@@ -74,10 +74,7 @@ fn duplicate_declaration_names_the_other_home_from_the_workspace_root() {
         member_workspace("workspace_message_paths_duplicate_declaration", &TWO_HOMES);
     let workspace = BTreeMap::from([(
         "api".to_string(),
-        WorkspaceCheckTarget {
-            findings: &api_findings,
-            config: &api_config,
-        },
+        WorkspaceCheckTarget::of(&api_findings, api_config.schema(), api_config.frame()),
     )]);
 
     let report = check_with_workspace(

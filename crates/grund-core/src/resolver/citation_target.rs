@@ -1,6 +1,6 @@
 //! The one function that maps a citation to the project it resolves against
-//! (§AR-system.2.10, §AR-resolver.1): the target's `Catalog` and the `Config`
-//! its ID is parsed and rendered with, or `None` when the alias is unknown
+//! (§AR-system.2.10, §AR-resolver.1): the target's `Catalog` and the `Schema`
+//! and `Compiled` grammar its ID is parsed and rendered with, or `None` when the alias is unknown
 //! (§FS-workspace.1.2, §FS-workspace.8).
 //!
 //! Every consumer of citations goes through here rather than matching on
@@ -18,15 +18,48 @@
 use std::collections::BTreeMap;
 
 use super::stub_home::unscanned_stub_home;
-use crate::config::Config;
+use crate::config::{Compiled, Display, Frame, Run, Schema};
 use crate::model::{Catalog, Citation, Declaration, Id};
 
-/// One project a citation can resolve against, as a rule needs it: the findings
-/// the ID is looked up in and the config that spells it, because a workspace may
-/// mix `[id] format`s (§FS-workspace.1.2, §AR-workspace.2).
+/// One project a citation can resolve against, as a rule needs it: the catalog
+/// the ID is looked up in and the schema and grammar that spell it, because a
+/// workspace may mix `[id] format`s (§FS-workspace.1.2, §AR-workspace.2), with
+/// the run that roots its stubs — records, never the façade (§AR-config.5).
+#[derive(Clone, Copy)]
 pub(crate) struct WorkspaceCheckTarget<'a> {
-    pub(crate) findings: &'a Catalog,
-    pub(crate) config: &'a Config,
+    pub(crate) catalog: &'a Catalog,
+    pub(crate) schema: &'a Schema,
+    pub(crate) compiled: &'a Compiled,
+    pub(crate) run: &'a Run,
+}
+
+impl<'a> WorkspaceCheckTarget<'a> {
+    /// The target a project's `catalog` makes, in the frame it was loaded in.
+    pub(crate) fn of(catalog: &'a Catalog, schema: &'a Schema, frame: Frame<'a>) -> Self {
+        Self {
+            catalog,
+            schema,
+            compiled: frame.compiled,
+            run: frame.run,
+        }
+    }
+
+    /// The frame a read of this project runs in, spelled from its own root: a
+    /// finding about it is spelled through the citing project's frame instead
+    /// (§FS-workspace.8.1).
+    pub(crate) fn frame(&self) -> Frame<'a> {
+        Frame {
+            run: self.run,
+            compiled: self.compiled,
+            name: None,
+            alias: None,
+            display: Display {
+                root: &self.run.root,
+                cli_base: &self.run.cli_base,
+                from_root: true,
+            },
+        }
+    }
 }
 
 /// §AR-resolver.1: the resolver itself. An unqualified citation resolves against
@@ -35,18 +68,13 @@ pub(crate) struct WorkspaceCheckTarget<'a> {
 pub(crate) fn target_for_citation<'a>(
     cite: &Citation,
     local: &'a Catalog,
-    local_config: &'a Config,
+    local_schema: &'a Schema,
+    local_frame: Frame<'a>,
     workspace: &'a BTreeMap<String, WorkspaceCheckTarget<'a>>,
 ) -> Option<WorkspaceCheckTarget<'a>> {
     match cite.namespace.as_deref() {
-        Some(namespace) => workspace.get(namespace).map(|target| WorkspaceCheckTarget {
-            findings: target.findings,
-            config: target.config,
-        }),
-        None => Some(WorkspaceCheckTarget {
-            findings: local,
-            config: local_config,
-        }),
+        Some(namespace) => workspace.get(namespace).copied(),
+        None => Some(WorkspaceCheckTarget::of(local, local_schema, local_frame)),
     }
 }
 
@@ -55,11 +83,12 @@ pub(crate) fn target_for_citation<'a>(
 pub(crate) fn citation_resolves(
     cite: &Citation,
     local: &Catalog,
-    local_config: &Config,
+    local_schema: &Schema,
+    local_frame: Frame<'_>,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
 ) -> bool {
-    target_for_citation(cite, local, local_config, workspace)
-        .map(|target| target.findings.declarations.contains_key(&cite.id))
+    target_for_citation(cite, local, local_schema, local_frame, workspace)
+        .map(|target| target.catalog.declarations.contains_key(&cite.id))
         .unwrap_or(false)
 }
 
@@ -72,11 +101,12 @@ pub(crate) fn citation_resolves(
 /// asked as a yes/no.
 pub(crate) fn section_resolves(
     findings: &Catalog,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     id: &Id,
     section: &str,
 ) -> bool {
-    section_home(findings, config, id, section).is_some()
+    section_home(findings, schema, frame, id, section).is_some()
 }
 
 /// Which record holds a section a citation resolves to (§FS-check.3.2.1).
@@ -93,12 +123,13 @@ pub(crate) enum SectionHome<'a> {
 /// that target's one declaration of `id`, read once per run; an ID `show` refuses as
 /// ambiguous lends no section there. A rule's `cites` fact asks here rather than
 /// `section_resolves`, because a citation into a home outside the walk counts for
-/// that home's chapter (§FS-rules.5.1). `config` is the project `findings` belong
-/// to, the target's for a workspace citation, because the stub's link resolves
+/// that home's chapter (§FS-rules.5.1). `schema` and `frame` are the project's
+/// `findings` belong to, the target's for a workspace citation, because the stub's link resolves
 /// against its root.
 pub(crate) fn section_home<'a>(
     findings: &'a Catalog,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     id: &Id,
     section: &str,
 ) -> Option<SectionHome<'a>> {
@@ -108,7 +139,7 @@ pub(crate) fn section_home<'a>(
     }
     decls
         .iter()
-        .filter_map(|stub| unscanned_stub_home(findings, config, id, stub))
+        .filter_map(|stub| unscanned_stub_home(findings, schema, frame, id, stub))
         .find(|home| home.sections.contains_key(section))
         .map(SectionHome::Unscanned)
 }

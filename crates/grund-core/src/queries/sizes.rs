@@ -85,7 +85,15 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
             let mut homes: Vec<&Declaration> = declarations
                 .iter()
                 .filter(|decl| !is_stub_for_inline_decl(&project.config.root, decl, declarations))
-                .map(|decl| home_as_scanned(&project.findings, &project.config, id, decl))
+                .map(|decl| {
+                    home_as_scanned(
+                        &project.findings,
+                        project.config.schema(),
+                        project.config.frame(),
+                        id,
+                        decl,
+                    )
+                })
                 .collect();
             homes.sort_by(|a, b| {
                 (sort_path_key(&a.file), a.line).cmp(&(sort_path_key(&b.file), b.line))
@@ -201,7 +209,8 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
     for row in pending {
         let bodies = point_body_pair(
             &mut cache,
-            row.project_config,
+            row.project_config.schema(),
+            row.project_config.frame(),
             row.id,
             row.declaration,
             row.section,

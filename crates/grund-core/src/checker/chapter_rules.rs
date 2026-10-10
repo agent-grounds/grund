@@ -2,7 +2,7 @@
 //! §AR-checker.1). Grammar, facts, evaluation, and deduplication stay owned by
 //! the rules component; this module only sequences and merges their results.
 
-use crate::config::{Config, known_kinds_line};
+use crate::config::{Form, Frame, Rules, Schema, known_kinds_line};
 use crate::grammar::render_id;
 use crate::model::{Catalog, CheckReport, Declaration, Diagnostic, Id};
 use crate::resolver::{SectionHome, WorkspaceCheckTarget, section_home};
@@ -13,71 +13,88 @@ use crate::rules::engine::{
 };
 use crate::rules::markdown::{MarkdownProject, SectionHomes, adapt_markdown, adapt_workspace};
 use crate::rules::sentence::{ParsedRule, RuleVocabulary, parse_rule};
-use crate::workspace::expand_workspace_tree;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::support::sort_diagnostics;
 
-/// What the rules adapter reads of `config`: the façade stays in the checker
-/// (§AR-config.5, §AR-rules.3).
-pub(crate) fn markdown_project(config: &Config) -> MarkdownProject<'_> {
+/// What the rules adapter reads of one project's records: the façade stays out of
+/// both components (§AR-config.5, §AR-rules.3). `name` is the scope a standalone
+/// adaptation selects; a workspace adaptation selects by alias instead.
+pub(crate) fn markdown_project<'a>(
+    name: Option<&'a str>,
+    target: &'a WorkspaceCheckTarget<'a>,
+) -> MarkdownProject<'a> {
     MarkdownProject {
-        name: config.project_name.as_deref(),
-        root: &config.root,
-        grammar: &config.grammar,
-        section_separator: &config.section_separator,
-        homes: config,
+        name,
+        root: &target.run.root,
+        grammar: &target.compiled.grammar,
+        section_separator: &target.schema.ids.section_separator,
+        homes: target,
     }
 }
 
 /// A project's sections resolve as `check` resolves them, a stub's in its target
 /// read under this project's scan settings (§FS-check.3.2.1, §AR-resolver.5).
-impl SectionHomes for Config {
+impl SectionHomes for WorkspaceCheckTarget<'_> {
     fn section_home<'c>(
         &self,
         findings: &'c Catalog,
         id: &Id,
         section: &str,
     ) -> Option<SectionHome<'c>> {
-        section_home(findings, self, id, section)
+        section_home(findings, self.schema, self.frame(), id, section)
     }
 }
 
-pub(crate) fn vocabulary(config: &Config) -> RuleVocabulary {
-    let kinds = config
-        .kinds
-        .iter()
-        .filter(|kind| kind.citable)
-        .map(|kind| kind.kind.clone())
-        .collect::<BTreeSet<_>>();
+/// The names of the kinds a rule can name in `schema`: its citable rows.
+fn citable_kinds(schema: &Schema) -> BTreeSet<String> {
+    schema.kinds().map(|(name, _)| name.to_string()).collect()
+}
+
+/// The names of `schema`'s rule kinds, whose declarations are rules (§FS-rules.1).
+fn rule_kinds(schema: &Schema) -> BTreeSet<&str> {
+    schema
+        .kinds()
+        .filter(|(_, kind)| matches!(kind.form, Form::Rule { .. }))
+        .map(|(name, _)| name)
+        .collect()
+}
+
+pub(crate) fn vocabulary(schema: &Schema, frame: Frame<'_>) -> RuleVocabulary {
+    let kinds = citable_kinds(schema);
     RuleVocabulary {
         kinds: kinds.clone(),
         target_kinds: kinds,
         target_namespaces: BTreeMap::new(),
-        named_sections: config.named_sections,
-        id_grammars: vec![config.grammar.clone()],
-        section_separators: vec![config.section_separator.clone()],
+        named_sections: schema.ids.named_sections,
+        id_grammars: vec![frame.grammar().clone()],
+        section_separators: vec![schema.ids.section_separator.clone()],
     }
 }
 
-pub(crate) fn parse_ad_hoc(config: &Config, sentence: &str) -> anyhow::Result<ParsedRule> {
-    parse_ad_hoc_with_vocabulary(config, sentence, vocabulary(config))
+pub(crate) fn parse_ad_hoc(
+    schema: &Schema,
+    frame: Frame<'_>,
+    sentence: &str,
+) -> anyhow::Result<ParsedRule> {
+    parse_ad_hoc_with_vocabulary(schema, sentence, vocabulary(schema, frame))
 }
 
 pub(crate) fn parse_ad_hoc_with_workspace(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     sentence: &str,
     projects: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
 ) -> anyhow::Result<ParsedRule> {
-    let mut vocab = vocabulary(config);
+    let mut vocab = vocabulary(schema, frame);
     add_workspace_targets(&mut vocab, projects);
-    parse_ad_hoc_with_vocabulary(config, sentence, vocab)
+    parse_ad_hoc_with_vocabulary(schema, sentence, vocab)
 }
 
-/// `config` is the one whose kinds the subject is read against, so it is the
+/// `schema` is the one whose kinds the subject is read against, so it is the
 /// one whose kinds a refusal that offers no form lists (§FS-rules.3.5.2).
 fn parse_ad_hoc_with_vocabulary(
-    config: &Config,
+    schema: &Schema,
     sentence: &str,
     vocabulary: RuleVocabulary,
 ) -> anyhow::Result<ParsedRule> {
@@ -94,7 +111,11 @@ fn parse_ad_hoc_with_vocabulary(
     .map_err(|error| {
         // §FS-rules.3.5.2: nothing to paste back, so the kinds follow the reason.
         if error.unrecovered {
-            anyhow::anyhow!("{}\n{}", error.message, known_kinds_line(&config.kinds))
+            anyhow::anyhow!(
+                "{}\n{}",
+                error.message,
+                known_kinds_line(schema.kinds().map(|(name, _)| name))
+            )
         } else {
             anyhow::anyhow!(error.message)
         }
@@ -116,7 +137,7 @@ fn add_workspace_targets(
         vocabulary,
         projects
             .iter()
-            .map(|(alias, project)| (alias.clone(), project.config)),
+            .map(|(alias, project)| (alias.clone(), project.schema)),
     );
 }
 
@@ -125,19 +146,13 @@ fn add_workspace_targets(
 /// judge it (§FS-rules.4.1.1).
 fn add_namespaces<'a>(
     vocabulary: &mut RuleVocabulary,
-    namespaces: impl IntoIterator<Item = (String, &'a Config)>,
+    namespaces: impl IntoIterator<Item = (String, &'a Schema)>,
 ) {
-    vocabulary
-        .target_namespaces
-        .extend(namespaces.into_iter().map(|(alias, config)| {
-            let kinds = config
-                .kinds
-                .iter()
-                .filter(|kind| kind.citable)
-                .map(|kind| kind.kind.clone())
-                .collect();
-            (alias, kinds)
-        }));
+    vocabulary.target_namespaces.extend(
+        namespaces
+            .into_iter()
+            .map(|(alias, schema)| (alias, citable_kinds(schema))),
+    );
 }
 
 /// The vocabulary a run that already loaded its workspace resolves rule objects
@@ -145,10 +160,11 @@ fn add_namespaces<'a>(
 /// yields the plain single-project vocabulary and every namespaced object kind
 /// in it is unverifiable here.
 pub(crate) fn workspace_vocabulary(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     projects: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
 ) -> RuleVocabulary {
-    let mut vocab = vocabulary(config);
+    let mut vocab = vocabulary(schema, frame);
     if !projects.is_empty() {
         add_workspace_targets(&mut vocab, projects);
     }
@@ -158,42 +174,26 @@ pub(crate) fn workspace_vocabulary(
 /// The vocabulary for a command that resolves rules without loading a workspace
 /// of its own — `init` (§FS-rules.4.1).
 ///
-/// Read from the workspace this config *declares*, never one climbed to from
-/// above: `init` does climb to render `### Workspace members`, but that is
-/// teaching and this is judging, and judging off a climbed tree would make the
-/// same bytes valid or invalid depending on what happens to sit on disk beside
-/// the checkout. A member cloned alone would then get a different verdict from
-/// the same rule (§FS-workspace.5.1, §DF-unverifiable-rule-scope).
-///
-/// Only stage 1 of the workspace load, because the aliases are all that is
-/// wanted and stages 2 and 3 scan every member's whole tree. Expanding is what
-/// makes the alias set `check`'s by construction. Best-effort like every other
-/// workspace read `init` does: an expansion that fails raises nothing and costs
-/// the run only the members it could not reach.
-///
-/// It does not cost the run the workspace itself. A config that declares
-/// `[workspace]` holds at least its own project's namespace, whatever its member
-/// list expands to — the entry an empty `members` already yields, recovered here
-/// by expanding the same tree with the member list emptied. So a run standing at
-/// a workspace root is never told that no workspace is in scope and sent to the
-/// workspace root, one directory reaches one verdict whether a member is absent
-/// or unlisted, and the rule an unreachable member's alias names is an invalid
-/// one rather than a bullet written out of a broken tree (§FS-rules.4.1.1).
-pub(crate) fn declared_workspace_vocabulary(config: &Config) -> RuleVocabulary {
-    let mut vocab = vocabulary(config);
-    if !config.workspace_declared {
-        return vocab;
-    }
-    let mut root_config = config.clone();
-    let entries = expand_workspace_tree(&mut root_config).unwrap_or_else(|_| {
-        let mut alone = config.without_members();
-        expand_workspace_tree(&mut alone).unwrap_or_default()
-    });
+/// `declared` is the workspace this project *declares*, by alias, never one
+/// climbed to from above: `init` does climb to render `### Workspace members`,
+/// but that is teaching and this is judging, and judging off a climbed tree
+/// would make the same bytes valid or invalid depending on what happens to sit
+/// on disk beside the checkout (§FS-workspace.5.1, §DF-unverifiable-rule-scope).
+/// The workspace component reads it (`declared_member_schemas`), stage 1 only and
+/// best-effort, so the alias set is `check`'s by construction, and a project
+/// that declares `[workspace]` holds at least its own namespace whatever its
+/// member list expands to (§FS-rules.4.1.1).
+pub(crate) fn declared_workspace_vocabulary(
+    schema: &Schema,
+    frame: Frame<'_>,
+    declared: &[(String, Schema)],
+) -> RuleVocabulary {
+    let mut vocab = vocabulary(schema, frame);
     add_namespaces(
         &mut vocab,
-        entries
+        declared
             .iter()
-            .map(|entry| (entry.alias.clone(), &entry.config)),
+            .map(|(alias, schema)| (alias.clone(), schema)),
     );
     vocab
 }
@@ -221,16 +221,13 @@ pub(crate) struct ConfiguredRules {
 /// (§FS-rules.9.1).
 pub(crate) fn configured_rule_sentences(
     findings: &Catalog,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     vocab: &RuleVocabulary,
 ) -> Result<ConfiguredRules, Diagnostic> {
-    let facts = adapt_markdown(findings, markdown_project(config), true);
-    let rule_kinds = config
-        .kinds
-        .iter()
-        .filter(|kind| kind.rules)
-        .map(|kind| kind.kind.as_str())
-        .collect::<BTreeSet<_>>();
+    let local = WorkspaceCheckTarget::of(findings, schema, frame);
+    let facts = adapt_markdown(findings, markdown_project(frame.name, &local), true);
+    let rule_kinds = rule_kinds(schema);
     let mut rows = Vec::new();
     let mut unverifiable = Vec::new();
     for (id, declarations) in &findings.declarations {
@@ -238,7 +235,7 @@ pub(crate) fn configured_rule_sentences(
             continue;
         }
         for declaration in declarations {
-            let origin = render_id(&config.grammar, id);
+            let origin = render_id(frame.grammar(), id);
             let path = declaration.file.to_string_lossy();
             let title = declaration.title.as_deref().ok_or_else(|| {
                 invalid_rule(
@@ -293,47 +290,46 @@ pub(crate) fn configured_rule_sentences(
 
 /// Append configured and optional ad-hoc rule results to the shared report.
 /// An incomplete scan passes an explicitly incomplete snapshot to the engine.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn check_chapter_rules(
     findings: &Catalog,
-    config: &Config,
+    rules: &Rules,
+    schema: &Schema,
+    frame: Frame<'_>,
     complete: bool,
     ad_hoc: Option<ParsedRule>,
     workspace: Option<(&str, &BTreeMap<String, WorkspaceCheckTarget<'_>>)>,
     report: &mut CheckReport,
 ) {
-    if !config.kinds.iter().any(|kind| kind.rules) && ad_hoc.is_none() {
+    let rule_kinds = rule_kinds(schema);
+    if rule_kinds.is_empty() && ad_hoc.is_none() {
         return;
     }
-    let mut vocab = vocabulary(config);
+    let mut vocab = vocabulary(schema, frame);
     if let Some((_, projects)) = workspace {
         add_workspace_targets(&mut vocab, projects);
     }
+    let local = WorkspaceCheckTarget::of(findings, schema, frame);
     let facts = match workspace {
         Some((selected, projects)) => {
             let projects = projects
                 .iter()
                 .map(|(alias, target)| {
-                    let project = markdown_project(target.config);
-                    (alias.as_str(), target.findings, project)
+                    let project = markdown_project(None, target);
+                    (alias.as_str(), target.catalog, project)
                 })
                 .collect::<Vec<_>>();
             adapt_workspace(selected, &projects, complete)
         }
-        None => adapt_markdown(findings, markdown_project(config), complete),
+        None => adapt_markdown(findings, markdown_project(frame.name, &local), complete),
     };
-    let mut rules = Vec::new();
-    let rule_kinds = config
-        .kinds
-        .iter()
-        .filter(|kind| kind.rules)
-        .map(|kind| kind.kind.as_str())
-        .collect::<BTreeSet<_>>();
+    let mut parsed_rules = Vec::new();
     for (id, declarations) in &findings.declarations {
         if !rule_kinds.contains(id.kind.as_str()) {
             continue;
         }
         for declaration in declarations {
-            let origin = render_id(&config.grammar, id);
+            let origin = render_id(frame.grammar(), id);
             let anchor = RuleAnchor {
                 path: declaration.file.to_string_lossy().into_owned(),
                 line: declaration.line,
@@ -354,7 +350,7 @@ pub(crate) fn check_chapter_rules(
                     declaration.line,
                     "rule rationale is empty",
                 )),
-                Ok((rule, None)) => rules.push(rule),
+                Ok((rule, None)) => parsed_rules.push(rule),
                 // §FS-rules.4.1: reported rather than evaluated — but the
                 // subject is asked here, so one directory reaches one verdict.
                 Ok((rule, Some(message))) => {
@@ -374,12 +370,12 @@ pub(crate) fn check_chapter_rules(
         }
     }
     if let Some(rule) = ad_hoc {
-        rules.push(rule);
+        parsed_rules.push(rule);
     }
-    let precedence = citation_precedence(&config.citations);
+    let precedence = citation_precedence(&rules.citations);
     // §FS-rules.7: one channel per level, so the absence arrives among the
     // errors its level already fills and every caller's own sort orders it.
-    let (errors, ramp_warnings) = evaluate(&rules, &precedence, &facts);
+    let (errors, ramp_warnings) = evaluate(&parsed_rules, &precedence, &facts);
     report.errors.extend(errors);
     // §FS-rules.7.8 / §FS-errors.4.1: the single-project `grund-core` arm is the one
     // caller that does not sort warnings downstream, and the sort is idempotent over
@@ -388,7 +384,7 @@ pub(crate) fn check_chapter_rules(
     sort_diagnostics(&mut report.warnings);
     report
         .suggestions
-        .extend(evaluate_suggestions(&rules, &precedence, &facts));
+        .extend(evaluate_suggestions(&parsed_rules, &precedence, &facts));
 }
 
 /// A rule rationale contains authored non-whitespace text after its declaration

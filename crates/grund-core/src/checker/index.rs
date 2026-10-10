@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 
 use super::index_entries::KindIndexEntries;
 use super::index_mention::index_mentions;
-use crate::config::{Config, display_path};
+use crate::config::{Frame, Schema};
 use crate::grammar::{
     declaration_id_on_line, is_inside_inline_code, never_rewrite_context, render_id,
 };
@@ -42,13 +42,16 @@ pub(super) struct KindIndexTarget<'a> {
 /// runs on `.md` files only (§FS-fmt.6.1). A non-Markdown index is a file the
 /// formatter can never repair, and the honest report about one is no report at
 /// all rather than a finding with no fix.
-pub(super) fn kind_index_targets(config: &Config) -> Vec<KindIndexTarget<'_>> {
-    config
-        .kinds
+pub(super) fn kind_index_targets<'a>(
+    schema: &'a Schema,
+    frame: Frame<'_>,
+) -> Vec<KindIndexTarget<'a>> {
+    schema
+        .rows
         .iter()
-        .filter_map(|kind| {
-            let folder = kind.folder.as_deref()?;
-            let index = kind.index_path()?;
+        .filter_map(|row| {
+            let folder = row.folder()?;
+            let index = row.index_path()?;
             // §FS-config.3.4 rejects an `index` that does not name a `.md` file,
             // so this filter never fires on a config that loaded; it states the
             // Markdown assumption every rule below rests on.
@@ -56,10 +59,10 @@ pub(super) fn kind_index_targets(config: &Config) -> Vec<KindIndexTarget<'_>> {
                 return None;
             }
             Some(KindIndexTarget {
-                kind: kind.kind.as_str(),
+                kind: row.name.as_str(),
                 folder_key: configured_home_path_key(folder),
                 index_key: scanned_path_key(&index),
-                index_file: config.root.join(&index),
+                index_file: frame.root().join(&index),
             })
         })
         .collect()
@@ -174,12 +177,12 @@ impl IndexEntryState {
 /// and the unused warning pick, so a collapsed stub-and-inline pair is named at
 /// the body rather than twice (§FS-list.2.5, §DF-index-entry-form.2.5).
 fn index_home_declaration<'a>(
-    config: &Config,
+    frame: Frame<'_>,
     decls: &'a [Declaration],
 ) -> Option<&'a Declaration> {
     decls
         .iter()
-        .find(|decl| !is_stub_for_inline_decl(&config.root, decl, decls))
+        .find(|decl| !is_stub_for_inline_decl(frame.root(), decl, decls))
         .or_else(|| decls.first())
 }
 
@@ -250,21 +253,21 @@ pub(crate) const INDEX_RULE_RELEASE: &str = "0.12.0";
 /// `IndexCitationForm::Bare` is narrowed to mean.
 pub(super) fn check_kind_indexes(
     findings: &Catalog,
-    config: &Config,
-    path_config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     index_targets: &BTreeMap<(PathBuf, Id), String>,
     report: &mut CheckReport,
 ) {
-    let targets = kind_index_targets(config);
+    let targets = kind_index_targets(schema, frame);
     if targets.is_empty() {
         return;
     }
-    let configured_root = scanned_path_key(&config.root);
-    let physical_root = physical_path_key(&config.root);
+    let configured_root = scanned_path_key(frame.root());
+    let physical_root = physical_path_key(frame.root());
     // §FS-check.3.18: folder declarations plus the external inline declarations
     // their canonical index links enroll. `KindIndexEntries` is also what `fmt`
     // and the unused-accounting surfaces read, so membership has one derivation.
-    let index_entries = KindIndexEntries::new(findings, config, index_targets);
+    let index_entries = KindIndexEntries::new(findings, schema, frame, index_targets);
 
     // One pass over the citations, bucketed by index file, so the per-kind loop
     // below is a lookup rather than another walk of the whole citation list
@@ -312,12 +315,12 @@ pub(super) fn check_kind_indexes(
             .iter()
             .filter(|(id, _)| id.kind == target.kind)
             .filter(|(id, _)| owed.contains(*id))
-            .filter_map(|(id, decls)| Some((id, index_home_declaration(config, decls)?)))
+            .filter_map(|(id, decls)| Some((id, index_home_declaration(frame, decls)?)))
             .collect();
         if covered.is_empty() {
             continue;
         }
-        let index_display = display_path(path_config, &target.index_file);
+        let index_display = frame.display_path(&target.index_file);
         // §FS-check.3.18.7: an absent index is reported once per declaration;
         // distinguish missing files, directories and unreadable files.
         // §FS-check.6.1.1: cover this effective input before its shared read.
@@ -348,19 +351,18 @@ pub(super) fn check_kind_indexes(
             // §FS-fmt.6.4: `fmt` leaves a declaration heading alone, so a citation
             // riding on one is no more repairable than one in inline code. Fenced
             // blocks need no test here — the scanner records no citation inside one.
-            if declaration_id_on_line(&config.grammar, line, false, true).is_some() {
+            if declaration_id_on_line(frame.grammar(), line, false, true).is_some() {
                 continue;
             }
             // An `Ignored` form creates no entry: a citation `fmt` will not wrap
             // neither satisfies the rule nor triggers §FS-check.3.17.5
             // (§DF-index-entry-form.2.3), so the ID is reported as unlisted.
-            let form = index_citation_form(line, &citation.text, &config.marker);
+            let form = index_citation_form(line, &citation.text, &schema.citation.marker);
             // §FS-check.3.2.1: §FS-check.3.2's own test, so a stub's section in a
             // target outside the walk admits the entry.
-            let section_known = citation
-                .section
-                .as_deref()
-                .is_none_or(|section| section_resolves(findings, config, &citation.id, section));
+            let section_known = citation.section.as_deref().is_none_or(|section| {
+                section_resolves(findings, schema, frame, &citation.id, section)
+            });
             // §FS-fmt.6.2.1: `fmt` skips a section citation with no link target and
             // reports `rewrote 0 lines`. The physical-root predicate above is the
             // other §FS-check.3.17.4 gate; only the bare form is gated.
@@ -390,7 +392,7 @@ pub(super) fn check_kind_indexes(
         let mentioned = if unentered.is_empty() {
             BTreeSet::new()
         } else {
-            index_mentions(config, &lines, &unentered)
+            index_mentions(frame, &lines, &unentered)
         };
 
         for (id, decl) in covered {
@@ -409,8 +411,8 @@ pub(super) fn check_kind_indexes(
                         // tool ships, and a release note. The first two are here.
                         message: format!(
                             "index entry {}{} is not a link; unchecked in grund {INDEX_RULE_PRIOR_RELEASE}, an error in {INDEX_RULE_RELEASE} — run `grund fmt --write`",
-                            config.marker,
-                            render_id(&config.grammar, id)
+                            schema.citation.marker,
+                            render_id(frame.grammar(), id)
                         ),
                         sites: Vec::new(),
                     authority: Vec::new(),});
@@ -423,19 +425,19 @@ pub(super) fn check_kind_indexes(
                     // §FS-check.3.18.5.1: "is not listed", said about a line the
                     // reader is looking at, is a diagnosis the reader argues with.
                     // Both forms keep §FS-distribution.4.2.3's past-tense release.
-                    let rendered = render_id(&config.grammar, id);
+                    let rendered = render_id(frame.grammar(), id);
                     let message = if mentioned.contains(id) {
                         // §FS-check.3.18.5: the form named follows `[reference]
                         // strict`, so it is true of the index it is said about.
-                        let form = if config.strict {
+                        let form = if schema.citation.strict {
                             format!(
                                 "an entry is a `{}`-marked Markdown link to the declaration",
-                                config.marker
+                                schema.citation.marker
                             )
                         } else {
                             format!(
                                 "an entry is a Markdown link to the declaration whose text is the ID, with or without the `{}` marker",
-                                config.marker
+                                schema.citation.marker
                             )
                         };
                         format!(
@@ -473,11 +475,11 @@ pub(crate) struct KindIndexFiles {
 }
 
 impl KindIndexFiles {
-    pub(crate) fn new(config: &Config) -> Self {
+    pub(crate) fn new(schema: &Schema, frame: Frame<'_>) -> Self {
         Self {
-            configured_root: scanned_path_key(&config.root),
-            physical_root: physical_path_key(&config.root),
-            keys: kind_index_targets(config)
+            configured_root: scanned_path_key(frame.root()),
+            physical_root: physical_path_key(frame.root()),
+            keys: kind_index_targets(schema, frame)
                 .into_iter()
                 .map(|target| target.index_key)
                 .collect(),

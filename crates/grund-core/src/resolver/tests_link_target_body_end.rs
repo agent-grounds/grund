@@ -51,7 +51,8 @@ fn link_of_a_1(name: &str, files: &[(&str, &str)]) -> (Catalog, Option<String>) 
         &id_a(),
         Some("1"),
         &config.project().presentation,
-        &config,
+        config.schema(),
+        config.frame(),
         &findings,
     );
     (findings, link)

@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use crate::config::Config;
+use crate::config::{Frame, Schema};
 use crate::model::{
     configured_home_path_key, physical_path_key, scanned_decl_relative_path, scanned_path_key,
 };
@@ -54,40 +54,41 @@ pub(super) struct KindHomeIndex<'a> {
 }
 
 impl<'a> KindHomeIndex<'a> {
-    pub(super) fn new(config: &'a Config) -> Self {
-        let configured_root = scanned_path_key(&config.root);
-        let physical_root = physical_path_key(&config.root);
+    pub(super) fn new(schema: &'a Schema, frame: Frame<'_>) -> Self {
+        let configured_root = scanned_path_key(frame.root());
+        let physical_root = physical_path_key(frame.root());
         let mut single_files = Vec::new();
         let mut homes = Vec::new();
 
-        for kind in &config.kinds {
-            if let Some(file) = kind.file.as_deref() {
+        for row in &schema.rows {
+            let citable = row.kind.is_some();
+            if let Some(file) = row.file() {
                 // §FS-declarations.checks.misplaced-declaration: only a citable kind has
                 // declarations to keep in one document, so the single-file rule says nothing about
                 // a non-citable `file` home — the home-kind rule below reports what is there, once.
-                if kind.citable {
+                if citable {
                     single_files.push(SingleFileHome {
-                        kind: kind.kind.as_str(),
+                        kind: row.name.as_str(),
                         path: file,
-                        physical_path: physical_path_key(&config.root.join(file)),
+                        physical_path: physical_path_key(&frame.root().join(file)),
                     });
                 }
                 homes.push(ConfiguredHome {
-                    kind: kind.kind.as_str(),
+                    kind: row.name.as_str(),
                     path: file,
                     key: configured_home_path_key(file),
                     exact: true,
-                    citable: kind.citable,
+                    citable,
                 });
             }
 
-            if let Some(folder) = kind.folder.as_deref() {
+            if let Some(folder) = row.folder() {
                 homes.push(ConfiguredHome {
-                    kind: kind.kind.as_str(),
+                    kind: row.name.as_str(),
                     path: folder,
                     key: configured_home_path_key(folder),
                     exact: false,
-                    citable: kind.citable,
+                    citable,
                 });
             }
         }

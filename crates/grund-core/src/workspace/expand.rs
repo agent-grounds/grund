@@ -50,6 +50,7 @@ pub(crate) struct WorkspaceCitationTarget {
 impl WorkspaceCitationTarget {
     /// The target `config` spells its IDs with (§FS-workspace.1.2): its schema
     /// and compiled grammar, which is all a scan reads of another project.
+    #[cfg(test)]
     pub(crate) fn of(alias: String, config: &Config) -> Self {
         Self {
             alias,

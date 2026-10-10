@@ -49,7 +49,7 @@ pub(crate) fn wrap_markdown_links(
     workspace: Option<&WorkspaceContext>,
     only_ids: Option<&BTreeSet<Id>>,
 ) -> String {
-    let targets = ShorthandTargets::new(config, Some(findings), workspace);
+    let targets = ShorthandTargets::new(config.frame(), Some(findings), workspace);
     wrap_markdown_links_with_targets(line, path, config, findings, workspace, only_ids, &targets)
 }
 
@@ -97,7 +97,8 @@ pub(super) fn wrap_markdown_links_with_targets(
                     &citation.id,
                     citation.section.as_deref(),
                     &target_project.config.project().presentation,
-                    &target_project.config,
+                    target_project.config.schema(),
+                    target_project.config.frame(),
                     &target_project.findings,
                     Some(&workspace.render_root),
                 )
@@ -107,7 +108,8 @@ pub(super) fn wrap_markdown_links_with_targets(
                 &citation.id,
                 citation.section.as_deref(),
                 &config.project().presentation,
-                config,
+                config.schema(),
+                config.frame(),
                 findings,
             ),
         };

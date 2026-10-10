@@ -107,7 +107,7 @@ impl LspCompletionContext {
                 }
                 CompletionProject {
                     alias: project.alias.clone(),
-                    config: config.clone(),
+                    config: (**config).clone(),
                     files,
                     editable,
                     candidates,

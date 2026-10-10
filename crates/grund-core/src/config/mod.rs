@@ -53,12 +53,14 @@ mod inputs;
 mod kind;
 mod point_sizes;
 mod project;
+mod project_records;
 mod record;
 mod report_paths;
 mod rows;
 mod run;
 mod run_warnings;
 mod scope_roots;
+mod slots;
 mod v1;
 mod validate;
 mod workspace_block;
@@ -70,7 +72,8 @@ pub use citations::{
 };
 pub(crate) use citations::{parse_citation_target_entry, render_citation_target};
 pub use compiled::Compiled;
-pub use frame::Frame;
+pub use frame::{Display, Frame};
+pub(crate) use project_records::ProjectRecords;
 // The parts of the records (§AR-config.1): an embedder reaches them through the
 // public fields of `Project`, `Run` and `Compiled`, and this component's tests
 // name them here.
@@ -92,6 +95,7 @@ pub use record::{AbsentOptionalNamespace, Config, ConfigLocation, ShorthandPolic
 pub use rows::{Extent, Form, Kind, Nesting, Origin, Place, Row};
 #[allow(unused_imports)]
 pub use run::{Run, RunScope, RunWorkspace};
+pub use slots::{Content, Handle, Presence, Slot};
 
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
@@ -101,7 +105,9 @@ pub(crate) use discovery::{
     load_config_at_with_report_base,
 };
 pub(crate) use fmt_block::fmt_excluded;
-pub(crate) use grounding::grounding_level_for_kind;
+pub(crate) use grounding::{
+    any_place_grounded, grounding_level_for_kind, homeless_row_grounding, row_grounding,
+};
 pub(crate) use kind::escape_toml_basic;
 pub(crate) use point_sizes::measure_point_text;
 pub(crate) use record::{
@@ -148,6 +154,8 @@ mod tests_report_paths;
 mod tests_scan_demand;
 #[cfg(test)]
 mod tests_scan_exclude;
+#[cfg(test)]
+mod tests_slots;
 #[cfg(test)]
 mod tests_validation;
 

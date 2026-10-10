@@ -16,7 +16,7 @@
 
 use std::path::PathBuf;
 
-use crate::config::{Config, RunWarning, canonical_config_root};
+use crate::config::{Frame, ProjectRecords, Run, RunWarning, canonical_config_root};
 use crate::model::{Diagnostic, format_path};
 use crate::scanner::walk_reads_any_file;
 use crate::workspace::{block_relative_root, uncovered_block_scope_roots, unread_block_diagnostic};
@@ -45,18 +45,20 @@ use crate::workspace::{block_relative_root, uncovered_block_scope_roots, unread_
 /// [`block_scope_roots`] asks the default scope — this is a property of the
 /// configuration rather than of one walk (§FS-check.1.3.10).
 pub(crate) fn unread_block_scope_root(
-    config: &Config,
+    block: &ProjectRecords,
     project_roots: &[PathBuf],
 ) -> Option<String> {
-    let mut walk = config.clone();
+    let frame = block.frame();
+    let mut run = block.run().clone();
     let mut roots = project_roots.to_vec();
-    roots.push(canonical_config_root(&config.root));
-    walk.set_workspace_project_roots(roots);
-    walk.set_scan_full(false);
-    uncovered_block_scope_roots(config)
+    roots.push(canonical_config_root(frame.root()));
+    run.workspace.project_roots = roots;
+    run.scope.full = false;
+    let walk = Frame { run: &run, ..frame };
+    uncovered_block_scope_roots(block)
         .into_iter()
-        .find(|root| walk_reads_any_file(walk.schema(), walk.frame(), root))
-        .map(|root| format_path(block_relative_root(config, &root)))
+        .find(|root| walk_reads_any_file(block.schema(), walk, root))
+        .map(|root| format_path(block_relative_root(block, &root)))
 }
 
 /// §FS-check.4.10.11, §FS-workspace.6.1, §FS-distribution.3.1: the
@@ -68,17 +70,16 @@ pub(crate) fn unread_block_scope_root(
 /// question is about a walk and the walker sits above the workspace pass
 /// (§AR-resolver.placement). Nothing here renders: what comes back is a
 /// `Diagnostic` per warning, for whichever frontend asked (§AR-bindings.2).
-pub(crate) fn settled_run_warnings(config: &Config) -> Vec<Diagnostic> {
-    config
-        .run_warnings
+pub(crate) fn settled_run_warnings(run: &Run) -> Vec<Diagnostic> {
+    run.warnings
         .iter()
         .filter_map(|warning| match warning {
             RunWarning::Settled(diagnostic) => Some(diagnostic.clone()),
             RunWarning::UnreadBlock {
-                config,
+                block,
                 project_roots,
-            } => unread_block_scope_root(config, project_roots)
-                .map(|root| unread_block_diagnostic(config, &root)),
+            } => unread_block_scope_root(block, project_roots)
+                .map(|root| unread_block_diagnostic(block, &root)),
         })
         .collect()
 }

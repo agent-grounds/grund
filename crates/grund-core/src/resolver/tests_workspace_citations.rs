@@ -137,17 +137,11 @@ fn workspace_qualified_citation_uses_target_id_grammar() {
     let workspace = BTreeMap::from([
         (
             "root".to_string(),
-            WorkspaceCheckTarget {
-                findings: &root_findings,
-                config: &root_config,
-            },
+            WorkspaceCheckTarget::of(&root_findings, root_config.schema(), root_config.frame()),
         ),
         (
             "api".to_string(),
-            WorkspaceCheckTarget {
-                findings: &api_findings,
-                config: &api_config,
-            },
+            WorkspaceCheckTarget::of(&api_findings, api_config.schema(), api_config.frame()),
         ),
     ]);
     let root_report = check_with_workspace(
@@ -252,17 +246,11 @@ fn workspace_qualified_dangling_diagnostic_uses_target_id_grammar() {
     let workspace = BTreeMap::from([
         (
             "root".to_string(),
-            WorkspaceCheckTarget {
-                findings: &root_findings,
-                config: &root_config,
-            },
+            WorkspaceCheckTarget::of(&root_findings, root_config.schema(), root_config.frame()),
         ),
         (
             "api".to_string(),
-            WorkspaceCheckTarget {
-                findings: &api_findings,
-                config: &api_config,
-            },
+            WorkspaceCheckTarget::of(&api_findings, api_config.schema(), api_config.frame()),
         ),
     ]);
     let report = check_with_workspace(

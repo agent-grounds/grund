@@ -33,7 +33,7 @@ pub(super) fn markdown_citation_is_value_binding(
             else {
                 return false;
             };
-            (&project.config, &project.findings)
+            (&*project.config, &project.findings)
         }
         None => (config, findings),
     };
@@ -43,7 +43,8 @@ pub(super) fn markdown_citation_is_value_binding(
             && value_binding_section_ends_in_coordinate(section)
     }) && binding_target_has_any_value_authority(
         target_findings,
-        target_config,
+        target_config.schema(),
+        target_config.frame(),
         &citation.id,
         section,
     );
@@ -51,7 +52,8 @@ pub(super) fn markdown_citation_is_value_binding(
         && !section.is_some_and(|section| {
             binding_aims_at_embedded_value_authority(
                 target_findings,
-                target_config,
+                target_config.schema(),
+                target_config.frame(),
                 &citation.id,
                 section,
             )

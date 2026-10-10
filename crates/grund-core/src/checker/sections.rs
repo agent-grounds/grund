@@ -19,7 +19,7 @@ use std::collections::BTreeMap;
 
 use super::reference_scope::ScanScope;
 use super::support::{heading_marks, section_depth};
-use crate::config::{Config, display_path};
+use crate::config::{Frame, Schema};
 use crate::grammar::render_id;
 use crate::model::{
     Catalog, CheckReport, Diagnostic, LANDED_CLAUSE, SectionHeadingOutsideDeclaration, Site,
@@ -31,10 +31,11 @@ use crate::scanner::section_path_is_numeric;
 /// (§AR-checker.2.15). Order does not matter — the report is sorted before it is
 /// printed (§FS-errors.4.1).
 ///
-/// `config` is the project being checked (it owns the ID grammar and the
-/// separator); `path_config` is the one the printed report renders paths
-/// against, so in a workspace a path named *inside* a message points where the
-/// finding's own anchor points (§FS-config.3.6, §FS-workspace.8.1).
+/// `schema` and `frame` are the project being checked (it owns the ID grammar
+/// and the separator), and the frame's display is the one the printed report
+/// renders paths against, so in a workspace a path named *inside* a message
+/// points where the finding's own anchor points (§FS-config.3.6,
+/// §FS-workspace.8.1).
 ///
 /// Why a later item's doc comment and a stub's prose stay out of the duplicate-path
 /// rule: `duplicate_sections` is already scoped to the declaration's own body
@@ -47,8 +48,8 @@ use crate::scanner::section_path_is_numeric;
 /// twice.
 pub(super) fn check_section_headings(
     findings: &Catalog,
-    config: &Config,
-    path_config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     report: &mut CheckReport,
 ) {
     report.errors.extend(
@@ -61,7 +62,7 @@ pub(super) fn check_section_headings(
     // §FS-declarations.checks.unmarked-heading.5 / §AR-checker.2.20: scanner-owned Markdown
     // candidates are errors since 0.16.0, independent of the marked-section heading-level mode.
     report.errors.extend(findings.unmarked_headings.iter().map(|heading| {
-        let rendered_owner = render_id(&config.grammar, &heading.owner);
+        let rendered_owner = render_id(frame.grammar(), &heading.owner);
         let separator = if heading
             .suggested_path
             .split('.')
@@ -89,7 +90,7 @@ pub(super) fn check_section_headings(
             column: None,
             message: format!(
                 "unmarked heading inside {rendered_owner}; number it ({suggested_heading}) as {rendered_owner}{}{path}, declare an ID, or use a bold label{LANDED_CLAUSE}",
-                config.section_separator,
+                schema.ids.section_separator,
                 path = heading.suggested_path,
             ),
             sites: Vec::new(),
@@ -99,8 +100,11 @@ pub(super) fn check_section_headings(
     // §FS-declarations.checks.section-heading-level / §FS-config.3.3.2: in strict mode, the
     // Markdown heading level must mirror the dotted section depth so `## 1`, `### 1.1`, ...
     // communicate the same tree that `§ID.1.1` addresses.
-    if matches!(config.section_heading_levels.as_str(), "strict" | "warn") {
-        let target = if config.section_heading_levels == "strict" {
+    if matches!(
+        schema.ids.section_heading_levels.as_str(),
+        "strict" | "warn"
+    ) {
+        let target = if schema.ids.section_heading_levels == "strict" {
             &mut report.errors
         } else {
             &mut report.warnings
@@ -117,8 +121,8 @@ pub(super) fn check_section_headings(
                             column: None,
                             message: format!(
                                 "section {}{}{} heading level mismatch: expected {} (level {}), found {} (level {})",
-                                render_id(&config.grammar, id),
-                                config.section_separator,
+                                render_id(frame.grammar(), id),
+                                schema.ids.section_separator,
                                 section_path,
                                 heading_marks(expected_level),
                                 expected_level,
@@ -134,7 +138,7 @@ pub(super) fn check_section_headings(
     }
     // §FS-declarations.checks.orphan-section / §AR-checker.2.17: every name-bearing path is
     // addressable only when each proper prefix exists in the same scanner-recorded map.
-    if config.named_sections {
+    if schema.ids.named_sections {
         for (id, decls) in &findings.declarations {
             for decl in decls {
                 for (path, info) in &decl.sections {
@@ -156,11 +160,11 @@ pub(super) fn check_section_headings(
                             column: None,
                             message: format!(
                                 "orphan section {}{}{}: missing prefix {}{}{}",
-                                render_id(&config.grammar, id),
-                                config.section_separator,
+                                render_id(frame.grammar(), id),
+                                schema.ids.section_separator,
                                 path,
-                                render_id(&config.grammar, id),
-                                config.section_separator,
+                                render_id(frame.grammar(), id),
+                                schema.ids.section_separator,
                                 prefix
                             ),
                             sites: Vec::new(),
@@ -195,7 +199,7 @@ pub(super) fn check_section_headings(
                     .collect();
                 let others = lines[1..]
                     .iter()
-                    .map(|line| format!("{}:{}", display_path(path_config, &decl.file), line))
+                    .map(|line| format!("{}:{}", frame.display_path(&decl.file), line))
                     .collect::<Vec<_>>()
                     .join(", ");
                 report.errors.push(Diagnostic {
@@ -205,8 +209,8 @@ pub(super) fn check_section_headings(
                     column: None,
                     message: format!(
                         "duplicate section {}{}{} (also declared at {others})",
-                        render_id(&config.grammar, id),
-                        config.section_separator,
+                        render_id(frame.grammar(), id),
+                        schema.ids.section_separator,
                         path
                     ),
                     sites,

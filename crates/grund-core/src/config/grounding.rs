@@ -14,7 +14,8 @@
 
 use super::kind::KindConfig;
 use super::project::{Rules, Schema};
-use super::record::{Config, declared_homeless_kind};
+use super::record::Config;
+use super::run::Run;
 
 /// The effective grounding level of the row named `kind` (§FS-config.3.4.8) —
 /// including the homeless kind, whose row a config need not have declared.
@@ -44,6 +45,52 @@ pub(crate) fn grounding_level_for_kind(schema: &Schema, rules: &Rules, kind: &st
         .map_or(grounding.level, |row| level(&row.name))
 }
 
+/// The effective `require_grounding` default (§FS-config.3.4.8.3): the
+/// `[reference]` key, or `grund check --require-grounding`, which sets the same
+/// default for one run (§FS-check.3.5) — so an explicit row `false` still wins.
+pub(crate) fn requires_grounding_by_default(rules: &Rules, run: &Run) -> bool {
+    rules.grounding.require || run.scope.require_grounding
+}
+
+/// The effective grounding pair for the row named `kind` (§FS-config.3.4.8.3):
+/// the row's word where it has one, else the default. The records' reading of
+/// `Config::kind_grounding`, for a stage handed no façade (§AR-config.5).
+pub(crate) fn row_grounding(rules: &Rules, run: &Run, kind: &str) -> (bool, usize) {
+    let row = rules.grounding.kinds.get(kind);
+    (
+        row.and_then(|row| row.require)
+            .unwrap_or_else(|| requires_grounding_by_default(rules, run)),
+        row.and_then(|row| row.level)
+            .unwrap_or(rules.grounding.level),
+    )
+}
+
+/// The effective pair for the homeless kind (§FS-config.3.9.2.3) — its declared
+/// row when the schema has one, else the defaults.
+pub(crate) fn homeless_row_grounding(schema: &Schema, rules: &Rules, run: &Run) -> (bool, usize) {
+    match schema.rows.iter().find(|row| row.is_complement()) {
+        Some(row) => row_grounding(rules, run, &row.name),
+        None => (
+            requires_grounding_by_default(rules, run),
+            rules.grounding.level,
+        ),
+    }
+}
+
+/// Whether any place is grounded at all (§FS-check.3.6): the records' reading of
+/// `Config::grounding_enabled`.
+pub(crate) fn any_place_grounded(schema: &Schema, rules: &Rules, run: &Run) -> bool {
+    requires_grounding_by_default(rules, run)
+        || schema.rows.iter().any(|row| {
+            rules
+                .grounding
+                .kinds
+                .get(&row.name)
+                .and_then(|row| row.require)
+                == Some(true)
+        })
+}
+
 impl Config {
     /// The effective grounding pair for one `[[kinds]]` row (§FS-config.3.4.8.3):
     /// the row's word where it has one, else the `[reference]` default — which is
@@ -54,15 +101,6 @@ impl Config {
             kind.require_grounding.unwrap_or(self.require_grounding),
             kind.grounding_level.unwrap_or(self.grounding_level),
         )
-    }
-
-    /// The effective pair for the homeless kind (§FS-config.3.9.2.3) — its declared
-    /// row when the table has one, else the `[reference]` defaults, since an
-    /// undeclared complement has no row to write them on.
-    pub(crate) fn homeless_grounding(&self) -> (bool, usize) {
-        declared_homeless_kind(&self.kinds)
-            .map(|kind| self.kind_grounding(kind))
-            .unwrap_or((self.require_grounding, self.grounding_level))
     }
 
     /// Whether any place is grounded at all — the early out that keeps the whole

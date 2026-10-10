@@ -1,7 +1,7 @@
 //! What a stage below the writers is handed beside the concerns it reads
 //! (§AR-checker.1, §DA-config-concern-records.2.3): the `Run` and the
-//! `Compiled` grammar of §AR-config.1.5, which are not concerns, the envelope's
-//! name and members (§AR-config.1.1), and how this run's report spells a path.
+//! `Compiled` grammar of §AR-config.1.5, which are not concerns, and how this
+//! run names the project and spells a path.
 //!
 //! The spelling is presentation's (`[output] relative_paths`, §FS-config.3.6)
 //! outranked by the run's `--path-base` (§FS-cli.3.4), so the façade settles it
@@ -11,7 +11,6 @@
 use std::path::Path;
 
 use super::compiled::Compiled;
-use super::project::Members;
 use super::run::Run;
 use crate::grammar::Grammar;
 use crate::model::{format_path, relative_from_base};
@@ -22,10 +21,12 @@ use crate::model::{format_path, relative_from_base};
 pub struct Frame<'a> {
     pub run: &'a Run,
     pub compiled: &'a Compiled,
-    /// `project_name` (§FS-config.3), the envelope's.
+    /// The project's stable `name`, the scope a standalone rule adaptation
+    /// selects (§AR-rules.3); `None` where the project names none.
     pub name: Option<&'a str>,
-    /// The `[workspace]` block (§AR-config.1.1).
-    pub members: &'a Members,
+    /// The alias a workspace run checks this project under, `None` outside one
+    /// (§FS-workspace.8.1): a finding spells its own coordinate qualified by it.
+    pub alias: Option<&'a str>,
     /// How this run's report spells a path — the report root's, which in a
     /// workspace is not this project's (§FS-workspace.8.1).
     pub display: Display<'a>,
@@ -55,6 +56,12 @@ impl<'a> Frame<'a> {
     /// checked inside a workspace run (§FS-workspace.8.1).
     pub fn displayed_by(self, display: Display<'a>) -> Self {
         Self { display, ..self }
+    }
+
+    /// This frame for the workspace member checked as `alias`
+    /// (§FS-workspace.8.1).
+    pub fn checked_as(self, alias: Option<&'a str>) -> Self {
+        Self { alias, ..self }
     }
 
     /// `path` as this run's report spells it (§FS-config.3.6.1).

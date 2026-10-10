@@ -15,7 +15,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use crate::config::Config;
+use crate::config::{Frame, Schema};
 use crate::grammar::{CITATION_RUN_SEPARATOR, LayoutChannel, layout_channel};
 use crate::model::{Catalog, CheckReport, Citation, Diagnostic, InlineCitationSite, plural};
 
@@ -68,14 +68,15 @@ const BLOCK_SPLIT_CLAUSE: &str = "; a blank line splits a note, an empty comment
 /// (§FS-inline-citation-style.4).
 pub(super) fn check_inline_citation_style(
     findings: &Catalog,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     report: &mut CheckReport,
 ) {
     // A site is identified by the file and the line it opens on — two blocks in
     // one file cannot share an opener — so the key stays two cheap fields rather
     // than a clone of the whole recorded site.
     let mut seen = BTreeSet::new();
-    let layout_message = layout_violation_message(config);
+    let layout_message = layout_violation_message(schema);
     let citation_texts = site_citation_texts(findings);
     for cite in &findings.citations {
         let Some(site) = &cite.inline_site else {
@@ -88,7 +89,7 @@ pub(super) fn check_inline_citation_style(
             .get(&(cite.file.as_path(), site.first_line))
             .map(String::as_str)
             .unwrap_or_default();
-        match config.inline_style.as_str() {
+        match schema.notes.inline_style.as_str() {
             "citation-only" => {
                 if site.has_note {
                     report.errors.push(Diagnostic {
@@ -104,7 +105,7 @@ pub(super) fn check_inline_citation_style(
             }
             _ => {
                 let lines = site.last_line - site.first_line + 1;
-                if lines > config.inline_note_max_lines {
+                if lines > schema.notes.max_lines {
                     report.errors.push(Diagnostic {
                         code: "inline-citation-style",
                         path: Some(cite.file.clone()),
@@ -115,13 +116,13 @@ pub(super) fn check_inline_citation_style(
                         message: format!(
                             "inline note is {lines} line{}, over the {}-line maximum: {}{BLOCK_SPLIT_CLAUSE}",
                             plural(lines),
-                            config.inline_note_max_lines,
+                            schema.notes.max_lines,
                             site_clause(site.first_line, site.last_line, citations),
                         ),
                         sites: Vec::new(),
                     authority: Vec::new(),});
                 }
-                if site.max_columns > config.inline_note_max_columns {
+                if site.max_columns > schema.notes.max_columns {
                     report.errors.push(Diagnostic {
                         code: "inline-citation-style",
                         path: Some(cite.file.clone()),
@@ -133,16 +134,16 @@ pub(super) fn check_inline_citation_style(
                             "inline note is {} column{}, over the {}-column maximum: {}",
                             site.max_columns,
                             plural(site.max_columns),
-                            config.inline_note_max_columns,
+                            schema.notes.max_columns,
                             site_clause(site.first_line, site.last_line, citations),
                         ),
                         sites: Vec::new(),
                         authority: Vec::new(),
                     });
                 }
-                if config.warn_on_suggested
-                    && lines > config.inline_note_suggested_lines
-                    && lines <= config.inline_note_max_lines
+                if schema.notes.warn_on_suggested
+                    && lines > schema.notes.suggested_lines
+                    && lines <= schema.notes.max_lines
                 {
                     report.warnings.push(Diagnostic {
                         code: "inline-citation-style",
@@ -154,13 +155,13 @@ pub(super) fn check_inline_citation_style(
                         message: format!(
                             "inline note is {lines} line{}, over the {}-line preferred limit: {}{BLOCK_SPLIT_CLAUSE}",
                             plural(lines),
-                            config.inline_note_suggested_lines,
+                            schema.notes.suggested_lines,
                             site_clause(site.first_line, site.last_line, citations),
                         ),
                         sites: Vec::new(),
                     authority: Vec::new(),});
                 }
-                report_layout_deviations(cite, site, config, &layout_message, report);
+                report_layout_deviations(cite, site, schema, frame, &layout_message, report);
             }
         }
     }
@@ -174,11 +175,12 @@ pub(super) fn check_inline_citation_style(
 fn report_layout_deviations(
     cite: &Citation,
     site: &InlineCitationSite,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     message: &str,
     report: &mut CheckReport,
 ) {
-    let channel = match layout_channel(config.lexical()) {
+    let channel = match layout_channel(frame.compiled.lexical(schema)) {
         Some(LayoutChannel::Warn) => &mut report.warnings,
         Some(LayoutChannel::Error) => &mut report.errors,
         None => return,
@@ -198,9 +200,9 @@ fn report_layout_deviations(
 
 /// The one message this rule emits, built with the configured marker so the form
 /// it names is the form the project writes (§FS-inline-citation-style.4.4.2).
-fn layout_violation_message(config: &Config) -> String {
+fn layout_violation_message(schema: &Schema) -> String {
     format!(
         "inline note must open with its citations and a colon ({}<ID>: note)",
-        config.marker
+        schema.citation.marker
     )
 }

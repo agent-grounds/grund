@@ -91,7 +91,8 @@ fn expandable(cite: &Citation, findings: &Catalog, config: &Config) -> bool {
     cite.shorthand_rewritable
         && section_resolves(
             findings,
-            config,
+            config.schema(),
+            config.frame(),
             &cite.id,
             cite.section.as_deref().unwrap_or_default(),
         )

@@ -16,7 +16,7 @@ use super::support::{
     citation_in_markdown_inline_code, close_enough_for_hint, dangling_message, edit_distance,
     missing_snapshot_message,
 };
-use crate::config::{Config, KindResolution, display_path};
+use crate::config::{Frame, KindResolution, Origin, Schema};
 use crate::grammar::render_qualified_id;
 use crate::model::{Catalog, CheckReport, Diagnostic};
 use crate::resolver::{
@@ -60,12 +60,10 @@ fn local_section_release_attribution() -> String {
 /// citation to propose — an ownerless site, an unsupported token, and an owned site
 /// whose owner lacks the section. `<tail>` is the token with its marker taken off,
 /// so the escape is the token the author would type.
-fn full_citation_or_escape(config: &Config, written: &str) -> String {
-    let tail = written.strip_prefix(&config.marker).unwrap_or(written);
-    format!(
-        "write a full citation or <{}>{tail} to show the shape without citing it",
-        config.marker,
-    )
+fn full_citation_or_escape(schema: &Schema, written: &str) -> String {
+    let marker = &schema.citation.marker;
+    let tail = written.strip_prefix(marker).unwrap_or(written);
+    format!("write a full citation or <{marker}>{tail} to show the shape without citing it")
 }
 
 /// §AR-checker.2.3, §AR-checker.2.4, §AR-checker.2.12: resolve every citation and
@@ -78,11 +76,17 @@ fn full_citation_or_escape(config: &Config, written: &str) -> String {
 /// resolved nor unknown — it is *unverified*, and the run says so once at the entry
 /// that made the skip legal rather than at every site (§FS-check.4.9.1). Every other
 /// unknown alias still errors here.
+///
+/// `resolve` answers a target kind's `resolve` policy by the citation's namespace
+/// (§FS-check.4.12): a rule of the target's, which its `WorkspaceCheckTarget`
+/// does not carry (§AR-config.5).
+#[allow(clippy::too_many_arguments)]
 pub(super) fn check_citation_resolution(
     findings: &Catalog,
-    config: &Config,
-    path_config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
+    resolve: &dyn Fn(Option<&str>, &str) -> Option<KindResolution>,
     tier: ReferenceTier,
     outside: Option<&ScanScope>,
     report: &mut CheckReport,
@@ -96,20 +100,20 @@ pub(super) fn check_citation_resolution(
         }
         let written = cite.text.trim();
         let section = cite.section.as_deref().unwrap_or_default();
-        let owner = render_qualified_id(&config.grammar, None, &cite.id);
+        let owner = render_qualified_id(frame.grammar(), None, &cite.id);
         // §FS-check.3.24.3: where `missing section` fires beside this site, its full
         // citation would only trade one error for the other; name the absence and the
         // escape instead.
-        let resolves = section_resolves(findings, config, &cite.id, section);
+        let resolves = section_resolves(findings, schema, frame, &cite.id, section);
         let remedy = if resolves {
             format!(
                 "write {}{owner}{}{section}",
-                config.marker, config.section_separator
+                schema.citation.marker, schema.ids.section_separator
             )
         } else {
             format!(
                 "{owner} has no section {section}, so {}",
-                full_citation_or_escape(config, written)
+                full_citation_or_escape(schema, written)
             )
         };
         // §FS-check.3.24.1: offered exactly where the next formatter pass would
@@ -142,7 +146,7 @@ pub(super) fn check_citation_resolution(
             continue;
         }
         let written = candidate.text.trim();
-        let guidance = full_citation_or_escape(config, written);
+        let guidance = full_citation_or_escape(schema, written);
         let mut message = if candidate.section.is_none() {
             format!("unsupported local section citation {written}; {guidance}")
         } else {
@@ -169,7 +173,7 @@ pub(super) fn check_citation_resolution(
         {
             continue;
         }
-        let Some(target) = target_for_citation(cite, findings, config, workspace) else {
+        let Some(target) = target_for_citation(cite, findings, schema, frame, workspace) else {
             // `target_for_citation` only returns `None` when the
             // namespace is present and unknown — so the namespace is always
             // Some here (§AR-resolver.1).
@@ -178,7 +182,7 @@ pub(super) fn check_citation_resolution(
                 .as_deref()
                 .expect("resolver only returns None for qualified citations");
             // §FS-workspace.4.3: unverified, not unknown — see this function's docs.
-            if namespace_is_unverified(config, namespace) {
+            if namespace_is_unverified(frame.run, namespace) {
                 continue;
             }
             report.errors.push(Diagnostic {
@@ -189,7 +193,7 @@ pub(super) fn check_citation_resolution(
                 message: unknown_project_message(
                     namespace,
                     workspace.keys().map(String::as_str),
-                    &config.workspace_scope_path,
+                    &frame.run.workspace.scope_path,
                 ),
                 sites: Vec::new(),
                 authority: Vec::new(),
@@ -202,7 +206,7 @@ pub(super) fn check_citation_resolution(
         if cite.shorthand
             && report_shorthand_citation(
                 cite,
-                config,
+                schema,
                 &target,
                 tier,
                 &mut shorthand_indexes,
@@ -213,28 +217,32 @@ pub(super) fn check_citation_resolution(
         }
         // §FS-check.3.1 / §FS-workspace.4.1: a citation whose ID is declared
         // nowhere in its target namespace is dangling.
-        if !target.findings.declarations.contains_key(&cite.id) {
-            let snapshot_kind = target
-                .config
-                .kinds
-                .iter()
-                .find(|kind| kind.kind == cite.id.kind && kind.fetch.is_some());
+        if !target.catalog.declarations.contains_key(&cite.id) {
+            // §FS-check.3.1.3: a fetch-enabled target kind keeps snapshots.
+            let snapshot_row = target.schema.rows.iter().find(|row| {
+                row.name == cite.id.kind
+                    && row
+                        .kind
+                        .as_ref()
+                        .is_some_and(|kind| matches!(kind.origin, Origin::External { .. }))
+            });
             let in_inline_code = citation_in_markdown_inline_code(cite);
-            let (code, message, warning) = if let Some(kind) = snapshot_kind {
+            let (code, message, warning) = if let Some(row) = snapshot_row {
                 // §FS-check.3.14.1: out-of-scope citations stay fixed dangling errors;
                 // a target kind's in-scope `should` must not demote this opt-in tier.
                 let should_warn = tier == ReferenceTier::Configured
-                    && kind.resolve == Some(KindResolution::Should);
-                let home = kind
-                    .file
-                    .as_deref()
-                    .or(kind.folder.as_deref())
+                    && resolve(cite.namespace.as_deref(), &row.name)
+                        == Some(KindResolution::Should);
+                let home = row
+                    .file()
+                    .or(row.folder())
                     .expect("fetch-enabled kind has exactly one home after config validation");
-                let home = display_path(path_config, &target.config.root.join(home));
+                let home = frame.display_path(&target.run.root.join(home));
                 let message = missing_snapshot_message(
-                    target.config,
+                    target.schema,
+                    target.frame(),
                     cite.namespace.as_deref(),
-                    target.findings,
+                    target.catalog,
                     &cite.id,
                     in_inline_code,
                     &home,
@@ -253,9 +261,10 @@ pub(super) fn check_citation_resolution(
                 (
                     "dangling",
                     dangling_message(
-                        target.config,
+                        target.schema,
+                        target.frame(),
                         cite.namespace.as_deref(),
-                        target.findings,
+                        target.catalog,
                         &cite.id,
                         in_inline_code,
                     ),
@@ -284,24 +293,24 @@ pub(super) fn check_citation_resolution(
         // cited section path — the lookup §FS-fmt.2.4.6 declines a local rewrite on,
         // which reads a stub's sections from its target, scanned or not (§FS-check.3.2.1).
         if let Some(sec) = &cite.section {
-            if !section_resolves(target.findings, target.config, &cite.id, sec) {
+            if !section_resolves(target.catalog, target.schema, target.frame(), &cite.id, sec) {
                 let coordinate = format!(
                     "{}{}{}",
                     render_qualified_id(
-                        &target.config.grammar,
+                        &target.compiled.grammar,
                         cite.namespace.as_deref(),
                         &cite.id
                     ),
-                    target.config.section_separator,
+                    target.schema.ids.section_separator,
                     sec
                 );
-                let message = if target.config.named_sections
-                    && target.config.grammar.is_named_section(Some(sec))
+                let message = if target.schema.ids.named_sections
+                    && target.compiled.grammar.is_named_section(Some(sec))
                     && cite.has_marker
                 {
                     format!(
                         "section not found: {coordinate}; write <{}> before it to show the shape without citing it",
-                        target.config.marker
+                        target.schema.citation.marker
                     )
                 } else {
                     format!("missing section {coordinate}")

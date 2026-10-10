@@ -374,7 +374,12 @@ fn shorthand_expansion_edit(
     // now, after every cheap gate above has passed, so an ordinary keystroke never
     // walks the declaration list at all (§GOAL-fast-feedback).
     let in_project = declarations_under_root(declarations, &config.root);
-    let text = shorthand_token_expansion(config, &line[token_start..token_end], &in_project)?;
+    let text = shorthand_token_expansion(
+        config.schema(),
+        config.frame(),
+        &line[token_start..token_end],
+        &in_project,
+    )?;
     Some(LineEdit {
         start: token_start,
         end: token_end,

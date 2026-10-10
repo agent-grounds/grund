@@ -43,7 +43,12 @@ fn anchor_of_a_1(name: &str, home: &str) -> (bool, Option<String>) {
     let recorded = decl.sections.contains_key("1");
     (
         recorded,
-        heading_anchor(decl, Some("1"), &config.project().presentation, &config),
+        heading_anchor(
+            decl,
+            Some("1"),
+            &config.project().presentation,
+            config.frame(),
+        ),
     )
 }
 

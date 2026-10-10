@@ -9,6 +9,7 @@ use super::sentence::{
     RuleVocabulary, TargetMode, parse_rule,
 };
 use crate::checker::markdown_project;
+use crate::resolver::WorkspaceCheckTarget;
 use crate::testing::{legacy_fs_folder_config, scan_findings, test_root, write};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -197,7 +198,14 @@ fn markdown_adapter_and_second_producer_drive_the_same_engine_result() {
     );
     let config = legacy_fs_folder_config(root.clone());
     let findings = scan_findings(&config, &root);
-    let markdown = adapt_markdown(&findings, markdown_project(&config), true);
+    let markdown = adapt_markdown(
+        &findings,
+        markdown_project(
+            config.frame().name,
+            &WorkspaceCheckTarget::of(&findings, config.schema(), config.frame()),
+        ),
+        true,
+    );
     // A producer replacement builds the schema independently: its opaque keys
     // and anchors deliberately share nothing with Markdown's (§AR-rules.6).
     let replacement_fs = NodeKey("replacement-node-17".into());

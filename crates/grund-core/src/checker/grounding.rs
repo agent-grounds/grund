@@ -14,7 +14,10 @@ use std::path::Path;
 
 use super::homes::{DeclarationHome, KindHomeIndex};
 use super::obligation_units::ObligationUnit;
-use crate::config::{Config, DEFAULT_GROUNDING_LEVEL, KindConfig, grounding_level_for_kind};
+use crate::config::{
+    DEFAULT_GROUNDING_LEVEL, Frame, Row, Rules, Schema, any_place_grounded,
+    grounding_level_for_kind, homeless_row_grounding, row_grounding,
+};
 use crate::model::{Catalog, CheckReport, Citation, Diagnostic, FileStructure};
 use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
 use crate::workspace::namespace_is_unverified;
@@ -48,12 +51,14 @@ enum GroundingSubject {
 /// at the site the run is required to say nothing about.
 pub(super) fn check_grounding(
     findings: &Catalog,
-    config: &Config,
+    rules: &Rules,
+    schema: &Schema,
+    frame: Frame<'_>,
     kind_homes: &KindHomeIndex<'_>,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
     report: &mut CheckReport,
 ) {
-    if !config.grounding_enabled() {
+    if !any_place_grounded(schema, rules, frame.run) {
         return;
     }
     // Two linear passes — citations, then declarations — so the per-unit test
@@ -65,8 +70,8 @@ pub(super) fn check_grounding(
         let unverified = cite
             .namespace
             .as_deref()
-            .is_some_and(|namespace| namespace_is_unverified(config, namespace));
-        if unverified || citation_resolves(cite, findings, config, workspace) {
+            .is_some_and(|namespace| namespace_is_unverified(frame.run, namespace));
+        if unverified || citation_resolves(cite, findings, schema, frame, workspace) {
             cited
                 .entry(cite.file.as_path())
                 .or_default()
@@ -85,7 +90,8 @@ pub(super) fn check_grounding(
 
     for file in &findings.scanned_files {
         let home = kind_homes.unique_decl_home_for_file(file);
-        let Some((require, level)) = governing_grounding(config, home.as_ref(), file) else {
+        let Some((require, level)) = governing_grounding(rules, schema, frame, home.as_ref(), file)
+        else {
             continue;
         };
         if !require {
@@ -120,7 +126,7 @@ pub(super) fn check_grounding(
                 message: format!(
                     "{}: no {} citation to a declared ID",
                     ungrounded_subject(&unit, place.as_deref()),
-                    config.marker
+                    schema.citation.marker
                 ),
                 sites: Vec::new(),
                 authority: Vec::new(),
@@ -135,27 +141,28 @@ pub(super) fn check_grounding(
 /// a citable folder home governs the source files in it, and the homeless kind
 /// governs the source files no single home claims.
 fn governing_grounding(
-    config: &Config,
+    rules: &Rules,
+    schema: &Schema,
+    frame: Frame<'_>,
     home: Option<&DeclarationHome<'_>>,
     file: &Path,
 ) -> Option<(bool, usize)> {
     let is_markdown = file.extension().and_then(|ext| ext.to_str()) == Some("md");
-    match home {
-        Some(home) if !home.citable => config
-            .kinds
+    let row_of = |kind: &str| {
+        schema
+            .rows
             .iter()
-            .find(|kind| kind.kind == home.kind)
-            .map(|kind| config.kind_grounding(kind)),
+            .find(|row| row.name == kind)
+            .map(|row| row_grounding(rules, frame.run, &row.name))
+    };
+    match home {
+        Some(home) if !home.citable => row_of(home.kind),
         // A Markdown document is not implementation, so a citable home and the
         // homeless complement both leave it alone; the exception above is a home
         // rather than an extension.
         _ if is_markdown => None,
-        Some(home) => config
-            .kinds
-            .iter()
-            .find(|kind| kind.kind == home.kind)
-            .map(|kind| config.kind_grounding(kind)),
-        None => Some(config.homeless_grounding()),
+        Some(home) => row_of(home.kind),
+        None => Some(homeless_row_grounding(schema, rules, frame.run)),
     }
 }
 
@@ -230,17 +237,17 @@ fn grounding_unit_spans(structure: Option<&FileStructure>, level: usize) -> Vec<
 /// written before the key existed — this is one unit per file at line 1.
 pub(super) fn file_obligation_units<'a>(
     citing_kind: &str,
-    config: &Config,
+    rules: &Rules,
+    schema: &Schema,
     findings: &'a Catalog,
     by_file: &BTreeMap<(&'a str, &'a Path), Vec<&'a Citation>>,
 ) -> Vec<ObligationUnit<'a>> {
-    let place = config
-        .kinds
+    let place = schema
+        .rows
         .iter()
-        .find(|kind| kind.kind == citing_kind)
-        .and_then(KindConfig::place_label);
-    let project = config.project();
-    let level = grounding_level_for_kind(&project.schema, &project.rules, citing_kind);
+        .find(|row| row.name == citing_kind)
+        .and_then(Row::place_label);
+    let level = grounding_level_for_kind(schema, rules, citing_kind);
     by_file
         .iter()
         .filter(|((kind, _), _)| *kind == citing_kind)

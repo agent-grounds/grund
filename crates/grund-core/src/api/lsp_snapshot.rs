@@ -18,7 +18,7 @@ use super::lsp_ranges::{
 };
 use super::lsp_report::{editor_report, editor_run_warnings, widen_for_path_anchor};
 use super::report::{public_lsp_report, public_lsp_run_warnings};
-use crate::config::display_path;
+use crate::config::{ProjectRecords, display_path};
 use crate::grammar::render_id;
 use crate::model::{
     Declaration, TextOverlays, canonical_snapshot_path, is_stub_for_inline_decl, sort_path_key,
@@ -60,8 +60,13 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
         config.set_root(canonical_snapshot_path(&opts.path));
     }
     let report_scope = widen_for_path_anchor(&mut config, &opts.path, opts.path_provided)?;
-    let context =
-        load_resolved_workspace_context(config, &opts.path, opts.path_provided, &overlays, true)?;
+    let context = load_resolved_workspace_context(
+        ProjectRecords::of(config),
+        &opts.path,
+        opts.path_provided,
+        &overlays,
+        true,
+    )?;
     let render_config = context.render_config().clone();
     let completion = LspCompletionContext::from_workspace(&context);
     let report = editor_report(&context, &overlays, &opts.path, report_scope.as_ref());
@@ -313,8 +318,8 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
             kind_titles,
             snapshot: LspSnapshot {
                 root: absolutize_path(&render_config.root),
-                marker: render_config.marker,
-                trigger: render_config.trigger,
+                marker: render_config.marker.clone(),
+                trigger: render_config.trigger.clone(),
                 workspace: context.workspace_loaded,
                 report,
                 run_warnings,

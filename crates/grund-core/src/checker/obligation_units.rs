@@ -8,8 +8,8 @@ use std::path::{Path, PathBuf};
 
 use super::citations::{citation_matches_target, e2e_spec_ref_matches_target};
 use super::grounding::file_obligation_units;
-use crate::config::{CitationTarget, Config};
-use crate::grammar::render_id;
+use crate::config::{CitationTarget, Rules, Schema};
+use crate::grammar::{Grammar, render_id};
 use crate::model::{Catalog, Citation, E2eSpecRef, Id};
 
 /// One thing an obligation is evaluated against (§AR-checker.2.9): a declaration
@@ -38,9 +38,9 @@ impl ObligationUnit<'_> {
                 .any(|spec_ref| e2e_spec_ref_matches_target(spec_ref, target))
     }
 
-    pub(super) fn subject(&self, config: &Config) -> String {
+    pub(super) fn subject(&self, grammar: &Grammar) -> String {
         match (self.id, &self.place) {
-            (Some(id), _) => render_id(&config.grammar, id),
+            (Some(id), _) => render_id(grammar, id),
             (None, Some(place)) => place.clone(),
             (None, None) => "source file".to_string(),
         }
@@ -72,12 +72,12 @@ pub(super) fn file_is_obligation_unit(
 }
 
 /// The configured kinds that declare no IDs (§FS-config.3.4.1), by name.
-pub(super) fn non_citable_kind_names(config: &Config) -> BTreeSet<&str> {
-    config
-        .kinds
+pub(super) fn non_citable_kind_names(schema: &Schema) -> BTreeSet<&str> {
+    schema
+        .rows
         .iter()
-        .filter(|kind| !kind.citable)
-        .map(|kind| kind.kind.as_str())
+        .filter(|row| row.kind.is_none())
+        .map(|row| row.name.as_str())
         .collect()
 }
 
@@ -92,18 +92,20 @@ pub(super) fn non_citable_kind_names(config: &Config) -> BTreeSet<&str> {
 /// being a hard gate on exactly the cases that carry no evidence yet.
 pub(super) fn obligation_units<'a>(
     citing_kind: &str,
-    config: &Config,
+    rules: &Rules,
+    schema: &Schema,
     findings: &'a Catalog,
     by_decl: &BTreeMap<&'a Id, Vec<&'a Citation>>,
     by_file: &BTreeMap<(&'a str, &'a Path), Vec<&'a Citation>>,
     e2e_by_case: &BTreeMap<&'a Path, Vec<&'a Citation>>,
 ) -> Vec<ObligationUnit<'a>> {
-    if citing_kind == config.homeless_kind() || non_citable_kind_names(config).contains(citing_kind)
+    if citing_kind == schema.complement_name()
+        || non_citable_kind_names(schema).contains(citing_kind)
     {
         // §FS-check.3.11.3: a kind with no declarations answers with its files,
         // cut by the row's `grounding_level` — the same unit §FS-check.3.6 asks
         // for grounding, in `grounding.rs`.
-        return file_obligation_units(citing_kind, config, findings, by_file);
+        return file_obligation_units(citing_kind, rules, schema, findings, by_file);
     }
 
     let mut units = Vec::new();

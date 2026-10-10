@@ -35,9 +35,10 @@ fn fmt_expands_resolvable_shorthands_only() {
         expand_shorthand_citations(
             line,
             DocstringContent::default(),
-            &config,
+            config.schema(),
+            config.frame(),
             is_md,
-            &ShorthandTargets::new(&config, Some(&findings), None),
+            &ShorthandTargets::new(config.frame(), Some(&findings), None),
             &mut saw_candidate,
             &mut Vec::new(),
         )
@@ -87,9 +88,10 @@ fn a_shorthand_prefix_of_a_longer_token_is_never_rewritten() {
         expand_shorthand_citations(
             line,
             DocstringContent::default(),
-            &config,
+            config.schema(),
+            config.frame(),
             is_md,
-            &ShorthandTargets::new(&config, Some(&findings), None),
+            &ShorthandTargets::new(config.frame(), Some(&findings), None),
             &mut saw_candidate,
             &mut Vec::new(),
         )
@@ -150,9 +152,10 @@ fn the_report_names_the_text_every_expansion_writes() {
     expand_shorthand_citations(
         "See §FS-042.1 and §FS-043.",
         DocstringContent::default(),
-        &config,
+        config.schema(),
+        config.frame(),
         true,
-        &ShorthandTargets::new(&config, Some(&findings), None),
+        &ShorthandTargets::new(config.frame(), Some(&findings), None),
         &mut saw_candidate,
         &mut expansions,
     )
@@ -235,7 +238,7 @@ fn fmt_expands_a_typed_trigger_shorthand_in_one_pass() {
             index_entry_ids: None,
             findings: Some(&findings),
             workspace: None,
-            shorthand_targets: &ShorthandTargets::new(&config, Some(&findings), None),
+            shorthand_targets: &ShorthandTargets::new(config.frame(), Some(&findings), None),
         },
         false,
         &mut false,
@@ -259,7 +262,7 @@ fn fmt_expands_a_typed_trigger_shorthand_in_one_pass() {
             index_entry_ids: None,
             findings: Some(&findings),
             workspace: None,
-            shorthand_targets: &ShorthandTargets::new(&config, Some(&findings), None),
+            shorthand_targets: &ShorthandTargets::new(config.frame(), Some(&findings), None),
         },
         false,
         &mut false,

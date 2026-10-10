@@ -68,7 +68,8 @@ fn links_of_a(name: &str, config: &str, files: &[(&str, &str)]) -> (Catalog, Lin
             &id_a(),
             section,
             &config.project().presentation,
-            &config,
+            config.schema(),
+            config.frame(),
             &findings,
         )
     };
@@ -182,7 +183,8 @@ fn a_section_heading_after_the_body_closes_gives_no_link_under_the_none_profile(
         &id_a(),
         Some("1"),
         &config.project().presentation,
-        &config,
+        config.schema(),
+        config.frame(),
         &findings,
     );
     assert_eq!(
@@ -217,7 +219,8 @@ fn a_missing_section_across_projects_under_the_none_profile_gives_no_link() {
             &id_a(),
             section,
             &api.config.project().presentation,
-            &api.config,
+            api.config.schema(),
+            api.config.frame(),
             &api.findings,
             Some(&context.render_root),
         )

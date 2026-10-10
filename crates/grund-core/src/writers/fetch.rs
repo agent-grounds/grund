@@ -125,7 +125,7 @@ fn fetch_run(
             *diagnostic = Some(err);
             fetch_operational(message)
         })?;
-        *run_warnings = run_warning_findings(&root_config, settled_run_warnings(&root_config));
+        *run_warnings = run_warning_findings(&root_config, settled_run_warnings(root_config.run()));
         projects
             .into_iter()
             .find(|project| project.alias == namespace)
@@ -134,7 +134,7 @@ fn fetch_run(
                 fetch_operational(format!("unknown project alias `{namespace}` for fetch"))
             })?
     } else {
-        *run_warnings = run_warning_findings(&root_config, settled_run_warnings(&root_config));
+        *run_warnings = run_warning_findings(&root_config, settled_run_warnings(root_config.run()));
         root_config
     };
 

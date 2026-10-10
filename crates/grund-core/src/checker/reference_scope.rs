@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use super::references::{ReferenceTier, check_citation_resolution};
 use super::sections::retain_heading_findings_in_scope;
-use crate::config::{Config, unwalked_home_roots};
+use crate::config::{Frame, Schema, unwalked_home_roots};
 use crate::model::{Catalog, CheckReport, DeclarationSource, Diagnostic, sort_path_key};
 use crate::resolver::{WorkspaceCheckTarget, WorkspaceProject};
 use crate::scanner::{CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS, scan_roots_for};
@@ -48,7 +48,8 @@ impl ScanScope {
 /// already the configured one — without `--full` there is no second tier, and no
 /// narrowing to do.
 pub(crate) fn configured_scope(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     path: &Path,
     path_provided: bool,
     full: bool,
@@ -56,14 +57,7 @@ pub(crate) fn configured_scope(
     if !full {
         return Ok(None);
     }
-    let mut roots = scan_roots_for(
-        config.schema(),
-        config.frame(),
-        Some(path),
-        path_provided,
-        false,
-        false,
-    )?;
+    let mut roots = scan_roots_for(schema, frame, Some(path), path_provided, false, false)?;
     let canonical = roots
         .iter()
         .filter_map(|root| fs::canonicalize(root).ok())
@@ -73,7 +67,7 @@ pub(crate) fn configured_scope(
     roots.dedup();
     // Both spellings again, for the same reason the roots carry both: a finding
     // is recorded under the path the walk reached it by (§FS-config.3.5.2.1).
-    let mut unwalked = unwalked_home_roots(config.schema(), &config.root);
+    let mut unwalked = unwalked_home_roots(schema, frame.root());
     let canonical = unwalked
         .iter()
         .filter_map(|home| fs::canonicalize(home).ok())
@@ -97,21 +91,15 @@ pub(crate) fn configured_scope(
 /// typed, even where that path is a kind home the ordinary walk prunes
 /// (§FS-config.3.4.7.3).
 pub(crate) fn path_report_scope(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     path: &Path,
     path_provided: bool,
 ) -> Result<Option<ScanScope>> {
-    if scope_is_config_root(config, path, path_provided) {
+    if scope_is_config_root(frame.root(), path, path_provided) {
         return Ok(None);
     }
-    let mut roots = scan_roots_for(
-        config.schema(),
-        config.frame(),
-        Some(path),
-        path_provided,
-        false,
-        false,
-    )?;
+    let mut roots = scan_roots_for(schema, frame, Some(path), path_provided, false, false)?;
     let canonical = roots
         .iter()
         .filter_map(|root| fs::canonicalize(root).ok())
@@ -148,11 +136,11 @@ pub(crate) fn path_report_scope(
 /// is the ordinary configuration — this repository's own `grund.toml` writes it.
 pub(crate) fn retain_diagnostics_in_report_scope(
     diagnostics: &mut Vec<Diagnostic>,
-    config: &Config,
+    frame: Frame<'_>,
     scope: Option<&ScanScope>,
 ) {
     let Some(scope) = scope else { return };
-    let entrypoints = agent_entrypoint_paths(config);
+    let entrypoints = agent_entrypoint_paths(frame);
     diagnostics.retain(|diagnostic| match &diagnostic.path {
         None => true,
         Some(path) => {
@@ -188,14 +176,14 @@ pub(crate) fn scope_read_any_file(findings: &Catalog, scope: Option<&ScanScope>)
 /// spells the supported agent set (§FS-init.2.1.1) rather than restated beside it.
 /// Names only, so this costs no walk: the question is which paths that check *may*
 /// have anchored a diagnostic at, and a file it never looked at anchors nothing.
-fn agent_entrypoint_paths(config: &Config) -> Vec<PathBuf> {
+fn agent_entrypoint_paths(frame: Frame<'_>) -> Vec<PathBuf> {
     std::iter::once(CANONICAL_AGENT_ENTRYPOINT)
         .chain(
             COMPANION_AGENT_ENTRYPOINTS
                 .iter()
                 .map(|entrypoint| entrypoint.rel),
         )
-        .map(|rel| config.root.join(rel))
+        .map(|rel| frame.root().join(rel))
         .collect()
 }
 
@@ -255,7 +243,8 @@ pub(crate) fn retain_findings_in_scope(findings: &mut Catalog, scope: Option<&Sc
 /// also out there still resolves. Empty without `--full`.
 pub(crate) fn out_of_scope_references(
     findings: &Catalog,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
     scope: Option<&ScanScope>,
 ) -> Vec<Diagnostic> {
@@ -265,9 +254,11 @@ pub(crate) fn out_of_scope_references(
     let mut tier = CheckReport::default();
     check_citation_resolution(
         findings,
-        config,
-        config,
+        schema,
+        frame,
         workspace,
+        // §FS-check.3.14.1: out of scope, a `should` never demotes a dangling error.
+        &|_, _| None,
         ReferenceTier::OutOfScope,
         Some(scope),
         &mut tier,
@@ -292,10 +283,11 @@ pub(crate) fn workspace_out_of_scope_references(
         .map(|project| {
             (
                 project.alias.clone(),
-                WorkspaceCheckTarget {
-                    findings: &project.findings,
-                    config: &project.config,
-                },
+                WorkspaceCheckTarget::of(
+                    &project.findings,
+                    project.config.schema(),
+                    project.config.frame(),
+                ),
             )
         })
         .collect::<BTreeMap<_, _>>();
@@ -303,7 +295,8 @@ pub(crate) fn workspace_out_of_scope_references(
     for (project, scope) in projects.iter().zip(scopes) {
         diagnostics.extend(out_of_scope_references(
             &project.findings,
-            &project.config,
+            project.config.schema(),
+            project.config.frame(),
             &workspace,
             scope.as_ref(),
         ));

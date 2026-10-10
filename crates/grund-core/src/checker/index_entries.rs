@@ -6,7 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use super::index::{KindIndexTarget, declarations_under_folder, kind_index_targets};
-use crate::config::Config;
+use crate::config::{Frame, Schema};
 use crate::grammar::never_rewrite_context;
 use crate::model::{
     Catalog, Citation, Declaration, Id, is_stub_for_inline_decl, physical_path_key,
@@ -32,12 +32,13 @@ impl KindIndexEntries {
     /// destination an external enrollment is compared against (§AR-checker.2.16).
     pub(crate) fn new(
         findings: &Catalog,
-        config: &Config,
+        schema: &Schema,
+        frame: Frame<'_>,
         index_targets: &BTreeMap<(PathBuf, Id), String>,
     ) -> Self {
-        let configured_root = scanned_path_key(&config.root);
-        let physical_root = physical_path_key(&config.root);
-        let targets = kind_index_targets(config);
+        let configured_root = scanned_path_key(frame.root());
+        let physical_root = physical_path_key(frame.root());
+        let targets = kind_index_targets(schema, frame);
         let mut folder_owed: BTreeMap<PathBuf, BTreeSet<Id>> = BTreeMap::new();
         for target in &targets {
             for (id, decls) in &findings.declarations {
@@ -59,7 +60,7 @@ impl KindIndexEntries {
         let mut owed = folder_owed.clone();
         let external_sites = enroll_external_inline_declarations(
             findings,
-            config,
+            frame,
             &targets,
             &configured_root,
             &physical_root,
@@ -116,7 +117,7 @@ impl KindIndexEntries {
 /// solely to inspect the persisted Markdown wrapper and destination.
 fn enroll_external_inline_declarations(
     findings: &Catalog,
-    config: &Config,
+    frame: Frame<'_>,
     targets: &[KindIndexTarget<'_>],
     configured_root: &Path,
     physical_root: &Path,
@@ -168,7 +169,7 @@ fn enroll_external_inline_declarations(
             continue;
         };
         if external_inline_home(
-            config,
+            frame,
             decls,
             &target.folder_key,
             configured_root,
@@ -212,7 +213,7 @@ fn enroll_external_inline_declarations(
 /// multiple independent homes remain the duplicate error rather than becoming
 /// an index membership `grund` guessed (§REQ-no-wrong-citation.1).
 fn external_inline_home<'a>(
-    config: &Config,
+    frame: Frame<'_>,
     decls: &'a [Declaration],
     folder_key: &Path,
     configured_root: &Path,
@@ -223,7 +224,7 @@ fn external_inline_home<'a>(
     }
     let mut homes = decls
         .iter()
-        .filter(|decl| !is_stub_for_inline_decl(&config.root, decl, decls));
+        .filter(|decl| !is_stub_for_inline_decl(frame.root(), decl, decls));
     let home = homes.next()?;
     if homes.next().is_some()
         || home.is_stub

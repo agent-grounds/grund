@@ -18,7 +18,7 @@ use anyhow::{Context, Result, anyhow};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use crate::config::Config;
+use crate::config::{Frame, Schema};
 use crate::grammar::{
     PythonDocstringScanState, declaration_id_on_line, markdown_fence_delimiter, render_id,
     section_path, source_scan_line,
@@ -64,7 +64,8 @@ pub(crate) fn extract_declaration_body(
     section: Option<&str>,
     mode: ShowRenderMode,
     include_heading: bool,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     overlays: &TextOverlays,
 ) -> Result<ShowOutput> {
     let mut cache = PointBodyCache::new(overlays);
@@ -75,7 +76,8 @@ pub(crate) fn extract_declaration_body(
         section,
         mode,
         include_heading,
-        config,
+        schema,
+        frame,
         Some(PointBodySite {
             declaration_line: declaration.line,
             declaration_body_end: (section.is_some() || declaration.body_end > declaration.line)
@@ -135,7 +137,8 @@ pub(super) fn extract_declaration_body_cached(
     section: Option<&str>,
     mode: ShowRenderMode,
     include_heading: bool,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     site: Option<PointBodySite>,
 ) -> Result<ShowOutput> {
     // `--toc` = the default lead, then a blank line, then the nested section
@@ -149,7 +152,8 @@ pub(super) fn extract_declaration_body_cached(
             section,
             ShowRenderMode::Default,
             include_heading,
-            config,
+            schema,
+            frame,
             site,
         )?;
         let outline_output = extract_declaration_body_cached(
@@ -159,7 +163,8 @@ pub(super) fn extract_declaration_body_cached(
             section,
             ShowRenderMode::Outline,
             false,
-            config,
+            schema,
+            frame,
             site,
         )?;
         default_output.body = join_with_blank(&default_output.body, &outline_output.body);
@@ -178,7 +183,8 @@ pub(super) fn extract_declaration_body_cached(
             section,
             ShowRenderMode::Default,
             want_h1_for_default,
-            config,
+            schema,
+            frame,
             site,
         )?;
         output.body = truncate_to_first_paragraph(&output.body);
@@ -213,7 +219,12 @@ pub(super) fn extract_declaration_body_cached(
         {
             break;
         }
-        let scan = source_scan_line(line, is_py, config.docstring_python, &mut py_docstring);
+        let scan = source_scan_line(
+            line,
+            is_py,
+            schema.sources.docstring_python,
+            &mut py_docstring,
+        );
         let scan_line = scan.text.as_ref();
         if in_decl
             && scan.in_py_docstring
@@ -230,7 +241,7 @@ pub(super) fn extract_declaration_body_cached(
         let fenced = was_fenced || fence_delimiter;
         if !fenced
             && let Some((found, _)) =
-                declaration_id_on_line(&config.grammar, scan_line, scan.in_py_docstring, is_md)
+                declaration_id_on_line(frame.grammar(), scan_line, scan.in_py_docstring, is_md)
         {
             if in_decl && (site.is_some() || &found != id) {
                 break;
@@ -243,7 +254,7 @@ pub(super) fn extract_declaration_body_cached(
                 line_style_comment = is_line_style_comment_line(scan_line);
                 // §FS-show.2.3.1.1: a `--` or `;` body is read behind its own marker.
                 own_marker = (!is_md && !scan.in_py_docstring)
-                    .then(|| own_line_marker(scan_line, config.lexical()))
+                    .then(|| own_line_marker(scan_line, frame.compiled.lexical(schema)))
                     .flatten();
                 block_closed = closes_comment_block(
                     scan_line,
@@ -283,13 +294,17 @@ pub(super) fn extract_declaration_body_cached(
                 if line_style_comment {
                     break;
                 }
-            } else if !continues_comment_body(scan_line, own_marker.as_deref(), config.lexical()) {
+            } else if !continues_comment_body(
+                scan_line,
+                own_marker.as_deref(),
+                frame.compiled.lexical(schema),
+            ) {
                 break;
             }
             block_closed =
                 closes_comment_block(scan_line, line_style_comment, scan.in_py_docstring, is_md);
         }
-        if !fenced && let Some(caps) = config.grammar.section_re.captures(scan_line) {
+        if !fenced && let Some(caps) = frame.grammar().section_re.captures(scan_line) {
             let sec = section_path(&caps).unwrap_or("");
             let depth = sec.split('.').count();
             match section {
@@ -366,13 +381,13 @@ pub(super) fn extract_declaration_body_cached(
     }
 
     if !in_decl {
-        return Err(anyhow!("ID not found: {}", render_id(&config.grammar, id)));
+        return Err(anyhow!("ID not found: {}", render_id(frame.grammar(), id)));
     }
     if !found_section {
         return Err(anyhow!(
             "section not found: {}{}{}",
-            render_id(&config.grammar, id),
-            config.section_separator,
+            render_id(frame.grammar(), id),
+            schema.ids.section_separator,
             section.unwrap_or("")
         ));
     }

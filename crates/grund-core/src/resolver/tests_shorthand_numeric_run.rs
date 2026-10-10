@@ -63,9 +63,10 @@ fn a_shorthand_glued_to_a_second_number_is_never_rewritten() {
         expand_shorthand_citations(
             line,
             DocstringContent::default(),
-            &config,
+            config.schema(),
+            config.frame(),
             true,
-            &ShorthandTargets::new(&config, Some(&findings), None),
+            &ShorthandTargets::new(config.frame(), Some(&findings), None),
             &mut saw_candidate,
             &mut Vec::new(),
         )
@@ -151,9 +152,10 @@ fn a_construct_boundary_does_not_open_a_run() {
         expand_shorthand_citations(
             line,
             DocstringContent::default(),
-            &config,
+            config.schema(),
+            config.frame(),
             true,
-            &ShorthandTargets::new(&config, Some(&findings), None),
+            &ShorthandTargets::new(config.frame(), Some(&findings), None),
             &mut saw_candidate,
             &mut Vec::new(),
         )

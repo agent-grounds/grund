@@ -13,7 +13,7 @@
 
 use anyhow::{Result, anyhow};
 
-use crate::config::{Config, display_path};
+use crate::config::{Frame, Schema};
 use crate::grammar::render_id;
 use crate::model::{E2eCase, Id, ShowOutput, ShowRenderMode, format_path, json_escape};
 
@@ -21,9 +21,14 @@ use crate::model::{E2eCase, Id, ShowOutput, ShowRenderMode, format_path, json_es
 /// fixture list (or just the invocation with `--brief`), plus the JSON shape — the
 /// case manifest of §FS-show.2.4. E2E declarations have no sections, so any
 /// `.<section>` is "section not found".
+///
+/// `frame` spells the case's path the way the report does, and `kind_title` is
+/// the kind's title from the project's presentation, which the caller reads: the
+/// resolver is handed none (§AR-resolver.6, §FS-show.2.4).
 pub(crate) fn show_e2e_case(
-    config: &Config,
-    path_config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
+    kind_title: Option<&str>,
     id: &Id,
     case: &E2eCase,
     section: Option<&str>,
@@ -32,8 +37,8 @@ pub(crate) fn show_e2e_case(
     if let Some(section) = section {
         return Err(anyhow!(
             "section not found: {}{}{}",
-            render_id(&config.grammar, id),
-            config.section_separator,
+            render_id(frame.grammar(), id),
+            schema.ids.section_separator,
             section
         ));
     }
@@ -70,22 +75,18 @@ pub(crate) fn show_e2e_case(
         .collect::<Vec<_>>()
         .join(",");
     // §FS-show.2.4: this pre-rendered form carries the same final target-kind metadata.
-    let metadata = config
-        .kinds
-        .iter()
-        .find(|kind| kind.kind == id.kind)
-        .and_then(|kind| kind.title.as_deref())
+    let metadata = kind_title
         .map(|title| format!(",\"kind_title\":\"{}\"", json_escape(title)))
         .unwrap_or_default();
     // §FS-show.2.4.2: a case directory has no heading, so `anchor` is null, after
     // `fixtures` and before the optional closing `kind_title`.
     let json = format!(
         "{{\"id\":\"{}\",\"kind\":\"E2E\",\"path\":\"{}\",\"args\":[{}],\"expected_exit\":{},\"fixtures\":[{}],\"anchor\":null{}}}",
-        json_escape(&render_id(&config.grammar, id)),
-        // path_config, not config: an `<alias>/E2E-x` shown from a workspace
-        // root must report the same root-relative path as every other kind
+        json_escape(&render_id(frame.grammar(), id)),
+        // The frame's display is the report root's: an `<alias>/E2E-x` shown from a
+        // workspace root must report the same root-relative path as every other kind
         // (§FS-workspace.8.1.2) — this baked JSON bypasses render_show_output_json.
-        json_escape(&display_path(path_config, &case.dir)),
+        json_escape(&frame.display_path(&case.dir)),
         args_json,
         case.expected_exit,
         fixtures_json,

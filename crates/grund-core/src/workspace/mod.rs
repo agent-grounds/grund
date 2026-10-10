@@ -31,6 +31,7 @@
 //! beside the expansion whose two facts it carries, and the qualified
 //! ID-argument split stayed as `id_arg.rs`: both read config text and no scan.
 
+mod declared;
 mod expand;
 mod findings;
 mod id_arg;
@@ -43,6 +44,7 @@ mod unlisted;
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
+pub(crate) use declared::declared_member_schemas;
 pub(crate) use expand::{
     WorkspaceCitationTarget, enclosing_workspace_of, expand_workspace_tree,
     expand_workspace_tree_with_report_base,

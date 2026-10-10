@@ -3,7 +3,7 @@
 //! disagreement reports (§FS-values.3.1.2, §FS-values.5.2.2).
 
 use super::value_mismatch::{rendered_value_path, value_mismatch, value_mismatch_text};
-use crate::config::{Config, display_path};
+use crate::config::{Display, Frame, Schema};
 use crate::model::{
     Declaration, Diagnostic, Site, ValueBinding, ValueComponent, first_unequal_component,
     joined_value_components, root_literal_parts,
@@ -18,17 +18,17 @@ type RunComponent<'a> = (String, usize, &'a ValueComponent);
 /// refuses is never also a mismatch (§FS-values.5.1).
 pub(super) fn root_binding_finding(
     binding: &ValueBinding,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     declaration: &Declaration,
     path: Option<&str>,
-    path_config: &Config,
 ) -> Option<Diagnostic> {
     let run = root_components(declaration, path)?;
     let site = |line| Site {
         path: declaration.file.clone(),
         line,
     };
-    let root = rendered_value_path(config, binding, path);
+    let root = rendered_value_path(schema, frame, binding, path);
     if let Some((index, (_, line, _))) = run
         .iter()
         .enumerate()
@@ -39,7 +39,7 @@ pub(super) fn root_binding_finding(
             &root,
             index + 1,
             site(*line),
-            path_config,
+            frame.display,
         ));
     }
     let declared = run
@@ -57,18 +57,18 @@ pub(super) fn root_binding_finding(
             &joined_value_components(&declared),
             "",
             site(run[0].1),
-            path_config,
+            frame.display,
         ));
     }
     let index = first_unequal_component(&parts, &declared)?;
     let (coordinate, line, component) = &run[index];
     Some(value_mismatch(
         binding,
-        &rendered_value_path(config, binding, Some(coordinate)),
+        &rendered_value_path(schema, frame, binding, Some(coordinate)),
         &parts[index],
         component,
         site(*line),
-        path_config,
+        frame.display,
     ))
 }
 
@@ -103,9 +103,9 @@ fn space_refusal(
     root: &str,
     component: usize,
     site: Site,
-    path_config: &Config,
+    display: Display<'_>,
 ) -> Diagnostic {
-    let declared_site = format!("{}:{}", display_path(path_config, &site.path), site.line);
+    let declared_site = format!("{}:{}", display.path(&site.path), site.line);
     Diagnostic {
         code: "invalid-value-binding",
         path: Some(binding.file.clone()),

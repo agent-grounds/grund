@@ -21,7 +21,7 @@
 use std::collections::BTreeMap;
 
 use super::context::{WorkspaceContext, WorkspaceProject};
-use crate::config::{Config, ShorthandPolicy};
+use crate::config::{Compiled, Frame, Schema, ShorthandPolicy};
 use crate::grammar::{
     DocstringContent, ParsedId, QUALIFIED_CITATION_PREFIX, ShorthandIndex,
     never_rewrite_context_in, parse_id, parse_id_arg, parse_id_arg_with_shorthand, render_id,
@@ -45,21 +45,23 @@ pub(crate) struct ShorthandTargets<'a> {
 }
 
 /// One aliased project's half of `ShorthandTargets`: its declarations, and the
-/// config the canonical ID renders under (a workspace may mix `[id] format`s).
+/// schema and grammar the canonical ID renders under (a workspace may mix
+/// `[id] format`s).
 pub(crate) struct ShorthandAliasTarget<'a> {
-    pub(crate) config: &'a Config,
+    pub(crate) schema: &'a Schema,
+    pub(crate) compiled: &'a Compiled,
     pub(crate) index: ShorthandIndex<'a>,
 }
 
 impl<'a> ShorthandTargets<'a> {
     pub(crate) fn new(
-        config: &Config,
+        frame: Frame<'_>,
         findings: Option<&'a Catalog>,
         workspace: Option<&'a WorkspaceContext>,
     ) -> Self {
         Self {
             local: findings
-                .map(|found| ShorthandIndex::build(&config.grammar, found.declarations.keys())),
+                .map(|found| ShorthandIndex::build(frame.grammar(), found.declarations.keys())),
             by_alias: workspace
                 .map(|workspace| {
                     workspace
@@ -69,9 +71,10 @@ impl<'a> ShorthandTargets<'a> {
                             (
                                 project.alias.as_str(),
                                 ShorthandAliasTarget {
-                                    config: &project.config,
+                                    schema: project.config.schema(),
+                                    compiled: project.config.compiled(),
                                     index: ShorthandIndex::build(
-                                        &project.config.grammar,
+                                        &project.config.compiled().grammar,
                                         project.findings.declarations.keys(),
                                     ),
                                 },
@@ -122,7 +125,8 @@ impl<'a> ShorthandTargets<'a> {
 pub(crate) fn expand_shorthand_citations(
     line: &str,
     docstring: DocstringContent<'_>,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     is_md: bool,
     targets: &ShorthandTargets<'_>,
     saw_candidate: &mut bool,
@@ -132,7 +136,8 @@ pub(crate) fn expand_shorthand_citations(
     let expanded = expand_shorthand_citations_with_origins(
         line,
         docstring,
-        config,
+        schema,
+        frame,
         is_md,
         targets,
         &[],
@@ -156,7 +161,8 @@ pub(crate) fn expand_shorthand_citations(
 pub(crate) fn expand_shorthand_citations_with_origins(
     line: &str,
     docstring: DocstringContent<'_>,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     is_md: bool,
     targets: &ShorthandTargets<'_>,
     trigger_marker_starts: &[usize],
@@ -166,9 +172,10 @@ pub(crate) fn expand_shorthand_citations_with_origins(
     // The local grammar is only one of the grammars in play: a qualified citation
     // is parsed with the *target's*, so a citing project with no shorthand of its
     // own can still hold one that needs expanding.
-    if config.marker.is_empty()
-        || !line.contains(&config.marker)
-        || (!config.grammar.has_shorthand() && targets.by_alias.is_empty())
+    let marker = &schema.citation.marker;
+    if marker.is_empty()
+        || !line.contains(marker)
+        || (!frame.grammar().has_shorthand() && targets.by_alias.is_empty())
     {
         return None;
     }
@@ -177,11 +184,11 @@ pub(crate) fn expand_shorthand_citations_with_origins(
     // Driven from marker positions, like the scan pass and for the same reason: the
     // shorthand prefixes every full ID under the default format, so a line sweep
     // costs a candidate and a rejection per citation (§AR-scanner.2.6, §GOAL-fast-feedback).
-    for (marker_start, _) in line.match_indices(&config.marker) {
+    for (marker_start, _) in line.match_indices(marker) {
         if marker_start < cursor {
             continue;
         }
-        let token_start = marker_start + config.marker.len();
+        let token_start = marker_start + marker.len();
         let Some(rest) = line.get(token_start..) else {
             continue;
         };
@@ -203,10 +210,12 @@ pub(crate) fn expand_shorthand_citations_with_origins(
             },
             None => None,
         };
-        let target_config = target.map_or(config, |target| target.config);
+        let (target_schema, target_grammar) = target.map_or((schema, frame.grammar()), |target| {
+            (target.schema, &target.compiled.grammar)
+        });
         let alias_len = alias.map_or(0, |(_, len)| len);
         let tail = &rest[alias_len..];
-        let Some(shorthand) = target_config.grammar.shorthand_for(tail) else {
+        let Some(shorthand) = target_grammar.shorthand_for(tail) else {
             continue;
         };
         // §DF-number-only-citation-shorthand.2.6: a token the full-ID pattern can
@@ -219,25 +228,19 @@ pub(crate) fn expand_shorthand_citations_with_origins(
             continue;
         };
         let match_end = caps.get(0).map_or(0, |found| found.end());
-        if target_config
-            .grammar
-            .has_reserved_named_tail(rest, alias_len + match_end)
-        {
+        if target_grammar.has_reserved_named_tail(rest, alias_len + match_end) {
             continue;
         }
         // §DF-number-only-citation-shorthand.2.6: the pattern is anchored only at
         // the start, so rewriting `§FS-042-User-Login` on its `FS-042` prefix would
         // corrupt the file — see the gate order above.
-        if !target_config.grammar.id_token_ends_cleanly(tail, match_end) {
+        if !target_grammar.id_token_ends_cleanly(tail, match_end) {
             continue;
         }
         // §FS-fmt.2.4.1.1: `§SPEC-001→SPEC-003` is a renumbering table, not a citation.
         // The marker is the *citing* project's — what the author typed — while the
         // number shape is the target's, the same split the rewrite below uses.
-        if target_config
-            .grammar
-            .shorthand_sits_in_numeric_run(&config.marker, tail, match_end)
-        {
+        if target_grammar.shorthand_sits_in_numeric_run(marker, tail, match_end) {
             continue;
         }
         // §FS-fmt.2.3: the same exclusions the other rewrites honour — inline code,
@@ -246,7 +249,7 @@ pub(crate) fn expand_shorthand_citations_with_origins(
         if never_rewrite_context_in(docstring, line, is_md, marker_start) {
             continue;
         }
-        let Some(id) = parse_id(&caps, &target_config.grammar) else {
+        let Some(id) = parse_id(&caps, target_grammar) else {
             continue;
         };
         // §FS-fmt.2.4.5: only *now* are declarations needed — every gate above rejects
@@ -274,7 +277,7 @@ pub(crate) fn expand_shorthand_citations_with_origins(
         // §FS-fmt.2.4.3 / §FS-workspace.4.2: an accepted project preserves only
         // marker-origin shorthand. A marker created from this line's trigger is
         // still authoring input and always expands to the canonical full ID.
-        if target_config.shorthand == ShorthandPolicy::Accepted
+        if target_schema.citation.shorthand == ShorthandPolicy::Accepted
             && !trigger_marker_starts.contains(&marker_start)
         {
             continue;
@@ -292,17 +295,17 @@ pub(crate) fn expand_shorthand_citations_with_origins(
         }
         // The ID renders under the *target* project's `[id] format`, which is what
         // makes the rewrite correct in a mixed-format workspace.
-        output.push_str(&render_id(&target_config.grammar, unique));
+        output.push_str(&render_id(target_grammar, unique));
         if let Some(section) = caps.name("sec") {
             // The target's separator, matching the form §FS-check.3.13 names —
             // the section belongs to the target's ID, not the citing project's.
-            output.push_str(&target_config.section_separator);
+            output.push_str(&target_schema.ids.section_separator);
             output.push_str(section.as_str());
         }
         expansions.push((
             marker_start,
             line[marker_start..token_start + match_end].to_string(),
-            format!("{}{}", config.marker, &output[written_start..]),
+            format!("{}{}", marker, &output[written_start..]),
         ));
         cursor = token_start + match_end;
     }
@@ -347,7 +350,7 @@ pub(crate) fn resolve_qualified_shorthand_citations(projects: &mut [WorkspacePro
             let grammar = projects
                 .iter()
                 .find(|project| project.alias == *alias)
-                .map(|project| &project.config.grammar)?;
+                .map(|project| &project.config.compiled().grammar)?;
             Some((alias.as_str(), ShorthandIndex::build(grammar, ids.iter())))
         })
         .collect();
@@ -376,39 +379,41 @@ pub(crate) fn resolve_qualified_shorthand_citations(projects: &mut [WorkspacePro
 /// the same grammar, so the editor and `grund fmt` agree on what resolves
 /// (§FS-fmt.2.4).
 pub(crate) fn shorthand_token_expansion(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     token: &str,
     declared_ids: &[&str],
 ) -> Option<String> {
-    if !config.grammar.has_shorthand() {
+    if !frame.grammar().has_shorthand() {
         return None;
     }
-    let parsed = parse_id_arg_with_shorthand(token, &config.grammar).ok()?;
+    let parsed = parse_id_arg_with_shorthand(token, frame.grammar()).ok()?;
     if !parsed.shorthand {
         return None;
     }
-    let unique = unique_shorthand_expansion_target(config, token, &parsed, declared_ids)?;
+    let unique = unique_shorthand_expansion_target(schema, frame, token, &parsed, declared_ids)?;
     let section = parsed
         .section
-        .map(|section| format!("{}{}", config.section_separator, section))
+        .map(|section| format!("{}{}", schema.ids.section_separator, section))
         .unwrap_or_default();
     Some(format!("{unique}{section}"))
 }
 
 fn unique_shorthand_expansion_target<'a>(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     token: &str,
     parsed: &ParsedId,
     declared_ids: &[&'a str],
 ) -> Option<&'a str> {
     let exact = parsed.section.as_ref().map_or(token, |section| {
         token
-            .strip_suffix(&format!("{}{}", config.section_separator, section))
+            .strip_suffix(&format!("{}{}", schema.ids.section_separator, section))
             .unwrap_or(token)
     });
     let mut matches = declared_ids.iter().copied().filter(|declared| {
         *declared == exact
-            || parse_id_arg(declared, &config.grammar)
+            || parse_id_arg(declared, frame.grammar())
                 .is_ok_and(|(id, section)| section.is_none() && shorthand_names(&id, &parsed.id))
     });
     let unique = matches.next()?;
