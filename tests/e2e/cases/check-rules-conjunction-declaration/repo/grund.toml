@@ -1,0 +1,25 @@
+grund_config_version = 1
+project_name = "conjunction-declaration"
+
+[reference]
+marker = "§"
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+section_separator = "."
+named_sections = true
+slug_pattern = "[a-z][a-z0-9-]*"
+
+[[kinds]]
+kind = "FS"
+folder = "docs/functional-spec"
+title = "What"
+index = false
+
+[[kinds]]
+kind = "RULE"
+folder = "docs/rules"
+title = "Rules"
+index = false
+rules = true
