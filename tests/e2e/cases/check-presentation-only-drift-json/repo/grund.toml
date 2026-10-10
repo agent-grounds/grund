@@ -1,0 +1,30 @@
+grund_config_version = 1
+
+[reference]
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+named_sections = true
+
+[[kinds]]
+kind = "GOAL"
+folder = "docs/goals"
+index = false
+
+[[kinds]]
+kind = "FS"
+folder = "docs/functional-spec"
+index = false
+
+[[kinds]]
+kind = "RULE"
+folder = "docs/rules"
+index = false
+rules = true
+
+[citations.FS]
+should = ["GOAL"]
+
+[fmt.cross_refs]
+anchor_format = "pandoc"

@@ -6,6 +6,12 @@ are the candidate set, and they are one per grammar because `[[kinds]]` and
 complete exactly when its first column is that set — every key the reader accepts
 has one row, no row names a key no parser accepts, no key is listed twice, and
 every row carries exactly one classification from the closed set.
+
+The classification is also held to the signatures that consume it
+(§DA-config-concern-records.2.3, §AR-checker.1): which concern records the
+checker's two halves and the scanner name is derived from their code and
+compared with what each stage is handed, so a concern the inventory assigns
+reaches a stage only as the record that stage takes.
 """
 
 import re
@@ -49,6 +55,18 @@ KIND_ARM = re.compile(r'^ {8}"([a-z_]+)" =>', re.MULTILINE)
 CITATION_ARM = re.compile(r'^\s+"([a-z-]+)" =>', re.MULTILINE)
 # A row of the inventory: a backticked key, then its classification.
 ROW = re.compile(r"^\|\s*`([^`]+)`\s*\|\s*([a-z]*)\s*\|", re.MULTILINE)
+
+CORE = REPO_ROOT / "crates" / "grund-core" / "src"
+# The concern record each classification lowers into (§AR-config.1.2).
+RECORD = {"schema": "Schema", "rules": "Rules", "presentation": "Presentation"}
+# What each stage is handed (§DA-config-concern-records.2.3 as amended); presentation
+# reaches judge only as `Expected`, and the scanner only at its entrypoint probe
+# (§AR-scanner.7).
+STAGE_CONCERNS = {
+    "conform": {"schema"},
+    "judge": {"schema", "rules"},
+    "scanner": {"schema", "presentation"},
+}
 
 # Keys the reader recognizes only in order to refuse them: they are not keys of
 # the format in force, so they are not the inventory's. Each is held to its
@@ -153,6 +171,38 @@ def _sample(names, limit=8):
     return shown if len(names) <= limit else f"{shown}, … ({len(names)} in all)"
 
 
+def _signature(component, name):
+    """The parameter list of `fn <name>(…)` in `component`, or ''."""
+    for path in sorted((CORE / component).glob("**/*.rs")):
+        if path.name.startswith("tests_") or path.name == "testing.rs":
+            continue
+        match = re.search(rf"\bfn {name}\s*(?:<[^>]*>)?\(([^)]*)\)", _source(path), re.S)
+        if match:
+            return match.group(1)
+    return ""
+
+
+def _component_code(component):
+    return "\n".join(
+        _source(path)
+        for path in sorted((CORE / component).glob("**/*.rs"))
+        if not (path.name.startswith("tests_") or path.name == "testing.rs")
+    )
+
+
+def _concerns_named(text):
+    return {concern for concern, record in RECORD.items() if re.search(rf"\b{record}\b", text)}
+
+
+def stage_concerns():
+    """Which concern records each stage names, read from its code."""
+    return {
+        "conform": _concerns_named(_signature("checker", "conform")),
+        "judge": _concerns_named(_signature("checker", "judge")),
+        "scanner": _concerns_named(_component_code("scanner")),
+    }
+
+
 class ConfigConcernInventoryTests(unittest.TestCase):
     def test_the_three_parse_sites_still_read_as_key_literals(self):
         """The guard on every comparison below: a parse that found nothing
@@ -226,6 +276,18 @@ class ConfigConcernInventoryTests(unittest.TestCase):
             _sample(duplicated),
             "inventory rows repeating one key, so one key has two concerns",
         )
+
+    # agent-grounds/grund#454: lands failing, one commit before the split.
+    @unittest.expectedFailure
+    def test_each_stage_is_handed_the_concerns_its_signature_derives(self):
+        """§AR-checker.1: the concerns each stage names are the ones it is
+        handed, presentation reaches judge only as `Expected`, and every
+        concern the inventory assigns reaches some stage."""
+        self.assertEqual(STAGE_CONCERNS, stage_concerns())
+        self.assertRegex(_signature("checker", "judge"), r"\bExpected\b")
+        assigned = {c for _, c in inventory_rows() if c in RECORD}
+        reached = set().union(*STAGE_CONCERNS.values())
+        self.assertEqual(set(), assigned - reached)
 
 
 if __name__ == "__main__":

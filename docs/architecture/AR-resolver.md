@@ -61,7 +61,8 @@ form, citation site), [§FS-terms.terms.4](../functional-spec/FS-terms.md#terms4
 `target_for_citation(cite, local, local_config, workspace)` in
 `resolver/citation_target.rs` is the single function any command calls to map a
 citation to the project it resolves against — that project's `Catalog` and the
-`Config` its ID is parsed and rendered with ([§AR-workspace.2](AR-workspace.md#2-single-citation-grammar)):
+`Schema` and `Compiled` its ID is parsed and rendered with ([§AR-config.1.5](AR-config.md#15-run-and-compiled)),
+never the `Config` façade ([§AR-workspace.2](AR-workspace.md#2-single-citation-grammar)):
 
 - `cite.namespace == None` → resolves against `local` (the current project).
 - `cite.namespace == Some(name)` → resolves against `workspace[name]`, or
@@ -270,3 +271,15 @@ What stays in [§AR-scanner.4.6](AR-scanner.md#46-a-stubs-home-is-recorded-once-
 lines its home declares the ID on, a lone stub's too, which is all the count of homes
 needs; what the target declares beyond that is read here, and only when a reader asks
 for it.
+
+## 6. A link target is handed presentation
+
+`markdown_link_target(from, id, section, &Presentation, &Schema, frame, catalog)` in
+`resolver/link_targets.rs` stays the one function that builds the canonical link
+target a citation's ID resolves to ([§FS-fmt.6.2](../functional-spec/FS-fmt.md#62-form)). The anchor profile is
+presentation's, so it is passed in as that record; the root, the grammar and the
+docstring reading come from the schema and the run's frame. It is one of the two
+places below the writers that name `Presentation` ([§AR-system.4](README.md#4-dependency-direction)). The checker never
+calls it: the canonical target of an index entry reaches the checker already built,
+as `Expected` ([§AR-checker.1.3](../../crates/grund-core/src/checker/report.rs)), so an anchor-format change moves a drift comparison
+through bytes and no index verdict through a setting.

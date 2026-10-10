@@ -345,6 +345,10 @@ Which row a file belongs to is [§AR-scanner.2.4.2](AR-scanner.md#242-citation-s
 
 The record is **structure, not units**: the level that turns it into units belongs to a row, and one file can be reached by only one row, but keeping the cut in the checker leaves the level rule in one place ([§AR-checker.2.8](../../crates/grund-core/src/checker/report.rs)) and keeps this pass a pure description of the file. It is taken only for the files whose own row asks for it, which is the same shape [§AR-scanner.2.4](AR-scanner.md#24-citing-side-classification)'s citing-side classification uses: a project at level `1` — every configuration written before the key existed — records nothing and pays nothing ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)). The alternative, letting the checker re-read the governed files, would make the grounding rule re-read the tree after the scan ([§AR-checker.placement](../../crates/grund-core/src/checker/report.rs)), and unlike the stub rule ([§AR-checker.2.5](../../crates/grund-core/src/checker/report.rs)) it would do so for every file in a home rather than for a handful of error sites.
 
+#### 2.7.3 Demand arrives as `ScanDemand`
+
+The scanner reads no grounding key. Which rows ask for structure is `Compiled::demand`, the `ScanDemand` config computes once with the same level rule the checker cuts by ([§AR-config.6.1](AR-config.md#61-scandemand-names-the-rows-that-record-structure)): `is_empty()` is the one-field early exit that excuses every file of a level-1 tree, and past it the file's own row, found by the lookup of [§AR-scanner.2.7.1](AR-scanner.md#271-the-files-own-row-asks), is asked `records_structure(row)`. So the scanner is handed `Schema`, `Run` and `Compiled` and never `Rules` ([§DA-config-concern-records.2.3](../decisions/architectural/DA-config-concern-records.md#23-the-checker-splits-into-conform-and-judge)), and what is recorded and what is cut stay one rule.
+
 ## 3. Output
 
 The walk's only structured output is a `Catalog` struct, and everything downstream (checking, showing, IDE diagnostics) operates on it; which agent entrypoint files a repository has is the scanner's one answer outside it, from a probe that is no part of the walk ([§AR-system.2.5](README.md#25-scanner)). `Catalog` contains:
@@ -502,3 +506,7 @@ The ordinary file walk treats each direct case directory as an E2E manifest boun
 ### 6.5 Citations of a case resolve like any other
 
 Citations of an `E2E` ID resolve like any other: an `E2E-<name>` cite from a spec ("proven by …") is a dangling-ref error ([§AR-checker.2.3](../../crates/grund-core/src/checker/report.rs)) when the case directory under the configured `E2E` home does not exist; `e2e/cases/<name>` is the example produced by the conventional configuration that selects that folder.
+
+## 7. The entrypoint probe is handed presentation
+
+Which companion entrypoints a repository has depends on one presentation setting: whether citations are clickable in conversation decides which surfaces a managed block reaches ([§FS-init.2.3.6.1](../functional-spec/FS-init.md#2361-the-drift-check)). `CanonicalSurfaceReach::for_presentation(&Presentation)` takes that record explicitly, in `scanner/agent_entrypoints.rs`, rather than reading it off a `Config`. It is one of the two places below the writers that name `Presentation` ([§AR-system.4](README.md#4-dependency-direction)), and it decides only which files are compared and against which surface's bytes, never a verdict.
