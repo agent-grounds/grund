@@ -21,9 +21,9 @@ use super::fmt_links::wrap_markdown_links_with_targets;
 use super::fmt_local_sections::expand_local_section_citations;
 use crate::config::Config;
 use crate::grammar::{
-    DocstringContent, DocstringCursor, FmtDirectives, declaration_id_on_line, id_token_end_at,
-    in_escape_position, is_inside_inline_code, is_inside_markdown_link_destination,
-    markdown_fence_delimiter, string_literal_in,
+    DocstringContent, DocstringCursor, FmtDirectives, MarkdownBlocks, MarkdownLine,
+    declaration_id_on_line, id_token_end_at, in_escape_position, is_inside_inline_code,
+    is_inside_markdown_link_destination, string_literal_in,
 };
 use crate::model::{Catalog, Id};
 use crate::resolver::{
@@ -52,7 +52,7 @@ pub(super) fn rewrite_file(
     opts: &FmtLineOpts<'_>,
     changes: &mut Vec<(PathBuf, usize, String)>,
 ) -> RewrittenFile {
-    let mut markdown_fence = None;
+    let mut markdown_blocks = MarkdownBlocks::default();
     let mut lines = Vec::new();
     let mut changed = false;
     let mut saw_shorthand_candidate = false;
@@ -65,7 +65,12 @@ pub(super) fn rewrite_file(
     let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");
     let mut docstrings = DocstringCursor::new(is_py, config.docstring_python);
     for (idx, line) in original.lines().enumerate() {
-        if is_md && markdown_fence_delimiter(&mut markdown_fence, line) {
+        let block = if is_md {
+            markdown_blocks.line(line)
+        } else {
+            MarkdownLine::Text
+        };
+        if block == MarkdownLine::FenceDelimiter {
             lines.push(line.to_string());
             continue;
         }
@@ -76,7 +81,7 @@ pub(super) fn rewrite_file(
         // §FS-fmt.2.5.2: a directive inside a fenced block is an illustration, so
         // the fence is asked first and toggles nothing; the directive line itself
         // is passed through whatever state it leaves behind.
-        if markdown_fence.is_some() {
+        if block.in_fence() {
             lines.push(line.to_string());
             continue;
         }
@@ -84,13 +89,16 @@ pub(super) fn rewrite_file(
             lines.push(line.to_string());
             continue;
         }
-        if declaration_id_on_line(
-            &config.grammar,
-            docstring.text_of(line),
-            docstring.is_docstring(),
-            is_md,
-        )
-        .is_some()
+        // §FS-check.1.1.5.1: a heading-shaped line in a raw-text HTML block
+        // declares nothing, so its citations are rewritten like any prose.
+        if block.may_be_heading()
+            && declaration_id_on_line(
+                &config.grammar,
+                docstring.text_of(line),
+                docstring.is_docstring(),
+                is_md,
+            )
+            .is_some()
         {
             lines.push(line.to_string());
             continue;

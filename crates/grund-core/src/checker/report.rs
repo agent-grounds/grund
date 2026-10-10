@@ -185,9 +185,10 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected, TextOverlays};
 /// The rule reads no file and decides nothing of its own, so the stub it reports is
 /// exactly the stub `show` refuses, `list --size` labels and `fmt` will not link
 /// through (§FS-declarations.checks.broken-stub.4), and the verdict is the one a save
-/// would give, a hidden or unlisted name judged as the stub wrote it and a fenced
-/// heading declaring nothing (§FS-declarations.checks.broken-stub.1,
-/// §FS-declarations.checks.broken-stub.2, §FS-declarations.checks.broken-stub.3).
+/// would give, a hidden or unlisted name judged as the stub wrote it and a heading
+/// inside a fence or a raw-text HTML block declaring nothing
+/// (§FS-declarations.checks.broken-stub.1, §FS-declarations.checks.broken-stub.2,
+/// §FS-check.1.1.5.1, §FS-declarations.checks.broken-stub.3).
 ///
 /// ### 2.6 Unused declarations (§FS-check.4.1)
 ///

@@ -41,9 +41,9 @@ use super::value_context::recognized_source_value_contexts;
 use super::values::{scan_value_bindings, validate_markdown_value_declarations};
 use crate::config::{Frame, Schema};
 use crate::grammar::{
-    DocstringContent, PythonDocstringScanState, STUB_LINK_HEADING,
-    bare_token_in_never_rewrite_zone, declaration_captures, markdown_fence_delimiter,
-    near_miss_heading, parse_id, qualified_suppressed_in_source, section_path, source_scan_line,
+    DocstringContent, MarkdownBlocks, MarkdownLine, PythonDocstringScanState, STUB_LINK_HEADING,
+    bare_token_in_never_rewrite_zone, declaration_captures, near_miss_heading, parse_id,
+    qualified_suppressed_in_source, section_path, source_scan_line,
 };
 use crate::model::{
     Catalog, Citation, Declaration, DeclarationSource, Id, NearMissHeading,
@@ -120,7 +120,7 @@ pub(super) fn scan_file_text(
     let (inline_sites, inline_block_lines) =
         inline_citation_sites(path, &text, is_md, is_py, schema, frame, workspace_targets);
     let in_docs = path.components().any(|c| c.as_os_str() == "docs");
-    let mut markdown_fence = None;
+    let mut markdown_blocks = MarkdownBlocks::default();
     let mut py_docstring = PythonDocstringScanState::default();
     let mut current: Option<Declaration> = None;
     // A marker enables value authority in any scanned document (§FS-values.1),
@@ -153,16 +153,24 @@ pub(super) fn scan_file_text(
     for (idx, line) in text.lines().enumerate() {
         let lineno = idx + 1;
         total_lines = lineno;
-        if is_md && markdown_fence_delimiter(&mut markdown_fence, line) {
+        let block = if is_md {
+            markdown_blocks.line(line)
+        } else {
+            MarkdownLine::Text
+        };
+        if block.in_fence() {
             continue;
         }
-        if markdown_fence.is_some() {
-            continue;
-        }
+        // §FS-check.1.1.5.1: a raw-text HTML block line is never a heading, so it
+        // declares nothing and opens no section, but its citations stay live below.
+        let heading_position = block.may_be_heading();
         let trimmed = line.trim_start();
         // Collected for every Markdown file: the shared section-map prune below
         // needs the body spans and cannot ask for them after this pass.
-        if is_md && let Some(level) = markdown_heading_level(line) {
+        if heading_position
+            && is_md
+            && let Some(level) = markdown_heading_level(line)
+        {
             md_headings.push((lineno, level));
         }
         let scan = source_scan_line(
@@ -182,7 +190,9 @@ pub(super) fn scan_file_text(
             source_value_context,
         );
 
-        if let Some(caps) = declaration_captures(grammar, scan_line, scan.in_py_docstring, is_md)
+        if heading_position
+            && let Some(caps) =
+                declaration_captures(grammar, scan_line, scan.in_py_docstring, is_md)
             && let Some(id) = parse_id(&caps, grammar)
         {
             if let Some(prev) = current.take() {
@@ -253,8 +263,9 @@ pub(super) fn scan_file_text(
         // §FS-declarations.checks.declaration-near-miss.1: the line was not a declaration. Ask the
         // near-miss pattern whether it looked like one, here rather than in a second read of the
         // tree — the scan has the line, the position rules and the fence/docstring state.
-        if let Some((text, format, kind)) =
-            near_miss_heading(grammar, scan_line, scan.in_py_docstring, is_md)
+        if heading_position
+            && let Some((text, format, kind)) =
+                near_miss_heading(grammar, scan_line, scan.in_py_docstring, is_md)
         {
             if let Some(prev) = current.take() {
                 findings
@@ -323,7 +334,9 @@ pub(super) fn scan_file_text(
             continue;
         }
 
-        let section_caps = grammar.section_re.captures(scan_line);
+        let section_caps = heading_position
+            .then(|| grammar.section_re.captures(scan_line))
+            .flatten();
         let recognized_section = section_caps.as_ref().and_then(section_path).is_some();
         let mut embedded_marker_attached = false;
         if let Some(caps) = section_caps
@@ -345,6 +358,7 @@ pub(super) fn scan_file_text(
             );
         }
         if is_md
+            && heading_position
             && !recognized_section
             && let Some(heading_level) = markdown_heading_level(line)
         {
@@ -362,6 +376,7 @@ pub(super) fn scan_file_text(
         }
         if embedded_marker.is_some()
             && !embedded_marker_attached
+            && heading_position
             && authored_heading_level(
                 scan_line,
                 is_md || scan.in_py_docstring,

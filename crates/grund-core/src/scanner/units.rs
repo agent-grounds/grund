@@ -17,8 +17,8 @@ use std::path::Path;
 use super::context::{file_home_kind, markdown_heading_level};
 use crate::config::{Frame, Schema};
 use crate::grammar::{
-    DocCommentRule, block_is_doc_comment, comment_blocks, doc_comment_rule, first_content_line,
-    markdown_fence_delimiter,
+    DocCommentRule, MarkdownBlocks, block_is_doc_comment, comment_blocks, doc_comment_rule,
+    first_content_line,
 };
 use crate::model::{Catalog, DocCommentBlock, FileHeading, FileStructure};
 
@@ -66,16 +66,16 @@ fn file_row(path: &Path, schema: &Schema, frame: Frame<'_>) -> String {
     file_home_kind(path, schema, frame).unwrap_or_else(|| schema.complement_name().to_string())
 }
 
-/// Every heading outside a fenced block, with its text (§AR-scanner.2.7). The
-/// fence state is the one §AR-scanner.2.3.3 keeps for citations, for the same
-/// reason: a `##` inside a fence is an example of a document, not a section of
-/// this one.
+/// Every heading outside a fenced block or a raw-text HTML block, with its text
+/// (§AR-scanner.2.7, §FS-check.1.1.5.1). The state is the one §AR-scanner.2.3.3
+/// keeps for citations, for the same reason: a `##` inside either is an example
+/// of a document, not a section of this one.
 fn markdown_structure(text: &str) -> FileStructure {
     let mut structure = FileStructure::default();
-    let mut fence = None;
+    let mut blocks = MarkdownBlocks::default();
     for (index, line) in text.lines().enumerate() {
         structure.total_lines = index + 1;
-        if markdown_fence_delimiter(&mut fence, line) || fence.is_some() {
+        if !blocks.line(line).may_be_heading() {
             continue;
         }
         let trimmed = line.trim_start();

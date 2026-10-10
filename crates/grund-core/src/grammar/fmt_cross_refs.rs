@@ -21,7 +21,7 @@
 //! file holds both and nothing outside names either.
 
 use super::compiled::{Grammar, QUALIFIED_CITATION_PREFIX};
-use super::fence::markdown_fence_delimiter;
+use super::markdown_blocks::MarkdownBlocks;
 use super::never_rewrite::is_inside_inline_code;
 use super::settings::LexicalSettings;
 use super::shorthand::parse_id_arg_with_shorthand;
@@ -66,16 +66,15 @@ pub(crate) fn flatten_cross_ref_links(
         return body.to_string();
     }
     let mut out = String::with_capacity(body.len());
-    let mut markdown_fence = None;
+    let mut markdown_blocks = MarkdownBlocks::default();
     for line in body.split_inclusive('\n') {
         // §FS-check.1.1.5: use the established opener/closer grammar; a
         // delimiter or fenced content is verbatim, and ordinary prose resumes
-        // after the valid closer.
+        // after the valid closer. A raw-text HTML block is flattened like prose,
+        // and a fence opener inside one opens nothing (§FS-check.1.1.5.1).
         let fence_line = line.strip_suffix('\n').unwrap_or(line);
         let fence_line = fence_line.strip_suffix('\r').unwrap_or(fence_line);
-        let fence_delimiter =
-            markdown_body && markdown_fence_delimiter(&mut markdown_fence, fence_line);
-        if fence_delimiter || markdown_fence.is_some() {
+        if markdown_body && markdown_blocks.line(fence_line).in_fence() {
             out.push_str(line);
         } else {
             out.push_str(&flatten_cross_ref_links_line(line, settings));
