@@ -842,85 +842,69 @@ docstring_python   = true
 respect_gitignore  = true
 ```
 
-`include` is the set of paths scanned from the config root ([§FS-config.3.5.7](FS-config.md#357-include-is-scanned-from-the-config-root)), beside every configured kind home ([§FS-config.3.5.8](FS-config.md#358-every-configured-kind-home-is-scanned)). `exclude` is the set of directory names skipped at any depth — one path component each, so an entry containing `/` is refused rather than accepted as a path ([§FS-config.3.5.16](FS-config.md#3516-an-exclude-entry-containing--is-refused)) — `extensions` filters which files are read ([§FS-config.3.5.13](FS-config.md#3513-an-extension-makes-a-file-readable-not-declarable)), and `respect_gitignore` has the scan honor the ignore files as well ([§FS-config.3.5.15](FS-config.md#3515-respect_gitignore--the-ignore-files)). `comment_prefixes` are the tokens recognized when looking for source declarations and citations in source files, composed with `extensions` ([§FS-config.3.5.14](FS-config.md#3514-comment_prefixes-compose-with-extensions)); `docstring_python` enables Python triple-quoted-string scanning in addition to `#` comments. A hidden file is not read ([§FS-config.3.5.12](FS-config.md#3512-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)), and `include` is a scope, not a fence ([§FS-config.3.5.11](FS-config.md#3511-include-is-a-scan-scope-not-a-fence)). A scan that ends up reading no files at all is reported, not silently passed ([§FS-check.2.2](FS-check.md#22-empty-scan)).
+Which files these keys make a run read is [§FS-scan.scope](FS-scan.md#scope-which-files-a-run-reads). `comment_prefixes` are the tokens recognized when looking for source declarations and citations in source files, composed with `extensions` ([§FS-config.3.5.14](FS-config.md#3514-comment_prefixes-compose-with-extensions)); `docstring_python` enables Python triple-quoted-string scanning in addition to `#` comments.
 
 An opted-in kind's home JSON is catalog input rather than part of this scan. The exact discovery and independence from every key in this table are fixed by [§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations) and [§FS-values.2.2](FS-values.md#22-json-declarations-from-the-kind-home).
 
-**Symlinks ([§FS-config.3.5.1](FS-config.md#351-a-symlink-in-the-tree-is-followed)–[§FS-config.3.5.6](FS-config.md#356-which-unresolvable-links-are-owed-a-report)).** Decided in [§DF-symlink-scan](../decisions/functional/DF-symlink-scan.md#df-symlink-scan-a-symlink-in-the-scanned-tree-is-followed-and-the-report-names-the-link).
-
 #### 3.5.1 A symlink in the tree is followed
 
-A **file symlink** inside a scanned tree is followed wherever its target resolves. A
-**directory symlink** is followed only while its canonical target remains inside
-the independently checked project's canonical root; when the target is outside
-that root, the directory is pruned and no file below it is scanned. The same gate
-applies when a configured or explicit scan root is itself a directory symlink.
-
-This is a boundary on link traversal, not on scan paths generally: a non-symlink
-parent-relative `include` may still name external content. Nor does resolving the
-project's own config root make it an outward link: when the repository itself was
-reached through a symlink, its canonical root is the fence and its tree remains
-readable. In-root directory links keep their in-tree spelling and are followed as
-before. A loaded workspace adds the stronger ownership boundary of
-[§FS-workspace.6](FS-workspace.md#6-nested-project-boundary), so a link into
-another loaded project is pruned even when that project is physically inside the
-current project's root.
+See [§FS-scan.scope.links](FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed).
 
 #### 3.5.2 A finding names the in-tree link path
 
-Every finding from a link met **inside a scanned tree** is reported at the in-tree link path, never the target's: that is the path a reader can act on, and it is what keeps `relative_paths` output ([§FS-config.3.6](FS-config.md#36-output--report-format)) and the additivity rule of [§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full) meaningful. An explicit path argument follows the same reporting rule: resolving `grund check docs/beta.md` identifies and reads the target, but every text and JSON report names `docs/beta.md` as reached through the configured CLI base. This remains true when the target resolves outside the config root — the in-tree link is the bounded, actionable spelling and the external physical path never becomes report output.
+See [§FS-scan.identity.link-path](FS-scan.md#identitylink-path-a-finding-names-the-in-tree-link-path).
 
 ##### 3.5.2.1 The scan root keeps the path the run was handed
 
-The same rule reaches the **scan root itself**: a repository whose own path is reached through a link — a symlinked `~/work`, macOS resolving `/var` to `/private/var` — is scanned and reported under the path the run was handed, never the physical one it resolves to. Resolving a root is how a run recognizes that a scope *is* the config root; it is not a decision about what the report calls it, and a finding spelled physically is one [`relative_paths`](#36-output--report-format) cannot render and no reader of that repository ever wrote.
+See [§FS-scan.identity.root-path](FS-scan.md#identityroot-path-the-scan-root-keeps-the-path-the-run-was-handed).
 
 #### 3.5.3 The directory rules apply under the link name
 
-The directory rules above still apply to a followed directory under its **link** name, so `docs/node_modules -> ../../node_modules` is excluded exactly as a real directory of that name would be. The two boundaries that are *not* name rules are another project's root, which a link may not carry a scan across in any direction ([§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)), and an E2E case directory, whose fixture tree stays out of the host scan however a link reaches it ([§FS-config.3.4.4.3](FS-config.md#3443-e2e-is-configured-not-a-default)).
+See [§FS-scan.scope.links.names](FS-scan.md#scopelinksnames-the-directory-rules-apply-under-the-link-name).
 
 #### 3.5.4 One physical file is read once
 
-One **physical** file is read once however many spellings reach it; when two do, the surviving spelling is the earlier root's, and within a single root the lexicographically first one ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full), [§FS-errors.4](FS-errors.md#4-determinism)).
+See [§FS-scan.identity.read-once](FS-scan.md#identityread-once-one-physical-file-is-read-once).
 
 #### 3.5.5 A link the scan cannot resolve is reported, and not scanned into
 
-A link the scan cannot resolve is not a silent skip: a broken target, or a loop such as `docs/self -> .`, is the per-file scan failure of [§FS-check.2](FS-check.md#2-outputs) — reported at the link's own path, the scan continuing past it, the run exiting `2` ([§REQ-no-missed-citation.1](../requirements/REQ-no-missed-citation.md#1-no-silent-skips)). Past it, and never *into* it: a loop is pruned where it is met, including the kind whose target reaches back over the scan root itself (`docs/up -> ..`), so the run never reports findings out of a tree it has just called unreadable and `include` still bounds what was read.
+See [§FS-scan.scope.links.unresolvable](FS-scan.md#scopelinksunresolvable-a-link-the-scan-cannot-resolve-is-reported-and-not-scanned-into).
 
 #### 3.5.6 Which unresolvable links are owed a report
 
-That report is owed only where the scan would otherwise have read through the link, judged by the same rules as any other entry: the ignore files for both kinds, and `extensions` as well for a broken link, which names a file where a loop names a directory. So a dangling `docs/logo.png -> nowhere`, and a link of either kind that `.gitignore` covers, stay silent — the scan was never going to read them.
+See [§FS-scan.scope.links.owed](FS-scan.md#scopelinksowed-which-unresolvable-links-are-owed-a-report).
 
 ##### 3.5.6.1 A broken link with no extension is a declared blind spot
 
-A broken link with **no extension at all** is silent for the same reason and is worth naming, because it is the one case where that answer can be wrong: `docs/shared -> ../nonexistent-dir` would have been a directory to descend into had it resolved. Nothing on disk distinguishes it from `bin/tool -> nowhere`, since the target does not exist and only the target could have said which it was, and reporting every extensionless dangling link is the noise this gate exists to prevent. That is a declared, bounded blind spot ([§REQ-no-missed-citation.2](../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded)) and not a silent one: a link you need scanned is one you need to resolve.
+See [§FS-scan.scope.links.blind-spot](FS-scan.md#scopelinksblind-spot-a-broken-link-with-no-extension-is-a-declared-blind-spot).
 
 #### 3.5.7 `include` is scanned from the config root
 
-`include` is scanned **from the config root** — the directory the discovered `grund.toml` was found at ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), or, when no config was discovered, the current working directory (never a subdirectory that merely happened to be passed as `grund`'s path argument). So in a config-less repo `grund` (no path) and `grund check .` both scan `requirements.md`, `docs/`, `e2e/`, `src/` relative to the cwd, while `grund check src/foo` or `grund check lib/` scans exactly the file or directory it is handed — an explicit path argument overrides `include` rather than being filtered by it. A plain parent-relative entry such as `../shared` intentionally names external content and is still scanned; [§FS-config.3.5.1](FS-config.md#351-a-symlink-in-the-tree-is-followed)'s project-root boundary applies only when a **directory symlink** carries traversal outside the project.
+See [§FS-scan.scope.include](FS-scan.md#scopeinclude-include-is-scanned-from-the-config-root).
 
 #### 3.5.8 Every configured kind home is scanned
 
-**Every configured kind home is scanned, whether or not `include` names it** ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)). A home is the repository saying "declarations and citations live here", so `include` names the *extra* roots — `src`, `crates`, a `README.md` — rather than having to repeat the homes the `[[kinds]]` table already spelled. A home that does not exist scans as nothing and earns no finding, so a fresh repository whose default homes are not scaffolded yet stays silent. The one home that is not a scan root is the one the config says so about: `scan = false` ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)) lists a place without scanning it.
+See [§FS-scan.scope.homes](FS-scan.md#scopehomes-every-configured-kind-home-is-scanned).
 
 #### 3.5.9 A scan root outruns every rule about descent
 
-A home is a **scan root**, and no scan root is pruned by `exclude`, an ignore file, or the hidden-directory rule ([AR-scanner.1](../architecture/AR-scanner.md#1-tree-walk)) — so a home the repository also excludes is read, while everything *below* it is filtered as usual. That is the honest reading of a config that says both: the `[[kinds]]` entry names the directory, and `exclude` was written about descendants. All three are rules about a descent, which is why a root outruns them; the hidden-file rule is about a name, so a root does not outrun it ([§FS-config.3.5.12](FS-config.md#3512-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)).
+See [§FS-scan.scope.roots](FS-scan.md#scoperoots-a-scan-root-outruns-every-rule-about-descent).
 
 #### 3.5.10 Why every home is scanned
 
-Scanning every home closes a trap that had nothing to do with non-citable kinds and everything to do with why one would be configured: a `folder` or `file` outside `include` was never scanned, so its declarations did not exist and its citations were **invisible rather than dangling** — no resolution, no finding, nothing to notice. A kind whose entire content is "this directory matters" would have fallen into it on its first line of config. **Upgrade note:** a repository that had a home outside `include` starts seeing that home's findings; they were always true of the tree, and the run was simply not reading it.
+See [§FS-scan.scope.homes.why](FS-scan.md#scopehomeswhy-why-every-home-is-scanned).
 
 #### 3.5.11 `include` is a scan scope, not a fence
 
-A citation in a file that neither `include` nor a kind home brings into the scan is invisible rather than merely unchecked ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)), so `grund check --full` scans the whole config root past this key. The flag cancels `include` and, with it, the `scan = false` prune of [§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned), and nothing else: every other rule of this table applies to that scan unchanged ([§FS-check.1.3.1](FS-check.md#131-the-scan-covers-the-whole-config-root)), and what it reports outside the default scope is [§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)'s to say.
+See [§FS-scan.scope.not-a-fence](FS-scan.md#scopenot-a-fence-include-is-a-scan-scope-not-a-fence).
 
 #### 3.5.12 A hidden file is not read, and the rule is not about descent
 
-The scan skips a hidden directory by not descending into it; it skips a file whose own name begins with `.` by the name that file wears, before `extensions` is consulted at all ([AR-scanner.1](../architecture/AR-scanner.md#1-tree-walk)). So `docs/.notes.md` is not scanned though `md` is listed, and a citation inside it neither resolves nor dangles — it is invisible the way one outside `include` is, and `grund check --full` does not reach it either ([§FS-config.3.5.11](FS-config.md#3511-include-is-a-scan-scope-not-a-fence)). Being a rule about a name rather than about a descent, it also reaches a scan **root**, the one exception to [§FS-config.3.5.9](FS-config.md#359-a-scan-root-outruns-every-rule-about-descent): a `file` home whose name is hidden, like an `include` entry naming one, is not read as a root. It is a blind spot the repository can see and plan around ([§REQ-no-missed-citation.2](../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded)): what decides is the file's own name, so a document that must be checked is one not named as a dotfile, and a run handed such a file whose extension `extensions` *does* allow says so rather than blaming the list ([§FS-check.2.2](FS-check.md#22-empty-scan)).
+See [§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent).
 
 #### 3.5.13 An extension makes a file readable, not declarable
 
-Listing an extension makes a file *readable*, not declarable. A prose markup format other than Markdown — AsciiDoc, reStructuredText, LaTeX — has its citations checked as soon as its extension appears in `extensions`, because the citation grammar is format-agnostic; its native heading syntax still declares nothing, since a declaration is a `#`-prefixed heading or a comment-prefixed line. Whether those formats should be declaration homes of their own is an open discussion ([§DISC-markup-format-declarations](../discussions/proposals/2026-05-25-markup-format-declarations.md#disc-markup-format-declarations-declarations-in-asciidoc-restructuredtext-latex-and-similar-markup-document-formats)), not a configured behavior.
+See [§FS-scan.scope.extensions](FS-scan.md#scopeextensions-an-extension-makes-a-file-readable-not-declarable).
 
 #### 3.5.14 `comment_prefixes` compose with `extensions`
 
@@ -928,7 +912,7 @@ How `comment_prefixes` and `extensions` compose, and which lines a configured pr
 
 #### 3.5.15 `respect_gitignore` — the ignore files
 
-`respect_gitignore` (default `true`) makes the scanner honor every form of ignore file the `ignore` crate recognizes — `.gitignore` at any depth, `.git/info/exclude`, the global `core.excludesFile`, and `.ignore` files. Set to `false` only when you genuinely need to scan ignored paths. The directory-level `exclude` list is applied **in addition** to ignore-file rules, never instead of them. See [AR-scanner.1.1](../architecture/AR-scanner.md#11-respecting-gitignore-and-friends).
+See [§FS-scan.scope.ignore-files](FS-scan.md#scopeignore-files-respect_gitignore--the-ignore-files).
 
 #### 3.5.16 An `exclude` entry containing `/` is refused
 

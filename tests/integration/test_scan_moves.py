@@ -172,14 +172,12 @@ class ScanMoveTests(unittest.TestCase):
         self.assertTrue(SCAN.is_file(), f"{SCAN.relative_to(REPO_ROOT)} is not there")
         return _sections(SCAN)
 
-    @unittest.expectedFailure
     def test_every_chapter_the_page_promises_is_declared(self):
         declared = self.scan()
         self.assertIn("FS-scan", declared)
         self.assertEqual([], [c for c in CHAPTERS if c not in declared], "chapters missing")
         self.assertRegex(INDEX.read_text(encoding="utf-8"), re.escape(f"[{CITATION}](FS-scan.md#"))
 
-    @unittest.expectedFailure
     def test_the_page_has_named_chapters_one_terms_chapter_and_no_text_chapter(self):
         text = self.scan() and SCAN.read_text(encoding="utf-8")
         tops = re.findall(r"^## (\S+?):? ", text, re.M)
@@ -188,7 +186,6 @@ class ScanMoveTests(unittest.TestCase):
         self.assertEqual([], [t for t in tops if t == "text" or t.startswith("text.")],
                          "which text a file has is not this step's to define")
 
-    @unittest.expectedFailure
     def test_each_moved_sentence_lives_at_its_destination_only(self):
         declared = _sections(SCAN) if SCAN.is_file() else {}
         for source, label, chapter, fragments in MOVES:
@@ -200,7 +197,6 @@ class ScanMoveTests(unittest.TestCase):
                 self.assertIn(_flat(fragment), _flat(declared.get(chapter, "")),
                               f"FS-scan.{chapter} does not hold the moved sentence")
 
-    @unittest.expectedFailure
     def test_the_page_describes_todays_paths_and_cites_what_it_does_not_restate(self):
         declared = self.scan()
         page = SCAN.read_text(encoding="utf-8")
@@ -212,7 +208,6 @@ class ScanMoveTests(unittest.TestCase):
                   if label != "path.check" and _flat(CHECK_ONLY) in _flat(body)]
         self.assertEqual([], stated, "a path narrowing the report is check's meaning, not a rule")
 
-    @unittest.expectedFailure
     def test_every_frozen_spec_ends_smaller(self):
         for name, baseline in BASELINES.items():
             lines = (FS / name).read_text(encoding="utf-8").splitlines()
