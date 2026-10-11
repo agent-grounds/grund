@@ -160,7 +160,7 @@ cannot come to mean two things.
 For a query command a `<path>` selects a **project** and bounds no walk. For `grund check` it is the
 **report scope** — the set of files a finding may be about — while the **resolution scope** it reads
 stays the enclosing project's ordinary scope, `[scan] include` plus every walked kind home, union the path
-([§FS-check.1.3.6.1](../functional-spec/FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution)). The run walks the resolution scope, runs every rule over the whole of it, and drops
+([§FS-scan.path.check](../functional-spec/FS-scan.md#pathcheck-check-reads-more-than-it-reports)). The run walks the resolution scope, runs every rule over the whole of it, and drops
 the diagnostics anchored outside the report scope.
 
 So "a scope narrower than the root has to stay narrow" is a statement about which **projects** a walk covers

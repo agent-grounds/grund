@@ -315,7 +315,7 @@ One owner per document is also what keeps diagnostics honest: where nested proje
 
 #### 2.2.3 A document no project answers
 
-A document reachable only below a directory symlink whose canonical target is outside the project root is pruned by [§FS-config.3.5.1](FS-config.md#351-a-symlink-in-the-tree-is-followed), so that project publishes no diagnostics for it and hover and navigation return no result. If multiple projects only reach the same external document through their scans, none owns it: choosing by folder order or root shape would guess between independent projects, so requests return no result and neither project's diagnostics are published for that file ([§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess)).
+A document reachable only below a directory symlink whose canonical target is outside the project root is pruned by [§FS-scan.scope.links](FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed), so that project publishes no diagnostics for it and hover and navigation return no result. If multiple projects only reach the same external document through their scans, none owns it: choosing by folder order or root shape would guess between independent projects, so requests return no result and neither project's diagnostics are published for that file ([§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess)).
 
 #### 2.2.4 An unusable folder is skipped
 

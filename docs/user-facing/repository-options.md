@@ -42,7 +42,7 @@ An independently checked project's canonical root also bounds directory
 symlinks: outward directory targets are not scanned, including from inside a
 workspace member, while in-root directory links, file links, and intentional
 parent-relative `[scan] include` paths remain readable
-([§FS-config.3.5.1](../functional-spec/FS-config.md#351-a-symlink-in-the-tree-is-followed)).
+([§FS-scan.scope.links](../functional-spec/FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed)).
 
 ## Keep shared values consistent
 
