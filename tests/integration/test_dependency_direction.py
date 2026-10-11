@@ -8,6 +8,11 @@ that still run the other way is **empty**, and must stay so. The mechanism is
 kept rather than deleted — a future read against the direction is recorded here
 with its note, or it is not made at all — and the list can only shrink.
 
+A read through a root re-export is the read it is: `crate::Finding`, or a name
+in `use crate::{…}`, that `lib.rs` re-exports from a component is judged as a
+read of that component (§AR-system.5), so the crate root is no way around the
+order.
+
 A component's test modules — `tests_*.rs` beside the code they pin, and the
 shared fixtures in `testing.rs` — are skipped: a test module may read any
 component, because what it exercises is reached from wherever the run that
@@ -46,6 +51,11 @@ ORDER = {
 # line or in a path written out where it is called.
 REFERENCE = re.compile(r"\bcrate::([a-z_][a-z0-9_]*)::(\{[^}]*\}|[A-Za-z0-9_]+)")
 NOTE = "§AR-system.4"
+# `pub use <component>::{…};` or `pub type <Name> = <component>::…;` in `lib.rs`.
+ROOT_USE = re.compile(r"^pub use ([a-z_]+)::(\{[^}]*\}|[A-Za-z0-9_]+);", re.M | re.S)
+ROOT_TYPE = re.compile(r"^pub type ([A-Za-z0-9_]+)\s*=\s*([a-z_]+)::", re.M)
+# `crate::<Name>` or `crate::{<Name>, …}`: a read through the crate root.
+ROOT_READ = re.compile(r"\bcrate::(\{[^}]*\}|[A-Za-z_][A-Za-z0-9_]*)(?!\w|\s*::)")
 
 # The ledger of reads against the direction of §AR-system.1, and it is empty.
 
@@ -112,16 +122,47 @@ def _is_test_module(path):
     return path.name.startswith("tests_") or path.name == "testing.rs"
 
 
+def root_re_exports(text):
+    """Each name `lib.rs` re-exports from a component, mapped to that component."""
+    exported = {}
+    for component, items in ROOT_USE.findall(text):
+        for name in items.strip("{}").split(","):
+            name = name.strip().split(" as ")[-1].strip()
+            if name and component in ORDER:
+                exported[name] = component
+    for name, component in ROOT_TYPE.findall(text):
+        if component in ORDER:
+            exported[name] = component
+    return exported
+
+
+def root_reads(text, exported):
+    """`(<component>::<Name>, line)` for every code read of a re-exported name
+    through the crate root; a doc-comment link is not a read."""
+    for number, line in enumerate(text.splitlines(), 1):
+        if line.lstrip().startswith("//"):
+            continue
+        for match in ROOT_READ.finditer(line):
+            for name in match.group(1).strip("{}").split(","):
+                name = name.strip().split(" as ")[0].strip()
+                if name in exported:
+                    yield f"{exported[name]}::{name}", number
+
+
 def _references():
     """Every `crate::<other>::<item>` a component file makes, as
     (file, `<other>::<item>`) -> the line it is written on."""
     found = {}
+    exported = root_re_exports((CORE / "lib.rs").read_text(encoding="utf-8"))
     for component in _components():
         for path in sorted((CORE / component).glob("**/*.rs")):
             if _is_test_module(path):
                 continue
             text = path.read_text(encoding="utf-8")
             relative = path.relative_to(CORE).as_posix()
+            for item, line in root_reads(text, exported):
+                if item.split("::", 1)[0] != component:
+                    found.setdefault((relative, item), line)
             for match in REFERENCE.finditer(text):
                 other = match.group(1)
                 if other not in ORDER or other == component:
@@ -250,6 +291,39 @@ class DependencyDirectionTests(unittest.TestCase):
             if line is not None and not _note_is_above(file, line):
                 unmarked.append(f"{file}:{line} ({item})")
         self.assertEqual([], unmarked, "recorded reads with no §AR-system.4 note above them")
+
+
+class RootReExportTests(unittest.TestCase):
+    """§AR-system.5: the crate root is no way around the order."""
+
+    LIB = (
+        "pub use model::{\n    Finding, Report,\n};\n"
+        "pub use api::{ListEntry, list};\n"
+        "pub type Config = config::Config;\n"
+    )
+
+    def test_the_root_re_exports_are_read_off_lib_rs(self):
+        self.assertEqual(
+            {"Finding": "model", "Report": "model", "ListEntry": "api", "list": "api",
+             "Config": "config"},
+            root_re_exports(self.LIB),
+        )
+
+    def test_a_read_through_the_root_is_the_read_it_is(self):
+        text = (
+            "use crate::{Finding, ListEntry};\n"
+            "/// See [`ListEntry`](crate::ListEntry).\n"
+            "fn f(x: crate::Config) -> crate::list::Thing {}\n"
+        )
+        self.assertEqual(
+            [("model::Finding", 1), ("api::ListEntry", 1), ("config::Config", 3)],
+            list(root_reads(text, root_re_exports(self.LIB))),
+        )
+
+    def test_the_tree_s_root_re_exports_are_seen(self):
+        exported = root_re_exports((CORE / "lib.rs").read_text(encoding="utf-8"))
+        self.assertEqual("model", exported.get("Finding"))
+        self.assertEqual("api", exported.get("check"))
 
 
 class ConfigFacadeTests(unittest.TestCase):

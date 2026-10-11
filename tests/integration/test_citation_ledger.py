@@ -44,13 +44,32 @@ def is_code(path):
             and not name.startswith("tests_") and name != "testing.rs")
 
 
-def _look(point):
-    """Whether the point resolves, and the files citing it or a section beneath it."""
-    resolves = subprocess.run([_grund(), point, "--brief"], cwd=REPO_ROOT,
-                              capture_output=True).returncode == 0
-    out = subprocess.run([_grund(), "refs", point, "--descendants", "--format", "json"],
-                         cwd=REPO_ROOT, capture_output=True, text=True, check=True).stdout
-    return resolves, {json.loads(line)["path"] for line in out.splitlines() if line.strip()}
+def _citers(citations, point):
+    """The files whose citations name the point or a section beneath it."""
+    id_, _, section = point.partition(".")
+    return {c["path"] for c in citations if c["id"] == id_
+            and (not section or (c["section"] or "") == section
+                 or (c["section"] or "").startswith(section + "."))}
+
+
+def _found(points):
+    """What `look(point)` answers for every point, from two scans run side by side:
+    `grund cover` dumps every citation of the tree, `grund show --batch` says which
+    points resolve, rather than a `refs` and a `show` per point."""
+    def run(args, stdin=None):
+        return subprocess.run([_grund(), *args], cwd=REPO_ROOT, input=stdin,
+                              capture_output=True, text=True).stdout
+    queries = "".join(json.dumps({"id": p.partition(".")[0], "section": p.partition(".")[2] or None})
+                      + "\n" for p in points)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        cover = pool.submit(run, ["cover", "--format", "json"])
+        shown = pool.submit(run, ["show", "--batch", "--format", "json", "--brief"], queries)
+        citations = [c for line in cover.result().splitlines() if line.strip()
+                     for c in json.loads(line)["citations"]]
+        resolved = [json.loads(line)["ok"] for line in shown.result().splitlines() if line.strip()]
+    if len(resolved) != len(points):
+        raise AssertionError(f"show --batch answered {len(resolved)} of {len(points)} points")
+    return {p: (ok, _citers(citations, p)) for p, ok in zip(points, resolved)}
 
 
 def problems(families, look):
@@ -93,9 +112,7 @@ def manifest():
 class CitationLedgerTests(unittest.TestCase):
     def test_every_points_citers_are_its_owner_and_its_migration_rows(self):
         families = manifest()
-        points = [point for family in families for point in family["points"]]
-        with ThreadPoolExecutor(max_workers=8) as pool:
-            found = dict(zip(points, pool.map(_look, points)))
+        found = _found([point for family in families for point in family["points"]])
         wrong = problems(families, found.__getitem__)
         self.assertEqual([], wrong, "\n" + "\n".join(wrong))
 
