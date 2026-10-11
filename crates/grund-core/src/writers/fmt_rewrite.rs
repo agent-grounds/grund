@@ -21,9 +21,9 @@ use super::fmt_links::wrap_markdown_links_with_targets;
 use super::fmt_local_sections::expand_local_section_citations;
 use crate::config::Config;
 use crate::grammar::{
-    DocstringContent, DocstringCursor, FmtDirectives, MarkdownBlocks, MarkdownLine,
-    declaration_id_on_line, id_token_end_at, in_escape_position, is_inside_inline_code,
-    is_inside_markdown_link_destination, string_literal_in,
+    CandidateReading, DocstringContent, DocstringCursor, FmtDirectives, MarkdownBlocks,
+    MarkdownLine, declaration_id_on_line, id_token_end_at, in_escape_position,
+    is_inside_inline_code, is_inside_markdown_link_destination, string_literal_in,
 };
 use crate::model::{Catalog, Id};
 use crate::resolver::{
@@ -450,6 +450,12 @@ pub(super) fn add_markers(
             continue;
         }
         if is_md && is_inside_inline_code(line, found.start()) {
+            continue;
+        }
+        // §FS-check.1.1.11: an unmarked pattern is one prose token; promoting its
+        // prefix would write the very edge the reading forbids.
+        let rest = &line[found.start()..];
+        if let CandidateReading::Pattern(_) = config.grammar.read_candidate(rest, found.len()) {
             continue;
         }
         if is_md && is_inside_markdown_link_destination(line, found.start()) {

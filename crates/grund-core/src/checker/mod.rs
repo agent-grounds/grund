@@ -42,6 +42,7 @@ mod chapter_rules;
 mod citation_prohibitions;
 mod citations;
 mod conform;
+mod glob_citations;
 mod grounding;
 mod homes;
 mod index;

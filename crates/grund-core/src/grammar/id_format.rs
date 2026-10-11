@@ -2,6 +2,7 @@ use anyhow::{Result, anyhow};
 use regex::Regex;
 
 use super::compiled::Grammar;
+use super::glob_candidate::CandidateReading;
 use super::shorthand::parse_id_arg_with_shorthand;
 use crate::model::Id;
 
@@ -524,6 +525,12 @@ pub(crate) fn id_token_end_at(line: &str, at: usize, grammar: &Grammar) -> Optio
         .filter(|found| found.start() == at)
         .filter(|found| !grammar.has_reserved_named_tail(line, found.end()))
     {
+        // §FS-check.1.1.11: a pattern has no ID to mark, so its trigger stays as written.
+        if let CandidateReading::Pattern(_) =
+            grammar.read_qualified_candidate(&line[at..], found.len())
+        {
+            return None;
+        }
         return Some(found.end());
     }
     let rest = line.get(at..)?;
@@ -535,6 +542,13 @@ pub(crate) fn id_token_end_at(line: &str, at: usize, grammar: &Grammar) -> Optio
         .filter(|found| grammar.id_token_ends_cleanly(rest, found.end()))
         .filter(|found| !grammar.has_reserved_named_tail(rest, found.end()))
         .max_by_key(|found| found.end())
+        // §FS-check.1.1.11: nor does a pattern on a shorthand prefix (`$$FS-001-*`).
+        .filter(|found| {
+            !matches!(
+                grammar.read_qualified_candidate(rest, found.end()),
+                CandidateReading::Pattern(_)
+            )
+        })
         .map(|found| at + found.end())
 }
 

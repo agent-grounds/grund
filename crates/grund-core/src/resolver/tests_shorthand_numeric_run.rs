@@ -187,7 +187,9 @@ fn a_construct_boundary_does_not_open_a_run() {
         expand("Quoted \"§FS-042\"/2 here"),
         "Quoted \"§FS-042-user-login\"/2 here"
     );
-    assert_eq!(expand("Braced §FS-042{2}"), "Braced §FS-042-user-login{2}");
+    // A `{` before an address character is an alternation, so the braced count is
+    // a pattern fmt never rewrites (§FS-check.1.1.11), not a construct boundary.
+    assert_eq!(expand("Braced §FS-042{2}"), "Braced §FS-042{2}");
     // Clause 2 on its own, with no bracket anywhere: a `<alias>/` namespace
     // precedes a citation and never follows one, so a path glued to the token
     // carries no second number.

@@ -2,10 +2,12 @@ use std::collections::BTreeSet;
 
 use super::citation_line::CitationLine;
 use crate::grammar::{
-    QUALIFIED_CITATION_PREFIX, never_rewrite_context_in, parse_id, parse_longest_id_prefix,
-    qualified_suppressed_in_source,
+    CandidateReading, QUALIFIED_CITATION_PREFIX, never_rewrite_context_in, parse_id,
+    parse_longest_id_prefix, qualified_suppressed_in_source,
 };
-use crate::model::{Catalog, Citation, LegacyCitationCandidate, LocalSectionCitationCandidate};
+use crate::model::{
+    Catalog, Citation, GlobCitation, LegacyCitationCandidate, LocalSectionCitationCandidate,
+};
 
 /// Whether `fmt` may rewrite the citation whose marker starts at `marker_start` —
 /// a **`scan_line`** offset, which is what every pass below holds — on the line
@@ -106,6 +108,10 @@ pub(super) fn scan_legacy_citation_candidates(line: &CitationLine<'_>, findings:
     }
     for (marker_start, _) in line.scan_line.match_indices(&line.schema.citation.marker) {
         let column = line.column_offset + marker_start + 1;
+        // §FS-check.1.1.11: a pattern's marker yields no catalog-compatible prefix either.
+        if glob_claimed(line, marker_start, findings) {
+            continue;
+        }
         let token_start = marker_start + line.schema.citation.marker.len();
         let Some(rest) = line.scan_line.get(token_start..) else {
             continue;
@@ -138,6 +144,87 @@ pub(super) fn scan_legacy_citation_candidates(line: &CitationLine<'_>, findings:
                 enclosing_section: None,
             });
     }
+}
+
+/// §FS-check.1.1.11 / §AR-scanner.2.3.6: the line's full-ID captures, after
+/// recording each marked candidate they read as a pattern — at its marker's
+/// column and as written after the marker, for §FS-check.checks.glob-citation —
+/// and claiming its marker, so no later pass on the line reads a prefix there.
+/// Outside a workspace this grammar also reads a marked qualified token, so a
+/// pattern after its `<alias>/` yields no prefix capture either; the fallback
+/// pass reports its alias, which no run without a workspace knows. In a
+/// workspace the target's grammar reads the tail in the qualified pass.
+pub(super) fn claim_citation_tokens<'a>(
+    line: &CitationLine<'a>,
+    workspace_mode: bool,
+    claimed_markers: &mut Vec<usize>,
+    findings: &mut Catalog,
+) -> Vec<(usize, regex::Captures<'a>)> {
+    let marker = line.schema.citation.marker.as_str();
+    let grammar = line.frame.grammar();
+    let mut tokens = grammar.citation_captures(line.scan_line, marker);
+    for span in &tokens.patterns {
+        claimed_markers.push(span.start);
+        record_glob_citation(line, span.clone(), findings);
+    }
+    if !workspace_mode {
+        tokens.captures.retain(|(offset, caps)| {
+            let (Some(full), Some(alias)) = (caps.get(0), caps.name("namespace")) else {
+                return true;
+            };
+            let token_start = offset + full.start();
+            let Some(marker_start) = token_start.checked_sub(marker.len()) else {
+                return true;
+            };
+            if !line.scan_line[..token_start].ends_with(marker)
+                || qualified_suppressed_in_source(line.scan_line, line.is_md, marker_start)
+            {
+                return true;
+            }
+            let tail_start = offset + alias.end() + 1;
+            let prefix_len = offset + full.end() - tail_start;
+            if !matches!(
+                grammar.read_candidate(&line.scan_line[tail_start..], prefix_len),
+                CandidateReading::Pattern(_)
+            ) {
+                return true;
+            }
+            // Outside a workspace every alias is unknown, so the fallback pass reports
+            // the alias for the whole token rather than a pattern (§FS-check.3.8).
+            claimed_markers.push(marker_start);
+            false
+        });
+    }
+    tokens.captures
+}
+
+/// Whether a pattern was already recorded at the marker at `marker_start`
+/// (§FS-check.1.1.11), so a later pass on the line reads no prefix there.
+pub(super) fn glob_claimed(
+    line: &CitationLine<'_>,
+    marker_start: usize,
+    findings: &Catalog,
+) -> bool {
+    let column = line.column_offset + marker_start + 1;
+    findings.glob_citations.iter().any(|pattern| {
+        pattern.line == line.lineno && pattern.column == column && pattern.file == line.path
+    })
+}
+
+/// §FS-check.checks.glob-citation: record the pattern spanning `span`, from its
+/// marker to its end, at the marker's column and as written after the marker.
+pub(super) fn record_glob_citation(
+    line: &CitationLine<'_>,
+    span: std::ops::Range<usize>,
+    findings: &mut Catalog,
+) {
+    let marker = line.schema.citation.marker.as_str();
+    findings.glob_citations.push(GlobCitation {
+        file: line.path.to_path_buf(),
+        line: line.lineno,
+        column: line.column_offset + span.start + 1,
+        token: line.scan_line[span.start + marker.len()..span.end].to_string(),
+    });
 }
 
 /// §AR-scanner.2.5: collect `<§>`-escaped citation illustrations. The literal
@@ -178,6 +265,12 @@ pub(super) fn scan_escaped_citations(line: &CitationLine<'_>, findings: &mut Cat
         let Some(parsed) = parse_longest_id_prefix(id_rest, line.frame.grammar()) else {
             continue;
         };
+        // §FS-check.1.1.11: an escaped pattern illustrates a pattern, never its prefix.
+        if let CandidateReading::Pattern(_) =
+            line.frame.grammar().read_candidate(id_rest, parsed.len)
+        {
+            continue;
+        }
         let token_end = token_start + alias_len + parsed.len;
         findings.escaped_citations.push(Citation {
             namespace,
