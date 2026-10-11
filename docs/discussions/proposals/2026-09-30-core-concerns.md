@@ -42,6 +42,8 @@ Reconciled on 2026-10-07 under `agent-grounds/grund#451`, against the releases t
 
 What is open stays open here until its owner ticket rules, and where that ruling and this document disagree the ruling wins and this document is corrected with it. Nothing in this reconciliation releases a behaviour ticket: each of `agent-grounds/grund#453` to `agent-grounds/grund#468` keeps its own discussion gate, and the schema view proposed as `grund schema` (`agent-grounds/grund#463`) is a separate command rather than a `config show` renderer, specified nowhere here.
 
+**Status 2026-10-11.** `agent-grounds/grund#458` implements fields, `closed` and `form` for version 2 ([§FS-fields](../../functional-spec/FS-fields.md#fs-fields-a-v2-kind-states-the-shape-of-its-declarations-and-check-holds-every-declaration-to-it), [§DF-kind-fields](../../decisions/functional/DF-kind-fields.md#df-kind-fields-a-kind-states-its-fields-by-section-name-and-a-present-optional-field-is-still-checked)). That settles the field half of [§DISC-core-concerns.3.7](2026-09-30-core-concerns.md#37-fields-and-form-the-type-of-a-kind) and nothing in the table above: whether fields render with a kind's rules stays open with `agent-grounds/grund#460`, and adopting them in this repository with `agent-grounds/grund#464`. It is not shipped until a release carries it.
+
 ## 2. Context — what is not separated today
 
 ### 2.1 The spec states one axis and not the other
@@ -647,6 +649,8 @@ Gate: every existing test and e2e case byte-identical, no new upward read, and t
 
 Not shipped. Planned for `0.18.0`, as `agent-grounds/grund#455` to `agent-grounds/grund#462`, beside the section-citation ramp `0.16.1` already names for that release ([§FS-rules.7.8](../../functional-spec/FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)).
 
+
+**Status 2026-10-11.** Fields and `form` are implemented under `agent-grounds/grund#458`: the v2 reader reads `[schema.kinds.<KIND>.fields.<name>]`, `closed` and `form`, refuses a malformed shape at its key, and `grund check` reports `missing-field`, `misplaced-field`, `mistitled-field`, `invalid-field-value` and `undeclared-chapter` ([§FS-fields.checks](../../functional-spec/FS-fields.md#checks-checks)), paired with the chapter rules a field expresses ([§FS-rules.6](../../functional-spec/FS-rules.md#6-semantic-deduplication)). Phase 2 is still not shipped.
 
 The v2 reader (`config/v2.rs`) with keyed rows and fields, measure tables, the envelope, the language table, `[rules.resolution]`, `[presentation.kinds.<name>]`, `anchors` and `links`; the defaults epoch; fields and `form`; `grund config migrate [--to 2] [--write]`; `init` writing v2 and only what differs from a default; the run flags `--format` and `--path-base`; one caution on a v1 config naming `migrate` and no release ([§FS-config.1.2.1](../../functional-spec/FS-config.md#121-no-release-removes-the-agents-location)'s shape); and [§FS-config.3](../../functional-spec/FS-config.md#3-keys) reordered by concern with the v1 key sections under a chapter the reader keeps forever.
 

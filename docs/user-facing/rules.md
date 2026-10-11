@@ -276,3 +276,31 @@ last field — `null` where no rule authored it, `["--rule"]` for the trial
 sentence, `["--rule","RULE-security"]` where both reached the same meaning — so
 a caller can ask which rule said this without matching message text.
 [§FS-rules.8](../functional-spec/FS-rules.md#8-command-surfaces) [§FS-check.1.4](../functional-spec/FS-check.md#14-selecting-findings-with---only-and---ignore) [§FS-errors.5.1](../functional-spec/FS-errors.md#51-on-stdout--the-commands-output)
+
+### Fields and chapter rules
+
+A version-2 kind can also declare its chapters as fields
+([fields guide](fields.md)). The two overlap on one question — is the chapter
+there — and answer it differently. A chapter rule counts chapters by display
+name, case-insensitively, and can name one exact declaration as its subject; a
+field finds its chapter by section name and adds what a rule cannot say: where
+the chapter stands, what it is titled byte for byte, which values a scalar may
+take, and whether anything else may appear. Reach for a field to state a kind's
+shape, and for a rule to state a count, to bind one declaration, or in a
+version-1 project.
+
+Neither replaces the other: a presence rule stays valid, rendered and evaluated
+beside a field that expresses it, as `RULE-terms` stays beside a `terms` field.
+A field expresses a rule when its `title`, or its name where it has none,
+equals the rule's chapter name ignoring case. Where both see the same absence
+in one declaration on the same channel — the rule counts zero chapters and the
+field reports `missing-field` or `mistitled-field` — the field's finding is the
+one reported, and the rule's `chapter-cardinality` is dropped with no rule ID
+appended, the way a `[citations]` duplicate already wins. A defect only one of
+them sees still reports: two chapters titled Terms under different names fail
+the rule and not the field, `## glossary: Terms` fails the field and not the
+rule, and a `must` rule beside a `warn` field reports both, so adding a field
+never weakens a rule. The pairing happens before `--only` and `--ignore`, so
+`--only chapter-cardinality` does not bring a paired absence back, and the
+language server sees the same findings.
+[§FS-rules.6](../functional-spec/FS-rules.md#6-semantic-deduplication) [§FS-fields.rules](../functional-spec/FS-fields.md#rules-fields-beside-chapter-rules)

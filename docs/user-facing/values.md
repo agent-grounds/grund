@@ -141,6 +141,16 @@ The regulator expects `24` (§AR-value-probe.values.aux-voltage.1) volts.
 `values.aux-voltage` keeps its coordinate whatever is inserted or reordered
 around it, which is the point of naming it rather than numbering it.
 
+In a version-2 `grund.toml` the same chapter is a field with
+`content = "values"`, and it means exactly what `value_chapter` means — the
+same roots, findings and prerequisites — plus whatever `presence`, `position`
+or `title` the field adds ([§FS-fields.content.values](../functional-spec/FS-fields.md#contentvalues-a-values-field-is-the-value-chapter), [fields guide](fields.md)):
+
+```toml
+[schema.kinds.AR.fields.values]
+content = "values"
+```
+
 Four things decide what the key does and do not bend:
 
 - **`[id] named_sections = true` is a prerequisite**, not a consequence. Setting
