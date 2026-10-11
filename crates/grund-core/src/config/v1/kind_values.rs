@@ -5,27 +5,36 @@
 //! value coordinate could ever exist. The v1 reader asks them per entry, in
 //! the same pass as the row refusals they are interleaved with, because the
 //! home they check is read off the filesystem under the config root
-//! (§AR-config.4).
+//! (§AR-config.4). The v2 reader asks the same ones of `form` and a values
+//! field, so one spelling has one set of prerequisites (§FS-fields.forms).
 
 use anyhow::{Result, anyhow};
 use std::fs;
 use std::path::Path;
 
-use super::kind_table::ParsedKind;
+use crate::config::kind::KindConfig;
 use crate::model::{format_path, normalize_path_lexically};
 
+/// The lines a row's value refusals are located at: the key that wrote each,
+/// or the row's header (§FS-config.4.3).
+pub(in crate::config) struct ValueLines {
+    pub(in crate::config) header: usize,
+    pub(in crate::config) values: Option<usize>,
+    pub(in crate::config) value_chapter: Option<usize>,
+}
+
 /// Every relationship `values` and `value_chapter` need of their own row
-/// (§FS-config.3.4.9, §FS-config.3.4.13). Located at the key's own line, so the
-/// message opens the line that has to change.
-pub(super) fn validate_kind_value_keys(
+/// (§FS-config.3.4.9, §FS-config.3.4.13, §FS-fields.forms). Located at the
+/// key's own line, so the message opens the line that has to change.
+pub(in crate::config) fn validate_kind_value_keys(
     path: &Path,
-    entry: &ParsedKind,
+    k: &KindConfig,
+    lines: &ValueLines,
     root: &Path,
     named_sections: bool,
 ) -> Result<()> {
-    let k = &entry.config;
     if k.values {
-        let line = entry.values_line.unwrap_or(entry.header_line);
+        let line = lines.values.unwrap_or(lines.header);
         if !k.citable {
             return Err(anyhow!(
                 "{}:{line}: kind `{}` sets `values = true` with `citable = false`",
@@ -50,7 +59,7 @@ pub(super) fn validate_kind_value_keys(
     // state in which no coordinate could ever exist, so the config is
     // refused rather than left to produce a chapter nothing reads.
     if k.value_chapter.is_some() {
-        let line = entry.value_chapter_line.unwrap_or(entry.header_line);
+        let line = lines.value_chapter.unwrap_or(lines.header);
         // §FS-config.3.2.7 is a prerequisite, not a consequence: without
         // named sections the handle this key names is not even a section.
         if !named_sections {
@@ -97,6 +106,28 @@ pub(super) fn validate_kind_value_keys(
         validate_value_home(path, line, root, &k.kind, home, expects_file)?;
     }
     Ok(())
+}
+
+/// §FS-config.3.4.12, §FS-fields.forms: why a rule kind's row cannot hold
+/// rules, if it cannot — the refusal v1 writes unlocated and v2 at `form`.
+pub(in crate::config) fn rule_kind_refusal(k: &KindConfig) -> Option<String> {
+    let rule_file_is_markdown = k
+        .file
+        .as_deref()
+        .is_none_or(|file| Path::new(file).extension().and_then(|ext| ext.to_str()) == Some("md"));
+    let refused = k.rules
+        && (!k.citable
+            || !k.scan
+            || (k.folder.is_none() && k.file.is_none())
+            || !rule_file_is_markdown
+            || k.values
+            || k.fetch.is_some());
+    refused.then(|| {
+        format!(
+            "kind `{}` sets `rules = true` but rule kinds must be citable, scanned Markdown kinds with a `file` or `folder` home and without `values` or `fetch`",
+            k.kind
+        )
+    })
 }
 
 /// A value home is mandatory, existing, and physically inside the project root

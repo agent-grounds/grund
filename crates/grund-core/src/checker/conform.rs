@@ -2,6 +2,7 @@
 //! declaration and heading is judged against its own kind's shape and nothing
 //! else, so the half is handed the schema and no `Rules` (§AR-config.5).
 
+use super::fields::check_fields;
 use super::glob_citations::check_glob_citations;
 use super::homes::{KindHomeIndex, paths_same_location_key};
 use super::inline_style::check_inline_citation_style;
@@ -17,7 +18,7 @@ use crate::model::{
 
 /// §AR-checker.1.1: duplicate, misplaced-declaration, broken-stub and
 /// declaration-near-miss (§FS-declarations.checks), the section family, inline
-/// citation style and the opt-in lead budget, each pass in the order the single
+/// citation style, the opt-in lead budget and the field family (§FS-fields.checks), each pass in the order the single
 /// driver ran it. Unsorted: the merge sorts (§AR-checker.1.4).
 pub(crate) fn conform(
     schema: &Schema,
@@ -46,6 +47,8 @@ pub(crate) fn conform(
     check_declaration_near_misses(catalog, &mut report);
     // §FS-check.checks.glob-citation: patterns written where a citation belongs.
     check_glob_citations(catalog, schema, &mut report);
+    // §FS-fields.checks: each declaration against its kind's fields and `closed`.
+    check_fields(catalog, schema, frame, &mut report);
     report
 }
 

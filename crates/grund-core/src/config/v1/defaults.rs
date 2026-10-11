@@ -12,7 +12,7 @@ use super::kind_defaults::{
 };
 use crate::config::project::{
     CitationSyntax, FmtPresentation, Grounding, IdGrammar, Members, NoteStyle, OutputPresentation,
-    Presentation, Project, Rules, Schema, Sources,
+    Presentation, Project, Rules, Schema, Sources, Strength,
 };
 use crate::config::record::{DEFAULT_GROUNDING_LEVEL, ShorthandPolicy};
 use crate::config::rows::{Extent, Form, Kind, Nesting, Origin, Place, Row};
@@ -161,6 +161,8 @@ fn built_in_rows(existing_config: bool) -> Vec<Row> {
                     form: Form::Prose,
                     index: default_kind_index(name),
                     origin: Origin::Local,
+                    fields: Vec::new(),
+                    closed: Strength::May,
                 }),
             }
         })

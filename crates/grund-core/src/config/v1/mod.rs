@@ -26,6 +26,7 @@ use super::project::Project;
 use kind_table::ParsedKind;
 
 pub(super) use defaults::default_project;
+pub(super) use kind_values::{ValueLines, rule_kind_refusal, validate_kind_value_keys};
 pub(super) use parse::{bail_config, parse_bool, parse_string, parse_usize};
 pub(crate) use parse::{parse_string_list, strip_comment};
 

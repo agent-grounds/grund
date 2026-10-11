@@ -20,7 +20,6 @@ use super::facade::Records;
 use super::kind::KindConfig;
 use super::point_sizes::LeadSizeWarning;
 use super::project::Schema;
-use super::rows::Form;
 use super::run_warnings::RunWarning;
 use super::slots::{Content, Handle, Slot};
 use super::v1;
@@ -451,18 +450,16 @@ pub(crate) fn kind_value_chapter<'a>(schema: &'a Schema, kind: &str) -> Option<&
     schema
         .kinds()
         .find(|(name, _)| *name == kind)
-        .and_then(|(_, configured)| match &configured.form {
-            // §AR-config.6.2: a value kind's chapter is its one named values slot.
-            Form::Value { .. } => configured.slots().find_map(|slot| match slot {
+        .and_then(|(_, configured)| {
+            // §AR-config.6.2, §FS-fields.content.values: the kind's one named values slot,
+            // whatever its form.
+            configured.slots().find_map(|slot| match slot {
                 Slot {
                     handle: Handle::Named(chapter),
                     content: Content::Values,
                     ..
                 } => Some(chapter),
                 _ => None,
-            }),
-            // A rule kind yields no slot, so its v1 value chapter is read off the form.
-            Form::Rule { value_chapter } => value_chapter.as_deref(),
-            Form::Prose => None,
+            })
         })
 }

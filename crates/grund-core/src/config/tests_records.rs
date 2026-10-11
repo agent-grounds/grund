@@ -20,6 +20,8 @@ fn prose() -> Kind {
         form: Form::Prose,
         index: KindIndex::Default,
         origin: Origin::Local,
+        fields: Vec::new(),
+        closed: Strength::May,
     }
 }
 

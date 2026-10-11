@@ -23,6 +23,8 @@ pub(super) enum Table {
     Layout(Option<usize>),
     /// `[schema.kinds.<NAME>]`: the index of its draft row.
     Row(usize),
+    /// `[schema.kinds.<NAME>.fields.<field>]`: the index of its draft field.
+    Field(usize),
     /// `[rules.citations]`.
     Citations,
     /// `[rules.citations.<KIND>]` and the lists read so far, each at its line.
@@ -69,6 +71,8 @@ pub(super) enum Opened {
     Table(Table),
     /// A row header; the reader makes its draft.
     Row(String),
+    /// A field header, its kind and its name; the reader makes its draft.
+    Field(String, String),
     Refused(String),
 }
 
@@ -100,9 +104,10 @@ pub(super) fn open(name: &str) -> Opened {
         ["schema", "notes", "layout"] => Table::Layout(None),
         ["schema", "leads", "words"] => Table::Measure(Measure::Words, Vec::new()),
         ["schema", "kinds", row] => return Opened::Row(row.to_string()),
-        // §FS-config-v2.schema.fields: #458's fields.
-        ["schema", "kinds", _, "fields", ..] => {
-            return Opened::Refused(not_yet(&format!("[{name}]")));
+        // §FS-config-v2.schema.fields, §FS-fields.declare.field.
+        ["schema", "kinds", _, "fields"] => Table::Parent,
+        ["schema", "kinds", row, "fields", field] => {
+            return Opened::Field(row.to_string(), field.to_string());
         }
         ["rules", "citations"] => Table::Citations,
         ["rules", "citations", "grounding"] => Table::Ladder(None, Vec::new()),

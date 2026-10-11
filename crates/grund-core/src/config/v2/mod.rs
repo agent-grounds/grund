@@ -7,11 +7,13 @@
 //! `walk.rs` is the line walk and the bookkeeping every table shares — explicit
 //! headers, duplicate keys, the strength-key collision; `tables.rs` names the
 //! table a header opens; `schema.rs`, `measures.rs`, `rules.rs` and
-//! `presentation.rs` read the keys of each concern; `finish.rs` judges what
+//! `presentation.rs` read the keys of each concern, and `fields.rs` a kind's
+//! fields (§FS-fields); `finish.rs` judges what
 //! only the whole file can say and lowers the rows; `defaults.rs` is the v2
 //! epoch; and `render.rs` writes a project back out in v2 spelling.
 
 mod defaults;
+mod fields;
 mod finish;
 mod measures;
 mod presentation;
@@ -48,10 +50,11 @@ pub(super) fn selects(text: &str) -> bool {
 
 /// §FS-config-v2.reader: lower a v2 file's `text` into a `Project`, refusing
 /// every spelling at the line it was written at (§FS-config-v2.reader.4).
-/// `report_path` is the path every error names. The meanings both readers share
-/// are judged afterwards, once, in `config/validate.rs` (§AR-config.4).
-pub(super) fn read(text: &str, report_path: &Path) -> Result<Project> {
+/// `report_path` is the path every error names, and `root` the config root a
+/// value home must exist under (§FS-fields.forms). The meanings both readers
+/// share are judged afterwards, once, in `config/validate.rs` (§AR-config.4).
+pub(super) fn read(text: &str, report_path: &Path, root: &Path) -> Result<Project> {
     let mut reader = walk::Reader::new(report_path);
     walk::walk(text, &mut reader)?;
-    finish::finish(reader)
+    finish::finish(reader, root)
 }

@@ -6,11 +6,13 @@
 use anyhow::Result;
 use std::path::{Component, Path};
 
+use super::fields::bodiless;
 use super::tables::not_yet;
 use super::walk::Reader;
 use crate::config::kind::KindIndex;
+use crate::config::project::Strength;
 use crate::config::record::ShorthandPolicy;
-use crate::config::rows::Extent;
+use crate::config::rows::{Extent, Form};
 use crate::config::v1::{parse_bool, parse_string, parse_string_list};
 use crate::grammar::{id_grammar_literal_slash_error, id_grammar_v2_slash_error};
 
@@ -28,6 +30,10 @@ pub(super) struct RowDraft {
     pub(super) index: Option<(KindIndex, usize)>,
     pub(super) id_format: Option<(String, usize)>,
     pub(super) fetch: Option<(String, usize)>,
+    /// §FS-fields.declare.form: `None` is `prose`.
+    pub(super) form: Option<(Form, usize)>,
+    /// §FS-fields.declare.closed: `None` is `may`.
+    pub(super) closed: Option<(Strength, usize)>,
 }
 
 impl RowDraft {
@@ -42,6 +48,8 @@ impl RowDraft {
             index: None,
             id_format: None,
             fetch: None,
+            form: None,
+            closed: None,
         }
     }
 }
@@ -190,11 +198,48 @@ pub(super) fn row_key(
             let fetch = parse_string(r.path, line, value)?;
             r.rows[index].fetch = Some((fetch, line));
         }
-        // §FS-config-v2.schema.fields: #458's row keys.
-        "form" | "closed" | "one_of" => return r.fail(line, not_yet(&clause)),
+        // §FS-fields.declare.form
+        "form" => {
+            let form = parse_string(r.path, line, value)?;
+            let parsed = match form.as_str() {
+                "prose" => Form::Prose,
+                "value" => Form::Value,
+                "rule" => Form::Rule,
+                _ => {
+                    let message = format!(
+                        "unknown [schema.kinds.{}] form `{form}` (expected prose, value, or rule)",
+                        r.rows[index].name
+                    );
+                    return r.fail(line, message);
+                }
+            };
+            r.rows[index].form = Some((parsed, line));
+        }
+        // §FS-fields.declare.closed
+        "closed" => {
+            let closed = parse_string(r.path, line, value)?;
+            let Some(strength) = Strength::parse(&closed) else {
+                let message = format!(
+                    "unknown [schema.kinds.{}] closed `{closed}` (expected must, warn, should, or may)",
+                    r.rows[index].name
+                );
+                return r.fail(line, message);
+            };
+            r.rows[index].closed = Some((strength, line));
+        }
         _ => return Ok(false),
     }
     Ok(true)
+}
+
+/// §FS-fields.forms: once a row's keys are all read, a kind with no authored
+/// body cannot be closed, refused at `closed`.
+pub(super) fn close_row(r: &Reader, index: usize) -> Result<()> {
+    let row = &r.rows[index];
+    if let (Some((_, line)), Some(why)) = (row.closed, bodiless(row)) {
+        return r.fail(line, format!("{why}, so it cannot be closed"));
+    }
+    Ok(())
 }
 
 /// Why an `index` value cannot name the folder's index: it must be a Markdown

@@ -13,9 +13,10 @@ use std::path::Path;
 
 use super::kind_defaults::default_kind_index;
 use super::kind_table::ParsedKind;
-use super::kind_values::validate_kind_value_keys;
+use super::kind_values::{ValueLines, rule_kind_refusal, validate_kind_value_keys};
+use crate::config::fields::Field;
 use crate::config::kind::{KindConfig, KindIndex, KindResolution};
-use crate::config::project::{KindGrounding, Project};
+use crate::config::project::{KindGrounding, Project, Strength};
 use crate::config::record::{CODE_SOURCE_KIND, ConfigLocation};
 use crate::config::rows::{Extent, Form, Kind, Origin, Place, Row};
 use crate::model::format_path;
@@ -52,22 +53,8 @@ pub(super) fn lower_parsed_kinds(
     }
     for entry in &parsed {
         let k = &entry.config;
-        let rule_file_is_markdown = k.file.as_deref().is_none_or(|file| {
-            Path::new(file).extension().and_then(|ext| ext.to_str()) == Some("md")
-        });
-        if k.rules
-            && (!k.citable
-                || !k.scan
-                || (k.folder.is_none() && k.file.is_none())
-                || !rule_file_is_markdown
-                || k.values
-                || k.fetch.is_some())
-        {
-            return Err(anyhow!(
-                "{}: kind `{}` sets `rules = true` but rule kinds must be citable, scanned Markdown kinds with a `file` or `folder` home and without `values` or `fetch`",
-                format_path(path),
-                k.kind
-            ));
+        if let Some(refusal) = rule_kind_refusal(k) {
+            return Err(anyhow!("{}: {refusal}", format_path(path)));
         }
         // §FS-config.3.4.10: an override belongs only to an ID namespace; an
         // explicit obligation needs the fetch remedy, and fetching needs one
@@ -141,7 +128,12 @@ pub(super) fn lower_parsed_kinds(
                 format_path(path)
             ));
         }
-        validate_kind_value_keys(path, entry, root, project.schema.ids.named_sections)?;
+        let lines = ValueLines {
+            header: entry.header_line,
+            values: entry.values_line,
+            value_chapter: entry.value_chapter_line,
+        };
+        validate_kind_value_keys(path, k, &lines, root, project.schema.ids.named_sections)?;
     }
     // §FS-config.3.4.7.6: an unwalked kind is a place and nothing more. A citable one
     // would have declarations nobody reads — the trap §FS-config.3.5.10 closes — and the
@@ -231,15 +223,9 @@ fn lower_row(k: &KindConfig) -> Row {
         (None, None) => None,
     };
     let form = if k.rules {
-        Form::Rule {
-            value_chapter: k.value_chapter.clone(),
-        }
+        Form::Rule
     } else if k.values {
-        Form::Value { chapter: None }
-    } else if k.value_chapter.is_some() {
-        Form::Value {
-            chapter: k.value_chapter.clone(),
-        }
+        Form::Value
     } else {
         Form::Prose
     };
@@ -270,6 +256,14 @@ fn lower_row(k: &KindConfig) -> Row {
                 },
                 None => Origin::Local,
             },
+            // §FS-fields.v1: `value_chapter` is the one field v1 can write.
+            fields: k
+                .value_chapter
+                .clone()
+                .into_iter()
+                .map(Field::value_chapter)
+                .collect(),
+            closed: Strength::May,
         }),
     }
 }

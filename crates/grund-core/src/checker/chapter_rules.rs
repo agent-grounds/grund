@@ -15,6 +15,7 @@ use crate::rules::markdown::{MarkdownProject, adapt_markdown, adapt_workspace};
 use crate::rules::sentence::{ParsedRule, RuleVocabulary, parse_rule};
 use std::collections::{BTreeMap, BTreeSet};
 
+use super::fields::pair_fields_with_rules;
 use super::support::sort_diagnostics;
 
 /// What the rules adapter reads of one project's records: the façade stays out of
@@ -40,7 +41,7 @@ fn citable_kinds(schema: &Schema) -> BTreeSet<String> {
 fn rule_kinds(schema: &Schema) -> BTreeSet<&str> {
     schema
         .kinds()
-        .filter(|(_, kind)| matches!(kind.form, Form::Rule { .. }))
+        .filter(|(_, kind)| kind.form == Form::Rule)
         .map(|(name, _)| name)
         .collect()
 }
@@ -371,6 +372,8 @@ pub(crate) fn check_chapter_rules(
     report
         .suggestions
         .extend(evaluate_suggestions(&parsed_rules, &precedence, &facts));
+    // §FS-rules.6: a field that expresses a rule reports a shared absence once.
+    pair_fields_with_rules(findings, schema, frame, report);
 }
 
 /// A rule rationale contains authored non-whitespace text after its declaration

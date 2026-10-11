@@ -35,6 +35,8 @@
 //! a `Config`.
 //! The concern records of §AR-config.1 are `project.rs` and `rows.rs`, with the
 //! invocation's facts in `run.rs` and what is derived once in `compiled.rs`;
+//! a kind's declared fields are `fields.rs`, and its slots over them `slots.rs`
+//! (§FS-fields.record);
 //! `facade.rs` builds `Config` from them and holds every per-run setter
 //! (§AR-config.5), and `v1/` is the version-1 reader with its defaults
 //! (§AR-config.3).
@@ -46,6 +48,7 @@ mod discovery;
 mod facade;
 #[cfg(test)]
 mod facade_sync;
+mod fields;
 mod fmt_block;
 mod frame;
 mod grounding;
@@ -80,6 +83,8 @@ pub(crate) use project_records::ProjectRecords;
 // name them here.
 #[allow(unused_imports)]
 pub use compiled::ScanDemand;
+#[allow(unused_imports)]
+pub use fields::{Field, FieldContent, Placement};
 pub(crate) use inputs::{
     input_read_dir, input_read_to_string, observe_config, observe_config_candidates,
     observe_ignore_inputs,
@@ -98,7 +103,7 @@ pub use rows::{Extent, Form, Kind, Nesting, Origin, Place, Row};
 #[allow(unused_imports)]
 pub use run::{Run, RunScope, RunWorkspace};
 #[allow(unused_imports)]
-pub use slots::{Content, Handle, Presence, Slot};
+pub use slots::{Content, Handle, Slot};
 
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
