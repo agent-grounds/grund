@@ -170,7 +170,9 @@ class DeclarationChapterTests(unittest.TestCase):
 
     def test_every_source_spec_ends_smaller(self):
         for name, baseline in BASELINES.items():
-            self.assertLess((FS / name).stat().st_size, baseline, name)
+            # Baselines are LF sizes; a Windows checkout reads CRLF.
+            size = len((FS / name).read_bytes().replace(b"\r\n", b"\n"))
+            self.assertLess(size, baseline, name)
 
     def test_what_the_move_leaves_behind_stays(self):
         for source, label, fragment in KEPT:
