@@ -1,7 +1,10 @@
 """§DA-one-fact-one-point-one-implementation.consequences — the rulings D1–D20
 that the one-answer work (§AR-system.principle) is built from are each recorded
 once, in one decision record per step family, and each ruling that moves a
-verdict names the compatibility route it ships by.
+verdict names the compatibility route it ships by. The records it holds are
+§DF-one-answer-rulings-run, §DF-one-answer-rulings-parse,
+§DF-one-answer-rulings-stubs, §DF-one-answer-rulings-fmt-editor and
+§DF-one-answer-rulings-grammar.
 
 The routes are the ones the #576 agora settled (V-A02–V-A26) under the author's
 reading: a ruling flips in one release only where an existing requirement
