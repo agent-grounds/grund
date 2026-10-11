@@ -40,7 +40,7 @@ CI dependency and build caches are performance optimizations only. A cache resto
 
 ## 3. Current hooks
 
-The current pre-commit gate runs the same Rust format/build/test commands that development CI runs: `cargo fmt --all -- --check`, `cargo build --workspace --all-targets --locked` with warnings denied, and `cargo test --workspace --all-targets --locked --features grund/test-workspace-load-count`. A plain `cargo test --workspace --all-targets --locked` is green on the same tree but runs less: it reports every test that reads the workspace-load observer as `ignored`, naming the feature that test needs ([§AR-ci.3.3](AR-ci.md#33-test-only-observers)). The test hook also runs at `pre-push`, so a contributor who commits while a test is transiently broken still gets the same local stop before sending the branch. It is the one hook `pre-push` runs: no hook asks a change for a changelog entry at any stage, because no change is gated on the changelog ([§FS-distribution.4.6](../functional-spec/FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)).
+The current pre-commit gate runs the same Rust format/build/test commands that development CI runs: `cargo fmt --all -- --check`, `cargo build --quiet --workspace --all-targets --locked` with warnings denied, and `python scripts/run_cargo_suite.py --workspace --all-targets --locked --features grund/test-workspace-load-count`, which runs `cargo test` with those arguments and prints what [§AR-ci.requirements.5.1](AR-ci.md#requirements51-a-suite-prints-its-failures-its-check-ins-and-one-summary) asks rather than a line per test. A plain `cargo test --workspace --all-targets --locked` is green on the same tree but runs less: it reports every test that reads the workspace-load observer as `ignored`, naming the feature that test needs ([§AR-ci.3.3](AR-ci.md#33-test-only-observers)). The test hook also runs at `pre-push`, so a contributor who commits while a test is transiently broken still gets the same local stop before sending the branch. It is the one hook `pre-push` runs: no hook asks a change for a changelog entry at any stage, because no change is gated on the changelog ([§FS-distribution.4.6](../functional-spec/FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)).
 
 The local Python gate runs `python scripts/run_python_gate.py`, and CI runs that
 same command as its two selections, one job each ([§AR-ci.3.4.3](AR-ci.md#343-selecting-the-node-acceptance)). The wrapper prepares
@@ -436,9 +436,9 @@ read the workflow as text: the CI Python has no YAML parser.
 
 On `ubuntu-latest` and `windows-latest` each leg is three jobs. The **Rust** job
 runs `cargo fmt --all -- --check`, the native watch contract, `cargo build
---workspace --all-targets --locked`, the grund self-check of §AR-ci.4 and
-`cargo test --workspace --all-targets --locked --features
-grund/test-workspace-load-count`. The **Python** job runs `python
+--quiet --workspace --all-targets --locked`, the grund self-check of §AR-ci.4 and
+`python scripts/run_cargo_suite.py --workspace --all-targets --locked --features
+grund/test-workspace-load-count` ([§AR-ci.3](AR-ci.md#3-current-hooks)). The **Python** job runs `python
 scripts/run_python_gate.py --without-node-acceptance`, and the **Node** job
 runs `python scripts/run_python_gate.py --only-node-acceptance`
 ([§AR-ci.3.4.3](AR-ci.md#343-selecting-the-node-acceptance)). No job on those two runs more than one of the three suites.
@@ -500,9 +500,9 @@ each `matrix.os` list, and holds the workflow to [§AR-ci.13.1](AR-ci.md#131-one
 [§AR-ci.13.4](AR-ci.md#134-cache-keys-are-per-job); it runs its checks against fixture workflows too, so a check that
 can no longer fail is caught.
 
-## requirements: What CI's wall clock holds to
+## requirements: What CI's wall clock and its log hold to
 
-Four requirements on how long the gate takes, each carrying a **mark**, as [§FS-config.requirements](../functional-spec/FS-config.md#requirements-what-the-config-contract-holds-to) marks its own: *realized* where CI behaves this way today and a section here says so; *directional* where it binds what is written from here on rather than describing what runs today; *deferred* where a named follow-up owes it. Every pull request waits for the slowest gate, and so does every merge, which the merge queue of [§AR-ci.12](AR-ci.md#12-a-merge-queue-lands-every-pull-request) lands only after a full run on its group, so a slow gate is the loop [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) says gets routed around. A **gate** here is one job of `ci.yml` as the forge names it, and each leg of a matrix job is a gate of its own: `cargo test (ubuntu-latest)` and `cargo test (windows-latest)` are two gates. The average is the target and the maximum is the hard limit: a gate that drifts past the average is a report, and a gate past the maximum is a failure.
+Requirements on how long the gate takes (requirements.1–4) and on what it prints (requirements.5), each carrying a **mark**, as [§FS-config.requirements](../functional-spec/FS-config.md#requirements-what-the-config-contract-holds-to) marks its own: *realized* where CI behaves this way today and a section here says so; *directional* where it binds what is written from here on rather than describing what runs today; *deferred* where a named follow-up owes it. Every pull request waits for the slowest gate, and so does every merge, which the merge queue of [§AR-ci.12](AR-ci.md#12-a-merge-queue-lands-every-pull-request) lands only after a full run on its group, so a slow gate is the loop [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) says gets routed around. A **gate** here is one job of `ci.yml` as the forge names it, and each leg of a matrix job is a gate of its own: `cargo test (ubuntu-latest)` and `cargo test (windows-latest)` are two gates. The average is the target and the maximum is the hard limit: a gate that drifts past the average is a report, and a gate past the maximum is a failure.
 
 ### requirements.1: Every gate averages at most ten minutes — directional
 
@@ -519,3 +519,30 @@ The average is measured, not assumed. `scripts/ci_duration.py` reads the last *w
 ### requirements.4: The threshold and the window are configuration — realized
 
 The threshold and the window live in `.github/ci-duration.json`, which the tracker reads on every run and in which it finds no literal it would otherwise fall back to: `threshold_minutes`, the average a gate may not exceed (`10`), and `window`, how many runs it averages over (`8`), a whole number from 1 to 100 because the forge lists at most 100 runs a page. A missing file or a missing key is an error naming it, never a silent default. They are repository CI configuration and not a `grund.toml` key: `grund` never reads them, and a key it never reads would cross [§FS-config.requirements.8](../functional-spec/FS-config.md#requirements8-a-projects-meaning-is-self-contained--realized). The maximum of requirements.2 is not here, because the forge reads it from `ci.yml` and from nowhere else.
+
+### requirements.5: A green step prints a screenful, a red one its failures — directional
+
+What a CI step prints is part of how CI is built. Whoever reads a red job, a person or an agent running `gh run view --log-failed`, reads every line before the failure, so a line that says only that something passed is paid for on every pull request and every push to `main`: the cost [§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file) says a read should not carry, on the loop [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) keeps short. Directional: when this was written the workspace `cargo test` step printed about 2200 lines on Ubuntu, 1640 of them `test … ok`, the `test-watch` contract test about 270, and `pip install pre-commit` 442, so it binds every step from here on, and the change that brings the last step under it flips this mark to realized.
+
+#### requirements.5.1: A suite prints its failures, its check-ins and one summary
+
+A suite step is the workspace `cargo test` on all three legs, which runs the e2e runner `crates/grund-cli/tests/e2e.rs` among its targets, the `test-watch` contract test of the `native watch contract` step, and the Python gate of [§AR-ci.3.4](AR-ci.md#34-the-python-gates-inputs). It prints only these, and exits with the suite's own status:
+
+- each failure, under the failing test's name, with its full output: what it wrote to stdout and stderr, its own and its child processes', and the panic or assertion message;
+- a check-in each time another 5% of the suite has finished, so at most twenty, one line each: `<done>/<total> tests, <failed> failed, <elapsed>s elapsed, slowest: <test> <seconds>s, …`, naming up to three of the slowest tests so far, slowest first, and the last check-in reads `<total>/<total>`;
+- the slowest-ten table of [§AR-ci.3.4.2](AR-ci.md#342-per-test-durations), where the suite keeps one;
+- one summary as its last line: `<total> tests: <passed> passed, <failed> failed, <ignored> ignored, <elapsed>s`, where *ignored* counts libtest's ignored tests and `unittest`'s skipped ones.
+
+Nothing else: no line per passing test, no `unittest` dot stream, no output a passing test or its child process wrote, no build progress. On success that is about twenty lines whatever the suite's size, and the slowest-tests figure is what attributes a gate's time per test for requirements.3. `tests/integration/test_ci_output.py` holds both kinds of suite to this on suites of its own.
+
+#### requirements.5.2: The cargo suites go through one wrapper
+
+`scripts/run_cargo_suite.py` takes `cargo test`'s arguments, runs `cargo test` with them over libtest's stable output, and prints what requirements.5.1 asks. Both `ci.yml` steps that run a cargo suite, `native watch contract` and `cargo test`, call it, and so does the `cargo-test` hook, so the hook and the workflow still spell one command ([§AR-ci.1.2](AR-ci.md#12-the-parity-test)). It needs Python's standard library and the toolchain the repository already uses and nothing else: no test runner a contributor must install. It builds the tests before it runs them, as quietly as requirements.5.4 asks, so a compile error is printed in full and a green build prints nothing.
+
+#### requirements.5.3: A hook prints its findings or one line — realized
+
+A pre-commit hook prints its findings when it fails and one line when it passes. Realized: `pre-commit` captures each hook's output, prints it when the hook fails, and prints one `Passed` line otherwise.
+
+#### requirements.5.4: Builds and installs are quiet unless they fail
+
+Every `cargo build`, `cargo run`, `cargo install` and `pip install` in `ci.yml` passes `--quiet` (`-q` for pip), the binding oracle's `cargo +1.95.0 build` included, and so does the `cargo-build` hook, so the hook and the workflow still spell one command. `--quiet` drops the progress lines — `Compiling`, `Downloading`, `Collecting` — and keeps every warning and error, so a failure still shows in full in the step that failed. A suite's own builds and the `git` its fixtures run are held to the same: a green Python gate prints no `Compiling` line and no `LF will be replaced by CRLF` warning.
