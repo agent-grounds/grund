@@ -15,9 +15,8 @@ backward-compatibility meter demand those proofs of them now, and they carry no
 moved yet (§FS-distribution.4.6.4).
 
 The tests landed under `@unittest.expectedFailure`, one commit before the
-records, because the pre-commit hook runs this suite. An expected failure that
-passes fails the suite, so the commit that writes the records takes the
-decorators off.
+records, because the pre-commit hook runs this suite; the commit that wrote the
+records took the decorators off.
 """
 
 import re
@@ -127,7 +126,6 @@ def _record(record_id):
 
 
 class RulingsRecordedTest(unittest.TestCase):
-    @unittest.expectedFailure
     def test_each_group_has_one_accepted_indexed_record_naming_its_rulings(self):
         index = (FUNCTIONAL / "README.md").read_text(encoding="utf-8")
         gaps = []
@@ -156,7 +154,6 @@ class RulingsRecordedTest(unittest.TestCase):
         )
         self.assertEqual(gaps, [])
 
-    @unittest.expectedFailure
     def test_each_verdict_moving_ruling_names_its_route(self):
         gaps = []
         for record_id, rulings in GROUPS.items():
@@ -182,7 +179,6 @@ class RulingsRecordedTest(unittest.TestCase):
                     )
         self.assertEqual(gaps, [])
 
-    @unittest.expectedFailure
     def test_no_ruling_record_cites_the_correction_route_live(self):
         offenders = [
             record_id
@@ -191,7 +187,6 @@ class RulingsRecordedTest(unittest.TestCase):
         ]
         self.assertEqual(offenders, [])
 
-    @unittest.expectedFailure
     def test_no_ruling_record_carries_a_release_note_or_a_numbered_chapter(self):
         offenders = []
         for record_id in GROUPS:

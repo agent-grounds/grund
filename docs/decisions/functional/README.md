@@ -122,4 +122,14 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-block-teaches-structural-queries](DF-block-teaches-structural-queries.md#df-block-teaches-structural-queries-the-managed-block-teaches-the-structural-query-inline-and-links-the-query-guide) — the managed block teaches the structural query inline and links the query guide
 - [§DF-kind-fields](DF-kind-fields.md#df-kind-fields-a-kind-states-its-fields-by-section-name-and-a-present-optional-field-is-still-checked) — a kind states its fields by section name, and a present optional field is still checked
 
+## The one-answer rulings
+
+The rulings the one-answer work is built from, one record per step family, each naming the compatibility route its rulings ship by.
+
+- [§DF-one-answer-rulings-run](DF-one-answer-rulings-run.md#df-one-answer-rulings-run-a-path-narrows-the-report-a-stub-reads-what-the-walk-reads-and-a-file-is-one-file-however-it-is-spelled-or-held) — a path narrows the report, a stub reads what the walk reads, and a file is one file however it is spelled or held
+- [§DF-one-answer-rulings-parse](DF-one-answer-rulings-parse.md#df-one-answer-rulings-parse-one-parse-gives-every-command-the-same-extents-comment-blocks-anchors-and-title-citations) — one parse gives every command the same extents, comment blocks, anchors and title citations
+- [§DF-one-answer-rulings-stubs](DF-one-answer-rulings-stubs.md#df-one-answer-rulings-stubs-a-stub-is-found-by-its-home-and-shape-read-as-the-scan-reads-and-shown-where-its-target-is) — a stub is found by its home and shape, read as the scan reads, and shown where its target is
+- [§DF-one-answer-rulings-fmt-editor](DF-one-answer-rulings-fmt-editor.md#df-one-answer-rulings-fmt-editor-fmt-writes-only-into-a-complete-link-wrapper-never-into-a-link-destination) — `fmt` writes only into a complete link wrapper, never into a link destination
+- [§DF-one-answer-rulings-grammar](DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary) — one grammar keeps the documented refusal bytes and order, and one kind universe keeps each command's vocabulary
+
 This index is navigational — citations should target the decision ID directly, never this file.
