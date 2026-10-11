@@ -924,7 +924,7 @@ Listing an extension makes a file *readable*, not declarable. A prose markup for
 
 #### 3.5.14 `comment_prefixes` compose with `extensions`
 
-The two lists compose: adding `sql` without `--`, or `--` without `sql` (or another extension using that prefix), does not enable SQL doc-comments. Every default comment prefix has a path through the default extension list: `;` pairs with Lisp, Scheme, and Clojure extensions; `--` pairs with SQL, Haskell, Lua, and Ada extensions; and `*` / `/*` are block-comment continuation and opener forms in the C-family extensions. Any line whose first non-whitespace run is a configured prefix is eligible to host a declaration heading or a citation. Each claimed form has a strict-mode executable case that plants a marked dangling citation in that form ([§REQ-no-missed-citation.3](../requirements/REQ-no-missed-citation.md#3-proven-per-host-language)).
+How `comment_prefixes` and `extensions` compose, and which lines a configured prefix makes eligible, is [§FS-languages.prefixes](FS-languages.md#prefixes-comment_prefixes-compose-with-extensions).
 
 #### 3.5.15 `respect_gitignore` — the ignore files
 

@@ -277,39 +277,23 @@ The doc-comment forms are [§FS-show.2.3.5](FS-show.md#235-the-doc-comment-forms
 
 #### 2.3.1 What counts as the "comment block"
 
-Extraction is precisely defined so that the implementation has no freedom and the same input produces the same output across editor, CLI, and binding callers.
-
-A declaration is found on a "declaration line" — a line that matches the declaration regex from [AR-scanner.2.1](../architecture/AR-scanner.md#21-declaration-detection) *and* sits inside a comment or docstring. The block surrounding it runs from an open boundary ([§FS-show.2.3.1.1](FS-show.md#2311-find-the-open-boundary)) to a close boundary ([§FS-show.2.3.1.2](FS-show.md#2312-find-the-close-boundary)), and ends early at any other declaration line ([§FS-show.2.3.1.3](FS-show.md#2313-terminate-early-on-another-declaration)).
+A declaration is found on a "declaration line" — a line that matches the declaration regex from [AR-scanner.2.1](../architecture/AR-scanner.md#21-declaration-detection) *and* sits inside a comment or docstring. Which lines around it form its block is [§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block).
 
 ##### 2.3.1.1 Find the open boundary
 
-Scan **backwards** from the declaration line over consecutive lines that are part of the same comment construct:
-
-- For line-style comments (`//`, `///`, `//!`, `#`, `;`, `--`): consecutive lines whose first non-whitespace character matches the same comment prefix family. A blank line ends the block. A line whose first non-whitespace character is not a comment prefix ends the block.
-- For block-style comments (`/* … */`, `/** … */`): scan backward until the opener is found (`/*` or `/**`). The opener line itself is part of the block.
-- For Python triple-quoted docstrings: scan backward until the opening `"""` (or `'''`). The opener line is part of the block.
+Where the block opens is [§FS-languages.comment-block.open](FS-languages.md#comment-blockopen-find-the-open-boundary).
 
 ##### 2.3.1.2 Find the close boundary
 
-Scan **forwards** from the declaration line by the symmetric rules:
-
-- Line-style: until a blank line or a non-comment line.
-- Block-style: until the closing `*/`. The closer line is part of the block. The closer is the one that ends the declaration's own comment, wherever it falls: a declaration written as a one-line `/* … */` closes on its own line, so its block is that line alone, and a `/* … */` comment on the next line is a separate comment outside it — not a section of the declaration, and not part of its body.
-- Python docstring: until the matching `"""` or `'''`. The closer line is part of the block.
+Where the block closes is [§FS-languages.comment-block.close](FS-languages.md#comment-blockclose-find-the-close-boundary).
 
 ##### 2.3.1.3 Terminate early on another declaration
 
-Scanning in **either direction**, if another declaration line of any ID is encountered, the block ends at the line before it. This is what allows two adjacent source declarations to live in the same comment without bleeding into each other — backward termination keeps a later declaration's block from absorbing the previous declaration's tail; forward termination keeps the previous declaration's block from absorbing the next declaration's head.
+Where another declaration line ends the block early is [§FS-languages.comment-block.early-end](FS-languages.md#comment-blockearly-end-terminate-early-on-another-declaration).
 
 #### 2.3.2 Stripping comment prefixes
 
-After the block is selected, comment prefixes are removed line-by-line so the output is plain prose:
-
-- The whitespace in front of the comment prefix belongs to the comment's envelope, not to the body: it is dropped together with the prefix, then a single space following the prefix is dropped if present. The remainder of the line is kept verbatim, so indentation the author wrote after the prefix (a nested list item, an indented code block) survives. This holds for an indented `///`, `//!`, `//`, `#`, `;` or `--` line, such as a doc-comment on a method inside an `impl`, exactly as for a ` * ` continuation of a class member's Javadoc: the shown body starts at the same column as the same text behind a top-level `///`.
-- For block-style continuation lines, a leading ` * ` (with surrounding spaces) is removed if present. Lines that do not have it are kept as-is.
-- For Python docstrings, no prefix is stripped — docstring content is plain text already; only the surrounding `"""` lines are skipped.
-- Trailing comment-close tokens (`*/`) on their own line are dropped entirely.
-- Blank lines inside the block are preserved.
+After the block is selected, its comment wrapper is removed line by line ([§FS-languages.comment-wrapper](FS-languages.md#comment-wrapper-the-comment-wrapper)), and a docstring's content is kept as it stands ([§FS-languages.docstring](FS-languages.md#docstring-docstrings)).
 
 The result is the markdown that the declaration's author wrote, identical to what would have lived in a `.md` file had the declaration been doc-resident instead of inline. This is the property that makes [§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments) round-trip-stable across the in-docs and in-code homes.
 

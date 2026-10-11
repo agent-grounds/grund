@@ -448,27 +448,15 @@ chapter's coordinate: `Terms` in `## terms: Terms`. A nested chapter's
 coordinate is its whole path, so `### requirements.terms: Terms` is
 `chapter(c, requirements.terms, Terms)`, and its label is `Terms` as well. It
 is the same label whether the declaration's body lives in a Markdown file or in
-a source doc-comment. A heading in a doc-comment sits behind the comment that carries
-it — `///`, `//!`, a block comment's ` * `, a hash comment's `#`, or any other
-configured prefix
-([§FS-config.3.5.14](FS-config.md#3514-comment_prefixes-compose-with-extensions))
-— and that envelope says where the body lives, not what the chapter is called,
-so it is never part of the label. `/// ## terms: Terms` in a Rust file and
+a source doc-comment, because the comment wrapper a heading sits behind is never
+part of it
+([§FS-languages.comment-wrapper.headings](FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line)).
+`/// ## terms: Terms` in a Rust file and
 `## terms: Terms` in a Markdown file are therefore the same fact,
 `chapter(c, terms, Terms)`, and a presence rule naming `Terms` counts either
 one ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)). The same label is the
 title of that chapter's `list --selector` row
-([§FS-rules.8](FS-rules.md#8-command-surfaces)).
-
-The envelope has a closing half too. A block comment's closing `*/` on the
-heading's own line, and the whitespace before it, closes the comment that
-carries the heading, so it is no more part of the label than the ` * ` that
-opens the line: ` * ## terms: Terms */` on the last line of a C or Java block
-comment is `chapter(c, terms, Terms)`, the fact `/// ## terms: Terms` gives.
-Only the C-family closer is envelope, because only a C-family block comment
-carries a heading on a line that can close it. A Python docstring's heading is
-read as Markdown, and a Markdown heading is never trimmed, so an author who
-writes `*/` at the end of either keeps it in the label. The `title` a
+([§FS-rules.8](FS-rules.md#8-command-surfaces)). The `title` a
 declaration's `--toc --format json` section map gives that chapter is the same
 label ([§FS-show.3.1.3](FS-show.md#313-json)).
 
