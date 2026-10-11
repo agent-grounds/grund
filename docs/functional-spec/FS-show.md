@@ -252,8 +252,8 @@ A duplicate elsewhere in the declaration is not this error: only a collision on 
 
 #### 2.2.3 Every surface reads the same section map
 
-Every surface reads the section map of [§FS-declarations.section.map](FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span). A query for the
-coordinate of a heading the map rejects has the ordinary `section not found` result and hint
+Every surface reads the section map of [§FS-declarations.section.map](FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span) ([§REQ-one-answer.sections.map](../requirements/REQ-one-answer.md#sectionsmap-every-surface-reads-one-section-map)).
+For a heading the map rejects, a query for its coordinate has the ordinary `section not found` result and hint
 from [§FS-show.3](FS-show.md#3-outputs), emits none of the outside heading's body, and never substitutes the
 located `check` finding for query semantics.
 
