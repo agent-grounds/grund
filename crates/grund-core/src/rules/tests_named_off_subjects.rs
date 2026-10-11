@@ -1,5 +1,5 @@
 //! A rule subject refused for needing named sections, read through `parse_rule`
-//! on a hand-written vocabulary (§FS-rules.3.5.2). The message is what a
+//! on a hand-written vocabulary (§FS-rule-refusals.sentences.named-sections). The message is what a
 //! configured rule declaration's `invalid-rule` finding carries after
 //! `is not a valid rule: ` (§FS-rules.7.1); `check --rule` prints it after
 //! `error: ` and adds its `known kinds:` line where no form is offered, which
@@ -63,7 +63,7 @@ fn wrong(rows: &[(&str, String)], vocabulary: &RuleVocabulary) -> Vec<String> {
         .collect()
 }
 
-/// §FS-rules.3.5.2: every row of the exact table, and the two rewrites it
+/// §FS-rule-refusals.sentences.named-sections: every row of the exact table, and the two rewrites it
 /// states beyond them: a selector's multi-component `KIND.NAME.NAME` is written
 /// `The NAME.NAME chapter of each KIND`, and its bare `KIND` is `Each KIND`.
 #[test]
@@ -119,14 +119,14 @@ fn a_subject_needing_named_sections_is_answered_with_one_they_make_valid() {
     let wrong = wrong(&rows, &vocabulary(&["FS", "REQ", "GOAL"]));
     assert!(
         wrong.is_empty(),
-        "{} of {} subjects were not answered as FS-rules.3.5.2 says:\n{}",
+        "{} of {} subjects were not answered as FS-rule-refusals.sentences.named-sections says:\n{}",
         wrong.len(),
         rows.len(),
         wrong.join("\n")
     );
 }
 
-/// §FS-rules.3.5.2 step 2, through §FS-rules.8.1 step 1: the kind is the
+/// §FS-rule-refusals.sentences.named-sections step 2, through §FS-rule-refusals.selectors step 1: the kind is the
 /// longest configured kind the text starts with.
 #[test]
 fn the_rebuilt_chapter_names_the_longest_configured_kind() {

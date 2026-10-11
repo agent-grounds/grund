@@ -115,7 +115,7 @@ impl WorkspaceContext {
     }
 
     /// The `known kinds:` line that ends an unknown `--kind` (§FS-list.1.1) and
-    /// a `--selector` refusal that recovers no kind (§FS-rules.8.1): every
+    /// a `--selector` refusal that recovers no kind (§FS-rule-refusals.selectors): every
     /// citable kind of the projects `project_filter` selects, once, in
     /// configuration order. An empty filter selects every loaded project, and a
     /// narrowed run names only the kinds its lookup accepts (§FS-list.1.2).

@@ -1,5 +1,5 @@
 //! A refused rule's accepted form is the sentence its author typed with only
-//! the refused part replaced (§FS-rules.3.5.4), read through `parse_rule` on a
+//! the refused part replaced (§FS-rule-refusals.sentences.rewrite), read through `parse_rule` on a
 //! vocabulary whose one kind is `FS`, named sections on. The message is what a
 //! configured rule declaration's `invalid-rule` finding carries after
 //! `is not a valid rule: ` (§FS-rules.7.1), and `unrecovered` is whether
@@ -64,14 +64,14 @@ fn assert_rows(rows: &[Row]) {
     let wrong = wrong(rows);
     assert!(
         wrong.is_empty(),
-        "{} of {} refusals were not as FS-rules.3.5.4 says:\n{}",
+        "{} of {} refusals were not as FS-rule-refusals.sentences.rewrite says:\n{}",
         wrong.len(),
         rows.len(),
         wrong.join("\n")
     );
 }
 
-/// §FS-rules.3.5.4.1: a refused token is replaced by its canonical spelling,
+/// §FS-rule-refusals.sentences.rewrite.replaced: a refused token is replaced by its canonical spelling,
 /// and the subject, modality and object kinds stay as typed.
 #[test]
 fn a_refused_token_is_replaced_under_the_typed_subject_and_kinds() {
@@ -109,7 +109,7 @@ fn a_refused_token_is_replaced_under_the_typed_subject_and_kinds() {
     ]);
 }
 
-/// §FS-rules.3.5.4.5: a per-target count without `times` keeps the count typed
+/// §FS-rule-refusals.sentences.rewrite.by-refusal: a per-target count without `times` keeps the count typed
 /// after its bound, and a count written with leading zeros loses them; a count
 /// that is zero or no numeral has nothing to keep.
 #[test]
@@ -136,7 +136,7 @@ fn a_count_keeps_the_number_typed_or_offers_no_form() {
     ]);
 }
 
-/// §FS-rules.3.5.4.3: a two-form refusal offers its pair only where both forms
+/// §FS-rule-refusals.sentences.rewrite.reparsed: a two-form refusal offers its pair only where both forms
 /// are accepted, so the documented conjunction, whose clauses name kinds this
 /// vocabulary lacks, offers none and leaves the kinds to `check --rule`.
 #[test]
@@ -155,7 +155,7 @@ fn a_two_form_refusal_offers_both_or_neither() {
     ]);
 }
 
-/// §FS-rules.3.5.4.5: a prohibition's `cite [count] KINDS` becomes
+/// §FS-rule-refusals.sentences.rewrite.by-refusal: a prohibition's `cite [count] KINDS` becomes
 /// `cite any KINDS`, and any other prohibited predicate has no form.
 #[test]
 fn a_prohibition_becomes_cite_any_or_offers_no_form() {
@@ -173,9 +173,9 @@ fn a_prohibition_becomes_cite_any_or_offers_no_form() {
     ]);
 }
 
-/// §FS-rules.3.5.4.5: a presence object's last word becomes `chapter` or
+/// §FS-rule-refusals.sentences.rewrite.by-refusal: a presence object's last word becomes `chapter` or
 /// `chapters` as the count takes, under the typed subject and modality, and no
-/// chapter name is invented where none was typed (§FS-rules.3.5.4.2).
+/// chapter name is invented where none was typed (§FS-rule-refusals.sentences.rewrite.recovered).
 #[test]
 fn a_presence_noun_is_respelled_under_the_typed_subject() {
     assert_rows(&[
@@ -202,7 +202,7 @@ fn a_presence_noun_is_respelled_under_the_typed_subject() {
     ]);
 }
 
-/// §FS-rules.3.5.1: the presence `NAME` is trimmed under the typed subject.
+/// §FS-rule-refusals.sentences.whitespace: the presence `NAME` is trimmed under the typed subject.
 #[test]
 fn a_presence_name_is_trimmed_under_the_typed_subject() {
     assert_rows(&[(
@@ -212,7 +212,7 @@ fn a_presence_name_is_trimmed_under_the_typed_subject() {
     )]);
 }
 
-/// §FS-rules.3.5.4.5: a chapter subject in a presence rule becomes its
+/// §FS-rule-refusals.sentences.rewrite.by-refusal: a chapter subject in a presence rule becomes its
 /// declaration, or `Each KIND`, and the presence predicate stays as typed.
 #[test]
 fn a_chapter_subject_with_chapters_becomes_its_declaration() {
@@ -230,7 +230,7 @@ fn a_chapter_subject_with_chapters_becomes_its_declaration() {
     ]);
 }
 
-/// §FS-rules.3.5.4.2: a refused subject is rebuilt with §FS-rules.8.1's steps
+/// §FS-rule-refusals.sentences.rewrite.recovered: a refused subject is rebuilt with §FS-rule-refusals.selectors's steps
 /// and written as a rule subject, keeping the named components typed before
 /// the refused one; where no configured kind is recovered there is no form.
 #[test]
@@ -294,7 +294,7 @@ fn a_refused_subject_is_rebuilt_as_the_selector_rebuilds_it() {
     ]);
 }
 
-/// §FS-rules.3.5.4.4: a path subject and an unknown or malformed object kind
+/// §FS-rule-refusals.sentences.rewrite.no-form: a path subject and an unknown or malformed object kind
 /// offer no form, and what is missing is a kind.
 #[test]
 fn a_missing_kind_offers_no_form_and_asks_for_the_known_kinds() {
@@ -322,7 +322,7 @@ fn a_missing_kind_offers_no_form_and_asks_for_the_known_kinds() {
     ]);
 }
 
-/// §FS-rules.3.5.4.4: no modality, an unknown verb, a count that is not
+/// §FS-rule-refusals.sentences.rewrite.no-form: no modality, an unknown verb, a count that is not
 /// accepted and a count with no object offer no form, and nothing missing is a
 /// kind; the count catch-all keeps its list of canonical counts.
 #[test]
@@ -352,7 +352,7 @@ fn a_sentence_that_does_not_say_what_belongs_offers_no_form() {
     ]);
 }
 
-/// §FS-rules.3.5.4.3: a form refused for another part is repaired again before
+/// §FS-rule-refusals.sentences.rewrite.reparsed: a form refused for another part is repaired again before
 /// it is offered, and one the passes cannot repair is not offered at all.
 #[test]
 fn a_form_is_repaired_until_the_parser_accepts_it() {
@@ -380,7 +380,7 @@ fn a_form_is_repaired_until_the_parser_accepts_it() {
     ]);
 }
 
-/// §FS-rules.3.5.4.3: a sentence refused for several productions at once is
+/// §FS-rule-refusals.sentences.rewrite.reparsed: a sentence refused for several productions at once is
 /// repaired one production per pass, the reason staying the first refusal's,
 /// and the passes end in a form or in none rather than looping.
 #[test]

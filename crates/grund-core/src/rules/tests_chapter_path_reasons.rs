@@ -1,5 +1,5 @@
 //! A chapter subject refused for its chapter path, read through `parse_rule` on
-//! a hand-written vocabulary (§FS-rules.3.5.3). The message is what a
+//! a hand-written vocabulary (§FS-rule-refusals.sentences.chapter-path). The message is what a
 //! configured rule declaration's `invalid-rule` finding carries after
 //! `is not a valid rule: ` and what `check --rule` prints after `error: `
 //! (§FS-rules.7.1); `rules_contract/chapter_path_reasons.rs` pins both
@@ -14,7 +14,7 @@ use std::path::PathBuf;
 const NUMBERED: &str = "numbered chapter subjects can detach when headings move";
 const WILDCARD: &str = "section-component wildcards are not accepted in phase 1";
 /// What follows a reason whose accepted form has the subject `subject`
-/// (§FS-rules.3.5.4.2).
+/// (§FS-rule-refusals.sentences.rewrite.recovered).
 fn form(subject: &str) -> String {
     format!("; accepted form: {subject} must cite at least one REQ.")
 }
@@ -70,17 +70,17 @@ fn assert_rows(rows: &[(&str, String)], vocabulary: &RuleVocabulary) {
     let wrong = wrong(rows, vocabulary);
     assert!(
         wrong.is_empty(),
-        "{} of {} chapter paths were not refused as FS-rules.3.5.3 says:\n{}",
+        "{} of {} chapter paths were not refused as FS-rule-refusals.sentences.chapter-path says:\n{}",
         wrong.len(),
         rows.len(),
         wrong.join("\n")
     );
 }
 
-/// §FS-rules.3.5.3: the exact table. A numbered or wildcard component in
+/// §FS-rule-refusals.sentences.chapter-path: the exact table. A numbered or wildcard component in
 /// `The PATH chapter of each KIND` gets the reason its literal spelling gets,
 /// and an empty component is refused off the section grammar, not as numbered.
-/// The form keeps the named components typed before it (§FS-rules.3.5.4.2).
+/// The form keeps the named components typed before it (§FS-rule-refusals.sentences.rewrite.recovered).
 #[test]
 fn a_chapter_path_is_refused_for_the_component_that_failed() {
     let chapter = form("The requirements chapter of each FS");
@@ -106,7 +106,7 @@ fn a_chapter_path_is_refused_for_the_component_that_failed() {
     assert_rows(&rows, &vocabulary(true));
 }
 
-/// §FS-rules.3.5.3: the first refused component decides. In the literal
+/// §FS-rule-refusals.sentences.chapter-path: the first refused component decides. In the literal
 /// spelling that is the first empty or all-digit one; in
 /// `The PATH chapter of each KIND` the first that is not a named one.
 #[test]
@@ -131,7 +131,7 @@ fn the_first_refused_component_decides_the_reason() {
     assert_rows(&rows, &vocabulary(true));
 }
 
-/// §FS-rules.3.5.4.2: a literal keeps its own declaration and the named
+/// §FS-rule-refusals.sentences.rewrite.recovered: a literal keeps its own declaration and the named
 /// components typed before the one that failed, whichever component failed.
 #[test]
 fn a_literal_keeps_its_declaration_and_the_components_before_the_failed_one() {
@@ -149,10 +149,10 @@ fn a_literal_keeps_its_declaration_and_the_components_before_the_failed_one() {
     assert_rows(&rows, &vocabulary(true));
 }
 
-/// §FS-rules.3.5.3: the literal spelling judges its path before it asks about
+/// §FS-rule-refusals.sentences.chapter-path: the literal spelling judges its path before it asks about
 /// named sections, so an empty component is refused off the section grammar
 /// with them off too, while the chapter spelling, which asks first, keeps its
-/// named-sections-off refusal (§FS-rules.3.5.2). With them off the literal is
+/// named-sections-off refusal (§FS-rule-refusals.sentences.named-sections). With them off the literal is
 /// offered `FS-login`, the subject `list --selector` gives it then too.
 #[test]
 fn an_empty_literal_component_is_judged_before_named_sections_are_asked_about() {

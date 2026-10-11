@@ -136,7 +136,7 @@ pub(crate) struct RuleParseError {
     pub(crate) message: String,
     /// The refusal offers no form and what could not be supplied is a kind, so
     /// `check --rule` follows it with the `known kinds:` line
-    /// (§FS-rules.3.5.4.4).
+    /// (§FS-rule-refusals.sentences.rewrite.no-form).
     pub(crate) unrecovered: bool,
 }
 
@@ -149,7 +149,7 @@ impl std::error::Error for RuleParseError {}
 
 /// Parse exactly the five released families (§FS-rules.3). A refusal offers
 /// the sentence as typed with the failed production replaced, read again
-/// before it is offered (§FS-rules.3.5.4).
+/// before it is offered (§FS-rule-refusals.sentences.rewrite).
 ///
 /// `Err` is the invalid rule and nothing else. The second half of `Ok` is
 /// §FS-rules.4.1's *unverifiable here*: the reason this scope could say neither
@@ -192,7 +192,7 @@ fn holds_clause(subject: &str) -> bool {
 
 /// Read a sentence, or refuse it with what its refusing production offers in
 /// place of what it read, wrapped back into the whole sentence
-/// (§FS-rules.3.5.4.1).
+/// (§FS-rule-refusals.sentences.rewrite.replaced).
 fn read(
     title: &str,
     origin: String,
@@ -202,7 +202,8 @@ fn read(
     if let Some(refusal) = documented(title) {
         return Err(refusal);
     }
-    // §FS-rules.3.5.4.5: the terminal `.` is appended, and `Each` capitalized.
+    // §FS-rule-refusals.sentences.rewrite.by-refusal: the terminal `.` is appended, and `Each`
+    // capitalized.
     if !title.ends_with('.') {
         return Err(refuse(
             "rule must end with \".\"",
@@ -215,7 +216,7 @@ fn read(
             Form::One(format!("Each {rest}")),
         ));
     }
-    // §FS-rules.3.5.4.4: a path names no kind to put in its place.
+    // §FS-rule-refusals.sentences.rewrite.no-form: a path names no kind to put in its place.
     if title.starts_with("Each file in ") {
         return Err(refuse(
             "path subjects are not accepted in phase 1",
@@ -228,7 +229,8 @@ fn read(
     if let Some(refusal) = quantified(title, split.map(|(subject, ..)| subject), vocabulary) {
         return Err(refusal);
     }
-    // §FS-rules.3.5.5: clauses joined by `and` are refused before any subject is read.
+    // §FS-rule-refusals.sentences.conjunction: clauses joined by `and` are refused before any
+    // subject is read.
     if let Some(forms) = conjunction_forms(sentence) {
         return Err(refuse(
             "conjunctions are not accepted",
@@ -237,12 +239,13 @@ fn read(
     }
     let Some((subject_text, level, polarity, predicate)) = split else {
         return Err(match sentence.split_once(" may not ") {
-            // §FS-rules.3.5.4.5: `must not`, the rest as typed.
+            // §FS-rule-refusals.sentences.rewrite.by-refusal: `must not`, the rest as typed.
             Some((before, after)) => refuse(
                 "modality \"may not\" is not accepted",
                 Form::One(format!("{before} must not {after}.")),
             ),
-            // §FS-rules.3.5.4.4: the sentence does not say which modality it meant.
+            // §FS-rule-refusals.sentences.rewrite.no-form: the sentence does not say which modality
+            // it meant.
             None => refuse("rule has no accepted modality", Form::None { kind: false }),
         });
     };
@@ -251,7 +254,8 @@ fn read(
     let before_predicate = &sentence[..sentence.len() - predicate.len()];
     let subject = parse_subject(subject_text, vocabulary).map_err(|refusal| {
         let refusal = refusal.rule_refusal(vocabulary);
-        // §FS-rules.3.5.4.2: a subject holding a clause of its own is two rules.
+        // §FS-rule-refusals.sentences.rewrite.recovered: a subject holding a clause of its own is
+        // two rules.
         if holds_clause(subject_text) {
             return refusal.offering_none(true);
         }
@@ -263,7 +267,8 @@ fn read(
             refusal.within(|predicate| format!("{before_predicate}{predicate}."))
         })?;
     if relation == RuleRelation::HaveChapter {
-        // §FS-rules.3.5.4.5: a chapter subject becomes its declaration, or `Each KIND`.
+        // §FS-rule-refusals.sentences.rewrite.by-refusal: a chapter subject becomes its
+        // declaration, or `Each KIND`.
         let declaration = match &subject {
             RuleSubject::ChapterOfKind { kind, .. } => Some(format!("Each {kind}")),
             RuleSubject::ExactChapter { declaration, .. } => Some(declaration.clone()),
@@ -291,9 +296,9 @@ fn read(
     ))
 }
 
-/// §FS-rules.3.5: two documented sentences are refused for their own
+/// §FS-rule-refusals.sentences: two documented sentences are refused for their own
 /// production whatever the vocabulary reads of the rest, and offer themselves
-/// with that production replaced (§FS-rules.3.5.4.5).
+/// with that production replaced (§FS-rule-refusals.sentences.rewrite.by-refusal).
 fn documented(title: &str) -> Option<Refusal> {
     let form = String::from;
     Some(match title {
@@ -317,7 +322,7 @@ fn documented(title: &str) -> Option<Refusal> {
 
 /// §FS-rules.12: a namespaced or chapter-quantified subject is refused for its
 /// own production before the modality is sought. Its form is the subject
-/// rebuilt as §FS-rules.3.5.4.2 says, and there is none where no modality
+/// rebuilt as §FS-rule-refusals.sentences.rewrite.recovered says, and there is none where no modality
 /// says where the subject ends.
 fn quantified(title: &str, subject: Option<&str>, vocabulary: &RuleVocabulary) -> Option<Refusal> {
     let (fault, quantifier) = if title.starts_with("Each */") {
@@ -332,7 +337,8 @@ fn quantified(title: &str, subject: Option<&str>, vocabulary: &RuleVocabulary) -
     };
     let head = subject.strip_prefix(quantifier).unwrap_or_default();
     let refusal = refused(fault, Spelling::Each, subject, head, None, "").rule_refusal(vocabulary);
-    // §FS-rules.3.5.4.2: a subject holding a clause of its own is two rules.
+    // §FS-rule-refusals.sentences.rewrite.recovered: a subject holding a clause of its own is two
+    // rules.
     if holds_clause(subject) {
         return Some(refusal.offering_none(true));
     }

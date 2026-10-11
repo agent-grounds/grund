@@ -1,6 +1,6 @@
-//! What §FS-rules.8.1's four steps recover, spelled by both surfaces that paste
+//! What §FS-rule-refusals.selectors's four steps recover, spelled by both surfaces that paste
 //! it back, on a hand-written vocabulary with named sections off
-//! (§FS-rules.3.5.2). A selector's `KIND.NAME[.NAME…]` is a rule's
+//! (§FS-rule-refusals.sentences.named-sections). A selector's `KIND.NAME[.NAME…]` is a rule's
 //! `The NAME[.NAME…] chapter of each KIND`, and a selector's bare `KIND` is a
 //! rule's `Each KIND`.
 
@@ -42,7 +42,7 @@ fn spelled(subject: &str, off: &RuleVocabulary) -> Option<(String, String)> {
     recover(&refusal, &on).map(|recovered| (recovered.selector(), recovered.rule_subject()))
 }
 
-/// §FS-rules.3.5.2 step 2: every rebuilt row of the table, and the rewrites the
+/// §FS-rule-refusals.sentences.named-sections step 2: every rebuilt row of the table, and the rewrites the
 /// point states beyond it, from one set of recovered parts.
 #[test]
 fn every_rebuilt_row_is_spelled_as_a_selector_and_as_a_rule_subject() {
@@ -76,7 +76,7 @@ fn every_rebuilt_row_is_spelled_as_a_selector_and_as_a_rule_subject() {
     }
 }
 
-/// §FS-rules.3.5.2 step 4: nothing is recovered where no configured kind is,
+/// §FS-rule-refusals.sentences.named-sections step 4: nothing is recovered where no configured kind is,
 /// and the kind is the longest configured one the text starts with.
 #[test]
 fn the_kind_is_recovered_from_the_configured_kinds_or_not_at_all() {
@@ -93,7 +93,7 @@ fn the_kind_is_recovered_from_the_configured_kinds_or_not_at_all() {
     );
 }
 
-/// §FS-rules.3.5.2 steps 1 and 3 on the rule side: a subject enabling makes
+/// §FS-rule-refusals.sentences.named-sections steps 1 and 3 on the rule side: a subject enabling makes
 /// valid is kept as typed, and the label follows from parsing the suggestion
 /// as configured.
 #[test]

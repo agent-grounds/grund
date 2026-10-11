@@ -1,8 +1,8 @@
 //! What a refused subject still names, for both surfaces that answer a refusal
-//! with something to paste back (§FS-rules.8.1, §FS-rules.3.5.2,
-//! §FS-rules.3.5.4.2).
+//! with something to paste back (§FS-rule-refusals.selectors, §FS-rule-refusals.sentences.named-sections,
+//! §FS-rule-refusals.sentences.rewrite.recovered).
 //!
-//! §FS-rules.8.1's four steps recover a configured kind, a declaration written
+//! §FS-rule-refusals.selectors's four steps recover a configured kind, a declaration written
 //! as a valid ID, and the longest run of named chapter components from what was
 //! typed. They return those parts rather than finished text: `list --selector`
 //! spells them as a selector and the rule surfaces spell them as a rule
@@ -15,7 +15,7 @@ use super::subjects::{
 use super::{RuleSubject, RuleVocabulary};
 use crate::grammar::Grammar;
 
-/// What §FS-rules.8.1's four steps recovered from a refused subject.
+/// What §FS-rule-refusals.selectors's four steps recovered from a refused subject.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) struct Recovered {
     /// How the subject was spelled, which a suggestion keeps (step 4).
@@ -32,7 +32,7 @@ pub(super) struct Recovered {
 }
 
 impl Recovered {
-    /// The parts as a selector (§FS-rules.8.1): the typed spelling, falling
+    /// The parts as a selector (§FS-rule-refusals.selectors): the typed spelling, falling
     /// back to `KIND[.NAME…]` or `Each KIND` only where nothing of it survives.
     pub(super) fn selector(&self) -> String {
         let Self { kind, names, .. } = self;
@@ -45,7 +45,7 @@ impl Recovered {
         self.with_names(base)
     }
 
-    /// The parts as a rule subject (§FS-rules.3.5.4.2): what the selector would
+    /// The parts as a rule subject (§FS-rule-refusals.sentences.rewrite.recovered): what the selector would
     /// be, with the selector-only `KIND.NAME[.NAME…]` written
     /// `The NAME[.NAME…] chapter of each KIND` and a bare `KIND` `Each KIND`.
     pub(super) fn rule_subject(&self) -> String {
@@ -66,7 +66,7 @@ impl Recovered {
     }
 }
 
-/// §FS-rules.8.1's four steps over a refusal, or `None` where no configured
+/// §FS-rule-refusals.selectors's four steps over a refusal, or `None` where no configured
 /// kind can be recovered.
 pub(super) fn recover(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> Option<Recovered> {
     let head = refusal
@@ -93,7 +93,7 @@ pub(super) struct Suggestion {
     pub(super) after_enabling: bool,
 }
 
-/// §FS-rules.8.1 and §FS-rules.3.5.2: a subject refused for needing named
+/// §FS-rule-refusals.selectors and §FS-rule-refusals.sentences.named-sections: a subject refused for needing named
 /// sections is asked of the surface's own `parse` again with them on. Where
 /// that accepts it, it is suggested as typed; otherwise `render` spells what
 /// the second refusal recovers. The label is decided by parsing the suggestion
@@ -117,8 +117,8 @@ pub(super) fn as_if_enabled<T>(
 }
 
 /// The vocabulary with named sections on and every grammar compiled that way,
-/// or `None` where a grammar cannot be (§FS-rules.8.1). A form suggested after
-/// enabling them is read again with it (§FS-rules.3.5.4.3).
+/// or `None` where a grammar cannot be (§FS-rule-refusals.selectors). A form suggested after
+/// enabling them is read again with it (§FS-rule-refusals.sentences.rewrite.reparsed).
 pub(super) fn enabled(vocabulary: &RuleVocabulary) -> Option<RuleVocabulary> {
     let id_grammars = vocabulary
         .id_grammars

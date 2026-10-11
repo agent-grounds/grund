@@ -1,4 +1,4 @@
-//! The accepted form a refused rule offers (§FS-rules.3.5.4).
+//! The accepted form a refused rule offers (§FS-rule-refusals.sentences.rewrite).
 //!
 //! A refusing production writes no finished text. It returns its reason and
 //! what it offers in place of the text it read: that text with the failed
@@ -6,7 +6,7 @@
 //! the sentence does not say what belongs there. Each caller wraps the form
 //! back into the text it read, so a refusal leaves the parser holding the
 //! whole sentence as typed with only the failed part replaced
-//! (§FS-rules.3.5.4.1). This module reads that sentence again before offering
+//! (§FS-rule-refusals.sentences.rewrite.replaced). This module reads that sentence again before offering
 //! it, and renders the one message both rule surfaces print.
 
 use super::recovery::enabled;
@@ -16,13 +16,13 @@ use crate::model::format_list;
 /// What a refusing production offers in place of the text it read.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) enum Form {
-    /// The text with the failed production replaced (§FS-rules.3.5.4.1).
+    /// The text with the failed production replaced (§FS-rule-refusals.sentences.rewrite.replaced).
     One(String),
     /// The forms a refusal offers together, such as a two-form refusal's pair
     /// or one per clause of a conjunction, and the word that joins them.
     Many(Vec<String>, &'static str),
     /// Nothing can be supplied, and whether what is missing is a kind
-    /// (§FS-rules.3.5.4.4).
+    /// (§FS-rule-refusals.sentences.rewrite.no-form).
     None { kind: bool },
 }
 
@@ -31,9 +31,9 @@ pub(super) enum Form {
 pub(super) struct Refusal {
     reason: String,
     form: Form,
-    /// The form is read with named sections on (§FS-rules.3.5.2).
+    /// The form is read with named sections on (§FS-rule-refusals.sentences.named-sections).
     enabling: bool,
-    /// Guidance that ends the message, form or not (§FS-rules.3.5.1).
+    /// Guidance that ends the message, form or not (§FS-rule-refusals.sentences.whitespace).
     trailer: Option<&'static str>,
 }
 
@@ -60,7 +60,7 @@ impl Refusal {
     }
 
     /// The same refusal offering no form, `kind` saying whether what is missing
-    /// is a kind (§FS-rules.3.5.4.4).
+    /// is a kind (§FS-rule-refusals.sentences.rewrite.no-form).
     pub(super) fn offering_none(mut self, kind: bool) -> Self {
         self.form = Form::None { kind };
         self
@@ -78,9 +78,9 @@ impl Refusal {
         self
     }
 
-    /// The refusal as both rule surfaces print it (§FS-rules.3.5.4), `read`
+    /// The refusal as both rule surfaces print it (§FS-rule-refusals.sentences.rewrite), `read`
     /// being the parser a form is read again with. A form is offered only once
-    /// it is accepted, and several only where every one is (§FS-rules.3.5.4.3).
+    /// it is accepted, and several only where every one is (§FS-rule-refusals.sentences.rewrite.reparsed).
     pub(super) fn offer(
         self,
         vocabulary: &RuleVocabulary,
@@ -121,12 +121,15 @@ impl Refusal {
         };
         let (forms, enabled, joiner) = match offered {
             Ok(offered) => offered,
-            // §FS-rules.3.5.4.4: the reason alone, and the kinds where one is missing.
+            // §FS-rule-refusals.sentences.rewrite.no-form: the reason alone, and the kinds where
+            // one is missing.
             Err(kind) => return alone(kind),
         };
-        // §FS-rules.3.5.2 step 3: the label is decided on the whole offered sentence.
+        // §FS-rule-refusals.sentences.named-sections step 3: the label is decided on the whole
+        // offered sentence.
         let after = enabled && forms.iter().any(|form| read(form, vocabulary).is_some());
-        // §FS-rules.3.5.2 step 3: only a reason about named sections may carry the label.
+        // §FS-rule-refusals.sentences.named-sections step 3: only a reason about named sections may
+        // carry the label.
         if after && !enabling {
             return alone(false);
         }
@@ -152,7 +155,7 @@ impl Refusal {
 /// chapter `NAME`, the chapter noun, the object kinds and the terminal `.`.
 pub(super) const PRODUCTIONS: usize = 11;
 
-/// §FS-rules.3.5.4.3: read `form` again until `read` accepts it, replacing what
+/// §FS-rule-refusals.sentences.rewrite.reparsed: read `form` again until `read` accepts it, replacing what
 /// each pass refuses the way that refusal says. Each pass replaces one refused
 /// production, so the passes end within the productions a sentence has; a
 /// pass with nothing to put in, more than one candidate, or nothing to change

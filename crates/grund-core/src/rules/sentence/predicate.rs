@@ -1,5 +1,5 @@
 //! The predicate of a rule sentence (§FS-rules.3.1–3.4), and the form each of
-//! its refusals offers in place of the predicate it read (§FS-rules.3.5.4.5).
+//! its refusals offers in place of the predicate it read (§FS-rule-refusals.sentences.rewrite.by-refusal).
 //! The subject and modality are the caller's, so a form here keeps them as
 //! typed by never seeing them.
 
@@ -49,7 +49,8 @@ pub(super) fn parse_predicate(
     }
     if let Some(rest) = text.strip_prefix("cite ") {
         if let Some(kinds) = rest.strip_prefix("no ") {
-            // §FS-rules.3.5.4.5: `<modality> not cite any`, the modality as typed.
+            // §FS-rule-refusals.sentences.rewrite.by-refusal: `<modality> not cite any`, the
+            // modality as typed.
             return Err(refuse(
                 "\"cite no\" is not accepted",
                 Form::One(format!("not cite any {kinds}")),
@@ -79,11 +80,11 @@ pub(super) fn parse_predicate(
             card,
         ));
     }
-    // §FS-rules.3.5.4.4: the sentence does not say which verb it meant.
+    // §FS-rule-refusals.sentences.rewrite.no-form: the sentence does not say which verb it meant.
     Err(refuse("verb is not accepted", Form::None { kind: false }))
 }
 
-/// §FS-rules.3.5.4.5: a prohibited `cite [count] KINDS` becomes
+/// §FS-rule-refusals.sentences.rewrite.by-refusal: a prohibited `cite [count] KINDS` becomes
 /// `cite any KINDS`, whatever count was written; any other prohibited
 /// predicate is not one the sentence says how to spell.
 fn prohibition(text: &str) -> Form {
@@ -108,7 +109,7 @@ fn prohibition(text: &str) -> Form {
 
 /// Chapter presence (§FS-rules.3.1): the count and the chapter `NAME`. A form
 /// keeps the count as typed and replaces the noun or the `NAME` that failed
-/// (§FS-rules.3.5.4.5).
+/// (§FS-rule-refusals.sentences.rewrite.by-refusal).
 fn presence(rest: &str) -> Result<(Cardinality, &str), Refusal> {
     let (card, object, spelling) = count_prefix(rest)?;
     let count = &rest[..rest.len() - object.len()];
@@ -130,7 +131,7 @@ fn presence(rest: &str) -> Result<(Cardinality, &str), Refusal> {
         return Err(refuse("chapter presence must end in \"chapter\"", form));
     };
     if name.is_empty() || name.trim() != name || name.chars().any(char::is_whitespace) {
-        // §FS-rules.3.5.1: the NAME trimmed, where that leaves one token.
+        // §FS-rule-refusals.sentences.whitespace: the NAME trimmed, where that leaves one token.
         let trimmed = name.trim();
         let form = if trimmed.is_empty() || trimmed.contains(char::is_whitespace) {
             Form::None { kind: false }
@@ -188,7 +189,8 @@ fn per_target(rest: &str) -> Option<Result<(&str, Cardinality), Refusal>> {
 /// A per-target count after its bound, which must end in `times`.
 fn times(kind: &str, bound: &str, raw: &str) -> Result<Cardinality, Refusal> {
     let Some(number) = raw.strip_suffix(" times") else {
-        // §FS-rules.3.5.4.5: the count typed after the bound, where it is a numeral.
+        // §FS-rule-refusals.sentences.rewrite.by-refusal: the count typed after the bound, where it
+        // is a numeral.
         let count = raw.split(' ').next().unwrap_or_default();
         let form = if numeral(count) {
             Form::One(format!("{kind}{bound}{count} times"))

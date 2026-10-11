@@ -1,8 +1,8 @@
 //! A refused `list --selector` is answered with a selector a reader can paste
-//! back, never with a rule sentence (§FS-rules.8.1), and `check --rule` answers
+//! back, never with a rule sentence (§FS-rule-refusals.selectors), and `check --rule` answers
 //! the same subject with the same recovery written as a rule subject
-//! (§FS-rules.3.5.4.2), after the reason a selector gets for the same component
-//! (§FS-rules.3.5.3). The fixture is the repository
+//! (§FS-rule-refusals.sentences.rewrite.recovered), after the reason a selector gets for the same component
+//! (§FS-rule-refusals.sentences.chapter-path). The fixture is the repository
 //! the `list-selector-refused-*` e2e cases share: one kind, `FS`, and `FS-login`
 //! with a named `requirements` chapter holding two numbered sections and a named
 //! `should` chapter.
@@ -32,7 +32,7 @@ fn named_sections_off() -> PathBuf {
     root
 }
 
-/// §FS-rules.8.1: every row of the exact table, named sections on.
+/// §FS-rule-refusals.selectors: every row of the exact table, named sections on.
 fn rows() -> Vec<(&'static str, String)> {
     let numbered = "numbered chapter subjects can detach when headings move";
     let wildcard = "section-component wildcards are not accepted in phase 1";
@@ -49,7 +49,8 @@ fn rows() -> Vec<(&'static str, String)> {
             "FS-login.requirements.1",
             format!("error: {numbered}; accepted selector: FS-login.requirements\n{HINT}"),
         ),
-        // §FS-rules.3.5.3: an empty component is not a number, so no breadcrumb.
+        // §FS-rule-refusals.sentences.chapter-path: an empty component is not a number, so no
+        // breadcrumb.
         (
             "FS-login.requirements.",
             "error: named chapter subject \"FS-login.requirements.\" does not match the configured section grammar; accepted selector: FS-login.requirements\n".into(),
@@ -120,7 +121,7 @@ fn rows() -> Vec<(&'static str, String)> {
     ]
 }
 
-/// §FS-rules.8.1: every row of the exact table with named sections off, then
+/// §FS-rule-refusals.selectors: every row of the exact table with named sections off, then
 /// the other selectors refused for needing them, each suggested what it would
 /// be suggested with them on.
 fn named_off_rows() -> Vec<(&'static str, String)> {
@@ -210,7 +211,7 @@ fn every_refused_selector_is_answered_with_a_selector() {
     );
 }
 
-/// §FS-rules.8.1: the `--size` mode reads the same selector, so it refuses
+/// §FS-rule-refusals.selectors: the `--size` mode reads the same selector, so it refuses
 /// with the same lines, the hint after `known kinds:` included.
 #[test]
 fn list_size_answers_a_refused_selector_with_the_same_lines() {
@@ -236,7 +237,7 @@ fn list_size_answers_a_refused_selector_with_the_same_lines() {
     }
 }
 
-/// §FS-rules.8.1: with named sections off, a selector refused for needing them
+/// §FS-rule-refusals.selectors: with named sections off, a selector refused for needing them
 /// is suggested what it would be suggested with them on, labelled
 /// `after enabling it` only where the suggestion needs them.
 #[test]
@@ -252,7 +253,7 @@ fn disabled_named_sections_suggest_what_enabling_them_would_accept() {
     );
 }
 
-/// Guard, green before and after §FS-rules.8.1: a suggestion labelled
+/// Guard, green before and after §FS-rule-refusals.selectors: a suggestion labelled
 /// `after enabling it` lists units once named sections are on, and a plain
 /// one lists units as configured, so no named-off suggestion is refused again.
 #[test]
@@ -274,7 +275,7 @@ fn every_named_off_suggestion_lists_units_where_its_label_says() {
     }
 }
 
-/// Guard, green before and after §FS-rules.8.1: every selector the table
+/// Guard, green before and after §FS-rule-refusals.selectors: every selector the table
 /// suggests is one `--selector` accepts, so pasting a suggestion back lists
 /// units rather than failing again.
 #[test]
@@ -292,7 +293,7 @@ fn every_suggested_selector_lists_units() {
 
 /// The rule subject the selector `selector` names: `KIND.NAME[.NAME…]` is
 /// selector-only, so it becomes `The NAME[.NAME…] chapter of each KIND`, and a
-/// bare `KIND` becomes `Each KIND` (§FS-rules.3.5.4.2).
+/// bare `KIND` becomes `Each KIND` (§FS-rule-refusals.sentences.rewrite.recovered).
 fn as_rule_subject(selector: &str) -> String {
     match selector.split_once('.') {
         Some(("FS", names)) => format!("The {names} chapter of each FS"),
@@ -301,7 +302,7 @@ fn as_rule_subject(selector: &str) -> String {
     }
 }
 
-/// §FS-rules.8.1, §FS-rules.3.5.4.2: a rule sentence over a refused subject is
+/// §FS-rule-refusals.selectors, §FS-rule-refusals.sentences.rewrite.recovered: a rule sentence over a refused subject is
 /// answered with the subject `list --selector` gives it, written as a rule
 /// subject under the typed predicate, and with no form and `known kinds:` where
 /// the selector has none. Only what follows the reason is compared, because the
@@ -349,7 +350,7 @@ fn the_rule_side_answers_a_refused_subject_as_the_selector_does() {
     assert!(wrong.is_empty(), "{}", wrong.join("\n"));
 }
 
-/// Guard, green before and after §FS-rules.8.1: the sentence a selector now
+/// Guard, green before and after §FS-rule-refusals.selectors: the sentence a selector now
 /// splits where the rule does (§FS-rules.3.6) is the rule `check --rule` has
 /// always read, with the subject `The should chapter of each FS`.
 #[test]

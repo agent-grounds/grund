@@ -1,6 +1,6 @@
 //! A chapter subject refused for its chapter path names the component that
-//! failed, whichever spelling reached it (§FS-rules.3.5.3), and is offered the
-//! typed sentence with that subject rebuilt (§FS-rules.3.5.4.2), the subject
+//! failed, whichever spelling reached it (§FS-rule-refusals.sentences.chapter-path), and is offered the
+//! typed sentence with that subject rebuilt (§FS-rule-refusals.sentences.rewrite.recovered), the subject
 //! `list --selector` gives it. The fixture is the
 //! `check-rules-chapter-path-reasons` e2e case's: kinds `FS`, `REQ` and `RULE`,
 //! named sections on, `FS-login` holding a named `requirements` chapter that
@@ -27,7 +27,7 @@ fn unconfigured() -> PathBuf {
     root
 }
 
-/// §FS-rules.3.5.3, §FS-rules.3.5.4.2: every row of the exact table, as the
+/// §FS-rule-refusals.sentences.chapter-path, §FS-rule-refusals.sentences.rewrite.recovered: every row of the exact table, as the
 /// fixture's rule declaration that writes it, its subject, and the reason and
 /// accepted form both rule surfaces print.
 fn rows() -> Vec<(&'static str, &'static str, String)> {
@@ -90,7 +90,7 @@ fn wrong_check_rule_rows(root: &Path, rows: &[(&str, &str, String)]) -> Vec<Stri
     wrong
 }
 
-/// §FS-rules.3.5.3: `check --rule` refuses each sentence for the component of
+/// §FS-rule-refusals.sentences.chapter-path: `check --rule` refuses each sentence for the component of
 /// its chapter path that failed: `requirements.1` as numbered and
 /// `requirements.*` for its wildcard in `The PATH chapter of each KIND`, as the
 /// literal spelling already is, and an empty component off the section grammar
@@ -108,7 +108,7 @@ fn check_rule_refuses_a_chapter_path_for_the_component_that_failed() {
     );
 }
 
-/// §FS-rules.3.5.3, §FS-rules.7.1: a configured rule declaration's
+/// §FS-rule-refusals.sentences.chapter-path, §FS-rules.7.1: a configured rule declaration's
 /// `invalid-rule` finding carries the same reason and accepted form after
 /// `is not a valid rule: `.
 #[test]
@@ -132,7 +132,7 @@ fn the_invalid_rule_finding_names_the_component_that_failed() {
     assert!(wrong.is_empty(), "{}", wrong.join("\n"));
 }
 
-/// Guard, green before and after §FS-rules.3.5.3: the unnumbered spellings of
+/// Guard, green before and after §FS-rule-refusals.sentences.chapter-path: the unnumbered spellings of
 /// the same chapter are accepted on both rule surfaces, so the rows above are
 /// refused for their paths and not for the fixture.
 #[test]
@@ -158,7 +158,7 @@ fn the_unnumbered_spellings_of_the_same_chapter_are_accepted() {
     }
 }
 
-/// §FS-rules.3.5.4.2: a literal keeps the named components typed before the
+/// §FS-rule-refusals.sentences.rewrite.recovered: a literal keeps the named components typed before the
 /// one that failed, and its own declaration where none was typed, here
 /// `FS-demo`, not `FS-login`.
 #[test]

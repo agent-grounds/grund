@@ -1,5 +1,5 @@
 //! A refused rule's accepted form is the sentence its author typed with only
-//! the refused part replaced (§FS-rules.3.5.4), pinned by exact rows. The
+//! the refused part replaced (§FS-rule-refusals.sentences.rewrite), pinned by exact rows. The
 //! fixture is the repository the `list-selector-refused-*` e2e cases share: one
 //! kind, `FS`, named sections on, and `FS-login` with named `requirements` and
 //! `should` chapters.
@@ -14,7 +14,7 @@ fn repo() -> PathBuf {
     case_repo("list-selector-refused-numbered-section")
 }
 
-/// §FS-rules.3.5.2's repository: kinds `FS`, `REQ` and `GOAL`, named sections
+/// §FS-rule-refusals.sentences.named-sections's repository: kinds `FS`, `REQ` and `GOAL`, named sections
 /// off, and `FS-login` holding a named `requirements` chapter.
 fn named_off() -> PathBuf {
     case_repo("check-rule-named-off-rebuilt-subject")
@@ -42,7 +42,7 @@ fn wrong_rows(root: &Path, rows: &[(&str, &str, &str)]) -> Vec<String> {
     wrong
 }
 
-/// §FS-rules.3.5.4.6: every row of the exact table, the refused sentence, the
+/// §FS-rule-refusals.sentences.rewrite.fs-only: every row of the exact table, the refused sentence, the
 /// `error:` line's text and the line after it.
 fn fs_only_rows() -> Vec<(&'static str, &'static str, &'static str)> {
     let kinds = "known kinds: FS\n";
@@ -216,7 +216,7 @@ fn fs_only_rows() -> Vec<(&'static str, &'static str, &'static str)> {
     ]
 }
 
-/// §FS-rules.3.5.4.6, the issue's reproducer: in a repository that configures
+/// §FS-rule-refusals.sentences.rewrite.fs-only, the issue's reproducer: in a repository that configures
 /// only `FS`, each refusal keeps what was typed, replaces the refused part, and
 /// offers nothing, followed by the kinds, where the part missing is a kind.
 #[test]
@@ -225,14 +225,14 @@ fn every_refusal_where_fs_is_the_only_kind_offers_the_typed_sentence_repaired() 
     let wrong = wrong_rows(&repo(), &rows);
     assert!(
         wrong.is_empty(),
-        "{} of {} refusals in an FS-only repository were not as FS-rules.3.5.4.6 says:\n{}",
+        "{} of {} refusals in an FS-only repository were not as FS-rule-refusals.sentences.rewrite.fs-only says:\n{}",
         wrong.len(),
         rows.len(),
         wrong.join("\n")
     );
 }
 
-/// §FS-rules.3.5.4.3: the rows a single replacement cannot repair. A missing
+/// §FS-rule-refusals.sentences.rewrite.reparsed: the rows a single replacement cannot repair. A missing
 /// `.` is offered only once the second pass has rewritten `at least 1`, and a
 /// form that would name a kind the repository lacks is never offered.
 #[test]
@@ -253,7 +253,7 @@ fn a_form_is_parsed_again_before_it_is_offered() {
     assert!(wrong.is_empty(), "{}", wrong.join("\n"));
 }
 
-/// §FS-rules.3.5.2, item 5: with named sections off, the subject is answered
+/// §FS-rule-refusals.sentences.named-sections, item 5: with named sections off, the subject is answered
 /// as that point says, and the modality and predicate are the ones the author
 /// typed, rewritten where they are refused too. The label is decided on the
 /// whole sentence, and where the predicate has no form nothing is suggested.
@@ -306,7 +306,7 @@ fn a_named_off_subject_keeps_the_typed_predicate() {
     );
 }
 
-/// §FS-rules.3.5.2 step 3: only a reason about named sections may carry the
+/// §FS-rule-refusals.sentences.named-sections step 3: only a reason about named sections may carry the
 /// `after enabling it` label. Where another part is refused first and only its
 /// form would need named sections, the refusal is the reason alone.
 #[test]
@@ -327,8 +327,8 @@ fn only_a_named_sections_reason_carries_the_after_enabling_label() {
     assert!(wrong.is_empty(), "{}", wrong.join("\n"));
 }
 
-/// §FS-rules.3.5.4.2: a refused subject holding a clause of its own, two
-/// clauses joined by anything but §FS-rules.3.5.5's ` and ` and split at the
+/// §FS-rule-refusals.sentences.rewrite.recovered: a refused subject holding a clause of its own, two
+/// clauses joined by anything but §FS-rule-refusals.sentences.conjunction's ` and ` and split at the
 /// second modality, is offered no form, never one that drops the first clause.
 #[test]
 fn a_subject_holding_a_clause_is_offered_no_form() {

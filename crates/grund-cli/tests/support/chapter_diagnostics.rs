@@ -1,4 +1,4 @@
-//! Chapter diagnostic regressions for §FS-rules.7.2.1 and §FS-rules.3.5.1.
+//! Chapter diagnostic regressions for §FS-rules.7.2.1 and §FS-rule-refusals.sentences.whitespace.
 //! The unchanged-selector controls prove the goal chapter is actually reached.
 
 use super::case_runner::{CaseKind::E2e, assert_every_case_passed, run_case};
@@ -22,7 +22,7 @@ fn chapter_diagnostic_display_name_json() {
     case("check-chapter-diagnostic-display-name-json");
 }
 
-/// §FS-rules.3.5.1: keep the full refusal prefix and explain internal whitespace.
+/// §FS-rule-refusals.sentences.whitespace: keep the full refusal prefix and explain internal whitespace.
 #[test]
 fn chapter_diagnostic_whitespace_refusal() {
     case("check-chapter-diagnostic-whitespace-refusal");

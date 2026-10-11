@@ -1,5 +1,5 @@
 //! The four steps that build a refused selector's suggestion, on a
-//! hand-written vocabulary (§FS-rules.8.1).
+//! hand-written vocabulary (§FS-rule-refusals.selectors).
 //!
 //! The named-sections-off suggestion is pinned black-box in
 //! `rules_contract/selector_refusals.rs`, since it reads the configuration
