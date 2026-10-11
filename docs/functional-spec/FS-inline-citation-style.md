@@ -9,8 +9,8 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 doc-comment, note), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, workspace, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding,
 severity), and [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (direction).
 
-- **comment block** — The contiguous run of comment lines a site is measured over. A blank line
-  ends one; an empty comment line does not.
+- **comment block** — The contiguous run of comment lines a site is measured over, as
+  [§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks) delimits it.
 - **definition-starter** — The language keyword on the line below a block that makes the block a
   doc-comment rather than an inline comment.
 - **leading comment** — A block with only blank lines or a shebang above it — how a language

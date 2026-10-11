@@ -9,8 +9,8 @@ Leans on [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (doc-comment) and
 - **comment block** — The run of lines one comment construct spans: a run of line comments, one
   block comment, or one Python docstring. Its extent is [§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block).
 - **comment wrapper** — The bytes of a comment line that say it is a comment rather than what it
-  says: the prefix, the whitespace before it, and a block comment's continuation and closer.
-  Which bytes they are is [§FS-languages.comment-wrapper](FS-languages.md#comment-wrapper-the-comment-wrapper).
+  says, such as the prefix and the whitespace before it. Which bytes they are, and when a block
+  comment's closer is among them, is [§FS-languages.comment-wrapper](FS-languages.md#comment-wrapper-the-comment-wrapper).
 - **fence** — A Markdown fenced code block, from its opening delimiter line to its closing one.
 
 ## comment-block: The comment block
@@ -46,7 +46,7 @@ Scanning in **either direction**, if another declaration line of any ID is encou
 The block forms say where a block begins and ends:
 
 - `//` / `///` / `//!` line comments: a run of adjacent lines whose first non-whitespace token is the same line-comment prefix.
-- `#`, `;`, `--` line comments: same rule per prefix (see [§FS-languages.prefixes](FS-languages.md#prefixes-comment_prefixes-compose-with-extensions) for the full prefix set).
+- `#`, `;`, `--` line comments: same rule per prefix (see [§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned) for the full prefix set).
 - `/* … */` block comments, `/**`- and `/*!`-opened alike: from opener to closer.
 - Python triple-quoted docstrings (`""" … """` / `''' … '''`): from the opening triple-quote to the matching close.
 

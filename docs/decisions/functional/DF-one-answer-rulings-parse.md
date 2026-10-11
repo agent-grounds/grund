@@ -26,7 +26,7 @@ verdict, and then the record names that requirement.
 - **D17a–d** (V-A17). A deeper declaration does not end its parent's body (a); a section
   ends at the next heading of its level or above (b); `//` and `///` are separate comment
   blocks (c); a trailing `*/` is part of a C-family comment's wrapper, and a literal `*/` in
-  Markdown or a docstring stays in its label (d), as [§FS-rules.5.1.1](../../functional-spec/FS-rules.md#511-a-chapters-display-name-is-the-label-its-author-wrote) says. Each changes what
+  Markdown or a docstring stays in its label (d), as [§FS-languages.comment-wrapper.headings](../../functional-spec/FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line) says. Each changes what
   `show`, `refs` and `list --size` print. Route: the warning release,
   [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), because no requirement forbids today's extents.
 - **D17e** (V-A18, amended). Anchors come from the complete rendered text of the authored

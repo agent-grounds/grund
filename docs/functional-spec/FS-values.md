@@ -102,7 +102,7 @@ A line break is not the one ASCII space, so a binding split across two lines is 
 The two lines must be one run of text:
 
 - In Markdown they are consecutive physical lines of one paragraph, and the literal's line is not a heading. The continuation prefix is the next line's indentation and, inside a blockquote, the same `>` markers that the literal's line carries.
-- In a scanned source file they are consecutive lines of one comment block ([§FS-inline-citation-style.1.2](FS-inline-citation-style.md#12-comment-blocks)): the same line-comment prefix, the interior of one block comment, or one Python docstring. The literal must sit in the comment content that [§FS-values.3.2](FS-values.md#32-recognized-text-contexts) recognizes. The continuation prefix is the next line's comment wrapper ([§FS-values.2.4.1](FS-values.md#241-recognition-in-source-doc-comments)) and the whitespace around it.
+- In a scanned source file they are consecutive lines of one comment block ([§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks)). The literal must sit in the comment content that [§FS-values.3.2](FS-values.md#32-recognized-text-contexts) recognizes. The continuation prefix is the next line's comment wrapper ([§FS-values.2.4.1](FS-values.md#241-recognition-in-source-doc-comments)) and the whitespace around it.
 
 The finding is `invalid-value-binding` at the literal: its line and the column of its opening backtick, where every attempt is located. Its message tells the author to put the two on one line, rather than restating the grammar the other attempts quote, and every other attempt keeps its message:
 
