@@ -16,6 +16,14 @@ NODE = REPO / "crates" / "grund-node"
 CASES = REPO / "tests" / "e2e" / "cases"
 
 
+def node_target():
+    """The shared, persistent build target of the whole acceptance (§AR-ci.3.4.1)."""
+    given = os.environ.get("GRUND_NODE_TARGET")
+    target = Path(given).expanduser() if given else SCRATCH / "grund-node-target"
+    target.mkdir(parents=True, exist_ok=True)
+    return target.resolve()
+
+
 @lru_cache(maxsize=1)
 def source_package():
     """Build once per suite; each test still gets a fresh installed consumer."""
@@ -31,8 +39,7 @@ def source_package():
     SCRATCH.mkdir(parents=True, exist_ok=True)
     temp = tempfile.TemporaryDirectory(prefix="grund-node-source-", dir=SCRATCH)
     atexit.register(temp.cleanup)
-    root = Path(temp.name)
-    stage, target = root / "package", root / "cargo-target"
+    stage, target = Path(temp.name) / "package", node_target()
     checked(["node", NODE / "stage.mjs", "--out-dir", stage, "--target-dir", target])
     checked(["npm", "run", "build:source", "--", "--target-dir", target], cwd=stage)
     packed = checked(["npm", "pack", "--json"], cwd=stage)
@@ -42,11 +49,11 @@ def source_package():
 
 @lru_cache(maxsize=1)
 def checkout_cli():
-    """Independent same-source mutation byte oracle (§FS-distribution.3.2.3.1)."""
-    SCRATCH.mkdir(parents=True, exist_ok=True)
-    temp = tempfile.TemporaryDirectory(prefix="grund-node-cli-oracle-", dir=SCRATCH)
-    atexit.register(temp.cleanup)
-    target = Path(temp.name) / "cargo-target"
+    """Independent same-source mutation byte oracle (§FS-distribution.3.2.3.1).
+
+    Built once per run into the shared target, and reused by every test (§AR-ci.3.4.1).
+    """
+    target = node_target()
     checked(["cargo", "+1.95.0", "build", "-p", "grund", "--locked", "--target-dir", target])
     return target / "debug" / ("grund.exe" if os.name == "nt" else "grund")
 

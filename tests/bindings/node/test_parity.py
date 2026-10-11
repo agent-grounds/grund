@@ -11,7 +11,7 @@ import subprocess
 import sys
 import unittest
 
-from support import CASES, REPO, Rehearsal, checked, command
+from support import CASES, REPO, Rehearsal, checked, checkout_cli, command
 
 
 class NodeParityTests(unittest.TestCase):
@@ -155,9 +155,7 @@ class NodeParityTests(unittest.TestCase):
                             "Every appended raw-member variant must pass all comparisons")
 
     def test_same_version_cli_check_stdout_stderr_and_status(self):
-        target = self.r.root / "cli-target"
-        checked(["cargo", "build", "-p", "grund", "--locked", "--target-dir", target])
-        cli = target / "debug" / ("grund.exe" if os.name == "nt" else "grund")
+        cli = checkout_cli()  # §AR-ci.3.4.1: the run's one CLI build
         manifest = json.loads((self.r.package / "package.json").read_text())
         self.assertEqual("grund " + manifest["version"], checked([cli, "--version"]).stdout.strip())
         shutil.copyfile(REPO / "tests/bindings/node/check-wire.mjs",
@@ -181,9 +179,7 @@ class NodeParityTests(unittest.TestCase):
                 self.assertEqual(native.stderr.encode(), node.stderr.encode())
 
     def test_command_wire_shapes_controls_query_sites_and_order(self):
-        target = self.r.root / "cli-target"
-        checked(["cargo", "build", "-p", "grund", "--locked", "--target-dir", target])
-        cli = target / "debug" / ("grund.exe" if os.name == "nt" else "grund")
+        cli = checkout_cli()  # §AR-ci.3.4.1: the run's one CLI build
         for script in ("query-wire.mjs", "wire-codec.mjs"):
             shutil.copyfile(REPO / "tests/bindings/node" / script, self.r.consumer / script)
         for case, operation, operand, flags, options in [

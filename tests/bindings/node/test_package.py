@@ -5,7 +5,7 @@ import shutil
 import unittest
 
 from launch import cargo_probe
-from support import NODE, REPO, Rehearsal, checked
+from support import NODE, REPO, Rehearsal, checked, node_target
 
 
 class NodePackageTests(unittest.TestCase):
@@ -71,8 +71,9 @@ class NodePackageTests(unittest.TestCase):
             "log.write(json.dumps({'manifest': str(manifest), 'args': args}) + '\\n')\n"
             f"sys.exit(subprocess.call([{real_cargo!r}, *args]))\n"
         )
-        checked(["npm", "run", "build:source", "--", "--target-dir",
-                 self.r.root / "fallback-target"], cwd=self.r.package, env=env)
+        # §AR-ci.3.4.1: the installed sources still compile; only the third-party tree is warm.
+        checked(["npm", "run", "build:source", "--", "--target-dir", node_target()],
+                cwd=self.r.package, env=env)
         self.assertTrue(trace.is_file(), "source builder must invoke Cargo")
         invocations = [json.loads(line) for line in trace.read_text().splitlines()]
         self.assertTrue(any("--locked" in call["args"] for call in invocations))

@@ -4,18 +4,26 @@ Set GRUND_BUILT/GRUND_RELEASED to reuse local artifacts for
 §FS-cochange-recipe.examples, and GRUND_BINDINGS_ORACLE to reuse a same-source
 binding oracle for §FS-distribution.3.0.3; otherwise build this checkout, install
 the exact released crate, and build the oracle from HEAD, without silently
-skipping tests.
+skipping tests. GRUND_NODE_TARGET names the Node acceptance's shared build target
+(§AR-ci.3.4.1). The run ends with its slowest tests (§AR-ci.3.4.2).
 """
 import os
 from pathlib import Path
 import subprocess
 import sys
+import time
+import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS = Path(__file__).resolve().parent
+SLOWEST = 10
+# The child keeps `python -m unittest`'s sys.path, with this directory appended to reach discover().
+DISCOVER = ('import sys; sys.path.append(sys.argv.pop(1)); import run_python_gate; '
+            'sys.exit(run_python_gate.discover(sys.argv[1:]))')
 
 
 def inputs():
-    """Fresh-checkout built, released and oracle inputs (§AR-ci.3.4)."""
+    """Fresh-checkout built, released, oracle and Node target inputs (§AR-ci.3.4)."""
     environment = dict(os.environ)
     suffix = '.exe' if os.name == 'nt' else ''
     scratch = Path.home() / 'ag/tmp'
@@ -45,7 +53,11 @@ def inputs():
         if not oracle.is_file():
             raise FileNotFoundError(oracle)
         environment['GRUND_BINDINGS_ORACLE'] = str(oracle)
-    for key in ('GRUND_BUILT', 'GRUND_RELEASED', 'GRUND_BINDINGS_ORACLE'):
+    if not environment.get('GRUND_NODE_TARGET'):
+        # §AR-ci.3.4.1: outside the checkout and kept between runs; CI's cargo cache restores it.
+        environment['GRUND_NODE_TARGET'] = str(scratch / 'grund-node-target')
+    Path(environment['GRUND_NODE_TARGET']).expanduser().mkdir(parents=True, exist_ok=True)
+    for key in ('GRUND_BUILT', 'GRUND_RELEASED', 'GRUND_BINDINGS_ORACLE', 'GRUND_NODE_TARGET'):
         environment[key] = str(Path(environment[key]).expanduser().resolve())
     version = subprocess.run([environment['GRUND_RELEASED'], '--version'],
                              capture_output=True, text=True, check=True).stdout
@@ -54,6 +66,40 @@ def inputs():
     return environment
 
 
+class TimedResult(unittest.TextTestResult):
+    """Records each test's wall-clock for the slowest-tests table (§AR-ci.3.4.2)."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.timings = []
+
+    def startTest(self, test):
+        self.started = time.perf_counter()
+        super().startTest(test)
+
+    def stopTest(self, test):
+        super().stopTest(test)
+        self.timings.append((time.perf_counter() - self.started, test.id()))
+
+
+def discover(argv):
+    """Run `unittest` with `argv`, then print the slowest tests (§AR-ci.3.4.2)."""
+    runner = unittest.TextTestRunner(resultclass=TimedResult)
+    result = unittest.main(module=None, argv=['python -m unittest', *argv],
+                           testRunner=runner, exit=False).result
+    stream = runner.stream
+    stream.writeln('Slowest tests')
+    for seconds, test in sorted(result.timings, reverse=True)[:SLOWEST]:
+        stream.writeln(f'{seconds:8.2f}s {test}')
+    stream.flush()
+    return 0 if result.wasSuccessful() else 1
+
+
+def run_tests(start, environment):
+    """Discover and time the tests under `start`; return the exit status (§AR-ci.3.4.2)."""
+    return subprocess.run([sys.executable, '-c', DISCOVER, str(SCRIPTS), 'discover', '-s',
+                           str(start), '-p', 'test_*.py'], cwd=ROOT, env=environment).returncode
+
+
 if __name__ == '__main__':
-    sys.exit(subprocess.run([sys.executable, '-m', 'unittest', 'discover', '-s',
-                            'tests/integration', '-p', 'test_*.py'], cwd=ROOT, env=inputs()).returncode)
+    sys.exit(run_tests('tests/integration', inputs()))
