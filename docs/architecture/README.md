@@ -15,6 +15,34 @@ Speed is set by the walk, which is why the walk happens once
 This page is the whole system, described once; each page in the index below
 describes one part and names its box here in a `placement` chapter (section 5).
 
+## principle: One fact, one point, one implementation
+
+Every fact `grund` decides — which files a run reads, the text of a file, a file's
+structure, which declarations an ID has, what a rule sentence means — has one defining
+point in the specification, one function in one owning component that derives it, and
+reads of that function's result everywhere else. The defining point sits in a definition
+chapter, never inside a finding and never inside one command's spec, the way
+[§FS-declarations.line](../functional-spec/FS-declarations.md#line-what-a-line-in-declaration-position-declares) defines a declaration line and its `checks` chapter only finds
+breaches of it. A command's spec says only what that command shows and cites the defining
+point, and a command that reads a shared answer also cites the section of [§REQ-one-answer](../requirements/REQ-one-answer.md#req-one-answer-every-command-gives-the-same-answer-about-one-tree)
+it must agree with, never another command's restatement as if it were the definition. Code
+cites the point, not a decision record, for a rule a point states. Spec, citations and
+code are unified in that order, and code is not unified ahead of a ruling on which copy is
+right. Words come from [§FS-terms](../functional-spec/FS-terms.md#fs-terms-the-shared-vocabulary-of-the-functional-spec-and-the-architecture): a home is a kind's file or folder, never where one ID is
+declared. [§REQ-one-answer](../requirements/REQ-one-answer.md#req-one-answer-every-command-gives-the-same-answer-about-one-tree) is the promise to users this secures; this chapter is how the
+engine keeps it.
+
+### principle.inventory: Until a family is unified, its copies cite the point
+
+A family is not done while its defining point is realized in more than one place. Until
+it is, a copy that conforms to the point cites it, so `grund refs <point> --summary` lists
+the copies left to remove. A citation is a claim: a site that breaks the point does not cite
+it, and stays a migration row until it is fixed. The families, their defining points,
+their owners and the copies left are listed in
+[§DA-one-fact-one-point-one-implementation.consequences](../decisions/architectural/DA-one-fact-one-point-one-implementation.md#consequences-consequences). That list is wider than
+[§REQ-one-answer.differences](../requirements/REQ-one-answer.md#differences-the-differences-known-when-this-requirement-landed): a second derivation that happens to answer right, and one
+derivation wrong everywhere, are both unfinished, and neither is two commands disagreeing.
+
 ## 1. The system
 
 Twelve components in one crate, stacked in the order they may read each other,

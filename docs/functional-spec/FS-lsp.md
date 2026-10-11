@@ -387,7 +387,7 @@ definition navigation has no editor-only recognition fallback
 ([§FS-lsp.1.3](FS-lsp.md#13-go-to-definition),
 [§FS-check.1.1.10](FS-check.md#1110-the-configured-marker-establishes-the-citation-start)).
 
-Same input + same config → same diagnostics, same hover body, same definition target, byte-for-byte ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)).
+Same input, same answer: the parity is [§REQ-one-answer.text.parity](../requirements/REQ-one-answer.md#textparity-the-editor-answers-as-the-command-line-does).
 
 Completion candidates, metadata, ordering and edit ranges obey the same promise
 ([§FS-lsp.1.6.2](FS-lsp.md#162-candidates-resolution-and-ordering), [§FS-lsp.1.6.3](FS-lsp.md#163-whole-token-replacement)).

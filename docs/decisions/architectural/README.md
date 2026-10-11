@@ -13,6 +13,7 @@ Half of this folder is the record of one rename. That is deliberate: the superse
 - [§DA-benchmark-instruction-counting](DA-benchmark-instruction-counting.md#da-benchmark-instruction-counting-the-performance-harness-counts-instructions-not-wall-clock-seconds) — the performance harness counts instructions, not wall-clock seconds
 - [§DA-engine-renders-nothing](DA-engine-renders-nothing.md#da-engine-renders-nothing-the-engine-renders-nothing-so-the-deprecated-compat-frontend-retires) — the engine renders nothing, so the deprecated compat frontend retires
 - [§DA-config-concern-records](DA-config-concern-records.md#da-config-concern-records-the-configuration-becomes-three-concern-records-inside-an-envelope-and-the-checker-splits-in-two) — the configuration becomes three concern records inside an envelope, and the checker splits in two
+- [§DA-one-fact-one-point-one-implementation](DA-one-fact-one-point-one-implementation.md#da-one-fact-one-point-one-implementation-every-fact-grund-decides-has-one-defining-point-one-implementation-and-reads-of-it-everywhere-else) — every fact grund decides has one defining point, one implementation, and reads of it everywhere else
 
 ## Name and packaging
 
