@@ -7,7 +7,7 @@ mod support;
 use std::fs;
 use support::*;
 
-/// §FS-check.1.1.7: a fetched snapshot is not a special input. Once `grund
+/// §FS-check.1.1.7 (§FS-citations.recognized.snapshots): a fetched snapshot is not a special input. Once `grund
 /// fetch` has written it, its configured file home sits in the ordinary scan
 /// scope and its declaration and body are recognized by the ordinary rules —
 /// the offline leg runs with the integration renamed away, so `check`, `show`
