@@ -97,12 +97,11 @@ MOVES = (
 ZONE_LIST = ("FS-fmt.md", "2.3", "zones",
              ("where rewriting would change a literal command, path, or example",))
 
-# What the move leaves where it is: the fence and raw-HTML grammar and the lexical
-# string and fence rules, which a later step moves to a languages page (#589), the
-# wrap form of 6.2, which another moves to the declarations page, and the
-# writer-only entries of the never-rewritten list.
+# What the move leaves where it is: the raw-HTML grammar and the lexical string and
+# fence rules, which a later step moves to the languages page the fence grammar
+# already moved to (#589), the wrap form of 6.2, which another moves to the
+# declarations page, and the writer-only entries of the never-rewritten list.
 KEPT = (
-    ("FS-check.md", "1.1.5", "it closes only on a run of the **same character** at least as long as the opener"),
     ("FS-check.md", "1.1.5.1", "No line of the block, its opening and closing lines included, is a heading"),
     ("FS-fmt.md", "2.3", "Declaration headings (the line that names the ID)"),
     ("FS-fmt.md", "2.3", "Everything in a **suppressed scope**"),
