@@ -11,8 +11,9 @@ use std::sync::Arc;
 
 use super::compiled::{Compiled, scan_demand};
 use super::facade::Records;
+use super::fields::Field;
 use super::kind::KindConfig;
-use super::project::{KindGrounding, Project};
+use super::project::{KindGrounding, Project, Strength};
 use super::record::Config;
 use super::rows::{Extent, Form, Kind, Origin, Place, Row};
 use super::run::Run;
@@ -173,15 +174,11 @@ fn row_of(kind: &KindConfig) -> Row {
         (None, None) if !kind.citable => Some(Extent::Complement),
         (None, None) => None,
     };
-    let form = match (&kind.value_chapter, kind.values, kind.rules) {
-        (value_chapter, _, true) => Form::Rule {
-            value_chapter: value_chapter.clone(),
-        },
-        (Some(chapter), _, false) => Form::Value {
-            chapter: Some(chapter.clone()),
-        },
-        (None, true, false) => Form::Value { chapter: None },
-        (None, false, false) => Form::Prose,
+    // §FS-fields.v1: the v1 row's lowering, its value chapter a field.
+    let form = match (kind.values, kind.rules) {
+        (_, true) => Form::Rule,
+        (true, false) => Form::Value,
+        (false, false) => Form::Prose,
     };
     Row {
         name: kind.kind.clone(),
@@ -202,6 +199,13 @@ fn row_of(kind: &KindConfig) -> Row {
                 },
                 None => Origin::Local,
             },
+            fields: kind
+                .value_chapter
+                .clone()
+                .into_iter()
+                .map(Field::value_chapter)
+                .collect(),
+            closed: Strength::May,
         }),
     }
 }

@@ -11,8 +11,9 @@
 
 use std::path::{Path, PathBuf};
 
+use super::fields::{Field, FieldContent};
 use super::kind::{DEFAULT_KIND_INDEX, KindConfig, KindIndex};
-use super::project::{Project, Schema};
+use super::project::{Project, Schema, Strength};
 use super::record::CODE_SOURCE_KIND;
 
 /// §AR-config.1.3: one `[[kinds]]` row.
@@ -43,30 +44,31 @@ pub enum Extent {
 }
 
 /// §AR-config.1.3: an ID namespace — its format override, what its
-/// declarations are, the index it keeps (§AR-config.1.4), and where its facts
-/// come from.
+/// declarations are, the index it keeps (§AR-config.1.4), where its facts
+/// come from, and the shape its declarations are held to (§FS-fields.record).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Kind {
     pub id_format: Option<String>,
     pub form: Form,
     pub index: KindIndex,
     pub origin: Origin,
+    /// §FS-fields.declare.field: the declared fields, in header order. A value
+    /// chapter is one of them (§FS-fields.content.values, §DF-kind-fields.2.4).
+    pub fields: Vec<Field>,
+    /// §FS-fields.declare.closed: `may` is an open kind.
+    pub closed: Strength,
 }
 
 /// What a kind's declarations are (§FS-config.3.4.9, §FS-config.3.4.12,
-/// §FS-config.3.4.13). A rule kind may still name a value chapter in v1, so
-/// the rule form carries one and the lowering keeps it (§AR-config.2 rule 3).
-#[derive(Clone, Debug, PartialEq)]
+/// §FS-fields.forms). The value chapter is not a form's payload: it is a field
+/// (§DF-kind-fields.2.4), so a rule kind and a prose kind name one alike.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Form {
     Prose,
-    /// `values = true` (`chapter: None`), or the named chapter whose children
-    /// are the values.
-    Value {
-        chapter: Option<String>,
-    },
-    Rule {
-        value_chapter: Option<String>,
-    },
+    /// `values = true`, `form = "value"`: the declarations are the values.
+    Value,
+    /// `rules = true`, `form = "rule"`.
+    Rule,
 }
 
 /// Where a kind's declarations come from (§FS-config.3.4.10).
@@ -99,13 +101,13 @@ impl Schema {
             .filter_map(|row| row.kind.as_ref().map(|kind| (row.name.as_str(), kind)))
     }
 
-    /// §FS-values.2: the rows declared `values = true` — value kinds with no
-    /// named chapter, whose homes hold the values themselves.
+    /// §FS-values.2: the rows declared `values = true` — value kinds, whose
+    /// homes hold the values themselves.
     pub fn value_rows(&self) -> impl Iterator<Item = &Row> {
         self.rows.iter().filter(|row| {
             row.kind
                 .as_ref()
-                .is_some_and(|kind| kind.form == Form::Value { chapter: None })
+                .is_some_and(|kind| kind.form == Form::Value)
         })
     }
 
@@ -167,16 +169,19 @@ impl Row {
 }
 
 impl Kind {
-    /// Whether this kind's declarations carry values: a value kind, or a rule
-    /// kind that names a value chapter (§FS-values.1, §FS-values.2.5).
+    /// Whether this kind's declarations carry values: a value kind, or one
+    /// with a value chapter (§FS-values.1, §FS-values.2.5).
     pub fn has_values(&self) -> bool {
-        matches!(
-            self.form,
-            Form::Value { .. }
-                | Form::Rule {
-                    value_chapter: Some(_)
-                }
-        )
+        self.form == Form::Value || self.value_chapter().is_some()
+    }
+
+    /// The name of the kind's values field, its value chapter
+    /// (§FS-fields.content.values).
+    pub fn value_chapter(&self) -> Option<&str> {
+        self.fields
+            .iter()
+            .find(|field| field.content == FieldContent::Values)
+            .map(|field| field.name.as_str())
     }
 }
 
@@ -200,12 +205,9 @@ impl Project {
             Some(Extent::Complement) | None => (None, None),
         };
         let kind = row.kind.as_ref();
-        let (values, value_chapter, rules) = match kind.map(|kind| &kind.form) {
-            Some(Form::Value { chapter: None }) => (true, None, false),
-            Some(Form::Value { chapter }) => (false, chapter.clone(), false),
-            Some(Form::Rule { value_chapter }) => (false, value_chapter.clone(), true),
-            Some(Form::Prose) | None => (false, None, false),
-        };
+        let form = kind.map(|kind| kind.form);
+        let (values, rules) = (form == Some(Form::Value), form == Some(Form::Rule));
+        let value_chapter = kind.and_then(Kind::value_chapter).map(str::to_string);
         let grounding = self.rules.grounding.kinds.get(&row.name);
         KindConfig {
             kind: row.name.clone(),

@@ -8,9 +8,11 @@ use std::fmt::Write;
 
 use super::rules::unit;
 use crate::config::citations::{CitationDisjunction, render_citation_target};
+use crate::config::fields::{FieldContent, Placement};
 use crate::config::kind::{KindIndex, KindResolution, escape_toml_basic};
+use crate::config::project::Strength;
 use crate::config::project::{Project, Rung, Threshold};
-use crate::config::rows::Extent;
+use crate::config::rows::{Extent, Form, Kind};
 
 fn string(value: &str) -> String {
     format!("\"{}\"", escape_toml_basic(value))
@@ -147,6 +149,7 @@ impl Project {
             if let crate::config::rows::Origin::External { fetch } = &kind.origin {
                 let _ = writeln!(out, "fetch = {}", string(fetch));
             }
+            fields(out, &row.name, kind);
         }
     }
 
@@ -214,6 +217,41 @@ impl Project {
             "\n[presentation.fmt]\nanchors = \"github\"\nlinks = \"index\"\nexclude = {}",
             list(&presentation.fmt.exclude)
         );
+    }
+}
+
+/// §FS-fields.declare: a kind's `form`, `closed` and fields, each field under
+/// its own header in header order (§FS-config-v2.reader.2).
+fn fields(out: &mut String, name: &str, kind: &Kind) {
+    match kind.form {
+        Form::Prose => {}
+        Form::Value => out.push_str("form = \"value\"\n"),
+        Form::Rule => out.push_str("form = \"rule\"\n"),
+    }
+    if kind.closed != Strength::May {
+        let _ = writeln!(out, "closed = \"{}\"", kind.closed.as_str());
+    }
+    for field in &kind.fields {
+        let _ = writeln!(out, "\n[schema.kinds.{name}.fields.{}]", field.name);
+        if let Some(title) = &field.title {
+            let _ = writeln!(out, "title = {}", string(title));
+        }
+        let _ = writeln!(out, "presence = \"{}\"", field.presence.as_str());
+        match &field.placement {
+            Some(Placement::First) => out.push_str("position = \"first\"\n"),
+            Some(Placement::Last) => out.push_str("position = \"last\"\n"),
+            Some(Placement::After(after)) => {
+                let _ = writeln!(out, "after = {}", string(after));
+            }
+            None => {}
+        }
+        match &field.content {
+            FieldContent::Prose => out.push_str("content = \"prose\"\n"),
+            FieldContent::Values => out.push_str("content = \"values\"\n"),
+            FieldContent::OneOf(values) => {
+                let _ = writeln!(out, "one_of = {}", list(values));
+            }
+        }
     }
 }
 

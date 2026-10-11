@@ -1,14 +1,23 @@
 //! §AR-config.6.2: a kind's shape as a sequence of slots, derived from its
-//! `form` rather than stored, so there is no second hand-maintained model of
-//! what a declaration of the kind holds.
+//! `form` and its fields rather than stored apart, so there is no second
+//! hand-maintained model of what a declaration of the kind holds
+//! (§FS-fields.record).
 
+use super::fields::{FieldContent, Placement};
+use super::project::Strength;
 use super::rows::{Form, Kind};
 
-/// One slot of a kind's shape (§AR-config.6.2).
+/// One slot of a kind's shape (§AR-config.6.2, §FS-fields.record).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Slot<'a> {
     pub handle: Handle<'a>,
-    pub presence: Presence,
+    /// The display name the slot's chapter must show (§FS-fields.identity.match).
+    pub title: Option<&'a str>,
+    /// Where the slot stands; data on the slot, never a reordering (§FS-fields.order).
+    pub placement: Option<&'a Placement>,
+    /// The configured strength (§FS-fields.strengths.table). A form says
+    /// nothing about it, so a slot derived from one is `May`, the weakest.
+    pub presence: Strength,
     pub content: Content<'a>,
 }
 
@@ -20,15 +29,6 @@ pub enum Handle<'a> {
     Numbered,
 }
 
-/// How strongly a declaration of the kind is held to carry the slot. A form
-/// says nothing about it, so a slot derived from one is `May`, the weakest.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Presence {
-    Must,
-    Should,
-    May,
-}
-
 /// What a slot holds: prose, value roots, or one of a closed set of titles.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Content<'a> {
@@ -38,18 +38,28 @@ pub enum Content<'a> {
 }
 
 impl Kind {
-    /// §AR-config.6.2: the kind's slots in declared order. A `Prose` or `Rule`
-    /// kind yields none, and a `Value` kind yields one — its value chapter as a
-    /// `Named` handle with `Values` content, or `Numbered` when it has none.
+    /// §AR-config.6.2, §FS-fields.record: the kind's slots in declared order.
+    /// A `Value` kind yields its numbered children, holding values; every
+    /// field yields a `Named` slot, in header order.
     pub fn slots(&self) -> impl Iterator<Item = Slot<'_>> {
-        let value = match &self.form {
-            Form::Value { chapter } => Some(Slot {
-                handle: chapter.as_deref().map_or(Handle::Numbered, Handle::Named),
-                presence: Presence::May,
-                content: Content::Values,
-            }),
-            Form::Prose | Form::Rule { .. } => None,
-        };
-        value.into_iter()
+        let numbered = (self.form == Form::Value).then_some(Slot {
+            handle: Handle::Numbered,
+            title: None,
+            placement: None,
+            presence: Strength::May,
+            content: Content::Values,
+        });
+        let fields = self.fields.iter().map(|field| Slot {
+            handle: Handle::Named(&field.name),
+            title: field.title.as_deref(),
+            placement: field.placement.as_ref(),
+            presence: field.presence,
+            content: match &field.content {
+                FieldContent::Prose => Content::Prose,
+                FieldContent::Values => Content::Values,
+                FieldContent::OneOf(values) => Content::OneOf(values),
+            },
+        });
+        numbered.into_iter().chain(fields)
     }
 }

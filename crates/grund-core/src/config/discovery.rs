@@ -232,7 +232,7 @@ fn read_config(read_path: &Path, report_path: &Path, root: &Path, run: &Run) -> 
     let text = super::input_read_to_string(read_path)
         .with_context(|| format!("read {}", format_path(report_path)))?;
     let project = if v2::selects(&text) {
-        let project = v2::read(&text, report_path)?;
+        let project = v2::read(&text, report_path, root)?;
         validate::reference(report_path, &project)?;
         project
     } else {

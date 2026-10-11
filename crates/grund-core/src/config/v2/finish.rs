@@ -7,17 +7,20 @@
 use anyhow::Result;
 use std::path::{Component, Path};
 
+use super::fields::{FieldDraft, kind_checks};
 use super::tables::not_yet;
 use super::walk::Reader;
-use crate::config::kind::{KindIndex, KindResolution};
-use crate::config::project::Project;
+use crate::config::kind::{KindConfig, KindIndex, KindResolution};
+use crate::config::project::{Project, Strength};
 use crate::config::record::CODE_SOURCE_KIND;
 use crate::config::rows::{Extent, Form, Kind, Origin, Place, Row};
+use crate::config::v1::{ValueLines, rule_kind_refusal, validate_kind_value_keys};
 
 use super::schema::RowDraft;
 
-/// §FS-config-v2.reader.4: judge the file whole, then lower its rows.
-pub(super) fn finish(mut r: Reader) -> Result<Project> {
+/// §FS-config-v2.reader.4: judge the file whole, then lower its rows. `root` is
+/// the config root a value home must exist under (§FS-fields.forms).
+pub(super) fn finish(mut r: Reader, root: &Path) -> Result<Project> {
     let mut late: Vec<(usize, String)> = Vec::new();
     // §FS-config-v2.defaults.2: the epoch's language set is not executed yet.
     if !r.languages {
@@ -28,14 +31,66 @@ pub(super) fn finish(mut r: Reader) -> Result<Project> {
     }
     for row in &r.rows {
         row_checks(row, &mut late);
+        let fields: Vec<&FieldDraft> = r.fields.iter().filter(|f| f.kind == row.name).collect();
+        kind_checks(&row.name, &fields, &mut late);
     }
     nested_places(&r.rows, &mut late);
     named_rows(&r, &mut late);
     if let Some((line, message)) = late.into_iter().min_by_key(|(line, _)| *line) {
         return r.fail(line, message);
     }
+    for row in &r.rows {
+        form_prerequisites(&r, row, root)?;
+    }
     lower(&mut r);
     Ok(r.project)
+}
+
+/// §FS-fields.forms, §FS-fields.content.values: `form = "value"`, `form =
+/// "rule"` and a values field ask what v1's `values`, `rules` and
+/// `value_chapter` ask of their row, with v1's messages, at the v2 key.
+fn form_prerequisites(r: &Reader, row: &RowDraft, root: &Path) -> Result<()> {
+    let values_field = r
+        .fields
+        .iter()
+        .find(|field| field.kind == row.name && matches!(field.content, Some((true, _))));
+    let form = row.form.map(|(form, _)| form);
+    let place = |file: bool| {
+        row.places
+            .iter()
+            .find_map(|(extent, _)| match (extent, file) {
+                (Extent::File(path), true) | (Extent::Folder(path), false) => Some(path.clone()),
+                _ => None,
+            })
+    };
+    let k = KindConfig {
+        kind: row.name.clone(),
+        folder: place(false),
+        file: place(true),
+        title: None,
+        index: KindIndex::Default,
+        citable: row.citable,
+        scan: row.scan,
+        require_grounding: None,
+        grounding_level: None,
+        values: form == Some(Form::Value),
+        value_chapter: values_field.map(|field| field.name.clone()),
+        rules: form == Some(Form::Rule),
+        format: None,
+        resolve: None,
+        fetch: row.fetch.as_ref().map(|(fetch, _)| fetch.clone()),
+    };
+    let form_line = row.form.map_or(row.line, |(_, line)| line);
+    if let Some(refusal) = rule_kind_refusal(&k) {
+        return r.fail(form_line, refusal);
+    }
+    let lines = ValueLines {
+        header: row.line,
+        values: Some(form_line),
+        value_chapter: values_field.and_then(|field| field.content.map(|(_, line)| line)),
+    };
+    let named_sections = r.project.schema.ids.named_sections;
+    validate_kind_value_keys(r.path, &k, &lines, root, named_sections)
 }
 
 /// §FS-config-v2.schema.places: what one row's keys must say together, each
@@ -195,7 +250,7 @@ fn named_rows(r: &Reader, late: &mut Vec<(usize, String)>) {
 /// when no row has one (§FS-config-v2.defaults.1); and a fetched kind's
 /// resolution, `must` unless `[rules.resolution]` says `warn`.
 fn lower(r: &mut Reader) {
-    let rows: Vec<Row> = r.rows.iter().map(lower_row).collect();
+    let rows: Vec<Row> = r.rows.iter().map(|row| lower_row(row, &r.fields)).collect();
     let any_place = rows.iter().any(|row| !row.places.is_empty());
     let include = rows
         .iter()
@@ -217,7 +272,7 @@ fn lower(r: &mut Reader) {
     }
 }
 
-fn lower_row(draft: &RowDraft) -> Row {
+fn lower_row(draft: &RowDraft, fields: &[FieldDraft]) -> Row {
     Row {
         name: draft.name.clone(),
         places: draft
@@ -230,7 +285,7 @@ fn lower_row(draft: &RowDraft) -> Row {
             .collect(),
         kind: draft.citable.then(|| Kind {
             id_format: draft.id_format.as_ref().map(|(format, _)| format.clone()),
-            form: Form::Prose,
+            form: draft.form.map_or(Form::Prose, |(form, _)| form),
             index: draft
                 .index
                 .as_ref()
@@ -241,6 +296,13 @@ fn lower_row(draft: &RowDraft) -> Row {
                 },
                 None => Origin::Local,
             },
+            // §FS-fields.declare.field: in header order (§FS-fields.record).
+            fields: fields
+                .iter()
+                .filter(|field| field.kind == draft.name)
+                .map(FieldDraft::lower)
+                .collect(),
+            closed: draft.closed.map_or(Strength::May, |(closed, _)| closed),
         }),
     }
 }

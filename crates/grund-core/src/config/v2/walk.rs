@@ -9,9 +9,10 @@ use anyhow::Result;
 use std::collections::BTreeMap;
 use std::path::Path;
 
+use super::fields::FieldDraft;
 use super::schema::RowDraft;
 use super::tables::{self, Opened, Table};
-use super::{defaults, measures, presentation, rules, schema};
+use super::{defaults, fields, measures, presentation, rules, schema};
 use crate::config::kind::KindResolution;
 use crate::config::project::Project;
 use crate::config::record::ConfigLocation;
@@ -24,6 +25,9 @@ pub(super) struct Reader<'a> {
     pub(super) project: Project,
     /// The `[schema.kinds.<NAME>]` rows, in authored order.
     pub(super) rows: Vec<RowDraft>,
+    /// The `[schema.kinds.<NAME>.fields.<field>]` tables, in header order
+    /// (§FS-fields.declare.field).
+    pub(super) fields: Vec<FieldDraft>,
     /// Where `grund_config_version` was written: the anchor of an omitted
     /// default this grund cannot execute (§FS-config-v2.defaults.2).
     pub(super) version_line: usize,
@@ -47,6 +51,7 @@ impl<'a> Reader<'a> {
             path,
             project: defaults::default_project(),
             rows: Vec::new(),
+            fields: Vec::new(),
             version_line: 1,
             languages: false,
             resolution: Vec::new(),
@@ -85,6 +90,9 @@ impl<'a> Reader<'a> {
             Opened::Row(row) => {
                 self.rows.push(RowDraft::new(row, line));
                 Table::Row(self.rows.len() - 1)
+            }
+            Opened::Field(row, field) => {
+                Table::Field(fields::open_field(self, &row, &field, line)?)
             }
             Opened::Table(table) => table,
         };
@@ -136,6 +144,7 @@ impl<'a> Reader<'a> {
             Table::Schema => schema::schema_key(self, key, value, line),
             Table::Sources => schema::sources_key(self, key, value, line),
             Table::Row(index) => schema::row_key(self, *index, key, value, line),
+            Table::Field(index) => fields::field_key(self, *index, key, value, line),
             Table::Measure(_, written) => measures::measure_key(self, written, key, value, line),
             Table::Text => measures::text_key(self, key, value, line),
             Table::Layout(first) => measures::layout_key(self, first, key, value, line),
@@ -172,6 +181,7 @@ impl<'a> Reader<'a> {
             Table::Measure(measure, written) => measures::close_measure(self, measure, &written),
             Table::CitationKind(kind, lists) => rules::close_citation_kind(self, &kind, &lists),
             Table::Ladder(place, rungs) => rules::close_ladder(self, place, rungs),
+            Table::Row(index) => schema::close_row(self, index),
             _ => Ok(()),
         }
     }
