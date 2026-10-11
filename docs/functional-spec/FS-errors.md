@@ -157,6 +157,39 @@ success
 
 One trailing newline follows the line. The line is on **stdout** because it is the command's output ([§FS-errors.1.1](FS-errors.md#11-what-stdout-carries)), exits `0`, and appears only when the selected report is otherwise empty: it says that report is empty, not that the repository has no findings ([§FS-check.2.1.3](FS-check.md#213-the-success-line)). It is not emitted in `--format=json`, where stdout remains findings-only.
 
+### 2.5 Refused input
+
+When a command refuses an input the user typed because it is not in the
+grammar — a rule sentence given to `check --rule`, a selector given to
+`list --selector` — the refusal names what failed and, where it can, gives the
+input that is accepted when it is pasted back:
+
+```
+error: <reason>; accepted <form|selector>: <input>
+error: <reason>
+```
+
+- It is a CLI-level message ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)): on **stderr**, with nothing on stdout,
+  and exit `2` ([§FS-errors.2.2.2](FS-errors.md#222-exit-codes)).
+- `<reason>` names the production that failed, and does not change with what
+  follows it. After `; ` stands exactly one label and what it labels: a rule
+  sentence after `accepted form:`, several quoted after `accepted forms:`, a
+  selector after `accepted selector:`. A label that ends in
+  `after enabling it:` says the input is accepted only once the configuration
+  enables what the reason names.
+- Where nothing can be offered, the reason stands alone. Where what could not
+  be supplied is a kind, the next line is `known kinds: <kinds>`, and a refusal
+  that has a next step to name ends in one `hint:` line
+  ([§FS-errors.1.2](FS-errors.md#12-what-stderr-carries)).
+- A configured rule declaration refused for the same reason is a located
+  finding ([§FS-errors.2.1](FS-errors.md#21-located-finding)), in the CLI and in the editor alike, whose message carries
+  the same reason and accepted input after `is not a valid rule: ` and never the
+  lines after it.
+
+Which inputs each surface refuses, and how the accepted input is built from
+what was typed, is [§FS-rules.3.5](FS-rules.md#35-strict-refusals) for rule sentences and [§FS-rules.8.1](FS-rules.md#81-a-refused-selector-is-answered-with-a-selector) for
+selectors.
+
 ## 3. Message text
 
 The shape is structural; the text is human-readable. Style rules apply to every shape:
