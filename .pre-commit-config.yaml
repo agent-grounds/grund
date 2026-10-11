@@ -32,16 +32,18 @@ repos:
       # (§AR-ci.1, .github/workflows/ci.yml) so every commit is well-formatted
       # and test-clean before it leaves the developer's machine:
       #   - `cargo fmt --all -- --check` matches the CI `cargo fmt --check` step.
-      #   - `cargo build --workspace --all-targets --locked` with `RUSTFLAGS=-Dwarnings`
+      #   - `cargo build --quiet --workspace --all-targets --locked` with `RUSTFLAGS=-Dwarnings`
       #     matches the CI build step and its `RUSTFLAGS: "-D warnings"` env. The
       #     `env` prefix is just `/usr/bin/env` so the env var is applied to the
       #     single cargo invocation without depending on shell-syntax expansion
       #     in pre-commit's argv split. Clippy is intentionally **not** part of
       #     CI (see .github/workflows/ci.yml), so it is intentionally not here
       #     either — match the CI gate, do not add a stricter one.
-      #   - `cargo test --workspace --all-targets --locked --features
-      #     grund/test-workspace-load-count` matches the CI `cargo test` step and
-      #     also runs at pre-push so broken tests block both commit-time and
+      #   - `python scripts/run_cargo_suite.py --workspace --all-targets --locked
+      #     --features grund/test-workspace-load-count` runs that `cargo test` and
+      #     prints its failures, a check-in each 5% and one summary rather than a
+      #     line per test (§AR-ci.requirements.5.2). It matches the CI `cargo test`
+      #     step and also runs at pre-push so broken tests block both commit-time and
       #     push-time workflows. The feature compiles in the workspace-load
       #     observer; without it the tests that read it are ignored (§AR-ci.3.3).
       - id: cargo-fmt-check
@@ -53,14 +55,14 @@ repos:
         stages: [pre-commit]
       - id: cargo-build
         name: cargo build (warnings as errors)
-        entry: env RUSTFLAGS=-Dwarnings cargo build --workspace --all-targets --locked
+        entry: env RUSTFLAGS=-Dwarnings cargo build --quiet --workspace --all-targets --locked
         language: system
         pass_filenames: false
         always_run: true
         stages: [pre-commit]
       - id: cargo-test
         name: cargo test
-        entry: cargo test --workspace --all-targets --locked --features grund/test-workspace-load-count
+        entry: python scripts/run_cargo_suite.py --workspace --all-targets --locked --features grund/test-workspace-load-count
         language: system
         pass_filenames: false
         always_run: true

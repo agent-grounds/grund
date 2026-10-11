@@ -22,6 +22,8 @@ REPO = Path(__file__).resolve().parents[2]
 WRAPPER = REPO / "scripts" / "run_cargo_suite.py"
 CI = REPO / ".github" / "workflows" / "ci.yml"
 PRE_COMMIT = REPO / ".pre-commit-config.yaml"
+# The oracle build every job that runs the Python gate shares (§AR-ci.13.1).
+ORACLE = REPO / "scripts" / "prepare_binding_oracle.py"
 WRAPPER_COMMAND = "python scripts/run_cargo_suite.py "
 
 ANSI = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
@@ -242,9 +244,10 @@ class CiStepsGoThroughTheQuietFormsTests(unittest.TestCase):
         text = CI.read_text(encoding="utf-8")
         shell = re.findall(r"^\s*(?:run:\s*)?((?:python -m )?(?:cargo|pip) (?:build|run|install)\b.*)$",
                            text, re.M)
-        listed = re.findall(r"\[\s*(\"cargo\",[^\]]*?\"(?:build|run)\"[^\]]*)", text, re.S)
+        listed = re.findall(r"\[\s*(\"cargo\",[^\]]*?\"(?:build|run)\"[^\]]*)",
+                            text + ORACLE.read_text(encoding="utf-8"), re.S)
         self.assertGreaterEqual(len(shell), 4, shell)
-        self.assertGreaterEqual(len(listed), 2, listed)
+        self.assertGreaterEqual(len(listed), 3, listed)
         for command in shell:
             with self.subTest(command=command):
                 self.assertRegex(command, r"(^|\s)(--quiet|-q)(\s|$)")
