@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # §AR-ci.12: the merge queue runs this on each group before main moves to it.
+  merge_group:
   # §FS-distribution.4.4.1: the release helpers run this on their candidate
   # commits before main moves to them.
   workflow_dispatch:
@@ -192,7 +194,7 @@ jobs:
 
   # `pre-commit run --all-files` cannot reproduce the `commit-msg` stage — it takes a
   # message file, not a file list — so a trailer that lives only in a commit message
-  # rides in unchecked. This job scans what the push or pull request adds (§AR-ci.8.2).
+  # rides in unchecked. This job scans what the event adds (§AR-ci.8.2).
   commit-messages:
     name: commit message attribution gate
     runs-on: ubuntu-latest
@@ -214,9 +216,13 @@ jobs:
           # judged on the commits it actually contributes. A push scans what it
           # added; the script narrows to the tip commit when `before` names a
           # commit the runner cannot resolve (first push, force-push).
+
+          # §AR-ci.12: a merge-queue group scans base_sha..head_sha, what it puts on main.
           RANGE: >-
             ${{ github.event_name == 'pull_request'
                 && format('{0}..{1}', github.event.pull_request.base.sha, github.event.pull_request.head.sha)
+                || github.event_name == 'merge_group'
+                && format('{0}..{1}', github.event.merge_group.base_sha, github.event.merge_group.head_sha)
                 || format('{0}..{1}', github.event.before, github.sha) }}
         run: python scripts/check_no_claude_attribution.py --range "$RANGE"
 
@@ -225,6 +231,8 @@ jobs:
   # pull requests gate on a base-branch baseline (§AR-benchmarks).
   bench:
     name: cargo bench (instruction counts)
+    # §AR-ci.12: a queue group neither compares nor records; its push to main records.
+    if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
