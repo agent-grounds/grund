@@ -101,7 +101,7 @@ pub(super) fn scan_file(
 /// line whose markers are already accounted for.
 ///
 /// Text section headings also require the spans, because the shared coordinate
-/// catalog is body-local (§FS-show.2.1.2.1). `scan_one_file` gives this call a fresh
+/// catalog is body-local (§FS-declarations.section.map). `scan_one_file` gives this call a fresh
 /// `Catalog`, so `findings` holds exactly this file's records.
 pub(super) fn scan_file_text(
     path: &Path,

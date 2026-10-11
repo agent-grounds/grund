@@ -1,6 +1,6 @@
 //! Declaration-body extraction (§AR-system.2.10): where a declaration's body
 //! begins and ends in the file that holds it, across Markdown and every
-//! supported comment dialect (§FS-show.2.1, §FS-show.2.2, §FS-show.2.3).
+//! supported comment dialect (§FS-declarations.body, §FS-declarations.section, §FS-show.2.3).
 //!
 //! This is a question about *source structure* asked of the spans a scan already
 //! recorded — the same question §AR-scanner.2.4.1 answers for the citing side — so
@@ -35,8 +35,8 @@ use super::comment_envelope::{
 };
 
 /// Pull the body text of a declaration out of its file: the lines under the
-/// `# <ID>: …` heading down to the next same-or-shallower heading (§FS-show.2.1),
-/// optionally just one citable subsection (§FS-show.2.2) or just the lead
+/// `# <ID>: …` heading down to the next same-or-shallower heading (§FS-declarations.body),
+/// optionally just one citable subsection (§FS-declarations.section) or just the lead
 /// paragraph (§FS-show.2.1.1). For an inline declaration in a code/`"""` doc-comment
 /// this walks the comment block (§FS-show.2.3.1) and strips comment markers
 /// (§FS-show.2.3.2) before returning the text.
@@ -91,7 +91,7 @@ pub(crate) fn extract_declaration_body(
 /// The exact scanner-recorded site whose body is being sliced. `show` supplies
 /// it after establishing uniqueness so an assigned scanner body span bounds the
 /// source slice too; size rows additionally use it to keep duplicate homes and
-/// duplicate section coordinates site-local (§FS-show.2.1.2.1, §FS-list.3.4).
+/// duplicate section coordinates site-local (§FS-declarations.section.map, §FS-list.3.4).
 #[derive(Clone, Copy)]
 pub(super) struct PointBodySite {
     pub(super) declaration_line: usize,
@@ -347,7 +347,7 @@ pub(super) fn extract_declaration_body_cached(
                     }
                     // Inside the target section: a sibling-or-shallower heading ends
                     // it, and in default mode any further numbered heading — including
-                    // a child — ends the section's lead prose (§FS-show.2.2).
+                    // a child — ends the section's lead prose (§FS-declarations.lead.section).
                     if found_section && (mode == ShowRenderMode::Default || depth <= target_depth) {
                         break;
                     }

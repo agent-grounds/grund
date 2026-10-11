@@ -1,5 +1,5 @@
-//! Rendered heading text for section and declaration anchors (§FS-fmt.6.2.2,
-//! §DF-declaration-anchor). Reducing links and HTML outside inline code is a
+//! Rendered heading text for section and declaration anchors
+//! (§FS-declarations.heading.rendered-text, §FS-fmt.6.2.2, §DF-declaration-anchor). Reducing links and HTML outside inline code is a
 //! lexical fact shared by readers and writers (§AR-system.2.1).
 
 use once_cell::sync::Lazy;
@@ -8,11 +8,11 @@ use regex::Regex;
 /// An inline Markdown link `[text](url)` — used to reduce a heading to the text a
 /// renderer would slugify (the destination URL is not part of that text), so an
 /// anchor stays correct even when a citation in a section heading has been wrapped
-/// by `grund fmt --cross-refs` (§DF-github-anchor-fidelity, §FS-fmt.6.2.2).
+/// by `grund fmt --cross-refs` (§DF-github-anchor-fidelity, §FS-declarations.heading.rendered-text).
 static MD_INLINE_LINK: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]*)\]\([^)]*\)").unwrap());
 /// An HTML-tag-shaped span `<…>` — a renderer drops it from a heading's text
 /// (`## RM-read: grund <ID>` slugs as `rm-read-grund`), so it must be removed
-/// before slugging the heading (§DF-github-anchor-fidelity, §FS-fmt.6.2.2).
+/// before slugging the heading (§DF-github-anchor-fidelity, §FS-declarations.heading.rendered-text).
 static HTML_TAG: Lazy<Regex> = Lazy::new(|| Regex::new(r"<[^>]*>").unwrap());
 
 /// Reduce a heading's source text to the text content a Markdown renderer would

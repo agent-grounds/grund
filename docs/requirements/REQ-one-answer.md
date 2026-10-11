@@ -47,7 +47,7 @@ duplicate, and `fmt` wraps none of its citations ([§FS-fmt.6.4.2](../functional
 
 ### sections.map: Every surface reads one section map
 
-Every coordinate-bearing surface reads the same body-local map ([§FS-show.2.1.2.1](../functional-spec/FS-show.md#2121-the-map-is-the-declarations-body-span)):
+Every coordinate-bearing surface reads the same body-local map ([§FS-declarations.section.map](../functional-spec/FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span)):
 direct and batch `show`, exhaustive batch generation, citation and value resolution,
 `refs`, completion, list/size output, duplicate detection, and editor navigation, citation
 lookups, highlights, and hover counts. A heading the map rejects can therefore neither

@@ -1,7 +1,8 @@
 //! Test module: section coordinates stay inside the declaration body that owns
 //! them, and headings left behind by stale scanner context become the hard
 //! finding specified by §FS-declarations.checks.section-outside-declaration and the shared-map contract in
-//! §FS-show.2.1.2.1.
+//! §FS-show.2.1.2.1, defined at §FS-declarations.section.map over the body span of
+//! §FS-declarations.body.
 
 use crate::checker::check_findings;
 use crate::model::{Catalog, Id, ShowRenderMode};
