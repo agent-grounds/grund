@@ -187,8 +187,8 @@ error: <reason>
   lines after it.
 
 Which inputs each surface refuses, and how the accepted input is built from
-what was typed, is [§FS-rules.3.5](FS-rules.md#35-strict-refusals) for rule sentences and [§FS-rules.8.1](FS-rules.md#81-a-refused-selector-is-answered-with-a-selector) for
-selectors.
+what was typed, is [§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals) for rule sentences and [§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)
+for selectors.
 
 ## 3. Message text
 
