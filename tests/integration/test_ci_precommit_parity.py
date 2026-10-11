@@ -180,19 +180,29 @@ class CiPreCommitParityTests(unittest.TestCase):
         ci = [run for run in ci_runs if "run_python_gate.py" in run]
         self.assertEqual(1, len(ci), ci)
         self.assertEqual(hook, ci[0])
-        calls = [node for node in ast.walk(ast.parse(wrapper))
+        tree = ast.parse(wrapper)
+        # §AR-ci.3.4.2: the wrapper hands this home and its inputs to the one timed discovery.
+        entries = [node for node in ast.walk(tree)
+                   if isinstance(node, ast.Call) and ast.unparse(node.func) == "run_tests"]
+        self.assertEqual(1, len(entries))
+        self.assertEqual([repr(home), "inputs()"], [ast.unparse(arg) for arg in entries[0].args])
+        runs = [node for node in ast.walk(tree)
+                if isinstance(node, ast.FunctionDef) and node.name == "run_tests"]
+        self.assertEqual(1, len(runs))
+        self.assertEqual(["start", "environment"], [arg.arg for arg in runs[0].args.args])
+        calls = [node for node in ast.walk(runs[0])
                  if isinstance(node, ast.Call) and ast.unparse(node.func) == "subprocess.run"
                  and node.args and isinstance(node.args[0], ast.List)
-                 and any(isinstance(arg, ast.Constant) and arg.value == "unittest"
+                 and any(isinstance(arg, ast.Constant) and arg.value == "discover"
                          for arg in node.args[0].elts)]
         self.assertEqual(1, len(calls))
-        argv = calls[0].args[0].elts
-        self.assertEqual("sys.executable", ast.unparse(argv[0]))
-        self.assertEqual(["-m", "unittest", "discover", "-s", home, "-p", "test_*.py"],
-                         [ast.literal_eval(arg) for arg in argv[1:]])
+        argv = [ast.unparse(arg) for arg in calls[0].args[0].elts]
+        self.assertEqual("sys.executable", argv[0])
+        self.assertEqual(["'discover'", "'-s'", "str(start)", "'-p'", "'test_*.py'"],
+                         argv[argv.index("'discover'"):])
         keywords = {keyword.arg: ast.unparse(keyword.value) for keyword in calls[0].keywords}
         self.assertEqual("ROOT", keywords.get("cwd"))
-        self.assertEqual("inputs()", keywords.get("env"))
+        self.assertEqual("environment", keywords.get("env"))
 
     def test_python_tests_are_discovered_from_this_home_on_both_sides(self):
         self.assert_python_discovery_parity(self.by_id["python-test"]["entry"], self.ci_runs,

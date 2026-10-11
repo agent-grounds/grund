@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "bindings" / "node"))
 from support import Rehearsal  # noqa: E402
-from support import CASES, NODE, REPO, SCRATCH, checked  # noqa: E402
+from support import CASES, NODE, REPO, SCRATCH, checked, node_target  # noqa: E402
 
 # §FS-fetch.2: grund runs a fetcher directly, with no shell of its own, so a case
 # marked `requires-unix-shell` is skipped off unix exactly as the CLI's case runner
@@ -27,7 +27,7 @@ class NativeSourceBuildTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="grund-native-build-", dir=SCRATCH) as directory:
             target = Path(directory)
             checked(["node", NODE / "build.mjs", "--source-root", REPO,
-                     "--out-dir", target / "native", "--target-dir", target / "cargo",
+                     "--out-dir", target / "native", "--target-dir", node_target(),
                      "--profile", "release"])
             self.assertTrue((target / "native" / "grund.node").is_file())
 
