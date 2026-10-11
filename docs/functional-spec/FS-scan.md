@@ -4,7 +4,7 @@ What a run is handed and what it reads, defined once for every command that scan
 
 ## terms: Terms
 
-Leans on [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scan root, scope, config root, workspace, member).
+Leans on [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, config root, workspace, member).
 
 - **kind home** — The `folder` or `file` a `[[kinds]]` row names ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)): the place its declarations live.
 - **scan root** — Where a walk starts: an `include` entry, a kind home, or an explicit path. Which rules it outruns is [§FS-scan.scope.roots](FS-scan.md#scoperoots-a-scan-root-outruns-every-rule-about-descent).
