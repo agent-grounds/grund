@@ -51,11 +51,7 @@ This list is the ownership boundary for the one writer that rewrites text anywhe
 - Declaration headings (the line that names the ID). The marker is for *citations*, not declarations.
 - The exact `<!-- grund:value -->` suffix on a numbered section heading. It is authored authority rather than formatter syntax: no pass inserts, canonicalizes, moves, removes, or rewrites it or its trailing whitespace, and `--check` and `--write` preserve its bytes ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)).
 - Explicit section names. Formatting may wrap citations to them and re-derive link anchors, but it never infers a name from a title, renames one, or rewrites a named heading path. An unmarked letter-tail token suppressed by [§FS-check.1.1](FS-check.md#11-recognized-citations) is not a shorter citation and is left byte-identical.
-- Citations inside string literals on a source line, where rewriting would change runtime behavior ([§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule)).
-- Citations inside a Markdown **fenced code block**, in every pass ([§FS-fmt.2.3.3](FS-fmt.md#233-a-fenced-code-block-is-an-illustration)).
-- Citations inside Markdown inline code spans (where rewriting would change a literal command, path, or example), a span ending where [§FS-fmt.2.3.5](FS-fmt.md#235-an-inline-code-span-closes-on-a-run-of-its-own-length) says it does.
-- ID-shaped text inside Markdown link destinations, except a destination `fmt` itself maintains ([§FS-fmt.2.3.4](FS-fmt.md#234-a-link-destination-is-the-url)).
-- ID-shaped text in an escape position ([§FS-check.1.1.9](FS-check.md#119-an-id-in-an-escape-position)). `--marker` would splice a marker inside the escape brackets and turn an illustration into a live citation; every later pass, the cross-reference wrap included, follows the marker and stops with it.
+- Citations in the zones the text itself forbids a rewrite in: a string literal on a source line, a fenced code block, an inline code span, a link destination and an escape position ([§FS-citations.zones](FS-citations.md#zones-where-citation-text-is-never-rewritten)).
 - Files outside the default scope.
 - External file-symlink targets, which `--write` reads and does not write through; files below an external directory symlink never reach `fmt` ([§FS-fmt.2.3.2](FS-fmt.md#232-a-link-that-leaves-the-config-root-is-not-written-through)).
 - Everything in a **suppressed scope**: a file the `[fmt] exclude` list names, and a region between a `grund:fmt off` directive and the `grund:fmt on` that closes it ([§FS-fmt.2.5](FS-fmt.md#25-suppressed-scopes)). Unlike every other entry in this list, these two are asked for by the repository rather than forced by the text, and they are the only ones an index carve-out outranks ([§FS-fmt.2.5.3](FS-fmt.md#253-a-kinds-index-is-still-linkified)).
@@ -115,29 +111,11 @@ Every pass stops at a Markdown fence — trigger-to-marker ([§FS-fmt.2.1](FS-fm
 
 #### 2.3.4 A link destination is the URL
 
-ID-shaped text inside a Markdown link destination is not rewritten, because rewriting it would change the URL rather than the visible citation. Off strict mode, such a **bare** token is not recognized as a citation there at all ([§FS-check.1.1](FS-check.md#11-recognized-citations)), the same never-rewrite zone keeping `check` from demanding an edit this command refuses to make. The one exception is the destination of a cross-reference wrap `fmt` itself maintains, which every cross-reference pass re-derives ([§FS-fmt.6.3](FS-fmt.md#63-idempotency-and-re-derive)); a hand-authored destination keeps its bytes.
+That a link destination is never rewritten, except the destination of a wrap `fmt` itself maintains, is [§FS-citations.zones.link-destination](FS-citations.md#zoneslink-destination-a-link-destination-is-the-url).
 
 #### 2.3.5 An inline code span closes on a run of its own length
 
-Where a Markdown inline code span begins and ends is read one line at a time, the way CommonMark reads it:
-
-- it opens at a run of *n* backticks whose first backtick is not backslash-escaped;
-- it closes at the next run of **exactly** *n* backticks, so a shorter or a longer run inside it is content;
-- inside the span a backslash is literal: it escapes nothing and does not stop the closing run, so `` `C:\` `` is a closed span;
-- an opener with no closing run on its line leaves the rest of that line code.
-
-So on the second line of
-
-```markdown
-Plain [§GOAL-a](goals.md#goal-a-stale) here.
-Escaped `` \ ` * `` then [§GOAL-a](goals.md#goal-a-stale) here.
-```
-
-the span opened by two backticks ends at the next two, the single backtick between them is content, and the citation after the span is prose: every cross-reference pass re-derives its anchor exactly as it does the first line's ([§FS-fmt.6.3](FS-fmt.md#63-idempotency-and-re-derive)). A citation written inside such a span, before or after the single backtick, is code and keeps its bytes.
-
-The last rule departs from CommonMark on purpose. CommonMark reads an opener that never closes as literal backticks, but a code span may continue onto the next line of its paragraph, which hard-wrapped prose makes ordinary, and a reader of one line cannot tell that span from a stray backtick. Reading the rest of the line as prose would let `fmt` write into the first line of a wrapped code span, a guess persisted into the tree ([§REQ-no-wrong-citation.3](../requirements/REQ-no-wrong-citation.md#3-no-wrong-write)); reading it as code costs at most a rewrite not made, and `check` withholds its demand for that rewrite at the same site.
-
-One reading serves every caller, because they have to agree. Every pass of this command and the LSP on-type transform ([§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform)) stop at the span it finds, and so does every reading `check` makes of inline code: the canonical-form exemption ([§FS-check.3.13.1](FS-check.md#3131-where-the-text-forbids-the-rewrite)), the illustration hint on a dangling citation ([§FS-check.3.1.2](FS-check.md#312-an-illustration-in-inline-code)), the kind-index entry form ([§FS-check.3.17.4](FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)), and the source-file skip of a qualified citation ([§FS-check.1.1](FS-check.md#11-recognized-citations)). So `check` never demands an edit at a site `fmt` reads as code, and `fmt` never leaves unmaintained a citation `check` reads as prose. Decided in [§DF-inline-code-span-closes-on-its-own-run](../decisions/functional/DF-inline-code-span-closes-on-its-own-run.md#df-inline-code-span-closes-on-its-own-run-an-inline-code-span-closes-on-a-run-of-its-own-length).
+Where an inline code span begins and ends, for every pass of this command and for `check`, is [§FS-citations.zones.inline-code](FS-citations.md#zonesinline-code-an-inline-code-span-closes-on-a-run-of-its-own-length).
 
 ### 2.4 Shorthand-to-canonical
 
@@ -415,7 +393,7 @@ Idempotency holds: a second run with no intervening edits is a no-op, because th
 
 #### 6.3.1 An existing wrap is recognized by its brackets
 
-A citation is already wrapped when its immediately-preceding character is `[` and its immediately-following text begins `](`. The one test decides both the re-derive of [§FS-fmt.6.3](FS-fmt.md#63-idempotency-and-re-derive) and the no-double-wrap rule; a citation that fails it is wrapped fresh.
+How an existing wrap is recognized, for the re-derive and the no-double-wrap rule alike, is [§FS-citations.wrap.recognized](FS-citations.md#wraprecognized-an-existing-wrap-is-recognized-by-its-brackets).
 
 #### 6.3.2 A marked off-grammar citation is wrapped like any other
 

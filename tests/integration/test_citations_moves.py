@@ -155,21 +155,18 @@ class CitationsMoveTests(unittest.TestCase):
         self.assertTrue(CITATIONS.is_file(), f"{CITATIONS.relative_to(REPO_ROOT)} is not there")
         return _sections(CITATIONS)
 
-    @unittest.expectedFailure
     def test_every_chapter_the_page_promises_is_declared(self):
         declared = self.citations()
         self.assertIn("FS-citations", declared)
         self.assertEqual([], [c for c in CHAPTERS if c not in declared], "chapters missing")
         self.assertRegex(INDEX.read_text(encoding="utf-8"), re.escape(f"[{CITATION}](FS-citations.md#"))
 
-    @unittest.expectedFailure
     def test_the_page_has_named_chapters_and_one_terms_chapter(self):
         text = self.citations() and CITATIONS.read_text(encoding="utf-8")
         tops = re.findall(r"^## (\S+?):? ", text, re.M)
         self.assertEqual([], [t for t in tops if t[0].isdigit()], "numbered top-level chapters")
         self.assertEqual(1, len(re.findall(r"^## terms: Terms$", text, re.M)), "Terms chapters")
 
-    @unittest.expectedFailure
     def test_each_moved_sentence_lives_at_its_destination_only(self):
         declared = _sections(CITATIONS) if CITATIONS.is_file() else {}
         for source, label, chapter, fragments in MOVES + (ZONE_LIST,):
@@ -182,7 +179,6 @@ class CitationsMoveTests(unittest.TestCase):
                 self.assertIn(_flat(fragment), _flat(declared.get(chapter, "")),
                               f"FS-citations.{chapter} does not hold the moved sentence")
 
-    @unittest.expectedFailure
     def test_the_rewrite_exemption_names_exactly_three_zones(self):
         body = self.citations().get("rewrite-exemption", "")
         flat = _flat(body)
@@ -191,7 +187,6 @@ class CitationsMoveTests(unittest.TestCase):
         self.assertIn(_flat("A suppressed scope and an external file-symlink target are not among them"), flat)
         self.assertIsNone(_cites(body, "zones"), "the exemption cites the whole zones chapter")
 
-    @unittest.expectedFailure
     def test_the_cross_reference_exception_is_still_stated(self):
         fmt = _sections(FS / "FS-fmt.md")["2.3.4"]
         zone = self.citations().get("zones.link-destination", "")
