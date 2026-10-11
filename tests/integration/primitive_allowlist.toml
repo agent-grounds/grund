@@ -1,0 +1,10 @@
+# The primitive guards' allowlist (test_primitive_guards.py): every production
+# file of grund-core that uses a guarded primitive outside its owners today, the
+# primitives it uses, and the step of agent-grounds/grund#576 that removes them:
+# #595 one run, one read; #596 one parse; #597 stubs; #598 fmt and the editor on
+# the record; #599 one grammar. Seeded from the code; it only shrinks.
+#
+# [[allow]]
+# file = "api/fmt.rs"
+# primitives = ["std::fs", "canonicalize"]
+# step = "#595"

@@ -33,7 +33,7 @@ where it is declared, its title, and how often it is cited.
 A selector names chapters only, so a numbered section is refused, and every
 refusal offers a selector to paste back, or lists the configured kinds where it
 names none of them
-([§FS-rules.8.1](../functional-spec/FS-rules.md#81-a-refused-selector-is-answered-with-a-selector)):
+([§FS-rule-refusals.selectors](../functional-spec/FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)):
 
 ```console
 $ grund list --selector FS.requirements.1

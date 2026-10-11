@@ -52,8 +52,10 @@ and a differential before each old path is deleted; then one run and one read, o
 stubs, `fmt` and the editor on the record, and one grammar. None of these guards exists
 when this record is accepted.
 
-As accepted, the families stand as follows; the guards make this list executable once they
-land.
+As accepted, the families stood as follows. The list is kept since in the manifest
+[§AR-system.principle.inventory](../../architecture/README.md#principleinventory-until-a-family-is-unified-its-copies-cite-the-point) names, which the citation ledger makes executable; there the
+run's points are [§FS-scan](../../functional-spec/FS-scan.md#fs-scan-what-a-path-argument-means-which-projects-a-run-loads-and-which-files-it-reads)'s, a refusal's are [§FS-rule-refusals](../../functional-spec/FS-rule-refusals.md#fs-rule-refusals-a-refused-rule-sentence-or-selector-is-answered-with-the-input-that-is-accepted)', and this table is the
+record of where the migration started.
 
 | Family | Defining point | Owner |
 |---|---|---|
