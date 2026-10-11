@@ -11,9 +11,14 @@
 # and config/v1/scan_block.rs, which split member and exclude paths, are rows until
 # #599 narrows the pattern to the alias grammar it owns.
 #
-# The writers that put files outside the scan - init, the integrations and the
-# snapshot writer fetch_write.rs - own their disk calls (PRIMITIVES), so they are
-# not rows: no step of #576 takes their writes away.
+# A writer owns the disk calls it makes to write (WRITERS in PRIMITIVES): it is an
+# owner because it is the one that writes, not because no run reads its output.
+# A writer that also reads the scanned tree or a file a run reads is a row, its
+# writes with its reads, because the guard sees a file and not a call: fetch_write.rs
+# reads a home and each walked snapshot's Markdown and parses their headings with
+# its own declarations_at_depth (#596 for that parse); init.rs probes the FS home;
+# init_block.rs reads AGENTS.md to splice its block; init_workspace_members.rs
+# probes each member's AGENTS.md. Once #595 hands them the read, they join WRITERS.
 
 [[allow]]
 file = "api/complete_ids.rs"
@@ -256,6 +261,11 @@ primitives = ["split on /"]
 step = "#599"
 
 [[allow]]
+file = "writers/fetch_write.rs"
+primitives = [".exists()", "std::fs"]
+step = "#595"
+
+[[allow]]
 file = "writers/fmt_links.rs"
 primitives = ["citation_re"]
 step = "#598"
@@ -271,13 +281,23 @@ primitives = ["std::fs"]
 step = "#598"
 
 [[allow]]
+file = "writers/init.rs"
+primitives = [".exists()", "std::fs"]
+step = "#595"
+
+[[allow]]
+file = "writers/init_block.rs"
+primitives = [".exists()", "std::fs"]
+step = "#595"
+
+[[allow]]
 file = "writers/init_render.rs"
 primitives = ["load_config"]
 step = "#595"
 
 [[allow]]
 file = "writers/init_workspace_members.rs"
-primitives = ["load_config"]
+primitives = [".exists()", "canonicalize", "load_config", "std::fs"]
 step = "#595"
 
 [[allow]]

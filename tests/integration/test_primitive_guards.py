@@ -2,7 +2,8 @@
 derivation of a fact a component owns. Across every production file of
 `grund-core`, each primitive below is forbidden outside its owners: reading the
 disk and loading a configuration outside the sources and config components and
-the writers that put files no run reads back, the scanner's line predicates outside the scanner and the grammar, and splitting an
+the writers that only write, the scanner's line predicates outside the scanner
+and the grammar, and splitting an
 ID or a kind on `/` outside the alias splitter. This generalizes the checker-only
 `checker/tests_post_scan_readers.rs` to the crate.
 
@@ -22,9 +23,14 @@ CRATE = REPO_ROOT / "crates" / "grund-core" / "src"
 ALLOWLIST = Path(__file__).resolve().parent / "primitive_allowlist.toml"
 STEP = re.compile(r"^#(59[5-9]|600)$")
 
-# The writers that put files outside the scan own their disk calls: scaffolding,
-# integration installs and materialized snapshots write what no run reads back.
-WRITERS = ("writers/init", "writers/integrations_", "writers/fetch_write.rs")
+# A writer owns the disk calls it makes to write: a file is an owner because it is
+# the one that writes, not because no run reads its output (init writes grund.toml
+# and AGENTS.md, which every run reads). A writer that also reads the scanned tree
+# or a file a run reads - fetch_write.rs, init.rs, init_block.rs,
+# init_workspace_members.rs - is no owner: its uses are allowlist rows.
+# init_target.rs only resolves the directory init writes into, and the integrations
+# read only the machine-level client files they themselves write.
+WRITERS = ("writers/init_companions.rs", "writers/init_target.rs", "writers/integrations_")
 # primitive -> (the pattern that finds a use of it, the directories or files that own it)
 PRIMITIVES = {
     "std::fs": (r"\bstd::fs\b", ("config/", "sources/") + WRITERS),
@@ -134,6 +140,11 @@ class PrimitiveGuardHarnessTests(unittest.TestCase):
     def test_a_row_without_its_step_fails(self):
         row = dict(self.ROW, step="")
         self.assertIn("names no step", " ".join(problems({("api/a.rs", "std::fs")}, [row])))
+
+    def test_a_writer_that_reads_the_tree_is_no_owner(self):
+        found = uses([("writers/fetch_write.rs", "let b = std::fs::read(&path)?;\n"),
+                      ("writers/init_companions.rs", "std::fs::write(&path, block)?;\n")])
+        self.assertEqual({("writers/fetch_write.rs", "std::fs")}, found)
 
     def test_a_comment_naming_a_primitive_is_not_a_use(self):
         found = uses([("api/a.rs", "/// Reads through `std::fs` once.\nfn f() {} // citation_re\n")])
