@@ -367,7 +367,8 @@ pub(super) fn is_direct_e2e_case_dir(
         .is_some()
 }
 
-/// The directories (or single file) the walk starts from: `[scan] include`
+/// The directories (or single file) the walk starts from, and so which files a run
+/// reads (§FS-scan.scope): `[scan] include`
 /// resolved against the repo root, otherwise the whole root — and, for a run
 /// given a `[path]` argument below that root, the path beside them, because the
 /// path narrows the report and not the walk (§FS-config.3.5.7, §AR-scanner.1.6,

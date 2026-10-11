@@ -2,9 +2,285 @@
 # file of grund-core that uses a guarded primitive outside its owners today, the
 # primitives it uses, and the step of agent-grounds/grund#576 that removes them:
 # #595 one run, one read; #596 one parse; #597 stubs; #598 fmt and the editor on
-# the record; #599 one grammar. Seeded from the code; it only shrinks.
+# the record; #599 one grammar. Seeded from the code at 53e981e6e9; it only shrinks.
 #
-# [[allow]]
-# file = "api/fmt.rs"
-# primitives = ["std::fs", "canonicalize"]
-# step = "#595"
+# Disk reads and config loads go to #595's one read, line predicates to #596's one
+# parse, and both to #598 where the reader is the formatter or the editor. Every
+# `split on /` row goes to #599, which gives the alias splitter its one home; the
+# pattern cannot tell a path split from an alias split, so config/workspace_block.rs
+# and config/v1/scan_block.rs, which split member and exclude paths, are rows until
+# #599 narrows the pattern to the alias grammar it owns.
+#
+# The writers that put files outside the scan - init, the integrations and the
+# snapshot writer fetch_write.rs - own their disk calls (PRIMITIVES), so they are
+# not rows: no step of #576 takes their writes away.
+
+[[allow]]
+file = "api/complete_ids.rs"
+primitives = ["split on /"]
+step = "#599"
+
+[[allow]]
+file = "api/config.rs"
+primitives = ["load_config"]
+step = "#595"
+
+[[allow]]
+file = "api/embedding.rs"
+primitives = [".exists()", "std::fs"]
+step = "#595"
+
+[[allow]]
+file = "api/fmt.rs"
+primitives = ["canonicalize", "std::fs"]
+step = "#598"
+
+[[allow]]
+file = "api/lsp_ranges.rs"
+primitives = ["std::fs"]
+step = "#598"
+
+[[allow]]
+file = "api/scope_cautions.rs"
+primitives = [".is_file()", "canonicalize", "std::fs"]
+step = "#595"
+
+[[allow]]
+file = "checker/agents.rs"
+primitives = [".exists()", "input_read_"]
+step = "#595"
+
+[[allow]]
+file = "checker/index.rs"
+primitives = [".exists()", ".is_file()", "input_read_"]
+step = "#595"
+
+[[allow]]
+file = "checker/index.rs"
+primitives = ["declaration_id_on_line"]
+step = "#596"
+
+[[allow]]
+file = "checker/index_entries.rs"
+primitives = ["input_read_"]
+step = "#595"
+
+[[allow]]
+file = "checker/index_mention.rs"
+primitives = ["citation_re", "declaration_id_on_line"]
+step = "#596"
+
+[[allow]]
+file = "checker/reference_scope.rs"
+primitives = ["canonicalize", "std::fs"]
+step = "#595"
+
+[[allow]]
+file = "checker/references.rs"
+primitives = ["split on /"]
+step = "#599"
+
+[[allow]]
+file = "checker/support.rs"
+primitives = ["input_read_"]
+step = "#595"
+
+[[allow]]
+file = "config/citations.rs"
+primitives = ["split on /"]
+step = "#599"
+
+[[allow]]
+file = "config/v1/scan_block.rs"
+primitives = ["split on /"]
+step = "#599"
+
+[[allow]]
+file = "config/workspace_block.rs"
+primitives = ["split on /"]
+step = "#599"
+
+[[allow]]
+file = "model/check_inputs.rs"
+primitives = ["canonicalize", "std::fs"]
+step = "#595"
+
+[[allow]]
+file = "model/paths.rs"
+primitives = [".exists()", "canonicalize", "std::fs"]
+step = "#595"
+
+[[allow]]
+file = "model/records.rs"
+primitives = [".exists()"]
+step = "#595"
+
+[[allow]]
+file = "queries/editor_hover.rs"
+primitives = ["split on /"]
+step = "#599"
+
+[[allow]]
+file = "queries/editor_on_type.rs"
+primitives = ["declaration_id_on_line"]
+step = "#598"
+
+[[allow]]
+file = "resolver/body.rs"
+primitives = ["input_read_"]
+step = "#595"
+
+[[allow]]
+file = "resolver/body.rs"
+primitives = ["declaration_id_on_line", "section_re", "source_scan_line"]
+step = "#596"
+
+[[allow]]
+file = "resolver/context.rs"
+primitives = ["std::fs"]
+step = "#595"
+
+[[allow]]
+file = "resolver/link_targets.rs"
+primitives = ["canonicalize", "std::fs"]
+step = "#595"
+
+[[allow]]
+file = "rules/engine/selectors.rs"
+primitives = ["split on /"]
+step = "#599"
+
+[[allow]]
+file = "rules/sentence/recovery.rs"
+primitives = ["split on /"]
+step = "#599"
+
+[[allow]]
+file = "scanner/agent_entrypoints.rs"
+primitives = [".is_file()", "input_read_", "std::fs"]
+step = "#595"
+
+[[allow]]
+file = "scanner/context.rs"
+primitives = ["canonicalize", "std::fs"]
+step = "#595"
+
+[[allow]]
+file = "scanner/e2e.rs"
+primitives = [".exists()", ".is_file()", "canonicalize", "input_read_", "std::fs"]
+step = "#595"
+
+[[allow]]
+file = "scanner/e2e.rs"
+primitives = ["split on /"]
+step = "#599"
+
+[[allow]]
+file = "scanner/file_pass.rs"
+primitives = ["input_read_"]
+step = "#595"
+
+[[allow]]
+file = "scanner/stub_homes.rs"
+primitives = [".exists()", ".is_file()"]
+step = "#595"
+
+[[allow]]
+file = "scanner/tree.rs"
+primitives = [".exists()", ".is_file()"]
+step = "#595"
+
+[[allow]]
+file = "scanner/value_json.rs"
+primitives = [".is_file()", "input_read_"]
+step = "#595"
+
+[[allow]]
+file = "scanner/walk.rs"
+primitives = [".exists()", ".is_file()", "canonicalize", "std::fs"]
+step = "#595"
+
+[[allow]]
+file = "scanner/walk_boundaries.rs"
+primitives = ["std::fs"]
+step = "#595"
+
+[[allow]]
+file = "scanner/walk_errors.rs"
+primitives = ["canonicalize", "std::fs"]
+step = "#595"
+
+[[allow]]
+file = "scanner/walk_reporting.rs"
+primitives = [".exists()", ".is_file()", "canonicalize", "std::fs"]
+step = "#595"
+
+[[allow]]
+file = "workspace/expand.rs"
+primitives = ["load_config"]
+step = "#595"
+
+[[allow]]
+file = "workspace/findings.rs"
+primitives = [".exists()"]
+step = "#595"
+
+[[allow]]
+file = "workspace/members.rs"
+primitives = ["canonicalize", "input_read_", "load_config", "std::fs"]
+step = "#595"
+
+[[allow]]
+file = "workspace/preflight.rs"
+primitives = ["load_config"]
+step = "#595"
+
+[[allow]]
+file = "workspace/scope.rs"
+primitives = ["canonicalize", "load_config", "std::fs"]
+step = "#595"
+
+[[allow]]
+file = "workspace/unlisted.rs"
+primitives = ["input_read_"]
+step = "#595"
+
+[[allow]]
+file = "writers/expected.rs"
+primitives = [".exists()"]
+step = "#595"
+
+[[allow]]
+file = "writers/fetch.rs"
+primitives = ["split on /"]
+step = "#599"
+
+[[allow]]
+file = "writers/fmt_links.rs"
+primitives = ["citation_re"]
+step = "#598"
+
+[[allow]]
+file = "writers/fmt_rewrite.rs"
+primitives = ["citation_re", "declaration_id_on_line"]
+step = "#598"
+
+[[allow]]
+file = "writers/fmt_tree.rs"
+primitives = ["std::fs"]
+step = "#598"
+
+[[allow]]
+file = "writers/init_render.rs"
+primitives = ["load_config"]
+step = "#595"
+
+[[allow]]
+file = "writers/init_workspace_members.rs"
+primitives = ["load_config"]
+step = "#595"
+
+[[allow]]
+file = "writers/init_workspace_members.rs"
+primitives = ["split on /"]
+step = "#599"

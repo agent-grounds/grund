@@ -53,6 +53,9 @@ pub(crate) type ScanError = (PathBuf, String);
 
 type FileScanResult = (PathBuf, std::result::Result<Catalog, String>);
 
+/// One file's pass on the text a save would write: the editor's unsaved text where
+/// the file is open in one, the disk only where it is not
+/// (§FS-declarations.checks.broken-stub.1).
 fn scan_one_file(
     file: &Path,
     schema: &Schema,

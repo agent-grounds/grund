@@ -1,8 +1,8 @@
 """§AR-system.principle, held as the primitive guards of §AR-system.5: no second
 derivation of a fact a component owns. Across every production file of
 `grund-core`, each primitive below is forbidden outside its owners: reading the
-disk and loading a configuration outside the sources and config components, the
-scanner's line predicates outside the scanner and the grammar, and splitting an
+disk and loading a configuration outside the sources and config components and
+the writers that put files no run reads back, the scanner's line predicates outside the scanner and the grammar, and splitting an
 ID or a kind on `/` outside the alias splitter. This generalizes the checker-only
 `checker/tests_post_scan_readers.rs` to the crate.
 
@@ -22,13 +22,16 @@ CRATE = REPO_ROOT / "crates" / "grund-core" / "src"
 ALLOWLIST = Path(__file__).resolve().parent / "primitive_allowlist.toml"
 STEP = re.compile(r"^#(59[5-9]|600)$")
 
+# The writers that put files outside the scan own their disk calls: scaffolding,
+# integration installs and materialized snapshots write what no run reads back.
+WRITERS = ("writers/init", "writers/integrations_", "writers/fetch_write.rs")
 # primitive -> (the pattern that finds a use of it, the directories or files that own it)
 PRIMITIVES = {
-    "std::fs": (r"\bstd::fs\b", ("config/", "sources/")),
+    "std::fs": (r"\bstd::fs\b", ("config/", "sources/") + WRITERS),
     "input_read_": (r"\binput_read_\w+\s*\(", ("config/", "sources/")),
-    ".exists()": (r"\.exists\(\)", ("config/", "sources/")),
-    ".is_file()": (r"\.is_file\(\)", ("config/", "sources/")),
-    "canonicalize": (r"\bcanonicalize\b", ("config/", "sources/")),
+    ".exists()": (r"\.exists\(\)", ("config/", "sources/") + WRITERS),
+    ".is_file()": (r"\.is_file\(\)", ("config/", "sources/") + WRITERS),
+    "canonicalize": (r"\bcanonicalize\b", ("config/", "sources/") + WRITERS),
     "load_config": (r"\bload_config(?:_at\w*)?\s*\(", ("config/",)),
     "markdown_fence_delimiter": (r"\bmarkdown_fence_delimiter\b", ("scanner/", "grammar/")),
     "declaration_id_on_line": (r"\bdeclaration_id_on_line\b", ("scanner/", "grammar/")),

@@ -16,14 +16,26 @@ name = "run"
 fact = "which files a run reads, what a path argument means, which projects it loads"
 done = false
 points = ["FS-scan.path", "FS-scan.projects", "FS-scan.scope"]
-owners = []
+owners = ["crates/grund-core/src/scanner/walk.rs"]
 
 [[family]]
 name = "text"
 fact = "the text of a file, and which path names it"
 done = false
 points = ["FS-scan.identity", "FS-declarations.checks.broken-stub.1"]
-owners = []
+owners = ["crates/grund-core/src/scanner/tree.rs"]
+
+[[family.migration]]
+file = "crates/grund-core/src/checker/report.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/model/stub_resolution.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/scanner/stub_homes.rs"
+step = "#597"
 
 [[family]]
 name = "structure"
@@ -37,14 +49,162 @@ points = [
   "FS-languages.comment-block",
   "FS-languages.fence",
 ]
-owners = []
+owners = ["crates/grund-core/src/scanner/file_pass.rs"]
+
+[[family.migration]]
+file = "crates/grund-core/src/model/headings.rs"
+step = "#596"
+
+[[family.migration]]
+file = "crates/grund-core/src/resolver/body.rs"
+step = "#596"
+
+[[family.migration]]
+file = "crates/grund-core/src/resolver/body_lines.rs"
+step = "#596"
+
+[[family.migration]]
+file = "crates/grund-core/src/scanner/context.rs"
+step = "#596"
+
+[[family.migration]]
+file = "crates/grund-core/src/scanner/unmarked_headings.rs"
+step = "#596"
+
+[[family.migration]]
+file = "crates/grund-core/src/checker/index.rs"
+step = "#598"
+
+[[family.migration]]
+file = "crates/grund-core/src/checker/report.rs"
+step = "#598"
+
+[[family.migration]]
+file = "crates/grund-core/src/grammar/anchors.rs"
+step = "#598"
+
+[[family.migration]]
+file = "crates/grund-core/src/grammar/fmt_cross_refs.rs"
+step = "#598"
+
+[[family.migration]]
+file = "crates/grund-core/src/grammar/heading_text.rs"
+step = "#598"
+
+[[family.migration]]
+file = "crates/grund-core/src/grammar/ids.rs"
+step = "#598"
+
+[[family.migration]]
+file = "crates/grund-core/src/resolver/link_targets.rs"
+step = "#598"
+
+[[family.migration]]
+file = "crates/grund-core/src/writers/fmt_links.rs"
+step = "#598"
+
+[[family.migration]]
+file = "crates/grund-core/src/writers/fmt_shorthand_links.rs"
+step = "#598"
+
+[[family.migration]]
+file = "crates/grund-core/src/writers/fmt_tree.rs"
+step = "#598"
 
 [[family]]
 name = "stubs"
 fact = "which declarations an ID has through a stub"
 done = false
 points = ["FS-declarations.stubs.verdict"]
-owners = []
+owners = ["crates/grund-core/src/scanner/stub_homes.rs"]
+
+[[family.migration]]
+file = "crates/grund-core/src/api/list.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/api/lsp_ranges.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/api/lsp_snapshot.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/checker/conform.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/checker/index.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/checker/index_entries.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/checker/judge.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/checker/mod.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/checker/report.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/checker/sizes.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/checker/values.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/model/records.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/model/stub_resolution.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/queries/ambiguity.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/queries/editor_completion.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/queries/mod.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/queries/show.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/queries/sizes.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/resolver/citation_target.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/resolver/link_targets.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/resolver/mod.rs"
+step = "#597"
+
+[[family.migration]]
+file = "crates/grund-core/src/rules/markdown.rs"
+step = "#597"
 
 [[family]]
 name = "grammar"
@@ -56,4 +216,92 @@ points = [
   "FS-rule-refusals.sentences",
   "FS-rule-refusals.selectors",
 ]
-owners = []
+owners = ["crates/grund-core/src/rules/sentence.rs"]
+
+[[family.migration]]
+file = "crates/grund-core/src/api/list.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/checker/chapter_rules.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/config/citations.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/config/record.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/grammar/settings.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/queries/list_scope.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/queries/selector_refusal.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/queries/sizes.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/resolver/context.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/rules/engine/resolution.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/rules/engine/selectors.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/rules/engine/unreached.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/rules/markdown.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/rules/sentence/conjunction.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/rules/sentence/count.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/rules/sentence/forms.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/rules/sentence/predicate.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/rules/sentence/recovery.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/rules/sentence/selectors.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/rules/sentence/subjects.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/rules/sentence/targets.rs"
+step = "#599"
+
+[[family.migration]]
+file = "crates/grund-core/src/scanner/line_owners.rs"
+step = "#599"
