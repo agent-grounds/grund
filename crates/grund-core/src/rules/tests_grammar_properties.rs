@@ -31,7 +31,11 @@ const DEFERRED: &[(&str, &str)] = &[
 
 /// Known violations: `(property, input)`, each a row the step it names closes.
 /// Seeded from today's code; a row whose violation is gone fails.
-const LEDGER: &[(&str, &str)] = &[];
+const LEDGER: &[(&str, &str)] = &[
+    // §REQ-one-answer.differences.identity G06: the rule refuses `each` as a fixed word
+    // in the wrong case, the selector as a literal subject; #599 gives both one grammar.
+    ("rule <=> selector", "each FS: two failures"),
+];
 
 /// Rule sentences a refusal answers with a form.
 const REFUSED_RULES: &[&str] = &[

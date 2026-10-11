@@ -123,6 +123,9 @@ surface shares is not a row; it belongs to the point that defines the right answ
   the rule `Each FS must cite at least one api/API.` parses in the same workspace. R.
 - **G04.** One non-citable kind gets three different refusal reasons from `list --kind`,
   `list --selector` and a rule subject. R.
+- **G06.** The subject `each FS` is refused by a rule as a fixed word in the wrong case and
+  by `list --selector` as a literal subject the ID grammar does not match. R, found on
+  `53e981e6e9` and amended in.
 
 ### differences.sections: Sections
 
@@ -187,9 +190,11 @@ each answer against the point that defines it as well, because two surfaces wron
 agree. `crates/grund-cli/tests/command_agreement.rs` is that comparison, seeded thin so
 that the gate it runs in does not grow unpaid: it asks the command line's surfaces
 over the reproduced rows of the ledger behind this list, one tree per row of
-[§REQ-one-answer.differences](REQ-one-answer.md#differences-the-differences-known-when-this-requirement-landed), and the first plain project of a fixed set of end-to-end
-families, and its divergence ledger fails on a divergence it does not list and on a row
-that no longer reproduces. Until it drives the editor and the bindings itself,
+[§REQ-one-answer.differences](REQ-one-answer.md#differences-the-differences-known-when-this-requirement-landed) the command line can show, and the first plain project of a fixed
+set of end-to-end families, and its divergence ledger fails on a divergence it does not
+list and on a row that no longer reproduces. A row only the editor, shell completion or
+an unsaved buffer shows is deferred there by name, with the step that builds its harness.
+Until it drives the editor and the bindings itself,
 `tests/integration/lsp_cli_parity.rs` compares the editor's diagnostics with `check`'s over
 the end-to-end corpus ([§REQ-one-answer.text.parity](REQ-one-answer.md#textparity-the-editor-answers-as-the-command-line-does)) and
 `crates/grund-cli/tests/stub_resolution_agreement.rs` the stub answers of every surface
