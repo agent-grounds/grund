@@ -972,8 +972,8 @@ it, and a fifth deliberately does not:
 
 - an ownerless, ambiguous, or digit-starting unsupported token, which [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical) leaves
   byte-identical because there is no owner to expand it against;
-- an owned site inside inline code, a Markdown link destination, or a source string literal — the
-  three contexts [§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten) forbids the rewrite in. The error itself still fires here, unlike
+- an owned site in one of the three contexts of
+  [§FS-citations.rewrite-exemption](FS-citations.md#rewrite-exemption-where-the-text-forbids-the-rewrite). The error itself still fires here, unlike
   [§FS-check.3.13.1](FS-check.md#3131-where-the-text-forbids-the-rewrite)'s exemption, because the manual remedy the finding names is a fix the author
   can make; only the offer of the command goes;
 - an out-of-scope finding of a `--full` run, where `fmt` does not reach at all, for the reason
