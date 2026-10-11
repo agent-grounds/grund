@@ -10,6 +10,7 @@ Everything but `main` is a function of the forge's JSON, so it is tested offline
 Exits 0 when done, 1 naming the file, key or `gh` call that failed."""
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -54,7 +55,11 @@ def load_config(path) -> Config:
     for key in ("threshold_minutes", "window"):
         if key not in data:
             raise ConfigError(f"{path}: missing key {key!r}")
-    return Config(threshold_minutes=float(data["threshold_minutes"]), window=int(data["window"]))
+    window = int(data["window"])
+    # The forge lists at most 100 runs a page; fewer than one measures nothing.
+    if not 1 <= window <= 100:
+        raise ConfigError(f"{path}: key 'window' is {window}, outside 1..100")
+    return Config(threshold_minutes=float(data["threshold_minutes"]), window=window)
 
 
 def parse_stamp(stamp: str) -> datetime:
@@ -101,8 +106,10 @@ def gate_averages(runs: list, window: int) -> dict:
     }
 
 
-def drift_report(averages: dict, config: Config):
-    """The drift issue's body naming every gate over the threshold, or None when none is."""
+def drift_report(averages: dict, config: Config, repo: str | None = None):
+    """The drift issue's body naming every gate over the threshold, or None when none is.
+
+    `repo` (`owner/name`) makes the link to AR-ci absolute; without it the name is plain."""
     over = sorted(((name, gate) for name, gate in averages.items()
                    if gate.average_minutes > config.threshold_minutes),
                   key=lambda pair: pair[1].average_minutes, reverse=True)
@@ -112,7 +119,7 @@ def drift_report(averages: dict, config: Config):
         MARKER,
         f"Over the last {config.window} successful pushes to `main`, these `{WORKFLOW}` gates "
         f"average more than the {config.threshold_minutes:g}-minute threshold "
-        "([AR-ci.requirements.1](docs/architecture/AR-ci.md)).",
+        f"({requirement_link(repo)}).",
         "",
         "| gate | average | runs |",
         "|---|---|---|",
@@ -126,10 +133,20 @@ def drift_report(averages: dict, config: Config):
     return "\n".join(lines) + "\n"
 
 
+def requirement_link(repo: str | None) -> str:
+    # An issue body resolves a relative link against /issues/, so only an absolute one works.
+    if not repo:
+        return "AR-ci.requirements.1"
+    return f"[AR-ci.requirements.1](https://github.com/{repo}/blob/main/docs/architecture/AR-ci.md)"
+
+
 def issue_action(open_issues: list):
-    """Edit the open issue carrying the marker, or open one when none does."""
+    """Edit the open issue whose body begins with the marker line, or open one when none does.
+
+    An issue that only quotes the marker further down is not the drift issue
+    (§AR-ci.requirements.3)."""
     for issue in open_issues:
-        if MARKER in (issue.get("body") or ""):
+        if (issue.get("body") or "").lstrip().startswith(MARKER):
             return ("update", issue["number"])
     return ("open", None)
 
@@ -155,9 +172,14 @@ def main(argv: list) -> int:
     runs = [json.loads(gh("api", f"repos/{{owner}}/{{repo}}/actions/runs/{run['id']}/jobs?per_page=100"))["jobs"]
             for run in listed["workflow_runs"][:config.window]]
     averages = gate_averages(runs, config.window)
+    if not averages:
+        # §AR-ci.requirements.3: the average is measured, so no run is no pass.
+        print(f"error: no successful push to main of {WORKFLOW} was found; nothing was measured",
+              file=sys.stderr)
+        return 1
     for name, gate in sorted(averages.items()):
         print(f"{gate.average_minutes:6.1f} min over {gate.samples} runs  {name}")
-    body = drift_report(averages, config)
+    body = drift_report(averages, config, os.environ.get("GITHUB_REPOSITORY"))
     if body is None:
         print(f"every gate averages at most {config.threshold_minutes:g} minutes; nothing written")
         return 0
