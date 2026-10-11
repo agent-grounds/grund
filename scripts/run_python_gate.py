@@ -67,19 +67,32 @@ def inputs():
 
 
 class TimedResult(unittest.TextTestResult):
-    """Records each test's wall-clock for the slowest-tests table (§AR-ci.3.4.2)."""
+    """Records each test's wall-clock, fixtures included, for the slowest table (§AR-ci.3.4.2)."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.timings = []
+        self.mark = time.perf_counter()
+
+    def startTestRun(self):
+        super().startTestRun()
+        self.mark = time.perf_counter()
 
     def startTest(self, test):
-        self.started = time.perf_counter()
+        # A test is charged from the previous test's stop, so setUpModule/setUpClass count.
+        self.started = self.mark
         super().startTest(test)
 
     def stopTest(self, test):
         super().stopTest(test)
-        self.timings.append((time.perf_counter() - self.started, test.id()))
+        self.mark = time.perf_counter()
+        self.timings.append([self.mark - self.started, test.id()])
+
+    def stopTestRun(self):
+        # The last class's and module's teardown is charged to the last test.
+        if self.timings:
+            self.timings[-1][0] += time.perf_counter() - self.mark
+        super().stopTestRun()
 
 
 def discover(argv):
@@ -92,6 +105,8 @@ def discover(argv):
     for seconds, test in sorted(result.timings, reverse=True)[:SLOWEST]:
         stream.writeln(f'{seconds:8.2f}s {test}')
     stream.flush()
+    if result.testsRun == 0 and not result.skipped:
+        return 5  # §AR-ci.3.4.2: `python -m unittest` on 3.12+ exits 5 when it finds no tests.
     return 0 if result.wasSuccessful() else 1
 
 

@@ -53,7 +53,6 @@ jobs:
       - name: Install binding Rust toolchain
         run: rustup toolchain install 1.95.0 --profile minimal
 
-      # §AR-ci.3.4.1: also restores the Node acceptance's shared build target.
       - name: Cache cargo registry and target
         uses: actions/cache@v5
         continue-on-error: true
@@ -64,10 +63,22 @@ jobs:
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
             ~/ag/tmp/grund-release-build
-            ~/ag/tmp/grund-node-target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
+
+      # §AR-ci.3.4.1: a key of its own, so the Node target is saved, not lost to the
+      # cargo cache's exact hit; incremental state is left out.
+      - name: Cache the Node acceptance's build target
+        uses: actions/cache@v5
+        continue-on-error: true
+        with:
+          path: |
+            ~/ag/tmp/grund-node-target
+            !~/ag/tmp/grund-node-target/**/incremental
+          key: ${{ runner.os }}-node-target-v1-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-target-v1-1.95.0-
 
       - name: cargo fmt --check
         run: cargo fmt --all -- --check
