@@ -91,7 +91,7 @@ fn a_heading_only_inside_a_backtick_fence_leaves_the_stub_broken() {
     );
 }
 
-/// §FS-declarations.checks.broken-stub.2, §FS-check.1.1.5: a tilde fence is a fence.
+/// §FS-declarations.checks.broken-stub.2, §FS-check.1.1.5 (§FS-languages.fence): a tilde fence is a fence.
 #[test]
 fn a_heading_only_inside_a_tilde_fence_leaves_the_stub_broken() {
     assert_broken(
@@ -100,7 +100,7 @@ fn a_heading_only_inside_a_tilde_fence_leaves_the_stub_broken() {
     );
 }
 
-/// §FS-check.1.1.5: a fence closes only on a run of its own character at least
+/// §FS-check.1.1.5 (§FS-languages.fence): a fence closes only on a run of its own character at least
 /// as long as the opener, so a shorter run and a tilde run leave it open.
 #[test]
 fn a_shorter_or_other_character_run_does_not_close_the_fence() {
@@ -110,7 +110,7 @@ fn a_shorter_or_other_character_run_does_not_close_the_fence() {
     );
 }
 
-/// §FS-check.1.1.5: an unclosed fence runs to end of file.
+/// §FS-check.1.1.5 (§FS-languages.fence): an unclosed fence runs to end of file.
 #[test]
 fn a_heading_after_an_unclosed_fence_leaves_the_stub_broken() {
     assert_broken(
@@ -119,7 +119,7 @@ fn a_heading_after_an_unclosed_fence_leaves_the_stub_broken() {
     );
 }
 
-/// §FS-check.1.1.5: an opener indented by up to three spaces is still a fence.
+/// §FS-check.1.1.5 (§FS-languages.fence): an opener indented by up to three spaces is still a fence.
 #[test]
 fn a_heading_inside_an_indented_fence_leaves_the_stub_broken() {
     assert_broken(
