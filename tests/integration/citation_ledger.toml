@@ -1,0 +1,59 @@
+# The citation ledger: every family of facts §AR-system.principle holds to one
+# defining point and one implementation, its defining points, the code that owns
+# each, and the copies left to migrate (AR-system.principle.inventory). Points are
+# written bare, without the marker, so this file cites nothing itself.
+# test_citation_ledger.py holds it, both ways round:
+#   - every point resolves;
+#   - every code file citing a point is an owner or a migration row of its family;
+#   - every owner and every migration row still cites a point of its family;
+#   - a family marked done has no migration rows left.
+# Each migration row names the step of agent-grounds/grund#576 that removes it:
+# #595 one run, one read; #596 one parse; #597 stubs; #598 fmt and the editor on
+# the record; #599 one grammar. The list only shrinks.
+
+[[family]]
+name = "run"
+fact = "which files a run reads, what a path argument means, which projects it loads"
+done = false
+points = ["FS-scan.path", "FS-scan.projects", "FS-scan.scope"]
+owners = []
+
+[[family]]
+name = "text"
+fact = "the text of a file, and which path names it"
+done = false
+points = ["FS-scan.identity", "FS-declarations.checks.broken-stub.1"]
+owners = []
+
+[[family]]
+name = "structure"
+fact = "body, sections, headings, anchors, comment blocks, fences, citation zones"
+done = false
+points = [
+  "FS-show.2.1",
+  "FS-show.2.1.2.1",
+  "FS-fmt.6.2",
+  "FS-citations.zones",
+  "FS-languages.comment-block",
+  "FS-languages.fence",
+]
+owners = []
+
+[[family]]
+name = "stubs"
+fact = "which declarations an ID has through a stub"
+done = false
+points = ["FS-declarations.stubs.verdict"]
+owners = []
+
+[[family]]
+name = "grammar"
+fact = "what a citation token, a rule sentence or a selector means, and how a refusal reads"
+done = false
+points = [
+  "FS-citations.recognized",
+  "FS-rules.2",
+  "FS-rule-refusals.sentences",
+  "FS-rule-refusals.selectors",
+]
+owners = []

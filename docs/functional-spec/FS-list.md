@@ -59,7 +59,7 @@ error: unknown kind `API`
 known kinds: FS, AR
 ```
 
-Without `--project` every loaded project is selected, and the same refusal lists `FS, AR, API`. Every `list` mode that ends a refusal in this line, `--size` and `--selector` included ([§FS-rules.8.1](FS-rules.md#81-a-refused-selector-is-answered-with-a-selector)), builds it from the same selection.
+Without `--project` every loaded project is selected, and the same refusal lists `FS, AR, API`. Every `list` mode that ends a refusal in this line, `--size` and `--selector` included ([§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)), builds it from the same selection.
 
 ### 1.3 `--unused`
 

@@ -184,12 +184,16 @@ surface shares is not a row; it belongs to the point that defines the right answ
 The requirement is proved by asking every surface each question on one tree, and each
 equivalence on both of its inputs, through each surface's own entrypoint, and by checking
 each answer against the point that defines it as well, because two surfaces wrong alike
-agree. Today two tests compare part of it: `crates/grund-cli/tests/stub_resolution_agreement.rs`
-compares the stub answers of [§REQ-one-answer.stubs](REQ-one-answer.md#stubs-what-a-stub-answers) and [§REQ-one-answer.identity](REQ-one-answer.md#identity-which-declarations-an-id-has), and
-`tests/integration/lsp_cli_parity.rs` compares the editor's diagnostics with `check`'s
-over the end-to-end corpus ([§REQ-one-answer.text.parity](REQ-one-answer.md#textparity-the-editor-answers-as-the-command-line-does)). The comparison over every
-surface and every tree is not built yet; until it is, a section no test compares is held
-by review.
+agree. `crates/grund-cli/tests/command_agreement.rs` is that comparison, seeded thin so
+that the gate it runs in does not grow unpaid: it asks the command line's surfaces
+over the reproduced rows of the ledger behind this list, one tree per row of
+[§REQ-one-answer.differences](REQ-one-answer.md#differences-the-differences-known-when-this-requirement-landed), and the first plain project of a fixed set of end-to-end
+families, and its divergence ledger fails on a divergence it does not list and on a row
+that no longer reproduces. Until it drives the editor and the bindings itself,
+`tests/integration/lsp_cli_parity.rs` compares the editor's diagnostics with `check`'s over
+the end-to-end corpus ([§REQ-one-answer.text.parity](REQ-one-answer.md#textparity-the-editor-answers-as-the-command-line-does)) and
+`crates/grund-cli/tests/stub_resolution_agreement.rs` the stub answers of every surface
+([§REQ-one-answer.stubs](REQ-one-answer.md#stubs-what-a-stub-answers)); a section none of the three compares is held by review.
 
 ## why: Why this exists
 

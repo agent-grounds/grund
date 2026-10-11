@@ -1239,9 +1239,8 @@ workspace root. A qualified citation `<§>api/FS-login` in `docs/index.md` wraps
 `[<§>api/FS-login](../apps/api/docs/functional-spec/FS-login.md#fs-login-...)` —
 the relative path crosses the workspace into the member's home, the anchor
 is computed from the *member's* declaration heading under the member's
-configured anchor profile ([§FS-fmt.6.7](FS-fmt.md#67-configurability)). The cross-project resolution goes
-through `target_for_citation` ([AR-resolver.1](../architecture/AR-resolver.md#1-the-resolver-one-function)) so the wrapped link
-and `check`'s resolution can never disagree.
+configured anchor profile ([§FS-fmt.6.7](FS-fmt.md#67-configurability)). The link names the declaration `check`
+resolves ([§REQ-one-answer.identity.declarations](../requirements/REQ-one-answer.md#identitydeclarations-every-command-reads-one-declaration-set)) at the anchor `show` reports ([§REQ-one-answer.writes.anchors](../requirements/REQ-one-answer.md#writesanchors-shows-anchor-is-the-anchor-fmt-writes)).
 
 A member-local run leaves qualified citations untouched ([§FS-workspace.8.5.1](FS-workspace.md#851-a-member-local-run-leaves-qualified-citations-untouched)), a re-derive
 reaches every project that wrapped the renamed thing ([§FS-workspace.8.5.2](FS-workspace.md#852-re-derive-crosses-projects)), and each

@@ -33,6 +33,8 @@ mod tests_boundaries;
 #[cfg(test)]
 mod tests_chapter_path_reasons;
 #[cfg(test)]
+mod tests_grammar_properties;
+#[cfg(test)]
 mod tests_index_contract;
 #[cfg(test)]
 mod tests_named_off_subjects;
