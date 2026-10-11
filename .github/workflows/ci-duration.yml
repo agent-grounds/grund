@@ -1,0 +1,25 @@
+# The meter of §AR-ci.requirements.3: averages each ci.yml gate over its last
+# successful pushes to main and opens or edits one drift issue when a gate is over
+# the threshold of .github/ci-duration.json (§AR-ci.requirements.4). It reads the
+# forge, so it runs on a schedule and never as a gate on a push or pull request.
+name: CI duration
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Average the gates and report drift
+        run: python3 scripts/ci_duration.py
