@@ -143,14 +143,28 @@ oracle it is given must come back as that same file's absolute path.
 `GRUND_NODE_TARGET` is the fourth input: one Cargo target directory that every
 build of the Node acceptance ([§AR-bindings.5](AR-bindings.md#5-grund-node-the-napi-rs-binding)) shares. Unset, the wrapper prepares
 `~/ag/tmp/grund-node-target`, outside the checkout and kept between runs, and CI
-lists that directory among the paths its cargo cache restores, so a job starts
-with the dependency tree already compiled. The acceptance's own helper reads the
+restores that directory from a cache step of its own, so a job starts with the
+dependency tree already compiled. The acceptance's own helper reads the
 same variable and falls back to the same directory, so `tests/bindings/node/run.py`
 run on its own shares it too. Every build site names this target or a directory
 under it, never a fresh temporary one: the source package and its bundled
 fallback rebuild, the documented native builder and its test-seams build, and
 the CLI. The CLI the acceptance compares against is built once per run and
 reused by every test that needs it. Cargo's own lock makes the sharing safe.
+
+That cache is not the cargo cache's. Its key is
+`<os>-node-target-v1-1.95.0-<Cargo.lock hash>`: the runner's OS, a version to
+bump when what it holds must be thrown away, the binding toolchain, and the lock
+file, with the same key less its hash as the restore prefix. A key of its own is
+what makes it save at all: `actions/cache` saves nothing on an exact hit of its
+primary key, and the cargo cache's key already hits whenever `Cargo.lock` has not
+changed, so a path added to it would never be written. It holds the release
+binding's and the debug CLI's compiled dependencies and leaves out every
+`incremental` directory, which a fresh checkout's workspace crates cannot reuse.
+That is roughly half a gigabyte per OS before compression, three caches in all,
+against a repository limit of 10 GB the other caches already crowd; the release
+LTO builds of the tarball's own crates are not worth caching, because they
+rebuild at their fresh paths every run anyway.
 
 Sharing a target changes what is cached, not what is proven. The builds keep
 `--profile release`, `--locked`, the bundled-sources closure, and the fallback
@@ -165,14 +179,20 @@ from a populated cache.
 every `--target-dir` the source package and the CLI build name lies under it and
 the CLI is built once; every other build site names this target, the rehearsal's,
 or a directory under one of them; unset, the wrapper and the helper agree on one
-persistent directory outside the checkout, which the CI cache restores.
+persistent directory outside the checkout, which a CI cache step of its own
+restores, under a key that is not the cargo cache's.
 
 #### 3.4.2 Per-test durations
 
 The wrapper times every test it runs and ends with a short table of the slowest
 ten, one `<seconds>s <test id>` line each under a `Slowest tests` heading, so where
 the gate's time goes is measured rather than inferred from the timestamps of
-`unittest`'s dot lines. It needs no Python newer than the gate's own floor, which
+`unittest`'s dot lines. A test's time runs from the previous test's end to its
+own, so the class and module fixtures run before it, `setUpClass` and
+`setUpModule` and the previous class's teardown, are charged to it, and the last
+test carries the run's final teardown; a cargo build in a fixture shows up
+against the first test of its class rather than nowhere. A discovery that finds
+no tests exits 5, as `python -m unittest` does from Python 3.12. It needs no Python newer than the gate's own floor, which
 is why it does not use `unittest --durations`, new in Python 3.12. It adds those
 ten lines and no line per test, because a passing test is not worth a line of
 the log. `run_python_gate.run_tests(start, environment)` is the one entry that

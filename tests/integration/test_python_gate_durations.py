@@ -71,6 +71,33 @@ class PythonGateDurationsTests(unittest.TestCase):
         self.assertNotEqual(0, result.returncode, result.stdout + result.stderr)
         self.assertIn("Slowest tests", result.stdout + result.stderr)
 
+    def test_class_fixture_time_is_counted(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        (Path(temp.name) / "test_fixture.py").write_text(textwrap.dedent("""
+            import time, unittest
+            class Fixture(unittest.TestCase):
+                @classmethod
+                def setUpClass(cls):
+                    time.sleep(0.5)
+                def test_quick(self):
+                    pass
+            """), encoding="utf-8")
+        result = self.run_tests(temp.name)
+        output = result.stdout + result.stderr
+        self.assertEqual(0, result.returncode, output)
+        rows = [row for row in map(ROW.match, output.splitlines()) if row]
+        self.assertTrue(rows, output)
+        self.assertIn("test_quick", rows[0].group(2), output)
+        self.assertGreaterEqual(float(rows[0].group(1)), 0.5,
+                                "setUpClass time is missing from the table")
+
+    def test_a_run_with_no_tests_exits_5(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        result = self.run_tests(temp.name)
+        self.assertEqual(5, result.returncode, result.stdout + result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

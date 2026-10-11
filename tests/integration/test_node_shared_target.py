@@ -4,7 +4,8 @@ The acceptance itself takes minutes, so nothing here builds. The source package 
 the CLI oracle are asked for in a child whose `checked` only records the commands
 it is handed; the other build sites are read from their source, where each one
 names its `--target-dir`. The wrapper and the helper are asked, with the variable
-unset, where they put the shared target, and the CI cache must restore it.
+unset, where they put the shared target; a CI cache step with a key of its own must
+restore it, because a key another step shares hits exactly and never saves.
 """
 
 import ast
@@ -148,8 +149,16 @@ class NodeSharedTargetTests(unittest.TestCase):
         home = Path.home().resolve()
         self.assertTrue(within(wrapper, home), wrapper)
         cached = "~/" + Path(wrapper).resolve().relative_to(home).as_posix()
-        self.assertIn(f"            {cached}\n", CI.read_text(encoding="utf-8"),
-                      "the CI cargo cache does not restore the shared Node target")
+        steps = CI.read_text(encoding="utf-8").split("\n      - ")
+        restoring = [step for step in steps if f"            {cached}\n" in step]
+        self.assertEqual(1, len(restoring), "one CI cache step restores the shared Node target")
+        keys = [line.strip() for step in steps for line in step.splitlines()
+                if "actions/cache" in step and line.strip().startswith("key:")]
+        key = [line.strip() for line in restoring[0].splitlines()
+               if line.strip().startswith("key:")]
+        self.assertEqual(1, len(key), restoring[0])
+        # An exact hit saves nothing, so a key shared with another cache never saves this one.
+        self.assertEqual(1, keys.count(key[0]), f"{key[0]} is shared with another cache step")
 
 
 if __name__ == "__main__":
