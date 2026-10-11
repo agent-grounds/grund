@@ -40,6 +40,13 @@ CODE_CELL = re.compile(r"^`?([a-z][a-z0-9-]*)`?$")
 MIGRATED = {
     "FS-check": ("glob-citation",),
     "FS-rules": ("unreached-declaration",),
+    "FS-fields": (
+        "invalid-field-value",
+        "misplaced-field",
+        "missing-field",
+        "mistitled-field",
+        "undeclared-chapter",
+    ),
     "FS-declarations": (
         "broken-stub",
         "declaration-near-miss",
