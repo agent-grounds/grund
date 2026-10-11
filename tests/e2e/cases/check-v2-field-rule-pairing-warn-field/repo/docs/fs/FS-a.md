@@ -1,6 +1,6 @@
 # FS-a: No terms
 
-See §RULE-terms.
+See §RULE-glossary.
 
 ## 1. Behaviour
 

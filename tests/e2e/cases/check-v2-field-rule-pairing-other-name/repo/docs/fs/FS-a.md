@@ -1,6 +1,6 @@
 # FS-a: Terms under another name
 
-See §RULE-terms.
+See §RULE-glossary.
 
 ## glossary: Terms
 

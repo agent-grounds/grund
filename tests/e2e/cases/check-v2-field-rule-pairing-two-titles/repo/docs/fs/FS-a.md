@@ -1,6 +1,6 @@
 # FS-a: Two Terms chapters
 
-See §RULE-terms.
+See §RULE-glossary.
 
 ## terms: Terms
 
