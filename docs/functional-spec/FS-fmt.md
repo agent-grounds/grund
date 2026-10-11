@@ -81,7 +81,7 @@ Everything else keeps the raw-line rule, unchanged: an ordinary string literal o
 
 `--write` does not rewrite an external **file-symlink** target: the scan still
 reads that file and checks its citations, exactly as
-[§FS-config.3.5.1](FS-config.md#351-a-symlink-in-the-tree-is-followed)
+[§FS-scan.scope.links](FS-scan.md#scopelinks-a-symlink-in-the-tree-is-followed)
 says, but the write stops at the boundary. Files below an external directory
 symlink never reach `fmt`, because the shared tree scan prunes that directory;
 they produce neither a rewrite nor a refusal warning. Putting this project's
@@ -102,7 +102,7 @@ The dry run refuses the same file, with the same `warning:` line, and does not l
 
 ##### 2.3.2.2 A link inside the config root is written through
 
-A link whose target is **inside** the config root is written through, and one consequence of that is named here rather than fixed. One physical file reached under two spellings is read once, under the surviving spelling ([§FS-config.3.5.4](FS-config.md#354-one-physical-file-is-read-once)), so `--cross-refs` computes every relative target from *that* spelling: the link it writes is correct when the file is opened where grund read it and wrong when it is opened at its other name. No rewrite can be right both ways — a single relative path is resolved against whichever directory the reader opened the file from — so the fix is not a better anchor but not giving one file two names.
+A link whose target is **inside** the config root is written through, and one consequence of that is named here rather than fixed. One physical file reached under two spellings is read once, under the surviving spelling ([§FS-scan.identity.read-once](FS-scan.md#identityread-once-one-physical-file-is-read-once)), so `--cross-refs` computes every relative target from *that* spelling: the link it writes is correct when the file is opened where grund read it and wrong when it is opened at its other name. No rewrite can be right both ways — a single relative path is resolved against whichever directory the reader opened the file from — so the fix is not a better anchor but not giving one file two names.
 
 #### 2.3.3 A fenced code block is an illustration
 
@@ -256,7 +256,7 @@ The never-rewrite zones of [§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten) 
 
 - `0` — no changes needed, **or** `--write` succeeded (regardless of whether changes were made — they were the requested operation, not a failure).
 - `1` — `--check` found at least one line that `--write` would change. Never returned by `--write`.
-- `2` — I/O error, or a path in the scanned tree that could not be read — a broken symlink or a symlink loop the scan would otherwise have read through ([§FS-config.3.5.5](FS-config.md#355-a-link-the-scan-cannot-resolve-is-reported-and-not-scanned-into), [§FS-config.3.5.6](FS-config.md#356-which-unresolvable-links-are-owed-a-report)), an unreadable directory. Each such path is named on stderr. A run that did not need the whole declaration set still rewrote every file it could read ([§FS-fmt.3.1](FS-fmt.md#31-an-unreadable-path-is-named-and-a-partial-run-still-rewrites)); one that did rewrote nothing ([§FS-fmt.3.2](FS-fmt.md#32-a-run-that-needs-the-whole-declaration-set-rewrites-nothing)); their lines say which ([§FS-fmt.3.4](FS-fmt.md#34-a-refusal-says-that-nothing-was-rewritten)).
+- `2` — I/O error, or a path in the scanned tree that could not be read — a broken symlink or a symlink loop the scan would otherwise have read through ([§FS-scan.scope.links.unresolvable](FS-scan.md#scopelinksunresolvable-a-link-the-scan-cannot-resolve-is-reported-and-not-scanned-into), [§FS-scan.scope.links.owed](FS-scan.md#scopelinksowed-which-unresolvable-links-are-owed-a-report)), an unreadable directory. Each such path is named on stderr. A run that did not need the whole declaration set still rewrote every file it could read ([§FS-fmt.3.1](FS-fmt.md#31-an-unreadable-path-is-named-and-a-partial-run-still-rewrites)); one that did rewrote nothing ([§FS-fmt.3.2](FS-fmt.md#32-a-run-that-needs-the-whole-declaration-set-rewrites-nothing)); their lines say which ([§FS-fmt.3.4](FS-fmt.md#34-a-refusal-says-that-nothing-was-rewritten)).
 
 The report goes to **stdout** — it is `fmt`'s output ([§FS-errors.1](FS-errors.md#1-streams)), the same stream `grund check`'s findings use, so `grund fmt --check | …` and `grund fmt --check > pending.txt` work the way they do for `grund check`. (CLI-level `error:` lines — a bad flag, an I/O failure — go to stderr as everywhere, [§FS-errors.2.2](FS-errors.md#22-cli-level-message).) The dry run lists the lines it would change ([§FS-fmt.3.5](FS-fmt.md#35-the-dry-run-report)), and `--write` the files it changed ([§FS-fmt.3.7](FS-fmt.md#37-the---write-report)).
 
