@@ -68,7 +68,7 @@ In a kind whose effective format carries both `{number}` and `{slug}`, the numbe
 
 ### 1.4 `<path>` and `--path`
 
-`<path>` is the directory or file whose tree is scanned to resolve the ID. Defaults to `.`. Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). `--path <path>` is an accepted alias for scripts that prefer to pass it as a flag; the two forms are equivalent.
+What `<path>` scans is [§FS-scan.path.show](FS-scan.md#pathshow-show-resolves-the-id-in-the-paths-tree). `--path <path>` is an accepted alias for scripts that prefer to pass it as a flag; the two forms are equivalent.
 
 #### 1.4.1 A second coordinate in the path slot
 

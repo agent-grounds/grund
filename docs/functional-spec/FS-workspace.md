@@ -557,22 +557,14 @@ Value bindings use this resolver without a parallel lookup path. An unqualified 
 
 ## 5. Command scope
 
-`grund check` run at a workspace root checks the root project (unless
-`include_root = false`, [§FS-workspace.2](FS-workspace.md#2-workspace-configuration)) and all configured members, aggregates findings, and prints the same explicit-channel
-`<path>:<line>: <channel>: <message>` shape as a normal check
-([§FS-check.2.1](FS-check.md#21-report-format)). Paths are rendered relative
-to the workspace root when `[output] relative_paths = true`. `grund check <dir>`
-with a `<dir>` narrower than the config root is one narrowed scan of the
-enclosing project — no workspace loaded, no `project` field. A run inside a
+Which projects a run at the workspace root loads is [§FS-scan.projects.workspace-root](FS-scan.md#projectsworkspace-root-a-run-at-the-workspace-root-loads-every-project), and a
+run narrower than the config root is [§FS-scan.projects.narrowed](FS-scan.md#projectsnarrowed-a-path-below-the-config-root-loads-no-workspace). A run inside a
 member is [§FS-workspace.5.1](FS-workspace.md#51-a-member-run); how a run that loads no workspace recognizes a qualified
 citation is [§FS-workspace.5.2](FS-workspace.md#52-recognition-in-a-run-that-loads-no-workspace).
 
 ### 5.1 A member run
 
-`grund check <member>` (or `grund check` invoked from inside a member tree)
-discovers the member's own config first and, for a member that declares no
-`[workspace]` block of its own, validates it as an independent project; one that
-does runs its own subtree ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)). Qualified citations such as `§root/<ID>` or `§sibling/<ID>` cannot be
+Which project a member run loads is [§FS-scan.projects.member](FS-scan.md#projectsmember-a-member-run-loads-the-member). Qualified citations such as `§root/<ID>` or `§sibling/<ID>` cannot be
 resolved without the workspace context; each such citation produces an
 `unknown project alias <path>` error at the citation site
 ([§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)). This matches [§DF-subproject-namespaces](../decisions/functional/DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos) [§DF-subproject-namespaces.3.6](../decisions/functional/DF-subproject-namespaces.md#36-standalone-members-fail-loud-not-silent) — silent skipping
@@ -1308,15 +1300,7 @@ reader to mistake it for the target's project.
 
 #### 8.6.1 A narrower `<path>` is one narrowed scan
 
-`cover` is the one command in this section whose `<path>` bounds a **scan**
-rather than choosing which config answers ([§FS-cover.1](FS-cover.md#1-inputs)), so it draws the
-aggregate/narrow line where `grund check` draws it and not where `list` does: a
-scope narrower than the config root is one narrowed scan of the enclosing
-project, no workspace loaded and no `project` field, the way `grund check <dir>`
-already behaves ([§FS-workspace.5](FS-workspace.md#5-command-scope)). Widening `grund cover src/` back to every
-project would answer a question the caller did not ask, and an explicit path
-deliberately bypasses `[scan] include`, so the narrowing is the only thing that
-put those files in scope at all.
+See [§FS-scan.path.cover](FS-scan.md#pathcover-cover-runs-one-narrowed-scan).
 
 #### 8.6.2 Why the grouping spans every project
 
@@ -1411,20 +1395,7 @@ by [§FS-config.3.6](FS-config.md#36-output--report-format) — the same line
 
 ### 8.8 Discovery follows `grund check`'s walk-up
 
-Discovery follows the same walk-up rule as `grund check` ([§FS-config.1](FS-config.md#1-file-location-and-discovery),
-[§FS-workspace.5](FS-workspace.md#5-command-scope)): from the CWD (or from an explicit `<path>` argument), walk up to the
-nearest `grund.toml` in either discovery form. If the nearest config is a member's own config,
-the command runs member-local — qualified `<alias>/<ID>` cannot resolve, the
-same way `check` errors at the member scope ([§FS-workspace.5.1](FS-workspace.md#51-a-member-run)). A scope inside a member
-with no config of its own is member-local all the same, on [§FS-workspace.2](FS-workspace.md#2-workspace-configuration)'s canonical
-defaults with the member directory as the config root; only outside every member
-does a nearest config at the workspace root run the command workspace-wide. An
-explicit `<path>` argument (e.g. `grund list apps/api`,
-`grund refs FS-x apps/api`, `grund complete ids --path apps/api`) behaves as if
-the command were invoked from that path: a `<path>` inside a member is member-scoped, not
-workspace-aggregate, even when a workspace exists above it. `cover`, whose
-`<path>` bounds a scan, runs one narrowed scan below the config root instead
-([§FS-workspace.8.6.1](FS-workspace.md#861-a-narrower-path-is-one-narrowed-scan)).
+See [§FS-scan.projects.discovery](FS-scan.md#projectsdiscovery-the-nearest-config-decides) and [§FS-scan.path.discovery](FS-scan.md#pathdiscovery-a-path-is-where-discovery-starts).
 
 ### 8.9 The current project
 
