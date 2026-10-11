@@ -108,7 +108,7 @@ fn anchor_slug_pandoc(text: &str) -> String {
 /// by `grund fmt --cross-refs` (§DF-github-anchor-fidelity).
 pub(crate) fn section_anchor_text(line: &str, section: &str) -> String {
     let trimmed = line.trim_start();
-    // §FS-fmt.6.2.4: named anchors derive from the complete rendered heading, so
+    // §FS-declarations.heading.rendered-text: named anchors derive from the complete rendered heading, so
     // its explicit colon reaches the renderer (`goals: Scope`). Numeric paths
     // retain their historical normalized stored text byte for byte.
     if section

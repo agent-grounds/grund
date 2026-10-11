@@ -14,7 +14,7 @@ use crate::model::{scanned_decl_relative_path, scanned_path_key, sort_path_key};
 use crate::workspace::WorkspaceCitationTarget;
 
 /// Narrow the shared coordinate catalog to each declaration's body and retain
-/// every rejected heading as one check site (§FS-show.2.1.2.1, §FS-declarations.checks.section-outside-declaration).
+/// every rejected heading as one check site (§FS-declarations.section.map, §FS-declarations.checks.section-outside-declaration).
 ///
 /// The line scan's current declaration runs farther than the body in Markdown,
 /// source comments, docstrings, and stubs. Applying the already-computed span

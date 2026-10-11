@@ -305,10 +305,11 @@ fn named_sections_preserve_full_ids_before_shorthand_and_findings_compose() {
     assert_eq!(findings.matches("section not found").count(), 2);
 }
 
-/// §FS-fmt.6.2.4: the rendered text of `## goals: Scope` carries the handle and
-/// colon, so the wrapper points at `#goals-scope`; retitling the heading to
-/// `## goals: Intent` refreshes that wrapper to `#goals-intent` on the next
-/// pass while the stored handle and the citation text stay `goals`.
+/// §FS-fmt.6.2.4, §FS-declarations.heading.rendered-text: the rendered text of
+/// `## goals: Scope` carries the handle and colon, so the wrapper points at
+/// `#goals-scope`; retitling the heading to `## goals: Intent` refreshes that
+/// wrapper to `#goals-intent` on the next pass while the stored handle and the
+/// citation text stay `goals`.
 #[test]
 fn named_section_formatting_uses_rendered_anchor_and_never_changes_handles() {
     let repo = Repo::new("formatting");
