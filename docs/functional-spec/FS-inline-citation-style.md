@@ -63,14 +63,7 @@ Four corners are known and accepted rather than repaired ([§DF-doc-comments-are
 
 ### 1.2 Comment blocks
 
-The block forms say where a block begins and ends. They are the scanner's existing normalization, not a verdict on which blocks are sites:
-
-- `//` / `///` / `//!` line comments: a run of adjacent lines whose first non-whitespace token is the same line-comment prefix.
-- `#`, `;`, `--` line comments: same rule per prefix (see [§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned) for the full prefix set).
-- `/* … */` block comments, `/**`- and `/*!`-opened alike: from opener to closer.
-- Python triple-quoted docstrings (`""" … """` / `''' … '''`): from the opening triple-quote to the matching close.
-
-Adjacency is broken by any line that is not part of the same block: a code line, a blank line, or a different comment style. An empty comment line — the prefix alone, such as `//` or `#`, with nothing after it — stays inside the run: it carries the prefix, so only a line without one breaks it.
+The block forms say where a block begins and ends, and are [§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks). They are the scanner's existing normalization, not a verdict on which blocks are sites.
 
 ### 1.3 What is not a site
 

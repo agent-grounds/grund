@@ -171,21 +171,18 @@ class LanguagesMoveTests(unittest.TestCase):
         self.assertTrue(LANGUAGES.is_file(), f"{LANGUAGES.relative_to(REPO_ROOT)} is not there")
         return _sections(LANGUAGES)
 
-    @unittest.expectedFailure
     def test_every_chapter_the_page_promises_is_declared(self):
         declared = self.languages()
         self.assertIn("FS-languages", declared)
         self.assertEqual([], [c for c in CHAPTERS if c not in declared], "chapters missing")
         self.assertRegex(INDEX.read_text(encoding="utf-8"), re.escape(f"[{CITATION}](FS-languages.md#"))
 
-    @unittest.expectedFailure
     def test_the_page_has_named_chapters_and_one_terms_chapter(self):
         text = self.languages() and LANGUAGES.read_text(encoding="utf-8")
         tops = re.findall(r"^## (\S+?):? ", text, re.M)
         self.assertEqual([], [t for t in tops if t[0].isdigit()], "numbered top-level chapters")
         self.assertEqual(1, len(re.findall(r"^## terms: Terms$", text, re.M)), "Terms chapters")
 
-    @unittest.expectedFailure
     def test_each_moved_sentence_lives_at_its_destination_only(self):
         declared = _sections(LANGUAGES) if LANGUAGES.is_file() else {}
         for source, label, title, chapters in MOVES:
@@ -201,7 +198,6 @@ class LanguagesMoveTests(unittest.TestCase):
                     self.assertIn(_flat(fragment), _flat(declared.get(chapter, "")),
                                   f"FS-languages.{chapter} does not hold the moved sentence")
 
-    @unittest.expectedFailure
     def test_a_restatement_leaves_and_cites_the_chapters_that_say_it(self):
         for source, label, title, chapters, fragments in DROPPED:
             entry = _read(FS / source)[label]
@@ -212,14 +208,12 @@ class LanguagesMoveTests(unittest.TestCase):
             for fragment in fragments:
                 self.assertNotIn(_flat(fragment), _flat(entry[1]), f"{source} {label} still restates it")
 
-    @unittest.expectedFailure
     def test_the_fence_grammar_is_cited_at_its_new_home(self):
         for source, label, chapter in REPOINTS:
             body = _sections(FS / source)[label]
             self.assertTrue(_cites(body, chapter), f"{source} {label} does not cite FS-languages.{chapter}")
             self.assertNotIn("FS-check.1.1.5]", body, f"{source} {label} still names the old coordinate")
 
-    @unittest.expectedFailure
     def test_both_readings_of_a_line_comment_run_are_still_stated(self):
         declared = self.languages()
         block = _flat(_chapter_and_children(declared, "comment-block"))
@@ -229,7 +223,6 @@ class LanguagesMoveTests(unittest.TestCase):
         for wording in NOT_YET:
             self.assertNotIn(_flat(wording), page, "a pending ruling's wording arrived early")
 
-    @unittest.expectedFailure
     def test_the_closing_comment_token_is_envelope_only_on_a_heading(self):
         self.languages()
         titled = _read(LANGUAGES)

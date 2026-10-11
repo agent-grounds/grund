@@ -38,6 +38,7 @@ What holds for the model itself, whichever command reads it. A check `grund chec
 
 - [§FS-citations](FS-citations.md#fs-citations-what-a-citation-is-and-where-its-text-is-never-rewritten) — what a citation is, and where its text is never rewritten
 - [§FS-declarations](FS-declarations.md#fs-declarations-a-declaration-is-addressable-once-from-one-allowed-place-and-holds-nothing-that-is-neither-a-coordinate-nor-a-finding) — a declaration is addressable once, from one allowed place, and holds nothing that is neither a coordinate nor a finding
+- [§FS-languages](FS-languages.md#fs-languages-how-a-source-files-lines-are-read) — how a source file's lines are read
 
 ## Cross-cutting
 

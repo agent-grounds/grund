@@ -56,7 +56,7 @@ An author makes one existing citable numeric section a marked root by ending its
 
 #### 2.4.1 Recognition in source doc-comments
 
-For source declarations the scanner recognizes the tag after removing the same configured comment wrapper used for headings: `//`, `///`, `//!`, `#`, `;`, and `--` line comments; `/* ... */` and `*` continuation lines used by Javadoc/JSDoc and other supported block doc-comments; and content inside enabled Python `"""` and `'''` docstrings. The language adds no alternate spelling.
+For source declarations the scanner recognizes the tag after removing the same configured comment wrapper used for headings ([§FS-languages.comment-wrapper](FS-languages.md#comment-wrapper-the-comment-wrapper)), and in a docstring reads its content as it stands ([§FS-languages.docstring](FS-languages.md#docstring-docstrings)). The language adds no alternate spelling.
 
 #### 2.4.2 Semantic content and raw bytes
 
