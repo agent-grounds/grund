@@ -100,7 +100,7 @@ No hint is appended for a missing `--path`, which was named as a path on purpose
 - `--brief` — the cheapest "what is this about" view, a hover-preview slice ([§FS-show.2.1.1](FS-show.md#211-brief---brief)).
 - (no flag, the default) — the lead, cut at the first *citable* section, so an agent landing on a bare `§<ID>` reads enough to know whether to fetch a deeper section ([§FS-show.2.1](FS-show.md#21-whole-declaration-default)).
 - `--toc` — the move when the next step is `grund <ID>.<sec>` and the section number needs to be chosen ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)).
-- `--full` — print the entire body: heading down to the end of its body span ([§FS-show.2.1.2.1](FS-show.md#2121-the-map-is-the-declarations-body-span)), all subsections recursively included. The escalation when narrower slices are not enough ([§FS-show.2.1.3](FS-show.md#213-full-body---full)).
+- `--full` — print the entire body: heading down to the end of its body span ([§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends)), all subsections recursively included. The escalation when narrower slices are not enough ([§FS-show.2.1.3](FS-show.md#213-full-body---full)).
 
 ### 1.7 `--format`
 
@@ -138,7 +138,7 @@ Opted-in JSON value declarations are members of the same catalog. For one, `show
 
 ### 2.1 Whole declaration (default)
 
-`grund FS-check` prints the *lead* — the prose between the declaration heading and the first child citable section heading (`## 1. ...`, or `## goals: ...` when named sections are enabled). The opening heading is omitted in `text` format and included in `md`. A named heading is a citable section and cuts its parent's lead exactly as a numbered heading does; a plain heading remains prose and does not cut it. This is the new default: a 1–2 paragraph slice that names what the declaration is about, without paying for the whole body. Decided in [§DF-show-default-token-cheap](../decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in).
+`grund FS-check` prints the *lead* ([§FS-declarations.lead](FS-declarations.md#lead-what-cuts-a-lead)). The opening heading is omitted in `text` format and included in `md`. This is the new default: a 1–2 paragraph slice that names what the declaration is about, without paying for the whole body. Decided in [§DF-show-default-token-cheap](../decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in).
 
 A declaration with no lead prints nothing ([§FS-show.2.1.4](FS-show.md#214-a-declaration-with-no-lead-prints-nothing)); a selected section gets the same cut one level down ([§FS-show.2.1.5](FS-show.md#215-a-sections-lead)).
 
@@ -158,21 +158,12 @@ If the declaration has no lead prose (opens directly with `## 1. ...`), `--brief
 
 `grund --toc FS-check` prints the default lead ([§FS-show.2.1](FS-show.md#21-whole-declaration-default)), then a blank line, then every citable section heading in the declaration body, one per line, in document order, each at the depth and in the complete form it was written (`## 1. Inputs`, `## goals: Goals`, `### goals.performance: Performance`, …). No section bodies. The heading lines are emitted verbatim — the same bytes `--full` would show for those lines — so the coordinate the reader needs is right there to feed back into `grund FS-check.<path>`. No generated summary, ever: `--toc` is a structural slice, as deterministic as the default ([§FS-errors.4](FS-errors.md#4-determinism)). A whole-declaration TOC still lists every claimant of a duplicate named coordinate; selecting that coordinate refuses as ambiguous ([§FS-show.2.2.2.3](FS-show.md#2223-the-whole-declaration-map-still-lists-both)).
 
-Which headings the map holds is [§FS-show.2.1.2.1](FS-show.md#2121-the-map-is-the-declarations-body-span); what it prints when the lead or the map is empty is [§FS-show.2.1.2.2](FS-show.md#2122-an-empty-lead-an-empty-map); a selected section's map is [§FS-show.2.1.2.3](FS-show.md#2123-a-selected-sections-map).
+Which headings the map holds is [§FS-declarations.section.map](FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span); what it prints when the lead or the map is empty is [§FS-show.2.1.2.2](FS-show.md#2122-an-empty-lead-an-empty-map); a selected section's map is [§FS-show.2.1.2.3](FS-show.md#2123-a-selected-sections-map).
 
 ##### 2.1.2.1 The map is the declaration's body span
 
-A coordinate enters the section map only when its heading lies inside that
-declaration's existing body span. The span, not the most recently scanned
-declaration, owns the coordinate: a same-or-higher Markdown heading, the end of
-an inline source doc-comment or docstring, the next declaration in a shared
-comment block, and a stub's single declaration line each end ownership. A
-deeper numeric or enabled named heading before that boundary remains a section;
-one after it is absent from the map and is reported by
-[§FS-declarations.checks.section-outside-declaration](FS-declarations.md#checkssection-outside-declaration-section-outside-a-declaration). Fenced Markdown
-pseudo-headings remain content under [§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example). This boundary does not make an
-otherwise legal plain heading inside a body an error; that separate policy is
-outside this contract.
+Which headings the map holds is [§FS-declarations.section.map](FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span), and where the body span that
+bounds it ends is [§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends).
 
 ##### 2.1.2.2 An empty lead, an empty map
 
@@ -184,7 +175,7 @@ If the lead is empty (`## 1.` or `## goals:` opens the body), the leading blank 
 
 #### 2.1.3 Full body (`--full`)
 
-`grund --full FS-check` prints from the heading of `FS-check` to the end of its body span ([§FS-show.2.1.2.1](FS-show.md#2121-the-map-is-the-declarations-body-span)): in Markdown, the start of the next same-or-higher heading, whether or not it declares an ID (or end of file). Every subsection and sub-subsection body is included. With `--section` / the dotted form, `--full` prints the selected section's heading and full body — the same slice [§FS-show.2.2](FS-show.md#22-section) defines. The opening heading is omitted in `text` and included in `md`, as in the default.
+`grund --full FS-check` prints from the heading of `FS-check` to the end of its body span ([§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends)). Every subsection and sub-subsection body is included. With `--section` / the dotted form, `--full` prints the selected section's heading and full body — the same slice [§FS-show.2.2](FS-show.md#22-section) defines. The opening heading is omitted in `text` and included in `md`, as in the default.
 
 `--full` is the escalation path when `--brief`, the default, and `--toc` are not enough. It is also the way to recover today's pre-[§DF-show-default-token-cheap](../decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in) behavior: use `grund <ID> --full`.
 
@@ -194,7 +185,7 @@ If a declaration has no lead paragraph (its body opens directly with `## 1. ...`
 
 #### 2.1.5 A section's lead
 
-`grund FS-check.3.1` applies the same cut one level down. It prints the selected section heading (`### 3.1 ...`), kept in `text` as in `md` ([§FS-show.2.2](FS-show.md#22-section)), and the prose between that heading and the first *child* heading (`#### 3.1.1 ...`). If the section opens directly with a sub-subsection, the output is just the section heading line. A section that does not exist is still a `section not found` error.
+`grund FS-check.3.1` applies the same cut one level down. It prints the selected section heading (`### 3.1 ...`), kept in `text` as in `md` ([§FS-show.2.2](FS-show.md#22-section)), and the section's lead ([§FS-declarations.lead.section](FS-declarations.md#leadsection-a-sections-lead)). If the section opens directly with a sub-subsection, the output is just the section heading line. A section that does not exist is still a `section not found` error.
 
 ### 2.2 Section
 
@@ -203,7 +194,7 @@ If a declaration has no lead paragraph (its body opens directly with `## 1. ...`
 - `--brief`: section heading + first paragraph.
 - (default): section heading + prose down to the first child heading.
 - `--toc`: section heading + lead + nested heading map.
-- `--full`: section heading + full body (everything down to the next sibling-or-shallower heading; nested deeper headings included).
+- `--full`: section heading + full body, the section's whole extent ([§FS-declarations.section](FS-declarations.md#section-what-a-section-is)).
 
 The selected section heading is printed verbatim in all four modes — `text` strips only the whole-declaration H1, not section headings ([§FS-show.3.1](FS-show.md#31-format-variants)). For `--brief`, the section heading is the slice's self-label. Named paths, including `name.number`, compose with default, brief, TOC, full, and `--section` exactly as numeric paths do. Arbitrary nesting depth is supported per [§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth). Every surface that names a section reads the same map ([§FS-show.2.2.3](FS-show.md#223-every-surface-reads-the-same-section-map)).
 
@@ -261,9 +252,8 @@ A duplicate elsewhere in the declaration is not this error: only a collision on 
 
 #### 2.2.3 Every surface reads the same section map
 
-Every surface reads the map of [§FS-show.2.1.2.1](FS-show.md#2121-the-map-is-the-declarations-body-span) ([§REQ-one-answer.sections.map](../requirements/REQ-one-answer.md#sectionsmap-every-surface-reads-one-section-map)), so none
-answers for a heading it rejects. A
-query for its coordinate has the ordinary `section not found` result and hint
+Every surface reads the section map of [§FS-declarations.section.map](FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span). A query for the
+coordinate of a heading the map rejects has the ordinary `section not found` result and hint
 from [§FS-show.3](FS-show.md#3-outputs), emits none of the outside heading's body, and never substitutes the
 located `check` finding for query semantics.
 

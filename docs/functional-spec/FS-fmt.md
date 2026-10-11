@@ -370,7 +370,7 @@ A stub stands for the declaration its target holds ([§FS-declarations.checks.du
 
 #### 6.2.2 The anchor slugifies the heading's rendered text
 
-The anchor is the heading's **rendered text** slugified per the configured renderer profile ([§FS-fmt.6.7.1](FS-fmt.md#671-anchor_format-names-a-renderer-profile)) — for the default `github` profile, `### 6.2 Form` produces `#62-form`. "Rendered text" matters when the heading itself contains an inline link (including a citation that `--cross-refs` has already wrapped, [§FS-fmt.6.4](FS-fmt.md#64-what-is-never-wrapped)) or an HTML-tag-shaped span: `## 4. Refining [§FS-<x>.1](FS-x.md#1-y)` slugifies as if it read `## 4. Refining §FS-<x>.1` (the destination URL is not part of the text), and `## RM-read: grund <ID>` slugifies as `## RM-read: grund ` (the `<ID>` is dropped) — exactly as a Markdown renderer treats them. The full strategy and profile list is decided in [§DF-md-link-anchor-strategy](../decisions/functional/DF-md-link-anchor-strategy.md#df-md-link-anchor-strategy-heading-text-slugs-re-derived-on-every-fmt-pass).
+The anchor is the heading's **rendered text** ([§FS-declarations.heading.rendered-text](FS-declarations.md#headingrendered-text-a-headings-rendered-text)) slugified per the configured renderer profile ([§FS-fmt.6.7.1](FS-fmt.md#671-anchor_format-names-a-renderer-profile)) — for the default `github` profile, `### 6.2 Form` produces `#62-form`, and `## RM-read: grund <ID>` slugifies as `## RM-read: grund `. The full strategy and profile list is decided in [§DF-md-link-anchor-strategy](../decisions/functional/DF-md-link-anchor-strategy.md#df-md-link-anchor-strategy-heading-text-slugs-re-derived-on-every-fmt-pass).
 
 #### 6.2.3 The `github` profile reproduces `github-slugger`
 
@@ -378,7 +378,7 @@ The `github` (and `gitlab`) profile reproduces `github-slugger` byte-for-byte: d
 
 #### 6.2.4 A named heading's anchor carries its name
 
-For an explicit named heading, the rendered text includes the name and colon. Thus `## goals: Scope` produces `#goals-scope` under the GitHub profile. Retitling it to `## goals: Intent` refreshes an existing wrapper to `#goals-intent` on the next pass while the stored name and citation text remain `goals`.
+A named heading's rendered text carries its name and colon ([§FS-declarations.heading.rendered-text](FS-declarations.md#headingrendered-text-a-headings-rendered-text)). Thus `## goals: Scope` produces `#goals-scope` under the GitHub profile. Retitling it to `## goals: Intent` refreshes an existing wrapper to `#goals-intent` on the next pass while the stored name and citation text remain `goals`.
 
 #### 6.2.5 The destination does not depend on how the file was named
 

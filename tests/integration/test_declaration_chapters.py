@@ -125,7 +125,6 @@ def _cites(text, target):
 
 
 class DeclarationChapterTests(unittest.TestCase):
-    @unittest.expectedFailure
     def test_every_chapter_the_page_promises_is_declared(self):
         declared = _sections(DECLARATIONS)
         self.assertEqual([], [c for c in CHAPTERS if c not in declared], "chapters missing")
@@ -138,7 +137,6 @@ class DeclarationChapterTests(unittest.TestCase):
             for fragment in fragments:
                 self.assertNotIn(_flat(fragment), terms, f"FS-terms glosses {chapter} again")
 
-    @unittest.expectedFailure
     def test_each_moved_sentence_lives_at_its_destination_only(self):
         declared = _sections(DECLARATIONS)
         for source, label, chapter, fragments in MOVES:
@@ -151,13 +149,11 @@ class DeclarationChapterTests(unittest.TestCase):
                 self.assertIn(_flat(fragment), _flat(declared.get(chapter, "")),
                               f"FS-declarations.{chapter} does not hold the moved sentence")
 
-    @unittest.expectedFailure
     def test_a_source_left_with_nothing_is_a_pointer(self):
         for source, label in POINTERS:
             body = _sections(FS / source)[label]
             self.assertLessEqual(len(body.split()), POINTER_WORDS, f"{source} {label} is not a pointer")
 
-    @unittest.expectedFailure
     def test_the_page_cites_what_it_does_not_restate(self):
         declared = _sections(DECLARATIONS)
         for chapter, target in CITED:
@@ -167,13 +163,11 @@ class DeclarationChapterTests(unittest.TestCase):
         for fragment in NOT_MOVED:
             self.assertNotIn(_flat(fragment), page, f"FS-declarations states {fragment!r}")
 
-    @unittest.expectedFailure
     def test_the_requirement_cites_the_map_where_it_is_defined(self):
         body = _sections(ONE_ANSWER)["sections.map"]
         self.assertTrue(_cites(body, "FS-declarations.section.map"),
                         "REQ-one-answer.sections.map still cites the map inside show's spec")
 
-    @unittest.expectedFailure
     def test_every_source_spec_ends_smaller(self):
         for name, baseline in BASELINES.items():
             self.assertLess((FS / name).stat().st_size, baseline, name)
