@@ -50,7 +50,7 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 
 ### declare.field: A field is a table under its kind
 
-`[schema.kinds.<KIND>.fields.<name>]` declares one field of `<KIND>`. `<name>` is a section name in the fixed named-component grammar `[a-z][a-z0-9-]*`; any other name is refused at its header. The table admits:
+`[schema.kinds.<KIND>.fields.<name>]` declares one field of `<KIND>`. `<name>` is a section name in the fixed named-component grammar `[a-z][a-z0-9-]*`; any other name is refused at its header, ``` `[schema.kinds.FS.fields.Terms]`: a field name is a section name matching `[a-z][a-z0-9-]*` ```. A field table follows its row's header: though TOML would accept a sub-table written first, a field header above `[schema.kinds.<KIND>]` is refused at its line, ``` `[schema.kinds.FS.fields.terms]` names no row: write [schema.kinds.FS] above it ```, so a kind's shape is read top-down from its row. The table admits:
 
 | Key | Value | Default |
 |---|---|---|
@@ -65,7 +65,7 @@ Fields are listed, rendered and reported in the order their headers are written 
 
 ### declare.closed: `closed` is a strength on the row
 
-`closed` on `[schema.kinds.<KIND>]` takes a strength and defaults to `may`, an open kind. A closed kind admits, as direct sections of its declarations, its declared fields and numbered sections, and nothing else. The strength is the channel of [§FS-fields.checks.undeclared-chapter](FS-fields.md#checksundeclared-chapter-undeclared-chapter).
+`closed` on `[schema.kinds.<KIND>]` takes a strength and defaults to `may`, an open kind. Any other value is ``unknown [schema.kinds.<KIND>] closed `<value>` (expected must, warn, should, or may)``. A closed kind admits, as direct sections of its declarations, its declared fields and numbered sections, and nothing else. The strength is the channel of [§FS-fields.checks.undeclared-chapter](FS-fields.md#checksundeclared-chapter-undeclared-chapter).
 
 ### declare.form: `form` is a row key
 
@@ -116,7 +116,7 @@ Each of these is a located config error at the offending key, and the run exits 
 | a cycle of two fields | the later field's `after` | `AR.a and AR.b each come after the other; one of them needs position or no after` |
 | a longer cycle, its fields in header order | the latest field's `after` | `AR.a, AR.b and AR.c come after one another in a cycle; one of them needs position or no after` |
 
-The list of fields in the `after` refusal is in header order, and reads `its fields: none` for a kind with no other field.
+The list of fields in the `after` refusal is in header order.
 
 ## content: Content
 
