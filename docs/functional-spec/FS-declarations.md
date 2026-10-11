@@ -6,6 +6,9 @@ declared exactly once, it is declared where its kind's home allows it, and every
 inside its body is either a coordinate a citation can reach or a finding `check` reports.
 Which line introduces an ID at all is [§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares),
 and which declarations a stub stands for is [§FS-declarations.stubs](FS-declarations.md#stubs-what-a-stub-points-at).
+What a heading is and what its rendered text reads, where a body ends, what a section and
+the section map are, and what cuts a lead are [§FS-declarations.heading](FS-declarations.md#heading-what-a-heading-is), [§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends),
+[§FS-declarations.section](FS-declarations.md#section-what-a-section-is) and [§FS-declarations.lead](FS-declarations.md#lead-what-cuts-a-lead).
 The checks below are that sentence enforced, save two that hold what an address is worth
 once it resolves: that the declaration is in the form its ID grammar gives it
 ([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)), and that its lead, and every citable section
@@ -151,6 +154,67 @@ with the declarations it points at is not counted beside them as one more
 
 Each stub's verdict is reached once per scan, and it is one of five: the target is missing; the target is a file the scan does not read ([§FS-declarations.checks.broken-stub.3](FS-declarations.md#checksbroken-stub3-a-target-the-scan-does-not-read-declares-nothing)); the target, read as the scan reads it on the text a save would write ([§FS-declarations.checks.broken-stub.1](FS-declarations.md#checksbroken-stub1-the-target-is-read-as-a-save-would-write-it), [§FS-declarations.checks.broken-stub.2](FS-declarations.md#checksbroken-stub2-a-heading-inside-a-fence-of-the-target-declares-nothing)), does not declare the ID; it declares the ID, on one line or more, and the stub points at each of those declarations ([§FS-declarations.checks.duplicate.1](FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)); or the target is the file the stub sits in, which declares the ID on another line, and the stub points at none of those declarations but is one of its own beside them, so the ID is a duplicate ([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)). The first three are a broken stub ([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)); a stub linked to its own file that declares the ID nowhere else is the third. The ID's declarations are counted from those verdicts, once its stubs are paired.
 
+## heading: What a heading is
+
+A heading is a Markdown ATX heading line (`#` through `######`) outside any fenced block
+or raw-text HTML block: a line inside one is never a heading, by [§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example). A heading
+either opens a declaration ([§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares)), is a citable section of the
+declaration whose body holds it ([§FS-declarations.section](FS-declarations.md#section-what-a-section-is)), or is plain prose. In a source
+file the comment-prefixed declaration line plays a heading's part ([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)).
+
+### heading.rendered-text: A heading's rendered text
+
+A heading's rendered text is its text as a Markdown renderer shows it. Where the heading
+contains an inline link (including a citation that `--cross-refs` has already wrapped,
+[§FS-fmt.6.4](FS-fmt.md#64-what-is-never-wrapped)) or an HTML-tag-shaped span, `## 4. Refining [§FS-<x>.1](FS-x.md#1-y)` reads
+as if it read `## 4. Refining §FS-<x>.1` (the destination URL is not part of the text),
+and `## RM-read: grund <ID>` reads as `## RM-read: grund ` (the `<ID>` is dropped) —
+exactly as a Markdown renderer treats them. For an explicit named heading, the rendered
+text includes the name and colon: `## goals: Scope` reads `goals: Scope`.
+
+## body: Where a declaration's body ends
+
+A declaration's body runs from its declaration line to the end of its body span. In
+Markdown that is the start of the next same-or-higher heading, whether or not it declares
+an ID (or end of file); in a source file it is the end of the comment block the
+declaration line opens ([§FS-show.2.3.1](FS-show.md#231-what-counts-as-the-comment-block)). The span, not the most recently scanned
+declaration, owns the coordinate: a same-or-higher Markdown heading, the end of an inline
+source doc-comment or docstring, the next declaration in a shared comment block, and a
+stub's single declaration line each end ownership.
+
+## section: What a section is
+
+A section is a citable heading inside a declaration's body: a numbered heading, or a named
+one where named sections are enabled, whose path is written in the grammar of
+[§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth). A plain heading is not a section; it remains prose. A section's extent is
+its heading and everything down to the next sibling-or-shallower heading; nested deeper
+headings included. Which sections a declaration has is its section map
+([§FS-declarations.section.map](FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span)).
+
+### section.map: The section map is the declaration's body span
+
+A coordinate enters the section map only when its heading lies inside that declaration's
+existing body span ([§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends)). A deeper numeric or enabled named heading
+before that boundary remains a section; one after it is absent from the map and is
+reported by [§FS-declarations.checks.section-outside-declaration](FS-declarations.md#checkssection-outside-declaration-section-outside-a-declaration). Fenced Markdown
+pseudo-headings remain content under [§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example). This boundary does not make an
+otherwise legal plain heading inside a body an error; that separate policy is outside this
+contract. Every surface reads this map ([§REQ-one-answer.sections.map](../requirements/REQ-one-answer.md#sectionsmap-every-surface-reads-one-section-map)), so none answers for
+a heading it rejects.
+
+## lead: What cuts a lead
+
+A declaration's lead is the prose between the declaration heading and the first child
+citable section heading (`## 1. ...`, or `## goals: ...` when named sections are enabled).
+A named heading is a citable section and cuts its parent's lead exactly as a numbered
+heading does; a plain heading remains prose and does not cut it. A lead may be empty.
+
+### lead.section: A section's lead
+
+A section's lead is the same cut one level down: the prose between that heading and the
+first *child* heading (`#### 3.1.1 ...` under `### 3.1 ...`). A section that opens
+directly with a child heading has an empty lead.
+
 ## checks: Checks
 
 Each section below is one check `grund check` enforces about a declaration, and its name
@@ -288,7 +352,7 @@ Section paths are addressed as `<ID>.<path>`, so the same `1.` under two differe
 
 #### checks.duplicate-section.2: Scoped to that declaration's body
 
-The headings judged are the ones inside the body [§FS-show.2.1](FS-show.md#21-whole-declaration-default) and [§FS-show.2.3.1](FS-show.md#231-what-counts-as-the-comment-block) delimit — in Markdown down to the next same-or-shallower heading, in a source file to the end of the comment block the declaration line opens. A `## 1.` further down the file — in the *next* item's doc-comment, or under a later unrelated heading — is not one of this declaration's sections: `grund <ID>.1` never reaches it, and reporting it would ask for a renumbering that changes what nothing points at. A stub ([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)) is one link line whose tail is a path rather than a body, so it declares no sections at all and is never reported here; the headings that count are the inline home's, which is also the file `grund <ID>.<path>` reads.
+The headings judged are the ones inside the body [§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends) delimits — in Markdown down to the next same-or-shallower heading, in a source file to the end of the comment block the declaration line opens. A `## 1.` further down the file — in the *next* item's doc-comment, or under a later unrelated heading — is not one of this declaration's sections: `grund <ID>.1` never reaches it, and reporting it would ask for a renumbering that changes what nothing points at. A stub ([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)) is one link line whose tail is a path rather than a body, so it declares no sections at all and is never reported here; the headings that count are the inline home's, which is also the file `grund <ID>.<path>` reads.
 
 #### checks.duplicate-section.3: Independent of `[id] section_heading_levels`
 
