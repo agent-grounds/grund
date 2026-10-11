@@ -14,6 +14,10 @@
 //! (§FS-fmt.6.4.2); and the editor snapshot reports and navigates the same
 //! way, its unsaved text answering what the saved text does
 //! (§FS-declarations.checks.broken-stub.1).
+//!
+//! It stays beside `command_agreement.rs` rather than inside it: that test asks
+//! the command line alone, and this one drives the editor snapshot too, until
+//! the agreement test drives the editor itself (§REQ-one-answer.proof).
 
 #[path = "support/stub_verdict.rs"]
 mod stub_verdict;
@@ -130,7 +134,7 @@ const LINK_ROWS: &[Row] = &[
 ];
 
 /// The editor's text moves every answer exactly as saving it would
-/// (§FS-declarations.checks.duplicate.1).
+/// (§REQ-one-answer.text.targets).
 const EDITOR_ROWS: &[Row] = &[
     Row {
         files: &[("notes/a.md", ONCE)],

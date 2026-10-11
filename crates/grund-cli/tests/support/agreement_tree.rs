@@ -1,0 +1,104 @@
+//! The fixture trees and the command runs `command_agreement.rs` compares
+//! (§REQ-one-answer.proof): one tree per question, each command through its own
+//! entrypoint, and the answers read off as exit codes, stderr lines and JSON rows.
+
+use serde_json::Value;
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::process::{Command, Output};
+
+/// One invariant asked of one tree: `Err` carries the two answers that differ.
+pub type Verdict = Result<(), String>;
+
+/// `{kind}-{slug}` with one kind, `FS`, at `docs/fs.md`.
+pub const CONFIG_SLUG: &str = "grund_config_version = 1\nproject_name = \"t\"\n\
+    [reference]\nmarker = \"\u{a7}\"\nstrict = true\n[id]\nformat = \"{kind}-{slug}\"\n\
+    [[kinds]]\nkind = \"FS\"\nfile = \"docs/fs.md\"\n";
+/// `{kind}-{number}-{slug}` with one kind, `FS`, at `docs/fs.md`.
+pub const CONFIG_NUMBER: &str = "grund_config_version = 1\nproject_name = \"t\"\n\
+    [reference]\nmarker = \"\u{a7}\"\nstrict = true\n[id]\nformat = \"{kind}-{number}-{slug}\"\n\
+    [[kinds]]\nkind = \"FS\"\nfile = \"docs/fs.md\"\n";
+
+/// One fixture tree under the worktree's own `target/`.
+pub struct Tree(pub PathBuf);
+
+impl Tree {
+    pub fn new(name: &str, files: &[(&str, &str)]) -> Self {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../target/command-agreement")
+            .join(format!("{name}-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        for (path, body) in files {
+            let path = root.join(path);
+            fs::create_dir_all(path.parent().expect("parent")).expect("create fixture parent");
+            fs::write(path, body).expect("write fixture");
+        }
+        fs::create_dir_all(&root).expect("create fixture root");
+        Self(root.canonicalize().expect("canonical fixture root"))
+    }
+
+    pub fn grund(&self, args: &[&str]) -> Output {
+        grund(&self.0, args)
+    }
+
+    /// The exit code of one command, `-1` where it was killed.
+    pub fn code(&self, args: &[&str]) -> i32 {
+        self.grund(args).status.code().unwrap_or(-1)
+    }
+
+    /// The first `error:` line one command prints, or `""`.
+    pub fn error(&self, args: &[&str]) -> String {
+        first_error(&self.grund(args))
+    }
+
+    /// The JSON rows one command prints on stdout.
+    pub fn json(&self, args: &[&str]) -> Vec<Value> {
+        json_lines(&stdout(&self.grund(args)))
+    }
+}
+
+impl Drop for Tree {
+    fn drop(&mut self) {
+        let _ = fs::remove_dir_all(&self.0);
+    }
+}
+
+pub fn grund(root: &Path, args: &[&str]) -> Output {
+    Command::new(env!("CARGO_BIN_EXE_grund"))
+        .args(args)
+        .current_dir(root)
+        .output()
+        .unwrap_or_else(|error| panic!("run grund {args:?}: {error}"))
+}
+
+pub fn stdout(output: &Output) -> String {
+    String::from_utf8_lossy(&output.stdout).into_owned()
+}
+
+pub fn stderr(output: &Output) -> String {
+    String::from_utf8_lossy(&output.stderr).into_owned()
+}
+
+pub fn first_error(output: &Output) -> String {
+    stderr(output)
+        .lines()
+        .find(|line| line.starts_with("error:"))
+        .unwrap_or("")
+        .to_string()
+}
+
+pub fn json_lines(text: &str) -> Vec<Value> {
+    text.lines()
+        .filter(|line| line.starts_with('{'))
+        .map(|line| serde_json::from_str(line).unwrap_or_else(|error| panic!("{error}: {line}")))
+        .collect()
+}
+
+/// `Err` naming both answers unless they agree.
+pub fn agree<T: PartialEq + std::fmt::Debug>(what: &str, one: T, other: T) -> Verdict {
+    if one == other {
+        Ok(())
+    } else {
+        Err(format!("{what}: {one:?} against {other:?}"))
+    }
+}

@@ -35,7 +35,7 @@ CHAPTERS = (
     "proof", "why",
 )
 DIFFERENCE_ROWS = {
-    "identity": ("G03", "G04"),
+    "identity": ("G03", "G04", "G06"),
     "sections": ("P01", "P02", "P03", "P07", "P10", "P12", "P16", "G05"),
     "stubs": ("Placement", "U01", "U03a", "U03b", "U03c", "U03d", "U04", "U05", "U06"),
     "text": ("R04", "R05", "R06a", "R06b", "R06c", "R06d"),
@@ -114,7 +114,7 @@ class OneAnswerMoveTests(unittest.TestCase):
             body = declared.get(f"differences.{group}", "")
             found = tuple(re.findall(r"^- \*\*([\w-]+?)\.\*\*", body, re.M))
             self.assertEqual(rows, found, f"rows of differences.{group}")
-        self.assertEqual(27, sum(len(rows) for rows in DIFFERENCE_ROWS.values()))
+        self.assertEqual(28, sum(len(rows) for rows in DIFFERENCE_ROWS.values()))
 
     def test_each_moved_sentence_lives_at_its_destination_only(self):
         declared = _sections(REQUIREMENT) if REQUIREMENT.is_file() else {}

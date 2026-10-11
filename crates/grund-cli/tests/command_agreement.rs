@@ -13,20 +13,222 @@
 //! them too.
 //!
 //! `LEDGER` is the divergence ledger: one row per known divergence, naming the
-//! tree and the invariant. A divergence it does not list fails, and so does a
+//! tree and the invariant. `DEFERRED` names each row of §REQ-one-answer.differences
+//! only the editor, shell completion or an unsaved buffer shows, with the step of
+//! #576 that builds its harness, and `WIDENING` what the seed leaves out. A divergence it does not list fails, and so does a
 //! row that no longer reproduces, so the ledger only shrinks. A divergence found
 //! here that §REQ-one-answer.differences does not list is added there by an
 //! amendment naming its baseline, or kept as a ledger-only row with its reason
 //! (the list rule of §REQ-one-answer); it is never kept in this file alone.
 
-use serde_json::Value;
+#[path = "support/agreement_identity.rs"]
+mod agreement_identity;
+#[path = "support/agreement_sections.rs"]
+mod agreement_sections;
+#[path = "support/agreement_stubs.rs"]
+mod agreement_stubs;
+#[path = "support/agreement_tree.rs"]
+mod agreement_tree;
+
+use agreement_identity as identity;
+use agreement_sections as sections;
+use agreement_stubs as stubs;
+use agreement_tree::{Verdict, grund, json_lines, stdout};
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Output};
 
 /// `(row of #576's ledger or of §REQ-one-answer.differences, tree, invariant)`.
-const LEDGER: &[(&str, &str, &str)] = &[];
+/// G01 and P05 are defects every surface shares, kept here alone as #576's
+/// ruling V-D04 says; every other row is listed in §REQ-one-answer.differences.
+const LEDGER: &[(&str, &str, &str)] = &[
+    ("G01", "r1", "citation-is-its-whole-token"),
+    ("R01", "r2", "narrowed-resolves-as-check"),
+    ("P05", "r3", "one-anchor"),
+    ("G03", "g03", "a-target-kind-is-one-kind"),
+    ("G04", "g04", "a-non-citable-kind-is-refused-once"),
+    ("G05", "g05", "a-members-chapter-is-selected"),
+    ("G06", "g06", "a-lowercase-subject-is-refused-once"),
+    ("P01", "p01", "a-body-ends-where-refs-ends-it"),
+    ("P02", "p02", "a-block-comment-section-is-one-section"),
+    ("P03", "p03", "a-top-level-doc-heading-is-one-section"),
+    ("P07", "p07", "a-plain-heading-is-in-one-section"),
+    ("P10", "p10", "an-adjacent-note-is-in-one-body"),
+    ("P12", "p12", "a-doc-comment-section-ends-once"),
+    (
+        "Placement",
+        "placement",
+        "a-stubbed-declaration-is-at-one-site",
+    ),
+    ("U01", "u01", "a-twice-declared-section-is-refused-once"),
+    ("U03a", "u03a", "the-batch-returns-the-targets-section"),
+    ("U03d", "u03d", "the-selector-selects-the-targets-chapter"),
+    ("U04", "u04", "an-obligation-is-judged-on-the-target"),
+    ("U05", "u05", "a-rule-targets-title-is-read-once"),
+    ("U06", "u06", "an-unused-declaration-is-at-one-site"),
+    ("R02", "r02", "a-narrowed-workspace-run-resolves-the-alias"),
+];
+
+/// `(row, tree, invariant, the question asked of the tree)`: each tree this test
+/// builds, the reproduced rows of #576 first, then one per row of
+/// §REQ-one-answer.differences the command line can show.
+const TREES: &[(&str, &str, &str, fn() -> Verdict)] = &[
+    (
+        "G01",
+        "r1",
+        "citation-is-its-whole-token",
+        identity::citation_is_its_whole_token,
+    ),
+    (
+        "R01",
+        "r2",
+        "narrowed-resolves-as-check",
+        identity::a_narrowed_run_resolves_what_check_resolves,
+    ),
+    (
+        "P05",
+        "r3",
+        "one-anchor",
+        sections::the_anchor_is_one_and_the_headings,
+    ),
+    (
+        "G03",
+        "g03",
+        "a-target-kind-is-one-kind",
+        identity::a_target_kind_is_one_kind,
+    ),
+    (
+        "G04",
+        "g04",
+        "a-non-citable-kind-is-refused-once",
+        identity::a_non_citable_kind_is_refused_once,
+    ),
+    (
+        "G05",
+        "g05",
+        "a-members-chapter-is-selected",
+        identity::a_members_chapter_is_selected_where_it_answers,
+    ),
+    (
+        "G06",
+        "g06",
+        "a-lowercase-subject-is-refused-once",
+        identity::a_lowercase_subject_is_refused_once,
+    ),
+    (
+        "P01",
+        "p01",
+        "a-body-ends-where-refs-ends-it",
+        sections::a_body_ends_where_refs_ends_it,
+    ),
+    (
+        "P02",
+        "p02",
+        "a-block-comment-section-is-one-section",
+        sections::a_block_comment_section_is_one_section,
+    ),
+    (
+        "P03",
+        "p03",
+        "a-top-level-doc-heading-is-one-section",
+        sections::a_top_level_doc_heading_is_one_section,
+    ),
+    (
+        "P07",
+        "p07",
+        "a-plain-heading-is-in-one-section",
+        sections::a_plain_heading_is_in_one_section,
+    ),
+    (
+        "P10",
+        "p10",
+        "an-adjacent-note-is-in-one-body",
+        sections::an_adjacent_note_is_in_one_body,
+    ),
+    (
+        "P12",
+        "p12",
+        "a-doc-comment-section-ends-once",
+        sections::a_doc_comment_section_ends_once,
+    ),
+    (
+        "Placement",
+        "placement",
+        "a-stubbed-declaration-is-at-one-site",
+        stubs::a_stubbed_declaration_is_at_one_site,
+    ),
+    (
+        "U01",
+        "u01",
+        "a-twice-declared-section-is-refused-once",
+        stubs::a_twice_declared_section_is_refused_once,
+    ),
+    (
+        "U03a",
+        "u03a",
+        "the-batch-returns-the-targets-section",
+        stubs::the_batch_returns_the_targets_section,
+    ),
+    (
+        "U03d",
+        "u03d",
+        "the-selector-selects-the-targets-chapter",
+        stubs::the_selector_selects_the_targets_chapter,
+    ),
+    (
+        "U04",
+        "u04",
+        "an-obligation-is-judged-on-the-target",
+        stubs::an_obligation_is_judged_on_the_target,
+    ),
+    (
+        "U05",
+        "u05",
+        "a-rule-targets-title-is-read-once",
+        stubs::a_rule_targets_title_is_read_once,
+    ),
+    (
+        "U06",
+        "u06",
+        "an-unused-declaration-is-at-one-site",
+        stubs::an_unused_declaration_is_at_one_site,
+    ),
+    (
+        "R02",
+        "r02",
+        "a-narrowed-workspace-run-resolves-the-alias",
+        identity::a_narrowed_workspace_run_resolves_the_alias,
+    ),
+];
+
+/// `(row, step, what it needs)`: each row of §REQ-one-answer.differences no
+/// command-line tree shows, and the step of #576 that gives this test its harness.
+const DEFERRED: &[(&str, &str, &str)] = &[
+    ("P16", "#598", "the editor snapshot's section span"),
+    ("U03b", "#597", "shell completion, a row read from code"),
+    ("U03c", "#597", "the editor snapshot"),
+    (
+        "R04",
+        "#595",
+        "an editor buffer under the target's physical path",
+    ),
+    ("R05", "#595", "an editor buffer with no file behind it"),
+    ("R06a", "#595", "an editor buffer of an index"),
+    ("R06b", "#595", "an editor buffer with a dangling citation"),
+    ("R06c", "#595", "an editor buffer of an AGENTS.md block"),
+    ("R06d", "#595", "an editor buffer of an end-to-end manifest"),
+];
+
+/// What the seed leaves out under §AR-ci.requirements.1, and the step that
+/// widens it before #576 closes.
+const WIDENING: &[(&str, &str)] = &[(
+    "every end-to-end tree, its narrowed, path-argument and editor-overlay variants, \
+     and `cover`, the editor snapshot and the bindings as surfaces",
+    "#600",
+)];
+
+/// The steps of #576 a deferred row or a widening may name.
+const STEPS: &[&str] = &["#595", "#596", "#597", "#598", "#599", "#600"];
 
 /// The families of `tests/e2e/cases/` whose first plain project is sampled.
 const SAMPLED_FAMILIES: &[&str] = &[
@@ -43,156 +245,6 @@ const SAMPLED_FAMILIES: &[&str] = &[
     "glob",
     "cover",
 ];
-
-const CONFIG_SLUG: &str = "grund_config_version = 1\nproject_name = \"t\"\n\
-    [reference]\nmarker = \"\u{a7}\"\nstrict = true\n[id]\nformat = \"{kind}-{slug}\"\n\
-    [[kinds]]\nkind = \"FS\"\nfile = \"docs/fs.md\"\n";
-const CONFIG_NUMBER: &str = "grund_config_version = 1\nproject_name = \"t\"\n\
-    [reference]\nmarker = \"\u{a7}\"\nstrict = true\n[id]\nformat = \"{kind}-{number}-{slug}\"\n\
-    [[kinds]]\nkind = \"FS\"\nfile = \"docs/fs.md\"\n";
-
-/// One fixture tree under the worktree's own `target/`.
-struct Tree(PathBuf);
-
-impl Tree {
-    fn new(name: &str, files: &[(&str, &str)]) -> Self {
-        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../target/command-agreement")
-            .join(format!("{name}-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&root);
-        for (path, body) in files {
-            let path = root.join(path);
-            fs::create_dir_all(path.parent().expect("parent")).expect("create fixture parent");
-            fs::write(path, body).expect("write fixture");
-        }
-        Self(root.canonicalize().expect("canonical fixture root"))
-    }
-
-    fn grund(&self, args: &[&str]) -> Output {
-        grund(&self.0, args)
-    }
-}
-
-impl Drop for Tree {
-    fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.0);
-    }
-}
-
-fn grund(root: &Path, args: &[&str]) -> Output {
-    Command::new(env!("CARGO_BIN_EXE_grund"))
-        .args(args)
-        .current_dir(root)
-        .output()
-        .unwrap_or_else(|error| panic!("run grund {args:?}: {error}"))
-}
-
-fn stdout(output: &Output) -> String {
-    String::from_utf8_lossy(&output.stdout).into_owned()
-}
-
-fn json_lines(text: &str) -> Vec<Value> {
-    text.lines()
-        .filter(|line| line.starts_with('{'))
-        .map(|line| serde_json::from_str(line).unwrap_or_else(|error| panic!("{error}: {line}")))
-        .collect()
-}
-
-/// One invariant asked of one tree: `Err` carries the two answers that differ.
-type Verdict = Result<(), String>;
-
-/// r1, row G01: a citation is its whole token, so `<§>FS-loginUser` is no citation
-/// of `FS-login` — `check` reports it dangling and `refs FS-login` does not list
-/// it (§FS-citations.recognized.marker-start, §REQ-one-answer.identity.declarations).
-fn citation_is_its_whole_token() -> Verdict {
-    let tree = Tree::new(
-        "r1-citation-prefix",
-        &[
-            ("grund.toml", CONFIG_SLUG),
-            (
-                "docs/fs.md",
-                "# FS-login: Login\n\nLogs in.\n\n# FS-other: Other\n\nSee \u{a7}FS-loginUser.\n",
-            ),
-        ],
-    );
-    let refs = stdout(&tree.grund(&["refs", "FS-login"]));
-    let check = json_lines(&stdout(&tree.grund(&["check", "--format", "json"])));
-    let dangling = check
-        .iter()
-        .any(|f| f["code"] == "dangling-citation" && f["line"] == 7);
-    let listed = refs.contains("docs/fs.md:7");
-    if listed || !dangling {
-        return Err(format!(
-            "refs FS-login lists docs/fs.md:7: {listed}; check reports \u{a7}FS-loginUser \
-             dangling: {dangling}"
-        ));
-    }
-    Ok(())
-}
-
-/// r2, row R01: a path argument narrows what is reported, never what resolves —
-/// the ID `check sub` resolves, `grund <ID> sub` shows
-/// (§REQ-one-answer.scope.narrowed, §REQ-one-answer.identity.declarations).
-fn a_narrowed_run_resolves_what_check_resolves() -> Verdict {
-    let tree = Tree::new(
-        "r2-path-argument",
-        &[
-            ("grund.toml", CONFIG_NUMBER),
-            ("docs/fs.md", "# FS-001-a: Alpha\n\nAlpha body.\n"),
-            ("sub/notes.md", "Uses \u{a7}FS-001-a.\n"),
-        ],
-    );
-    let check = tree.grund(&["check", "sub"]).status.success();
-    let show = tree.grund(&["FS-001-a", "sub"]);
-    if check != show.status.success() {
-        return Err(format!(
-            "check sub succeeds: {check}; grund FS-001-a sub succeeds: {} ({})",
-            show.status.success(),
-            String::from_utf8_lossy(&show.stderr).trim()
-        ));
-    }
-    Ok(())
-}
-
-/// r3, row P05: the anchor `show` reports is the one `fmt --cross-refs` writes
-/// (§REQ-one-answer.writes.anchors), and both are the rendered heading's, a
-/// closing `#` run taken off (§FS-show.3.1.3.1).
-fn the_anchor_is_one_and_the_headings() -> Verdict {
-    let tree = Tree::new(
-        "r3-closing-hashes",
-        &[
-            ("grund.toml", CONFIG_SLUG),
-            (
-                "docs/fs.md",
-                concat!(
-                    "# FS-a: Alpha ##\n\nAlpha body.\n\n## 1. Steps ##\n\nStep text.\n\n",
-                    "# FS-b: Beta\n\nSee \u{a7}FS-a and \u{a7}FS-a.1.\n",
-                ),
-            ),
-        ],
-    );
-    let shown = json_lines(&stdout(&tree.grund(&["FS-a", "--format", "json"])));
-    let shown = shown
-        .first()
-        .and_then(|v| v["anchor"].as_str())
-        .unwrap_or("")
-        .to_string();
-    tree.grund(&["fmt", "--cross-refs", "--write"]);
-    let written = fs::read_to_string(tree.0.join("docs/fs.md")).expect("read fmt output");
-    let wrote = written
-        .split("fs.md#")
-        .nth(1)
-        .and_then(|rest| rest.split(')').next())
-        .unwrap_or("")
-        .to_string();
-    if shown != wrote || wrote != "fs-a-alpha" || !written.contains("fs.md#1-steps)") {
-        return Err(format!(
-            "show's anchor {shown:?}, fmt's {wrote:?}; the heading's is \"fs-a-alpha\" \
-             (and \"1-steps\")"
-        ));
-    }
-    Ok(())
-}
 
 /// Every ID `list` prints is the ID `list --size` measures, at the same
 /// `path:line` (§REQ-one-answer.identity.declarations).
@@ -253,22 +305,9 @@ fn sampled_trees() -> Vec<(String, PathBuf)> {
 /// Every divergence found, as `(tree, invariant, the answers that differ)`.
 fn divergences() -> Vec<(String, &'static str, String)> {
     let mut found = Vec::new();
-    let reproduced: [(&str, &str, fn() -> Verdict); 3] = [
-        (
-            "r1",
-            "citation-is-its-whole-token",
-            citation_is_its_whole_token,
-        ),
-        (
-            "r2",
-            "narrowed-resolves-as-check",
-            a_narrowed_run_resolves_what_check_resolves,
-        ),
-        ("r3", "one-anchor", the_anchor_is_one_and_the_headings),
-    ];
-    for (tree, invariant, verdict) in reproduced {
+    for (_, tree, invariant, verdict) in TREES {
         if let Err(answers) = verdict() {
-            found.push((tree.to_string(), invariant, answers));
+            found.push((tree.to_string(), *invariant, answers));
         }
     }
     for (name, root) in sampled_trees() {
@@ -327,21 +366,60 @@ fn difference_rows() -> Vec<String> {
     rows
 }
 
-/// Every listed difference has its tree here, so its row closes only when this
-/// test sees the two answers agree (§REQ-one-answer.proof).
+/// Every listed difference has its tree here, or is deferred by name with the
+/// step that builds its harness, so its row closes only when this test sees the
+/// two answers agree (§REQ-one-answer.proof).
 #[test]
 fn every_listed_difference_has_its_tree() {
-    let built: BTreeSet<&str> = ["R01"].into();
-    let missing: Vec<String> = difference_rows()
-        .into_iter()
-        .filter(|row| !built.contains(row.as_str()))
+    let built: BTreeSet<&str> = TREES.iter().map(|(row, ..)| *row).collect();
+    let deferred: BTreeSet<&str> = DEFERRED.iter().map(|(row, ..)| *row).collect();
+    let rows = difference_rows();
+    let missing: Vec<&String> = rows
+        .iter()
+        .filter(|row| !built.contains(row.as_str()) && !deferred.contains(row.as_str()))
         .collect();
     assert!(
         missing.is_empty(),
-        "{} row(s) of \u{a7}REQ-one-answer.differences have no tree in this test: {}",
+        "{} row(s) of \u{a7}REQ-one-answer.differences have no tree in this test: {missing:?}",
         missing.len(),
-        missing.join(", ")
     );
+    let both: Vec<_> = built.intersection(&deferred).collect();
+    assert!(both.is_empty(), "built and deferred at once: {both:?}");
+    let stale: Vec<_> = deferred
+        .iter()
+        .filter(|row| !rows.iter().any(|r| r == *row))
+        .collect();
+    assert!(
+        stale.is_empty(),
+        "deferred rows no longer listed: {stale:?}"
+    );
+}
+
+#[test]
+fn every_deferral_and_widening_names_its_step() {
+    for (what, step) in DEFERRED
+        .iter()
+        .map(|(row, step, _)| (*row, *step))
+        .chain(WIDENING.iter().copied())
+    {
+        assert!(
+            STEPS.contains(&step),
+            "{what} names no step of #576: {step}"
+        );
+    }
+}
+
+/// Each tree is one ledger row, under the same tree and invariant.
+#[test]
+fn every_tree_is_its_ledger_row_or_agrees() {
+    for (row, tree, invariant, _) in TREES {
+        if let Some((listed, ..)) = LEDGER.iter().find(|(_, t, i)| t == tree && i == invariant) {
+            assert_eq!(
+                listed, row,
+                "{tree} / {invariant} is ledgered under another row"
+            );
+        }
+    }
 }
 
 #[test]
