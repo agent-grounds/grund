@@ -120,7 +120,8 @@ pub fn a_block_comment_section_is_one_section() -> Verdict {
 }
 
 /// Row P03: `/// # 1. Sub` is a section for `--toc` and for a direct query alike
-/// (§REQ-one-answer.sections.map).
+/// (§REQ-one-answer.sections.map). P12's tree diverges only through this
+/// construct, so closing P03 may close that tree while P12 stays open.
 pub fn a_top_level_doc_heading_is_one_section() -> Verdict {
     let tree = Tree::new(
         "p03-top-level-doc-heading",
@@ -177,7 +178,9 @@ pub fn an_adjacent_note_is_in_one_body() -> Verdict {
 
 /// Row P12: in a doc-comment, the heading that ends a section for `show` ends it
 /// for line ownership too (§REQ-one-answer.sections.map). A plain heading agrees
-/// on this tree today; the numbered top-level heading shows the row.
+/// on this tree today; the numbered top-level heading shows the row. That heading
+/// is P03's construct, so closing P03 may close this tree while P12 stays open: a
+/// tree only P12 shows is then needed before the row is closed.
 pub fn a_doc_comment_section_ends_once() -> Verdict {
     let tree = Tree::new(
         "p12-doc-comment-ownership",

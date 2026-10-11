@@ -138,15 +138,17 @@ def root_re_exports(text):
 
 def root_reads(text, exported):
     """`(<component>::<Name>, line)` for every code read of a re-exported name
-    through the crate root; a doc-comment link is not a read."""
-    for number, line in enumerate(text.splitlines(), 1):
-        if line.lstrip().startswith("//"):
+    through the crate root; a doc-comment link is not a read. The pattern runs over
+    the whole text, so a `use crate::{...}` block rustfmt wraps over lines is seen."""
+    lines = text.splitlines()
+    for match in ROOT_READ.finditer(text):
+        number = text.count("\n", 0, match.start()) + 1
+        if lines[number - 1].lstrip().startswith("//"):
             continue
-        for match in ROOT_READ.finditer(line):
-            for name in match.group(1).strip("{}").split(","):
-                name = name.strip().split(" as ")[0].strip()
-                if name in exported:
-                    yield f"{exported[name]}::{name}", number
+        for name in match.group(1).strip("{}").split(","):
+            name = name.strip().split(" as ")[0].strip()
+            if name in exported:
+                yield f"{exported[name]}::{name}", number
 
 
 def _references():
@@ -317,6 +319,13 @@ class RootReExportTests(unittest.TestCase):
         )
         self.assertEqual(
             [("model::Finding", 1), ("api::ListEntry", 1), ("config::Config", 3)],
+            list(root_reads(text, root_re_exports(self.LIB))),
+        )
+
+    def test_a_wrapped_use_block_is_read_too(self):
+        text = "use crate::{\n    Finding,\n    ListEntry,\n};\n"
+        self.assertEqual(
+            [("model::Finding", 1), ("api::ListEntry", 1)],
             list(root_reads(text, root_re_exports(self.LIB))),
         )
 

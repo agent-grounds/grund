@@ -366,32 +366,63 @@ fn difference_rows() -> Vec<String> {
     rows
 }
 
+/// The rows #576's ruling V-D04 keeps in this file alone: defects every surface
+/// shares, so §REQ-one-answer.differences does not list them.
+const LEDGER_ONLY: &[&str] = &["G01", "P05"];
+
+/// What is wrong between this file's trees and deferrals and the rows
+/// §REQ-one-answer.differences lists, both ways round: a listed row with no tree
+/// and no deferral, a row both built and deferred, and a built or deferred row
+/// the requirement no longer lists, which would otherwise live here alone.
+fn listing_problems(rows: &[String]) -> Vec<String> {
+    let built: BTreeSet<&str> = TREES.iter().map(|(row, ..)| *row).collect();
+    let deferred: BTreeSet<&str> = DEFERRED.iter().map(|(row, ..)| *row).collect();
+    let listed = |row: &str| rows.iter().any(|r| r == row);
+    let mut wrong = Vec::new();
+    for row in rows {
+        if !built.contains(row.as_str()) && !deferred.contains(row.as_str()) {
+            wrong.push(format!("{row} is listed but has no tree in this test"));
+        }
+    }
+    for row in built.intersection(&deferred) {
+        wrong.push(format!("{row} is built and deferred at once"));
+    }
+    for row in built.union(&deferred) {
+        if !listed(row) && !LEDGER_ONLY.contains(row) {
+            wrong.push(format!(
+                "{row} is no longer listed: take it out of this test"
+            ));
+        }
+    }
+    wrong
+}
+
 /// Every listed difference has its tree here, or is deferred by name with the
 /// step that builds its harness, so its row closes only when this test sees the
 /// two answers agree (§REQ-one-answer.proof).
 #[test]
 fn every_listed_difference_has_its_tree() {
-    let built: BTreeSet<&str> = TREES.iter().map(|(row, ..)| *row).collect();
-    let deferred: BTreeSet<&str> = DEFERRED.iter().map(|(row, ..)| *row).collect();
-    let rows = difference_rows();
-    let missing: Vec<&String> = rows
-        .iter()
-        .filter(|row| !built.contains(row.as_str()) && !deferred.contains(row.as_str()))
-        .collect();
+    let wrong = listing_problems(&difference_rows());
     assert!(
-        missing.is_empty(),
-        "{} row(s) of \u{a7}REQ-one-answer.differences have no tree in this test: {missing:?}",
-        missing.len(),
+        wrong.is_empty(),
+        "{} row(s) not as \u{a7}REQ-one-answer.differences lists them:\n{}",
+        wrong.len(),
+        wrong.join("\n")
     );
-    let both: Vec<_> = built.intersection(&deferred).collect();
-    assert!(both.is_empty(), "built and deferred at once: {both:?}");
-    let stale: Vec<_> = deferred
-        .iter()
-        .filter(|row| !rows.iter().any(|r| r == *row))
+}
+
+/// A built row the requirement drops is refused like a deferred one, and only the
+/// ledger-only rows stay here unlisted (§REQ-one-answer.proof).
+#[test]
+fn a_row_the_requirement_drops_is_refused() {
+    let rows: Vec<String> = difference_rows()
+        .into_iter()
+        .filter(|r| r != "G03")
         .collect();
-    assert!(
-        stale.is_empty(),
-        "deferred rows no longer listed: {stale:?}"
+    let wrong = listing_problems(&rows);
+    assert_eq!(
+        wrong,
+        vec!["G03 is no longer listed: take it out of this test".to_string()]
     );
 }
 

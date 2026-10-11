@@ -6,7 +6,8 @@ grow back. The list only shrinks from both sides: a pointer that grows past its
 bound, stops citing its point or restates again fails, and so does a row whose
 coordinate is gone or whose bound is looser than what it measures. A section
 whose lead is only `Moved to §…` is a pointer by its shape, so one the rows do
-not name fails too."""
+not name fails too. A lead is held without its heading line: a restated fragment
+that grows back into a heading's title is not caught."""
 
 import functools
 import json
