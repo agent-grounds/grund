@@ -43,8 +43,8 @@ load: an explicit query stream ([§FS-show.1.8](FS-show.md#18---batch-an-explici
 `<ID>` is the full ID without the marker (e.g. `FS-check`). It may include an inline section (`FS-check.3.1`); the dotted form uses the configured `[id] section_separator`. Beyond the kind's grammar it accepts an exact off-grammar ID the catalog retains ([§FS-show.1.1.1](FS-show.md#111-exact-off-grammar-ids)); the catalog-prefix ambiguity fails rather than guesses ([§FS-show.1.1.2](FS-show.md#112-where-the-id-ends-and-the-section-begins)); and a missing fetch-backed snapshot is a failed offline query ([§FS-show.1.1.3](FS-show.md#113-a-missing-fetched-snapshot)).
 
 Configured literals such as `:` remain part of a conforming ID when it is
-discovered and read; the complete ID printed by `list` is the same ID accepted
-here ([§FS-declarations.line.configured-literals](FS-declarations.md#lineconfigured-literals-configured-literals-belong-to-the-canonical-id)).
+discovered and read, as `list` prints it ([§REQ-one-answer.identity.declarations](../requirements/REQ-one-answer.md#identitydeclarations-every-command-reads-one-declaration-set),
+[§FS-declarations.line.configured-literals](FS-declarations.md#lineconfigured-literals-configured-literals-belong-to-the-canonical-id)).
 
 #### 1.1.1 Exact off-grammar IDs
 
@@ -261,12 +261,8 @@ A duplicate elsewhere in the declaration is not this error: only a collision on 
 
 #### 2.2.3 Every surface reads the same section map
 
-Every coordinate-bearing surface reads the same body-local map ([§FS-show.2.1.2.1](FS-show.md#2121-the-map-is-the-declarations-body-span)):
-direct and batch `show`, exhaustive batch generation, citation and value
-resolution, `refs`, completion, list/size output, duplicate detection, and LSP
-navigation, citation lookups, highlights, and hover counts. A heading rejected by
-[§FS-show.2.1.2.1](FS-show.md#2121-the-map-is-the-declarations-body-span) can therefore neither resolve nor be suggested, listed, measured, navigated to,
-validated as an embedded-value root, or treated as a duplicate claimant. A
+Every surface reads the map of [§FS-show.2.1.2.1](FS-show.md#2121-the-map-is-the-declarations-body-span) ([§REQ-one-answer.sections.map](../requirements/REQ-one-answer.md#sectionsmap-every-surface-reads-one-section-map)), so none
+answers for a heading it rejects. A
 query for its coordinate has the ordinary `section not found` result and hint
 from [§FS-show.3](FS-show.md#3-outputs), emits none of the outside heading's body, and never substitutes the
 located `check` finding for query semantics.
@@ -471,7 +467,7 @@ A single object on stdout: `{"id":<ID>,"section":<section-path or null>,"body":<
 
 ##### 3.1.3.1 The heading anchor
 
-`anchor` is the fragment a web link to the selected heading takes, without its leading `#`: exactly the anchor `grund fmt --cross-refs` derives for a citation of the same coordinate ([§FS-fmt.6.2](FS-fmt.md#62-form)), from the same heading text and under the `[fmt.cross_refs] anchor_format` profile of the project that declares the target ([§FS-fmt.6.7.1](FS-fmt.md#671-anchor_format-names-a-renderer-profile), [§DF-md-link-anchor-strategy.2.3](../decisions/functional/DF-md-link-anchor-strategy.md#23-renderer-profiles)). A whole declaration anchors on its own declaration heading, a numeric or named section on that section's heading, and each `--toc` `sections` entry on its own heading, so a duplicate heading listed twice carries each site's anchor. A caller composes `<base>/blob/<ref>/<path>#<anchor>` from one read and never slugs a heading itself ([§DF-show-anchor-data](../decisions/functional/DF-show-anchor-data.md#df-show-anchor-data-show-json-carries-the-heading-anchor-grund-already-derives)).
+`anchor` is the fragment a web link to the selected heading takes, without its leading `#`, slugged by [§FS-fmt.6.2](FS-fmt.md#62-form) from that heading's text, as `fmt` slugs it ([§REQ-one-answer.writes.anchors](../requirements/REQ-one-answer.md#writesanchors-shows-anchor-is-the-anchor-fmt-writes)), under the `[fmt.cross_refs] anchor_format` profile of the project that declares the target ([§FS-fmt.6.7.1](FS-fmt.md#671-anchor_format-names-a-renderer-profile), [§DF-md-link-anchor-strategy.2.3](../decisions/functional/DF-md-link-anchor-strategy.md#23-renderer-profiles)). A whole declaration anchors on its own declaration heading, a numeric or named section on that section's heading, and each `--toc` `sections` entry on its own heading, so a duplicate heading listed twice carries each site's anchor. A caller composes `<base>/blob/<ref>/<path>#<anchor>` from one read and never slugs a heading itself ([§DF-show-anchor-data](../decisions/functional/DF-show-anchor-data.md#df-show-anchor-data-show-json-carries-the-heading-anchor-grund-already-derives)).
 
 `anchor` is `null` when the selected site has no heading anchor: under the `none` profile, for a declaration whose home is a source file whether it is read directly or through a Markdown stub, for a JSON value declaration ([§FS-output-shapes.4.3](FS-output-shapes.md#43-json-value-declarations)), and for a `--toc` entry inside a source declaration. A caller links such a site by its `line` instead, as `#L<line>`. `[fmt.cross_refs] enabled = false` and the formatter's exclusions govern what `fmt` writes, not what a heading's anchor is, so neither turns `anchor` to `null`. The field is data, not a link: `show` still renders no URL ([§DF-neural-link-generation.1](../decisions/functional/DF-neural-link-generation.md#1-decision)).
 

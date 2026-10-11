@@ -222,9 +222,9 @@ A `docs/` file whose H1 has the stub shape `# <ID>: [<text>](<path>)` where eith
 
 #### checks.broken-stub.1: The target is read as a save would write it
 
-Whether the file at `<path>` contains a source declaration of the ID is judged on the text a save would write: the editor's unsaved text where the file is open in one, and the text on disk only where it is not. That is the text the scan reads any file from and the text `show` slices the stub's body out of ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), so the verdict and the body never come from two versions of one file.
+Whether the file at `<path>` contains a source declaration of the ID is judged on the text a save would write: the editor's unsaved text where the file is open in one, and the text on disk only where it is not. That is the text the scan reads any file from and the text `show` slices the stub's body out of ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id), [§REQ-one-answer.text.targets](../requirements/REQ-one-answer.md#texttargets-a-stubs-target-answers-as-its-saved-text-would)).
 
-So an unsaved edit that removes the target's declaration breaks the stub at once. `check` reports `broken-stub` at the stub line, and the editor shows it as the user edits ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)). `show` refuses with the second line of [§FS-show.2.3.4](FS-show.md#234-broken-stub), never `ID not found`. An unsaved edit that puts the declaration back repairs the stub just as soon: `show` reads the body from the edited text, and the error goes. Scan scope plays no part, as it plays none in finding the body ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)). Every answer is the one the same text gives once it is saved, which is what keeps the editor's diagnostics, its hover and the command line in agreement ([§FS-lsp.4](FS-lsp.md#4-determinism-and-parity-with-the-cli), [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration)).
+So an unsaved edit that removes the target's declaration breaks the stub at once. `check` reports `broken-stub` at the stub line, and the editor shows it as the user edits ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)). `show` refuses with the second line of [§FS-show.2.3.4](FS-show.md#234-broken-stub), never `ID not found`. An unsaved edit that puts the declaration back repairs the stub just as soon: `show` reads the body from the edited text, and the error goes. Scan scope plays no part, as it plays none in finding the body ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)).
 
 #### checks.broken-stub.2: A heading inside a fence of the target declares nothing
 
@@ -238,12 +238,7 @@ What decides is the target's own name and extension, not the scan's scope, so th
 
 #### checks.broken-stub.4: Every command reads the one verdict
 
-`check`, `show`, `refs`, `list`, `list --size`, `fmt --cross-refs` and the editor all read each stub's verdict, and the count of the ID's declarations it gives ([§FS-declarations.stubs.verdict](FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)); none reaches an answer of its own. So on one tree they cannot disagree:
-
-- Where `check` reports a stub broken, `show` refuses it as a broken stub ([§FS-show.2.3.4](FS-show.md#234-broken-stub)), `list --size` labels its row `broken stub` ([§FS-list.3.4.3](FS-list.md#343-text-rows)), and `fmt` wraps no citation through it ([§FS-fmt.6.4.2](FS-fmt.md#642-a-citation-of-a-broken-stub-or-of-an-ambiguous-id-is-not-wrapped)).
-- Where `check` reports the ID a duplicate, `show` and `refs` refuse it as ambiguous at the same sites ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id), [§FS-refs.4.1](FS-refs.md#41-a-stubs-homes-are-found-in-its-target)), `list` and `list --size` mark its rows duplicate, and `fmt` wraps none of its citations ([§FS-fmt.6.4.2](FS-fmt.md#642-a-citation-of-a-broken-stub-or-of-an-ambiguous-id-is-not-wrapped)).
-- A target outside `[scan] include` is counted, measured and linked exactly as it is with the target scanned, a target that declares the ID twice included ([§FS-list.3.4.6](FS-list.md#346-a-home-outside-the-scan)).
-- An unsaved edit to the target moves every answer at once, the editor's diagnostics and its navigation included, exactly as saving it would.
+Every command reads each stub's verdict and the declaration count it gives ([§FS-declarations.stubs.verdict](FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)). What they then agree on is [§REQ-one-answer.stubs.verdict](../requirements/REQ-one-answer.md#stubsverdict-every-command-reads-one-verdict-per-stub), [§REQ-one-answer.identity.declarations](../requirements/REQ-one-answer.md#identitydeclarations-every-command-reads-one-declaration-set), [§REQ-one-answer.stubs.outside-include](../requirements/REQ-one-answer.md#stubsoutside-include-a-target-outside-the-include-answers-as-if-scanned) and [§REQ-one-answer.text.targets](../requirements/REQ-one-answer.md#texttargets-a-stubs-target-answers-as-its-saved-text-would).
 
 ### checks.misplaced-declaration: Misplaced declaration (configured kind home)
 
@@ -301,7 +296,7 @@ The mode ([§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-dep
 
 #### checks.duplicate-section.4: The same record `show` reads
 
-This rule and [§FS-show.2.2.2](FS-show.md#222-ambiguous-section) answer from one recorded section set, so `grund <ID>.<path>` refuses exactly when this rule reports `<ID>.<path>` and returns a body exactly when it does not. Two readers that each decided for themselves would disagree — a fenced example, a heading past the end of the body — and a coordinate `check` calls clean but `show` will not resolve is [§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess) failing quietly in the other direction.
+That this rule and `show` read one section record is [§REQ-one-answer.sections.ambiguity](../requirements/REQ-one-answer.md#sectionsambiguity-check-and-show-judge-a-section-path-from-one-record).
 
 ### checks.orphan-section: Orphan name-bearing section path
 
