@@ -142,7 +142,7 @@ const SOURCE_SCOPE: &str = "grund_config_version = 1\n\n[scan]\ninclude = [\"src
 /// `\u{a7}2.1` names a section the declaration records, so both modes rewrite it,
 /// and `\u{a7}12` names none, so both leave it byte-identical (§FS-fmt.2.4.6). The
 /// marker is spelled `\u{a7}`, since a typed trigger before `2.1` is not a
-/// declaration-local candidate (§FS-check.1.1.8).
+/// declaration-local candidate (§FS-check.1.1.8 (§FS-citations.recognized.local-sections)).
 const DECLARATION: &str = "# FS-001-alpha: Alpha\n\nAlpha is the first thing.\n\n\
      See \u{a7}2.1 for the detail.\n\nAnd \u{a7}12 for the rest.\n\n\
      ### 2.1 Detail\n\nThe detail.\n";

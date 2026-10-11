@@ -214,7 +214,7 @@ fn named_sections_drive_show_refs_json_and_completion() {
 /// — is neither a named heading nor an alias for section `1`, so the query
 /// fails instead of truncating to the numeric section.
 ///
-/// §FS-check.1.1.2: the fixture runs at `strict = false` and holds all three
+/// §FS-check.1.1.2 (§FS-citations.recognized.named-candidates): the fixture runs at `strict = false` and holds all three
 /// candidate readings at once — the marker-prefixed `<§>FS-doc.absent` is a
 /// citation even though the named section is missing, the unmarked
 /// `FS-doc.absent` is one prose token suppressed whole rather than falling

@@ -1,5 +1,5 @@
 //! End-to-end contract for catalog-backed reads of persisted off-grammar
-//! declarations across CLI surfaces (§FS-config.3.2.5, §FS-check.1.1.1,
+//! declarations across CLI surfaces (§FS-config.3.2.5, §FS-check.1.1.1 (§FS-citations.recognized.off-grammar),
 //! §FS-show.1.1, §FS-refs.1, §FS-list.2.3, §FS-completions.2.2, §FS-cover.2.4,
 //! §FS-fmt.6, and §FS-workspace.8).
 

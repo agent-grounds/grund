@@ -39,7 +39,7 @@ fn e2e_cases_match_expected_reports() {
     assert_every_case_passed("e2e cases", &outcomes);
 }
 
-/// §FS-check.1.1.10: port the control/subject reproducer across all graph consumers.
+/// §FS-check.1.1.10 (§FS-citations.recognized.marker-start): port the control/subject reproducer across all graph consumers.
 #[test]
 fn word_character_marker_cli_contract() {
     let root = repo_root();

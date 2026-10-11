@@ -173,7 +173,7 @@ fn fmt_write_clears_a_marked_bare_entry_off_strict_mode() {
 /// (`FS-001-login` homed in `FS-001-login-a.md`). Off strict mode, the token
 /// `fmt --cross-refs` writes into the link destination (`FS-001-login-a`) must
 /// not become a citation of its own — the round trip has to clear the unlinked
-/// entry without leaving behind a new `unknown reference` (§FS-check.1.1.4).
+/// entry without leaving behind a new `unknown reference` (§FS-check.1.1.4 (§FS-citations.recognized.link-destinations)).
 #[test]
 fn fmt_write_clears_a_bare_entry_whose_home_extends_the_id() {
     let dir = build_fixture_with_home(

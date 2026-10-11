@@ -145,7 +145,7 @@ fn a_bare_entry_is_an_error_at_its_line_in_the_index() {
     );
 }
 
-/// §FS-check.3.18.5 / §FS-check.3.17.2: the wrapped form is what satisfies the
+/// §FS-check.3.18.5 / §FS-check.3.17.2 (§FS-citations.wrap.shape): the wrapped form is what satisfies the
 /// rule, and `check` never looks at where the link points (§DF-index-entry-form.2.2).
 #[test]
 fn a_linked_entry_satisfies_the_rule_whatever_the_target_says() {

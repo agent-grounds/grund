@@ -368,7 +368,7 @@ fn bare_token_in_markdown_link_destination_is_not_a_citation() {
     );
 }
 
-/// §FS-check.1.1.6: an exact explicit value binding records its authored
+/// §FS-check.1.1.6 (§FS-citations.recognized.value-bindings): an exact explicit value binding records its authored
 /// component *beside* the ordinary citation, and its marker-prefixed token
 /// still counts as exactly one citation under every recognition rule above —
 /// a binding adds a record, it does not add a second citation. The second half

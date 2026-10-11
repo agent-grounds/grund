@@ -28,7 +28,7 @@ fn check_tree(config: &Config, root: &Path) -> (Catalog, CheckReport) {
 }
 
 /// §FS-check.3.13.3: a shorthand that names exactly one declaration is reported
-/// once, with the canonical form to write — and, per §FS-check.1.2.4, it still
+/// once, with the canonical form to write — and, per §FS-check.1.2.4 (§FS-citations.shorthand.edge), it still
 /// counts as a citation everywhere else. The uncited warning firing here was
 /// the original defect (§FS-check.4.1.1): `check` said "declared but never
 /// cited" about a declaration this file cites twice, so the resolving
@@ -151,7 +151,7 @@ fn bare_shorthand_is_text_even_when_strict_is_off() {
     assert!(messages(&report).is_empty(), "{:?}", messages(&report));
 }
 
-/// §FS-check.1.2.3 / §DF-number-only-citation-shorthand.2.6: the full-ID pass
+/// §FS-check.1.2.3 (§FS-citations.shorthand.full-id-wins) / §DF-number-only-citation-shorthand.2.6: the full-ID pass
 /// claims its tokens first, so a full citation is never also read as the
 /// shorthand prefix inside it.
 #[test]
@@ -370,7 +370,7 @@ fn an_escaped_shorthand_that_resolves_is_suggested() {
     );
 }
 
-/// §FS-check.1.2.1 / §AR-scanner.2.6.11: the shorthand shape is the kind's
+/// §FS-check.1.2.1 (§FS-citations.shorthand.shape) / §AR-scanner.2.6.11: the shorthand shape is the kind's
 /// effective format with `{slug}` and one adjacent literal separator removed.
 /// The reduction drops the placeholder together with one adjacent separator,
 /// whichever side carries it — so a format that puts the slug in the middle
