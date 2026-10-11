@@ -22,6 +22,7 @@ command's own `--help` page links the guide and example that cover it
 | [Querying grund](querying.md) | — |
 | [Terminal feedback with watch](watch.md) | — |
 | [Writing chapter rules](rules.md) | [`examples/rules`](../../examples/rules/) |
+| [Kind fields](fields.md) | [`examples/fields`](../../examples/fields/) |
 | [First-class values](values.md) | [`examples/values`](../../examples/values/) |
 | — | [`examples/workspace`](../../examples/workspace/) |
 

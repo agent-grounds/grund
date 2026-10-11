@@ -83,11 +83,11 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected, TextOverlays};
 /// misplaced-declaration, broken-stub and declaration-near-miss
 /// (§FS-declarations.checks), the section family of `sections.rs` (heading
 /// level, duplicate and orphan section, section outside a declaration, unmarked
-/// heading), inline citation style (§AR-checker.2.14) and the opt-in lead budget
-/// (§FS-declarations.checks.oversized-lead). It is handed no `Rules` and no
-/// `Presentation`. Where it reads a kind's value shape it reads it through the
-/// kind's slots (§AR-config.6.2), so a field model added to the kind reaches it
-/// without a second reader.
+/// heading), inline citation style (§AR-checker.2.14), the opt-in lead budget
+/// (§FS-declarations.checks.oversized-lead) and the field family
+/// (§AR-checker.2.21). It is handed no `Rules` and no `Presentation`. Where it
+/// reads a kind's shape it reads it through the kind's record (§AR-config.6.2),
+/// so the value checks and the field checks read one model.
 ///
 /// ### 1.2 `judge`: the relational half
 ///
@@ -415,6 +415,28 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected, TextOverlays};
 /// record and applies no config or heading-level-mode gate. Full-scope narrowing
 /// drops candidates outside configured scan scope before this pass. The ordinary
 /// report path supplies text, JSON, exact-code selection, and LSP parity.
+///
+/// ### 2.21 Kind fields (§FS-fields.checks, §DF-kind-fields)
+///
+/// `fields.rs` holds every local, non-stub declaration of a kind that declares a
+/// field or is closed to that shape, over its direct sections in source order:
+/// missing-field at the declaration's line, mistitled-field and
+/// invalid-field-value at the field's heading, misplaced-field walked chain by
+/// chain from each head against the nearest present predecessor's actual place,
+/// so one field out of place is one finding (§FS-fields.order.nearest), and
+/// undeclared-chapter for each named direct section a closed kind does not
+/// declare. Each takes the channel §FS-fields.strengths.table names; a `may`
+/// field is unchecked when absent and an error when misshapen. The pass is
+/// node-local, so it sits in `conform`.
+///
+/// Its pairing with the chapter rules is not node-local: a field and the
+/// presence rule it expresses report one shared absence once (§FS-rules.6). The
+/// chapter-rule pass therefore ends by re-deriving the field findings and
+/// dropping each `chapter-cardinality` that counted zero chapters of a field's
+/// expressed name in a declaration whose missing-field or mistitled-field for
+/// that field sits on the same channel. It runs before `--only`/`--ignore`, so
+/// selecting `chapter-cardinality` alone does not resurrect the dropped finding,
+/// and the LSP report, which calls the same pass, pairs the same way.
 ///
 /// ## 3. Diagnostic data and rendering
 ///

@@ -69,10 +69,16 @@ and `output`.
 `Schema::rows` is one `Row { name, places: Vec<Place>, kind: Option<Kind> }`
 per `[[kinds]]` row, in file order. `Place { extent, scanned }` with
 `Extent::Folder(path) | File(path) | Complement`.
-`Kind { id_format, form, index, origin }`, where `form` is
-`Prose | Value { chapter } | Rule { value_chapter }` and `origin` is `Local | External { fetch }`.
-`Rule` keeps `value_chapter` because v1 accepts `rules = true` together with
-`value_chapter`, and a lossless lowering keeps both.
+`Kind { id_format, form, index, origin, fields, closed }`, where `form` is
+`Prose | Value | Rule`, `origin` is `Local | External { fetch }`, `fields` is the
+kind's declared fields in header order and `closed` the strength of the
+undeclared-chapter check, `may` when the kind is open ([§FS-fields.record](../functional-spec/FS-fields.md#record-the-record)).
+`Field { name, title, presence, placement, content }` lives in `config/fields.rs`,
+with `placement` one of `First | Last | After(name)` and `content` one of
+`Prose | Values | OneOf(values)`. `form` carries no payload: v1's `value_chapter`
+is a `may` field with `Values` content, on a `Value` kind and on a `Rule` kind
+alike, because v1 accepts `rules = true` together with `value_chapter` and a
+lossless lowering keeps both ([§FS-fields.v1](../functional-spec/FS-fields.md#v1-version-1-is-unchanged)).
 `Schema::places()` yields `(name, &Place)` for every place of every row, and
 `Schema::kinds()` yields `(name, &Kind)` for every row with a kind. The three
 states [§DISC-core-concerns.10.1](../discussions/proposals/2026-09-30-core-concerns.md#101-the-five-decisions-the-2026-09-30-proposal-leaves-open) keeps apart are distinct by construction:
@@ -301,14 +307,15 @@ scanner reads no grounding key at all.
 ### 6.2 A kind's shape is a sequence of slots, derived from its form
 
 `Kind::slots()` yields the kind's slots in declared order, each
-`Slot { handle: Named | Numbered, presence, content: Prose | Values | OneOf }`.
-It is a method over the `form` of [§AR-config.1.3](AR-config.md#13-rows-places-and-kinds-over-one-vector), not stored data, so there is no
-second hand-maintained model of fields: a `Prose` or `Rule` kind yields no slot,
-and a `Value` kind yields one — its value chapter as a `Named` handle with
-`Values` content, or `Numbered` when it has no chapter. Conformance reads a
-kind's value shape through `slots()` ([§AR-checker.1.1](../../crates/grund-core/src/checker/report.rs)), and a field model added to
-the kind is yielded by the same method in the order it was declared, so the
-checks and a schema view read one sequence.
+`Slot { handle: Named | Numbered, title, placement, presence, content: Prose | Values | OneOf }`.
+It is a method over the `form` and `fields` of [§AR-config.1.3](AR-config.md#13-rows-places-and-kinds-over-one-vector), not stored data, so
+there is no second hand-maintained model of fields: a `Value` kind yields one
+`Numbered` slot with `Values` content for its numbered components, and then
+every kind yields one `Named` slot per field, in header order, carrying the
+field's title, placement, strength and content ([§FS-fields.record](../functional-spec/FS-fields.md#record-the-record)). A v1
+value chapter arrives as one of those fields. Conformance reads a kind's value
+shape through `slots()` ([§AR-checker.1.1](../../crates/grund-core/src/checker/report.rs)), so the checks and a schema view read
+one sequence.
 
 ## 7. The v2 reader
 
@@ -343,8 +350,15 @@ and two citation lists that can match one citation
 ([§FS-config-v2.rules.citations](../functional-spec/FS-config-v2.md#rulescitations-rulescitations)). A check that reads several tables runs in
 `finish.rs` once the walk ends: a row's keys together, one row's place inside
 another's, a ladder, resolution entry or title naming its row, and the omitted
-language set ([§FS-config-v2.defaults.2](../functional-spec/FS-config-v2.md#defaults2-the-language-set-is-fixed-before-it-is-executed)). Each is kept with the line it is
-about, and the earliest is reported.
+language set ([§FS-config-v2.defaults.2](../functional-spec/FS-config-v2.md#defaults2-the-language-set-is-fixed-before-it-is-executed)), and one kind's fields together —
+two ends, two values fields, an `after` that names no field, the `last` one or
+an already-followed one, and a cycle ([§FS-fields.order.refusals](../functional-spec/FS-fields.md#orderrefusals-what-the-loader-refuses)). Each is kept
+with the line it is about, and the earliest is reported. A field table's own
+keys are judged as they are met, in `v2/fields.rs`, and a field or `closed` on
+a row whose declarations have no authored body is refused at its header
+([§FS-fields.forms](../functional-spec/FS-fields.md#forms-form-lowers-to-the-version-1-contracts)). The prerequisites `form` carries are v1's own functions,
+called once the late checks pass, so both readers refuse a rule or value kind
+with one text.
 
 ### 7.3 The lowering
 
@@ -364,6 +378,9 @@ fields the warning channel reads, beside `must` and `should`
 | `[rules.citations.<KIND>]` | the seven lists of `KindCitationRules`, `warn` and `warn-not` included |
 | `[rules.citations.grounding]`, `[rules.citations.<NAME>.grounding]` | the ladder, whole; its `must` rung is the effective `require` and `level` pair |
 | `fetch`, `[rules.resolution]` | `Origin::External`, and the kind's resolution, `must` unless `warn` |
+| `form` | `Kind::form`, `prose` unless written |
+| `closed` | `Kind::closed`, `may` unless written |
+| `[schema.kinds.<NAME>.fields.<field>]` | one `Field`, in header order; `presence` `may`, no placement and `Prose` content unless written |
 
 A state version 2 does not spell keeps its v1 record value, so a v1 file means
 what it meant ([§FS-config-v2.mapping](../functional-spec/FS-config-v2.md#mapping-what-the-records-keep-apart)).

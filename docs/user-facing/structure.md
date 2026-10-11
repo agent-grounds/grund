@@ -7,6 +7,8 @@ named chapters, and citations. The [chapter-rules guide](../user-facing/rules.md
 lists every accepted sentence and refusal rewrite; the runnable
 [`examples/rules/`](../../examples/rules/) repository demonstrates the findings and
 deduplication behavior ([§FS-rules](../functional-spec/FS-rules.md#fs-rules-grounded-declarations-state-and-enforce-chapter-rules)).
+A version-2 kind can declare its chapters as fields — their order, titles and
+allowed values, and whether anything else may appear — in the [fields guide](../user-facing/fields.md), with the runnable [`examples/fields/`](../../examples/fields/) ([§FS-fields](../functional-spec/FS-fields.md#fs-fields-a-v2-kind-states-the-shape-of-its-declarations-and-check-holds-every-declaration-to-it)).
 
 | Kind | What it is | Where it lives |
 | --- | --- | --- |

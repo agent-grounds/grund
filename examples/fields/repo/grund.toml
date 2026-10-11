@@ -1,0 +1,33 @@
+grund_config_version = 2
+project_name = "fields-example"
+
+[schema.sources]
+languages = ["markdown"]
+
+[schema.kinds.FS]
+folders = ["docs/fs"]
+index = false
+[schema.kinds.FS.fields.terms]
+title = "Terms"
+presence = "must"
+position = "first"
+
+[schema.kinds.AR]
+folders = ["docs/ar"]
+index = false
+[schema.kinds.AR.fields.placement]
+presence = "must"
+position = "first"
+[schema.kinds.AR.fields.terms]
+title = "Terms"
+presence = "warn"
+after = "placement"
+
+[schema.kinds.DF]
+folders = ["docs/df"]
+index = false
+closed = "must"
+[schema.kinds.DF.fields.status]
+one_of = ["Proposed", "Accepted", "Superseded"]
+presence = "must"
+position = "first"
