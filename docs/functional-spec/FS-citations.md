@@ -6,10 +6,12 @@ What a citation is, which tokens a scan records as one, and which spans of text 
 
 Leans on [§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker, citation, qualified citation, shorthand, canonical form,
 citation site), [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (doc-comment), and [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, config root).
-The never-rewrite zone and the suppressed scope are [§FS-fmt.terms](FS-fmt.md#terms-terms)'s.
+The suppressed scope is [§FS-fmt.terms](FS-fmt.md#terms-terms)'s.
 
 - **recognized citation** — A token the scan records as a citation edge. It is what `refs` lists,
   what counts as a use and grounds a unit, and what every check judges.
+- **never-rewrite zone** — A span whose bytes every pass preserves exactly, because a rewrite there
+  would change what the file means. Which spans they are is [§FS-citations.zones](FS-citations.md#zones-where-citation-text-is-never-rewritten).
 - **wrap** — A citation written as a Markdown link whose text is the citation: the form
   `grund fmt --cross-refs` writes and keeps current.
 
