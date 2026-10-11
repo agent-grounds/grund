@@ -125,6 +125,35 @@ class TrackerTests(unittest.TestCase):
         self.assertEqual(self.tracker.issue_action([{"number": 12, "body": "unrelated"}]),
                          ("open", None))
 
+    def test_an_issue_that_only_quotes_the_marker_is_not_the_drift_issue(self) -> None:
+        issues = [{"number": 5, "body": f"It looks for {MARKER} in the body."}]
+        self.assertEqual(self.tracker.issue_action(issues), ("open", None))
+
+    def test_a_window_outside_one_to_a_hundred_is_an_error_that_names_it(self) -> None:
+        for window in (0, -1, 101):
+            with self.subTest(window=window), self.assertRaisesRegex(Exception, "window"):
+                self.config(window=window)
+
+    def test_no_run_measured_fails_rather_than_passing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "ci-duration.json"
+            path.write_text(json.dumps({"threshold_minutes": 10, "window": 8}))
+            original = self.tracker.gh
+            self.tracker.gh = lambda *arguments, stdin=None: json.dumps({"workflow_runs": []})
+            try:
+                self.assertEqual(self.tracker.main(["ci_duration.py", str(path)]), 1)
+            finally:
+                self.tracker.gh = original
+
+    def test_the_link_to_ar_ci_is_absolute_or_plain(self) -> None:
+        config = self.config(threshold=10, window=3)
+        averages = self.tracker.gate_averages(RUNS, config.window)
+        linked = self.tracker.drift_report(averages, config, "agent-grounds/grund")
+        self.assertIn("(https://github.com/agent-grounds/grund/blob/main/docs/architecture/AR-ci.md)",
+                      linked)
+        plain = self.tracker.drift_report(averages, config)
+        self.assertNotIn("](docs/", plain)
+
 
 class WiringTests(unittest.TestCase):
     """Where the meter sits: its config, its workflow, and not in the local gate."""
