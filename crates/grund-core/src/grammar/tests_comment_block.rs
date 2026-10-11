@@ -9,7 +9,7 @@ use crate::testing::{
     inline_style_findings, inline_style_findings_with, over_the_column_cap, over_the_line_cap,
 };
 
-/// §FS-inline-citation-style.1.2: a line-comment block is the run of adjacent
+/// §FS-inline-citation-style.1.2 (§FS-languages.comment-block.forms): a line-comment block is the run of adjacent
 /// lines carrying the same marker, and a blank line or a code line ends it — the
 /// three runs here are three blocks, and only the `//` one is a site.
 #[test]
@@ -39,7 +39,7 @@ fn rust_measures_slash_slash_but_not_slash_slash_slash_or_bang() {
     assert_eq!(findings, over_the_line_cap(12, 4, "§FS-001-login"));
 }
 
-/// §FS-inline-citation-style.1.2: a block comment runs from opener to closer,
+/// §FS-inline-citation-style.1.2 (§FS-languages.comment-block.forms): a block comment runs from opener to closer,
 /// and §FS-inline-citation-style.2.3.1: the measured size is that physical
 /// extent — the `/*` and ` */` lines carry no prose and still count, so a
 /// three-sentence note reports as five lines.

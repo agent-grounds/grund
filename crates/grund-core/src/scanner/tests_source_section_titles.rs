@@ -153,7 +153,7 @@ fn a_heading_in_a_source_comment_records_its_markdown_title() {
     );
 }
 
-/// §FS-rules.5.1.1: a block comment's closing `*/` on the heading's own line is
+/// §FS-rules.5.1.1 (§FS-languages.comment-wrapper.headings): a block comment's closing `*/` on the heading's own line is
 /// the envelope's closing half, so it joins the title no more than the ` * `
 /// that opens the line does — with or without whitespace before it. Markdown
 /// and a docstring keep a `*/` their author wrote: neither line is a C-family

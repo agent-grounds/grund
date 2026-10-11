@@ -9,7 +9,7 @@ use crate::testing::{
     canonical_test_path, numbered_config, scan_findings, scan_tree, test_root, write,
 };
 
-/// §FS-check.1.1.5: a fenced code block is read as neither prose nor code, so
+/// §FS-check.1.1.5 (§FS-languages.fence): a fenced code block is read as neither prose nor code, so
 /// nothing inside it is a citation. A fence opens with at most three leading
 /// spaces and a run of at least three backticks or tildes, closes only on a
 /// run of the same character at least as long, and a backtick opener carrying

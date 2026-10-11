@@ -4,7 +4,7 @@
 
 use super::section_title;
 
-/// §FS-rules.5.1.1: a block comment's closing `*/` on the heading's own line is
+/// §FS-rules.5.1.1 (§FS-languages.comment-wrapper.headings): a block comment's closing `*/` on the heading's own line is
 /// envelope, like the ` * ` that opens it; `///` is the control.
 #[test]
 fn a_toc_title_drops_a_block_comment_closer_on_the_heading_line() {

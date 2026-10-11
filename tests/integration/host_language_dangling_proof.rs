@@ -1,6 +1,6 @@
 //! §REQ-no-missed-citation.3 — every doc-comment form the scanner claims to
 //! support is proven by a dangling citation planted in that form, and
-//! §FS-config.3.5.14 makes the claim concrete: `comment_prefixes` and
+//! §FS-config.3.5.14 (§FS-languages.prefixes) makes the claim concrete: `comment_prefixes` and
 //! `extensions` compose, so every default comment prefix must have a path
 //! through the default extension list, and every such claimed form must have a
 //! strict-mode executable case behind it. Read from the corpus goldens — an `unknown

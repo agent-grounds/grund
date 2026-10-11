@@ -79,7 +79,7 @@ fn exact_marker_requires_a_citable_numeric_heading() {
 /// The marker is recognised after the configured comment wrapper is removed,
 /// in every supported source form: the `//`, `///`, `//!`, `#`, `;` and `--`
 /// line comments, the `/** … */` block doc-comments with their `*`
-/// continuations, and both Python docstring quotes (§FS-values.2.4.1).
+/// continuations, and both Python docstring quotes (§FS-values.2.4.1, §FS-languages.docstring).
 #[test]
 fn every_source_wrapper_and_python_docstring_compares_values() {
     let line_forms = [
