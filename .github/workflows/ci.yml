@@ -62,10 +62,10 @@ jobs:
       # §FS-check.6.1.1, §AR-bindings.3: exercise actual native backends and
       # private lifecycle boundaries on Linux, macOS and Windows.
       - name: native watch contract
-        run: cargo test -p grund --features test-watch --test check_watch_observer --locked
+        run: python scripts/run_cargo_suite.py -p grund --features test-watch --test check_watch_observer --locked
 
       - name: cargo build
-        run: cargo build --workspace --all-targets --locked
+        run: cargo build --quiet --workspace --all-targets --locked
 
       - name: grund self-check
         shell: bash
@@ -83,7 +83,7 @@ jobs:
 
           try:
               result = subprocess.run(
-                  ["cargo", "run", "--locked", "--", "check", ".", "--format", "json", "--full"],
+                  ["cargo", "run", "--quiet", "--locked", "--", "check", ".", "--format", "json", "--full"],
                   stdout=subprocess.PIPE,
                   timeout=30,
               )
@@ -103,8 +103,10 @@ jobs:
       # exit code, stdout, and stderr against its expected.* files; tests/init.rs
       # covers the file-content / config-validation contract for `grund init`. So
       # `cargo test` runs the full e2e suite plus the core and CLI unit tests.
+
+      # §AR-ci.requirements.5.2: failures, a check-in each 5% and one summary, no line per test.
       - name: cargo test
-        run: cargo test --workspace --all-targets --locked --features grund/test-workspace-load-count
+        run: python scripts/run_cargo_suite.py --workspace --all-targets --locked --features grund/test-workspace-load-count
 
   python-ubuntu:
     name: python (ubuntu-latest)
@@ -151,7 +153,7 @@ jobs:
       # The file-size ownership regression asks `fissile measure` for each split owner
       # (§AR-core-module-layout.1.5), so the binary is on PATH for the Python tests.
       - name: Install fissile
-        run: cargo install fissile --version 0.8.3 --locked
+        run: cargo install fissile --version 0.8.3 --locked --quiet
 
       # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
       # including a PR merge checkout, before the Python gate runs.
@@ -262,9 +264,9 @@ jobs:
       # Every binary a hook calls, in this job, before the hooks run (§AR-ci.1).
       - name: Install pre-commit hook dependencies
         run: |
-          python -m pip install pre-commit
-          cargo install lychee --version 0.23.0 --locked
-          cargo install fissile --version 0.8.3 --locked
+          python -m pip install -q pre-commit
+          cargo install lychee --version 0.23.0 --locked --quiet
+          cargo install fissile --version 0.8.3 --locked --quiet
 
       - name: pre-commit
         # lychee checks upwards of three thousand links, a large share of them
@@ -321,10 +323,10 @@ jobs:
       # §FS-check.6.1.1, §AR-bindings.3: exercise actual native backends and
       # private lifecycle boundaries on Linux, macOS and Windows.
       - name: native watch contract
-        run: cargo test -p grund --features test-watch --test check_watch_observer --locked
+        run: python scripts/run_cargo_suite.py -p grund --features test-watch --test check_watch_observer --locked
 
       - name: cargo build
-        run: cargo build --workspace --all-targets --locked
+        run: cargo build --quiet --workspace --all-targets --locked
 
       - name: grund self-check
         shell: bash
@@ -342,7 +344,7 @@ jobs:
 
           try:
               result = subprocess.run(
-                  ["cargo", "run", "--locked", "--", "check", ".", "--format", "json", "--full"],
+                  ["cargo", "run", "--quiet", "--locked", "--", "check", ".", "--format", "json", "--full"],
                   stdout=subprocess.PIPE,
                   timeout=30,
               )
@@ -362,8 +364,10 @@ jobs:
       # exit code, stdout, and stderr against its expected.* files; tests/init.rs
       # covers the file-content / config-validation contract for `grund init`. So
       # `cargo test` runs the full e2e suite plus the core and CLI unit tests.
+
+      # §AR-ci.requirements.5.2: failures, a check-in each 5% and one summary, no line per test.
       - name: cargo test
-        run: cargo test --workspace --all-targets --locked --features grund/test-workspace-load-count
+        run: python scripts/run_cargo_suite.py --workspace --all-targets --locked --features grund/test-workspace-load-count
 
   python-windows:
     name: python (windows-latest)
@@ -410,7 +414,7 @@ jobs:
       # The file-size ownership regression asks `fissile measure` for each split owner
       # (§AR-core-module-layout.1.5), so the binary is on PATH for the Python tests.
       - name: Install fissile
-        run: cargo install fissile --version 0.8.3 --locked
+        run: cargo install fissile --version 0.8.3 --locked --quiet
 
       # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
       # including a PR merge checkout, before the Python gate runs.
@@ -548,12 +552,12 @@ jobs:
       # §FS-check.6.1.1, §AR-bindings.3: exercise actual native backends and
       # private lifecycle boundaries on Linux, macOS and Windows.
       - name: native watch contract
-        run: cargo test -p grund --features test-watch --test check_watch_observer --locked
+        run: python scripts/run_cargo_suite.py -p grund --features test-watch --test check_watch_observer --locked
 
       # The file-size ownership regression asks `fissile measure` for each split owner
       # (§AR-core-module-layout.1.5), so the binary is on PATH for the Python tests.
       - name: Install fissile
-        run: cargo install fissile --version 0.8.3 --locked
+        run: cargo install fissile --version 0.8.3 --locked --quiet
 
       # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
       # including a PR merge checkout, before the Python gate runs.
@@ -570,7 +574,7 @@ jobs:
         run: python scripts/run_python_gate.py --only-node-acceptance
 
       - name: cargo build
-        run: cargo build --workspace --all-targets --locked
+        run: cargo build --quiet --workspace --all-targets --locked
 
       - name: grund self-check
         shell: bash
@@ -588,7 +592,7 @@ jobs:
 
           try:
               result = subprocess.run(
-                  ["cargo", "run", "--locked", "--", "check", ".", "--format", "json", "--full"],
+                  ["cargo", "run", "--quiet", "--locked", "--", "check", ".", "--format", "json", "--full"],
                   stdout=subprocess.PIPE,
                   timeout=30,
               )
@@ -608,8 +612,10 @@ jobs:
       # exit code, stdout, and stderr against its expected.* files; tests/init.rs
       # covers the file-content / config-validation contract for `grund init`. So
       # `cargo test` runs the full e2e suite plus the core and CLI unit tests.
+
+      # §AR-ci.requirements.5.2: failures, a check-in each 5% and one summary, no line per test.
       - name: cargo test
-        run: cargo test --workspace --all-targets --locked --features grund/test-workspace-load-count
+        run: python scripts/run_cargo_suite.py --workspace --all-targets --locked --features grund/test-workspace-load-count
 
   # §AR-ci.13.2: the required checks. Each runs no suite of its own; it runs whatever its
   # needs did, and fails unless every one of them succeeded.
@@ -711,7 +717,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y valgrind
           # The runner version must match the `iai-callgrind` dev-dependency in Cargo.toml.
-          cargo install iai-callgrind-runner --version 0.16.1 --locked
+          cargo install iai-callgrind-runner --version 0.16.1 --locked --quiet
 
       - name: Save base branch benchmark baseline
         if: github.event_name == 'pull_request'

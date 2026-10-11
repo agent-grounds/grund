@@ -135,7 +135,9 @@ class CiPreCommitParityTests(unittest.TestCase):
                 installs = [
                     index
                     for index, line in enumerate(lines)
-                    if re.match(rf"cargo install {re.escape(binary)} --version \S+ --locked$", line)
+                    # §AR-ci.requirements.5.4: an install is quiet, and still pinned.
+                    if re.match(rf"cargo install {re.escape(binary)} --version \S+ --locked --quiet$",
+                                line)
                 ]
                 self.assertTrue(installs, f"ci.yml pins no `cargo install {binary} --version`")
                 self.assertLess(installs[0], gate, f"{binary} is installed after the pre-commit step")

@@ -32,7 +32,8 @@ import run_python_gate
 selection = sys.argv[3] or None
 sys.exit(run_python_gate.run_tests(sys.argv[2], dict(os.environ), selection))
 """
-RAN = re.compile(r"(?m)^Ran (\d+) tests?")
+# The summary line of §AR-ci.requirements.5.1: `<total> tests: <passed> passed, …`.
+RAN = re.compile(r"(?m)^(\d+) tests: ")
 
 
 def ids(suite):
@@ -76,7 +77,7 @@ class PythonGateSelectionTests(unittest.TestCase):
     def run_selected(self, root, selection):
         result = subprocess.run([sys.executable, "-c", CHILD, str(REPO / "scripts"), str(root),
                                  selection or ""], cwd=root, capture_output=True, text=True)
-        ran = RAN.search(result.stderr)
+        ran = RAN.search(result.stdout)
         return result.returncode, int(ran.group(1)) if ran else None, result.stdout + result.stderr
 
     def test_run_tests_hands_the_selection_to_its_discovery(self):

@@ -5,16 +5,22 @@ Set GRUND_BUILT/GRUND_RELEASED to reuse local artifacts for
 binding oracle for §FS-distribution.3.0.3; otherwise build this checkout, install
 the exact released crate, and build the oracle from HEAD, without silently
 skipping tests. GRUND_NODE_TARGET names the Node acceptance's shared build target
-(§AR-ci.3.4.1). The run ends with its slowest tests (§AR-ci.3.4.2).
-`--without-node-acceptance` or `--only-node-acceptance` runs one side of the
-Node acceptance; no argument runs everything (§AR-ci.3.4.3).
+(§AR-ci.3.4.1). The run prints only its failures, a check-in each 5% and its slowest
+tests before one summary (§AR-ci.requirements.5.1, §AR-ci.3.4.2); its builds are
+quiet (§AR-ci.requirements.5.4). `--without-node-acceptance` or
+`--only-node-acceptance` runs one side of the Node acceptance; no argument runs
+everything (§AR-ci.3.4.3).
 """
+import io
 import os
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import time
 import unittest
+
+import suite_progress
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = Path(__file__).resolve().parent
@@ -47,14 +53,14 @@ def inputs():
     # Both builds share this checkout's target, so the oracle reuses grund-core's artifacts.
     target = Path(environment.get('CARGO_TARGET_DIR', str(ROOT / 'target'))).expanduser().resolve()
     if not environment.get('GRUND_BUILT'):
-        subprocess.run(['cargo', 'build', '-p', 'grund', '--locked', '--target-dir', str(target)],
-                       cwd=ROOT, check=True)
+        subprocess.run(['cargo', 'build', '--quiet', '-p', 'grund', '--locked',
+                        '--target-dir', str(target)], cwd=ROOT, check=True)
         environment['GRUND_BUILT'] = str(target / ('debug/grund' + suffix))
     if not environment.get('GRUND_RELEASED'):
         release = scratch / 'grund-cochange-release-0.16.1'
         executable = release / ('bin/grund' + suffix)
         if not executable.is_file():
-            subprocess.run(['cargo', 'install', 'grund', '--version', '0.16.1', '--locked',
+            subprocess.run(['cargo', 'install', '--quiet', 'grund', '--version', '0.16.1', '--locked',
                             '--root', str(release), '--target-dir', str(scratch / 'grund-release-build')],
                            cwd=ROOT, check=True)
         environment['GRUND_RELEASED'] = str(executable)
@@ -62,7 +68,7 @@ def inputs():
         # §AR-ci.3.4: built from HEAD each run, as the workflow builds it; cargo is incremental.
         head = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=ROOT, capture_output=True,
                               text=True, check=True).stdout.strip()
-        subprocess.run(['cargo', 'build', '--locked', '-p', 'grund-core', '--example',
+        subprocess.run(['cargo', 'build', '--quiet', '--locked', '-p', 'grund-core', '--example',
                         'grund-binding-oracle', '--target-dir', str(target)], cwd=ROOT,
                        env=dict(environment, GRUND_BINDINGS_SOURCE_SHA=head), check=True)
         oracle = target / ('debug/examples/grund-binding-oracle' + suffix)
@@ -82,32 +88,143 @@ def inputs():
     return environment
 
 
-class TimedResult(unittest.TextTestResult):
-    """Records each test's wall-clock, fixtures included, for the slowest table (§AR-ci.3.4.2)."""
+class Capture:
+    """Holds what the tests write, their child processes included, until it is asked for.
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    §AR-ci.requirements.5.1: file descriptors 1 and 2 point at one temporary file for the
+    whole run, so a child process that inherits them writes there too; on Windows the
+    process's standard handles follow, because a child inherits those instead.
+    """
+
+    def __init__(self):
+        self.file = tempfile.TemporaryFile()
+        self.saved = None
+
+    def start(self):
+        self.flush()
+        self.saved = (os.dup(1), os.dup(2), sys.stdout, sys.stderr)
+        for fd in (1, 2):
+            os.dup2(self.file.fileno(), fd)
+        sink = io.TextIOWrapper(open(self.file.fileno(), 'wb', buffering=0, closefd=False),
+                                encoding='utf-8', errors='replace', write_through=True)
+        sys.stdout = sys.stderr = sink
+        self.handles()
+
+    def take(self):
+        """What was written since the last take, and an empty file for what comes next."""
+        self.flush()
+        self.file.seek(0)
+        data = self.file.read()
+        self.file.seek(0)
+        self.file.truncate()
+        return data.decode('utf-8', errors='replace')
+
+    def stop(self):
+        self.flush()
+        out, err, sys.stdout, sys.stderr = self.saved
+        os.dup2(out, 1)
+        os.dup2(err, 2)
+        os.close(out)
+        os.close(err)
+        self.handles()
+
+    @staticmethod
+    def flush():
+        for stream in (sys.stdout, sys.stderr):
+            try:
+                stream.flush()
+            except (AttributeError, OSError, ValueError):
+                pass
+
+    @staticmethod
+    def handles():
+        if os.name != 'nt':
+            return
+        import ctypes
+        import msvcrt
+        for fd, handle in ((1, -11), (2, -12)):  # STD_OUTPUT_HANDLE, STD_ERROR_HANDLE
+            ctypes.windll.kernel32.SetStdHandle(handle, msvcrt.get_osfhandle(fd))
+
+
+class TimedResult(unittest.TestResult):
+    """Times each test, fixtures included (§AR-ci.3.4.2), and prints only what failed.
+
+    §AR-ci.requirements.5.1: what a test and its fixtures wrote is printed under its
+    name when it fails and dropped when it passes; a check-in each 5% and the summary
+    go through `suite_progress`, as the cargo wrapper's do.
+    """
+
+    def __init__(self, stream, total):
+        super().__init__()
+        self.stream = stream
+        self.progress = suite_progress.Progress(total, stream)
+        self.capture = Capture()
         self.timings = []
         self.mark = time.perf_counter()
+        self.counts = (0, 0, 0)
+        self.skips = 0
+        self.running = False
+
+    def problems(self):
+        return (len(self.failures), len(self.errors), len(self.unexpectedSuccesses))
 
     def startTestRun(self):
         super().startTestRun()
-        self.mark = time.perf_counter()
+        self.mark = self.progress.start = time.perf_counter()
+        self.capture.start()
 
     def startTest(self, test):
-        # A test is charged from the previous test's stop, so setUpModule/setUpClass count.
+        # A test is charged from the previous test's stop, so setUpModule/setUpClass count,
+        # and so is what they wrote.
         self.started = self.mark
+        self.counts = self.problems()
+        self.skips = len(self.skipped)
+        self.running = True
         super().startTest(test)
 
     def stopTest(self, test):
         super().stopTest(test)
+        self.running = False
         self.mark = time.perf_counter()
-        self.timings.append([self.mark - self.started, test.id()])
+        seconds = self.mark - self.started
+        self.timings.append([seconds, test.id()])
+        output = self.capture.take()
+        if self.problems() != self.counts:
+            self.report(test.id(), output, self.counts)
+            outcome = 'failed'
+        elif len(self.skipped) != self.skips:
+            outcome = 'ignored'
+        else:
+            outcome = 'passed'
+        self.progress.finished(test.id(), seconds, outcome)
+
+    def addError(self, test, err):
+        super().addError(test, err)
+        if not self.running:
+            # A class or module fixture failed outside any test (`_ErrorHolder`).
+            before = (len(self.failures), len(self.errors) - 1, len(self.unexpectedSuccesses))
+            self.report(str(test), self.capture.take(), before)
+            self.progress.error()
+
+    def report(self, name, output, before):
+        failures, errors, unexpected = before
+        self.stream.write(f'FAIL {name}\n')
+        if output.strip():
+            self.stream.write(output if output.endswith('\n') else output + '\n')
+        for _, trace in self.failures[failures:] + self.errors[errors:]:
+            self.stream.write(trace if trace.endswith('\n') else trace + '\n')
+        if len(self.unexpectedSuccesses) > unexpected:
+            self.stream.write('unexpected success\n')
+        self.stream.flush()
 
     def stopTestRun(self):
         # The last class's and module's teardown is charged to the last test.
         if self.timings:
             self.timings[-1][0] += time.perf_counter() - self.mark
+        leftover = self.capture.take()
+        self.capture.stop()
+        if leftover.strip() and not self.wasSuccessful():
+            self.stream.write(leftover)
         super().stopTestRun()
 
 
@@ -147,17 +264,36 @@ class SelectingLoader(unittest.TestLoader):
         return select(super().discover(*args, **kwargs), self.selection)
 
 
+class QuietRunner:
+    """A `unittest` runner whose output is §AR-ci.requirements.5.1's and nothing else."""
+
+    def __init__(self, stream):
+        self.stream = stream
+
+    def run(self, test):
+        result = TimedResult(self.stream, test.countTestCases())
+        result.startTestRun()
+        try:
+            test(result)
+        finally:
+            result.stopTestRun()
+        return result
+
+
 def discover(argv, selection=None):
-    """Run `unittest` with `argv` on the selected tests, then print the slowest (§AR-ci.3.4.2)."""
-    runner = unittest.TextTestRunner(resultclass=TimedResult)
+    """Run `unittest` with `argv` on the selected tests, then print the slowest
+    (§AR-ci.3.4.2) and the summary."""
+    # The report goes to the descriptor the run started with, which Capture leaves alone.
+    stream = open(os.dup(1), 'w', encoding='utf-8', errors='replace')
+    runner = QuietRunner(stream)
     result = unittest.main(module=None, argv=['python -m unittest', *argv],
                            testLoader=SelectingLoader(selection),
                            testRunner=runner, exit=False).result
-    stream = runner.stream
-    stream.writeln('Slowest tests')
+    stream.write('Slowest tests\n')
     for seconds, test in sorted(result.timings, reverse=True)[:SLOWEST]:
-        stream.writeln(f'{seconds:8.2f}s {test}')
-    stream.flush()
+        stream.write(f'{seconds:8.2f}s {test}\n')
+    result.progress.summary()
+    stream.close()
     if result.testsRun == 0 and not result.skipped:
         return 5  # §AR-ci.3.4.2: `python -m unittest` on 3.12+ exits 5 when it finds no tests.
     return 0 if result.wasSuccessful() else 1

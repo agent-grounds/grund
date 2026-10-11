@@ -13,7 +13,7 @@ source_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).st
 target = (Path.home() / "ag/tmp/grund-bindings-ci-oracle").resolve()
 build_env = dict(os.environ, GRUND_BINDINGS_SOURCE_SHA=source_sha)
 subprocess.run([
-    "cargo", "+1.95.0", "build", "--locked", "-p", "grund-core",
+    "cargo", "+1.95.0", "build", "--quiet", "--locked", "-p", "grund-core",
     "--example", "grund-binding-oracle", "--target-dir", str(target),
 ], env=build_env, check=True)
 executable = "grund-binding-oracle.exe" if os.name == "nt" else "grund-binding-oracle"

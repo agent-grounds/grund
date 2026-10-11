@@ -19,15 +19,18 @@ SPLIT = ("ubuntu-latest", "windows-latest")
 RUNNER_OS = {"ubuntu-latest": "Linux", "macos-latest": "macOS", "windows-latest": "Windows"}
 GATE = "python scripts/run_python_gate.py"
 SUITES = {
-    "rust": "cargo test --workspace --all-targets --locked --features grund/test-workspace-load-count",
+    # §AR-ci.requirements.5.2: the cargo suites go through the quiet wrapper.
+    "rust": ("python scripts/run_cargo_suite.py --workspace --all-targets --locked"
+             " --features grund/test-workspace-load-count"),
     "python": f"{GATE} --without-node-acceptance",
     "node": f"{GATE} --only-node-acceptance",
 }
 # The rest of the Rust job (§AR-ci.13.1); the self-check is the Python heredoc of §AR-ci.4.
 RUST_CHECKS = {
     "fmt": "cargo fmt --all -- --check",
-    "native watch contract": "cargo test -p grund --features test-watch --test check_watch_observer --locked",
-    "build": "cargo build --workspace --all-targets --locked",
+    "native watch contract": ("python scripts/run_cargo_suite.py -p grund --features test-watch"
+                              " --test check_watch_observer --locked"),
+    "build": "cargo build --quiet --workspace --all-targets --locked",
     "self-check": '"check", ".", "--format", "json", "--full"',
 }
 PRE_COMMIT = "pre-commit run --all-files"
