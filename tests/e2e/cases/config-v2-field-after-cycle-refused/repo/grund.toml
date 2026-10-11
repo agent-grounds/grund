@@ -1,0 +1,11 @@
+grund_config_version = 2
+project_name = "example"
+[schema.sources]
+languages = ["markdown"]
+[schema.kinds.AR]
+folders = ["docs/ar"]
+index = false
+[schema.kinds.AR.fields.a]
+after = "b"
+[schema.kinds.AR.fields.b]
+after = "a"

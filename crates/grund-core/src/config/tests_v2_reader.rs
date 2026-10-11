@@ -306,18 +306,6 @@ fn v2_unexecuted_clauses_are_refused_at_their_line() {
     let not_yet = "is part of the v2 format but not supported by this grund yet";
     let cases = [
         (
-            "fields",
-            format!("{HEAD}{FS_GOAL}[schema.kinds.FS.fields.terms]\npresence = \"must\"\n"),
-            9,
-            "`[schema.kinds.FS.fields.terms]`",
-        ),
-        (
-            "form",
-            format!("{HEAD}[schema.kinds.RULE]\nfiles = [\"rules.md\"]\nform = \"rule\"\n"),
-            7,
-            "`[schema.kinds.RULE] form`",
-        ),
-        (
             "two_places",
             format!("{HEAD}[schema.kinds.FS]\nfolders = [\"a\", \"b\"]\n"),
             6,

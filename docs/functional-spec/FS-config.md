@@ -703,7 +703,7 @@ Five combinations are config errors, reported per [§FS-config.4.3](FS-config.md
 
 `values = true` opts whole declarations in this row's home into [§FS-values](FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value). It is absent and false by default. It is one of the two value-related config keys: `values` opts whole declarations in, while `value_chapter` ([§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values)) makes the named children of one chapter into roots inside declarations. The two are refused on one row, and there is still no `value_sources` key. An enabled row must be citable, have exactly one existing `file` or `folder`, and normalize that home inside the project root. Each violation is a located config error. Validation checks these structural relationships without parsing declaration content.
 
-`grund config show` prints `values = true` only for an enabled row; a false or absent value prints no key. The key is additive and does not change `grund_config_version` ([§FS-config.5](FS-config.md#5-schema-versioning)).
+`grund config show` prints `values = true` only for an enabled row; a false or absent value prints no key. The key is additive and does not change `grund_config_version` ([§FS-config.5](FS-config.md#5-schema-versioning)). Its version-2 spelling is `form = "value"`, with the same meaning and prerequisites ([§FS-fields.forms](FS-fields.md#forms-form-lowers-to-the-version-1-contracts)).
 
 ##### 3.4.9.1 The value suffix is a separate authority
 
@@ -787,7 +787,8 @@ validated later as located findings ([§FS-rules.4](FS-rules.md#4-validation-lif
 
 The key is optional and additive, so `grund_config_version` remains 1 ([§FS-config.5](FS-config.md#5-schema-versioning)).
 An older binary rejects the unknown key loudly rather than silently ignoring a
-rule-enabled repository.
+rule-enabled repository. Its version-2 spelling is `form = "rule"`, with the same
+meaning and prerequisites ([§FS-fields.forms](FS-fields.md#forms-form-lowers-to-the-version-1-contracts)).
 
 #### 3.4.13 `value_chapter` — the chapter whose named children are values
 
@@ -826,6 +827,8 @@ no-op, and the `named_sections` default does not change ([§FS-config.3.2.7](FS-
 violation above is a located config error. Validation checks these structural
 relationships without parsing declaration content; a chapter that a declaration
 fills wrongly is scanned data and is reported later as a located finding ([§FS-check.3.20](FS-check.md#320-invalid-value-declaration)).
+Its version-2 spelling is a field with `content = "values"`, which means the
+same and lowers to the same record ([§FS-fields.content.values](FS-fields.md#contentvalues-a-values-field-is-the-value-chapter)).
 
 ### 3.5 `[scan]` — what gets scanned
 

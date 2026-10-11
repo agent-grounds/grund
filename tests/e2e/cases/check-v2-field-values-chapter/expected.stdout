@@ -1,0 +1,4 @@
+docs/power.md:5: error: invalid value declaration for AR-004-value-probe: a declared value chapter holds only named value-root headings
+docs/power.md:7: error: invalid value declaration for AR-004-value-probe: a declared value chapter holds only named value-root headings
+docs/power.md:16: error: invalid value declaration for AR-004-value-probe: embedded value component coordinate must follow physical order (expected `values.gap.2`)
+docs/power.md:21: error: invalid value declaration for AR-004-value-probe: embedded value components must be immediate numeric headings `.1` through `.N` (expected `values.deep.2`)

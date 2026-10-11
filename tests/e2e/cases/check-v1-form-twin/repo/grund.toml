@@ -1,0 +1,34 @@
+grund_config_version = 1
+project_name = "example"
+
+[reference]
+marker = "§"
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+slug_pattern = "[a-z][a-z0-9-]*"
+named_sections = true
+
+[[kinds]]
+kind = "CONST"
+folder = "values"
+index = false
+values = true
+
+[[kinds]]
+kind = "DOC"
+folder = "docs"
+index = false
+value_chapter = "values"
+
+[[kinds]]
+kind = "RULE"
+folder = "rules"
+index = false
+rules = true
+value_chapter = "values"
+
+[scan]
+include = ["docs", "values", "rules"]
+extensions = ["md"]

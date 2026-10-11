@@ -82,7 +82,7 @@ The v2 language set, with its suffixes, declaration hosts and explicit opt-in la
 
 ### schema.places: Rows and their places
 
-A row is `[schema.kinds.<NAME>]`. It admits `files` and `folders`, lists of paths from the config root, which are its places; `citable`, default `true`; `scan`, default `true`; `index`; `id_format`; `fetch`; and `form`. A citable row with no place is declared in doc-comments only. These keys mean what the v1 row keys of [§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds) mean, written as lists and under v2 names: `id_format` is v1's row `format` and `fetch` is v1's `fetch`.
+A row is `[schema.kinds.<NAME>]`. It admits `files` and `folders`, lists of paths from the config root, which are its places; `citable`, default `true`; `scan`, default `true`; `index`; `id_format`; `fetch`; `form`; and `closed`, with its `fields` tables under it ([§FS-config-v2.schema.fields](FS-config-v2.md#schemafields-fields-and-forms)). A citable row with no place is declared in doc-comments only. These keys mean what the v1 row keys of [§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds) mean, written as lists and under v2 names: `id_format` is v1's row `format` and `fetch` is v1's `fetch`.
 
 ### schema.sources: `[schema.sources]`
 
@@ -104,7 +104,7 @@ A stronger strength takes the looser threshold. `must = 1` beside `should = 3` i
 
 ### schema.fields: Fields and forms
 
-`[schema.kinds.<NAME>.fields.<field>]` and a row's `form`, `closed` and `one_of` are part of the format, specified with agent-grounds/grund#458. They are subject to [§FS-config-v2.rollout](FS-config-v2.md#rollout-what-this-grund-executes-and-what-it-refuses).
+`[schema.kinds.<NAME>.fields.<field>]`, with its keys `title`, `presence`, `position`, `after`, `content` and `one_of`, and a row's `form` and `closed`, are specified by [§FS-fields](FS-fields.md#fs-fields-a-v2-kind-states-the-shape-of-its-declarations-and-check-holds-every-declaration-to-it): what each key means, what the loader refuses, and the findings `grund check` reports. They are executed ([§FS-config-v2.rollout](FS-config-v2.md#rollout-what-this-grund-executes-and-what-it-refuses)).
 
 ## rules: The rules concern
 
@@ -159,7 +159,7 @@ The format is published whole, and this binary executes part of it. A clause the
 | `languages = ["markdown"]` | executed | #455 |
 | Any other `languages` value, an omitted `languages`, `[schema.sources.extensions]`, `[schema.sources.definitions.*]`, `[schema.sources] exclude` | refused | #456 |
 | A row with more than one place, a place inside another row's place, a `code` row with places | refused | #457 |
-| `[schema.kinds.*.fields.*]`, `form`, `closed`, `one_of` | refused | #458 |
+| `[schema.kinds.*.fields.*]`, `form`, `closed` | executed | #458 |
 | Any other `anchors` or `links` value | refused | #459 |
 | `[presentation] rules` | refused | #460 |
 

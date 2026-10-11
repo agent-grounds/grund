@@ -1,0 +1,14 @@
+grund_config_version = 2
+
+[schema]
+id_format = "{kind}-{number}-{slug}"
+slug_pattern = "[a-z0-9][a-z0-9-]*"
+
+[schema.sources]
+languages = ["markdown"]
+
+[schema.kinds.AR]
+folders = ["docs"]
+index = false
+[schema.kinds.AR.fields.values]
+content = "values"

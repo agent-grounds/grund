@@ -186,6 +186,9 @@ it reports the same absence as `chapter-cardinality`, naming its own rule and
 suppressing nothing ([§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration)). The two families
 differ in the code they raise and in the counts they can state, not in whether
 the absence is seen.
+A whole-kind presence rule stays valid under a version-2 config, beside the
+fields that config may declare; where a field expresses the rule, one shared
+absence is reported once ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)).
 
 ### 3.2 Outbound citation count
 
@@ -945,6 +948,21 @@ authored, rendered, and interpreted as before. A rule that loses to config this
 way authored nothing, so a trial sentence duplicating a `[citations]` direction
 is invisible to a report scoped by `authority`
 ([§FS-rules.8](FS-rules.md#8-command-surfaces)).
+
+Field-to-rule pairing is narrower still, and it happens after evaluation
+rather than before it. A version-2 field expresses a chapter-presence rule when
+its `title`, or its name where it has no title, equals the rule's chapter `NAME`
+case-insensitively ([§FS-fields.rules](FS-fields.md#rules-fields-beside-chapter-rules)). Where, for one declaration, that rule
+counts zero matching chapters and the field reports `missing-field` or
+`mistitled-field` on the same channel, the field's finding stands and the
+rule's `chapter-cardinality` for that declaration is dropped: no rule ID is
+appended and the field's `authority` stays `null`, as config wins above. A
+defect only one of them sees is still reported: two chapters titled Terms under
+different names fail the rule and not the field, `## glossary: Terms` fails the
+field and not the rule, and a `must` rule beside a `warn` field reports both, so
+adding a field never weakens a rule. The pairing runs where conformance and
+rule findings are merged, after the chapter-rule pass and before `--only` and
+`--ignore`, so the language server sees the same findings.
 
 ## 7. Findings and channels
 
