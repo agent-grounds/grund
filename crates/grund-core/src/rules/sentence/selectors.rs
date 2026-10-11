@@ -1,6 +1,6 @@
 //! The `list --selector` surface (§FS-rules.8): the selector-only `KIND.NAME`
 //! shorthand, and a refusal answered with a selector rather than a rule
-//! sentence (§FS-rules.8.1).
+//! sentence (§FS-rule-refusals.selectors).
 //!
 //! What failed is decided once, by `parse_subject` and `validate_named_path`
 //! and named by `SubjectFault::failed`, and what a suggestion can recover once,
@@ -15,10 +15,10 @@ use super::subjects::{
 };
 use super::{RuleSubject, RuleVocabulary};
 
-/// §FS-rules.8.1: the breadcrumb a numbered, wildcard or quantified refusal adds.
+/// §FS-rule-refusals.selectors: the breadcrumb a numbered, wildcard or quantified refusal adds.
 const HINT: &str = "hint: grund show --batch --toc expands each selected unit into its sections";
 
-/// A refused selector, as `list` prints it after `error: ` (§FS-rules.8.1).
+/// A refused selector, as `list` prints it after `error: ` (§FS-rule-refusals.selectors).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct SelectorRefusal {
     reason: String,
@@ -30,7 +30,7 @@ pub(crate) struct SelectorRefusal {
 
 impl SelectorRefusal {
     /// The refusal's lines. `known_kinds` is the `known kinds:` line an unknown
-    /// `--kind` prints, used where no kind was recovered (§FS-rules.8.1).
+    /// `--kind` prints, used where no kind was recovered (§FS-rule-refusals.selectors).
     pub(crate) fn render(&self, known_kinds: &str) -> String {
         let hint = if self.hint {
             format!("\n{HINT}")
@@ -38,7 +38,8 @@ impl SelectorRefusal {
             String::new()
         };
         let Some(suggestion) = &self.suggestion else {
-            // §FS-rules.8.1: the breadcrumb follows the kinds where none was recovered.
+            // §FS-rule-refusals.selectors: the breadcrumb follows the kinds where none was
+            // recovered.
             return format!("{}\n{known_kinds}{hint}", self.reason);
         };
         let accepted = if self.after_enabling {
@@ -60,7 +61,7 @@ pub(crate) fn parse_selector(
         Ok(subject) => return Ok(subject),
         Err(refusal) => refusal,
     };
-    // §FS-rules.8.1: a pasted rule sentence is answered with its subject, which
+    // §FS-rule-refusals.selectors: a pasted rule sentence is answered with its subject, which
     // ends where the rule sentence's does (§FS-rules.3.6).
     let Some((subject, ..)) = split_modality(text) else {
         return Err(answer(&refusal, vocabulary));
@@ -94,7 +95,7 @@ fn select(text: &str, vocabulary: &RuleVocabulary) -> Result<RuleSubject, Subjec
             });
         }
     }
-    // §FS-rules.8.1: the namespace reason `parse_rule` gives before the subject.
+    // §FS-rule-refusals.selectors: the namespace reason `parse_rule` gives before the subject.
     if let Some(head) = text.strip_prefix("Each ")
         && head.starts_with("*/")
     {
@@ -104,16 +105,16 @@ fn select(text: &str, vocabulary: &RuleVocabulary) -> Result<RuleSubject, Subjec
     parse_subject(text, vocabulary)
 }
 
-/// Render a refused subject as a selector refusal (§FS-rules.8.1).
+/// Render a refused subject as a selector refusal (§FS-rule-refusals.selectors).
 fn answer(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> SelectorRefusal {
-    // §FS-rules.8.1: a numbered or wildcard component is named as what failed.
+    // §FS-rule-refusals.selectors: a numbered or wildcard component is named as what failed.
     let fault = refusal.fault.failed();
     if fault == SubjectFault::NamedSectionsOff {
         return answer_as_if_enabled(refusal, vocabulary);
     }
     SelectorRefusal {
         reason: fault.reason(&refusal.text),
-        // §FS-rules.8.1: the breadcrumb follows from the reason alone.
+        // §FS-rule-refusals.selectors: the breadcrumb follows from the reason alone.
         hint: matches!(
             fault,
             SubjectFault::NumberedChapter
@@ -125,7 +126,7 @@ fn answer(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> SelectorRefu
     }
 }
 
-/// §FS-rules.8.1: a selector refused for needing named sections keeps that
+/// §FS-rule-refusals.selectors: a selector refused for needing named sections keeps that
 /// reason, and is suggested what the same selector is suggested with them on.
 fn answer_as_if_enabled(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> SelectorRefusal {
     let suggested = as_if_enabled(&refusal.text, vocabulary, select, Recovered::selector);

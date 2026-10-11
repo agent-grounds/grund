@@ -1,11 +1,11 @@
-//! §FS-rules.3.5.5: a sentence joining clauses with ` and ` is refused as a
+//! §FS-rule-refusals.sentences.conjunction: a sentence joining clauses with ` and ` is refused as a
 //! conjunction on both rule surfaces, never as an unknown kind named after a
 //! fragment of the sentence.
 
 use super::support::{case_repo, run, scratch_from, text, write};
 
-/// §FS-rules.3.5.5's exact table: the sentence, its exact reason, and whether
-/// `check --rule` follows it with `known kinds: FS` (§FS-rules.3.5.4.4).
+/// §FS-rule-refusals.sentences.conjunction's exact table: the sentence, its exact reason, and whether
+/// `check --rule` follows it with `known kinds: FS` (§FS-rule-refusals.sentences.rewrite.no-form).
 const ROWS: [(&str, &str, bool); 8] = [
     (
         "Each FS must cite at least one FS and must not cite any FS.",
@@ -55,7 +55,7 @@ const ROWS: [(&str, &str, bool); 8] = [
     ),
 ];
 
-/// §FS-rules.3.5.5: `check --rule` in a repository whose one kind is `FS`.
+/// §FS-rule-refusals.sentences.conjunction: `check --rule` in a repository whose one kind is `FS`.
 #[test]
 fn a_conjunction_is_refused_by_name_under_check_rule() {
     let root = case_repo("check-rule-conjunction-one-kind");
@@ -78,7 +78,7 @@ fn a_conjunction_is_refused_by_name_under_check_rule() {
     assert!(wrong.is_empty(), "wrong refusals:\n{}", wrong.join("\n"));
 }
 
-/// §FS-rules.3.5.5, §FS-rules.7.1: a configured rule declaration carrying the
+/// §FS-rule-refusals.sentences.conjunction, §FS-rules.7.1: a configured rule declaration carrying the
 /// same sentence gets the same reason in its `invalid-rule` finding, and never
 /// the line after it.
 #[test]
@@ -108,7 +108,7 @@ fn a_conjunction_is_refused_by_name_in_a_rule_declaration() {
     assert!(wrong.is_empty(), "wrong findings:\n{}", wrong.join("\n"));
 }
 
-/// §FS-rules.3.5.5: ` and ` that no modality follows is not a conjunction, so a
+/// §FS-rule-refusals.sentences.conjunction: ` and ` that no modality follows is not a conjunction, so a
 /// chapter named `and` is still a subject.
 #[test]
 fn and_without_a_modality_after_it_is_not_a_conjunction() {

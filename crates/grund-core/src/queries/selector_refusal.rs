@@ -5,7 +5,7 @@
 
 use crate::model::OperationDiagnostic;
 
-/// A selector the sentence grammar refused, already rendered (§FS-rules.8.1).
+/// A selector the sentence grammar refused, already rendered (§FS-rule-refusals.selectors).
 pub(crate) fn selector_refusal(rendered: String) -> anyhow::Error {
     anyhow::Error::new(OperationDiagnostic::new("query", "query-failed", rendered))
 }

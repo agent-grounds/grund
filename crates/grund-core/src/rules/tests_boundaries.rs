@@ -37,7 +37,7 @@ fn rule() -> ParsedRule {
     }
 }
 
-/// §FS-rules.3.5.1, §FS-errors.3: whitespace at any position remains refused,
+/// §FS-rule-refusals.sentences.whitespace, §FS-errors.3: whitespace at any position remains refused,
 /// with the entire released reason followed by actionable guidance. Between
 /// them stands the typed sentence with the `NAME` trimmed, where trimming
 /// leaves a token, and nothing where the `NAME` is empty or holds whitespace.

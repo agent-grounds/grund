@@ -171,6 +171,12 @@ class RuleRefusalsMoveTests(unittest.TestCase):
         self.assertNotIn("error: <reason>; accepted selector: <selector>",
                          DESTINATION.read_text(encoding="utf-8"),
                          "the selector refusal restates the line FS-errors.2.5 states")
+        rules = _headings(SOURCE)
+        self.assertNotIn("error: <reason>; accepted form:", SOURCE.read_text(encoding="utf-8"),
+                         "FS-rules restates the line FS-errors.2.5 states")
+        for label in ("4.", "7.1"):
+            self.assertTrue(_cites(_body(rules, label), "FS-errors.2.5"),
+                            f"FS-rules.{label.rstrip('.')} does not cite FS-errors.2.5 for the shape")
 
     def test_the_new_page_is_indexed(self):
         self.assertTrue(re.search(r"\(FS-rule-refusals\.md[#)]", INDEX.read_text(encoding="utf-8")),

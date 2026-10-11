@@ -1,4 +1,4 @@
-//! The issue's reproducer as a contract (§FS-rules.3.5.4): every form a
+//! The issue's reproducer as a contract (§FS-rule-refusals.sentences.rewrite): every form a
 //! refused rule offers is accepted when it is pasted back, a refusal that
 //! offers none is its reason alone with `known kinds:` only where a kind is
 //! missing, and a rule declaration's finding carries the same text. It runs in
@@ -44,7 +44,7 @@ fn named_on() -> PathBuf {
     root
 }
 
-/// At least one sentence per row of §FS-rules.3.5.4.5, with the answer it gets.
+/// At least one sentence per row of §FS-rule-refusals.sentences.rewrite.by-refusal, with the answer it gets.
 fn fs_only_sentences() -> Vec<(&'static str, Answer)> {
     vec![
         ("Each FS may not cite any FS.", Form),
@@ -145,7 +145,7 @@ fn named_on_sentences() -> Vec<(&'static str, Answer)> {
     ]
 }
 
-/// Sentences over `FS`, `REQ` and `GOAL` with named sections off (§FS-rules.3.5.2).
+/// Sentences over `FS`, `REQ` and `GOAL` with named sections off (§FS-rule-refusals.sentences.named-sections).
 fn named_off_sentences() -> Vec<(&'static str, Answer)> {
     vec![
         ("FS-*.requirements must cite at least one GOAL.", Form),
@@ -179,7 +179,7 @@ fn refusal(root: &Path, sentence: &str) -> Option<String> {
 }
 
 /// The forms the first line of `stderr` offers, and whether they are labelled
-/// `after enabling it`. The §FS-rules.3.5.1 explanation is not part of a form.
+/// `after enabling it`. The §FS-rule-refusals.sentences.whitespace explanation is not part of a form.
 fn offered_forms(stderr: &str) -> (Vec<String>, bool) {
     let line = stderr.lines().next().unwrap_or_default();
     let line = line
@@ -254,7 +254,7 @@ fn answered_wrongly(
     None
 }
 
-/// §FS-rules.3.5.4.3, the issue's property: every form a refused rule offers,
+/// §FS-rule-refusals.sentences.rewrite.reparsed, the issue's property: every form a refused rule offers,
 /// in each of the three repositories, is accepted when it is pasted back, and
 /// one labelled `after enabling it` is accepted once named sections are on.
 #[test]
@@ -280,7 +280,7 @@ fn every_offered_form_is_accepted_when_pasted_back() {
     );
 }
 
-/// §FS-rules.3.5.4.4: a refusal with nothing to supply offers no form; it is
+/// §FS-rule-refusals.sentences.rewrite.no-form: a refusal with nothing to supply offers no form; it is
 /// its reason alone, followed by `known kinds:` only where a kind is missing.
 #[test]
 fn a_refusal_with_nothing_to_supply_is_its_reason_alone() {
@@ -324,7 +324,7 @@ fn with_rule_declarations(root: &Path, name: &str, sentences: &[&str]) -> PathBu
     copy
 }
 
-/// §FS-rules.3.5.4, §FS-rules.7.1: a configured rule declaration's finding
+/// §FS-rule-refusals.sentences.rewrite, §FS-rules.7.1: a configured rule declaration's finding
 /// carries the text `check --rule` prints on its `error:` line, and never the
 /// `known kinds:` line after it, because one front end renders both.
 #[test]

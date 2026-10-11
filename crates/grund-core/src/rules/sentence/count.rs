@@ -47,7 +47,7 @@ pub(super) enum CountSpelling {
 
 /// Read the count `text` opens with. A refusal's form is `text` with the count
 /// written canonically, or none where it does not say which count it meant
-/// (§FS-rules.3.5.4.5).
+/// (§FS-rule-refusals.sentences.rewrite.by-refusal).
 pub(super) fn count_prefix(text: &str) -> Result<(Cardinality, &str, CountSpelling), Refusal> {
     if let Some(rest) = text.strip_prefix("at least one ") {
         return Ok((Cardinality::AT_LEAST_ONE, rest, CountSpelling::AtLeastOne));
@@ -109,7 +109,8 @@ pub(super) fn count_prefix(text: &str) -> Result<(Cardinality, &str, CountSpelli
             return Ok((card, object, spelling));
         }
     }
-    // §FS-rules.3.5.4.5: no count to keep, so the canonical ones are listed alone.
+    // §FS-rule-refusals.sentences.rewrite.by-refusal: no count to keep, so the canonical ones are
+    // listed alone.
     Err(refuse(
         "count is not accepted; the canonical counts are \"at least one\", \"at least N\", \"at most N\", \"exactly one\" and \"exactly N\" for a base-10 N",
         Form::None { kind: false },
@@ -122,7 +123,7 @@ pub(super) fn numeral(raw: &str) -> bool {
 }
 
 /// A positive count. A refusal's form is the count without its leading zeros,
-/// or none where it is zero or no numeral (§FS-rules.3.5.4.5).
+/// or none where it is zero or no numeral (§FS-rule-refusals.sentences.rewrite.by-refusal).
 pub(super) fn positive(raw: &str) -> Result<usize, Refusal> {
     let canonical = raw.bytes().all(|byte| byte.is_ascii_digit()) && !raw.starts_with('0');
     canonical

@@ -1,12 +1,12 @@
-//! The conjunction refusal of §FS-rules.3.5.5.
+//! The conjunction refusal of §FS-rule-refusals.sentences.conjunction.
 
 use super::split_modality;
 
-/// §FS-rules.3.5.5: a sentence whose ` and ` is followed by `must ` or
+/// §FS-rule-refusals.sentences.conjunction: a sentence whose ` and ` is followed by `must ` or
 /// `should ` joins clauses, and is answered with one sentence per clause, each
 /// later clause given the first clause's subject (§FS-rules.3.6). Runs before
 /// the modality split, so no fragment of the sentence is read as a kind; each
-/// form is then read again like any other (§FS-rules.3.5.4.3).
+/// form is then read again like any other (§FS-rule-refusals.sentences.rewrite.reparsed).
 pub(super) fn conjunction_forms(sentence: &str) -> Option<Vec<String>> {
     let mut clauses = Vec::new();
     let mut start = 0;

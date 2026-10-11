@@ -1,4 +1,4 @@
-//! The passes that read a form again before it is offered (§FS-rules.3.5.4.3),
+//! The passes that read a form again before it is offered (§FS-rule-refusals.sentences.rewrite.reparsed),
 //! driven by readers written for each case so that a pass the parser never
 //! takes today is still pinned.
 
@@ -58,7 +58,7 @@ fn a_pass_that_changes_nothing_ends_with_no_form() {
 }
 
 /// Turning named sections on is a change of its own, so a form kept as typed
-/// for that reason is read again with them on (§FS-rules.3.5.2).
+/// for that reason is read again with them on (§FS-rule-refusals.sentences.named-sections).
 #[test]
 fn a_pass_that_only_turns_named_sections_on_reads_the_form_again() {
     let (settled, passes) = settled("FS-login.requirements must cite REQ.", |form, enabled| {
@@ -86,7 +86,7 @@ fn a_pass_with_more_than_one_candidate_offers_no_form() {
 }
 
 /// A pass with nothing to put in ends with no form, and says whether what it
-/// could not supply is a kind (§FS-rules.3.5.4.4).
+/// could not supply is a kind (§FS-rule-refusals.sentences.rewrite.no-form).
 #[test]
 fn a_pass_with_nothing_to_supply_says_whether_a_kind_is_missing() {
     for kind in [true, false] {

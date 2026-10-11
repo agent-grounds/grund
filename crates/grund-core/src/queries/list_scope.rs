@@ -69,7 +69,7 @@ pub(crate) fn check_list_scope(
             .map(|project| project.config.section_separator.clone())
             .collect(),
     };
-    // §FS-rules.8.1: a refusal recovering no kind ends in `known kinds:`.
+    // §FS-rule-refusals.selectors: a refusal recovering no kind ends in `known kinds:`.
     parse_selector(raw, &vocabulary)
         .map(Some)
         .map_err(|refusal| selector_refusal(refusal.render(&known_kinds())))

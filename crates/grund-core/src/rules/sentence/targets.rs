@@ -13,7 +13,7 @@ use crate::config::{NamespaceMatch, parse_citation_target_entry, render_citation
 /// (§FS-rules.4.1). The first such reason is the one kept, which is the target
 /// whose refusal the reader used to see. A refused object kind is never
 /// guessed, so its refusal offers no form and is missing a kind
-/// (§FS-rules.3.5.4.4).
+/// (§FS-rule-refusals.sentences.rewrite.no-form).
 fn known_target(
     target: &str,
     vocab: &RuleVocabulary,

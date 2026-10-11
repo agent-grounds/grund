@@ -3,7 +3,7 @@
 //! lexical reader consults beside those patterns, and the per-alias grammar a
 //! qualified citation's ID tail is read with (§FS-config.3.2, §FS-workspace.1.2).
 //! A grammar also keeps what it was compiled from, so a refused selector can be
-//! answered as if named sections were on (§FS-rules.8.1).
+//! answered as if named sections were on (§FS-rule-refusals.selectors).
 //!
 //! Records rather than lookups, and the reason this component names no `Config`
 //! (§AR-system.4). Every value here is config's decision — it owns the keys, it
@@ -32,7 +32,7 @@ pub(crate) struct GrammarKind {
 
 /// Everything config handed [`Grammar::build`] but the named-sections switch,
 /// kept by the grammar it built so that grammar can be compiled again with the
-/// switch on (§FS-rules.8.1).
+/// switch on (§FS-rule-refusals.selectors).
 pub(super) struct GrammarSource {
     pub(super) format: String,
     pub(super) kinds: Vec<GrammarKind>,
@@ -46,7 +46,7 @@ impl Grammar {
     /// This grammar as `build` compiles it with `[id] named_sections` on. Only a
     /// `list --selector` refused for needing named sections asks for it, to be
     /// answered with what the same selector gets once they are on
-    /// (§FS-rules.8.1), so nothing else ever compiles it.
+    /// (§FS-rule-refusals.selectors), so nothing else ever compiles it.
     pub(crate) fn with_named_sections(&self) -> Result<Self> {
         if self.named_sections {
             return Ok(self.clone());

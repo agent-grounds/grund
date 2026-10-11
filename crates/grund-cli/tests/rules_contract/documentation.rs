@@ -152,7 +152,8 @@ fn guide_marked_rows_execute_against_the_released_parser() {
         let reason_end =
             right[reason_start..].find('`').expect("refusal reason end") + reason_start;
         let reason = &right[reason_start..reason_end];
-        // §FS-rules.3.5.4.4: a row that offers no form names the line after it.
+        // §FS-rule-refusals.sentences.rewrite.no-form: a row that offers no form names the line
+        // after it.
         let after = match right[reason_end + 1..].strip_prefix(", then `") {
             Some(rest) => format!("{}\n", rest.strip_suffix('`').expect("kinds line end")),
             None => String::new(),

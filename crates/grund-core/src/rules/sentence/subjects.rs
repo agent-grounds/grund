@@ -4,10 +4,10 @@
 //! A refused subject comes back as what the parser read rather than as finished
 //! text: the production that failed, plus the kind, declaration and path it had
 //! read. The rule surfaces answer it with what can be recovered written as a
-//! rule subject (§FS-rules.3.5.4.2), and a subject needing named sections with
-//! one they make valid (§FS-rules.3.5.2); a chapter path is refused for the
-//! component that failed (§FS-rules.3.5.3), and `selectors.rs` renders it as a
-//! selector (§FS-rules.8.1). Both surfaces agree on what failed because only
+//! rule subject (§FS-rule-refusals.sentences.rewrite.recovered), and a subject needing named sections with
+//! one they make valid (§FS-rule-refusals.sentences.named-sections); a chapter path is refused for the
+//! component that failed (§FS-rule-refusals.sentences.chapter-path), and `selectors.rs` renders it as a
+//! selector (§FS-rule-refusals.selectors). Both surfaces agree on what failed because only
 //! one parser decided it and `SubjectFault::failed` names it for both, and on
 //! what a suggestion recovers because only `recovery.rs` builds it.
 
@@ -16,7 +16,7 @@ use super::recovery::{Recovered, Suggestion, as_if_enabled, recover};
 use super::{RuleLevel, RulePolarity, RuleSubject, RuleVocabulary};
 use crate::grammar::{parse_id_arg, render_id};
 
-/// Which production of a subject failed (§FS-rules.3.5).
+/// Which production of a subject failed (§FS-rule-refusals.sentences).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) enum SubjectFault {
     UnknownKind(String),
@@ -40,7 +40,7 @@ pub(super) enum Component {
     Malformed,
 }
 
-/// How a subject was spelled, which a suggestion keeps (§FS-rules.8.1).
+/// How a subject was spelled, which a suggestion keeps (§FS-rule-refusals.selectors).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(super) enum Spelling {
     Each,
@@ -67,8 +67,8 @@ pub(super) struct SubjectRefusal {
 impl SubjectFault {
     /// What a refusal names as failed: a chapter path the section grammar
     /// refused at a numbered or wildcard component is refused for that
-    /// component, whichever spelling reached it (§FS-rules.3.5.3,
-    /// §FS-rules.8.1).
+    /// component, whichever spelling reached it (§FS-rule-refusals.sentences.chapter-path,
+    /// §FS-rule-refusals.selectors).
     pub(super) fn failed(&self) -> Self {
         match self {
             Self::SectionGrammar(Component::Numbered) => Self::NumberedChapter,
@@ -77,7 +77,7 @@ impl SubjectFault {
         }
     }
 
-    /// The released reason a refusal opens with (§FS-rules.3.5).
+    /// The released reason a refusal opens with (§FS-rule-refusals.sentences).
     pub(super) fn reason(&self, text: &str) -> String {
         match self {
             Self::UnknownKind(kind) => format!("unknown kind \"{kind}\""),
@@ -105,10 +105,10 @@ impl SubjectFault {
 }
 
 impl SubjectRefusal {
-    /// The rule surfaces' refusal (§FS-rules.3.5): the reason for the component
-    /// that failed (§FS-rules.3.5.3), then a form whose subject is rebuilt from
-    /// what can be recovered (§FS-rules.3.5.4.2), or, where it needs named
-    /// sections, the subject §FS-rules.3.5.2 suggests, read with them on. Where
+    /// The rule surfaces' refusal (§FS-rule-refusals.sentences): the reason for the component
+    /// that failed (§FS-rule-refusals.sentences.chapter-path), then a form whose subject is rebuilt from
+    /// what can be recovered (§FS-rule-refusals.sentences.rewrite.recovered), or, where it needs named
+    /// sections, the subject §FS-rule-refusals.sentences.named-sections suggests, read with them on. Where
     /// no configured kind is recovered there is no form, and what is missing is
     /// a kind.
     pub(super) fn rule_refusal(&self, vocabulary: &RuleVocabulary) -> Refusal {
@@ -157,7 +157,7 @@ pub(super) fn refused(
 /// Split a sentence into its subject, its modality and its predicate. The
 /// modality is found in a fixed order rather than at the earliest position
 /// (§FS-rules.3.6), and a rule and a pasted selector both split here, so they
-/// read the same subject from the same sentence (§FS-rules.8.1).
+/// read the same subject from the same sentence (§FS-rule-refusals.selectors).
 pub(super) fn split_modality(sentence: &str) -> Option<(&str, RuleLevel, RulePolarity, &str)> {
     [
         (" must not ", RuleLevel::Required, RulePolarity::Prohibiting),
@@ -182,7 +182,7 @@ pub(super) fn parse_subject(
 ) -> Result<RuleSubject, SubjectRefusal> {
     if let Some(kind) = text.strip_prefix("Each ") {
         let each = |fault, head| refused(fault, Spelling::Each, text, head, None, "");
-        // §FS-rules.8.1: refused for its quantifier; `parse_rule` refuses it first.
+        // §FS-rule-refusals.selectors: refused for its quantifier; `parse_rule` refuses it first.
         if let Some(kind) = kind.strip_prefix("chapter of each ") {
             return Err(each(SubjectFault::ChapterQuantified, kind));
         }
@@ -216,7 +216,8 @@ pub(super) fn parse_subject(
     {
         return Err(literal(SubjectFault::SectionWildcard));
     }
-    // §FS-rules.3.5.3: the first empty or all-digit component decides; empty is no number.
+    // §FS-rule-refusals.sentences.chapter-path: the first empty or all-digit component decides;
+    // empty is no number.
     if let Some(section) = path
         && let Some(part) = section
             .split('.')

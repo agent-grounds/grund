@@ -8,8 +8,8 @@ what was typed, so an agent that pastes the offer back is not refused again
 
 ## terms: Terms
 
-Leans on [§FS-rules.terms](FS-rules.md#terms-terms) (subject, selector, chapter, family, unverifiable here) and
-[§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding).
+Leans on [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding) and
+[§FS-rules.terms](FS-rules.md#terms-terms) (subject, selector, chapter, family, unverifiable here).
 
 - **refusal** — The answer to an input outside the grammar: a reason naming the production that
   failed, and an accepted input where one can be built.
@@ -84,8 +84,8 @@ chapter name must be a non-empty NAME with no surrounding whitespace; NAME forbi
 ```
 
 An empty `NAME` uses the same refusal. This adds guidance without admitting any
-new grammar. An ad-hoc refusal still writes nothing to stdout and exits 2
-([§FS-rules.4](FS-rules.md#4-validation-lifecycle)), and a missing piece here is a chapter name, never a
+new grammar. An ad-hoc refusal still has the shape of
+[§FS-errors.2.5](FS-errors.md#25-refused-input), and a missing piece here is a chapter name, never a
 kind, so no `known kinds:` line follows it.
 
 ### sentences.named-sections: A subject that needs named sections is answered with one they make valid
@@ -138,7 +138,7 @@ them can print a second line:
   the two lines `list --selector` prints for the same subject ([§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)).
   At a workspace root that selector lists every loaded project's kinds
   ([§FS-list.1.2](FS-list.md#12---project)), and the rule only the root's, because its subject accepts no
-  other. It writes nothing to stdout and exits 2.
+  other. The line has the shape of [§FS-errors.2.5](FS-errors.md#25-refused-input).
 - A configured rule declaration's `invalid-rule` finding is the reason alone,
   `<RULE-ID> is not a valid rule: <reason>`, because a finding is one message
   on one line ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)).
@@ -280,7 +280,7 @@ is accepted.
 Where no form is offered, the refusal is its reason alone. On `check --rule`,
 the `known kinds:` line [§FS-rule-refusals.sentences.named-sections](FS-rule-refusals.md#sentencesnamed-sections-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid) prints follows the reason where what
 could not be supplied is a kind, a subject's or an object's, naming the same
-set; it writes nothing to stdout and exits 2. Where what could not be supplied
+set, in the shape of [§FS-errors.2.5](FS-errors.md#25-refused-input). Where what could not be supplied
 is anything else, nothing follows the reason. A configured rule declaration's
 `invalid-rule` finding ends at the reason either way ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)).
 
@@ -319,8 +319,8 @@ keeps its list of the canonical counts, and the [§FS-rule-refusals.sentences.wh
 
 In the repository of [§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)'s first table, whose one kind is `FS`, with
 named sections on and `FS-login` holding named `requirements` and `should`
-chapters, these are the exact `check --rule` refusals. Each exits 2 with
-nothing on stdout, and its `error:` line is the reason and what follows it. A
+chapters, these are the exact `check --rule` refusals. Each is printed in the
+shape of [§FS-errors.2.5](FS-errors.md#25-refused-input), and its `error:` line is the reason and what follows it. A
 configured rule declaration's finding carries the same text after
 `is not a valid rule: `, and never the line after it.
 
@@ -390,8 +390,8 @@ The check runs after the terminal `.` and the fixed-word and phase-1 subject
 refusals of the table, which are read from the sentence's start, and before
 the modality split of [§FS-rules.3.6](FS-rules.md#36-where-a-sentences-subject-ends). So the subject is never read from a
 fragment, and no refusal names part of a sentence as a kind. Both rule surfaces
-carry the same reason: `check --rule` prints `error: <reason>`, writes nothing
-to stdout and exits 2 ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)), and a configured rule declaration's
+carry the same reason: `check --rule` prints `error: <reason>` in the shape
+of [§FS-errors.2.5](FS-errors.md#25-refused-input), and a configured rule declaration's
 finding is `<RULE-ID> is not a valid rule: <reason>` ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)).
 
 In a repository whose one kind is `FS`, these are the exact reasons. On
@@ -420,8 +420,8 @@ subject, which holds the first clause and so is not rebuilt
 ## selectors: A refused selector is answered with a selector
 
 Every `list` mode that takes `--selector`, `--size` included, refuses a
-selector it cannot accept on stderr, writes nothing to stdout, and exits `2`.
-Its `error:` line is the refused-input shape of [§FS-errors.2.5](FS-errors.md#25-refused-input): it names the
+selector it cannot accept. Its `error:` line is the refused-input shape of
+[§FS-errors.2.5](FS-errors.md#25-refused-input): it names the
 production that failed and ends in exactly one accepted selector, which a
 reader can paste back into `--selector`.
 

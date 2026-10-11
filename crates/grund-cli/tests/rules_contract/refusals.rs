@@ -1,5 +1,5 @@
 //! Exact production-aware refusal bytes for every common near miss required by
-//! §FS-rules.3.5 and the pre-scan lifecycle of §FS-rules.4.
+//! §FS-rule-refusals.sentences and the pre-scan lifecycle of §FS-rules.4.
 
 use super::support::{assert_run, case_repo, fixture, run, scratch, scratch_from, text};
 use std::fs;
@@ -40,11 +40,11 @@ fn every_released_family_subject_modality_and_count_spelling_is_accepted() {
     }
 }
 
-/// §FS-rules.3.5, §FS-rules.12: the deliberate phase-1 absences a sentence can
+/// §FS-rule-refusals.sentences, §FS-rules.12: the deliberate phase-1 absences a sentence can
 /// spell - path subjects, wildcard namespaces, component wildcards, chapter
 /// quantification - are refused by name, with the typed sentence repaired or,
 /// where it does not say what belongs in the gap, the known kinds
-/// (§FS-rules.3.5.4.5).
+/// (§FS-rule-refusals.sentences.rewrite.by-refusal).
 #[test]
 fn every_listed_refusal_has_its_exact_rewrite_and_exit_two() {
     let rows = [
@@ -115,7 +115,7 @@ fn every_listed_refusal_has_its_exact_rewrite_and_exit_two() {
     }
     assert!(
         wrong.is_empty(),
-        "{} of {} FS-rules.3.5 rows were not exact:\n{}",
+        "{} of {} FS-rule-refusals.sentences rows were not exact:\n{}",
         wrong.len(),
         rows.len(),
         wrong.join("\n")
@@ -144,7 +144,7 @@ fn named_chapter_subject_requires_the_named_sections_gate() {
 /// The reason every subject refused for needing named sections gives.
 const NAMED_OFF: &str = "named chapter subjects require [id] named_sections = true";
 
-/// §FS-rules.3.5.2's repository: kinds `FS`, `REQ` and `GOAL`, named sections
+/// §FS-rule-refusals.sentences.named-sections's repository: kinds `FS`, `REQ` and `GOAL`, named sections
 /// off, and `FS-login` holding a named `requirements` chapter.
 fn named_off() -> PathBuf {
     case_repo("check-rule-named-off-rebuilt-subject")
@@ -162,7 +162,7 @@ fn named_on() -> PathBuf {
     root
 }
 
-/// §FS-rules.3.5.2: every row of the exact table, the subject and the stderr
+/// §FS-rule-refusals.sentences.named-sections: every row of the exact table, the subject and the stderr
 /// that follows the reason. The first two are the subjects enabling named
 /// sections does make valid, and they print what they printed before.
 fn named_off_rows() -> Vec<(&'static str, String)> {
@@ -224,7 +224,7 @@ fn wrong_named_off_rows(root: &Path, rows: &[(&str, String)]) -> Vec<String> {
     wrong
 }
 
-/// §FS-rules.3.5.2: with named sections off, a subject refused for needing them
+/// §FS-rule-refusals.sentences.named-sections: with named sections off, a subject refused for needing them
 /// is answered with a subject that turning them on makes valid, labelled
 /// `after enabling it` only where the suggestion needs them, and with nothing
 /// guessed where no configured kind is recovered.
@@ -234,15 +234,15 @@ fn a_subject_needing_named_sections_is_answered_with_one_they_make_valid() {
     let wrong = wrong_named_off_rows(&named_off(), &rows);
     assert!(
         wrong.is_empty(),
-        "{} of {} rules refused with named sections off were not answered as FS-rules.3.5.2 says:\n{}",
+        "{} of {} rules refused with named sections off were not answered as FS-rule-refusals.sentences.named-sections says:\n{}",
         wrong.len(),
         rows.len(),
         wrong.join("\n")
     );
 }
 
-/// Guard, green before and after §FS-rules.3.5.2: the subjects enabling named
-/// sections does make valid keep every byte, the §FS-rules.3.5 row included.
+/// Guard, green before and after §FS-rule-refusals.sentences.named-sections: the subjects enabling named
+/// sections does make valid keep every byte, the §FS-rule-refusals.sentences row included.
 #[test]
 fn a_subject_enabling_makes_valid_keeps_its_as_typed_suggestion() {
     let wrong = wrong_named_off_rows(&named_off(), &named_off_rows()[..2]);
@@ -282,7 +282,7 @@ fn pastes_back(refusal: &str, off: &Path, on: &Path) -> Result<(), String> {
     Ok(())
 }
 
-/// §FS-rules.3.5.2, the issue's reproducer: every form offered with named
+/// §FS-rule-refusals.sentences.named-sections, the issue's reproducer: every form offered with named
 /// sections off pastes back where its label says. One labelled `after enabling
 /// it` is accepted once they are on and refused as configured, a plain one is
 /// accepted as configured, and a refusal that offers none lists the kinds.
@@ -302,7 +302,7 @@ fn every_named_off_rule_suggestion_is_accepted_where_its_label_says() {
     assert!(wrong.is_empty(), "{}", wrong.join("\n"));
 }
 
-/// §FS-rules.4, §FS-rules.3.5.4.4: each is refused before the scan, and each
+/// §FS-rules.4, §FS-rule-refusals.sentences.rewrite.no-form: each is refused before the scan, and each
 /// offers a form but `FSbogus`, from which no configured kind is recovered, so
 /// it is answered with the known kinds instead.
 #[test]
@@ -339,7 +339,7 @@ fn malformed_counts_ids_and_named_paths_are_pre_scan_refusals() {
     }
 }
 
-/// §FS-rules.3, §FS-rules.3.5: one meaning keeps one spelling, so a floor of one
+/// §FS-rules.3, §FS-rule-refusals.sentences: one meaning keeps one spelling, so a floor of one
 /// is the word `one` in both count-bearing shapes and the numeral is refused by
 /// name - the rule the new `at least N` production has to obey.
 #[test]
@@ -359,12 +359,12 @@ fn numeric_at_least_one_is_refused_in_both_count_shapes() {
     }
 }
 
-/// §FS-rules.3.5: the four sentences `at least` could not reach before it had a
+/// §FS-rule-refusals.sentences: the four sentences `at least` could not reach before it had a
 /// numeric production. Each stays refused and lands on the reason its two
 /// sibling bounds already answer with, so widening the grammar cannot quietly
 /// leave a near miss on the generic `count is not accepted` catch-all. The form
 /// keeps the typed bound, and a count that is no numeral or is zero gets none
-/// (§FS-rules.3.5.4.5).
+/// (§FS-rule-refusals.sentences.rewrite.by-refusal).
 #[test]
 fn at_least_reaches_the_refusals_its_sibling_bounds_already_answer_with() {
     for (sentence, refusal) in [
@@ -413,7 +413,7 @@ fn a_chapter_floor_above_one_takes_the_plural_noun() {
 /// spelled some other way names the five canonical counts, appended after the
 /// clause it already printed - so `count is not accepted;` stays a verbatim
 /// contiguous prefix. The sentence does not say which count it meant, so no
-/// form follows the list (§FS-rules.3.5.4.5).
+/// form follows the list (§FS-rule-refusals.sentences.rewrite.by-refusal).
 #[test]
 fn the_catch_all_count_refusal_names_every_canonical_count() {
     let output = run(

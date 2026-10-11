@@ -317,12 +317,9 @@ being reported, and no surface silently omits it.
 
 `check --rule` is different only where a title declaration would have supplied
 a location. Grammar or vocabulary refusal is decided after config selection
-and before scanning, prints `error: <reason>; accepted form: <rewrite>` (or
-`accepted forms:`, or `accepted form after enabling it:` where the rewrite
-needs `[id] named_sections = true`), writes nothing to stdout, and exits 2. A
-refusal that offers no form ([§FS-rule-refusals.sentences.rewrite](FS-rule-refusals.md#sentencesrewrite-an-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced)) prints `error: <reason>` alone,
-and then `known kinds: <kinds>` where what it could not supply is a kind
-([§FS-rule-refusals.sentences.rewrite.no-form](FS-rule-refusals.md#sentencesrewriteno-form-where-no-form-is-offered)). A syntactically valid
+and before scanning, and is printed in the refused-input shape of
+[§FS-errors.2.5](FS-errors.md#25-refused-input), with the accepted form, or none, that
+[§FS-rule-refusals.sentences.rewrite](FS-rule-refusals.md#sentencesrewrite-an-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced) builds. A syntactically valid
 unresolved literal requires the catalog, so after scanning it yields an
 `invalid-rule` attributed to `--rule` and the ordinary finding exit 1.
 
@@ -635,8 +632,7 @@ warnings now are those a newly counted section citation alone produces, until
 ```
 
 The rewrite is the sentence as authored with the failed production replaced
-([§FS-rule-refusals.sentences.rewrite](FS-rule-refusals.md#sentencesrewrite-an-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced)). An ambiguous production uses `accepted forms:`, and a rewrite
-that needs `[id] named_sections = true` uses `accepted form after enabling it:`.
+([§FS-rule-refusals.sentences.rewrite](FS-rule-refusals.md#sentencesrewrite-an-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced)), after the label [§FS-errors.2.5](FS-errors.md#25-refused-input) gives it.
 A parse failure that offers no form, every refusal [§FS-rule-refusals.sentences.rewrite.by-refusal](FS-rule-refusals.md#sentencesrewriteby-refusal-the-rewrite-each-refusal-makes) says
 offers none, is:
 
