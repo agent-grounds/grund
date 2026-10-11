@@ -159,9 +159,12 @@ file, with the same key less its hash as the restore prefix. A key of its own is
 what makes it save at all: `actions/cache` saves nothing on an exact hit of its
 primary key, and the cargo cache's key already hits whenever `Cargo.lock` has not
 changed, so a path added to it would never be written. It holds the release
-binding's and the debug CLI's compiled dependencies and leaves out every
-`incremental` directory, which a fresh checkout's workspace crates cannot reuse.
-That is roughly half a gigabyte per OS before compression, three caches in all,
+binding's and the debug CLI's compiled dependencies and no incremental state.
+It cannot leave that state out, because `actions/cache` archives a listed
+directory whole, so the builds never write it: the CLI builds with
+`CARGO_INCREMENTAL=0`, the release builds are not incremental, and a fresh
+checkout's workspace crates could not reuse the state anyway. After one run on
+Linux the target is about 0.7 GB before compression, three caches in all,
 against a repository limit of 10 GB the other caches already crowd; the release
 LTO builds of the tarball's own crates are not worth caching, because they
 rebuild at their fresh paths every run anyway.
@@ -192,8 +195,9 @@ own, so the class and module fixtures run before it, `setUpClass` and
 `setUpModule` and the previous class's teardown, are charged to it, and the last
 test carries the run's final teardown; a cargo build in a fixture shows up
 against the first test of its class rather than nowhere. A discovery that finds
-no tests exits 5, as `python -m unittest` does from Python 3.12. It needs no Python newer than the gate's own floor, which
-is why it does not use `unittest --durations`, new in Python 3.12. It adds those
+no tests exits 5, as `python -m unittest` does from Python 3.12. It needs no
+Python newer than the gate's own floor, which is why it does not use
+`unittest --durations`, new in Python 3.12. It adds those
 ten lines and no line per test, because a passing test is not worth a line of
 the log. `run_python_gate.run_tests(start, environment)` is the one entry that
 runs a discovery and prints the table; the wrapper calls it on `tests/integration`
