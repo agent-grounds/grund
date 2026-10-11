@@ -54,7 +54,11 @@ def checkout_cli():
     Built once per run into the shared target, and reused by every test (§AR-ci.3.4.1).
     """
     target = node_target()
-    checked(["cargo", "+1.95.0", "build", "-p", "grund", "--locked", "--target-dir", target])
+    # No incremental state: the CI cache could not leave it out, and a fresh checkout
+    # cannot reuse it (§AR-ci.3.4.1).
+    env = {**os.environ, "CARGO_INCREMENTAL": "0"}
+    checked(["cargo", "+1.95.0", "build", "-p", "grund", "--locked", "--target-dir", target],
+            env=env)
     return target / "debug" / ("grund.exe" if os.name == "nt" else "grund")
 
 

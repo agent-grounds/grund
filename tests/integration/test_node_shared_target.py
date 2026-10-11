@@ -31,7 +31,7 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, sys.argv[1])
 import support
 
-calls = []
+calls, envs = [], []
 
 class Done:
     def __init__(self, stdout=""):
@@ -40,6 +40,7 @@ class Done:
 def record(argv, cwd=None, env=None):
     argv = [str(arg) for arg in argv]
     calls.append(argv)
+    envs.append((env or {}).get("CARGO_INCREMENTAL"))
     if argv[:2] == ["node", "--version"]:
         return Done("v22.0.0\\n")
     if argv[:3] == ["npm", "pack", "--json"]:
@@ -50,7 +51,7 @@ support.checked = record
 shutil.which = lambda name, *rest, **options: name
 stage, target, tarball = support.source_package()
 first, second = support.checkout_cli(), support.checkout_cli()
-print(json.dumps({"calls": calls, "target": str(target), "cli": [str(first), str(second)]}))
+print(json.dumps({"calls": calls, "incremental": envs, "target": str(target), "cli": [str(first), str(second)]}))
 """
 
 DEFAULTS = """
@@ -102,6 +103,8 @@ class NodeSharedTargetTests(unittest.TestCase):
         builds = [argv for argv in recorded["calls"]
                   if "cargo" in argv and "build" in argv and "grund" in argv]
         self.assertEqual(1, len(builds), "the CLI is built once per run")
+        incremental = recorded["incremental"][recorded["calls"].index(builds[0])]
+        self.assertEqual("0", incremental, "the debug CLI writes no incremental state to cache")
         self.assertEqual(1, len(set(recorded["cli"])), recorded["cli"])
         self.assertTrue(within(recorded["cli"][0], shared), recorded["cli"][0])
 

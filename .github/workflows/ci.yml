@@ -68,14 +68,13 @@ jobs:
             ${{ runner.os }}-cargo-
 
       # §AR-ci.3.4.1: a key of its own, so the Node target is saved, not lost to the
-      # cargo cache's exact hit; incremental state is left out.
+      # cargo cache's exact hit; the builds write no incremental state into it.
       - name: Cache the Node acceptance's build target
         uses: actions/cache@v5
         continue-on-error: true
         with:
           path: |
             ~/ag/tmp/grund-node-target
-            !~/ag/tmp/grund-node-target/**/incremental
           key: ${{ runner.os }}-node-target-v1-1.95.0-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-node-target-v1-1.95.0-
