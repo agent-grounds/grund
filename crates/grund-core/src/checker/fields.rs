@@ -86,7 +86,7 @@ fn for_each_finding<'a>(
                 declaration,
                 direct: direct_sections(declaration),
             };
-            for finding in shape.judge(kind) {
+            for finding in shape.findings(kind) {
                 visit(declaration, finding);
             }
         }
@@ -120,7 +120,7 @@ struct Shape<'a> {
 }
 
 impl<'a> Shape<'a> {
-    fn judge(&self, kind: &'a Kind) -> Vec<FieldFinding<'a>> {
+    fn findings(&self, kind: &'a Kind) -> Vec<FieldFinding<'a>> {
         let mut out = Vec::new();
         for field in &kind.fields {
             match self.position(&field.name) {

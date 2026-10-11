@@ -301,6 +301,7 @@ V2_HANDLERS = {
     "schema_key": ("schema", "arms"),
     "sources_key": ("schema.sources", "arms"),
     "row_key": ("schema.kinds.<NAME>", "arms"),
+    "field_key": ("schema.kinds.<NAME>.fields.<name>", "arms"),
     "measure_key": ("schema.notes.lines|schema.notes.columns|schema.leads.words", "strength"),
     "text_key": ("schema.notes.text", "single"),
     "layout_key": ("schema.notes.layout", "strength"),
