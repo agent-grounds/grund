@@ -1,5 +1,6 @@
 //! Test module: what the tree walk does with a link it cannot read
-//! (§FS-config.3.5.5, §FS-config.3.5.6, §FS-check.2.4) — which loops and broken
+//! (§FS-config.3.5.5, §FS-config.3.5.6, §FS-scan.scope.links.unresolvable,
+//! §FS-scan.scope.links.owed, §FS-check.2.4) — which loops and broken
 //! links are owed a report, where that report names them, and what the walk
 //! does *not* read on the way. Split from `tests_walk.rs` along the seam the
 //! source already draws between `walk.rs` and `walk_errors.rs`. Unix-only:
@@ -26,7 +27,7 @@ fn a_broken_link_is_reported_only_where_the_walk_would_have_read_it() {
     );
 }
 
-/// §FS-config.3.5.6.1: the declared blind spot. `docs/shared -> ../nonexistent-dir`
+/// §FS-config.3.5.6.1, §FS-scan.scope.links.blind-spot: the declared blind spot. `docs/shared -> ../nonexistent-dir`
 /// has no extension at all, so nothing on disk distinguishes the directory it
 /// would have been descended into from an ordinary `bin/tool -> nowhere` — only
 /// the target could have said which, and it is not there. The walk stays silent
@@ -50,7 +51,7 @@ fn a_broken_link_with_no_extension_at_all_is_a_declared_blind_spot() {
     );
 }
 
-/// §FS-config.3.5.15: `respect_gitignore` is on by default and honours every
+/// §FS-config.3.5.15, §FS-scan.scope.ignore-files: `respect_gitignore` is on by default and honours every
 /// ignore-file form the `ignore` crate recognizes, `.ignore` included, so a
 /// path one covers is never walked — and a broken link there is not a hole the
 /// run has to report.
@@ -180,7 +181,7 @@ fn a_loop_above_the_walk_root_is_not_descended_into() {
     );
 }
 
-/// §FS-config.3.5.2: two links that point at each other's directories are met
+/// §FS-config.3.5.2, §FS-scan.identity.link-path: two links that point at each other's directories are met
 /// one spelling deep — `docs/a/link/link` — and neither of the names the user
 /// has to fix is a prefix of that path.
 #[test]

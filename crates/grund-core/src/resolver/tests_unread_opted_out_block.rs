@@ -122,7 +122,7 @@ fn cautioned_blocks(root: &Path) -> usize {
 /// something, had it been a project?" is no, and the caution must not fire.
 ///
 /// The prune cannot come from the walk's directory filter: a walk root is
-/// never pruned at depth 0 (§FS-config.3.5.9), so the root is gated before the
+/// never pruned at depth 0 (§FS-config.3.5.9, §FS-scan.scope.roots), so the root is gated before the
 /// walk or not at all.
 #[cfg(unix)]
 #[test]
