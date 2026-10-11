@@ -391,16 +391,20 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `full-scope-ignored` | warning | — | `--full` with an explicit path | [§FS-check.1.3.7](FS-check.md#137-a-path-the-flag-cannot-widen-earns-a-caution-not-a-refusal) |
 | `glob-citation` | warning | error in `0.19.0` | — | [§FS-check.checks.glob-citation](FS-check.md#checksglob-citation-glob-citation) |
 | `inline-citation-style` | error; warning for the two opt-in forms | — | `[reference] inline_style`; `warn_on_suggested`; `inline_note_layout_check` | [§FS-check.3.10](FS-check.md#310-inline-citation-style-violation) |
+| `invalid-field-value` | by strength: the field's `presence` | — | `one_of` on a v2 field | [§FS-fields.checks.invalid-field-value](FS-fields.md#checksinvalid-field-value-invalid-field-value) |
 | `invalid-rule` | error | — | `rules = true` on a kind | [§FS-check.3.25](FS-check.md#325-invalid-rule) |
 | `invalid-value-binding` | error | — | `values = true` on a kind | [§FS-check.3.21](FS-check.md#321-invalid-value-binding) |
 | `invalid-value-declaration` | error | — | `values = true` on a kind | [§FS-check.3.20](FS-check.md#320-invalid-value-declaration) |
 | `io` | error | — | — | [§FS-check.2.4](FS-check.md#24-an-incomplete-run) |
 | `local-section-citation` | error | — | — | [§FS-check.3.24](FS-check.md#324-declaration-local-section-citation) |
 | `misplaced-declaration` | error | — | a configured kind home | [§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home) |
+| `misplaced-field` | by strength: the field's `presence` | — | `position` or `after` on a v2 field | [§FS-fields.checks.misplaced-field](FS-fields.md#checksmisplaced-field-misplaced-field) |
 | `missing-citation` | error | — | a `must` entry | [§FS-check.3.11](FS-check.md#311-missing-required-citation) |
+| `missing-field` | by strength: the field's `presence` | — | a v2 field | [§FS-fields.checks.missing-field](FS-fields.md#checksmissing-field-missing-field) |
 | `missing-index-entry` | error | — | — | [§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index) |
 | `missing-section` | error | — | — | [§FS-check.3.2](FS-check.md#32-missing-section) |
 | `missing-snapshot` | warning | — | `fetch` on a kind | [§FS-check.4.12](FS-check.md#412-missing-snapshot) |
+| `mistitled-field` | by strength: the field's `presence` | — | `title` on a v2 field | [§FS-fields.checks.mistitled-field](FS-fields.md#checksmistitled-field-mistitled-field) |
 | `nothing-recognized` | warning | — | — | [§FS-check.4.5](FS-check.md#45-nothing-recognized) |
 | `optional-member-absent` | warning | — | `optional = true` on a member | [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent) |
 | `orphan-section` | error | — | `[id] named_sections` | [§FS-declarations.checks.orphan-section](FS-declarations.md#checksorphan-section-orphan-name-bearing-section-path) |
@@ -421,6 +425,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `shorthand-numeric-run` | error | — | — | [§FS-check.3.15](FS-check.md#315-shorthand-citation-in-a-numeric-run) |
 | `suggested-citation` | none — suggestion | — | `--suggestions`, on a `should` entry | [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) |
 | `uncited-unit` | error | — | `rules = true` on a kind | [§FS-check.3.28](FS-check.md#328-uncited-unit) |
+| `undeclared-chapter` | by strength: the kind's `closed` | — | `closed` on a v2 kind | [§FS-fields.checks.undeclared-chapter](FS-fields.md#checksundeclared-chapter-undeclared-chapter) |
 | `ungrounded` | error | — | `require_grounding` | [§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in) |
 | `unknown-project` | error | — | — | [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) |
 | `unlinked-index-entry` | error | — | — | [§FS-check.3.17](FS-check.md#317-index-entry-is-not-a-link) |
@@ -433,6 +438,11 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 The four `remote-*` rows are specified ahead of the release that introduces them
 ([§FS-remote-projects](FS-remote-projects.md#fs-remote-projects-a-project-cites-another-repositorys-declarations-from-a-committed-pinned-projection)); until it ships, a config declaring `[workspace.remotes]` is refused
 at load ([§FS-remote-projects.declaration.older](FS-remote-projects.md#declarationolder-an-older-grund-refuses-the-table-loudly)), so none of them fires.
+
+The five field codes `invalid-field-value`, `misplaced-field`, `missing-field`,
+`mistitled-field` and `undeclared-chapter` take their channel from the strength
+their field or kind writes, so one code can be an error, a warning or a
+suggestion ([§FS-fields.strengths.table](FS-fields.md#strengthstable-which-strength-each-finding-takes)).
 
 The chapter-rule codes `chapter-cardinality`, `citation-cardinality`,
 `invalid-rule`, `uncited-unit`, and `unreached-declaration` are selectable on

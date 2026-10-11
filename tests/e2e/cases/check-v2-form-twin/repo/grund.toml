@@ -1,0 +1,23 @@
+grund_config_version = 2
+project_name = "example"
+
+[schema.sources]
+languages = ["markdown"]
+
+[schema.kinds.CONST]
+folders = ["values"]
+index = false
+form = "value"
+
+[schema.kinds.DOC]
+folders = ["docs"]
+index = false
+[schema.kinds.DOC.fields.values]
+content = "values"
+
+[schema.kinds.RULE]
+folders = ["rules"]
+index = false
+form = "rule"
+[schema.kinds.RULE.fields.values]
+content = "values"

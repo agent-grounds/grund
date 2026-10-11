@@ -1,0 +1,1 @@
+docs/fs/FS-a.md:1: error: FS-a has 2 Terms chapters; RULE-terms requires exactly one; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: "terms: Terms", "words: Terms"

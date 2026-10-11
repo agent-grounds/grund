@@ -161,6 +161,8 @@ mod tests_scan_exclude;
 #[cfg(test)]
 mod tests_slots;
 #[cfg(test)]
+mod tests_v2_fields;
+#[cfg(test)]
 mod tests_v2_lowering;
 #[cfg(test)]
 mod tests_v2_reader;

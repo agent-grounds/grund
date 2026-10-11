@@ -92,6 +92,48 @@ fn v2_config_reader_contract() {
     assert_every_case_passed("v2 config reader", &outcomes);
 }
 
+/// §FS-fields: a v2 kind's fields, `closed` and `form`, run alone. Every case is
+/// also in the full pass; the `*-v1-*` cases are the v1 halves that must not move.
+#[test]
+fn v2_kind_fields_contract() {
+    let root = repo_root();
+    let cases = root.join("tests/e2e/cases");
+    let outcomes = [
+        "check-v2-field-terms-first",
+        "check-v2-field-terms-first-json",
+        "check-v2-field-only",
+        "check-v2-field-after",
+        "check-v2-field-status-must",
+        "check-v2-field-status-warn",
+        "check-v2-field-status-should",
+        "check-v2-field-status-should-suggestions",
+        "check-v2-field-status-may",
+        "check-v2-field-closed-must",
+        "check-v2-field-closed-warn",
+        "check-v2-field-closed-should",
+        "check-v2-field-closed-may",
+        "check-v2-field-values-chapter",
+        "check-chapter-value-invalid-shape",
+        "check-v2-form-twin",
+        "check-v1-form-twin",
+        "check-v2-field-rule-pairing-missing",
+        "check-v2-field-rule-pairing-two-titles",
+        "check-v2-field-rule-pairing-other-name",
+        "check-v2-field-rule-pairing-warn-field",
+        "config-v2-field-position-and-after-refused",
+        "config-v2-field-two-first-refused",
+        "config-v2-field-after-unknown-refused",
+        "config-v2-field-after-cycle-refused",
+        "config-v2-field-one-of-title-refused",
+        "config-v2-field-on-value-form-refused",
+        "config-v1-fields-unknown-key",
+    ]
+    .iter()
+    .map(|name| run_case(&root, &cases.join(name), E2e))
+    .collect::<Vec<_>>();
+    assert_every_case_passed("v2 kind fields", &outcomes);
+}
+
 /// §FS-show.3.5.2: the check breadcrumb belongs only to the existing-path
 /// migration case. Port grund.33's clean-check and resolving-ID controls before
 /// comparing the malformed coordinate and both non-path alias refusals.

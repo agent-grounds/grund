@@ -1,0 +1,10 @@
+grund_config_version = 2
+project_name = "example"
+[schema.sources]
+languages = ["markdown"]
+[schema.kinds.DF]
+folders = ["docs/df"]
+index = false
+closed = "must"
+[schema.kinds.DF.fields.status]
+one_of = ["Proposed", "Accepted", "Superseded"]
