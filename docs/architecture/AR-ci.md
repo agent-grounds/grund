@@ -45,9 +45,10 @@ The current pre-commit gate runs the same Rust format/build/test commands that d
 Both Python gates run `python scripts/run_python_gate.py`. The wrapper prepares
 the built binary and released Grund 0.16.1 for the co-change compatibility cases
 ([§FS-cochange-recipe.examples](../functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance)) and the same-source binding oracle for the
-Node parity tests ([§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)), the three inputs of [§AR-ci.3.4](AR-ci.md#34-the-python-gates-inputs), then runs
-`python -m unittest discover -s tests/integration -p test_*.py` with that environment
-from the repository root. The parity test checks the shared wrapper invocation
+Node parity tests ([§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)), and the shared build target of the Node
+acceptance, the inputs of [§AR-ci.3.4](AR-ci.md#34-the-python-gates-inputs), then runs unittest discovery of `tests/integration`
+with the pattern `test_*.py` and that environment from the repository root, timing
+each test ([§AR-ci.3.4.2](AR-ci.md#342-per-test-durations)). The parity test checks the shared wrapper invocation
 and its discovery directory and pattern.
 
 ### 3.1 Citations and links
@@ -108,8 +109,8 @@ Stated so a test can hold a test file to it: **a test that reads an observation 
 
 ### 3.4 The Python gate's inputs
 
-The wrapper hands its discovery run three inputs, each an absolute path in the
-environment, and treats the three alike: a variable already set is used as
+The wrapper hands its discovery run four inputs, each an absolute path in the
+environment, and treats the four alike: a variable already set is used as
 given, and an unset one is prepared from this checkout. `GRUND_BUILT` is the
 tree's own `grund`, built by `cargo build -p grund --locked`. `GRUND_RELEASED`
 is released Grund 0.16.1, installed once into the wrapper's scratch and held to
@@ -136,6 +137,49 @@ the verdict CI reaches on the same tree.
 the oracle unset and no CI in its environment, the oracle the wrapper returns
 must answer `--metadata` with this checkout's `HEAD` and protocol version 1. An
 oracle it is given must come back as that same file's absolute path.
+
+#### 3.4.1 The Node acceptance's shared build target
+
+`GRUND_NODE_TARGET` is the fourth input: one Cargo target directory that every
+build of the Node acceptance ([§AR-bindings.5](AR-bindings.md#5-grund-node-the-napi-rs-binding)) shares. Unset, the wrapper prepares
+`~/ag/tmp/grund-node-target`, outside the checkout and kept between runs, and CI
+lists that directory among the paths its cargo cache restores, so a job starts
+with the dependency tree already compiled. The acceptance's own helper reads the
+same variable and falls back to the same directory, so `tests/bindings/node/run.py`
+run on its own shares it too. Every build site names this target or a directory
+under it, never a fresh temporary one: the source package and its bundled
+fallback rebuild, the documented native builder and its test-seams build, and
+the CLI. The CLI the acceptance compares against is built once per run and
+reused by every test that needs it. Cargo's own lock makes the sharing safe.
+
+Sharing a target changes what is cached, not what is proven. The builds keep
+`--profile release`, `--locked`, the bundled-sources closure, and the fallback
+rebuild after the native artifacts are removed from the installed tarball, so
+[§FS-distribution.3.2.3.3](../functional-spec/FS-distribution.md#3233-source-buildlocal-package-ownership) holds as written: the tarball's own workspace crates
+still compile from its own sources, at their own paths, and generated files
+still stay outside the checkout. What a warm target no longer repeats is the
+third-party dependency tree, which that point already lets a source build take
+from a populated cache.
+
+`tests/integration/test_node_shared_target.py` holds this: with the variable set,
+every `--target-dir` the source package and the CLI build name lies under it and
+the CLI is built once; every other build site names this target, the rehearsal's,
+or a directory under one of them; unset, the wrapper and the helper agree on one
+persistent directory outside the checkout, which the CI cache restores.
+
+#### 3.4.2 Per-test durations
+
+The wrapper times every test it runs and ends with a short table of the slowest
+ten, one `<seconds>s <test id>` line each under a `Slowest tests` heading, so where
+the gate's time goes is measured rather than inferred from the timestamps of
+`unittest`'s dot lines. It needs no Python newer than the gate's own floor, which
+is why it does not use `unittest --durations`, new in Python 3.12. It adds those
+ten lines and no line per test, because a passing test is not worth a line of
+the log. `run_python_gate.run_tests(start, environment)` is the one entry that
+runs a discovery and prints the table; the wrapper calls it on `tests/integration`
+and returns its exit status.
+`tests/integration/test_python_gate_durations.py` runs it on a small suite of its
+own.
 
 ## 4. Performance smoke guard
 
