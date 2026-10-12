@@ -172,7 +172,7 @@ pub(crate) fn e2e_case_dir_name(schema: &Schema, rendered: &str) -> String {
 /// `check`), `expected.exit`, `spec.refs`, and the recursive fixture file list —
 /// the data `grund E2E-<name>` renders or checks (§FS-show.2.4, §FS-config.3.9).
 fn read_e2e_case(schema: &Schema, frame: Frame<'_>, dir: &Path) -> Result<E2eCase> {
-    // §FS-scan.text.buffer: the manifest as a save would write it.
+    // §AR-system.2.13: the manifest as a save would write it.
     let sources = frame.sources();
     let command_args = dir.join("command.args");
     let args = if path_is_file(&command_args) {
@@ -210,7 +210,7 @@ fn read_e2e_spec_refs(schema: &Schema, frame: Frame<'_>, dir: &Path) -> Result<V
         return Ok(Vec::new());
     }
     // §FS-check.6.1.1: cover this effective input before its shared read, as a
-    // save would write it (§FS-scan.text.buffer).
+    // save would write it (§AR-system.2.13).
     let text = frame.sources().text(&path)?;
     Ok(text
         .lines()

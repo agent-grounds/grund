@@ -77,7 +77,7 @@ pub(super) fn citation_in_markdown_inline_code(
     if !markdown {
         return false;
     }
-    // §FS-scan.text.buffer: the record holds what a save would write, an open
+    // §AR-system.2.13: the record holds what a save would write, an open
     // buffer's included; a file without one is read as the run reads it.
     let line = match findings.files.get(&cite.file) {
         Some(record) => record.line(cite.line).map(str::to_string),
