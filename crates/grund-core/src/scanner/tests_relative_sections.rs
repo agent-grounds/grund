@@ -218,3 +218,26 @@ fn outside_every_body_it_is_only_text() {
     assert!(parents(&findings).is_empty());
     assert_eq!(sections(&findings), Vec::<String>::new());
 }
+
+/// §FS-declarations.checks.orphan-section: the one answer the orphan check and
+/// the parent pass both read, a named path's first missing prefix, and none for a
+/// numeric path, whose parents need not be recorded.
+#[test]
+fn an_orphan_is_a_named_path_missing_a_prefix() {
+    let findings = scan(
+        "relative_parent_missing_prefix",
+        true,
+        "#### format.user.name: Name\n\n### 2.1 Numeric\n\n\
+         ## parse: Parsing\n\n### parse.1: Tokens\n",
+    );
+    let decl = findings
+        .declarations
+        .values()
+        .flatten()
+        .next()
+        .expect("FS-login");
+    let missing = |path: &str| decl.missing_section_prefix(path);
+    assert_eq!(missing("format.user.name").as_deref(), Some("format"));
+    assert_eq!(missing("2.1"), None);
+    assert_eq!(missing("parse.1"), None);
+}

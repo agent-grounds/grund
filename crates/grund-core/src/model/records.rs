@@ -114,6 +114,27 @@ pub struct Declaration {
     pub value_valid: Option<bool>,
 }
 
+impl Declaration {
+    /// The first proper prefix of `path` that this declaration's section map
+    /// lacks, where `path` bears a name: what makes the section an orphan
+    /// (§FS-declarations.checks.orphan-section). `None` for a numeric path, which
+    /// needs no parent recorded, and for a path whose every prefix is. The
+    /// orphan-section check reports it, and the parent pass refuses an orphan as a
+    /// relative heading's parent, so the two never disagree on which is one.
+    pub(crate) fn missing_section_prefix(&self, path: &str) -> Option<String> {
+        let parts = path.split('.').collect::<Vec<_>>();
+        let named = parts
+            .iter()
+            .any(|part| part.as_bytes().first().is_some_and(u8::is_ascii_lowercase));
+        if !named {
+            return None;
+        }
+        (1..parts.len())
+            .map(|end| parts[..end].join("."))
+            .find(|prefix| !self.sections.contains_key(prefix))
+    }
+}
+
 /// One numeric or explicitly named subsection heading recorded inside a
 /// declaration (§AR-scanner.2.2): the heading text used for anchors, plus the
 /// source line and Markdown heading level used by the section-depth checker

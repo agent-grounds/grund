@@ -182,17 +182,7 @@ pub(super) fn check_section_headings(
         for (id, decls) in &findings.declarations {
             for decl in decls {
                 for (path, info) in &decl.sections {
-                    if !path
-                        .split('.')
-                        .any(|part| part.as_bytes().first().is_some_and(u8::is_ascii_lowercase))
-                    {
-                        continue;
-                    }
-                    let parts = path.split('.').collect::<Vec<_>>();
-                    let first_absent = (1..parts.len())
-                        .map(|end| parts[..end].join("."))
-                        .find(|prefix| !decl.sections.contains_key(prefix));
-                    if let Some(prefix) = first_absent {
+                    if let Some(prefix) = decl.missing_section_prefix(path) {
                         report.errors.push(Diagnostic {
                             code: "orphan-section",
                             path: Some(decl.file.clone()),
