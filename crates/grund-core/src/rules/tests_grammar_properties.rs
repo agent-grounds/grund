@@ -18,8 +18,8 @@
 
 use super::RuleAnchor;
 use super::sentence::{RuleVocabulary, parse_rule, parse_selector};
-use crate::config::Config;
-use std::collections::{BTreeMap, BTreeSet};
+use crate::config::{Config, KindTable};
+use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 /// The properties no test can ask yet, and the step that makes each askable.
@@ -88,10 +88,11 @@ fn vocabulary() -> RuleVocabulary {
         .expect("{kind}-{slug} grammar with named sections");
     let kinds = BTreeSet::from(["FS".to_string(), "GOAL".to_string()]);
     RuleVocabulary {
-        kinds: kinds.clone(),
-        target_kinds: kinds,
-        target_namespaces: BTreeMap::new(),
+        objects: KindTable::of_citable(&kinds),
+        kinds,
         named_sections: true,
+        named_kinds: Default::default(),
+        non_citable: Default::default(),
         id_grammars: vec![config.grammar],
         section_separators: vec![".".into()],
     }
