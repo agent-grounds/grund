@@ -199,3 +199,13 @@ max_accepted = { value = 597, unit = "lines" }
 reason = """
 §AR-ci.13 runs each operating system's suites as jobs of their own: a Rust, a Python and a Node job on Ubuntu and on Windows, one job on macOS, the Ubuntu pre-commit job and one required `cargo test (<os>)` aggregate each. Every job checks out, installs its toolchains, restores its own caches and saves them again on a push to main (§AR-ci.13.6), so the setup repeats seven times, and §AR-ci.13 writes the jobs out rather than generating them with YAML anchors because the tests that hold the layout read the workflow as text. A composite action or a reusable workflow would move that setup where those tests cannot see it, which is the indirection the layout test exists to refuse; the oracle build already left for scripts/prepare_binding_oracle.py, the one step that was code rather than setup. The ceiling follows the number of jobs, not logic accruing in any of them.
 """
+[[exceptions]]
+path = "docs/functional-spec/FS-config.md"
+match = "exact"
+rules = ["docs"]
+kind = "deferred"
+max_accepted = { value = 763, unit = "lines" }
+until = "the section-path grammar of §FS-config.3.3 leaves for a declaration of its own with its existing section citations migrated"
+reason = """
+Over the soft budget at 763 non-blank lines before issue #643 touched it, and promoted by the count of soft edits, so any edit is refused. Missing boundary: §FS-config.3.3, the section-path grammar, is a subject of its own with its own sub-structure, but moving it out is a mapped migration of 43 citing sites across 24 files, which the approved proposal for #643 leaves out of that change by extending the points in place. #643 restates §FS-config.3.3.1 and extends §FS-config.3.3.2, §FS-config.3.3.3, §FS-config.3.3.4 and §FS-config.3.2.7 within their existing paragraphs, and puts the relative-heading grammar itself in §FS-declarations.section.relative, so the file adds no line. The ceiling accepts exactly the measured 763 non-blank lines and permits no growth.
+"""

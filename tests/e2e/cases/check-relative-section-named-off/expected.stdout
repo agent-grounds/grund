@@ -1,0 +1,1 @@
+docs/functional-spec/FS-off.md:9: error: unmarked heading inside FS-off; number it (### 3.2. .user: User) as FS-off.3.2, declare an ID, or use a bold label; this became an error in grund 0.16.0; under FS-off.3 a relative heading is written ### .2. User

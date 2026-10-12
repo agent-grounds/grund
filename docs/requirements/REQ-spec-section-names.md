@@ -87,6 +87,13 @@ new one for as long as `grund refs` still finds a site on it. The pointer is ret
 when nothing cites it, and retiring it is a change of its own — not a side effect of the
 move that made it.
 
+A relative heading takes its path from its parent, so moving it under another parent, or
+renaming or renumbering any of its ancestors, renames every address beneath it. The rule
+does not bend for that: each address still cited keeps its pointer. What a relative heading
+adds is that the move is caught where it would otherwise retarget a citation in silence —
+an old address another section has taken is reported until the pointer is there
+([§FS-section-lock.move](../functional-spec/FS-section-lock.md#move-moving-a-cited-section-on-purpose)).
+
 ## why: Why this exists
 
 The specification is read by address far more often than it is read whole. Every

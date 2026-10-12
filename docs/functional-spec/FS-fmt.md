@@ -49,7 +49,8 @@ This list is the ownership boundary for the one writer that rewrites text anywhe
 
 - Declaration headings (the line that names the ID). The marker is for *citations*, not declarations.
 - The exact `<!-- grund:value -->` suffix on a numbered section heading. It is authored authority rather than formatter syntax: no pass inserts, canonicalizes, moves, removes, or rewrites it or its trailing whitespace, and `--check` and `--write` preserve its bytes ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)).
-- Explicit section names. Formatting may wrap citations to them and re-derive link anchors, but it never infers a name from a title, renames one, or rewrites a named heading path. An unmarked letter-tail token suppressed by [§FS-check.1.1](FS-check.md#11-recognized-citations) is not a shorter citation and is left byte-identical.
+- Explicit section names. Formatting may wrap citations to them and re-derive link anchors, but it never infers a name from a title, renames one, or rewrites a named heading path.
+- Relative section headings, never expanded, shortened or rewritten ([§FS-declarations.section.relative.shown](FS-declarations.md#sectionrelativeshown-how-a-relative-heading-is-shown)). `--write` writes only their section lock ([§FS-section-lock.write](FS-section-lock.md#write-who-writes-the-lock)).
 - Citations in every zone [§FS-citations.zones](FS-citations.md#zones-where-citation-text-is-never-rewritten) names, the zones the text itself forbids a rewrite in.
 - Files outside the default scope.
 - External file-symlink targets, which `--write` reads and does not write through; files below an external directory symlink never reach `fmt` ([§FS-fmt.2.3.2](FS-fmt.md#232-a-link-that-leaves-the-config-root-is-not-written-through)).

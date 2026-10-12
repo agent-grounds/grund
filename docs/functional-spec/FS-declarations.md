@@ -361,7 +361,8 @@ stub's single declaration line each end ownership.
 
 A section is a citable heading inside a declaration's body: a numbered heading, or a named
 one where named sections are enabled, whose path is written in the grammar of
-[§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth). A plain heading is not a section; it remains prose. A section's extent is
+[§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth), or, in a Markdown body, taken from its parent heading by a relative heading
+([§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)). A plain heading is not a section; it remains prose. A section's extent is
 its heading and everything down to the next sibling-or-shallower heading; nested deeper
 headings included. Which sections a declaration has is its section map
 ([§FS-declarations.section.map](FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span)).
@@ -376,6 +377,46 @@ pseudo-headings remain content under [§FS-show.2.5](FS-show.md#25-a-heading-ins
 otherwise legal plain heading inside a body an error; that separate policy is outside this
 contract. Every surface reads this map ([§REQ-one-answer.sections.map](../requirements/REQ-one-answer.md#sectionsmap-every-surface-reads-one-section-map)), so none answers for
 a heading it rejects.
+
+### section.relative: A heading may write only the component it adds
+
+Inside a Markdown declaration body a heading may write only the component it adds and take the rest of its path from its parent: under `## format: Formatting`, the heading `### .1: Username` declares `format.1`. The heading's **canonical path** is its parent's path, a `.`, and its component; under the declaration heading itself it is the component alone. The canonical path is the section's one coordinate. Citations, `refs`, `list`, completion, query results, the section map and every diagnostic name `FS-login.format.1`; `.1` alone is never a coordinate, and no citation form addresses a section relative to anything.
+
+The form needs no setting and serves every outline, numeric or named, in every repository; relative and complete-path headings mix freely at any depth. It is unambiguous because no repository that passes `grund check` today contains it: before this form, every dotted heading inside a Markdown declaration body was an [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) error. Decided in [§DF-relative-section-headings](../decisions/functional/DF-relative-section-headings.md#df-relative-section-headings-a-heading-may-write-only-the-component-it-adds).
+
+A cited relative section is guarded against silently holding other text after a move by the section lock ([§FS-section-lock](FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)).
+
+#### section.relative.form: The form
+
+A relative heading writes one `.` and exactly one component, a number `[0-9]+` or a name in the grammar of [§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-explicit-section-names). The rest of the line uses the title syntax the complete-path heading for the same canonical path would use: the optional trailing period and space-separated title of a purely numeric path, or the colon form of a name-bearing one ([§FS-config.3.3.1](FS-config.md#331-named-components)).
+
+| Parent | Relative heading | Canonical path | Complete-path heading it stands for |
+|---|---|---|---|
+| `## 3. Third` | `### .1 Username` or `### .1. Username` | `3.1` | `### 3.1 Username` or `### 3.1. Username` |
+| `## format: Formatting` | `### .1: Username` | `format.1` | `### format.1: Username` |
+| `## format: Formatting` | `### .user: Username` | `format.user` | `### format.user: Username` |
+| the declaration | `## .format: Formatting` | `format` | `## format: Formatting` |
+| the declaration | `## .3 Third` | `3` | `## 3 Third` |
+
+Expanding a relative heading is inserting its parent's path before the `.`. Everything the complete-path heading would be refused for, the relative heading is refused for too: a name with `named_sections` off, a name after a numeric parent path (the reserved `number.name` order), the colon form on a purely numeric path, and a numeric path written without its space or period. A dotted heading that is not this form — two components (`#### .a.b: Deep`), an empty component (`### .: Title`), or any of the refusals above — declares nothing and stays an [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) error, whose message then also shows the relative form ([§FS-declarations.checks.unmarked-heading.2.1](FS-declarations.md#checksunmarked-heading21-a-dotted-heading-is-also-shown-the-relative-form)). Only a name needs `named_sections`: with it off, `### .1 Username` under `## 3. Third` is still section `3.1`.
+
+#### section.relative.parent: The parent
+
+A relative heading at level N takes as its parent the nearest heading before it in the same declaration body that is shallower than N; a heading inside a fence is content and is not a candidate. That heading must be exactly level N−1, and it must be either the declaration heading itself or a **usable** section: one the scan recorded, whose path is not an orphan ([§FS-declarations.checks.orphan-section](FS-declarations.md#checksorphan-section-orphan-name-bearing-section-path)), and which is not one of two or more claimants of one path ([§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path)), whichever claimant it is. A parent that carries its own depth finding ([§FS-declarations.checks.section-heading-level](FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch)) is still usable, and its child does not repeat that finding.
+
+In every other case — a skipped level, a parent that is a plain heading, an orphan, a duplicate, or a failed relative heading, a would-be parent inside a fence — the relative heading declares nothing and is a [§FS-declarations.checks.relative-section-parent](FS-declarations.md#checksrelative-section-parent-a-relative-heading-without-its-parent) error that names the parent it needed. Relative headings chain: `#### .1:` under `### .user:` under `## format:` is `format.user.1`. A relative heading and a complete-path heading that resolve to one canonical path, or two relative headings that do, are a [§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path) like any two claimants.
+
+A relative heading sits one level below its parent by construction, so it never carries a depth finding of its own ([§FS-config.3.3.2](FS-config.md#332-section_heading_levels--heading-depth-against-path-depth)). Markdown's six levels therefore bound how many relative steps nest, five under an H1 declaration, and not how long a path is: under `"loose"` a parent that writes a seven-component path hands its relative child an eight-component one. The rule that a numeric prefix need not be recorded ([§FS-config.3.3.3](FS-config.md#333-every-prefix-of-a-name-bearing-path-is-recorded)) still holds for complete-path headings; a relative heading always needs its actual parent, because the parent is where its path comes from.
+
+#### section.relative.where: Only in Markdown declaration bodies
+
+The form is recognised only in an ATX heading inside a Markdown declaration body, the headings [§FS-declarations.checks.unmarked-heading.1](FS-declarations.md#checksunmarked-heading1-which-headings-participate) judges. The same dotted line keeps exactly the meaning it has without this form everywhere else: in a source doc-comment, a file title before the first declaration, after a heading that closed the body, in a file with no declaration, and in a fence or raw HTML block. A source doc-comment stays outside it in this release because giving its dotted lines a meaning would move verdicts that pass today; that change takes the warning route of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) on its own.
+
+#### section.relative.shown: How a relative heading is shown
+
+Every surface that reports a coordinate reports the canonical path. Two surfaces print a heading line for the reader to copy a coordinate from, and they print a relative heading with its canonical path in place of the relative one, at its written depth and with everything after the path kept. The section map ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)) maps `### .1: Username` under `## format: Formatting` as `### format.1: Username`, and `### .1. Username` under `## 3. Third` as `### 3.1. Username`, for a whole declaration, for a selected section, and for the selected section's own first line. The title hover shows `` `format.1: Username` `` ([§FS-lsp.1.2.4](FS-lsp.md#124-the-title-hovers-text)). The expansion is deterministic, from the recorded parent, so it is a structural slice and not a summary ([§FS-non-goals.14](FS-non-goals.md#14-generated-summaries-token-saving-inside-check)).
+
+Every read of the file's text — the default read, `--brief` and `--full` — prints the relative heading as written, and so does the JSON `body` of those reads. The JSON form of a `--toc` read carries the map's lines in `body`, and each `sections[]` entry's `path` is the canonical path, its `title` the title as written, and its `anchor` the anchor of the heading as written. A link anchor follows the heading as written and rendered, so `### .1: Username` is `#1-username` ([§FS-fmt.6.2.2](FS-fmt.md#622-the-anchor-slugifies-the-headings-rendered-text)). No command rewrites a relative heading into its complete form or back ([§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten)).
 
 ## lead: What cuts a lead
 
@@ -621,11 +662,29 @@ The mode ([§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-dep
 
 That this rule and `show` read one section record is [§REQ-one-answer.sections.ambiguity](../requirements/REQ-one-answer.md#sectionsambiguity-check-and-show-judge-a-section-path-from-one-record).
 
+#### checks.duplicate-section.5: Judged over canonical paths
+
+A relative heading claims its canonical path ([§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)), so `### format.1: Username` and `### .1: Username` under `## format:`, or two `### .1:` headings under it, are two claimants of `format.1` and this one finding, in the message above: anchored at the first line, naming the other. Neither claimant is a usable parent, so a relative heading beneath either is [§FS-declarations.checks.relative-section-parent](FS-declarations.md#checksrelative-section-parent-a-relative-heading-without-its-parent).
+
 ### checks.orphan-section: Orphan name-bearing section path
 
 With `[id] named_sections = true`, every proper prefix of a name-bearing section path must be recorded in the same declaration before the descendant can be addressed. `### goals.performance: Performance` therefore requires a recorded `goals`; `### missing.performance: Performance` is one error at that heading's line even when another Markdown heading visually contains it. The check uses the complete recorded path set and is independent of heading-depth validation, so a heading with both a missing prefix and a wrong depth produces both findings. Purely numeric paths are unchanged and are never judged by this rule.
 
 The message names the orphan coordinate and its first absent prefix. Its code is `orphan-section`. This is a declaration-side structural error, not a missing-citation error: it is reported even when nobody cites the orphan, and a citation to it may independently be present and resolve to the recorded coordinate.
+
+The rule is judged over canonical paths ([§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)). A relative heading is never an orphan, because it is recorded only under a usable parent; a relative heading beneath an orphan is [§FS-declarations.checks.relative-section-parent](FS-declarations.md#checksrelative-section-parent-a-relative-heading-without-its-parent), and no second orphan finding.
+
+### checks.relative-section-parent: A relative heading without its parent
+
+A well-formed relative heading ([§FS-declarations.section.relative.form](FS-declarations.md#sectionrelativeform-the-form)) whose parent is not a usable section exactly one level shallower, nor the declaration heading ([§FS-declarations.section.relative.parent](FS-declarations.md#sectionrelativeparent-the-parent)), declares nothing and is one error at its line with code `relative-section-parent`:
+
+```text
+relative heading <written> needs an H<N-1> parent under <coordinate>, and there is none
+```
+
+`<written>` is the heading's `#` run, a space, and its relative component with its `.` (`#### .1`), and `<N-1>` is one less than that `#` count. `<coordinate>` is where the parent was needed: the nearest usable section or declaration heading before the heading that is shallower than level N−1, as `<ID>` or `<ID>.<path>`. The declaration heading always qualifies, so there is always one. Under `## format: Formatting` in `FS-login`, a `#### .1: Username` with no `###` between reads `relative heading #### .1 needs an H3 parent under FS-login.format, and there is none`. The same line covers every reason a parent is not usable — a skipped level, a plain heading, an orphan, a duplicate before or after the child, a failed relative heading, a would-be parent inside a fence — because the fix is the same: give the heading the parent it needs, or write its complete path.
+
+A relative heading beneath a failed one fails the same way, at its own line. A citation of the address the heading meant is a [§FS-check.3.2](FS-check.md#32-missing-section) finding as it would be for any absent section. Text, JSON (`"sites":null`), LSP and `--only`/`--ignore` treatment are those of every located error ([§FS-check.2.1](FS-check.md#21-report-format)).
 
 ### checks.section-heading-level: Section heading level mismatch
 
@@ -652,13 +711,13 @@ This is an ordinary hard finding under §[§FS-check.2](FS-check.md#2-outputs)�
 
 ### checks.unmarked-heading: Unmarked Markdown heading
 
-A Markdown ATX heading that is deeper than a declaration heading and whose line is still inside that declaration's body is an error when it is neither another declaration nor a recognized numeric or enabled named section. The containing declaration is the nearest enclosing body, so a plain heading beneath a deeper child declaration names that child, not an overlapping ancestor. This is a project-wide rule with no configuration, severity selector, or permanent opt-out ([§DF-unmarked-markdown-headings](../decisions/functional/DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph)).
+A Markdown ATX heading that is deeper than a declaration heading and whose line is still inside that declaration's body is an error when it is neither another declaration nor a recognized numeric or enabled named section, written with its complete path or as a relative heading ([§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)). The containing declaration is the nearest enclosing body, so a plain heading beneath a deeper child declaration names that child, not an overlapping ancestor. This is a project-wide rule with no configuration, severity selector, or permanent opt-out ([§DF-unmarked-markdown-headings](../decisions/functional/DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph)).
 
 Which headings participate is [§FS-declarations.checks.unmarked-heading.1](FS-declarations.md#checksunmarked-heading1-which-headings-participate). The message is [§FS-declarations.checks.unmarked-heading.2](FS-declarations.md#checksunmarked-heading2-the-message) and its suggested coordinate [§FS-declarations.checks.unmarked-heading.3](FS-declarations.md#checksunmarked-heading3-the-suggested-coordinate); its rendering is [§FS-declarations.checks.unmarked-heading.4](FS-declarations.md#checksunmarked-heading4-rendering-exit-and-selection), its flip to an error [§FS-declarations.checks.unmarked-heading.5](FS-declarations.md#checksunmarked-heading5-an-error-in-grund-0160), and what it leaves unchanged [§FS-declarations.checks.unmarked-heading.6](FS-declarations.md#checksunmarked-heading6-no-command-numbers-the-heading).
 
 #### checks.unmarked-heading.1: Which headings participate
 
-Only ATX headings in scanned Markdown files participate. A heading inside a backtick or tilde fence is content. A file title before the first declaration, a same-or-shallower heading that closes a declaration body, source doc-comment text, setext text, and a bold label are outside the rule. A deeper declaration and a valid numeric or enabled named section already participate in the graph and are not unmarked. `--full` keeps this convention-scoped finding narrowed to the configured scan scope, as it does other convention findings ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)).
+Only ATX headings in scanned Markdown files participate. A heading inside a backtick or tilde fence is content. A file title before the first declaration, a same-or-shallower heading that closes a declaration body, source doc-comment text, setext text, and a bold label are outside the rule. A deeper declaration and a valid numeric or enabled named section already participate in the graph and are not unmarked, and so does a well-formed relative heading: one that has no usable parent is [§FS-declarations.checks.relative-section-parent](FS-declarations.md#checksrelative-section-parent-a-relative-heading-without-its-parent) and never this finding. A dotted heading that is not the relative form ([§FS-declarations.section.relative.form](FS-declarations.md#sectionrelativeform-the-form)) is judged here like any other heading. `--full` keeps this convention-scoped finding narrowed to the configured scan scope, as it does other convention findings ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)).
 
 #### checks.unmarked-heading.2: The message
 
@@ -668,9 +727,19 @@ The error is located at the heading line, uses code `unmarked-heading`, and has 
 unmarked heading inside <ID>; number it (<suggested heading>) as <ID>.<path>, declare an ID, or use a bold label; this became an error in grund 0.16.0
 ```
 
+##### checks.unmarked-heading.2.1: A dotted heading is also shown the relative form
+
+When the heading's text begins with `.` — a dotted heading that is not a well-formed relative heading, such as `#### .a.b: Deep`, `### .1: Title` under a numeric parent, or a name with `named_sections` off — the message keeps every byte above and appends one clause showing the relative heading that would declare the same suggested coordinate:
+
+```text
+; under <parent coordinate> a relative heading is written <relative heading>
+```
+
+`<parent coordinate>` is `<ID>`, or `<ID>.<path>` without its last component, taken from the suggested coordinate. `<relative heading>` is the authored `#` run, a space, `.` and the suggested coordinate's last component, then the title syntax the suggested heading uses — `: ` on a name-bearing path, and on a purely numeric path the suggested heading's own `.` and space — then the authored title with its leading dotted token (the first run of non-space characters) removed, or `Untitled` when nothing is left. So `### .1: Username` under `## 3. Third` in `FS-001-login` reads `…; this became an error in grund 0.16.0; under FS-001-login.3 a relative heading is written ### .1. Username`. The clause is appended only where the suggested coordinate's parent is the declaration or a usable section ([§FS-declarations.section.relative.parent](FS-declarations.md#sectionrelativeparent-the-parent)), because a relative heading under any other parent would only trade this error for another. It is an append, so a consumer matching the existing text as a prefix, and every `code` consumer, reads the finding as before ([§FS-errors.3](FS-errors.md#3-message-text)).
+
 #### checks.unmarked-heading.3: The suggested coordinate
 
-The suggested coordinate is guidance, not a rewrite. Its path depth follows the written ATX depth relative to the containing declaration. At each depth, grund uses the nearest preceding citable or already-suggested parent and appends one above the largest existing or earlier-suggested numeric sibling; it never fills a hole or reuses a coordinate. With no parent it starts one above the largest root numeric coordinate, or at `1` when none exists. If the authored heading skips a depth, missing parents are filled with `.1`. A named parent may therefore receive a numeric child such as `goals.1`. The suggested heading preserves the authored `#` depth and title and inserts the complete coordinate in that valid numeric or mixed form. A titleless ATX heading has no authored title to preserve, so its otherwise-identical suggestion uses the literal title `Untitled`; applying that complete suggested heading produces a recognized section and clears the error.
+The suggested coordinate is guidance, not a rewrite. Its path depth follows the written ATX depth relative to the containing declaration. At each depth, grund uses the nearest preceding citable or already-suggested parent and appends one above the largest existing or earlier-suggested numeric sibling; it never fills a hole or reuses a coordinate. With no parent it starts one above the largest root numeric coordinate, or at `1` when none exists. If the authored heading skips a depth, missing parents are filled with `.1`. A named parent may therefore receive a numeric child such as `goals.1`. The suggested heading preserves the authored `#` depth and title and inserts the complete coordinate in that valid numeric or mixed form. The suggestion is always this complete-path heading, for a plain heading and a dotted one alike; the relative form is offered only beside it ([§FS-declarations.checks.unmarked-heading.2.1](FS-declarations.md#checksunmarked-heading21-a-dotted-heading-is-also-shown-the-relative-form)). A titleless ATX heading has no authored title to preserve, so its otherwise-identical suggestion uses the literal title `Untitled`; applying that complete suggested heading produces a recognized section and clears the error.
 
 #### checks.unmarked-heading.4: Rendering, exit, and selection
 
