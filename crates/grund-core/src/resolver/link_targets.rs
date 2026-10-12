@@ -18,7 +18,9 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use crate::config::{Frame, Presentation, Schema};
-use crate::grammar::{Grammar, anchor_slug, reduce_heading_text, render_id};
+use crate::grammar::{
+    Grammar, anchor_slug, reduce_heading_text, render_id, without_closing_sequence,
+};
 use crate::model::{
     Catalog, Declaration, Id, SectionInfo, paired_declarations, scanned_decl_relative_path,
     scanned_path_key,
@@ -192,14 +194,24 @@ pub(crate) fn heading_anchor(
         // that declaration's own heading anchor, not just the file.
         None => declaration_heading_text(decl, frame.grammar()),
     };
-    Some(anchor_slug(&heading, &presentation.fmt.anchor_format))
+    Some(rendered_anchor(&heading, presentation))
 }
 
 /// The anchor of one recorded section heading site, from the heading text the
 /// scanner stored for it (§FS-show.3.1.3.1): each `--toc` entry reads its own
 /// site, so a duplicated path still carries the anchor of the heading listed.
 pub(crate) fn section_site_anchor(site: &SectionInfo, presentation: &Presentation) -> String {
-    anchor_slug(&site.title, &presentation.fmt.anchor_format)
+    rendered_anchor(&site.title, presentation)
+}
+
+/// The anchor of a heading's stored text, slugged from its rendered text: a
+/// closing `#` run is not part of it (§FS-declarations.heading.rendered-text,
+/// §DF-closing-hashes-are-not-the-heading), while the `--toc` title keeps it.
+fn rendered_anchor(heading: &str, presentation: &Presentation) -> String {
+    anchor_slug(
+        without_closing_sequence(heading),
+        &presentation.fmt.anchor_format,
+    )
 }
 
 /// The text content of a Markdown declaration's `# <ID>: <title>` heading — the
