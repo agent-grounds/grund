@@ -1,0 +1,21 @@
+grund_config_version = 1
+project_name = "fixture"
+
+[reference]
+marker = "§"
+strict = true
+require_grounding = false
+
+[id]
+format = "{kind}-{number}-{slug}"
+
+[[kinds]]
+kind = "FS"
+folder = "docs/functional-spec"
+index = false
+
+[scan]
+include = ["docs"]
+
+[fmt.cross_refs]
+enabled = false
