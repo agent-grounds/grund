@@ -14,6 +14,12 @@ from test_release_workflow import WORKFLOWS, jobs, squash, step_name, steps
 CI = WORKFLOWS / "ci.yml"
 
 
+def job_condition(body):
+    """A job's own `if:`, with any continuation lines; empty when the job has none."""
+    condition = re.search(r"(?m)^    if:(.*(?:\n {6,}\S.*)*)", body)
+    return condition.group(1).strip() if condition else ""
+
+
 class MergeQueueRunTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -24,15 +30,18 @@ class MergeQueueRunTests(unittest.TestCase):
         triggers = self.text.split("\non:\n", 1)[1].split("\nenv:", 1)[0]
         self.assertRegex(triggers, r"(?m)^  merge_group:", "ci.yml does not run on merge-queue groups")
 
-    def test_the_test_matrix_runs_on_every_event(self):
-        header = self.jobs["test"].split("steps:", 1)[0]
-        self.assertNotIn("if:", header, "the required checks must report on a queue group too")
+    def test_the_required_checks_report_on_queue_groups(self):
+        # Found by the check names the ruleset requires, not by how ci.yml lays out its jobs.
+        required = {job: body for job, body in self.jobs.items()
+                    if re.search(r"(?m)^    name:\s*['\"]?cargo test \(", body)}
+        self.assertTrue(required, "no job reports a `cargo test (<os>)` check")
+        for job, body in required.items():
+            self.assertNotRegex(job_condition(body), r"merge_group|github\.event_name",
+                                f"job {job} may skip a queue group, so its required check never reports")
 
     def test_the_benchmark_job_is_skipped_on_merge_queue_groups(self):
-        header = self.jobs["bench"].split("steps:", 1)[0]
-        condition = re.search(r"(?m)^    if:\s*(.+)$", header)
-        self.assertIsNotNone(condition, "the bench job runs on merge-queue groups")
-        self.assertEqual("github.event_name != 'merge_group'", condition.group(1).strip())
+        self.assertEqual("github.event_name != 'merge_group'", job_condition(self.jobs["bench"]),
+                         "the bench job runs on merge-queue groups")
 
     def test_the_commit_message_range_covers_the_group(self):
         (scan,) = [step for step in steps(self.jobs["commit-messages"])
