@@ -78,7 +78,6 @@ pub(crate) fn expected(
             config.frame(),
             findings,
         ),
-        cross_refs_disabled: !config.fmt_cross_refs_enabled,
         fmt_excluded: noted_fmt_excluded(findings, config),
     }
 }
