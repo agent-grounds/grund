@@ -351,6 +351,7 @@ than only repos that ship an editor config.
 | [Querying grund](docs/user-facing/querying.md) | selectors, batch reads, `refs`, `cover` |
 | [Reviewing code](docs/user-facing/reviewing.md) | a citation's blast radius, diff recipes |
 | [Chapter rules](docs/user-facing/rules.md) | checked rules in controlled English — [runnable example](examples/rules/) |
+| [Fields](docs/user-facing/fields.md) | a version-2 kind's chapters as fields, their order, titles and values checked — [runnable example](examples/fields/) |
 | [Values](docs/user-facing/values.md) | one value, declared once, checked wherever it is quoted |
 | [External facts](docs/user-facing/external-facts.md) | cite tickets as committed offline snapshots |
 | [Workspaces](docs/user-facing/repository-options.md#workspaces-and-sub-projects) | citations across sub-projects |
@@ -360,7 +361,7 @@ than only repos that ship an editor config.
 `grund --help` is one screen; `grund <command> --help` is one page with flags, examples,
 and exit codes.
 
-The [benchmark report](docs/benchmarks.md) preserves a 2026-05-20 local timing run and a historical instruction-count snapshot, with methodology and build assumptions. [Current CI](docs/architecture/AR-ci.md#51-pull-requests-and-pushes) compares instruction counts on generated fixtures against the PR base branch. Counts proxy workload cost, not elapsed time; [regression limits are not enforced](docs/architecture/AR-ci.md#52-regression-limits).
+The [benchmark report](docs/benchmarks.md) preserves a 2026-05-20 local timing run and a historical instruction-count snapshot, with methodology and build assumptions. [Current CI](docs/architecture/AR-ci.md#51-pull-requests-and-pushes) compares instruction counts on generated fixtures against the PR base branch. Counts proxy workload cost, not elapsed time; [instruction-count growth past the regression limits fails the pull request](docs/architecture/AR-ci.md#52-regression-limits).
 
 `grund` follows its own scheme: [why](docs/grund.md), [goals](docs/goals.md),
 [roadmap](docs/roadmap.md), [changelog](docs/changelog.md). This README is under spec
