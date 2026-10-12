@@ -189,6 +189,7 @@ pub(super) fn scan_file_text(
             source_value_context,
         );
 
+        let mut declared = false;
         if heading_position
             && let Some(caps) =
                 declaration_captures(grammar, scan_line, scan.in_py_docstring, is_md)
@@ -239,13 +240,16 @@ pub(super) fn scan_file_text(
                     "embedded value marker must be on a citable numeric section heading",
                 );
             }
-            continue;
+            declared = true;
         }
+        // §FS-citations.recognized.title-lines: a declaration's heading is read for its
+        // citations below, never again for structure.
+        let structure = heading_position && !declared;
 
         // §FS-declarations.checks.declaration-near-miss.1: the line was not a declaration. Ask the
         // near-miss pattern whether it looked like one, here rather than in a second read of the
         // tree — the scan has the line, the position rules and the fence/docstring state.
-        if heading_position
+        if structure
             && let Some((text, format, kind)) =
                 near_miss_heading(grammar, scan_line, scan.in_py_docstring, is_md)
         {
@@ -302,7 +306,7 @@ pub(super) fn scan_file_text(
             continue;
         }
 
-        let section_caps = heading_position
+        let section_caps = structure
             .then(|| grammar.section_re.captures(scan_line))
             .flatten();
         let recognized_section = section_caps.as_ref().and_then(section_path).is_some();
@@ -316,7 +320,7 @@ pub(super) fn scan_file_text(
                 .headings
                 .push(heading.record(&record, level, path, HeadingKind::Rejected));
         } else if is_md
-            && heading_position
+            && structure
             && let Some(level) = markdown_heading_level(trimmed)
         {
             record
@@ -343,7 +347,7 @@ pub(super) fn scan_file_text(
             );
         }
         if is_md
-            && heading_position
+            && structure
             && !recognized_section
             && let Some(heading_level) = markdown_heading_level(line)
         {
@@ -361,7 +365,7 @@ pub(super) fn scan_file_text(
         }
         if embedded_marker.is_some()
             && !embedded_marker_attached
-            && heading_position
+            && structure
             && authored_heading_level(
                 scan_line,
                 is_md || scan.in_py_docstring,
