@@ -58,6 +58,7 @@ mod parse_moves;
 mod reference_scope;
 mod references;
 mod report;
+mod section_lock;
 mod sections;
 mod selection;
 mod shorthand;

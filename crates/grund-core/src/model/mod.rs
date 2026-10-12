@@ -41,6 +41,7 @@ mod paths;
 mod patterns;
 mod records;
 mod report;
+mod section_lock;
 mod stub_resolution;
 mod text;
 mod unclosed_wrappers;
@@ -81,6 +82,10 @@ pub(crate) use paths::{
 pub(crate) use patterns::GlobCitation;
 pub(crate) use records::{LegacyCitationCandidate, LocalSectionCitationCandidate, ShowRenderMode};
 pub(crate) use report::{CheckReport, Diagnostic, LANDED_CLAUSE, Site};
+pub(crate) use section_lock::{
+    LockEntry, LockLines, SECTION_LOCK_DIR, SectionLockFile, read_lock_lines, render_lock,
+    section_lock_path,
+};
 pub(crate) use stub_resolution::{PairedDeclarations, StubResolution, paired_declarations};
 pub(crate) use text::{CITATION_DIRECTION_REPAIR, format_list, json_escape, plural};
 pub(crate) use unclosed_wrappers::UnclosedWrapperNote;

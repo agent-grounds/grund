@@ -76,6 +76,7 @@ mod record;
 mod relative_sections;
 mod scan_error;
 mod scope_probe;
+mod section_locks;
 mod section_record;
 mod stub_homes;
 mod stub_shape;
