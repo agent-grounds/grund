@@ -21,7 +21,7 @@ pub(crate) enum StubResolution {
     /// (§FS-declarations.stubs.target.3). Judged on the name the stub wrote.
     NotRead,
     /// The target was read, as the scan reads it on the text a save would write,
-    /// and does not declare the ID (§FS-declarations.stubs.target.1,
+    /// and does not declare the ID (§AR-scanner.4.6,
     /// §FS-declarations.stubs.target.2).
     LacksId,
     /// The stub links to the file it sits in, which declares the ID elsewhere. The

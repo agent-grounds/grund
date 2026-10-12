@@ -25,7 +25,7 @@ fn subject_resolves(rule: &ParsedRule, facts: &RuleFacts, index: &FactIndex<'_>)
 }
 
 /// Exact subjects resolve in the engine because resolution is selector
-/// semantics, not checker orchestration (§FS-rules.2, §AR-rules.1).
+/// semantics, not checker orchestration (§AR-rules.2, §AR-rules.1).
 pub(crate) fn unresolved_subject_diagnostic(
     rule: &ParsedRule,
     facts: &RuleFacts,

@@ -60,7 +60,7 @@ pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> C
 
 /// §FS-declarations.checks.duplicate: an ID with more than one non-stub home is a duplicate.
 /// Its declarations are counted once its stubs are paired by their verdicts
-/// (§FS-declarations.stubs.verdict).
+/// (§AR-scanner.4.6).
 fn check_duplicates(findings: &Catalog, frame: Frame<'_>, report: &mut CheckReport) {
     for (id, decls) in &findings.declarations {
         // §FS-declarations.stubs.pairing.3: a stub's home is named at its target, at
@@ -175,7 +175,7 @@ fn check_misplaced(
 }
 
 /// §FS-declarations.checks.broken-stub: the verdict the scan recorded on each stub
-/// (§FS-declarations.stubs.verdict), its target missing, not read, or not declaring
+/// (§AR-scanner.4.6), its target missing, not read, or not declaring
 /// the ID (§AR-checker.2.5).
 fn check_broken_stubs(findings: &Catalog, frame: Frame<'_>, report: &mut CheckReport) {
     for (id, decls) in &findings.declarations {

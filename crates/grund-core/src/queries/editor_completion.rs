@@ -55,7 +55,7 @@ impl LspCompletionContext {
     /// Cache uniquely resolving declared spellings and formatter file scopes in
     /// the snapshot's existing scan (§FS-lsp.1.6.2, §FS-lsp.1.6.4). An ID resolves
     /// uniquely where it has one declaration once its stubs are paired by their
-    /// verdicts (§FS-declarations.stubs.verdict).
+    /// verdicts (§AR-scanner.4.6).
     pub(crate) fn from_workspace(context: &WorkspaceContext) -> Self {
         let projects = context
             .projects

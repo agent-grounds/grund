@@ -29,7 +29,7 @@
 //! records it on the stub (§AR-scanner.4.6); an ID's declarations are paired by
 //! those verdicts in `model/stub_resolution.rs`. The broken-stub, duplicate and
 //! unused rules read both and read no target, so the stub one accepts is the stub
-//! the others pair (§FS-declarations.stubs.verdict).
+//! the others pair (§AR-scanner.4.6).
 //!
 //! `plural`, the plural `s` a count earns, came here from the writers' template
 //! renderer with §AR-system.2.8 and left again with §AR-system.2.11: the

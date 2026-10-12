@@ -2,7 +2,7 @@
 //! §FS-show.2.2.1, §FS-show.2.2.2). No body extraction is needed to decide
 //! whether a recorded target has multiple claimants. A stub's homes are found in
 //! its target, scanned or not (§FS-refs.4.1), read off the verdict the scan
-//! recorded on the stub (§FS-declarations.stubs.verdict).
+//! recorded on the stub (§AR-scanner.4.6).
 
 use super::show_query::ShowQueryError;
 use crate::config::{Config, display_path};
@@ -44,7 +44,7 @@ pub(super) fn ambiguous_id_refusal(
         return None;
     }
     // §FS-declarations.stubs.pairing.3: a declaration a stub stands for is at its
-    // target, at each line there that declares the ID (§FS-declarations.stubs.verdict).
+    // target, at each line there that declares the ID (§AR-scanner.4.6).
     // §FS-errors.3.1: every site is spelled from the effective report root.
     let mut sites: Vec<(String, String, usize)> = paired
         .iter()

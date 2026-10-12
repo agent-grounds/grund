@@ -1,6 +1,6 @@
 //! Declaration-body extraction (§AR-system.2.10): where a declaration's body
 //! begins and ends in the file that holds it, across Markdown and every
-//! supported comment dialect (§FS-declarations.body, §FS-declarations.section, §FS-show.2.3).
+//! supported comment dialect (§AR-scanner.2.4.1, §AR-scanner.2.2, §FS-show.2.3).
 //!
 //! This is a question about *source structure* asked of what a scan already
 //! recorded — the same question §AR-scanner.2.4.1 answers for the citing side — so
@@ -24,9 +24,9 @@ use crate::scanner::{TodayMiss, TodaySink, TodaySite, today_slices};
 use super::body_lines::{join_with_blank, truncate_to_first_paragraph};
 
 /// Pull the body text of a declaration out of its file: the lines under the
-/// `# <ID>: …` heading down to the next same-or-shallower heading (§FS-declarations.body),
-/// optionally just one citable subsection (§FS-declarations.section) or just the lead
-/// paragraph (§FS-show.2.1.1). For an inline declaration in a code/`"""` doc-comment
+/// `# <ID>: …` heading down to the next same-or-shallower heading (§AR-scanner.2.4.1),
+/// optionally just one citable subsection (§AR-scanner.2.2) or just the lead
+/// paragraph (§AR-system.2.10). For an inline declaration in a code/`"""` doc-comment
 /// this walks the comment block (§FS-show.2.3.1) and strips comment markers
 /// (§FS-show.2.3.2) before returning the text.
 ///
@@ -61,12 +61,12 @@ pub(crate) fn extract_declaration_body(
     let site = site_of(declaration, section.is_some(), section_line);
     let views = match mode {
         // `--toc` = the default lead, then a blank line, then the nested section
-        // headings (§FS-show.2.1.2), both out of the one walk.
+        // headings (§AR-system.2.10), both out of the one walk.
         ShowRenderMode::Toc => vec![
             TodaySink::new(ShowRenderMode::Default, include_heading),
             TodaySink::new(ShowRenderMode::Outline, false),
         ],
-        // `--brief` = heading + first paragraph (§FS-show.2.1.1); the H1 is
+        // `--brief` = heading + first paragraph (§AR-system.2.10); the H1 is
         // suppressed when a section is selected.
         ShowRenderMode::Brief => vec![TodaySink::new(ShowRenderMode::Default, section.is_none())],
         mode => vec![TodaySink::new(mode, include_heading)],
@@ -94,7 +94,7 @@ pub(crate) fn extract_declaration_body(
 /// The scanner-recorded site a slice is pinned to. `show` supplies it after
 /// establishing uniqueness, so an assigned scanner body span bounds the slice too;
 /// size rows additionally use it to keep duplicate homes and duplicate section
-/// coordinates site-local (§FS-declarations.section.map, §FS-list.3.4). The body
+/// coordinates site-local (§AR-scanner.2.2.5, §FS-list.3.4). The body
 /// end is the catalog's only where it published one: a read-only scan without
 /// sections keeps its single-line placeholder and the slicer derives that
 /// declaration's boundary itself (§AR-benchmarks).
@@ -111,7 +111,7 @@ pub(super) fn site_of(
     }
 }
 
-/// One walk of the declaration's record into `sinks` (§FS-show.2.1), with the
+/// One walk of the declaration's record into `sinks` (§AR-system.2.10), with the
 /// line the slice starts at, or the refusal a missing declaration or section is.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn slice_site(

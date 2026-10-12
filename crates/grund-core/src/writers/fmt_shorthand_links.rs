@@ -1,4 +1,4 @@
-//! An accepted local shorthand as a link target (§FS-fmt.2.4, §FS-fmt.6.2): the
+//! An accepted local shorthand as a link target (§FS-fmt.2.4, §AR-system.2.1): the
 //! short span stays as written while its canonical `Id` selects the link, so the
 //! expansion pass and the wrapper pass read one answer about what a shorthand
 //! names.
@@ -10,7 +10,7 @@ use crate::grammar::{
 };
 use crate::model::Id;
 
-/// §FS-fmt.2.4 / §FS-fmt.6.2: accepted local shorthand survives the expansion
+/// §FS-fmt.2.4 / §AR-system.2.1: accepted local shorthand survives the expansion
 /// pass but remains a resolved citation eligible for cross-reference wrapping.
 /// Its visible short span is retained while its canonical `Id` selects the link.
 pub(super) fn collect_local_accepted_shorthand_links(

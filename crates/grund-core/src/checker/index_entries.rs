@@ -207,7 +207,7 @@ fn enroll_external_inline_declarations(
 /// multiple independent homes remain the duplicate error rather than becoming
 /// an index membership `grund` guessed (§REQ-no-wrong-citation.1). The ID has one
 /// only where it has one declaration once its stubs are paired by their verdicts
-/// (§FS-declarations.stubs.verdict).
+/// (§AR-scanner.4.6).
 fn external_inline_home<'a>(
     decls: &'a [Declaration],
     folder_key: &Path,

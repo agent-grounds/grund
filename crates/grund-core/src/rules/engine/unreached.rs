@@ -68,10 +68,10 @@ pub(super) fn report_unreached(
 ///
 /// It is read as the complement of the selection rather than as a second join
 /// over `chapter`, which is what §FS-rules.5.2's `chapter_of` says as well: that
-/// clause is written over the subject selector's whole-path join (§FS-rules.2.1)
+/// clause is written over the subject selector's whole-path join (§AR-rules.2)
 /// and not over the presence family's display-name count (§FS-rules.3.1). So
 /// "contributes no unit" and "is unreached" are one set by construction
-/// (§FS-rules.2) — no declaration can both hand the relation a unit and be
+/// (§AR-rules.2) — no declaration can both hand the relation a unit and be
 /// reported as out of the rule's reach.
 ///
 /// §FS-rules.5.2's `owns` reaches a chapter at any depth, so the complement is

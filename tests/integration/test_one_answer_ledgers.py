@@ -12,11 +12,9 @@ The ledgers read are the difference rows themselves, the migration rows of
 and be named by at least one row, so the list cannot keep a step nobody waits on.
 Nothing here asks the forge: a step is live because it is listed.
 
-The tests that read the real ledgers landed under `@unittest.expectedFailure`,
-one commit before the rows were given their rulings, because the pre-commit hook
-runs this suite and a plainly failing test could not be committed. An expected
-failure that passes fails the suite, so the commit that rules the rows takes the
-decorators off.
+The tests that read the real ledgers landed one commit before the rows were given
+their rulings, marked as expected failures so the pre-commit hook, which runs this
+suite, could take them; the commit that ruled the rows took the marks off.
 """
 
 import functools
@@ -153,23 +151,19 @@ def real_problems():
 
 
 class OneAnswerLedgersTest(unittest.TestCase):
-    @unittest.expectedFailure
     def test_every_difference_row_cites_a_decision_record_that_resolves(self):
         wrong = [w for w in real_problems() if w.startswith("REQ-one-answer.differences")]
         self.assertEqual([], wrong, "\n" + "\n".join(wrong))
 
-    @unittest.expectedFailure
     def test_every_ledger_row_names_a_listed_step_or_a_resolving_ruling(self):
         wrong = [w for w in real_problems()
                  if not w.startswith(("REQ-one-answer.differences", "one_answer_steps.toml"))]
         self.assertEqual([], wrong, "\n" + "\n".join(wrong))
 
-    @unittest.expectedFailure
     def test_every_listed_step_names_a_ruling_and_is_named_by_a_row(self):
         wrong = [w for w in real_problems() if w.startswith("one_answer_steps.toml")]
         self.assertEqual([], wrong, "\n" + "\n".join(wrong))
 
-    @unittest.expectedFailure
     def test_every_ledger_test_reads_its_steps_from_the_list(self):
         wrong = [str(path.relative_to(REPO_ROOT)) for path in STEP_READERS
                  if STEPS.name not in path.read_text(encoding="utf-8")]

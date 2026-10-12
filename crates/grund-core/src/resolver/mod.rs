@@ -62,7 +62,7 @@
 //! declaration is a stub's pointer followed them into `model/` beside
 //! `resolve_stub_target`, so the link target could ask it without reading the
 //! checker above it; it is the pairing of an ID's declarations by each stub's
-//! recorded verdict now (§FS-declarations.stubs.verdict, §AR-scanner.4.6).
+//! recorded verdict now (§AR-scanner.4.6).
 //! `WorkspaceCitationTarget` and the qualified ID-argument split
 //! stayed in `workspace/`: both are answers about configs and entry text, with
 //! no scan in them.

@@ -23,7 +23,7 @@ pub(super) fn assign_unmarked_heading_owners(
         .map(|decl| {
             (
                 decl.line,
-                // §FS-declarations.body: the record's body rule, whether or not the
+                // §AR-scanner.2.4.1: the record's body rule, whether or not the
                 // run publishes spans on the catalog (§FS-declarations.checks.unmarked-heading.6).
                 record
                     .heading_at(decl.line)

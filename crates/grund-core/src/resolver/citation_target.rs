@@ -116,7 +116,7 @@ pub(crate) enum SectionHome<'a> {
 }
 
 /// Where `section` of `id` resolves, or `None` where it does not. A stub's sections
-/// are those of the target's record its verdict holds (§FS-declarations.stubs.verdict),
+/// are those of the target's record its verdict holds (§AR-scanner.4.6),
 /// scanned or not, as `check` reports them (§FS-check.3.2.1): where no recorded
 /// declaration holds the path, the ID's one declaration answers from the record the
 /// scan kept on the stub that stands for it (§AR-scanner.4.6); an ID `show` refuses

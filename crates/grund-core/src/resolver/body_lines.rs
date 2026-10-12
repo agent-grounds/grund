@@ -7,7 +7,7 @@
 /// `--toc` joins the default body with the section-map body, separated by one
 /// blank line. Empty halves are dropped; if both are empty the result is empty.
 /// Each body already ends with `\n`, so `{a}\n{b}` produces `<a>\n\n<b>\n`
-/// (§FS-show.2.1.2.2).
+/// (§AR-system.2.10).
 pub(super) fn join_with_blank(default_body: &str, outline_body: &str) -> String {
     match (default_body.is_empty(), outline_body.is_empty()) {
         (true, true) => String::new(),
@@ -18,7 +18,7 @@ pub(super) fn join_with_blank(default_body: &str, outline_body: &str) -> String 
 }
 
 /// `--brief` truncates the (default-mode, heading-included) body to its first
-/// blank-line-separated paragraph (§FS-show.2.1.1). Keeps the heading line and
+/// blank-line-separated paragraph (§AR-system.2.10). Keeps the heading line and
 /// at most one blank-line separator before the first paragraph; stops at the
 /// next blank line (or end of body).
 pub(super) fn truncate_to_first_paragraph(body: &str) -> String {

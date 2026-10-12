@@ -101,7 +101,7 @@ fn list_sizes_run(
             }
             // §FS-list.3.4.6: one row per declaration, at its record, so a healthy stub
             // whose target is outside the walk is measured there, and a target declaring
-            // the ID twice is two rows (§FS-declarations.stubs.verdict).
+            // the ID twice is two rows (§AR-scanner.4.6).
             let paired = paired_declarations(declarations);
             let duplicate_declaration = paired.len() > 1;
             for one in paired.iter() {

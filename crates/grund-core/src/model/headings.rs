@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use super::records::Id;
 
 /// One section-like heading rejected from a declaration's shared coordinate
-/// maps because it lies beyond that declaration's body (§FS-declarations.section.map).
+/// maps because it lies beyond that declaration's body (§AR-scanner.2.4.1).
 pub struct SectionHeadingOutsideDeclaration {
     pub file: PathBuf,
     pub line: usize,
