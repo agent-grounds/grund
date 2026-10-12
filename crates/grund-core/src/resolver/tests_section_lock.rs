@@ -22,7 +22,26 @@ fn judge(
     cites: &str,
     lock: &str,
 ) -> (Vec<(String, EntryVerdict)>, Vec<String>) {
+    let (verdicts, unrecorded) = judge_in(name, [format, parse], cites, lock, &[]);
+    (
+        verdicts,
+        unrecorded.into_iter().map(|(section, _)| section).collect(),
+    )
+}
+
+/// `judge` over a tree that also holds `extra` as `(path, text)`, each unrecorded
+/// address with the fingerprint `fmt --write` would enter for it.
+fn judge_in(
+    name: &str,
+    [format, parse]: [&str; 2],
+    cites: &str,
+    lock: &str,
+    extra: &[(&str, &str)],
+) -> (Vec<(String, EntryVerdict)>, Vec<(String, Option<String>)>) {
     let root = test_root(name);
+    for (path, text) in extra {
+        write(&root.join(path), text);
+    }
     write(&root.join("grund.toml"), CONFIG);
     write(
         &root.join("docs/FS-login.md"),
@@ -47,7 +66,7 @@ fn judge(
     let unrecorded = judgements
         .iter()
         .flat_map(|judgement| &judgement.unrecorded)
-        .map(|(section, _, _)| section.clone())
+        .map(|(section, _, fingerprint)| (section.clone(), fingerprint.clone()))
         .collect();
     (verdicts, unrecorded)
 }
@@ -145,14 +164,75 @@ fn of_a_coordinate_entered_twice_the_held_entry_stays() {
     );
 }
 
+/// §FS-section-lock.holds.repeated: a text the declaration repeats is entered as
+/// `-`, and the entry takes the fingerprint once the texts differ.
 #[test]
-fn a_repeated_text_is_written_as_a_dash() {
+fn a_repeated_text_is_written_as_a_dash_until_it_differs() {
+    let cites = "See \u{a7}FS-login.format.1.";
+    let (_, added) = judge_in("section_lock_repeated", ["Same.", "Same."], cites, "", &[]);
+    assert_eq!(added, [("format.1".to_string(), None)]);
+    let (differ, _) = judge(
+        "section_lock_repeated_differ",
+        "Trim surrounding whitespace.",
+        "Split on commas.",
+        cites,
+        "FS-login.format.1 -\n",
+    );
+    assert_eq!(
+        differ,
+        [(
+            "format.1".to_string(),
+            EntryVerdict::Refresh(Some("8f332b6fe87bb346".to_string()))
+        )]
+    );
+}
+
+/// §FS-section-lock.limits.identical: while two sections hold one text, an entry
+/// of it is kept whichever of them holds it, so swapping them is not seen.
+#[test]
+fn identical_texts_cannot_be_told_apart() {
     let (verdicts, _) = judge(
-        "section_lock_repeated",
+        "section_lock_identical",
         "Same.",
         "Same.",
         "See \u{a7}FS-login.format.1.",
         "FS-login.format.1 -\n",
     );
     assert_eq!(verdicts, [("format.1".to_string(), EntryVerdict::Keep)]);
+}
+
+/// §FS-section-lock.limits.gate: an edit `fmt --write` never recorded leaves the
+/// old fingerprint, so moving the edited text away reads as an edit in place.
+#[test]
+fn an_unrecorded_edit_hides_a_later_move() {
+    let (verdicts, _) = judge(
+        "section_lock_unrefreshed",
+        "Split on commas.",
+        "Trim all surrounding whitespace.",
+        "See \u{a7}FS-login.format.1.",
+        "FS-login.format.1 8f332b6fe87bb346\n",
+    );
+    assert!(
+        matches!(verdicts[..], [(_, EntryVerdict::Refresh(Some(_)))]),
+        "{verdicts:?}"
+    );
+}
+
+/// §FS-section-lock.limits.across: the recorded text now in another declaration
+/// is not looked for there, so the entry reads as edited in place.
+#[test]
+fn a_text_moved_into_another_declaration_is_not_found() {
+    let signup = "# FS-signup: Signup\n\n## form: Form\n\n### .1: Name\n\n\
+                  Trim surrounding whitespace.\n";
+    let (verdicts, _) = judge_in(
+        "section_lock_across",
+        ["Split on commas.", "Lower case."],
+        "See \u{a7}FS-login.format.1.",
+        "FS-login.format.1 8f332b6fe87bb346\n",
+        &[("docs/FS-signup.md", signup)],
+    );
+    assert!(
+        matches!(verdicts[..], [(_, EntryVerdict::Refresh(Some(_)))]),
+        "{verdicts:?}"
+    );
 }
