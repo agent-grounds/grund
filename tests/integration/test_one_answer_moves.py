@@ -35,8 +35,8 @@ CHAPTERS = (
     "proof", "why",
 )
 DIFFERENCE_ROWS = {
-    "identity": ("G03", "G04", "G06"),
-    "sections": ("P01", "P02", "P03", "P07", "P10", "P12", "P16", "G05"),
+    "identity": ("G06",),
+    "sections": ("P01", "P02", "P03", "P07", "P10", "P12", "P16"),
     "stubs": ("Placement", "U01", "U03a", "U03b", "U03c", "U03d", "U04", "U05", "U06"),
     "text": ("R04", "R05", "R06a", "R06b", "R06c", "R06d"),
     "scope": ("R01", "R02"),
@@ -108,13 +108,13 @@ class OneAnswerMoveTests(unittest.TestCase):
         self.assertIn("REQ-one-answer", declared)
         self.assertEqual([], [c for c in CHAPTERS if c not in declared], "chapters missing")
 
-    def test_the_differences_list_has_its_twenty_seven_rows(self):
+    def test_the_differences_list_has_its_twenty_five_rows(self):
         declared = self.requirement()
         for group, rows in DIFFERENCE_ROWS.items():
             body = declared.get(f"differences.{group}", "")
             found = tuple(re.findall(r"^- \*\*([\w-]+?)\.\*\*", body, re.M))
             self.assertEqual(rows, found, f"rows of differences.{group}")
-        self.assertEqual(28, sum(len(rows) for rows in DIFFERENCE_ROWS.values()))
+        self.assertEqual(25, sum(len(rows) for rows in DIFFERENCE_ROWS.values()))
 
     def test_each_moved_sentence_lives_at_its_destination_only(self):
         declared = _sections(REQUIREMENT) if REQUIREMENT.is_file() else {}

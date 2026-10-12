@@ -132,5 +132,6 @@ The rulings the one-answer work is built from, one record per step family, each 
 - [§DF-one-answer-rulings-stubs](DF-one-answer-rulings-stubs.md#df-one-answer-rulings-stubs-a-stub-is-found-by-its-home-and-shape-read-as-the-scan-reads-and-shown-where-its-target-is) — a stub is found by its home and shape, read as the scan reads, and shown where its target is
 - [§DF-one-answer-rulings-fmt-editor](DF-one-answer-rulings-fmt-editor.md#df-one-answer-rulings-fmt-editor-fmt-writes-only-into-a-complete-link-wrapper-never-into-a-link-destination) — `fmt` writes only into a complete link wrapper, never into a link destination
 - [§DF-one-answer-rulings-grammar](DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary) — one grammar keeps the documented refusal bytes and order, and one kind universe keeps each command's vocabulary
+- [§DF-one-kind-verdict](DF-one-kind-verdict.md#df-one-kind-verdict-every-command-reads-one-kind-verdict-in-its-own-scope-and-refuses-a-rule-sentence-for-the-first-stage-it-fails) — every command reads one kind verdict in its own scope, and refuses a rule sentence for the first stage it fails
 
 This index is navigational — citations should target the decision ID directly, never this file.

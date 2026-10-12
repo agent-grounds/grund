@@ -1,0 +1,1 @@
+docs/rules/RULE-e.md:1: error: RULE-e is not a valid rule: unknown kind "e2e" — kind "e2e" declares no IDs — tests/e2e/ is not a citable home; this wording changes in grund 0.19.0

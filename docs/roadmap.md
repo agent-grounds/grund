@@ -43,6 +43,39 @@ above prescribes need not wait for a release. It is not a deadline item.
 
 GitHub: [#368](https://github.com/agent-grounds/grund/issues/368).
 
+## RM-one-grammar-flip: end the one-grammar window in 0.19.0
+
+The kind verdict and the refusal order of [§DF-one-kind-verdict](decisions/functional/DF-one-kind-verdict.md#df-one-kind-verdict-every-command-reads-one-kind-verdict-in-its-own-scope-and-refuses-a-rule-sentence-for-the-first-stage-it-fails) ship with a
+window, as [§REQ-backwards-compatibility.2](requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) requires of every move that is not
+purely additive. In the release that lands them, two refusals keep their
+legacy reason and append the new one ([§FS-errors.3.8](functional-spec/FS-errors.md#38-the-one-grammar-wording-migration)), and a pinned or `*/`
+`[citations]` target the run cannot accept loads with a warning naming
+`0.19.0` ([§FS-config.3.9.5.2](functional-spec/FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds)). This milestone is `0.19.0`, the release those
+messages name.
+
+GitHub: follows [#599](https://github.com/agent-grounds/grund/issues/599), which ships the window.
+
+### 1. What
+
+Drop the legacy prefix and the `; this wording changes in grund 0.19.0` suffix,
+so the two reasons are [§FS-errors.3.8.1](functional-spec/FS-errors.md#381-the-final-templates)'s final templates, and raise each
+`[citations]` warning of [§FS-config.3.9.5.2](functional-spec/FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds) to an `error:` that fails the load
+with exit `2`, its text ending in `; this became an error in grund 0.19.0`. The
+release constant goes with them. The flip is a change of its own, with its own
+`release-note` on the decision record that lands it.
+
+### 2. Why now
+
+The e2e goldens carry `0.19.0` as literal bytes and a unit test asserts it is
+still ahead of `CARGO_PKG_VERSION`, so the version bump that reaches it fails
+CI until this milestone lands, the forcing function the earlier windows used.
+
+### 3. Measurable
+
+No message in the tree names `0.19.0` in the future tense; the e2e cases that
+pin the window print the final templates, and the `[citations]` warning cases
+exit `2`.
+
 ## RM-distribution: cargo + npm + pypi from one engine
 
 Per [§FS-distribution](functional-spec/FS-distribution.md#fs-distribution-grund-distribution-targets) and [§AR-bindings](architecture/AR-bindings.md#ar-bindings-target-shape-for-exposing-the-rust-engine-on-three-platforms). Builds on the shipped workspace split ([§AR-bindings.2](architecture/AR-bindings.md#2-grund-core-the-only-place-logic-lives)).
