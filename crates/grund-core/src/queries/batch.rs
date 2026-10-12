@@ -1,6 +1,7 @@
 use anyhow::{Result, anyhow};
 use std::collections::BTreeSet;
 
+use super::narrowing::Owner;
 use super::show::{render_show_output_json, show_declaration_with_home};
 use super::show_query::{ShowFormat, ShowOpts, ShowQueryError};
 use crate::config::{display_path, run_warning_findings};
@@ -120,8 +121,27 @@ pub fn show_batch_with_scope(
     path_provided: bool,
 ) -> (Vec<Finding>, Result<Vec<BatchShowRecord>>) {
     let mut run_warnings = Vec::new();
-    let records = show_batch_run(queries, opts, path_provided, &mut run_warnings);
+    let records = show_batch_run(queries, opts, path_provided, &mut run_warnings, None);
     (run_warnings, records)
+}
+
+/// [`show_batch_with_scope`] with one narrowing line per query the owning project
+/// would answer otherwise, in input order (§FS-scan.path.show).
+#[doc(hidden)]
+pub fn show_batch_narrowed(
+    queries: Option<Vec<BatchShowQuery>>,
+    opts: ShowOpts,
+    path_provided: bool,
+) -> (Vec<Finding>, Result<Vec<BatchShowRecord>>, Vec<String>) {
+    let (mut run_warnings, mut narrowing) = (Vec::new(), Vec::new());
+    let records = show_batch_run(
+        queries,
+        opts,
+        path_provided,
+        &mut run_warnings,
+        Some(&mut narrowing),
+    );
+    (run_warnings, records, narrowing)
 }
 
 fn show_batch_run(
@@ -129,6 +149,7 @@ fn show_batch_run(
     mut opts: ShowOpts,
     path_provided: bool,
     run_warnings: &mut Vec<Finding>,
+    narrowing: Option<&mut Vec<String>>,
 ) -> Result<Vec<BatchShowRecord>> {
     if queries.as_ref().is_some_and(Vec::is_empty) {
         return Ok(Vec::new());
@@ -154,6 +175,16 @@ fn show_batch_run(
     }
     let queries = queries.unwrap_or_else(|| exhaustive_batch_queries(&context));
     opts.format = ShowFormat::Json;
+    // §FS-scan.path.show: one owning-project read for the whole batch.
+    if let Some(lines) = narrowing
+        && let Some(owner) = Owner::of(&context, &opts.path, path_provided)
+    {
+        lines.extend(
+            queries
+                .iter()
+                .filter_map(|query| owner.show_line(&context, &query.id)),
+        );
+    }
 
     queries
         .into_iter()

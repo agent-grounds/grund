@@ -169,7 +169,7 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
     // walks like every other command, and a refused query still owes the reader
     // the cautions the workspace pass settled before it (§FS-distribution.3.1).
     let section_flag = section_override.clone();
-    let (run_warnings, result) = show_with_scope(
+    let (run_warnings, result, narrowing) = show_narrowed(
         &id_arg,
         ShowOpts {
             path: path.clone(),
@@ -180,7 +180,7 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
         path_provided,
     );
     render_run_warnings(&run_warnings);
-    match result {
+    let code = match result {
         Ok(output) => {
             if format == "json" {
                 println!("{}", output.json.unwrap_or_default());
@@ -201,11 +201,15 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
             if is_missing_positional_path(&message, path_positional) {
                 eprintln!("error: {message}");
                 print_second_coordinate_hint(&id_arg, &path, section_flag.as_deref());
-                return ExitCode::from(2);
+                ExitCode::from(2)
+            } else {
+                render_show_error(&id_arg, &path, default_invocation, &format, &message, sites)
             }
-            render_show_error(&id_arg, &path, default_invocation, &format, &message, sites)
         }
-    }
+    };
+    // §FS-scan.path.warning.shape: after every line the answer wrote to stderr.
+    render_path_narrowing(&narrowing);
+    code
 }
 
 /// The positional path that does not exist, where §FS-show.1.4.1 may append its hint.

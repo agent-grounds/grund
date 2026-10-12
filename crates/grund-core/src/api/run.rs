@@ -21,6 +21,7 @@ use crate::checker::{
 };
 use crate::config::{Config, Invocation, ProjectRecords, Selection};
 use crate::model::{CheckReport, Diagnostic, Finding};
+use crate::queries::name_the_workspace_root;
 use crate::resolver::{WorkspaceCheckTarget, load_workspace_projects, settled_run_warnings};
 use crate::scanner::scan_tree;
 use crate::workspace::{
@@ -189,6 +190,10 @@ pub(super) fn run_check_with_run_warnings(
         config.frame(),
         report_scope.as_ref(),
     );
+    // §FS-scan.projects.narrowed.alias: below the root, an alias the workspace resolves says so.
+    if report_scope.is_some() {
+        name_the_workspace_root(&mut report.errors, &findings.citations, &config, path);
+    }
     // §FS-check.2.2 / §FS-check.4.5: a walk that read no files, or read them and
     // recognized nothing in them, is almost always a misconfigured scope rather
     // than a clean repo — say so on stderr instead of exiting 0 in silence.

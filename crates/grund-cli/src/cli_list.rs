@@ -206,7 +206,7 @@ fn command_list(args: &[String]) -> ExitCode {
     // §FS-check.4.10.7, §FS-workspace.6.1.7: the run's warnings come
     // back beside the catalog, so a refused `--project` or `--kind` still prints
     // the cautions the workspace pass settled before it (§FS-distribution.3.1).
-    let (run_warnings, listed) = list_with_run_warnings(ListOpts {
+    let (run_warnings, listed, narrowing) = list_narrowed(ListOpts {
         path,
         path_provided,
         kind_filter,
@@ -237,5 +237,5 @@ fn command_list(args: &[String]) -> ExitCode {
         render_list_text(&output.entries);
     }
 
-    exit_after_scan_errors(&output.scan_errors)
+    exit_after_listing(&output.scan_errors, &narrowing, &format, summary)
 }

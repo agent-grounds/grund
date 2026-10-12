@@ -221,6 +221,12 @@ impl KindTable {
         self.workspace |= self.projects.len() > before;
     }
 
+    /// Whether the run holds a workspace one of whose projects `alias` names
+    /// (§FS-scan.projects.narrowed.alias).
+    pub(crate) fn holds_alias(&self, alias: &str) -> bool {
+        self.workspace && self.projects.iter().any(|project| project.alias == alias)
+    }
+
     /// The projects `scope` reads, in load order. A pinned alias the table
     /// does not hold reads none.
     fn in_scope<'s>(&'s self, scope: KindScope<'s>) -> impl Iterator<Item = &'s KindProject> {

@@ -97,6 +97,32 @@ fn render_run_warnings(warnings: &[Finding]) {
     }
 }
 
+/// §FS-scan.path.warning.shape: the lines a path narrower than its config root
+/// owes, after every other line the command writes to stderr.
+fn render_path_narrowing(lines: &[String]) {
+    for line in lines {
+        eprintln!("warning: {line}");
+    }
+}
+
+/// `list`'s exit: its scan errors, then the lines a narrowed path owes for the
+/// fields this output prints — a JSON row `refs` and the duplicate flag, a text
+/// row the duplicate note, `--summary` neither (§FS-scan.path.list).
+fn exit_after_listing(
+    scan_errors: &[ApiScanError],
+    narrowing: &ListNarrowing,
+    format: &str,
+    summary: bool,
+) -> ExitCode {
+    let code = exit_after_scan_errors(scan_errors);
+    let shown = ListShown {
+        refs: format == "json" && !summary,
+        duplicate: !summary,
+    };
+    render_path_narrowing(&narrowing.lines(shown));
+    code
+}
+
 fn exit_after_scan_errors(scan_errors: &[ApiScanError]) -> ExitCode {
     if scan_errors.is_empty() {
         return ExitCode::SUCCESS;
