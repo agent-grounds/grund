@@ -23,7 +23,7 @@ Leans on [§FS-terms.terms.1](../functional-spec/FS-terms.md#terms1-declarations
 `crates/grund-core/src/lib.rs` stays the engine crate entrypoint and public Rust
 API surface, and every implementation file under it belongs to one **module
 directory**: one per component of [§AR-system.2](README.md#2-components), named
-after it — `model/`, `grammar/`, `config/`, `workspace/`, `templates/`,
+after it — `model/`, `sources/`, `grammar/`, `config/`, `workspace/`, `templates/`,
 `scanner/`, `resolver/`, `rules/`, `checker/`, `queries/`, `writers/`, `api/`.
 What each one implements, consumes and must not know is its component's
 subsection, and what it may *read* is [§AR-system.4](README.md#4-dependency-direction);
@@ -31,7 +31,7 @@ this section says only how its files are arranged. There is no `compat/`
 directory beside the api: the engine has no process frontend
 ([§AR-system.2.9.1](README.md#291-no-process-frontend-lives-in-the-engine)).
 
-A file belongs to exactly one of those twelve module directories — for example,
+A file belongs to exactly one of those thirteen module directories — for example,
 `model/records.rs` belongs to **model** and `api/show.rs` belongs to **api** — and
 it holds one thing, named for what that is: the invariant, rule or record a
 reader would look for under that name. That is what a citation of this section
@@ -62,7 +62,7 @@ All 67 are `<component>/tests_<subject>.rs`, declared in that component's `mod.r
 
 `tests/integration/test_module_layout.py` holds the layout: every `.rs` under
 `crates/grund-core/src/` is `lib.rs`, `testing.rs`, or a file inside one of the
-twelve component directories, each present directory has a `mod.rs`, and `lib.rs`
+thirteen component directories, each present directory has a `mod.rs`, and `lib.rs`
 `include!`s nothing at all. Its pending-component set is empty; a named
 component directory or its `mod.rs` going missing is an error.
 `tests/integration/test_dependency_direction.py` holds the order of

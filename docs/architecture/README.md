@@ -1,4 +1,4 @@
-# AR-system: one engine, twelve components, three frontends
+# AR-system: one engine, thirteen components, three frontends
 
 `grund` is one pipeline. A single tree walk reads every file once and produces
 the `Catalog`; the resolver completes the structural model; chapter-rule parsing
@@ -46,7 +46,7 @@ derivation wrong everywhere, are both unfinished, and neither is two commands di
 
 ## 1. The system
 
-Twelve components in one crate, stacked in the order they may read each other,
+Thirteen components in one crate, stacked in the order they may read each other,
 and the frontends above them:
 
 ```text
@@ -77,6 +77,8 @@ and the frontends above them:
              ├────────────────────────────────────────────────────┤
              │ 2.1  grammar                                       │
              ├────────────────────────────────────────────────────┤
+             │ 2.13 sources                                       │
+             ├────────────────────────────────────────────────────┤
              │ 2.2  model                                         │
              └────────────────────────────────────────────────────┘
              a component reads only what is below it (section 4)
@@ -87,7 +89,7 @@ The same components as the data moves through them:
 ```text
                grund.toml ──► config ──► workspace ──┐
                                                      ▼
-  tree ──► scanner ──► Catalog ──────────────────► resolver ────────────────┐
+ sources ──► scanner ──► Catalog ────────────────► resolver ────────────────┐
                                                         │                  │
                              rule titles + vocabulary ──┤                  │
                                                         ▼                  ▼
@@ -166,7 +168,7 @@ Consumes everything above. Produces the embedding surface: data-returning functi
 
 #### 2.9.1 No process frontend lives in the engine
 
-No engine component parses argv, renders to a stream, or decides a process exit status. The former `grund_core::main_entry()` process frontend and its `compat/` module left after the deprecation path of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) completed; `lib.rs` exports no replacement renderer ([§FS-distribution.3.1.1](../functional-spec/FS-distribution.md#311-main_entry-is-absent-from-the-embedding-api), [§DA-engine-renders-nothing](../decisions/architectural/DA-engine-renders-nothing.md#da-engine-renders-nothing-the-engine-renders-nothing-so-the-deprecated-compat-frontend-retires)). Run-level cautions, including the four `[workspace]` warnings that were last to move, travel as `Diagnostic` data for each frontend to render ([§FS-check.3.30](../functional-spec/FS-check.md#330-a-workspace-member-swallows-the-blocks-own-scan), [§FS-check.3.29](../functional-spec/FS-check.md#329-unlisted-workspace-block), [§FS-check.4.10](../functional-spec/FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread), [§FS-workspace.6.1](../functional-spec/FS-workspace.md#61-nested-workspaces)). `tests/integration/test_engine_boundary.py` holds the absence of the renderer and process-entry export; the direction ledger in section 4 covers only the twelve engine components.
+No engine component parses argv, renders to a stream, or decides a process exit status. The former `grund_core::main_entry()` process frontend and its `compat/` module left after the deprecation path of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) completed; `lib.rs` exports no replacement renderer ([§FS-distribution.3.1.1](../functional-spec/FS-distribution.md#311-main_entry-is-absent-from-the-embedding-api), [§DA-engine-renders-nothing](../decisions/architectural/DA-engine-renders-nothing.md#da-engine-renders-nothing-the-engine-renders-nothing-so-the-deprecated-compat-frontend-retires)). Run-level cautions, including the four `[workspace]` warnings that were last to move, travel as `Diagnostic` data for each frontend to render ([§FS-check.3.30](../functional-spec/FS-check.md#330-a-workspace-member-swallows-the-blocks-own-scan), [§FS-check.3.29](../functional-spec/FS-check.md#329-unlisted-workspace-block), [§FS-check.4.10](../functional-spec/FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread), [§FS-workspace.6.1](../functional-spec/FS-workspace.md#61-nested-workspaces)). `tests/integration/test_engine_boundary.py` holds the absence of the renderer and process-entry export; the direction ledger in section 4 covers only the thirteen engine components.
 
 ### 2.10 resolver
 
@@ -188,6 +190,10 @@ Knows no frontend, renderer or filesystem beyond repository-relative fact
 anchors. Design: [§AR-rules](AR-rules.md#ar-rules-sentences-and-facts-meet-only-in-the-rule-engine).
 Module: `crates/grund-core/src/rules/` (created with the implementation).
 
+### 2.13 sources
+
+Consumes the disk and the run's buffers. Produces the one text, existence and identity of every file a run reads: for a path, its `text`, whether it `exists`, whether it `is_file`, its `read_dir` listing and its physical identity, with a buffer standing for its file under every spelling and a buffer with no file behind it existing ([§FS-scan.text.buffer](../functional-spec/FS-scan.md#textbuffer-a-files-text-is-what-a-save-would-write), [§FS-scan.text.buffer-only](../functional-spec/FS-scan.md#textbuffer-only-a-buffer-with-no-file-behind-it-is-a-file), [§FS-scan.identity.buffers](../functional-spec/FS-scan.md#identitybuffers-a-buffer-is-the-file-at-its-physical-location)). The buffers are the ones the run's `Run` carries, keyed by physical path ([§AR-config.1.5](AR-config.md#15-run-and-compiled)). It offers one other view, `saved`, which reads the disk past the buffers, for the readers [§REQ-one-answer.differences.text](../requirements/REQ-one-answer.md#differencestext-text) still lists, and each of them leaves it when its row closes. It is the one component that reads the disk: config reads its own files and a writer writes what its spec names, and nothing else opens, stats or lists a path (section 5's primitive guards). Knows no grammar, no configuration and no rule: what a file's text means is the scanner's. Module: `sources/` in `crates/grund-core/src/`, created with the implementation.
+
 ## 3. Frontends
 
 Two today, two planned, and none has engine logic ([§AR-bindings](AR-bindings.md#ar-bindings-target-shape-for-exposing-the-rust-engine-on-three-platforms)). `grund-cli` parses arguments, renders text and JSON, and maps exit codes ([§AR-bindings.3](AR-bindings.md#3-cratesgrund-cli-the-cli-binary), [§FS-cli](../functional-spec/FS-cli.md#fs-cli-grunds-command-line-surface-conventions)). `grund-lsp` speaks LSP over stdio and translates every request into an api call ([§AR-lsp](AR-lsp.md#ar-lsp-how-the-lsp-server-is-built)). `grund-node` and `grund-py` will marshal the same functions ([§AR-bindings.5](AR-bindings.md#5-grund-node-the-napi-rs-binding), [§AR-bindings.6](AR-bindings.md#6-grund-py-the-pyo3-binding)). Each depends on `grund-core` and on nothing of the others, so the CLI carries no JSON-RPC and the server no terminal renderer ([§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary)).
@@ -199,8 +205,9 @@ rule drawn: the frontends sit above api; api above the queries and the writers,
 which are siblings and read nothing of each other; those above the checker; the
 checker above rules; rules above resolver; resolver above scanner; scanner above
 workspace and templates, which are siblings and read nothing of each other;
-both above config; config above grammar; and grammar above model, which reads
-nothing but std. Two things hold it. The compiler holds a component's privacy —
+both above config; config above grammar; grammar above sources; and sources
+above model, which reads nothing but std. So every component from config up
+reads a file through sources ([§AR-system.2.13](README.md#213-sources)). Two things hold it. The compiler holds a component's privacy —
 nothing outside a module directory can name what its `mod.rs` does not re-export
 ([§AR-core-module-layout.1.1](AR-core-module-layout.md#11-modrs-is-the-components-whole-boundary)) —
 and `tests/integration/test_dependency_direction.py` holds the order across
@@ -239,7 +246,7 @@ The system:
 
 | ID | Subject |
 |---|---|
-| [§AR-system](README.md#ar-system-one-engine-twelve-components-three-frontends) | one engine, twelve components, three frontends — this page |
+| [§AR-system](README.md#ar-system-one-engine-thirteen-components-three-frontends) | one engine, thirteen components, three frontends — this page |
 
 The components and frontends:
 

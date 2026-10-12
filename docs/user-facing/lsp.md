@@ -103,6 +103,12 @@ token. Completion lists request refresh on further typing. The server supplies
 plain text edits and cannot intercept Tab or enforce client response handling
 ([§FS-lsp.1.6.4](../functional-spec/FS-lsp.md#164-snapshot-and-live-transform-interaction)).
 
+## Unsaved files
+
+The editor judges what a save would write ([§FS-scan.text.buffer](../functional-spec/FS-scan.md#textbuffer-a-files-text-is-what-a-save-would-write)). A new file you have not saved yet is a file: a stub that points at it is not reported broken, and the ID it declares is not reported duplicated ([§FS-scan.text.buffer-only](../functional-spec/FS-scan.md#textbuffer-only-a-buffer-with-no-file-behind-it-is-a-file)). A file is the same file under any spelling, so an unsaved edit to a stub's target reaches the stub even when one of them goes through a symlink ([§FS-scan.identity.buffers](../functional-spec/FS-scan.md#identitybuffers-a-buffer-is-the-file-at-its-physical-location)). An unsaved file in a directory the scan skips, by `exclude` or an ignore file, is skipped as the saved file would be.
+
+Four checks still read the saved file until 0.19.0: the index check, the inline-code hint on a dangling citation, the `AGENTS.md` managed-block check and the end-to-end manifest reader ([§DF-four-editor-checks-read-saved-text](../decisions/functional/DF-four-editor-checks-read-saved-text.md#df-four-editor-checks-read-saved-text-four-editor-checks-read-the-saved-file-for-one-more-release)). Save the file to see what they say about an edit.
+
 ## VSCode / VSCodium
 
 Install a generic LSP client extension and configure it to launch `grund-lsp` for Markdown plus the source file types in your `[scan] extensions`. Use one that is available on your editor's marketplace: VSCodium installs from Open VSX, where "Simple LSP Client" (`wdomitrz.simple-lsp-client`) is published — the older `zsol.vscode-glspc` is only on the Microsoft Marketplace and cannot be installed in VSCodium.

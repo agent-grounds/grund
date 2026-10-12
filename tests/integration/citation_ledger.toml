@@ -40,7 +40,7 @@ owners = ["crates/grund-core/src/config/kinds.rs"]
 name = "text"
 fact = "the text of a file, and which path names it"
 done = false
-points = ["FS-scan.identity", "FS-declarations.checks.broken-stub.1"]
+points = ["FS-scan.text", "FS-scan.identity", "FS-declarations.checks.broken-stub.1"]
 owners = ["crates/grund-core/src/scanner/tree.rs"]
 
 [[family.migration]]

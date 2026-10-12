@@ -114,7 +114,24 @@ question a command asks is answered from that table, within the command's own
 scope ([§FS-scan.projects.kinds](../functional-spec/FS-scan.md#projectskinds-whose-kinds-a-run-reads)). A rule vocabulary judges its objects with a table of
 the same type, built from the projects its own run loaded, so a narrowed run's
 namespaced object stays unverifiable ([§FS-rules.4.1](../functional-spec/FS-rules.md#41-a-rule-this-scope-cannot-verify)). It is read from configs, never from scanned
-files, so it is config-time work. No other `Run` field is read from a file. A command-line override of
+files, so it is config-time work. Beside those it carries the editor's **buffers** and the
+**selection**. The buffers are the open documents the invocation was handed,
+keyed by physical path, which every reader of the run reads as the files they
+name through `sources` ([§AR-system.2.13](README.md#213-sources), [§FS-scan.text.buffer](../functional-spec/FS-scan.md#textbuffer-a-files-text-is-what-a-save-would-write)); a command-line run has
+none. The selection is which projects load, what the path bounds for resolution
+and what it bounds for the report ([§FS-scan.path](../functional-spec/FS-scan.md#path-what-a-path-argument-means), [§FS-scan.projects](../functional-spec/FS-scan.md#projects-which-projects-a-run-loads)). Each
+command keeps its own: `check <path>` resolves against the whole project, `show`,
+`list`, `id`, `refs` and `cover` with a path resolve within the path's tree, a
+workspace `check <dir>` is one narrowed scan, and the editor's root lookup skips
+the member rewrite.
+
+One function builds every `Run`: `open()`, in the workspace component, the
+lowest that knows both the config and the members. It takes the invocation, the
+path, the command, its flags, `--path-base` and the buffers, discovers the
+config, expands the workspace, and builds each project's `Run` once. Nothing
+assigns to a `Run` field afterwards, as nothing does to the façade (section 5):
+a per-run fact a command decides is an argument to `open()`, never a setter on a
+built `Run`. No other `Run` field is read from a file. A command-line override of
 a file's value, such as `--require-grounding`, is a `Run` fact the façade applies
 over the `Project` value. `Compiled { grammar, demand }` is `compile(&Project)`:
 the ID grammar, and the `ScanDemand` that tells the scanner which rows' files
