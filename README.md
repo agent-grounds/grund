@@ -10,7 +10,7 @@
 <tr>
 <td valign="top" width="400">
 <b>1 · Declare</b><br>
-Give a spec an ID in <a href="examples/quickstart/repo/docs/functional-spec/FS-login.md"><code>docs/functional-spec/FS-login.md</code></a>
+Write a spec in <a href="examples/quickstart/repo/docs/functional-spec/FS-login.md"><code>docs/functional-spec/</code></a>
 <pre lang="markdown">
 &#35; FS-login: Login
 &#35;&#35; format: Username format
