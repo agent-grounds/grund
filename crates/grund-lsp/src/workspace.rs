@@ -17,6 +17,10 @@ struct ProjectSnapshot {
     /// Cached core authoring context (§FS-lsp.1.6.4). Optional only for the
     /// existing transport fixtures that construct navigation snapshots.
     completion: Option<grund_core::LspCompletionContext>,
+    /// The context the snapshot was loaded from, which a citation hover answers
+    /// from (§FS-lsp.responsiveness.3, §AR-lsp.5.2). Optional for the same
+    /// fixtures as `completion`.
+    show: Option<grund_core::LspShowContext>,
     /// The directories `snapshot.scanned_files` lie in, so a file created since
     /// the last scan is still recognized as this project's — a new file under a
     /// symlinked or parent-relative `[scan] include` has no root prefix and is
@@ -43,6 +47,7 @@ impl ProjectSnapshot {
             snapshot,
             kind_titles: metadata.kind_titles,
             completion: None,
+            show: None,
             scanned_dirs,
             index,
         }
@@ -52,6 +57,7 @@ impl ProjectSnapshot {
     fn with_completion(root: PathBuf, loaded: grund_core::LspSnapshotWithCompletion) -> Self {
         let mut project = Self::new(root, loaded.metadata);
         project.completion = Some(loaded.completion);
+        project.show = Some(loaded.show);
         project
     }
 

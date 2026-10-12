@@ -148,10 +148,10 @@ pub use checker::{CHECK_FINDING_CODES, CheckFindingSelection};
 pub use queries::{
     BatchShowFailure, BatchShowQuery, BatchShowRecord, CitationCompletion, DeclaredId, LineEdit,
     ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput, LspCitation,
-    LspCompletionContext, LspDeclaration, LspFindingRange, LspSnapshot, LspSnapshotOpts,
-    LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub, LspUsage, ShowFormat, ShowMode,
-    ShowOpts, ShowQueryError, can_replace_trigger_at, citation_under_title, list_sizes,
-    list_sizes_with_run_warnings, lsp_hover_with_kind_title, lsp_title_hover_body,
+    LspCompletionContext, LspDeclaration, LspFindingRange, LspShowContext, LspSnapshot,
+    LspSnapshotOpts, LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub, LspUsage,
+    ShowFormat, ShowMode, ShowOpts, ShowQueryError, can_replace_trigger_at, citation_under_title,
+    list_sizes, list_sizes_with_run_warnings, lsp_hover_with_kind_title, lsp_title_hover_body,
     on_type_line_edits, show_batch_with_scope, usage_clause, usage_over_paths,
 };
 
@@ -201,7 +201,7 @@ pub use api::{
     lsp_snapshot, lsp_snapshot_with_completion, lsp_snapshot_with_metadata, node_embedding_call,
     node_request, parse_cover_line_range, propose_id, propose_id_with_run_warnings,
     reference_style, refs, refs_outcome, refs_with_metadata, render_finding_sites_json, scan, show,
-    show_with_overlays, show_with_scope, validate_config,
+    show_from_snapshot, show_with_scope, validate_config,
 };
 #[cfg(feature = "test-binding-writes")]
 pub use writers::{BindingWriteFaultGuard, binding_write_fault};

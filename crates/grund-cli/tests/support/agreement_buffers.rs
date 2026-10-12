@@ -8,7 +8,9 @@
 //! §REQ-one-answer.differences.text are trees here too, booked in the ledger.
 
 use super::agreement_tree::Verdict;
-use grund_core::{Finding, LspSnapshotOpts, ShowOpts, lsp_snapshot, show_with_overlays};
+use grund_core::{
+    Finding, LspSnapshotOpts, ShowOpts, lsp_snapshot_with_completion, show_from_snapshot,
+};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
@@ -110,13 +112,14 @@ impl Tree {
 
     /// The editor's answer and `show`'s for `id`, over `buffers`.
     fn answers(&self, buffers: &BTreeMap<PathBuf, String>, id: &str) -> String {
-        let snapshot = lsp_snapshot(LspSnapshotOpts {
+        let loaded = lsp_snapshot_with_completion(LspSnapshotOpts {
             path: self.0.clone(),
             path_provided: true,
             open_documents: buffers.clone(),
         });
-        let findings = match snapshot {
-            Ok(snapshot) => {
+        let findings = match &loaded {
+            Ok(loaded) => {
+                let snapshot = &loaded.metadata.snapshot;
                 let line = |finding: &Finding| format!("{}: {}", finding.code, finding.message);
                 let errors: Vec<String> = snapshot.report.errors.iter().map(line).collect();
                 let warnings: Vec<String> = snapshot.report.warnings.iter().map(line).collect();
@@ -124,13 +127,15 @@ impl Tree {
             }
             Err(error) => format!("snapshot refused: {error}"),
         };
-        let opts = ShowOpts {
-            path: self.0.clone(),
-            ..ShowOpts::default()
+        // §FS-lsp.responsiveness.3: `show` as the editor answers it, from the
+        // context that snapshot was loaded from.
+        let opts = ShowOpts::default();
+        let shown = match &loaded {
+            Ok(loaded) => show_from_snapshot(&loaded.show, id, opts.mode, opts.format)
+                .map(|shown| shown.body)
+                .map_err(|error| error.to_string()),
+            Err(error) => Err(error.to_string()),
         };
-        let shown = show_with_overlays(id, opts, buffers.clone())
-            .map(|shown| shown.body)
-            .map_err(|error| error.to_string());
         format!("{findings}, show {id} {shown:?}")
     }
 

@@ -11,16 +11,17 @@
 //! (§AR-system.2.7).
 
 use anyhow::{Result, anyhow};
-use std::collections::BTreeMap;
-use std::path::PathBuf;
 
-use super::lsp_snapshot::normalized_overlays;
 use crate::config::{Invocation, Selection, display_path};
 use crate::grammar::flatten_cross_ref_links;
 use crate::model::{Finding, ShowOutput};
-use crate::queries::{ShowFormat, ShowOpts, render_show_output_json, show_declaration_with_home};
-use crate::resolver::{load_invoked_workspace_context, with_member_id_candidates};
-use crate::sources::Buffers;
+use crate::queries::{
+    LspShowContext, ShowFormat, ShowMode, ShowOpts, render_show_output_json,
+    show_declaration_with_home,
+};
+use crate::resolver::{
+    WorkspaceContext, load_invoked_workspace_context, with_member_id_candidates,
+};
 
 use super::report::context_run_warnings;
 use crate::scanner::resolve_id_arg;
@@ -31,14 +32,6 @@ use crate::workspace::split_qualified_id_arg;
 
 pub fn show(id_arg: &str, opts: ShowOpts) -> Result<ShowOutput> {
     show_with_scope(id_arg, opts, true).1
-}
-
-pub fn show_with_overlays(
-    id_arg: &str,
-    opts: ShowOpts,
-    open_documents: BTreeMap<PathBuf, String>,
-) -> Result<ShowOutput> {
-    show_with_scope_and_overlays(id_arg, opts, true, normalized_overlays(open_documents)).1
 }
 
 /// The ID read behind `grund <ID>` (§FS-show).
@@ -53,21 +46,11 @@ pub fn show_with_scope(
     opts: ShowOpts,
     path_provided: bool,
 ) -> (Vec<Finding>, Result<ShowOutput>) {
-    show_with_scope_and_overlays(id_arg, opts, path_provided, Buffers::default())
-}
-
-fn show_with_scope_and_overlays(
-    id_arg: &str,
-    opts: ShowOpts,
-    path_provided: bool,
-    buffers: Buffers,
-) -> (Vec<Finding>, Result<ShowOutput>) {
     let mut run_warnings = Vec::new();
     let output = show_run(
         id_arg,
         opts,
         path_provided,
-        buffers,
         &mut run_warnings,
         &mut serde_json::Value::Null,
     );
@@ -82,14 +65,7 @@ pub(super) fn show_data(
 ) -> (Vec<Finding>, Result<(ShowOutput, serde_json::Value)>) {
     let mut warnings = Vec::new();
     let mut metadata = serde_json::Value::Null;
-    let result = show_run(
-        id,
-        opts,
-        explicit,
-        Buffers::default(),
-        &mut warnings,
-        &mut metadata,
-    );
+    let result = show_run(id, opts, explicit, &mut warnings, &mut metadata);
     (warnings, result.map(|out| (out, metadata)))
 }
 
@@ -97,16 +73,56 @@ fn show_run(
     id_arg: &str,
     opts: ShowOpts,
     path_provided: bool,
-    buffers: Buffers,
     run_warnings: &mut Vec<Finding>,
     metadata: &mut serde_json::Value,
 ) -> Result<ShowOutput> {
-    // §AR-config.1.5: the buffers are the run's, handed to `open()` with its scope.
-    let invocation = Invocation::new(&opts.path, path_provided, Selection::Project)
-        .classify(false)
-        .buffers(buffers);
+    // §AR-config.1.5: a command-line run has no buffers; the editor's answer is
+    // `show_from_snapshot`, over the context its snapshot loaded with them.
+    let invocation = Invocation::new(&opts.path, path_provided, Selection::Project).classify(false);
     let context = load_invoked_workspace_context(&invocation)?;
     *run_warnings = context_run_warnings(&context);
+    show_answer(
+        &context,
+        id_arg,
+        opts.section,
+        opts.mode,
+        opts.format,
+        metadata,
+    )
+}
+
+/// The editor's citation preview, answered from the context its snapshot was
+/// loaded from rather than from a load of its own (§FS-lsp.responsiveness.3,
+/// §AR-lsp.5.2): the same answer `grund <ID>` gives after its load, so the
+/// bytes are the CLI's (§FS-lsp.1.2.1, §REQ-one-answer.text.parity).
+pub fn show_from_snapshot(
+    snapshot: &LspShowContext,
+    id_arg: &str,
+    mode: ShowMode,
+    format: ShowFormat,
+) -> Result<ShowOutput> {
+    show_answer(
+        &snapshot.context,
+        id_arg,
+        None,
+        mode,
+        format,
+        &mut serde_json::Value::Null,
+    )
+}
+
+/// The answer half of `grund <ID>` (§FS-show): resolves the argument against a
+/// context already loaded, slices the body and renders its format. The CLI's
+/// load and the editor's snapshot both hand their context here, so there is one
+/// answer whichever surface asks (§AR-lsp.5.2).
+fn show_answer(
+    context: &WorkspaceContext,
+    id_arg: &str,
+    opts_section: Option<String>,
+    mode: ShowMode,
+    format: ShowFormat,
+    metadata: &mut serde_json::Value,
+) -> Result<ShowOutput> {
     let (alias, raw_id) = split_qualified_id_arg(id_arg)?;
     let project = match alias.as_deref() {
         Some(name) => context
@@ -154,14 +170,14 @@ fn show_run(
     let (id, inline_section) =
         resolve_id_arg(raw_id, config.schema(), config.frame(), &project.findings)
             .map_err(|error| anyhow::Error::new(error.diagnostic()))?;
-    if opts.section.is_some() && inline_section.is_some() {
+    if opts_section.is_some() && inline_section.is_some() {
         return Err(anyhow!(crate::model::OperationDiagnostic::new(
             "query",
             "query-failed",
             format!("--section cannot be combined with an inline section")
         )));
     }
-    let section = opts.section.or(inline_section);
+    let section = opts_section.or(inline_section);
     *metadata = crate::queries::show_metadata(config, &project.findings, &id, section.as_deref());
     let (mut output, home) = show_declaration_with_home(
         config,
@@ -169,26 +185,26 @@ fn show_run(
         &project.findings,
         &id,
         section.as_deref(),
-        opts.mode.render_mode(),
-        opts.format == ShowFormat::Markdown,
+        mode.render_mode(),
+        format == ShowFormat::Markdown,
     )
     // §FS-workspace.8.1.1: a miss names the projects that do declare the ID,
     // read off the context this run already loaded.
-    .map_err(|err| with_member_id_candidates(err, &context, alias.as_deref(), raw_id))?;
-    if opts.format != ShowFormat::Markdown {
+    .map_err(|err| with_member_id_candidates(err, context, alias.as_deref(), raw_id))?;
+    if format != ShowFormat::Markdown {
         let markdown_body = output.path.extension().and_then(|ext| ext.to_str()) == Some("md");
         // §FS-show.3.2.1, §FS-show.3.2.2: flatten ordinary prose while
         // preserving authored wrappers in Markdown fences.
         output.body = flatten_cross_ref_links(&output.body, config.lexical(), markdown_body);
     }
-    if opts.format == ShowFormat::Json {
+    if format == ShowFormat::Json {
         let json = render_show_output_json(
             config,
             context.render_config(),
             &home,
             &id,
             section.as_deref(),
-            opts.mode.render_mode(),
+            mode.render_mode(),
             &output,
         );
         output.json = Some(json);

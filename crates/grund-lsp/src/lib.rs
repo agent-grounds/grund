@@ -3,9 +3,9 @@
 use anyhow::{Context, Result};
 use grund_core::{
     DeclaredId, Finding, LspCitation, LspDeclaration, LspSnapshot, LspSnapshotOpts,
-    LspSnapshotWithMetadata, LspStub, LspUsage, ShowFormat, ShowMode, ShowOpts,
-    canonical_snapshot_path, citation_under_title, effective_config, lsp_hover_with_kind_title,
-    lsp_snapshot_with_completion, lsp_title_hover_body, on_type_line_edits, show_with_overlays,
+    LspSnapshotWithMetadata, LspStub, LspUsage, ShowFormat, ShowMode, canonical_snapshot_path,
+    citation_under_title, effective_config, lsp_hover_with_kind_title,
+    lsp_snapshot_with_completion, lsp_title_hover_body, on_type_line_edits, show_from_snapshot,
 };
 use lsp_server::{Connection, Message, Notification, Request, Response};
 use lsp_types::{
@@ -520,17 +520,18 @@ impl Server {
                 )));
             }
         };
+        // §FS-lsp.responsiveness.3, §AR-lsp.5.2: the body comes from the context the
+        // snapshot was loaded from, through `show`'s own answer, never a fresh load.
+        let Some(loaded) = &project.show else {
+            return Ok(None);
+        };
         // A citation that does not resolve has no preview body; its diagnostic
         // already carries the nearest-ID hint (§FS-lsp.1.2.2).
-        let body = match show_with_overlays(
+        let body = match show_from_snapshot(
+            loaded,
             &citation.query_id,
-            ShowOpts {
-                path: snapshot.root.clone(),
-                section: None,
-                mode: ShowMode::Toc,
-                format: ShowFormat::Markdown,
-            },
-            self.open_document_overlays(),
+            ShowMode::Toc,
+            ShowFormat::Markdown,
         ) {
             Ok(output) => lsp_hover_with_kind_title(
                 &linkify_hover_body(&output.body, &snapshot.citations),

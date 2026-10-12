@@ -22,8 +22,8 @@ use crate::config::{Invocation, ProjectRecords, Selection, display_path};
 use crate::grammar::render_id;
 use crate::model::{Declaration, paired_declarations, sort_path_key};
 use crate::queries::{
-    LspCitation, LspCompletionContext, LspDeclaration, LspFindingRange, LspSnapshot,
-    LspSnapshotOpts, LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub,
+    LspCitation, LspCompletionContext, LspDeclaration, LspFindingRange, LspShowContext,
+    LspSnapshot, LspSnapshotOpts, LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub,
 };
 use crate::resolver::load_resolved_workspace_context;
 use crate::scanner::api_scan_error;
@@ -47,7 +47,8 @@ pub fn lsp_snapshot_with_metadata(opts: LspSnapshotOpts) -> Result<LspSnapshotWi
 /// Load completion configuration and candidates with the editor snapshot
 /// (§FS-lsp.1.6.2, §FS-lsp.1.6.4), never separately per request.
 pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshotWithCompletion> {
-    let overlays = normalized_overlays(opts.open_documents);
+    // §FS-lsp.responsiveness.3: the run keeps what it reads, for the hover.
+    let overlays = normalized_overlays(opts.open_documents).recording();
     // §FS-lsp.1.1: classify citing sides so the citation-direction checks run and
     // surface as editor diagnostics, the same errors `grund check` reports.
 
@@ -323,7 +324,7 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
     // each one anchors at — the same channel the CLI renders, from the same place
     // (§FS-lsp.4.1).
     let run_warnings = public_lsp_run_warnings(&render_config, editor_run_warnings(&context));
-    Ok(LspSnapshotWithCompletion {
+    let snapshot = LspSnapshotWithCompletion {
         completion,
         metadata: LspSnapshotWithMetadata {
             kind_titles,
@@ -343,7 +344,10 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                 scan_errors,
             },
         },
-    })
+        // §AR-lsp.5.2: the context is kept beside the snapshot it built.
+        show: LspShowContext { context },
+    };
+    Ok(snapshot)
 }
 
 pub(super) fn normalized_overlays(overlays: BTreeMap<PathBuf, String>) -> Buffers {

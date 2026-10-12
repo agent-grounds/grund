@@ -267,14 +267,17 @@ fn public_embedding_api_checks_and_shows_without_cli_dispatch() {
         lsp_root.join("docs/functional-spec/FS-001-alpha.md"),
         "# FS-001-alpha: Alpha\n\nUnsaved lead.\n\n## 1. Detail\nUnsaved detail.\n".to_string(),
     );
-    let shown_overlay = show_with_overlays(
-        "FS-001-alpha",
-        ShowOpts {
-            path: lsp_root.clone(),
-            mode: ShowMode::Toc,
-            ..ShowOpts::default()
-        },
+    let loaded = lsp_snapshot_with_completion(LspSnapshotOpts {
+        path: lsp_root.clone(),
+        path_provided: true,
         open_documents,
+    })
+    .expect("lsp snapshot over the open buffer");
+    let shown_overlay = show_from_snapshot(
+        &loaded.show,
+        "FS-001-alpha",
+        ShowMode::Toc,
+        ShowOpts::default().format,
     )
     .expect("show uses open buffer overlay");
     assert!(shown_overlay.body.contains("Unsaved lead."));

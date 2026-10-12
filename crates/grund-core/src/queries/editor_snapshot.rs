@@ -15,6 +15,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 use crate::model::{Finding, Report};
+use crate::resolver::WorkspaceContext;
 use crate::scanner::ApiScanError;
 
 /// One snapshot request (§AR-lsp.5.1): the anchor folder, whether the editor named
@@ -146,4 +147,16 @@ pub struct LspSnapshotWithMetadata {
 pub struct LspSnapshotWithCompletion {
     pub metadata: LspSnapshotWithMetadata,
     pub completion: super::LspCompletionContext,
+    /// The loaded context the snapshot was built from, which a citation hover
+    /// answers from (§FS-lsp.responsiveness.3, §AR-lsp.5.2).
+    pub show: LspShowContext,
+}
+
+/// The workspace a snapshot was loaded from, overlays applied and every file
+/// text its scan read kept, so `show_from_snapshot` answers a citation hover
+/// without loading or reading again (§FS-lsp.responsiveness.3, §AR-lsp.5.2).
+/// Opaque: it is exactly as fresh as the snapshot it was built beside
+/// (§FS-lsp.1.6.4).
+pub struct LspShowContext {
+    pub(crate) context: WorkspaceContext,
 }

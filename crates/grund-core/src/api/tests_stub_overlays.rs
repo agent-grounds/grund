@@ -4,7 +4,7 @@
 //! saved (§FS-show.2.3.4, §FS-show.2.3.7, §FS-lsp.1.1), whether or not the
 //! target is in the scan.
 
-use super::{lsp_snapshot, show_with_overlays};
+use super::{lsp_snapshot, lsp_snapshot_with_completion, show_from_snapshot};
 use crate::model::format_path;
 use crate::queries::{LspSnapshotOpts, ShowOpts};
 use crate::testing::{test_root, write};
@@ -80,13 +80,17 @@ fn open(root: &Path, text: Option<&str>) -> BTreeMap<PathBuf, String> {
         .collect()
 }
 
-/// `show FS-second`: the body, or the refusal.
+/// `show FS-second` as the editor answers it, from its snapshot
+/// (§FS-lsp.responsiveness.3): the body, or the refusal.
 fn show_second(root: &Path, editor: Option<&str>) -> Result<String, String> {
-    let opts = ShowOpts {
+    let loaded = lsp_snapshot_with_completion(LspSnapshotOpts {
         path: root.to_path_buf(),
-        ..ShowOpts::default()
-    };
-    show_with_overlays("FS-second", opts, open(root, editor))
+        path_provided: true,
+        open_documents: open(root, editor),
+    })
+    .expect("lsp snapshot");
+    let opts = ShowOpts::default();
+    show_from_snapshot(&loaded.show, "FS-second", opts.mode, opts.format)
         .map(|out| out.body.trim_end().to_string())
         .map_err(|err| err.to_string())
 }
