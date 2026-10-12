@@ -723,16 +723,16 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           git checkout --force "origin/${{ github.base_ref }}"
-          cargo bench -p grund --features bench --locked --bench instructions -- --save-baseline=main --save-summary=json
+          cargo bench -p grund --features bench --locked --quiet --bench instructions -- --save-baseline=main --save-summary=json
           git checkout --force "${{ github.sha }}"
 
       - name: cargo bench
         if: github.event_name != 'pull_request'
-        run: cargo bench -p grund --features bench --locked --bench instructions -- --save-summary=json
+        run: cargo bench -p grund --features bench --locked --quiet --bench instructions -- --save-summary=json
 
       - name: cargo bench regression gate
         if: github.event_name == 'pull_request'
-        run: cargo bench -p grund --features bench --locked --bench instructions -- --baseline=main --save-summary=json
+        run: cargo bench -p grund --features bench --locked --quiet --bench instructions -- --baseline=main --save-summary=json
 
       - name: Upload benchmark summaries
         if: always()

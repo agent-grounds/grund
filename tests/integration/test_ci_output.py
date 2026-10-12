@@ -88,7 +88,7 @@ class SuiteShape:
 class CargoSuiteOutputTests(SuiteShape, unittest.TestCase):
     """§AR-ci.requirements.5.2: `scripts/run_cargo_suite.py` on a crate of its own."""
 
-    def crate(self, failing=False, broken=False):
+    def crate(self, failing=False, broken=False, chatty=False, crashing=False):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         root = Path(temp.name)
@@ -111,16 +111,34 @@ class CargoSuiteOutputTests(SuiteShape, unittest.TestCase):
                       "        panic!(\"FAIL-PANIC-MARK\");\n    }\n")
         if broken:
             tests += "    fn does_not_compile() -> u32 { \"BUILD-ERROR-MARK\" }\n"
+        if chatty:
+            # Written past libtest's capture, as a child process writes: a partial line, and
+            # the alternate-screen exit a terminal program leaves behind.
+            tests += "".join(
+                f"    #[test]\n    fn writes_past_capture_{n}() {{\n"
+                "        use std::io::Write;\n"
+                f"        let text: &[u8] = {text};\n"
+                "        std::io::stdout().write_all(text).unwrap();\n"
+                "        std::io::stdout().flush().unwrap();\n    }\n"
+                for n, text in enumerate((r'b"NOISE-PARTIAL"', r'b"\x1b[?1049l"',
+                                          r'b"NOISE-LINE\n"')))
+        if crashing:
+            (root / "tests").mkdir()
+            (root / "tests" / "crash.rs").write_text(
+                "fn main() {\n    if std::env::args().any(|arg| arg == \"--list\") { return; }\n"
+                "    std::process::abort();\n}\n", encoding="utf-8")
+            with (root / "Cargo.toml").open("a", encoding="utf-8") as manifest:
+                manifest.write('\n[[test]]\nname = "crash"\npath = "tests/crash.rs"\nharness = false\n')
         (root / "src").mkdir()
         (root / "src" / "lib.rs").write_text(
             "#[cfg(test)]\nmod tests {\n" + tests + "}\n", encoding="utf-8")
         return root
 
-    def run_suite(self, crate):
+    def run_suite(self, crate, *args):
         self.assertTrue(WRAPPER.is_file(), f"{WRAPPER.relative_to(REPO)} does not exist")
         environment = dict(os.environ, CARGO_TARGET_DIR=str(crate / "target"))
         return subprocess.run(
-            [sys.executable, str(WRAPPER), "--manifest-path", str(crate / "Cargo.toml")],
+            [sys.executable, str(WRAPPER), "--manifest-path", str(crate / "Cargo.toml"), *args],
             cwd=REPO, env=environment, capture_output=True, text=True, timeout=600)
 
     def test_a_green_suite_prints_check_ins_and_a_summary_only(self):
@@ -140,6 +158,26 @@ class CargoSuiteOutputTests(SuiteShape, unittest.TestCase):
         self.assertFalse(any(LIBTEST_OK.match(line) for line in lines), output)
         self.assertFalse(any("NOISE-" in line for line in lines), output)
         self.assert_shape(lines, PASSING + 2, failed=1)
+
+    def test_output_past_libtest_capture_loses_no_test(self):
+        # A partial line or an escape sequence runs into libtest's own line; on one thread
+        # it splits `test <name> ... ` from its verdict.
+        crate = self.crate(chatty=True)
+        for args in ((), ("--", "--test-threads=1")):
+            with self.subTest(args=args):
+                result = self.run_suite(crate, *args)
+                lines = lines_of(result)
+                self.assertEqual(0, result.returncode, "\n".join(lines))
+                self.assert_quiet(lines)
+                self.assert_shape(lines, PASSING + 4, failed=0)
+
+    def test_a_crashed_binary_is_an_error_the_summary_counts(self):
+        result = self.run_suite(self.crate(crashing=True), "--no-fail-fast")
+        lines = lines_of(result)
+        output = "\n".join(lines)
+        self.assertNotEqual(0, result.returncode, output)
+        self.assertRegex(lines[-1], rf"^{PASSING + 1} tests: {PASSING + 1} passed, 0 failed, "
+                                    r"0 ignored, 1 error, \d+(?:\.\d+)?s$", output)
 
     def test_a_broken_build_prints_the_compile_error_and_fails(self):
         result = self.run_suite(self.crate(broken=True))
@@ -242,7 +280,7 @@ class CiStepsGoThroughTheQuietFormsTests(unittest.TestCase):
 
     def test_every_build_and_install_is_quiet(self):
         text = CI.read_text(encoding="utf-8")
-        shell = re.findall(r"^\s*(?:run:\s*)?((?:python -m )?(?:cargo|pip) (?:build|run|install)\b.*)$",
+        shell = re.findall(r"^\s*(?:run:\s*)?((?:python -m )?(?:cargo|pip) (?:build|run|install|bench)\b.*)$",
                            text, re.M)
         listed = re.findall(r"\[\s*(\"cargo\",[^\]]*?\"(?:build|run)\"[^\]]*)",
                             text + ORACLE.read_text(encoding="utf-8"), re.S)
