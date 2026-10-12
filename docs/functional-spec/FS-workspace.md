@@ -1427,3 +1427,6 @@ rule. An empty segment (`hardware//FS-x`) has nothing to quote, so the
 finding says a segment is empty; a leading `/` (`/FS-x`) says the path is
 empty — never empty backticks. An alias path that is *well formed* but names no
 project is the unknown-alias error of [§FS-workspace.8.1.3](FS-workspace.md#813-an-unknown-alias-outside-a-workspace-context), not this one.
+The rule holds for every command that takes a qualified ID, `grund fetch`
+included ([§FS-fetch.1](FS-fetch.md#1-input-and-project-selection)): one splitter reads the path, so the same argument is
+refused with the same words wherever it is typed.
