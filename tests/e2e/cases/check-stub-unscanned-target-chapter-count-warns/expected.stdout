@@ -1,0 +1,1 @@
+docs/fs/x.md:1: warning: FS-x has 2 Terms chapters; --rule requires at most 1; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: "terms: Terms", "more: Terms"; a citation or chapter a stub's target holds now counts, and this warning becomes an error in grund 0.19.0

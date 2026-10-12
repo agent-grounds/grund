@@ -173,9 +173,9 @@ this requirement, was found later, on `e8c40221d7`, and is added by amendment.
 ### differences.stubs: Stubs
 
 U01 and U05 closed with [§DF-stub-target-section-declared-twice](../decisions/functional/DF-stub-target-section-declared-twice.md#df-stub-target-section-declared-twice-a-section-a-stubs-target-declares-twice-is-reported-where-it-is-written-scanned-or-not) and
-[§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190). U07 and U08, differences that predate this
-requirement, were found later, on `94c23bc85b`, and are added by amendment; U04's text was
-corrected on the same baseline.
+[§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190), and U04, U07 and U08 with
+[§DF-stub-target-citations-and-chapters](../decisions/functional/DF-stub-target-citations-and-chapters.md#df-stub-target-citations-and-chapters-a-stubs-target-lends-the-stubbed-declaration-its-citations-and-chapters-and-what-that-newly-raises-warns-until-0190). U06 was widened when U04 closed, to every finding about
+the declaration itself that still lands at the stub.
 
 - **Placement.** For a healthy stub to a target outside the include, `list` shows the stub
   and `list --size` the target. R. Ruled by [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) (#650).
@@ -184,18 +184,8 @@ corrected on the same baseline.
 - **U03b.** Shell completion offers none of the outside target's sections. C. Ruled by [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) (#650).
 - **U03c.** The editor snapshot enumerates none of the outside target's sections. R. Ruled by [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) (#650).
 - **U03d.** `list --selector FS.terms` omits the outside target's section `show` returns. R. Ruled by [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) (#650).
-- **U04.** Citation obligations on an outside target are judged on the stub's empty record,
-  not on the target as the same tree with it scanned judges them: a prohibition the target's
-  citations break is missed, and an `at least` count they meet is reported at the stub,
-  `FS-x must cite GOAL`, where `src/x.rs:3` cites `GOAL-g`. R, corrected on `94c23bc85b`. Ruled by [§DF-one-answer-rulings-stubs](../decisions/functional/DF-one-answer-rulings-stubs.md#df-one-answer-rulings-stubs-a-stub-is-found-by-its-home-and-shape-read-as-the-scan-reads-and-shown-where-its-target-is), ruling D8 (#651).
-- **U06.** `check --only unused` places the warning at the stub, `show` places the
-  declaration at the target. R. Ruled by [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) (#650).
-- **U07.** A chapter rule counts none of an outside target's chapters: `Each FS must have
-  exactly one Terms chapter.` reports `FS-x has 0 Terms chapters` at the stub, and the same
-  tree with the target scanned passes. R, found on `94c23bc85b`. Ruled by [§DF-one-answer-rulings-stubs](../decisions/functional/DF-one-answer-rulings-stubs.md#df-one-answer-rulings-stubs-a-stub-is-found-by-its-home-and-shape-read-as-the-scan-reads-and-shown-where-its-target-is), ruling D8 (#651).
-- **U08.** `refs` lists no citation an outside target makes, so the `unused` warning counts
-  none either: `refs GOAL-g` lists nothing, and with the target scanned it lists
-  `src/x.rs:3`. R, found on `94c23bc85b`. Ruled by [§DF-one-answer-rulings-stubs](../decisions/functional/DF-one-answer-rulings-stubs.md#df-one-answer-rulings-stubs-a-stub-is-found-by-its-home-and-shape-read-as-the-scan-reads-and-shown-where-its-target-is), ruling D8 (#651).
+- **U06.** A finding about the declaration itself (`unused`, or a count or chapter count it
+  fails) is placed at the stub by `check`, while `show` places the declaration at the target. R. Ruled by [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) (#650).
 
 ### differences.text: Text
 

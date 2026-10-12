@@ -29,6 +29,15 @@ grund refs <ID> [<path>] [--section <s>] [--descendants] [--summary] [--total] [
 
 `refs` runs the same scan as `check` ([AR-scanner](../architecture/AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations)) and lists, for the requested `<ID>`, every recognised citation site — the set `check` would validate, so it honours `[reference] strict` (bare tokens are listed only in non-strict mode), the source-string exclusions ([§FS-check.1.1.3](FS-check.md#113-string-literals-in-source-files)), and citations inside doc-comments. In particular, a real Python module, function, or method docstring after assigned triple-quoted data remains in the set, while the assigned-data span itself is absent ([§FS-check.1.1.3.1](FS-check.md#1131-assigned-python-triple-quoted-data)). It does **not** list the *declaration* of `<ID>` — that is `grund <ID> --format=json` (the README documents that one-liner). An ID with no declaration still lists its citations, exactly the ones `check` flags as dangling, so `refs` is also the "what would break if I never create this ID" tool.
 
+The set also holds each citation a stub's target outside `[scan] include` lends the declaration
+the stub pairs with ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)), once it resolves to `<ID>`: `refs` lists it
+at its line in the target, `src/x.rs:3`, as the same tree with the target scanned lists it, though
+`check` judges none of that file's own hygiene. A citation of that file the stubbed declaration
+does not make is not in the set, and neither is one that resolves to nothing, so an ID it cites
+that is declared nowhere is not listed from there. `--summary`, `--total`, `list`'s `refs` count
+and the editor's count of a declaration's citing sites count the same set, and so does the
+`unused` warning ([§FS-check.4.1](FS-check.md#41-unused-declaration)).
+
 An owned declaration-local numeric citation ([§FS-check.1.1.8](FS-check.md#118-declaration-local-numeric-section-candidates)) is in that same set under its resolved full ID and exact section. Whole-ID and `--section` queries include it, while text and JSON retain the authored local token. Ownerless and unsupported local candidates have no guessed target and therefore appear in no target's result.
 
 With `--descendants` ([§FS-refs.1](FS-refs.md#1-inputs)) the section filter keeps a citation whose section coordinate *is* the requested path or lies beneath it — the set [§FS-lsp.1.3.1](FS-lsp.md#131-citations-from-declarations) already returns on that section's heading, one relation read by both transports ([§FS-lsp.4](FS-lsp.md#4-determinism-and-parity-with-the-cli)). Three clauses fix what *beneath* means, and they are written here rather than left implicit in a comparison because a lookup that two rules could satisfy must say which one picks ([§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution)):

@@ -75,10 +75,7 @@ const LEDGER: &[(&str, &str, &str)] = &[
     ("U03b", "u03b", "completion-offers-the-targets-section"),
     ("U03c", "u03c", "the-editor-enumerates-the-targets-section"),
     ("U03d", "u03d", "the-selector-selects-the-targets-chapter"),
-    ("U04", "u04", "an-obligation-is-judged-on-the-target"),
     ("U06", "u06", "an-unused-declaration-is-at-one-site"),
-    ("U07", "u07", "a-chapter-rule-counts-the-targets-chapters"),
-    ("U08", "u08", "refs-lists-the-targets-citation"),
     ("R02", "r02", "a-narrowed-workspace-run-resolves-the-alias"),
     // R06a-d keep the saved text for one release (DF-four-editor-checks-read-saved-text);
     // their flip is #624.
@@ -92,7 +89,7 @@ const LEDGER: &[(&str, &str, &str)] = &[
 /// builds, the reproduced rows of #576 first, then one per row of
 /// §REQ-one-answer.differences the command line, shell completion or the editor
 /// snapshot can show. A tree with no row holds a row that closed, U01 and U05 with
-/// #597, so its two answers must agree.
+/// #597 and U04, U07 and U08 with #651, so its two answers must agree.
 const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
     (
         Some("G01"),
@@ -203,10 +200,16 @@ const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
         stubs::the_selector_selects_the_targets_chapter,
     ),
     (
-        Some("U04"),
-        "u04",
-        "an-obligation-is-judged-on-the-target",
-        stubs::an_obligation_is_judged_on_the_target,
+        None,
+        "u04-prohibition",
+        "a-prohibition-is-judged-on-the-target",
+        stubs::a_prohibition_is_judged_on_the_target,
+    ),
+    (
+        None,
+        "u04-count",
+        "a-count-is-judged-on-the-target",
+        stubs::a_count_is_judged_on_the_target,
     ),
     (
         None,
@@ -221,13 +224,13 @@ const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
         stubs::an_unused_declaration_is_at_one_site,
     ),
     (
-        Some("U07"),
+        None,
         "u07",
         "a-chapter-rule-counts-the-targets-chapters",
         stubs::a_chapter_rule_counts_the_targets_chapters,
     ),
     (
-        Some("U08"),
+        None,
         "u08",
         "refs-lists-the-targets-citation",
         stubs::refs_lists_the_targets_citation,

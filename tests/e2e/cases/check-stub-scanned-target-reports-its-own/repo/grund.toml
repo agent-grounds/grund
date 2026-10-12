@@ -1,0 +1,21 @@
+grund_config_version = 1
+
+[reference]
+strict = true
+require_grounding = true
+
+[id]
+format = "{kind}-{number}-{slug}"
+
+[[kinds]]
+kind = "GOAL"
+folder = "docs/goals"
+index = false
+
+[[kinds]]
+kind = "FS"
+folder = "docs/fs"
+index = false
+
+[scan]
+include = ["docs", "src"]
