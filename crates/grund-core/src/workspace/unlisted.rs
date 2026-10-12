@@ -17,6 +17,7 @@
 //! not parse must not fail the run, and a full load rebuilds the grammar regex set
 //! per candidate.
 
+use crate::sources::Sources;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
@@ -258,7 +259,7 @@ fn is_project_root_of_run(config: &Config, canonical: &Path) -> bool {
 /// is would be the worse bug (§FS-workspace.6.1.7).
 fn workspace_table_line(config_path: &Path) -> Option<usize> {
     // §FS-check.6.1.1: cover this effective input before its shared read.
-    let text = crate::config::input_read_to_string(config_path).ok()?;
+    let text = Sources::on_disk().text(config_path).ok()?;
     text.lines().enumerate().find_map(|(idx, raw_line)| {
         let line = strip_comment(raw_line).trim();
         (line.starts_with('[')

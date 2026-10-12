@@ -23,7 +23,7 @@ use crate::model::{
     Catalog, Declaration, Id, SectionInfo, paired_declarations, scanned_decl_relative_path,
     scanned_path_key,
 };
-use crate::sources::physical_path_key;
+use crate::sources::{canonical_path, physical_path_key};
 
 /// Compute the link URL for a citation: a repo-relative path to the declaration's
 /// home file — following an inline-spec stub to its real source file — plus a
@@ -232,10 +232,9 @@ fn relative_url_under(from_file: &Path, to_file: &Path, root: &Path) -> String {
             std::borrow::Cow::Borrowed(to_rel),
         ),
         _ => {
-            let root = std::fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
-            let from_file =
-                std::fs::canonicalize(from_file).unwrap_or_else(|_| from_file.to_path_buf());
-            let to_file = std::fs::canonicalize(to_file).unwrap_or_else(|_| to_file.to_path_buf());
+            let root = canonical_path(root).unwrap_or_else(|_| root.to_path_buf());
+            let from_file = canonical_path(from_file).unwrap_or_else(|_| from_file.to_path_buf());
+            let to_file = canonical_path(to_file).unwrap_or_else(|_| to_file.to_path_buf());
             let from_rel = from_file
                 .strip_prefix(&root)
                 .map(Path::to_path_buf)

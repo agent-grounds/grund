@@ -88,7 +88,7 @@ pub(crate) use reference_scope::{
     retain_diagnostics_in_report_scope, retain_findings_in_scope, scope_read_any_file,
     workspace_out_of_scope_references,
 };
-pub(crate) use report::{check_on_disk, check_with_workspace_and_overlays};
+pub(crate) use report::check_project;
 pub(crate) use sections::{out_of_scope_section_headings, workspace_out_of_scope_section_headings};
 pub(crate) use support::sort_diagnostics;
 pub(crate) use values::{

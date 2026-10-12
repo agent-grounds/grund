@@ -18,9 +18,9 @@
 //! diagnostic that carries it, which is what lets a test read it
 //! (§AR-core-module-layout.1).
 
+use crate::sources::{Sources, canonical_path};
 use anyhow::{Result, anyhow};
 use std::collections::BTreeMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::findings::undecidable_ancestor_claim_diagnostic;
@@ -35,7 +35,7 @@ use crate::model::{Diagnostic, is_hidden, sort_path_key};
 /// The canonical form of `path` — the root a project is identified by — or the path
 /// unchanged when it does not resolve.
 pub(super) fn canonical_workspace_path(path: &Path) -> PathBuf {
-    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
+    canonical_path(path).unwrap_or_else(|_| path.to_path_buf())
 }
 
 /// One expanded `members` entry: the canonical project root, and the entry **as
@@ -88,7 +88,7 @@ pub(super) fn expand_workspace_member_list(config: &Config) -> Result<ExpandedMe
             // §FS-workspace.2.4: directory I/O failures stay at the `members`
             // line and name the glob as written.
             // §FS-check.6.1.1: cover this effective input before its shared read.
-            let entries = crate::config::input_read_dir(&parent).map_err(|err| {
+            let entries = Sources::on_disk().read_dir(&parent).map_err(|err| {
                 workspace_members_error(
                     config,
                     format!("cannot read workspace member glob `{member}`: {err}"),
@@ -225,7 +225,7 @@ pub(super) fn workspace_member_root(
              [workspace] optional_members if it may be legitimately absent"
         )));
     }
-    let root = fs::canonicalize(lexical).unwrap_or_else(|_| lexical.to_path_buf());
+    let root = canonical_path(lexical).unwrap_or_else(|_| lexical.to_path_buf());
     let block_root = canonical_workspace_path(&config.root);
     // Strictly inside: equal is the `self` symlink, not-a-prefix is every other
     // escape, and the two differ only in the preposition the message needs.
@@ -309,7 +309,9 @@ fn member_claims(root: &Path, entries: &[String]) -> Vec<MemberClaim> {
 /// warning that says so has to name.
 pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>, String> {
     // §FS-check.6.1.1: cover this effective input before its shared read.
-    let text = crate::config::input_read_to_string(config_path).map_err(|err| err.to_string())?;
+    let text = Sources::on_disk()
+        .text(config_path)
+        .map_err(|err| err.to_string())?;
     let mut in_workspace = false;
     let mut entries = Vec::new();
     let mut optional = Vec::new();

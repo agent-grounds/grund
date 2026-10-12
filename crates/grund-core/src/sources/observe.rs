@@ -87,3 +87,25 @@ pub(crate) fn observe_input(path: &Path, recursive: bool) -> bool {
     }
     true
 }
+
+/// Test-only observation seam for §AR-resolver.3: an opted-in black-box test
+/// can count public CLI loader entries without changing the loader's result.
+/// It writes the disk, so it lives with the component that touches it
+/// (§AR-system.2.13).
+#[cfg(feature = "test-workspace-load-count")]
+pub(crate) fn record_test_workspace_load() {
+    use std::io::Write;
+
+    let Some(path) = std::env::var_os("GRUND_TEST_WORKSPACE_LOAD_LOG") else {
+        return;
+    };
+    let mut log = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+        .expect("open GRUND_TEST_WORKSPACE_LOAD_LOG");
+    writeln!(log, "load").expect("write GRUND_TEST_WORKSPACE_LOAD_LOG");
+}
+
+#[cfg(not(feature = "test-workspace-load-count"))]
+pub(crate) fn record_test_workspace_load() {}

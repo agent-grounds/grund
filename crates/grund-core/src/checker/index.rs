@@ -22,7 +22,7 @@ use crate::model::{
     paired_declarations, scanned_decl_relative_path, scanned_path_key,
 };
 use crate::resolver::section_resolves;
-use crate::sources::physical_path_key;
+use crate::sources::{path_is_dir, physical_path_key};
 
 /// One kind's index obligation, resolved against the config root
 /// (§FS-config.3.4). `folder_key` and `index_key` are config-root-relative and
@@ -296,11 +296,15 @@ pub(super) fn check_kind_indexes(
         .filter_map(|relative| index_keys.get(relative.as_ref()).copied())
         .collect();
 
+    // R06a of §REQ-one-answer.differences.text: the index as saved
+    // (§DF-four-editor-checks-read-saved-text).
+    let saved = frame.sources().saved();
     for target in &targets {
         // `is_file`, not `exists`: a path that is not a readable file is not an index
         // this run failed to read, it is an index that is not there — a missing one or
         // a directory wearing the name — which is §FS-check.3.18.7's finding, not silence.
-        if !index_scanned.contains(target.index_key.as_path()) && target.index_file.is_file() {
+        if !index_scanned.contains(target.index_key.as_path()) && saved.is_file(&target.index_file)
+        {
             continue;
         }
         let Some(owed) = index_entries.entries_in(&target.index_file) else {
@@ -320,11 +324,11 @@ pub(super) fn check_kind_indexes(
         // §FS-check.3.18.7: an absent index is reported once per declaration;
         // distinguish missing files, directories and unreadable files.
         // §FS-check.6.1.1: cover this effective input before its shared read.
-        let text = crate::config::input_read_to_string(&target.index_file).ok();
+        let text = saved.text(&target.index_file).ok();
         let absent = match &text {
             Some(_) => "",
-            None if target.index_file.is_dir() => " (the index file is a directory)",
-            None if target.index_file.exists() => " (the index file could not be read)",
+            None if path_is_dir(&target.index_file) => " (the index file is a directory)",
+            None if saved.exists(&target.index_file) => " (the index file could not be read)",
             None => " (the index file does not exist)",
         };
         let lines: Vec<&str> = text

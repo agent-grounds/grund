@@ -8,6 +8,7 @@
 //! before the frame is handed down: a stage spells a path through `Display`
 //! and never reads the key (§AR-config.5).
 
+use crate::sources::Sources;
 use std::path::Path;
 
 use super::compiled::Compiled;
@@ -46,6 +47,12 @@ pub struct Display<'a> {
 }
 
 impl<'a> Frame<'a> {
+    /// What every reader of this run asks for a file's text and existence: the
+    /// run's buffers in front of the disk (§AR-system.2.13, §FS-scan.text.buffer).
+    pub(crate) fn sources(&self) -> Sources<'a> {
+        Sources::of(&self.run.buffers)
+    }
+
     /// The config root (§FS-config.1).
     pub fn root(&self) -> &'a Path {
         &self.run.root

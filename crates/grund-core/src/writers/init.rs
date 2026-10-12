@@ -15,6 +15,7 @@ use crate::model::{Catalog, Diagnostic, Finding, FindingSite, format_path};
 use crate::scanner::{
     CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, effective_scope_reads_any_file, scan_tree,
 };
+use crate::sources::path_exists;
 use crate::templates::{
     ConversationSurface, render_agents_append_block, render_agents_md_from_block, render_grund_toml,
 };
@@ -408,7 +409,7 @@ fn init_run(
     };
     for (rel, contents) in &files {
         let dest = target.join(rel);
-        if !force && dest.exists() {
+        if !force && path_exists(&dest) {
             events.push(InitEvent {
                 verb: "exists",
                 path: rel.clone(),
@@ -471,7 +472,7 @@ fn init_run(
         && events
             .iter()
             .all(|event| !event.is_change() || event.verb == verb_updated(dry_run))
-        && target.join(fs_home.path()).exists();
+        && path_exists(target.join(fs_home.path()));
     let next = (any_change && !refresh_of_complete_setup).then(|| {
         // §FS-init.2.2.2: only no-`--docs` guidance asks this question. The probe
         // uses the effective config selected above and exits on its first file.

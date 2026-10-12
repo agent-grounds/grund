@@ -53,8 +53,8 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
 
     // §FS-lsp.2.2.1, §AR-lsp.5.1.1: `Editor` anchors an explicit zero-config folder
     // and widens a walk below the root, both as `open()` builds the run.
-    let invocation = Invocation::new(&opts.path, opts.path_provided, Selection::Editor)
-        .buffers(overlays.clone());
+    let invocation =
+        Invocation::new(&opts.path, opts.path_provided, Selection::Editor).buffers(overlays);
     let config = open(&invocation)?;
     let report_scope = editor_report_scope(&config, &opts.path, opts.path_provided)?;
     let context = load_resolved_workspace_context(
@@ -64,7 +64,9 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
     )?;
     let render_config = context.render_config().clone();
     let completion = LspCompletionContext::from_workspace(&context);
-    let report = editor_report(&context, &overlays, &opts.path, report_scope.as_ref());
+    let report = editor_report(&context, &opts.path, report_scope.as_ref());
+    // §FS-scan.text.buffer: every range's text is the run's, as the scan read it.
+    let sources = render_config.frame().sources();
     // LSP routes findings back to project snapshots by filesystem identity.
     // Preserve absolute paths here instead of reconstructing them from rendered
     // `../` paths under Windows verbatim roots (§FS-lsp.1.1, §FS-lsp.2.2.2).
@@ -99,7 +101,7 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                 .iter()
                 .map(|heading| {
                     let (column, text) =
-                        heading_span_parts(&heading.file, heading.line, &heading.path, &overlays);
+                        heading_span_parts(&heading.file, heading.line, &heading.path, sources);
                     LspFindingRange {
                         code: "section-outside-declaration",
                         path: absolutize_path(&heading.file),
@@ -180,7 +182,7 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                 } else {
                     display_path(&project.config, &home.file)
                 };
-                let (column, text) = declaration_range_parts(home, &rendered, &overlays);
+                let (column, text) = declaration_range_parts(home, &rendered, sources);
                 declarations.push(LspDeclaration {
                     project: context.workspace_loaded.then(|| project.alias.clone()),
                     path: absolutize_path(&home.file),
@@ -195,7 +197,7 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                 // title: editors navigate `<ID>.<section>` to that section's
                 // citations, the same way the whole-ID title does (§FS-lsp.1.3.1).
                 for (section, info) in &home.sections {
-                    let (column, text) = section_range_parts(home, info, section, &overlays);
+                    let (column, text) = section_range_parts(home, info, section, sources);
                     sections.push(LspDeclaration {
                         project: context.workspace_loaded.then(|| project.alias.clone()),
                         path: absolutize_path(&home.file),
@@ -216,7 +218,7 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
             }) {
                 let target = lsp_target_for_stub(stub);
                 if let Some((target_path, target_line)) = target {
-                    let (column, text) = declaration_range_parts(stub, &rendered, &overlays);
+                    let (column, text) = declaration_range_parts(stub, &rendered, sources);
                     stubs.push(LspStub {
                         project: context.workspace_loaded.then(|| project.alias.clone()),
                         path: absolutize_path(&stub.file),

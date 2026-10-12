@@ -13,7 +13,7 @@ use super::walk::{scan_roots, walk_scannable_files_reporting};
 use crate::config::{Frame, Schema};
 use crate::grammar::resolve_shorthand_citations;
 use crate::model::{Catalog, normalize_path_lexically, sort_path_key};
-use crate::sources::{Buffers, Sources, canonicalize_existing_prefix, paths_same_location};
+use crate::sources::{canonicalize_existing_prefix, paths_same_location};
 use crate::workspace::WorkspaceCitationTarget;
 
 /// The file count above which one tree scan is worth splitting across threads
@@ -59,11 +59,10 @@ fn scan_one_file(
     schema: &Schema,
     frame: Frame<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
-    overlays: &Buffers,
 ) -> FileScanResult {
     let mut findings = Catalog::default();
     // §FS-check.6.1.1: `sources` observes this input before its shared read.
-    let result = match Sources::of(overlays).text(file) {
+    let result = match frame.sources().text(file) {
         Ok(text) => scan_file_text(file, &text, schema, frame, &mut findings, workspace_targets),
         Err(err) => Err(err.into()),
     };
@@ -83,9 +82,8 @@ pub(super) fn scan_unwalked_file(
     file: &Path,
     schema: &Schema,
     frame: Frame<'_>,
-    overlays: &Buffers,
 ) -> Result<Catalog> {
-    let (_, result) = scan_one_file(file, schema, frame, &[], overlays);
+    let (_, result) = scan_one_file(file, schema, frame, &[]);
     result.map_err(|message| anyhow!(message))
 }
 
@@ -94,7 +92,6 @@ fn scan_file_results(
     schema: &Schema,
     frame: Frame<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
-    overlays: &Buffers,
 ) -> Vec<FileScanResult> {
     // §AR-bindings.3: scoped observation follows the shared parallel scan.
     let observer = crate::config::check_input_observer();
@@ -102,7 +99,7 @@ fn scan_file_results(
         .par_iter()
         .map(|file| {
             crate::config::with_check_input_observer(observer.clone(), || {
-                scan_one_file(file, schema, frame, workspace_targets, overlays)
+                scan_one_file(file, schema, frame, workspace_targets)
             })
         })
         .collect::<Vec<_>>()
@@ -140,7 +137,6 @@ pub(crate) fn scan_tree_with_workspace(
         explicit_scope,
         workspace_targets,
         PARALLEL_SCAN_MIN_FILES,
-        &Buffers::default(),
     )
 }
 
@@ -151,7 +147,6 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     explicit_scope: bool,
     workspace_targets: &[WorkspaceCitationTarget],
     parallel_min_files: usize,
-    overlays: &Buffers,
 ) -> Result<(Catalog, Vec<ScanError>)> {
     // §FS-config.3.5: a link the walk could not resolve is already a scan failure
     // before a single file is opened — it joins the per-file ones (§FS-check.2.4).
@@ -164,11 +159,11 @@ pub(crate) fn scan_tree_with_workspace_threshold(
         ..Catalog::default()
     };
     let (mut files, mut errors) = (walked.files, walked.errors);
-    add_overlay_scan_files(schema, frame, scope, explicit_scope, overlays, &mut files)?;
+    add_overlay_scan_files(schema, frame, scope, explicit_scope, &mut files)?;
     // §FS-values.2.2: home JSON is a declaration input, never a general text
     // scan input even when a repository adds `json` to `[scan].extensions`.
     if schema.value_rows().next().is_some() {
-        let home_json = value_json_sources(schema, frame, overlays)
+        let home_json = value_json_sources(schema, frame)
             .map(|sources| {
                 sources
                     .into_iter()
@@ -183,8 +178,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
         });
     }
     if files.len() >= parallel_min_files {
-        for (file, result) in scan_file_results(&files, schema, frame, workspace_targets, overlays)
-        {
+        for (file, result) in scan_file_results(&files, schema, frame, workspace_targets) {
             match result {
                 Ok(file_findings) => merge_findings(&mut findings, file_findings),
                 Err(message) => errors.push((file, message)),
@@ -192,7 +186,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
         }
     } else {
         for file in files {
-            match scan_one_file(&file, schema, frame, workspace_targets, overlays) {
+            match scan_one_file(&file, schema, frame, workspace_targets) {
                 (_, Ok(file_findings)) => merge_findings(&mut findings, file_findings),
                 (_, Err(message)) => errors.push((file, message)),
             }
@@ -201,7 +195,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     if let Err(err) = scan_e2e_cases(schema, frame, scope, explicit_scope, &mut findings) {
         errors.push((frame.root().join("e2e/cases"), format!("{err:#}")));
     }
-    scan_value_json_sources(schema, frame, overlays, &mut findings, &mut errors);
+    scan_value_json_sources(schema, frame, &mut findings, &mut errors);
     // §FS-workspace.1.2: when the citing-grammar pass and the target-grammar pass both
     // fire on the same line they emit in source order *per pass*; one sort at the end
     // keeps a workspace scan's per-line order the single-project scan's left-to-right one.
@@ -227,27 +221,8 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     promote_local_legacy_citations(schema, frame, &mut findings);
     resolve_shorthand_citations(frame.grammar(), &mut findings);
     // §AR-scanner.4.6: a stub's verdict is reached only once every declaration is in.
-    resolve_stubs(schema, frame, overlays, &mut findings);
+    resolve_stubs(schema, frame, &mut findings);
     Ok((findings, errors))
-}
-
-pub(crate) fn scan_tree_with_workspace_overlays(
-    schema: &Schema,
-    frame: Frame<'_>,
-    scope: Option<&Path>,
-    explicit_scope: bool,
-    workspace_targets: &[WorkspaceCitationTarget],
-    overlays: &Buffers,
-) -> Result<(Catalog, Vec<ScanError>)> {
-    scan_tree_with_workspace_threshold(
-        schema,
-        frame,
-        scope,
-        explicit_scope,
-        workspace_targets,
-        PARALLEL_SCAN_MIN_FILES,
-        overlays,
-    )
 }
 
 /// The buffers with no file behind them that the walk would read were they
@@ -259,14 +234,14 @@ fn add_overlay_scan_files(
     frame: Frame<'_>,
     scope: Option<&Path>,
     explicit_scope: bool,
-    overlays: &Buffers,
     files: &mut Vec<PathBuf>,
 ) -> Result<()> {
-    if overlays.is_empty() {
+    let buffer_only = frame.sources().buffer_only_files();
+    if buffer_only.is_empty() {
         return Ok(());
     }
     let roots = scan_roots(schema, frame, scope, explicit_scope)?;
-    for path in Sources::of(overlays).buffer_only_files() {
+    for path in buffer_only {
         if unread(schema, frame, &roots, &path).is_some() {
             continue;
         }

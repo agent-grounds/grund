@@ -4,7 +4,6 @@ use crate::model::{
     Catalog, CheckReport, Declaration, Diagnostic, Id, SectionInfo, paired_declarations,
 };
 use crate::resolver::{PointBodyCache, point_body_pair};
-use crate::sources::Buffers;
 
 /// Opt-in point-lead budget checking (§FS-declarations.checks.oversized-lead).
 ///
@@ -17,7 +16,6 @@ pub(super) fn check_oversized_leads(
     findings: &Catalog,
     schema: &Schema,
     frame: Frame<'_>,
-    overlays: &Buffers,
     report: &mut CheckReport,
 ) {
     // §FS-declarations.checks.oversized-lead: v1's one budget is a warning; v2's
@@ -45,7 +43,7 @@ pub(super) fn check_oversized_leads(
         return;
     }
     let budgets = budgets.as_slice();
-    let mut cache = PointBodyCache::new(overlays);
+    let mut cache = PointBodyCache::new(frame.sources());
     for (id, declarations) in &findings.declarations {
         // §FS-declarations.checks.oversized-lead.4: the scanned sites, so a stub that
         // stands for a declaration outside the walk is passed over by the slicer.

@@ -10,16 +10,15 @@ use super::value_json_enrollment::{enroll_json_member, push_json_invalid};
 use crate::config::{Frame, Schema};
 use crate::model::sort_path_key;
 use crate::model::{Catalog, DeclarationSource, normalize_path_lexically};
-use crate::sources::{Buffers, Sources, paths_same_location, physical_path_key};
+use crate::sources::{paths_same_location, physical_path_key};
 
 pub(super) fn scan_value_json_sources(
     schema: &Schema,
     frame: Frame<'_>,
-    overlays: &Buffers,
     findings: &mut Catalog,
     errors: &mut Vec<ScanError>,
 ) {
-    let sources = match value_json_sources(schema, frame, overlays) {
+    let sources = match value_json_sources(schema, frame) {
         Ok(sources) => sources,
         Err((path, message)) => {
             errors.push((path, message));
@@ -45,7 +44,7 @@ pub(super) fn scan_value_json_sources(
     for (paths, owners) in grouped {
         let path = &paths[0];
         // §FS-scan.text.buffer: one location, one text, whichever spelling holds it.
-        let text = match Sources::of(overlays).text(path) {
+        let text = match frame.sources().text(path) {
             Ok(text) => text.into_owned(),
             Err(error) => {
                 errors.push((
@@ -91,7 +90,6 @@ pub(super) fn scan_value_json_sources(
 pub(super) fn value_json_sources<'a>(
     schema: &'a Schema,
     frame: Frame<'a>,
-    overlays: &Buffers,
 ) -> std::result::Result<Vec<(PathBuf, &'a str)>, (PathBuf, String)> {
     let mut sources = Vec::new();
     for row in schema.value_rows() {
@@ -106,19 +104,21 @@ pub(super) fn value_json_sources<'a>(
         let Some(folder) = row.folder() else { continue };
         let folder = normalize_path_lexically(&frame.root().join(folder));
         // §FS-check.6.1.1: cover this effective input before its shared read.
-        let entries = crate::config::input_read_dir(&folder)
+        let disk = frame.sources();
+        let entries = disk
+            .read_dir(&folder)
             .map_err(|error| (folder.clone(), format!("read value home: {error}")))?;
         for entry in entries {
             let entry =
                 entry.map_err(|error| (folder.clone(), format!("read value home: {error}")))?;
             let path = normalize_path_lexically(&entry.path());
             if path.extension().and_then(|extension| extension.to_str()) == Some("json")
-                && path.is_file()
+                && disk.is_file(&path)
             {
                 sources.push((path, kind));
             }
         }
-        for path in Sources::of(overlays).buffer_only_files() {
+        for path in disk.buffer_only_files() {
             if path
                 .parent()
                 .is_some_and(|parent| paths_same_location(parent, &folder))

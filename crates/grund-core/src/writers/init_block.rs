@@ -5,6 +5,7 @@ use std::path::Path;
 use super::init::{InitEvent, verb_appended, verb_updated, verb_wrote};
 use crate::grammar::{AGENTS_BLOCK_VERSION, AgentsBlockLookup, find_agents_block};
 use crate::model::format_path;
+use crate::sources::{Sources, path_exists};
 
 /// What `init` did to an existing `AGENTS.md`'s managed block — `appended ` (no
 /// block before), `updated ` (a supported block whose bytes changed: an older
@@ -40,7 +41,7 @@ pub(super) fn write_or_update_canonical_agent_entrypoint(
     dry_run: bool,
 ) -> Result<InitEvent, String> {
     let dest = target.join(rel);
-    if !force && dest.exists() {
+    if !force && path_exists(&dest) {
         match update_agents_block(&dest, block, rel, dry_run) {
             Ok(AgentsUpdateResult::Appended) => Ok(InitEvent {
                 verb: verb_appended(dry_run),
@@ -88,7 +89,7 @@ pub(super) fn update_agents_block(
     label: &str,
     dry_run: bool,
 ) -> Result<AgentsUpdateResult> {
-    let existing = fs::read_to_string(dest)?;
+    let existing = Sources::on_disk().text(dest)?;
     let (updated, result) = update_agents_text(&existing, block, label)?;
     if !dry_run && result != AgentsUpdateResult::Unchanged {
         fs::write(dest, updated)?;

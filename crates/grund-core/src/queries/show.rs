@@ -9,7 +9,7 @@ use crate::resolver::{
     extract_declaration_body, heading_anchor, section_site_anchor, show_e2e_case,
     takes_heading_anchor,
 };
-use crate::sources::{Buffers, paths_same_location};
+use crate::sources::paths_same_location;
 use anyhow::{Result, anyhow};
 
 #[cfg(test)]
@@ -22,7 +22,7 @@ pub(crate) fn show_declaration(
     mode: ShowRenderMode,
     include_heading: bool,
 ) -> Result<ShowOutput> {
-    show_declaration_with_overlays(
+    show_declaration_with_home(
         config,
         path_config,
         findings,
@@ -30,7 +30,6 @@ pub(crate) fn show_declaration(
         section,
         mode,
         include_heading,
-        &Buffers::default(),
     )
     .map(|(output, _)| output)
 }
@@ -50,7 +49,7 @@ pub(crate) fn show_declaration(
 /// Which record that is, and whether the ID is refused instead, is the one
 /// pairing of its declarations by the verdict the scan recorded on each stub
 /// (§FS-declarations.stubs.verdict): nothing here reads a stub's target.
-pub(crate) fn show_declaration_with_overlays<'a>(
+pub(crate) fn show_declaration_with_home<'a>(
     config: &Config,
     path_config: &Config,
     findings: &'a Catalog,
@@ -58,7 +57,6 @@ pub(crate) fn show_declaration_with_overlays<'a>(
     section: Option<&str>,
     mode: ShowRenderMode,
     include_heading: bool,
-    overlays: &Buffers,
 ) -> Result<(ShowOutput, &'a Declaration)> {
     let not_found = || {
         anyhow!(crate::model::OperationDiagnostic::new(
@@ -138,7 +136,6 @@ pub(crate) fn show_declaration_with_overlays<'a>(
         include_heading,
         config.schema(),
         config.frame(),
-        overlays,
     )?;
     Ok((output, record))
 }
@@ -201,7 +198,7 @@ fn show_json_value(
 /// (§FS-config.3.6: paths are relative to *the config root*, and §FS-integrations.3.1.5
 /// joins this path against the root `grund-open` discovered).
 ///
-/// `home` is the record `show_declaration_with_overlays` read the body out of.
+/// `home` is the record `show_declaration_with_home` read the body out of.
 pub(crate) fn render_show_output_json(
     config: &Config,
     path_config: &Config,

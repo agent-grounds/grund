@@ -1,9 +1,9 @@
 //! Configured-scope narrowing and the out-of-scope reference tier
 //! (§AR-core-module-layout.1.5, §FS-check.1.3, §FS-check.3.14).
 
+use crate::sources::canonical_path;
 use anyhow::Result;
 use std::collections::BTreeMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::references::{ReferenceTier, check_citation_resolution};
@@ -60,7 +60,7 @@ pub(crate) fn configured_scope(
     let mut roots = scan_roots_for(schema, frame, Some(path), path_provided, false, false)?;
     let canonical = roots
         .iter()
-        .filter_map(|root| fs::canonicalize(root).ok())
+        .filter_map(|root| canonical_path(root).ok())
         .collect::<Vec<_>>();
     roots.extend(canonical);
     roots.sort_by_key(|root| sort_path_key(root));
@@ -70,7 +70,7 @@ pub(crate) fn configured_scope(
     let mut unwalked = unwalked_home_roots(schema, frame.root());
     let canonical = unwalked
         .iter()
-        .filter_map(|home| fs::canonicalize(home).ok())
+        .filter_map(|home| canonical_path(home).ok())
         .collect::<Vec<_>>();
     unwalked.extend(canonical);
     unwalked.sort_by_key(|home| sort_path_key(home));
@@ -102,7 +102,7 @@ pub(crate) fn path_report_scope(
     let mut roots = scan_roots_for(schema, frame, Some(path), path_provided, false, false)?;
     let canonical = roots
         .iter()
-        .filter_map(|root| fs::canonicalize(root).ok())
+        .filter_map(|root| canonical_path(root).ok())
         .collect::<Vec<_>>();
     roots.extend(canonical);
     roots.sort_by_key(|root| sort_path_key(root));

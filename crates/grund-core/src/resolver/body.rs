@@ -24,7 +24,7 @@ use crate::grammar::{
     source_scan_line,
 };
 use crate::model::{Declaration, Id, ShowOutput, ShowRenderMode};
-use crate::sources::{Buffers, Sources};
+use crate::sources::Sources;
 
 use super::body_lines::{
     closes_comment_block, join_with_blank, push_outline_section, truncate_to_first_paragraph,
@@ -65,9 +65,8 @@ pub(crate) fn extract_declaration_body(
     include_heading: bool,
     schema: &Schema,
     frame: Frame<'_>,
-    overlays: &Buffers,
 ) -> Result<ShowOutput> {
-    let mut cache = PointBodyCache::new(overlays);
+    let mut cache = PointBodyCache::new(frame.sources());
     extract_declaration_body_cached(
         &mut cache,
         path,
@@ -105,21 +104,22 @@ pub(super) struct PointBodySite {
 /// owns no parsing rules: the cached bytes still flow through the exact show
 /// slicer below (§FS-list.3.4.1, §FS-declarations.checks.oversized-lead).
 pub(crate) struct PointBodyCache<'a> {
-    overlays: &'a Buffers,
+    sources: Sources<'a>,
     text: BTreeMap<PathBuf, String>,
 }
 
 impl<'a> PointBodyCache<'a> {
-    pub(crate) fn new(overlays: &'a Buffers) -> Self {
+    /// A cache over the text `sources` gives (§FS-scan.text.buffer).
+    pub(crate) fn new(sources: Sources<'a>) -> Self {
         Self {
-            overlays,
+            sources,
             text: BTreeMap::new(),
         }
     }
 
     fn read(&mut self, path: &Path) -> Result<&str> {
         if !self.text.contains_key(path) {
-            let text = read_text_with_overlays(path, self.overlays)?;
+            let text = read_text(path, self.sources)?;
             self.text.insert(path.to_path_buf(), text);
         }
         Ok(self.text.get(path).expect("cached point source"))
@@ -410,8 +410,8 @@ pub(super) fn extract_declaration_body_cached(
 
 /// The text a save would write (§FS-scan.text.buffer), observed before a disk
 /// read (§FS-check.6.1.1).
-fn read_text_with_overlays(path: &Path, overlays: &Buffers) -> Result<String> {
-    Sources::of(overlays)
+fn read_text(path: &Path, sources: Sources<'_>) -> Result<String> {
+    sources
         .text(path)
         .map(|text| text.into_owned())
         .with_context(|| format!("read {}", path.display()))

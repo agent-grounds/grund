@@ -6,9 +6,9 @@
 //! an overlay reaches `show` only through the engine.
 
 use super::*;
-use crate::config::load_config;
+use crate::config::{Invocation, Selection, discover_config};
 use crate::model::{Id, ShowRenderMode};
-use crate::scanner::scan_tree_with_workspace_overlays;
+use crate::scanner::scan_tree_with_workspace;
 use crate::sources::Buffers;
 use crate::testing::{test_root, write};
 
@@ -60,19 +60,14 @@ fn unscanned_stub_target_reads_the_overlay_by_its_id() {
         "# FS-second: [../source.rs](../source.rs)\n",
     );
     write(&root.join("source.rs"), ON_DISK);
-    let config = load_config(&root).expect("load config");
-    let overlays = Buffers::new([(config.root.join("source.rs"), UNSAVED.to_string())]);
-    let (findings, _) = scan_tree_with_workspace_overlays(
-        config.schema(),
-        config.frame(),
-        None,
-        false,
-        &[],
-        &overlays,
-    )
-    .expect("scan");
+    // §AR-config.1.5: the buffers are the run's, so every read of it sees them.
+    let buffers = Buffers::new([(root.join("source.rs"), UNSAVED.to_string())]);
+    let invocation = Invocation::new(&root, true, Selection::Project).buffers(buffers);
+    let config = discover_config(&invocation).expect("load config");
+    let (findings, _) =
+        scan_tree_with_workspace(config.schema(), config.frame(), None, false, &[]).expect("scan");
     let show = |section| {
-        show_declaration_with_overlays(
+        show_declaration_with_home(
             &config,
             &config,
             &findings,
@@ -80,7 +75,6 @@ fn unscanned_stub_target_reads_the_overlay_by_its_id() {
             section,
             ShowRenderMode::Default,
             false,
-            &overlays,
         )
         .expect("§FS-show.2.3.7: a stub that is not broken reads its target")
         .0

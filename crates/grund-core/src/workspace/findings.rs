@@ -15,6 +15,7 @@
 //! line the message already names, carried as the finding's own location so an
 //! editor places it without parsing the text (§FS-lsp.1.1.3, §AR-bindings.2).
 
+use crate::sources::path_exists;
 use std::path::{Path, PathBuf};
 
 use super::members::{WorkspaceMember, canonical_workspace_path};
@@ -95,7 +96,7 @@ pub(crate) fn block_scope_roots<'a>(
 ) -> Vec<(PathBuf, Option<&'a WorkspaceMember>)> {
     root_scope_roots(config.schema(), &config.root, false)
         .into_iter()
-        .filter(|root| root.exists())
+        .filter(|root| path_exists(&root))
         .map(|root| {
             let canonical = canonical_workspace_path(&root);
             let member = members
@@ -165,7 +166,7 @@ pub(crate) fn reject_absorbed_scan(config: &Config, members: &[WorkspaceMember])
 pub(crate) fn uncovered_block_scope_roots(config: &Config) -> Vec<PathBuf> {
     root_scope_roots(config.schema(), &config.root, false)
         .into_iter()
-        .filter(|root| root.exists())
+        .filter(|root| path_exists(&root))
         .filter(|root| {
             let canonical = canonical_workspace_path(root);
             !config

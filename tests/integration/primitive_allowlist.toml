@@ -13,12 +13,10 @@
 #
 # A writer owns the disk calls it makes to write (WRITERS in PRIMITIVES): it is an
 # owner because it is the one that writes, not because no run reads its output.
-# A writer that also reads the scanned tree or a file a run reads is a row, its
-# writes with its reads, because the guard sees a file and not a call: fetch_write.rs
-# reads a home and each walked snapshot's Markdown and parses their headings with
-# its own declarations_at_depth (#596 for that parse); init.rs probes the FS home;
-# init_block.rs reads AGENTS.md to splice its block; init_workspace_members.rs
-# probes each member's AGENTS.md. Once #595 hands them the read, they join WRITERS.
+# What a writer reads it asks sources for since #595, so the guard, which sees a
+# file and not a call, can let a writer's file own its writes: fetch_install.rs,
+# init.rs and init_block.rs are WRITERS. fetch_write.rs still parses headings with
+# its own declarations_at_depth, which is #596's.
 
 [[allow]]
 file = "api/complete_ids.rs"
@@ -26,29 +24,9 @@ primitives = ["split on /"]
 step = "#599"
 
 [[allow]]
-file = "api/embedding.rs"
-primitives = [".exists()", "std::fs"]
-step = "#595"
-
-[[allow]]
 file = "api/fmt.rs"
 primitives = ["canonicalize", "std::fs"]
 step = "#598"
-
-[[allow]]
-file = "api/scope_cautions.rs"
-primitives = [".is_file()", "canonicalize", "std::fs"]
-step = "#595"
-
-[[allow]]
-file = "checker/agents.rs"
-primitives = [".exists()", "input_read_"]
-step = "#595"
-
-[[allow]]
-file = "checker/index.rs"
-primitives = [".exists()", ".is_file()", "input_read_"]
-step = "#595"
 
 [[allow]]
 file = "checker/index.rs"
@@ -56,29 +34,14 @@ primitives = ["declaration_id_on_line"]
 step = "#596"
 
 [[allow]]
-file = "checker/index_entries.rs"
-primitives = ["input_read_"]
-step = "#595"
-
-[[allow]]
 file = "checker/index_mention.rs"
 primitives = ["citation_re", "declaration_id_on_line"]
 step = "#596"
 
 [[allow]]
-file = "checker/reference_scope.rs"
-primitives = ["canonicalize", "std::fs"]
-step = "#595"
-
-[[allow]]
 file = "checker/references.rs"
 primitives = ["split on /"]
 step = "#599"
-
-[[allow]]
-file = "checker/support.rs"
-primitives = ["input_read_"]
-step = "#595"
 
 [[allow]]
 file = "config/citations.rs"
@@ -110,16 +73,6 @@ file = "resolver/body.rs"
 primitives = ["declaration_id_on_line", "section_re", "source_scan_line"]
 step = "#596"
 
-[[allow]]
-file = "resolver/context.rs"
-primitives = ["std::fs"]
-step = "#595"
-
-[[allow]]
-file = "resolver/link_targets.rs"
-primitives = ["canonicalize", "std::fs"]
-step = "#595"
-
 # The selectors.rs row moved here with the old first-`/` split, which the
 # §FS-rules.7.9 ramp keeps to tell a newly matched site; it goes with the ramp.
 [[allow]]
@@ -133,79 +86,9 @@ primitives = ["split on /"]
 step = "#599"
 
 [[allow]]
-file = "scanner/agent_entrypoints.rs"
-primitives = [".is_file()", "input_read_", "std::fs"]
-step = "#595"
-
-[[allow]]
-file = "scanner/context.rs"
-primitives = ["canonicalize", "std::fs"]
-step = "#595"
-
-[[allow]]
-file = "scanner/e2e.rs"
-primitives = [".exists()", ".is_file()", "canonicalize", "input_read_", "std::fs"]
-step = "#595"
-
-[[allow]]
 file = "scanner/e2e.rs"
 primitives = ["split on /"]
 step = "#599"
-
-[[allow]]
-file = "scanner/value_json.rs"
-primitives = [".is_file()", "input_read_"]
-step = "#595"
-
-[[allow]]
-file = "scanner/walk.rs"
-primitives = [".exists()", ".is_file()", "canonicalize", "std::fs"]
-step = "#595"
-
-[[allow]]
-file = "scanner/walk_boundaries.rs"
-primitives = ["std::fs"]
-step = "#595"
-
-[[allow]]
-file = "scanner/walk_errors.rs"
-primitives = ["canonicalize", "std::fs"]
-step = "#595"
-
-[[allow]]
-file = "scanner/walk_reporting.rs"
-primitives = [".exists()", ".is_file()", "canonicalize", "std::fs"]
-step = "#595"
-
-[[allow]]
-file = "workspace/findings.rs"
-primitives = [".exists()"]
-step = "#595"
-
-[[allow]]
-file = "workspace/members.rs"
-primitives = ["canonicalize", "input_read_", "std::fs"]
-step = "#595"
-
-[[allow]]
-file = "workspace/scope.rs"
-primitives = ["canonicalize", "std::fs"]
-step = "#595"
-
-[[allow]]
-file = "workspace/unlisted.rs"
-primitives = ["input_read_"]
-step = "#595"
-
-[[allow]]
-file = "writers/expected.rs"
-primitives = [".exists()"]
-step = "#595"
-
-[[allow]]
-file = "writers/fetch_write.rs"
-primitives = [".exists()", "std::fs"]
-step = "#595"
 
 [[allow]]
 file = "writers/fmt_links.rs"
@@ -221,21 +104,6 @@ step = "#598"
 file = "writers/fmt_tree.rs"
 primitives = ["std::fs"]
 step = "#598"
-
-[[allow]]
-file = "writers/init.rs"
-primitives = [".exists()", "std::fs"]
-step = "#595"
-
-[[allow]]
-file = "writers/init_block.rs"
-primitives = [".exists()", "std::fs"]
-step = "#595"
-
-[[allow]]
-file = "writers/init_workspace_members.rs"
-primitives = [".exists()", "canonicalize", "std::fs"]
-step = "#595"
 
 [[allow]]
 file = "writers/init_workspace_members.rs"

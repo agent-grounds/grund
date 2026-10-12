@@ -4,6 +4,7 @@
 use super::embedding_data::Data;
 use super::embedding_failure::{envelope, error_data, failure};
 use super::{embedding_config, embedding_queries, embedding_writers};
+use crate::sources::{path_exists, path_metadata};
 use crate::*;
 use serde_json::{Value, json};
 use std::path::PathBuf;
@@ -71,13 +72,13 @@ pub(super) fn run(r: &EmbeddingRequest, query: Query) -> Result<Value, Value> {
     );
     if tree {
         if r.operation != "init" {
-            std::fs::metadata(&r.root).map_err(|error| {
+            path_metadata(&r.root).map_err(|error| {
                 let mut source = OperationDiagnostic::new("filesystem", "io", error.to_string());
                 source.path = Some(crate::model::format_path(&r.root));
                 error_data(anyhow::Error::new(error).context(source), &[])
             })?;
         }
-        if r.root.exists() {
+        if path_exists(&r.root) {
             crate::workspace::preflight_embedding_paths(&r.root).map_err(|e| error_data(e, &[]))?;
         }
     }

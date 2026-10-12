@@ -107,17 +107,11 @@ pub(crate) use legacy::{
 };
 pub(crate) use scan_error::api_scan_error;
 pub(crate) use scope_probe::effective_scope_reads_any_file;
-pub(crate) use tree::{ScanError, scan_tree, scan_tree_strict, scan_tree_with_workspace_overlays};
+pub(crate) use tree::{ScanError, scan_tree, scan_tree_strict, scan_tree_with_workspace};
 pub(crate) use walk::{scan_roots_for, walk_reads_any_file};
 pub(crate) use walk_reporting::{
     walk_scannable_files, walk_scannable_files_reporting, walk_scannable_files_with_sources,
 };
-
-// What another component's tests read (§AR-core-module-layout.1.3): the
-// workspace-wide tree entry point, which the cross-project citation cases
-// drive. The four narrower reads went beside their own cases, below.
-#[cfg(test)]
-pub(crate) use tree::scan_tree_with_workspace;
 
 // The cases that pin this component, one module per behaviour area
 // (§AR-core-module-layout.1.3).

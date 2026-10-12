@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use super::disk::{input_read_to_string, path_exists, path_is_file};
+use super::disk::{input_read_dir, input_read_to_string, path_exists, path_is_file};
 use super::identity::canonicalize_existing_prefix;
 use super::observe::observe_input;
 use crate::model::normalize_path_lexically;
@@ -30,10 +30,6 @@ impl Buffers {
                 .map(|(path, text)| (canonicalize_existing_prefix(&path), text))
                 .collect(),
         ))
-    }
-
-    pub(crate) fn is_empty(&self) -> bool {
-        self.0.is_empty()
     }
 
     /// The buffer that is the file at `path`, under any spelling of it.
@@ -62,6 +58,13 @@ impl<'a> Sources<'a> {
         }
     }
 
+    /// The disk alone, for a reader no run is handed to: a configuration read
+    /// before any run is built, or the saved view a reader with no frame asks
+    /// (§DF-four-editor-checks-read-saved-text).
+    pub(crate) fn on_disk() -> Sources<'static> {
+        Sources { buffers: None }
+    }
+
     /// The open buffer that is the file at `path`, if the run holds one.
     pub(crate) fn buffer(self, path: &Path) -> Option<&'a str> {
         self.buffers.and_then(|buffers| buffers.get(path))
@@ -73,6 +76,12 @@ impl<'a> Sources<'a> {
             Some(text) => Ok(Cow::Borrowed(text)),
             None => input_read_to_string(path).map(Cow::Owned),
         }
+    }
+
+    /// The directory's entries on disk, observed first (§FS-check.6.1.3); the
+    /// buffers with no file behind them are `buffer_only_files`.
+    pub(crate) fn read_dir(self, path: impl AsRef<Path>) -> std::io::Result<std::fs::ReadDir> {
+        input_read_dir(path)
     }
 
     /// Whether the file is there: on disk, or open in a buffer with nothing
@@ -100,6 +109,12 @@ impl<'a> Sources<'a> {
                     .collect()
             })
             .unwrap_or_default()
+    }
+
+    /// The disk past the buffers, for the readers §REQ-one-answer.differences.text
+    /// still lists until each row closes (§DF-four-editor-checks-read-saved-text).
+    pub(crate) fn saved(self) -> Self {
+        Self { buffers: None }
     }
 
     /// The file a stub's link names (§FS-check.6.1.1): relative to the stub's

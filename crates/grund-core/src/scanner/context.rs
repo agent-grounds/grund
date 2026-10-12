@@ -1,5 +1,5 @@
+use crate::sources::canonical_path;
 use std::collections::BTreeMap;
-use std::fs;
 use std::path::Path;
 
 use super::line_owners::{LineOwners, resolve_requested_lines};
@@ -292,8 +292,7 @@ pub(crate) fn file_home_kind(path: &Path, schema: &Schema, frame: Frame<'_>) -> 
     // `strip_prefix(config.root)` misses. Reuse the checker's reverse-home
     // helper, which strips against the physical root first, then the configured
     // one, so the lookup is identical to the declaration-home lookup.
-    let physical_root =
-        fs::canonicalize(frame.root()).unwrap_or_else(|_| frame.root().to_path_buf());
+    let physical_root = canonical_path(frame.root()).unwrap_or_else(|_| frame.root().to_path_buf());
     let relative = scanned_decl_relative_path(path, frame.root(), &physical_root)?;
     let relative = relative.as_ref();
     let mut matched: Option<&str> = None;

@@ -25,12 +25,14 @@ STEP = re.compile(r"^#(59[5-9]|600)$")
 
 # A writer owns the disk calls it makes to write: a file is an owner because it is
 # the one that writes, not because no run reads its output (init writes grund.toml
-# and AGENTS.md, which every run reads). A writer that also reads the scanned tree
-# or a file a run reads - fetch_write.rs, init.rs, init_block.rs,
-# init_workspace_members.rs - is no owner: its uses are allowlist rows.
-# init_target.rs only resolves the directory init writes into, and the integrations
-# read only the machine-level client files they themselves write.
-WRITERS = ("writers/init_companions.rs", "writers/init_target.rs", "writers/integrations_")
+# and AGENTS.md, which every run reads). What a writer reads - the scanned tree, a
+# file a run reads, the file it replaces - it asks the sources component for, so
+# fetch_install.rs, init.rs and init_block.rs keep only their writes. init_target.rs
+# only resolves the directory init writes into, and the integrations read only the
+# machine-level client files they themselves write. Any other file under writers/
+# is no owner.
+WRITERS = ("writers/fetch_install.rs", "writers/init.rs", "writers/init_block.rs",
+           "writers/init_companions.rs", "writers/init_target.rs", "writers/integrations_")
 # primitive -> (the pattern that finds a use of it, the directories or files that own it)
 PRIMITIVES = {
     "std::fs": (r"\bstd::fs\b", ("config/", "sources/") + WRITERS),
@@ -141,10 +143,10 @@ class PrimitiveGuardHarnessTests(unittest.TestCase):
         row = dict(self.ROW, step="")
         self.assertIn("names no step", " ".join(problems({("api/a.rs", "std::fs")}, [row])))
 
-    def test_a_writer_that_reads_the_tree_is_no_owner(self):
-        found = uses([("writers/fetch_write.rs", "let b = std::fs::read(&path)?;\n"),
+    def test_a_file_under_writers_that_is_no_writer_is_no_owner(self):
+        found = uses([("writers/expected.rs", "let b = std::fs::read(&path)?;\n"),
                       ("writers/init_companions.rs", "std::fs::write(&path, block)?;\n")])
-        self.assertEqual({("writers/fetch_write.rs", "std::fs")}, found)
+        self.assertEqual({("writers/expected.rs", "std::fs")}, found)
 
     def test_a_comment_naming_a_primitive_is_not_a_use(self):
         found = uses([("api/a.rs", "/// Reads through `std::fs` once.\nfn f() {} // citation_re\n")])

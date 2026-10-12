@@ -8,8 +8,8 @@
 //! config work every walking command shares, not something `check` owns
 //! (§AR-core-module-layout.1).
 
+use crate::sources::canonical_path;
 use anyhow::Result;
-use std::fs;
 use std::path::{Component, Path, PathBuf};
 
 use super::findings::reject_absorbed_scan;
@@ -138,7 +138,7 @@ fn config_for_member_scope(mut config: Config, invocation: &Invocation) -> Resul
 /// from, so a bare file name is scoped from the working directory (§FS-config.1.4).
 fn config_scope_start(path: &Path) -> PathBuf {
     let start = discovery_start_dir(path);
-    fs::canonicalize(start).unwrap_or_else(|_| start.to_path_buf())
+    canonical_path(start).unwrap_or_else(|_| start.to_path_buf())
 }
 
 /// §FS-workspace.2.2: both lists are read here. Present, an optional member is an

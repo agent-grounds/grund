@@ -12,7 +12,7 @@
 /// *recognized*, not *declared* — a project that only cites another project's
 /// specs (§FS-workspace.1) declares nothing and is working as intended, so one
 /// citation anywhere answers the question and the caution stays quiet.
-use std::fs;
+use crate::sources::{canonical_path, path_is_file};
 use std::path::Path;
 
 use crate::checker::{ScanScope, scope_read_any_file};
@@ -91,7 +91,7 @@ pub(super) fn scan_scope_caution(
 /// message too, a boundary §FS-check.2.2.2 states rather than leaves to be found.
 fn handed_a_hidden_file(config: &Config, path: &Path, path_provided: bool) -> bool {
     path_provided
-        && path.is_file()
+        && path_is_file(&path)
         && path
             .file_name()
             .and_then(|name| name.to_str())
@@ -115,7 +115,7 @@ fn empty_scan_warning(config: &Config, path: &Path, path_provided: bool) -> Diag
     // path was omitted.
     let scoped_to_root = !path_provided
         || path == Path::new(".")
-        || fs::canonicalize(path)
+        || canonical_path(path)
             .map(|p| p == config.root)
             .unwrap_or(false);
     let message = match (&config.include, scoped_to_root) {
@@ -243,7 +243,7 @@ pub(super) fn full_scope_ignored_warning(
 fn display_lexical_scope(config: &Config, path: &Path) -> String {
     let base = config.report_base();
     for ancestor in path.ancestors() {
-        if fs::canonicalize(ancestor)
+        if canonical_path(ancestor)
             .map(|resolved| resolved == *base)
             .unwrap_or(false)
         {

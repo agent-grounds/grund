@@ -71,6 +71,7 @@
 
 mod expected;
 mod fetch;
+mod fetch_install;
 mod fetch_write;
 mod fmt_complete_findings;
 mod fmt_error;

@@ -89,7 +89,7 @@ pub(crate) use ambiguity::declaration_ambiguity_refusal;
 pub(crate) use citation_counts::ListCitationCounts;
 pub(crate) use list_scope::check_list_scope;
 pub(crate) use selector_refusal::require_unique_literal;
-pub(crate) use show::{render_show_output_json, show_declaration_with_overlays};
+pub(crate) use show::{render_show_output_json, show_declaration_with_home};
 
 // What other components' tests read (§AR-core-module-layout.1.3).
 #[cfg(test)]

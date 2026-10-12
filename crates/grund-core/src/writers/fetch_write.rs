@@ -1,16 +1,18 @@
-//! Snapshot-home discovery, declaration ownership, and atomic installation for
-//! the explicit materializer (§FS-fetch.4, §FS-fetch.5, §REQ-no-data-loss.2).
+//! Snapshot-home discovery and declaration ownership for the explicit
+//! materializer (§FS-fetch.4, §FS-fetch.5); `fetch_install.rs` installs what
+//! they decide (§REQ-no-data-loss.2).
 
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::fetch::{FetchFailure, fetch_io, fetch_operational};
+use super::fetch_install::atomic_install;
 use crate::config::Config;
 use crate::grammar::{
     Grammar, MarkdownBlocks, near_miss_heading, parse_id_arg, parse_longest_id_prefix,
 };
 use crate::model::{Id, OperationDiagnostic, format_path};
 use crate::scanner::{markdown_heading_level, walk_scannable_files_with_sources};
+use crate::sources::{path_exists, path_is_dir, read_bytes};
 
 /// `ignore::Error` owns the I/O error but does not expose it through `source()`.
 /// Retain both its original context and that original I/O cause for embedders
@@ -150,7 +152,7 @@ pub(super) fn write_file_home(
     snapshot: &[u8],
     diagnostic: &mut Option<anyhow::Error>,
 ) -> std::result::Result<(), FetchFailure> {
-    let original = match fs::read(path) {
+    let original = match read_bytes(path) {
         Ok(bytes) => bytes,
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => Vec::new(),
         Err(err) => {
@@ -218,8 +220,8 @@ pub(super) fn write_folder_home(
     diagnostic: &mut Option<anyhow::Error>,
 ) -> std::result::Result<(), FetchFailure> {
     let mut matches = Vec::new();
-    if folder.exists() {
-        if !folder.is_dir() {
+    if path_exists(folder) {
+        if !path_is_dir(folder) {
             return Err(fetch_operational(format!(
                 "snapshot folder {} is not a directory",
                 folder.display()
@@ -261,7 +263,7 @@ pub(super) fn write_folder_home(
             if path.extension().and_then(|extension| extension.to_str()) != Some("md") {
                 continue;
             }
-            let bytes = fs::read(&path).map_err(|err| {
+            let bytes = read_bytes(&path).map_err(|err| {
                 fetch_io(
                     diagnostic,
                     &path,
@@ -308,164 +310,11 @@ pub(super) fn write_folder_home(
         .first()
         .and_then(|declaration| declaration.path.clone())
         .unwrap_or_else(|| folder.join(format!("{local}.md")));
-    if matches.is_empty() && target.exists() {
+    if matches.is_empty() && path_exists(&target) {
         return Err(fetch_operational(format!(
             "snapshot file {} already exists for a different ID",
             target.display()
         )));
     }
     atomic_install(&target, snapshot, diagnostic)
-}
-
-/// §FS-fetch.4 / §FS-fetch.5: install complete bytes by same-directory rename,
-/// leaving an unchanged target untouched.
-fn atomic_install(
-    path: &Path,
-    bytes: &[u8],
-    diagnostic: &mut Option<anyhow::Error>,
-) -> std::result::Result<(), FetchFailure> {
-    if fs::read(path).ok().as_deref() == Some(bytes) {
-        return Ok(());
-    }
-    let existing_permissions = match fs::metadata(path) {
-        Ok(metadata) => Some(metadata.permissions()),
-        Err(err) if err.kind() == std::io::ErrorKind::NotFound => None,
-        Err(err) => {
-            return Err(fetch_io(
-                diagnostic,
-                path,
-                err,
-                format!("cannot read metadata for {}", path.display()),
-            ));
-        }
-    };
-    let parent = path
-        .parent()
-        .ok_or_else(|| fetch_operational(format!("cannot write {}", path.display())))?;
-    let created_directories = create_parent_directories(parent, path, diagnostic)?;
-    let mut temporary = None;
-    for attempt in 0..100u32 {
-        let candidate = parent.join(format!(".grund-fetch-{}-{attempt}.tmp", std::process::id()));
-        match std::fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&candidate)
-        {
-            Ok(file) => {
-                temporary = Some((candidate, file));
-                break;
-            }
-            Err(err) if err.kind() == std::io::ErrorKind::AlreadyExists => continue,
-            Err(err) => {
-                rollback_created_directories(&created_directories);
-                return Err(fetch_io(
-                    diagnostic,
-                    path,
-                    err,
-                    format!("cannot write {}", path.display()),
-                ));
-            }
-        }
-    }
-    let Some((temporary_path, mut file)) = temporary else {
-        rollback_created_directories(&created_directories);
-        return Err(fetch_operational(format!(
-            "cannot create temporary file for {}",
-            path.display()
-        )));
-    };
-    use std::io::Write;
-    let installed = file.write_all(bytes).and_then(|_| {
-        if let Some(permissions) = existing_permissions {
-            file.set_permissions(permissions)?;
-        }
-        file.sync_all()
-    });
-    if let Err(err) = installed {
-        drop(file);
-        let _ = fs::remove_file(&temporary_path);
-        rollback_created_directories(&created_directories);
-        return Err(fetch_io(
-            diagnostic,
-            path,
-            err,
-            format!("cannot write {}", path.display()),
-        ));
-    }
-    drop(file);
-    if let Err(err) = fs::rename(&temporary_path, path) {
-        let _ = fs::remove_file(&temporary_path);
-        rollback_created_directories(&created_directories);
-        return Err(fetch_io(
-            diagnostic,
-            path,
-            err,
-            format!("cannot atomically replace {}", path.display()),
-        ));
-    }
-    Ok(())
-}
-
-/// Create only the missing parent chain and remember exactly what this fetch
-/// added, so every later failure can restore the prior tree (§FS-fetch.4,
-/// §FS-fetch.5, §REQ-no-data-loss.2).
-fn create_parent_directories(
-    parent: &Path,
-    target: &Path,
-    diagnostic: &mut Option<anyhow::Error>,
-) -> std::result::Result<Vec<PathBuf>, FetchFailure> {
-    let mut missing = Vec::new();
-    let mut cursor = parent;
-    loop {
-        match fs::metadata(cursor) {
-            Ok(metadata) if metadata.is_dir() => break,
-            Ok(_) => {
-                return Err(fetch_operational(format!(
-                    "cannot write {}: {} is not a directory",
-                    target.display(),
-                    cursor.display()
-                )));
-            }
-            Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
-                missing.push(cursor.to_path_buf());
-                cursor = cursor.parent().ok_or_else(|| {
-                    fetch_io(
-                        diagnostic,
-                        target,
-                        err,
-                        format!("cannot write {}", target.display()),
-                    )
-                })?;
-            }
-            Err(err) => {
-                return Err(fetch_io(
-                    diagnostic,
-                    target,
-                    err,
-                    format!("cannot write {}", target.display()),
-                ));
-            }
-        }
-    }
-
-    let mut created = Vec::new();
-    for directory in missing.into_iter().rev() {
-        if let Err(err) = fs::create_dir(&directory) {
-            rollback_created_directories(&created);
-            return Err(fetch_io(
-                diagnostic,
-                target,
-                err,
-                format!("cannot write {}", target.display()),
-            ));
-        }
-        created.push(directory);
-    }
-    Ok(created)
-}
-
-fn rollback_created_directories(created: &[PathBuf]) {
-    for directory in created.iter().rev() {
-        let _ = fs::remove_dir(directory);
-    }
 }

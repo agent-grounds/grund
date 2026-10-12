@@ -1,14 +1,13 @@
 use anyhow::{Result, anyhow};
 use std::collections::BTreeSet;
 
-use super::show::{render_show_output_json, show_declaration_with_overlays};
+use super::show::{render_show_output_json, show_declaration_with_home};
 use super::show_query::{ShowFormat, ShowOpts, ShowQueryError};
 use crate::config::{display_path, run_warning_findings};
 use crate::grammar::{flatten_cross_ref_links, render_id};
 use crate::model::{Finding, FindingSite, ShowOutput};
 use crate::resolver::{WorkspaceContext, load_workspace_context, with_member_id_candidates};
 use crate::scanner::resolve_id_arg;
-use crate::sources::Buffers;
 use crate::workspace::split_qualified_id_arg;
 
 /// One input coordinate for the CLI-only batch-show adapter
@@ -80,7 +79,6 @@ pub(crate) fn show_batch_data(
                         section: query.section.clone(),
                         ..opts.clone()
                     },
-                    &Buffers::default(),
                     &mut metadata,
                 );
                 match result {
@@ -164,12 +162,7 @@ fn show_batch_run(
                 section: query.section.clone(),
                 ..opts.clone()
             };
-            let result = match show_batch_query_in_context(
-                &context,
-                &query.id,
-                query_opts,
-                &Buffers::default(),
-            ) {
+            let result = match show_batch_query_in_context(&context, &query.id, query_opts) {
                 Ok(output) => Ok(output.json.unwrap_or_default()),
                 Err(error) => match batch_query_failure(&error) {
                     Some(failure) => Err(failure),
@@ -188,22 +181,14 @@ fn show_batch_query_in_context(
     context: &WorkspaceContext,
     id_arg: &str,
     opts: ShowOpts,
-    overlays: &Buffers,
 ) -> Result<ShowOutput> {
-    show_batch_query_with_metadata(
-        context,
-        id_arg,
-        opts,
-        overlays,
-        &mut serde_json::Value::Null,
-    )
+    show_batch_query_with_metadata(context, id_arg, opts, &mut serde_json::Value::Null)
 }
 
 fn show_batch_query_with_metadata(
     context: &WorkspaceContext,
     id_arg: &str,
     opts: ShowOpts,
-    overlays: &Buffers,
     metadata: &mut serde_json::Value,
 ) -> Result<ShowOutput> {
     let (alias, raw_id) = split_qualified_id_arg(id_arg)?;
@@ -244,7 +229,7 @@ fn show_batch_query_with_metadata(
     }
     let section = opts.section.or(inline_section);
     *metadata = super::show_metadata(config, &project.findings, &id, section.as_deref());
-    let (mut output, home) = show_declaration_with_overlays(
+    let (mut output, home) = show_declaration_with_home(
         config,
         context.render_config(),
         &project.findings,
@@ -252,7 +237,6 @@ fn show_batch_query_with_metadata(
         section.as_deref(),
         opts.mode.render_mode(),
         false,
-        overlays,
     )
     .map_err(|error| with_member_id_candidates(error, context, alias.as_deref(), raw_id))?;
     let markdown_body = output.path.extension().and_then(|ext| ext.to_str()) == Some("md");

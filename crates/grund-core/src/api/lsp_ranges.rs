@@ -14,7 +14,7 @@ use crate::model::{
 };
 use crate::resolver::{WorkspaceContext, WorkspaceProject};
 use crate::scanner::EMBEDDED_VALUE_MARKER;
-use crate::sources::{Buffers, Sources, canonicalize_existing_prefix};
+use crate::sources::{Sources, canonicalize_existing_prefix};
 
 pub(super) fn lsp_query_id(
     context: &WorkspaceContext,
@@ -73,7 +73,7 @@ pub(super) fn lsp_target_for_stub(stub: &Declaration) -> Option<(PathBuf, usize)
 pub(super) fn declaration_range_parts(
     decl: &Declaration,
     rendered_id: &str,
-    overlays: &Buffers,
+    sources: Sources<'_>,
 ) -> (usize, String) {
     match &decl.source {
         DeclarationSource::Json {
@@ -81,7 +81,7 @@ pub(super) fn declaration_range_parts(
             key_text,
             ..
         } => (*key_column, key_text.clone()),
-        DeclarationSource::Text => heading_span_parts(&decl.file, decl.line, rendered_id, overlays),
+        DeclarationSource::Text => heading_span_parts(&decl.file, decl.line, rendered_id, sources),
     }
 }
 
@@ -89,14 +89,14 @@ pub(super) fn section_range_parts(
     decl: &Declaration,
     info: &SectionInfo,
     section: &str,
-    overlays: &Buffers,
+    sources: Sources<'_>,
 ) -> (usize, String) {
     if matches!(decl.source, DeclarationSource::Json { .. })
         && let Some(value) = &info.value
     {
         return (value.column, value.source_slice.clone());
     }
-    let (column, mut text) = heading_span_parts(&decl.file, info.line, section, overlays);
+    let (column, mut text) = heading_span_parts(&decl.file, info.line, section, sources);
     if info.value_root.is_some()
         && let Some(marker) = text.rfind(&format!(" {EMBEDDED_VALUE_MARKER}"))
     {
@@ -115,10 +115,10 @@ pub(super) fn heading_span_parts(
     file: &Path,
     line: usize,
     needle: &str,
-    overlays: &Buffers,
+    sources: Sources<'_>,
 ) -> (usize, String) {
     // §FS-scan.text.buffer: the line as a save would write it.
-    Sources::of(overlays)
+    sources
         .text(file)
         .ok()
         .and_then(|text| text.lines().nth(line.saturating_sub(1)).map(str::to_string))

@@ -2,6 +2,7 @@ use crate::grammar::{
     AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup, find_agents_block,
 };
 use crate::model::{CheckReport, Diagnostic, Expected, ExpectedEntrypoint};
+use crate::sources::Sources;
 
 /// One of §FS-errors.3.6.1's five final templates around its `detail`: the
 /// `repo maintenance: ` classification ahead, and the reminder that the finding
@@ -61,11 +62,13 @@ pub(crate) fn check_agent_block_path(
     let require_block = entrypoint.require_block;
     // §FS-check.6.1.3: retain this probe when the entrypoint is absent.
     crate::config::observe_input(path, false);
-    if !path.exists() {
+    // §FS-check.6.1.1, R06c of §REQ-one-answer.differences.text: the saved file,
+    // observed before its read (§DF-four-editor-checks-read-saved-text).
+    let saved = Sources::on_disk().saved();
+    if !saved.exists(path) {
         return;
     }
-    // §FS-check.6.1.1: cover this effective input before its shared read.
-    let Ok(text) = crate::config::input_read_to_string(path) else {
+    let Ok(text) = saved.text(path) else {
         let file_name = path
             .file_name()
             .and_then(|name| name.to_str())

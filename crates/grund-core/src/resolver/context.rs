@@ -22,8 +22,8 @@ use super::shorthand::resolve_qualified_shorthand_citations;
 use super::unread_block::settled_run_warnings;
 use crate::config::{Invocation, ProjectRecords, Selection};
 use crate::model::{Catalog, Diagnostic};
-use crate::scanner::{ScanError, scan_tree_with_workspace_overlays};
-use crate::sources::Buffers;
+use crate::scanner::{ScanError, scan_tree_with_workspace};
+use crate::sources::record_test_workspace_load;
 use crate::workspace::{
     WorkspaceCitationTarget, expand_workspace_tree, open, open_narrowable, scope_is_config_root,
     unlisted_workspace_block_run_warnings,
@@ -162,26 +162,6 @@ pub(crate) fn load_classifying_workspace_context(
     load_invoked_workspace_context(&Invocation::new(path, path_provided, Selection::Project))
 }
 
-/// Test-only observation seam for §AR-resolver.3: an opted-in black-box test
-/// can count public CLI loader entries without changing the loader's result.
-#[cfg(feature = "test-workspace-load-count")]
-fn record_test_workspace_load() {
-    use std::io::Write;
-
-    let Some(path) = std::env::var_os("GRUND_TEST_WORKSPACE_LOAD_LOG") else {
-        return;
-    };
-    let mut log = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(path)
-        .expect("open GRUND_TEST_WORKSPACE_LOAD_LOG");
-    writeln!(log, "load").expect("write GRUND_TEST_WORKSPACE_LOAD_LOG");
-}
-
-#[cfg(not(feature = "test-workspace-load-count"))]
-fn record_test_workspace_load() {}
-
 /// The load for what one invocation decided, its buffers and its
 /// classification included, every project's `Run` built by `open()`
 /// (§AR-config.1.5).
@@ -214,13 +194,11 @@ pub(crate) fn load_resolved_workspace_context(
     path: &Path,
     path_provided: bool,
 ) -> Result<WorkspaceContext> {
-    // §FS-scan.text.buffer: the buffers the run was opened with (§AR-config.1.5).
-    let overlays = &config.run().buffers.clone();
     // §FS-workspace.5 / §AR-workspace.6: workspace mode applies whenever the
     // discovered config carries `[workspace]` after member-scope rewriting, so this
     // flag is the single canonical "is this a workspace run?".
     if !config.project().workspace.declared {
-        return single_project_context(config, path, path_provided, overlays);
+        return single_project_context(config, path, path_provided);
     }
 
     let mut root_config = config;
@@ -228,7 +206,7 @@ pub(crate) fn load_resolved_workspace_context(
     // §FS-workspace.8.9: the current project is the root iff
     // `include_root = true` (the helper always emits the root first).
     let current = root_config.project().workspace.include_root.then_some(0);
-    let projects = load_workspace_projects_with_overlays(&mut root_config, overlays)?;
+    let projects = load_workspace_projects(&mut root_config)?;
     // Cloned *after* the expansion, not before: what the walk learns about the
     // tree is what the report is rendered from (§FS-check.4.9).
     let render_config = root_config.clone();
@@ -265,15 +243,13 @@ fn single_project_context(
     config: ProjectRecords,
     path: &Path,
     path_provided: bool,
-    overlays: &Buffers,
 ) -> Result<WorkspaceContext> {
-    let (findings, scan_errors) = scan_tree_with_workspace_overlays(
+    let (findings, scan_errors) = scan_tree_with_workspace(
         config.schema(),
         config.frame(),
         Some(path),
         path_provided,
         &[],
-        overlays,
     )?;
     let render_root = config.frame().root().to_path_buf();
     let render_config = config.clone();
@@ -347,8 +323,7 @@ pub(crate) fn load_narrowable_workspace_context(
         // included, on every aggregate run (§GOAL-fast-feedback).
         return load_resolved_workspace_context(config, path, path_provided);
     }
-    let overlays = config.run().buffers.clone();
-    single_project_context(config, path, path_provided, &overlays)
+    single_project_context(config, path, path_provided)
 }
 
 /// Load every workspace project a workspace-mode command operates on:
@@ -361,14 +336,6 @@ pub(crate) fn load_narrowable_workspace_context(
 /// root scan respects the member boundary (§AR-workspace.6).
 pub(crate) fn load_workspace_projects(
     root_config: &mut ProjectRecords,
-) -> Result<Vec<WorkspaceProject>> {
-    let overlays = root_config.run().buffers.clone();
-    load_workspace_projects_with_overlays(root_config, &overlays)
-}
-
-fn load_workspace_projects_with_overlays(
-    root_config: &mut ProjectRecords,
-    overlays: &Buffers,
 ) -> Result<Vec<WorkspaceProject>> {
     // Stage 1: build the (alias, config) list, recursing into any member that
     // is itself a workspace root. Failing fast on alias errors, empty
@@ -408,10 +375,7 @@ fn load_workspace_projects_with_overlays(
             .enumerate()
             .map(|(index, (alias, records))| {
                 crate::config::with_check_input_observer(observer.clone(), || {
-                    (
-                        index,
-                        load_workspace_project(alias, records, &targets, overlays),
-                    )
+                    (index, load_workspace_project(alias, records, &targets))
                 })
             })
             .collect::<Vec<_>>()
@@ -420,10 +384,7 @@ fn load_workspace_projects_with_overlays(
             .into_iter()
             .enumerate()
             .map(|(index, (alias, records))| {
-                (
-                    index,
-                    load_workspace_project(alias, records, &targets, overlays),
-                )
+                (index, load_workspace_project(alias, records, &targets))
             })
             .collect::<Vec<_>>()
     };
@@ -441,15 +402,13 @@ fn load_workspace_project(
     alias: String,
     config: ProjectRecords,
     targets: &[WorkspaceCitationTarget],
-    overlays: &Buffers,
 ) -> Result<WorkspaceProject> {
-    let (findings, scan_errors) = scan_tree_with_workspace_overlays(
+    let (findings, scan_errors) = scan_tree_with_workspace(
         config.schema(),
         config.frame(),
         Some(config.frame().root()),
         true,
         targets,
-        overlays,
     )?;
     Ok(WorkspaceProject {
         alias,

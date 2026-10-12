@@ -3,7 +3,6 @@ use super::judge::{CheckWorkspace, judge};
 use super::support::{diagnostic_cmp, sort_diagnostics};
 use crate::config::{Frame, Rules, Schema};
 use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
-use crate::sources::Buffers;
 
 /// AR-checker: how grund validates the scanner's findings
 ///
@@ -79,7 +78,7 @@ use crate::sources::Buffers;
 ///
 /// ### 1.1 `conform`: the node-local half
 ///
-/// `conform(schema, catalog, frame, overlays)` judges each declaration and
+/// `conform(schema, catalog, frame)` judges each declaration and
 /// heading against its own kind's shape and nothing else: duplicate,
 /// misplaced-declaration, broken-stub and declaration-near-miss
 /// (§FS-declarations.checks), the section family of `sections.rs` (heading
@@ -460,27 +459,9 @@ use crate::sources::Buffers;
 /// - The optional LSP server (§AR-lsp) can run a subset of checks (e.g., only
 ///   dangling references on the active file's citations) against a cached scan.
 /// - Tests can feed synthetic `Catalog` directly to the checker without disk I/O.
-pub(crate) fn check_on_disk(
-    rules: &Rules,
-    schema: &Schema,
-    catalog: &Catalog,
-    expected: &Expected,
-    frame: Frame<'_>,
-    workspace: &CheckWorkspace<'_>,
-) -> CheckReport {
-    check_with_workspace_and_overlays(
-        rules,
-        schema,
-        catalog,
-        expected,
-        frame,
-        workspace,
-        &Buffers::default(),
-    )
-}
-
-/// The driver over editor overlays too, so §FS-declarations.checks.oversized-lead
-/// measures the live text; `check_on_disk` is it with none.
+/// The text every pass measures is the run's (§FS-scan.text.buffer): the editor's
+/// buffers where the run carries any, so §FS-declarations.checks.oversized-lead
+/// measures the live text, and the disk otherwise.
 ///
 /// `frame` is displayed by the report's root (§FS-workspace.8.1) — the workspace
 /// root's in workspace mode, the project's own otherwise — and checked as the
@@ -504,16 +485,15 @@ pub(crate) fn check_on_disk(
 /// maintainer declared matters and is usually all Markdown, so the exemption
 /// would make the rule inert exactly where it was asked for. Which place is
 /// asked, and how finely, is a `[[kinds]]` row's to say (§FS-config.3.4.8).
-pub(crate) fn check_with_workspace_and_overlays(
+pub(crate) fn check_project(
     rules: &Rules,
     schema: &Schema,
     catalog: &Catalog,
     expected: &Expected,
     frame: Frame<'_>,
     workspace: &CheckWorkspace<'_>,
-    overlays: &Buffers,
 ) -> CheckReport {
-    let conformed = conform(schema, catalog, frame, overlays);
+    let conformed = conform(schema, catalog, frame);
     let judged = judge(rules, schema, catalog, expected, frame, workspace);
     merge(conformed, judged)
 }
