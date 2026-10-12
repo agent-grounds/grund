@@ -107,7 +107,7 @@ pub(super) fn scan_file_text(
     let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");
     let (inline_sites, inline_block_lines) =
         inline_citation_sites(path, &text, is_md, is_py, schema, frame, workspace_targets);
-    let in_docs = path.components().any(|c| c.as_os_str() == "docs");
+    let in_docs = super::stub_shape::stub_by_docs(path);
     let mut markdown_blocks = MarkdownBlocks::default();
     let mut py_docstring = PythonDocstringScanState::default();
     let mut current: Option<Declaration> = None;

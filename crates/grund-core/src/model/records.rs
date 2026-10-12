@@ -2,7 +2,9 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use super::e2e::E2eCase;
-use super::headings::{NearMissHeading, SectionHeadingOutsideDeclaration, UnmarkedHeading};
+use super::headings::{
+    NearMissHeading, SectionHeadingOutsideDeclaration, StubShapeNote, UnmarkedHeading,
+};
 use super::line_owners::FileLineOwnership;
 use super::patterns::GlobCitation;
 use super::stub_resolution::StubResolution;
@@ -333,6 +335,9 @@ pub struct Catalog {
     /// not a declaration, so the rule costs one regex on heading-shaped lines
     /// rather than a second read of the tree.
     pub near_miss_headings: Vec<NearMissHeading>,
+    /// Stub-shaped headings the two stub tests read differently, until 0.19.0
+    /// (§FS-declarations.checks.stub-shape, §AR-scanner.4.7).
+    pub(crate) stub_shape_notes: Vec<StubShapeNote>,
     /// The owners of the line ranges a `cover --lines` run asked for, one entry
     /// per scanned file (§FS-cover.6, §AR-scanner.2.4.4). Empty — and never
     /// computed — unless `Config::owner_lines` is set.

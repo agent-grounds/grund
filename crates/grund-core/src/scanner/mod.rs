@@ -72,6 +72,7 @@ mod scan_error;
 mod scope_probe;
 mod section_record;
 mod stub_homes;
+mod stub_shape;
 mod tree;
 mod units;
 mod unmarked_headings;
@@ -145,6 +146,8 @@ mod tests_section_body_scope;
 mod tests_section_outside_declaration;
 #[cfg(test)]
 mod tests_source_section_titles;
+#[cfg(test)]
+mod tests_stub_shape;
 #[cfg(test)]
 mod tests_unmarked_headings;
 #[cfg(test)]
