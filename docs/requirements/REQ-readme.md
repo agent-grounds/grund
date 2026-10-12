@@ -4,14 +4,15 @@ The root `README.md` is the first surface a human or an agent reads, and it sell
 
 ## 1. What it must say
 
-The README opens on the workflow, shown rather than narrated, and lets what follows say what `grund` is rather than a sentence about it. The managed `AGENTS.md` block is what an agent is told about a grounded project ([§REQ-agents-md](REQ-agents-md.md#req-agents-md-the-agent-entrypoint-stays-managed-and-grounded)), and the README shows that same block to a human: the loop, then the default structure, then excerpts of the block itself, then how to install and set up a repository, which is what writes the block. The README is read whole, so depth lives in `docs/` behind links, not inline ([§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file)); it stays measured against the repository's entrypoint line budget, and clearing an overflow of the 250-line soft tier means moving a section into `docs/` ([AR-ci section 9](../architecture/AR-ci.md#9-file-size-budget-gate)).
+The README opens on the workflow, shown rather than narrated, and lets what follows say what `grund` is rather than a sentence about it. The managed `AGENTS.md` block is what an agent is told about a grounded project ([§REQ-agents-md](REQ-agents-md.md#req-agents-md-the-agent-entrypoint-stays-managed-and-grounded)), and the README shows that same block to a human: the loop, then the default structure, then excerpts of the block itself, then how to install and set up a repository, which is what writes the block. After setup come three reference sections: the citation format, drawn as the grammar of a citation; making citations clickable in a terminal; and editor support through `grund-lsp`. The README is read whole, so depth lives in `docs/` behind links, not inline ([§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file)); it stays measured against the repository's entrypoint line budget, and clearing an overflow of the 250-line soft tier means moving a section into `docs/` ([AR-ci section 9](../architecture/AR-ci.md#9-file-size-budget-gate)).
 
 The README gives concise links to the existing traceability comparison and to performance
 evidence and its methodology. It reuses the introduction and section-retrieval examples
 rather than adding another slogan block or copying the detailed comparison.
 The loop's cards link into a runnable example before a reader needs to learn the
 whole schema. Setup distinguishes adopting existing specs
-from scaffolding new ones.
+from scaffolding new ones, and offers adoption to an agent through
+`grund agent-setup-instructions`.
 
 ### 1.1 The loop
 
