@@ -37,7 +37,7 @@ pub struct Run {
     /// from the call scope when the run is made, so members carry it too.
     pub(crate) path_base: Option<PathBase>,
     /// The editor's open documents, keyed by physical path, which every reader
-    /// of this run reads as the files they name (§FS-scan.text.buffer).
+    /// of this run reads as the files they name (§AR-system.2.13).
     pub(crate) buffers: Buffers,
 }
 
@@ -158,7 +158,7 @@ impl Invocation {
         self
     }
 
-    /// The editor's open documents (§FS-scan.text.buffer).
+    /// The editor's open documents (§AR-config.1.5).
     pub(crate) fn buffers(mut self, buffers: Buffers) -> Self {
         self.buffers = buffers;
         self

@@ -73,7 +73,7 @@ use crate::workspace::WorkspaceCitationTarget;
 /// parser used by member-local scans (§FS-workspace.5.2).
 ///
 /// One file's text into `findings`, the text being what the caller read through
-/// `sources`, a buffer where the run holds one (§FS-scan.text.buffer): declarations, their section
+/// `sources`, a buffer where the run holds one (§AR-system.2.13): declarations, their section
 /// headings, citations, and the headings that came close to being declarations.
 ///
 /// `classify` turns on citing-side classification — declaration body ranges and each

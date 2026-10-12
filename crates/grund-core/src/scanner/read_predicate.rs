@@ -8,7 +8,7 @@
 //! Four readers ask it. The walk asks the name test of each entry and the
 //! filter of each directory. A file that exists only as a buffer, which the
 //! walk never meets on disk, is read or skipped by `unread`, exactly as the
-//! saved file would be (§FS-scan.text.buffer-only). A stub's target asks
+//! saved file would be (§AR-system.2.13). A stub's target asks
 //! `name_refusal` alone, the two reasons §FS-declarations.checks.broken-stub.3
 //! honours. And a link the walker could not resolve asks `name_refusal` or
 //! `directory_refusal`, with `ignored`, whether the walk would have read it
@@ -85,7 +85,7 @@ pub(crate) fn directory_refusal(path: &Path, exclude: &[String]) -> Option<Unrea
 
 /// Whether the walk from `roots` reads `path`, and which rule refuses it where
 /// it does not: asked of a file the walk never meets on disk, a buffer with
-/// nothing behind it (§FS-scan.text.buffer-only). A scan root outruns the
+/// nothing behind it (§AR-system.2.13). A scan root outruns the
 /// descent rules here as it does in the walk (§AR-scanner.1.7).
 pub(super) fn unread(
     schema: &Schema,

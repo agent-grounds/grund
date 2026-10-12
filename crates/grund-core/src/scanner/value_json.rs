@@ -43,7 +43,7 @@ pub(super) fn scan_value_json_sources(
     grouped.sort_by_key(|(paths, _)| sort_path_key(&paths[0]));
     for (paths, owners) in grouped {
         let path = &paths[0];
-        // §FS-scan.text.buffer: one location, one text, whichever spelling holds it.
+        // §AR-system.2.13: one location, one text, whichever spelling holds it.
         let text = match frame.sources().text(path) {
             Ok(text) => text.into_owned(),
             Err(error) => {

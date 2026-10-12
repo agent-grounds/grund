@@ -117,7 +117,7 @@ pub(super) fn heading_span_parts(
     needle: &str,
     sources: Sources<'_>,
 ) -> (usize, String) {
-    // §FS-scan.text.buffer: the line as a save would write it.
+    // §AR-system.2.13: the line as a save would write it.
     sources
         .text(file)
         .ok()

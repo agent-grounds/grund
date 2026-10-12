@@ -109,7 +109,7 @@ pub(crate) struct PointBodyCache<'a> {
 }
 
 impl<'a> PointBodyCache<'a> {
-    /// A cache over the text `sources` gives (§FS-scan.text.buffer).
+    /// A cache over the text `sources` gives (§AR-system.2.13).
     pub(crate) fn new(sources: Sources<'a>) -> Self {
         Self {
             sources,
@@ -408,7 +408,7 @@ pub(super) fn extract_declaration_body_cached(
     })
 }
 
-/// The text a save would write (§FS-scan.text.buffer), observed before a disk
+/// The text a save would write (§AR-system.2.13), observed before a disk
 /// read (§FS-check.6.1.1).
 fn read_text(path: &Path, sources: Sources<'_>) -> Result<String> {
     sources

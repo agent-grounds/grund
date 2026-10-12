@@ -48,7 +48,7 @@ pub struct Display<'a> {
 
 impl<'a> Frame<'a> {
     /// What every reader of this run asks for a file's text and existence: the
-    /// run's buffers in front of the disk (§AR-system.2.13, §FS-scan.text.buffer).
+    /// run's buffers in front of the disk (§AR-system.2.13).
     pub(crate) fn sources(&self) -> Sources<'a> {
         Sources::of(&self.run.buffers)
     }
