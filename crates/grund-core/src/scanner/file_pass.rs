@@ -242,8 +242,8 @@ pub(super) fn scan_file_text(
             }
             declared = true;
         }
-        // §FS-citations.recognized.title-lines: a declaration's heading is read for its
-        // citations below, never again for structure.
+        // §AR-scanner.2.3: a declaration's heading is read for its citations below,
+        // never again for structure.
         let structure = heading_position && !declared;
 
         // §FS-declarations.checks.declaration-near-miss.1: the line was not a declaration. Ask the

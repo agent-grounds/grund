@@ -280,9 +280,11 @@ fn marker_pass_marks_a_bare_id_on_a_docstring_opening_line() {
 /// §FS-fmt.2.3: a declaration heading is one of the two whole lines `fmt`
 /// never rewrites, and the docstring state this fix gives `fmt` is what lets it
 /// see one inside a docstring — where the scanner has always seen it, and where
-/// it records no citation at all. Before, `fmt` read the raw line, found no
-/// heading, and offered to rewrite a shorthand in the heading's own title that
-/// `check` never reported.
+/// a title's citations are read like any other (§FS-citations.recognized.title-lines).
+/// Before, `fmt` read the raw line, found no heading, and offered to rewrite a
+/// shorthand in the heading's own title. `check` reports that shorthand now, and
+/// `fmt` still leaves the title alone, so it is fixed by hand
+/// (§DF-a-title-citation-is-a-citation.4).
 #[test]
 fn fmt_skips_a_declaration_heading_inside_a_docstring() {
     let root = docstring_repo(
@@ -306,8 +308,8 @@ fn fmt_skips_a_declaration_heading_inside_a_docstring() {
          [[kinds]]\nkind = \"AR\"\nfolder = \"docs/architecture\"\nindex = false\n\n\
          [scan]\ninclude = [\"docs\", \"src\"]\nextensions = [\"md\", \"py\"]\n",
     );
-    // The heading line is silent on both surfaces; the body line is on neither.
-    assert_eq!(reported_lines(&root), vec![4]);
+    // `check` reports the heading line and the body line; `fmt` rewrites only the body.
+    assert_eq!(reported_lines(&root), vec![2, 4]);
     assert_eq!(rewrite_lines(&root).0, vec![4]);
 }
 
