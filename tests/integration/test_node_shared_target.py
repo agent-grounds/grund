@@ -77,6 +77,22 @@ launch.checked(["cargo", "+1.95.0", "build", "-p", "grund", "--locked", "--targe
 launch.checked(["npm", "pack", "--json"])
 """
 
+# The gate reaches the acceptance only through this wrapper, which captures run.py's output.
+FORWARD = """
+import sys, unittest
+sys.dont_write_bytecode = True
+sys.path.insert(0, sys.argv[1])
+import test_node_binding_acceptance as wrapper
+
+class Done:
+    stdout, returncode = "noise out\\n", 0
+    stderr = "Compiling grund\\nnode build: dev /t 5.0s\\ntest_x ... node build: release /t 49.2s\\ntest_x ... ok\\n"
+
+wrapper.subprocess.run = lambda *args, **options: Done()
+tests = unittest.defaultTestLoader.loadTestsFromModule(wrapper)
+sys.exit(not unittest.TextTestRunner().run(tests).wasSuccessful())
+"""
+
 DEFAULTS = """
 import json, sys
 sys.dont_write_bytecode = True
@@ -219,6 +235,16 @@ class NodeSharedTargetTests(unittest.TestCase):
                          [(match[1], match[2]) for match in parsed],
                          "one line per build, none for anything else the harness runs; "
                          f"stderr was {result.stderr!r}")
+
+    def test_a_green_acceptance_shows_its_build_lines_and_nothing_else_it_captured(self):
+        result = child(FORWARD, REPO / "tests" / "integration", cwd=self.temp)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        output = result.stdout + result.stderr
+        self.assertEqual(["node build: dev /t 5.0s", "node build: release /t 49.2s"],
+                         [line for line in output.splitlines() if line.startswith("node build:")],
+                         f"the wrapper hides the build lines on success; output was {output!r}")
+        for noise in ("Compiling grund", "test_x ... ok", "noise out"):
+            self.assertNotIn(noise, output)
 
     def test_the_ci_key_drops_entries_saved_before_the_dev_builds(self):
         steps = CI.read_text(encoding="utf-8").split("\n      - ")

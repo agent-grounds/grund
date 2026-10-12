@@ -20,6 +20,17 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
+BUILD_LINE = "node build: "
+
+
+def build_lines(stderr):
+    """The acceptance's per-build lines (§AR-ci.3.4.1.1), the only output a green run shows.
+
+    A verbose runner writes `test ... ` before a test's output, so a line may begin
+    with that; each build line runs from its marker to the end of the line.
+    """
+    return "".join(line[line.index(BUILD_LINE):] for line in stderr.splitlines(keepends=True)
+                   if BUILD_LINE in line)
 
 
 class NodeAcceptanceWorkflowTests(unittest.TestCase):
@@ -28,6 +39,9 @@ class NodeAcceptanceWorkflowTests(unittest.TestCase):
             [sys.executable, "tests/bindings/node/run.py"], cwd=REPO,
             capture_output=True, text=True,
         )
+        # §AR-ci.3.4.1.1: the capture would hide them, so they reach the gate's job log here.
+        sys.stderr.write(build_lines(result.stderr))
+        sys.stderr.flush()
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
 
 
