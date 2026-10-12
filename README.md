@@ -1,6 +1,4 @@
-# grund
-
-[![CI](https://github.com/agent-grounds/grund/actions/workflows/ci.yml/badge.svg)](https://github.com/agent-grounds/grund/actions/workflows/ci.yml) [![crates.io](https://img.shields.io/crates/v/grund.svg)](https://crates.io/crates/grund) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+# grund <a href="LICENSE"><img align="right" alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a> <a href="https://crates.io/crates/grund"><img align="right" alt="crates.io" src="https://img.shields.io/crates/v/grund.svg"></a> <a href="https://github.com/agent-grounds/grund/actions/workflows/ci.yml"><img align="right" alt="CI" src="https://github.com/agent-grounds/grund/actions/workflows/ci.yml/badge.svg"></a>
 
 > **Keep your agents grounded** — specs, docs, and code as one knowledge graph, checked on every commit.
 
