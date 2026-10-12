@@ -64,6 +64,7 @@ Supported check finding codes:
   inline-citation-style
   invalid-field-value
   invalid-rule
+  invalid-section-lock
   invalid-value-binding
   invalid-value-declaration
   io
@@ -87,6 +88,8 @@ Supported check finding codes:
   oversized-lead
   parse-moves
   redundant-config
+  relative-section-parent
+  section-address-changed
   section-heading-level
   section-outside-declaration
   shorthand-citation
@@ -102,6 +105,7 @@ Supported check finding codes:
   unlisted-workspace-block
   unmarked-heading
   unreached-declaration
+  unrecorded-section-citation
   unused
   value-mismatch
 
