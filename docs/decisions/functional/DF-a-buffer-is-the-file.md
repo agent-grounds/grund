@@ -45,8 +45,8 @@ D6 is still a warning-release ruling in general. R04 takes the correction route 
 the answer it gave, not because of how identity works. Its false answer is D7's: a stub
 reported broken until the same bytes are saved. It reaches that answer through a buffer the
 lookup misses, not through a buffer with no file behind it. The ticket's author ruled that
-R04 goes by the correction route, in this record
-([#595](https://github.com/agent-grounds/grund/issues/595#issuecomment-6116438709)).
+R04 goes by the correction route, in this record, when approving the proposal on
+[#595](https://github.com/agent-grounds/grund/issues/595).
 
 ## 3. Rejected alternative: keep the lookup by spelling for one release
 
