@@ -144,15 +144,135 @@ section grammar admits: a numbered path always, and a named path such as
 
 ## stubs: What a stub points at
 
-A stub is a pointer ([§FS-terms.terms.3](FS-terms.md#terms3-source-forms)): its heading, `# <ID>: [<text>](<path>)`, links to a
-file, its target, and it points at the declarations of its ID there. Which declarations
-those are, if any, is the stub's verdict ([§FS-declarations.stubs.verdict](FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)). A stub paired
-with the declarations it points at is not counted beside them as one more
-([§FS-declarations.checks.duplicate.1](FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)).
+A stub is a pointer ([§FS-terms.terms.3](FS-terms.md#terms3-source-forms)): a heading whose title is one link
+([§FS-declarations.stubs.shape](FS-declarations.md#stubsshape-what-a-stub-looks-like)) to a file, its target, and it points at the declarations of its
+ID there. What the target gives the stub is [§FS-declarations.stubs.target](FS-declarations.md#stubstarget-what-a-stubs-target-gives-it), how the stub pairs
+with what it points at is [§FS-declarations.stubs.pairing](FS-declarations.md#stubspairing-how-a-stub-pairs-with-what-it-points-at), and which declarations those are, if
+any, is the stub's verdict ([§FS-declarations.stubs.verdict](FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)). A stub paired with the
+declarations it points at is not counted beside them as one more
+([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)).
 
 ### stubs.verdict: One verdict per stub, reached once per scan
 
 Each stub's verdict is reached once per scan, and it is one of five: the target is missing; the target is a file the scan does not read ([§FS-declarations.checks.broken-stub.3](FS-declarations.md#checksbroken-stub3-a-target-the-scan-does-not-read-declares-nothing)); the target, read as the scan reads it on the text a save would write ([§FS-declarations.checks.broken-stub.1](FS-declarations.md#checksbroken-stub1-the-target-is-read-as-a-save-would-write-it), [§FS-declarations.checks.broken-stub.2](FS-declarations.md#checksbroken-stub2-a-heading-inside-a-fence-of-the-target-declares-nothing)), does not declare the ID; it declares the ID, on one line or more, and the stub points at each of those declarations ([§FS-declarations.checks.duplicate.1](FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)); or the target is the file the stub sits in, which declares the ID on another line, and the stub points at none of those declarations but is one of its own beside them, so the ID is a duplicate ([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)). The first three are a broken stub ([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)); a stub linked to its own file that declares the ID nowhere else is the third. The ID's declarations are counted from those verdicts, once its stubs are paired.
+
+### stubs.shape: What a stub looks like
+
+A stub is a heading whose title is one link, `<ID>: [<text>](<path>)`, at any heading level,
+in a Markdown file of some kind's home ([§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates)): a file under a kind's `folder`,
+or a kind's `file`, citable or not, however many homes hold it. The complement place is not a
+home ([§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure)), so a heading of that shape there is a declaration titled with a link. That is the test
+from grund 0.19.0 ([§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190)).
+
+Until then a stub is read by the test grund has always used: a heading whose title is one
+link, in a Markdown file with a directory named `docs` anywhere on its path. That path is the
+whole path, not the path below the config root, so in a checkout below a directory named
+`docs` every heading of that shape is a stub. No release has required a stub to be an H1:
+`## FS-x: [x](../../src/x.rs)` in `docs/fs/x.md` is a stub under either test. Every heading
+the two tests read differently is reported as `stub-shape`
+([§FS-declarations.checks.stub-shape](FS-declarations.md#checksstub-shape-stub-shape-read-differently-from-grund-0190)), and is read as the `docs` test reads it until 0.19.0.
+
+### stubs.target: What a stub's target gives it
+
+The link resolves as a Markdown link does, relative to the stub file's directory, so `lychee`
+and rendered docs see the same target. Where nothing is at that path, `grund` falls back to
+the path relative to the config root, for older stubs that wrote repo-root paths. The target
+declares the ID exactly as the scanner's own pass reads that file, as if it were scanned
+(D3 of [§DF-one-answer-rulings-stubs](../decisions/functional/DF-one-answer-rulings-stubs.md#df-one-answer-rulings-stubs-a-stub-is-found-by-its-home-and-shape-read-as-the-scan-reads-and-shown-where-its-target-is)): on the text a save would write
+([§FS-declarations.stubs.target.1](FS-declarations.md#stubstarget1-the-target-is-read-as-a-save-would-write-it)), with a fence's headings declaring nothing
+([§FS-declarations.stubs.target.2](FS-declarations.md#stubstarget2-a-heading-inside-a-fence-of-the-target-declares-nothing)), only where the scan would read the file at all
+([§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)), and never through a stub of its own
+([§FS-declarations.stubs.target.4](FS-declarations.md#stubstarget4-a-stub-in-the-target-declares-nothing)). What a target outside `[scan] include` gives the stub, and
+what of it stays unjudged, is [§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged).
+
+#### stubs.target.1: The target is read as a save would write it
+
+Whether the file at `<path>` contains a source declaration of the ID is judged on the target's text as [§FS-scan.text.buffer](FS-scan.md#textbuffer-a-files-text-is-what-a-save-would-write) defines it, the text a save would write. That is the text the scan reads any file from and the text `show` slices the stub's body out of ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id), [§REQ-one-answer.text.targets](../requirements/REQ-one-answer.md#texttargets-a-stubs-target-answers-as-its-saved-text-would)). The path the stub wrote reads a buffer the editor opened under any spelling of the same file ([§FS-scan.identity.buffers](FS-scan.md#identitybuffers-a-buffer-is-the-file-at-its-physical-location)), and a target open only in a buffer, with no file saved behind it, is not missing: it is judged on the buffer, so it is healthy where the buffer declares the ID and `stub link target lacks <ID>: <path>` where it does not, as the saved file would be ([§FS-scan.text.buffer-only](FS-scan.md#textbuffer-only-a-buffer-with-no-file-behind-it-is-a-file)).
+
+So an unsaved edit that removes the target's declaration breaks the stub at once. `check` reports `broken-stub` at the stub line, and the editor shows it as the user edits ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)). `show` refuses with the second line of [§FS-show.2.3.4](FS-show.md#234-broken-stub), never `ID not found`. An unsaved edit that puts the declaration back repairs the stub just as soon: `show` reads the body from the edited text, and the error goes. Scan scope plays no part, as it plays none in finding the body ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)).
+
+#### stubs.target.2: A heading inside a fence of the target declares nothing
+
+The target's text, the one [§FS-declarations.checks.broken-stub.1](FS-declarations.md#checksbroken-stub1-the-target-is-read-as-a-save-would-write-it) names, is read for the ID the way the scan reads that file. In a Markdown target a heading inside a fenced code block is an example, not a declaration ([§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example)), and the fence is the one [§FS-languages.fence](FS-languages.md#fence-fences) defines: a fence delimiter line, and every line while a fence is open, declares nothing, however much it looks like `# <ID>: …`. A line inside a raw-text HTML block such as `<pre>` ([§FS-check.1.1.5.1](FS-check.md#1151-a-raw-html-block-holds-no-heading)) declares nothing in the same way. A target whose only heading of the ID sits inside a fence or such a block therefore contains no declaration of it, and the stub is broken exactly as if the target never named the ID, whether or not the target is inside `[scan] include`: `check` reports `stub link target lacks <ID>: <path>` at the stub's line, and `show` refuses with the second line of [§FS-show.2.3.4](FS-show.md#234-broken-stub) rather than answering `ID not found`. A target that holds a fenced example of the heading and the real declaration outside every fence declares the ID once, at the real heading, and the stub is healthy. Fences are tracked in a Markdown target only: inside a source target's doc-comment the scan does not track them, so neither does this test ([§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example)). Why a stub that used to pass now fails is [§DF-stub-target-fenced-heading](../decisions/functional/DF-stub-target-fenced-heading.md#df-stub-target-fenced-heading-a-heading-inside-a-fence-of-a-stubs-target-does-not-declare-its-id).
+
+#### stubs.target.3: A target the scan does not read declares nothing
+
+The target is read for the ID the way the scan reads that file ([§FS-declarations.checks.broken-stub.2](FS-declarations.md#checksbroken-stub2-a-heading-inside-a-fence-of-the-target-declares-nothing)), and some files the scan never reads, wherever they sit: one whose own name begins with `.`, skipped by that name before `extensions` is consulted ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)), and one whose extension `[scan] extensions` does not list ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)). Such a target declares nothing, whatever it holds. A `# <ID>: …` heading in `notes/.a.md`, or in `notes/a.zz` where `zz` is not listed, is text the scan does not read, so the stub is broken exactly as if the target never named the ID.
+
+What decides is the target's own name and extension, not the scan's scope, so the stub is broken whether or not the target lies inside `[scan] include`. The name judged is the one the stub wrote, not the one a symlink resolves to: `notes/.a.md -> a.md` declares nothing even where the `notes/a.md` it resolves to is scanned and declares the ID, so the stub pairs with neither and is a declaration of its own beside that one, the duplicate a regular hidden copy of `notes/a.md` makes. The same holds for `notes/a.zz -> a.md` where `zz` is not listed. That a target outside `include` reads as if it were scanned ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)) reaches only a file the scan would read were it in scope. `check` reports `stub link target lacks <ID>: <path>` at the stub's line, and `show` refuses with the second line of [§FS-show.2.3.4](FS-show.md#234-broken-stub) rather than answering a body sliced out of a file the scan does not read. A stub broken this way pairs with nothing ([§FS-declarations.checks.duplicate.1](FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), so `refs` refuses nothing from its target, however many headings of the ID the target holds ([§FS-refs.4.1](FS-refs.md#41-a-stubs-homes-are-found-in-its-target)). The remedy is the target's: a name that does not begin with `.`, and an extension `extensions` lists.
+
+#### stubs.target.4: A stub in the target declares nothing
+
+A heading in the target that is itself a stub ([§FS-declarations.stubs.shape](FS-declarations.md#stubsshape-what-a-stub-looks-like)) declares
+nothing there: it is a pointer, not a declaration. A stub whose target holds only a stub of
+its ID is therefore broken, `stub link target lacks <ID>: <path>` at its line, exactly as if
+the target never named the ID, so a chain of stubs never reaches the declaration at its end.
+`docs/fs/a.md` holding `# FS-x: [x](b.md)` beside `docs/fs/b.md` holding
+`# FS-x: [x](../../src/x.rs)` is broken at `docs/fs/a.md:1`, and, being broken, is a
+declaration of its own beside `src/x.rs:1`, so `FS-x` is a duplicate. Which headings in the
+target are stubs is the shape test of the release, read on the target's own path. Every
+command gives this answer (D13 of [§DF-one-answer-rulings-stubs](../decisions/functional/DF-one-answer-rulings-stubs.md#df-one-answer-rulings-stubs-a-stub-is-found-by-its-home-and-shape-read-as-the-scan-reads-and-shown-where-its-target-is)).
+
+#### stubs.target.5: What a target outside the include gives, and what stays unjudged
+
+A target outside `[scan] include` gives the stub what every command resolves through: its
+declarations of the ID, counted as [§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned) counts them; their
+sections, so a citation into one reads as it would were the target scanned
+([§FS-check.3.2.1](FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not)); and every section path one of those declarations claims twice, which
+`check` reports as `duplicate-section` ([§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path)) at the
+target's headings, `<path>:<line>` exactly as the same tree with the target scanned reports
+them, whether or not anything cites the section
+([§DF-stub-target-section-declared-twice](../decisions/functional/DF-stub-target-section-declared-twice.md#df-stub-target-section-declared-twice-a-section-a-stubs-target-declares-twice-is-reported-where-it-is-written-scanned-or-not)). A section the target does not declare is reported
+as before, in the same words — `missing section <ID>.<path>` for a numeric path — and under
+the same `missing-section` code. A broken stub ([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)) pairs
+with nothing and gains no section: it keeps its broken-stub finding, and a citation of one of
+its sections is `missing section` as before. A target that declares the ID more than once
+pairs as `show` refuses it, ambiguously ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), and lends no section, and so does
+every target of an ID with more than one declaration ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)).
+
+Nothing else of the target is judged as if scanned yet: the citations it makes, the
+obligations its declaration owes, and its chapters as a rule's subjects or in a rule's count
+of chapters ([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path), [§FS-rules.3.1](FS-rules.md#31-chapter-presence)) stay as they were outside the scan, the rows U04,
+U07 and U08 of [§REQ-one-answer.differences.stubs](../requirements/REQ-one-answer.md#differencesstubs-stubs). Findings about the target file itself —
+its other declarations, its notes and formatting, its leads, and whether its citations
+resolve — are not reported: the target is read on the stub's behalf, not scanned (D8 of
+[§DF-one-answer-rulings-stubs](../decisions/functional/DF-one-answer-rulings-stubs.md#df-one-answer-rulings-stubs-a-stub-is-found-by-its-home-and-shape-read-as-the-scan-reads-and-shown-where-its-target-is)). Decided in [§DF-stub-sections-from-unscanned-target](../decisions/functional/DF-stub-sections-from-unscanned-target.md#df-stub-sections-from-unscanned-target-a-stubs-sections-are-its-targets-whether-or-not-the-scan-reaches-it), and for a
+section the target declares twice in [§DF-stub-target-section-declared-twice](../decisions/functional/DF-stub-target-section-declared-twice.md#df-stub-target-section-declared-twice-a-section-a-stubs-target-declares-twice-is-reported-where-it-is-written-scanned-or-not).
+
+### stubs.pairing: How a stub pairs with what it points at
+
+A stub whose target declares its ID is the pointer to those declarations, never one more
+beside them ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)); stubs to one target stand for its
+declarations once between them ([§FS-declarations.stubs.pairing.2](FS-declarations.md#stubspairing2-stubs-to-one-target-stand-for-its-declarations-once)); a declaration reached
+through stubs is named at its target ([§FS-declarations.stubs.pairing.3](FS-declarations.md#stubspairing3-a-declaration-reached-through-stubs-is-named-at-its-target)); and a surface that
+shows where it is shows it there ([§FS-declarations.stubs.pairing.4](FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target)). Decided in
+[§DF-stub-pairs-with-unscanned-target](../decisions/functional/DF-stub-pairs-with-unscanned-target.md#df-stub-pairs-with-unscanned-target-a-stub-pairs-with-its-target-whether-or-not-the-scan-reaches-it), and for a target that declares the ID twice in
+[§DF-stub-target-declared-twice](../decisions/functional/DF-stub-target-declared-twice.md#df-stub-target-declared-twice-a-stubs-target-that-declares-its-id-twice-is-two-homes-scanned-or-not).
+
+#### stubs.pairing.1: A stub pairs with its target whether or not the target is scanned
+
+A stub whose target declares its ID — the stub [§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub) accepts — is the pointer to that declaration, not a second declaration of the ID, whether or not `[scan] include` reaches the target ([§REQ-one-answer.stubs.outside-include](../requirements/REQ-one-answer.md#stubsoutside-include-a-target-outside-the-include-answers-as-if-scanned)). The ID's declarations are counted off each stub's verdict ([§FS-declarations.stubs.verdict](FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)), on the target's text as [§FS-declarations.checks.broken-stub.1](FS-declarations.md#checksbroken-stub1-the-target-is-read-as-a-save-would-write-it) reads it, so an unsaved edit to the target moves the count as saving it would ([§REQ-one-answer.text.targets](../requirements/REQ-one-answer.md#texttargets-a-stubs-target-answers-as-its-saved-text-would)). A lone stub to an unscanned target still stands for the declaration it points at, so its ID has one declaration, never none. It stands for every declaration of the ID in its target that is not itself a stub, each read as the scan would read it were the target scanned, so a target that declares the ID twice is two declarations and the ID is a duplicate, lone stub or not, named at both lines ([§FS-declarations.checks.duplicate.3](FS-declarations.md#checksduplicate3-a-declaration-reached-through-stubs-is-named-at-its-target)) as the same tree with the target scanned names them. A broken stub pairs with nothing and stays a declaration of its own, scanned target or not.
+
+#### stubs.pairing.2: Stubs to one target stand for its declarations once
+
+Stubs of one ID whose links resolve to the same target file stand for its declaration once between them, not once each: two pointers to one declaration do not make it two. Where that file declares the ID twice they stand for both declarations, once, as a lone stub does ([§FS-declarations.checks.duplicate.1](FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), never once per stub. Stubs whose links resolve to different files, each declaring the ID, stand for at least as many declarations as there are files, and the ID is a duplicate. A surface that shows such a declaration at a stub rather than at its target — `list`, where the target is outside the scan — shows it once, at the first of its stubs in `path:line` order, and once for a target that declares the ID twice too, a row that carries the note every line of a duplicated ID carries ([§FS-list.3.1.1](FS-list.md#311-row-notes)).
+
+#### stubs.pairing.3: A declaration reached through stubs is named at its target
+
+Where a duplicate error or an ambiguity refusal ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)) lists a declaration that stubs point at, the site it names is the target's declaration of the ID, `<path>:<line>`, exactly as it would be were the target scanned — never a stub's own line, which has nothing to fix. A target that declares the ID twice is named at each of its declarations, never at its first alone. The sites sort, and the error is located, per [§FS-check.2.1](FS-check.md#21-report-format) over those names, so the first site may be in the target file. The same sites travel in the finding's JSON `sites` ([§FS-errors.5](FS-errors.md#5-json-format)).
+
+#### stubs.pairing.4: Every surface shows a paired declaration at its target
+
+A surface that says where a paired declaration is names the target's declaration, its
+`<path>:<line>` and its title, as the same tree with the target scanned names it: `show`
+([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), `list --size` ([§FS-list.3.4.6](FS-list.md#346-a-home-outside-the-scan)), and the duplicate error and the ambiguity
+refusal ([§FS-declarations.stubs.pairing.3](FS-declarations.md#stubspairing3-a-declaration-reached-through-stubs-is-named-at-its-target)). From grund 0.19.0 plain `list` ([§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical)) and
+the `unused` warning ([§FS-check.4.1](FS-check.md#41-unused-declaration)) do too. Until then those two show it at the stub, as
+they always have: plain `list` prints the stub's line and its link,
+`FS-x  docs/fs/x.md:1  → ../../src/x.rs`, once for all its stubs as
+[§FS-declarations.stubs.pairing.2](FS-declarations.md#stubspairing2-stubs-to-one-target-stand-for-its-declarations-once) says, and `check` places `unused` at the stub's line. They
+are the rows Placement and U06 of [§REQ-one-answer.differences.stubs](../requirements/REQ-one-answer.md#differencesstubs-stubs), and
+[§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) announces the move.
 
 ## heading: What a heading is
 
@@ -226,23 +346,23 @@ business, in [§FS-check.2](FS-check.md#2-outputs) and [§FS-check.1.4](FS-check
 
 ### checks.duplicate: Duplicate declaration
 
-The same ID declared more than once: any two declarations that are not stubs ([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)), whether headings or inline doc-comment declarations and whether in one file or several. Reported per [§FS-check.2.1](FS-check.md#21-report-format): one error located at the lexicographically-first site, with the remaining sites listed in the message.
+The same ID declared more than once: any two declarations that are not stubs ([§FS-declarations.stubs.shape](FS-declarations.md#stubsshape-what-a-stub-looks-like)), whether headings or inline doc-comment declarations and whether in one file or several. Reported per [§FS-check.2.1](FS-check.md#21-report-format): one error located at the lexicographically-first site, with the remaining sites listed in the message.
 
 Duplicate JSON keys, cross-file JSON IDs, Markdown/JSON collisions, and overlapping opted-in ownership feed this same ambiguity rule even when their components agree. A duplicate target cannot be value-compared ([§FS-values.2.3](FS-values.md#23-duplicates-and-ownership)).
 
-A stub whose link holds is not a declaration of its own, whether or not the scan reaches what it points at ([§FS-declarations.checks.duplicate.1](FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)); stubs that point at one target stand for its declarations once between them ([§FS-declarations.checks.duplicate.2](FS-declarations.md#checksduplicate2-stubs-to-one-target-stand-for-its-declarations-once)); and a declaration reached through stubs is named at its target ([§FS-declarations.checks.duplicate.3](FS-declarations.md#checksduplicate3-a-declaration-reached-through-stubs-is-named-at-its-target)). Decided in [§DF-stub-pairs-with-unscanned-target](../decisions/functional/DF-stub-pairs-with-unscanned-target.md#df-stub-pairs-with-unscanned-target-a-stub-pairs-with-its-target-whether-or-not-the-scan-reaches-it), and for a target that declares the ID twice in [§DF-stub-target-declared-twice](../decisions/functional/DF-stub-target-declared-twice.md#df-stub-target-declared-twice-a-stubs-target-that-declares-its-id-twice-is-two-homes-scanned-or-not).
+How a stub counts here is [§FS-declarations.stubs.pairing](FS-declarations.md#stubspairing-how-a-stub-pairs-with-what-it-points-at): a stub whose link holds is not a declaration of its own, whether or not the scan reaches what it points at ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)); stubs that point at one target stand for its declarations once between them ([§FS-declarations.stubs.pairing.2](FS-declarations.md#stubspairing2-stubs-to-one-target-stand-for-its-declarations-once)); and a declaration reached through stubs is named at its target ([§FS-declarations.stubs.pairing.3](FS-declarations.md#stubspairing3-a-declaration-reached-through-stubs-is-named-at-its-target)).
 
 #### checks.duplicate.1: A stub pairs with its target whether or not the target is scanned
 
-A stub whose target declares its ID — the stub [§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub) accepts — is the pointer to that declaration, not a second declaration of the ID, whether or not `[scan] include` reaches the target ([§REQ-one-answer.stubs.outside-include](../requirements/REQ-one-answer.md#stubsoutside-include-a-target-outside-the-include-answers-as-if-scanned)). The ID's declarations are counted off each stub's verdict ([§FS-declarations.stubs.verdict](FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)), on the target's text as [§FS-declarations.checks.broken-stub.1](FS-declarations.md#checksbroken-stub1-the-target-is-read-as-a-save-would-write-it) reads it, so an unsaved edit to the target moves the count as saving it would ([§REQ-one-answer.text.targets](../requirements/REQ-one-answer.md#texttargets-a-stubs-target-answers-as-its-saved-text-would)). A lone stub to an unscanned target still stands for the declaration it points at, so its ID has one declaration, never none. It stands for every declaration of the ID in its target that is not itself a stub, each read as the scan would read it were the target scanned, so a target that declares the ID twice is two declarations and the ID is a duplicate, lone stub or not, named at both lines ([§FS-declarations.checks.duplicate.3](FS-declarations.md#checksduplicate3-a-declaration-reached-through-stubs-is-named-at-its-target)) as the same tree with the target scanned names them. A broken stub pairs with nothing and stays a declaration of its own, scanned target or not.
+Moved to [§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned).
 
 #### checks.duplicate.2: Stubs to one target stand for its declarations once
 
-Stubs of one ID whose links resolve to the same target file stand for its declaration once between them, not once each: two pointers to one declaration do not make it two. Where that file declares the ID twice they stand for both declarations, once, as a lone stub does ([§FS-declarations.checks.duplicate.1](FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), never once per stub. Stubs whose links resolve to different files, each declaring the ID, stand for at least as many declarations as there are files, and the ID is a duplicate. A surface that shows such a declaration at a stub rather than at its target — `list`, where the target is outside the scan — shows it once, at the first of its stubs in `path:line` order, and once for a target that declares the ID twice too, a row that carries the note every line of a duplicated ID carries ([§FS-list.3.1.1](FS-list.md#311-row-notes)).
+Moved to [§FS-declarations.stubs.pairing.2](FS-declarations.md#stubspairing2-stubs-to-one-target-stand-for-its-declarations-once).
 
 #### checks.duplicate.3: A declaration reached through stubs is named at its target
 
-Where a duplicate error or an ambiguity refusal ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)) lists a declaration that stubs point at, the site it names is the target's declaration of the ID, `<path>:<line>`, exactly as it would be were the target scanned — never a stub's own line, which has nothing to fix. A target that declares the ID twice is named at each of its declarations, never at its first alone. The sites sort, and the error is located, per [§FS-check.2.1](FS-check.md#21-report-format) over those names, so the first site may be in the target file. The same sites travel in the finding's JSON `sites` ([§FS-errors.5](FS-errors.md#5-json-format)).
+Moved to [§FS-declarations.stubs.pairing.3](FS-declarations.md#stubspairing3-a-declaration-reached-through-stubs-is-named-at-its-target).
 
 ### checks.declaration-near-miss: Declaration near miss
 
@@ -282,27 +402,65 @@ There is no line-oriented opt-out or automatic rewrite: the position and colon r
 
 ### checks.broken-stub: Broken inline-spec stub
 
-A `docs/` file whose H1 has the stub shape `# <ID>: [<text>](<path>)` where either the path does not exist, or the file at that path contains no source declaration of the same ID. Relative stub links resolve as normal Markdown links first — relative to the stub file's directory — so `lychee` and rendered docs see the same target. If that path does not exist, `grund` falls back to resolving the path relative to the config root for compatibility with older stubs that wrote repo-root paths. Which lines of the target can hold that declaration is [§FS-declarations.checks.broken-stub.2](FS-declarations.md#checksbroken-stub2-a-heading-inside-a-fence-of-the-target-declares-nothing), and which targets can hold one at all is [§FS-declarations.checks.broken-stub.3](FS-declarations.md#checksbroken-stub3-a-target-the-scan-does-not-read-declares-nothing). So a stub is broken exactly where its verdict is one of the three that hold no declaration of the ID: a missing target, a file the scan does not read, or a target that does not declare the ID ([§FS-declarations.stubs.verdict](FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)).
+A stub ([§FS-declarations.stubs.shape](FS-declarations.md#stubsshape-what-a-stub-looks-like)) whose verdict is one of the three that hold no
+declaration of the ID ([§FS-declarations.stubs.verdict](FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)): nothing is at the path its link
+resolves to, the target is a file the scan does not read ([§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)),
+or the target, read as [§FS-declarations.stubs.target](FS-declarations.md#stubstarget-what-a-stubs-target-gives-it) reads it, does not declare the ID. A
+target whose only heading of the ID is inside a fence ([§FS-declarations.stubs.target.2](FS-declarations.md#stubstarget2-a-heading-inside-a-fence-of-the-target-declares-nothing)) or is
+itself a stub ([§FS-declarations.stubs.target.4](FS-declarations.md#stubstarget4-a-stub-in-the-target-declares-nothing)) does not declare it, so a chain of stubs is
+broken at its first link.
 
 #### checks.broken-stub.1: The target is read as a save would write it
 
-Whether the file at `<path>` contains a source declaration of the ID is judged on the target's text as [§FS-scan.text.buffer](FS-scan.md#textbuffer-a-files-text-is-what-a-save-would-write) defines it, the text a save would write. That is the text the scan reads any file from and the text `show` slices the stub's body out of ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id), [§REQ-one-answer.text.targets](../requirements/REQ-one-answer.md#texttargets-a-stubs-target-answers-as-its-saved-text-would)). The path the stub wrote reads a buffer the editor opened under any spelling of the same file ([§FS-scan.identity.buffers](FS-scan.md#identitybuffers-a-buffer-is-the-file-at-its-physical-location)), and a target open only in a buffer, with no file saved behind it, is not missing: it is judged on the buffer, so it is healthy where the buffer declares the ID and `stub link target lacks <ID>: <path>` where it does not, as the saved file would be ([§FS-scan.text.buffer-only](FS-scan.md#textbuffer-only-a-buffer-with-no-file-behind-it-is-a-file)).
-
-So an unsaved edit that removes the target's declaration breaks the stub at once. `check` reports `broken-stub` at the stub line, and the editor shows it as the user edits ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)). `show` refuses with the second line of [§FS-show.2.3.4](FS-show.md#234-broken-stub), never `ID not found`. An unsaved edit that puts the declaration back repairs the stub just as soon: `show` reads the body from the edited text, and the error goes. Scan scope plays no part, as it plays none in finding the body ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)).
+Moved to [§FS-declarations.stubs.target.1](FS-declarations.md#stubstarget1-the-target-is-read-as-a-save-would-write-it).
 
 #### checks.broken-stub.2: A heading inside a fence of the target declares nothing
 
-The target's text, the one [§FS-declarations.checks.broken-stub.1](FS-declarations.md#checksbroken-stub1-the-target-is-read-as-a-save-would-write-it) names, is read for the ID the way the scan reads that file. In a Markdown target a heading inside a fenced code block is an example, not a declaration ([§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example)), and the fence is the one [§FS-languages.fence](FS-languages.md#fence-fences) defines: a fence delimiter line, and every line while a fence is open, declares nothing, however much it looks like `# <ID>: …`. A line inside a raw-text HTML block such as `<pre>` ([§FS-check.1.1.5.1](FS-check.md#1151-a-raw-html-block-holds-no-heading)) declares nothing in the same way. A target whose only heading of the ID sits inside a fence or such a block therefore contains no declaration of it, and the stub is broken exactly as if the target never named the ID, whether or not the target is inside `[scan] include`: `check` reports `stub link target lacks <ID>: <path>` at the stub's line, and `show` refuses with the second line of [§FS-show.2.3.4](FS-show.md#234-broken-stub) rather than answering `ID not found`. A target that holds a fenced example of the heading and the real declaration outside every fence declares the ID once, at the real heading, and the stub is healthy. Fences are tracked in a Markdown target only: inside a source target's doc-comment the scan does not track them, so neither does this test ([§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example)). Why a stub that used to pass now fails is [§DF-stub-target-fenced-heading](../decisions/functional/DF-stub-target-fenced-heading.md#df-stub-target-fenced-heading-a-heading-inside-a-fence-of-a-stubs-target-does-not-declare-its-id).
+Moved to [§FS-declarations.stubs.target.2](FS-declarations.md#stubstarget2-a-heading-inside-a-fence-of-the-target-declares-nothing).
 
 #### checks.broken-stub.3: A target the scan does not read declares nothing
 
-The target is read for the ID the way the scan reads that file ([§FS-declarations.checks.broken-stub.2](FS-declarations.md#checksbroken-stub2-a-heading-inside-a-fence-of-the-target-declares-nothing)), and some files the scan never reads, wherever they sit: one whose own name begins with `.`, skipped by that name before `extensions` is consulted ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)), and one whose extension `[scan] extensions` does not list ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)). Such a target declares nothing, whatever it holds. A `# <ID>: …` heading in `notes/.a.md`, or in `notes/a.zz` where `zz` is not listed, is text the scan does not read, so the stub is broken exactly as if the target never named the ID.
-
-What decides is the target's own name and extension, not the scan's scope, so the stub is broken whether or not the target lies inside `[scan] include`. The name judged is the one the stub wrote, not the one a symlink resolves to: `notes/.a.md -> a.md` declares nothing even where the `notes/a.md` it resolves to is scanned and declares the ID, so the stub pairs with neither and is a declaration of its own beside that one, the duplicate a regular hidden copy of `notes/a.md` makes. The same holds for `notes/a.zz -> a.md` where `zz` is not listed. That a target outside `include` reads as if it were scanned ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)) reaches only a file the scan would read were it in scope. `check` reports `stub link target lacks <ID>: <path>` at the stub's line, and `show` refuses with the second line of [§FS-show.2.3.4](FS-show.md#234-broken-stub) rather than answering a body sliced out of a file the scan does not read. A stub broken this way pairs with nothing ([§FS-declarations.checks.duplicate.1](FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), so `refs` refuses nothing from its target, however many headings of the ID the target holds ([§FS-refs.4.1](FS-refs.md#41-a-stubs-homes-are-found-in-its-target)). The remedy is the target's: a name that does not begin with `.`, and an extension `extensions` lists.
+Moved to [§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing).
 
 #### checks.broken-stub.4: Every command reads the one verdict
 
 Every command reads each stub's verdict and the declaration count it gives ([§FS-declarations.stubs.verdict](FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)). What they then agree on is [§REQ-one-answer.stubs.verdict](../requirements/REQ-one-answer.md#stubsverdict-every-command-reads-one-verdict-per-stub), [§REQ-one-answer.identity.declarations](../requirements/REQ-one-answer.md#identitydeclarations-every-command-reads-one-declaration-set), [§REQ-one-answer.stubs.outside-include](../requirements/REQ-one-answer.md#stubsoutside-include-a-target-outside-the-include-answers-as-if-scanned) and [§REQ-one-answer.text.targets](../requirements/REQ-one-answer.md#texttargets-a-stubs-target-answers-as-its-saved-text-would).
+
+### checks.stub-shape: Stub shape read differently from grund 0.19.0
+
+A heading of the stub shape — its title one link — that the two tests of
+[§FS-declarations.stubs.shape](FS-declarations.md#stubsshape-what-a-stub-looks-like) read differently is one **warning** at its line, in one of two
+messages. In a Markdown file in no kind's home with a directory named `docs` on its path,
+the heading is a stub today and a declaration from 0.19.0:
+
+```text
+docs/notes/y.md:1: warning: FS-y is read as a stub only because a directory on its path is named docs, and that reading is removed in grund 0.19.0, which reads a stub only in a kind's home — move the file into a kind's folder, or name its folder in [[kinds]], to keep it a stub
+```
+
+In a kind's home with no directory named `docs` on its path, the heading is a declaration
+titled with a link today and a stub to that link's path from 0.19.0:
+
+```text
+spec/fs/x.md:1: warning: FS-x is read as a declaration titled with a link, and that reading is removed in grund 0.19.0, which reads it as a stub to ../../src/x.rs — give the heading a title that is not one link to keep it a declaration
+```
+
+The path the second message names is the link's destination as written. A heading both
+tests read alike gets nothing: a stub at any level in a kind's home under `docs/`, and a
+heading of that shape in no home and with no `docs` on its path. The warning is read off the
+heading's own file, so whether anything cites the ID, and whether the heading would pair or
+be broken, does not move it. Only files the scan reads are judged; a target read for a stub
+reports nothing of its own ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)). The `docs` test reads the whole
+path, so in a checkout below a directory named `docs` the first message fires at every such
+heading outside every home and the second never fires; the test of 0.19.0 reads the path
+below the config root, and the difference goes with the `docs` test.
+
+- **Code:** `stub-shape`, with `"severity":"warning"` and `"sites":null` in JSON
+  ([§FS-errors.5](FS-errors.md#5-json-format)). It leaves the exit status where the rest of the run put it ([§FS-check.2](FS-check.md#2-outputs)).
+  `--only stub-shape` keeps it and `--ignore stub-shape` removes it
+  ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)), and the editor shows it at the heading with warning severity
+  ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
+- **Release:** grund 0.19.0 removes the `docs` test, and with it every heading this check
+  reports. The route is [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190).
 
 ### checks.misplaced-declaration: Misplaced declaration (configured kind home)
 
@@ -352,7 +510,7 @@ Section paths are addressed as `<ID>.<path>`, so the same `1.` under two differe
 
 #### checks.duplicate-section.2: Scoped to that declaration's body
 
-The headings judged are the ones inside the body [§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends) delimits. A `## 1.` further down the file — in the *next* item's doc-comment, or under a later unrelated heading — is not one of this declaration's sections: `grund <ID>.1` never reaches it, and reporting it would ask for a renumbering that changes what nothing points at. A stub ([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)) is one link line whose tail is a path rather than a body, so it declares no sections at all and is never reported here; the headings that count are the inline home's, which is also the file `grund <ID>.<path>` reads.
+The headings judged are the ones inside the body [§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends) delimits. A `## 1.` further down the file — in the *next* item's doc-comment, or under a later unrelated heading — is not one of this declaration's sections: `grund <ID>.1` never reaches it, and reporting it would ask for a renumbering that changes what nothing points at. A stub ([§FS-declarations.stubs.shape](FS-declarations.md#stubsshape-what-a-stub-looks-like)) is one link line whose tail is a path rather than a body, so it declares no sections of its own and is never reported here. The headings that count for its ID are those of each declaration it pairs with ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), which is also the file `grund <ID>.<path>` reads: they are judged in that declaration's body and reported at their own lines in the target, whether or not `[scan] include` reaches it ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)), exactly as the same tree with the target scanned reports them. A scanned target's declaration is one record however many stubs point at it, so its duplicate is reported once.
 
 #### checks.duplicate-section.3: Independent of `[id] section_heading_levels`
 
@@ -467,7 +625,7 @@ An explicit-path check judges only declaration and section sites scanned at that
 
 A declaration's address is the one thing a repository stores about it in a thousand
 places at once, so what may go wrong with a declaration is the same question as what may
-go wrong with an address. Gathering the ten checks here rather than under the command
+go wrong with an address. Gathering the eleven checks here rather than under the command
 that happens to report them puts each one beside the invariant it defends, and names each
 one what a reader already holds when they need it: the code out of a finding they have
 just read ([§REQ-spec-section-names.code](../requirements/REQ-spec-section-names.md#code-a-check-is-named-by-its-diagnostic-code)). `check` is one reader of this contract, and not the

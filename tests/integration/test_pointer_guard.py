@@ -26,7 +26,7 @@ EXE = "grund.exe" if os.name == "nt" else "grund"
 # (coordinate, defining points it must cite, lead-word bound, fragments gone)
 POINTERS = (
     # The citation pass over the restatements step 0a of #576 left in place.
-    ("FS-declarations.checks.duplicate.1",
+    ("FS-declarations.stubs.pairing.1",
      ("REQ-one-answer.text.targets", "REQ-one-answer.stubs.outside-include"), 188,
      ("the editor reports the duplicate, or its absence",
       "the editor's unsaved text where the target is open in one",
@@ -244,6 +244,12 @@ POINTERS = (
     ("FS-check.4.7", ("FS-check.3.30",), 34, ()),
     ("FS-check.4.13", ("FS-declarations.checks.oversized-lead",), 20, ()),
     ("FS-check.4.14", ("FS-declarations.checks.unmarked-heading",), 20, ()),
+    ("FS-declarations.checks.duplicate.1", ("FS-declarations.stubs.pairing.1",), 18, ()),
+    ("FS-declarations.checks.duplicate.2", ("FS-declarations.stubs.pairing.2",), 14, ()),
+    ("FS-declarations.checks.duplicate.3", ("FS-declarations.stubs.pairing.3",), 15, ()),
+    ("FS-declarations.checks.broken-stub.1", ("FS-declarations.stubs.target.1",), 15, ()),
+    ("FS-declarations.checks.broken-stub.2", ("FS-declarations.stubs.target.2",), 15, ()),
+    ("FS-declarations.checks.broken-stub.3", ("FS-declarations.stubs.target.3",), 14, ()),
     ("FS-rules.3.5", ("FS-rule-refusals.sentences",), 7, ()),
     ("FS-rules.3.5.1", ("FS-rule-refusals.sentences.whitespace",), 8, ()),
     ("FS-rules.3.5.2", ("FS-rule-refusals.sentences.named-sections",), 18, ()),
