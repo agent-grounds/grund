@@ -1,1 +1,1 @@
-docs/offer.md:7: error: value mismatch for CONST-discount.1: bound `0.30`, declared `0.25` at values/runtime.json:2
+docs/solver.md:7: error: value mismatch for CONST-time-step.1: bound `0.002`, declared `0.001` at values/time-step.md:2
