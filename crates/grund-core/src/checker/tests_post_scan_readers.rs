@@ -19,10 +19,11 @@ use std::path::{Path, PathBuf};
 /// sources, which the readers §REQ-one-answer.differences.text lists take past
 /// the editor's buffers (§AR-system.2.13), and the calls a rule reaches such
 /// a read through in another file — the scanner's listing of agent-entrypoint
-/// companions, which reads a companion's text, the resolver's point-body slicer,
-/// and the kind-index membership derivation, which reads every configured index.
+/// companions, which reads a companion's text, and the kind-index membership
+/// derivation, which reads every configured index.
 /// A stub's target is read by the scan alone (§AR-scanner.4.6), and every rule
-/// reads its record, so no call that reaches it is a read here.
+/// reads its record, so no call that reaches it is a read here. The resolver's
+/// point-body slicer reads the file record too, not the file (§AR-scanner.2.8).
 const READ_CALLS: &[&str] = &[
     "input_read_to_string",
     "Sources::saved",
@@ -30,7 +31,6 @@ const READ_CALLS: &[&str] = &[
     "fs::read",
     "File::open",
     "companion_agent_entrypoints",
-    "point_body_pair",
     "KindIndexEntries::new",
 ];
 
@@ -47,12 +47,6 @@ const READERS: &[(&str, &str, &str)] = &[
     ("index.rs", "Sources::saved", "AR-checker.2.16"),
     ("index.rs", "KindIndexEntries::new", "AR-checker.2.16"),
     ("index_entries.rs", "Sources::saved", "AR-checker.2.16"),
-    // The opt-in lead budget, which reads each home through the resolver's slicer.
-    (
-        "sizes.rs",
-        "point_body_pair",
-        "FS-declarations.checks.oversized-lead",
-    ),
 ];
 
 fn component_dir() -> PathBuf {
