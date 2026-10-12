@@ -1,0 +1,1 @@
+error: grund.toml:2: `kinds` takes only the empty list `kinds = []`, which declares no kinds; declare each kind as a `[[kinds]]` table

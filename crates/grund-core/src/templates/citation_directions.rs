@@ -44,12 +44,18 @@ pub(crate) fn citation_directions_section(project: &Project, run: &Run) -> Strin
     let mut lines = vec!["### Citation directions".to_string(), String::new()];
     let grounding = citation_grounding_sentence(project, run);
     if !project.rules.citations.declared {
-        lines.push(join_sentences(
-            &format!(
+        // §FS-init.2.3.4.4.2: the climbing-rule sentence names kinds; a config
+        // with no citable kind is told that no direction applies yet instead.
+        let paragraph = if project.kind_configs().iter().any(|kind| kind.citable) {
+            format!(
                 "Specs cite goals, architecture cites specs, code and executable tests cite the specs they realize. In a citation rule array, entries are all required; `|` inside one entry means any one alternative. See {CITATION_DIRECTIONS_URL} for the levels and examples."
-            ),
-            grounding.as_deref(),
-        ));
+            )
+        } else {
+            format!(
+                "No kind is declared yet, so no citation direction applies. Once kinds exist, the config's citation rules say which kinds each may cite; see {CITATION_DIRECTIONS_URL} for the levels and examples."
+            )
+        };
+        lines.push(join_sentences(&paragraph, grounding.as_deref()));
         return lines.join("\n");
     }
     lines.push(join_sentences(CITATION_LEVEL_LEGEND, grounding.as_deref()));

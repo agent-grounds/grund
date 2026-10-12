@@ -69,6 +69,15 @@ pub enum IdProposalOutcome {
     },
 }
 
+impl IdProposalOutcome {
+    /// The `known kinds:` line a frontend prints under an `UnknownKind` headline
+    /// (§FS-id.1.1): the one renderer every refusal that names kinds shares, so
+    /// a project with no kinds reads `none` here too (§FS-list.1.1.1).
+    pub fn known_kinds_line(known: &[String]) -> String {
+        crate::config::known_kinds_line(known.iter().map(String::as_str))
+    }
+}
+
 /// Programmatic `id`: compute the next conflict-free declaration ID without
 /// parsing CLI flags or printing the text/JSON report (§AR-bindings.2).
 pub fn propose_id(kind: &str, title: &str, opts: IdOpts) -> Result<IdProposalOutcome> {

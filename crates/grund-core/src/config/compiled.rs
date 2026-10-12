@@ -66,8 +66,9 @@ impl Compiled {
 pub(crate) fn compile(project: &Project) -> Result<Compiled> {
     let ids = &project.schema.ids;
     let kinds = grammar_kinds(&project.schema.rows);
-    // §FS-config-v2.defaults.1: only v1 refuses a table with no citable kind.
-    if project.version != 2 {
+    // §FS-config-v2.defaults.1: only v1 refuses a table with no citable kind, and
+    // not the empty one `kinds = []` declares (§FS-config.3.4.4.5).
+    if project.version != 2 && !project.schema.rows.is_empty() {
         require_kinds(&kinds)?;
     }
     let grammar = Grammar::build(

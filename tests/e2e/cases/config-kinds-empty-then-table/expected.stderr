@@ -1,0 +1,1 @@
+error: grund.toml:4: `[[kinds]]` cannot follow `kinds = []` (line 2), which declares no kinds; delete `kinds = []` to declare kinds as tables

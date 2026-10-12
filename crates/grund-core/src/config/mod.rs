@@ -121,8 +121,8 @@ pub(crate) use grounding::{
 };
 pub(crate) use kind::escape_toml_basic;
 pub(crate) use kinds::{
-    KindScope, KindTable, KindVerdict, Quote, install_kind_table, one_grammar_window,
-    unverifiable_reason,
+    KindScope, KindTable, KindVerdict, Quote, install_kind_table, known_kinds_line,
+    one_grammar_window, unverifiable_reason,
 };
 pub(crate) use point_sizes::measure_point_text;
 pub(crate) use record::{
@@ -148,6 +148,8 @@ pub(crate) use fmt_block::validate_fmt_exclude;
 // (§AR-core-module-layout.1.3).
 #[cfg(test)]
 mod tests_discovery;
+#[cfg(test)]
+mod tests_empty_kinds;
 #[cfg(test)]
 mod tests_grounding;
 #[cfg(test)]

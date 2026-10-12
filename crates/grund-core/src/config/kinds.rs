@@ -403,13 +403,18 @@ pub(crate) fn install_kind_table<'a>(
 /// `--selector` refusal that recovers no kind (§FS-rule-refusals.selectors), and a
 /// `check --rule` refusal that offers no form where a kind is missing
 /// (§FS-rule-refusals.sentences.rewrite.no-form): every citable kind named in
-/// `citable`, once, in configuration order.
+/// `citable`, once, in configuration order — and `grund id`'s too (§FS-id.1.1).
+/// A scope with no citable kind at all says so and how to start, rather than
+/// ending on an empty list (§FS-list.1.1.1).
 pub(crate) fn known_kinds_line<'a>(citable: impl IntoIterator<Item = &'a str>) -> String {
     let mut seen = BTreeSet::new();
     let known = citable
         .into_iter()
         .filter(|kind| seen.insert(*kind))
         .collect::<Vec<_>>();
+    if known.is_empty() {
+        return "known kinds: none — declare one in grund.toml first".to_string();
+    }
     format!("known kinds: {}", known.join(", "))
 }
 

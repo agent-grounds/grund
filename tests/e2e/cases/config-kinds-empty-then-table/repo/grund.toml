@@ -1,0 +1,6 @@
+grund_config_version = 1
+kinds = []
+
+[[kinds]]
+kind = "FS"
+folder = "docs/specs"
