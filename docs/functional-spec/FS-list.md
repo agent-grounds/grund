@@ -56,6 +56,16 @@ The `known kinds:` line lists the citable kinds only: they are the whole set thi
 
 Selected workspace projects may configure one kind differently. The kind is accepted when any selected project has it citable, which is exactly when the `known kinds:` line names it, and it is refused as non-citable only when none does. In a workspace whose `root` project configures `SKILL` with `citable = false` and whose member `api` has `SKILL` citable, `grund list --kind SKILL` lists `api/SKILL-intro`, while `grund list --project root --kind SKILL` is refused with the headline above and `known kinds: FS, AR`. The verdict is the one every command reads for a kind name in its scope ([§FS-scan.projects.kinds](FS-scan.md#projectskinds-whose-kinds-a-run-reads)), and the headline is [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)'s.
 
+#### 1.1.1 A scope with no citable kind
+
+Where the scope has no citable kind at all, as in a project whose config declares no kinds ([§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)), the line does not end on an empty list. It reads `known kinds: none — declare one in grund.toml first`, wherever a refusal prints it: `--kind`, `--selector` ([§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)), and `grund id` ([§FS-id.1.1](FS-id.md#11-unknown-and-non-citable-kinds)). The headline above it is unchanged, so the kind the user typed is still named:
+
+```text
+$ grund id FS "Password reset"
+error: unknown kind `FS`
+known kinds: none — declare one in grund.toml first
+```
+
 ### 1.2 `--project`
 
 `--project <alias>[,<alias>...]` lists, in workspace mode, only declarations from the named projects, and composes with `--kind` by intersection. Outside workspace mode it is a CLI-level error (exit `2`); an unknown alias is also a CLI-level error (exit `2`), the same shape as an unknown `--kind` ([§FS-list.4](FS-list.md#4-exit-codes)). Workspace qualification, size behavior, and member-local invocation are specified in [§FS-workspace.8.3](FS-workspace.md#83-grund-list).

@@ -5,7 +5,7 @@
 
 ## 1. Context
 
-A multi-file kind (`folder = "…"`, [§FS-config.3.4](../../functional-spec/FS-config.md#34-kinds--recognized-kinds)) conventionally keeps an index README in its home, and `grund init --docs` writes the convention into the one it scaffolds ([§FS-init.2.1](../../functional-spec/FS-init.md#21-files-written-updated-or-left-in-place)). Nothing verified it. Measured on this repository at v0.11.0: `docs/discussions/README.md` announced "Current proposals:" and listed 9 of the 11 that existed, `grund check` was green over it, and the two largest folder kinds — `DF` with 34 declarations and `DA` with 7 — had no index at all.
+A multi-file kind (`folder = "…"`, [§FS-config.3.4](../../functional-spec/FS-config.md#34-kinds--recognized-kinds)) conventionally keeps an index README in its home, and `grund init --scaffold` writes the convention into the one it scaffolds ([§FS-init.2.1](../../functional-spec/FS-init.md#21-files-written-updated-or-left-in-place)). Nothing verified it. Measured on this repository at v0.11.0: `docs/discussions/README.md` announced "Current proposals:" and listed 9 of the 11 that existed, `grund check` was green over it, and the two largest folder kinds — `DF` with 34 declarations and `DA` with 7 — had no index at all.
 
 One direction was already checked: an index row is an ordinary citation, so an index naming a deleted ID dangles ([§FS-check.3.1](../../functional-spec/FS-check.md#31-dangling-citation)). Only the other direction had no rule.
 

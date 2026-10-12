@@ -26,7 +26,7 @@ wrote AGENTS.md
 wrote grund.toml
 
 next:
-  1. re-run with --docs to scaffold the FS home (requirements.md), docs/, and tests/ (or create them yourself) — until then `grund check` has nothing to scan
+  1. re-run with --scaffold to scaffold the FS home (requirements.md), docs/, and tests/ (or create them yourself) — until then `grund check` has nothing to scan
   2. run `grund check` — a scaffolded tree is clean
   3. allocate an ID:  ID=$(grund id FS "…")  then add it to requirements.md
 see AGENTS.md for the full workflow.
@@ -60,7 +60,7 @@ wrote AGENTS.md
 exists grund.toml
 
 next:
-  1. re-run with --docs to scaffold the FS home (requirements.md), docs/, and tests/ (or create them yourself)
+  1. re-run with --scaffold to scaffold the FS home (requirements.md), docs/, and tests/ (or create them yourself)
   2. run `grund check` — a scaffolded tree is clean
   3. allocate an ID:  ID=$(grund id FS "…")  then add it to requirements.md
 see AGENTS.md for the full workflow.
@@ -82,7 +82,7 @@ grund init {repo_copy}
 Precondition: `{repo_copy}` has an `AGENTS.md` whose managed block a
 `grund.toml` change made stale — the state `grund check` reports with "run
 `grund init` to refresh" ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)) — and its effective FS home, `docs/`
-and `tests/` exist: either the file-form `requirements.md` a `grund init --docs`
+and `tests/` exist: either the file-form `requirements.md` a `grund init --scaffold`
 scaffold wrote, or a configured FS folder such as `docs/functional-spec`.
 
 Exit `0`, stdout empty, stderr:
@@ -103,12 +103,12 @@ absent: it keeps the whole block, step 1 included, as the
 configured `docs/functional-spec` that does not exist. So does
 [§FS-init-fixtures.1.1](FS-init-fixtures.md#11-populated-configured-form), a first run rather than a refresh.
 
-## 2. Docs form
+## 2. Scaffold form
 
 Command:
 
 ```text
-grund init {repo_copy} --docs
+grund init {repo_copy} --scaffold
 ```
 
 Precondition: `{repo_copy}` exists and contains no generated files.
@@ -136,6 +136,8 @@ next:
   3. cite it as §<ID> from the docs and e2e tests that depend on it, then `grund check` again
 see AGENTS.md for the full workflow.
 ```
+
+`grund init {repo_copy} --docs` writes the same tree and the same report, after one deprecation warning on stderr ([§FS-init.1.7](FS-init.md#17---docs-is-the-deprecated-spelling-of---scaffold)).
 
 Final tree includes the default-form files plus exactly these docs and tests scaffold paths:
 
@@ -291,3 +293,51 @@ Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 ```
 
 Each described foreign project appends `: <description>` after its link; `core` shows the description rendering *before* the trailing `*(not yet initialized)*` suffix; `ui` has no config, therefore no description, and its bullet is byte-identical to the [§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init) form. The root's configured description is absent with its omitted self row, but remains available when the root is foreign in a member entrypoint.
+
+## 7. The `none` template
+
+Command:
+
+```text
+grund init {repo_copy} --template=none
+```
+
+Precondition: `{repo_copy}` has no `AGENTS.md` and no config in either discovery form, and may already hold a `docs/` and a `tests/` of its own.
+
+Exit `0`, stdout empty, stderr:
+
+```text
+wrote AGENTS.md
+wrote grund.toml
+
+next:
+  1. declare a first kind in grund.toml, then run `grund init` again so AGENTS.md lists it
+  2. run `grund check`
+  3. allocate an ID:  ID=$(grund id <KIND> "…")  then add it to that kind's home
+see AGENTS.md for the full workflow.
+```
+
+The final tree is the precondition's plus `AGENTS.md` and `grund.toml`, and nothing under `docs/` or `tests/` changes ([§FS-init.3.6](FS-init.md#36-bare-init-writes-the-config-and-the-entrypoints-and-nothing-in-a-home)). `grund.toml` is the config of [§FS-init.2.4.9](FS-init.md#249-the-none-templates-config), `kinds = []` in place of the kind tables, and the block's Project map is the paragraph of [§FS-init.2.3.4.4.2](FS-init.md#23442-no-kinds-yet). `grund check` over that tree exits `0` and `grund init --check` reports `exists AGENTS.md` and `exists grund.toml`.
+
+### 7.1 Refused template runs
+
+Each of these exits `2`, writes nothing, and prints one line on stderr ([§FS-init.1.6.3](FS-init.md#163-an-unknown-name), [§FS-init.1.6.4](FS-init.md#164-none-has-nothing-to-scaffold)):
+
+```text
+$ grund init {repo_copy} --template=docs
+error: unknown template `docs` — the built-in templates are software-development and none; a template from a path is not supported yet
+$ grund init {repo_copy} --template=none --scaffold
+error: --scaffold has nothing to lay: the none template has no starter files
+```
+
+### 7.2 A template over an existing config
+
+Command: `grund init {repo_copy} --template=none`, where `{repo_copy}` already has a `grund.toml`. The config is kept and the run notes it ([§FS-init.1.6.5](FS-init.md#165-a-config-that-is-already-there)):
+
+```text
+wrote AGENTS.md
+exists grund.toml
+note: grund.toml exists, so the none template's grund.toml is not written — init never overwrites a config
+```
+
+The `next:` block that follows is the one the kept config earns ([§FS-init.2.2.2](FS-init.md#222-the-next-block)).

@@ -477,7 +477,7 @@ not permission to return a string in place of typed data.
 - IdResult: id/kind/number:number|null/slug/folder:string|null/file:string|null/
   e2eCaseDir:string|null/fileHoldsSingleDeclaration:boolean.
 - InitData: events:{verb,path}[]/errors:Finding[]/notes:string[]/
-  next:{docs:boolean,entrypoint:string,scanReadsFile:boolean,fsHome:
+  next:{docs:boolean,declaresKinds:boolean,entrypoint:string,scanReadsFile:boolean,fsHome:
   {kind:'file',path:string,headingName:string,headingMarker:string} |
   {kind:'folder',path:string}}|null/pendingChanges:boolean.
 - CompleteResult: ids:string[]. FetchResult: id:string (the requested operand).

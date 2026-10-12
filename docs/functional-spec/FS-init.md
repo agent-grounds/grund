@@ -1,6 +1,6 @@
 # FS-init: grund bootstraps a new grund-conformant repo
 
-The `init` subcommand writes the minimum set of files a project needs to start using `grund` — an agent entrypoint ([§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place)) and a bare `<path>/grund.toml` config ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)) — so that a fresh repo, or an existing repo adopting the scheme, becomes scannable in one command. It is the minimum-effort, non-intrusive on-ramp, and every behavior below serves that: every default is the most-common case; a config the repo already has, in either form, is kept; the versioned `grund` block goes into the agent entrypoints the repo already has, and only a repo with none gets the canonical `AGENTS.md` ([§FS-init.1.5](FS-init.md#15-agent-entrypoint-flags)); nothing the user authored is rewritten without `--force`; and `--dry-run` previews any run before it touches the working tree. [§FS-init.3](FS-init.md#3-non-intrusive-guarantees) consolidates those guarantees. Serves [§GOAL-agent-grounding.1](../goals.md#1-the-three-layers) (the managed block is the instruction layer), [§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree) (the emitted defaults are the canonical grammar), and [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible) (no hidden prompts; the same input produces byte-identical output).
+The `init` subcommand writes the minimum set of files a project needs to start using `grund` — an agent entrypoint ([§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place)) and a bare `<path>/grund.toml` config ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)), laid from a template ([§FS-init.1.6](FS-init.md#16-templates)) — so that a fresh repo, or an existing repo adopting the scheme, becomes scannable in one command. It is the minimum-effort, non-intrusive on-ramp, and every behavior below serves that: every default is the most-common case; a config the repo already has, in either form, is kept; the versioned `grund` block goes into the agent entrypoints the repo already has, and only a repo with none gets the canonical `AGENTS.md` ([§FS-init.1.5](FS-init.md#15-agent-entrypoint-flags)); nothing the user authored is rewritten without `--force`; and `--dry-run` previews any run before it touches the working tree. [§FS-init.3](FS-init.md#3-non-intrusive-guarantees) consolidates those guarantees. Serves [§GOAL-agent-grounding.1](../goals.md#1-the-three-layers) (the managed block is the instruction layer), [§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree) (the emitted defaults are the canonical grammar), and [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible) (no hidden prompts; the same input produces byte-identical output).
 
 `init` is the only `grund` subcommand that creates adoption scaffolding in the working tree. In an existing agent entrypoint it may update the managed `grund` block, and it rewrites no other user-authored content there unless the file is the canonical `AGENTS.md` and `--force` is passed ([§FS-init.3](FS-init.md#3-non-intrusive-guarantees)).
 
@@ -23,18 +23,24 @@ declaration, stub, doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scannin
 - **delimiter** — The comment line that opens a managed block and the one that closes it.
 - **legacy block** — A block at v3 or earlier, written before the delimiters: its H2 heading is
   the begin delimiter and the next H1 or H2 ends it.
+- **template** — What `init` lays down: a `grund.toml`, and a starter file for each home that
+  config names. Two are built in ([§FS-init.1.6](FS-init.md#16-templates)).
+- **starter file** — A minimal file a template places in a home to teach its layout. Only
+  `--scaffold` lays one ([§FS-init.2.1.3](FS-init.md#213-the-software-development-starter-files)); bare `init` never does ([§FS-init.3.6](FS-init.md#36-bare-init-writes-the-config-and-the-entrypoints-and-nothing-in-a-home)).
 
 ## 1. Inputs
 
 ```
-grund init [<path>] [--name <name>] [--description <text>] [--docs] [--force] [--dry-run] [--check] [--no-vcs] [--agents-md] [--claude] [--gemini] [--pi] [--copilot] [--cursor] [--windsurf] [--zed]
+grund init [<path>] [--name <name>] [--description <text>] [--template <name>] [--scaffold] [--force] [--dry-run] [--check] [--no-vcs] [--agents-md] [--claude] [--gemini] [--pi] [--copilot] [--cursor] [--windsurf] [--zed]
 ```
 
-- `<path>` — directory in which to scaffold; defaults to `.`. Applies to every form of `init`, `--docs` included, and prefixes every emitted path in [§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place). Must exist: `init` does not create the target directory, because a missing target is a user error, not something to silently paper over.
+- `<path>` — directory in which to scaffold; defaults to `.`. Applies to every form of `init`, `--scaffold` included, and prefixes every emitted path in [§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place). Must exist: `init` does not create the target directory, because a missing target is a user error, not something to silently paper over.
 - `--name <name>` — human-readable project name baked into the generated `AGENTS.md` heading when canonical `AGENTS.md` is selected, and into the `grund.toml` `project_name` key when that config is freshly written. An explicit value wins; otherwise `init` uses `project_name` from a config at either supported location in the target, and only when the target has no configured name does it fall back to the basename of `<path>` resolved to an absolute path. An ancestor's config never supplies this default, and an existing target config is never rewritten ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)).
 - `--description <text>` — one-line project description baked into the generated `grund.toml` `project_description` key ([§FS-config.3](FS-config.md#3-keys)), replacing the commented teaching line [§FS-init.2.4](FS-init.md#24-generated-grundtoml) writes by default. No default: `init` never invents a description. A `<text>` containing a line break is a CLI error, mirroring the config-side single-line rule. Like `--name`, the value only lands in a freshly written config — an existing `grund.toml` is never modified ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)).
-- `--docs` — also scaffold the docs the effective config names: [§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place) lists the default set, and [§FS-init.1.3](FS-init.md#13---docs-and-the-effective-config) says why each is there and how the config changes it. Off by default — most adopters already have a `docs/` of some shape and want only the entry point and config.
-- `--force` — overwrite a selected canonical `AGENTS.md` and the `--docs` scaffold files where they already exist, never the config ([§FS-init.3.4](FS-init.md#34-with---force), [§FS-init.3.5](FS-init.md#35-what---force-does-not-replace)). Off by default. Existing entrypoints are appended to or updated without it ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)), so it is only needed to reset a generated `AGENTS.md` or a `--docs` scaffold to its canonical bytes.
+- `--template <name>` — the template to lay: `software-development`, the default, or `none` ([§FS-init.1.6](FS-init.md#16-templates)). `--template=<name>` is the same flag. The template is where the generated config and the starter files come from; a target that already has a config keeps it ([§FS-init.1.6.5](FS-init.md#165-a-config-that-is-already-there)).
+- `--scaffold` — also lay the template's starter files at the homes the effective config names: [§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place) lists the default set, and [§FS-init.1.3](FS-init.md#13---scaffold-and-the-effective-config) says why each is there and how the config changes it. Off by default — most adopters already have a `docs/` of some shape and want only the entry point and config, which is what bare `init` writes ([§FS-init.3.6](FS-init.md#36-bare-init-writes-the-config-and-the-entrypoints-and-nothing-in-a-home)). Refused beside `--template=none` ([§FS-init.1.6.4](FS-init.md#164-none-has-nothing-to-scaffold)).
+- `--docs` — the deprecated spelling of `--scaffold` ([§FS-init.1.7](FS-init.md#17---docs-is-the-deprecated-spelling-of---scaffold)).
+- `--force` — overwrite a selected canonical `AGENTS.md` and the starter files `--scaffold` lays where they already exist, never the config ([§FS-init.3.4](FS-init.md#34-with---force), [§FS-init.3.5](FS-init.md#35-what---force-does-not-replace)). Off by default. Existing entrypoints are appended to or updated without it ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)), so it is only needed to reset a generated `AGENTS.md` or a starter file to its canonical bytes.
 - `--dry-run` — preview the run without writing or modifying any file: each `wrote `, `appended `, or `updated ` line of the report ([§FS-init.2.2](FS-init.md#22-stdout--stderr)) is emitted as `would-write `, `would-append `, or `would-update `, while `exists ` lines and the `next:` block are unchanged. Composes with every other flag, including `--force`. Off by default.
 - `--check` — the same preview, taken as a verdict: nothing is written, the report is the one `--dry-run` prints for this tree ([§FS-init.2.2](FS-init.md#22-stdout--stderr)), and the run exits `1` when any line of that report is a `would-…` ([§FS-init.4](FS-init.md#4-exit-codes)). It is what a pre-commit hook or a CI job runs; [§FS-init.1.4](FS-init.md#14-why---check-exists) says why it exists. Composes with every other flag exactly as `--dry-run` does, `--force` included; passing both is redundant, not an error, since both say *write nothing*. Off by default — bare `grund init` still writes.
 - `--no-vcs` — scaffold into a target outside any version-controlled tree, which is otherwise refused ([§FS-init.1.2](FS-init.md#12-refused-targets)). Off by default. It says only *this really is where I want a project*: it does not lift the unconditional refusals of [§FS-init.1.2](FS-init.md#12-refused-targets), and it is not `--force` (which decides whether files `init` owns get overwritten, [§FS-init.3](FS-init.md#3-non-intrusive-guarantees)) — the two answer different questions, and a run may need either, both, or neither.
@@ -45,14 +51,15 @@ Per [§FS-non-goals.10](FS-non-goals.md#10-interactive-mode), `init` is non-inte
 ### 1.1 Usage examples
 
 ```
-grund init                       # cwd, no docs tree
+grund init                       # cwd: the config and the agent entrypoint, no starter files
 grund init path/to/repo          # auto-detect existing entrypoint, else AGENTS.md
-grund init --docs                # cwd, with docs/ + tests/e2e/ + tests/integration/ scaffolds
-grund init --docs path/to/repo   # explicit target, with docs/ + tests/e2e/ + tests/integration/ scaffolds
+grund init --scaffold            # cwd, plus the starter files: requirements.md, docs/, tests/e2e/, tests/integration/
+grund init --scaffold path/to/repo # explicit target, with the same starter files
+grund init --template=none       # a grund.toml that declares no kinds, for a repo that declares its own
 grund init --dry-run path/to/repo # preview without writing anything
 grund init --check path/to/repo  # same preview as a gate: exit 1 if anything is pending
 grund init --claude --gemini path/to/repo # create/update both agent entrypoints
-grund init --docs --name acme path/to/repo  # full form
+grund init --scaffold --name acme path/to/repo  # full form
 ```
 
 Argument order is flexible: positional `<path>` may appear before or after the flags.
@@ -103,13 +110,13 @@ These are refusals, not prompts: `init` still never asks a question ([§FS-non-g
 
 #### 1.2.6 Entrypoint blocks are read before any is written
 
-The location rules are not the only refusals a run can meet. Every planned entrypoint that already exists — the canonical `AGENTS.md` and each companion alike ([§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent)) — is read and its managed block classified before the first one is written, and a block `init` would refuse to update refuses the run: a malformed delimiter pair ([§FS-init.2.3.11](FS-init.md#2311-malformed-delimiters)) or a block newer than the binary ([§FS-init.2.3.10.2](FS-init.md#23102-a-newer-block-version)). The refusal is total in the sense of [§FS-init.1.2](FS-init.md#12-refused-targets): no entrypoint is created, appended, or updated, `grund.toml` and the `--docs` scaffold are not written, no `wrote`, `appended`, or `updated` line is reported, and `init` exits `2` with the message that names the file and the defect. It does not matter where the refused file sits in the order the entrypoints are written; a clean `CLAUDE.md` planned before a malformed `GEMINI.md` is left byte-for-byte as it was. `--dry-run` and `--check` report the same refusal rather than a preview.
+The location rules are not the only refusals a run can meet. Every planned entrypoint that already exists — the canonical `AGENTS.md` and each companion alike ([§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent)) — is read and its managed block classified before the first one is written, and a block `init` would refuse to update refuses the run: a malformed delimiter pair ([§FS-init.2.3.11](FS-init.md#2311-malformed-delimiters)) or a block newer than the binary ([§FS-init.2.3.10.2](FS-init.md#23102-a-newer-block-version)). The refusal is total in the sense of [§FS-init.1.2](FS-init.md#12-refused-targets): no entrypoint is created, appended, or updated, `grund.toml` and the starter files `--scaffold` lays are not written, no `wrote`, `appended`, or `updated` line is reported, and `init` exits `2` with the message that names the file and the defect. It does not matter where the refused file sits in the order the entrypoints are written; a clean `CLAUDE.md` planned before a malformed `GEMINI.md` is left byte-for-byte as it was. `--dry-run` and `--check` report the same refusal rather than a preview.
 
 The check runs after the user-global rule ([§FS-init.1.2.4](FS-init.md#124-which-refusal-is-reported-first)), because both read the same plan; a run with several refused blocks is told about the first in the order the entrypoints are written. Checking in the write pass alone is not enough: by the time it meets the second entrypoint it has already written the first, and a run that exits `2` would leave a half-scaffolded tree that `grund check` cannot even read for want of a `grund.toml`.
 
-### 1.3 `--docs` and the effective config
+### 1.3 `--scaffold` and the effective config
 
-The root-level `requirements.md` starter file is scaffolded because the generated `FS` kind uses it as the default requirements/spec home ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)). An existing config that omits `[[kinds]]` instead keeps the compatibility FS home from [§FS-config.3.4.4.4](FS-config.md#3444-a-config-that-omits-kinds-keeps-the-older-fs-home), so `--docs` scaffolds `docs/functional-spec/README.md` and points next-step guidance at `docs/functional-spec`. `roadmap.md` and `changelog.md` are scaffolded because the generated managed block's `docs/` table links to them ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)).
+The root-level `requirements.md` starter file is scaffolded because the generated `FS` kind uses it as the default requirements/spec home ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)). An existing config that omits `[[kinds]]` instead keeps the compatibility FS home from [§FS-config.3.4.4.4](FS-config.md#3444-a-config-that-omits-kinds-keeps-the-older-fs-home), so `--scaffold` lays `docs/functional-spec/README.md` and points next-step guidance at `docs/functional-spec`. `roadmap.md` and `changelog.md` are scaffolded because the generated managed block's `docs/` table links to them ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)).
 
 ### 1.4 Why `--check` exists
 
@@ -132,16 +139,66 @@ Each flag explicitly creates or updates one agent's entrypoint:
 
 When no explicit agent-entrypoint flag is passed, `init` runs in automatic mode: update existing known agent entrypoint files if any are present; otherwise create agent-directory-triggered companions for `.claude/`, `.gemini/`, `.pi/`, `.cursor/`, or `.zed/` if those agent directories already exist; otherwise create canonical `AGENTS.md` ([§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place)). When one or more explicit agent-entrypoint flags are passed, `init` writes exactly those requested entrypoint families and adds no automatic fallback.
 
+### 1.6 Templates
+
+A template is what `init` lays down: the `grund.toml` it writes when the target has no config ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)), and a starter file for each home that config names, which only `--scaffold` lays ([§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place)). `--template <name>` picks one; `--template=<name>` is the same flag. The managed block belongs to no template: it is rendered from whichever config governs the target ([§FS-init.2.3.8](FS-init.md#238-substituted-content)). Two templates are built into the binary ([§FS-init.1.6.1](FS-init.md#161-software-development-the-default), [§FS-init.1.6.2](FS-init.md#162-none)); a template read from a path is not supported yet ([§FS-init.1.6.3](FS-init.md#163-an-unknown-name)).
+
+#### 1.6.1 `software-development`, the default
+
+The template `init` lays when no `--template` is given: the `grund.toml` of [§FS-init.2.4](FS-init.md#24-generated-grundtoml), with the `GRUND`, `GOAL`, `FS`, `AR`, `DF`, `DA` and `RM` kinds and the non-citable `e2e` and `integration` test kinds ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)), and the ten starter files [§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place) lists. `grund init` and `grund init --template=software-development` lay byte-identical trees.
+
+#### 1.6.2 `none`
+
+A `grund.toml` that declares no kinds, `kinds = []` in place of the `[[kinds]]` tables ([§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds), [§FS-init.2.4.9](FS-init.md#249-the-none-templates-config)), and no starter files. It is for a repository that declares its own kinds, the existing-structure adoption of [§FS-init.5.2](FS-init.md#52-adopting-an-existing-docs-heavy-repo). The tree it lays passes `grund check` and `grund init --check` unmodified, and the managed block it renders teaches how to add the first kind ([§FS-init.2.3.4.4.2](FS-init.md#23442-no-kinds-yet)).
+
+#### 1.6.3 An unknown name
+
+Any other name is refused before anything is read or written, exit `2`. The message names the built-in templates and says that a template from a path is not supported yet:
+
+```
+error: unknown template `docs` — the built-in templates are software-development and none; a template from a path is not supported yet
+```
+
+A `--template` with no value is a CLI-level error, as a `--name` with none is.
+
+#### 1.6.4 `none` has nothing to scaffold
+
+`--template=none --scaffold` is refused the same way, exit `2` with nothing written, because the template has no starter files to lay:
+
+```
+error: --scaffold has nothing to lay: the none template has no starter files
+```
+
+#### 1.6.5 A config that is already there
+
+A target that already has a config keeps it, whichever template was asked for: `init` never writes a config over one ([§FS-init.2.4.2](FS-init.md#242-an-existing-config-is-never-overwritten)), and the managed block is rendered from the config it keeps. When `--template` was passed explicitly the run says so in a note ([§FS-init.2.2.1](FS-init.md#221-notes)), so the flag never silently does nothing:
+
+```
+note: grund.toml exists, so the none template's grund.toml is not written — init never overwrites a config
+```
+
+The note names the config at whichever discovery location it was found, and its wording is true of a preview and of a write alike. A run with no `--template` asked for no template config, so it gets no note. Under `--scaffold` the starter files are still laid, at the homes the existing config names ([§FS-init.1.3](FS-init.md#13---scaffold-and-the-effective-config)).
+
+### 1.7 `--docs` is the deprecated spelling of `--scaffold`
+
+`--docs` is the name `--scaffold` had before it, and it still works: it lays exactly what `--scaffold` lays, byte for byte, and composes with every other flag the same way. It is deprecated under [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path): a run that spells it prints one CLI-level warning on stderr before anything else, naming the replacement and the release that removes the old spelling, and changes nothing else — not the files, not the report, not the exit code ([§DF-init-templates.2.2](../decisions/functional/DF-init-templates.md#22---docs-warns-until-0190-on-stderr-alone)):
+
+```
+warning: --docs is deprecated and is removed in grund 0.19.0; use --scaffold, which lays the same starter files
+```
+
+`init` has no `--format json`, and the bindings' `docs` option is not a command-line spelling and is not deprecated ([§DF-init-templates.2.3](../decisions/functional/DF-init-templates.md#23-the-bindings-keep-docs)), so stderr is the warning's only surface. From `0.19.0`, `--docs` is an unknown flag.
+
 ## 2. Outputs
 
 ### 2.1 Files written, updated, or left in place
 
-In the default form (no `--docs`):
+Bare `init`, with no `--scaffold`, writes these two and nothing else ([§FS-init.3.6](FS-init.md#36-bare-init-writes-the-config-and-the-entrypoints-and-nothing-in-a-home)):
 
 - Agent entrypoints — see [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints). In automatic mode ([§FS-init.1.5](FS-init.md#15-agent-entrypoint-flags)), existing known entrypoints are appended or updated in place: `<path>/AGENTS.md`, `<path>/AGENTS.override.md`, `<path>/CLAUDE.md`, `<path>/.claude/CLAUDE.md`, `<path>/GEMINI.md`, `<path>/.pi/AGENTS.md`, `<path>/.github/copilot-instructions.md`, `<path>/.cursor/rules/grund.mdc`, `<path>/.cursorrules`, and `<path>/.windsurfrules`, excluding companion symlinks to `AGENTS.md`. If none exist, a missing companion is created for each agent whose agent directory already exists, one per agent ([§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent)); if there are still no entrypoints to update or create, canonical `AGENTS.md` is written. [§FS-init.2.1.2](FS-init.md#212-automatic-entrypoint-selection) gives the rules of each step. Explicit flags (`--agents-md`, `--claude`, `--gemini`, `--pi`, `--copilot`, `--cursor`, `--windsurf`, `--zed`) create or update their requested entrypoints regardless of automatic detection, under the same one-per-agent rule ([§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent)).
 - `<path>/grund.toml` — see [§FS-init.2.4](FS-init.md#24-generated-grundtoml). Written only when the target carries no config in either discovery form ([§FS-config.1](FS-config.md#1-file-location-and-discovery)); a target that already has one is reported with `exists ` at the name it was found under (`exists .agents/grund.toml` for a repo on that form) and gets no second config.
 
-With `--docs`, additionally — each a minimal starter ([§FS-init.2.1.3](FS-init.md#213-the---docs-starter-files)):
+With `--scaffold`, additionally the template's starter files ([§FS-init.2.1.3](FS-init.md#213-the-software-development-starter-files)). These are the `software-development` template's; the `none` template has none ([§FS-init.1.6.4](FS-init.md#164-none-has-nothing-to-scaffold)):
 
 - `<path>/requirements.md`
 - `<path>/docs/grund.md`
@@ -154,7 +211,7 @@ With `--docs`, additionally — each a minimal starter ([§FS-init.2.1.3](FS-ini
 - `<path>/tests/e2e/README.md`
 - `<path>/tests/integration/.gitkeep`
 
-The exact bytes for a given `grund` version are embedded in the binary; reference copies live under `templates/` in the `grund` source tree, and two `grund init --docs` runs at the same version with the same `--name` produce byte-identical scaffolds ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). `grund check` is clean against the freshly-scaffolded tree.
+The exact bytes for a given `grund` version are the `software-development` template's ([§FS-init.1.6.1](FS-init.md#161-software-development-the-default)), embedded in the binary, and two `grund init --scaffold` runs at the same version with the same `--name` produce byte-identical scaffolds ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). `grund check` is clean against the freshly-scaffolded tree.
 
 #### 2.1.1 One entrypoint per agent
 
@@ -184,7 +241,7 @@ A companion symlink to `AGENTS.md` selects the canonical `AGENTS.md` target inst
 
 `AGENTS.override.md`, `.github/copilot-instructions.md`, `.cursorrules`, and `.windsurfrules` are automatic existing-file-only — `AGENTS.override.md` is an override channel; `.github/` is generic GitHub metadata; `.cursorrules` is Cursor's legacy single-file form (the modern `.cursor/rules/` directory is preferred when creating new); and `.windsurfrules` is a root file with no companion directory to key off, so creating one requires the explicit `--windsurf` flag. `.rules` is never detected by file existence alone, because the filename is too generic to attribute to Zed by itself: an existing `.rules` is Zed's entrypoint only where `.zed/` exists or a managed block from a previous run is already in it ([§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent)).
 
-#### 2.1.3 The `--docs` starter files
+#### 2.1.3 The `software-development` starter files
 
 Each scaffolded markdown file is a minimal starter — enough structure to teach the layout, no real content:
 
@@ -231,7 +288,7 @@ Paths are relative to `<path>`. Stdout is always empty ([§FS-errors.6](FS-error
 
 #### 2.2.1 Notes
 
-The run's `note:` lines, one per line, each name something the run could not do, or a state of the tree the caller would otherwise have to notice for itself: a duplicated entrypoint ([§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent)), a Claude entrypoint shadowed by a symlink ([§FS-init.2.3.4.17](FS-init.md#23417-clickable-citations)). A note is a report, not a finding: it changes nothing, and the exit code is the one the run would have had without it ([§FS-init.4](FS-init.md#4-exit-codes)).
+The run's `note:` lines, one per line, each name something the run could not do, or a state of the tree the caller would otherwise have to notice for itself: a duplicated entrypoint ([§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent)), a Claude entrypoint shadowed by a symlink ([§FS-init.2.3.4.17](FS-init.md#23417-clickable-citations)), a template config the target's own config kept out ([§FS-init.1.6.5](FS-init.md#165-a-config-that-is-already-there)). A note is a report, not a finding: it changes nothing, and the exit code is the one the run would have had without it ([§FS-init.4](FS-init.md#4-exit-codes)).
 
 Under `--dry-run` a note is written in the conditional, like every other line of that report: the run wrote nothing, so a note in the present tense describes a tree that does not exist — and an instruction that assumes the write already happened, such as deleting the symlink a preview did not replace, costs the reader the only entrypoint they have. What such an instruction waits on is the **block**, not the file: a preview's `would-append` names an entrypoint that already exists, so a condition the reader can satisfy by looking is no condition at all.
 
@@ -239,13 +296,13 @@ Under `--dry-run` a note is written in the conditional, like every other line of
 
 After the notes, stderr prints a short `next:` block — a blank line, then numbered first steps, then `see <entrypoint> for the full workflow.` — so the user is not left at a bare list of paths wondering what to do. `<entrypoint>` is the first agent entrypoint `init` wrote, updated, or found already current. The steps are: run `grund check` (a fresh tree is clean); allocate an ID with `ID=$(grund id FS "…")` and add it to the effective FS home (`requirements.md` with the `## <ID>: …` H2 for generated defaults, or under the configured FS folder with `# <ID>: …` when compatibility or explicit config makes FS a folder); cite it as `§<ID>` from the docs and e2e tests that depend on it.
 
-When `--docs` was *not* passed, a re-run advice is inserted as step 1, the following steps move down, the allocation step drops its second line — the one naming the `## <ID>: …` H2 or `# <ID>: …` H1, which prints only under `--docs` — and the citation step is omitted. Whenever it is printed, that advice points at re-running with `--docs` (or creating the effective FS home, `docs/`, and `tests/` by hand); a refresh of a complete setup does not print it at all ([§FS-init.2.2.2.1](FS-init.md#2221-a-refresh-of-a-complete-setup-teaches-nothing)). It appends the clause `until then \`grund check\` has nothing to scan` only when the effective scanner would read no file — exactly the scan decision in [§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned): configured extensions, ignore and exclude rules, hidden-file and symlink handling, workspace boundaries, configured include paths, scanned kind homes, and `scan = false` all retain their scanner meanings. Path existence or a non-empty directory alone does not make the clause false.
+When `--scaffold` was *not* passed, a re-run advice is inserted as step 1, the following steps move down, the allocation step drops its second line — the one naming the `## <ID>: …` H2 or `# <ID>: …` H1, which prints only under `--scaffold` — and the citation step is omitted. Whenever it is printed, that advice points at re-running with `--scaffold` (or creating the effective FS home, `docs/`, and `tests/` by hand); a refresh of a complete setup does not print it at all ([§FS-init.2.2.2.1](FS-init.md#2221-a-refresh-of-a-complete-setup-teaches-nothing)). It appends the clause `until then \`grund check\` has nothing to scan` only when the effective scanner would read no file — exactly the scan decision in [§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned): configured extensions, ignore and exclude rules, hidden-file and symlink handling, workspace boundaries, configured include paths, scanned kind homes, and `scan = false` all retain their scanner meanings. Path existence or a non-empty directory alone does not make the clause false. A config that declares no kinds gets the block of [§FS-init.2.2.2.2](FS-init.md#2222-a-project-with-no-kinds) instead.
 
 The `next:` block is suppressed entirely when every reported path is `exists ` (or, under `--dry-run`, every reported path is `exists ` and no `would-…` lines were emitted) — the user already has a complete, current grund setup, so there is no next step to teach. It is suppressed for the same reason on a refresh of a complete setup ([§FS-init.2.2.2.1](FS-init.md#2221-a-refresh-of-a-complete-setup-teaches-nothing)). When it is printed, it is guidance, not a finding: part of the success output, with no effect on the exit code.
 
 ##### 2.2.2.1 A refresh of a complete setup teaches nothing
 
-A run with no `--docs` is a **refresh of a complete setup** when both hold:
+A run with no `--scaffold` is a **refresh of a complete setup** when both hold:
 
 - every reported path is `exists ` or `updated ` — under `--dry-run` and `--check`, `exists ` or `would-update ` — so a single `wrote `, `appended `, `would-write `, or `would-append ` line makes the run something else;
 - the effective FS home exists on disk: the configured FS `file`, else the configured FS `folder`, else `requirements.md`, resolved against the target directory.
@@ -253,6 +310,20 @@ A run with no `--docs` is a **refresh of a complete setup** when both hold:
 Such a run prints no `next:` block. It is where `grund check` sends a repository whose managed block a `grund.toml` change made stale ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)); after it the user again has the complete, current setup the suppression above describes, and the advice to scaffold an FS home that exists would send them hunting for a detection failure that did not happen. Their next step is the `grund check` that sent them here.
 
 Everything else keeps the block exactly as [§FS-init.2.2.2](FS-init.md#222-the-next-block) renders it: a first run (`wrote ` or `appended ` of an entrypoint) even where the FS home, `docs/`, and `tests/` exist ([§FS-init-fixtures.1.1](FS-init-fixtures.md#11-populated-configured-form)), and a refresh whose effective FS home is absent. Suppressing the block moves no exit code: `--check` still exits `1` on a `would-update ` ([§FS-init.4](FS-init.md#4-exit-codes)).
+
+##### 2.2.2.2 A project with no kinds
+
+A config that declares no kinds ([§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)) has no FS home to scaffold or to allocate in, so every step above would send the user somewhere that does not exist — `--scaffold` included, which the `none` template refuses ([§FS-init.1.6.4](FS-init.md#164-none-has-nothing-to-scaffold)). The block teaches the one step that is missing instead, `<entrypoint>` as above:
+
+```
+next:
+  1. declare a first kind in grund.toml, then run `grund init` again so AGENTS.md lists it
+  2. run `grund check`
+  3. allocate an ID:  ID=$(grund id <KIND> "…")  then add it to that kind's home
+see AGENTS.md for the full workflow.
+```
+
+It is printed and suppressed by the rules of [§FS-init.2.2.2](FS-init.md#222-the-next-block), save that such a run is never a refresh of a complete setup ([§FS-init.2.2.2.1](FS-init.md#2221-a-refresh-of-a-complete-setup-teaches-nothing)): it has no effective FS home to find on disk, and the step it teaches is still open. The bindings read the same decision from the guidance's `declares_kinds` field ([§DF-init-templates.2.3](../decisions/functional/DF-init-templates.md#23-the-bindings-keep-docs)).
 
 ### 2.3 Generated agent entrypoints
 
@@ -302,13 +373,23 @@ That guide, *Querying grund*, puts the query recipes in one place, each with its
 
 ##### 2.3.4.4 Project Map
 
-The block describes the configured kind homes from the effective `grund.toml` as a raw-readable Markdown link list (`- [KIND](home): Title`), so the generated instructions name and link the host repo's actual artifact layout instead of hard-coding the default layout or relying on table rendering. A kind that is a place rather than an ID space gets the row [§FS-init.2.3.4.4.1](FS-init.md#23441-rows-for-places) gives it, or none.
+The block describes the configured kind homes from the effective `grund.toml` as a raw-readable Markdown link list (`- [KIND](home): Title`), so the generated instructions name and link the host repo's actual artifact layout instead of hard-coding the default layout or relying on table rendering. A kind that is a place rather than an ID space gets the row [§FS-init.2.3.4.4.1](FS-init.md#23441-rows-for-places) gives it, or none, and a config with no kind to list gets the paragraph of [§FS-init.2.3.4.4.2](FS-init.md#23442-no-kinds-yet) instead of an empty map.
 
 The scan scope (`[scan].include` / `[scan].exclude`) is *not* surfaced here — it is configuration an agent never needs to read inline, since `grund <ID>`, `grund list`, and `grund refs` apply it transparently. Where the init target lies in a workspace, whether or not its own config declares `[workspace]`, the sibling [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members) block names the workspace projects; the Project Map itself describes the *current* project's declaration homes only and is unchanged in workspace mode.
 
 ###### 2.3.4.4.1 Rows for places
 
 A **non-citable kind** ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) is named by its **place** rather than its name — `- [skills/](skills): Agent review and automation skills` — because its name is a config key an agent can never write in a citation, while the directory is something it can go and read. An unscanned kind ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)) is rendered the same way; the row is the point of configuring it. The **homeless kind** ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) — `code`, or whatever the project named it — has no place and therefore no row.
+
+###### 2.3.4.4.2 No kinds yet
+
+A config that declares no kinds ([§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)) has no row to render, and an empty map teaches nothing. The map is then one paragraph that teaches the first kind in the config's own spelling. For a version-1 config:
+
+```markdown
+No kinds are declared yet: `grund.toml` sets `kinds = []`. Replace it with one `[[kinds]]` table per kind of document this repository gives IDs to — `kind = "FS"`, then `folder = "docs/specs"` or `file = "requirements.md"`, and a `title` — and run `grund init` again to list them here.
+```
+
+A version-2 config with no row is taught `[schema.kinds.<KIND>]` and its `folders` or `files` the same way ([§FS-config-v2.defaults.1](FS-config-v2.md#defaults1-what-v2-fixes)). Two other places in the block would otherwise name an empty set, and say so instead. The citation-scheme line's kind set reads ``no `KIND` is declared yet`` rather than `KIND ∈ {}` ([§FS-init.2.3.8.1](FS-init.md#2381-what-the-config-fills-in)). Where the config declares no `[citations]`, the citation-direction paragraph ([§FS-init.2.3.4.10](FS-init.md#23410-citation-direction)) reads ``No kind is declared yet, so no citation direction applies. Once kinds exist, the config's citation rules say which kinds each may cite; see <guide> for the levels and examples.``, `<guide>` being the citation-directions guide's URL, in place of the static climbing-rule sentence that names kinds the config does not have; the grounding sentence follows it as before. All three are substituted content, so they move no block version ([§FS-init.2.3.7](FS-init.md#237-the-block-version)), and `check` compares the citation-direction paragraph against the same render it always does ([§FS-init.2.3.5.8](FS-init.md#2358-the-drift-check)).
 
 ##### 2.3.4.5 Declaration Forms
 
@@ -566,7 +647,7 @@ Several things in the generated entrypoint are *substituted in* rather than fixe
 
 ##### 2.3.8.1 What the config fills in
 
-From that config the block fills in the ID shape (`<KIND>-<NNN>-<slug>`, `<KIND>-<slug>`, …, derived from `[id].format`), one worked example citation, the `[id].section_separator`, the marker and `$$`-trigger from `[reference]`, the `KIND ∈ {…}` set from `[[kinds]]`, a raw-readable link list of each kind's configured declaration home and title ([§FS-init.2.3.4.4](FS-init.md#2344-project-map)), a sentence on whether bare ID-shaped tokens count as citations (driven by `[reference].strict`), and the inline citation style sentences defined by [§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering).
+From that config the block fills in the ID shape (`<KIND>-<NNN>-<slug>`, `<KIND>-<slug>`, …, derived from `[id].format`), one worked example citation, the `[id].section_separator`, the marker and `$$`-trigger from `[reference]`, the `KIND ∈ {…}` set from `[[kinds]]` (``no `KIND` is declared yet`` where there is none, [§FS-init.2.3.4.4.2](FS-init.md#23442-no-kinds-yet)), a raw-readable link list of each kind's configured declaration home and title ([§FS-init.2.3.4.4](FS-init.md#2344-project-map)), a sentence on whether bare ID-shaped tokens count as citations (driven by `[reference].strict`), and the inline citation style sentences defined by [§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering).
 
 ##### 2.3.8.2 The worked example is escaped
 
@@ -607,7 +688,7 @@ If the file already contains any supported block version, including the current 
 
 ##### 2.3.10.2 A newer block version
 
-If an agent entrypoint contains a newer block version than the running binary supports, `init` exits 2 and writes nothing: neither that file nor any other entrypoint, `grund.toml`, or the `--docs` scaffold is touched, because the version is read before the first write ([§FS-init.1.2.6](FS-init.md#126-entrypoint-blocks-are-read-before-any-is-written)).
+If an agent entrypoint contains a newer block version than the running binary supports, `init` exits 2 and writes nothing: neither that file nor any other entrypoint, `grund.toml`, nor the starter files `--scaffold` lays are touched, because the version is read before the first write ([§FS-init.1.2.6](FS-init.md#126-entrypoint-blocks-are-read-before-any-is-written)).
 
 #### 2.3.11 Malformed delimiters
 
@@ -627,7 +708,7 @@ When a companion path is a symlink to `AGENTS.md`, `init` does not touch it sepa
 
 ### 2.4 Generated `grund.toml`
 
-`init` writes `<path>/grund.toml` — the bare, root-visible form — and **only when the target has no config at all**, in either discovery location ([§FS-init.2.4.1](FS-init.md#241-both-discovery-locations-are-probed)). An existing config is never overwritten, not even with `--force` ([§FS-init.2.4.2](FS-init.md#242-an-existing-config-is-never-overwritten)). The file it does write is a teaching surface ([§FS-init.2.4.3](FS-init.md#243-every-written-key-is-the-default)); [§FS-init.2.4.4](FS-init.md#244-named_sections-is-written-off) to [§FS-init.2.4.8](FS-init.md#248-values-are-illustrated-not-enabled) say how particular keys are written.
+`init` writes `<path>/grund.toml` — the bare, root-visible form — and **only when the target has no config at all**, in either discovery location ([§FS-init.2.4.1](FS-init.md#241-both-discovery-locations-are-probed)). An existing config is never overwritten, not even with `--force` ([§FS-init.2.4.2](FS-init.md#242-an-existing-config-is-never-overwritten)). The file it does write is the template's config ([§FS-init.1.6](FS-init.md#16-templates)) and a teaching surface ([§FS-init.2.4.3](FS-init.md#243-every-written-key-is-the-default)); [§FS-init.2.4.4](FS-init.md#244-named_sections-is-written-off) to [§FS-init.2.4.8](FS-init.md#248-values-are-illustrated-not-enabled) say how particular keys are written, and [§FS-init.2.4.9](FS-init.md#249-the-none-templates-config) what the `none` template writes instead.
 
 #### 2.4.1 Both discovery locations are probed
 
@@ -635,7 +716,7 @@ Both discovery locations of [§FS-config.1](FS-config.md#1-file-location-and-dis
 
 #### 2.4.2 An existing config is never overwritten
 
-An existing config is the repo's configuration — the one surface a project customizes ([§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable)) — and `init` never overwrites it, not even with `--force`: an existing config is reported as `exists` and left byte-for-byte unchanged ([§FS-init.3](FS-init.md#3-non-intrusive-guarantees)). `--force` resets the things `init` owns end to end — the canonical `AGENTS.md` and the `--docs` starter files — not the user's settings; a customized config that `init --force` clobbered would be a footgun.
+An existing config is the repo's configuration — the one surface a project customizes ([§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable)) — and `init` never overwrites it, not even with `--force`: an existing config is reported as `exists` and left byte-for-byte unchanged ([§FS-init.3](FS-init.md#3-non-intrusive-guarantees)). `--force` resets the things `init` owns end to end — the canonical `AGENTS.md` and the starter files `--scaffold` lays — not the user's settings; a customized config that `init --force` clobbered would be a footgun.
 
 #### 2.4.3 Every written key is the default
 
@@ -665,11 +746,16 @@ A single `project_name = "<name>"` key appears at the top above the section tabl
 
 The shipped template illustrates values only as a commented `CONST` row with `values = true` and `file = "values.json"`. Fresh repositories remain unopted-in, and neither the template nor the effective schema contains a `value_sources` key ([§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations)).
 
+#### 2.4.9 The `none` template's config
+
+The `none` template ([§FS-init.1.6.2](FS-init.md#162-none)) writes the same file with its kinds taken out. `kinds = []` stands in for the `[[kinds]]` tables, the commented `CONST` illustration among them ([§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)), as a top-level key above `[reference]`, because TOML admits a top-level key nowhere after a table, with a comment teaching how to replace it with the first `[[kinds]]` table. The commented `[citations]` ruleset goes with the kinds it names, and a comment pointing at the citation-directions guide stays. Every other key is written as [§FS-init.2.4.3](FS-init.md#243-every-written-key-is-the-default) to [§FS-init.2.4.7](FS-init.md#247-project_name-and-project_description) write it, `[scan] include` included, so the file differs from the default template's in its kinds alone.
+
 ## 3. Non-intrusive guarantees
 
 What `init` won't touch, in one list; the detail lives at the section cited beside each guarantee.
 
 - **A target that is not a project is refused before anything is written** ([§FS-init.1.2](FS-init.md#12-refused-targets)).
+- **Bare `init` creates nothing in a home**: it writes the config and the entrypoints, and nothing under any kind home, `docs/` or `tests/` ([§FS-init.3.6](FS-init.md#36-bare-init-writes-the-config-and-the-entrypoints-and-nothing-in-a-home)).
 - **Automatic mode never adds a competing entrypoint** ([§FS-init.1.5](FS-init.md#15-agent-entrypoint-flags), [§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place)).
 - **`init` never creates a second file for an agent that already has one** ([§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent)), save the Claude entrypoint an explicit `--claude` writes beside a symlinked companion in a `conversation = "link"` repository ([§FS-init.2.1.1.1](FS-init.md#2111-a-symlinked-companion-under-conversation--link)).
 - **Ambiguous companions need an unambiguous signal** ([§FS-init.3.1](FS-init.md#31-ambiguous-companions-need-an-unambiguous-signal)).
@@ -698,21 +784,30 @@ Without `--force`, `init` never overwrites an existing file. Existing agent entr
 exists grund.toml
 ```
 
-This makes repeated `grund init` runs idempotent and safe for existing repos. The `--docs` mode applies the same rule across the docs tree: existing scaffold files are reported as `exists ` and left unchanged; missing scaffold files are written.
+This makes repeated `grund init` runs idempotent and safe for existing repos. `--scaffold` applies the same rule to the starter files: an existing one is reported as `exists ` and left unchanged; a missing one is written.
 
 ### 3.4 With `--force`
 
-With `--force`, a selected canonical `AGENTS.md` and the `--docs` scaffold files are overwritten in place; their previous contents are not preserved (the user has git for that, per [§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking) — `grund` does not maintain its own history). The `--docs` files are starter files `init` owns, and a repository that has filled `docs/goals.md` or `docs/grund.md` with real content loses it, which is why the flag exists and why nothing else in `init` reaches these files ([§REQ-no-data-loss.3](../requirements/REQ-no-data-loss.md#3-destructive-is-opt-in-and-never-a-side-effect)).
+With `--force`, a selected canonical `AGENTS.md` and the starter files `--scaffold` lays are overwritten in place; their previous contents are not preserved (the user has git for that, per [§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking) — `grund` does not maintain its own history). The starter files are files `init` owns, and a repository that has filled `docs/goals.md` or `docs/grund.md` with real content loses it, which is why the flag exists and why nothing else in `init` reaches these files ([§REQ-no-data-loss.3](../requirements/REQ-no-data-loss.md#3-destructive-is-opt-in-and-never-a-side-effect)).
 
 ### 3.5 What `--force` does not replace
 
 **`--force` never overwrites the config**: `init --force` still reports it as `exists ` and leaves it untouched ([§FS-init.2.4.2](FS-init.md#242-an-existing-config-is-never-overwritten)). Existing *companion* entrypoints are likewise not full-file overwritten by `--force` — the canonical `AGENTS.md` is the one entrypoint the flag replaces whole; if a companion is present and not symlinked to `AGENTS.md`, only its managed block is appended or updated so unrelated agent-specific instructions remain intact.
 
+### 3.6 Bare `init` writes the config and the entrypoints, and nothing in a home
+
+`grund init` without `--scaffold`, whichever its template, lays only what a repository needs to be checkable and to tell its agents about grund:
+
+- It writes the template's `grund.toml`, and only when the target has no config in either discovery location. It never overwrites one, not even with `--force` ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)).
+- It writes or updates the managed `grund` block in the agent entrypoints the repository already has; only a repository with none gets the canonical `AGENTS.md` ([§FS-init.1.5](FS-init.md#15-agent-entrypoint-flags), [§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent), [§FS-init.2.1.2](FS-init.md#212-automatic-entrypoint-selection)).
+- It creates nothing under any kind home, and nothing under `docs/` or `tests/`: no starter file, no directory, no `.gitkeep`. That is what makes it safe on a repository that already has specs, and what the `grund-init` skill relies on when it leaves the scaffold off an existing repository ([§DF-skill-init-existing-specs](../decisions/functional/DF-skill-init-existing-specs.md#df-skill-init-existing-specs-grund-init-adopts-existing-specs-before-scaffolding)).
+- It prints the `next:` block, whose first step points at `--scaffold`, or at creating the homes by hand, while the effective FS home does not exist ([§FS-init.2.2.2](FS-init.md#222-the-next-block)).
+
 ## 4. Exit codes
 
 - `0` — every requested file was written, appended, updated, or already current. Under `--check` ([§FS-init.1](FS-init.md#1-inputs)) this is the tree that is current: every reported path was `exists ` and there is nothing to write.
 - `1` — `--check` only: the report carried at least one `would-…` line, so the tree is not current ([§FS-init.4.1](FS-init.md#41-what-earns-the-1)).
-- `2` — I/O error (target path does not exist, permission denied, disk full, etc.); a CLI-level error such as an unknown flag; a refused target ([§FS-init.1.2](FS-init.md#12-refused-targets)), in which case nothing was written; an existing config that fails to load ([§FS-init.2.3.8.3](FS-init.md#2383-a-config-that-fails-to-load)); an existing agent entrypoint contains a managed block whose schema version is newer than the running binary supports ([§FS-init.2.3.10.2](FS-init.md#23102-a-newer-block-version)); or an existing agent entrypoint has malformed delimiters ([§FS-init.2.3.11](FS-init.md#2311-malformed-delimiters)) — in both of those the file is left unchanged. `2` wins over `1` ([§FS-init.4.2](FS-init.md#42-2-wins-over-1)).
+- `2` — I/O error (target path does not exist, permission denied, disk full, etc.); a CLI-level error such as an unknown flag; a refused target ([§FS-init.1.2](FS-init.md#12-refused-targets)), in which case nothing was written; an existing config that fails to load ([§FS-init.2.3.8.3](FS-init.md#2383-a-config-that-fails-to-load)); a refused template, an unknown name or `none` beside `--scaffold` ([§FS-init.1.6.3](FS-init.md#163-an-unknown-name), [§FS-init.1.6.4](FS-init.md#164-none-has-nothing-to-scaffold)), in which case nothing was written; an existing agent entrypoint contains a managed block whose schema version is newer than the running binary supports ([§FS-init.2.3.10.2](FS-init.md#23102-a-newer-block-version)); or an existing agent entrypoint has malformed delimiters ([§FS-init.2.3.11](FS-init.md#2311-malformed-delimiters)) — in both of those the file is left unchanged. `2` wins over `1` ([§FS-init.4.2](FS-init.md#42-2-wins-over-1)).
 
 `--dry-run` alone keeps `0` whatever it reports ([§FS-init.4.3](FS-init.md#43-why---dry-run-keeps-0)). Exit-code mapping is fixed per [§GOAL-friendliness-first.2](../goals.md#2-what-this-rules-out) and [§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization).
 
@@ -738,7 +833,7 @@ The output reads like an agent skill rather than a human tutorial. It instructs 
 
 ### 5.2 Adopting an existing docs-heavy repo
 
-For an existing docs-heavy repo, the instructions make the adoption choice explicit before any write: show the canonical `grund` artifact types, including `GRUND` for the grounding doc, beside the detected project-specific sections, tags, or document classes, then ask whether to use canonical `grund`, canonical core plus project-specific extras, or the existing structure with `grund` citations. The recommended `grund init` form omits `--docs` unless the user selects a canonical-layout migration; existing specs are represented in `[[kinds]]` and `[scan]` settings rather than replaced by generic scaffold folders. This follows [§DF-skill-init-existing-specs](../decisions/functional/DF-skill-init-existing-specs.md#df-skill-init-existing-specs-grund-init-adopts-existing-specs-before-scaffolding).
+For an existing docs-heavy repo, the instructions make the adoption choice explicit before any write: show the canonical `grund` artifact types, including `GRUND` for the grounding doc, beside the detected project-specific sections, tags, or document classes, then ask whether to use canonical `grund`, canonical core plus project-specific extras, or the existing structure with `grund` citations. The recommended `grund init` form omits `--scaffold` unless the user selects a canonical-layout migration; existing specs are represented in `[[kinds]]` and `[scan]` settings rather than replaced by generic scaffold folders. For the existing-structure model the starting config is `grund init --template=none`'s, which declares no kinds for the agent to fill with the repository's own ([§FS-init.1.6.2](FS-init.md#162-none)) before `grund init` runs again to render them. This follows [§DF-skill-init-existing-specs](../decisions/functional/DF-skill-init-existing-specs.md#df-skill-init-existing-specs-grund-init-adopts-existing-specs-before-scaffolding).
 
 ### 5.3 One body, two surfaces
 

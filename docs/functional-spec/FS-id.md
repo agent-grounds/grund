@@ -25,7 +25,7 @@ grund id <KIND> "<title>" [<path>] [--width <N>] [--explain] [--format text|json
 
 ### 1.1 Unknown and non-citable kinds
 
-An unknown kind is a CLI-level error, exit `2` ([§FS-id.6](FS-id.md#6-exit-codes)): an `error:` line naming the kind, then a `known kinds: …` line listing the citable kinds, on stderr — the shape `grund list --kind <unknown>` produces, so a typo never reads as a clean run. A configured **non-citable** kind ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) is refused in the same shape with the reason in place of "unknown" — `error: kind `skill` declares no IDs — skills/ is not a citable home` — because it has no ID to allocate. The verdict is [§FS-scan.projects.kinds](FS-scan.md#projectskinds-whose-kinds-a-run-reads)'s and the headline [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)'s.
+An unknown kind is a CLI-level error, exit `2` ([§FS-id.6](FS-id.md#6-exit-codes)): an `error:` line naming the kind, then a `known kinds: …` line listing the citable kinds, on stderr — the shape `grund list --kind <unknown>` produces, so a typo never reads as a clean run. A configured **non-citable** kind ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) is refused in the same shape with the reason in place of "unknown" — `error: kind `skill` declares no IDs — skills/ is not a citable home` — because it has no ID to allocate. The verdict is [§FS-scan.projects.kinds](FS-scan.md#projectskinds-whose-kinds-a-run-reads)'s and the headline [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)'s. A project that declares no kinds has none to allocate in, and its `known kinds:` line says so ([§FS-list.1.1.1](FS-list.md#111-a-scope-with-no-citable-kind)).
 
 ### 1.2 Number width
 

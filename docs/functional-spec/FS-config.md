@@ -193,9 +193,7 @@ project_description = "One line describing what this project is for" # optional
 
 ### 3.1 `[reference]` — citation form
 
-The marker may contain word characters, including `_`. An accepted marker establishes the
-start of a marked full-ID citation without a word boundary between marker and ID
-([§FS-check.1.1.10](FS-check.md#1110-the-configured-marker-establishes-the-citation-start)).
+The marker may contain word characters, including `_`; where a marked citation then starts is [§FS-citations.recognized.marker-start](FS-citations.md#recognizedmarker-start-the-configured-marker-establishes-the-citation-start).
 
 ```toml
 [reference]
@@ -470,7 +468,7 @@ The key is additive and does not move `grund_config_version` ([§FS-config.5](FS
 
 ##### 3.4.2.1 The default follows `folder`
 
-The default follows from `folder` rather than from a second key restating it: a kind whose declarations live in a directory has a directory a reader arrives at, and `grund init --docs` already scaffolds that README and writes the convention into it ([§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place)). `index = false` is for a kind whose declarations are *exercised* rather than navigated — the canonical case is a repository's own `E2E` kind, whose home holds case directories and no README, and whose `e2e/README.md` one level up documents the case layout in English instead of naming `E2E-` IDs. That is why the opt-out spells a file name or `false` rather than being inferred from a README's absence: "any folder README is an index" is not true of every tree.
+The default follows from `folder` rather than from a second key restating it: a kind whose declarations live in a directory has a directory a reader arrives at, and `grund init --scaffold` already scaffolds that README and writes the convention into it ([§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place)). `index = false` is for a kind whose declarations are *exercised* rather than navigated — the canonical case is a repository's own `E2E` kind, whose home holds case directories and no README, and whose `e2e/README.md` one level up documents the case layout in English instead of naming `E2E-` IDs. That is why the opt-out spells a file name or `false` rather than being inferred from a README's absence: "any folder README is an index" is not true of every tree.
 
 ##### 3.4.2.2 Where `index` is valid
 
@@ -505,7 +503,7 @@ correction are recorded in
 
 #### 3.4.4 The default kinds
 
-The defaults declare these nine, in this order (an existing `grund.toml` that omits `[[kinds]]` gets them with the older `FS` home of [§FS-config.3.4.4.4](FS-config.md#3444-a-config-that-omits-kinds-keeps-the-older-fs-home)):
+The defaults declare these nine, in this order (an existing `grund.toml` that omits `[[kinds]]` gets them with the older `FS` home of [§FS-config.3.4.4.4](FS-config.md#3444-a-config-that-omits-kinds-keeps-the-older-fs-home), and one that writes `kinds = []` gets none, [§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)):
 
 ```toml
 [[kinds]]
@@ -573,6 +571,10 @@ A test cites the document whose claim it proves, and is never cited back: an `e2
 ##### 3.4.4.4 A config that omits `[[kinds]]` keeps the older `FS` home
 
 Compatibility note: a pre-existing `grund.toml` that omits `[[kinds]]` keeps the pre-`requirements.md` implicit FS home (`folder = "docs/functional-spec"`) until the project writes an explicit `[[kinds]]` table. New zero-config projects and freshly generated configs use the canonical defaults in [§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds), where `FS` is `file = "requirements.md"`. This preserves existing configs without adding a new schema version.
+
+##### 3.4.4.5 `kinds = []` declares no kinds
+
+A v1 config that writes the top-level key `kinds = []` declares an empty kind set: no row, no ID namespace, no home, and none of the defaults above, where omitting `[[kinds]]` keeps them with the older `FS` home of [§FS-config.3.4.4.4](FS-config.md#3444-a-config-that-omits-kinds-keeps-the-older-fs-home). It is how a repository that declares its own kinds starts ([§FS-init.1.6.2](FS-init.md#162-none)), and the one kind set with no citable kind that v1 loads: a `[[kinds]]` table whose every row sets `citable = false` is still refused. Only the empty array is accepted. A non-empty one is refused at its line with the instruction to write `[[kinds]]` tables, and a `[[kinds]]` table after `kinds = []` is refused at its header, as TOML refuses a table appended to a static array. A version-2 file needs no key for this: one with no `[schema.kinds]` row already has no kinds ([§FS-config-v2.defaults.1](FS-config-v2.md#defaults1-what-v2-fixes)). What follows is each command's to say: the scan reads `[scan] include` and nothing else, because there is no home to add to it ([§FS-scan.scope.homes](FS-scan.md#scopehomes-every-configured-kind-home-is-scanned)); no marked token is a citation, so `check` reports none ([§FS-citations.recognized.no-kinds](FS-citations.md#recognizedno-kinds-with-no-kind-no-token-is-a-citation)); `grund id` has no kind to allocate in ([§FS-list.1.1.1](FS-list.md#111-a-scope-with-no-citable-kind)); and the managed block teaches the first kind rather than listing none ([§FS-init.2.3.4.4.2](FS-init.md#23442-no-kinds-yet)).
 
 #### 3.4.5 Name rules
 
