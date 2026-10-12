@@ -48,6 +48,8 @@ fn chapter_diagnostic_parser_refuses_whitespace_anywhere_in_presence_name() {
         target_kinds: BTreeSet::from(["FS".into()]),
         target_namespaces: BTreeMap::new(),
         named_sections: true,
+        named_kinds: Default::default(),
+        non_citable: Default::default(),
         id_grammars: Vec::new(),
         section_separators: vec![".".into()],
     };
@@ -126,6 +128,8 @@ fn sentence_front_end_returns_complete_parsed_rule_without_facts_or_diagnostics(
             target_kinds: BTreeSet::from(["FS".into(), "REQ".into()]),
             target_namespaces: BTreeMap::new(),
             named_sections: true,
+            named_kinds: Default::default(),
+            non_citable: Default::default(),
             id_grammars: Vec::new(),
             section_separators: vec![".".into()],
         },

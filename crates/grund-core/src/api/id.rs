@@ -11,7 +11,7 @@ use anyhow::Result;
 use std::path::PathBuf;
 
 use super::config::config_run_warnings;
-use crate::config::{display_path, kind_prefixes, non_citable_kind_error};
+use crate::config::{KindScope, KindTable, KindVerdict, Quote, display_path};
 use crate::model::{Finding, Id, paths_same_location};
 use crate::scanner::{e2e_case_dir_name, scan_tree_strict};
 use crate::workspace::resolve_workspace_config;
@@ -96,17 +96,26 @@ fn propose_id_run(
 ) -> Result<IdProposalOutcome> {
     let config = resolve_workspace_config(&opts.path)?;
     *run_warnings = config_run_warnings(&config);
-    let configured = config.kinds.iter().find(|candidate| candidate.kind == kind);
-    let Some(kind_config) = configured.filter(|candidate| candidate.citable) else {
+    // §FS-scan.projects.kinds: `grund id` asks in the project the run loads.
+    let table = KindTable::standalone(config.schema());
+    let scope = KindScope::Project("");
+    let headline = match table.verdict(scope, kind) {
+        KindVerdict::Citable => None,
         // §FS-id.1.1: a non-citable kind is configured and still has nothing to
         // mint, so it is refused in the same shape with its reason in place of
-        // "unknown" — a real row in the table is not a typo.
+        // "unknown" — a real row in the table is not a typo (§FS-errors.2.5.1).
+        KindVerdict::NonCitable(entry) => Some(entry.non_citable_reason(Quote::Backtick)),
+        _ => Some(format!("unknown kind `{kind}`")),
+    };
+    let configured = config.kinds.iter().find(|candidate| candidate.kind == kind);
+    let (None, Some(kind_config)) = (&headline, configured) else {
         return Ok(IdProposalOutcome::UnknownKind {
-            headline: match configured {
-                Some(candidate) => non_citable_kind_error(candidate),
-                None => format!("unknown kind `{kind}`"),
-            },
-            known: kind_prefixes(&config.kinds),
+            headline: headline.unwrap_or_else(|| format!("unknown kind `{kind}`")),
+            known: table
+                .citable(scope)
+                .into_iter()
+                .map(str::to_string)
+                .collect(),
         });
     };
     let slug = slugify_title(title, &config.slug_pattern);

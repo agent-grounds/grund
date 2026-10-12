@@ -10,6 +10,7 @@ mod subjects;
 mod targets;
 
 use super::RuleAnchor;
+use crate::config::one_grammar_window;
 use crate::grammar::Grammar;
 use conjunction::conjunction_forms;
 use forms::{Form, Refusal, refuse};
@@ -115,6 +116,12 @@ pub(crate) struct RuleVocabulary {
     /// use `target_kinds`; qualified targets must resolve in their namespace.
     pub(crate) target_namespaces: BTreeMap<String, BTreeSet<String>>,
     pub(crate) named_sections: bool,
+    /// Kinds whose own project turns named sections on, where the vocabulary
+    /// spans projects that set it differently (§FS-scan.projects.kinds).
+    pub(crate) named_kinds: BTreeSet<String>,
+    /// Configured kinds that declare no IDs, each with the reason it is refused
+    /// for (§FS-errors.2.5.1); the bare object kinds share the subjects' scope.
+    pub(crate) non_citable: BTreeMap<String, String>,
     /// Effective lexical grammars for the catalogs this vocabulary can select.
     /// The sentence front end sees syntax, never scan facts (§AR-rules.1).
     pub(crate) id_grammars: Vec<Grammar>,
@@ -128,6 +135,22 @@ impl RuleVocabulary {
     /// than invalid — a scope holding namespaces judged the alias and said no.
     pub(crate) fn workspace_in_scope(&self) -> bool {
         !self.target_namespaces.is_empty()
+    }
+
+    /// §FS-scan.projects.kinds: whether a named chapter of `kind` is
+    /// addressable, read under the project that configures it.
+    pub(crate) fn named_sections_for(&self, kind: &str) -> bool {
+        self.named_sections || self.named_kinds.contains(kind)
+    }
+
+    /// §FS-errors.3.8: `legacy`, a refusal that names `kind`, with
+    /// §FS-errors.2.5.1's reason appended where `kind` is configured but not
+    /// citable here, until the window closes.
+    pub(crate) fn kind_refusal(&self, legacy: String, kind: &str) -> String {
+        match self.non_citable.get(kind) {
+            Some(reason) => one_grammar_window(&legacy, reason),
+            None => legacy,
+        }
     }
 }
 
@@ -190,26 +213,46 @@ fn holds_clause(subject: &str) -> bool {
     })
 }
 
+/// §FS-rule-refusals.sentences.order: the stages a sentence is read in, in
+/// order. A sentence is refused for the first one it fails and no later stage
+/// is read; `read` takes them in this order, one block each, and a test holds
+/// this list to the specification's table.
+#[cfg(test)]
+pub(crate) const STAGES: [&str; 6] = [
+    "terminal period",
+    "fixed word and phase-1 subject",
+    "conjunction",
+    "modality",
+    "the rest of the subject",
+    "the predicate",
+];
+
 /// Read a sentence, or refuse it with what its refusing production offers in
 /// place of what it read, wrapped back into the whole sentence
-/// (§FS-rule-refusals.sentences.rewrite.replaced).
+/// (§FS-rule-refusals.sentences.rewrite.replaced), at the first of [`STAGES`]
+/// it fails.
 fn read(
     title: &str,
     origin: String,
     anchor: RuleAnchor,
     vocabulary: &RuleVocabulary,
 ) -> Result<(ParsedRule, Option<String>), Refusal> {
+    // §FS-rule-refusals.sentences.order: two documented sentences are refused for
+    // their own row before stage 1; both end in `.`, so no sentence can tell.
     if let Some(refusal) = documented(title) {
         return Err(refusal);
     }
-    // §FS-rule-refusals.sentences.rewrite.by-refusal: the terminal `.` is appended, and `Each`
-    // capitalized.
+    // Stage 1, the terminal period (§FS-rule-refusals.sentences.rewrite.by-refusal:
+    // the `.` is appended).
     if !title.ends_with('.') {
         return Err(refuse(
             "rule must end with \".\"",
             Form::One(format!("{title}.")),
         ));
     }
+    // Stage 2, the fixed word and the phase-1 subject refusals, read from the
+    // sentence's start: `Each` capitalized, a path, `Each */`, `Each chapter of
+    // each`, and a section-component wildcard.
     if let Some(rest) = title.strip_prefix("each ") {
         return Err(refuse(
             "fixed word \"Each\" is case-sensitive",
@@ -229,14 +272,20 @@ fn read(
     if let Some(refusal) = quantified(title, split.map(|(subject, ..)| subject), vocabulary) {
         return Err(refusal);
     }
-    // §FS-rule-refusals.sentences.conjunction: clauses joined by `and` are refused before any
-    // subject is read.
+    // Stage 3, the conjunction (§FS-rule-refusals.sentences.conjunction): clauses
+    // joined by `and` are refused before any more of the subject is read. A
+    // wildcard subject fails stage 2 first, and keeps this refusal as its prefix
+    // through the window of §FS-errors.3.8. Without a conjunction stage 5 refuses
+    // the wildcard with the same parser, so nothing else moves.
     if let Some(forms) = conjunction_forms(sentence) {
-        return Err(refuse(
-            "conjunctions are not accepted",
-            Form::Many(forms, "and"),
-        ));
+        let refusal = refuse("conjunctions are not accepted", Form::Many(forms, "and"));
+        let wildcard = split.and_then(|(subject, ..)| section_wildcard(subject, vocabulary));
+        return Err(match wildcard {
+            Some(reason) => refusal.moving_to(reason),
+            None => refusal,
+        });
     }
+    // Stage 4, the modality.
     let Some((subject_text, level, polarity, predicate)) = split else {
         return Err(match sentence.split_once(" may not ") {
             // §FS-rule-refusals.sentences.rewrite.by-refusal: `must not`, the rest as typed.
@@ -252,6 +301,7 @@ fn read(
     // What follows the subject and what precedes the predicate, both as typed.
     let after_subject = &title[subject_text.len()..];
     let before_predicate = &sentence[..sentence.len() - predicate.len()];
+    // Stage 5, the rest of the subject.
     let subject = parse_subject(subject_text, vocabulary).map_err(|refusal| {
         let refusal = refusal.rule_refusal(vocabulary);
         // §FS-rule-refusals.sentences.rewrite.recovered: a subject holding a clause of its own is
@@ -261,6 +311,7 @@ fn read(
         }
         refusal.within(|subject| format!("{subject}{after_subject}"))
     })?;
+    // Stage 6, the predicate.
     let mut unverifiable = None;
     let (relation, targets, cardinality) =
         parse_predicate(predicate, polarity, vocabulary, &mut unverifiable).map_err(|refusal| {
@@ -320,6 +371,15 @@ fn documented(title: &str) -> Option<Refusal> {
     })
 }
 
+/// Stage 2's wildcard row (§FS-rule-refusals.sentences.order): the reason a
+/// subject is refused for its section-component wildcard, decided by the
+/// subject parser's own test, so a subject that fails an earlier component of
+/// stage 5 first keeps that component's reason.
+fn section_wildcard(subject: &str, vocabulary: &RuleVocabulary) -> Option<String> {
+    let fault = parse_subject(subject, vocabulary).err()?.fault.failed();
+    (fault == SubjectFault::SectionWildcard).then(|| fault.reason(subject))
+}
+
 /// §FS-rules.12: a namespaced or chapter-quantified subject is refused for its
 /// own production before the modality is sought. Its form is the subject
 /// rebuilt as §FS-rule-refusals.sentences.rewrite.recovered says, and there is none where no modality
@@ -345,3 +405,7 @@ fn quantified(title: &str, subject: Option<&str>, vocabulary: &RuleVocabulary) -
     let after_subject = &title[subject.len()..];
     Some(refusal.within(|subject| format!("{subject}{after_subject}")))
 }
+
+#[cfg(test)]
+#[path = "sentence/tests_order.rs"]
+mod tests_order;

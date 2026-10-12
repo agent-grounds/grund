@@ -2,7 +2,7 @@
 //! §AR-checker.1). Grammar, facts, evaluation, and deduplication stay owned by
 //! the rules component; this module only sequences and merges their results.
 
-use crate::config::{Form, Frame, Rules, Schema, known_kinds_line};
+use crate::config::{Form, Frame, KindProject, KindScope, KindTable, Rules, Schema};
 use crate::grammar::render_id;
 use crate::model::{Catalog, CheckReport, Declaration, Diagnostic};
 use crate::resolver::WorkspaceCheckTarget;
@@ -32,9 +32,13 @@ pub(crate) fn markdown_project<'a>(
     }
 }
 
-/// The names of the kinds a rule can name in `schema`: its citable rows.
+/// The names of the kinds a rule can name in `schema`: its citable rows, as
+/// the run's one reading of a project's kinds gives them (§FS-scan.projects.kinds).
 fn citable_kinds(schema: &Schema) -> BTreeSet<String> {
-    schema.kinds().map(|(name, _)| name.to_string()).collect()
+    KindProject::of("", schema)
+        .citable()
+        .map(str::to_string)
+        .collect()
 }
 
 /// The names of `schema`'s rule kinds, whose declarations are rules (§FS-rules.1).
@@ -46,13 +50,24 @@ fn rule_kinds(schema: &Schema) -> BTreeSet<&str> {
         .collect()
 }
 
+/// The vocabulary a rule of `schema`'s project is read in: its subject and a
+/// bare object in that project's scope (§FS-scan.projects.kinds), named
+/// sections as that project sets them.
 pub(crate) fn vocabulary(schema: &Schema, frame: Frame<'_>) -> RuleVocabulary {
-    let kinds = citable_kinds(schema);
+    let table = KindTable::standalone(schema);
+    let scope = KindScope::Project("");
+    let kinds: BTreeSet<String> = table
+        .citable(scope)
+        .into_iter()
+        .map(str::to_string)
+        .collect();
     RuleVocabulary {
         kinds: kinds.clone(),
         target_kinds: kinds,
         target_namespaces: BTreeMap::new(),
-        named_sections: schema.ids.named_sections,
+        named_sections: table.named_sections(scope),
+        named_kinds: BTreeSet::new(),
+        non_citable: table.non_citable_reasons(scope),
         id_grammars: vec![frame.grammar().clone()],
         section_separators: vec![schema.ids.section_separator.clone()],
     }
@@ -102,7 +117,7 @@ fn parse_ad_hoc_with_vocabulary(
             anyhow::anyhow!(
                 "{}\n{}",
                 error.message,
-                known_kinds_line(schema.kinds().map(|(name, _)| name))
+                KindTable::standalone(schema).known_kinds_line(KindScope::Project(""))
             )
         } else {
             anyhow::anyhow!(error.message)

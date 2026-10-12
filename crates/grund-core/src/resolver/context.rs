@@ -114,23 +114,11 @@ impl WorkspaceContext {
             .collect()
     }
 
-    /// The `known kinds:` line that ends an unknown `--kind` (§FS-list.1.1) and
-    /// a `--selector` refusal that recovers no kind (§FS-rule-refusals.selectors): every
-    /// citable kind of the projects `project_filter` selects, once, in
-    /// configuration order. An empty filter selects every loaded project, and a
-    /// narrowed run names only the kinds its lookup accepts (§FS-list.1.2).
-    pub(crate) fn known_kinds_line(
-        &self,
-        project_filter: &std::collections::BTreeSet<String>,
-    ) -> String {
-        crate::config::known_kinds_line(
-            self.projects
-                .iter()
-                .filter(|project| {
-                    project_filter.is_empty() || project_filter.contains(&project.alias)
-                })
-                .flat_map(|project| project.config.schema().kinds().map(|(name, _)| name)),
-        )
+    /// The run's kind table (§FS-scan.projects.kinds): the one the workspace
+    /// walk built, held on the config that owns the render root, or the one
+    /// project's where the run loaded no workspace.
+    pub(crate) fn kind_table(&self) -> std::sync::Arc<crate::config::KindTable> {
+        self.render_config.kind_table()
     }
 }
 

@@ -80,7 +80,7 @@ pub(super) fn recover(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> 
         spelling: refusal.spelling,
         kind: kind.into(),
         declaration,
-        names: named_prefix(refusal.path.as_deref(), vocabulary),
+        names: named_prefix(refusal.path.as_deref(), kind, vocabulary),
         separator: refusal.separator.clone(),
     })
 }
@@ -155,7 +155,7 @@ fn is_declaration(head: &str, vocabulary: &RuleVocabulary) -> bool {
 }
 
 /// Step 3: the longest run of named components before the first refused one.
-fn named_prefix(path: Option<&str>, vocabulary: &RuleVocabulary) -> String {
+fn named_prefix(path: Option<&str>, kind: &str, vocabulary: &RuleVocabulary) -> String {
     let Some(path) = path else {
         return String::new();
     };
@@ -167,7 +167,7 @@ fn named_prefix(path: Option<&str>, vocabulary: &RuleVocabulary) -> String {
     (1..=named)
         .rev()
         .map(|length| components[..length].join("."))
-        .find(|prefix| validate_named_path(prefix, vocabulary).is_ok())
+        .find(|prefix| validate_named_path(prefix, kind, vocabulary).is_ok())
         .unwrap_or_default()
 }
 

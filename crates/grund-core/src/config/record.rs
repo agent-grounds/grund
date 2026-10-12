@@ -377,35 +377,6 @@ pub(crate) fn kind_prefixes(kinds: &[KindConfig]) -> Vec<String> {
         .collect()
 }
 
-/// The `known kinds:` line that ends an unknown `--kind` (§FS-list.1.1), a
-/// `--selector` refusal that recovers no kind (§FS-rule-refusals.selectors), and a
-/// `check --rule` refusal that offers no form where a kind is missing
-/// (§FS-rule-refusals.sentences.rewrite.no-form): every citable kind named in `citable`, once, in
-/// configuration order.
-pub(crate) fn known_kinds_line<'a>(citable: impl IntoIterator<Item = &'a str>) -> String {
-    let mut seen = std::collections::BTreeSet::new();
-    let known = citable
-        .into_iter()
-        .filter(|kind| seen.insert(*kind))
-        .collect::<Vec<_>>();
-    format!("known kinds: {}", known.join(", "))
-}
-
-/// Why a configured kind cannot be selected with `--kind` or minted from
-/// (§FS-list.1.1, §FS-id.1.1). A non-citable kind is not a typo — it is a real row
-/// in `[[kinds]]` that will never have a declaration — so the message says that
-/// rather than calling it unknown, and names the home, which is the thing the
-/// caller can actually go and open.
-pub(crate) fn non_citable_kind_error(kind: &KindConfig) -> String {
-    match kind.place_label() {
-        Some(place) => format!(
-            "kind `{}` declares no IDs — {place} is not a citable home",
-            kind.kind
-        ),
-        None => format!("kind `{}` declares no IDs", kind.kind),
-    }
-}
-
 /// Every citing kind `[citations.<kind>]` may name (§FS-config.3.9): each
 /// configured kind, citable or not, plus `code` — but only where the table did
 /// not declare the homeless kind itself. A config that names its complement
