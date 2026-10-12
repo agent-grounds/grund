@@ -27,8 +27,8 @@ use super::findings::undecidable_ancestor_claim_diagnostic;
 use super::optional_members::expand_optional_members;
 use super::scope::{config_location_error, workspace_members_error};
 use crate::config::{
-    AbsentOptionalNamespace, Config, ConfigLocation, config_file_in,
-    load_config_at_with_report_base, parse_string_list, strip_comment,
+    AbsentOptionalNamespace, Config, ConfigLocation, Invocation, Selection, config_at,
+    config_file_in, parse_string_list, strip_comment,
 };
 use crate::model::{Diagnostic, is_hidden, sort_path_key};
 
@@ -512,8 +512,13 @@ fn read_ancestor_workspace_block(
     (
         Some(AncestorBlock {
             claims: member_claims(&canonical_workspace_path(dir), &entries),
-            config: load_config_at_with_report_base(dir, cli_base, Some(report_base))
-                .map_err(|err| format!("{err:#}")),
+            config: config_at(
+                dir,
+                cli_base,
+                Some(report_base),
+                &Invocation::new(dir, false, Selection::Project),
+            )
+            .map_err(|err| format!("{err:#}")),
             members: None,
         }),
         None,

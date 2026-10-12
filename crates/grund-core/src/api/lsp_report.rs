@@ -20,30 +20,28 @@ use crate::model::{CheckReport, Diagnostic};
 use crate::resolver::{WorkspaceCheckTarget, WorkspaceContext};
 use crate::sources::Buffers;
 use crate::workspace::{
-    absent_only_workspace_caution, absent_optional_member_warnings, scope_is_config_root,
-    unlisted_workspace_block_errors,
+    absent_only_workspace_caution, absent_optional_member_warnings, unlisted_workspace_block_errors,
 };
 use crate::writers::expected;
 
 /// §AR-lsp.5.1.1: a snapshot anchored below its config root keeps the two scopes of
 /// §FS-check.1.3.6.1, the way `run_check_with_run_warnings` does for `grund check
-/// <path>`. The walk is widened to the project's ordinary roots on the config, for
-/// the reason that run sets it there — the scanner asks four frames down — and the
-/// returned report scope is what the caller narrows the report to once every rule
-/// has run. `None`, and an unchanged walk, for a root anchor.
+/// <path>`. The walk was widened to the project's ordinary roots when `open()`
+/// built the run under the `Editor` selection, and the report scope returned here
+/// is what the caller narrows the report to once every rule has run. `None`, and
+/// an unchanged walk, for a root anchor.
 ///
 /// Only the single-project arm: a config that still declares `[workspace]` here is
 /// a non-member folder of the workspace root, which loads every project at its own
 /// root and is not narrowed by the anchor at all (`load_resolved_workspace_context`).
-pub(super) fn widen_for_path_anchor(
-    config: &mut Config,
+pub(super) fn editor_report_scope(
+    config: &Config,
     path: &Path,
     path_provided: bool,
 ) -> Result<Option<ScanScope>> {
-    if config.workspace_declared || scope_is_config_root(&config.root, path, path_provided) {
+    if !config.run().scope.resolution_wide {
         return Ok(None);
     }
-    config.set_scan_resolution_wide(true);
     path_report_scope(config.schema(), config.frame(), path, path_provided)
 }
 
@@ -57,7 +55,7 @@ pub(super) fn editor_report(
     anchor: &Path,
     report_scope: Option<&ScanScope>,
 ) -> CheckReport {
-    check_workspace_context(context, false, overlays, anchor, report_scope)
+    check_workspace_context(context, overlays, anchor, report_scope)
 }
 
 /// §FS-lsp.4.1: the report the editor shows, decided here so that an editor and a
@@ -78,7 +76,6 @@ pub(super) fn editor_report(
 /// of the anchor, then the files the wider walk could not read outside it.
 fn check_workspace_context(
     context: &WorkspaceContext,
-    force_require_grounding: bool,
     overlays: &Buffers,
     anchor: &Path,
     report_scope: Option<&ScanScope>,
@@ -111,12 +108,7 @@ fn check_workspace_context(
         .iter()
         .all(|project| project.scan_errors.is_empty());
     for project in &context.projects {
-        let mut config = project.config.clone();
-        // §FS-check.1: the same global default the key sets, per member — an
-        // explicit `false` on a `[[kinds]]` row still wins (§FS-config.3.4.8.3).
-        if force_require_grounding {
-            config.force_require_grounding();
-        }
+        let config = project.config.clone();
         let mut project_report = if context.workspace_loaded {
             // §AR-checker.1.3: presentation's bytes, rendered before the checker runs.
             let expected = expected(&project.findings, &config, &workspace);

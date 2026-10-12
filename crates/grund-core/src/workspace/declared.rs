@@ -5,11 +5,10 @@
 //! returned here and names no façade (§AR-config.5).
 
 use anyhow::Result;
-use std::path::Path;
 
 use super::expand::{WorkspaceProjectEntry, expand_workspace_tree};
-use super::scope::{resolve_workspace_config, scope_is_config_root};
-use crate::config::{Config, Schema, install_kind_table};
+use super::scope::open;
+use crate::config::{Config, Invocation, Schema, install_kind_table};
 
 /// Each project the workspace `config` declares, by alias, with its schema —
 /// empty where `config` declares no `[workspace]`.
@@ -36,9 +35,9 @@ pub(crate) fn declared_member_schemas(config: &Config) -> Vec<(String, Schema)> 
 /// judges and puts the same warnings on the run's channel
 /// (§AR-config.1.5, §REQ-one-answer.scope.narrowed). A scope that is
 /// the config root is the whole run, and its expansion builds the table.
-pub(crate) fn resolve_narrowable_config(path: &Path, path_provided: bool) -> Result<Config> {
-    let mut config = resolve_workspace_config(path)?;
-    if config.workspace_declared && !scope_is_config_root(&config.root, path, path_provided) {
+pub(crate) fn open_narrowable(invocation: &Invocation) -> Result<Config> {
+    let mut config = open(invocation)?;
+    if config.workspace_declared && !invocation.names_root(&config.root) {
         install_declared_kind_table(&mut config);
     }
     Ok(config)

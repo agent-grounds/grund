@@ -16,34 +16,51 @@ use super::findings::reject_absorbed_scan;
 use super::members::{WorkspaceMember, canonical_workspace_path, expand_workspace_member_list};
 use crate::config::display_path;
 use crate::config::{
-    Config, ConfigLocation, RunWarning, discovery_start_dir, invalid_project_alias_message,
-    is_valid_project_alias, load_config, load_config_at,
+    Config, ConfigLocation, Invocation, RunWarning, Selection, config_at, discover_config,
+    discovery_start_dir, invalid_project_alias_message, is_valid_project_alias,
 };
 use crate::model::format_path;
 
-/// Whether the requested scope *is* the config root — the scope `[scan] include`
-/// governs, and therefore the only one `grund check --full` can widen
-/// (§FS-check.1.3.6). It is also what decides a workspace-wide run
-/// (§FS-workspace.5): both questions are "did the caller ask for the whole
-/// project, however they spelled it?".
-pub(crate) fn scope_is_config_root(root: &Path, path: &Path, path_provided: bool) -> bool {
-    !path_provided
-        || fs::canonicalize(path)
-            .map(|path| path == root)
-            .unwrap_or(false)
-}
+/// Whether the path names the project's root (§FS-check.1.3.6): the invocation's
+/// question, answered in config where the `Run` is built (§AR-config.1.5).
+pub(crate) use crate::config::scope_is_config_root;
 
-/// §AR-workspace.5.1, §AR-workspace.6, §AR-resolver.3: every CLI entry point
-/// that walks the tree funnels through this helper so workspace handling is
-/// identical across `check`, `fmt`, `refs`, `list`, `cover`, `show`, `id`, and
-/// completions. The three steps are upward discovery, the member-scope
-/// rewrite, and boundary-root population — the last is what stops a root-scope
-/// scan from absorbing member declarations into the parent namespace.
-pub(crate) fn resolve_workspace_config(path: &Path) -> Result<Config> {
-    let mut config = load_config(path)?;
-    config = config_for_member_scope(config, path)?;
+/// §AR-config.1.5: the one function that builds every `Run`. It discovers the
+/// config for the invocation's path, rewrites a scope inside a member onto the
+/// member, and populates the boundary the scanner consumes, so each project's
+/// `Run` is built once from what the command decided: its selection, its flags,
+/// `--path-base` and the editor's buffers (§AR-workspace.5.1, §AR-workspace.6,
+/// §AR-resolver.3). Every CLI entry point that walks the tree funnels through
+/// here, so workspace handling is identical across `check`, `fmt`, `refs`,
+/// `list`, `cover`, `show`, `id`, and completions; the boundary is what stops a
+/// root-scope scan from absorbing member declarations into the parent namespace.
+/// A `Discovery` selection stops after discovery (§FS-config.1).
+pub(crate) fn open(invocation: &Invocation) -> Result<Config> {
+    let mut config = discover_config(invocation)?;
+    if invocation.selection == Selection::Discovery {
+        return Ok(config);
+    }
+    config = config_for_member_scope(config, invocation)?;
     apply_workspace_boundary(&mut config)?;
     Ok(config)
+}
+
+/// `open()` at a known config root, with no upward walk: what `init` reads of a
+/// directory it already found a config in (§FS-init.2.3.4), under a run that
+/// has decided nothing else.
+pub(crate) fn open_at(root: &Path, cli_base: &Path) -> Result<Config> {
+    config_at(
+        root,
+        cli_base,
+        None,
+        &Invocation::new(root, false, Selection::Project),
+    )
+}
+
+/// `open()` for a command whose path only selects the project, with no flag
+/// of its own (§FS-workspace.8.8).
+pub(crate) fn resolve_workspace_config(path: &Path) -> Result<Config> {
+    open(&Invocation::new(path, true, Selection::Project))
 }
 
 /// §AR-workspace.6: a workspace-declared scan must never descend into member
@@ -103,16 +120,16 @@ pub(crate) fn populate_workspace_boundary(
 /// the member has its own `grund.toml` or not — either way a
 /// member-scoped command runs as an independent project, with member defaults
 /// when no member config exists.
-fn config_for_member_scope(mut config: Config, path: &Path) -> Result<Config> {
+fn config_for_member_scope(mut config: Config, invocation: &Invocation) -> Result<Config> {
     if !config.workspace_declared {
         return Ok(config);
     }
-    let scope = config_scope_start(path);
+    let scope = config_scope_start(&invocation.path);
     if scope == config.root {
         return Ok(config);
     }
     if let Some(member_root) = configured_member_root_for_scope(&config, &scope) {
-        config = load_config_at(&member_root, &config.cli_base)?;
+        config = config_at(&member_root, &config.cli_base, None, invocation)?;
     }
     Ok(config)
 }

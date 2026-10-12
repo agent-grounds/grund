@@ -8,7 +8,7 @@ use rayon::prelude::*;
 
 use super::tree::scan_tree_with_workspace_threshold;
 use crate::checker::{check_findings, dangling_message};
-use crate::config::{Config, load_config_at_with_report_base};
+use crate::config::{Config, Invocation, Selection, config_at};
 #[cfg(unix)]
 use crate::model::{Catalog, Declaration, DeclarationSource};
 use crate::model::{Id, format_path};
@@ -115,10 +115,11 @@ members = ["packages/*"]
     root_config.workspace_boundary_roots = member_roots.clone();
     let mut entries = vec![("root".to_string(), root_config.clone())];
     for member_root in member_roots {
-        let member_config = load_config_at_with_report_base(
+        let member_config = config_at(
             &member_root,
             &root_config.cli_base,
             Some(&root_config.root),
+            &Invocation::new(&member_root, false, Selection::Project),
         )
         .expect("member config");
         let alias = member_root

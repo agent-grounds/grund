@@ -16,9 +16,9 @@ use super::lsp_ranges::{
     absolutize_path, declaration_range_parts, heading_span_parts, lsp_query_id,
     lsp_target_for_citation, lsp_target_for_stub, section_range_parts,
 };
-use super::lsp_report::{editor_report, editor_run_warnings, widen_for_path_anchor};
+use super::lsp_report::{editor_report, editor_report_scope, editor_run_warnings};
 use super::report::{public_lsp_report, public_lsp_run_warnings};
-use crate::config::{ProjectRecords, display_path};
+use crate::config::{Invocation, ProjectRecords, Selection, display_path};
 use crate::grammar::render_id;
 use crate::model::{Declaration, paired_declarations, sort_path_key};
 use crate::queries::{
@@ -27,8 +27,8 @@ use crate::queries::{
 };
 use crate::resolver::load_resolved_workspace_context;
 use crate::scanner::api_scan_error;
-use crate::sources::{Buffers, canonical_snapshot_path};
-use crate::workspace::resolve_workspace_config;
+use crate::sources::Buffers;
+use crate::workspace::open;
 
 /// Programmatic snapshot for `grund-lsp`: all scanner-derived declaration and
 /// citation ranges plus their resolved navigation targets. This keeps the LSP
@@ -48,23 +48,19 @@ pub fn lsp_snapshot_with_metadata(opts: LspSnapshotOpts) -> Result<LspSnapshotWi
 /// (§FS-lsp.1.6.2, §FS-lsp.1.6.4), never separately per request.
 pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshotWithCompletion> {
     let overlays = normalized_overlays(opts.open_documents);
-    // §FS-lsp.1.1: classify citing sides so the citation-direction checks
-    // (`missing-citation` / `forbidden-citation`) run and surface as editor
-    // diagnostics, the same errors `grund check` reports.
-    let mut config = resolve_workspace_config(&opts.path)?;
-    // §FS-lsp.2.2.1: an editor's explicit zero-config folder is the project anchor
-    // even when the server process started elsewhere; CLI discovery deliberately
-    // roots defaults at cwd, so this API corrects that root before it builds.
-    if opts.path_provided && opts.path.is_dir() && config.config_file.is_none() {
-        config.set_root(canonical_snapshot_path(&opts.path));
-    }
-    let report_scope = widen_for_path_anchor(&mut config, &opts.path, opts.path_provided)?;
+    // §FS-lsp.1.1: classify citing sides so the citation-direction checks run and
+    // surface as editor diagnostics, the same errors `grund check` reports.
+
+    // §FS-lsp.2.2.1, §AR-lsp.5.1.1: `Editor` anchors an explicit zero-config folder
+    // and widens a walk below the root, both as `open()` builds the run.
+    let invocation = Invocation::new(&opts.path, opts.path_provided, Selection::Editor)
+        .buffers(overlays.clone());
+    let config = open(&invocation)?;
+    let report_scope = editor_report_scope(&config, &opts.path, opts.path_provided)?;
     let context = load_resolved_workspace_context(
         ProjectRecords::of(config),
         &opts.path,
         opts.path_provided,
-        &overlays,
-        true,
     )?;
     let render_config = context.render_config().clone();
     let completion = LspCompletionContext::from_workspace(&context);

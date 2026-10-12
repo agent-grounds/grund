@@ -10,9 +10,9 @@ use std::path::{Path, PathBuf};
 
 use super::*;
 
+use crate::config::{Invocation, Selection};
 use crate::resolver::{
-    load_classifying_workspace_context, load_workspace_context,
-    load_workspace_context_with_overlays,
+    load_classifying_workspace_context, load_invoked_workspace_context, load_workspace_context,
 };
 use crate::sources::Buffers;
 use crate::testing::{test_root, write};
@@ -155,7 +155,7 @@ fn refs_carries_the_citing_sites_enclosing_unit() {
 /// §AR-scanner.2.4.2, §GOAL-fast-feedback: the queries that publish none of the
 /// three citing-side fields still skip the post-pass. `list`, `fmt`,
 /// `complete_ids`, `sizes` and `batch` enter through `load_workspace_context`
-/// and `show` through `load_workspace_context_with_overlays(_, _, _, false)`, so
+/// and `show` through `load_invoked_workspace_context` with classification off, so
 /// those two loaders are where the skip has to hold; `refs` has its own entry
 /// precisely so that turning the pass on for it did not turn it on for six.
 ///
@@ -179,8 +179,10 @@ fn the_queries_that_publish_no_enclosing_unit_still_skip_classification() {
             .count()
     };
     assert_eq!(classified(&root, false), 0, "load_workspace_context");
-    let overlaid = load_workspace_context_with_overlays(&root, true, &Buffers::default(), false)
-        .expect("load context with overlays");
+    let invocation = Invocation::new(&root, true, Selection::Project)
+        .classify(false)
+        .buffers(Buffers::default());
+    let overlaid = load_invoked_workspace_context(&invocation).expect("load context with overlays");
     assert_eq!(
         overlaid
             .projects
@@ -189,7 +191,7 @@ fn the_queries_that_publish_no_enclosing_unit_still_skip_classification() {
             .filter(|citation| citation.enclosing_declaration.is_some())
             .count(),
         0,
-        "load_workspace_context_with_overlays(.., false) — show's entry"
+        "load_invoked_workspace_context(classify off) — show's entry"
     );
     // Three of the four sites sit in a declaration body, so the classifying
     // loader is the one that answers: the assertion above is a skip, not an

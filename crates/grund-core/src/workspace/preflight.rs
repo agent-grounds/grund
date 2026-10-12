@@ -1,7 +1,7 @@
 //! Bounded host path protection, before alias derivation (§FS-distribution.3.3.3).
 
 use super::members::expand_workspace_member_list;
-use crate::config::{Config, load_config, load_config_at};
+use crate::config::{Config, Invocation, Selection, config_at, discover_config};
 use crate::model::OperationDiagnostic;
 use anyhow::Result;
 use std::collections::BTreeSet;
@@ -10,7 +10,7 @@ use std::path::Path;
 /// Use the actual workspace member discovery; never invent a second glob walker.
 /// Existing process entrypoints do not opt into this preflight (§FS-distribution.3.1).
 pub(crate) fn preflight_embedding_paths(path: &Path) -> Result<()> {
-    let config = load_config(path)?;
+    let config = discover_config(&Invocation::new(path, true, Selection::Discovery))?;
     let mut seen = BTreeSet::new();
     visit(config.clone(), &mut seen)?;
     // §FS-distribution.3.3.3: narrowed calls can derive aliases from claiming ancestors.
@@ -39,7 +39,12 @@ fn visit(config: Config, seen: &mut BTreeSet<std::path::PathBuf>) -> Result<()> 
         return Ok(());
     };
     for member in expanded.members {
-        let Ok(child) = load_config_at(&member.root, &config.cli_base) else {
+        let Ok(child) = config_at(
+            &member.root,
+            &config.cli_base,
+            None,
+            &config.run().members(),
+        ) else {
             continue;
         };
         if !member.optional

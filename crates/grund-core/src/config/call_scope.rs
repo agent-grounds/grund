@@ -5,7 +5,7 @@
 //! one discovery input to the synchronous embedding call, instead of changing
 //! process cwd or existing Rust/CLI defaults. The guard restores prior scope on both return and unwind.
 //! Config objects handed to worker threads already contain the resolved root;
-//! workspace members use direct load_config_at and do not need this fallback.
+//! workspace members use direct `config_at` and do not need this fallback.
 
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};

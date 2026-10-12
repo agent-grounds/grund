@@ -1,9 +1,11 @@
 //! §AR-config.5: the `Config` façade, built from the three records and written
 //! nowhere outside this component. `from_records` is the one place a façade
-//! field gets its value; every per-run change goes through a setter here that
-//! records the fact on the `Run` first and then refreshes the field it shows,
-//! so the façade a component holds and the records behind it never disagree
-//! about what the invocation decided.
+//! field gets its value. What the invocation decided is settled before its `Run`
+//! is built (§AR-config.1.5), so the setters left here are what workspace
+//! expansion learns about the checkout, and the ones a unit test states a scope
+//! with. Each records the fact on the `Run` first and then refreshes the field it
+//! shows, so the façade a component holds and the records behind it never
+//! disagree.
 //!
 //! A setter refreshes its own field rather than rebuilding the whole façade:
 //! tests still set façade fields directly, and a whole rebuild would undo them.
@@ -171,39 +173,23 @@ impl Config {
         &self.records
     }
 
-    /// Re-roots the run at `root`, the canonical config root a workspace walk
-    /// resolved (§AR-workspace.6).
-    pub(crate) fn set_root(&mut self, root: PathBuf) {
-        self.records.run.root = root;
-        self.root = self.records.run.root.clone();
-    }
-
-    /// `grund check --full` for this run (§FS-check.1.3).
+    /// `grund check --full`, stated on a test's façade; a command hands it to
+    /// `open()` (§AR-config.1.5, §FS-check.1.3).
+    #[cfg(test)]
     pub(crate) fn set_scan_full(&mut self, full: bool) {
         self.records.run.scope.full = full;
         self.scan_full = full;
     }
 
-    /// An explicit path below the config root (§FS-check.1.3.6.1).
-    pub(crate) fn set_scan_resolution_wide(&mut self, wide: bool) {
-        self.records.run.scope.resolution_wide = wide;
-        self.scan_resolution_wide = wide;
-    }
-
-    /// Whether this run's scan classifies citing sides (§AR-scanner.2.4).
-    pub(crate) fn set_classify_citation_sources(&mut self, classify: bool) {
-        self.records.run.scope.classify_citation_sources = classify;
-        self.classify_citation_sources = classify;
-    }
-
-    /// The `cover --lines` ranges this run asks the owners of (§FS-cover.6.1).
+    /// `cover --lines` ranges, stated on a test's façade (§FS-cover.6.1).
+    #[cfg(test)]
     pub(crate) fn set_owner_lines(&mut self, lines: Vec<(usize, usize)>) {
         self.records.run.scope.owner_lines = lines;
         self.owner_lines = self.records.run.scope.owner_lines.clone();
     }
 
-    /// `grund check --require-grounding`: on for this run, never off
-    /// (§FS-check.3.6).
+    /// `--require-grounding`, stated on a test's façade (§FS-check.3.6).
+    #[cfg(test)]
     pub(crate) fn force_require_grounding(&mut self) {
         self.records.run.scope.require_grounding = true;
         self.require_grounding = true;

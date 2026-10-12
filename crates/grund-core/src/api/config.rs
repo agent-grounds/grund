@@ -9,10 +9,10 @@ use std::path::Path;
 
 use super::config_findings::config_diagnostics;
 use super::report::public_run_warnings;
-use crate::config::{Config, Project, load_config};
+use crate::config::{Config, Invocation, Project, Selection};
 use crate::model::Finding;
 use crate::resolver::settled_run_warnings;
-use crate::workspace::{expand_workspace_tree, resolve_workspace_config};
+use crate::workspace::{expand_workspace_tree, open, resolve_workspace_config};
 
 /// The run's `[workspace]` warnings off a `Config` a caller already holds
 /// (§FS-check.4.10, §FS-workspace.6.1.7.6): what the workspace pass
@@ -28,14 +28,14 @@ pub fn config_run_warnings(config: &Config) -> Vec<Finding> {
 }
 
 pub fn effective_config(path: &Path) -> Result<Config> {
-    load_config(path)
+    open(&Invocation::new(path, true, Selection::Discovery))
 }
 
 /// The project the config for `path` lowers to, every default applied and no
 /// per-run fact in it (§AR-config.1.1, §AR-bindings.2): what an embedder reads
 /// in place of the `Config` façade, which is on its way out (§AR-config.5).
 pub fn effective_project(path: &Path) -> Result<Project> {
-    Ok(load_config(path)?.project().clone())
+    Ok(effective_config(path)?.project().clone())
 }
 
 /// Validate config discovery/parsing for a path without printing CLI output

@@ -15,13 +15,13 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use super::lsp_snapshot::normalized_overlays;
-use crate::config::display_path;
+use crate::config::{Invocation, Selection, display_path};
 use crate::grammar::flatten_cross_ref_links;
 use crate::model::{Finding, ShowOutput};
 use crate::queries::{
     ShowFormat, ShowOpts, render_show_output_json, show_declaration_with_overlays,
 };
-use crate::resolver::{load_workspace_context_with_overlays, with_member_id_candidates};
+use crate::resolver::{load_invoked_workspace_context, with_member_id_candidates};
 use crate::sources::Buffers;
 
 use super::report::context_run_warnings;
@@ -103,7 +103,11 @@ fn show_run(
     run_warnings: &mut Vec<Finding>,
     metadata: &mut serde_json::Value,
 ) -> Result<ShowOutput> {
-    let context = load_workspace_context_with_overlays(&opts.path, path_provided, overlays, false)?;
+    // §AR-config.1.5: the buffers are the run's, handed to `open()` with its scope.
+    let invocation = Invocation::new(&opts.path, path_provided, Selection::Project)
+        .classify(false)
+        .buffers(overlays.clone());
+    let context = load_invoked_workspace_context(&invocation)?;
     *run_warnings = context_run_warnings(&context);
     let (alias, raw_id) = split_qualified_id_arg(id_arg)?;
     let project = match alias.as_deref() {

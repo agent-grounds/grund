@@ -69,26 +69,6 @@ impl ProjectRecords {
     pub(crate) fn into_facade(self) -> Config {
         self.facade
     }
-
-    /// Whether this run classifies citing sides (§AR-scanner.2.4).
-    pub(crate) fn set_classify_citation_sources(&mut self, classify: bool) {
-        self.facade.set_classify_citation_sources(classify);
-    }
-
-    /// `grund check --full` for this run (§FS-check.1.3).
-    pub(crate) fn set_scan_full(&mut self, full: bool) {
-        self.facade.set_scan_full(full);
-    }
-
-    /// `--require-grounding` for this run (§FS-check.3.5).
-    pub(crate) fn force_require_grounding(&mut self) {
-        self.facade.force_require_grounding();
-    }
-
-    /// The `cover --lines` ranges this run asks the owners of (§FS-cover.6.1).
-    pub(crate) fn set_owner_lines(&mut self, lines: Vec<(usize, usize)>) {
-        self.facade.set_owner_lines(lines);
-    }
 }
 
 /// The components still on §AR-config.5's list read the façade straight

@@ -8,9 +8,10 @@ use anyhow::{Context, Result};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::compiled::compile;
+use super::compiled::{Compiled, compile};
+use super::project::Project;
 use super::record::Config;
-use super::run::Run;
+use super::run::{Invocation, Run};
 use super::run_warnings::RunWarning;
 use super::{v1, v2, validate};
 use crate::model::{format_path, relative_from_base};
@@ -99,7 +100,11 @@ pub(crate) fn discovery_start_dir(path: &Path) -> &Path {
 /// Why the fallback root is the working directory: `[scan] include` must resolve
 /// against the repository, so `grund check src/` scopes *into* `src/` instead of
 /// looking for `src/docs`, `src/e2e`, `src/src`.
-pub(crate) fn load_config(start: &Path) -> Result<Config> {
+///
+/// The run it builds is `invocation`'s (§AR-config.1.5), and only `open()` in the
+/// workspace component asks.
+pub(crate) fn discover_config(invocation: &Invocation) -> Result<Config> {
+    let start = invocation.path.as_path();
     // §FS-check.6.1.1, §FS-check.6.1.3: cover the lexical invocation and its
     // followed targets before type probes or canonical discovery lose the link.
     anyhow::ensure!(
@@ -117,7 +122,7 @@ pub(crate) fn load_config(start: &Path) -> Result<Config> {
         // member config shadows an ancestor's `.agents/` one exactly as a nested
         // `.agents/grund.toml` always did (§FS-config.1, §DF-config-file-location.2.1).
         if config_file_in(dir).is_some() {
-            return load_config_at(dir, &walk_start);
+            return config_at(dir, &walk_start, None, invocation);
         }
         cursor = dir.parent();
     }
@@ -126,54 +131,47 @@ pub(crate) fn load_config(start: &Path) -> Result<Config> {
     // `cli_base` (the resolved path arg) when `relative_paths` is off (§FS-config.3.6.1).
 
     // §FS-distribution.3.3.3: embedding scopes this fallback to its supplied root.
+    // §FS-lsp.2.2.1: an editor's explicit zero-config folder is the project anchor
+    // even when the server process started elsewhere.
     let root = match super::call_scope::embedding_base() {
+        _ if invocation.anchors_zero_config() => crate::sources::canonical_snapshot_path(start),
         Some(base) => fs::canonicalize(&base).unwrap_or(base),
         None => std::env::current_dir()
             .ok()
             .and_then(|cwd| fs::canonicalize(&cwd).ok())
             .unwrap_or_else(|| walk_start.clone()),
     };
-    let mut run = Run::at(root);
-    run.cli_base = walk_start;
-    let config = defaults_under(&run);
+    let run = Run::of(root, walk_start, invocation);
+    let config = defaults_under(run, invocation);
     // §FS-check.6.1.3: zero-config still has effective roots and probes.
     super::observe_config(&config);
     Ok(config)
 }
 
 /// Load the config rooted at `root` (no upward walk), using `cli_base` for
-/// path rendering. The one shared loader both upward discovery (`load_config`)
-/// and direct workspace-member loading funnel through (§AR-workspace.5.1).
-pub(crate) fn load_config_at(root: &Path, cli_base: &Path) -> Result<Config> {
-    load_config_at_with_report_base(root, cli_base, None)
-}
-
-/// The shared loader behind `load_config_at`, with an explicit `report_base` for
-/// rendering config-error paths.
+/// path rendering, under `invocation` (§AR-config.1.5). The one shared loader
+/// both upward discovery (`discover_config`) and direct workspace-member
+/// loading funnel through (§AR-workspace.5.1).
 ///
-/// How a report base reads: one *above* this config is the ordinary case for a
-/// workspace member; one *below* it is the enclosing workspace read by an ancestor
-/// climb, and that renders with `..` so the reader lands on the file that holds the
-/// offending line rather than on a same-named one in their own directory
-/// (§FS-workspace.6.1.7).
-pub(crate) fn load_config_at_with_report_base(
+/// `report_base` is the base config-error paths are rendered from.
+pub(crate) fn config_at(
     root: &Path,
     cli_base: &Path,
     report_base: Option<&Path>,
+    invocation: &Invocation,
 ) -> Result<Config> {
     let root = fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
     let candidate = config_file_in(&root);
-    let mut run = Run::at(root.clone());
-    run.cli_base = cli_base.to_path_buf();
+    let mut run = Run::of(root.clone(), cli_base.to_path_buf(), invocation);
     // Report config errors against a stable relative path, never the absolute
     // discovered path (§FS-errors.4: deterministic, no absolute paths outside the
     // configured root).
 
     // §FS-cli.3.4: under `--path-base=invocation` every location the load records,
     // and so every config-load error, is spelled from the CLI base.
-    let invocation = run.path_base == Some(super::call_scope::PathBase::Invocation);
+    let from_cli_base = run.path_base == Some(super::call_scope::PathBase::Invocation);
     let report_relative = |path: &Path| match report_base {
-        _ if invocation => relative_from_base(cli_base, path),
+        _ if from_cli_base => relative_from_base(cli_base, path),
         Some(base) => relative_from_base(base, path),
         None => path
             .strip_prefix(&root)
@@ -184,12 +182,12 @@ pub(crate) fn load_config_at_with_report_base(
     // surface that reports on the config can name the file grund ignored.
     run.redundant_config_file = redundant_config_file_in(&root).map(|path| report_relative(&path));
     let config = match candidate {
-        None => defaults_under(&run),
+        None => defaults_under(run, invocation),
         Some(candidate) => {
             let report_path = report_relative(&candidate);
             run.config_file = Some(report_path.clone());
             // §FS-distribution.3.3.2: classify all config-load failures at discovery.
-            read_config(&candidate, &report_path, &root, &run).map_err(|error| {
+            read_config(&candidate, &report_path, &root, run, invocation).map_err(|error| {
                 if error
                     .downcast_ref::<crate::model::OperationDiagnostic>()
                     .is_some()
@@ -211,10 +209,24 @@ pub(crate) fn load_config_at_with_report_base(
 
 /// The zero-config façade under `run` (§GOAL-zero-config): the v1 default
 /// project, which no file narrowed (§AR-config.3.2).
-fn defaults_under(run: &Run) -> Config {
+fn defaults_under(run: Run, invocation: &Invocation) -> Config {
     let project = v1::default_project(false);
     let compiled = compile(&project).expect("default grammar must compile");
-    Config::from_records(&project, run, &compiled)
+    settled(&project, &compiled, run, invocation)
+}
+
+/// The façade over `project` under `run`, its one fact that needs the project
+/// settled first: whether the walk reads the ordinary roots beside the path,
+/// which a `[workspace]` block decides for the editor (§AR-config.1.5,
+/// §AR-lsp.5.1.1). Built once; nothing sets a scope field after.
+fn settled(
+    project: &Project,
+    compiled: &Compiled,
+    mut run: Run,
+    invocation: &Invocation,
+) -> Config {
+    run.scope.resolution_wide = invocation.resolution_wide(&run.root, project.workspace.declared);
+    Config::from_records(project, &run, compiled)
 }
 
 /// Read one config file into the façade (§AR-config.2): lowered by the reader
@@ -228,7 +240,13 @@ fn defaults_under(run: &Run) -> Config {
 /// meanings, then the `[[kinds]]` refusals and the kind table, then the grammar,
 /// then the member lists and `[citations]`. The v2 reader has refused every
 /// spelling before the shared judgement starts (§FS-config-v2.reader.4).
-fn read_config(read_path: &Path, report_path: &Path, root: &Path, run: &Run) -> Result<Config> {
+fn read_config(
+    read_path: &Path,
+    report_path: &Path,
+    root: &Path,
+    run: Run,
+    invocation: &Invocation,
+) -> Result<Config> {
     // §FS-check.6.1.1: cover this effective input before its shared read.
     let text = super::input_read_to_string(read_path)
         .with_context(|| format!("read {}", format_path(report_path)))?;
@@ -245,9 +263,27 @@ fn read_config(read_path: &Path, report_path: &Path, root: &Path, run: &Run) -> 
     let compiled = compile(&project)
         .with_context(|| format!("{}: invalid [id] grammar", format_path(report_path)))?;
     let warnings = validate::lists(report_path, &project)?;
-    let mut config = Config::from_records(&project, run, &compiled);
+    let mut config = settled(&project, &compiled, run, invocation);
     // §FS-config.3.9.5.2: what a run that holds no workspace cannot judge loads,
     // and says so on the run's warning channel.
     config.extend_run_warnings(warnings.into_iter().map(RunWarning::citation_target));
     Ok(config)
+}
+
+/// Discovery from `start` as a read-only command makes it: the loader the unit
+/// tests state a project through (§AR-config.1.5).
+#[cfg(test)]
+pub(crate) fn load_config(start: &Path) -> Result<Config> {
+    discover_config(&Invocation::new(
+        start,
+        true,
+        super::run::Selection::Discovery,
+    ))
+}
+
+/// `config_at` with no report base, as a read-only command loads a member.
+#[cfg(test)]
+pub(crate) fn load_config_at(root: &Path, cli_base: &Path) -> Result<Config> {
+    let invocation = Invocation::new(root, false, super::run::Selection::Project);
+    config_at(root, cli_base, None, &invocation)
 }
