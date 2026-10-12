@@ -5,6 +5,7 @@
 use std::path::{Path, PathBuf};
 
 use crate::config::Frame;
+use crate::grammar::{STUB_LINK_HEADING, may_hold_relative_heading};
 use crate::model::{Catalog, SECTION_LOCK_DIR, SectionLockFile};
 
 /// Whether the config root holds anything under `.grund/sections/`, read where
@@ -15,6 +16,35 @@ pub(crate) fn section_locks_present(frame: Frame<'_>) -> bool {
         .sources()
         .read_dir(frame.root().join(SECTION_LOCK_DIR))
         .is_ok_and(|mut entries| entries.next().is_some())
+}
+
+/// Whether the walked Markdown file `path`, holding `text`, may give the scan a
+/// relative heading: one of its own, or one in the Markdown file a stub-shaped
+/// heading in it links to, which the scan reads on the stub's behalf wherever it
+/// lies (§FS-declarations.stubs.target.5). With `section_locks_present`, what
+/// makes a run that has not scanned ask for a scan of the lock pass
+/// (§FS-section-lock.write): it may answer yes where the scan finds no relative
+/// section, and never no where it finds one, because the judgement it stands in
+/// for is made on the scan alone.
+pub(crate) fn may_give_relative_heading(frame: Frame<'_>, path: &Path, text: &str) -> bool {
+    let sources = frame.sources();
+    // The scan reads a stub's link off the text after its ID, which ends at a
+    // colon, so every colon of a heading line is tried.
+    let linked = |line: &str| {
+        if !line.trim_start().starts_with('#') {
+            return None;
+        }
+        line.match_indices(':')
+            .find_map(|(at, _)| Some(STUB_LINK_HEADING.captures(&line[at..])?["path"].to_owned()))
+    };
+    may_hold_relative_heading(text)
+        || text.lines().filter_map(linked).any(|target| {
+            let target = Path::new(&target);
+            target.extension().and_then(|ext| ext.to_str()) == Some("md")
+                && sources
+                    .text(&sources.stub_target(frame.root(), path, target))
+                    .is_ok_and(|text| may_hold_relative_heading(&text))
+        })
 }
 
 /// Every `<ID>.lock` directly under the config root's `.grund/sections/`, and

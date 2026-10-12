@@ -11,11 +11,12 @@ use super::fmt_rewrite::{FmtLineOpts, rewrite_file};
 use super::fmt_section_lock::{LockChange, section_lock_changes};
 use crate::checker::{KindIndexEntries, KindIndexFiles};
 use crate::config::{Config, display_path, fmt_excluded};
-use crate::grammar::{FMT_DIRECTIVE, may_hold_relative_heading};
+use crate::grammar::FMT_DIRECTIVE;
 use crate::model::{Catalog, SECTION_LOCK_DIR};
 use crate::resolver::{ShorthandTargets, WorkspaceContext, index_link_targets};
 use crate::scanner::{
-    ApiScanError, api_scan_error, walk_scannable_files, walk_scannable_files_reporting,
+    ApiScanError, api_scan_error, may_give_relative_heading, walk_scannable_files,
+    walk_scannable_files_reporting,
 };
 
 /// §FS-fmt.6.6: whether this invocation turns the cross-reference pass on by
@@ -202,7 +203,8 @@ pub(crate) fn fmt_tree(
             )
         })?;
         let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");
-        relative_seen |= is_md && may_hold_relative_heading(&original);
+        relative_seen =
+            relative_seen || is_md && may_give_relative_heading(config.frame(), &path, &original);
         // §FS-fmt.2.5.1: an excluded file keeps its bytes, so the ordinary pass
         // is off here — every rewrite with it (§FS-fmt.2.5).
         let file_excluded = excluded.contains(&path);
