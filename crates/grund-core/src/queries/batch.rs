@@ -126,7 +126,7 @@ pub fn show_batch_with_scope(
 }
 
 /// [`show_batch_with_scope`] with one narrowing line per query the owning project
-/// would answer otherwise, in input order (§FS-scan.path.show).
+/// would answer otherwise, in input order (`narrowing.rs`).
 #[doc(hidden)]
 pub fn show_batch_narrowed(
     queries: Option<Vec<BatchShowQuery>>,
@@ -175,7 +175,7 @@ fn show_batch_run(
     }
     let queries = queries.unwrap_or_else(|| exhaustive_batch_queries(&context));
     opts.format = ShowFormat::Json;
-    // §FS-scan.path.show: one owning-project read for the whole batch.
+    // One owning-project read for the whole batch; `Owner::of` gates it.
     if let Some(lines) = narrowing
         && let Some(owner) = Owner::of(&context, &opts.path, path_provided)
     {

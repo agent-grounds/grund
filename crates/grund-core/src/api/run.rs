@@ -190,7 +190,7 @@ pub(super) fn run_check_with_run_warnings(
         config.frame(),
         report_scope.as_ref(),
     );
-    // §FS-scan.projects.narrowed.alias: below the root, an alias the workspace resolves says so.
+    // Below the root, an alias the workspace resolves says so.
     if report_scope.is_some() {
         name_the_workspace_root(&mut report.errors, &findings.citations, &config, path);
     }

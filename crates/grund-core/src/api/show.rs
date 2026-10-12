@@ -59,8 +59,8 @@ pub fn show_with_scope(
 }
 
 /// [`show_with_scope`] for the CLI, with the line a path narrower than its config
-/// root owes where the owning project would answer otherwise (§FS-scan.path.show),
-/// which the frontend writes after everything else (§FS-scan.path.warning.shape).
+/// root owes where the owning project would answer otherwise (`queries::narrowing`),
+/// which the frontend writes after everything else.
 #[doc(hidden)]
 pub fn show_narrowed(
     id_arg: &str,
@@ -104,7 +104,7 @@ fn show_run(
     let invocation = Invocation::new(&opts.path, path_provided, Selection::Project).classify(false);
     let context = load_invoked_workspace_context(&invocation)?;
     *run_warnings = context_run_warnings(&context);
-    // §FS-scan.path.show: the owning project is read only where the path narrows.
+    // `Owner::of` reads the owning project only where the path narrows.
     if let Some(lines) = narrowing
         && let Some(owner) = Owner::of(&context, &opts.path, path_provided)
     {

@@ -346,18 +346,19 @@ impl ListNarrowing {
 /// number of the kind held outside the path, or, under a number-less format, the
 /// proposal itself declared there. `narrow` is the run's own config; the owning
 /// project is read only where the path narrows (§FS-scan.path.warning.cost).
+/// `render` writes an ID against the owning project's config, as `id` writes its own.
 pub(crate) fn id_line(
     narrow: &Config,
     path: &Path,
     path_provided: bool,
     proposal: &Id,
-    width: usize,
+    render: impl Fn(&Id, &Config) -> String,
 ) -> Option<String> {
     let narrowed = NarrowedPath::of(narrow.schema(), narrow.frame(), path, path_provided)?;
     // §FS-scan.path.warning: read as `check`'s resolution scope is (§FS-scan.path.check).
     let config = open(&Invocation::new(path, true, Selection::Check).classify(false)).ok()?;
     let (findings, _) = scan_tree(config.schema(), config.frame(), Some(path), true).ok()?;
-    id_line_in(&narrowed, &config, &findings, proposal, width)
+    id_line_in(&narrowed, &config, &findings, proposal, render)
 }
 
 fn id_line_in(
@@ -365,7 +366,7 @@ fn id_line_in(
     config: &Config,
     findings: &Catalog,
     proposal: &Id,
-    width: usize,
+    render: impl Fn(&Id, &Config) -> String,
 ) -> Option<String> {
     if let Some(number) = proposal.num {
         let of_kind = || {
@@ -391,7 +392,7 @@ fn id_line_in(
                 path.operand,
                 proposal.kind,
                 clause(),
-                crate::writers::format_id(&moved, config, width)
+                render(&moved, config)
             ));
         }
     }
@@ -400,7 +401,7 @@ fn id_line_in(
     let (_, site) = path.first_outside(config, homes)?;
     Some(format!(
         "{} is already declared at {}, outside {}{}, and id refuses it",
-        crate::writers::format_id(proposal, config, width),
+        render(proposal, config),
         site.text,
         path.operand,
         clause()

@@ -222,7 +222,7 @@ impl KindTable {
     }
 
     /// Whether the run holds a workspace one of whose projects `alias` names
-    /// (§FS-scan.projects.narrowed.alias).
+    /// (`queries::name_the_workspace_root`).
     pub(crate) fn holds_alias(&self, alias: &str) -> bool {
         self.workspace && self.projects.iter().any(|project| project.alias == alias)
     }

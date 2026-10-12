@@ -24,16 +24,16 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 | Reading | Count |
 | --- | --- |
-| Public root names | 220 |
+| Public root names | 227 |
 | Rustdoc-visible | 202 |
-| `#[doc(hidden)]` | 18 |
+| `#[doc(hidden)]` | 25 |
 | Named, a related API, or a data type of one | 126 |
-| Outside that closure | 94 |
-| Named by a frontend or its tests | 127 |
+| Outside that closure | 101 |
+| Named by a frontend or its tests | 134 |
 | Reached structurally only | 43 |
 | No repository consumer of either kind | 50 |
 | Disposition keep | 135 |
-| Disposition keep, hidden | 18 |
+| Disposition keep, hidden | 25 |
 | Disposition keep, name in the spec | 18 |
 | Disposition hide | 11 |
 | Disposition retire with the ramp | 4 |
@@ -172,12 +172,16 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `LineEdit` | queries | visible | no | none found | via on_type_line_edits → LineEdit `grund-lsp/src/lib.rs:1329` | hide |
 | `LinkSupport` | writers | visible | no | none found | via GLOBAL_AGENT_INSTRUCTION_TARGETS → GlobalAgentTarget → LinkSupport `grund-cli/src/lib.rs:32` | facade, then retire |
 | `list` | api | visible | related API | none found | none found | keep |
+| `list_narrowed` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:26` | — | keep, hidden |
 | `list_sizes` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, name in the spec |
+| `list_sizes_narrowed` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:26` | — | keep, hidden |
 | `list_sizes_with_run_warnings` | queries | visible | no | none found | none found | keep, name in the spec |
 | `list_with_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
 | `ListEntry` | api | visible | data type of `list` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
+| `ListNarrowing` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:21` | — | keep, hidden |
 | `ListOpts` | api | visible | data type of `list` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `ListOutput` | api | visible | data type of `list` | none found | via list_with_run_warnings → ListOutput `grund-cli/src/cli_list.rs:204` | keep |
+| `ListShown` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:21` | — | keep, hidden |
 | `ListSizeEntry` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, name in the spec |
 | `ListSizeMeasurement` | queries | visible | no | none found | via ListSizeEntry → ListSizeMeasurement `grund-cli/src/lib.rs:13` | keep, name in the spec |
 | `ListSizeOpts` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, name in the spec |
@@ -214,6 +218,7 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `PointSizeUnit` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `Project` | config | visible | named | none found | none found | keep |
 | `propose_id` | api | visible | related API | none found | none found | keep |
+| `propose_id_narrowed` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:27` | — | keep, hidden |
 | `propose_id_with_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
 | `read_optional_text` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `reference_style` | api | visible | related API | none found | none found | keep |
@@ -238,8 +243,10 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `SectionInfo` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `ShorthandPolicy` | config | visible | data type of `validate_config` | none found | via Config → ShorthandPolicy `grund-cli/src/lib.rs:13` | keep |
 | `show` | api | visible | named | none found | none found | keep |
+| `show_batch_narrowed` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:27` | — | keep, hidden |
 | `show_batch_with_scope` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
 | `show_from_snapshot` | api | visible | related API | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
+| `show_narrowed` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:28` | — | keep, hidden |
 | `show_with_scope` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
 | `ShowFormat` | queries | visible | data type of `ShowOpts` | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
 | `ShowMode` | queries | visible | data type of `ShowOpts` | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |

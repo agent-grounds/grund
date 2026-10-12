@@ -34,7 +34,7 @@ pub fn list_sizes_with_run_warnings(opts: ListSizeOpts) -> (Vec<Finding>, Result
 }
 
 /// [`list_sizes_with_run_warnings`] for the CLI, with what a path narrower than
-/// its config root moves about each printed entry (§FS-scan.path.list).
+/// its config root moves about each printed entry (`ListNarrowing`).
 #[doc(hidden)]
 pub fn list_sizes_narrowed(
     opts: ListSizeOpts,
@@ -275,7 +275,7 @@ fn list_sizes_run(
         });
         entries.truncate(top);
     }
-    // §FS-scan.path.list: the owning project is read only where the path narrows,
+    // `Owner::of` reads the owning project only where the path narrows,
     // and an entry gets one line however many of its coordinates print. A section
     // row prints the duplicate flag too, so no size row is a chapter row.
     if let Some(narrowing) = narrowing
