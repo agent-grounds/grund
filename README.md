@@ -8,7 +8,7 @@
 <table>
 <tbody>
 <tr>
-<td valign="top" width="400">
+<td valign="top" width="50%">
 <b>1 · Declare</b><br>
 Write a spec in <a href="examples/quickstart/repo/docs/functional-spec/FS-login.md"><code>docs/functional-spec/</code></a>
 <pre lang="markdown">
@@ -18,7 +18,7 @@ Write a spec in <a href="examples/quickstart/repo/docs/functional-spec/FS-login.
 Trim surrounding whitespace.
 </pre>
 </td>
-<td valign="top" width="400">
+<td valign="top" width="50%">
 <b>2 · Cite</b><br>
 Cite it from the code in <a href="examples/quickstart/repo/src/login.py"><code>src/login.py</code></a>
 <pre lang="python">
@@ -31,7 +31,7 @@ def clean_username(username):
 </tbody>
 <tbody>
 <tr>
-<td valign="top" width="400">
+<td valign="top" width="50%">
 <b>3 · Read</b><br>
 Look it up before you change the code
 <pre lang="console">
@@ -40,12 +40,12 @@ $ grund FS-login.format.1
 Trim surrounding whitespace.
 </pre>
 </td>
-<td valign="top" width="400">
+<td valign="top" width="50%">
 <b>4 · Check</b><br>
-Misspell <code>format</code> in the citation, and CI fails
+Misspell <code>format</code>, and CI fails
 <pre lang="console">
 $ grund check
-… section not found: FS-login.fromat.1; …&#10;&#10;
+… not found: FS-login.fromat.1; …&#10;&#10;
 </pre>
 </td>
 </tr>
