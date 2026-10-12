@@ -24,8 +24,8 @@ use crate::config::ProjectRecords;
 use crate::model::{Catalog, Diagnostic, TextOverlays};
 use crate::scanner::{ScanError, scan_tree_with_workspace_overlays};
 use crate::workspace::{
-    WorkspaceCitationTarget, expand_workspace_tree, resolve_workspace_config, scope_is_config_root,
-    unlisted_workspace_block_run_warnings,
+    WorkspaceCitationTarget, expand_workspace_tree, resolve_narrowable_config,
+    resolve_workspace_config, scope_is_config_root, unlisted_workspace_block_run_warnings,
 };
 
 /// One project in scope for a query command — an alias, the loaded project's
@@ -340,7 +340,9 @@ pub(crate) fn load_narrowable_workspace_context(
     path_provided: bool,
     owner_lines: &[(usize, usize)],
 ) -> Result<WorkspaceContext> {
-    let mut config = ProjectRecords::of(resolve_workspace_config(path)?);
+    // §FS-scan.projects.kinds: narrowed or not, it judges the `[citations]`
+    // targets the whole run judges, as `check` does.
+    let mut config = ProjectRecords::of(resolve_narrowable_config(path, path_provided)?);
     config.set_owner_lines(owner_lines.to_vec());
     if !config.project().workspace.declared
         || scope_is_config_root(&config.root, path, path_provided)
