@@ -25,11 +25,12 @@ If you have no checkout yet, get one with
 ## Declare and cite
 
 The declaration in [`requirements.md`](repo/requirements.md) gives the requirement
-an ID and a named `format` section:
+an ID, a named `format` section, and its numbered child `format.1`:
 
 ```markdown
 # FS-login: Login
 ## format: Username format
+### format.1: Surrounding whitespace
 Trim surrounding whitespace.
 ```
 
@@ -37,15 +38,15 @@ Trim surrounding whitespace.
 
 ```python
 def clean_username(username):
-    # §FS-login.format
+    # §FS-login.format.1
     return username.strip()
 ```
 
 ## Read and check
 
 ```console
-$ grund FS-login.format
-## format: Username format
+$ grund FS-login.format.1
+### format.1: Surrounding whitespace
 Trim surrounding whitespace.
 $ grund check
 success
@@ -58,7 +59,7 @@ In the temporary copy's `src/login.py`, misspell the citation's section: change
 
 ```console
 $ grund check
-src/login.py:2: error: section not found: FS-login.fromat; write <§> before it to show the shape without citing it
+src/login.py:2: error: section not found: FS-login.fromat.1; write <§> before it to show the shape without citing it
 ```
 
 The command exits `1`: the declaration exists, but the section the code names does

@@ -12,6 +12,7 @@ Give a requirement an ID in <a href="examples/quickstart/repo/requirements.md"><
 <pre lang="markdown">
 &#35; FS-login: Login
 &#35;&#35; format: Username format
+&#35;&#35;&#35; format.1: Surrounding whitespace
 Trim surrounding whitespace.
 </pre>
 </td>
@@ -20,8 +21,8 @@ Trim surrounding whitespace.
 Cite it from the code in <a href="examples/quickstart/repo/src/login.py"><code>src/login.py</code></a>
 <pre lang="python">
 def clean_username(username):
-    &#35; &#167;FS-login.format
-    return username.strip()
+    &#35; &#167;FS-login.format.1
+    return username.strip()&#10;&#10;
 </pre>
 </td>
 </tr>
@@ -32,8 +33,8 @@ def clean_username(username):
 <b>3 · Read</b><br>
 Look it up before you change the code
 <pre lang="console">
-$ grund FS-login.format
-&#35;&#35; format: Username format
+$ grund FS-login.format.1
+&#35;&#35;&#35; format.1: Surrounding whitespace
 Trim surrounding whitespace.
 </pre>
 </td>
@@ -42,7 +43,7 @@ Trim surrounding whitespace.
 Misspell <code>format</code> in the citation, and CI fails
 <pre lang="console">
 $ grund check
-… section not found: FS-login.fromat; …&#10;&#10;
+… section not found: FS-login.fromat.1; …&#10;&#10;
 </pre>
 </td>
 </tr>
@@ -148,8 +149,22 @@ platforms, the Python and Node APIs, and local candidate builds.
    └────────────────────────────────────────── citation marker (writing only)
 ```
 
-The [structure guide](docs/user-facing/structure.md) covers the three ID schemes, the
-rest of the citation syntax, and inline declarations.
+A declaration can also live in code: a doc-comment that opens with the ID declares it,
+and a link from the kind's index enrolls it with no stub file
+([§FS-check.3.18](docs/functional-spec/FS-check.md#318-declaration-missing-from-its-kinds-index)). Grund's own `AR-checker` is declared only on the
+function it describes, in [`crates/grund-core/src/checker/report.rs`](crates/grund-core/src/checker/report.rs):
+
+```rust
+/// AR-checker: how grund validates the scanner's findings
+///
+/// The checker takes the resolved `Catalog` produced from §AR-scanner, asks
+/// …
+pub(crate) fn check_on_disk(
+```
+
+`grund AR-checker` prints that prose without the `///` markers
+([§FS-show.2.3](docs/functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments)). The [structure guide](docs/user-facing/structure.md) covers the
+three ID schemes, the rest of the citation syntax, and inline declarations.
 
 ## Make citations clickable
 
