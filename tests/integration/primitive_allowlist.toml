@@ -26,11 +26,6 @@ primitives = ["split on /"]
 step = "#599"
 
 [[allow]]
-file = "api/config.rs"
-primitives = ["load_config"]
-step = "#595"
-
-[[allow]]
 file = "api/embedding.rs"
 primitives = [".exists()", "std::fs"]
 step = "#595"
@@ -183,28 +178,18 @@ primitives = [".exists()", ".is_file()", "canonicalize", "std::fs"]
 step = "#595"
 
 [[allow]]
-file = "workspace/expand.rs"
-primitives = ["load_config"]
-step = "#595"
-
-[[allow]]
 file = "workspace/findings.rs"
 primitives = [".exists()"]
 step = "#595"
 
 [[allow]]
 file = "workspace/members.rs"
-primitives = ["canonicalize", "input_read_", "load_config", "std::fs"]
-step = "#595"
-
-[[allow]]
-file = "workspace/preflight.rs"
-primitives = ["load_config"]
+primitives = ["canonicalize", "input_read_", "std::fs"]
 step = "#595"
 
 [[allow]]
 file = "workspace/scope.rs"
-primitives = ["canonicalize", "load_config", "std::fs"]
+primitives = ["canonicalize", "std::fs"]
 step = "#595"
 
 [[allow]]
@@ -248,13 +233,8 @@ primitives = [".exists()", "std::fs"]
 step = "#595"
 
 [[allow]]
-file = "writers/init_render.rs"
-primitives = ["load_config"]
-step = "#595"
-
-[[allow]]
 file = "writers/init_workspace_members.rs"
-primitives = [".exists()", "canonicalize", "load_config", "std::fs"]
+primitives = [".exists()", "canonicalize", "std::fs"]
 step = "#595"
 
 [[allow]]

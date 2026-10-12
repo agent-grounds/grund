@@ -19,13 +19,13 @@ use crate::checker::{
     retain_diagnostics_in_report_scope, retain_findings_in_scope, sort_diagnostics,
     workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
 };
-use crate::config::{Config, ProjectRecords};
+use crate::config::{Config, Invocation, ProjectRecords, Selection};
 use crate::model::{CheckReport, Diagnostic, Finding};
 use crate::resolver::{WorkspaceCheckTarget, load_workspace_projects, settled_run_warnings};
 use crate::scanner::scan_tree;
 use crate::workspace::{
-    absent_only_workspace_caution, absent_optional_member_warnings, resolve_narrowable_config,
-    scope_is_config_root, unlisted_workspace_block_errors,
+    absent_only_workspace_caution, absent_optional_member_warnings, open_narrowable,
+    unlisted_workspace_block_errors,
 };
 use crate::writers::expected;
 
@@ -89,34 +89,32 @@ pub(super) fn run_check_with_run_warnings(
     ad_hoc_sentence: Option<&str>,
     run_warnings: &mut Vec<Finding>,
 ) -> Result<CheckRun> {
+    // §FS-check.1.3: `--full` cancels `[scan] include` for the walk. It is a
+    // per-run flag, never a config key (§DF-check-full-scope.2.5).
+
+    // §FS-check.1.3.6.1: below the root the path is the report scope, so the
+    // `Check` selection has `open()` build a run whose walk reads the ordinary roots.
+
+    // §FS-check.1: the flag and `[reference] require_grounding` are one knob; it never
+    // turns the key off (§FS-config.3.4.8.3), and reaches every member (§FS-check.3.5).
+    let invocation = Invocation::new(path, path_provided, Selection::Check)
+        .full(full)
+        .require_grounding(force_require_grounding);
     // §AR-config.1.5: a narrowed run still judges the `[citations]`
     // targets its declared workspace's kinds answer, and says so on this channel.
-    let mut config = resolve_narrowable_config(path, path_provided)?;
+    let config = open_narrowable(&invocation)?;
     // §FS-check.4.10.8: root boundary population has answered
     // everything a failed expansion is allowed to carry. Capture it before a
     // nested member can refuse; questions below the root do not exist yet.
     *run_warnings = public_run_warnings(&config, settled_run_warnings(config.run()));
-    // §FS-rules.4: ad-hoc grammar/vocabulary refusals happen before scanning.
-    // §FS-check.1.3: `--full` cancels `[scan] include` for the walk. It is a
-    // per-run flag, never a config key (§DF-check-full-scope.2.5).
-    config.set_scan_full(full);
-    // §FS-check.1.3.6.1: the path is the report scope, so the walk reads the
-    // ordinary roots too. On the config for the reason `scan_full` is — the
-    // scanner asks for it four frames below the run that decided it.
-    config.set_scan_resolution_wide(!scope_is_config_root(&config.root, path, path_provided));
-    // §FS-check.1: the flag and `[reference] require_grounding` are one knob, so
-    // it sets the same global default — it never turns the key off, and a
-    // `[[kinds]]` row that says `false` stays exempt under it (§FS-config.3.4.8.3).
-    if force_require_grounding {
-        config.force_require_grounding();
-    }
-    if config.workspace_declared && scope_is_config_root(&config.root, path, path_provided) {
-        let run = run_workspace_check(config, force_require_grounding, full, ad_hoc_sentence)?;
+    if config.workspace_declared && invocation.names_root(&config.root) {
+        let run = run_workspace_check(config, full, ad_hoc_sentence)?;
         // §FS-check.4.10.8: successful expansion may settle more
         // blocks, so the successful side channel is the complete ordered set.
         *run_warnings = public_run_warnings(&run.config, settled_run_warnings(run.config.run()));
         return Ok(run);
     }
+    // §FS-rules.4: ad-hoc grammar/vocabulary refusals happen before scanning.
     let ad_hoc = ad_hoc_sentence
         .map(|sentence| parse_ad_hoc(config.schema(), config.frame(), sentence))
         .transpose()?;
@@ -265,20 +263,13 @@ pub(super) fn run_check_with_run_warnings(
 /// (§FS-lsp.4.1).
 fn run_workspace_check(
     root_config: Config,
-    force_require_grounding: bool,
     full: bool,
     ad_hoc_sentence: Option<&str>,
 ) -> Result<CheckRun> {
     let mut root_config = ProjectRecords::of(root_config);
+    // §FS-check.3.5: `--require-grounding` reaches every member's run through the
+    // invocation it was built from (`Run::members`), as `--full` does.
     let mut projects = load_workspace_projects(&mut root_config)?;
-    // §FS-check.3.5: `--require-grounding` propagates to every member's
-    // config. The flag only affects checking, not scanning, so applying it
-    // after the load is equivalent to setting it before.
-    if force_require_grounding {
-        for project in &mut projects {
-            project.config.force_require_grounding();
-        }
-    }
     // §FS-check.1.3.8: `include` is a per-project statement, so each project's
     // walk is widened past its own and tiered against its own configured scope.
     let scopes = projects

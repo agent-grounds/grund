@@ -24,8 +24,7 @@ use super::scope::{
 };
 use crate::config::display_path;
 use crate::config::{
-    AbsentOptionalNamespace, Compiled, Config, RunWarning, Schema, install_kind_table,
-    load_config_at_with_report_base,
+    AbsentOptionalNamespace, Compiled, Config, RunWarning, Schema, config_at, install_kind_table,
 };
 
 /// One project of the run a qualified citation can name, as the scanner needs
@@ -434,8 +433,15 @@ fn collect_workspace_members(
             ));
         }
         visited.push(member_root.clone());
-        let mut member_config =
-            load_config_at_with_report_base(member_root, &top_config.cli_base, Some(report_base))?;
+        // §AR-config.1.5: a member's run is built once, from what the run's own
+        // invocation hands its members (§AR-scanner.2.4.2, §FS-check.1.3.8).
+        let invocation = top_config.run().members();
+        let mut member_config = config_at(
+            member_root,
+            &top_config.cli_base,
+            Some(report_base),
+            &invocation,
+        )?;
         // The alias is derived whether or not the member turns out to be a
         // project: a member that is itself a workspace still contributes its
         // segment to every alias path below it (§FS-workspace.6.1.2).

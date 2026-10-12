@@ -44,7 +44,7 @@ mod unlisted;
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
-pub(crate) use declared::{declared_member_schemas, resolve_narrowable_config};
+pub(crate) use declared::{declared_member_schemas, open_narrowable};
 pub(crate) use expand::{
     WorkspaceCitationTarget, enclosing_workspace_of, expand_workspace_tree,
     expand_workspace_tree_with_report_base,
@@ -59,7 +59,7 @@ pub(crate) use optional_members::{
 };
 pub(crate) use preflight::preflight_embedding_paths;
 pub(crate) use scope::{
-    apply_workspace_boundary, populate_workspace_boundary, resolve_workspace_config,
+    apply_workspace_boundary, open, open_at, populate_workspace_boundary, resolve_workspace_config,
     scope_is_config_root,
 };
 pub(crate) use unlisted::{unlisted_workspace_block_errors, unlisted_workspace_block_run_warnings};

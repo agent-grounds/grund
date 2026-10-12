@@ -92,8 +92,8 @@ pub(crate) use citation_target::{
 };
 pub(crate) use context::{
     WorkspaceContext, WorkspaceProject, load_classifying_workspace_context,
-    load_narrowable_workspace_context, load_resolved_workspace_context, load_workspace_context,
-    load_workspace_context_with_overlays, load_workspace_projects,
+    load_invoked_workspace_context, load_narrowable_workspace_context,
+    load_resolved_workspace_context, load_workspace_context, load_workspace_projects,
 };
 pub(crate) use e2e_body::show_e2e_case;
 pub(crate) use id_candidates::{join_alternatives, with_member_id_candidates};

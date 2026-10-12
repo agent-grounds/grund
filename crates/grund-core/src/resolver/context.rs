@@ -20,13 +20,13 @@ use std::path::{Path, PathBuf};
 use super::legacy_promotion::promote_qualified_legacy_citations;
 use super::shorthand::resolve_qualified_shorthand_citations;
 use super::unread_block::settled_run_warnings;
-use crate::config::ProjectRecords;
+use crate::config::{Invocation, ProjectRecords, Selection};
 use crate::model::{Catalog, Diagnostic};
 use crate::scanner::{ScanError, scan_tree_with_workspace_overlays};
 use crate::sources::Buffers;
 use crate::workspace::{
-    WorkspaceCitationTarget, expand_workspace_tree, resolve_narrowable_config,
-    resolve_workspace_config, scope_is_config_root, unlisted_workspace_block_run_warnings,
+    WorkspaceCitationTarget, expand_workspace_tree, open, open_narrowable, scope_is_config_root,
+    unlisted_workspace_block_run_warnings,
 };
 
 /// One project in scope for a query command — an alias, the loaded project's
@@ -136,12 +136,14 @@ impl WorkspaceContext {
 ///   `current` is the root when it is included, otherwise `None` so
 ///   unqualified lookups cannot silently resolve against a member.
 ///
-/// Discovery itself is delegated to the existing `resolve_workspace_config`
+/// Discovery itself is delegated to `open()`
 /// — this helper is strictly the "load every project that's in scope" layer
 /// on top of it (§AR-workspace.5.1).
 pub(crate) fn load_workspace_context(path: &Path, path_provided: bool) -> Result<WorkspaceContext> {
     record_test_workspace_load();
-    load_workspace_context_with_overlays(path, path_provided, &Buffers::default(), false)
+    load_invoked_workspace_context(
+        &Invocation::new(path, path_provided, Selection::Project).classify(false),
+    )
 }
 
 /// The same load for a query that **publishes** citing-side attribution rather
@@ -157,7 +159,7 @@ pub(crate) fn load_classifying_workspace_context(
     path_provided: bool,
 ) -> Result<WorkspaceContext> {
     record_test_workspace_load();
-    load_workspace_context_with_overlays(path, path_provided, &Buffers::default(), true)
+    load_invoked_workspace_context(&Invocation::new(path, path_provided, Selection::Project))
 }
 
 /// Test-only observation seam for §AR-resolver.3: an opted-in black-box test
@@ -180,35 +182,27 @@ fn record_test_workspace_load() {
 #[cfg(not(feature = "test-workspace-load-count"))]
 fn record_test_workspace_load() {}
 
-pub(crate) fn load_workspace_context_with_overlays(
-    path: &Path,
-    path_provided: bool,
-    overlays: &Buffers,
-    classify_citation_sources: bool,
-) -> Result<WorkspaceContext> {
-    let config = ProjectRecords::of(resolve_workspace_config(path)?);
-    load_resolved_workspace_context(
-        config,
-        path,
-        path_provided,
-        overlays,
-        classify_citation_sources,
-    )
+/// The load for what one invocation decided, its buffers and its
+/// classification included, every project's `Run` built by `open()`
+/// (§AR-config.1.5).
+pub(crate) fn load_invoked_workspace_context(invocation: &Invocation) -> Result<WorkspaceContext> {
+    let config = ProjectRecords::of(open(invocation)?);
+    load_resolved_workspace_context(config, &invocation.path, invocation.path_provided)
 }
 
-/// The same load, entered from an already-resolved config. `resolve_workspace_config`
+/// The same load, entered from an already-opened config. `open()`
 /// walks the member globs to apply the workspace boundary (§AR-workspace.6), so a
 /// caller that had to resolve the config to make a routing decision must not pay
 /// for it twice (§GOAL-fast-feedback).
 ///
-/// Who asks for citing-side classification (§AR-scanner.2.4.2): the LSP snapshot
-/// passes `true` so `grund check`'s citation-direction errors (`missing-citation` /
+/// Who asks for citing-side classification (§AR-scanner.2.4.2), on the invocation
+/// the config was opened with: the LSP snapshot asks so `grund check`'s citation-direction errors (`missing-citation` /
 /// `forbidden-citation`, §FS-lsp.1.1) surface in the editor; `grund check` itself
 /// uses `load_workspace_projects` directly and keeps the default (on); and
-/// `cover` and `refs` pass `true` because their JSON records publish the
+/// `cover` and `refs` ask because their JSON records publish the
 /// enclosing declaration and section of the citing site (§FS-cover.3.2,
 /// §FS-refs.3.2). `list`, `show`, `fmt`, ID completion, `sizes` and `batch` read
-/// none of the three fields the pass fills and pass `false`.
+/// none of the three fields the pass fills and turn it off.
 ///
 /// Why `workspace_declared` is the canonical "is this a workspace run?": a path that
 /// resolves member-local has already been rewritten by `config_for_member_scope` to
@@ -216,15 +210,12 @@ pub(crate) fn load_workspace_context_with_overlays(
 /// invoked the command — `grund alias/FS-x docs/`, `grund refs FS-y .`, and
 /// `grund fmt --cross-refs subdir/` all see the same workspace.
 pub(crate) fn load_resolved_workspace_context(
-    mut config: ProjectRecords,
+    config: ProjectRecords,
     path: &Path,
     path_provided: bool,
-    overlays: &Buffers,
-    classify_citation_sources: bool,
 ) -> Result<WorkspaceContext> {
-    // §AR-scanner.2.4.2 / §AR-benchmarks: who passes what is on the doc comment
-    // above; workspace members inherit the answer below.
-    config.set_classify_citation_sources(classify_citation_sources);
+    // §FS-scan.text.buffer: the buffers the run was opened with (§AR-config.1.5).
+    let overlays = &config.run().buffers.clone();
     // §FS-workspace.5 / §AR-workspace.6: workspace mode applies whenever the
     // discovered config carries `[workspace]` after member-scope rewriting, so this
     // flag is the single canonical "is this a workspace run?".
@@ -341,28 +332,23 @@ pub(crate) fn load_narrowable_workspace_context(
     path_provided: bool,
     owner_lines: &[(usize, usize)],
 ) -> Result<WorkspaceContext> {
+    // §AR-scanner.2.4.2: both branches classify, so one command does not answer
+    // two ways depending on where it was invoked (§FS-cover.3.2).
+    let invocation =
+        Invocation::new(path, path_provided, Selection::Project).owner_lines(owner_lines.to_vec());
     // §AR-config.1.5: narrowed or not, it judges the `[citations]`
     // targets the whole run judges, as `check` does.
-    let mut config = ProjectRecords::of(resolve_narrowable_config(path, path_provided)?);
-    config.set_owner_lines(owner_lines.to_vec());
+    let config = ProjectRecords::of(open_narrowable(&invocation)?);
     if !config.project().workspace.declared
         || scope_is_config_root(&config.root, path, path_provided)
     {
         // The resolved config is handed on rather than re-derived:
         // `load_workspace_context` would resolve it a second time, glob walk
         // included, on every aggregate run (§GOAL-fast-feedback).
-        return load_resolved_workspace_context(
-            config,
-            path,
-            path_provided,
-            &Buffers::default(),
-            true,
-        );
+        return load_resolved_workspace_context(config, path, path_provided);
     }
-    // §AR-scanner.2.4.2: the narrowed scan performs the pass too, so one command
-    // does not answer two ways depending on where it was invoked (§FS-cover.3.2).
-    config.set_classify_citation_sources(true);
-    single_project_context(config, path, path_provided, &Buffers::default())
+    let overlays = config.run().buffers.clone();
+    single_project_context(config, path, path_provided, &overlays)
 }
 
 /// Load every workspace project a workspace-mode command operates on:
@@ -376,7 +362,8 @@ pub(crate) fn load_narrowable_workspace_context(
 pub(crate) fn load_workspace_projects(
     root_config: &mut ProjectRecords,
 ) -> Result<Vec<WorkspaceProject>> {
-    load_workspace_projects_with_overlays(root_config, &Buffers::default())
+    let overlays = root_config.run().buffers.clone();
+    load_workspace_projects_with_overlays(root_config, &overlays)
 }
 
 fn load_workspace_projects_with_overlays(
@@ -387,20 +374,13 @@ fn load_workspace_projects_with_overlays(
     // is itself a workspace root. Failing fast on alias errors, empty
     // workspaces, duplicates, member cycles, and missing members before any
     // scan keeps misconfiguration cheap to diagnose.
-    let mut entries = expand_workspace_tree(root_config.facade_mut())?
+    let entries = expand_workspace_tree(root_config.facade_mut())?
         .into_iter()
         .map(|entry| (entry.alias, ProjectRecords::of(entry.config)))
         .collect::<Vec<_>>();
 
-    // §AR-scanner.2.4.2: members inherit the root's classification intent, so a
-    // read-only run skips the post-pass workspace-wide. §FS-check.1.3.8: `--full` is a
-    // property of the run, so every member walks past its own `[scan] include` too.
-    let scope = &root_config.run().scope;
-    let (classify, full) = (scope.classify_citation_sources, scope.full);
-    for (_, records) in &mut entries {
-        records.set_classify_citation_sources(classify);
-        records.set_scan_full(full);
-    }
+    // §AR-scanner.2.4.2, §FS-check.1.3.8: each member's run was built carrying the
+    // root's classification and `--full` (`Run::members`), so nothing is set here.
 
     // Stage 2: build the target list up-front so each project's scan can
     // parse `§<alias>/<ID>` citations with the target's grammar inline —

@@ -2,15 +2,13 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::config::{
-    Config, config_file_in, is_valid_project_alias, load_config_at, run_warning_findings,
-};
+use crate::config::{Config, config_file_in, is_valid_project_alias, run_warning_findings};
 use crate::model::{Finding, normalize_path_lexically};
 use crate::resolver::settled_run_warnings;
 use crate::templates::markdown_link_destination;
 use crate::workspace::{
     AncestorWorkspaces, apply_workspace_boundary, enclosing_workspace_of,
-    expand_workspace_tree_with_report_base,
+    expand_workspace_tree_with_report_base, open_at,
 };
 
 /// One resolved workspace project — the alias, canonical root, and optional
@@ -146,7 +144,7 @@ fn find_init_workspace_root(
     let mut config = loop {
         let dir = cursor?;
         if config_file_in(dir).is_some() {
-            break load_config_at(dir, &canonical_target).ok()?;
+            break open_at(dir, &canonical_target).ok()?;
         }
         cursor = dir.parent();
     };

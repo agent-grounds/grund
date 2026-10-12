@@ -101,6 +101,7 @@ pub use project::{
 pub use record::{AbsentOptionalNamespace, Config, ConfigLocation, ShorthandPolicy};
 #[allow(unused_imports)]
 pub use rows::{Extent, Form, Kind, Nesting, Origin, Place, Row};
+pub(crate) use run::{Invocation, Selection, scope_is_config_root};
 #[allow(unused_imports)]
 pub use run::{Run, RunScope, RunWorkspace};
 #[allow(unused_imports)]
@@ -110,9 +111,10 @@ pub use slots::{Content, Handle, Slot};
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
 pub(crate) use discovery::{
-    config_file_in, discovery_start_dir, home_form_of, load_config, load_config_at,
-    load_config_at_with_report_base,
+    config_at, config_file_in, discover_config, discovery_start_dir, home_form_of,
 };
+#[cfg(test)]
+pub(crate) use discovery::{load_config, load_config_at};
 pub(crate) use fmt_block::fmt_excluded;
 pub(crate) use grounding::{
     any_place_grounded, grounding_level_for_kind, homeless_row_grounding, row_grounding,

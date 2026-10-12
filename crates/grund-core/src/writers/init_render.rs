@@ -12,12 +12,13 @@ use std::path::Path;
 
 use super::init_target::derive_default_name;
 use super::init_workspace_members::render_workspace_members_section_with_run_warnings;
-use crate::config::{Config, config_file_in, load_config};
+use crate::config::{Config, Invocation, Selection, config_file_in};
 use crate::model::Finding;
 #[cfg(test)]
 use crate::templates::{
     ConversationSurface, render_agents_append_block, render_agents_md_from_block,
 };
+use crate::workspace::open;
 
 /// The `### Workspace members` section one `init` run renders (§FS-init.2.3.4.15),
 /// built here rather than inside the block substitutions so it is built
@@ -69,7 +70,7 @@ pub(super) fn init_pending_effective_config(
     description: Option<&str>,
 ) -> Result<(Config, String)> {
     let config = if config_file_in(target).is_some() {
-        load_config(target)?
+        open(&Invocation::new(target, true, Selection::Discovery))?
     } else {
         Config::default_for(target.to_path_buf())
     };
