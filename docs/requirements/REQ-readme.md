@@ -4,7 +4,7 @@ The root `README.md` is the first surface a human or an agent reads, and it sell
 
 ## 1. What it must say
 
-The README opens on the workflow, shown rather than narrated, and only then says what `grund` is: the two grounds, one bullet each, every bullet citing the GRUND declaration that states it ([§GRUND-schema](../grund.md#grund-schema-the-shape-of-a-projects-knowledge-is-hard-to-define-and-to-keep), [§GRUND-links](../grund.md#grund-links-the-cross-linking-rules-are-hard-to-define-and-to-hold)). The managed `AGENTS.md` block is what an agent is told about a grounded project ([§REQ-agents-md](REQ-agents-md.md#req-agents-md-the-agent-entrypoint-stays-managed-and-grounded)), and the README draws that same block for a human as three figures, in this order — the loop, the read ladder, the map — and then says how to install and set up a repository, which is what writes the block. The README is read whole, so depth lives in `docs/` behind links, not inline ([§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file)); it stays measured against the repository's entrypoint line budget, and clearing an overflow of the 250-line soft tier means moving a section into `docs/` ([AR-ci section 9](../architecture/AR-ci.md#9-file-size-budget-gate)).
+The README opens on the workflow, shown rather than narrated, and only then says what `grund` is: the two grounds, one bullet each, every bullet citing the GRUND declaration that states it ([§GRUND-schema](../grund.md#grund-schema-the-shape-of-a-projects-knowledge-is-hard-to-define-and-to-keep), [§GRUND-links](../grund.md#grund-links-the-cross-linking-rules-are-hard-to-define-and-to-hold)). The managed `AGENTS.md` block is what an agent is told about a grounded project ([§REQ-agents-md](REQ-agents-md.md#req-agents-md-the-agent-entrypoint-stays-managed-and-grounded)), and the README draws that same block for a human as three figures: the loop, then the default structure, then how to install and set up a repository, which is what writes the block, and only after that the read ladder, as detail for a reader who stays. The README is read whole, so depth lives in `docs/` behind links, not inline ([§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file)); it stays measured against the repository's entrypoint line budget, and clearing an overflow of the 250-line soft tier means moving a section into `docs/` ([AR-ci section 9](../architecture/AR-ci.md#9-file-size-budget-gate)).
 
 The README gives concise links to the existing traceability comparison and to performance
 evidence and its methodology. It reuses the introduction and section-retrieval examples
@@ -19,8 +19,9 @@ Four cards form a two-by-two grid: declare and cite above, read and check below.
 Every card has the same shape: a numbered verb, one line naming the file it shows or
 the change it makes, and one excerpt from a committed runnable example
 ([§REQ-readme.2](REQ-readme.md#2-every-example-is-real)): a short requirement, the code that cites it, the section an agent
-reads before changing that code, and `grund check` failing once that requirement's ID
-is renamed. Columns are equally wide and top-aligned, and the excerpts in a row are
+reads before changing that code, and `grund check` failing on a citation that
+misspells that section. The section is named, so the README shows that sections can
+be. Columns are equally wide and top-aligned, and the excerpts in a row are
 equally tall. Each row is its own table body, so the renderer's alternating row shading
 never falls on a card. The excerpts stay highlighted HTML text, readable in either theme.
 The example has its own configuration and checked citations; its IDs are escaped in
@@ -39,13 +40,14 @@ ordinary edit to that declaration does not stale them.
 The measurements name their repository scope; the loop's captured query shows
 what retrieval actually returns.
 
-### 1.3 The map
+### 1.3 The default structure
 
-The repository's kinds and the directions their citations take, drawn as one diagram from
-its `[citations]`, with `must` and `should` told apart. The diagram summarizes; the rendered
-directions in `AGENTS.md` stay the complete statement.
-Kind labels explain their names, alternative targets remain alternatives, and the
-caption identifies this as one configurable schema, not a universal hierarchy.
+The structure `grund init` writes, drawn as one diagram: its kinds as layers, each
+labelled with the question it answers and its home, and the citation directions of the
+canonical ruleset `init` writes commented out under `[citations]`, with `must` and
+`should` told apart. The caption says the ruleset is commented out until a project
+adopts it, names the alternatives the drawn arrows leave out and the kinds the diagram
+omits, and says that kinds, homes and rules are the project's to change.
 
 ## 2. Every example is real
 
