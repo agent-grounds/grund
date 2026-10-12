@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "bindings" / "node"))
 from support import Rehearsal  # noqa: E402
-from support import CASES, NODE, REPO, SCRATCH, checked, node_target  # noqa: E402
+from support import CASES, NODE, REPO, SCRATCH, checked, dev_env, node_target  # noqa: E402
 
 # §FS-fetch.2: grund runs a fetcher directly, with no shell of its own, so a case
 # marked `requires-unix-shell` is skipped off unix exactly as the CLI's case runner
@@ -54,9 +54,10 @@ class NodeConsumerTests(unittest.TestCase):
         self.assertEqual("", self.rehearsal.run("fetch.mjs"))
 
     def test_native_workers_panics_writer_lease_and_teardown(self):
+        # §AR-ci.3.4.1.1: the seams are proven by a dev build; the release one is above.
         checked(["node", NODE / "build.mjs", "--source-root", REPO,
                  "--out-dir", self.rehearsal.package / "native", "--target-dir",
-                 self.rehearsal.target, "--profile", "release", "--test-seams"])
+                 self.rehearsal.target, "--profile", "dev", "--test-seams"], env=dev_env())
         self.assertEqual("", self.rehearsal.run("runtime.mjs"))
         self.assertEqual("finished\n", self.rehearsal.run("pending-liveness.cjs"))
 

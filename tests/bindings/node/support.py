@@ -24,6 +24,11 @@ def node_target():
     return target.resolve()
 
 
+def dev_env(base=None):
+    """A dev build's environment: no incremental state for the cache to archive (§AR-ci.3.4.1)."""
+    return {**(os.environ if base is None else base), "CARGO_INCREMENTAL": "0"}
+
+
 @lru_cache(maxsize=1)
 def source_package():
     """Build once per suite; each test still gets a fresh installed consumer."""
@@ -41,7 +46,9 @@ def source_package():
     atexit.register(temp.cleanup)
     stage, target = Path(temp.name) / "package", node_target()
     checked(["node", NODE / "stage.mjs", "--out-dir", stage, "--target-dir", target])
-    checked(["npm", "run", "build:source", "--", "--target-dir", target], cwd=stage)
+    # §AR-ci.3.4.1.1: the source closure is proven by a dev build, without incremental state.
+    checked(["npm", "run", "build:source", "--", "--target-dir", target, "--profile", "dev"],
+            cwd=stage, env=dev_env())
     packed = checked(["npm", "pack", "--json"], cwd=stage)
     tarball = stage / json.loads(packed.stdout)[0]["filename"]
     return stage, target, tarball
@@ -56,9 +63,8 @@ def checkout_cli():
     target = node_target()
     # No incremental state: the CI cache could not leave it out, and a fresh checkout
     # cannot reuse it (§AR-ci.3.4.1).
-    env = {**os.environ, "CARGO_INCREMENTAL": "0"}
     checked(["cargo", "+1.95.0", "build", "-p", "grund", "--locked", "--target-dir", target],
-            env=env)
+            env=dev_env())
     return target / "debug" / ("grund.exe" if os.name == "nt" else "grund")
 
 

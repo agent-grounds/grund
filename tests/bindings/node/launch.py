@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
@@ -28,8 +29,28 @@ def command(argv, cwd=REPO, env=None, timeout=900):
     )
 
 
+def build_profile(args):
+    """The profile a build resolves to, or None when the command builds nothing.
+
+    The binding's builder and `build:source` default to release; the CLI's Cargo build
+    to dev (§AR-ci.3.4.1.1).
+    """
+    if any(arg.endswith("build.mjs") for arg in args) or "build:source" in args:
+        return args[args.index("--profile") + 1] if "--profile" in args else "release"
+    if Path(args[0]).stem == "cargo" and "build" in args:
+        return "release" if "--release" in args else "dev"
+    return None
+
+
 def checked(argv, cwd=REPO, env=None):
+    args = [str(arg) for arg in argv]
+    profile, started = build_profile(args), time.monotonic()
     result = command(argv, cwd, env)
+    if profile:
+        # §AR-ci.3.4.1.1: one line per build, so CI attributes the acceptance's time.
+        target = args[args.index("--target-dir") + 1] if "--target-dir" in args else "-"
+        print(f"node build: {profile} {target} {time.monotonic() - started:.1f}s",
+              file=sys.stderr, flush=True)
     assert result.returncode == 0, (
         f"command failed ({result.returncode}): {' '.join(map(str, argv))}\n"
         f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
