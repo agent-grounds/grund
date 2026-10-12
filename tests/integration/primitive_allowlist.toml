@@ -44,11 +44,6 @@ file = "queries/editor_hover.rs"
 primitives = ["split on /"]
 step = "S1"
 
-[[allow]]
-file = "queries/editor_on_type.rs"
-primitives = ["declaration_id_on_line"]
-step = "S2"
-
 # The selectors.rs row moved here with the old first-`/` split, which the
 # §FS-rules.7.9 ramp keeps to tell a newly matched site; it goes with the ramp.
 [[allow]]
@@ -73,7 +68,7 @@ step = "S2"
 
 [[allow]]
 file = "writers/fmt_rewrite.rs"
-primitives = ["citation_re", "declaration_id_on_line"]
+primitives = ["citation_re"]
 step = "S2"
 
 [[allow]]
