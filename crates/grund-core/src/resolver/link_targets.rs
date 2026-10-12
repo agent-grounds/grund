@@ -213,6 +213,10 @@ pub(crate) fn numbered_heading_anchor(
         Some(sec) => decl.sections.get(sec)?.line,
         None => decl.line,
     };
+    // No heading precedes a file's first line, so its home need not be looked up.
+    if line == 1 {
+        return Some(base);
+    }
     Some(numbered_anchor(
         files.get(&decl.file).map(AsRef::as_ref),
         line,
