@@ -58,7 +58,7 @@ pub struct RunWorkspace {
     pub scope_path: String,
     pub absent_optional: Vec<AbsentOptionalNamespace>,
     /// The run's kind table, built once where the workspace is expanded
-    /// (§FS-scan.projects.kinds); `None` in a run that expanded none, whose
+    /// (§AR-config.1.5); `None` in a run that expanded none, whose
     /// table is its one project's.
     pub(crate) kinds: Option<Arc<KindTable>>,
 }

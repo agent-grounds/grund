@@ -96,7 +96,7 @@ fn propose_id_run(
 ) -> Result<IdProposalOutcome> {
     let config = resolve_workspace_config(&opts.path)?;
     *run_warnings = config_run_warnings(&config);
-    // §FS-scan.projects.kinds: `grund id` asks in the project the run loads.
+    // §AR-config.1.5: `grund id` asks in the project the run loads.
     let table = KindTable::standalone(config.schema());
     let scope = KindScope::Project("");
     let headline = match table.verdict(scope, kind) {

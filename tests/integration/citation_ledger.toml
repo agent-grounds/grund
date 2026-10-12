@@ -15,8 +15,26 @@
 name = "run"
 fact = "which files a run reads, what a path argument means, which projects it loads"
 done = false
-points = ["FS-scan.path", "FS-scan.projects", "FS-scan.scope"]
+points = [
+  "FS-scan.path",
+  "FS-scan.projects.discovery",
+  "FS-scan.projects.workspace-root",
+  "FS-scan.projects.member",
+  "FS-scan.projects.narrowed",
+  "FS-scan.scope",
+]
 owners = ["crates/grund-core/src/scanner/walk.rs"]
+
+[[family.migration]]
+file = "crates/grund-core/src/workspace/declared.rs"
+step = "#595"
+
+[[family]]
+name = "kinds"
+fact = "whose kinds are what: one verdict per kind name, read once from the configs a run declares"
+done = true
+points = ["FS-scan.projects.kinds"]
+owners = ["crates/grund-core/src/config/kinds.rs"]
 
 [[family]]
 name = "text"
@@ -220,7 +238,11 @@ points = [
   "FS-rule-refusals.sentences",
   "FS-rule-refusals.selectors",
 ]
-owners = ["crates/grund-core/src/rules/sentence.rs"]
+owners = [
+  "crates/grund-core/src/rules/sentence.rs",
+  "crates/grund-core/src/rules/sentence/stages.rs",
+  "crates/grund-core/src/config/kinds.rs",
+]
 
 [[family.migration]]
 file = "crates/grund-core/src/api/list.rs"
@@ -232,10 +254,6 @@ step = "#599"
 
 [[family.migration]]
 file = "crates/grund-core/src/config/citations.rs"
-step = "#599"
-
-[[family.migration]]
-file = "crates/grund-core/src/config/record.rs"
 step = "#599"
 
 [[family.migration]]
@@ -252,10 +270,6 @@ step = "#599"
 
 [[family.migration]]
 file = "crates/grund-core/src/queries/sizes.rs"
-step = "#599"
-
-[[family.migration]]
-file = "crates/grund-core/src/resolver/context.rs"
 step = "#599"
 
 [[family.migration]]

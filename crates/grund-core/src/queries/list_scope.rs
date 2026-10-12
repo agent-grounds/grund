@@ -24,7 +24,7 @@ pub(crate) fn check_list_scope(
     selector: Option<&str>,
 ) -> Result<Option<RuleSubject>> {
     check_project_aliases(context, project_filter)?;
-    // §FS-scan.projects.kinds: every kind name below is answered from the run's
+    // §AR-config.1.5: every kind name below is answered from the run's
     // one table, in the projects this run selects.
     let table = context.kind_table();
     let scope = KindScope::Selected(project_filter);

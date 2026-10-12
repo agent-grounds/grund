@@ -235,14 +235,14 @@ impl Config {
     }
 
     /// The run's kind table, which expansion built (§AR-config.1.5,
-    /// §FS-scan.projects.kinds). Not a façade field: nothing but the setter
+    /// §AR-config.1.5). Not a façade field: nothing but the setter
     /// writes it, so the records hold it alone.
     pub(crate) fn set_kind_table(&mut self, table: Arc<KindTable>) {
         self.records.run.workspace.kinds = Some(table);
     }
 
     /// The kind table every kind-name question of this run is answered from
-    /// (§FS-scan.projects.kinds): the one expansion built, or this project's
+    /// (§AR-config.1.5): the one expansion built, or this project's
     /// own where the run expanded no workspace.
     pub(crate) fn kind_table(&self) -> Arc<KindTable> {
         match &self.records.run.workspace.kinds {
