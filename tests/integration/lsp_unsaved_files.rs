@@ -188,6 +188,8 @@ impl Answers {
         self.diagnostics.is_empty() && self.hover.contains("Body.")
     }
 
+    /// Only the symlink tests, which are unix-only, ask this.
+    #[cfg(unix)]
     fn broken_stub(&self) -> bool {
         self.diagnostics
             .get("docs/a.md")
