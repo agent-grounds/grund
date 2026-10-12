@@ -370,7 +370,7 @@ the forms those authoring surfaces create.
 
 #### 3.2.7 `named_sections` — the gate for explicit section names
 
-`named_sections` is an absent-by-default Boolean gate for explicit section names. When absent or `false`, section scanning, citation recognition, queries, formatting, completion, LSP behavior, and operational output remain the numeric-only behavior of earlier configurations. When `true`, a named component has the fixed, configuration-independent grammar `[a-z][a-z0-9-]*`; it is not derived from `slug_pattern` or from the displayed heading title. `grund init` writes the teaching default `named_sections = false` ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)). Unknown values are invalid config.
+`named_sections` is an absent-by-default Boolean gate for explicit section names. When absent or `false`, section scanning, citation recognition, queries, formatting, completion, LSP behavior, and operational output remain the numeric-only behavior of earlier configurations. When `true`, a named component has the fixed, configuration-independent grammar `[a-z][a-z0-9-]*`; it is not derived from `slug_pattern` or from the displayed heading title. `grund init` writes the teaching default `named_sections = false` ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)). Unknown values are invalid config. A relative heading whose one component is a name needs the gate as a complete-path heading carrying that name does, and one whose component is a number needs nothing ([§FS-declarations.section.relative.form](FS-declarations.md#sectionrelativeform-the-form)).
 
 ### 3.3 Section paths — arbitrary nesting depth
 
@@ -387,7 +387,7 @@ Section depth in the citation must match a heading at that depth in the declarat
 
 #### 3.3.1 Named components
 
-With `named_sections = true` ([§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-explicit-section-names)), any path containing a named component uses the explicit colon form `<complete-path>: <title>`. The path is written in full at every depth; the title declares nothing and may change without changing the coordinate:
+With `named_sections = true` ([§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-explicit-section-names)), any path containing a named component uses the explicit colon form `<path>: <title>`. A heading writes its complete path, or, in a Markdown declaration body, a relative path: one `.` and one component, the rest supplied by its parent ([§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)). Only the complete path is citable. The title declares nothing and may change without changing the coordinate:
 
 ```markdown
 ## goals: Goals
@@ -399,17 +399,17 @@ Named components may occur at every depth, so all-name paths such as `goals.perf
 
 #### 3.3.2 `section_heading_levels` — heading depth against path depth
 
-`section_heading_levels` controls how the Markdown heading depth must line up with the dotted section path. The default, `"strict"`, requires the heading depth to equal the declaration heading depth plus the number of path components, named or numeric, so under an H1 declaration `## 1.1 …` and `## goals.performance: …` are `section heading level mismatch` errors in `grund check` ([§FS-declarations.checks.section-heading-level](FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch)). `"warn"` reports the same mismatch as a warning, so CI can stay green while a repo migrates. `"loose"` preserves the historical depth behavior: any deeper heading can declare a syntactically legal complete path. Unknown values are invalid config.
+`section_heading_levels` controls how the Markdown heading depth must line up with the dotted section path. The default, `"strict"`, requires the heading depth to equal the declaration heading depth plus the number of path components, named or numeric, so under an H1 declaration `## 1.1 …` and `## goals.performance: …` are `section heading level mismatch` errors in `grund check` ([§FS-declarations.checks.section-heading-level](FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch)). `"warn"` reports the same mismatch as a warning, so CI can stay green while a repo migrates. `"loose"` preserves the historical depth behavior: any deeper heading can declare a syntactically legal complete path. Unknown values are invalid config. Depth is judged on the canonical path: a relative heading sits one level below its parent by construction, so it has no depth finding of its own, and Markdown's six levels bound how far relative headings nest, not how long a path is ([§FS-declarations.section.relative.parent](FS-declarations.md#sectionrelativeparent-the-parent)).
 
 The mode does not govern an ATX heading with no coordinate: inside a Markdown declaration body, every deeper ATX heading must instead be a declaration or a recognized numeric or enabled named section. [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) reports one that is neither and names the headings the rule leaves alone; there is no severity or opt-out key for this project-wide rule ([§DF-unmarked-markdown-headings](../decisions/functional/DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph)).
 
 #### 3.3.3 Every prefix of a name-bearing path is recorded
 
-Every proper prefix of a name-bearing path must itself be recorded in the same declaration. Thus `### goals.performance: …` requires `goals`, while `### missing.performance: …` is an orphan even if its Markdown placement looks nested under some other heading ([§FS-declarations.checks.orphan-section](FS-declarations.md#checksorphan-section-orphan-name-bearing-section-path)). The invariant applies to name-bearing paths only; purely numeric paths preserve their historical behavior.
+Every proper prefix of a name-bearing path must itself be recorded in the same declaration. Thus `### goals.performance: …` requires `goals`, while `### missing.performance: …` is an orphan even if its Markdown placement looks nested under some other heading ([§FS-declarations.checks.orphan-section](FS-declarations.md#checksorphan-section-orphan-name-bearing-section-path)). The invariant applies to name-bearing paths only; purely numeric paths preserve their historical behavior. A relative heading always needs its actual parent, numeric or named ([§FS-declarations.section.relative.parent](FS-declarations.md#sectionrelativeparent-the-parent)).
 
 #### 3.3.4 The outer section separator
 
-The default `section_separator` is `.`. Projects that prefer `:` (`<§>FS-check:3.1.2`) or `#` (`RFC-42#3.1.2`) override it; the dotted **components** stay separated by `.` regardless of the outer separator. This split keeps the section grammar regular at any depth.
+The default `section_separator` is `.`. Projects that prefer `:` (`<§>FS-check:3.1.2`) or `#` (`RFC-42#3.1.2`) override it; the dotted **components** stay separated by `.` regardless of the outer separator. This split keeps the section grammar regular at any depth. The leading `.` of a relative heading ([§FS-declarations.section.relative.form](FS-declarations.md#sectionrelativeform-the-form)) is a component separator, so it is `.` whatever `section_separator` says.
 
 ### 3.4 `[[kinds]]` — recognized kinds
 

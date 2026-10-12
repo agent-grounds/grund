@@ -1,0 +1,3 @@
+.grund/sections/FS-login.lock:1: error: section lock line is not <coordinate> <fingerprint>; run grund fmt --write to rebuild the file
+.grund/sections/FS-login.lock:3: error: section lock line is not <coordinate> <fingerprint>; run grund fmt --write to rebuild the file
+.grund/sections/FS-login.lock:5: error: section lock line is not <coordinate> <fingerprint>; run grund fmt --write to rebuild the file

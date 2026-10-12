@@ -1,0 +1,17 @@
+grund_config_version = 1
+
+[reference]
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+named_sections = true
+section_heading_levels = "loose"
+
+[[kinds]]
+kind = "FS"
+folder = "docs/functional-spec"
+index = false
+
+[fmt.cross_refs]
+enabled = false

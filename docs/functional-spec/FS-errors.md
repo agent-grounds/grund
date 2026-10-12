@@ -508,6 +508,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `invalid-rule` | error | — | `rules = true` on a kind | [§FS-check.3.25](FS-check.md#325-invalid-rule) |
 | `invalid-value-binding` | error | — | `values = true` on a kind | [§FS-check.3.21](FS-check.md#321-invalid-value-binding) |
 | `invalid-value-declaration` | error | — | `values = true` on a kind | [§FS-check.3.20](FS-check.md#320-invalid-value-declaration) |
+| `invalid-section-lock` | error | — | a `.grund/sections/` lock file | [§FS-section-lock.checks.invalid-section-lock](FS-section-lock.md#checksinvalid-section-lock-a-lock-line-grund-cannot-read) |
 | `io` | error | — | — | [§FS-check.2.4](FS-check.md#24-an-incomplete-run) |
 | `local-section-citation` | error | — | — | [§FS-check.3.24](FS-check.md#324-declaration-local-section-citation) |
 | `misplaced-declaration` | error | — | a configured kind home | [§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home) |
@@ -529,10 +530,12 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `oversized-lead` | warning | — | `[reference] lead_size_warning` | [§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in) |
 | `parse-moves` | warning | — | — | [§FS-declarations.checks.parse-moves](FS-declarations.md#checksparse-moves-a-verdict-that-moves-in-0190) |
 | `redundant-config` | warning | — | — | [§FS-check.4.3](FS-check.md#43-redundant-config-pair) |
+| `relative-section-parent` | error | — | — | [§FS-declarations.checks.relative-section-parent](FS-declarations.md#checksrelative-section-parent-a-relative-heading-without-its-parent) |
 | `remote-missing` | error | — | a `[workspace.remotes]` table | [§FS-remote-projects.checks.remote-missing](FS-remote-projects.md#checksremote-missing-a-declared-remote-has-no-pinned-projection) |
 | `remote-modified` | error | — | a `[workspace.remotes]` table | [§FS-remote-projects.checks.remote-modified](FS-remote-projects.md#checksremote-modified-the-projection-is-not-the-locked-bytes) |
 | `remote-orphan` | warning | — | a `[workspace.remotes]` table | [§FS-remote-projects.checks.remote-orphan](FS-remote-projects.md#checksremote-orphan-state-no-declaration-names) |
 | `remote-stale` | error | — | a `[workspace.remotes]` table | [§FS-remote-projects.checks.remote-stale](FS-remote-projects.md#checksremote-stale-the-lock-disagrees-with-the-declaration) |
+| `section-address-changed` | error | — | a citation of a relative heading's address | [§FS-section-lock.checks.section-address-changed](FS-section-lock.md#checkssection-address-changed-a-cited-sections-text-sits-at-another-address) |
 | `section-heading-level` | error or warning, by the mode | — | `[id] section_heading_levels` | [§FS-declarations.checks.section-heading-level](FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch) |
 | `section-outside-declaration` | error | — | — | [§FS-declarations.checks.section-outside-declaration](FS-declarations.md#checkssection-outside-declaration-section-outside-a-declaration) |
 | `shorthand-citation` | error | — | — | [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) |
@@ -541,6 +544,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `suggested-citation` | none — suggestion | — | `--suggestions`, on a `should` entry | [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) |
 | `uncited-unit` | error | — | `rules = true` on a kind | [§FS-check.3.28](FS-check.md#328-uncited-unit) |
 | `unclosed-wrapper` | warning | — | — | [§FS-citations.checks.unclosed-wrapper](FS-citations.md#checksunclosed-wrapper-unclosed-wrapper-read-differently-from-grund-0190) |
+| `unrecorded-section-citation` | error | — | a citation of a relative heading's address | [§FS-section-lock.checks.unrecorded-section-citation](FS-section-lock.md#checksunrecorded-section-citation-a-cited-relative-address-the-lock-does-not-hold) |
 | `undeclared-chapter` | by strength: the kind's `closed` | — | `closed` on a v2 kind | [§FS-fields.checks.undeclared-chapter](FS-fields.md#checksundeclared-chapter-undeclared-chapter) |
 | `ungrounded` | error | — | `require_grounding` | [§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in) |
 | `unknown-project` | error | — | — | [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) |
