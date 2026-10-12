@@ -10,6 +10,7 @@ use super::headings::{
 };
 use super::line_owners::FileLineOwnership;
 use super::patterns::GlobCitation;
+use super::section_lock::SectionLockFile;
 use super::stub_resolution::StubResolution;
 use super::unclosed_wrappers::UnclosedWrapperNote;
 use super::values::{
@@ -366,6 +367,9 @@ pub struct Catalog {
     /// (§AR-scanner.2.8): what every command slices and reads its owners from,
     /// a stub's target the walk did not reach included (§AR-scanner.4.6).
     pub(crate) files: FileRecords,
+    /// The section lock files under the config root, read beside the walk and
+    /// never as a source (§FS-section-lock.file.shard).
+    pub(crate) section_locks: Vec<SectionLockFile>,
 }
 
 /// ID-query slice mode (§FS-show.1.6): each rung adds to the previous one —

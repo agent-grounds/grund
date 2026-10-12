@@ -7,6 +7,7 @@ use super::file_pass::scan_file_text;
 use super::legacy::promote_local_legacy_citations;
 use super::merge::merge_findings;
 use super::read_predicate::unread;
+use super::section_locks::read_section_locks;
 use super::stub_homes::resolve_stubs;
 use super::stub_shape::note_stub_shapes;
 use super::value_json::{scan_value_json_sources, value_json_sources};
@@ -207,6 +208,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
         errors.push((frame.root().join("e2e/cases"), format!("{err:#}")));
     }
     scan_value_json_sources(schema, frame, &mut findings, &mut errors);
+    read_section_locks(frame, &mut findings, &mut errors);
     // §FS-workspace.1.2: when the citing-grammar pass and the target-grammar pass both
     // fire on the same line they emit in source order *per pass*; one sort at the end
     // keeps a workspace scan's per-line order the single-project scan's left-to-right one.

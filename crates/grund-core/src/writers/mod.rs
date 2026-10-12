@@ -79,6 +79,7 @@ mod fmt_error;
 mod fmt_links;
 mod fmt_local_sections;
 mod fmt_rewrite;
+mod fmt_section_lock;
 mod fmt_shorthand_links;
 mod fmt_tree;
 mod fmt_value_bindings;

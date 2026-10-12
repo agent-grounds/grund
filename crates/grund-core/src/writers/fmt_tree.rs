@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 
 use super::fmt_complete_findings::{CompleteFindings, CompleteScan};
 use super::fmt_rewrite::{FmtLineOpts, rewrite_file};
+use super::fmt_section_lock::{fmt_section_locks, may_hold_relative_heading};
 use crate::checker::{KindIndexEntries, KindIndexFiles};
 use crate::config::{Config, display_path, fmt_excluded};
 use crate::grammar::FMT_DIRECTIVE;
@@ -126,6 +127,7 @@ pub(crate) fn fmt_tree(
 ) -> Result<FmtTreeOutcome> {
     let mut changes = Vec::new();
     let mut refused_writes = Vec::new();
+    let mut relative_seen = false;
     let add_marker = opts.add_marker;
     let cross_refs = opts.cross_refs;
     let write = opts.write;
@@ -200,6 +202,7 @@ pub(crate) fn fmt_tree(
             )
         })?;
         let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");
+        relative_seen |= is_md && may_hold_relative_heading(&original);
         // §FS-fmt.2.5.1: an excluded file keeps its bytes, so the ordinary pass
         // is off here — every rewrite with it (§FS-fmt.2.5).
         let file_excluded = excluded.contains(&path);
@@ -304,6 +307,17 @@ pub(crate) fn fmt_tree(
             }
         }
     }
+    // §FS-section-lock.write.rules: a root-scoped run brings the section locks along.
+    let render = opts.render;
+    fmt_section_locks(
+        config,
+        render,
+        scope,
+        findings,
+        relative_seen,
+        write,
+        &mut changes,
+    )?;
     Ok(FmtTreeOutcome {
         changes,
         scan_errors,

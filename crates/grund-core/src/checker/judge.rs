@@ -13,6 +13,7 @@ use super::homes::KindHomeIndex;
 use super::index::check_kind_indexes;
 use super::index_entries::KindIndexEntries;
 use super::references::{ReferenceTier, check_citation_resolution};
+use super::section_lock::check_section_locks;
 use super::unclosed_wrapper::check_unclosed_wrappers;
 use super::values::check_values;
 use crate::config::{Frame, KindResolution, Rules, Schema};
@@ -94,6 +95,8 @@ pub(crate) fn judge(
     // §AR-checker.2.18 / §FS-values.5: ordinary resolution runs first and the
     // focused pass suppresses comparison at every unresolved or ambiguous site.
     check_values(findings, schema, frame, targets, &mut report);
+    // §FS-section-lock.checks: the lock against the tree, in `section_lock.rs`.
+    check_section_locks(findings, schema, frame, &mut report);
 
     // §FS-check.2.3.1 / §AR-checker.2.11: a `<§>`-escaped illustration whose ID
     // resolves to a real declaration is likely a live citation someone bracketed
