@@ -11,7 +11,8 @@ Leans on [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (doc-comment) and
 - **comment wrapper** — The bytes of a comment line that say it is a comment rather than what it
   says, such as the prefix and the whitespace before it. Which bytes they are, and when a block
   comment's closer is among them, is [§FS-languages.comment-wrapper](FS-languages.md#comment-wrapper-the-comment-wrapper).
-- **fence** — A Markdown fenced code block, from its opening delimiter line to its closing one.
+- **fence** — A Markdown fenced code block, from its opening delimiter line to its closing one,
+  in a Markdown file or read through the comment wrapper in a comment block.
 
 ## comment-block: The comment block
 
@@ -76,6 +77,14 @@ For Python docstrings, no prefix is stripped — docstring content is plain text
 ## fence: Fences
 
 A fence opens with at most three leading spaces followed by a run of at least three backticks or tildes; it closes only on a run of the **same character** at least as long as the opener, again with at most three leading spaces and only whitespace after the run. A backtick opener cannot carry a backtick in its info string. An unclosed fence runs to end of file.
+
+### fence.comment-block: A fence inside a comment block hides its headings
+
+Inside a comment block ([§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block)) a fence is read on each line's text with its comment wrapper off ([§FS-languages.comment-wrapper](FS-languages.md#comment-wrapper-the-comment-wrapper)), by the rule above: `/// ```text`, ` * ```text` and a docstring's own ```` ```text ```` line each open one, and the matching delimiter behind the same wrapper closes it. A fence never outlives the comment block it opens in: one still open where the block ends closes there, so it hides nothing in a later comment block of the file.
+
+While such a fence is open, a line that would be a section or a plain heading of the block, numbered, named or plain at any level, is not a heading ([§FS-declarations.heading](FS-declarations.md#heading-what-a-heading-is)), exactly as inside a Markdown fence ([§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example)). It is not a section of the declaration whose body holds it, so a citation of the coordinate it spells is a missing section ([§FS-check.3.2](FS-check.md#32-missing-section)). It does not end a lead, a section or a body, `--toc` does not list it, `refs` does not name it as a citation's enclosing section, and `fmt` does not link to it. It draws no heading-level, duplicate-section or section-outside-declaration finding ([§FS-declarations.checks.section-heading-level](FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch), [§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path), [§FS-declarations.checks.section-outside-declaration](FS-declarations.md#checkssection-outside-declaration-section-outside-a-declaration)).
+
+The fence hides headings and nothing else. A citation inside it is still read and checked ([§FS-citations.recognized.contexts](FS-citations.md#recognizedcontexts-contexts-read-as-neither-prose-nor-code) skips only a Markdown file's fence), a `grund:fmt off` or `grund:fmt on` line inside it still toggles ([§FS-fmt.2.5.2](FS-fmt.md#252-grundfmt-off--grundfmt-on--a-region-at-a-time)), `show` still flattens a citation wrapper inside it ([§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example)), and a source declaration line inside it is read as it would be outside ([§FS-declarations.stubs.target.2](FS-declarations.md#stubstarget2-a-heading-inside-a-fence-of-the-target-declares-nothing)). Why a heading there was once a section, and why that changed in one release, is [§DF-doc-comment-fenced-heading](../decisions/functional/DF-doc-comment-fenced-heading.md#df-doc-comment-fenced-heading-a-heading-inside-a-fence-in-a-comment-block-is-not-a-section).
 
 ## prefixes: `comment_prefixes` compose with `extensions`
 
