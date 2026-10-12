@@ -14,13 +14,15 @@ use std::sync::{Arc, Mutex};
 use super::disk::{input_read_dir, input_read_to_string, path_exists, path_is_file};
 use super::identity::canonicalize_existing_prefix;
 use super::observe::observe_input;
-use crate::model::normalize_path_lexically;
+use crate::model::{FileText, normalize_path_lexically};
 
 /// The editor's open documents for one run, keyed by physical path
-/// (§AR-config.1.5, §FS-scan.identity.buffers). A command-line run has none.
+/// (§AR-config.1.5, §FS-scan.identity.buffers). A command-line run has none. Each
+/// is shared, so the file record a scan keeps of one holds the buffer itself
+/// rather than a copy (§AR-scanner.2.8.1).
 #[derive(Clone, Default)]
 pub(crate) struct Buffers {
-    open: Arc<BTreeMap<PathBuf, String>>,
+    open: Arc<BTreeMap<PathBuf, Arc<str>>>,
     /// What this run has read, kept when the run is the editor's snapshot.
     /// Shared by every member's run.
     record: Option<Arc<Mutex<Record>>>,
@@ -44,7 +46,7 @@ impl Buffers {
         Self {
             open: Arc::new(
                 open.into_iter()
-                    .map(|(path, text)| (canonicalize_existing_prefix(&path), text))
+                    .map(|(path, text)| (canonicalize_existing_prefix(&path), Arc::from(text)))
                     .collect(),
             ),
             record: None,
@@ -63,13 +65,11 @@ impl Buffers {
     }
 
     /// The buffer that is the file at `path`, under any spelling of it.
-    fn get(&self, path: &Path) -> Option<&str> {
+    fn get(&self, path: &Path) -> Option<&Arc<str>> {
         if self.open.is_empty() {
             return None;
         }
-        self.open
-            .get(&canonicalize_existing_prefix(path))
-            .map(String::as_str)
+        self.open.get(&canonicalize_existing_prefix(path))
     }
 
     /// The disk text a recording run already read at `path`, as it read it.
@@ -145,7 +145,9 @@ impl<'a> Sources<'a> {
 
     /// The open buffer that is the file at `path`, if the run holds one.
     pub(crate) fn buffer(self, path: &Path) -> Option<&'a str> {
-        self.buffers.and_then(|buffers| buffers.get(path))
+        self.buffers
+            .and_then(|buffers| buffers.get(path))
+            .map(|text| &**text)
     }
 
     /// The file's text as a save would write it (§FS-scan.text.buffer). A
@@ -158,7 +160,7 @@ impl<'a> Sources<'a> {
         };
         buffers.note_read(path);
         if let Some(text) = buffers.get(path) {
-            return Ok(Cow::Borrowed(text));
+            return Ok(Cow::Borrowed(&**text));
         }
         if let Some(text) = buffers.recorded(path) {
             return Ok(Cow::Owned(text));
@@ -166,6 +168,25 @@ impl<'a> Sources<'a> {
         let text = input_read_to_string(path)?;
         buffers.record(path, &text);
         Ok(Cow::Owned(text))
+    }
+
+    /// The same text, held to be kept (§AR-scanner.2.8.1): the disk read's string
+    /// moved into the record, or the open buffer shared with it, never copied.
+    /// A recording run notes and keeps it as `text` does (§AR-lsp.2.1).
+    pub(crate) fn shared_text(self, path: &Path) -> std::io::Result<FileText> {
+        let Some(buffers) = self.buffers else {
+            return input_read_to_string(path).map(|text| FileText::Disk(Arc::new(text)));
+        };
+        buffers.note_read(path);
+        if let Some(text) = buffers.get(path) {
+            return Ok(FileText::Buffer(Arc::clone(text)));
+        }
+        if let Some(text) = buffers.recorded(path) {
+            return Ok(FileText::Disk(Arc::new(text)));
+        }
+        let text = input_read_to_string(path)?;
+        buffers.record(path, &text);
+        Ok(FileText::Disk(Arc::new(text)))
     }
 
     /// The directory's entries on disk, observed first (§FS-check.6.1.3); the

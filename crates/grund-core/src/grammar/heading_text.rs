@@ -88,3 +88,30 @@ fn inline_code_segments(text: &str) -> Vec<(&str, bool)> {
     }
     segments
 }
+
+/// A heading's text without its closing sequence (§FS-declarations.heading.rendered-text):
+/// a trailing run of `#` preceded by a space or tab and followed by nothing but spaces
+/// or tabs goes, with the whitespace before it, as CommonMark reads an ATX heading.
+/// `1. Steps ##` reads `1. Steps`; `C#` and `A ## B` keep their `#`. A heading that
+/// is only a `#` run keeps nothing of it.
+pub(crate) fn without_closing_sequence(text: &str) -> &str {
+    let trimmed = text.trim_end_matches([' ', '\t']);
+    let before_run = trimmed.trim_end_matches('#');
+    if before_run.len() == trimmed.len() {
+        return trimmed;
+    }
+    if before_run.is_empty() || before_run.ends_with([' ', '\t']) {
+        return before_run.trim_end_matches([' ', '\t']);
+    }
+    trimmed
+}
+
+/// The rendered text of an ATX heading line whose leading whitespace is gone
+/// (§FS-declarations.heading.rendered-text): the opening run of `level` `#`, the
+/// closing sequence, and the whitespace around the text left out, as a slice of
+/// the line. What a grounding finding quotes (§FS-check.3.6.3) and what a
+/// heading's anchor is slugged from are this one reading.
+pub(crate) fn atx_heading_text(trimmed: &str, level: usize) -> &str {
+    let after_run = trimmed.get(level..).unwrap_or("");
+    without_closing_sequence(after_run.trim_start_matches([' ', '\t']))
+}

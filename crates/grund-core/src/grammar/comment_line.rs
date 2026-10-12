@@ -3,6 +3,7 @@ use super::id_format::parse_longest_id_prefix;
 use super::ids::parse_loose_qualified_id_prefix;
 use super::never_rewrite::{is_inside_inline_code, is_inside_string_literal};
 use super::settings::{AliasGrammar, LexicalSettings};
+use crate::model::BlockForm;
 
 /// Every recognized citation token on one line, as byte ranges into it
 /// (§FS-check.1.1): the configured marker, `[reference] strict`, the
@@ -227,6 +228,46 @@ pub(crate) fn strip_block_closer(line: &str) -> &str {
     line.trim_end()
         .strip_suffix("*/")
         .map_or(line, str::trim_end)
+}
+
+/// What one line of a comment block says once its envelope is off
+/// (§FS-languages.comment-wrapper), read by the block's form: behind a line
+/// marker, the whitespace before it, the marker and one space go; in a
+/// `/* … */` block, the opener or a ` * ` continuation goes the same way, a
+/// line without one is kept as written (§FS-languages.comment-wrapper.headings),
+/// and the C-family closer with the whitespace before it is envelope too, a
+/// closer alone leaving nothing (§DF-one-answer-rulings-parse, D17d). A docstring
+/// line has no wrapper (§FS-languages.docstring).
+pub(crate) fn comment_envelope<'a>(line: &'a str, form: &BlockForm) -> &'a str {
+    let behind = |rest: &'a str| rest.strip_prefix(' ').unwrap_or(rest);
+    match form {
+        BlockForm::Docstring => line,
+        BlockForm::Line(marker) => line
+            .trim_start()
+            .strip_prefix(marker.as_str())
+            .map_or(line, behind),
+        BlockForm::Block => {
+            let trimmed = line.trim_start();
+            let content = if let Some(rest) = trimmed
+                .strip_prefix("/**")
+                .or_else(|| trimmed.strip_prefix("/*"))
+            {
+                behind(rest)
+            } else if !trimmed.starts_with("*/")
+                && let Some(rest) = trimmed.strip_prefix('*')
+            {
+                behind(rest)
+            } else if trimmed.starts_with("*/") {
+                trimmed
+            } else {
+                line
+            };
+            content
+                .trim_end()
+                .strip_suffix("*/")
+                .map_or(content, str::trim_end)
+        }
+    }
 }
 
 pub(crate) fn comment_strip_prefixes<'a>(lexical: LexicalSettings<'a>) -> Vec<&'a str> {

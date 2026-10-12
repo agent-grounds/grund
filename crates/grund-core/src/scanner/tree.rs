@@ -63,8 +63,8 @@ fn scan_one_file(
 ) -> FileScanResult {
     let mut findings = Catalog::default();
     // §FS-check.6.1.1: `sources` observes this input before its shared read.
-    let result = match frame.sources().text(file) {
-        Ok(text) => scan_file_text(file, &text, schema, frame, &mut findings, workspace_targets),
+    let result = match frame.sources().shared_text(file) {
+        Ok(text) => scan_file_text(file, text, schema, frame, &mut findings, workspace_targets),
         Err(err) => Err(err.into()),
     };
     match result {

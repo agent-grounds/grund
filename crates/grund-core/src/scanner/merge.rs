@@ -45,5 +45,6 @@ pub(super) fn merge_findings(target: &mut Catalog, mut source: Catalog) {
     target.stub_shape_notes.append(&mut source.stub_shape_notes);
     target.scanned_files.append(&mut source.scanned_files);
     target.file_structure.extend(source.file_structure);
+    target.files.extend(source.files);
     target.line_ownership.append(&mut source.line_ownership);
 }

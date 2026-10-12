@@ -6,29 +6,25 @@
 //! This is a *description* of a file, not a list of units: the level that turns
 //! headings and doc-comment blocks into units belongs to the `[[kinds]]` row that
 //! governs the file (§FS-config.3.4.8.2), and the cut is made in
-//! `checker/grounding.rs` so the level rule is written once. It runs per file,
-//! only where that file's own row asks for a unit finer than the file, so one
-//! fine-grained place does not describe the whole tree and a project at level `1`
-//! — every configuration written before the keys existed — records nothing and
-//! pays nothing (§GOAL-fast-feedback).
+//! `checker/grounding.rs` so the level rule is written once. The record it views
+//! is filled on every run (§AR-scanner.2.7.2); the view is taken only where the
+//! file's own row asks for a unit finer than the file, so a project at level `1`
+//! copies nothing out of it (§GOAL-fast-feedback).
 
 use std::path::Path;
 
-use super::context::{file_home_kind, markdown_heading_level};
+use super::context::file_home_kind;
 use crate::config::{Frame, Schema};
-use crate::grammar::{
-    DocCommentRule, MarkdownBlocks, block_is_doc_comment, comment_blocks, doc_comment_rule,
-    first_content_line,
-};
-use crate::model::{Catalog, DocCommentBlock, FileHeading, FileStructure};
+use crate::model::{Catalog, DocCommentBlock, FileHeading, FileRecord, FileStructure};
 
 /// Record `path`'s grounding structure into `findings`, or do nothing when the
 /// row this file belongs to asks for no unit finer than the file
-/// (§AR-scanner.2.7). Called once per file from the per-file scan, with the text
-/// it already read.
+/// (§AR-scanner.2.7). The structure is a view of the file's record
+/// (§AR-scanner.2.8.2): its listed headings in Markdown, its doc-comment blocks
+/// elsewhere, both read in the one pass that filled the record.
 pub(super) fn record_file_structure(
     path: &Path,
-    text: &str,
+    record: &FileRecord,
     schema: &Schema,
     frame: Frame<'_>,
     findings: &mut Catalog,
@@ -40,11 +36,10 @@ pub(super) fn record_file_structure(
     if demand.is_empty() || !demand.records_structure(&file_row(path, schema, frame)) {
         return;
     }
-    let extension = path.extension().and_then(|ext| ext.to_str());
-    let structure = if extension == Some("md") {
-        markdown_structure(text)
+    let structure = if record.markdown {
+        markdown_structure(record)
     } else {
-        source_structure(path, text, extension == Some("py"), schema, frame)
+        source_structure(record)
     };
     findings
         .file_structure
@@ -67,86 +62,44 @@ fn file_row(path: &Path, schema: &Schema, frame: Frame<'_>) -> String {
 }
 
 /// Every heading outside a fenced block or a raw-text HTML block, with its text
-/// (§AR-scanner.2.7, §FS-check.1.1.5.1). The state is the one §AR-scanner.2.3.3
-/// keeps for citations, for the same reason: a `##` inside either is an example
-/// of a document, not a section of this one.
-fn markdown_structure(text: &str) -> FileStructure {
-    let mut structure = FileStructure::default();
-    let mut blocks = MarkdownBlocks::default();
-    for (index, line) in text.lines().enumerate() {
-        structure.total_lines = index + 1;
-        if !blocks.line(line).may_be_heading() {
-            continue;
-        }
-        let trimmed = line.trim_start();
-        if let Some(level) = markdown_heading_level(trimmed) {
-            structure.headings.push(FileHeading {
-                line: index + 1,
-                level,
-                text: heading_text(trimmed, level),
-            });
-        }
+/// (§AR-scanner.2.7, §FS-check.1.1.5.1): the record's listed headings, a `##`
+/// inside either being an example of a document, not a section of this one.
+fn markdown_structure(record: &FileRecord) -> FileStructure {
+    FileStructure {
+        headings: record
+            .headings
+            .iter()
+            .filter(|heading| heading.listed)
+            .map(|heading| FileHeading {
+                line: heading.line,
+                level: heading.level,
+                text: record.heading_text(heading).to_string(),
+            })
+            .collect(),
+        doc_comments: Vec::new(),
+        total_lines: record.total_lines,
     }
-    structure
-}
-
-/// A heading's text: the line without its opening `#`s and without the optional
-/// closing run Markdown allows (`## Steps ##`), so a finding quotes the title
-/// rather than the syntax (§FS-check.3.6.3).
-pub(super) fn heading_text(trimmed: &str, level: usize) -> String {
-    let suffix = trimmed[level..].trim_end_matches([' ', '\t']);
-    let closing_start = suffix.trim_end_matches('#').len();
-    let without_closing = if closing_start < suffix.len()
-        && suffix[..closing_start]
-            .as_bytes()
-            .last()
-            .is_some_and(|byte| matches!(byte, b' ' | b'\t'))
-    {
-        &suffix[..closing_start]
-    } else {
-        suffix
-    };
-    without_closing.trim_matches([' ', '\t']).to_string()
 }
 
 /// Every doc-comment block in a source file, with its indentation
-/// (§AR-scanner.2.7). Which blocks are documentation is the per-language rule of
-/// §FS-inline-citation-style.1.1.1, read once per file from the extension and
-/// applied to each block with one comparison — the same call the inline-site pass
-/// makes, so a block cannot be a doc comment for one rule and a note for the
-/// other.
-fn source_structure(
-    path: &Path,
-    text: &str,
-    is_py: bool,
-    schema: &Schema,
-    frame: Frame<'_>,
-) -> FileStructure {
-    let lines = text.lines().collect::<Vec<_>>();
-    let doc_rule = doc_comment_rule(path);
-    let leading_limit = match doc_rule {
-        DocCommentRule::Position(_) => first_content_line(&lines),
-        _ => 0,
-    };
-    let mut structure = FileStructure {
-        total_lines: lines.len(),
-        ..FileStructure::default()
-    };
-    for (start, end, kind) in comment_blocks(&lines, is_py, frame.compiled.lexical(schema)) {
-        let block = &lines[start..=end];
-        if block_is_doc_comment(
-            doc_rule,
-            &kind,
-            block,
-            lines.get(end + 1).copied(),
-            start <= leading_limit,
-        ) {
-            structure.doc_comments.push(DocCommentBlock {
-                start: start + 1,
-                end: end + 1,
-                indented: lines[start].starts_with(char::is_whitespace),
-            });
-        }
+/// (§AR-scanner.2.7): the record's blocks its language calls documentation
+/// (§FS-inline-citation-style.1.1.1), the same flag the inline-site pass reads, so
+/// a block cannot be a doc comment for one rule and a note for the other.
+fn source_structure(record: &FileRecord) -> FileStructure {
+    FileStructure {
+        headings: Vec::new(),
+        doc_comments: record
+            .blocks
+            .iter()
+            .filter(|block| block.doc)
+            .map(|block| DocCommentBlock {
+                start: block.start,
+                end: block.end,
+                indented: record
+                    .line(block.start)
+                    .is_some_and(|line| line.starts_with(char::is_whitespace)),
+            })
+            .collect(),
+        total_lines: record.total_lines,
     }
-    structure
 }

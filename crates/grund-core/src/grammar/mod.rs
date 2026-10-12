@@ -94,7 +94,7 @@ pub(crate) use comment_block::{
     CommentBlockKind, DocCommentRule, block_declares_id, block_is_doc_comment, comment_blocks,
     doc_comment_rule, first_content_line, line_comment_block_marker,
 };
-pub(crate) use comment_line::{comment_strip_prefixes, strip_block_closer};
+pub(crate) use comment_line::{comment_envelope, comment_strip_prefixes, strip_block_closer};
 pub(crate) use compiled::{
     AGENTS_BLOCK_END, QUALIFIED_CITATION_PREFIX, STUB_LINK_HEADING, is_valid_project_alias,
     named_mode_section_path, named_section_component, section_path,
@@ -107,7 +107,7 @@ pub(crate) use fence::markdown_fence_delimiter;
 pub(crate) use fmt_cross_refs::flatten_cross_ref_links;
 pub(crate) use fmt_suppress::{FMT_DIRECTIVE, FmtDirectives, FmtExcluded};
 pub(crate) use glob_candidate::{CandidateReading, read_loose_candidate};
-pub(crate) use heading_text::reduce_heading_text;
+pub(crate) use heading_text::{atx_heading_text, reduce_heading_text};
 pub(crate) use id_format::{
     id_shape, id_token_end_at, literal_after_kind_placeholder, parse_longest_id_prefix,
 };

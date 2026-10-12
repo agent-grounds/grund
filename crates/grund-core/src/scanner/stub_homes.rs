@@ -8,11 +8,12 @@
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use super::read_predicate::name_refusal;
 use super::tree::scan_unwalked_file;
 use crate::config::{Frame, Schema};
-use crate::model::{Catalog, Declaration, Id, StubResolution};
+use crate::model::{Catalog, Declaration, FileRecord, Id, StubResolution};
 use crate::sources::{paths_same_location, physical_path_key};
 
 /// Reach every stub's verdict once, after the walk, and record it on the stub
@@ -35,6 +36,8 @@ pub(super) fn resolve_stubs(schema: &Schema, frame: Frame<'_>, findings: &mut Ca
             decl.stub_resolution = verdict;
         }
     }
+    // §AR-scanner.2.8: a target read here is sliced from its record like any scanned file.
+    findings.files.extend(targets.files);
 }
 
 /// The verdict on `stub`, asked in the order of §AR-scanner.4.6; `None` for a
@@ -90,11 +93,13 @@ fn resolve_stub(
 
 /// The records of the targets the walk did not record a stub's ID in, by physical
 /// location, each read once per scan through `scan_unwalked_file` (§AR-scanner.4.6).
-/// A target that cannot be read is remembered as such.
+/// A target that cannot be read is remembered as such; one that can keeps its file
+/// record (§AR-scanner.2.8), which is how `show` reads a stub's target.
 struct UnwalkedTargets<'a> {
     schema: &'a Schema,
     frame: Frame<'a>,
     read: BTreeMap<PathBuf, Option<BTreeMap<Id, Vec<Declaration>>>>,
+    files: BTreeMap<PathBuf, Arc<FileRecord>>,
 }
 
 impl<'a> UnwalkedTargets<'a> {
@@ -103,18 +108,20 @@ impl<'a> UnwalkedTargets<'a> {
             schema,
             frame,
             read: BTreeMap::new(),
+            files: BTreeMap::new(),
         }
     }
 
     /// The declarations of `id` in `path` that are not stubs, or `None` where the
     /// file cannot be read.
     fn records(&mut self, path: &Path, id: &Id) -> Option<Vec<Declaration>> {
-        let (schema, frame) = (self.schema, self.frame);
+        let (schema, frame, files) = (self.schema, self.frame, &mut self.files);
         let read = self
             .read
             .entry(physical_path_key(path))
             .or_insert_with(|| {
                 let findings = scan_unwalked_file(path, schema, frame).ok()?;
+                files.extend(findings.files);
                 Some(findings.declarations)
             })
             .as_ref()?;

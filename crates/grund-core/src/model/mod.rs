@@ -33,6 +33,7 @@
 mod e2e;
 mod expected;
 mod failure;
+mod file_record;
 mod headings;
 mod line_owners;
 mod paths;
@@ -62,6 +63,9 @@ pub use values::{
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
+pub(crate) use file_record::{
+    BlockForm, FileRecord, FileText, HeadingKind, LineZone, RecordedBlock, RecordedHeading,
+};
 pub(crate) use headings::{StubShapeNote, StubShapeReading, UnmarkedHeadingCandidate};
 pub(crate) use paths::{
     configured_home_path_key, format_path, is_hidden, normalize_path_lexically, relative_from_base,

@@ -11,7 +11,8 @@
 
 use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::{Path, PathBuf};
+use std::path::Path;
+use std::sync::Arc;
 
 use super::after_pass::AfterPass;
 use super::citation_line::CitationLine;
@@ -23,29 +24,32 @@ use super::context::{
     assign_declaration_bodies, inline_citation_sites, markdown_heading_level,
     resolve_citation_owners, retain_in_body_sections,
 };
+use super::declaration_line::{close_declaration, stub_and_title};
 use super::embedded_value_context::{
     EMBEDDED_VALUE_MARKER, authored_heading_level, embedded_value_marker_for_line,
     push_invalid_embedded_marker,
 };
+use super::extents::assign_extents;
 use super::qualified_citations::{
     scan_fallback_qualified_citations, scan_workspace_qualified_pass,
 };
+use super::record::{HeadingLine, walk_blocks, zone_of};
 use super::section_record::record_section_heading;
 use super::tree::heading_level_for_line;
-use super::units::{heading_text, record_file_structure};
+use super::units::record_file_structure;
 use super::unmarked_headings::assign_unmarked_heading_owners;
 use super::value_binding_split::scan_split_binding;
 use super::value_context::recognized_source_value_contexts;
 use super::values::scan_value_bindings;
 use crate::config::{Frame, Schema};
 use crate::grammar::{
-    DocstringContent, MarkdownBlocks, MarkdownLine, PythonDocstringScanState, STUB_LINK_HEADING,
+    DocstringContent, MarkdownBlocks, MarkdownLine, PythonDocstringScanState, atx_heading_text,
     bare_token_in_never_rewrite_zone, declaration_captures, near_miss_heading, parse_id,
     qualified_suppressed_in_source, section_path, source_scan_line,
 };
 use crate::model::{
-    Catalog, Citation, Declaration, DeclarationSource, Id, NearMissHeading,
-    UnmarkedHeadingCandidate,
+    Catalog, Citation, Declaration, DeclarationSource, FileRecord, FileText, HeadingKind, Id,
+    NearMissHeading, UnmarkedHeadingCandidate,
 };
 use crate::workspace::WorkspaceCitationTarget;
 
@@ -95,7 +99,7 @@ use crate::workspace::WorkspaceCitationTarget;
 /// `Catalog`, so `findings` holds exactly this file's records.
 pub(super) fn scan_file_text(
     path: &Path,
-    text: &str,
+    file_text: FileText,
     schema: &Schema,
     frame: Frame<'_>,
     findings: &mut Catalog,
@@ -105,8 +109,18 @@ pub(super) fn scan_file_text(
     let marker = &schema.citation.marker;
     let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");
     let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");
-    let (inline_sites, inline_block_lines) =
-        inline_citation_sites(path, &text, is_md, is_py, schema, frame, workspace_targets);
+    // §AR-scanner.2.8.1: the record keeps the text as read, and the pass reads it there.
+    let mut record = FileRecord::new(file_text, is_md);
+    let shared = record.text.clone();
+    let text = shared.as_str();
+    // §AR-scanner.2.8.1: the comment blocks, walked once, are what the inline-note sites read.
+    let (inline_sites, inline_block_lines) = if is_md {
+        Default::default()
+    } else {
+        let lines = text.lines().collect::<Vec<_>>();
+        record.blocks = walk_blocks(path, &lines, is_py, schema, frame);
+        inline_citation_sites(&lines, &record.blocks, schema, frame, workspace_targets)
+    };
     let in_docs = super::stub_shape::stub_by_docs(path);
     let mut markdown_blocks = MarkdownBlocks::default();
     let mut py_docstring = PythonDocstringScanState::default();
@@ -127,9 +141,6 @@ pub(super) fn scan_file_text(
     // rules, so the caller asks for it: `check`, the LSP, `cover` and `refs` pass `true`;
     // `list`, `show`, `fmt`, ID completion, `sizes` and `batch` pass `false`.
     let classify = frame.run.scope.classify_citation_sources;
-    // §AR-scanner.2.4.1: every Markdown heading (line, level) outside a fence — a
-    // declaration body runs until the next heading at the same or higher level.
-    let mut md_headings: Vec<(usize, usize)> = Vec::new();
     // §AR-scanner.2.2.7 / §FS-declarations.checks.unmarked-heading.1: declaration and section
     // recognition happen in this same fence-aware pass. Plain ATX headings wait until body spans
     // are known before becoming reportable candidates.
@@ -153,20 +164,20 @@ pub(super) fn scan_file_text(
         // declares nothing and opens no section, but its citations stay live below.
         let heading_position = block.may_be_heading();
         let trimmed = line.trim_start();
-        // Collected for every Markdown file: the shared section-map prune below
-        // needs the body spans and cannot ask for them after this pass.
-        if heading_position
-            && is_md
-            && let Some(level) = markdown_heading_level(line)
-        {
-            md_headings.push((lineno, level));
-        }
         let scan = source_scan_line(
             line,
             is_py,
             schema.sources.docstring_python,
             &mut py_docstring,
         );
+        record.zones.extend(zone_of(lineno, &scan));
+        let heading = HeadingLine {
+            text,
+            line,
+            lineno,
+            scan: &scan,
+            is_md,
+        };
         let scan_line = scan.text.as_ref();
         let source_value_context = value_line_contexts
             .as_ref()
@@ -183,40 +194,23 @@ pub(super) fn scan_file_text(
                 declaration_captures(grammar, scan_line, scan.in_py_docstring, is_md)
             && let Some(id) = parse_id(&caps, grammar)
         {
-            if let Some(prev) = current.take() {
-                findings
-                    .declarations
-                    .entry(prev.id.clone())
-                    .or_default()
-                    .push(prev);
-            }
+            close_declaration(&mut current, findings);
             // §FS-declarations.line.configured-slug: the matched delimiter belongs to the tail.
             let tail = &scan_line[caps.name("id").unwrap().end()..];
-            let mut is_stub = false;
-            let mut defined_in = None;
-            if is_md
-                && in_docs
-                && let Some(link_caps) = STUB_LINK_HEADING.captures(tail)
-            {
-                is_stub = true;
-                defined_in = Some(PathBuf::from(link_caps.name("path").unwrap().as_str()));
-            }
-            let title = if is_stub {
-                None
-            } else {
-                let trimmed = tail.trim_start();
-                let trimmed = trimmed.strip_prefix(':').unwrap_or(trimmed).trim();
-                (!trimmed.is_empty()).then(|| trimmed.to_string())
-            };
+            let (is_stub, defined_in, title) = stub_and_title(tail, is_md && in_docs);
+            let heading_level =
+                heading_level_for_line(scan_line, is_md || scan.in_py_docstring, &caps);
+            record.headings.push(heading.record(
+                &record,
+                heading_level,
+                None,
+                HeadingKind::Declaration,
+            ));
             current = Some(Declaration {
                 id,
                 file: path.to_path_buf(),
                 line: lineno,
-                heading_level: heading_level_for_line(
-                    scan_line,
-                    is_md || scan.in_py_docstring,
-                    &caps,
-                ),
+                heading_level,
                 sections: BTreeMap::new(),
                 duplicate_sections: Vec::new(),
                 is_stub,
@@ -255,13 +249,7 @@ pub(super) fn scan_file_text(
             && let Some((text, format, kind)) =
                 near_miss_heading(grammar, scan_line, scan.in_py_docstring, is_md)
         {
-            if let Some(prev) = current.take() {
-                findings
-                    .declarations
-                    .entry(prev.id.clone())
-                    .or_default()
-                    .push(prev);
-            }
+            close_declaration(&mut current, findings);
             findings.near_miss_headings.push(NearMissHeading {
                 file: path.to_path_buf(),
                 line: lineno,
@@ -272,23 +260,24 @@ pub(super) fn scan_file_text(
                 .find(text)
                 .map(|start| start + text.len())
                 .unwrap_or(0);
-            let tail = &scan_line[token_end..];
-            let mut is_stub = false;
-            let mut defined_in = None;
-            if is_md
-                && in_docs
-                && let Some(link_caps) = STUB_LINK_HEADING.captures(tail)
-            {
-                is_stub = true;
-                defined_in = Some(PathBuf::from(link_caps.name("path").unwrap().as_str()));
-            }
-            let title = if is_stub {
-                None
+            let (is_stub, defined_in, title) =
+                stub_and_title(&scan_line[token_end..], is_md && in_docs);
+            let heading_level = if is_md || scan.in_py_docstring {
+                scan_line
+                    .trim_start()
+                    .chars()
+                    .take_while(|ch| *ch == '#')
+                    .count()
+                    .max(1)
             } else {
-                let trimmed = tail.trim_start();
-                let trimmed = trimmed.strip_prefix(':').unwrap_or(trimmed).trim();
-                (!trimmed.is_empty()).then(|| trimmed.to_string())
+                1
             };
+            record.headings.push(heading.record(
+                &record,
+                heading_level,
+                None,
+                HeadingKind::Declaration,
+            ));
             // §FS-config.3.2.5 / §AR-scanner.2.1: retain a rejected declaration-position
             // token as an ordinary catalog declaration, with exact spelling and all
             // body/section state from this same file pass.
@@ -296,16 +285,7 @@ pub(super) fn scan_file_text(
                 id: Id::legacy(kind.to_string(), text),
                 file: path.to_path_buf(),
                 line: lineno,
-                heading_level: if is_md || scan.in_py_docstring {
-                    scan_line
-                        .trim_start()
-                        .chars()
-                        .take_while(|ch| *ch == '#')
-                        .count()
-                        .max(1)
-                } else {
-                    1
-                },
+                heading_level,
                 sections: BTreeMap::new(),
                 duplicate_sections: Vec::new(),
                 is_stub,
@@ -326,6 +306,23 @@ pub(super) fn scan_file_text(
             .then(|| grammar.section_re.captures(scan_line))
             .flatten();
         let recognized_section = section_caps.as_ref().and_then(section_path).is_some();
+        // §AR-scanner.2.8.1: every heading the loop meets, settled once the bodies are known.
+        if let Some(caps) = section_caps.as_ref()
+            && let Some(sec) = section_path(caps)
+        {
+            let level = heading_level_for_line(scan_line, is_md || scan.in_py_docstring, caps);
+            let path = Some(sec.to_string());
+            record
+                .headings
+                .push(heading.record(&record, level, path, HeadingKind::Rejected));
+        } else if is_md
+            && heading_position
+            && let Some(level) = markdown_heading_level(trimmed)
+        {
+            record
+                .headings
+                .push(heading.record(&record, level, None, HeadingKind::Plain));
+        }
         let mut embedded_marker_attached = false;
         if let Some(caps) = section_caps
             && let Some(decl) = current.as_mut()
@@ -351,7 +348,7 @@ pub(super) fn scan_file_text(
             && let Some(heading_level) = markdown_heading_level(line)
         {
             let heading = line.trim_end().trim_start().to_string();
-            let title = heading_text(trimmed, heading_level);
+            let title = atx_heading_text(trimmed, heading_level).to_string();
             let column = line.find('#').unwrap_or(0) + 1;
             unmarked_heading_candidates.push(UnmarkedHeadingCandidate {
                 file: path.to_path_buf(),
@@ -537,13 +534,17 @@ pub(super) fn scan_file_text(
         }
     }
 
-    if let Some(decl) = current.take() {
-        findings
-            .declarations
-            .entry(decl.id.clone())
-            .or_default()
-            .push(decl);
-    }
+    close_declaration(&mut current, findings);
+    record.total_lines = total_lines;
+    // §AR-scanner.2.8.2: every declaration's and section's extents, on every run.
+    assign_extents(&mut record, findings);
+    // §AR-scanner.2.4.1: the Markdown headings a body or a section ends at.
+    let md_headings: Vec<(usize, usize)> = record
+        .headings
+        .iter()
+        .filter(|heading| heading.atx)
+        .map(|heading| (heading.line, heading.level))
+        .collect();
 
     // §AR-scanner.2.4: now that every declaration and (for Markdown) every heading
     // on the file is known, fix each declaration's body span and classify each
@@ -551,6 +552,8 @@ pub(super) fn scan_file_text(
     let due = AfterPass::of(findings, schema, scan_values);
     let has_unmarked_headings = !unmarked_heading_candidates.is_empty();
     let has_local_section_candidates = !findings.local_section_citation_candidates.is_empty();
+    // §DF-one-parse-answers-from-0-19: the catalog publishes spans where 0.17 did, which bounds
+    // today's `show`; the record holds them on every run.
     if classify
         // §FS-cover.6.2: a `cover --lines` request reads the body spans too.
         || !frame.run.scope.owner_lines.is_empty()
@@ -560,27 +563,13 @@ pub(super) fn scan_file_text(
         || due.declared_chapters
         || has_local_section_candidates
     {
-        assign_declaration_bodies(
-            findings,
-            is_md,
-            is_py,
-            schema,
-            frame,
-            &text,
-            &md_headings,
-            total_lines,
-        );
+        assign_declaration_bodies(findings, &record);
     }
     if due.text_sections {
         retain_in_body_sections(findings);
     }
     if has_unmarked_headings {
-        assign_unmarked_heading_owners(
-            findings,
-            unmarked_heading_candidates,
-            &md_headings,
-            total_lines,
-        );
+        assign_unmarked_heading_owners(findings, unmarked_heading_candidates, &record);
     }
     due.validate_values(
         path,
@@ -604,6 +593,7 @@ pub(super) fn scan_file_text(
     // §AR-scanner.2.7.1: the headings and doc-comment blocks a grounding unit finer
     // than the file is cut out of — recorded only where the file's own row asks
     // for one, so a level-1 tree pays nothing (§FS-config.3.4.8.2).
-    record_file_structure(path, text, schema, frame, findings);
+    record_file_structure(path, &record, schema, frame, findings);
+    findings.files.insert(path.to_path_buf(), Arc::new(record));
     Ok(())
 }

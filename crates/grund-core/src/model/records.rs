@@ -1,7 +1,9 @@
 use std::collections::BTreeMap;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use super::e2e::E2eCase;
+use super::file_record::FileRecord;
 use super::headings::{
     NearMissHeading, SectionHeadingOutsideDeclaration, StubShapeNote, UnmarkedHeading,
 };
@@ -342,6 +344,10 @@ pub struct Catalog {
     /// per scanned file (§FS-cover.6, §AR-scanner.2.4.4). Empty — and never
     /// computed — unless `Config::owner_lines` is set.
     pub(crate) line_ownership: Vec<FileLineOwnership>,
+    /// One record per scanned file, keyed by the path its declarations carry
+    /// (§AR-scanner.2.8): what every command slices and reads its owners from,
+    /// a stub's target the walk did not reach included (§AR-scanner.4.6).
+    pub(crate) files: BTreeMap<PathBuf, Arc<FileRecord>>,
 }
 
 /// ID-query slice mode (§FS-show.1.6): each rung adds to the previous one —

@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use crate::model::{Catalog, Declaration, UnmarkedHeading, UnmarkedHeadingCandidate};
+use crate::model::{Catalog, FileRecord, UnmarkedHeading, UnmarkedHeadingCandidate};
 
 /// Retain only Markdown headings owned by a declaration body, choose the
 /// nearest nested owner, and assign deterministic unused section paths
@@ -8,8 +8,7 @@ use crate::model::{Catalog, Declaration, UnmarkedHeading, UnmarkedHeadingCandida
 pub(super) fn assign_unmarked_heading_owners(
     findings: &mut Catalog,
     mut candidates: Vec<UnmarkedHeadingCandidate>,
-    md_headings: &[(usize, usize)],
-    total_lines: usize,
+    record: &FileRecord,
 ) {
     #[derive(Clone)]
     struct KnownPath {
@@ -24,7 +23,11 @@ pub(super) fn assign_unmarked_heading_owners(
         .map(|decl| {
             (
                 decl.line,
-                markdown_declaration_body_end(decl, md_headings, total_lines),
+                // §FS-declarations.body: the record's body rule, whether or not the
+                // run publishes spans on the catalog (§FS-declarations.checks.unmarked-heading.6).
+                record
+                    .heading_at(decl.line)
+                    .map_or(decl.line, |heading| heading.end.max(decl.line)),
                 decl.heading_level,
                 decl.id.clone(),
                 decl.sections
@@ -160,24 +163,4 @@ pub(super) fn assign_unmarked_heading_owners(
         }
         format!("1{}", "0".repeat(digits.len()))
     }
-}
-
-/// Compute an unmarked-heading ownership boundary without publishing it on the
-/// declaration model. Read-only `show` and `list --size` scans intentionally
-/// keep their lazy whole-declaration slicing (§FS-declarations.checks.unmarked-heading.6, §FS-show.2.1.3).
-pub(super) fn markdown_declaration_body_end(
-    decl: &Declaration,
-    md_headings: &[(usize, usize)],
-    total_lines: usize,
-) -> usize {
-    if decl.is_stub {
-        return decl.line;
-    }
-    md_headings
-        .iter()
-        .filter(|(line, level)| *line > decl.line && *level <= decl.heading_level)
-        .map(|(line, _)| line - 1)
-        .min()
-        .unwrap_or(total_lines)
-        .max(decl.line)
 }
