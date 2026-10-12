@@ -502,6 +502,9 @@ A `web` link to a Markdown heading needs the fragment the forge renders for it.
 Do not slug the heading by hand: every `grund <ID> --format json` read carries
 it as `anchor`, so the link is one read away
 ([Link a citation from one read](querying.md#link-a-citation-from-one-read)).
+A heading's closing hashes are not part of its text, so `## 1. Steps ##` has the
+anchor `1-steps`, the fragment the forge renders, and `grund fmt --cross-refs`
+links it the same way ([§FS-declarations.heading.rendered-text](../functional-spec/FS-declarations.md#headingrendered-text-a-headings-rendered-text)).
 
 The flag records the value and re-renders the instruction blocks; editing the
 key by hand and re-running `grund integrations --write` is equivalent. It is

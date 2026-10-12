@@ -5,15 +5,20 @@
 //! and goes with this file then ([#639](https://github.com/agent-grounds/grund/issues/639)):
 //! the record's own rules are `extents.rs`.
 //!
-//! The comment envelope today's body reads is `compat_envelope.rs`.
+//! The comment envelope today's body reads is `compat_envelope.rs`. The two
+//! readings at the end, the record's lead and a block line 0.19.0 makes a section,
+//! are what §FS-declarations.checks.parse-moves compares today's answers with.
 
-use crate::grammar::LexicalSettings;
-use crate::model::{FileRecord, HeadingKind, ShowRenderMode, ShowSection};
+use crate::grammar::{LexicalSettings, comment_envelope};
+use crate::model::{
+    BlockForm, FileRecord, HeadingKind, RecordedHeading, ShowRenderMode, ShowSection,
+};
 
 use super::compat_envelope::{
     clean_envelope_line, closes_comment_block, continues_comment_body, is_line_style_comment_line,
     own_line_marker, section_title,
 };
+use super::context::markdown_heading_level;
 
 /// The catalog site a slice is pinned to (§FS-declarations.section.map, §FS-list.3.4):
 /// its declaration line, the body end the catalog publishes when it publishes one,
@@ -271,4 +276,59 @@ impl<'a> TodayOwnerEnds<'a> {
         };
         closer.map_or(usize::MAX, |next| next - 1)
     }
+}
+
+/// The lead the record gives a site, read through today's envelope: the lines
+/// after `site_line` down to `lead_end` (§FS-declarations.lead), so the warning
+/// of §FS-declarations.checks.parse-moves.2's third shape measures the lead 0.19.0 prints beside the one
+/// [`today_slices`] prints now.
+pub(crate) fn record_lead(
+    record: &FileRecord,
+    declaration_line: usize,
+    site_line: usize,
+    lead_end: usize,
+    lexical: LexicalSettings<'_>,
+) -> String {
+    let is_md = record.markdown;
+    let (scan_line, in_docstring, _) = scanned(record, declaration_line);
+    let own_marker = (!is_md && !in_docstring)
+        .then(|| own_line_marker(scan_line, lexical))
+        .flatten();
+    let mut sink = TodaySink::new(ShowRenderMode::Default, false);
+    for lineno in site_line + 1..=lead_end {
+        let (scan_line, in_docstring, closes) = scanned(record, lineno);
+        if in_docstring && closes && scan_line.trim().is_empty() {
+            break;
+        }
+        let markdown_heading = is_md || in_docstring;
+        sink.lines.push(clean_envelope_line(
+            scan_line,
+            markdown_heading,
+            own_marker.as_deref(),
+        ));
+    }
+    sink.finish().0
+}
+
+/// Whether a heading the record rejects is a section from 0.19.0: a `/** … */`
+/// line without ` * ` that reads, kept as written, as a heading deeper than its
+/// declaration's (§FS-languages.comment-wrapper.headings, the second shape of
+/// §FS-declarations.checks.parse-moves.2).
+/// Today the scan reads its first `#` as a comment marker, so it is too shallow.
+pub(crate) fn becomes_section(
+    record: &FileRecord,
+    heading: &RecordedHeading,
+    declaration_level: usize,
+) -> bool {
+    if heading.kind != HeadingKind::Rejected || heading.path.is_none() || record.markdown {
+        return false;
+    }
+    let (Some(block), Some(line)) = (record.block_at(heading.line), record.line(heading.line))
+    else {
+        return false;
+    };
+    block.form == BlockForm::Block
+        && !line.trim_start().starts_with('*')
+        && markdown_heading_level(comment_envelope(line, &block.form).trim_start())
+            .is_some_and(|level| level > declaration_level)
 }

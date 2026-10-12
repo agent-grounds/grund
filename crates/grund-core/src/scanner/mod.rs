@@ -104,7 +104,9 @@ pub(crate) use agent_entrypoints::{
     existing_init_companion_agent_entrypoints, is_file_or_symlink, is_symlink_to,
     path_missing_without_following_symlinks,
 };
-pub(crate) use compat::{TodayMiss, TodaySink, TodaySite, today_slices};
+pub(crate) use compat::{
+    TodayMiss, TodaySink, TodaySite, becomes_section, record_lead, today_slices,
+};
 pub(crate) use context::{file_home_kind, markdown_heading_level, section_path_is_numeric};
 pub(crate) use e2e::e2e_case_dir_name;
 pub(crate) use embedded_value_context::EMBEDDED_VALUE_MARKER;

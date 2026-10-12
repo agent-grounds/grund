@@ -7,6 +7,7 @@ use super::glob_citations::check_glob_citations;
 use super::homes::{KindHomeIndex, paths_same_location_key};
 use super::inline_style::check_inline_citation_style;
 use super::near_miss::check_declaration_near_misses;
+use super::parse_moves::check_parse_moves;
 use super::sections::check_section_headings;
 use super::sizes::check_oversized_leads;
 use super::stub_shape::check_stub_shapes;
@@ -19,7 +20,8 @@ use crate::model::{
 
 /// §AR-checker.1.1: duplicate, misplaced-declaration, broken-stub, stub-shape and
 /// declaration-near-miss (§FS-declarations.checks), the section family, inline
-/// citation style, the opt-in lead budget and the field family (§FS-fields.checks), each pass in the order the single
+/// citation style, the opt-in lead budget, the parse-moves warning
+/// (§FS-declarations.checks.parse-moves) and the field family (§FS-fields.checks), each pass in the order the single
 /// driver ran it. Unsorted: the merge sorts (§AR-checker.1.4).
 pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> CheckReport {
     let mut report = CheckReport::default();
@@ -37,6 +39,9 @@ pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> C
     // project judges only the already-scoped scanner sites, including duplicate
     // claimants, through the shared show slicer. Warnings never affect exit.
     check_oversized_leads(catalog, schema, frame, &mut report);
+    // §FS-declarations.checks.parse-moves: where 0.19.0's one parse moves a verdict, today's
+    // answer stands and the line that moves it warns.
+    check_parse_moves(catalog, schema, frame, &mut report);
     check_broken_stubs(catalog, frame, &mut report);
     // §FS-declarations.checks.stub-shape: a stub-shaped heading 0.19.0 reads differently.
     check_stub_shapes(catalog, frame, &mut report);

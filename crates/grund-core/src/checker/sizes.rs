@@ -18,27 +18,7 @@ pub(super) fn check_oversized_leads(
     frame: Frame<'_>,
     report: &mut CheckReport,
 ) {
-    // §FS-declarations.checks.oversized-lead: v1's one budget is a warning; v2's
-    // `[schema.leads.words]` puts one on each strength's channel, strongest first.
-    let mut budgets: Vec<(Strength, LeadSizeWarning)> = schema
-        .leads
-        .map(|warning| (Strength::Warn, warning))
-        .into_iter()
-        .collect();
-    budgets.extend(
-        schema
-            .lead_thresholds
-            .iter()
-            .filter(|threshold| threshold.strength != Strength::May)
-            .map(|threshold| {
-                let budget = LeadSizeWarning {
-                    max: threshold.value,
-                    unit: PointSizeUnit::Words,
-                };
-                (threshold.strength, budget)
-            }),
-    );
-    budgets.sort_by_key(|(strength, _)| *strength as u8);
+    let budgets = lead_budgets(schema);
     if budgets.is_empty() {
         return;
     }
@@ -87,6 +67,51 @@ pub(super) fn check_oversized_leads(
     }
 }
 
+/// The configured lead budgets, strongest first (§FS-declarations.checks.oversized-lead): v1's
+/// one budget is a warning; v2's `[schema.leads.words]` puts one on each strength's channel.
+/// Empty where the project opted into none, so a caller stops before any body read.
+pub(super) fn lead_budgets(schema: &Schema) -> Vec<(Strength, LeadSizeWarning)> {
+    let mut budgets: Vec<(Strength, LeadSizeWarning)> = schema
+        .leads
+        .map(|warning| (Strength::Warn, warning))
+        .into_iter()
+        .collect();
+    budgets.extend(
+        schema
+            .lead_thresholds
+            .iter()
+            .filter(|threshold| threshold.strength != Strength::May)
+            .map(|threshold| {
+                let budget = LeadSizeWarning {
+                    max: threshold.value,
+                    unit: PointSizeUnit::Words,
+                };
+                (threshold.strength, budget)
+            }),
+    );
+    budgets.sort_by_key(|(strength, _)| *strength as u8);
+    budgets
+}
+
+/// A lead site's coordinate as a finding names it: local in a member-local check,
+/// workspace-qualified at a workspace root (§FS-declarations.checks.oversized-lead.1).
+pub(super) fn site_coordinate(
+    schema: &Schema,
+    frame: Frame<'_>,
+    id: &Id,
+    section: Option<&str>,
+) -> String {
+    let mut coordinate = render_id(frame.grammar(), id);
+    if let Some(section) = section {
+        coordinate.push_str(&schema.ids.section_separator);
+        coordinate.push_str(section);
+    }
+    match frame.alias {
+        Some(alias) => format!("{alias}/{coordinate}"),
+        None => coordinate,
+    }
+}
+
 /// Judge and, when needed, report one declaration or section site using the
 /// exact fixed warning contract (§FS-declarations.checks.oversized-lead.1).
 #[allow(clippy::too_many_arguments)]
@@ -114,14 +139,7 @@ fn check_oversized_lead_site(
     }) else {
         return;
     };
-    let mut coordinate = render_id(frame.grammar(), id);
-    if let Some((section, _)) = section {
-        coordinate.push_str(&schema.ids.section_separator);
-        coordinate.push_str(section);
-    }
-    if let Some(alias) = frame.alias {
-        coordinate = format!("{alias}/{coordinate}");
-    }
+    let coordinate = site_coordinate(schema, frame, id, section.map(|(section, _)| section));
     let channel = match strength {
         Strength::Must => &mut report.errors,
         Strength::Warn => &mut report.warnings,

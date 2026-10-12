@@ -53,6 +53,7 @@ mod inline_style;
 mod judge;
 mod near_miss;
 mod obligation_units;
+mod parse_moves;
 mod reference_scope;
 mod references;
 mod report;
