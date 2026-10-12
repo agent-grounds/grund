@@ -3,7 +3,7 @@ use crate::grammar::render_id;
 use crate::model::{
     Catalog, CheckReport, Declaration, Diagnostic, Id, SectionInfo, paired_declarations,
 };
-use crate::resolver::{PointBodyCache, point_body_pair};
+use crate::resolver::point_body_pair;
 
 /// Opt-in point-lead budget checking (§FS-declarations.checks.oversized-lead).
 ///
@@ -43,14 +43,13 @@ pub(super) fn check_oversized_leads(
         return;
     }
     let budgets = budgets.as_slice();
-    let mut cache = PointBodyCache::new(frame.sources());
     for (id, declarations) in &findings.declarations {
         // §FS-declarations.checks.oversized-lead.4: the scanned sites, so a stub that
         // stands for a declaration outside the walk is passed over by the slicer.
         let paired = paired_declarations(declarations);
         for declaration in paired.stand_ins() {
             check_oversized_lead_site(
-                &mut cache,
+                findings,
                 schema,
                 frame,
                 id,
@@ -62,7 +61,7 @@ pub(super) fn check_oversized_leads(
 
             for (section, info) in &declaration.sections {
                 check_oversized_lead_site(
-                    &mut cache,
+                    findings,
                     schema,
                     frame,
                     id,
@@ -74,7 +73,7 @@ pub(super) fn check_oversized_leads(
             }
             for (section, info) in &declaration.duplicate_sections {
                 check_oversized_lead_site(
-                    &mut cache,
+                    findings,
                     schema,
                     frame,
                     id,
@@ -92,7 +91,7 @@ pub(super) fn check_oversized_leads(
 /// exact fixed warning contract (§FS-declarations.checks.oversized-lead.1).
 #[allow(clippy::too_many_arguments)]
 fn check_oversized_lead_site(
-    cache: &mut PointBodyCache<'_>,
+    findings: &Catalog,
     schema: &Schema,
     frame: Frame<'_>,
     id: &Id,
@@ -101,7 +100,8 @@ fn check_oversized_lead_site(
     budgets: &[(Strength, LeadSizeWarning)],
     report: &mut CheckReport,
 ) {
-    let Ok(Some((lead, _))) = point_body_pair(cache, schema, frame, id, declaration, section)
+    let Ok(Some((lead, _))) =
+        point_body_pair(&findings.files, schema, frame, id, declaration, section)
     else {
         // A stub is broken or has its home outside the scan, unjudged either way
         // (§FS-declarations.checks.oversized-lead.4). A read failure is the scan's.

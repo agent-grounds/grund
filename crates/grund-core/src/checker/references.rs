@@ -226,7 +226,7 @@ pub(super) fn check_citation_resolution(
                         .as_ref()
                         .is_some_and(|kind| matches!(kind.origin, Origin::External { .. }))
             });
-            let in_inline_code = citation_in_markdown_inline_code(cite);
+            let in_inline_code = citation_in_markdown_inline_code(findings, cite);
             let (code, message, warning) = if let Some(row) = snapshot_row {
                 // §FS-check.3.14.1: out-of-scope citations stay fixed dangling errors;
                 // a target kind's in-scope `should` must not demote this opt-in tier.

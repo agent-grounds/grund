@@ -106,22 +106,15 @@ pub(super) fn resolve_citation_owners(
     schema: &Schema,
     frame: Frame<'_>,
     path: &Path,
-    md_headings: &[(usize, usize)],
-    total_lines: usize,
+    record: &FileRecord,
     classify: bool,
 ) {
     if !frame.run.scope.owner_lines.is_empty() {
-        resolve_requested_lines(
-            findings,
-            path,
-            md_headings,
-            total_lines,
-            &frame.run.scope.owner_lines,
-        );
+        resolve_requested_lines(findings, path, record, &frame.run.scope.owner_lines);
     }
     let has_local_candidates = !findings.local_section_citation_candidates.is_empty();
     if classify || has_local_candidates {
-        classify_citation_sources(findings, schema, frame, path, md_headings);
+        classify_citation_sources(findings, schema, frame, path, record);
     }
     if has_local_candidates {
         promote_local_section_citations(findings);
@@ -138,9 +131,9 @@ fn classify_citation_sources(
     schema: &Schema,
     frame: Frame<'_>,
     path: &Path,
-    md_headings: &[(usize, usize)],
+    record: &FileRecord,
 ) {
-    let owners = LineOwners::new(findings, md_headings);
+    let owners = LineOwners::new(findings, record);
     // §FS-config.3.9.2.2: step 3 of the fallback is the homeless kind, whose name
     // is `code` only where the project did not name it something truer.
     let unowned_kind =

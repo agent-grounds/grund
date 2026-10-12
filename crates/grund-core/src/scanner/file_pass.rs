@@ -538,13 +538,6 @@ pub(super) fn scan_file_text(
     record.total_lines = total_lines;
     // §AR-scanner.2.8.2: every declaration's and section's extents, on every run.
     assign_extents(&mut record, findings);
-    // §AR-scanner.2.4.1: the Markdown headings a body or a section ends at.
-    let md_headings: Vec<(usize, usize)> = record
-        .headings
-        .iter()
-        .filter(|heading| heading.atx)
-        .map(|heading| (heading.line, heading.level))
-        .collect();
 
     // §AR-scanner.2.4: now that every declaration and (for Markdown) every heading
     // on the file is known, fix each declaration's body span and classify each
@@ -581,15 +574,7 @@ pub(super) fn scan_file_text(
         value_line_contexts.as_deref(),
         findings,
     );
-    resolve_citation_owners(
-        findings,
-        schema,
-        frame,
-        path,
-        &md_headings,
-        total_lines,
-        classify,
-    );
+    resolve_citation_owners(findings, schema, frame, path, &record, classify);
     // §AR-scanner.2.7.1: the headings and doc-comment blocks a grounding unit finer
     // than the file is cut out of — recorded only where the file's own row asks
     // for one, so a level-1 tree pays nothing (§FS-config.3.4.8.2).

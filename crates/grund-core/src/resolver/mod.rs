@@ -70,7 +70,6 @@
 mod body;
 mod body_lines;
 mod citation_target;
-mod comment_envelope;
 mod context;
 mod e2e_body;
 mod id_candidates;
@@ -85,7 +84,7 @@ pub use id_candidates::names_member_id_candidate;
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
-pub(crate) use body::{PointBodyCache, extract_declaration_body};
+pub(crate) use body::extract_declaration_body;
 pub(crate) use citation_target::{
     SectionHome, WorkspaceCheckTarget, citation_resolves, section_home, section_resolves,
     target_for_citation,
@@ -109,8 +108,6 @@ pub(crate) use unread_block::settled_run_warnings;
 
 // The cases that pin this component, one module per behaviour area
 // (§AR-core-module-layout.1.3).
-#[cfg(test)]
-mod tests_clean_body_line;
 #[cfg(test)]
 mod tests_link_target_body_end;
 #[cfg(test)]

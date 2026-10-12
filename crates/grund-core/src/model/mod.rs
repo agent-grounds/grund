@@ -64,7 +64,8 @@ pub use values::{
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
 pub(crate) use file_record::{
-    BlockForm, FileRecord, FileText, HeadingKind, LineZone, RecordedBlock, RecordedHeading,
+    BlockForm, FileRecord, FileRecords, FileText, HeadingKind, LineZone, RecordedBlock,
+    RecordedHeading,
 };
 pub(crate) use headings::{StubShapeNote, StubShapeReading, UnmarkedHeadingCandidate};
 pub(crate) use paths::{

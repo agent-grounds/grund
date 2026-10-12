@@ -120,6 +120,7 @@ pub(super) fn zone_of(lineno: usize, scan: &SourceScanLine<'_>) -> Option<LineZo
         line: lineno,
         start: scan.column_offset,
         end: scan.column_offset + scan.text.len(),
+        closes: scan.closed_py_docstring,
     })
 }
 
