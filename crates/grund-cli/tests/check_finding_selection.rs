@@ -326,6 +326,7 @@ fn issue_49_check_help_exposes_the_sorted_public_code_catalog() {
         "stub-shape",
         "suggested-citation",
         "uncited-unit",
+        "unclosed-wrapper",
         "undeclared-chapter",
         "ungrounded",
         "unknown-project",

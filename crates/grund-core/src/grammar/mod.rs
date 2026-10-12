@@ -103,7 +103,7 @@ pub(crate) use compiled::{
 // The bare fence reader serves the record's doc-comment headings and the template
 // tests, which look for a fenced example rather than for a heading (§FS-check.1.1.5).
 pub(crate) use fence::markdown_fence_delimiter;
-pub(crate) use fmt_cross_refs::flatten_cross_ref_links;
+pub(crate) use fmt_cross_refs::{cross_ref_wrap, flatten_cross_ref_links};
 pub(crate) use fmt_suppress::{FMT_DIRECTIVE, FmtDirectives, FmtExcluded};
 pub(crate) use glob_candidate::{CandidateReading, read_loose_candidate};
 pub(crate) use heading_text::{atx_heading_text, reduce_heading_text, without_closing_sequence};
@@ -159,6 +159,8 @@ mod tests_comment_block;
 mod tests_comment_block_position;
 #[cfg(test)]
 mod tests_declaration_line;
+#[cfg(test)]
+mod tests_fmt_cross_refs;
 #[cfg(test)]
 mod tests_fmt_suppression;
 #[cfg(test)]

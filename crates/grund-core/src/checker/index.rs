@@ -14,8 +14,8 @@ use super::index_entries::KindIndexEntries;
 use super::index_mention::index_mentions;
 use crate::config::{Frame, Schema};
 use crate::grammar::{
-    declaration_id_on_line, is_inside_inline_code, markdown_line_kinds, never_rewrite_context,
-    render_id,
+    cross_ref_wrap, declaration_id_on_line, is_inside_inline_code, markdown_line_kinds,
+    never_rewrite_context, render_id,
 };
 use crate::model::{
     Catalog, CheckReport, Citation, Declaration, Diagnostic, Id, configured_home_path_key,
@@ -122,15 +122,10 @@ fn index_citation_form(line: &str, text: &str, marker: &str) -> IndexCitationFor
         // marker, which is multi-byte under the default `§`, and slicing one byte
         // into it would panic (§REQ-never-crashes).
         cursor = end;
-        // §FS-fmt.6.3.1's wrap detection, from the other side: a `[` immediately
-        // before the citation and `](…)` immediately after it is the shape the
-        // formatter writes and re-derives, and the only shape it recognizes.
-        let wrapped = start > 0
-            && line.as_bytes()[start - 1] == b'['
-            && line[end..]
-                .strip_prefix("](")
-                .and_then(|rest| rest.find(')'))
-                .is_some_and(|close| close > 0);
+        // §FS-citations.wrap.recognized: the formatter's own bracket test, with a
+        // destination that reaches a first `)` and holds something before it.
+        let wrapped = cross_ref_wrap(line, start, end)
+            .is_some_and(|wrap| wrap.first_close.is_some_and(|close| close > wrap.url_start));
         if wrapped {
             if is_inside_inline_code(line, start - 1) {
                 continue;

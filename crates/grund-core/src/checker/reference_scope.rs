@@ -239,6 +239,10 @@ pub(crate) fn retain_findings_in_scope(findings: &mut Catalog, scope: Option<&Sc
     findings
         .stub_shape_notes
         .retain(|note| scope.contains(&note.file));
+    // §FS-citations.checks.unclosed-wrapper: judged on the files the configured scope reads.
+    findings
+        .unclosed_wrapper_notes
+        .retain(|note| scope.contains(&note.file));
     findings.scanned_files.retain(|file| scope.contains(file));
     // The shorthand resolutions §AR-scanner.2.6.6 performed against the whole walk
     // are deliberately left standing: a site whose declaration the retains above

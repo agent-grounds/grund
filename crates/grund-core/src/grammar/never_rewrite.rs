@@ -288,39 +288,49 @@ fn closing_run_end(bytes: &[u8], from: usize, len: usize) -> Option<usize> {
 /// Whether byte offset `pos` falls inside the destination part of an inline
 /// Markdown link (`[text](destination)`). URLs are presentation syntax, not
 /// citations, so `fmt --marker` must not rewrite ID-shaped file names there
-/// (§FS-fmt.2.3.4).
+/// (§FS-fmt.2.3.4). Every destination on the line is read with the one extent of
+/// `link_destination_close` (§FS-citations.zones.link-destination).
 pub(crate) fn is_inside_markdown_link_destination(line: &str, pos: usize) -> bool {
     let bytes = line.as_bytes();
     let mut i = 0;
     while i + 1 < bytes.len() {
         if bytes[i] == b']' && bytes[i + 1] == b'(' && !is_escaped(bytes, i) {
             let start = i + 2;
-            let mut depth = 1usize;
-            let mut j = start;
-            while j < bytes.len() {
-                match bytes[j] {
-                    b'(' if !is_escaped(bytes, j) => depth += 1,
-                    b')' if !is_escaped(bytes, j) => {
-                        depth -= 1;
-                        if depth == 0 {
-                            if pos >= start && pos < j {
-                                return true;
-                            }
-                            i = j;
-                            break;
-                        }
-                    }
-                    _ => {}
-                }
-                j += 1;
-            }
-            if j >= bytes.len() {
-                return pos >= start;
+            match link_destination_close(bytes, start) {
+                Some(close) if pos >= start && pos < close => return true,
+                Some(close) => i = close,
+                None => return pos >= start,
             }
         }
         i += 1;
     }
     false
+}
+
+/// §FS-citations.zones.link-destination: where the destination that begins at
+/// `start`, just after an unescaped `](`, ends — the index of the `)` that
+/// balances its `(`. Each unescaped `(` inside opens one more level and each
+/// unescaped `)` closes one; an escaped one counts for neither. `None` when the
+/// `(` never balances on the line, so the destination runs to the end of it.
+///
+/// The one extent of a destination: the never-rewrite zone above and the wrap
+/// test of §FS-citations.wrap.recognized both read it, so no pass of `fmt` can
+/// end a destination somewhere `check` does not.
+pub(crate) fn link_destination_close(bytes: &[u8], start: usize) -> Option<usize> {
+    let mut depth = 1usize;
+    for (j, &byte) in bytes.iter().enumerate().skip(start) {
+        match byte {
+            b'(' if !is_escaped(bytes, j) => depth += 1,
+            b')' if !is_escaped(bytes, j) => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(j);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
 }
 
 /// Whether the byte at `pos` is backslash-escaped — an odd run of `\` in front
