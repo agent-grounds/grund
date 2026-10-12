@@ -1,0 +1,2 @@
+ambiguous ID: FS-001 (matches FS-001-a, FS-001-c)
+warning: FS-001 is also declared at specs/b/z.md:1, outside specs/a; from grund 0.19.0 a path narrows what is reported, not what resolves
