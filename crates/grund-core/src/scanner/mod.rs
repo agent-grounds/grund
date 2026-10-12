@@ -120,6 +120,7 @@ pub(crate) use legacy::{
 };
 pub(crate) use scan_error::api_scan_error;
 pub(crate) use scope_probe::effective_scope_reads_any_file;
+pub(crate) use section_locks::section_locks_present;
 pub(crate) use tree::{ScanError, scan_tree, scan_tree_strict, scan_tree_with_workspace};
 pub(crate) use walk::{scan_roots_for, walk_reads_any_file};
 pub(crate) use walk_reporting::{

@@ -41,6 +41,19 @@ pub(crate) fn relative_heading_form(text: &str) -> Option<RelativeForm<'_>> {
     })
 }
 
+/// Whether any line of `text` is an ATX heading whose text reads as the relative
+/// form, wherever it sits: what makes a tree worth a scan for a writer that has
+/// no record of it. Whether the heading declares a section is the scan's answer.
+pub(crate) fn may_hold_relative_heading(text: &str) -> bool {
+    text.lines().any(|line| {
+        let line = line.trim_start_matches(' ');
+        let after = line.trim_start_matches('#');
+        after.len() < line.len()
+            && after.starts_with([' ', '\t'])
+            && relative_heading_form(after.trim_start_matches([' ', '\t'])).is_some()
+    })
+}
+
 /// The heading line with its relative path replaced by `canonical`, its depth
 /// and everything after the path kept: `### .1: Username` at `format.1` is
 /// `### format.1: Username` (§FS-declarations.section.relative.shown). A line
@@ -79,7 +92,20 @@ pub(crate) fn relative_heading_hint(level: usize, suggested: &str, title: &str) 
 
 #[cfg(test)]
 mod tests {
-    use super::{expand_relative_heading, relative_heading_form, relative_heading_hint};
+    use super::{
+        expand_relative_heading, may_hold_relative_heading, relative_heading_form,
+        relative_heading_hint,
+    };
+
+    #[test]
+    fn only_a_relative_heading_asks_for_a_scan() {
+        assert!(may_hold_relative_heading("# FS-a: A\n\n### .1: Username\n"));
+        assert!(!may_hold_relative_heading(
+            "# FS-a: A\n\n## 1. One\n.1 is prose\n"
+        ));
+        assert!(!may_hold_relative_heading("#.1 not a heading\n"));
+        assert!(!may_hold_relative_heading("## ...and then\n"));
+    }
 
     #[test]
     fn expansion_keeps_the_depth_and_the_title_syntax() {
