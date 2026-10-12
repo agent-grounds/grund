@@ -44,6 +44,10 @@ done = false
 points = [
   "FS-show.2.1",
   "FS-show.2.1.2.1",
+  "FS-declarations.heading",
+  "FS-declarations.body",
+  "FS-declarations.section",
+  "FS-declarations.lead",
   "FS-fmt.6.2",
   "FS-citations.zones",
   "FS-languages.comment-block",
