@@ -1,0 +1,1 @@
+error: invalid project alias `Bad` (expected [a-z][a-z0-9-]*, one segment per workspace level)

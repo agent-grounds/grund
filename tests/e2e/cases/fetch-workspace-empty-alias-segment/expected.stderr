@@ -1,0 +1,1 @@
+error: invalid project alias `alpha/`: a segment is empty (expected [a-z][a-z0-9-]*, one segment per workspace level)
