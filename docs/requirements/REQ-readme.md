@@ -15,10 +15,12 @@ from scaffolding new ones.
 
 ### 1.1 The loop
 
-Declare and cite sit side by side, with check spanning the row below. Each card names
-its step in equally wide, top-aligned columns, with matching excerpt heights. It says
+Four cards form a two-by-two grid: declare and cite above, check before you read
+and check below. The third card retrieves the cited requirement before a code change;
+the fourth shows the broken-reference check. Each card names
+its step in equally wide, top-aligned columns, with matching excerpt heights per row. It says
 what it does and carries one excerpt from a committed runnable example
-([§REQ-readme.2](REQ-readme.md#2-every-example-is-real)): a short requirement, the code that cites it, and
+([§REQ-readme.2](REQ-readme.md#2-every-example-is-real)): a short requirement, the code that cites it, its retrieved section, and
 `grund check` failing once that section is renumbered. The check card names the
 renumbering before showing its result. The HTML table keeps the excerpts readable
 as text in either theme. The example has its own configuration and checked citations;
@@ -32,7 +34,7 @@ What an agent reads in place of the file: the lead, one section, the section map
 full body of one real declaration, each beside its measured size, so what the ladder saves
 is a number rather than a claim ([§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file)). Sizes are rounded, so that an
 ordinary edit to that declaration does not stale them.
-The measurements name their repository scope, and a short captured query shows
+The measurements name their repository scope; the loop's captured query shows
 what retrieval actually returns.
 
 ### 1.3 The map
