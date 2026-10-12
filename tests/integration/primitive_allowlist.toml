@@ -258,11 +258,6 @@ primitives = [".exists()"]
 step = "#595"
 
 [[allow]]
-file = "writers/fetch.rs"
-primitives = ["split on /"]
-step = "#599"
-
-[[allow]]
 file = "writers/fetch_write.rs"
 primitives = [".exists()", "std::fs"]
 step = "#595"

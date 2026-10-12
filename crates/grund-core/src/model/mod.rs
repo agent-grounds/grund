@@ -80,6 +80,6 @@ pub(crate) use stub_resolution::{PairedDeclarations, StubResolution, paired_decl
 pub(crate) use text::{CITATION_DIRECTION_REPAIR, format_list, json_escape, plural};
 pub(crate) use values::{
     JSON_NUMBER_RE, authored_component, component_text_is_valid, first_unequal_component,
-    joined_value_components, root_literal_parts, value_binding_section_ends_in_coordinate,
-    value_binding_section_shape_is_valid, value_components_equal,
+    joined_value_components, positive_numeric_component, root_literal_parts,
+    value_binding_section_ends_in_coordinate, value_components_equal,
 };

@@ -6,7 +6,7 @@ use std::path::PathBuf;
 
 use super::values::markdown_component;
 use crate::config::{Config, load_config};
-use crate::model::value_binding_section_shape_is_valid;
+use crate::grammar::value_binding_section_shape_is_valid;
 use crate::testing::{check_run, codes, scan_findings, test_root, write};
 
 #[test]

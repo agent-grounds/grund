@@ -98,6 +98,7 @@ pub(crate) use comment_line::{comment_strip_prefixes, strip_block_closer};
 pub(crate) use compiled::{
     AGENTS_BLOCK_END, QUALIFIED_CITATION_PREFIX, STUB_LINK_HEADING, is_valid_project_alias,
     named_mode_section_path, named_section_component, section_path,
+    value_binding_section_shape_is_valid,
 };
 // The bare fence reader stays visible to the template tests, which look for a
 // fenced example rather than for a heading (§FS-check.1.1.5).

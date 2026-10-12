@@ -12,9 +12,10 @@ use super::value_binding_attempts::{
 };
 use super::value_context::{binding_span_is_inside, value_binding_context};
 use crate::config::{Frame, Schema};
+use crate::grammar::value_binding_section_shape_is_valid;
 use crate::model::{
     Catalog, Id, InvalidValueSite, ValueBinding, authored_component, component_text_is_valid,
-    paths_same_location, value_binding_section_shape_is_valid,
+    paths_same_location,
 };
 use crate::workspace::WorkspaceCitationTarget;
 
