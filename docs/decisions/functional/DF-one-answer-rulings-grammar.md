@@ -47,6 +47,22 @@ verdict, and then the record names that requirement.
   candidate for <§>REQ-backwards-compatibility.5 under [§REQ-no-missed-citation.2](../../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded). G01 and
   G02 are wrong in every command alike, so they are correctness defects, not differences
   [§REQ-one-answer](../../requirements/REQ-one-answer.md#req-one-answer-every-command-gives-the-same-answer-about-one-tree) lists.
+- **G06** (#600). Fix: `list --selector "each FS"` is wrong and the rule is right.
+  [§FS-rule-refusals.selectors](../../functional-spec/FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector) already gives a refused selector the reason
+  [§FS-rule-refusals.sentences](../../functional-spec/FS-rule-refusals.md#sentences-strict-refusals) gives the same subject, so the selector owes the rule's
+  `fixed word "Each" is case-sensitive`. The route is D10's: the selector appends the rule's
+  reason and keeps its literal-subject text as a verbatim prefix, which moves nothing. The
+  row of [§REQ-one-answer.differences.identity](../../requirements/REQ-one-answer.md#differencesidentity-identity) closes with that append.
+- **G09** (#600). Fix: `[citations]` is right and the three other surfaces are wrong.
+  `code` is the homeless kind ([§FS-config.3.9.2](../../functional-spec/FS-config.md#392-the-homeless-kind)), and
+  [§REQ-one-answer.identity.kinds](../../requirements/REQ-one-answer.md#identitykinds-every-command-reads-one-kind-verdict) refuses a non-citable kind for that reason everywhere,
+  so a rule's subject and object, `list --kind` and `list --selector` owe `code` the
+  non-citable reason, not `unknown`. The route is the row of
+  [§DF-one-kind-verdict.decision.routes](DF-one-kind-verdict.md#decisionroutes-which-route-each-move-takes) for a non-citable kind on a selector or in a rule: the
+  warning release, [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), with the legacy reason kept and the new
+  one appended now and the new reason alone in `0.19.0`. Both rulings are recorded here,
+  beside G01 and G02, because the record whose step listed G09 has already published its
+  notice.
 - **D19** (V-A22). The new specifications are REQ-one-answer, FS-citations, FS-languages,
   FS-scan (the run only) and FS-rule-refusals, with no FS-kinds; stubs and structure become
   chapters of [§FS-declarations](../../functional-spec/FS-declarations.md#fs-declarations-a-declaration-is-addressable-once-from-one-allowed-place-and-holds-nothing-that-is-neither-a-coordinate-nor-a-finding). Each new FS carries exactly one `## terms: Terms` chapter as

@@ -1,0 +1,64 @@
+# The live steps of agent-grounds/grund#576 (REQ-one-answer.proof): every open
+# step a row of the one-answer ledgers may name, and the decision record it carries
+# out. A row of citation_ledger.toml, primitive_allowlist.toml, command_agreement.rs
+# (DEFERRED, WIDENING) or tests_grammar_properties.rs (DEFERRED) names one of these
+# ids as its `step`, or a resolving `ruling` instead; test_one_answer_ledgers.py
+# refuses a row that names neither, a step whose ruling does not resolve, and a
+# step no row names. Records are written bare, without the marker.
+#
+# A step is live because it is listed: the gate never asks the forge. The change
+# that closes a step deletes its entry here, and the gate then names every row
+# still waiting on it.
+#
+# S1-S4 are the follow-ups the plan approved on #600 files under #576 once it
+# lands; each id becomes its issue number when it is filed.
+
+[[step]]
+id = "#621"
+ruling = "DF-one-answer-rulings-run"
+what = "resolve show, list, id and workspace check <dir> against the owning project (R01, R02)"
+
+[[step]]
+id = "#624"
+ruling = "DF-four-editor-checks-read-saved-text"
+what = "the four editor checks read the saved text (R06a-d)"
+
+[[step]]
+id = "#639"
+ruling = "DF-one-parse-answers-from-0-19"
+what = "one parse's answers from 0.19.0 (P01-P03, P07, P10, P12; scanner/compat.rs)"
+
+[[step]]
+id = "#650"
+ruling = "DF-stubs-by-home-and-at-the-target"
+what = "a stub is read by its home and shown at its target (Placement, U03a-d, U06)"
+
+[[step]]
+id = "#651"
+ruling = "DF-one-answer-rulings-stubs"
+what = "an outside stub target's citations and chapters judged as if scanned (U04, U07, U08)"
+
+[[step]]
+id = "#655"
+ruling = "DF-fmt-and-editor-answers-from-0-19"
+what = "the 0.19.0 wrapper and title span (P16)"
+
+[[step]]
+id = "S1"
+ruling = "DF-one-answer-rulings-grammar"
+what = "one grammar's leftovers: one subject matcher, the alias splits onto grammar/ids.rs, G06 and G09"
+
+[[step]]
+id = "S2"
+ruling = "DF-one-answer-rulings-parse"
+what = "read declaration headings and citations off the file record"
+
+[[step]]
+id = "S3"
+ruling = "DF-one-answer-rulings-fmt-editor"
+what = "fmt reads through sources and the run's scope"
+
+[[step]]
+id = "S4"
+ruling = "DA-one-fact-one-point-one-implementation"
+what = "widen command agreement to every end-to-end tree, cover, the editor snapshot and the bindings"

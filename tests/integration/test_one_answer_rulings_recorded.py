@@ -41,7 +41,8 @@ ESCAPE = "<" + MARKER + ">"
 ROUTE = "REQ-backwards-compatibility"
 
 # One record per step family of the plan approved on #576, and its rulings.
-# G01 and G02 are the token corrections of V-A26, recorded with the grammar.
+# G01 and G02 are the token corrections of V-A26, recorded with the grammar, and
+# G06 and G09 the two difference rows #600 found with no ruling, both ruled "fix".
 GROUPS = {
     "DF-one-answer-rulings-run": ["D1", "D5", "D6", "D7", "D14"],
     "DF-one-answer-rulings-parse": [
@@ -49,7 +50,9 @@ GROUPS = {
     ],
     "DF-one-answer-rulings-stubs": ["D2", "D3", "D4", "D8", "D13", "D15", "D16"],
     "DF-one-answer-rulings-fmt-editor": ["D17g"],
-    "DF-one-answer-rulings-grammar": ["D10", "D11", "D18", "D20", "G01", "G02"],
+    "DF-one-answer-rulings-grammar": [
+        "D10", "D11", "D18", "D20", "G01", "G02", "G06", "G09",
+    ],
 }
 # Process and structure rulings move nothing; each need only be named, in one
 # of the records above or in the principle's own decision record.
@@ -57,10 +60,11 @@ NAMED_ANYWHERE = ["D12", "D19"]
 
 # The warning release (route .2): every ruling, or part of a split ruling, that moves
 # a verdict no existing requirement forbade. V-A02–V-A08, V-A10, V-A12, V-A16,
-# V-A17, V-A18 (the TOC title), V-A20 (the wrapper), V-A21, V-A23.
+# V-A17, V-A18 (the TOC title), V-A20 (the wrapper), V-A21, V-A23, and G09 on the
+# route of DF-one-kind-verdict.decision.routes.
 WARNING = {
     "D1", "D14", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D10", "D16",
-    "D17a", "D17b", "D17c", "D17d", "D17e", "D17g", "D18", "D20",
+    "D17a", "D17b", "D17c", "D17d", "D17e", "D17g", "D18", "D20", "G09",
 }
 # The correction candidates (route .5) and the prior prohibition each rests on; any
 # one of the listed points will do. V-A05, V-A08, V-A09, V-A10, V-A18, V-A19,

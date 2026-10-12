@@ -133,6 +133,13 @@ Each row names the two answers that differ, the tree that shows it, and its grad
 reproduced on `a420f558af`, **C** decided by a code path read on it. A defect every
 surface shares is not a row; it belongs to the point that defines the right answer.
 
+Each row also cites the decision record that rules on it: which answer is right, and the
+step or release that closes the row. A row carries a ruling when it names a step listed
+live in `tests/integration/one_answer_steps.toml`, or cites a `DF-` or `DA-` record that
+resolves; a row that names neither is unruled, and an unruled row is a defect of the list
+itself. So a row whose step closed without removing it cannot stay unnoticed: the list
+shrinks because each row says what retires it, not because someone remembers to.
+
 ### differences.identity: Identity
 
 G03 and G04 closed with [§REQ-one-answer.identity.kinds](REQ-one-answer.md#identitykinds-every-command-reads-one-kind-verdict). G09, a difference that predates
@@ -224,6 +231,17 @@ the end-to-end corpus ([§REQ-one-answer.text.parity](REQ-one-answer.md#textpari
 ([§REQ-one-answer.stubs](REQ-one-answer.md#stubs-what-a-stub-answers)), and `crates/grund-cli/tests/kind_verdict_agreement.rs` asks every
 kind-taking surface about one name on one tree ([§REQ-one-answer.identity.kinds](REQ-one-answer.md#identitykinds-every-command-reads-one-kind-verdict),
 [§REQ-one-answer.sections.named](REQ-one-answer.md#sectionsnamed-every-command-reads-a-kinds-named-sections-under-its-own-project)); a section none of the four compares is held by review.
+
+Every row of every ledger behind the list carries a ruling in the sense of
+[§REQ-one-answer.differences](REQ-one-answer.md#differences-the-differences-known-when-this-requirement-landed): the migration rows of `tests/integration/citation_ledger.toml`, the
+rows of `tests/integration/primitive_allowlist.toml`, the comparison's deferred rows and its
+widening, and the grammar properties' deferred rows each name a step listed in
+`tests/integration/one_answer_steps.toml` or a decision record that resolves. Each listed
+step names the decision record it carries out and is named by at least one row, so the
+list of live steps cannot keep a step nobody waits on. `tests/integration/test_one_answer_ledgers.py`
+refuses a row that names neither, a difference row that cites no record, and a step no row
+names, without reaching the forge: a step is live because it is listed, and the change that
+closes a step deletes its entry.
 
 ## why: Why this exists
 
