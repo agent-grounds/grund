@@ -361,8 +361,6 @@ than only repos that ship an editor config.
 `grund --help` is one screen; `grund <command> --help` is one page with flags, examples,
 and exit codes.
 
-The [benchmark report](docs/benchmarks.md) preserves a 2026-05-20 local timing run and a historical instruction-count snapshot, with methodology and build assumptions. [Current CI](docs/architecture/AR-ci.md#51-pull-requests-and-pushes) compares instruction counts on generated fixtures against the PR base branch. Counts proxy workload cost, not elapsed time; [instruction-count growth past the regression limits fails the pull request](docs/architecture/AR-ci.md#52-regression-limits).
-
 `grund` follows its own scheme: [why](docs/grund.md), [goals](docs/goals.md),
 [roadmap](docs/roadmap.md), [changelog](docs/changelog.md). This README is under spec
 too — [§REQ-readme](docs/requirements/REQ-readme.md#req-readme-the-readme-is-the-grounded-shop-window): excerpts come from this repository or its runnable examples,
