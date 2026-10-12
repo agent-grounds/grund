@@ -157,6 +157,8 @@ mod tests_nothing_recognized;
 #[cfg(test)]
 mod tests_post_scan_readers;
 #[cfg(test)]
+mod tests_relative_section_titles;
+#[cfg(test)]
 mod tests_shorthand;
 #[cfg(test)]
 mod tests_unverifiable_rule_scope;
