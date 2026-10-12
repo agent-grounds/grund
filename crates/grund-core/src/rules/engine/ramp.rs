@@ -36,25 +36,48 @@ impl Windows {
     }
 
     /// A required count that fails with the newly counted or newly matched sites
-    /// and holds without them is ramped and names the windows its sites came
-    /// from; one that fails without them stays an error (§FS-rules.7.8,
-    /// §FS-rules.7.9). Each site is `(newly counted, newly matched)`.
+    /// and holds without them is ramped; one that fails without them stays an
+    /// error. It names a window when dropping that window's sites alone lets the
+    /// count hold, and both when neither alone does, since then each change
+    /// produces it by itself (§FS-rules.7.8, §FS-rules.7.9). Each site is
+    /// `(newly counted, newly matched)`.
     pub(super) fn of_count(
         level: RuleLevel,
         cardinality: Cardinality,
         sites: impl IntoIterator<Item = (bool, bool)>,
     ) -> Self {
-        let (mut without, mut counted, mut matched) = (0, false, false);
+        let (mut without, mut not_counted, mut not_matched) = (0, 0, 0);
         for (c, m) in sites {
             without += usize::from(!c && !m);
-            counted |= c;
-            matched |= m;
+            not_counted += usize::from(!c);
+            not_matched += usize::from(!m);
         }
-        if level == RuleLevel::Required && cardinality.contains(without) {
+        if level != RuleLevel::Required || !cardinality.contains(without) {
+            return Self::default();
+        }
+        let counted = cardinality.contains(not_counted);
+        let matched = cardinality.contains(not_matched);
+        if counted || matched {
             Self { counted, matched }
         } else {
-            Self::default()
+            Self {
+                counted: true,
+                matched: true,
+            }
         }
+    }
+
+    /// A per-target finding for a target only the corrected match takes into the
+    /// universe exists only now, whatever its count, so it is always in
+    /// §FS-rules.7.9's window, and in §FS-rules.7.8's only when its count holds
+    /// without the newly counted sites. Each site is `newly counted`.
+    pub(super) fn of_new_target(
+        level: RuleLevel,
+        cardinality: Cardinality,
+        sites: impl IntoIterator<Item = bool>,
+    ) -> Self {
+        let not_counted = sites.into_iter().filter(|&c| !c).count();
+        Self::at(level, cardinality.contains(not_counted), true)
     }
 
     fn any(self) -> bool {
