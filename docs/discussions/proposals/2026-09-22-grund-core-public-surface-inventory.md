@@ -193,6 +193,7 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `LspCompletionContext` | queries | visible | data type of `lsp_snapshot_with_completion` | grund-lsp `grund-lsp/src/workspace.rs:19` | — | keep |
 | `LspDeclaration` | queries | visible | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
 | `LspFindingRange` | queries | visible | data type of `lsp_snapshot` | none found | via LspSnapshot → LspFindingRange `grund-lsp/src/lib.rs:4` | keep |
+| `LspShowContext` | queries | visible | data type of `lsp_snapshot_with_completion` | grund-lsp `grund-lsp/src/workspace.rs:22` | — | keep |
 | `LspSnapshot` | queries | visible | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
 | `LspSnapshotOpts` | queries | visible | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
 | `LspSnapshotWithCompletion` | queries | visible | data type of `lsp_snapshot_with_completion` | grund-lsp `grund-lsp/src/workspace.rs:52` | — | keep |
@@ -238,7 +239,7 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `ShorthandPolicy` | config | visible | data type of `validate_config` | none found | via Config → ShorthandPolicy `grund-cli/src/lib.rs:13` | keep |
 | `show` | api | visible | named | none found | none found | keep |
 | `show_batch_with_scope` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
-| `show_with_overlays` | api | visible | related API | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
+| `show_from_snapshot` | api | visible | related API | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
 | `show_with_scope` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
 | `ShowFormat` | queries | visible | data type of `ShowOpts` | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
 | `ShowMode` | queries | visible | data type of `ShowOpts` | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
