@@ -159,4 +159,16 @@ pub struct LspSnapshotWithCompletion {
 /// (§FS-lsp.1.6.4).
 pub struct LspShowContext {
     pub(crate) context: WorkspaceContext,
+    /// The buffers the context's run read through, recording.
+    pub(crate) buffers: crate::sources::Buffers,
+}
+
+impl LspShowContext {
+    /// Every file the snapshot's run read from disk, under the path it read it
+    /// by, the ones outside its scan included — a stub's target in another
+    /// folder, say. A change to any of them makes the snapshot stale
+    /// (§AR-lsp.2.1, §FS-lsp.responsiveness.3).
+    pub fn read_files(&self) -> Vec<PathBuf> {
+        self.buffers.recorded_paths()
+    }
 }
