@@ -166,7 +166,7 @@ title = "Init scaffold templates: what grund init writes, verbatim"
 kind = "readme"
 file = "README.md"
 citable = false
-title = "The README: the shop window for users, which cites what grund does, never how it is built"
+title = "The README: the shop window for users, which links the user guides and cites no spec"
 
 [scan]
 # README.md and AGENTS.md are cited surfaces too — scanned so their citations
@@ -253,7 +253,7 @@ must = ["FS"]
 must-not = ["AR"]
 
 [citations.readme]
-must-not = ["AR"]                # a reader of the README is told what grund does, not how it is built
+must-not = ["FS", "AR"]                # the README sends a reader to the user guides, never into the specs
 
 # Workflows and scripts are implementation: the same rule as `code`.
 [citations.workflow]

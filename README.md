@@ -132,15 +132,14 @@ grund check
 grund agent-setup-instructions   # the guided adoption workflow, for your agent to follow
 ```
 
-It has your agent inspect the repository, recommend settings for the specs you have,
-confirm every option with you, write `grund.toml`, run `grund init` and validate
-([§FS-init.5](docs/functional-spec/FS-init.md#5-agent-setup-instructions)). To do it by hand, [map their existing
-locations](docs/user-facing/setup.md) before running `grund init`; use `--docs` only
-when you want scaffolds.
-`init` writes your agent's instructions from `grund.toml` — ours is
-[`AGENTS.md`](AGENTS.md). Add `grund check` to [pre-commit and CI](docs/user-facing/checking.md#in-pre-commit-and-ci).
-[Installation](docs/user-facing/installation.md) covers prebuilt binaries, supported
-platforms, the Python and Node APIs, and local candidate builds.
+Your agent inspects the repository, recommends settings for the specs you have,
+confirms each one with you, then writes `grund.toml`, runs `grund init` and validates.
+To set up by hand instead, see [setup](docs/user-facing/setup.md).
+
+Then:
+
+- add `grund check` to [pre-commit and CI](docs/user-facing/checking.md#in-pre-commit-and-ci);
+- for prebuilt binaries and the Python and Node APIs, see [installation](docs/user-facing/installation.md).
 
 ## Declaration format
 
@@ -161,8 +160,7 @@ are its sections, each at the depth its path names: numbered, or named once
 They are cited as [§REQ-readme.1.1](docs/requirements/REQ-readme.md#11-the-loop) and [§REQ-readme.evidence](docs/requirements/REQ-readme.md#evidence-positioning-and-performance-claims-have-evidence).
 
 A declaration can also live in code: a doc-comment that opens with the ID declares it,
-and a link from the kind's index enrolls it with no stub file
-([§FS-check.3.18](docs/functional-spec/FS-check.md#318-declaration-missing-from-its-kinds-index)). Grund's own `AR-checker` is declared only on the
+and a link from the kind's index enrolls it with no stub file. Grund's own `AR-checker` is declared only on the
 function it describes, in [`crates/grund-core/src/checker/report.rs`](crates/grund-core/src/checker/report.rs):
 
 ```rust
@@ -174,8 +172,7 @@ function it describes, in [`crates/grund-core/src/checker/report.rs`](crates/gru
 pub(crate) fn check_on_disk(
 ```
 
-`grund AR-checker` prints that prose without the `///` markers
-([§FS-show.2.3](docs/functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments)).
+`grund AR-checker` prints that prose without the `///` markers.
 
 ## Citation format
 
@@ -192,8 +189,16 @@ pub(crate) fn check_on_disk(
    └────────────────────────────────────────── citation marker (writing only)
 ```
 
-The [structure guide](docs/user-facing/structure.md) covers the three ID schemes and
-the rest of the citation syntax.
+`[id] format` picks one of three ID schemes, and a kind may override it:
+
+| Scheme | Example | Trade-off |
+|---|---|---|
+| `{kind}-{number}-{slug}` *(default)* | `FS-014-user-login` | the number stays stable; allocate it with `grund id` |
+| `{kind}-{number}` | `FS-014` | the most stable, but says nothing until resolved |
+| `{kind}-{slug}` *(grund's own)* | `FS-user-login` | reads like English; renaming a slug rewrites its citations |
+
+The [structure guide](docs/user-facing/structure.md) has the rest of the syntax, and a
+runnable example of each scheme.
 
 ## Workspaces
 
@@ -217,15 +222,14 @@ The API session model lives in this project. The platform-level coordinator
 is §root/FS-platform.
 ```
 
-`grund check` at the root checks every member, each in its own namespace
-([§FS-workspace](docs/functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace)).
+`grund check` at the root checks every member, each in its own namespace;
+[repository options](docs/user-facing/repository-options.md#workspaces-and-sub-projects) has the details.
 
 ## External facts
 
 A ticket from GitHub, Jira, or Linear is cited like any spec once a kind names the
 executable that fetches it. `grund fetch <ID>` saves it as a declaration in the
-repository; every other command reads that committed snapshot offline
-([§FS-fetch](docs/functional-spec/FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)). From the [external-tickets example](examples/external-tickets/):
+repository; every other command reads that committed snapshot offline. From the [external-tickets example](examples/external-tickets/):
 
 ```toml
 [[kinds]]
@@ -251,8 +255,7 @@ and a GitHub integration to start from.
 
 A number a spec declares can be checked wherever it is used. With `values = true` on a
 kind, a declaration's numbered headings are its components, and a backticked literal
-beside a citation must equal them
-([§FS-values](docs/functional-spec/FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)). From the [values example](examples/values/), a physics simulation's time step:
+beside a citation must equal them. From the [values example](examples/values/), a physics simulation's time step:
 
 ```markdown
 # CONST-time-step: Integration time step
@@ -288,7 +291,7 @@ Supported clients are `codium`, `iterm2`, `kitty`, `tmux`, `vscode`, and `wezter
 
 **`~/.local/bin` must be on your `PATH`** — that is where the resolver is installed, and it is not there by default on macOS, where a missing `PATH` entry makes every click silently do nothing.
 
-**[Clickable citations](docs/user-facing/clickable-citations.md)** is the full setup guide: the per-client reload each one needs, the manual step WezTerm and iTerm2 require, how to check it works, what to do when a click does nothing, and how to control the citations agents write in conversations. See also [§FS-integrations](docs/functional-spec/FS-integrations.md#fs-integrations-grund-prints-and-installs-its-rendering-layer-integrations).
+**[Clickable citations](docs/user-facing/clickable-citations.md)** is the full setup guide: the per-client reload each one needs, the manual step WezTerm and iTerm2 require, how to check it works, what to do when a click does nothing, and how to control the citations agents write in conversations.
 
 ## Editor support via [LSP](https://microsoft.github.io/language-server-protocol/)
 
@@ -300,15 +303,10 @@ cargo install grund-lsp
 
 The server speaks LSP over stdio and has no daemon or socket. For IntelliJ
 family IDEs, `grund-lsp integrations lsp4ij --write <directory>` generates the
-LSP4IJ import template carried by the installed binary
-([§FS-lsp.2.4](docs/functional-spec/FS-lsp.md#24-installed-editor-integrations)).
+LSP4IJ import template carried by the installed binary.
 
-It also completes declared citations: in a Markdown note here,
-after `See `, type `§` followed by `FS-ls`, request completion, and choose `FS-lsp`
-(“grund ships an optional LSP server”, `docs/functional-spec/FS-lsp.md`).
-Acceptance leaves `See §FS-lsp`; starting with
-`$$F` works too ([§FS-lsp.1.6](docs/functional-spec/FS-lsp.md#16-declared-id-completion)).
-Use your editor's acceptance key; see [authoring and client bindings](docs/user-facing/lsp.md#write-a-citation).
+Type `§` or `$$` and it completes the declared IDs; see
+[authoring and client bindings](docs/user-facing/lsp.md#write-a-citation).
 The [setup guide](docs/user-facing/lsp.md) has the complete import and
 verification flow plus snippets for VSCode, Vim/Neovim, Emacs, Helix, Zed, and
 Sublime Text. Put reusable client config in your editor's **user (global)
@@ -319,7 +317,7 @@ than only repos that ship an editor config.
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/lsp/hover-preview.png">
     <source media="(prefers-color-scheme: light)" srcset="docs/assets/lsp/hover-preview-light.png">
-    <img src="docs/assets/lsp/hover-preview-light.png" width="96%" alt="Hover preview of [§FS-declarations.checks.misplaced-declaration](docs/functional-spec/FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home) shown directly above the grund code that implements the misplaced-declaration check">
+    <img src="docs/assets/lsp/hover-preview-light.png" width="96%" alt="Hover preview of the misplaced-declaration spec point shown directly above the grund code that implements the misplaced-declaration check">
   </picture>
   <br><sub><strong>Hover previews</strong> — the spec and the code that satisfies it, in one frame.</sub>
 </p>
