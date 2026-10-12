@@ -351,8 +351,10 @@ fn companion_selected_by_evidence(
 fn companion_has_managed_block(path: &Path) -> bool {
     // Malformed delimiters still prove grund ownership — selecting the file
     // lets `check` surface the defect instead of silently skipping it.
-    // §FS-check.6.1.1: cover this effective input before its shared read.
-    Sources::on_disk()
+
+    // §FS-check.6.1.1: cover this effective input before its shared read; R06c of
+    // §REQ-one-answer.differences.text reads it as saved.
+    Sources::saved()
         .text(path)
         .is_ok_and(|text| !matches!(find_agents_block(&text), AgentsBlockLookup::Absent))
 }

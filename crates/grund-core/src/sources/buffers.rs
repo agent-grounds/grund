@@ -59,9 +59,16 @@ impl<'a> Sources<'a> {
     }
 
     /// The disk alone, for a reader no run is handed to: a configuration read
-    /// before any run is built, or the saved view a reader with no frame asks
-    /// (§DF-four-editor-checks-read-saved-text).
+    /// before any run is built, or a writer reading what it is about to replace.
     pub(crate) fn on_disk() -> Sources<'static> {
+        Sources { buffers: None }
+    }
+
+    /// The disk past the buffers, for the readers §REQ-one-answer.differences.text
+    /// still lists until each row closes (§DF-four-editor-checks-read-saved-text).
+    /// It is the one name those readers use, so finding `Sources::saved()` finds
+    /// every one of them.
+    pub(crate) fn saved() -> Sources<'static> {
         Sources { buffers: None }
     }
 
@@ -109,12 +116,6 @@ impl<'a> Sources<'a> {
                     .collect()
             })
             .unwrap_or_default()
-    }
-
-    /// The disk past the buffers, for the readers §REQ-one-answer.differences.text
-    /// still lists until each row closes (§DF-four-editor-checks-read-saved-text).
-    pub(crate) fn saved(self) -> Self {
-        Self { buffers: None }
     }
 
     /// The file a stub's link names (§FS-check.6.1.1): relative to the stub's

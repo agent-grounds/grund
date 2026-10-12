@@ -136,7 +136,7 @@ fn enroll_external_inline_declarations(
             // §FS-check.6.1.1: cover this effective input before its shared read;
             // R06a of §REQ-one-answer.differences.text reads it as saved
             // (§DF-four-editor-checks-read-saved-text).
-            let text = Sources::on_disk().saved().text(&target.index_file).ok()?;
+            let text = Sources::saved().text(&target.index_file).ok()?;
             Some((
                 target.index_key.as_path(),
                 text.lines().map(str::to_string).collect(),

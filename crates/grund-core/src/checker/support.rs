@@ -73,7 +73,7 @@ pub(super) fn citation_in_markdown_inline_code(cite: &Citation) -> bool {
     }
     // §FS-check.6.1.1: cover this effective input before its shared read; R06b of
     // §REQ-one-answer.differences.text reads it as saved (§DF-four-editor-checks-read-saved-text).
-    let Ok(text) = Sources::on_disk().saved().text(&cite.file) else {
+    let Ok(text) = Sources::saved().text(&cite.file) else {
         return false;
     };
     let Some(line) = text.lines().nth(cite.line.saturating_sub(1)) else {
