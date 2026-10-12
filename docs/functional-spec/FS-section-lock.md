@@ -24,7 +24,7 @@ FS-login.format.1 8b1a5e0c2f9d7a64
 FS-login.parse.user 0d3c9e51b7f2a816
 ```
 
-Nothing else is recorded: no title, no line number, no history. A coordinate of a complete-path heading is not an entry, cited or not, and neither is an address nothing cites.
+Nothing else is recorded: no title, no line number, no history. A coordinate of a complete-path heading is not an entry, cited or not, and neither is an address nothing cites. A relative heading in a stub's target is entered like one in a scanned file, wherever the target lies: one outside `[scan] include` still lends the stub its sections ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)), so a citation of one is a cited relative address.
 
 ### holds.fingerprint: The fingerprint
 

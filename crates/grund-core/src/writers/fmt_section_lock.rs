@@ -29,7 +29,8 @@ pub(super) struct LockChange {
 /// rebuilds, ordered by line, then text (§FS-section-lock.write.report). The
 /// project's findings are `findings` where the run has them; otherwise it is
 /// scanned whole, refusing as the cross-reference pass does (§FS-fmt.3.2), and
-/// only where a lock file exists or a walked file may hold a relative heading.
+/// only where a lock file exists or a walked file may give the scan a relative
+/// heading, in its own text or in a stub's target (`may_give_relative_heading`).
 /// A citation into another project is judged against the one `workspace` loaded
 /// under its alias (§FS-section-lock.file.members).
 pub(super) fn section_lock_changes(

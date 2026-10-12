@@ -130,24 +130,16 @@ struct LockTarget<'a, 'b> {
 /// against `targets`, the projects the run loaded, by its alias, and a lock
 /// file of an alias the run did not load not at all
 /// (§FS-section-lock.file.members). Empty, and nothing sliced, in a tree with
-/// neither a lock nor a relative heading.
+/// neither a lock nor a cited relative section. Whether a citation's section is
+/// relative is asked of the declaration it resolves to, through its stubs, so a
+/// section in a stub's target outside `[scan] include` is locked as one inside it
+/// (§FS-section-lock.holds.entry).
 pub(crate) fn judge_section_locks<'a>(
     findings: &'a Catalog,
     schema: &Schema,
     frame: Frame<'_>,
     targets: &BTreeMap<String, WorkspaceCheckTarget<'a>>,
 ) -> Vec<LockJudgement<'a>> {
-    // §FS-section-lock: a tree with no lock and no relative heading reads none.
-    let relative = |catalog: &Catalog| {
-        let relative = |decl: &Declaration| decl.sections.values().any(|info| info.relative);
-        catalog.declarations.values().flatten().any(relative)
-    };
-    if findings.section_locks.is_empty()
-        && !relative(findings)
-        && !targets.values().any(|target| relative(target.catalog))
-    {
-        return Vec::new();
-    }
     let local = LockTarget {
         catalog: findings,
         schema,
@@ -180,6 +172,10 @@ pub(crate) fn judge_section_locks<'a>(
                 .or_default()
                 .push(citation);
         }
+    }
+    // §FS-section-lock: a tree that cites no relative section and has no lock reads none.
+    if cited.is_empty() && findings.section_locks.is_empty() {
+        return Vec::new();
     }
     let rendered = |alias: Option<&str>, id: &Id| {
         let target = target_of(alias).expect("a cited project is loaded");
