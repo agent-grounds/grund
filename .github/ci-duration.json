@@ -1,4 +1,4 @@
 {
-  "threshold_minutes": 10,
+  "threshold_minutes": 15,
   "window": 8
 }
