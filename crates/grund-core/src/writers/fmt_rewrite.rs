@@ -247,11 +247,7 @@ fn fmt_line_at(
     let mut link_changed = false;
     // §FS-fmt.6.1.2: the carve-out narrows the pass to the index's own entries only
     // where the ordinary pass is off; where it runs, it already wraps the page.
-    let entry_ids = if opts.cross_refs {
-        None
-    } else {
-        opts.index_entry_ids
-    };
+    let entry_ids = opts.index_entry_ids.filter(|_| !opts.cross_refs);
     if (opts.cross_refs || entry_ids.is_some())
         && is_md
         && let Some(findings) = opts.findings
