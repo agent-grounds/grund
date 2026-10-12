@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use crate::checker::KindIndexEntries;
 use crate::model::Id;
-use crate::resolver::{WorkspaceContext, index_link_targets};
+use crate::resolver::{WorkspaceContext, WorkspaceProject, index_link_targets};
 
 /// The two per-target-alias citation counts `grund list` needs, built in one
 /// pass (§FS-list.3.2.1, §DF-index-not-an-inbound-citation).
@@ -35,19 +35,7 @@ impl<'a> ListCitationCounts<'a> {
             empty: BTreeMap::new(),
         };
         for source in &context.projects {
-            // §AR-checker.2.16: the enrollment destination, as `Expected` carries it.
-            let index_targets = index_link_targets(
-                &source.config.project().presentation,
-                source.config.schema(),
-                source.config.frame(),
-                &source.findings,
-            );
-            let index_entries = KindIndexEntries::new(
-                &source.findings,
-                source.config.schema(),
-                source.config.frame(),
-                &index_targets,
-            );
+            let index_entries = kind_index_entries(source);
             for citation in &source.findings.citations {
                 let target_alias: &str = match &citation.namespace {
                     Some(ns) => ns.as_str(),
@@ -87,4 +75,22 @@ impl<'a> ListCitationCounts<'a> {
     pub(crate) fn used_for(&self, alias: &str) -> &BTreeMap<&'a Id, usize> {
         self.used.get(alias).unwrap_or(&self.empty)
     }
+}
+
+/// `source`'s own kind-index entries, the citations `--unused` discounts
+/// (§FS-list.1.3, §DF-index-not-an-inbound-citation).
+pub(crate) fn kind_index_entries(source: &WorkspaceProject) -> KindIndexEntries {
+    // §AR-checker.2.16: the enrollment destination, as `Expected` carries it.
+    let index_targets = index_link_targets(
+        &source.config.project().presentation,
+        source.config.schema(),
+        source.config.frame(),
+        &source.findings,
+    );
+    KindIndexEntries::new(
+        &source.findings,
+        source.config.schema(),
+        source.config.frame(),
+        &index_targets,
+    )
 }

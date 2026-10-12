@@ -23,7 +23,7 @@ use grund_core::{
     Report, ShowFormat, ShowMode, ShowOpts, ShowQueryError, canonical_template_text,
     check_with_run_warnings, complete_ids_with_run_warnings, config_run_warnings, config_warnings,
     cover, cover_lines, effective_config, effective_project, fetch_snapshot_with_run_warnings,
-    format_references, init, list_narrowed, list_sizes, names_member_id_candidate,
+    format_references, init, list_narrowed, list_sizes_narrowed, names_member_id_candidate,
     propose_id_narrowed, refs_with_metadata, render_finding_sites_json, show_batch_narrowed,
     show_narrowed, usage_clause, usage_over_paths, validate_config, with_report_path_base,
 };

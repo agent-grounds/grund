@@ -30,8 +30,36 @@ pub(crate) fn resolve_id_arg(
     frame: Frame<'_>,
     findings: &Catalog,
 ) -> std::result::Result<(Id, Option<String>), IdArgError> {
+    let targets = id_arg_targets(raw, schema, frame, findings)?;
+    match targets.as_slice() {
+        [(id, section)] => Ok((id.clone(), section.clone())),
+        many => {
+            // §FS-distribution.3.3.2: candidates are resolver data, not parsed prose.
+            let candidates = many
+                .iter()
+                .map(|(id, _)| render_id(frame.grammar(), id))
+                .collect::<Vec<_>>();
+            let mut diagnostic = crate::model::OperationDiagnostic::new(
+                "query",
+                "ambiguous",
+                format!("ambiguous ID: {raw} (matches {})", candidates.join(", ")),
+            );
+            diagnostic.details = serde_json::json!({"candidates": candidates});
+            Err(IdArgError::Ambiguous(anyhow!(diagnostic)))
+        }
+    }
+}
+
+/// Every ID `raw` may name in `findings`, sorted: one where [`resolve_id_arg`]
+/// resolves it, several where it is ambiguous (§FS-show.2.2.1.1).
+pub(crate) fn id_arg_targets(
+    raw: &str,
+    schema: &Schema,
+    frame: Frame<'_>,
+    findings: &Catalog,
+) -> std::result::Result<Vec<(Id, Option<String>)>, IdArgError> {
     if let Ok(parsed) = parse_id_arg(raw, frame.grammar()) {
-        return Ok(parsed);
+        return Ok(vec![parsed]);
     }
     let legacy_catalog = legacy_catalog_ids(&findings.declarations);
     let legacy = match_legacy_tail(raw, schema, frame, &legacy_catalog);
@@ -50,26 +78,12 @@ pub(crate) fn resolve_id_arg(
     }
     targets.sort();
     targets.dedup();
-    match targets.as_slice() {
-        [(id, section)] => Ok((id.clone(), section.clone())),
-        [] => match parsed {
-            Ok(parsed) => Ok((parsed.id, parsed.section)),
-            Err(err) => Err(IdArgError::Unparsable(err)),
-        },
-        many => {
-            // §FS-distribution.3.3.2: candidates are resolver data, not parsed prose.
-            let candidates = many
-                .iter()
-                .map(|(id, _)| render_id(frame.grammar(), id))
-                .collect::<Vec<_>>();
-            let mut diagnostic = crate::model::OperationDiagnostic::new(
-                "query",
-                "ambiguous",
-                format!("ambiguous ID: {raw} (matches {})", candidates.join(", ")),
-            );
-            diagnostic.details = serde_json::json!({"candidates": candidates});
-            Err(IdArgError::Ambiguous(anyhow!(diagnostic)))
-        }
+    if !targets.is_empty() {
+        return Ok(targets);
+    }
+    match parsed {
+        Ok(parsed) => Ok(vec![(parsed.id, parsed.section)]),
+        Err(err) => Err(IdArgError::Unparsable(err)),
     }
 }
 

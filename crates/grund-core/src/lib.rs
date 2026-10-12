@@ -151,8 +151,9 @@ pub use queries::{
     LspCompletionContext, LspDeclaration, LspFindingRange, LspShowContext, LspSnapshot,
     LspSnapshotOpts, LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub, LspUsage,
     ShowFormat, ShowMode, ShowOpts, ShowQueryError, can_replace_trigger_at, citation_under_title,
-    list_sizes, list_sizes_with_run_warnings, lsp_hover_with_kind_title, lsp_title_hover_body,
-    on_type_line_edits, show_batch_narrowed, show_batch_with_scope, usage_clause, usage_over_paths,
+    list_sizes, list_sizes_narrowed, list_sizes_with_run_warnings, lsp_hover_with_kind_title,
+    lsp_title_hover_body, on_type_line_edits, show_batch_narrowed, show_batch_with_scope,
+    usage_clause, usage_over_paths,
 };
 #[doc(hidden)]
 pub use queries::{ListNarrowing, ListShown};

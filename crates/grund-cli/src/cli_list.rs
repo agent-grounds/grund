@@ -172,7 +172,7 @@ fn command_list(args: &[String]) -> ExitCode {
     }
 
     if let Some(units) = size_units {
-        let output = match list_sizes(ListSizeOpts {
+        let (_, listed, narrowing) = list_sizes_narrowed(ListSizeOpts {
             path,
             path_provided,
             kind_filter,
@@ -181,7 +181,8 @@ fn command_list(args: &[String]) -> ExitCode {
             selector,
             units,
             top,
-        }) {
+        });
+        let output = match listed {
             Ok(output) => output,
             Err(err) => {
                 eprintln!("error: {err:#}");
@@ -200,7 +201,7 @@ fn command_list(args: &[String]) -> ExitCode {
         } else {
             render_list_size_text(&output.entries);
         }
-        return exit_after_scan_errors(&output.scan_errors);
+        return exit_after_sizes(&output.scan_errors, &narrowing);
     }
 
     // §FS-check.4.10.7, §FS-workspace.6.1.7: the run's warnings come

@@ -85,7 +85,7 @@ pub use narrowing::{ListNarrowing, ListShown};
 pub use show_query::{ShowFormat, ShowMode, ShowOpts, ShowQueryError};
 pub use sizes::{
     ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput, list_sizes,
-    list_sizes_with_run_warnings,
+    list_sizes_narrowed, list_sizes_with_run_warnings,
 };
 
 // What the other components read, each by this module's path (§AR-system.4):
