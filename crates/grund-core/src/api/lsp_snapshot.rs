@@ -19,7 +19,7 @@ use super::lsp_ranges::{
 use super::lsp_report::{editor_report, editor_report_scope, editor_run_warnings};
 use super::report::{public_lsp_report, public_lsp_run_warnings};
 use crate::config::{Invocation, ProjectRecords, Selection, display_path};
-use crate::grammar::render_id;
+use crate::grammar::{expand_relative_heading, render_id};
 use crate::model::{Declaration, paired_declarations, sort_path_key};
 use crate::queries::{
     LspCitation, LspCompletionContext, LspDeclaration, LspFindingRange, LspShowContext,
@@ -215,11 +215,9 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                 for (section, info) in &home.sections {
                     let (column, text) = section_range_parts(home, info, section, sources);
                     // §FS-lsp.1.2.4: `.1: Username` hovers as `format.1: Username`.
-                    let hover_text = info.relative.then(|| {
-                        let component = section.rsplit('.').next().unwrap_or(section);
-                        let title = text.get(1 + component.len()..).unwrap_or_default();
-                        format!("{section}{title}")
-                    });
+                    let hover_text = info
+                        .relative
+                        .then(|| expand_relative_heading(&text, section));
                     sections.push(LspDeclaration {
                         project: context.workspace_loaded.then(|| project.alias.clone()),
                         path: absolutize_path(&home.file),

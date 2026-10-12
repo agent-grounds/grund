@@ -9,8 +9,8 @@ use std::fs;
 use support::*;
 
 /// §FS-lsp.1.2.4: `### .1: Username` hovers as `format.1: Username` over the
-/// written title, and a citation of `FS-login.format.1` previews and goes to that
-/// written line.
+/// written title, a heading with odd spacing as `--toc` prints it, and a
+/// citation of `FS-login.format.1` previews and goes to that written line.
 #[test]
 fn a_relative_heading_hovers_and_navigates_at_its_canonical_path() {
     let root = test_root("relative-sections");
@@ -25,7 +25,7 @@ fn a_relative_heading_hovers_and_navigates_at_its_canonical_path() {
     fs::write(
         &spec,
         "# FS-login: Login\n\n## format: Formatting\n\n### .1: Username\n\n\
-         Trim surrounding whitespace.\n",
+         Trim surrounding whitespace.\n\n### .2:   Spaced  title ##\n\nKeep the case.\n",
     )
     .expect("write spec");
     let usage = root.join("docs/use.md");
@@ -49,6 +49,14 @@ fn a_relative_heading_hovers_and_navigates_at_its_canonical_path() {
             "start": { "line": 4, "character": 4 },
             "end": { "line": 4, "character": "### .1: Username".len() }
         })
+    );
+
+    // The expansion `--toc` prints, spacing and closing run as written.
+    let spaced = hover_result(&mut stdin, &receiver, &mut child, 6, &file_uri(&spec), 8, 6);
+    let spaced = spaced["contents"]["value"].as_str().unwrap_or_default();
+    assert!(
+        spaced.starts_with("`format.2:   Spaced  title ##` — "),
+        "{spaced}"
     );
 
     let citation = hover_result(
