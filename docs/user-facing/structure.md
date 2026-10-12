@@ -133,6 +133,32 @@ grund 0.18.0 still gives 0.17's answer where these rules move one, and from 0.19
 
 `grund` does this itself: [§AR-checker](../../crates/grund-core/src/checker/report.rs) lives only in the doc-comment of `fn check` in [`crates/grund-core/src/checker/report.rs`](../../crates/grund-core/src/checker/report.rs), and its canonical row in [`docs/architecture/README.md`](../architecture/README.md) enrolls it without a stub — `grund AR-checker` prints the source prose.
 
+## Section headings
+
+A heading inside a declaration body is a citable section. Its path is written in the heading, numbered (`## 1. Overview`, `### 1.1 Scope`) or, with `[id] named_sections = true`, named (`## format: Formatting`, `### format.1: Username`). Its depth must match the path, one level per component ([§FS-config.3.3](../functional-spec/FS-config.md#33-section-paths--arbitrary-nesting-depth)).
+
+A deep path repeats its parent in every heading below it. A **relative heading** writes only the component it adds: a leading `.`, the component, and the same title syntax as the complete form ([§FS-declarations.section.relative](../functional-spec/FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)):
+
+```markdown
+# FS-login: Login
+
+## format: Formatting
+
+### .1: Username
+```
+
+`### .1:` takes its parent's path and declares `FS-login.format.1`. The parent is the nearest shallower heading, and it must sit exactly one level up. It is the declaration heading or a section that is neither an orphan nor a duplicate. Relative headings chain, so `#### .1:` under `### .user:` under `## format:` is `format.user.1`. A relative heading with no such parent declares nothing, and `check` reports `relative-section-parent` with the parent it needed. Every place that prints a coordinate uses the full path: citations, `refs`, `list`, completion, JSON, diagnostics, `--toc` and the editor hover. The default read, `--brief` and `--full` print the heading as written. The form works only in Markdown declaration bodies. A source doc-comment still writes the complete path.
+
+A relative address depends on where its block sits. Move `### .1:` from `## format:` to `## parse:` and the same words answer to `FS-login.parse.1`, while a citation of `FS-login.format.1` now reads other text. So each cited relative section is recorded in a committed **section lock**, `.grund/sections/<ID>.lock`. A lock line holds the address and a fingerprint of the section's text ([§FS-section-lock](../functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)):
+
+```text
+FS-login.format.1 8f332b6fe87bb346
+```
+
+After citing a relative section, run `grund fmt --write` from the root and commit what it writes. Nothing else writes the lock, and `fmt` never rewrites a heading. `check` reports three things. `unrecorded-section-citation` is a cited address with no entry. `section-address-changed` is a cited text that now sits at another address, with both addresses named. `invalid-section-lock` is a lock line `check` cannot read. To accept a move, leave a pointer in the old section that cites the new address, or rewrite the citations.
+
+The lock has one gap. A section moved and edited in the same change matches no recorded fingerprint, so the lock reads it as an edit in place. `check` passes, and the only trace is the refreshed line in the lock diff ([§FS-section-lock.limits.edit-and-move](../functional-spec/FS-section-lock.md#limitsedit-and-move-a-section-moved-and-edited-in-one-change)). Where an address must never move, write its complete path: complete-path headings need no lock. The runnable [`examples/relative-sections/`](../../examples/relative-sections/) shows the lock catching an unrecorded citation.
+
 ## Schema and links: the rules a repository is held to
 
 `grund` reads a repository as a graph. Every scan turns the tree into one

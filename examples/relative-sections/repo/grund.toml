@@ -1,0 +1,17 @@
+grund_config_version = 1
+
+[reference]
+strict = true
+
+[id]
+# Relative headings write a name component, so named sections are on.
+format = "{kind}-{slug}"
+named_sections = true
+
+[[kinds]]
+kind = "FS"
+folder = "docs/functional-spec"
+index = false
+
+[fmt.cross_refs]
+enabled = false

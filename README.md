@@ -164,6 +164,14 @@ are its sections, each at the depth its path names: numbered, or named once
 
 They are cited as [§REQ-readme.1.1](docs/requirements/REQ-readme.md#11-the-loop) and [§REQ-readme.evidence](docs/requirements/REQ-readme.md#evidence-positioning-and-performance-claims-have-evidence).
 
+A section heading may write only the component it adds: under `## format: Formatting`,
+`### .1: Username` declares `FS-login.format.1`, and every citation, `refs` line and
+`--toc` shows that full path. Moving the block under another parent changes its address,
+so after citing a relative section run `grund fmt --write` and commit the section lock it
+writes, `.grund/sections/FS-login.lock`; `check` then says where a cited text went. See
+[section headings](docs/user-facing/structure.md#section-headings) and
+[`examples/relative-sections/`](examples/relative-sections/).
+
 A declaration can also live in code: a doc-comment that opens with the ID declares it,
 and a link from the kind's index enrolls it with no stub file. Grund's own `AR-checker` is declared only on the
 function it describes, in [`crates/grund-core/src/checker/report.rs`](crates/grund-core/src/checker/report.rs):
