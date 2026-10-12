@@ -131,6 +131,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 
 - [§DF-managed-block-delimiters](DF-managed-block-delimiters.md#df-managed-block-delimiters-standard-beginend-delimiters-for-the-managed-agent-instructions-block) — standard BEGIN/END delimiters for the managed agent-instructions block
 - [§DF-skill-init-existing-specs](DF-skill-init-existing-specs.md#df-skill-init-existing-specs-grund-init-adopts-existing-specs-before-scaffolding) — `grund-init` adopts existing specs before scaffolding
+- [§DF-init-templates](DF-init-templates.md#df-init-templates-grund-init-lays-a-named-template-and---scaffold-replaces---docs) — `grund init` lays a named template, and `--scaffold` replaces `--docs`
 - [§DF-repo-conversation-opinion](DF-repo-conversation-opinion.md#df-repo-conversation-opinion-repositories-may-commit-a-link-only-conversation-rendering-opinion) — repositories may commit a link-only conversation-rendering opinion
 - [§DF-conversation-link-target](DF-conversation-link-target.md#df-conversation-link-target-the-conversation-link-form-is-a-markdown-link-over-an-absolute-uri-addressed-per-machine) — the conversation link form is a Markdown link over an absolute URI, addressed per machine
 - [§DF-directions-render](DF-directions-render.md#df-directions-render-the-citation-directions-wording-is-chosen-once-against-a-canonical-config) — the citation-directions wording is chosen once, against a canonical config

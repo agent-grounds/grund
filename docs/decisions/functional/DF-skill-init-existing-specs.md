@@ -16,7 +16,7 @@ When existing specs or spec-like artifacts are found, the skill should adopt the
 1. **Inventory first.** Detect existing spec homes, naming patterns, ID-like headings, citation markers, decisions, roadmaps, changelogs, e2e fixtures, and agent instruction files before recommending any command.
 2. **Ask for an artifact model.** When existing specs are present, list the canonical `grund` kinds (`GRUND`, `GOAL`, `FS`, `AR`, `DF`, `DA`, `E2E`, `RM`) beside the detected project-specific sections, tags, or document classes, then ask the user which model to adopt before writing config or refactoring docs.
 3. **Prefer configuration over movement.** Represent existing homes in `[[kinds]]`, `[scan].include`, `[scan].exclude`, and ID grammar settings. Do not rename files, move directories, or rewrap existing specs unless the selected artifact model calls for that refactor and the user confirms it.
-4. **Default to no `--docs`.** If the repo already has meaningful spec artifacts, recommend `grund init` without `--docs` unless the user selected a canonical-layout migration. The canonical scaffold is for fresh or empty projects; existing specs should be mapped, not shadowed.
+4. **Default to no `--scaffold`.** If the repo already has meaningful spec artifacts, recommend `grund init` without `--scaffold` unless the user selected a canonical-layout migration. The canonical scaffold is for fresh or empty projects; existing specs should be mapped, not shadowed.
 5. **Preserve existing grund config.** If `grund.toml` or `.agents/grund.toml` already exists, treat it as authoritative. The skill may propose edits, but should ask before changing it because `init` itself never overwrites existing config ([§FS-init.2.4](../../functional-spec/FS-init.md#24-generated-grundtoml)).
 6. **Preserve existing agent entrypoints.** Let `grund init` append or update only the managed block in whatever known entrypoints already exist. Do not create a competing `AGENTS.md` unless the user explicitly requests the canonical entrypoint ([§FS-init.2.1](../../functional-spec/FS-init.md#21-files-written-updated-or-left-in-place)).
 7. **Separate adoption from conversion.** The first setup pass should leave the tree with a valid config, refreshed agent guidance, and a validation report. Adding missing `§` citations, renaming IDs, splitting specs into canonical `FS`/`AR` homes, or adding e2e coverage should follow the selected artifact model, with a visible plan instead of being hidden inside `init`.
@@ -27,20 +27,20 @@ For an existing spec-heavy repo, the skill should show an explicit choice before
 
 | Option | Shape | Result |
 |---|---|---|
-| Canonical `grund` | Use `GRUND`, `GOAL`, `FS`, `AR`, `DF`, `DA`, `E2E`, and `RM` as the complete artifact model. | The agent may add or refactor docs toward canonical homes, usually with `--docs` only when folders are missing and the user accepts the migration. |
+| Canonical `grund` | Use `GRUND`, `GOAL`, `FS`, `AR`, `DF`, `DA`, `E2E`, and `RM` as the complete artifact model. | The agent may add or refactor docs toward canonical homes, usually with `--scaffold` only when folders are missing and the user accepts the migration. |
 | Canonical core plus project extras | Use `GRUND`, `GOAL`, `FS`, and `AR` as the backbone, then add project-specific kinds for existing sections, tags, or document classes such as `ADR`, `RFC`, `REQ`, `PLAN`, or `RUNBOOK`. | The agent maps existing docs into config, adds missing canonical backbone docs when useful, and keeps project-specific artifacts first-class. |
-| Existing structure with citations | Keep the repo's current sections/tags/document classes as the artifact model, adding only `grund` citations, declaration headings, and config around them. | The agent minimizes churn: no canonical refactor unless requested, and `grund init` refreshes only the entrypoints. |
+| Existing structure with citations | Keep the repo's current sections/tags/document classes as the artifact model, adding only `grund` citations, declaration headings, and config around them. | The agent minimizes churn: no canonical refactor unless requested. It may start from `grund init --template=none`, whose config declares no kinds ([§FS-init.1.6.2](../../functional-spec/FS-init.md#162-none)), fill it with the repo's own `[[kinds]]`, and run `grund init` again so the entrypoints teach them. |
 
 The prompt should include a recommendation grounded in the inventory. For example, a repo with mature ADRs and product requirements but no explicit architecture spec might recommend "canonical core plus project extras"; a repo with a clean internal taxonomy and high migration cost might recommend "existing structure with citations." Once the user selects an option, the agent uses that choice to decide whether it is merely adding config/citations or also refactoring docs into new homes.
 
 ## 4. Decision rule
 
-Classify the target before choosing `--docs`:
+Classify the target before choosing `--scaffold` or a template:
 
 | Repo shape | Skill recommendation |
 |---|---|
-| Fresh repo with no meaningful docs/specs | Use `grund init --docs` if the user wants the canonical scaffold. |
-| Existing docs/specs but no grund config | Write `grund.toml` that maps the existing layout ([§DF-config-file-location.2.3](DF-config-file-location.md#23-grund-init-writes-the-bare-grundtoml)), then run `grund init` without `--docs`. |
+| Fresh repo with no meaningful docs/specs | Use `grund init --scaffold` if the user wants the canonical scaffold. |
+| Existing docs/specs but no grund config | Write `grund.toml` that maps the existing layout ([§DF-config-file-location.2.3](DF-config-file-location.md#23-grund-init-writes-the-bare-grundtoml)), then run `grund init` without `--scaffold`, or start from `grund init --template=none` when the repo declares its own kinds. |
 | Existing `grund.toml` or `.agents/grund.toml` | Do not rewrite config by default; run `grund init` to refresh entrypoints, then validate. |
 | Existing grund citations/declarations but no config | Infer the closest ID grammar and kind homes from the existing declarations, ask for confirmation, then write config before `grund init`. |
 | Existing non-grund spec system | Preserve it first; optionally propose a later conversion or dual-citation plan. |
@@ -56,4 +56,4 @@ Classify the target before choosing `--docs`:
 
 - [§FS-init.5](../../functional-spec/FS-init.md#5-agent-setup-instructions) carries the behavior contract for the printed and packaged `grund-init` instructions.
 - `skills/grund-init/SKILL.md` carries the operational decision table because agents need it at setup time without reading this decision first.
-- The first setup pass stays conservative: preserve the user's existing spec system, map it into `grund` config, and make the agent entrypoint teach the resulting layout. `--docs` is correct for an empty repo and usually wrong for a repo that already has specs.
+- The first setup pass stays conservative: preserve the user's existing spec system, map it into `grund` config, and make the agent entrypoint teach the resulting layout. `--scaffold` is correct for an empty repo and usually wrong for a repo that already has specs ([§DF-init-templates](DF-init-templates.md#df-init-templates-grund-init-lays-a-named-template-and---scaffold-replaces---docs)).

@@ -325,7 +325,7 @@ The message follows what the run was given: the repo root with `[scan] include` 
 
 ##### 2.2.2.1 The repo root
 
-When the scope is the repo root (no path argument, or `grund check .`) and `[scan] include` is set, the message names the `include` list and points at `grund.toml` / `grund init`, since the usual cause is a project whose sources live outside the default `docs/`, `e2e/`, `src/`.
+When the scope is the repo root (no path argument, or `grund check .`) and `[scan] include` is set, the message names the `include` list and points at `grund.toml` / `grund init --scaffold`, since the usual cause is a project whose sources live outside the default `docs/`, `e2e/`, `src/`. A config that declares no kinds ([§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)) has no starter file to scaffold, so its message names declaring a first kind in that place instead: after `found no files.` it reads ``This project declares no kinds yet: replace `kinds = []` in `grund.toml` with a `[[kinds]]` table for its first kind, point `[scan] include` at your sources, or pass a path explicitly (`grund check <dir>`).``
 
 ##### 2.2.2.2 An explicit path
 
@@ -343,7 +343,7 @@ A hidden file whose extension is *also* unlisted keeps [§FS-check.2.2.2.2](FS-c
 
 ##### 2.2.2.4 No project in scope
 
-When a `[workspace]` block put no project in scope at all — `include_root = false`, and every member it has is an optional one this checkout does not have ([§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent)) — the message says exactly that. The messages of [§FS-check.2.2.2.1](FS-check.md#2221-the-repo-root) and [§FS-check.2.2.2.2](FS-check.md#2222-an-explicit-path) would both be false here, because the scan never looked under `[scan] include` and the tree `grund init --docs` scaffolds is not what is missing. This one names no remedy either, for the reason [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent)'s finding names none: nothing is misconfigured, and the only thing that changes the answer is a fuller checkout.
+When a `[workspace]` block put no project in scope at all — `include_root = false`, and every member it has is an optional one this checkout does not have ([§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent)) — the message says exactly that. The messages of [§FS-check.2.2.2.1](FS-check.md#2221-the-repo-root) and [§FS-check.2.2.2.2](FS-check.md#2222-an-explicit-path) would both be false here, because the scan never looked under `[scan] include` and the tree `grund init --scaffold` lays is not what is missing. This one names no remedy either, for the reason [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent)'s finding names none: nothing is misconfigured, and the only thing that changes the answer is a fuller checkout.
 
 #### 2.2.3 Exit code, JSON, and what suppresses it
 
@@ -1265,7 +1265,7 @@ The usual causes are a tree nobody has declared in yet and a docs tree whose hea
 
 #### 4.5.2 The message
 
-The line names how many files were read, the shape a declaration heading and a citation take under the configured format, and the configured kinds:
+The line names how many files were read, the shape a declaration heading and a citation take under the configured format, and the configured kinds. A project that declares no kinds has none to name and recognizes nothing by construction ([§FS-citations.recognized.no-kinds](FS-citations.md#recognizedno-kinds-with-no-kind-no-token-is-a-citation)), so its line says that instead: ``nothing recognized — grund read 3 files, and this project declares no kinds, so no heading in them is a declaration and no token a citation. Declare its first kind in grund.toml to start.`` Otherwise it reads:
 
 ```
 warning: nothing recognized — grund read 3 files and found no declaration and no citation in them. A declaration heading reads `# <KIND>-<NNN>-<slug>: <title>` and a citation `<marker><KIND>-<NNN>-<slug>`, under [id] format = "{kind}-{number}-{slug}" with <KIND> one of {AR, FS}. Either nothing is declared yet, or the headings are written to a different shape than that.
