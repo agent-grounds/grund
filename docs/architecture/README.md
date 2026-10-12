@@ -38,7 +38,8 @@ A family is not done while its defining point is realized in more than one place
 it is, a copy that conforms to the point cites it, so `grund refs <point> --summary` lists
 the copies left to remove. A citation is a claim: a site that breaks the point does not cite
 it, and stays a migration row until it is fixed. The families, their defining points,
-their owners and the copies left, each copy naming the step that removes it, are listed in
+their owners and the copies left, each copy naming the step that removes it or the decision
+that keeps it until a named release, are listed in
 `tests/integration/citation_ledger.toml`, the manifest the citation ledger of section 5
 holds to `grund refs`. That list is wider than
 [§REQ-one-answer.differences](../requirements/REQ-one-answer.md#differences-the-differences-known-when-this-requirement-landed): a second derivation that happens to answer right, and one
