@@ -34,7 +34,7 @@ use super::qualified_citations::{
     scan_fallback_qualified_citations, scan_workspace_qualified_pass,
 };
 use super::record::{HeadingLine, bare_block_line, walk_blocks, zone_of};
-use super::relative_sections::resolve_relative_sections;
+use super::relative_sections::HeldHeadings;
 use super::section_record::record_section_heading;
 use super::tree::heading_level_for_line;
 use super::unclosed_wrapper::UnclosedWrappers;
@@ -47,7 +47,7 @@ use crate::config::{Frame, Schema};
 use crate::grammar::{
     DocstringContent, MarkdownBlocks, MarkdownLine, PythonDocstringScanState, atx_heading_text,
     bare_token_in_never_rewrite_zone, declaration_captures, near_miss_heading, parse_id,
-    qualified_suppressed_in_source, relative_heading_form, section_path, source_scan_line,
+    qualified_suppressed_in_source, section_path, source_scan_line,
 };
 use crate::model::{
     Catalog, Citation, Declaration, DeclarationSource, FileRecord, FileText, HeadingKind, Id,
@@ -150,8 +150,7 @@ pub(super) fn scan_file_text(
     // §AR-scanner.2.2.7 / §FS-declarations.checks.unmarked-heading.1: declaration and section
     // recognition happen in this same fence-aware pass. Plain ATX headings wait until body spans
     // are known before becoming reportable candidates.
-    let mut unmarked_heading_candidates = Vec::new();
-    let mut relative_heading_candidates = Vec::new();
+    let mut held_headings = HeldHeadings::default();
     let mut total_lines = 0usize;
     // §FS-values.3.1.1.1: a literal that closed the line before, held for one line.
     let mut split = None;
@@ -385,20 +384,15 @@ pub(super) fn scan_file_text(
             let heading = line.trim_end().trim_start().to_string();
             let title = atx_heading_text(trimmed, heading_level).to_string();
             let column = line.find('#').unwrap_or(0) + 1;
-            let candidate = UnmarkedHeadingCandidate {
+            // §FS-declarations.section.relative.form: its parent is known once the file is.
+            held_headings.push(UnmarkedHeadingCandidate {
                 file: path.to_path_buf(),
                 line: lineno,
                 column,
                 heading,
                 heading_level,
                 title,
-            };
-            // §FS-declarations.section.relative.form: its parent is known once the file is.
-            if relative_heading_form(&candidate.title).is_some() {
-                relative_heading_candidates.push((candidate, None));
-            } else {
-                unmarked_heading_candidates.push(candidate);
-            }
+            });
         }
         if embedded_marker.is_some()
             && !embedded_marker_attached
@@ -419,10 +413,9 @@ pub(super) fn scan_file_text(
                 "embedded value marker must be on a citable numeric section heading",
             );
             // §FS-values.2.4: a relative heading's marker is the parent pass's to attach.
-            match relative_heading_candidates.last_mut() {
-                Some((candidate, pending)) if candidate.line == lineno => *pending = Some(site),
-                _ => findings.invalid_value_declarations.push(site),
-            }
+            findings
+                .invalid_value_declarations
+                .extend(held_headings.hold_marker(lineno, site));
         }
 
         let citation_line = CitationLine {
@@ -585,17 +578,7 @@ pub(super) fn scan_file_text(
 
     close_declaration(&mut current, findings);
     record.total_lines = total_lines;
-    if !relative_heading_candidates.is_empty() {
-        resolve_relative_sections(
-            findings,
-            &mut record,
-            relative_heading_candidates,
-            grammar.named_sections,
-            schema,
-            &mut unmarked_heading_candidates,
-        );
-        unmarked_heading_candidates.sort_by_key(|candidate| candidate.line);
-    }
+    held_headings.resolve(findings, &mut record, grammar.named_sections, schema);
     // §AR-scanner.2.8.2: every declaration's and section's extents, on every run.
     assign_extents(&mut record, findings);
 
@@ -603,7 +586,7 @@ pub(super) fn scan_file_text(
     // on the file is known, fix each declaration's body span and classify each
     // citation's citing side — off the hot path either way (§AR-benchmarks).
     let due = AfterPass::of(findings, schema, scan_values);
-    let has_unmarked_headings = !unmarked_heading_candidates.is_empty();
+    let has_unmarked_headings = !held_headings.unmarked.is_empty();
     let has_local_section_candidates = !findings.local_section_citation_candidates.is_empty();
     // §DF-one-parse-answers-from-0-19: the catalog publishes spans where 0.17 did, which bounds
     // today's `show`; the record holds them on every run.
@@ -622,7 +605,7 @@ pub(super) fn scan_file_text(
         retain_in_body_sections(findings);
     }
     if has_unmarked_headings {
-        assign_unmarked_heading_owners(findings, unmarked_heading_candidates, &record);
+        assign_unmarked_heading_owners(findings, held_headings.unmarked, &record);
     }
     due.validate_values(
         path,

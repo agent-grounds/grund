@@ -22,6 +22,66 @@ use crate::model::{
 /// accepted heading takes the marker (§FS-values.2.4.4).
 pub(super) type RelativeCandidate = (UnmarkedHeadingCandidate, Option<InvalidValueSite>);
 
+/// The Markdown headings the per-file pass holds until the file's headings are
+/// known: the unmarked candidates, and the relative ones the parent pass settles
+/// (§FS-declarations.section.relative.form, §FS-declarations.checks.unmarked-heading).
+#[derive(Default)]
+pub(super) struct HeldHeadings {
+    pub(super) unmarked: Vec<UnmarkedHeadingCandidate>,
+    relative: Vec<RelativeCandidate>,
+}
+
+impl HeldHeadings {
+    /// Hold `candidate` as relative when its text reads as the relative form.
+    pub(super) fn push(&mut self, candidate: UnmarkedHeadingCandidate) {
+        if relative_heading_form(&candidate.title).is_some() {
+            self.relative.push((candidate, None));
+        } else {
+            self.unmarked.push(candidate);
+        }
+    }
+
+    /// Hand a misplaced value marker on `line` to the relative heading there, for
+    /// the parent pass to attach (§FS-values.2.4); any other marker is returned.
+    pub(super) fn hold_marker(
+        &mut self,
+        line: usize,
+        site: InvalidValueSite,
+    ) -> Option<InvalidValueSite> {
+        match self.relative.last_mut() {
+            Some((candidate, pending)) if candidate.line == line => {
+                *pending = Some(site);
+                None
+            }
+            _ => Some(site),
+        }
+    }
+
+    /// Run the parent pass over the relative headings, leaving the unmarked ones
+    /// in line order.
+    pub(super) fn resolve(
+        &mut self,
+        findings: &mut Catalog,
+        record: &mut FileRecord,
+        named_sections: bool,
+        schema: &Schema,
+    ) {
+        if self.relative.is_empty() {
+            return;
+        }
+        let relative = std::mem::take(&mut self.relative);
+        resolve_relative_sections(
+            findings,
+            record,
+            relative,
+            named_sections,
+            schema,
+            &mut self.unmarked,
+        );
+        self.unmarked.sort_by_key(|candidate| candidate.line);
+    }
+}
+
 /// Resolve every relative candidate of one Markdown file — a heading whose text
 /// reads as the relative form (§FS-declarations.section.relative.form) — against its parent
 /// (§FS-declarations.section.relative.parent). An accepted one is recorded on its
@@ -37,7 +97,7 @@ pub(super) type RelativeCandidate = (UnmarkedHeadingCandidate, Option<InvalidVal
 /// accepted heading is a value root as its complete form would be, enrolled at
 /// its canonical path (§FS-values.2.4, §FS-values.2.5); a marker no accepted
 /// heading takes is reported as the per-file pass would have.
-pub(super) fn resolve_relative_sections(
+fn resolve_relative_sections(
     findings: &mut Catalog,
     record: &mut FileRecord,
     candidates: Vec<RelativeCandidate>,
