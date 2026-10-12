@@ -57,9 +57,11 @@ mod chapter_values;
 mod citation_line;
 mod citations;
 mod context;
+mod declaration_line;
 mod e2e;
 mod embedded_value_context;
 mod embedded_values;
+mod extents;
 mod file_pass;
 mod json;
 mod legacy;
@@ -68,6 +70,7 @@ mod line_owners;
 mod merge;
 mod qualified_citations;
 mod read_predicate;
+mod record;
 mod scan_error;
 mod scope_probe;
 mod section_record;
@@ -136,6 +139,8 @@ mod tests_line_owners;
 mod tests_local_section_citations;
 #[cfg(test)]
 mod tests_qualified_citations;
+#[cfg(test)]
+mod tests_record;
 #[cfg(test)]
 mod tests_scan_demand;
 #[cfg(test)]

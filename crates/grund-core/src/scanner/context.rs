@@ -2,14 +2,14 @@ use crate::sources::canonical_path;
 use std::collections::BTreeMap;
 use std::path::Path;
 
+use super::extents::body_has_content;
 use super::line_owners::{LineOwners, resolve_requested_lines};
-use super::unmarked_headings::markdown_declaration_body_end;
 use crate::config::{Frame, Schema};
-use crate::grammar::{
-    AliasGrammar, CommentBlockKind, DocCommentRule, block_declares_id, block_is_doc_comment,
-    comment_blocks, doc_comment_rule, first_content_line, inline_note_verdicts,
+use crate::grammar::{AliasGrammar, block_declares_id, inline_note_verdicts};
+use crate::model::{
+    BlockForm, Catalog, FileRecord, InlineCitationSite, RecordedBlock,
+    SectionHeadingOutsideDeclaration,
 };
-use crate::model::{Catalog, InlineCitationSite, SectionHeadingOutsideDeclaration};
 use crate::model::{scanned_decl_relative_path, scanned_path_key, sort_path_key};
 use crate::workspace::WorkspaceCitationTarget;
 
@@ -82,82 +82,17 @@ pub(crate) fn markdown_heading_level(line: &str) -> Option<usize> {
     }
 }
 
-/// Assign every declaration in `findings` its body line span (§AR-scanner.2.4.1).
-/// In Markdown the body runs until the next heading at the same or higher level;
-/// in a source file it is bounded by the comment/docstring block the declaration
-/// opens, capped before the next declaration sharing that block.
-pub(super) fn assign_declaration_bodies(
-    findings: &mut Catalog,
-    is_md: bool,
-    is_py: bool,
-    schema: &Schema,
-    frame: Frame<'_>,
-    text: &str,
-    md_headings: &[(usize, usize)],
-    total_lines: usize,
-) {
-    // The lines (sorted) at which this file declares — used to cap a source
-    // declaration's body before the next declaration in the same comment block.
-    let mut decl_lines: Vec<usize> = findings
-        .declarations
-        .values()
-        .flatten()
-        .map(|decl| decl.line)
-        .collect();
-    decl_lines.sort_unstable();
-
-    let code_blocks = (!is_md).then(|| comment_block_ranges(text, is_py, schema, frame));
-
+/// Publish every declaration's body line span on the catalog (§AR-scanner.2.4.1),
+/// as the record's body rule answered it (§FS-declarations.body,
+/// §AR-scanner.2.8.2).
+pub(super) fn assign_declaration_bodies(findings: &mut Catalog, record: &FileRecord) {
     for decl in findings.declarations.values_mut().flatten() {
         decl.body_start = decl.line;
-        if decl.is_stub {
-            decl.body_end = decl.line;
-            decl.body_has_content = false;
-            continue;
-        }
-        if is_md {
-            decl.body_end = markdown_declaration_body_end(decl, md_headings, total_lines);
-        } else {
-            let block_end = code_blocks
-                .as_ref()
-                .and_then(|blocks| {
-                    blocks
-                        .iter()
-                        .find(|(start, end)| *start <= decl.line && decl.line <= *end)
-                        .map(|(_, end)| *end)
-                })
-                .unwrap_or(decl.line);
-            let next_decl_cap = decl_lines
-                .iter()
-                .copied()
-                .find(|line| *line > decl.line)
-                .filter(|line| *line <= block_end)
-                .map(|line| line - 1);
-            decl.body_end = next_decl_cap.unwrap_or(block_end).max(decl.line);
-        }
-        decl.body_has_content = text
-            .lines()
-            .skip(decl.line)
-            .take(decl.body_end.saturating_sub(decl.line))
-            .any(|line| !line.trim().is_empty());
+        decl.body_end = record
+            .heading_at(decl.line)
+            .map_or(decl.line, |heading| heading.end.max(decl.line));
+        decl.body_has_content = !decl.is_stub && body_has_content(record, decl.line, decl.body_end);
     }
-}
-
-/// The 1-indexed inclusive line spans of every comment / docstring block in a
-/// source file (§AR-scanner.2.4.1) — the shared block walk of `comment_block.rs`
-/// without the declares-an-ID filtering, so a declaration's body can be bounded
-/// by the block that hosts it.
-fn comment_block_ranges(
-    text: &str,
-    is_py: bool,
-    schema: &Schema,
-    frame: Frame<'_>,
-) -> Vec<(usize, usize)> {
-    let lines = text.lines().collect::<Vec<_>>();
-    comment_blocks(&lines, is_py, frame.compiled.lexical(schema))
-        .into_iter()
-        .map(|(start, end, _)| (start + 1, end + 1))
-        .collect()
 }
 
 /// Settle who owns each citation site once body spans are known: classify the
@@ -346,15 +281,14 @@ fn lexical_targets(targets: &[WorkspaceCitationTarget]) -> Vec<AliasGrammar<'_>>
 }
 
 /// Locate the source-comment blocks that can host inline citation sites
-/// (§FS-inline-citation-style.1). Markdown prose is deliberately out of scope,
-/// and so is a *doc comment*: documentation is not a note about a clause, so
-/// nothing the inline citation style says applies to one
-/// (§FS-inline-citation-style.1.1, §AR-scanner.4).
+/// (§FS-inline-citation-style.1), from the blocks the record walked once
+/// (§AR-scanner.2.8.1). Markdown prose is deliberately out of scope, and so is a
+/// *doc comment*: documentation is not a note about a clause, so nothing the
+/// inline citation style says applies to one (§FS-inline-citation-style.1.1,
+/// §AR-scanner.4).
 pub(super) fn inline_citation_sites(
-    path: &Path,
-    text: &str,
-    is_md: bool,
-    is_py: bool,
+    lines: &[&str],
+    blocks: &[RecordedBlock],
     schema: &Schema,
     frame: Frame<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
@@ -364,41 +298,23 @@ pub(super) fn inline_citation_sites(
 ) {
     let mut sites = BTreeMap::new();
     let mut site_lines = BTreeMap::new();
-    if is_md {
+    if blocks.is_empty() {
         return (sites, site_lines);
     }
-    let lines = text.lines().collect::<Vec<_>>();
     // §FS-workspace.1.2: the lexical half of the run's citation targets, taken once
     // per file — which project's grammar reads a qualified token's ID tail is all
     // the tokenizer below needs of a target (§AR-system.2.1).
     let alias_grammars = lexical_targets(workspace_targets);
-    // §FS-inline-citation-style.1.1.2: which blocks this file's language calls
-    // documentation. Read once from the extension, then applied to each block
-    // below with one comparison (§AR-scanner.4).
-    let doc_rule = doc_comment_rule(path);
-    // Only a position language asks where the file's leading comment is, so the
-    // scan for it is taken only there and the marker recognizers ignore the flag
-    // it feeds (§GOAL-fast-feedback).
-    let leading_limit = match doc_rule {
-        DocCommentRule::Position(_) => first_content_line(&lines),
-        _ => 0,
-    };
-    for (start, end, kind) in comment_blocks(&lines, is_py, frame.compiled.lexical(schema)) {
+    for recorded in blocks {
+        let (start, end) = (recorded.start - 1, recorded.end - 1);
         let block = &lines[start..=end];
         // §FS-inline-citation-style.1.1: a doc comment hosts no site — the same
         // skip a block that *declares* an ID already earned, and for the same
         // reason: its shape is not this spec's to govern.
-        let is_doc_comment = block_is_doc_comment(
-            doc_rule,
-            &kind,
-            block,
-            lines.get(end + 1).copied(),
-            start <= leading_limit,
-        );
-        if !is_doc_comment
+        if !recorded.doc
             && !block_declares_id(
                 block,
-                matches!(kind, CommentBlockKind::PythonDocstring),
+                recorded.form == BlockForm::Docstring,
                 frame.compiled.lexical(schema),
             )
         {
