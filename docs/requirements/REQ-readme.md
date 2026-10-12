@@ -42,12 +42,14 @@ what retrieval actually returns.
 
 ### 1.3 The default structure
 
-The structure `grund init` writes, drawn as one diagram: its kinds as layers, each
-labelled with the question it answers and its home, and the citation directions of the
-canonical ruleset `init` writes commented out under `[citations]`, with `must` and
-`should` told apart. The caption says the ruleset is commented out until a project
-adopts it, names the alternatives the drawn arrows leave out and the kinds the diagram
-omits, and says that kinds, homes and rules are the project's to change.
+The structure `grund init` writes, as one table read top to bottom from why to code: a
+row for every kind `init` writes, with the question it answers, its home, and what it
+cites under the canonical ruleset `init` writes commented out under `[citations]`,
+every alternative named and the error levels told apart from the suggestions. It is a
+table rather than a drawing because a table renders the same on every surface that
+shows the README: GitHub, crates.io, either theme, and the raw text an agent reads. The
+caption says the ruleset is commented out until a project adopts it, and that kinds,
+homes and rules are the project's to change.
 
 ## 2. Every example is real
 
