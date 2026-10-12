@@ -48,7 +48,7 @@ POINTERS = (
      ("REQ-one-answer.identity.declarations",), 84,
      ("the complete ID printed by `list` is the same ID",)),
     ("FS-show.2.2.3",
-     ("REQ-one-answer.sections.map",), 58,
+     ("REQ-one-answer.sections.map",), 57,
      ("can therefore neither resolve nor be suggested",)),
     ("FS-declarations.checks.duplicate-section.4",
      ("REQ-one-answer.sections.ambiguity",), 18,
