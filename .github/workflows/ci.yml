@@ -213,9 +213,9 @@ jobs:
         with:
           path: |
             ~/ag/tmp/grund-node-target
-          key: ${{ runner.os }}-node-target-v1-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-node-target-v2-1.95.0-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-node-target-v1-1.95.0-
+            ${{ runner.os }}-node-target-v2-1.95.0-
 
       # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
       # including a PR merge checkout, before the Python gate runs.
@@ -472,9 +472,9 @@ jobs:
         with:
           path: |
             ~/ag/tmp/grund-node-target
-          key: ${{ runner.os }}-node-target-v1-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-node-target-v2-1.95.0-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-node-target-v1-1.95.0-
+            ${{ runner.os }}-node-target-v2-1.95.0-
 
       # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
       # including a PR merge checkout, before the Python gate runs.
@@ -538,9 +538,9 @@ jobs:
         with:
           path: |
             ~/ag/tmp/grund-node-target
-          key: ${{ runner.os }}-node-target-v1-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-node-target-v2-1.95.0-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-node-target-v1-1.95.0-
+            ${{ runner.os }}-node-target-v2-1.95.0-
 
       - name: cargo fmt --check
         run: cargo fmt --all -- --check

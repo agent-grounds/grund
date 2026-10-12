@@ -5,7 +5,7 @@ import shutil
 import unittest
 
 from launch import cargo_probe
-from support import NODE, REPO, Rehearsal, checked, node_target
+from support import NODE, REPO, Rehearsal, checked, dev_env, node_target
 
 
 class NodePackageTests(unittest.TestCase):
@@ -72,8 +72,9 @@ class NodePackageTests(unittest.TestCase):
             f"sys.exit(subprocess.call([{real_cargo!r}, *args]))\n"
         )
         # §AR-ci.3.4.1: the installed sources still compile; only the third-party tree is warm.
-        checked(["npm", "run", "build:source", "--", "--target-dir", node_target()],
-                cwd=self.r.package, env=env)
+        # §AR-ci.3.4.1.1: a dev build proves the fallback's closure as well as a release one.
+        checked(["npm", "run", "build:source", "--", "--target-dir", node_target(),
+                 "--profile", "dev"], cwd=self.r.package, env=dev_env(env))
         self.assertTrue(trace.is_file(), "source builder must invoke Cargo")
         invocations = [json.loads(line) for line in trace.read_text().splitlines()]
         self.assertTrue(any("--locked" in call["args"] for call in invocations))
