@@ -51,13 +51,13 @@ fn judge(
 
 #[test]
 fn a_wrapped_citation_fingerprints_as_the_bare_one() {
-    // b2405f19c414fb23 is `See <§>FS-login.parse.1.`, written bare.
+    // c8dd830ca673266a is `See <§>FS-login.parse.1.`, written bare.
     let (verdicts, unrecorded) = judge(
         "section_lock_wrapped_citation",
         "See [\u{a7}FS-login.parse.1](FS-login.md#1-second).",
         "Split on commas.",
         "See \u{a7}FS-login.format.1.",
-        "FS-login.format.1 b2405f19c414fb23\n",
+        "FS-login.format.1 c8dd830ca673266a\n",
     );
     assert_eq!(verdicts, [("format.1".to_string(), EntryVerdict::Keep)]);
     // The pointer-shaped citation is a citation like any other.
@@ -118,7 +118,7 @@ fn a_pointer_acknowledges_the_move() {
         verdicts,
         [(
             "format.1".to_string(),
-            EntryVerdict::Refresh(Some("b2405f19c414fb23".to_string()))
+            EntryVerdict::Refresh(Some("c8dd830ca673266a".to_string()))
         )]
     );
     assert_eq!(unrecorded, ["parse.1"]);
