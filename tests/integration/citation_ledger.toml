@@ -76,7 +76,12 @@ points = [
   "FS-languages.comment-block",
   "FS-languages.fence",
 ]
-owners = ["crates/grund-core/src/scanner/file_pass.rs"]
+owners = [
+  "crates/grund-core/src/model/file_record.rs",
+  "crates/grund-core/src/scanner/extents.rs",
+  "crates/grund-core/src/scanner/file_pass.rs",
+  "crates/grund-core/src/scanner/record.rs",
+]
 
 [[family.migration]]
 file = "crates/grund-core/src/model/headings.rs"
@@ -88,6 +93,12 @@ step = "#596"
 
 [[family.migration]]
 file = "crates/grund-core/src/resolver/body_lines.rs"
+step = "#596"
+
+# Today's answers, kept beside the record's through 0.18.0 by
+# DF-one-parse-answers-from-0-19; #639, #596's follow-up, retires them.
+[[family.migration]]
+file = "crates/grund-core/src/scanner/compat.rs"
 step = "#596"
 
 [[family.migration]]

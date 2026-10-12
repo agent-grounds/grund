@@ -68,11 +68,6 @@ file = "queries/editor_on_type.rs"
 primitives = ["declaration_id_on_line"]
 step = "#598"
 
-[[allow]]
-file = "resolver/body.rs"
-primitives = ["declaration_id_on_line", "section_re", "source_scan_line"]
-step = "#596"
-
 # The selectors.rs row moved here with the old first-`/` split, which the
 # §FS-rules.7.9 ramp keeps to tell a newly matched site; it goes with the ramp.
 [[allow]]

@@ -36,7 +36,10 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// not among them: the scan reads it once and records its verdict on the stub
 /// (§AR-scanner.4.6), so the broken-stub rule, a cited section, a value binding's
 /// target and a rule's `cites` fact read that record instead of the file
-/// (§AR-resolver.5):
+/// (§AR-resolver.5). Nor is a home's body: the opt-in lead budget
+/// (§FS-declarations.checks.oversized-lead) and the parse-moves warning
+/// (§FS-declarations.checks.parse-moves) slice the file record the scan keeps
+/// (§AR-scanner.2.8). What is read after the scan is:
 ///
 /// - §AR-checker.2.3's hint: the line of a dangling Markdown citation, from disk.
 /// - §AR-checker.2.6: every configured kind index, from disk, through
@@ -45,9 +48,6 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// - §AR-checker.2.7: each agent entrypoint, from disk. Its companions are listed,
 ///   and read, by the writers before the check, in `Expected` (§AR-checker.1.3).
 /// - §AR-checker.2.16: every configured kind index, from disk.
-/// - The opt-in lead budget (§FS-declarations.checks.oversized-lead): every
-///   Markdown or doc-comment home, through the resolver's point-body slicer
-///   (§AR-system.2.10), overlay first and disk second.
 ///
 /// ## terms: Terms
 ///
