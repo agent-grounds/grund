@@ -164,10 +164,11 @@ pub struct LspShowContext {
 }
 
 impl LspShowContext {
-    /// Every file the snapshot's run read from disk, under the path it read it
-    /// by, the ones outside its scan included — a stub's target in another
-    /// folder, say. A change to any of them makes the snapshot stale
-    /// (§AR-lsp.2.1, §FS-lsp.responsiveness.3).
+    /// Every file the snapshot's run read, from an open buffer or from disk,
+    /// under the path it read it by, the ones outside its scan included — a
+    /// stub's target in another folder, say. A change to any of them, an edit
+    /// to its buffer or the buffer's close back to disk, makes the snapshot
+    /// stale (§AR-lsp.2.1, §FS-lsp.responsiveness.3).
     pub fn read_files(&self) -> Vec<PathBuf> {
         self.buffers.recorded_paths()
     }

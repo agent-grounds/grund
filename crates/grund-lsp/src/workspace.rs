@@ -26,8 +26,9 @@ struct ProjectSnapshot {
     /// symlinked or parent-relative `[scan] include` has no root prefix and is
     /// in no scan yet, and would otherwise look like nobody's (§FS-lsp.2.2).
     scanned_dirs: BTreeSet<PathBuf>,
-    /// The files the snapshot's run read outside its scan — a stub's target in
-    /// another editor folder, say — canonicalized: an edit to one of them makes
+    /// The files the snapshot's run read outside its scan, from an open buffer
+    /// or from disk — a stub's target in another editor folder, say —
+    /// canonicalized: an edit to one of them, or its close back to disk, makes
     /// this snapshot stale as surely as an edit to a scanned file (§AR-lsp.2.1).
     read_outside_scan: BTreeSet<PathBuf>,
     /// Where `snapshot`'s records lie, so a lookup about one file does not scan

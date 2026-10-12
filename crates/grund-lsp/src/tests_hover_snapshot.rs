@@ -238,14 +238,9 @@ fn a_citation_hover_shows_the_unsaved_body_as_saved() {
     }
 }
 
-/// §AR-lsp.2.1 with §FS-lsp.4.1: a snapshot goes stale when any file its run
-/// read changes, not only a file it scanned. Folder `b` stubs an ID declared in
-/// folder `a`, outside `b`'s scan; an unsaved edit of that declaration in `a`
-/// is in the hover on `b`'s citation, the bytes `grund <ID> --toc` prints in `b`
-/// once it is saved.
-#[test]
-fn a_citation_hover_sees_an_unsaved_edit_to_a_file_read_outside_its_scan() {
-    let root = test_root("hover_from_snapshot_cross_folder");
+/// Folder `b` stubs `FS-t`, declared in `a/src/s.rs`, outside `b`'s scan;
+/// `b/docs/use.md` cites it on its first line. Returns `a`, `b` and that file.
+fn cross_folder_fixture(root: &Path) -> (PathBuf, PathBuf, PathBuf) {
     let config = |kind: &str, include: &str| {
         format!(
             "grund_config_version = 1\n[reference]\nstrict = true\nrequire_grounding = false\n\
@@ -258,40 +253,140 @@ fn a_citation_hover_sees_an_unsaved_edit_to_a_file_read_outside_its_scan() {
     write(&a.join("grund.toml"), &config("AA", "\"docs\", \"src\""));
     write(&a.join("docs/AA-x.md"), "# AA-x: X\n\nx \u{a7}AA-x.\n");
     let target = a.join("src/s.rs");
-    write(&target, "/// FS-t: T\n///\n/// Disk lead.\npub fn t() {}\n");
+    write(&target, &declaring("Disk lead."));
     write(&b.join("grund.toml"), &config("FS", "\"docs\""));
     write(
         &b.join("docs/t.md"),
         "# FS-t: [../../a/src/s.rs](../../a/src/s.rs)\n",
     );
     write(&b.join("docs/use.md"), "Uses \u{a7}FS-t here.\n");
+    (a, b, target)
+}
 
+/// The text of `a/src/s.rs` declaring `FS-t` with `lead`.
+fn declaring(lead: &str) -> String {
+    format!("/// FS-t: T\n///\n/// {lead}\npub fn t() {{}}\n")
+}
+
+fn server_over_folders(folders: &[&PathBuf]) -> (Server, Connection) {
     let (connection, client) = Connection::memory();
-    let mut server = Server::new(
+    let server = Server::new(
         connection,
-        [&a, &b]
-            .into_iter()
-            .map(|folder| (Url::from_directory_path(folder).unwrap(), folder.clone()))
+        folders
+            .iter()
+            .map(|folder| (Url::from_directory_path(folder).unwrap(), (*folder).clone()))
             .collect(),
         true,
     )
     .unwrap();
-    let unsaved = "/// FS-t: T\n///\n/// Unsaved lead.\npub fn t() {}\n";
-    server
-        .handle_notification(Notification::new(
-            "textDocument/didOpen".into(),
-            json!({"textDocument": {
-                "uri": Url::from_file_path(&target).unwrap(),
-                "languageId": "rust",
-                "version": 1,
-                "text": unsaved,
-            }}),
-        ))
-        .expect("didOpen");
-    while client.receiver.try_recv().is_ok() {}
-    let (body, _) = hover(&mut server, &client, &b, 0);
+    (server, client)
+}
 
-    write(&target, unsaved);
-    assert_eq!(body, cli_answer(&server, &b, "FS-t"), "hover in b on FS-t");
-    assert!(body.contains("Unsaved lead."), "{body:?}");
+/// Hand the server `method` and drop the diagnostics it publishes in answer.
+fn notify(server: &mut Server, client: &Connection, method: &str, params: Value) {
+    server
+        .handle_notification(Notification::new(method.into(), params))
+        .unwrap_or_else(|err| panic!("{method}: {err:#}"));
+    while client.receiver.try_recv().is_ok() {}
+}
+
+/// Send each `(method, params, lead)` and hover `b`'s citation of `FS-t` after
+/// it; then hold each hover to what `grund FS-t --toc` prints in `b` once
+/// `target` is saved declaring that `lead` — the editor's text at that point.
+fn hover_after_each(
+    server: &mut Server,
+    client: &Connection,
+    b: &Path,
+    target: &Path,
+    steps: Vec<(&str, Value, &str)>,
+) {
+    let mut hovers = Vec::new();
+    for (method, params, lead) in steps {
+        notify(server, client, method, params);
+        hovers.push((method, lead, hover(server, client, b, 0).0));
+    }
+    for (method, lead, body) in hovers {
+        write(target, &declaring(lead));
+        assert_eq!(
+            body,
+            cli_answer(server, b, "FS-t"),
+            "hover in b after {method}"
+        );
+        assert!(body.contains(lead), "hover in b after {method}: {body:?}");
+    }
+}
+
+/// The edits to `target` after its didOpen: an unsaved change, then the close
+/// that drops the buffer and leaves the disk's `Disk lead.`.
+fn change_then_close(target: &Path) -> Vec<(&'static str, Value, &'static str)> {
+    let uri = Url::from_file_path(target).unwrap();
+    vec![
+        (
+            "textDocument/didChange",
+            json!({"textDocument": {"uri": uri, "version": 2},
+                   "contentChanges": [{"text": declaring("Changed lead.")}]}),
+            "Changed lead.",
+        ),
+        (
+            "textDocument/didClose",
+            json!({"textDocument": {"uri": uri}}),
+            "Disk lead.",
+        ),
+    ]
+}
+
+fn did_open(target: &Path, lead: &str) -> Value {
+    json!({"textDocument": {
+        "uri": Url::from_file_path(target).unwrap(),
+        "languageId": "rust",
+        "version": 1,
+        "text": declaring(lead),
+    }})
+}
+
+/// §AR-lsp.2.1 with §FS-lsp.4.1: a snapshot goes stale when any file its run
+/// read changes, not only a file it scanned, and whether the run read it from
+/// disk or from an open buffer. An unsaved edit in `a` of the declaration `b`
+/// stubs is in the hover on `b`'s citation through the file's whole life in the
+/// editor — opened, changed, closed back to disk — each time the bytes
+/// `grund <ID> --toc` prints in `b` over what a save would write.
+#[test]
+fn a_citation_hover_sees_an_unsaved_edit_to_a_file_read_outside_its_scan() {
+    let root = test_root("hover_from_snapshot_cross_folder");
+    let (a, b, target) = cross_folder_fixture(&root);
+    let (mut server, client) = server_over_folders(&[&a, &b]);
+    let mut steps = vec![(
+        "textDocument/didOpen",
+        did_open(&target, "Unsaved lead."),
+        "Unsaved lead.",
+    )];
+    steps.extend(change_then_close(&target));
+    hover_after_each(&mut server, &client, &b, &target, steps);
+}
+
+/// §AR-lsp.2.1: a project first built while a file it reads outside its scan is
+/// already open — a folder the editor adds after the file was opened — reads
+/// it from the buffer, and goes stale on it all the same.
+#[test]
+fn a_folder_added_while_a_file_it_reads_is_open_sees_the_edits_to_it() {
+    let root = test_root("hover_from_snapshot_added_folder");
+    let (a, b, target) = cross_folder_fixture(&root);
+    let (mut server, client) = server_over_folders(&[&a]);
+    notify(
+        &mut server,
+        &client,
+        "textDocument/didOpen",
+        did_open(&target, "Unsaved lead."),
+    );
+    let added = json!({"event": {
+        "added": [{"uri": Url::from_directory_path(&b).unwrap(), "name": "b"}],
+        "removed": [],
+    }});
+    let mut steps = vec![(
+        "workspace/didChangeWorkspaceFolders",
+        added,
+        "Unsaved lead.",
+    )];
+    steps.extend(change_then_close(&target));
+    hover_after_each(&mut server, &client, &b, &target, steps);
 }

@@ -7,7 +7,7 @@
 //! that exists (§FS-scan.text.buffer-only).
 
 use std::borrow::Cow;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
@@ -21,10 +21,20 @@ use crate::model::normalize_path_lexically;
 #[derive(Clone, Default)]
 pub(crate) struct Buffers {
     open: Arc<BTreeMap<PathBuf, String>>,
-    /// The disk text this run has read, kept when the run is the editor's
-    /// snapshot so a later answer over it reads nothing again
-    /// (§FS-lsp.responsiveness.3, §AR-lsp.5.2). Shared by every member's run.
-    record: Option<Arc<Mutex<BTreeMap<PathBuf, String>>>>,
+    /// What this run has read, kept when the run is the editor's snapshot.
+    /// Shared by every member's run.
+    record: Option<Arc<Mutex<Record>>>,
+}
+
+/// What a recording run has read (§FS-lsp.responsiveness.3).
+#[derive(Default)]
+struct Record {
+    /// The disk text it read, so a later answer over it reads nothing again
+    /// (§AR-lsp.5.2). Never a buffer's text: a buffer is in front of it.
+    disk: BTreeMap<PathBuf, String>,
+    /// Every path it read, whether a buffer or the disk answered: what its
+    /// snapshot goes stale on (§AR-lsp.2.1).
+    read: BTreeSet<PathBuf>,
 }
 
 impl Buffers {
@@ -41,9 +51,10 @@ impl Buffers {
         }
     }
 
-    /// These buffers, keeping every file text the run reads from disk, under
-    /// the path it was read by: the snapshot a hover answers from without
-    /// reading the file again (§FS-lsp.responsiveness.3).
+    /// These buffers, keeping every path the run reads and every file text it
+    /// reads from disk, under the path it was read by: the snapshot a hover
+    /// answers from without reading the file again (§FS-lsp.responsiveness.3),
+    /// and what that snapshot goes stale on (§AR-lsp.2.1).
     pub(crate) fn recording(self) -> Self {
         Self {
             record: Some(Arc::default()),
@@ -64,11 +75,12 @@ impl Buffers {
     /// The disk text a recording run already read at `path`, as it read it.
     fn recorded(&self, path: &Path) -> Option<String> {
         let record = self.record.as_ref()?;
-        record.lock().ok()?.get(path).cloned()
+        record.lock().ok()?.disk.get(path).cloned()
     }
 
-    /// Every path a recording run has read from disk so far, under the path it
-    /// was read by: what its snapshot goes stale on (§AR-lsp.2.1).
+    /// Every path a recording run has read so far, from a buffer or from disk,
+    /// under the path it was read by: what its snapshot goes stale on
+    /// (§AR-lsp.2.1).
     pub(crate) fn recorded_paths(&self) -> Vec<PathBuf> {
         self.record
             .as_ref()
@@ -76,9 +88,20 @@ impl Buffers {
                 record
                     .lock()
                     .ok()
-                    .map(|record| record.keys().cloned().collect())
+                    .map(|record| record.read.iter().cloned().collect())
             })
             .unwrap_or_default()
+    }
+
+    /// Note that the run read `path`, if it records its reads, whichever of a
+    /// buffer and the disk answers it (§AR-lsp.2.1).
+    fn note_read(&self, path: &Path) {
+        if let Some(record) = &self.record
+            && let Ok(mut record) = record.lock()
+            && !record.read.contains(path)
+        {
+            record.read.insert(path.to_path_buf());
+        }
     }
 
     /// Keep `text`, read from disk at `path`, if this run records its reads.
@@ -86,7 +109,7 @@ impl Buffers {
         if let Some(record) = &self.record
             && let Ok(mut record) = record.lock()
         {
-            record.insert(path.to_path_buf(), text.to_string());
+            record.disk.insert(path.to_path_buf(), text.to_string());
         }
     }
 }
@@ -126,15 +149,17 @@ impl<'a> Sources<'a> {
     }
 
     /// The file's text as a save would write it (§FS-scan.text.buffer). A
-    /// recording run reads each file from disk once and answers again from what
-    /// it kept (§FS-lsp.responsiveness.3).
+    /// recording run notes every path it reads, a buffer's included, and reads
+    /// each file from disk once, answering again from what it kept
+    /// (§FS-lsp.responsiveness.3, §AR-lsp.2.1).
     pub(crate) fn text(self, path: &Path) -> std::io::Result<Cow<'a, str>> {
-        if let Some(text) = self.buffer(path) {
-            return Ok(Cow::Borrowed(text));
-        }
         let Some(buffers) = self.buffers else {
             return input_read_to_string(path).map(Cow::Owned);
         };
+        buffers.note_read(path);
+        if let Some(text) = buffers.get(path) {
+            return Ok(Cow::Borrowed(text));
+        }
         if let Some(text) = buffers.recorded(path) {
             return Ok(Cow::Owned(text));
         }
