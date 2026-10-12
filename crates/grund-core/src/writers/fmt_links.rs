@@ -19,8 +19,8 @@ use super::fmt_shorthand_links::{accepted_shorthand_link, collect_local_accepted
 use super::fmt_value_bindings::markdown_citation_is_value_binding;
 use crate::config::Config;
 use crate::grammar::{
-    CandidateReading, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, is_inside_inline_code,
-    parse_id, parse_longest_id_prefix,
+    CandidateReading, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, cross_ref_wrap,
+    never_rewrite_context, parse_id, parse_longest_id_prefix,
 };
 use crate::model::{Catalog, Id};
 use crate::resolver::{
@@ -32,8 +32,8 @@ use crate::scanner::{
 
 /// Wrap each `§<ID>[.<section>]` citation on this Markdown line as `[§<ID>…](url)`
 /// — the `--cross-refs` rewrite (§FS-fmt.6.2): re-derive an existing wrapper's URL,
-/// skip citations in inline code (§FS-fmt.6.4), and emit nothing when the target
-/// does not resolve (§FS-fmt.6.4).
+/// skip citations in inline code or a link destination (§FS-fmt.6.4), and emit
+/// nothing when the target does not resolve (§FS-fmt.6.4).
 ///
 /// `workspace` is `None` for single-project runs (and for member-local
 /// runs in a workspace — §FS-workspace.8.5.1). When `Some`, a qualified
@@ -116,14 +116,17 @@ pub(super) fn wrap_markdown_links_with_targets(
         };
         let marked_end = citation.token_end;
         let marker_start = citation.marker_start;
-        let already_wrapped = marker_start > 0 && line.as_bytes()[marker_start - 1] == b'[';
-        if already_wrapped && line[marked_end..].starts_with("](") {
-            let url_start = marked_end + 2;
-            if let Some(close_rel) = line[url_start..].find(')') {
-                let close = url_start + close_rel;
-                output.push_str(&line[cursor..url_start]);
+        // §FS-citations.wrap.recognized: a closed wrap is re-derived up to its first
+        // `)` until 0.19.0; one that never closes before a later `)` is the
+        // author's bytes and is left as written; one with no `)` is wrapped fresh.
+        if let Some(wrap) = cross_ref_wrap(line, marker_start, marked_end) {
+            if let Some(close) = wrap.rederived_close() {
+                output.push_str(&line[cursor..wrap.url_start]);
                 output.push_str(&target);
                 cursor = close;
+                continue;
+            }
+            if wrap.unclosed_before_paren() {
                 continue;
             }
         }
@@ -177,7 +180,9 @@ fn markdown_link_citations(
         if !line[..full.start()].ends_with(&config.marker) {
             continue;
         }
-        if is_inside_inline_code(line, marker_start) {
+        // §FS-citations.zones.link-destination: inline code and every destination
+        // the line holds, read with the one extent every other pass reads.
+        if never_rewrite_context(line, true, marker_start) {
             continue;
         }
         let Some(id) = parse_id(&caps, &config.grammar) else {
@@ -223,7 +228,7 @@ fn collect_workspace_markdown_link_citations(
         return;
     }
     for (marker_start, _) in line.match_indices(&config.marker) {
-        if is_inside_inline_code(line, marker_start) {
+        if never_rewrite_context(line, true, marker_start) {
             continue;
         }
         let token_start = marker_start + config.marker.len();

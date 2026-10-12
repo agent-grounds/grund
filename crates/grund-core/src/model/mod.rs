@@ -42,6 +42,7 @@ mod records;
 mod report;
 mod stub_resolution;
 mod text;
+mod unclosed_wrappers;
 mod values;
 
 pub use e2e::{E2eCase, E2eSpecRef};
@@ -77,6 +78,7 @@ pub(crate) use records::{LegacyCitationCandidate, LocalSectionCitationCandidate,
 pub(crate) use report::{CheckReport, Diagnostic, LANDED_CLAUSE, Site};
 pub(crate) use stub_resolution::{PairedDeclarations, StubResolution, paired_declarations};
 pub(crate) use text::{CITATION_DIRECTION_REPAIR, format_list, json_escape, plural};
+pub(crate) use unclosed_wrappers::UnclosedWrapperNote;
 pub(crate) use values::{
     JSON_NUMBER_RE, authored_component, component_text_is_valid, first_unequal_component,
     joined_value_components, positive_numeric_component, root_literal_parts,

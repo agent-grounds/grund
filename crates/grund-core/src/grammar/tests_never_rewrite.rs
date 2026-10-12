@@ -97,3 +97,36 @@ fn the_shared_zone_predicate_answers_for_the_escape_in_both_host_languages() {
         );
     }
 }
+
+/// §FS-citations.zones.link-destination: a destination ends at the `)` that
+/// balances its `(`, an escaped parenthesis counts for neither, and one that never
+/// balances runs to the end of the line — so a citation after it is inside it.
+#[test]
+fn a_link_destination_ends_at_the_paren_that_balances_it() {
+    let close = |line: &str| {
+        let start = line.find("](").expect("a destination") + 2;
+        never_rewrite::link_destination_close(line.as_bytes(), start)
+    };
+    assert_eq!(close("[a](plain) x"), Some(9));
+    assert_eq!(close("[a](old(1).md) x"), Some(13), "nested parens balance");
+    assert_eq!(
+        close(r"[a](x\)y) z"),
+        Some(8),
+        "an escaped `)` closes nothing"
+    );
+    assert_eq!(
+        close(r"[a](x\(y) z"),
+        Some(8),
+        "an escaped `(` opens nothing"
+    );
+    assert_eq!(close("[a](stale and (aside) end."), None, "never balances");
+
+    let unclosed = "Unclosed [the target](notes and \u{a7}FS-x after.";
+    let later = unclosed.find('\u{a7}').expect("the later citation");
+    assert!(is_inside_markdown_link_destination(unclosed, later));
+    let closed = "See [the target](notes) and \u{a7}FS-x after.";
+    assert!(!is_inside_markdown_link_destination(
+        closed,
+        closed.find('\u{a7}').expect("the citation")
+    ));
+}

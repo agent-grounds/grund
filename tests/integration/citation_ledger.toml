@@ -77,6 +77,7 @@ points = [
   "FS-languages.fence",
 ]
 owners = [
+  "crates/grund-core/src/grammar/never_rewrite.rs",
   "crates/grund-core/src/model/file_record.rs",
   "crates/grund-core/src/scanner/extents.rs",
   "crates/grund-core/src/scanner/file_pass.rs",

@@ -36,6 +36,7 @@ use super::qualified_citations::{
 use super::record::{HeadingLine, walk_blocks, zone_of};
 use super::section_record::record_section_heading;
 use super::tree::heading_level_for_line;
+use super::unclosed_wrapper::UnclosedWrappers;
 use super::units::record_file_structure;
 use super::unmarked_headings::assign_unmarked_heading_owners;
 use super::value_binding_split::scan_split_binding;
@@ -124,6 +125,7 @@ pub(super) fn scan_file_text(
     let in_docs = super::stub_shape::stub_by_docs(path);
     let mut markdown_blocks = MarkdownBlocks::default();
     let mut py_docstring = PythonDocstringScanState::default();
+    let mut wrappers = UnclosedWrappers::new(schema, frame, is_md);
     let mut current: Option<Declaration> = None;
     // A marker enables value authority in any scanned document (§FS-values.1),
     // and a declared chapter is recognized in the same source doc-comments
@@ -160,6 +162,7 @@ pub(super) fn scan_file_text(
         if block.in_fence() {
             continue;
         }
+        wrappers.read(line);
         // §FS-check.1.1.5.1: a raw-text HTML block line is never a heading, so it
         // declares nothing and opens no section, but its citations stay live below.
         let heading_position = block.may_be_heading();
@@ -520,6 +523,7 @@ pub(super) fn scan_file_text(
             &qualified_marker_starts,
             findings,
         );
+        wrappers.note(&citation_line, citation_start, current.as_ref(), findings);
         scan_local_section_candidates(
             &citation_line,
             &claimed_markers,

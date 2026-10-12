@@ -9,6 +9,7 @@ use super::headings::{
 use super::line_owners::FileLineOwnership;
 use super::patterns::GlobCitation;
 use super::stub_resolution::StubResolution;
+use super::unclosed_wrappers::UnclosedWrapperNote;
 use super::values::{
     DeclarationSource, EmbeddedValueRoot, InvalidValueSite, ValueBinding, ValueComponent,
 };
@@ -339,6 +340,9 @@ pub struct Catalog {
     /// Stub-shaped headings the two stub tests read differently, until 0.19.0
     /// (§FS-declarations.checks.stub-shape, §AR-scanner.4.7).
     pub(crate) stub_shape_notes: Vec<StubShapeNote>,
+    /// Wraps whose destination never closes before a later `)`, until 0.19.0
+    /// (§FS-citations.checks.unclosed-wrapper).
+    pub(crate) unclosed_wrapper_notes: Vec<UnclosedWrapperNote>,
     /// The owners of the line ranges a `cover --lines` run asked for, one entry
     /// per scanned file (§FS-cover.6, §AR-scanner.2.4.4). Empty — and never
     /// computed — unless `Config::owner_lines` is set.
