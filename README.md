@@ -109,6 +109,10 @@ And the table's rules, as it reads them:
 > - …
 > - Each file in **tests/e2e/** must cite FS; avoid citing AR.
 
+For an agent without the managed block, the loop fits in one rule for its system prompt:
+
+> When you see `§<ID>` or `§<ID>.<section>` in any file you are reading, run `grund <ID>[.<section>]` and treat the output as the authoritative definition. Do not paraphrase or guess — quote what `grund` returned, or cite the ID and move on.
+
 ## Quick start
 
 ```bash
