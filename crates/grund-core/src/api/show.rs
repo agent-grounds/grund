@@ -229,6 +229,7 @@ fn show_answer(
     if format == ShowFormat::Json {
         let json = render_show_output_json(
             config,
+            &project.findings.files,
             context.render_config(),
             &home,
             &id,
