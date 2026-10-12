@@ -20,6 +20,7 @@ use authority::Authority;
 pub(crate) use authority::one_rules_authority;
 use index::FactIndex;
 pub(crate) use precedence::citation_precedence;
+pub(crate) use ramp::route_stubbed_rules;
 use ramp::{Windows, matched_before, newly_counted, nodes_matched_before, route};
 pub(crate) use resolution::unresolved_subject_diagnostic;
 use resolution::unresolved_subject_diagnostic_indexed;

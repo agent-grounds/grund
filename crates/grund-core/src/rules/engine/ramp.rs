@@ -1,8 +1,9 @@
 //! The release windows in which a finding that only a newly counted
 //! numbered-section citation (§FS-rules.7.8), or only a target newly matched at
 //! the rule's own nested alias (§FS-rules.7.9), produces warns rather than
-//! fails. This module, the site mark it reads and the second field of
-//! `evaluate` go away at 0.18.0.
+//! fails. Those two, the site mark they read and the second field of
+//! `evaluate` go away at 0.18.0; the window of a rule declared through a stub
+//! whose target the scan does not read (§FS-rules.7.10) goes at 0.19.0.
 
 use super::super::facts::{NodeKey, RuleFacts, SiteKey};
 use super::super::{Cardinality, RuleLevel, RuleTargets};
@@ -16,6 +17,9 @@ const RAMP_CLAUSE: &str = "; a citation to a numbered section now counts, and th
 
 /// The same pending clause for the corrected pinned-target match (§FS-rules.7.9).
 const MATCH_CLAUSE: &str = "; a target pinned at the rule's own nested alias path now matches, and this warning becomes an error in grund 0.18.0";
+
+/// The same pending clause for a rule declared through a stub (§FS-rules.7.10).
+const STUB_CLAUSE: &str = "; a rule declared through a stub now applies, and this warning becomes an error in grund 0.19.0";
 
 /// Which windows a finding falls in. Both may hold, and then the finding names
 /// both, §FS-rules.7.8's first (§FS-rules.7.9).
@@ -144,4 +148,38 @@ pub(super) fn route<'a>(
         message.push_str(MATCH_CLAUSE);
     }
     (ramp, message)
+}
+
+/// §FS-rules.7.10: a required-level finding that only rules declared through a
+/// stub whose target the scan does not read produce — every rule its authority
+/// names is one of `stubbed` — moves from `errors` to `warnings`, and a finding
+/// already ramped by §FS-rules.7.8 or §FS-rules.7.9 keeps its clauses and gains
+/// this one after them. A rule's own `invalid-rule` is about the rule, not by
+/// it, and stays an error as it is for an inline rule.
+pub(crate) fn route_stubbed_rules(
+    stubbed: &BTreeSet<String>,
+    errors: &mut Vec<Diagnostic>,
+    warnings: &mut Vec<Diagnostic>,
+) {
+    if stubbed.is_empty() {
+        return;
+    }
+    let only_stubbed = |diagnostic: &Diagnostic| {
+        diagnostic.code != "invalid-rule"
+            && !diagnostic.authority.is_empty()
+            && diagnostic
+                .authority
+                .iter()
+                .all(|origin| stubbed.contains(origin))
+    };
+    for warning in warnings.iter_mut().filter(|warning| only_stubbed(warning)) {
+        warning.message.push_str(STUB_CLAUSE);
+    }
+    let (ramped, kept): (Vec<_>, Vec<_>) =
+        std::mem::take(errors).into_iter().partition(only_stubbed);
+    *errors = kept;
+    warnings.extend(ramped.into_iter().map(|mut diagnostic| {
+        diagnostic.message.push_str(STUB_CLAUSE);
+        diagnostic
+    }));
 }
