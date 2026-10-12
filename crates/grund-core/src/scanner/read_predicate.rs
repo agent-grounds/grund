@@ -5,12 +5,14 @@
 //! between the scan root and the file, and the `ignore` crate's matcher for the
 //! ignore files, so the rules have one copy rather than one per reader.
 //!
-//! Three readers ask it. The walk asks the name test of each entry and the
+//! Four readers ask it. The walk asks the name test of each entry and the
 //! filter of each directory. A file that exists only as a buffer, which the
 //! walk never meets on disk, is read or skipped by `unread`, exactly as the
-//! saved file would be (§FS-scan.text.buffer-only). And a stub's target asks
+//! saved file would be (§FS-scan.text.buffer-only). A stub's target asks
 //! `name_refusal` alone, the two reasons §FS-declarations.checks.broken-stub.3
-//! honours.
+//! honours. And a link the walker could not resolve asks `name_refusal` or
+//! `directory_refusal`, with `ignored`, whether the walk would have read it
+//! (§FS-config.3.5.6), since the walker filters no error entry itself.
 
 use std::path::{Component, Path, PathBuf};
 
@@ -64,6 +66,21 @@ pub(crate) fn name_refusal(path: &Path, schema: &Schema) -> Option<Unread> {
         .iter()
         .any(|allowed| allowed == ext);
     (!listed).then_some(Unread::Extension)
+}
+
+/// The name reasons a directory is not descended: a hidden name, or one
+/// `[scan] exclude` lists (§AR-scanner.1.2). The walk's filter asks it of every
+/// directory, and a looping link the walker reports instead of yielding asks it
+/// of the link.
+pub(crate) fn directory_refusal(path: &Path, exclude: &[String]) -> Option<Unread> {
+    if is_hidden(path) {
+        return Some(Unread::ExcludedDirectory);
+    }
+    let name = path.file_name().and_then(|name| name.to_str())?;
+    exclude
+        .iter()
+        .any(|item| item == name)
+        .then_some(Unread::ExcludedDirectory)
 }
 
 /// Whether the walk from `roots` reads `path`, and which rule refuses it where
@@ -142,10 +159,11 @@ fn under_root(
 
 /// Whether the ignore files the walk honours drop `path` (§AR-scanner.1.1).
 /// Where the entry is on disk the walker itself answers, one level deep from its
-/// parent, its parents' ignore files and the global ones included, as
-/// `walk_errors.rs` asks of a broken link; where it is not, the same files are
+/// parent, its parents' ignore files and the global ones included, which is
+/// also how `walk_errors.rs` asks about a link the walker could not resolve;
+/// where it is not, the same files are
 /// matched against the name in the walker's order of precedence.
-fn ignored(path: &Path, is_dir: bool) -> bool {
+pub(super) fn ignored(path: &Path, is_dir: bool) -> bool {
     let Some(parent) = path.parent() else {
         return false;
     };
