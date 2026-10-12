@@ -23,6 +23,11 @@ impl FileText {
             Self::Buffer(text) => text,
         }
     }
+
+    /// Whether the text is an editor's open buffer rather than the saved file.
+    pub(crate) fn is_buffer(&self) -> bool {
+        matches!(self, Self::Buffer(_))
+    }
 }
 
 /// What a recorded heading is to the scan (§AR-scanner.2.8.1).
@@ -101,7 +106,12 @@ pub(crate) struct LineZone {
     /// The scanned bytes, relative to the line's start.
     pub(crate) start: usize,
     pub(crate) end: usize,
+    /// The line closes its docstring.
+    pub(crate) closes: bool,
 }
+
+/// Every scanned file's record, by the path the scan read it under (§AR-scanner.2.8).
+pub(crate) type FileRecords = std::collections::BTreeMap<std::path::PathBuf, Arc<FileRecord>>;
 
 /// One scanned file's record (§AR-scanner.2.8).
 pub(crate) struct FileRecord {

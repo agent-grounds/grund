@@ -17,21 +17,23 @@
 
 use anyhow::Result;
 
-use super::body::{PointBodyCache, PointBodySite, extract_declaration_body_cached};
+use super::body::{site_of, slice_site};
 use super::e2e_body::show_e2e_case;
 use crate::config::{Frame, Schema};
 use crate::grammar::flatten_cross_ref_links;
-use crate::model::{Declaration, DeclarationSource, Id, SectionInfo, ShowRenderMode};
+use crate::model::{Declaration, DeclarationSource, FileRecords, Id, SectionInfo, ShowRenderMode};
+use crate::scanner::TodaySink;
 
 /// Return the lead/full text pair for one catalog site. JSON values and E2E
 /// cases already carry their canonical show bodies in scanner records; text
-/// declarations use the cached show slicer. A stub that reaches it has no body to
+/// declarations are sliced out of the file record the scan kept, lead and full in
+/// one walk (§AR-scanner.2.8). A stub that reaches it has no body to
 /// measure: either it is broken (§FS-list.2.5, §FS-list.3.4), or its home lies
 /// outside the walk and the caller is `check`'s lead budget, which judges scanned
 /// sites only (§FS-declarations.checks.oversized-lead.4). The size catalog passes
 /// such a stub's home instead (§FS-list.3.4.6).
 pub(crate) fn point_body_pair(
-    cache: &mut PointBodyCache<'_>,
+    files: &FileRecords,
     schema: &Schema,
     frame: Frame<'_>,
     id: &Id,
@@ -62,37 +64,29 @@ pub(crate) fn point_body_pair(
         return Ok(Some((lead, full)));
     }
 
+    let site = site_of(
+        declaration,
+        section.is_some(),
+        section.map(|(_, info)| info.line),
+    );
+    let sinks = vec![
+        TodaySink::new(ShowRenderMode::Default, false),
+        TodaySink::new(ShowRenderMode::Full, false),
+    ];
     let section_path = section.map(|(path, _)| path);
-    let site = PointBodySite {
-        declaration_line: declaration.line,
-        declaration_body_end: (section.is_some() || declaration.body_end > declaration.line)
-            .then_some(declaration.body_end),
-        section_line: section.map(|(_, info)| info.line),
-    };
-    let mut lead = extract_declaration_body_cached(
-        cache,
-        &declaration.file,
+    let (_, views) = slice_site(
+        files,
         id,
+        declaration,
+        site,
         section_path,
-        ShowRenderMode::Default,
-        false,
+        sinks,
         schema,
         frame,
-        Some(site),
-    )?
-    .body;
-    let mut full = extract_declaration_body_cached(
-        cache,
-        &declaration.file,
-        id,
-        section_path,
-        ShowRenderMode::Full,
-        false,
-        schema,
-        frame,
-        Some(site),
-    )?
-    .body;
+    )?;
+    let mut views = views.into_iter().map(TodaySink::finish);
+    let (mut lead, _) = views.next().unwrap_or_default();
+    let (mut full, _) = views.next().unwrap_or_default();
     // Text and JSON `show` flatten generated wrappers; point measurements promise
     // those same bytes (§FS-show.3.2.2, §FS-list.3.4.1). Markdown measurements retain
     // authored destination bytes inside fences.

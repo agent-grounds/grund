@@ -128,7 +128,7 @@ pub(crate) fn show_declaration_with_home<'a>(
     }
     // §FS-show.2.3.7: a stub reads its target's declaration, found by the ID.
     let output = extract_declaration_body(
-        &record.file,
+        &findings.files,
         id,
         record,
         section,

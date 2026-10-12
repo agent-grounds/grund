@@ -56,6 +56,8 @@ mod agent_entrypoints;
 mod chapter_values;
 mod citation_line;
 mod citations;
+mod compat;
+mod compat_envelope;
 mod context;
 mod declaration_line;
 mod e2e;
@@ -102,6 +104,7 @@ pub(crate) use agent_entrypoints::{
     existing_init_companion_agent_entrypoints, is_file_or_symlink, is_symlink_to,
     path_missing_without_following_symlinks,
 };
+pub(crate) use compat::{TodayMiss, TodaySink, TodaySite, today_slices};
 pub(crate) use context::{file_home_kind, markdown_heading_level, section_path_is_numeric};
 pub(crate) use e2e::e2e_case_dir_name;
 pub(crate) use embedded_value_context::EMBEDDED_VALUE_MARKER;
@@ -121,6 +124,8 @@ pub(crate) use walk_reporting::{
 // (§AR-core-module-layout.1.3).
 #[cfg(test)]
 mod tests_chapter_values;
+#[cfg(test)]
+mod tests_compat;
 #[cfg(test)]
 mod tests_config_scan;
 #[cfg(test)]

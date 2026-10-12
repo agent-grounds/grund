@@ -7,9 +7,10 @@ use super::selector_refusal::require_unique_literal;
 use crate::config::{Config, display_path, measure_point_text, run_warning_findings};
 use crate::grammar::render_id;
 use crate::model::{
-    Declaration, Finding, Id, SectionInfo, format_path, paired_declarations, sort_path_key,
+    Declaration, FileRecords, Finding, Id, SectionInfo, format_path, paired_declarations,
+    sort_path_key,
 };
-use crate::resolver::{PointBodyCache, load_workspace_context, point_body_pair};
+use crate::resolver::{load_workspace_context, point_body_pair};
 use crate::rules::sentence::RuleSubject;
 use crate::scanner::api_scan_error;
 
@@ -17,7 +18,7 @@ pub use super::size_output::{ListSizeEntry, ListSizeMeasurement, ListSizeOpts, L
 
 /// Programmatic point-size catalog. It selects the same declaration set as
 /// [`list`](crate::list), adds scanner-recorded section sites, and measures show-identical
-/// lead/full bodies through one per-file cache (§FS-list.2, §FS-list.3.4.1,
+/// lead/full bodies out of the file record each scan kept (§FS-list.2, §FS-list.3.4.1,
 /// §FS-workspace.8.3.3). A healthy stub whose target the walk did not reach is measured
 /// at the home `show` reads there, with that home's sections (§FS-list.3.4.6).
 pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
@@ -51,6 +52,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
     struct Pending<'a> {
         project_alias: &'a str,
         project_config: &'a Config,
+        files: &'a FileRecords,
         id: &'a Id,
         declaration: &'a Declaration,
         section: Option<(&'a str, &'a SectionInfo)>,
@@ -91,6 +93,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
                 pending.push(Pending {
                     project_alias: &project.alias,
                     project_config: &project.config,
+                    files: &project.findings.files,
                     id,
                     declaration,
                     section: None,
@@ -112,6 +115,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
                         pending.push(Pending {
                             project_alias: &project.alias,
                             project_config: &project.config,
+                            files: &project.findings.files,
                             id,
                             declaration,
                             section: Some((section, info)),
@@ -191,12 +195,11 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
     }
 
     let render_config = context.render_config();
-    // §AR-system.2.13: the run's text, its buffers in front of the disk.
-    let mut cache = PointBodyCache::new(render_config.frame().sources());
     let mut entries = Vec::with_capacity(pending.len());
     for row in pending {
+        // §AR-scanner.2.8: the file record its project's scan kept, buffers in front of the disk.
         let bodies = point_body_pair(
-            &mut cache,
+            row.files,
             row.project_config.schema(),
             row.project_config.frame(),
             row.id,

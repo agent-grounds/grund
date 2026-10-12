@@ -1,15 +1,19 @@
 //! Which declaration and section own a line of one file (§AR-scanner.2.4.3,
 //! §AR-scanner.2.4.4): the one lookup the citation post-pass and a
-//! `cover --lines` request both ask (§FS-cover.6.2). The heading stack that
-//! closes a section exists only while the file's pass runs, so a requested range
-//! is resolved here, inside that pass.
+//! `cover --lines` request both ask (§FS-cover.6.2). A requested range is
+//! resolved inside the file's pass, beside the record whose headings close a
+//! section (§AR-scanner.2.8).
 
 use std::path::Path;
 
-use crate::model::{Catalog, FileLineOwnership, Id, OwnerRun, RangeOwnership, SectionRun};
+use crate::model::{
+    Catalog, FileLineOwnership, FileRecord, Id, OwnerRun, RangeOwnership, SectionRun,
+};
+
+use super::compat::TodayOwnerEnds;
 
 /// One file's declaration bodies with their accepted sections, and the
-/// fence-aware heading stack that closes them: the single place a line is given
+/// record's fence-aware headings that close them: the single place a line is given
 /// its owner (§AR-scanner.2.4.3, §AR-scanner.2.4.4). The citation post-pass and a
 /// `cover --lines` request both ask [`LineOwners::owner_at`], so a line and a
 /// citation on it can never be given different owners (§FS-cover.6.2).
@@ -17,13 +21,13 @@ pub(super) struct LineOwners<'a> {
     /// `(body_start, body_end, id, sections)`, each section as
     /// `(path, heading line, heading level)` in line order.
     bodies: Vec<(usize, usize, Id, Vec<(String, usize, usize)>)>,
-    md_headings: &'a [(usize, usize)],
+    ends: TodayOwnerEnds<'a>,
 }
 
 impl<'a> LineOwners<'a> {
     /// Taken after the body spans are assigned, so the lookup is a scan of a
     /// small local list rather than of the file.
-    pub(super) fn new(findings: &Catalog, md_headings: &'a [(usize, usize)]) -> Self {
+    pub(super) fn new(findings: &Catalog, record: &'a FileRecord) -> Self {
         let bodies = findings
             .declarations
             .values()
@@ -40,7 +44,7 @@ impl<'a> LineOwners<'a> {
             .collect();
         Self {
             bodies,
-            md_headings,
+            ends: TodayOwnerEnds::new(record),
         }
     }
 
@@ -55,39 +59,22 @@ impl<'a> LineOwners<'a> {
             .filter(|(start, end, _, _)| *start <= line && line <= *end)
             // Nearest preceding declaration: the one whose body starts latest.
             .max_by_key(|(start, _, _, _)| *start)?;
-        Some((id, enclosing_section(sections, self.md_headings, line)))
+        Some((id, enclosing_section(sections, &self.ends, line)))
     }
 }
 
-/// Resolve the nearest accepted chapter while letting every Markdown sibling
-/// heading close it (§FS-rules.2, §AR-scanner.2.4.4). Rejected, duplicate and
-/// unmarked headings are absent from `sections`, but remain present in the full
-/// fence-aware heading stack and therefore still delimit the preceding unit.
+/// Resolve the nearest accepted chapter, closed where 0.17 closes it
+/// (§FS-rules.2, §AR-scanner.2.4.4, `TodayOwnerEnds`).
 fn enclosing_section(
     sections: &[(String, usize, usize)],
-    md_headings: &[(usize, usize)],
+    ends: &TodayOwnerEnds<'_>,
     site_line: usize,
 ) -> Option<String> {
     let (path, line, depth) = sections
         .iter()
         .filter(|(_, line, _)| *line <= site_line)
         .max_by_key(|(_, line, _)| *line)?;
-    let end = if md_headings.is_empty() {
-        sections
-            .iter()
-            .filter(|(_, next_line, next_depth)| next_line > line && next_depth <= depth)
-            .map(|(_, next_line, _)| next_line - 1)
-            .min()
-            .unwrap_or(usize::MAX)
-    } else {
-        md_headings
-            .iter()
-            .filter(|(next_line, next_depth)| next_line > line && next_depth <= depth)
-            .map(|(next_line, _)| next_line - 1)
-            .min()
-            .unwrap_or(usize::MAX)
-    };
-    (site_line <= end).then(|| path.clone())
+    (site_line <= ends.end(sections, *line, *depth)).then(|| path.clone())
 }
 
 /// Record, for each range in `requested`, its owner runs and their section runs
@@ -97,11 +84,11 @@ fn enclosing_section(
 pub(super) fn resolve_requested_lines(
     findings: &mut Catalog,
     path: &Path,
-    md_headings: &[(usize, usize)],
-    total_lines: usize,
+    record: &FileRecord,
     requested: &[(usize, usize)],
 ) {
-    let owners = LineOwners::new(findings, md_headings);
+    let total_lines = record.total_lines;
+    let owners = LineOwners::new(findings, record);
     let ranges = requested
         .iter()
         .map(|&(start, end)| RangeOwnership {

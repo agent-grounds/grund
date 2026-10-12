@@ -64,23 +64,29 @@ pub(super) fn missing_snapshot_message(
 
 /// §FS-check.3.1.2: whether a citation site sits inside a Markdown inline-code
 /// span, the signal that a dangling `§`-citation may be an illustration. Only
-/// the rare dangling path asks, so this re-reads the one line rather than
-/// widening every `Citation`; source files (columns shifted by stripped comment
-/// prefixes) never qualify. Any read/bounds failure yields `false` — no hint.
-pub(super) fn citation_in_markdown_inline_code(cite: &Citation) -> bool {
+/// the rare dangling path asks, so this reads the one line out of the file record
+/// the scan kept (§AR-scanner.2.8) rather than widening every `Citation`; source
+/// files (columns shifted by stripped comment prefixes) never qualify. Any
+/// bounds failure yields `false` — no hint.
+pub(super) fn citation_in_markdown_inline_code(findings: &Catalog, cite: &Citation) -> bool {
     if cite.file.extension().and_then(|e| e.to_str()) != Some("md") {
         return false;
     }
-    // §FS-check.6.1.1: cover this effective input before its shared read; R06b of
-    // §REQ-one-answer.differences.text reads it as saved (§DF-four-editor-checks-read-saved-text).
-    let Ok(text) = Sources::saved().text(&cite.file) else {
-        return false;
+    let record = findings.files.get(&cite.file);
+    let line = match record {
+        Some(record) if !record.text.is_buffer() => record.line(cite.line).map(str::to_string),
+        // R06b of §REQ-one-answer.differences.text reads an open buffer's file as
+        // saved (§DF-four-editor-checks-read-saved-text, §FS-check.6.1.1).
+        _ => Sources::saved().text(&cite.file).ok().and_then(|text| {
+            let line = text.lines().nth(cite.line.saturating_sub(1))?;
+            Some(line.to_string())
+        }),
     };
-    let Some(line) = text.lines().nth(cite.line.saturating_sub(1)) else {
+    let Some(line) = line else {
         return false;
     };
     let pos = cite.column.saturating_sub(1);
-    pos <= line.len() && is_inside_inline_code(line, pos)
+    pos <= line.len() && is_inside_inline_code(&line, pos)
 }
 
 fn nearest_declared_id(
