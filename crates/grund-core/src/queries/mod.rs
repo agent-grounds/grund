@@ -57,15 +57,20 @@ mod editor_hover;
 mod editor_on_type;
 mod editor_snapshot;
 mod list_scope;
+mod narrowing;
 mod selector_refusal;
 mod show;
 mod show_metadata;
+#[cfg(test)]
+mod tests_narrowing;
 pub(crate) use show_metadata::show_metadata;
 mod show_query;
 mod size_output;
 mod sizes;
 
-pub use batch::{BatchShowFailure, BatchShowQuery, BatchShowRecord, show_batch_with_scope};
+pub use batch::{
+    BatchShowFailure, BatchShowQuery, BatchShowRecord, show_batch_narrowed, show_batch_with_scope,
+};
 pub use editor_completion::{CitationCompletion, LspCompletionContext};
 pub use editor_hover::{
     LspUsage, citation_under_title, lsp_hover_with_kind_title, lsp_title_hover_body, usage_clause,
@@ -76,6 +81,7 @@ pub use editor_snapshot::{
     LspCitation, LspDeclaration, LspFindingRange, LspShowContext, LspSnapshot, LspSnapshotOpts,
     LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub,
 };
+pub use narrowing::{ListNarrowing, ListShown};
 pub use show_query::{ShowFormat, ShowMode, ShowOpts, ShowQueryError};
 pub use sizes::{
     ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput, list_sizes,
@@ -88,6 +94,7 @@ pub use sizes::{
 pub(crate) use ambiguity::declaration_ambiguity_refusal;
 pub(crate) use citation_counts::ListCitationCounts;
 pub(crate) use list_scope::check_list_scope;
+pub(crate) use narrowing::{Owner, id_line, name_the_workspace_root};
 pub(crate) use selector_refusal::require_unique_literal;
 pub(crate) use show::{render_show_output_json, show_declaration_with_home};
 

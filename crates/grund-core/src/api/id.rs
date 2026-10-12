@@ -13,6 +13,7 @@ use std::path::PathBuf;
 use super::config::config_run_warnings;
 use crate::config::{KindScope, KindTable, KindVerdict, Quote, display_path};
 use crate::model::{Finding, Id};
+use crate::queries::id_line;
 use crate::scanner::{e2e_case_dir_name, scan_tree_strict};
 use crate::sources::paths_same_location;
 use crate::workspace::resolve_workspace_config;
@@ -85,8 +86,22 @@ pub fn propose_id_with_run_warnings(
     opts: IdOpts,
 ) -> (Vec<Finding>, Result<IdProposalOutcome>) {
     let mut run_warnings = Vec::new();
-    let outcome = propose_id_run(kind, title, opts, &mut run_warnings);
+    let outcome = propose_id_run(kind, title, opts, &mut run_warnings, None);
     (run_warnings, outcome)
+}
+
+/// [`propose_id_with_run_warnings`] for the CLI, with the line a path narrower
+/// than its config root owes where the owning project would propose otherwise
+/// (§FS-scan.path.id).
+#[doc(hidden)]
+pub fn propose_id_narrowed(
+    kind: &str,
+    title: &str,
+    opts: IdOpts,
+) -> (Vec<Finding>, Result<IdProposalOutcome>, Vec<String>) {
+    let (mut run_warnings, mut narrowing) = (Vec::new(), Vec::new());
+    let outcome = propose_id_run(kind, title, opts, &mut run_warnings, Some(&mut narrowing));
+    (run_warnings, outcome, narrowing)
 }
 
 fn propose_id_run(
@@ -94,6 +109,7 @@ fn propose_id_run(
     title: &str,
     opts: IdOpts,
     run_warnings: &mut Vec<Finding>,
+    narrowing: Option<&mut Vec<String>>,
 ) -> Result<IdProposalOutcome> {
     let config = resolve_workspace_config(&opts.path)?;
     *run_warnings = config_run_warnings(&config);
@@ -166,6 +182,16 @@ fn propose_id_run(
                 decl.line
             ),
         });
+    }
+    // §FS-scan.path.id: the owning project is read only where the path narrows.
+    if let Some(lines) = narrowing {
+        lines.extend(id_line(
+            &config,
+            &opts.path,
+            opts.path_provided,
+            &id,
+            opts.width,
+        ));
     }
     // §FS-id.2.3: the H1 hint is owed where the kind's file holds the kind's single declaration,
     // counted in that file — a declaration of the kind written elsewhere is

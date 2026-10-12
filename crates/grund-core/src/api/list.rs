@@ -14,7 +14,9 @@ use std::path::PathBuf;
 use crate::config::{Config, KindConfig, display_path};
 use crate::grammar::{render_id, section_display_name};
 use crate::model::{Declaration, Finding, Id, format_path, paired_declarations, sort_path_key};
-use crate::queries::{ListCitationCounts, check_list_scope, require_unique_literal};
+use crate::queries::{
+    ListCitationCounts, ListNarrowing, Owner, check_list_scope, require_unique_literal,
+};
 use crate::resolver::{WorkspaceProject, load_workspace_context};
 use crate::rules::sentence::RuleSubject;
 
@@ -71,11 +73,25 @@ pub fn list(opts: ListOpts) -> Result<ListOutput> {
 #[doc(hidden)]
 pub fn list_with_run_warnings(opts: ListOpts) -> (Vec<Finding>, Result<ListOutput>) {
     let mut warnings = Vec::new();
-    let output = list_run(opts, &mut warnings);
+    let output = list_run(opts, &mut warnings, None);
     (warnings, output)
 }
 
-fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutput> {
+/// [`list_with_run_warnings`] for the CLI, with what a path narrower than its
+/// config root moves about each listed entry (§FS-scan.path.list): lines the
+/// frontend asks for once it knows which fields it prints.
+#[doc(hidden)]
+pub fn list_narrowed(opts: ListOpts) -> (Vec<Finding>, Result<ListOutput>, ListNarrowing) {
+    let (mut warnings, mut narrowing) = (Vec::new(), ListNarrowing::default());
+    let output = list_run(opts, &mut warnings, Some(&mut narrowing));
+    (warnings, output, narrowing)
+}
+
+fn list_run(
+    opts: ListOpts,
+    run_warnings: &mut Vec<Finding>,
+    narrowing: Option<&mut ListNarrowing>,
+) -> Result<ListOutput> {
     let context = load_workspace_context(&opts.path, opts.path_provided)?;
     *run_warnings = context_run_warnings(&context);
     // §FS-list.1.2: aliases, kinds and selector are checked against the selection.
@@ -288,6 +304,16 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
             }
         })
         .collect::<Vec<_>>();
+    // §FS-scan.path.list: the owning project is read only where the path narrows.
+    if let Some(narrowing) = narrowing
+        && let Some(owner) = Owner::of(&context, &opts.path, opts.path_provided)
+    {
+        let printed = public_entries.iter();
+        *narrowing = ListNarrowing::of(
+            owner.list_moves(&context, opts.unused_only),
+            printed.map(|entry| (entry.id.as_str(), entry.section.is_some())),
+        );
+    }
 
     let mut summaries = Vec::new();
     if context.workspace_loaded {
