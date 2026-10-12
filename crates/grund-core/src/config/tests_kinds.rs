@@ -20,10 +20,11 @@ fn project(name: &str, rows: &str, named: bool) -> Config {
     load_config(&root).expect("load config")
 }
 
+/// One `[[kinds]]` row. `index` is written on a citable row alone: config
+/// refuses it on a kind that declares nothing to index (§FS-config.3.4.2).
 fn row(kind: &str, folder: &str, citable: bool) -> String {
-    format!(
-        "[[kinds]]\nkind = \"{kind}\"\nfolder = \"{folder}\"\nindex = false\ncitable = {citable}\n\n"
-    )
+    let index = if citable { "index = false\n" } else { "" };
+    format!("[[kinds]]\nkind = \"{kind}\"\nfolder = \"{folder}\"\n{index}citable = {citable}\n\n")
 }
 
 /// `api` configures `FS` and a non-citable `skill`; `web` configures `AR`,
