@@ -5,17 +5,20 @@
 use super::forms::{Form, Refusal, refuse};
 use super::{RuleTargets, RuleVocabulary, TargetMode};
 use crate::config::{
-    NamespaceMatch, parse_citation_target_entry, render_citation_target, unverifiable_reason,
+    KindScope, KindVerdict, NamespaceMatch, Quote, one_grammar_window, parse_citation_target_entry,
+    render_citation_target, unverifiable_reason,
 };
 
-/// Recognize one object target. An unresolved namespaced kind in a scope that
-/// holds no workspace vocabulary is not a refusal: its reason is recorded in
-/// `unverifiable` and the target renders as authored, so the sentence still
-/// parses and every other check the scope can make is still made
-/// (§FS-rules.4.1). The first such reason is the one kept, which is the target
-/// whose refusal the reader used to see. A refused object kind is never
-/// guessed, so its refusal offers no form and is missing a kind
-/// (§FS-rule-refusals.sentences.rewrite.no-form).
+/// Recognize one object target, by the verdict the vocabulary's kind table
+/// gives it in its scope (§FS-scan.projects.kinds): the local project for a
+/// bare `KIND`, the aliased one for `alias/KIND`, every one for `*/KIND`. An
+/// unresolved namespaced kind in a scope that holds no workspace vocabulary is
+/// not a refusal: its reason is recorded in `unverifiable` and the target
+/// renders as authored, so the sentence still parses and every other check the
+/// scope can make is still made (§FS-rules.4.1). The first such reason is the
+/// one kept, which is the target whose refusal the reader used to see. A
+/// refused object kind is never guessed, so its refusal offers no form and is
+/// missing a kind (§FS-rule-refusals.sentences.rewrite.no-form).
 fn known_target(
     target: &str,
     vocab: &RuleVocabulary,
@@ -24,50 +27,37 @@ fn known_target(
     let missing = Form::None { kind: true };
     let parsed =
         parse_citation_target_entry(target).map_err(|message| refuse(message, missing.clone()))?;
-    let known = match &parsed.namespace {
-        NamespaceMatch::Local => vocab.target_kinds.contains(&parsed.kind),
-        NamespaceMatch::Alias(alias) => vocab
-            .target_namespaces
-            .get(alias)
-            .is_some_and(|kinds| kinds.contains(&parsed.kind)),
-        NamespaceMatch::Any => {
-            vocab.target_kinds.contains(&parsed.kind)
-                || vocab
-                    .target_namespaces
-                    .values()
-                    .any(|kinds| kinds.contains(&parsed.kind))
+    let kind = parsed.kind.as_str();
+    let (scope, alias, qualifier) = match &parsed.namespace {
+        NamespaceMatch::Local => (KindScope::Project(""), None, String::new()),
+        NamespaceMatch::Alias(alias) => (
+            KindScope::Pinned(alias),
+            Some(alias.as_str()),
+            format!(" in namespace \"{alias}\""),
+        ),
+        NamespaceMatch::Any => (
+            KindScope::Any,
+            None,
+            " in any workspace namespace".to_string(),
+        ),
+    };
+    let legacy = format!("unknown kind \"{kind}\"{qualifier}");
+    let reason = match vocab.objects.verdict(scope, kind) {
+        KindVerdict::Citable => return Ok(render_citation_target(&parsed)),
+        // §FS-rules.4.1.1: a namespaced object kind the run holds no workspace
+        // vocabulary for is one this scope cannot judge either way; §FS-errors.3.7.1
+        // gives the true clause alone, the final template.
+        KindVerdict::Unverifiable => {
+            unverifiable.get_or_insert(unverifiable_reason(alias, kind));
+            return Ok(render_citation_target(&parsed));
         }
-    };
-    if known {
-        return Ok(render_citation_target(&parsed));
-    }
-    let kind = parsed.kind.clone();
-    let qualifier = match &parsed.namespace {
-        NamespaceMatch::Alias(alias) => format!(" in namespace \"{alias}\""),
-        NamespaceMatch::Any => " in any workspace namespace".to_string(),
-        NamespaceMatch::Local => String::new(),
-    };
-    // §FS-rules.4.1.1: a namespaced object kind the run holds no workspace
-    // vocabulary for is one this scope cannot judge either way.
-    let alias = match &parsed.namespace {
-        NamespaceMatch::Alias(alias) => Some(alias.as_str()),
-        NamespaceMatch::Any => None,
-        NamespaceMatch::Local => {
-            // §FS-errors.3.8: a bare object shares the subject's scope, so a kind
-            // configured there without IDs says so.
-            let legacy = format!("unknown kind \"{kind}\"");
-            return Err(refuse(vocab.kind_refusal(legacy, &kind), missing));
+        // §FS-errors.3.8: a kind its scope configures without IDs says so.
+        KindVerdict::NonCitable(entry) => {
+            one_grammar_window(&legacy, &entry.non_citable_reason(Quote::Double))
         }
+        KindVerdict::Unknown | KindVerdict::UnknownAlias => legacy,
     };
-    if vocab.workspace_in_scope() {
-        return Err(refuse(
-            format!("unknown kind \"{kind}\"{qualifier}"),
-            missing,
-        ));
-    }
-    // §FS-errors.3.7.1: the true clause alone, the final template.
-    unverifiable.get_or_insert(unverifiable_reason(alias, &kind));
-    Ok(render_citation_target(&parsed))
+    Err(refuse(reason, missing))
 }
 
 pub(super) fn kind_targets(

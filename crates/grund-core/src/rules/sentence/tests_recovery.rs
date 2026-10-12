@@ -5,10 +5,10 @@
 //! rule's `Each KIND`.
 
 use super::{Recovered, as_if_enabled, enabled, recover};
-use crate::config::Config;
+use crate::config::{Config, KindTable};
 use crate::rules::sentence::RuleVocabulary;
 use crate::rules::sentence::subjects::parse_subject;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 /// The configured `kinds` under `{kind}-{slug}`, named sections off.
@@ -25,9 +25,8 @@ fn named_off(kinds: &[&str]) -> RuleVocabulary {
         .map(|kind| kind.to_string())
         .collect::<BTreeSet<_>>();
     RuleVocabulary {
-        kinds: kinds.clone(),
-        target_kinds: kinds,
-        target_namespaces: BTreeMap::new(),
+        objects: KindTable::of_citable(&kinds),
+        kinds,
         named_sections: false,
         named_kinds: Default::default(),
         non_citable: Default::default(),

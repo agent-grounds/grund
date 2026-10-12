@@ -2,7 +2,7 @@
 //! §AR-checker.1). Grammar, facts, evaluation, and deduplication stay owned by
 //! the rules component; this module only sequences and merges their results.
 
-use crate::config::{Form, Frame, KindProject, KindScope, KindTable, Rules, Schema};
+use crate::config::{Form, Frame, KindScope, KindTable, Rules, Schema};
 use crate::grammar::render_id;
 use crate::model::{Catalog, CheckReport, Declaration, Diagnostic};
 use crate::resolver::WorkspaceCheckTarget;
@@ -32,15 +32,6 @@ pub(crate) fn markdown_project<'a>(
     }
 }
 
-/// The names of the kinds a rule can name in `schema`: its citable rows, as
-/// the run's one reading of a project's kinds gives them (§FS-scan.projects.kinds).
-fn citable_kinds(schema: &Schema) -> BTreeSet<String> {
-    KindProject::of("", schema)
-        .citable()
-        .map(str::to_string)
-        .collect()
-}
-
 /// The names of `schema`'s rule kinds, whose declarations are rules (§FS-rules.1).
 fn rule_kinds(schema: &Schema) -> BTreeSet<&str> {
     schema
@@ -62,12 +53,11 @@ pub(crate) fn vocabulary(schema: &Schema, frame: Frame<'_>) -> RuleVocabulary {
         .map(str::to_string)
         .collect();
     RuleVocabulary {
-        kinds: kinds.clone(),
-        target_kinds: kinds,
-        target_namespaces: BTreeMap::new(),
+        kinds,
         named_sections: table.named_sections(scope),
         named_kinds: BTreeSet::new(),
         non_citable: table.non_citable_reasons(scope),
+        objects: table,
         id_grammars: vec![frame.grammar().clone()],
         section_separators: vec![schema.ids.section_separator.clone()],
     }
@@ -136,25 +126,13 @@ fn add_workspace_targets(
     vocabulary: &mut RuleVocabulary,
     projects: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
 ) {
-    add_namespaces(
-        vocabulary,
+    // §FS-rules.4.1.1: one namespace per project the run loaded; holding any at
+    // all is what separates a scope that judged an alias and said no from one
+    // that could not judge it.
+    vocabulary.objects.add_projects(
         projects
             .iter()
-            .map(|(alias, project)| (alias.clone(), project.schema)),
-    );
-}
-
-/// One namespace per project the run loaded. Holding any at all is what
-/// separates a scope that judged an alias and said no from one that could not
-/// judge it (§FS-rules.4.1.1).
-fn add_namespaces<'a>(
-    vocabulary: &mut RuleVocabulary,
-    namespaces: impl IntoIterator<Item = (String, &'a Schema)>,
-) {
-    vocabulary.target_namespaces.extend(
-        namespaces
-            .into_iter()
-            .map(|(alias, schema)| (alias, citable_kinds(schema))),
+            .map(|(alias, project)| (alias.as_str(), project.schema)),
     );
 }
 
@@ -192,11 +170,10 @@ pub(crate) fn declared_workspace_vocabulary(
     declared: &[(String, Schema)],
 ) -> RuleVocabulary {
     let mut vocab = vocabulary(schema, frame);
-    add_namespaces(
-        &mut vocab,
+    vocab.objects.add_projects(
         declared
             .iter()
-            .map(|(alias, schema)| (alias.clone(), schema)),
+            .map(|(alias, schema)| (alias.as_str(), schema)),
     );
     vocab
 }

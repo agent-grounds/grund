@@ -8,7 +8,7 @@
 //! alias set `init` resolves against being the one `check` loads.
 
 use super::chapter_rules::{configured_rule_sentences, declared_workspace_vocabulary, vocabulary};
-use crate::config::{Config, ProjectRecords, load_config};
+use crate::config::{Config, KindScope, KindVerdict, ProjectRecords, load_config};
 use crate::resolver::load_workspace_projects;
 use crate::rules::RuleAnchor;
 use crate::rules::sentence::{RuleVocabulary, parse_rule};
@@ -86,6 +86,18 @@ fn declared(config: &Config) -> RuleVocabulary {
     )
 }
 
+/// The namespaces `vocab` judges a pinned object in, in load order: every
+/// project of its object table but the one whose config reads the rule.
+fn namespaces(vocab: &RuleVocabulary) -> Vec<String> {
+    vocab
+        .objects
+        .projects
+        .iter()
+        .filter(|project| !project.alias.is_empty())
+        .map(|project| project.alias.clone())
+        .collect()
+}
+
 /// Whether `sentence` resolves, and when it does not, whether it is
 /// §FS-rules.4.1's unverifiable case (`Err(true)`) or an invalid rule
 /// (`Err(false)`).
@@ -139,8 +151,8 @@ fn only_a_scope_holding_no_namespace_makes_an_object_kind_unverifiable() {
         assert_eq!(
             verdict(config, &format!("{each} {object}.")),
             expected,
-            "{object} with workspace_in_scope={}",
-            declared(config).workspace_in_scope()
+            "{object} with a workspace in scope={}",
+            declared(config).objects.workspace
         );
     }
 }
@@ -244,19 +256,16 @@ fn the_declared_vocabulary_holds_the_aliases_the_workspace_load_yields() {
         .collect::<BTreeSet<_>>();
 
     assert_eq!(
-        vocab
-            .target_namespaces
-            .keys()
-            .cloned()
-            .collect::<BTreeSet<_>>(),
+        namespaces(&vocab).into_iter().collect::<BTreeSet<_>>(),
         loaded,
         "one expansion, one alias set"
     );
-    assert!(vocab.workspace_in_scope(), "the run holds this workspace");
-    assert!(
-        vocab.target_namespaces["api/core"].contains("OP"),
+    assert!(vocab.objects.workspace, "the run holds this workspace");
+    assert_eq!(
+        vocab.objects.verdict(KindScope::Pinned("api/core"), "OP"),
+        KindVerdict::Citable,
         "a nested member's kinds are in its own namespace: {:?}",
-        vocab.target_namespaces
+        vocab.objects
     );
 }
 
@@ -281,17 +290,19 @@ fn a_declared_workspace_holds_its_own_namespace_even_when_the_members_do_not_exp
 
     let vocab = declared(&config);
     assert!(
-        vocab.workspace_in_scope(),
+        vocab.objects.workspace,
         "a declared workspace is in scope whatever became of its members"
     );
     assert_eq!(
-        vocab.target_namespaces.keys().cloned().collect::<Vec<_>>(),
+        namespaces(&vocab),
         vec!["root".to_string()],
         "and what it holds is its own namespace, the entry an empty member list yields"
     );
     assert_eq!(
-        vocab.target_kinds,
-        vocabulary(config.schema(), config.frame()).target_kinds,
+        vocab.objects.citable(KindScope::Project("")),
+        vocabulary(config.schema(), config.frame())
+            .objects
+            .citable(KindScope::Project("")),
         "the local kinds are unaffected"
     );
     assert_eq!(

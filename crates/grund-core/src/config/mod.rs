@@ -120,7 +120,8 @@ pub(crate) use grounding::{
 };
 pub(crate) use kind::escape_toml_basic;
 pub(crate) use kinds::{
-    KindProject, KindScope, KindTable, KindVerdict, Quote, one_grammar_window, unverifiable_reason,
+    KindScope, KindTable, KindVerdict, Quote, install_kind_table, one_grammar_window,
+    unverifiable_reason,
 };
 pub(crate) use point_sizes::measure_point_text;
 pub(crate) use record::{
@@ -132,7 +133,6 @@ pub(crate) use scope_roots::{
     canonical_config_root, root_scope_roots, unwalked_home_roots, unwalked_homes,
 };
 pub(crate) use v1::{parse_string_list, strip_comment};
-pub(crate) use validate::pinned_citation_target_warnings;
 pub(crate) use workspace_block::{
     INVALID_ALIAS_PATH_EXPECTED, both_member_lists_message, invalid_alias_path_segment,
     invalid_project_alias_message, is_valid_project_alias, optional_member_alias_segment,

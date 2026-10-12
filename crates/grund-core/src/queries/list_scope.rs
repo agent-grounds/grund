@@ -6,10 +6,10 @@
 //! because the size catalog in this component reads it too (§AR-system.4).
 
 use anyhow::{Result, anyhow};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 
 use super::selector_refusal::selector_refusal;
-use crate::config::{KindScope, KindVerdict, Quote};
+use crate::config::{KindScope, KindTable, KindVerdict, Quote};
 use crate::resolver::WorkspaceContext;
 use crate::rules::sentence::{RuleSubject, RuleVocabulary, parse_selector};
 
@@ -54,9 +54,9 @@ pub(crate) fn check_list_scope(
         .map(str::to_string)
         .collect::<BTreeSet<_>>();
     let vocabulary = RuleVocabulary {
-        kinds: kinds.clone(),
-        target_kinds: kinds,
-        target_namespaces: BTreeMap::new(),
+        kinds,
+        // A selector names no object (§FS-rule-refusals.selectors).
+        objects: KindTable::default(),
         named_sections: table.named_sections(scope),
         // §FS-rule-refusals.selectors: `KIND.NAME` reads named sections under the
         // project that configures `KIND`.

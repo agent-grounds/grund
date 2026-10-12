@@ -7,8 +7,8 @@
 
 use super::RuleAnchor;
 use super::sentence::{RuleVocabulary, parse_rule};
-use crate::config::Config;
-use std::collections::{BTreeMap, BTreeSet};
+use crate::config::{Config, KindTable};
+use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 const NUMBERED: &str = "numbered chapter subjects can detach when headings move";
@@ -31,9 +31,8 @@ fn vocabulary(named_sections: bool) -> RuleVocabulary {
         .map(|kind| kind.to_string())
         .collect::<BTreeSet<_>>();
     RuleVocabulary {
-        kinds: kinds.clone(),
-        target_kinds: kinds,
-        target_namespaces: BTreeMap::new(),
+        objects: KindTable::of_citable(&kinds),
+        kinds,
         named_sections,
         named_kinds: Default::default(),
         non_citable: Default::default(),

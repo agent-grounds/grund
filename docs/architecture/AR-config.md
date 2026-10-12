@@ -105,11 +105,15 @@ learned about this checkout. Its `scope` holds the full-tree and wide-resolution
 flags, the citing-side classification switch and the `cover --lines` ranges; its
 `workspace` holds the boundary roots, project roots, scope path and absent
 optional members, and the run's kind table: one row per project the config
-declares, holding that project's kinds and its named-sections setting, built by
-one call into `config/kinds.rs` at the expansion site that stamps the project
-roots, and a table of one project for a standalone run. Every kind-name
+declares, holding that project's kinds and its named-sections setting, built,
+judged against the pinned `[citations]` targets and held by one call into
+`config/kinds.rs`. Workspace expansion makes that call where it stamps the
+project roots, and a narrowed run makes it over the workspace its config
+declares; a standalone run holds a table of one project. Every kind-name
 question a command asks is answered from that table, within the command's own
-scope ([§FS-scan.projects.kinds](../functional-spec/FS-scan.md#projectskinds-whose-kinds-a-run-reads)). It is read from configs, never from scanned
+scope ([§FS-scan.projects.kinds](../functional-spec/FS-scan.md#projectskinds-whose-kinds-a-run-reads)). A rule vocabulary judges its objects with a table of
+the same type, built from the projects its own run loaded, so a narrowed run's
+namespaced object stays unverifiable ([§FS-rules.4.1](../functional-spec/FS-rules.md#41-a-rule-this-scope-cannot-verify)). It is read from configs, never from scanned
 files, so it is config-time work. No other `Run` field is read from a file. A command-line override of
 a file's value, such as `--require-grounding`, is a `Run` fact the façade applies
 over the `Project` value. `Compiled { grammar, demand }` is `compile(&Project)`:

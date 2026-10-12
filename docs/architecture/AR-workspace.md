@@ -150,7 +150,8 @@ must hold for *every* shape of config the loader can return:
 - A `[citations]` target's kind is universal only for a bare target, which
   names the local project. A pinned `alias/KIND` or `*/KIND` target names
   other projects, whose kinds the loader of one config does not hold, so it is
-  judged once, when workspace expansion has built the run's kind table
+  judged once, where the run's kind table is built: at workspace expansion,
+  or over the declared workspace in a narrowed run
   ([§AR-config.1.5](AR-config.md#15-run-and-compiled), [§FS-config.3.9.5.2](../functional-spec/FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds)), and never also at load.
 - `project_name` is *not* universal. [§FS-config.3](../functional-spec/FS-config.md#3-keys) makes it free-form metadata
   when the project is standalone, and only an alias when it participates in a

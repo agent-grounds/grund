@@ -9,7 +9,6 @@
 use anyhow::Result;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 use super::findings::reject_absorbed_scan;
 use super::members::{
@@ -25,8 +24,8 @@ use super::scope::{
 };
 use crate::config::display_path;
 use crate::config::{
-    AbsentOptionalNamespace, Compiled, Config, KindTable, RunWarning, Schema,
-    load_config_at_with_report_base, pinned_citation_target_warnings,
+    AbsentOptionalNamespace, Compiled, Config, RunWarning, Schema, install_kind_table,
+    load_config_at_with_report_base,
 };
 
 /// One project of the run a qualified citation can name, as the scanner needs
@@ -356,22 +355,14 @@ pub(crate) fn expand_workspace_tree_with_report_base(
     }
     root_config.set_workspace_project_roots(project_roots);
     // §FS-scan.projects.kinds: the run's one reading of every project's kinds,
-    // built here because this is the first point that holds them all, and the
+    // made here because this is the first point that holds them all, and the
     // pinned `[citations]` targets judged against it once (§AR-workspace.5.2).
-    let kinds = Arc::new(KindTable::build(
+    install_kind_table(
+        root_config,
         entries
-            .iter()
-            .map(|entry| (entry.alias.as_str(), entry.config.schema())),
-    ));
-    let warnings = entries
-        .iter()
-        .flat_map(|entry| pinned_citation_target_warnings(&entry.config, &kinds))
-        .collect::<Vec<_>>();
-    root_config.extend_run_warnings(warnings);
-    for entry in &mut entries {
-        entry.config.set_kind_table(Arc::clone(&kinds));
-    }
-    root_config.set_kind_table(kinds);
+            .iter_mut()
+            .map(|entry| (entry.alias.as_str(), &mut entry.config)),
+    );
     // §FS-check.4.9: the root config is what the report is rendered from, so it is
     // where the announcement is read back off (`run_workspace_check`).
     root_config.set_workspace_absent_optional(absent_optional);

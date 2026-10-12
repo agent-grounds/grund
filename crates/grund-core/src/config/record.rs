@@ -298,7 +298,7 @@ impl Config {
     /// when the table has one, else the reserved `code`.
     #[cfg(test)]
     pub(crate) fn homeless_kind(&self) -> &str {
-        declared_homeless_kind(&self.kinds).map_or(CODE_SOURCE_KIND, |kind| kind.kind.as_str())
+        self.schema().complement_name()
     }
 
     /// Recompile the `Grammar` after a test set the façade's `[id]` /
@@ -375,30 +375,6 @@ pub(crate) fn kind_prefixes(kinds: &[KindConfig]) -> Vec<String> {
         .filter(|kind| kind.citable)
         .map(|kind| kind.kind.clone())
         .collect()
-}
-
-/// Every citing kind `[citations.<kind>]` may name (§FS-config.3.9): each
-/// configured kind, citable or not, plus `code` — but only where the table did
-/// not declare the homeless kind itself. A config that names its complement
-/// `src` has no `code`, and `[citations.code]` in it is a rule about nothing
-/// (§FS-config.3.9.2.1).
-pub(super) fn citing_kind_names(kinds: &[KindConfig]) -> Vec<&str> {
-    let named = declared_homeless_kind(kinds).is_some();
-    kinds
-        .iter()
-        .map(|kind| kind.kind.as_str())
-        .chain((!named).then_some(CODE_SOURCE_KIND))
-        .collect()
-}
-
-/// The `[[kinds]]` entry that *is* the homeless kind, if the table declares one
-/// (§FS-config.3.9.2.1): non-citable, and with no `folder` or `file`, because it
-/// is the complement of every home rather than one of them. At most one entry
-/// can be this, which the config validator holds.
-pub(super) fn declared_homeless_kind(kinds: &[KindConfig]) -> Option<&KindConfig> {
-    kinds
-        .iter()
-        .find(|kind| !kind.citable && kind.folder.is_none() && kind.file.is_none())
 }
 
 /// Whether a `[[kinds]]` row opted its home into first-class values

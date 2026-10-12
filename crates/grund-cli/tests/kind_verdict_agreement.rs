@@ -1,12 +1,13 @@
 //! One kind verdict per scope, read by every command (§REQ-one-answer.identity.kinds).
 //!
 //! One workspace tree: the root configures `FS`, the non-citable `e2e` and named
-//! sections off; its member `api` configures `API` with named sections on. Each
-//! row asks one kind name in one scope (§FS-scan.projects.kinds), and each column
-//! is a surface that asks in that scope: `list --kind` and `list --selector` in
-//! every loaded project, a rule's subject, a rule's object and a `[citations]`
-//! target in the root, and a pinned object and target in `api`. Every column of a
-//! row must give the row's one verdict class — accepted, refused as not citable
+//! sections off; its member `api` configures `API`, the non-citable `SKILL` and
+//! named sections on. Each row asks one kind name in one scope
+//! (§FS-scan.projects.kinds), and each column is a surface that asks in that
+//! scope: `list --kind` and `list --selector` in every loaded project, a rule's
+//! subject, a rule's object and a `[citations]` target in the root, a pinned
+//! object and target in `api`, and a `*/` object and target in any loaded
+//! project. Every column of a row must give the row's one verdict class — accepted, refused as not citable
 //! (§FS-errors.2.5.1), or refused otherwise — so no two surfaces disagree, and
 //! none disagrees with the point that defines the answer. A second test holds a
 //! member's named chapter to one answer (§REQ-one-answer.sections.named).
@@ -39,6 +40,8 @@ enum Scope {
     Root,
     /// The project `api`: a pinned object and a pinned target.
     Api,
+    /// Any loaded project: a `*/` object and a `*/` target.
+    Any,
 }
 
 /// One kind name, and its verdict in each scope.
@@ -47,6 +50,7 @@ struct Row {
     workspace: Verdict,
     root: Verdict,
     api: Verdict,
+    any: Verdict,
 }
 
 const ROWS: &[Row] = &[
@@ -56,6 +60,7 @@ const ROWS: &[Row] = &[
         workspace: Accepted,
         root: Accepted,
         api: Refused,
+        any: Accepted,
     },
     // A member's citable kind: unknown to the root alone.
     Row {
@@ -63,6 +68,7 @@ const ROWS: &[Row] = &[
         workspace: Accepted,
         root: Refused,
         api: Accepted,
+        any: Accepted,
     },
     // A configured kind that declares no IDs.
     Row {
@@ -70,6 +76,15 @@ const ROWS: &[Row] = &[
         workspace: NonCitable,
         root: NonCitable,
         api: Refused,
+        any: NonCitable,
+    },
+    // A member's kind that declares no IDs: unknown to the root alone.
+    Row {
+        name: "SKILL",
+        workspace: NonCitable,
+        root: Refused,
+        api: NonCitable,
+        any: NonCitable,
     },
     // A kind no project configures.
     Row {
@@ -77,6 +92,7 @@ const ROWS: &[Row] = &[
         workspace: Refused,
         root: Refused,
         api: Refused,
+        any: Refused,
     },
 ];
 
@@ -125,6 +141,11 @@ named_sections = true
 kind = \"API\"
 folder = \"docs/api\"
 index = false
+
+[[kinds]]
+kind = \"SKILL\"
+folder = \"skills\"
+citable = false
 
 [scan]
 include = [\"docs\"]
@@ -203,9 +224,10 @@ fn surfaces(scope: Scope, name: &str) -> Vec<(String, Output)> {
                 run(&plain, &["list", "--selector", name]),
             ),
         ],
-        Scope::Root | Scope::Api => {
+        Scope::Root | Scope::Api | Scope::Any => {
             let target = match scope {
                 Scope::Api => format!("api/{name}"),
+                Scope::Any => format!("*/{name}"),
                 _ => name.to_owned(),
             };
             let mut asked = Vec::new();
@@ -244,6 +266,7 @@ fn every_surface_gives_a_kind_name_one_verdict_in_its_scope() {
             (Scope::Workspace, row.workspace),
             (Scope::Root, row.root),
             (Scope::Api, row.api),
+            (Scope::Any, row.any),
         ] {
             for (surface, output) in surfaces(scope, row.name) {
                 let (got, stderr) = verdict(&output);
