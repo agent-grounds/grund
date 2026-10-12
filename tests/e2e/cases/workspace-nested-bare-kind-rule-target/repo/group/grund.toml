@@ -1,0 +1,10 @@
+grund_config_version = 1
+project_name = "group"
+[reference]
+strict = true
+[id]
+format = "{kind}-{slug}"
+[workspace]
+members = ["api"]
+[scan]
+include = ["docs"]
