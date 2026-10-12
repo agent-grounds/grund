@@ -96,7 +96,7 @@ pub(crate) fn judge(
     // focused pass suppresses comparison at every unresolved or ambiguous site.
     check_values(findings, schema, frame, targets, &mut report);
     // §FS-section-lock.checks: the lock against the tree, in `section_lock.rs`.
-    check_section_locks(findings, schema, frame, &mut report);
+    check_section_locks(findings, schema, frame, targets, &mut report);
 
     // §FS-check.2.3.1 / §AR-checker.2.11: a `<§>`-escaped illustration whose ID
     // resolves to a real declaration is likely a live citation someone bracketed
