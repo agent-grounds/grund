@@ -11,6 +11,7 @@ command's own `--help` page links the guide and example that cover it
 | [Installation](installation.md) | — |
 | [Setting up a repository](setup.md) | [`examples/scheme-*`](../../examples/) |
 | [Checking a repository](checking.md) | — |
+| [The `grund.toml` reference](configuration.md), with its [JSON Schema](../../schemas/grund.schema.json) | — |
 | [Python API](python-api.md) | [`examples/python-api`](../../examples/python-api/) |
 | [Citation directions](citation-directions.md) | — |
 | [Clickable citations](clickable-citations.md) | — |

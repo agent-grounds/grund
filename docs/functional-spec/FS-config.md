@@ -1115,6 +1115,8 @@ The table is optional and defaults to the empty list, which is what every config
 
 ## 4. Validation and inspection
 
+Beside the readers, the repository publishes `schemas/grund.schema.json`, a JSON Schema (draft-07) of every key of both versions — [§FS-config.3](FS-config.md#3-keys) and [§FS-config-v2](FS-config-v2.md#fs-config-v2-grund-reads-a-version-2-config-by-concern-with-one-strength-vocabulary-and-fixed-defaults) — with its type, accepted values and default, each table closed to keys it does not name, for editors whose TOML language server reads JSON Schema; the user-facing key reference, `docs/user-facing/configuration.md`, is rendered from it. It is not a second validator: what relates keys to one another or to the tree, such as a `resolve` that needs a `fetch`, stays with `grund config validate` ([§FS-config.4.1](FS-config.md#41-grund-config-validate-path)), and a test holds the schema to the readers — every key it names is accepted, and every committed configuration `config validate` accepts validates against it.
+
 ### 4.1 `grund config validate [path]`
 
 Loads the config discovered by walking up from `path` (or `.` when omitted), checks the keys, and reports problems. Exits 0 on success, 1 on validation errors — the error in the same `error: <path>:<line>: <message>` shape [§FS-config.4.3](FS-config.md#43-invalid-config-behavior) defines. No tree scan is performed. A redundant config pair at the config root is reported as a `warning:` here too ([§FS-config.1.1](FS-config.md#11-when-one-directory-carries-both), [§FS-check.4.3](FS-check.md#43-redundant-config-pair)); it is a warning, so it does not change the exit code.

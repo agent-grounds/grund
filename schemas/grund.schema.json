@@ -1,0 +1,1888 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/agent-grounds/grund/main/schemas/grund.schema.json",
+  "title": "grund.toml",
+  "description": "The configuration of a grund project. `grund config validate` is the authority; this schema serves editors.",
+  "if": {
+    "properties": {
+      "grund_config_version": {
+        "const": 2
+      }
+    },
+    "required": [
+      "grund_config_version"
+    ]
+  },
+  "then": {
+    "$ref": "#/definitions/v2"
+  },
+  "else": {
+    "$ref": "#/definitions/v1"
+  },
+  "definitions": {
+    "v1": {
+      "type": "object",
+      "description": "Version 1, the default.",
+      "properties": {
+        "grund_config_version": {
+          "type": "integer",
+          "enum": [
+            1
+          ],
+          "description": "The config format version. Omitted means 1.",
+          "default": 1,
+          "x-grund-spec": {
+            "id": "FS-config.5",
+            "href": "docs/functional-spec/FS-config.md#5-schema-versioning"
+          }
+        },
+        "project_name": {
+          "type": "string",
+          "description": "The project's name; in a workspace, also its alias in `§alias/<ID>` citations.",
+          "x-grund-spec": {
+            "id": "FS-config.3",
+            "href": "docs/functional-spec/FS-config.md#3-keys"
+          }
+        },
+        "project_description": {
+          "type": "string",
+          "description": "One-line description shown next to the project in generated workspace member lists.",
+          "x-grund-spec": {
+            "id": "FS-config.3",
+            "href": "docs/functional-spec/FS-config.md#3-keys"
+          }
+        },
+        "reference": {
+          "type": "object",
+          "description": "How a citation is written, and the project-wide grounding and inline-note defaults.",
+          "x-grund-spec": {
+            "id": "FS-config.3.1",
+            "href": "docs/functional-spec/FS-config.md#31-reference--citation-form"
+          },
+          "properties": {
+            "marker": {
+              "type": "string",
+              "description": "The character(s) that mark a citation.",
+              "default": "§",
+              "x-grund-spec": {
+                "id": "FS-config.3.1",
+                "href": "docs/functional-spec/FS-config.md#31-reference--citation-form"
+              }
+            },
+            "trigger": {
+              "type": "string",
+              "description": "The typed sequence the editor and `grund fmt` turn into the marker.",
+              "default": "$$",
+              "x-grund-spec": {
+                "id": "FS-config.3.1",
+                "href": "docs/functional-spec/FS-config.md#31-reference--citation-form"
+              }
+            },
+            "strict": {
+              "type": "boolean",
+              "description": "`true` reads only marked citations; `false` reads bare IDs too.",
+              "default": true,
+              "x-grund-spec": {
+                "id": "FS-config.3.1",
+                "href": "docs/functional-spec/FS-config.md#31-reference--citation-form"
+              }
+            },
+            "shorthand": {
+              "type": "string",
+              "enum": [
+                "canonical",
+                "accepted"
+              ],
+              "description": "Whether number-only citations are written out in full (`canonical`) or kept as written (`accepted`).",
+              "default": "canonical",
+              "x-grund-spec": {
+                "id": "FS-config.3.1.1",
+                "href": "docs/functional-spec/FS-config.md#311-shorthand--persisted-number-only-citations"
+              }
+            },
+            "require_grounding": {
+              "type": "boolean",
+              "description": "Whether every scanned source file must cite a declared ID; the default for every `[[kinds]]` row.",
+              "default": false,
+              "x-grund-spec": {
+                "id": "FS-config.3.1.7",
+                "href": "docs/functional-spec/FS-config.md#317-require_grounding-and-grounding_level--defaults-for-kinds"
+              }
+            },
+            "grounding_level": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 6,
+              "description": "The unit that must carry a citation: `1` the whole file, `N` every `H<N>` section too; the default for every `[[kinds]]` row.",
+              "default": 1,
+              "x-grund-spec": {
+                "id": "FS-config.3.1.7",
+                "href": "docs/functional-spec/FS-config.md#317-require_grounding-and-grounding_level--defaults-for-kinds"
+              }
+            },
+            "conversation": {
+              "type": "string",
+              "enum": [
+                "link"
+              ],
+              "description": "The repository's opinion on how agents render citations in conversation: `link`, or absent for none.",
+              "x-grund-spec": {
+                "id": "FS-config.3.1.3",
+                "href": "docs/functional-spec/FS-config.md#313-conversation--one-name-two-scopes"
+              }
+            },
+            "lead_size_warning": {
+              "type": "object",
+              "properties": {
+                "max": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "lines",
+                    "words",
+                    "bytes"
+                  ]
+                }
+              },
+              "required": [
+                "max",
+                "unit"
+              ],
+              "additionalProperties": false,
+              "x-grund-inline": true,
+              "description": "Opt in to a warning when a declaration's lead outgrows `max` `unit`s (`lines`, `words` or `bytes`).",
+              "x-grund-spec": {
+                "id": "FS-config.3.1.2",
+                "href": "docs/functional-spec/FS-config.md#312-lead_size_warning--the-oversized-lead-opt-in"
+              }
+            },
+            "inline_style": {
+              "type": "string",
+              "enum": [
+                "citation-with-note",
+                "citation-only"
+              ],
+              "description": "Whether an inline citation may carry a note beside it.",
+              "default": "citation-with-note",
+              "x-grund-spec": {
+                "id": "FS-config.3.1.8",
+                "href": "docs/functional-spec/FS-config.md#318-inline_style-and-the-note-budgets"
+              }
+            },
+            "inline_note_suggested_lines": {
+              "type": "integer",
+              "description": "Lines past which an inline note is a suggestion (a warning with `warn_on_suggested`).",
+              "default": 1,
+              "x-grund-spec": {
+                "id": "FS-config.3.1.8",
+                "href": "docs/functional-spec/FS-config.md#318-inline_style-and-the-note-budgets"
+              }
+            },
+            "inline_note_max_lines": {
+              "type": "integer",
+              "description": "The most lines an inline note may take; more is an error.",
+              "default": 3,
+              "x-grund-spec": {
+                "id": "FS-config.3.1.8",
+                "href": "docs/functional-spec/FS-config.md#318-inline_style-and-the-note-budgets"
+              }
+            },
+            "inline_note_max_columns": {
+              "type": "integer",
+              "description": "The most columns an inline note may take; more is an error.",
+              "default": 100,
+              "x-grund-spec": {
+                "id": "FS-config.3.1.8",
+                "href": "docs/functional-spec/FS-config.md#318-inline_style-and-the-note-budgets"
+              }
+            },
+            "inline_note_layout": {
+              "type": "string",
+              "enum": [
+                "any",
+                "citation-first-colon"
+              ],
+              "description": "Where the citation sits inside an inline note.",
+              "default": "any",
+              "x-grund-spec": {
+                "id": "FS-config.3.1.9",
+                "href": "docs/functional-spec/FS-config.md#319-inline_note_layout-and-inline_note_layout_check"
+              }
+            },
+            "inline_note_layout_check": {
+              "type": "string",
+              "enum": [
+                "off",
+                "warn",
+                "error"
+              ],
+              "description": "How a note that breaks `inline_note_layout` is reported.",
+              "default": "off",
+              "x-grund-spec": {
+                "id": "FS-config.3.1.9",
+                "href": "docs/functional-spec/FS-config.md#319-inline_note_layout-and-inline_note_layout_check"
+              }
+            },
+            "warn_on_suggested": {
+              "type": "boolean",
+              "description": "Report notes past `inline_note_suggested_lines` as warnings rather than suggestions.",
+              "default": false,
+              "x-grund-spec": {
+                "id": "FS-config.3.1.8",
+                "href": "docs/functional-spec/FS-config.md#318-inline_style-and-the-note-budgets"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "id": {
+          "type": "object",
+          "description": "The ID grammar: the shape of every declared ID and section path.",
+          "x-grund-spec": {
+            "id": "FS-config.3.2",
+            "href": "docs/functional-spec/FS-config.md#32-id--id-grammar"
+          },
+          "properties": {
+            "format": {
+              "type": "string",
+              "description": "The ID template: `{kind}` plus `{number}`, `{slug}` or both; everything else is literal.",
+              "default": "{kind}-{number}-{slug}",
+              "x-grund-spec": {
+                "id": "FS-config.3.2",
+                "href": "docs/functional-spec/FS-config.md#32-id--id-grammar"
+              }
+            },
+            "section_separator": {
+              "type": "string",
+              "description": "The separator between an ID and its section path.",
+              "default": ".",
+              "x-grund-spec": {
+                "id": "FS-config.3.2.2",
+                "href": "docs/functional-spec/FS-config.md#322-section_separator-must-stay-distinguishable"
+              }
+            },
+            "number_pattern": {
+              "type": "string",
+              "description": "Regex for `{number}`.",
+              "default": "\\d+",
+              "x-grund-spec": {
+                "id": "FS-config.3.2.4",
+                "href": "docs/functional-spec/FS-config.md#324-each-pattern-compiles-on-its-own"
+              }
+            },
+            "slug_pattern": {
+              "type": "string",
+              "description": "Regex for `{slug}`.",
+              "default": "[a-z0-9][a-z0-9-]*",
+              "x-grund-spec": {
+                "id": "FS-config.3.2.4",
+                "href": "docs/functional-spec/FS-config.md#324-each-pattern-compiles-on-its-own"
+              }
+            },
+            "named_sections": {
+              "type": "boolean",
+              "description": "Enable named section components, such as `## goals:`, matching `[a-z][a-z0-9-]*`.",
+              "default": false,
+              "x-grund-spec": {
+                "id": "FS-config.3.2.7",
+                "href": "docs/functional-spec/FS-config.md#327-named_sections--the-gate-for-explicit-section-names"
+              }
+            },
+            "section_heading_levels": {
+              "type": "string",
+              "enum": [
+                "strict",
+                "warn",
+                "loose"
+              ],
+              "description": "How a heading whose depth does not match its section path is reported: an error, a warning, or not at all.",
+              "default": "strict",
+              "x-grund-spec": {
+                "id": "FS-config.3.3.2",
+                "href": "docs/functional-spec/FS-config.md#332-section_heading_levels--heading-depth-against-path-depth"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "kinds": {
+          "type": "array",
+          "description": "One row per kind: where its declarations live and how they are read.",
+          "x-grund-spec": {
+            "id": "FS-config.3.4",
+            "href": "docs/functional-spec/FS-config.md#34-kinds--recognized-kinds"
+          },
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "description": "The kind's name: the ID prefix of a citable kind, its `[citations.<kind>]` key and its `--kind` selector.",
+                "x-grund-spec": {
+                  "id": "FS-config.3.4",
+                  "href": "docs/functional-spec/FS-config.md#34-kinds--recognized-kinds"
+                }
+              },
+              "prefix": {
+                "not": {},
+                "deprecated": true,
+                "description": "Removed in grund 0.13.0 and refused: rename it to `kind`.",
+                "x-grund-spec": {
+                  "id": "FS-config.3.4.6",
+                  "href": "docs/functional-spec/FS-config.md#346-prefix-the-former-spelling-of-kind-removed-in-0130"
+                }
+              },
+              "folder": {
+                "type": "string",
+                "description": "A folder home: each declaration is the H1 of its own file under this directory.",
+                "x-grund-spec": {
+                  "id": "FS-config.3.4",
+                  "href": "docs/functional-spec/FS-config.md#34-kinds--recognized-kinds"
+                }
+              },
+              "file": {
+                "type": "string",
+                "description": "A single-file home: every declaration is a heading in this document.",
+                "x-grund-spec": {
+                  "id": "FS-config.3.4",
+                  "href": "docs/functional-spec/FS-config.md#34-kinds--recognized-kinds"
+                }
+              },
+              "title": {
+                "type": "string",
+                "description": "The kind's title in the Project map, `grund list --summary` and editor hovers.",
+                "x-grund-spec": {
+                  "id": "FS-config.3.4.3",
+                  "href": "docs/functional-spec/FS-config.md#343-title"
+                }
+              },
+              "citable": {
+                "type": "boolean",
+                "description": "`false` makes this a place: it cites, but declares no IDs.",
+                "default": true,
+                "x-grund-spec": {
+                  "id": "FS-config.3.4.1",
+                  "href": "docs/functional-spec/FS-config.md#341-citable--kinds-that-declare-no-ids"
+                }
+              },
+              "index": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "const": false
+                  }
+                ],
+                "description": "The folder's index file, which must list every declaration; `false` opts out.",
+                "x-grund-default": "README.md (folder kinds; `false` for a kind named E2E)",
+                "x-grund-spec": {
+                  "id": "FS-config.3.4.2",
+                  "href": "docs/functional-spec/FS-config.md#342-index--the-kinds-index-file"
+                },
+                "examples": [
+                  "INDEX.md",
+                  false
+                ]
+              },
+              "scan": {
+                "type": "boolean",
+                "description": "`false` lists the kind in the Project map without walking it.",
+                "default": true,
+                "x-grund-spec": {
+                  "id": "FS-config.3.4.7",
+                  "href": "docs/functional-spec/FS-config.md#347-scan--a-place-that-is-listed-not-scanned"
+                }
+              },
+              "require_grounding": {
+                "type": "boolean",
+                "description": "This kind's grounding requirement; it wins over `[reference]` and over `--require-grounding`.",
+                "x-grund-default": "inherits `[reference] require_grounding`",
+                "x-grund-spec": {
+                  "id": "FS-config.3.4.8",
+                  "href": "docs/functional-spec/FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level"
+                }
+              },
+              "grounding_level": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 6,
+                "description": "This kind's grounding unit, overriding `[reference] grounding_level`.",
+                "x-grund-default": "inherits `[reference] grounding_level`",
+                "x-grund-spec": {
+                  "id": "FS-config.3.4.8",
+                  "href": "docs/functional-spec/FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level"
+                }
+              },
+              "values": {
+                "type": "boolean",
+                "description": "Make every declaration of this kind a first-class value.",
+                "default": false,
+                "x-grund-spec": {
+                  "id": "FS-config.3.4.9",
+                  "href": "docs/functional-spec/FS-config.md#349-values--first-class-value-declarations"
+                }
+              },
+              "value_chapter": {
+                "type": "string",
+                "description": "The chapter whose named children are values, in every declaration of this kind.",
+                "x-grund-spec": {
+                  "id": "FS-config.3.4.13",
+                  "href": "docs/functional-spec/FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values"
+                }
+              },
+              "rules": {
+                "type": "boolean",
+                "description": "Make every declaration title of this kind an executable rule sentence.",
+                "default": false,
+                "x-grund-spec": {
+                  "id": "FS-config.3.4.12",
+                  "href": "docs/functional-spec/FS-config.md#3412-rules--rule-declaration-kinds"
+                }
+              },
+              "format": {
+                "type": "string",
+                "description": "This kind's ID template, overriding `[id] format`.",
+                "x-grund-default": "inherits `[id] format`",
+                "x-grund-spec": {
+                  "id": "FS-config.3.4.10.1",
+                  "href": "docs/functional-spec/FS-config.md#34101-format"
+                },
+                "examples": [
+                  "{kind}-{number}"
+                ]
+              },
+              "resolve": {
+                "type": "string",
+                "enum": [
+                  "must",
+                  "should"
+                ],
+                "description": "How a missing external snapshot is reported: `must` as a dangling citation, `should` as a warning.",
+                "x-grund-default": "must when fetch is set, else absent",
+                "x-grund-spec": {
+                  "id": "FS-config.3.4.10.2",
+                  "href": "docs/functional-spec/FS-config.md#34102-fetch-and-resolve"
+                }
+              },
+              "fetch": {
+                "type": "string",
+                "description": "The executable `grund fetch` runs to save a missing external snapshot.",
+                "x-grund-spec": {
+                  "id": "FS-config.3.4.10.2",
+                  "href": "docs/functional-spec/FS-config.md#34102-fetch-and-resolve"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "scan": {
+          "type": "object",
+          "description": "What the scan walks and reads.",
+          "x-grund-spec": {
+            "id": "FS-config.3.5",
+            "href": "docs/functional-spec/FS-config.md#35-scan--what-gets-scanned"
+          },
+          "properties": {
+            "include": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Directories and files to scan, from the config root; every kind's home is scanned as well.",
+              "default": [
+                "requirements.md",
+                "docs",
+                "e2e",
+                "src"
+              ],
+              "x-grund-spec": {
+                "id": "FS-config.3.5.7",
+                "href": "docs/functional-spec/FS-config.md#357-include-is-scanned-from-the-config-root"
+              }
+            },
+            "exclude": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Directory names skipped at any depth.",
+              "default": [
+                "target",
+                "node_modules",
+                ".git",
+                "dist",
+                "build",
+                ".venv"
+              ],
+              "x-grund-spec": {
+                "id": "FS-config.3.5.16",
+                "href": "docs/functional-spec/FS-config.md#3516-an-exclude-entry-containing--is-refused"
+              }
+            },
+            "extensions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "The file extensions the scan reads.",
+              "default": [
+                "md",
+                "rs",
+                "go",
+                "java",
+                "kt",
+                "ts",
+                "tsx",
+                "js",
+                "py",
+                "c",
+                "cpp",
+                "swift",
+                "scala",
+                "rb",
+                "php",
+                "cs",
+                "lisp",
+                "scm",
+                "clj",
+                "sql",
+                "hs",
+                "lhs",
+                "lua",
+                "ada",
+                "adb",
+                "ads"
+              ],
+              "x-grund-spec": {
+                "id": "FS-config.3.5.13",
+                "href": "docs/functional-spec/FS-config.md#3513-an-extension-makes-a-file-readable-not-declarable"
+              }
+            },
+            "comment_prefixes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "The comment markers a citation or declaration in source code may follow.",
+              "default": [
+                "//",
+                "#",
+                ";",
+                "--",
+                "*",
+                "/*"
+              ],
+              "x-grund-spec": {
+                "id": "FS-config.3.5.14",
+                "href": "docs/functional-spec/FS-config.md#3514-comment_prefixes-compose-with-extensions"
+              }
+            },
+            "docstring_python": {
+              "type": "boolean",
+              "description": "Read Python docstrings as well as `#` comments.",
+              "default": true,
+              "x-grund-spec": {
+                "id": "FS-config.3.5",
+                "href": "docs/functional-spec/FS-config.md#35-scan--what-gets-scanned"
+              }
+            },
+            "respect_gitignore": {
+              "type": "boolean",
+              "description": "Skip what `.gitignore` and other ignore files exclude.",
+              "default": true,
+              "x-grund-spec": {
+                "id": "FS-config.3.5.15",
+                "href": "docs/functional-spec/FS-config.md#3515-respect_gitignore--the-ignore-files"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "output": {
+          "type": "object",
+          "description": "How reports are printed.",
+          "x-grund-spec": {
+            "id": "FS-config.3.6",
+            "href": "docs/functional-spec/FS-config.md#36-output--report-format"
+          },
+          "properties": {
+            "format": {
+              "type": "string",
+              "enum": [
+                "text",
+                "json"
+              ],
+              "description": "The default report format, as `--format`.",
+              "default": "text",
+              "x-grund-spec": {
+                "id": "FS-config.3.6",
+                "href": "docs/functional-spec/FS-config.md#36-output--report-format"
+              }
+            },
+            "color": {
+              "type": "string",
+              "enum": [
+                "auto",
+                "always",
+                "never"
+              ],
+              "description": "Reserved: accepted and kept, with no effect yet.",
+              "x-grund-spec": {
+                "id": "FS-config.3.6",
+                "href": "docs/functional-spec/FS-config.md#36-output--report-format"
+              }
+            },
+            "relative_paths": {
+              "type": "boolean",
+              "description": "Report paths relative to the config root (`true`) or to where the command ran, as `--path-base`.",
+              "default": true,
+              "x-grund-spec": {
+                "id": "FS-config.3.6.1",
+                "href": "docs/functional-spec/FS-config.md#361-relative_paths--false--the-cli-base"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "fmt": {
+          "type": "object",
+          "description": "What `grund fmt` leaves alone.",
+          "x-grund-spec": {
+            "id": "FS-config.3.10",
+            "href": "docs/functional-spec/FS-config.md#310-fmt--suppressing-the-rewrite"
+          },
+          "properties": {
+            "exclude": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Files `grund fmt` never rewrites: gitignore-style globs from the config root.",
+              "default": [],
+              "x-grund-spec": {
+                "id": "FS-config.3.10.1",
+                "href": "docs/functional-spec/FS-config.md#3101-entries-are-gitignore-style-globs"
+              }
+            },
+            "cross_refs": {
+              "type": "object",
+              "description": "Whether `grund fmt` wraps citations in Markdown links, and the anchor style it writes.",
+              "x-grund-spec": {
+                "id": "FS-config.3.7",
+                "href": "docs/functional-spec/FS-config.md#37-fmtcross_refs--cross-reference-emission"
+              },
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "`false` stops `grund fmt` from wrapping citations in Markdown links.",
+                  "default": true,
+                  "x-grund-spec": {
+                    "id": "FS-config.3.7",
+                    "href": "docs/functional-spec/FS-config.md#37-fmtcross_refs--cross-reference-emission"
+                  }
+                },
+                "anchor_format": {
+                  "type": "string",
+                  "enum": [
+                    "github",
+                    "gitlab",
+                    "mkdocs",
+                    "pandoc",
+                    "none"
+                  ],
+                  "description": "The heading-anchor style of the links `grund fmt` writes.",
+                  "default": "github",
+                  "x-grund-spec": {
+                    "id": "FS-config.3.7",
+                    "href": "docs/functional-spec/FS-config.md#37-fmtcross_refs--cross-reference-emission"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "workspace": {
+          "type": "object",
+          "description": "The sub-projects a workspace root checks, each in its own namespace.",
+          "x-grund-spec": {
+            "id": "FS-config.3.8",
+            "href": "docs/functional-spec/FS-config.md#38-workspace--sub-project-members"
+          },
+          "properties": {
+            "members": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Member directories, or a directory ending in `/*` for all its children, each checked as its own project.",
+              "default": [],
+              "x-grund-spec": {
+                "id": "FS-config.3.8",
+                "href": "docs/functional-spec/FS-config.md#38-workspace--sub-project-members"
+              }
+            },
+            "optional_members": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Members that may be absent, such as an uninitialized submodule.",
+              "default": [],
+              "x-grund-spec": {
+                "id": "FS-config.3.8",
+                "href": "docs/functional-spec/FS-config.md#38-workspace--sub-project-members"
+              }
+            },
+            "include_root": {
+              "type": "boolean",
+              "description": "Whether the root is checked as a project too.",
+              "default": true,
+              "x-grund-spec": {
+                "id": "FS-config.3.8",
+                "href": "docs/functional-spec/FS-config.md#38-workspace--sub-project-members"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "citations": {
+          "type": "object",
+          "description": "Citation direction rules: one `[citations.<KIND>]` table per citing kind.",
+          "x-grund-spec": {
+            "id": "FS-config.3.9",
+            "href": "docs/functional-spec/FS-config.md#39-citations--citation-direction-rules"
+          },
+          "properties": {
+            "default": {
+              "type": "string",
+              "enum": [
+                "must",
+                "should",
+                "may",
+                "should-not",
+                "must-not"
+              ],
+              "description": "What any kind may cite when no rule names the target; absent means `may`.",
+              "x-grund-spec": {
+                "id": "FS-config.3.9.4",
+                "href": "docs/functional-spec/FS-config.md#394-defaults-and-precedence"
+              }
+            }
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/v1CitationRule"
+          },
+          "x-grund-key": "<KIND>"
+        }
+      },
+      "additionalProperties": false
+    },
+    "v1CitationRule": {
+      "type": "object",
+      "description": "What a citing kind (or place) must, should, may, should not and must not cite.",
+      "x-grund-spec": {
+        "id": "FS-config.3.9",
+        "href": "docs/functional-spec/FS-config.md#39-citations--citation-direction-rules"
+      },
+      "properties": {
+        "default": {
+          "type": "string",
+          "enum": [
+            "must",
+            "should",
+            "may",
+            "should-not",
+            "must-not"
+          ],
+          "description": "What this kind may cite when no list names the target, overriding `[citations] default`.",
+          "x-grund-spec": {
+            "id": "FS-config.3.9.4",
+            "href": "docs/functional-spec/FS-config.md#394-defaults-and-precedence"
+          }
+        },
+        "must": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds each declaration (or file, for a place) must cite; a miss is an error.",
+          "default": [],
+          "x-grund-spec": {
+            "id": "FS-config.3.9.1",
+            "href": "docs/functional-spec/FS-config.md#391-levels"
+          }
+        },
+        "should": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds it should cite; a miss is a suggestion.",
+          "default": [],
+          "x-grund-spec": {
+            "id": "FS-config.3.9.1",
+            "href": "docs/functional-spec/FS-config.md#391-levels"
+          }
+        },
+        "may": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds it may cite, even under a stricter default.",
+          "default": [],
+          "x-grund-spec": {
+            "id": "FS-config.3.9.1",
+            "href": "docs/functional-spec/FS-config.md#391-levels"
+          }
+        },
+        "should-not": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds it should not cite; a citation is a suggestion.",
+          "default": [],
+          "x-grund-spec": {
+            "id": "FS-config.3.9.1",
+            "href": "docs/functional-spec/FS-config.md#391-levels"
+          }
+        },
+        "must-not": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds it must not cite; a citation is an error.",
+          "default": [],
+          "x-grund-spec": {
+            "id": "FS-config.3.9.1",
+            "href": "docs/functional-spec/FS-config.md#391-levels"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "v2": {
+      "type": "object",
+      "description": "Version 2: keys grouped by concern — `[schema]` for what exists, `[rules]` for how it relates, `[presentation]` for what grund writes. Every constraint takes one strength: `must` is an error, `warn` a warning, `should` a suggestion shown by `grund check --suggestions`, and `may` is not checked.",
+      "properties": {
+        "grund_config_version": {
+          "type": "integer",
+          "enum": [
+            2
+          ],
+          "description": "The config format version: 2 selects the version-2 reader.",
+          "x-grund-spec": {
+            "id": "FS-config.5",
+            "href": "docs/functional-spec/FS-config.md#5-schema-versioning"
+          }
+        },
+        "project_name": {
+          "type": "string",
+          "description": "The project's name; in a workspace, also its alias in `§alias/<ID>` citations.",
+          "x-grund-spec": {
+            "id": "FS-config.3",
+            "href": "docs/functional-spec/FS-config.md#3-keys"
+          }
+        },
+        "schema": {
+          "type": "object",
+          "description": "What exists: the citation marker, the ID grammar, the sources, the note and lead measures, and the kinds.",
+          "x-grund-spec": {
+            "id": "FS-config-v2.schema.1",
+            "href": "docs/functional-spec/FS-config-v2.md#schema1-schema"
+          },
+          "properties": {
+            "marker": {
+              "type": "string",
+              "description": "The character(s) that mark a citation, as v1 `[reference] marker`.",
+              "default": "§",
+              "x-grund-spec": {
+                "id": "FS-config-v2.schema.1",
+                "href": "docs/functional-spec/FS-config-v2.md#schema1-schema"
+              }
+            },
+            "shorthand": {
+              "type": "string",
+              "enum": [
+                "canonical",
+                "accepted"
+              ],
+              "description": "Whether number-only citations are written out in full (`canonical`) or kept as written (`accepted`).",
+              "default": "canonical",
+              "x-grund-spec": {
+                "id": "FS-config-v2.schema.1",
+                "href": "docs/functional-spec/FS-config-v2.md#schema1-schema"
+              }
+            },
+            "id_format": {
+              "type": "string",
+              "description": "The ID template, as v1 `[id] format`.",
+              "default": "{kind}-{slug}",
+              "x-grund-spec": {
+                "id": "FS-config-v2.schema.1",
+                "href": "docs/functional-spec/FS-config-v2.md#schema1-schema"
+              }
+            },
+            "slug_pattern": {
+              "type": "string",
+              "description": "Regex for `{slug}`; the default starts with a letter.",
+              "default": "[a-z][a-z0-9-]*",
+              "x-grund-spec": {
+                "id": "FS-config-v2.schema.1",
+                "href": "docs/functional-spec/FS-config-v2.md#schema1-schema"
+              }
+            },
+            "number_pattern": {
+              "type": "string",
+              "description": "Regex for `{number}`.",
+              "default": "\\d+",
+              "x-grund-spec": {
+                "id": "FS-config-v2.schema.1",
+                "href": "docs/functional-spec/FS-config-v2.md#schema1-schema"
+              }
+            },
+            "section_separator": {
+              "type": "string",
+              "description": "The separator between an ID and its section path.",
+              "default": ".",
+              "x-grund-spec": {
+                "id": "FS-config-v2.schema.1",
+                "href": "docs/functional-spec/FS-config-v2.md#schema1-schema"
+              }
+            },
+            "heading_depth": {
+              "type": "string",
+              "enum": [
+                "must",
+                "warn",
+                "should",
+                "may"
+              ],
+              "description": "How strongly a heading whose depth does not match its section path is reported.",
+              "default": "must",
+              "x-grund-spec": {
+                "id": "FS-config-v2.schema.1",
+                "href": "docs/functional-spec/FS-config-v2.md#schema1-schema"
+              }
+            },
+            "sources": {
+              "type": "object",
+              "description": "The sources a version-2 project is read from.",
+              "x-grund-spec": {
+                "id": "FS-config-v2.schema.sources",
+                "href": "docs/functional-spec/FS-config-v2.md#schemasources-schemasources"
+              },
+              "properties": {
+                "languages": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "markdown"
+                    ]
+                  },
+                  "minItems": 1,
+                  "maxItems": 1,
+                  "description": "The source languages a version-2 project is read in. Required, and `[\"markdown\"]` is the only value today.",
+                  "x-grund-spec": {
+                    "id": "FS-config-v2.schema.sources",
+                    "href": "docs/functional-spec/FS-config-v2.md#schemasources-schemasources"
+                  }
+                },
+                "exclude": {
+                  "not": {},
+                  "description": "Reserved; refused today.",
+                  "x-grund-spec": {
+                    "id": "FS-config-v2.schema.sources",
+                    "href": "docs/functional-spec/FS-config-v2.md#schemasources-schemasources"
+                  }
+                },
+                "respect_gitignore": {
+                  "type": "boolean",
+                  "description": "Skip what `.gitignore` and other ignore files exclude.",
+                  "default": true,
+                  "x-grund-spec": {
+                    "id": "FS-config-v2.schema.sources",
+                    "href": "docs/functional-spec/FS-config-v2.md#schemasources-schemasources"
+                  }
+                },
+                "extensions": {
+                  "not": {},
+                  "description": "Reserved; refused today."
+                },
+                "definitions": {
+                  "not": {},
+                  "description": "Reserved; refused today."
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "languages"
+              ]
+            },
+            "notes": {
+              "type": "object",
+              "description": "Measures on inline citation notes.",
+              "properties": {
+                "lines": {
+                  "type": "object",
+                  "description": "How many lines an inline note may take, by strength.",
+                  "x-grund-spec": {
+                    "id": "FS-config-v2.schema.measures",
+                    "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                  },
+                  "properties": {
+                    "must": {
+                      "type": "integer",
+                      "description": "The most lines an inline note may take; more is an error.",
+                      "default": 3,
+                      "x-grund-spec": {
+                        "id": "FS-config-v2.schema.measures",
+                        "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                      }
+                    },
+                    "warn": {
+                      "type": "integer",
+                      "description": "Lines past which an inline note is a warning.",
+                      "x-grund-spec": {
+                        "id": "FS-config-v2.schema.measures",
+                        "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                      }
+                    },
+                    "should": {
+                      "type": "integer",
+                      "description": "Lines past which an inline note is a suggestion.",
+                      "x-grund-spec": {
+                        "id": "FS-config-v2.schema.measures",
+                        "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                      }
+                    },
+                    "may": {
+                      "type": "integer",
+                      "description": "A line guideline that is not checked.",
+                      "x-grund-spec": {
+                        "id": "FS-config-v2.schema.measures",
+                        "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "columns": {
+                  "type": "object",
+                  "description": "How many columns an inline note may take, by strength.",
+                  "x-grund-spec": {
+                    "id": "FS-config-v2.schema.measures",
+                    "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                  },
+                  "properties": {
+                    "must": {
+                      "type": "integer",
+                      "description": "The most columns an inline note may take; more is an error.",
+                      "default": 100,
+                      "x-grund-spec": {
+                        "id": "FS-config-v2.schema.measures",
+                        "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                      }
+                    },
+                    "warn": {
+                      "type": "integer",
+                      "description": "Columns past which an inline note is a warning.",
+                      "x-grund-spec": {
+                        "id": "FS-config-v2.schema.measures",
+                        "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                      }
+                    },
+                    "should": {
+                      "type": "integer",
+                      "description": "Columns past which an inline note is a suggestion.",
+                      "x-grund-spec": {
+                        "id": "FS-config-v2.schema.measures",
+                        "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                      }
+                    },
+                    "may": {
+                      "type": "integer",
+                      "description": "A column guideline that is not checked.",
+                      "x-grund-spec": {
+                        "id": "FS-config-v2.schema.measures",
+                        "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "text": {
+                  "type": "object",
+                  "description": "Whether an inline note may carry text beside its citation.",
+                  "x-grund-spec": {
+                    "id": "FS-config-v2.schema.measures",
+                    "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                  },
+                  "properties": {
+                    "must": {
+                      "type": "boolean",
+                      "description": "`true` lets an inline note carry text beside its citation; `false` allows the citation alone.",
+                      "default": true,
+                      "x-grund-spec": {
+                        "id": "FS-config-v2.schema.measures",
+                        "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "layout": {
+                  "type": "object",
+                  "description": "Where the citation sits inside a note; write one strength only.",
+                  "x-grund-spec": {
+                    "id": "FS-config-v2.schema.measures",
+                    "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                  },
+                  "properties": {
+                    "must": {
+                      "type": "string",
+                      "enum": [
+                        "any",
+                        "citation-first-colon"
+                      ],
+                      "description": "The required layout; a deviation is an error.",
+                      "x-grund-spec": {
+                        "id": "FS-config-v2.schema.measures",
+                        "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                      }
+                    },
+                    "warn": {
+                      "type": "string",
+                      "enum": [
+                        "any",
+                        "citation-first-colon"
+                      ],
+                      "description": "The required layout; a deviation is a warning.",
+                      "x-grund-spec": {
+                        "id": "FS-config-v2.schema.measures",
+                        "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                      }
+                    },
+                    "should": {
+                      "type": "string",
+                      "enum": [
+                        "any",
+                        "citation-first-colon"
+                      ],
+                      "description": "The required layout; a deviation is a suggestion.",
+                      "x-grund-spec": {
+                        "id": "FS-config-v2.schema.measures",
+                        "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                      }
+                    },
+                    "may": {
+                      "type": "string",
+                      "enum": [
+                        "any",
+                        "citation-first-colon"
+                      ],
+                      "description": "The layout, unchecked.",
+                      "x-grund-spec": {
+                        "id": "FS-config-v2.schema.measures",
+                        "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "leads": {
+              "type": "object",
+              "description": "Measures on declaration leads.",
+              "properties": {
+                "words": {
+                  "type": "object",
+                  "description": "How many words a declaration's lead may take, by strength.",
+                  "x-grund-spec": {
+                    "id": "FS-config-v2.schema.measures",
+                    "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                  },
+                  "properties": {
+                    "must": {
+                      "type": "integer",
+                      "description": "Words past which a declaration's lead is an error.",
+                      "x-grund-spec": {
+                        "id": "FS-config-v2.schema.measures",
+                        "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                      }
+                    },
+                    "warn": {
+                      "type": "integer",
+                      "description": "Words past which a declaration's lead is a warning.",
+                      "x-grund-spec": {
+                        "id": "FS-config-v2.schema.measures",
+                        "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                      }
+                    },
+                    "should": {
+                      "type": "integer",
+                      "description": "Words past which a declaration's lead is a suggestion.",
+                      "x-grund-spec": {
+                        "id": "FS-config-v2.schema.measures",
+                        "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                      }
+                    },
+                    "may": {
+                      "type": "integer",
+                      "description": "A word guideline that is not checked.",
+                      "x-grund-spec": {
+                        "id": "FS-config-v2.schema.measures",
+                        "href": "docs/functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys"
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "kinds": {
+              "type": "object",
+              "description": "The kinds, one `[schema.kinds.<NAME>]` table each.",
+              "additionalProperties": {
+                "$ref": "#/definitions/v2Kind"
+              },
+              "x-grund-key": "<NAME>"
+            }
+          },
+          "additionalProperties": false
+        },
+        "rules": {
+          "type": "object",
+          "description": "How nodes relate: citation rules, grounding and snapshot resolution.",
+          "properties": {
+            "citations": {
+              "type": "object",
+              "description": "Citation direction rules: one `[rules.citations.<KIND>]` table per citing kind.",
+              "x-grund-spec": {
+                "id": "FS-config-v2.rules.citations",
+                "href": "docs/functional-spec/FS-config-v2.md#rulescitations-rulescitations"
+              },
+              "properties": {
+                "default": {
+                  "type": "string",
+                  "enum": [
+                    "may",
+                    "should-not",
+                    "warn-not",
+                    "must-not"
+                  ],
+                  "description": "What a citing kind may cite when its rule does not name the target: `may`, or a prohibition at some strength.",
+                  "x-grund-default": "may (effective; stored absent)",
+                  "x-grund-spec": {
+                    "id": "FS-config-v2.rules.citations.default",
+                    "href": "docs/functional-spec/FS-config-v2.md#rulescitationsdefault-a-default-may-forbid-never-oblige"
+                  }
+                },
+                "grounding": {
+                  "$ref": "#/definitions/v2Grounding"
+                }
+              },
+              "additionalProperties": {
+                "$ref": "#/definitions/v2CitationRule"
+              },
+              "x-grund-key": "<KIND>"
+            },
+            "resolution": {
+              "type": "object",
+              "description": "How strongly a fetched kind's missing snapshot is reported: `<KIND> = \"must\"` or `\"warn\"`.",
+              "additionalProperties": {
+                "type": "string",
+                "enum": [
+                  "must",
+                  "warn"
+                ],
+                "description": "The strength of a missing snapshot for this fetched kind."
+              },
+              "x-grund-key": "<KIND>",
+              "x-grund-spec": {
+                "id": "FS-config-v2.rules.resolution",
+                "href": "docs/functional-spec/FS-config-v2.md#rulesresolution-rulesresolution"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "presentation": {
+          "type": "object",
+          "description": "The bytes grund writes: the trigger, the conversation opinion, kind titles and `grund fmt`.",
+          "x-grund-spec": {
+            "id": "FS-config-v2.presentation",
+            "href": "docs/functional-spec/FS-config-v2.md#presentation-the-presentation-concern"
+          },
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "A one-line description shown beside the project in generated workspace member lists.",
+              "x-grund-spec": {
+                "id": "FS-config-v2.presentation",
+                "href": "docs/functional-spec/FS-config-v2.md#presentation-the-presentation-concern"
+              }
+            },
+            "trigger": {
+              "type": "string",
+              "description": "The typed sequence the editor and `grund fmt` turn into the marker.",
+              "default": "$$",
+              "x-grund-spec": {
+                "id": "FS-config-v2.presentation",
+                "href": "docs/functional-spec/FS-config-v2.md#presentation-the-presentation-concern"
+              }
+            },
+            "conversation": {
+              "type": "string",
+              "enum": [
+                "link"
+              ],
+              "description": "The repository's opinion on how agents render citations in conversation: `link`, or absent for none.",
+              "x-grund-spec": {
+                "id": "FS-config-v2.presentation",
+                "href": "docs/functional-spec/FS-config-v2.md#presentation-the-presentation-concern"
+              }
+            },
+            "rules": {
+              "not": {},
+              "description": "Reserved; refused today.",
+              "x-grund-spec": {
+                "id": "FS-config-v2.presentation",
+                "href": "docs/functional-spec/FS-config-v2.md#presentation-the-presentation-concern"
+              }
+            },
+            "kinds": {
+              "type": "object",
+              "description": "Display titles, one `[presentation.kinds.<NAME>]` table per kind.",
+              "additionalProperties": {
+                "type": "object",
+                "description": "One kind's display title.",
+                "x-grund-spec": {
+                  "id": "FS-config-v2.presentation",
+                  "href": "docs/functional-spec/FS-config-v2.md#presentation-the-presentation-concern"
+                },
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "The kind's title in the Project map, `grund list --summary` and editor hovers.",
+                    "x-grund-spec": {
+                      "id": "FS-config-v2.presentation",
+                      "href": "docs/functional-spec/FS-config-v2.md#presentation-the-presentation-concern"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "x-grund-key": "<NAME>"
+            },
+            "fmt": {
+              "type": "object",
+              "description": "What `grund fmt` writes and leaves alone.",
+              "x-grund-spec": {
+                "id": "FS-config-v2.presentation",
+                "href": "docs/functional-spec/FS-config-v2.md#presentation-the-presentation-concern"
+              },
+              "properties": {
+                "anchors": {
+                  "type": "string",
+                  "enum": [
+                    "github"
+                  ],
+                  "description": "The heading-anchor style `grund fmt` writes in citation links; `github` is the only one today.",
+                  "default": "github",
+                  "x-grund-spec": {
+                    "id": "FS-config-v2.presentation",
+                    "href": "docs/functional-spec/FS-config-v2.md#presentation-the-presentation-concern"
+                  }
+                },
+                "links": {
+                  "type": "string",
+                  "enum": [
+                    "index"
+                  ],
+                  "description": "Where `grund fmt` points citation links; `index` is the only target today.",
+                  "default": "index",
+                  "x-grund-spec": {
+                    "id": "FS-config-v2.presentation",
+                    "href": "docs/functional-spec/FS-config-v2.md#presentation-the-presentation-concern"
+                  }
+                },
+                "exclude": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Files `grund fmt` never rewrites: gitignore-style globs, as v1 `[fmt] exclude`.",
+                  "default": [],
+                  "x-grund-spec": {
+                    "id": "FS-config-v2.presentation",
+                    "href": "docs/functional-spec/FS-config-v2.md#presentation-the-presentation-concern"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "workspace": {
+          "type": "object",
+          "description": "The sub-projects a workspace root checks, each in its own namespace.",
+          "x-grund-spec": {
+            "id": "FS-config.3.8",
+            "href": "docs/functional-spec/FS-config.md#38-workspace--sub-project-members"
+          },
+          "properties": {
+            "members": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Member directories, or globs of them, each checked as its own project.",
+              "default": [],
+              "x-grund-spec": {
+                "id": "FS-config.3.8",
+                "href": "docs/functional-spec/FS-config.md#38-workspace--sub-project-members"
+              }
+            },
+            "optional_members": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Members that may be absent, such as an uninitialized submodule.",
+              "default": [],
+              "x-grund-spec": {
+                "id": "FS-config.3.8",
+                "href": "docs/functional-spec/FS-config.md#38-workspace--sub-project-members"
+              }
+            },
+            "include_root": {
+              "type": "boolean",
+              "description": "Whether the root is checked as a project too.",
+              "default": true,
+              "x-grund-spec": {
+                "id": "FS-config.3.8",
+                "href": "docs/functional-spec/FS-config.md#38-workspace--sub-project-members"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "grund_config_version",
+        "schema"
+      ],
+      "additionalProperties": false
+    },
+    "v2Kind": {
+      "type": "object",
+      "description": "One kind: its homes, its form, and its fields.",
+      "x-grund-spec": {
+        "id": "FS-config-v2.schema.places",
+        "href": "docs/functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places"
+      },
+      "properties": {
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Single-file homes: every declaration is a heading in one of these documents.",
+          "default": [],
+          "x-grund-spec": {
+            "id": "FS-config-v2.schema.places",
+            "href": "docs/functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places"
+          }
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Folder homes: each declaration is the H1 of its own file under one of these directories.",
+          "default": [],
+          "x-grund-spec": {
+            "id": "FS-config-v2.schema.places",
+            "href": "docs/functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places"
+          }
+        },
+        "citable": {
+          "type": "boolean",
+          "description": "`false` makes this a place: it cites, but declares no IDs.",
+          "default": true,
+          "x-grund-spec": {
+            "id": "FS-config-v2.schema.places",
+            "href": "docs/functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places"
+          }
+        },
+        "scan": {
+          "type": "boolean",
+          "description": "`false` lists the kind in the Project map without walking it.",
+          "default": true,
+          "x-grund-spec": {
+            "id": "FS-config-v2.schema.places",
+            "href": "docs/functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places"
+          }
+        },
+        "index": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "const": false
+            }
+          ],
+          "description": "The folder's index file, which must list every declaration; `false` opts out.",
+          "x-grund-default": "README.md (no E2E special case in v2)",
+          "x-grund-spec": {
+            "id": "FS-config-v2.schema.places",
+            "href": "docs/functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places"
+          },
+          "examples": [
+            "INDEX.md",
+            false
+          ]
+        },
+        "id_format": {
+          "type": "string",
+          "description": "This kind's ID template, overriding `[schema] id_format`.",
+          "x-grund-default": "inherits `[schema] id_format`",
+          "x-grund-spec": {
+            "id": "FS-config-v2.schema.places",
+            "href": "docs/functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places"
+          },
+          "examples": [
+            "{kind}-{number}"
+          ]
+        },
+        "fetch": {
+          "type": "string",
+          "description": "The executable `grund fetch` runs to save a missing external snapshot.",
+          "x-grund-spec": {
+            "id": "FS-config-v2.schema.places",
+            "href": "docs/functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places"
+          }
+        },
+        "form": {
+          "type": "string",
+          "enum": [
+            "prose",
+            "value",
+            "rule"
+          ],
+          "description": "What a declaration is: ordinary `prose`, a first-class `value`, or an executable `rule`.",
+          "default": "prose",
+          "x-grund-spec": {
+            "id": "FS-fields.declare.form",
+            "href": "docs/functional-spec/FS-fields.md#declareform-form-is-a-row-key"
+          }
+        },
+        "closed": {
+          "type": "string",
+          "enum": [
+            "must",
+            "warn",
+            "should",
+            "may"
+          ],
+          "description": "How strongly a chapter that is neither a declared field nor a numbered section is reported.",
+          "default": "may",
+          "x-grund-spec": {
+            "id": "FS-fields.declare.closed",
+            "href": "docs/functional-spec/FS-fields.md#declareclosed-closed-is-a-strength-on-the-row"
+          }
+        },
+        "fields": {
+          "type": "object",
+          "description": "The kind's chapters as fields, by name.",
+          "additionalProperties": {
+            "$ref": "#/definitions/v2Field"
+          },
+          "x-grund-key": "<field>"
+        }
+      },
+      "additionalProperties": false
+    },
+    "v2Field": {
+      "type": "object",
+      "description": "One field: a chapter of the kind, its presence, position and content.",
+      "x-grund-spec": {
+        "id": "FS-fields.declare.field",
+        "href": "docs/functional-spec/FS-fields.md#declarefield-a-field-is-a-table-under-its-kind"
+      },
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The heading title the chapter must carry, exactly.",
+          "x-grund-spec": {
+            "id": "FS-fields.declare.field",
+            "href": "docs/functional-spec/FS-fields.md#declarefield-a-field-is-a-table-under-its-kind"
+          }
+        },
+        "presence": {
+          "type": "string",
+          "enum": [
+            "must",
+            "warn",
+            "should",
+            "may"
+          ],
+          "description": "How strongly a missing chapter is reported.",
+          "default": "may",
+          "x-grund-spec": {
+            "id": "FS-fields.declare.field",
+            "href": "docs/functional-spec/FS-fields.md#declarefield-a-field-is-a-table-under-its-kind"
+          }
+        },
+        "position": {
+          "type": "string",
+          "enum": [
+            "first",
+            "last"
+          ],
+          "description": "Pin the chapter first or last among the declaration's sections.",
+          "x-grund-spec": {
+            "id": "FS-fields.declare.field",
+            "href": "docs/functional-spec/FS-fields.md#declarefield-a-field-is-a-table-under-its-kind"
+          }
+        },
+        "after": {
+          "type": "string",
+          "description": "Name of another field of the same kind this one comes directly after.",
+          "x-grund-spec": {
+            "id": "FS-fields.declare.field",
+            "href": "docs/functional-spec/FS-fields.md#declarefield-a-field-is-a-table-under-its-kind"
+          }
+        },
+        "content": {
+          "type": "string",
+          "enum": [
+            "prose",
+            "values"
+          ],
+          "description": "`values` makes this chapter the kind's value chapter.",
+          "default": "prose",
+          "x-grund-spec": {
+            "id": "FS-fields.declare.field",
+            "href": "docs/functional-spec/FS-fields.md#declarefield-a-field-is-a-table-under-its-kind"
+          }
+        },
+        "one_of": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The values a scalar chapter's title may take.",
+          "x-grund-spec": {
+            "id": "FS-fields.declare.field",
+            "href": "docs/functional-spec/FS-fields.md#declarefield-a-field-is-a-table-under-its-kind"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "v2CitationRule": {
+      "type": "object",
+      "description": "What a citing kind (or place) must, warn, should, may, should not, warn not and must not cite.",
+      "x-grund-spec": {
+        "id": "FS-config-v2.rules.citations",
+        "href": "docs/functional-spec/FS-config-v2.md#rulescitations-rulescitations"
+      },
+      "properties": {
+        "default": {
+          "type": "string",
+          "enum": [
+            "may",
+            "should-not",
+            "warn-not",
+            "must-not"
+          ],
+          "description": "What this kind may cite when no list names the target: `may`, or a prohibition at some strength.",
+          "x-grund-spec": {
+            "id": "FS-config-v2.rules.citations.default",
+            "href": "docs/functional-spec/FS-config-v2.md#rulescitationsdefault-a-default-may-forbid-never-oblige"
+          }
+        },
+        "must": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds this one must cite; a miss is an error.",
+          "default": [],
+          "x-grund-spec": {
+            "id": "FS-config-v2.rules.citations",
+            "href": "docs/functional-spec/FS-config-v2.md#rulescitations-rulescitations"
+          }
+        },
+        "warn": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds this one must cite; a miss is a warning.",
+          "default": [],
+          "x-grund-spec": {
+            "id": "FS-config-v2.rules.citations",
+            "href": "docs/functional-spec/FS-config-v2.md#rulescitations-rulescitations"
+          }
+        },
+        "should": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds this one should cite; a miss is a suggestion.",
+          "default": [],
+          "x-grund-spec": {
+            "id": "FS-config-v2.rules.citations",
+            "href": "docs/functional-spec/FS-config-v2.md#rulescitations-rulescitations"
+          }
+        },
+        "may": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds this one may cite.",
+          "default": [],
+          "x-grund-spec": {
+            "id": "FS-config-v2.rules.citations",
+            "href": "docs/functional-spec/FS-config-v2.md#rulescitations-rulescitations"
+          }
+        },
+        "should-not": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds this one should not cite; a citation is a suggestion.",
+          "default": [],
+          "x-grund-spec": {
+            "id": "FS-config-v2.rules.citations",
+            "href": "docs/functional-spec/FS-config-v2.md#rulescitations-rulescitations"
+          }
+        },
+        "warn-not": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds this one must not cite; a citation is a warning.",
+          "default": [],
+          "x-grund-spec": {
+            "id": "FS-config-v2.rules.citations",
+            "href": "docs/functional-spec/FS-config-v2.md#rulescitations-rulescitations"
+          }
+        },
+        "must-not": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds this one must not cite; a citation is an error.",
+          "default": [],
+          "x-grund-spec": {
+            "id": "FS-config-v2.rules.citations",
+            "href": "docs/functional-spec/FS-config-v2.md#rulescitations-rulescitations"
+          }
+        },
+        "grounding": {
+          "$ref": "#/definitions/v2Grounding"
+        }
+      },
+      "additionalProperties": false
+    },
+    "v2Grounding": {
+      "type": "object",
+      "description": "The grounding ladder: the unit, by strength, that must carry a citation.",
+      "x-grund-spec": {
+        "id": "FS-config-v2.rules.grounding",
+        "href": "docs/functional-spec/FS-config-v2.md#rulesgrounding-grounding-is-a-ladder-replaced-whole"
+      },
+      "properties": {
+        "must": {
+          "type": "string",
+          "enum": [
+            "file",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6"
+          ],
+          "description": "The unit (`file`, or every `h2`–`h6` section) that must carry a citation; a miss is an error.",
+          "x-grund-spec": {
+            "id": "FS-config-v2.rules.grounding",
+            "href": "docs/functional-spec/FS-config-v2.md#rulesgrounding-grounding-is-a-ladder-replaced-whole"
+          }
+        },
+        "warn": {
+          "type": "string",
+          "enum": [
+            "file",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6"
+          ],
+          "description": "The unit that must carry a citation; a miss is a warning.",
+          "x-grund-spec": {
+            "id": "FS-config-v2.rules.grounding",
+            "href": "docs/functional-spec/FS-config-v2.md#rulesgrounding-grounding-is-a-ladder-replaced-whole"
+          }
+        },
+        "should": {
+          "type": "string",
+          "enum": [
+            "file",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6"
+          ],
+          "description": "The unit that should carry a citation; a miss is a suggestion.",
+          "x-grund-spec": {
+            "id": "FS-config-v2.rules.grounding",
+            "href": "docs/functional-spec/FS-config-v2.md#rulesgrounding-grounding-is-a-ladder-replaced-whole"
+          }
+        },
+        "may": {
+          "type": "string",
+          "enum": [
+            "file",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6"
+          ],
+          "description": "A grounding unit that is not checked.",
+          "x-grund-spec": {
+            "id": "FS-config-v2.rules.grounding",
+            "href": "docs/functional-spec/FS-config-v2.md#rulesgrounding-grounding-is-a-ladder-replaced-whole"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
