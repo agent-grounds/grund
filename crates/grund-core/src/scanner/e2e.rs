@@ -171,7 +171,7 @@ pub(crate) fn e2e_case_dir_name(schema: &Schema, rendered: &str) -> String {
 fn read_e2e_case(schema: &Schema, frame: Frame<'_>, dir: &Path) -> Result<E2eCase> {
     // R06d of §REQ-one-answer.differences.text: the manifest as saved
     // (§DF-four-editor-checks-read-saved-text).
-    let saved = frame.sources().saved();
+    let saved = Sources::saved();
     let command_args = dir.join("command.args");
     let args = if path_is_file(&command_args) {
         // §FS-check.6.1.1: cover this effective input before its shared read.
@@ -209,7 +209,7 @@ fn read_e2e_spec_refs(schema: &Schema, frame: Frame<'_>, dir: &Path) -> Result<V
     }
     // §FS-check.6.1.1: cover this effective input before its shared read; R06d of
     // §REQ-one-answer.differences.text reads it as saved (§DF-four-editor-checks-read-saved-text).
-    let text = frame.sources().saved().text(&path)?;
+    let text = Sources::saved().text(&path)?;
     Ok(text
         .lines()
         .filter_map(|line| e2e_spec_ref_from_line(schema, frame, line.trim()))

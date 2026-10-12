@@ -64,7 +64,7 @@ pub(crate) fn check_agent_block_path(
     crate::config::observe_input(path, false);
     // §FS-check.6.1.1, R06c of §REQ-one-answer.differences.text: the saved file,
     // observed before its read (§DF-four-editor-checks-read-saved-text).
-    let saved = Sources::on_disk().saved();
+    let saved = Sources::saved();
     if !saved.exists(path) {
         return;
     }

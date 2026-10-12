@@ -22,7 +22,7 @@ use crate::model::{
     paired_declarations, scanned_decl_relative_path, scanned_path_key,
 };
 use crate::resolver::section_resolves;
-use crate::sources::{path_is_dir, physical_path_key};
+use crate::sources::{Sources, path_is_dir, physical_path_key};
 
 /// One kind's index obligation, resolved against the config root
 /// (§FS-config.3.4). `folder_key` and `index_key` are config-root-relative and
@@ -298,7 +298,7 @@ pub(super) fn check_kind_indexes(
 
     // R06a of §REQ-one-answer.differences.text: the index as saved
     // (§DF-four-editor-checks-read-saved-text).
-    let saved = frame.sources().saved();
+    let saved = Sources::saved();
     for target in &targets {
         // `is_file`, not `exists`: a path that is not a readable file is not an index
         // this run failed to read, it is an index that is not there — a missing one or
