@@ -116,7 +116,10 @@ token.
 
 Object kind targets use the existing target-entry grammar of
 [§FS-config.3.9.3](FS-config.md#393-alias-matching) unchanged, including a
-pinned `alias/KIND` and `*/KIND`. Alternatives joined with `or` are one target
+pinned `alias/KIND` and `*/KIND`. A target pinned at the rule's own member by
+that member's whole alias path, nested or not (`group/api/AR` in the member
+whose alias path is `group/api`), matches exactly what the bare kind matches,
+because the entry splits at its last `/`. Alternatives joined with `or` are one target
 set. Repeated or differently ordered kinds normalize to the same byte-sorted
 set for meaning and deduplication.
 
@@ -609,7 +612,8 @@ and never affect exit status. Structural recommendations retain their
 structural code on that channel. The one rule finding that was a warning is an
 error from 0.16.0 ([§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160)); the only rule findings that are
 warnings now are those a newly counted section citation alone produces, until
-0.18.0 ([§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)).
+0.18.0 ([§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)), and those a target pinned at the rule's own nested
+alias path alone produces, until 0.18.0 ([§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0180)).
 
 ### 7.1 Invalid rule
 
@@ -795,6 +799,36 @@ because a suggestion never moves the exit status at any release.
 At `0.18.0` these findings become errors on the ordinary `must` channel, and
 this subsection becomes a pointer as [§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160) did. The decision and its
 compatibility route are [§DF-section-citation-counts-in-rules](../decisions/functional/DF-section-citation-counts-in-rules.md#df-section-citation-counts-in-rules-a-resolved-citation-to-a-numbered-section-counts-in-chapter-rules).
+
+### 7.9 A target pinned at its own nested alias warns until 0.18.0
+
+A required-level finding that exists only because a target pinned at the
+rule's own member by a nested alias path now matches that member's declarations
+([§FS-rules.2](FS-rules.md#2-subject-selectors)) is carried on the warnings channel rather than the errors channel,
+for one release window. Before this release such a target matched nothing in
+its own member, because the pin was split at its first `/` rather than its
+last ([§FS-config.3.9.3](FS-config.md#393-alias-matching)). The window covers every finding the corrected match can
+newly produce, outbound or inbound: a prohibition's `forbidden-citation` at a
+site the pinned target now matches, and the `citation-cardinality` or
+`uncited-unit` of an `at most N` or `exactly N` count that the same count
+without those sites satisfies. A count that fails without them is still an
+error. The verdicts that newly pass — an `at least N` count, or per-target
+coverage, that those sites now satisfy — land in the release that ships the
+change, and only the ones that newly fail are ramped.
+
+The warning is the error's message unchanged, followed by `; a target pinned at
+the rule's own nested alias path now matches, and this warning becomes an error
+in grund 0.18.0`, the pending clause of [§FS-distribution.4.2.3](FS-distribution.md#423-the-vocabulary-is-closed)'s closed
+vocabulary. It carries the code it will carry as an error, so `--only` and
+`--ignore` select it now as they will then, it leaves the exit status where the
+rest of the run put it, and at the recommended level such a finding is an
+ordinary suggestion and owes no ramp, all as in [§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180). A finding that
+qualifies under both windows stays a warning until the later of their two
+releases and carries both clauses, [§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)'s first.
+
+At `0.18.0` these findings become errors on the ordinary `must` channel, and
+this subsection becomes a pointer as [§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160) did. The decision and its
+compatibility route are [§DF-nested-alias-rule-targets](../decisions/functional/DF-nested-alias-rule-targets.md#df-nested-alias-rule-targets-a-rule-target-pinned-at-its-own-nested-alias-matches-like-the-bare-kind).
 
 ## 8. Command surfaces
 

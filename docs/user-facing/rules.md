@@ -148,7 +148,9 @@ The complete accepted sentence forms, with representative findings, are:
 Counts are positive decimal integers. Spell one as `one` where shown; numeric
 counts other than one use plural `chapters` or `times`. Object kinds may be local
 (`REQ`), pinned to a workspace member (`api/REQ`), or any member (`*/REQ`), and
-`or` forms one normalized target set. A namespaced object kind needs the workspace
+`or` forms one normalized target set. A member nested inside another pins
+itself with its whole alias path (`group/api/REQ` in member `group/api`), which
+judges exactly like the bare kind. A namespaced object kind needs the workspace
 in scope: a run without one says so at the rule's heading and still writes the block.
 
 <!-- BEGIN chapter-rules-refused -->
