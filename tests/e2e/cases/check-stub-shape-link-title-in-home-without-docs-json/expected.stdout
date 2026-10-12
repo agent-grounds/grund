@@ -1,0 +1,1 @@
+{"severity":"warning","path":"spec/fs/x.md","line":1,"code":"stub-shape","message":"FS-x is read as a declaration titled with a link, and that reading is removed in grund 0.19.0, which reads it as a stub to ../../src/x.rs — give the heading a title that is not one link to keep it a declaration","sites":null,"authority":null}

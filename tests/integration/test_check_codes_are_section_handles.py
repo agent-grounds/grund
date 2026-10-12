@@ -57,6 +57,7 @@ MIGRATED = {
         "oversized-lead",
         "section-heading-level",
         "section-outside-declaration",
+        "stub-shape",
         "unmarked-heading",
     ),
 }

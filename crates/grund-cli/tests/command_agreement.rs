@@ -63,12 +63,14 @@ const LEDGER: &[(&str, &str, &str)] = &[
         "placement",
         "a-stubbed-declaration-is-at-one-site",
     ),
-    ("U01", "u01", "a-twice-declared-section-is-refused-once"),
     ("U03a", "u03a", "the-batch-returns-the-targets-section"),
+    ("U03b", "u03b", "completion-offers-the-targets-section"),
+    ("U03c", "u03c", "the-editor-enumerates-the-targets-section"),
     ("U03d", "u03d", "the-selector-selects-the-targets-chapter"),
     ("U04", "u04", "an-obligation-is-judged-on-the-target"),
-    ("U05", "u05", "a-rule-targets-title-is-read-once"),
     ("U06", "u06", "an-unused-declaration-is-at-one-site"),
+    ("U07", "u07", "a-chapter-rule-counts-the-targets-chapters"),
+    ("U08", "u08", "refs-lists-the-targets-citation"),
     ("R02", "r02", "a-narrowed-workspace-run-resolves-the-alias"),
     // R06a-d keep the saved text for one release (DF-four-editor-checks-read-saved-text);
     // their flip is #624.
@@ -80,118 +82,144 @@ const LEDGER: &[(&str, &str, &str)] = &[
 
 /// `(row, tree, invariant, the question asked of the tree)`: each tree this test
 /// builds, the reproduced rows of #576 first, then one per row of
-/// §REQ-one-answer.differences the command line can show.
-const TREES: &[(&str, &str, &str, fn() -> Verdict)] = &[
+/// §REQ-one-answer.differences the command line, shell completion or the editor
+/// snapshot can show. A tree with no row holds a row that closed, U01 and U05 with
+/// #597, so its two answers must agree.
+const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
     (
-        "G01",
+        Some("G01"),
         "r1",
         "citation-is-its-whole-token",
         identity::citation_is_its_whole_token,
     ),
     (
-        "R01",
+        Some("R01"),
         "r2",
         "narrowed-resolves-as-check",
         identity::a_narrowed_run_resolves_what_check_resolves,
     ),
     (
-        "P05",
+        Some("P05"),
         "r3",
         "one-anchor",
         sections::the_anchor_is_one_and_the_headings,
     ),
     (
-        "G06",
+        Some("G06"),
         "g06",
         "a-lowercase-subject-is-refused-once",
         identity::a_lowercase_subject_is_refused_once,
     ),
     (
-        "G09",
+        Some("G09"),
         "g09",
         "the-homeless-kind-is-one-verdict",
         identity::the_homeless_kind_is_one_verdict,
     ),
     (
-        "P01",
+        Some("P01"),
         "p01",
         "a-body-ends-where-refs-ends-it",
         sections::a_body_ends_where_refs_ends_it,
     ),
     (
-        "P02",
+        Some("P02"),
         "p02",
         "a-block-comment-section-is-one-section",
         sections::a_block_comment_section_is_one_section,
     ),
     (
-        "P03",
+        Some("P03"),
         "p03",
         "a-top-level-doc-heading-is-one-section",
         sections::a_top_level_doc_heading_is_one_section,
     ),
     (
-        "P07",
+        Some("P07"),
         "p07",
         "a-plain-heading-is-in-one-section",
         sections::a_plain_heading_is_in_one_section,
     ),
     (
-        "P10",
+        Some("P10"),
         "p10",
         "an-adjacent-note-is-in-one-body",
         sections::an_adjacent_note_is_in_one_body,
     ),
     (
-        "P12",
+        Some("P12"),
         "p12",
         "a-doc-comment-section-ends-once",
         sections::a_doc_comment_section_ends_once,
     ),
     (
-        "Placement",
+        Some("Placement"),
         "placement",
         "a-stubbed-declaration-is-at-one-site",
         stubs::a_stubbed_declaration_is_at_one_site,
     ),
     (
-        "U01",
+        None,
         "u01",
         "a-twice-declared-section-is-refused-once",
         stubs::a_twice_declared_section_is_refused_once,
     ),
     (
-        "U03a",
+        Some("U03a"),
         "u03a",
         "the-batch-returns-the-targets-section",
         stubs::the_batch_returns_the_targets_section,
     ),
     (
-        "U03d",
+        Some("U03b"),
+        "u03b",
+        "completion-offers-the-targets-section",
+        stubs::completion_offers_the_targets_section,
+    ),
+    (
+        Some("U03c"),
+        "u03c",
+        "the-editor-enumerates-the-targets-section",
+        stubs::the_editor_enumerates_the_targets_section,
+    ),
+    (
+        Some("U03d"),
         "u03d",
         "the-selector-selects-the-targets-chapter",
         stubs::the_selector_selects_the_targets_chapter,
     ),
     (
-        "U04",
+        Some("U04"),
         "u04",
         "an-obligation-is-judged-on-the-target",
         stubs::an_obligation_is_judged_on_the_target,
     ),
     (
-        "U05",
+        None,
         "u05",
         "a-rule-targets-title-is-read-once",
         stubs::a_rule_targets_title_is_read_once,
     ),
     (
-        "U06",
+        Some("U06"),
         "u06",
         "an-unused-declaration-is-at-one-site",
         stubs::an_unused_declaration_is_at_one_site,
     ),
     (
-        "R02",
+        Some("U07"),
+        "u07",
+        "a-chapter-rule-counts-the-targets-chapters",
+        stubs::a_chapter_rule_counts_the_targets_chapters,
+    ),
+    (
+        Some("U08"),
+        "u08",
+        "refs-lists-the-targets-citation",
+        stubs::refs_lists_the_targets_citation,
+    ),
+    (
+        Some("R02"),
         "r02",
         "a-narrowed-workspace-run-resolves-the-alias",
         identity::a_narrowed_workspace_run_resolves_the_alias,
@@ -200,11 +228,7 @@ const TREES: &[(&str, &str, &str, fn() -> Verdict)] = &[
 
 /// `(row, step, what it needs)`: each row of §REQ-one-answer.differences no
 /// command-line tree shows, and the step of #576 that gives this test its harness.
-const DEFERRED: &[(&str, &str, &str)] = &[
-    ("P16", "#598", "the editor snapshot's section span"),
-    ("U03b", "#597", "shell completion, a row read from code"),
-    ("U03c", "#597", "the editor snapshot"),
-];
+const DEFERRED: &[(&str, &str, &str)] = &[("P16", "#598", "the editor snapshot's section span")];
 
 /// What the seed leaves out under §AR-ci.requirements.1, and the step that
 /// widens it before #576 closes.
@@ -369,7 +393,7 @@ const LEDGER_ONLY: &[&str] = &["G01", "P05"];
 fn listing_problems(rows: &[String]) -> Vec<String> {
     let built: BTreeSet<&str> = TREES
         .iter()
-        .map(|(row, ..)| *row)
+        .filter_map(|(row, ..)| *row)
         .chain(buffers::TREES.iter().filter_map(|(row, ..)| *row))
         .collect();
     let deferred: BTreeSet<&str> = DEFERRED.iter().map(|(row, ..)| *row).collect();
@@ -440,12 +464,14 @@ fn every_deferral_and_widening_names_its_step() {
 #[test]
 fn every_tree_is_its_ledger_row_or_agrees() {
     for (row, tree, invariant, _) in TREES {
-        if let Some((listed, ..)) = LEDGER.iter().find(|(_, t, i)| t == tree && i == invariant) {
-            assert_eq!(
-                listed, row,
-                "{tree} / {invariant} is ledgered under another row"
-            );
-        }
+        let listed = LEDGER
+            .iter()
+            .find(|(_, t, i)| t == tree && i == invariant)
+            .map(|(listed, ..)| *listed);
+        assert_eq!(
+            listed, *row,
+            "{tree} / {invariant} is ledgered under another row, or a closed row's tree is"
+        );
     }
     for (row, tree, _) in buffers::TREES {
         let listed = LEDGER

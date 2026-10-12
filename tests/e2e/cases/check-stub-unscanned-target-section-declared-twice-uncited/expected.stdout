@@ -1,0 +1,1 @@
+src/x.rs:5: error: duplicate section FS-x.1 (also declared at src/x.rs:9)
