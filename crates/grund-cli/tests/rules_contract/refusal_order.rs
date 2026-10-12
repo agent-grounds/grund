@@ -92,3 +92,46 @@ fn a_sentence_is_refused_for_the_first_stage_it_fails() {
         wrong.join("\n")
     );
 }
+
+/// §FS-rule-refusals.sentences.order: stage 2 reads the wildcard from the first
+/// clause's subject, so the modality of a later clause cannot hide it — `must
+/// not` and `should not` are read before `must` and `should` when a subject is
+/// split off a whole sentence (§FS-rules.3.6). A modality the first clause does
+/// not accept leaves no subject, and the sentence is refused as before.
+#[test]
+fn a_wildcard_is_read_from_the_subject_of_the_first_clause() {
+    let root = case_repo("check-rule-conjunction-one-kind");
+    let wildcard = "section-component wildcards are not accepted in phase 1";
+    let rows = [
+        (
+            "The * chapter of each FS must cite at least one FS and must not cite any FS.",
+            format!(
+                "error: conjunctions are not accepted; accepted forms: \"Each FS must cite at least one FS.\" and \"Each FS must not cite any FS.\" — {wildcard}{WINDOW}"
+            ),
+        ),
+        (
+            "The * chapter of each FS should cite at least one FS and should not cite any FS.",
+            format!(
+                "error: conjunctions are not accepted; accepted forms: \"Each FS should cite at least one FS.\" and \"Each FS should not cite any FS.\" — {wildcard}{WINDOW}"
+            ),
+        ),
+        (
+            "FS-x.* may not cite any FS.",
+            "error: modality \"may not\" is not accepted; accepted form: FS-x must not cite any FS."
+                .to_string(),
+        ),
+    ];
+    let mut wrong = Vec::new();
+    for (sentence, expected) in rows {
+        let output = run(&root, &["check", ".", "--rule", sentence]);
+        let stderr = text(&output.stderr);
+        let line = stderr.lines().next().unwrap_or_default();
+        if output.status.code() != Some(2) || line != expected {
+            wrong.push(format!(
+                "{sentence}\n  exit {:?}\n  first line {line:?}\n  expected   {expected:?}",
+                output.status.code()
+            ));
+        }
+    }
+    assert!(wrong.is_empty(), "{}", wrong.join("\n"));
+}

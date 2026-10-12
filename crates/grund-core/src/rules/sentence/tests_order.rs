@@ -3,7 +3,7 @@
 
 use std::path::Path;
 
-use super::STAGES;
+use super::stages::STAGES;
 
 #[test]
 fn read_takes_the_stages_of_the_specification_table() {
@@ -23,5 +23,5 @@ fn read_takes_the_stages_of_the_specification_table() {
             Some(rest.split(" |").next()?.trim())
         })
         .collect::<Vec<_>>();
-    assert_eq!(stages, STAGES);
+    assert_eq!(stages, STAGES.map(|(name, _)| name));
 }
