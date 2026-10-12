@@ -12,7 +12,6 @@ use crate::config::{Config, Invocation, Selection, config_at};
 #[cfg(unix)]
 use crate::model::{Catalog, Declaration, DeclarationSource};
 use crate::model::{Id, format_path};
-use crate::sources::Buffers;
 use crate::testing::{
     findings_signature, legacy_fs_folder_config, scan_errors_signature, scan_tree, test_root, write,
 };
@@ -62,7 +61,6 @@ fn parallel_file_scan_matches_sequential_scan() {
         true,
         &[],
         usize::MAX,
-        &Buffers::default(),
     )
     .expect("sequential scan");
     let (parallel, parallel_errors) = scan_tree_with_workspace_threshold(
@@ -72,7 +70,6 @@ fn parallel_file_scan_matches_sequential_scan() {
         true,
         &[],
         1,
-        &Buffers::default(),
     )
     .expect("parallel scan");
 
@@ -144,7 +141,6 @@ members = ["packages/*"]
                 true,
                 &targets,
                 usize::MAX,
-                &Buffers::default(),
             )
             .expect("sequential workspace project scan");
             (
@@ -164,7 +160,6 @@ members = ["packages/*"]
                 true,
                 &targets,
                 1,
-                &Buffers::default(),
             )
             .expect("parallel workspace project scan");
             (

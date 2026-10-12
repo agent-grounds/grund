@@ -12,13 +12,12 @@ use std::path::{Path, PathBuf};
 use super::run::unread_resolution_source_cautions;
 use super::scope_cautions::scan_scope_caution;
 use crate::checker::{
-    CheckWorkspace, ScanScope, check_chapter_rules, check_with_workspace_and_overlays,
-    path_report_scope, retain_diagnostics_in_report_scope, sort_diagnostics,
+    CheckWorkspace, ScanScope, check_chapter_rules, check_project, path_report_scope,
+    retain_diagnostics_in_report_scope, sort_diagnostics,
 };
 use crate::config::Config;
 use crate::model::{CheckReport, Diagnostic};
 use crate::resolver::{WorkspaceCheckTarget, WorkspaceContext};
-use crate::sources::Buffers;
 use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, unlisted_workspace_block_errors,
 };
@@ -51,11 +50,10 @@ pub(super) fn editor_report_scope(
 /// scope rather than the walk. A no-op narrowing for a root anchor.
 pub(super) fn editor_report(
     context: &WorkspaceContext,
-    overlays: &Buffers,
     anchor: &Path,
     report_scope: Option<&ScanScope>,
 ) -> CheckReport {
-    check_workspace_context(context, overlays, anchor, report_scope)
+    check_workspace_context(context, anchor, report_scope)
 }
 
 /// §FS-lsp.4.1: the report the editor shows, decided here so that an editor and a
@@ -76,7 +74,6 @@ pub(super) fn editor_report(
 /// of the anchor, then the files the wider walk could not read outside it.
 fn check_workspace_context(
     context: &WorkspaceContext,
-    overlays: &Buffers,
     anchor: &Path,
     report_scope: Option<&ScanScope>,
 ) -> CheckReport {
@@ -118,26 +115,24 @@ fn check_workspace_context(
                 .frame()
                 .displayed_by(context.render_config().frame().display)
                 .checked_as(Some(&project.alias));
-            check_with_workspace_and_overlays(
+            check_project(
                 config.rules(),
                 config.schema(),
                 &project.findings,
                 &expected,
                 frame,
                 &check_workspace,
-                overlays,
             )
         } else {
             let no_workspace = BTreeMap::new();
             let expected = expected(&project.findings, &config, &no_workspace);
-            check_with_workspace_and_overlays(
+            check_project(
                 config.rules(),
                 config.schema(),
                 &project.findings,
                 &expected,
                 config.frame(),
                 &CheckWorkspace::alone(&no_workspace),
-                overlays,
             )
         };
         check_chapter_rules(

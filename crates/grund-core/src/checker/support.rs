@@ -1,6 +1,7 @@
 use crate::config::{Frame, Schema};
 use crate::grammar::{is_inside_inline_code, render_id, render_qualified_id};
 use crate::model::{Catalog, Citation, Diagnostic, Id, sort_path_key};
+use crate::sources::Sources;
 
 /// §FS-check.3.1: the dangling message. A near same-kind ID is a likely typo; a
 /// Markdown inline-code context is a likely illustration. Offer whichever
@@ -70,8 +71,9 @@ pub(super) fn citation_in_markdown_inline_code(cite: &Citation) -> bool {
     if cite.file.extension().and_then(|e| e.to_str()) != Some("md") {
         return false;
     }
-    // §FS-check.6.1.1: cover this effective input before its shared read.
-    let Ok(text) = crate::config::input_read_to_string(&cite.file) else {
+    // §FS-check.6.1.1: cover this effective input before its shared read; R06b of
+    // §REQ-one-answer.differences.text reads it as saved (§DF-four-editor-checks-read-saved-text).
+    let Ok(text) = Sources::on_disk().saved().text(&cite.file) else {
         return false;
     };
     let Some(line) = text.lines().nth(cite.line.saturating_sub(1)) else {

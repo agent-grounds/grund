@@ -1,6 +1,6 @@
+use crate::sources::{Sources, canonical_path, path_exists, path_is_file};
 use anyhow::{Context, Result};
 use std::collections::BTreeMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::config::{Frame, Schema, root_scope_roots};
@@ -26,7 +26,7 @@ fn cases_root_in_ordinary_scope(schema: &Schema, frame: Frame<'_>, cases_root: &
         .any(|root| {
             // The caller canonicalizes the cases root (§AR-scanner.6.2), so the compare
             // has to meet it there; a root that does not exist yet keeps its own spelling.
-            let root = fs::canonicalize(root).unwrap_or_else(|_| root.clone());
+            let root = canonical_path(root).unwrap_or_else(|_| root.clone());
             cases_root.starts_with(&root) || root.starts_with(cases_root)
         })
 }
@@ -54,10 +54,10 @@ pub(super) fn scan_e2e_cases(
         return Ok(());
     };
     let cases_root = frame.root().join(folder);
-    if !cases_root.exists() || !cases_root.is_dir() {
+    if !path_exists(&cases_root) || !cases_root.is_dir() {
         return Ok(());
     }
-    let cases_root = fs::canonicalize(&cases_root).unwrap_or(cases_root);
+    let cases_root = canonical_path(&cases_root).unwrap_or(cases_root);
     let mut scan_root = cases_root.clone();
 
     // §FS-check.1.3.6.1: a path-scoped run reads the cases the ordinary run reads —
@@ -68,10 +68,10 @@ pub(super) fn scan_e2e_cases(
             && cases_root_in_ordinary_scope(schema, frame, &cases_root));
     if narrowed_to_path {
         let scope = scope.unwrap_or(Path::new("."));
-        if scope.is_file() {
+        if path_is_file(&scope) {
             return Ok(());
         }
-        let scope = fs::canonicalize(scope).unwrap_or_else(|_| scope.to_path_buf());
+        let scope = canonical_path(scope).unwrap_or_else(|_| scope.to_path_buf());
         if scope.starts_with(&cases_root) {
             scan_root = scope;
         } else if !cases_root.starts_with(&scope) {
@@ -84,14 +84,14 @@ pub(super) fn scan_e2e_cases(
     }
 
     let mut case_dirs = Vec::new();
-    if scan_root.join("expected.exit").is_file() {
+    if path_is_file(&scan_root.join("expected.exit")) {
         case_dirs.push(scan_root);
     } else {
         // §FS-check.6.1.1: cover this effective input before its shared read.
-        for entry in crate::config::input_read_dir(&scan_root)? {
+        for entry in Sources::on_disk().read_dir(&scan_root)? {
             let entry = entry?;
             let path = entry.path();
-            if path.is_dir() && path.join("expected.exit").is_file() {
+            if path.is_dir() && path_is_file(&path.join("expected.exit")) {
                 case_dirs.push(path);
             }
         }
@@ -169,10 +169,14 @@ pub(crate) fn e2e_case_dir_name(schema: &Schema, rendered: &str) -> String {
 /// `check`), `expected.exit`, `spec.refs`, and the recursive fixture file list —
 /// the data `grund E2E-<name>` renders or checks (§FS-show.2.4, §FS-config.3.9).
 fn read_e2e_case(schema: &Schema, frame: Frame<'_>, dir: &Path) -> Result<E2eCase> {
+    // R06d of §REQ-one-answer.differences.text: the manifest as saved
+    // (§DF-four-editor-checks-read-saved-text).
+    let saved = frame.sources().saved();
     let command_args = dir.join("command.args");
-    let args = if command_args.is_file() {
+    let args = if path_is_file(&command_args) {
         // §FS-check.6.1.1: cover this effective input before its shared read.
-        crate::config::input_read_to_string(&command_args)?
+        saved
+            .text(&command_args)?
             .split_whitespace()
             .map(str::to_string)
             .collect()
@@ -180,7 +184,8 @@ fn read_e2e_case(schema: &Schema, frame: Frame<'_>, dir: &Path) -> Result<E2eCas
         vec!["check".to_string()]
     };
     // §FS-check.6.1.1: cover this effective input before its shared read.
-    let expected_exit = crate::config::input_read_to_string(dir.join("expected.exit"))?
+    let expected_exit = saved
+        .text(&dir.join("expected.exit"))?
         .trim()
         .parse::<i32>()
         .with_context(|| format!("parse {}/expected.exit", format_path(dir)))?;
@@ -199,11 +204,12 @@ fn read_e2e_case(schema: &Schema, frame: Frame<'_>, dir: &Path) -> Result<E2eCas
 
 fn read_e2e_spec_refs(schema: &Schema, frame: Frame<'_>, dir: &Path) -> Result<Vec<E2eSpecRef>> {
     let path = dir.join("spec.refs");
-    if !path.is_file() {
+    if !path_is_file(&path) {
         return Ok(Vec::new());
     }
-    // §FS-check.6.1.1: cover this effective input before its shared read.
-    let text = crate::config::input_read_to_string(path)?;
+    // §FS-check.6.1.1: cover this effective input before its shared read; R06d of
+    // §REQ-one-answer.differences.text reads it as saved (§DF-four-editor-checks-read-saved-text).
+    let text = frame.sources().saved().text(&path)?;
     Ok(text
         .lines()
         .filter_map(|line| e2e_spec_ref_from_line(schema, frame, line.trim()))
@@ -243,7 +249,7 @@ fn e2e_spec_ref_from_line(schema: &Schema, frame: Frame<'_>, line: &str) -> Opti
 
 fn collect_relative_fixture_files(root: &Path, dir: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
     // §FS-check.6.1.1: cover this effective input before its shared read.
-    for entry in crate::config::input_read_dir(dir)? {
+    for entry in Sources::on_disk().read_dir(dir)? {
         let entry = entry?;
         let path = entry.path();
         if path.is_dir() {

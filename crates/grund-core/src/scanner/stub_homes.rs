@@ -13,7 +13,7 @@ use super::read_predicate::name_refusal;
 use super::tree::scan_unwalked_file;
 use crate::config::{Frame, Schema};
 use crate::model::{Catalog, Declaration, Id, StubResolution};
-use crate::sources::{Buffers, Sources, paths_same_location, physical_path_key};
+use crate::sources::{paths_same_location, physical_path_key};
 
 /// Reach every stub's verdict once, after the walk, and record it on the stub
 /// (§AR-scanner.4.6): every command reads it from there and none reaches its own
@@ -21,13 +21,8 @@ use crate::sources::{Buffers, Sources, paths_same_location, physical_path_key};
 /// in is read through the walk's own pass over one file, on the text a save would
 /// write (§FS-declarations.checks.broken-stub.1), once per target however many
 /// stubs and IDs name it. An ID no stub declares is passed over.
-pub(super) fn resolve_stubs(
-    schema: &Schema,
-    frame: Frame<'_>,
-    overlays: &Buffers,
-    findings: &mut Catalog,
-) {
-    let mut targets = UnwalkedTargets::new(schema, frame, overlays);
+pub(super) fn resolve_stubs(schema: &Schema, frame: Frame<'_>, findings: &mut Catalog) {
+    let mut targets = UnwalkedTargets::new(schema, frame);
     for (id, decls) in &mut findings.declarations {
         if !decls.iter().any(|decl| decl.is_stub) {
             continue;
@@ -53,7 +48,7 @@ fn resolve_stub(
 ) -> Option<StubResolution> {
     let target = stub.defined_in.as_ref().filter(|_| stub.is_stub)?;
     // §FS-scan.text.buffer-only: a buffer with no file behind it is there.
-    let sources = Sources::of(targets.overlays);
+    let sources = frame.sources();
     let resolved = sources.stub_target(frame.root(), &stub.file, target);
     if !sources.exists(&resolved) {
         return Some(StubResolution::Missing);
@@ -99,16 +94,14 @@ fn resolve_stub(
 struct UnwalkedTargets<'a> {
     schema: &'a Schema,
     frame: Frame<'a>,
-    overlays: &'a Buffers,
     read: BTreeMap<PathBuf, Option<BTreeMap<Id, Vec<Declaration>>>>,
 }
 
 impl<'a> UnwalkedTargets<'a> {
-    fn new(schema: &'a Schema, frame: Frame<'a>, overlays: &'a Buffers) -> Self {
+    fn new(schema: &'a Schema, frame: Frame<'a>) -> Self {
         Self {
             schema,
             frame,
-            overlays,
             read: BTreeMap::new(),
         }
     }
@@ -116,12 +109,12 @@ impl<'a> UnwalkedTargets<'a> {
     /// The declarations of `id` in `path` that are not stubs, or `None` where the
     /// file cannot be read.
     fn records(&mut self, path: &Path, id: &Id) -> Option<Vec<Declaration>> {
-        let (schema, frame, overlays) = (self.schema, self.frame, self.overlays);
+        let (schema, frame) = (self.schema, self.frame);
         let read = self
             .read
             .entry(physical_path_key(path))
             .or_insert_with(|| {
-                let findings = scan_unwalked_file(path, schema, frame, overlays).ok()?;
+                let findings = scan_unwalked_file(path, schema, frame).ok()?;
                 Some(findings.declarations)
             })
             .as_ref()?;

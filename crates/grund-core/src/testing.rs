@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 
 use anyhow::Result;
 
-use crate::checker::{CheckWorkspace, check_on_disk, diagnostic_cmp};
+use crate::checker::{CheckWorkspace, check_project, diagnostic_cmp};
 use crate::config::{Config, KindIndex, config_file_in, display_path};
 use crate::grammar::render_id;
 use crate::model::{Catalog, CheckReport, Diagnostic, format_path, sort_path_key};
@@ -73,7 +73,7 @@ pub(crate) fn check_with_workspace(
         .frame()
         .displayed_by(path_config.display())
         .checked_as(current_alias);
-    check_on_disk(
+    check_project(
         config.rules(),
         config.schema(),
         findings,

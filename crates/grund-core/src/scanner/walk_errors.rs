@@ -1,5 +1,5 @@
+use crate::sources::{canonical_path, link_metadata};
 use ignore::WalkBuilder;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::tree::ScanError;
@@ -48,7 +48,7 @@ pub(super) fn walk_error_report(
         return symlink_loop_report(&link, ancestor, schema, frame);
     }
     let path = walk_error_path(err).unwrap_or(scan_root);
-    if !fs::symlink_metadata(path).is_ok_and(|meta| meta.file_type().is_symlink()) {
+    if !link_metadata(path).is_ok_and(|meta| meta.file_type().is_symlink()) {
         return Some((path.to_path_buf(), walk_error_reason(err)));
     }
     if !is_scannable(path, schema) || !walk_would_have_read(path, schema) {
@@ -122,7 +122,7 @@ pub(super) fn symlink_loop_report(
 /// error path pays for any of it.
 fn shortest_link_spelling(path: &Path, scan_root: &Path) -> Option<PathBuf> {
     let identity = link_identity(path)?;
-    let canonical_root = fs::canonicalize(scan_root).ok()?;
+    let canonical_root = canonical_path(scan_root).ok()?;
     let relative = identity.strip_prefix(&canonical_root).ok()?;
     let candidate = scan_root.join(relative);
     // The canonical directory may be reached under several in-tree names; this
@@ -136,7 +136,7 @@ fn shortest_link_spelling(path: &Path, scan_root: &Path) -> Option<PathBuf> {
 /// link is identified as the link rather than as its target.
 fn link_identity(path: &Path) -> Option<PathBuf> {
     let name = path.file_name()?;
-    Some(fs::canonicalize(path.parent()?).ok()?.join(name))
+    Some(canonical_path(path.parent()?).ok()?.join(name))
 }
 
 /// Whether the walk would have read the file at `path` had the link resolved —

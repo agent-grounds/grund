@@ -3,7 +3,6 @@
 
 use anyhow::{Result, anyhow};
 use std::collections::BTreeSet;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::tree::ScanError;
@@ -12,7 +11,9 @@ use super::walk_boundaries::{is_scannable, outward_directory_link_root, owned_by
 use super::walk_errors::{symlink_loop_report, walk_error_report};
 use crate::config::{Frame, Schema, canonical_config_root};
 use crate::model::sort_path_key;
-use crate::sources::physical_path_key;
+use crate::sources::{
+    canonical_path, is_regular_file, path_exists, path_is_file, physical_path_key,
+};
 
 /// The tree walk for the callers that ask a yes/no question about the tree and
 /// nothing else — today the `--cross-refs` auto-enable probe, which wants to know
@@ -124,11 +125,11 @@ pub(crate) fn walk_scannable_files_with_sources(
         if !crate::config::observe_input(&scan_root, true) {
             return Err(anyhow!("watch input coverage failed"));
         }
-        if !scan_root.exists() {
+        if !path_exists(&scan_root) {
             continue;
         }
         let canonical_scan_root =
-            fs::canonicalize(&scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
+            canonical_path(&scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
         // §FS-config.3.5.1: a scan root reached through a directory link uses
         // the same canonical project-root boundary as a link met during descent.
 
@@ -153,7 +154,7 @@ pub(crate) fn walk_scannable_files_with_sources(
         // A root that resolves elsewhere reaches every one of its files under a
         // spelling that is not the file's own, so all of them can alias (§FS-check.1.3.2).
         let root_is_aliased = canonical_scan_root != scan_root;
-        if scan_root.is_file() {
+        if path_is_file(&scan_root) {
             if is_scannable(&scan_root, schema) {
                 // §FS-check.1.3.6.1: a file handed as the path is walked beside roots
                 // that reach it under its own name, so a link's spelling has to
@@ -208,7 +209,7 @@ pub(crate) fn walk_scannable_files_with_sources(
             }
             if !entry
                 .file_type()
-                .is_some_and(|file_type| file_type.is_file())
+                .is_some_and(|file_type| is_regular_file(file_type))
                 || !is_scannable(entry.path(), schema)
             {
                 continue;

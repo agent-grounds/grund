@@ -18,9 +18,7 @@ use super::lsp_snapshot::normalized_overlays;
 use crate::config::{Invocation, Selection, display_path};
 use crate::grammar::flatten_cross_ref_links;
 use crate::model::{Finding, ShowOutput};
-use crate::queries::{
-    ShowFormat, ShowOpts, render_show_output_json, show_declaration_with_overlays,
-};
+use crate::queries::{ShowFormat, ShowOpts, render_show_output_json, show_declaration_with_home};
 use crate::resolver::{load_invoked_workspace_context, with_member_id_candidates};
 use crate::sources::Buffers;
 
@@ -40,7 +38,7 @@ pub fn show_with_overlays(
     opts: ShowOpts,
     open_documents: BTreeMap<PathBuf, String>,
 ) -> Result<ShowOutput> {
-    show_with_scope_and_overlays(id_arg, opts, true, &normalized_overlays(open_documents)).1
+    show_with_scope_and_overlays(id_arg, opts, true, normalized_overlays(open_documents)).1
 }
 
 /// The ID read behind `grund <ID>` (§FS-show).
@@ -55,21 +53,21 @@ pub fn show_with_scope(
     opts: ShowOpts,
     path_provided: bool,
 ) -> (Vec<Finding>, Result<ShowOutput>) {
-    show_with_scope_and_overlays(id_arg, opts, path_provided, &Buffers::default())
+    show_with_scope_and_overlays(id_arg, opts, path_provided, Buffers::default())
 }
 
 fn show_with_scope_and_overlays(
     id_arg: &str,
     opts: ShowOpts,
     path_provided: bool,
-    overlays: &Buffers,
+    buffers: Buffers,
 ) -> (Vec<Finding>, Result<ShowOutput>) {
     let mut run_warnings = Vec::new();
     let output = show_run(
         id_arg,
         opts,
         path_provided,
-        overlays,
+        buffers,
         &mut run_warnings,
         &mut serde_json::Value::Null,
     );
@@ -88,7 +86,7 @@ pub(super) fn show_data(
         id,
         opts,
         explicit,
-        &Buffers::default(),
+        Buffers::default(),
         &mut warnings,
         &mut metadata,
     );
@@ -99,14 +97,14 @@ fn show_run(
     id_arg: &str,
     opts: ShowOpts,
     path_provided: bool,
-    overlays: &Buffers,
+    buffers: Buffers,
     run_warnings: &mut Vec<Finding>,
     metadata: &mut serde_json::Value,
 ) -> Result<ShowOutput> {
     // §AR-config.1.5: the buffers are the run's, handed to `open()` with its scope.
     let invocation = Invocation::new(&opts.path, path_provided, Selection::Project)
         .classify(false)
-        .buffers(overlays.clone());
+        .buffers(buffers);
     let context = load_invoked_workspace_context(&invocation)?;
     *run_warnings = context_run_warnings(&context);
     let (alias, raw_id) = split_qualified_id_arg(id_arg)?;
@@ -165,7 +163,7 @@ fn show_run(
     }
     let section = opts.section.or(inline_section);
     *metadata = crate::queries::show_metadata(config, &project.findings, &id, section.as_deref());
-    let (mut output, home) = show_declaration_with_overlays(
+    let (mut output, home) = show_declaration_with_home(
         config,
         context.render_config(),
         &project.findings,
@@ -173,7 +171,6 @@ fn show_run(
         section.as_deref(),
         opts.mode.render_mode(),
         opts.format == ShowFormat::Markdown,
-        overlays,
     )
     // §FS-workspace.8.1.1: a miss names the projects that do declare the ID,
     // read off the context this run already loaded.

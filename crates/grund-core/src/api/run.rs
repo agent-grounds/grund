@@ -14,7 +14,7 @@ use super::config_findings::config_diagnostics;
 use super::report::public_run_warnings;
 use super::scope_cautions::{full_scope_ignored_warning, scan_scope_caution};
 use crate::checker::{
-    CheckWorkspace, check_chapter_rules, check_on_disk, configured_scope, out_of_scope_references,
+    CheckWorkspace, check_chapter_rules, check_project, configured_scope, out_of_scope_references,
     out_of_scope_section_headings, parse_ad_hoc, parse_ad_hoc_with_workspace, path_report_scope,
     retain_diagnostics_in_report_scope, retain_findings_in_scope, sort_diagnostics,
     workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
@@ -161,7 +161,7 @@ pub(super) fn run_check_with_run_warnings(
     // §AR-checker.1.3: presentation's bytes, rendered before the checker runs.
     let no_workspace = BTreeMap::new();
     let expected = expected(&findings, &config, &no_workspace);
-    let mut report = check_on_disk(
+    let mut report = check_project(
         config.rules(),
         config.schema(),
         &findings,
@@ -334,7 +334,7 @@ fn run_workspace_check(
             .frame()
             .displayed_by(root_config.display())
             .checked_as(Some(&project.alias));
-        let mut project_report = check_on_disk(
+        let mut project_report = check_project(
             project.config.rules(),
             project.config.schema(),
             &project.findings,

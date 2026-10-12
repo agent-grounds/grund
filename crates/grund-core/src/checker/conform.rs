@@ -15,18 +15,12 @@ use crate::model::{
     Catalog, CheckReport, Diagnostic, Site, StubResolution, format_path, paired_declarations,
     sort_path_key,
 };
-use crate::sources::Buffers;
 
 /// §AR-checker.1.1: duplicate, misplaced-declaration, broken-stub and
 /// declaration-near-miss (§FS-declarations.checks), the section family, inline
 /// citation style, the opt-in lead budget and the field family (§FS-fields.checks), each pass in the order the single
 /// driver ran it. Unsorted: the merge sorts (§AR-checker.1.4).
-pub(crate) fn conform(
-    schema: &Schema,
-    catalog: &Catalog,
-    frame: Frame<'_>,
-    overlays: &Buffers,
-) -> CheckReport {
+pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> CheckReport {
     let mut report = CheckReport::default();
     check_duplicates(catalog, frame, &mut report);
     check_misplaced(catalog, schema, frame, &mut report);
@@ -41,7 +35,7 @@ pub(crate) fn conform(
     // §FS-declarations.checks.oversized-lead: an absent key stops before any body read; an opted-in
     // project judges only the already-scoped scanner sites, including duplicate
     // claimants, through the shared show slicer. Warnings never affect exit.
-    check_oversized_leads(catalog, schema, frame, overlays, &mut report);
+    check_oversized_leads(catalog, schema, frame, &mut report);
     check_broken_stubs(catalog, frame, &mut report);
     // §FS-declarations.checks.declaration-near-miss: headings that open like a declaration and
     // parse as none.

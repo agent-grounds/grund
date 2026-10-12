@@ -1,10 +1,10 @@
 use std::collections::BTreeMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::config::{Config, config_file_in, is_valid_project_alias, run_warning_findings};
 use crate::model::{Finding, normalize_path_lexically};
 use crate::resolver::settled_run_warnings;
+use crate::sources::{canonical_path, path_exists};
 use crate::templates::markdown_link_destination;
 use crate::workspace::{
     AncestorWorkspaces, apply_workspace_boundary, enclosing_workspace_of,
@@ -55,7 +55,7 @@ fn find_init_workspace_context(
     let (mut root_config, run_root) = find_init_workspace_root(target, run_warnings)?;
     // `expand_workspace_tree` returns canonical project roots, so canonicalize
     // `target` before §FS-init.2.3.4.15.4's identity-based self omission.
-    let target_canonical = fs::canonicalize(target).ok()?;
+    let target_canonical = canonical_path(target).ok()?;
     let mut projects = Vec::new();
     // §FS-check.3.29.7: the expansion below is the only route that walks *down* from
     // a root above the run, so it is the only one that has to be told where the
@@ -139,7 +139,7 @@ fn find_init_workspace_root(
     // Without a canonical anchor we cannot reliably compare against the
     // canonicalized project roots `expand_workspace_tree` returns; bail
     // out so the section is suppressed (§FS-init.2.3.4.15).
-    let canonical_target = fs::canonicalize(target).ok()?;
+    let canonical_target = canonical_path(target).ok()?;
     let mut cursor: Option<&Path> = Some(&canonical_target);
     let mut config = loop {
         let dir = cursor?;
@@ -224,7 +224,7 @@ pub(crate) fn render_workspace_members_section_with_run_warnings(
     // before it returned `Some`, so this call cannot fail in practice; bail
     // out instead of falling back to a non-canonical path that would break
     // the `is_self` comparison below.
-    let Ok(target_canonical) = fs::canonicalize(target) else {
+    let Ok(target_canonical) = canonical_path(target) else {
         return (String::new(), run_warnings);
     };
     let mut bullets = Vec::with_capacity(projects.len());
@@ -235,7 +235,7 @@ pub(crate) fn render_workspace_members_section_with_run_warnings(
             continue;
         }
         let agents_md_path = project.project_root.join("AGENTS.md");
-        let initialized = agents_md_path.exists();
+        let initialized = path_exists(&agents_md_path);
         let link = if initialized {
             relative_link_path(&target_canonical, &agents_md_path)
         } else {

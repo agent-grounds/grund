@@ -1,6 +1,6 @@
+use crate::sources::{canonical_path, is_regular_file, path_exists, path_is_file};
 use anyhow::{Result, anyhow};
 use ignore::WalkBuilder;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::e2e::{e2e_cases_folder, e2e_id_from_case_dir_name};
@@ -97,11 +97,10 @@ pub(super) fn scannable_walker(
 /// report to raise it into, and the question — would a project have read something
 /// — is answered by the files that can be read.
 pub(crate) fn walk_reads_any_file(schema: &Schema, frame: Frame<'_>, scan_root: &Path) -> bool {
-    if !scan_root.exists() {
+    if !path_exists(&scan_root) {
         return false;
     }
-    let canonical_scan_root =
-        fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
+    let canonical_scan_root = canonical_path(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
     let physical_root = canonical_config_root(frame.root());
     // §FS-config.3.5.1, §FS-workspace.6: the reporting walk's own scan-root
     // gates, ahead of the branch below, because neither a file root nor a walk
@@ -121,7 +120,7 @@ pub(crate) fn walk_reads_any_file(schema: &Schema, frame: Frame<'_>, scan_root: 
     {
         return false;
     }
-    if scan_root.is_file() {
+    if path_is_file(&scan_root) {
         return is_scannable(scan_root, schema);
     }
     let link_roots = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
@@ -140,7 +139,7 @@ pub(crate) fn walk_reads_any_file(schema: &Schema, frame: Frame<'_>, scan_root: 
     walker.filter_map(Result::ok).any(|entry| {
         entry
             .file_type()
-            .is_some_and(|file_type| file_type.is_file())
+            .is_some_and(|file_type| is_regular_file(file_type))
             && is_scannable(entry.path(), schema)
     })
 }
@@ -339,7 +338,7 @@ impl WalkDirFilter {
         }
         drop(link_roots);
         (is_link || covered)
-            .then(|| fs::canonicalize(path).ok())
+            .then(|| canonical_path(path).ok())
             .flatten()
     }
 
@@ -387,7 +386,7 @@ pub(super) fn is_direct_e2e_case_dir(
     let Some(cases_root) = cases_root else {
         return false;
     };
-    if path.parent() != Some(cases_root) || !path.join("expected.exit").is_file() {
+    if path.parent() != Some(cases_root) || !path_is_file(&path.join("expected.exit")) {
         return false;
     }
     path.file_name()
@@ -440,7 +439,7 @@ pub(crate) fn scan_roots_for(
 ) -> Result<Vec<PathBuf>> {
     if explicit_scope {
         let scope = scope.unwrap_or(Path::new("."));
-        if !scope.exists() {
+        if !path_exists(&scope) {
             return Err(anyhow!("path does not exist: {}", scope.display()));
         }
         let lexical_scope = if scope.is_absolute() {
@@ -450,7 +449,7 @@ pub(crate) fn scan_roots_for(
                 .map(|cwd| normalize_path_lexically(&cwd.join(scope)))
                 .unwrap_or_else(|_| normalize_path_lexically(scope))
         };
-        let resolved = fs::canonicalize(scope).unwrap_or_else(|_| lexical_scope.clone());
+        let resolved = canonical_path(scope).unwrap_or_else(|_| lexical_scope.clone());
         // §FS-config.3.5.1, §FS-config.3.5.2.1: keep the lexical spelling for an
         // in-tree link and an external directory-link root; resolve other roots.
         let scope =

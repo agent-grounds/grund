@@ -71,8 +71,7 @@ mod validate;
 mod workspace_block;
 
 pub(crate) use crate::sources::{
-    check_input_observer, input_read_dir, input_read_to_string, observe_input,
-    with_check_input_observer,
+    check_input_observer, input_read_to_string, observe_input, with_check_input_observer,
 };
 pub use citations::{
     CitationDisjunction, CitationLevel, CitationRules, CitationTarget, KindCitationRules,

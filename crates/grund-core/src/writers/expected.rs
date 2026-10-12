@@ -7,6 +7,7 @@
 //! directions (§AR-checker.2.7). The chapter-rule section is rendered from the
 //! check run's own catalog, so building it adds no walk (§FS-init.2.3.4.15).
 
+use crate::sources::path_exists;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -55,7 +56,7 @@ pub(crate) fn expected(
     let rule_guidance = rule_rows.as_deref().map(|rows| (findings, rows));
     let root = &config.root;
     let canonical = root.join(CANONICAL_AGENT_ENTRYPOINT);
-    let canonical_exists = canonical.exists();
+    let canonical_exists = path_exists(&canonical);
     let mut entrypoints = Vec::new();
     if canonical_exists {
         entrypoints.push(expected_entrypoint(config, canonical, true, rule_guidance));
