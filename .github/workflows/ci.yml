@@ -16,20 +16,17 @@ env:
   # deny clippy lints — clippy is intentionally not part of CI here. Add a
   # `cargo clippy --no-deps -- -D warnings` step if/when we want lint enforcement.
   RUSTFLAGS: "-D warnings"
+  # §FS-distribution.3.0.3: corpus pipes carry UTF-8 on every host.
+  PYTHONUTF8: "1"
 
+# §AR-ci.13: each operating system's suites run as jobs of their own, side by side,
+# written out rather than generated so the tests can read them as text. Each OS's
+# required check, `cargo test (<os>)`, is the aggregate at the end that judges them.
 jobs:
-  test:
-    name: cargo test (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      # Run every matrix leg even if one fails so we can see Linux + macOS + Windows
-      # results together rather than aborting after the first failure.
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    env:
-      # §FS-distribution.3.0.3: corpus pipes carry UTF-8 on every host.
-      PYTHONUTF8: "1"
+  # §AR-ci.13.1: the ubuntu-latest leg, one job per language.
+  rust-ubuntu:
+    name: rust (ubuntu-latest)
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
 
@@ -45,16 +42,7 @@ jobs:
         with:
           python-version: "3.x"
 
-      # §FS-distribution.3.2.3.2: acceptance uses a supported Node major.
-      - name: Install Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: "22.x"
-
-      # §FS-distribution.3.2.3.3: source builders require this pinned toolchain.
-      - name: Install binding Rust toolchain
-        run: rustup toolchain install 1.95.0 --profile minimal
-
+      # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
       - name: Cache cargo registry and target
         uses: actions/cache@v5
         continue-on-error: true
@@ -63,23 +51,10 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-            ~/ag/tmp/grund-cochange-release-0.16.1
-            ~/ag/tmp/grund-release-build
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
+            ${{ runner.os }}-cargo-${{ github.job }}-
             ${{ runner.os }}-cargo-
-
-      # §AR-ci.3.4.1: a key of its own, so the Node target is saved, not lost to the
-      # cargo cache's exact hit; the builds write no incremental state into it.
-      - name: Cache the Node acceptance's build target
-        uses: actions/cache@v5
-        continue-on-error: true
-        with:
-          path: |
-            ~/ag/tmp/grund-node-target
-          key: ${{ runner.os }}-node-target-v1-1.95.0-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-node-target-v1-1.95.0-
 
       - name: cargo fmt --check
         run: cargo fmt --all -- --check
@@ -88,67 +63,6 @@ jobs:
       # private lifecycle boundaries on Linux, macOS and Windows.
       - name: native watch contract
         run: cargo test -p grund --features test-watch --test check_watch_observer --locked
-
-      # The file-size ownership regression asks `fissile measure` for each split owner
-      # (§AR-core-module-layout.1.5), so the binary is on PATH for the python tests on
-      # every leg, not only the one that runs the hooks.
-      - name: Install fissile
-        run: |
-          cargo install fissile --version 0.8.3 --locked
-
-      # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
-      # including a PR merge checkout, before either Python or pre-commit runs.
-      - name: Prepare same-source binding oracle
-        shell: bash
-        run: |
-          python - <<'PY'
-          import os
-          import subprocess
-          from pathlib import Path
-
-          source_sha = subprocess.check_output(
-              ["git", "rev-parse", "HEAD"], text=True,
-          ).strip()
-          target = (Path.home() / "ag/tmp/grund-bindings-ci-oracle").resolve()
-          build_env = dict(os.environ, GRUND_BINDINGS_SOURCE_SHA=source_sha)
-          subprocess.run([
-              "cargo", "+1.95.0", "build", "--locked", "-p", "grund-core",
-              "--example", "grund-binding-oracle", "--target-dir", str(target),
-          ], env=build_env, check=True)
-          executable = "grund-binding-oracle.exe" if os.name == "nt" else "grund-binding-oracle"
-          oracle = target / "debug/examples" / executable
-          if not oracle.is_file():
-              raise FileNotFoundError(oracle)
-          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as output:
-              output.write(f"GRUND_BINDINGS_ORACLE={oracle}\n")
-          PY
-
-      - name: python tests
-        # §FS-cochange-recipe.examples: compatibility is mandatory, not environment-dependent.
-        run: python scripts/run_python_gate.py
-
-      - name: Install pre-commit hook dependencies
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          python -m pip install pre-commit
-          cargo install lychee --version 0.23.0 --locked
-
-      # `.pre-commit-config.yaml` is the local gate; CI runs it directly so every
-      # pre-commit hook remains enforced remotely (§AR-ci.1).
-      - name: pre-commit
-        if: matrix.os == 'ubuntu-latest'
-        # lychee checks upwards of three thousand links, a large share of them
-        # to github.com. Unauthenticated, they share a low per-IP budget with
-        # every other job on the runner, and a handful come back 503 - which it
-        # reports as "Rejected status code", reading like a dead link rather
-        # than a throttle. The links were this repository's own documents, and
-        # they resolved in a browser the whole time. lychee reads GITHUB_TOKEN
-        # from the environment; the workflow-scoped one is enough, because the
-        # point is the authenticated rate limit rather than access to anything
-        # private.
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pre-commit run --all-files
 
       - name: cargo build
         run: cargo build --workspace --all-targets --locked
@@ -192,6 +106,543 @@ jobs:
       - name: cargo test
         run: cargo test --workspace --all-targets --locked --features grund/test-workspace-load-count
 
+  python-ubuntu:
+    name: python (ubuntu-latest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      # §FS-distribution.3.2.3.2: acceptance uses a supported Node major.
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.x"
+
+      # §FS-distribution.3.2.3.3: source builders require this pinned toolchain.
+      - name: Install binding Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+
+      # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      - name: Cache cargo registry and target
+        uses: actions/cache@v5
+        continue-on-error: true
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+            ~/ag/tmp/grund-release-build
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ github.job }}-
+            ${{ runner.os }}-cargo-
+
+      # The file-size ownership regression asks `fissile measure` for each split owner
+      # (§AR-core-module-layout.1.5), so the binary is on PATH for the Python tests.
+      - name: Install fissile
+        run: cargo install fissile --version 0.8.3 --locked
+
+      # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
+      # including a PR merge checkout, before the Python gate runs.
+      - name: Prepare same-source binding oracle
+        run: python scripts/prepare_binding_oracle.py
+
+      # §AR-ci.3.4.3: every Python test but the Node acceptance, which a job of its own runs.
+      - name: python tests
+        # §FS-cochange-recipe.examples: compatibility is mandatory, not environment-dependent.
+        run: python scripts/run_python_gate.py --without-node-acceptance
+
+  node-ubuntu:
+    name: node acceptance (ubuntu-latest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      # §FS-distribution.3.2.3.2: acceptance uses a supported Node major.
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.x"
+
+      # §FS-distribution.3.2.3.3: source builders require this pinned toolchain.
+      - name: Install binding Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+
+      # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      - name: Cache cargo registry and target
+        uses: actions/cache@v5
+        continue-on-error: true
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+            ~/ag/tmp/grund-release-build
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ github.job }}-
+            ${{ runner.os }}-cargo-
+
+      # §AR-ci.3.4.1: a key of its own, so the Node target is saved, not lost to the
+      # cargo cache's exact hit; the builds write no incremental state into it.
+      - name: Cache the Node acceptance's build target
+        uses: actions/cache@v5
+        continue-on-error: true
+        with:
+          path: |
+            ~/ag/tmp/grund-node-target
+          key: ${{ runner.os }}-node-target-v1-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-target-v1-1.95.0-
+
+      # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
+      # including a PR merge checkout, before the Python gate runs.
+      - name: Prepare same-source binding oracle
+        run: python scripts/prepare_binding_oracle.py
+
+      # §AR-ci.3.4.3: the Node acceptance alone, the longest test of the Python gate.
+      - name: node acceptance
+        run: python scripts/run_python_gate.py --only-node-acceptance
+
+  # `.pre-commit-config.yaml` is the local gate; CI runs it directly so every
+  # pre-commit hook remains enforced remotely (§AR-ci.1), less the hooks whose command a
+  # job above already runs (§AR-ci.13.3).
+  pre-commit:
+    name: pre-commit (ubuntu-latest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      - name: Cache cargo registry and target
+        uses: actions/cache@v5
+        continue-on-error: true
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ github.job }}-
+            ${{ runner.os }}-cargo-
+
+      # Every binary a hook calls, in this job, before the hooks run (§AR-ci.1).
+      - name: Install pre-commit hook dependencies
+        run: |
+          python -m pip install pre-commit
+          cargo install lychee --version 0.23.0 --locked
+          cargo install fissile --version 0.8.3 --locked
+
+      - name: pre-commit
+        # lychee checks upwards of three thousand links, a large share of them
+        # to github.com. Unauthenticated, they share a low per-IP budget with
+        # every other job on the runner, and a handful come back 503 - which it
+        # reports as "Rejected status code", reading like a dead link rather
+        # than a throttle. The links were this repository's own documents, and
+        # they resolved in a browser the whole time. lychee reads GITHUB_TOKEN
+        # from the environment; the workflow-scoped one is enough, because the
+        # point is the authenticated rate limit rather than access to anything
+        # private.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # §AR-ci.13.3: exactly the hooks whose command the Rust, Python and Node jobs run.
+          SKIP: cargo-fmt-check,cargo-build,cargo-test,python-test
+        run: pre-commit run --all-files
+
+  # §AR-ci.13.1: the windows-latest leg, one job per language.
+  rust-windows:
+    name: rust (windows-latest)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      - name: Cache cargo registry and target
+        uses: actions/cache@v5
+        continue-on-error: true
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ github.job }}-
+            ${{ runner.os }}-cargo-
+
+      - name: cargo fmt --check
+        run: cargo fmt --all -- --check
+
+      # §FS-check.6.1.1, §AR-bindings.3: exercise actual native backends and
+      # private lifecycle boundaries on Linux, macOS and Windows.
+      - name: native watch contract
+        run: cargo test -p grund --features test-watch --test check_watch_observer --locked
+
+      - name: cargo build
+        run: cargo build --workspace --all-targets --locked
+
+      - name: grund self-check
+        shell: bash
+        run: |
+          # `--full` (§FS-check.1.3) walks past `[scan] include` as well, so a citation this
+          # repository's own config forgot to cover — examples/ is deliberately outside it —
+          # fails CI instead of accumulating unseen.
+
+          # The 30s ceiling is the catastrophic-regression guard (§AR-ci.4 /
+          # §GOAL-fast-feedback); the `bench` job (§AR-benchmarks / §AR-ci.5) is the precise
+          # meter. Python, not GNU `timeout`, so the same step runs on all three platforms.
+          python - <<'PY'
+          import subprocess
+          import sys
+
+          try:
+              result = subprocess.run(
+                  ["cargo", "run", "--locked", "--", "check", ".", "--format", "json", "--full"],
+                  stdout=subprocess.PIPE,
+                  timeout=30,
+              )
+          except subprocess.TimeoutExpired:
+              print("grund self-check exceeded 30s", file=sys.stderr)
+              sys.exit(124)
+
+          if result.returncode != 0:
+              sys.exit(result.returncode)
+          if result.stdout:
+              print("grund self-check wrote unexpected stdout:", file=sys.stderr)
+              sys.stderr.buffer.write(result.stdout)
+              sys.exit(1)
+          PY
+
+      # crates/grund-cli/tests/e2e.rs walks every fixture under tests/e2e/cases and asserts each case's
+      # exit code, stdout, and stderr against its expected.* files; tests/init.rs
+      # covers the file-content / config-validation contract for `grund init`. So
+      # `cargo test` runs the full e2e suite plus the core and CLI unit tests.
+      - name: cargo test
+        run: cargo test --workspace --all-targets --locked --features grund/test-workspace-load-count
+
+  python-windows:
+    name: python (windows-latest)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      # §FS-distribution.3.2.3.2: acceptance uses a supported Node major.
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.x"
+
+      # §FS-distribution.3.2.3.3: source builders require this pinned toolchain.
+      - name: Install binding Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+
+      # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      - name: Cache cargo registry and target
+        uses: actions/cache@v5
+        continue-on-error: true
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+            ~/ag/tmp/grund-release-build
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ github.job }}-
+            ${{ runner.os }}-cargo-
+
+      # The file-size ownership regression asks `fissile measure` for each split owner
+      # (§AR-core-module-layout.1.5), so the binary is on PATH for the Python tests.
+      - name: Install fissile
+        run: cargo install fissile --version 0.8.3 --locked
+
+      # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
+      # including a PR merge checkout, before the Python gate runs.
+      - name: Prepare same-source binding oracle
+        run: python scripts/prepare_binding_oracle.py
+
+      # §AR-ci.3.4.3: every Python test but the Node acceptance, which a job of its own runs.
+      - name: python tests
+        # §FS-cochange-recipe.examples: compatibility is mandatory, not environment-dependent.
+        run: python scripts/run_python_gate.py --without-node-acceptance
+
+  node-windows:
+    name: node acceptance (windows-latest)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      # §FS-distribution.3.2.3.2: acceptance uses a supported Node major.
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.x"
+
+      # §FS-distribution.3.2.3.3: source builders require this pinned toolchain.
+      - name: Install binding Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+
+      # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      - name: Cache cargo registry and target
+        uses: actions/cache@v5
+        continue-on-error: true
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+            ~/ag/tmp/grund-release-build
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ github.job }}-
+            ${{ runner.os }}-cargo-
+
+      # §AR-ci.3.4.1: a key of its own, so the Node target is saved, not lost to the
+      # cargo cache's exact hit; the builds write no incremental state into it.
+      - name: Cache the Node acceptance's build target
+        uses: actions/cache@v5
+        continue-on-error: true
+        with:
+          path: |
+            ~/ag/tmp/grund-node-target
+          key: ${{ runner.os }}-node-target-v1-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-target-v1-1.95.0-
+
+      # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
+      # including a PR merge checkout, before the Python gate runs.
+      - name: Prepare same-source binding oracle
+        run: python scripts/prepare_binding_oracle.py
+
+      # §AR-ci.3.4.3: the Node acceptance alone, the longest test of the Python gate.
+      - name: node acceptance
+        run: python scripts/run_python_gate.py --only-node-acceptance
+
+  # §AR-ci.13.1: macOS keeps its suites in one job; the merge queue shares its five slots.
+  macos:
+    name: suites (macos-latest)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      # Pinned to a tagged release rather than @master so a compromise of the
+      # action repo doesn't silently change CI behavior on unrelated PRs.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      # §FS-distribution.3.2.3.2: acceptance uses a supported Node major.
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.x"
+
+      # §FS-distribution.3.2.3.3: source builders require this pinned toolchain.
+      - name: Install binding Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+
+      # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      - name: Cache cargo registry and target
+        uses: actions/cache@v5
+        continue-on-error: true
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+            ~/ag/tmp/grund-release-build
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ github.job }}-
+            ${{ runner.os }}-cargo-
+
+      # §AR-ci.3.4.1: a key of its own, so the Node target is saved, not lost to the
+      # cargo cache's exact hit; the builds write no incremental state into it.
+      - name: Cache the Node acceptance's build target
+        uses: actions/cache@v5
+        continue-on-error: true
+        with:
+          path: |
+            ~/ag/tmp/grund-node-target
+          key: ${{ runner.os }}-node-target-v1-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-target-v1-1.95.0-
+
+      - name: cargo fmt --check
+        run: cargo fmt --all -- --check
+
+      # §FS-check.6.1.1, §AR-bindings.3: exercise actual native backends and
+      # private lifecycle boundaries on Linux, macOS and Windows.
+      - name: native watch contract
+        run: cargo test -p grund --features test-watch --test check_watch_observer --locked
+
+      # The file-size ownership regression asks `fissile measure` for each split owner
+      # (§AR-core-module-layout.1.5), so the binary is on PATH for the Python tests.
+      - name: Install fissile
+        run: cargo install fissile --version 0.8.3 --locked
+
+      # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
+      # including a PR merge checkout, before the Python gate runs.
+      - name: Prepare same-source binding oracle
+        run: python scripts/prepare_binding_oracle.py
+
+      # §AR-ci.3.4.3: every Python test but the Node acceptance, which a job of its own runs.
+      - name: python tests
+        # §FS-cochange-recipe.examples: compatibility is mandatory, not environment-dependent.
+        run: python scripts/run_python_gate.py --without-node-acceptance
+
+      # §AR-ci.3.4.3: the Node acceptance alone, the longest test of the Python gate.
+      - name: node acceptance
+        run: python scripts/run_python_gate.py --only-node-acceptance
+
+      - name: cargo build
+        run: cargo build --workspace --all-targets --locked
+
+      - name: grund self-check
+        shell: bash
+        run: |
+          # `--full` (§FS-check.1.3) walks past `[scan] include` as well, so a citation this
+          # repository's own config forgot to cover — examples/ is deliberately outside it —
+          # fails CI instead of accumulating unseen.
+
+          # The 30s ceiling is the catastrophic-regression guard (§AR-ci.4 /
+          # §GOAL-fast-feedback); the `bench` job (§AR-benchmarks / §AR-ci.5) is the precise
+          # meter. Python, not GNU `timeout`, so the same step runs on all three platforms.
+          python - <<'PY'
+          import subprocess
+          import sys
+
+          try:
+              result = subprocess.run(
+                  ["cargo", "run", "--locked", "--", "check", ".", "--format", "json", "--full"],
+                  stdout=subprocess.PIPE,
+                  timeout=30,
+              )
+          except subprocess.TimeoutExpired:
+              print("grund self-check exceeded 30s", file=sys.stderr)
+              sys.exit(124)
+
+          if result.returncode != 0:
+              sys.exit(result.returncode)
+          if result.stdout:
+              print("grund self-check wrote unexpected stdout:", file=sys.stderr)
+              sys.stderr.buffer.write(result.stdout)
+              sys.exit(1)
+          PY
+
+      # crates/grund-cli/tests/e2e.rs walks every fixture under tests/e2e/cases and asserts each case's
+      # exit code, stdout, and stderr against its expected.* files; tests/init.rs
+      # covers the file-content / config-validation contract for `grund init`. So
+      # `cargo test` runs the full e2e suite plus the core and CLI unit tests.
+      - name: cargo test
+        run: cargo test --workspace --all-targets --locked --features grund/test-workspace-load-count
+
+  # §AR-ci.13.2: the required checks. Each runs no suite of its own; it runs whatever its
+  # needs did, and fails unless every one of them succeeded.
+  test-ubuntu:
+    name: cargo test (ubuntu-latest)
+    runs-on: ubuntu-latest
+    needs: [rust-ubuntu, python-ubuntu, node-ubuntu, pre-commit]
+    if: always()
+    steps:
+      - name: every job it needs succeeded
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}
+        run: exit 1
+
+  test-windows:
+    name: cargo test (windows-latest)
+    runs-on: ubuntu-latest
+    needs: [rust-windows, python-windows, node-windows]
+    if: always()
+    steps:
+      - name: every job it needs succeeded
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}
+        run: exit 1
+
+  test-macos:
+    name: cargo test (macos-latest)
+    runs-on: ubuntu-latest
+    needs: [macos]
+    if: always()
+    steps:
+      - name: every job it needs succeeded
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}
+        run: exit 1
+
   # `pre-commit run --all-files` cannot reproduce the `commit-msg` stage — it takes a
   # message file, not a file list — so a trailer that lives only in a commit message
   # rides in unchecked. This job scans what the event adds (§AR-ci.8.2).
@@ -227,7 +678,7 @@ jobs:
         run: python scripts/check_no_claude_attribution.py --range "$RANGE"
 
   # Instruction-counting benchmarks for the hot CLI commands (§AR-benchmarks /
-  # §AR-ci.5): kept out of the `test` matrix because only this job needs Valgrind, and
+  # §AR-ci.5): kept out of the suite jobs because only this job needs Valgrind, and
   # pull requests gate on a base-branch baseline (§AR-benchmarks).
   bench:
     name: cargo bench (instruction counts)

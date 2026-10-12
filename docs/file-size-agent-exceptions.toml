@@ -199,3 +199,13 @@ until = "the documented-page check and its fence readers leave for a sibling mod
 reason = """
 Over the soft budget before this change; touched here only to pass the section the project record it now renders from (§AR-config.5), which promoted the soft finding. Every case renders one config through one renderer, one per row of the §DF-directions-render table. Missing boundary: the documented-example case at the end of the file, with fenced_example and fence_language, reads a docs page rather than a rendered table and is a module of its own (tests_citation_directions_page.rs), which takes the file under budget.
 """
+[[exceptions]]
+path = ".github/workflows/ci.yml"
+match = "exact"
+rules = ["workflows"]
+kind = "structural"
+until = "indefinite"
+max_accepted = { value = 491, unit = "lines" }
+reason = """
+§AR-ci.13 runs each operating system's suites as jobs of their own: a Rust, a Python and a Node job on Ubuntu and on Windows, one job on macOS, the Ubuntu pre-commit job and one required `cargo test (<os>)` aggregate each. Every job checks out, installs its toolchains and restores its own cache, so the setup repeats seven times, and §AR-ci.13 writes the jobs out rather than generating them with YAML anchors because the tests that hold the layout read the workflow as text. A composite action or a reusable workflow would move that setup where those tests cannot see it, which is the indirection the layout test exists to refuse; the oracle build already left for scripts/prepare_binding_oracle.py, the one step that was code rather than setup. The ceiling follows the number of jobs, not logic accruing in any of them.
+"""

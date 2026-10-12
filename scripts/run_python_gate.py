@@ -6,6 +6,8 @@ binding oracle for §FS-distribution.3.0.3; otherwise build this checkout, insta
 the exact released crate, and build the oracle from HEAD, without silently
 skipping tests. GRUND_NODE_TARGET names the Node acceptance's shared build target
 (§AR-ci.3.4.1). The run ends with its slowest tests (§AR-ci.3.4.2).
+`--without-node-acceptance` or `--only-node-acceptance` runs one side of the
+Node acceptance; no argument runs everything (§AR-ci.3.4.3).
 """
 import os
 from pathlib import Path
@@ -17,9 +19,23 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = Path(__file__).resolve().parent
 SLOWEST = 10
-# The child keeps `python -m unittest`'s sys.path, with this directory appended to reach discover().
-DISCOVER = ('import sys; sys.path.append(sys.argv.pop(1)); import run_python_gate; '
-            'sys.exit(run_python_gate.discover(sys.argv[1:]))')
+# The child keeps `python -m unittest`'s sys.path, with this directory appended to reach discover();
+# the argument after it is the selection, empty for everything (§AR-ci.3.4.3).
+DISCOVER = ('import sys; sys.path.append(sys.argv.pop(1)); selection = sys.argv.pop(1) or None; '
+            'import run_python_gate; sys.exit(run_python_gate.discover(sys.argv[1:], selection))')
+NODE_ACCEPTANCE = 'test_node_binding_acceptance'
+SELECTIONS = ('without-node-acceptance', 'only-node-acceptance')
+USAGE = 'usage: run_python_gate.py [--without-node-acceptance | --only-node-acceptance]'
+
+
+def parse_selection(argv):
+    """The selection `argv` names, or exit 2 with the usage line (§AR-ci.3.4.3)."""
+    if not argv:
+        return None
+    if len(argv) == 1 and argv[0].startswith('--') and argv[0][2:] in SELECTIONS:
+        return argv[0][2:]
+    print(USAGE, file=sys.stderr)
+    sys.exit(2)
 
 
 def inputs():
@@ -95,10 +111,47 @@ class TimedResult(unittest.TextTestResult):
         super().stopTestRun()
 
 
-def discover(argv):
-    """Run `unittest` with `argv`, then print the slowest tests (§AR-ci.3.4.2)."""
+def module_of(test):
+    """The module a test comes from; a module that failed to import keeps its name."""
+    if isinstance(test, unittest.loader._FailedTest):
+        name = test._testMethodName
+    else:
+        name = type(test).__module__
+    return name.rsplit('.', 1)[-1]
+
+
+def select(suite, selection):
+    """The tests of `suite` that `selection` runs, cut by module (§AR-ci.3.4.3)."""
+    if selection is None:
+        return suite
+    if selection not in SELECTIONS:
+        raise ValueError(f'unknown selection {selection!r}')
+    only = selection == 'only-node-acceptance'
+    chosen = unittest.TestSuite()
+    for item in suite:
+        if isinstance(item, unittest.TestSuite):
+            chosen.addTest(select(item, selection))
+        elif (module_of(item) == NODE_ACCEPTANCE) == only:
+            chosen.addTest(item)
+    return chosen
+
+
+class SelectingLoader(unittest.TestLoader):
+    """Discovers as `unittest` does, then keeps what the selection runs (§AR-ci.3.4.3)."""
+
+    def __init__(self, selection):
+        super().__init__()
+        self.selection = selection
+
+    def discover(self, *args, **kwargs):
+        return select(super().discover(*args, **kwargs), self.selection)
+
+
+def discover(argv, selection=None):
+    """Run `unittest` with `argv` on the selected tests, then print the slowest (§AR-ci.3.4.2)."""
     runner = unittest.TextTestRunner(resultclass=TimedResult)
     result = unittest.main(module=None, argv=['python -m unittest', *argv],
+                           testLoader=SelectingLoader(selection),
                            testRunner=runner, exit=False).result
     stream = runner.stream
     stream.writeln('Slowest tests')
@@ -110,11 +163,14 @@ def discover(argv):
     return 0 if result.wasSuccessful() else 1
 
 
-def run_tests(start, environment):
-    """Discover and time the tests under `start`; return the exit status (§AR-ci.3.4.2)."""
-    return subprocess.run([sys.executable, '-c', DISCOVER, str(SCRIPTS), 'discover', '-s',
-                           str(start), '-p', 'test_*.py'], cwd=ROOT, env=environment).returncode
+def run_tests(start, environment, selection=None):
+    """Discover, select and time the tests under `start`; return the exit status (§AR-ci.3.4.2)."""
+    return subprocess.run([sys.executable, '-c', DISCOVER, str(SCRIPTS), selection or '',
+                           'discover', '-s', str(start), '-p', 'test_*.py'],
+                          cwd=ROOT, env=environment).returncode
 
 
 if __name__ == '__main__':
-    sys.exit(run_tests('tests/integration', inputs()))
+    # §AR-ci.3.4.3: the argument is judged before inputs() builds anything.
+    chosen = parse_selection(sys.argv[1:])
+    sys.exit(run_tests('tests/integration', inputs(), chosen))
