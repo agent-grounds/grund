@@ -106,6 +106,7 @@ include!("cli_watch_observer.rs");
 include!("cli_show.rs");
 include!("cli_show_batch.rs");
 include!("cli_list.rs");
+include!("cli_list_render.rs");
 include!("cli_refs.rs");
 include!("cli_cover.rs");
 include!("cli_fmt.rs");
