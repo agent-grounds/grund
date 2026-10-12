@@ -204,7 +204,7 @@ crosses a project boundary names the target's alias. From the
 
 ```toml
 project_name = "root"
-…
+# …
 [workspace]
 members = ["packages/*"]
 include_root = true
@@ -236,7 +236,7 @@ resolve = "should"
 fetch = "scripts/fetch-ticket"
 ```
 
-```bash
+```console
 $ grund check
 docs/guide.md:3: warning: no snapshot for TICKET-1234 in docs/tickets.md — run grund fetch TICKET-1234
 $ grund fetch TICKET-1234
@@ -266,7 +266,7 @@ The reference field price is `1200.0 USD` (§CONST-field-price).
 
 A use that drifts from its declaration fails the check:
 
-```bash
+```console
 $ grund check
 docs/offer.md:7: error: value mismatch for CONST-discount.1: bound `0.30`, declared `0.25` at values/runtime.json:2
 ```
