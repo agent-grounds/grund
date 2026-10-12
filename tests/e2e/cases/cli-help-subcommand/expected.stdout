@@ -84,6 +84,7 @@ Supported check finding codes:
   out-of-scope-shorthand-citation
   out-of-scope-unknown-project
   oversized-lead
+  parse-moves
   redundant-config
   section-heading-level
   section-outside-declaration

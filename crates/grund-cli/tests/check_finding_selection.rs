@@ -317,6 +317,7 @@ fn issue_49_check_help_exposes_the_sorted_public_code_catalog() {
         "out-of-scope-shorthand-citation",
         "out-of-scope-unknown-project",
         "oversized-lead",
+        "parse-moves",
         "redundant-config",
         "section-heading-level",
         "section-outside-declaration",
