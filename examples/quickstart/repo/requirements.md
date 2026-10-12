@@ -1,3 +1,3 @@
 # FS-login: Login
-## 1. Username
+## format: Username format
 Trim surrounding whitespace.

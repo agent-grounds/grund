@@ -13,7 +13,7 @@
 Give a requirement an ID in <a href="examples/quickstart/repo/requirements.md"><code>requirements.md</code></a>
 <pre lang="markdown">
 &#35; FS-login: Login
-&#35;&#35; 1. Username
+&#35;&#35; format: Username format
 Trim surrounding whitespace.
 </pre>
 </td>
@@ -22,7 +22,7 @@ Trim surrounding whitespace.
 Cite it from the code in <a href="examples/quickstart/repo/src/login.py"><code>src/login.py</code></a>
 <pre lang="python">
 def clean_username(username):
-    """&#167;FS-login.1"""
+    """&#167;FS-login.format"""
     return username.strip()
 </pre>
 </td>
@@ -34,17 +34,17 @@ def clean_username(username):
 <b>3 · Read</b><br>
 Look it up before you change the code
 <pre lang="console">
-$ grund FS-login.1
-&#35;&#35; 1. Username
+$ grund FS-login.format
+&#35;&#35; format: Username format
 Trim surrounding whitespace.
 </pre>
 </td>
 <td valign="top" width="400">
 <b>4 · Check</b><br>
-Rename <code>FS-login</code> → <code>FS-signin</code>, and CI fails
+Misspell <code>format</code> in the citation, and CI fails
 <pre lang="console">
 $ grund check
-… error: unknown reference FS-login; …&#10;&#10;
+… section not found: FS-login.fromat; …&#10;&#10;
 </pre>
 </td>
 </tr>
@@ -67,44 +67,32 @@ away from the code — and keep the repository consistent as both change.
 [requirements-traceability comparison](docs/related-work/REL-traceability-tools.md#workmatrix-reader-tasks)
 sets `grund` beside the tools it descends from.
 
-## What an agent reads
+## The default structure
 
-The lookup above retrieves just the cited requirement. For a larger specification,
-an agent can choose how much to read. These rounded word
-counts are measured on Grund's own `FS-check` specification:
-
-| An agent runs | and reads |
-|---|---|
-| `grund FS-check` | the lead — **~30 words** |
-| `grund FS-check.3.2` | one section — **~140 words** |
-| `grund FS-check --toc` | the lead and a map of ~250 sections — **~1,800 words** |
-| `grund FS-check --full` | the whole specification — **~32,000 words** |
-
-One rule in an agent's instructions keeps that loop: *when you see `§<ID>`, run
-`grund <ID>` and treat what it prints as the authoritative definition.* Every agent
-fetches the same bytes for the same ID. [Querying grund](docs/user-facing/querying.md)
-has the recipes past this ladder; [coordinate sizes](docs/user-facing/coordinate-sizes.md)
-shows how to find and split a lead that grew too heavy.
-
-## The map
-
-Kinds and citation rules are configurable. Here is a simplified part of Grund's
-own schema, showing required targets and recommended alternatives:
+`grund init` lays a project out in layers, each answering one question, and each
+layer cites the one that explains it:
 
 ```mermaid
 flowchart BT
-  code["Code"] -->|should cite either| implementation["FS · functional spec<br/>or AR · architecture"]
-  tests["End-to-end tests and examples"] == must cite ==> FS["FS · functional spec"]
-  FS -->|should cite either| purpose["GOAL · goal<br/>or another FS · functional spec"]
+  code["Code"] --> AR
+  integration["Integration tests<br/>tests/integration/"] --> AR
+  AR["AR · How<br/>docs/architecture/"] --> FS
+  e2e["End-to-end tests<br/>tests/e2e/"] == must ==> FS
+  FS["FS · What<br/>requirements.md"] --> GOAL
+  GOAL["GOAL · Where<br/>docs/goals.md"] --> GRUND["GRUND · Why<br/>docs/grund.md"]
 ```
 
-A thin arrow is a recommendation (`grund check --suggestions`); a thick one is a
-requirement, whose absence is an error. Same-kind citations are allowed; this is
-not a universal hierarchy. This repository also forbids functional specs,
-requirements and examples from citing architecture. The
-complete statement is the [citation directions in `AGENTS.md`](AGENTS.md#citation-directions);
-kinds, homes and the ID grammar are in the [structure guide](docs/user-facing/structure.md),
-and the `[citations]` grammar in [citation directions](docs/user-facing/citation-directions.md).
+Each box is a kind and its home as `init` writes them to `grund.toml`; decision
+records (`DF`, `DA`) cite what they decide, and the roadmap (`RM`) is unconstrained.
+The arrows are the canonical ruleset `init` writes commented out under `[citations]`;
+uncomment it to enforce them. A thin arrow is a recommendation
+(`grund check --suggestions`); the thick one is a requirement, whose absence is an
+error. Some recommendations name alternatives: code may also cite a functional spec
+directly, architecture a goal, and a goal or a spec another of its own kind. A
+functional spec must never cite architecture. Kinds, homes and rules are yours to
+change: the [structure guide](docs/user-facing/structure.md) covers kinds, homes and
+the ID grammar, and [citation directions](docs/user-facing/citation-directions.md) the
+`[citations]` grammar.
 
 ## Quick start
 
@@ -129,6 +117,25 @@ before running `grund init`; use `--docs` only when you want scaffolds.
 [`AGENTS.md`](AGENTS.md). Add `grund check` to [pre-commit and CI](docs/user-facing/checking.md#in-pre-commit-and-ci).
 [Installation](docs/user-facing/installation.md) covers prebuilt binaries, supported
 platforms, the Python and Node APIs, and local candidate builds.
+
+## What an agent reads
+
+Step 3 above retrieves just the cited requirement. For a larger specification,
+an agent can choose how much to read. These rounded word
+counts are measured on Grund's own `FS-check` specification:
+
+| An agent runs | and reads |
+|---|---|
+| `grund FS-check` | the lead — **~30 words** |
+| `grund FS-check.3.2` | one section — **~140 words** |
+| `grund FS-check --toc` | the lead and a map of ~250 sections — **~1,800 words** |
+| `grund FS-check --full` | the whole specification — **~32,000 words** |
+
+One rule in an agent's instructions keeps that loop: *when you see `§<ID>`, run
+`grund <ID>` and treat what it prints as the authoritative definition.* Every agent
+fetches the same bytes for the same ID. [Querying grund](docs/user-facing/querying.md)
+has the recipes past this ladder; [coordinate sizes](docs/user-facing/coordinate-sizes.md)
+shows how to find and split a lead that grew too heavy.
 
 ## Go deeper
 

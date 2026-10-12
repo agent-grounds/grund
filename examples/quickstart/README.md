@@ -3,9 +3,9 @@
 A small login example of declarations, section retrieval and broken
 citations ([§FS-examples.2](../../docs/functional-spec/FS-examples.md#2-canonical-use-cases),
 [§FS-show.2.1.5](../../docs/functional-spec/FS-show.md#215-a-sections-lead),
-[§FS-check.3.1.1](../../docs/functional-spec/FS-check.md#311-a-near-id)).
-The fixture's own `grund.toml` maps the `FS` kind to `requirements.md` and scans
-`src/`. Its IDs belong to that mini-repository.
+[§FS-check.3.2](../../docs/functional-spec/FS-check.md#32-missing-section)).
+The fixture's own `grund.toml` maps the `FS` kind to `requirements.md`, enables
+`[id] named_sections = true`, and scans `src/`. Its IDs belong to that mini-repository.
 
 ## Try it
 
@@ -25,11 +25,11 @@ If you have no checkout yet, get one with
 ## Declare and cite
 
 The declaration in [`requirements.md`](repo/requirements.md) gives the requirement
-an ID and a numbered section:
+an ID and a named `format` section:
 
 ```markdown
 # FS-login: Login
-## 1. Username
+## format: Username format
 Trim surrounding whitespace.
 ```
 
@@ -37,15 +37,15 @@ Trim surrounding whitespace.
 
 ```python
 def clean_username(username):
-    """§FS-login.1"""
+    """§FS-login.format"""
     return username.strip()
 ```
 
 ## Read and check
 
 ```console
-$ grund FS-login.1
-## 1. Username
+$ grund FS-login.format
+## format: Username format
 Trim surrounding whitespace.
 $ grund check
 success
@@ -53,18 +53,16 @@ success
 
 ## Break and repair
 
-In the temporary copy's `requirements.md`, rename the declaration: change
-`# FS-login: Login` to `# FS-signin: Login`, leaving the code's citation unchanged.
-Run the check again:
+In the temporary copy's `src/login.py`, misspell the citation's section: change
+`format` to `fromat`. Run the check again:
 
 ```console
 $ grund check
-src/login.py:2: error: unknown reference FS-login; did you mean FS-signin?
-requirements.md:1: warning: declared but never cited: FS-signin
+src/login.py:2: error: section not found: FS-login.fromat; write <§> before it to show the shape without citing it
 ```
 
-The command exits `1`: the code still names `FS-login`, which no longer exists, and
-the check suggests the near ID that does. Change the heading back to `# FS-login: Login` and rerun
+The command exits `1`: the declaration exists, but the section the code names does
+not. Correct the spelling back to `format` and rerun
 `grund check`; it prints `success` and exits `0` again.
 
 Returning `username` unchanged in the Python code would still pass the citation check.
