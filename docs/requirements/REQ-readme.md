@@ -47,7 +47,8 @@ a citation, the project map that says where each kind lives, how it writes and c
 and the citation directions as it reads them, so a reader sees the table turned into
 instructions. The excerpts are quoted Markdown rather
 than a code block, so their long lines wrap rather than scroll. A managed-block upgrade
-that changes a quoted line updates the README in the same change.
+that changes a quoted line updates the README in the same change. A short note closes
+the section: the loop as one rule for the system prompt of an agent without the block.
 
 ## 2. Every example is real
 
