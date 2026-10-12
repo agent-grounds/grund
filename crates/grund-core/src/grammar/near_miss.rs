@@ -126,7 +126,13 @@ impl NearMissGrammar {
 /// `//[/!]?` there, and both still begin with `/`.
 fn first_declaration_bytes(comment_prefix: &str) -> Vec<u8> {
     let mut bytes = vec![b'#'];
-    for alternative in comment_prefix.trim_matches(['(', ')']).split('|') {
+    // The group is `(?:…)`; its own `?:` is no alternative's first byte, which
+    // matters now the longest alternative, `/\*[*!]?`, sorts first (§AR-scanner.4.3).
+    let group = comment_prefix
+        .strip_prefix("(?:")
+        .and_then(|inner| inner.strip_suffix(')'))
+        .unwrap_or(comment_prefix);
+    for alternative in group.split('|') {
         // Every alternative is `regex::escape`d, so a leading `\` is the escape
         // of the byte that follows it.
         let literal = alternative.strip_prefix('\\').unwrap_or(alternative);

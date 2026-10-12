@@ -10,7 +10,7 @@ use std::path::Path;
 use crate::config::{Frame, Schema};
 use crate::grammar::{
     CommentBlockKind, DocCommentRule, SourceScanLine, atx_heading_text, block_is_doc_comment,
-    comment_blocks, comment_envelope, doc_comment_rule, first_content_line,
+    comment_blocks, comment_envelope, doc_comment_rule, first_content_line, is_bare_block_line,
     markdown_fence_delimiter,
 };
 use crate::model::{
@@ -41,6 +41,7 @@ pub(super) fn walk_blocks(
         .map(|(start, end, kind)| RecordedBlock {
             start: start + 1,
             end: end + 1,
+            closed: !matches!(kind, CommentBlockKind::Block { closed: false }),
             doc: block_is_doc_comment(
                 doc_rule,
                 &kind,
@@ -50,11 +51,25 @@ pub(super) fn walk_blocks(
             ),
             form: match kind {
                 CommentBlockKind::Line(marker) => BlockForm::Line(marker),
-                CommentBlockKind::Block => BlockForm::Block,
+                CommentBlockKind::Block { .. } => BlockForm::Block,
                 CommentBlockKind::PythonDocstring => BlockForm::Docstring,
             },
         })
         .collect()
+}
+
+/// Whether line `lineno` of a source file is a bare line of a closed `/* … */`
+/// block, read off the blocks the record walked (§FS-declarations.line.block-comment):
+/// the declaration gate, the near-miss gate and `show`'s reading of the
+/// declaration such a line opens all ask the record this, never the line alone.
+pub(crate) fn bare_block_line(record: &FileRecord, lineno: usize) -> bool {
+    !record.markdown
+        && record.block_at(lineno).is_some_and(|block| {
+            block.form == BlockForm::Block
+                && record
+                    .line(lineno)
+                    .is_some_and(|line| is_bare_block_line(line, block.closed))
+        })
 }
 
 /// One line the loop recognized as a heading, located in the file's text.

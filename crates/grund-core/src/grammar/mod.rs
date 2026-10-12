@@ -91,8 +91,9 @@ pub use compiled::Grammar;
 // directory that can name any of it.
 pub(crate) use anchors::{anchor_slug, section_anchor_text, section_display_name};
 pub(crate) use comment_block::{
-    CommentBlockKind, DocCommentRule, block_declares_id, block_is_doc_comment, comment_blocks,
-    doc_comment_rule, first_content_line, line_comment_block_marker,
+    CommentBlockKind, DocCommentRule, bare_block_lines, block_declares_id, block_is_doc_comment,
+    comment_blocks, declaration_id_on_source_line, doc_comment_rule, first_content_line,
+    is_bare_block_line, line_comment_block_marker,
 };
 pub(crate) use comment_line::{comment_envelope, comment_strip_prefixes, strip_block_closer};
 pub(crate) use compiled::{
@@ -155,6 +156,8 @@ pub(crate) use anchors::anchor_slug_github;
 // (§AR-core-module-layout.1.3).
 #[cfg(test)]
 mod tests_block_comment_opener;
+#[cfg(test)]
+mod tests_block_comment_state;
 #[cfg(test)]
 mod tests_comment_block;
 #[cfg(test)]

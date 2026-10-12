@@ -22,8 +22,9 @@ use super::fmt_local_sections::expand_local_section_citations;
 use crate::config::Config;
 use crate::grammar::{
     CandidateReading, DocstringContent, DocstringCursor, FmtDirectives, MarkdownBlocks,
-    MarkdownLine, declaration_id_on_line, id_token_end_at, in_escape_position,
-    is_inside_inline_code, is_inside_markdown_link_destination, string_literal_in,
+    MarkdownLine, bare_block_lines, declaration_id_on_source_line, id_token_end_at,
+    in_escape_position, is_inside_inline_code, is_inside_markdown_link_destination,
+    string_literal_in,
 };
 use crate::model::{Catalog, Id};
 use crate::resolver::{
@@ -64,6 +65,8 @@ pub(super) fn rewrite_file(
     // passed through untouched, or one unvisited `"""` desynchronizes the file.
     let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");
     let mut docstrings = DocstringCursor::new(is_py, config.docstring_python);
+    // §FS-declarations.line.block-comment: a bare block line declares as the scan reads it.
+    let bare_block = bare_block_lines(original, is_md, is_py, config.lexical());
     for (idx, line) in original.lines().enumerate() {
         let block = if is_md {
             markdown_blocks.line(line)
@@ -92,10 +95,11 @@ pub(super) fn rewrite_file(
         // §FS-check.1.1.5.1: a heading-shaped line in a raw-text HTML block
         // declares nothing, so its citations are rewritten like any prose.
         if block.may_be_heading()
-            && declaration_id_on_line(
+            && declaration_id_on_source_line(
                 &config.grammar,
                 docstring.text_of(line),
                 docstring.is_docstring(),
+                bare_block.get(idx).copied().unwrap_or(false),
                 is_md,
             )
             .is_some()

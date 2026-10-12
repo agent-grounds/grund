@@ -61,7 +61,7 @@ pub(super) fn recognized_source_value_contexts(
                     });
                 }
             }
-            CommentBlockKind::Block => {
+            CommentBlockKind::Block { .. } => {
                 for index in start..=end {
                     let line = lines[index];
                     let comment_start = if index == start {

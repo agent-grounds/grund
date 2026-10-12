@@ -15,13 +15,16 @@ use crate::model::{Catalog, Declaration, EmbeddedValueRoot, SectionInfo, ValueRo
 
 /// Record `sec` on `decl`, and say whether the line's embedded marker was
 /// consumed here — an unattached marker is the caller's finding to report
-/// (§FS-values.2.4.4).
+/// (§FS-values.2.4.4). `markdown_depth` reads the heading at its own `#` run, as
+/// in Markdown, a docstring, or a bare line of a block a bare line declared in
+/// (§FS-declarations.line.block-comment).
 pub(super) fn record_section_heading(
     decl: &mut Declaration,
     caps: &regex::Captures<'_>,
     sec: &str,
     scan_line: &str,
     scan: &SourceScanLine<'_>,
+    markdown_depth: bool,
     is_md: bool,
     lineno: usize,
     embedded_marker: Option<usize>,
@@ -29,7 +32,7 @@ pub(super) fn record_section_heading(
     path: &Path,
     findings: &mut Catalog,
 ) -> bool {
-    let heading_level = heading_level_for_line(scan_line, is_md || scan.in_py_docstring, caps);
+    let heading_level = heading_level_for_line(scan_line, markdown_depth, caps);
     if heading_level <= decl.heading_level {
         return false;
     }

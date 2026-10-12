@@ -12,8 +12,9 @@ use std::borrow::Cow;
 
 /// Build the alternation a declaration/section heading may be prefixed by — one
 /// entry per `[scan] comment_prefixes` value (§FS-config.3.5), with `//` widened to
-/// also catch Rust/JS doc-comment forms `///` and `//!` so inline declarations in
-/// code are seen (§AR-scanner.4.3). Longest-first so `//` does not shadow `///`.
+/// also catch Rust/JS doc-comment forms `///` and `//!`, and `/*` widened to the
+/// `/**` and `/*!` openers, so inline declarations in code are seen (§AR-scanner.4.3,
+/// §FS-declarations.line.block-comment). Longest-first so `//` does not shadow `///`.
 pub(super) fn comment_prefix_regex(comment_prefixes: &[String]) -> String {
     let mut prefixes = comment_prefixes
         .iter()
@@ -21,6 +22,8 @@ pub(super) fn comment_prefix_regex(comment_prefixes: &[String]) -> String {
         .map(|prefix| {
             if prefix == "//" {
                 r"//[/!]?".to_string()
+            } else if prefix == "/*" {
+                r"/\*[*!]?".to_string()
             } else {
                 regex::escape(prefix)
             }
@@ -31,6 +34,49 @@ pub(super) fn comment_prefix_regex(comment_prefixes: &[String]) -> String {
         "(?!)".to_string()
     } else {
         format!("(?:{})", prefixes.join("|"))
+    }
+}
+
+/// The `/* … */` state the line reader carries across lines, as it carries a
+/// docstring's (§AR-scanner.4.4): a block opens only on a line whose first
+/// non-blank characters are `/*` (so `/**` and `/*!` too) and closes at the first
+/// `*/` after its opener, on that line or a later one
+/// (§FS-declarations.line.block-comment). `comment_blocks` is its reader, and every
+/// gate reads the spans it walks, so "is this line inside a block?" has one answer.
+#[derive(Clone, Copy, Default)]
+pub(crate) struct BlockCommentScanState {
+    open: bool,
+}
+
+/// Where one line stands to a `/* … */` block: inside one (its opener included),
+/// and whether it is the line that closes it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct BlockCommentLine {
+    pub(crate) inside: bool,
+    pub(crate) closes: bool,
+}
+
+impl BlockCommentScanState {
+    /// Advance over one raw line. Recognition, not parsing: a `/*` after code or in
+    /// a string on its line opens nothing, and a line-initial `/*` inside a
+    /// multi-line string literal opens a block all the same.
+    pub(crate) fn advance(&mut self, line: &str) -> BlockCommentLine {
+        let rest = if self.open {
+            line
+        } else if let Some(rest) = line.trim_start().strip_prefix("/*") {
+            rest
+        } else {
+            return BlockCommentLine {
+                inside: false,
+                closes: false,
+            };
+        };
+        let closes = rest.contains("*/");
+        self.open = !closes;
+        BlockCommentLine {
+            inside: true,
+            closes,
+        }
     }
 }
 

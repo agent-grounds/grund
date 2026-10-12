@@ -248,8 +248,10 @@ pub(crate) fn comment_envelope<'a>(line: &'a str, form: &BlockForm) -> &'a str {
             .map_or(line, behind),
         BlockForm::Block => {
             let trimmed = line.trim_start();
+            // §FS-declarations.line.block-comment: `/**` and `/*!` are openers as `/*` is.
             let content = if let Some(rest) = trimmed
                 .strip_prefix("/**")
+                .or_else(|| trimmed.strip_prefix("/*!"))
                 .or_else(|| trimmed.strip_prefix("/*"))
             {
                 behind(rest)
