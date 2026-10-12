@@ -44,7 +44,7 @@ grund check <empty-repo> --format json
 If the scan reads no scannable files, exit `0`, stdout empty, stderr contains one JSON warning object:
 
 ```json
-{"severity":"warning","path":null,"line":null,"code":"empty-scan","message":"nothing to scan — no files under `<path>` matched grund's extensions (md, rs, go, java, kt, ts, tsx, js, py, c, cpp, swift, scala, rb, php, cs, lisp, scm, clj, sql, hs, lhs, lua, ada, adb, ads).","sites":null}
+{"severity":"warning","path":null,"line":null,"code":"empty-scan","message":"nothing to scan — no files under `<path>` matched grund's extensions (md, rs, go, java, kt, ts, tsx, js, py, c, cpp, swift, scala, rb, php, cs, lisp, scm, clj, sql, hs, lhs, lua, ada, adb, ads).","sites":null,"authority":null}
 ```
 
 A clean non-empty JSON check emits nothing on stdout and nothing on stderr. There is no success object.
@@ -72,8 +72,8 @@ existing global bytewise location order, and every object retains its existing
 bytes and shape:
 
 ```json
-{"severity":"warning","path":"docs/functional-spec/FS-001-alpha.md","line":3,"code":"unused-declaration","message":"declared but never cited: FS-001-alpha","sites":null}
-{"severity":"error","path":"src/z-last.rs","line":1,"code":"dangling","message":"unknown reference FS-999-missing","sites":null}
+{"severity":"warning","path":"docs/functional-spec/FS-001-alpha.md","line":3,"code":"unused","message":"declared but never cited: FS-001-alpha","sites":null,"authority":null}
+{"severity":"error","path":"src/z-last.rs","line":1,"code":"dangling","message":"unknown reference FS-999-missing","sites":null,"authority":null}
 ```
 
 ## 4. `show --format=json`

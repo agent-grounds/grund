@@ -33,6 +33,7 @@ class BoundaryTests(unittest.TestCase):
         cls.g = binding()
 
     def test_silent_no_argv_no_exit_no_cwd_and_independent_roots(self):
+        """§FS-distribution.requirements.library: the host is left as it was found."""
         with temporary() as first, temporary() as second:
             root = fixture(first)
             clean = fixture(second, "clean")

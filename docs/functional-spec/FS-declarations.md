@@ -2,8 +2,10 @@
 
 A declaration is the line that introduces an ID, and it is what every citation in a
 grund repository addresses. One invariant makes that address worth storing: an ID is
-declared exactly once, it is declared where its kind's home allows it, and every heading
-inside its body is either a coordinate a citation can reach or a finding `check` reports.
+declared exactly once, it is declared where its kind's home allows it, and every ATX heading
+inside its body in a Markdown file is either a coordinate a citation can reach or a finding
+`check` reports; source doc-comment and setext text stay outside that rule
+([§FS-declarations.checks.unmarked-heading.1](FS-declarations.md#checksunmarked-heading1-which-headings-participate)).
 Which line introduces an ID at all is [§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares),
 and which declarations a stub stands for is [§FS-declarations.stubs](FS-declarations.md#stubs-what-a-stub-points-at).
 What a heading is and what its rendered text reads, where a body ends, what a section and
@@ -23,6 +25,49 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 lead, index, catalog), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker, citation, citation site), [§FS-terms.terms.3](FS-terms.md#terms3-source-forms)
 (source declaration, stub, doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, workspace, member),
 [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity, caution), and [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (rule).
+
+## requirements: What every declaration holds to
+
+Two requirements on declarations as a whole, each carrying a mark of
+[§FS-config.requirements](FS-config.md#requirements-what-the-config-contract-holds-to). The rest of what a declaration holds to is required elsewhere and
+is not repeated: that an ID has one declaration and a section path one heading is
+[§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution), which names the duplicate checks as its enforcement; that every
+command reads one declaration set, one stub verdict and one section map, whatever the scope,
+is [§REQ-one-answer](../requirements/REQ-one-answer.md#req-one-answer-every-command-gives-the-same-answer-about-one-tree); and that a check about a declaration is specified here under its code is
+[§REQ-spec-section-names.code](../requirements/REQ-spec-section-names.md#code-a-check-is-named-by-its-diagnostic-code).
+
+### requirements.mentions: Writing about an ID never declares it — realized, one case deferred
+
+A line that names an ID without introducing it never declares that ID, wherever it sits. An
+ID followed by a section path is a coordinate in every declaration position, and with the
+declaration colon after it the whole token is the near miss, never a declaration of the
+shorter ID ([§FS-declarations.line.section-suffix](FS-declarations.md#linesection-suffix-an-id-with-a-section-after-it-declares-nothing), [§FS-declarations.line.section-suffix.2](FS-declarations.md#linesection-suffix2-with-the-colon-the-whole-token-is-the-near-miss)); a
+heading inside a fence or a raw-text HTML block is an example ([§FS-declarations.heading](FS-declarations.md#heading-what-a-heading-is),
+[§FS-declarations.checks.broken-stub.2](FS-declarations.md#checksbroken-stub2-a-heading-inside-a-fence-of-the-target-declares-nothing)); and an ID in inline code or in Markdown prose
+declares nothing and is no near miss ([§FS-declarations.checks.declaration-near-miss.3](FS-declarations.md#checksdeclaration-near-miss3-never-in-inline-code-prose-or-a-fenced-block)). One
+case is owed. Every comment-prefixed line of a source file is a declaration position
+([§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares)), so `// FS-x: …` inside a function body, a citation whose marker was
+dropped, declares `FS-x` and makes the real declaration a duplicate. Seeing a source
+declaration only in a doc-comment that documents the definition after it is **deferred** to
+[§RM-doc-comment-declarations](../roadmap.md#rm-doc-comment-declarations-declarations-only-in-classmethod-doc-comments). Serves [§REQ-no-wrong-citation.2](../requirements/REQ-no-wrong-citation.md#2-no-false-alarms) and [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration).
+
+### requirements.actionable: A finding is located at the fault, and no command makes the fix — realized, directional for the next check
+
+Every finding of [§FS-declarations.checks](FS-declarations.md#checks-checks) is located at the fault — the
+declaration or heading in question, or the stub whose link is broken — never at a line with
+nothing to fix: a declaration reached through stubs is named at its target, not at a stub
+([§FS-declarations.checks.duplicate.3](FS-declarations.md#checksduplicate3-a-declaration-reached-through-stubs-is-named-at-its-target)), with every other site listed in the message
+([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration), [§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path)). The message
+states what is true and the choices the author has, and no command applies one: no corrected
+ID is proposed ([§FS-declarations.checks.declaration-near-miss.4](FS-declarations.md#checksdeclaration-near-miss4-facts-not-a-guessed-rename),
+[§FS-declarations.checks.declaration-near-miss.6](FS-declarations.md#checksdeclaration-near-miss6-no-opt-out-no-rewrite)), a suggested coordinate is guidance `fmt`
+never writes ([§FS-declarations.checks.unmarked-heading.3](FS-declarations.md#checksunmarked-heading3-the-suggested-coordinate),
+[§FS-declarations.checks.unmarked-heading.6](FS-declarations.md#checksunmarked-heading6-no-command-numbers-the-heading)), a non-citable home is named as a place rather
+than mapped to a kind ([§FS-declarations.checks.misplaced-declaration.3](FS-declarations.md#checksmisplaced-declaration3-a-non-citable-home)), and an oversized
+lead is answered with remedies that keep its citations
+([§FS-declarations.checks.oversized-lead.1](FS-declarations.md#checksoversized-lead1-the-message)). This binds every check added here from now on.
+Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible), beyond the `path:line` that [§GOAL-friendliness-first.1](../goals.md#1-hard-requirements)
+already requires.
 
 ## line: What a line in declaration position declares
 

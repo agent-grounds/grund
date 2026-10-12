@@ -136,7 +136,9 @@ CHECK_ONLY = "narrows the report"
 # The page cites rather than restates these.
 CITED = ("REQ-one-answer.differences.scope", "FS-workspace.6.2")
 # Non-blank lines on main at 1640b6c47c; every file the move touches ends below it.
-BASELINES = {"FS-config.md": 765, "FS-workspace.md": 1163, "FS-check.md": 919}
+# FS-check's adds the 10 lines of the requirements chapter it gained since (#634), so
+# the room a restatement could grow back into is the one line it was.
+BASELINES = {"FS-config.md": 765, "FS-workspace.md": 1163, "FS-check.md": 929}
 
 
 def _flat(text):

@@ -8,6 +8,24 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (workspace), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding,
 verdict), [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (rule), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, binding, fetcher, snapshot).
 
+## requirements: What every case run holds to
+
+One requirement on the shared runner as a whole, carrying a mark of [§FS-config.requirements](FS-config.md#requirements-what-the-config-contract-holds-to).
+That captured output is real and moves with the change that moves it is [§REQ-readme.2](../requirements/REQ-readme.md#2-every-example-is-real) for the
+README and [§FS-examples.4](FS-examples.md#4-maintenance-contract) for an example's goldens, so it is not repeated.
+
+### requirements.verdict: A case passes only by matching what it says — realized, directional for the next manifest field
+
+The shared runner never reports a pass for a case it did not run as written. A
+`command.args` line a shell would read differently is refused before `grund` runs, never run
+as other arguments ([§FS-examples.5.3](FS-examples.md#53-commandargs-is-read-as-shell-words-or-refused)); a malformed `command.external` is refused before any
+fixture is copied, and a failed spawn never counts as golden success ([§FS-examples.5.4](FS-examples.md#54-commandexternal-invokes-an-explicit-json-argv)); and
+the harness's own wrong-golden probes compare even under an inherited refresh, so a refresh
+cannot hide a broken mismatch verdict ([§FS-examples.5.1](FS-examples.md#51-synthetic-verdict-probes-always-compare)). Each refusal names the case. A
+manifest field added from here on is read exactly or refused, naming the case, and never
+turns a mismatch into a pass. Serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work): an example teaches the workflow
+only while its run is true.
+
 ## 1. Scope
 
 An example is any maintained directory or document under `examples/` that is advertised from the README, from `examples/README.md`, or from a functional spec. Scratch fixtures, private experiments, and e2e-only test cases are not examples until they are linked from one of those user-facing surfaces.

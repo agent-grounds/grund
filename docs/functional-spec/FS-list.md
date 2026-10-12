@@ -13,6 +13,18 @@ stub, doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project
   section: its lead and full-body measurement, or the site alone where there
   is nothing to measure.
 
+## requirements: What every listing holds to
+
+Two requirements on `list` as a whole, each carrying a mark as [§FS-config.requirements](FS-config.md#requirements-what-the-config-contract-holds-to) defines them. There is no third for what the tool states once for every query: listing exactly the declarations and sections `check` validates and `show` resolves, and counting what `refs` and `show` answer, is [§REQ-one-answer.contract](../requirements/REQ-one-answer.md#contract-one-question-one-tree-one-answer) with [§REQ-one-answer.identity.declarations](../requirements/REQ-one-answer.md#identitydeclarations-every-command-reads-one-declaration-set) and [§REQ-one-answer.sections.map](../requirements/REQ-one-answer.md#sectionsmap-every-surface-reads-one-section-map); reading offline, read-only and to the same bytes on every run is [§REQ-runs-offline.1](../requirements/REQ-runs-offline.md#1-read-and-verification-paths-execute-nothing), [§REQ-no-data-loss.1](../requirements/REQ-no-data-loss.md#1-the-query-surface-never-writes) and [§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes); and a narrowed listing as a rung of the escalation ladder is [§GOAL-token-economy.1](../goals.md#1-what-this-requires).
+
+### requirements.flagged-rows: A finding marks a row and never removes one — realized
+
+Whatever `check` reports about a declaration, `list` still shows it: a duplicated ID keeps one flagged line per home and picks no winner ([§FS-list.2.6](FS-list.md#26-duplicate-declarations)), each claimant of a duplicated section keeps its own marked size row ([§FS-list.2.7](FS-list.md#27-duplicate-sections)), a broken stub is listed at its own site with its target ([§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical), [§FS-list.3.4.3](FS-list.md#343-text-rows)), and an off-grammar declaration stays a normal row ([§FS-list.2.3](FS-list.md#23-off-grammar-declarations)). Nor does a finding fail the run: `list` has no exit `1` ([§FS-list.4](FS-list.md#4-exit-codes)). The located error is left to `check`, so the catalog shows the situation `check` judges, never a tree tidied of what it objects to. Serves [§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution), which reports duplicates rather than ranking them, and [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work).
+
+### requirements.one-selection: Every filter narrows every mode alike — realized, directional for the next filter
+
+The filters make one selection and every output mode reads it: `--kind`, `--project`, `--unused` and `--selector` narrow the per-declaration rows, the `--summary` counts and the `--size` rows alike, compose with one another by intersection, and apply before `--top` keeps its largest rows ([§FS-list.1.2](FS-list.md#12---project), [§FS-list.1.4](FS-list.md#14---summary), [§FS-list.3.3.1](FS-list.md#331-narrowed-summaries), [§FS-list.3.4.5](FS-list.md#345-order-and---top), [§FS-rules.8](FS-rules.md#8-command-surfaces)). A refusal reads it too: the `known kinds:` line is built from the same selection in every mode ([§FS-list.1.2](FS-list.md#12---project)). This binds a filter added from here on: it narrows that one selection, and so reaches every mode at once, rather than being a predicate one mode applies and another forgets. Serves [§GOAL-token-economy.1](../goals.md#1-what-this-requires), whose ladder needs a slice to name one set at every rung.
+
 ## 1. Inputs
 
 ```

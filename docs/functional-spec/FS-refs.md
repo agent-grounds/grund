@@ -9,6 +9,18 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, workspace, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations)
 (value, binding, snapshot).
 
+## requirements: What every citation lookup holds to
+
+Two requirements on `refs` as a whole, each carrying a mark as [§FS-config.requirements](FS-config.md#requirements-what-the-config-contract-holds-to) defines them. There is no third for what the tool states once for every query: listing exactly the citations `check` validates, and refusing a duplicate home as `show` does, is [§REQ-one-answer.contract](../requirements/REQ-one-answer.md#contract-one-question-one-tree-one-answer) and [§REQ-one-answer.identity.declarations](../requirements/REQ-one-answer.md#identitydeclarations-every-command-reads-one-declaration-set); rejecting an ambiguous operand with its candidates is [§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution); reading offline, read-only and to the same bytes on every run is [§REQ-runs-offline.1](../requirements/REQ-runs-offline.md#1-read-and-verification-paths-execute-nothing), [§REQ-no-data-loss.1](../requirements/REQ-no-data-loss.md#1-the-query-surface-never-writes) and [§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes); and `--summary` and `--total` as rungs of the escalation ladder are [§GOAL-token-economy.1](../goals.md#1-what-this-requires).
+
+### requirements.one-set: Every flag answers from one citation set — realized, directional for the next flag
+
+The invocation fixes one set — every recognised citation of the ID, narrowed by `--section` or the dotted form and widened by `--descendants` ([§FS-refs.1](FS-refs.md#1-inputs), [§FS-refs.2](FS-refs.md#2-behaviour)) — and each output flag folds over that set rather than over one of its own: `--summary` to a row per file, `--total` to one row ([§FS-refs.3.3](FS-refs.md#33---summary), [§FS-refs.3.4](FS-refs.md#34---total)). None adds a refusal or an exit status: each inherits the operand's result ([§FS-refs.4](FS-refs.md#4-exit-codes)). So no combination needs a rule of its own, and `--section <s> --descendants --total` is a count a reader can hold against the editor's ([§FS-lsp.1.2.6](FS-lsp.md#126-what-a-section-heading-counts)). This binds a flag added from here on: it narrows or widens that set, or folds over it, and inherits the operand's result. Serves [§GOAL-token-economy.1](../goals.md#1-what-this-requires).
+
+### requirements.unresolved: A citation is listed whether or not it resolves — realized
+
+Whether a site reaches anything is `check`'s question, never a reason to drop it: an ID with no declaration lists its dangling citations, a cited section no heading declares counts under `--descendants` ([§FS-refs.2](FS-refs.md#2-behaviour)), a missing fetched snapshot lists its sites without running the integration ([§FS-refs.2.3](FS-refs.md#23-fetch-backed-snapshots)), and a stub that cannot be paired refuses nothing ([§FS-refs.4.1](FS-refs.md#41-a-stubs-homes-are-found-in-its-target)). What `refs` refuses is an operand it cannot name one target for — a grammar rejection, a duplicate home, a duplicate on the selected section — and deciding that needs no declaration to exist ([§FS-refs.4](FS-refs.md#4-exit-codes)). So `refs` says what would break before a target exists and after it is gone. Serves [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration).
+
 ## 1. Inputs
 
 ```

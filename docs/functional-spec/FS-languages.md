@@ -14,6 +14,14 @@ Leans on [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (doc-comment) and
 - **fence** — A Markdown fenced code block, from its opening delimiter line to its closing one,
   in a Markdown file or read through the comment wrapper in a comment block.
 
+## requirements: What every reading of a file's lines holds to
+
+One requirement on the reading as a whole, carrying a mark of [§FS-config.requirements](FS-config.md#requirements-what-the-config-contract-holds-to). Three more are left out because they are stated elsewhere: *the same lines give the same body in the editor, on the command line and through the bindings* is [§REQ-one-answer.text.parity](../requirements/REQ-one-answer.md#textparity-the-editor-answers-as-the-command-line-does) and [§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes); *every comment form the defaults claim is proved by a dangling citation planted in it* is [§REQ-no-missed-citation.3](../requirements/REQ-no-missed-citation.md#3-proven-per-host-language), which [§FS-languages.prefixes](FS-languages.md#prefixes-comment_prefixes-compose-with-extensions) serves; and *what `show` prints of a source declaration is its author's text less the comment wrapper* is [§FS-show.requirements.authored-bytes](FS-show.md#requirementsauthored-bytes-a-slice-is-the-authors-bytes-selected-and-never-rewritten--realized).
+
+### requirements.one-block: Every command reads a run of line comments as the same block — deferred
+
+The extraction is defined to leave no freedom ([§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block)), yet a run of line comments is read two ways today: the body `show` slices continues across one comment prefix family, so a `//` note under a `///` declaration is part of its body ([§FS-languages.comment-block.open](FS-languages.md#comment-blockopen-find-the-open-boundary)), while the block forms stop where the prefix changes ([§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks)), so `refs` gives that note's citations no enclosing declaration ([§REQ-one-answer.differences.sections](../requirements/REQ-one-answer.md#differencessections-sections)). That `//` and `///` are separate blocks is ruled as D17c of [§DF-one-answer-rulings-parse.decision](../decisions/functional/DF-one-answer-rulings-parse.md#decision-decision), and carrying the ruling out is owed to the later step it names, through the warning release of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path). Serves [§REQ-one-answer.sections.map](../requirements/REQ-one-answer.md#sectionsmap-every-surface-reads-one-section-map).
+
 ## comment-block: The comment block
 
 Extraction is precisely defined so that the implementation has no freedom and the same input produces the same output across editor, CLI, and binding callers.

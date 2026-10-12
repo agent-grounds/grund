@@ -27,6 +27,30 @@ member, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, caut
 - **unverified** — Of a citation into an absent member: neither resolved nor
   reported, a third outcome beside valid and dangling.
 
+## requirements: What the workspace contract holds to
+
+Five requirements on the workspace as a whole, each carrying a mark in the sense of [§FS-config.requirements](FS-config.md#requirements-what-the-config-contract-holds-to). Four more are left out because a goal or another requirement already states them: *a repository that declares no workspace pays nothing for one* is [§GOAL-small-and-large.3](../goals.md#3-layout-knobs-live-in-config), the one cost every repository pays being the qualified shape it reads ([§FS-workspace.1.3](FS-workspace.md#13-the-shape-outside-a-workspace)); *a misconfigured block fails loudly at the line that wrote it* is [§FS-config.requirements.5](FS-config.md#requirements5-a-mistake-in-the-config-fails-loudly--realized-one-case-deferred); *every surface answers a qualified citation as `check` does* is [§REQ-one-answer](../requirements/REQ-one-answer.md#req-one-answer-every-command-gives-the-same-answer-about-one-tree); and *a workspace run stays offline and its output deterministic* is [§REQ-runs-offline](../requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service)'s and [§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes)'s.
+
+### requirements.explicit: A cross-project citation names its target by alias path and resolves there alone — realized
+
+Which project a citation names is decided by its text: an unqualified ID resolves in the current project only and a qualified one in the project its alias path names, never through a file path or an unqualified ID another project happens to declare ([§FS-workspace.4](FS-workspace.md#4-resolution), [§FS-workspace.8.1.1.1](FS-workspace.md#8111-why-it-still-refuses), [§FS-workspace.8.9](FS-workspace.md#89-the-current-project)). The lookup then reads only the target's catalog, grammar and shorthand policy ([§FS-workspace.1.2](FS-workspace.md#12-whose-grammar-reads-the-id), [§FS-workspace.4.1](FS-workspace.md#41-each-lookup-stays-in-its-project), [§FS-workspace.4.2](FS-workspace.md#42-qualified-shorthand-follows-the-targets-policy)), so one ID in two projects is two declarations rather than an ambiguity ([§FS-workspace.8.1.4](FS-workspace.md#814-one-id-in-two-projects-is-not-ambiguous)), and a candidate the run can name is message text, never a pick ([§FS-workspace.8.1.1.3](FS-workspace.md#8113-several-candidates-are-listed-never-chosen)). Serves [§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution) and [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration).
+
+### requirements.said: What a workspace does not check, it says — realized
+
+A qualified citation the run cannot resolve is an error at its site in every run, workspace or not, whatever kind its tail names and whichever loaded grammar would accept it ([§FS-workspace.1.2.1](FS-workspace.md#121-an-unknown-alias-has-no-grammar-to-read-its-tail), [§FS-workspace.1.3](FS-workspace.md#13-the-shape-outside-a-workspace), [§FS-workspace.4](FS-workspace.md#4-resolution), [§FS-workspace.5.1](FS-workspace.md#51-a-member-run), [§FS-workspace.5.2](FS-workspace.md#52-recognition-in-a-run-that-loads-no-workspace)), unless the config declared that its namespace may be absent. Every place a workspace leaves unchecked, or names otherwise than its configs say, is declared by the config or announced by the run: an absent optional member, declared one entry at a time and named once per member with `success` withheld ([§FS-workspace.2.2.5](FS-workspace.md#225-the-blind-spot-it-costs), [§FS-workspace.4.3](FS-workspace.md#43-unverified-is-reported-once-per-member), [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent)); the own files of an `include_root = false` block ([§FS-workspace.6.1.2.1](FS-workspace.md#6121-an-opted-out-nodes-own-files-are-read-by-nobody)); a block no enclosing block lists, whose projects are absorbed rather than named ([§FS-workspace.6.1.8](FS-workspace.md#618-a-block-no-enclosing-block-lists-is-outside-the-chain)); and alias paths an unreadable ancestor claim may have shortened ([§FS-workspace.6.1.7.5](FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable)). Only the two shapes of [§FS-workspace.6.1.8.1](FS-workspace.md#6181-two-shapes-stay-unreported) go unreported. Serves [§REQ-no-missed-citation](../requirements/REQ-no-missed-citation.md#req-no-missed-citation-every-citation-the-run-reads-is-checked), whose list of declared blind spots ([§REQ-no-missed-citation.2](../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded)) names the first of these but not yet the second.
+
+### requirements.own-catalog: A project's catalog holds its own declarations and no other project's — realized
+
+One project's scan never enters another's: the root scan stops at every member ([§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)), the boundary is mutual and belongs to the directory rather than to the path that reaches it, symlinks included ([§FS-workspace.6.2](FS-workspace.md#62-the-boundary-is-mutual)), and a member checked on its own is fenced by its canonical root ([§FS-workspace.6.3](FS-workspace.md#63-a-member-checked-on-its-own)). Member roots are compared canonically and may neither overlap nor escape their block ([§FS-workspace.2.3](FS-workspace.md#23-what-a-member-entry-may-name), [§FS-workspace.6.1.4](FS-workspace.md#614-members-are-compared-as-canonical-paths)), and a block whose members would swallow its whole scan is refused rather than left reading nothing ([§FS-workspace.2.1](FS-workspace.md#21-a-member-that-swallows-the-blocks-own-scan)). Serves [§REQ-no-wrong-citation.2](../requirements/REQ-no-wrong-citation.md#2-no-false-alarms), since a declaration reported as a duplicate of itself is a false alarm, and [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration).
+
+### requirements.narrower-run: A narrower run is never more permissive than the outermost root — realized, one recorded exception
+
+A citation that passes at a narrower scope passes at the outermost root. A path below the config root and a project that declares no `[workspace]` load no workspace, so every qualified citation there is an unknown alias ([§FS-workspace.5](FS-workspace.md#5-command-scope), [§FS-workspace.5.1](FS-workspace.md#51-a-member-run), [§FS-workspace.6.1.7.1](FS-workspace.md#6171-only-a-run-that-reads-a-path-carries-the-obligation)); a block in the claimed chain resolves a subset of the root's alias paths, never a re-spelling of them ([§FS-workspace.6.1.5](FS-workspace.md#615-alias-paths-do-not-change-with-scope), [§FS-workspace.6.1.5.2](FS-workspace.md#6152-a-subtree-does-not-name-its-projects-from-itself)). That is why a block reads its paths from the outermost claim above it, a `grund.toml` above the checkout included, and why a claiming block that cannot answer fails the run ([§FS-workspace.6.1.6](FS-workspace.md#616-a-path-is-read-from-the-outermost-claim), [§FS-workspace.6.1.7](FS-workspace.md#617-a-claiming-block-that-cannot-answer-fails-the-run)): the enclosing-workspace case [§FS-config.requirements.8](FS-config.md#requirements8-a-projects-meaning-is-self-contained--realized) names. The recorded exception is a block no enclosing block lists, which names its subtree from itself ([§FS-workspace.6.1.5.1](FS-workspace.md#6151-the-guarantee-is-quantified-over-the-scope)) and is reported by every run whose scan meets it ([§FS-workspace.6.1.8](FS-workspace.md#618-a-block-no-enclosing-block-lists-is-outside-the-chain)). Serves [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) at the outermost root, the run CI holds.
+
+### requirements.ahead: Remotes, mounted roots and a relaxed standalone mode are specified ahead of their release — deferred
+
+Four passages state [§FS-remote-projects](FS-remote-projects.md#fs-remote-projects-a-project-cites-another-repositorys-declarations-from-a-committed-pinned-projection) behaviour: a mounted member's and a remote's alias and a remote's place among the siblings ([§FS-workspace.3](FS-workspace.md#3-aliases)), the mounted-root exception to the outermost claim ([§FS-workspace.6.1.6](FS-workspace.md#616-a-path-is-read-from-the-outermost-claim)), a claim read from `mounted_members` entries and `[workspace.remotes]` keys ([§FS-workspace.6.1.7.4](FS-workspace.md#6174-the-claim-is-read-from-members-entries-alone)), and a neighbouring repository cited as `<alias>/<ID>` ([§FS-workspace.7](FS-workspace.md#7-neighboring-repos)). They are owed to the Mount and Remotes pieces of [§DF-remote-projects](../decisions/functional/DF-remote-projects.md#df-remote-projects-a-remote-project-is-a-workspace-member-whose-bytes-were-fetched-mounted-as-its-own-root) and serve [§REQ-remote-equivalence](../requirements/REQ-remote-equivalence.md#req-remote-equivalence-a-fetched-remote-answers-every-operation-as-a-local-project-does); until those land, a config declaring `mounted_members` or `[workspace.remotes]` is refused at load ([§FS-remote-projects.declaration.older](FS-remote-projects.md#declarationolder-an-older-grund-refuses-the-table-loudly)) and the ancestor climb reads `members` and `optional_members` alone. A relaxed standalone mode that downgrades a member-local unknown alias to a warning is owed to its own change ([§FS-workspace.5.1](FS-workspace.md#51-a-member-run), [§DF-subproject-namespaces.3.6](../decisions/functional/DF-subproject-namespaces.md#36-standalone-members-fail-loud-not-silent)).
+
 ## 1. Citation syntax
 
 A normal citation still resolves inside the current project:
@@ -473,10 +497,10 @@ basename when omitted. A member listed in `optional_members` is the one exceptio
 and it is an exception in both checkouts: its alias is the entry's last path
 segment, and a `project_name` that disagrees with that segment is a config error
 rather than a second name ([§FS-workspace.2.2.2](FS-workspace.md#222-the-alias-of-an-optional-member)). A mounted member's alias is its entry's last
-segment too, and a remote's is its table key ([§FS-remote-projects.declaration.alias](FS-remote-projects.md#declarationalias-the-alias-is-the-table-key)).
+segment too, and a remote's is its table key, both specified ahead of their release ([§FS-remote-projects.declaration.alias](FS-remote-projects.md#declarationalias-the-alias-is-the-table-key)).
 
 Aliases must match the lowercase slug grammar in [§FS-workspace.1.1](FS-workspace.md#11-the-alias-path) and must be unique **among
-siblings** — the root project, the top-level members and the block's remotes share one level, and
+siblings** — the root project, the top-level members and, once they ship, the block's remotes share one level, and
 each nested `[workspace]` block's members share another ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)). A duplicate or
 invalid alias is a launch-time error, because a qualified citation would
 otherwise have two possible targets. Two projects under different parents may
@@ -743,7 +767,7 @@ does, which is
 multi-segment `members` entry (`grp/inner`) hops a directory that may itself
 declare `[workspace]` and list the same child, and the outer claim is the one the
 scan down from the outermost root follows — ordinary nesting has one claim per
-directory, where the two agree. A mounted root is the one exception: no claim above it reaches
+directory, where the two agree. A mounted root, specified ahead of its release, is the one exception: no claim above it reaches
 inside, and a path inside it is read from its own claims and shown outside under its alias
 ([§FS-remote-projects.mount.rule](FS-remote-projects.md#mountrule-a-mounted-root-resolves-natively-and-is-shown-under-its-alias)).
 
@@ -798,15 +822,15 @@ command inside it.
 
 ##### 6.1.7.4 The claim is read from `members` entries alone
 
-The claim is read from the **`members`, `optional_members` and `mounted_members` entries and the
-`[workspace.remotes]` keys alone**, each key claiming `.grund/remotes/<key>/`
-([§FS-workspace.2.2.9.1](FS-workspace.md#2291-the-ancestor-climb-reads-optional_members), [§FS-remote-projects.declaration.registration](FS-remote-projects.md#declarationregistration-only-a-declaration-registers-a-remote)), never from a loaded config: those values are parsed on their own
+The claim is read from the **`members` and `optional_members` entries alone**
+([§FS-workspace.2.2.9.1](FS-workspace.md#2291-the-ancestor-climb-reads-optional_members)), with `mounted_members` entries and `[workspace.remotes]` keys, each key claiming `.grund/remotes/<key>/`, specified to join them ahead of their release
+([§FS-remote-projects.declaration.registration](FS-remote-projects.md#declarationregistration-only-a-declaration-registers-a-remote)), and never from a loaded config: those values are parsed on their own
 — no other key read, no shape rule applied — so a config that fails to load is
 still asked whether it claims this directory. Deciding it from a loaded config instead made *every* load
 failure above a repository silently equal to "claims nothing", which is the
 collapsed prefix this rule exists to prevent, and two mistakes on one `members`
 line then behaved oppositely: a member that does not exist failed the subtree
-run, while an entry the shape rule rejects ([§FS-workspace.2.3](FS-workspace.md#23-what-a-member-entry-may-name)) let it re-spell itself. A run started inside
+run, while an entry the shape rule rejects ([§FS-workspace.2.3](FS-workspace.md#23-what-a-member-entry-may-name)) let it re-spell itself. Once remotes ship, a run started inside
 a projection climbs only to learn that it is mounted and under which alias ([§FS-remote-projects.mount.inside](FS-remote-projects.md#mountinside-a-run-started-inside-a-projection)).
 
 ##### 6.1.7.5 An unobtainable `members` value leaves the claim undecidable
@@ -888,7 +912,7 @@ scan include is not a link traversal and retains the intentional external scope
 
 A neighbouring repository is cited as `<alias>/<ID>`, for example `<§>payments/FS-refunds`, once
 it is declared as a remote and fetched into a committed, pinned projection
-([§FS-remote-projects](FS-remote-projects.md#fs-remote-projects-a-project-cites-another-repositorys-declarations-from-a-committed-pinned-projection)), offline and fast ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)).
+([§FS-remote-projects](FS-remote-projects.md#fs-remote-projects-a-project-cites-another-repositorys-declarations-from-a-committed-pinned-projection)), offline and fast ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)). That is specified ahead of its release: until it ships, a config that declares a remote is refused at load ([§FS-remote-projects.declaration.older](FS-remote-projects.md#declarationolder-an-older-grund-refuses-the-table-loudly)).
 
 ## 8. Other commands
 
