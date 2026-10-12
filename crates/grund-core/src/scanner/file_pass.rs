@@ -33,7 +33,7 @@ use super::extents::assign_extents;
 use super::qualified_citations::{
     scan_fallback_qualified_citations, scan_workspace_qualified_pass,
 };
-use super::record::{HeadingLine, bare_block_line, walk_blocks, zone_of};
+use super::record::{CommentFences, HeadingLine, bare_block_line, walk_blocks, zone_of};
 use super::relative_sections::HeldHeadings;
 use super::section_record::record_section_heading;
 use super::tree::heading_level_for_line;
@@ -125,6 +125,7 @@ pub(super) fn scan_file_text(
     };
     let in_docs = super::stub_shape::stub_by_docs(path);
     let mut markdown_blocks = MarkdownBlocks::default();
+    let mut comment_fences = CommentFences::default();
     let mut py_docstring = PythonDocstringScanState::default();
     let mut wrappers = UnclosedWrappers::new(schema, frame, is_md);
     let mut current: Option<Declaration> = None;
@@ -178,6 +179,9 @@ pub(super) fn scan_file_text(
             &mut py_docstring,
         );
         record.zones.extend(zone_of(lineno, &scan));
+        if !is_md {
+            comment_fences.read(&mut record, lineno);
+        }
         let heading = HeadingLine {
             text,
             line,
@@ -332,7 +336,9 @@ pub(super) fn scan_file_text(
             continue;
         }
 
-        let section_caps = structure
+        // §FS-languages.fence.comment-block: a fence in a comment block hides its headings only.
+        let heading_structure = structure && !record.in_comment_fence(lineno);
+        let section_caps = heading_structure
             .then(|| grammar.section_re.captures(scan_line))
             .flatten();
         let recognized_section = section_caps.as_ref().and_then(section_path).is_some();
