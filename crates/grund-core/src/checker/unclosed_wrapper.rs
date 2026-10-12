@@ -12,9 +12,10 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected, UnclosedWrapperNo
 use crate::resolver::WorkspaceCheckTarget;
 
 /// §FS-citations.checks.unclosed-wrapper: one warning per noted citation `fmt
-/// --cross-refs` would link. Its ordinary pass links where it is enabled and
-/// nothing suppresses the line; a kind's index entry is linked wherever that pass
-/// is off (§FS-fmt.2.5.3). A citation whose target declares nothing is skipped as
+/// --cross-refs` would link. Its ordinary pass links wherever nothing suppresses
+/// the line, whatever `[fmt.cross_refs] enabled` says, since that key gates only
+/// the automatic pass (§FS-fmt.6.7.2); a kind's index entry is linked even in a
+/// suppressed scope (§FS-fmt.2.5.3). A citation whose target declares nothing is skipped as
 /// `fmt` skips it (§FS-fmt.6.4), and a qualified one resolves only in the
 /// workspace that loaded its alias (§FS-workspace.8.5). The warning leaves the
 /// exit status where the rest of the run put it (§FS-check.2).
@@ -26,9 +27,7 @@ pub(super) fn check_unclosed_wrappers(
     report: &mut CheckReport,
 ) {
     let linked = |note: &UnclosedWrapperNote| {
-        let ordinary = !expected.cross_refs_disabled
-            && !note.suppressed
-            && !expected.fmt_excluded.contains(&note.file);
+        let ordinary = !note.suppressed && !expected.fmt_excluded.contains(&note.file);
         let resolves = match note.namespace.as_deref() {
             Some(alias) => targets
                 .get(alias)

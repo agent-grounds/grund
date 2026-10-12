@@ -2,7 +2,8 @@
 //! before the checker's relational half runs (§AR-system.2.11), and the checker
 //! compares it with disk and renders nothing (§AR-checker.2.7, §AR-checker.2.16),
 //! so a presentation-only change can move a drift finding through these bytes
-//! and no other verdict (§FS-check.3.5.4).
+//! (§FS-check.3.5.4), and an `[fmt] exclude` change the unclosed-wrapper
+//! warning (§FS-citations.checks.unclosed-wrapper), and no other verdict.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
@@ -11,8 +12,8 @@ use super::records::Id;
 
 /// §AR-checker.1.3: the managed-block version this config asks for, every
 /// agent entrypoint in the order the check compares them, the canonical link
-/// target of each index-file citation external enrollment inspects, and where
-/// `fmt --cross-refs` links outside an index.
+/// target of each index-file citation external enrollment inspects, and the
+/// files `[fmt] exclude` keeps `fmt --cross-refs` out of.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Expected {
     /// The block version a current managed block carries (§FS-init.2.3.7).
@@ -25,10 +26,6 @@ pub struct Expected {
     /// `fmt`'s bare-ID link destination keyed by (index file, ID)
     /// (§FS-check.3.18.3, §DF-index-entry-form.2.7).
     pub index_targets: BTreeMap<(PathBuf, Id), String>,
-    /// `[fmt.cross_refs] enabled = false`: `fmt --cross-refs` links only a kind's
-    /// index entries (§FS-fmt.6.1.2), which `unclosed-wrapper` follows
-    /// (§FS-citations.checks.unclosed-wrapper).
-    pub cross_refs_disabled: bool,
     /// The files holding an `unclosed-wrapper` note that `[fmt] exclude` names, a
     /// suppressed scope where only index entries are linked (§FS-fmt.2.5.3).
     pub fmt_excluded: BTreeSet<PathBuf>,

@@ -1,1 +1,2 @@
 docs/fs/README.md:3: warning: the link after FS-x never closes, so grund fmt --cross-refs leaves it as written, and from grund 0.19.0 it is not read as FS-x's link and FS-x is linked on its own — add the ')' that ends the link to keep it
+docs/notes.md:3: warning: the link after FS-x never closes, so grund fmt --cross-refs leaves it as written, and from grund 0.19.0 it is not read as FS-x's link and FS-x is linked on its own — add the ')' that ends the link to keep it
