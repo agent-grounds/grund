@@ -216,13 +216,17 @@ So that CI can attribute the acceptance's time without the captured output of
 cargo, every build the acceptance runs prints one line to its standard error
 as it finishes: the profile, the target directory and the wall seconds, in the
 form `node build: <profile> <target-dir> <seconds>s`. It is one line per build
-and none for anything else the harness runs.
+and none for anything else the harness runs. The gate reaches the acceptance
+through `tests/integration/test_node_binding_acceptance.py`, which captures its
+output to show only on failure; it passes these lines, and nothing else, on to
+its own standard error on every run, so they reach the job log of a green leg.
 
 `tests/integration/test_node_shared_target.py` holds this too: across the
 support module's source package and every other build site, exactly one build
 of the binding resolves to the release profile, and it is the documented native
 builder's; a build the harness runs prints its one line naming its profile,
-target and seconds; and the CI cache key carries the `v2` this point bumped.
+target and seconds; the wrapper shows those lines, and only those, on a green
+run; and the CI cache key carries the `v2` this point bumped.
 
 #### 3.4.2 Per-test durations
 
