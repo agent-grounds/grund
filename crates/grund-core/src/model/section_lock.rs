@@ -9,9 +9,12 @@ use std::path::{Path, PathBuf};
 pub(crate) const SECTION_LOCK_DIR: &str = ".grund/sections";
 
 /// One lock file the scan read beside the walk: `id` the rendered ID its name
-/// carries, which also places it (§FS-section-lock.file.shard).
+/// carries, which also places it (§FS-section-lock.file.shard), and `alias` the
+/// project its citations go into when that is another one, named by the
+/// directory it sits in (§FS-section-lock.file.members).
 #[derive(Clone, Debug)]
 pub(crate) struct SectionLockFile {
+    pub(crate) alias: Option<String>,
     pub(crate) id: String,
     pub(crate) text: String,
 }
@@ -34,9 +37,14 @@ pub(crate) struct LockLines {
     pub(crate) invalid: Vec<usize>,
 }
 
-/// The lock file of `id` under `root` (§FS-section-lock.file.shard).
-pub(crate) fn section_lock_path(root: &Path, id: &str) -> PathBuf {
-    root.join(SECTION_LOCK_DIR).join(format!("{id}.lock"))
+/// The lock file of `id` under `root` (§FS-section-lock.file.shard), in the
+/// directory of `alias` for a citation into another project
+/// (§FS-section-lock.file.members).
+pub(crate) fn section_lock_path(root: &Path, alias: Option<&str>, id: &str) -> PathBuf {
+    let dir = root.join(SECTION_LOCK_DIR);
+    alias
+        .map_or(dir.clone(), |alias| dir.join(alias))
+        .join(format!("{id}.lock"))
 }
 
 /// Read `text`, the lock file of `id`: a line is an entry when it is

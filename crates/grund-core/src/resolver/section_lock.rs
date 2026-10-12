@@ -8,6 +8,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
+use super::citation_target::WorkspaceCheckTarget;
 use super::point_body::point_body_pair;
 use crate::config::{Frame, Schema};
 use crate::grammar::render_id;
@@ -55,8 +56,13 @@ pub(crate) enum EntryVerdict {
 /// One lock file judged against the tree: the one that exists, the one a cited
 /// relative address needs, or both (§FS-section-lock.file.shard).
 pub(crate) struct LockJudgement<'a> {
-    /// The coordinate prefix: the ID as `[id] format` renders it.
+    /// The project its citations go into when that is another one
+    /// (§FS-section-lock.file.members).
+    pub(crate) alias: Option<&'a str>,
+    /// The coordinate prefix: the ID as that project's `[id] format` renders it.
     pub(crate) rendered: String,
+    /// What separates the ID from a section path there.
+    pub(crate) separator: String,
     pub(crate) path: PathBuf,
     /// Its text as read, `None` where no file exists.
     pub(crate) text: Option<&'a str>,
@@ -71,10 +77,25 @@ pub(crate) struct LockJudgement<'a> {
 }
 
 impl LockJudgement<'_> {
+    /// The coordinate of `section` as a line of the file spells it
+    /// (§FS-section-lock.holds.entry).
+    pub(crate) fn coordinate(&self, section: &str) -> String {
+        format!("{}{}{section}", self.rendered, self.separator)
+    }
+
+    /// The coordinate as a finding names it: with the alias of the project it
+    /// is in when that is another one (§FS-section-lock.file.members).
+    pub(crate) fn cited(&self, section: &str) -> String {
+        match self.alias {
+            Some(alias) => format!("{alias}/{}", self.coordinate(section)),
+            None => self.coordinate(section),
+        }
+    }
+
     /// The entries the file holds once `fmt --write` has run, as
     /// `(coordinate, fingerprint)` pairs (§FS-section-lock.write.rules).
-    pub(crate) fn written_entries(&self, separator: &str) -> Vec<(String, Option<String>)> {
-        let coordinate = |section: &str| format!("{}{separator}{section}", self.rendered);
+    pub(crate) fn written_entries(&self) -> Vec<(String, Option<String>)> {
+        let coordinate = |section: &str| self.coordinate(section);
         let kept = self
             .verdicts
             .iter()
@@ -95,68 +116,116 @@ impl LockJudgement<'_> {
     }
 }
 
+/// The project a lock file's entries are judged against: the citing project
+/// itself, or the member or remote its alias names (§FS-section-lock.file.members).
+#[derive(Clone, Copy)]
+struct LockTarget<'a, 'b> {
+    catalog: &'a Catalog,
+    schema: &'b Schema,
+    frame: Frame<'b>,
+}
+
 /// Judge every lock file the scan read and every one a cited relative address
-/// needs, in path order (§FS-section-lock). A citation into another project is
-/// not judged here. Empty, and nothing sliced, in a tree with neither.
+/// needs, in path order (§FS-section-lock): a citation into another project
+/// against `targets`, the projects the run loaded, by its alias, and a lock
+/// file of an alias the run did not load not at all
+/// (§FS-section-lock.file.members). Empty, and nothing sliced, in a tree with
+/// neither a lock nor a relative heading.
 pub(crate) fn judge_section_locks<'a>(
     findings: &'a Catalog,
     schema: &Schema,
     frame: Frame<'_>,
+    targets: &BTreeMap<String, WorkspaceCheckTarget<'a>>,
 ) -> Vec<LockJudgement<'a>> {
     // §FS-section-lock: a tree with no lock and no relative heading reads none.
-    let relative = |decl: &Declaration| decl.sections.values().any(|info| info.relative);
-    if findings.section_locks.is_empty() && !findings.declarations.values().flatten().any(relative)
+    let relative = |catalog: &Catalog| {
+        let relative = |decl: &Declaration| decl.sections.values().any(|info| info.relative);
+        catalog.declarations.values().flatten().any(relative)
+    };
+    if findings.section_locks.is_empty()
+        && !relative(findings)
+        && !targets.values().any(|target| relative(target.catalog))
     {
         return Vec::new();
     }
-    let grammar = frame.grammar();
-    let separator = schema.ids.section_separator.as_str();
-    let mut cited: BTreeMap<&Id, BTreeMap<&str, Vec<&Citation>>> = BTreeMap::new();
+    let local = LockTarget {
+        catalog: findings,
+        schema,
+        frame,
+    };
+    let target_of = |alias: Option<&str>| match alias {
+        None => Some(local),
+        Some(alias) => targets.get(alias).map(|target| LockTarget {
+            catalog: target.catalog,
+            schema: target.schema,
+            frame: target.frame(),
+        }),
+    };
+    type Cited<'a> = BTreeMap<(Option<&'a str>, &'a Id), BTreeMap<&'a str, Vec<&'a Citation>>>;
+    let mut cited: Cited<'a> = BTreeMap::new();
     for citation in &findings.citations {
-        let (None, Some(section)) = (&citation.namespace, &citation.section) else {
+        let Some(section) = &citation.section else {
             continue;
         };
-        if sole_declaration(findings, &citation.id)
+        let alias = citation.namespace.as_deref();
+        if target_of(alias)
+            .and_then(|target| sole_declaration(target.catalog, &citation.id))
             .and_then(|decl| decl.sections.get(section))
             .is_some_and(|info| info.relative)
         {
             cited
-                .entry(&citation.id)
+                .entry((alias, &citation.id))
                 .or_default()
                 .entry(section.as_str())
                 .or_default()
                 .push(citation);
         }
     }
-    let mut ids: BTreeMap<String, Option<&Id>> = cited
+    let rendered = |alias: Option<&str>, id: &Id| {
+        let target = target_of(alias).expect("a cited project is loaded");
+        render_id(target.frame.grammar(), id)
+    };
+    let mut ids: BTreeMap<(Option<&'a str>, String), Option<&'a Id>> = cited
         .keys()
-        .map(|id| (render_id(grammar, id), Some(*id)))
+        .map(|&(alias, id)| ((alias, rendered(alias, id)), Some(id)))
         .collect();
     let mut texts = BTreeMap::new();
     for lock in &findings.section_locks {
-        texts.insert(lock.id.as_str(), lock.text.as_str());
-        ids.entry(lock.id.clone()).or_insert_with(|| {
-            findings
+        let alias = lock.alias.as_deref();
+        let Some(target) = target_of(alias) else {
+            continue;
+        };
+        texts.insert((alias, lock.id.as_str()), lock.text.as_str());
+        ids.entry((alias, lock.id.clone())).or_insert_with(|| {
+            target
+                .catalog
                 .declarations
                 .keys()
-                .find(|id| render_id(grammar, id) == lock.id)
+                .find(|id| render_id(target.frame.grammar(), id) == lock.id)
         });
     }
     let mut judgements = Vec::new();
-    for (rendered, id) in ids {
-        let decl = id.and_then(|id| sole_declaration(findings, id));
-        let text = texts.get(rendered.as_str()).copied();
+    for ((alias, rendered), id) in ids {
+        let target = target_of(alias).expect("a judged project is loaded");
+        let separator = target.schema.ids.section_separator.clone();
+        let decl = id.and_then(|id| sole_declaration(target.catalog, id));
+        let text = texts.get(&(alias, rendered.as_str())).copied();
         let lines = text.map_or_else(LockLines::default, |text| {
-            read_lock_lines(text, &rendered, separator)
+            read_lock_lines(text, &rendered, &separator)
         });
-        let cited = id.and_then(|id| cited.remove(id)).unwrap_or_default();
+        let cited = id
+            .and_then(|id| cited.remove(&(alias, id)))
+            .unwrap_or_default();
         let fingerprints = decl.map_or_else(Vec::new, |decl| {
-            fingerprints(findings, schema, frame, id.expect("a paired ID"), decl)
+            fingerprints(target, id.expect("a paired ID"), decl)
         });
-        let (verdicts, unrecorded) = judge_entries(findings, decl, &lines, cited, &fingerprints);
+        let (verdicts, unrecorded) =
+            judge_entries(target.catalog, decl, &lines, cited, &fingerprints);
         judgements.push(LockJudgement {
-            path: section_lock_path(frame.root(), &rendered),
+            path: section_lock_path(frame.root(), alias, &rendered),
+            alias,
             rendered,
+            separator,
             text,
             lines,
             decl,
@@ -177,18 +246,21 @@ fn sole_declaration<'a>(findings: &'a Catalog, id: &Id) -> Option<&'a Declaratio
 
 /// Every section of `decl` with its line and fingerprint, in document order.
 fn fingerprints(
-    findings: &Catalog,
-    schema: &Schema,
-    frame: Frame<'_>,
+    target: LockTarget<'_, '_>,
     id: &Id,
     decl: &Declaration,
 ) -> Vec<(String, usize, String)> {
+    let LockTarget {
+        catalog,
+        schema,
+        frame,
+    } = target;
     let mut sections = decl
         .sections
         .iter()
         .filter_map(|(path, info)| {
             let (_, full) =
-                point_body_pair(&findings.files, schema, frame, id, decl, Some((path, info)))
+                point_body_pair(&catalog.files, schema, frame, id, decl, Some((path, info)))
                     .ok()??;
             // §FS-section-lock.holds.fingerprint: the text below the heading line.
             let below = full.split_once('\n').map_or("", |(_, below)| below);

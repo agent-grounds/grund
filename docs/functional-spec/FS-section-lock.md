@@ -44,6 +44,8 @@ The entries for the cited relative addresses of declaration `<ID>` live in `.gru
 
 Each project keeps the entries for the citations its own files hold. A citation into another workspace member or a remote, `§<alias>/<ID>.<path>`, is entered in `.grund/sections/<alias>/<ID>.lock` of the citing project, so a member's own run and a run from the workspace root agree on what it cites and where that is recorded.
 
+Such an entry's coordinate is the one the citation names, `<ID>` and its path as the target project spells them, without the alias, and it is judged against the target's sections and texts like any other entry. A finding about it names the coordinate with the alias, `api/FS-login.format.1`, and [§FS-section-lock.checks.section-address-changed](FS-section-lock.md#checkssection-address-changed-a-cited-sections-text-sits-at-another-address) sits at the target's heading. A run that does not load the alias — a member's own run, where a sibling's alias is unknown ([§FS-workspace.5.1](FS-workspace.md#51-a-member-run)) — leaves `.grund/sections/<alias>/` alone: it reports nothing from it and writes nothing to it.
+
 ## write: Who writes the lock
 
 ### write.rules: Add, refresh, drop
@@ -112,7 +114,7 @@ An edit that `fmt --write` never recorded leaves the old fingerprint in place, w
 
 ## checks: Checks
 
-Each is a located `grund check` error with its code in [§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog), selected by `--only` and `--ignore` like any other, and rendered in text, JSON (`"sites":null`) and the LSP as [§FS-check.2.1](FS-check.md#21-report-format) says. None fires in a repository with no lock file and no citation of a relative address.
+Each is a located `grund check` error with its code in [§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog), selected by `--only` and `--ignore` like any other, and rendered in text, JSON (`"sites":null`) and the LSP as [§FS-check.2.1](FS-check.md#21-report-format) says. None fires in a repository with no lock file and no citation of a relative address. A message names the lock file as the report names every path, so from the workspace root a member's lock is `packages/api/.grund/sections/FS-login.lock`.
 
 ### checks.section-address-changed: A cited section's text sits at another address
 

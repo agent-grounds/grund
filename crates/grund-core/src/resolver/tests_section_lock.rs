@@ -2,6 +2,8 @@
 //! `fmt --write` writes from (§FS-section-lock.write.rules,
 //! §FS-section-lock.checks.section-address-changed), over a scanned tree.
 
+use std::collections::BTreeMap;
+
 use super::section_lock::{EntryVerdict, judge_section_locks};
 use crate::config::load_config;
 use crate::testing::{scan_findings, test_root, write};
@@ -35,7 +37,8 @@ fn judge(
     }
     let config = load_config(&root).expect("load config");
     let findings = scan_findings(&config, &root);
-    let judgements = judge_section_locks(&findings, config.schema(), config.frame());
+    let judgements =
+        judge_section_locks(&findings, config.schema(), config.frame(), &BTreeMap::new());
     let verdicts = judgements
         .iter()
         .flat_map(|judgement| &judgement.verdicts)

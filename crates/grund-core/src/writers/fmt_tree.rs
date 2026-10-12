@@ -314,6 +314,7 @@ pub(crate) fn fmt_tree(
         walked.root_scope,
         findings,
         relative_seen,
+        workspace,
     )?;
     for lock in locks {
         if write && let Err(error) = write_lock(config, &lock) {

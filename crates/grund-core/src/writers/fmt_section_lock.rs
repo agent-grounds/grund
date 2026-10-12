@@ -5,12 +5,13 @@
 //! pass writes what it returns, as it writes every file `fmt` rewrites.
 
 use anyhow::Result;
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use super::fmt_complete_findings::CompleteScan;
 use crate::config::Config;
 use crate::model::{Catalog, render_lock};
-use crate::resolver::{EntryVerdict, judge_section_locks};
+use crate::resolver::{EntryVerdict, WorkspaceCheckTarget, WorkspaceContext, judge_section_locks};
 use crate::scanner::section_locks_present;
 
 /// One lock file the pass changes: the text it is brought to, empty for a file
@@ -29,12 +30,15 @@ pub(super) struct LockChange {
 /// project's findings are `findings` where the run has them; otherwise it is
 /// scanned whole, refusing as the cross-reference pass does (§FS-fmt.3.2), and
 /// only where a lock file exists or a walked file may hold a relative heading.
+/// A citation into another project is judged against the one `workspace` loaded
+/// under its alias (§FS-section-lock.file.members).
 pub(super) fn section_lock_changes(
     config: &Config,
     render: &Config,
     root_scope: bool,
     findings: Option<&Catalog>,
     relative_seen: bool,
+    workspace: Option<&WorkspaceContext>,
 ) -> Result<Vec<LockChange>> {
     if !root_scope
         || (findings.is_none() && !relative_seen && !section_locks_present(config.frame()))
@@ -49,11 +53,21 @@ pub(super) fn section_lock_changes(
             scanned.findings()
         }
     };
-    let separator = &config.schema().ids.section_separator;
+    let targets = workspace.map_or_else(BTreeMap::new, |context| {
+        context
+            .projects
+            .iter()
+            .map(|project| {
+                let (schema, frame) = (project.config.schema(), project.config.frame());
+                let target = WorkspaceCheckTarget::of(&project.findings, schema, frame);
+                (project.alias.clone(), target)
+            })
+            .collect()
+    });
     let mut changes = Vec::new();
-    for judgement in judge_section_locks(findings, config.schema(), config.frame()) {
-        let coordinate = |section: &str| format!("{}{separator}{section}", judgement.rendered);
-        let written = judgement.written_entries(separator);
+    for judgement in judge_section_locks(findings, config.schema(), config.frame(), &targets) {
+        let coordinate = |section: &str| judgement.coordinate(section);
+        let written = judgement.written_entries();
         let text = render_lock(&written);
         let mut rows = judgement
             .lines
