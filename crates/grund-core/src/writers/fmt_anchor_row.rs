@@ -3,6 +3,8 @@
 //! the row names the anchor it moves to and the release that numbers it, on the
 //! route of a loud, mechanical migration (§REQ-backwards-compatibility.3).
 
+use std::borrow::Cow;
+
 use once_cell::sync::Lazy;
 use regex::Regex;
 
@@ -12,10 +14,19 @@ const NUMBERED_SINCE: &str = "0.18";
 /// A Markdown inline link's destination, `#` fragment and all.
 static LINK_TARGET: Lazy<Regex> = Lazy::new(|| Regex::new(r"\]\(([^)\s]*)\)").unwrap());
 
+/// The row a line's link rewrite names (§FS-fmt.3.5.1): none when the links left
+/// `before` as it was, the repeated-anchor row when a repeat's numbering is all
+/// that moved them, and the plain `markdown link` otherwise.
+pub(super) fn link_row(before: &str, after: &str) -> Option<Cow<'static, str>> {
+    (before != after).then(|| {
+        repeated_anchor_row(before, after).map_or(Cow::Borrowed("markdown link"), Cow::Owned)
+    })
+}
+
 /// The row for a line whose only change is links whose old anchor is the
 /// unnumbered slug of the anchor they now take — `#1-overview` → `#1-overview-1`,
 /// or `_1` under mkdocs — or `None` when anything else on the line changed.
-pub(super) fn repeated_anchor_row(before: &str, after: &str) -> Option<String> {
+fn repeated_anchor_row(before: &str, after: &str) -> Option<String> {
     let old = LINK_TARGET.captures_iter(before).collect::<Vec<_>>();
     let new = LINK_TARGET.captures_iter(after).collect::<Vec<_>>();
     if old.len() != new.len() || LINK_TARGET.split(before).ne(LINK_TARGET.split(after)) {
