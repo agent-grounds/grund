@@ -24,8 +24,17 @@ pub(crate) fn numbered_anchor(
     let Some(record) = record.filter(|record| record.markdown) else {
         return base;
     };
+    let headings = record.headings.iter().filter(|heading| heading.atx);
+    // The first heading of a file takes its slug as it is: nothing to slug.
+    if headings
+        .clone()
+        .next()
+        .is_none_or(|first| first.line >= line)
+    {
+        return base;
+    }
     let mut slugs = Slugs::new(profile);
-    for heading in record.headings.iter().filter(|heading| heading.atx) {
+    for heading in headings {
         let slug = anchor_slug(
             without_closing_sequence(&reduce_heading_text(record.heading_text(heading))),
             profile,
