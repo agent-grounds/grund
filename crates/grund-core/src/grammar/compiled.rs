@@ -29,7 +29,7 @@ static NAMED_COMPONENT_RE: Lazy<Regex> =
 /// Whether `part` is one `[a-z][a-z0-9-]*` section handle (§FS-config.3.3.1): the
 /// component grammar the section regexes compile, asked of one component. The
 /// handles `value_chapter` and the values fields name are held to it too
-/// (§FS-config.3.2.7, §FS-config.3.4.13), and so is a rule's chapter path (§FS-rules.2).
+/// (§FS-config.3.2.7, §FS-config.3.4.13), and so is a rule's chapter path.
 pub(crate) fn named_section_component(part: &str) -> bool {
     NAMED_COMPONENT_RE.is_match(part)
 }
@@ -48,6 +48,17 @@ pub(crate) fn named_mode_section_path(path: &str, numeric: impl Fn(&str) -> bool
             !seen_numeric && named_section_component(part)
         }
     })
+}
+
+/// Whether a binding's cited section path is a value-binding shape at all: a
+/// valid root path — every component numeric, or a named prefix as
+/// §FS-config.3.3.1 permits — optionally followed by one positive numeric
+/// immediate coordinate (§FS-values.3.1). A path with no coordinate is the root
+/// itself (§FS-values.3.1.2), and a bare ID has no path to check. Which of the
+/// two readings a path takes, and whether its root *is* a root, is the checker's
+/// question (§FS-values.5.1); this is only the grammar.
+pub(crate) fn value_binding_section_shape_is_valid(section: &str) -> bool {
+    named_mode_section_path(section, crate::model::positive_numeric_component)
 }
 pub(crate) static STUB_LINK_HEADING: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^\s*:\s*\[[^\]]*\]\(\s*(?P<path>[^)\s]+)\s*\)\s*$").unwrap());

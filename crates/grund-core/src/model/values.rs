@@ -3,7 +3,6 @@ use regex::Regex;
 use std::path::PathBuf;
 
 use super::records::Id;
-use crate::grammar::named_mode_section_path;
 
 /// Exact component classification and equality for first-class values
 /// (§FS-values.2, §FS-values.4). Decimals stay as normalized coefficient and
@@ -69,17 +68,6 @@ impl EmbeddedValueRoot {
     }
 }
 
-/// Whether a binding's cited section path is a value-binding shape at all: a
-/// valid root path — every component numeric, or a named prefix as
-/// §FS-config.3.3.1 permits — optionally followed by one positive numeric
-/// immediate coordinate (§FS-values.3.1). A path with no coordinate is the root
-/// itself (§FS-values.3.1.2), and a bare ID has no path to check. Which of the
-/// two readings a path takes, and whether its root *is* a root, is the checker's
-/// question (§FS-values.5.1); this is only the grammar.
-pub(crate) fn value_binding_section_shape_is_valid(section: &str) -> bool {
-    named_mode_section_path(section, positive_numeric_component)
-}
-
 /// Whether a binding path's final segment can name an immediate component: a
 /// path that ends in a name has no coordinate, so it can only be a chapter root
 /// aimed at whole (§FS-values.3.1, §FS-values.5.1).
@@ -90,7 +78,7 @@ pub(crate) fn value_binding_section_ends_in_coordinate(section: &str) -> bool {
         .is_some_and(positive_numeric_component)
 }
 
-fn positive_numeric_component(part: &str) -> bool {
+pub(crate) fn positive_numeric_component(part: &str) -> bool {
     !part.is_empty() && !part.starts_with('0') && part.bytes().all(|byte| byte.is_ascii_digit())
 }
 

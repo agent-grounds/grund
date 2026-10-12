@@ -7,10 +7,8 @@ use crate::checker::{
 };
 use crate::config::Config;
 use crate::grammar::MarkdownLineCitation;
-use crate::model::{
-    Catalog, component_text_is_valid, value_binding_section_ends_in_coordinate,
-    value_binding_section_shape_is_valid,
-};
+use crate::grammar::value_binding_section_shape_is_valid;
+use crate::model::{Catalog, component_text_is_valid, value_binding_section_ends_in_coordinate};
 use crate::resolver::WorkspaceContext;
 
 /// Whether `fmt --cross-refs` must leave this citation's bytes alone as an exact
