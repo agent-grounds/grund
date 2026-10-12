@@ -72,6 +72,10 @@ rules it writes commented out in `grund.toml` until you adopt them:
 |           | DA          | `docs/decisions/architectural/` | should cite AR or FS                    |
 | Plan      | RM          | `docs/roadmap.md`               |                                         |
 
+Every rule `grund check` holds a project to, what each one means underneath, and the
+finding it reports is listed in
+[Schema and links](docs/user-facing/structure.md#schema-and-links-the-rules-a-repository-is-held-to).
+
 ## Agent instructions
 
 `init` also writes the structure into your agent's instructions, a managed block in
