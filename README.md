@@ -157,7 +157,8 @@ function it describes, in [`crates/grund-core/src/checker/report.rs`](crates/gru
 ```rust
 /// AR-checker: how grund validates the scanner's findings
 ///
-/// The checker takes the resolved `Catalog` produced from §AR-scanner, asks
+/// …
+/// ## placement: Where the checker sits
 /// …
 pub(crate) fn check_on_disk(
 ```
