@@ -3,7 +3,7 @@
 A small login example of declarations, section retrieval and broken
 citations ([§FS-examples.2](../../docs/functional-spec/FS-examples.md#2-canonical-use-cases),
 [§FS-show.2.1.5](../../docs/functional-spec/FS-show.md#215-a-sections-lead),
-[§FS-check.3.2](../../docs/functional-spec/FS-check.md#32-missing-section)).
+[§FS-check.3.1.1](../../docs/functional-spec/FS-check.md#311-a-near-id)).
 The fixture's own `grund.toml` maps the `FS` kind to `requirements.md` and scans
 `src/`. Its IDs belong to that mini-repository.
 
@@ -53,16 +53,18 @@ success
 
 ## Break and repair
 
-In the temporary copy's `requirements.md`, change `## 1. Username` to
-`## 2. Username`, leaving the code's citation unchanged. Run the check again:
+In the temporary copy's `requirements.md`, rename the declaration: change
+`# FS-login: Login` to `# FS-signin: Login`, leaving the code's citation unchanged.
+Run the check again:
 
 ```console
 $ grund check
-src/login.py:2: error: missing section FS-login.1
+src/login.py:2: error: unknown reference FS-login; did you mean FS-signin?
+requirements.md:1: warning: declared but never cited: FS-signin
 ```
 
-The command exits `1`: the declaration still exists, but the section the code
-names does not. Change the heading back to `## 1. Username` and rerun
+The command exits `1`: the code still names `FS-login`, which no longer exists, and
+the check suggests the near ID that does. Change the heading back to `# FS-login: Login` and rerun
 `grund check`; it prints `success` and exits `0` again.
 
 Returning `username` unchanged in the Python code would still pass the citation check.

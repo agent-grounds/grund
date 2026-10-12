@@ -19,8 +19,8 @@ Four cards form a two-by-two grid: declare and cite above, read and check below.
 Every card has the same shape: a numbered verb, one line naming the file it shows or
 the change it makes, and one excerpt from a committed runnable example
 ([§REQ-readme.2](REQ-readme.md#2-every-example-is-real)): a short requirement, the code that cites it, the section an agent
-reads before changing that code, and `grund check` failing once that section is
-renumbered. Columns are equally wide and top-aligned, and the excerpts in a row are
+reads before changing that code, and `grund check` failing once that requirement's ID
+is renamed. Columns are equally wide and top-aligned, and the excerpts in a row are
 equally tall. Each row is its own table body, so the renderer's alternating row shading
 never falls on a card. The excerpts stay highlighted HTML text, readable in either theme.
 The example has its own configuration and checked citations; its IDs are escaped in

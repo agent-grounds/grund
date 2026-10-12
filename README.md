@@ -41,10 +41,10 @@ Trim surrounding whitespace.
 </td>
 <td valign="top" width="400">
 <b>4 · Check</b><br>
-Renumber section 1 → 2, and CI fails
+Rename <code>FS-login</code> → <code>FS-signin</code>, and CI fails
 <pre lang="console">
 $ grund check
-… error: missing section FS-login.1&#10;&#10;
+… error: unknown reference FS-login; …&#10;&#10;
 </pre>
 </td>
 </tr>
