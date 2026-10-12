@@ -13,11 +13,14 @@ use std::collections::BTreeMap;
 use super::legacy_inline::reconcile_promoted_inline_site;
 use crate::config::{Frame, Schema};
 use crate::grammar::{
-    IdArgError, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, never_rewrite_context,
-    parse_id_arg, parse_id_arg_with_shorthand, render_id, shorthand_candidates, shorthand_names,
+    IdArgError, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, cross_ref_wrap_after,
+    never_rewrite_context, parse_id_arg, parse_id_arg_with_shorthand, render_id,
+    shorthand_candidates, shorthand_names,
 };
 use crate::model::sort_path_key;
-use crate::model::{Catalog, Citation, Declaration, Id, LegacyCitationCandidate};
+use crate::model::{
+    Catalog, Citation, Declaration, Id, LegacyCitationCandidate, UnclosedWrapperNote,
+};
 
 /// Resolve a query through the canonical grammar first, then combine exact
 /// catalog compatibility with number shorthand (§FS-config.3.2.6, §FS-show.1).
@@ -94,6 +97,7 @@ pub(super) fn promote_local_legacy_citations(
             &catalog,
             candidate,
             &mut findings.citations,
+            &mut findings.unclosed_wrapper_notes,
         );
     }
     findings.local_section_citation_candidates.retain(|local| {
@@ -128,7 +132,9 @@ pub(crate) fn configured_catalog_ids(declarations: &BTreeMap<Id, Vec<Declaration
 
 /// One deferred candidate reconciled against one target catalog — the step both
 /// halves of this pass share, the local one above and the qualified one in
-/// `resolver/legacy_promotion.rs` (§AR-resolver.placement).
+/// `resolver/legacy_promotion.rs` (§AR-resolver.placement). A promoted citation
+/// whose wrap never closes before a later `)` is noted in `notes`, as the line
+/// pass notes a configured one (§FS-citations.checks.unclosed-wrapper).
 pub(crate) fn promote_legacy_candidate(
     (source_schema, source_frame): (&Schema, Frame<'_>),
     (target_schema, target_frame): (&Schema, Frame<'_>),
@@ -136,6 +142,7 @@ pub(crate) fn promote_legacy_candidate(
     catalog: &[Id],
     candidate: LegacyCitationCandidate,
     citations: &mut Vec<Citation>,
+    notes: &mut Vec<UnclosedWrapperNote>,
 ) {
     let Some((id, section, consumed)) =
         match_legacy_tail(&candidate.tail, target_schema, target_frame, catalog)
@@ -173,6 +180,27 @@ pub(crate) fn promote_legacy_candidate(
     // With no configured interpretation left, exact catalog compatibility is
     // the one target and replaces the rejected/empty shorthand parse.
     citations.retain(|citation| !same_marker(citation));
+    notes.retain(|note| {
+        !(note.file == candidate.file
+            && note.line == candidate.line
+            && note.column == candidate.column)
+    });
+    // §FS-citations.checks.unclosed-wrapper: the scan saw the `[`; the rest of the
+    // wrap follows the promoted token's end.
+    if let Some(suppressed) = candidate.wrap_opener
+        && cross_ref_wrap_after(&candidate.tail, consumed)
+            .is_some_and(|wrap| wrap.unclosed_before_paren())
+    {
+        notes.push(UnclosedWrapperNote {
+            file: candidate.file.clone(),
+            line: candidate.line,
+            column: candidate.column,
+            namespace: candidate.namespace.clone(),
+            id: id.clone(),
+            label: text[source_schema.citation.marker.len()..].to_string(),
+            suppressed,
+        });
+    }
     let site = candidate.inline_site.clone();
     let block_lines = candidate.inline_block_lines.clone();
     let file = candidate.file.clone();

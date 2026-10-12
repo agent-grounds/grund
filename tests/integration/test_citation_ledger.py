@@ -22,7 +22,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = Path(__file__).resolve().parent / "citation_ledger.toml"
 EXE = "grund.exe" if os.name == "nt" else "grund"
-STEP = re.compile(r"^#(59[5-9]|600)$")
+STEP = re.compile(r"^#(59[5-9]|600|655)$")
 
 
 @functools.lru_cache(maxsize=None)
@@ -85,7 +85,7 @@ def problems(families, look):
             wrong.append(f"{name}: marked done with {len(rows)} migration row(s) left")
         for file, row in sorted(rows.items()):
             if not STEP.match(row.get("step", "")):
-                wrong.append(f"{name}: row {file} names no step of #576 (#595-#600)")
+                wrong.append(f"{name}: row {file} names no step of #576 (#595-#600, #655)")
             if file in owners:
                 wrong.append(f"{name}: {file} is both an owner and a migration row")
         cited_by = set()

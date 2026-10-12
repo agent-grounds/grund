@@ -8,12 +8,16 @@ use std::path::PathBuf;
 
 use super::Id;
 
-/// One unclosed wrap, at its citation's line: the ID it would link, its alias
-/// when qualified, and the citation as written after the marker.
+/// One unclosed wrap, at its citation's line and column: the ID it would link,
+/// its alias when qualified, the citation as written after the marker, and
+/// whether a `grund:fmt off` region holds the line, where only a kind's index
+/// entry is linked (§FS-fmt.2.5.3).
 pub(crate) struct UnclosedWrapperNote {
     pub(crate) file: PathBuf,
     pub(crate) line: usize,
+    pub(crate) column: usize,
     pub(crate) namespace: Option<String>,
     pub(crate) id: Id,
     pub(crate) label: String,
+    pub(crate) suppressed: bool,
 }

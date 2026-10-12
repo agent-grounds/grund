@@ -530,7 +530,11 @@ pub(super) fn scan_file_text(
             &qualified_marker_starts,
             findings,
         );
-        scan_legacy_citation_candidates(&citation_line, findings);
+        scan_legacy_citation_candidates(
+            &citation_line,
+            |marker_start| wrappers.opener(&citation_line, marker_start, current.as_ref()),
+            findings,
+        );
         scan_escaped_citations(&citation_line, findings);
         // Exact candidates stay in this pass. The checker activates them only
         // for whole or marked authority, keeping unmarked prose inert across

@@ -9,7 +9,9 @@
 #   - a family marked done has no migration rows left.
 # Each migration row names the step of agent-grounds/grund#576 that removes it:
 # #595 one run, one read; #596 one parse; #597 stubs; #598 fmt and the editor on
-# the record; #599 one grammar. The list only shrinks.
+# the record; #599 one grammar; #655 the 0.19.0 wrapper and title span #598
+# announces, which leaves the callers of the one wrapper test citing what they
+# write and read. The list only shrinks.
 
 [[family]]
 name = "run"
@@ -77,6 +79,7 @@ points = [
   "FS-languages.fence",
 ]
 owners = [
+  "crates/grund-core/src/grammar/fmt_cross_refs.rs",
   "crates/grund-core/src/grammar/never_rewrite.rs",
   "crates/grund-core/src/model/file_record.rs",
   "crates/grund-core/src/scanner/extents.rs",
@@ -112,7 +115,7 @@ step = "#596"
 
 [[family.migration]]
 file = "crates/grund-core/src/checker/index.rs"
-step = "#598"
+step = "#655"
 
 [[family.migration]]
 file = "crates/grund-core/src/checker/report.rs"
@@ -120,10 +123,6 @@ step = "#598"
 
 [[family.migration]]
 file = "crates/grund-core/src/grammar/anchors.rs"
-step = "#598"
-
-[[family.migration]]
-file = "crates/grund-core/src/grammar/fmt_cross_refs.rs"
 step = "#598"
 
 [[family.migration]]
@@ -140,7 +139,7 @@ step = "#598"
 
 [[family.migration]]
 file = "crates/grund-core/src/writers/fmt_links.rs"
-step = "#598"
+step = "#655"
 
 [[family.migration]]
 file = "crates/grund-core/src/writers/fmt_shorthand_links.rs"

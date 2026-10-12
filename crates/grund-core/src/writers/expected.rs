@@ -8,11 +8,11 @@
 //! check run's own catalog, so building it adds no walk (§FS-init.2.3.4.15).
 
 use crate::sources::path_exists;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use crate::checker::{configured_rule_sentences, workspace_vocabulary};
-use crate::config::Config;
+use crate::config::{Config, fmt_excluded};
 use crate::grammar::parse_id_arg;
 use crate::model::{Catalog, Expected, ExpectedEntrypoint, ExpectedSection};
 use crate::resolver::{WorkspaceCheckTarget, index_link_targets, markdown_link_target};
@@ -78,7 +78,28 @@ pub(crate) fn expected(
             config.frame(),
             findings,
         ),
+        cross_refs_disabled: !config.fmt_cross_refs_enabled,
+        fmt_excluded: noted_fmt_excluded(findings, config),
     }
+}
+
+/// The files holding an unclosed-wrapper note that `[fmt] exclude` names
+/// (§FS-citations.checks.unclosed-wrapper, §FS-fmt.2.5.1). Patterns were
+/// validated at load, so a matcher that fails to build excludes nothing here
+/// and `fmt` refuses to run at all.
+fn noted_fmt_excluded(findings: &Catalog, config: &Config) -> BTreeSet<PathBuf> {
+    if findings.unclosed_wrapper_notes.is_empty() {
+        return BTreeSet::new();
+    }
+    let Ok(excluded) = fmt_excluded(config) else {
+        return BTreeSet::new();
+    };
+    findings
+        .unclosed_wrapper_notes
+        .iter()
+        .filter(|note| excluded.contains(&note.file))
+        .map(|note| note.file.clone())
+        .collect()
 }
 
 /// The managed-block version this config asks for: v15 once a kind declares

@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use super::index::{KindIndexTarget, declarations_under_folder, kind_index_targets};
 use crate::config::{Frame, Schema};
-use crate::grammar::never_rewrite_context;
+use crate::grammar::{cross_ref_wrap, never_rewrite_context};
 use crate::model::{
     Catalog, Citation, Declaration, Id, paired_declarations, scanned_decl_relative_path,
     scanned_path_key,
@@ -241,7 +241,9 @@ fn link_target_at_citation<'a>(line: &'a str, citation: &Citation) -> Option<&'a
     if line.get(start..end)? != citation.text {
         return None;
     }
-    let rest = line.get(end..)?.strip_prefix("](")?;
-    let close = rest.find(')')?;
-    (close > 0).then_some(&rest[..close])
+    // §FS-citations.wrap.recognized: the formatter's own bracket test, to the `)`
+    // it re-derives up to, with something before it.
+    let wrap = cross_ref_wrap(line, start, end)?;
+    let close = wrap.first_close?;
+    (close > wrap.url_start).then(|| &line[wrap.url_start..close])
 }
