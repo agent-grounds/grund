@@ -93,8 +93,10 @@ Python docstrings. The source wrapper is outside the heading depth:
 # The configured default is `3` (§FS-python.1.1).
 ```
 
-`//`, `///`, `//!`, `;`, `--`, `/* ... */` / `*` Javadoc or JSDoc lines, and
-both Python triple-quote delimiters follow the same rule. Lookalike marker
+`//`, `///`, `//!`, `;`, `--`, `/* ... */` / `*` Javadoc or JSDoc lines, a
+block comment's bare lines under a declaration on a bare line or behind a `/**`
+opener ([§FS-declarations.line.block-comment](../functional-spec/FS-declarations.md#lineblock-comment-a-line-inside-a-block-comment)), and both Python triple-quote
+delimiters follow the same rule. Lookalike marker
 spellings are inert prose. An exact marker on a nonnumeric heading is a located
 `invalid-value-declaration` instead of guessed authority — including a named
 heading inside a declared values chapter, where the chapter has already made the
