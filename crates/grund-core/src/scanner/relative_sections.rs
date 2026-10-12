@@ -8,7 +8,7 @@
 use std::collections::BTreeMap;
 
 use super::context::section_path_is_numeric;
-use super::extents::body_end;
+use super::extents::{DeclarationBodies, body_end};
 use crate::grammar::{named_mode_section_path, reduce_heading_text, relative_heading_form};
 use crate::model::{
     Catalog, Declaration, FileRecord, RelativeSectionParent, SectionInfo, UnmarkedHeadingCandidate,
@@ -33,24 +33,11 @@ pub(super) fn resolve_relative_sections(
     named_sections: bool,
     unmarked: &mut Vec<UnmarkedHeadingCandidate>,
 ) {
-    let mut bodies: Vec<(usize, usize, usize)> = findings
-        .declarations
-        .values()
-        .flatten()
-        .map(|decl| (decl.line, body_end(record, decl, None), decl.heading_level))
-        .collect();
-    bodies.sort_unstable();
+    let bodies = DeclarationBodies::of(record, findings);
     let mut by_owner: BTreeMap<usize, Vec<UnmarkedHeadingCandidate>> = BTreeMap::new();
     for candidate in candidates {
-        let line = candidate.line;
-        let level = candidate.heading_level;
-        // §FS-declarations.checks.unmarked-heading: the nearest enclosing body owns it.
-        match bodies
-            .iter()
-            .filter(|(start, end, decl_level)| *start < line && line <= *end && level > *decl_level)
-            .max_by_key(|(start, _, _)| *start)
-        {
-            Some((start, _, _)) => by_owner.entry(*start).or_default().push(candidate),
+        match bodies.owner(candidate.line, candidate.heading_level) {
+            Some((start, _)) => by_owner.entry(start).or_default().push(candidate),
             None => unmarked.push(candidate),
         }
     }

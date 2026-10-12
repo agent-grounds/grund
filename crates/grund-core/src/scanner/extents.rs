@@ -33,6 +33,37 @@ pub(super) fn body_end(record: &FileRecord, decl: &Declaration, next_decl: Optio
         .max(decl.line)
 }
 
+/// The Markdown declaration bodies of one file, each as its heading line, the
+/// line it ends on (`body_end`) and its heading level: the one answer to which
+/// declaration owns a heading (§FS-declarations.body,
+/// §FS-declarations.checks.unmarked-heading.1), asked by the parent pass before
+/// the extents are written and by the unmarked-heading pass after.
+pub(super) struct DeclarationBodies(Vec<(usize, usize, usize)>);
+
+impl DeclarationBodies {
+    pub(super) fn of(record: &FileRecord, findings: &Catalog) -> Self {
+        let mut bodies = findings
+            .declarations
+            .values()
+            .flatten()
+            .map(|decl| (decl.line, body_end(record, decl, None), decl.heading_level))
+            .collect::<Vec<_>>();
+        bodies.sort_unstable();
+        Self(bodies)
+    }
+
+    /// The heading line and body end of the innermost declaration whose body
+    /// holds a heading at `level` on `line`: below its heading, within its body,
+    /// and deeper than it. `None` for a heading outside every body.
+    pub(super) fn owner(&self, line: usize, level: usize) -> Option<(usize, usize)> {
+        self.0
+            .iter()
+            .filter(|(start, end, decl_level)| *start < line && line <= *end && level > *decl_level)
+            .max_by_key(|(start, _, _)| *start)
+            .map(|(start, end, _)| (*start, *end))
+    }
+}
+
 /// Whether any line of `decl`'s body after its heading holds more than whitespace
 /// (§AR-scanner.2.4.1), read from the heading's offset rather than from the top
 /// of the file.

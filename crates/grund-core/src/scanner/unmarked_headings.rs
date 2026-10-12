@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 
+use super::extents::DeclarationBodies;
 use super::relative_sections::usable_section;
 use crate::grammar::relative_heading_hint;
 use crate::model::{Catalog, FileRecord, RelativeHint, UnmarkedHeading, UnmarkedHeadingCandidate};
@@ -18,6 +19,7 @@ pub(super) fn assign_unmarked_heading_owners(
         path: String,
     }
 
+    let owners = DeclarationBodies::of(record, findings);
     let bodies = findings
         .declarations
         .values()
@@ -25,44 +27,35 @@ pub(super) fn assign_unmarked_heading_owners(
         .map(|decl| {
             (
                 decl.line,
-                // §AR-scanner.2.4.1: the record's body rule, whether or not the
-                // run publishes spans on the catalog (§FS-declarations.checks.unmarked-heading.6).
-                record
-                    .heading_at(decl.line)
-                    .map_or(decl.line, |heading| heading.end.max(decl.line)),
-                decl.heading_level,
-                decl.id.clone(),
-                decl.sections
-                    .iter()
-                    .map(|(path, info)| KnownPath {
-                        line: info.line,
-                        path: path.clone(),
-                    })
-                    .collect::<Vec<_>>(),
+                (
+                    decl.heading_level,
+                    decl.id.clone(),
+                    decl.sections
+                        .iter()
+                        .map(|(path, info)| KnownPath {
+                            line: info.line,
+                            path: path.clone(),
+                        })
+                        .collect::<Vec<_>>(),
+                ),
             )
         })
-        .collect::<Vec<_>>();
+        .collect::<BTreeMap<_, _>>();
     candidates.sort_by_key(|candidate| candidate.line);
     // This pass is per file, so the inclusive body span identifies a concrete
     // declaration site even when another site declares the same logical ID.
     let mut suggested_by_body: BTreeMap<(usize, usize), Vec<KnownPath>> = BTreeMap::new();
 
     for candidate in candidates {
-        let Some((body_start, body_end, declaration_level, owner, existing)) = bodies
-            .iter()
-            .filter(|(start, end, level, _, _)| {
-                *start <= candidate.line
-                    && candidate.line <= *end
-                    && candidate.heading_level > *level
-            })
-            .max_by_key(|(start, _, _, _, _)| *start)
+        let Some((body_start, body_end)) = owners.owner(candidate.line, candidate.heading_level)
         else {
             continue;
         };
+        let Some((declaration_level, owner, existing)) = bodies.get(&body_start) else {
+            continue;
+        };
         let target_depth = candidate.heading_level - declaration_level;
-        let prior_suggestions = suggested_by_body
-            .entry((*body_start, *body_end))
-            .or_default();
+        let prior_suggestions = suggested_by_body.entry((body_start, body_end)).or_default();
         let mut paths = existing.clone();
         paths.extend(prior_suggestions.iter().cloned());
         let suggested_path = suggested_section_path(&paths, candidate.line, target_depth);
@@ -82,9 +75,9 @@ pub(super) fn assign_unmarked_heading_owners(
                     .declarations
                     .values()
                     .flatten()
-                    .find(|decl| decl.line == *body_start)?;
+                    .find(|decl| decl.line == body_start)?;
                 parent
-                    .is_none_or(|parent| usable_section(decl, *body_end, parent))
+                    .is_none_or(|parent| usable_section(decl, body_end, parent))
                     .then(|| RelativeHint {
                         parent: parent.unwrap_or_default().to_string(),
                         heading: relative_heading_hint(
