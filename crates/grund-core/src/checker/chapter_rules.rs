@@ -4,11 +4,11 @@
 
 use crate::config::{Form, Frame, KindScope, KindTable, Rules, Schema};
 use crate::grammar::render_id;
-use crate::model::{Catalog, CheckReport, Declaration, Diagnostic};
+use crate::model::{Catalog, CheckReport, Declaration, Diagnostic, paired_declarations};
 use crate::resolver::WorkspaceCheckTarget;
 use crate::rules::RuleAnchor;
 use crate::rules::engine::{
-    citation_precedence, evaluate, evaluate_suggestions, one_rules_authority,
+    citation_precedence, evaluate, evaluate_suggestions, one_rules_authority, route_stubbed_rules,
     unresolved_subject_diagnostic,
 };
 use crate::rules::markdown::{MarkdownProject, adapt_markdown, adapt_workspace};
@@ -38,6 +38,69 @@ fn rule_kinds(schema: &Schema) -> BTreeSet<&str> {
         .kinds()
         .filter(|(_, kind)| kind.form == Form::Rule)
         .map(|(name, _)| name)
+        .collect()
+}
+
+/// One rule as the loader reads it (§FS-rules.7.10): the record its ID pairs with
+/// (§FS-declarations.stubs.pairing.1), whose title and body are the sentence and
+/// rationale `grund <ID> --brief` prints, and the declaration it is reported at —
+/// the record itself, or the stub standing for a target the scan does not read.
+struct RuleDeclaration<'a> {
+    origin: String,
+    record: &'a Declaration,
+    site: &'a Declaration,
+}
+
+impl RuleDeclaration<'_> {
+    /// Whether the rule is declared through a stub whose target the scan does not
+    /// read, so its findings warn until 0.19.0 (§FS-rules.7.10).
+    fn through_unscanned_stub(&self) -> bool {
+        self.site.is_stub && !std::ptr::eq(self.record, self.site)
+    }
+
+    fn anchor(&self) -> RuleAnchor {
+        RuleAnchor {
+            path: self.site.file.to_string_lossy().into_owned(),
+            line: self.site.line,
+            column: None,
+        }
+    }
+
+    fn invalid(&self, message: &str) -> Diagnostic {
+        invalid_rule(
+            &self.origin,
+            self.site.file.to_string_lossy().as_ref(),
+            self.site.line,
+            message,
+        )
+    }
+}
+
+/// Every rule `findings` declares, each paired declaration once, so a stub and the
+/// scanned target it points at are one rule and a stub to an unscanned target is
+/// its target's rule (§FS-rules.7.10, §AR-scanner.4.6). `check` and `init` both
+/// read rules from here.
+fn rule_declarations<'a>(
+    findings: &'a Catalog,
+    schema: &Schema,
+    frame: Frame<'_>,
+) -> Vec<RuleDeclaration<'a>> {
+    let rule_kinds = rule_kinds(schema);
+    findings
+        .declarations
+        .iter()
+        .filter(|(id, _)| rule_kinds.contains(id.kind.as_str()))
+        .flat_map(|(id, declarations)| {
+            let origin = render_id(frame.grammar(), id);
+            paired_declarations(declarations)
+                .iter()
+                .map(|paired| RuleDeclaration {
+                    origin: origin.clone(),
+                    record: paired.record,
+                    site: paired.stand_in,
+                })
+                .collect::<Vec<_>>()
+        })
         .collect()
 }
 
@@ -207,62 +270,31 @@ pub(crate) fn configured_rule_sentences(
 ) -> Result<ConfiguredRules, Diagnostic> {
     let local = WorkspaceCheckTarget::of(findings, schema, frame);
     let facts = adapt_markdown(findings, markdown_project(frame.name, &local), true);
-    let rule_kinds = rule_kinds(schema);
     let mut rows = Vec::new();
     let mut unverifiable = Vec::new();
-    for (id, declarations) in &findings.declarations {
-        if !rule_kinds.contains(id.kind.as_str()) {
-            continue;
+    for rule in rule_declarations(findings, schema, frame) {
+        let title = rule
+            .record
+            .title
+            .as_deref()
+            .ok_or_else(|| rule.invalid("rule declaration has no title"))?;
+        if !rule_has_rationale(rule.record) {
+            return Err(rule.invalid("rule rationale is empty"));
         }
-        for declaration in declarations {
-            let origin = render_id(frame.grammar(), id);
-            let path = declaration.file.to_string_lossy();
-            let title = declaration.title.as_deref().ok_or_else(|| {
-                invalid_rule(
-                    &origin,
-                    path.as_ref(),
-                    declaration.line,
-                    "rule declaration has no title",
-                )
-            })?;
-            if !rule_has_rationale(declaration) {
-                return Err(invalid_rule(
-                    &origin,
-                    path.as_ref(),
-                    declaration.line,
-                    "rule rationale is empty",
-                ));
-            }
-            let (parsed, unverifiable_here) = parse_rule(
-                title,
-                origin.clone(),
-                RuleAnchor {
-                    path: declaration.file.to_string_lossy().into_owned(),
-                    line: declaration.line,
-                    column: None,
-                },
-                vocab,
-            )
-            .map_err(|error| {
-                invalid_rule(&origin, path.as_ref(), declaration.line, &error.message)
-            })?;
-            // §FS-rules.4.1: the object's namespace is the whole of what is
-            // unverifiable, so every other question is put either way.
-            if let Some(diagnostic) = unresolved_subject_diagnostic(&parsed, &facts) {
-                return Err(diagnostic);
-            }
-            // §FS-rules.4.1.2: reported, rendered, and not a reason to withhold
-            // the write.
-            if let Some(message) = unverifiable_here {
-                unverifiable.push(invalid_rule(
-                    &origin,
-                    path.as_ref(),
-                    declaration.line,
-                    &message,
-                ));
-            }
-            rows.push((origin, title.to_string()));
+        let (parsed, unverifiable_here) =
+            parse_rule(title, rule.origin.clone(), rule.anchor(), vocab)
+                .map_err(|error| rule.invalid(&error.message))?;
+        // §FS-rules.4.1: the object's namespace is the whole of what is
+        // unverifiable, so every other question is put either way.
+        if let Some(diagnostic) = unresolved_subject_diagnostic(&parsed, &facts) {
+            return Err(diagnostic);
         }
+        // §FS-rules.4.1.2: reported, rendered, and not a reason to withhold
+        // the write.
+        if let Some(message) = unverifiable_here {
+            unverifiable.push(rule.invalid(&message));
+        }
+        rows.push((rule.origin, title.to_string()));
     }
     rows.sort_by(|a, b| a.0.cmp(&b.0));
     Ok(ConfiguredRules { rows, unverifiable })
@@ -304,49 +336,35 @@ pub(crate) fn check_chapter_rules(
         None => adapt_markdown(findings, markdown_project(frame.name, &local), complete),
     };
     let mut parsed_rules = Vec::new();
-    for (id, declarations) in &findings.declarations {
-        if !rule_kinds.contains(id.kind.as_str()) {
-            continue;
+    // §FS-rules.7.10: the origins whose findings warn until 0.19.0.
+    let mut stubbed = BTreeSet::new();
+    for rule in rule_declarations(findings, schema, frame) {
+        let parsed = rule
+            .record
+            .title
+            .as_deref()
+            .ok_or_else(|| "rule declaration has no title".to_string())
+            .and_then(|title| {
+                parse_rule(title, rule.origin.clone(), rule.anchor(), &vocab)
+                    .map_err(|error| error.message)
+            });
+        if rule.through_unscanned_stub() {
+            stubbed.insert(rule.origin.clone());
         }
-        for declaration in declarations {
-            let origin = render_id(frame.grammar(), id);
-            let anchor = RuleAnchor {
-                path: declaration.file.to_string_lossy().into_owned(),
-                line: declaration.line,
-                column: None,
-            };
-            let parsed = declaration
-                .title
-                .as_deref()
-                .ok_or_else(|| "rule declaration has no title".to_string())
-                .and_then(|title| {
-                    parse_rule(title, origin.clone(), anchor, &vocab).map_err(|error| error.message)
-                });
-            let path = declaration.file.to_string_lossy();
-            match parsed {
-                Ok(_) if !rule_has_rationale(declaration) => report.errors.push(invalid_rule(
-                    &origin,
-                    path.as_ref(),
-                    declaration.line,
-                    "rule rationale is empty",
-                )),
-                Ok((rule, None)) => parsed_rules.push(rule),
-                // §FS-rules.4.1: reported rather than evaluated — but the
-                // subject is asked here, so one directory reaches one verdict.
-                Ok((rule, Some(message))) => {
-                    report.errors.push(
-                        unresolved_subject_diagnostic(&rule, &facts).unwrap_or_else(|| {
-                            invalid_rule(&origin, path.as_ref(), declaration.line, &message)
-                        }),
-                    );
-                }
-                Err(message) => report.errors.push(invalid_rule(
-                    &origin,
-                    path.as_ref(),
-                    declaration.line,
-                    &message,
-                )),
+        match parsed {
+            Ok(_) if !rule_has_rationale(rule.record) => {
+                report.errors.push(rule.invalid("rule rationale is empty"));
             }
+            Ok((parsed, None)) => parsed_rules.push(parsed),
+            // §FS-rules.4.1: reported rather than evaluated — but the
+            // subject is asked here, so one directory reaches one verdict.
+            Ok((parsed, Some(message))) => {
+                report.errors.push(
+                    unresolved_subject_diagnostic(&parsed, &facts)
+                        .unwrap_or_else(|| rule.invalid(&message)),
+                );
+            }
+            Err(message) => report.errors.push(rule.invalid(&message)),
         }
     }
     if let Some(rule) = ad_hoc {
@@ -355,7 +373,8 @@ pub(crate) fn check_chapter_rules(
     let precedence = citation_precedence(&rules.citations);
     // §FS-rules.7: one channel per level, so the absence arrives among the
     // errors its level already fills and every caller's own sort orders it.
-    let (errors, ramp_warnings) = evaluate(&parsed_rules, &precedence, &facts);
+    let (mut errors, mut ramp_warnings) = evaluate(&parsed_rules, &precedence, &facts);
+    route_stubbed_rules(&stubbed, &mut errors, &mut ramp_warnings);
     report.errors.extend(errors);
     // §FS-rules.7.8 / §FS-errors.4.1: the single-project `grund-core` arm is the one
     // caller that does not sort warnings downstream, and the sort is idempotent over
