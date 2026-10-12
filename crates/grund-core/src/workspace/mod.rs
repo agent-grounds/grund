@@ -44,7 +44,7 @@ mod unlisted;
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
-pub(crate) use declared::{declared_member_schemas, install_declared_kind_table};
+pub(crate) use declared::{declared_member_schemas, resolve_narrowable_config};
 pub(crate) use expand::{
     WorkspaceCitationTarget, enclosing_workspace_of, expand_workspace_tree,
     expand_workspace_tree_with_report_base,

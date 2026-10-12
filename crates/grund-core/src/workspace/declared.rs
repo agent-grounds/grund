@@ -4,7 +4,11 @@
 //! (§FS-scan.projects.kinds). The checker builds the vocabulary from the schemas
 //! returned here and names no façade (§AR-config.5).
 
+use anyhow::Result;
+use std::path::Path;
+
 use super::expand::{WorkspaceProjectEntry, expand_workspace_tree};
+use super::scope::{resolve_workspace_config, scope_is_config_root};
 use crate::config::{Config, Schema, install_kind_table};
 
 /// Each project the workspace `config` declares, by alias, with its schema —
@@ -25,15 +29,27 @@ pub(crate) fn declared_member_schemas(config: &Config) -> Vec<(String, Schema)> 
         .collect()
 }
 
+/// The config a command whose `<path>` narrows the walk runs on: `check`,
+/// `cover` and `cover --lines` (§FS-scan.projects.narrowed). This is the one
+/// place a narrowed scan of a config that declares `[workspace]` is set up, so
+/// each of them judges the pinned and `*/` `[citations]` targets its whole run
+/// judges and puts the same warnings on the run's channel
+/// (§FS-scan.projects.kinds, §REQ-one-answer.scope.narrowed). A scope that is
+/// the config root is the whole run, and its expansion builds the table.
+pub(crate) fn resolve_narrowable_config(path: &Path, path_provided: bool) -> Result<Config> {
+    let mut config = resolve_workspace_config(path)?;
+    if config.workspace_declared && !scope_is_config_root(&config.root, path, path_provided) {
+        install_declared_kind_table(&mut config);
+    }
+    Ok(config)
+}
+
 /// §FS-scan.projects.kinds: a narrowed run of a config that declares
 /// `[workspace]` loads no member's files and still reads the kinds its declared
 /// workspace configures, so it judges the pinned and `*/` `[citations]`
 /// targets a full run judges, with the same one call. Nothing else of the
 /// declared read reaches the run: a rule object here stays §FS-rules.4.1's.
-pub(crate) fn install_declared_kind_table(config: &mut Config) {
-    if !config.workspace_declared {
-        return;
-    }
+fn install_declared_kind_table(config: &mut Config) {
     let mut projects = declared_projects(config);
     install_kind_table(
         config,
