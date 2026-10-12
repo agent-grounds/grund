@@ -73,7 +73,7 @@ pub use editor_hover::{
 };
 pub use editor_on_type::{DeclaredId, LineEdit, can_replace_trigger_at, on_type_line_edits};
 pub use editor_snapshot::{
-    LspCitation, LspDeclaration, LspFindingRange, LspSnapshot, LspSnapshotOpts,
+    LspCitation, LspDeclaration, LspFindingRange, LspShowContext, LspSnapshot, LspSnapshotOpts,
     LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub,
 };
 pub use show_query::{ShowFormat, ShowMode, ShowOpts, ShowQueryError};

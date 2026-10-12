@@ -3,7 +3,9 @@
 //! and how each command's answer is read off it and compared with the row's
 //! verdict (§FS-declarations.stubs.verdict).
 
-use grund_core::{LspSnapshotOpts, ShowOpts, lsp_snapshot, show_with_overlays};
+use grund_core::{
+    LspSnapshotOpts, ShowOpts, lsp_snapshot, lsp_snapshot_with_completion, show_from_snapshot,
+};
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::fmt::Debug;
@@ -435,13 +437,17 @@ fn lsp_column(repo: &Repo, row: &Row, column: &str, out: &mut Disagreements) {
     );
 }
 
-/// `show` through the API, over the editor's text.
+/// `show` through the API, over the editor's text, as the editor answers it
+/// from its snapshot (§FS-lsp.responsiveness.3).
 fn show_api_column(repo: &Repo, row: &Row, out: &mut Disagreements) {
-    let opts = ShowOpts {
+    let opts = ShowOpts::default();
+    let shown = lsp_snapshot_with_completion(LspSnapshotOpts {
         path: repo.0.clone(),
-        ..ShowOpts::default()
-    };
-    let got = match show_with_overlays("FS-a", opts, repo.editor(row)) {
+        path_provided: true,
+        open_documents: repo.editor(row),
+    })
+    .and_then(|loaded| show_from_snapshot(&loaded.show, "FS-a", opts.mode, opts.format));
+    let got = match shown {
         Ok(shown) => Shown::Body((repo.relative(&shown.path), shown.line)),
         Err(error) => {
             let message = error.to_string();

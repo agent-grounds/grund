@@ -95,7 +95,7 @@ pub use refs::{
     RefsWithMetadata, refs, refs_outcome, refs_with_metadata,
 };
 pub use report::render_finding_sites_json;
-pub use show::{show, show_with_overlays, show_with_scope};
+pub use show::{show, show_from_snapshot, show_with_scope};
 
 // What another component's tests read (§AR-core-module-layout.1.3): the same run
 // record and entry point the public `check` API uses.

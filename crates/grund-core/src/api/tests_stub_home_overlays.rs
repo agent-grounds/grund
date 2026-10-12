@@ -4,7 +4,7 @@
 //! answers as the saved text does (§FS-show.2.2.1, §FS-lsp.1.1), because the stub
 //! pairs on the same reading as its health (§FS-declarations.checks.broken-stub.1).
 
-use super::{lsp_snapshot, show_with_overlays};
+use super::{lsp_snapshot, lsp_snapshot_with_completion, show_from_snapshot};
 use crate::model::format_path;
 use crate::queries::{LspSnapshotOpts, ShowOpts};
 use crate::testing::{test_root, write};
@@ -70,13 +70,17 @@ fn relative(root: &Path, path: &Path) -> String {
     format_path(path.strip_prefix(root).unwrap_or(path))
 }
 
-/// `show FS-x`: `path:line body`, or the refusal.
+/// `show FS-x` as the editor answers it, from its snapshot
+/// (§FS-lsp.responsiveness.3): `path:line body`, or the refusal.
 fn show_x(root: &Path, editor: Option<&str>) -> Result<String, String> {
-    let opts = ShowOpts {
+    let loaded = lsp_snapshot_with_completion(LspSnapshotOpts {
         path: root.to_path_buf(),
-        ..ShowOpts::default()
-    };
-    show_with_overlays("FS-x", opts, open(root, editor))
+        path_provided: true,
+        open_documents: open(root, editor),
+    })
+    .expect("lsp snapshot");
+    let opts = ShowOpts::default();
+    show_from_snapshot(&loaded.show, "FS-x", opts.mode, opts.format)
         .map(|out| {
             let path = relative(root, &out.path);
             format!("{path}:{} {}", out.line, out.body.trim_end())

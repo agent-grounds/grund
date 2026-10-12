@@ -94,7 +94,10 @@ fn hover(
     let column = server
         .document_text(&uri)
         .and_then(|text| text.lines().nth(line as usize).map(str::to_string))
-        .and_then(|text| text.find('\u{a7}').map(|byte| byte_to_utf16(&text, byte) + 1))
+        .and_then(|text| {
+            text.find('\u{a7}')
+                .map(|byte| byte_to_utf16(&text, byte) + 1)
+        })
         .expect("a citation on the line");
     let observed = Arc::new(Mutex::new(Vec::new()));
     let sink = Arc::clone(&observed);
@@ -174,7 +177,11 @@ fn a_citation_hover_loads_no_workspace_once_a_snapshot_exists() {
             "the hover on {id} observed {} workspace inputs, {:?}…: it reloaded the workspace \
              instead of answering from the snapshot (\u{a7}FS-lsp.responsiveness.3)",
             observed.len(),
-            observed.iter().take(3).map(|input| &input.path).collect::<Vec<_>>()
+            observed
+                .iter()
+                .take(3)
+                .map(|input| &input.path)
+                .collect::<Vec<_>>()
         );
     }
 }

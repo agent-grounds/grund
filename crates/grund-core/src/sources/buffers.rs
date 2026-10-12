@@ -9,7 +9,7 @@
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use super::disk::{input_read_dir, input_read_to_string, path_exists, path_is_file};
 use super::identity::canonicalize_existing_prefix;
@@ -19,27 +19,61 @@ use crate::model::normalize_path_lexically;
 /// The editor's open documents for one run, keyed by physical path
 /// (§AR-config.1.5, §FS-scan.identity.buffers). A command-line run has none.
 #[derive(Clone, Default)]
-pub(crate) struct Buffers(Arc<BTreeMap<PathBuf, String>>);
+pub(crate) struct Buffers {
+    open: Arc<BTreeMap<PathBuf, String>>,
+    /// The disk text this run has read, kept when the run is the editor's
+    /// snapshot so a later answer over it reads nothing again
+    /// (§FS-lsp.responsiveness.3, §AR-lsp.5.2). Shared by every member's run.
+    record: Option<Arc<Mutex<BTreeMap<PathBuf, String>>>>,
+}
 
 impl Buffers {
     /// The documents an editor handed its run, each keyed by the location its
     /// path resolves to, so two spellings of one file are one buffer.
     pub(crate) fn new(open: impl IntoIterator<Item = (PathBuf, String)>) -> Self {
-        Self(Arc::new(
-            open.into_iter()
-                .map(|(path, text)| (canonicalize_existing_prefix(&path), text))
-                .collect(),
-        ))
+        Self {
+            open: Arc::new(
+                open.into_iter()
+                    .map(|(path, text)| (canonicalize_existing_prefix(&path), text))
+                    .collect(),
+            ),
+            record: None,
+        }
+    }
+
+    /// These buffers, keeping every file text the run reads from disk, under
+    /// the path it was read by: the snapshot a hover answers from without
+    /// reading the file again (§FS-lsp.responsiveness.3).
+    pub(crate) fn recording(self) -> Self {
+        Self {
+            record: Some(Arc::default()),
+            ..self
+        }
     }
 
     /// The buffer that is the file at `path`, under any spelling of it.
     fn get(&self, path: &Path) -> Option<&str> {
-        if self.0.is_empty() {
+        if self.open.is_empty() {
             return None;
         }
-        self.0
+        self.open
             .get(&canonicalize_existing_prefix(path))
             .map(String::as_str)
+    }
+
+    /// The disk text a recording run already read at `path`, as it read it.
+    fn recorded(&self, path: &Path) -> Option<String> {
+        let record = self.record.as_ref()?;
+        record.lock().ok()?.get(path).cloned()
+    }
+
+    /// Keep `text`, read from disk at `path`, if this run records its reads.
+    fn record(&self, path: &Path, text: &str) {
+        if let Some(record) = &self.record
+            && let Ok(mut record) = record.lock()
+        {
+            record.insert(path.to_path_buf(), text.to_string());
+        }
     }
 }
 
@@ -77,12 +111,22 @@ impl<'a> Sources<'a> {
         self.buffers.and_then(|buffers| buffers.get(path))
     }
 
-    /// The file's text as a save would write it (§FS-scan.text.buffer).
+    /// The file's text as a save would write it (§FS-scan.text.buffer). A
+    /// recording run reads each file from disk once and answers again from what
+    /// it kept (§FS-lsp.responsiveness.3).
     pub(crate) fn text(self, path: &Path) -> std::io::Result<Cow<'a, str>> {
-        match self.buffer(path) {
-            Some(text) => Ok(Cow::Borrowed(text)),
-            None => input_read_to_string(path).map(Cow::Owned),
+        if let Some(text) = self.buffer(path) {
+            return Ok(Cow::Borrowed(text));
         }
+        let Some(buffers) = self.buffers else {
+            return input_read_to_string(path).map(Cow::Owned);
+        };
+        if let Some(text) = buffers.recorded(path) {
+            return Ok(Cow::Owned(text));
+        }
+        let text = input_read_to_string(path)?;
+        buffers.record(path, &text);
+        Ok(Cow::Owned(text))
     }
 
     /// The directory's entries on disk, observed first (§FS-check.6.1.3); the
@@ -109,7 +153,7 @@ impl<'a> Sources<'a> {
         self.buffers
             .map(|buffers| {
                 buffers
-                    .0
+                    .open
                     .keys()
                     .filter(|path| !path_exists(path))
                     .cloned()
