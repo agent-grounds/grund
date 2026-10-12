@@ -271,14 +271,38 @@ its sections is `missing section` as before. A target that declares the ID more 
 pairs as `show` refuses it, ambiguously ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), and lends no section, and so does
 every target of an ID with more than one declaration ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)).
 
-Nothing else of the target is judged as if scanned yet: the citations it makes, the
-obligations its declaration owes, and its chapters as a rule's subjects or in a rule's count
-of chapters ([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path), [§FS-rules.3.1](FS-rules.md#31-chapter-presence)) stay as they were outside the scan, the rows U04,
-U07 and U08 of [§REQ-one-answer.differences.stubs](../requirements/REQ-one-answer.md#differencesstubs-stubs). Findings about the target file itself —
-its other declarations, its notes and formatting, its leads, and whether its citations
-resolve — are not reported: the target is read on the stub's behalf, not scanned (D8 of
-[§DF-one-answer-rulings-stubs](../decisions/functional/DF-one-answer-rulings-stubs.md#df-one-answer-rulings-stubs-a-stub-is-found-by-its-home-and-shape-read-as-the-scan-reads-and-shown-where-its-target-is)). Decided in [§DF-stub-sections-from-unscanned-target](../decisions/functional/DF-stub-sections-from-unscanned-target.md#df-stub-sections-from-unscanned-target-a-stubs-sections-are-its-targets-whether-or-not-the-scan-reaches-it), and for a
-section the target declares twice in [§DF-stub-target-section-declared-twice](../decisions/functional/DF-stub-target-section-declared-twice.md#df-stub-target-section-declared-twice-a-section-a-stubs-target-declares-twice-is-reported-where-it-is-written-scanned-or-not).
+It also gives every verdict those declarations' content feeds, exactly as the same tree with
+the target scanned gives it. Each citation the scanner's pass over the target assigns to one
+of those declarations, the citations in its body, is that declaration's citation: once it
+resolves, through the shorthand and the declaration-local section citation as a scanned
+citation does ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand), [§FS-check.1.1.8](FS-check.md#118-declaration-local-numeric-section-candidates)), it is an edge that counts toward a rule's
+obligation, prohibition and counts ([§FS-rules.5.1](FS-rules.md#51-facts-and-identity)) and toward a `[citations]` obligation and
+prohibition ([§FS-check.3.11](FS-check.md#311-missing-required-citation), [§FS-check.3.12](FS-check.md#312-forbidden-citation)), `refs` lists it ([§FS-refs.2](FS-refs.md#2-behaviour)), and the ID it
+cites is not `unused` ([§FS-check.4.1](FS-check.md#41-unused-declaration)). Each of those declarations' chapters, cited or not, is
+a rule's subject and is counted by a chapter rule ([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path), [§FS-rules.3.1](FS-rules.md#31-chapter-presence)). Stubs to one
+target lend its citations and chapters once between them
+([§FS-declarations.stubs.pairing.2](FS-declarations.md#stubspairing2-stubs-to-one-target-stand-for-its-declarations-once)), and a target that declares the ID twice lends each
+declaration's own, as scanned. A broken stub pairs with nothing and lends nothing.
+
+A finding about one of those citations is reported at the citation's line in the target, where
+the scanned tree reports it: `src/x.rs:3: … FS must not cite GOAL …`. A finding about the
+declaration itself, a count it fails, a chapter count or `unused`, stays at the stub's line,
+row U06 of [§REQ-one-answer.differences.stubs](../requirements/REQ-one-answer.md#differencesstubs-stubs), until [§FS-declarations.stubs.pairing.4](FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target) moves it.
+A required-level finding that only the citations and chapters read this way produce warns
+until 0.19.0 ([§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)); one they remove goes at once.
+
+Nothing else of the target is judged. Findings about the target file itself — its other
+declarations, its notes and formatting, its leads, whether it is grounded, and whether its
+citations resolve — are not reported: the target is read on the stub's behalf, not scanned (D8
+of [§DF-one-answer-rulings-stubs](../decisions/functional/DF-one-answer-rulings-stubs.md#df-one-answer-rulings-stubs-a-stub-is-found-by-its-home-and-shape-read-as-the-scan-reads-and-shown-where-its-target-is)). A citation of the target that does not resolve — an unknown
+ID, a section the cited declaration does not have, a shorthand that matches no declaration or
+several — counts for nothing, as in the scanned tree, where it is never an edge
+([§FS-rules.5.1](FS-rules.md#51-facts-and-identity)), and it is reported nowhere. A citation the pass assigns to no declaration of
+the ID, in a note outside its body or in another declaration, is the target file's and is not
+lent, and neither is another declaration's chapter. Decided in
+[§DF-stub-sections-from-unscanned-target](../decisions/functional/DF-stub-sections-from-unscanned-target.md#df-stub-sections-from-unscanned-target-a-stubs-sections-are-its-targets-whether-or-not-the-scan-reaches-it), for a section the target declares twice in
+[§DF-stub-target-section-declared-twice](../decisions/functional/DF-stub-target-section-declared-twice.md#df-stub-target-section-declared-twice-a-section-a-stubs-target-declares-twice-is-reported-where-it-is-written-scanned-or-not), and for the citations and chapters in
+[§DF-stub-target-citations-and-chapters](../decisions/functional/DF-stub-target-citations-and-chapters.md#df-stub-target-citations-and-chapters-a-stubs-target-lends-the-stubbed-declaration-its-citations-and-chapters-and-what-that-newly-raises-warns-until-0190).
 
 A target outside `include` is still asked the two rules [§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing) adds,
 because, read as if scanned, it would meet them: `other/gen/a.md`, outside
@@ -314,10 +338,13 @@ A surface that says where a paired declaration is names the target's declaration
 `<path>:<line>` and its title, as the same tree with the target scanned names it: `show`
 ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), `list --size` ([§FS-list.3.4.6](FS-list.md#346-a-home-outside-the-scan)), and the duplicate error and the ambiguity
 refusal ([§FS-declarations.stubs.pairing.3](FS-declarations.md#stubspairing3-a-declaration-reached-through-stubs-is-named-at-its-target)). From grund 0.19.0 plain `list` ([§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical)) and
-the `unused` warning ([§FS-check.4.1](FS-check.md#41-unused-declaration)) do too. Until then those two show it at the stub, as
-they always have: plain `list` prints the stub's line and its link,
+a finding about the declaration itself, the `unused` warning ([§FS-check.4.1](FS-check.md#41-unused-declaration)) or a count or
+chapter count it fails ([§FS-rules.7.2](FS-rules.md#72-chapter-cardinality), [§FS-rules.7.3](FS-rules.md#73-outbound-citation-cardinality)), do too. Until then those show it at
+the stub, as they always have: plain `list` prints the stub's line and its link,
 `FS-x  docs/fs/x.md:1  → ../../src/x.rs`, once for all its stubs as
-[§FS-declarations.stubs.pairing.2](FS-declarations.md#stubspairing2-stubs-to-one-target-stand-for-its-declarations-once) says, and `check` places `unused` at the stub's line. They
+[§FS-declarations.stubs.pairing.2](FS-declarations.md#stubspairing2-stubs-to-one-target-stand-for-its-declarations-once) says, and `check` places `unused`, and a count or chapter
+count the declaration fails, at the stub's line, whatever of the target's citations and
+chapters the count reads ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)). They
 are the rows Placement and U06 of [§REQ-one-answer.differences.stubs](../requirements/REQ-one-answer.md#differencesstubs-stubs), and
 [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) announces the move.
 

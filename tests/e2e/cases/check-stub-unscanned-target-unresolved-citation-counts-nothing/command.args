@@ -1,0 +1,1 @@
+check --rule "Each FS must cite exactly one GOAL." --only-rule {repo}

@@ -1,8 +1,9 @@
 //! The trees of `command_agreement.rs` for what a stub answers: the rows of
 //! §REQ-one-answer.differences.stubs, each around the stub `docs/x.md` to a
 //! target `src/x.rs` outside `[scan] include`, asked of the command line, of shell
-//! completion and of the editor snapshot. U01 and U05 closed with #597, so their
-//! trees stay here to agree (§FS-declarations.stubs.target.5, §FS-rules.7.10).
+//! completion and of the editor snapshot. U01 and U05 closed with #597, and U04,
+//! U07 and U08 with #651, so their trees stay here to agree
+//! (§FS-declarations.stubs.target.5, §FS-rules.7.10, §FS-rules.7.11).
 
 use super::agreement_tree::{Tree, Verdict, agree};
 use grund_core::{LspSnapshotOpts, lsp_snapshot};
@@ -151,51 +152,6 @@ pub fn the_selector_selects_the_targets_chapter() -> Verdict {
     )
 }
 
-/// Row U04: a citation obligation is judged on an outside target as on the same
-/// target scanned (§REQ-one-answer.stubs.outside-include).
-pub fn an_obligation_is_judged_on_the_target() -> Verdict {
-    let config = |include: &str| {
-        CONFIG
-            .replace("folder = \"docs\"", "folder = \"docs/fs\"")
-            .replace(
-                "[scan]\n",
-                "[[kinds]]\nkind = \"GOAL\"\nfolder = \"docs/goals\"\nindex = false\n[scan]\n",
-            )
-            .replace("include = [\"docs\"]", include)
-    };
-    let findings = |name: &str, include: &str| {
-        let config = config(include);
-        let tree = Tree::new(
-            name,
-            &[
-                ("grund.toml", config.as_str()),
-                ("docs/fs/x.md", "# FS-x: [../../src/x.rs](../../src/x.rs)\n"),
-                ("docs/goals/g.md", "# GOAL-g: G\n\nLead.\n"),
-                (
-                    "src/x.rs",
-                    "/// FS-x: X\n///\n/// Lead, for \u{a7}GOAL-g.\npub fn x() {}\n",
-                ),
-            ],
-        );
-        tree.json(&[
-            "check",
-            "--rule",
-            "Each FS must not cite any GOAL.",
-            "--only-rule",
-            "--format",
-            "json",
-        ])
-        .iter()
-        .map(|row| row["code"].as_str().unwrap_or("").to_string())
-        .collect::<Vec<_>>()
-    };
-    agree(
-        "the obligation's findings, target outside / target scanned",
-        findings("u04-outside", "include = [\"docs\"]"),
-        findings("u04-scanned", "include = [\"docs\", \"src\"]"),
-    )
-}
-
 /// Closed row U05: a RULE target's title that `show --brief` reads is one `check`
 /// reads (§REQ-one-answer.stubs.verdict, §FS-rules.7.10), outside the include as
 /// with the target scanned.
@@ -292,32 +248,60 @@ fn goal_tree(name: &str, include: &str) -> Tree {
 const OUTSIDE: &str = "include = [\"docs\"]";
 const SCANNED: &str = "include = [\"docs\", \"src\"]";
 
-/// Row U07: a chapter rule counts an outside target's chapters as it counts them
-/// with the target scanned (§REQ-one-answer.stubs.outside-include).
-pub fn a_chapter_rule_counts_the_targets_chapters() -> Verdict {
-    let codes = |name: &str, include: &str| {
-        goal_tree(name, include)
-            .json(&[
-                "check",
-                "--rule",
-                "Each FS must have exactly one Terms chapter.",
-                "--only-rule",
-                "--format",
-                "json",
-            ])
-            .iter()
-            .map(|row| row["code"].as_str().unwrap_or("").to_string())
-            .collect::<Vec<_>>()
-    };
+/// The findings of `check --rule <rule> --only-rule` on `name`'s goal tree, as
+/// `code` alone or as `code path:line` where `sited`.
+fn rule_findings(name: &str, include: &str, rule: &str, sited: bool) -> Vec<String> {
+    goal_tree(name, include)
+        .json(&["check", "--rule", rule, "--only-rule", "--format", "json"])
+        .iter()
+        .map(|row| {
+            let code = row["code"].as_str().unwrap_or("").to_string();
+            if sited {
+                format!("{code} {}", site(row))
+            } else {
+                code
+            }
+        })
+        .collect()
+}
+
+/// Closed row U04, its prohibition: a citation the outside target makes breaks
+/// `must not cite` at its line in the target, as with the target scanned
+/// (§FS-declarations.stubs.target.5, §FS-rules.7.11).
+pub fn a_prohibition_is_judged_on_the_target() -> Verdict {
+    let rule = "Each FS must not cite any GOAL.";
     agree(
-        "the chapter rule's findings, target outside / target scanned",
-        codes("u07-outside", OUTSIDE),
-        codes("u07-scanned", SCANNED),
+        "the prohibition's findings and sites, target outside / target scanned",
+        rule_findings("u04-prohibition-outside", OUTSIDE, rule, true),
+        rule_findings("u04-prohibition-scanned", SCANNED, rule, true),
     )
 }
 
-/// Row U08: `refs` lists an outside target's citation as it lists it with the
-/// target scanned (§REQ-one-answer.stubs.outside-include).
+/// Closed row U04, its count: a citation the outside target makes meets
+/// `at least one` as with the target scanned (§FS-declarations.stubs.target.5).
+pub fn a_count_is_judged_on_the_target() -> Verdict {
+    let rule = "Each FS must cite at least one GOAL.";
+    agree(
+        "the count's findings, target outside / target scanned",
+        rule_findings("u04-count-outside", OUTSIDE, rule, false),
+        rule_findings("u04-count-scanned", SCANNED, rule, false),
+    )
+}
+
+/// Closed row U07: a chapter rule counts an outside target's chapters as it
+/// counts them with the target scanned (§FS-declarations.stubs.target.5).
+pub fn a_chapter_rule_counts_the_targets_chapters() -> Verdict {
+    let rule = "Each FS must have exactly one Terms chapter.";
+    agree(
+        "the chapter rule's findings, target outside / target scanned",
+        rule_findings("u07-outside", OUTSIDE, rule, false),
+        rule_findings("u07-scanned", SCANNED, rule, false),
+    )
+}
+
+/// Closed row U08: `refs` lists an outside target's citation as it lists it with
+/// the target scanned, and so `unused` counts it (§FS-declarations.stubs.target.5,
+/// §FS-refs.2).
 pub fn refs_lists_the_targets_citation() -> Verdict {
     let sites = |name: &str, include: &str| {
         goal_tree(name, include)
@@ -326,9 +310,23 @@ pub fn refs_lists_the_targets_citation() -> Verdict {
             .map(site)
             .collect::<Vec<_>>()
     };
+    let unused = |name: &str, include: &str| {
+        goal_tree(name, include)
+            .json(&["check", "--only", "unused", "--format", "json"])
+            .iter()
+            .filter_map(|row| row["message"].as_str().map(str::to_string))
+            .filter(|message| message.ends_with("GOAL-g"))
+            .collect::<Vec<_>>()
+    };
     agree(
-        "refs GOAL-g, target outside / target scanned",
-        sites("u08-outside", OUTSIDE),
-        sites("u08-scanned", SCANNED),
+        "refs GOAL-g and whether GOAL-g is unused, target outside / target scanned",
+        (
+            sites("u08-outside", OUTSIDE),
+            unused("u08-unused-outside", OUTSIDE),
+        ),
+        (
+            sites("u08-scanned", SCANNED),
+            unused("u08-unused-scanned", SCANNED),
+        ),
     )
 }

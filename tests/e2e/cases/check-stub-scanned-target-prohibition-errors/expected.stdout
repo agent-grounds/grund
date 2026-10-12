@@ -1,0 +1,1 @@
+src/x.rs:3: error: FS must not cite GOAL (--rule) — re-point the citation or downgrade it to a plain Markdown link

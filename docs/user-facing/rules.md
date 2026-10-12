@@ -227,6 +227,14 @@ ending `; a citation to a numbered section now counts, and this warning
 becomes an error in grund 0.18.0`. Move or remove the citation, loosen the
 count, or `--ignore` the code. [§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity) [§FS-rules.3.4](../functional-spec/FS-rules.md#34-inbound-citation-count-and-prohibition) [§FS-rules.7.8](../functional-spec/FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)
 
+A rule reads a declaration written behind a stub on what its target says, even
+where the target is outside `[scan] include`: the target's citations count, its
+chapters are counted, and a forbidden citation there is reported at its line in
+the target. Those citations and chapters count only since this release, so
+until 0.19.0 a finding only they produce is a warning ending `; a citation or
+chapter a stub's target holds now counts, and this warning becomes an error in
+grund 0.19.0`. §FS-declarations.stubs.target.5 §FS-rules.7.11
+
 The runnable [`examples/rules/`](../../examples/rules/) repository includes a
 passing and violated instance of all five families, shared-prefix coverage
 targets, both deduplication directions, both channels, and the strict refusal

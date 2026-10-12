@@ -1,0 +1,1 @@
+check --rule "Each FS must have at most 1 Terms chapter." --only-rule {repo}

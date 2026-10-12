@@ -59,7 +59,8 @@ tree gives today with the target scanned ([§FS-declarations.stubs.pairing.4](..
 
 - **Placement.** Plain `list` shows a healthy stub's declaration at its target, with its title:
   `FS-x  src/x.rs:1  X` rather than `FS-x  docs/fs/x.md:1  → ../../src/x.rs`.
-- **U06.** `check` places the `unused` warning at the target's line, not the stub's.
+- **U06.** `check` places a finding about the declaration itself, the `unused` warning or a
+  count or chapter count it fails, at the target's line, not the stub's.
 - **U03a to U03d.** `show --batch --all`, shell completion, the editor's completion and
   navigation, and `list --selector` read an outside target's sections, as `show` already does.
 

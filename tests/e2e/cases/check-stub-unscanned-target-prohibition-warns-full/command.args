@@ -1,0 +1,1 @@
+check --full --rule "Each FS must not cite any GOAL." --only-rule {repo}

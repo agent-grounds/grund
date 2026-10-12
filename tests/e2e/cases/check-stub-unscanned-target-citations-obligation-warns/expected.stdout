@@ -1,0 +1,2 @@
+docs/fs/x.md:1: warning: FS-x must cite GOAL (citation direction); a citation or chapter a stub's target holds now counts, and this warning becomes an error in grund 0.19.0
+docs/goals/g.md:1: warning: declared but never cited: GOAL-g

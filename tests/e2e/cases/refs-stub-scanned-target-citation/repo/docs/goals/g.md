@@ -1,0 +1,3 @@
+# GOAL-g: G
+
+Lead.
