@@ -38,7 +38,12 @@ class MergeQueueRunTests(unittest.TestCase):
             with self.subTest(job=job):
                 header = self.jobs[job].split("steps:", 1)[0]
                 condition = re.search(r"(?m)^    if:\s*(.+)$", header)
-                if condition:
+                if job == "bench":
+                    # §AR-ci.13.2: the one judged job a group skips; the aggregate accepts it there.
+                    flat = " ".join(self.jobs["test-ubuntu"].split())
+                    self.assertIn("needs.bench.result == 'skipped' && github.event_name == 'merge_group'",
+                                  flat, "cargo test (ubuntu-latest) does not accept the group's skip")
+                elif condition:
                     self.assertEqual("always()", condition.group(1).replace("${{", "")
                                      .replace("}}", "").strip(),
                                      "the required checks must report on a queue group too")
