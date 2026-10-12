@@ -60,6 +60,12 @@ HTML excerpts from a separate example repository encode the marker as `&#167;`;
 the example's own check resolves those citations, and relative links identify their
 source files. Such IDs are not declarations in the root repository's namespace.
 
+The README tells a user what `grund` does, never how it is built: it may cite FS, and
+it cites no AR. The repository's own `grund.toml` declares `README.md` as a place
+with `[citations.readme] must-not = ["AR"]`, so `grund check` refuses an
+architecture citation there, and the user-facing guides are where the README sends a
+reader for depth.
+
 ## evidence: Positioning and performance claims have evidence
 
 The README and its supporting comparison, benchmark report and positioning roadmap copy

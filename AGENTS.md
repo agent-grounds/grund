@@ -38,6 +38,7 @@ A `§<ID>` is a pointer to a fact, not a file path. Resolve it with `grund` and 
 - [.github/workflows/](.github/workflows): CI and release workflows: the gate on GitHub, and how a release ships
 - [scripts/](scripts): Repository scripts: hook checks, release preparation, benchmarks, PGO build
 - [templates/](templates): Init scaffold templates: what grund init writes, verbatim
+- [README.md](README.md): The README: the shop window for users, which cites what grund does, never how it is built
 
 ### Project namespaces
 
@@ -61,7 +62,7 @@ Declarations are heading lines `# <ID>: …` in markdown. In a code doc-comment 
 
 ### Citation directions
 
-`must`/`never` are `grund check` errors; `should`/`avoid` are suggestions (`grund check --suggestions`). Every source file must cite a declared ID or declare one inline; every file under tests/e2e/, tests/integration/, examples/, .github/workflows/, and scripts/ must cite one.
+`must`/`never` are `grund check` errors; `should`/`avoid` are suggestions (`grund check --suggestions`). Every source file must cite a declared ID or declare one inline; every file under tests/e2e/, tests/integration/, examples/, .github/workflows/, scripts/, and README.md must cite one.
 
 - Each **GOAL** declaration should cite GRUND or GOAL.
 - Each **FS** declaration should cite GOAL or FS; never cite AR.
@@ -76,6 +77,7 @@ Declarations are heading lines `# <ID>: …` in markdown. In a code doc-comment 
 - Each file in **examples/** must cite FS; never cite AR.
 - Each file in **.github/workflows/** should cite FS or AR.
 - Each file in **scripts/** should cite FS or AR.
+- The file **README.md** must not cite AR.
 - Each source file outside the Project map (**code**) that cites anything should cite FS or AR.
 Anything not listed above is allowed.
 
