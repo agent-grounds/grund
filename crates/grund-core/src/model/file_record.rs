@@ -96,6 +96,10 @@ pub(crate) struct RecordedBlock {
     pub(crate) form: BlockForm,
     /// Whether the file's language calls it documentation (§FS-inline-citation-style.1.1.1).
     pub(crate) doc: bool,
+    /// Whether a `/* … */` block's `*/` was found; only a closed block has bare
+    /// lines in declaration position (§FS-declarations.line.block-comment). Always
+    /// `true` for the other forms, which have no closer to miss.
+    pub(crate) closed: bool,
 }
 
 /// A line whose scanned text is a part of it (§AR-scanner.2.8.1): a Python

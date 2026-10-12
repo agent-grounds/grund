@@ -19,6 +19,7 @@ use super::compat_envelope::{
     own_line_marker, section_title,
 };
 use super::context::markdown_heading_level;
+use super::record::bare_block_line;
 
 /// The catalog site a slice is pinned to (§FS-declarations.section.map, §FS-list.3.4):
 /// its declaration line, the body end the catalog publishes when it publishes one,
@@ -109,11 +110,17 @@ pub(crate) fn today_slices(
         .then(|| own_line_marker(scan_line, lexical))
         .flatten();
     let own_marker = own_marker.as_deref();
+    // §FS-declarations.line.block-comment: a declaration 0.17 never found has no bytes to keep,
+    // so its block is read by the record's envelope, down to the block's `*/`.
+    let record_block_end = bare_declaration_block_end(record, decl_line);
+    let clean = |line: &str, markdown_heading: bool| match record_block_end {
+        Some(_) => comment_envelope(line, &BlockForm::Block).to_string(),
+        None => clean_envelope_line(line, markdown_heading, own_marker),
+    };
     let mut block_closed = closes_comment_block(scan_line, line_style, in_docstring, is_md);
     for sink in sinks.iter_mut().filter(|sink| sink.include_heading) {
         let markdown_heading = is_md || in_docstring;
-        sink.lines
-            .push(clean_envelope_line(scan_line, markdown_heading, own_marker));
+        sink.lines.push(clean(scan_line, markdown_heading));
     }
     let mut found_section = section.is_none();
     let mut target_depth = usize::MAX;
@@ -140,7 +147,10 @@ pub(crate) fn today_slices(
         if heading.is_some_and(|heading| heading.kind == HeadingKind::Declaration) {
             break;
         }
-        if !is_md {
+        if let Some(block_end) = record_block_end {
+            // Every line of the block is the body's, bare or behind ` * `, to its closer.
+            block_closed = lineno >= block_end;
+        } else if !is_md {
             // A blank line ends a line-style comment; a docstring line is its body.
             if !in_docstring
                 && (if line.trim().is_empty() {
@@ -174,11 +184,7 @@ pub(crate) fn today_slices(
             let step = match path {
                 _ if target_found => {
                     if sink.view != ShowRenderMode::Outline {
-                        sink.lines.push(clean_envelope_line(
-                            scan_line,
-                            markdown_heading,
-                            own_marker,
-                        ));
+                        sink.lines.push(clean(scan_line, markdown_heading));
                     }
                     Step::Taken
                 }
@@ -189,11 +195,15 @@ pub(crate) fn today_slices(
                 Some(_) if section.is_some() && depth <= target_depth => Step::Close,
                 Some(path) if sink.view == ShowRenderMode::Outline => {
                     let depth = section.map_or(depth, |_| depth - target_depth);
-                    sink.lines
-                        .push(clean_envelope_line(scan_line, markdown_heading, own_marker));
+                    let line = clean(scan_line, markdown_heading);
+                    let title = match record_block_end {
+                        Some(_) => section_title(&line, path, true, None),
+                        None => section_title(scan_line, path, markdown_heading, own_marker),
+                    };
+                    sink.lines.push(line);
                     sink.sections.push(ShowSection {
                         path: path.to_string(),
-                        title: section_title(scan_line, path, markdown_heading, own_marker),
+                        title,
                         depth,
                     });
                     Step::Taken
@@ -205,11 +215,7 @@ pub(crate) fn today_slices(
                 Step::Taken => {}
                 Step::Body => {
                     if found_section && sink.view != ShowRenderMode::Outline {
-                        sink.lines.push(clean_envelope_line(
-                            scan_line,
-                            markdown_heading,
-                            own_marker,
-                        ));
+                        sink.lines.push(clean(scan_line, markdown_heading));
                     }
                     if closes_docstring {
                         sink.open = false;
@@ -222,6 +228,17 @@ pub(crate) fn today_slices(
         return Err(TodayMiss::Section);
     }
     Ok(output_line)
+}
+
+/// The last line of the closed `/* … */` block a declaration on a bare line of it
+/// opens, or `None` for any other declaration (§FS-declarations.line.block-comment,
+/// §DF-bare-block-comment-line-declares.2.2): such a declaration's body, sections
+/// and lead are its block's by the record's own rules at once, because 0.17 printed
+/// nothing for it and there are no bytes of today's to keep.
+fn bare_declaration_block_end(record: &FileRecord, decl_line: usize) -> Option<usize> {
+    bare_block_line(record, decl_line)
+        .then(|| record.block_at(decl_line).map(|block| block.end))
+        .flatten()
 }
 
 /// A line as the scan read it: inside its docstring's delimiters where it is a
@@ -294,6 +311,8 @@ pub(crate) fn record_lead(
     let own_marker = (!is_md && !in_docstring)
         .then(|| own_line_marker(scan_line, lexical))
         .flatten();
+    // §FS-declarations.line.block-comment: the envelope `today_slices` reads such a block with.
+    let record_envelope = bare_declaration_block_end(record, declaration_line).is_some();
     let mut sink = TodaySink::new(ShowRenderMode::Default, false);
     for lineno in site_line + 1..=lead_end {
         let (scan_line, in_docstring, closes) = scanned(record, lineno);
@@ -301,11 +320,11 @@ pub(crate) fn record_lead(
             break;
         }
         let markdown_heading = is_md || in_docstring;
-        sink.lines.push(clean_envelope_line(
-            scan_line,
-            markdown_heading,
-            own_marker.as_deref(),
-        ));
+        sink.lines.push(if record_envelope {
+            comment_envelope(scan_line, &BlockForm::Block).to_string()
+        } else {
+            clean_envelope_line(scan_line, markdown_heading, own_marker.as_deref())
+        });
     }
     sink.finish().0
 }

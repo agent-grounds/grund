@@ -4,7 +4,7 @@ use std::path::Path;
 use crate::config::{Config, fmt_excluded};
 use crate::grammar::{
     DocstringContent, DocstringCursor, FmtDirectives, MarkdownBlocks, MarkdownLine,
-    declaration_id_on_line, id_token_end_at, is_inside_inline_code,
+    bare_block_lines, declaration_id_on_source_line, id_token_end_at, is_inside_inline_code,
     is_inside_markdown_link_destination, never_rewrite_context_in, string_literal_in,
 };
 use crate::sources::canonical_snapshot_path;
@@ -189,6 +189,8 @@ pub(super) fn line_is_rewritable(
     // §FS-fmt.2.5.2.1: every file starts with the rewrite on — a region never
     // carries across files, so the walk starts at the top of this one.
     let mut directives = FmtDirectives::new(config.lexical(), is_md);
+    // §FS-declarations.line.block-comment: `rewrite_file`'s bare block lines, read the same way.
+    let bare_block = bare_block_lines(text, is_md, is_py, config.lexical());
     for (index, line) in text.lines().enumerate() {
         let block = if is_md {
             markdown_blocks.line(line)
@@ -222,10 +224,11 @@ pub(super) fn line_is_rewritable(
             // §FS-check.1.1.5.1: a raw-text HTML block holds no declaration heading.
             return directives.rewriting()
                 && (!block.may_be_heading()
-                    || declaration_id_on_line(
+                    || declaration_id_on_source_line(
                         &config.grammar,
                         docstring.text_of(line),
                         docstring.is_docstring(),
+                        bare_block.get(index).copied().unwrap_or(false),
                         is_md,
                     )
                     .is_none());

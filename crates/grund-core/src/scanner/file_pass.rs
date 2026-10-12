@@ -33,7 +33,7 @@ use super::extents::assign_extents;
 use super::qualified_citations::{
     scan_fallback_qualified_citations, scan_workspace_qualified_pass,
 };
-use super::record::{HeadingLine, walk_blocks, zone_of};
+use super::record::{HeadingLine, bare_block_line, walk_blocks, zone_of};
 use super::section_record::record_section_heading;
 use super::tree::heading_level_for_line;
 use super::unclosed_wrapper::UnclosedWrappers;
@@ -127,6 +127,9 @@ pub(super) fn scan_file_text(
     let mut py_docstring = PythonDocstringScanState::default();
     let mut wrappers = UnclosedWrappers::new(schema, frame, is_md);
     let mut current: Option<Declaration> = None;
+    // §FS-declarations.line.block-comment: `current` was found on a bare block line, so its
+    // block's bare headings are read at their own depth, as the record reads them.
+    let mut current_bare = false;
     // A marker enables value authority in any scanned document (§FS-values.1),
     // and a declared chapter is recognized in the same source doc-comments
     // (§FS-values.2.5); unopted trees gain no extra read (§FS-values.9).
@@ -192,18 +195,29 @@ pub(super) fn scan_file_text(
             source_value_context,
         );
 
+        // §FS-declarations.line.block-comment: a bare line of a closed `/* … */` block is in
+        // declaration position, read as a docstring line is, where the comment reading finds none.
+        let bare_block = !is_md && !scan.in_py_docstring && bare_block_line(&record, lineno);
         let mut declared = false;
         if heading_position
-            && let Some(caps) =
+            && let Some((caps, bare)) =
                 declaration_captures(grammar, scan_line, scan.in_py_docstring, is_md)
+                    .map(|caps| (caps, false))
+                    .or_else(|| {
+                        bare_block
+                            .then(|| declaration_captures(grammar, scan_line, true, is_md))
+                            .flatten()
+                            .map(|caps| (caps, true))
+                    })
             && let Some(id) = parse_id(&caps, grammar)
         {
             close_declaration(&mut current, findings);
+            current_bare = bare;
             // §FS-declarations.line.configured-slug: the matched delimiter belongs to the tail.
             let tail = &scan_line[caps.name("id").unwrap().end()..];
             let (is_stub, defined_in, title) = stub_and_title(tail, is_md && in_docs);
             let heading_level =
-                heading_level_for_line(scan_line, is_md || scan.in_py_docstring, &caps);
+                heading_level_for_line(scan_line, is_md || scan.in_py_docstring || bare, &caps);
             record.headings.push(heading.record(
                 &record,
                 heading_level,
@@ -253,10 +267,18 @@ pub(super) fn scan_file_text(
         // near-miss pattern whether it looked like one, here rather than in a second read of the
         // tree — the scan has the line, the position rules and the fence/docstring state.
         if structure
-            && let Some((text, format, kind)) =
+            && let Some(((text, format, kind), bare)) =
                 near_miss_heading(grammar, scan_line, scan.in_py_docstring, is_md)
+                    .map(|miss| (miss, false))
+                    .or_else(|| {
+                        bare_block
+                            .then(|| near_miss_heading(grammar, scan_line, true, is_md))
+                            .flatten()
+                            .map(|miss| (miss, true))
+                    })
         {
             close_declaration(&mut current, findings);
+            current_bare = bare;
             findings.near_miss_headings.push(NearMissHeading {
                 file: path.to_path_buf(),
                 line: lineno,
@@ -269,7 +291,7 @@ pub(super) fn scan_file_text(
                 .unwrap_or(0);
             let (is_stub, defined_in, title) =
                 stub_and_title(&scan_line[token_end..], is_md && in_docs);
-            let heading_level = if is_md || scan.in_py_docstring {
+            let heading_level = if is_md || scan.in_py_docstring || bare {
                 scan_line
                     .trim_start()
                     .chars()
@@ -313,11 +335,14 @@ pub(super) fn scan_file_text(
             .then(|| grammar.section_re.captures(scan_line))
             .flatten();
         let recognized_section = section_caps.as_ref().and_then(section_path).is_some();
+        // §FS-declarations.line.block-comment: under a declaration a bare line opened, a bare
+        // `## 1. Sub` is as deep as its own `#` run, so it is that declaration's section `.1`.
+        let markdown_depth = is_md || scan.in_py_docstring || (bare_block && current_bare);
         // §AR-scanner.2.8.1: every heading the loop meets, settled once the bodies are known.
         if let Some(caps) = section_caps.as_ref()
             && let Some(sec) = section_path(caps)
         {
-            let level = heading_level_for_line(scan_line, is_md || scan.in_py_docstring, caps);
+            let level = heading_level_for_line(scan_line, markdown_depth, caps);
             let path = Some(sec.to_string());
             record
                 .headings
@@ -341,6 +366,7 @@ pub(super) fn scan_file_text(
                 sec,
                 scan_line,
                 &scan,
+                markdown_depth,
                 is_md,
                 lineno,
                 embedded_marker,

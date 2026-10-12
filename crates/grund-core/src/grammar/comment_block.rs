@@ -1,8 +1,12 @@
 use std::path::Path;
 
+use super::Grammar;
 use super::near_miss::declaration_id_on_line;
 use super::settings::LexicalSettings;
-use super::source_line::{PythonDocstringScanState, SourceScanLine, source_scan_line};
+use super::source_line::{
+    BlockCommentScanState, PythonDocstringScanState, SourceScanLine, source_scan_line,
+};
+use crate::model::Id;
 
 /// One comment block, classified: what opens it, where a docstring closes it,
 /// whether it declares an ID, and whether the language it is written in calls it
@@ -18,7 +22,11 @@ use super::source_line::{PythonDocstringScanState, SourceScanLine, source_scan_l
 #[derive(Clone)]
 pub(crate) enum CommentBlockKind {
     Line(String),
-    Block,
+    /// A `/* … */` block, and whether its `*/` was found: only a closed block has
+    /// bare lines in declaration position (§FS-declarations.line.block-comment).
+    Block {
+        closed: bool,
+    },
     PythonDocstring,
 }
 
@@ -28,7 +36,7 @@ fn comment_block_kind(line: &str, lexical: LexicalSettings<'_>) -> Option<Commen
         return None;
     }
     if lexical.comment_prefixes.iter().any(|prefix| prefix == "/*") && trimmed.starts_with("/*") {
-        return Some(CommentBlockKind::Block);
+        return Some(CommentBlockKind::Block { closed: false });
     }
     line_comment_marker(trimmed, lexical.comment_prefixes).map(CommentBlockKind::Line)
 }
@@ -44,7 +52,7 @@ pub(crate) fn line_comment_block_marker(
 ) -> Option<String> {
     match comment_block_kind(line, lexical)? {
         CommentBlockKind::Line(marker) => Some(marker),
-        CommentBlockKind::Block | CommentBlockKind::PythonDocstring => None,
+        CommentBlockKind::Block { .. } | CommentBlockKind::PythonDocstring => None,
     }
 }
 
@@ -109,12 +117,12 @@ pub(crate) fn comment_blocks(
             index += 1;
             continue;
         }
-        let Some(kind) = comment_block_kind(lines[index], lexical) else {
+        let Some(mut kind) = comment_block_kind(lines[index], lexical) else {
             index += 1;
             continue;
         };
         let start = index;
-        let end = match &kind {
+        let end = match &mut kind {
             CommentBlockKind::Line(marker) => {
                 let mut end = index;
                 while end + 1 < lines.len()
@@ -129,11 +137,17 @@ pub(crate) fn comment_blocks(
                 }
                 end
             }
-            CommentBlockKind::Block => {
+            // §AR-scanner.4.4: the block's span is the line reader's block state, which
+            // opens on this line and closes at the first `*/` after the opener.
+            CommentBlockKind::Block { closed } => {
+                let mut state = BlockCommentScanState::default();
                 let mut end = index;
-                while end + 1 < lines.len() && !lines[end].contains("*/") {
+                let mut step = state.advance(lines[end]);
+                while !step.closes && end + 1 < lines.len() {
                     end += 1;
+                    step = state.advance(lines[end]);
                 }
+                *closed = step.closes;
                 end
             }
             CommentBlockKind::PythonDocstring => unreachable!("handled by the shared reader"),
@@ -144,9 +158,63 @@ pub(crate) fn comment_blocks(
     blocks
 }
 
+/// Whether `line` is a bare line of a `/* … */` block: no ` * ` gutter and no
+/// opener, in a block whose `*/` is found (`closed`). Such a line is in
+/// declaration position, read as a docstring line is, with no prefix
+/// (§FS-declarations.line.block-comment); in an unclosed block it is not. The
+/// scanner's gates, `show`'s reading of the declaration it opens, and `fmt` all
+/// ask this of the spans `comment_blocks` walked, so they agree on every line.
+pub(crate) fn is_bare_block_line(line: &str, closed: bool) -> bool {
+    let trimmed = line.trim_start();
+    closed && !trimmed.starts_with('*') && !trimmed.starts_with("/*")
+}
+
+/// For every line of a source file, whether it is a bare block line
+/// (`is_bare_block_line`), read off the blocks `comment_blocks` walks — what a
+/// reader without the scanner's file record replays (§FS-declarations.line.block-comment).
+/// A Markdown file has no comment blocks, so no line of it is one.
+pub(crate) fn bare_block_lines(
+    text: &str,
+    is_md: bool,
+    is_py: bool,
+    lexical: LexicalSettings<'_>,
+) -> Vec<bool> {
+    if is_md {
+        return Vec::new();
+    }
+    let lines = text.lines().collect::<Vec<_>>();
+    let mut bare = vec![false; lines.len()];
+    for (start, end, kind) in comment_blocks(&lines, is_py, lexical) {
+        if let CommentBlockKind::Block { closed } = kind {
+            for (flag, line) in bare[start..=end].iter_mut().zip(&lines[start..=end]) {
+                *flag = is_bare_block_line(line, closed);
+            }
+        }
+    }
+    bare
+}
+
+/// The ID a source line declares, read in comment position first and, on a bare
+/// block line, as a docstring line is (§FS-declarations.line.block-comment): one
+/// order every re-reader of a declaration line shares with the scanner's gate.
+pub(crate) fn declaration_id_on_source_line(
+    grammar: &Grammar,
+    line: &str,
+    in_py_docstring: bool,
+    bare_block: bool,
+    is_md: bool,
+) -> Option<(Id, usize)> {
+    declaration_id_on_line(grammar, line, in_py_docstring, is_md).or_else(|| {
+        bare_block
+            .then(|| declaration_id_on_line(grammar, line, true, is_md))
+            .flatten()
+    })
+}
+
 pub(crate) fn block_declares_id(
     lines: &[&str],
     in_py_docstring: bool,
+    closed_block: bool,
     lexical: LexicalSettings<'_>,
 ) -> bool {
     let mut py_docstring = PythonDocstringScanState::default();
@@ -162,10 +230,11 @@ pub(crate) fn block_declares_id(
                 assigned_data_span: None,
             }
         };
-        declaration_id_on_line(
+        declaration_id_on_source_line(
             lexical.grammar,
             scan.text.as_ref(),
             scan.in_py_docstring,
+            is_bare_block_line(line, closed_block),
             false,
         )
         .is_some()
@@ -292,7 +361,7 @@ pub(crate) fn block_is_doc_comment(
                 (marker == "///" && !first.starts_with("////")) || marker == "//!"
             }
             // `/**/` is the empty block comment, not a Javadoc opener.
-            CommentBlockKind::Block => {
+            CommentBlockKind::Block { .. } => {
                 (first.starts_with("/**") && !first.starts_with("/**/")) || first.starts_with("/*!")
             }
             CommentBlockKind::PythonDocstring => false,

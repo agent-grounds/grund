@@ -308,6 +308,7 @@ pub(super) fn inline_citation_sites(
             && !block_declares_id(
                 block,
                 recorded.form == BlockForm::Docstring,
+                recorded.form == BlockForm::Block && recorded.closed,
                 frame.compiled.lexical(schema),
             )
         {
