@@ -157,14 +157,14 @@ That cache is not the cargo cache's. Its key is
 `<os>-node-target-v2-1.95.0-<Cargo.lock hash>`: the runner's OS, a version to
 bump when what it holds must be thrown away, the binding toolchain, and the lock
 file, with the same key less its hash as the restore prefix. A key of its own is
-what makes it save at all: `actions/cache` saves nothing on an exact hit of its
-primary key, and the cargo cache's key already hits whenever `Cargo.lock` has not
-changed, so a path added to it would never be written. It holds the release
+what makes it save at all: an entry is never overwritten, so a save to a primary
+key that already has one saves nothing, and the cargo cache's key already hits
+whenever `Cargo.lock` has not changed, so a path added to it would never be written. It holds the release
 binding's and the dev builds' compiled dependencies and no incremental state;
 `v2` is the bump that came with the dev builds of [§AR-ci.3.4.1.1](AR-ci.md#3411-one-release-build-and-every-build-on-one-line), whose
 dependencies an entry saved before them does not hold and, on an exact hit,
 would never save.
-It cannot leave that state out, because `actions/cache` archives a listed
+It cannot leave that state out, because a cache archives a listed
 directory whole, so the builds never write it: the CLI builds with
 `CARGO_INCREMENTAL=0`, and so do the dev builds of the binding, the release
 build is not incremental, and a fresh
@@ -486,9 +486,9 @@ from the workflow rather than from a list of its own ([§AR-ci.1.2](AR-ci.md#12-
 ### 13.4 Cache keys are per job
 
 Every job still restores the cargo cache and builds what it needs. No two jobs
-on one operating system share a cache key: `actions/cache` saves nothing on an
-exact hit of its key, so the first job to save a shared key would fix what every
-other one restores, and theirs would never be saved. A key names its job, as
+on one operating system share a cache key: an entry is never overwritten, and a
+save to a key that already has one saves nothing, so the first job to save a
+shared key would fix what every other one restores, and theirs would never be saved. A key names its job, as
 `${{ github.job }}` or a literal does; a restore prefix may still fall back to
 another job's entries, because reading one overwrites nothing. The Node
 target's cache of [§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build-target) is the job's that runs the Node acceptance.
@@ -499,6 +499,38 @@ target's cache of [§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build
 each `matrix.os` list, and holds the workflow to [§AR-ci.13.1](AR-ci.md#131-one-job-per-language), [§AR-ci.13.2](AR-ci.md#132-the-required-check-is-an-aggregate) and
 [§AR-ci.13.4](AR-ci.md#134-cache-keys-are-per-job); it runs its checks against fixture workflows too, so a check that
 can no longer fail is caught.
+
+### 13.6 Only a push to main saves a cache
+
+Every cache is restored on every event, and saved only by a push to
+`refs/heads/main`. A run restores from its own ref or the default branch's and
+nowhere else, so an entry saved from `refs/pull/<n>/merge`, from a merge queue's
+`gh-readonly-queue/main/pr-<n>-<sha>`, from a tag or from a dispatch is never read
+again; it only counts against the repository's 10 GB limit, and the forge makes
+room for it by evicting the oldest entries, which are main's. That is what kept
+every pull-request and queue run from finding main's exact key, so each one fell
+back to a partial match, rebuilt, and saved gigabytes nobody reads. When this was
+written the caches stood at 13.6 GB, 11.5 GB of it on such refs.
+
+So no workflow under `.github/workflows/` uses the combined `actions/cache`, which
+saves on every event its workflow runs on. Each cache is an `actions/cache/restore`
+step with no event guard, and an `actions/cache/save` step after the work, with the
+same path and key, guarded by `github.event_name == 'push' && github.ref ==
+'refs/heads/main'` on the step or its job. The rule is the same in `release.yml`
+and `pre-release-checks.yml`, whose runs come from tags and dispatches: there the
+guard is never true, and the caches they read are main's. Keys stay per job
+([§AR-ci.13.4](AR-ci.md#134-cache-keys-are-per-job)).
+
+What main saves fits under the limit with room for a second set while a changed
+`Cargo.lock` waits for the old entries to age out. So a cargo cache holds the
+registry, the git checkouts and the dependencies' compiled artifacts, and not the
+workspace crates' own artifacts, which every run rebuilds from its own sources,
+nor incremental state: a workflow that caches cargo sets `CARGO_INCREMENTAL: 0`,
+as the Node target's builds already do ([§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build-target)).
+
+`tests/integration/test_ci_cache_saves.py` reads every workflow as text and holds
+it to this point, and it runs its checks against fixture workflows too, so a check
+that can no longer fail is caught.
 
 ## requirements: What CI's wall clock and its log hold to
 
