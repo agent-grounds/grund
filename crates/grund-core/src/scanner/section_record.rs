@@ -69,6 +69,7 @@ pub(super) fn record_section_heading(
                 valid: true,
                 origin,
             }),
+        relative: false,
     };
     // §AR-scanner.2.2.3: a path is recorded once, by the first heading that claims it; later
     // claimants go to `duplicate_sections` so §FS-declarations.checks.duplicate-section can name

@@ -89,6 +89,9 @@ pub struct LspDeclaration {
     pub text: String,
     pub query_id: String,
     pub section_separator: String,
+    /// The hover's title token where it is not `text`: a relative heading's
+    /// canonical path with its title kept (§FS-lsp.1.2.4).
+    pub hover_text: Option<String>,
 }
 
 /// The exact span of a title a finding is anchored on (§FS-lsp.1.1.1).

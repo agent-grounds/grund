@@ -96,7 +96,13 @@ pub(super) fn section_range_parts(
     {
         return (value.column, value.source_slice.clone());
     }
-    let (column, mut text) = heading_span_parts(&decl.file, info.line, section, sources);
+    // §FS-lsp.1.2.4: a relative heading's range is the `.<component>` it writes.
+    let needle = match section.rsplit_once('.') {
+        Some((_, last)) if info.relative => format!(".{last}"),
+        _ if info.relative => format!(".{section}"),
+        _ => section.to_string(),
+    };
+    let (column, mut text) = heading_span_parts(&decl.file, info.line, &needle, sources);
     if info.value_root.is_some()
         && let Some(marker) = text.rfind(&format!(" {EMBEDDED_VALUE_MARKER}"))
     {

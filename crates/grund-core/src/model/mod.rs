@@ -50,7 +50,10 @@ pub use e2e::{E2eCase, E2eSpecRef};
 pub use expected::{Expected, ExpectedEntrypoint, ExpectedSection};
 pub(crate) use failure::OperationContext;
 pub use failure::OperationDiagnostic;
-pub use headings::{NearMissHeading, SectionHeadingOutsideDeclaration, UnmarkedHeading};
+pub use headings::{
+    NearMissHeading, RelativeHint, RelativeSectionParent, SectionHeadingOutsideDeclaration,
+    UnmarkedHeading,
+};
 pub(crate) use line_owners::{FileLineOwnership, OwnerRun, RangeOwnership, SectionRun};
 pub use records::{
     Catalog, Citation, Declaration, DocCommentBlock, FileHeading, FileStructure, Id,

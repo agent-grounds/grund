@@ -23,6 +23,9 @@ pub(super) fn merge_findings(target: &mut Catalog, mut source: Catalog) {
         .unmarked_headings
         .append(&mut source.unmarked_headings);
     target
+        .relative_section_parents
+        .append(&mut source.relative_section_parents);
+    target
         .legacy_citation_candidates
         .append(&mut source.legacy_citation_candidates);
     target

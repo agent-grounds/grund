@@ -79,6 +79,7 @@ mod managed_block;
 mod markdown_blocks;
 mod near_miss;
 mod never_rewrite;
+mod relative_heading;
 mod section_paths;
 mod settings;
 mod shorthand;
@@ -137,6 +138,9 @@ pub(crate) use never_rewrite::{
     DocstringContent, DocstringCursor, bare_token_in_never_rewrite_zone, in_escape_position,
     is_escaped, is_inside_inline_code, is_inside_markdown_link_destination, never_rewrite_context,
     never_rewrite_context_in, qualified_suppressed_in_source, string_literal_in,
+};
+pub(crate) use relative_heading::{
+    expand_relative_heading, relative_heading_form, relative_heading_hint,
 };
 pub(crate) use section_paths::path_at_or_under;
 pub(crate) use settings::{AliasGrammar, GrammarKind, LexicalSettings, require_kinds};

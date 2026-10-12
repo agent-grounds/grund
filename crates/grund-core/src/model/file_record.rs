@@ -65,8 +65,12 @@ pub(crate) struct RecordedHeading {
     /// Its rendered text's bytes in the file text (§FS-declarations.heading.rendered-text):
     /// no opening `#` run, no closing sequence, no surrounding whitespace.
     pub(crate) text: Range<usize>,
-    /// The section path parsed off it, if any.
+    /// The section path parsed off it, if any: for a relative heading, the
+    /// canonical path its parent supplied (§FS-declarations.section.relative).
     pub(crate) path: Option<String>,
+    /// Written `.<component>` and resolved against its parent; its path is
+    /// canonical and not the bytes the line carries.
+    pub(crate) relative: bool,
     pub(crate) kind: HeadingKind,
     /// On a declaration or an accepted section: the last line of its body
     /// (§FS-declarations.body, §AR-scanner.2.4.4); `0` on any other heading.

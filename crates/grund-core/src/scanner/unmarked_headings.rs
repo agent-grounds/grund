@@ -1,6 +1,8 @@
 use std::collections::BTreeMap;
 
-use crate::model::{Catalog, FileRecord, UnmarkedHeading, UnmarkedHeadingCandidate};
+use super::relative_sections::usable_section;
+use crate::grammar::relative_heading_hint;
+use crate::model::{Catalog, FileRecord, RelativeHint, UnmarkedHeading, UnmarkedHeadingCandidate};
 
 /// Retain only Markdown headings owned by a declaration body, choose the
 /// nearest nested owner, and assign deterministic unused section paths
@@ -68,6 +70,30 @@ pub(super) fn assign_unmarked_heading_owners(
             line: candidate.line,
             path: suggested_path.clone(),
         });
+        // §FS-declarations.checks.unmarked-heading.2.1: a dotted heading is shown the
+        // relative form, where the suggested coordinate's parent could hold one.
+        let relative_hint = candidate
+            .title
+            .starts_with('.')
+            .then_some(())
+            .and_then(|()| {
+                let parent = suggested_path.rsplit_once('.').map(|(parent, _)| parent);
+                let decl = findings
+                    .declarations
+                    .values()
+                    .flatten()
+                    .find(|decl| decl.line == *body_start)?;
+                parent
+                    .is_none_or(|parent| usable_section(decl, *body_end, parent))
+                    .then(|| RelativeHint {
+                        parent: parent.unwrap_or_default().to_string(),
+                        heading: relative_heading_hint(
+                            candidate.heading_level,
+                            &suggested_path,
+                            &candidate.title,
+                        ),
+                    })
+            });
         findings.unmarked_headings.push(UnmarkedHeading {
             file: candidate.file,
             line: candidate.line,
@@ -77,6 +103,7 @@ pub(super) fn assign_unmarked_heading_owners(
             title: candidate.title,
             owner: owner.clone(),
             suggested_path,
+            relative_hint,
         });
     }
 

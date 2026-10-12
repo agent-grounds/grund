@@ -144,6 +144,7 @@ pub(super) fn enroll_json_member(
                 heading_level: 2,
                 value,
                 value_root: None,
+                relative: false,
             },
         );
     }

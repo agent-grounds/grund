@@ -34,6 +34,7 @@ use super::qualified_citations::{
     scan_fallback_qualified_citations, scan_workspace_qualified_pass,
 };
 use super::record::{HeadingLine, bare_block_line, walk_blocks, zone_of};
+use super::relative_sections::resolve_relative_sections;
 use super::section_record::record_section_heading;
 use super::tree::heading_level_for_line;
 use super::unclosed_wrapper::UnclosedWrappers;
@@ -46,7 +47,7 @@ use crate::config::{Frame, Schema};
 use crate::grammar::{
     DocstringContent, MarkdownBlocks, MarkdownLine, PythonDocstringScanState, atx_heading_text,
     bare_token_in_never_rewrite_zone, declaration_captures, near_miss_heading, parse_id,
-    qualified_suppressed_in_source, section_path, source_scan_line,
+    qualified_suppressed_in_source, relative_heading_form, section_path, source_scan_line,
 };
 use crate::model::{
     Catalog, Citation, Declaration, DeclarationSource, FileRecord, FileText, HeadingKind, Id,
@@ -150,6 +151,7 @@ pub(super) fn scan_file_text(
     // recognition happen in this same fence-aware pass. Plain ATX headings wait until body spans
     // are known before becoming reportable candidates.
     let mut unmarked_heading_candidates = Vec::new();
+    let mut relative_heading_candidates = Vec::new();
     let mut total_lines = 0usize;
     // §FS-values.3.1.1.1: a literal that closed the line before, held for one line.
     let mut split = None;
@@ -383,14 +385,20 @@ pub(super) fn scan_file_text(
             let heading = line.trim_end().trim_start().to_string();
             let title = atx_heading_text(trimmed, heading_level).to_string();
             let column = line.find('#').unwrap_or(0) + 1;
-            unmarked_heading_candidates.push(UnmarkedHeadingCandidate {
+            let candidate = UnmarkedHeadingCandidate {
                 file: path.to_path_buf(),
                 line: lineno,
                 column,
                 heading,
                 heading_level,
                 title,
-            });
+            };
+            // §FS-declarations.section.relative.form: its parent is known once the file is.
+            if relative_heading_form(&candidate.title).is_some() {
+                relative_heading_candidates.push(candidate);
+            } else {
+                unmarked_heading_candidates.push(candidate);
+            }
         }
         if embedded_marker.is_some()
             && !embedded_marker_attached
@@ -574,6 +582,16 @@ pub(super) fn scan_file_text(
 
     close_declaration(&mut current, findings);
     record.total_lines = total_lines;
+    if !relative_heading_candidates.is_empty() {
+        resolve_relative_sections(
+            findings,
+            &mut record,
+            relative_heading_candidates,
+            grammar.named_sections,
+            &mut unmarked_heading_candidates,
+        );
+        unmarked_heading_candidates.sort_by_key(|candidate| candidate.line);
+    }
     // §AR-scanner.2.8.2: every declaration's and section's extents, on every run.
     assign_extents(&mut record, findings);
 

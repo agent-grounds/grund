@@ -24,6 +24,34 @@ pub struct UnmarkedHeading {
     pub title: String,
     pub owner: Id,
     pub suggested_path: String,
+    /// For a dotted heading whose suggested coordinate has a usable parent, the
+    /// relative heading that declares it (§FS-declarations.checks.unmarked-heading.2.1).
+    pub relative_hint: Option<RelativeHint>,
+}
+
+/// The clause a dotted unmarked heading's message appends: the parent's path
+/// (empty for the declaration) and the relative heading written under it
+/// (§FS-declarations.checks.unmarked-heading.2.1).
+pub struct RelativeHint {
+    pub parent: String,
+    pub heading: String,
+}
+
+/// A well-formed relative heading that declares nothing because no usable
+/// parent sits one level above it (§FS-declarations.checks.relative-section-parent).
+/// `written` is the `#` run, a space and the `.<component>`; `under` the path of
+/// the nearest usable heading shallower than the parent it needed, empty for
+/// the declaration. `column` and `heading` are the authored heading, the span an
+/// editor underlines (§FS-lsp.1.1).
+pub struct RelativeSectionParent {
+    pub file: PathBuf,
+    pub line: usize,
+    pub column: usize,
+    pub heading: String,
+    pub owner: Id,
+    pub written: String,
+    pub needed_level: usize,
+    pub under: String,
 }
 
 /// A fence-filtered Markdown heading awaiting body ownership and coordinate

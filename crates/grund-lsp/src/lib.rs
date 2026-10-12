@@ -505,7 +505,7 @@ impl Server {
                 let usage = snapshot.title_usage(&decl.query_id, &decl.section_separator);
                 return Ok(Some(title_hover(
                     declaration_range(decl, self),
-                    &decl.text,
+                    decl.hover_text.as_deref().unwrap_or(&decl.text),
                     usage,
                     kind_title(&decl.query_id),
                 )));
