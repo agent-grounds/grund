@@ -1,0 +1,1 @@
+warning: FS-002-b at specs/b/fs-b.md:1, outside specs/a, holds the highest FS number; from grund 0.19.0 a path narrows what is reported, not what resolves, and id proposes FS-003-beta

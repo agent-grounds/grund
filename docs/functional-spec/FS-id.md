@@ -16,7 +16,7 @@ grund id <KIND> "<title>" [<path>] [--width <N>] [--explain] [--format text|json
 
 - `<KIND>` — required: a configured *citable* `[[kinds]]` entry ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)); an unknown or non-citable kind is refused ([§FS-id.1.1](FS-id.md#11-unknown-and-non-citable-kinds)).
 - `<title>` — required: a free-form title for the new declaration, slugged per [§FS-id.3](FS-id.md#3-slug-derivation).
-- `<path>` — what it scans is [§FS-scan.path.id](FS-scan.md#pathid-id-numbers-from-the-paths-tree).
+- `<path>` — what it scans, and what a narrowed one warns until grund 0.19.0, is [§FS-scan.path.id](FS-scan.md#pathid-id-numbers-from-the-paths-tree).
 - `--width <N>` — minimum digit width of the number, default `3` ([§DF-id-number-width](../decisions/functional/DF-id-number-width.md#df-id-number-width-grund-id-zero-pads-minted-numbers-to-a-default-width-of-3)), a floor rather than a cap ([§FS-id.1.2](FS-id.md#12-number-width)).
 - `--explain` — text only: also print a one-line `next:` hint on stderr ([§FS-id.2.3](FS-id.md#23---explain-text-only)). No effect in `--format json`, which already carries the `folder`.
 - `--format text|json` — output shape ([§FS-id.2](FS-id.md#2-outputs)). Default `text`.

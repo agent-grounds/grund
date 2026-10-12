@@ -1,0 +1,2 @@
+docs/api.md:3: error: unknown project alias root
+docs/api.md:1: warning: declared but never cited: API-a

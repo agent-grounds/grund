@@ -14,7 +14,7 @@ Leans on [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure)
 
 ## path: What a path argument means
 
-Every command that takes a `<path>` discovers its configuration from it ([§FS-scan.path.discovery](FS-scan.md#pathdiscovery-a-path-is-where-discovery-starts)). What the path then bounds is each command's own today: `check` reads its project's ordinary scope as well as the path ([§FS-scan.path.check](FS-scan.md#pathcheck-check-reads-more-than-it-reports)), and `cover`, `list`, `show`, `refs` and `id` each give it the meaning their own leaf below states. The commands do not yet agree, and the disagreement is listed, not settled, at [§REQ-one-answer.differences.scope](../requirements/REQ-one-answer.md#differencesscope-scope).
+Every command that takes a `<path>` discovers its configuration from it ([§FS-scan.path.discovery](FS-scan.md#pathdiscovery-a-path-is-where-discovery-starts)). What the path then bounds is each command's own today: `check` reads its project's ordinary scope as well as the path ([§FS-scan.path.check](FS-scan.md#pathcheck-check-reads-more-than-it-reports)), and `cover`, `list`, `show`, `refs` and `id` each give it the meaning their own leaf below states. The commands do not yet agree, and the disagreement is listed, not settled, at [§REQ-one-answer.differences.scope](../requirements/REQ-one-answer.md#differencesscope-scope). Until grund 0.19.0 settles it for `list`, `show` and `id`, each of them says so wherever the narrowing changes its answer ([§FS-scan.path.warning](FS-scan.md#pathwarning-where-the-path-changes-an-answer-the-run-says-so)).
 
 ### path.discovery: A path is where discovery starts
 
@@ -28,13 +28,55 @@ A run given an explicit path reads the declarations and the citations its projec
 
 Of the commands [§FS-workspace.8](FS-workspace.md#8-other-commands) covers, `cover` is the one whose `<path>` bounds a **scan** rather than choosing which config answers ([§FS-cover.1](FS-cover.md#1-inputs)), so it draws the aggregate/narrow line where `grund check` draws it and not where `list` does: a scope narrower than the config root is one narrowed scan of the enclosing project, no workspace loaded and no `project` field, the way `grund check <dir>` already behaves ([§FS-scan.projects.narrowed](FS-scan.md#projectsnarrowed-a-path-below-the-config-root-loads-no-workspace)). Widening `grund cover src/` back to every project would answer a question the caller did not ask, and an explicit path deliberately bypasses `[scan] include`, so the narrowing is the only thing that put those files in scope at all.
 
+### path.warning: Where the path changes an answer, the run says so
+
+`list`, `show` and `id` resolve within the path's tree. From grund 0.19.0 they resolve against the owning project — the one the path discovers ([§FS-scan.path.discovery](FS-scan.md#pathdiscovery-a-path-is-where-discovery-starts)), read as `check`'s resolution scope is ([§FS-scan.path.check](FS-scan.md#pathcheck-check-reads-more-than-it-reports)) — and narrow only what they report ([§DF-one-answer-rulings-run](../decisions/functional/DF-one-answer-rulings-run.md#df-one-answer-rulings-run-a-path-narrows-the-report-a-stub-reads-what-the-walk-reads-and-a-file-is-one-file-however-it-is-spelled-or-held), ruling D1). Until then each keeps today's answer, stdout and exit code byte for byte under every `--format`, and adds one `warning:` line to stderr for each place where the answer computed against the owning project differs from it. Each command's leaf below says which places those are and names the site outside the path that moves each one. Every such line ends in the same clause:
+
+```text
+; from grund 0.19.0 a path narrows what is reported, not what resolves
+```
+
+#### path.warning.shape: A text line after everything else on stderr
+
+The line is a CLI-level warning ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)): plain text on stderr under every `--format`, written after every line the run already writes there, never on stdout and never moving the exit code. `<path>` in it is the path operand as the caller wrote it; every `<file>:<line>` is rendered against the base the command's own output uses ([§FS-errors.3.1](FS-errors.md#31-one-base-for-every-path-in-the-line)). Where several sites outside the path move the same answer, the line names the first in path, then line order.
+
+#### path.warning.cost: Only a narrowed path reads more
+
+Only a path narrower than the owning project's config root can change an answer, so only such a run reads beyond the path, and it reads the owning project once ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)). A run with no path, or with one at or above its config root, reads exactly what it read before and prints no such line.
+
+#### path.warning.release: One named release, held by a test
+
+The release the clause names is one constant shared by every such line and by [§FS-scan.projects.narrowed.alias](FS-scan.md#projectsnarrowedalias-a-refused-alias-the-workspace-root-resolves-says-so), and a unit test holds it above the running version ([§FS-distribution.4.2.1](FS-distribution.md#421-a-test-can-hold-only-the-pending-half)): the release guard's closed vocabulary does not read it ([§FS-distribution.4.2.3](FS-distribution.md#423-the-vocabulary-is-closed)). The decision and its release note are [§DF-path-narrowing-warns](../decisions/functional/DF-path-narrowing-warns.md#df-path-narrowing-warns-a-path-that-narrows-what-show-list-and-id-resolve-or-what-check--resolves-an-alias-against-says-so-for-one-release).
+
 ### path.list: `list` scans the path's tree
 
 For `list`, `<path>` is the directory or file whose tree is scanned, `.` by default. Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)).
 
+The places it warns about are the catalog entries this run prints, or counts under `--summary`, that would print differently, appear or vanish when the owning project is read: an entry under the path cited from outside it changes its JSON `refs` and its `--unused` selection, and one with another home outside the path gains the duplicate note ([§FS-list.2.6](FS-list.md#26-duplicate-declarations)). The line is one per such entry, in output order, and names the site outside the path that moves it — a citation of the entry, or its other home:
+
+```text
+warning: <ID> entry depends on <file>:<line>, outside <path>; from grund 0.19.0 a path narrows what is reported, not what resolves
+```
+
+A declaration that merely lies outside the path moves nothing: from grund 0.19.0 the path still bounds which entries are reported. So `list sub` over a `sub/` that declares nothing prints nothing and warns nothing, and a text `list` row whose citations lie outside the path warns nothing either, because the text row does not show them ([§FS-list.3.1](FS-list.md#31---format-text-default)).
+
 ### path.show: `show` resolves the ID in the path's tree
 
 For `show`, `<path>` is the directory or file whose tree is scanned to resolve the ID. Defaults to `.`. Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)).
+
+Two answers change when the owning project is read, and each gains its line after today's stderr. An ID not found within the path that the project declares outside it (today `ID not found`, stdout empty, exit `1`):
+
+```text
+warning: <ID> is declared at <file>:<line>, outside <path>; from grund 0.19.0 a path narrows what is reported, not what resolves
+```
+
+And an ID found within the path that the project also declares outside it (today the body, exit `0`; then an ambiguous ID, [§FS-show.2.2.1](FS-show.md#221-ambiguous-id)):
+
+```text
+warning: <ID> is also declared at <file>:<line>, outside <path>; from grund 0.19.0 a path narrows what is reported, not what resolves
+```
+
+`<ID>` is the ID as the query wrote it, without its section. A miss the project does not resolve either moves nothing and gets no line. Under `--batch` each query gets its own line, in input order.
 
 ### path.refs: `refs` scans the path's tree
 
@@ -43,6 +85,15 @@ For `refs`, `<path>` is the directory or file whose tree is scanned, default `.`
 ### path.id: `id` numbers from the path's tree
 
 For `id`, `<path>` is the directory whose tree is scanned for the next free number; it defaults to the current directory and is resolved as by every `grund` command ([§FS-cli.3](FS-cli.md#3-cross-subcommand-flags)): config discovery walks up to `grund.toml`, else takes the defaults.
+
+The answer changes when the owning project holds a higher number of the kind outside the path, so that `id` would propose another ID, or, under a number-less format ([§FS-id.4.1](FS-id.md#41-number-less-id-formats)), declares the proposed ID outside it, so that `id` would refuse it ([§FS-id.5](FS-id.md#5-collision-check)). Each case gains its line, naming the declaration that holds the number or the ID:
+
+```text
+warning: <ID> at <file>:<line>, outside <path>, holds the highest <KIND> number; from grund 0.19.0 a path narrows what is reported, not what resolves, and id proposes <proposal>
+warning: <proposal> is already declared at <file>:<line>, outside <path>; from grund 0.19.0 a path narrows what is reported, not what resolves, and id refuses it
+```
+
+`<proposal>` is the ID `id` would print with the owning project read. Today's ID still goes to stdout and the exit stays `0`.
 
 ## projects: Which projects a run loads
 
@@ -63,6 +114,16 @@ Discovery follows the same walk-up rule as `grund check` ([§FS-config.1](FS-con
 ### projects.narrowed: A path below the config root loads no workspace
 
 `grund check <dir>` with a `<dir>` narrower than the config root is one narrowed scan of the enclosing project — no workspace loaded, no `project` field.
+
+#### projects.narrowed.alias: A refused alias the workspace root resolves says so
+
+A narrowed scan loads no workspace, so a citation qualified by a project alias is refused with `unknown project alias <alias>` ([§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)) even where the config root declares a `[workspace]` that resolves it. From grund 0.19.0 `check <dir>` resolves each project a run from `<dir>` would see ([§DF-one-answer-rulings-run](../decisions/functional/DF-one-answer-rulings-run.md#df-one-answer-rulings-run-a-path-narrows-the-report-a-stub-reads-what-the-walk-reads-and-a-file-is-one-file-however-it-is-spelled-or-held), ruling D14). Until then, where the workspace the config root declares resolves the alias, the finding keeps its whole message as a verbatim prefix in every output shape and appends one clause ([§FS-errors.3](FS-errors.md#3-message-text)):
+
+```text
+unknown project alias <alias>; grund check from the workspace root resolves this alias, and from grund 0.19.0 grund check <path> will too
+```
+
+`<path>` is the path operand as the caller wrote it. Code, severity, location, the other findings and the exit code do not move. An alias the workspace root does not resolve either keeps today's message unchanged, and so does a member run ([§FS-workspace.5.1](FS-workspace.md#51-a-member-run)): a member directory still means a member run, from grund 0.19.0 as today.
 
 ### projects.kinds: Whose kinds a run reads
 
