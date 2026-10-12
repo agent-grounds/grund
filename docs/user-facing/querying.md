@@ -41,6 +41,14 @@ error: numbered chapter subjects can detach when headings move; accepted selecto
 hint: grund show --batch --toc expands each selected unit into its sections
 ```
 
+In a workspace, the projects a selector or `--kind` reads each answer for their
+own kinds ([§FS-scan.projects.kinds](../functional-spec/FS-scan.md#projectskinds-whose-kinds-a-run-reads)). A `KIND.NAME` selector follows the
+`[id] named_sections` setting of the project that configures `KIND`, not the
+root's. So when member `api` turns named sections on, `list --selector API.terms`
+lists the same `terms` chapters that `grund api/API-a.terms` shows. A kind
+configured with `citable = false` is refused as a kind that declares no IDs,
+naming its home, rather than as an unknown kind.
+
 To reach `requirements.1`, select the named chapter and expand it with
 `grund show --batch --toc --format json`, as the next section does.
 

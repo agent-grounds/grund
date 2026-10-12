@@ -272,11 +272,8 @@ fn read(
     if let Some(refusal) = quantified(title, split.map(|(subject, ..)| subject), vocabulary) {
         return Err(refusal);
     }
-    // Stage 3, the conjunction (§FS-rule-refusals.sentences.conjunction): clauses
-    // joined by `and` are refused before any more of the subject is read. A
-    // wildcard subject fails stage 2 first, and keeps this refusal as its prefix
-    // through the window of §FS-errors.3.8. Without a conjunction stage 5 refuses
-    // the wildcard with the same parser, so nothing else moves.
+    // Stage 3 (§FS-rule-refusals.sentences.conjunction); a wildcard subject failed
+    // stage 2 first and keeps this reason as its prefix until §FS-errors.3.8 closes.
     if let Some(forms) = conjunction_forms(sentence) {
         let refusal = refuse("conjunctions are not accepted", Form::Many(forms, "and"));
         let wildcard = split.and_then(|(subject, ..)| section_wildcard(subject, vocabulary));
