@@ -95,7 +95,7 @@ fn excluded_entry<'a>(path: &Path, exclude: &'a [String]) -> Option<&'a str> {
 /// stub's target, which until grund 0.19.0 is a warning and not a verdict
 /// (§FS-declarations.stubs.target.3, §FS-declarations.checks.excluded-stub-target).
 /// Asked as the walk asks it, from the config root in place of `include` and from each
-/// of `roots`, so a root that reads the target outruns the rule (§FS-scan.scope.roots);
+/// of `roots`, so a root that reads the target outruns the rule (§AR-scanner.1.7);
 /// the config root's answer names the rule. A target outside the config root is no
 /// reason, and nor is a hidden directory, another project or an unwalked home
 /// (§AR-scanner.1.13).

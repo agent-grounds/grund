@@ -290,6 +290,7 @@ fn issue_49_check_help_exposes_the_sorted_public_code_catalog() {
         "empty-citation-obligation",
         "empty-scan",
         "escaped-citation-resolves",
+        "excluded-stub-target",
         "forbidden-citation",
         "full-scope-ignored",
         "glob-citation",
