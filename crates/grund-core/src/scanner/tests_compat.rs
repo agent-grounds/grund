@@ -3,7 +3,8 @@
 //! gives the answer 0.18.0 keeps byte for byte, and beside it the record already
 //! holds the answer 0.19.0 gives instead: the body end (P01, P10, D17a), the
 //! section end (P07, P12), the lead a doc-comment heading cuts (P02, P03) and a
-//! `--toc` title (closing hashes, D17d).
+//! `--toc` title (closing hashes, D17d). P02 and P03 also hold the two readings
+//! the parse-moves warning compares today's answer with.
 
 use std::path::{Path, PathBuf};
 
@@ -11,7 +12,9 @@ use crate::config::Config;
 use crate::model::{Catalog, FileRecord, HeadingKind, ShowRenderMode};
 use crate::testing::{legacy_fs_folder_config, scan_findings, test_root, write};
 
-use super::compat::{TodayOwnerEnds, TodaySink, TodaySite, today_slices};
+use super::compat::{
+    TodayOwnerEnds, TodaySink, TodaySite, becomes_section, record_lead, today_slices,
+};
 
 fn scan(name: &str, file: &str, lines: &[&str]) -> (Config, Catalog, PathBuf) {
     let root = test_root(name);
@@ -220,6 +223,8 @@ fn p02_today_toc_lists_a_bare_block_line() {
     assert_eq!(sections, vec![("1".to_string(), "Sub".to_string(), 1)]);
     assert_eq!(heading(record, 6).kind, HeadingKind::Rejected);
     assert_eq!(heading(record, 2).lead_end, 9);
+    // The line 0.19.0 makes section 1 (§FS-declarations.checks.parse-moves.2).
+    assert!(becomes_section(record, heading(record, 6), 1));
 }
 
 /// P03: today `--toc` lists `/// # 1. Sub` under a `///` declaration and the
@@ -248,6 +253,11 @@ fn p03_today_a_same_level_heading_cuts_the_lead() {
     assert_eq!(sections, vec![("1".to_string(), "Sub".to_string(), 1)]);
     assert_eq!(heading(record, 5).kind, HeadingKind::Rejected);
     assert_eq!(heading(record, 1).lead_end, 7);
+    // 0.19.0's lead runs past it, and it is no section then either
+    // (§FS-declarations.checks.parse-moves.2).
+    let lead = record_lead(record, 1, 1, 7, config.lexical());
+    assert_eq!(lead, "Gamma body.\n\n# 1. Sub\n\nSub body.\n");
+    assert!(!becomes_section(record, heading(record, 5), 1));
 }
 
 /// D17d: today a `///` heading's trailing `*/` is dropped from its `--toc`
