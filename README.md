@@ -20,7 +20,7 @@ Trim surrounding whitespace.
 Cite it from the code in <a href="examples/quickstart/repo/src/login.py"><code>src/login.py</code></a>
 <pre lang="python">
 def clean_username(username):
-    """&#167;FS-login.format"""
+    &#35; &#167;FS-login.format
     return username.strip()
 </pre>
 </td>

@@ -33,11 +33,11 @@ an ID and a named `format` section:
 Trim surrounding whitespace.
 ```
 
-[`src/login.py`](repo/src/login.py) cites that section in its docstring:
+[`src/login.py`](repo/src/login.py) cites that section in a comment above the line it governs:
 
 ```python
 def clean_username(username):
-    """§FS-login.format"""
+    # §FS-login.format
     return username.strip()
 ```
 
