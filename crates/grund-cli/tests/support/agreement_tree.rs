@@ -3,6 +3,7 @@
 //! entrypoint, and the answers read off as exit codes, stderr lines and JSON rows.
 
 use serde_json::Value;
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
@@ -101,4 +102,18 @@ pub fn agree<T: PartialEq + std::fmt::Debug>(what: &str, one: T, other: T) -> Ve
     } else {
         Err(format!("{what}: {one:?} against {other:?}"))
     }
+}
+
+/// The steps of #576 a deferred row or a widening may name: the ids of
+/// `tests/integration/one_answer_steps.toml`, the one list of the live steps
+/// (§REQ-one-answer.proof), read off its `id = "…"` lines.
+pub fn listed_steps() -> BTreeSet<String> {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/integration/one_answer_steps.toml");
+    let text = fs::read_to_string(path).expect("read one_answer_steps.toml");
+    text.lines()
+        .filter_map(|line| line.strip_prefix("id = \""))
+        .filter_map(|rest| rest.strip_suffix('"'))
+        .map(str::to_string)
+        .collect()
 }
