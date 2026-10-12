@@ -335,6 +335,35 @@ fn a_missing_section_is_not_linked_where_the_link_takes_no_anchor() {
     assert_every_case_passed("no-anchor missing section", &outcomes);
 }
 
+/// §FS-languages.fence.comment-block: grund#641's tree, a heading inside a fence in a
+/// `///`, `/** */` or docstring block is no section on any surface, while a citation in
+/// the fence stays live and an unclosed fence ends with its own comment block.
+#[test]
+fn a_fenced_heading_in_a_doc_comment_is_not_a_section() {
+    let root = repo_root();
+    let cases = root.join("tests/e2e/cases");
+    let outcomes = [
+        "toc",
+        "block-toc",
+        "docstring-toc",
+        "full",
+        "refs-json",
+        "check-missing",
+        "check-level",
+        "check-duplicate",
+        "fmt",
+        "citation-live",
+        "unclosed-ends-with-block",
+    ]
+    .iter()
+    .map(|name| {
+        let case = cases.join(format!("doc-comment-fenced-heading-{name}"));
+        run_case(&root, &case, E2e)
+    })
+    .collect::<Vec<_>>();
+    assert_every_case_passed("doc-comment fenced heading", &outcomes);
+}
+
 /// Completion scripts participate in the same two independent runs as every
 /// immutable case, so their bytes are stable across invocations (§FS-completions.3).
 #[test]
