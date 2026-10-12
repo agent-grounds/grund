@@ -12,9 +12,12 @@
 //!   failure (§FS-rules.2, §FS-rule-refusals.selectors).
 //!
 //! `DEFERRED` names the properties today's code cannot be asked, each with the
-//! step of #576 that makes it askable: `parse(render(r)) == r` needs a renderer
-//! of a parsed rule, `--kind K` ⇔ `Each K` one kind universe per run, and the
-//! coordinate-lexer differential one lexer to compare against.
+//! step of #576 that makes it askable, listed live in
+//! `tests/integration/one_answer_steps.toml` (§REQ-one-answer.proof). It is empty:
+//! `--kind K` ⇔ `Each K` is asked by `kind_verdict_agreement.rs`, #626 left one
+//! coordinate lexer for the primitive guard to hold, and no command renders a
+//! parsed rule, so `parse(render(r)) == r` has nothing to ask that the reparse
+//! property above does not.
 
 use super::RuleAnchor;
 use super::sentence::{RuleVocabulary, parse_rule, parse_selector};
@@ -23,17 +26,14 @@ use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 /// The properties no test can ask yet, and the step that makes each askable.
-const DEFERRED: &[(&str, &str)] = &[
-    ("parse(render(r)) == r", "#599"),
-    ("--kind K accepted <=> Each K accepted", "#599"),
-    ("one coordinate lexer, differential over a corpus", "#599"),
-];
+const DEFERRED: &[(&str, &str)] = &[];
 
 /// Known violations: `(property, input)`, each a row the step it names closes.
 /// Seeded from today's code; a row whose violation is gone fails.
 const LEDGER: &[(&str, &str)] = &[
     // §REQ-one-answer.differences.identity G06: the rule refuses `each` as a fixed word
-    // in the wrong case, the selector as a literal subject; #599 gives both one grammar.
+    // in the wrong case, the selector as a literal subject; S1 fixes it as
+    // §DF-one-answer-rulings-grammar rules.
     ("rule <=> selector", "each FS: two failures"),
 ];
 
@@ -227,12 +227,26 @@ fn the_ledger_fails_on_a_new_violation_and_on_a_stale_row() {
     );
 }
 
+/// The ids of `tests/integration/one_answer_steps.toml`, the one list of the live
+/// steps of #576 (§REQ-one-answer.proof), read off its `id = "…"` lines.
+fn listed_steps() -> BTreeSet<String> {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/integration/one_answer_steps.toml");
+    let text = std::fs::read_to_string(path).expect("read one_answer_steps.toml");
+    text.lines()
+        .filter_map(|line| line.strip_prefix("id = \""))
+        .filter_map(|rest| rest.strip_suffix('"'))
+        .map(str::to_string)
+        .collect()
+}
+
 #[test]
 fn every_deferred_property_names_its_step() {
+    let steps = listed_steps();
     for (property, step) in DEFERRED {
         assert!(
-            ["#599"].contains(step),
-            "{property} names no step that makes it askable"
+            steps.contains(*step),
+            "{property} names no step listed in one_answer_steps.toml: {step}"
         );
     }
 }

@@ -1,106 +1,97 @@
 # The primitive guards' allowlist (test_primitive_guards.py): every production
 # file of grund-core that uses a guarded primitive outside its owners today, the
-# primitives it uses, and the step of agent-grounds/grund#576 that removes them:
-# #595 one run, one read; #596 one parse; #597 stubs; #598 fmt and the editor on
-# the record; #599 one grammar. Seeded from the code at 53e981e6e9; it only shrinks.
+# primitives it uses, and either the step of agent-grounds/grund#576 that removes
+# them, listed live in one_answer_steps.toml, or the decision record that keeps
+# them (`ruling`). Seeded from the code at 53e981e6e9; it only shrinks.
 #
-# Disk reads and config loads go to #595's one read, line predicates to #596's one
-# parse, and both to #598 where the reader is the formatter or the editor. Every
-# `split on /` row goes to #599, which gives the alias splitter its one home; the
-# pattern cannot tell a path split from an alias split, so config/workspace_block.rs
-# and config/v1/scan_block.rs, which split member and exclude paths, are rows until
-# #599 narrows the pattern to the alias grammar it owns.
+# S1 gives the four hand-rolled alias splits their one home in grammar/ids.rs, S2
+# reads declaration headings and citations off the file record instead of
+# re-parsing them, and S3 has fmt read through sources and the run's scope. The
+# alias lexer in config/citations.rs and config/workspace_block.rs is an owner of
+# `split on /` (PRIMITIVES), not a row.
 #
 # A writer owns the disk calls it makes to write (WRITERS in PRIMITIVES): it is an
 # owner because it is the one that writes, not because no run reads its output.
-# What a writer reads it asks sources for since #595, so the guard, which sees a
-# file and not a call, can let a writer's file own its writes: fetch_install.rs,
-# init.rs and init_block.rs are WRITERS. fetch_write.rs still parses headings with
-# its own declarations_at_depth, which is #596's.
+# What a writer reads it asks sources for, so the guard, which sees a file and not
+# a call, can let a writer's file own its writes: fetch_install.rs, init.rs and
+# init_block.rs are WRITERS.
+#
+# `exempt` holds the three hits of the `split on /` pattern that split something
+# other than a coordinate, each with its reason. The test refuses a fourth.
 
 [[allow]]
 file = "api/complete_ids.rs"
 primitives = ["split on /"]
-step = "#599"
+step = "S1"
 
 [[allow]]
 file = "api/fmt.rs"
 primitives = ["canonicalize", "std::fs"]
-step = "#598"
+step = "S3"
 
 [[allow]]
 file = "checker/index.rs"
 primitives = ["declaration_id_on_line"]
-step = "#596"
+step = "S2"
 
 [[allow]]
 file = "checker/index_mention.rs"
 primitives = ["citation_re", "declaration_id_on_line"]
-step = "#596"
-
-[[allow]]
-file = "checker/references.rs"
-primitives = ["split on /"]
-step = "#599"
-
-[[allow]]
-file = "config/citations.rs"
-primitives = ["split on /"]
-step = "#599"
-
-[[allow]]
-file = "config/v1/scan_block.rs"
-primitives = ["split on /"]
-step = "#599"
-
-[[allow]]
-file = "config/workspace_block.rs"
-primitives = ["split on /"]
-step = "#599"
+step = "S2"
 
 [[allow]]
 file = "queries/editor_hover.rs"
 primitives = ["split on /"]
-step = "#599"
+step = "S1"
 
 [[allow]]
 file = "queries/editor_on_type.rs"
 primitives = ["declaration_id_on_line"]
-step = "#598"
+step = "S2"
 
 # The selectors.rs row moved here with the old first-`/` split, which the
 # §FS-rules.7.9 ramp keeps to tell a newly matched site; it goes with the ramp.
 [[allow]]
 file = "rules/engine/ramp.rs"
 primitives = ["split on /"]
-step = "#599"
+ruling = "DF-nested-alias-rule-targets"
 
 [[allow]]
 file = "rules/sentence/recovery.rs"
 primitives = ["split on /"]
-step = "#599"
+step = "S1"
 
 [[allow]]
 file = "scanner/e2e.rs"
 primitives = ["split on /"]
-step = "#599"
+step = "S1"
 
 [[allow]]
 file = "writers/fmt_links.rs"
 primitives = ["citation_re"]
-step = "#598"
+step = "S2"
 
 [[allow]]
 file = "writers/fmt_rewrite.rs"
 primitives = ["citation_re", "declaration_id_on_line"]
-step = "#598"
+step = "S2"
 
 [[allow]]
 file = "writers/fmt_tree.rs"
 primitives = ["std::fs"]
-step = "#598"
+step = "S3"
 
-[[allow]]
+[[exempt]]
+file = "checker/references.rs"
+primitives = ["split on /"]
+reason = "compares the segments of an alias path already lexed, for scope and the did-you-mean hint"
+
+[[exempt]]
+file = "config/v1/scan_block.rs"
+primitives = ["split on /"]
+reason = "names the last component of a [scan] exclude path in its error"
+
+[[exempt]]
 file = "writers/init_workspace_members.rs"
 primitives = ["split on /"]
-step = "#599"
+reason = "renames the last segment of a built alias path for init --name"
