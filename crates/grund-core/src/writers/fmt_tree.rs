@@ -98,7 +98,7 @@ pub(crate) struct FmtRunOpts<'a> {
 /// which may live anywhere in the project tree, so workspace mode reuses the
 /// caller's whole-project findings — the `WorkspaceContext` scan, no second disk
 /// pass per project — and falls back to a strict project scan otherwise. That
-/// fallback preserves §FS-fmt.6.2 for `grund fmt --cross-refs path/to/file.md`,
+/// fallback preserves the link target (§AR-system.2.10) for `grund fmt --cross-refs path/to/file.md`,
 /// where the caller's findings are scope-narrow and a cross-file home would
 /// otherwise be invisible. A shorthand needs the same declaration set, but only
 /// where the tree actually contains one, and paying for a scan on every run of

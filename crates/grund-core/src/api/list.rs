@@ -138,7 +138,7 @@ fn list_run(
             if opts.unused_only && id.kind == "E2E" && !opts.kind_filter.contains("E2E") {
                 continue;
             }
-            // §FS-declarations.stubs.verdict: the declarations every command counts. A
+            // §AR-scanner.4.6: the declarations every command counts. A
             // stub whose target declares the ID twice is one row, and two declarations
             // (§FS-declarations.stubs.pairing.2).
             let paired = paired_declarations(decls);

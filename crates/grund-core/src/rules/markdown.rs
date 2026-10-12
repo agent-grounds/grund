@@ -41,7 +41,7 @@ pub(crate) fn adapt_markdown(
 /// same engine handles local, pinned, and any-member object selectors without
 /// learning resolver records (§FS-rules.2, §AR-rules.3). An ID's declarations, its
 /// nodes, the edges into it and the sections a citation of it reaches are read off
-/// each stub's verdict (§FS-declarations.stubs.verdict).
+/// each stub's verdict (§AR-scanner.4.6).
 pub(crate) fn adapt_workspace(
     selected: &str,
     projects: &[(&str, &Catalog, MarkdownProject<'_>)],
@@ -81,7 +81,7 @@ pub(crate) fn adapt_workspace(
                 format!("{alias}/{bare_label}")
             };
             // A healthy Markdown stub and its inline declaration are one declaration once
-            // paired (§FS-declarations.stubs.verdict): one node, so relations share it
+            // paired (§AR-scanner.4.6): one node, so relations share it
             // (§FS-rules.5.1).
             let paired = paired_declarations(homes);
             for (ordinal, home) in paired.stand_ins().enumerate() {
@@ -162,7 +162,7 @@ pub(crate) fn adapt_workspace(
                 continue;
             };
             // A stub whose target declares the ID twice stands for two declarations, so
-            // its ID is ambiguous here as it is to `check` (§FS-declarations.stubs.verdict).
+            // its ID is ambiguous here as it is to `check` (§AR-scanner.4.6).
             if paired_declarations(target_homes).len() != 1 {
                 // Unknown and ambiguous targets retain their ordinary resolver
                 // findings but never become logical edges (§FS-rules.5.1).
@@ -176,13 +176,13 @@ pub(crate) fn adapt_workspace(
             };
             // §FS-rules.5.1: a resolved section that is no rule unit counts for its nearest
             // named ancestor chapter, or else its declaration. It resolves where `check`
-            // finds it, a stub's in its target, scanned or not (§FS-declarations.stubs.verdict).
+            // finds it, a stub's in its target, scanned or not (§AR-scanner.4.6).
             let (target, newly_counted) = match citation.section.as_ref() {
                 Some(section) => {
                     let Some(home) = section_home(target_findings, &citation.id, section) else {
                         continue;
                     };
-                    // §FS-declarations.stubs.verdict: mint from the record the verdict holds.
+                    // §AR-scanner.4.6: mint from the record the verdict holds.
                     if let SectionHome::Unscanned(home) = home
                         && minted_homes.insert((target_alias.to_string(), citation.id.clone()))
                     {

@@ -146,8 +146,7 @@ pub(crate) fn parse_ad_hoc_with_workspace(
 }
 
 /// `schema` is the one whose kinds the subject is read against, so it is the
-/// one whose kinds a refusal that offers no form lists (§FS-rule-refusals.sentences.named-sections,
-/// §FS-rule-refusals.sentences.rewrite.no-form).
+/// one whose kinds a refusal that offers no form lists (§AR-rules.1).
 fn parse_ad_hoc_with_vocabulary(
     schema: &Schema,
     sentence: &str,
@@ -164,7 +163,7 @@ fn parse_ad_hoc_with_vocabulary(
         &vocabulary,
     )
     .map_err(|error| {
-        // §FS-rule-refusals.sentences.rewrite.no-form: no form, and a kind is missing, so the kinds
+        // §AR-rules.1: no form, and a kind is missing, so the kinds
         // follow.
         if error.unrecovered {
             anyhow::anyhow!(

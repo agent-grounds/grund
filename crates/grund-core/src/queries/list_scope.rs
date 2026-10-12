@@ -55,10 +55,10 @@ pub(crate) fn check_list_scope(
         .collect::<BTreeSet<_>>();
     let vocabulary = RuleVocabulary {
         kinds,
-        // A selector names no object (§FS-rule-refusals.selectors).
+        // A selector names no object (§AR-rules.1).
         objects: KindTable::default(),
         named_sections: table.named_sections(scope),
-        // §FS-rule-refusals.selectors: `KIND.NAME` reads named sections under the
+        // §AR-rules.1: `KIND.NAME` reads named sections under the
         // project that configures `KIND`.
         named_kinds: table
             .named_section_kinds(scope)
@@ -73,7 +73,7 @@ pub(crate) fn check_list_scope(
             .map(|project| project.config.section_separator.clone())
             .collect(),
     };
-    // §FS-rule-refusals.selectors: a refusal recovering no kind ends in `known kinds:`.
+    // §AR-rules.1: a refusal recovering no kind ends in `known kinds:`.
     parse_selector(raw, &vocabulary)
         .map(Some)
         .map_err(|refusal| selector_refusal(refusal.render(&table.known_kinds_line(scope))))

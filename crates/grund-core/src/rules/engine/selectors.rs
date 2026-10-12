@@ -1,4 +1,4 @@
-//! Subject selectors and the fact joins that answer them (§FS-rules.2,
+//! Subject selectors and the fact joins that answer them (§AR-rules.2,
 //! §FS-rules.5.1): which units a subject denotes, which declarations a target
 //! set names, using shared snapshot indexes (§AR-rules.3.1, §FS-rules.5.3).
 //! Nothing here decides a finding — the families in `engine.rs` do — so one
@@ -10,7 +10,7 @@ use super::index::FactIndex;
 use crate::config::{NamespaceMatch, parse_citation_target_entry};
 use std::collections::BTreeSet;
 
-/// Indexed selectors retain their original relation order (§FS-rules.2, §FS-rules.5.3).
+/// Indexed selectors retain their original relation order (§AR-rules.2, §FS-rules.5.3).
 pub(super) fn select_subjects(
     subject: &RuleSubject,
     facts: &RuleFacts,
@@ -29,7 +29,7 @@ pub(super) fn select_subjects(
             .flatten()
             .map(|node| (*node).clone())
             .collect(),
-        // §FS-rules.2.1, §FS-rules.5.2: `chapter_handle` joins the whole path, and
+        // §AR-rules.2, §FS-rules.5.2: `chapter_handle` joins the whole path, and
         // `owns` keeps a chapter at any depth under a declaration of the kind.
         // The path bucket is already in chapter-fact order.
         RuleSubject::ChapterOfKind { kind, name } => index
@@ -76,7 +76,7 @@ pub(super) fn target_nodes(
 /// A declaration kind matches a target entry split at its last `/` exactly as a
 /// citation is (§FS-config.3.9.3), so a target pinned at the rule's own member by
 /// its whole alias path, nested or not, matches what the bare kind matches
-/// (§FS-rules.2).
+/// (§AR-rules.2).
 pub(super) fn target_kind_matches(targets: &RuleTargets, kind: &str, facts: &RuleFacts) -> bool {
     let RuleTargets::Kinds { values, .. } = targets else {
         return false;

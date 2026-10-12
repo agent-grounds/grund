@@ -141,7 +141,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// site parenthetically in the message. This keeps the report's `path:line:`
 /// prefix invariant (§AR-checker.3, §FS-check.2.1) while still naming all sites. The
 /// declarations are the ones `paired_declarations` derives from each stub's verdict
-/// (§FS-declarations.stubs.verdict, §AR-scanner.4.6): a stub and the inline declaration it
+/// (§AR-scanner.4.6): a stub and the inline declaration it
 /// points at count as one, not two — whether or not the walk reached that declaration, and
 /// however many stubs point at it — and a declaration a stub stands for is named at its
 /// target (§FS-declarations.stubs.pairing.1, §FS-declarations.stubs.pairing.2,
@@ -174,14 +174,14 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// declaration's recorded sections. Where the walk recorded only a stub of the ID,
 /// the lookup goes on to the stub's target, scanned or not (§FS-check.3.2.1),
 /// through the target's record the stub's verdict holds
-/// (§FS-declarations.stubs.verdict, §AR-resolver.5). Missing → one error at the
+/// (§AR-scanner.4.6, §AR-resolver.5). Missing → one error at the
 /// citation site.
 ///
 /// ### 2.5 Broken inline-spec stubs (§FS-declarations.checks.broken-stub)
 ///
 /// For each declaration whose H1 has the stub shape `# <ID>: [<text>](<path>)`
 /// (description after the colon is a single bare markdown link), report the verdict
-/// the scan recorded on the stub (§FS-declarations.stubs.verdict, §AR-scanner.4.6): a
+/// the scan recorded on the stub (§AR-scanner.4.6): a
 /// target that is missing draws `stub link target missing`, and one the scan does not
 /// read, or that does not declare the ID, draws `stub link target lacks <ID>` — one
 /// error at the stub site.
@@ -190,7 +190,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// through (§FS-declarations.checks.broken-stub.4), and the verdict is the one a save
 /// would give, a hidden or unlisted name judged as the stub wrote it and a heading
 /// inside a fence or a raw-text HTML block declaring nothing
-/// (§FS-declarations.stubs.target.1, §FS-declarations.stubs.target.2,
+/// (§AR-scanner.4.6, §FS-declarations.stubs.target.2,
 /// §FS-check.1.1.5.1, §FS-declarations.stubs.target.3).
 ///
 /// ### 2.6 Unused declarations (§FS-check.4.1)
@@ -362,7 +362,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// enrollment's exact destination are facts about the line, not the citation
 /// record. Ordinary in-folder entries still require only the wrapper shape; only
 /// external enrollment compares the destination to the one `fmt` derives
-/// (§FS-fmt.6.2, §DF-index-entry-form.2.7), and that destination arrives as
+/// (§AR-system.2.10, §DF-index-entry-form.2.7), and that destination arrives as
 /// `Expected`'s index target for the (index file, ID) pair (§AR-checker.1.3):
 /// the anchor profile is presentation's, and this pass only looks it up.
 ///
@@ -462,7 +462,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// - The optional LSP server (§AR-lsp) can run a subset of checks (e.g., only
 ///   dangling references on the active file's citations) against a cached scan.
 /// - Tests can feed synthetic `Catalog` directly to the checker without disk I/O.
-/// The text every pass measures is the run's (§FS-scan.text.buffer): the editor's
+/// The text every pass measures is the run's (§AR-system.2.13): the editor's
 /// buffers where the run carries any, so §FS-declarations.checks.oversized-lead
 /// measures the live text, and the disk otherwise.
 ///

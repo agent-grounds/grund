@@ -15,7 +15,7 @@ use crate::resolver::WorkspaceCheckTarget;
 /// workspace catalog as ordinary citations, and compares only one valid,
 /// unique target: a numbered component, or a root's whole component run. A target
 /// is unique where its ID has one declaration once its stubs are paired by their
-/// verdicts (§FS-declarations.stubs.verdict).
+/// verdicts (§AR-scanner.4.6).
 pub(super) fn check_values(
     findings: &Catalog,
     schema: &Schema,
@@ -155,7 +155,7 @@ pub(super) fn binding_aim<'a>(
     binding: &'a ValueBinding,
 ) -> BindingAim<'a> {
     // §FS-values.5.1: compared as if a stub's target were scanned
-    // (§FS-declarations.stubs.verdict).
+    // (§AR-scanner.4.6).
     let homes = declarations_as_scanned(findings, &binding.id);
     let declaration = match homes[..] {
         [home] => Some(home),
@@ -375,7 +375,7 @@ pub(crate) fn binding_target_has_any_value_authority(
 
 /// The record of every declaration of `id` once its stubs are paired by their
 /// verdicts, a stub's read from its target outside the walk
-/// (§FS-declarations.stubs.verdict): the value authority an attempt is classified by
+/// (§AR-scanner.4.6): the value authority an attempt is classified by
 /// and `fmt` protects, as it would be were the target scanned (§FS-values.3.1.1,
 /// §FS-values.8).
 fn declarations_as_scanned<'a>(findings: &'a Catalog, id: &Id) -> Vec<&'a Declaration> {

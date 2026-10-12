@@ -162,7 +162,7 @@ pub(crate) fn judge(
 /// except E2E cases, which are proof artifacts, not citation targets. An
 /// index entry is not an inbound citation (§DF-index-not-an-inbound-citation).
 /// The warning sits at the first stand-in of the ID's declarations once its stubs
-/// are paired by their verdicts (§FS-declarations.stubs.verdict).
+/// are paired by their verdicts (§AR-scanner.4.6).
 fn check_unused(
     findings: &Catalog,
     frame: Frame<'_>,

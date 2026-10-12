@@ -35,7 +35,7 @@ use crate::sources::{canonical_path, physical_path_key};
 /// home (a stub's target) and the `none` profile both get a bare file link.
 /// `None` if the ID does not resolve (§FS-fmt.6.4), `None` for a broken stub and
 /// for an ID with more than one declaration once its stubs are paired
-/// (§FS-fmt.6.4.2, §FS-declarations.stubs.verdict), and `None` for a `.<section>`
+/// (§FS-fmt.6.4.2, §AR-scanner.4.6), and `None` for a `.<section>`
 /// citation of a section the declaration does not have, whether or not the link
 /// takes a heading anchor (§FS-fmt.6.4.1).
 ///
@@ -137,7 +137,7 @@ pub(crate) fn markdown_link_target_with_root(
     path_root: Option<&Path>,
 ) -> Option<String> {
     // §FS-fmt.6.4.2: only an ID with one declaration, not a broken stub, is linked, read
-    // off the verdict the scan recorded on each stub (§FS-declarations.stubs.verdict).
+    // off the verdict the scan recorded on each stub (§AR-scanner.4.6).
     let sole = paired_declarations(findings.declarations.get(id)?).sole()?;
     if sole.is_broken_stub() {
         return None;

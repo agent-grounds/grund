@@ -8,7 +8,7 @@
 //! refs (§FS-refs.4), without making a citation query read a declaration body.
 //! Both read what a stub points at off the verdict the scan recorded on it, whether
 //! or not the walk reached the target (§FS-show.2.3.7, §AR-scanner.4.6), and decide
-//! nothing about the stub themselves (§FS-declarations.stubs.verdict).
+//! nothing about the stub themselves (§AR-scanner.4.6).
 //!
 //! Three files left when §AR-system.2.10 became a component, all one fact: a
 //! declaration's body sliced by the spans a scan recorded is a function of the

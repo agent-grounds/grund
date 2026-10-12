@@ -22,7 +22,7 @@
 //! names one either (§AR-system.4). `MarkdownLineCitation` is where one marked citation
 //! starts and ends on a line, plus what it parsed to: a lexical fact the
 //! formatter's link pass, its shorthand pass and the scanner's off-grammar pass
-//! each record and only the link pass reads (§FS-fmt.6.2).
+//! each record and only the link pass reads (§AR-system.2.1).
 
 use anyhow::{Result, anyhow};
 
@@ -262,7 +262,7 @@ fn split_loose_section(token: &str) -> (&str, Option<&str>) {
 /// starts, where the token ends, the project alias it named if it was qualified
 /// (§FS-workspace.1), and what it parsed to. Three passes record these — the
 /// formatter's link pass, its accepted-shorthand pass (§FS-fmt.2.4) and the
-/// scanner's off-grammar pass (§FS-config.3.2) — and the wrapper of §FS-fmt.6.2
+/// scanner's off-grammar pass (§FS-config.3.2) — and the `--cross-refs` wrapper (§AR-system.2.1)
 /// reads them, which is why the record is here rather than with any one of them.
 pub(crate) struct MarkdownLineCitation {
     pub(crate) marker_start: usize,

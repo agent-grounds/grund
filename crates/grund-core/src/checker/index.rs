@@ -172,7 +172,7 @@ impl IndexEntryState {
 
 /// The declaration a finding about `id` points at — the same home `grund list`
 /// and the unused warning pick, so a collapsed stub-and-inline pair is named at
-/// the body rather than twice (§FS-declarations.stubs.verdict, §DF-index-entry-form.2.5).
+/// the body rather than twice (§AR-scanner.4.6, §DF-index-entry-form.2.5).
 fn index_home_declaration(decls: &[Declaration]) -> Option<&Declaration> {
     paired_declarations(decls).stand_ins().next()
 }

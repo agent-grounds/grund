@@ -11,7 +11,7 @@ use crate::resolver::point_body_pair;
 /// pass only applies the configured strict threshold and constructs the fixed
 /// warning, keeping CLI and LSP on the same checker path. The sites are the
 /// stand-ins of each ID's declarations once its stubs are paired by their verdicts
-/// (§FS-declarations.stubs.verdict).
+/// (§AR-scanner.4.6).
 pub(super) fn check_oversized_leads(
     findings: &Catalog,
     schema: &Schema,

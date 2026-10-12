@@ -48,7 +48,7 @@ pub(crate) fn show_declaration(
 ///
 /// Which record that is, and whether the ID is refused instead, is the one
 /// pairing of its declarations by the verdict the scan recorded on each stub
-/// (§FS-declarations.stubs.verdict): nothing here reads a stub's target.
+/// (§AR-scanner.4.6): nothing here reads a stub's target.
 pub(crate) fn show_declaration_with_home<'a>(
     config: &Config,
     path_config: &Config,

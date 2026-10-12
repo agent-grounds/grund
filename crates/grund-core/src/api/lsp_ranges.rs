@@ -53,14 +53,14 @@ pub(super) fn lsp_target_for_citation(
     if citation.local_section && citation.section.is_some() {
         return None;
     }
-    // §FS-declarations.stubs.verdict: the first declaration's record, where the
+    // §AR-scanner.4.6: the first declaration's record, where the
     // scan found it, whether or not the walk reached its file.
     let first = paired_declarations(decls).iter().next()?.record;
     Some((first.file.clone(), first.line))
 }
 
 /// Where a stub navigates: the first record its verdict found at the target
-/// (§FS-declarations.stubs.verdict); a stub whose verdict holds no record has no
+/// (§AR-scanner.4.6); a stub whose verdict holds no record has no
 /// destination.
 pub(super) fn lsp_target_for_stub(stub: &Declaration) -> Option<(PathBuf, usize)> {
     let Some(StubResolution::Declares(records)) = &stub.stub_resolution else {

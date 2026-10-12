@@ -170,7 +170,7 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                     );
                 }
             }
-            // §FS-declarations.stubs.verdict: a title for each stand-in of the ID's paired
+            // §AR-scanner.4.6: a title for each stand-in of the ID's paired
             // declarations, and a stub title for each stub that only points at one.
             let paired = paired_declarations(decls);
             let mut stand_ins: Vec<&Declaration> = paired.stand_ins().collect();
