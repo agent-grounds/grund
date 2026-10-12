@@ -5,7 +5,7 @@
 //! `show` prints (§FS-section-lock.holds.fingerprint) and a citation's target is
 //! the resolver's answer (§AR-system.2.10).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 use super::point_body::point_body_pair;
@@ -238,13 +238,16 @@ fn judge_entries<'a>(
             chosen.insert(entry.section.as_str(), index);
         }
     }
+    // Read before the loop takes entries out of `cited`: a second line of one
+    // coordinate is still a line of a cited one.
+    let was_cited: BTreeSet<&str> = cited.keys().copied().collect();
     let mut verdicts = Vec::new();
     for (index, entry) in lines.entries.iter().enumerate() {
         let section = entry.section.as_str();
         let held = decl
             .and_then(|decl| decl.sections.get(section))
             .is_some_and(|info| info.relative);
-        let verdict = match (current(section), held && cited.contains_key(section)) {
+        let verdict = match (current(section), held && was_cited.contains(section)) {
             _ if chosen.get(section) != Some(&index) => EntryVerdict::Drop,
             // A text no slice could read is no evidence of an edit or a move.
             (None, true) => EntryVerdict::Keep,
