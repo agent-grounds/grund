@@ -158,11 +158,6 @@ primitives = ["split on /"]
 step = "#599"
 
 [[allow]]
-file = "scanner/tree.rs"
-primitives = [".is_file()"]
-step = "#595"
-
-[[allow]]
 file = "scanner/value_json.rs"
 primitives = [".is_file()", "input_read_"]
 step = "#595"

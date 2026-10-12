@@ -4,6 +4,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::e2e::{e2e_cases_folder, e2e_id_from_case_dir_name};
+use super::read_predicate::Unread;
 use super::walk_boundaries::{
     is_directory_symlink, is_scannable, outward_directory_link_root, owned_by_another_project,
 };
@@ -54,33 +55,15 @@ pub(super) fn scannable_walker(
             .git_exclude(false)
             .parents(false);
     }
-    // §AR-workspace.6: precompute the boundary path components once, expressed
-    // relative to the canonical scan root, so the walker filter is a single
-    // component-suffix compare — no per-entry `canonicalize`, no allocation.
-    let boundary_suffixes: Vec<PathBuf> = frame
-        .run
-        .workspace
-        .boundary_roots
-        .iter()
-        .filter_map(|root| root.strip_prefix(canonical_scan_root).ok())
-        .map(Path::to_path_buf)
-        .collect();
-    let filter = WalkDirFilter {
-        scan_root: scan_root.to_path_buf(),
-        canonical_scan_root: canonical_scan_root.to_path_buf(),
-        boundary_suffixes,
-        boundary_roots: frame.run.workspace.boundary_roots.clone(),
-        excluded: schema.sources.exclude.clone(),
-        e2e_cases_root: e2e_cases_folder(schema).map(|folder| frame.root().join(folder)),
-        physical_root: physical_root.to_path_buf(),
-        unwalked_homes: walk_pruned_home_keys(schema, frame, scan_root, physical_root),
-        root: frame.root().to_path_buf(),
-        project_roots: frame.run.workspace.project_roots.clone(),
-        id_format: schema.ids.format.clone(),
-        grammar: frame.grammar().clone(),
-        link_roots: std::sync::Arc::clone(link_roots),
-        looping_links: std::sync::Arc::clone(looping_links),
-    };
+    let filter = WalkDirFilter::new(
+        schema,
+        frame,
+        scan_root,
+        canonical_scan_root,
+        physical_root,
+        link_roots,
+        looping_links,
+    );
     builder.filter_entry(move |entry| filter.keep(entry));
     Ok(builder.build())
 }
@@ -183,7 +166,7 @@ pub(crate) fn walk_reads_any_file(schema: &Schema, frame: Frame<'_>, scan_root: 
 /// is asked about, and a prefix test then answers for the whole subtree; a link
 /// already covered by one is not recorded again, so the list holds the disjoint
 /// link subtrees and nothing more.
-struct WalkDirFilter {
+pub(super) struct WalkDirFilter {
     scan_root: PathBuf,
     canonical_scan_root: PathBuf,
     physical_root: PathBuf,
@@ -208,6 +191,47 @@ struct WalkDirFilter {
 }
 
 impl WalkDirFilter {
+    /// The filter one scan root is walked with, and the one the read predicate
+    /// asks of a single path (§AR-scanner.1.13): the same fields from the same
+    /// frame, so the two cannot prune differently.
+    pub(super) fn new(
+        schema: &Schema,
+        frame: Frame<'_>,
+        scan_root: &Path,
+        canonical_scan_root: &Path,
+        physical_root: &Path,
+        link_roots: &std::sync::Arc<std::sync::Mutex<Vec<PathBuf>>>,
+        looping_links: &std::sync::Arc<std::sync::Mutex<Vec<(PathBuf, PathBuf)>>>,
+    ) -> Self {
+        // §AR-workspace.6: precompute the boundary path components once, expressed
+        // relative to the canonical scan root, so the walker filter is a single
+        // component-suffix compare — no per-entry `canonicalize`, no allocation.
+        let boundary_suffixes: Vec<PathBuf> = frame
+            .run
+            .workspace
+            .boundary_roots
+            .iter()
+            .filter_map(|root| root.strip_prefix(canonical_scan_root).ok())
+            .map(Path::to_path_buf)
+            .collect();
+        Self {
+            scan_root: scan_root.to_path_buf(),
+            canonical_scan_root: canonical_scan_root.to_path_buf(),
+            boundary_suffixes,
+            boundary_roots: frame.run.workspace.boundary_roots.clone(),
+            excluded: schema.sources.exclude.clone(),
+            e2e_cases_root: e2e_cases_folder(schema).map(|folder| frame.root().join(folder)),
+            physical_root: physical_root.to_path_buf(),
+            unwalked_homes: walk_pruned_home_keys(schema, frame, scan_root, physical_root),
+            root: frame.root().to_path_buf(),
+            project_roots: frame.run.workspace.project_roots.clone(),
+            id_format: schema.ids.format.clone(),
+            grammar: frame.grammar().clone(),
+            link_roots: std::sync::Arc::clone(link_roots),
+            looping_links: std::sync::Arc::clone(looping_links),
+        }
+    }
+
     /// Whether the walk keeps this entry — and, for a directory, descends into
     /// it. Files are otherwise not filtered here; the extension test is the
     /// caller's.
@@ -231,56 +255,63 @@ impl WalkDirFilter {
     /// from a tree the run has just called unreadable and reads past `[scan] include`,
     /// so the link is pruned here and the report raised afterwards.
     fn keep(&self, entry: &ignore::DirEntry) -> bool {
+        let is_dir = entry.file_type().is_some_and(|t| t.is_dir());
+        self.refusal(entry.path(), entry.depth(), is_dir, entry.path_is_symlink())
+            .is_none()
+    }
+
+    /// Which rule prunes the entry at `path`, `depth` below the scan root, or
+    /// `None` where the walk keeps it: `keep` for the walk, and the read
+    /// predicate for one path the walk never meets on disk (§AR-scanner.1.13).
+    pub(super) fn refusal(
+        &self,
+        path: &Path,
+        depth: usize,
+        is_dir: bool,
+        is_link: bool,
+    ) -> Option<Unread> {
         // §FS-check.6.1.1: linked files/dirs expose targets before descent/read.
-        if entry.path_is_symlink() {
-            if !crate::config::observe_input(
-                entry.path(),
-                entry.file_type().is_some_and(|t| t.is_dir()),
-            ) {
-                return false;
-            }
+        if is_link && !crate::config::observe_input(path, is_dir) {
+            return Some(Unread::Unobserved);
         }
-        if entry.depth() == 0 {
-            return true;
+        if depth == 0 {
+            return None;
         }
         // §FS-config.3.4.7.2: a home the config lists without walking is pruned here as
         // well as left out of `kind_home_roots`, on the in-tree path the way
         // §AR-scanner.2.4.2 decides which home a file is in (§GOAL-fast-feedback).
         if !self.unwalked_homes.is_empty()
             && let Some(relative) =
-                scanned_decl_relative_path(entry.path(), &self.root, &self.physical_root)
+                scanned_decl_relative_path(path, &self.root, &self.physical_root)
             && self
                 .unwalked_homes
                 .iter()
                 .any(|home| relative.starts_with(home))
         {
-            return false;
+            return Some(Unread::UnwalkedHome);
         }
-        if !entry
-            .file_type()
-            .is_some_and(|file_type| file_type.is_dir())
-        {
-            return true;
+        if !is_dir {
+            return None;
         }
-        let path = entry.path();
-        let resolved = self.resolved_link_dir(entry);
+        let resolved = self.resolved_link_dir(path, is_link);
         let resolved = resolved.as_deref();
-        if self.crosses_a_scan_boundary(path, resolved) || is_hidden(path) {
-            return false;
+        if self.crosses_a_scan_boundary(path, resolved) {
+            return Some(Unread::AnotherProject);
+        }
+        if is_hidden(path) {
+            return Some(Unread::ExcludedDirectory);
         }
         if self.is_e2e_case_dir(path) || resolved.is_some_and(|path| self.is_e2e_case_dir(path)) {
-            return false;
+            return Some(Unread::E2eCase);
         }
-        let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
-            return true;
-        };
+        let name = path.file_name().and_then(|name| name.to_str())?;
         if self.excluded.iter().any(|item| item == name) {
-            return false;
+            return Some(Unread::ExcludedDirectory);
         }
         // §FS-config.3.5.5: a directory link whose target is at or above the walk root
         // is a loop, and the one kind the walker cannot see, so it is pruned here and
         // the report raised afterwards from `looping_links` (§AR-scanner.1.9).
-        if entry.path_is_symlink()
+        if is_link
             && let Some(resolved) = resolved
             && self.canonical_scan_root.starts_with(resolved)
         {
@@ -288,22 +319,20 @@ impl WalkDirFilter {
                 .lock()
                 .unwrap_or_else(std::sync::PoisonError::into_inner)
                 .push((path.to_path_buf(), resolved.to_path_buf()));
-            return false;
+            return Some(Unread::LoopingLink);
         }
-        true
+        None
     }
 
     /// The canonical path of a directory the walk reached **through** a symlink
     /// — the link itself, or anything below one — and `None` for a directory
     /// reached under its own name, which is the ordinary case and pays no
     /// syscall (§AR-scanner.1.3, §GOAL-fast-feedback).
-    fn resolved_link_dir(&self, entry: &ignore::DirEntry) -> Option<PathBuf> {
-        let path = entry.path();
+    fn resolved_link_dir(&self, path: &Path, is_link: bool) -> Option<PathBuf> {
         let mut link_roots = self
             .link_roots
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
-        let is_link = entry.path_is_symlink();
         let covered = link_roots.iter().any(|root| path.starts_with(root));
         if is_link && !covered {
             link_roots.push(path.to_path_buf());
