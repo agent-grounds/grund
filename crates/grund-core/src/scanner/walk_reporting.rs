@@ -12,7 +12,7 @@ use super::walk_errors::{symlink_loop_report, walk_error_report};
 use crate::config::{Frame, Schema, canonical_config_root};
 use crate::model::sort_path_key;
 use crate::sources::{
-    canonical_path, is_regular_file, path_exists, path_is_file, physical_path_key,
+    canonical_path, is_directory, is_regular_file, path_exists, path_is_file, physical_path_key,
 };
 
 /// The tree walk for the callers that ask a yes/no question about the tree and
@@ -201,10 +201,7 @@ pub(crate) fn walk_scannable_files_with_sources(
             // §FS-check.3.29.11: a directory is not a scannable file, so it falls out
             // one line below. Its path is what the unlisted-`[workspace]` rule needs,
             // and the scan root itself — the entry at depth 0 — is one of them.
-            if entry
-                .file_type()
-                .is_some_and(|file_type| file_type.is_dir())
-            {
+            if entry.file_type().is_some_and(is_directory) {
                 dirs.push(entry.path().to_path_buf());
             }
             if !entry

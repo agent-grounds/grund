@@ -1,4 +1,4 @@
-use crate::sources::{canonical_path, is_regular_file, path_exists, path_is_file};
+use crate::sources::{canonical_path, is_directory, is_regular_file, path_exists, path_is_file};
 use anyhow::{Result, anyhow};
 use ignore::WalkBuilder;
 use std::path::{Path, PathBuf};
@@ -254,7 +254,7 @@ impl WalkDirFilter {
     /// from a tree the run has just called unreadable and reads past `[scan] include`,
     /// so the link is pruned here and the report raised afterwards.
     fn keep(&self, entry: &ignore::DirEntry) -> bool {
-        let is_dir = entry.file_type().is_some_and(|t| t.is_dir());
+        let is_dir = entry.file_type().is_some_and(is_directory);
         self.refusal(entry.path(), entry.depth(), is_dir, entry.path_is_symlink())
             .is_none()
     }
