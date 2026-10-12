@@ -105,10 +105,10 @@ doc-comment, so no real citation's verdict moves.
 conditions holds.
 
 1. *Prior prohibition.* The old verdict violated [§REQ-no-wrong-citation.1](../../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution), which already applied when it shipped: a section coordinate resolved to a heading the declaration does not have, only an example of one. It has stood since doc-comment sections were recorded, and the sentence that sanctioned it since 0.10.1.
-2. *Accepted proof.* This record. The deprecation path does not fit: there is no form a user chose that the tool now refuses, only a fenced example the tool misread, and keeping it misread a release longer keeps the wrong resolution. A mechanical migration has nothing to rewrite.
+2. *Accepted proof.* This record. The deprecation path of [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) does not fit: there is no form a user chose that the tool now refuses, only a fenced example the tool misread, and keeping it misread a release longer keeps the wrong resolution. The mechanical migration of [§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) has nothing to rewrite, because the comment is right as written.
 3. *Named release.* The release note below names the move in both directions and says who sees it.
 4. *Actionable findings.* The one finding the change adds is `missing section`, at the citing line and naming the coordinate, which the author fixes by citing a section that exists.
-5. *No new licence.* No rule, finding or prohibition is new: the change reads one more line as [§FS-declarations.heading](../../functional-spec/FS-declarations.md#heading-what-a-heading-is) already said to, and the measurement in section 4 finds no tree it moves.
+5. *No new licence.* This correction is not a licence for any other move. No rule, finding or prohibition is new: the change reads one more line as [§FS-declarations.heading](../../functional-spec/FS-declarations.md#heading-what-a-heading-is) already said to, and the measurement in section 4 finds no tree it moves.
 
 ## release-note: Release note
 
@@ -119,5 +119,6 @@ conditions holds.
   longer names it as an enclosing section, and `fmt` no longer links to it. **Who this
   breaks:** a repository that cites the coordinate such a fenced line spells, which now gets
   `missing section`; the heading-level, duplicate-section and section-outside-declaration
-  errors such a line drew go away. Measured before release over grund, rhei, ephor, fissile
+  errors such a line drew go away, so the verdict moves both ways. Every finding the change
+  adds names its location, the citing line, and the fix: cite a section that exists. Measured before release over grund, rhei, ephor, fissile
   and their workspace, none of them sees a new finding.
