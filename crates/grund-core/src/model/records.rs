@@ -242,6 +242,10 @@ pub(crate) struct LegacyCitationCandidate {
     pub(crate) source_kind: String,
     pub(crate) enclosing_declaration: Option<Id>,
     pub(crate) enclosing_section: Option<String>,
+    /// Where the marker sits right after a `[` on a Markdown prose line `fmt`
+    /// reads, whether a `grund:fmt off` region holds that line; `None` elsewhere.
+    /// Promotion asks the rest of the wrap (§FS-citations.checks.unclosed-wrapper).
+    pub(crate) wrap_opener: Option<bool>,
 }
 
 /// The enclosing source-comment citation site for one citation

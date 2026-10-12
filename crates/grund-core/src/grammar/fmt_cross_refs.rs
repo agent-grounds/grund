@@ -80,10 +80,20 @@ impl CrossRefWrap {
 /// begins `](`. `fmt`, `show`'s flatten and `check`'s kind-index entry form all
 /// ask it here, so none of them can recognize a wrap the others do not.
 pub(crate) fn cross_ref_wrap(line: &str, start: usize, end: usize) -> Option<CrossRefWrap> {
-    let bytes = line.as_bytes();
-    if start == 0 || bytes.get(start - 1) != Some(&b'[') || !line.get(end..)?.starts_with("](") {
+    if start == 0 || line.as_bytes().get(start - 1) != Some(&b'[') {
         return None;
     }
+    cross_ref_wrap_after(line, end)
+}
+
+/// The half of [`cross_ref_wrap`] after the citation, for a caller that saw the
+/// `[` before it on an earlier pass: an off-grammar citation, whose end is known
+/// only once the catalog promotes it (§FS-config.3.2.6).
+pub(crate) fn cross_ref_wrap_after(line: &str, end: usize) -> Option<CrossRefWrap> {
+    if !line.get(end..)?.starts_with("](") {
+        return None;
+    }
+    let bytes = line.as_bytes();
     let url_start = end + 2;
     Some(CrossRefWrap {
         url_start,

@@ -50,6 +50,7 @@ pub(crate) fn promote_qualified_legacy_citations(projects: &mut [WorkspaceProjec
                 catalog,
                 candidate,
                 &mut project.findings.citations,
+                &mut project.findings.unclosed_wrapper_notes,
             );
         }
         sort_citations(&mut project.findings.citations);

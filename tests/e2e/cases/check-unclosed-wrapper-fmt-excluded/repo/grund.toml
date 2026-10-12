@@ -1,0 +1,24 @@
+grund_config_version = 1
+project_name = "fixture"
+
+[reference]
+marker = "§"
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "FS"
+folder = "docs/fs"
+index = false
+
+[scan]
+include = ["docs"]
+
+[fmt]
+exclude = ["docs/notes.md"]
+
+[fmt.cross_refs]
+enabled = true
+anchor_format = "github"
