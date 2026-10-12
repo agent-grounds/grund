@@ -101,6 +101,14 @@ pub(super) fn scan_file_text(
     findings: &mut Catalog,
     workspace_targets: &[WorkspaceCitationTarget],
 ) -> Result<()> {
+    // Deliberate slowdown, never to merge: proves the §AR-ci.5.2 gate fails the build.
+    let mut slow = 0u64;
+    for _ in 0..35 {
+        for byte in std::hint::black_box(text).bytes() {
+            slow = slow.wrapping_mul(31).wrapping_add(u64::from(byte));
+        }
+    }
+    std::hint::black_box(slow);
     let grammar = frame.grammar();
     let marker = &schema.citation.marker;
     let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");
