@@ -168,8 +168,8 @@ pub(crate) fn judge_section_locks<'a>(
     judgements
 }
 
-/// The one declaration `id` pairs to, which is the one its citations resolve to
-/// (§FS-declarations.stubs.verdict).
+/// The one declaration `id`'s citations resolve to, as the pairing of its stubs
+/// answers it: a cited relative address is a section of it (§FS-section-lock.terms).
 fn sole_declaration<'a>(findings: &'a Catalog, id: &Id) -> Option<&'a Declaration> {
     let sole = paired_declarations(findings.declarations.get(id)?).sole()?;
     Some(sole.record)

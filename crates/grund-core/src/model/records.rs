@@ -130,7 +130,7 @@ pub struct SectionInfo {
     /// (§FS-values.2.4, §FS-values.6.1).
     pub value_root: Option<EmbeddedValueRoot>,
     /// Written as a relative heading, `.<component>` under its parent, so its
-    /// path is the canonical one the parent supplied (§FS-declarations.section.relative).
+    /// path is the canonical one the parent supplied (§FS-terms.terms.1).
     pub relative: bool,
 }
 
