@@ -209,7 +209,7 @@ against the PR base branch ([§AR-ci.5.1](architecture/AR-ci.md#51-pull-requests
 Instruction count is a workload-cost proxy under binary/input/build assumptions,
 including PGO comparability ([§AR-benchmarks.2](architecture/AR-benchmarks.md#2-why-instruction-counts-not-wall-clock),
 [§AR-benchmarks.5](architecture/AR-benchmarks.md#5-comparing-two-revisions)); regression
-limits are not enforced ([§AR-ci.5.2](architecture/AR-ci.md#52-regression-limits)).
+limits fail the build ([§AR-ci.5.2](architecture/AR-ci.md#52-regression-limits)).
 
 ### 2. Why now
 

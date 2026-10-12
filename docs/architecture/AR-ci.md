@@ -288,7 +288,9 @@ On pull requests, the job checks out the PR base branch and runs `cargo bench -p
 
 ### 5.2 Regression limits
 
-The intended harness limits are 5% `Ir` for the generated 10k-file fixture and 12.5% `Ir` for the other hot commands, which scan the smaller generated fixtures rather than this repository's own tree ([§AR-benchmarks.1.1](AR-benchmarks.md#11-generated-fixtures-never-this-repository)). Those limits are not wired up today: the PR rerun passes no limit flag and the harness sets no `RegressionConfig`, so a regression is recorded in the summaries and compared against the baseline but does not fail the build; growth beyond those limits is the behavior the gate is intended to enforce for the [§GOAL-fast-feedback.1](../goals.md#1-performance-targets) targets.
+The harness limits are 5% `Ir` for the generated 10k-file fixture and 12.5% `Ir` for the other hot commands, which scan the smaller generated fixtures rather than this repository's own tree ([§AR-benchmarks.1.1](AR-benchmarks.md#11-generated-fixtures-never-this-repository)). They are set in the harness, not on the command line: `crates/grund-cli/benches/instructions.rs` gives the benchmark group a Callgrind `soft_limits` of 12.5% on `Ir`, and `check_large_10k` a config of its own with 5%, which replaces the group's regression config for that benchmark. The PR rerun compares the PR commit against the `main` baseline under those limits, and growth past one makes `cargo bench` exit non-zero, so the bench job fails, and the `cargo test (ubuntu-latest)` required check with it ([§AR-ci.13.2](AR-ci.md#132-the-required-check-is-an-aggregate)). That is the gate that holds the [§GOAL-fast-feedback.1](../goals.md#1-performance-targets) targets.
+
+The job first deletes `target/iai`, which the cache restores from another commit: under limits, saving the baseline or recording a push would otherwise compare against those stale counts and could fail a step that only records. A limit is raised only by a change of its own that says why, never to let one pull request through.
 
 ### 5.3 The `bench` feature
 
@@ -458,8 +460,8 @@ acceptance a second time.
 Each operating system keeps one job named `cargo test (<os>)`, the name the
 ruleset requires and the merge queue waits for, so neither changes. It runs no
 suite of its own. It `needs:` every job that runs a command of [§AR-ci.13.1](AR-ci.md#131-one-job-per-language) on
-its operating system — on Ubuntu, the pre-commit job too — and no job of
-another. That is why the language jobs are a job per operating system rather
+its operating system — on Ubuntu, the pre-commit job too, and the bench job, so
+that the limits of [§AR-ci.5.2](AR-ci.md#52-regression-limits) hold a merge — and no job of another. That is why the language jobs are a job per operating system rather
 than a matrix: a matrix job's result, as a job needing it reads it, is all its
 legs' results together, so an aggregate needing one would judge every operating
 system's suites and wait for all of them.
@@ -467,7 +469,9 @@ system's suites and wait for all of them.
 It passes only when every job it needs succeeded. Its `if:` is `always()`,
 because a job whose need failed is otherwise skipped, and a skipped required
 check counts as passed; its step then fails on any result other than
-`success`, so a need that failed, was cancelled or was skipped fails it. It runs
+`success`, so a need that failed, was cancelled or was skipped fails it. The one
+exception is the bench job's skip in a merge-queue group, where that job never
+runs ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)): the Ubuntu check accepts it there and nowhere else. It runs
 on `ubuntu-latest` whichever operating system it judges, so it takes no macOS
 slot.
 

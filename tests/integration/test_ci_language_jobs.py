@@ -34,6 +34,9 @@ RUST_CHECKS = {
     "self-check": '"check", ".", "--format", "json", "--full"',
 }
 PRE_COMMIT = "pre-commit run --all-files"
+# §AR-ci.5.2: the bench job's comparing step, which the harness's `Ir` limits fail.
+BENCH = ("cargo bench -p grund --features bench --locked --quiet --bench instructions"
+         " -- --baseline=main --save-summary=json")
 AGGREGATE = re.compile(r"cargo test \((.+)\)")
 
 
@@ -136,6 +139,11 @@ def leg_jobs(found, system):
             and any(runs(i, command) for command in wanted)]
 
 
+def bench_jobs(found):
+    """The jobs that run the bench comparison; the Ubuntu aggregate judges them (§AR-ci.13.2)."""
+    return [i for i in found if not i["aggregate"] and BENCH in i["commands"]]
+
+
 def required_check_problems(text):
     """§AR-ci.13.2: one aggregate per system, needing exactly that system's leg jobs."""
     found = instances(text)
@@ -152,7 +160,8 @@ def required_check_problems(text):
         if not aggregate["needs"]:
             problems.append(f"{name!r} aggregates no jobs (no `needs:`)")
             continue
-        expected = sorted({i["job"] for i in leg_jobs(found, system)})
+        judged = leg_jobs(found, system) + (bench_jobs(found) if system == "ubuntu-latest" else [])
+        expected = sorted({i["job"] for i in judged})
         if sorted(aggregate["needs"]) != expected:
             problems.append(f"{name!r} needs {sorted(aggregate['needs'])}, not the jobs that run "
                             f"its leg on {system}: {expected}")
@@ -182,6 +191,24 @@ def guard_problems(text):
             f"needs.{need}.result" in flat for need in aggregate["needs"])
         if not (named or compared):
             problems.append(f"{name!r} has no step that fails unless every need succeeded")
+    return problems
+
+
+def bench_guard_problems(text):
+    """§AR-ci.13.2: the Ubuntu aggregate accepts the bench job's skip in a merge-queue group only."""
+    found = instances(text)
+    benches = {i["job"] for i in bench_jobs(found)}
+    problems = []
+    for aggregate in (i for i in found if i["aggregate"] and i["system"] == "ubuntu-latest"):
+        flat = squash(aggregate["text"])
+        for job in sorted(benches & set(aggregate["needs"])):
+            if "contains(needs.*.result, 'skipped')" in flat:
+                problems.append(f"{aggregate['name']!r} fails on any skipped need, so every "
+                                f"merge-queue group, where {job!r} is skipped, fails")
+            elif not re.search(rf"needs\.{re.escape(job)}\.result == 'skipped' && "
+                               r"github\.event_name == 'merge_group'", flat):
+                problems.append(f"{aggregate['name']!r} does not limit accepting {job!r}'s skip "
+                                "to a merge-queue group")
     return problems
 
 
@@ -239,10 +266,16 @@ def leg(job_id, system, *runs_, extra=""):
     return f"  {job_id}:\n    runs-on: {system}\n{extra}    steps:\n{lines}"
 
 
-def aggregate(system, needed, guard=True, condition="always()"):
+def aggregate(system, needed, guard=True, condition="always()", bench=None):
     check = ("      - if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, "
              "'cancelled') || contains(needs.*.result, 'skipped') }}\n        run: exit 1\n"
              if guard else "      - run: echo done\n")
+    if guard and bench:
+        others = " || ".join(f"needs.{need}.result != 'success'" for need in needed)
+        check = (f"      - if: ${{{{ {others} || !(needs.{bench}.result == 'success' || "
+                 f"needs.{bench}.result == 'skipped' && github.event_name == 'merge_group') }}}}\n"
+                 "        run: exit 1\n")
+        needed = needed + [bench]
     cond = f"    if: {condition}\n" if condition else ""
     return (f"  test-{system.split('-')[0]}:\n    name: cargo test ({system})\n    runs-on: ubuntu-latest\n"
             f"    needs: [{', '.join(needed)}]\n{cond}    steps:\n{check}")
@@ -254,7 +287,8 @@ def cache(key):
 
 
 def fixture(cache_key="${{ runner.os }}-cargo-${{ github.job }}", node_rust_merged=False,
-            guard=True, condition="always()", needs_pre_commit=True):
+            guard=True, condition="always()", needs_pre_commit=True, needs_bench=True,
+            bench_skip_anywhere=False):
     """A workflow laid out as §AR-ci.13 asks, with one knob per way it can go wrong."""
     rust = list(RUST_CHECKS.values())[:3] + [SUITES["rust"]]
     selfcheck = '      - run: |\n          python - "check", ".", "--format", "json", "--full"\n'
@@ -269,7 +303,11 @@ def fixture(cache_key="${{ runner.os }}-cargo-${{ github.job }}", node_rust_merg
     text += leg("pre-commit", "ubuntu-latest", PRE_COMMIT)
     text += leg("macos", "macos-latest", *rust, SUITES["python"], SUITES["node"]) + selfcheck
     ubuntu = ["rust-ubuntu", "python-ubuntu", "node-ubuntu"] + (["pre-commit"] if needs_pre_commit else [])
-    text += aggregate("ubuntu-latest", ubuntu, guard, condition)
+    text += leg("bench", "ubuntu-latest", BENCH)
+    if bench_skip_anywhere:
+        text += aggregate("ubuntu-latest", ubuntu + ["bench"], guard, condition)
+    else:
+        text += aggregate("ubuntu-latest", ubuntu, guard, condition, "bench" if needs_bench else None)
     text += aggregate("windows-latest", ["rust-windows", "python-windows", "node-windows"], guard, condition)
     text += aggregate("macos-latest", ["macos"], guard, condition)
     return text
@@ -290,6 +328,10 @@ class LanguageJobsTests(unittest.TestCase):
         # §AR-ci.13.2
         self.assertEqual([], guard_problems(self.text))
 
+    def test_the_ubuntu_check_accepts_the_bench_skip_only_in_the_queue(self):
+        # §AR-ci.13.2, §AR-ci.5.2
+        self.assertEqual([], bench_guard_problems(self.text))
+
     def test_each_suite_runs_once_in_a_job_of_its_own(self):
         # §AR-ci.13.1
         self.assertEqual([], split_problems(self.text))
@@ -304,7 +346,8 @@ class LanguageJobsCheckTests(unittest.TestCase):
 
     def test_the_layout_asked_for_passes_every_check(self):
         text = fixture()
-        for check in (required_check_problems, guard_problems, split_problems, cache_problems):
+        for check in (required_check_problems, guard_problems, bench_guard_problems,
+                      split_problems, cache_problems):
             with self.subTest(check=check.__name__):
                 self.assertEqual([], check(text))
 
@@ -320,6 +363,12 @@ class LanguageJobsCheckTests(unittest.TestCase):
 
     def test_an_unjudged_pre_commit_job_is_caught(self):
         self.assertTrue(required_check_problems(fixture(needs_pre_commit=False)))
+
+    def test_an_unjudged_bench_job_is_caught(self):
+        self.assertTrue(required_check_problems(fixture(needs_bench=False)))
+
+    def test_a_bench_skip_refused_in_the_queue_is_caught(self):
+        self.assertTrue(bench_guard_problems(fixture(bench_skip_anywhere=True)))
 
     def test_an_aggregate_over_matrix_jobs_is_caught(self):
         text = ("jobs:\n  rust:\n    runs-on: ${{ matrix.os }}\n    strategy:\n      matrix:\n"

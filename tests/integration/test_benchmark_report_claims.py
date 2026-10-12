@@ -1,13 +1,14 @@
-"""§AR-ci.5.2 — the benchmark job records an instruction-count comparison
-against the pull request's base branch and does **not** fail the build on
-growth: "the PR rerun passes no limit flag and the harness sets no
-`RegressionConfig`". The generated report and the generator that writes it must
-say that, because a reader who believes the gate is live stops looking for the
-regression nobody blocked (§AR-benchmarks).
+"""§AR-ci.5.2 — the benchmark job compares instruction counts against the pull
+request's base branch and **fails the build** on growth past the harness's
+limits: 5% `Ir` on the generated 10k-file fixture, 12.5% on every other
+benchmark. The current copy a reader acts on — the report's current-reporting
+paragraph and the README — must name that gate, and none of it may still say the
+limits are not enforced, because a reader who believes either the wrong way
+reads a red bench job, or a green one, wrongly (§AR-benchmarks).
 
 §REQ-readme.evidence makes the report an archive: new measurements must write
-elsewhere. The existing generator guard remains, but this correction does not
-change the generator. Text detectors require factual review as well.
+elsewhere, and the archived rows stay byte for byte. Text detectors require
+factual review as well.
 """
 
 import hashlib
@@ -22,7 +23,8 @@ GENERATOR = REPO_ROOT / "scripts/local-benchmark-report.py"
 REPORT = REPO_ROOT / "docs/benchmarks.md"
 README = REPO_ROOT / "README.md"
 
-# The claim §AR-ci.5.2 contradicts, as the generator spells it today.
+# One limit stated for every benchmark, which §AR-ci.5.2 contradicts: 5% holds the
+# 10k-file fixture alone.
 FAILING_GATE_CLAIM = "fails when `Ir` grows by more than 5%"
 
 # A sentence is what a reader takes as one statement. Read on the generated
@@ -31,8 +33,7 @@ FAILING_GATE_CLAIM = "fails when `Ir` grows by more than 5%"
 SENTENCE_SPLIT = re.compile(r"(?<=\.)\s")
 FAIL_WORD = re.compile(r"\bfail(s|ed|ing|ure)?\b", re.IGNORECASE)
 
-# Saying the gate does *not* fail the build is the correction, not the
-# claim, so a negated "fail" is what §AR-ci.5.2 asks the sentence to say.
+# A negated "fail" is the denial §AR-ci.5.2 retired: the gate is live.
 NEGATED = re.compile(r"\b(not|never|no|without)\b(\s+\w+){0,2}\s*$", re.IGNORECASE)
 
 # Match positive assertions independently of a later sentence disclaiming them.
@@ -50,11 +51,12 @@ NEGATED_GATE = re.compile(
 )
 
 
-def _instruction_gate_claims(text):
+def _instruction_gate_claims(text, denied=False):
+    """Sentences about instruction counts that claim a gate, or with `denied`, deny one."""
     offenders = []
     for sentence in re.split(r"(?<=[.!?])\s+", text.replace("\n", " ")):
         if INSTRUCTION.search(sentence) and any(
-            not NEGATED_GATE.search(sentence[:match.start()])
+            bool(NEGATED_GATE.search(sentence[:match.start()])) == denied
             for match in GATE.finditer(sentence)
         ):
             offenders.append(sentence.strip())
@@ -91,52 +93,73 @@ def _sentences_about_instruction_counts(text):
     ]
 
 
-def _promises_a_failure(sentence):
-    """Whether `sentence` states that something fails, negations excluded."""
+def _denies_a_failure(sentence):
+    """Whether `sentence` says something does not fail."""
     return any(
-        not NEGATED.search(sentence[: match.start()])
+        NEGATED.search(sentence[: match.start()])
         for match in FAIL_WORD.finditer(sentence)
     )
 
 
-class TheBenchmarkComparisonIsRecordedNotGating(unittest.TestCase):
-    def test_the_generator_does_not_claim_a_failing_gate(self):
+def _names_both_limits(sentence):
+    return "5%" in sentence and "12.5%" in sentence
+
+
+class TheBenchmarkComparisonGatesTheBuild(unittest.TestCase):
+    def test_the_generator_does_not_state_one_limit_for_every_benchmark(self):
         self.assertNotIn(
             FAILING_GATE_CLAIM,
             GENERATOR.read_text(encoding="utf-8"),
-            f"{GENERATOR.relative_to(REPO_ROOT)} still generates the claim that "
-            "pull-request CI fails on `Ir` growth; §AR-ci.5.2 says the "
-            "comparison is recorded and the limits are not wired up",
+            f"{GENERATOR.relative_to(REPO_ROOT)} states a 5% limit for every "
+            "benchmark; §AR-ci.5.2 holds only the 10k-file fixture to 5%",
         )
 
-    def test_the_report_does_not_claim_a_failing_gate(self):
+    def test_the_report_does_not_state_one_limit_for_every_benchmark(self):
         self.assertNotIn(
             FAILING_GATE_CLAIM,
             REPORT.read_text(encoding="utf-8"),
-            f"{REPORT.relative_to(REPO_ROOT)} still says pull-request CI fails "
-            "on `Ir` growth; §AR-ci.5.2 says it records the comparison",
+            f"{REPORT.relative_to(REPO_ROOT)} states a 5% limit for every "
+            "benchmark; §AR-ci.5.2 holds only the 10k-file fixture to 5%",
         )
 
-    def test_no_sentence_about_ir_promises_a_build_failure(self):
+    def test_no_sentence_about_ir_denies_the_build_failure(self):
         offenders = [
             sentence
             for sentence in _sentences_about_instruction_counts(
                 REPORT.read_text(encoding="utf-8")
             )
-            if _promises_a_failure(sentence)
+            if _denies_a_failure(sentence)
         ]
         self.assertEqual(
             [],
             offenders,
             f"a sentence about `Ir` in {REPORT.relative_to(REPO_ROOT)} still "
-            "promises a build failure: " + " | ".join(offenders),
+            "says growth does not fail the build: " + " | ".join(offenders),
         )
 
-    def test_public_copy_has_no_active_instruction_regression_gate(self):
+    def test_the_report_names_both_limits_and_the_failure(self):
+        sentences = [
+            sentence
+            for sentence in _sentences_about_instruction_counts(
+                REPORT.read_text(encoding="utf-8")
+            )
+            if _names_both_limits(sentence) and FAIL_WORD.search(sentence)
+            and "#52-regression-limits" in sentence
+        ]
+        self.assertTrue(
+            sentences,
+            f"{REPORT.relative_to(REPO_ROOT)} has no sentence that names the 5% and "
+            "12.5% `Ir` limits, says growth past them fails, and links §AR-ci.5.2",
+        )
+
+    def test_public_copy_names_the_instruction_regression_gate(self):
         for path in (REPORT, README):
             with self.subTest(path=path.name):
-                offenders = _instruction_gate_claims(path.read_text(encoding="utf-8"))
-                self.assertEqual([], offenders, "active instruction gate claim: " + " | ".join(offenders))
+                text = path.read_text(encoding="utf-8")
+                self.assertTrue(_instruction_gate_claims(text),
+                                f"{path.name} does not say instruction-count growth fails the build")
+                denials = _instruction_gate_claims(text, denied=True)
+                self.assertEqual([], denials, "stale denial of the gate: " + " | ".join(denials))
 
     def test_readme_retires_the_throughput_badge(self):
         text = README.read_text(encoding="utf-8")
@@ -199,7 +222,7 @@ class PerformanceDetectorProbes(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertTrue(_instruction_gate_claims(text))
 
-    def test_negated_gate_claims_and_unrelated_checks_are_allowed(self):
+    def test_negated_gate_claims_and_unrelated_checks_are_not_claims(self):
         for text in (
             "Instruction count is not a release-blocking meter.",
             "Instruction-count limits are not enforced.",
@@ -211,6 +234,21 @@ class PerformanceDetectorProbes(unittest.TestCase):
         ):
             with self.subTest(text=text):
                 self.assertEqual([], _instruction_gate_claims(text))
+
+    def test_negated_gate_claims_are_denials(self):
+        for text in (
+            "Instruction-count limits are not enforced.",
+            "Growth in `Ir` does not yet fail the build.",
+            "CI doesn't fail on `Ir` growth.",
+        ):
+            with self.subTest(text=text):
+                self.assertTrue(_instruction_gate_claims(text, denied=True))
+        self.assertEqual([], _instruction_gate_claims(
+            "grund check fails on a dangling citation.", denied=True))
+
+    def test_a_denial_of_the_build_failure_is_found(self):
+        self.assertTrue(_denies_a_failure("Growth in `Ir` does not fail the build."))
+        self.assertFalse(_denies_a_failure("Growth in `Ir` past 5% fails the build."))
 
     def test_missing_links_are_detected_including_bare_paths(self):
         target = "docs/benchmarks.md"

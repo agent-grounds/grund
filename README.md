@@ -20,7 +20,7 @@
 
 See the [requirements-traceability comparison](docs/related-work/REL-traceability-tools.md#workmatrix-reader-tasks) for concrete retrieval and checking tasks and their limits.
 
-The [benchmark report](docs/benchmarks.md) preserves a 2026-05-20 local timing run and a historical instruction-count snapshot, with methodology and build assumptions. [Current CI](docs/architecture/AR-ci.md#51-pull-requests-and-pushes) compares instruction counts on generated fixtures against the PR base branch. Counts proxy workload cost, not elapsed time; [regression limits are not enforced](docs/architecture/AR-ci.md#52-regression-limits).
+The [benchmark report](docs/benchmarks.md) preserves a 2026-05-20 local timing run and a historical instruction-count snapshot, with methodology and build assumptions. [Current CI](docs/architecture/AR-ci.md#51-pull-requests-and-pushes) compares instruction counts on generated fixtures against the PR base branch. Counts proxy workload cost, not elapsed time; [instruction-count growth past the regression limits fails the pull request](docs/architecture/AR-ci.md#52-regression-limits).
 
 ## 0. Specify your intent
 
