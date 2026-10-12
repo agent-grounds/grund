@@ -1,0 +1,1 @@
+check --only excluded-stub-target {repo}

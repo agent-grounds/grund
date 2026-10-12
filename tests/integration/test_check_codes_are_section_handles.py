@@ -54,6 +54,7 @@ MIGRATED = {
         "declaration-near-miss",
         "duplicate",
         "duplicate-section",
+        "excluded-stub-target",
         "misplaced-declaration",
         "orphan-section",
         "oversized-lead",

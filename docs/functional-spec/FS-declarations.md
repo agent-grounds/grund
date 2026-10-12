@@ -200,7 +200,9 @@ The target's text, the one [§FS-declarations.stubs.target.1](FS-declarations.md
 
 The target is read for the ID the way the scan reads that file ([§FS-declarations.stubs.target.2](FS-declarations.md#stubstarget2-a-heading-inside-a-fence-of-the-target-declares-nothing)), and some files the scan never reads, wherever they sit: one whose own name begins with `.`, skipped by that name before `extensions` is consulted ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)), and one whose extension `[scan] extensions` does not list ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)). Such a target declares nothing, whatever it holds. A `# <ID>: …` heading in `notes/.a.md`, or in `notes/a.zz` where `zz` is not listed, is text the scan does not read, so the stub is broken exactly as if the target never named the ID.
 
-What decides is the target's own name and extension, not the scan's scope, so the stub is broken whether or not the target lies inside `[scan] include`. The name judged is the one the stub wrote, not the one a symlink resolves to: `notes/.a.md -> a.md` declares nothing even where the `notes/a.md` it resolves to is scanned and declares the ID, so the stub pairs with neither and is a declaration of its own beside that one, the duplicate a regular hidden copy of `notes/a.md` makes. The same holds for `notes/a.zz -> a.md` where `zz` is not listed. That a target outside `include` reads as if it were scanned ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)) reaches only a file the scan would read were it in scope. `check` reports `stub link target lacks <ID>: <path>` at the stub's line, and `show` refuses with the second line of [§FS-show.2.3.4](FS-show.md#234-broken-stub) rather than answering a body sliced out of a file the scan does not read. A stub broken this way pairs with nothing ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), so `refs` refuses nothing from its target, however many headings of the ID the target holds ([§FS-refs.4.1](FS-refs.md#41-a-stubs-homes-are-found-in-its-target)). The remedy is the target's: a name that does not begin with `.`, and an extension `extensions` lists.
+What decides is the target's own name and extension, not `[scan] include`, so the stub is broken whether or not the target lies inside it. The name judged is the one the stub wrote, not the one a symlink resolves to: `notes/.a.md -> a.md` declares nothing even where the `notes/a.md` it resolves to is scanned and declares the ID, so the stub pairs with neither and is a declaration of its own beside that one, the duplicate a regular hidden copy of `notes/a.md` makes. The same holds for `notes/a.zz -> a.md` where `zz` is not listed. That a target outside `include` reads as if it were scanned ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)) reaches only a file the scan would read were it in scope. `check` reports `stub link target lacks <ID>: <path>` at the stub's line, and `show` refuses with the second line of [§FS-show.2.3.4](FS-show.md#234-broken-stub) rather than answering a body sliced out of a file the scan does not read. A stub broken this way pairs with nothing ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), so `refs` refuses nothing from its target, however many headings of the ID the target holds ([§FS-refs.4.1](FS-refs.md#41-a-stubs-homes-are-found-in-its-target)). The remedy is the target's: a name that does not begin with `.`, and an extension `extensions` lists.
+
+Two more rules keep the walk from reading a file, and until grund 0.19.0 neither decides what a target declares: a directory on its path that `[scan] exclude` names ([§FS-config.3.5.16](FS-config.md#3516-an-exclude-entry-containing--is-refused)), and an ignore file under `respect_gitignore` ([§FS-scan.scope.ignore-files](FS-scan.md#scopeignore-files-respect_gitignore--the-ignore-files)). A stub to `notes/gen/a.md`, where `[scan] exclude` names `gen` or `.gitignore` ignores `notes/gen/`, keeps the verdict the target's name, extension and text give it, so it pairs where the target declares the ID, and where it pairs `check` warns at the stub ([§FS-declarations.checks.excluded-stub-target](FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-broken-from-grund-0190)). From 0.19.0 such a target declares nothing, as a hidden or unlisted one does, and the stub is broken: a stub's target must pass the walk's own filters, exclude and the ignore files, with only the `include` gate removed (D5 of [§DF-one-answer-rulings-run](../decisions/functional/DF-one-answer-rulings-run.md#df-one-answer-rulings-run-a-path-narrows-the-report-a-stub-reads-what-the-walk-reads-and-a-file-is-one-file-however-it-is-spelled-or-held)). Both rules are asked as the walk asks them, from each scan root the run walks and from the config root in place of `include`, so a scan root under an excluded name outruns the entry here as it does in the walk ([§FS-scan.scope.roots](FS-scan.md#scoperoots-a-scan-root-outruns-every-rule-about-descent)), and the first rule met on the way down is the one that refuses. Lying outside `include` is no reason in either release. In this one neither is a hidden directory on the target's path, since the hidden name that decides is the target's own, nor is a target outside the config root, which no walk descends into.
 
 #### stubs.target.4: A stub in the target declares nothing
 
@@ -239,6 +241,12 @@ its other declarations, its notes and formatting, its leads, and whether its cit
 resolve — are not reported: the target is read on the stub's behalf, not scanned (D8 of
 [§DF-one-answer-rulings-stubs](../decisions/functional/DF-one-answer-rulings-stubs.md#df-one-answer-rulings-stubs-a-stub-is-found-by-its-home-and-shape-read-as-the-scan-reads-and-shown-where-its-target-is)). Decided in [§DF-stub-sections-from-unscanned-target](../decisions/functional/DF-stub-sections-from-unscanned-target.md#df-stub-sections-from-unscanned-target-a-stubs-sections-are-its-targets-whether-or-not-the-scan-reaches-it), and for a
 section the target declares twice in [§DF-stub-target-section-declared-twice](../decisions/functional/DF-stub-target-section-declared-twice.md#df-stub-target-section-declared-twice-a-section-a-stubs-target-declares-twice-is-reported-where-it-is-written-scanned-or-not).
+
+A target outside `include` is still asked the two rules [§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing) adds,
+because, read as if scanned, it would meet them: `other/gen/a.md`, outside
+`include = ["docs"]` and under a `[scan] exclude` entry `gen`, pairs in this release and is
+warned about ([§FS-declarations.checks.excluded-stub-target](FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-broken-from-grund-0190)). Only `include` itself is never a
+reason.
 
 ### stubs.pairing: How a stub pairs with what it points at
 
@@ -420,6 +428,9 @@ or the target, read as [§FS-declarations.stubs.target](FS-declarations.md#stubs
 target whose only heading of the ID is inside a fence ([§FS-declarations.stubs.target.2](FS-declarations.md#stubstarget2-a-heading-inside-a-fence-of-the-target-declares-nothing)) or is
 itself a stub ([§FS-declarations.stubs.target.4](FS-declarations.md#stubstarget4-a-stub-in-the-target-declares-nothing)) does not declare it, so a chain of stubs is
 broken at its first link.
+From grund 0.19.0 a target the walk refuses by a `[scan] exclude` entry or an ignore file is
+a file the scan does not read too; until then its stub is healthy and earns the warning of
+[§FS-declarations.checks.excluded-stub-target](FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-broken-from-grund-0190).
 
 #### checks.broken-stub.1: The target is read as a save would write it
 
@@ -472,6 +483,47 @@ below the config root, and the difference goes with the `docs` test.
   ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
 - **Release:** grund 0.19.0 removes the `docs` test, and with it every heading this check
   reports. The route is [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190).
+
+### checks.excluded-stub-target: Stub to a target the walk excludes, broken from grund 0.19.0
+
+A stub ([§FS-declarations.stubs.shape](FS-declarations.md#stubsshape-what-a-stub-looks-like)) that is not broken
+([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)) and whose target the walk would not read, for a
+`[scan] exclude` entry or an ignore file ([§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)), is one
+**warning** at the stub's line. The stub stays healthy in this release; the warning says
+that from grund 0.19.0 it is `broken-stub`. Refused by an `exclude` entry:
+
+```text
+docs/fs/x.md:1: warning: FS-x is a stub to ../../notes/gen/a.md, which the scan does not read because [scan] exclude names gen, and grund 0.19.0 reports this stub as broken-stub — move the target out of gen, or take gen out of [scan] exclude, to keep the stub
+```
+
+Refused by an ignore file:
+
+```text
+docs/fs/x.md:1: warning: FS-x is a stub to ../../notes/gen/a.md, which the scan does not read because .gitignore ignores it by notes/gen/, and grund 0.19.0 reports this stub as broken-stub — move the target out of what .gitignore ignores, or stop ignoring it there, to keep the stub
+```
+
+The path after `stub to` is the link's destination as written. The `exclude` entry is named
+as the list writes it. The ignore file is named by its path from the config root
+(`.gitignore`, `notes/.ignore`, `.git/info/exclude`), or by its absolute path where it lies
+outside the config root, as a global `core.excludesFile` does; the pattern after `by` is the
+line of that file that matched, as written. Where the path meets both rules, the one named is
+the first the walk meets on the way down, and at one directory the `exclude` entry comes
+before the ignore files, the walk's own order.
+
+Nothing else earns the warning. A broken stub reports `broken-stub` alone. A target that is
+only outside `[scan] include` is silent, and so are a hidden directory on the target's path,
+another project's root, and a target outside the config root: none is a reason in this
+release ([§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)). Each stub to such a target gets its own warning,
+and whether anything cites the ID does not move it.
+
+- **Code:** `excluded-stub-target`, with `"severity":"warning"` and `"sites":null` in JSON
+  ([§FS-errors.5](FS-errors.md#5-json-format)). It leaves the exit status where the rest of the run put it ([§FS-check.2](FS-check.md#2-outputs)).
+  `--only excluded-stub-target` keeps it and `--ignore excluded-stub-target` removes it
+  ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)), and the editor shows it at the stub with warning severity
+  ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
+- **Release:** grund 0.19.0 makes every target this check reports a file the scan does not
+  read, so its stub is `broken-stub`, and removes the check. The ruling and its route are D5
+  of [§DF-one-answer-rulings-run](../decisions/functional/DF-one-answer-rulings-run.md#df-one-answer-rulings-run-a-path-narrows-the-report-a-stub-reads-what-the-walk-reads-and-a-file-is-one-file-however-it-is-spelled-or-held), the warning release of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path).
 
 ### checks.misplaced-declaration: Misplaced declaration (configured kind home)
 
