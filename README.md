@@ -53,18 +53,6 @@ $ grund check
 `grund` gives specs stable IDs, lets code cite them, and checks those citations in CI.
 Agents retrieve the section they need before editing ([§GRUND-grund](docs/grund.md#grund-grund-agents-stay-grounded-in-the-spec)).
 
-- **Structure:** define your kinds of fact, their homes and their IDs in `grund.toml`; retrieve one section at a time ([§GRUND-schema](docs/grund.md#grund-schema-the-shape-of-a-projects-knowledge-is-hard-to-define-and-to-keep)).
-- **Checks:** catch broken citations and violations of your declared rules in pre-commit and CI ([§GRUND-links](docs/grund.md#grund-links-the-cross-linking-rules-are-hard-to-define-and-to-hold)).
-
-**A valid citation does not prove the code implements the requirement.** Returning
-`username` unchanged would still pass `grund check`; tests and review verify behavior.
-It does let an agent verify that quickly and cheaply — the requirement is one lookup
-away from the code — and keep the repository consistent as both change.
-[Lychee](https://lychee.cli.rs/) checks ordinary links; both belong in CI
-([§GRUND-links.2](docs/grund.md#2-holding-every-edit-to-them)). The
-[requirements-traceability comparison](docs/related-work/REL-traceability-tools.md#workmatrix-reader-tasks)
-sets `grund` beside the tools it descends from.
-
 ## The default structure
 
 `grund init` lays a project out in layers, each answering one question, and each
@@ -91,17 +79,25 @@ ruleset it writes commented out under `[citations]`; uncomment it to enforce the
 and [citation directions](docs/user-facing/citation-directions.md) the `[citations]`
 grammar.
 
+- **Structure:** define your kinds of fact, their homes and their IDs in `grund.toml`; retrieve one section at a time ([§GRUND-schema](docs/grund.md#grund-schema-the-shape-of-a-projects-knowledge-is-hard-to-define-and-to-keep)).
+- **Checks:** catch broken citations and violations of your declared rules in pre-commit and CI ([§GRUND-links](docs/grund.md#grund-links-the-cross-linking-rules-are-hard-to-define-and-to-hold)).
+
+**A valid citation does not prove the code implements the requirement.** Returning
+`username` unchanged would still pass `grund check`; tests and review verify behavior.
+It does let an agent verify that quickly and cheaply — the requirement is one lookup
+away from the code — and keep the repository consistent as both change.
+[Lychee](https://lychee.cli.rs/) checks ordinary links; both belong in CI
+([§GRUND-links.2](docs/grund.md#2-holding-every-edit-to-them)). The
+[requirements-traceability comparison](docs/related-work/REL-traceability-tools.md#workmatrix-reader-tasks)
+sets `grund` beside the tools it descends from.
+
 ## Quick start
 
 ```bash
 cargo install grund
 ```
 
-First, [try the login example](examples/quickstart/): retrieve its
-requirement, get a passing check, then break and repair the citation in a temporary copy.
-
-For your own project, run the following **inside its repository** if you are
-starting with new specs:
+Run the following **inside your repository** if you are starting with new specs:
 
 ```bash
 grund init --docs     # writes config, agent instructions, and doc scaffolds
