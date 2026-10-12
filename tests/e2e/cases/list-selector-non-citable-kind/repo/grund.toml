@@ -1,0 +1,30 @@
+grund_config_version = 1
+project_name = "root"
+
+[reference]
+marker = "§"
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+slug_pattern = "[a-z][a-z0-9-]*"
+named_sections = true
+
+[[kinds]]
+kind = "FS"
+folder = "docs/fs"
+index = false
+
+[[kinds]]
+kind = "e2e"
+folder = "tests/e2e"
+citable = false
+
+[[kinds]]
+kind = "RULE"
+folder = "docs/rules"
+index = false
+rules = true
+
+[scan]
+include = ["docs", "tests"]

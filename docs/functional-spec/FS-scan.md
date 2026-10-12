@@ -63,6 +63,32 @@ Discovery follows the same walk-up rule as `grund check` ([§FS-config.1](FS-con
 
 `grund check <dir>` with a `<dir>` narrower than the config root is one narrowed scan of the enclosing project — no workspace loaded, no `project` field.
 
+### projects.kinds: Whose kinds a run reads
+
+A run reads the kinds of the projects its configuration declares: its own config's `[[kinds]]` and, where that config declares a `[workspace]`, each member's ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds), [§FS-workspace.2](FS-workspace.md#2-workspace-configuration)). It reads them from the configs alone, before any file is read, so a narrowed scan ([§FS-scan.projects.narrowed](FS-scan.md#projectsnarrowed-a-path-below-the-config-root-loads-no-workspace)), which loads no member's files, still reads the kinds its declared workspace configures. Every question a command asks about a kind name is answered from that one reading, never from a set the command builds for itself.
+
+The question is always asked within a **scope**, a set of the projects the run read. Each command keeps the scope it documents, so two commands may accept different names; within one scope, a name has exactly one verdict, whichever command asks:
+
+| Who asks | Scope |
+|---|---|
+| `list --kind`, `list --selector`, `list --size --selector` | the selected projects: every loaded project, or those `--project` names ([§FS-list.1.2](FS-list.md#12---project)) |
+| a rule subject, on `check`, `check --rule` and in the editor | the project whose configuration reads the rule ([§FS-rule-refusals.sentences.named-sections](FS-rule-refusals.md#sentencesnamed-sections-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid)) |
+| a rule object, or a `[citations]` target | the local project for a bare `KIND`, the aliased project for `alias/KIND`, every project for `*/KIND` ([§FS-config.3.9.5](FS-config.md#395-validation)) |
+| `grund id <KIND>` | the project the run loads ([§FS-id.1.1](FS-id.md#11-unknown-and-non-citable-kinds)) |
+
+The verdict is one of four:
+
+1. **citable** — a project in scope configures the name as a citable kind;
+2. **configured but not citable** — a project in scope configures it with `citable = false` ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)), and none in scope has it citable; the verdict carries that project's kind home, and its refusal is [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids);
+3. **unknown** — no project in scope configures it;
+4. **unverifiable here** — the scope names a project alias and the run holds no workspace that could say what that project configures, as [§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify) defines it for a rule object.
+
+Where two projects in one scope configure a name differently, citable wins, as [§FS-list.1.1](FS-list.md#11---kind) already says for `--kind`. The `known kinds:` line a refusal ends in names the citable kinds of the same scope, once each, in configuration order.
+
+A kind's named sections are read under the project that configures it. A named chapter subject of `KIND` ([§FS-rules.2](FS-rules.md#2-subject-selectors)) is accepted where that project sets `[id] named_sections = true`, whatever the root or another loaded project sets, so `list --selector API.terms` at a workspace root answers whatever `grund api/API-a.terms` answers ([§FS-declarations.section.map](FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span)). Where two projects in scope configure `KIND`, the subject is accepted when either has named sections on, and it matches only the declarations of a project that has them on.
+
+`--unused` leaving out end-to-end cases, the kind titles a project lists, and where a non-citable kind's own files must cite are other questions, and stay their own points' ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)). The rulings this point carries out are [§DF-one-answer-rulings-grammar](../decisions/functional/DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary)'s D18, and the routes it took [§DF-one-kind-verdict](../decisions/functional/DF-one-kind-verdict.md#df-one-kind-verdict-every-command-reads-one-kind-verdict-in-its-own-scope-and-refuses-a-rule-sentence-for-the-first-stage-it-fails).
+
 ## scope: Which files a run reads
 
 `include` is the set of paths scanned from the config root ([§FS-scan.scope.include](FS-scan.md#scopeinclude-include-is-scanned-from-the-config-root)), beside every configured kind home ([§FS-scan.scope.homes](FS-scan.md#scopehomes-every-configured-kind-home-is-scanned)). `exclude` is the set of directory names skipped at any depth — one path component each, so an entry containing `/` is refused rather than accepted as a path ([§FS-config.3.5.16](FS-config.md#3516-an-exclude-entry-containing--is-refused)) — `extensions` filters which files are read ([§FS-scan.scope.extensions](FS-scan.md#scopeextensions-an-extension-makes-a-file-readable-not-declarable)), and `respect_gitignore` has the scan honor the ignore files as well ([§FS-scan.scope.ignore-files](FS-scan.md#scopeignore-files-respect_gitignore--the-ignore-files)). A hidden file is not read ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)), and `include` is a scope, not a fence ([§FS-scan.scope.not-a-fence](FS-scan.md#scopenot-a-fence-include-is-a-scan-scope-not-a-fence)). A scan that ends up reading no files at all is reported, not silently passed ([§FS-check.2.2](FS-check.md#22-empty-scan)). In a loaded workspace a scan also stops at every directory another project owns ([§FS-workspace.6.2](FS-workspace.md#62-the-boundary-is-mutual)).

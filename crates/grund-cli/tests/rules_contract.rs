@@ -14,6 +14,8 @@ mod documentation;
 mod paste_back;
 #[path = "rules_contract/refusal_forms.rs"]
 mod refusal_forms;
+#[path = "rules_contract/refusal_order.rs"]
+mod refusal_order;
 #[path = "rules_contract/refusals.rs"]
 mod refusals;
 #[path = "rules_contract/regressions.rs"]

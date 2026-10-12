@@ -43,6 +43,15 @@ Where `check` reports an ID a duplicate, `show` and `refs` refuse it as ambiguou
 same sites ([§FS-show.2.2.1](../functional-spec/FS-show.md#221-ambiguous-id), [§FS-refs.4.1](../functional-spec/FS-refs.md#41-a-stubs-homes-are-found-in-its-target)), `list` and `list --size` mark its rows
 duplicate, and `fmt` wraps none of its citations ([§FS-fmt.6.4.2](../functional-spec/FS-fmt.md#642-a-citation-of-a-broken-stub-or-of-an-ambiguous-id-is-not-wrapped)).
 
+### identity.kinds: Every command reads one kind verdict
+
+Every command that takes a kind name — `list --kind`, `list --selector`, a rule's subject
+and object, a `[citations]` target, `grund id` — reads its verdict from the one reading of
+[§FS-scan.projects.kinds](../functional-spec/FS-scan.md#projectskinds-whose-kinds-a-run-reads), within the scope that command documents. Each command keeps its own
+scope, so two commands may accept different names; within one scope a name is citable,
+configured but not citable, unknown, or unverifiable here, for every command alike, and a
+non-citable kind is refused for that reason everywhere ([§FS-errors.2.5.1](../functional-spec/FS-errors.md#251-a-kind-that-declares-no-ids)).
+
 ## sections: Which sections a declaration has
 
 ### sections.map: Every surface reads one section map
@@ -63,6 +72,13 @@ exactly when it does not. Two readers that each decided for themselves would dis
 fenced example, a heading past the end of the body — and a coordinate `check` calls clean
 but `show` will not resolve is [§REQ-no-wrong-citation](REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess) failing quietly in the other
 direction.
+
+### sections.named: Every command reads a kind's named sections under its own project
+
+Whether a kind's named chapters are addressable is read under the project that configures
+the kind ([§FS-scan.projects.kinds](../functional-spec/FS-scan.md#projectskinds-whose-kinds-a-run-reads)), so `list --selector KIND.NAME` at a workspace root
+answers whatever `grund <alias>/<ID>.NAME` answers for the same declaration, whatever the
+root or another member sets.
 
 ## stubs: What a stub answers
 
@@ -119,10 +135,8 @@ surface shares is not a row; it belongs to the point that defines the right answ
 
 ### differences.identity: Identity
 
-- **G03.** A `[citations]` target `api/API` is refused on load as an unknown kind, while
-  the rule `Each FS must cite at least one api/API.` parses in the same workspace. R.
-- **G04.** One non-citable kind gets three different refusal reasons from `list --kind`,
-  `list --selector` and a rule subject. R.
+G03 and G04 closed with [§REQ-one-answer.identity.kinds](REQ-one-answer.md#identitykinds-every-command-reads-one-kind-verdict).
+
 - **G06.** The subject `each FS` is refused by a rule as a fixed word in the wrong case and
   by `list --selector` as a literal subject the ID grammar does not match. R, found on
   `53e981e6e9` and amended in.
@@ -142,8 +156,6 @@ surface shares is not a row; it belongs to the point that defines the right answ
   heading that ends it for `show`. R.
 - **P16.** The editor snapshot's span for a C-family section keeps `*/`, the `--toc` title
   does not; the core fields only. R.
-- **G05.** With named sections off at the root and on in member `api`, `grund
-  api/API-a.terms` answers and an unfiltered `list --selector API.terms` refuses. R.
 
 ### differences.stubs: Stubs
 
@@ -198,7 +210,9 @@ Until it drives the editor and the bindings itself,
 `tests/integration/lsp_cli_parity.rs` compares the editor's diagnostics with `check`'s over
 the end-to-end corpus ([§REQ-one-answer.text.parity](REQ-one-answer.md#textparity-the-editor-answers-as-the-command-line-does)) and
 `crates/grund-cli/tests/stub_resolution_agreement.rs` the stub answers of every surface
-([§REQ-one-answer.stubs](REQ-one-answer.md#stubs-what-a-stub-answers)); a section none of the three compares is held by review.
+([§REQ-one-answer.stubs](REQ-one-answer.md#stubs-what-a-stub-answers)), and `crates/grund-cli/tests/kind_verdict_agreement.rs` asks every
+kind-taking surface about one name on one tree ([§REQ-one-answer.identity.kinds](REQ-one-answer.md#identitykinds-every-command-reads-one-kind-verdict),
+[§REQ-one-answer.sections.named](REQ-one-answer.md#sectionsnamed-every-command-reads-a-kinds-named-sections-under-its-own-project)); a section none of the four compares is held by review.
 
 ## why: Why this exists
 

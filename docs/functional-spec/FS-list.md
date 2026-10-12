@@ -45,7 +45,7 @@ known kinds: GRUND, GOAL, FS, AR, DF, DA, RM
 
 The `known kinds:` line lists the citable kinds only: they are the whole set this selector accepts. Under `--project` that set is the selected projects' kinds ([§FS-list.1.2](FS-list.md#12---project)).
 
-Selected workspace projects may configure one kind differently. The kind is accepted when any selected project has it citable, which is exactly when the `known kinds:` line names it, and it is refused as non-citable only when none does. In a workspace whose `root` project configures `SKILL` with `citable = false` and whose member `api` has `SKILL` citable, `grund list --kind SKILL` lists `api/SKILL-intro`, while `grund list --project root --kind SKILL` is refused with the headline above and `known kinds: FS, AR`.
+Selected workspace projects may configure one kind differently. The kind is accepted when any selected project has it citable, which is exactly when the `known kinds:` line names it, and it is refused as non-citable only when none does. In a workspace whose `root` project configures `SKILL` with `citable = false` and whose member `api` has `SKILL` citable, `grund list --kind SKILL` lists `api/SKILL-intro`, while `grund list --project root --kind SKILL` is refused with the headline above and `known kinds: FS, AR`. The verdict is the one every command reads for a kind name in its scope ([§FS-scan.projects.kinds](FS-scan.md#projectskinds-whose-kinds-a-run-reads)), and the headline is [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)'s.
 
 ### 1.2 `--project`
 

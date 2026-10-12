@@ -190,6 +190,31 @@ Which inputs each surface refuses, and how the accepted input is built from
 what was typed, is [§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals) for rule sentences and [§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)
 for selectors.
 
+#### 2.5.1 A kind that declares no IDs
+
+A configured kind that is not citable ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) is refused by every
+surface that takes a kind name with one reason, built in one place from the
+kind and its home, in the quoting that surface already uses: a backtick on
+`list --kind` and `grund id`, a double quote on `list --selector` and on a
+rule's subject and object.
+
+```text
+kind `<KIND>` declares no IDs — <home>/ is not a citable home
+kind "<KIND>" declares no IDs — <home>/ is not a citable home
+```
+
+The verdict is [§FS-scan.projects.kinds](FS-scan.md#projectskinds-whose-kinds-a-run-reads)'s, read in the asking surface's scope,
+and on the command line the next line is `known kinds: <kinds>`, naming the
+citable kinds of that scope. A configured rule declaration's `invalid-rule`
+finding carries the reason alone after `is not a valid rule: `
+([§FS-errors.2.5](FS-errors.md#25-refused-input)). A `[citations]` target keeps the wording [§FS-config.3.9.5](FS-config.md#395-validation)
+documents for it, *a non-citable target kind*.
+
+`list --kind` and `grund id` print the first form today ([§FS-list.1.1](FS-list.md#11---kind),
+[§FS-id.1.1](FS-id.md#11-unknown-and-non-citable-kinds)). The selector and rule surfaces reach the second through the
+window of [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration): until `0.19.0` they keep the reason they printed
+before and append this one.
+
 ## 3. Message text
 
 The shape is structural; the text is human-readable. Style rules apply to every shape:
@@ -303,6 +328,60 @@ exactly:
 unknown project alias <ALIAS>; no workspace is in scope here, so the alias cannot be resolved — check from the workspace root
 no workspace is in scope here, so no namespace can be searched for <KIND> — check from the workspace root
 ```
+
+### 3.8 The one-grammar wording migration
+
+Two refusals change the reason they print, and both are bytes a consumer may
+match, so they take the warning release of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)
+rather than changing outright ([§DF-one-answer-rulings-grammar](../decisions/functional/DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary), D10):
+
+- A configured kind that is not citable, named on `list --selector`,
+  `list --size --selector`, or in a rule's subject or object on `check`,
+  `check --rule` or a configured rule declaration, was refused as though it
+  were not configured: `unknown kind "<KIND>"`, or, for a selector spelled
+  `KIND` or `KIND.NAME`, `literal subject "<selector>" does not match the
+  configured ID grammar`. Its reason is §FS-errors.2.5.1's.
+- A subject with a section-component wildcard in a sentence that joins clauses
+  with `and` was refused as a conjunction. Under the order of
+  [§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails) the wildcard is refused first.
+
+Until `0.19.0` each complete legacy reason, accepted forms included, stays a
+verbatim contiguous prefix, followed by ` — `, the reason it is moving to, and
+the suffix `; this wording changes in grund 0.19.0`. Whatever followed the
+legacy reason on the next line — `known kinds:`, a `hint:` — still follows it.
+The exit code, the `invalid-rule` code and its severity, and what is refused do
+not move; only the reason's text does. In a repository whose kinds are `FS`,
+`RULE` and the non-citable `e2e` homed at `tests/e2e/`, with named sections on,
+these are the exact lines the window prints:
+
+| Input | Exact reason |
+|---|---|
+| `list --selector e2e.terms` | `literal subject "e2e.terms" does not match the configured ID grammar — kind "e2e" declares no IDs — tests/e2e/ is not a citable home; this wording changes in grund 0.19.0` |
+| `list --selector 'Each e2e'` | `unknown kind "e2e" — kind "e2e" declares no IDs — tests/e2e/ is not a citable home; this wording changes in grund 0.19.0` |
+| `check --rule 'Each e2e must have exactly one terms chapter.'` | `unknown kind "e2e" — kind "e2e" declares no IDs — tests/e2e/ is not a citable home; this wording changes in grund 0.19.0` |
+| `check --rule 'Each FS must cite at least one e2e.'` | `unknown kind "e2e" — kind "e2e" declares no IDs — tests/e2e/ is not a citable home; this wording changes in grund 0.19.0` |
+| `check --rule 'FS-x.* must cite at least one FS and must not cite any FS.'` | `conjunctions are not accepted; accepted forms: "FS-x must cite at least one FS." and "FS-x must not cite any FS." — section-component wildcards are not accepted in phase 1; this wording changes in grund 0.19.0` |
+
+The first four are each followed by `known kinds: FS, RULE`, and the fifth by
+nothing, as before. Exact-line consumers migrate during the window to the
+reason after the ` — `, which is what `0.19.0` prints alone; a prefix matcher
+reads what it read before. Retiring the window is [§RM-one-grammar-flip](../roadmap.md#rm-one-grammar-flip-end-the-one-grammar-window-in-0190).
+
+#### 3.8.1 The final templates
+
+From `0.19.0` the legacy prefix and the suffix go, and the reasons are exactly
+[§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)'s double-quoted form and the wildcard reason of
+[§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals):
+
+```text
+kind "<KIND>" declares no IDs — <home>/ is not a citable home
+section-component wildcards are not accepted in phase 1
+```
+
+The wildcard reason is then followed by the accepted form
+[§FS-rule-refusals.sentences.rewrite](FS-rule-refusals.md#sentencesrewrite-an-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced) builds, where it builds one; for a
+sentence that is still a conjunction once its subject is rebuilt it builds
+none ([§FS-rule-refusals.sentences.rewrite.reparsed](FS-rule-refusals.md#sentencesrewritereparsed-a-form-is-parsed-before-it-is-offered)).
 
 ## 4. Determinism
 

@@ -90,6 +90,10 @@ kind, so no `known kinds:` line follows it.
 
 ### sentences.named-sections: A subject that needs named sections is answered with one they make valid
 
+Whether named sections are on is read under the project that configures the
+subject's kind ([§FS-scan.projects.kinds](FS-scan.md#projectskinds-whose-kinds-a-run-reads)); for a rule subject that is the
+project whose configuration reads the rule.
+
 With `[id] named_sections = false`, a subject refused because named chapter
 subjects require named sections is answered with a subject that turning them on
 makes valid, so a reader who follows the suggestion is not refused again. It is
@@ -386,9 +390,10 @@ where every one is accepted, after `; accepted forms: `, quoted, two joined as
 `"A." and "B."` and more as `"A.", "B.", and "C."`. Where any one is not, the
 reason stands alone ([§FS-rule-refusals.sentences.rewrite.no-form](FS-rule-refusals.md#sentencesrewriteno-form-where-no-form-is-offered)).
 
-The check runs after the terminal `.` and the fixed-word and phase-1 subject
-refusals of the table, which are read from the sentence's start, and before
-the modality split of [§FS-rules.3.6](FS-rules.md#36-where-a-sentences-subject-ends). So the subject is never read from a
+Where the check stands among the other refusals is
+[§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails)'s third row: after the terminal `.` and the
+fixed-word and phase-1 subject refusals, and before the modality split of
+[§FS-rules.3.6](FS-rules.md#36-where-a-sentences-subject-ends). So the subject is never read from a
 fragment, and no refusal names part of a sentence as a kind. Both rule surfaces
 carry the same reason: `check --rule` prints `error: <reason>` in the shape
 of [§FS-errors.2.5](FS-errors.md#25-refused-input), and a configured rule declaration's
@@ -416,6 +421,41 @@ the first production it fails. The seventh row's forms name kinds this
 repository does not configure. The last row is refused first for its phase-1
 subject, which holds the first clause and so is not rebuilt
 ([§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied)).
+
+### sentences.order: A sentence is refused for the first stage it fails
+
+A sentence is read in one fixed order of stages, and it is refused for the
+first stage it fails; no later stage is read. The order is the one the
+documented rows already imply ([§DF-one-answer-rulings-grammar](../decisions/functional/DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary), D20), held here
+as one table so it does not depend on how one phrase of another point is read:
+
+| Stage | What it refuses | Example that also fails a later stage | Reason it opens with |
+|---|---|---|---|
+| 1. terminal period | a sentence that does not end in `.` | `Each FS may not cite any FS` | `rule must end with "."` |
+| 2. fixed word and phase-1 subject | `each` for `Each`, and the deliberate phase-1 absences of [§FS-rules.12](FS-rules.md#12-deliberate-phase-1-absences): a path subject, `Each */KIND`, `Each chapter of each KIND`, and a section-component wildcard in any spelling | `FS-x.* must cite at least one FS and must not cite any FS.` | `section-component wildcards are not accepted in phase 1` |
+| 3. conjunction | clauses joined by `and` ([§FS-rule-refusals.sentences.conjunction](FS-rule-refusals.md#sentencesconjunction-any-clauses-joined-by-and-are-refused-as-a-conjunction)) | `Each FS may not cite any FS and must cite at least one FS.` | `conjunctions are not accepted` |
+| 4. modality | no accepted modality, `may not` included | `Each POLICY may not cite any FS.` | `modality "may not" is not accepted` |
+| 5. the rest of the subject | an unknown or non-citable kind, named sections off, the section grammar, a numbered chapter, the ID grammar | `Each POLICY must cite no FS.` | `unknown kind "POLICY"` |
+| 6. the predicate | the verb, quantifier, count and object kind, and a chapter subject that would have chapters | `Each FS must cite no FS.` | `"cite no" is not accepted` |
+
+The examples are read in a repository whose one kind is `FS`, with named
+sections on. Two sentences the table of [§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals) gives whole,
+`Each FS must cite no AR.` and `Each FS must cite a GOAL.`, are refused for that
+row before stage 1; both end in `.`, so no sentence can tell.
+
+Stage 2 decides a wildcard with the subject parser's own test, so a sentence
+with no conjunction is refused exactly as before, and a subject that reaches a
+wildcard only through a component that fails earlier in stage 5 — `The *
+chapter of each FS` with named sections off — keeps that component's reason.
+A numbered chapter, named sections off and every kind refusal stay in stage 5,
+after the conjunction, so a refusal never names a fragment of a sentence as a
+kind.
+
+Stage 2's wildcard row is the one place this order differs from what a
+sentence was refused with before it was written down: a wildcard subject
+joined by `and` was refused as a conjunction. That reason moves through the
+window of [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration), which keeps the conjunction refusal as a prefix until
+`0.19.0`.
 
 ## selectors: A refused selector is answered with a selector
 
@@ -463,7 +503,18 @@ so these refusals add no breadcrumb.
 
 Where no configured kind can be recovered, nothing is guessed. The reason
 stands alone, and a second line lists the configured citable kinds exactly as
-an unknown `--kind` does ([§FS-list.1.1](FS-list.md#11---kind)). A refusal that earns the breadcrumb
+an unknown `--kind` does ([§FS-list.1.1](FS-list.md#11---kind)). A kind that is configured but not citable is not a
+kind that cannot be recovered: its reason is [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)'s, reached
+through the window of [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration), and the line after it is the same
+`known kinds:` line.
+
+Which kinds a selector accepts, and whether `KIND.NAME` needs named sections,
+are both read in the selected projects as [§FS-scan.projects.kinds](FS-scan.md#projectskinds-whose-kinds-a-run-reads) says, the
+second under the project that configures `KIND`. At a workspace root whose own
+config leaves named sections off and whose member `api` turns them on,
+`list --selector API.terms` lists `api/API-a.terms` exactly as
+`grund api/API-a.terms` shows it, while `list --project root --selector
+API.terms`, whose scope configures no `API`, is refused as it was. A refusal that earns the breadcrumb
 below prints it as a third line, after the kinds:
 
 ```text

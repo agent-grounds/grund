@@ -283,11 +283,14 @@ class ThisRepositoryTests(unittest.TestCase):
         """§FS-distribution.4.2.2 — the wording ramps this tree carried all named
         0.16.0, and their goldens hold the final wording (§FS-errors.3.3,
         §FS-errors.3.6.1, §FS-errors.3.7.1). A golden that still promised a
-        wording change would ship a promise the release has already reached."""
+        wording change would ship a promise the release has already reached.
+        The one-grammar window names 0.19.0 instead (§FS-errors.3.8)."""
         golden = [
             claim
             for claim in self.claims
-            if claim.clause == "wording changes in" and claim.path.startswith("tests/")
+            if claim.clause == "wording changes in"
+            and claim.release == "0.16.0"
+            and claim.path.startswith("tests/")
         ]
         self.assertEqual([], golden)
 
