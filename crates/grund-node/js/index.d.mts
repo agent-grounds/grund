@@ -100,7 +100,7 @@ export type IdResult = Cautions & { readonly id: string; readonly kind: string; 
   readonly fileHoldsSingleDeclaration: boolean };
 export type Event = { readonly verb: string; readonly path: string };
 export type InitData = { readonly events: readonly Event[]; readonly errors: readonly Finding[]; readonly notes: readonly string[];
-  readonly next: { readonly docs: boolean; readonly entrypoint: string; readonly scanReadsFile: boolean;
+  readonly next: { readonly docs: boolean; readonly declaresKinds: boolean; readonly entrypoint: string; readonly scanReadsFile: boolean;
     readonly fsHome: { readonly kind: 'file'; readonly path: string; readonly headingName: string; readonly headingMarker: string } |
       { readonly kind: 'folder'; readonly path: string } } | null; readonly pendingChanges: boolean };
 export type InitResult = InitData & Cautions;

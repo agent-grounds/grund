@@ -1,3 +1,4 @@
+warning: --docs is deprecated and is removed in grund 0.19.0; use --scaffold, which lays the same starter files
 wrote AGENTS.md
 wrote grund.toml
 wrote requirements.md

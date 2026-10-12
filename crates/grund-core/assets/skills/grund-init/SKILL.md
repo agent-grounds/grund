@@ -13,8 +13,8 @@ Guide the user through `grund` adoption. `grund init` itself is non-interactive,
 2. Present a short "detected repo shape" summary and recommended setup.
 3. If existing specs or spec-like artifacts are present, show the canonical `grund` artifact types beside the detected project-specific sections/tags/document classes, then ask which artifact model to adopt before writing config or refactoring docs.
 4. Ask each remaining setup/config question below. For every question, include the recommended value, repo evidence, pros, cons, and when to choose something else.
-5. Write `grund.toml` from the analysis before running `grund init`, so generated guidance reflects the repository's actual grammar, marker, strict mode, kinds, artifact folders, and scan scope.
-6. Run `grund init [path] [--name NAME] [--force]`, adding `--docs` only when the repo is fresh or the user selected a canonical-layout migration that needs the scaffold. Omit `--name` to reuse a target config's `project_name`, falling back to the target directory name when the config has none; pass it only to override that generated identity for this run. Preview the run with `--dry-run` if the user wants to inspect what will change before committing, and offer `--check` — the same preview, writing nothing and exiting `1` when a file is still pending — as the pre-commit or CI gate that catches a managed block whose text drifted while its version heading stayed current. `init` refuses a target that no `.git`, `.hg`, `.jj`, or `.svn` marker covers, in it or any ancestor: for a directory not yet under version control, either run the VCS's own init first or pass `--no-vcs`. It also refuses the home directory and the machine-global agent instruction files (`~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, and the rest of that set) with no flag at all — those say the path is wrong, not that an option is missing, so re-point the run rather than trying to force it.
+5. Write `grund.toml` from the analysis before running `grund init`, so generated guidance reflects the repository's actual grammar, marker, strict mode, kinds, artifact folders, and scan scope. For the existing-structure model, `grund init --template=none` lays a starting `grund.toml` that declares no kinds (`kinds = []`): replace that line with the repo's own `[[kinds]]` tables, then run `grund init` again so the entrypoints teach them.
+6. Run `grund init [path] [--name NAME] [--force]`, adding `--scaffold` only when the repo is fresh or the user selected a canonical-layout migration that needs the template's starter files. Omit `--name` to reuse a target config's `project_name`, falling back to the target directory name when the config has none; pass it only to override that generated identity for this run. Preview the run with `--dry-run` if the user wants to inspect what will change before committing, and offer `--check` — the same preview, writing nothing and exiting `1` when a file is still pending — as the pre-commit or CI gate that catches a managed block whose text drifted while its version heading stayed current. `init` refuses a target that no `.git`, `.hg`, `.jj`, or `.svn` marker covers, in it or any ancestor: for a directory not yet under version control, either run the VCS's own init first or pass `--no-vcs`. It also refuses the home directory and the machine-global agent instruction files (`~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, and the rest of that set) with no flag at all — those say the path is wrong, not that an option is missing, so re-point the run rather than trying to force it.
 7. Run `grund config validate [path]` and `grund check [path]`.
 8. Summarize generated files, validation results, existing specs/artifacts found, and any follow-up cleanup.
 9. Optionally offer to wire the user's editor to the `grund-lsp` server (see Editor Setup). Editor configuration is the user's one-time work, not something `grund init` writes — so only offer it, and prefer editor **user** settings over a per-repo config so the server works in every project.
@@ -56,7 +56,7 @@ Ask first:
 - Target path: default `.`
 - Project name: default target config value, then target directory basename
 - Artifact model when existing specs are detected: canonical `grund`, canonical core plus project-specific extras, or existing structure with citations
-- Scaffold docs/e2e with `--docs`: default no for existing repos, yes for fresh repos
+- Template and starter files: `--template=software-development` (the default, canonical kinds) or `--template=none` (no kinds, for the existing-structure model); `--scaffold` to lay the starter files: default no for existing repos, yes for fresh repos
 - Existing file behavior: append/update default, or `--force`
 
 ## Existing Specs Adoption
@@ -80,9 +80,9 @@ Then ask the user to choose one adoption model:
 |---|---|---|
 | Canonical `grund` | Fresh or lightly documented repos, or users who explicitly want to reorganize around `grund` conventions. | Use `GRUND`, `GOAL`, `FS`, `AR`, `DF`, `DA`, `E2E`, and `RM` as the complete artifact model; add or refactor docs toward canonical homes only after user confirmation. |
 | Canonical core plus project-specific extras | Repos with useful existing ADRs/RFCs/requirements but no clear behavior-vs-architecture backbone. | Use `GRUND`, `GOAL`, `FS`, and `AR` as the grounding backbone, then add custom `[[kinds]]` for project-specific artifacts. |
-| Existing structure with citations | Mature repos with a strong existing taxonomy or high migration cost. | Preserve current sections/tags/document classes, configure `[[kinds]]` and `[scan]` around them, and add `grund` citations/declarations without forcing canonical folders. |
+| Existing structure with citations | Mature repos with a strong existing taxonomy or high migration cost. | Start from `grund init --template=none`, whose config declares no kinds; preserve current sections/tags/document classes, configure `[[kinds]]` and `[scan]` around them, and add `grund` citations/declarations without forcing canonical folders. |
 
-The question should include a recommendation grounded in the inventory. Do not write `grund.toml`, run `grund init --docs`, move documents, rename headings, or add bulk citations until the user chooses the adoption model. Once selected, use the model to decide whether the setup is only config plus entrypoint refresh, or a broader docs refactor with a visible plan.
+The question should include a recommendation grounded in the inventory. Do not write `grund.toml`, run `grund init --scaffold`, move documents, rename headings, or add bulk citations until the user chooses the adoption model. Once selected, use the model to decide whether the setup is only config plus entrypoint refresh, or a broader docs refactor with a visible plan.
 
 ## Config Questions
 
@@ -187,7 +187,7 @@ Relax only to match existing IDs.
 
 Default kinds: `GRUND`, `GOAL`, `FS`, `AR`, `DF`, `DA`, `E2E`, `RM`.
 
-Ask whether to keep defaults, remove unused kinds, or add project-specific kinds.
+Ask whether to keep defaults, remove unused kinds, or add project-specific kinds. To start from none instead, `grund init --template=none` writes `kinds = []`, and each kind is then added as its own `[[kinds]]` table.
 
 Pros of defaults: matches grund docs and generated scaffold.
 Cons: some repos may not need all categories.
@@ -211,7 +211,7 @@ Pros: focused, avoids scanning root clutter.
 Cons: misses specs/citations outside these dirs.
 Every configured `[[kinds]]` home is walked whether or not it is listed here, so
 this key names the *extra* roots. Base the recommendation on actual directories.
-Do not include paths that do not exist unless `--docs` will create them.
+Do not include paths that do not exist unless `--scaffold` will create them.
 
 `exclude`
 
@@ -379,11 +379,11 @@ target and use `|` for alternatives.
 
 ## Recommendation Heuristics
 
-### `--docs`
+### `--template` and `--scaffold`
 
-Recommend `--docs = true` when the repo has little or no `docs/` or `e2e/` structure.
+Recommend `grund init --scaffold` when the repo has little or no `docs/` or `tests/` structure: the default `--template=software-development` lays the canonical kinds and their starter files.
 
-Recommend `--docs = false` when the repo already has meaningful docs or tests, and suggest adding only missing grund files.
+Recommend no `--scaffold` when the repo already has meaningful docs or tests, and suggest adding only missing grund files. When it keeps its own taxonomy, recommend `grund init --template=none`, then replace `kinds = []` in `grund.toml` with the repo's `[[kinds]]` and run `grund init` again; `--template=none --scaffold` is refused, as `none` has no starter files.
 
 ### `[reference].strict`
 
@@ -433,7 +433,7 @@ Recommend:
 
 ## Language And Repo Shape Examples
 
-Use these examples to turn repo evidence into recommended `[scan]` settings. Include only directories that exist, unless `--docs` will create them.
+Use these examples to turn repo evidence into recommended `[scan]` settings. Include only directories that exist, unless `--scaffold` will create them.
 
 ### Rust
 

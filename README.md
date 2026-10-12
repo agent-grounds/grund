@@ -126,7 +126,7 @@ cargo install grund
 Run the following **inside your repository** if you are starting with new specs:
 
 ```bash
-grund init --docs     # config, agent instructions and doc scaffolds
+grund init --scaffold # config, agent instructions and starter files
 grund check
 ```
 

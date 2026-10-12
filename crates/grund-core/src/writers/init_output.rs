@@ -13,6 +13,13 @@ pub struct InitOpts {
     /// `--description` — pending one-line `project_description` for a freshly
     /// written config (§FS-init.1, §DF-workspace-member-descriptions).
     pub description: Option<String>,
+    /// `--template` — the built-in template named on the command line, if any
+    /// (§FS-init.1.6). `None` lays the default; a named one, the default's name
+    /// included, also earns the note over an existing config (§FS-init.1.6.5).
+    pub template: Option<String>,
+    /// `--scaffold`, and its deprecated spelling `--docs` — also lay the
+    /// template's starter files (§FS-init.1, §FS-init.1.7). The field keeps its
+    /// name because it is published API (§DF-init-templates.2.3).
     pub docs: bool,
     pub force: bool,
     pub dry_run: bool,
@@ -34,6 +41,7 @@ impl Default for InitOpts {
             target: PathBuf::from("."),
             name: None,
             description: None,
+            template: None,
             docs: false,
             force: false,
             dry_run: false,

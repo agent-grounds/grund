@@ -274,7 +274,7 @@ fn absent_optional_member_message(written: &str, alias_path: &str) -> String {
 /// announcements beside it name namespaces rather than the scope — but not either
 /// of §FS-check.2.2.2's other two messages, both of which would be false: the walk
 /// never reached `[scan] include`, so it did not look there and find nothing, and
-/// the `grund init --docs` tree it would offer to scaffold is not what is missing.
+/// the `grund init --scaffold` tree it would offer to scaffold is not what is missing.
 /// A checkout is, and that is not grund's to ask for (§FS-check.4.9.3).
 pub(crate) fn absent_only_workspace_caution(
     config: &Config,

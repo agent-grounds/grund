@@ -1,0 +1,59 @@
+grund_config_version = 1
+project_name = "{NAME}"
+# project_description = "<one line shown next to this project in workspace member lists>"
+
+# This project declares no kinds yet: nothing is an ID, so nothing is cited.
+# Replace `kinds = []` with one [[kinds]] table per kind of document this
+# repository gives IDs to, then run `grund init` again so the agent instructions list them:
+#
+# [[kinds]]
+# kind = "FS"                    # the ID prefix: FS-<number>-<slug>
+# folder = "docs/specs"          # or file = "requirements.md"
+# title = "What: behavior, requirements, and constraints"
+kinds = []
+
+[reference]
+marker = "§"
+trigger = "$$"
+strict = true
+shorthand = "canonical" # canonical | accepted
+require_grounding = false
+inline_style = "citation-with-note" # citation-with-note | citation-only
+inline_note_suggested_lines = 1
+inline_note_max_lines = 3
+inline_note_max_columns = 100
+inline_note_layout = "any" # any | citation-first-colon
+inline_note_layout_check = "off" # off | warn | error
+warn_on_suggested = false
+
+[id]
+format = "{kind}-{number}-{slug}" # placeholders: {kind} required; use {number}, {slug}, or both
+section_separator = "."
+named_sections = false
+section_heading_levels = "strict" # strict | warn | loose
+number_pattern = "\\d+"
+slug_pattern = "[a-z0-9][a-z0-9-]*"
+
+[scan]
+include = ["requirements.md", "docs", "e2e", "src"]
+# exclude: directory names, each skipped at every depth; an entry is never a path.
+exclude = ["target", "node_modules", ".git", "dist", "build", ".venv"]
+extensions = ["md", "rs", "go", "java", "kt", "ts", "tsx", "js", "py", "c", "cpp", "swift", "scala", "rb", "php", "cs", "lisp", "scm", "clj", "sql", "hs", "lhs", "lua", "ada", "adb", "ads"]
+comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
+docstring_python = true
+respect_gitignore = true
+
+[output]
+format = "text" # text | json
+color = "auto" # auto | always | never
+relative_paths = true
+
+[fmt.cross_refs]
+enabled = true
+anchor_format = "github" # github | gitlab | mkdocs | pandoc | none
+
+# Citation directions: once kinds exist, [citations.<KIND>] tables say which
+# kinds each may cite, with RFC-2119 levels. The complete grammar and a
+# config/render example are at
+# https://github.com/agent-grounds/grund/blob/main/docs/user-facing/citation-directions.md
+# in the grund repository.

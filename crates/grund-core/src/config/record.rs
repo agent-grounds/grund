@@ -293,6 +293,15 @@ impl Config {
         Self::from_project(&v1::default_project(false), root).expect("default grammar must compile")
     }
 
+    /// The defaults with the empty kind set `kinds = []` declares
+    /// (§FS-config.3.4.4.5): what the `none` template's config means, which
+    /// `grund init` renders the managed block from before it writes the file
+    /// (§FS-init.2.4.9).
+    pub(crate) fn without_kinds_for(root: PathBuf) -> Self {
+        Self::from_project(&v1::default_project_without_kinds(), root)
+            .expect("the empty kind set must compile")
+    }
+
     /// The homeless kind for this config (§FS-config.3.9.2) — the citing kind
     /// every site outside every configured home resolves to. The declared entry
     /// when the table has one, else the reserved `code`.

@@ -15,7 +15,7 @@ Check and author:
   fetch         Materialize one configured external snapshot.           grund fetch TICKET-1234
 
 Set up:
-  init          Scaffold agent instructions + grund.toml.               grund init --docs
+  init          Scaffold agent instructions + grund.toml.               grund init --scaffold
   config        Validate or show the effective grund.toml.              grund config show
   integrations  Print/install clickable-citation integrations.          grund integrations wezterm
   completions   Print shell completion scripts.                         grund completions bash

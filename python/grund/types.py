@@ -370,6 +370,7 @@ class InitFsHome:
 @dataclass(frozen=True)
 class InitNext:
     docs: bool
+    declares_kinds: bool
     entrypoint: str
     fs_home: InitFsHome
     scan_reads_file: bool

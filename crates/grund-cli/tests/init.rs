@@ -67,16 +67,16 @@ fn init_default_writes_canonical_pair_and_passes_check() {
 }
 
 #[test]
-fn init_docs_form_emits_full_scaffold_and_check_is_clean() {
-    // §FS-init.2.1.3 (--docs form) + §FS-init.2.3.4.10 (reachable static
+fn init_scaffold_form_emits_full_scaffold_and_check_is_clean() {
+    // §FS-init.2.1.3 (--scaffold form) + §FS-init.2.3.4.10 (reachable static
     // citation-direction guidance). The scaffolded tree must satisfy `grund check` —
     // i.e. the canonical AGENTS.md + grund.toml + docs skeleton is internally consistent.
-    let target = workdir("init_docs_form_emits_full_scaffold_and_check_is_clean");
+    let target = workdir("init_scaffold_form_emits_full_scaffold_and_check_is_clean");
     let output = run_grund(
         &[
             "init",
             target.to_str().unwrap(),
-            "--docs",
+            "--scaffold",
             "--agents-md",
             "--name",
             "DemoProject",
@@ -85,7 +85,7 @@ fn init_docs_form_emits_full_scaffold_and_check_is_clean() {
     );
     assert!(
         output.status.success(),
-        "init --docs failed: stderr={}",
+        "init --scaffold failed: stderr={}",
         String::from_utf8_lossy(&output.stderr)
     );
 
@@ -104,7 +104,10 @@ fn init_docs_form_emits_full_scaffold_and_check_is_clean() {
         "tests/integration/.gitkeep",
     ];
     for rel in expected {
-        assert!(target.join(rel).exists(), "init --docs did not write {rel}");
+        assert!(
+            target.join(rel).exists(),
+            "init --scaffold did not write {rel}"
+        );
     }
 
     let agents = fs::read_to_string(target.join("AGENTS.md")).expect("read AGENTS.md");
@@ -120,16 +123,16 @@ fn init_docs_form_emits_full_scaffold_and_check_is_clean() {
     );
     assert!(
         agents.contains(CITATION_DIRECTIONS_URL),
-        "--docs AGENTS.md should link to the reachable canonical citation directions page"
+        "--scaffold AGENTS.md should link to the reachable canonical citation directions page"
     );
     assert!(
         grund_toml.contains(CITATION_DIRECTIONS_URL),
-        "--docs grund.toml should link to the reachable canonical citation directions page"
+        "--scaffold grund.toml should link to the reachable canonical citation directions page"
     );
     assert!(
         !agents.contains("See docs/user-facing/citation-directions.md")
             && !grund_toml.contains("See docs/user-facing/citation-directions.md"),
-        "--docs output must not point at an absent repo-local page"
+        "--scaffold output must not point at an absent repo-local page"
     );
 
     let check = run_grund(&["check", target.to_str().unwrap()], manifest_dir());
@@ -141,17 +144,17 @@ fn init_docs_form_emits_full_scaffold_and_check_is_clean() {
 }
 
 #[test]
-fn init_docs_default_requirements_file_is_scanned() {
+fn init_scaffold_default_requirements_file_is_scanned() {
     // §FS-init.2.1 / §FS-config.3.5.8: the generated FS home is in the generated
     // scan roots, so declarations added where `init` points users are resolvable.
-    let target = workdir("init_docs_default_requirements_file_is_scanned");
+    let target = workdir("init_scaffold_default_requirements_file_is_scanned");
     let output = run_grund(
-        &["init", target.to_str().unwrap(), "--docs"],
+        &["init", target.to_str().unwrap(), "--scaffold"],
         manifest_dir(),
     );
     assert!(
         output.status.success(),
-        "init --docs failed: stderr={}",
+        "init --scaffold failed: stderr={}",
         String::from_utf8_lossy(&output.stderr)
     );
 
@@ -249,15 +252,15 @@ fn init_description_flag_rejects_multiline_value() {
 }
 
 #[test]
-fn init_failed_docs_write_reports_prior_progress() {
+fn init_failed_scaffold_write_reports_prior_progress() {
     // §FS-init.2.2 / §FS-init.4: init reports touched paths as it goes. If a
     // later scaffold write fails, the user still needs the transcript for the
     // files that were already created.
-    let target = workdir("init_failed_docs_write_reports_prior_progress");
+    let target = workdir("init_failed_scaffold_write_reports_prior_progress");
     fs::write(target.join("docs"), "not a directory").expect("write docs file");
 
     let output = run_grund(
-        &["init", target.to_str().unwrap(), "--docs"],
+        &["init", target.to_str().unwrap(), "--scaffold"],
         manifest_dir(),
     );
     assert!(
@@ -399,14 +402,14 @@ title = "Architecture decision"
 }
 
 /// §FS-config.3.4.4.4 / §FS-init.2.1: existing configs without explicit kind homes keep
-/// the legacy FS folder, and `init --docs` must scaffold that effective home.
-/// §FS-init.1.3 is that rule seen from the `--docs` side: a config that omits
+/// the legacy FS folder, and `init --scaffold` must scaffold that effective home.
+/// §FS-init.1.3 is that rule seen from the `--scaffold` side: a config that omits
 /// `[[kinds]]` keeps the compatibility FS home, so the scaffold writes
 /// `docs/functional-spec/README.md` and the next-step guidance points at
 /// `docs/functional-spec` rather than at the generated `requirements.md`.
 #[test]
-fn init_docs_existing_implicit_legacy_config_uses_legacy_fs_home() {
-    let target = workdir("init_docs_existing_implicit_legacy_config_uses_legacy_fs_home");
+fn init_scaffold_existing_implicit_legacy_config_uses_legacy_fs_home() {
+    let target = workdir("init_scaffold_existing_implicit_legacy_config_uses_legacy_fs_home");
     fs::create_dir_all(target.join(".agents")).expect("create .agents");
     fs::write(
         target.join(".agents/grund.toml"),
@@ -415,12 +418,12 @@ fn init_docs_existing_implicit_legacy_config_uses_legacy_fs_home() {
     .expect("write legacy implicit config");
 
     let output = run_grund(
-        &["init", target.to_str().unwrap(), "--docs"],
+        &["init", target.to_str().unwrap(), "--scaffold"],
         manifest_dir(),
     );
     assert!(
         output.status.success(),
-        "init --docs failed: stderr={}",
+        "init --scaffold failed: stderr={}",
         String::from_utf8_lossy(&output.stderr)
     );
 
@@ -655,17 +658,17 @@ fn init_dry_run_on_current_repo_suppresses_next_block() {
 }
 
 #[test]
-fn init_dry_run_with_docs_previews_scaffold_without_writing() {
-    // §FS-init.1 / §FS-init.2.2: --dry-run composes with --docs — every docs
+fn init_dry_run_with_scaffold_previews_scaffold_without_writing() {
+    // §FS-init.1 / §FS-init.2.2: --dry-run composes with --scaffold — every docs
     // scaffold path is reported as `would-write` and no file lands on disk.
-    let target = workdir("init_dry_run_with_docs_previews_scaffold_without_writing");
+    let target = workdir("init_dry_run_with_scaffold_previews_scaffold_without_writing");
     let dry = run_grund(
-        &["init", target.to_str().unwrap(), "--docs", "--dry-run"],
+        &["init", target.to_str().unwrap(), "--scaffold", "--dry-run"],
         manifest_dir(),
     );
     assert!(
         dry.status.success(),
-        "init --docs --dry-run failed: stderr={}",
+        "init --scaffold --dry-run failed: stderr={}",
         String::from_utf8_lossy(&dry.stderr)
     );
     let stderr = String::from_utf8_lossy(&dry.stderr);
@@ -685,16 +688,16 @@ fn init_dry_run_with_docs_previews_scaffold_without_writing() {
     ] {
         assert!(
             stderr.contains(&format!("would-write {rel}")),
-            "dry-run --docs should preview `would-write {rel}`, got:\n{stderr}"
+            "dry-run --scaffold should preview `would-write {rel}`, got:\n{stderr}"
         );
         assert!(
             !target.join(rel).exists(),
-            "dry-run --docs must not write {rel} to disk"
+            "dry-run --scaffold must not write {rel} to disk"
         );
     }
     assert!(
         !stderr.contains("\nwrote "),
-        "dry-run --docs must not use the real-run verb, got:\n{stderr}"
+        "dry-run --scaffold must not use the real-run verb, got:\n{stderr}"
     );
 }
 

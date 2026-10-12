@@ -138,7 +138,7 @@ fn empty_scan_warning(config: &Config, path: &Path, path_provided: bool) -> Diag
         ),
         (Some(dirs), true) => format!(
             "nothing to scan — grund looked under [scan] include = [{}] and found no files. Run \
-             `grund init --docs` to scaffold the canonical requirements.md, docs/, and e2e/ \
+             `grund init --scaffold` to scaffold the canonical requirements.md, docs/, and e2e/ \
              trees, point `[scan] include` in `grund.toml` at your sources, or pass a \
              path explicitly (`grund check <dir>`).",
             quoted_list(dirs)

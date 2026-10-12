@@ -63,6 +63,21 @@ impl Read {
     }
 }
 
+/// The project a v1 file means when it writes `kinds = []` and nothing else:
+/// the defaults with the empty kind set (§FS-config.3.4.4.5) — what the `none`
+/// template's config means before it is written (§FS-init.2.4.9).
+pub(super) fn default_project_without_kinds() -> Project {
+    let mut project = default_project(false);
+    kind_rows::lower_parsed_kinds(
+        Path::new("grund.toml"),
+        Path::new("."),
+        Vec::new(),
+        &mut project,
+    )
+    .expect("an empty kind set lowers");
+    project
+}
+
 /// The whole v1 file as a `Project`, unjudged: both steps of [`Read`] in turn.
 #[cfg(test)]
 pub(super) fn read(read_path: &Path, report_path: &Path, root: &Path) -> Result<Project> {

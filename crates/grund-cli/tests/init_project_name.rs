@@ -31,7 +31,7 @@ fn init_force_keeps_configured_name_across_reported_sequence() {
         &[
             "init",
             target.to_str().unwrap(),
-            "--docs",
+            "--scaffold",
             "--name",
             "probe",
         ],
@@ -46,7 +46,7 @@ fn init_force_keeps_configured_name_across_reported_sequence() {
     let config_before = fs::read(target.join("grund.toml")).expect("read initial config");
 
     let forced = run_grund(
-        &["init", target.to_str().unwrap(), "--docs", "--force"],
+        &["init", target.to_str().unwrap(), "--scaffold", "--force"],
         manifest_dir(),
     );
     assert!(

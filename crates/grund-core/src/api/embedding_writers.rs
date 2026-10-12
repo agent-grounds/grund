@@ -41,6 +41,9 @@ pub(super) fn write(r: &EmbeddingRequest) -> Result<Value, Value> {
                 target: r.root.clone(),
                 name: r.string("name"),
                 description: r.string("description"),
+                // §DF-init-templates.2.3: the bindings take no template option
+                // yet, so they lay the default one as before.
+                template: None,
                 docs: r.flag("docs"),
                 force: r.flag("force"),
                 dry_run: !r.flag("write"),

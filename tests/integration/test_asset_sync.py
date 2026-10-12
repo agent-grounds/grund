@@ -38,12 +38,20 @@ class AssetSyncTests(unittest.TestCase):
         )
 
     def test_every_template_matches_its_embedded_asset_in_both_directions(self):
+        # §DF-init-templates.2.5: one directory per template, so the two trees
+        # are compared by relative path at every depth.
         repo_templates = REPO_ROOT / "templates"
         embedded_templates = ASSETS / "templates"
-        repo_names = {path.name for path in repo_templates.iterdir() if path.is_file()}
-        embedded_names = {path.name for path in embedded_templates.iterdir() if path.is_file()}
+
+        def names(root):
+            return {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file()}
+
+        repo_names = names(repo_templates)
+        embedded_names = names(embedded_templates)
         self.assertEqual(repo_names, embedded_names, "templates/ and the embedded copies name different files")
-        self.assertGreaterEqual(len(repo_names), 10)
+        self.assertGreaterEqual(len(repo_names), 12)
+        self.assertIn("software-development/grund.toml", repo_names)
+        self.assertIn("none/grund.toml", repo_names)
         for name in sorted(repo_names):
             with self.subTest(template=name):
                 self.assertEqual(

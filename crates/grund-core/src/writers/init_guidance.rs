@@ -1,4 +1,5 @@
-//! The typed post-init guidance and `--docs` scaffold (§FS-init.2.1–2.2).
+//! The typed post-init guidance and the `--scaffold` starter files
+//! (§FS-init.2.1–2.2).
 
 use crate::config::Config;
 use crate::scanner::CANONICAL_AGENT_ENTRYPOINT;
@@ -10,7 +11,13 @@ use crate::templates::{
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct InitNext {
+    /// Whether the run laid the starter files: `--scaffold`, or its deprecated
+    /// spelling `--docs` (§FS-init.1.7). The name is published API and stays
+    /// (§DF-init-templates.2.3).
     pub docs: bool,
+    /// Whether the effective config declares any citable kind. Where it does
+    /// not, the guidance teaches the first kind instead (§FS-init.2.2.2.2).
+    pub declares_kinds: bool,
     pub entrypoint: String,
     pub fs_home: InitFsHome,
     /// Whether the effective scanner found a readable file before this guidance
@@ -23,12 +30,11 @@ impl InitNext {
     /// Render the shared trailing guidance for the shipped CLI and the deprecated
     /// core command adapter (§FS-init.2.2.2).
     pub fn render(&self) -> String {
-        render_next_block_for_home(
-            self.docs,
-            Some(&self.entrypoint),
-            &self.fs_home,
-            self.scan_reads_file,
-        )
+        let entrypoint = Some(self.entrypoint.as_str());
+        if !self.declares_kinds {
+            return render_first_kind_block(entrypoint);
+        }
+        render_next_block_for_home(self.docs, entrypoint, &self.fs_home, self.scan_reads_file)
     }
 }
 
@@ -51,6 +57,19 @@ impl InitFsHome {
             InitFsHome::File { path, .. } | InitFsHome::Folder { path } => path,
         }
     }
+}
+
+/// The `next:` block of a project that declares no kinds (§FS-init.2.2.2.2):
+/// there is no FS home to scaffold or allocate in, so it teaches the first kind.
+fn render_first_kind_block(entrypoint: Option<&str>) -> String {
+    let entrypoint = entrypoint.unwrap_or(CANONICAL_AGENT_ENTRYPOINT);
+    format!(
+        "\nnext:\n  \
+         1. declare a first kind in grund.toml, then run `grund init` again so {entrypoint} lists it\n  \
+         2. run `grund check`\n  \
+         3. allocate an ID:  ID=$(grund id <KIND> \"…\")  then add it to that kind's home\n\
+         see {entrypoint} for the full workflow.\n"
+    )
 }
 
 /// The trailing `next:` guidance block (§FS-init.2.2.2). Suppressed by the caller
@@ -94,7 +113,7 @@ fn render_next_block_for_home(
             InitFsHome::File { path, .. } | InitFsHome::Folder { path } => path,
         };
         output.push_str(&format!(
-            "  1. re-run with --docs to scaffold the FS home ({fs_home_path}), docs/, and tests/ (or create them yourself)"
+            "  1. re-run with --scaffold to scaffold the FS home ({fs_home_path}), docs/, and tests/ (or create them yourself)"
         ));
         if !scan_reads_file {
             output.push_str(" — until then `grund check` has nothing to scan");
@@ -145,7 +164,8 @@ pub(crate) fn init_fs_home(config: &Config) -> InitFsHome {
     }
 }
 
-/// Every `--docs` stub, paired with the path it lands at (§FS-init.2.1). Every
+/// Every starter file of the `software-development` template, paired with the
+/// path it lands at (§FS-init.2.1). Every
 /// owned ID example is rendered from its kind's effective format (§FS-init.2.1.3).
 pub(crate) fn docs_scaffold_for_config(
     fs_home: &InitFsHome,

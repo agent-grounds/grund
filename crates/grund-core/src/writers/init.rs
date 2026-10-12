@@ -9,6 +9,9 @@ use super::init_notes::{duplicate_agent_entrypoint_notes, shadowed_claude_entryp
 use super::init_plan::selected_init_agent_entrypoints;
 use super::init_render::{agents_workspace_members_section, init_pending_effective_config};
 use super::init_target::{refuse_init_global_instruction_paths, refuse_init_target};
+use super::init_template::{
+    StarterWrite, lay_starter_files, resolve_template, template_config_note,
+};
 use crate::checker::{configured_rule_sentences, declared_workspace_vocabulary};
 use crate::config::{Config, config_file_in, display_path};
 use crate::model::{Catalog, Diagnostic, Finding, FindingSite, format_path};
@@ -45,8 +48,9 @@ fn render_chapter_rules(mut block: String, section: Option<&str>) -> String {
     block
 }
 
-/// Scaffold a grund setup into `opts.target`: the agent-instruction
-/// entrypoints, `grund.toml`, and — with `--docs` — the documentation stubs.
+/// Scaffold a grund setup into `opts.target` from a template (§FS-init.1.6): the
+/// agent-instruction entrypoints, the template's `grund.toml`, and — with
+/// `--scaffold` — its starter files.
 ///
 /// Why the effective config is read before the entrypoint plan: one selection
 /// rule depends on it. A companion symlinked to `AGENTS.md` leaves its agent
@@ -77,7 +81,7 @@ fn render_chapter_rules(mut block: String, section: Option<&str>) -> String {
 /// not even with `--force`, and is reported under the name it was found at so a
 /// repo on the `.agents/` form never grows the redundant pair. `--force`
 /// targets the things `init` owns end to end — the managed agent-instructions
-/// block and the `--docs` scaffold stubs — not the user's settings.
+/// block and the starter files `--scaffold` lays — not the user's settings.
 ///
 /// Why the shadowed-entrypoint note is emitted: the committed `link` opinion is
 /// rendered per entrypoint, and a Claude entrypoint that is a symlink to
@@ -111,6 +115,7 @@ fn init_run(
         target,
         name,
         description,
+        template: template_name,
         docs,
         force,
         dry_run,
@@ -131,6 +136,9 @@ fn init_run(
             "--description must be a single line".to_string(),
         ));
     }
+    // §FS-init.1.6.3, §FS-init.1.6.4: a refused template is a flag error, settled
+    // before the target is even looked at, so nothing is read or written.
+    let template = resolve_template(template_name.as_deref(), docs).map_err(InitError::new)?;
     // §FS-init.1, §FS-init.1.2: what `<path>` is, and whether it may be
     // scaffolded at all. The companion rule that needs the entrypoint plan runs
     // below, where that plan first exists; both are ahead of every write.
@@ -144,13 +152,12 @@ fn init_run(
     // §FS-init.2.1.1.1, §FS-init.2.3.4.17: do both before the entrypoint plan,
     // so each renderer consumes the same identity and effective grammar.
     let (mut init_config, resolved_name) =
-        init_pending_effective_config(&target, name.as_deref(), description.as_deref()).map_err(
-            |err| {
-                let message = err.to_string();
-                *diagnostic = Some(err);
-                InitError::new(message)
-            },
-        )?;
+        init_pending_effective_config(&target, template, name.as_deref(), description.as_deref())
+            .map_err(|err| {
+            let message = err.to_string();
+            *diagnostic = Some(err);
+            InitError::new(message)
+        })?;
     // §FS-init.2.2.2: the guidance probe consumes the exact §AR-workspace.6
     // boundary used by scanner commands. Keep this best-effort: the existing
     // workspace renderer owns init's diagnostics and error-tolerant behavior.
@@ -355,6 +362,10 @@ fn init_run(
             .strip_prefix(&target)
             .unwrap_or(&existing)
             .to_path_buf();
+        // §FS-init.1.6.5: an explicit template must not silently do nothing.
+        if template_name.is_some() {
+            notes.push(template_config_note(template, &format_path(&rel)));
+        }
         events.push(InitEvent {
             verb: "exists",
             path: format_path(&rel),
@@ -370,7 +381,7 @@ fn init_run(
         if !dry_run
             && let Err(err) = fs::write(
                 &config_dest,
-                render_grund_toml(&resolved_name, description.as_deref()),
+                render_grund_toml(template, &resolved_name, description.as_deref()),
             )
         {
             // §FS-distribution.3.3.2: retain source I/O data before string projection.
@@ -414,79 +425,34 @@ fn init_run(
     } else {
         Vec::new()
     };
-    for (rel, contents) in &files {
-        let dest = target.join(rel);
-        if !force && path_exists(&dest) {
-            events.push(InitEvent {
-                verb: "exists",
-                path: rel.clone(),
-            });
-            continue;
-        }
-        if !dry_run
-            && let Some(parent) = dest.parent()
-            && let Err(err) = fs::create_dir_all(parent)
-        {
-            // §FS-distribution.3.3.2: retain source I/O data before string projection.
-            *diagnostic = Some(
-                crate::model::OperationDiagnostic::filesystem(
-                    &parent,
-                    &err,
-                    format!("create {}: {err}", parent.display()),
-                )
-                .into(),
-            );
-            return Err(InitError::with_events(
-                events,
-                format!("create {}: {err}", parent.display()),
-            ));
-        }
-        if !dry_run && let Err(err) = fs::write(&dest, contents) {
-            // §FS-distribution.3.3.2: retain source I/O data before string projection.
-            *diagnostic = Some(
-                crate::model::OperationDiagnostic::filesystem(
-                    &dest,
-                    &err,
-                    format!("write {}: {err}", dest.display()),
-                )
-                .into(),
-            );
-            return Err(InitError::with_events(
-                events,
-                format!("write {}: {err}", dest.display()),
-            ));
-        }
-        events.push(InitEvent {
-            verb: verb_wrote(dry_run),
-            path: rel.clone(),
-        });
-        #[cfg(feature = "test-binding-writes")]
-        if !dry_run {
-            if let Err(error) = super::binding_write_fault::after_write() {
-                *diagnostic = Some(
-                    crate::model::OperationDiagnostic::filesystem(&dest, &error, error.to_string())
-                        .into(),
-                );
-                return Err(InitError::with_events(events, error.to_string()));
-            }
-        }
-        any_change = true;
-    }
+    // §FS-init.2.1.3: the starter files, laid by the template's own writer.
+    any_change |= lay_starter_files(StarterWrite {
+        target: &target,
+        files: &files,
+        force,
+        dry_run,
+        diagnostic,
+        events: &mut events,
+    })?;
+    // §FS-init.2.2.2.2: a config with no citable kind has no FS home at all.
+    let declares_kinds = init_config.kinds.iter().any(|kind| kind.citable);
 
-    // §FS-init.2.2.2.1: only `exists`/`updated` lines, no `--docs`, and the
+    // §FS-init.2.2.2.1: only `exists`/`updated` lines, no `--scaffold`, and the
     // effective FS home on disk — the refresh `grund check` sends people down.
     let refresh_of_complete_setup = !docs
+        && declares_kinds
         && events
             .iter()
             .all(|event| !event.is_change() || event.verb == verb_updated(dry_run))
         && path_exists(target.join(fs_home.path()));
     let next = (any_change && !refresh_of_complete_setup).then(|| {
-        // §FS-init.2.2.2: only no-`--docs` guidance asks this question. The probe
+        // §FS-init.2.2.2: only no-`--scaffold` guidance asks this question. The probe
         // uses the effective config selected above and exits on its first file.
         let scan_reads_file =
             !docs && effective_scope_reads_any_file(init_config.schema(), init_config.frame());
         InitNext {
             docs,
+            declares_kinds,
             entrypoint: workflow_entrypoint
                 .unwrap_or_else(|| CANONICAL_AGENT_ENTRYPOINT.to_string()),
             fs_home,

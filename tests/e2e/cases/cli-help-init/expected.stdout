@@ -1,13 +1,14 @@
-grund init — scaffold agent instructions + `grund.toml` (and, with --docs, the docs/ and e2e/ layout).
+grund init — scaffold agent instructions + a template's `grund.toml` (and, with --scaffold, its starter files).
 Idempotent: re-running updates the managed agent-instructions block in place and leaves your edits alone.
 
-Usage:  grund init [PATH] [--docs] [--name NAME] [--description TEXT] [--force] [--dry-run] [--check] [--no-vcs] [--agents-md] [--claude] [--gemini] [--pi] [--copilot] [--cursor] [--windsurf] [--zed]
+Usage:  grund init [PATH] [--template NAME] [--scaffold] [--name NAME] [--description TEXT] [--force] [--dry-run] [--check] [--no-vcs] [--agents-md] [--claude] [--gemini] [--pi] [--copilot] [--cursor] [--windsurf] [--zed]
 
 Options:
-  --docs         also write docs/ (grund, goals, roadmap, changelog, spec READMEs) and e2e/
+  --template NAME  software-development (default: the canonical kinds) or none (no kinds, for a repo that declares its own)
+  --scaffold     also write the template's starter files: requirements.md, docs/ and tests/ (--docs is the deprecated spelling)
   --name NAME    project name (default: target project_name, then directory name)
   --description TEXT  one-line project description written to grund.toml (shown next to this project in workspace member lists)
-  --force        rewrite the canonical AGENTS.md and --docs scaffolds; grund.toml is never overwritten
+  --force        rewrite the canonical AGENTS.md and the --scaffold starter files; grund.toml is never overwritten
   --dry-run      report what would be written/appended/updated without touching any file
   --check        the same report, as a gate: writes nothing, exits 1 if anything is pending
   --no-vcs       scaffold into a target with no .git/.hg/.jj/.svn above it (refused by default)
@@ -20,10 +21,11 @@ Options:
   --windsurf     create/update .windsurfrules
   --zed          create/update .rules
 
-Exit:  0 written / updated / already current · 1 --check only: something is still pending · 2 missing or refused target, unknown flag, or unsupported newer block.
+Exit:  0 written / updated / already current · 1 --check only: something is still pending · 2 missing or refused target, unknown flag or template, or unsupported newer block.
 
 Examples:
-  grund init --docs                  # full first-time scaffold
+  grund init --scaffold              # full first-time scaffold
+  grund init --template=none         # a grund.toml with no kinds, for a repo that declares its own
   grund init --dry-run               # preview without writing
   grund init --check                 # the same preview as a gate: exit 1 if pending
   grund init --name "My Service"      # auto-detect entrypoint, else AGENTS.md
@@ -34,5 +36,6 @@ Examples:
   grund init --docs --force          # rewrite AGENTS.md and the docs/ scaffolds
   grund init --no-vcs ../scratch     # scaffold a directory no VCS tracks
 
+Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/init.md
 Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/init-repo-shapes.md
-Example:  https://github.com/agent-grounds/grund/tree/main/examples
+Example:  https://github.com/agent-grounds/grund/tree/main/examples/init-template-none

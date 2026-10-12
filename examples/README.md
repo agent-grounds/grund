@@ -31,6 +31,7 @@ summarizes when to reach for each.
 | Folder                                                       | Use-case                                                 |
 |--------------------------------------------------------------|----------------------------------------------------------|
 | [`quickstart/`](quickstart/) | Declare a login requirement with a named section, cite it from code, retrieve it, then break and repair the citation ([§FS-examples.2](../docs/functional-spec/FS-examples.md#2-canonical-use-cases)) |
+| [`init-template-none/`](init-template-none/) | Setting up a repository that declares its own kinds with `grund init --template=none` ([§FS-init.1.6.2](../docs/functional-spec/FS-init.md#162-none)) |
 | [`workspace/`](workspace/)                                   | Cross-project citation in a monorepo ([§FS-workspace](../docs/functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace)) |
 | [`rules/`](rules/)                                           | Controlled-English rules over declarations, named chapters, and citations ([§FS-rules](../docs/functional-spec/FS-rules.md#fs-rules-grounded-declarations-state-and-enforce-chapter-rules)) |
 | [`fields/`](fields/)                                         | A version-2 kind's chapters declared as fields: order, titles, scalar values and closed kinds ([§FS-fields](../docs/functional-spec/FS-fields.md#fs-fields-a-v2-kind-states-the-shape-of-its-declarations-and-check-holds-every-declaration-to-it)) |
