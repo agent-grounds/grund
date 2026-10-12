@@ -7,10 +7,11 @@ use std::path::Path;
 
 use super::embedded_value_context::{
     EMBEDDED_VALUE_MARKER, authored_heading_level, authored_heading_path,
-    component_without_block_close, normalized_value_lines, semantic_comment_content,
+    component_without_block_close, normalized_value_lines, relative_heading_paths,
+    semantic_comment_content,
 };
 use super::value_context::SourceValueLineContext;
-use super::values::{markdown_component, value_declaration_is_in_home};
+use super::values::{recorded_component, value_declaration_is_in_home};
 use crate::config::{Frame, Schema};
 use crate::model::{
     Catalog, EmbeddedValueRoot, InvalidValueSite, ValueRootOrigin, authored_component,
@@ -40,6 +41,9 @@ pub(super) fn validate_embedded_value_roots(
         .flatten()
         .filter(|decl| paths_same_location(&decl.file, path))
     {
+        // §FS-values.2.4: a relative heading is read at the path the record holds.
+        let relative = relative_heading_paths(decl);
+        let recorded = |line: usize| relative.get(&line).map(String::as_str);
         let mut roots = decl
             .sections
             .iter()
@@ -178,7 +182,7 @@ pub(super) fn validate_embedded_value_roots(
             let root_title_valid = normalized
                 .get(root_line.saturating_sub(1))
                 .and_then(|(line, _, _, block_comment)| {
-                    markdown_component(line, frame)
+                    recorded_component(line, recorded(root_line), frame)
                         .map(|(title, column)| (title, column, *block_comment))
                 })
                 .and_then(|(title, _, block_comment)| {
@@ -241,14 +245,16 @@ pub(super) fn validate_embedded_value_roots(
                 if content.is_empty() || matches!(content, "/*" | "/**" | "/*!" | "*" | "*/") {
                     continue;
                 }
-                let child = authored_heading_path(
-                    line,
-                    markdown,
-                    *block_comment,
-                    chapter_root,
-                    schema,
-                    frame,
-                );
+                let child = recorded(line_no).map(str::to_string).or_else(|| {
+                    authored_heading_path(
+                        line,
+                        markdown,
+                        *block_comment,
+                        chapter_root,
+                        schema,
+                        frame,
+                    )
+                });
                 let level = authored_heading_level(line, markdown, *block_comment, schema);
                 let expected_path = format!("{root_path}.{expected}");
                 let immediate_numeric = child.as_deref().is_some_and(|path| {
@@ -293,7 +299,8 @@ pub(super) fn validate_embedded_value_roots(
                             .to_string(),
                     ));
                 }
-                let Some((component, column)) = markdown_component(line, frame) else {
+                let Some((component, column)) = recorded_component(line, recorded(line_no), frame)
+                else {
                     reasons.push((
                         line_no,
                         None,

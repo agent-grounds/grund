@@ -1,13 +1,14 @@
 //! Host-context recognition and heading normalization for embedded values
 //! (§FS-values.2.4, §FS-values.9).
 
+use std::collections::BTreeMap;
 use std::path::Path;
 
 use super::value_context::SourceValueLineContext;
 use crate::config::{Frame, Schema};
 use crate::grammar::named_mode_section_path;
 use crate::grammar::{PythonDocstringScanState, source_scan_line};
-use crate::model::{Catalog, DeclarationSource, Id, InvalidValueSite};
+use crate::model::{Catalog, Declaration, DeclarationSource, Id, InvalidValueSite};
 
 pub(crate) const EMBEDDED_VALUE_MARKER: &str = "<!-- grund:value -->";
 
@@ -100,16 +101,44 @@ pub(super) fn push_invalid_embedded_marker(
     marker_start: usize,
     message: &str,
 ) {
-    findings.invalid_value_declarations.push(InvalidValueSite {
+    let column = column_offset + marker_start + 1;
+    let site = invalid_embedded_marker(id, path, line, column, message);
+    findings.invalid_value_declarations.push(site);
+}
+
+/// The `invalid-value-declaration` a marker at `column` of `line` earns.
+pub(super) fn invalid_embedded_marker(
+    id: Option<Id>,
+    path: &Path,
+    line: usize,
+    column: usize,
+    message: &str,
+) -> InvalidValueSite {
+    InvalidValueSite {
         id,
         file: path.to_path_buf(),
         line,
-        column: Some(column_offset + marker_start + 1),
+        column: Some(column),
         message: message.to_string(),
         source: DeclarationSource::Text,
         binding_namespace: None,
         binding_section: None,
-    });
+    }
+}
+
+/// The line of each heading of `decl` written in the relative form, with the
+/// canonical path the record holds for it, a duplicate's included (§FS-values.2.4).
+pub(super) fn relative_heading_paths(decl: &Declaration) -> BTreeMap<usize, String> {
+    let duplicates = decl
+        .duplicate_sections
+        .iter()
+        .map(|(path, info)| (path, info));
+    decl.sections
+        .iter()
+        .chain(duplicates)
+        .filter(|(_, info)| info.relative)
+        .map(|(path, info)| (info.line, path.clone()))
+        .collect()
 }
 
 pub(super) fn component_without_block_close(component: &str, block_comment: bool) -> &str {

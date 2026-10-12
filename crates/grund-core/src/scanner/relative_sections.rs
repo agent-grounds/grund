@@ -8,11 +8,19 @@
 use std::collections::BTreeMap;
 
 use super::context::section_path_is_numeric;
+use super::embedded_value_context::invalid_embedded_marker;
 use super::extents::{DeclarationBodies, body_end};
+use super::section_record::section_value_root;
+use crate::config::Schema;
 use crate::grammar::{named_mode_section_path, reduce_heading_text, relative_heading_form};
 use crate::model::{
-    Catalog, Declaration, FileRecord, RelativeSectionParent, SectionInfo, UnmarkedHeadingCandidate,
+    Catalog, Declaration, EmbeddedValueRoot, FileRecord, InvalidValueSite, RelativeSectionParent,
+    SectionInfo, UnmarkedHeadingCandidate,
 };
+
+/// A relative candidate, with the finding its value marker earns if no
+/// accepted heading takes the marker (§FS-values.2.4.4).
+pub(super) type RelativeCandidate = (UnmarkedHeadingCandidate, Option<InvalidValueSite>);
 
 /// Resolve every relative candidate of one Markdown file — a heading whose text
 /// reads as the relative form (§FS-declarations.section.relative.form) — against its parent
@@ -25,20 +33,28 @@ use crate::model::{
 /// (§FS-declarations.section.relative.where, §FS-declarations.checks.unmarked-heading.1).
 ///
 /// Candidates are taken shallowest first, so every parent is settled — accepted,
-/// failed or a claimant of a duplicated path — before a child asks for it.
+/// failed or a claimant of a duplicated path — before a child asks for it. An
+/// accepted heading is a value root as its complete form would be, enrolled at
+/// its canonical path (§FS-values.2.4, §FS-values.2.5); a marker no accepted
+/// heading takes is reported as the per-file pass would have.
 pub(super) fn resolve_relative_sections(
     findings: &mut Catalog,
     record: &mut FileRecord,
-    candidates: Vec<UnmarkedHeadingCandidate>,
+    candidates: Vec<RelativeCandidate>,
     named_sections: bool,
+    schema: &Schema,
     unmarked: &mut Vec<UnmarkedHeadingCandidate>,
 ) {
     let bodies = DeclarationBodies::of(record, findings);
-    let mut by_owner: BTreeMap<usize, Vec<UnmarkedHeadingCandidate>> = BTreeMap::new();
-    for candidate in candidates {
+    let mut by_owner: BTreeMap<usize, Vec<RelativeCandidate>> = BTreeMap::new();
+    let mut markers = Vec::new();
+    for (candidate, marker) in candidates {
         match bodies.owner(candidate.line, candidate.heading_level) {
-            Some((start, _)) => by_owner.entry(start).or_default().push(candidate),
-            None => unmarked.push(candidate),
+            Some((start, _)) => by_owner.entry(start).or_default().push((candidate, marker)),
+            None => {
+                markers.extend(marker);
+                unmarked.push(candidate);
+            }
         }
     }
     let mut accepted: BTreeMap<usize, String> = BTreeMap::new();
@@ -52,11 +68,12 @@ pub(super) fn resolve_relative_sections(
             continue;
         };
         let end = body_end(record, decl, None);
-        owned.sort_by_key(|candidate| (candidate.heading_level, candidate.line));
-        for heading in owned {
+        owned.sort_by_key(|(candidate, _)| (candidate.heading_level, candidate.line));
+        for (heading, mut marker) in owned {
             let level = heading.heading_level;
             let parent = parent_path(record, decl, end, heading.line, level);
             let Some(parent) = parent else {
+                markers.extend(marker);
                 findings
                     .relative_section_parents
                     .push(RelativeSectionParent {
@@ -72,6 +89,7 @@ pub(super) fn resolve_relative_sections(
                 continue;
             };
             let Some(form) = relative_heading_form(&heading.title) else {
+                markers.extend(marker);
                 unmarked.push(heading);
                 continue;
             };
@@ -89,8 +107,17 @@ pub(super) fn resolve_relative_sections(
                         part.bytes().all(|byte| byte.is_ascii_digit())
                     }));
             if !shaped || !form.fits(numeric) {
+                markers.extend(marker);
                 unmarked.push(heading);
                 continue;
+            }
+            let column = marker.as_ref().and_then(|site| site.column);
+            let value_root = section_value_root(schema, &decl.id.kind, &canonical, column);
+            if value_root
+                .as_ref()
+                .is_some_and(|root| root.marker_column().is_some())
+            {
+                marker = None;
             }
             let info = SectionInfo {
                 // §FS-declarations.section.relative.shown: anchored as written and rendered.
@@ -98,13 +125,26 @@ pub(super) fn resolve_relative_sections(
                 line: heading.line,
                 heading_level: level,
                 value: None,
-                value_root: None,
+                value_root,
                 relative: true,
             };
-            claim(decl, canonical.clone(), info);
+            // §FS-values.2.4.3: a duplicated root's marker is reported where it lies.
+            if let Some((line, Some(column))) = claim(decl, canonical.clone(), info) {
+                let message = "embedded value root coordinate is duplicated";
+                let id = Some(decl.id.clone());
+                markers.push(invalid_embedded_marker(
+                    id,
+                    &heading.file,
+                    line,
+                    column,
+                    message,
+                ));
+            }
+            markers.extend(marker);
             accepted.insert(heading.line, canonical);
         }
     }
+    findings.invalid_value_declarations.extend(markers);
     for heading in &mut record.headings {
         if let Some(path) = accepted.remove(&heading.line) {
             heading.path = Some(path);
@@ -116,20 +156,34 @@ pub(super) fn resolve_relative_sections(
 /// Record `path` on `decl` by the first-claimant rule (§AR-scanner.2.2.3): the
 /// heading earliest in the file holds it and every later one is a duplicate,
 /// whichever form each was written in (§FS-declarations.checks.duplicate-section.5).
-fn claim(decl: &mut Declaration, path: String, info: SectionInfo) {
-    match decl.sections.remove(&path) {
+/// Returns the line of the heading that became the duplicate, with its value
+/// marker's column if it was a marked root.
+fn claim(
+    decl: &mut Declaration,
+    path: String,
+    info: SectionInfo,
+) -> Option<(usize, Option<usize>)> {
+    let duplicate = match decl.sections.remove(&path) {
         Some(first) if first.line < info.line => {
             decl.sections.insert(path.clone(), first);
-            decl.duplicate_sections.push((path, info));
+            info
         }
         Some(later) => {
             decl.sections.insert(path.clone(), info);
-            decl.duplicate_sections.push((path, later));
+            later
         }
         None => {
             decl.sections.insert(path, info);
+            return None;
         }
-    }
+    };
+    let marker = duplicate
+        .value_root
+        .as_ref()
+        .and_then(EmbeddedValueRoot::marker_column);
+    let at = (duplicate.line, marker);
+    decl.duplicate_sections.push((path, duplicate));
+    Some(at)
 }
 
 /// The path of the parent a relative heading at `level` on `line` takes, empty

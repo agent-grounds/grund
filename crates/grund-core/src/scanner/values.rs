@@ -12,7 +12,7 @@ use super::value_binding_attempts::{
 };
 use super::value_context::{binding_span_is_inside, value_binding_context};
 use crate::config::{Frame, Schema};
-use crate::grammar::value_binding_section_shape_is_valid;
+use crate::grammar::{expand_relative_heading, value_binding_section_shape_is_valid};
 use crate::model::{
     Catalog, Id, InvalidValueSite, ValueBinding, authored_component, component_text_is_valid,
 };
@@ -117,7 +117,8 @@ pub(super) fn validate_markdown_value_declarations(
                 valid = false;
                 continue;
             };
-            match markdown_component(line, frame) {
+            let recorded = info.relative.then_some(coordinate.as_str());
+            match recorded_component(line, recorded, frame) {
                 Some((component, column)) if component_text_is_valid(component) => {
                     info.value = Some(authored_component(component, column));
                 }
@@ -189,6 +190,24 @@ pub(crate) fn markdown_component<'a>(line: &'a str, frame: Frame<'_>) -> Option<
     let component = tail.trim_start_matches([' ', '\t']);
     let start = line.len() - component.len();
     Some((component, start + 1))
+}
+
+/// [`markdown_component`] of a heading, read at `recorded` — the canonical path
+/// the record holds for it — when it is written in the relative form, so its
+/// component is its complete form's; the column stays on the line as written
+/// (§FS-values.2.4).
+pub(crate) fn recorded_component<'a>(
+    line: &'a str,
+    recorded: Option<&str>,
+    frame: Frame<'_>,
+) -> Option<(&'a str, usize)> {
+    let Some(path) = recorded else {
+        return markdown_component(line, frame);
+    };
+    let complete = expand_relative_heading(line, path);
+    // The expansion keeps everything after the path, so the component ends `line`.
+    let start = line.len() - markdown_component(&complete, frame)?.0.len();
+    Some((&line[start..], start + 1))
 }
 
 /// Record only exact authored bindings in Markdown or a recognized whole-line
