@@ -125,13 +125,20 @@ command keeps its own: `check <path>` resolves against the whole project, `show`
 workspace `check <dir>` is one narrowed scan, and the editor's root lookup skips
 the member rewrite.
 
-One function builds every `Run`: `open()`, in the workspace component, the
-lowest that knows both the config and the members. It takes the invocation, the
-path, the command, its flags, `--path-base` and the buffers, discovers the
-config, expands the workspace, and builds each project's `Run` once. Nothing
-assigns to a `Run` field afterwards, as nothing does to the façade (section 5):
-a per-run fact a command decides is an argument to `open()`, never a setter on a
-built `Run`. No other `Run` field is read from a file. A command-line override of
+One function builds every `Run` from what the invocation decided: `open()`, in
+the workspace component, the lowest that knows both the config and the members.
+It takes the invocation, the path, the command, its flags, `--path-base` and the
+buffers, discovers the config, applies the member rewrite and the workspace
+boundary, and builds the `Run` once. Nothing a command decides is set on a `Run`
+afterwards, as nothing is on the façade (section 5): a per-run fact a command
+decides is an argument to `open()`, never a setter on a built `Run`. What is
+completed afterwards is only what the run discovers rather than decides:
+workspace expansion, which runs once a workspace check has its root config,
+builds each member's `Run` through the same constructor and then records the
+`workspace` facts it found (the boundary roots, project roots, scope path and
+absent optional members, and the kind table, which a narrowed run reads from its
+declared workspace instead) and the run warnings it raised. No other `Run` field
+is read from a file. A command-line override of
 a file's value, such as `--require-grounding`, is a `Run` fact the façade applies
 over the `Project` value. `Compiled { grammar, demand }` is `compile(&Project)`:
 the ID grammar, and the `ScanDemand` that tells the scanner which rows' files
