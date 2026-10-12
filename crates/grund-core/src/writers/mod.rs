@@ -73,6 +73,7 @@ mod expected;
 mod fetch;
 mod fetch_install;
 mod fetch_write;
+mod fmt_anchor_row;
 mod fmt_complete_findings;
 mod fmt_error;
 mod fmt_links;

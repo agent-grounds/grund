@@ -2,11 +2,11 @@ use super::ambiguity::{ambiguous_id_refusal, ambiguous_section_refusal};
 use crate::config::{Config, display_path};
 use crate::grammar::render_id;
 use crate::model::{
-    Catalog, Declaration, DeclarationSource, Id, SectionInfo, ShowOutput, ShowRenderMode,
-    StubResolution, format_path, json_escape, paired_declarations,
+    Catalog, Declaration, DeclarationSource, FileRecords, Id, SectionInfo, ShowOutput,
+    ShowRenderMode, StubResolution, format_path, json_escape, paired_declarations,
 };
 use crate::resolver::{
-    extract_declaration_body, heading_anchor, section_site_anchor, show_e2e_case,
+    extract_declaration_body, numbered_heading_anchor, section_site_anchor, show_e2e_case,
     takes_heading_anchor,
 };
 use crate::sources::paths_same_location;
@@ -201,6 +201,7 @@ fn show_json_value(
 /// `home` is the record `show_declaration_with_home` read the body out of.
 pub(crate) fn render_show_output_json(
     config: &Config,
+    files: &FileRecords,
     path_config: &Config,
     home: &Declaration,
     id: &Id,
@@ -214,7 +215,7 @@ pub(crate) fn render_show_output_json(
     if let Some(json) = &output.json {
         return json.clone();
     }
-    let anchors = ShowAnchors::of(config, home, section, output);
+    let anchors = ShowAnchors::of(config, files, home, section, output);
     let mut extra = String::new();
     if matches!(mode, ShowRenderMode::Toc) {
         extra.push_str(",\"sections\":[");
@@ -286,7 +287,13 @@ struct ShowAnchors {
 }
 
 impl ShowAnchors {
-    fn of(config: &Config, decl: &Declaration, section: Option<&str>, output: &ShowOutput) -> Self {
+    fn of(
+        config: &Config,
+        files: &FileRecords,
+        decl: &Declaration,
+        section: Option<&str>,
+        output: &ShowOutput,
+    ) -> Self {
         let none = || Self {
             selected: None,
             sections: vec![None; output.sections.len()],
@@ -313,6 +320,8 @@ impl ShowAnchors {
             .filter(|(_, info)| info.line > output.line)
             .collect();
         sites.sort_by_key(|(_, info)| info.line);
+        // §DF-repeated-heading-anchor.decision.count: numbered among the home's headings.
+        let home = files.get(&decl.file).map(AsRef::as_ref);
         let mut cursor = 0;
         let sections = output
             .sections
@@ -328,11 +337,11 @@ impl ShowAnchors {
                     }
                     None => decl.sections.get(&entry.path),
                 };
-                site.map(|site| section_site_anchor(site, presentation))
+                site.map(|site| section_site_anchor(site, presentation, home))
             })
             .collect();
         Self {
-            selected: heading_anchor(decl, section, presentation, config.frame()),
+            selected: numbered_heading_anchor(decl, section, presentation, config.frame(), files),
             sections,
         }
     }

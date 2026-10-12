@@ -17,13 +17,14 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+use super::anchor_numbering::numbered_anchor;
 use crate::config::{Frame, Presentation, Schema};
 use crate::grammar::{
     Grammar, anchor_slug, reduce_heading_text, render_id, without_closing_sequence,
 };
 use crate::model::{
-    Catalog, Declaration, Id, SectionInfo, paired_declarations, scanned_decl_relative_path,
-    scanned_path_key,
+    Catalog, Declaration, FileRecord, FileRecords, Id, SectionInfo, paired_declarations,
+    scanned_decl_relative_path, scanned_path_key,
 };
 use crate::sources::{canonical_path, physical_path_key};
 
@@ -156,7 +157,7 @@ pub(crate) fn markdown_link_target_with_root(
         return Some(rel);
     }
     // §FS-fmt.6.2.1.1: a bare ID's heading is the scan's record too.
-    let anchor = heading_anchor(record, section, presentation, frame)?;
+    let anchor = numbered_heading_anchor(record, section, presentation, frame, &findings.files)?;
     Some(format!("{}#{}", rel, anchor))
 }
 
@@ -197,11 +198,40 @@ pub(crate) fn heading_anchor(
     Some(rendered_anchor(&heading, presentation))
 }
 
+/// [`heading_anchor`], numbered as the renderer numbers a repeated slug among
+/// the headings of `decl`'s home (§DF-repeated-heading-anchor.decision.count):
+/// the anchor `fmt --cross-refs` writes and `show` reports.
+pub(crate) fn numbered_heading_anchor(
+    decl: &Declaration,
+    section: Option<&str>,
+    presentation: &Presentation,
+    frame: Frame<'_>,
+    files: &FileRecords,
+) -> Option<String> {
+    let base = heading_anchor(decl, section, presentation, frame)?;
+    let line = match section {
+        Some(sec) => decl.sections.get(sec)?.line,
+        None => decl.line,
+    };
+    Some(numbered_anchor(
+        files.get(&decl.file).map(AsRef::as_ref),
+        line,
+        base,
+        &presentation.fmt.anchor_format,
+    ))
+}
+
 /// The anchor of one recorded section heading site, from the heading text the
 /// scanner stored for it (§FS-show.3.1.3.1): each `--toc` entry reads its own
-/// site, so a duplicated path still carries the anchor of the heading listed.
-pub(crate) fn section_site_anchor(site: &SectionInfo, presentation: &Presentation) -> String {
-    rendered_anchor(&site.title, presentation)
+/// site, so a duplicated path still carries the anchor of the heading listed,
+/// numbered among its home's headings (§DF-repeated-heading-anchor.decision.count).
+pub(crate) fn section_site_anchor(
+    site: &SectionInfo,
+    presentation: &Presentation,
+    home: Option<&FileRecord>,
+) -> String {
+    let base = rendered_anchor(&site.title, presentation);
+    numbered_anchor(home, site.line, base, &presentation.fmt.anchor_format)
 }
 
 /// The anchor of a heading's stored text, slugged from its rendered text: a

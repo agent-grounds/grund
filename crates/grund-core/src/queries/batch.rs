@@ -276,6 +276,7 @@ fn show_batch_query_with_metadata(
     output.body = flatten_cross_ref_links(&output.body, config.lexical(), markdown_body);
     output.json = Some(render_show_output_json(
         config,
+        &project.findings.files,
         context.render_config(),
         &home,
         &id,
