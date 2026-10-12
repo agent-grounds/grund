@@ -149,7 +149,7 @@ this requirement, was found later, on `e8c40221d7`, and is added by amendment.
 ### differences.sections: Sections
 
 - **P01.** In a file with no sections, `show --full` runs a body past a plain `# Appendix`,
-  while `list --size` and `refs` end it before. R.
+  while `refs` ends it before. R.
 - **P02.** A `/** … */` section without ` * ` is listed by `--toc` and refused by a direct
   query. R.
 - **P03.** `/// # 1. Sub` is listed by `--toc` and refused by `grund FS-b.1`. R.
@@ -157,8 +157,8 @@ this requirement, was found later, on `e8c40221d7`, and is added by amendment.
   citations under it no section. R.
 - **P10.** `show` includes an adjacent `//` note in a `///` body, `refs` gives it no
   enclosing declaration. R.
-- **P12.** In a doc-comment, ownership continues a section past a plain or duplicate
-  heading that ends it for `show`. R.
+- **P12.** In a doc-comment, ownership continues a section past a duplicate heading that
+  ends it for `show`. R.
 - **P16.** The editor snapshot's span for a C-family section keeps `*/`, the `--toc` title
   does not; the core fields only. R.
 

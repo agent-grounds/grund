@@ -9,11 +9,12 @@ and which declarations a stub stands for is [§FS-declarations.stubs](FS-declara
 What a heading is and what its rendered text reads, where a body ends, what a section and
 the section map are, and what cuts a lead are [§FS-declarations.heading](FS-declarations.md#heading-what-a-heading-is), [§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends),
 [§FS-declarations.section](FS-declarations.md#section-what-a-section-is) and [§FS-declarations.lead](FS-declarations.md#lead-what-cuts-a-lead).
-The checks below are that sentence enforced, save two that hold what an address is worth
+The checks below are that sentence enforced, save three. Two hold what an address is worth
 once it resolves: that the declaration is in the form its ID grammar gives it
 ([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)), and that its lead, and every citable section
 lead in its body, stays inside the size its project budgets where that project asks for
-one ([§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)). Serves [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) and
+one ([§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)). The third warns, for one release, where
+the next one moves a verdict ([§FS-declarations.checks.parse-moves](FS-declarations.md#checksparse-moves-a-verdict-that-moves-in-0190)). Serves [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) and
 [§GOAL-token-economy.1](../goals.md#1-what-this-requires).
 
 ## terms: Terms
@@ -292,6 +293,14 @@ and `## RM-read: grund <ID>` reads as `## RM-read: grund ` (the `<ID>` is droppe
 exactly as a Markdown renderer treats them. For an explicit named heading, the rendered
 text includes the name and colon: `## goals: Scope` reads `goals: Scope`.
 
+A closing sequence of `#` characters, and the spaces or tabs before it, is not part of the
+rendered text, exactly as CommonMark reads an ATX heading: `## 1. Steps ##` reads `1. Steps`,
+so its anchor is `1-steps` ([§FS-fmt.6.2.2](FS-fmt.md#622-the-anchor-slugifies-the-headings-rendered-text)). A `#` run that is not preceded by a space or tab, or that
+is followed by anything but spaces or tabs, is text: `## C#` reads `C#`. Every anchor `fmt`
+writes and `show` reports is slugged from this text ([§DF-closing-hashes-are-not-the-heading](../decisions/functional/DF-closing-hashes-are-not-the-heading.md#df-closing-hashes-are-not-the-heading-a-headings-closing-hashes-are-not-part-of-its-anchor)).
+Until 0.19.0 the `--toc` `title` still prints the closing run as written
+([§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves)).
+
 ## body: Where a declaration's body ends
 
 A declaration's body runs from its declaration line to the end of its body span. In
@@ -327,7 +336,9 @@ a heading it rejects.
 A declaration's lead is the prose between the declaration heading and the first child
 citable section heading (`## 1. ...`, or `## goals: ...` when named sections are enabled).
 A named heading is a citable section and cuts its parent's lead exactly as a numbered
-heading does; a plain heading remains prose and does not cut it. A lead may be empty.
+heading does; a plain heading remains prose and does not cut it. A deeper declaration's
+heading cuts its parent's lead too, because the lead is the parent's own prose and the deeper
+declaration's is not. A lead may be empty.
 
 ### lead.section: A section's lead
 
@@ -620,6 +631,71 @@ The absent key activates no measurement or finding and leaves the existing text 
 #### checks.oversized-lead.4: Which sites it judges
 
 An explicit-path check judges only declaration and section sites scanned at that path. `--full` adds its existing out-of-scope citation findings but does not extend this repository policy beyond declarations in the configured scan scope. In a workspace, each member's effective key governs only that member's sites; a member without the key remains silent even when another member opts in.
+
+### checks.parse-moves: A verdict that moves in 0.19.0
+
+From 0.19.0 every command reads one parse of each file, and on three shapes of tree that
+parse moves a `check` verdict ([§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves)). In 0.18.0 each of them
+answers as before and warns, at the line that moves it, naming the edit that keeps today's
+meaning in both releases. A tree with none of these shapes gets no `parse-moves` finding,
+and every other answer that moves in 0.19.0 changes printed bytes only and warns nowhere.
+
+The message is [§FS-declarations.checks.parse-moves.1](FS-declarations.md#checksparse-moves1-the-message), the shapes are
+[§FS-declarations.checks.parse-moves.2](FS-declarations.md#checksparse-moves2-the-three-shapes), rendering and selection
+[§FS-declarations.checks.parse-moves.3](FS-declarations.md#checksparse-moves3-rendering-exit-and-selection), and the release that removes it
+[§FS-declarations.checks.parse-moves.4](FS-declarations.md#checksparse-moves4-removed-in-0190).
+
+- **Code:** `parse-moves` ([§FS-errors.5](FS-errors.md#5-json-format)).
+
+#### checks.parse-moves.1: The message
+
+The finding is located at the line whose meaning moves, uses code `parse-moves`, severity
+`warning`, and its text after `<path>:<line>: warning: ` is one of these, by shape:
+
+```text
+from grund 0.19.0 this heading ends <coordinate>, so the citation on line <N> leaves it; make the heading deeper, or move the citation above it, to keep it in <coordinate>
+from grund 0.19.0 this line is the heading of <coordinate>; prefix it with ` * ` to make it <coordinate> in both releases, or rewrite it as prose to keep it out of both
+from grund 0.19.0 this heading no longer cuts the lead of <coordinate>, which then measures <actual> <unit>, over the configured maximum of <max>; make it a section of <coordinate> to keep the cut
+```
+
+`<coordinate>` is local in a member-local check and workspace-qualified at a workspace root,
+as in [§FS-declarations.checks.oversized-lead.1](FS-declarations.md#checksoversized-lead1-the-message). `<N>` is the line of the first citation
+that leaves the section; one heading gets one finding however many citations follow it.
+
+#### checks.parse-moves.2: The three shapes
+
+1. **A heading that will end a doc-comment section above a citation.** In a source
+   doc-comment, a heading of the open section's depth or shallower, numbered or plain, and
+   any heading that repeats a path already open, today runs on for ownership: `refs`,
+   `cover --lines`, the chapter rules and the editor count a citation below it in the
+   section above. From 0.19.0 it ends that section. It warns when at least one citation
+   between it and the section's 0.18.0 end changes owner.
+2. **A block-comment line without ` * ` that will become a section.** Inside a `/** … */`
+   declaration, a line that reads as a numbered or enabled named heading without the
+   ` * ` prefix ([§FS-languages.comment-wrapper.headings](FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line)) is no section today and
+   is section `<coordinate>` from 0.19.0. It always warns, because a citation of that
+   section moves from `missing section` to resolved and the section starts owning what
+   follows it.
+3. **A heading that will stop cutting a lead past its budget.** Where
+   [§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in) is active, a `///` line one `#` shallower than a
+   section depth (`/// # 1. Sub`) cuts the declaration's lead today and is no section from
+   0.19.0 ([§FS-show.2.3.3](FS-show.md#233-section-selection-inside-a-doc-comment)). It warns only when the lead without that cut is over
+   the configured maximum, so 0.19.0 would add an `oversized-lead` the tree does not have.
+
+#### checks.parse-moves.3: Rendering, exit, and selection
+
+A warning-only run exits `0`. Text output uses the ordinary `<path>:<line>: warning:
+<message>` form, and JSON the ordinary located finding object with `"severity":"warning"`
+and `"sites":null` ([§FS-errors.5](FS-errors.md#5-json-format)). `--only parse-moves` retains it and `--ignore
+parse-moves` removes it through the ordinary exact-code selection rules
+([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)). The LSP publishes the same message, line, code and warning severity
+([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)), reading the buffer's text. No command rewrites the line.
+
+#### checks.parse-moves.4: Removed in 0.19.0
+
+In 0.19.0 the answers move, the check and its code are removed, and the catalog row goes
+with them ([#639](https://github.com/agent-grounds/grund/issues/639)). An `--only parse-moves` or `--ignore parse-moves` left in a
+script then names an unknown code and is refused as any unknown code is.
 
 ## why: Why this exists
 
