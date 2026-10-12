@@ -233,11 +233,22 @@ fn listed_steps() -> BTreeSet<String> {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../tests/integration/one_answer_steps.toml");
     let text = std::fs::read_to_string(path).expect("read one_answer_steps.toml");
-    text.lines()
-        .filter_map(|line| line.strip_prefix("id = \""))
-        .filter_map(|rest| rest.strip_suffix('"'))
-        .map(str::to_string)
-        .collect()
+    text.lines().filter_map(step_id).collect()
+}
+
+/// The id an `id = "…"` line of one_answer_steps.toml sets, whatever its indent,
+/// quote or trailing `# comment`; an id itself may start with `#`.
+fn step_id(line: &str) -> Option<String> {
+    let rest = line
+        .trim()
+        .strip_prefix("id")?
+        .trim_start()
+        .strip_prefix('=')?
+        .trim_start();
+    let quote = rest.chars().next().filter(|c| *c == '"' || *c == '\'')?;
+    let (id, tail) = rest[1..].split_once(quote)?;
+    let tail = tail.trim();
+    (tail.is_empty() || tail.starts_with('#')).then(|| id.to_string())
 }
 
 #[test]
