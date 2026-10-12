@@ -81,14 +81,24 @@ fn scan_one_file(
 
 /// One file's pass outside any walk (§AR-scanner.2), its overlay first: the
 /// records of a file the walk did not reach, for a stub whose target lies
-/// outside scan scope and still reads as the scanned file would (§FS-show.2.3.7).
+/// outside scan scope and still reads as the scanned file would (§FS-show.2.3.7),
+/// its qualified citations recognized against the workspace's projects as the
+/// walk's are (§FS-declarations.stubs.target.5).
 pub(super) fn scan_unwalked_file(
     file: &Path,
     schema: &Schema,
     frame: Frame<'_>,
+    workspace_targets: &[WorkspaceCitationTarget],
 ) -> Result<Catalog> {
-    let (_, result) = scan_one_file(file, schema, frame, &[]);
-    result.map_err(|message| anyhow!(message))
+    let (_, result) = scan_one_file(file, schema, frame, workspace_targets);
+    let mut findings = result.map_err(|message| anyhow!(message))?;
+    // §FS-workspace.1.2: the two passes' sites, back in the single-project scan's order.
+    if !workspace_targets.is_empty() {
+        findings
+            .citations
+            .sort_by_key(|cite| (cite.line, cite.column));
+    }
+    Ok(findings)
 }
 
 fn scan_file_results(
@@ -235,7 +245,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     resolve_shorthand_citations(frame.grammar(), &mut findings);
     // §AR-scanner.4.6: a stub's verdict is reached only once every declaration is in.
     let (roots, _) = scan_roots(schema, frame, scope, explicit_scope)?;
-    resolve_stubs(schema, frame, &roots, &mut findings);
+    resolve_stubs(schema, frame, &roots, workspace_targets, &mut findings);
     Ok((findings, errors))
 }
 

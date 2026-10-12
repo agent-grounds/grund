@@ -85,30 +85,6 @@ pub(crate) fn adapt_workspace(
             // (§FS-rules.5.1).
             let paired = paired_declarations(homes);
             for (ordinal, home) in paired.stand_ins().enumerate() {
-                let key = NodeKey(format!(
-                    "{selected}:markdown:{alias}:decl:{bare_label}:{ordinal}"
-                ));
-                declarations
-                    .entry((alias.to_string(), id.clone()))
-                    .or_insert_with(|| key.clone());
-                let kind = if local {
-                    id.kind.clone()
-                } else {
-                    format!("{alias}/{}", id.kind)
-                };
-                facts.decl.push((key.clone(), kind));
-                facts.nodes.insert(
-                    key,
-                    NodeMeta {
-                        label: label.clone(),
-                        anchor: RuleAnchor {
-                            path: home.file.to_string_lossy().into_owned(),
-                            line: home.line,
-                            column: None,
-                        },
-                        lent: false,
-                    },
-                );
                 // §FS-declarations.stubs.target.5: the chapters are the paired record's, a
                 // target's outside the walk lent and marked for §FS-rules.7.11.
                 let records = paired
@@ -116,11 +92,36 @@ pub(crate) fn adapt_workspace(
                     .filter(|paired| std::ptr::eq(paired.stand_in, home));
                 for (nth, record) in records.enumerate() {
                     let lent = !std::ptr::eq(record.record, home);
-                    // A target declaring the ID twice lends each record's own chapters.
+                    // A target declaring the ID twice is two declarations, as scanned: each
+                    // record its own node, anchored where the stub stands for it.
                     let ordinal = match nth {
                         0 => ordinal.to_string(),
                         nth => format!("{ordinal}.{nth}"),
                     };
+                    let key = NodeKey(format!(
+                        "{selected}:markdown:{alias}:decl:{bare_label}:{ordinal}"
+                    ));
+                    declarations
+                        .entry((alias.to_string(), id.clone()))
+                        .or_insert_with(|| key.clone());
+                    let kind = if local {
+                        id.kind.clone()
+                    } else {
+                        format!("{alias}/{}", id.kind)
+                    };
+                    facts.decl.push((key.clone(), kind));
+                    facts.nodes.insert(
+                        key,
+                        NodeMeta {
+                            label: label.clone(),
+                            anchor: RuleAnchor {
+                                path: home.file.to_string_lossy().into_owned(),
+                                line: home.line,
+                                column: None,
+                            },
+                            lent: false,
+                        },
+                    );
                     for (section, info) in &record.record.sections {
                         if !is_rule_unit(section) {
                             continue;

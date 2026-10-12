@@ -1,0 +1,18 @@
+grund_config_version = 1
+project_name = "fixture"
+[reference]
+strict = true
+require_grounding = false
+[id]
+named_sections = true
+format = "{kind}-{slug}"
+[[kinds]]
+kind = "FS"
+folder = "docs/fs"
+index = false
+[[kinds]]
+kind = "GOAL"
+folder = "docs/goals"
+index = false
+[scan]
+include = ["docs","src"]

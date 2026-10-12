@@ -20,6 +20,7 @@ use crate::model::{
 };
 use crate::resolver::section_resolves;
 use crate::sources::{paths_same_location, physical_path_key};
+use crate::workspace::WorkspaceCitationTarget;
 
 /// Reach every stub's verdict once, after the walk, and record it on the stub
 /// (§AR-scanner.4.6): every command reads it from there and none reaches its own
@@ -35,9 +36,10 @@ pub(super) fn resolve_stubs(
     schema: &Schema,
     frame: Frame<'_>,
     roots: &[PathBuf],
+    workspace_targets: &[WorkspaceCitationTarget],
     findings: &mut Catalog,
 ) {
-    let mut targets = UnwalkedTargets::new(schema, frame, roots);
+    let mut targets = UnwalkedTargets::new(schema, frame, roots, workspace_targets);
     let mut notes = Vec::new();
     for (id, decls) in &mut findings.declarations {
         if !decls.iter().any(|decl| decl.is_stub) {
@@ -65,8 +67,9 @@ pub(super) fn resolve_stubs(
 /// not resolve counts for nothing and is reported nowhere, so it is dropped here: an
 /// unqualified ID nobody declares, a shorthand that names none or several, a section
 /// the cited declaration lacks. A qualified one resolves against its namespace where
-/// every edge reader already asks it. A `--full` run that narrows a walked target
-/// away lends through here too.
+/// every edge reader already asks it, its shorthand in the workspace's one pass over
+/// every edge, which drops one that still names nothing (§AR-scanner.2.6.6). A
+/// `--full` run that narrows a walked target away lends through here too.
 pub(crate) fn lend_citations(
     grammar: &Grammar,
     findings: &mut Catalog,
@@ -192,6 +195,7 @@ struct UnwalkedTargets<'a> {
     schema: &'a Schema,
     frame: Frame<'a>,
     roots: &'a [PathBuf],
+    workspace_targets: &'a [WorkspaceCitationTarget],
     read: BTreeMap<PathBuf, Option<TargetRead>>,
     excluded: BTreeMap<PathBuf, Option<ExcludingRule>>,
     files: BTreeMap<PathBuf, Arc<FileRecord>>,
@@ -206,11 +210,17 @@ struct TargetRead {
 }
 
 impl<'a> UnwalkedTargets<'a> {
-    fn new(schema: &'a Schema, frame: Frame<'a>, roots: &'a [PathBuf]) -> Self {
+    fn new(
+        schema: &'a Schema,
+        frame: Frame<'a>,
+        roots: &'a [PathBuf],
+        workspace_targets: &'a [WorkspaceCitationTarget],
+    ) -> Self {
         Self {
             schema,
             frame,
             roots,
+            workspace_targets,
             read: BTreeMap::new(),
             excluded: BTreeMap::new(),
             files: BTreeMap::new(),
@@ -232,10 +242,11 @@ impl<'a> UnwalkedTargets<'a> {
     /// file cannot be read.
     fn records(&mut self, path: &Path, id: &Id) -> Option<Vec<Declaration>> {
         let (schema, frame, files) = (self.schema, self.frame, &mut self.files);
+        let workspace_targets = self.workspace_targets;
         let read = self
             .read
             .entry(physical_path_key(path))
-            .or_insert_with(|| read_target(path, schema, frame, files))
+            .or_insert_with(|| read_target(path, schema, frame, workspace_targets, files))
             .as_ref()?;
         Some(
             read.declarations
@@ -261,27 +272,22 @@ impl<'a> UnwalkedTargets<'a> {
 }
 
 /// One pass over a target the walk did not reach, its file record kept in `files`.
-/// The citations are those of a pass that assigns each to its enclosing
-/// declaration, which a run that classifies no citing side asks for here alone, so
-/// `list` counts what `check` counts (§FS-refs.2, §AR-scanner.2.4.2).
+/// The pass assigns each citation to its enclosing declaration, which a run that
+/// classifies no citing side asks for here alone, so `list` counts what `check`
+/// counts (§FS-refs.2, §AR-scanner.2.4.2).
 fn read_target(
     path: &Path,
     schema: &Schema,
     frame: Frame<'_>,
+    workspace_targets: &[WorkspaceCitationTarget],
     files: &mut BTreeMap<PathBuf, Arc<FileRecord>>,
 ) -> Option<TargetRead> {
-    let mut findings = scan_unwalked_file(path, schema, frame).ok()?;
+    let mut run: Run = frame.run.clone();
+    run.scope.classify_citation_sources = true;
+    let classifying = Frame { run: &run, ..frame };
+    let mut findings = scan_unwalked_file(path, schema, classifying, workspace_targets).ok()?;
     files.extend(std::mem::take(&mut findings.files));
-    let citations = if frame.run.scope.classify_citation_sources {
-        findings.citations
-    } else {
-        let mut run: Run = frame.run.clone();
-        run.scope.classify_citation_sources = true;
-        let classifying = Frame { run: &run, ..frame };
-        scan_unwalked_file(path, schema, classifying)
-            .ok()?
-            .citations
-    };
+    let citations = findings.citations;
     let mut by_owner: BTreeMap<Id, Vec<Citation>> = BTreeMap::new();
     for citation in citations {
         if let Some(owner) = citation.enclosing_declaration.clone() {

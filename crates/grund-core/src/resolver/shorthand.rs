@@ -27,7 +27,7 @@ use crate::grammar::{
     never_rewrite_context_in, parse_id, parse_id_arg, parse_id_arg_with_shorthand, render_id,
     shorthand_names,
 };
-use crate::model::{Catalog, Id};
+use crate::model::{Catalog, Citation, Id};
 
 /// Everything one `grund fmt` walk needs to expand a shorthand: this project's
 /// declaration index, plus one per workspace alias for the qualified form
@@ -330,16 +330,14 @@ pub(crate) fn expand_shorthand_citations_with_origins(
 /// §AR-scanner.2.6.6: resolve `§<alias>/FS-042` against the aliased project's
 /// declarations. A per-project scan cannot do this — it sees only its own
 /// declaration set — so the cross-namespace half of the shorthand rule lands
-/// here, once every project has been scanned. Unqualified shorthands were
-/// already resolved inside each project's own walk.
+/// here, once every project has been scanned, over every edge: the walk's and
+/// those a stub's target lends (§FS-declarations.stubs.target.5). Unqualified
+/// shorthands were already resolved inside each project's own walk. A lent one
+/// that still names nothing is dropped, as an unresolved lent citation is.
 pub(crate) fn resolve_qualified_shorthand_citations(projects: &mut [WorkspaceProject]) {
-    let pending = |project: &WorkspaceProject| {
-        project
-            .findings
-            .citations
-            .iter()
-            .any(|cite| cite.shorthand && cite.namespace.is_some() && cite.id.slug.is_none())
-    };
+    let unresolved =
+        |cite: &Citation| cite.shorthand && cite.namespace.is_some() && cite.id.slug.is_none();
+    let pending = |project: &WorkspaceProject| project.findings.edges().any(unresolved);
     if !projects.iter().any(pending) {
         return;
     }
@@ -363,7 +361,7 @@ pub(crate) fn resolve_qualified_shorthand_citations(projects: &mut [WorkspacePro
         })
         .collect();
     for project in projects.iter_mut() {
-        for cite in &mut project.findings.citations {
+        for cite in project.findings.edges_mut() {
             if !cite.shorthand || cite.id.slug.is_some() {
                 continue;
             }
@@ -378,6 +376,7 @@ pub(crate) fn resolve_qualified_shorthand_citations(projects: &mut [WorkspacePro
                 cite.id = unique.clone();
             }
         }
+        project.findings.retain_lent(|cite| !unresolved(cite));
     }
 }
 

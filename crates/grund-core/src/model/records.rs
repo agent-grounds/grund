@@ -407,6 +407,21 @@ impl Catalog {
         self.marked_edges().map(|(citation, _)| citation)
     }
 
+    /// The same edges, to be rewritten in place: the cross-namespace shorthand pass
+    /// resolves every edge once, lent or walked (§AR-scanner.2.6.6).
+    pub(crate) fn edges_mut(&mut self) -> impl Iterator<Item = &mut Citation> + '_ {
+        self.citations
+            .iter_mut()
+            .chain(self.lent_citations.iter_mut())
+    }
+
+    /// Drop each lent citation that names nothing once every edge is resolved: as in
+    /// the scanned tree it counts for nothing, and the target reports nothing of its
+    /// own (§FS-declarations.stubs.target.5).
+    pub(crate) fn retain_lent(&mut self, keep: impl FnMut(&Citation) -> bool) {
+        self.lent_citations.retain(keep);
+    }
+
     /// The same edges, each marked whether a stub's target lends it, which the
     /// §FS-rules.7.11 window reads.
     pub(crate) fn marked_edges(&self) -> impl Iterator<Item = (&Citation, bool)> + '_ {
