@@ -8,6 +8,10 @@ too, so the architecture hands a reader the command the gate runs. Hook/workflow
 files are read as text: the CI Python has no YAML parser. The Python wrapper's
 discovery argv is inspected as syntax, without executing its setup or tests.
 
+CI runs the hook list with `SKIP` naming exactly the hooks another job already runs,
+a set computed here from the workflow, so every hook still runs on Ubuntu once
+(§AR-ci.13.3), and it runs the Python wrapper as its two selections (§AR-ci.3.4.3).
+
 §AR-ci.1.2 divides the work: this test holds the *existence* of a counterpart,
 because that is the half a line-shaped read can see. The other half — that the
 counterpart reaches the same verdict on the same tree — is held by each gate's
@@ -22,6 +26,8 @@ import re
 import unittest
 from pathlib import Path
 
+from test_release_workflow import jobs, steps
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PRE_COMMIT = REPO_ROOT / ".pre-commit-config.yaml"
@@ -30,6 +36,9 @@ CI = WORKFLOWS / "ci.yml"
 AR_CI = REPO_ROOT / "docs" / "architecture" / "AR-ci.md"
 PYTHON_GATE = REPO_ROOT / "scripts" / "run_python_gate.py"
 RUST_HOOKS = ("cargo-fmt-check", "cargo-build", "cargo-test")
+GATE = "python scripts/run_python_gate.py"
+# §AR-ci.3.4.3: CI runs the hook's command as these two selections, which together are the hook.
+SELECTIONS = ("--only-node-acceptance", "--without-node-acceptance")
 FILE_LIST_STAGES = ("pre-commit", "manual")
 ENV_PREFIX = "env RUSTFLAGS=-Dwarnings "
 # The release helper writes the release section (§FS-distribution.4.6); it gates no change.
@@ -62,6 +71,28 @@ def _run_lines(lines):
     return [line[len("run:"):].strip() for line in lines if line.startswith("run:")]
 
 
+def _skipped(ci_text):
+    """The hooks the pre-commit step's `SKIP` names, from the step or its job's `env:`."""
+    for body in jobs(ci_text).values():
+        for step in steps(body):
+            if "pre-commit run --all-files" not in step:
+                continue
+            for scope in (step, body.split("\n    steps:", 1)[0]):
+                found = re.search(r"(?m)^\s*SKIP:\s*[\"']?([^\"'\n]*)", scope)
+                if found:
+                    return {item.strip() for item in found.group(1).split(",") if item.strip()}
+            return set()
+    return set()
+
+
+def _run_elsewhere(hook, ci_runs):
+    """Whether a CI step other than the pre-commit one runs this hook's command (§AR-ci.13.3)."""
+    command = hook["entry"].removeprefix(ENV_PREFIX)
+    if command == GATE:
+        return all(f"{GATE} {selection}" in ci_runs for selection in SELECTIONS)
+    return command in ci_runs
+
+
 def _section_lead(text, heading):
     """The code spans of one section's lead: the lines after `heading` up to the next heading."""
     lines = text.splitlines()
@@ -76,7 +107,8 @@ class CiPreCommitParityTests(unittest.TestCase):
     def setUpClass(cls):
         cls.pre_commit_text = PRE_COMMIT.read_text(encoding="utf-8")
         cls.hooks = _hooks(cls.pre_commit_text)
-        cls.ci_lines = _lines(CI.read_text(encoding="utf-8"))
+        cls.ci_text = CI.read_text(encoding="utf-8")
+        cls.ci_lines = _lines(cls.ci_text)
         cls.ci_runs = _run_lines(cls.ci_lines)
         cls.by_id = {hook["id"]: hook for hook in cls.hooks}
 
@@ -90,7 +122,11 @@ class CiPreCommitParityTests(unittest.TestCase):
         self.assertIn("pre-commit run --all-files", self.ci_runs)
 
     def test_every_external_binary_is_installed_before_the_hooks_run(self):
-        gate = self.ci_lines.index("run: pre-commit run --all-files")
+        # In the job that runs the hooks: with the suites split into jobs (§AR-ci.13), a binary
+        # another job installs is not on this job's PATH.
+        (job,) = [body for body in jobs(self.ci_text).values() if "run: pre-commit run --all-files" in body]
+        lines = _lines(job)
+        gate = lines.index("run: pre-commit run --all-files")
         for hook in self.hooks:
             binary = hook["entry"].split()[0]
             if binary in ("cargo", "python", "env"):
@@ -98,7 +134,7 @@ class CiPreCommitParityTests(unittest.TestCase):
             with self.subTest(binary=binary):
                 installs = [
                     index
-                    for index, line in enumerate(self.ci_lines)
+                    for index, line in enumerate(lines)
                     if re.match(rf"cargo install {re.escape(binary)} --version \S+ --locked$", line)
                 ]
                 self.assertTrue(installs, f"ci.yml pins no `cargo install {binary} --version`")
@@ -124,6 +160,16 @@ class CiPreCommitParityTests(unittest.TestCase):
         rustflags = [line for line in self.ci_lines if line.startswith("RUSTFLAGS:")]
         self.assertEqual(1, len(rustflags), rustflags)
         self.assertEqual("-Dwarnings", re.sub(r'[\s"]', "", rustflags[0].partition(":")[2]))
+
+    def test_the_pre_commit_step_skips_exactly_the_hooks_another_job_runs(self):
+        # §AR-ci.13.3: a hook no job runs is never skipped, and one a job runs is not run twice.
+        others = [run for run in self.ci_runs if run != "pre-commit run --all-files"]
+        expected = {hook["id"] for hook in self.hooks if _run_elsewhere(hook, others)}
+        self.assertLessEqual({"cargo-test", "python-test"}, expected,
+                             "no job beside pre-commit runs the Rust suite, or the Python gate's two "
+                             "selections")
+        self.assertEqual(sorted(expected), sorted(_skipped(self.ci_text)),
+                         "the pre-commit step's SKIP is not the set of hooks another job runs")
 
     def test_every_commit_msg_hook_has_a_range_scanning_counterpart(self):
         counterparts = 0
@@ -175,21 +221,21 @@ class CiPreCommitParityTests(unittest.TestCase):
     def assert_python_discovery_parity(self, hook, ci_runs, wrapper):
         """Shared setup must reach this test home (§AR-ci.1.2, §FS-cochange-recipe.examples)."""
         home = Path(__file__).resolve().parent.relative_to(REPO_ROOT).as_posix()
-        command = "python scripts/run_python_gate.py"
-        self.assertEqual(command, hook)
-        ci = [run for run in ci_runs if "run_python_gate.py" in run]
-        self.assertEqual(1, len(ci), ci)
-        self.assertEqual(hook, ci[0])
+        self.assertEqual(GATE, hook)
+        # §AR-ci.3.4.3: CI runs the hook's command as its two selections and never whole.
+        ci = sorted({run for run in ci_runs if "run_python_gate.py" in run})
+        self.assertEqual([f"{hook} {selection}" for selection in SELECTIONS], ci)
         tree = ast.parse(wrapper)
         # §AR-ci.3.4.2: the wrapper hands this home and its inputs to the one timed discovery.
         entries = [node for node in ast.walk(tree)
                    if isinstance(node, ast.Call) and ast.unparse(node.func) == "run_tests"]
         self.assertEqual(1, len(entries))
-        self.assertEqual([repr(home), "inputs()"], [ast.unparse(arg) for arg in entries[0].args])
+        # A third argument may carry the selection; the home and the inputs stay these.
+        self.assertEqual([repr(home), "inputs()"], [ast.unparse(arg) for arg in entries[0].args][:2])
         runs = [node for node in ast.walk(tree)
                 if isinstance(node, ast.FunctionDef) and node.name == "run_tests"]
         self.assertEqual(1, len(runs))
-        self.assertEqual(["start", "environment"], [arg.arg for arg in runs[0].args.args])
+        self.assertEqual(["start", "environment"], [arg.arg for arg in runs[0].args.args][:2])
         calls = [node for node in ast.walk(runs[0])
                  if isinstance(node, ast.Call) and ast.unparse(node.func) == "subprocess.run"
                  and node.args and isinstance(node.args[0], ast.List)
@@ -216,7 +262,8 @@ class CiPreCommitParityTests(unittest.TestCase):
         self.assertNotEqual(wrapper, wrong_home)
         variants = ((hook, self.ci_runs, wrong_home),
                     (hook + " --other", self.ci_runs, wrapper),
-                    (hook, [run + " --other" if run == hook else run for run in self.ci_runs], wrapper))
+                    (hook, [run + " --other" if "run_python_gate.py" in run else run
+                            for run in self.ci_runs], wrapper))
         for candidate in variants:
             with self.subTest(hook=candidate[0], ci=candidate[1]):
                 with self.assertRaises(AssertionError):

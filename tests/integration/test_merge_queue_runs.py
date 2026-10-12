@@ -24,9 +24,24 @@ class MergeQueueRunTests(unittest.TestCase):
         triggers = self.text.split("\non:\n", 1)[1].split("\nenv:", 1)[0]
         self.assertRegex(triggers, r"(?m)^  merge_group:", "ci.yml does not run on merge-queue groups")
 
-    def test_the_test_matrix_runs_on_every_event(self):
-        header = self.jobs["test"].split("steps:", 1)[0]
-        self.assertNotIn("if:", header, "the required checks must report on a queue group too")
+    def test_the_required_checks_and_the_jobs_they_judge_run_on_every_event(self):
+        # §AR-ci.13.2: a required check is an aggregate, so the jobs it needs must run here too.
+        required = [job for job, body in self.jobs.items()
+                    if re.search(r"(?m)^    name:\s*cargo test \(", body)]
+        self.assertTrue(required, "no job carries a required `cargo test (<os>)` check")
+        judged = set(required)
+        for job in required:
+            listed = re.search(r"(?m)^    needs:\s*\[(.*)\]", self.jobs[job])
+            if listed:
+                judged.update(item.strip() for item in listed.group(1).split(","))
+        for job in sorted(judged):
+            with self.subTest(job=job):
+                header = self.jobs[job].split("steps:", 1)[0]
+                condition = re.search(r"(?m)^    if:\s*(.+)$", header)
+                if condition:
+                    self.assertEqual("always()", condition.group(1).replace("${{", "")
+                                     .replace("}}", "").strip(),
+                                     "the required checks must report on a queue group too")
 
     def test_the_benchmark_job_is_skipped_on_merge_queue_groups(self):
         header = self.jobs["bench"].split("steps:", 1)[0]

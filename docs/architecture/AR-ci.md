@@ -20,7 +20,7 @@ Leans on [§FS-terms.terms.1](../functional-spec/FS-terms.md#terms1-declarations
 
 ## 1. Pre-commit is the source of truth
 
-The hook list lives in `.pre-commit-config.yaml`. CI must invoke that list directly with `pre-commit run --all-files`, rather than hand-copying each hook into separate workflow steps. The workflow may install hook prerequisites first, but the set of checks is defined by the pre-commit config.
+The hook list lives in `.pre-commit-config.yaml`. CI must invoke that list directly with `pre-commit run --all-files`, rather than hand-copying each hook into separate workflow steps. The workflow may install hook prerequisites first, but the set of checks is defined by the pre-commit config. It may also skip, through pre-commit's own `SKIP`, exactly the hooks whose command another job of the workflow already runs ([§AR-ci.13.3](AR-ci.md#133-every-hook-runs-once)): the config still decides what is checked, and the workflow decides only where each check runs, never whether.
 
 When a new pre-commit hook is added, the same change must ensure CI can run it. If the hook needs an external binary, the CI workflow installs that binary before the pre-commit step. If the hook is intentionally local-only, it does not belong in `.pre-commit-config.yaml`; put it in a developer-local hook instead.
 
@@ -30,7 +30,7 @@ When a new pre-commit hook is added, the same change must ensure CI can run it. 
 
 ### 1.2 The parity test
 
-All of this is checked rather than remembered: `tests/integration/test_ci_precommit_parity.py` reads the hook list, workflow and Python wrapper and fails when CI stops invoking the hook list, a hook's binary has no pinned install step before that gate, a `commit-msg` hook has no range-scanning counterpart, the Rust hooks and the workflow's own steps spell different commands, [§AR-ci.3](AR-ci.md#3-current-hooks) does not spell a command a Rust hook runs, warnings are denied on one side only, the Python gates invoke different wrappers or discover tests from the wrong directory, or a hook bound only to a stage without a file list has no CI step naming the same `scripts/` script. What it holds is the *existence* of a counterpart, which is line-shaped; the *same verdict* half of [§AR-ci.1.1](AR-ci.md#11-stages-without-a-file-list) is held by each gate's own test, which runs both invocations against one fixture tree and asserts they agree — for the attribution gate, `tests/integration/test_check_no_claude_attribution.py`.
+All of this is checked rather than remembered: `tests/integration/test_ci_precommit_parity.py` reads the hook list, workflow and Python wrapper and fails when CI stops invoking the hook list, a hook's binary has no pinned install step before that gate, a `commit-msg` hook has no range-scanning counterpart, the Rust hooks and the workflow's own steps spell different commands, [§AR-ci.3](AR-ci.md#3-current-hooks) does not spell a command a Rust hook runs, warnings are denied on one side only, the Python gates invoke different wrappers or discover tests from the wrong directory, a hook bound only to a stage without a file list has no CI step naming the same `scripts/` script, or the pre-commit step's `SKIP` names a hook no other job runs, or leaves out one that a job does ([§AR-ci.13.3](AR-ci.md#133-every-hook-runs-once)). What it holds is the *existence* of a counterpart, which is line-shaped; the *same verdict* half of [§AR-ci.1.1](AR-ci.md#11-stages-without-a-file-list) is held by each gate's own test, which runs both invocations against one fixture tree and asserts they agree — for the attribution gate, `tests/integration/test_check_no_claude_attribution.py`.
 
 ## 2. Platform scope
 
@@ -42,14 +42,15 @@ CI dependency and build caches are performance optimizations only. A cache resto
 
 The current pre-commit gate runs the same Rust format/build/test commands that development CI runs: `cargo fmt --all -- --check`, `cargo build --workspace --all-targets --locked` with warnings denied, and `cargo test --workspace --all-targets --locked --features grund/test-workspace-load-count`. A plain `cargo test --workspace --all-targets --locked` is green on the same tree but runs less: it reports every test that reads the workspace-load observer as `ignored`, naming the feature that test needs ([§AR-ci.3.3](AR-ci.md#33-test-only-observers)). The test hook also runs at `pre-push`, so a contributor who commits while a test is transiently broken still gets the same local stop before sending the branch. It is the one hook `pre-push` runs: no hook asks a change for a changelog entry at any stage, because no change is gated on the changelog ([§FS-distribution.4.6](../functional-spec/FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)).
 
-Both Python gates run `python scripts/run_python_gate.py`. The wrapper prepares
+The local Python gate runs `python scripts/run_python_gate.py`, and CI runs that
+same command as its two selections, one job each ([§AR-ci.3.4.3](AR-ci.md#343-selecting-the-node-acceptance)). The wrapper prepares
 the built binary and released Grund 0.16.1 for the co-change compatibility cases
 ([§FS-cochange-recipe.examples](../functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance)) and the same-source binding oracle for the
 Node parity tests ([§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)), and the shared build target of the Node
 acceptance, the inputs of [§AR-ci.3.4](AR-ci.md#34-the-python-gates-inputs), then runs unittest discovery of `tests/integration`
 with the pattern `test_*.py` and that environment from the repository root, timing
-each test ([§AR-ci.3.4.2](AR-ci.md#342-per-test-durations)). The parity test checks the shared wrapper invocation
-and its discovery directory and pattern.
+each test ([§AR-ci.3.4.2](AR-ci.md#342-per-test-durations)). The parity test checks the shared wrapper invocation,
+the two selections CI passes it, and its discovery directory and pattern.
 
 ### 3.1 Citations and links
 
@@ -205,6 +206,32 @@ and returns its exit status.
 `tests/integration/test_python_gate_durations.py` runs it on a small suite of its
 own.
 
+#### 3.4.3 Selecting the Node acceptance
+
+The wrapper takes at most one argument, which selects what its discovery runs.
+`--without-node-acceptance` runs every test it discovers except the Node
+acceptance, the tests of the module `test_node_binding_acceptance`;
+`--only-node-acceptance` runs those alone. No argument runs everything, and that
+is what the local `python-test` hook runs, so the local verdict is the one the
+two selections reach together, and CI runs them as two jobs ([§AR-ci.13.1](AR-ci.md#131-one-job-per-language))
+because the Node acceptance is the longest test of the gate by minutes. Any other
+argument, or both at once, exits 2 with a usage line before any input is
+prepared, so a mistyped selection costs nothing and is never silently the whole
+suite.
+
+The cut is by module. A module that fails to import is still in the selection
+its name puts it in, so a Node acceptance that no longer imports fails the Node
+job rather than vanishing from both. Each selection still ends with the slowest
+table and still exits 5 when it finds nothing ([§AR-ci.3.4.2](AR-ci.md#342-per-test-durations)), so a Node
+selection that matches no test fails rather than passing on nothing run.
+`run_python_gate.select(suite, selection)` is the one function that makes the
+cut: given a discovered `unittest` suite and `None`, `'without-node-acceptance'`
+or `'only-node-acceptance'`, it returns a suite of the tests that selection runs.
+`run_python_gate.run_tests(start, environment, selection=None)` hands the selection to
+the one timed discovery, so a selection is cut where the tests are found.
+`tests/integration/test_python_gate_selection.py` holds it to this without
+running the Node acceptance itself.
+
 ## 4. Performance smoke guard
 
 CI carries a cheap floor on [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) that does not depend on any benchmarking toolchain: the `grund check . --full` self-check step runs the already-built binary under a generous wall-clock `timeout` — long enough never to flake on a loaded runner, short enough to fail the build on a catastrophic regression such as an accidental quadratic walk or a second read pass over every file. It is not the budget itself (the budget is tens of milliseconds; the ceiling is tens of seconds) — it is the difference between "we'd notice eventually" and "the build is red on the commit that did it". The precise per-commit meter is the [§AR-ci.5](AR-ci.md#5-benchmark-job) benchmark job, and this timeout stays as its catastrophic backstop.
@@ -350,9 +377,86 @@ Beside push, pull request and merge-queue group ([§AR-ci.12](AR-ci.md#12-a-merg
 
 ## 12. A merge queue lands every pull request
 
-`main` takes a pull request only through GitHub's merge queue. The queue tests each pull request on `main` together with every pull request queued ahead of it, under the checks a pull request must pass — the three `cargo test` legs — and lands exactly the commit it tested, so nothing reaches `main` that CI has not passed, as [§FS-distribution.4.4.1](../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed) holds the release helpers to. That is why no pull request has to be current with `main` itself, and the up-to-date requirement is off: a pull request that went green on an older `main` is not rebased and run again for every merge ahead of it. The requirement is not merely dropped, because in this repository two pull requests that are each green often fail together — one moves a point the other still cites, and only their combination is red. The queue meets that combination on its own ref, before `main`; the requirement switched off without a queue would let it land, and `main` would go red on a commit no run had judged ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)).
+`main` takes a pull request only through GitHub's merge queue. The queue tests each pull request on `main` together with every pull request queued ahead of it, under the checks a pull request must pass — the three `cargo test` legs, each the aggregate of its operating system's jobs ([§AR-ci.13.2](AR-ci.md#132-the-required-check-is-an-aggregate)) — and lands exactly the commit it tested, so nothing reaches `main` that CI has not passed, as [§FS-distribution.4.4.1](../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed) holds the release helpers to. That is why no pull request has to be current with `main` itself, and the up-to-date requirement is off: a pull request that went green on an older `main` is not rebased and run again for every merge ahead of it. The requirement is not merely dropped, because in this repository two pull requests that are each green often fail together — one moves a point the other still cites, and only their combination is red. The queue meets that combination on its own ref, before `main`; the requirement switched off without a queue would let it land, and `main` would go red on a commit no run had judged ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)).
 
 The workflow runs on `merge_group` for the queue. The test matrix runs there as it does on a push, and the commit-message job scans the group's `base_sha..head_sha` ([§AR-ci.8.2](AR-ci.md#82-the-scanned-range)). The benchmark job does not run: on a pull request it compares against the base branch, and on a push to `main` it records counts ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)), and the queue's push to `main` still runs it. That push run stays the record of `main`. `tests/integration/test_merge_queue_runs.py` holds the trigger and both jobs to this.
+
+## 13. Each operating system's suites run as parallel jobs
+
+A leg that runs its suites one after another takes as long as their sum, and the
+slowest leg is how long every pull request and every merge-queue group waits
+([§AR-ci.requirements.1](AR-ci.md#requirements1-every-gate-averages-at-most-ten-minutes--directional)). So the suites of a leg run as jobs of their own, side by
+side, and the leg takes as long as its longest one. The jobs are written out
+rather than generated by YAML anchors, because the tests that hold this layout
+read the workflow as text: the CI Python has no YAML parser.
+
+### 13.1 One job per language
+
+On `ubuntu-latest` and `windows-latest` each leg is three jobs. The **Rust** job
+runs `cargo fmt --all -- --check`, the native watch contract, `cargo build
+--workspace --all-targets --locked`, the grund self-check of §AR-ci.4 and
+`cargo test --workspace --all-targets --locked --features
+grund/test-workspace-load-count`. The **Python** job runs `python
+scripts/run_python_gate.py --without-node-acceptance`, and the **Node** job
+runs `python scripts/run_python_gate.py --only-node-acceptance`
+([§AR-ci.3.4.3](AR-ci.md#343-selecting-the-node-acceptance)). No job on those two runs more than one of the three suites.
+
+`macos-latest` may keep them in one job. It is the shortest leg, and the free
+plan's five concurrent macOS jobs are shared by every run, the merge queue's
+concurrent groups included ([§AR-ci.12](AR-ci.md#12-a-merge-queue-lands-every-pull-request)), so splitting it buys little and can
+starve the queue.
+
+On every operating system each of those commands runs exactly once: none is
+dropped by the split and none repeated by it. The plain `python
+scripts/run_python_gate.py` runs in no job, because it would run the Node
+acceptance a second time.
+
+### 13.2 The required check is an aggregate
+
+Each operating system keeps one job named `cargo test (<os>)`, the name the
+ruleset requires and the merge queue waits for, so neither changes. It runs no
+suite of its own. It `needs:` every job that runs a command of [§AR-ci.13.1](AR-ci.md#131-one-job-per-language) on
+its operating system — on Ubuntu, the pre-commit job too — and no job of
+another. That is why the language jobs are a job per operating system rather
+than a matrix: a matrix job's result, as a job needing it reads it, is all its
+legs' results together, so an aggregate needing one would judge every operating
+system's suites and wait for all of them.
+
+It passes only when every job it needs succeeded. Its `if:` is `always()`,
+because a job whose need failed is otherwise skipped, and a skipped required
+check counts as passed; its step then fails on any result other than
+`success`, so a need that failed, was cancelled or was skipped fails it. It runs
+on `ubuntu-latest` whichever operating system it judges, so it takes no macOS
+slot.
+
+### 13.3 Every hook runs once
+
+The pre-commit step runs on Ubuntu with `SKIP` naming exactly the hooks whose
+command another job already runs: `cargo-fmt-check`, `cargo-build` and
+`cargo-test`, whose commands the Rust job's steps spell, and `python-test`,
+whose command the Python and Node jobs run between them as its two selections.
+Every other hook runs there and only there. So each hook's command runs once on
+Ubuntu, a skipped hook is one a named job runs, and the list in
+`.pre-commit-config.yaml` stays what is checked ([§AR-ci.1](AR-ci.md#1-pre-commit-is-the-source-of-truth));
+`tests/integration/test_ci_precommit_parity.py` computes the set it must skip
+from the workflow rather than from a list of its own ([§AR-ci.1.2](AR-ci.md#12-the-parity-test)).
+
+### 13.4 Cache keys are per job
+
+Every job still restores the cargo cache and builds what it needs. No two jobs
+on one operating system share a cache key: `actions/cache` saves nothing on an
+exact hit of its key, so the first job to save a shared key would fix what every
+other one restores, and theirs would never be saved. A key names its job, as
+`${{ github.job }}` or a literal does; a restore prefix may still fall back to
+another job's entries, because reading one overwrites nothing. The Node
+target's cache of [§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build-target) is the job's that runs the Node acceptance.
+
+### 13.5 The layout test
+
+`tests/integration/test_ci_language_jobs.py` reads `ci.yml` as text, expands
+each `matrix.os` list, and holds the workflow to [§AR-ci.13.1](AR-ci.md#131-one-job-per-language), [§AR-ci.13.2](AR-ci.md#132-the-required-check-is-an-aggregate) and
+[§AR-ci.13.4](AR-ci.md#134-cache-keys-are-per-job); it runs its checks against fixture workflows too, so a check that
+can no longer fail is caught.
 
 ## requirements: What CI's wall clock holds to
 
