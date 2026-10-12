@@ -53,7 +53,7 @@ $ grund check
 `grund` gives specs stable IDs, lets code cite them, and checks those citations in CI.
 Agents retrieve the section they need before editing ([§GRUND-grund](docs/grund.md#grund-grund-agents-stay-grounded-in-the-spec)).
 
-## The default structure
+## Default structure
 
 `grund init` lays a project out in layers, each answering one question, and each
 layer cites the one that explains it:
