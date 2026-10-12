@@ -276,7 +276,8 @@ fn list_sizes_run(
         entries.truncate(top);
     }
     // §FS-scan.path.list: the owning project is read only where the path narrows,
-    // and an entry gets one line however many of its coordinates print.
+    // and an entry gets one line however many of its coordinates print. A section
+    // row prints the duplicate flag too, so no size row is a chapter row.
     if let Some(narrowing) = narrowing
         && let Some(owner) = Owner::of(&context, &opts.path, opts.path_provided)
     {
@@ -284,7 +285,7 @@ fn list_sizes_run(
         let printed = entries
             .iter()
             .filter(|entry| seen.insert(entry.id.as_str()))
-            .map(|entry| (entry.id.as_str(), entry.section.is_some()));
+            .map(|entry| (entry.id.as_str(), false));
         *narrowing = ListNarrowing::of(owner.list_moves(&context, opts.unused_only), printed);
     }
 

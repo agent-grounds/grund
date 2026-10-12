@@ -18,7 +18,7 @@ use crate::config::{Config, Frame, Invocation, Schema, Selection, display_path};
 use crate::grammar::render_id;
 use crate::model::{Catalog, Citation, Diagnostic, Id, paired_declarations, sort_path_key};
 use crate::resolver::{WorkspaceContext, WorkspaceProject, load_invoked_workspace_context};
-use crate::scanner::{id_arg_targets, resolve_id_arg, scan_tree};
+use crate::scanner::{id_arg_targets, scan_tree};
 use crate::workspace::{open, split_qualified_id_arg};
 
 /// §FS-scan.path.warning.release: the release from which a path narrows what is
@@ -115,7 +115,7 @@ impl Owner {
 
     /// §FS-scan.path.show: the line for one query, if the owning project moves it —
     /// a miss it declares outside the path, or a hit it also declares there, or a
-    /// short form it resolves to more than one ID.
+    /// short form it resolves to more IDs than the path holds.
     pub(crate) fn show_line(&self, narrow: &WorkspaceContext, id_arg: &str) -> Option<String> {
         let (alias, raw_id) = split_qualified_id_arg(id_arg).ok()?;
         if alias.is_some() {
@@ -124,26 +124,39 @@ impl Owner {
         let owner = self.project();
         let (config, findings) = (&owner.config, &owner.findings);
         let targets = id_arg_targets(raw_id, config.schema(), config.frame(), findings).ok()?;
-        let homes = targets
-            .iter()
-            .filter_map(|(id, _)| findings.declarations.get(id))
-            .flat_map(|decls| paired_declarations(decls).stand_ins().collect::<Vec<_>>())
-            .collect::<Vec<_>>();
+        let homes = |keep: &dyn Fn(&Id) -> bool| {
+            targets
+                .iter()
+                .filter(|(id, _)| keep(id))
+                .filter_map(|(id, _)| findings.declarations.get(id))
+                .flat_map(|decls| paired_declarations(decls).stand_ins().collect::<Vec<_>>())
+                .collect::<Vec<_>>()
+        };
+        // Each ID the query names within the path, with its count of homes there.
+        let inside = narrow.current_project().map_or_else(Vec::new, |project| {
+            let (schema, frame) = (project.config.schema(), project.config.frame());
+            id_arg_targets(raw_id, schema, frame, &project.findings)
+                .unwrap_or_default()
+                .into_iter()
+                .filter_map(|(id, _)| {
+                    let decls = project.findings.declarations.get(&id)?;
+                    Some((id, paired_declarations(decls).len()))
+                })
+                .collect::<Vec<_>>()
+        });
+        let (verb, homes) = match inside.as_slice() {
+            [] => ("is declared", homes(&|_| true)),
+            [(_, 1)] if homes(&|_| true).len() > 1 => ("is also declared", homes(&|_| true)),
+            // Already ambiguous within the path: only a match it does not hold moves it.
+            [_, _, ..] => (
+                "is also declared",
+                homes(&|id| inside.iter().all(|(held, _)| held != id)),
+            ),
+            _ => return None,
+        };
         let (_, outside) = self
             .path
             .first_outside(config, homes.iter().map(|home| ((), &home.file, home.line)))?;
-        let inside = narrow.current_project().map_or(0, |project| {
-            let (schema, frame) = (project.config.schema(), project.config.frame());
-            resolve_id_arg(raw_id, schema, frame, &project.findings)
-                .ok()
-                .and_then(|(id, _)| project.findings.declarations.get(&id))
-                .map_or(0, |decls| paired_declarations(decls).len())
-        });
-        let verb = match inside {
-            0 => "is declared",
-            1 if homes.len() > 1 => "is also declared",
-            _ => return None,
-        };
         // `<ID>` as the query wrote it, without its section.
         let section = targets.first().and_then(|(_, section)| section.as_deref());
         let written = section

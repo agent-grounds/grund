@@ -76,7 +76,7 @@ And an ID found within the path that the project also declares outside it (today
 warning: <ID> is also declared at <file>:<line>, outside <path>; from grund 0.19.0 a path narrows what is reported, not what resolves
 ```
 
-A short form (§FS-show.1.2) that resolves to one ID within the path and to several in the project is ambiguous then too (§FS-show.2.2.1.1), so it gains the second line, naming the first home of another match outside the path. `<ID>` is the ID as the query wrote it, without its section. A miss the project does not resolve either moves nothing and gets no line. Under `--batch` each query gets its own line, in input order.
+A short form (§FS-show.1.2) that resolves to one ID within the path and to several in the project is ambiguous then too (§FS-show.2.2.1.1), so it gains the second line, naming the first home of another match outside the path. One already ambiguous within the path lists more candidates in the project when the project adds a match the path does not hold, so it gains the second line too, naming the first outside home of such a match; one the project adds no match to gets no line. `<ID>` is the ID as the query wrote it, without its section. A miss the project does not resolve either moves nothing and gets no line. Under `--batch` each query gets its own line, in input order.
 
 ### path.refs: `refs` scans the path's tree
 
