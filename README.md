@@ -139,6 +139,7 @@ To set up by hand instead, see [setup](docs/user-facing/setup.md).
 Then:
 
 - add `grund check` to [pre-commit and CI](docs/user-facing/checking.md#in-pre-commit-and-ci);
+- look up any key in the [`grund.toml` reference](docs/user-facing/configuration.md), and point your editor at its [JSON Schema](schemas/grund.schema.json);
 - for prebuilt binaries and the Python and Node APIs, see [installation](docs/user-facing/installation.md).
 
 ## Declaration format
@@ -345,6 +346,7 @@ than only repos that ship an editor config.
 | Guide | For |
 |---|---|
 | [Checking a repository](docs/user-facing/checking.md) | what `grund check` enforces, its report, `--watch`, `--only`, pre-commit |
+| [`grund.toml` reference](docs/user-facing/configuration.md) | every key of both config versions, and the JSON Schema for your editor |
 | [Structure and IDs](docs/user-facing/structure.md) | kinds, ID schemes, citation syntax, inline declarations |
 | [Querying grund](docs/user-facing/querying.md) | selectors, batch reads, `refs`, `cover` |
 | [Reviewing code](docs/user-facing/reviewing.md) | a citation's blast radius, diff recipes |
