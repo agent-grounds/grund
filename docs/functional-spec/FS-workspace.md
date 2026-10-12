@@ -1394,7 +1394,7 @@ by [§FS-config.3.6](FS-config.md#36-output--report-format) — the same line
 
 ### 8.8 Discovery follows `grund check`'s walk-up
 
-See [§FS-scan.projects.discovery](FS-scan.md#projectsdiscovery-the-nearest-config-decides) and [§FS-scan.path.discovery](FS-scan.md#pathdiscovery-a-path-is-where-discovery-starts).
+See [§FS-scan.projects.discovery](FS-scan.md#projectsdiscovery-the-nearest-config-decides), [§FS-scan.path.discovery](FS-scan.md#pathdiscovery-a-path-is-where-discovery-starts), and, for a narrowed `check <dir>`'s refused alias, [§FS-scan.projects.narrowed.alias](FS-scan.md#projectsnarrowedalias-a-refused-alias-the-workspace-root-resolves-says-so).
 
 ### 8.9 The current project
 
