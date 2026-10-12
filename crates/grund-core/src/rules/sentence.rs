@@ -10,7 +10,7 @@ mod subjects;
 mod targets;
 
 use super::RuleAnchor;
-use crate::config::one_grammar_window;
+use crate::config::{KindTable, one_grammar_window};
 use crate::grammar::Grammar;
 use conjunction::conjunction_forms;
 use forms::{Form, Refusal, refuse};
@@ -111,10 +111,10 @@ pub(crate) struct ParsedRule {
 #[derive(Clone)]
 pub(crate) struct RuleVocabulary {
     pub(crate) kinds: BTreeSet<String>,
-    pub(crate) target_kinds: BTreeSet<String>,
-    /// Citable target kinds by full workspace alias. Bare targets continue to
-    /// use `target_kinds`; qualified targets must resolve in their namespace.
-    pub(crate) target_namespaces: BTreeMap<String, BTreeSet<String>>,
+    /// The kind table an object is judged in (§FS-scan.projects.kinds): the
+    /// project whose config reads the rule as `""`, for a bare `KIND`, and each
+    /// project the rule's run loaded by alias, for `alias/KIND` and `*/KIND`.
+    pub(crate) objects: KindTable,
     pub(crate) named_sections: bool,
     /// Kinds whose own project turns named sections on, where the vocabulary
     /// spans projects that set it differently (§FS-scan.projects.kinds).
@@ -129,14 +129,6 @@ pub(crate) struct RuleVocabulary {
 }
 
 impl RuleVocabulary {
-    /// §FS-rules.4.1.1: whether the run holds a workspace vocabulary at all.
-    /// False wherever the effective config declares no `[workspace]`, and that
-    /// absence is what makes a namespaced object kind unverifiable here rather
-    /// than invalid — a scope holding namespaces judged the alias and said no.
-    pub(crate) fn workspace_in_scope(&self) -> bool {
-        !self.target_namespaces.is_empty()
-    }
-
     /// §FS-scan.projects.kinds: whether a named chapter of `kind` is
     /// addressable, read under the project that configures it.
     pub(crate) fn named_sections_for(&self, kind: &str) -> bool {

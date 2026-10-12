@@ -12,12 +12,11 @@
 //! config was a file-name category; they are config's own now (§AR-system.2.3).
 
 use anyhow::{Result, anyhow};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::path::Path;
 
 use super::kind::KindConfig;
 use super::kinds::{KindScope, KindTable, KindVerdict, one_grammar_warning, unverifiable_reason};
-use super::record::citing_kind_names;
 use super::workspace_block::{INVALID_ALIAS_PATH_EXPECTED, invalid_alias_path_segment};
 use crate::model::format_path;
 
@@ -176,27 +175,24 @@ fn invalid_citation_target_message(token: &str, qualifier: &str, kind: &str) -> 
 
 /// Validate the parsed `[citations]` rules against the finalized kind set
 /// (§FS-config.3.9.5): every citing kind is a configured kind or `code`, every
-/// target names a *citable* configured kind, and no two targets of the same
-/// cited kind whose namespace matchers overlap sit at different levels.
+/// bare target names a *citable* configured kind, and no two targets of the
+/// same cited kind whose namespace matchers overlap sit at different levels.
 /// `table` is the spelling the messages name the rules by: `citations` in v1,
-/// `rules.citations` in v2 (§FS-config-v2.rules.citations).
+/// `rules.citations` in v2 (§FS-config-v2.rules.citations). `local` is this
+/// project's own kind table, which answers both sides (§FS-scan.projects.kinds).
 pub(super) fn validate_citation_rules(
     path: &Path,
     table: &str,
     kinds: &[KindConfig],
     citations: &CitationRules,
+    local: &KindTable,
 ) -> Result<()> {
-    // The citing side is any name in the table plus `code` — a non-citable kind
-    // cites like any other place (§FS-config.3.9). The cited side is narrower:
-    // only a citable kind has IDs to be the target of a citation.
-    let citing_known: BTreeSet<&str> = citing_kind_names(kinds).into_iter().collect();
-    let known: BTreeSet<&str> = kinds
-        .iter()
-        .filter(|k| k.citable)
-        .map(|k| k.kind.as_str())
-        .collect();
+    let scope = KindScope::Project("");
     for (citing, rules) in &citations.per_kind {
-        if !citing_known.contains(citing.as_str()) {
+        // The citing side is any configured name, `code` included — a
+        // non-citable kind cites like any other place (§FS-config.3.9). The
+        // cited side is narrower: only a citable kind has IDs to be cited.
+        if local.config_verdict(scope, citing) == KindVerdict::Unknown {
             return Err(anyhow!(
                 "{}: [{table}.{citing}] names an unknown kind `{citing}`",
                 format_path(path)
@@ -221,17 +217,18 @@ pub(super) fn validate_citation_rules(
                     // §FS-config.3.9.5.2: a pinned or `*/` target names other
                     // projects' kinds, which this config does not hold, so it is
                     // judged by `pinned_target_warnings` and never here.
-                    if target.namespace == NamespaceMatch::Local
-                        && !known.contains(target.kind.as_str())
-                    {
-                        // A non-citable kind is a name the table knows and a
-                        // citation can never carry, so say which of the two it
-                        // is rather than calling a configured kind unknown.
-                        let why = if citing_known.contains(target.kind.as_str()) {
-                            "a non-citable target kind"
-                        } else {
-                            "an unknown target kind"
-                        };
+                    let why = match target.namespace {
+                        NamespaceMatch::Local => match local.config_verdict(scope, &target.kind) {
+                            KindVerdict::Citable => None,
+                            // A non-citable kind is a name the table knows and a
+                            // citation can never carry, so say which of the two it
+                            // is rather than calling a configured kind unknown.
+                            KindVerdict::NonCitable(_) => Some("a non-citable target kind"),
+                            _ => Some("an unknown target kind"),
+                        },
+                        _ => None,
+                    };
+                    if let Some(why) = why {
                         return Err(anyhow!(
                             "{}: [{table}.{citing}] {level_name} names {why} `{}`",
                             format_path(path),
@@ -293,7 +290,7 @@ pub(crate) fn pinned_target_warnings(
                     || "in any workspace namespace".to_string(),
                     |alias| format!("in namespace `{alias}`"),
                 );
-                let why = match kinds.verdict(scope, kind) {
+                let why = match kinds.config_verdict(scope, kind) {
                     KindVerdict::Citable => continue,
                     KindVerdict::NonCitable(_) => {
                         format!("a non-citable target kind `{kind}` {place}")

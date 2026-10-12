@@ -6,9 +6,9 @@
 //! as if named sections were on.
 
 use super::parse_selector;
-use crate::config::Config;
+use crate::config::{Config, KindTable};
 use crate::rules::sentence::{RuleSubject, RuleVocabulary};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 const HINT: &str = "\nhint: grund show --batch --toc expands each selected unit into its sections";
@@ -27,9 +27,8 @@ fn vocabulary(kinds: &[&str]) -> RuleVocabulary {
         .map(|kind| kind.to_string())
         .collect::<BTreeSet<_>>();
     RuleVocabulary {
-        kinds: kinds.clone(),
-        target_kinds: kinds,
-        target_namespaces: BTreeMap::new(),
+        objects: KindTable::of_citable(&kinds),
+        kinds,
         named_sections: true,
         named_kinds: Default::default(),
         non_citable: Default::default(),

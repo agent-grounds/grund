@@ -2,10 +2,10 @@
 //! §AR-config.1.5): each project's kinds and its named-sections setting, read
 //! from its config alone, and every kind-name question answered from that
 //! reading within the asking command's scope. It is config-time work — no file
-//! is read — so it lives in the config component, and workspace expansion
-//! builds the run's table with one call to [`KindTable::build`]
-//! (§AR-workspace.5.2). A run that expands no workspace holds the table of its
-//! one project ([`KindTable::standalone`]).
+//! is read — so it lives in the config component, and a run that reads a
+//! workspace builds, judges and holds its table with one call to
+//! [`install_kind_table`] (§AR-workspace.5.2). A run that reads no workspace
+//! holds the table of its one project ([`KindTable::standalone`]).
 //!
 //! The refusal a configured but non-citable kind earns is rendered here too,
 //! once, in the quoting each surface already uses (§FS-errors.2.5.1), and so is
@@ -13,8 +13,11 @@
 //! (§FS-errors.3.8, §FS-config.3.9.5.2).
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::Arc;
 
 use super::project::Schema;
+use super::record::{CODE_SOURCE_KIND, Config};
+use super::validate::pinned_citation_target_warnings;
 
 /// The release the one-grammar window ends in (§RM-one-grammar-flip): the
 /// appended reasons stand alone and the pinned-target warnings become errors.
@@ -69,6 +72,10 @@ pub(crate) struct KindProject {
     pub(crate) kinds: Vec<KindEntry>,
     /// `[id] named_sections` of this project's own config.
     pub(crate) named_sections: bool,
+    /// `code`, where the config writes no complement of its own
+    /// (§FS-config.3.9.2): a kind with no row, which only
+    /// [`KindTable::config_verdict`] reads.
+    implicit_complement: Option<KindEntry>,
 }
 
 impl KindProject {
@@ -87,6 +94,13 @@ impl KindProject {
                 })
                 .collect(),
             named_sections: schema.ids.named_sections,
+            implicit_complement: (!schema.rows.iter().any(|row| row.is_complement())).then(|| {
+                KindEntry {
+                    name: CODE_SOURCE_KIND.to_string(),
+                    citable: false,
+                    home: None,
+                }
+            }),
         }
     }
 
@@ -143,7 +157,8 @@ pub(crate) enum KindVerdict<'a> {
 pub(crate) struct KindTable {
     pub(crate) projects: Vec<KindProject>,
     /// Whether the run holds a workspace, so an alias can be judged at all
-    /// (§FS-rules.4.1.1).
+    /// (§FS-rules.4.1.1): its absence is what makes a namespaced object kind
+    /// unverifiable here rather than invalid.
     pub(crate) workspace: bool,
 }
 
@@ -166,6 +181,44 @@ impl KindTable {
             projects: vec![KindProject::of("", schema)],
             workspace: false,
         }
+    }
+
+    /// A table of one project whose kinds are `citable`, each citable: the
+    /// object table of a vocabulary a test builds by hand.
+    #[cfg(test)]
+    pub(crate) fn of_citable(citable: &BTreeSet<String>) -> Self {
+        Self {
+            projects: vec![KindProject {
+                alias: String::new(),
+                kinds: citable
+                    .iter()
+                    .map(|name| KindEntry {
+                        name: name.clone(),
+                        citable: true,
+                        home: None,
+                    })
+                    .collect(),
+                named_sections: false,
+                implicit_complement: None,
+            }],
+            workspace: false,
+        }
+    }
+
+    /// Adds the projects a rule's run loaded, by alias, to the table of the
+    /// project whose config reads the rule (§FS-rules.4.1.1): holding any is what
+    /// lets a pinned or `*/` object be judged rather than found unverifiable.
+    pub(crate) fn add_projects<'a>(
+        &mut self,
+        projects: impl IntoIterator<Item = (&'a str, &'a Schema)>,
+    ) {
+        let before = self.projects.len();
+        self.projects.extend(
+            projects
+                .into_iter()
+                .map(|(alias, schema)| KindProject::of(alias, schema)),
+        );
+        self.workspace |= self.projects.len() > before;
     }
 
     /// The projects `scope` reads, in load order. A pinned alias the table
@@ -205,6 +258,31 @@ impl KindTable {
                 KindVerdict::UnknownAlias
             }
             _ => KindVerdict::Unknown,
+        }
+    }
+
+    /// §FS-config.3.9.5: the verdict on a name a config reads as a `[citations]`
+    /// kind, citing or cited — [`Self::verdict`] with one explicit case. `code`,
+    /// the complement a config that writes none of its own still has
+    /// (§FS-config.3.9.2), has no row, so every other surface calls it unknown
+    /// (§FS-list.1.1); config has always read it as configured and not citable,
+    /// a kind that cites and is never cited, and keeps that answer.
+    pub(crate) fn config_verdict<'s>(
+        &'s self,
+        scope: KindScope<'s>,
+        name: &str,
+    ) -> KindVerdict<'s> {
+        match self.verdict(scope, name) {
+            KindVerdict::Unknown => self
+                .in_scope(scope)
+                .find_map(|project| {
+                    project
+                        .implicit_complement
+                        .as_ref()
+                        .filter(|entry| entry.name == name)
+                })
+                .map_or(KindVerdict::Unknown, KindVerdict::NonCitable),
+            verdict => verdict,
         }
     }
 
@@ -258,6 +336,33 @@ impl KindTable {
             .flat_map(KindProject::citable)
             .collect()
     }
+}
+
+/// §AR-config.1.5: the one call a run that reads a workspace makes. Builds the
+/// table from `projects`, each by alias, judges every project's pinned and `*/`
+/// `[citations]` targets against it once (§FS-config.3.9.5.2), puts their
+/// warnings on `root`'s run channel, and has `root` and every project hold it.
+/// Expansion makes it for a full run, and a narrowed run makes it over the
+/// workspace its config declares (§FS-scan.projects.kinds).
+pub(crate) fn install_kind_table<'a>(
+    root: &mut Config,
+    projects: impl IntoIterator<Item = (&'a str, &'a mut Config)>,
+) {
+    let mut projects = projects.into_iter().collect::<Vec<_>>();
+    let table = Arc::new(KindTable::build(
+        projects
+            .iter()
+            .map(|(alias, config)| (*alias, config.schema())),
+    ));
+    let warnings = projects
+        .iter()
+        .flat_map(|(_, config)| pinned_citation_target_warnings(config, &table))
+        .collect::<Vec<_>>();
+    root.extend_run_warnings(warnings);
+    for (_, config) in &mut projects {
+        config.set_kind_table(Arc::clone(&table));
+    }
+    root.set_kind_table(table);
 }
 
 /// The `known kinds:` line that ends an unknown `--kind` (§FS-list.1.1), a

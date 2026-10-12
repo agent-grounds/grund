@@ -77,11 +77,15 @@ pub(super) fn lists(path: &Path, project: &Project) -> Result<Vec<String>> {
         return Ok(Vec::new());
     }
     let table = citations_table(project);
+    // §FS-scan.projects.kinds: a bare target and the citing side are judged in
+    // this project's own scope, from its one reading of its kinds.
+    let local = KindTable::standalone(&project.schema);
     validate_citation_rules(
         path,
         table,
         &project.kind_configs(),
         &project.rules.citations,
+        &local,
     )?;
     if project.workspace.declared {
         return Ok(Vec::new());
@@ -90,14 +94,14 @@ pub(super) fn lists(path: &Path, project: &Project) -> Result<Vec<String>> {
         path,
         table,
         &project.rules.citations,
-        &KindTable::standalone(&project.schema),
+        &local,
     ))
 }
 
 /// §FS-config.3.9.5.2: the load warnings `config`'s pinned and `*/` targets
-/// earn against the kind table its workspace expansion built — the half of
+/// earn against the kind table built over its workspace — the half of
 /// [`lists`] a config that declares `[workspace]` defers to that point.
-pub(crate) fn pinned_citation_target_warnings(
+pub(super) fn pinned_citation_target_warnings(
     config: &Config,
     kinds: &KindTable,
 ) -> Vec<RunWarning> {

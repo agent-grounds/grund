@@ -24,8 +24,8 @@ use crate::model::{CheckReport, Diagnostic, Finding};
 use crate::resolver::{WorkspaceCheckTarget, load_workspace_projects, settled_run_warnings};
 use crate::scanner::scan_tree;
 use crate::workspace::{
-    absent_only_workspace_caution, absent_optional_member_warnings, resolve_workspace_config,
-    scope_is_config_root, unlisted_workspace_block_errors,
+    absent_only_workspace_caution, absent_optional_member_warnings, install_declared_kind_table,
+    resolve_workspace_config, scope_is_config_root, unlisted_workspace_block_errors,
 };
 use crate::writers::expected;
 
@@ -90,6 +90,11 @@ pub(super) fn run_check_with_run_warnings(
     run_warnings: &mut Vec<Finding>,
 ) -> Result<CheckRun> {
     let mut config = resolve_workspace_config(path)?;
+    // §FS-scan.projects.kinds: a narrowed run still judges the `[citations]`
+    // targets its declared workspace's kinds answer, and says so on this channel.
+    if config.workspace_declared && !scope_is_config_root(&config.root, path, path_provided) {
+        install_declared_kind_table(&mut config);
+    }
     // §FS-check.4.10.8: root boundary population has answered
     // everything a failed expansion is allowed to carry. Capture it before a
     // nested member can refuse; questions below the root do not exist yet.

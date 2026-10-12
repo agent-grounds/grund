@@ -9,6 +9,7 @@ use super::sentence::{
     RuleVocabulary, TargetMode, parse_rule,
 };
 use crate::checker::markdown_project;
+use crate::config::KindTable;
 use crate::resolver::WorkspaceCheckTarget;
 use crate::testing::{legacy_fs_folder_config, scan_findings, test_root, write};
 use std::collections::{BTreeMap, BTreeSet};
@@ -45,8 +46,7 @@ fn rule() -> ParsedRule {
 fn chapter_diagnostic_parser_refuses_whitespace_anywhere_in_presence_name() {
     let vocabulary = RuleVocabulary {
         kinds: BTreeSet::from(["FS".into()]),
-        target_kinds: BTreeSet::from(["FS".into()]),
-        target_namespaces: BTreeMap::new(),
+        objects: KindTable::of_citable(&BTreeSet::from(["FS".into()])),
         named_sections: true,
         named_kinds: Default::default(),
         non_citable: Default::default(),
@@ -125,8 +125,7 @@ fn sentence_front_end_returns_complete_parsed_rule_without_facts_or_diagnostics(
         anchor("docs/rules.md", 7),
         &RuleVocabulary {
             kinds: BTreeSet::from(["FS".into(), "REQ".into()]),
-            target_kinds: BTreeSet::from(["FS".into(), "REQ".into()]),
-            target_namespaces: BTreeMap::new(),
+            objects: KindTable::of_citable(&BTreeSet::from(["FS".into(), "REQ".into()])),
             named_sections: true,
             named_kinds: Default::default(),
             non_citable: Default::default(),

@@ -8,8 +8,8 @@
 
 use super::RuleAnchor;
 use super::sentence::{RuleVocabulary, parse_rule};
-use crate::config::Config;
-use std::collections::{BTreeMap, BTreeSet};
+use crate::config::{Config, KindTable};
+use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 /// The one kind `FS` under `{kind}-{slug}`, named sections on.
@@ -23,9 +23,8 @@ fn vocabulary() -> RuleVocabulary {
         .expect("{kind}-{slug} grammar with named sections");
     let kinds = BTreeSet::from(["FS".to_string()]);
     RuleVocabulary {
-        kinds: kinds.clone(),
-        target_kinds: kinds,
-        target_namespaces: BTreeMap::new(),
+        objects: KindTable::of_citable(&kinds),
+        kinds,
         named_sections: true,
         named_kinds: Default::default(),
         non_citable: Default::default(),
