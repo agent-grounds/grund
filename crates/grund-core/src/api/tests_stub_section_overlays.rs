@@ -1,7 +1,7 @@
 //! A stub's sections are its target's, read as a save would write them
 //! (§FS-check.3.2.1, §FS-lsp.1.1): with a target outside the scan open in an
 //! editor, the snapshot reports the missing sections the saved text gives, as it
-//! reads the overlay for a stub's health (§FS-declarations.checks.broken-stub.1).
+//! reads the overlay for a stub's health (§FS-declarations.stubs.target.1).
 
 use super::lsp_snapshot;
 use crate::model::format_path;

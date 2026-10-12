@@ -1,7 +1,7 @@
 //! Test module: a stub whose target lies outside scan scope reads the target's
 //! declaration by its ID, and reads it from an editor's overlay where there is
 //! one, as the scanned target would (§FS-show.2.3.7). The scan that records the
-//! stub's verdict reads the overlay too (§FS-declarations.checks.broken-stub.1),
+//! stub's verdict reads the overlay too (§FS-declarations.stubs.target.1),
 //! as every engine query scans before it shows. The e2e cases pin the disk read;
 //! an overlay reaches `show` only through the engine.
 

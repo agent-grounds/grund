@@ -204,7 +204,7 @@ exists and declares no such ID, `refs` lists the citations of the stub's ID and
 exits `0`, as it does for any absent target ([§FS-refs.1](FS-refs.md#1-inputs)). A
 target the scan does not read, by its name or its extension, declares no such ID
 however many headings of it the target holds
-([§FS-declarations.checks.broken-stub.3](FS-declarations.md#checksbroken-stub3-a-target-the-scan-does-not-read-declares-nothing)),
+([§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)),
 so its stub refuses nothing either. The `broken stub:` refusals belong to `show`,
 which needs the target's body ([§FS-show.2.3.4](FS-show.md#234-broken-stub));
 `refs` reads no body.

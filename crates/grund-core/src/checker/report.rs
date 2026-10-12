@@ -141,8 +141,8 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// (§FS-declarations.stubs.verdict, §AR-scanner.4.6): a stub and the inline declaration it
 /// points at count as one, not two — whether or not the walk reached that declaration, and
 /// however many stubs point at it — and a declaration a stub stands for is named at its
-/// target (§FS-declarations.checks.duplicate.1, §FS-declarations.checks.duplicate.2,
-/// §FS-declarations.checks.duplicate.3).
+/// target (§FS-declarations.stubs.pairing.1, §FS-declarations.stubs.pairing.2,
+/// §FS-declarations.stubs.pairing.3).
 ///
 /// ### 2.2 Misplaced declarations (§FS-declarations.checks.misplaced-declaration)
 ///
@@ -187,8 +187,8 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// through (§FS-declarations.checks.broken-stub.4), and the verdict is the one a save
 /// would give, a hidden or unlisted name judged as the stub wrote it and a heading
 /// inside a fence or a raw-text HTML block declaring nothing
-/// (§FS-declarations.checks.broken-stub.1, §FS-declarations.checks.broken-stub.2,
-/// §FS-check.1.1.5.1, §FS-declarations.checks.broken-stub.3).
+/// (§FS-declarations.stubs.target.1, §FS-declarations.stubs.target.2,
+/// §FS-check.1.1.5.1, §FS-declarations.stubs.target.3).
 ///
 /// ### 2.6 Unused declarations (§FS-check.4.1)
 ///

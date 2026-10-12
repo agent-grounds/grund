@@ -9,7 +9,7 @@
 //! filter of each directory. A file that exists only as a buffer, which the
 //! walk never meets on disk, is read or skipped by `unread`, exactly as the
 //! saved file would be (§AR-system.2.13). A stub's target asks
-//! `name_refusal` alone, the two reasons §FS-declarations.checks.broken-stub.3
+//! `name_refusal` alone, the two reasons §FS-declarations.stubs.target.3
 //! honours. And a link the walker could not resolve asks `name_refusal` or
 //! `directory_refusal`, with `ignored`, whether the walk would have read it
 //! (§FS-config.3.5.6), since the walker filters no error entry itself.
@@ -53,7 +53,7 @@ pub(crate) enum Unread {
 }
 
 /// The name and extension reasons, which hold wherever the file lies: all a
-/// stub's target honours (§FS-declarations.checks.broken-stub.3), and the test
+/// stub's target honours (§FS-declarations.stubs.target.3), and the test
 /// the walk asks of every file it yields (§FS-config.3.5).
 pub(crate) fn name_refusal(path: &Path, schema: &Schema) -> Option<Unread> {
     if is_hidden(path) {

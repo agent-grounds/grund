@@ -43,7 +43,7 @@ pub(super) fn ambiguous_id_refusal(
     if paired.len() <= 1 {
         return None;
     }
-    // §FS-declarations.checks.duplicate.3: a declaration a stub stands for is at its
+    // §FS-declarations.stubs.pairing.3: a declaration a stub stands for is at its
     // target, at each line there that declares the ID (§FS-declarations.stubs.verdict).
     // §FS-errors.3.1: every site is spelled from the effective report root.
     let mut sites: Vec<(String, String, usize)> = paired
