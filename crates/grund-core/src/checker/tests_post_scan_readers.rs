@@ -23,6 +23,11 @@ use std::path::{Path, PathBuf};
 /// A stub's target is read by the scan alone (§AR-scanner.4.6), and every rule
 /// reads its record, so no call that reaches it is a read here. The resolver's
 /// point-body slicer reads the file record too, not the file (§AR-scanner.2.8).
+///
+/// The `sources` entry matches `sources(`, the `frame.sources()` hand-off, so
+/// it marks where the run's sources enter a rule, not every read made through
+/// them: a rule handed a `Sources` value reads it as `.text(` or `.exists(`,
+/// which no entry matches, and a row here names the file the hand-off is in.
 const READ_CALLS: &[&str] = &[
     "input_read_to_string",
     "sources",

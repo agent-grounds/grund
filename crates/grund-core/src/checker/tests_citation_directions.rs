@@ -7,6 +7,7 @@ use crate::model::Id;
 use crate::scanner::companion_agent_entrypoints;
 #[cfg(unix)]
 use crate::sources::Sources;
+#[cfg(unix)]
 use crate::testing::current_block;
 use crate::testing::{scan_tree, test_root, write};
 
