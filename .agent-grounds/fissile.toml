@@ -263,8 +263,7 @@ hard_message = "split-doc-hard"
 
 # Entrypoints are the exception to the paragraph above: nothing addresses them
 # by citation, so they are read whole — `CLAUDE.md` and `AGENTS.md` into every
-# session's context, `README.md` by whoever arrives first, a `SKILL.md` when the
-# skill loads. Length here is charged to every one of those reads, which is
+# session's context, a `SKILL.md` when the skill loads. Length here is charged to every one of those reads, which is
 # exactly the cost §GOAL-token-economy is about, so these keep the soft 250 the
 # whole markdown tree used to carry. The hard ceiling is raised from that rule's
 # 400 to 500: `skills/grund-init/SKILL.md` measures 387 lines and cannot be split
@@ -273,9 +272,24 @@ hard_message = "split-doc-hard"
 # override is the wrong one to park a shipped artifact against.
 [[rules]]
 id = "entrypoints"
-include = ["README.md", "CLAUDE.md", "AGENTS.md", "skills/**/*.md"]
+include = ["CLAUDE.md", "AGENTS.md", "skills/**/*.md"]
 unit = "lines"
 soft = 250
+hard = 500
+count_blank_lines = false
+count_comment_lines = true
+soft_message = "split-entrypoint-soft"
+hard_message = "split-doc-hard"
+
+# `README.md` is read whole too, but by whoever arrives first rather than into
+# every agent session, and it shows each feature as a real excerpt of a runnable
+# example (§REQ-readme.2) — so it gets a soft 450 of its own, under the same
+# hard ceiling.
+[[rules]]
+id = "readme"
+include = ["README.md"]
+unit = "lines"
+soft = 450
 hard = 500
 count_blank_lines = false
 count_comment_lines = true
