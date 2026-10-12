@@ -70,7 +70,7 @@ pub(crate) fn check_agent_block_path(
     // §FS-check.6.1.3: retain this probe when the entrypoint is absent.
     crate::config::observe_input(path, false);
     // §FS-check.6.1.1: observed before its read, as a save would write it
-    // (§FS-scan.text.buffer).
+    // (§AR-system.2.13).
     if !sources.exists(path) {
         // §FS-init.2.3.5.8: a destination of the live render with no file is a
         // missing block.

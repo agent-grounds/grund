@@ -179,7 +179,7 @@ fn enroll_external_inline_declarations(
         .iter()
         .filter_map(|target| {
             // §FS-check.6.1.1: cover this effective input before its shared read,
-            // as a save would write it (§FS-scan.text.buffer).
+            // as a save would write it (§AR-system.2.13).
             let text = sources.text(&target.index_file).ok()?;
             Some((
                 target.index_key.as_path(),

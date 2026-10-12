@@ -300,7 +300,7 @@ pub(super) fn check_kind_indexes(
         })
         .collect();
 
-    // §FS-scan.text.buffer: the index as a save would write it.
+    // §AR-system.2.13: the index as a save would write it.
     let sources = frame.sources();
     for target in &targets {
         // `is_file`, not `exists`: a path that is not a readable file is not an index

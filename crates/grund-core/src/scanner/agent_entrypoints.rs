@@ -337,9 +337,10 @@ pub(crate) fn companion_workspace_exists(
         .is_some_and(|workspace| path_is_dir(root.join(workspace)))
 }
 
-/// Whether the on-disk `path` is grund-owned despite belonging to an entrypoint
-/// whose filename is too generic to attribute by existence alone (currently
-/// `.rules`, §FS-init.2.1.2). True when the entry is discovery-safe by filename,
+/// Whether `path`, read through `sources` (the run's for check, the disk's for
+/// init), is grund-owned despite belonging to an entrypoint whose filename is
+/// too generic to attribute by existence alone (currently `.rules`,
+/// §FS-init.2.1.2). True when the entry is discovery-safe by filename,
 /// when its owning workspace directory proves ownership, or when the file
 /// already carries a managed block from a prior `grund init` — same evidence
 /// for both `grund check`'s companion scan and `grund init`'s update set, so
@@ -361,7 +362,7 @@ fn companion_has_managed_block(path: &Path, sources: Sources<'_>) -> bool {
     // lets `check` surface the defect instead of silently skipping it.
 
     // §FS-check.6.1.1: cover this effective input before its shared read, as a
-    // save would write it (§FS-scan.text.buffer).
+    // save would write it (§AR-system.2.13).
     sources
         .text(path)
         .is_ok_and(|text| !matches!(find_agents_block(&text), AgentsBlockLookup::Absent))
