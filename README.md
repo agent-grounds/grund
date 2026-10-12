@@ -70,27 +70,26 @@ sets `grund` beside the tools it descends from.
 `grund init` lays a project out in layers, each answering one question, and each
 layer cites the one that explains it:
 
-```mermaid
-flowchart BT
-  code["Code"] --> AR
-  integration["Integration tests<br/>tests/integration/"] --> AR
-  AR["AR · How<br/>docs/architecture/"] --> FS
-  e2e["End-to-end tests<br/>tests/e2e/"] == must ==> FS
-  FS["FS · What<br/>requirements.md"] --> GOAL
-  GOAL["GOAL · Where<br/>docs/goals.md"] --> GRUND["GRUND · Why<br/>docs/grund.md"]
-```
+|           | Kind        | Home                            | Cites                                  |
+|-----------|-------------|---------------------------------|----------------------------------------|
+| Why       | GRUND       | `docs/grund.md`                 |                                        |
+| Where     | GOAL        | `docs/goals.md`                 | should cite GRUND or GOAL              |
+| What      | FS          | `requirements.md`               | should cite GOAL or FS; **never** AR   |
+| How       | AR          | `docs/architecture/`            | should cite FS or GOAL                 |
+| Proof     | e2e         | `tests/e2e/`                    | **must** cite FS; avoid AR             |
+|           | integration | `tests/integration/`            | should cite AR                         |
+| Code      | code        | any other file                  | should cite FS or AR                   |
+| Decisions | DF          | `docs/decisions/functional/`    | should cite FS or GOAL                 |
+|           | DA          | `docs/decisions/architectural/` | should cite AR or FS                   |
+| Plan      | RM          | `docs/roadmap.md`               |                                        |
 
-Each box is a kind and its home as `init` writes them to `grund.toml`; decision
-records (`DF`, `DA`) cite what they decide, and the roadmap (`RM`) is unconstrained.
-The arrows are the canonical ruleset `init` writes commented out under `[citations]`;
-uncomment it to enforce them. A thin arrow is a recommendation
-(`grund check --suggestions`); the thick one is a requirement, whose absence is an
-error. Some recommendations name alternatives: code may also cite a functional spec
-directly, architecture a goal, and a goal or a spec another of its own kind. A
-functional spec must never cite architecture. Kinds, homes and rules are yours to
-change: the [structure guide](docs/user-facing/structure.md) covers kinds, homes and
-the ID grammar, and [citation directions](docs/user-facing/citation-directions.md) the
-`[citations]` grammar.
+Kinds and homes are what `init` writes to `grund.toml`. The rules are the canonical
+ruleset it writes commented out under `[citations]`; uncomment it to enforce them. A
+**must** or **never** is a `grund check` error, and a should or avoid is a suggestion
+(`grund check --suggestions`). Kinds, homes and rules are yours to change: the
+[structure guide](docs/user-facing/structure.md) covers kinds, homes and the ID grammar,
+and [citation directions](docs/user-facing/citation-directions.md) the `[citations]`
+grammar.
 
 ## Quick start
 
