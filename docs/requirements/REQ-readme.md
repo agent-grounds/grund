@@ -21,8 +21,8 @@ Every card has the same shape: a numbered verb, one line naming the file it show
 the change it makes, and one excerpt from a committed runnable example
 ([§REQ-readme.2](REQ-readme.md#2-every-example-is-real)): a short requirement, the code that cites it, the section an agent
 reads before changing that code, and `grund check` failing on a citation that
-misspells that section. The section is named, so the README shows that sections can
-be. Columns are equally wide and top-aligned, and the excerpts in a row are
+misspells that section. The cited section is a named section's numbered child
+(`format.1`), so the README shows that a section path can mix names and numbers. Columns are equally wide and top-aligned, and the excerpts in a row are
 equally tall. Each row is its own table body, so the renderer's alternating row shading
 never falls on a card. The excerpts stay highlighted HTML text, readable in either theme.
 The example has its own configuration and checked citations; its IDs are escaped in
