@@ -114,7 +114,7 @@ impl WorkspaceContext {
             .collect()
     }
 
-    /// The run's kind table (§FS-scan.projects.kinds): the one the workspace
+    /// The run's kind table (§AR-config.1.5): the one the workspace
     /// walk built, held on the config that owns the render root, or the one
     /// project's where the run loaded no workspace.
     pub(crate) fn kind_table(&self) -> std::sync::Arc<crate::config::KindTable> {
@@ -340,7 +340,7 @@ pub(crate) fn load_narrowable_workspace_context(
     path_provided: bool,
     owner_lines: &[(usize, usize)],
 ) -> Result<WorkspaceContext> {
-    // §FS-scan.projects.kinds: narrowed or not, it judges the `[citations]`
+    // §AR-config.1.5: narrowed or not, it judges the `[citations]`
     // targets the whole run judges, as `check` does.
     let mut config = ProjectRecords::of(resolve_narrowable_config(path, path_provided)?);
     config.set_owner_lines(owner_lines.to_vec());

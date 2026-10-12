@@ -77,7 +77,7 @@ pub(super) fn lists(path: &Path, project: &Project) -> Result<Vec<String>> {
         return Ok(Vec::new());
     }
     let table = citations_table(project);
-    // §FS-scan.projects.kinds: a bare target and the citing side are judged in
+    // §AR-config.1.5: a bare target and the citing side are judged in
     // this project's own scope, from its one reading of its kinds.
     let local = KindTable::standalone(&project.schema);
     validate_citation_rules(

@@ -1,7 +1,7 @@
 //! The workspace a config *declares*, read for its configs alone (§FS-rules.4.1,
 //! §FS-workspace.5.1): what `init` judges a rule's object namespaces against
 //! without loading a workspace of its own, and the kinds a narrowed run reads
-//! (§FS-scan.projects.kinds). The checker builds the vocabulary from the schemas
+//! (§AR-config.1.5). The checker builds the vocabulary from the schemas
 //! returned here and names no façade (§AR-config.5).
 
 use anyhow::Result;
@@ -34,7 +34,7 @@ pub(crate) fn declared_member_schemas(config: &Config) -> Vec<(String, Schema)> 
 /// place a narrowed scan of a config that declares `[workspace]` is set up, so
 /// each of them judges the pinned and `*/` `[citations]` targets its whole run
 /// judges and puts the same warnings on the run's channel
-/// (§FS-scan.projects.kinds, §REQ-one-answer.scope.narrowed). A scope that is
+/// (§AR-config.1.5, §REQ-one-answer.scope.narrowed). A scope that is
 /// the config root is the whole run, and its expansion builds the table.
 pub(crate) fn resolve_narrowable_config(path: &Path, path_provided: bool) -> Result<Config> {
     let mut config = resolve_workspace_config(path)?;
@@ -44,7 +44,7 @@ pub(crate) fn resolve_narrowable_config(path: &Path, path_provided: bool) -> Res
     Ok(config)
 }
 
-/// §FS-scan.projects.kinds: a narrowed run of a config that declares
+/// §AR-config.1.5: a narrowed run of a config that declares
 /// `[workspace]` loads no member's files and still reads the kinds its declared
 /// workspace configures, so it judges the pinned and `*/` `[citations]`
 /// targets a full run judges, with the same one call. Nothing else of the

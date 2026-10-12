@@ -10,7 +10,7 @@ use crate::config::{
 };
 
 /// Recognize one object target, by the verdict the vocabulary's kind table
-/// gives it in its scope (§FS-scan.projects.kinds): the local project for a
+/// gives it in its scope (§AR-config.1.5): the local project for a
 /// bare `KIND`, the aliased one for `alias/KIND`, every one for `*/KIND`. An
 /// unresolved namespaced kind in a scope that holds no workspace vocabulary is
 /// not a refusal: its reason is recorded in `unverifiable` and the target

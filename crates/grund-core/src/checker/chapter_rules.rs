@@ -42,7 +42,7 @@ fn rule_kinds(schema: &Schema) -> BTreeSet<&str> {
 }
 
 /// The vocabulary a rule of `schema`'s project is read in: its subject and a
-/// bare object in that project's scope (§FS-scan.projects.kinds), named
+/// bare object in that project's scope (§AR-config.1.5), named
 /// sections as that project sets them.
 pub(crate) fn vocabulary(schema: &Schema, frame: Frame<'_>) -> RuleVocabulary {
     let table = KindTable::standalone(schema);

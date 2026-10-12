@@ -354,7 +354,7 @@ pub(crate) fn expand_workspace_tree_with_report_base(
             .set_workspace_absent_optional(absent_optional.clone());
     }
     root_config.set_workspace_project_roots(project_roots);
-    // §FS-scan.projects.kinds: the run's one reading of every project's kinds,
+    // §AR-config.1.5: the run's one reading of every project's kinds,
     // made here because this is the first point that holds them all, and the
     // pinned `[citations]` targets judged against it once (§AR-workspace.5.2).
     install_kind_table(

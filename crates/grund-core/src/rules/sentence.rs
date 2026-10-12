@@ -109,13 +109,13 @@ pub(crate) struct ParsedRule {
 #[derive(Clone)]
 pub(crate) struct RuleVocabulary {
     pub(crate) kinds: BTreeSet<String>,
-    /// The kind table an object is judged in (§FS-scan.projects.kinds): the
+    /// The kind table an object is judged in (§AR-config.1.5): the
     /// project whose config reads the rule as `""`, for a bare `KIND`, and each
     /// project the rule's run loaded by alias, for `alias/KIND` and `*/KIND`.
     pub(crate) objects: KindTable,
     pub(crate) named_sections: bool,
     /// Kinds whose own project turns named sections on, where the vocabulary
-    /// spans projects that set it differently (§FS-scan.projects.kinds).
+    /// spans projects that set it differently (§AR-config.1.5).
     pub(crate) named_kinds: BTreeSet<String>,
     /// Configured kinds that declare no IDs, each with the reason it is refused
     /// for (§FS-errors.2.5.1); the bare object kinds share the subjects' scope.
@@ -127,7 +127,7 @@ pub(crate) struct RuleVocabulary {
 }
 
 impl RuleVocabulary {
-    /// §FS-scan.projects.kinds: whether a named chapter of `kind` is
+    /// §AR-config.1.5: whether a named chapter of `kind` is
     /// addressable, read under the project that configures it.
     pub(crate) fn named_sections_for(&self, kind: &str) -> bool {
         self.named_sections || self.named_kinds.contains(kind)

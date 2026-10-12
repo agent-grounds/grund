@@ -325,7 +325,7 @@ pub(super) fn is_named_component(component: &str) -> bool {
 
 /// Whether a literal subject's chapter path may be named: named sections are
 /// on for the vocabulary, or for the kind of the declaration a configured
-/// grammar reads it as (§FS-scan.projects.kinds).
+/// grammar reads it as (§AR-config.1.5).
 fn named_literal(text: &str, vocab: &RuleVocabulary) -> bool {
     vocab.named_sections
         || vocab.id_grammars.iter().any(|grammar| {
@@ -334,7 +334,7 @@ fn named_literal(text: &str, vocab: &RuleVocabulary) -> bool {
 }
 
 /// Accept a chapter path of named components only (§FS-rules.2), read under
-/// `kind`'s own project (§FS-scan.projects.kinds); a refusal says how its first
+/// `kind`'s own project (§AR-config.1.5); a refusal says how its first
 /// refused component failed.
 pub(super) fn validate_named_path(
     path: &str,

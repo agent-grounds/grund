@@ -179,7 +179,7 @@ fn invalid_citation_target_message(token: &str, qualifier: &str, kind: &str) -> 
 /// same cited kind whose namespace matchers overlap sit at different levels.
 /// `table` is the spelling the messages name the rules by: `citations` in v1,
 /// `rules.citations` in v2 (§FS-config-v2.rules.citations). `local` is this
-/// project's own kind table, which answers both sides (§FS-scan.projects.kinds).
+/// project's own kind table, which answers both sides (§AR-config.1.5).
 pub(super) fn validate_citation_rules(
     path: &Path,
     table: &str,

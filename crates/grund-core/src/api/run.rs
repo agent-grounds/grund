@@ -89,7 +89,7 @@ pub(super) fn run_check_with_run_warnings(
     ad_hoc_sentence: Option<&str>,
     run_warnings: &mut Vec<Finding>,
 ) -> Result<CheckRun> {
-    // §FS-scan.projects.kinds: a narrowed run still judges the `[citations]`
+    // §AR-config.1.5: a narrowed run still judges the `[citations]`
     // targets its declared workspace's kinds answer, and says so on this channel.
     let mut config = resolve_narrowable_config(path, path_provided)?;
     // §FS-check.4.10.8: root boundary population has answered
