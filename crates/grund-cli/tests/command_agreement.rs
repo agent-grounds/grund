@@ -44,12 +44,11 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 /// `(row of #576's ledger or of §REQ-one-answer.differences, tree, invariant)`.
-/// G01 and P05 are defects every surface shares, kept here alone as #576's
-/// ruling V-D04 says; every other row is listed in §REQ-one-answer.differences.
+/// G01 is a defect every surface shares, kept here alone as #576's ruling V-D04
+/// says; every other row is listed in §REQ-one-answer.differences.
 const LEDGER: &[(&str, &str, &str)] = &[
     ("G01", "r1", "citation-is-its-whole-token"),
     ("R01", "r2", "narrowed-resolves-as-check"),
-    ("P05", "r3", "one-anchor"),
     ("G06", "g06", "a-lowercase-subject-is-refused-once"),
     ("G09", "g09", "the-homeless-kind-is-one-verdict"),
     ("P01", "p01", "a-body-ends-where-refs-ends-it"),
@@ -58,6 +57,11 @@ const LEDGER: &[(&str, &str, &str)] = &[
     ("P07", "p07", "a-plain-heading-is-in-one-section"),
     ("P10", "p10", "an-adjacent-note-is-in-one-body"),
     ("P12", "p12", "a-doc-comment-section-ends-once"),
+    (
+        "P12",
+        "p12-duplicate",
+        "a-doc-comment-section-ends-at-a-duplicate",
+    ),
     (
         "Placement",
         "placement",
@@ -97,12 +101,6 @@ const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
         "r2",
         "narrowed-resolves-as-check",
         identity::a_narrowed_run_resolves_what_check_resolves,
-    ),
-    (
-        Some("P05"),
-        "r3",
-        "one-anchor",
-        sections::the_anchor_is_one_and_the_headings,
     ),
     (
         Some("G06"),
@@ -151,6 +149,12 @@ const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
         "p12",
         "a-doc-comment-section-ends-once",
         sections::a_doc_comment_section_ends_once,
+    ),
+    (
+        Some("P12"),
+        "p12-duplicate",
+        "a-doc-comment-section-ends-at-a-duplicate",
+        sections::a_doc_comment_section_ends_at_a_duplicate,
     ),
     (
         Some("Placement"),
@@ -383,8 +387,19 @@ fn difference_rows() -> Vec<String> {
 }
 
 /// The rows #576's ruling V-D04 keeps in this file alone: defects every surface
-/// shares, so §REQ-one-answer.differences does not list them.
-const LEDGER_ONLY: &[&str] = &["G01", "P05"];
+/// shares, so §REQ-one-answer.differences does not list them. P05 left it when
+/// §DF-closing-hashes-are-not-the-heading corrected the anchor on every surface.
+const LEDGER_ONLY: &[&str] = &["G01"];
+
+/// Row P05, closed: `show` reports and `fmt --cross-refs` writes one anchor, the
+/// rendered heading's with its closing `#` run taken off, `fs.md#1-steps`
+/// (§FS-declarations.heading.rendered-text, §REQ-one-answer.writes.anchors).
+#[test]
+fn the_anchor_is_one_and_the_headings() {
+    if let Err(divergence) = sections::the_anchor_is_one_and_the_headings() {
+        panic!("{divergence}");
+    }
+}
 
 /// What is wrong between this file's trees and deferrals and the rows
 /// §REQ-one-answer.differences lists, both ways round: a listed row with no tree
