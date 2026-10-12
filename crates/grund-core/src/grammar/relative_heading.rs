@@ -76,3 +76,43 @@ pub(crate) fn relative_heading_hint(level: usize, suggested: &str, title: &str) 
         if rest.is_empty() { "Untitled" } else { rest }
     )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{expand_relative_heading, relative_heading_form, relative_heading_hint};
+
+    #[test]
+    fn expansion_keeps_the_depth_and_the_title_syntax() {
+        assert_eq!(
+            expand_relative_heading("### .1: Username", "format.1"),
+            "### format.1: Username"
+        );
+        assert_eq!(
+            expand_relative_heading("### .1. Scope", "1.1"),
+            "### 1.1. Scope"
+        );
+        assert_eq!(
+            expand_relative_heading("### .2 Terms", "1.2"),
+            "### 1.2 Terms"
+        );
+        assert_eq!(expand_relative_heading("## Notes", "notes"), "## Notes");
+    }
+
+    #[test]
+    fn the_form_is_one_component_then_a_title() {
+        assert!(relative_heading_form(".format: Formatting").is_some());
+        assert!(relative_heading_form(".1 Scope").is_some());
+        assert!(relative_heading_form(".format.user: Two components").is_none());
+        assert!(relative_heading_form(".1").is_none());
+        assert!(relative_heading_form("...and then").is_none());
+    }
+
+    #[test]
+    fn the_hint_writes_the_last_component() {
+        assert_eq!(
+            relative_heading_hint(3, "format.1", "format.1 Username"),
+            "### .1: Username"
+        );
+        assert_eq!(relative_heading_hint(3, "1.2", "1.2"), "### .2. Untitled");
+    }
+}
