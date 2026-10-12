@@ -64,6 +64,10 @@ with exit `2`, its text ending in `; this became an error in grund 0.19.0`. The
 release constant goes with them. The flip is a change of its own, with its own
 `release-note` on the decision record that lands it.
 
+The canonical config of [§DF-directions-render.3](decisions/functional/DF-directions-render.md#3-the-canonical-config) pins `api/AR` in a project
+that declares no `[workspace]`, so from `0.19.0` it stops loading. The flip
+changes it, and the e2e cases built on it, in the same change.
+
 ### 2. Why now
 
 The e2e goldens carry `0.19.0` as literal bytes and a unit test asserts it is
