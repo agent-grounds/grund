@@ -202,3 +202,29 @@ pub fn a_doc_comment_section_ends_once() -> Verdict {
         citation_on(&tree, "FS-b", 11)["enclosing_section"] == "1",
     )
 }
+
+/// Row P12 on a tree only P12 shows: a duplicate `## 1.` ends section 2 for `show`,
+/// and `refs` still places the citation below it in section 2
+/// (§REQ-one-answer.sections.map). It uses no heading P03 reads differently, so it
+/// stays open when P03 closes.
+pub fn a_doc_comment_section_ends_at_a_duplicate() -> Verdict {
+    let tree = Tree::new(
+        "p12-doc-comment-duplicate",
+        &[
+            ("grund.toml", CONFIG_FOLDER),
+            (
+                "src/lib.rs",
+                concat!(
+                    "/// FS-b: Beta\n///\n/// Beta body.\n///\n/// ## 1. One\n///\n",
+                    "/// One body.\n///\n/// ## 2. Two\n///\n/// Two body.\n///\n",
+                    "/// ## 1. One again\n///\n/// Again cites \u{a7}FS-b.\npub struct B;\n",
+                ),
+            ),
+        ],
+    );
+    agree(
+        "show FS-b.2 holds line 15 / refs places its citation in section 2",
+        body_holds(&tree, "FS-b.2", "Again cites"),
+        citation_on(&tree, "FS-b", 15)["enclosing_section"] == "2",
+    )
+}
