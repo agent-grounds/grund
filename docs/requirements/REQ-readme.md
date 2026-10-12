@@ -4,7 +4,7 @@ The root `README.md` is the first surface a human or an agent reads, and it sell
 
 ## 1. What it must say
 
-The README opens on the workflow, shown rather than narrated, and only then says what `grund` is: the two grounds, one bullet each, every bullet citing the GRUND declaration that states it ([§GRUND-schema](../grund.md#grund-schema-the-shape-of-a-projects-knowledge-is-hard-to-define-and-to-keep), [§GRUND-links](../grund.md#grund-links-the-cross-linking-rules-are-hard-to-define-and-to-hold)). The managed `AGENTS.md` block is what an agent is told about a grounded project ([§REQ-agents-md](REQ-agents-md.md#req-agents-md-the-agent-entrypoint-stays-managed-and-grounded)), and the README draws that same block for a human as three figures: the loop, then the default structure, then how to install and set up a repository, which is what writes the block, and only after that the read ladder, as detail for a reader who stays. The README is read whole, so depth lives in `docs/` behind links, not inline ([§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file)); it stays measured against the repository's entrypoint line budget, and clearing an overflow of the 250-line soft tier means moving a section into `docs/` ([AR-ci section 9](../architecture/AR-ci.md#9-file-size-budget-gate)).
+The README opens on the workflow, shown rather than narrated, and only then says in one sentence what `grund` is. The two grounds wait until after the default structure, which shows what they are about: one bullet each, every bullet citing the GRUND declaration that states it ([§GRUND-schema](../grund.md#grund-schema-the-shape-of-a-projects-knowledge-is-hard-to-define-and-to-keep), [§GRUND-links](../grund.md#grund-links-the-cross-linking-rules-are-hard-to-define-and-to-hold)). The managed `AGENTS.md` block is what an agent is told about a grounded project ([§REQ-agents-md](REQ-agents-md.md#req-agents-md-the-agent-entrypoint-stays-managed-and-grounded)), and the README draws that same block for a human as three figures: the loop, then the default structure, then how to install and set up a repository, which is what writes the block, and only after that the read ladder, as detail for a reader who stays. The README is read whole, so depth lives in `docs/` behind links, not inline ([§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file)); it stays measured against the repository's entrypoint line budget, and clearing an overflow of the 250-line soft tier means moving a section into `docs/` ([AR-ci section 9](../architecture/AR-ci.md#9-file-size-budget-gate)).
 
 The README gives concise links to the existing traceability comparison and to performance
 evidence and its methodology. It reuses the introduction and section-retrieval examples
@@ -27,7 +27,7 @@ never falls on a card. The excerpts stay highlighted HTML text, readable in eith
 The example has its own configuration and checked citations; its IDs are escaped in
 the root README, and each card's file name links to its example file.
 
-Below the cards, the README says what a valid citation does not prove, and what it
+Below the two grounds, the README says what a valid citation does not prove, and what it
 does give an agent: a quick, cheap way to verify the code against its requirement and
 to keep the repository consistent.
 
