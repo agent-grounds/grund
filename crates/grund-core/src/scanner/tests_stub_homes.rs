@@ -1,0 +1,79 @@
+//! Test module: what a stub's target outside the walk lends the stubbed declaration
+//! (§FS-declarations.stubs.target.5, §AR-scanner.4.6): its citations, read once per
+//! target however many stubs name it, kept apart from the walk's own, and only
+//! those that resolve.
+
+use crate::config::load_config;
+use crate::model::{Catalog, Citation};
+use crate::testing::{scan_tree, test_root, write};
+
+const CONFIG: &str = "grund_config_version = 1\n\n[reference]\nstrict = true\n\
+require_grounding = false\n\n[id]\nformat = \"{kind}-{slug}\"\n\n\
+[[kinds]]\nkind = \"FS\"\nfolder = \"docs/fs\"\nindex = false\n\n\
+[[kinds]]\nkind = \"GOAL\"\nfolder = \"docs/goals\"\nindex = false\n\n\
+[scan]\ninclude = [\"docs\"]\n";
+
+/// `FS-x` in `src/x.rs`, outside the walk, citing `GOAL-g` and an ID nobody
+/// declares, beside `FS-y`, which cites `GOAL-g` too.
+const TARGET: &str = concat!(
+    "/// FS-x: X\n///\n/// Lead, for \u{a7}GOAL-g and \u{a7}GOAL-zz.\npub fn x() {}\n\n",
+    "/// FS-y: Y\n///\n/// Lead, for \u{a7}GOAL-g.\npub fn y() {}\n",
+);
+
+/// A tree whose two stubs of `FS-x` point at one target outside the walk.
+fn two_stubs(name: &str) -> Catalog {
+    let root = test_root(name);
+    write(&root.join("grund.toml"), CONFIG);
+    write(&root.join("docs/fs/x.md"), "# FS-x: [x](../../src/x.rs)\n");
+    write(
+        &root.join("docs/fs/again.md"),
+        "# FS-x: [x](../../src/x.rs)\n",
+    );
+    write(&root.join("docs/goals/g.md"), "# GOAL-g: G\n\nThe goal.\n");
+    write(&root.join("src/x.rs"), TARGET);
+    let config = load_config(&root).expect("load config");
+    let (findings, _) = scan_tree(&config, None, false).expect("scan");
+    findings
+}
+
+fn sites(citations: &[Citation]) -> Vec<(String, usize)> {
+    citations
+        .iter()
+        .map(|cite| {
+            (
+                format!("{}-{}", cite.id.kind, cite.id.slug.as_deref().unwrap_or("")),
+                cite.line,
+            )
+        })
+        .collect()
+}
+
+#[test]
+fn a_target_read_for_two_stubs_lends_its_citations_once() {
+    let findings = two_stubs("stub_homes_lends_once");
+    assert_eq!(
+        sites(&findings.lent_citations),
+        [("GOAL-g".to_string(), 3)],
+        "the stubbed declaration's resolved citation, once for both stubs"
+    );
+}
+
+#[test]
+fn a_lent_citation_is_an_edge_and_never_a_walked_citation() {
+    let findings = two_stubs("stub_homes_lent_apart");
+    assert!(
+        findings
+            .citations
+            .iter()
+            .all(|cite| !cite.file.ends_with("src/x.rs")),
+        "no hygiene check reads the target's citations"
+    );
+    assert_eq!(
+        findings
+            .edges()
+            .filter(|cite| cite.file.ends_with("src/x.rs"))
+            .count(),
+        1,
+        "the edges carry the lent citation"
+    );
+}

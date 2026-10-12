@@ -147,7 +147,7 @@ pub(crate) use section_paths::path_at_or_under;
 pub(crate) use settings::{AliasGrammar, GrammarKind, LexicalSettings, require_kinds};
 pub(crate) use shorthand::{
     IdArgError, ParsedId, ShorthandIndex, parse_id_arg_with_shorthand, resolve_shorthand_citations,
-    shorthand_candidates, shorthand_names,
+    resolve_shorthands, shorthand_candidates, shorthand_names,
 };
 pub(crate) use source_line::{PythonDocstringScanState, SourceScanLine, source_scan_line};
 

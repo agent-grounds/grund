@@ -165,7 +165,8 @@ pub(crate) fn judge(
 /// except E2E cases, which are proof artifacts, not citation targets. An
 /// index entry is not an inbound citation (§DF-index-not-an-inbound-citation).
 /// The warning sits at the first stand-in of the ID's declarations once its stubs
-/// are paired by their verdicts (§AR-scanner.4.6).
+/// are paired by their verdicts (§AR-scanner.4.6), and a citation a stub's target
+/// lends is use (§FS-refs.2, §FS-declarations.stubs.target.5).
 fn check_unused(
     findings: &Catalog,
     frame: Frame<'_>,
@@ -174,8 +175,7 @@ fn check_unused(
     report: &mut CheckReport,
 ) {
     let mut cited: BTreeSet<&Id> = findings
-        .citations
-        .iter()
+        .edges()
         .filter(|cite| cite.namespace.is_none() && !index_entries.is_index_entry(cite))
         .map(|c| &c.id)
         .collect();
@@ -184,8 +184,7 @@ fn check_unused(
             cited.extend(
                 target
                     .catalog
-                    .citations
-                    .iter()
+                    .edges()
                     .filter(|cite| cite.namespace.as_deref() == Some(alias))
                     .map(|cite| &cite.id),
             );

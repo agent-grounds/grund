@@ -26,6 +26,10 @@ pub(crate) struct FactHeader {
 pub(crate) struct NodeMeta {
     pub(crate) label: String,
     pub(crate) anchor: RuleAnchor,
+    /// A chapter a stub's target outside the walk lends its declaration: side
+    /// metadata the engine reads to ramp, never a relation (§FS-rules.7.11). It goes
+    /// with the ramp at 0.19.0.
+    pub(crate) lent: bool,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct SiteMeta {
@@ -35,6 +39,10 @@ pub(crate) struct SiteMeta {
     /// to its nearest unit: side metadata the engine reads to ramp, never a
     /// relation (§FS-rules.7.8). It goes with the ramp at 0.18.0.
     pub(crate) newly_counted: bool,
+    /// A citation a stub's target outside the walk lends its declaration
+    /// (§FS-declarations.stubs.target.5): read to ramp, like `newly_counted`, and
+    /// gone with the ramp at 0.19.0 (§FS-rules.7.11).
+    pub(crate) lent: bool,
 }
 
 /// Every declaration/chapter exists independently of citations and every

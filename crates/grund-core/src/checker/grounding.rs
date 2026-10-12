@@ -303,6 +303,7 @@ pub(super) fn file_obligation_units<'a>(
                         line: start,
                         citations: inside,
                         e2e_spec_refs: Vec::new(),
+                        lent: false,
                     })
                 })
                 .collect::<Vec<_>>()

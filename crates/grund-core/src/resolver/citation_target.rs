@@ -18,7 +18,7 @@
 use std::collections::BTreeMap;
 
 use crate::config::{Compiled, Display, Frame, Run, Schema};
-use crate::model::{Catalog, Citation, Declaration, Id, paired_declarations};
+use crate::model::{Catalog, Citation, Id, paired_declarations};
 
 /// One project a citation can resolve against, as a rule needs it: the catalog
 /// the ID is looked up in and the schema and grammar that spell it, because a
@@ -97,42 +97,24 @@ pub(crate) fn citation_resolves(
 
 /// Whether some declaration of `id` records a heading at section path `section`:
 /// the one lookup §FS-check.3.2 reports a missing section from, §FS-fmt.2.4.6
-/// declines a declaration-local rewrite on, and §FS-check.3.17.4 admits a bare
-/// index entry by, so the finding and the refusals cannot disagree. An undeclared
-/// `id` has no sections, and an owner with no numbered headings, a wholly absent
-/// path and a partially resolving one all answer `false`. It is `section_home`,
-/// asked as a yes/no.
+/// declines a declaration-local rewrite on, §FS-check.3.17.4 admits a bare
+/// index entry by, and a rule's `cites` fact and a lent citation resolve by
+/// (§FS-rules.5.1, §FS-declarations.stubs.target.5), so the finding and the refusals
+/// cannot disagree. An undeclared `id` has no sections, and an owner with no
+/// numbered headings, a wholly absent path and a partially resolving one all answer
+/// `false`. A stub's sections are those of the target's record its verdict holds
+/// (§AR-scanner.4.6), scanned or not, as `check` reports them (§FS-check.3.2.1):
+/// where no recorded declaration holds the path, the ID's one declaration answers
+/// from the record the scan kept on the stub that stands for it; an ID `show`
+/// refuses as ambiguous, and a broken stub, lend no section there.
 pub(crate) fn section_resolves(findings: &Catalog, id: &Id, section: &str) -> bool {
-    section_home(findings, id, section).is_some()
-}
-
-/// Which record holds a section a citation resolves to (§FS-check.3.2.1).
-pub(crate) enum SectionHome<'a> {
-    /// A declaration the walk recorded.
-    Recorded,
-    /// The one declaration of the ID in a stub's target, the record the scan kept
-    /// on the stub because the catalog holds no record of it.
-    Unscanned(&'a Declaration),
-}
-
-/// Where `section` of `id` resolves, or `None` where it does not. A stub's sections
-/// are those of the target's record its verdict holds (§AR-scanner.4.6),
-/// scanned or not, as `check` reports them (§FS-check.3.2.1): where no recorded
-/// declaration holds the path, the ID's one declaration answers from the record the
-/// scan kept on the stub that stands for it (§AR-scanner.4.6); an ID `show` refuses
-/// as ambiguous, and a broken stub, lend no section there. A rule's `cites` fact asks
-/// here rather than `section_resolves`, because a citation into a home outside the
-/// walk counts for that home's chapter (§FS-rules.5.1).
-pub(crate) fn section_home<'a>(
-    findings: &'a Catalog,
-    id: &Id,
-    section: &str,
-) -> Option<SectionHome<'a>> {
-    let decls = findings.declarations.get(id)?;
+    let Some(decls) = findings.declarations.get(id) else {
+        return false;
+    };
     if decls.iter().any(|decl| decl.sections.contains_key(section)) {
-        return Some(SectionHome::Recorded);
+        return true;
     }
-    let sole = paired_declarations(decls).sole()?;
-    (!std::ptr::eq(sole.record, sole.stand_in) && sole.record.sections.contains_key(section))
-        .then_some(SectionHome::Unscanned(sole.record))
+    paired_declarations(decls).sole().is_some_and(|sole| {
+        !std::ptr::eq(sole.record, sole.stand_in) && sole.record.sections.contains_key(section)
+    })
 }

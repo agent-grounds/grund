@@ -259,7 +259,8 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                 }
             }
         }
-        for citation in &project.findings.citations {
+        // §FS-refs.2: the editor counts and navigates the set `refs` lists.
+        for citation in project.findings.edges() {
             let target_project = match citation.namespace.as_deref() {
                 Some(alias) => context.project_by_alias(alias),
                 None => Some(project),

@@ -74,6 +74,7 @@ fn facts() -> RuleFacts {
                     NodeMeta {
                         label: label.into(),
                         anchor: anchor(line),
+                        lent: false,
                     },
                 )
             })
@@ -85,6 +86,7 @@ fn facts() -> RuleFacts {
                     label: "REQ-a.part.detail".into(),
                     anchor: anchor(7),
                     newly_counted: false,
+                    lent: false,
                 },
             ),
             (
@@ -93,6 +95,7 @@ fn facts() -> RuleFacts {
                     label: "REQ-a.part.detail".into(),
                     anchor: anchor(8),
                     newly_counted: false,
+                    lent: false,
                 },
             ),
         ]),

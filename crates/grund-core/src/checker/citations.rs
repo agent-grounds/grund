@@ -17,6 +17,7 @@ use crate::config::{
     Schema, render_citation_target, row_grounding,
 };
 use crate::model::{Catalog, CheckReport, Citation, Diagnostic, E2eSpecRef, Id};
+use crate::rules::engine::LENT_CLAUSE;
 use crate::scanner::file_home_kind;
 use crate::sources::paths_same_location;
 
@@ -59,10 +60,14 @@ pub(super) fn check_citation_obligations(
     // time would make the pass O(citations × kinds) for no gain (§AR-benchmarks).
     let non_citable = non_citable_kind_names(schema);
     let homeless = schema.complement_name();
-    for cite in &findings.citations {
+    // §FS-declarations.stubs.target.5: a declaration's citations are its edges, those a
+    // stub's target lends included; a file's are the ones the walk found in it.
+    for cite in findings.edges() {
         if let Some(id) = &cite.enclosing_declaration {
             by_decl.entry(id).or_default().push(cite);
         }
+    }
+    for cite in &findings.citations {
         if file_is_obligation_unit(&non_citable, homeless, cite) {
             by_file
                 .entry((cite.source_kind.as_str(), cite.file.as_path()))
@@ -123,13 +128,15 @@ pub(super) fn check_citation_obligations(
         for unit in units {
             for entry in &kind_rules.must {
                 if !entry.targets.iter().any(|t| unit.satisfies(t)) {
-                    report.errors.push(obligation_diagnostic(
-                        "missing-citation",
-                        frame,
-                        &unit,
-                        entry,
-                        "must",
-                    ));
+                    let mut diagnostic =
+                        obligation_diagnostic("missing-citation", frame, &unit, entry, "must");
+                    // §FS-rules.7.11: a unit only a stub's target supplies warns until 0.19.0.
+                    if unit.lent {
+                        diagnostic.message.push_str(LENT_CLAUSE);
+                        report.warnings.push(diagnostic);
+                    } else {
+                        report.errors.push(diagnostic);
+                    }
                 }
             }
             // §FS-config-v2.rules.strengths: `warn` is the `must` finding, code
