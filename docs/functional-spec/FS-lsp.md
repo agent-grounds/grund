@@ -460,6 +460,19 @@ This binds every answer, not only a published diagnostic. A hover ([§FS-lsp.1.2
 ([§FS-lsp.1.3](FS-lsp.md#13-go-to-definition)), an occurrence highlight ([§FS-lsp.1.3.3](FS-lsp.md#133-occurrence-highlight)), a document link ([§FS-lsp.1.3.2](FS-lsp.md#132-document-links)) and a
 references reply each find their document by one resolution of the request's own path.
 
+### responsiveness.3: A citation hover reads nothing the snapshot did not
+
+Once a snapshot exists, a citation hover ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview)) answers from it: the hover loads no
+workspace, and reads no file and observes no checking input that the snapshot's own build did not
+already read. Its cost therefore grows with the answer, the cited body, and not with the tree the
+snapshot was built over, which is what keeps a keystroke-adjacent request inside
+[§GOAL-fast-feedback.1](../goals.md#1-performance-targets) on a large workspace.
+
+What the hover answers does not move: its body stays byte for byte what `grund <ID> --toc` prints
+over the same input ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview), [§REQ-one-answer.text.parity](../requirements/REQ-one-answer.md#textparity-the-editor-answers-as-the-command-line-does)), stubs, named sections, value
+bindings and cross-project aliases included, and an open document's unsaved text is the input it
+reads, as it is for every other answer ([§FS-lsp.4.1](FS-lsp.md#41-how-parity-is-held)).
+
 ## 5. Out of scope
 
 - **Per-editor wrappers**: no first-party VSCode/IntelliJ/Vim/Emacs plugin duplicates the LSP server or is published to a marketplace ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)). The LSP server is the executable surface; [§FS-lsp.2.4](FS-lsp.md#24-installed-editor-integrations) ships importable configuration data but the user installs the generic client and performs the import.
