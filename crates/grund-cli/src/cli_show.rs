@@ -207,7 +207,7 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
             }
         }
     };
-    // §FS-scan.path.warning.shape: after every line the answer wrote to stderr.
+    // After every line the answer wrote to stderr.
     render_path_narrowing(&narrowing);
     code
 }

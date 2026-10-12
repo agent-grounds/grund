@@ -23,7 +23,11 @@ points = [
   "FS-scan.projects.narrowed",
   "FS-scan.scope",
 ]
-owners = ["crates/grund-core/src/config/run.rs", "crates/grund-core/src/scanner/walk.rs"]
+owners = [
+  "crates/grund-core/src/config/run.rs",
+  "crates/grund-core/src/queries/narrowing.rs",
+  "crates/grund-core/src/scanner/walk.rs",
+]
 
 [[family.migration]]
 file = "crates/grund-core/src/workspace/declared.rs"

@@ -78,7 +78,7 @@ pub fn list_with_run_warnings(opts: ListOpts) -> (Vec<Finding>, Result<ListOutpu
 }
 
 /// [`list_with_run_warnings`] for the CLI, with what a path narrower than its
-/// config root moves about each listed entry (§FS-scan.path.list): lines the
+/// config root moves about each listed entry (`ListNarrowing`): lines the
 /// frontend asks for once it knows which fields it prints.
 #[doc(hidden)]
 pub fn list_narrowed(opts: ListOpts) -> (Vec<Finding>, Result<ListOutput>, ListNarrowing) {
@@ -304,7 +304,7 @@ fn list_run(
             }
         })
         .collect::<Vec<_>>();
-    // §FS-scan.path.list: the owning project is read only where the path narrows.
+    // `Owner::of` reads the owning project only where the path narrows.
     if let Some(narrowing) = narrowing
         && let Some(owner) = Owner::of(&context, &opts.path, opts.path_provided)
     {

@@ -92,7 +92,7 @@ pub fn propose_id_with_run_warnings(
 
 /// [`propose_id_with_run_warnings`] for the CLI, with the line a path narrower
 /// than its config root owes where the owning project would propose otherwise
-/// (§FS-scan.path.id).
+/// (`id_line`).
 #[doc(hidden)]
 pub fn propose_id_narrowed(
     kind: &str,
@@ -183,14 +183,14 @@ fn propose_id_run(
             ),
         });
     }
-    // §FS-scan.path.id: the owning project is read only where the path narrows.
+    // `id_line` reads the owning project only where the path narrows.
     if let Some(lines) = narrowing {
         lines.extend(id_line(
             &config,
             &opts.path,
             opts.path_provided,
             &id,
-            opts.width,
+            |id, config| format_id(id, config, opts.width),
         ));
     }
     // §FS-id.2.3: the H1 hint is owed where the kind's file holds the kind's single declaration,
