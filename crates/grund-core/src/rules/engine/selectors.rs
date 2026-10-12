@@ -7,6 +7,7 @@
 use super::super::facts::{NodeKey, RuleFacts};
 use super::super::{RuleSubject, RuleTargets};
 use super::index::FactIndex;
+use crate::config::{NamespaceMatch, parse_citation_target_entry};
 use std::collections::BTreeSet;
 
 /// Indexed selectors retain their original relation order (§FS-rules.2, §FS-rules.5.3).
@@ -72,18 +73,33 @@ pub(super) fn target_nodes(
         .flat_map(|(_, nodes)| nodes.iter().map(|node| (*node).clone()))
         .collect()
 }
+/// A declaration kind matches a target entry split at its last `/` exactly as a
+/// citation is (§FS-config.3.9.3), so a target pinned at the rule's own member by
+/// its whole alias path, nested or not, matches what the bare kind matches
+/// (§FS-rules.2).
 pub(super) fn target_kind_matches(targets: &RuleTargets, kind: &str, facts: &RuleFacts) -> bool {
     let RuleTargets::Kinds { values, .. } = targets else {
         return false;
     };
-    values.iter().any(|target| match target.split_once('/') {
-        None => target == kind,
-        Some(("*", target_kind)) => {
-            kind == target_kind || kind.ends_with(&format!("/{target_kind}"))
-        }
-        Some((project, target_kind)) => {
-            kind == format!("{project}/{target_kind}")
-                || (project == facts.header.project && kind == target_kind)
+    values.iter().any(|target| {
+        let Ok(entry) = parse_citation_target_entry(target) else {
+            return false;
+        };
+        let wanted = entry.kind.as_str();
+        match &entry.namespace {
+            NamespaceMatch::Local => kind == wanted,
+            NamespaceMatch::Any => {
+                kind == wanted
+                    || kind
+                        .strip_suffix(wanted)
+                        .is_some_and(|alias| alias.ends_with('/'))
+            }
+            NamespaceMatch::Alias(alias) => {
+                kind.strip_prefix(alias.as_str())
+                    .and_then(|rest| rest.strip_prefix('/'))
+                    == Some(wanted)
+                    || (alias == &facts.header.project && kind == wanted)
+            }
         }
     })
 }

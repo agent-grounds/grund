@@ -20,7 +20,7 @@ use authority::Authority;
 pub(crate) use authority::one_rules_authority;
 use index::FactIndex;
 pub(crate) use precedence::citation_precedence;
-use ramp::{count_is_ramped, newly_counted, route};
+use ramp::{Windows, matched_before, newly_counted, nodes_matched_before, route};
 pub(crate) use resolution::unresolved_subject_diagnostic;
 use resolution::unresolved_subject_diagnostic_indexed;
 use selectors::{
@@ -32,9 +32,10 @@ use unreached::report_unreached;
 /// One level of evaluation: the channel a rule finding has always had at that
 /// level, and the ramp's warnings beside it.
 ///
-/// A finding that a newly counted numbered-section citation alone produces is
-/// carried on the warnings channel rather than the errors channel, for the
-/// length of its ramp and no longer (§FS-rules.7.8). It is a pair rather than a
+/// A finding that a newly counted numbered-section citation (§FS-rules.7.8), or
+/// a target newly matched at the rule's own nested alias (§FS-rules.7.9), alone
+/// produces is carried on the warnings channel rather than the errors channel,
+/// for the length of its ramp and no longer. It is a pair rather than a
 /// type so that the engine/checker crossing stays `Diagnostic` and nothing else
 /// (§AR-rules.5): when the ramp closes at `0.18.0` the second half goes away
 /// and the return collapses back to one `Vec`.
@@ -198,6 +199,7 @@ fn evaluate_one(
         }
         RuleRelation::Cite if rule.polarity == RulePolarity::Prohibiting => {
             let targets = target_nodes(&rule.targets, facts, index);
+            let before = nodes_matched_before(&rule.targets, facts, index);
             for subject in subjects {
                 for (site, _, target) in index.citations_in(&subject) {
                     if citation_matches_targets(target, &targets, index) {
@@ -209,11 +211,15 @@ fn evaluate_one(
                         } else {
                             ("discouraged-citation", "")
                         };
-                        // §FS-rules.7.8: a required site counted only now warns.
-                        let ramped =
-                            rule.level == RuleLevel::Required && newly_counted(facts, site);
+                        // §FS-rules.7.8, §FS-rules.7.9: a required site counted or
+                        // matched only now warns.
+                        let windows = Windows::at(
+                            rule.level,
+                            newly_counted(facts, site),
+                            !citation_matches_targets(target, &before, index),
+                        );
                         let (sink, message) = route(
-                            ramped,
+                            windows,
                             out,
                             ramp,
                             format!(
@@ -242,21 +248,24 @@ fn evaluate_one(
             for subject in subjects {
                 // §FS-rules.3.4: a numbered section of the subject's own body
                 // reaches it here, so its newly counted sites ramp (§FS-rules.7.8).
+                // §FS-rules.7.9: a citing kind only the corrected match takes ramps too.
                 let sites = index
                     .citations_to(&subject)
                     .iter()
-                    .filter(|(_, from, _)| {
-                        index
-                            .declaration_kind(from)
-                            .is_some_and(|kind| target_kind_matches(&rule.targets, kind, facts))
+                    .filter_map(|(site, from, _)| {
+                        let kind = index.declaration_kind(from)?;
+                        target_kind_matches(&rule.targets, kind, facts).then(|| {
+                            (
+                                newly_counted(facts, site),
+                                !matched_before(&rule.targets, kind, facts),
+                            )
+                        })
                     })
-                    .map(|(site, _, _)| site)
                     .collect::<Vec<_>>();
                 let count = sites.len();
                 if !rule.cardinality.contains(count) {
-                    let without = sites.iter().filter(|s| !newly_counted(facts, s)).count();
                     let (sink, message) = route(
-                        count_is_ramped(rule.level, rule.cardinality, without),
+                        Windows::of_count(rule.level, rule.cardinality, sites),
                         out,
                         ramp,
                         format!(
@@ -288,22 +297,36 @@ fn evaluate_cites(
         return;
     };
     let targets = target_nodes(&rule.targets, facts, index);
+    let before = nodes_matched_before(&rule.targets, facts, index);
     for subject in subjects {
         if *mode == TargetMode::PerTarget {
-            // Each owner's count with and without the newly counted sites (§FS-rules.7.8).
-            let mut counts = BTreeMap::new();
+            // Each owner's sites, marked newly counted or not (§FS-rules.7.8).
+            let mut counts: BTreeMap<_, Vec<bool>> = BTreeMap::new();
             for (site, _, cited) in index.citations_in(subject) {
                 if let Some(owner) = index.owner(cited) {
-                    let (all, without) = counts.entry(owner).or_insert((0usize, 0usize));
-                    *all += 1;
-                    *without += usize::from(!newly_counted(facts, site));
+                    counts
+                        .entry(owner)
+                        .or_default()
+                        .push(newly_counted(facts, site));
                 }
             }
             for target in &targets {
-                let (count, without) = counts.get(target).copied().unwrap_or((0, 0));
+                let sites = counts.get(target).map(Vec::as_slice).unwrap_or_default();
+                let count = sites.len();
                 if !rule.cardinality.contains(count) {
+                    // §FS-rules.7.9: a target only the corrected match takes into the
+                    // universe produces its finding only now, whatever its count.
+                    let windows = if before.contains(target) {
+                        Windows::of_count(
+                            rule.level,
+                            rule.cardinality,
+                            sites.iter().map(|&counted| (counted, false)),
+                        )
+                    } else {
+                        Windows::at(rule.level, sites.iter().any(|&c| c), true)
+                    };
                     let (sink, message) = route(
-                        count_is_ramped(rule.level, rule.cardinality, without),
+                        windows,
                         out,
                         ramp,
                         format!(
@@ -328,11 +351,15 @@ fn evaluate_cites(
                 .citations_in(subject)
                 .iter()
                 .filter(|(_, _, target)| citation_matches_targets(target, &targets, index))
-                .map(|(site, _, _)| site)
+                .map(|(site, _, target)| {
+                    (
+                        newly_counted(facts, site),
+                        !citation_matches_targets(target, &before, index),
+                    )
+                })
                 .collect::<Vec<_>>();
             let count = sites.len();
             if !rule.cardinality.contains(count) {
-                let without = sites.iter().filter(|s| !newly_counted(facts, s)).count();
                 let ordinary = rule.cardinality == Cardinality::AT_LEAST_ONE && count == 0;
                 let code = if ordinary {
                     if rule.level == RuleLevel::Required {
@@ -362,9 +389,10 @@ fn evaluate_cites(
                         rule.cardinality.wording()
                     )
                 };
-                // §FS-rules.7.8: a count the newly counted sites alone break warns.
-                let ramped = count_is_ramped(rule.level, rule.cardinality, without);
-                let (sink, message) = route(ramped, out, ramp, message);
+                // §FS-rules.7.8, §FS-rules.7.9: a count the newly counted or newly
+                // matched sites alone break warns.
+                let windows = Windows::of_count(rule.level, rule.cardinality, sites);
+                let (sink, message) = route(windows, out, ramp, message);
                 push_node(sink, facts, subject, code, message, authority);
             }
         }
