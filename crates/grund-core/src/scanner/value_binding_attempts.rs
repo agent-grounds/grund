@@ -152,9 +152,9 @@ fn attempted_value_id(
     if let Some(parsed) = parse_longest_id_prefix(raw, grammar) {
         return Some((parsed.id, parsed.section));
     }
-    // A named address is deliberately outside the ordinary numeric-only
-    // grammar, so recover only the complete ID before the separator to classify
-    // the delimited form as an attempted value binding (§FS-values.3.1.1).
+    // A named address is outside the numeric-only grammar, so the attempted binding
+    // is classified by the complete ID before the separator (§FS-values.3.1.1).
+    // coordinate-lexer: recovers the ID before a named address the grammar refused
     raw.match_indices(&schema.ids.section_separator)
         .map(|(index, _)| index)
         .collect::<Vec<_>>()

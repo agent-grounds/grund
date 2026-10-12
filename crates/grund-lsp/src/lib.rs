@@ -887,6 +887,7 @@ impl Server {
                 id: decl
                     .project
                     .as_deref()
+                    // coordinate-lexer: strips a known alias, lexes nothing
                     .and_then(|alias| decl.query_id.strip_prefix(alias)?.strip_prefix('/'))
                     .unwrap_or(&decl.query_id),
             })

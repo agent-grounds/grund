@@ -9,11 +9,9 @@
 //! subject, so what can be recovered is decided once. Where named sections are
 //! off, both surfaces ask their own parser again with them on.
 
-use super::subjects::{
-    Spelling, SubjectRefusal, is_named_component, parse_subject, validate_named_path,
-};
+use super::subjects::{Spelling, SubjectRefusal, parse_subject, validate_named_path};
 use super::{RuleSubject, RuleVocabulary};
-use crate::grammar::Grammar;
+use crate::grammar::{Grammar, named_section_component};
 
 /// What §FS-rule-refusals.selectors's four steps recovered from a refused subject.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -71,6 +69,7 @@ impl Recovered {
 pub(super) fn recover(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> Option<Recovered> {
     let head = refusal
         .head
+        // coordinate-lexer: recovery of refused text, which no grammar admits
         .rsplit_once('/')
         .map_or(refusal.head.as_str(), |(_, local)| local);
     let kind = recovered_kind(head, vocabulary)?;
@@ -162,7 +161,7 @@ fn named_prefix(path: Option<&str>, kind: &str, vocabulary: &RuleVocabulary) -> 
     let components = path.split('.').collect::<Vec<_>>();
     let named = components
         .iter()
-        .take_while(|component| is_named_component(component))
+        .take_while(|component| named_section_component(component))
         .count();
     (1..=named)
         .rev()

@@ -5,8 +5,9 @@ use std::path::Path;
 
 use super::value_context::SourceValueLineContext;
 use crate::config::{Frame, Schema};
+use crate::grammar::named_mode_section_path;
 use crate::grammar::{PythonDocstringScanState, source_scan_line};
-use crate::model::{Catalog, DeclarationSource, Id, InvalidValueSite, named_section_component};
+use crate::model::{Catalog, DeclarationSource, Id, InvalidValueSite};
 
 pub(crate) const EMBEDDED_VALUE_MARKER: &str = "<!-- grund:value -->";
 
@@ -176,14 +177,8 @@ pub(super) fn authored_heading_path(
         .then(|| token.strip_suffix(':'))
         .flatten()
     {
-        let mut seen_numeric = false;
-        let well_formed = coordinate.split('.').all(|part| {
-            if part.bytes().all(|byte| byte.is_ascii_digit()) && !part.is_empty() {
-                seen_numeric = true;
-                true
-            } else {
-                !seen_numeric && named_section_component(part)
-            }
+        let well_formed = named_mode_section_path(coordinate, |part| {
+            !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit())
         });
         return well_formed.then(|| coordinate.to_string());
     }

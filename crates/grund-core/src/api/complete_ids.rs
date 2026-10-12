@@ -65,9 +65,9 @@ fn complete_ids_run(opts: CompleteIdsOpts, run_warnings: &mut Vec<Finding>) -> R
         .map(|project| &project.config)
         .unwrap_or_else(|| context.render_config());
     let mut candidates = BTreeSet::new();
-    // §FS-workspace.8.4.1: an alias path may itself carry slashes
-    // (§FS-workspace.6.1), so the split is at the *last* `/` — the left names a
-    // project, the right is its ID-prefix.
+    // §FS-workspace.8.4.1: split an alias path (§FS-workspace.6.1) at its *last* `/`;
+    // the right is an ID-prefix.
+    // coordinate-lexer: an unfinished token, completed rather than validated
     if let Some((alias_prefix, id_prefix)) = opts.prefix.rsplit_once('/') {
         if !context.workspace_loaded {
             return Ok(Vec::new());

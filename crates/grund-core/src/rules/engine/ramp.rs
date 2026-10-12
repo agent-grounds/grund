@@ -97,6 +97,7 @@ pub(super) fn matched_before(targets: &RuleTargets, kind: &str, facts: &RuleFact
     let RuleTargets::Kinds { values, .. } = targets else {
         return false;
     };
+    // coordinate-lexer: the old first-`/` matcher, kept for the §FS-rules.7.9 ramp to 0.18.0
     values.iter().any(|target| match target.split_once('/') {
         None => target == kind,
         Some(("*", target_kind)) => {

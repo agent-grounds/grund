@@ -10,7 +10,7 @@ use crate::config::run_warning_findings;
 use crate::grammar::{MarkdownBlocks, parse_id_arg};
 use crate::model::Finding;
 use crate::resolver::settled_run_warnings;
-use crate::workspace::{expand_workspace_tree, resolve_workspace_config};
+use crate::workspace::{expand_workspace_tree, resolve_workspace_config, split_qualified_id_arg};
 
 /// Which public CLI exit class a fetch refusal belongs to (§FS-fetch.7).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -111,10 +111,11 @@ fn fetch_run(
         *diagnostic = Some(err);
         fetch_operational(message)
     })?;
-    let (namespace, local) = raw
-        .rsplit_once('/')
-        .map_or((None, raw), |(ns, id)| (Some(ns), id));
-    let selected = if let Some(namespace) = namespace {
+    // §FS-fetch.1, §FS-workspace.8.11: the one alias-path splitter, so `fetch` refuses
+    // a malformed path with the words `show` prints, still at the operational exit.
+    let (namespace, local) =
+        split_qualified_id_arg(raw).map_err(|err| fetch_operational(format!("{err:#}")))?;
+    let selected = if let Some(namespace) = namespace.as_deref() {
         if !root_config.workspace_declared {
             return Err(fetch_operational(format!(
                 "unknown project alias `{namespace}` for fetch"

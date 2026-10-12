@@ -83,6 +83,7 @@ fn select(text: &str, vocabulary: &RuleVocabulary) -> Result<RuleSubject, Subjec
     }
     for separator in &vocabulary.section_separators {
         // §FS-rules.2: `KIND.NAME` means `The NAME chapter of each KIND`.
+        // coordinate-lexer: rule vocabulary `KIND.NAME`, not an ID coordinate
         if let Some((kind, name)) = text.split_once(separator.as_str())
             && vocabulary.kinds.contains(kind)
         {

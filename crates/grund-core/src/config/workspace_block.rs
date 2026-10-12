@@ -85,14 +85,9 @@ fn looks_like_windows_drive_prefix(part: &str) -> bool {
     bytes.len() >= 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':'
 }
 
-/// §AR-workspace.5.3: the alias slug grammar, as one predicate — the same shape
-/// `PROJECT_ALIAS_PATTERN` compiles into the citation regexes, asked of a name
-/// rather than of a token.
-pub(crate) fn is_valid_project_alias(alias: &str) -> bool {
-    let mut chars = alias.chars();
-    matches!(chars.next(), Some(ch) if ch.is_ascii_lowercase())
-        && chars.all(|ch| ch.is_ascii_lowercase() || ch.is_ascii_digit() || ch == '-')
-}
+/// §AR-workspace.5.3: the alias slug grammar is the grammar component's one
+/// predicate, compiled from the pattern the citation regexes use.
+pub(crate) use crate::grammar::is_valid_project_alias;
 
 /// What an alias path is expected to look like, named in every diagnostic that
 /// refuses one — the slug grammar, and the fact that a path carries one segment

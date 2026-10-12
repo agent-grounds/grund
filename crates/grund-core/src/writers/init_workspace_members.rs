@@ -81,9 +81,9 @@ fn find_init_workspace_context(
                 if !is_valid_project_alias(name) {
                     return None;
                 }
-                // `--name` renames the project, not the workspace levels above
-                // it: only the last segment of the alias path changes
-                // (§FS-workspace.6.1).
+                // `--name` renames the project, not the levels above it: only the
+                // alias path's last segment changes (§FS-workspace.6.1).
+                // coordinate-lexer: renames a built alias path, lexes nothing
                 alias = match alias.rsplit_once('/') {
                     Some((prefix, _)) => format!("{prefix}/{name}"),
                     None => name.to_string(),

@@ -14,7 +14,7 @@
 use super::forms::{Form, Refusal, refuse};
 use super::recovery::{Recovered, Suggestion, as_if_enabled, recover};
 use super::{RuleLevel, RulePolarity, RuleSubject, RuleVocabulary};
-use crate::grammar::{parse_id_arg, render_id};
+use crate::grammar::{named_section_component, parse_id_arg, render_id};
 
 /// Which production of a subject failed (§FS-rule-refusals.sentences).
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -299,6 +299,7 @@ fn split_section<'a>(
         .section_separators
         .iter()
         .find_map(|separator| {
+            // coordinate-lexer: rule vocabulary, every separator
             text.split_once(separator.as_str())
                 .map(|(declaration, section)| (declaration, separator.as_str(), section))
         })
@@ -310,17 +311,6 @@ fn split_section<'a>(
                 .flatten()
                 .map(|(declaration, section)| (declaration, ".", section))
         })
-}
-
-/// Whether one chapter-path component is a named one (§FS-rules.2).
-pub(super) fn is_named_component(component: &str) -> bool {
-    component
-        .as_bytes()
-        .first()
-        .is_some_and(u8::is_ascii_lowercase)
-        && component
-            .bytes()
-            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
 }
 
 /// Whether a literal subject's chapter path may be named: named sections are
@@ -344,7 +334,7 @@ pub(super) fn validate_named_path(
     if !vocab.named_sections_for(kind) {
         return Err(SubjectFault::NamedSectionsOff);
     }
-    if let Some(component) = path.split('.').find(|part| !is_named_component(part)) {
+    if let Some(component) = path.split('.').find(|part| !named_section_component(part)) {
         let shape = if !component.is_empty() && component.bytes().all(|b| b.is_ascii_digit()) {
             Component::Numbered
         } else if component.contains('*') {

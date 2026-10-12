@@ -216,9 +216,9 @@ fn e2e_spec_ref_from_line(schema: &Schema, frame: Frame<'_>, line: &str) -> Opti
         return None;
     }
     let token = token.strip_prefix(&schema.citation.marker).unwrap_or(token);
-    // §FS-workspace.6.1: an alias path may carry slashes, and an ID never does,
-    // so the last separator is the boundary — the same split every other
-    // consumer of a qualified token makes.
+    // §FS-workspace.6.1: an alias path may carry slashes and an ID never does,
+    // so the last separator is the boundary.
+    // coordinate-lexer: a test label, read without the slug check that would refuse it
     let (namespace, id_text) = match token.rsplit_once('/') {
         Some((namespace, id_text)) if !namespace.is_empty() => {
             (Some(namespace.to_string()), id_text)
