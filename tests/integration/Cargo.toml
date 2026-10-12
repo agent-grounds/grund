@@ -29,6 +29,10 @@ name = "lsp_cli_parity"
 path = "lsp_cli_parity.rs"
 
 [[test]]
+name = "lsp_unsaved_files"
+path = "lsp_unsaved_files.rs"
+
+[[test]]
 name = "integrations_resolve"
 path = "integrations_resolve.rs"
 
