@@ -122,7 +122,7 @@ pub(crate) fn adapt_workspace(
                     facts.chapter.push((
                         chapter.clone(),
                         section.clone(),
-                        section_display_name(&info.title, section).to_string(),
+                        section_display_name(&info.title, section, info.relative).into_owned(),
                     ));
                     facts.nodes.insert(
                         chapter,

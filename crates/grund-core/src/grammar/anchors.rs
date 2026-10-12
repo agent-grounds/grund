@@ -13,9 +13,12 @@
 //! byte-for-byte is the whole of §DF-github-anchor-fidelity, and nothing about
 //! it is a writer's plan.
 
+use std::borrow::Cow;
+
 use unicode_normalization::UnicodeNormalization;
 
 use super::heading_text::reduce_heading_text;
+use super::relative_heading::expand_relative_heading;
 
 /// Slugify a heading into a fragment anchor, dispatching on the configured
 /// `[fmt.cross_refs] anchor_format` profile (github / gitlab / mkdocs / pandoc) —
@@ -138,18 +141,30 @@ pub(crate) fn section_anchor_text(line: &str, section: &str) -> String {
 /// complete rendered heading for anchor fidelity; rule facts and selector rows
 /// need the semantic display name that follows the coordinate instead. A nested
 /// chapter's coordinate is its whole path, so `requirements.terms: Terms` is
-/// labelled `Terms`, as its `--toc` title is (§FS-rules.5.1.1).
-pub(crate) fn section_display_name<'a>(title: &'a str, section: &str) -> &'a str {
+/// labelled `Terms`, as its `--toc` title is (§FS-rules.5.1.1). A `relative`
+/// heading is named as the complete-path heading it stands for, so `.terms: Terms`
+/// is `Terms` too (§FS-declarations.section.relative.shown).
+pub(crate) fn section_display_name<'a>(
+    title: &'a str,
+    section: &str,
+    relative: bool,
+) -> Cow<'a, str> {
+    if relative {
+        let complete = expand_relative_heading(title, section);
+        return Cow::Owned(section_display_name(&complete, section, false).into_owned());
+    }
     if !section
         .as_bytes()
         .first()
         .is_some_and(u8::is_ascii_lowercase)
     {
-        return title;
+        return Cow::Borrowed(title);
     }
-    title
-        .strip_prefix(section)
-        .and_then(|rest| rest.strip_prefix(':'))
-        .map(str::trim_start)
-        .unwrap_or(title)
+    Cow::Borrowed(
+        title
+            .strip_prefix(section)
+            .and_then(|rest| rest.strip_prefix(':'))
+            .map(str::trim_start)
+            .unwrap_or(title),
+    )
 }

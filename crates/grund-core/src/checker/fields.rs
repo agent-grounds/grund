@@ -4,6 +4,7 @@
 //! pairing of a field with the chapter-presence rule it expresses, run where the
 //! rule findings join the report (§FS-rules.6).
 
+use std::borrow::Cow;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
@@ -96,13 +97,13 @@ fn for_each_finding<'a>(
 /// §FS-fields.terms: a declaration's direct sections, `(name, line, display name)`
 /// in the order they are written. The lead is not a section; a section written
 /// twice counts once, at its first heading (§FS-fields.identity.name).
-fn direct_sections(declaration: &Declaration) -> Vec<(&str, usize, &str)> {
-    let mut direct: Vec<(&str, usize, &str)> = declaration
+fn direct_sections(declaration: &Declaration) -> Vec<(&str, usize, Cow<'_, str>)> {
+    let mut direct: Vec<(&str, usize, Cow<'_, str>)> = declaration
         .sections
         .iter()
         .filter(|(path, _)| !path.contains('.'))
         .map(|(path, info)| {
-            let display = section_display_name(&info.title, path);
+            let display = section_display_name(&info.title, path, info.relative);
             (path.as_str(), info.line, display)
         })
         .collect();
@@ -116,7 +117,7 @@ struct Shape<'a> {
     id: String,
     separator: &'a str,
     declaration: &'a Declaration,
-    direct: Vec<(&'a str, usize, &'a str)>,
+    direct: Vec<(&'a str, usize, Cow<'a, str>)>,
 }
 
 impl<'a> Shape<'a> {
@@ -179,7 +180,8 @@ impl<'a> Shape<'a> {
     /// a present field's display name, compared byte for byte
     /// (§FS-fields.identity.match).
     fn content(&self, field: &'a Field, at: usize, out: &mut Vec<FieldFinding<'a>>) {
-        let (_, line, display) = self.direct[at];
+        let (_, line, ref display) = self.direct[at];
+        let display = display.as_ref();
         let section = format!("{}{}{}", self.id, self.separator, field.name);
         let channel = shape_channel(field);
         if let Some(title) = &field.title

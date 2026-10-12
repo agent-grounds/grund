@@ -291,7 +291,8 @@ fn list_run(
                         let mut row = base();
                         row.section = Some(section.clone());
                         row.line = info.line;
-                        row.title = Some(section_display_name(&info.title, section).to_string());
+                        let title = section_display_name(&info.title, section, info.relative);
+                        row.title = Some(title.into_owned());
                         row.stub = false;
                         row.defines = None;
                         row.refs = 0;
