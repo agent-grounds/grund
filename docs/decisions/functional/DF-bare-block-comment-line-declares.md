@@ -112,9 +112,13 @@ behind a `/**` or `/*!` opener.
   new near miss on an attempted declaration. Should it find one on prose, the near miss on
   a bare block line takes the [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) route instead: a warning in
   this release, and the error from the next one through a follow-up under
-  [#576](https://github.com/agent-grounds/grund/issues/576). That measurement belongs to the
-  pull request that ships this record, and its outcome is written into this section and
-  the release note before the record ships.
+  [#576](https://github.com/agent-grounds/grund/issues/576). The measurement was taken on
+  the pull request that ships this record: `grund check` with 0.17's binary (main at
+  8b9d62e610) and this change's, over grund's own tree, every `tests/e2e/cases/` tree,
+  every `examples/` tree, rhei, ephor, fissile and the workspace root. The two agree on
+  every tree but this change's own fixtures, so no new near miss lands on prose, and none
+  on any real repository at all. **The near miss stays an error**, and no follow-up is
+  owed.
 - **Sections.** `/** ## 1. Sub` on an opener line is a section heading (2.3).
 - **Untouched.** A repository that removed `/*` from `[scan] comment_prefixes` sees no
   change, because the block state follows that prefix as `comment_blocks` does. Python
@@ -147,4 +151,5 @@ conditions holds.
   like any other: a duplicate of an ID declared elsewhere, a home, index, chapter or
   direction finding, or an unused-declaration warning, and every finding names its
   location and the fix. A bare block line that a configured kind's grammar rejects, followed by a colon, is
-  a `declaration-near-miss` error, as its starred twin is.
+  a `declaration-near-miss` error, as its starred twin is. Measured before release over
+  grund, rhei, ephor and fissile and their workspace, none of them sees a new finding.
