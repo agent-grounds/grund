@@ -370,3 +370,39 @@ fn a_workspace_names_the_other_heading_from_the_workspace_root() {
              apps/api/docs/functional-spec/FS-001-alpha.md:7)"
     );
 }
+
+/// §FS-declarations.checks.duplicate-section.2: the rule reads the records an ID
+/// pairs with, and a scanned target is one record however many stubs point at
+/// it, so two stubs to one colliding inline home report its collision once, at
+/// the home's own lines.
+#[test]
+fn two_stubs_to_one_scanned_target_report_its_collision_once() {
+    let root = test_root("duplicate_sections_two_stubs_one_target");
+    write(
+        &root.join("docs/architecture/AR-001-core.md"),
+        "# AR-001-core: [src/core.rs](../../src/core.rs)\n",
+    );
+    write(
+        &root.join("docs/architecture/AR-001-core-again.md"),
+        "# AR-001-core: [src/core.rs](../../src/core.rs)\n",
+    );
+    write(
+        &root.join("src/core.rs"),
+        "/// AR-001-core: Core module\n///\n/// ## 1. First\n///\n/// First body.\n\
+             ///\n/// ## 1. Second\n///\n/// Second body.\npub struct A;\n",
+    );
+    let config = legacy_fs_folder_config(root.clone());
+    let findings = scan_findings(&config, &root);
+    let report = check_findings(&findings, &config);
+
+    assert_eq!(
+        located_diagnostics(
+            &config,
+            report
+                .errors
+                .iter()
+                .filter(|e| e.code == "duplicate-section")
+        ),
+        vec!["src/core.rs:3: duplicate section AR-001-core.1 (also declared at src/core.rs:7)"]
+    );
+}
