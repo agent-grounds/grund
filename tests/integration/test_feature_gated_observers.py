@@ -75,8 +75,13 @@ def _ignore_reason(attrs, cfg_feature):
 
 class FeatureGatedObserverTests(unittest.TestCase):
     def test_every_feature_the_test_hook_enables_has_its_observer_held_here(self):
-        entry = re.search(r"entry:\s*(cargo test .*)$", PRE_COMMIT.read_text(encoding="utf-8"), re.M)
-        self.assertIsNotNone(entry, "no `cargo test` hook entry")
+        # The hook is found by its id, whatever runner its entry spells (§AR-ci.3).
+        entry = re.search(
+            r"^\s*- id: cargo-test\n(?:\s+(?!- id:)\S.*\n)*?\s+entry:\s*(.*)$",
+            PRE_COMMIT.read_text(encoding="utf-8"),
+            re.M,
+        )
+        self.assertIsNotNone(entry, "no `cargo-test` hook entry")
         passed = set()
         for value in re.findall(r"--features[ =](\S+)", entry.group(1)):
             passed.update(value.split(","))
