@@ -11,6 +11,7 @@ use crate::config::{Frame, Schema};
 use crate::grammar::{
     CommentBlockKind, DocCommentRule, SourceScanLine, atx_heading_text, block_is_doc_comment,
     comment_blocks, comment_envelope, doc_comment_rule, first_content_line,
+    markdown_fence_delimiter,
 };
 use crate::model::{
     BlockForm, Declaration, FileRecord, HeadingKind, LineZone, RecordedBlock, RecordedHeading,
@@ -183,7 +184,7 @@ fn doc_comment_plain_headings(
         let Some(block) = record.block_at(decl_line) else {
             continue;
         };
-        let mut fence: Option<(char, usize)> = None;
+        let mut fence = None;
         for lineno in decl_line + 1..=end {
             let Some(line) = record.line(lineno) else {
                 break;
@@ -193,8 +194,7 @@ fn doc_comment_plain_headings(
                 None => line,
             };
             let content = comment_envelope(scanned, &block.form);
-            if let Some(next) = fence_step(content, fence) {
-                fence = next;
+            if markdown_fence_delimiter(&mut fence, content) {
                 continue;
             }
             if fence.is_some() || record.heading_at(lineno).is_some() {
@@ -222,28 +222,4 @@ fn doc_comment_plain_headings(
         }
     }
     plain
-}
-
-/// A fence opening or closing on this line: `Some(new state)`, or `None` where the
-/// line neither opens nor closes one (CommonMark's backtick and tilde fences).
-fn fence_step(content: &str, open: Option<(char, usize)>) -> Option<Option<(char, usize)>> {
-    let indent = content.len() - content.trim_start_matches(' ').len();
-    if indent > 3 {
-        return None;
-    }
-    let rest = &content[indent..];
-    let marker = rest.chars().next().filter(|ch| matches!(ch, '`' | '~'))?;
-    let run = rest.len() - rest.trim_start_matches(marker).len();
-    if run < 3 {
-        return None;
-    }
-    match open {
-        None => Some(Some((marker, run))),
-        Some((open_marker, open_run))
-            if open_marker == marker && run >= open_run && rest[run..].trim().is_empty() =>
-        {
-            Some(None)
-        }
-        Some(_) => None,
-    }
 }

@@ -100,9 +100,8 @@ pub(crate) use compiled::{
     named_mode_section_path, named_section_component, section_path,
     value_binding_section_shape_is_valid,
 };
-// The bare fence reader stays visible to the template tests, which look for a
-// fenced example rather than for a heading (§FS-check.1.1.5).
-#[cfg(test)]
+// The bare fence reader serves the record's doc-comment headings and the template
+// tests, which look for a fenced example rather than for a heading (§FS-check.1.1.5).
 pub(crate) use fence::markdown_fence_delimiter;
 pub(crate) use fmt_cross_refs::flatten_cross_ref_links;
 pub(crate) use fmt_suppress::{FMT_DIRECTIVE, FmtDirectives, FmtExcluded};
