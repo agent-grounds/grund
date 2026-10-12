@@ -9,9 +9,9 @@ use std::path::Path;
 
 use crate::config::{Frame, Schema};
 use crate::grammar::{
-    CommentBlockKind, DocCommentRule, SourceScanLine, atx_heading_text, block_is_doc_comment,
-    comment_blocks, comment_envelope, doc_comment_rule, first_content_line, is_bare_block_line,
-    markdown_fence_delimiter,
+    CommentBlockKind, DocCommentRule, MarkdownFence, SourceScanLine, atx_heading_text,
+    block_is_doc_comment, comment_blocks, comment_envelope, doc_comment_rule, first_content_line,
+    is_bare_block_line, markdown_fence_delimiter,
 };
 use crate::model::{
     BlockForm, Declaration, FileRecord, HeadingKind, LineZone, RecordedBlock, RecordedHeading,
@@ -188,9 +188,10 @@ pub(super) fn settle_headings(
 }
 
 /// The headings without a path inside each source declaration's body: a line
-/// that reads as an ATX heading once its envelope is off, outside a fence
-/// (§FS-languages.comment-wrapper.headings, §FS-show.2.5). Only a declaration's
-/// own block is read, so a file without one pays nothing.
+/// that reads as an ATX heading once its envelope is off, outside the fences the
+/// scan recorded (§FS-languages.comment-wrapper.headings,
+/// §FS-languages.fence.comment-block). Only a declaration's own block is read, so
+/// a file without one pays nothing.
 fn doc_comment_plain_headings(
     record: &FileRecord,
     bodies: &BTreeMap<usize, (usize, usize)>,
@@ -200,22 +201,14 @@ fn doc_comment_plain_headings(
         let Some(block) = record.block_at(decl_line) else {
             continue;
         };
-        let mut fence = None;
         for lineno in decl_line + 1..=end {
             let Some(line) = record.line(lineno) else {
                 break;
             };
-            let scanned = match record.zone_at(lineno) {
-                Some(zone) => &line[zone.start..zone.end],
-                None => line,
-            };
-            let content = comment_envelope(scanned, &block.form);
-            if markdown_fence_delimiter(&mut fence, content) {
+            if record.in_comment_fence(lineno) || record.heading_at(lineno).is_some() {
                 continue;
             }
-            if fence.is_some() || record.heading_at(lineno).is_some() {
-                continue;
-            }
+            let content = comment_envelope(scanned_line(record, lineno, line), &block.form);
             let trimmed = content.trim_start();
             let Some(level) = markdown_heading_level(trimmed) else {
                 continue;
@@ -239,4 +232,48 @@ fn doc_comment_plain_headings(
         }
     }
     plain
+}
+
+/// The fences of a source file's comment blocks, read line by line as the scan
+/// meets them (§FS-languages.fence.comment-block): a delimiter is read on the
+/// line with its comment wrapper off, and a fence still open where its block
+/// ends closes there. The scan records what it reads, and every heading reader
+/// asks the record, so there is one reading of where such a fence runs.
+#[derive(Default)]
+pub(super) struct CommentFences {
+    /// The first line of the block the open fence is in.
+    block: usize,
+    open: Option<MarkdownFence>,
+}
+
+impl CommentFences {
+    /// Read line `lineno` of `record`, whose docstring zone is already in, and
+    /// record it when it is a delimiter or inside a fence.
+    pub(super) fn read(&mut self, record: &mut FileRecord, lineno: usize) {
+        let Some(block) = record.block_at(lineno) else {
+            self.open = None;
+            return;
+        };
+        if block.start != self.block {
+            self.block = block.start;
+            self.open = None;
+        }
+        let Some(line) = record.line(lineno) else {
+            return;
+        };
+        let content = comment_envelope(scanned_line(record, lineno, line), &block.form);
+        let delimiter = markdown_fence_delimiter(&mut self.open, content);
+        if delimiter || self.open.is_some() {
+            record.fenced.push(lineno);
+        }
+    }
+}
+
+/// The part of `line` the scan read: a docstring line inside its delimiters
+/// (§AR-scanner.4.4), any other line whole.
+fn scanned_line<'a>(record: &FileRecord, lineno: usize, line: &'a str) -> &'a str {
+    match record.zone_at(lineno) {
+        Some(zone) => &line[zone.start..zone.end],
+        None => line,
+    }
 }

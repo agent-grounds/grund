@@ -132,6 +132,9 @@ pub(crate) struct FileRecord {
     pub(crate) blocks: Vec<RecordedBlock>,
     /// The docstring lines, in line order; empty outside Python.
     pub(crate) zones: Vec<LineZone>,
+    /// The source lines inside a fence of their comment block, delimiters
+    /// included, in line order; empty for Markdown (§FS-languages.fence.comment-block).
+    pub(crate) fenced: Vec<usize>,
     line_starts: OnceLock<Vec<usize>>,
 }
 
@@ -144,6 +147,7 @@ impl FileRecord {
             headings: Vec::new(),
             blocks: Vec::new(),
             zones: Vec::new(),
+            fenced: Vec::new(),
             line_starts: OnceLock::new(),
         }
     }
@@ -199,6 +203,12 @@ impl FileRecord {
             .binary_search_by_key(&line, |zone| zone.line)
             .ok()?;
         self.zones.get(index)
+    }
+
+    /// Whether `line` is inside a fence of its comment block, so it is never a
+    /// heading (§FS-languages.fence.comment-block).
+    pub(crate) fn in_comment_fence(&self, line: usize) -> bool {
+        self.fenced.binary_search(&line).is_ok()
     }
 
     /// The comment block holding `line`.

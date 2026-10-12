@@ -104,7 +104,7 @@ pub(crate) use compiled::{
 };
 // The bare fence reader serves the record's doc-comment headings and the template
 // tests, which look for a fenced example rather than for a heading (§FS-check.1.1.5).
-pub(crate) use fence::markdown_fence_delimiter;
+pub(crate) use fence::{MarkdownFence, markdown_fence_delimiter};
 pub(crate) use fmt_cross_refs::{cross_ref_wrap, cross_ref_wrap_after, flatten_cross_ref_links};
 pub(crate) use fmt_suppress::{FMT_DIRECTIVE, FmtDirectives, FmtExcluded};
 pub(crate) use glob_candidate::{CandidateReading, read_loose_candidate};
