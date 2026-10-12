@@ -809,12 +809,16 @@ for one release window. Before this release such a target matched nothing in
 its own member, because the pin was split at its first `/` rather than its
 last ([§FS-config.3.9.3](FS-config.md#393-alias-matching)). The window covers every finding the corrected match can
 newly produce, outbound or inbound: a prohibition's `forbidden-citation` at a
-site the pinned target now matches, and the `citation-cardinality` or
+site the pinned target now matches; the `citation-cardinality` or
 `uncited-unit` of an `at most N` or `exactly N` count that the same count
-without those sites satisfies. A count that fails without them is still an
-error. The verdicts that newly pass — an `at least N` count, or per-target
-coverage, that those sites now satisfy — land in the release that ships the
-change, and only the ones that newly fail are ramped.
+without those sites satisfies; and every per-target `citation-cardinality`
+([§FS-rules.3.3](FS-rules.md#33-per-target-coverage)) for a target only the corrected match brings into the universe —
+an `each … at least N` miss as much as an `exactly N` or `at most N` bound —
+because before the correction that target was not in the universe and the rule
+had nothing to fail on. A count that fails without them is still an error. The
+verdicts that newly pass — an `at least N` count that those sites now satisfy —
+land in the release that ships the change, and only the ones that newly fail
+are ramped.
 
 The warning is the error's message unchanged, followed by `; a target pinned at
 the rule's own nested alias path now matches, and this warning becomes an error
@@ -824,7 +828,11 @@ vocabulary. It carries the code it will carry as an error, so `--only` and
 rest of the run put it, and at the recommended level such a finding is an
 ordinary suggestion and owes no ramp, all as in [§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180). A finding that
 qualifies under both windows stays a warning until the later of their two
-releases and carries both clauses, [§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)'s first.
+releases and carries both clauses, [§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)'s first. A finding names a
+window only when that window's change is needed for it: a count that still
+breaks without its newly counted sites names this window alone. When each
+change by itself would produce the finding, so neither is needed alone, it
+names both.
 
 At `0.18.0` these findings become errors on the ordinary `must` channel, and
 this subsection becomes a pointer as [§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160) did. The decision and its

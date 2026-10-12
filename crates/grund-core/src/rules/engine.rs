@@ -314,8 +314,6 @@ fn evaluate_cites(
                 let sites = counts.get(target).map(Vec::as_slice).unwrap_or_default();
                 let count = sites.len();
                 if !rule.cardinality.contains(count) {
-                    // §FS-rules.7.9: a target only the corrected match takes into the
-                    // universe produces its finding only now, whatever its count.
                     let windows = if before.contains(target) {
                         Windows::of_count(
                             rule.level,
@@ -323,7 +321,7 @@ fn evaluate_cites(
                             sites.iter().map(|&counted| (counted, false)),
                         )
                     } else {
-                        Windows::at(rule.level, sites.iter().any(|&c| c), true)
+                        Windows::of_new_target(rule.level, rule.cardinality, sites.iter().copied())
                     };
                     let (sink, message) = route(
                         windows,
