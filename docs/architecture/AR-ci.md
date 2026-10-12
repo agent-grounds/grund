@@ -154,24 +154,28 @@ the CLI. The CLI the acceptance compares against is built once per run and
 reused by every test that needs it. Cargo's own lock makes the sharing safe.
 
 That cache is not the cargo cache's. Its key is
-`<os>-node-target-v1-1.95.0-<Cargo.lock hash>`: the runner's OS, a version to
+`<os>-node-target-v2-1.95.0-<Cargo.lock hash>`: the runner's OS, a version to
 bump when what it holds must be thrown away, the binding toolchain, and the lock
 file, with the same key less its hash as the restore prefix. A key of its own is
 what makes it save at all: `actions/cache` saves nothing on an exact hit of its
 primary key, and the cargo cache's key already hits whenever `Cargo.lock` has not
 changed, so a path added to it would never be written. It holds the release
-binding's and the debug CLI's compiled dependencies and no incremental state.
+binding's and the dev builds' compiled dependencies and no incremental state;
+`v2` is the bump that came with the dev builds of [§AR-ci.3.4.1.1](AR-ci.md#3411-one-release-build-and-every-build-on-one-line), whose
+dependencies an entry saved before them does not hold and, on an exact hit,
+would never save.
 It cannot leave that state out, because `actions/cache` archives a listed
 directory whole, so the builds never write it: the CLI builds with
-`CARGO_INCREMENTAL=0`, the release builds are not incremental, and a fresh
+`CARGO_INCREMENTAL=0`, and so do the dev builds of the binding, the release
+build is not incremental, and a fresh
 checkout's workspace crates could not reuse the state anyway. After one run on
 Linux the target is about 0.7 GB before compression, three caches in all,
-against a repository limit of 10 GB the other caches already crowd; the release
-LTO builds of the tarball's own crates are not worth caching, because they
-rebuild at their fresh paths every run anyway.
+against a repository limit of 10 GB the other caches already crowd; the
+tarball's own crates are not worth caching, because they rebuild at their fresh
+paths every run anyway.
 
 Sharing a target changes what is cached, not what is proven. The builds keep
-`--profile release`, `--locked`, the bundled-sources closure, and the fallback
+`--locked`, the bundled-sources closure, and the fallback
 rebuild after the native artifacts are removed from the installed tarball, so
 [§FS-distribution.3.2.3.3](../functional-spec/FS-distribution.md#3233-source-buildlocal-package-ownership) holds as written: the tarball's own workspace crates
 still compile from its own sources, at their own paths, and generated files
@@ -185,6 +189,40 @@ the CLI is built once; every other build site names this target, the rehearsal's
 or a directory under one of them; unset, the wrapper and the helper agree on one
 persistent directory outside the checkout, which a CI cache step of its own
 restores, under a key that is not the cargo cache's.
+
+##### 3.4.1.1 One release build, and every build on one line
+
+A warm target saves only the dependency tree, and under the release profile
+that is the cheap part: `lto = true` and one codegen unit make the optimisation
+and link of the tarball's own cdylib about 48 s of a 50 s build on a
+developer's machine, and two to four times that on a runner, with or without a
+warm target. So the acceptance pays for that profile once. Exactly one build of
+the binding uses `--profile release`: the documented native builder command of
+[§FS-distribution.3.2.3.3](../functional-spec/FS-distribution.md#3233-source-buildlocal-package-ownership), in `tests/e2e/test_node_binding.py`, which is the
+acceptance's proof that release is ordinary LTO. Every other build of the
+binding passes `--profile dev`: the test-seams build, the source package's
+`npm run build:source`, and the bundled-fallback rebuild in an unpacked
+tarball, the last two through `build:source`'s pass-through to the builder.
+What each of those proves does not depend on the optimiser: the test-seams build
+proves the runtime seams, worker panics, the writer lease and teardown, and the
+source package and its fallback prove the bundled `--locked` source closure, its
+ESM, CJS and TypeScript surface, and that the fallback compiles from the
+tarball's own sources without reaching the checkout. [§FS-distribution.3.2.3.3](../functional-spec/FS-distribution.md#3233-source-buildlocal-package-ownership)
+names a profile for the native builder only, so it holds as written. A build
+that only refuses before Cargo runs, or reaches a probe that stands in for it,
+compiles nothing and is not counted.
+
+So that CI can attribute the acceptance's time without the captured output of
+cargo, every build the acceptance runs prints one line to its standard error
+as it finishes: the profile, the target directory and the wall seconds, in the
+form `node build: <profile> <target-dir> <seconds>s`. It is one line per build
+and none for anything else the harness runs.
+
+`tests/integration/test_node_shared_target.py` holds this too: across the
+support module's source package and every other build site, exactly one build
+of the binding resolves to the release profile, and it is the documented native
+builder's; a build the harness runs prints its one line naming its profile,
+target and seconds; and the CI cache key carries the `v2` this point bumped.
 
 #### 3.4.2 Per-test durations
 

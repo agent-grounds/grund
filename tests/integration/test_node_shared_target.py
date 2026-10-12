@@ -1,5 +1,7 @@
 """§AR-ci.3.4.1 — every build of the Node acceptance shares one persistent target.
 
+§AR-ci.3.4.1.1 — it pays for the release profile once, and each build prints one line.
+
 The acceptance itself takes minutes, so nothing here builds. The source package and
 the CLI oracle are asked for in a child whose `checked` only records the commands
 it is handed; the other build sites are read from their source, where each one
@@ -11,6 +13,7 @@ restore it, because a key another step shares hits exactly and never saves.
 import ast
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -54,6 +57,26 @@ first, second = support.checkout_cli(), support.checkout_cli()
 print(json.dumps({"calls": calls, "incremental": envs, "target": str(target), "cli": [str(first), str(second)]}))
 """
 
+# Every command goes through `launch.subprocess.run`, so a fake one there sees each build.
+ATTRIBUTE = """
+import subprocess, sys
+sys.dont_write_bytecode = True
+sys.path.insert(0, sys.argv[1])
+import launch
+
+class Done:
+    stdout, stderr, returncode = "", "", 0
+
+launch.subprocess.run = lambda *args, **options: Done()
+target, node = sys.argv[2], sys.argv[3]
+launch.checked(["node", "--version"])
+launch.checked(["node", node + "/build.mjs", "--source-root", ".", "--out-dir", "out",
+                "--target-dir", target, "--profile", "dev", "--test-seams"])
+launch.checked(["npm", "run", "build:source", "--", "--target-dir", target])
+launch.checked(["cargo", "+1.95.0", "build", "-p", "grund", "--locked", "--target-dir", target])
+launch.checked(["npm", "pack", "--json"])
+"""
+
 DEFAULTS = """
 import json, sys
 sys.dont_write_bytecode = True
@@ -80,6 +103,38 @@ def within(path, root):
         return True
     except ValueError:
         return False
+
+
+def profile(argv):
+    """The profile a binding build resolves to: `build.mjs` and `build:source` default to release."""
+    return argv[argv.index("--profile") + 1] if "--profile" in argv else "release"
+
+
+def binding_builds(path):
+    """Each `checked([...])` of the builder or `build:source` in a file, with its profile.
+
+    A build through `command(...)` is a refusal the test expects or a Cargo probe's, which
+    compiles nothing (§AR-ci.3.4.1.1), so only `checked` counts. A site is named by the
+    innermost function around it.
+    """
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
+    builds = []
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Call) and ast.unparse(node.func).split(".")[-1] == "checked"
+                and node.args and isinstance(node.args[0], ast.List)):
+            continue
+        elements = node.args[0].elts
+        if not any("build.mjs" in ast.unparse(item) or "build:source" in ast.unparse(item)
+                   for item in elements):
+            continue
+        values = [item.value if isinstance(item, ast.Constant) else ast.unparse(item)
+                  for item in elements]
+        around = max((scope for scope in functions
+                      if scope.lineno <= node.lineno <= scope.end_lineno),
+                     key=lambda scope: scope.lineno)
+        builds.append((f"{path.relative_to(REPO).as_posix()} {around.name}", profile(values)))
+    return builds
 
 
 class NodeSharedTargetTests(unittest.TestCase):
@@ -128,6 +183,50 @@ class NodeSharedTargetTests(unittest.TestCase):
                 if not shared and ast.unparse(value) not in allowed:
                     stray.append(f"{site}: --target-dir {ast.unparse(value)}")
         self.assertEqual([], stray, "a Node acceptance build names its own target directory")
+
+    def test_the_acceptance_pays_for_the_release_profile_once(self):
+        result = child(RECORD, NODE_HARNESS, cwd=self.temp, GRUND_NODE_TARGET=str(self.temp))
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        recorded = json.loads(result.stdout.splitlines()[-1])
+        source = [(index, argv) for index, argv in enumerate(recorded["calls"])
+                  if "build:source" in argv]
+        self.assertEqual(1, len(source), recorded["calls"])
+        index, argv = source[0]
+        builds = [("tests/bindings/node/support.py source_package", profile(argv))]
+        for path in BUILD_SITES:
+            builds += binding_builds(path)
+        release = [site for site, chosen in builds if chosen == "release"]
+        self.assertEqual(
+            ["tests/e2e/test_node_binding.py test_documented_native_source_builder"], release,
+            f"{len(release)} release builds of the binding in one acceptance run, "
+            f"want only the documented native builder's: {builds}")
+        others = [(site, chosen) for site, chosen in builds if chosen not in ("release", "dev")]
+        self.assertEqual([], others, "a binding build names a profile the test cannot read")
+        # A dev build is incremental by default, and the cache archives the target whole.
+        self.assertEqual("0", recorded["incremental"][index],
+                         "the dev source build writes no incremental state to cache")
+
+    def test_each_build_prints_one_line_naming_its_profile_target_and_seconds(self):
+        target = self.temp / "shared"
+        result = child(ATTRIBUTE, NODE_HARNESS, target, NODE_HARNESS.parents[2] / "crates" /
+                       "grund-node", cwd=self.temp)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        lines = [line for line in result.stderr.splitlines() if line.startswith("node build:")]
+        shape = re.compile(r"node build: (\S+) (.+) (\d+(?:\.\d+)?)s")
+        parsed = [shape.fullmatch(line) for line in lines]
+        self.assertTrue(all(parsed), lines)
+        self.assertEqual([("dev", str(target)), ("release", str(target)), ("dev", str(target))],
+                         [(match[1], match[2]) for match in parsed],
+                         "one line per build, none for anything else the harness runs; "
+                         f"stderr was {result.stderr!r}")
+
+    def test_the_ci_key_drops_entries_saved_before_the_dev_builds(self):
+        steps = CI.read_text(encoding="utf-8").split("\n      - ")
+        keys = [line.strip() for step in steps for line in step.splitlines()
+                if "~/ag/tmp/grund-node-target" in step and line.strip().startswith("key:")]
+        self.assertEqual(1, len(keys), keys)
+        self.assertIn("-node-target-v2-", keys[0],
+                      "an entry saved before the dev builds holds none of their dependencies")
 
     def test_unset_the_wrapper_and_the_helper_share_one_persistent_target_ci_restores(self):
         built = self.temp / "grund-built-unused"
