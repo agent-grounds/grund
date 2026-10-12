@@ -74,6 +74,7 @@ owners = [
   "crates/grund-core/src/grammar/heading_text.rs",
   "crates/grund-core/src/grammar/never_rewrite.rs",
   "crates/grund-core/src/model/file_record.rs",
+  "crates/grund-core/src/resolver/body_lines.rs",
   "crates/grund-core/src/resolver/link_targets.rs",
   "crates/grund-core/src/scanner/context.rs",
   "crates/grund-core/src/scanner/extents.rs",
@@ -85,6 +86,12 @@ owners = [
 # DF-one-parse-answers-from-0-19; #639 retires them.
 [[family.migration]]
 file = "crates/grund-core/src/scanner/compat.rs"
+step = "#639"
+
+# Show's body views, sliced through compat's today_slices; #639 slices them off
+# the record.
+[[family.migration]]
+file = "crates/grund-core/src/resolver/body.rs"
 step = "#639"
 
 # Callers of the one wrapper test; #655, the 0.19.0 wrapper, leaves them citing
