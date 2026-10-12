@@ -304,7 +304,7 @@ A **non-citable kind** ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that
 
 ##### 2.3.4.5 Declaration Forms
 
-The block teaches that declarations are heading lines in markdown or supported language doc-comments, and that an inline source declaration can be represented by a one-line markdown stub in the configured kind home. It also teaches, rendered according to `[id] section_heading_levels`, that numbered headings inside a declaration are citable sections; depth-matching headings (`## 1. …`, `### 1.1 …`) are required in strict mode, warned on in warn mode, and recommended in loose mode. When the effective config enables named sections, the same block additionally teaches the explicit complete-path forms `## goals: Goals`, `### goals.performance: Performance`, and `### goals.3: Ordered child`, plus the reserved `number.name` order. Disabled repositories receive no named-heading guidance. Since v16 it also teaches the relative form beside the complete one: write `.<component>` under the parent heading (`### .1: Username` under `## format: Formatting`), and run `grund fmt --write` after citing one so the section lock records it ([§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds), [§FS-section-lock](FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)); an existing v15 block is repaired by `grund init` and reports `agents-init` once until then ([§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)). Since v10 it also teaches which headings a declaration body may carry unmarked ([§FS-init.2.3.4.5.1](FS-init.md#23451-unmarked-headings)).
+The block teaches that declarations are heading lines in markdown or supported language doc-comments, and that an inline source declaration can be represented by a one-line markdown stub in the configured kind home. It also teaches, rendered according to `[id] section_heading_levels`, that numbered headings inside a declaration are citable sections; depth-matching headings (`## 1. …`, `### 1.1 …`) are required in strict mode, warned on in warn mode, and recommended in loose mode. When the effective config enables named sections, the same block additionally teaches the explicit complete-path forms `## goals: Goals`, `### goals.performance: Performance`, and `### goals.3: Ordered child`, plus the reserved `number.name` order. Disabled repositories receive no named-heading guidance. Since v16 it also teaches the relative form beside the complete one: in a Markdown declaration body, write `.<component>` under the parent heading (`### .1: Username` under `## format: Formatting` where named sections are enabled, `### .1. Scope` under `## 3. Third` otherwise), and run `grund fmt --write` after citing one so the section lock records it ([§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds), [§FS-section-lock](FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)); an existing v14 block, or v15 where a rule kind is enabled, is repaired by `grund init` and reports `agents-init` once until then ([§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)). Since v10 it also teaches which headings a declaration body may carry unmarked ([§FS-init.2.3.4.5.1](FS-init.md#23451-unmarked-headings)).
 
 ###### 2.3.4.5.1 Unmarked headings
 
@@ -531,11 +531,13 @@ The canonical text for a given block version `vN` is embedded in the `grund` bin
 
 ##### 2.3.7.1 The current version
 
-The current schema for a repository without a rule kind is **v14**; v14 adds
-the structural query of [§FS-init.2.3.4.3.1](FS-init.md#23431-structural-queries) to the cheap-read ladder. A
-rule-enabled repository uses **v15** because [§FS-init.2.3.5.10](FS-init.md#23510-chapter-rules) adds
-byte-compared content. Removing the opt-in returns to byte-identical v14 output
-rather than making v15 universal — rule-enabled stays base plus one. v12, with
+The current schema for a repository without a rule kind is **v16**; v16 adds
+the relative section heading and its section lock to the declaration forms of
+[§FS-init.2.3.4.5](FS-init.md#2345-declaration-forms). A rule-enabled repository uses **v17** because
+[§FS-init.2.3.5.10](FS-init.md#23510-chapter-rules) adds byte-compared content. Removing the opt-in returns to
+byte-identical v16 output rather than making v17 universal — rule-enabled stays
+base plus one. v14, with v15 its rule-enabled form, added the structural query of
+[§FS-init.2.3.4.3.1](FS-init.md#23431-structural-queries) to the cheap-read ladder. v12, with
 v13 its rule-enabled form, stopped writing a bare ID-shaped illustration into
 the block's own prose — the escaped example teaches the shape once and the two declaration lines use
 the `<ID>` placeholder — so the scaffold lands clean under `[reference] strict = false`

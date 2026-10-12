@@ -78,7 +78,11 @@ use super::compiled::{
 /// cheap-read ladder gains the structural query — `list --selector` rows fed to
 /// `show --batch --toc --format json` — and links the Querying grund guide. v15
 /// is that base with v13's `### Chapter rules` section.
-pub(crate) const AGENTS_BLOCK_VERSION: u32 = 15;
+/// v16 (§FS-init.2.3.4.5, §DF-relative-section-headings): the declaration forms
+/// teach the relative section heading, `.<component>` under its parent, and the
+/// `grund fmt --write` that records a cited one in the section lock. v17 is that
+/// base with v15's `### Chapter rules` section.
+pub(crate) const AGENTS_BLOCK_VERSION: u32 = 17;
 
 /// The byte span and `vN` version of the managed block inside an `AGENTS.md`
 /// (§FS-init.2.3) — what both `grund init`'s update and `grund check`'s validation
