@@ -18,6 +18,7 @@ pub const CHECK_FINDING_CODES: &[&str] = &[
     "empty-citation-obligation",
     "empty-scan",
     "escaped-citation-resolves",
+    "excluded-stub-target",
     "forbidden-citation",
     "full-scope-ignored",
     "glob-citation",

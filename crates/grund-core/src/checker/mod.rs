@@ -42,6 +42,7 @@ mod chapter_rules;
 mod citation_prohibitions;
 mod citations;
 mod conform;
+mod excluded_stub_target;
 mod fields;
 mod glob_citations;
 mod grounding;

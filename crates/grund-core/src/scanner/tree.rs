@@ -232,7 +232,8 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     promote_local_legacy_citations(schema, frame, &mut findings);
     resolve_shorthand_citations(frame.grammar(), &mut findings);
     // §AR-scanner.4.6: a stub's verdict is reached only once every declaration is in.
-    resolve_stubs(schema, frame, &mut findings);
+    let roots = scan_roots(schema, frame, scope, explicit_scope)?;
+    resolve_stubs(schema, frame, &roots, &mut findings);
     Ok((findings, errors))
 }
 
