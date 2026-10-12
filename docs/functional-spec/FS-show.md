@@ -158,6 +158,8 @@ If the declaration has no lead prose (opens directly with `## 1. ...`), `--brief
 
 `grund --toc FS-check` prints the default lead ([§FS-show.2.1](FS-show.md#21-whole-declaration-default)), then a blank line, then every citable section heading in the declaration body, one per line, in document order, each at the depth and in the complete form it was written (`## 1. Inputs`, `## goals: Goals`, `### goals.performance: Performance`, …). No section bodies. The heading lines are emitted verbatim — the same bytes `--full` would show for those lines — so the coordinate the reader needs is right there to feed back into `grund FS-check.<path>`. No generated summary, ever: `--toc` is a structural slice, as deterministic as the default ([§FS-errors.4](FS-errors.md#4-determinism)). A whole-declaration TOC still lists every claimant of a duplicate named coordinate; selecting that coordinate refuses as ambiguous ([§FS-show.2.2.2.3](FS-show.md#2223-the-whole-declaration-map-still-lists-both)).
 
+Until 0.19.0 the map also lists `/// # 1. Sub` ([§FS-show.2.3.3](FS-show.md#233-section-selection-inside-a-doc-comment)) and a `title` keeps a closing `#` run; from 0.19.0 neither ([§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves)).
+
 Which headings the map holds is [§FS-declarations.section.map](FS-declarations.md#sectionmap-the-section-map-is-the-declarations-body-span); what it prints when the lead or the map is empty is [§FS-show.2.1.2.2](FS-show.md#2122-an-empty-lead-an-empty-map); a selected section's map is [§FS-show.2.1.2.3](FS-show.md#2123-a-selected-sections-map).
 
 ##### 2.1.2.1 The map is the declaration's body span
@@ -290,6 +292,8 @@ The result is the markdown that the declaration's author wrote, identical to wha
 #### 2.3.3 Section selection inside a doc-comment
 
 Section selection (`AR-<event-bus>.2`) works the same way inside a doc-comment as inside a markdown file: the scanner records the numbered subsection headings declared within the doc-comment block and `show` slices to the requested section. Section depth is measured relative to the declaration's heading depth exactly as in markdown ([AR-scanner.2.2](../architecture/AR-scanner.md#22-section-detection)) — an `AR-<event-bus>:` declaration inside a `///` block is "depth 1", so `## 1.` is a depth-1 section. The comment-stripping pass leaves these headings intact.
+
+So `/// # 1. Sub` is a same-level heading, not a section. A `/** … */` line without ` * ` that reads `## 1. Sub` is a section from 0.19.0, not before ([§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves)).
 
 #### 2.3.4 Broken stub
 

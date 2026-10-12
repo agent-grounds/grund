@@ -151,7 +151,7 @@ A path is recorded **once**, by the first heading that claims it. A later headin
 
 #### 2.2.4 Nothing resolves through the duplicate list
 
-The map alone answers a `§<ID>.<path>` citation, the completion candidates, and the heading-level rule ([§FS-declarations.checks.section-heading-level](../functional-spec/FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch)). Two commands do read the list, and read nothing else for the question they ask — [§AR-checker.2.15](../../crates/grund-core/src/checker/report.rs) names every colliding line in the duplicate-section error ([§FS-declarations.checks.duplicate-section](../functional-spec/FS-declarations.md#checksduplicate-section-duplicate-section-path)), and `show` refuses a coordinate the list holds ([§FS-show.2.2.2](../functional-spec/FS-show.md#222-ambiguous-section)) before it re-reads the file for the body. `--toc` over a whole declaration is *not* one of them: it builds its map by re-scanning the source rather than by reading either structure, so it still prints both heading lines, which is what [§FS-show.2.2.2](../functional-spec/FS-show.md#222-ambiguous-section) exempts it for.
+The map alone answers a `§<ID>.<path>` citation, the completion candidates, and the heading-level rule ([§FS-declarations.checks.section-heading-level](../functional-spec/FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch)). Two commands do read the list, and read nothing else for the question they ask — [§AR-checker.2.15](../../crates/grund-core/src/checker/report.rs) names every colliding line in the duplicate-section error ([§FS-declarations.checks.duplicate-section](../functional-spec/FS-declarations.md#checksduplicate-section-duplicate-section-path)), and `show` refuses a coordinate the list holds ([§FS-show.2.2.2](../functional-spec/FS-show.md#222-ambiguous-section)) before it re-reads the file for the body. `--toc` over a whole declaration reads both: it lists the map and the duplicate list together from the file record ([§AR-scanner.2.8](AR-scanner.md#28-the-file-record)), in line order, rather than re-scanning the source, so it still prints both heading lines, which is what [§FS-show.2.2.2](../functional-spec/FS-show.md#222-ambiguous-section) exempts it for.
 
 #### 2.2.5 Coordinates are body-local
 
@@ -270,7 +270,13 @@ one exists. The scanner answers this while it holds the heading stack: the
 nearest preceding accepted section whose subtree contains the site wins, and a
 same-or-shallower heading closes it. A duplicate occurrence of a section
 path, and a rejected path, cannot own a site; the primary occurrence of a
-duplicated path still can. This is structural attribution,
+duplicated path still can. In a source doc-comment, until 0.19.0, only the next
+accepted section closes one: a duplicate, a rejected path or a plain heading of
+the same depth or shallower leaves the open section owning what follows it, which
+is today's answer kept by the compatibility reading of
+[§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves). From 0.19.0 every such heading closes it, as
+`show` already ends the section there, and where that moves a citation's owner
+0.18.0 warns ([§FS-declarations.checks.parse-moves](../functional-spec/FS-declarations.md#checksparse-moves-a-verdict-that-moves-in-0190)). This is structural attribution,
 not rule evaluation ([§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)). On a `grund cover --lines` run the requested ranges are passed into the file's pass and resolved there, while the heading stack is still held, by the same lookup that fills `enclosing_section` ([§FS-cover.6.2](../functional-spec/FS-cover.md#62-ownership-rules)).
 
 The scanner neither imports the rules component nor constructs `RuleFacts`.
@@ -347,7 +353,7 @@ An `Id` with a `None` component whose placeholder appears in the format renders 
 
 ### 2.7 Grounding units per file
 
-When the row a file belongs to asks for a grounding unit finer than the file — an effective `grounding_level` above `1` ([§FS-config.3.4.8](../functional-spec/FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)) — the per-file scan also records the structure the checker cuts those units out of: for a Markdown file every heading outside a fence or a raw-text HTML block, with its level and its text; for a source file every doc-comment block, with its line span and whether its first line is indented. The classifier that decides which comment blocks are documentation is the one [§AR-scanner.4.2](AR-scanner.md#42-doc-comment-or-inline-comment) already applies, read once per file from the extension.
+Every file's scan records the structure the checker cuts grounding units out of when the row a file belongs to asks for a unit finer than the file — an effective `grounding_level` above `1` ([§FS-config.3.4.8](../functional-spec/FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)). It is a view of the file record ([§AR-scanner.2.8](AR-scanner.md#28-the-file-record)), not a pass of its own: for a Markdown file every heading outside a fence or a raw-text HTML block, with its level and its text; for a source file every doc-comment block, with its line span and whether its first line is indented. The classifier that decides which comment blocks are documentation is the one [§AR-scanner.4.2](AR-scanner.md#42-doc-comment-or-inline-comment) already applies, read once per file from the extension.
 
 #### 2.7.1 The file's own row asks
 
@@ -355,11 +361,35 @@ Which row a file belongs to is [§AR-scanner.2.4.2](AR-scanner.md#242-citation-s
 
 #### 2.7.2 Structure, not units
 
-The record is **structure, not units**: the level that turns it into units belongs to a row, and one file can be reached by only one row, but keeping the cut in the checker leaves the level rule in one place ([§AR-checker.2.8](../../crates/grund-core/src/checker/report.rs)) and keeps this pass a pure description of the file. It is taken only for the files whose own row asks for it, which is the same shape [§AR-scanner.2.4](AR-scanner.md#24-citing-side-classification)'s citing-side classification uses: a project at level `1` — every configuration written before the key existed — records nothing and pays nothing ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)). The alternative, letting the checker re-read the governed files, would make the grounding rule re-read the tree after the scan ([§AR-checker.placement](../../crates/grund-core/src/checker/report.rs)), and unlike the stub rule ([§AR-checker.2.5](../../crates/grund-core/src/checker/report.rs)) it would do so for every file in a home rather than for a handful of error sites.
+The record is **structure, not units**: the level that turns it into units belongs to a row, and one file can be reached by only one row, but keeping the cut in the checker leaves the level rule in one place ([§AR-checker.2.8](../../crates/grund-core/src/checker/report.rs)) and keeps this pass a pure description of the file. The structure is recorded on **every run, for every file**, whatever its row asks: it is the file record every command slices and reads its owners from ([§AR-scanner.2.8](AR-scanner.md#28-the-file-record)), so recording it only where a row asks would keep a second, row-shaped retention mode beside it. A project at level `1` — every configuration written before the key existed — still cuts no units, and the instructions the recording costs are held by the benchmark gate rather than by skipping it ([§AR-ci.5.2](AR-ci.md#52-regression-limits)). The alternative, letting the checker re-read the governed files, would make the grounding rule re-read the tree after the scan ([§AR-checker.placement](../../crates/grund-core/src/checker/report.rs)), and unlike the stub rule ([§AR-checker.2.5](../../crates/grund-core/src/checker/report.rs)) it would do so for every file in a home rather than for a handful of error sites.
 
 #### 2.7.3 Demand arrives as `ScanDemand`
 
 The scanner reads no grounding key. Which rows ask for structure is `Compiled::demand`, the `ScanDemand` config computes once with the same level rule the checker cuts by ([§AR-config.6.1](AR-config.md#61-scandemand-names-the-rows-that-record-structure)): `is_empty()` is the one-field early exit that excuses every file of a level-1 tree, and past it the file's own row, found by the lookup of [§AR-scanner.2.7.1](AR-scanner.md#271-the-files-own-row-asks), is asked `records_structure(row)`. So the scanner is handed `Schema`, `Run` and `Compiled` and never `Rules` ([§DA-config-concern-records.2.3](../decisions/architectural/DA-config-concern-records.md#23-the-checker-splits-into-conform-and-judge)), and what is recorded and what is cut stay one rule.
+
+### 2.8 The file record
+
+The scan reads each file once, through `sources` ([§AR-system.2.13](README.md#213-sources)), and keeps what it read in the `Catalog` as one record per scanned file. Every command that asks where a body, a section, a lead or a comment block ends, or what a heading's text is, answers from that record; none reads the file again or parses it a second way ([§AR-system.principle](README.md#principle-one-fact-one-point-one-implementation)).
+
+#### 2.8.1 What the record holds
+
+- **The text**, as `sources` returned it: the string a disk read produced, or the editor's open buffer itself, shared rather than copied.
+- **Every heading outside a fence**, in Markdown or inside a comment: its line, level, byte span, rendered text ([§FS-declarations.heading.rendered-text](../functional-spec/FS-declarations.md#headingrendered-text-a-headings-rendered-text)) and parsed path, and what it is: a declaration, an accepted section, a duplicate, a rejected path, or plain.
+- **Every comment block**, with its form (`//`, `///`, `//!`, `/** */`, `#`, a docstring, …) and its lines, walked once by the block forms the inline-note rule already reads ([§FS-languages.comment-block](../functional-spec/FS-languages.md#comment-block-the-comment-block)).
+- **The zones** citations are read in.
+- **On every declaration and section**, its end, its lead's end and its heading's span.
+
+#### 2.8.2 Who fills it, and who reads it
+
+The per-file pass fills it, on every run, while it holds the heading stack and the fence state. Each extent rule is one function over the record: where a body ends ([§FS-declarations.body](../functional-spec/FS-declarations.md#body-where-a-declarations-body-ends)), where a section ends ([§AR-scanner.2.4.4](AR-scanner.md#244-the-enclosing-accepted-chapter)), what a comment line's envelope is ([§FS-languages.comment-wrapper](../functional-spec/FS-languages.md#comment-wrapper-the-comment-wrapper)), and what a heading's text is. `show` in every form, `list --size`, the oversized-lead check and the inline-code hint slice the text at recorded offsets; `refs`, `cover --lines`, the chapter rules, `section-outside-declaration` and the editor read the recorded owners; the grounding structure of [§AR-scanner.2.7](AR-scanner.md#27-grounding-units-per-file) is a view of it.
+
+#### 2.8.3 Today's answers for one release
+
+Until 0.19.0 the answers [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves) moves are given by one compatibility reading over the same record, not by a second parser: today's body end, section end, doc-comment owner and table of contents. Nothing else reads it, each of its functions names that record as the one that deletes it, and where its answer and the record's differ in a way that moves a verdict, `check` warns ([§FS-declarations.checks.parse-moves](../functional-spec/FS-declarations.md#checksparse-moves-a-verdict-that-moves-in-0190)).
+
+#### 2.8.4 Why the text is kept
+
+Slicing needs the bytes, and the alternative is a second read of every file a query shows, the reading this record exists to remove. Keeping the text only for commands that slice would be a second retention mode, saving memory the size of the scanned text; the cost is measured, and held by the benchmark gate ([§AR-ci.5.2](AR-ci.md#52-regression-limits)).
 
 ## 3. Output
 
