@@ -397,13 +397,17 @@ pub(super) fn is_direct_e2e_case_dir(
 /// given a `[path]` argument below that root, the path beside them, because the
 /// path narrows the report and not the walk (§FS-config.3.5.7, §AR-scanner.1.6,
 /// §FS-check.1.3.6.1).
+///
+/// Beside the roots, whether the scope is the whole project: no path, or one that
+/// resolves to the config root — the one resolution of the scope, which the lock
+/// pass of `fmt` reads rather than resolving it again (§FS-section-lock.write).
 pub(super) fn scan_roots(
     schema: &Schema,
     frame: Frame<'_>,
     scope: Option<&Path>,
     explicit_scope: bool,
-) -> Result<Vec<PathBuf>> {
-    scan_roots_for(
+) -> Result<(Vec<PathBuf>, bool)> {
+    resolve_scan_roots(
         schema,
         frame,
         scope,
@@ -433,6 +437,18 @@ pub(crate) fn scan_roots_for(
     full: bool,
     widen: bool,
 ) -> Result<Vec<PathBuf>> {
+    Ok(resolve_scan_roots(schema, frame, scope, explicit_scope, full, widen)?.0)
+}
+
+/// `scan_roots_for`, and whether the scope it resolved is the config root.
+fn resolve_scan_roots(
+    schema: &Schema,
+    frame: Frame<'_>,
+    scope: Option<&Path>,
+    explicit_scope: bool,
+    full: bool,
+    widen: bool,
+) -> Result<(Vec<PathBuf>, bool)> {
     if explicit_scope {
         let scope = scope.unwrap_or(Path::new("."));
         if !path_exists(&scope) {
@@ -455,7 +471,7 @@ pub(crate) fn scan_roots_for(
                 walk_root_under_config_root(frame, &resolved)
             };
         if resolved == canonical_config_root(frame.root()) {
-            return Ok(root_scope_roots(schema, frame.root(), full));
+            return Ok((root_scope_roots(schema, frame.root(), full), true));
         }
         // §FS-check.1.3.6.1: the ordinary roots union the path, the path first so its
         // spelling wins for the files it names (§FS-check.1.3.2). `full` is no part of
@@ -463,11 +479,11 @@ pub(crate) fn scan_roots_for(
         if widen {
             let mut roots = vec![scope];
             roots.extend(root_scope_roots(schema, frame.root(), false));
-            return Ok(roots);
+            return Ok((roots, false));
         }
-        return Ok(vec![scope]);
+        return Ok((vec![scope], false));
     }
-    Ok(root_scope_roots(schema, frame.root(), full))
+    Ok((root_scope_roots(schema, frame.root(), full), true))
 }
 
 /// A resolved scope re-expressed under the spelling `config.root` wears

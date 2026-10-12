@@ -140,7 +140,8 @@ pub(crate) use never_rewrite::{
     never_rewrite_context_in, qualified_suppressed_in_source, string_literal_in,
 };
 pub(crate) use relative_heading::{
-    expand_relative_heading, relative_heading_form, relative_heading_hint,
+    expand_relative_heading, may_hold_relative_heading, relative_heading_form,
+    relative_heading_hint,
 };
 pub(crate) use section_paths::path_at_or_under;
 pub(crate) use settings::{AliasGrammar, GrammarKind, LexicalSettings, require_kinds};

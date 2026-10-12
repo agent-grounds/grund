@@ -8,11 +8,11 @@ use std::path::{Path, PathBuf};
 
 use super::fmt_complete_findings::{CompleteFindings, CompleteScan};
 use super::fmt_rewrite::{FmtLineOpts, rewrite_file};
-use super::fmt_section_lock::{fmt_section_locks, may_hold_relative_heading};
+use super::fmt_section_lock::{LockChange, section_lock_changes};
 use crate::checker::{KindIndexEntries, KindIndexFiles};
 use crate::config::{Config, display_path, fmt_excluded};
-use crate::grammar::FMT_DIRECTIVE;
-use crate::model::Catalog;
+use crate::grammar::{FMT_DIRECTIVE, may_hold_relative_heading};
+use crate::model::{Catalog, SECTION_LOCK_DIR};
 use crate::resolver::{ShorthandTargets, WorkspaceContext, index_link_targets};
 use crate::scanner::{
     ApiScanError, api_scan_error, walk_scannable_files, walk_scannable_files_reporting,
@@ -307,22 +307,65 @@ pub(crate) fn fmt_tree(
             }
         }
     }
-    // §FS-section-lock.write.rules: a root-scoped run brings the section locks along.
-    let render = opts.render;
-    fmt_section_locks(
+    // §FS-section-lock.write.rules: a run over the whole project brings the locks along.
+    let locks = section_lock_changes(
         config,
-        render,
-        scope,
+        opts.render,
+        walked.root_scope,
         findings,
         relative_seen,
-        write,
-        &mut changes,
     )?;
+    for lock in locks {
+        if write && let Err(error) = write_lock(config, &lock) {
+            return Err(partial_io_error(
+                opts.render,
+                &lock.path,
+                "write",
+                error,
+                &changes,
+                &scan_errors,
+                &refused_writes,
+            ));
+        }
+        changes.extend(
+            lock.rows
+                .into_iter()
+                .map(|(line, row)| (lock.path.clone(), line, row)),
+        );
+    }
     Ok(FmtTreeOutcome {
         changes,
         scan_errors,
         refused_writes,
     })
+}
+
+/// Bring a lock file to `lock.text` (§FS-section-lock.file.shard): one with no
+/// entry is deleted, and with it each directory under `.grund/sections/` it
+/// leaves empty, that one included.
+fn write_lock(config: &Config, lock: &LockChange) -> std::io::Result<()> {
+    if !lock.text.is_empty() {
+        if let Some(dir) = lock.path.parent() {
+            fs::create_dir_all(dir)?;
+        }
+        return fs::write(&lock.path, &lock.text);
+    }
+    if lock.exists {
+        fs::remove_file(&lock.path)?;
+    }
+    let sections = config.root.join(SECTION_LOCK_DIR);
+    let under = |dir: &&Path| dir.starts_with(&sections);
+    for dir in lock.path.ancestors().skip(1).take_while(under) {
+        let sources = config.frame().sources();
+        if !sources
+            .read_dir(dir)
+            .is_ok_and(|mut entries| entries.next().is_none())
+        {
+            break;
+        }
+        fs::remove_dir(dir)?;
+    }
+    Ok(())
 }
 
 fn partial_io_error(

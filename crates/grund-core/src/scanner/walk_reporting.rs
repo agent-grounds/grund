@@ -54,6 +54,10 @@ pub(crate) struct WalkedTree {
     /// caller of this list — the unlisted-`[workspace]` rule of §FS-check.3.29 —
     /// probes each directory for a config and answers the claim above the walk.
     pub(crate) dirs: Vec<PathBuf>,
+    /// Whether the scope the walk resolved is the whole project, as `scan_roots`
+    /// answered it: only such a `fmt --write` writes a section lock
+    /// (§FS-section-lock.write).
+    pub(crate) root_scope: bool,
 }
 
 /// The tree walk (§AR-scanner.1): from each scan root, descend skipping hidden and
@@ -105,7 +109,7 @@ pub(crate) fn walk_scannable_files_with_sources(
     explicit_scope: bool,
     on_error: &mut dyn FnMut(&ScanError, ignore::Error),
 ) -> Result<WalkedTree> {
-    let roots = scan_roots(schema, frame, scope, explicit_scope)?;
+    let (roots, root_scope) = scan_roots(schema, frame, scope, explicit_scope)?;
     // §FS-config.3.5.4: an aliased root, or a symlink met on the way down, is what
     // hands the same file to the walk under two spellings — nothing else does, so
     // a tree with neither never pays for the identity pass (§GOAL-fast-feedback).
@@ -296,6 +300,7 @@ pub(crate) fn walk_scannable_files_with_sources(
         errors,
         outside_root,
         dirs,
+        root_scope,
     })
 }
 

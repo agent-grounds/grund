@@ -5,6 +5,16 @@
 use crate::config::Frame;
 use crate::model::{Catalog, SECTION_LOCK_DIR, SectionLockFile};
 
+/// Whether the config root holds anything under `.grund/sections/`, read where
+/// `read_section_locks` reads: what makes a run that has not scanned ask for a
+/// scan of the lock pass (§FS-section-lock.write).
+pub(crate) fn section_locks_present(frame: Frame<'_>) -> bool {
+    frame
+        .sources()
+        .read_dir(frame.root().join(SECTION_LOCK_DIR))
+        .is_ok_and(|mut entries| entries.next().is_some())
+}
+
 /// Every `<ID>.lock` directly under the config root's `.grund/sections/`, sorted
 /// by path. A tree with no such directory costs one failed listing. A file that
 /// cannot be read joins the run's unreadable paths (§FS-check.2.4).
