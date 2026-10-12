@@ -186,7 +186,7 @@ pub(crate) fn check_on_disk(
    │     │        │       │         └───────── slug: [a-z0-9][a-z0-9-]*
    │     │        │       └─────────────────── optional ordinal (e.g., 001)
    │     │        └─────────────────────────── kind: FS, AR, … or your own
-   │     └──────────────────────────────────── workspace project alias
+   │     └──────────────────────────────────── alias: root, api, …
    └────────────────────────────────────────── citation marker
 ```
 

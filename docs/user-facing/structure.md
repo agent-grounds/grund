@@ -33,7 +33,7 @@ allowed values, and whether anything else may appear — in the [fields guide](.
    │     │        │       │         └───────── slug: [a-z0-9][a-z0-9-]*
    │     │        │       └─────────────────── optional ordinal (e.g., 001)
    │     │        └─────────────────────────── kind: FS, AR, … or your own
-   │     └──────────────────────────────────── workspace project alias
+   │     └──────────────────────────────────── alias: root, api, …
    └────────────────────────────────────────── citation marker
 ```
 
