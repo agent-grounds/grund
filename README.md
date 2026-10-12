@@ -1,4 +1,4 @@
-# grund <a href="LICENSE"><img align="right" alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a> <a href="https://crates.io/crates/grund"><img align="right" alt="crates.io" src="https://img.shields.io/crates/v/grund.svg"></a> <a href="https://github.com/agent-grounds/grund/actions/workflows/ci.yml"><img align="right" alt="CI" src="https://github.com/agent-grounds/grund/actions/workflows/ci.yml/badge.svg"></a>
+# grund <a href="https://github.com/agent-grounds/grund/actions/workflows/ci.yml"><img align="absmiddle" alt="CI" src="https://github.com/agent-grounds/grund/actions/workflows/ci.yml/badge.svg"></a> <a href="https://crates.io/crates/grund"><img align="absmiddle" alt="crates.io" src="https://img.shields.io/crates/v/grund.svg"></a> <a href="LICENSE"><img align="absmiddle" alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
 
 > **Keep your agents grounded** — specs, docs, and code as one knowledge graph, checked on every commit.
 
