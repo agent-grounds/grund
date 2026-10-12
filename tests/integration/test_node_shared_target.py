@@ -280,7 +280,7 @@ class NodeSharedTargetTests(unittest.TestCase):
         cached = "~/" + Path(wrapper).resolve().relative_to(home).as_posix()
         steps = CI.read_text(encoding="utf-8").split("\n      - ")
         restoring = [step for step in steps if f"            {cached}\n" in step]
-        # §AR-ci.13.4: one such step in each job that runs the Node acceptance, all one key.
+        # §AR-ci.13.4: the restore and save steps of each job running the Node acceptance, one key.
         self.assertTrue(restoring, "no CI cache step restores the shared Node target")
         key = {line.strip() for step in restoring for line in step.splitlines()
                if line.strip().startswith("key:")}

@@ -23,8 +23,6 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
-  # §AR-ci.13.6: no incremental state is written, so none reaches a cargo cache.
-  CARGO_INCREMENTAL: 0
   # Pin the Rust toolchain used by every release job so all six PGO binaries
   # are produced by the same compiler version (avoids drift between the
   # outside-container `dtolnay/rust-toolchain` and the inside-container
@@ -428,19 +426,6 @@ jobs:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           components: llvm-tools-preview
 
-      - name: Restore cargo registry and target
-        id: cargo
-        uses: actions/cache/restore@v5
-        with:
-          path: |
-            ~/.cargo/registry
-            target
-          key: ${{ runner.os }}-${{ runner.arch }}-cargo-release-pgo-${{ env.RUST_TOOLCHAIN }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-cargo-release-pgo-${{ env.RUST_TOOLCHAIN }}-
-            ${{ runner.os }}-${{ runner.arch }}-cargo-release-pgo-
-            ${{ runner.os }}-${{ runner.arch }}-cargo-
-
       - name: Build PGO release binary
         id: pgo
         continue-on-error: ${{ ! matrix.pgo_required }}
@@ -526,17 +511,6 @@ jobs:
             ${{ steps.package.outputs.lsp_archive }}
             ${{ steps.package.outputs.lsp_archive }}.sha256
           if-no-files-found: error
-
-      # §AR-ci.13.6: only a push to main saves, so a tag or a dispatch never does here,
-      # and the entries this restores are the ones main's CI saved.
-      - name: Save cargo registry and target
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v5
-        with:
-          path: |
-            ~/.cargo/registry
-            target
-          key: ${{ runner.os }}-${{ runner.arch }}-cargo-release-pgo-${{ env.RUST_TOOLCHAIN }}-${{ hashFiles('**/Cargo.lock') }}
 
   publish-crates:
     name: publish crates.io packages
