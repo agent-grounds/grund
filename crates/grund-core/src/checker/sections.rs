@@ -23,6 +23,7 @@ use crate::config::{Frame, Schema};
 use crate::grammar::render_id;
 use crate::model::{
     Catalog, CheckReport, Diagnostic, LANDED_CLAUSE, SectionHeadingOutsideDeclaration, Site,
+    paired_declarations,
 };
 use crate::resolver::WorkspaceProject;
 use crate::scanner::section_path_is_numeric;
@@ -181,7 +182,10 @@ pub(super) fn check_section_headings(
     // dotted path give `§<ID>.<path>` two destinations — §FS-declarations.checks.duplicate's
     // ambiguity one level down, reported in its shape (§DF-duplicate-section-path.2.1).
     for (id, decls) in &findings.declarations {
-        for decl in decls {
+        // §FS-declarations.checks.duplicate-section.2: judged on the records the ID pairs with,
+        // at their lines; a scanned target is one record (§FS-declarations.stubs.target.5).
+        for paired in paired_declarations(decls).iter() {
+            let decl = paired.record;
             let mut colliding: BTreeMap<&str, Vec<usize>> = BTreeMap::new();
             for (path, info) in &decl.duplicate_sections {
                 colliding.entry(path.as_str()).or_default().push(info.line);
