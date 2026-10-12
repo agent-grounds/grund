@@ -677,8 +677,10 @@ that leaves the section; one heading gets one finding however many citations fol
    section moves from `missing section` to resolved and the section starts owning what
    follows it.
 3. **A heading that will stop cutting a lead past its budget.** Where
-   [§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in) is active, a `///` line one `#` shallower than a
-   section depth (`/// # 1. Sub`) cuts the declaration's lead today and is no section from
+   [§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in) is active, a heading in a source doc-comment that
+   is no section, such as a numbered heading one `#` shallower than a section depth
+   (`/// # 1. Sub`, or `# 1. Sub` in a Python docstring, a `/** … */` block or a `--`
+   comment), cuts the declaration's lead today and cuts nothing from
    0.19.0 ([§FS-show.2.3.3](FS-show.md#233-section-selection-inside-a-doc-comment)). It warns only when the lead without that cut is over
    the configured maximum, so 0.19.0 would add an `oversized-lead` the tree does not have.
 
