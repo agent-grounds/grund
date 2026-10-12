@@ -432,7 +432,7 @@ as one table so it does not depend on how one phrase of another point is read:
 | Stage | What it refuses | Example that also fails a later stage | Reason it opens with |
 |---|---|---|---|
 | 1. terminal period | a sentence that does not end in `.` | `Each FS may not cite any FS` | `rule must end with "."` |
-| 2. fixed word and phase-1 subject | `each` for `Each`, and the deliberate phase-1 absences of [§FS-rules.12](FS-rules.md#12-deliberate-phase-1-absences): a path subject, `Each */KIND`, `Each chapter of each KIND`, and a section-component wildcard in any spelling | `FS-x.* must cite at least one FS and must not cite any FS.` | `section-component wildcards are not accepted in phase 1` |
+| 2. fixed word and phase-1 subject | `each` for `Each`, and the deliberate phase-1 absences of [§FS-rules.12](FS-rules.md#12-deliberate-phase-1-absences): a path subject (`Each file in`), `Each */KIND`, `Each chapter of each KIND`, and a section-component wildcard in the first clause's subject, in any spelling | `FS-x.* must cite at least one FS and must not cite any FS.` | `section-component wildcards are not accepted in phase 1` |
 | 3. conjunction | clauses joined by `and` ([§FS-rule-refusals.sentences.conjunction](FS-rule-refusals.md#sentencesconjunction-any-clauses-joined-by-and-are-refused-as-a-conjunction)) | `Each FS may not cite any FS and must cite at least one FS.` | `conjunctions are not accepted` |
 | 4. modality | no accepted modality, `may not` included | `Each POLICY may not cite any FS.` | `modality "may not" is not accepted` |
 | 5. the rest of the subject | an unknown or non-citable kind, named sections off, the section grammar, a numbered chapter, the ID grammar | `Each POLICY must cite no FS.` | `unknown kind "POLICY"` |
@@ -443,13 +443,18 @@ sections on. Two sentences the table of [§FS-rule-refusals.sentences](FS-rule-r
 `Each FS must cite no AR.` and `Each FS must cite a GOAL.`, are refused for that
 row before stage 1; both end in `.`, so no sentence can tell.
 
-Stage 2 decides a wildcard with the subject parser's own test, so a sentence
-with no conjunction is refused exactly as before, and a subject that reaches a
-wildcard only through a component that fails earlier in stage 5 — `The *
-chapter of each FS` with named sections off — keeps that component's reason.
-A numbered chapter, named sections off and every kind refusal stay in stage 5,
-after the conjunction, so a refusal never names a fragment of a sentence as a
-kind.
+Stage 2 reads its rows from the sentence's start. A path subject is `Each
+file in`, refused whatever follows; `Each docs/fs/` names a kind, refused in
+stage 5. The wildcard is read from the subject of the first clause, the text
+before the first `and` that joins clauses ([§FS-rule-refusals.sentences.conjunction](FS-rule-refusals.md#sentencesconjunction-any-clauses-joined-by-and-are-refused-as-a-conjunction)), so that row is read only where an
+accepted modality splits that subject off: `FS-x.* may not cite any FS.` is
+refused for its modality, as before. Stage 2 decides a wildcard with the
+subject parser's own test, so a sentence with no conjunction is refused exactly
+as before, and a subject that reaches a wildcard only through a component that
+fails earlier in stage 5 — `The * chapter of each FS` with named sections off —
+keeps that component's reason. A numbered chapter, named sections off and every
+kind refusal stay in stage 5, after the conjunction, so a refusal never names a
+fragment of a sentence as a kind.
 
 Stage 2's wildcard row is the one place this order differs from what a
 sentence was refused with before it was written down: a wildcard subject
