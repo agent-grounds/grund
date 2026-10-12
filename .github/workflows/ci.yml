@@ -12,6 +12,8 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  # §AR-ci.13.6: no incremental state is written, so none reaches a cargo cache.
+  CARGO_INCREMENTAL: 0
   # Treat rustc warnings as errors for the binary itself. NOTE: this does not
   # deny clippy lints — clippy is intentionally not part of CI here. Add a
   # `cargo clippy --no-deps -- -D warnings` step if/when we want lint enforcement.
@@ -22,6 +24,10 @@ env:
 # §AR-ci.13: each operating system's suites run as jobs of their own, side by side,
 # written out rather than generated so the tests can read them as text. Each OS's
 # required check, `cargo test (<os>)`, is the aggregate at the end that judges them.
+
+# §AR-ci.13.6: each job restores its caches first and saves them last, on a push to main
+# alone. A cache failure only warns: actions/cache/restore and /save report one as a
+# warning and go on, so a job never stops on its cache (§AR-ci).
 jobs:
   # §AR-ci.13.1: the ubuntu-latest leg, one job per language.
   rust-ubuntu:
@@ -43,13 +49,12 @@ jobs:
           python-version: "3.x"
 
       # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
-      - name: Cache cargo registry and target
-        uses: actions/cache@v5
-        continue-on-error: true
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
         with:
           path: |
             ~/.cargo/registry
-            ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
@@ -108,6 +113,20 @@ jobs:
       - name: cargo test
         run: python scripts/run_cargo_suite.py --workspace --all-targets --locked --features grund/test-workspace-load-count
 
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+
   python-ubuntu:
     name: python (ubuntu-latest)
     runs-on: ubuntu-latest
@@ -135,16 +154,14 @@ jobs:
         run: rustup toolchain install 1.95.0 --profile minimal
 
       # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
-      - name: Cache cargo registry and target
-        uses: actions/cache@v5
-        continue-on-error: true
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
         with:
           path: |
             ~/.cargo/registry
-            ~/.cargo/git
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-            ~/ag/tmp/grund-release-build
           key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ github.job }}-
@@ -164,6 +181,21 @@ jobs:
       - name: python tests
         # §FS-cochange-recipe.examples: compatibility is mandatory, not environment-dependent.
         run: python scripts/run_python_gate.py --without-node-acceptance
+
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
 
   node-ubuntu:
     name: node acceptance (ubuntu-latest)
@@ -192,16 +224,14 @@ jobs:
         run: rustup toolchain install 1.95.0 --profile minimal
 
       # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
-      - name: Cache cargo registry and target
-        uses: actions/cache@v5
-        continue-on-error: true
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
         with:
           path: |
             ~/.cargo/registry
-            ~/.cargo/git
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-            ~/ag/tmp/grund-release-build
           key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ github.job }}-
@@ -209,9 +239,9 @@ jobs:
 
       # §AR-ci.3.4.1: a key of its own, so the Node target is saved, not lost to the
       # cargo cache's exact hit; the builds write no incremental state into it.
-      - name: Cache the Node acceptance's build target
-        uses: actions/cache@v5
-        continue-on-error: true
+      - name: Restore the Node acceptance's build target
+        id: node-target
+        uses: actions/cache/restore@v5
         with:
           path: |
             ~/ag/tmp/grund-node-target
@@ -227,6 +257,30 @@ jobs:
       # §AR-ci.3.4.3: the Node acceptance alone, the longest test of the Python gate.
       - name: node acceptance
         run: python scripts/run_python_gate.py --only-node-acceptance
+
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+
+      # §AR-ci.13.6: only a push to main saves, after the work, the key its restore missed.
+      - name: Save the Node acceptance's build target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.node-target.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/ag/tmp/grund-node-target
+          key: ${{ runner.os }}-node-target-v2-1.95.0-${{ hashFiles('**/Cargo.lock') }}
 
   # `.pre-commit-config.yaml` is the local gate; CI runs it directly so every
   # pre-commit hook remains enforced remotely (§AR-ci.1), less the hooks whose command a
@@ -248,13 +302,12 @@ jobs:
           python-version: "3.x"
 
       # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
-      - name: Cache cargo registry and target
-        uses: actions/cache@v5
-        continue-on-error: true
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
         with:
           path: |
             ~/.cargo/registry
-            ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
@@ -284,6 +337,20 @@ jobs:
           SKIP: cargo-fmt-check,cargo-build,cargo-test,python-test
         run: pre-commit run --all-files
 
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+
   # §AR-ci.13.1: the windows-latest leg, one job per language.
   rust-windows:
     name: rust (windows-latest)
@@ -304,13 +371,12 @@ jobs:
           python-version: "3.x"
 
       # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
-      - name: Cache cargo registry and target
-        uses: actions/cache@v5
-        continue-on-error: true
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
         with:
           path: |
             ~/.cargo/registry
-            ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
@@ -369,6 +435,21 @@ jobs:
       - name: cargo test
         run: python scripts/run_cargo_suite.py --workspace --all-targets --locked --features grund/test-workspace-load-count
 
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        shell: bash
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+
   python-windows:
     name: python (windows-latest)
     runs-on: windows-latest
@@ -396,16 +477,14 @@ jobs:
         run: rustup toolchain install 1.95.0 --profile minimal
 
       # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
-      - name: Cache cargo registry and target
-        uses: actions/cache@v5
-        continue-on-error: true
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
         with:
           path: |
             ~/.cargo/registry
-            ~/.cargo/git
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-            ~/ag/tmp/grund-release-build
           key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ github.job }}-
@@ -425,6 +504,22 @@ jobs:
       - name: python tests
         # §FS-cochange-recipe.examples: compatibility is mandatory, not environment-dependent.
         run: python scripts/run_python_gate.py --without-node-acceptance
+
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        shell: bash
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
 
   node-windows:
     name: node acceptance (windows-latest)
@@ -453,16 +548,14 @@ jobs:
         run: rustup toolchain install 1.95.0 --profile minimal
 
       # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
-      - name: Cache cargo registry and target
-        uses: actions/cache@v5
-        continue-on-error: true
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
         with:
           path: |
             ~/.cargo/registry
-            ~/.cargo/git
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-            ~/ag/tmp/grund-release-build
           key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ github.job }}-
@@ -470,9 +563,9 @@ jobs:
 
       # §AR-ci.3.4.1: a key of its own, so the Node target is saved, not lost to the
       # cargo cache's exact hit; the builds write no incremental state into it.
-      - name: Cache the Node acceptance's build target
-        uses: actions/cache@v5
-        continue-on-error: true
+      - name: Restore the Node acceptance's build target
+        id: node-target
+        uses: actions/cache/restore@v5
         with:
           path: |
             ~/ag/tmp/grund-node-target
@@ -488,6 +581,31 @@ jobs:
       # §AR-ci.3.4.3: the Node acceptance alone, the longest test of the Python gate.
       - name: node acceptance
         run: python scripts/run_python_gate.py --only-node-acceptance
+
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        shell: bash
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+
+      # §AR-ci.13.6: only a push to main saves, after the work, the key its restore missed.
+      - name: Save the Node acceptance's build target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.node-target.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/ag/tmp/grund-node-target
+          key: ${{ runner.os }}-node-target-v2-1.95.0-${{ hashFiles('**/Cargo.lock') }}
 
   # §AR-ci.13.1: macOS keeps its suites in one job; the merge queue shares its five slots.
   macos:
@@ -519,16 +637,14 @@ jobs:
         run: rustup toolchain install 1.95.0 --profile minimal
 
       # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
-      - name: Cache cargo registry and target
-        uses: actions/cache@v5
-        continue-on-error: true
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
         with:
           path: |
             ~/.cargo/registry
-            ~/.cargo/git
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-            ~/ag/tmp/grund-release-build
           key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ github.job }}-
@@ -536,9 +652,9 @@ jobs:
 
       # §AR-ci.3.4.1: a key of its own, so the Node target is saved, not lost to the
       # cargo cache's exact hit; the builds write no incremental state into it.
-      - name: Cache the Node acceptance's build target
-        uses: actions/cache@v5
-        continue-on-error: true
+      - name: Restore the Node acceptance's build target
+        id: node-target
+        uses: actions/cache/restore@v5
         with:
           path: |
             ~/ag/tmp/grund-node-target
@@ -616,6 +732,30 @@ jobs:
       # §AR-ci.requirements.5.2: failures, a check-in each 5% and one summary, no line per test.
       - name: cargo test
         run: python scripts/run_cargo_suite.py --workspace --all-targets --locked --features grund/test-workspace-load-count
+
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+
+      # §AR-ci.13.6: only a push to main saves, after the work, the key its restore missed.
+      - name: Save the Node acceptance's build target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.node-target.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/ag/tmp/grund-node-target
+          key: ${{ runner.os }}-node-target-v2-1.95.0-${{ hashFiles('**/Cargo.lock') }}
 
   # §AR-ci.13.2: the required checks. Each runs no suite of its own; it runs whatever its
   # needs did, and fails unless every one of them succeeded.
@@ -699,13 +839,12 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Cache cargo registry and target
-        uses: actions/cache@v5
-        continue-on-error: true
+      - name: Restore cargo registry and target
+        id: cargo
+        uses: actions/cache/restore@v5
         with:
           path: |
             ~/.cargo/registry
-            ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
@@ -741,3 +880,17 @@ jobs:
           name: iai-callgrind-summaries
           path: target/iai/**/summary.json
           if-no-files-found: ignore
+
+      # §AR-ci.13.6: only a push to main saves, after the work and without what every
+      # run rebuilds from its own sources.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        run: bash scripts/prune_cargo_cache.sh
+
+      - name: Save cargo registry and target
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
