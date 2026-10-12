@@ -168,6 +168,7 @@ fn empty_citable_value_heading(line: &str, declaration_level: usize, frame: Fram
             coordinate.split('.').all(|part| {
                 !part.is_empty()
                     && part.bytes().all(|byte| {
+                        // coordinate-lexer: looser on purpose: `## 3a:` stays a heading
                         byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-'
                     })
             })

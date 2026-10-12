@@ -8,10 +8,10 @@ use std::path::Path;
 use super::embedded_value_context::push_invalid_embedded_marker;
 use super::tree::heading_level_for_line;
 use crate::config::{Schema, kind_value_chapter};
-use crate::grammar::{SourceScanLine, section_anchor_text, strip_block_closer};
-use crate::model::{
-    Catalog, Declaration, EmbeddedValueRoot, SectionInfo, ValueRootOrigin, named_section_component,
+use crate::grammar::{
+    SourceScanLine, named_section_component, section_anchor_text, strip_block_closer,
 };
+use crate::model::{Catalog, Declaration, EmbeddedValueRoot, SectionInfo, ValueRootOrigin};
 
 /// Record `sec` on `decl`, and say whether the line's embedded marker was
 /// consumed here — an unattached marker is the caller's finding to report

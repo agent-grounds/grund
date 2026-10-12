@@ -14,7 +14,7 @@ use super::grounding::ParsedGrounding;
 use super::parse::{bail_config, parse_bool, parse_string};
 use crate::config::kind::{KindConfig, KindIndex, KindResolution};
 use crate::grammar::id_grammar_literal_slash_error;
-use crate::model::named_section_component;
+use crate::grammar::named_section_component;
 
 /// One `[[kinds]]` entry as the parser has it so far: the entry itself, the line
 /// its `[[kinds]]` header sat on (what an entry-level error anchors at), and

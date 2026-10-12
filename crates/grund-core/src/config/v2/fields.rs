@@ -12,7 +12,7 @@ use crate::config::fields::{Field, FieldContent, Placement};
 use crate::config::project::Strength;
 use crate::config::rows::Form;
 use crate::config::v1::{parse_string, parse_string_list};
-use crate::model::named_section_component;
+use crate::grammar::named_section_component;
 
 /// One field table as written, each key at its line.
 pub(super) struct FieldDraft {

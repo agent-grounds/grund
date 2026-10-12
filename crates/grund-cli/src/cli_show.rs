@@ -289,6 +289,7 @@ fn render_show_error(
             .ok()
             .and_then(|config| {
                 id_arg
+                    // coordinate-lexer: hint text for a refusal already made
                     .rsplit_once(&config.section_separator)
                     .map(|(base, _)| base.to_string())
             })

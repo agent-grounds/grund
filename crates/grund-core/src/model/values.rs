@@ -3,6 +3,7 @@ use regex::Regex;
 use std::path::PathBuf;
 
 use super::records::Id;
+use crate::grammar::named_mode_section_path;
 
 /// Exact component classification and equality for first-class values
 /// (§FS-values.2, §FS-values.4). Decimals stay as normalized coefficient and
@@ -76,17 +77,7 @@ impl EmbeddedValueRoot {
 /// two readings a path takes, and whether its root *is* a root, is the checker's
 /// question (§FS-values.5.1); this is only the grammar.
 pub(crate) fn value_binding_section_shape_is_valid(section: &str) -> bool {
-    // §FS-config.3.3.1: a numeric component may follow a named prefix, never
-    // the other way round, so `2.values` stays reserved.
-    let mut seen_numeric = false;
-    section.split('.').all(|part| {
-        if positive_numeric_component(part) {
-            seen_numeric = true;
-            true
-        } else {
-            !seen_numeric && named_section_component(part)
-        }
-    })
+    named_mode_section_path(section, positive_numeric_component)
 }
 
 /// Whether a binding path's final segment can name an immediate component: a
@@ -101,15 +92,6 @@ pub(crate) fn value_binding_section_ends_in_coordinate(section: &str) -> bool {
 
 fn positive_numeric_component(part: &str) -> bool {
     !part.is_empty() && !part.starts_with('0') && part.bytes().all(|byte| byte.is_ascii_digit())
-}
-
-/// One `[a-z][a-z0-9-]*` section handle — the fixed named-component grammar
-/// `value_chapter` is also held to (§FS-config.3.2.7, §FS-config.3.4.13).
-pub(crate) fn named_section_component(part: &str) -> bool {
-    part.as_bytes().first().is_some_and(u8::is_ascii_lowercase)
-        && part
-            .bytes()
-            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
 }
 
 /// An exact authored binding beside the ordinary citation the scanner emits

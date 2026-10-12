@@ -236,6 +236,7 @@ pub(crate) fn parse_qualified_id_prefix(raw: &str) -> Option<(Id, Option<String>
     ))
 }
 
+// coordinate-lexer: the grammar-less loose reading (§FS-workspace.5.2)
 fn split_loose_section(token: &str) -> (&str, Option<&str>) {
     let suffix_start = token
         .char_indices()

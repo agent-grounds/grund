@@ -78,6 +78,7 @@ pub(super) fn scan_local_section_candidates(
         let tail = &rest[..token_len];
         let supported = tail
             .split('.')
+            // coordinate-lexer: a section-only local token, no ID in front
             .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()));
         findings
             .local_section_citation_candidates

@@ -17,7 +17,38 @@ use super::source_line::comment_prefix_regex;
 use crate::model::Id;
 
 const NUMERIC_SECTION_PATTERN: &str = r"\d+(?:\.\d+)*";
-const NAMED_SECTION_PATTERN: &str = r"[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*(?:\.\d+)*";
+/// One named section component, the handle `named_sections` admits (§FS-config.3.3.1).
+const NAMED_COMPONENT_PATTERN: &str = "[a-z][a-z0-9-]*";
+/// A named-mode section path: named components, then any numeric ones — a numeric
+/// component may follow a named prefix, never the other way round (§FS-config.3.3.1).
+static NAMED_SECTION_PATTERN: Lazy<String> =
+    Lazy::new(|| format!(r"{NAMED_COMPONENT_PATTERN}(?:\.{NAMED_COMPONENT_PATTERN})*(?:\.\d+)*"));
+static NAMED_COMPONENT_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(&format!(r"\A{NAMED_COMPONENT_PATTERN}\z")).unwrap());
+
+/// Whether `part` is one `[a-z][a-z0-9-]*` section handle (§FS-config.3.3.1): the
+/// component grammar the section regexes compile, asked of one component. The
+/// handles `value_chapter` and the values fields name are held to it too
+/// (§FS-config.3.2.7, §FS-config.3.4.13), and so is a rule's chapter path (§FS-rules.2).
+pub(crate) fn named_section_component(part: &str) -> bool {
+    NAMED_COMPONENT_RE.is_match(part)
+}
+
+/// Whether a `.`-joined path is a named-mode section path (§FS-config.3.3.1): every
+/// component a handle or a number, and no handle after a number, so `2.values` stays
+/// reserved. What counts as a number is the caller's question — a value binding
+/// admits only positive ones (§FS-values.3.1) — so it is passed in.
+pub(crate) fn named_mode_section_path(path: &str, numeric: impl Fn(&str) -> bool) -> bool {
+    let mut seen_numeric = false;
+    path.split('.').all(|part| {
+        if numeric(part) {
+            seen_numeric = true;
+            true
+        } else {
+            !seen_numeric && named_section_component(part)
+        }
+    })
+}
 pub(crate) static STUB_LINK_HEADING: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^\s*:\s*\[[^\]]*\]\(\s*(?P<path>[^)\s]+)\s*\)\s*$").unwrap());
 /// The explicit managed-block delimiters (§FS-init.2.3.9,
@@ -45,9 +76,18 @@ pub(crate) static AGENTS_SECTION_BOUNDARY: Lazy<Regex> =
 /// Realizes §FS-config.3.1, §FS-config.3.2, §FS-config.3.3 and the regex-not-a-parser
 /// stance of §AR-scanner.5.
 /// The pattern one alias segment must match (§FS-workspace.1.1, §AR-workspace.2).
-/// One canonical place — also referenced by the config-load alias validator
-/// (`is_valid_project_alias` in `config/workspace_block.rs`).
+/// One canonical place — the config-load alias validator [`is_valid_project_alias`]
+/// is compiled from it.
 const PROJECT_ALIAS_PATTERN: &str = "[a-z][a-z0-9-]*";
+static PROJECT_ALIAS_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(&format!(r"\A{PROJECT_ALIAS_PATTERN}\z")).unwrap());
+
+/// §AR-workspace.5.3: the alias slug grammar, as one predicate — the same shape
+/// `PROJECT_ALIAS_PATTERN` compiles into the citation regexes, asked of a name
+/// rather than of a token (§FS-workspace.1.1).
+pub(crate) fn is_valid_project_alias(alias: &str) -> bool {
+    PROJECT_ALIAS_RE.is_match(alias)
+}
 /// The namespace a qualified citation carries: one alias segment per workspace
 /// level, so a project nested inside a member workspace is named by its whole
 /// chain (§FS-workspace.1.1, §FS-workspace.6.1). Greedy by construction and the
@@ -264,7 +304,7 @@ impl Grammar {
 
         let sep_quoted = regex::escape(section_separator);
         let section_pattern = if named_sections {
-            format!(r"(?:{NUMERIC_SECTION_PATTERN}|{NAMED_SECTION_PATTERN})")
+            format!(r"(?:{NUMERIC_SECTION_PATTERN}|{})", *NAMED_SECTION_PATTERN)
         } else {
             NUMERIC_SECTION_PATTERN.to_string()
         };
@@ -291,7 +331,10 @@ impl Grammar {
         // numeric headings retain optional full stops. Rust regexes lack lookahead, so
         // punctuation stays captured and `section_path` removes it (§AR-scanner.2.2).
         let section_heading = if named_sections {
-            format!(r"(?P<sec>(?:{NUMERIC_SECTION_PATTERN}\.?|{NAMED_SECTION_PATTERN}:))")
+            format!(
+                r"(?P<sec>(?:{NUMERIC_SECTION_PATTERN}\.?|{}:))",
+                *NAMED_SECTION_PATTERN
+            )
         } else {
             format!(r"(?P<sec>{NUMERIC_SECTION_PATTERN})\.?")
         };
