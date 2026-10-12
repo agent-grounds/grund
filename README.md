@@ -252,23 +252,23 @@ and a GitHub integration to start from.
 A number a spec declares can be checked wherever it is used. With `values = true` on a
 kind, a declaration's numbered headings are its components, and a backticked literal
 beside a citation must equal them
-([§FS-values](docs/functional-spec/FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)). From the [values example](examples/values/):
+([§FS-values](docs/functional-spec/FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)). From the [values example](examples/values/), a physics simulation's time step:
 
 ```markdown
-# CONST-field-price: Reference field price
-## 1. 1200
-## 2. USD
+# CONST-time-step: Integration time step
+## 1. 0.001
+## 2. s
 ```
 
 ```markdown
-The reference field price is `1200.0 USD` (§CONST-field-price).
+Each solver step advances time by `1.0e-3 s` (§CONST-time-step).
 ```
 
-A use that drifts from its declaration fails the check:
+A use that still quotes the step from before it was tuned fails the check:
 
 ```console
 $ grund check
-docs/offer.md:7: error: value mismatch for CONST-discount.1: bound `0.30`, declared `0.25` at values/runtime.json:2
+docs/solver.md:7: error: value mismatch for CONST-time-step.1: bound `0.002`, declared `0.001` at values/time-step.md:2
 ```
 
 The [values guide](docs/user-facing/values.md) covers JSON declarations, values inside

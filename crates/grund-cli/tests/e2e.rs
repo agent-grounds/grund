@@ -424,28 +424,25 @@ fn the_values_example_shows_what_it_is_the_example_of() {
     assert!(config.contains("values = true"), "{config}");
 
     // Both declaration forms: Markdown sections, and a home JSON catalog.
-    assert!(read("repo/values/field-price.md").contains("## 1. 1200"));
-    assert!(read("repo/values/runtime.json").contains("\"CONST-discount\""));
+    assert!(read("repo/values/time-step.md").contains("## 1. 0.001"));
+    assert!(read("repo/values/runtime.json").contains("\"CONST-damping\""));
 
     // Both binding forms, and the runtime that reads the same JSON. The prose
-    // binds the price as the one quantity it is, amount and unit together
+    // binds the time step as the one quantity it is, amount and unit together
     // (§FS-values.3.1.2); the Python comment binds one component.
-    let prose = read("repo/docs/offer.md");
+    let prose = read("repo/docs/solver.md");
     assert!(
-        prose.contains("`1200.0 USD` (\u{a7}CONST-field-price)"),
+        prose.contains("`1.0e-3 s` (\u{a7}CONST-time-step)"),
         "{prose}"
     );
     let code = read("repo/src/model.py");
-    assert!(
-        code.contains("`1.2e3` (\u{a7}CONST-field-price.1)"),
-        "{code}"
-    );
+    assert!(code.contains("`1e-3` (\u{a7}CONST-time-step.1)"), "{code}");
     assert!(code.contains("values/runtime.json"), "{code}");
 
     // The deliberate non-binding: an unbackticked literal beside a citation is
     // not a value claim, so the run below must not report it.
     assert!(
-        prose.contains("not bound: 1200 (\u{a7}CONST-field-price.1)"),
+        prose.contains("not bound: 0.001 (\u{a7}CONST-time-step.1)"),
         "{prose}"
     );
 
@@ -454,7 +451,7 @@ fn the_values_example_shows_what_it_is_the_example_of() {
     assert_eq!(read("expected.stderr"), "\n");
     assert_eq!(
         read("expected.stdout"),
-        "docs/offer.md:7: error: value mismatch for CONST-discount.1: \
-         bound `0.30`, declared `0.25` at values/runtime.json:2\n"
+        "docs/solver.md:7: error: value mismatch for CONST-time-step.1: \
+         bound `0.002`, declared `0.001` at values/time-step.md:2\n"
     );
 }
