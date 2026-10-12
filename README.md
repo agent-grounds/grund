@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/agent-grounds/grund/actions/workflows/ci.yml/badge.svg)](https://github.com/agent-grounds/grund/actions/workflows/ci.yml) [![crates.io](https://img.shields.io/crates/v/grund.svg)](https://crates.io/crates/grund) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **Keep your agents grounded** — specs, docs, and code as one knowledge graph, always in sync.
+> **Keep your agents grounded** — specs, docs, and code as one knowledge graph, checked on every commit.
 
 <!-- grund:fmt off -->
 <table>
