@@ -328,7 +328,7 @@ fn a_virtual_workspace_folder_is_skipped_not_fatal() {
 fn a_folder_whose_config_will_not_load_leaves_the_others_serving() {
     // One half-typed `grund.toml` used to abort the whole batch, so the folder
     // beside it lost every feature and the failure only reached stderr
-    // (§FS-lsp.2.2.4, §REQ-never-crashes).
+    // (§FS-lsp.2.2.4, §FS-lsp.requirements.degrades, §REQ-never-crashes).
     let root = std::env::temp_dir().join(format!("grund-lsp-broken-{}", std::process::id()));
     let _ = fs::remove_dir_all(&root);
     let good = root.join("good");

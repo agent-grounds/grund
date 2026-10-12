@@ -93,7 +93,10 @@ CITED = (
 # Bytes on main at 3613f4e9fd; every source the move takes text from ends below it.
 # FS-fmt.md grew past its move baseline by one point of fmt's own, not a restatement:
 # §FS-fmt.6.3.3 (grund#642).
-BASELINES = {"FS-show.md": 61180, "FS-fmt.md": 88600}
+
+# Each adds the bytes of the requirements chapter its spec gained since (#634: 5293
+# and 4925), so the room a restatement could grow back into is what it was.
+BASELINES = {"FS-show.md": 66473, "FS-fmt.md": 93525}
 
 
 def _flat(text):

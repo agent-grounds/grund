@@ -334,7 +334,7 @@ fn wezterm_wiring_note_reads_only_outside_the_block() {
 /// §DF-conversation-link-target.2.4 / §FS-integrations.4.3.3: an agent is
 /// instructed only in the form its renderer is verified to honor. The gate can
 /// hold a target where it was, never make one worse — every downgrade lands on
-/// `path`, the form that surface already had.
+/// `path`, the form that surface already had (§FS-integrations.requirements.never-worse).
 #[test]
 fn link_support_gates_unverified_targets_to_path() {
     for target in ConversationTarget::ALL {

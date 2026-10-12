@@ -2,7 +2,7 @@
 
 `grund fetch <ID>` deliberately asks the selected kind's configured integration for one
 complete Markdown declaration and stores it in that kind's configured home, and
-`grund fetch --remote <alias>` projects a declared remote repository
+`grund fetch --remote <alias>`, specified ahead of its release, projects a declared remote repository
 ([§FS-fetch.remote](FS-fetch.md#remote-remote-projections)). Together they are the only external-materialization surface; all later scanning and resolution use the saved
 declaration under [§REQ-runs-offline](../requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service).
 
@@ -97,7 +97,7 @@ failure and exits 1. Missing fetch configuration, integration failure, rejected 
 ambiguous existing content, and filesystem failure are CLI-level operational errors on
 stderr and exit 2, following [§FS-errors.2.2](FS-errors.md#22-cli-level-message).
 
-`fetch --remote` exits 0 once the projection and lock are installed, and prints the
+Once it ships, `fetch --remote` exits 0 when the projection and lock are installed, and prints the
 remote's own content findings, which never block the pin
 ([§FS-fetch.remote.findings](FS-fetch.md#remotefindings-refuse-only-what-this-grund-cannot-load)). A refused remote fetch exits 2 with the old projection and
 lock byte-identical. `--check` exits 0 when every selected pin is current, 1 on any
@@ -105,6 +105,8 @@ difference, a rewind included, and 2 when a ref cannot be obtained
 ([§FS-fetch.remote.check](FS-fetch.md#remotecheck---check-is-a-read-only-drift-signal)).
 
 ## remote: Remote projections
+
+This chapter is specified ahead of the releases that build it, as all of [§FS-remote-projects](FS-remote-projects.md#fs-remote-projects-a-project-cites-another-repositorys-declarations-from-a-committed-pinned-projection) is; until they land, `--remote` is refused as an unknown flag with exit 2.
 
 ### remote.selector: `--remote <alias>` projects one declared remote
 

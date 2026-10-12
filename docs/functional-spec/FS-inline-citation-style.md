@@ -16,6 +16,52 @@ severity), and [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (di
 - **leading comment** — A block with only blank lines or a shebang above it — how a language
   with no doc-comment syntax spells a module doc.
 
+## requirements: What the note budgets hold to
+
+Three requirements on the budgets, and the layout beside them, as a whole, each carrying a
+mark of [§FS-config.requirements](FS-config.md#requirements-what-the-config-contract-holds-to). Two properties are left out because a requirement already
+states them: that two installs measure a note alike, with no per-file, per-kind or
+per-editor reshaping of the measure, is [§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree) and [§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes); and
+that a default changes nothing a conformant tree sees is [§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree) and
+[§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered).
+
+### requirements.actionable: A budget finding is acted on as printed — realized, directional for the next budget
+
+A budget finding lands once per note, at its first line ([§FS-inline-citation-style.4](FS-inline-citation-style.md#4-enforcement-grund-check)), and
+once per cap the note breaks, so one pass shows every reason ([§FS-inline-citation-style.4.1](FS-inline-citation-style.md#41-errors--hard-caps)).
+It prints the measured size beside the cap ([§FS-inline-citation-style.4.1.1](FS-inline-citation-style.md#411-the-measured-size)), the note's
+lines and every citation in it ([§FS-inline-citation-style.4.1.2](FS-inline-citation-style.md#412-the-site-clause)), and, for a line count, the
+boundary a split has to cross ([§FS-inline-citation-style.4.1.3](FS-inline-citation-style.md#413-the-splitting-clause)); the soft-cap warning carries
+the same clauses ([§FS-inline-citation-style.4.2](FS-inline-citation-style.md#42-warnings--opt-in-soft-cap)). A layout deviation lands at the line to
+edit and names the shape to write ([§FS-inline-citation-style.4.4.1](FS-inline-citation-style.md#441-one-finding-per-nonconforming-line),
+[§FS-inline-citation-style.4.4.2](FS-inline-citation-style.md#442-one-message-at-both-severities)). Nothing has to be measured again or looked up to act on
+one. A budget added from here on is reported the same way. Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
+
+### requirements.shape-only: A note's size and layout never reach its citations — realized
+
+Whether a block is a note, how large it is and how it is laid out decide only what `check`
+measures and reports. Its citations resolve, count toward the grounding floor and the
+citation directions, and are linked by `fmt` as anywhere else ([§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites)),
+so a block recognized the wrong way changes what is measured and never what a citation means
+([§FS-inline-citation-style.1.1.3](FS-inline-citation-style.md#113-accepted-corners)). No command rewrites a note to fit
+([§FS-inline-citation-style.4.3](FS-inline-citation-style.md#43-grund-fmt), [§FS-inline-citation-style.6.1](FS-inline-citation-style.md#61-no-rewrite-in-grund-fmt)), and every command but
+`check` reads its citations whatever its measurements ([§FS-inline-citation-style.7.4](FS-inline-citation-style.md#74-other-commands)).
+Serves [§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess) and [§REQ-no-data-loss](../requirements/REQ-no-data-loss.md#req-no-data-loss-grund-never-eats-user-content).
+
+### requirements.agent-copy: The agent is told what the gate holds, as of the last render — realized, directional for the next check
+
+The copy in the managed block is rendered from the keys `check` reads
+([§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering)): the caps, the block a cap finding says to split
+([§FS-inline-citation-style.5.2](FS-inline-citation-style.md#52-the-block-sentence)), the layout where one is set ([§FS-inline-citation-style.5.3](FS-inline-citation-style.md#53-the-layout-sentence)),
+and where the gate stops ([§FS-inline-citation-style.5.4](FS-inline-citation-style.md#54-the-doc-comment-sentence)). It says what to write, never which
+channel a deviation reaches, so moving a layout check between `warn` and `error`, or setting
+`warn_on_suggested`, changes nothing the agent reads ([§FS-inline-citation-style.5.3.2](FS-inline-citation-style.md#532-the-same-at-every-check-setting)). It is
+a snapshot: once a key that decides what is judged is changed, it teaches the previous house
+style until `grund init` renders it again, which `grund init --check` reports as
+`would-update` and `check` does not ([§FS-inline-citation-style.5.5](FS-inline-citation-style.md#55-rendered-not-live), [§FS-init.1](FS-init.md#1-inputs)). A check
+added to the note gate from here on adds its sentence in the same change, and a key that only
+picks a channel adds none. Serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work).
+
 ## 1. Scope
 
 A **note** is an *inline comment* block — a maximal run of adjacent comment/docstring lines, by the scanner's existing line classes ([AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)) — that contains at least one citation token recognized by [§FS-check.1.1](FS-check.md#11-recognized-citations). A note never spans more than one block: a code line, a blank line, or a different comment style ends a block, and an empty comment line does not ([§FS-inline-citation-style.1.2](FS-inline-citation-style.md#12-comment-blocks)). A **doc-comment** block is not one, whatever it carries: [§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites) draws that line and every rule below stops at it. What this spec does not govern is listed in [§FS-inline-citation-style.1.3](FS-inline-citation-style.md#13-what-is-not-a-site), and what inside a note counts as its *note text* is defined in [§FS-inline-citation-style.1.4](FS-inline-citation-style.md#14-notes).

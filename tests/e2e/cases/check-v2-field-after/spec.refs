@@ -3,3 +3,4 @@ FS-fields.order.absent
 FS-fields.order.nearest
 FS-fields.checks.misplaced-field
 FS-fields.checks.missing-field
+FS-fields.requirements.one-finding

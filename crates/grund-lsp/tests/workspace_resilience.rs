@@ -171,6 +171,7 @@ fn a_scanned_sibling_does_not_give_another_project_ownership() {
 
 #[test]
 fn two_external_scan_claims_are_rejected_as_ambiguous() {
+    // §FS-lsp.requirements.no-guess: a file two scans claim is nobody's.
     let base =
         std::env::temp_dir().join(format!("grund-lsp-ambiguous-owner-{}", std::process::id()));
     let _ = fs::remove_dir_all(&base);

@@ -18,6 +18,54 @@ Leans on [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding) and
 - **accepted selector** — A selector offered after a refusal, which `list --selector` does not
   refuse when it is pasted back.
 
+## requirements: What every refusal holds to
+
+Two requirements on refusals as a whole, each carrying a mark of
+[§FS-config.requirements](FS-config.md#requirements-what-the-config-contract-holds-to). Four more are left out because they are stated
+elsewhere: *an offered sentence stays accepted as the language grows* is
+[§FS-rules.requirements.addition](FS-rules.md#requirementsaddition-the-language-grows-by-addition--directional); *a sentence that needs a phase-1 absence is
+refused rather than half-parsed* is [§FS-rules.requirements.phase-one](FS-rules.md#requirementsphase-one-what-phase-1-leaves-out-is-owed-to-its-own-change--deferred); *a
+reason's wording moves only through a window that keeps the old text as a
+prefix*, as stage 2's wildcard reason does ([§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails)),
+is [§FS-errors.requirements.prefix-windows](FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes--realized-directional-for-the-next-change); and *a rule and a selector refused
+for one subject give one reason* is [§REQ-one-answer](../requirements/REQ-one-answer.md#req-one-answer-every-command-gives-the-same-answer-about-one-tree), save the case its
+differences list ([§REQ-one-answer.differences.identity](../requirements/REQ-one-answer.md#differencesidentity-identity)).
+
+### requirements.typed: An offer is built from what was typed and what is configured, and nothing else — realized
+
+On every surface that offers one — `check --rule`, a rule declaration's
+`invalid-rule` finding and `list --selector` — the offer is the input as typed
+with only the failed production rewritten ([§FS-rule-refusals.sentences.rewrite.replaced](FS-rule-refusals.md#sentencesrewritereplaced-only-the-failed-part-is-replaced),
+[§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)). It draws on the typed text and the configured kinds
+alone, never on the scan, so no chapter name is invented and no object kind
+guessed ([§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied)), and it is parsed again
+and offered only once it is accepted ([§FS-rule-refusals.sentences.rewrite.reparsed](FS-rule-refusals.md#sentencesrewritereparsed-a-form-is-parsed-before-it-is-offered)),
+its label saying when the configuration has to change first
+([§FS-rule-refusals.sentences.named-sections](FS-rule-refusals.md#sentencesnamed-sections-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid)). Where that is not enough, nothing
+is offered: the reason stands alone, followed on `check --rule` and
+`list --selector` by the configured kinds where the missing piece is a kind
+([§FS-rule-refusals.sentences.rewrite.no-form](FS-rule-refusals.md#sentencesrewriteno-form-where-no-form-is-offered), [§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)); and
+an ambiguity names every candidate and chooses none ([§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals)).
+So an offer never names a kind, a chapter or a declaration that neither the
+author nor the repository supplied, and pasting it back is not refused. Serves
+[§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work), whose agent acts on the offer as printed.
+
+### requirements.next-refusal: A refusal added from here on joins every table that enumerates them — directional
+
+The refusals are enumerated rather than open-ended: the stage order a sentence
+is refused in ([§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails)), the rewrite each makes and
+when it offers none ([§FS-rule-refusals.sentences.rewrite.by-refusal](FS-rule-refusals.md#sentencesrewriteby-refusal-the-rewrite-each-refusal-makes)), and the
+refusals a selector answers with the true failure in place of a grammar
+mismatch ([§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)) each list them. A refusal added from here
+on joins each in the change that adds it, rather than leaning on *every* to
+reach it: it takes a stage, so a sentence that also fails a later stage is still
+refused for the first; it takes a row naming what its form replaces, or that it
+offers none and whether `known kinds:` follows, so
+[§FS-rule-refusals.requirements.typed](FS-rule-refusals.md#requirementstyped-an-offer-is-built-from-what-was-typed-and-what-is-configured-and-nothing-else--realized) reaches it; and where its reason is true of
+a selector, `list --selector` gives the same reason. This binds refusals added
+from here on; it is not a claim about those written today. Serves
+[§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work).
+
 ## sentences: Strict refusals
 
 No paraphrase or unlisted production is accepted. A refusal, printed in the

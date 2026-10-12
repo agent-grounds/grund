@@ -2,3 +2,5 @@ FS-check.3.8
 FS-workspace.6.1
 FS-workspace.5
 FS-scan.projects.narrowed
+FS-check.requirements.narrow-never-lenient
+FS-workspace.requirements.narrower-run

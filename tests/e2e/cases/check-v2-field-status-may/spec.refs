@@ -4,3 +4,4 @@ FS-fields.checks.invalid-field-value
 FS-fields.checks.missing-field
 FS-config-v2.rules.strengths
 FS-fields.strengths.may
+FS-fields.requirements.satisfiable

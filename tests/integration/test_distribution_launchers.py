@@ -186,7 +186,8 @@ class TransparencyTests(LauncherFixture):
 
 
 class RefusalTests(LauncherFixture):
-    """§FS-distribution-candidate.3.3 — no payload, no substitute."""
+    """§FS-distribution-candidate.3.3, §FS-distribution.requirements.own-payload —
+    no payload, no substitute."""
 
     def test_a_missing_platform_package_is_refused(self):
         shutil.rmtree(self.modules / "@grund-cli" / self.row["npm_suffix"])

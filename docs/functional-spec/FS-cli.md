@@ -8,6 +8,39 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, workspace), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity, verdict), and
 [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (snapshot).
 
+## requirements: What every invocation holds to
+
+Two requirements on the command-line surface as a whole, each carrying a mark of
+[§FS-config.requirements](FS-config.md#requirements-what-the-config-contract-holds-to). Three properties are left out because a goal or requirement already
+states them: that the exit-code mapping is fixed is [§GOAL-friendliness-first.2](../goals.md#2-what-this-rules-out), which
+[§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed) freezes by name; that the surface changes only through a named window is
+[§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) and [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path); and that every address a help
+page prints resolves where it lands is [§REQ-shipped-surfaces.1](../requirements/REQ-shipped-surfaces.md#1-no-shipped-or-printed-byte-names-a-declaration-of-this-repository).
+
+### requirements.before-load: A usage mistake is answered before the tree is read — realized, directional for the next flag
+
+What the arguments alone can refuse is refused before config discovery, before any
+`grund.toml` is read and before any scan: an unsupported run-flag value ([§FS-cli.3.5](FS-cli.md#35-a-bad-run-flag-is-answered-before-the-load)), a
+flag placed before its subcommand ([§FS-cli.4.1](FS-cli.md#41-a-flag-placed-before-the-subcommand)), an unknown or malformed flag, a missing
+value, a conflicting pair, a second path ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location), [§FS-cli.3.2](FS-cli.md#32-at-most-one-path)), and a bad `check`
+selector ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)); `--version` and `--help` are answered before it as well ([§FS-cli.2](FS-cli.md#2-global-flags)).
+So a mistake on the command line is reported as itself whatever tree it points at, and a
+broken `grund.toml` never hides it. A flag added from here on is validated,
+as far as its own spelling decides, before the load. Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
+
+### requirements.as-written: An invocation runs as written or is refused — realized, directional for the next subcommand
+
+No invocation is quietly narrowed or read as another. A second path is refused, never
+dropped ([§FS-cli.3.2](FS-cli.md#32-at-most-one-path)); a flag before a known subcommand is refused, never read as a query for
+an ID spelled like the subcommand ([§FS-cli.4.1](FS-cli.md#41-a-flag-placed-before-the-subcommand)); a flag the command does not take is an
+error ([§FS-cli.3](FS-cli.md#3-cross-subcommand-flags)); bare `grund` is an error, never a help page at exit `0` ([§FS-cli.1.1](FS-cli.md#11-why-these-defaults));
+and a first word that is neither a subcommand nor an ID fails as the query it was read as,
+with a hint toward the subcommand it may have meant ([§FS-cli.1.2](FS-cli.md#12-a-first-word-that-is-not-an-id)). Where one word has two
+readings, the order that picks is written down: help dispatch before the ID query
+([§FS-cli.1.3](FS-cli.md#13-a-help-request-with-an-unknown-first-word)), and `--version` above everything ([§FS-cli.2](FS-cli.md#2-global-flags)). A subcommand or flag added from
+here on keeps this: a word it makes ambiguous is refused or given a written precedence,
+never resolved by a guess. Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
+
 ## 1. The default subcommand
 
 - `grund` with no arguments is a CLI-level error ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)): the fallback that ran `grund check .` was removed in grund 0.16.0, and the message names the explicit forms to write instead.
