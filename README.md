@@ -80,11 +80,20 @@ agent reads a citation:
 > - `grund <ID> --toc` — the lead plus the nested section map. Use to choose which subsection to fetch next.
 > - `grund <ID> --full` — the entire body. Escalate to this when narrower reads aren't enough.
 
+Where each kind lives in this repository:
+
+> - [GRUND](docs/grund.md): Why: project motivation
+> - [GOAL](docs/goals.md): Where: project direction and outcomes
+> - [FS](docs/functional-spec): What: behavior, requirements, and constraints
+> - [REQ](docs/requirements): Hard requirements: what grund must never break
+> - [AR](docs/architecture): How: high-level implementation, structure, and design
+> - …
+
 How it writes:
 
-> - **Spec first.** For behavior or design changes, write or update the most-specific spec point before code.
 > - **Cite as you write.** Place `§<ID>` at the point a claim or behavior is made — on the doc-comment for a whole behavior, inline beside the clause it enforces.
 > - …
+> - **Inline citation style.** Inline notes: ≤ 1 line preferred, hard cap 3 lines; ≤ 100 columns. A note is one comment block: a blank line splits it, an empty comment line does not. Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell or SQL comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there.
 > - **Always cite the most-specific point.**
 
 And the table's rules, as it reads them:
@@ -115,37 +124,6 @@ before running `grund init`; use `--docs` only when you want scaffolds.
 [Installation](docs/user-facing/installation.md) covers prebuilt binaries, supported
 platforms, the Python and Node APIs, and local candidate builds.
 
-## What an agent reads
-
-Step 3 above retrieves just the cited requirement. For a larger specification,
-an agent can choose how much to read. These rounded word
-counts are measured on Grund's own `FS-check` specification:
-
-| An agent runs | and reads |
-|---|---|
-| `grund FS-check` | the lead — **~30 words** |
-| `grund FS-check.3.2` | one section — **~140 words** |
-| `grund FS-check --toc` | the lead and a map of ~250 sections — **~1,800 words** |
-| `grund FS-check --full` | the whole specification — **~32,000 words** |
-
-One rule in an agent's instructions keeps that loop: *when you see `§<ID>`, run
-`grund <ID>` and treat what it prints as the authoritative definition.* Every agent
-fetches the same bytes for the same ID. [Querying grund](docs/user-facing/querying.md)
-has the recipes past this ladder; [coordinate sizes](docs/user-facing/coordinate-sizes.md)
-shows how to find and split a lead that grew too heavy.
-
-- **Structure:** define your kinds of fact, their homes and their IDs in `grund.toml`; retrieve one section at a time ([§GRUND-schema](docs/grund.md#grund-schema-the-shape-of-a-projects-knowledge-is-hard-to-define-and-to-keep)).
-- **Checks:** catch broken citations and violations of your declared rules in pre-commit and CI ([§GRUND-links](docs/grund.md#grund-links-the-cross-linking-rules-are-hard-to-define-and-to-hold)).
-
-**A valid citation does not prove the code implements the requirement.** Returning
-`username` unchanged would still pass `grund check`; tests and review verify behavior.
-It does let an agent verify that quickly and cheaply — the requirement is one lookup
-away from the code — and keep the repository consistent as both change.
-[Lychee](https://lychee.cli.rs/) checks ordinary links; both belong in CI
-([§GRUND-links.2](docs/grund.md#2-holding-every-edit-to-them)). The
-[requirements-traceability comparison](docs/related-work/REL-traceability-tools.md#workmatrix-reader-tasks)
-sets `grund` beside the tools it descends from.
-
 ## Go deeper
 
 | Guide | For |
@@ -160,6 +138,7 @@ sets `grund` beside the tools it descends from.
 | [Workspaces](docs/user-facing/repository-options.md#workspaces-and-sub-projects) | citations across sub-projects |
 | [Clickable citations](docs/user-facing/clickable-citations.md) | `grund integrations` for your terminal and editor |
 | [Editor support](docs/user-facing/lsp.md) | `grund-lsp`: completion, hover, diagnostics, `$$` → `§` |
+| [Related work](docs/related-work/REL-traceability-tools.md) | `grund` beside the requirements-traceability tools it descends from |
 | [All guides](docs/user-facing/README.md) | each beside its runnable example |
 
 `grund --help` is one screen; `grund <command> --help` is one page with flags, examples,
