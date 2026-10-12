@@ -215,8 +215,7 @@ reached the stub's verdict, and kept the target's records of the ID on the stub
 `paired_declarations` ([§FS-declarations.stubs.verdict](../functional-spec/FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)), so `show` slices its body out of the record `check` resolves its
 sections against, and the two count one section set ([§FS-show.2.2.2.2](../functional-spec/FS-show.md#2222-the-headings-check-counts)).
 
-`section_home` in `resolver/citation_target.rs` is the one test, and
-`section_resolves` asks it as a yes or no. Every reader in `check` asks it: the
+`section_resolves` in `resolver/citation_target.rs` is the one test. Every reader in `check` asks it: the
 missing-section finding ([§AR-checker.2.4](../../crates/grund-core/src/checker/report.rs)), the `grund fmt --write` clause that
 finding carries ([§FS-check.3.24.1](../functional-spec/FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)), the escape a local section citation offers in
 place of a full citation of a section its owner lacks ([§FS-check.3.24.3](../functional-spec/FS-check.md#3243-an-absent-target-section-is-answered-with-the-escape)), the bare
@@ -225,11 +224,10 @@ index entry the index rule admits ([§FS-check.3.17.4](../functional-spec/FS-che
 Where no recorded declaration holds the path, it answers from the ID's one
 declaration where a stub stands for it: the target's record of it. A broken stub
 pairs with no record and gains no section, and an ID with more than one declaration
-lends none, as `show` refuses it ([§FS-show.2.3.7](../functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id), [§FS-show.2.2.1](../functional-spec/FS-show.md#221-ambiguous-id)). Where the section was
-found in such a record, the rule adapter mints that declaration's chapters as nodes,
-from the record the lookup returned, so the fact's target is the chapter the citation names,
-as on the scanned tree. They carry no `chapter` fact, so no subject or count of
-chapters reaches them ([§FS-check.3.2.1](../functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not), [§AR-rules.3](AR-rules.md#3-rulefacts)).
+lends none, as `show` refuses it ([§FS-show.2.3.7](../functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id), [§FS-show.2.2.1](../functional-spec/FS-show.md#221-ambiguous-id)). The rule adapter mints every declaration's chapters as nodes from the record it is
+paired with, the target's in place of the stub, so the fact's target is the chapter the
+citation names, as on the scanned tree, and those chapters are a rule's subjects and are
+counted ([§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged), [§AR-rules.3](AR-rules.md#3-rulefacts)).
 
 The other readers take the same declarations. A value binding compares against the
 record of its ID's one declaration, the target's in place of the stub, so a mismatch

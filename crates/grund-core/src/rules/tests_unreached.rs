@@ -27,6 +27,7 @@ fn node(label: &str, path: &str) -> (NodeKey, NodeMeta) {
         NodeMeta {
             label: label.into(),
             anchor: anchor(path, 1),
+            lent: false,
         },
     )
 }
@@ -70,6 +71,7 @@ fn facts() -> RuleFacts {
                 NodeMeta {
                     label: "FS-good.requirements".into(),
                     anchor: anchor("docs/fs/FS-good.md", 3),
+                    lent: false,
                 },
             ),
         ]),
@@ -96,6 +98,7 @@ fn facts_with_displayed_chapter() -> RuleFacts {
         NodeMeta {
             label: "FS-displayed.requirements".into(),
             anchor: anchor("docs/fs/FS-displayed.md", 5),
+            lent: false,
         },
     );
     facts

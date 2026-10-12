@@ -324,7 +324,13 @@ pub struct InlineCitationSite {
 #[derive(Default)]
 pub struct Catalog {
     pub declarations: BTreeMap<Id, Vec<Declaration>>,
+    /// The citations the walk found. A hygiene check reads these alone; a reader
+    /// that asks what a declaration cites, or who cites an ID, reads [`Catalog::edges`].
     pub citations: Vec<Citation>,
+    /// The citations a stub's target outside the walk lends the declaration the stub
+    /// pairs with, once per target and each resolved (§FS-declarations.stubs.target.5,
+    /// §AR-scanner.4.6). Never in `citations`, so no hygiene check sees the target.
+    pub(crate) lent_citations: Vec<Citation>,
     /// Numeric and enabled named section headings that the line scan attached
     /// to a stale declaration context, then the body-span post-pass proved the
     /// declaration does not own (§FS-declarations.checks.section-outside-declaration).
@@ -391,6 +397,22 @@ pub struct Catalog {
     /// The section lock files under the config root, read beside the walk and
     /// never as a source (§FS-section-lock.file.shard).
     pub(crate) section_locks: Vec<SectionLockFile>,
+}
+
+impl Catalog {
+    /// Every citation that is an edge of the graph: the walk's, then those a stub's
+    /// target lends (§FS-declarations.stubs.target.5, §AR-scanner.4.6). `refs`, the
+    /// counts, `unused`, the rules and the `[citations]` directions read these.
+    pub(crate) fn edges(&self) -> impl Iterator<Item = &Citation> + '_ {
+        self.marked_edges().map(|(citation, _)| citation)
+    }
+
+    /// The same edges, each marked whether a stub's target lends it, which the
+    /// §FS-rules.7.11 window reads.
+    pub(crate) fn marked_edges(&self) -> impl Iterator<Item = (&Citation, bool)> + '_ {
+        let walked = self.citations.iter().map(|citation| (citation, false));
+        walked.chain(self.lent_citations.iter().map(|citation| (citation, true)))
+    }
 }
 
 /// ID-query slice mode (§FS-show.1.6): each rung adds to the previous one —

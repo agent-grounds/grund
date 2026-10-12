@@ -44,6 +44,7 @@ fn facts() -> RuleFacts {
             NodeMeta {
                 label: "FS-demo".into(),
                 anchor: anchor("docs/fs.md", 2),
+                lent: false,
             },
         )]),
         sites: BTreeMap::new(),

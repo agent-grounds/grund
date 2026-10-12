@@ -164,7 +164,8 @@ pub(super) fn refs_impl_with_details(
     let mut hits = Vec::new();
     for project in &context.projects {
         let is_target = project.alias == target_alias;
-        for citation in &project.findings.citations {
+        // §FS-refs.2: the set holds what a stub's target lends, resolved.
+        for citation in project.findings.edges() {
             let local_match = citation.namespace.is_none() && is_target;
             let qualified_match = citation
                 .namespace

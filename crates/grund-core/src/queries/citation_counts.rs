@@ -36,7 +36,8 @@ impl<'a> ListCitationCounts<'a> {
         };
         for source in &context.projects {
             let index_entries = kind_index_entries(source);
-            for citation in &source.findings.citations {
+            // §FS-refs.2: `list` counts the set `refs` lists, lent citations included.
+            for citation in source.findings.edges() {
                 let target_alias: &str = match &citation.namespace {
                     Some(ns) => ns.as_str(),
                     None => source.alias.as_str(),

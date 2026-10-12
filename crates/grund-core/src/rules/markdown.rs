@@ -4,9 +4,9 @@
 use super::RuleAnchor;
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
 use crate::grammar::{Grammar, render_id, section_display_name};
-use crate::model::{Catalog, Declaration, Id, paired_declarations};
-use crate::resolver::{SectionHome, section_home};
-use std::collections::{BTreeMap, BTreeSet};
+use crate::model::{Catalog, Id, paired_declarations};
+use crate::resolver::section_resolves;
+use std::collections::BTreeMap;
 
 /// What the adapter reads of one project, and nothing more: the rules
 /// component holds no configuration façade (§AR-config.5, §AR-rules.3). The
@@ -41,7 +41,9 @@ pub(crate) fn adapt_markdown(
 /// same engine handles local, pinned, and any-member object selectors without
 /// learning resolver records (§FS-rules.2, §AR-rules.3). An ID's declarations, its
 /// nodes, the edges into it and the sections a citation of it reaches are read off
-/// each stub's verdict (§AR-scanner.4.6).
+/// each stub's verdict (§AR-scanner.4.6), and a declaration's chapters and
+/// citations off the record it is paired with, so a stub's target outside the walk
+/// lends both, each marked for §FS-rules.7.11 (§FS-declarations.stubs.target.5).
 pub(crate) fn adapt_workspace(
     selected: &str,
     projects: &[(&str, &Catalog, MarkdownProject<'_>)],
@@ -68,8 +70,6 @@ pub(crate) fn adapt_workspace(
     };
     let mut declarations: BTreeMap<(String, Id), NodeKey> = BTreeMap::new();
     let mut chapters: BTreeMap<(String, Id, String), NodeKey> = BTreeMap::new();
-    // The IDs whose home outside the walk a citation resolved into, its chapters minted.
-    let mut minted_homes: BTreeSet<(String, Id)> = BTreeSet::new();
 
     for (alias, findings, project) in projects {
         let local = *alias == selected;
@@ -106,42 +106,58 @@ pub(crate) fn adapt_workspace(
                             line: home.line,
                             column: None,
                         },
+                        lent: false,
                     },
                 );
-                for (section, info) in &home.sections {
-                    if !is_rule_unit(section) {
-                        continue;
-                    }
-                    let chapter = NodeKey(format!(
-                        "{selected}:markdown:{alias}:chapter:{bare_label}:{section}:{ordinal}"
-                    ));
-                    chapters.insert(
-                        (alias.to_string(), id.clone(), section.clone()),
-                        chapter.clone(),
-                    );
-                    facts.chapter.push((
-                        chapter.clone(),
-                        section.clone(),
-                        section_display_name(&info.title, section, info.relative).into_owned(),
-                    ));
-                    facts.nodes.insert(
-                        chapter,
-                        NodeMeta {
-                            label: format!("{label}{}{section}", project.section_separator),
-                            anchor: RuleAnchor {
-                                path: home.file.to_string_lossy().into_owned(),
-                                line: info.line,
-                                column: None,
+                // §FS-declarations.stubs.target.5: the chapters are the paired record's, a
+                // target's outside the walk lent and marked for §FS-rules.7.11.
+                let records = paired
+                    .iter()
+                    .filter(|paired| std::ptr::eq(paired.stand_in, home));
+                for (nth, record) in records.enumerate() {
+                    let lent = !std::ptr::eq(record.record, home);
+                    // A target declaring the ID twice lends each record's own chapters.
+                    let ordinal = match nth {
+                        0 => ordinal.to_string(),
+                        nth => format!("{ordinal}.{nth}"),
+                    };
+                    for (section, info) in &record.record.sections {
+                        if !is_rule_unit(section) {
+                            continue;
+                        }
+                        let chapter = NodeKey(format!(
+                            "{selected}:markdown:{alias}:chapter:{bare_label}:{section}:{ordinal}"
+                        ));
+                        chapters.insert(
+                            (alias.to_string(), id.clone(), section.clone()),
+                            chapter.clone(),
+                        );
+                        facts.chapter.push((
+                            chapter.clone(),
+                            section.clone(),
+                            section_display_name(&info.title, section, info.relative).into_owned(),
+                        ));
+                        facts.nodes.insert(
+                            chapter,
+                            NodeMeta {
+                                label: format!("{label}{}{section}", project.section_separator),
+                                anchor: RuleAnchor {
+                                    path: record.record.file.to_string_lossy().into_owned(),
+                                    line: info.line,
+                                    column: None,
+                                },
+                                lent,
                             },
-                        },
-                    );
+                        );
+                    }
                 }
             }
         }
     }
 
     for (alias, findings, _) in projects {
-        for (ordinal, citation) in findings.citations.iter().enumerate() {
+        // §FS-declarations.stubs.target.5: a stub's target lends its citations as edges.
+        for (ordinal, (citation, lent)) in findings.marked_edges().enumerate() {
             let Some(source_id) = citation.enclosing_declaration.as_ref() else {
                 continue;
             };
@@ -152,7 +168,7 @@ pub(crate) fn adapt_workspace(
                 continue;
             };
             let target_alias = citation.namespace.as_deref().unwrap_or(alias);
-            let Some((_, target_findings, target_project)) = projects
+            let Some((_, target_findings, _)) = projects
                 .iter()
                 .find(|(candidate, _, _)| *candidate == target_alias)
             else {
@@ -179,20 +195,8 @@ pub(crate) fn adapt_workspace(
             // finds it, a stub's in its target, scanned or not (§AR-scanner.4.6).
             let (target, newly_counted) = match citation.section.as_ref() {
                 Some(section) => {
-                    let Some(home) = section_home(target_findings, &citation.id, section) else {
+                    if !section_resolves(target_findings, &citation.id, section) {
                         continue;
-                    };
-                    // §AR-scanner.4.6: mint from the record the verdict holds.
-                    if let SectionHome::Unscanned(home) = home
-                        && minted_homes.insert((target_alias.to_string(), citation.id.clone()))
-                    {
-                        mint_home_chapters(
-                            &mut facts,
-                            &mut chapters,
-                            (target_alias, &citation.id, &target_declaration),
-                            home,
-                            target_project.section_separator,
-                        );
                     }
                     (
                         nearest_chapter(&chapters, target_alias, &citation.id, section)
@@ -235,14 +239,14 @@ pub(crate) fn adapt_workspace(
                         column: Some(citation.column),
                     },
                     newly_counted,
+                    lent,
                 },
             );
         }
     }
 
     // The relation is the chapter tree, not a flattened declaration-to-section
-    // index. This keeps direct-chapter counts direct (§FS-rules.5.1). It is drawn
-    // last, so it reaches the chapters a citation minted.
+    // index. This keeps direct-chapter counts direct (§FS-rules.5.1).
     for ((alias, id, path), chapter) in &chapters {
         let parent = path
             .rsplit_once('.')
@@ -255,44 +259,6 @@ pub(crate) fn adapt_workspace(
     }
 
     facts
-}
-
-/// The rule units of `home`, the declaration of `id` a stub stands for in a target
-/// the walk did not reach, as nodes under that stub's declaration node `owner`.
-/// The home answers a citation into it and nothing else (§FS-check.3.2.1): the
-/// citation counts for the chapter it names, as on the scanned tree, and with no
-/// `chapter` row no subject or count of chapters reaches the node (§AR-rules.3).
-/// A stub encloses no citation, so minting them part-way through the citations
-/// moves no source side already drawn.
-fn mint_home_chapters(
-    facts: &mut RuleFacts,
-    chapters: &mut BTreeMap<(String, Id, String), NodeKey>,
-    (alias, id, owner): (&str, &Id, &NodeKey),
-    home: &Declaration,
-    separator: &str,
-) {
-    let label = facts.nodes[owner].label.clone();
-    for (section, info) in &home.sections {
-        if !is_rule_unit(section) {
-            continue;
-        }
-        let chapter = NodeKey(format!("{}:home:{section}", owner.0));
-        chapters.insert(
-            (alias.to_string(), id.clone(), section.clone()),
-            chapter.clone(),
-        );
-        facts.nodes.insert(
-            chapter,
-            NodeMeta {
-                label: format!("{label}{separator}{section}"),
-                anchor: RuleAnchor {
-                    path: home.file.to_string_lossy().into_owned(),
-                    line: info.line,
-                    column: None,
-                },
-            },
-        );
-    }
 }
 
 /// A section with an all-digit component is no rule unit (§FS-rules.2).

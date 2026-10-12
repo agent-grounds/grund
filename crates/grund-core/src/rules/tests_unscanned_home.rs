@@ -1,8 +1,9 @@
-//! A stub's home outside the walk answers a citation into it and nothing else
-//! (§FS-check.3.2.1): a citation of one of its chapters counts for that chapter,
-//! as on the scanned tree (§FS-rules.5.1), through a node no subject or count of
-//! chapters reaches (§AR-rules.3), and rules read the home out of the scan's one
-//! reading of the stub's target (§AR-scanner.4.6), never a reading of their own.
+//! A stub's home outside the walk lends the stubbed declaration its chapters
+//! (§FS-declarations.stubs.target.5): a citation of one of them counts for that
+//! chapter, as on the scanned tree (§FS-rules.5.1), each is a node with a chapter
+//! row, cited or not, marked lent for §FS-rules.7.11 (§AR-rules.3), and rules read
+//! the home out of the scan's one reading of the stub's target (§AR-scanner.4.6),
+//! never a reading of their own.
 
 use super::facts::{NodeKey, RuleFacts};
 use super::markdown::adapt_markdown;
@@ -68,7 +69,7 @@ fn cited_by_uses(facts: &RuleFacts) -> Vec<String> {
 }
 
 #[test]
-fn a_bare_citation_mints_no_chapter_node() {
+fn an_uncited_chapter_of_an_unscanned_home_is_still_lent() {
     let (config, findings) = stub_repo("rules_unscanned_home_bare", "\u{a7}AR-second");
     let facts = adapt_markdown(
         &findings,
@@ -83,13 +84,13 @@ fn a_bare_citation_mints_no_chapter_node() {
         facts
             .nodes
             .values()
-            .all(|meta| meta.label != "AR-second.goals"),
-        "a home no citation asks into mints no node"
+            .any(|meta| meta.label == "AR-second.goals" && meta.lent),
+        "§FS-declarations.stubs.target.5: a chapter is lent, cited or not"
     );
 }
 
 #[test]
-fn a_chapter_of_an_unscanned_home_is_a_node_without_a_chapter_row() {
+fn a_chapter_of_an_unscanned_home_is_a_lent_chapter() {
     let uses = "\u{a7}AR-second.goals and \u{a7}AR-second.goals.1";
     let (config, findings) = stub_repo("rules_unscanned_home_chapter", uses);
     let facts = adapt_markdown(
@@ -124,8 +125,12 @@ fn a_chapter_of_an_unscanned_home_is_a_node_without_a_chapter_row() {
         "contained by the stub's declaration, so its kind and owner resolve"
     );
     assert!(
-        facts.chapter.iter().all(|(node, _, _)| *node != goals.0),
-        "§FS-check.3.2.1: no chapter row, so no subject or count of chapters reaches it"
+        facts.chapter.iter().any(|(node, _, _)| *node == goals.0),
+        "§FS-declarations.stubs.target.5: a chapter row, so subjects and counts reach it"
+    );
+    assert!(
+        facts.nodes[&goals.0].lent,
+        "§FS-rules.7.11: marked, so what it newly raises warns"
     );
 }
 

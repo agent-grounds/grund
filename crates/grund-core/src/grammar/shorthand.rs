@@ -258,15 +258,30 @@ pub(crate) fn resolve_shorthand_citations(grammar: &Grammar, findings: &mut Cata
     // resolve here — a qualified one is resolved against its own namespace by
     // the resolver's cross-namespace pass.
     let declared: Vec<Id> = findings.declarations.keys().cloned().collect();
-    let index = ShorthandIndex::build(grammar, declared.iter());
     // §FS-check.2.3.1: an escape earns its "this resolves — did you mean it to be
     // live?" suggestion only by carrying an `Id` that is actually declared, and a
     // shorthand's `Id` never is until it is rewritten here.
-    for cite in findings
-        .citations
-        .iter_mut()
-        .chain(findings.escaped_citations.iter_mut())
-    {
+    resolve_shorthands(
+        grammar,
+        &declared,
+        findings
+            .citations
+            .iter_mut()
+            .chain(findings.escaped_citations.iter_mut()),
+    );
+}
+
+/// Rewrite each local shorthand among `citations` to the one ID of `declared` it
+/// names, leaving zero or several matches unresolved (§AR-scanner.2.6.6). The
+/// walk's citations and those a stub's target lends resolve here alike
+/// (§FS-declarations.stubs.target.5).
+pub(crate) fn resolve_shorthands<'a>(
+    grammar: &Grammar,
+    declared: &[Id],
+    citations: impl Iterator<Item = &'a mut Citation>,
+) {
+    let index = ShorthandIndex::build(grammar, declared.iter());
+    for cite in citations {
         if !cite.shorthand || cite.namespace.is_some() || cite.id.slug.is_some() {
             continue;
         }

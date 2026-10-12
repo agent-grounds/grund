@@ -197,8 +197,7 @@ impl Owner {
                         config,
                         owner
                             .findings
-                            .citations
-                            .iter()
+                            .edges()
                             .filter(|cite| cite.namespace.is_none() && &cite.id == id)
                             .filter(|cite| !use_only || !index_entries.is_index_entry(cite))
                             .map(|cite| ((), &cite.file, cite.line)),

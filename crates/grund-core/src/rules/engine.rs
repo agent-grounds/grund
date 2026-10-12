@@ -1,6 +1,7 @@
 //! Relational chapter-rule evaluation (§FS-rules.5–7, §AR-rules.4–5).
 
 mod authority;
+mod cites;
 mod index;
 mod precedence;
 mod ramp;
@@ -11,17 +12,17 @@ mod unreached;
 use super::facts::{Completeness, NodeKey, RuleFacts, SiteKey};
 use super::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
-    TargetMode,
 };
 use crate::model::{CITATION_DIRECTION_REPAIR, Diagnostic};
 use std::collections::{BTreeMap, BTreeSet};
 
 use authority::Authority;
 pub(crate) use authority::one_rules_authority;
+use cites::evaluate_cites;
 use index::FactIndex;
 pub(crate) use precedence::citation_precedence;
-pub(crate) use ramp::route_stubbed_rules;
-use ramp::{Windows, matched_before, newly_counted, nodes_matched_before, route};
+pub(crate) use ramp::{LENT_CLAUSE, route_stubbed_rules};
+use ramp::{Marks, Windows, matched_before, node_lent, nodes_matched_before, route, site_marks};
 pub(crate) use resolution::unresolved_subject_diagnostic;
 use resolution::unresolved_subject_diagnostic_indexed;
 use selectors::{
@@ -30,12 +31,16 @@ use selectors::{
 };
 use unreached::report_unreached;
 
+#[cfg(test)]
+mod tests_lent_ramp;
+
 /// One level of evaluation: the channel a rule finding has always had at that
 /// level, and the ramp's warnings beside it.
 ///
-/// A finding that a newly counted numbered-section citation (§FS-rules.7.8), or
-/// a target newly matched at the rule's own nested alias (§FS-rules.7.9), alone
-/// produces is carried on the warnings channel rather than the errors channel,
+/// A finding that a newly counted numbered-section citation (§FS-rules.7.8), a
+/// target newly matched at the rule's own nested alias (§FS-rules.7.9), or what a
+/// stub's target lends (§FS-rules.7.11) alone produces is carried on the warnings
+/// channel rather than the errors channel,
 /// for the length of its ramp and no longer. It is a pair rather than a
 /// type so that the engine/checker crossing stays `Diagnostic` and nothing else
 /// (§AR-rules.5): when the ramp closes at `0.18.0` the second half goes away
@@ -157,10 +162,16 @@ fn evaluate_one(
             };
             for subject in subjects {
                 let chapters = index.chapters_of(&subject);
-                let count = chapters
+                // §FS-rules.7.11: a chapter a stub's target lends is marked to ramp.
+                let named = chapters
                     .iter()
                     .filter(|row| facts.chapter[**row].2.eq_ignore_ascii_case(name))
-                    .count();
+                    .map(|row| Marks {
+                        lent: node_lent(facts, &facts.chapter[*row].0),
+                        ..Marks::default()
+                    })
+                    .collect::<Vec<_>>();
+                let count = named.len();
                 if !rule.cardinality.contains(count) {
                     // §FS-rules.7.2.1: show accepted direct chapters in source order,
                     // retaining the complete released prefix (§FS-errors.3).
@@ -183,16 +194,24 @@ fn evaluate_one(
                             .collect::<Vec<_>>()
                             .join(", ")
                     };
-                    push_node(
+                    let windows = Windows::of_count(rule.level, rule.cardinality, named)
+                        .of_subject(rule.level, node_lent(facts, &subject));
+                    let (sink, message) = route(
+                        windows,
                         out,
-                        facts,
-                        &subject,
-                        "chapter-cardinality",
+                        ramp,
                         format!(
                             "{} has {count} {name} chapters; {authority} requires {}; expected display name \"{name}\" (case-insensitive, not section handle); observed direct chapters: {observed}",
                             label(facts, &subject),
                             rule.cardinality.wording()
                         ),
+                    );
+                    push_node(
+                        sink,
+                        facts,
+                        &subject,
+                        "chapter-cardinality",
+                        message,
                         authority,
                     );
                 }
@@ -212,12 +231,15 @@ fn evaluate_one(
                         } else {
                             ("discouraged-citation", "")
                         };
-                        // §FS-rules.7.8, §FS-rules.7.9: a required site counted or
-                        // matched only now warns.
+                        // §FS-rules.7.8, §FS-rules.7.9, §FS-rules.7.11: a required site
+                        // counted, matched or lent only now warns.
                         let windows = Windows::at(
                             rule.level,
-                            newly_counted(facts, site),
-                            !citation_matches_targets(target, &before, index),
+                            site_marks(
+                                facts,
+                                site,
+                                !citation_matches_targets(target, &before, index),
+                            ),
                         );
                         let (sink, message) = route(
                             windows,
@@ -256,17 +278,16 @@ fn evaluate_one(
                     .filter_map(|(site, from, _)| {
                         let kind = index.declaration_kind(from)?;
                         target_kind_matches(&rule.targets, kind, facts).then(|| {
-                            (
-                                newly_counted(facts, site),
-                                !matched_before(&rule.targets, kind, facts),
-                            )
+                            site_marks(facts, site, !matched_before(&rule.targets, kind, facts))
                         })
                     })
                     .collect::<Vec<_>>();
                 let count = sites.len();
                 if !rule.cardinality.contains(count) {
+                    let windows = Windows::of_count(rule.level, rule.cardinality, sites)
+                        .of_subject(rule.level, node_lent(facts, &subject));
                     let (sink, message) = route(
-                        Windows::of_count(rule.level, rule.cardinality, sites),
+                        windows,
                         out,
                         ramp,
                         format!(
@@ -278,121 +299,6 @@ fn evaluate_one(
                     );
                     push_node(sink, facts, &subject, "uncited-unit", message, authority);
                 }
-            }
-        }
-    }
-}
-
-/// Count the unit's physical rows once (§FS-rules.5.1, §FS-rules.5.3), then
-/// enumerate the declared target universe for per-target coverage (§FS-rules.5.2).
-fn evaluate_cites(
-    rule: &SemanticRule,
-    authority: &Authority,
-    facts: &RuleFacts,
-    index: &FactIndex<'_>,
-    subjects: &[NodeKey],
-    out: &mut Vec<Diagnostic>,
-    ramp: &mut Vec<Diagnostic>,
-) {
-    let RuleTargets::Kinds { mode, .. } = &rule.targets else {
-        return;
-    };
-    let targets = target_nodes(&rule.targets, facts, index);
-    let before = nodes_matched_before(&rule.targets, facts, index);
-    for subject in subjects {
-        if *mode == TargetMode::PerTarget {
-            // Each owner's sites, marked newly counted or not (§FS-rules.7.8).
-            let mut counts: BTreeMap<_, Vec<bool>> = BTreeMap::new();
-            for (site, _, cited) in index.citations_in(subject) {
-                if let Some(owner) = index.owner(cited) {
-                    counts
-                        .entry(owner)
-                        .or_default()
-                        .push(newly_counted(facts, site));
-                }
-            }
-            for target in &targets {
-                let sites = counts.get(target).map(Vec::as_slice).unwrap_or_default();
-                let count = sites.len();
-                if !rule.cardinality.contains(count) {
-                    let windows = if before.contains(target) {
-                        Windows::of_count(
-                            rule.level,
-                            rule.cardinality,
-                            sites.iter().map(|&counted| (counted, false)),
-                        )
-                    } else {
-                        Windows::of_new_target(rule.level, rule.cardinality, sites.iter().copied())
-                    };
-                    let (sink, message) = route(
-                        windows,
-                        out,
-                        ramp,
-                        format!(
-                            "{} cites {} {count} times; {authority} requires {}",
-                            label(facts, subject),
-                            label(facts, target),
-                            rule.cardinality.times_wording()
-                        ),
-                    );
-                    push_node(
-                        sink,
-                        facts,
-                        subject,
-                        "citation-cardinality",
-                        message,
-                        authority,
-                    );
-                }
-            }
-        } else {
-            let sites = index
-                .citations_in(subject)
-                .iter()
-                .filter(|(_, _, target)| citation_matches_targets(target, &targets, index))
-                .map(|(site, _, target)| {
-                    (
-                        newly_counted(facts, site),
-                        !citation_matches_targets(target, &before, index),
-                    )
-                })
-                .collect::<Vec<_>>();
-            let count = sites.len();
-            if !rule.cardinality.contains(count) {
-                let ordinary = rule.cardinality == Cardinality::AT_LEAST_ONE && count == 0;
-                let code = if ordinary {
-                    if rule.level == RuleLevel::Required {
-                        "missing-citation"
-                    } else {
-                        "suggested-citation"
-                    }
-                } else {
-                    "citation-cardinality"
-                };
-                let message = if ordinary {
-                    format!(
-                        "{} {} cite {} ({authority})",
-                        label(facts, subject),
-                        if rule.level == RuleLevel::Required {
-                            "must"
-                        } else {
-                            "should"
-                        },
-                        target_wording(&rule.targets)
-                    )
-                } else {
-                    format!(
-                        "{} cites {} {count} times; {authority} requires {}",
-                        label(facts, subject),
-                        target_wording(&rule.targets),
-                        rule.cardinality.wording()
-                    )
-                };
-                // §FS-rules.7.8, §FS-rules.7.9: a count the newly counted or newly
-                // matched sites alone break warns.
-                let windows = Windows::of_count(rule.level, rule.cardinality, sites);
-                let (sink, message) = route(windows, out, ramp, message);
-                push_node(sink, facts, subject, code, message, authority);
             }
         }
     }

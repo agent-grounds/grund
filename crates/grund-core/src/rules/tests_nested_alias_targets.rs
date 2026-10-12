@@ -34,6 +34,7 @@ fn facts() -> RuleFacts {
             NodeMeta {
                 label: label.into(),
                 anchor: anchor(line),
+                lent: false,
             },
         )
     };
@@ -47,6 +48,7 @@ fn facts() -> RuleFacts {
                     ..anchor(line)
                 },
                 newly_counted: false,
+                lent: false,
             },
         )
     };
@@ -256,6 +258,7 @@ fn facts_with_uncited_own_target() -> RuleFacts {
         NodeMeta {
             label: "AR-c".into(),
             anchor: anchor(25),
+            lent: false,
         },
     );
     facts
@@ -277,6 +280,7 @@ fn facts_with_section_site() -> RuleFacts {
                 label: "AR-b".into(),
                 anchor: anchor(line),
                 newly_counted,
+                lent: false,
             },
         );
     }

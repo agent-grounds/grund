@@ -143,7 +143,7 @@ pub(super) fn run_check_with_run_warnings(
         scope.as_ref(),
     );
     out_of_scope.extend(out_of_scope_section_headings(&findings, scope.as_ref()));
-    retain_findings_in_scope(&mut findings, scope.as_ref());
+    retain_findings_in_scope(&mut findings, config.frame().grammar(), scope.as_ref());
     // §FS-check.1.3.6.1: a file the wider walk could not read is outside the report
     // scope like anything else about it, and it is the exit code as well as a line
     // (§FS-check.2.4) — so it leaves both here, and §FS-check.1.3.6.3 says it below.
@@ -292,7 +292,8 @@ fn run_workspace_check(
     let mut out_of_scope = workspace_out_of_scope_references(&projects, &scopes);
     out_of_scope.extend(workspace_out_of_scope_section_headings(&projects, &scopes));
     for (project, scope) in projects.iter_mut().zip(&scopes) {
-        retain_findings_in_scope(&mut project.findings, scope.as_ref());
+        let grammar = project.config.frame().grammar();
+        retain_findings_in_scope(&mut project.findings, grammar, scope.as_ref());
     }
 
     let rules_complete = projects

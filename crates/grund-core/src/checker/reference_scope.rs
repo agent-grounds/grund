@@ -9,9 +9,12 @@ use std::path::{Path, PathBuf};
 use super::references::{ReferenceTier, check_citation_resolution};
 use super::sections::retain_heading_findings_in_scope;
 use crate::config::{Frame, Schema, unwalked_home_roots};
+use crate::grammar::Grammar;
 use crate::model::{Catalog, CheckReport, DeclarationSource, Diagnostic, sort_path_key};
 use crate::resolver::{WorkspaceCheckTarget, WorkspaceProject};
-use crate::scanner::{CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS, scan_roots_for};
+use crate::scanner::{
+    CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS, lend_citations, scan_roots_for,
+};
 use crate::workspace::scope_is_config_root;
 
 /// The roots a run *without* `--full` walks: the explicit path argument, or
@@ -198,7 +201,15 @@ fn agent_entrypoint_paths(frame: Frame<'_>) -> Vec<PathBuf> {
 /// `report_shorthand_citation` judges a site against — one predicate covering the
 /// unqualified and the cross-member qualified form alike, where an undo pass here
 /// could only reach the unqualified one.
-pub(crate) fn retain_findings_in_scope(findings: &mut Catalog, scope: Option<&ScanScope>) {
+///
+/// A citation dropped from a stub's target the narrowing has just put outside is
+/// lent to the stubbed declaration rather than lost, as a run without the flag
+/// lends it (§FS-declarations.stubs.target.5, §AR-scanner.4.6).
+pub(crate) fn retain_findings_in_scope(
+    findings: &mut Catalog,
+    grammar: &Grammar,
+    scope: Option<&ScanScope>,
+) {
     let Some(scope) = scope else { return };
     findings.declarations.retain(|_, decls| {
         decls.retain(|decl| {
@@ -206,7 +217,11 @@ pub(crate) fn retain_findings_in_scope(findings: &mut Catalog, scope: Option<&Sc
         });
         !decls.is_empty()
     });
-    findings.citations.retain(|cite| scope.contains(&cite.file));
+    let (kept, dropped): (Vec<_>, Vec<_>) = std::mem::take(&mut findings.citations)
+        .into_iter()
+        .partition(|cite| scope.contains(&cite.file));
+    findings.citations = kept;
+    lend_citations(grammar, findings, dropped);
     findings
         .local_section_citation_candidates
         .retain(|candidate| scope.contains(&candidate.file));

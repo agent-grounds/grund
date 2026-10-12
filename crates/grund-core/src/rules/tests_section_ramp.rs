@@ -30,6 +30,7 @@ fn facts() -> RuleFacts {
             NodeMeta {
                 label: label.into(),
                 anchor: anchor(line),
+                lent: false,
             },
         )
     };
@@ -43,6 +44,7 @@ fn facts() -> RuleFacts {
                     ..anchor(line)
                 },
                 newly_counted,
+                lent: false,
             },
         )
     };

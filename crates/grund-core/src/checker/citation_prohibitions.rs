@@ -8,19 +8,33 @@ use crate::config::{
     CitationLevel, CitationTarget, NamespaceMatch, Rules, Schema, render_citation_target,
 };
 use crate::model::{CITATION_DIRECTION_REPAIR, Catalog, CheckReport, Citation, Diagnostic};
+use crate::rules::engine::LENT_CLAUSE;
 
 /// §AR-checker.2.10 / §FS-check.3.12: a citation site whose citing kind prohibits
 /// its target is a `forbidden-citation` error (`must-not`) or a
 /// `discouraged-citation` suggestion (`should-not`). The error carries
-/// §FS-check.3.12's repair suffix; the suggestion does not (§FS-check.2.3).
+/// §FS-check.3.12's repair suffix; the suggestion does not (§FS-check.2.3). A
+/// citation a stub's target lends is a site of its kind at its line in the target,
+/// and its error warns until 0.19.0 (§FS-check.3.12, §FS-rules.7.11).
 pub(super) fn check_citation_prohibitions(
     findings: &Catalog,
     rules: &Rules,
     schema: &Schema,
     report: &mut CheckReport,
 ) {
-    for cite in &findings.citations {
+    for (cite, lent) in findings.marked_edges() {
         match citation_site_level(rules, cite) {
+            Some(CitationLevel::MustNot) if lent => {
+                let mut diagnostic = prohibition_diagnostic(
+                    "forbidden-citation",
+                    schema,
+                    cite,
+                    "must not",
+                    CITATION_DIRECTION_REPAIR,
+                );
+                diagnostic.message.push_str(LENT_CLAUSE);
+                report.warnings.push(diagnostic);
+            }
             Some(CitationLevel::MustNot) => report.errors.push(prohibition_diagnostic(
                 "forbidden-citation",
                 schema,
