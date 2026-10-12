@@ -19,6 +19,15 @@ fn block_continuation_drops_whitespace_before_star() {
     assert_eq!(clean_body_line("     *", false), "");
 }
 
+/// §FS-declarations.line.block-comment: every opener is envelope, so `/** ## 1. Sub`
+/// shows as `/* ## 1. Sub` does.
+#[test]
+fn every_block_opener_drops_whole() {
+    for line in ["/* ## 1. Sub", "/** ## 1. Sub", "/*! ## 1. Sub"] {
+        assert_eq!(clean_body_line(line, false), "## 1. Sub", "line {line:?}");
+    }
+}
+
 #[test]
 fn indented_line_comment_drops_whitespace_before_marker() {
     assert_eq!(clean_body_line("    /// x", false), "x");

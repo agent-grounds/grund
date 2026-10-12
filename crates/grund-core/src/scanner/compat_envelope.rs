@@ -13,8 +13,8 @@ use crate::grammar::{LexicalSettings, line_comment_block_marker, strip_block_clo
 /// declaration's own comment family instead (`own_line_marker`).
 const FIXED_LINE_MARKERS: [&str; 4] = ["///", "//!", "//", "#"];
 
-/// Strip one of the fixed comment markers (`///`, `//!`, `//`, `#`, `*`, `/*`,
-/// `*/`) off a body line when the declaration lives in a code/`"""` doc-comment — Markdown bodies
+/// Strip one of the fixed comment markers (`///`, `//!`, `//`, `#`, `*`, `/**`,
+/// `/*!`, `/*`, `*/`) off a body line when the declaration lives in a code/`"""` doc-comment — Markdown bodies
 /// pass through unchanged (§FS-show.2.3.2). The whitespace in front of the marker
 /// is envelope and goes with it, so an indented `///` or a class member's ` * `
 /// shows its body at column 0; what follows the marker and its one space is kept
@@ -25,7 +25,8 @@ pub(super) fn clean_body_line(line: &str, is_md: bool) -> String {
     }
 
     let body = line.trim_start();
-    for prefix in ["///", "//!", "//", "*/", "#", "*", "/*"] {
+    // §FS-declarations.line.block-comment: `/**` and `/*!` are openers as `/*` is.
+    for prefix in ["///", "//!", "//", "*/", "#", "*", "/**", "/*!", "/*"] {
         if let Some(rest) = body.strip_prefix(prefix) {
             if prefix == "*/" && rest.trim().is_empty() {
                 return String::new();
