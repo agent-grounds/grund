@@ -154,14 +154,16 @@ class NodeSharedTargetTests(unittest.TestCase):
         cached = "~/" + Path(wrapper).resolve().relative_to(home).as_posix()
         steps = CI.read_text(encoding="utf-8").split("\n      - ")
         restoring = [step for step in steps if f"            {cached}\n" in step]
-        self.assertEqual(1, len(restoring), "one CI cache step restores the shared Node target")
-        keys = [line.strip() for step in steps for line in step.splitlines()
-                if "actions/cache" in step and line.strip().startswith("key:")]
-        key = [line.strip() for line in restoring[0].splitlines()
-               if line.strip().startswith("key:")]
-        self.assertEqual(1, len(key), restoring[0])
+        # §AR-ci.13.4: one such step in each job that runs the Node acceptance, all one key.
+        self.assertTrue(restoring, "no CI cache step restores the shared Node target")
+        key = {line.strip() for step in restoring for line in step.splitlines()
+               if line.strip().startswith("key:")}
+        self.assertEqual(1, len(key), restoring)
+        others = [line.strip() for step in steps if step not in restoring
+                  for line in step.splitlines()
+                  if "actions/cache" in step and line.strip().startswith("key:")]
         # An exact hit saves nothing, so a key shared with another cache never saves this one.
-        self.assertEqual(1, keys.count(key[0]), f"{key[0]} is shared with another cache step")
+        self.assertNotIn(next(iter(key)), others, f"{key} is shared with another cache step")
 
 
 if __name__ == "__main__":
