@@ -29,7 +29,7 @@ allowed values, and whether anything else may appear — in the [fields guide](.
             ┌───────────── ID ───────────────┐
   [§] [alias /] KIND - [number -] slug [.section]
    │     │        │       │         │       │
-   │     │        │       │         │       └─ dotted path of arbitrary depth (.3, .3.1, …)
+   │     │        │       │         │       └─ dotted path (.3, .3.1, .format, …)
    │     │        │       │         └───────── [a-z0-9][a-z0-9-]*  (default slug_pattern)
    │     │        │       └─────────────────── optional ordinal (e.g., 001)
    │     │        └─────────────────────────── GRUND│GOAL|FS│AR│DF│DA│RM│[custom]

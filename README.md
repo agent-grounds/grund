@@ -117,12 +117,82 @@ grund init --docs     # writes config, agent instructions, and doc scaffolds
 grund check
 ```
 
-**Already have specs?** [Map their existing locations](docs/user-facing/setup.md)
-before running `grund init`; use `--docs` only when you want scaffolds.
+**Already have specs?** Hand the setup to your agent:
+
+```bash
+grund agent-setup-instructions   # the guided adoption workflow, for your agent to follow
+```
+
+It has your agent inspect the repository, recommend settings for the specs you have,
+confirm every option with you, write `grund.toml`, run `grund init` and validate
+([§FS-init.5](docs/functional-spec/FS-init.md#5-agent-setup-instructions)). To do it by hand, [map their existing
+locations](docs/user-facing/setup.md) before running `grund init`; use `--docs` only
+when you want scaffolds.
 `init` writes your agent's instructions from `grund.toml` — ours is
 [`AGENTS.md`](AGENTS.md). Add `grund check` to [pre-commit and CI](docs/user-facing/checking.md#in-pre-commit-and-ci).
 [Installation](docs/user-facing/installation.md) covers prebuilt binaries, supported
 platforms, the Python and Node APIs, and local candidate builds.
+
+## Citation format
+
+```plaintext
+     ┌─────────────────── citation ───────────────────┐
+            ┌───────────── ID ───────────────┐
+  [§] [alias /] KIND - [number -] slug [.section]
+   │     │        │       │         │       │
+   │     │        │       │         │       └─ dotted path (.3, .3.1, .format, …)
+   │     │        │       │         └───────── [a-z0-9][a-z0-9-]*  (default slug_pattern)
+   │     │        │       └─────────────────── optional ordinal (e.g., 001)
+   │     │        └─────────────────────────── GRUND│GOAL|FS│AR│DF│DA│RM│[custom]
+   │     └──────────────────────────────────── project alias for subprojects or monorepo
+   └────────────────────────────────────────── citation marker (writing only)
+```
+
+The [structure guide](docs/user-facing/structure.md) covers the three ID schemes, the
+rest of the citation syntax, and inline declarations.
+
+## Make citations clickable
+
+Turn a `§<ID>` in your terminal into something you click, landing at the exact line it cites:
+
+```bash
+grund integrations                  # what applies in this environment
+grund integrations wezterm          # read the snippet and the resolver first
+grund integrations wezterm --write  # install it
+```
+
+Supported clients are `codium`, `iterm2`, `kitty`, `tmux`, `vscode`, and `wezterm`. `--write` is a one-time, idempotent user setup — the integration, the `grund-open` resolver, and a global instruction block for whichever agents you have installed. It changes no repository.
+
+**`~/.local/bin` must be on your `PATH`** — that is where the resolver is installed, and it is not there by default on macOS, where a missing `PATH` entry makes every click silently do nothing.
+
+**[Clickable citations](docs/user-facing/clickable-citations.md)** is the full setup guide: the per-client reload each one needs, the manual step WezTerm and iTerm2 require, how to check it works, what to do when a click does nothing, and how to control the citations agents write in conversations. See also [§FS-integrations](docs/functional-spec/FS-integrations.md#fs-integrations-grund-prints-and-installs-its-rendering-layer-integrations).
+
+## Editor support via [LSP](https://microsoft.github.io/language-server-protocol/)
+
+Install the optional language server separately when you want citation completion, editor diagnostics, hover previews, usage counts on declaration titles, definition jumps, document links, references, and live `$$` → `§` formatting:
+
+```bash
+cargo install grund-lsp
+```
+
+The server speaks LSP over stdio and has no daemon or socket. For IntelliJ
+family IDEs, `grund-lsp integrations lsp4ij --write <directory>` generates the
+LSP4IJ import template carried by the installed binary
+([§FS-lsp.2.4](docs/functional-spec/FS-lsp.md#24-installed-editor-integrations)).
+
+It also completes declared citations: in a Markdown note here,
+after `See `, type `§` followed by `FS-ls`, request completion, and choose `FS-lsp`
+(“grund ships an optional LSP server”, `docs/functional-spec/FS-lsp.md`).
+Acceptance leaves `See §FS-lsp`; starting with
+`$$F` works too ([§FS-lsp.1.6](docs/functional-spec/FS-lsp.md#16-declared-id-completion)).
+Use your editor's acceptance key; see [authoring and client bindings](docs/user-facing/lsp.md#write-a-citation).
+The [setup guide](docs/user-facing/lsp.md) has the complete import and
+verification flow plus snippets for VSCode, Vim/Neovim, Emacs, Helix, Zed, and
+Sublime Text. Put reusable client config in your editor's **user (global)
+settings**, not a per-repo file, so `grund-lsp` works in every project rather
+than only repos that ship an editor config.
+
+See the [LSP screenshots](docs/user-facing/lsp.md#screenshots) for hover previews, diagnostics, and navigation.
 
 ## Go deeper
 
@@ -136,8 +206,6 @@ platforms, the Python and Node APIs, and local candidate builds.
 | [Values](docs/user-facing/values.md) | one value, declared once, checked wherever it is quoted |
 | [External facts](docs/user-facing/external-facts.md) | cite tickets as committed offline snapshots |
 | [Workspaces](docs/user-facing/repository-options.md#workspaces-and-sub-projects) | citations across sub-projects |
-| [Clickable citations](docs/user-facing/clickable-citations.md) | `grund integrations` for your terminal and editor |
-| [Editor support](docs/user-facing/lsp.md) | `grund-lsp`: completion, hover, diagnostics, `$$` → `§` |
 | [Related work](docs/related-work/REL-traceability-tools.md) | `grund` beside the requirements-traceability tools it descends from |
 | [All guides](docs/user-facing/README.md) | each beside its runnable example |
 
