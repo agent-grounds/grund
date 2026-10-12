@@ -65,7 +65,7 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
     let render_config = context.render_config().clone();
     let completion = LspCompletionContext::from_workspace(&context);
     let report = editor_report(&context, &opts.path, report_scope.as_ref());
-    // §FS-scan.text.buffer: every range's text is the run's, as the scan read it.
+    // §AR-system.2.13: every range's text is the run's, as the scan read it.
     let sources = render_config.frame().sources();
     // LSP routes findings back to project snapshots by filesystem identity.
     // Preserve absolute paths here instead of reconstructing them from rendered

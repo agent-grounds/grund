@@ -23,7 +23,7 @@ points = [
   "FS-scan.projects.narrowed",
   "FS-scan.scope",
 ]
-owners = ["crates/grund-core/src/scanner/walk.rs"]
+owners = ["crates/grund-core/src/config/run.rs", "crates/grund-core/src/scanner/walk.rs"]
 
 [[family.migration]]
 file = "crates/grund-core/src/workspace/declared.rs"
@@ -41,7 +41,12 @@ name = "text"
 fact = "the text of a file, and which path names it"
 done = false
 points = ["FS-scan.text", "FS-scan.identity", "FS-declarations.checks.broken-stub.1"]
-owners = ["crates/grund-core/src/scanner/tree.rs"]
+owners = [
+  "crates/grund-core/src/sources/buffers.rs",
+  "crates/grund-core/src/sources/disk.rs",
+  "crates/grund-core/src/sources/identity.rs",
+  "crates/grund-core/src/sources/mod.rs",
+]
 
 [[family.migration]]
 file = "crates/grund-core/src/checker/report.rs"

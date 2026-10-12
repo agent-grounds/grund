@@ -191,7 +191,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
     }
 
     let render_config = context.render_config();
-    // §FS-scan.text.buffer: the run's text, its buffers in front of the disk.
+    // §AR-system.2.13: the run's text, its buffers in front of the disk.
     let mut cache = PointBodyCache::new(render_config.frame().sources());
     let mut entries = Vec::with_capacity(pending.len());
     for row in pending {

@@ -53,7 +53,7 @@ type FileScanResult = (PathBuf, std::result::Result<Catalog, String>);
 
 /// One file's pass on the text a save would write: the editor's unsaved text where
 /// the file is open in one, the disk only where it is not
-/// (§FS-declarations.checks.broken-stub.1).
+/// (§AR-system.2.13).
 fn scan_one_file(
     file: &Path,
     schema: &Schema,
@@ -226,7 +226,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
 }
 
 /// The buffers with no file behind them that the walk would read were they
-/// saved, asked of the one read predicate (§FS-scan.text.buffer-only,
+/// saved, asked of the one read predicate (§AR-system.2.13,
 /// §AR-scanner.1.13): every ignore file, `exclude` and unwalked home reaches
 /// them as it reaches the walk.
 fn add_overlay_scan_files(
