@@ -132,3 +132,106 @@ A stub is a heading whose title is one link, `# AR-event-bus: [bus](../../src/bu
 grund 0.18.0 still gives 0.17's answer where these rules move one, and from 0.19.0 every command reads them ([§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves)). Where that would move a `check` verdict, 0.18.0 warns `parse-moves` at the line that moves it and names the edit that means the same in both releases ([§FS-declarations.checks.parse-moves](../functional-spec/FS-declarations.md#checksparse-moves-a-verdict-that-moves-in-0190)): a doc-comment heading that will end a section above a citation, a `/** … */` line without ` * ` that will become a section, and a heading that will stop cutting a lead past its budget.
 
 `grund` does this itself: [§AR-checker](../../crates/grund-core/src/checker/report.rs) lives only in the doc-comment of `fn check` in [`crates/grund-core/src/checker/report.rs`](../../crates/grund-core/src/checker/report.rs), and its canonical row in [`docs/architecture/README.md`](../architecture/README.md) enrolls it without a stub — `grund AR-checker` prints the source prose.
+
+## Schema and links: the rules a repository is held to
+
+`grund` reads a repository as a graph. Every scan turns the tree into one
+snapshot of facts, and every rule, whether written in `grund.toml` or as a
+sentence, is a question asked of that snapshot. There are two kinds of rule.
+**Schema rules** say what a fact may look like and where it may live, which
+decides whether it enters the graph at all. **Link rules** say which citations
+must, should, or must not exist between the facts once they are there.
+
+### What a scan builds
+
+Underneath, the snapshot is five relations ([§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)):
+
+| Relation | One row per | Example |
+| --- | --- | --- |
+| `decl(node, kind)` | declaration | `FS-login` is an `FS` |
+| `chapter(node, path, display_name)` | named chapter in a declaration's body | `FS-login.terms`, labelled `Terms` |
+| `contains(parent, child)` | chapter inside its declaration or parent chapter | `FS-login` contains `FS-login.terms` |
+| `cites(site, from, target)` | citation that resolves | a citation of `FS-login.3` at `auth.rs:42`, from `AR-auth` to `FS-login` |
+| `site_in(site, unit)` | unit that contains a citation site | that site is in `AR-auth` |
+
+A citation of a numbered section counts as a citation of its nearest named
+chapter, or else of the declaration. A citation that does not resolve adds no
+`cites` row; it gets its own finding instead. Every declaration and chapter has
+its row whether or not it cites anything, so "each FS must …" means every FS.
+The meaning is specified as Datalog over that one complete snapshot. The
+implementation is a hand-written evaluator, not a Datalog engine.
+
+Citation directions and chapter rules are also rendered into the agent
+instructions `grund init` writes. An agent therefore reads a rule before it
+writes, and `grund check` holds it to the rule after.
+
+### Schema rules: what a fact may look like
+
+| Rule | You write | What it means in the graph | `grund check` reports |
+| --- | --- | --- | --- |
+| Kinds and homes | a `[[kinds]]` row: `kind`, and `file` or `folder` ([§FS-config.3.4](../functional-spec/FS-config.md#34-kinds--recognized-kinds)) | the node types, and where a node of each type may be declared | `misplaced-declaration`, `duplicate`, `declaration-near-miss` |
+| ID grammar | `[id] format` and its patterns, optionally per kind ([§FS-config.3.2](../functional-spec/FS-config.md#32-id--id-grammar)) | the address space: one spelling per node | a format mismatch, as an error |
+| Sections | numbered `## 1. …` or named `## terms: Terms` headings ([§FS-declarations.section](../functional-spec/FS-declarations.md#section-what-a-section-is)) | child coordinates `<ID>.<path>`, and their `contains` rows | `section-heading-level`, `duplicate-section`, `section-outside-declaration`, `orphan-section`, `unmarked-heading` |
+| Inline declarations and stubs | a declaration line in a doc-comment, or a stub heading whose title is one link | a node whose body lives in source | `broken-stub`, `stub-shape` |
+| Kind index | a folder kind's `README.md` ([§FS-check.3.18](../functional-spec/FS-check.md#318-declaration-missing-from-its-kinds-index)) | every node of the kind is listed there, as a link | `missing-index-entry`, `unlinked-index-entry` |
+| Fields *(config v2)* | `fields` on a kind ([guide](fields.md), [§FS-fields](../functional-spec/FS-fields.md#fs-fields-a-v2-kind-states-the-shape-of-its-declarations-and-check-holds-every-declaration-to-it)) | which chapters each node carries, in what order, with what values | `missing-field`, `mistitled-field`, `misplaced-field`, `invalid-field-value`, `undeclared-chapter` |
+| Values | a numbered component in an opted-in kind ([guide](values.md), [§FS-values](../functional-spec/FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)) | one node is the source of a value, and every use is compared with it | `invalid-value-declaration`, `invalid-value-binding`, `value-mismatch` |
+| Lead size *(opt-in)* | `[reference] lead_size_warning` ([guide](coordinate-sizes.md)) | what a default `grund <ID>` read costs | `oversized-lead` |
+
+### Link rules: which citations must exist
+
+| Rule | You write | What it means in the graph | `grund check` reports |
+| --- | --- | --- | --- |
+| Every citation resolves | `§<ID>[.<section>]`, or `§<alias>/<ID>` in a workspace ([§FS-check.3.1](../functional-spec/FS-check.md#31-dangling-citation)) | an edge exists only if its target node does | `dangling`, `missing-section`, `unknown-project`, `glob-citation`, and with `--full` the `out-of-scope-*` codes |
+| One spelling per edge | `[reference] shorthand` and the inline-note limits ([§FS-config.3.1](../functional-spec/FS-config.md#31-reference--citation-form)) | the same edge is written the same way everywhere | `shorthand-citation`, `shorthand-numeric-run`, `local-section-citation`, `inline-citation-style` |
+| Citation directions | `[citations.<KIND>]` with `must`, `should`, `should-not`, `must-not` ([guide](citation-directions.md), [§FS-config.3.9](../functional-spec/FS-config.md#39-citations--citation-direction-rules)) | per declaration, at least one `cites` row into the named kinds; per site, no `cites` row into a forbidden one | `missing-citation`, `forbidden-citation`, and with `--suggestions` `suggested-citation`, `discouraged-citation` |
+| Grounding *(opt-in)* | `require_grounding` and `grounding_level`, in `[reference]` or on a kind ([§FS-check.3.6](../functional-spec/FS-check.md#36-ungrounded-unit-opt-in)) | every file, or every unit in it, has at least one outgoing `cites` row | `ungrounded` |
+| Chapter rules | a declaration of a kind with `rules = true`, whose title is one sentence ([guide](rules.md), [`examples/rules/`](../../examples/rules/), [§FS-rules.1](../functional-spec/FS-rules.md#1-rule-declarations-and-opt-in)) | a count over `chapter` or `cites` rows, for every unit the sentence's subject selects | `chapter-cardinality`, `citation-cardinality`, `uncited-unit`, `unreached-declaration`, `invalid-rule` |
+
+A chapter rule is a sentence from one of five families ([§FS-rules.3](../functional-spec/FS-rules.md#3-the-five-sentence-families)):
+
+- **Chapter presence:** `Each FS must have exactly one Terms chapter.`
+- **Outbound count:** `The requirements chapter of each FS must cite at least one REQ.`
+- **Per-target coverage:** `Each RM must cite each GOAL at least once.`
+- **Inbound count:** `Each GOAL should be cited by at least one FS.`
+- **Prohibition:** `Each FS must not cite any AR.`
+
+A citation direction and a rule that say the same thing are one constraint and
+produce one finding ([§FS-rules.6](../functional-spec/FS-rules.md#6-semantic-deduplication)). A `must` is an error and fails the run with
+exit `1`. A `should` or `should-not` goes to the suggestions channel, which
+`--suggestions` shows ([§FS-check.2.3](../functional-spec/FS-check.md#23-suggestions-channel-opt-in)). Warnings never fail a run. The code
+catalog lists every finding code, its severity, and the setting that turns it on
+([§FS-errors.5.5](../functional-spec/FS-errors.md#55-the-check-code-catalog)).
+
+### Linking: what grund does
+
+- **One citation, every language.** A citation is read by the same resolver in
+  Markdown and in every doc-comment form: Rustdoc, Javadoc, Python docstrings,
+  Go, JSDoc and the rest ([§GOAL-polyglot-citation](../goals.md#goal-polyglot-citation-ids-cite-cleanly-from-anywhere-they-are-useful)). It names an ID, not a path,
+  so it survives a moved file and a reworded heading.
+- **Clickable in Markdown.** In a `.md` file, `grund fmt --write` wraps each
+  citation in a link to its declaration. It computes the anchor exactly as
+  GitHub does ([§DF-github-anchor-fidelity](../decisions/functional/DF-github-anchor-fidelity.md#df-github-anchor-fidelity-the-github-anchor-profile-reproduces-github-slugger-exactly)) and rewrites the link when the target
+  moves or its heading changes. Generated configs turn this on with
+  `[fmt.cross_refs]`, and a kind's index is always linked ([§FS-fmt.6](../functional-spec/FS-fmt.md#6-cross-reference-emission)). Source
+  comments keep the bare citation, because their languages do not render
+  Markdown. `grund fmt --check` reports a stale link as a pending rewrite.
+
+  ```markdown
+  [§FS-login.3](../functional-spec/FS-login.md#3-session-timeout)
+  ```
+
+- **Typing and expanding.** `$$` becomes `§`, and a persisted number-only
+  shorthand is expanded to the full ID.
+- **Following an edge backwards.** `grund refs <ID>` lists every citation of an
+  ID. Run it before renaming or moving a declaration.
+- **In the editor and the terminal.** The language server jumps from a citation
+  to its declaration, shows the section map on hover, lists references, and
+  turns citations into document links ([LSP guide](lsp.md), [§FS-lsp](../functional-spec/FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)).
+  `grund integrations <client> --write` makes a citation clickable in your
+  terminal ([guide](clickable-citations.md), [§FS-integrations](../functional-spec/FS-integrations.md#fs-integrations-grund-prints-and-installs-its-rendering-layer-integrations)).
+- **In agents' output.** The agent instructions say how to link a citation in
+  pull request bodies, reviews and conversations.
+
+Ordinary links, such as URLs and relative paths without a `§`, are not
+`grund`'s to check: see [what it does not check](checking.md#what-it-does-not-check).
