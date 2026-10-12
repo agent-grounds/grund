@@ -153,7 +153,9 @@ fn named_sections_follow_the_configuring_project() {
     );
 }
 
-/// §FS-errors.2.5.1: one renderer, in each surface's quoting.
+/// §FS-errors.2.5.1: one renderer, in each surface's quoting. The double-quoted
+/// form is the first of §FS-errors.3.8.1's final templates: the reason that
+/// follows the window's ` — `, and that `0.19.0` prints alone.
 #[test]
 fn the_non_citable_reason_renders_in_both_quotings() {
     let entry = KindEntry {

@@ -31,7 +31,7 @@
 {"project":"tests/e2e/cases/check-chapter-value-no-opt-in/repo","show":[0,"cfbd577b6da51321",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/check-chapter-value-root-binding-match/repo","show":[0,"9d4581f8694972cd",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/check-chapter-value-source-comment/repo","show":[0,"b743565662c0d8c8",""],"validate":[0,"e3b0c44298fc1c14",""]}
-{"project":"tests/e2e/cases/check-citation-directions-drift/repo","show":[0,"e19b849d0450ab85",""],"validate":[0,"e3b0c44298fc1c14",""]}
+{"project":"tests/e2e/cases/check-citation-directions-drift/repo","show":[0,"e19b849d0450ab85",""],"validate":[0,"e3b0c44298fc1c14","warning: grund.toml: [citations.skill] must-not names `api/AR`: unknown project alias api; no workspace is in scope here, so the alias cannot be resolved — check from the workspace root; this becomes an error in grund 0.19.0\n"]}
 {"project":"tests/e2e/cases/check-citation-directions-grounding-drift/repo","show":[0,"cf9fd86d221f7c69",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/check-citation-levels-default/repo","show":[0,"6159112ec4f36e17",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/check-citation-levels-visible/repo","show":[0,"6159112ec4f36e17",""],"validate":[0,"e3b0c44298fc1c14",""]}
@@ -546,8 +546,8 @@
 {"project":"tests/e2e/cases/init-check-workspace-pinned-rule-member/repo","show":[0,"ce265a5ddaa12927",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-check-workspace-pinned-rule-member/repo/member","show":[0,"93d5e82f2b541650",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-check-workspace-pinned-rule-member/repo/workshop","show":[0,"031e8c593d0a48b3",""],"validate":[0,"e3b0c44298fc1c14",""]}
-{"project":"tests/e2e/cases/init-citation-directions-canonical/expected.repo","show":[0,"e19b849d0450ab85",""],"validate":[0,"e3b0c44298fc1c14",""]}
-{"project":"tests/e2e/cases/init-citation-directions-canonical/repo","show":[0,"e19b849d0450ab85",""],"validate":[0,"e3b0c44298fc1c14",""]}
+{"project":"tests/e2e/cases/init-citation-directions-canonical/expected.repo","show":[0,"e19b849d0450ab85",""],"validate":[0,"e3b0c44298fc1c14","warning: grund.toml: [citations.skill] must-not names `api/AR`: unknown project alias api; no workspace is in scope here, so the alias cannot be resolved — check from the workspace root; this becomes an error in grund 0.19.0\n"]}
+{"project":"tests/e2e/cases/init-citation-directions-canonical/repo","show":[0,"e19b849d0450ab85",""],"validate":[0,"e3b0c44298fc1c14","warning: grund.toml: [citations.skill] must-not names `api/AR`: unknown project alias api; no workspace is in scope here, so the alias cannot be resolved — check from the workspace root; this becomes an error in grund 0.19.0\n"]}
 {"project":"tests/e2e/cases/init-citation-directions-closed-default/expected.repo","show":[0,"6afbc1d44407c43a",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-citation-directions-closed-default/repo","show":[0,"6afbc1d44407c43a",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-citation-directions-grounding-off/expected.repo","show":[0,"dcc5ababf56c412d",""],"validate":[0,"e3b0c44298fc1c14",""]}
