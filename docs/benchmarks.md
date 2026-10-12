@@ -29,8 +29,10 @@ Current benchmarks use generated fixtures rather than the live repository
 Pull-request CI measures the base branch and then the PR commit, recording the `Ir`
 comparison in summaries; pushes to `main` record counts without comparing against
 themselves ([§AR-ci.5.1](architecture/AR-ci.md#51-pull-requests-and-pushes)).
-Instruction-regression limits are not enforced: growth is reported but does not fail
-the build ([§AR-ci.5.2](architecture/AR-ci.md#52-regression-limits)).
+Instruction-regression limits are enforced: growth in `Ir` past 5% on the generated
+10k-file fixture, or past 12.5% on any other benchmark, fails the bench job and the
+`cargo test (ubuntu-latest)` required check
+([§AR-ci.5.2](architecture/AR-ci.md#52-regression-limits)).
 
 Callgrind instruction count is a repeatable workload-cost proxy for a given binary
 and input, not elapsed time or a universal latency guarantee

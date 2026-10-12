@@ -14,7 +14,10 @@
 //! `iai-callgrind-runner` on `PATH`).
 
 #[cfg(feature = "bench")]
-use iai_callgrind::{Command, binary_benchmark, binary_benchmark_group, main};
+use iai_callgrind::{
+    BinaryBenchmarkConfig, Callgrind, Command, EventKind, binary_benchmark, binary_benchmark_group,
+    main,
+};
 #[cfg(feature = "bench")]
 use std::{
     path::{Path, PathBuf},
@@ -51,6 +54,21 @@ const FIXTURE_ID: &str = "FS-00001-feature-00001";
 /// exercises the citing-side classification + direction passes (§FS-config.3.9).
 #[cfg(feature = "bench")]
 const CITATIONS_REPO_REL: &str = "target/bench-fixtures/canonical-citations-repo";
+
+/// §AR-ci.5.2: the `Ir` growth over the base-branch baseline past which the bench
+/// fails. A benchmark's own config replaces the group's regression config, so
+/// `check_large_10k` holds the tighter limit and every other bench the group's.
+#[cfg(feature = "bench")]
+const GROUP_IR_LIMIT_PCT: f64 = 12.5;
+#[cfg(feature = "bench")]
+const LARGE_IR_LIMIT_PCT: f64 = 5.0;
+
+#[cfg(feature = "bench")]
+fn ir_limit(pct: f64) -> BinaryBenchmarkConfig {
+    let mut config = BinaryBenchmarkConfig::default();
+    config.tool(Callgrind::default().soft_limits([(EventKind::Ir, pct)]));
+    config
+}
 
 #[cfg(feature = "bench")]
 fn ensure_fixture(rel: &str, file_count: usize, citations: bool) -> PathBuf {
@@ -103,7 +121,7 @@ fn check() -> Command {
 
 // `grund check <large-fixture>` — the 10k-file budget input.
 #[cfg(feature = "bench")]
-#[binary_benchmark]
+#[binary_benchmark(config = ir_limit(LARGE_IR_LIMIT_PCT))]
 fn check_large_10k() -> Command {
     let root = ensure_fixture(LARGE_REPO_REL, LARGE_REPO_FILE_COUNT, false);
     Command::new(GRUND).arg("check").arg(root).build()
@@ -192,6 +210,7 @@ fn fmt_check() -> Command {
 #[cfg(feature = "bench")]
 binary_benchmark_group!(
     name = commands;
+    config = ir_limit(GROUP_IR_LIMIT_PCT);
     benchmarks = check, check_large_10k, check_citations, list, show_brief, show, show_full, refs, cover, fmt_check
 );
 
