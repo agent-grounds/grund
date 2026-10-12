@@ -1,6 +1,6 @@
 {"project":"examples/cochange/repo","show":[0,"f80d62210a487f08",""],"validate":[0,"e3b0c44298fc1c14",""]}
-{"project":"examples/external-tickets/expected.repo","show":[0,"73554bd0b11db697",""],"validate":[0,"e3b0c44298fc1c14",""]}
-{"project":"examples/external-tickets/repo","show":[0,"73554bd0b11db697",""],"validate":[0,"e3b0c44298fc1c14",""]}
+{"project":"examples/external-tickets/expected.repo","show":[0,"ea0424b8be873b45",""],"validate":[0,"e3b0c44298fc1c14",""]}
+{"project":"examples/external-tickets/repo","show":[0,"ea0424b8be873b45",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"examples/rules/repo","show":[0,"d28aff84c56f80d5",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"examples/scheme-numbered-slug/repo","show":[0,"8b0ea647c5721722",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"examples/scheme-numbered/repo","show":[0,"bc40f80194f459e7",""],"validate":[0,"e3b0c44298fc1c14",""]}

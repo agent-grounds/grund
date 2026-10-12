@@ -2,8 +2,6 @@
 
 > **Keep your agents grounded** — docs, values, and code as one knowledge graph, checked on every commit.
 
-<p align="right"><a href="https://github.com/agent-grounds/grund/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/agent-grounds/grund/actions/workflows/ci.yml/badge.svg"></a> <a href="https://crates.io/crates/grund"><img alt="crates.io" src="https://img.shields.io/crates/v/grund.svg"></a> <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a></p>
-
 <!-- grund:fmt off -->
 <table>
 <tbody>
@@ -52,6 +50,8 @@ $ grund check
 </tbody>
 </table>
 <!-- grund:fmt on -->
+
+<p><a href="https://github.com/agent-grounds/grund/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/agent-grounds/grund/actions/workflows/ci.yml/badge.svg"></a> <a href="https://crates.io/crates/grund"><img alt="crates.io" src="https://img.shields.io/crates/v/grund.svg"></a> <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a></p>
 
 ## Default structure
 
@@ -122,14 +122,14 @@ cargo install grund
 Run the following **inside your repository** if you are starting with new specs:
 
 ```bash
-grund init --docs     # writes config, agent instructions, and doc scaffolds
+grund init --docs     # config, agent instructions and doc scaffolds
 grund check
 ```
 
 **Already have specs?** Hand the setup to your agent:
 
 ```bash
-grund agent-setup-instructions   # the guided adoption workflow, for your agent to follow
+grund agent-setup-instructions   # a guided setup for your agent
 ```
 
 Your agent inspects the repository, recommends settings for the specs you have,
@@ -182,12 +182,12 @@ pub(crate) fn check_on_disk(
             ┌───────────── ID ───────────────┐
   [§] [alias /] KIND - [number -] slug [.section]
    │     │        │       │         │       │
-   │     │        │       │         │       └─ dotted path (.3, .3.1, .format, …)
-   │     │        │       │         └───────── [a-z0-9][a-z0-9-]*  (default slug_pattern)
+   │     │        │       │         │       └─ section: .3, .3.1, .format
+   │     │        │       │         └───────── slug: [a-z0-9][a-z0-9-]*
    │     │        │       └─────────────────── optional ordinal (e.g., 001)
-   │     │        └─────────────────────────── GRUND│GOAL|FS│AR│DF│DA│RM│[custom]
-   │     └──────────────────────────────────── project alias for subprojects or monorepo
-   └────────────────────────────────────────── citation marker (writing only)
+   │     │        └─────────────────────────── kind: FS, AR, … or your own
+   │     └──────────────────────────────────── workspace project alias
+   └────────────────────────────────────────── citation marker
 ```
 
 `[id] format` picks one of three ID schemes, and a kind may override it:
@@ -228,13 +228,13 @@ is §root/FS-platform.
 
 ## External facts
 
-A ticket from GitHub, Jira, or Linear is cited like any spec once a kind names the
+A GitHub issue, or a Jira or Linear ticket, is cited like any spec once a kind names the
 executable that fetches it. `grund fetch <ID>` saves it as a declaration in the
 repository; every other command reads that committed snapshot offline. From the [external-tickets example](examples/external-tickets/):
 
 ```toml
 [[kinds]]
-kind = "TICKET"
+kind = "GH"
 file = "docs/tickets.md"
 format = "{kind}-{number}"
 resolve = "should"
@@ -243,9 +243,9 @@ fetch = "scripts/fetch-ticket"
 
 ```console
 $ grund check
-docs/guide.md:3: warning: no snapshot for TICKET-1234 in docs/tickets.md — run grund fetch TICKET-1234
-$ grund fetch TICKET-1234
-$ grund TICKET-1234
+… no snapshot for GH-1234 in docs/tickets.md — run grund fetch GH-1234
+$ grund fetch GH-1234
+$ grund GH-1234
 The issue requests committed snapshots that resolve offline.
 ```
 
@@ -272,7 +272,7 @@ A use that still quotes the step from before it was tuned fails the check:
 
 ```console
 $ grund check
-docs/solver.md:7: error: value mismatch for CONST-time-step.1: bound `0.002`, declared `0.001` at values/time-step.md:2
+… value mismatch for CONST-time-step.1: bound `0.002`, declared `0.001` …
 ```
 
 The [values guide](docs/user-facing/values.md) covers JSON declarations, values inside
@@ -284,7 +284,7 @@ Turn a `§<ID>` in your terminal into something you click, landing at the exact 
 
 ```bash
 grund integrations                  # what applies in this environment
-grund integrations wezterm          # read the snippet and the resolver first
+grund integrations wezterm          # review what it installs
 grund integrations wezterm --write  # install it
 ```
 

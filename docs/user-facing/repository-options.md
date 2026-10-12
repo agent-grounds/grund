@@ -97,7 +97,7 @@ one repository-owned fetcher, then materialize a cited fact deliberately:
 
 ```toml
 [[kinds]]
-kind = "TICKET"
+kind = "GH"
 file = "docs/tickets.md"
 format = "{kind}-{number}"
 resolve = "should"
@@ -105,7 +105,7 @@ fetch = "scripts/fetch-ticket"
 ```
 
 ```sh
-grund fetch TICKET-1234
+grund fetch GH-1234
 ```
 
 Checks, queries, formatting, completion, and the LSP never run that program;

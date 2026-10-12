@@ -1,3 +1,3 @@
 # Release guide
 
-The rollout follows §TICKET-1234.
+The rollout follows §GH-1234.

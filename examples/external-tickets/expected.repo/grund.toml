@@ -8,7 +8,7 @@ format = "{kind}-{slug}"
 slug_pattern = "[a-z][a-z-]*"
 
 [[kinds]]
-kind = "TICKET"
+kind = "GH"
 file = "docs/tickets.md"
 format = "{kind}-{number}"
 resolve = "should"

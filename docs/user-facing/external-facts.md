@@ -9,7 +9,7 @@ executable:
 
 ```toml
 [[kinds]]
-kind = "TICKET"
+kind = "GH"
 file = "docs/tickets.md"
 title = "External tickets (generated snapshots)"
 format = "{kind}-{number}"
@@ -23,8 +23,8 @@ and run `chmod +x scripts/fetch-ticket` before the first fetch:
 
 ````sh
 #!/bin/sh
-title=$(gh issue view "${1#TICKET-}" --json title --jq .title) || exit
-body=$(gh issue view "${1#TICKET-}" --json body --jq .body) || exit
+title=$(gh issue view "${1#GH-}" --json title --jq .title) || exit
+body=$(gh issue view "${1#GH-}" --json body --jq .body) || exit
 fence=$(printf '%s\n```\n' "$body" | grep -o '`\{3,\}' | sort | tail -n 1)
 printf '## %s: %s\n\n%s`markdown\n%s\n%s`\n' "$1" "$title" "$fence" "$body" "$fence"
 ````
@@ -55,23 +55,23 @@ A fetched kind is `must` unless `[rules.resolution]` says `warn`, which is the
 version-1 `should`:
 
 ```toml
-[schema.kinds.TICKET]
+[schema.kinds.GH]
 files = ["docs/tickets.md"]
 id_format = "{kind}-{number}"
 fetch = "scripts/fetch-ticket"
 
 [rules.resolution]
-TICKET = "warn"
+GH = "warn"
 
-[presentation.kinds.TICKET]
+[presentation.kinds.GH]
 title = "External tickets (generated snapshots)"
 ```
 
 In a workspace, qualify the ID to select the owning project:
 
 ```sh
-grund fetch api/TICKET-1234
+grund fetch api/GH-1234
 ```
 
-The member's executable receives only `TICKET-1234`, and the declaration is
+The member's executable receives only `GH-1234`, and the declaration is
 written under that member's configured home ([§FS-fetch.1](../functional-spec/FS-fetch.md#1-input-and-project-selection)).
