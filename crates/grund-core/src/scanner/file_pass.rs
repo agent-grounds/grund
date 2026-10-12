@@ -71,19 +71,9 @@ use crate::workspace::WorkspaceCitationTarget;
 /// one disk read for both unqualified and qualified citations
 /// (§AR-workspace.5.1). An empty slice falls back to the loose qualified
 /// parser used by member-local scans (§FS-workspace.5.2).
-pub(super) fn scan_file(
-    path: &Path,
-    schema: &Schema,
-    frame: Frame<'_>,
-    findings: &mut Catalog,
-    workspace_targets: &[WorkspaceCitationTarget],
-) -> Result<()> {
-    // §FS-check.6.1.1: cover this effective input before its shared read.
-    let text = crate::config::input_read_to_string(path)?;
-    scan_file_text(path, &text, schema, frame, findings, workspace_targets)
-}
-
-/// Scan one file's already-read text into `findings`: declarations, their section
+///
+/// One file's text into `findings`, the text being what the caller read through
+/// `sources`, a buffer where the run holds one (§FS-scan.text.buffer): declarations, their section
 /// headings, citations, and the headings that came close to being declarations.
 ///
 /// `classify` turns on citing-side classification — declaration body ranges and each

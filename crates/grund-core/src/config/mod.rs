@@ -70,7 +70,10 @@ mod v2;
 mod validate;
 mod workspace_block;
 
-pub(crate) use crate::model::{check_input_observer, observe_input, with_check_input_observer};
+pub(crate) use crate::sources::{
+    check_input_observer, input_read_dir, input_read_to_string, observe_input,
+    with_check_input_observer,
+};
 pub use citations::{
     CitationDisjunction, CitationLevel, CitationRules, CitationTarget, KindCitationRules,
     NamespaceMatch,
@@ -86,10 +89,7 @@ pub(crate) use project_records::ProjectRecords;
 pub use compiled::ScanDemand;
 #[allow(unused_imports)]
 pub use fields::{Field, FieldContent, Placement};
-pub(crate) use inputs::{
-    input_read_dir, input_read_to_string, observe_config, observe_config_candidates,
-    observe_ignore_inputs,
-};
+pub(crate) use inputs::{observe_config, observe_config_candidates, observe_ignore_inputs};
 pub use kind::{KindConfig, KindIndex, KindResolution};
 pub use point_sizes::{LeadSizeWarning, PointSizeUnit};
 #[allow(unused_imports)]

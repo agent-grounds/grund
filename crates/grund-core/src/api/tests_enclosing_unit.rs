@@ -9,11 +9,12 @@
 use std::path::{Path, PathBuf};
 
 use super::*;
-use crate::model::TextOverlays;
+
 use crate::resolver::{
     load_classifying_workspace_context, load_workspace_context,
     load_workspace_context_with_overlays,
 };
+use crate::sources::Buffers;
 use crate::testing::{test_root, write};
 
 const CONFIG: &str = "grund_config_version = 1\n\
@@ -178,7 +179,7 @@ fn the_queries_that_publish_no_enclosing_unit_still_skip_classification() {
             .count()
     };
     assert_eq!(classified(&root, false), 0, "load_workspace_context");
-    let overlaid = load_workspace_context_with_overlays(&root, true, &TextOverlays::new(), false)
+    let overlaid = load_workspace_context_with_overlays(&root, true, &Buffers::default(), false)
         .expect("load context with overlays");
     assert_eq!(
         overlaid

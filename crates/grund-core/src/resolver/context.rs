@@ -21,8 +21,9 @@ use super::legacy_promotion::promote_qualified_legacy_citations;
 use super::shorthand::resolve_qualified_shorthand_citations;
 use super::unread_block::settled_run_warnings;
 use crate::config::ProjectRecords;
-use crate::model::{Catalog, Diagnostic, TextOverlays};
+use crate::model::{Catalog, Diagnostic};
 use crate::scanner::{ScanError, scan_tree_with_workspace_overlays};
+use crate::sources::Buffers;
 use crate::workspace::{
     WorkspaceCitationTarget, expand_workspace_tree, resolve_narrowable_config,
     resolve_workspace_config, scope_is_config_root, unlisted_workspace_block_run_warnings,
@@ -140,7 +141,7 @@ impl WorkspaceContext {
 /// on top of it (§AR-workspace.5.1).
 pub(crate) fn load_workspace_context(path: &Path, path_provided: bool) -> Result<WorkspaceContext> {
     record_test_workspace_load();
-    load_workspace_context_with_overlays(path, path_provided, &TextOverlays::new(), false)
+    load_workspace_context_with_overlays(path, path_provided, &Buffers::default(), false)
 }
 
 /// The same load for a query that **publishes** citing-side attribution rather
@@ -156,7 +157,7 @@ pub(crate) fn load_classifying_workspace_context(
     path_provided: bool,
 ) -> Result<WorkspaceContext> {
     record_test_workspace_load();
-    load_workspace_context_with_overlays(path, path_provided, &TextOverlays::new(), true)
+    load_workspace_context_with_overlays(path, path_provided, &Buffers::default(), true)
 }
 
 /// Test-only observation seam for §AR-resolver.3: an opted-in black-box test
@@ -182,7 +183,7 @@ fn record_test_workspace_load() {}
 pub(crate) fn load_workspace_context_with_overlays(
     path: &Path,
     path_provided: bool,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
     classify_citation_sources: bool,
 ) -> Result<WorkspaceContext> {
     let config = ProjectRecords::of(resolve_workspace_config(path)?);
@@ -218,7 +219,7 @@ pub(crate) fn load_resolved_workspace_context(
     mut config: ProjectRecords,
     path: &Path,
     path_provided: bool,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
     classify_citation_sources: bool,
 ) -> Result<WorkspaceContext> {
     // §AR-scanner.2.4.2 / §AR-benchmarks: who passes what is on the doc comment
@@ -273,7 +274,7 @@ fn single_project_context(
     config: ProjectRecords,
     path: &Path,
     path_provided: bool,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
 ) -> Result<WorkspaceContext> {
     let (findings, scan_errors) = scan_tree_with_workspace_overlays(
         config.schema(),
@@ -354,14 +355,14 @@ pub(crate) fn load_narrowable_workspace_context(
             config,
             path,
             path_provided,
-            &TextOverlays::new(),
+            &Buffers::default(),
             true,
         );
     }
     // §AR-scanner.2.4.2: the narrowed scan performs the pass too, so one command
     // does not answer two ways depending on where it was invoked (§FS-cover.3.2).
     config.set_classify_citation_sources(true);
-    single_project_context(config, path, path_provided, &TextOverlays::new())
+    single_project_context(config, path, path_provided, &Buffers::default())
 }
 
 /// Load every workspace project a workspace-mode command operates on:
@@ -375,12 +376,12 @@ pub(crate) fn load_narrowable_workspace_context(
 pub(crate) fn load_workspace_projects(
     root_config: &mut ProjectRecords,
 ) -> Result<Vec<WorkspaceProject>> {
-    load_workspace_projects_with_overlays(root_config, &TextOverlays::new())
+    load_workspace_projects_with_overlays(root_config, &Buffers::default())
 }
 
 fn load_workspace_projects_with_overlays(
     root_config: &mut ProjectRecords,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
 ) -> Result<Vec<WorkspaceProject>> {
     // Stage 1: build the (alias, config) list, recursing into any member that
     // is itself a workspace root. Failing fast on alias errors, empty
@@ -460,7 +461,7 @@ fn load_workspace_project(
     alias: String,
     config: ProjectRecords,
     targets: &[WorkspaceCitationTarget],
-    overlays: &TextOverlays,
+    overlays: &Buffers,
 ) -> Result<WorkspaceProject> {
     let (findings, scan_errors) = scan_tree_with_workspace_overlays(
         config.schema(),

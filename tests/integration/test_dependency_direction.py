@@ -1,7 +1,7 @@
 """§AR-system.4 — no component of `grund-core` reads one above it. Every
 `crate::<other>` reference in every `.rs` file under
 `crates/grund-core/src/<component>/` is judged against the order §AR-system.1
-draws: model, grammar, config, then workspace and templates as siblings that may
+draws: model, sources, grammar, config, then workspace and templates as siblings that may
 not read each other, scanner, resolver, rules, checker, then queries and writers
 as siblings that may not read each other either, then api. The ledger of reads
 that still run the other way is **empty**, and must stay so. The mechanism is
@@ -34,17 +34,18 @@ CORE = REPO_ROOT / "crates" / "grund-core" / "src"
 
 ORDER = {
     "model": 0,
-    "grammar": 1,
-    "config": 2,
-    "workspace": 3,
-    "templates": 3,
-    "scanner": 4,
-    "resolver": 5,
-    "rules": 6,
-    "checker": 7,
-    "queries": 8,
-    "writers": 8,
-    "api": 9,
+    "sources": 1,
+    "grammar": 2,
+    "config": 3,
+    "workspace": 4,
+    "templates": 4,
+    "scanner": 5,
+    "resolver": 6,
+    "rules": 7,
+    "checker": 8,
+    "queries": 9,
+    "writers": 9,
+    "api": 10,
 }
 
 # `crate::<component>::<item>` or `crate::<component>::{<item>, …}`, in a `use`

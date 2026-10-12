@@ -3,7 +3,7 @@ use rayon::prelude::*;
 use std::path::{Component, Path, PathBuf};
 
 use super::e2e::{e2e_cases_folder, scan_e2e_cases};
-use super::file_pass::{scan_file, scan_file_text};
+use super::file_pass::scan_file_text;
 use super::legacy::promote_local_legacy_citations;
 use super::merge::merge_findings;
 use super::stub_homes::resolve_stubs;
@@ -12,10 +12,8 @@ use super::walk::{is_direct_e2e_case_dir, scan_roots, walk_scannable_files_repor
 use super::walk_boundaries::is_scannable;
 use crate::config::{Frame, Schema};
 use crate::grammar::resolve_shorthand_citations;
-use crate::model::{
-    Catalog, TextOverlays, canonicalize_existing_prefix, normalize_path_lexically,
-    paths_same_location, sort_path_key,
-};
+use crate::model::{Catalog, normalize_path_lexically, sort_path_key};
+use crate::sources::{Buffers, Sources, canonicalize_existing_prefix, paths_same_location};
 use crate::workspace::WorkspaceCitationTarget;
 
 /// The file count above which one tree scan is worth splitting across threads
@@ -61,13 +59,13 @@ fn scan_one_file(
     schema: &Schema,
     frame: Frame<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
-    overlays: &TextOverlays,
+    overlays: &Buffers,
 ) -> FileScanResult {
     let mut findings = Catalog::default();
-    let result = if let Some(text) = overlay_text(overlays, file) {
-        scan_file_text(file, text, schema, frame, &mut findings, workspace_targets)
-    } else {
-        scan_file(file, schema, frame, &mut findings, workspace_targets)
+    // §FS-check.6.1.1: `sources` observes this input before its shared read.
+    let result = match Sources::of(overlays).text(file) {
+        Ok(text) => scan_file_text(file, &text, schema, frame, &mut findings, workspace_targets),
+        Err(err) => Err(err.into()),
     };
     match result {
         Ok(()) => {
@@ -85,7 +83,7 @@ pub(super) fn scan_unwalked_file(
     file: &Path,
     schema: &Schema,
     frame: Frame<'_>,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
 ) -> Result<Catalog> {
     let (_, result) = scan_one_file(file, schema, frame, &[], overlays);
     result.map_err(|message| anyhow!(message))
@@ -96,7 +94,7 @@ fn scan_file_results(
     schema: &Schema,
     frame: Frame<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
-    overlays: &TextOverlays,
+    overlays: &Buffers,
 ) -> Vec<FileScanResult> {
     // §AR-bindings.3: scoped observation follows the shared parallel scan.
     let observer = crate::config::check_input_observer();
@@ -142,7 +140,7 @@ pub(crate) fn scan_tree_with_workspace(
         explicit_scope,
         workspace_targets,
         PARALLEL_SCAN_MIN_FILES,
-        &TextOverlays::new(),
+        &Buffers::default(),
     )
 }
 
@@ -153,7 +151,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     explicit_scope: bool,
     workspace_targets: &[WorkspaceCitationTarget],
     parallel_min_files: usize,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
 ) -> Result<(Catalog, Vec<ScanError>)> {
     // §FS-config.3.5: a link the walk could not resolve is already a scan failure
     // before a single file is opened — it joins the per-file ones (§FS-check.2.4).
@@ -239,7 +237,7 @@ pub(crate) fn scan_tree_with_workspace_overlays(
     scope: Option<&Path>,
     explicit_scope: bool,
     workspace_targets: &[WorkspaceCitationTarget],
-    overlays: &TextOverlays,
+    overlays: &Buffers,
 ) -> Result<(Catalog, Vec<ScanError>)> {
     scan_tree_with_workspace_threshold(
         schema,
@@ -257,25 +255,25 @@ fn add_overlay_scan_files(
     frame: Frame<'_>,
     scope: Option<&Path>,
     explicit_scope: bool,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
     files: &mut Vec<PathBuf>,
 ) -> Result<()> {
     if overlays.is_empty() {
         return Ok(());
     }
     let roots = scan_roots(schema, frame, scope, explicit_scope)?;
-    for path in overlays.keys() {
-        if !is_scannable(path, schema) {
+    for path in Sources::of(overlays).buffer_only_files() {
+        if !is_scannable(&path, schema) {
             continue;
         }
-        let path = normalize_path_lexically(path);
+        let path = normalize_path_lexically(&path);
         if !roots.iter().any(|root| path_starts_with(&path, root)) {
             continue;
         }
         if files.iter().any(|file| paths_same_location(file, &path)) {
             continue;
         }
-        if path.exists() || !new_overlay_file_passes_walk_filters(schema, frame, &roots, &path) {
+        if !new_overlay_file_passes_walk_filters(schema, frame, &roots, &path) {
             continue;
         }
         files.push(path);
@@ -398,13 +396,6 @@ pub(super) fn path_starts_with(path: &Path, root: &Path) -> bool {
     let path = canonicalize_existing_prefix(path);
     let root = canonicalize_existing_prefix(root);
     path == root || path.starts_with(root)
-}
-
-pub(crate) fn overlay_text<'a>(overlays: &'a TextOverlays, path: &Path) -> Option<&'a str> {
-    overlays
-        .get(&normalize_path_lexically(path))
-        .or_else(|| overlays.get(path))
-        .map(String::as_str)
 }
 
 /// Scan helper for point-query subcommands (`show`, `id`): any unreadable file

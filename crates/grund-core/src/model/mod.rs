@@ -24,11 +24,12 @@
 //! records — `Report`, `Finding` and `FindingSite` — joined `report.rs` beside
 //! the internal ones they are rendered from, because the editor snapshot and the
 //! show refusal of §FS-lsp and §FS-errors.5.2 carry them and both are the queries'.
-//! And the snapshot canonicalization of §AR-lsp.5 joined `paths.rs` out of
-//! `scanner/tree.rs`, the queries and the writers being siblings that both
-//! rebase a path against it.
+//! The snapshot canonicalization of §AR-lsp.5 joined `paths.rs` out of
+//! `scanner/tree.rs` the same way, and left again, with the physical path keys
+//! and the input observer that sat in `check_inputs.rs`, for the sources
+//! component when §AR-system.2.13 became one: each asks the disk, and only
+//! sources does (§AR-system.5).
 
-mod check_inputs;
 mod e2e;
 mod expected;
 mod failure;
@@ -42,14 +43,12 @@ mod stub_resolution;
 mod text;
 mod values;
 
-pub use check_inputs::{CheckInput, CheckInputObserver, with_check_input_observer};
 pub use e2e::{E2eCase, E2eSpecRef};
 pub use expected::{Expected, ExpectedEntrypoint, ExpectedSection};
 pub(crate) use failure::OperationContext;
 pub use failure::OperationDiagnostic;
 pub use headings::{NearMissHeading, SectionHeadingOutsideDeclaration, UnmarkedHeading};
 pub(crate) use line_owners::{FileLineOwnership, OwnerRun, RangeOwnership, SectionRun};
-pub use paths::canonical_snapshot_path;
 pub use records::{
     Catalog, Citation, Declaration, DocCommentBlock, FileHeading, FileStructure, Id,
     InlineCitationSite, SectionInfo, ShowOutput, ShowSection,
@@ -63,18 +62,13 @@ pub use values::{
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
-pub(crate) use check_inputs::{check_input_observer, observe_input};
 pub(crate) use headings::UnmarkedHeadingCandidate;
 pub(crate) use paths::{
-    canonicalize_existing_prefix, configured_home_path_key, format_path, is_hidden,
-    normalize_path_lexically, paths_same_location, physical_path_key, relative_from_base,
+    configured_home_path_key, format_path, is_hidden, normalize_path_lexically, relative_from_base,
     scanned_decl_relative_path, scanned_path_key, sort_path_key,
 };
 pub(crate) use patterns::GlobCitation;
-pub(crate) use records::{
-    LegacyCitationCandidate, LocalSectionCitationCandidate, ShowRenderMode, TextOverlays,
-    resolve_stub_target,
-};
+pub(crate) use records::{LegacyCitationCandidate, LocalSectionCitationCandidate, ShowRenderMode};
 pub(crate) use report::{CheckReport, Diagnostic, LANDED_CLAUSE, Site};
 pub(crate) use stub_resolution::{PairedDeclarations, StubResolution, paired_declarations};
 pub(crate) use text::{CITATION_DIRECTION_REPAIR, format_list, json_escape, plural};

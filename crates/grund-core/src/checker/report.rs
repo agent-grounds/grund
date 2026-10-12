@@ -2,7 +2,8 @@ use super::conform::conform;
 use super::judge::{CheckWorkspace, judge};
 use super::support::{diagnostic_cmp, sort_diagnostics};
 use crate::config::{Frame, Rules, Schema};
-use crate::model::{Catalog, CheckReport, Diagnostic, Expected, TextOverlays};
+use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
+use crate::sources::Buffers;
 
 /// AR-checker: how grund validates the scanner's findings
 ///
@@ -474,7 +475,7 @@ pub(crate) fn check_on_disk(
         expected,
         frame,
         workspace,
-        &TextOverlays::new(),
+        &Buffers::default(),
     )
 }
 
@@ -510,7 +511,7 @@ pub(crate) fn check_with_workspace_and_overlays(
     expected: &Expected,
     frame: Frame<'_>,
     workspace: &CheckWorkspace<'_>,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
 ) -> CheckReport {
     let conformed = conform(schema, catalog, frame, overlays);
     let judged = judge(rules, schema, catalog, expected, frame, workspace);

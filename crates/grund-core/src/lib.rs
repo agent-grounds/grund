@@ -2,6 +2,10 @@
 // declared in `model/` and what crosses the boundary is what `model/mod.rs`
 // re-exports (§AR-core-module-layout.1.1).
 mod model;
+// §AR-system.2.13: sources is one Rust module, the one reader of the disk, so
+// what crosses its boundary is what `sources/mod.rs` re-exports
+// (§AR-core-module-layout.1.1).
+mod sources;
 // §AR-system.2.1: the grammar component is one Rust module too, so the lexical
 // facts are declared in `grammar/` and what crosses the boundary is what
 // `grammar/mod.rs` re-exports (§AR-core-module-layout.1.1).
@@ -63,12 +67,18 @@ pub(crate) mod testing;
 // §AR-system.2.2 model: the records every component passes along — the catalog
 // a walk produces, the published report, and the value bindings (§FS-values.2).
 pub use model::{
-    Catalog, CheckInput, CheckInputObserver, Citation, Declaration, DeclarationSource,
-    DocCommentBlock, E2eCase, E2eSpecRef, EmbeddedValueRoot, FileHeading, FileStructure, Finding,
-    FindingSite, Id, InlineCitationSite, InvalidValueSite, NearMissHeading, OperationDiagnostic,
-    Report, SectionHeadingOutsideDeclaration, SectionInfo, ShowOutput, ShowSection,
-    UnmarkedHeading, ValueBinding, ValueComponent, ValueComponentKind, ValueRootOrigin,
-    canonical_snapshot_path, with_check_input_observer,
+    Catalog, Citation, Declaration, DeclarationSource, DocCommentBlock, E2eCase, E2eSpecRef,
+    EmbeddedValueRoot, FileHeading, FileStructure, Finding, FindingSite, Id, InlineCitationSite,
+    InvalidValueSite, NearMissHeading, OperationDiagnostic, Report,
+    SectionHeadingOutsideDeclaration, SectionInfo, ShowOutput, ShowSection, UnmarkedHeading,
+    ValueBinding, ValueComponent, ValueComponentKind, ValueRootOrigin,
+};
+
+// §AR-system.2.13 sources: the one reader of the disk, whose input observer an
+// embedder scopes to a check (§AR-bindings.3) and whose snapshot path an
+// editor's request is matched by (§AR-lsp.5.1).
+pub use sources::{
+    CheckInput, CheckInputObserver, canonical_snapshot_path, with_check_input_observer,
 };
 
 /// The scan's shared facts under the name they had before the glossary's word

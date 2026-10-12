@@ -3,13 +3,13 @@ use crate::config::{Config, display_path};
 use crate::grammar::render_id;
 use crate::model::{
     Catalog, Declaration, DeclarationSource, Id, SectionInfo, ShowOutput, ShowRenderMode,
-    StubResolution, TextOverlays, format_path, json_escape, paired_declarations,
-    paths_same_location,
+    StubResolution, format_path, json_escape, paired_declarations,
 };
 use crate::resolver::{
     extract_declaration_body, heading_anchor, section_site_anchor, show_e2e_case,
     takes_heading_anchor,
 };
+use crate::sources::{Buffers, paths_same_location};
 use anyhow::{Result, anyhow};
 
 #[cfg(test)]
@@ -30,7 +30,7 @@ pub(crate) fn show_declaration(
         section,
         mode,
         include_heading,
-        &TextOverlays::new(),
+        &Buffers::default(),
     )
     .map(|(output, _)| output)
 }
@@ -58,7 +58,7 @@ pub(crate) fn show_declaration_with_overlays<'a>(
     section: Option<&str>,
     mode: ShowRenderMode,
     include_heading: bool,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
 ) -> Result<(ShowOutput, &'a Declaration)> {
     let not_found = || {
         anyhow!(crate::model::OperationDiagnostic::new(

@@ -8,9 +8,10 @@ use std::path::PathBuf;
 
 use crate::config::display_path;
 use crate::grammar::render_id;
-use crate::model::{Finding, RangeOwnership, paths_same_location};
+use crate::model::{Finding, RangeOwnership};
 use crate::resolver::load_narrowable_workspace_context;
 use crate::scanner::ApiScanError;
+use crate::sources::paths_same_location;
 
 use super::cover::cover_scan_errors;
 use super::report::context_run_warnings;

@@ -7,12 +7,12 @@ use super::selector_refusal::require_unique_literal;
 use crate::config::{Config, display_path, measure_point_text, run_warning_findings};
 use crate::grammar::render_id;
 use crate::model::{
-    Declaration, Finding, Id, SectionInfo, TextOverlays, format_path, paired_declarations,
-    sort_path_key,
+    Declaration, Finding, Id, SectionInfo, format_path, paired_declarations, sort_path_key,
 };
 use crate::resolver::{PointBodyCache, load_workspace_context, point_body_pair};
 use crate::rules::sentence::RuleSubject;
 use crate::scanner::api_scan_error;
+use crate::sources::Buffers;
 
 pub use super::size_output::{ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput};
 
@@ -191,7 +191,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
         });
     }
 
-    let overlays = TextOverlays::new();
+    let overlays = Buffers::default();
     let mut cache = PointBodyCache::new(&overlays);
     let render_config = context.render_config();
     let mut entries = Vec::with_capacity(pending.len());

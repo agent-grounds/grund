@@ -106,9 +106,7 @@ pub(crate) use legacy::{
 };
 pub(crate) use scan_error::api_scan_error;
 pub(crate) use scope_probe::effective_scope_reads_any_file;
-pub(crate) use tree::{
-    ScanError, overlay_text, scan_tree, scan_tree_strict, scan_tree_with_workspace_overlays,
-};
+pub(crate) use tree::{ScanError, scan_tree, scan_tree_strict, scan_tree_with_workspace_overlays};
 pub(crate) use walk::{scan_roots_for, walk_reads_any_file};
 pub(crate) use walk_reporting::{
     walk_scannable_files, walk_scannable_files_reporting, walk_scannable_files_with_sources,

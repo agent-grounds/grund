@@ -1,9 +1,8 @@
 use std::path::{Path, PathBuf};
 
 use crate::config::{Frame, Schema};
-use crate::model::{
-    configured_home_path_key, physical_path_key, scanned_decl_relative_path, scanned_path_key,
-};
+use crate::model::{configured_home_path_key, scanned_decl_relative_path, scanned_path_key};
+use crate::sources::physical_path_key;
 
 pub(super) struct DeclarationHome<'a> {
     pub(super) kind: &'a str,

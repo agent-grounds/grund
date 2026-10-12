@@ -23,9 +23,8 @@ use crate::grammar::{
     MarkdownBlocks, PythonDocstringScanState, declaration_id_on_line, render_id, section_path,
     source_scan_line,
 };
-use crate::model::{Declaration, Id, ShowOutput, ShowRenderMode, TextOverlays};
-
-use crate::scanner::overlay_text;
+use crate::model::{Declaration, Id, ShowOutput, ShowRenderMode};
+use crate::sources::{Buffers, Sources};
 
 use super::body_lines::{
     closes_comment_block, join_with_blank, push_outline_section, truncate_to_first_paragraph,
@@ -66,7 +65,7 @@ pub(crate) fn extract_declaration_body(
     include_heading: bool,
     schema: &Schema,
     frame: Frame<'_>,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
 ) -> Result<ShowOutput> {
     let mut cache = PointBodyCache::new(overlays);
     extract_declaration_body_cached(
@@ -106,12 +105,12 @@ pub(super) struct PointBodySite {
 /// owns no parsing rules: the cached bytes still flow through the exact show
 /// slicer below (§FS-list.3.4.1, §FS-declarations.checks.oversized-lead).
 pub(crate) struct PointBodyCache<'a> {
-    overlays: &'a TextOverlays,
+    overlays: &'a Buffers,
     text: BTreeMap<PathBuf, String>,
 }
 
 impl<'a> PointBodyCache<'a> {
-    pub(crate) fn new(overlays: &'a TextOverlays) -> Self {
+    pub(crate) fn new(overlays: &'a Buffers) -> Self {
         Self {
             overlays,
             text: BTreeMap::new(),
@@ -409,12 +408,11 @@ pub(super) fn extract_declaration_body_cached(
     })
 }
 
-fn read_text_with_overlays(path: &Path, overlays: &TextOverlays) -> Result<String> {
-    if let Some(text) = overlay_text(overlays, path) {
-        Ok(text.to_string())
-    } else {
-        // §FS-check.6.1.1: cover this effective input before its shared read.
-        crate::config::input_read_to_string(path)
-            .with_context(|| format!("read {}", path.display()))
-    }
+/// The text a save would write (§FS-scan.text.buffer), observed before a disk
+/// read (§FS-check.6.1.1).
+fn read_text_with_overlays(path: &Path, overlays: &Buffers) -> Result<String> {
+    Sources::of(overlays)
+        .text(path)
+        .map(|text| text.into_owned())
+        .with_context(|| format!("read {}", path.display()))
 }

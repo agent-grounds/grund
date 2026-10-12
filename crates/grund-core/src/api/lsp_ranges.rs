@@ -7,15 +7,14 @@
 //! file budget: the walk there decides *which* rows exist, and each answer here
 //! is a function of one row.
 
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::model::{
-    Citation, Declaration, DeclarationSource, SectionInfo, StubResolution, TextOverlays,
-    canonicalize_existing_prefix, paired_declarations,
+    Citation, Declaration, DeclarationSource, SectionInfo, StubResolution, paired_declarations,
 };
 use crate::resolver::{WorkspaceContext, WorkspaceProject};
-use crate::scanner::{EMBEDDED_VALUE_MARKER, overlay_text};
+use crate::scanner::EMBEDDED_VALUE_MARKER;
+use crate::sources::{Buffers, Sources, canonicalize_existing_prefix};
 
 pub(super) fn lsp_query_id(
     context: &WorkspaceContext,
@@ -74,7 +73,7 @@ pub(super) fn lsp_target_for_stub(stub: &Declaration) -> Option<(PathBuf, usize)
 pub(super) fn declaration_range_parts(
     decl: &Declaration,
     rendered_id: &str,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
 ) -> (usize, String) {
     match &decl.source {
         DeclarationSource::Json {
@@ -90,7 +89,7 @@ pub(super) fn section_range_parts(
     decl: &Declaration,
     info: &SectionInfo,
     section: &str,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
 ) -> (usize, String) {
     if matches!(decl.source, DeclarationSource::Json { .. })
         && let Some(value) = &info.value
@@ -116,11 +115,12 @@ pub(super) fn heading_span_parts(
     file: &Path,
     line: usize,
     needle: &str,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
 ) -> (usize, String) {
-    overlay_text(overlays, file)
-        .map(str::to_string)
-        .or_else(|| fs::read_to_string(file).ok())
+    // §FS-scan.text.buffer: the line as a save would write it.
+    Sources::of(overlays)
+        .text(file)
+        .ok()
         .and_then(|text| text.lines().nth(line.saturating_sub(1)).map(str::to_string))
         .and_then(|line| {
             let start = line.find(needle)?;

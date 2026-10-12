@@ -20,9 +20,10 @@ use std::path::{Path, PathBuf};
 use crate::config::{Frame, Presentation, Schema};
 use crate::grammar::{Grammar, anchor_slug, reduce_heading_text, render_id};
 use crate::model::{
-    Catalog, Declaration, Id, SectionInfo, paired_declarations, physical_path_key,
-    scanned_decl_relative_path, scanned_path_key,
+    Catalog, Declaration, Id, SectionInfo, paired_declarations, scanned_decl_relative_path,
+    scanned_path_key,
 };
+use crate::sources::physical_path_key;
 
 /// Compute the link URL for a citation: a repo-relative path to the declaration's
 /// home file — following an inline-spec stub to its real source file — plus a

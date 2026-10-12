@@ -1,10 +1,10 @@
 use crate::config::{Frame, LeadSizeWarning, PointSizeUnit, Schema, Strength, measure_point_text};
 use crate::grammar::render_id;
 use crate::model::{
-    Catalog, CheckReport, Declaration, Diagnostic, Id, SectionInfo, TextOverlays,
-    paired_declarations,
+    Catalog, CheckReport, Declaration, Diagnostic, Id, SectionInfo, paired_declarations,
 };
 use crate::resolver::{PointBodyCache, point_body_pair};
+use crate::sources::Buffers;
 
 /// Opt-in point-lead budget checking (§FS-declarations.checks.oversized-lead).
 ///
@@ -17,7 +17,7 @@ pub(super) fn check_oversized_leads(
     findings: &Catalog,
     schema: &Schema,
     frame: Frame<'_>,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
     report: &mut CheckReport,
 ) {
     // §FS-declarations.checks.oversized-lead: v1's one budget is a warning; v2's

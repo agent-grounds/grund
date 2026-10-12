@@ -1,6 +1,6 @@
 """§AR-core-module-layout.1 — the engine is one Rust module per component: every
 `.rs` file under `crates/grund-core/src/` is `lib.rs`, the shared test fixtures
-in `testing.rs`, or a file inside one of the twelve component directories
+in `testing.rs`, or a file inside one of the thirteen component directories
 §AR-system.2 names; each directory declares its files in a `mod.rs`, which is
 the whole of what crosses its boundary; the retired `compat/` directory is not
 a component; and `lib.rs` splices nothing at all."""
@@ -24,6 +24,7 @@ COMPONENTS = (
     "resolver",
     "rules",
     "scanner",
+    "sources",
     "templates",
     "workspace",
     "writers",

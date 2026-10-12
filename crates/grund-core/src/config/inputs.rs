@@ -1,21 +1,7 @@
 //! Config-dependent checking inputs (§FS-check.6.1.1, §FS-check.6.1.3).
 
-use crate::model::{check_input_observer, observe_input};
+use crate::sources::{check_input_observer, input_read_to_string, observe_input};
 use std::path::{Path, PathBuf};
-
-pub(crate) fn input_read_to_string(path: impl AsRef<Path>) -> std::io::Result<String> {
-    if !observe_input(path.as_ref(), false) {
-        return Err(std::io::Error::other("watch input coverage failed"));
-    }
-    std::fs::read_to_string(path)
-}
-
-pub(crate) fn input_read_dir(path: impl AsRef<Path>) -> std::io::Result<std::fs::ReadDir> {
-    if !observe_input(path.as_ref(), true) {
-        return Err(std::io::Error::other("watch input coverage failed"));
-    }
-    std::fs::read_dir(path)
-}
 
 /// Subscribe to both discovery names even if absent or shadowed. The frontend
 /// supplies shallow, filtered parent anchors (§FS-check.6.1.3).
