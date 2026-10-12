@@ -1,15 +1,15 @@
 use anyhow::{Result, anyhow};
 use rayon::prelude::*;
-use std::path::{Component, Path, PathBuf};
+use std::path::{Path, PathBuf};
 
-use super::e2e::{e2e_cases_folder, scan_e2e_cases};
+use super::e2e::scan_e2e_cases;
 use super::file_pass::scan_file_text;
 use super::legacy::promote_local_legacy_citations;
 use super::merge::merge_findings;
+use super::read_predicate::unread;
 use super::stub_homes::resolve_stubs;
 use super::value_json::{scan_value_json_sources, value_json_sources};
-use super::walk::{is_direct_e2e_case_dir, scan_roots, walk_scannable_files_reporting};
-use super::walk_boundaries::is_scannable;
+use super::walk::{scan_roots, walk_scannable_files_reporting};
 use crate::config::{Frame, Schema};
 use crate::grammar::resolve_shorthand_citations;
 use crate::model::{Catalog, normalize_path_lexically, sort_path_key};
@@ -250,6 +250,10 @@ pub(crate) fn scan_tree_with_workspace_overlays(
     )
 }
 
+/// The buffers with no file behind them that the walk would read were they
+/// saved, asked of the one read predicate (§FS-scan.text.buffer-only,
+/// §AR-scanner.1.13): every ignore file, `exclude` and unwalked home reaches
+/// them as it reaches the walk.
 fn add_overlay_scan_files(
     schema: &Schema,
     frame: Frame<'_>,
@@ -263,133 +267,17 @@ fn add_overlay_scan_files(
     }
     let roots = scan_roots(schema, frame, scope, explicit_scope)?;
     for path in Sources::of(overlays).buffer_only_files() {
-        if !is_scannable(&path, schema) {
+        if unread(schema, frame, &roots, &path).is_some() {
             continue;
         }
         let path = normalize_path_lexically(&path);
-        if !roots.iter().any(|root| path_starts_with(&path, root)) {
-            continue;
-        }
         if files.iter().any(|file| paths_same_location(file, &path)) {
-            continue;
-        }
-        if !new_overlay_file_passes_walk_filters(schema, frame, &roots, &path) {
             continue;
         }
         files.push(path);
     }
     files.sort_by_key(|path| sort_path_key(path));
     Ok(())
-}
-
-fn new_overlay_file_passes_walk_filters(
-    schema: &Schema,
-    frame: Frame<'_>,
-    roots: &[PathBuf],
-    path: &Path,
-) -> bool {
-    roots.iter().any(|root| {
-        let root = canonicalize_existing_prefix(root);
-        let path = canonicalize_existing_prefix(path);
-        if path == root || !path.starts_with(&root) {
-            return false;
-        }
-        if frame
-            .run
-            .workspace
-            .boundary_roots
-            .iter()
-            .any(|boundary| path_starts_with(&path, boundary))
-        {
-            return false;
-        }
-        let Ok(relative) = path.strip_prefix(&root) else {
-            return false;
-        };
-        let components: Vec<_> = relative
-            .components()
-            .filter_map(|component| match component {
-                Component::Normal(name) => name.to_str(),
-                _ => None,
-            })
-            .collect();
-        if components
-            .iter()
-            .any(|component| component.starts_with('.'))
-        {
-            return false;
-        }
-        if components
-            .iter()
-            .take(components.len().saturating_sub(1))
-            .any(|component| {
-                schema
-                    .sources
-                    .exclude
-                    .iter()
-                    .any(|excluded| excluded == component)
-            })
-        {
-            return false;
-        }
-        let e2e_cases_root = e2e_cases_folder(schema).map(|folder| frame.root().join(folder));
-        let mut ancestor = path.parent();
-        while let Some(dir) = ancestor {
-            if dir == root {
-                break;
-            }
-            if is_direct_e2e_case_dir(
-                dir,
-                e2e_cases_root.as_deref(),
-                &schema.ids.format,
-                frame.grammar(),
-            ) {
-                return false;
-            }
-            ancestor = dir.parent();
-        }
-        !path_ignored_by_gitignore(schema, &root, &path)
-    })
-}
-
-fn path_ignored_by_gitignore(schema: &Schema, root: &Path, path: &Path) -> bool {
-    if !schema.sources.respect_gitignore {
-        return false;
-    }
-    let Some(parent) = path.parent() else {
-        return false;
-    };
-    let mut dirs = Vec::new();
-    let mut cursor = Some(parent);
-    while let Some(dir) = cursor {
-        dirs.push(dir);
-        if dir == root {
-            break;
-        }
-        cursor = dir.parent();
-    }
-    dirs.reverse();
-    let mut ignored = false;
-    for dir in dirs {
-        let gitignore = dir.join(".gitignore");
-        if !gitignore.is_file() {
-            continue;
-        }
-        let mut builder = ignore::gitignore::GitignoreBuilder::new(dir);
-        if builder.add(&gitignore).is_some() {
-            continue;
-        }
-        let Ok(matcher) = builder.build() else {
-            continue;
-        };
-        let matched = matcher.matched_path_or_any_parents(path, false);
-        if matched.is_ignore() {
-            ignored = true;
-        } else if matched.is_whitelist() {
-            ignored = false;
-        }
-    }
-    ignored
 }
 
 pub(super) fn path_starts_with(path: &Path, root: &Path) -> bool {

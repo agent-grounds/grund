@@ -67,6 +67,7 @@ mod legacy_inline;
 mod line_owners;
 mod merge;
 mod qualified_citations;
+mod read_predicate;
 mod scan_error;
 mod scope_probe;
 mod section_record;

@@ -9,8 +9,8 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+use super::read_predicate::name_refusal;
 use super::tree::scan_unwalked_file;
-use super::walk_boundaries::is_scannable;
 use crate::config::{Frame, Schema};
 use crate::model::{Catalog, Declaration, Id, StubResolution};
 use crate::sources::{Buffers, Sources, paths_same_location, physical_path_key};
@@ -58,10 +58,10 @@ fn resolve_stub(
     if !sources.exists(&resolved) {
         return Some(StubResolution::Missing);
     }
-    // §FS-declarations.checks.broken-stub.3: a file the scan would read wherever it
-    // lay, judged by the name the stub wrote before any record is paired with it,
-    // so a symlink under a hidden or unlisted name never pairs with its file.
-    if !(sources.is_file(&resolved) && is_scannable(&resolved, targets.schema)) {
+    // §FS-declarations.checks.broken-stub.3, §AR-scanner.1.13: only the name and
+    // extension reasons, judged by the name the stub wrote before any record is
+    // paired with it, so a symlink under a hidden or unlisted name never pairs.
+    if !sources.is_file(&resolved) || name_refusal(&resolved, targets.schema).is_some() {
         return Some(StubResolution::NotRead);
     }
     if paths_same_location(&frame.root().join(&stub.file), &resolved) {

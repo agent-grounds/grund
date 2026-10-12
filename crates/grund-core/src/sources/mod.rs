@@ -23,6 +23,9 @@ pub use observe::{CheckInput, CheckInputObserver, with_check_input_observer};
 
 // What the other components read, each by this module's path (§AR-system.4).
 pub(crate) use buffers::{Buffers, Sources};
-pub(crate) use disk::{input_read_dir, input_read_to_string};
+pub(crate) use disk::{
+    input_read_dir, input_read_to_string, path_exists, path_is_dir, path_is_entry, path_is_file,
+    path_is_symlink, read_git_metadata,
+};
 pub(crate) use identity::{canonicalize_existing_prefix, paths_same_location, physical_path_key};
 pub(crate) use observe::{check_input_observer, observe_input};

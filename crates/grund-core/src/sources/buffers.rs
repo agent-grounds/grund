@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use super::disk::input_read_to_string;
+use super::disk::{input_read_to_string, path_exists, path_is_file};
 use super::identity::canonicalize_existing_prefix;
 use super::observe::observe_input;
 use crate::model::normalize_path_lexically;
@@ -78,12 +78,12 @@ impl<'a> Sources<'a> {
     /// Whether the file is there: on disk, or open in a buffer with nothing
     /// behind it yet (§FS-scan.text.buffer-only).
     pub(crate) fn exists(self, path: &Path) -> bool {
-        self.buffer(path).is_some() || path.exists()
+        self.buffer(path).is_some() || path_exists(path)
     }
 
     /// Whether `path` is a file, a buffer being one (§FS-scan.text.buffer-only).
     pub(crate) fn is_file(self, path: &Path) -> bool {
-        self.buffer(path).is_some() || path.is_file()
+        self.buffer(path).is_some() || path_is_file(path)
     }
 
     /// The buffers with no file behind them, each under the path the editor
@@ -95,7 +95,7 @@ impl<'a> Sources<'a> {
                 buffers
                     .0
                     .keys()
-                    .filter(|path| !path.exists())
+                    .filter(|path| !path_exists(path))
                     .cloned()
                     .collect()
             })

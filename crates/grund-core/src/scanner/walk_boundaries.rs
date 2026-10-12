@@ -10,8 +10,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use super::read_predicate::name_refusal;
 use crate::config::Schema;
-use crate::model::is_hidden;
 
 /// Whether a canonical path belongs to a project of this run that is **not** the
 /// one doing the walking (§FS-workspace.6.2, §AR-workspace.6.2). The owner is the
@@ -60,15 +60,8 @@ pub(super) fn is_directory_symlink(path: &Path) -> bool {
 }
 
 /// Whether a file is one the scanner reads: a non-hidden name with an extension in
-/// `[scan] extensions` (§FS-config.3.5, §AR-scanner.1).
+/// `[scan] extensions` (§FS-config.3.5, §AR-scanner.1), the name half of the one
+/// read predicate (§AR-scanner.1.13).
 pub(crate) fn is_scannable(path: &Path, schema: &Schema) -> bool {
-    if is_hidden(path) {
-        return false;
-    }
-    let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
-    schema
-        .sources
-        .extensions
-        .iter()
-        .any(|allowed| allowed == ext)
+    name_refusal(path, schema).is_none()
 }
