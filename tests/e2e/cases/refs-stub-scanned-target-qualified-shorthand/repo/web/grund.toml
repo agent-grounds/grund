@@ -1,0 +1,13 @@
+grund_config_version = 1
+project_name = "web"
+
+[id]
+format = "{kind}-{number}-{slug}"
+
+[[kinds]]
+kind = "FS"
+folder = "docs/fs"
+index = false
+
+[scan]
+include = ["docs", "src"]
