@@ -337,7 +337,8 @@ fn a_missing_section_is_not_linked_where_the_link_takes_no_anchor() {
 
 /// §FS-languages.fence.comment-block: grund#641's tree, a heading inside a fence in a
 /// `///`, `/** */` or docstring block is no section on any surface, while a citation in
-/// the fence stays live and an unclosed fence ends with its own comment block.
+/// the fence stays live, a value marker on a fenced heading is an illustration, and an
+/// unclosed fence ends with its own comment block.
 #[test]
 fn a_fenced_heading_in_a_doc_comment_is_not_a_section() {
     let root = repo_root();
@@ -346,6 +347,8 @@ fn a_fenced_heading_in_a_doc_comment_is_not_a_section() {
         "toc",
         "block-toc",
         "docstring-toc",
+        "inner-tilde-toc",
+        "go-toc",
         "full",
         "refs-json",
         "check-missing",
@@ -354,6 +357,7 @@ fn a_fenced_heading_in_a_doc_comment_is_not_a_section() {
         "fmt",
         "citation-live",
         "unclosed-ends-with-block",
+        "value-marker",
     ]
     .iter()
     .map(|name| {

@@ -400,9 +400,10 @@ pub(super) fn scan_file_text(
                 title,
             });
         }
+        // §FS-languages.fence.comment-block: a fenced marker is an illustration, as in Markdown.
         if embedded_marker.is_some()
             && !embedded_marker_attached
-            && structure
+            && heading_structure
             && authored_heading_level(
                 scan_line,
                 is_md || scan.in_py_docstring,
