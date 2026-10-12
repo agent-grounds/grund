@@ -150,16 +150,6 @@ This file is the single normative contract for workspace configuration, resoluti
 Issue 474 changes only the link to the renamed roadmap heading in this file, without adding prose or increasing its size. The former 900-line ceiling was already exceeded; the ceiling is reconciled to the measured 1149 non-blank lines, with the same split boundary and no growth allowance.
 """
 [[exceptions]]
-path = "README.md"
-match = "exact"
-rules = ["entrypoints"]
-kind = "deferred"
-max_accepted = { value = 427, unit = "lines" }
-until = "detailed command walkthroughs move into user-facing guides with a concise linked landing table and maintained real excerpts"
-reason = """
-The landing page still includes detailed command walkthroughs beside its concise introduction. Missing boundary: guide pages carrying those longer scenarios, with the landing page linking them while preserving its real-excerpt obligations under §REQ-readme.2. Issue 474 updates the roadmap link and aligns the both-evidence wording within one existing line; the runnable recipe guidance is a later implementation task. No README lines or size growth are added in this specification commit. The ceiling accepts exactly its current non-blank line count and permits no growth.
-"""
-[[exceptions]]
 path = "docs/functional-spec/FS-check.md"
 match = "exact"
 rules = ["docs"]
