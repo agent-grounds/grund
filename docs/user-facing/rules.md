@@ -154,7 +154,7 @@ judges exactly like the bare kind. A namespaced object kind needs the workspace
 in scope: a run without one says so at the rule's heading and still writes the block.
 
 <!-- BEGIN chapter-rules-refused -->
-Common refusals are intentional. Each names what failed and offers your sentence with only the refused part replaced, which is accepted when you paste it back; where grund cannot know what belongs in its place, it offers nothing, and `grund check --rule` lists the known kinds when what is missing is a kind:
+Common refusals are intentional. A sentence is refused for the first stage it fails, and no later stage is read: the final `.`, the fixed word and the phase-1 subject, a conjunction, the modality, the rest of the subject, then the predicate. A configured kind that declares no IDs is refused as that, naming its home, rather than as an unknown kind. Until 0.19.0 the old reason stays in front of the new one, as in `unknown kind "e2e" — kind "e2e" declares no IDs — tests/e2e/ is not a citable home; this wording changes in grund 0.19.0`. Each names what failed and offers your sentence with only the refused part replaced, which is accepted when you paste it back; where grund cannot know what belongs in its place, it offers nothing, and `grund check --rule` lists the known kinds when what is missing is a kind:
 
 - `Each FS may not cite any AR.` → `modality "may not" is not accepted; accepted form: Each FS must not cite any AR.`
 - `Each FS must cite no AR.` → `"cite no" is not accepted; accepted form: Each FS must not cite any AR.`
