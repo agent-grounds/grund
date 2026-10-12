@@ -9,7 +9,7 @@
 //! readings at the end, the record's lead and a block line 0.19.0 makes a section,
 //! are what §FS-declarations.checks.parse-moves compares today's answers with.
 
-use crate::grammar::{LexicalSettings, comment_envelope};
+use crate::grammar::{LexicalSettings, comment_envelope, expand_relative_heading};
 use crate::model::{
     BlockForm, FileRecord, HeadingKind, RecordedHeading, ShowRenderMode, ShowSection,
 };
@@ -36,6 +36,7 @@ pub(crate) struct TodaySite {
 pub(crate) struct TodaySink {
     view: ShowRenderMode,
     include_heading: bool,
+    canonical: bool,
     open: bool,
     lines: Vec<String>,
     sections: Vec<ShowSection>,
@@ -46,9 +47,27 @@ impl TodaySink {
         Self {
             view,
             include_heading,
+            canonical: false,
             open: true,
             lines: Vec::new(),
             sections: Vec::new(),
+        }
+    }
+
+    /// This sink, printing a relative heading at its canonical path, as `--toc`
+    /// does (§FS-declarations.section.relative.shown, §FS-show.2.1.2).
+    pub(crate) fn canonical(mut self) -> Self {
+        self.canonical = true;
+        self
+    }
+
+    /// `line`, a section heading the walk takes, as this sink prints it.
+    fn heading_line(&self, line: String, heading: Option<&RecordedHeading>) -> String {
+        match heading.filter(|heading| self.canonical && heading.relative) {
+            Some(heading) => {
+                expand_relative_heading(&line, heading.path.as_deref().unwrap_or_default())
+            }
+            None => line,
         }
     }
 
@@ -184,7 +203,8 @@ pub(crate) fn today_slices(
             let step = match path {
                 _ if target_found => {
                     if sink.view != ShowRenderMode::Outline {
-                        sink.lines.push(clean(scan_line, markdown_heading));
+                        let line = sink.heading_line(clean(scan_line, markdown_heading), heading);
+                        sink.lines.push(line);
                     }
                     Step::Taken
                 }
@@ -195,17 +215,17 @@ pub(crate) fn today_slices(
                 Some(_) if section.is_some() && depth <= target_depth => Step::Close,
                 Some(path) if sink.view == ShowRenderMode::Outline => {
                     let depth = section.map_or(depth, |_| depth - target_depth);
-                    let line = clean(scan_line, markdown_heading);
+                    let line = sink.heading_line(clean(scan_line, markdown_heading), heading);
                     let title = match record_block_end {
                         Some(_) => section_title(&line, path, true, None),
-                        None => section_title(scan_line, path, markdown_heading, own_marker),
+                        None => section_title(&line, path, markdown_heading, own_marker),
                     };
-                    sink.lines.push(line);
                     sink.sections.push(ShowSection {
                         path: path.to_string(),
                         title,
                         depth,
                     });
+                    sink.lines.push(line);
                     Step::Taken
                 }
                 Some(_) => Step::Body,

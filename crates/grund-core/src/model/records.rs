@@ -5,7 +5,8 @@ use super::e2e::E2eCase;
 use super::excluded_stub_targets::ExcludedStubTargetNote;
 use super::file_record::FileRecords;
 use super::headings::{
-    NearMissHeading, SectionHeadingOutsideDeclaration, StubShapeNote, UnmarkedHeading,
+    NearMissHeading, RelativeSectionParent, SectionHeadingOutsideDeclaration, StubShapeNote,
+    UnmarkedHeading,
 };
 use super::line_owners::FileLineOwnership;
 use super::patterns::GlobCitation;
@@ -127,6 +128,9 @@ pub struct SectionInfo {
     /// metadata records authority without synthesizing a declaration
     /// (§FS-values.2.4, §FS-values.6.1).
     pub value_root: Option<EmbeddedValueRoot>,
+    /// Written as a relative heading, `.<component>` under its parent, so its
+    /// path is the canonical one the parent supplied (§FS-declarations.section.relative).
+    pub relative: bool,
 }
 
 /// One citation site: an `<ID>[.<section>]` token, optionally `§`-prefixed, or
@@ -308,6 +312,9 @@ pub struct Catalog {
     /// §AR-scanner.2.2.7). The scanner assigns the owner and a collision-free
     /// suggested coordinate before any checker consumes this list.
     pub unmarked_headings: Vec<UnmarkedHeading>,
+    /// Well-formed relative headings with no usable parent one level up
+    /// (§FS-declarations.checks.relative-section-parent): they declare nothing.
+    pub relative_section_parents: Vec<RelativeSectionParent>,
     pub(crate) legacy_citation_candidates: Vec<LegacyCitationCandidate>,
     pub(crate) local_section_citation_candidates: Vec<LocalSectionCitationCandidate>,
     pub value_bindings: Vec<ValueBinding>,

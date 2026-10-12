@@ -84,19 +84,52 @@ pub(super) fn check_section_headings(
                 heading.title.as_str()
             }
         );
+        // §FS-declarations.checks.unmarked-heading.2.1: appended, so the prefix reads as before.
+        let relative = heading.relative_hint.as_ref().map_or(String::new(), |hint| {
+            format!(
+                "; under {} a relative heading is written {}",
+                coordinate(&rendered_owner, &schema.ids.section_separator, &hint.parent),
+                hint.heading
+            )
+        });
         Diagnostic {
             code: "unmarked-heading",
             path: Some(heading.file.clone()),
             line: Some(heading.line),
             column: None,
             message: format!(
-                "unmarked heading inside {rendered_owner}; number it ({suggested_heading}) as {rendered_owner}{}{path}, declare an ID, or use a bold label{LANDED_CLAUSE}",
+                "unmarked heading inside {rendered_owner}; number it ({suggested_heading}) as {rendered_owner}{}{path}, declare an ID, or use a bold label{LANDED_CLAUSE}{relative}",
                 schema.ids.section_separator,
                 path = heading.suggested_path,
             ),
             sites: Vec::new(),
         authority: Vec::new(),}
     }));
+
+    // §FS-declarations.checks.relative-section-parent: a relative heading with no usable parent.
+    report
+        .errors
+        .extend(findings.relative_section_parents.iter().map(|heading| {
+            let rendered_owner = render_id(frame.grammar(), &heading.owner);
+            Diagnostic {
+                code: "relative-section-parent",
+                path: Some(heading.file.clone()),
+                line: Some(heading.line),
+                column: None,
+                message: format!(
+                    "relative heading {} needs an H{} parent under {}, and there is none",
+                    heading.written,
+                    heading.needed_level,
+                    coordinate(
+                        &rendered_owner,
+                        &schema.ids.section_separator,
+                        &heading.under
+                    )
+                ),
+                sites: Vec::new(),
+                authority: Vec::new(),
+            }
+        }));
 
     // §FS-declarations.checks.section-heading-level / §FS-config.3.3.2: in strict mode, the
     // Markdown heading level must mirror the dotted section depth so `## 1`, `### 1.1`, ...
@@ -115,6 +148,10 @@ pub(super) fn check_section_headings(
         for (id, decls) in &findings.declarations {
             for decl in decls {
                 for (section_path, section) in &decl.sections {
+                    // §FS-config.3.3.3: a relative heading's depth is its parent's plus one.
+                    if section.relative {
+                        continue;
+                    }
                     let expected_level = decl.heading_level + section_depth(section_path);
                     if section.heading_level != expected_level {
                         target.push(Diagnostic {
@@ -145,9 +182,11 @@ pub(super) fn check_section_headings(
         for (id, decls) in &findings.declarations {
             for decl in decls {
                 for (path, info) in &decl.sections {
-                    if !path
-                        .split('.')
-                        .any(|part| part.as_bytes().first().is_some_and(u8::is_ascii_lowercase))
+                    // §FS-declarations.section.relative.parent: its prefixes exist.
+                    if info.relative
+                        || !path
+                            .split('.')
+                            .any(|part| part.as_bytes().first().is_some_and(u8::is_ascii_lowercase))
                     {
                         continue;
                     }
@@ -246,6 +285,15 @@ fn section_outside_declaration_diagnostic(
     }
 }
 
+/// `<ID>` for the declaration, `<ID><sep><path>` for a section of it.
+fn coordinate(owner: &str, separator: &str, path: &str) -> String {
+    if path.is_empty() {
+        owner.to_string()
+    } else {
+        format!("{owner}{separator}{path}")
+    }
+}
+
 pub(super) fn retain_heading_findings_in_scope(findings: &mut Catalog, scope: &ScanScope) {
     findings
         .section_headings_outside_declarations
@@ -254,6 +302,9 @@ pub(super) fn retain_heading_findings_in_scope(findings: &mut Catalog, scope: &S
     // Markdown convention remains restricted to configured scan scope.
     findings
         .unmarked_headings
+        .retain(|heading| scope.contains(&heading.file));
+    findings
+        .relative_section_parents
         .retain(|heading| scope.contains(&heading.file));
 }
 

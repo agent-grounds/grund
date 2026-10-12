@@ -123,6 +123,20 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                 text: heading.heading.clone(),
             }
         }));
+        // §FS-declarations.checks.relative-section-parent / §FS-lsp.1.1: the authored heading.
+        finding_ranges.extend(
+            project
+                .findings
+                .relative_section_parents
+                .iter()
+                .map(|heading| LspFindingRange {
+                    code: "relative-section-parent",
+                    path: absolutize_path(&heading.file),
+                    line: heading.line,
+                    column: heading.column,
+                    text: heading.heading.clone(),
+                }),
+        );
         // §FS-check.checks.glob-citation / §FS-lsp.1.1: a pattern is no citation, so
         // its warning keeps the candidate's own span, marker included.
         let marker = &project.config.schema().citation.marker;
@@ -193,12 +207,19 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                     text,
                     query_id: query_id.clone(),
                     section_separator: project.config.section_separator.clone(),
+                    hover_text: None,
                 });
                 // Each citable section heading is its own declaration-side
                 // title: editors navigate `<ID>.<section>` to that section's
                 // citations, the same way the whole-ID title does (§FS-lsp.1.3.1).
                 for (section, info) in &home.sections {
                     let (column, text) = section_range_parts(home, info, section, sources);
+                    // §FS-lsp.1.2.4: `.1: Username` hovers as `format.1: Username`.
+                    let hover_text = info.relative.then(|| {
+                        let component = section.rsplit('.').next().unwrap_or(section);
+                        let title = text.get(1 + component.len()..).unwrap_or_default();
+                        format!("{section}{title}")
+                    });
                     sections.push(LspDeclaration {
                         project: context.workspace_loaded.then(|| project.alias.clone()),
                         path: absolutize_path(&home.file),
@@ -208,6 +229,7 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                         text,
                         query_id: lsp_query_id(&context, project, &rendered, Some(section)),
                         section_separator: project.config.section_separator.clone(),
+                        hover_text,
                     });
                 }
             }
