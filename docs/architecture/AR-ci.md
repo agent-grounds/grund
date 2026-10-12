@@ -516,16 +516,18 @@ So no workflow under `.github/workflows/` uses the combined `actions/cache`, whi
 saves on every event its workflow runs on. Each cache is an `actions/cache/restore`
 step with no event guard, and an `actions/cache/save` step after the work, with the
 same path and key, guarded by `github.event_name == 'push' && github.ref ==
-'refs/heads/main'` on the step or its job. The rule is the same in `release.yml`
-and `pre-release-checks.yml`, whose runs come from tags and dispatches: there the
-guard is never true, and the caches they read are main's. Keys stay per job
-([§AR-ci.13.4](AR-ci.md#134-cache-keys-are-per-job)).
+'refs/heads/main'` on the step or its job. A workflow that never runs on a push to
+main has no save step, since its guard could never be true. `release.yml`, run from
+tags and dispatches, caches nothing: no run ever saves a key it could read, so it
+builds cold. `pre-release-checks.yml`, dispatched only, restores and never saves, so
+its own key never hits and only its `<os>-cargo-` fallback finds anything: main's
+Linux cargo caches. Keys stay per job ([§AR-ci.13.4](AR-ci.md#134-cache-keys-are-per-job)).
 
 What main saves fits under the limit with room for a second set while a changed
 `Cargo.lock` waits for the old entries to age out. So a cargo cache holds the
-registry, the git checkouts and the dependencies' compiled artifacts, and not the
-workspace crates' own artifacts, which every run rebuilds from its own sources,
-nor incremental state: a workflow that caches cargo sets `CARGO_INCREMENTAL: 0`,
+registry (and the git checkouts, should `Cargo.lock` ever gain a git dependency)
+and the dependencies' compiled artifacts, and not the workspace crates' own
+artifacts, which every run rebuilds from its own sources, nor incremental state: a workflow that caches cargo sets `CARGO_INCREMENTAL: 0`,
 as the Node target's builds already do ([§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build-target)).
 
 `tests/integration/test_ci_cache_saves.py` reads every workflow as text and holds

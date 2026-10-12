@@ -30,8 +30,9 @@ jobs:
           # llvm-profdata, used by scripts/pgo-build.sh to merge the .profraw profiles.
           components: llvm-tools-preview
 
+      # §AR-ci.13.6: a dispatch never saves, so its own key never hits; the `-cargo-`
+      # fallback restores what it can of main's Linux cargo caches.
       - name: Restore cargo registry and target
-        id: cargo
         uses: actions/cache/restore@v5
         with:
           path: |
@@ -53,14 +54,3 @@ jobs:
             printf '%s\n' "$out" >&2
             exit 1
           fi
-
-      # §AR-ci.13.6: only a push to main saves, so a tag or a dispatch never does here,
-      # and the entries this restores are the ones main's CI saved.
-      - name: Save cargo registry and target
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v5
-        with:
-          path: |
-            ~/.cargo/registry
-            target
-          key: ${{ runner.os }}-cargo-prerelease-pgo-${{ hashFiles('**/Cargo.lock') }}
