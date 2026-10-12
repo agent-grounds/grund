@@ -1,3 +1,3 @@
 def clean_username(username):
-    """§FS-login.format"""
+    # §FS-login.format
     return username.strip()
