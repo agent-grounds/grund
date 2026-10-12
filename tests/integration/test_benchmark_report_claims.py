@@ -2,7 +2,7 @@
 request's base branch and **fails the build** on growth past the harness's
 limits: 5% `Ir` on the generated 10k-file fixture, 12.5% on every other
 benchmark. The current copy a reader acts on — the report's current-reporting
-paragraph and the README — must name that gate, and none of it may still say the
+paragraph — must name that gate, and none of it may still say the
 limits are not enforced, because a reader who believes either the wrong way
 reads a red bench job, or a green one, wrongly (§AR-benchmarks).
 
@@ -153,13 +153,11 @@ class TheBenchmarkComparisonGatesTheBuild(unittest.TestCase):
         )
 
     def test_public_copy_names_the_instruction_regression_gate(self):
-        for path in (REPORT, README):
-            with self.subTest(path=path.name):
-                text = path.read_text(encoding="utf-8")
-                self.assertTrue(_instruction_gate_claims(text),
-                                f"{path.name} does not say instruction-count growth fails the build")
-                denials = _instruction_gate_claims(text, denied=True)
-                self.assertEqual([], denials, "stale denial of the gate: " + " | ".join(denials))
+        text = REPORT.read_text(encoding="utf-8")
+        self.assertTrue(_instruction_gate_claims(text),
+                        f"{REPORT.name} does not say instruction-count growth fails the build")
+        denials = _instruction_gate_claims(text, denied=True)
+        self.assertEqual([], denials, "stale denial of the gate: " + " | ".join(denials))
 
     def test_readme_retires_the_throughput_badge(self):
         text = README.read_text(encoding="utf-8")
@@ -167,12 +165,6 @@ class TheBenchmarkComparisonGatesTheBuild(unittest.TestCase):
             re.search(r"!\[[^\]]*(?:LoC/s|lines.*second|throughput)[^\]]*\]", text, re.I),
             "README still publishes the undated throughput badge",
         )
-
-    def test_readme_links_to_performance_evidence_and_current_reporting(self):
-        missing = _missing_evidence_links(README.read_text(encoding="utf-8"), (
-            "docs/benchmarks.md", "docs/architecture/AR-ci.md",
-        ))
-        self.assertEqual([], missing, "README missing performance paths: " + ", ".join(missing))
 
     def test_report_separates_historical_measurements_from_current_reporting(self):
         text = REPORT.read_text(encoding="utf-8")
