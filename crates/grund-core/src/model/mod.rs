@@ -62,7 +62,7 @@ pub use values::{
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
-pub(crate) use headings::UnmarkedHeadingCandidate;
+pub(crate) use headings::{StubShapeNote, StubShapeReading, UnmarkedHeadingCandidate};
 pub(crate) use paths::{
     configured_home_path_key, format_path, is_hidden, normalize_path_lexically, relative_from_base,
     scanned_decl_relative_path, scanned_path_key, sort_path_key,

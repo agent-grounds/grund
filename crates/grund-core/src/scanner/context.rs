@@ -283,8 +283,26 @@ fn promote_local_section_citations(findings: &mut Catalog) {
 
 /// The kind whose configured home (`[[kinds]] folder` / `file`, §FS-config.3.4)
 /// uniquely contains `path` — step 2 of §AR-scanner.2.4.2. `None` when no home or
-/// more than one home matches, so the citation falls through to `code`.
+/// more than one home matches, so the citation falls through to `code`. Read off
+/// the one list of homes holding the path (§AR-scanner.4.7).
 pub(crate) fn file_home_kind(path: &Path, schema: &Schema, frame: Frame<'_>) -> Option<String> {
+    let mut homes = homes_holding(path, schema, frame).into_iter();
+    let first = homes.next()?;
+    homes.all(|kind| kind == first).then(|| first.to_string())
+}
+
+/// Whether any kind's home holds `path`: the home test of a stub
+/// (§FS-declarations.stubs.shape), read off the same list as `file_home_kind`
+/// (§AR-scanner.4.7).
+pub(crate) fn in_some_home(path: &Path, schema: &Schema, frame: Frame<'_>) -> bool {
+    !homes_holding(path, schema, frame).is_empty()
+}
+
+/// The kinds whose configured home holds `path`, in `[[kinds]]` order and one
+/// entry per row that holds it (§AR-scanner.4.7): every row with a `folder` or a
+/// `file`, citable or not, overlapping homes included. The complement place has
+/// neither, so it is no home (§FS-terms.terms.4).
+fn homes_holding<'a>(path: &Path, schema: &'a Schema, frame: Frame<'_>) -> Vec<&'a str> {
     // Walked file paths are canonicalized against the scan root (`scan_roots`
     // resolves an explicit scope), while `config.root` is the configured,
     // possibly-symlinked root — so on macOS a temp dir resolves through
@@ -293,23 +311,20 @@ pub(crate) fn file_home_kind(path: &Path, schema: &Schema, frame: Frame<'_>) -> 
     // helper, which strips against the physical root first, then the configured
     // one, so the lookup is identical to the declaration-home lookup.
     let physical_root = canonical_path(frame.root()).unwrap_or_else(|_| frame.root().to_path_buf());
-    let relative = scanned_decl_relative_path(path, frame.root(), &physical_root)?;
+    let Some(relative) = scanned_decl_relative_path(path, frame.root(), &physical_root) else {
+        return Vec::new();
+    };
     let relative = relative.as_ref();
-    let mut matched: Option<&str> = None;
-    for row in &schema.rows {
-        let hit = match (row.file(), row.folder()) {
+    schema
+        .rows
+        .iter()
+        .filter(|row| match (row.file(), row.folder()) {
             (Some(file), _) => relative == scanned_path_key(Path::new(file)).as_path(),
             (_, Some(folder)) => relative.starts_with(scanned_path_key(Path::new(folder))),
             _ => false,
-        };
-        if hit {
-            if matched.is_some_and(|prev| prev != row.name.as_str()) {
-                return None;
-            }
-            matched = Some(row.name.as_str());
-        }
-    }
-    matched.map(str::to_string)
+        })
+        .map(|row| row.name.as_str())
+        .collect()
 }
 
 /// The lexical half of the run's citation targets (§FS-workspace.1.2): which

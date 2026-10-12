@@ -8,6 +8,7 @@ use super::legacy::promote_local_legacy_citations;
 use super::merge::merge_findings;
 use super::read_predicate::unread;
 use super::stub_homes::resolve_stubs;
+use super::stub_shape::note_stub_shapes;
 use super::value_json::{scan_value_json_sources, value_json_sources};
 use super::walk::{scan_roots, walk_scannable_files_reporting};
 use crate::config::{Frame, Schema};
@@ -68,6 +69,8 @@ fn scan_one_file(
     };
     match result {
         Ok(()) => {
+            // §FS-declarations.checks.stub-shape: noted on this file's own headings.
+            note_stub_shapes(file, schema, frame, &mut findings);
             findings.scanned_files.push(file.to_path_buf());
             (file.to_path_buf(), Ok(findings))
         }

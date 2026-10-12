@@ -50,6 +50,7 @@ pub const CHECK_FINDING_CODES: &[&str] = &[
     "section-outside-declaration",
     "shorthand-citation",
     "shorthand-numeric-run",
+    "stub-shape",
     "suggested-citation",
     "uncited-unit",
     "undeclared-chapter",

@@ -322,6 +322,7 @@ fn issue_49_check_help_exposes_the_sorted_public_code_catalog() {
         "section-outside-declaration",
         "shorthand-citation",
         "shorthand-numeric-run",
+        "stub-shape",
         "suggested-citation",
         "uncited-unit",
         "undeclared-chapter",

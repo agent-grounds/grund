@@ -235,6 +235,10 @@ pub(crate) fn retain_findings_in_scope(findings: &mut Catalog, scope: Option<&Sc
     findings
         .near_miss_headings
         .retain(|heading| scope.contains(&heading.file));
+    // §FS-declarations.checks.stub-shape: judged on the files the configured scope reads.
+    findings
+        .stub_shape_notes
+        .retain(|note| scope.contains(&note.file));
     findings.scanned_files.retain(|file| scope.contains(file));
     // The shorthand resolutions §AR-scanner.2.6.6 performed against the whole walk
     // are deliberately left standing: a site whose declaration the retains above

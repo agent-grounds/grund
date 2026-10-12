@@ -60,6 +60,7 @@ mod sections;
 mod selection;
 mod shorthand;
 mod sizes;
+mod stub_shape;
 mod support;
 mod value_mismatch;
 mod value_roots;
