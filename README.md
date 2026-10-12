@@ -40,13 +40,23 @@ def clean_username(username):
 </td>
 </tr>
 <tr>
-<td colspan="2" valign="top">
-<b>3 · Check</b><br>
-Rename section <b>format.1 → format.2</b> without updating the citation.<br>
+<td valign="top" width="360">
+<b>3 · Check before you read</b><br>
+Look up the cited requirement<br>
+Before changing the code:
+<pre>
+$ grund FS-login.format.1
+&#35;&#35;&#35; format.1: Username
+Trim surrounding whitespace.
+</pre>
+</td>
+<td valign="top" width="360">
+<b>4 · Check</b><br>
+Rename <b>format.1 → format.2</b>, not its citation.<br>
 CI catches the broken reference:
 <pre>
-$ grund check
-src/login.py:2: error: section not found: FS-login.format.1; …
+$ grund check&#10;
+… section not found: FS-login.format.1 …
 </pre>
 </td>
 </tr>
@@ -55,7 +65,7 @@ src/login.py:2: error: section not found: FS-login.format.1; …
 
 From the [runnable example](examples/quickstart/):
 [requirement](examples/quickstart/repo/requirements.md),
-[code](examples/quickstart/repo/src/login.py), and captured failure output (hint elided).
+[code](examples/quickstart/repo/src/login.py), and captured command output (error location and hint elided).
 Its citations are checked inside that example's own repository.
 
 **A valid citation does not prove the code implements the requirement.** Returning
@@ -68,15 +78,8 @@ sets `grund` beside the tools it descends from.
 
 ## What an agent reads
 
-Before editing, an agent retrieves the cited requirement. Inside the example:
-
-```console
-$ grund FS-login.format.1
-### format.1: Username
-Trim surrounding whitespace.
-```
-
-For a larger specification, it can choose how much to read. These rounded word
+The lookup above retrieves just the cited requirement. For a larger specification,
+an agent can choose how much to read. These rounded word
 counts are measured on Grund's own `FS-check` specification:
 
 | An agent runs | and reads |
