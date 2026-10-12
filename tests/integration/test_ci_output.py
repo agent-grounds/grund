@@ -251,6 +251,8 @@ def ci_steps():
         line = raw.strip()
         if line.startswith("- name:"):
             name = line[len("- name:"):].strip()
+        elif line.startswith("- "):  # an unnamed step, such as §AR-ci.13.6's prune
+            name = None
         elif line.startswith("run:") and line != "run: |" and name is not None:
             steps.append((name, line[len("run:"):].strip()))
     return steps
