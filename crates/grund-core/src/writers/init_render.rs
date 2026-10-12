@@ -14,6 +14,7 @@ use super::init_target::derive_default_name;
 use super::init_workspace_members::render_workspace_members_section_with_run_warnings;
 use crate::config::{Config, Invocation, Selection, config_file_in};
 use crate::model::Finding;
+use crate::templates::Template;
 #[cfg(test)]
 use crate::templates::{
     ConversationSurface, render_agents_append_block, render_agents_md_from_block,
@@ -51,7 +52,8 @@ pub(super) fn agents_workspace_members_section(
 /// The config and generated name that `grund init` will leave governing
 /// `target`, which the generated `AGENTS.md` must describe (§FS-init.2.3.8):
 /// `target`'s existing config in either discovery form if there is one
-/// (§FS-config.1), otherwise the defaults plus the *pending* `project_name` and
+/// (§FS-config.1), otherwise `template`'s (§FS-init.1.6) — the defaults, or for
+/// `none` the defaults with no kinds (§FS-init.2.4.9) — plus the *pending* `project_name` and
 /// `project_description` that `init` is about to write into `target/grund.toml`
 /// (§FS-init.2.4.7). The `pending` in the name flags that the returned `Config`
 /// may carry values that are not yet on disk — callers must not treat it as
@@ -66,13 +68,17 @@ pub(super) fn agents_workspace_members_section(
 /// success. `grund check` rejects the same file with exit `2`.
 pub(super) fn init_pending_effective_config(
     target: &Path,
+    template: Template,
     explicit_name: Option<&str>,
     description: Option<&str>,
 ) -> Result<(Config, String)> {
     let config = if config_file_in(target).is_some() {
         open(&Invocation::new(target, true, Selection::Discovery))?
     } else {
-        Config::default_for(target.to_path_buf())
+        match template {
+            Template::SoftwareDevelopment => Config::default_for(target.to_path_buf()),
+            Template::None => Config::without_kinds_for(target.to_path_buf()),
+        }
     };
     // §FS-init.2.3.8: every canonical renderer consumes one generated identity:
     // the explicit flag, then target-local config, then the target basename.

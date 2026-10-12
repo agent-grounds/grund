@@ -1,9 +1,13 @@
 //! Test module: `kinds = []`, the empty kind set (§FS-config.3.4.4.5) — distinct
 //! from an omitted `[[kinds]]`, which keeps the built-in rows with the older `FS`
-//! home (§FS-config.3.4.4.4); and refused when it is not empty or a table
-//! follows it.
+//! home (§FS-config.3.4.4.4); refused when it is not empty or a table follows it;
+//! and the meaning each template's config has before `init` writes it
+//! (§FS-init.1.6.1, §FS-init.2.4.9).
+
+use std::path::PathBuf;
 
 use crate::config::{Config, load_config};
+use crate::templates::{Template, render_grund_toml};
 use crate::testing::{test_root, write};
 
 fn load(name: &str, text: &str) -> anyhow::Result<Config> {
@@ -84,4 +88,37 @@ fn a_table_of_non_citable_kinds_is_still_refused() {
         "empty_kinds_only_non_citable",
         "[[kinds]]\nkind = \"e2e\"\nfolder = \"tests\"\ncitable = false\n",
     );
+}
+
+/// §FS-init.1.6.1, §FS-init.2.4.9: each template's config, read back, means
+/// the config `init` rendered the managed block from before writing it.
+#[test]
+fn each_template_config_means_its_pending_config() {
+    let root = PathBuf::from(".");
+    let cases = [
+        (
+            Template::SoftwareDevelopment,
+            Config::default_for(root.clone()),
+        ),
+        (Template::None, Config::without_kinds_for(root)),
+    ];
+    for (template, pending) in cases {
+        let written = load(
+            &format!("empty_kinds_template_{}", template.name()),
+            &render_grund_toml(template, "demo", None),
+        )
+        .unwrap_or_else(|err| panic!("{}: {err:#}", template.name()));
+        assert_eq!(
+            written.project().schema.rows,
+            pending.project().schema.rows,
+            "{}",
+            template.name()
+        );
+        assert_eq!(
+            written.project().presentation.kinds,
+            pending.project().presentation.kinds,
+            "{}",
+            template.name()
+        );
+    }
 }

@@ -3,7 +3,7 @@
 use super::init_render::render_agents_md;
 use super::init_workspace_members::render_workspace_members_section;
 use crate::config::Config;
-use crate::templates::render_grund_toml;
+use crate::templates::{Template, render_grund_toml};
 use crate::testing::{test_root, write};
 
 /// §FS-init.2.3.4.15: `render_workspace_members_section` returns the empty
@@ -452,11 +452,15 @@ fn workspace_members_at_a_group_its_parent_does_not_list_names_its_own_tree() {
 #[test]
 fn grund_toml_description_teaching_line_and_substitution() {
     let teaching_line = "# project_description = \"<one line shown next to this project in workspace member lists>\"";
-    let without = render_grund_toml("demo", None);
+    let without = render_grund_toml(Template::SoftwareDevelopment, "demo", None);
     assert!(without.contains(teaching_line));
     assert!(!without.contains("\nproject_description = "));
 
-    let with = render_grund_toml("demo", Some("Demo \"quoted\" service"));
+    let with = render_grund_toml(
+        Template::SoftwareDevelopment,
+        "demo",
+        Some("Demo \"quoted\" service"),
+    );
     assert!(!with.contains(teaching_line));
     assert!(with.contains("project_description = \"Demo \\\"quoted\\\" service\""));
 }

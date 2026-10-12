@@ -96,6 +96,7 @@ mod init_output;
 mod init_plan;
 mod init_render;
 mod init_target;
+mod init_template;
 mod init_workspace_members;
 mod integrations_agents;
 mod integrations_api;
@@ -173,6 +174,8 @@ mod tests_id;
 mod tests_init_agents;
 #[cfg(test)]
 mod tests_init_target;
+#[cfg(test)]
+mod tests_init_template;
 #[cfg(test)]
 mod tests_integrations;
 #[cfg(test)]

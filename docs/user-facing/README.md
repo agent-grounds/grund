@@ -19,6 +19,7 @@ command's own `--help` page links the guide and example that cover it
 | [Distribution runbook](distribution-runbook.md) | — |
 | [Git co-change evidence](cochange.md) | [`examples/cochange`](../../examples/cochange/) |
 | [External facts](external-facts.md) | [`examples/external-tickets`](../../examples/external-tickets/) |
+| [Setting up a repository with `grund init`](init.md) | [`examples/init-template-none`](../../examples/init-template-none/) |
 | [`grund init` repository shapes](init-repo-shapes.md) | [`examples/scheme-*`](../../examples/) |
 | [Editor support via LSP](lsp.md) | — |
 | [Node Promise API](node-api.md) | [`examples/node-api`](../../examples/node-api/) |

@@ -169,7 +169,8 @@ fn refresh_without_the_fs_home_keeps_next_guidance() {
     let output = refresh_after_config_change("refresh_without_the_fs_home", false);
     let rendered = output.next.expect("next guidance").render();
     assert!(
-        rendered.contains("1. re-run with --docs to scaffold the FS home (docs/functional-spec)"),
+        rendered
+            .contains("1. re-run with --scaffold to scaffold the FS home (docs/functional-spec)"),
         "a refresh with no FS home must keep the scaffold advice: {rendered}"
     );
 }

@@ -19,7 +19,7 @@ fn print_help() {
     println!("  fetch         Materialize one configured external snapshot.           grund fetch TICKET-1234");
     println!();
     println!("Set up:");
-    println!("  init          Scaffold agent instructions + grund.toml.               grund init --docs");
+    println!("  init          Scaffold agent instructions + grund.toml.               grund init --scaffold");
     println!("  config        Validate or show the effective grund.toml.              grund config show");
     println!("  integrations  Print/install clickable-citation integrations.          grund integrations wezterm");
     println!("  completions   Print shell completion scripts.                         grund completions bash");
@@ -273,19 +273,22 @@ fn print_subcommand_help(cmd: &str) {
         }
         "init" => {
             println!(
-                "grund init — scaffold agent instructions + `grund.toml` (and, with --docs, the docs/ and e2e/ layout)."
+                "grund init — scaffold agent instructions + a template's `grund.toml` (and, with --scaffold, its starter files)."
             );
             println!(
                 "Idempotent: re-running updates the managed agent-instructions block in place and leaves your edits alone."
             );
             println!();
             println!(
-                "Usage:  grund init [PATH] [--docs] [--name NAME] [--description TEXT] [--force] [--dry-run] [--check] [--no-vcs] [--agents-md] [--claude] [--gemini] [--pi] [--copilot] [--cursor] [--windsurf] [--zed]"
+                "Usage:  grund init [PATH] [--template NAME] [--scaffold] [--name NAME] [--description TEXT] [--force] [--dry-run] [--check] [--no-vcs] [--agents-md] [--claude] [--gemini] [--pi] [--copilot] [--cursor] [--windsurf] [--zed]"
             );
             println!();
             println!("Options:");
             println!(
-                "  --docs         also write docs/ (grund, goals, roadmap, changelog, spec READMEs) and e2e/"
+                "  --template NAME  software-development (default: the canonical kinds) or none (no kinds, for a repo that declares its own)"
+            );
+            println!(
+                "  --scaffold     also write the template's starter files: requirements.md, docs/ and tests/ (--docs is the deprecated spelling)"
             );
             println!(
                 "  --name NAME    project name (default: target project_name, then directory name)"
@@ -294,7 +297,7 @@ fn print_subcommand_help(cmd: &str) {
                 "  --description TEXT  one-line project description written to grund.toml (shown next to this project in workspace member lists)"
             );
             println!(
-                "  --force        rewrite the canonical AGENTS.md and --docs scaffolds; grund.toml is never overwritten"
+                "  --force        rewrite the canonical AGENTS.md and the --scaffold starter files; grund.toml is never overwritten"
             );
             println!(
                 "  --dry-run      report what would be written/appended/updated without touching any file"
@@ -321,11 +324,14 @@ fn print_subcommand_help(cmd: &str) {
             println!("  --zed          create/update .rules");
             println!();
             println!(
-                "Exit:  0 written / updated / already current · 1 --check only: something is still pending · 2 missing or refused target, unknown flag, or unsupported newer block."
+                "Exit:  0 written / updated / already current · 1 --check only: something is still pending · 2 missing or refused target, unknown flag or template, or unsupported newer block."
             );
             println!();
             println!("Examples:");
-            println!("  grund init --docs                  # full first-time scaffold");
+            println!("  grund init --scaffold              # full first-time scaffold");
+            println!(
+                "  grund init --template=none         # a grund.toml with no kinds, for a repo that declares its own"
+            );
             println!("  grund init --dry-run               # preview without writing");
             println!(
                 "  grund init --check                 # the same preview as a gate: exit 1 if pending"
@@ -352,8 +358,11 @@ fn print_subcommand_help(cmd: &str) {
                 "  grund init --no-vcs ../scratch     # scaffold a directory no VCS tracks"
             );
             print_guide_links(
-                &["https://github.com/agent-grounds/grund/blob/main/docs/user-facing/init-repo-shapes.md"],
-                &["https://github.com/agent-grounds/grund/tree/main/examples"],
+                &[
+                    "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/init.md",
+                    "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/init-repo-shapes.md",
+                ],
+                &["https://github.com/agent-grounds/grund/tree/main/examples/init-template-none"],
             );
         }
         "config" => print_config_help(),

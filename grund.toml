@@ -48,7 +48,8 @@ kind = "AR"
 folder = "docs/architecture"
 title = "How: high-level implementation, structure, and design"
 
-# DF before DA, matching the canonical default kind order (FS-config.3.4, templates/grund.toml).
+# DF before DA, matching the canonical default kind order (FS-config.3.4,
+# templates/software-development/grund.toml).
 [[kinds]]
 kind = "DF"
 folder = "docs/decisions/functional"

@@ -1,8 +1,16 @@
+/// §FS-init.1.7, §REQ-backwards-compatibility.2: the one line a run that spells
+/// `--docs` prints, naming the replacement and the release that removes the old
+/// spelling (§DF-init-templates.2.2). The release is written out in full so the
+/// release guard reads it (§FS-distribution.4.2.2).
+const DOCS_FLAG_DEPRECATION: &str = "warning: --docs is deprecated and is removed in grund 0.19.0; use --scaffold, which lays the same starter files";
+
 fn command_init(args: &[String]) -> ExitCode {
     let mut path: Option<PathBuf> = None;
     let mut name: Option<String> = None;
     let mut description: Option<String> = None;
+    let mut template: Option<String> = None;
     let mut docs = false;
+    let mut docs_spelled = false;
     let mut force = false;
     let mut dry_run = false;
     let mut check = false;
@@ -11,7 +19,22 @@ fn command_init(args: &[String]) -> ExitCode {
     let mut idx = 0;
     while idx < args.len() {
         match args[idx].as_str() {
-            "--docs" => docs = true,
+            // §FS-init.1: lay the template's starter files as well.
+            "--scaffold" => docs = true,
+            // §FS-init.1.7: the deprecated spelling of `--scaffold`, warned below.
+            "--docs" => (docs, docs_spelled) = (true, true),
+            // §FS-init.1.6: the template to lay; core names and refuses it.
+            "--template" => {
+                idx += 1;
+                if idx >= args.len() {
+                    eprintln!("error: --template requires a value");
+                    return ExitCode::from(2);
+                }
+                template = Some(args[idx].clone());
+            }
+            other if other.starts_with("--template=") => {
+                template = Some(other.trim_start_matches("--template=").to_string());
+            }
             "--force" => force = true,
             "--dry-run" => dry_run = true,
             // §FS-init.1.4: the same preview, taken as a verdict.
@@ -61,10 +84,14 @@ fn command_init(args: &[String]) -> ExitCode {
         }
         idx += 1;
     }
+    if docs_spelled {
+        eprintln!("{DOCS_FLAG_DEPRECATION}");
+    }
     let output = match init(InitOpts {
         target: path.unwrap_or_else(|| PathBuf::from(".")),
         name,
         description,
+        template,
         docs,
         force,
         dry_run,

@@ -8,7 +8,9 @@ use super::init_render::render_agents_md;
 use super::*;
 use crate::checker::check_findings;
 use crate::config::{Config, load_config};
-use crate::templates::{AGENT_SETUP_INSTRUCTIONS, canonical_template_text, render_grund_toml};
+use crate::templates::{
+    AGENT_SETUP_INSTRUCTIONS, Template, canonical_template_text, render_grund_toml,
+};
 use crate::testing::{current_block, current_marker, scan_tree, test_root, write};
 
 /// §FS-init.5.3: the distributable skill and the binary-embedded copy the CLI
@@ -81,7 +83,9 @@ fn agent_setup_instructions_name_the_ordered_adoption_workflow() {
 /// §FS-init.5.2: adopting a docs-heavy repository is a choice made *before* any
 /// write — the canonical artifact types are shown beside what the repository
 /// already has, the three adoption models are offered, and the recommended
-/// `grund init` form reaches for `--docs` only where a scaffold is wanted.
+/// `grund init` form reaches for `--scaffold` only where a scaffold is wanted,
+/// and the existing-structure model starts from `--template=none`
+/// (§FS-init.1.6.2, §DF-skill-init-existing-specs.3).
 #[test]
 fn agent_setup_instructions_offer_the_three_adoption_models_before_any_write() {
     let text = AGENT_SETUP_INSTRUCTIONS;
@@ -93,9 +97,17 @@ fn agent_setup_instructions_offer_the_three_adoption_models_before_any_write() {
     );
     assert!(
         text.contains(
-            "adding `--docs` only when the repo is fresh or the user selected a canonical-layout migration"
+            "adding `--scaffold` only when the repo is fresh or the user selected a canonical-layout migration"
         ),
         "existing specs are represented in the config rather than replaced by generic scaffold folders"
+    );
+    assert!(
+        text.contains("| Start from `grund init --template=none`, whose config declares no kinds;"),
+        "the existing-structure model starts from the template that declares no kinds"
+    );
+    assert!(
+        !text.contains("--docs"),
+        "the skill teaches --scaffold, not --docs"
     );
 
     let show_beside = text
@@ -119,7 +131,9 @@ fn embedded_templates_are_lf_canonical() {
 
     let config = Config::default_for(PathBuf::from("."));
     assert!(!render_agents_md("demo", &config, Path::new("."), true).contains('\r'));
-    assert!(!render_grund_toml("demo", None).contains('\r'));
+    for template in Template::ALL {
+        assert!(!render_grund_toml(template, "demo", None).contains('\r'));
+    }
     assert!(!canonical_template_text(AGENT_SETUP_INSTRUCTIONS).contains('\r'));
     let fs_home = init_fs_home(&config);
     for (_, contents) in docs_scaffold(&fs_home) {

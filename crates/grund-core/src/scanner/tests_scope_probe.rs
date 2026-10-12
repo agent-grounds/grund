@@ -116,6 +116,7 @@ fn init_guidance_renderer_changes_only_the_empty_scan_suffix() {
 fn next_guidance(scan_reads_file: bool) -> InitNext {
     InitNext {
         docs: false,
+        declares_kinds: true,
         entrypoint: "AGENTS.md".to_string(),
         fs_home: InitFsHome::File {
             path: "requirements.md".to_string(),

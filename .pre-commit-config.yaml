@@ -113,9 +113,9 @@ repos:
       # URLs where a sentence needs an address (§REQ-shipped-surfaces.1), and
       # both homes are `scan = false`, so `grund check` never looks at them and
       # this hook is the only thing keeping those addresses resolvable
-      # (§REQ-shipped-surfaces.3). `templates/grund.toml` is named on its own
-      # because a directory argument yields only the markup files under it, and
-      # it is the one URL-carrying file in either home that is not Markdown.
+      # (§REQ-shipped-surfaces.3). Each template's `grund.toml` is named on its
+      # own because a directory argument yields only the markup files under it,
+      # and they are the URL-carrying files in either home that are not Markdown.
       # Their embedded copies under `crates/grund-core/assets/` need no separate
       # pass — `tests/integration/test_asset_sync.py` pins them byte-identical
       # to these. The wrapper validates this repository's canonical
@@ -123,7 +123,7 @@ repos:
       # those exact successful URLs from the network pass (§AR-ci.3.1).
       - id: lychee
         name: lychee
-        entry: python scripts/check_links.py README.md docs examples skills templates templates/grund.toml
+        entry: python scripts/check_links.py README.md docs examples skills templates templates/software-development/grund.toml templates/none/grund.toml
         language: system
         pass_filenames: false
         always_run: true

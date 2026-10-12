@@ -1,4 +1,4 @@
-//! Black-box coverage for the effective ID shapes in `init --docs` scaffolds.
+//! Black-box coverage for the effective ID shapes in `init --scaffold` scaffolds.
 //! §FS-init.2.1.3: every scaffold-owned example follows the illustrated kind's
 //! override or the repository fallback, on fresh creation and forced refresh.
 
@@ -58,15 +58,15 @@ fn assert_slug_only_scaffold(root: &Path) {
 }
 
 #[test]
-fn init_docs_force_refreshes_every_example_to_the_repository_format() {
-    let target = workdir("init_docs_force_refreshes_every_example_to_the_repository_format");
+fn init_scaffold_force_refreshes_every_example_to_the_repository_format() {
+    let target = workdir("init_scaffold_force_refreshes_every_example_to_the_repository_format");
     let first = run_grund(
-        &["init", target.to_str().unwrap(), "--docs"],
+        &["init", target.to_str().unwrap(), "--scaffold"],
         manifest_dir(),
     );
     assert!(
         first.status.success(),
-        "initial init --docs failed: {}",
+        "initial init --scaffold failed: {}",
         String::from_utf8_lossy(&first.stderr)
     );
 
@@ -101,12 +101,12 @@ fn init_docs_force_refreshes_every_example_to_the_repository_format() {
     // Without --force, an owned scaffold remains byte-for-byte untouched even
     // when its teaching shape no longer matches the config (§FS-init.3.3).
     let preserved = run_grund(
-        &["init", target.to_str().unwrap(), "--docs"],
+        &["init", target.to_str().unwrap(), "--scaffold"],
         manifest_dir(),
     );
     assert!(
         preserved.status.success(),
-        "non-force init --docs failed: {}",
+        "non-force init --scaffold failed: {}",
         String::from_utf8_lossy(&preserved.stderr)
     );
     for (relative, expected) in &before {
@@ -118,12 +118,12 @@ fn init_docs_force_refreshes_every_example_to_the_repository_format() {
     }
 
     let forced = run_grund(
-        &["init", target.to_str().unwrap(), "--docs", "--force"],
+        &["init", target.to_str().unwrap(), "--scaffold", "--force"],
         manifest_dir(),
     );
     assert!(
         forced.status.success(),
-        "forced init --docs failed: {}",
+        "forced init --scaffold failed: {}",
         String::from_utf8_lossy(&forced.stderr)
     );
     assert_eq!(
@@ -136,8 +136,9 @@ fn init_docs_force_refreshes_every_example_to_the_repository_format() {
 }
 
 #[test]
-fn init_docs_renders_kind_overrides_and_fallbacks_in_compatibility_fs_home() {
-    let target = workdir("init_docs_renders_kind_overrides_and_fallbacks_in_compatibility_fs_home");
+fn init_scaffold_renders_kind_overrides_and_fallbacks_in_compatibility_fs_home() {
+    let target =
+        workdir("init_scaffold_renders_kind_overrides_and_fallbacks_in_compatibility_fs_home");
     fs::create_dir_all(target.join(".agents")).expect("create config directory");
     fs::write(
         target.join(".agents/grund.toml"),
@@ -167,12 +168,12 @@ format = "{kind}_{number}_{slug}"
     .expect("write mixed-format config");
 
     let output = run_grund(
-        &["init", target.to_str().unwrap(), "--docs"],
+        &["init", target.to_str().unwrap(), "--scaffold"],
         manifest_dir(),
     );
     assert!(
         output.status.success(),
-        "mixed-format init --docs failed: {}",
+        "mixed-format init --scaffold failed: {}",
         String::from_utf8_lossy(&output.stderr)
     );
     assert!(
@@ -204,8 +205,9 @@ format = "{kind}_{number}_{slug}"
 }
 
 #[test]
-fn init_docs_preserves_literal_kind_tokens_in_fallback_and_override_shapes() {
-    let target = workdir("init_docs_preserves_literal_kind_tokens_in_fallback_and_override_shapes");
+fn init_scaffold_preserves_literal_kind_tokens_in_fallback_and_override_shapes() {
+    let target =
+        workdir("init_scaffold_preserves_literal_kind_tokens_in_fallback_and_override_shapes");
     fs::create_dir_all(target.join(".agents")).expect("create config directory");
     fs::write(
         target.join(".agents/grund.toml"),
@@ -224,12 +226,12 @@ format = "{kind}<KIND>_{number}"
     .expect("write literal-delimiter config");
 
     let output = run_grund(
-        &["init", target.to_str().unwrap(), "--docs"],
+        &["init", target.to_str().unwrap(), "--scaffold"],
         manifest_dir(),
     );
     assert!(
         output.status.success(),
-        "literal-delimiter init --docs failed: {}",
+        "literal-delimiter init --scaffold failed: {}",
         String::from_utf8_lossy(&output.stderr)
     );
 

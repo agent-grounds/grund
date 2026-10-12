@@ -82,7 +82,7 @@ impl Data for ListSizeMeasurement {
     }
 }
 record!(InitEvent; verb, path);
-record!(InitNext; docs, entrypoint, fs_home, scan_reads_file);
+record!(InitNext; docs, declares_kinds, entrypoint, fs_home, scan_reads_file);
 impl Data for InitFsHome {
     fn data(&self) -> Value {
         match self {
