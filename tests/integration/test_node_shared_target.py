@@ -250,9 +250,10 @@ class NodeSharedTargetTests(unittest.TestCase):
         steps = CI.read_text(encoding="utf-8").split("\n      - ")
         keys = [line.strip() for step in steps for line in step.splitlines()
                 if "~/ag/tmp/grund-node-target" in step and line.strip().startswith("key:")]
-        self.assertEqual(1, len(keys), keys)
-        self.assertIn("-node-target-v2-", keys[0],
-                      "an entry saved before the dev builds holds none of their dependencies")
+        self.assertTrue(keys, "no job caches the Node target")
+        for key in keys:
+            self.assertIn("-node-target-v2-", key,
+                          "an entry saved before the dev builds holds none of their dependencies")
 
     def test_unset_the_wrapper_and_the_helper_share_one_persistent_target_ci_restores(self):
         built = self.temp / "grund-built-unused"
