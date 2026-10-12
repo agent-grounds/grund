@@ -249,3 +249,6 @@ mod kind_title;
 
 #[path = "tests_answer_cost.rs"]
 mod answer_cost;
+
+#[path = "tests_hover_snapshot.rs"]
+mod hover_snapshot;
