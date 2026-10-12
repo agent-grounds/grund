@@ -135,11 +135,16 @@ surface shares is not a row; it belongs to the point that defines the right answ
 
 ### differences.identity: Identity
 
-G03 and G04 closed with [§REQ-one-answer.identity.kinds](REQ-one-answer.md#identitykinds-every-command-reads-one-kind-verdict).
+G03 and G04 closed with [§REQ-one-answer.identity.kinds](REQ-one-answer.md#identitykinds-every-command-reads-one-kind-verdict). G09, a difference that predates
+this requirement, was found later, on `e8c40221d7`, and is added by amendment.
 
 - **G06.** The subject `each FS` is refused by a rule as a fixed word in the wrong case and
   by `list --selector` as a literal subject the ID grammar does not match. R, found on
   `53e981e6e9` and amended in.
+- **G09.** In a project whose `[[kinds]]` table declares no homeless kind, a `[citations]`
+  target `code`, bare, pinned or `*/`, is refused as a kind that is not citable, while a
+  rule's subject and object, `list --kind` and `list --selector` call `code` unknown: the
+  default name has no row ([§FS-config.3.9.2](../functional-spec/FS-config.md#392-the-homeless-kind)). R on `e8c40221d7`.
 
 ### differences.sections: Sections
 

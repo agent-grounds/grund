@@ -10,7 +10,9 @@
 //! project. Every column of a row must give the row's one verdict class — accepted, refused as not citable
 //! (§FS-errors.2.5.1), or refused otherwise — so no two surfaces disagree, and
 //! none disagrees with the point that defines the answer. A second test holds a
-//! member's named chapter to one answer (§REQ-one-answer.sections.named).
+//! member's named chapter to one answer (§REQ-one-answer.sections.named), and a
+//! third pins the one name that still has two, `code`, while its row stands
+//! (§REQ-one-answer.differences.identity).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -284,6 +286,38 @@ fn every_surface_gives_a_kind_name_one_verdict_in_its_scope() {
     assert!(
         wrong.is_empty(),
         "surfaces disagree on a kind verdict:\n{}",
+        wrong.join("\n")
+    );
+}
+
+/// §REQ-one-answer.differences.identity, row G09: `code`, the homeless kind's
+/// default name, has no `[[kinds]]` row in either project (§FS-config.3.9.2), so it
+/// keeps the two answers it had before the kind table: configured and not citable
+/// on a `[citations]` target, bare, pinned or `*/`, and unknown on every other
+/// surface. Closing the row changes this test with it.
+#[test]
+fn the_homeless_kinds_default_name_keeps_its_two_answers_while_its_row_stands() {
+    let mut wrong = Vec::new();
+    for scope in [Scope::Workspace, Scope::Root, Scope::Api, Scope::Any] {
+        for (surface, output) in surfaces(scope, "code") {
+            let expected = if surface.starts_with("[citations.") {
+                NonCitable
+            } else {
+                Refused
+            };
+            let (got, stderr) = verdict(&output);
+            if got != expected {
+                wrong.push(format!(
+                    "code in {scope:?}: {surface}\n  expected {expected:?}, got {got:?} \
+                     (exit {:?})\n  stderr {stderr:?}",
+                    output.status.code()
+                ));
+            }
+        }
+    }
+    assert!(
+        wrong.is_empty(),
+        "`code` moved off the two answers G09 records:\n{}",
         wrong.join("\n")
     );
 }
