@@ -180,21 +180,29 @@ pub(crate) fn scan_tree_with_workspace_threshold(
                 .any(|source| paths_same_location(source, file))
         });
     }
+    // §AR-scanner.2.8: each file's record is set aside as its findings merge, and the map
+    // is built once from all of them, not by one keyed insert per file.
+    let mut records = Vec::with_capacity(files.len());
+    let mut merge = |findings: &mut Catalog, mut file_findings: Catalog| {
+        records.extend(std::mem::take(&mut file_findings.files));
+        merge_findings(findings, file_findings);
+    };
     if files.len() >= parallel_min_files {
         for (file, result) in scan_file_results(&files, schema, frame, workspace_targets) {
             match result {
-                Ok(file_findings) => merge_findings(&mut findings, file_findings),
+                Ok(file_findings) => merge(&mut findings, file_findings),
                 Err(message) => errors.push((file, message)),
             }
         }
     } else {
         for file in files {
             match scan_one_file(&file, schema, frame, workspace_targets) {
-                (_, Ok(file_findings)) => merge_findings(&mut findings, file_findings),
+                (_, Ok(file_findings)) => merge(&mut findings, file_findings),
                 (_, Err(message)) => errors.push((file, message)),
             }
         }
     }
+    findings.files = records.into_iter().collect();
     if let Err(err) = scan_e2e_cases(schema, frame, scope, explicit_scope, &mut findings) {
         errors.push((frame.root().join("e2e/cases"), format!("{err:#}")));
     }
