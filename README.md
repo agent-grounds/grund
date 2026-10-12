@@ -1,4 +1,4 @@
-<p align="right"><a href="https://github.com/agent-grounds/grund/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/agent-grounds/grund/actions/workflows/ci.yml/badge.svg"></a> <a href="https://crates.io/crates/grund"><img alt="crates.io" src="https://img.shields.io/crates/v/grund.svg"></a> <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a></p>
+<table align="right"><tr><td><a href="https://github.com/agent-grounds/grund/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/agent-grounds/grund/actions/workflows/ci.yml/badge.svg"></a> <a href="https://crates.io/crates/grund"><img alt="crates.io" src="https://img.shields.io/crates/v/grund.svg"></a> <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a></td></tr></table>
 
 # grund
 
@@ -10,7 +10,7 @@
 <tr>
 <td valign="top" width="400">
 <b>1 · Declare</b><br>
-Give a requirement an ID in <a href="examples/quickstart/repo/requirements.md"><code>requirements.md</code></a>
+Give a spec an ID in <a href="examples/quickstart/repo/docs/functional-spec/FS-login.md"><code>docs/functional-spec/FS-login.md</code></a>
 <pre lang="markdown">
 &#35; FS-login: Login
 &#35;&#35; format: Username format
@@ -75,8 +75,8 @@ rules it writes commented out in `grund.toml` until you adopt them:
 ## Agent instructions
 
 `init` also writes the structure into your agent's instructions, a managed block in
-`AGENTS.md` that `grund init --check` keeps current. From [ours](AGENTS.md), how an
-agent reads a citation:
+`AGENTS.md` that `grund init --check` keeps current. For example, grund's own
+[`AGENTS.md`](AGENTS.md) tells an agent how to read a citation:
 
 > A `§<ID>` is a pointer to a fact, not a file path. Resolve it with `grund` and climb only as far as needed:
 >
@@ -320,7 +320,7 @@ than only repos that ship an editor config.
     <source media="(prefers-color-scheme: light)" srcset="docs/assets/lsp/hover-preview-light.png">
     <img src="docs/assets/lsp/hover-preview-light.png" width="96%" alt="Hover preview of the misplaced-declaration spec point shown directly above the grund code that implements the misplaced-declaration check">
   </picture>
-  <br><sub><strong>Hover previews</strong> — the spec and the code that satisfies it, in one frame.</sub>
+  <br><strong>Hover previews</strong> — the spec and the code that satisfies it, in one frame.
 </p>
 
 <p align="center">
@@ -329,7 +329,7 @@ than only repos that ship an editor config.
     <source media="(prefers-color-scheme: light)" srcset="docs/assets/lsp/error-reporting-light.png">
     <img src="docs/assets/lsp/error-reporting-light.png" width="96%" alt="Dangling citation diagnostic showing the nearest declared ID hint">
   </picture>
-  <br><sub><strong>Error reporting</strong> — dangling citations are flagged inline with a "did you mean" hint.</sub>
+  <br><strong>Error reporting</strong> — dangling citations are flagged inline with a "did you mean" hint.
 </p>
 
 <p align="center">
@@ -338,7 +338,7 @@ than only repos that ship an editor config.
     <source media="(prefers-color-scheme: light)" srcset="docs/assets/lsp/definitions-light.png">
     <img src="docs/assets/lsp/definitions-light.png" width="96%" alt="Go-to-definition results listing FS-check.3.7 declaration and citation targets">
   </picture>
-  <br><sub><strong>Definitions &amp; references</strong> — jump between a declaration and every §citation of it.</sub>
+  <br><strong>Definitions &amp; references</strong> — jump between a declaration and every §citation of it.
 </p>
 
 ## Go deeper

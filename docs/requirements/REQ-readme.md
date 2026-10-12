@@ -20,7 +20,7 @@ with the JSON Schema that editors read ([§FS-config.4](../functional-spec/FS-co
 Four cards form a two-by-two grid: declare and cite above, read and check below.
 Every card has the same shape: a numbered verb, one line naming the file it shows or
 the change it makes, and one excerpt from a committed runnable example
-([§REQ-readme.2](REQ-readme.md#2-every-example-is-real)): a short requirement, the code that cites it, the section an agent
+([§REQ-readme.2](REQ-readme.md#2-every-example-is-real)): a short functional spec, the code that cites it, the section an agent
 reads before changing that code, and `grund check` failing on a citation that
 misspells that section. The cited section is a named section's numbered child
 (`format.1`), so the README shows that a section path can mix names and numbers. Columns are equally wide and top-aligned, and the excerpts in a row are

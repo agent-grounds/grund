@@ -6,7 +6,7 @@ named_sections = true
 
 [[kinds]]
 kind = "FS"
-file = "requirements.md"
+folder = "docs/functional-spec"
 
 [scan]
 include = ["src"]

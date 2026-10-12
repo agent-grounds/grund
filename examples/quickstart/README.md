@@ -4,7 +4,7 @@ A small login example of declarations, section retrieval and broken
 citations ([§FS-examples.2](../../docs/functional-spec/FS-examples.md#2-canonical-use-cases),
 [§FS-show.2.1.5](../../docs/functional-spec/FS-show.md#215-a-sections-lead),
 [§FS-check.3.2](../../docs/functional-spec/FS-check.md#32-missing-section)).
-The fixture's own `grund.toml` maps the `FS` kind to `requirements.md`, enables
+The fixture's own `grund.toml` keeps the `FS` kind in `docs/functional-spec/`, enables
 `[id] named_sections = true`, and scans `src/`. Its IDs belong to that mini-repository.
 
 ## Try it
@@ -24,8 +24,9 @@ If you have no checkout yet, get one with
 
 ## Declare and cite
 
-The declaration in [`requirements.md`](repo/requirements.md) gives the requirement
-an ID, a named `format` section, and its numbered child `format.1`:
+The declaration in [`docs/functional-spec/FS-login.md`](repo/docs/functional-spec/FS-login.md)
+gives the login behavior an ID, a named `format` section, and its numbered child
+`format.1`:
 
 ```markdown
 # FS-login: Login
@@ -33,6 +34,9 @@ an ID, a named `format` section, and its numbered child `format.1`:
 ### format.1: Surrounding whitespace
 Trim surrounding whitespace.
 ```
+
+The folder's [`README.md`](repo/docs/functional-spec/README.md) lists it, as the index
+of a folder kind must.
 
 [`src/login.py`](repo/src/login.py) cites that section in a comment above the line it governs:
 
@@ -68,7 +72,7 @@ not. Correct the spelling back to `format` and rerun
 
 Returning `username` unchanged in the Python code would still pass the citation check.
 Grund checks whether the reference resolves; tests and review establish whether
-the code satisfies the requirement.
+the code satisfies the spec.
 
 The existing example test runner checks this fixture against its committed
 goldens ([§FS-examples.4](../../docs/functional-spec/FS-examples.md#4-maintenance-contract)).
