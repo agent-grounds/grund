@@ -27,6 +27,8 @@ fn vocabulary() -> RuleVocabulary {
         target_kinds: kinds,
         target_namespaces: BTreeMap::new(),
         named_sections: true,
+        named_kinds: Default::default(),
+        non_citable: Default::default(),
         id_grammars: vec![config.grammar],
         section_separators: vec![".".into()],
     }

@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 use super::compiled::compile;
 use super::record::Config;
 use super::run::Run;
+use super::run_warnings::RunWarning;
 use super::{v1, v2, validate};
 use crate::model::{format_path, relative_from_base};
 
@@ -243,6 +244,10 @@ fn read_config(read_path: &Path, report_path: &Path, root: &Path, run: &Run) -> 
     validate::kinds(report_path, &project)?;
     let compiled = compile(&project)
         .with_context(|| format!("{}: invalid [id] grammar", format_path(report_path)))?;
-    validate::lists(report_path, &project)?;
-    Ok(Config::from_records(&project, run, &compiled))
+    let warnings = validate::lists(report_path, &project)?;
+    let mut config = Config::from_records(&project, run, &compiled);
+    // §FS-config.3.9.5.2: what a run that holds no workspace cannot judge loads,
+    // and says so on the run's warning channel.
+    config.extend_run_warnings(warnings.into_iter().map(RunWarning::citation_target));
+    Ok(config)
 }

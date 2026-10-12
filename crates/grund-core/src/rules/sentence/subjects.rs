@@ -105,6 +105,23 @@ impl SubjectFault {
 }
 
 impl SubjectRefusal {
+    /// The reason this refusal opens with on both surfaces: the released one
+    /// for the component that failed, and, where what it named as a kind is
+    /// configured but declares no IDs, §FS-errors.2.5.1's appended through the
+    /// window of §FS-errors.3.8.
+    pub(super) fn reason(&self, vocabulary: &RuleVocabulary) -> String {
+        let fault = self.fault.failed();
+        let legacy = fault.reason(&self.text);
+        match &fault {
+            SubjectFault::UnknownKind(kind) => vocabulary.kind_refusal(legacy, kind),
+            // §FS-errors.3.8: a selector spelled `KIND` or `KIND.NAME`.
+            SubjectFault::IdGrammar if self.spelling == Spelling::Literal => {
+                vocabulary.kind_refusal(legacy, &self.head)
+            }
+            _ => legacy,
+        }
+    }
+
     /// The rule surfaces' refusal (§FS-rule-refusals.sentences): the reason for the component
     /// that failed (§FS-rule-refusals.sentences.chapter-path), then a form whose subject is rebuilt from
     /// what can be recovered (§FS-rule-refusals.sentences.rewrite.recovered), or, where it needs named
@@ -125,7 +142,7 @@ impl SubjectRefusal {
                 after_enabling: false,
             })
         };
-        let reason = self.fault.failed().reason(&self.text);
+        let reason = self.reason(vocabulary);
         match suggested {
             Some(suggested) => {
                 refuse(reason, Form::One(suggested.text)).enabling(suggested.after_enabling)
@@ -194,10 +211,10 @@ pub(super) fn parse_subject(
     {
         let chapter = |fault| refused(fault, Spelling::ChapterOfEach, text, kind, Some(name), "");
         known_subject(kind, vocab).map_err(chapter)?;
-        if !vocab.named_sections {
+        if !vocab.named_sections_for(kind) {
             return Err(chapter(SubjectFault::NamedSectionsOff));
         }
-        validate_named_path(name, vocab).map_err(chapter)?;
+        validate_named_path(name, kind, vocab).map_err(chapter)?;
         return Ok(RuleSubject::ChapterOfKind {
             kind: kind.into(),
             name: name.into(),
@@ -229,7 +246,7 @@ pub(super) fn parse_subject(
             SubjectFault::NumberedChapter
         }));
     }
-    if path.is_some() && !vocab.named_sections {
+    if path.is_some() && !named_literal(text, vocab) {
         return Err(literal(SubjectFault::NamedSectionsOff));
     }
     for (index, grammar) in vocab.id_grammars.iter().enumerate() {
@@ -306,10 +323,25 @@ pub(super) fn is_named_component(component: &str) -> bool {
             .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
 }
 
-/// Accept a chapter path of named components only (§FS-rules.2); a refusal
-/// says how its first refused component failed.
-pub(super) fn validate_named_path(path: &str, vocab: &RuleVocabulary) -> Result<(), SubjectFault> {
-    if !vocab.named_sections {
+/// Whether a literal subject's chapter path may be named: named sections are
+/// on for the vocabulary, or for the kind of the declaration a configured
+/// grammar reads it as (§FS-scan.projects.kinds).
+fn named_literal(text: &str, vocab: &RuleVocabulary) -> bool {
+    vocab.named_sections
+        || vocab.id_grammars.iter().any(|grammar| {
+            parse_id_arg(text, grammar).is_ok_and(|(id, _)| vocab.named_kinds.contains(&id.kind))
+        })
+}
+
+/// Accept a chapter path of named components only (§FS-rules.2), read under
+/// `kind`'s own project (§FS-scan.projects.kinds); a refusal says how its first
+/// refused component failed.
+pub(super) fn validate_named_path(
+    path: &str,
+    kind: &str,
+    vocab: &RuleVocabulary,
+) -> Result<(), SubjectFault> {
+    if !vocab.named_sections_for(kind) {
         return Err(SubjectFault::NamedSectionsOff);
     }
     if let Some(component) = path.split('.').find(|part| !is_named_component(part)) {

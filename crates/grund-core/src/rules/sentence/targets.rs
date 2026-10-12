@@ -4,7 +4,9 @@
 
 use super::forms::{Form, Refusal, refuse};
 use super::{RuleTargets, RuleVocabulary, TargetMode};
-use crate::config::{NamespaceMatch, parse_citation_target_entry, render_citation_target};
+use crate::config::{
+    NamespaceMatch, parse_citation_target_entry, render_citation_target, unverifiable_reason,
+};
 
 /// Recognize one object target. An unresolved namespaced kind in a scope that
 /// holds no workspace vocabulary is not a refusal: its reason is recorded in
@@ -47,40 +49,25 @@ fn known_target(
     };
     // §FS-rules.4.1.1: a namespaced object kind the run holds no workspace
     // vocabulary for is one this scope cannot judge either way.
-    match unverifiable_reason(&parsed.namespace, &kind, vocab) {
-        // §FS-errors.3.7.1: the true clause alone, the final template.
-        Some(reason) => {
-            unverifiable.get_or_insert(format!("{reason} \u{2014} check from the workspace root"));
-            Ok(render_citation_target(&parsed))
+    let alias = match &parsed.namespace {
+        NamespaceMatch::Alias(alias) => Some(alias.as_str()),
+        NamespaceMatch::Any => None,
+        NamespaceMatch::Local => {
+            // §FS-errors.3.8: a bare object shares the subject's scope, so a kind
+            // configured there without IDs says so.
+            let legacy = format!("unknown kind \"{kind}\"");
+            return Err(refuse(vocab.kind_refusal(legacy, &kind), missing));
         }
-        None => Err(refuse(
+    };
+    if vocab.workspace_in_scope() {
+        return Err(refuse(
             format!("unknown kind \"{kind}\"{qualifier}"),
             missing,
-        )),
+        ));
     }
-}
-
-/// Why an unresolved object kind is §FS-rules.4.1's unverifiable case rather
-/// than an invalid rule, or `None` when it is an invalid rule. The reason names
-/// what the scope cannot reach, never a candidate it cannot have
-/// (§FS-check.3.8.3).
-fn unverifiable_reason(
-    namespace: &NamespaceMatch,
-    kind: &str,
-    vocab: &RuleVocabulary,
-) -> Option<String> {
-    if vocab.workspace_in_scope() {
-        return None;
-    }
-    match namespace {
-        NamespaceMatch::Alias(alias) => Some(format!(
-            "unknown project alias {alias}; no workspace is in scope here, so the alias cannot be resolved"
-        )),
-        NamespaceMatch::Any => Some(format!(
-            "no workspace is in scope here, so no namespace can be searched for {kind}"
-        )),
-        NamespaceMatch::Local => None,
-    }
+    // §FS-errors.3.7.1: the true clause alone, the final template.
+    unverifiable.get_or_insert(unverifiable_reason(alias, &kind));
+    Ok(render_citation_target(&parsed))
 }
 
 pub(super) fn kind_targets(

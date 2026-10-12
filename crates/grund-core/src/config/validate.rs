@@ -13,9 +13,12 @@
 use anyhow::{Result, anyhow};
 use std::path::Path;
 
-use super::citations::validate_citation_rules;
+use super::citations::{pinned_target_warnings, validate_citation_rules};
 use super::kind::KindConfig;
+use super::kinds::KindTable;
 use super::project::{KindGrounding, Project};
+use super::record::Config;
+use super::run_warnings::RunWarning;
 use super::v1::bail_config;
 use super::workspace_block::validate_workspace_lists;
 use crate::model::format_path;
@@ -60,28 +63,70 @@ pub(super) fn kinds(path: &Path, project: &Project) -> Result<()> {
 }
 
 /// §AR-config.4: the member lists and the `[citations]` rules against the final
-/// kind set, judged after the grammar compiles, as v1 always judged them.
-pub(super) fn lists(path: &Path, project: &Project) -> Result<()> {
+/// kind set, judged after the grammar compiles, as v1 always judged them. The
+/// `Ok` is the load warnings a pinned or `*/` target earns in a config that
+/// declares no `[workspace]`, so no run of it holds one (§FS-config.3.9.5.2); a
+/// config that declares one has them judged where its workspace is expanded.
+pub(super) fn lists(path: &Path, project: &Project) -> Result<Vec<String>> {
     // §AR-workspace.5.2: post-parse invariants run on every load, not gated on which
     // section appeared. Free-form `project_name` is slug-checked later
     // (§AR-workspace.5.3); both member lists are shape-checked in `workspace_block.rs`.
     validate_workspace_lists(&project.workspace)?;
     // §FS-config.3.9.5: validate `[citations]` against the final kind set.
-    if project.rules.citations.declared {
-        // §FS-config-v2.rules.citations: each version names the rules its own way.
-        let table = if project.version == 2 {
-            "rules.citations"
-        } else {
-            "citations"
-        };
-        validate_citation_rules(
-            path,
-            table,
-            &project.kind_configs(),
-            &project.rules.citations,
-        )?;
+    if !project.rules.citations.declared {
+        return Ok(Vec::new());
     }
-    Ok(())
+    let table = citations_table(project);
+    validate_citation_rules(
+        path,
+        table,
+        &project.kind_configs(),
+        &project.rules.citations,
+    )?;
+    if project.workspace.declared {
+        return Ok(Vec::new());
+    }
+    Ok(pinned_target_warnings(
+        path,
+        table,
+        &project.rules.citations,
+        &KindTable::standalone(&project.schema),
+    ))
+}
+
+/// §FS-config.3.9.5.2: the load warnings `config`'s pinned and `*/` targets
+/// earn against the kind table its workspace expansion built — the half of
+/// [`lists`] a config that declares `[workspace]` defers to that point.
+pub(crate) fn pinned_citation_target_warnings(
+    config: &Config,
+    kinds: &KindTable,
+) -> Vec<RunWarning> {
+    let project = config.project();
+    let Some(path) = config.run().config_file.as_deref() else {
+        return Vec::new();
+    };
+    if !project.rules.citations.declared {
+        return Vec::new();
+    }
+    pinned_target_warnings(
+        path,
+        citations_table(project),
+        &project.rules.citations,
+        kinds,
+    )
+    .into_iter()
+    .map(RunWarning::citation_target)
+    .collect()
+}
+
+/// How a config spells its `[citations]` table in a message
+/// (§FS-config-v2.rules.citations): each version names the rules its own way.
+pub(crate) fn citations_table(project: &Project) -> &'static str {
+    if project.version == 2 {
+        "rules.citations"
+    } else {
+        "citations"
+    }
 }
 
 /// Every rule the two row keys have to satisfy (§FS-config.3.4.8.5), each closing a

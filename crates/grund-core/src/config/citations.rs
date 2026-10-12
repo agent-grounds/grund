@@ -16,6 +16,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 use super::kind::KindConfig;
+use super::kinds::{KindScope, KindTable, KindVerdict, one_grammar_warning, unverifiable_reason};
 use super::record::citing_kind_names;
 use super::workspace_block::{INVALID_ALIAS_PATH_EXPECTED, invalid_alias_path_segment};
 use crate::model::format_path;
@@ -217,7 +218,12 @@ pub(super) fn validate_citation_rules(
             let level_name = level.as_str();
             for disjunction in disjunctions {
                 for target in &disjunction.targets {
-                    if !known.contains(target.kind.as_str()) {
+                    // §FS-config.3.9.5.2: a pinned or `*/` target names other
+                    // projects' kinds, which this config does not hold, so it is
+                    // judged by `pinned_target_warnings` and never here.
+                    if target.namespace == NamespaceMatch::Local
+                        && !known.contains(target.kind.as_str())
+                    {
                         // A non-citable kind is a name the table knows and a
                         // citation can never carry, so say which of the two it
                         // is rather than calling a configured kind unknown.
@@ -256,6 +262,61 @@ pub(super) fn validate_citation_rules(
         }
     }
     Ok(())
+}
+
+/// §FS-config.3.9.5.2: judge every pinned and `*/` target of `citations`
+/// against the kinds of the projects its qualifier names, as `kinds` reads
+/// them, and return one load warning per target the run cannot accept, naming
+/// [`super::kinds::ONE_GRAMMAR_FLIP`]. A run whose table holds no workspace
+/// cannot judge another project at all, and says so in §FS-errors.3.7.1's
+/// wording. `path` is the config's report path and `table` its spelling of the
+/// section, as [`validate_citation_rules`] names them.
+pub(crate) fn pinned_target_warnings(
+    path: &Path,
+    table: &str,
+    citations: &CitationRules,
+    kinds: &KindTable,
+) -> Vec<String> {
+    let mut warnings = Vec::new();
+    for (citing, rules) in &citations.per_kind {
+        for (level, disjunctions) in rules.lists() {
+            for target in disjunctions.iter().flat_map(|d| &d.targets) {
+                let (scope, alias) = match &target.namespace {
+                    NamespaceMatch::Local => continue,
+                    NamespaceMatch::Alias(alias) => {
+                        (KindScope::Pinned(alias), Some(alias.as_str()))
+                    }
+                    NamespaceMatch::Any => (KindScope::Any, None),
+                };
+                let kind = &target.kind;
+                let place = alias.map_or_else(
+                    || "in any workspace namespace".to_string(),
+                    |alias| format!("in namespace `{alias}`"),
+                );
+                let why = match kinds.verdict(scope, kind) {
+                    KindVerdict::Citable => continue,
+                    KindVerdict::NonCitable(_) => {
+                        format!("a non-citable target kind `{kind}` {place}")
+                    }
+                    KindVerdict::Unknown => format!("an unknown target kind `{kind}` {place}"),
+                    KindVerdict::UnknownAlias => {
+                        format!("an unknown project alias `{}`", alias.unwrap_or_default())
+                    }
+                    KindVerdict::Unverifiable => format!(
+                        "`{}`: {}",
+                        render_citation_target(target),
+                        unverifiable_reason(alias, kind)
+                    ),
+                };
+                warnings.push(one_grammar_warning(&format!(
+                    "{}: [{table}.{citing}] {} names {why}",
+                    format_path(path),
+                    level.as_str()
+                )));
+            }
+        }
+    }
+    warnings
 }
 
 /// Whether two rule-target namespace matchers can match the same citation

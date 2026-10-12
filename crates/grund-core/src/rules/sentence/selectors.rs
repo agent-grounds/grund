@@ -86,7 +86,7 @@ fn select(text: &str, vocabulary: &RuleVocabulary) -> Result<RuleSubject, Subjec
         if let Some((kind, name)) = text.split_once(separator.as_str())
             && vocabulary.kinds.contains(kind)
         {
-            validate_named_path(name, vocabulary).map_err(|fault| {
+            validate_named_path(name, kind, vocabulary).map_err(|fault| {
                 refused(fault, Spelling::KindName, text, kind, Some(name), separator)
             })?;
             return Ok(RuleSubject::ChapterOfKind {
@@ -113,7 +113,7 @@ fn answer(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> SelectorRefu
         return answer_as_if_enabled(refusal, vocabulary);
     }
     SelectorRefusal {
-        reason: fault.reason(&refusal.text),
+        reason: refusal.reason(vocabulary),
         // §FS-rule-refusals.selectors: the breadcrumb follows from the reason alone.
         hint: matches!(
             fault,

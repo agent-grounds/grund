@@ -9,7 +9,7 @@ use anyhow::{Result, anyhow};
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::selector_refusal::selector_refusal;
-use crate::config::non_citable_kind_error;
+use crate::config::{KindScope, KindVerdict, Quote};
 use crate::resolver::WorkspaceContext;
 use crate::rules::sentence::{RuleSubject, RuleVocabulary, parse_selector};
 
@@ -24,44 +24,48 @@ pub(crate) fn check_list_scope(
     selector: Option<&str>,
 ) -> Result<Option<RuleSubject>> {
     check_project_aliases(context, project_filter)?;
-    let known_kinds = || context.known_kinds_line(project_filter);
+    // §FS-scan.projects.kinds: every kind name below is answered from the run's
+    // one table, in the projects this run selects.
+    let table = context.kind_table();
+    let scope = KindScope::Selected(project_filter);
+    for kind in kind_filter {
+        // §FS-list.1.1: accepted when any selected project has the kind citable;
+        // configured but citable nowhere selected is refused for that reason,
+        // named by the first such entry in load order (§FS-errors.2.5.1).
+        let headline = match table.verdict(scope, kind) {
+            KindVerdict::Citable => continue,
+            KindVerdict::NonCitable(entry) => entry.non_citable_reason(Quote::Backtick),
+            _ => format!("unknown kind `{kind}`"),
+        };
+        return Err(anyhow!("{headline}\n{}", table.known_kinds_line(scope)));
+    }
+    let Some(raw) = selector else {
+        return Ok(None);
+    };
     let selected_projects = || {
         context
             .projects
             .iter()
             .filter(|project| project_filter.is_empty() || project_filter.contains(&project.alias))
     };
-    for kind in kind_filter {
-        // §FS-list.1.1: accepted when any selected project has the kind citable.
-        let entries = || {
-            selected_projects()
-                .flat_map(|project| &project.config.kinds)
-                .filter(|entry| &entry.kind == kind)
-        };
-        if entries().any(|entry| entry.citable) {
-            continue;
-        }
-        // Configured but citable nowhere selected: the reason, named by the
-        // first such entry in load order, rather than "unknown" (§FS-list.1.1).
-        let headline = match entries().next() {
-            Some(entry) => non_citable_kind_error(entry),
-            None => format!("unknown kind `{kind}`"),
-        };
-        return Err(anyhow!("{headline}\n{}", known_kinds()));
-    }
-    let Some(raw) = selector else {
-        return Ok(None);
-    };
-    let kinds = selected_projects()
-        .flat_map(|project| project.config.kinds.iter())
-        .filter(|kind| kind.citable)
-        .map(|kind| kind.kind.clone())
+    let kinds = table
+        .citable(scope)
+        .into_iter()
+        .map(str::to_string)
         .collect::<BTreeSet<_>>();
     let vocabulary = RuleVocabulary {
         kinds: kinds.clone(),
         target_kinds: kinds,
         target_namespaces: BTreeMap::new(),
-        named_sections: selected_projects().all(|project| project.config.named_sections),
+        named_sections: table.named_sections(scope),
+        // §FS-rule-refusals.selectors: `KIND.NAME` reads named sections under the
+        // project that configures `KIND`.
+        named_kinds: table
+            .named_section_kinds(scope)
+            .into_iter()
+            .map(str::to_string)
+            .collect(),
+        non_citable: table.non_citable_reasons(scope),
         id_grammars: selected_projects()
             .map(|project| project.config.grammar.clone())
             .collect(),
@@ -72,7 +76,7 @@ pub(crate) fn check_list_scope(
     // §FS-rule-refusals.selectors: a refusal recovering no kind ends in `known kinds:`.
     parse_selector(raw, &vocabulary)
         .map(Some)
-        .map_err(|refusal| selector_refusal(refusal.render(&known_kinds())))
+        .map_err(|refusal| selector_refusal(refusal.render(&table.known_kinds_line(scope))))
 }
 
 /// `--project` needs workspace mode and names only loaded aliases
