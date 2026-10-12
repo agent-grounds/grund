@@ -17,7 +17,7 @@
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-use super::fmt_anchor_row::repeated_anchor_row;
+use super::fmt_anchor_row::link_row as link_row_of;
 use super::fmt_links::wrap_markdown_links_with_targets;
 use super::fmt_local_sections::expand_local_section_citations;
 use crate::config::Config;
@@ -245,8 +245,7 @@ fn fmt_line_at(
     );
     let shorthand_changed = expansion.is_some();
     let mut final_line = expansion.unwrap_or(marked);
-    let mut link_changed = false;
-    let mut anchor_row = None;
+    let mut link_row = None;
     // §FS-fmt.6.1.2: the carve-out narrows the pass to the index's own entries only
     // where the ordinary pass is off; where it runs, it already wraps the page.
     let entry_ids = opts.index_entry_ids.filter(|_| !opts.cross_refs);
@@ -254,7 +253,6 @@ fn fmt_line_at(
         && is_md
         && let Some(findings) = opts.findings
     {
-        let before = final_line.clone();
         let wrapped = wrap_markdown_links_with_targets(
             &final_line,
             path,
@@ -264,10 +262,8 @@ fn fmt_line_at(
             entry_ids,
             opts.shorthand_targets,
         );
-        link_changed = wrapped != final_line;
+        link_row = link_row_of(&final_line, &wrapped);
         final_line = wrapped;
-        // §DF-repeated-heading-anchor.decision.row: a link a repeat's numbering moved.
-        anchor_row = repeated_anchor_row(&before, &final_line);
     }
     // §FS-fmt.3.5.1: the first rewrite that fired on the line names its one row.
     let label = if trigger_changed {
@@ -278,10 +274,8 @@ fn fmt_line_at(
         "local section \u{2192} canonical"
     } else if shorthand_changed {
         "shorthand \u{2192} canonical"
-    } else if let Some(row) = anchor_row.as_deref().filter(|_| link_changed) {
+    } else if let Some(row) = link_row.as_deref() {
         row
-    } else if link_changed {
-        "markdown link"
     } else {
         ""
     };
