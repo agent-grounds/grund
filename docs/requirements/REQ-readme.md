@@ -9,8 +9,8 @@ The README opens on the workflow, shown rather than narrated, and only then says
 The README gives concise links to the existing traceability comparison and to performance
 evidence and its methodology. It reuses the introduction and section-retrieval examples
 rather than adding another slogan block or copying the detailed comparison.
-An early quick-start link leads to installation and a runnable example before a
-reader needs to learn the whole schema. Setup distinguishes adopting existing specs
+The loop's cards link into a runnable example before a reader needs to learn the
+whole schema. Setup distinguishes adopting existing specs
 from scaffolding new ones.
 
 ### 1.1 The loop
