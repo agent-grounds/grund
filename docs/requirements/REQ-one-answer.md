@@ -182,10 +182,6 @@ this requirement, was found later, on `e8c40221d7`, and is added by amendment.
 
 ### differences.text: Text
 
-- **R04.** A buffer opened under the target's physical path does not move a stub that
-  spells it through a symlink; the same edit saved does. R.
-- **R05.** A stub to a target that exists only as a buffer is broken, or its ID a
-  duplicate, until the same bytes are saved. R.
 - **R06a.** An index link edited to a bare citation is clean in the editor and
   `unlinked-index-entry` once saved. R.
 - **R06b.** The inline-code hint on a dangling citation differs between buffer and save. R.

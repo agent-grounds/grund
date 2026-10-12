@@ -36,7 +36,9 @@ CHAPTERS = (
     "scope.links", "scope.links.names", "scope.links.unresolvable",
     "scope.links.owed", "scope.links.blind-spot",
     "identity",
-    "identity.link-path", "identity.root-path", "identity.read-once",
+    "identity.link-path", "identity.root-path", "identity.read-once", "identity.buffers",
+    "text",
+    "text.buffer", "text.buffer-only",
 )
 
 # (source file, source heading label, destination chapter it must cite,
@@ -178,13 +180,11 @@ class ScanMoveTests(unittest.TestCase):
         self.assertEqual([], [c for c in CHAPTERS if c not in declared], "chapters missing")
         self.assertRegex(INDEX.read_text(encoding="utf-8"), re.escape(f"[{CITATION}](FS-scan.md#"))
 
-    def test_the_page_has_named_chapters_one_terms_chapter_and_no_text_chapter(self):
+    def test_the_page_has_named_chapters_and_one_terms_chapter(self):
         text = self.scan() and SCAN.read_text(encoding="utf-8")
         tops = re.findall(r"^## (\S+?):? ", text, re.M)
         self.assertEqual([], [t for t in tops if t[0].isdigit()], "numbered top-level chapters")
         self.assertEqual(1, len(re.findall(r"^## terms: Terms$", text, re.M)), "Terms chapters")
-        self.assertEqual([], [t for t in tops if t == "text" or t.startswith("text.")],
-                         "which text a file has is not this step's to define")
 
     def test_each_moved_sentence_lives_at_its_destination_only(self):
         declared = _sections(SCAN) if SCAN.is_file() else {}
