@@ -448,20 +448,20 @@ The comment forms a declaration is recognized in (matched as comment prefixes pr
 
 | Language(s)              | Declaration-hosting comment form                  | How the regex sees it                |
 |--------------------------|---------------------------------------------------|--------------------------------------|
-| Java, Kotlin, Scala      | `/** … */` (Javadoc / KDoc / Scaladoc)            | `/*` opens; ` * ` on continuation    |
+| Java, Kotlin, Scala      | `/** … */` (Javadoc / KDoc / Scaladoc)            | `/*`, `/**`, `/*!` open; continuation with or without ` * ` |
 | C, C++                   | `/** … */` (Doxygen) or `/// …`                   | `/*` or `//` (covers `///`)          |
 | C#                       | `/// <summary>…</summary>` (XML doc)              | `//` (covers `///`)                  |
-| Rust                     | `/// …` outer, `//! …` inner, `/** … */` block    | `//` covers `///` and `//!`; `/*` for block |
-| TypeScript, JavaScript   | `/** … */` (JSDoc / TSDoc)                        | `/*` opens; ` * ` on continuation    |
+| Rust                     | `/// …` outer, `//! …` inner, `/** … */` block    | `//` covers `///` and `//!`; `/*` covers `/**` and `/*!` |
+| TypeScript, JavaScript   | `/** … */` (JSDoc / TSDoc)                        | `/*`, `/**`, `/*!` open; continuation with or without ` * ` |
 | Go                       | `// …` block immediately above the declaration    | `//`                                 |
 | Swift                    | `/// …` or `/** … */`                             | `//` or `/*`                          |
-| PHP                      | `/** … */` (PHPDoc)                               | `/*` opens; ` * ` on continuation    |
+| PHP                      | `/** … */` (PHPDoc)                               | `/*`, `/**`, `/*!` open; continuation with or without ` * ` |
 | Ruby                     | `# …` lines (RDoc / YARD)                         | `#` (see note 4.1)                    |
 | Python                   | `""" … """` or `''' … '''` docstring                 | special-cased (see note 4.1)         |
 | Lisp, Scheme, Clojure    | `; …` line comments                               | `;`                                  |
 | SQL, Haskell, Lua, Ada   | `-- …` line comments                              | `--`                                 |
 
-This table documents the comment *conventions* for the languages `grund` is built to serve. It is not the only gate: the file extension must be in `[scan] extensions` and the marker must be in `[scan] comment_prefixes` ([§FS-config.3.5](../functional-spec/FS-config.md#35-scan--what-gets-scanned)). The defaults contain both halves for every row above and also recognize bare `*` / `/*` block-comment lines. A language not in the table still works when the repository configures both its extension and its comment marker.
+This table documents the comment *conventions* for the languages `grund` is built to serve. It is not the only gate: the file extension must be in `[scan] extensions` and the marker must be in `[scan] comment_prefixes` ([§FS-config.3.5](../functional-spec/FS-config.md#35-scan--what-gets-scanned)). The defaults contain both halves for every row above and also recognize bare `*` / `/*` block-comment lines. The configured `/*` is matched as `/\*[*!]?`, the way `//` is matched as `//[/!]?`, so it opens a block behind `/**` and `/*!` as well; the same alternation feeds the section-heading regex, so `/** ## 1. Sub` on an opener line is a section heading just as `/* ## 1. Sub` is. A line inside a block whose `*/` is found is read whether or not it carries ` * ` ([§FS-declarations.line.block-comment](../functional-spec/FS-declarations.md#lineblock-comment-a-line-inside-a-block-comment)). A language not in the table still works when the repository configures both its extension and its comment marker.
 
 ### 4.4 Comment lines are normalized before detection
 
@@ -469,7 +469,7 @@ Before declaration, section, or citation detection runs on a source file, the sc
 
 - `//`, `///`, and `//!` line comments strip the full leading comment marker and one following space when present. Therefore `/// AR-001-router: Router`, `//! AR-001-router: Router`, and `// AR-001-router: Router` all expose the same declaration content: `AR-001-router: Router`.
 - `#`, `;`, and `--` line comments strip that marker and one following space when present. Therefore Python/Ruby `# AR-001-router: Router` exposes `AR-001-router: Router`; a bare source line `AR-001-router: Router` is not a declaration outside a Python docstring, because it has no comment marker.
-- Block comments strip the opener (`/*` or `/**`) and closer (`*/`) when they appear on their own content lines. Continuation lines strip one optional leading `*` plus one following space when present. Therefore ` * AR-001-router: Router` exposes `AR-001-router: Router`.
+- Block comments strip the opener (`/*`, `/**` or `/*!`) and closer (`*/`) when they appear on their own content lines. Continuation lines strip one optional leading `*` plus one following space when present. Therefore ` * AR-001-router: Router`, a bare `AR-001-router: Router` inside the block, and `/** AR-001-router: Router` all expose `AR-001-router: Router`. The reader carries the block state across lines, as it does for a docstring, by the rule of [§FS-declarations.line.block-comment](../functional-spec/FS-declarations.md#lineblock-comment-a-line-inside-a-block-comment): a block opens only on a line that starts with an opener and closes at the first `*/`, and a bare line is comment content only in a block whose `*/` is found. The declaration gate, the near-miss gate and `comment_blocks` read their block spans from that one state, so the question "is this line inside a block comment?" has one answer for every reader.
 - Python triple-quoted docstrings in `.py` files enter docstring mode for both `"""` and `'''`. Delimiter-only opening and closing lines are not content; delimiter lines that also contain prose are scanned after stripping the delimiter on that side, so `"""Uses §FS-001-router."""` and an indented multi-line docstring body are both scanned as docstring content.
 - With Python docstring scanning enabled, the same reader records the assigned-data spans of [§FS-check.1.1.3.1](../functional-spec/FS-check.md#1131-assigned-python-triple-quoted-data). It carries the delimiter across lines, excludes only raw columns inside the span, resumes at a same-line tail, and returns to neutral state before a later docstring. The comment-block classifier consumes that classification rather than treating the assigned opener or closer as a docstring boundary.
 - The normalization is line-local and deterministic, with only delimiter and lexical-mode state carried between lines. It does not parse the host language beyond recognizing the comment/docstring and assigned-data forms above; after normalization, the same declaration, section, citation, value, and inline-site readers apply. The scanner, body and link resolvers, embedded-value pass, formatter, and editor transforms replay this one classification rather than maintaining consumer-specific Python parsers. Recorded source positions and data spans still point at original-file byte columns, not stripped content columns, so LSP ranges and diagnostics cover the token the user sees and writers can preserve assigned data byte-for-byte.
@@ -488,6 +488,18 @@ The following inline declarations are all required to be recognized under the de
  * AR-003-block: Block comment spec
  * ## 1. Contract
  */
+
+/**
+AR-007-bare: Block comment without the gutter
+## 1. Contract
+*/
+
+/** AR-008-opener: Declared on the opener line
+
+Body.
+*/
+
+/** AR-009-oneline: One-line Javadoc */
 ```
 
 ```go

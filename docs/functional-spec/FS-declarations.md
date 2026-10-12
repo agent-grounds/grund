@@ -27,10 +27,48 @@ lead, index, catalog), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (marke
 ## line: What a line in declaration position declares
 
 A line is in declaration position where a declaration could open: a Markdown heading, a
-comment-prefixed line in a source file, or a bare line inside a Python docstring
-([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)). The position is necessary and not sufficient. The token that opens the
+comment-prefixed line in a source file, a bare line inside a Python docstring, or a line
+inside a `/* … */` block comment, with or without its ` * ` gutter
+([§FS-declarations.line.block-comment](FS-declarations.md#lineblock-comment-a-line-inside-a-block-comment), [§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)). The position is necessary and not sufficient. The token that opens the
 line has to be the shape a declaration takes, and one shape that starts out like it is
 not.
+
+### line.block-comment: A line inside a block comment
+
+A block comment opens on a line whose first non-blank characters are `/*`, `/**` or `/*!`,
+and closes at the first `*/` after its opener, on the opener's line or a later one. The
+block is the one [§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks) names, read where `/*` is among
+`[scan] comment_prefixes` ([§FS-languages.prefixes](FS-languages.md#prefixes-comment_prefixes-compose-with-extensions)). Inside it, three forms of line are in
+declaration position, once the wrapper of [§FS-languages.comment-wrapper](FS-languages.md#comment-wrapper-the-comment-wrapper) is read off:
+
+- the opener line, behind any of the three openers: `/* FS-b: Beta`, `/** FS-b: Beta`,
+  `/*! FS-b: Beta`, and the one-line `/** FS-b: Beta */`, whose title is read as the
+  one-line `/* FS-b: Beta */` form's title is;
+- a continuation line behind ` * `: ` * FS-b: Beta`;
+- a bare continuation line, with no ` * `, indented or not: `FS-b: Beta`. Only a block whose
+  `*/` is found has bare lines in declaration position. In a block that runs to the end of
+  the file without one, a bare line declares nothing, while the opener and starred forms
+  read as they do in a closed block.
+
+So the bare line declares exactly where its starred twin does, in any block comment and not
+only a `/**` doc block, and the declaration is found by every command that reads the
+catalog: `check`, `show`, `list`, `refs`, `cover` and the editor. A newly found declaration
+draws every finding any other does, including `declaration-near-miss` (whose position is
+this point's, [§FS-declarations.checks.declaration-near-miss.1](FS-declarations.md#checksdeclaration-near-miss1-what-counts), at the severity [§DF-bare-block-comment-line-declares.4](../decisions/functional/DF-bare-block-comment-line-declares.md#4-consequences) settles), duplicates, homes, indexes
+and rules. Its body, sections and lead are its comment block's
+([§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block)), with bare lines kept as written, so a bare `## 1. Sub` under
+it is its section `.1`. Decided in [§DF-bare-block-comment-line-declares](../decisions/functional/DF-bare-block-comment-line-declares.md#df-bare-block-comment-line-declares-a-line-inside-a-block-comment-declares-with-or-without-its-gutter-behind-any-of-its-openers).
+
+Nothing else is inside a block, so none of these lines is in declaration position by this
+point:
+
+- a line after the block's `*/`;
+- a line after a `/*` that is not at the start of its line, such as `x = 1; /* note */` or
+  `let s = "/*";`;
+- a line after a `//` comment that contains `/*`, such as `// see /* here`.
+
+This is recognition, not parsing: a line that starts with `/*` inside a
+string literal spanning several lines opens a block all the same.
 
 ### line.configured-literals: Configured literals belong to the canonical ID
 
@@ -397,7 +435,7 @@ What counts is [§FS-declarations.checks.declaration-near-miss.1](FS-declaration
 
 #### checks.declaration-near-miss.1: What counts
 
-A line in declaration position — a Markdown heading, or a comment-prefixed line in a source file under the rules of [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) — whose first token unambiguously begins with a configured citable kind ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)), which the effective ID grammar rejects, and which is **followed by the declaration colon**. This also covers a per-kind format whose first literal after `{kind}` differs from the persisted token.
+A line in declaration position ([§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares), read under the rules of [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)) whose first token unambiguously begins with a configured citable kind ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)), which the effective ID grammar rejects, and which is **followed by the declaration colon**. This also covers a per-kind format whose first literal after `{kind}` differs from the persisted token.
 
 #### checks.declaration-near-miss.2: The declaration colon is the discriminator
 

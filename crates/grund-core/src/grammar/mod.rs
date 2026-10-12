@@ -154,6 +154,8 @@ pub(crate) use anchors::anchor_slug_github;
 // The cases that pin this component, one module per behaviour area
 // (§AR-core-module-layout.1.3).
 #[cfg(test)]
+mod tests_block_comment_opener;
+#[cfg(test)]
 mod tests_comment_block;
 #[cfg(test)]
 mod tests_comment_block_position;
