@@ -1,19 +1,27 @@
 # Relative sections: write only the component a heading adds
 
-This runnable mini-repository demonstrates [§FS-declarations.section.relative](../../docs/functional-spec/FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds) and the section lock that guards it, [§FS-section-lock](../../docs/functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went). `FS-login` writes its subsections as `### .1: Username` under `## format: Formatting`, and `docs/use.md` cites two of them. The lock records one citation and misses the other.
+This runnable mini-repository demonstrates [§FS-declarations.section.relative](../../docs/functional-spec/FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds). It is for authors of deep outlines who are tired of repeating the parent's path in every heading. `FS-login` writes its subsections as `### .1: Username` under `## format: Formatting`, and `docs/use.md` cites two of them. Open `repo/docs/functional-spec/FS-login.md` first, then `repo/docs/use.md`.
 
 Run it from the repository root:
 
 ```bash
-grund check examples/relative-sections/repo
-echo $?    # 1: FS-login.format.2 is cited but not in the lock
+grund FS-login --toc examples/relative-sections/repo
+echo $?    # 0
 ```
 
-A relative heading takes its path from the heading one level up. `### .1:` under `## format:` is `FS-login.format.1`, and `### .1:` under `## parse:` is `FS-login.parse.1`. Every place that shows a coordinate prints the full path. `grund show FS-login --toc` lists `### format.1: Username`, while the default read and `--full` print the heading as it was written.
+The section map on stdout is the golden below; stderr is empty:
 
-A relative address has a cost: move the block under another parent and the same words answer to a different address. So a cited relative section is locked to its text. `.grund/sections/FS-login.lock` holds one line per cited address with a fingerprint of the section's text. Only `grund fmt --write`, run from the root, writes that file, and the file is committed. Here the lock records `FS-login.format.1`. Nothing records `FS-login.format.2`, so `check` prints the golden `unrecorded-section-citation` error below.
+```text
+## format: Formatting
+### format.1: Username
+### format.2: Password
+## parse: Parsing
+### parse.1: Tokens
+```
 
-Run `grund fmt --write` on a copy of the repository: it adds the missing line, and `check` then prints `success`. Later, if `## format:` and `## parse:` swap their `### .1` blocks, `check` says where the cited text went. Accepting that move takes a pointer in the old section or an edit of the citations.
+A relative heading takes its path from the heading one level up. `### .1:` under `## format:` is `FS-login.format.1`, and `### .1:` under `## parse:` is `FS-login.parse.1`. So the citation `<§>FS-login.format.1` in `docs/use.md` resolves to the Username section, and the map prints that full path for you to copy. Every place that shows a coordinate prints the full path. The default read and `--full` print the heading as it was written.
+
+A relative address has a cost: move the block under another parent and the same words answer to a different address. So a cited relative section is locked to its text ([§FS-section-lock](../../docs/functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)). `repo/.grund/sections/FS-login.lock` holds one line per cited address with a fingerprint of the section's text, and `grund check examples/relative-sections/repo` prints `success`. Only `grund fmt --write`, run from the root, writes that file, and the file is committed. The sibling example [`relative-sections-lock/`](../relative-sections-lock/) shows the lock catching a citation it does not record.
 
 The trade-offs:
 
