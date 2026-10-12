@@ -18,7 +18,7 @@
 //! `existing_init_companion_agent_entrypoints` rather than restating it, so
 //! `check` and `init` cannot come to disagree about what an entrypoint is.
 
-use crate::sources::{Sources, is_regular_file, link_metadata, read_link};
+use crate::sources::{Sources, is_regular_file, link_metadata, path_is_dir, read_link};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
@@ -327,7 +327,7 @@ pub(crate) fn companion_workspace_exists(
     }
     entrypoint
         .workspace
-        .is_some_and(|workspace| root.join(workspace).is_dir())
+        .is_some_and(|workspace| path_is_dir(root.join(workspace)))
 }
 
 /// Whether the on-disk `path` is grund-owned despite belonging to an entrypoint

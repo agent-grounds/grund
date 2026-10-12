@@ -39,6 +39,8 @@ PRIMITIVES = {
     "input_read_": (r"\binput_read_\w+\s*\(", ("config/", "sources/")),
     ".exists()": (r"\.exists\(\)", ("config/", "sources/") + WRITERS),
     ".is_file()": (r"\.is_file\(\)", ("config/", "sources/") + WRITERS),
+    ".is_dir()": (r"\.is_dir\(\)", ("config/", "sources/") + WRITERS),
+    ".metadata()": (r"\.(?:symlink_)?metadata\(\)", ("config/", "sources/") + WRITERS),
     "canonicalize": (r"\bcanonicalize\b", ("config/", "sources/") + WRITERS),
     "load_config": (r"\bload_config(?:_at\w*)?\s*\(", ("config/",)),
     "markdown_fence_delimiter": (r"\bmarkdown_fence_delimiter\b", ("scanner/", "grammar/")),

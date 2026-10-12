@@ -11,7 +11,7 @@ use crate::grammar::render_id;
 use crate::model::{Finding, RangeOwnership};
 use crate::resolver::load_narrowable_workspace_context;
 use crate::scanner::ApiScanError;
-use crate::sources::paths_same_location;
+use crate::sources::{path_is_dir, paths_same_location};
 
 use super::cover::cover_scan_errors;
 use super::report::context_run_warnings;
@@ -125,7 +125,7 @@ fn cover_lines_run(opts: CoverLinesOpts, cautions: &mut Vec<Finding>) -> Result<
     if !opts.path_provided {
         bail!("--lines needs a file path");
     }
-    if opts.path.is_dir() {
+    if path_is_dir(&opts.path) {
         bail!(
             "--lines needs a file path, and `{}` is a directory",
             opts.path.display()

@@ -89,3 +89,8 @@ pub(crate) fn read_link(path: impl AsRef<Path>) -> std::io::Result<PathBuf> {
 pub(crate) fn is_regular_file(file_type: std::fs::FileType) -> bool {
     file_type.is_file()
 }
+
+/// Whether an entry's type, as a listing reports it, is a directory.
+pub(crate) fn is_directory(file_type: std::fs::FileType) -> bool {
+    file_type.is_dir()
+}

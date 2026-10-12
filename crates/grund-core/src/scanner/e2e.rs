@@ -1,4 +1,4 @@
-use crate::sources::{Sources, canonical_path, path_exists, path_is_file};
+use crate::sources::{Sources, canonical_path, path_exists, path_is_dir, path_is_file};
 use anyhow::{Context, Result};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -54,7 +54,7 @@ pub(super) fn scan_e2e_cases(
         return Ok(());
     };
     let cases_root = frame.root().join(folder);
-    if !path_exists(&cases_root) || !cases_root.is_dir() {
+    if !path_exists(&cases_root) || !path_is_dir(&cases_root) {
         return Ok(());
     }
     let cases_root = canonical_path(&cases_root).unwrap_or(cases_root);
@@ -91,7 +91,7 @@ pub(super) fn scan_e2e_cases(
         for entry in Sources::on_disk().read_dir(&scan_root)? {
             let entry = entry?;
             let path = entry.path();
-            if path.is_dir() && path_is_file(&path.join("expected.exit")) {
+            if path_is_dir(&path) && path_is_file(&path.join("expected.exit")) {
                 case_dirs.push(path);
             }
         }
@@ -252,7 +252,7 @@ fn collect_relative_fixture_files(root: &Path, dir: &Path, files: &mut Vec<PathB
     for entry in Sources::on_disk().read_dir(dir)? {
         let entry = entry?;
         let path = entry.path();
-        if path.is_dir() {
+        if path_is_dir(&path) {
             collect_relative_fixture_files(root, &path, files)?;
         } else {
             files.push(path.strip_prefix(root).unwrap_or(&path).to_path_buf());

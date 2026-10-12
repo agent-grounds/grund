@@ -7,7 +7,7 @@
 //! category, which is what made a §AR-scanner.2 file answer a §AR-scanner.1
 //! question; they read a path and the `[scan]` table and nothing of a line.
 
-use crate::sources::link_metadata;
+use crate::sources::{link_metadata, path_is_dir};
 use std::path::{Path, PathBuf};
 
 use super::read_predicate::name_refusal;
@@ -55,7 +55,7 @@ pub(super) fn outward_directory_link_root(
 }
 
 pub(super) fn is_directory_symlink(path: &Path) -> bool {
-    path.is_dir() && link_metadata(path).is_ok_and(|metadata| metadata.file_type().is_symlink())
+    path_is_dir(path) && link_metadata(path).is_ok_and(|metadata| metadata.file_type().is_symlink())
 }
 
 /// Whether a file is one the scanner reads: a non-hidden name with an extension in

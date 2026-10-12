@@ -27,6 +27,7 @@ use crate::config::{
     AbsentOptionalNamespace, Config, Run, both_member_lists_message, optional_member_alias_segment,
 };
 use crate::model::Diagnostic;
+use crate::sources::path_is_dir;
 
 pub(super) fn workspace_optional_members_error(config: &Config, message: String) -> anyhow::Error {
     config_location_error(config.workspace_optional_members_source.as_ref(), message)
@@ -73,7 +74,7 @@ pub(super) fn expand_optional_members(
         let lexical = config.root.join(entry);
         // §FS-workspace.2.2.1: absent is `is_dir` and nothing more — an empty
         // directory is *present*. See this function's docs.
-        if !lexical.is_dir() {
+        if !path_is_dir(&lexical) {
             // §FS-workspace.6.1.4: two entries naming one root are one member, and the
             // dedup below the merge reaches only the present ones — see this
             // function's docs.

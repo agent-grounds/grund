@@ -18,7 +18,7 @@
 //! diagnostic that carries it, which is what lets a test read it
 //! (§AR-core-module-layout.1).
 
-use crate::sources::{Sources, canonical_path};
+use crate::sources::{Sources, canonical_path, is_directory, path_is_dir, path_metadata};
 use anyhow::{Result, anyhow};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -76,7 +76,7 @@ pub(super) fn expand_workspace_member_list(config: &Config) -> Result<ExpandedMe
     for member in &config.workspace_members {
         if let Some(glob_parent) = member.strip_suffix("/*") {
             let parent = config.root.join(glob_parent);
-            if !parent.is_dir() {
+            if !path_is_dir(&parent) {
                 // Named as written, like every other member error: a rendered path is
                 // relative to *this block's* root, not the base the report uses, and
                 // under `relative_paths = false` could not be relative at all (§FS-errors.4).
@@ -104,16 +104,13 @@ pub(super) fn expand_workspace_member_list(config: &Config) -> Result<ExpandedMe
                 let path = entry.path();
                 // §FS-workspace.2.4: classify the child by its followed metadata, so a
                 // symlink to a directory is a member subject to the same checks below.
-                if !path
-                    .metadata()
-                    .map_err(|err| {
-                        workspace_members_error(
-                            config,
-                            format!("cannot read workspace member glob `{member}`: {err}"),
-                        )
-                    })?
-                    .is_dir()
-                {
+                let metadata = path_metadata(&path).map_err(|err| {
+                    workspace_members_error(
+                        config,
+                        format!("cannot read workspace member glob `{member}`: {err}"),
+                    )
+                })?;
+                if !is_directory(metadata.file_type()) {
                     continue;
                 }
                 // §AR-workspace.5.3: `packages/*` skips hidden dirs (`.git`,
@@ -218,7 +215,7 @@ pub(super) fn workspace_member_root(
     lexical: &Path,
 ) -> Result<PathBuf> {
     let located = |message: String| config_location_error(source, message);
-    if !lexical.is_dir() {
+    if !path_is_dir(lexical) {
         // §FS-workspace.2.2.4: the unchanged default, one clause longer.
         return Err(located(format!(
             "workspace member does not exist: {written} — list it in \
