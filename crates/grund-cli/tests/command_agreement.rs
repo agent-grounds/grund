@@ -8,9 +8,11 @@
 //! #576 (r1, r2 and r3), one tree per row of §REQ-one-answer.differences, and a
 //! fixed sample of the end-to-end corpus: the first case of each family in
 //! `SAMPLED_FAMILIES` whose fixture is a plain project. The surfaces are the
-//! command line's; the editor and the bindings are compared by
-//! `lsp_cli_parity.rs` and `stub_resolution_agreement.rs` until this test drives
-//! them too.
+//! command line's, and for `agreement_buffers::TREES` the editor snapshot and `show` over an
+//! edit held as a buffer, against the same edit saved (§FS-scan.text.buffer);
+//! the bindings, and the editor against the command line, are compared by
+//! `lsp_cli_parity.rs` and `stub_resolution_agreement.rs` until this test
+//! drives them too.
 //!
 //! `LEDGER` is the divergence ledger: one row per known divergence, naming the
 //! tree and the invariant. `DEFERRED` names each row of §REQ-one-answer.differences
@@ -21,6 +23,8 @@
 //! amendment naming its baseline, or kept as a ledger-only row with its reason
 //! (the list rule of §REQ-one-answer); it is never kept in this file alone.
 
+#[path = "support/agreement_buffers.rs"]
+mod agreement_buffers;
 #[path = "support/agreement_identity.rs"]
 mod agreement_identity;
 #[path = "support/agreement_sections.rs"]
@@ -30,6 +34,7 @@ mod agreement_stubs;
 #[path = "support/agreement_tree.rs"]
 mod agreement_tree;
 
+use agreement_buffers as buffers;
 use agreement_identity as identity;
 use agreement_sections as sections;
 use agreement_stubs as stubs;
@@ -65,6 +70,12 @@ const LEDGER: &[(&str, &str, &str)] = &[
     ("U05", "u05", "a-rule-targets-title-is-read-once"),
     ("U06", "u06", "an-unused-declaration-is-at-one-site"),
     ("R02", "r02", "a-narrowed-workspace-run-resolves-the-alias"),
+    // R06a-d keep the saved text for one release (DF-four-editor-checks-read-saved-text);
+    // their flip is #624.
+    ("R06a", "r06a", "a-buffer-answers-as-saved"),
+    ("R06b", "r06b", "a-buffer-answers-as-saved"),
+    ("R06c", "r06c", "a-buffer-answers-as-saved"),
+    ("R06d", "r06d", "a-buffer-answers-as-saved"),
 ];
 
 /// `(row, tree, invariant, the question asked of the tree)`: each tree this test
@@ -193,16 +204,6 @@ const DEFERRED: &[(&str, &str, &str)] = &[
     ("P16", "#598", "the editor snapshot's section span"),
     ("U03b", "#597", "shell completion, a row read from code"),
     ("U03c", "#597", "the editor snapshot"),
-    (
-        "R04",
-        "#595",
-        "an editor buffer under the target's physical path",
-    ),
-    ("R05", "#595", "an editor buffer with no file behind it"),
-    ("R06a", "#595", "an editor buffer of an index"),
-    ("R06b", "#595", "an editor buffer with a dangling citation"),
-    ("R06c", "#595", "an editor buffer of an AGENTS.md block"),
-    ("R06d", "#595", "an editor buffer of an end-to-end manifest"),
 ];
 
 /// What the seed leaves out under §AR-ci.requirements.1, and the step that
@@ -296,6 +297,11 @@ fn divergences() -> Vec<(String, &'static str, String)> {
             found.push((tree.to_string(), *invariant, answers));
         }
     }
+    for (_, tree, verdict) in buffers::TREES {
+        if let Err(answers) = verdict() {
+            found.push((tree.to_string(), buffers::INVARIANT, answers));
+        }
+    }
     for (name, root) in sampled_trees() {
         if let Err(answers) = one_declared_set(&root) {
             found.push((name, "one-declared-set", answers));
@@ -361,7 +367,11 @@ const LEDGER_ONLY: &[&str] = &["G01", "P05"];
 /// and no deferral, a row both built and deferred, and a built or deferred row
 /// the requirement no longer lists, which would otherwise live here alone.
 fn listing_problems(rows: &[String]) -> Vec<String> {
-    let built: BTreeSet<&str> = TREES.iter().map(|(row, ..)| *row).collect();
+    let built: BTreeSet<&str> = TREES
+        .iter()
+        .map(|(row, ..)| *row)
+        .chain(buffers::TREES.iter().filter_map(|(row, ..)| *row))
+        .collect();
     let deferred: BTreeSet<&str> = DEFERRED.iter().map(|(row, ..)| *row).collect();
     let listed = |row: &str| rows.iter().any(|r| r == row);
     let mut wrong = Vec::new();
@@ -436,6 +446,16 @@ fn every_tree_is_its_ledger_row_or_agrees() {
                 "{tree} / {invariant} is ledgered under another row"
             );
         }
+    }
+    for (row, tree, _) in buffers::TREES {
+        let listed = LEDGER
+            .iter()
+            .find(|(_, t, i)| t == tree && *i == buffers::INVARIANT)
+            .map(|(listed, ..)| *listed);
+        assert_eq!(
+            listed, *row,
+            "{tree} is ledgered under another row, or a closed row's tree is"
+        );
     }
 }
 
