@@ -7,7 +7,7 @@
 use std::cmp::Ordering;
 
 use super::paths::sort_path_key;
-use super::records::Declaration;
+use super::records::{Catalog, Declaration, Id};
 
 /// What the scan found at a stub's target, in the order the scanner asks
 /// (§AR-scanner.4.6). `Missing`, `NotRead` and `LacksId` are a broken stub
@@ -145,6 +145,30 @@ pub(crate) fn paired_declarations(decls: &[Declaration]) -> PairedDeclarations<'
     }
     paired.sort_by(|a, b| site_order(a.record, b.record));
     PairedDeclarations { decls, paired }
+}
+
+/// Whether some declaration of `id` records a heading at section path `section`:
+/// the one lookup §FS-check.3.2 reports a missing section from, §FS-fmt.2.4.6
+/// declines a declaration-local rewrite on, §FS-check.3.17.4 admits a bare
+/// index entry by, and a rule's `cites` fact and a lent citation resolve by
+/// (§FS-rules.5.1, §FS-declarations.stubs.target.5), so the finding and the refusals
+/// cannot disagree. An undeclared `id` has no sections, and an owner with no
+/// numbered headings, a wholly absent path and a partially resolving one all answer
+/// `false`. A stub's sections are those of the target's record its verdict holds
+/// (§AR-scanner.4.6), scanned or not, as `check` reports them (§FS-check.3.2.1):
+/// where no recorded declaration holds the path, the ID's one declaration answers
+/// from the record the scan kept on the stub that stands for it; an ID `show`
+/// refuses as ambiguous, and a broken stub, lend no section there.
+pub(crate) fn section_resolves(findings: &Catalog, id: &Id, section: &str) -> bool {
+    let Some(decls) = findings.declarations.get(id) else {
+        return false;
+    };
+    if decls.iter().any(|decl| decl.sections.contains_key(section)) {
+        return true;
+    }
+    paired_declarations(decls).sole().is_some_and(|sole| {
+        !std::ptr::eq(sole.record, sole.stand_in) && sole.record.sections.contains_key(section)
+    })
 }
 
 fn site_order(a: &Declaration, b: &Declaration) -> Ordering {
