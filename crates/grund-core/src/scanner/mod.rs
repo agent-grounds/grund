@@ -111,8 +111,9 @@ pub(crate) use context::{file_home_kind, markdown_heading_level, section_path_is
 pub(crate) use e2e::e2e_case_dir_name;
 pub(crate) use embedded_value_context::EMBEDDED_VALUE_MARKER;
 pub(crate) use legacy::{
-    collect_local_legacy_markdown_citations, configured_catalog_ids, legacy_catalog_ids,
-    match_legacy_tail, promote_legacy_candidate, resolve_id_arg, sort_citations,
+    collect_local_legacy_markdown_citations, configured_catalog_ids, id_arg_targets,
+    legacy_catalog_ids, match_legacy_tail, promote_legacy_candidate, resolve_id_arg,
+    sort_citations,
 };
 pub(crate) use scan_error::api_scan_error;
 pub(crate) use scope_probe::effective_scope_reads_any_file;

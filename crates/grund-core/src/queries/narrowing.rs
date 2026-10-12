@@ -12,13 +12,13 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use super::citation_counts::ListCitationCounts;
+use super::citation_counts::{ListCitationCounts, kind_index_entries};
 use crate::checker::{ScanScope, path_report_scope};
 use crate::config::{Config, Frame, Invocation, Schema, Selection, display_path};
 use crate::grammar::render_id;
 use crate::model::{Catalog, Citation, Diagnostic, Id, paired_declarations, sort_path_key};
 use crate::resolver::{WorkspaceContext, WorkspaceProject, load_invoked_workspace_context};
-use crate::scanner::{resolve_id_arg, scan_tree};
+use crate::scanner::{id_arg_targets, resolve_id_arg, scan_tree};
 use crate::workspace::{open, split_qualified_id_arg};
 
 /// §FS-scan.path.warning.release: the release from which a path narrows what is
@@ -114,7 +114,8 @@ impl Owner {
     }
 
     /// §FS-scan.path.show: the line for one query, if the owning project moves it —
-    /// a miss it declares outside the path, or a hit it also declares there.
+    /// a miss it declares outside the path, or a hit it also declares there, or a
+    /// short form it resolves to more than one ID.
     pub(crate) fn show_line(&self, narrow: &WorkspaceContext, id_arg: &str) -> Option<String> {
         let (alias, raw_id) = split_qualified_id_arg(id_arg).ok()?;
         if alias.is_some() {
@@ -122,24 +123,38 @@ impl Owner {
         }
         let owner = self.project();
         let (config, findings) = (&owner.config, &owner.findings);
-        let (id, _) = resolve_id_arg(raw_id, config.schema(), config.frame(), findings).ok()?;
-        let homes = paired_declarations(findings.declarations.get(&id)?);
-        let (_, outside) = self.path.first_outside(
-            config,
-            homes.stand_ins().map(|home| ((), &home.file, home.line)),
-        )?;
-        let inside = narrow
-            .current_project()
-            .and_then(|project| project.findings.declarations.get(&id))
-            .map_or(0, |decls| paired_declarations(decls).len());
+        let targets = id_arg_targets(raw_id, config.schema(), config.frame(), findings).ok()?;
+        let homes = targets
+            .iter()
+            .filter_map(|(id, _)| findings.declarations.get(id))
+            .flat_map(|decls| paired_declarations(decls).stand_ins().collect::<Vec<_>>())
+            .collect::<Vec<_>>();
+        let (_, outside) = self
+            .path
+            .first_outside(config, homes.iter().map(|home| ((), &home.file, home.line)))?;
+        let inside = narrow.current_project().map_or(0, |project| {
+            let (schema, frame) = (project.config.schema(), project.config.frame());
+            resolve_id_arg(raw_id, schema, frame, &project.findings)
+                .ok()
+                .and_then(|(id, _)| project.findings.declarations.get(&id))
+                .map_or(0, |decls| paired_declarations(decls).len())
+        });
         let verb = match inside {
             0 => "is declared",
             1 if homes.len() > 1 => "is also declared",
             _ => return None,
         };
+        // `<ID>` as the query wrote it, without its section.
+        let section = targets.first().and_then(|(_, section)| section.as_deref());
+        let written = section
+            .and_then(|section| {
+                raw_id
+                    .strip_suffix(section)?
+                    .strip_suffix(&*config.section_separator)
+            })
+            .unwrap_or(raw_id);
         Some(format!(
-            "{} {verb} at {}, outside {}{}",
-            render_id(&config.grammar, &id),
+            "{written} {verb} at {}, outside {}{}",
             outside.text,
             self.path.operand,
             clause()
@@ -159,9 +174,11 @@ impl Owner {
             ListCitationCounts::new(&self.context),
         );
         let count = |counts: &BTreeMap<&Id, usize>, id: &Id| counts.get(id).copied().unwrap_or(0);
+        // §FS-list.1.3: an index entry is not use, so it never drops an entry.
+        let index_entries = kind_index_entries(owner);
         let mut moves = BTreeMap::new();
         for (id, decls) in &listed.findings.declarations {
-            let citations = || {
+            let citations = |use_only: bool| {
                 self.path
                     .first_outside(
                         config,
@@ -170,18 +187,19 @@ impl Owner {
                             .citations
                             .iter()
                             .filter(|cite| cite.namespace.is_none() && &cite.id == id)
+                            .filter(|cite| !use_only || !index_entries.is_index_entry(cite))
                             .map(|cite| ((), &cite.file, cite.line)),
                     )
                     .map(|(_, site)| site)
             };
             let refs = (count(narrow_counts.refs_for(""), id)
                 != count(owner_counts.refs_for(""), id))
-            .then(citations)
+            .then(|| citations(false))
             .flatten();
             let vanishes = (unused_only
                 && count(narrow_counts.used_for(""), id) == 0
                 && count(owner_counts.used_for(""), id) > 0)
-                .then(citations)
+                .then(|| citations(true))
                 .flatten();
             let duplicate = owner
                 .findings

@@ -123,6 +123,18 @@ fn exit_after_listing(
     code
 }
 
+/// `list --size`'s exit: its scan errors, then the lines a narrowed path owes. A
+/// size row prints the duplicate flag and no `refs` (§FS-scan.path.list).
+fn exit_after_sizes(scan_errors: &[ApiScanError], narrowing: &ListNarrowing) -> ExitCode {
+    let code = exit_after_scan_errors(scan_errors);
+    let shown = ListShown {
+        refs: false,
+        duplicate: true,
+    };
+    render_path_narrowing(&narrowing.lines(shown));
+    code
+}
+
 fn exit_after_scan_errors(scan_errors: &[ApiScanError]) -> ExitCode {
     if scan_errors.is_empty() {
         return ExitCode::SUCCESS;
