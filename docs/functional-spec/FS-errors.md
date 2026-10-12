@@ -539,6 +539,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `stub-shape` | warning | — | — | [§FS-declarations.checks.stub-shape](FS-declarations.md#checksstub-shape-stub-shape-read-differently-from-grund-0190) |
 | `suggested-citation` | none — suggestion | — | `--suggestions`, on a `should` entry | [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) |
 | `uncited-unit` | error | — | `rules = true` on a kind | [§FS-check.3.28](FS-check.md#328-uncited-unit) |
+| `unclosed-wrapper` | warning | — | — | [§FS-citations.checks.unclosed-wrapper](FS-citations.md#checksunclosed-wrapper-unclosed-wrapper-read-differently-from-grund-0190) |
 | `undeclared-chapter` | by strength: the kind's `closed` | — | `closed` on a v2 kind | [§FS-fields.checks.undeclared-chapter](FS-fields.md#checksundeclared-chapter-undeclared-chapter) |
 | `ungrounded` | error | — | `require_grounding` | [§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in) |
 | `unknown-project` | error | — | — | [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) |

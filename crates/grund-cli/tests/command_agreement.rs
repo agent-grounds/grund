@@ -57,6 +57,9 @@ const LEDGER: &[(&str, &str, &str)] = &[
     ("P07", "p07", "a-plain-heading-is-in-one-section"),
     ("P10", "p10", "an-adjacent-note-is-in-one-body"),
     ("P12", "p12", "a-doc-comment-section-ends-once"),
+    // P16 keeps the editor's span for one release (DF-fmt-and-editor-answers-from-0-19);
+    // its flip is #655.
+    ("P16", "p16", "a-section-title-span-is-the-toc-title"),
     (
         "P12",
         "p12-duplicate",
@@ -157,6 +160,12 @@ const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
         sections::a_doc_comment_section_ends_at_a_duplicate,
     ),
     (
+        Some("P16"),
+        "p16",
+        "a-section-title-span-is-the-toc-title",
+        sections::a_section_title_span_is_the_toc_title,
+    ),
+    (
         Some("Placement"),
         "placement",
         "a-stubbed-declaration-is-at-one-site",
@@ -232,7 +241,7 @@ const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
 
 /// `(row, step, what it needs)`: each row of §REQ-one-answer.differences no
 /// command-line tree shows, and the step of #576 that gives this test its harness.
-const DEFERRED: &[(&str, &str, &str)] = &[("P16", "#598", "the editor snapshot's section span")];
+const DEFERRED: &[(&str, &str, &str)] = &[];
 
 /// What the seed leaves out under §AR-ci.requirements.1, and the step that
 /// widens it before #576 closes.
