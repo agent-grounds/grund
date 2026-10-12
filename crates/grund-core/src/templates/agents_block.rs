@@ -91,9 +91,16 @@ fn agents_template_substitutions(
 fn section_heading_note(project: &Project, marker: &str) -> String {
     let ids = &project.schema.ids;
     let sep = ids.section_separator.as_str();
-    let unmarked_policy = " Every non-declaration heading inside a Markdown declaration body must carry a numbered or enabled named section path; file titles, headings that close the body, fenced examples, non-ATX text, and source doc-comments stay exempt, while bold labels remain the non-citable alternative.";
-    // §FS-init.2.3.4.5: enabled repositories teach explicit complete handles;
-    // the generated false default retains the prior numeric-only bytes here.
+    // §FS-init.2.3.4.5: since v16 the relative form, and the lock a citation of it needs.
+    let (parent, child, path) = if ids.named_sections {
+        ("## format: Formatting", "### .1: Username", "format.1")
+    } else {
+        ("## 3. Third", "### .1. Scope", "3.1")
+    };
+    let heading_policy = format!(
+        " In a Markdown declaration body a heading may instead write only the component it adds and take the rest from the heading one level up: `{child}` under `{parent}` declares `{marker}<ID>{sep}{path}`, the one coordinate it is cited and reported by. After citing such a heading, run `grund fmt --write` so the section lock records it, and commit the lock. Every non-declaration heading inside a Markdown declaration body must carry a numbered or enabled named section path; file titles, headings that close the body, fenced examples, non-ATX text, and source doc-comments stay exempt, while bold labels remain the non-citable alternative."
+    );
+    // §FS-init.2.3.4.5: enabled repositories teach explicit complete handles.
     if ids.named_sections {
         let verdict = match ids.section_heading_levels.as_str() {
             "strict" => "an error",
@@ -103,18 +110,18 @@ fn section_heading_note(project: &Project, marker: &str) -> String {
             _ => "recommended for readability",
         };
         return format!(
-            "Named sections are enabled: use explicit complete paths (`## goals: Goals`, `### goals.performance: Performance`, `### goals.3: Ordered child`) so `{marker}<ID>{sep}goals.performance` resolves; handles are letter-first lowercase names, `name.number` is legal, and `number.name` is reserved. Heading depth must match each path component ({verdict}). Purely numbered headings remain citable.{unmarked_policy}"
+            "Named sections are enabled: use explicit complete paths (`## goals: Goals`, `### goals.performance: Performance`, `### goals.3: Ordered child`) so `{marker}<ID>{sep}goals.performance` resolves; handles are letter-first lowercase names, `name.number` is legal, and `number.name` is reserved. Heading depth must match each path component ({verdict}). Purely numbered headings remain citable.{heading_policy}"
         );
     }
     match ids.section_heading_levels.as_str() {
         "strict" => format!(
-            "Numbered headings inside a declaration are citable sections: use depth-matching headings (`## 1. …`, `### 1.1 …`, etc.) so `{marker}<ID>{sep}1` / `{marker}<ID>{sep}1.1` resolve; mismatched heading depth is a `grund check` error.{unmarked_policy}"
+            "Numbered headings inside a declaration are citable sections: use depth-matching headings (`## 1. …`, `### 1.1 …`, etc.) so `{marker}<ID>{sep}1` / `{marker}<ID>{sep}1.1` resolve; mismatched heading depth is a `grund check` error.{heading_policy}"
         ),
         "warn" => format!(
-            "Numbered headings inside a declaration are citable sections: use depth-matching headings (`## 1. …`, `### 1.1 …`, etc.) so `{marker}<ID>{sep}1` / `{marker}<ID>{sep}1.1` resolve; mismatched heading depth is a `grund check` warning.{unmarked_policy}"
+            "Numbered headings inside a declaration are citable sections: use depth-matching headings (`## 1. …`, `### 1.1 …`, etc.) so `{marker}<ID>{sep}1` / `{marker}<ID>{sep}1.1` resolve; mismatched heading depth is a `grund check` warning.{heading_policy}"
         ),
         _ => format!(
-            "Numbered headings inside a declaration are citable sections: `{marker}<ID>{sep}1` / `{marker}<ID>{sep}1.1` resolve by dotted number, and depth-matching headings (`## 1. …`, `### 1.1 …`) are recommended for readability.{unmarked_policy}"
+            "Numbered headings inside a declaration are citable sections: `{marker}<ID>{sep}1` / `{marker}<ID>{sep}1.1` resolve by dotted number, and depth-matching headings (`## 1. …`, `### 1.1 …`) are recommended for readability.{heading_policy}"
         ),
     }
 }

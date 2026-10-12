@@ -101,13 +101,13 @@ fn noted_fmt_excluded(findings: &Catalog, config: &Config) -> BTreeSet<PathBuf> 
         .collect()
 }
 
-/// The managed-block version this config asks for: v15 once a kind declares
-/// rules, v14 otherwise (§FS-init.2.3.7).
+/// The managed-block version this config asks for: v17 once a kind declares
+/// rules, v16 otherwise (§FS-init.2.3.7.1).
 pub(crate) fn block_version(config: &Config) -> u32 {
     if config.kinds.iter().any(|kind| kind.rules) {
-        15
+        17
     } else {
-        14
+        16
     }
 }
 

@@ -30,8 +30,8 @@ fn render_chapter_rules(mut block: String, section: Option<&str>) -> String {
         return block;
     };
     block = block.replacen(
-        "Grounding with grund (v14)",
-        "Grounding with grund (v15)",
+        "Grounding with grund (v16)",
+        "Grounding with grund (v17)",
         1,
     );
     let insertion = block
