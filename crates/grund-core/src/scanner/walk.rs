@@ -4,7 +4,7 @@ use ignore::WalkBuilder;
 use std::path::{Path, PathBuf};
 
 use super::e2e::{e2e_cases_folder, e2e_id_from_case_dir_name};
-use super::read_predicate::Unread;
+use super::read_predicate::{Unread, directory_refusal};
 use super::walk_boundaries::{
     is_directory_symlink, is_scannable, outward_directory_link_root, owned_by_another_project,
 };
@@ -12,7 +12,7 @@ pub(super) use super::walk_reporting::walk_scannable_files_reporting;
 use crate::config::{Frame, Schema, canonical_config_root, root_scope_roots, unwalked_homes};
 use crate::grammar::Grammar;
 use crate::model::{
-    configured_home_path_key, is_hidden, normalize_path_lexically, scanned_decl_relative_path,
+    configured_home_path_key, normalize_path_lexically, scanned_decl_relative_path,
 };
 
 /// The walker one scan root is traversed with (§AR-scanner.1): the hidden-name and
@@ -297,15 +297,11 @@ impl WalkDirFilter {
         if self.crosses_a_scan_boundary(path, resolved) {
             return Some(Unread::AnotherProject);
         }
-        if is_hidden(path) {
-            return Some(Unread::ExcludedDirectory);
+        if let Some(reason) = directory_refusal(path, &self.excluded) {
+            return Some(reason);
         }
         if self.is_e2e_case_dir(path) || resolved.is_some_and(|path| self.is_e2e_case_dir(path)) {
             return Some(Unread::E2eCase);
-        }
-        let name = path.file_name().and_then(|name| name.to_str())?;
-        if self.excluded.iter().any(|item| item == name) {
-            return Some(Unread::ExcludedDirectory);
         }
         // §FS-config.3.5.5: a directory link whose target is at or above the walk root
         // is a loop, and the one kind the walker cannot see, so it is pruned here and

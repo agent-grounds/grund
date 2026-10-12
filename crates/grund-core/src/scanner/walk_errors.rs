@@ -1,11 +1,9 @@
 use crate::sources::{canonical_path, link_metadata};
-use ignore::WalkBuilder;
 use std::path::{Path, PathBuf};
 
+use super::read_predicate::{directory_refusal, ignored, name_refusal};
 use super::tree::ScanError;
-use super::walk_boundaries::is_scannable;
 use crate::config::{Frame, Schema};
-use crate::model::is_hidden;
 
 /// The per-file scan failure a walker error becomes (§FS-check.2.4), or `None` when
 /// the walk was never going to read through the path it names (§FS-config.3.5.6).
@@ -21,10 +19,10 @@ use crate::model::is_hidden;
 /// resolve — a broken target, or a loop, which the `ignore` crate detects and
 /// reports rather than recursing into. The walker applies neither its directory
 /// filter nor its ignore files to an error entry, so the tests the link would
-/// have faced are applied here by hand: the hidden-name and `[scan] exclude`
-/// tests for a looping directory, the ignore files for either kind, and
-/// `[scan] extensions` as well for a broken link, which names a file where a loop
-/// names a directory. That is what keeps a dangling `docs/logo.png`, and a link
+/// have faced are asked of the one read predicate instead (§AR-scanner.1.13):
+/// the hidden-name and `[scan] exclude` tests for a looping directory, the ignore
+/// files for either kind, and the name test as well for a broken link, which
+/// names a file where a loop names a directory. That is what keeps a dangling `docs/logo.png`, and a link
 /// of either kind that `.gitignore` covers, silent — the walk was never going to
 /// read them. Anything else — an unreadable directory, a malformed ignore file —
 /// is reported as it stands, at the walk root when the error names no path of its
@@ -51,7 +49,7 @@ pub(super) fn walk_error_report(
     if !link_metadata(path).is_ok_and(|meta| meta.file_type().is_symlink()) {
         return Some((path.to_path_buf(), walk_error_reason(err)));
     }
-    if !is_scannable(path, schema) || !walk_would_have_read(path, schema) {
+    if name_refusal(path, schema).is_some() || walk_ignores(path, false, schema) {
         return None;
     }
     let reason = match err.io_error().map(std::io::Error::kind) {
@@ -85,10 +83,8 @@ pub(super) fn symlink_loop_report(
     schema: &Schema,
     frame: Frame<'_>,
 ) -> Option<ScanError> {
-    let name = link.file_name().and_then(|name| name.to_str())?;
-    if is_hidden(link)
-        || schema.sources.exclude.iter().any(|item| item == name)
-        || !walk_would_have_read(link, schema)
+    if directory_refusal(link, &schema.sources.exclude).is_some()
+        || walk_ignores(link, true, schema)
     {
         return None;
     }
@@ -139,32 +135,15 @@ fn link_identity(path: &Path) -> Option<PathBuf> {
     Some(canonical_path(path.parent()?).ok()?.join(name))
 }
 
-/// Whether the walk would have read the file at `path` had the link resolved —
-/// the ignore-file half of that question, which `is_scannable` cannot answer
-/// (§FS-config.3.5.6, §AR-scanner.1.1).
-///
-/// `.gitignore` and friends are applied to the entries the walker *yields*, and a
-/// link it cannot resolve arrives as an error instead, so an ignored generated
-/// file would otherwise earn a scan error about a path the ordinary walk was
-/// never going to look at. Re-walking the link's own directory one level deep,
-/// without following links, answers it: there the link is an ordinary entry and
-/// the ignore rules do apply to it. Only a positive "the walker filtered this
-/// out" suppresses the report — an unreadable parent or no parent at all reports,
-/// because a silent skip is the failure §REQ-no-missed-citation.1 rules out. The
-/// cost is one directory read, and only for a link that is already broken.
-fn walk_would_have_read(path: &Path, schema: &Schema) -> bool {
-    if !schema.sources.respect_gitignore {
-        return true;
-    }
-    let Some(parent) = path.parent() else {
-        return true;
-    };
-    let mut builder = WalkBuilder::new(parent);
-    builder.hidden(false).max_depth(Some(1)).follow_links(false);
-    builder
-        .build()
-        .filter_map(std::result::Result::ok)
-        .any(|entry| entry.path() == path)
+/// Whether the ignore files drop the link at `path` had it resolved — the half
+/// of the question the name tests cannot answer (§FS-config.3.5.6,
+/// §AR-scanner.1.1). The walker applies `.gitignore` and friends to the entries
+/// it *yields*, and a link it cannot resolve arrives as an error instead, so the
+/// predicate's `ignored` asks the walker about the link as an ordinary entry of
+/// its own directory. Only a positive "the walker filtered this out" suppresses
+/// the report: a silent skip is the failure §REQ-no-missed-citation.1 rules out.
+fn walk_ignores(path: &Path, is_dir: bool, schema: &Schema) -> bool {
+    schema.sources.respect_gitignore && ignored(path, is_dir)
 }
 
 /// The `(link, ancestor)` of a symlink loop, at any nesting depth of the error.
