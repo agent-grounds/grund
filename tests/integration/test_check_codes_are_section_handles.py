@@ -59,10 +59,16 @@ MIGRATED = {
         "orphan-section",
         "oversized-lead",
         "parse-moves",
+        "relative-section-parent",
         "section-heading-level",
         "section-outside-declaration",
         "stub-shape",
         "unmarked-heading",
+    ),
+    "FS-section-lock": (
+        "invalid-section-lock",
+        "section-address-changed",
+        "unrecorded-section-citation",
     ),
 }
 
