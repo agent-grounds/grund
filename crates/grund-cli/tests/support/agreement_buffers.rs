@@ -64,6 +64,11 @@ pub const TREES: &[(Option<&str>, &str, fn() -> Verdict)] = &[
     (None, "r06a", an_index_entry_is_judged_on_the_buffer),
     (None, "r06b", the_inline_code_hint_reads_the_buffer),
     (None, "r06c", the_agents_block_is_judged_on_the_buffer),
+    (
+        None,
+        "r06c-companion",
+        a_companions_block_is_found_in_the_buffer,
+    ),
     (None, "r06d", the_e2e_manifest_is_read_from_the_buffer),
 ];
 
@@ -264,6 +269,19 @@ fn the_agents_block_is_judged_on_the_buffer() -> Verdict {
     let tree = Tree::new("r06c", &config(&[]), &files);
     let edited = "Hello.\n<!-- END GRUND MANAGED BLOCK -->\n";
     tree.buffer_against_saved("AGENTS.md", edited, "FS-a")
+}
+
+/// R06c, the companion probe: a `.rules` that no `.zed/` claims is an entrypoint
+/// only on the managed block it carries, here held in the buffer alone.
+fn a_companions_block_is_found_in_the_buffer() -> Verdict {
+    let files = [
+        ("docs/a.md", DECLARES),
+        ("AGENTS.md", "Hello.\n"),
+        (".rules", "Hello.\n"),
+    ];
+    let tree = Tree::new("r06c-companion", &config(&[]), &files);
+    let edited = "Hello.\n<!-- END GRUND MANAGED BLOCK -->\n";
+    tree.buffer_against_saved(".rules", edited, "FS-a")
 }
 
 /// R06d: an end-to-end case's expected exit code, edited.
