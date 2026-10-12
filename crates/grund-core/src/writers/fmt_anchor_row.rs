@@ -53,8 +53,8 @@ mod tests {
     fn a_link_moved_to_the_numbered_anchor_names_both() {
         assert_eq!(
             repeated_anchor_row(
-                "See [§FS-b.1](a.md#1-overview).",
-                "See [§FS-b.1](a.md#1-overview-1)."
+                "See [\u{a7}FS-b.1](a.md#1-overview).",
+                "See [\u{a7}FS-b.1](a.md#1-overview-1)."
             )
             .as_deref(),
             Some(
@@ -67,11 +67,17 @@ mod tests {
     #[test]
     fn any_other_change_keeps_the_plain_row() {
         assert_eq!(
-            repeated_anchor_row("See §FS-b.1.", "See [§FS-b.1](a.md#1-overview-1)."),
+            repeated_anchor_row(
+                "See \u{a7}FS-b.1.",
+                "See [\u{a7}FS-b.1](a.md#1-overview-1)."
+            ),
             None
         );
         assert_eq!(
-            repeated_anchor_row("See [§FS-b.1](a.md#one).", "See [§FS-b.1](a.md#two)."),
+            repeated_anchor_row(
+                "See [\u{a7}FS-b.1](a.md#one).",
+                "See [\u{a7}FS-b.1](a.md#two)."
+            ),
             None
         );
     }
