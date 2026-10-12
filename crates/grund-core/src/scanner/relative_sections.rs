@@ -230,10 +230,7 @@ pub(super) fn usable_section(decl: &Declaration, end: usize, path: &str) -> bool
         .duplicate_sections
         .iter()
         .any(|(other, info)| other == path && in_body(info.line));
-    // §FS-declarations.checks.orphan-section: a name-bearing path needs every prefix.
-    let parts = path.split('.').collect::<Vec<_>>();
-    let orphan = !section_path_is_numeric(path)
-        && (1..parts.len()).any(|cut| !decl.sections.contains_key(&parts[..cut].join(".")));
+    let orphan = decl.missing_section_prefix(path).is_some();
     first.heading_level > decl.heading_level && !later && !orphan
 }
 
