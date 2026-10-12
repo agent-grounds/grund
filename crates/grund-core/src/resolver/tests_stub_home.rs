@@ -6,9 +6,8 @@
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
-use super::*;
 use crate::config::{Config, load_config};
-use crate::model::{Catalog, Id, normalize_path_lexically};
+use crate::model::{Catalog, Id, normalize_path_lexically, section_resolves};
 use crate::sources::{CheckInput, with_check_input_observer};
 use crate::testing::{scan_tree, test_root, write};
 

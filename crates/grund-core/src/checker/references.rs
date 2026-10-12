@@ -18,10 +18,8 @@ use super::support::{
 };
 use crate::config::{Frame, KindResolution, Origin, Schema};
 use crate::grammar::render_qualified_id;
-use crate::model::{Catalog, CheckReport, Diagnostic};
-use crate::resolver::{
-    WorkspaceCheckTarget, join_alternatives, section_resolves, target_for_citation,
-};
+use crate::model::{Catalog, CheckReport, Diagnostic, section_resolves};
+use crate::resolver::{WorkspaceCheckTarget, join_alternatives, target_for_citation};
 use crate::workspace::namespace_is_unverified;
 use std::collections::BTreeMap;
 

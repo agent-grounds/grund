@@ -5,8 +5,7 @@ use std::path::Path;
 
 use crate::config::Config;
 use crate::grammar::render_id;
-use crate::model::{Catalog, Citation};
-use crate::resolver::section_resolves;
+use crate::model::{Catalog, Citation, section_resolves};
 
 /// Expand only scanner-proven, uniquely owned local section edges whose cited
 /// section resolves against that owner (§FS-fmt.2.4.6). The complete

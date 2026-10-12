@@ -215,7 +215,7 @@ reached the stub's verdict, and kept the target's records of the ID on the stub
 `paired_declarations` ([§FS-declarations.stubs.verdict](../functional-spec/FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)), so `show` slices its body out of the record `check` resolves its
 sections against, and the two count one section set ([§FS-show.2.2.2.2](../functional-spec/FS-show.md#2222-the-headings-check-counts)).
 
-`section_resolves` in `resolver/citation_target.rs` is the one test. Every reader in `check` asks it: the
+`section_resolves` in `model/stub_resolution.rs` is the one test. Every reader in `check` asks it: the
 missing-section finding ([§AR-checker.2.4](../../crates/grund-core/src/checker/report.rs)), the `grund fmt --write` clause that
 finding carries ([§FS-check.3.24.1](../functional-spec/FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)), the escape a local section citation offers in
 place of a full citation of a section its owner lacks ([§FS-check.3.24.3](../functional-spec/FS-check.md#3243-an-absent-target-section-is-answered-with-the-escape)), the bare

@@ -4,8 +4,7 @@
 use super::RuleAnchor;
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
 use crate::grammar::{Grammar, render_id, section_display_name};
-use crate::model::{Catalog, Id, paired_declarations};
-use crate::resolver::section_resolves;
+use crate::model::{Catalog, Id, paired_declarations, section_resolves};
 use std::collections::BTreeMap;
 
 /// What the adapter reads of one project, and nothing more: the rules

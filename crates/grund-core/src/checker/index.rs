@@ -19,9 +19,8 @@ use crate::grammar::{
 };
 use crate::model::{
     Catalog, CheckReport, Citation, Declaration, Diagnostic, Id, configured_home_path_key,
-    paired_declarations, scanned_decl_relative_path, scanned_path_key,
+    paired_declarations, scanned_decl_relative_path, scanned_path_key, section_resolves,
 };
-use crate::resolver::section_resolves;
 use crate::sources::{Sources, path_is_dir, physical_path_key};
 
 /// One kind's index obligation, resolved against the config root

@@ -18,7 +18,7 @@
 use std::collections::BTreeMap;
 
 use crate::config::{Compiled, Display, Frame, Run, Schema};
-use crate::model::{Catalog, Citation, Id, paired_declarations};
+use crate::model::{Catalog, Citation};
 
 /// One project a citation can resolve against, as a rule needs it: the catalog
 /// the ID is looked up in and the schema and grammar that spell it, because a
@@ -93,28 +93,4 @@ pub(crate) fn citation_resolves(
     target_for_citation(cite, local, local_schema, local_frame, workspace)
         .map(|target| target.catalog.declarations.contains_key(&cite.id))
         .unwrap_or(false)
-}
-
-/// Whether some declaration of `id` records a heading at section path `section`:
-/// the one lookup §FS-check.3.2 reports a missing section from, §FS-fmt.2.4.6
-/// declines a declaration-local rewrite on, §FS-check.3.17.4 admits a bare
-/// index entry by, and a rule's `cites` fact and a lent citation resolve by
-/// (§FS-rules.5.1, §FS-declarations.stubs.target.5), so the finding and the refusals
-/// cannot disagree. An undeclared `id` has no sections, and an owner with no
-/// numbered headings, a wholly absent path and a partially resolving one all answer
-/// `false`. A stub's sections are those of the target's record its verdict holds
-/// (§AR-scanner.4.6), scanned or not, as `check` reports them (§FS-check.3.2.1):
-/// where no recorded declaration holds the path, the ID's one declaration answers
-/// from the record the scan kept on the stub that stands for it; an ID `show`
-/// refuses as ambiguous, and a broken stub, lend no section there.
-pub(crate) fn section_resolves(findings: &Catalog, id: &Id, section: &str) -> bool {
-    let Some(decls) = findings.declarations.get(id) else {
-        return false;
-    };
-    if decls.iter().any(|decl| decl.sections.contains_key(section)) {
-        return true;
-    }
-    paired_declarations(decls).sole().is_some_and(|sole| {
-        !std::ptr::eq(sole.record, sole.stand_in) && sole.record.sections.contains_key(section)
-    })
 }

@@ -16,9 +16,8 @@ use crate::config::{Frame, Run, Schema};
 use crate::grammar::{Grammar, resolve_shorthands};
 use crate::model::{
     Catalog, Citation, Declaration, ExcludedStubTargetNote, ExcludingRule, FileRecord, Id,
-    StubResolution, paired_declarations,
+    StubResolution, paired_declarations, section_resolves,
 };
-use crate::resolver::section_resolves;
 use crate::sources::{paths_same_location, physical_path_key};
 use crate::workspace::WorkspaceCitationTarget;
 
