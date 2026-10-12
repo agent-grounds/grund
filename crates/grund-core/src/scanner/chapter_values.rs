@@ -8,7 +8,8 @@
 use std::path::Path;
 
 use super::embedded_value_context::{
-    authored_heading_level, authored_heading_path, normalized_value_lines, semantic_comment_content,
+    authored_heading_level, authored_heading_path, normalized_value_lines, relative_heading_paths,
+    semantic_comment_content,
 };
 use super::section_record::section_is_chapter_value_root;
 use super::value_context::SourceValueLineContext;
@@ -51,6 +52,7 @@ pub(super) fn validate_declared_value_chapters(
             continue;
         };
         let chapter_level = chapter_info.heading_level;
+        let relative = relative_heading_paths(decl);
         let mut skip_through = chapter_info.line;
         for line_no in chapter_info.line.saturating_add(1)..=decl.body_end {
             let Some((line, _, docstring, block_comment)) = normalized.get(line_no - 1) else {
@@ -78,11 +80,13 @@ pub(super) fn validate_declared_value_chapters(
                     is_md,
                     schema,
                 );
-                if authored_heading_path(line, markdown, *block_comment, true, schema, frame)
-                    .is_some_and(|found| {
-                        section_is_chapter_value_root(schema, &decl.id.kind, &found)
-                    })
-                {
+                // §FS-values.2.5: a relative root is read at the path the record holds.
+                let path = relative.get(&line_no).cloned().or_else(|| {
+                    authored_heading_path(line, markdown, *block_comment, true, schema, frame)
+                });
+                if path.is_some_and(|found| {
+                    section_is_chapter_value_root(schema, &decl.id.kind, &found)
+                }) {
                     continue;
                 }
             } else {

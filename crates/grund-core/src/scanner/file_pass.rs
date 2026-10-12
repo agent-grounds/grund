@@ -27,7 +27,7 @@ use super::context::{
 use super::declaration_line::{close_declaration, stub_and_title};
 use super::embedded_value_context::{
     EMBEDDED_VALUE_MARKER, authored_heading_level, embedded_value_marker_for_line,
-    push_invalid_embedded_marker,
+    invalid_embedded_marker, push_invalid_embedded_marker,
 };
 use super::extents::assign_extents;
 use super::qualified_citations::{
@@ -395,7 +395,7 @@ pub(super) fn scan_file_text(
             };
             // §FS-declarations.section.relative.form: its parent is known once the file is.
             if relative_heading_form(&candidate.title).is_some() {
-                relative_heading_candidates.push(candidate);
+                relative_heading_candidates.push((candidate, None));
             } else {
                 unmarked_heading_candidates.push(candidate);
             }
@@ -411,15 +411,18 @@ pub(super) fn scan_file_text(
             )
             .is_some()
         {
-            push_invalid_embedded_marker(
-                findings,
+            let site = invalid_embedded_marker(
                 current.as_ref().map(|decl| decl.id.clone()),
                 path,
                 lineno,
-                scan.column_offset,
-                embedded_marker.unwrap(),
+                scan.column_offset + embedded_marker.unwrap() + 1,
                 "embedded value marker must be on a citable numeric section heading",
             );
+            // §FS-values.2.4: a relative heading's marker is the parent pass's to attach.
+            match relative_heading_candidates.last_mut() {
+                Some((candidate, pending)) if candidate.line == lineno => *pending = Some(site),
+                _ => findings.invalid_value_declarations.push(site),
+            }
         }
 
         let citation_line = CitationLine {
@@ -588,6 +591,7 @@ pub(super) fn scan_file_text(
             &mut record,
             relative_heading_candidates,
             grammar.named_sections,
+            schema,
             &mut unmarked_heading_candidates,
         );
         unmarked_heading_candidates.sort_by_key(|candidate| candidate.line);

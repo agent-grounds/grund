@@ -37,14 +37,11 @@ pub(super) fn record_section_heading(
         return false;
     }
     let section_path = sec.to_string();
-    let numeric = sec
-        .split('.')
-        .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()));
-    let mut embedded_marker_attached = embedded_marker.is_some() && numeric;
-    // §FS-values.2.5 / §AR-scanner.2.2.8: the second enrollment route. A named
-    // direct child of the declaration's direct chapter is a root by schema,
-    // with no marker to carry; the marker route stays numeric-only.
-    let chapter_root = section_is_chapter_value_root(schema, &decl.id.kind, sec);
+    let marker_column = embedded_marker.map(|start| scan.column_offset + start + 1);
+    let value_root = section_value_root(schema, &decl.id.kind, sec, marker_column);
+    let mut embedded_marker_attached = value_root
+        .as_ref()
+        .is_some_and(|root| root.marker_column().is_some());
     // §FS-rules.5.1.1: a source heading is titled from its own `#` run up to any
     // closing `*/`, so the comment around it never joins the label.
     // Markdown and docstring lines stay as is.
@@ -59,16 +56,7 @@ pub(super) fn record_section_heading(
         line: lineno,
         heading_level,
         value: None,
-        value_root: embedded_marker
-            .filter(|_| numeric)
-            .map(|marker_start| ValueRootOrigin::Marker {
-                column: scan.column_offset + marker_start + 1,
-            })
-            .or(chapter_root.then_some(ValueRootOrigin::Chapter))
-            .map(|origin| EmbeddedValueRoot {
-                valid: true,
-                origin,
-            }),
+        value_root,
         relative: false,
     };
     // §AR-scanner.2.2.3: a path is recorded once, by the first heading that claims it; later
@@ -95,6 +83,31 @@ pub(super) fn record_section_heading(
         }
     }
     embedded_marker_attached
+}
+
+/// The value root a section recorded at `sec` in a declaration of `kind` is, if
+/// any: marked when its heading carries the marker, at `marker_column`, and its
+/// path is numeric (§FS-values.2.4); otherwise a root by the kind's declared
+/// chapter (§FS-values.2.5, §AR-scanner.2.2.8), which carries no marker. The
+/// marker route stays numeric-only. A relative heading is enrolled here too, at
+/// the canonical path its parent gave it (§FS-values.2.4).
+pub(super) fn section_value_root(
+    schema: &Schema,
+    kind: &str,
+    sec: &str,
+    marker_column: Option<usize>,
+) -> Option<EmbeddedValueRoot> {
+    let numeric = sec
+        .split('.')
+        .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()));
+    marker_column
+        .filter(|_| numeric)
+        .map(|column| ValueRootOrigin::Marker { column })
+        .or(section_is_chapter_value_root(schema, kind, sec).then_some(ValueRootOrigin::Chapter))
+        .map(|origin| EmbeddedValueRoot {
+            valid: true,
+            origin,
+        })
 }
 
 /// Whether this section path is a value root by the kind's declared chapter

@@ -158,6 +158,8 @@ mod tests_record;
 #[cfg(test)]
 mod tests_relative_sections;
 #[cfg(test)]
+mod tests_relative_values;
+#[cfg(test)]
 mod tests_scan_demand;
 #[cfg(test)]
 mod tests_scope_probe;
