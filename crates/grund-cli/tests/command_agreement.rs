@@ -45,10 +45,8 @@ const LEDGER: &[(&str, &str, &str)] = &[
     ("G01", "r1", "citation-is-its-whole-token"),
     ("R01", "r2", "narrowed-resolves-as-check"),
     ("P05", "r3", "one-anchor"),
-    ("G03", "g03", "a-target-kind-is-one-kind"),
-    ("G04", "g04", "a-non-citable-kind-is-refused-once"),
-    ("G05", "g05", "a-members-chapter-is-selected"),
     ("G06", "g06", "a-lowercase-subject-is-refused-once"),
+    ("G09", "g09", "the-homeless-kind-is-one-verdict"),
     ("P01", "p01", "a-body-ends-where-refs-ends-it"),
     ("P02", "p02", "a-block-comment-section-is-one-section"),
     ("P03", "p03", "a-top-level-doc-heading-is-one-section"),
@@ -92,28 +90,16 @@ const TREES: &[(&str, &str, &str, fn() -> Verdict)] = &[
         sections::the_anchor_is_one_and_the_headings,
     ),
     (
-        "G03",
-        "g03",
-        "a-target-kind-is-one-kind",
-        identity::a_target_kind_is_one_kind,
-    ),
-    (
-        "G04",
-        "g04",
-        "a-non-citable-kind-is-refused-once",
-        identity::a_non_citable_kind_is_refused_once,
-    ),
-    (
-        "G05",
-        "g05",
-        "a-members-chapter-is-selected",
-        identity::a_members_chapter_is_selected_where_it_answers,
-    ),
-    (
         "G06",
         "g06",
         "a-lowercase-subject-is-refused-once",
         identity::a_lowercase_subject_is_refused_once,
+    ),
+    (
+        "G09",
+        "g09",
+        "the-homeless-kind-is-one-verdict",
+        identity::the_homeless_kind_is_one_verdict,
     ),
     (
         "P01",
@@ -417,12 +403,12 @@ fn every_listed_difference_has_its_tree() {
 fn a_row_the_requirement_drops_is_refused() {
     let rows: Vec<String> = difference_rows()
         .into_iter()
-        .filter(|r| r != "G03")
+        .filter(|r| r != "G06")
         .collect();
     let wrong = listing_problems(&rows);
     assert_eq!(
         wrong,
-        vec!["G03 is no longer listed: take it out of this test".to_string()]
+        vec!["G06 is no longer listed: take it out of this test".to_string()]
     );
 }
 

@@ -75,80 +75,6 @@ pub fn a_narrowed_run_resolves_what_check_resolves() -> Verdict {
     Ok(())
 }
 
-/// Row G03: an `alias/KIND` target names one kind universe whether a rule or the
-/// `[citations]` table names it (§REQ-one-answer.identity).
-pub fn a_target_kind_is_one_kind() -> Verdict {
-    let files = [
-        ("api/grund.toml", MEMBER),
-        ("api/docs/api.md", MEMBER_DOC),
-        ("docs/fs.md", CITES_MEMBER),
-    ];
-    let ruled = Tree::new(
-        "g03-rule",
-        &[&[("grund.toml", WORKSPACE)][..], &files].concat(),
-    );
-    let table = format!("{WORKSPACE}[citations.FS]\nmust = [\"api/API\"]\n");
-    let tabled = Tree::new(
-        "g03-table",
-        &[&[("grund.toml", table.as_str())][..], &files].concat(),
-    );
-    agree(
-        "the rule's `api/API` is refused / the table's is refused",
-        ruled.error(&["check", "--rule", "Each FS must cite at least one api/API."]),
-        tabled.error(&["check"]),
-    )
-}
-
-/// Row G04: a non-citable kind is refused for one reason by `list --kind`,
-/// `list --selector` and a rule subject (§REQ-one-answer.identity).
-pub fn a_non_citable_kind_is_refused_once() -> Verdict {
-    let config =
-        format!("{CONFIG_SLUG}[[kinds]]\nkind = \"skill\"\nfolder = \"skills\"\ncitable = false\n");
-    let tree = Tree::new(
-        "g04-non-citable",
-        &[
-            ("grund.toml", config.as_str()),
-            ("docs/fs.md", "# FS-a: A\n\nBody.\n"),
-            ("skills/s.md", "Uses \u{a7}FS-a.\n"),
-        ],
-    );
-    let kind = reason(&tree.error(&["list", "--kind", "skill"]));
-    let selector = reason(&tree.error(&["list", "--selector", "skill"]));
-    let rule = reason(&tree.error(&["check", "--rule", "Each skill must cite at least one FS."]));
-    agree("list --kind / list --selector", &kind, &selector)
-        .and_then(|()| agree("list --selector / the rule subject", &selector, &rule))
-}
-
-/// Row G05: a member's named chapter that `grund <ID>` answers is one an
-/// unfiltered `list --selector` selects (§REQ-one-answer.sections.map).
-pub fn a_members_chapter_is_selected_where_it_answers() -> Verdict {
-    let root = WORKSPACE.replace(
-        "format = \"{kind}-{slug}\"\n",
-        "format = \"{kind}-{slug}\"\nnamed_sections = false\n",
-    );
-    let member = MEMBER.replace(
-        "format = \"{kind}-{slug}\"\n",
-        "format = \"{kind}-{slug}\"\nnamed_sections = true\n",
-    );
-    let tree = Tree::new(
-        "g05-named-sections",
-        &[
-            ("grund.toml", root.as_str()),
-            ("docs/fs.md", "# FS-a: A\n\nCites \u{a7}api/API-a.terms.\n"),
-            ("api/grund.toml", member.as_str()),
-            (
-                "api/docs/api.md",
-                "# API-a: A\n\nThe interface.\n\n## terms: Terms\n\nThe words.\n",
-            ),
-        ],
-    );
-    agree(
-        "grund api/API-a.terms answers / list --selector API.terms answers",
-        tree.code(&["api/API-a.terms"]) == 0,
-        tree.code(&["list", "--selector", "API.terms"]) == 0,
-    )
-}
-
 /// Row G06: the subject `each FS` is refused for one reason as a rule's subject
 /// and as a selector (§REQ-one-answer.identity).
 pub fn a_lowercase_subject_is_refused_once() -> Verdict {
@@ -165,6 +91,28 @@ pub fn a_lowercase_subject_is_refused_once() -> Verdict {
         "the rule subject / the selector",
         reason(&tree.error(&["check", "--rule", "each FS must cite at least one GOAL."])),
         reason(&tree.error(&["list", "--selector", "each FS"])),
+    )
+}
+
+/// Row G09: the default homeless kind `code` is one verdict whether a `[citations]`
+/// target or `list --kind` names it (§REQ-one-answer.identity.kinds).
+pub fn the_homeless_kind_is_one_verdict() -> Verdict {
+    let files = [("docs/fs.md", "# FS-a: A\n\nBody.\n")];
+    let listed = Tree::new(
+        "g09-list",
+        &[&[("grund.toml", CONFIG_SLUG)][..], &files].concat(),
+    );
+    let table = format!("{CONFIG_SLUG}[citations.FS]\nmust = [\"code\"]\n");
+    let tabled = Tree::new(
+        "g09-table",
+        &[&[("grund.toml", table.as_str())][..], &files].concat(),
+    );
+    agree(
+        "the table's `code` is non-citable / list --kind's is",
+        tabled.error(&["check"]).contains("non-citable"),
+        listed
+            .error(&["list", "--kind", "code"])
+            .contains("non-citable"),
     )
 }
 
