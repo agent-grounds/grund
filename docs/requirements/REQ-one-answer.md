@@ -101,7 +101,7 @@ the target scanned, a target that declares the ID twice included ([§FS-list.3.4
 ### text.targets: A stub's target answers as its saved text would
 
 The verdict on a stub and the body `show` slices out of its target never come from two
-versions of the target ([§FS-declarations.checks.broken-stub.1](../functional-spec/FS-declarations.md#checksbroken-stub1-the-target-is-read-as-a-save-would-write-it), [§FS-show.2.3.7](../functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id)). An unsaved
+versions of the target ([§FS-declarations.stubs.target.1](../functional-spec/FS-declarations.md#stubstarget1-the-target-is-read-as-a-save-would-write-it), [§FS-show.2.3.7](../functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id)). An unsaved
 edit to the target moves every answer at once, the editor's diagnostics and its navigation
 included, exactly as saving it would: every answer is the one the same text gives once it
 is saved.

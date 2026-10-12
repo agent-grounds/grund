@@ -1,7 +1,7 @@
 //! A stub's verdict, reached once after the walk (§AR-scanner.4.6): whether the
 //! file a stub points at is there, whether the scan reads it, and which of its
 //! records declare the stub's ID, read through the walk's own pass on the text a
-//! save would write (§FS-declarations.checks.broken-stub.1). Every command reads
+//! save would write (§FS-declarations.stubs.target.1). Every command reads
 //! the verdict recorded on the stub, so the stub's health and the count of the ID's
 //! declarations agree whether or not the walk reached the target, and whether or not
 //! an edit to it is saved (§FS-declarations.stubs.verdict).
@@ -19,7 +19,7 @@ use crate::sources::{paths_same_location, physical_path_key};
 /// (§AR-scanner.4.6): every command reads it from there and none reaches its own
 /// (§FS-declarations.stubs.verdict). A target the walk did not record the ID
 /// in is read through the walk's own pass over one file, on the text a save would
-/// write (§FS-declarations.checks.broken-stub.1), once per target however many
+/// write (§FS-declarations.stubs.target.1), once per target however many
 /// stubs and IDs name it. An ID no stub declares is passed over.
 pub(super) fn resolve_stubs(schema: &Schema, frame: Frame<'_>, findings: &mut Catalog) {
     let mut targets = UnwalkedTargets::new(schema, frame);
@@ -53,7 +53,7 @@ fn resolve_stub(
     if !sources.exists(&resolved) {
         return Some(StubResolution::Missing);
     }
-    // §FS-declarations.checks.broken-stub.3, §AR-scanner.1.13: only the name and
+    // §FS-declarations.stubs.target.3, §AR-scanner.1.13: only the name and
     // extension reasons, judged by the name the stub wrote before any record is
     // paired with it, so a symlink under a hidden or unlisted name never pairs.
     if !sources.is_file(&resolved) || name_refusal(&resolved, targets.schema).is_some() {

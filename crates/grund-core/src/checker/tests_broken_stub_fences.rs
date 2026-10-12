@@ -1,6 +1,6 @@
 //! Test module: a stub's Markdown target is read for its ID the way the scan
 //! reads it, so a heading inside a fence of the target is an example and not
-//! the declaration the stub needs (§FS-declarations.checks.broken-stub.2).
+//! the declaration the stub needs (§FS-declarations.stubs.target.2).
 //!
 //! Each case lays one target twice: outside `[scan] include`, where the stub's
 //! own test is the only reader and `check` must report the stub exactly when the
@@ -82,7 +82,7 @@ fn assert_healthy(name: &str, target_name: &str, stub: &str, target: &str) {
     );
 }
 
-/// §FS-declarations.checks.broken-stub.2: the reported tree, a backtick fence.
+/// §FS-declarations.stubs.target.2: the reported tree, a backtick fence.
 #[test]
 fn a_heading_only_inside_a_backtick_fence_leaves_the_stub_broken() {
     assert_broken(
@@ -91,7 +91,7 @@ fn a_heading_only_inside_a_backtick_fence_leaves_the_stub_broken() {
     );
 }
 
-/// §FS-declarations.checks.broken-stub.2, §FS-check.1.1.5 (§FS-languages.fence): a tilde fence is a fence.
+/// §FS-declarations.stubs.target.2, §FS-check.1.1.5 (§FS-languages.fence): a tilde fence is a fence.
 #[test]
 fn a_heading_only_inside_a_tilde_fence_leaves_the_stub_broken() {
     assert_broken(
@@ -128,7 +128,7 @@ fn a_heading_inside_an_indented_fence_leaves_the_stub_broken() {
     );
 }
 
-/// §FS-declarations.checks.broken-stub.2: a fenced example before the real
+/// §FS-declarations.stubs.target.2: a fenced example before the real
 /// declaration changes nothing.
 #[test]
 fn a_fenced_example_beside_the_real_declaration_keeps_the_stub_healthy() {
@@ -152,7 +152,7 @@ fn an_indented_code_sample_does_not_open_a_fence() {
     );
 }
 
-/// §FS-declarations.checks.broken-stub.2, §FS-show.2.5: fences are Markdown's;
+/// §FS-declarations.stubs.target.2, §FS-show.2.5: fences are Markdown's;
 /// the scan tracks none inside a source doc-comment, and neither does the stub.
 #[test]
 fn a_fence_inside_a_source_doc_comment_is_not_tracked() {

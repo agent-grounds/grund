@@ -5,15 +5,15 @@
 //! `notes/<target>` and the citation `docs/uses.md`; each column is a command
 //! that reads the stub. On every row the columns must agree with the row's one
 //! verdict (§FS-declarations.stubs.verdict): whether `check` reports the stub
-//! broken (§FS-declarations.checks.broken-stub.3), and the declarations of
-//! `FS-a` once its stub is paired (§FS-declarations.checks.duplicate.1). So
+//! broken (§FS-declarations.stubs.target.3), and the declarations of
+//! `FS-a` once its stub is paired (§FS-declarations.stubs.pairing.1). So
 //! `show` and `refs` refuse exactly the IDs `check` reports a duplicate, at the
 //! same sites (§FS-show.2.2.1, §FS-refs.4.1); `list --size` measures every
 //! declaration and only those that are not broken stubs (§FS-list.3.4.6); `fmt`
 //! links only an ID with one declaration that is not a broken stub
 //! (§FS-fmt.6.4.2); and the editor snapshot reports and navigates the same
 //! way, its unsaved text answering what the saved text does
-//! (§FS-declarations.checks.broken-stub.1).
+//! (§FS-declarations.stubs.target.1).
 //!
 //! It stays beside `command_agreement.rs` rather than inside it: that test asks
 //! the command line alone, and this one drives the editor snapshot too, until
@@ -107,7 +107,7 @@ const DISK_ROWS: &[Row] = &[
 ];
 
 /// A symlink is judged by the name the stub wrote, never the file it resolves
-/// to (§FS-declarations.checks.broken-stub.3).
+/// to (§FS-declarations.stubs.target.3).
 #[cfg(unix)]
 const LINK_ROWS: &[Row] = &[
     Row {

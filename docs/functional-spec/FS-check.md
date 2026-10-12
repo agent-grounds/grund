@@ -440,14 +440,14 @@ For a value binding the explicit numeric component must resolve here before comp
 #### 3.2.1 A stub's sections are its target's, scanned or not
 
 A citation of a stub's ID names a section of the declaration the stub pairs with
-([§FS-declarations.checks.duplicate.1](FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), so the section exists exactly where that declaration
+([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), so the section exists exactly where that declaration
 records a heading at the requested path, read from the stub's target whether or not
 `[scan] include` reaches it. The stub declares no sections of its own
 ([§FS-declarations.checks.duplicate-section.2](FS-declarations.md#checksduplicate-section2-scoped-to-that-declarations-body)), so its own record never answers; the target's
 declaration is the one `grund <ID>.<path>` slices ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), and `check` and `show`
 answer from that one section set ([§FS-show.2.2.2.2](FS-show.md#2222-the-headings-check-counts)). A section citation reads as it would were
 the target scanned: stubs to one target are one home and so one section set
-([§FS-declarations.checks.duplicate.2](FS-declarations.md#checksduplicate2-stubs-to-one-target-stand-for-its-declarations-once)), and a `--full` run, whose report inside the default scope
+([§FS-declarations.stubs.pairing.2](FS-declarations.md#stubspairing2-stubs-to-one-target-stand-for-its-declarations-once)), and a `--full` run, whose report inside the default scope
 is the plain run's ([§FS-check.1.3.4](FS-check.md#134-purely-additive)), resolves it as the plain run does.
 
 That answer is one fact, and every reader of it in `check` takes it: this finding, the `cites`

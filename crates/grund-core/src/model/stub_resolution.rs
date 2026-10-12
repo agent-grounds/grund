@@ -18,11 +18,11 @@ pub(crate) enum StubResolution {
     Missing,
     /// The scan does not read the target: not a file, a name that begins with `.`,
     /// an extension `[scan] extensions` does not list, or a file it cannot read
-    /// (§FS-declarations.checks.broken-stub.3). Judged on the name the stub wrote.
+    /// (§FS-declarations.stubs.target.3). Judged on the name the stub wrote.
     NotRead,
     /// The target was read, as the scan reads it on the text a save would write,
-    /// and does not declare the ID (§FS-declarations.checks.broken-stub.1,
-    /// §FS-declarations.checks.broken-stub.2).
+    /// and does not declare the ID (§FS-declarations.stubs.target.1,
+    /// §FS-declarations.stubs.target.2).
     LacksId,
     /// The stub links to the file it sits in, which declares the ID elsewhere. The
     /// stub pairs with nothing there, so it is a declaration of its own
@@ -30,7 +30,7 @@ pub(crate) enum StubResolution {
     OwnFile,
     /// The target's records of the ID that are not themselves stubs, ascending by
     /// line and never empty: the stub points at each
-    /// (§FS-declarations.checks.duplicate.1). Kept whole, sections and body span
+    /// (§FS-declarations.stubs.pairing.1). Kept whole, sections and body span
     /// included, so a reader answers from the record whether or not the walk
     /// reached the target.
     Declares(Vec<Declaration>),
@@ -108,7 +108,7 @@ impl<'a> PairedDeclarations<'a> {
 /// each record there that no declaration, and no stub before it in `path:line`
 /// order, already stands for, so stubs to one target stand for its declarations
 /// once between them and a target declaring the ID twice is two
-/// (§FS-declarations.checks.duplicate.2). Any other stub is a declaration of its
+/// (§FS-declarations.stubs.pairing.2). Any other stub is a declaration of its
 /// own: a broken one, and one that links to its own file.
 pub(crate) fn paired_declarations(decls: &[Declaration]) -> PairedDeclarations<'_> {
     let mut paired: Vec<Paired<'_>> = decls

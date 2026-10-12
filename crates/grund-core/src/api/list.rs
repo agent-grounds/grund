@@ -124,7 +124,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
             }
             // §FS-declarations.stubs.verdict: the declarations every command counts. A
             // stub whose target declares the ID twice is one row, and two declarations
-            // (§FS-declarations.checks.duplicate.2).
+            // (§FS-declarations.stubs.pairing.2).
             let paired = paired_declarations(decls);
             let duplicate = paired.len() > 1;
             let mut stand_ins: Vec<&Declaration> = paired.stand_ins().collect();

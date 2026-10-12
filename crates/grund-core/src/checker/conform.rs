@@ -52,8 +52,8 @@ pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> C
 /// (§FS-declarations.stubs.verdict).
 fn check_duplicates(findings: &Catalog, frame: Frame<'_>, report: &mut CheckReport) {
     for (id, decls) in &findings.declarations {
-        // §FS-declarations.checks.duplicate.3: a stub's home is named at its target, at
-        // each line there that declares the ID (§FS-declarations.checks.duplicate.1).
+        // §FS-declarations.stubs.pairing.3: a stub's home is named at its target, at
+        // each line there that declares the ID (§FS-declarations.stubs.pairing.1).
         let paired = paired_declarations(decls);
         if paired.len() > 1 {
             let mut sites: Vec<Site> = paired

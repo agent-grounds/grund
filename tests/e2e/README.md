@@ -105,12 +105,12 @@ can read is the same silence in a new spelling.
 - missing Markdown section
 - duplicate Markdown declaration
 - a stub whose target is outside `[scan] include`, counted as the scanned tree counts it
-  ([§FS-declarations.checks.duplicate.1](../../docs/functional-spec/FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned), [grund#532](https://github.com/agent-grounds/grund/issues/532)):
+  ([§FS-declarations.stubs.pairing.1](../../docs/functional-spec/FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned), [grund#532](https://github.com/agent-grounds/grund/issues/532)):
   two stubs to one unscanned file are one home in `check`, `list` and `show`
-  ([§FS-declarations.checks.duplicate.2](../../docs/functional-spec/FS-declarations.md#checksduplicate2-stubs-to-one-target-stand-for-its-declarations-once)), two stubs to two files that each declare
+  ([§FS-declarations.stubs.pairing.2](../../docs/functional-spec/FS-declarations.md#stubspairing2-stubs-to-one-target-stand-for-its-declarations-once)), two stubs to two files that each declare
   the ID are still a duplicate, and a duplicate or ambiguity with a real second
   declaration names the target's line rather than the stub's, in text and JSON
-  ([§FS-declarations.checks.duplicate.3](../../docs/functional-spec/FS-declarations.md#checksduplicate3-a-declaration-reached-through-stubs-is-named-at-its-target)) — beside the one-stub tree and the scanned
+  ([§FS-declarations.stubs.pairing.3](../../docs/functional-spec/FS-declarations.md#stubspairing3-a-declaration-reached-through-stubs-is-named-at-its-target)) — beside the one-stub tree and the scanned
   controls of both shapes, which read as they always have; and a lone stub to an unscanned
   file that declares the ID twice is two homes ([grund#556](https://github.com/agent-grounds/grund/issues/556)), a duplicate named at both of the
   target's lines in text and JSON, all three lines named beside a scanned second declaration,
@@ -119,7 +119,7 @@ can read is the same silence in a new spelling.
   at the stub ([§FS-list.3.4.6](../../docs/functional-spec/FS-list.md#346-a-home-outside-the-scan), [grund#565](https://github.com/agent-grounds/grund/issues/565))
 - a stub whose target is a symlink named so the scan does not read it — hidden (`notes/.a.md`) or
   of an unlisted extension (`notes/a.zz`) — resolving to the scanned file that declares the ID,
-  judged by the name the stub wrote ([§FS-declarations.checks.broken-stub.3](../../docs/functional-spec/FS-declarations.md#checksbroken-stub3-a-target-the-scan-does-not-read-declares-nothing), [grund#567](https://github.com/agent-grounds/grund/issues/567)):
+  judged by the name the stub wrote ([§FS-declarations.stubs.target.3](../../docs/functional-spec/FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing), [grund#567](https://github.com/agent-grounds/grund/issues/567)):
   the stub is broken and pairs with nothing, so `check` reports the duplicate beside it and `refs`
   refuses the ID as ambiguous, exactly as for a regular hidden copy of the file, the control beside them
 - `fmt --cross-refs` links no citation of an ID whose one declaration is a stub `check` reports broken —
@@ -254,7 +254,7 @@ can read is the same silence in a new spelling.
 - `show` Rust inline declaration extraction
 - Markdown stub to Rust inline declaration
 - broken Markdown-to-Rust inline stub
-- a stub whose Markdown target declares its ID only inside a fenced block, with the target outside and inside `[scan] include` ([§FS-declarations.checks.broken-stub.2](../../docs/functional-spec/FS-declarations.md#checksbroken-stub2-a-heading-inside-a-fence-of-the-target-declares-nothing)): `check` reports the broken stub at its line and `show` refuses it as [§FS-show.2.3.4](../../docs/functional-spec/FS-show.md#234-broken-stub) says rather than answering `ID not found`, while a target holding a fenced example beside the real declaration stays healthy in both scopes and `show` reads the real body
+- a stub whose Markdown target declares its ID only inside a fenced block, with the target outside and inside `[scan] include` ([§FS-declarations.stubs.target.2](../../docs/functional-spec/FS-declarations.md#stubstarget2-a-heading-inside-a-fence-of-the-target-declares-nothing)): `check` reports the broken stub at its line and `show` refuses it as [§FS-show.2.3.4](../../docs/functional-spec/FS-show.md#234-broken-stub) says rather than answering `ID not found`, while a target holding a fenced example beside the real declaration stays healthy in both scopes and `show` reads the real body
 - a stub whose Rust or Markdown target lies outside `[scan] include`, read by its ID rather than at the stub's own line ([§FS-show.2.3.7](../../docs/functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id)): the lead, a section, `--toc`, `--format json`, an ambiguous section refused by `show` and by `refs`, an ID the target declares twice refused in text and JSON as `ambiguous ID`, a Markdown target's heading anchors on the lead, a section and each `--toc` entry, and a batch whose one stub sits on the same line as its target and whose others do not
 - Rust source comment to Markdown citation
 - Rust `///` doc-comment declaration and marked citation under strict mode

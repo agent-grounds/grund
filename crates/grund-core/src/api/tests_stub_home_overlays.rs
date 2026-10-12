@@ -1,8 +1,8 @@
 //! The count of homes reads a stub's target as a save would write it
-//! (§FS-declarations.checks.duplicate.1): with the target open in an editor, the
+//! (§FS-declarations.stubs.pairing.1): with the target open in an editor, the
 //! snapshot reports the duplicate the saved text gives, and `show` refuses or
 //! answers as the saved text does (§FS-show.2.2.1, §FS-lsp.1.1), because the stub
-//! pairs on the same reading as its health (§FS-declarations.checks.broken-stub.1).
+//! pairs on the same reading as its health (§FS-declarations.stubs.target.1).
 
 use super::{lsp_snapshot, lsp_snapshot_with_completion, show_from_snapshot};
 use crate::model::format_path;
@@ -19,7 +19,7 @@ const DECLARES: &str = "/// FS-x: X\n///\n/// X lead.\npub fn x() {}\n";
 const DROPS: &str = "pub fn x() {}\n";
 
 /// The same file declaring the ID twice, at lines 1 and 6: two homes
-/// (§FS-declarations.checks.duplicate.1). Split so no line of this file opens
+/// (§FS-declarations.stubs.pairing.1). Split so no line of this file opens
 /// with the second declaration, which the scan would read as one of its own.
 const TWICE: &str = concat!(
     "/// FS-x: X\n///\n/// X lead.\npub fn x() {}\n\n",
@@ -158,7 +158,7 @@ fn assert_drop_leaves_two_homes(name: &str, scanned: bool) {
 }
 
 /// With the declaration in place both stubs pair with it, so the ID has one home,
-/// at the target (§FS-declarations.checks.duplicate.2).
+/// at the target (§FS-declarations.stubs.pairing.2).
 fn assert_declaration_pairs_the_stubs(name: &str, scanned: bool) {
     let texts = (DROPS, DECLARES);
     let shown = Ok("src/x.rs:1 X lead.");
@@ -198,7 +198,7 @@ const TWO_HOMES: (Result<&str, &str>, &[&str]) = (
 
 /// A lone stub stands for every declaration its unscanned target holds, so an
 /// unsaved second declaration there adds a home exactly as saving it would
-/// (§FS-declarations.checks.duplicate.1, §FS-declarations.checks.duplicate.3).
+/// (§FS-declarations.stubs.pairing.1, §FS-declarations.stubs.pairing.3).
 #[test]
 fn unsaved_second_declaration_behind_a_lone_stub_adds_a_home() {
     let (shown, errors) = TWO_HOMES;
@@ -207,7 +207,7 @@ fn unsaved_second_declaration_behind_a_lone_stub_adds_a_home() {
 }
 
 /// Two stubs to that target stand for its two declarations once between them, not
-/// once each (§FS-declarations.checks.duplicate.2).
+/// once each (§FS-declarations.stubs.pairing.2).
 #[test]
 fn unsaved_second_declaration_behind_two_stubs_adds_one_home() {
     let (shown, errors) = TWO_HOMES;
