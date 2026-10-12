@@ -125,15 +125,21 @@ pub(super) fn empty_scan_warning(config: &Config, path: &Path, path_provided: bo
              needs checking into a file that is not hidden.",
             format_path(path)
         ),
+        // §FS-check.2.2.2.1: a project with no kinds has no starter file to
+        // scaffold, so the first remedy it is offered is its first kind.
+        (Some(dirs), true) if kind_prefixes(&config.kinds).is_empty() => format!(
+            "nothing to scan — grund looked under [scan] include = [{}] and found no files. This \
+             project declares no kinds yet: replace `kinds = []` in `grund.toml` with a \
+             `[[kinds]]` table for its first kind, point `[scan] include` at your sources, or \
+             pass a path explicitly (`grund check <dir>`).",
+            quoted_list(dirs)
+        ),
         (Some(dirs), true) => format!(
             "nothing to scan — grund looked under [scan] include = [{}] and found no files. Run \
              `grund init --docs` to scaffold the canonical requirements.md, docs/, and e2e/ \
              trees, point `[scan] include` in `grund.toml` at your sources, or pass a \
              path explicitly (`grund check <dir>`).",
-            dirs.iter()
-                .map(|dir| format!("\"{dir}\""))
-                .collect::<Vec<_>>()
-                .join(", ")
+            quoted_list(dirs)
         ),
         _ => format!(
             "nothing to scan — no files under `{}` matched grund's extensions ({}).",
@@ -150,6 +156,14 @@ pub(super) fn empty_scan_warning(config: &Config, path: &Path, path_provided: bo
         sites: Vec::new(),
         authority: Vec::new(),
     }
+}
+
+/// `["a", "b"]`'s inside, as the empty-scan warning names `[scan] include`.
+fn quoted_list(dirs: &[String]) -> String {
+    dirs.iter()
+        .map(|dir| format!("\"{dir}\""))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 /// The CLI-level warning `check` reports when the walk read files and recognized
@@ -172,12 +186,16 @@ pub(super) fn empty_scan_warning(config: &Config, path: &Path, path_provided: bo
 fn nothing_recognized_warning(config: &Config, scanned_files: usize) -> Diagnostic {
     let shape = id_shape(&config.id_format);
     let files = if scanned_files == 1 { "file" } else { "files" };
-    Diagnostic {
-        code: "nothing-recognized",
-        path: None,
-        line: None,
-        column: None,
-        message: format!(
+    let kinds = kind_prefixes(&config.kinds);
+    // §FS-check.4.5.2: with no kind, no token is a citation; say so, not `{}`.
+    let message = if kinds.is_empty() {
+        format!(
+            "nothing recognized — grund read {scanned_files} {files}, and this project declares \
+             no kinds, so no heading in them is a declaration and no token a citation. Declare \
+             its first kind in grund.toml to start."
+        )
+    } else {
+        format!(
             "nothing recognized — grund read {scanned_files} {files} and found no declaration \
              and no citation in them. A declaration heading reads `# {shape}: <title>` and a \
              citation `{marker}{shape}`, under [id] format = \"{format}\" with <KIND> one of \
@@ -185,8 +203,15 @@ fn nothing_recognized_warning(config: &Config, scanned_files: usize) -> Diagnost
              different shape than that.",
             marker = config.marker,
             format = config.id_format,
-            kinds = kind_prefixes(&config.kinds).join(", "),
-        ),
+            kinds = kinds.join(", "),
+        )
+    };
+    Diagnostic {
+        code: "nothing-recognized",
+        path: None,
+        line: None,
+        column: None,
+        message,
         sites: Vec::new(),
         authority: Vec::new(),
     }

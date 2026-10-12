@@ -176,13 +176,14 @@ the code's table to this one.
 ### 3.1 One row per key
 
 The key column is spelled the way [§DF-config-concerns.2.3](../decisions/functional/DF-config-concerns.md#23-the-inventory) spells it, and the
-set is that inventory's set: the 61 keys of the format in force.
+set is that inventory's set: the 62 keys of the format in force.
 
 | Key | Record path |
 |---|---|
 | `grund_config_version` | `version` |
 | `project_name` | `name` |
 | `project_description` | `presentation.description` |
+| `kinds` | `schema.rows` |
 | `[reference] conversation` | `presentation.conversation` |
 | `[reference] grounding_level` | `rules.grounding` |
 | `[reference] inline_note_layout` | `schema.notes` |

@@ -45,12 +45,8 @@ pub(super) fn lower_parsed_kinds(
             nameless.header_line
         ));
     }
-    if parsed.is_empty() {
-        return Err(anyhow!(
-            "{}: at least one [[kinds]] entry must declare a `kind`",
-            format_path(path)
-        ));
-    }
+    // §FS-config.3.4.4.5: no entries at all is `kinds = []`, the empty kind set,
+    // and lowers to no rows below — the reader yields it for nothing else.
     for entry in &parsed {
         let k = &entry.config;
         if let Some(refusal) = rule_kind_refusal(k) {

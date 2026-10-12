@@ -69,6 +69,42 @@ impl ParsedKind {
     }
 }
 
+/// §FS-config.3.4.4.5: the top-level `kinds = []`, the one v1 spelling of an
+/// empty kind set. Only the empty array is accepted: a non-empty one is a kind
+/// table written the wrong way, and the refusal says how to write it.
+pub(super) fn parse_empty_kinds(path: &Path, line_no: usize, value: &str) -> Result<()> {
+    let inner = value
+        .strip_prefix('[')
+        .and_then(|rest| rest.strip_suffix(']'));
+    if inner.is_some_and(|inner| inner.trim().is_empty()) {
+        return Ok(());
+    }
+    bail_config(
+        path,
+        line_no,
+        "`kinds` takes only the empty list `kinds = []`, which declares no kinds; declare each kind as a `[[kinds]]` table".to_string(),
+    )
+}
+
+/// §FS-config.3.4.4.5: a `[[kinds]]` table after `kinds = []` would append to a
+/// static array, which TOML refuses, so it is refused at the table's header.
+pub(super) fn refuse_kinds_after_empty(
+    path: &Path,
+    line_no: usize,
+    empty_kinds_line: Option<usize>,
+) -> Result<()> {
+    match empty_kinds_line {
+        Some(empty) => bail_config(
+            path,
+            line_no,
+            format!(
+                "`[[kinds]]` cannot follow `kinds = []` (line {empty}), which declares no kinds; delete `kinds = []` to declare kinds as tables"
+            ),
+        ),
+        None => Ok(()),
+    }
+}
+
 /// Read one `key = value` line inside a `[[kinds]]` block into `slot`
 /// (§FS-config.3.4). Returns `false` for a key this section does not define, so
 /// the caller reports it as an unknown config key (§FS-config.4.3).

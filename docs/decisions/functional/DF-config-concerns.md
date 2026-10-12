@@ -17,7 +17,7 @@ Serves [§GOAL-configurable](../../goals.md#goal-configurable-every-default-is-o
 
 Every committed parse site is enumerated, and the union of the keys they accept is the candidate set: `config/v1/parse.rs` (the top-level keys and the project tables), `config/v1/kind_table.rs` (a `[[kinds]]` row), and `config/v1/citations.rs` (`[citations]` and a `[citations.<KIND>]` table). This is complete by construction — a key no parser accepts cannot be written — and it is the same enumeration [§DF-config-scope-override.2.1](DF-config-scope-override.md#21-one-relation-stated-once-and-stated-as-a-relation) makes, because the question *which keys are there* has one answer whatever is then asked of them.
 
-That is **61 keys**. One key the readers recognize is not among them: `[[kinds]] prefix` is matched only in order to refuse it with the release that removed it ([§FS-config.3.4.6](../../functional-spec/FS-config.md#346-prefix-the-former-spelling-of-kind-removed-in-0130)), so it is not a key of the format in force. The exclusion is a claim about the reader rather than about the inventory, so `tests/integration/test_config_concern_inventory.py` holds it to the refusal: the row may stay absent only while no config may write the key.
+That is **62 keys**. One key the readers recognize is not among them: `[[kinds]] prefix` is matched only in order to refuse it with the release that removed it ([§FS-config.3.4.6](../../functional-spec/FS-config.md#346-prefix-the-former-spelling-of-kind-removed-in-0130)), so it is not a key of the format in force. The exclusion is a claim about the reader rather than about the inventory, so `tests/integration/test_config_concern_inventory.py` holds it to the refusal: the row may stay absent only while no config may write the key.
 
 ### 2.2 Stage 2 — the criterion, from the read sites
 
@@ -47,6 +47,7 @@ One row per key of the format in force, in the order [§FS-config.3](../../funct
 | `grund_config_version` | envelope | Chooses the reader. It is read before any concern and constrains no node. |
 | `project_name` | envelope | Identity, and the workspace alias: it says which project a coordinate belongs to, never what holds inside one. |
 | `project_description` | presentation | The line a generated member list renders beside the alias. No checker, scanner, formatter or query reads it. |
+| `kinds` | schema | `kinds = []`, the empty kind set ([§FS-config.3.4.4.5](../../functional-spec/FS-config.md#3445-kinds---declares-no-kinds)): which kinds exist, which is what `[[kinds]]` rows say. |
 | `[reference] conversation` | presentation | How an agent is told to render a citation in conversation. It reaches a finding only as managed-block drift, which is a rule over the generated region. |
 | `[reference] grounding_level` | rules | Which unit inside a governed file the grounding obligation is asked of — the subject's node, not a property of one. |
 | `[reference] inline_note_layout` | schema | The house shape of one note. |

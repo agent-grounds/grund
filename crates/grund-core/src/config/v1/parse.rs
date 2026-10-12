@@ -16,7 +16,7 @@ use std::path::Path;
 
 use super::citations::parse_citation_entry;
 use super::grounding::{check_grounding_level, parse_kind_grounding_key};
-use super::kind_table::{ParsedKind, parse_kinds_key};
+use super::kind_table::{ParsedKind, parse_empty_kinds, parse_kinds_key, refuse_kinds_after_empty};
 use super::scan_block::parse_scan_exclude;
 use crate::config::fmt_block::validate_fmt_exclude;
 use crate::config::point_sizes::parse_lead_size_warning;
@@ -44,6 +44,8 @@ pub(super) fn parse_config_file(
     let mut parsed_kinds: Vec<ParsedKind> = Vec::new();
     let mut current_kind: Option<ParsedKind> = None;
     let mut kinds_block_seen = false;
+    // §FS-config.3.4.4.5: where `kinds = []` declared the empty kind set.
+    let mut empty_kinds_line = None;
     let at = |line: usize| {
         Some(ConfigLocation {
             path: path.to_path_buf(),
@@ -79,6 +81,7 @@ pub(super) fn parse_config_file(
                             "expected `[[kinds]]` (array of tables)".to_string(),
                         )?;
                     }
+                    refuse_kinds_after_empty(path, line_no, empty_kinds_line)?;
                     // Flush any open kind entry, then start a new one.
                     if let Some(kind) = current_kind.take() {
                         parsed_kinds.push(kind);
@@ -126,6 +129,11 @@ pub(super) fn parse_config_file(
                         ),
                     )?;
                 }
+            }
+            // §FS-config.3.4.4.5: declared, with no entries — not omitted.
+            ("", "kinds") => {
+                parse_empty_kinds(path, line_no, value)?;
+                (kinds_block_seen, empty_kinds_line) = (true, Some(line_no));
             }
             ("", "project_name") => {
                 project.name = Some(parse_string(path, line_no, value)?);

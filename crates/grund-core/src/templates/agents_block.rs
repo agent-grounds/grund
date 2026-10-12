@@ -52,7 +52,14 @@ fn agents_template_substitutions(
     // §FS-init.2.3.8.2: the worked example illustrates a non-existent ID, so it is
     // rendered in the `<marker>`-escaped form (§FS-workspace.1).
     let cite_example = format!("<{marker}>{id_example}{sep}3{sep}1");
-    let kinds_set = format!("{{{}}}", kind_prefixes(&project.kind_configs()).join(", "));
+    // §FS-init.2.3.4.4.2: a config with no citable kind says so rather than
+    // naming the empty set.
+    let citable = kind_prefixes(&project.kind_configs());
+    let kinds_set = if citable.is_empty() {
+        "no `KIND` is declared yet".to_string()
+    } else {
+        format!("`KIND ∈ {{{}}}`", citable.join(", "))
+    };
     let bare_note = if project.schema.citation.strict {
         format!(
             "Bare ID-shaped tokens are ignored — `[reference] strict = true` is set in `grund.toml`, so only `{marker}`-prefixed citations are checked."
@@ -231,7 +238,21 @@ fn declaration_map(project: &Project) -> String {
                 ),
             }
         });
-    rows.collect::<Vec<_>>().join("\n")
+    let rows = rows.collect::<Vec<_>>();
+    if rows.is_empty() {
+        return first_kind_paragraph(project);
+    }
+    rows.join("\n")
+}
+
+/// §FS-init.2.3.4.4.2: the Project map of a config with no row to list — one
+/// paragraph teaching the first kind in the config's own spelling, rather than
+/// an empty map.
+fn first_kind_paragraph(project: &Project) -> String {
+    if project.version == 2 {
+        return "No kinds are declared yet. Add one `[schema.kinds.<KIND>]` table per kind of document this repository gives IDs to, with the `folders` or `files` its declarations live in, and run `grund init` again to list them here.".to_string();
+    }
+    "No kinds are declared yet: `grund.toml` sets `kinds = []`. Replace it with one `[[kinds]]` table per kind of document this repository gives IDs to — `kind = \"FS\"`, then `folder = \"docs/specs\"` or `file = \"requirements.md\"`, and a `title` — and run `grund init` again to list them here.".to_string()
 }
 
 /// One Project map row: a Markdown link from `label` to `home`, then the title.

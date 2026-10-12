@@ -12,6 +12,8 @@ pub(in crate::config) const KEYS: &[(&str, &str)] = &[
     ("grund_config_version", "version"),
     ("project_name", "name"),
     ("project_description", "presentation.description"),
+    // §FS-config.3.4.4.5: the empty kind set, which replaces the built-in rows.
+    ("kinds", "schema.rows"),
     ("[reference] conversation", "presentation.conversation"),
     ("[reference] grounding_level", "rules.grounding.level"),
     ("[reference] inline_note_layout", "schema.notes.layout"),
