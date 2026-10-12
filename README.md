@@ -4,73 +4,68 @@
 
 > **Keep your agents grounded** — connect code to the spec that explains it.
 
-`grund` gives specs stable IDs, lets code cite them, and checks those citations in CI.
-Agents retrieve the section they need before editing ([§GRUND-grund](docs/grund.md#grund-grund-agents-stay-grounded-in-the-spec)).
-
-- **Structure:** define your kinds of fact, their homes and their IDs in `grund.toml`; retrieve one section at a time ([§GRUND-schema](docs/grund.md#grund-schema-the-shape-of-a-projects-knowledge-is-hard-to-define-and-to-keep)).
-- **Checks:** catch broken citations and violations of your declared rules in pre-commit and CI ([§GRUND-links](docs/grund.md#grund-links-the-cross-linking-rules-are-hard-to-define-and-to-hold)).
-
 [Quick start](#quick-start) · [Try the example](examples/quickstart/) · [Guides](docs/user-facing/README.md)
 
 ## How it works
 
 <!-- grund:fmt off -->
 <table>
+<tbody>
 <tr>
-<td valign="top" width="360">
+<td valign="top" width="400">
 <b>1 · Declare</b><br>
-Give a requirement an ID<br>
-<code>requirements.md</code>
-<pre>
+Give a requirement an ID in <a href="examples/quickstart/repo/requirements.md"><code>requirements.md</code></a>
+<pre lang="markdown">
 &#35; FS-login: Login
-&#35;&#35; format: Formatting
-&#35;&#35;&#35; format.1: Username
+&#35;&#35; 1. Username
 Trim surrounding whitespace.
 </pre>
 </td>
-<td valign="top" width="360">
+<td valign="top" width="400">
 <b>2 · Cite</b><br>
-Cite it from code<br>
-<code>src/login.py</code>
-<pre>
+Cite it from the code in <a href="examples/quickstart/repo/src/login.py"><code>src/login.py</code></a>
+<pre lang="python">
 def clean_username(username):
-    """&#167;FS-login.format.1"""&#10;
+    """&#167;FS-login.1"""
     return username.strip()
 </pre>
 </td>
 </tr>
+</tbody>
+<tbody>
 <tr>
-<td valign="top" width="360">
-<b>3 · Check before you read</b><br>
-Look up the cited requirement<br>
-Before changing the code:
-<pre>
-$ grund FS-login.format.1
-&#35;&#35;&#35; format.1: Username
+<td valign="top" width="400">
+<b>3 · Read</b><br>
+Look it up before you change the code
+<pre lang="console">
+$ grund FS-login.1
+&#35;&#35; 1. Username
 Trim surrounding whitespace.
 </pre>
 </td>
-<td valign="top" width="360">
+<td valign="top" width="400">
 <b>4 · Check</b><br>
-Rename <b>format.1 → format.2</b>, not its citation.<br>
-CI catches the broken reference:
-<pre>
-$ grund check&#10;
-… section not found: FS-login.format.1 …
+Renumber section 1 → 2, and CI fails
+<pre lang="console">
+$ grund check
+… error: missing section FS-login.1&#10;&#10;
 </pre>
 </td>
 </tr>
+</tbody>
 </table>
 <!-- grund:fmt on -->
 
-From the [runnable example](examples/quickstart/):
-[requirement](examples/quickstart/repo/requirements.md),
-[code](examples/quickstart/repo/src/login.py), and captured command output (error location and hint elided).
-Its citations are checked inside that example's own repository.
+`grund` gives specs stable IDs, lets code cite them, and checks those citations in CI.
+Agents retrieve the section they need before editing ([§GRUND-grund](docs/grund.md#grund-grund-agents-stay-grounded-in-the-spec)).
+
+- **Structure:** define your kinds of fact, their homes and their IDs in `grund.toml`; retrieve one section at a time ([§GRUND-schema](docs/grund.md#grund-schema-the-shape-of-a-projects-knowledge-is-hard-to-define-and-to-keep)).
+- **Checks:** catch broken citations and violations of your declared rules in pre-commit and CI ([§GRUND-links](docs/grund.md#grund-links-the-cross-linking-rules-are-hard-to-define-and-to-hold)).
 
 **A valid citation does not prove the code implements the requirement.** Returning
-`username` unchanged while keeping the citation would still pass this check; tests and review
-verify behavior. Grund checks citation targets and declared structural rules.
+`username` unchanged would still pass `grund check`; tests and review verify behavior.
+It does let an agent verify that quickly and cheaply — the requirement is one lookup
+away from the code — and keep the repository consistent as both change.
 [Lychee](https://lychee.cli.rs/) checks ordinary links; both belong in CI
 ([§GRUND-links.2](docs/grund.md#2-holding-every-edit-to-them)). The
 [requirements-traceability comparison](docs/related-work/REL-traceability-tools.md#workmatrix-reader-tasks)

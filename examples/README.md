@@ -30,7 +30,7 @@ summarizes when to reach for each.
 
 | Folder                                                       | Use-case                                                 |
 |--------------------------------------------------------------|----------------------------------------------------------|
-| [`quickstart/`](quickstart/) | Declare a login requirement in a named chapter, cite it from code, retrieve it, then break and repair the citation ([§FS-examples.2](../docs/functional-spec/FS-examples.md#2-canonical-use-cases)) |
+| [`quickstart/`](quickstart/) | Declare a login requirement, cite it from code, retrieve it, then break and repair the citation ([§FS-examples.2](../docs/functional-spec/FS-examples.md#2-canonical-use-cases)) |
 | [`workspace/`](workspace/)                                   | Cross-project citation in a monorepo ([§FS-workspace](../docs/functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace)) |
 | [`rules/`](rules/)                                           | Controlled-English rules over declarations, named chapters, and citations ([§FS-rules](../docs/functional-spec/FS-rules.md#fs-rules-grounded-declarations-state-and-enforce-chapter-rules)) |
 | [`fields/`](fields/)                                         | A version-2 kind's chapters declared as fields: order, titles, scalar values and closed kinds ([§FS-fields](../docs/functional-spec/FS-fields.md#fs-fields-a-v2-kind-states-the-shape-of-its-declarations-and-check-holds-every-declaration-to-it)) |
