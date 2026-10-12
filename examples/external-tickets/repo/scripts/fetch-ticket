@@ -2,6 +2,6 @@
 set -eu
 
 test "$#" -eq 1
-test "$1" = "TICKET-1234"
+test "$1" = "GH-1234"
 
-printf '## TICKET-1234: Ship the external-facts workflow\n\nThe issue requests committed snapshots that resolve offline.\n'
+printf '## GH-1234: Ship the external-facts workflow\n\nThe issue requests committed snapshots that resolve offline.\n'

@@ -29,12 +29,12 @@ allowed values, and whether anything else may appear — in the [fields guide](.
             ┌───────────── ID ───────────────┐
   [§] [alias /] KIND - [number -] slug [.section]
    │     │        │       │         │       │
-   │     │        │       │         │       └─ dotted path (.3, .3.1, .format, …)
-   │     │        │       │         └───────── [a-z0-9][a-z0-9-]*  (default slug_pattern)
+   │     │        │       │         │       └─ section: .3, .3.1, .format
+   │     │        │       │         └───────── slug: [a-z0-9][a-z0-9-]*
    │     │        │       └─────────────────── optional ordinal (e.g., 001)
-   │     │        └─────────────────────────── GRUND│GOAL|FS│AR│DF│DA│RM│[custom]
-   │     └──────────────────────────────────── project alias for subprojects or monorepo
-   └────────────────────────────────────────── citation marker (writing only)
+   │     │        └─────────────────────────── kind: FS, AR, … or your own
+   │     └──────────────────────────────────── workspace project alias
+   └────────────────────────────────────────── citation marker
 ```
 
 Three schemes are supported. `[id].format` selects the repository default; an

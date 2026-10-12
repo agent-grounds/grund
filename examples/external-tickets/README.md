@@ -2,7 +2,7 @@
 
 This example teaches the fetch-backed external-fact workflow specified by
 [§FS-fetch](../../docs/functional-spec/FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot). The repository uses ordinary slug IDs by default and a numeric
-`TICKET` override. `repo/docs/guide.md` cites a ticket before its snapshot
+`GH` override. `repo/docs/guide.md` cites a ticket before its snapshot
 exists; `repo/scripts/fetch-ticket` is a deterministic local stand-in for a
 GitHub, Jira, or Linear integration.
 
@@ -10,10 +10,10 @@ From inside `repo/`, the complete workflow is:
 
 ```sh
 grund check
-grund fetch TICKET-1234
+grund fetch GH-1234
 grund check
-grund show TICKET-1234
-grund refs TICKET-1234
+grund show GH-1234
+grund refs GH-1234
 ```
 
 The first check exits 0 with the fixed `missing-snapshot` warning. Fetch is the
