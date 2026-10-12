@@ -17,11 +17,12 @@
 //! `LEDGER` is the divergence ledger: one row per known divergence, naming the
 //! tree and the invariant. `DEFERRED` names each row of §REQ-one-answer.differences
 //! only the editor, shell completion or an unsaved buffer shows, with the step of
-//! #576 that builds its harness, and `WIDENING` what the seed leaves out. A divergence it does not list fails, and so does a
-//! row that no longer reproduces, so the ledger only shrinks. A divergence found
-//! here that §REQ-one-answer.differences does not list is added there by an
-//! amendment naming its baseline, or kept as a ledger-only row with its reason
-//! (the list rule of §REQ-one-answer); it is never kept in this file alone.
+//! #576 that builds its harness, and `WIDENING` what the seed leaves out, each step
+//! listed live in `tests/integration/one_answer_steps.toml`. A divergence it does
+//! not list fails, and so does a row that no longer reproduces, so the ledger only
+//! shrinks. A divergence found here that §REQ-one-answer.differences does not list
+//! is added there by an amendment naming its baseline, or kept as a ledger-only row
+//! with its reason (the list rule of §REQ-one-answer); it is never kept in this file alone.
 
 #[path = "support/agreement_buffers.rs"]
 mod agreement_buffers;
@@ -244,15 +245,26 @@ const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
 const DEFERRED: &[(&str, &str, &str)] = &[];
 
 /// What the seed leaves out under §AR-ci.requirements.1, and the step that
-/// widens it before #576 closes.
+/// widens it.
 const WIDENING: &[(&str, &str)] = &[(
     "every end-to-end tree, its narrowed, path-argument and editor-overlay variants, \
      and `cover`, the editor snapshot and the bindings as surfaces",
-    "#600",
+    "S4",
 )];
 
-/// The steps of #576 a deferred row or a widening may name.
-const STEPS: &[&str] = &["#595", "#596", "#597", "#598", "#599", "#600"];
+/// The steps of #576 a deferred row or a widening may name: the ids of
+/// `tests/integration/one_answer_steps.toml`, the one list of the live steps
+/// (§REQ-one-answer.proof), read off its `id = "…"` lines.
+fn listed_steps() -> BTreeSet<String> {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/integration/one_answer_steps.toml");
+    let text = fs::read_to_string(path).expect("read one_answer_steps.toml");
+    text.lines()
+        .filter_map(|line| line.strip_prefix("id = \""))
+        .filter_map(|rest| rest.strip_suffix('"'))
+        .map(str::to_string)
+        .collect()
+}
 
 /// The families of `tests/e2e/cases/` whose first plain project is sampled.
 const SAMPLED_FAMILIES: &[&str] = &[
@@ -472,14 +484,15 @@ fn a_row_the_requirement_drops_is_refused() {
 
 #[test]
 fn every_deferral_and_widening_names_its_step() {
+    let steps = listed_steps();
     for (what, step) in DEFERRED
         .iter()
         .map(|(row, step, _)| (*row, *step))
         .chain(WIDENING.iter().copied())
     {
         assert!(
-            STEPS.contains(&step),
-            "{what} names no step of #576: {step}"
+            steps.contains(step),
+            "{what} names no step listed in one_answer_steps.toml: {step}"
         );
     }
 }

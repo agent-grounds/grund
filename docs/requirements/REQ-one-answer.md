@@ -147,25 +147,25 @@ this requirement, was found later, on `e8c40221d7`, and is added by amendment.
 
 - **G06.** The subject `each FS` is refused by a rule as a fixed word in the wrong case and
   by `list --selector` as a literal subject the ID grammar does not match. R, found on
-  `53e981e6e9` and amended in.
+  `53e981e6e9` and amended in. Ruled by [§DF-one-answer-rulings-grammar](../decisions/functional/DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary), which fixes it (S1).
 - **G09.** In a project whose `[[kinds]]` table declares no homeless kind, a `[citations]`
   target `code`, bare, pinned or `*/`, is refused as a kind that is not citable, while a
   rule's subject and object, `list --kind` and `list --selector` call `code` unknown: the
-  default name has no row ([§FS-config.3.9.2](../functional-spec/FS-config.md#392-the-homeless-kind)). R on `e8c40221d7`.
+  default name has no row ([§FS-config.3.9.2](../functional-spec/FS-config.md#392-the-homeless-kind)). R on `e8c40221d7`. Ruled by [§DF-one-answer-rulings-grammar](../decisions/functional/DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary), which fixes it (S1).
 
 ### differences.sections: Sections
 
 - **P01.** In a file with no sections, `show --full` runs a body past a plain `# Appendix`,
-  while `refs` ends it before. R.
+  while `refs` ends it before. R. Ruled by [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves), which moves it in 0.19.0 (#639).
 - **P02.** A `/** … */` section without ` * ` is listed by `--toc` and refused by a direct
-  query. R.
-- **P03.** `/// # 1. Sub` is listed by `--toc` and refused by `grund FS-b.1`. R.
+  query. R. Ruled by [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves), which moves it in 0.19.0 (#639).
+- **P03.** `/// # 1. Sub` is listed by `--toc` and refused by `grund FS-b.1`. R. Ruled by [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves), which moves it in 0.19.0 (#639).
 - **P07.** `## 1. One` then a plain `## Notes`: `--full` includes Notes, `refs` gives the
-  citations under it no section. R.
+  citations under it no section. R. Ruled by [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves), which moves it in 0.19.0 (#639).
 - **P10.** `show` includes an adjacent `//` note in a `///` body, `refs` gives it no
-  enclosing declaration. R.
+  enclosing declaration. R. Ruled by [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves), which moves it in 0.19.0 (#639).
 - **P12.** In a doc-comment, ownership continues a section past a duplicate heading that
-  ends it for `show`. R.
+  ends it for `show`. R. Ruled by [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves), which moves it in 0.19.0 (#639).
 - **P16.** The editor snapshot's span for a C-family section keeps `*/`, the `--toc` title
   does not; the core fields only. R. Ruled by [§DF-fmt-and-editor-answers-from-0-19](../decisions/functional/DF-fmt-and-editor-answers-from-0-19.md#df-fmt-and-editor-answers-from-0-19-fmts-link-wrapper-and-the-editors-title-span-change-in-0190-after-a-release-that-announces-them), which
   moves it in 0.19.0.
@@ -178,39 +178,39 @@ requirement, were found later, on `94c23bc85b`, and are added by amendment; U04'
 corrected on the same baseline.
 
 - **Placement.** For a healthy stub to a target outside the include, `list` shows the stub
-  and `list --size` the target. R.
+  and `list --size` the target. R. Ruled by [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) (#650).
 - **U03a.** Exhaustive `show --batch` omits the outside target's section direct `show`
-  returns. R.
-- **U03b.** Shell completion offers none of the outside target's sections. C.
-- **U03c.** The editor snapshot enumerates none of the outside target's sections. R.
-- **U03d.** `list --selector FS.terms` omits the outside target's section `show` returns. R.
+  returns. R. Ruled by [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) (#650).
+- **U03b.** Shell completion offers none of the outside target's sections. C. Ruled by [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) (#650).
+- **U03c.** The editor snapshot enumerates none of the outside target's sections. R. Ruled by [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) (#650).
+- **U03d.** `list --selector FS.terms` omits the outside target's section `show` returns. R. Ruled by [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) (#650).
 - **U04.** Citation obligations on an outside target are judged on the stub's empty record,
   not on the target as the same tree with it scanned judges them: a prohibition the target's
   citations break is missed, and an `at least` count they meet is reported at the stub,
-  `FS-x must cite GOAL`, where `src/x.rs:3` cites `GOAL-g`. R, corrected on `94c23bc85b`.
+  `FS-x must cite GOAL`, where `src/x.rs:3` cites `GOAL-g`. R, corrected on `94c23bc85b`. Ruled by [§DF-one-answer-rulings-stubs](../decisions/functional/DF-one-answer-rulings-stubs.md#df-one-answer-rulings-stubs-a-stub-is-found-by-its-home-and-shape-read-as-the-scan-reads-and-shown-where-its-target-is), ruling D8 (#651).
 - **U06.** `check --only unused` places the warning at the stub, `show` places the
-  declaration at the target. R.
+  declaration at the target. R. Ruled by [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) (#650).
 - **U07.** A chapter rule counts none of an outside target's chapters: `Each FS must have
   exactly one Terms chapter.` reports `FS-x has 0 Terms chapters` at the stub, and the same
-  tree with the target scanned passes. R, found on `94c23bc85b`.
+  tree with the target scanned passes. R, found on `94c23bc85b`. Ruled by [§DF-one-answer-rulings-stubs](../decisions/functional/DF-one-answer-rulings-stubs.md#df-one-answer-rulings-stubs-a-stub-is-found-by-its-home-and-shape-read-as-the-scan-reads-and-shown-where-its-target-is), ruling D8 (#651).
 - **U08.** `refs` lists no citation an outside target makes, so the `unused` warning counts
   none either: `refs GOAL-g` lists nothing, and with the target scanned it lists
-  `src/x.rs:3`. R, found on `94c23bc85b`.
+  `src/x.rs:3`. R, found on `94c23bc85b`. Ruled by [§DF-one-answer-rulings-stubs](../decisions/functional/DF-one-answer-rulings-stubs.md#df-one-answer-rulings-stubs-a-stub-is-found-by-its-home-and-shape-read-as-the-scan-reads-and-shown-where-its-target-is), ruling D8 (#651).
 
 ### differences.text: Text
 
 - **R06a.** An index link edited to a bare citation is clean in the editor and
-  `unlinked-index-entry` once saved. R.
-- **R06b.** The inline-code hint on a dangling citation differs between buffer and save. R.
-- **R06c.** An `AGENTS.md` block edit is judged on the old disk text until saved. R.
-- **R06d.** An end-to-end manifest edit is read from disk until saved. R.
+  `unlinked-index-entry` once saved. R. Ruled by [§DF-four-editor-checks-read-saved-text](../decisions/functional/DF-four-editor-checks-read-saved-text.md#df-four-editor-checks-read-saved-text-four-editor-checks-read-the-saved-file-for-one-more-release) (#624).
+- **R06b.** The inline-code hint on a dangling citation differs between buffer and save. R. Ruled by [§DF-four-editor-checks-read-saved-text](../decisions/functional/DF-four-editor-checks-read-saved-text.md#df-four-editor-checks-read-saved-text-four-editor-checks-read-the-saved-file-for-one-more-release) (#624).
+- **R06c.** An `AGENTS.md` block edit is judged on the old disk text until saved. R. Ruled by [§DF-four-editor-checks-read-saved-text](../decisions/functional/DF-four-editor-checks-read-saved-text.md#df-four-editor-checks-read-saved-text-four-editor-checks-read-the-saved-file-for-one-more-release) (#624).
+- **R06d.** An end-to-end manifest edit is read from disk until saved. R. Ruled by [§DF-four-editor-checks-read-saved-text](../decisions/functional/DF-four-editor-checks-read-saved-text.md#df-four-editor-checks-read-saved-text-four-editor-checks-read-the-saved-file-for-one-more-release) (#624).
 
 ### differences.scope: Scope
 
 - **R01.** `check sub` resolves `FS-001-a`, which `grund FS-001-a sub` reports not found.
-  R.
+  R. Ruled by [§DF-one-answer-rulings-run](../decisions/functional/DF-one-answer-rulings-run.md#df-one-answer-rulings-run-a-path-narrows-the-report-a-stub-reads-what-the-walk-reads-and-a-file-is-one-file-however-it-is-spelled-or-held), ruling D1 (#621).
 - **R02.** In a workspace, `check docs` reports `unknown project alias` for a citation the
-  root `check` and `list docs` resolve. R.
+  root `check` and `list docs` resolve. R. Ruled by [§DF-one-answer-rulings-run](../decisions/functional/DF-one-answer-rulings-run.md#df-one-answer-rulings-run-a-path-narrows-the-report-a-stub-reads-what-the-walk-reads-and-a-file-is-one-file-however-it-is-spelled-or-held), ruling D14 (#621).
 
 ## proof: Proved by comparison
 
