@@ -2,6 +2,7 @@
 //! declaration and heading is judged against its own kind's shape and nothing
 //! else, so the half is handed the schema and no `Rules` (§AR-config.5).
 
+use super::excluded_stub_target::check_excluded_stub_targets;
 use super::fields::check_fields;
 use super::glob_citations::check_glob_citations;
 use super::homes::{KindHomeIndex, paths_same_location_key};
@@ -43,6 +44,8 @@ pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> C
     // answer stands and the line that moves it warns.
     check_parse_moves(catalog, schema, frame, &mut report);
     check_broken_stubs(catalog, frame, &mut report);
+    // §FS-declarations.checks.excluded-stub-target: a stub 0.19.0 reports as broken.
+    check_excluded_stub_targets(catalog, frame, &mut report);
     // §FS-declarations.checks.stub-shape: a stub-shaped heading 0.19.0 reads differently.
     check_stub_shapes(catalog, frame, &mut report);
     // §FS-declarations.checks.declaration-near-miss: headings that open like a declaration and

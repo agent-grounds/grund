@@ -10,10 +10,12 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use super::read_predicate::name_refusal;
+use super::read_predicate::{excluding_rule, name_refusal};
 use super::tree::scan_unwalked_file;
 use crate::config::{Frame, Schema};
-use crate::model::{Catalog, Declaration, FileRecord, Id, StubResolution};
+use crate::model::{
+    Catalog, Declaration, ExcludedStubTargetNote, ExcludingRule, FileRecord, Id, StubResolution,
+};
 use crate::sources::{paths_same_location, physical_path_key};
 
 /// Reach every stub's verdict once, after the walk, and record it on the stub
@@ -21,16 +23,24 @@ use crate::sources::{paths_same_location, physical_path_key};
 /// (§FS-declarations.stubs.verdict). A target the walk did not record the ID
 /// in is read through the walk's own pass over one file, on the text a save would
 /// write (§FS-declarations.stubs.target.1), once per target however many
-/// stubs and IDs name it. An ID no stub declares is passed over.
-pub(super) fn resolve_stubs(schema: &Schema, frame: Frame<'_>, findings: &mut Catalog) {
-    let mut targets = UnwalkedTargets::new(schema, frame);
+/// stubs and IDs name it. An ID no stub declares is passed over. A stub that pairs
+/// with a target the walk from `roots` would not read, for an `exclude` entry or an
+/// ignore file, is noted for the warning (§FS-declarations.checks.excluded-stub-target).
+pub(super) fn resolve_stubs(
+    schema: &Schema,
+    frame: Frame<'_>,
+    roots: &[PathBuf],
+    findings: &mut Catalog,
+) {
+    let mut targets = UnwalkedTargets::new(schema, frame, roots);
+    let mut notes = Vec::new();
     for (id, decls) in &mut findings.declarations {
         if !decls.iter().any(|decl| decl.is_stub) {
             continue;
         }
         let verdicts: Vec<Option<StubResolution>> = decls
             .iter()
-            .map(|decl| resolve_stub(frame, id, decl, decls.as_slice(), &mut targets))
+            .map(|decl| resolve_stub(frame, id, decl, decls.as_slice(), &mut targets, &mut notes))
             .collect();
         for (decl, verdict) in decls.iter_mut().zip(verdicts) {
             decl.stub_resolution = verdict;
@@ -38,6 +48,7 @@ pub(super) fn resolve_stubs(schema: &Schema, frame: Frame<'_>, findings: &mut Ca
     }
     // §AR-scanner.2.8: a target read here is sliced from its record like any scanned file.
     findings.files.extend(targets.files);
+    findings.excluded_stub_target_notes.extend(notes);
 }
 
 /// The verdict on `stub`, asked in the order of §AR-scanner.4.6; `None` for a
@@ -48,6 +59,7 @@ fn resolve_stub(
     stub: &Declaration,
     decls: &[Declaration],
     targets: &mut UnwalkedTargets<'_>,
+    notes: &mut Vec<ExcludedStubTargetNote>,
 ) -> Option<StubResolution> {
     let target = stub.defined_in.as_ref().filter(|_| stub.is_stub)?;
     // §FS-scan.text.buffer-only: a buffer with no file behind it is there.
@@ -82,6 +94,19 @@ fn resolve_stub(
             Some(records) => records,
             None => return Some(StubResolution::NotRead),
         };
+        // §FS-declarations.stubs.target.3: a target the walk did not read keeps its
+        // verdict until 0.19.0, and warns where it pairs.
+        if !walked.is_empty()
+            && let Some(rule) = targets.excluding_rule(&resolved)
+        {
+            notes.push(ExcludedStubTargetNote {
+                file: stub.file.clone(),
+                line: stub.line,
+                id: id.clone(),
+                target: target.clone(),
+                rule,
+            });
+        }
     }
     walked.sort_by_key(|decl| decl.line);
     Some(if walked.is_empty() {
@@ -98,18 +123,32 @@ fn resolve_stub(
 struct UnwalkedTargets<'a> {
     schema: &'a Schema,
     frame: Frame<'a>,
+    roots: &'a [PathBuf],
     read: BTreeMap<PathBuf, Option<BTreeMap<Id, Vec<Declaration>>>>,
+    excluded: BTreeMap<PathBuf, Option<ExcludingRule>>,
     files: BTreeMap<PathBuf, Arc<FileRecord>>,
 }
 
 impl<'a> UnwalkedTargets<'a> {
-    fn new(schema: &'a Schema, frame: Frame<'a>) -> Self {
+    fn new(schema: &'a Schema, frame: Frame<'a>, roots: &'a [PathBuf]) -> Self {
         Self {
             schema,
             frame,
+            roots,
             read: BTreeMap::new(),
+            excluded: BTreeMap::new(),
             files: BTreeMap::new(),
         }
+    }
+
+    /// The `exclude` entry or ignore-file rule that keeps the walk from `path`, asked
+    /// once per target (§FS-declarations.checks.excluded-stub-target).
+    fn excluding_rule(&mut self, path: &Path) -> Option<ExcludingRule> {
+        let (schema, frame, roots) = (self.schema, self.frame, self.roots);
+        self.excluded
+            .entry(physical_path_key(path))
+            .or_insert_with(|| excluding_rule(schema, frame, roots, path))
+            .clone()
     }
 
     /// The declarations of `id` in `path` that are not stubs, or `None` where the

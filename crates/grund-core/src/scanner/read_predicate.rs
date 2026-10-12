@@ -9,18 +9,22 @@
 //! filter of each directory. A file that exists only as a buffer, which the
 //! walk never meets on disk, is read or skipped by `unread`, exactly as the
 //! saved file would be (§AR-system.2.13). A stub's target asks
-//! `name_refusal` alone, the two reasons §FS-declarations.stubs.target.3
-//! honours. And a link the walker could not resolve asks `name_refusal` or
+//! `name_refusal` for its verdict, the two reasons §FS-declarations.stubs.target.3
+//! honours, and `excluding_rule` for the warning that the exclude and ignore-file
+//! reasons decide it from grund 0.19.0. And a link the walker could not resolve asks `name_refusal` or
 //! `directory_refusal`, with `ignored`, whether the walk would have read it
 //! (§FS-config.3.5.6), since the walker filters no error entry itself.
 
 use std::path::{Component, Path, PathBuf};
 
-use ignore::{Match, WalkBuilder, gitignore::GitignoreBuilder};
+use ignore::{
+    Match, WalkBuilder,
+    gitignore::{GitignoreBuilder, Glob},
+};
 
 use super::walk::WalkDirFilter;
 use crate::config::{Frame, Schema, canonical_config_root};
-use crate::model::is_hidden;
+use crate::model::{ExcludingRule, format_path, is_hidden};
 use crate::sources::{
     canonicalize_existing_prefix, path_exists, path_is_dir, path_is_entry, path_is_file,
     path_is_symlink, read_git_metadata,
@@ -73,14 +77,92 @@ pub(crate) fn name_refusal(path: &Path, schema: &Schema) -> Option<Unread> {
 /// directory, and a looping link the walker reports instead of yielding asks it
 /// of the link.
 pub(crate) fn directory_refusal(path: &Path, exclude: &[String]) -> Option<Unread> {
-    if is_hidden(path) {
-        return Some(Unread::ExcludedDirectory);
-    }
+    (is_hidden(path) || excluded_entry(path, exclude).is_some())
+        .then_some(Unread::ExcludedDirectory)
+}
+
+/// The `[scan] exclude` entry that names `path`'s own directory name
+/// (§FS-config.3.5.16), as the list writes it.
+fn excluded_entry<'a>(path: &Path, exclude: &'a [String]) -> Option<&'a str> {
     let name = path.file_name().and_then(|name| name.to_str())?;
     exclude
         .iter()
-        .any(|item| item == name)
-        .then_some(Unread::ExcludedDirectory)
+        .find(|item| *item == name)
+        .map(String::as_str)
+}
+
+/// The `[scan] exclude` entry or ignore-file rule that keeps the walk from reading a
+/// stub's target, which until grund 0.19.0 is a warning and not a verdict
+/// (§FS-declarations.stubs.target.3, §FS-declarations.checks.excluded-stub-target).
+/// Asked as the walk asks it, from the config root in place of `include` and from each
+/// of `roots`, so a root that reads the target outruns the rule (§FS-scan.scope.roots);
+/// the config root's answer names the rule. A target outside the config root is no
+/// reason, and nor is a hidden directory, another project or an unwalked home
+/// (§AR-scanner.1.13).
+pub(crate) fn excluding_rule(
+    schema: &Schema,
+    frame: Frame<'_>,
+    roots: &[PathBuf],
+    path: &Path,
+) -> Option<ExcludingRule> {
+    let file = canonicalize_existing_prefix(path);
+    let physical_root = canonical_config_root(frame.root());
+    if !file.starts_with(&physical_root) {
+        return None;
+    }
+    let mut refusal = None;
+    let roots = roots.iter().map(|root| canonicalize_existing_prefix(root));
+    for root in std::iter::once(physical_root.clone()).chain(roots) {
+        let Ok(relative) = file.strip_prefix(&root) else {
+            continue;
+        };
+        let rule = excluding_rule_under(schema, &physical_root, &root, relative)?;
+        refusal.get_or_insert(rule);
+    }
+    refusal
+}
+
+/// `excluding_rule` for one root `relative` lies below: the first rule met on the way
+/// down, and at one directory the `exclude` entry before the ignore files, the
+/// walk's own order (§FS-declarations.checks.excluded-stub-target).
+fn excluding_rule_under(
+    schema: &Schema,
+    physical_root: &Path,
+    root: &Path,
+    relative: &Path,
+) -> Option<ExcludingRule> {
+    let names: Vec<_> = relative
+        .components()
+        .filter_map(|component| match component {
+            Component::Normal(name) => Some(name),
+            _ => None,
+        })
+        .collect();
+    let mut path = root.to_path_buf();
+    for (depth, name) in names.iter().enumerate() {
+        path.push(name);
+        let is_dir = depth + 1 < names.len();
+        // §FS-declarations.stubs.target.3: a hidden directory is no reason in this release.
+        if is_dir
+            && !is_hidden(&path)
+            && let Some(entry) = excluded_entry(&path, &schema.sources.exclude)
+        {
+            return Some(ExcludingRule::Exclude(entry.to_string()));
+        }
+        if schema.sources.respect_gitignore
+            && let Some(ignored) = ignoring_rule(&path, is_dir)
+        {
+            let file = ignored
+                .file
+                .strip_prefix(physical_root)
+                .map_or_else(|_| format_path(&ignored.file), format_path);
+            return Some(ExcludingRule::IgnoreFile {
+                file,
+                pattern: ignored.pattern,
+            });
+        }
+    }
+    None
 }
 
 /// Whether the walk from `roots` reads `path`, and which rule refuses it where
@@ -164,67 +246,93 @@ fn under_root(
 /// where it is not, the same files are
 /// matched against the name in the walker's order of precedence.
 pub(super) fn ignored(path: &Path, is_dir: bool) -> bool {
-    let Some(parent) = path.parent() else {
-        return false;
-    };
-    if path_is_entry(path) {
-        let mut builder = WalkBuilder::new(parent);
-        builder.hidden(false).max_depth(Some(1)).follow_links(false);
-        return !builder
-            .build()
-            .filter_map(Result::ok)
-            .any(|entry| entry.path() == path);
-    }
-    ignored_by_rules(path, is_dir)
+    walker_ignores(path).unwrap_or_else(|| ignored_by_rules(path, is_dir).is_some())
 }
 
-/// The walker's precedence for a name with nothing on disk: `.ignore` files,
-/// deepest first; then, inside a git repository, its `.gitignore` files up to
+/// The ignore file and the line of it that drop `path`, for a reader that names the
+/// rule (§FS-declarations.checks.excluded-stub-target): the rule `ignored` matches,
+/// kept only where the walker, asked of an entry on disk, drops it too.
+fn ignoring_rule(path: &Path, is_dir: bool) -> Option<IgnoredBy> {
+    let rule = ignored_by_rules(path, is_dir)?;
+    (walker_ignores(path) != Some(false)).then_some(rule)
+}
+
+/// The walker's own answer for an entry on disk, `None` where nothing is there.
+fn walker_ignores(path: &Path) -> Option<bool> {
+    let Some(parent) = path.parent() else {
+        return Some(false);
+    };
+    if !path_is_entry(path) {
+        return None;
+    }
+    let mut builder = WalkBuilder::new(parent);
+    builder.hidden(false).max_depth(Some(1)).follow_links(false);
+    Some(
+        !builder
+            .build()
+            .filter_map(Result::ok)
+            .any(|entry| entry.path() == path),
+    )
+}
+
+/// An ignore file's rule that drops a path: the file and the line as written.
+struct IgnoredBy {
+    file: PathBuf,
+    pattern: String,
+}
+
+/// What one matcher decides: `None` where it says nothing, `Some(None)` where it
+/// whitelists, `Some(Some(rule))` where `rule` ignores.
+fn decision(found: Match<&Glob>) -> Option<Option<IgnoredBy>> {
+    match found {
+        Match::Ignore(glob) => Some(Some(IgnoredBy {
+            file: glob.from().map(Path::to_path_buf).unwrap_or_default(),
+            pattern: glob.original().to_string(),
+        })),
+        Match::Whitelist(_) => Some(None),
+        Match::None => None,
+    }
+}
+
+/// The walker's precedence for a name, and the rule that ignores it: `.ignore`
+/// files, deepest first; then, inside a git repository, its `.gitignore` files up to
 /// the repository root, its `info/exclude`, and the global excludes.
-fn ignored_by_rules(path: &Path, is_dir: bool) -> bool {
+fn ignored_by_rules(path: &Path, is_dir: bool) -> Option<IgnoredBy> {
     let dirs: Vec<&Path> = path
         .ancestors()
         .skip(1)
         .filter(|dir| path_is_dir(dir))
         .collect();
     let repository = dirs.iter().position(|dir| path_exists(&dir.join(".git")));
-    let matched = |dir: &Path, file: PathBuf| -> Match<bool> {
+    let matched = |dir: &Path, file: PathBuf| -> Option<Option<IgnoredBy>> {
         if !path_is_file(&file) {
-            return Match::None;
+            return None;
         }
         let mut builder = GitignoreBuilder::new(dir);
         if builder.add(&file).is_some() {
-            return Match::None;
+            return None;
         }
-        builder.build().map_or(Match::None, |matcher| {
-            matcher.matched(path, is_dir).map(|_| true)
-        })
-    };
-    let decided = |found: Match<bool>| match found {
-        Match::Ignore(_) => Some(true),
-        Match::Whitelist(_) => Some(false),
-        Match::None => None,
+        let matcher = builder.build().ok()?;
+        decision(matcher.matched(path, is_dir))
     };
     for dir in &dirs {
-        if let Some(verdict) = decided(matched(dir, dir.join(".ignore"))) {
+        if let Some(verdict) = matched(dir, dir.join(".ignore")) {
             return verdict;
         }
     }
-    let Some(repository) = repository else {
-        return false;
-    };
+    let repository = repository?;
     for dir in &dirs[..=repository] {
-        if let Some(verdict) = decided(matched(dir, dir.join(".gitignore"))) {
+        if let Some(verdict) = matched(dir, dir.join(".gitignore")) {
             return verdict;
         }
     }
     let top = dirs[repository];
-    if let Some(verdict) = decided(matched(top, git_dir(top).join("info/exclude"))) {
+    if let Some(verdict) = matched(top, git_dir(top).join("info/exclude")) {
         return verdict;
     }
     let cwd = std::env::current_dir().unwrap_or_else(|_| top.to_path_buf());
     let (global, _) = GitignoreBuilder::new(cwd).build_global();
-    global.matched(path, is_dir).is_ignore()
+    decision(global.matched(path, is_dir)).flatten()
 }
 
 /// The repository's common git directory: `.git` itself, or for a worktree the

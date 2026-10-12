@@ -31,6 +31,7 @@
 //! sources does (§AR-system.5).
 
 mod e2e;
+mod excluded_stub_targets;
 mod expected;
 mod failure;
 mod file_record;
@@ -64,6 +65,7 @@ pub use values::{
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
+pub(crate) use excluded_stub_targets::{ExcludedStubTargetNote, ExcludingRule};
 pub(crate) use file_record::{
     BlockForm, FileRecord, FileRecords, FileText, HeadingKind, LineZone, RecordedBlock,
     RecordedHeading,
