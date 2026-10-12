@@ -50,13 +50,10 @@ $ grund check
 </table>
 <!-- grund:fmt on -->
 
-`grund` gives specs stable IDs, lets code cite them, and checks those citations in CI.
-Agents retrieve the section they need before editing ([§GRUND-grund](docs/grund.md#grund-grund-agents-stay-grounded-in-the-spec)).
-
 ## Default structure
 
-`grund init` lays a project out in layers, each answering one question, and each
-layer cites the one that explains it:
+`grund init` lays a project out in layers, each citing the one that explains it, under
+rules it writes commented out in `grund.toml` until you adopt them:
 
 |           | Kind        | Home                            | Cites                                  |
 |-----------|-------------|---------------------------------|----------------------------------------|
@@ -71,25 +68,32 @@ layer cites the one that explains it:
 |           | DA          | `docs/decisions/architectural/` | should cite AR or FS                   |
 | Plan      | RM          | `docs/roadmap.md`               |                                        |
 
-Kinds and homes are what `init` writes to `grund.toml`. The rules are the canonical
-ruleset it writes commented out under `[citations]`; uncomment it to enforce them. A
-**must** or **never** is a `grund check` error, and a should or avoid is a suggestion
-(`grund check --suggestions`). Kinds, homes and rules are yours to change: the
-[structure guide](docs/user-facing/structure.md) covers kinds, homes and the ID grammar,
-and [citation directions](docs/user-facing/citation-directions.md) the `[citations]`
-grammar.
+## Agent instructions
 
-- **Structure:** define your kinds of fact, their homes and their IDs in `grund.toml`; retrieve one section at a time ([§GRUND-schema](docs/grund.md#grund-schema-the-shape-of-a-projects-knowledge-is-hard-to-define-and-to-keep)).
-- **Checks:** catch broken citations and violations of your declared rules in pre-commit and CI ([§GRUND-links](docs/grund.md#grund-links-the-cross-linking-rules-are-hard-to-define-and-to-hold)).
+`init` also writes the structure into your agent's instructions, a managed block in
+`AGENTS.md` that `grund init --check` keeps current. From [ours](AGENTS.md), how an
+agent reads a citation:
 
-**A valid citation does not prove the code implements the requirement.** Returning
-`username` unchanged would still pass `grund check`; tests and review verify behavior.
-It does let an agent verify that quickly and cheaply — the requirement is one lookup
-away from the code — and keep the repository consistent as both change.
-[Lychee](https://lychee.cli.rs/) checks ordinary links; both belong in CI
-([§GRUND-links.2](docs/grund.md#2-holding-every-edit-to-them)). The
-[requirements-traceability comparison](docs/related-work/REL-traceability-tools.md#workmatrix-reader-tasks)
-sets `grund` beside the tools it descends from.
+> A `§<ID>` is a pointer to a fact, not a file path. Resolve it with `grund` and climb only as far as needed:
+>
+> - `grund <ID>` — the lead (heading-less, cut at the first child section). The cheap first read for a bare `§<ID>` citation.
+> - `grund <ID> --toc` — the lead plus the nested section map. Use to choose which subsection to fetch next.
+> - `grund <ID> --full` — the entire body. Escalate to this when narrower reads aren't enough.
+
+How it writes:
+
+> - **Spec first.** For behavior or design changes, write or update the most-specific spec point before code.
+> - **Cite as you write.** Place `§<ID>` at the point a claim or behavior is made — on the doc-comment for a whole behavior, inline beside the clause it enforces.
+> - …
+> - **Always cite the most-specific point.**
+
+And the table's rules, as it reads them:
+
+> `must`/`never` are `grund check` errors; `should`/`avoid` are suggestions (`grund check --suggestions`). …
+>
+> - Each **FS** declaration should cite GOAL or FS; never cite AR.
+> - …
+> - Each file in **tests/e2e/** must cite FS; avoid citing AR.
 
 ## Quick start
 
@@ -129,6 +133,18 @@ One rule in an agent's instructions keeps that loop: *when you see `§<ID>`, run
 fetches the same bytes for the same ID. [Querying grund](docs/user-facing/querying.md)
 has the recipes past this ladder; [coordinate sizes](docs/user-facing/coordinate-sizes.md)
 shows how to find and split a lead that grew too heavy.
+
+- **Structure:** define your kinds of fact, their homes and their IDs in `grund.toml`; retrieve one section at a time ([§GRUND-schema](docs/grund.md#grund-schema-the-shape-of-a-projects-knowledge-is-hard-to-define-and-to-keep)).
+- **Checks:** catch broken citations and violations of your declared rules in pre-commit and CI ([§GRUND-links](docs/grund.md#grund-links-the-cross-linking-rules-are-hard-to-define-and-to-hold)).
+
+**A valid citation does not prove the code implements the requirement.** Returning
+`username` unchanged would still pass `grund check`; tests and review verify behavior.
+It does let an agent verify that quickly and cheaply — the requirement is one lookup
+away from the code — and keep the repository consistent as both change.
+[Lychee](https://lychee.cli.rs/) checks ordinary links; both belong in CI
+([§GRUND-links.2](docs/grund.md#2-holding-every-edit-to-them)). The
+[requirements-traceability comparison](docs/related-work/REL-traceability-tools.md#workmatrix-reader-tasks)
+sets `grund` beside the tools it descends from.
 
 ## Go deeper
 
