@@ -39,7 +39,7 @@ use agreement_buffers as buffers;
 use agreement_identity as identity;
 use agreement_sections as sections;
 use agreement_stubs as stubs;
-use agreement_tree::{Verdict, grund, json_lines, stdout};
+use agreement_tree::{Verdict, grund, json_lines, listed_steps, stdout};
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -251,20 +251,6 @@ const WIDENING: &[(&str, &str)] = &[(
      and `cover`, the editor snapshot and the bindings as surfaces",
     "S4",
 )];
-
-/// The steps of #576 a deferred row or a widening may name: the ids of
-/// `tests/integration/one_answer_steps.toml`, the one list of the live steps
-/// (§REQ-one-answer.proof), read off its `id = "…"` lines.
-fn listed_steps() -> BTreeSet<String> {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../tests/integration/one_answer_steps.toml");
-    let text = fs::read_to_string(path).expect("read one_answer_steps.toml");
-    text.lines()
-        .filter_map(|line| line.strip_prefix("id = \""))
-        .filter_map(|rest| rest.strip_suffix('"'))
-        .map(str::to_string)
-        .collect()
-}
 
 /// The families of `tests/e2e/cases/` whose first plain project is sampled.
 const SAMPLED_FAMILIES: &[&str] = &[
