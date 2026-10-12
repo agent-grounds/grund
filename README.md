@@ -142,20 +142,23 @@ when you want scaffolds.
 [Installation](docs/user-facing/installation.md) covers prebuilt binaries, supported
 platforms, the Python and Node APIs, and local candidate builds.
 
-## Citation format
+## Declaration format
 
-```plaintext
-     ┌─────────────────── citation ───────────────────┐
-            ┌───────────── ID ───────────────┐
-  [§] [alias /] KIND - [number -] slug [.section]
-   │     │        │       │         │       │
-   │     │        │       │         │       └─ dotted path (.3, .3.1, .format, …)
-   │     │        │       │         └───────── [a-z0-9][a-z0-9-]*  (default slug_pattern)
-   │     │        │       └─────────────────── optional ordinal (e.g., 001)
-   │     │        └─────────────────────────── GRUND│GOAL|FS│AR│DF│DA│RM│[custom]
-   │     └──────────────────────────────────── project alias for subprojects or monorepo
-   └────────────────────────────────────────── citation marker (writing only)
+A heading `# <ID>: <title>` in the kind's home declares an ID. The headings under it
+are its sections, each at the depth its path names: numbered, or named once
+`[id] named_sections = true` is set. This README's own requirement mixes both:
+
+```markdown
+# REQ-readme: the README is the grounded shop window
+…
+## 1. What it must say
+…
+### 1.1 The loop
+…
+## evidence: Positioning and performance claims have evidence
 ```
+
+They are cited as [§REQ-readme.1.1](docs/requirements/REQ-readme.md#11-the-loop) and [§REQ-readme.evidence](docs/requirements/REQ-readme.md#evidence-positioning-and-performance-claims-have-evidence).
 
 A declaration can also live in code: a doc-comment that opens with the ID declares it,
 and a link from the kind's index enrolls it with no stub file
@@ -172,8 +175,104 @@ pub(crate) fn check_on_disk(
 ```
 
 `grund AR-checker` prints that prose without the `///` markers
-([§FS-show.2.3](docs/functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments)). The [structure guide](docs/user-facing/structure.md) covers the
-three ID schemes, the rest of the citation syntax, and inline declarations.
+([§FS-show.2.3](docs/functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments)).
+
+## Citation format
+
+```plaintext
+     ┌─────────────────── citation ───────────────────┐
+            ┌───────────── ID ───────────────┐
+  [§] [alias /] KIND - [number -] slug [.section]
+   │     │        │       │         │       │
+   │     │        │       │         │       └─ dotted path (.3, .3.1, .format, …)
+   │     │        │       │         └───────── [a-z0-9][a-z0-9-]*  (default slug_pattern)
+   │     │        │       └─────────────────── optional ordinal (e.g., 001)
+   │     │        └─────────────────────────── GRUND│GOAL|FS│AR│DF│DA│RM│[custom]
+   │     └──────────────────────────────────── project alias for subprojects or monorepo
+   └────────────────────────────────────────── citation marker (writing only)
+```
+
+The [structure guide](docs/user-facing/structure.md) covers the three ID schemes and
+the rest of the citation syntax.
+
+## Workspaces
+
+A monorepo of independently checked projects is a workspace: each member keeps its
+own `grund.toml` and its own IDs, the root lists the members, and a citation that
+crosses a project boundary names the target's alias. From the
+[workspace example](examples/workspace/), the root's `grund.toml` and a member's spec:
+
+```toml
+project_name = "root"
+…
+[workspace]
+members = ["packages/*"]
+include_root = true
+```
+
+```markdown
+# FS-session: API session
+
+The API session model lives in this project. The platform-level coordinator
+is §root/FS-platform.
+```
+
+`grund check` at the root checks every member, each in its own namespace
+([§FS-workspace](docs/functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace)).
+
+## External facts
+
+A ticket from GitHub, Jira, or Linear is cited like any spec once a kind names the
+executable that fetches it. `grund fetch <ID>` saves it as a declaration in the
+repository; every other command reads that committed snapshot offline
+([§FS-fetch](docs/functional-spec/FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)). From the [external-tickets example](examples/external-tickets/):
+
+```toml
+[[kinds]]
+kind = "TICKET"
+file = "docs/tickets.md"
+format = "{kind}-{number}"
+resolve = "should"
+fetch = "scripts/fetch-ticket"
+```
+
+```bash
+$ grund check
+docs/guide.md:3: warning: no snapshot for TICKET-1234 in docs/tickets.md — run grund fetch TICKET-1234
+$ grund fetch TICKET-1234
+$ grund TICKET-1234
+The issue requests committed snapshots that resolve offline.
+```
+
+The [external facts guide](docs/user-facing/external-facts.md) has the fetch contract
+and a GitHub integration to start from.
+
+## Values
+
+A number a spec declares can be checked wherever it is used. With `values = true` on a
+kind, a declaration's numbered headings are its components, and a backticked literal
+beside a citation must equal them
+([§FS-values](docs/functional-spec/FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)). From the [values example](examples/values/):
+
+```markdown
+# CONST-field-price: Reference field price
+## 1. 1200
+## 2. USD
+```
+
+```markdown
+The reference field price is `1200.0 USD` (§CONST-field-price).
+```
+
+A use that drifts from its declaration fails the check:
+
+```bash
+$ grund check
+docs/offer.md:7: error: value mismatch for CONST-discount.1: bound `0.30`, declared `0.25` at values/runtime.json:2
+```
+
+The [values guide](docs/user-facing/values.md) covers JSON declarations, values inside
+prose specs, and bindings in code comments.
 
 ## Make citations clickable
 
