@@ -160,7 +160,8 @@ this requirement, was found later, on `e8c40221d7`, and is added by amendment.
 - **P12.** In a doc-comment, ownership continues a section past a duplicate heading that
   ends it for `show`. R.
 - **P16.** The editor snapshot's span for a C-family section keeps `*/`, the `--toc` title
-  does not; the core fields only. R.
+  does not; the core fields only. R. Ruled by [§DF-fmt-and-editor-answers-from-0-19](../decisions/functional/DF-fmt-and-editor-answers-from-0-19.md#df-fmt-and-editor-answers-from-0-19-fmts-link-wrapper-and-the-editors-title-span-change-in-0190-after-a-release-that-announces-them), which
+  moves it in 0.19.0.
 
 ### differences.stubs: Stubs
 

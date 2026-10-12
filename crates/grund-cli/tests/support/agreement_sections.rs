@@ -1,8 +1,9 @@
 //! The trees of `command_agreement.rs` for which sections a declaration has and
 //! which anchor a link takes: the reproduced row r3 of #576, and the rows of
-//! §REQ-one-answer.differences.sections the command line can show.
+//! §REQ-one-answer.differences.sections the command line or the editor snapshot can show.
 
 use super::agreement_tree::{CONFIG_SLUG, Tree, Verdict, agree, json_lines, stdout};
+use grund_core::{LspSnapshotOpts, lsp_snapshot};
 use serde_json::Value;
 use std::fs;
 
@@ -226,5 +227,44 @@ pub fn a_doc_comment_section_ends_at_a_duplicate() -> Verdict {
         "show FS-b.2 holds line 15 / refs places its citation in section 2",
         body_holds(&tree, "FS-b.2", "Again cites"),
         citation_on(&tree, "FS-b", 15)["enclosing_section"] == "2",
+    )
+}
+
+/// Row P16: the editor snapshot's span for a C-family section title ends where
+/// the `--toc` title ends, its `*/` left out as comment envelope
+/// (§REQ-one-answer.sections.map, §FS-lsp.1.3.4,
+/// §FS-languages.comment-wrapper.headings). Ruled by
+/// §DF-fmt-and-editor-answers-from-0-19, so the row reproduces until 0.19.0.
+pub fn a_section_title_span_is_the_toc_title() -> Verdict {
+    let tree = Tree::new(
+        "p16-block-comment-title-span",
+        &[
+            ("grund.toml", CONFIG_FOLDER),
+            (
+                "src/a.c",
+                "/**\n * FS-y: The y spec\n *\n * The lead.\n * ## 1. One */\nint y(void) { return 0; }\n",
+            ),
+        ],
+    );
+    let title = first(&tree, &["FS-y", "--toc", "--format", "json"])["sections"][0]["title"]
+        .as_str()
+        .unwrap_or("")
+        .to_string();
+    let snapshot = lsp_snapshot(LspSnapshotOpts {
+        path: tree.0.clone(),
+        path_provided: true,
+        ..LspSnapshotOpts::default()
+    })
+    .expect("editor snapshot");
+    let span = snapshot
+        .sections
+        .iter()
+        .find(|section| section.query_id == "FS-y.1")
+        .map(|section| section.text.clone())
+        .unwrap_or_default();
+    agree(
+        "the editor's span for FS-y.1 / `1. ` and the --toc title",
+        span,
+        format!("1. {title}"),
     )
 }

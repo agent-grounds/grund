@@ -40,6 +40,8 @@ The rendered view of a citation — `[§ID](path#anchor)` — and who owns it.
 - [§DF-stub-heading-from-unscanned-target](DF-stub-heading-from-unscanned-target.md#df-stub-heading-from-unscanned-target-a-bare-id-link-through-a-stub-anchors-on-its-targets-heading-whether-or-not-the-scan-reaches-it) — a bare-ID link through a stub anchors on its target's heading whether or not the scan reaches it
 - [§DF-show-cross-ref-flattening](DF-show-cross-ref-flattening.md#df-show-cross-ref-flattening-grund-show-flattens-cross-reference-link-wrappers) — grund show flattens cross-reference link wrappers
 - [§DF-fmt-suppression](DF-fmt-suppression.md#df-fmt-suppression-fmt-suppression-is-per-file-and-per-region-and-the-index-carve-out-outranks-both) — fmt suppression is per file and per region, and the index carve-out outranks both
+- [§DF-fmt-never-writes-into-a-link-destination](DF-fmt-never-writes-into-a-link-destination.md#df-fmt-never-writes-into-a-link-destination-fmt-never-writes-into-a-link-destination-it-does-not-maintain) — `fmt` never writes into a link destination it does not maintain
+- [§DF-fmt-and-editor-answers-from-0-19](DF-fmt-and-editor-answers-from-0-19.md#df-fmt-and-editor-answers-from-0-19-fmts-link-wrapper-and-the-editors-title-span-change-in-0190-after-a-release-that-announces-them) — `fmt`'s link wrapper and the editor's title span change in 0.19.0, after a release that announces them
 
 ## The index a folder kind keeps
 
