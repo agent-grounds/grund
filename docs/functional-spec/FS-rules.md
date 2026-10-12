@@ -612,8 +612,10 @@ and never affect exit status. Structural recommendations retain their
 structural code on that channel. The one rule finding that was a warning is an
 error from 0.16.0 ([§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160)); the only rule findings that are
 warnings now are those a newly counted section citation alone produces, until
-0.18.0 ([§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)), and those a target pinned at the rule's own nested
-alias path alone produces, until 0.18.0 ([§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0180)).
+0.18.0 ([§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)), those a target pinned at the rule's own nested
+alias path alone produces, until 0.18.0 ([§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0180)), and those of a rule
+declared through a stub whose target the scan does not read, until 0.19.0
+([§FS-rules.7.10](FS-rules.md#710-a-rule-declared-through-a-stub-warns-until-0190)).
 
 ### 7.1 Invalid rule
 
@@ -837,6 +839,45 @@ names both.
 At `0.18.0` these findings become errors on the ordinary `must` channel, and
 this subsection becomes a pointer as [§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160) did. The decision and its
 compatibility route are [§DF-nested-alias-rule-targets](../decisions/functional/DF-nested-alias-rule-targets.md#df-nested-alias-rule-targets-a-rule-target-pinned-at-its-own-nested-alias-matches-like-the-bare-kind).
+
+### 7.10 A rule declared through a stub warns until 0.19.0
+
+A rule's sentence and rationale are read from the declaration its ID pairs
+with ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), so a rule written as a stub in its
+kind's home is the rule its target declares, the sentence `grund <ID> --brief`
+prints. Before this release `check` read the stub's own heading instead, whose
+title is a link, and reported `<ID> is not a valid rule: rule declaration has
+no title` at the stub, `invalid-rule`, whether or not the scan reached the
+target. That error goes in the release that ships the change: removing it
+breaks no run.
+
+Where the target is outside `[scan] include`, the rule then applies for the
+first time, and every required-level finding it produces is carried on the
+warnings channel rather than the errors channel until 0.19.0, so a run that
+passed with `--ignore invalid-rule` still passes. The warning is the error's
+message unchanged, followed by `; a rule declared through a stub now applies,
+and this warning becomes an error in grund 0.19.0`, the pending clause of
+[§FS-distribution.4.2.3](FS-distribution.md#423-the-vocabulary-is-closed)'s closed vocabulary:
+
+```text
+docs/fs/a.md:3: warning: FS must not cite GOAL (RULE-r) — re-point the citation or downgrade it to a plain Markdown link; a rule declared through a stub now applies, and this warning becomes an error in grund 0.19.0
+```
+
+Where the scan reads the target, the rule already applied from the declaration
+the walk read there, and its findings stay errors: that tree loses the false
+`invalid-rule` and nothing else. A rule declared inline is unchanged. A
+target whose sentence is itself no rule is `invalid-rule` for the reason the
+rule's own text gives, as an inline rule is, at the line the error is reported
+at today, the stub's. The finding keeps the code it will carry as an error,
+leaves the exit status where the rest of the run put it, and at the
+recommended level is an ordinary suggestion that owes no ramp, all as in
+[§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180). A finding that also qualifies under [§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180) or
+[§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0180) stays a warning until the latest of their releases and carries
+each clause it qualifies for, in the order of these subsections.
+
+At `0.19.0` these findings become errors on the ordinary `must` channel, and
+this subsection becomes a pointer as [§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160) did. The decision and its
+compatibility route are [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190).
 
 ## 8. Command surfaces
 

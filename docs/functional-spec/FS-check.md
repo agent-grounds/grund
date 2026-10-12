@@ -458,17 +458,8 @@ attempt rather than prose ([§FS-values.3.1.1](FS-values.md#311-invalid-attempts
 declaration-local rewrite that declines an absent section ([§FS-fmt.2.4.6](FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)) with the command clause
 it withholds there ([§FS-check.3.24.1](FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)).
 
-Nothing else moves. A section the target does not declare is reported as before, in the same
-words — `missing section <ID>.<path>` for a numeric path — and under the same `missing-section`
-code. A broken stub
-([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)) pairs with nothing and gains no section: it keeps its
-broken-stub finding, and a citation of one of its sections is `missing section` as before. A
-target that declares the ID more than once pairs as `show` refuses it, ambiguously
-([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), and lends no section, and so does every target of an ID with more than one home
-([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)). The target is read only to answer a citation into it, so what `check`
-judges of the home itself stays as it was outside the scan: its declaration, the citations it
-makes, and its chapters as a rule's subjects or in a rule's count of chapters
-([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path), [§FS-rules.3.1](FS-rules.md#31-chapter-presence)).
+What else a target outside the include gives the stub, a section it declares twice included,
+and what of it stays unjudged, is [§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged).
 Decided in [§DF-stub-sections-from-unscanned-target](../decisions/functional/DF-stub-sections-from-unscanned-target.md#df-stub-sections-from-unscanned-target-a-stubs-sections-are-its-targets-whether-or-not-the-scan-reaches-it).
 
 ### 3.3 Duplicate declaration

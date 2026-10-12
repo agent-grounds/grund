@@ -164,21 +164,30 @@ this requirement, was found later, on `e8c40221d7`, and is added by amendment.
 
 ### differences.stubs: Stubs
 
+U01 and U05 closed with [§DF-stub-target-section-declared-twice](../decisions/functional/DF-stub-target-section-declared-twice.md#df-stub-target-section-declared-twice-a-section-a-stubs-target-declares-twice-is-reported-where-it-is-written-scanned-or-not) and
+[§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190). U07 and U08, differences that predate this
+requirement, were found later, on `94c23bc85b`, and are added by amendment; U04's text was
+corrected on the same baseline.
+
 - **Placement.** For a healthy stub to a target outside the include, `list` shows the stub
   and `list --size` the target. R.
-- **U01.** A citation into a section the outside target declares twice passes `check` and
-  is refused by `show`. R.
 - **U03a.** Exhaustive `show --batch` omits the outside target's section direct `show`
   returns. R.
 - **U03b.** Shell completion offers none of the outside target's sections. C.
 - **U03c.** The editor snapshot enumerates none of the outside target's sections. R.
 - **U03d.** `list --selector FS.terms` omits the outside target's section `show` returns. R.
-- **U04.** Citation obligations are not checked on an outside target, and are on the same
-  target scanned. R.
-- **U05.** `check` reports an outside RULE target's title missing, which `show --brief`
-  reads. R.
+- **U04.** Citation obligations on an outside target are judged on the stub's empty record,
+  not on the target as the same tree with it scanned judges them: a prohibition the target's
+  citations break is missed, and an `at least` count they meet is reported at the stub,
+  `FS-x must cite GOAL`, where `src/x.rs:3` cites `GOAL-g`. R, corrected on `94c23bc85b`.
 - **U06.** `check --only unused` places the warning at the stub, `show` places the
   declaration at the target. R.
+- **U07.** A chapter rule counts none of an outside target's chapters: `Each FS must have
+  exactly one Terms chapter.` reports `FS-x has 0 Terms chapters` at the stub, and the same
+  tree with the target scanned passes. R, found on `94c23bc85b`.
+- **U08.** `refs` lists no citation an outside target makes, so the `unused` warning counts
+  none either: `refs GOAL-g` lists nothing, and with the target scanned it lists
+  `src/x.rs:3`. R, found on `94c23bc85b`.
 
 ### differences.text: Text
 
