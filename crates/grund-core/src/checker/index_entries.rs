@@ -9,9 +9,10 @@ use super::index::{KindIndexTarget, declarations_under_folder, kind_index_target
 use crate::config::{Frame, Schema};
 use crate::grammar::never_rewrite_context;
 use crate::model::{
-    Catalog, Citation, Declaration, Id, paired_declarations, physical_path_key,
-    scanned_decl_relative_path, scanned_path_key,
+    Catalog, Citation, Declaration, Id, paired_declarations, scanned_decl_relative_path,
+    scanned_path_key,
 };
+use crate::sources::physical_path_key;
 
 /// The IDs each kind index owes an entry for, keyed by the index's
 /// config-root-relative path (§FS-check.3.18). `folder_owed` preserves the

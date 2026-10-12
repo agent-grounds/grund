@@ -19,9 +19,10 @@ use crate::grammar::{
 };
 use crate::model::{
     Catalog, CheckReport, Citation, Declaration, Diagnostic, Id, configured_home_path_key,
-    paired_declarations, physical_path_key, scanned_decl_relative_path, scanned_path_key,
+    paired_declarations, scanned_decl_relative_path, scanned_path_key,
 };
 use crate::resolver::section_resolves;
+use crate::sources::physical_path_key;
 
 /// One kind's index obligation, resolved against the config root
 /// (§FS-config.3.4). `folder_key` and `index_key` are config-root-relative and

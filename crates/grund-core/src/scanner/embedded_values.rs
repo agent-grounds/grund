@@ -14,8 +14,9 @@ use super::values::{markdown_component, value_declaration_is_in_home};
 use crate::config::{Frame, Schema};
 use crate::model::{
     Catalog, EmbeddedValueRoot, InvalidValueSite, ValueRootOrigin, authored_component,
-    component_text_is_valid, paths_same_location,
+    component_text_is_valid,
 };
+use crate::sources::paths_same_location;
 
 /// Validate every marked section against its physical one-level subtree and
 /// place decoded components on the existing descendant section records

@@ -12,9 +12,10 @@ use super::sizes::check_oversized_leads;
 use crate::config::{Frame, Schema};
 use crate::grammar::render_id;
 use crate::model::{
-    Catalog, CheckReport, Diagnostic, Site, StubResolution, TextOverlays, format_path,
-    paired_declarations, sort_path_key,
+    Catalog, CheckReport, Diagnostic, Site, StubResolution, format_path, paired_declarations,
+    sort_path_key,
 };
+use crate::sources::Buffers;
 
 /// §AR-checker.1.1: duplicate, misplaced-declaration, broken-stub and
 /// declaration-near-miss (§FS-declarations.checks), the section family, inline
@@ -24,7 +25,7 @@ pub(crate) fn conform(
     schema: &Schema,
     catalog: &Catalog,
     frame: Frame<'_>,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
 ) -> CheckReport {
     let mut report = CheckReport::default();
     check_duplicates(catalog, frame, &mut report);

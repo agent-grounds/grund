@@ -12,10 +12,8 @@ use std::path::{Path, PathBuf};
 use super::tree::scan_unwalked_file;
 use super::walk_boundaries::is_scannable;
 use crate::config::{Frame, Schema};
-use crate::model::{
-    Catalog, Declaration, Id, StubResolution, TextOverlays, paths_same_location, physical_path_key,
-    resolve_stub_target,
-};
+use crate::model::{Catalog, Declaration, Id, StubResolution};
+use crate::sources::{Buffers, Sources, paths_same_location, physical_path_key};
 
 /// Reach every stub's verdict once, after the walk, and record it on the stub
 /// (§AR-scanner.4.6): every command reads it from there and none reaches its own
@@ -26,7 +24,7 @@ use crate::model::{
 pub(super) fn resolve_stubs(
     schema: &Schema,
     frame: Frame<'_>,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
     findings: &mut Catalog,
 ) {
     let mut targets = UnwalkedTargets::new(schema, frame, overlays);
@@ -54,14 +52,16 @@ fn resolve_stub(
     targets: &mut UnwalkedTargets<'_>,
 ) -> Option<StubResolution> {
     let target = stub.defined_in.as_ref().filter(|_| stub.is_stub)?;
-    let resolved = resolve_stub_target(frame.root(), &stub.file, target);
-    if !resolved.exists() {
+    // §FS-scan.text.buffer-only: a buffer with no file behind it is there.
+    let sources = Sources::of(targets.overlays);
+    let resolved = sources.stub_target(frame.root(), &stub.file, target);
+    if !sources.exists(&resolved) {
         return Some(StubResolution::Missing);
     }
     // §FS-declarations.checks.broken-stub.3: a file the scan would read wherever it
     // lay, judged by the name the stub wrote before any record is paired with it,
     // so a symlink under a hidden or unlisted name never pairs with its file.
-    if !(resolved.is_file() && is_scannable(&resolved, targets.schema)) {
+    if !(sources.is_file(&resolved) && is_scannable(&resolved, targets.schema)) {
         return Some(StubResolution::NotRead);
     }
     if paths_same_location(&frame.root().join(&stub.file), &resolved) {
@@ -99,12 +99,12 @@ fn resolve_stub(
 struct UnwalkedTargets<'a> {
     schema: &'a Schema,
     frame: Frame<'a>,
-    overlays: &'a TextOverlays,
+    overlays: &'a Buffers,
     read: BTreeMap<PathBuf, Option<BTreeMap<Id, Vec<Declaration>>>>,
 }
 
 impl<'a> UnwalkedTargets<'a> {
-    fn new(schema: &'a Schema, frame: Frame<'a>, overlays: &'a TextOverlays) -> Self {
+    fn new(schema: &'a Schema, frame: Frame<'a>, overlays: &'a Buffers) -> Self {
         Self {
             schema,
             frame,

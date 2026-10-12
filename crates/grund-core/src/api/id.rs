@@ -12,8 +12,9 @@ use std::path::PathBuf;
 
 use super::config::config_run_warnings;
 use crate::config::{KindScope, KindTable, KindVerdict, Quote, display_path};
-use crate::model::{Finding, Id, paths_same_location};
+use crate::model::{Finding, Id};
 use crate::scanner::{e2e_case_dir_name, scan_tree_strict};
+use crate::sources::paths_same_location;
 use crate::workspace::resolve_workspace_config;
 use crate::writers::{format_id, slugify_title};
 

@@ -7,8 +7,9 @@ use std::path::{Path, PathBuf};
 use super::editor_on_type::{docstring_content_at, line_is_rewritable};
 use crate::config::{Config, fmt_excluded};
 use crate::grammar::{in_escape_position, never_rewrite_context_in, parse_id_arg, render_id};
-use crate::model::{canonical_snapshot_path, format_path, paired_declarations, relative_from_base};
+use crate::model::{format_path, paired_declarations, relative_from_base};
 use crate::resolver::WorkspaceContext;
+use crate::sources::canonical_snapshot_path;
 
 #[path = "editor_completion_token.rs"]
 mod token;

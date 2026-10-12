@@ -5,9 +5,10 @@ use super::show::{render_show_output_json, show_declaration_with_overlays};
 use super::show_query::{ShowFormat, ShowOpts, ShowQueryError};
 use crate::config::{display_path, run_warning_findings};
 use crate::grammar::{flatten_cross_ref_links, render_id};
-use crate::model::{Finding, FindingSite, ShowOutput, TextOverlays};
+use crate::model::{Finding, FindingSite, ShowOutput};
 use crate::resolver::{WorkspaceContext, load_workspace_context, with_member_id_candidates};
 use crate::scanner::resolve_id_arg;
+use crate::sources::Buffers;
 use crate::workspace::split_qualified_id_arg;
 
 /// One input coordinate for the CLI-only batch-show adapter
@@ -79,7 +80,7 @@ pub(crate) fn show_batch_data(
                         section: query.section.clone(),
                         ..opts.clone()
                     },
-                    &TextOverlays::new(),
+                    &Buffers::default(),
                     &mut metadata,
                 );
                 match result {
@@ -167,7 +168,7 @@ fn show_batch_run(
                 &context,
                 &query.id,
                 query_opts,
-                &TextOverlays::new(),
+                &Buffers::default(),
             ) {
                 Ok(output) => Ok(output.json.unwrap_or_default()),
                 Err(error) => match batch_query_failure(&error) {
@@ -187,7 +188,7 @@ fn show_batch_query_in_context(
     context: &WorkspaceContext,
     id_arg: &str,
     opts: ShowOpts,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
 ) -> Result<ShowOutput> {
     show_batch_query_with_metadata(
         context,
@@ -202,7 +203,7 @@ fn show_batch_query_with_metadata(
     context: &WorkspaceContext,
     id_arg: &str,
     opts: ShowOpts,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
     metadata: &mut serde_json::Value,
 ) -> Result<ShowOutput> {
     let (alias, raw_id) = split_qualified_id_arg(id_arg)?;

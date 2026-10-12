@@ -16,10 +16,9 @@ use crate::config::{
     CitationDisjunction, CitationTarget, Frame, KindCitationRules, NamespaceMatch, Row, Rules,
     Schema, render_citation_target, row_grounding,
 };
-use crate::model::{
-    Catalog, CheckReport, Citation, Diagnostic, E2eSpecRef, Id, paths_same_location,
-};
+use crate::model::{Catalog, CheckReport, Citation, Diagnostic, E2eSpecRef, Id};
 use crate::scanner::file_home_kind;
+use crate::sources::paths_same_location;
 
 /// How a citing kind is named in a finding (§FS-check.3.11, §FS-check.3.12.1): a
 /// citable kind by its name, which is the prefix of every ID in it; a

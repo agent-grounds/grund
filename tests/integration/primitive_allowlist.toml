@@ -41,11 +41,6 @@ primitives = ["canonicalize", "std::fs"]
 step = "#598"
 
 [[allow]]
-file = "api/lsp_ranges.rs"
-primitives = ["std::fs"]
-step = "#598"
-
-[[allow]]
 file = "api/scope_cautions.rs"
 primitives = [".is_file()", "canonicalize", "std::fs"]
 step = "#595"
@@ -106,21 +101,6 @@ primitives = ["split on /"]
 step = "#599"
 
 [[allow]]
-file = "model/check_inputs.rs"
-primitives = ["canonicalize", "std::fs"]
-step = "#595"
-
-[[allow]]
-file = "model/paths.rs"
-primitives = [".exists()", "canonicalize", "std::fs"]
-step = "#595"
-
-[[allow]]
-file = "model/records.rs"
-primitives = [".exists()"]
-step = "#595"
-
-[[allow]]
 file = "queries/editor_hover.rs"
 primitives = ["split on /"]
 step = "#599"
@@ -129,11 +109,6 @@ step = "#599"
 file = "queries/editor_on_type.rs"
 primitives = ["declaration_id_on_line"]
 step = "#598"
-
-[[allow]]
-file = "resolver/body.rs"
-primitives = ["input_read_"]
-step = "#595"
 
 [[allow]]
 file = "resolver/body.rs"
@@ -183,18 +158,8 @@ primitives = ["split on /"]
 step = "#599"
 
 [[allow]]
-file = "scanner/file_pass.rs"
-primitives = ["input_read_"]
-step = "#595"
-
-[[allow]]
-file = "scanner/stub_homes.rs"
-primitives = [".exists()", ".is_file()"]
-step = "#595"
-
-[[allow]]
 file = "scanner/tree.rs"
-primitives = [".exists()", ".is_file()"]
+primitives = [".is_file()"]
 step = "#595"
 
 [[allow]]

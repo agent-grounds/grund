@@ -53,7 +53,7 @@ pub(crate) fn observe_input(path: &Path, recursive: bool) -> bool {
     } else {
         std::env::current_dir().unwrap_or_default().join(path)
     };
-    let absolute = super::normalize_path_lexically(&absolute);
+    let absolute = crate::model::normalize_path_lexically(&absolute);
     let mut cursor = absolute;
     let mut seen = std::collections::BTreeSet::new();
     // §FS-check.6.1.3: intermediate links can be replaced independently too.
@@ -70,7 +70,7 @@ pub(crate) fn observe_input(path: &Path, recursive: bool) -> bool {
             } else {
                 cursor.parent().unwrap_or(Path::new("/")).join(target)
             };
-            cursor = super::normalize_path_lexically(&cursor);
+            cursor = crate::model::normalize_path_lexically(&cursor);
             continue;
         }
         if let Ok(target) = std::fs::canonicalize(&cursor) {

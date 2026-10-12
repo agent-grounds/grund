@@ -7,8 +7,9 @@
 
 use super::*;
 use crate::config::load_config;
-use crate::model::{Id, ShowRenderMode, TextOverlays};
+use crate::model::{Id, ShowRenderMode};
 use crate::scanner::scan_tree_with_workspace_overlays;
+use crate::sources::Buffers;
 use crate::testing::{test_root, write};
 
 const CONFIG: &str = "grund_config_version = 1\n\n[reference]\nstrict = true\n\n\
@@ -60,7 +61,7 @@ fn unscanned_stub_target_reads_the_overlay_by_its_id() {
     );
     write(&root.join("source.rs"), ON_DISK);
     let config = load_config(&root).expect("load config");
-    let overlays = TextOverlays::from([(config.root.join("source.rs"), UNSAVED.to_string())]);
+    let overlays = Buffers::new([(config.root.join("source.rs"), UNSAVED.to_string())]);
     let (findings, _) = scan_tree_with_workspace_overlays(
         config.schema(),
         config.frame(),

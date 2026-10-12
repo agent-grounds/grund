@@ -1,10 +1,9 @@
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use super::e2e::E2eCase;
 use super::headings::{NearMissHeading, SectionHeadingOutsideDeclaration, UnmarkedHeading};
 use super::line_owners::FileLineOwnership;
-use super::paths::normalize_path_lexically;
 use super::patterns::GlobCitation;
 use super::stub_resolution::StubResolution;
 use super::values::{
@@ -281,8 +280,6 @@ pub struct InlineCitationSite {
     pub layout_violations: Vec<usize>,
 }
 
-pub(crate) type TextOverlays = BTreeMap<PathBuf, String>;
-
 /// Everything the scanner found in one tree walk — the catalog of
 /// §FS-terms.terms.1: declarations grouped by ID (so duplicates surface,
 /// §FS-declarations.checks.duplicate) and citations in encounter order. This
@@ -371,30 +368,6 @@ pub struct ShowOutput {
     pub line: usize,
     pub json: Option<String>,
     pub sections: Vec<ShowSection>,
-}
-
-pub(crate) fn resolve_stub_target(root: &Path, stub_file: &Path, target: &Path) -> PathBuf {
-    if target.is_absolute() {
-        super::observe_input(target, false);
-        return target.to_path_buf();
-    }
-    let stub_file = if stub_file.is_absolute() {
-        stub_file.to_path_buf()
-    } else {
-        root.join(stub_file)
-    };
-    let markdown_relative =
-        normalize_path_lexically(&stub_file.parent().unwrap_or(root).join(target));
-    let root_relative = normalize_path_lexically(&root.join(target));
-    // §FS-check.6.1.1, §FS-check.6.1.3: cover both candidates before selection,
-    // including missing intermediate directories and followed-link anchors.
-    super::observe_input(&markdown_relative, false);
-    super::observe_input(&root_relative, false);
-    if markdown_relative.exists() {
-        markdown_relative
-    } else {
-        root_relative
-    }
 }
 
 /// One Markdown heading outside a fence (§AR-scanner.2.7): its line, its level,

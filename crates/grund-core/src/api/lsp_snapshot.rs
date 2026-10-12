@@ -20,15 +20,14 @@ use super::lsp_report::{editor_report, editor_run_warnings, widen_for_path_ancho
 use super::report::{public_lsp_report, public_lsp_run_warnings};
 use crate::config::{ProjectRecords, display_path};
 use crate::grammar::render_id;
-use crate::model::{
-    Declaration, TextOverlays, canonical_snapshot_path, paired_declarations, sort_path_key,
-};
+use crate::model::{Declaration, paired_declarations, sort_path_key};
 use crate::queries::{
     LspCitation, LspCompletionContext, LspDeclaration, LspFindingRange, LspSnapshot,
     LspSnapshotOpts, LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub,
 };
 use crate::resolver::load_resolved_workspace_context;
 use crate::scanner::api_scan_error;
+use crate::sources::{Buffers, canonical_snapshot_path};
 use crate::workspace::resolve_workspace_config;
 
 /// Programmatic snapshot for `grund-lsp`: all scanner-derived declaration and
@@ -349,9 +348,6 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
     })
 }
 
-pub(super) fn normalized_overlays(overlays: BTreeMap<PathBuf, String>) -> TextOverlays {
-    overlays
-        .into_iter()
-        .map(|(path, text)| (absolutize_path(&path), text))
-        .collect()
+pub(super) fn normalized_overlays(overlays: BTreeMap<PathBuf, String>) -> Buffers {
+    Buffers::new(overlays)
 }

@@ -16,8 +16,9 @@ use crate::checker::{
     path_report_scope, retain_diagnostics_in_report_scope, sort_diagnostics,
 };
 use crate::config::Config;
-use crate::model::{CheckReport, Diagnostic, TextOverlays};
+use crate::model::{CheckReport, Diagnostic};
 use crate::resolver::{WorkspaceCheckTarget, WorkspaceContext};
+use crate::sources::Buffers;
 use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, scope_is_config_root,
     unlisted_workspace_block_errors,
@@ -52,7 +53,7 @@ pub(super) fn widen_for_path_anchor(
 /// scope rather than the walk. A no-op narrowing for a root anchor.
 pub(super) fn editor_report(
     context: &WorkspaceContext,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
     anchor: &Path,
     report_scope: Option<&ScanScope>,
 ) -> CheckReport {
@@ -78,7 +79,7 @@ pub(super) fn editor_report(
 fn check_workspace_context(
     context: &WorkspaceContext,
     force_require_grounding: bool,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
     anchor: &Path,
     report_scope: Option<&ScanScope>,
 ) -> CheckReport {

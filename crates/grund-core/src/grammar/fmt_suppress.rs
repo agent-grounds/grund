@@ -18,13 +18,13 @@
 //! against; the directive reader takes the settings record built beside the
 //! grammar (§FS-config.3.10, §AR-system.2.1).
 
+use crate::sources::canonical_snapshot_path;
 use ignore::gitignore::Gitignore;
 use std::path::{Path, PathBuf};
 
 use super::comment_line::{comment_strip_prefixes, strip_comment_tokens};
 use super::never_rewrite::DocstringContent;
 use super::settings::LexicalSettings;
-use crate::model::canonical_snapshot_path;
 
 /// The fixed text of a suppression directive (§FS-fmt.2.5.2). Not configurable,
 /// for the same reason the fence syntax is not: a marker that reads differently

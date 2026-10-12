@@ -11,7 +11,8 @@ use super::walk::{scan_roots, scannable_walker};
 use super::walk_boundaries::{is_scannable, outward_directory_link_root, owned_by_another_project};
 use super::walk_errors::{symlink_loop_report, walk_error_report};
 use crate::config::{Frame, Schema, canonical_config_root};
-use crate::model::{physical_path_key, sort_path_key};
+use crate::model::sort_path_key;
+use crate::sources::physical_path_key;
 
 /// The tree walk for the callers that ask a yes/no question about the tree and
 /// nothing else — today the `--cross-refs` auto-enable probe, which wants to know

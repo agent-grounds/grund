@@ -17,11 +17,12 @@ use std::path::PathBuf;
 use super::lsp_snapshot::normalized_overlays;
 use crate::config::display_path;
 use crate::grammar::flatten_cross_ref_links;
-use crate::model::{Finding, ShowOutput, TextOverlays};
+use crate::model::{Finding, ShowOutput};
 use crate::queries::{
     ShowFormat, ShowOpts, render_show_output_json, show_declaration_with_overlays,
 };
 use crate::resolver::{load_workspace_context_with_overlays, with_member_id_candidates};
+use crate::sources::Buffers;
 
 use super::report::context_run_warnings;
 use crate::scanner::resolve_id_arg;
@@ -54,14 +55,14 @@ pub fn show_with_scope(
     opts: ShowOpts,
     path_provided: bool,
 ) -> (Vec<Finding>, Result<ShowOutput>) {
-    show_with_scope_and_overlays(id_arg, opts, path_provided, &TextOverlays::new())
+    show_with_scope_and_overlays(id_arg, opts, path_provided, &Buffers::default())
 }
 
 fn show_with_scope_and_overlays(
     id_arg: &str,
     opts: ShowOpts,
     path_provided: bool,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
 ) -> (Vec<Finding>, Result<ShowOutput>) {
     let mut run_warnings = Vec::new();
     let output = show_run(
@@ -87,7 +88,7 @@ pub(super) fn show_data(
         id,
         opts,
         explicit,
-        &TextOverlays::new(),
+        &Buffers::default(),
         &mut warnings,
         &mut metadata,
     );
@@ -98,7 +99,7 @@ fn show_run(
     id_arg: &str,
     opts: ShowOpts,
     path_provided: bool,
-    overlays: &TextOverlays,
+    overlays: &Buffers,
     run_warnings: &mut Vec<Finding>,
     metadata: &mut serde_json::Value,
 ) -> Result<ShowOutput> {

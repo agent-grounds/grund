@@ -8,7 +8,8 @@ use std::sync::{Arc, Mutex};
 
 use super::*;
 use crate::config::{Config, load_config};
-use crate::model::{Catalog, CheckInput, Id, normalize_path_lexically, with_check_input_observer};
+use crate::model::{Catalog, Id, normalize_path_lexically};
+use crate::sources::{CheckInput, with_check_input_observer};
 use crate::testing::{scan_tree, test_root, write};
 
 const CONFIG: &str = "grund_config_version = 1\n\n[reference]\nstrict = true\n\

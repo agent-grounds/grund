@@ -11,7 +11,8 @@ use crate::checker::{check_findings, dangling_message};
 use crate::config::{Config, load_config_at_with_report_base};
 #[cfg(unix)]
 use crate::model::{Catalog, Declaration, DeclarationSource};
-use crate::model::{Id, TextOverlays, format_path};
+use crate::model::{Id, format_path};
+use crate::sources::Buffers;
 use crate::testing::{
     findings_signature, legacy_fs_folder_config, scan_errors_signature, scan_tree, test_root, write,
 };
@@ -61,7 +62,7 @@ fn parallel_file_scan_matches_sequential_scan() {
         true,
         &[],
         usize::MAX,
-        &TextOverlays::new(),
+        &Buffers::default(),
     )
     .expect("sequential scan");
     let (parallel, parallel_errors) = scan_tree_with_workspace_threshold(
@@ -71,7 +72,7 @@ fn parallel_file_scan_matches_sequential_scan() {
         true,
         &[],
         1,
-        &TextOverlays::new(),
+        &Buffers::default(),
     )
     .expect("parallel scan");
 
@@ -142,7 +143,7 @@ members = ["packages/*"]
                 true,
                 &targets,
                 usize::MAX,
-                &TextOverlays::new(),
+                &Buffers::default(),
             )
             .expect("sequential workspace project scan");
             (
@@ -162,7 +163,7 @@ members = ["packages/*"]
                 true,
                 &targets,
                 1,
-                &TextOverlays::new(),
+                &Buffers::default(),
             )
             .expect("parallel workspace project scan");
             (

@@ -13,7 +13,8 @@ use super::judge::{CheckWorkspace, judge};
 use super::report::check_on_disk;
 use super::support::sort_diagnostics;
 use crate::config::{Config, load_config};
-use crate::model::{Catalog, CheckReport, Diagnostic, Expected, TextOverlays};
+use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
+use crate::sources::Buffers;
 #[cfg(unix)]
 use crate::testing::linked_repo;
 use crate::testing::{drifted_include_repo, kind_index_repo, scan_tree, test_root, write};
@@ -298,7 +299,7 @@ fn the_merge_has_no_cross_half_tie_and_is_the_stable_sort_of_both_halves() {
             config.schema(),
             &catalog,
             config.frame(),
-            &TextOverlays::new(),
+            &Buffers::default(),
         );
         let judged = judge(
             config.rules(),

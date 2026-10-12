@@ -13,7 +13,8 @@ use super::embedded_value_context::{
 use super::section_record::section_is_chapter_value_root;
 use super::value_context::SourceValueLineContext;
 use crate::config::{Frame, Schema, kind_value_chapter};
-use crate::model::{Catalog, InvalidValueSite, paths_same_location};
+use crate::model::{Catalog, InvalidValueSite};
+use crate::sources::paths_same_location;
 
 /// What a declared chapter may not hold. One message for every shape, because
 /// the rule is one rule — the chapter holds value roots and nothing else — and
