@@ -182,11 +182,9 @@ pub(super) fn check_section_headings(
         for (id, decls) in &findings.declarations {
             for decl in decls {
                 for (path, info) in &decl.sections {
-                    // §FS-declarations.section.relative.parent: its prefixes exist.
-                    if info.relative
-                        || !path
-                            .split('.')
-                            .any(|part| part.as_bytes().first().is_some_and(u8::is_ascii_lowercase))
+                    if !path
+                        .split('.')
+                        .any(|part| part.as_bytes().first().is_some_and(u8::is_ascii_lowercase))
                     {
                         continue;
                     }

@@ -73,13 +73,16 @@ owners = [
   "crates/grund-core/src/grammar/fmt_cross_refs.rs",
   "crates/grund-core/src/grammar/heading_text.rs",
   "crates/grund-core/src/grammar/never_rewrite.rs",
+  "crates/grund-core/src/grammar/relative_heading.rs",
   "crates/grund-core/src/model/file_record.rs",
+  "crates/grund-core/src/resolver/anchor_numbering.rs",
   "crates/grund-core/src/resolver/body_lines.rs",
   "crates/grund-core/src/resolver/link_targets.rs",
   "crates/grund-core/src/scanner/context.rs",
   "crates/grund-core/src/scanner/extents.rs",
   "crates/grund-core/src/scanner/file_pass.rs",
   "crates/grund-core/src/scanner/record.rs",
+  "crates/grund-core/src/scanner/relative_sections.rs",
 ]
 
 # Today's answers, kept beside the record's through 0.18.0 by
