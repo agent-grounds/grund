@@ -26,6 +26,10 @@ struct ProjectSnapshot {
     /// symlinked or parent-relative `[scan] include` has no root prefix and is
     /// in no scan yet, and would otherwise look like nobody's (§FS-lsp.2.2).
     scanned_dirs: BTreeSet<PathBuf>,
+    /// The files the snapshot's run read outside its scan — a stub's target in
+    /// another editor folder, say — canonicalized: an edit to one of them makes
+    /// this snapshot stale as surely as an edit to a scanned file (§AR-lsp.2.1).
+    read_outside_scan: BTreeSet<PathBuf>,
     /// Where `snapshot`'s records lie, so a lookup about one file does not scan
     /// every record in the workspace (§FS-lsp.responsiveness.1). Derived from
     /// the snapshot here, beside `scanned_dirs`, so it is rebuilt exactly when
@@ -49,6 +53,7 @@ impl ProjectSnapshot {
             completion: None,
             show: None,
             scanned_dirs,
+            read_outside_scan: BTreeSet::new(),
             index,
         }
     }
@@ -56,18 +61,29 @@ impl ProjectSnapshot {
     /// Install authoring and navigation from the same scan (§FS-lsp.1.6.4).
     fn with_completion(root: PathBuf, loaded: grund_core::LspSnapshotWithCompletion) -> Self {
         let mut project = Self::new(root, loaded.metadata);
+        let scanned = &project.snapshot.scanned_files;
+        project.read_outside_scan = loaded
+            .show
+            .read_files()
+            .into_iter()
+            .filter(|path| !scanned.contains(path))
+            .map(|path| canonical_snapshot_path(&path))
+            .filter(|path| !scanned.contains(path))
+            .collect();
         project.completion = Some(loaded.completion);
         project.show = Some(loaded.show);
         project
     }
 
     /// Whether this project's scan may need rebuilding for `path` (already
-    /// canonicalized). The directory fallback deliberately over-approximates
+    /// canonicalized): a file it scanned, or one it read outside its scan
+    /// (§AR-lsp.2.1). The directory fallback deliberately over-approximates
     /// newly created files; ownership below never uses that approximation
     /// (§FS-lsp.2.2.2).
     fn might_cover(&self, path: &Path) -> bool {
         path.starts_with(&self.root)
             || self.snapshot.scanned_files.contains(path)
+            || self.read_outside_scan.contains(path)
             || path
                 .parent()
                 .is_some_and(|parent| self.scanned_dirs.contains(parent))

@@ -67,6 +67,20 @@ impl Buffers {
         record.lock().ok()?.get(path).cloned()
     }
 
+    /// Every path a recording run has read from disk so far, under the path it
+    /// was read by: what its snapshot goes stale on (§AR-lsp.2.1).
+    pub(crate) fn recorded_paths(&self) -> Vec<PathBuf> {
+        self.record
+            .as_ref()
+            .and_then(|record| {
+                record
+                    .lock()
+                    .ok()
+                    .map(|record| record.keys().cloned().collect())
+            })
+            .unwrap_or_default()
+    }
+
     /// Keep `text`, read from disk at `path`, if this run records its reads.
     fn record(&self, path: &Path, text: &str) {
         if let Some(record) = &self.record

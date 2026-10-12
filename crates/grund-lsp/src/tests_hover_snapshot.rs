@@ -146,7 +146,11 @@ fn cli_answer(server: &Server, root: &Path, id: &str) -> String {
         },
     )
     .unwrap_or_else(|err| panic!("grund {id} --toc: {err:#}"));
-    let project = server.projects.first().expect("the root project");
+    let project = server
+        .projects
+        .iter()
+        .find(|project| project.root == root)
+        .expect("the project at root");
     let citation = project
         .snapshot
         .citations
@@ -232,4 +236,62 @@ fn a_citation_hover_shows_the_unsaved_body_as_saved() {
             "unsaved hover on {id}"
         );
     }
+}
+
+/// §AR-lsp.2.1 with §FS-lsp.4.1: a snapshot goes stale when any file its run
+/// read changes, not only a file it scanned. Folder `b` stubs an ID declared in
+/// folder `a`, outside `b`'s scan; an unsaved edit of that declaration in `a`
+/// is in the hover on `b`'s citation, the bytes `grund <ID> --toc` prints in `b`
+/// once it is saved.
+#[test]
+fn a_citation_hover_sees_an_unsaved_edit_to_a_file_read_outside_its_scan() {
+    let root = test_root("hover_from_snapshot_cross_folder");
+    let config = |kind: &str, include: &str| {
+        format!(
+            "grund_config_version = 1\n[reference]\nstrict = true\nrequire_grounding = false\n\
+             [id]\nformat = \"{{kind}}-{{slug}}\"\n\
+             [[kinds]]\nkind = \"{kind}\"\nfolder = \"docs\"\nindex = false\n\
+             [scan]\ninclude = [{include}]\n"
+        )
+    };
+    let (a, b) = (root.join("a"), root.join("b"));
+    write(&a.join("grund.toml"), &config("AA", "\"docs\", \"src\""));
+    write(&a.join("docs/AA-x.md"), "# AA-x: X\n\nx \u{a7}AA-x.\n");
+    let target = a.join("src/s.rs");
+    write(&target, "/// FS-t: T\n///\n/// Disk lead.\npub fn t() {}\n");
+    write(&b.join("grund.toml"), &config("FS", "\"docs\""));
+    write(
+        &b.join("docs/t.md"),
+        "# FS-t: [../../a/src/s.rs](../../a/src/s.rs)\n",
+    );
+    write(&b.join("docs/use.md"), "Uses \u{a7}FS-t here.\n");
+
+    let (connection, client) = Connection::memory();
+    let mut server = Server::new(
+        connection,
+        [&a, &b]
+            .into_iter()
+            .map(|folder| (Url::from_directory_path(folder).unwrap(), folder.clone()))
+            .collect(),
+        true,
+    )
+    .unwrap();
+    let unsaved = "/// FS-t: T\n///\n/// Unsaved lead.\npub fn t() {}\n";
+    server
+        .handle_notification(Notification::new(
+            "textDocument/didOpen".into(),
+            json!({"textDocument": {
+                "uri": Url::from_file_path(&target).unwrap(),
+                "languageId": "rust",
+                "version": 1,
+                "text": unsaved,
+            }}),
+        ))
+        .expect("didOpen");
+    while client.receiver.try_recv().is_ok() {}
+    let (body, _) = hover(&mut server, &client, &b, 0);
+
+    write(&target, unsaved);
+    assert_eq!(body, cli_answer(&server, &b, "FS-t"), "hover in b on FS-t");
+    assert!(body.contains("Unsaved lead."), "{body:?}");
 }

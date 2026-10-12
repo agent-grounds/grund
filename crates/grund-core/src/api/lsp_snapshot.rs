@@ -54,8 +54,8 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
 
     // §FS-lsp.2.2.1, §AR-lsp.5.1.1: `Editor` anchors an explicit zero-config folder
     // and widens a walk below the root, both as `open()` builds the run.
-    let invocation =
-        Invocation::new(&opts.path, opts.path_provided, Selection::Editor).buffers(overlays);
+    let invocation = Invocation::new(&opts.path, opts.path_provided, Selection::Editor)
+        .buffers(overlays.clone());
     let config = open(&invocation)?;
     let report_scope = editor_report_scope(&config, &opts.path, opts.path_provided)?;
     let context = load_resolved_workspace_context(
@@ -345,7 +345,10 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
             },
         },
         // §AR-lsp.5.2: the context is kept beside the snapshot it built.
-        show: LspShowContext { context },
+        show: LspShowContext {
+            context,
+            buffers: overlays,
+        },
     };
     Ok(snapshot)
 }
