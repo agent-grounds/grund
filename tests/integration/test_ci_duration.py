@@ -160,7 +160,7 @@ class WiringTests(unittest.TestCase):
 
     def test_the_repository_config_carries_threshold_and_window(self) -> None:
         config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-        self.assertEqual(config["threshold_minutes"], 10)
+        self.assertEqual(config["threshold_minutes"], 15)
         self.assertIsInstance(config["window"], int)
 
     def test_the_workflow_runs_the_tracker_on_a_schedule_and_never_as_a_gate(self) -> None:
