@@ -1,0 +1,1 @@
+{"severity":"error","path":"src/x.rs","line":5,"code":"duplicate-section","message":"duplicate section FS-x.1 (also declared at src/x.rs:9)","sites":[{"path":"src/x.rs","line":5},{"path":"src/x.rs","line":9}],"authority":null}
