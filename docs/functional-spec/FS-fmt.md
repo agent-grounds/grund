@@ -373,7 +373,7 @@ The anchor is the heading's **rendered text** ([§FS-declarations.heading.render
 
 #### 6.2.3 The `github` profile reproduces `github-slugger`
 
-The `github` (and `gitlab`) profile reproduces `github-slugger` byte-for-byte: disallowed characters are deleted in place and each remaining space becomes one `-`, with no run-collapsing and no trailing-`-` trim — `## A — B` → `#a--b`, `` ## 6. Watch mode (`--watch`) `` → `#6-watch-mode---watch` ([§DF-github-anchor-fidelity](../decisions/functional/DF-github-anchor-fidelity.md#df-github-anchor-fidelity-the-github-anchor-profile-reproduces-github-slugger-exactly)).
+The `github` (and `gitlab`) profile reproduces `github-slugger` byte-for-byte: disallowed characters are deleted in place and each remaining space becomes one `-`, with no run-collapsing and no trailing-`-` trim — `## A — B` → `#a--b`, `` ## 6. Watch mode (`--watch`) `` → `#6-watch-mode---watch` ([§DF-github-anchor-fidelity](../decisions/functional/DF-github-anchor-fidelity.md#df-github-anchor-fidelity-the-github-anchor-profile-reproduces-github-slugger-exactly)). A repeated slug in one file is numbered `-1`, `-2` ([§DF-repeated-heading-anchor.decision](../decisions/functional/DF-repeated-heading-anchor.md#decision-decision)).
 
 #### 6.2.4 A named heading's anchor carries its name
 
