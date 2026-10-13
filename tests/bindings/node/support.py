@@ -1,5 +1,6 @@
 """Test-only local package rehearsal for §FS-distribution.3.2.3.3."""
 
+import hashlib
 import json
 import atexit
 import os
@@ -17,9 +18,14 @@ CASES = REPO / "tests" / "e2e" / "cases"
 
 
 def node_target():
-    """The shared, persistent build target of the whole acceptance (§AR-ci.3.4.1)."""
+    """This checkout's persistent build target, under the shared root (§AR-ci.3.4.1).
+
+    One per source checkout, keyed by a digest of its resolved root (§AR-ci.3.4.1.2).
+    """
     given = os.environ.get("GRUND_NODE_TARGET")
-    target = Path(given).expanduser() if given else SCRATCH / "grund-node-target"
+    root = Path(given).expanduser() if given else SCRATCH / "grund-node-target"
+    key = hashlib.sha256(os.fsencode(REPO)).hexdigest()[:16]
+    target = root / key
     target.mkdir(parents=True, exist_ok=True)
     return target.resolve()
 
@@ -58,7 +64,7 @@ def source_package():
 def checkout_cli():
     """Independent same-source mutation byte oracle (§FS-distribution.3.2.3.1).
 
-    Built once per run into the shared target, and reused by every test (§AR-ci.3.4.1).
+    Built once per run into this checkout's target, and reused by every test (§AR-ci.3.4.1).
     """
     target = node_target()
     # No incremental state: the CI cache could not leave it out, and a fresh checkout

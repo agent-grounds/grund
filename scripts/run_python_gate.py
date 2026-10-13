@@ -4,7 +4,7 @@ Set GRUND_BUILT/GRUND_RELEASED to reuse local artifacts for
 §FS-cochange-recipe.examples, and GRUND_BINDINGS_ORACLE to reuse a same-source
 binding oracle for §FS-distribution.3.0.3; otherwise build this checkout, install
 the exact released crate, and build the oracle from HEAD, without silently
-skipping tests. GRUND_NODE_TARGET names the Node acceptance's shared build target
+skipping tests. GRUND_NODE_TARGET names the root of the Node acceptance's build targets
 (§AR-ci.3.4.1). The run prints only its failures, a check-in each 5% and its slowest
 tests before one summary (§AR-ci.requirements.5.1, §AR-ci.3.4.2); its builds are
 quiet (§AR-ci.requirements.5.4). `--without-node-acceptance` or
