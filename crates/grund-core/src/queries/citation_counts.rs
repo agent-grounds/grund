@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use crate::checker::KindIndexEntries;
 use crate::model::Id;
-use crate::resolver::{WorkspaceContext, WorkspaceProject, index_link_targets};
+use crate::resolver::{SettledHeadings, WorkspaceContext, WorkspaceProject, index_link_targets};
 
 /// The two per-target-alias citation counts `grund list` needs, built in one
 /// pass (§FS-list.3.2.1, §DF-index-not-an-inbound-citation).
@@ -87,6 +87,7 @@ pub(crate) fn kind_index_entries(source: &WorkspaceProject) -> KindIndexEntries 
         source.config.schema(),
         source.config.frame(),
         &source.findings,
+        &SettledHeadings::default(),
     );
     KindIndexEntries::new(
         &source.findings,

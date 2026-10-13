@@ -15,7 +15,9 @@ use crate::checker::{configured_rule_sentences, workspace_vocabulary};
 use crate::config::{Config, fmt_excluded};
 use crate::grammar::parse_id_arg;
 use crate::model::{Catalog, Expected, ExpectedEntrypoint, ExpectedSection};
-use crate::resolver::{WorkspaceCheckTarget, index_link_targets, markdown_link_target};
+use crate::resolver::{
+    SettledHeadings, WorkspaceCheckTarget, index_link_targets, markdown_link_target,
+};
 use crate::scanner::{CANONICAL_AGENT_ENTRYPOINT, companion_agent_entrypoints};
 use crate::templates::{
     ConversationSurface, citation_directions_section, clickable_citations_section,
@@ -77,6 +79,7 @@ pub(crate) fn expected(
             config.schema(),
             config.frame(),
             findings,
+            &SettledHeadings::default(),
         ),
         fmt_excluded: noted_fmt_excluded(findings, config),
     }

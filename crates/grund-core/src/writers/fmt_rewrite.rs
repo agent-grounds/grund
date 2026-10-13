@@ -28,7 +28,7 @@ use crate::grammar::{
 };
 use crate::model::{Catalog, Id};
 use crate::resolver::{
-    ShorthandTargets, WorkspaceContext, expand_shorthand_citations_with_origins,
+    SettledHeadings, ShorthandTargets, WorkspaceContext, expand_shorthand_citations_with_origins,
 };
 
 /// One file's rewritten lines plus what the walk needs to decide afterwards:
@@ -159,6 +159,9 @@ pub(crate) struct FmtLineOpts<'a> {
     /// per walk (§FS-fmt.2.4.5). Separate from `findings` because a qualified
     /// shorthand reads another project's declarations entirely.
     pub(crate) shorthand_targets: &'a ShorthandTargets<'a>,
+    /// The heading lines this run leaves rewritten, which every anchor the link
+    /// pass writes is derived from (§FS-fmt.6.3.3).
+    pub(crate) settled: &'a SettledHeadings,
 }
 
 /// Apply the `fmt` rewrites to one line, in order: trigger→marker (§FS-fmt.2.1),
@@ -260,6 +263,7 @@ fn fmt_line_at(
             opts.workspace,
             entry_ids,
             opts.shorthand_targets,
+            opts.settled,
         );
         link_row = link_row_of(&final_line, &wrapped);
         final_line = wrapped;
@@ -359,6 +363,7 @@ fn suppressed_line(
         opts.workspace,
         Some(entry_ids),
         opts.shorthand_targets,
+        opts.settled,
     );
     if wrapped == line {
         return unchanged();
