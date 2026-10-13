@@ -358,7 +358,7 @@ fn citation_only_accepts_a_comma_joined_chain() {
 /// documented-only layout ever asks the classifier a question
 /// (§GOAL-fast-feedback).
 ///
-/// §FS-inline-citation-style.7.2: that is what the scanner pays for the field —
+/// §AR-scanner.3.2: that is what the scanner pays for the field —
 /// one comparison per inline citation site under the default and under a
 /// documented-only layout, and no line tokenized or classified on its account.
 #[test]
@@ -405,7 +405,7 @@ fn filled_slots(block: &BlockCitations<'_>) -> usize {
     block.ranges.iter().filter(|slot| slot.is_some()).count()
 }
 
-/// §GOAL-fast-feedback, §FS-inline-citation-style.7.2: the sharing between the
+/// §GOAL-fast-feedback, §AR-scanner.3.2: the sharing between the
 /// two note verdicts is a memo
 /// filled as a pass reaches a line, never up front — the property the rest of
 /// this module cannot see, since an eager tokenization answers every question

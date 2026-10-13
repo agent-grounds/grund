@@ -221,6 +221,8 @@ The full-ID patterns stop at the first byte outside the grammar, so a glob opera
 
 ### 2.4 Citing-side classification
 
+Which kind a citation site counts as is [§FS-citations.citing-kind](../functional-spec/FS-citations.md#citing-kind-which-kind-a-citation-site-counts-as); [§AR-scanner.2.4.2](AR-scanner.md#242-citation-source-kind) computes it.
+
 After body spans are assigned, local numeric candidates use the same enclosing-declaration result
 as ordinary citing-side classification. A unique owner promotes the candidate to an ordinary
 `Citation` carrying the canonical owner ID and numeric section plus its authored local spelling;
@@ -409,6 +411,8 @@ The walk's only structured output is a `Catalog` struct, and everything downstre
 
 A citation inside a source **inline comment** block also carries that block as an inline citation site ([§FS-inline-citation-style.1](../functional-spec/FS-inline-citation-style.md#1-scope)): its first and last line, the character width of its widest line ([§FS-inline-citation-style.2.3](../functional-spec/FS-inline-citation-style.md#23-counting-lines-and-columns)), whether it carries a note, and the ascending list of the lines this run will *report* as failing the configured `[reference] inline_note_layout` ([§FS-inline-citation-style.3.3](../functional-spec/FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit)). Every citation in one block carries the same site. A **doc comment** block carries no site at all — it is not one ([§FS-inline-citation-style.1.1](../functional-spec/FS-inline-citation-style.md#11-doc-comments-are-not-sites)) — so its citations are recorded the way a declaring block's are, with no site for the checker's style, budget, and layout rules to reach; [§AR-scanner.4.2](AR-scanner.md#42-doc-comment-or-inline-comment) is the classifier that decides which kind a block is.
 
+The site is additive, and it never grows past the comment block ([§FS-inline-citation-style.1.2](../functional-spec/FS-inline-citation-style.md#12-comment-blocks)): the scanner already knows each line's block extent from the normalization of [§AR-scanner.4.4](AR-scanner.md#44-comment-lines-are-normalized-before-detection), so recording the site is recording that extent on the citations the block contains, not new line classification. A shape outside the block — the next code line after the comment, say — is not part of the site.
+
 ### 3.2 The reported layout lines
 
 That line list is what lets the checker report a per-line deviation without re-reading the file, and it is a record of the configured verdict rather than a survey of the tree: it holds the lines rule 1 judges, not every line carrying a citation, and it is empty — with no line classified — at the default `inline_note_layout = "any"`, under `inline_style = "citation-only"`, and at `inline_note_layout_check = "off"`, where the verdicts would reach no channel ([§FS-inline-citation-style.4.4](../functional-spec/FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations)). So a project that configures no layout, or configures one without gating it, tokenizes no line and classifies no line on the field's account, and pays not even a per-block memo — that allocation belongs to the second reader and is made only where one exists. A future consumer wanting deviations from an ungated tree is asking a question this field does not answer.
@@ -576,7 +580,7 @@ The marker character recognized in citations follows [§DF-reference-marker](../
 
 ## 6. E2E case declarations
 
-`E2E` is a **configured** kind — it left the default `[[kinds]]` set in grund 0.12.0 ([§FS-config.3.4.4](../functional-spec/FS-config.md#344-the-default-kinds)) — and everything below follows the configured `E2E` home. A config with no citable `E2E` kind runs none of this pass: no case declarations, and no fixture-tree pruning, so a nested case repo under such a tree is ordinary content the walk reads. The `E2E` kind is the one kind not declared by a heading line: a case directory declares it ([§AR-scanner.6.1](AR-scanner.md#61-a-case-directory-declares-the-id)).
+`E2E` is a **configured** kind — it left the default `[[kinds]]` set in grund 0.12.0 ([§FS-config.3.4.4](../functional-spec/FS-config.md#344-the-default-kinds)) — and everything below follows the configured `E2E` home. A config with no citable `E2E` kind runs none of this pass: no case declarations, and no fixture-tree pruning, so a nested case repo under such a tree is ordinary content the walk reads. The `E2E` kind is the one kind not declared by a heading line: a case directory declares it ([§AR-scanner.6.1](AR-scanner.md#61-a-case-directory-declares-the-id)). What a case directory declares, and where the walk stops, is [§FS-declarations.e2e-case](../functional-spec/FS-declarations.md#e2e-case-what-an-e2e-case-directory-declares); this section is how the scanner realizes it.
 
 ### 6.1 A case directory declares the ID
 

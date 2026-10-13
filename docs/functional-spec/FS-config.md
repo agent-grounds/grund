@@ -441,7 +441,7 @@ Some directories hold agent-facing content rather than specification — skills,
 
 - **A home** — `folder` or `file` — wherever the kind is a *place*. Leaving both out is not an omission but a different thing: the entry becomes the **homeless kind**, the complement of every home, whose default name is `code` ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)). Everything below is written about a non-citable kind with a home; [§FS-config.3.9.2](FS-config.md#392-the-homeless-kind) says where the homeless one differs.
 - **A row in the generated Project map and in the generated citation directions** ([§FS-init.2.3.4.4](FS-init.md#2344-project-map), [§FS-init.2.3.5](FS-init.md#235-citation-directions)) — rendered by **place**, never by name, because the name is a config key and the place is the thing a reader can open.
-- **Citation-direction rules.** The citing-side classification already reaches it: a citation inside a kind's home, when exactly one home contains its file, is classified as that kind even where no declaration encloses it ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)). Obligations attach per file rather than per declaration ([§FS-check.3.11](FS-check.md#311-missing-required-citation)), since there is no declaration to attach them to.
+- **Citation-direction rules.** The citing-side classification already reaches it: a citation inside a kind's home, when exactly one home contains its file, is classified as that kind even where no declaration encloses it ([§FS-citations.citing-kind](FS-citations.md#citing-kind-which-kind-a-citation-site-counts-as)). Obligations attach per file rather than per declaration ([§FS-check.3.11](FS-check.md#311-missing-required-citation)), since there is no declaration to attach them to.
 - **Grounding**, over every scanned file in its home, `.md` included ([§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in)) — asked of this home alone with `require_grounding` on the row, or of every place at once with the `[reference]` default the row inherits ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)).
 
 ##### 3.4.1.2 What it loses
@@ -566,7 +566,7 @@ A test cites the document whose claim it proves, and is never cited back: an `e2
 
 ##### 3.4.4.3 `E2E` is configured, not a default
 
-`E2E` is **not** in this list, and is still a fully supported kind: a repository whose e2e suite is a corpus of case directories declares it (`kind = "E2E"`, `folder = "e2e/cases"`, `index = false`) and gets the case-declaration machinery of [AR-scanner.6](../architecture/AR-scanner.md#6-e2e-case-declarations) — `E2E-<case>` IDs, `grund <ID>` over the case manifest, per-case obligations, and the fixture-tree pruning that keeps a nested case repo out of the host scan. That machinery follows the configured `E2E` home, so a config that wants it names it. Decided in [§DF-non-citable-kinds.3](../decisions/functional/DF-non-citable-kinds.md#3-consequences), which also records what a default-config repository with an `e2e/cases` tree sees on upgrade.
+`E2E` is **not** in this list, and is still a fully supported kind: a repository whose e2e suite is a corpus of case directories declares it (`kind = "E2E"`, `folder = "e2e/cases"`, `index = false`) and gets the case-declaration machinery of [§FS-declarations.e2e-case](FS-declarations.md#e2e-case-what-an-e2e-case-directory-declares) — `E2E-<case>` IDs, `grund <ID>` over the case manifest, per-case obligations, and the fixture-tree pruning that keeps a nested case repo out of the host scan. That machinery follows the configured `E2E` home, so a config that wants it names it. Decided in [§DF-non-citable-kinds.3](../decisions/functional/DF-non-citable-kinds.md#3-consequences), which also records what a default-config repository with an `e2e/cases` tree sees on upgrade.
 
 ##### 3.4.4.4 A config that omits `[[kinds]]` keeps the older `FS` home
 
@@ -1019,9 +1019,7 @@ An **obligation** asks: does each top-level declaration of the citing kind conta
 
 #### 3.9.2 The homeless kind
 
-Every citation site that no single configured kind home claims — outside every home, or in a file two overlapping homes contain — resolves to one citing kind ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)). That kind is the **complement** of the whole `[[kinds]]` table: it is the one kind that is not a place, which is why it has no `folder` and no `file` and why there is exactly one of it.
-
-Its name is `code` by default, and a project may name it something truer by declaring it ([§FS-config.3.9.2.1](FS-config.md#3921-declaring-it)).
+Every citation site that no single configured kind home claims — outside every home, or in a file two overlapping homes contain — resolves to one citing kind ([§FS-citations.citing-kind](FS-citations.md#citing-kind-which-kind-a-citation-site-counts-as)). That kind is the **complement** of the whole `[[kinds]]` table: it is the one kind that is not a place, which is why it has no `folder` and no `file` and why there is exactly one of it. Its name is `code` by default, and a project may name it something truer by declaring it ([§FS-config.3.9.2.1](FS-config.md#3921-declaring-it)).
 
 ##### 3.9.2.1 Declaring it
 

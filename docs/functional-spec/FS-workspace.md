@@ -916,11 +916,10 @@ it is declared as a remote and fetched into a committed, pinned projection
 
 ## 8. Other commands
 
-The workspace surface composes through the same resolver `grund check` uses
-([AR-resolver.1](../architecture/AR-resolver.md#1-the-resolver-one-function)), so qualified-ID behavior in query commands is a UX layer over
-an already-built engine — not new resolution logic.
+Every query command resolves a qualified ID exactly as `grund check` does: what it
+adds is presentation, never a resolution rule of its own.
 
-The shared resolver includes the catalog-backed read compatibility of
+That resolution includes the catalog-backed read compatibility of
 [§FS-config.3.2](FS-config.md#32-id--id-grammar). Therefore qualified `show`/`refs`, workspace `list`, completion,
 cross-reference formatting, and `cover` all expose the same exact persisted
 off-grammar declaration and declaration-backed marked citations under the

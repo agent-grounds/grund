@@ -148,7 +148,7 @@ CLI `error:` prefix (including the `known aliases:` or standalone `note:` line).
 
 ### 4.2 E2E cases
 
-For an E2E case, `show --format=json` uses the E2E manifest shape from [§FS-show.2.4](FS-show.md#24-e2e-cases), whose fields, `path` among them, [§FS-show.2.4.2](FS-show.md#242-the-manifest-as-json) defines.
+For an E2E case ([§FS-declarations.e2e-case](FS-declarations.md#e2e-case-what-an-e2e-case-directory-declares)), `show --format=json` uses the E2E manifest shape from [§FS-show.2.4](FS-show.md#24-e2e-cases), whose fields, `path` among them, [§FS-show.2.4.2](FS-show.md#242-the-manifest-as-json) defines.
 
 ```json
 {"id":"E2E-login","kind":"E2E","path":"e2e/cases/login","args":[],"expected_exit":0,"fixtures":["expected.exit","expected.stdout","repo/docs/functional-spec/FS-001-login.md"],"anchor":null}

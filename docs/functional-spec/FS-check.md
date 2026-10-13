@@ -156,7 +156,7 @@ That the same shape is accepted as a CLI ID argument is [§FS-citations.shorthan
 
 #### 1.3.1 The scan covers the whole config root
 
-`[scan] exclude`, `.gitignore` and every other ignore file, hidden names — directory and file alike ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)) — workspace member boundaries ([§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)), the E2E case-directory boundary wherever a citable `E2E` kind is configured ([AR-scanner.6](../architecture/AR-scanner.md#6-e2e-case-declarations)), and `[scan] extensions` all still apply exactly as they do without the flag. A file type `grund` does not scan stays unscanned; widening `extensions` is a config decision, and one flag that widened both would make "what did this run read" unanswerable. A boundary is a *declared* member, not any nested `grund.toml`: a project directory the workspace never declared is ordinary tree to both scans, so `--full` reads it and judges its citations under *this* project's grammar and kinds. That is what the plain scan does with it too, but the flag is what makes it reachable by default — a vendored, generated, or example project belongs in `[scan] exclude`, or in `[workspace] members` if it is one of ours, before a run adds `--full`.
+`[scan] exclude`, `.gitignore` and every other ignore file, hidden names — directory and file alike ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)) — workspace member boundaries ([§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)), the E2E case-directory boundary wherever a citable `E2E` kind is configured ([§FS-declarations.e2e-case.walk](FS-declarations.md#e2e-casewalk-the-walk-stops-at-a-case-directory)), and `[scan] extensions` all still apply exactly as they do without the flag. A file type `grund` does not scan stays unscanned; widening `extensions` is a config decision, and one flag that widened both would make "what did this run read" unanswerable. A boundary is a *declared* member, not any nested `grund.toml`: a project directory the workspace never declared is ordinary tree to both scans, so `--full` reads it and judges its citations under *this* project's grammar and kinds. That is what the plain scan does with it too, but the flag is what makes it reachable by default — a vendored, generated, or example project belongs in `[scan] exclude`, or in `[workspace] members` if it is one of ours, before a run adds `--full`.
 
 #### 1.3.2 The wider scan reads a superset, each file once
 
@@ -529,7 +529,7 @@ Every scanned file resolves to exactly one `[[kinds]]` row, and that row's effec
 
 - **A non-citable kind's home** ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) governs **every** scanned file in it, `.md` included — a `folder` home's files, or the one document of a `file` home ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)), which is a place a maintainer declared like any other and takes both keys on its row ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)).
 - **A citable kind's folder home** governs the **source files** in it — a file the scan reads whose extension is not `.md` ([AR-scanner.1](../architecture/AR-scanner.md#1-tree-walk)).
-- **The homeless kind** ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) governs the source files no home claims, and a file claimed by two overlapping homes falls to it as well, the way its citing side already does ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)).
+- **The homeless kind** ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) governs the source files no home claims, and a file claimed by two overlapping homes falls to it as well, the way its citing side already does ([§FS-citations.citing-kind](FS-citations.md#citing-kind-which-kind-a-citation-site-counts-as)).
 
 So Markdown is exempt except inside a non-citable home, and `require_grounding = true` on an unscanned home's row is a config error ([§FS-check.3.6.1.1](FS-check.md#3611-markdown-is-governed-only-in-a-non-citable-home)). A repository that sets only the global key keeps every level `1` and the file as the unit ([§FS-check.3.6.1.2](FS-check.md#3612-the-global-key-alone-is-the-rule-it-always-was)).
 
@@ -679,7 +679,7 @@ Units are built from citations, so a file carrying none produces no unit and `mu
 
 #### 3.11.6 An `E2E` case
 
-An `E2E`-kind obligation ([§FS-config.3.9.1](FS-config.md#391-levels)) is per case declaration, can be satisfied by the case's `spec.refs` manifest entries, and remains an error when the case has no scanned citations or matching manifest entry.
+An `E2E`-kind obligation ([§FS-config.3.9.1](FS-config.md#391-levels)) is per case declaration ([§FS-declarations.e2e-case](FS-declarations.md#e2e-case-what-an-e2e-case-directory-declares)), can be satisfied by the case's `spec.refs` manifest entries, and remains an error when the case has no scanned citations or matching manifest entry.
 
 ### 3.12 Forbidden citation
 
@@ -701,7 +701,7 @@ Under v2 the prohibition is written as `must-not`, `warn-not` or `should-not` ([
 
 #### 3.12.1 How the two kinds are read
 
-The citing kind is the site's resolved `source_kind` ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)), named by kind for a citable kind, by **home** for a non-citable one the way [§FS-check.3.11.2](FS-check.md#3112-a-non-citable-kind) names it (`skills/ must not cite AR`), and by name for the homeless kind, which has no home to name it by ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)). The cited kind and alias come from the citation token, matched against the rule's alias grammar ([§FS-config.3.9.3](FS-config.md#393-alias-matching)).
+The citing kind is the one [§FS-citations.citing-kind](FS-citations.md#citing-kind-which-kind-a-citation-site-counts-as) gives the site, named by kind for a citable kind, by **home** for a non-citable one the way [§FS-check.3.11.2](FS-check.md#3112-a-non-citable-kind) names it (`skills/ must not cite AR`), and by name for the homeless kind, which has no home to name it by ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)). The cited kind and alias come from the citation token, matched against the rule's alias grammar ([§FS-config.3.9.3](FS-config.md#393-alias-matching)).
 
 ### 3.13 Number-only shorthand citation
 
@@ -1235,7 +1235,7 @@ For an ID under the index's own folder, the entry is a citation of the declarati
 
 #### 4.1.3 `E2E` declarations are exempt
 
-`E2E` declarations ([AR-scanner.6](../architecture/AR-scanner.md#6-e2e-case-declarations)) are exempt: an end-to-end case is exercised by being run, not by being cited, so a `§E2E-<name>` that nothing cites is not a warning. Every other kind is subject to this rule, including Markdown and JSON value declarations; the citation inside a recognized value binding counts as a use ([§FS-values.3.2](FS-values.md#32-recognized-text-contexts)). `grund list --unused` ([§FS-list](FS-list.md#fs-list-grund-lists-every-declared-id)) uses the same default signal and suppresses uncited `E2E` cases unless `E2E` is explicitly selected with `--kind` (including a multi-kind filter such as `--kind FS,E2E`).
+`E2E` declarations ([§FS-declarations.e2e-case](FS-declarations.md#e2e-case-what-an-e2e-case-directory-declares)) are exempt: an end-to-end case is exercised by being run, not by being cited, so a `§E2E-<name>` that nothing cites is not a warning. Every other kind is subject to this rule, including Markdown and JSON value declarations; the citation inside a recognized value binding counts as a use ([§FS-values.3.2](FS-values.md#32-recognized-text-contexts)). `grund list --unused` ([§FS-list](FS-list.md#fs-list-grund-lists-every-declared-id)) uses the same default signal and suppresses uncited `E2E` cases unless `E2E` is explicitly selected with `--kind` (including a multi-kind filter such as `--kind FS,E2E`).
 
 #### 4.1.4 A citation anywhere in the resolution scope counts
 
