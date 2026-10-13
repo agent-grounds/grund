@@ -118,11 +118,14 @@ pub fn completion_offers_the_targets_section() -> Verdict {
 /// (§REQ-one-answer.stubs.outside-include).
 pub fn the_editor_enumerates_the_targets_section() -> Verdict {
     let tree = section_tree("u03c");
-    let snapshot = lsp_snapshot(LspSnapshotOpts {
-        path: tree.0.clone(),
-        path_provided: true,
-        ..LspSnapshotOpts::default()
-    })
+    let snapshot = super::agreement_evidence::editor(
+        LspSnapshotOpts {
+            path: tree.0.clone(),
+            path_provided: true,
+            ..LspSnapshotOpts::default()
+        },
+        lsp_snapshot,
+    )
     .expect("editor snapshot");
     let enumerated = snapshot
         .sections

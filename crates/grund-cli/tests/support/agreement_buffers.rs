@@ -111,11 +111,14 @@ impl Tree {
 
     /// The editor's answer and `show`'s for `id`, over `buffers`.
     fn answers(&self, buffers: &BTreeMap<PathBuf, String>, id: &str) -> String {
-        let loaded = lsp_snapshot_with_completion(LspSnapshotOpts {
-            path: self.0.clone(),
-            path_provided: true,
-            open_documents: buffers.clone(),
-        });
+        let loaded = super::agreement_evidence::editor(
+            LspSnapshotOpts {
+                path: self.0.clone(),
+                path_provided: true,
+                open_documents: buffers.clone(),
+            },
+            lsp_snapshot_with_completion,
+        );
         let findings = match &loaded {
             Ok(loaded) => {
                 let snapshot = &loaded.metadata.snapshot;

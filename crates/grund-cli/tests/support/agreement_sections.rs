@@ -245,11 +245,14 @@ pub fn a_section_title_span_is_the_toc_title() -> Verdict {
         .as_str()
         .unwrap_or("")
         .to_string();
-    let snapshot = lsp_snapshot(LspSnapshotOpts {
-        path: tree.0.clone(),
-        path_provided: true,
-        ..LspSnapshotOpts::default()
-    })
+    let snapshot = super::agreement_evidence::editor(
+        LspSnapshotOpts {
+            path: tree.0.clone(),
+            path_provided: true,
+            ..LspSnapshotOpts::default()
+        },
+        lsp_snapshot,
+    )
     .expect("editor snapshot");
     let span = snapshot
         .sections
