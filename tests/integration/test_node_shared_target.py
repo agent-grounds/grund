@@ -1,6 +1,8 @@
-"""§AR-ci.3.4.1 — every build of the Node acceptance shares one persistent target.
+"""§AR-ci.3.4.1 — every build of the Node acceptance shares one persistent target root.
 
 §AR-ci.3.4.1.1 — it pays for the release profile once, and each build prints one line.
+
+§AR-ci.3.4.1.2 — under that root each source checkout builds into a target of its own.
 
 The acceptance itself takes minutes, so nothing here builds. The source package and
 the CLI oracle are asked for in a child whose `checked` only records the commands
@@ -54,7 +56,8 @@ support.checked = record
 shutil.which = lambda name, *rest, **options: name
 stage, target, tarball = support.source_package()
 first, second = support.checkout_cli(), support.checkout_cli()
-print(json.dumps({"calls": calls, "incremental": envs, "target": str(target), "cli": [str(first), str(second)]}))
+print(json.dumps({"calls": calls, "incremental": envs, "target": str(target),
+                  "again": str(support.node_target()), "cli": [str(first), str(second)]}))
 """
 
 # Every command goes through `launch.subprocess.run`, so a fake one there sees each build.
@@ -111,6 +114,20 @@ def child(script, *args, cwd, **given):
     result = subprocess.run([sys.executable, "-c", script, *map(str, args)], cwd=cwd,
                             env=environment, capture_output=True, text=True)
     return result
+
+
+def checkout(root):
+    """A second source checkout at `root`: the harness's own modules, and the builder files
+    the source package asks for, which the recorder never runs."""
+    harness = root / "tests" / "bindings" / "node"
+    harness.mkdir(parents=True)
+    for name in ("support.py", "launch.py"):
+        (harness / name).write_bytes((NODE_HARNESS / name).read_bytes())
+    node = root / "crates" / "grund-node"
+    node.mkdir(parents=True)
+    for name in ("build.mjs", "stage.mjs"):
+        (node / name).write_text("", encoding="utf-8")
+    return harness
 
 
 def within(path, root):
@@ -178,6 +195,40 @@ class NodeSharedTargetTests(unittest.TestCase):
         self.assertEqual("0", incremental, "the debug CLI writes no incremental state to cache")
         self.assertEqual(1, len(set(recorded["cli"])), recorded["cli"])
         self.assertTrue(within(recorded["cli"][0], shared), recorded["cli"][0])
+
+    def test_each_source_checkout_builds_into_a_target_of_its_own(self):
+        shared = self.temp / "shared"
+        runs = {}
+        for name, harness in (("this", NODE_HARNESS),
+                              ("a", checkout(self.temp / "a")), ("b", checkout(self.temp / "b"))):
+            result = child(RECORD, harness, cwd=self.temp, GRUND_NODE_TARGET=str(shared))
+            self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+            runs[name] = json.loads(result.stdout.splitlines()[-1])
+        result = child(RECORD, self.temp / "a" / "tests" / "bindings" / "node", cwd=self.temp,
+                       GRUND_NODE_TARGET=str(shared))
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        rerun = json.loads(result.stdout.splitlines()[-1])
+        targets = {name: Path(run["target"]).resolve() for name, run in runs.items()}
+        for name, run in runs.items():
+            self.assertTrue(within(targets[name], shared), (name, targets[name]))
+            self.assertEqual(targets[name], Path(run["again"]).resolve(),
+                             f"checkout {name} gets another target on a second call")
+        self.assertEqual(targets["a"], Path(rerun["target"]).resolve(),
+                         "checkout a gets another target on a second run")
+        names = sorted(targets)
+        for index, one in enumerate(names):
+            for other in names[index + 1:]:
+                self.assertFalse(
+                    within(targets[one], targets[other]) or within(targets[other], targets[one]),
+                    f"checkouts {one} and {other} share a target under GRUND_NODE_TARGET: "
+                    f"{targets[one]} and {targets[other]}")
+        for name, run in runs.items():
+            named = [argv[argv.index("--target-dir") + 1]
+                     for argv in run["calls"] if "--target-dir" in argv]
+            self.assertTrue(named, run["calls"])
+            stray = [path for path in named + run["cli"] if not within(path, targets[name])]
+            self.assertEqual([], stray,
+                             f"checkout {name} builds outside its own target {targets[name]}")
 
     def test_every_other_build_site_names_the_shared_target(self):
         allowed = ("self.r.target", "self.rehearsal.target")
@@ -274,7 +325,8 @@ class NodeSharedTargetTests(unittest.TestCase):
         self.assertTrue(Path(wrapper).is_dir(), "the shared target is prepared and kept")
         self.assertFalse(within(wrapper, REPO), "generated files stay outside the checkout")
         self.assertIsNotNone(defaults["helper"], "tests/bindings/node/support.py has no node_target()")
-        self.assertEqual(Path(wrapper).resolve(), Path(defaults["helper"]).resolve())
+        # §AR-ci.3.4.1.2: the wrapper prepares the root, the helper's target lies under it.
+        self.assertTrue(within(defaults["helper"], wrapper), (wrapper, defaults["helper"]))
         home = Path.home().resolve()
         self.assertTrue(within(wrapper, home), wrapper)
         cached = "~/" + Path(wrapper).resolve().relative_to(home).as_posix()
