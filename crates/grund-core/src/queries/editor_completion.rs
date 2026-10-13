@@ -190,7 +190,7 @@ impl LspCompletionContext {
         let Some(token) = token::active_token(self, owner, line, cursor) else {
             return Vec::new();
         };
-        let docstring = docstring_content_at(&owner.config, text, line_index, is_py);
+        let docstring = docstring_content_at(&owner.config, path, text, line_index);
         if in_escape_position(line, token.start, &owner.config.marker)
             || never_rewrite_context_in(docstring, line, is_md, token.start)
         {

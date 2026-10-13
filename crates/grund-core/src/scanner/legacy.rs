@@ -14,7 +14,7 @@ use super::legacy_inline::reconcile_promoted_inline_site;
 use crate::config::{Frame, Schema};
 use crate::grammar::{
     IdArgError, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, cross_ref_wrap_after,
-    never_rewrite_context, parse_id_arg, parse_id_arg_with_shorthand, render_id,
+    markdown_never_rewrite_context, parse_id_arg, parse_id_arg_with_shorthand, render_id,
     shorthand_candidates, shorthand_names,
 };
 use crate::model::sort_path_key;
@@ -363,7 +363,7 @@ pub(crate) fn collect_local_legacy_markdown_citations(
     let catalog = legacy_catalog_ids(&findings.declarations);
     for (marker_start, _) in line.match_indices(&schema.citation.marker) {
         // §FS-fmt.6.4: the wrap pass's never-rewrite zones, destinations included.
-        if never_rewrite_context(line, true, marker_start) {
+        if markdown_never_rewrite_context(line, marker_start) {
             continue;
         }
         let token_start = marker_start + schema.citation.marker.len();

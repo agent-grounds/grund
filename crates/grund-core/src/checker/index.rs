@@ -15,7 +15,8 @@ use super::index_entries::KindIndexEntries;
 use super::index_mention::index_mentions;
 use crate::config::{Frame, Schema};
 use crate::grammar::{
-    cross_ref_wrap, is_inside_inline_code, markdown_line_kinds, never_rewrite_context, render_id,
+    cross_ref_wrap, is_inside_inline_code, markdown_line_kinds, markdown_never_rewrite_context,
+    render_id,
 };
 use crate::model::{
     Catalog, CheckReport, Citation, Declaration, Diagnostic, FileRecord, HeadingKind, Id,
@@ -140,7 +141,7 @@ fn index_citation_form(line: &str, text: &str, marker: &str) -> IndexCitationFor
         // §FS-fmt.2.3, through the one predicate the scanner and the rewrite
         // already share: an inline-code illustration and a Markdown link
         // destination are zones `fmt` never writes in.
-        if !marked || never_rewrite_context(line, true, start) {
+        if !marked || markdown_never_rewrite_context(line, start) {
             continue;
         }
         form = IndexCitationForm::Bare;

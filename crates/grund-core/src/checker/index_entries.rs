@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use super::index::{KindIndexTarget, declarations_under_folder, kind_index_targets};
 use crate::config::{Frame, Schema};
-use crate::grammar::{cross_ref_wrap, never_rewrite_context};
+use crate::grammar::{cross_ref_wrap, markdown_never_rewrite_context};
 use crate::model::{
     Catalog, Citation, Declaration, Id, paired_declarations, scanned_decl_relative_path,
     scanned_path_key,
@@ -279,7 +279,7 @@ fn external_inline_home<'a>(
 fn link_target_at_citation<'a>(line: &'a str, citation: &Citation) -> Option<&'a str> {
     let start = citation.column.checked_sub(1)?;
     let open = start.checked_sub(1)?;
-    if line.as_bytes().get(open) != Some(&b'[') || never_rewrite_context(line, true, open) {
+    if line.as_bytes().get(open) != Some(&b'[') || markdown_never_rewrite_context(line, open) {
         return None;
     }
     let end = start.checked_add(citation.text.len())?;

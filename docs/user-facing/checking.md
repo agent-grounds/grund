@@ -32,6 +32,8 @@ docs/requirements/REQ-no-wrong-citation.md:7: error: missing section FS-check.3.
 8. *(opt-in)* With `require_grounding = true`: every source file — or every file of one configured place, down to every `##` section or doc-comment block of it — carries at least one citation. *(ungrounded source file)*
 9. *(workspace)* Alias-qualified citations resolve across configured sub-projects. *(cross-project references — see [§FS-workspace](../functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace))*
 
+Text inside a source file's string literal is data, so a qualified citation there is not a cross-project citation and `grund fmt` never rewrites it; a marked unqualified citation there is still checked. A literal that spans lines — a Rust raw string, a Java text block, a JavaScript template, a shell heredoc and the other forms in [§FS-languages.multi-line-string.forms](../functional-spec/FS-languages.md#multi-line-stringforms-the-recognized-forms) — counts as a string on every line it spans. The forms grund does not carry, such as Ruby heredocs and shell's ordinary quoted strings, are listed in [§FS-languages.multi-line-string.unrecognized](../functional-spec/FS-languages.md#multi-line-stringunrecognized-the-forms-that-are-not-carried); on their later lines a qualified citation is still read as one.
+
 That is the core. Every rule, including citation directions, chapter rules, fields and
 values, with what it means underneath and the finding code it reports, is in
 [Schema and links](structure.md#schema-and-links-the-rules-a-repository-is-held-to).

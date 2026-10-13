@@ -2,47 +2,34 @@ docs/architecture/README.md:13: error: unknown reference AR-haskell-block
 docs/functional-spec/FS-entry.md:15: error: unknown reference AR-haskell-block
 src/BlockRouter.hs:12: error: unknown reference FS-gone-haskell-block
 src/MarkdownRouter.java:8: error: unknown reference FS-gone-java-markdown
-src/MarkdownRouter.java:12: error: unknown project alias api
 src/Router.cs:10: error: unknown reference FS-gone-csharp
-src/Router.cs:13: error: unknown project alias api
 src/Router.hs:11: error: unknown reference FS-gone-haskell
 src/Router.hs:14: error: unknown project alias api
 src/Router.java:10: error: unknown reference FS-gone-java
-src/Router.java:14: error: unknown project alias api
 src/Router.kt:10: error: unknown reference FS-gone-kotlin
-src/Router.kt:14: error: unknown project alias api
 src/Router.m:10: error: unknown reference FS-gone-objc
 src/Router.m:13: error: unknown project alias api
 src/Router.php:11: error: unknown reference FS-gone-php
-src/Router.php:15: error: unknown project alias api
 src/Router.scala:9: error: unknown reference FS-gone-scala
-src/Router.scala:12: error: unknown project alias api
 src/Router.swift:8: error: unknown reference FS-gone-swift
-src/Router.swift:12: error: unknown project alias api
 src/router.c:3: error: unknown reference FS-gone-c
 src/router.c:6: error: unknown project alias api
 src/router.clj:8: error: unknown reference FS-gone-clojure
 src/router.clj:11: error: unknown project alias api
 src/router.cpp:3: error: unknown reference FS-gone-cpp
-src/router.cpp:6: error: unknown project alias api
 src/router.dart:8: error: unknown reference FS-gone-dart
-src/router.dart:11: error: unknown project alias api
 src/router.el:8: error: unknown reference FS-gone-elisp
 src/router.el:11: error: unknown project alias api
 src/router.go:10: error: unknown reference FS-gone-go
-src/router.go:13: error: unknown project alias api
 src/router.js:10: error: unknown reference FS-gone-javascript
-src/router.js:13: error: unknown project alias api
 src/router.lua:8: error: unknown reference FS-gone-lua
 src/router.lua:11: error: unknown project alias api
 src/router.py:9: error: unknown reference FS-gone-python
 src/router.rb:8: error: unknown reference FS-gone-ruby
 src/router.rb:12: error: unknown project alias api
 src/router.rs:8: error: unknown reference FS-gone-rust
-src/router.rs:11: error: unknown project alias api
 src/router.sh:9: error: unknown reference FS-gone-shell
 src/router.sh:12: error: unknown project alias api
 src/router.sql:8: error: unknown reference FS-gone-sql
 src/router.sql:11: error: unknown project alias api
 src/router.ts:10: error: unknown reference FS-gone-typescript
-src/router.ts:13: error: unknown project alias api

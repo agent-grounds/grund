@@ -1,3 +1,4 @@
+use super::multi_line_string::MultiLineStrings;
 use super::source_line::{PythonDocstringScanState, SourceScanLine, source_scan_line};
 
 /// The never-rewrite predicates shared by the scanner (§AR-scanner.2.3), `fmt`
@@ -13,19 +14,23 @@ use super::source_line::{PythonDocstringScanState, SourceScanLine, source_scan_l
 /// to agree: `fmt` is forbidden to canonicalize a shorthand here, so
 /// §FS-check.3.13.1 must not demand it here either — an error whose named fix the
 /// tool refuses to perform is an error a repository can never clear.
-pub(crate) fn never_rewrite_context(line: &str, is_md: bool, marker_start: usize) -> bool {
-    if is_md {
-        is_inside_inline_code(line, marker_start)
-            || is_inside_markdown_link_destination(line, marker_start)
-    } else {
-        is_inside_string_literal(line, marker_start)
-    }
+///
+/// This is the Markdown half, which a raw line answers whole. A source line is
+/// asked through its line view, `never_rewrite_context_in`, because whether a
+/// column is inside a string depends on the lines above it
+/// (§FS-languages.multi-line-string).
+pub(crate) fn markdown_never_rewrite_context(line: &str, marker_start: usize) -> bool {
+    is_inside_inline_code(line, marker_start)
+        || is_inside_markdown_link_destination(line, marker_start)
 }
 
 /// Where a Python docstring's **content** and any assigned-data span sit on one
 /// raw source line (§AR-scanner.4.4, §FS-check.1.1.3.1). The docstring view is
 /// empty on every other line; the assigned-data span separately protects only
-/// its own raw bytes from scanner-aligned rewrites.
+/// its own raw bytes from scanner-aligned rewrites. It also carries the state
+/// the line **begins** in: how many of its leading bytes are inside a string
+/// literal an earlier line opened (§FS-languages.multi-line-string), so every
+/// reader that asks "inside a string?" asks it of the line it is actually on.
 ///
 /// §FS-fmt.2.3.1.1: a docstring's delimiters are doc-comment syntax, not quotes, so
 /// the never-rewrite walk runs over this slice rather than the raw line and a
@@ -37,20 +42,32 @@ pub(crate) fn never_rewrite_context(line: &str, is_md: bool, marker_start: usize
 pub(crate) struct DocstringContent<'a> {
     span: Option<(usize, &'a str)>,
     assigned_data_span: Option<(usize, usize)>,
+    /// The raw-line bytes before this offset are inside a multi-line literal
+    /// (§FS-languages.multi-line-string); `0` on a line that begins in code.
+    literal_entry: usize,
 }
 
 impl<'a> DocstringContent<'a> {
     /// The content span of a line the scanner has already normalized
     /// (§AR-scanner.4.4). `SourceScanLine::text` is a slice of the raw line starting
-    /// at `column_offset`, which is exactly the pair this view is.
-    pub(crate) fn of(scan: &SourceScanLine<'a>, raw_line: &'a str) -> Self {
+    /// at `column_offset`, which is exactly the pair this view is. `literal_entry` is
+    /// the line's entry in the file's `MultiLineStrings`.
+    pub(crate) fn of(scan: &SourceScanLine<'a>, raw_line: &'a str, literal_entry: usize) -> Self {
         Self {
             span: scan.in_py_docstring.then(|| {
                 let start = scan.column_offset;
                 (start, &raw_line[start..start + scan.text.len()])
             }),
             assigned_data_span: scan.assigned_data_span,
+            literal_entry,
         }
+    }
+
+    /// The literal entry state on the scanner's normalized line, which starts
+    /// `column_offset` bytes into the raw one (§AR-scanner.4.4,
+    /// §FS-languages.multi-line-string).
+    pub(crate) fn literal_entry_from(self, column_offset: usize) -> usize {
+        self.literal_entry.saturating_sub(column_offset)
     }
 
     /// The text a whole-line reader sees here: the docstring's content on a
@@ -71,15 +88,15 @@ impl<'a> DocstringContent<'a> {
     }
 
     /// The text a never-rewrite question at raw-line offset `pos` is asked of, with
-    /// `pos` translated into it. A position outside the content — the delimiter
-    /// itself, or the code after a one-line docstring closes — is judged on the raw
-    /// line, the only text that describes it.
-    fn view(self, raw_line: &'a str, pos: usize) -> (&'a str, usize) {
+    /// the literal entry state and `pos` translated into it. A position outside the
+    /// content — the delimiter itself, or the code after a one-line docstring
+    /// closes — is judged on the raw line, the only text that describes it.
+    fn view(self, raw_line: &'a str, pos: usize) -> (&'a str, usize, usize) {
         match self.span {
             Some((offset, text)) if pos >= offset && pos < offset + text.len() => {
-                (text, pos - offset)
+                (text, self.literal_entry_from(offset), pos - offset)
             }
-            _ => (raw_line, pos),
+            _ => (raw_line, self.literal_entry, pos),
         }
     }
 
@@ -89,7 +106,7 @@ impl<'a> DocstringContent<'a> {
     }
 }
 
-/// `never_rewrite_context` for a source line whose docstring content `docstring`
+/// The never-rewrite question for a line whose docstring content `docstring`
 /// describes, at the raw-line offset `marker_start` (§FS-fmt.2.3.1.1). Every surface
 /// that asks "may `fmt` rewrite here?" goes through this, so all three reach one
 /// verdict per site.
@@ -102,8 +119,12 @@ pub(crate) fn never_rewrite_context_in(
     if docstring.is_assigned_data(marker_start) {
         return true;
     }
-    let (text, pos) = docstring.view(line, marker_start);
-    never_rewrite_context(text, is_md, pos)
+    let (text, entry, pos) = docstring.view(line, marker_start);
+    if is_md {
+        markdown_never_rewrite_context(text, pos)
+    } else {
+        is_inside_string_literal(text, entry, pos)
+    }
 }
 
 /// `is_inside_string_literal` asked of the same view (§FS-fmt.2.3.1.1) — what the
@@ -113,8 +134,8 @@ pub(crate) fn string_literal_in(docstring: DocstringContent<'_>, line: &str, pos
     if docstring.is_assigned_data(pos) {
         return true;
     }
-    let (text, pos) = docstring.view(line, pos);
-    is_inside_string_literal(text, pos)
+    let (text, entry, pos) = docstring.view(line, pos);
+    is_inside_string_literal(text, entry, pos)
 }
 
 /// The Python-docstring state a line **begins** in, so a caller that rewrites the
@@ -126,29 +147,50 @@ pub(crate) fn string_literal_in(docstring: DocstringContent<'_>, line: &str, pos
 /// into the docstring's content, and every offset after the splice moves. The
 /// content's *start* never moves — only indentation and the delimiter precede it —
 /// so replaying `source_scan_line` from the entry state is exact.
-#[derive(Clone, Copy, Default)]
-pub(crate) struct DocstringCursor {
+///
+/// The cursor also reads the file's multi-line string literals
+/// (§FS-languages.multi-line-string) off the pre-pass `literals`, one line per
+/// `advance`. A splice never moves a closer: nothing before a line's closer is
+/// rewritten, because all of it is inside the literal.
+#[derive(Clone, Copy)]
+pub(crate) struct DocstringCursor<'l> {
     /// `true` only for a `.py` file in a project that scans docstrings; otherwise
-    /// every line yields an empty view and no work is done.
+    /// the docstring half of every view is empty and no work is done for it.
     scanning: bool,
     state: PythonDocstringScanState,
+    literals: &'l MultiLineStrings,
+    /// The 0-based index of the line the next `advance` reads.
+    line: usize,
 }
 
-impl DocstringCursor {
-    pub(crate) fn new(is_py: bool, docstring_python: bool) -> Self {
+impl Default for DocstringCursor<'_> {
+    fn default() -> Self {
+        Self::new(false, false, MultiLineStrings::NONE)
+    }
+}
+
+impl<'l> DocstringCursor<'l> {
+    pub(crate) fn new(is_py: bool, docstring_python: bool, literals: &'l MultiLineStrings) -> Self {
         Self {
             scanning: is_py && docstring_python,
             state: PythonDocstringScanState::default(),
+            literals,
+            line: 0,
         }
     }
 
     /// Advance over one raw line, returning its content view.
     pub(crate) fn advance<'a>(&mut self, line: &'a str) -> DocstringContent<'a> {
+        let literal_entry = self.literals.entry(self.line);
+        self.line += 1;
         if !self.scanning {
-            return DocstringContent::default();
+            return DocstringContent {
+                literal_entry,
+                ..DocstringContent::default()
+            };
         }
         let scan = source_scan_line(line, true, true, &mut self.state);
-        DocstringContent::of(&scan, line)
+        DocstringContent::of(&scan, line, literal_entry)
     }
 
     /// The content view of `line` read from this cursor's *current* state, leaving
@@ -167,13 +209,15 @@ impl DocstringCursor {
 /// demanding an edit the formatter refuses to make. Markdown inline-code spans
 /// are prose formatting rather than a rewrite hazard, so a bare token there stays
 /// a citation off strict mode — this predicate is narrower than
-/// `never_rewrite_context`, which also withholds the marked case from code.
+/// `never_rewrite_context_in`, which also withholds the marked case from code.
 ///
 /// §AR-scanner.2.3.1: the third zone, the escape position of §FS-check.1.1.9, is
 /// the one that depends on neither the strict mode nor the host language, so it is
-/// asked of Markdown and source alike rather than in either branch.
+/// asked of Markdown and source alike rather than in either branch. `entry` is the
+/// line's literal entry state (§FS-languages.multi-line-string).
 pub(crate) fn bare_token_in_never_rewrite_zone(
     line: &str,
+    entry: usize,
     is_md: bool,
     pos: usize,
     marker: &str,
@@ -184,7 +228,7 @@ pub(crate) fn bare_token_in_never_rewrite_zone(
     if is_md {
         is_inside_markdown_link_destination(line, pos)
     } else {
-        is_inside_string_literal(line, pos)
+        is_inside_string_literal(line, entry, pos)
     }
 }
 
@@ -216,7 +260,26 @@ pub(crate) fn in_escape_position(line: &str, pos: usize, marker: &str) -> bool {
 /// this line — the source-code exclusion that keeps an ID printed in a string
 /// from being treated as a citation by the scanner or rewritten by `fmt`
 /// (§FS-fmt.2.3.1).
-pub(crate) fn is_inside_string_literal(line: &str, pos: usize) -> bool {
+///
+/// `entry` is the state the line begins in (§FS-languages.multi-line-string): its
+/// first `entry` bytes are inside a literal an earlier line opened, and the
+/// per-line toggle starts neutral after them. `0` is a line that begins in code.
+pub(crate) fn is_inside_string_literal(line: &str, entry: usize, pos: usize) -> bool {
+    after_literal(line, entry, pos).is_none_or(|(tail, pos)| toggled_open(tail, pos))
+}
+
+/// The part of `line` after its carried literal closes, with `pos` translated into
+/// it — `None` while `pos` is still inside that literal
+/// (§FS-languages.multi-line-string).
+fn after_literal(line: &str, entry: usize, pos: usize) -> Option<(&str, usize)> {
+    if pos < entry {
+        return None;
+    }
+    Some((line.get(entry..)?, pos - entry))
+}
+
+/// The per-line quote toggle of §FS-fmt.2.3.1, from a neutral start.
+fn toggled_open(line: &str, pos: usize) -> bool {
     let bytes = line.as_bytes();
     let mut single = false;
     let mut double = false;
@@ -357,7 +420,16 @@ pub(crate) fn is_escaped(bytes: &[u8], pos: usize) -> bool {
 /// no string literals and its inline code is prose formatting, so a marked
 /// qualified citation there is always a citation. Shared by every detection pass
 /// so the rule lives in one place; returns whether the citation at `pos` must be
-/// suppressed.
-pub(crate) fn qualified_suppressed_in_source(scan_line: &str, is_md: bool, pos: usize) -> bool {
-    !is_md && (is_inside_inline_code(scan_line, pos) || is_inside_string_literal(scan_line, pos))
+/// suppressed. Both halves are read after the line's carried literal closes
+/// (`entry`, §FS-languages.multi-line-string), so a template's closing `` ` ``
+/// opens no inline-code span.
+pub(crate) fn qualified_suppressed_in_source(
+    scan_line: &str,
+    entry: usize,
+    is_md: bool,
+    pos: usize,
+) -> bool {
+    !is_md
+        && after_literal(scan_line, entry, pos)
+            .is_none_or(|(tail, pos)| is_inside_inline_code(tail, pos) || toggled_open(tail, pos))
 }

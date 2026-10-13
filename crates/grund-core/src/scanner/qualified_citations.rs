@@ -9,7 +9,7 @@ use super::citation_line::CitationLine;
 use super::citations::{glob_claimed, record_glob_citation, scanned_citation_rewritable};
 use crate::grammar::{
     CandidateReading, QUALIFIED_CITATION_PREFIX, parse_longest_id_prefix,
-    parse_qualified_id_prefix, qualified_suppressed_in_source, read_loose_candidate,
+    parse_qualified_id_prefix, read_loose_candidate,
 };
 use crate::model::{Catalog, Citation, Id};
 use crate::workspace::WorkspaceCitationTarget;
@@ -49,7 +49,7 @@ pub(super) fn scan_fallback_qualified_citations(
         if qualified_claimed.contains(&marker_start) || glob_claimed(line, marker_start, findings) {
             continue;
         }
-        if qualified_suppressed_in_source(line.scan_line, line.is_md, marker_start) {
+        if line.qualified_suppressed(marker_start) {
             continue;
         }
         let token_start = marker_start + line.schema.citation.marker.len();
@@ -149,7 +149,7 @@ pub(super) fn scan_workspace_qualified_pass(
         return;
     }
     for (marker_start, _) in line.scan_line.match_indices(&line.schema.citation.marker) {
-        if qualified_suppressed_in_source(line.scan_line, line.is_md, marker_start) {
+        if line.qualified_suppressed(marker_start) {
             continue;
         }
         let token_start = marker_start + line.schema.citation.marker.len();

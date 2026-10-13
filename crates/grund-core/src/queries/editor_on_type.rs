@@ -4,8 +4,9 @@ use std::path::Path;
 use crate::config::{Config, fmt_excluded};
 use crate::grammar::{
     DocstringContent, DocstringCursor, FmtDirectives, MarkdownBlocks, MarkdownLine,
-    bare_block_lines, declaration_id_on_source_line, id_token_end_at, is_inside_inline_code,
-    is_inside_markdown_link_destination, never_rewrite_context_in, string_literal_in,
+    MultiLineStrings, bare_block_lines, declaration_id_on_source_line, id_token_end_at,
+    is_inside_inline_code, is_inside_markdown_link_destination, never_rewrite_context_in,
+    string_literal_in,
 };
 use crate::sources::canonical_snapshot_path;
 
@@ -117,7 +118,7 @@ pub fn on_type_line_edits(
     };
     let cursor = cursor_byte.min(line.len());
     let is_py = path.extension().and_then(|ext| ext.to_str()) == Some("py");
-    if let Some(edit) = trigger_marker_edit(&config, path, text, line_index, is_py, line, cursor) {
+    if let Some(edit) = trigger_marker_edit(&config, path, text, line_index, line, cursor) {
         return Ok(vec![edit]);
     }
     Ok(shorthand_expansion_edit(
@@ -142,11 +143,14 @@ pub fn on_type_line_edits(
 /// not a scanned `.py` returns the empty view without walking at all.
 pub(super) fn docstring_content_at<'a>(
     config: &Config,
+    path: &Path,
     text: &'a str,
     line_index: usize,
-    is_py: bool,
 ) -> DocstringContent<'a> {
-    let mut docstrings = DocstringCursor::new(is_py, config.docstring_python);
+    let is_py = path.extension().and_then(|ext| ext.to_str()) == Some("py");
+    // §FS-languages.multi-line-string: the same pre-pass `rewrite_file` reads.
+    let literals = MultiLineStrings::of(path, text, config.docstring_python);
+    let mut docstrings = DocstringCursor::new(is_py, config.docstring_python, &literals);
     let mut content = DocstringContent::default();
     for (index, line) in text.lines().enumerate() {
         content = docstrings.advance(line);
@@ -185,7 +189,9 @@ pub(super) fn line_is_rewritable(
     let mut markdown_blocks = MarkdownBlocks::default();
     // §FS-fmt.2.3.1.1: `rewrite_file` reads a docstring line's content when it asks
     // whether the line is a declaration heading, so this walk does too.
-    let mut docstrings = DocstringCursor::new(is_py, config.docstring_python);
+    // It asks no string question, so it reads no multi-line literal.
+    let mut docstrings =
+        DocstringCursor::new(is_py, config.docstring_python, MultiLineStrings::NONE);
     // §FS-fmt.2.5.2.1: every file starts with the rewrite on — a region never
     // carries across files, so the walk starts at the top of this one.
     let mut directives = FmtDirectives::new(config.lexical(), is_md);
@@ -297,13 +303,11 @@ fn declarations_under_root<'a>(declarations: &[DeclaredId<'a>], root: &Path) -> 
 
 /// The `$$` → `§` conversion for the trigger immediately before `cursor`, when the
 /// text between it and the cursor is a whole ID-shaped token (§FS-fmt.2.1).
-#[allow(clippy::too_many_arguments)]
 fn trigger_marker_edit(
     config: &Config,
     path: &Path,
     text: &str,
     line_index: usize,
-    is_py: bool,
     line: &str,
     cursor: usize,
 ) -> Option<LineEdit> {
@@ -315,7 +319,7 @@ fn trigger_marker_edit(
     }
     // §FS-fmt.2.3.1.1: the docstring walk runs only here, past the two tests that
     // reject every ordinary keystroke (§GOAL-fast-feedback).
-    let docstring = docstring_content_at(config, text, line_index, is_py);
+    let docstring = docstring_content_at(config, path, text, line_index);
     if !can_replace_trigger_with_config(config, docstring, path, line, trigger_start, token) {
         return None;
     }
@@ -364,7 +368,7 @@ fn shorthand_expansion_edit(
     // contexts the live transform refuses, so a citation illustrated in inline
     // code stays as typed and so does one in a scope the repository suppressed.
     let is_md = path.extension().and_then(|ext| ext.to_str()) == Some("md");
-    let docstring = docstring_content_at(config, text, line_index, is_py);
+    let docstring = docstring_content_at(config, path, text, line_index);
     if never_rewrite_context_in(docstring, line, is_md, marker_start)
         || file_is_fmt_excluded(config, path)
         || !line_is_rewritable(config, text, line_index, is_md, is_py)

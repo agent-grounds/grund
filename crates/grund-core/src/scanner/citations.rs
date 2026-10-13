@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 use super::citation_line::CitationLine;
 use crate::grammar::{
     CandidateReading, QUALIFIED_CITATION_PREFIX, never_rewrite_context_in, parse_id,
-    parse_longest_id_prefix, qualified_suppressed_in_source,
+    parse_longest_id_prefix,
 };
 use crate::model::{
     Catalog, Citation, GlobCitation, LegacyCitationCandidate, LocalSectionCitationCandidate,
@@ -125,7 +125,7 @@ pub(super) fn scan_legacy_citation_candidates(
         };
         let (namespace, tail) = match QUALIFIED_CITATION_PREFIX.captures(rest) {
             Some(prefix) => {
-                if qualified_suppressed_in_source(line.scan_line, line.is_md, marker_start) {
+                if line.qualified_suppressed(marker_start) {
                     continue;
                 }
                 let Some(alias) = prefix.name("namespace") else {
@@ -185,7 +185,7 @@ pub(super) fn claim_citation_tokens<'a>(
                 return true;
             };
             if !line.scan_line[..token_start].ends_with(marker)
-                || qualified_suppressed_in_source(line.scan_line, line.is_md, marker_start)
+                || line.qualified_suppressed(marker_start)
             {
                 return true;
             }
@@ -381,7 +381,7 @@ pub(super) fn scan_shorthand_citations(
         if namespace.is_some()
             && (workspace_mode
                 || qualified_claimed.contains(&marker_start)
-                || qualified_suppressed_in_source(line.scan_line, line.is_md, marker_start))
+                || line.qualified_suppressed(marker_start))
         {
             continue;
         }

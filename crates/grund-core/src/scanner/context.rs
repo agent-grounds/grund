@@ -5,7 +5,7 @@ use std::path::Path;
 use super::extents::body_has_content;
 use super::line_owners::{LineOwners, resolve_requested_lines};
 use crate::config::{Frame, Schema};
-use crate::grammar::{AliasGrammar, block_declares_id, inline_note_verdicts};
+use crate::grammar::{AliasGrammar, MultiLineStrings, block_declares_id, inline_note_verdicts};
 use crate::model::{
     BlockForm, Catalog, FileRecord, InlineCitationSite, RecordedBlock,
     SectionHeadingOutsideDeclaration,
@@ -281,6 +281,7 @@ fn lexical_targets(targets: &[WorkspaceCitationTarget]) -> Vec<AliasGrammar<'_>>
 /// §AR-scanner.4).
 pub(super) fn inline_citation_sites(
     lines: &[&str],
+    literals: &MultiLineStrings,
     blocks: &[RecordedBlock],
     schema: &Schema,
     frame: Frame<'_>,
@@ -317,6 +318,8 @@ pub(super) fn inline_citation_sites(
             // (§AR-scanner.3.2).
             let (has_note, layout_violations) = inline_note_verdicts(
                 block,
+                // §FS-languages.multi-line-string: each line read in the state it begins in.
+                literals.starting_at(start),
                 start + 1,
                 frame.compiled.lexical(schema),
                 &alias_grammars,

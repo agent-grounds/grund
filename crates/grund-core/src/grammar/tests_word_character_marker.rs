@@ -36,11 +36,12 @@ fn word_character_marker_note_classification_preserves_containing_full_ids() {
         ] {
             config.strict = strict;
             let line = format!("// {token}");
-            let ranges = line_citation_ranges(&line, config.lexical(), &[]);
+            let ranges = line_citation_ranges(&line, 0, config.lexical(), &[]);
             assert_eq!(ranges, vec![(3, line.len())], "{line}");
             assert!(
                 !block_has_inline_note(
                     &[&line],
+                    &[],
                     config.lexical(),
                     &[],
                     &comment_strip_prefixes(config.lexical())
@@ -49,7 +50,7 @@ fn word_character_marker_note_classification_preserves_containing_full_ids() {
             );
 
             let noted = format!("{line}: retain the whole target");
-            let ranges = line_citation_ranges(&noted, config.lexical(), &[]);
+            let ranges = line_citation_ranges(&noted, 0, config.lexical(), &[]);
             assert_eq!(ranges, vec![(3, line.len())], "{noted}");
             let (content, tokens) =
                 line_layout_view(&noted, &ranges, &comment_strip_prefixes(config.lexical()))
@@ -65,6 +66,7 @@ fn word_character_marker_note_classification_preserves_containing_full_ids() {
             assert!(
                 block_has_inline_note(
                     &[&noted],
+                    &[],
                     config.lexical(),
                     &[],
                     &comment_strip_prefixes(config.lexical())
@@ -92,7 +94,7 @@ fn word_character_marker_note_classification_keeps_overlapping_marker_ranges() {
             config.strict = strict;
             for prefix in ["// ", "// 😀 "] {
                 let line = format!("{prefix}{run}FS_login");
-                let ranges = line_citation_ranges(&line, config.lexical(), &[]);
+                let ranges = line_citation_ranges(&line, 0, config.lexical(), &[]);
                 let start = prefix.len() + skipped_bytes;
                 assert_eq!(ranges, vec![(start, line.len())], "{line}");
                 assert_eq!(&line[start..], format!("{marker}FS_login"));

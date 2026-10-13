@@ -81,6 +81,8 @@ mod inline_note_layout;
 mod language_table;
 mod managed_block;
 mod markdown_blocks;
+mod multi_line_forms;
+mod multi_line_string;
 mod near_miss;
 mod never_rewrite;
 mod relative_heading;
@@ -133,6 +135,7 @@ pub(crate) use managed_block::{
     find_managed_block, integrations_block_markers,
 };
 pub(crate) use markdown_blocks::{MarkdownBlocks, MarkdownLine, markdown_line_kinds};
+pub(crate) use multi_line_string::MultiLineStrings;
 // The version a managed integrations block is written and read at: the command
 // that installs one stamps it, and that command is the CLI's
 // (§FS-integrations.4.2, §AR-bindings.3).
@@ -144,8 +147,9 @@ pub(crate) use near_miss::declaration_id_on_line;
 pub(crate) use near_miss::{declaration_captures, near_miss_heading};
 pub(crate) use never_rewrite::{
     DocstringContent, DocstringCursor, bare_token_in_never_rewrite_zone, in_escape_position,
-    is_escaped, is_inside_inline_code, is_inside_markdown_link_destination, never_rewrite_context,
-    never_rewrite_context_in, qualified_suppressed_in_source, string_literal_in,
+    is_escaped, is_inside_inline_code, is_inside_markdown_link_destination,
+    markdown_never_rewrite_context, never_rewrite_context_in, qualified_suppressed_in_source,
+    string_literal_in,
 };
 pub(crate) use relative_heading::{
     expand_relative_heading, may_hold_relative_heading, relative_heading_form,
@@ -195,6 +199,8 @@ mod tests_inline_note_layout;
 mod tests_line_prefix_forms;
 #[cfg(test)]
 mod tests_markdown_blocks;
+#[cfg(test)]
+mod tests_multi_line_string;
 #[cfg(test)]
 mod tests_never_rewrite;
 #[cfg(test)]

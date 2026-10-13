@@ -83,7 +83,8 @@ and ID. They use your document's member config. A complete loaded alias plus
 project ([§FS-lsp.1.6.2](../functional-spec/FS-lsp.md#162-candidates-resolution-and-ordering)).
 
 Completion follows the formatter's protected contexts: no choices in inline
-code, link destinations, fences, declaration headings, source strings,
+code, link destinations, fences, declaration headings, source strings (a
+string that spans lines included),
 `grund:fmt off` regions, excluded or unscanned files, or outward file symlinks.
 Source comments and Python docstrings are eligible. A nonempty typing trigger
 works even with an empty marker; bare IDs never start completion
