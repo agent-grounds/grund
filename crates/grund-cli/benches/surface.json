@@ -4,7 +4,7 @@
       "scenarios": ["check", "check_large_10k", "check_citations"],
       "flags": {
         "--format": {"waiver": "Changes only how the findings the scan produced are printed; the scan the check rows count is the same, and #699 is to add a json row."},
-        "--full": {"waiver": "Widens the walk past [scan] include, a manual audit rather than the save or commit gate; #699 is to add a scenario for it."},
+        "--full": {"waiver": "Widens the walk past [scan] include to every reachable file; this repository's own pre-commit hook and CI self-check run it, so it is on their commit path, and #699 is to add a scenario for it."},
         "--ignore": {"waiver": "Filters finding codes after the scan the check rows already count."},
         "--only": {"waiver": "Filters finding codes after the scan the check rows already count."},
         "--only-rule": {"waiver": "Narrows the output of --rule, after the scan the check rows already count; it is covered with --rule."},
@@ -55,7 +55,7 @@
       "scenarios": ["cover"],
       "flags": {
         "--format": {"waiver": "Changes only how the cover row's records are printed."},
-        "--lines": {"waiver": "An editor query on one file's line range, served on the editor path by grund-lsp (mode lsp); #699 is to add a scenario for it."},
+        "--lines": {"waiver": "One scan plus a line-ownership pass over one file, which the opt-in co-change commit-msg and CI recipe runs on each diff hunk, so it is on that commit path; #699 is to add a scenario for it."},
         "--path-base": {"waiver": "Rewrites the printed paths, after the scan the cover row already counts."}
       }
     },
@@ -73,7 +73,8 @@
     "init": {"waiver": "Run once when a repository adopts grund, and scaffolds files rather than scanning a tree."},
     "config": {"waiver": "Reads and validates one grund.toml, run by hand; the same config load is inside every counted row."},
     "agent-setup-instructions": {"waiver": "Prints fixed text and scans nothing."},
-    "completions": {"waiver": "Prints a fixed shell script once per shell setup and scans nothing; the ID lookup it installs runs `grund complete ids` on each Tab, outside SUBCOMMANDS and this inventory."},
+    "completions": {"waiver": "Prints a fixed shell script once per shell setup and scans nothing; the ID lookup it installs runs `grund complete ids` on each Tab, which is inventoried as the hidden command `complete`."},
+    "complete": {"waiver": "The hidden shell-completion helper: one scan of the tree per Tab that asks for IDs, never on the save, commit or push path; #699 may add a row for it."},
     "integrations": {"waiver": "Prints or installs editor and terminal integration snippets once per machine and scans nothing."}
   },
   "modes": {

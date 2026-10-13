@@ -90,7 +90,7 @@ Choosing the benched commands by how often they run ([§AR-benchmarks.1.2](AR-be
 
 The inventory covers three kinds of item, and only the third is kept by hand:
 
-- **Commands**: every entry of the `SUBCOMMANDS` table in `crates/grund-cli/src/lib.rs`, the list the CLI dispatches on. The inventory never copies that list. The test reads it.
+- **Commands**: every entry of the `SUBCOMMANDS` table in `crates/grund-cli/src/lib.rs`, the list the CLI dispatches on, and every entry of its `HIDDEN_SUBCOMMANDS` table, which the CLI dispatches too but keeps out of help and completion, such as the shell-completion helper `complete`. The inventory never copies either list. The test reads them. A hidden command has no help page, so it is inventoried as a command with no flags.
 - **Flags**: every `--flag` the command's help page prints, read from the help page's source: the arm of `print_subcommand_help` in `crates/grund-cli/src/cli_help.rs` for that command, the `print_*_help` function the arm calls, and every `print_*` helper those call, such as `print_run_flag_help`. Its string literals are the text `grund <command> --help` prints. `--help` itself is left out, because every command takes it and it scans nothing. A positional word such as `config show` or `completions bash` is not a flag.
 - **Designated performance-sensitive modes**: ways of running the engine that no command or flag names, so the CLI definition cannot list them. They are the list in section 1.6.1. That list is the one part of the surface written by hand, and adding a mode means adding it there.
 
