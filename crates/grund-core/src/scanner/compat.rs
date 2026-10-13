@@ -128,7 +128,7 @@ pub(crate) fn today_slices(
     let own_marker = (!is_md && !in_docstring)
         .then(|| own_line_marker(scan_line, lexical))
         .flatten();
-    let own_marker = own_marker.as_deref();
+    let own_marker = own_marker.as_ref();
     // §FS-declarations.line.block-comment: a declaration 0.17 never found has no bytes to keep,
     // so its block is read by the record's envelope, down to the block's `*/`.
     let record_block_end = bare_declaration_block_end(record, decl_line);
@@ -343,7 +343,7 @@ pub(crate) fn record_lead(
         sink.lines.push(if record_envelope {
             comment_envelope(scan_line, &BlockForm::Block).to_string()
         } else {
-            clean_envelope_line(scan_line, markdown_heading, own_marker.as_deref())
+            clean_envelope_line(scan_line, markdown_heading, own_marker.as_ref())
         });
     }
     sink.finish().0

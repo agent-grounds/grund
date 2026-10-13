@@ -7,7 +7,9 @@ use std::path::Path;
 use super::value_context::SourceValueLineContext;
 use crate::config::{Frame, Schema};
 use crate::grammar::named_mode_section_path;
-use crate::grammar::{PythonDocstringScanState, longest_form_at, prefix_forms, source_scan_line};
+use crate::grammar::{
+    PythonDocstringScanState, is_lone_block_marker, longest_form_at, prefix_forms, source_scan_line,
+};
 use crate::model::{Catalog, Declaration, DeclarationSource, Id, InvalidValueSite};
 
 pub(crate) const EMBEDDED_VALUE_MARKER: &str = "<!-- grund:value -->";
@@ -228,7 +230,7 @@ pub(super) fn semantic_comment_content<'a>(
     if markdown {
         return content;
     }
-    if matches!(content, "/*" | "/**" | "/*!" | "*" | "*/") {
+    if is_lone_block_marker(content) {
         return "";
     }
     // §FS-languages.prefixes.forms: the marker is the longest form of a configured

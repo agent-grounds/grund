@@ -4,6 +4,7 @@ use regex::Regex;
 use super::compiled::Grammar;
 use super::ids::parse_id;
 use super::settings::GrammarKind;
+use super::source_line::prefix_forms;
 use crate::model::Id;
 // `LegacyGrammar` below is this component's own, moved down out of the scanner
 // with §AR-system.2.5.
@@ -51,6 +52,7 @@ impl NearMissGrammar {
     pub(super) fn build(
         kind_alt: &str,
         comment_prefix: &str,
+        comment_prefixes: &[String],
         after_kind: &str,
         format: &str,
     ) -> Self {
@@ -67,7 +69,7 @@ impl NearMissGrammar {
             docstring_pattern: format!(r"^\s*{near}"),
             decl_re: once_cell::sync::OnceCell::new(),
             docstring_re: once_cell::sync::OnceCell::new(),
-            first_bytes: first_declaration_bytes(comment_prefix),
+            first_bytes: first_declaration_bytes(comment_prefixes),
         }
     }
 
@@ -120,26 +122,18 @@ impl NearMissGrammar {
 }
 
 /// The bytes a declaration-position line can begin with: `#` for the Markdown
-/// form, plus the first byte of every alternative in the comment-prefix group.
-/// Read off the compiled alternation rather than the raw `[scan] comment_prefixes`
-/// so it cannot drift from what the pattern actually accepts — `//` is widened to
-/// `//[/!]?` there, and both still begin with `/`.
-fn first_declaration_bytes(comment_prefix: &str) -> Vec<u8> {
+/// form, plus the first byte of every configured comment prefix. Every form a
+/// prefix stands for opens with the prefix itself (§FS-languages.prefixes.forms),
+/// so `///`, `---`, `-- |` and `;;` add no byte their prefix does not, and the set
+/// is read off the same table the pattern's alternation is built from
+/// (§AR-scanner.4.3).
+fn first_declaration_bytes(comment_prefixes: &[String]) -> Vec<u8> {
     let mut bytes = vec![b'#'];
-    // The group is `(?:…)`; its own `?:` is no alternative's first byte, which
-    // matters now the longest alternative, `/\*[*!]?`, sorts first (§AR-scanner.4.3).
-    let group = comment_prefix
-        .strip_prefix("(?:")
-        .and_then(|inner| inner.strip_suffix(')'))
-        .unwrap_or(comment_prefix);
-    for alternative in group.split('|') {
-        // Every alternative is `regex::escape`d, so a leading `\` is the escape
-        // of the byte that follows it.
-        let literal = alternative.strip_prefix('\\').unwrap_or(alternative);
-        if let Some(&byte) = literal.as_bytes().first() {
-            bytes.push(byte);
-        }
-    }
+    bytes.extend(
+        comment_prefixes
+            .iter()
+            .filter_map(|prefix| prefix_forms(prefix).first_byte()),
+    );
     bytes.sort_unstable();
     bytes.dedup();
     bytes
