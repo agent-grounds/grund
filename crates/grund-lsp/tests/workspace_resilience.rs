@@ -493,3 +493,54 @@ fn a_member_config_two_folders_fail_on_is_published_once_from_the_member() {
     wait_for_exit(&mut child);
     let _ = fs::remove_dir_all(&base);
 }
+
+#[test]
+fn a_claiming_ancestor_config_that_stops_loading_is_published_on_its_grund_toml() {
+    let base =
+        std::env::temp_dir().join(format!("grund-lsp-config-ancestor-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&base);
+    let ancestor = base.join("w");
+    let claiming = "grund_config_version = 1\n[workspace]\nmembers = [\"m\"]\n";
+    let ancestor_config = ancestor.join("grund.toml");
+    write(&ancestor_config, claiming);
+    let member = ancestor.join("m");
+    let (spec, source) = write_project(&member, "Use");
+    let member_config = member.join("grund.toml");
+    let healthy = fs::read_to_string(&member_config).expect("read config");
+    write(
+        &member_config,
+        &format!("project_name = \"m\"\n{healthy}[workspace]\nmembers = [\"sub\"]\n"),
+    );
+    write(
+        &member.join("sub/grund.toml"),
+        "grund_config_version = 1\nproject_name = \"sub\"\n",
+    );
+    let config_uri = file_uri(&ancestor_config);
+
+    let (mut child, mut stdin, receiver) = start_server_with_workspace_folders(&base, &[&member]);
+    assert!(
+        cites(
+            &references(&mut child, &mut stdin, &receiver, 2, &spec),
+            &source
+        ),
+        "the healthy configs' scan is the last good one before the ancestor's breaks"
+    );
+
+    // The block that claims `m` is the file that will not load, so `grund check`
+    // in `m` fails on it, and the editor marks it there (§FS-lsp.2.2.4.1).
+    write(&ancestor_config, &format!("{claiming}[scan\n"));
+    changed_watched_files(&mut stdin);
+    let diagnostics = recv_publish_for(
+        &receiver,
+        &mut child,
+        &config_uri,
+        "the claiming ancestor's config load error",
+        |diagnostics| !diagnostics.is_empty(),
+    );
+    assert_config_error_at(&diagnostics, 3, "../grund.toml:4: expected `key = value`");
+
+    stop_server(&mut child, &mut stdin, &receiver, 3);
+    drop(stdin);
+    wait_for_exit(&mut child);
+    let _ = fs::remove_dir_all(&base);
+}

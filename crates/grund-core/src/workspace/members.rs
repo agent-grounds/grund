@@ -19,7 +19,7 @@
 //! (§AR-core-module-layout.1).
 
 use crate::sources::{Sources, canonical_path, is_directory, path_is_dir, path_metadata};
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -30,7 +30,7 @@ use crate::config::{
     AbsentOptionalNamespace, Config, ConfigLocation, Invocation, Selection, config_at,
     config_file_in, parse_string_list, strip_comment,
 };
-use crate::model::{Diagnostic, is_hidden, sort_path_key};
+use crate::model::{Diagnostic, OperationDiagnostic, is_hidden, sort_path_key};
 
 /// The canonical form of `path` — the root a project is identified by — or the path
 /// unchanged when it does not resolve.
@@ -353,7 +353,7 @@ pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>,
 /// claimed, the expanded member roots.
 struct AncestorBlock {
     claims: Vec<MemberClaim>,
-    config: Result<Config, String>,
+    config: Result<Config, OperationDiagnostic>,
     members: Option<Vec<PathBuf>>,
 }
 
@@ -462,7 +462,8 @@ impl AncestorWorkspaces {
         // failing the claim — the same way an expansion failure is (§FS-workspace.6.1.7).
         let config = match &block.config {
             Ok(config) => config,
-            Err(message) => return Err(anyhow!("{message}")),
+            // §FS-lsp.2.2.4.1: re-raised typed, so the file and line it names reach an editor.
+            Err(diagnostic) => return Err(diagnostic.clone().into()),
         };
         if block.members.is_none() {
             block.members = Some(expand_workspace_members(config)?);
@@ -517,7 +518,10 @@ fn read_ancestor_workspace_block(
                 Some(report_base),
                 &Invocation::new(dir, false, Selection::Project),
             )
-            .map_err(|err| format!("{err:#}")),
+            .map_err(|err| {
+                err.downcast::<OperationDiagnostic>()
+                    .unwrap_or_else(|err| OperationDiagnostic::from_error("config", "config", err))
+            }),
             members: None,
         }),
         None,
