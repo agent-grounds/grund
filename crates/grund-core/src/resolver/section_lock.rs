@@ -10,6 +10,7 @@ use std::path::PathBuf;
 
 use super::citation_target::WorkspaceCheckTarget;
 use super::point_body::point_body_pair;
+use super::relative_fingerprint::relative_nested_headings;
 use crate::config::{Frame, Schema};
 use crate::grammar::render_id;
 use crate::model::{
@@ -240,7 +241,8 @@ fn sole_declaration<'a>(findings: &'a Catalog, id: &Id) -> Option<&'a Declaratio
     Some(sole.record)
 }
 
-/// Every section of `decl` with its line and fingerprint, in document order.
+/// Every section of `decl` with its line and fingerprint, in document order: the
+/// one place a fingerprint is computed (§DF-section-lock-relative-fingerprint.decision.one-place).
 fn fingerprints(
     target: LockTarget<'_, '_>,
     id: &Id,
@@ -258,9 +260,11 @@ fn fingerprints(
             let (_, full) =
                 point_body_pair(&catalog.files, schema, frame, id, decl, Some((path, info)))
                     .ok()??;
-            // §FS-section-lock.holds.fingerprint: the text below the heading line.
+            // §FS-section-lock.holds.fingerprint: the text below the heading line,
+            // its nested headings written relative to the section.
             let below = full.split_once('\n').map_or("", |(_, below)| below);
-            Some((path.clone(), info.line, section_fingerprint(below)))
+            let below = relative_nested_headings(below, decl, path, info.line);
+            Some((path.clone(), info.line, section_fingerprint(&below)))
         })
         .collect::<Vec<_>>();
     sections.sort_by_key(|(_, line, _)| *line);

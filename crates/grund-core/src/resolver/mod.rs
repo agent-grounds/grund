@@ -77,6 +77,7 @@ mod id_candidates;
 mod legacy_promotion;
 mod link_targets;
 mod point_body;
+mod relative_fingerprint;
 mod section_lock;
 mod settled_headings;
 mod shorthand;

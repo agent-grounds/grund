@@ -69,6 +69,24 @@ pub(crate) fn expand_relative_heading(line: &str, canonical: &str) -> String {
     format!("{}{canonical}{tail}", &line[..dot])
 }
 
+/// The heading line with its path, `written` as the line spells it, replaced by
+/// `.` and `below`, the components it has beneath an enclosing section; its `#`
+/// run and everything after the path kept: `#### 1.1.1. Latency` and `#### .1.
+/// Latency`, both at `1.1.1`, are `#### .1. Latency` beneath `1.1`
+/// (§FS-section-lock.holds.fingerprint). The inverse of
+/// [`expand_relative_heading`]. A line that does not spell `written` comes back
+/// unchanged.
+pub(crate) fn relative_to_ancestor(line: &str, written: &str, below: &str) -> String {
+    let after_hashes = line.trim_start().trim_start_matches('#');
+    let text = after_hashes.trim_start_matches([' ', '\t']);
+    match text.strip_prefix(written) {
+        Some(tail) if !written.is_empty() => {
+            format!("{}.{below}{tail}", &line[..line.len() - text.len()])
+        }
+        _ => line.to_string(),
+    }
+}
+
 /// The relative heading an unmarked dotted heading would be written as under the
 /// parent of `suggested` (§FS-declarations.checks.unmarked-heading.2.1): the `#`
 /// run, `.` and the last component, the title syntax the suggested heading uses,
@@ -94,8 +112,36 @@ pub(crate) fn relative_heading_hint(level: usize, suggested: &str, title: &str) 
 mod tests {
     use super::{
         expand_relative_heading, may_hold_relative_heading, relative_heading_form,
-        relative_heading_hint,
+        relative_heading_hint, relative_to_ancestor,
     };
+
+    #[test]
+    fn a_path_is_written_relative_to_an_ancestor_keeping_the_rest() {
+        assert_eq!(
+            relative_to_ancestor("#### 1.1.1. Latency", "1.1.1", "1"),
+            "#### .1. Latency"
+        );
+        assert_eq!(
+            relative_to_ancestor("#### .1. Latency", ".1", "1"),
+            "#### .1. Latency"
+        );
+        assert_eq!(
+            relative_to_ancestor("##### .1. P95", ".1", "1.1"),
+            "##### .1.1. P95"
+        );
+        assert_eq!(
+            relative_to_ancestor(
+                "#### 1.goals.latency: Latency",
+                "1.goals.latency",
+                "latency"
+            ),
+            "#### .latency: Latency"
+        );
+        assert_eq!(
+            relative_to_ancestor("#### Other", "1.1.1", "1"),
+            "#### Other"
+        );
+    }
 
     #[test]
     fn only_a_relative_heading_asks_for_a_scan() {
