@@ -187,16 +187,17 @@ pub(crate) fn config_at(
             let report_path = report_relative(&candidate);
             run.config_file = Some(report_path.clone());
             // §FS-distribution.3.3.2: classify all config-load failures at discovery.
-            read_config(&candidate, &report_path, &root, run, invocation).map_err(|error| {
-                if error
-                    .downcast_ref::<crate::model::OperationDiagnostic>()
-                    .is_some()
+            // §FS-lsp.2.2.4.1: and name the file it failed on, which an editor marks.
+            read_config(&candidate, &report_path, &root, run, invocation).map_err(|mut error| {
+                if let Some(diagnostic) = error.downcast_mut::<crate::model::OperationDiagnostic>()
                 {
+                    diagnostic.file = Some(candidate.clone());
                     error
                 } else {
                     let mut diagnostic =
                         crate::model::OperationDiagnostic::from_error("config", "config", error);
                     diagnostic.path = Some(format_path(&report_path));
+                    diagnostic.file = Some(candidate.clone());
                     diagnostic.into()
                 }
             })?
