@@ -334,8 +334,8 @@
       "limit_pct": 12.5,
       "ceiling_ir": 165000000,
       "ceiling_from": {
-        "ir": 131403220,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 131972862,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -347,10 +347,10 @@
       "fixture": "scan-parallel",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 181000000,
+      "ceiling_ir": 170000000,
       "ceiling_from": {
-        "ir": 144124013,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 135431778,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -364,10 +364,10 @@
       "fixture": "canonical",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 853000000,
+      "ceiling_ir": 836000000,
       "ceiling_from": {
-        "ir": 682022907,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 668033064,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -380,10 +380,10 @@
       "fixture": "canonical",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 969000000,
+      "ceiling_ir": 950000000,
       "ceiling_from": {
-        "ir": 774947678,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 759265301,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -396,10 +396,10 @@
       "fixture": "canonical",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 949000000,
+      "ceiling_ir": 931000000,
       "ceiling_from": {
-        "ir": 758504105,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 744587672,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -413,10 +413,10 @@
       "fixture": "canonical",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 950000000,
+      "ceiling_ir": 1003000000,
       "ceiling_from": {
-        "ir": 759393806,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 802103659,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -429,10 +429,10 @@
       "fixture": "citations",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 883000000,
+      "ceiling_ir": 866000000,
       "ceiling_from": {
-        "ir": 705791121,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 692200264,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -444,10 +444,10 @@
       "fixture": "workspace",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 1081000000,
+      "ceiling_ir": 1048000000,
       "ceiling_from": {
-        "ir": 864761012,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 838364681,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -459,10 +459,10 @@
       "fixture": "rules",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 1330000000,
+      "ceiling_ir": 1322000000,
       "ceiling_from": {
-        "ir": 1063562733,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 1057322906,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -474,10 +474,10 @@
       "fixture": "named-sections",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 2086000000,
+      "ceiling_ir": 2070000000,
       "ceiling_from": {
-        "ir": 1668306173,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 1655421773,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -489,10 +489,10 @@
       "fixture": "values",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 1443000000,
+      "ceiling_ir": 1430000000,
       "ceiling_from": {
-        "ir": 1154117200,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 1143802758,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -504,10 +504,10 @@
       "fixture": "external-facts",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 927000000,
+      "ceiling_ir": 907000000,
       "ceiling_from": {
-        "ir": 741129214,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 724951409,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -521,10 +521,10 @@
       "fixture": "canonical",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 753000000,
+      "ceiling_ir": 736000000,
       "ceiling_from": {
-        "ir": 602259900,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 588539363,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -538,10 +538,10 @@
       "fixture": "canonical",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 743000000,
+      "ceiling_ir": 726000000,
       "ceiling_from": {
-        "ir": 593746173,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 580104546,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -554,10 +554,10 @@
       "fixture": "canonical",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 809000000,
+      "ceiling_ir": 791000000,
       "ceiling_from": {
-        "ir": 646571993,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 632401782,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -570,10 +570,10 @@
       "fixture": "canonical",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 719000000,
+      "ceiling_ir": 702000000,
       "ceiling_from": {
-        "ir": 574825970,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 560998463,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -585,10 +585,10 @@
       "fixture": "workspace",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 972000000,
+      "ceiling_ir": 936000000,
       "ceiling_from": {
-        "ir": 777380015,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 748471584,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -600,10 +600,10 @@
       "fixture": "large",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 5026000000,
+      "ceiling_ir": 5018000000,
       "ceiling_from": {
-        "ir": 4020570614,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 4013632028,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -617,10 +617,10 @@
       "fixture": "named-sections",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 1059000000,
+      "ceiling_ir": 1043000000,
       "ceiling_from": {
-        "ir": 847194357,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 833626080,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -635,10 +635,10 @@
       "fixture": "named-sections",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 1060000000,
+      "ceiling_ir": 1041000000,
       "ceiling_from": {
-        "ir": 847811513,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 832613113,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -653,10 +653,10 @@
       "fixture": "canonical",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 533000000,
+      "ceiling_ir": 516000000,
       "ceiling_from": {
-        "ir": 425970274,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 412438744,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -677,10 +677,10 @@
       ],
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 534000000,
+      "ceiling_ir": 517000000,
       "ceiling_from": {
-        "ir": 426468630,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 413210276,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -696,10 +696,10 @@
       "fixture": "canonical",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 725000000,
+      "ceiling_ir": 709000000,
       "ceiling_from": {
-        "ir": 579533842,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 566691630,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -713,10 +713,10 @@
       "fixture": "named-sections",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 1114000000,
+      "ceiling_ir": 1097000000,
       "ceiling_from": {
-        "ir": 890993794,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 877284537,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -730,10 +730,10 @@
       "fixture": "citations",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 594000000,
+      "ceiling_ir": 575000000,
       "ceiling_from": {
-        "ir": 474698877,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 459849134,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -748,10 +748,10 @@
       "path": "docs/functional-spec/README.md",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 122000000,
+      "ceiling_ir": 136000000,
       "ceiling_from": {
-        "ir": 97139987,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 108764425,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -765,10 +765,10 @@
       "fixture": "citations",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 739000000,
+      "ceiling_ir": 723000000,
       "ceiling_from": {
-        "ir": 590969410,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 577853947,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -782,10 +782,10 @@
       "fixture": "cross-refs",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 2231000000,
+      "ceiling_ir": 2200000000,
       "ceiling_from": {
-        "ir": 1784797571,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 1759874875,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -799,10 +799,10 @@
       "fixture": "cross-refs",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 2680000000,
+      "ceiling_ir": 2649000000,
       "ceiling_from": {
-        "ir": 2143233055,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 2118843695,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -816,10 +816,10 @@
       "fixture": "canonical",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 580000000,
+      "ceiling_ir": 563000000,
       "ceiling_from": {
-        "ir": 463528805,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 450148091,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -834,10 +834,10 @@
       "fixture": "canonical",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 539000000,
+      "ceiling_ir": 524000000,
       "ceiling_from": {
-        "ir": 430498533,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 418439370,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
@@ -850,10 +850,10 @@
       "frontend": "lsp",
       "tier": "pr",
       "limit_pct": 12.5,
-      "ceiling_ir": 1181000000,
+      "ceiling_ir": 1165000000,
       "ceiling_from": {
-        "ir": 944330143,
-        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+        "ir": 931792446,
+        "commit": "a9be43ef4f664fcdca9cc2f084060390acca7bb9"
       },
       "pgo": false
     },
