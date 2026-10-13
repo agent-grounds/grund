@@ -96,6 +96,8 @@ Each extension belongs to one recognizer of [§FS-inline-citation-style.1.1.1](F
 | `sh` `bash` `zsh` | position | `function <name>`, or `<name>()` / `<name> ()`, with `<name>` matching `[A-Za-z_][A-Za-z0-9_]*`. |
 | `sql` | position | the definition-starter `create`, matched case-insensitively, so `CREATE OR REPLACE FUNCTION …` counts. |
 
+Every extension this table names is read by the default configuration, which follows the table rather than a list of its own ([§FS-scan.scope.extensions.default](FS-scan.md#scopeextensionsdefault-the-extensions-default-follows-the-language-table)): a doc form this table claims is never one a project that wrote no `extensions` cannot reach.
+
 A **definition-starter** matches when the next line, with leading whitespace removed, begins with the keyword followed by a non-identifier character or the end of the line: `func(` and `func main` match, `functional` does not, and an indented Ruby `def` inside a `class` still counts.
 
 #### 1.1.3 Accepted corners

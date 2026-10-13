@@ -172,3 +172,41 @@ fn every_default_extension_and_comment_prefix_has_a_dangling_proof() {
         "default comment prefixes no reported dangling line opens with: {unproven_prefixes:?}"
     );
 }
+
+/// The extensions the language table of §FS-inline-citation-style.1.1.2 names,
+/// read from the spec's own Markdown so the test holds no copy of the table.
+fn classified_extensions(repo: &Path) -> Vec<String> {
+    let spec = repo.join("docs/functional-spec/FS-inline-citation-style.md");
+    let text = fs::read_to_string(&spec).expect("read FS-inline-citation-style.md");
+    let section = text
+        .split("#### 1.1.2 Languages")
+        .nth(1)
+        .and_then(|rest| rest.split("\n#### ").next())
+        .expect("a 1.1.2 Languages section");
+    let mut extensions = Vec::new();
+    for row in section.lines().filter(|line| line.starts_with("| `")) {
+        let cell = row.split('|').nth(1).unwrap_or("");
+        extensions.extend(cell.split('`').skip(1).step_by(2).map(str::to_string));
+    }
+    assert!(
+        extensions.len() >= 20,
+        "1.1.2 table looks wrong: {extensions:?}"
+    );
+    extensions
+}
+
+/// §FS-scan.scope.extensions.default: with no `extensions` key, every extension the language
+/// table classifies is read, so §REQ-no-missed-citation.3 holds for each of its doc forms.
+#[test]
+fn every_classified_extension_is_read_by_default() {
+    let (defaults, _) = defaults(&binaries::grund());
+    let unread: Vec<String> = classified_extensions(&binaries::repo_root())
+        .into_iter()
+        .filter(|extension| !defaults.contains(extension))
+        .collect();
+    assert!(
+        unread.is_empty(),
+        "§FS-inline-citation-style.1.1.2 classifies extensions the default `[scan] extensions` \
+         does not read: {unread:?}\ndefault: {defaults:?}"
+    );
+}
