@@ -60,6 +60,7 @@ pub fn sections(
     coordinate: &str,
     show: &Value,
     batch: &Value,
+    listed: &Value,
     loaded: Option<&LspSnapshotWithCompletion>,
     errors: &mut Vec<String>,
 ) {
@@ -72,14 +73,22 @@ pub fn sections(
     }
     let path = body["path"].as_str().unwrap();
     let target = physical(context, path);
-    let outside_scan =
-        loaded.is_some_and(|snapshot| {
-            let base = text(context, "base");
-            let saved = text(context, "saved");
-            !snapshot.metadata.snapshot.scanned_files.iter().any(|file| {
-                file.to_string_lossy().replace(&base, &saved) == target.to_string_lossy()
+    let target = target.canonicalize().unwrap_or(target);
+    let outside_scan = loaded.is_some_and(|snapshot| {
+        let base = text(context, "base");
+        let saved = text(context, "saved");
+        let unscanned = !snapshot.metadata.snapshot.scanned_files.iter().any(|file| {
+            let mapped = std::path::PathBuf::from(file.to_string_lossy().replace(&base, &saved));
+            mapped.canonicalize().unwrap_or(mapped) == target
+        });
+        let healthy_outside_stub = entries(listed, "entries").iter().any(|entry| {
+            entry["defines"].as_str().is_some_and(|defines| {
+                let defined = physical(context, defines);
+                defined.canonicalize().unwrap_or(defined) == target
             })
         });
+        unscanned && healthy_outside_stub
+    });
     let batch_records = entries(batch, "records");
     let local_coordinate = coordinate.rsplit('/').next().unwrap();
     let current_local = batch_records.iter().any(|record| {
