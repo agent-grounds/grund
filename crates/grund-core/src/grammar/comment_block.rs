@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use super::Grammar;
 use super::near_miss::declaration_id_on_line;
 use super::settings::LexicalSettings;
@@ -292,41 +290,6 @@ pub(crate) enum DefinitionStart {
     /// SQL's `create`, matched case-insensitively so `CREATE OR REPLACE
     /// FUNCTION …` counts with `create table …`.
     SqlCreate,
-}
-
-/// Go's definition keywords — `package` included, so a file-header comment above
-/// the package clause is the module doc it looks like.
-const GO_DEFINITION_STARTERS: &[&str] = &["func", "type", "var", "const", "package"];
-/// Ruby's definition keywords. Leading whitespace is stripped before the test,
-/// so an indented `def` inside a `class` still counts.
-const RUBY_DEFINITION_STARTERS: &[&str] = &["class", "module", "def"];
-
-/// The doc-comment recognizer for one file, keyed on its extension
-/// (§FS-inline-citation-style.1.1.2, §AR-scanner.4). Built in and not
-/// configurable: what a note *is* must not differ between two installs
-/// (§FS-non-goals.13). An extension this table does not name has no doc notion,
-/// so every one of its comment blocks stays an inline site and nothing a tree
-/// already passes changes.
-pub(crate) fn doc_comment_rule(path: &Path) -> DocCommentRule {
-    let Some(extension) = path.extension().and_then(|ext| ext.to_str()) else {
-        return DocCommentRule::None;
-    };
-    match extension {
-        "rs" | "c" | "h" | "cpp" | "cc" | "cxx" | "hpp" | "hh" | "hxx" | "m" | "mm" | "java"
-        | "cs" | "kt" | "kts" | "scala" | "swift" | "js" | "jsx" | "mjs" | "cjs" | "ts" | "tsx"
-        | "php" | "dart" => DocCommentRule::CFamily,
-        "py" => DocCommentRule::Docstring,
-        "lua" => DocCommentRule::LuaDoc,
-        "hs" | "lhs" => DocCommentRule::Haddock,
-        // Both spellings an R source file is written with; the extension is the
-        // only thing about R that is case-sensitive here.
-        "r" | "R" => DocCommentRule::Roxygen,
-        "go" => DocCommentRule::Position(DefinitionStart::Keywords(GO_DEFINITION_STARTERS)),
-        "rb" => DocCommentRule::Position(DefinitionStart::Keywords(RUBY_DEFINITION_STARTERS)),
-        "sh" | "bash" | "zsh" => DocCommentRule::Position(DefinitionStart::ShellFunction),
-        "sql" => DocCommentRule::Position(DefinitionStart::SqlCreate),
-        _ => DocCommentRule::None,
-    }
 }
 
 /// Whether one comment block is a doc comment rather than an inline note

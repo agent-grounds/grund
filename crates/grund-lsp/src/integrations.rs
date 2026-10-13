@@ -160,6 +160,8 @@ fn program_args() -> Value {
     Value::Object(args)
 }
 
+/// The conventional language ID for an extension, every default one included
+/// (§FS-lsp.2.4.2); an unknown extension is its own ID.
 fn language_id(extension: &str) -> &str {
     match extension {
         "md" => "markdown",
@@ -175,6 +177,15 @@ fn language_id(extension: &str) -> &str {
         "clj" => "clojure",
         "hs" | "lhs" => "haskell",
         "adb" | "ads" => "ada",
+        "h" => "c",
+        "cc" | "cxx" | "hpp" | "hh" | "hxx" => "cpp",
+        "m" => "objective-c",
+        "mm" => "objective-cpp",
+        "kts" => "kotlin",
+        "jsx" => "javascriptreact",
+        "mjs" | "cjs" => "javascript",
+        "R" => "r",
+        "sh" | "bash" | "zsh" => "shellscript",
         other => other,
     }
 }

@@ -16,21 +16,18 @@ use crate::config::project::{
 };
 use crate::config::record::{DEFAULT_GROUNDING_LEVEL, ShorthandPolicy};
 use crate::config::rows::{Extent, Form, Kind, Nesting, Origin, Place, Row};
+use crate::grammar::classified_extensions;
 
 const DEFAULT_ID_FORMAT: &str = "{kind}-{number}-{slug}";
 const DEFAULT_SECTION_SEPARATOR: &str = ".";
 const DEFAULT_NUMBER_PATTERN: &str = r"\d+";
 const DEFAULT_SLUG_PATTERN: &str = r"[a-z0-9][a-z0-9-]*";
 /// The `[scan]` defaults (§FS-config.3.5): what a repo with no `include` walks,
-/// the extensions it reads, and the comment prefixes a declaration or an
-/// inline note may sit behind. The compiled grammar takes `comment_prefixes`
-/// as an argument and holds no opinion about what it should be
-/// (§AR-system.2.1).
+/// and the comment prefixes a declaration or an inline note may sit behind. The
+/// compiled grammar takes `comment_prefixes` as an argument and holds no opinion
+/// about what it should be (§AR-system.2.1). The extensions it reads are not
+/// listed here: see [`default_scan_extensions`].
 const DEFAULT_INCLUDE: &[&str] = &["requirements.md", "docs", "e2e", "src"];
-const DEFAULT_SCAN_EXTENSIONS: &[&str] = &[
-    "md", "rs", "go", "java", "kt", "ts", "tsx", "js", "py", "c", "cpp", "swift", "scala", "rb",
-    "php", "cs", "lisp", "scm", "clj", "sql", "hs", "lhs", "lua", "ada", "adb", "ads",
-];
 const DEFAULT_COMMENT_PREFIXES: &[&str] = &["//", "#", ";", "--", "*", "/*"];
 /// §AR-config.3.2 `scan exclusions`.
 const DEFAULT_EXCLUDE: &[&str] = &["target", "node_modules", ".git", "dist", "build", ".venv"];
@@ -40,6 +37,17 @@ const LEGACY_FS_FOLDER: &str = "docs/functional-spec";
 
 fn strings(values: &[&str]) -> Vec<String> {
     values.iter().map(|value| value.to_string()).collect()
+}
+
+/// The v1 `extensions` default: `md`, then every extension grund's built-in
+/// language table names, in table order (§FS-scan.scope.extensions.default).
+/// Derived rather than listed, so a language the table gains is read by default
+/// and the two can never disagree (§AR-system.principle).
+fn default_scan_extensions() -> Vec<String> {
+    std::iter::once("md")
+        .chain(classified_extensions())
+        .map(str::to_string)
+        .collect()
 }
 
 /// The project a v1 file means before any key: the built-in defaults of
@@ -77,7 +85,7 @@ pub(in crate::config) fn default_project(existing_config: bool) -> Project {
                 include: Some(strings(DEFAULT_INCLUDE)),
                 include_source: None,
                 exclude: strings(DEFAULT_EXCLUDE),
-                extensions: strings(DEFAULT_SCAN_EXTENSIONS),
+                extensions: default_scan_extensions(),
                 comment_prefixes: strings(DEFAULT_COMMENT_PREFIXES),
                 docstring_python: true,
                 respect_gitignore: true,

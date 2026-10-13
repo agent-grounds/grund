@@ -171,6 +171,8 @@ mod tests_scan_demand;
 #[cfg(test)]
 mod tests_scan_exclude;
 #[cfg(test)]
+mod tests_scan_extensions;
+#[cfg(test)]
 mod tests_slots;
 #[cfg(test)]
 mod tests_v2_fields;

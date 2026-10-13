@@ -13,10 +13,15 @@ use std::time::{SystemTime, UNIX_EPOCH};
 const EXECUTABLE_ENV: &str = "GRUND_LSP_LSP4IJ_EXECUTABLE";
 const CMD_QUOTE_ENV: &str = "GRUND_LSP_LSP4IJ_QUOTE";
 
-pub const DEFAULT_EXTENSIONS: &[&str] = &[
-    "md", "rs", "go", "java", "kt", "ts", "tsx", "js", "py", "c", "cpp", "swift", "scala", "rb",
-    "php", "cs", "lisp", "scm", "clj", "sql", "hs", "lhs", "lua", "ada", "adb", "ads",
-];
+/// The `[scan] extensions` a project with no config reads, as grund-core
+/// derives it (§FS-scan.scope.extensions.default), rather than a copy of it.
+pub fn default_extensions(project: &Path) -> Vec<String> {
+    grund_core::effective_project(project)
+        .expect("a project with no config has the default config")
+        .schema
+        .sources
+        .extensions
+}
 
 pub struct Sandbox {
     pub root: PathBuf,
@@ -122,7 +127,7 @@ pub fn template_from(text: &str) -> Value {
     panic!("output does not contain an LSP4IJ template object:\n{text}");
 }
 
-pub fn assert_template(template: &Value, extensions: &[&str], executable: &Path) {
+pub fn assert_template<E: AsRef<str>>(template: &Value, extensions: &[E], executable: &Path) {
     assert_eq!(template["id"], "grund-lsp");
     assert_eq!(template["name"], "grund LSP");
 
@@ -153,6 +158,7 @@ pub fn assert_template(template: &Value, extensions: &[&str], executable: &Path)
     let expected = extensions
         .iter()
         .map(|extension| {
+            let extension = extension.as_ref();
             json!({
                 "fileType": { "patterns": [format!("*.{extension}")] },
                 "languageId": language_id(extension),
@@ -344,6 +350,15 @@ fn language_id(extension: &str) -> &str {
         "clj" => "clojure",
         "hs" | "lhs" => "haskell",
         "adb" | "ads" => "ada",
+        "h" => "c",
+        "cc" | "cxx" | "hpp" | "hh" | "hxx" => "cpp",
+        "m" => "objective-c",
+        "mm" => "objective-cpp",
+        "kts" => "kotlin",
+        "jsx" => "javascriptreact",
+        "mjs" | "cjs" => "javascript",
+        "R" => "r",
+        "sh" | "bash" | "zsh" => "shellscript",
         other => other,
     }
 }
