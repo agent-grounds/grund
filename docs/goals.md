@@ -16,7 +16,7 @@ New declarations, code, decisions, and e2e cases cite the most-specific ID they 
 
 ### 3. What this rules out
 
-No guessed citations, separate lint surface, or hard-coded code-unit heuristic.
+No guessed citations (the recovered links of [§REL-trace-link-recovery](related-work/REL-trace-link-recovery.md#rel-trace-link-recovery-trace-link-recovery-links-proposed-after-the-fact)), separate lint surface, or hard-coded code-unit heuristic.
 
 ### 4. Composition with other goals
 
@@ -28,7 +28,7 @@ See [AR-goal-measurement.2](architecture/AR-goal-measurement.md#2-goal-meters).
 
 ## GOAL-no-dangling-refs: every cited ID resolves to a declaration
 
-A passing repo has zero dangling references and zero broken section coordinates in the text the run read — the declared, bounded blind spots of [§REQ-no-missed-citation.2](requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded) included, which [§FS-check.1.3](functional-spec/FS-check.md#13-the-full-tree-scope---full)'s `--full` is the switch for. False negatives are bugs. This is the correctness floor under [§GRUND-links.2](grund.md#2-holding-every-edit-to-them): a citation an agent cannot trust grounds nothing.
+A passing repo has zero dangling references and zero broken section coordinates in the text the run read — the declared, bounded blind spots of [§REQ-no-missed-citation.2](requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded) included, which [§FS-check.1.3](functional-spec/FS-check.md#13-the-full-tree-scope---full)'s `--full` is the switch for. False negatives are bugs. This is the correctness floor under [§GRUND-links.2](grund.md#2-holding-every-edit-to-them): a citation an agent cannot trust grounds nothing, and references nobody checks are known to rot ([§REL-documentation-decay](related-work/REL-documentation-decay.md#rel-documentation-decay-documentation-decay-references-that-fall-behind-the-code)).
 
 ### 1. What "resolves" means
 
@@ -40,7 +40,7 @@ See [AR-goal-measurement.2](architecture/AR-goal-measurement.md#2-goal-meters).
 
 ## GOAL-polyglot-citation: IDs cite cleanly from anywhere they are useful
 
-One citation grammar works in Markdown and source comments, across docs/code boundaries, through one resolver. This is the reason `grund` is more than a Markdown link checker: the link between code and the text that says why ([§GRUND-links](grund.md#grund-links-the-cross-linking-rules-are-hard-to-define-and-to-hold)) has to hold in every language a line is written in.
+One citation grammar works in Markdown and source comments, across docs/code boundaries, through one resolver. This is the reason `grund` is more than a Markdown link checker or a documentation tool that resolves references within one language ([§REL-doc-reference-checkers](related-work/REL-doc-reference-checkers.md#rel-doc-reference-checkers-documentation-tools-that-check-their-own-references)): the link between code and the text that says why ([§GRUND-links](grund.md#grund-links-the-cross-linking-rules-are-hard-to-define-and-to-hold)) has to hold in every language a line is written in.
 
 ### 1. What "cleanly" means
 
@@ -48,7 +48,7 @@ Same marker, same section grammar, same resolver, same line-located errors in ev
 
 ### 2. Why this is a goal, not a side effect
 
-Markdown links degrade outside rendered Markdown; `§<ID>` citations must stay useful wherever implementation intent lives.
+Markdown links degrade outside rendered Markdown; `§<ID>` citations must stay useful wherever implementation intent lives, including the comments where annotation languages have long put checkable text ([§REL-comment-annotations](related-work/REL-comment-annotations.md#rel-comment-annotations-annotation-languages-in-comments-a-checked-sublanguage-beside-the-code)).
 
 ### 3. Composition with other goals
 
@@ -148,7 +148,7 @@ See [AR-goal-measurement.2](architecture/AR-goal-measurement.md#2-goal-meters).
 
 ### 4. Research notes
 
-Evidence for the cheap default lives in [DF-show-default-token-cheap](decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in). The unit grund's slices return, one labelled fact per declaration, has its precedent in information typing ([§REL-information-typing](related-work/REL-information-typing.md#rel-information-typing-information-typing-units-of-one-kind-under-one-label)).
+Evidence for the cheap default lives in [DF-show-default-token-cheap](decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in). The unit grund's slices return, one labelled fact per declaration, has its precedent in information typing ([§REL-information-typing](related-work/REL-information-typing.md#rel-information-typing-information-typing-units-of-one-kind-under-one-label)). What is known about agent interfaces and repository context, for and against narrow reads, is in [§REL-agent-context](related-work/REL-agent-context.md#rel-agent-context-repository-context-for-coding-agents-what-an-agent-is-given-to-read).
 
 ## GOAL-configurable: every default is overridable
 

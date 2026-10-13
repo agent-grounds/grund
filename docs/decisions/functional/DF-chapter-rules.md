@@ -57,11 +57,13 @@ decision fixes what must cross the boundary, not which files implement it.
 
 - **Rules as TOML rows.** A table is not a declaration title or an instruction,
   so the checked form and the rendered form would differ.
-- **Datalog as the authoring language.** It states the semantics precisely but
+- **Datalog as the authoring language.** It states the semantics precisely, as
+  it does for the query languages over program facts ([§REL-code-queries](../../related-work/REL-code-queries.md#rel-code-queries-queries-and-conformance-over-program-facts-rules-over-what-was-extracted)), but
   is not the friendly instruction surface
   [§GOAL-friendliness-first](../../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible) requires.
-- **A general SBVR parser.** It imports an external standard and synonyms that
-  the release does not promise; grund's own five productions are the contract.
+- **A general SBVR parser.** It imports an external standard
+  ([§REL-controlled-language](../../related-work/REL-controlled-language.md#rel-controlled-language-controlled-natural-languages-english-with-a-fixed-grammar)) and synonyms that the release does not promise;
+  grund's own five productions are the contract.
 - **Rules in config.** One malformed title should be a located finding at its
   declaration rather than an invalid config that prevents every command from
   scanning the repository.
