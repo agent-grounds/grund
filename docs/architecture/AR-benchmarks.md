@@ -80,9 +80,9 @@ The millisecond budget itself is still backstopped by the cheap wall-clock guard
 
 ## 3. How it runs
 
-- Locally: `cargo bench -p grund --features bench --bench instructions` (requires `valgrind`, `python3`, and `iai-callgrind-runner` on `PATH`). With no prior run, iai-callgrind records the counts and exits clean; on a later run in the same `target/` it prints the delta against the previous run. Every fixture is regenerated on each run ([§AR-benchmarks.1.1](AR-benchmarks.md#11-generated-fixtures-never-this-repository)). Its record says `environment: local`, a series of its own ([§AR-benchmarks.7.4](AR-benchmarks.md#74-a-local-run-is-a-series-of-its-own)).
+- Locally: `cargo bench -p grund --features bench --bench instructions` (requires `valgrind`, `python3`, and `iai-callgrind-runner` on `PATH`). With no prior run, iai-callgrind records the counts and exits clean; on a later run in the same `target/` it prints the delta against the previous run. Every fixture is regenerated on each run ([§AR-benchmarks.1.1](AR-benchmarks.md#11-generated-fixtures-never-this-repository)). `cargo bench` writes no run record; `python3 scripts/bench_record.py record --out target/bench-record.json`, run after it, does. That record says `environment: local`, a series of its own ([§AR-benchmarks.7.4](AR-benchmarks.md#74-a-local-run-is-a-series-of-its-own)).
 - In CI: the dedicated `bench` job of [§AR-ci.5](AR-ci.md#5-benchmark-job) runs the harness in a pinned environment. A pull request measures the base binary and its own under its own harness ([§AR-benchmarks.5](AR-benchmarks.md#5-comparing-two-revisions), [§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)), and growth past the limits of [§AR-ci.5.2](AR-ci.md#52-regression-limits) fails the job. A push to `main` runs the suite twice on one binary and checks the same-binary bound ([§AR-benchmarks.7.3](AR-benchmarks.md#73-the-same-binary-bound)).
-- Every run, local or CI, writes one run record, and two records are compared only within one series ([§AR-benchmarks.7](AR-benchmarks.md#7-the-run-record-and-its-series)).
+- Every run is written down as one run record by `bench_record.py record`, which the CI job runs after each `cargo bench` and a local run runs by hand, and two records are compared only within one series ([§AR-benchmarks.7](AR-benchmarks.md#7-the-run-record-and-its-series)).
 
 ## 4. Relationship to the rest of the tree
 
@@ -101,7 +101,7 @@ Two revisions are compared by **one harness on one fixture bundle**, and only th
 
 ### 5.1 A scenario the base binary refuses
 
-A scenario the base binary cannot run — it names a flag or a mode the base does not know — is not compared, and it does not fail the comparison. Before measuring a scenario under `GRUND_BENCH_BIN`, the harness runs its invocation once outside Callgrind; when that exits non-zero, the harness leaves the scenario out of the base run and the base's run record lists it as refused. The head run still measures it. The comparison reports it as `no base, not compared`, and only a scenario both binaries ran can fail.
+A scenario the base binary cannot run — it names a flag or a mode the base does not know — is not compared, and it does not fail the comparison. Before measuring a scenario under `GRUND_BENCH_BIN`, the harness runs its invocation once outside Callgrind; when that exits non-zero, the harness leaves the scenario out of the base run and the base's run record lists it as refused. A scenario's setup that runs the binary, such as `fmt_check`'s `fmt --write`, is part of that probe: a base binary that fails the setup refuses the scenario rather than stopping the harness. Under the harness's own binary a failed setup still fails the run. The head run still measures it. The comparison reports it as `no base, not compared`, and only a scenario both binaries ran can fail.
 
 ## 6. Scope
 
@@ -109,7 +109,7 @@ This is a build-and-CI tool, not a CLI surface: it adds no subcommand, no flag, 
 
 ## 7. The run record and its series
 
-Every run of the harness, in CI or locally, is normalized by `scripts/bench_record.py` into one compact JSON **run record**, and two records are compared only when they belong to one **series**. The record is what makes a count readable apart from the job that took it: it says what was measured, with what, and on which input.
+Every run of the harness is normalized into one compact JSON **run record** by `python3 scripts/bench_record.py record`, run after `cargo bench` (the CI job runs it after each run, and a local run runs it by hand), and two records are compared only when they belong to one **series**. The record is what makes a count readable apart from the job that took it: it says what was measured, with what, and on which input.
 
 ### 7.1 What a record holds
 
@@ -136,4 +136,4 @@ The same-binary bound is **1%** `Ir`: two runs of one binary on one fixture bund
 
 ### 7.4 A local run is a series of its own
 
-A local `cargo bench` runs outside the pinned image, so its record says `environment: local` and `image: local`, and it is a series of its own by construction. That is the honest reading of the gap between the same commit's counts locally and in CI. `docs/benchmarks.md` gives the one `docker run` command that reproduces CI's environment.
+A local `cargo bench` runs outside the pinned image, so the record `bench_record.py record` writes after it says `environment: local` and `image: local`, and it is a series of its own by construction. A run of the pinned image on another machine records `local` too: the host's processor is not in the series key, so its counts must not join CI's series. That is the honest reading of the gap between the same commit's counts locally and in CI. `docs/benchmarks.md` gives the one `docker run` command that reproduces CI's environment.

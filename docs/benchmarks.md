@@ -52,7 +52,10 @@ establish comparability with a differently built binary today.
 
 CI takes its counts in one pinned environment
 ([§AR-ci.5](architecture/AR-ci.md#5-benchmark-job)): the image below, named by its
-digest, Valgrind `1:3.19.0-1`, `iai-callgrind-runner` 0.16.1, `LC_ALL=C.UTF-8`,
+digest, Valgrind `1:3.19.0-1` and Valgrind's `libc6-dbg` at the image's `libc6` version,
+both from the `snapshot.debian.org` timestamp `20261001T000000Z`, which stays installable
+after bookworm's archive moves on (if the snapshot is unreachable, rerun; the timestamp
+moves only with the image digest, in a change of its own), `iai-callgrind-runner` 0.16.1, `LC_ALL=C.UTF-8`,
 `TZ=UTC`, `RAYON_NUM_THREADS=4`, `CARGO_INCREMENTAL=0` and an empty `RUSTFLAGS`. To
 take the same counts on another machine, run the suite in that image from the
 repository root. It builds into `target/bench-image`, as root, and takes the commit
@@ -64,17 +67,21 @@ docker run --rm --security-opt seccomp=unconfined -v "$PWD":/work -w /work \
   -e LC_ALL=C.UTF-8 -e TZ=UTC -e RAYON_NUM_THREADS=4 -e CARGO_INCREMENTAL=0 -e RUSTFLAGS= \
   -e CARGO_TARGET_DIR=/work/target/bench-image -e BENCH_COMMIT="$(git rev-parse HEAD)" \
   rust:1.95.0-bookworm@sha256:6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1 \
-  bash -c 'apt-get update -qq && apt-get install -y -qq --no-install-recommends valgrind=1:3.19.0-1 \
+  bash -c 'rm -f /etc/apt/sources.list.d/* && echo "deb [check-valid-until=no] \
+      https://snapshot.debian.org/archive/debian/20261001T000000Z bookworm main" > /etc/apt/sources.list &&
+    apt-get update -qq && apt-get install -y -qq --no-install-recommends valgrind=1:3.19.0-1 \
       libc6-dbg="$(dpkg-query -W -f "\${Version}" libc6)" &&
     cargo install iai-callgrind-runner --version 0.16.1 --locked --quiet &&
     cargo bench -p grund --features bench --locked --quiet --bench instructions -- --save-summary=json &&
-    python3 scripts/bench_record.py record --environment ci --image sha256:6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1 \
+    python3 scripts/bench_record.py record --environment local \
       --commit "$BENCH_COMMIT" --binary target/bench-image/release/grund \
       --iai target/bench-image/iai --out target/bench-image/record.json'
 ```
 
-Every run, in CI or locally, is written down as one run record by
-`scripts/bench_record.py` ([§AR-benchmarks.7](architecture/AR-benchmarks.md#7-the-run-record-and-its-series)):
+`cargo bench` writes no record. A run is written down as one run record by
+`python3 scripts/bench_record.py record`, run after it — the CI job does so after each
+run, and the command above does so in the image
+([§AR-benchmarks.7](architecture/AR-benchmarks.md#7-the-run-record-and-its-series)):
 the count per scenario, and the identity fields the counts were taken with, which are
 the image, the compiler, Valgrind, the runner, the build flags, the locale, the
 timezone, the thread count and each fixture's schema version and digest. Those fields,
@@ -82,10 +89,12 @@ and nothing else, make the record's **series**. Two records are compared only wi
 one series: `bench_record.py compare` refuses records of two series and names each
 field that differs ([§AR-benchmarks.7.2](architecture/AR-benchmarks.md#72-the-series-key)),
 so a fixture, toolchain or environment change starts a new series instead of reading
-as a code change. A plain `cargo bench` outside the image records `environment: local`,
-a series of its own ([§AR-benchmarks.7.4](architecture/AR-benchmarks.md#74-a-local-run-is-a-series-of-its-own)).
-The host's processor can still move a count the image does not pin, so a count taken
-this way is checked against CI's rather than assumed equal to it.
+as a code change. After a plain `cargo bench` outside the image,
+`python3 scripts/bench_record.py record --out target/bench-record.json` records
+`environment: local`, a series of its own ([§AR-benchmarks.7.4](architecture/AR-benchmarks.md#74-a-local-run-is-a-series-of-its-own)).
+The run in the image above records `local` too: the host's processor can still move a
+count the image does not pin and the series key does not name, so a count taken this
+way is checked against CI's rather than joining its series.
 
 ## Instructions
 

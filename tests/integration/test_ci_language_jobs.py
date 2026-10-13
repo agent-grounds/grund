@@ -42,6 +42,7 @@ BENCH = ("cargo bench -p grund --features bench --locked --quiet --bench instruc
 AGGREGATE = re.compile(r"cargo test \((.+)\)")
 # §AR-ci.5: the bench job's image, named by its digest.
 BENCH_IMAGE = re.compile(r"(?m)^\s+(?:container|image):\s*rust:[\w.-]+-bookworm@sha256:([0-9a-f]{64})\s*$")
+SNAPSHOT = re.compile(r"https://snapshot\.debian\.org/archive/debian/\d{8}T\d{6}Z\b")
 BENCH_ENV = {"LC_ALL": "C.UTF-8", "TZ": "UTC", "RAYON_NUM_THREADS": "4",
              "CARGO_INCREMENTAL": "0", "RUSTFLAGS": ""}
 
@@ -294,6 +295,12 @@ def bench_pin_problems(text):
             problems.append(f"the bench job sets {key}={env.get(key)!r}, not {value!r}")
     if not re.search(r"\bvalgrind=\S+", body):
         problems.append("the bench job installs Valgrind without an exact version")
+    if not re.search(r"\blibc6-dbg=\S+", body):
+        problems.append("the bench job installs libc6-dbg without an exact version")
+    if not SNAPSHOT.search(body) or re.search(r"deb\.debian\.org", body):
+        problems.append("the bench job's packages do not come from one snapshot.debian.org timestamp")
+    if image and env.get("BENCH_IMAGE") != "sha256:" + image.group(1):
+        problems.append(f"BENCH_IMAGE {env.get('BENCH_IMAGE')!r} is not the container's digest")
     if "iai-callgrind-runner --version 0.16.1" not in body:
         problems.append("the bench job does not pin iai-callgrind-runner 0.16.1")
     keys = [key for step in job_steps if "actions/cache" in step
@@ -349,6 +356,7 @@ PINNED_BENCH = """jobs:
     runs-on: ubuntu-latest
     container: rust:1.90.0-bookworm@sha256:{digest}
     env:
+      BENCH_IMAGE: sha256:{digest}
       LC_ALL: C.UTF-8
       TZ: UTC
       RAYON_NUM_THREADS: 4
@@ -360,7 +368,8 @@ PINNED_BENCH = """jobs:
         with:
           key: bench-{digest}-${{{{ hashFiles('**/Cargo.lock') }}}}
       - run: |
-          apt-get install -y valgrind=1:3.19.0-1
+          echo "deb https://snapshot.debian.org/archive/debian/20261001T000000Z bookworm main" > /etc/apt/sources.list
+          apt-get install -y valgrind=1:3.19.0-1 libc6-dbg=2.36-9+deb12u14
           cargo install iai-callgrind-runner --version 0.16.1 --locked --quiet
       - if: github.event_name == 'pull_request'
         run: |
@@ -484,7 +493,10 @@ class BenchJobCheckTests(unittest.TestCase):
 
     def test_a_floating_environment_is_caught(self):
         for old, new in (("@sha256:" + "0" * 64, ""), ("valgrind=1:3.19.0-1", "valgrind"),
-                         ("      TZ: UTC\n", ""), ("bench-" + "0" * 64, "bench")):
+                         ("      TZ: UTC\n", ""), ("bench-" + "0" * 64, "bench"),
+                         ("libc6-dbg=2.36-9+deb12u14", "libc6-dbg"),
+                         ("snapshot.debian.org/archive/debian/20261001T000000Z", "deb.debian.org/debian"),
+                         ("BENCH_IMAGE: sha256:" + "0" * 64, "BENCH_IMAGE: sha256:" + "1" * 64)):
             with self.subTest(drop=old):
                 self.assertTrue(bench_pin_problems(PINNED_BENCH.replace(old, new)))
         toolchain = PINNED_BENCH.replace(
