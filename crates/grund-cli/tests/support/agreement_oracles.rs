@@ -4,7 +4,7 @@
 
 use serde_json::{Value, json};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Output;
 
 pub fn text(context: &Value, field: &str) -> String {
@@ -25,10 +25,8 @@ pub fn normalize(value: &str, context: &Value) -> String {
     } else {
         format!("tests/e2e/cases/{name}/repo")
     };
-    value
-        .replace("\r\n", "\n")
-        .replace(&text(context, "base"), &original)
-        .replace(&text(context, "saved"), &original)
+    super::agreement_paths::logical_text(&value.replace("\r\n", "\n"), context)
+        .replace("<repo>", &original)
 }
 
 pub fn golden(context: &Value, output: &Output) -> Result<Value, String> {
@@ -74,19 +72,14 @@ pub fn golden(context: &Value, output: &Output) -> Result<Value, String> {
 /// A path outside the root is allowed: stub and parent-relative scans have those
 /// semantics (§FS-scan.path.cover, §REQ-one-answer.stubs.outside-include).
 pub fn physical(context: &Value, path: &str) -> PathBuf {
-    let root = PathBuf::from(text(context, "saved"));
-    let path = Path::new(path);
-    if path.is_absolute() {
-        path.to_path_buf()
-    } else {
-        root.join(path)
-    }
+    super::agreement_paths::physical(context, path)
 }
 
 /// Every returned physical site has its independent authored byte witness.
 /// This catches invented IDs, moved lines and token loss even if all frontends
-/// agree. Full expected sets are supplied by reviewed manifests and the positive
-/// controls; these witnesses do not claim a new reference parser.
+/// agree. Reviewed manifests pin their original argv and the positive control
+/// pins list-basic. Generic complete expected sets are still missing: this
+/// corroboration is tagged incomplete and cannot discharge independent truth.
 pub fn witnesses(context: &Value, rows: &[Value], point: &str) -> Result<Value, String> {
     let mut witnesses = Vec::new();
     for row in rows {
@@ -139,6 +132,10 @@ pub fn witnesses(context: &Value, rows: &[Value], point: &str) -> Result<Value, 
             if let Some(token) = row["text"].as_str()
                 && !token.is_empty()
                 && !source.contains(token)
+                && !(physical
+                    .extension()
+                    .is_some_and(|extension| extension == "json")
+                    && decoded_string(source, token, false))
             {
                 return Err(format!(
                     "{path}:{line} does not author returned token {token:?}"
@@ -223,13 +220,21 @@ pub fn witnesses(context: &Value, rows: &[Value], point: &str) -> Result<Value, 
             witnesses.push(json!({"path":path,"bytes":bytes.len()}));
         }
     }
-    Ok(json!({"oracle":"physical-source-bytes","point":point,"sites":witnesses}))
+    Ok(
+        json!({"oracle":"physical-source-bytes","complete":false,"point":point,"sites":witnesses,
+        "scope":{"projectRoot":context["projectRoot"],"reportBase":context["reportBase"],
+            "invocationBase":context["invocationBase"],"configFile":context["configFile"]}}),
+    )
 }
 
 /// Standard JSON string decoding is independent of the declaration parser.
 /// Preserve the exact authored line while handling escaped value/ID keys
 /// (§FS-show.2.1, §REQ-one-answer.identity.declarations).
 fn decoded_token(line: &str, expected: &str) -> bool {
+    decoded_string(line, expected, true)
+}
+
+fn decoded_string(line: &str, expected: &str, exact: bool) -> bool {
     let mut start = None;
     let mut escaped = false;
     for (index, character) in line.char_indices() {
@@ -243,9 +248,13 @@ fn decoded_token(line: &str, expected: &str) -> bool {
         }
         if character == '"' {
             if let Some(begin) = start.take() {
-                if serde_json::from_str::<String>(&line[begin..index + 1])
-                    .is_ok_and(|value| value == expected)
-                {
+                if serde_json::from_str::<String>(&line[begin..index + 1]).is_ok_and(|value| {
+                    if exact {
+                        value == expected
+                    } else {
+                        value.contains(expected)
+                    }
+                }) {
                     return true;
                 }
             } else {

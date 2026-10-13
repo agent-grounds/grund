@@ -14,6 +14,7 @@ pub struct Question {
     pub path: String,
     pub explicit: bool,
     pub point: &'static str,
+    pub scopes: Value,
 }
 
 impl Question {
@@ -35,6 +36,7 @@ impl Question {
             path: context["path"].as_str().unwrap().into(),
             explicit: context["explicit"].as_bool().unwrap(),
             point,
+            scopes: context["scopes"].clone(),
         }
     }
 
@@ -49,9 +51,19 @@ impl Question {
         args
     }
 
+    pub fn context(&self, context: &Value, surface: &str) -> Value {
+        let mut scoped = context.clone();
+        if let Some(scope) = self.scopes[surface].as_object() {
+            for (key, value) in scope {
+                scoped[key] = value.clone();
+            }
+        }
+        scoped
+    }
+
     pub fn python_request(&self, cwd: &str) -> Value {
         json!({"operation":self.operation,"root":self.path,"explicit":self.explicit,
-            "cwd":cwd,"args":self.args,"options":self.options})
+            "cwd":cwd,"args":self.args,"options":self.options,"scope":self.scopes["python"]})
     }
 
     pub fn node_request(&self, cwd: &str) -> Value {
@@ -71,7 +83,7 @@ impl Question {
             "show" | "refs" => vec![self.args[0].clone(), options],
             _ => vec![options],
         };
-        json!({"operation":self.node_operation,"cwd":cwd,"args":args})
+        json!({"operation":self.node_operation,"cwd":cwd,"args":args,"scope":self.scopes["node"]})
     }
 }
 

@@ -37,6 +37,7 @@ fn s4_executes_the_complete_corpus_matrix() {
     let mut cells = BTreeSet::new();
     let mut materializations = BTreeMap::new();
     let mut host_questions = BTreeSet::new();
+    let mut incomplete_truth = Vec::new();
     for call in &calls {
         let Some(context) = &call.context else {
             continue;
@@ -108,8 +109,10 @@ fn s4_executes_the_complete_corpus_matrix() {
                     {
                         if variant == "narrowed" {
                             assert_eq!(
-                                call.path.to_string_lossy(),
-                                context["cwd"].as_str().unwrap()
+                                call.path,
+                                PathBuf::from(context["cwd"].as_str().unwrap())
+                                    .canonicalize()
+                                    .unwrap()
                             );
                         }
                         if variant == "path-argument" && call.surface != "cover-lines" {
@@ -133,6 +136,9 @@ fn s4_executes_the_complete_corpus_matrix() {
                 call.expected.get("oracleError").is_none(),
                 "source oracle failed"
             );
+            if call.expected["complete"] == false {
+                incomplete_truth.push(format!("{case} / {variant} / {}", call.surface));
+            }
             cells.insert((case, variant, call.surface.clone()));
         }
     }
@@ -228,6 +234,12 @@ fn s4_executes_the_complete_corpus_matrix() {
         missing.first()
     );
     assert!(
+        incomplete_truth.is_empty(),
+        "S4 independent truth unfinished: {} corroboration-only receipts; first {:?}",
+        incomplete_truth.len(),
+        incomplete_truth.first()
+    );
+    assert!(
         errors.is_empty(),
         "S4 agreement/oracle failures ({}):\n{}",
         errors.len(),
@@ -266,19 +278,13 @@ fn positive_control(cases: &std::path::Path, calls: &[agreement_evidence::Call])
             let selected = std::path::Path::new(context["path"].as_str().unwrap())
                 .strip_prefix(context["saved"].as_str().unwrap())
                 .unwrap();
-            let expected_sites: BTreeSet<_> = expected_sites
+            let explicit = call
+                .args
                 .iter()
-                .filter(|(_, site)| {
-                    if *variant != "narrowed" && *variant != "path-argument" {
-                        return true;
-                    }
-                    let (path, _) = site.rsplit_once(':').unwrap();
-                    std::path::Path::new(path).starts_with(selected)
-                })
-                .cloned()
-                .collect();
+                .any(|arg| Some(arg.as_str()) == context["path"].as_str());
+            let selected_sites = control_sites(&expected_sites, selected, explicit);
             assert!(
-                !expected_sites.is_empty(),
+                !selected_sites.is_empty(),
                 "list-basic {variant} independent control cannot be empty"
             );
             assert_eq!(call.exit, Some(0), "{surface}: {:?}", call.stderr);
@@ -293,7 +299,7 @@ fn positive_control(cases: &std::path::Path, calls: &[agreement_evidence::Call])
                 })
                 .collect();
             assert_eq!(
-                actual, expected_sites,
+                actual, selected_sites,
                 "{surface} against reviewed list-basic golden"
             );
             for (host, operation) in [
@@ -325,6 +331,20 @@ fn positive_control(cases: &std::path::Path, calls: &[agreement_evidence::Call])
                     })
                     .expect("actual host positive control");
                 assert!(call.result["failure"].is_null());
+                let host_explicit = if host == "python" {
+                    call.request["explicit"] == true
+                } else {
+                    call.request["args"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .any(|options| options.get("root").is_some())
+                };
+                let host_sites = control_sites(&expected_sites, selected, host_explicit);
+                assert!(
+                    !host_sites.is_empty(),
+                    "nonempty actual host control domain"
+                );
                 let actual: BTreeSet<_> = call.result["result"]["entries"]
                     .as_array()
                     .unwrap()
@@ -338,10 +358,62 @@ fn positive_control(cases: &std::path::Path, calls: &[agreement_evidence::Call])
                     })
                     .collect();
                 assert_eq!(
-                    actual, expected_sites,
+                    actual, host_sites,
                     "{host} {operation} {variant}: reviewed independent control"
                 );
             }
         }
     }
+}
+
+/// §FS-list.3: implicit cwd chooses a project; only an explicit subpath narrows
+/// the control's declarations. Reviewed golden bytes remain the complete set.
+fn control_sites(
+    sites: &BTreeSet<(String, String)>,
+    selected: &std::path::Path,
+    explicit: bool,
+) -> BTreeSet<(String, String)> {
+    sites
+        .iter()
+        .filter(|(_, site)| {
+            !explicit
+                || selected == std::path::Path::new("")
+                || selected == std::path::Path::new(".")
+                || std::path::Path::new(site.rsplit_once(':').unwrap().0).starts_with(selected)
+        })
+        .cloned()
+        .collect()
+}
+
+#[test]
+fn list_basic_controls_keep_implicit_and_explicit_domains() {
+    let golden = fs::read_to_string(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/e2e/cases/list-basic/expected.stdout"),
+    )
+    .unwrap();
+    let sites: BTreeSet<_> = golden
+        .lines()
+        .map(|line| {
+            let words: Vec<_> = line.split_whitespace().collect();
+            (words[0].to_string(), words[1].to_string())
+        })
+        .collect();
+    assert_eq!(sites.len(), 3);
+    assert_eq!(
+        control_sites(&sites, std::path::Path::new("docs/architecture"), false),
+        sites
+    );
+    let narrowed = control_sites(
+        &sites,
+        std::path::Path::new("docs/architecture/AR-001-auth.md"),
+        true,
+    );
+    assert_eq!(
+        narrowed,
+        BTreeSet::from([(
+            "AR-001-auth".into(),
+            "docs/architecture/AR-001-auth.md:1".into()
+        )])
+    );
 }

@@ -9,6 +9,7 @@ import hashlib
 import os
 from pathlib import Path
 import shutil
+from agreement_scope import question_scopes
 
 ROOT = Path(__file__).resolve().parents[2]
 CASES = ROOT / 'tests/e2e/cases'
@@ -139,6 +140,8 @@ def materialize(home, name, variant):
     context['editorPath'] = str(base / relative)
     context['cwd'] = str(saved / relative) if variant == 'narrowed' else str(saved)
     context['explicit'] = variant != 'narrowed'
+    if not context['absent']:
+        context['scopes'] = question_scopes(context)
     return context
 
 
