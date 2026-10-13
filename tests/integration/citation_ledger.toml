@@ -27,6 +27,8 @@ points = [
 ]
 owners = [
   "crates/grund-core/src/config/run.rs",
+  "crates/grund-core/src/config/v1/defaults.rs",
+  "crates/grund-core/src/grammar/language_table.rs",
   "crates/grund-core/src/queries/narrowing.rs",
   "crates/grund-core/src/scanner/walk.rs",
   "crates/grund-core/src/workspace/declared.rs",
