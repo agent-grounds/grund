@@ -15,7 +15,8 @@ use crate::config::{Project, escape_toml_basic};
 use crate::grammar::id_shape;
 
 pub(super) const AGENTS_TEMPLATE: &str = include_str!("../../assets/templates/AGENTS.md");
-/// The scaffold config. Its `[citations]` block comment explains the five levels
+/// The scaffold config teaches open-ended marker choices (§FS-init.2.4.5).
+/// Its `[citations]` block comment explains the five levels
 /// and hands the reader the `CITATION_DIRECTIONS_URL` of
 /// `citation_directions.rs`, where it used to cite
 /// §FS-config.3.9 by ID: the file lands verbatim in the adopting repository, so
@@ -24,7 +25,8 @@ pub(super) const AGENTS_TEMPLATE: &str = include_str!("../../assets/templates/AG
 const GRUND_TOML_TEMPLATE: &str =
     include_str!("../../assets/templates/software-development/grund.toml");
 /// The `none` template's config: the default one with `kinds = []` for its
-/// kind tables, and nothing else (§FS-init.2.4.9).
+/// kind tables, and nothing else (§FS-init.2.4.9). It keeps the same marker
+/// guidance (§FS-init.2.4.5).
 const NO_KINDS_GRUND_TOML_TEMPLATE: &str = include_str!("../../assets/templates/none/grund.toml");
 
 /// The templates built into the binary, which `grund init --template` names

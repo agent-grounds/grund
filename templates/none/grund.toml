@@ -13,7 +13,7 @@ project_name = "{NAME}"
 kinds = []
 
 [reference]
-marker = "§"
+marker = "§" # § | ∵ | ⊢ | ※ | ⏚ | any rare character
 trigger = "$$"
 strict = true
 shorthand = "canonical" # canonical | accepted
