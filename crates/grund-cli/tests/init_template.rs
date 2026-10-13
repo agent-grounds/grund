@@ -155,3 +155,30 @@ fn a_fresh_scaffold_declares_req_in_docs_requirements() {
     let (ok, stderr) = init(&target, &["--check"]);
     assert!(ok, "grund init --check: {stderr}");
 }
+
+/// §FS-init.2.1.3: `--scaffold` lays the `REQ` starter only where the governing
+/// config declares `REQ`, in the folder its row names: a config an earlier
+/// `init` wrote, with no `REQ` row, gets none.
+#[test]
+fn the_req_starter_follows_the_configs_req_row() {
+    let fs_row =
+        "grund_config_version = 1\n\n[[kinds]]\nkind = \"FS\"\nfile = \"requirements.md\"\n";
+
+    let older = workdir("init_template_scaffold_without_req");
+    fs::write(older.join("grund.toml"), fs_row).unwrap();
+    let (ok, stderr) = init(&older, &["--scaffold"]);
+    assert!(ok, "{stderr}");
+    assert!(!stderr.contains("docs/requirements"), "{stderr}");
+    assert!(!older.join("docs/requirements").exists(), "{stderr}");
+
+    let moved = workdir("init_template_scaffold_req_elsewhere");
+    let config = format!("{fs_row}\n[[kinds]]\nkind = \"REQ\"\nfolder = \"specs/hard\"\n");
+    fs::write(moved.join("grund.toml"), config).unwrap();
+    let (ok, stderr) = init(&moved, &["--scaffold"]);
+    assert!(ok, "{stderr}");
+    assert!(
+        stderr.contains("wrote requirements.md\nwrote specs/hard/README.md\n"),
+        "{stderr}"
+    );
+    assert!(!moved.join("docs/requirements").exists(), "{stderr}");
+}
