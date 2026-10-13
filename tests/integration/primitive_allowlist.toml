@@ -24,16 +24,6 @@ primitives = ["split on /"]
 step = "S1"
 
 [[allow]]
-file = "checker/index.rs"
-primitives = ["declaration_id_on_line"]
-step = "S2"
-
-[[allow]]
-file = "checker/index_mention.rs"
-primitives = ["citation_re", "declaration_id_on_line"]
-step = "S2"
-
-[[allow]]
 file = "queries/editor_hover.rs"
 primitives = ["split on /"]
 step = "S1"
@@ -54,16 +44,6 @@ step = "S1"
 file = "scanner/e2e.rs"
 primitives = ["split on /"]
 step = "S1"
-
-[[allow]]
-file = "writers/fmt_links.rs"
-primitives = ["citation_re"]
-step = "S2"
-
-[[allow]]
-file = "writers/fmt_rewrite.rs"
-primitives = ["citation_re"]
-step = "S2"
 
 [[exempt]]
 file = "checker/references.rs"

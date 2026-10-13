@@ -44,11 +44,6 @@ ruling = "DF-one-answer-rulings-grammar"
 what = "one grammar's leftovers: one subject matcher, the alias splits onto grammar/ids.rs, G06 and G09"
 
 [[step]]
-id = "S2"
-ruling = "DF-one-answer-rulings-parse"
-what = "read declaration headings and citations off the file record"
-
-[[step]]
 id = "S4"
 ruling = "DA-one-fact-one-point-one-implementation"
 what = "widen command agreement to every end-to-end tree, cover, the editor snapshot and the bindings"
