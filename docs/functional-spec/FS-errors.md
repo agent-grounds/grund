@@ -579,7 +579,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `suggested-citation` | none — suggestion | — | `--suggestions`, on a `should` entry | [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) |
 | `uncited-unit` | error | — | `rules = true` on a kind | [§FS-check.3.28](FS-check.md#328-uncited-unit) |
 | `unclosed-wrapper` | warning | — | — | [§FS-citations.checks.unclosed-wrapper](FS-citations.md#checksunclosed-wrapper-unclosed-wrapper-read-differently-from-grund-0190) |
-| `unread-scan-root` | warning | — | a `file` home or a file `include` entry | [§FS-scan.checks.unread-scan-root](FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read) |
+| `unread-scan-root` | warning | — | a `file` home or file `include` entry not read for its name | [§FS-scan.checks.unread-scan-root](FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read) |
 | `unrecorded-section-citation` | error | — | a citation of a relative heading's address | [§FS-section-lock.checks.unrecorded-section-citation](FS-section-lock.md#checksunrecorded-section-citation-a-cited-relative-address-the-lock-does-not-hold) |
 | `undeclared-chapter` | by strength: the kind's `closed` | — | `closed` on a v2 kind | [§FS-fields.checks.undeclared-chapter](FS-fields.md#checksundeclared-chapter-undeclared-chapter) |
 | `ungrounded` | error | — | `require_grounding` | [§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in) |

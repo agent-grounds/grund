@@ -1,0 +1,1 @@
+grund.toml:10: warning: [[kinds]] TXT home `.notes.txt` is not read — its name begins with `.`, and `txt` is not in [scan] extensions, so nothing in it is checked. Rename the file to a name that is not hidden and an extension the list holds.

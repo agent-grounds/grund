@@ -26,9 +26,9 @@ The rule this settles: a scan root outruns every rule about *descent* — `exclu
 
 `list`, `refs`, `show`, `cover` and `fmt` stay as they are, by the author's ruling on the plan. The fact is about the coverage of `check`'s verdict, the choice [§FS-check.4.9.4](../../functional-spec/FS-check.md#494-a-located-finding-on-stdout-not-a-cli-level-caution) makes for an absent optional member, so `list --kind TXT` stays empty and prints nothing about the root.
 
-### 2.2 Out of scope: a hidden-named file home
+### 2.2 A hidden-named file home is decided apart
 
-A `file` home whose name is hidden is still read by no run and named by none, because the hidden rule is asked first. It is the declared blind spot of [§FS-scan.scope.hidden](../../functional-spec/FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent), but a configuration that names it still looks clean, which breaks [§REQ-no-missed-citation.1](../../requirements/REQ-no-missed-citation.md#1-no-silent-skips) the same way. It is [issue #689](https://github.com/agent-grounds/grund/issues/689), not this decision.
+This decision left a `file` home whose name is hidden out, because the hidden rule is asked first and the root stayed silent. That silence broke [§REQ-no-missed-citation.1](../../requirements/REQ-no-missed-citation.md#1-no-silent-skips) the same way, and [§DF-unread-hidden-root](DF-unread-hidden-root.md#df-unread-hidden-root-a-configured-file-root-with-a-hidden-name-is-named-not-read) closes it with this same warning ([issue #689](https://github.com/agent-grounds/grund/issues/689)).
 
 ## 3. Consequences
 

@@ -1,1 +1,1 @@
-success
+grund.toml:4: warning: [scan] include entry `docs/.notes.md` is not read — its name begins with `.`, and grund reads no hidden file, so nothing in it is checked. Rename the file to a name that is not hidden, or drop the entry.
