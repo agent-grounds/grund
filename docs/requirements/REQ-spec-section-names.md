@@ -20,11 +20,12 @@ a check that is a warning today sits in it only until the day it is promoted.
 
 ## shape: Where a number is allowed
 
-A new declaration has no numbered top-level section. The grammar admits a number under
-a name but not a name under a number, so a numbered chapter makes its whole subtree
-positional for good. Numbers therefore go beneath a named prefix, and only where the
-content is genuinely ordered or is a sub-point of one named thing: a precedence ladder,
-a sequence of steps, the parts of one check.
+A new declaration has no numbered top-level section. A numbered chapter makes every address
+beneath it depend on that chapter's position, named descendants included. The section lock
+reports such a move, and a pointer left at the old address keeps its citations on target,
+but neither makes the address permanent. Numbers therefore go beneath a named prefix,
+and only where the content is genuinely ordered or is a sub-point of one named thing: a
+precedence ladder, a sequence of steps, the parts of one check.
 
 A term or a check is two components below the ID, and a third component only for a
 sub-point of a check. Depth is not free: a note that cites a coordinate stays inside the

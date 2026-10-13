@@ -1,0 +1,2 @@
+docs/use.md:5: warning: section not found: FS-x.1.nope; write <§> before it to show the shape without citing it; a citation of a name under a number is now checked, and this warning becomes an error in grund 0.19.0
+docs/use.md:7: warning: unknown reference FS-nope; a citation of a name under a number is now checked, and this warning becomes an error in grund 0.19.0

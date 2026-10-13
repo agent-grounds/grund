@@ -1,0 +1,1 @@
+docs/fs/x.md:5: warning: FS must not cite GOAL (RULE-r) — re-point the citation or downgrade it to a plain Markdown link; a citation of a name under a number is now checked, and this warning becomes an error in grund 0.19.0

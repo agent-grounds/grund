@@ -180,7 +180,7 @@ The link target is a file URI with a line fragment (`#L<n>`) for the resolved de
 
 `textDocument/documentHighlight` marks the whole `§<ID>` citation — or declaration, section, or stub title — under the cursor as one span, plus every other occurrence of the same ID in the open document. Without it, an editor with no highlight provider falls back to its language word pattern, which splits a citation such as `§FS-lsp.1.3` on `§`, `-`, and `.` and boxes only the bare word at the cursor (`lsp`). Highlights are scoped to the document the request names: the citing token plus same-document declarations, section headings, stub titles, and sibling citations of the same ID; usages in other files are reached through citations ([§FS-lsp.1.3.1](FS-lsp.md#131-citations-from-declarations)).
 
-For a named coordinate, the complete `§<ID>.<path>` token and the complete named heading title are occurrence units. Highlights never shorten a missing or reserved letter-bearing tail to the bare ID or numeric prefix.
+For a named coordinate, the complete `§<ID>.<path>` token and the complete named heading title are occurrence units. A mixed coordinate ([§FS-config.3.3.1](FS-config.md#331-named-components)), `<§>FS-x.1.goals`, is one such unit, and hover and definition answer it as the section it names. Highlights never shorten a missing or mixed letter-bearing tail to the bare ID or numeric prefix.
 
 #### 1.3.4 Origin span and result shape
 
