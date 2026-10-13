@@ -80,6 +80,37 @@ No message in the tree names `0.19.0` in the future tense; the e2e cases that
 pin the window print the final templates, and the `[citations]` warning cases
 exit `2`.
 
+## RM-doc-comment-relative-headings: give a relative heading in a doc-comment its meaning in 0.19.0
+
+In 0.18.0 a relative heading in a source doc-comment declaration body is prose,
+as before, and warns `parse-moves` naming `0.19.0`
+([§FS-declarations.checks.parse-moves.2](functional-spec/FS-declarations.md#checksparse-moves2-the-four-shapes), [§DF-doc-comment-relative-headings](decisions/functional/DF-doc-comment-relative-headings.md#df-doc-comment-relative-headings-a-relative-heading-in-a-doc-comment-warns-in-0180-and-is-a-section-from-0190)).
+This milestone is `0.19.0`, the release that message names.
+
+GitHub: lands with [#639](https://github.com/agent-grounds/grund/issues/639), after [#665](https://github.com/agent-grounds/grund/issues/665) ships the warning.
+
+### 1. What
+
+The line declares its section at its canonical path, under the parent rule
+([§FS-declarations.section.relative.parent](functional-spec/FS-declarations.md#sectionrelativeparent-the-parent)), the section lock
+([§FS-section-lock](functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)) and the display rules
+([§FS-declarations.section.relative.shown](functional-spec/FS-declarations.md#sectionrelativeshown-how-a-relative-heading-is-shown)), as in Markdown; a line with no usable
+parent is a `relative-section-parent` error. Citations below it move into the new
+section, and the line's warning was their notice. The `parse-moves` shape goes
+with the code, and #639's release note names the change.
+
+### 2. Why now
+
+The warning's release is one constant that a unit test holds ahead of
+`CARGO_PKG_VERSION`, so the version bump that reaches `0.19.0` fails CI until
+this lands.
+
+### 3. Measurable
+
+The e2e cases that pin the warning in Rust, Python, Java and Go doc-comments
+print no `parse-moves` finding, and `grund <ID> --toc` lists the relative
+heading at its canonical path in each.
+
 ## RM-distribution: cargo + npm + pypi from one engine
 
 Per [§FS-distribution](functional-spec/FS-distribution.md#fs-distribution-grund-distribution-targets) and [§AR-bindings](architecture/AR-bindings.md#ar-bindings-target-shape-for-exposing-the-rust-engine-on-three-platforms). Builds on the shipped workspace split ([§AR-bindings.2](architecture/AR-bindings.md#2-grund-core-the-only-place-logic-lives)).
