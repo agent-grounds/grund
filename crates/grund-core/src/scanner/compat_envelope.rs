@@ -5,7 +5,9 @@
 //! goes with that file in 0.19.0, when the record's envelope
 //! (§FS-languages.comment-wrapper, `grammar::comment_envelope`) answers instead.
 
-use crate::grammar::{LexicalSettings, line_comment_block_marker, strip_block_closer};
+use crate::grammar::{
+    LexicalSettings, line_comment_block_marker, prefix_forms, strip_block_closer,
+};
 
 /// The line-style markers this file has always read on its own, by a fixed list
 /// rather than by the declaration's marker. Every other marker the configured
@@ -87,14 +89,20 @@ pub(super) fn continues_comment_body(
 }
 
 /// What is left of a body line once its envelope is off (§FS-show.2.3.2): behind
-/// the declaration's own marker, the whitespace in front of it, the marker, and
-/// one following space go and nothing else does; otherwise `clean_body_line`.
+/// the declaration's own marker, the whitespace in front of it, the whole form of
+/// that marker the line was written in (§FS-languages.prefixes.forms, so a `;;`
+/// run goes whole), and one following space go and nothing else does; otherwise
+/// `clean_body_line`.
 pub(super) fn clean_envelope_line(line: &str, is_md: bool, own_marker: Option<&str>) -> String {
     let Some(marker) = own_marker.filter(|_| !is_md) else {
         return clean_body_line(line, is_md);
     };
-    match line.trim_start().strip_prefix(marker) {
-        Some(rest) => rest.strip_prefix(' ').unwrap_or(rest).to_string(),
+    let trimmed = line.trim_start();
+    match prefix_forms(marker).len_at(trimmed) {
+        Some(len) => {
+            let rest = &trimmed[len..];
+            rest.strip_prefix(' ').unwrap_or(rest).to_string()
+        }
         None => line.to_string(),
     }
 }
