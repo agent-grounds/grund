@@ -76,28 +76,9 @@ where
                         path: rel,
                     }),
                     Err(err) => {
-                        // §FS-distribution.3.3.2: classify while the original source is held.
-                        let mut source = crate::model::OperationDiagnostic::new(
-                            if err.downcast_ref::<std::io::Error>().is_some() {
-                                "filesystem"
-                            } else {
-                                "operation"
-                            },
-                            "init",
-                            format!("update {}: {err}", format_path(&path)),
-                        );
-                        source.path = Some(format_path(&path));
-                        if let Some(io) = err.downcast_ref::<std::io::Error>() {
-                            source.details = serde_json::json!({"os_error":io.raw_os_error()});
-                        }
-                        *diagnostic = Some(source.into());
-                        return Err(InitError::with_events(
-                            std::mem::take(events),
-                            // Forward slashes on every platform, like report
-                            // paths (§FS-errors.2.2) — Windows must not leak
-                            // backslashes into the message.
-                            format!("update {}: {err}", format_path(&path)),
-                        ));
+                        let (source, message) = update_failure(&path, &err);
+                        *diagnostic = Some(source);
+                        return Err(InitError::with_events(std::mem::take(events), message));
                     }
                 }
             }
@@ -159,4 +140,29 @@ where
     }
 
     Ok(())
+}
+
+/// The diagnostic and message for an entrypoint whose block could not be read or
+/// spliced — one wording whether the write pass meets it or the pre-write pass
+/// does first (§FS-init.1.2.6).
+pub(super) fn update_failure(path: &Path, err: &anyhow::Error) -> (anyhow::Error, String) {
+    // Forward slashes on every platform, like report paths (§FS-errors.2.2) —
+    // Windows must not leak backslashes into the message.
+    let message = format!("update {}: {err}", format_path(path));
+    // §FS-distribution.3.3.2: classify while the original source is held.
+    let io = err.downcast_ref::<std::io::Error>();
+    let mut source = crate::model::OperationDiagnostic::new(
+        if io.is_some() {
+            "filesystem"
+        } else {
+            "operation"
+        },
+        "init",
+        message.clone(),
+    );
+    source.path = Some(format_path(path));
+    if let Some(io) = io {
+        source.details = serde_json::json!({"os_error":io.raw_os_error()});
+    }
+    (source.into(), message)
 }

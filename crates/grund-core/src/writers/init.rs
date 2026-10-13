@@ -2,7 +2,7 @@ use std::fs;
 use std::path::Path;
 
 use super::expected::chapter_rules_section;
-use super::init_block::write_or_update_canonical_agent_entrypoint;
+use super::init_block::{refuse_planned_agent_blocks, write_or_update_canonical_agent_entrypoint};
 pub(crate) use super::init_guidance::init_fs_home;
 use super::init_guidance::{InitNext, docs_scaffold_for_config};
 use super::init_notes::{duplicate_agent_entrypoint_notes, shadowed_claude_entrypoint_note};
@@ -236,6 +236,13 @@ fn init_run(
     if let Some(message) =
         refuse_init_global_instruction_paths(&agent_entrypoints.planned_paths(&target))
     {
+        return Err(InitError::new(message));
+    }
+    // §FS-init.1.2.6: a malformed or newer block in any planned entrypoint
+    // refuses the run before the first write or report line, not mid-plan.
+    if let Some((path, err)) = refuse_planned_agent_blocks(&target, &agent_entrypoints, force) {
+        let (source, message) = super::init_companions::update_failure(&path, &err);
+        *diagnostic = Some(source);
         return Err(InitError::new(message));
     }
 
