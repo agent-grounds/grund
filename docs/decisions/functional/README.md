@@ -113,6 +113,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-unread-opted-out-block](DF-unread-opted-out-block.md#df-unread-opted-out-block-the-unread-files-of-an-opted-out-block-are-a-conditional-warning-that-never-ramps) — the unread files of an opted-out block are a conditional warning that never ramps
 - [§DF-remote-projects](DF-remote-projects.md#df-remote-projects-a-remote-project-is-a-workspace-member-whose-bytes-were-fetched-mounted-as-its-own-root) — a remote project is a workspace member whose bytes were fetched, mounted as its own root
 - [§DF-undeclared-blind-spots](DF-undeclared-blind-spots.md#df-undeclared-blind-spots-two-skips-no-section-named-become-located-findings) — two skips no section named become located findings
+- [§DF-default-extensions-follow-language-table](DF-default-extensions-follow-language-table.md#df-default-extensions-follow-language-table-the-scan-extensions-default-reads-every-language-grund-classifies) — the `[scan] extensions` default reads every language grund classifies
 
 ## The command surface
 

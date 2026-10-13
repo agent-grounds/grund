@@ -1,0 +1,18 @@
+FS-101-c-header        src/c_header.h:1  C header router
+FS-102-cc-source       src/cc_router.cc:1  C++ router, cc spelling
+FS-103-cxx-source      src/cxx_router.cxx:2  C++ router, cxx spelling
+FS-104-hpp-header      src/cpp_header.hpp:2  C++ header, hpp spelling
+FS-105-hh-header       src/cpp_header_hh.hh:1  C++ header, hh spelling
+FS-106-hxx-header      src/cpp_header_hxx.hxx:1  C++ header, hxx spelling
+FS-107-objc-source     src/ObjcRouter.m:2  Objective-C router
+FS-108-objcpp-source   src/ObjcppRouter.mm:1  Objective-C++ router
+FS-109-kotlin-script   src/KotlinScriptRouter.kts:2  Kotlin script router
+FS-110-jsx-source      src/jsx_router.jsx:2  JSX router
+FS-111-mjs-source      src/module_router.mjs:2  ES module router
+FS-112-cjs-source      src/commonjs_router.cjs:2  CommonJS router
+FS-113-dart-source     src/dart_router.dart:1  Dart router
+FS-114-r-source        src/r_router.r:1  R router, lower-case spelling
+FS-115-r-upper-source  src/RUpperRouter.R:1  R router, upper-case spelling
+FS-116-sh-source       src/sh_router.sh:2  POSIX shell router
+FS-117-bash-source     src/bash_router.bash:1  Bash router
+FS-118-zsh-source      src/zsh_router.zsh:1  Zsh router
