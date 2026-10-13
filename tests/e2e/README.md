@@ -264,6 +264,17 @@ can read is the same silence in a new spelling.
 - Python `"""` / `'''` docstring declarations and marked citations under strict mode
 - Clojure `;` and SQL `--` declarations and marked citations under strict mode
 - a marked dangling citation planted in every default extension and opened by every default comment prefix, one file per extension (`doccomment-polyglot-dangling`): the per-host-language proof of [§REQ-no-missed-citation.3](../../docs/requirements/REQ-no-missed-citation.md#3-proven-per-host-language)
+- one idiomatic file per language of the top-20 table, plus Scala, each declaring `AR-<lang>` with
+  a `## 1.` section in its native doc comment ([§FS-languages.comment-block.forms](../../docs/functional-spec/FS-languages.md#comment-blockforms-comment-blocks)), citing
+  `FS-entry.1` from a plain comment, and carrying one dangling citation and two string literals:
+  `doccomment-polyglot-top20` pins the `check` verdicts, `doccomment-polyglot-top20-show` the
+  stripped bodies ([§FS-show.2.3](../../docs/functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments), [§FS-languages.comment-wrapper](../../docs/functional-spec/FS-languages.md#comment-wrapper-the-comment-wrapper)), and `doccomment-polyglot-top20-refs`
+  every plain-comment citation ([§FS-refs.3.1](../../docs/functional-spec/FS-refs.md#31---format-text-default)). The fixture lists every extension in
+  `[scan] extensions`, so it leaves the default list of [grund#705](https://github.com/agent-grounds/grund/issues/705) unsettled. The goldens pin
+  known defects for their fixes to remove on refresh: the `unknown reference AR-<lang>` lines and
+  the missing Lua, Haskell, Clojure and Emacs Lisp bodies are [grund#703](https://github.com/agent-grounds/grund/issues/703), the
+  `unknown project alias api` lines are [grund#702](https://github.com/agent-grounds/grund/issues/702), and the trailing `</summary>` in the C# body is
+  an unfiled wart
 - missing stub-link target
 - stub-link target is a directory
 - stub-link target has an unsupported extension
