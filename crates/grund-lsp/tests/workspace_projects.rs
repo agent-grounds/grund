@@ -144,7 +144,7 @@ fn an_external_directory_link_has_no_diagnostics_or_hover() {
     // §FS-lsp.2.2.3: the LSP consumes the shared scan. A document reachable only
     // below an outward directory link is therefore neither diagnosed nor
     // answerable by this project.
-    let base = std::env::temp_dir().join(format!("grund-lsp-symlink-{}", std::process::id()));
+    let base = fixture_base().join(format!("grund-lsp-symlink-{}", std::process::id()));
     let _ = fs::remove_dir_all(&base);
     let root = base.join("repo");
     let outside = base.join("outside-docs");
@@ -188,7 +188,7 @@ fn an_external_directory_link_has_no_diagnostics_or_hover() {
 
 #[test]
 fn a_parent_relative_include_root_still_answers() {
-    let base = std::env::temp_dir().join(format!("grund-lsp-parent-{}", std::process::id()));
+    let base = fixture_base().join(format!("grund-lsp-parent-{}", std::process::id()));
     let _ = fs::remove_dir_all(&base);
     let root = base.join("repo");
     let shared = base.join("shared");
@@ -236,7 +236,7 @@ fn a_file_two_projects_scan_collects_one_verdict() {
     // A workspace root and one of its members, both opened as editor folders,
     // scan the member's files. The member owns them, so its verdict is the one
     // published — never both snapshots' findings merged (§FS-lsp.2.2.2).
-    let root = std::env::temp_dir().join(format!("grund-lsp-overlap-{}", std::process::id()));
+    let root = fixture_base().join(format!("grund-lsp-overlap-{}", std::process::id()));
     let _ = fs::remove_dir_all(&root);
     write(
         &root.join("grund.toml"),
@@ -278,7 +278,7 @@ fn a_virtual_workspace_folder_is_skipped_not_fatal() {
     // VS Code multi-root windows mix local folders with virtual ones. A folder
     // grund cannot read must not take the local folders beside it down
     // (§FS-lsp.2.2.4, §REQ-never-crashes).
-    let root = std::env::temp_dir().join(format!("grund-lsp-virtual-{}", std::process::id()));
+    let root = fixture_base().join(format!("grund-lsp-virtual-{}", std::process::id()));
     let _ = fs::remove_dir_all(&root);
     write(
         &root.join("grund.toml"),
@@ -329,7 +329,7 @@ fn a_folder_whose_config_will_not_load_leaves_the_others_serving() {
     // One half-typed `grund.toml` used to abort the whole batch, so the folder
     // beside it lost every feature and the failure only reached stderr
     // (§FS-lsp.2.2.4, §FS-lsp.requirements.degrades, §REQ-never-crashes).
-    let root = std::env::temp_dir().join(format!("grund-lsp-broken-{}", std::process::id()));
+    let root = fixture_base().join(format!("grund-lsp-broken-{}", std::process::id()));
     let _ = fs::remove_dir_all(&root);
     let good = root.join("good");
     let bad = root.join("bad");
@@ -388,7 +388,7 @@ fn an_edit_in_one_project_leaves_the_others_answering() {
     // Only the projects that can see the edited document are rebuilt, so this
     // pins that the edited one *does* update and the untouched one does not go
     // stale or vanish (§AR-lsp.2.1).
-    let root = std::env::temp_dir().join(format!("grund-lsp-scoped-{}", std::process::id()));
+    let root = fixture_base().join(format!("grund-lsp-scoped-{}", std::process::id()));
     let _ = fs::remove_dir_all(&root);
     let first_root = root.join("first");
     let second_root = root.join("second");
@@ -477,7 +477,7 @@ fn on_type_edits(
 /// `initialize` and kept it would still satisfy a helper-level case.
 #[test]
 fn on_type_formatting_follows_the_edited_members_trigger_and_marker() {
-    let root = std::env::temp_dir().join(format!("grund-lsp-on-type-{}", std::process::id()));
+    let root = fixture_base().join(format!("grund-lsp-on-type-{}", std::process::id()));
     let _ = fs::remove_dir_all(&root);
     write(
         &root.join("grund.toml"),

@@ -42,7 +42,7 @@ impl Sandbox {
             .duration_since(UNIX_EPOCH)
             .expect("clock after epoch")
             .as_nanos();
-        let root = std::env::temp_dir().join(format!(
+        let root = crate::support::fixture_base().join(format!(
             "grund-lsp-integrations-{label}-{}-{nonce}",
             std::process::id()
         ));

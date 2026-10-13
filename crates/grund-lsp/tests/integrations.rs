@@ -350,7 +350,7 @@ fn build_packaged_binary() -> PathBuf {
     let built = build_target
         .join("debug")
         .join(format!("grund-lsp{}", std::env::consts::EXE_SUFFIX));
-    let retained = std::env::temp_dir().join(format!(
+    let retained = support::fixture_base().join(format!(
         "grund-lsp-packaged-binary-{}{}",
         std::process::id(),
         std::env::consts::EXE_SUFFIX

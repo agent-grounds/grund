@@ -79,7 +79,7 @@ fn stop_server(
 
 #[test]
 fn a_temporarily_invalid_config_keeps_its_snapshot_while_other_projects_refresh() {
-    let base = std::env::temp_dir().join(format!("grund-lsp-retain-{}", std::process::id()));
+    let base = fixture_base().join(format!("grund-lsp-retain-{}", std::process::id()));
     let _ = fs::remove_dir_all(&base);
     let first = base.join("first");
     let second = base.join("second");
@@ -130,7 +130,7 @@ fn a_temporarily_invalid_config_keeps_its_snapshot_while_other_projects_refresh(
 
 #[test]
 fn a_scanned_sibling_does_not_give_another_project_ownership() {
-    let base = std::env::temp_dir().join(format!("grund-lsp-exact-owner-{}", std::process::id()));
+    let base = fixture_base().join(format!("grund-lsp-exact-owner-{}", std::process::id()));
     let _ = fs::remove_dir_all(&base);
     let first = base.join("first");
     let second = base.join("nested/second");
@@ -172,8 +172,7 @@ fn a_scanned_sibling_does_not_give_another_project_ownership() {
 #[test]
 fn two_external_scan_claims_are_rejected_as_ambiguous() {
     // §FS-lsp.requirements.no-guess: a file two scans claim is nobody's.
-    let base =
-        std::env::temp_dir().join(format!("grund-lsp-ambiguous-owner-{}", std::process::id()));
+    let base = fixture_base().join(format!("grund-lsp-ambiguous-owner-{}", std::process::id()));
     let _ = fs::remove_dir_all(&base);
     let first = base.join("first");
     let second = base.join("nested/second");
@@ -216,7 +215,7 @@ fn two_external_scan_claims_are_rejected_as_ambiguous() {
 #[test]
 #[cfg(unix)]
 fn an_external_unreadable_file_still_publishes_its_scan_error() {
-    let base = std::env::temp_dir().join(format!("grund-lsp-external-io-{}", std::process::id()));
+    let base = fixture_base().join(format!("grund-lsp-external-io-{}", std::process::id()));
     let _ = fs::remove_dir_all(&base);
     let root = base.join("repo");
     let shared = base.join("shared");
@@ -328,7 +327,7 @@ fn changed_watched_files(stdin: &mut ChildStdin) {
 #[test]
 fn a_config_that_stops_loading_is_published_on_grund_toml_until_it_loads_again() {
     // §FS-lsp.requirements.config-errors: the editor gets the command line's error.
-    let base = std::env::temp_dir().join(format!("grund-lsp-config-diag-{}", std::process::id()));
+    let base = fixture_base().join(format!("grund-lsp-config-diag-{}", std::process::id()));
     let _ = fs::remove_dir_all(&base);
     let root = base.join("project");
     let (spec, source) = write_project(&root, "Use");
@@ -379,7 +378,7 @@ fn a_config_that_stops_loading_is_published_on_grund_toml_until_it_loads_again()
 
 #[test]
 fn a_server_started_on_a_broken_config_publishes_it_on_grund_toml() {
-    let base = std::env::temp_dir().join(format!("grund-lsp-config-start-{}", std::process::id()));
+    let base = fixture_base().join(format!("grund-lsp-config-start-{}", std::process::id()));
     let _ = fs::remove_dir_all(&base);
     let root = base.join("project");
     write_project(&root, "Use");
@@ -406,7 +405,7 @@ fn a_server_started_on_a_broken_config_publishes_it_on_grund_toml() {
 
 #[test]
 fn a_workspace_block_that_absorbs_the_scan_is_published_on_its_members_line() {
-    let base = std::env::temp_dir().join(format!("grund-lsp-config-absorb-{}", std::process::id()));
+    let base = fixture_base().join(format!("grund-lsp-config-absorb-{}", std::process::id()));
     let _ = fs::remove_dir_all(&base);
     let root = base.join("project");
     let (spec, source) = write_project(&root, "Use");
@@ -452,7 +451,7 @@ fn a_workspace_block_that_absorbs_the_scan_is_published_on_its_members_line() {
 
 #[test]
 fn a_member_config_two_folders_fail_on_is_published_once_from_the_member() {
-    let base = std::env::temp_dir().join(format!("grund-lsp-config-member-{}", std::process::id()));
+    let base = fixture_base().join(format!("grund-lsp-config-member-{}", std::process::id()));
     let _ = fs::remove_dir_all(&base);
     let root = base.join("workspace");
     write_project(&root, "Use");
@@ -498,8 +497,7 @@ fn a_member_config_two_folders_fail_on_is_published_once_from_the_member() {
 
 #[test]
 fn a_claiming_ancestor_config_that_stops_loading_is_published_on_its_grund_toml() {
-    let base =
-        std::env::temp_dir().join(format!("grund-lsp-config-ancestor-{}", std::process::id()));
+    let base = fixture_base().join(format!("grund-lsp-config-ancestor-{}", std::process::id()));
     let _ = fs::remove_dir_all(&base);
     let ancestor = base.join("w");
     let claiming = "grund_config_version = 1\n[workspace]\nmembers = [\"m\"]\n";
