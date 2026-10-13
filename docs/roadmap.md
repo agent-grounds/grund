@@ -132,7 +132,7 @@ or `[citations]` finding only such citations raise, warn and name `0.19.0`
 [§DF-number-name-sections.decision.citations](decisions/functional/DF-number-name-sections.md#decisioncitations-a-citation-that-was-skipped-is-now-checked)). This milestone is `0.19.0`, the
 release that message names.
 
-GitHub: the follow-up filed from [#662](https://github.com/agent-grounds/grund/issues/662).
+GitHub: [#710](https://github.com/agent-grounds/grund/issues/710), filed from [#662](https://github.com/agent-grounds/grund/issues/662).
 
 ### 1. What
 
