@@ -578,5 +578,5 @@ fn empty_workspace_error(config: &Config) -> anyhow::Error {
         || "workspace has no projects in scope (include_root = false and no members)".to_string(),
         |glob| format!("the glob `{glob}` matched no directories"),
     );
-    config_location_error(source, message)
+    config_location_error(config, source, message)
 }
