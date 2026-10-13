@@ -15,6 +15,7 @@ use std::path::{Path, PathBuf};
 
 use super::project::Schema;
 use super::rows::Extent;
+use crate::model::{RootOrigin, RootRow};
 
 /// Where the config root physically is, for the comparisons that have to be made
 /// against a resolved path. Equal to `config.root` for every root `grund`
@@ -88,6 +89,46 @@ pub(crate) fn root_scope_roots(schema: &Schema, root: &Path, full: bool) -> Vec<
         // it, so there is nothing left for the homes to add.
         (false, false) => vec![root.to_path_buf()],
     }
+}
+
+/// Each configured key that can make a single file a scan root, as the path
+/// `root_scope_roots` spells that root, with the row and the line that named it
+/// (§FS-scan.checks.unread-scan-root.location): every `[scan] include` entry, then
+/// every walked `file` home, in the roots' own order, so the first row naming a path
+/// is the one that spelled it (§AR-scanner.1.8). A key the file did not write, a
+/// built-in row or a version-2 file's derived `include`, has no line and no entry.
+pub(crate) fn file_root_rows(schema: &Schema, root: &Path) -> Vec<(PathBuf, RootRow)> {
+    let as_root = |entry: &str| root.join(entry).components().collect::<PathBuf>();
+    let include = schema.sources.include_source.iter().flat_map(|source| {
+        let entries = schema.sources.include.iter().flatten();
+        entries.map(move |entry| {
+            let row = RootRow {
+                origin: RootOrigin::Include,
+                written: entry.clone(),
+                config: source.path.clone(),
+                line: source.line,
+            };
+            (as_root(entry), row)
+        })
+    });
+    let homes = schema.rows.iter().filter_map(move |row| {
+        let place = row.places.first().filter(|place| place.scanned)?;
+        let (Extent::File(file), Some(source)) = (&place.extent, &place.source) else {
+            return None;
+        };
+        let origin = RootOrigin::Home {
+            kind: row.name.clone(),
+            citable: row.kind.is_some(),
+        };
+        let row = RootRow {
+            origin,
+            written: file.clone(),
+            config: source.path.clone(),
+            line: source.line,
+        };
+        Some((as_root(file), row))
+    });
+    include.chain(homes).collect()
 }
 
 /// Every home the config lists without walking (`scan = false`,

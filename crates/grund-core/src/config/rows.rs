@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 use super::fields::{Field, FieldContent};
 use super::kind::{DEFAULT_KIND_INDEX, KindConfig, KindIndex};
 use super::project::{Project, Schema, Strength};
-use super::record::CODE_SOURCE_KIND;
+use super::record::{CODE_SOURCE_KIND, ConfigLocation};
 
 /// §AR-config.1.3: one `[[kinds]]` row.
 #[derive(Clone, Debug, PartialEq)]
@@ -28,10 +28,22 @@ pub struct Row {
 }
 
 /// §AR-config.1.3: a place, and whether the walk reads it (§FS-config.3.4.7).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Place {
     pub extent: Extent,
     pub scanned: bool,
+    /// The line of the key that named the place, which a finding about the place
+    /// itself anchors at (§FS-scan.checks.unread-scan-root.location); `None` for a
+    /// built-in row.
+    pub source: Option<ConfigLocation>,
+}
+
+/// Two places are equal when they mean the same: where each was written is not
+/// part of it, so a file and the file it prints load to equal rows (§AR-config.2).
+impl PartialEq for Place {
+    fn eq(&self, other: &Self) -> bool {
+        self.extent == other.extent && self.scanned == other.scanned
+    }
 }
 
 /// §AR-config.1.3: what a place covers.

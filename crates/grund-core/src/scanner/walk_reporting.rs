@@ -5,12 +5,13 @@ use anyhow::{Result, anyhow};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
+use super::read_predicate::{Unread, name_refusal};
 use super::tree::ScanError;
 use super::walk::{scan_roots, scannable_walker};
 use super::walk_boundaries::{is_scannable, outward_directory_link_root, owned_by_another_project};
 use super::walk_errors::{symlink_loop_report, walk_error_report};
-use crate::config::{Frame, Schema, canonical_config_root};
-use crate::model::sort_path_key;
+use crate::config::{Frame, Schema, canonical_config_root, file_root_rows};
+use crate::model::{RootRow, sort_path_key};
 use crate::sources::{
     canonical_path, is_directory, is_regular_file, path_exists, path_is_file, physical_path_key,
 };
@@ -58,6 +59,10 @@ pub(crate) struct WalkedTree {
     /// answered it: only such a `fmt --write` writes a section lock
     /// (§FS-section-lock.write).
     pub(crate) root_scope: bool,
+    /// The configured file roots the extension filter refused, each with the row
+    /// that made it a root, for `check`'s report (§AR-scanner.1.6,
+    /// §FS-scan.checks.unread-scan-root).
+    pub(crate) unread_roots: Vec<RootRow>,
 }
 
 /// The tree walk (§AR-scanner.1): from each scan root, descend skipping hidden and
@@ -124,6 +129,10 @@ pub(crate) fn walk_scannable_files_with_sources(
     // resolved path. Equal to `config.root` for the roots `grund` discovers, which
     // are canonical already (§FS-config.1) — one `stat` per run either way.
     let physical_root = canonical_config_root(frame.root());
+    // §AR-scanner.1.6: the file roots the extension filter refused, with their rows,
+    // and the rows themselves, read only once a root is refused.
+    let mut unread_roots = Vec::new();
+    let mut file_rows = None;
     for scan_root in roots {
         // §FS-check.6.1.1: the actual walk roots are covered before traversal.
         if !crate::config::observe_input(&scan_root, true) {
@@ -159,14 +168,25 @@ pub(crate) fn walk_scannable_files_with_sources(
         // spelling that is not the file's own, so all of them can alias (§FS-check.1.3.2).
         let root_is_aliased = canonical_scan_root != scan_root;
         if path_is_file(&scan_root) {
-            if is_scannable(&scan_root, schema) {
-                // §FS-check.1.3.6.1: a file handed as the path is walked beside roots
-                // that reach it under its own name, so a link's spelling has to
-                // resolve to the same one read (§FS-config.3.5.4).
-                if root_is_aliased {
-                    aliasable.insert(scan_root.clone());
+            match name_refusal(&scan_root, schema) {
+                None => {
+                    // §FS-check.1.3.6.1: a file handed as the path is walked beside roots
+                    // that reach it under its own name, so a link's spelling has to
+                    // resolve to the same one read (§FS-config.3.5.4).
+                    if root_is_aliased {
+                        aliasable.insert(scan_root.clone());
+                    }
+                    files.push(scan_root);
                 }
-                files.push(scan_root);
+                // §AR-scanner.1.13: the predicate's own answer, kept with the row
+                // that made the file a root (§FS-scan.scope.extensions.root).
+                Some(Unread::Extension) => {
+                    let rows =
+                        file_rows.get_or_insert_with(|| file_root_rows(schema, frame.root()));
+                    record_unread_root(&mut unread_roots, rows, &scan_root);
+                }
+                // §FS-scan.checks.unread-scan-root.silent: the hidden rule is asked first.
+                Some(_) => {}
             }
             continue;
         }
@@ -301,7 +321,21 @@ pub(crate) fn walk_scannable_files_with_sources(
         outside_root,
         dirs,
         root_scope,
+        unread_roots,
     })
+}
+
+/// Record the row that made `scan_root` a root, once however many roots spell it:
+/// under version 2 a `files` entry is an `include` root and a home at once
+/// (§FS-scan.checks.unread-scan-root.location). A root no configured key names, a
+/// path typed on the command line, has no row to report at.
+fn record_unread_root(unread: &mut Vec<RootRow>, rows: &[(PathBuf, RootRow)], scan_root: &Path) {
+    let Some((_, row)) = rows.iter().find(|(path, _)| path == scan_root) else {
+        return;
+    };
+    if !unread.contains(row) {
+        unread.push(row.clone());
+    }
 }
 
 /// Whether the walk reached this path *through* one of the directory links it

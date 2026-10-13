@@ -106,6 +106,7 @@ Supported check finding codes:
   unlisted-workspace-block
   unmarked-heading
   unreached-declaration
+  unread-scan-root
   unrecorded-section-citation
   unused
   value-mismatch

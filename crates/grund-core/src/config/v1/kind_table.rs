@@ -33,6 +33,9 @@ pub(super) struct ParsedKind {
     /// The line `value_chapter` was written on, which its own refusals anchor
     /// at (§FS-config.3.4.13).
     pub(super) value_chapter_line: Option<usize>,
+    /// The line `file` was written on, which a finding about the home anchors at
+    /// (§FS-scan.checks.unread-scan-root.location).
+    pub(super) file_line: Option<usize>,
 }
 
 impl ParsedKind {
@@ -61,6 +64,7 @@ impl ParsedKind {
             values_line: None,
             rules_line: None,
             value_chapter_line: None,
+            file_line: None,
         }
     }
 }
@@ -223,6 +227,7 @@ pub(super) fn parse_kinds_key(
             let file = parse_string(path, line_no, value)?;
             if let Some(slot) = current_kind.as_mut() {
                 slot.config.file = Some(file);
+                slot.file_line = Some(line_no);
             } else {
                 bail_config(
                     path,

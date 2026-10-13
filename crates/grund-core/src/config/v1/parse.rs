@@ -304,7 +304,8 @@ pub(super) fn parse_config_file(
                 }
             }
             ("scan", "include") => {
-                project.schema.sources.include = Some(parse_string_list(path, line_no, value)?)
+                project.schema.sources.include = Some(parse_string_list(path, line_no, value)?);
+                project.schema.sources.include_source = at(line_no);
             }
             ("scan", "exclude") => {
                 project.schema.sources.exclude = parse_scan_exclude(path, line_no, value)?

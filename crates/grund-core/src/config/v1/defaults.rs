@@ -75,6 +75,7 @@ pub(in crate::config) fn default_project(existing_config: bool) -> Project {
             },
             sources: Sources {
                 include: Some(strings(DEFAULT_INCLUDE)),
+                include_source: None,
                 exclude: strings(DEFAULT_EXCLUDE),
                 extensions: strings(DEFAULT_SCAN_EXTENSIONS),
                 comment_prefixes: strings(DEFAULT_COMMENT_PREFIXES),
@@ -154,6 +155,7 @@ fn built_in_rows(existing_config: bool) -> Vec<Row> {
                     .map(|extent| Place {
                         extent,
                         scanned: true,
+                        source: None,
                     })
                     .collect(),
                 kind: default_kind_citable(name).then(|| Kind {

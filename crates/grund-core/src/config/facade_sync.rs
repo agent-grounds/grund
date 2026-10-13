@@ -187,6 +187,7 @@ fn row_of(kind: &KindConfig) -> Row {
             .map(|extent| Place {
                 extent,
                 scanned: kind.scan,
+                source: None,
             })
             .collect(),
         kind: kind.citable.then(|| Kind {

@@ -118,6 +118,7 @@ pub(crate) use legacy::{
     legacy_catalog_ids, match_legacy_tail, promote_legacy_candidate, resolve_id_arg,
     sort_citations,
 };
+pub(crate) use read_predicate::{Unread, extension_refusal, name_refusal};
 pub(crate) use record::{bare_block_line, enveloped_line};
 pub(crate) use relative_sections::{RelativeAnswer, doc_comment_relative_answers};
 pub(crate) use scan_error::api_scan_error;

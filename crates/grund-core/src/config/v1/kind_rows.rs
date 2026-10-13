@@ -203,7 +203,11 @@ fn lower_rows(path: &Path, parsed: &[ParsedKind], project: &mut Project) {
             if let Some(resolve) = resolve {
                 resolution.entry(k.kind.clone()).or_insert(resolve);
             }
-            lower_row(k)
+            let source = entry.file_line.map(|line| ConfigLocation {
+                path: path.to_path_buf(),
+                line,
+            });
+            lower_row(k, source)
         })
         .collect();
     project.schema.rows = rows;
@@ -215,7 +219,7 @@ fn lower_rows(path: &Path, parsed: &[ParsedKind], project: &mut Project) {
 /// One validated entry as a row of §AR-config.1.3: its one place, and its kind
 /// when it declares IDs. The complement is the non-citable entry with no home
 /// (§FS-config.3.9.2.1); a citable entry with no home is a kind with no place.
-fn lower_row(k: &KindConfig) -> Row {
+fn lower_row(k: &KindConfig, source: Option<ConfigLocation>) -> Row {
     let extent = match (&k.folder, &k.file) {
         (Some(folder), _) => Some(Extent::Folder(folder.clone())),
         (None, Some(file)) => Some(Extent::File(file.clone())),
@@ -242,6 +246,11 @@ fn lower_row(k: &KindConfig) -> Row {
         places: extent
             .into_iter()
             .map(|extent| Place {
+                // §FS-scan.checks.unread-scan-root.location: a file home is located at
+                // its `file` key; a folder's key has no finding to anchor yet.
+                source: matches!(extent, Extent::File(_))
+                    .then(|| source.clone())
+                    .flatten(),
                 extent,
                 scanned: k.scan,
             })

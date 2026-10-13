@@ -55,6 +55,7 @@ pub(super) fn default_project() -> Project {
             },
             sources: Sources {
                 include: None,
+                include_source: None,
                 exclude: strings(EXCLUDE),
                 extensions: vec!["md".to_string()],
                 comment_prefixes: strings(COMMENT_PREFIXES),

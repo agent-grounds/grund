@@ -66,6 +66,7 @@ pub const CHECK_FINDING_CODES: &[&str] = &[
     "unlisted-workspace-block",
     "unmarked-heading",
     "unreached-declaration",
+    "unread-scan-root",
     "unrecorded-section-citation",
     "unused",
     "value-mismatch",

@@ -91,6 +91,9 @@ pub struct IdGrammar {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Sources {
     pub include: Option<Vec<String>>,
+    /// Where `[scan] include` was written, which a finding about one of its entries
+    /// anchors at (§FS-scan.checks.unread-scan-root.location).
+    pub include_source: Option<ConfigLocation>,
     pub exclude: Vec<String>,
     pub extensions: Vec<String>,
     pub comment_prefixes: Vec<String>,

@@ -12,7 +12,7 @@ use super::tables::not_yet;
 use super::walk::Reader;
 use crate::config::kind::{KindConfig, KindIndex, KindResolution};
 use crate::config::project::{Project, Strength};
-use crate::config::record::CODE_SOURCE_KIND;
+use crate::config::record::{CODE_SOURCE_KIND, ConfigLocation};
 use crate::config::rows::{Extent, Form, Kind, Origin, Place, Row};
 use crate::config::v1::{ValueLines, rule_kind_refusal, validate_kind_value_keys};
 
@@ -250,7 +250,11 @@ fn named_rows(r: &Reader, late: &mut Vec<(usize, String)>) {
 /// when no row has one (§FS-config-v2.defaults.1); and a fetched kind's
 /// resolution, `must` unless `[rules.resolution]` says `warn`.
 fn lower(r: &mut Reader) {
-    let rows: Vec<Row> = r.rows.iter().map(|row| lower_row(row, &r.fields)).collect();
+    let rows: Vec<Row> = r
+        .rows
+        .iter()
+        .map(|row| lower_row(row, &r.fields, r.path))
+        .collect();
     let any_place = rows.iter().any(|row| !row.places.is_empty());
     let include = rows
         .iter()
@@ -272,15 +276,19 @@ fn lower(r: &mut Reader) {
     }
 }
 
-fn lower_row(draft: &RowDraft, fields: &[FieldDraft]) -> Row {
+fn lower_row(draft: &RowDraft, fields: &[FieldDraft], path: &Path) -> Row {
     Row {
         name: draft.name.clone(),
         places: draft
             .places
             .iter()
-            .map(|(extent, _)| Place {
+            .map(|(extent, line)| Place {
                 extent: extent.clone(),
                 scanned: draft.scan,
+                source: Some(ConfigLocation {
+                    path: path.to_path_buf(),
+                    line: *line,
+                }),
             })
             .collect(),
         kind: draft.citable.then(|| Kind {
