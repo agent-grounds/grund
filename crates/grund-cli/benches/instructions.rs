@@ -8,21 +8,27 @@
 //! spec for the full rationale, the fixture set, and why one fixture enables
 //! `[citations]` while the rest omit it.
 //!
+//! §AR-benchmarks.1.2: the scenarios are the rows of `benches/scenarios.json`, and this
+//! harness builds its one group from them; adding a row adds a benchmark. The catalog's
+//! `pgo` subset is also the PGO training list `scripts/distribution/train.py` reads
+//! (§AR-benchmarks.1.5).
+//!
 //! §AR-benchmarks.5: the binary under test is `GRUND_BENCH_BIN` when it is set, so
 //! one harness on one fixture bundle measures a base revision's binary and its own.
 //!
-//! The command list also drives the PGO training run in `scripts/pgo-build.sh`;
-//! keep them in sync. Run with
-//! `cargo bench -p grund --features bench --bench instructions` (needs Valgrind and
-//! `iai-callgrind-runner` on `PATH`).
+//! Run with `cargo bench -p grund --features bench --bench instructions` (needs Valgrind
+//! and `iai-callgrind-runner` on `PATH`).
 
 #[cfg(feature = "bench")]
 use iai_callgrind::{
-    BinaryBenchmarkConfig, BinaryBenchmarkGroup, Callgrind, Command, EventKind, binary_benchmark,
-    binary_benchmark_attribute, binary_benchmark_group, main,
+    Bench, BinaryBenchmark, BinaryBenchmarkConfig, BinaryBenchmarkGroup, Callgrind, Command,
+    EventKind, binary_benchmark_group, main,
 };
 #[cfg(feature = "bench")]
+use serde::Deserialize;
+#[cfg(feature = "bench")]
 use std::{
+    collections::BTreeMap,
     ffi::OsString,
     path::{Path, PathBuf},
     process::{Command as ProcessCommand, Stdio},
@@ -38,49 +44,72 @@ const BENCH_BIN_VAR: &str = "GRUND_BENCH_BIN";
 /// `target/bench-refused.txt` when unset.
 #[cfg(feature = "bench")]
 const REFUSED_VAR: &str = "GRUND_BENCH_REFUSED";
+/// §AR-ci.5.2: switches the absolute `Ir` ceilings on, which CI's series alone is held to.
+#[cfg(feature = "bench")]
+const CEILINGS_VAR: &str = "GRUND_BENCH_CEILINGS";
 /// The `scripts/bench_record.py` mode that probes one scenario.
 #[cfg(feature = "bench")]
 const PROBE: &str = "probe";
+/// §AR-benchmarks.1.2: the scenario catalog, compiled in so a changed row rebuilds the harness.
+#[cfg(feature = "bench")]
+const CATALOG: &str = include_str!("scenarios.json");
+/// The placeholder in a row's `args` that stands for its fixture's `subject`.
+#[cfg(feature = "bench")]
+const SUBJECT: &str = "{id}";
+
 /// Repository root — used only to locate the fixture generator script, never
 /// scanned by a benchmark.
 #[cfg(feature = "bench")]
 const REPO: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../..");
-/// Generated canonical fixture for the per-command suite — large enough to be
-/// representative, small enough to keep the suite quick.
-#[cfg(feature = "bench")]
-const CANONICAL_REPO_REL: &str = "target/bench-fixtures/canonical-repo";
-#[cfg(feature = "bench")]
-const CANONICAL_FILE_COUNT: usize = 1_500;
-/// Generated large conformant fixture for the `grund check` budget benchmark.
-#[cfg(feature = "bench")]
-const LARGE_REPO_REL: &str = "target/bench-fixtures/large-conformant-repo";
-#[cfg(feature = "bench")]
-const LARGE_REPO_FILE_COUNT: usize = 10_000;
 
-/// A declared ID the canonical fixture always contains (`id_for(1)` in the
-/// generator) — the subject of the `show` ladder and `refs` benchmarks. The
-/// fixture's bodies are uniform, so these measure the scan + render path that
-/// dominates, not body size.
+/// §AR-benchmarks.1.2: the catalog — the generated fixtures and the ordered scenario rows.
+/// A row's `ceiling_from` and `pgo` are for its readers, not the harness.
 #[cfg(feature = "bench")]
-const FIXTURE_ID: &str = "FS-00001-feature-00001";
+#[derive(Deserialize)]
+struct Catalog {
+    fixtures: BTreeMap<String, Fixture>,
+    scenarios: Vec<Scenario>,
+}
 
-/// Generated canonical fixture that declares `[citations]`, so `check_citations`
-/// exercises the citing-side classification + direction passes (§FS-config.3.9).
+/// §AR-benchmarks.1.1: one generated fixture, and the declared ID its single-ID rows read.
 #[cfg(feature = "bench")]
-const CITATIONS_REPO_REL: &str = "target/bench-fixtures/canonical-citations-repo";
+#[derive(Deserialize)]
+struct Fixture {
+    dir: String,
+    files: usize,
+    citations: bool,
+    subject: Option<String>,
+}
 
-/// §AR-ci.5.2: the `Ir` growth over the base-branch baseline past which the bench
-/// fails. A benchmark's own config replaces the group's regression config, so
-/// `check_large_10k` holds the tighter limit and every other bench the group's.
+/// One benchmark: its invocation on its fixture, and its two limits (§AR-ci.5.2).
 #[cfg(feature = "bench")]
-const GROUP_IR_LIMIT_PCT: f64 = 12.5;
-#[cfg(feature = "bench")]
-const LARGE_IR_LIMIT_PCT: f64 = 5.0;
+#[derive(Deserialize)]
+struct Scenario {
+    name: String,
+    args: Vec<String>,
+    fixture: String,
+    /// §AR-benchmarks.1.3: run once outside Callgrind, on the same fixture, before measuring.
+    setup: Option<Vec<String>>,
+    limit_pct: f64,
+    ceiling_ir: u64,
+}
 
 #[cfg(feature = "bench")]
-fn ir_limit(pct: f64) -> BinaryBenchmarkConfig {
+fn catalog() -> Catalog {
+    serde_json::from_str(CATALOG).expect("benches/scenarios.json is a scenario catalog")
+}
+
+/// §AR-ci.5.2: the row's relative `soft_limits`, and its `hard_limits` ceiling only when the
+/// ceilings are switched on and the binary is the harness's own.
+#[cfg(feature = "bench")]
+fn limits(scenario: &Scenario) -> BinaryBenchmarkConfig {
+    let mut callgrind = Callgrind::default();
+    callgrind.soft_limits([(EventKind::Ir, scenario.limit_pct)]);
+    if std::env::var_os(CEILINGS_VAR).is_some() && std::env::var_os(BENCH_BIN_VAR).is_none() {
+        callgrind.hard_limits([(EventKind::Ir, scenario.ceiling_ir)]);
+    }
     let mut config = BinaryBenchmarkConfig::default();
-    config.tool(Callgrind::default().soft_limits([(EventKind::Ir, pct)]));
+    config.tool(callgrind);
     config
 }
 
@@ -92,20 +121,7 @@ fn grund() -> PathBuf {
 
 /// A scenario's arguments, held apart from the binary so the probe and Callgrind run one list.
 #[cfg(feature = "bench")]
-#[derive(Default)]
-struct Invocation(Vec<OsString>);
-
-#[cfg(feature = "bench")]
-impl Invocation {
-    fn arg(mut self, arg: impl Into<OsString>) -> Self {
-        self.0.push(arg.into());
-        self
-    }
-
-    fn args<const N: usize>(self, args: [&str; N]) -> Self {
-        args.into_iter().fold(self, Self::arg)
-    }
-}
+type Invocation = Vec<OsString>;
 
 /// A scenario's invocation, or why its setup failed under the binary being measured.
 #[cfg(feature = "bench")]
@@ -115,7 +131,7 @@ type Setup = Result<Invocation, String>;
 #[cfg(feature = "bench")]
 fn command(setup: Setup) -> Command {
     let invocation = setup.unwrap_or_else(|reason| panic!("benchmark setup failed: {reason}"));
-    Command::new(grund()).args(invocation.0).build()
+    Command::new(grund()).args(invocation).build()
 }
 
 #[cfg(feature = "bench")]
@@ -130,7 +146,7 @@ fn refused_file() -> PathBuf {
 /// outside Callgrind; a scenario the base binary refuses, in either, is listed and left out
 /// of the base run.
 #[cfg(feature = "bench")]
-fn accepts(scenario: &str, setup: fn() -> Setup) -> bool {
+fn accepts(scenario: &str, setup: impl FnOnce() -> Setup) -> bool {
     let Some(binary) = std::env::var_os(BENCH_BIN_VAR) else {
         return true;
     };
@@ -151,7 +167,7 @@ fn accepts(scenario: &str, setup: fn() -> Setup) -> bool {
         .arg("--refused")
         .arg(refused_file())
         .arg("--")
-        .args(invocation.0)
+        .args(invocation)
         .status()
         .expect("run the benchmark probe")
         .success()
@@ -176,9 +192,11 @@ fn refuse(scenario: &str, reason: &str) {
     );
 }
 
+/// §AR-benchmarks.1.1: generate the fixture outside Callgrind; the generator leaves an
+/// unchanged one as it is.
 #[cfg(feature = "bench")]
-fn ensure_fixture(rel: &str, file_count: usize, citations: bool) -> PathBuf {
-    let root = Path::new(REPO).join(rel);
+fn ensure_fixture(fixture: &Fixture) -> PathBuf {
+    let root = Path::new(REPO).join(&fixture.dir);
     let script = Path::new(REPO).join("scripts/generate_large_benchmark_fixture.py");
     let mut command = ProcessCommand::new("python3");
     command
@@ -186,8 +204,8 @@ fn ensure_fixture(rel: &str, file_count: usize, citations: bool) -> PathBuf {
         .arg("--root")
         .arg(&root)
         .arg("--files")
-        .arg(file_count.to_string());
-    if citations {
+        .arg(fixture.files.to_string());
+    if fixture.citations {
         command.arg("--citations");
     }
     let status = command.status().expect("run benchmark fixture generator");
@@ -195,209 +213,67 @@ fn ensure_fixture(rel: &str, file_count: usize, citations: bool) -> PathBuf {
     root
 }
 
+/// §AR-benchmarks.1.2: a row's invocation — its `args`, `{id}` its fixture's subject, then
+/// the fixture's path — after its setup has run under the binary being measured, so the
+/// probe of §AR-benchmarks.5.1 runs exactly what Callgrind measures. §AR-benchmarks.1.3
+/// is the one setup today: `fmt --write` normalizes `fmt_check`'s input, so the measured
+/// `--check` exits successfully on a canonical tree.
 #[cfg(feature = "bench")]
-fn canonical_repo() -> PathBuf {
-    ensure_fixture(CANONICAL_REPO_REL, CANONICAL_FILE_COUNT, false)
-}
-
-/// Generate and normalize the formatter benchmark input outside Callgrind so
-/// the measured `--check` exits successfully on a canonical tree, under the binary
-/// being measured. §AR-benchmarks.1.3
-#[cfg(feature = "bench")]
-fn canonical_fmt_repo() -> Result<PathBuf, String> {
-    let root = canonical_repo();
-    let status = ProcessCommand::new(grund())
-        .args(["fmt", "--write"])
-        .arg(&root)
-        .stdout(Stdio::null())
-        .status()
-        .expect("normalize formatter benchmark fixture");
-    if status.success() {
-        Ok(root)
-    } else {
-        Err(format!("`fmt --write` exited with {status}"))
+fn invocation(catalog: &Catalog, scenario: &Scenario) -> Setup {
+    let fixture = &catalog.fixtures[&scenario.fixture];
+    let root = ensure_fixture(fixture);
+    if let Some(setup) = &scenario.setup {
+        let status = ProcessCommand::new(grund())
+            .args(setup)
+            .arg(&root)
+            .stdout(Stdio::null())
+            .status()
+            .expect("run the benchmark's setup");
+        if !status.success() {
+            return Err(format!("`{}` exited with {status}", setup.join(" ")));
+        }
     }
-}
-
-// Each scenario's invocation is a function of its own, so the probe of §AR-benchmarks.5.1
-// runs exactly what Callgrind measures.
-
-// `grund check <fixture>` — validate every citation in the tree.
-#[cfg(feature = "bench")]
-fn check_args() -> Setup {
-    Ok(Invocation::default().args(["check"]).arg(canonical_repo()))
-}
-
-#[cfg(feature = "bench")]
-#[binary_benchmark]
-fn check() -> Command {
-    command(check_args())
-}
-
-// `grund check <large-fixture>` — the 10k-file budget input.
-#[cfg(feature = "bench")]
-fn check_large_10k_args() -> Setup {
-    Ok(Invocation::default().args(["check"]).arg(ensure_fixture(
-        LARGE_REPO_REL,
-        LARGE_REPO_FILE_COUNT,
-        false,
-    )))
-}
-
-#[cfg(feature = "bench")]
-#[binary_benchmark(config = ir_limit(LARGE_IR_LIMIT_PCT))]
-fn check_large_10k() -> Command {
-    command(check_large_10k_args())
-}
-
-// `grund check <fixture-with-citations>` — the citation-direction code path
-// (classify + obligation + prohibition passes, §FS-config.3.9). Same file count
-// as `check`, so the delta against it is the direction-checking overhead.
-#[cfg(feature = "bench")]
-fn check_citations_args() -> Setup {
-    Ok(Invocation::default().args(["check"]).arg(ensure_fixture(
-        CITATIONS_REPO_REL,
-        CANONICAL_FILE_COUNT,
-        true,
-    )))
-}
-
-#[cfg(feature = "bench")]
-#[binary_benchmark]
-fn check_citations() -> Command {
-    command(check_citations_args())
-}
-
-// `grund list <fixture>` — every declared ID.
-#[cfg(feature = "bench")]
-fn list_args() -> Setup {
-    Ok(Invocation::default().args(["list"]).arg(canonical_repo()))
-}
-
-#[cfg(feature = "bench")]
-#[binary_benchmark]
-fn list() -> Command {
-    command(list_args())
-}
-
-// `grund <ID> --brief <fixture>` — title plus first paragraph.
-#[cfg(feature = "bench")]
-fn show_brief_args() -> Setup {
-    Ok(Invocation::default()
-        .args(["show", FIXTURE_ID, "--brief"])
-        .arg(canonical_repo()))
-}
-
-#[cfg(feature = "bench")]
-#[binary_benchmark]
-fn show_brief() -> Command {
-    command(show_brief_args())
-}
-
-// `grund <ID> <fixture>` — the lead-default declaration read.
-#[cfg(feature = "bench")]
-fn show_args() -> Setup {
-    Ok(Invocation::default()
-        .args(["show", FIXTURE_ID])
-        .arg(canonical_repo()))
-}
-
-#[cfg(feature = "bench")]
-#[binary_benchmark]
-fn show() -> Command {
-    command(show_args())
-}
-
-// `grund <ID> --full <fixture>` — one full declaration body.
-#[cfg(feature = "bench")]
-fn show_full_args() -> Setup {
-    Ok(Invocation::default()
-        .args(["show", FIXTURE_ID, "--full"])
-        .arg(canonical_repo()))
-}
-
-#[cfg(feature = "bench")]
-#[binary_benchmark]
-fn show_full() -> Command {
-    command(show_full_args())
-}
-
-// `grund refs <ID> <fixture>` — every citation site of an ID.
-#[cfg(feature = "bench")]
-fn refs_args() -> Setup {
-    Ok(Invocation::default()
-        .args(["refs", FIXTURE_ID])
-        .arg(canonical_repo()))
-}
-
-#[cfg(feature = "bench")]
-#[binary_benchmark]
-fn refs() -> Command {
-    command(refs_args())
-}
-
-// `grund cover <fixture>` — the citation graph grouped by scanned file.
-#[cfg(feature = "bench")]
-fn cover_args() -> Setup {
-    Ok(Invocation::default().args(["cover"]).arg(canonical_repo()))
-}
-
-#[cfg(feature = "bench")]
-#[binary_benchmark]
-fn cover() -> Command {
-    command(cover_args())
-}
-
-// `grund fmt --check <fixture>` — report (without writing) any non-canonical citation.
-#[cfg(feature = "bench")]
-fn fmt_check_args() -> Setup {
-    Ok(Invocation::default()
-        .args(["fmt", "--check"])
-        .arg(canonical_fmt_repo()?))
-}
-
-#[cfg(feature = "bench")]
-#[binary_benchmark]
-fn fmt_check() -> Command {
-    command(fmt_check_args())
-}
-
-/// Add each scenario the binary under test accepts (§AR-benchmarks.5.1).
-#[cfg(feature = "bench")]
-macro_rules! scenarios {
-    ($group:ident: $($bench:ident => $args:ident),+ $(,)?) => {
-        $(
-            if accepts(stringify!($bench), $args) {
-                $group.binary_benchmark(binary_benchmark_attribute!($bench));
-            }
-        )+
+    let subject = || {
+        fixture.subject.as_deref().unwrap_or_else(|| {
+            panic!(
+                "`{}` reads `{SUBJECT}`, but its fixture names no subject",
+                scenario.name
+            )
+        })
     };
+    let mut invocation: Invocation = scenario
+        .args
+        .iter()
+        .map(|arg| OsString::from(arg.replace(SUBJECT, subject())))
+        .collect();
+    invocation.push(root.into_os_string());
+    Ok(invocation)
 }
 
+/// §AR-benchmarks.1.2, §AR-benchmarks.5.1: one benchmark per catalog row the binary under
+/// test accepts, keyed by the row's bare name so the run record of §AR-benchmarks.7.1 is.
 #[cfg(feature = "bench")]
 fn commands_group(group: &mut BinaryBenchmarkGroup) {
     if std::env::var_os(BENCH_BIN_VAR).is_some() {
         // A refusal is this run's alone, never a previous run's.
         let _ = std::fs::remove_file(refused_file());
     }
-    scenarios!(group:
-        check => check_args,
-        check_large_10k => check_large_10k_args,
-        check_citations => check_citations_args,
-        list => list_args,
-        show_brief => show_brief_args,
-        show => show_args,
-        show_full => show_full_args,
-        refs => refs_args,
-        cover => cover_args,
-        fmt_check => fmt_check_args,
-    );
+    let catalog = catalog();
+    for scenario in &catalog.scenarios {
+        if accepts(&scenario.name, || invocation(&catalog, scenario)) {
+            let name = scenario.name.as_str();
+            group.binary_benchmark(
+                BinaryBenchmark::new(name)
+                    .config(limits(scenario))
+                    .bench(Bench::new(name).command(command(invocation(&catalog, scenario)))),
+            );
+        }
+    }
 }
 
 #[cfg(feature = "bench")]
 binary_benchmark_group!(
     name = commands;
-    config = ir_limit(GROUP_IR_LIMIT_PCT);
     benchmarks = |group: &mut BinaryBenchmarkGroup| commands_group(group)
 );
 

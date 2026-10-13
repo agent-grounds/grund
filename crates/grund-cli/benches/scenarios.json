@@ -1,0 +1,193 @@
+{
+  "fixtures": {
+    "canonical": {
+      "dir": "target/bench-fixtures/canonical-repo",
+      "files": 1500,
+      "citations": false,
+      "subject": "FS-00001-feature-00001"
+    },
+    "large": {
+      "dir": "target/bench-fixtures/large-conformant-repo",
+      "files": 10000,
+      "citations": false
+    },
+    "citations": {
+      "dir": "target/bench-fixtures/canonical-citations-repo",
+      "files": 1500,
+      "citations": true
+    }
+  },
+  "scenarios": [
+    {
+      "name": "check",
+      "args": [
+        "check"
+      ],
+      "fixture": "canonical",
+      "limit_pct": 12.5,
+      "ceiling_ir": 903000000,
+      "ceiling_from": {
+        "ir": 721826824,
+        "commit": "cf706c45301090d3c9c950ad95b1e68a08bafb1f"
+      },
+      "pgo": {
+        "api": "check(root)"
+      }
+    },
+    {
+      "name": "check_large_10k",
+      "args": [
+        "check"
+      ],
+      "fixture": "large",
+      "limit_pct": 5.0,
+      "ceiling_ir": 5060000000,
+      "ceiling_from": {
+        "ir": 4599468956,
+        "commit": "cf706c45301090d3c9c950ad95b1e68a08bafb1f"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_citations",
+      "args": [
+        "check"
+      ],
+      "fixture": "citations",
+      "limit_pct": 12.5,
+      "ceiling_ir": 863000000,
+      "ceiling_from": {
+        "ir": 690202560,
+        "commit": "cf706c45301090d3c9c950ad95b1e68a08bafb1f"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list",
+      "args": [
+        "list"
+      ],
+      "fixture": "canonical",
+      "limit_pct": 12.5,
+      "ceiling_ir": 792000000,
+      "ceiling_from": {
+        "ir": 633345095,
+        "commit": "cf706c45301090d3c9c950ad95b1e68a08bafb1f"
+      },
+      "pgo": {
+        "api": "list(root)"
+      }
+    },
+    {
+      "name": "show_brief",
+      "args": [
+        "show",
+        "{id}",
+        "--brief"
+      ],
+      "fixture": "canonical",
+      "limit_pct": 12.5,
+      "ceiling_ir": 582000000,
+      "ceiling_from": {
+        "ir": 465084965,
+        "commit": "cf706c45301090d3c9c950ad95b1e68a08bafb1f"
+      },
+      "pgo": {
+        "api": "show FS-check --brief",
+        "id": "FS-check"
+      }
+    },
+    {
+      "name": "show",
+      "args": [
+        "show",
+        "{id}"
+      ],
+      "fixture": "canonical",
+      "limit_pct": 12.5,
+      "ceiling_ir": 582000000,
+      "ceiling_from": {
+        "ir": 465402343,
+        "commit": "cf706c45301090d3c9c950ad95b1e68a08bafb1f"
+      },
+      "pgo": {
+        "api": "show FS-check",
+        "id": "FS-check"
+      }
+    },
+    {
+      "name": "show_full",
+      "args": [
+        "show",
+        "{id}",
+        "--full"
+      ],
+      "fixture": "canonical",
+      "limit_pct": 12.5,
+      "ceiling_ir": 582000000,
+      "ceiling_from": {
+        "ir": 465006918,
+        "commit": "cf706c45301090d3c9c950ad95b1e68a08bafb1f"
+      },
+      "pgo": {
+        "api": "show FS-check --full",
+        "id": "FS-check"
+      }
+    },
+    {
+      "name": "refs",
+      "args": [
+        "refs",
+        "{id}"
+      ],
+      "fixture": "canonical",
+      "limit_pct": 12.5,
+      "ceiling_ir": 630000000,
+      "ceiling_from": {
+        "ir": 503315666,
+        "commit": "cf706c45301090d3c9c950ad95b1e68a08bafb1f"
+      },
+      "pgo": {
+        "api": "refs GOAL-fast-feedback",
+        "id": "GOAL-fast-feedback"
+      }
+    },
+    {
+      "name": "cover",
+      "args": [
+        "cover"
+      ],
+      "fixture": "canonical",
+      "limit_pct": 12.5,
+      "ceiling_ir": 741000000,
+      "ceiling_from": {
+        "ir": 592199422,
+        "commit": "cf706c45301090d3c9c950ad95b1e68a08bafb1f"
+      },
+      "pgo": {
+        "api": "cover(root)"
+      }
+    },
+    {
+      "name": "fmt_check",
+      "args": [
+        "fmt",
+        "--check"
+      ],
+      "fixture": "canonical",
+      "setup": [
+        "fmt",
+        "--write"
+      ],
+      "limit_pct": 12.5,
+      "ceiling_ir": 2337000000,
+      "ceiling_from": {
+        "ir": 1869400856,
+        "commit": "cf706c45301090d3c9c950ad95b1e68a08bafb1f"
+      },
+      "pgo": {
+        "api": "fmt preview"
+      }
+    }
+  ]
+}

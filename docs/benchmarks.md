@@ -34,7 +34,8 @@ two counts within the same-binary bound
 [§AR-benchmarks.5](architecture/AR-benchmarks.md#5-comparing-two-revisions)).
 Instruction-regression limits are enforced: growth in `Ir` past 5% on the generated
 10k-file fixture, or past 12.5% on any other benchmark, fails the bench job and the
-`cargo test (ubuntu-latest)` required check
+`cargo test (ubuntu-latest)` required check, and so does a count over its scenario's
+absolute `Ir` ceiling in the catalog `crates/grund-cli/benches/scenarios.json`
 ([§AR-ci.5.2](architecture/AR-ci.md#52-regression-limits)).
 
 Callgrind instruction count is a repeatable workload-cost proxy for a given binary
@@ -60,12 +61,15 @@ moves only with the image digest, in a change of its own), `iai-callgrind-runner
 take the same counts on another machine, run the suite in that image from the
 repository root. It builds into `target/bench-image`, as root, and takes the commit
 from the host, since a worktree's `.git` points outside the container. The seccomp
-option lets iai-callgrind turn address-space randomization off, as CI does:
+option lets iai-callgrind turn address-space randomization off, as CI does, and
+`GRUND_BENCH_CEILINGS` holds the run to the catalog's absolute `Ir` ceilings, as the
+bench job does ([§AR-ci.5.2](architecture/AR-ci.md#52-regression-limits)):
 
 ```sh
 docker run --rm --security-opt seccomp=unconfined -v "$PWD":/work -w /work \
   -e LC_ALL=C.UTF-8 -e TZ=UTC -e RAYON_NUM_THREADS=4 -e CARGO_INCREMENTAL=0 -e RUSTFLAGS= \
   -e CARGO_TARGET_DIR=/work/target/bench-image -e BENCH_COMMIT="$(git rev-parse HEAD)" \
+  -e GRUND_BENCH_CEILINGS=1 \
   rust:1.95.0-bookworm@sha256:6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1 \
   bash -c 'rm -f /etc/apt/sources.list.d/* && echo "deb [check-valid-until=no] \
       https://snapshot.debian.org/archive/debian/20261001T000000Z bookworm main" > /etc/apt/sources.list &&

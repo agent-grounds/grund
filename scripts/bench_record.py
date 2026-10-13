@@ -161,7 +161,7 @@ def summary_ir(iai_dir: Path) -> dict:
     counts = {}
     for path in sorted(Path(iai_dir).rglob("summary.json")):
         summary = load(path)
-        # A bench added through `binary_benchmark_attribute!` carries its own name as its id.
+        # §AR-benchmarks.1.2: a catalog row's bench carries the row's name as name and id.
         name, bench_id = summary["function_name"], summary.get("id")
         if bench_id and bench_id != name:
             name = f"{name}.{bench_id}"
