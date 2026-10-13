@@ -33,7 +33,7 @@ Examples:
   grund init --agents-md --cursor     # AGENTS.md beside the Cursor rules
   grund init --pi --copilot --windsurf --zed  # those agents' entrypoints too
   grund init --description "Billing service"  # the one-liner workspace lists show
-  grund init --docs --force          # rewrite AGENTS.md and the docs/ scaffolds
+  grund init --scaffold --force      # rewrite AGENTS.md and the starter files
   grund init --no-vcs ../scratch     # scaffold a directory no VCS tracks
 
 Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/init.md
