@@ -74,7 +74,7 @@ Without `--project` every loaded project is selected, and the same refusal lists
 
 `--unused` lists only declarations that no recognised citation points at — the same set `check` warns on ([§FS-check.4.1](FS-check.md#41-unused-declaration)) — **excluding `E2E` cases unless `E2E` is explicitly selected with `--kind`**. An e2e case is a proof artifact, exercised by being run, not a citation target, so it is uncited by construction and would only ever bury the actionable signal (uncited specs, decisions, goals) in a bare `--unused` query. `--unused --kind E2E` lists uncited cases only, while `--unused --kind FS,E2E` lists uncited `FS` declarations plus uncited `E2E` cases because `E2E` was explicitly requested.
 
-A citation that is a kind's own index entry ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)) is discounted here too, for the reason `check` discounts it ([§FS-check.4.1](FS-check.md#41-unused-declaration)).
+A citation that is a kind's own index entry ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)) is discounted here too, for the reason `check` discounts it and within the same bounds ([§FS-check.4.1.2](FS-check.md#412-an-index-entry-does-not-count)): a section citation or a value binding's citation in that index is not the entry and still counts ([§FS-check.4.1.2.1](FS-check.md#4121-a-section-citation-or-a-value-binding-in-the-index-is-not-the-entry)).
 
 ### 1.4 `--summary`
 

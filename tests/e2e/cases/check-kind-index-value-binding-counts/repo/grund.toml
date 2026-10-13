@@ -1,0 +1,16 @@
+grund_config_version = 1
+
+[reference]
+strict = true
+
+[id]
+named_sections = true
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "COMP"
+folder = "docs/competition"
+value_chapter = "values"
+
+[scan]
+include = ["docs"]
