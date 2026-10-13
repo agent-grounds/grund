@@ -42,9 +42,10 @@ from safety standards such as ISO 26262, which "require established traceability
 find 22 challenges and 16 unique solutions in the literature; a case study at an
 automotive supplier met 17 of the challenges, six of them unsolved. The standards
 themselves are RTCA DO-178C for airborne software (2011,
-[RTCA](https://www.rtca.org/do-178/)), ISO 26262-8:2018 for road vehicles
-([ISO](https://www.iso.org/standard/68390.html)) and IEC 62304:2006/Amd 1:2015 for
-medical-device software ([ISO](https://www.iso.org/standard/38421.html)). Their texts were
+[RTCA](https://www.rtca.org/do-178/)), ISO 26262-8:2018, second edition, for road
+vehicles ([EVS catalogue](https://www.evs.ee/en/iso-26262-8-2018)) and
+IEC 62304:2006/Amd 1:2015, consolidated as edition 1.1, for medical-device software
+([IEC](https://webstore.iec.ch/en/publication/22794)). Their texts were
 not read: what they require of trace data is known here only from secondary sources, and
 no sentence of this entry rests on them.
 

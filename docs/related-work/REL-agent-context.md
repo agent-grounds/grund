@@ -157,7 +157,7 @@ which kind may link to which, no coverage obligation, no value check and no CI g
 `serena project health-check` checks the setup
 ([running](https://github.com/oraios/serena/blob/main/docs/02-usage/020_running.md)). A
 Python REPL over its operations is documented for v2 only
-([configuration](https://github.com/oraios/serena/blob/main/docs/02-usage/050_configuration.md)).
+([configuration](https://oraios.github.io/serena/02-usage/050_configuration.html)).
 Its [licence file](https://github.com/oraios/serena/blob/main/LICENSE) names v1.7.0 the
 "Last MIT-licensed release"; on main the application is GPL-3.0-or-later and its SolidLSP
 component MIT.
