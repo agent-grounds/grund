@@ -238,6 +238,25 @@ Until grund 0.19.0, what `fmt --cross-refs` does with a wrap turns on whether it
 
 From grund 0.19.0 a wrap is `[§<ID>](…)` closed by the `)` that balances its `(`, and only that: its whole destination is re-derived, so `[§<ID>](old(1).md)` keeps no `.md)`, and a `[§<ID>](` that never closes is no wrap and is wrapped fresh, the later `)` and the text before it kept. The route is [§DF-fmt-and-editor-answers-from-0-19](../decisions/functional/DF-fmt-and-editor-answers-from-0-19.md#df-fmt-and-editor-answers-from-0-19-fmts-link-wrapper-and-the-editors-title-span-change-in-0190-after-a-release-that-announces-them).
 
+## citing-kind: Which kind a citation site counts as
+
+Every citation site has exactly one **citing kind**, the kind a `[citations.<kind>]` rule
+names it by ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)), and it is decided in this order:
+
+1. **The enclosing declaration's kind.** The nearest preceding declaration whose body contains
+   the site ([§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends)) gives its kind. A site later in the file than that body
+   does not inherit it and falls through.
+2. **The kind of the file's home.** Where no declaration encloses the site, the kind whose
+   `folder` or `file` contains the site's file gives its kind — but only when exactly one
+   configured home contains it.
+3. **The homeless kind.** Otherwise — outside every home, or in a file two overlapping homes
+   contain — the site is the homeless kind's ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)).
+
+The second step asks nothing about declarations, which is why the files of a non-citable
+kind, which declare none, count as that kind because of where they are
+([§FS-config.3.4.1.1](FS-config.md#3411-what-a-non-citable-kind-keeps)). An `E2E` case is outside the rule: its obligations are judged per case
+over its `spec.refs` lines ([§FS-config.3.9.1.2](FS-config.md#3912-e2e-obligations-are-per-case)), not over citation sites.
+
 ## checks: Checks
 
 The checks a citation's wrap is held to. Each is a section named by its diagnostic code ([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)).
