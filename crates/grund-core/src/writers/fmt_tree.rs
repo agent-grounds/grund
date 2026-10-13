@@ -191,7 +191,8 @@ pub(crate) fn fmt_tree(
             continue;
         }
         // §FS-distribution.3.2.2.1: a later read failure retains earlier owned writes.
-        let original = fs::read_to_string(&path).map_err(|error| {
+        // §AR-system.2.13: the read goes through the run's sources; only the writes are ours.
+        let original = config.frame().sources().text(&path).map_err(|error| {
             partial_io_error(
                 opts.render,
                 &path,

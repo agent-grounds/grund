@@ -4,13 +4,13 @@
 //! (§FS-fmt.3, §AR-bindings.2).
 
 use anyhow::Result;
-use std::fs;
 use std::path::PathBuf;
 
 use crate::config::display_path;
 use crate::model::Finding;
 use crate::resolver::{WorkspaceProject, load_workspace_context};
 use crate::scanner::ApiScanError;
+use crate::workspace::scope_is_config_root;
 
 use super::report::context_run_warnings;
 use crate::writers::{FmtRunOpts, auto_cross_refs_for_scope, fmt_tree, fmt_workspace_projects};
@@ -93,11 +93,9 @@ fn format_references_run(opts: FmtOpts, cautions: &mut Vec<Finding>) -> Result<F
     } else {
         None
     };
+    // §AR-config.1.5: the run's one scope test says whether the path names the root.
     let walk_all_projects = context.workspace_loaded
-        && (!opts.path_provided
-            || fs::canonicalize(&opts.path)
-                .map(|canonical| canonical == config.root)
-                .unwrap_or(false));
+        && scope_is_config_root(&config.root, &opts.path, opts.path_provided);
     let (changes, scan_errors, refused_writes) = if walk_all_projects {
         // §FS-fmt.3.2: complete every project's strict readiness pass before a
         // workspace write can touch the first one. The dry pass also discovers
