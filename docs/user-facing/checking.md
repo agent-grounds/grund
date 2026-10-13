@@ -50,6 +50,22 @@ without redirection (the linter convention — only run-level `error:` lines, li
 an unreadable path, go to stderr). JSON output remains diagnostics-only and in
 global location order, so a clean `grund check --format=json` prints nothing.
 
+Some warnings are about what the run did not read rather than what it found.
+A file the configuration names as a scan root — a `[[kinds]]` `file` home, a
+version-2 `files` entry, or an `[scan] include` entry that is a file — is read
+only if `[scan] extensions` lists its extension. When it does not, the file stays
+unread and `check` says so at the line of the key that named it, keeping the exit
+code at 0 and withholding `success`:
+
+```text
+grund.toml:10: warning: [[kinds]] TXT home `notes.txt` is not read — `txt` is not in [scan] extensions, so nothing in it is checked. Add "txt" to [scan] extensions, or give the file an extension the list holds.
+```
+
+List the extension, or give the file one the list holds; a row that names the file
+only as a place in the Project map says so with `scan = false`. `--ignore
+unread-scan-root` drops the warning
+([§FS-scan.checks.unread-scan-root](../functional-spec/FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read)).
+
 `grund check --watch` checks immediately and updates the terminal after saves;
 Ctrl-C restores an owned alternate screen and returns the last completed status.
 Redirected output appends ordinary reports, and clean JSON runs have no visible
