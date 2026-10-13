@@ -190,6 +190,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     // judged: the scanner never asks that question itself (§AR-workspace.1).
     let mut findings = Catalog {
         walked_dirs: walked.dirs,
+        unread_roots: walked.unread_roots,
         ..Catalog::default()
     };
     let (mut files, mut errors) = (walked.files, walked.errors);

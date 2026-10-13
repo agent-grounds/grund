@@ -9,6 +9,7 @@ use super::*;
 
 fn place(extent: Extent) -> Place {
     Place {
+        source: None,
         extent,
         scanned: true,
     }

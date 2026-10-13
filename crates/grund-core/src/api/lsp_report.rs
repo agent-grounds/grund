@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 
 use super::run::unread_resolution_source_cautions;
 use super::scope_cautions::scan_scope_caution;
+use super::unread_roots::unread_root_warnings;
 use crate::checker::{
     CheckWorkspace, ScanScope, check_chapter_rules, check_project, path_report_scope,
     retain_diagnostics_in_report_scope, sort_diagnostics,
@@ -147,6 +148,11 @@ fn check_workspace_context(
                 .then_some((project.alias.as_str(), &workspace)),
             &mut project_report,
         );
+        // §FS-lsp.4.1: `grund check`'s warning from its own function
+        // (§FS-scan.checks.unread-scan-root).
+        project_report
+            .warnings
+            .extend(unread_root_warnings(&config, &project.findings));
         // §FS-check.1.3.6.1: a file the wider walk could not read outside the anchor
         // leaves the errors; §FS-check.1.3.6.3 says it once the report is narrowed.
         let (inside, unread_outside): (Vec<_>, Vec<_>) = project

@@ -13,6 +13,7 @@ use std::path::{Path, PathBuf};
 use super::config_findings::config_diagnostics;
 use super::report::public_run_warnings;
 use super::scope_cautions::{full_scope_ignored_warning, scan_scope_caution};
+use super::unread_roots::unread_root_warnings;
 use crate::checker::{
     CheckWorkspace, check_chapter_rules, check_project, configured_scope, out_of_scope_references,
     out_of_scope_section_headings, parse_ad_hoc, parse_ad_hoc_with_workspace, path_report_scope,
@@ -180,6 +181,11 @@ pub(super) fn run_check_with_run_warnings(
         None,
         &mut report,
     );
+    // §FS-scan.checks.unread-scan-root: before the narrowing, which drops it where the
+    // path does not cover the `grund.toml` holding the row (.scope).
+    report
+        .warnings
+        .extend(unread_root_warnings(&config, &findings));
     let had_scan_errors = append_scan_errors(&mut report, scan_errors);
     // §FS-check.1.3.6.1: every rule has run over the resolution scope, so the report
     // narrows to the path — the second stage, after the rules (§AR-resolver.3.3).
@@ -358,6 +364,10 @@ fn run_workspace_check(
             Some((&project.alias, &workspace)),
             &mut project_report,
         );
+        // §FS-scan.checks.unread-scan-root.scope: each project in its own `grund.toml`.
+        project_report
+            .warnings
+            .extend(unread_root_warnings(&project.config, &project.findings));
         let project_has_findings =
             !project_report.errors.is_empty() || !project_report.warnings.is_empty();
         report.errors.append(&mut project_report.errors);

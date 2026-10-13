@@ -63,6 +63,13 @@ pub(crate) fn name_refusal(path: &Path, schema: &Schema) -> Option<Unread> {
     if is_hidden(path) {
         return Some(Unread::HiddenName);
     }
+    extension_refusal(path, schema)
+}
+
+/// The extension reason alone, for the reader that has to know whether the list
+/// would have read a file the hidden rule refused (§FS-check.2.2.2): the one copy of
+/// the extension test.
+pub(crate) fn extension_refusal(path: &Path, schema: &Schema) -> Option<Unread> {
     let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
     let listed = schema
         .sources

@@ -19,6 +19,7 @@ use crate::checker::{ScanScope, scope_read_any_file};
 use crate::config::{Config, display_path, kind_prefixes};
 use crate::grammar::id_shape;
 use crate::model::{Catalog, Diagnostic, format_path, normalize_path_lexically};
+use crate::scanner::{Unread, extension_refusal, name_refusal};
 use crate::workspace::scope_is_config_root;
 
 fn nothing_recognized(findings: &Catalog) -> bool {
@@ -89,17 +90,14 @@ pub(super) fn scan_scope_caution(
 /// handed explicitly is walked (§FS-config.3.5.12), so an empty one really did match
 /// no extensions — and a directory whose only content is hidden keeps the extension
 /// message too, a boundary §FS-check.2.2.2 states rather than leaves to be found.
+///
+/// Both name rules are the read predicate's answers (§AR-scanner.1.13), so this
+/// caution and the walk cannot disagree about which rule refused the file.
 fn handed_a_hidden_file(config: &Config, path: &Path, path_provided: bool) -> bool {
     path_provided
         && path_is_file(&path)
-        && path
-            .file_name()
-            .and_then(|name| name.to_str())
-            .is_some_and(|name| name.starts_with('.'))
-        && path
-            .extension()
-            .and_then(|ext| ext.to_str())
-            .is_some_and(|ext| config.extensions.iter().any(|allowed| allowed == ext))
+        && name_refusal(path, config.schema()) == Some(Unread::HiddenName)
+        && extension_refusal(path, config.schema()).is_none()
 }
 
 /// The CLI-level warning `check` reports when the tree walk matched no files

@@ -13,6 +13,7 @@ use super::patterns::GlobCitation;
 use super::section_lock::SectionLockFile;
 use super::stub_resolution::StubResolution;
 use super::unclosed_wrappers::UnclosedWrapperNote;
+use super::unread_roots::RootRow;
 use super::values::{
     DeclarationSource, EmbeddedValueRoot, InvalidValueSite, ValueBinding, ValueComponent,
 };
@@ -358,6 +359,10 @@ pub struct Catalog {
     /// §FS-check.3.29 probes. Carried rather than judged here: the walk knows what
     /// it reached, and nothing about workspaces (§AR-workspace.1).
     pub walked_dirs: Vec<PathBuf>,
+    /// The configured file roots the extension list kept out of the walk, each
+    /// with the row that made it a root, as the root gate recorded them
+    /// (§AR-scanner.1.6, §FS-scan.checks.unread-scan-root).
+    pub(crate) unread_roots: Vec<RootRow>,
     /// Per-file heading and doc-comment structure, for the files a grounding
     /// unit finer than the file is asked of (§AR-scanner.2.7, §FS-check.3.6.2).
     /// Empty — and never collected — unless `ScanDemand` names a row (§AR-config.6.1).
