@@ -4,7 +4,7 @@
 use super::agreement_host::Host;
 use super::agreement_oracles::{entries, rows, text, without_keys, witnesses};
 use super::agreement_questions::Question;
-use grund_core::{EmbeddingRequest, embedding_call, node_embedding_call, node_request};
+use grund_core::{node_embedding_call, node_request};
 use serde_json::{Value, json};
 use std::path::Path;
 use std::process::Output;
@@ -31,7 +31,12 @@ pub fn hosts(
     let cwd = text(context, "cwd");
     let request = question.python_request(&cwd);
     let python = host.call("python", request.clone());
-    let independent = match witnesses(context, &fact_rows(question, &python), question.point) {
+    let python_context = question.context(context, "python");
+    let independent = match witnesses(
+        &python_context,
+        &fact_rows(question, &python),
+        question.point,
+    ) {
         Ok(witness) => witness,
         Err(error) => {
             errors.push(error);
@@ -39,24 +44,52 @@ pub fn hosts(
         }
     };
     super::agreement_evidence::witness(independent.clone());
-    let rust = embedding_call(EmbeddingRequest {
-        operation: question.operation.into(),
-        root: question.path.clone().into(),
-        explicit: question.explicit,
-        args: question.args.clone(),
-        options: question.options.clone(),
-    });
-    equal("Python complete envelope", &python, &rust, errors);
     let node_req = question.node_request(&cwd);
     let node = host.call("node", node_req.clone());
-    let node_rust = node_embedding_call(node_request(
-        question.node_operation,
-        node_req["args"].as_array().unwrap().clone(),
-        Path::new(&cwd),
-    ));
-    equal("Node complete envelope", &node, &node_rust, errors);
-    super::agreement_evidence::witness(independent.clone());
-    compare_cli(question, cli, &python, errors);
+    if matches!(question.surface, "show" | "show-batch") {
+        let node_rust = node_embedding_call(node_request(
+            question.node_operation,
+            node_req["args"].as_array().unwrap().clone(),
+            Path::new(&cwd),
+        ));
+        equal("Node complete metadata envelope", &node, &node_rust, errors);
+    }
+    equal(
+        "actual host complete common envelopes",
+        super::agreement_host_projection::node_common(node.clone(), question.node_operation),
+        super::agreement_host_projection::from_python(python.clone(), question.node_operation),
+        errors,
+    );
+    let node_independent = match witnesses(
+        &question.context(context, "node"),
+        &fact_rows(question, &node),
+        question.point,
+    ) {
+        Ok(witness) => witness,
+        Err(error) => {
+            errors.push(error);
+            json!({"oracleError":"physical-source-bytes"})
+        }
+    };
+    super::agreement_evidence::witness(node_independent);
+    let cli_context = question.context(context, "cli");
+    let projected = super::agreement_sites::output(question.surface, cli, &cli_context);
+    compare_cli(
+        question,
+        &projected,
+        &super::agreement_sites::host(question.surface, python.clone(), &python_context),
+        errors,
+    );
+    compare_cli(
+        question,
+        &projected,
+        &super::agreement_sites::host(
+            question.surface,
+            node.clone(),
+            &question.context(context, "node"),
+        ),
+        errors,
+    );
     json!({"python":python,"node":node,"witness":independent,"request":request})
 }
 
@@ -115,12 +148,7 @@ fn columns(rows: Vec<Value>, names: &[&str]) -> Vec<Value> {
 pub fn compare_cli(question: &Question, cli: &Output, host: &Value, errors: &mut Vec<String>) {
     let actual = rows(cli);
     if !host["failure"].is_null() {
-        if cli.status.success() {
-            errors.push(format!(
-                "{} CLI succeeds but host refuses: {}",
-                question.surface, host["failure"]
-            ));
-        }
+        super::agreement_refusals::compare(cli, &host["failure"], errors);
         return;
     }
     let result = &host["result"];
@@ -234,6 +262,12 @@ pub fn compare_cli(question: &Question, cli: &Output, host: &Value, errors: &mut
                         "batch refused coordinate",
                         &actual["ok"],
                         &json!(false),
+                        errors,
+                    );
+                    equal(
+                        "batch refusal reason and sites",
+                        super::agreement_refusals::fact(&actual["error"]),
+                        super::agreement_refusals::fact(&expected["failure"]),
                         errors,
                     );
                 }

@@ -12,6 +12,7 @@ from collections.abc import Mapping
 
 from agreement_fixtures import CASES, ROOT, materialize, manifest_request
 from agreement_setup import prepare
+from agreement_scope import isolated_fixtures, question_scopes
 
 
 def plain(value):
@@ -42,9 +43,11 @@ def python_call(api, request):
 
 def main():
     temporary, api, stage, provenance, runtime = prepare()
+    fixtures = isolated_fixtures()
     node = subprocess.Popen([runtime, str(ROOT / 'tests/bindings/agreement_node.mjs'), str(stage)],
                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding='utf-8')
-    home = Path(temporary.name)
+    home = Path(fixtures.name)
+    provenance['fixtureRoot'] = str(home)
     print(json.dumps({'ready': provenance}), flush=True)
     try:
         for line in sys.stdin:
@@ -55,6 +58,8 @@ def main():
             elif op == 'prepare':
                 answer = materialize(home, request['case'], request['variant'])
                 answer['manifestRequest'] = manifest_request(answer)
+            elif op == 'scope':
+                answer = question_scopes(request['context'], request['path'])
             elif op == 'clone':
                 source = Path(request['source'])
                 assert source.resolve().is_relative_to(home.resolve())
@@ -92,6 +97,7 @@ def main():
         if node.wait(timeout=30):
             raise RuntimeError('Node host failed')
         temporary.cleanup()
+        fixtures.cleanup()
 
 
 if __name__ == '__main__':

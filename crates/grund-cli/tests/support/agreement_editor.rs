@@ -1,94 +1,106 @@
-//! Actual editor snapshots and hovers, held text against isolated saved bytes
-//! (§REQ-one-answer.proof.matrix, §REQ-one-answer.text.targets).
+//! Actual editor snapshots/hovers at the fixture cwd (§FS-lsp.2.2.1,
+//! §REQ-one-answer.proof.matrix, §REQ-one-answer.text.targets).
 
-use super::agreement_evidence;
-use super::agreement_oracles::{text, witnesses};
-use grund_core::{
-    LspSnapshotOpts, LspSnapshotWithCompletion, ShowFormat, ShowMode, lsp_snapshot_with_completion,
-    show_from_snapshot,
-};
+use super::agreement_editor_worker::Worker;
+use super::agreement_evidence as evidence;
+use super::agreement_oracles::{physical, text, witnesses};
+use super::agreement_paths::{logical_text, logical_value, saved_path};
 use serde_json::{Value, json};
-use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-pub fn snapshot(context: &Value, errors: &mut Vec<String>) -> Option<LspSnapshotWithCompletion> {
+fn cwd(context: &Value, held: bool) -> PathBuf {
+    if held {
+        PathBuf::from(text(context, "base")).join(
+            Path::new(context["cwd"].as_str().unwrap())
+                .strip_prefix(text(context, "saved"))
+                .unwrap(),
+        )
+    } else {
+        PathBuf::from(text(context, "cwd"))
+    }
+}
+
+pub fn snapshot(worker: &mut Worker, context: &Value, errors: &mut Vec<String>) -> Option<Value> {
     let path = PathBuf::from(text(context, "editorPath"));
-    let open_documents: BTreeMap<PathBuf, String> = context["overlays"]
-        .as_object()
-        .unwrap()
-        .iter()
-        .map(|(path, text)| (PathBuf::from(path), text.as_str().unwrap().into()))
-        .collect();
-    let opts = LspSnapshotOpts {
-        path: path.clone(),
-        path_provided: context["explicit"].as_bool().unwrap(),
-        open_documents,
-    };
-    let result = lsp_snapshot_with_completion(opts);
-    let response = match &result {
-        Ok(loaded) => json!({"snapshot":format!("{:#?}",loaded.metadata),
-            "readFiles":loaded.show.read_files()}),
-        Err(error) => json!({"failure":format!("{error:#}")}),
-    };
-    agreement_evidence::receipt(
+    let response = worker.call(json!({"operation":"snapshot","cwd":cwd(context,true),
+        "path":path,"explicit":context["explicit"],"overlays":context["overlays"]}));
+    evidence::receipt(
         "editor",
         &path,
-        json!({"path":path,
-        "explicit":context["explicit"],"overlays":context["overlays"],"question":"snapshot"}),
-        response,
+        json!({"path":path,"cwd":cwd(context,true),
+        "explicit":context["explicit"],"overlays":context["overlays"],"question":"snapshot",
+        "scope":context["scopes"]["editor"]}),
+        response.clone(),
     );
-    if let Ok(loaded) = &result {
-        let rows: Vec<Value> = loaded
-            .metadata
-            .snapshot
-            .declarations
-            .iter()
-            .chain(loaded.metadata.snapshot.sections.iter())
-            .map(|site| json!({"path":site.display_path,"line":site.line}))
-            .collect();
-        match witnesses(context, &rows, "§REQ-one-answer.identity.declarations") {
-            Ok(witness) => agreement_evidence::witness(witness),
-            Err(error) => errors.push(error),
-        }
-    } else {
-        agreement_evidence::witness(json!({"point":"§FS-lsp.2.2.1",
+    if response.get("failure").is_some() {
+        evidence::witness(json!({"point":"§FS-lsp.2.2.1","complete":false,
             "oracle":"fixture-config-bytes","configs":context["sourceInventory"]}));
+        return None;
     }
-    result.ok()
+    assert_eq!(
+        PathBuf::from(response["snapshot"]["root"].as_str().unwrap())
+            .canonicalize()
+            .unwrap(),
+        PathBuf::from(context["scopes"]["editor"]["projectRoot"].as_str().unwrap())
+            .canonicalize()
+            .unwrap(),
+        "editor loaded a project outside the independently discovered context"
+    );
+    let rows: Vec<_> = ["declarations", "sections"]
+        .into_iter()
+        .flat_map(|key| response["snapshot"][key].as_array().unwrap())
+        .map(|site| {
+            json!({"path":saved_path(context,Path::new(site["path"].as_str().unwrap())),
+            "line":site["line"]})
+        })
+        .collect();
+    let mut scoped = context.clone();
+    scoped["reportBase"] = context["scopes"]["cli"]["reportBase"].clone();
+    match witnesses(&scoped, &rows, "§REQ-one-answer.identity.declarations") {
+        Ok(witness) => evidence::witness(witness),
+        Err(error) => errors.push(error),
+    }
+    Some(response)
 }
 
 pub fn show(
+    worker: &mut Worker,
     context: &Value,
-    loaded: &LspSnapshotWithCompletion,
     coordinate: &str,
     cli: &[Value],
     cli_refused: bool,
     errors: &mut Vec<String>,
 ) {
-    let result = show_from_snapshot(&loaded.show, coordinate, ShowMode::Toc, ShowFormat::Json);
-    let response = match &result {
-        Ok(out) => json!({"body":out.body,"path":out.path,"line":out.line,
-            "json":out.json,"sections":out.sections.iter().map(|s|json!({"path":s.path,"title":s.title,"depth":s.depth})).collect::<Vec<_>>()}),
-        Err(error) => json!({"failure":format!("{error:#}")}),
-    };
-    agreement_evidence::receipt(
+    let response =
+        worker.call(json!({"operation":"show","cwd":cwd(context,true),"coordinate":coordinate}));
+    evidence::receipt(
         "editor",
         Path::new(&text(context, "editorPath")),
-        json!({"coordinate":coordinate,"question":"show","overlays":context["overlays"]}),
-        response,
+        json!({"coordinate":coordinate,"question":"show","overlays":context["overlays"],
+            "scope":context["scopes"]["editor"]}),
+        response.clone(),
     );
-    if let Ok(out) = result {
-        let actual: Value = serde_json::from_str(out.json.as_deref().expect("requested JSON"))
-            .expect("snapshot hover JSON");
-        match witnesses(context, &[actual.clone()], "§REQ-one-answer.text.parity") {
-            Ok(witness) => agreement_evidence::witness(witness),
+    if let Some(serialized) = response["json"].as_str() {
+        let actual: Value = serde_json::from_str(serialized).unwrap();
+        let mut editor_scope = context.clone();
+        editor_scope["reportBase"] = context["scopes"]["editor"]["reportBase"].clone();
+        let mut saved_actual = actual.clone();
+        if let Some(path) = actual["path"].as_str() {
+            saved_actual["path"] = json!(saved_path(context, &physical(&editor_scope, path)));
+        }
+        match witnesses(context, &[saved_actual], "§REQ-one-answer.text.parity") {
+            Ok(witness) => evidence::witness(witness),
             Err(error) => errors.push(error),
         }
-        // Paths belong to two independent copies; compare their logical site.
-        if cli != [actual.clone()] {
+        if logical_value(json!(cli), context) != logical_value(json!([actual.clone()]), context) {
             let selected = PathBuf::from(text(context, "path"));
             let outside_selection = actual["path"].as_str().is_some_and(|path| {
-                !super::agreement_oracles::physical(context, path).starts_with(&selected)
+                let target = saved_path(context, &physical(&editor_scope, path));
+                !target
+                    .canonicalize()
+                    .unwrap_or(target)
+                    .starts_with(selected.canonicalize().unwrap_or_else(|_| selected.clone()))
             });
             if cli_refused
                 && cli.is_empty()
@@ -96,10 +108,8 @@ pub fn show(
                 && context["variant"] != "editor-overlay"
                 && outside_selection
             {
-                // R01 keeps the path-scoped command's missing outside home until
-                // #621; do not correct that shipped answer in the proof harness.
-                // §REQ-one-answer.differences.scope, §DF-one-answer-rulings-run.
-                agreement_evidence::receipt(
+                // §REQ-one-answer.differences.scope: R01 holds only the outside home.
+                evidence::receipt(
                     "known-difference",
                     &selected,
                     json!({"coordinate":coordinate,"outsideHome":actual["path"]}),
@@ -114,153 +124,122 @@ pub fn show(
     } else if !cli_refused || !cli.is_empty() {
         errors.push(format!("editor refuses {coordinate}, CLI answers {cli:?}"));
     } else {
-        agreement_evidence::witness(json!({"oracle":"authored-coordinate-search",
-            "coordinate":coordinate,"point":"§REQ-one-answer.sections.map"}));
+        evidence::witness(
+            json!({"oracle":"authored-coordinate-search","complete":false,
+            "coordinate":coordinate,"point":"§REQ-one-answer.sections.map"}),
+        );
     }
 }
 
-/// Snapshot invariance validates the actual held edit's semantic control, while
-/// physical-source/golden expectations remain independent truth.
 pub fn saved_control(
+    worker: &mut Worker,
     context: &Value,
-    loaded: &LspSnapshotWithCompletion,
+    loaded: &Value,
     errors: &mut Vec<String>,
 ) {
     if context["variant"] != "editor-overlay" {
         return;
     }
     let path = PathBuf::from(text(context, "path"));
-    let saved = lsp_snapshot_with_completion(LspSnapshotOpts {
-        path: path.clone(),
-        path_provided: true,
-        ..Default::default()
-    });
-    agreement_evidence::receipt(
+    let saved = worker.call(json!({"operation":"saved","cwd":cwd(context,false),
+        "path":path,"explicit":context["explicit"],"overlays":{}}));
+    evidence::receipt(
         "editor-control",
         &path,
-        json!({"path":path,"overlays":{},
-        "heldBytes":context["heldBytes"],"relative":context["overlayRelative"]}),
-        match &saved {
-            Ok(s) => json!({"snapshot":format!("{:#?}",s.metadata)}),
-            Err(error) => json!({"failure":format!("{error:#}")}),
-        },
+        json!({"path":path,"overlays":{},"heldBytes":context["heldBytes"],
+            "relative":context["overlayRelative"]}),
+        saved.clone(),
     );
-    let base = text(context, "base");
-    let saved_root = text(context, "saved");
-    let held = format!("{:#?}", loaded.metadata).replace(&base, &saved_root);
-    let saved = saved.map(|s| format!("{:#?}", s.metadata));
-    if saved.as_ref().ok() != Some(&held) {
+    if logical_value(loaded.clone(), context) != logical_value(saved.clone(), context) {
         errors.push(format!(
-            "held/saved editor snapshot: {held} against {saved:?}"
+            "held/saved editor snapshot: {loaded} against {saved}"
         ));
     }
-    agreement_evidence::witness(json!({"oracle":"saved-held-byte-equality",
+    evidence::witness(json!({"oracle":"saved-held-byte-equality",
         "heldBytes":context["heldBytes"],"point":"§REQ-one-answer.contract"}));
 }
 
-/// Check bounds reports, while snapshot navigation retains its wider catalog
-/// (§FS-scan.path.check). Compare diagnostics on the selected report domain.
-pub fn check(
-    context: &Value,
-    loaded: &LspSnapshotWithCompletion,
-    host: &Value,
-    errors: &mut Vec<String>,
-) {
+/// Check bounds reports while editor navigation retains its wider catalog.
+pub fn check(context: &Value, loaded: &Value, host: &Value, errors: &mut Vec<String>) {
     if !host["failure"].is_null() {
         return;
     }
-    let snapshot = &loaded.metadata.snapshot;
-    let base = text(context, "base");
-    let saved = text(context, "saved");
-    let render_path = |path: &str| {
-        let path = path.replace(&base, &saved);
-        let path = super::agreement_oracles::physical(context, &path);
-        path.to_string_lossy().replace('\\', "/")
+    let snapshot = &loaded["snapshot"];
+    let mut editor_scope = context.clone();
+    editor_scope["reportBase"] = context["scopes"]["editor"]["reportBase"].clone();
+    let render_path = |path: &str, scope: &Value| {
+        saved_path(context, &physical(scope, path))
+            .to_string_lossy()
+            .replace('\\', "/")
     };
-    let actual_warnings: std::collections::BTreeSet<_> = snapshot
-        .run_warnings
+    let actual_warnings: BTreeSet<_> = snapshot["run_warnings"]
+        .as_array()
+        .unwrap()
         .iter()
-        .map(|finding| finding.message.replace(&base, &saved))
+        .map(|f| logical_text(f["message"].as_str().unwrap(), context))
         .collect();
-    let expected_warnings: std::collections::BTreeSet<_> = host["run_cautions"]
+    let expected_warnings: BTreeSet<_> = host["run_cautions"]
         .as_array()
         .into_iter()
         .flatten()
-        .map(|finding| finding["message"].as_str().unwrap().to_string())
+        .map(|f| logical_text(f["message"].as_str().unwrap(), context))
         .collect();
     if actual_warnings != expected_warnings {
         errors.push(format!(
             "editor/check warning channel: {actual_warnings:?} against {expected_warnings:?}"
         ));
     }
-    let actual: std::collections::BTreeSet<_> = snapshot
-        .report
-        .errors
-        .iter()
-        .chain(&snapshot.report.warnings)
-        .map(|finding| {
-            (
-                finding.severity.to_string(),
-                finding.code.to_string(),
-                finding.path.as_deref().map(&render_path),
-                finding.line.map(|line| line as u64),
-                finding.message.replace(&base, &saved),
-            )
-        })
-        .collect();
-    let expected: std::collections::BTreeSet<_> = ["errors", "warnings"]
-        .into_iter()
-        .flat_map(|key| {
-            host["result"]["selected_report"][key]
-                .as_array()
-                .cloned()
-                .unwrap_or_default()
-        })
-        .map(|finding| {
-            (
-                finding["severity"].as_str().unwrap().to_string(),
-                finding["code"].as_str().unwrap().to_string(),
-                finding["path"].as_str().map(&render_path),
-                finding["line"].as_u64(),
-                finding["message"].as_str().unwrap().to_string(),
-            )
-        })
-        .collect();
-    if actual != expected {
-        let only_cli: Vec<_> = expected.difference(&actual).collect();
-        let only_editor: Vec<_> = actual.difference(&expected).collect();
-        let known_alias_difference = !only_cli.is_empty()
-            && only_editor.is_empty()
-            && context["variant"] != "whole-tree"
-            && context["variant"] != "editor-overlay"
-            && snapshot.workspace
-            && only_cli.iter().all(|finding| {
-                finding.1 == "unknown-project"
-                    && snapshot.citations.iter().any(|citation| {
-                        let same_site = Some(render_path(citation.path.to_string_lossy().as_ref()))
-                            == finding.2
-                            && Some(citation.line as u64) == finding.3;
-                        same_site
-                            && citation.target_path.is_some()
-                            && citation
-                                .query_id
-                                .split_once('/')
-                                .is_some_and(|(alias, _)| finding.4.contains(&format!("`{alias}`")))
-                    })
-            });
-        if known_alias_difference {
-            // R02 holds precisely a narrowed alias refusal the wider editor can
-            // resolve, not any other report difference (§REQ-one-answer.differences.scope).
-            agreement_evidence::receipt(
-                "known-difference",
-                Path::new(&text(context, "path")),
-                json!({"resolvedCitationSites":format!("{:#?}",snapshot.citations)}),
-                json!({"row":"R02","onlyCli":only_cli}),
-            );
-        } else {
-            errors.push(format!(
-                "editor/check findings: {actual:?} against {expected:?}"
-            ));
-        }
+    let facts = |report: &Value, scope: &Value| -> BTreeSet<_> {
+        ["errors", "warnings"]
+            .into_iter()
+            .flat_map(|key| report[key].as_array().into_iter().flatten())
+            .map(|f| {
+                (
+                    f["severity"].as_str().unwrap().to_string(),
+                    f["code"].as_str().unwrap().to_string(),
+                    f["path"].as_str().map(|p| render_path(p, scope)),
+                    f["line"].as_u64(),
+                    logical_text(f["message"].as_str().unwrap(), context),
+                )
+            })
+            .collect()
+    };
+    let actual = facts(&snapshot["report"], &editor_scope);
+    let expected = facts(&host["result"]["selected_report"], context);
+    if actual == expected {
+        return;
+    }
+    let only_cli: Vec<_> = expected.difference(&actual).collect();
+    let only_editor: Vec<_> = actual.difference(&expected).collect();
+    let known = !only_cli.is_empty()
+        && only_editor.is_empty()
+        && context["variant"] != "whole-tree"
+        && context["variant"] != "editor-overlay"
+        && snapshot["workspace"] == true
+        && only_cli.iter().all(|f| {
+            f.1 == "unknown-project"
+                && snapshot["citations"].as_array().unwrap().iter().any(|c| {
+                    Some(render_path(c["path"].as_str().unwrap(), &editor_scope)) == f.2
+                        && c["line"].as_u64() == f.3
+                        && !c["target_path"].is_null()
+                        && c["query_id"]
+                            .as_str()
+                            .unwrap()
+                            .split_once('/')
+                            .is_some_and(|(alias, _)| f.4.contains(&format!("`{alias}`")))
+                })
+        });
+    if known {
+        // §REQ-one-answer.differences.scope: retain R02's exact alias condition.
+        evidence::receipt(
+            "known-difference",
+            Path::new(&text(context, "path")),
+            json!({"resolvedCitationSites":snapshot["citations"]}),
+            json!({"row":"R02","onlyCli":only_cli}),
+        );
+    } else {
+        errors.push(format!(
+            "editor/check findings: {actual:?} against {expected:?}"
+        ));
     }
 }

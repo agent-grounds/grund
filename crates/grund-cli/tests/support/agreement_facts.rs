@@ -5,12 +5,16 @@
 
 use super::agreement_evidence as evidence;
 use super::agreement_oracles::{entries, physical, text};
-use grund_core::LspSnapshotWithCompletion;
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-pub fn declarations(context: &Value, answers: &BTreeMap<&str, Value>, errors: &mut Vec<String>) {
+pub fn declarations(
+    context: &Value,
+    answers: &BTreeMap<&str, Value>,
+    loaded: Option<&Value>,
+    errors: &mut Vec<String>,
+) {
     let lists = entries(&answers["list"], "entries");
     let sizes: Vec<_> = entries(&answers["list-size"], "entries")
         .into_iter()
@@ -39,7 +43,27 @@ pub fn declarations(context: &Value, answers: &BTreeMap<&str, Value>, errors: &m
             continue;
         }
         if let Some(size) = peers.iter().find(|size| {
-            row["stub"] == true && !row["defines"].is_null() && row["defines"] == size["path"]
+            row["defines"]
+                .as_str()
+                .zip(size["path"].as_str())
+                .is_some_and(|(defines, path)| {
+                    physical(context, defines) == physical(context, path)
+                        && healthy_unscanned(context, &row, &physical(context, path), loaded)
+                        && row["duplicate"] == size["duplicate"]
+                        && loaded.is_some_and(|loaded| {
+                            loaded["snapshot"]["stubs"]
+                                .as_array()
+                                .unwrap()
+                                .iter()
+                                .any(|stub| {
+                                    super::agreement_paths::saved_path(
+                                        context,
+                                        Path::new(stub["target_path"].as_str().unwrap()),
+                                    ) == physical(context, path)
+                                        && stub["target_line"] == size["line"]
+                                })
+                        })
+                })
         }) {
             // §REQ-one-answer.differences.stubs: Placement keeps the stub
             // home until #650, while size reads the target.
@@ -55,13 +79,83 @@ pub fn declarations(context: &Value, answers: &BTreeMap<&str, Value>, errors: &m
     }
 }
 
+/// §REQ-one-answer.differences.stubs: the real healthy stub and an unscanned
+/// physical target are both preconditions, never just two returned row flags.
+pub fn healthy_unscanned(
+    context: &Value,
+    row: &Value,
+    target: &Path,
+    loaded: Option<&Value>,
+) -> bool {
+    let Some(snapshot) = loaded.map(|s| &s["snapshot"]) else {
+        return false;
+    };
+    if row["stub"] != true || !target.is_file() {
+        return false;
+    }
+    let canonical = |path: &Path| path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
+    let target = canonical(target);
+    if snapshot["scanned_files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|path| {
+            canonical(&super::agreement_paths::saved_path(
+                context,
+                Path::new(path.as_str().unwrap()),
+            )) == target
+        })
+    {
+        return false;
+    }
+    let Some(stub_path) = row["path"].as_str() else {
+        return false;
+    };
+    let stub_path = canonical(&physical(context, stub_path));
+    snapshot["stubs"].as_array().unwrap().iter().any(|stub| {
+        let stub_file =
+            super::agreement_paths::saved_path(context, Path::new(stub["path"].as_str().unwrap()));
+        let target_file = super::agreement_paths::saved_path(
+            context,
+            Path::new(stub["target_path"].as_str().unwrap()),
+        );
+        canonical(&stub_file) == stub_path
+            && canonical(&target_file) == target
+            && stub["line"] == row["line"]
+            && stub["query_id"].as_str().is_some_and(|query| {
+                query.rsplit('/').next()
+                    == row["id"].as_str().map(|id| id.rsplit('/').next().unwrap())
+            })
+            && std::fs::read_to_string(&stub_file)
+                .ok()
+                .is_some_and(|bytes| {
+                    bytes
+                        .lines()
+                        .nth(row["line"].as_u64().unwrap_or(0).saturating_sub(1) as usize)
+                        .is_some_and(|line| {
+                            line.contains("](") && line.contains(row["id"].as_str().unwrap())
+                        })
+                })
+            && std::fs::read_to_string(&target_file)
+                .ok()
+                .is_some_and(|bytes| {
+                    bytes
+                        .lines()
+                        .nth(stub["target_line"].as_u64().unwrap_or(0).saturating_sub(1) as usize)
+                        .is_some_and(|line| {
+                            line.contains(row["id"].as_str().unwrap().rsplit('/').next().unwrap())
+                        })
+                })
+    })
+}
+
 pub fn sections(
     context: &Value,
     coordinate: &str,
     show: &Value,
     batch: &Value,
     listed: &Value,
-    loaded: Option<&LspSnapshotWithCompletion>,
+    loaded: Option<&Value>,
     errors: &mut Vec<String>,
 ) {
     let Some(serialized) = show["result"]["json"].as_str() else {
@@ -74,20 +168,12 @@ pub fn sections(
     let path = body["path"].as_str().unwrap();
     let target = physical(context, path);
     let target = target.canonicalize().unwrap_or(target);
-    let outside_scan = loaded.is_some_and(|snapshot| {
-        let base = text(context, "base");
-        let saved = text(context, "saved");
-        let unscanned = !snapshot.metadata.snapshot.scanned_files.iter().any(|file| {
-            let mapped = std::path::PathBuf::from(file.to_string_lossy().replace(&base, &saved));
-            mapped.canonicalize().unwrap_or(mapped) == target
-        });
-        let healthy_outside_stub = entries(listed, "entries").iter().any(|entry| {
-            entry["defines"].as_str().is_some_and(|defines| {
-                let defined = physical(context, defines);
-                defined.canonicalize().unwrap_or(defined) == target
-            })
-        });
-        unscanned && healthy_outside_stub
+    let outside_scan = entries(listed, "entries").iter().any(|entry| {
+        entry["defines"].as_str().is_some_and(|defines| {
+            let defined = physical(context, defines);
+            defined.canonicalize().unwrap_or(defined) == target
+                && healthy_unscanned(context, entry, &target, loaded)
+        })
     });
     let batch_records = entries(batch, "records");
     let local_coordinate = coordinate.rsplit('/').next().unwrap();
@@ -135,9 +221,17 @@ pub fn sections(
             }
         }
         if let Some(snapshot) = loaded {
-            let offered = snapshot.metadata.snapshot.sections.iter().any(|site| {
-                site.query_id == format!("{coordinate}{}{section_path}", site.section_separator)
-            });
+            let offered = snapshot["snapshot"]["sections"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|site| {
+                    site["query_id"]
+                        == format!(
+                            "{coordinate}{}{section_path}",
+                            site["section_separator"].as_str().unwrap()
+                        )
+                });
             if !offered {
                 if outside_scan {
                     evidence::receipt(
