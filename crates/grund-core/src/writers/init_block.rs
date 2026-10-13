@@ -1,10 +1,12 @@
 use anyhow::{Result, anyhow};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use super::init::{InitEvent, verb_appended, verb_updated, verb_wrote};
-use crate::grammar::{AGENTS_BLOCK_VERSION, AgentsBlockLookup, find_agents_block};
+use super::init_plan::SelectedInitAgentEntrypoints;
+use crate::grammar::{AGENTS_BLOCK_VERSION, AgentsBlock, AgentsBlockLookup, find_agents_block};
 use crate::model::format_path;
+use crate::scanner::{CANONICAL_AGENT_ENTRYPOINT, InitCompanionAgentEntrypoint};
 use crate::sources::{Sources, path_exists};
 
 /// What `init` did to an existing `AGENTS.md`'s managed block — `appended ` (no
@@ -107,6 +109,44 @@ pub(crate) fn update_agents_text(
     block: &str,
     label: &str,
 ) -> Result<(String, AgentsUpdateResult)> {
+    match spliceable_agents_block(existing, label)? {
+        Some(existing_block) => {
+            // A legacy H2-bounded block is migrated to the delimited form by
+            // this same splice (§FS-init.2.3.10): the replacement `block` carries
+            // the delimiters, and the legacy span is what gets replaced.
+            let mut updated = String::with_capacity(existing.len() + block.len());
+            updated.push_str(&existing[..existing_block.start]);
+            updated.push_str(block);
+            updated.push_str(&existing[existing_block.end..]);
+            let result = if updated == existing {
+                AgentsUpdateResult::Unchanged
+            } else {
+                AgentsUpdateResult::Updated
+            };
+            Ok((updated, result))
+        }
+        None => {
+            let separator = if existing.is_empty() || existing.ends_with("\n\n") {
+                ""
+            } else if existing.ends_with('\n') {
+                "\n"
+            } else {
+                "\n\n"
+            };
+            let mut updated = String::with_capacity(existing.len() + separator.len() + block.len());
+            updated.push_str(existing);
+            updated.push_str(separator);
+            updated.push_str(block);
+            Ok((updated, AgentsUpdateResult::Appended))
+        }
+    }
+}
+
+/// The one classification of an existing entrypoint's managed block, which both
+/// the write pass and the pre-write pass ask (§FS-init.1.2.6): the block to
+/// splice over, `None` when there is none, or the refusal for a malformed
+/// (§FS-init.2.3.11) or newer (§FS-init.2.3.10.2) block.
+fn spliceable_agents_block(existing: &str, label: &str) -> Result<Option<AgentsBlock>> {
     match find_agents_block(existing) {
         // §FS-init.2.3.11: splicing against broken delimiters risks eating user
         // content, so a malformed block is a hard error and the file is left
@@ -122,33 +162,47 @@ pub(crate) fn update_agents_text(
                     AGENTS_BLOCK_VERSION
                 ));
             }
-            // A legacy H2-bounded block is migrated to the delimited form by
-            // this same splice (§FS-init.2.3.10): the replacement `block` carries
-            // the delimiters, and the legacy span is what gets replaced.
-            let mut updated = String::with_capacity(existing.len() + block.len());
-            updated.push_str(&existing[..existing_block.start]);
-            updated.push_str(block);
-            updated.push_str(&existing[existing_block.end..]);
-            let result = if updated == existing {
-                AgentsUpdateResult::Unchanged
-            } else {
-                AgentsUpdateResult::Updated
-            };
-            Ok((updated, result))
+            Ok(Some(existing_block))
         }
-        AgentsBlockLookup::Absent => {
-            let separator = if existing.is_empty() || existing.ends_with("\n\n") {
-                ""
-            } else if existing.ends_with('\n') {
-                "\n"
-            } else {
-                "\n\n"
-            };
-            let mut updated = String::with_capacity(existing.len() + separator.len() + block.len());
-            updated.push_str(existing);
-            updated.push_str(separator);
-            updated.push_str(block);
-            Ok((updated, AgentsUpdateResult::Appended))
-        }
+        AgentsBlockLookup::Absent => Ok(None),
     }
+}
+
+/// §FS-init.1.2.6: read every planned entrypoint the write pass would update and
+/// classify its block before the first write, so a refused block anywhere in the
+/// plan refuses the whole run. Walks the plan in write order — the canonical
+/// entrypoint (only when `--force` does not overwrite it), then each existing
+/// companion — and returns the first refusal with the path it names and the
+/// label the write pass would give it.
+pub(super) fn refuse_planned_agent_blocks(
+    target: &Path,
+    plan: &SelectedInitAgentEntrypoints,
+    force: bool,
+) -> Option<(PathBuf, anyhow::Error)> {
+    let canonical = (plan.canonical && !force)
+        .then(|| target.join(CANONICAL_AGENT_ENTRYPOINT))
+        .filter(|dest| path_exists(dest))
+        .map(|dest| (dest, CANONICAL_AGENT_ENTRYPOINT.to_string()));
+    let companions = plan
+        .companions
+        .iter()
+        .filter_map(|entrypoint| match entrypoint {
+            InitCompanionAgentEntrypoint::Existing(path) => {
+                let rel = format_path(path.strip_prefix(target).unwrap_or(path));
+                Some((path.clone(), rel))
+            }
+            InitCompanionAgentEntrypoint::MissingAlias(_) => None,
+        });
+    canonical
+        .into_iter()
+        .chain(companions)
+        .find_map(|(path, label)| {
+            let existing = match Sources::on_disk().text(&path) {
+                Ok(existing) => existing,
+                Err(err) => return Some((path, err.into())),
+            };
+            spliceable_agents_block(&existing, &label)
+                .err()
+                .map(|err| (path, err))
+        })
 }
