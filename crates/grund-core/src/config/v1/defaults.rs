@@ -32,8 +32,9 @@ const DEFAULT_COMMENT_PREFIXES: &[&str] = &["//", "#", ";", "--", "*", "/*"];
 /// §AR-config.3.2 `scan exclusions`.
 const DEFAULT_EXCLUDE: &[&str] = &["target", "node_modules", ".git", "dist", "build", ".venv"];
 /// §AR-config.3.2 `legacy FS home`: the folder a `grund.toml` written before
-/// the `requirements.md` default still gets for `FS`.
-const LEGACY_FS_FOLDER: &str = "docs/functional-spec";
+/// the `requirements.md` default still gets for `FS`, and the home grund 0.19.0
+/// makes the default for every project (§FS-check.checks.fs-home-moves).
+pub(crate) const LEGACY_FS_FOLDER: &str = "docs/functional-spec";
 
 fn strings(values: &[&str]) -> Vec<String> {
     values.iter().map(|value| value.to_string()).collect()

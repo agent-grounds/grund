@@ -4,6 +4,7 @@
 
 use super::excluded_stub_target::check_excluded_stub_targets;
 use super::fields::check_fields;
+use super::fs_home_moves::check_fs_home_moves;
 use super::glob_citations::check_glob_citations;
 use super::homes::{KindHomeIndex, paths_same_location_key};
 use super::inline_style::check_inline_citation_style;
@@ -53,6 +54,8 @@ pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> C
     check_declaration_near_misses(catalog, &mut report);
     // §FS-check.checks.glob-citation: patterns written where a citation belongs.
     check_glob_citations(catalog, schema, &mut report);
+    // §FS-check.checks.fs-home-moves: a zero-config FS home that 0.19.0 moves.
+    check_fs_home_moves(catalog, schema, frame, &mut report);
     // §FS-fields.checks: each declaration against its kind's fields and `closed`.
     check_fields(catalog, schema, frame, &mut report);
     report
