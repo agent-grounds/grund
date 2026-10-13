@@ -592,7 +592,7 @@ What counts is [§FS-declarations.checks.declaration-near-miss.1](FS-declaration
 
 #### checks.declaration-near-miss.1: What counts
 
-A line in declaration position ([§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares), read under the rules of [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)) whose first token unambiguously begins with a configured citable kind ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)), which the effective ID grammar rejects, and which is **followed by the declaration colon**. This also covers a per-kind format whose first literal after `{kind}` differs from the persisted token.
+A line in declaration position ([§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares), in a source file read through its comment block, [§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block)) whose first token unambiguously begins with a configured citable kind ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)), which the effective ID grammar rejects, and which is **followed by the declaration colon**. This also covers a per-kind format whose first literal after `{kind}` differs from the persisted token.
 
 #### checks.declaration-near-miss.2: The declaration colon is the discriminator
 
@@ -754,7 +754,7 @@ That is the rule working as designed, not a gap in it: `citable = false` says th
 
 ### checks.duplicate-section: Duplicate section path
 
-Two or more citable section headings inside one declaration claiming the same dotted path ([AR-scanner.2.2](../architecture/AR-scanner.md#22-section-detection)) — either two `## 1. …` headings or two `## goals: …` headings under one `# FS-001-login`. Reported per [§FS-check.2.1](FS-check.md#21-report-format) in [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)'s shape: one error located at the first heading in file order, with every other heading line named in the message. Named and numeric coordinates use the same `duplicate-section` code ([§FS-errors.5](FS-errors.md#5-json-format)), the same multi-site `sites` record [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) carries, and the same no-ranking rule.
+Two or more citable section headings inside one declaration claiming the same dotted path ([§FS-declarations.section](FS-declarations.md#section-what-a-section-is)) — either two `## 1. …` headings or two `## goals: …` headings under one `# FS-001-login`. Reported per [§FS-check.2.1](FS-check.md#21-report-format) in [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)'s shape: one error located at the first heading in file order, with every other heading line named in the message. Named and numeric coordinates use the same `duplicate-section` code ([§FS-errors.5](FS-errors.md#5-json-format)), the same multi-site `sites` record [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) carries, and the same no-ranking rule.
 
 ```
 docs/functional-spec/FS-001-login.md:5: duplicate section FS-001-login.1 (also declared at docs/functional-spec/FS-001-login.md:9)
@@ -804,7 +804,7 @@ A relative heading beneath a failed one fails the same way, at its own line. A c
 
 ### checks.section-heading-level: Section heading level mismatch
 
-`[id] section_heading_levels` ([§FS-config.3.3.2](FS-config.md#332-section_heading_levels--heading-depth-against-path-depth)) sets how a citable section heading's Markdown depth must match its dotted path ([AR-scanner.2.2](../architecture/AR-scanner.md#22-section-detection)), and whether a mismatch is an error, a warning, or not reported. A mismatch the mode reports is located at the heading line. This section judges the depth of headings that already carry coordinates; the project-wide in-body Markdown ATX rule for a heading that carries none is [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading), independent of this mode. Bold labels are not headings and remain unchecked.
+`[id] section_heading_levels` ([§FS-config.3.3.2](FS-config.md#332-section_heading_levels--heading-depth-against-path-depth)) sets how a citable section heading's Markdown depth must match its dotted path ([§FS-declarations.section](FS-declarations.md#section-what-a-section-is)), and whether a mismatch is an error, a warning, or not reported. A mismatch the mode reports is located at the heading line. This section judges the depth of headings that already carry coordinates; the project-wide in-body Markdown ATX rule for a heading that carries none is [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading), independent of this mode. Bold labels are not headings and remain unchecked.
 
 Under v2 the key is `[schema] heading_depth`, a strength ([§FS-config-v2.schema.1](FS-config-v2.md#schema1-schema)). `must`, its default, reports a mismatch as an error, `warn` as a warning and `should` as a suggestion, and `may` recognizes sections without judging their depth, which is v1's `loose`.
 

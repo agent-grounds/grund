@@ -73,7 +73,9 @@ ungrounded), and any future qualified `show` / `refs` / `list` — must go
 through this function rather than match on `citation.namespace` itself. The bug
 shape it rules out is a command that learns qualified IDs but resolves them
 slightly differently from `check`, leaving the editor jump and the CI verdict
-out of sync.
+out of sync. The workspace surface of the query commands composes through this
+same function, so a qualified ID in `show`, `refs`, `list` or completion is a UX
+layer over the resolver `check` uses, not new resolution logic ([§FS-workspace.8](../functional-spec/FS-workspace.md#8-other-commands)).
 
 A `None` return value at the resolver is never a silent skip; the calling
 rule turns it into a located diagnostic (`unknown project alias <path>` at

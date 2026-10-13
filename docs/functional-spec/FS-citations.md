@@ -33,7 +33,7 @@ Per [§DF-reference-marker](../decisions/functional/DF-reference-marker.md#df-re
 
 In default mode (`[reference] strict = true`), only marker-prefixed citations are recognized — bare tokens are treated as plain text and do not trigger dangling citation errors. Repositories that still rely on bare citations may set `[reference] strict = false` as a compatibility mode after checking the migration surface with `grund fmt --marker` ([§FS-fmt](FS-fmt.md#fs-fmt-grund-normalizes-citations-in-bulk)).
 
-Citations may appear in markdown prose, in source-file line/block comments, and in language doc-comments (Javadoc, JSDoc, Rustdoc, Python docstrings, etc.) — see [AR-scanner.2.3](../architecture/AR-scanner.md#23-citation-detection) and [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) for the exact contexts. `E2E` citations (`§E2E-<name>`) resolve against case directories under the configured `E2E` kind home per [AR-scanner.6](../architecture/AR-scanner.md#6-e2e-case-declarations).
+Citations may appear in markdown prose, in source-file line/block comments, and in language doc-comments (Javadoc, JSDoc, Rustdoc, Python docstrings, etc.): which comment forms each language has is [§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block), and the contexts read as neither prose nor code are [§FS-citations.recognized.contexts](FS-citations.md#recognizedcontexts-contexts-read-as-neither-prose-nor-code). `E2E` citations (`§E2E-<name>`) resolve against the case directories of the configured `E2E` kind home, each of which declares the ID its name reads as ([§FS-declarations.e2e-case.id](FS-declarations.md#e2e-caseid-a-case-directory-and-the-id-it-declares)).
 
 ### recognized.off-grammar: Off-grammar citations
 
@@ -91,7 +91,7 @@ the candidate; a repeated terminal dot run is retained as unsupported syntax rat
 to that punctuation case. Named and mixed declaration-local shorthand are not recognized.
 
 After declaration bodies are assigned, the candidate is owned only by the existing enclosing-body
-rule ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)): Markdown
+rule ([§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends), as for [§FS-citations.citing-kind](FS-citations.md#citing-kind-which-kind-a-citation-site-counts-as)): Markdown
 same-or-higher headings, source comment or docstring ends, and the nearest preceding declaration
 inside a multi-declaration comment are boundaries. Adjacent citations and other files do not
 supply an owner. A uniquely owned candidate becomes an ordinary citation edge to the owner's ID

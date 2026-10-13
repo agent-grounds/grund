@@ -1,10 +1,10 @@
 //! Test module: what the scanner *records* about an inline citation site
-//! (§FS-inline-citation-style.7.1) — the enclosing block's span, its measured
+//! (§AR-scanner.3.1) — the enclosing block's span, its measured
 //! width, whether it carries a note, and the lines that fail the configured
 //! layout.
 //!
 //! Asserted on the `Citation` the scan returns rather than through a checker
-//! finding, because §FS-inline-citation-style.7.1 is a claim about the record: every other suite reads
+//! finding, because §AR-scanner.3.1 is a claim about the record: every other suite reads
 //! these fields through a verdict, which cannot distinguish a field that is
 //! wrong from a rule that never fired.
 
@@ -40,7 +40,7 @@ fn sites(name: &str, source: &str, gated_layout: bool) -> Vec<Option<InlineCitat
         .collect()
 }
 
-/// §FS-inline-citation-style.7.1: a citation in an ordinary comment block
+/// §AR-scanner.3.1: a citation in an ordinary comment block
 /// carries that block's `(first_line, last_line, max_columns, has_note)`.
 ///
 /// `max_columns` is 46 for a line of 47 bytes: the `§` marker costs one column,
@@ -68,7 +68,7 @@ fn an_inline_note_records_its_own_block_span_and_width() {
     );
 }
 
-/// §FS-inline-citation-style.7.1: multiple citations in the same block carry
+/// §AR-scanner.3.1: multiple citations in the same block carry
 /// the same span — the record is the block's, not each citation's, so the
 /// widest line of the block is every one of its citations' `max_columns` and
 /// the opening prose line is inside the span although it cites nothing.
@@ -94,7 +94,7 @@ fn two_citations_in_one_block_carry_one_span() {
     assert_eq!(found, vec![expected.clone(), expected]);
 }
 
-/// §FS-inline-citation-style.7.1: a doc-comment block records no inline
+/// §AR-scanner.3.1: a doc-comment block records no inline
 /// citation site at all — the same `None` a Markdown citation carries, and for
 /// the same reason a declaring block does: what the language calls
 /// documentation is not a note.
@@ -113,7 +113,7 @@ fn a_doc_comment_block_records_no_site() {
     assert_eq!(found, vec![None, None]);
 }
 
-/// §FS-inline-citation-style.7.1: `has_note` is the block's, not the
+/// §AR-scanner.3.1: `has_note` is the block's, not the
 /// citation's — a comment that is nothing but citations carries none.
 #[test]
 fn a_block_of_bare_citations_records_no_note() {
@@ -134,7 +134,7 @@ fn a_block_of_bare_citations_records_no_note() {
     );
 }
 
-/// §FS-inline-citation-style.7.1: beside the four fields, the site records the
+/// §AR-scanner.3.1: beside the four fields, the site records the
 /// block's judged lines that fail the configured layout, 1-based and ascending
 /// — and every citation of the block carries that same list.
 #[test]

@@ -90,7 +90,7 @@ docs/functional-spec/FS-show.md:11: §FS-check.1
 
 ### 3.2 `--format json`
 
-NDJSON on stdout — one object per citation, matching the `Citation` shape ([AR-scanner.3](../architecture/AR-scanner.md#3-output)) plus the verbatim token and optional target-kind metadata. These examples select a kind without an effective title:
+NDJSON on stdout — one object per citation, in the record shape of [§FS-output-shapes.5.1](FS-output-shapes.md#51-refs---formatjson), which carries the verbatim token and the optional target-kind metadata. These examples select a kind without an effective title:
 
 ```json
 {"path":"crates/grund-core/src/scanner/file_pass.rs","line":142,"column":12,"id":"FS-check","section":"1","marker":false,"text":"FS-check.1","enclosing_declaration":null,"enclosing_section":null}
