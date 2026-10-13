@@ -28,7 +28,8 @@ INDEX = FOLDER / "README.md"
 ROADMAP = REPO_ROOT / "docs" / "roadmap.md"
 TITLE = "Related work: the ideas grund descends from and the tools beside it"
 
-# The eight bodies of work agent-grounds/grund#384 names, one entry each.
+# Every body of related work the folder holds, one entry each: those
+# agent-grounds/grund#384 named, then those agent-grounds/grund#708 added.
 ENTRIES = (
     "incremental-formalization",
     "flexiformality",
@@ -38,6 +39,18 @@ ENTRIES = (
     "schema-later",
     "traceability-tools",
     "spec-driven-development",
+    "trace-link-recovery",
+    "explicit-traceability",
+    "comment-code-consistency",
+    "documentation-decay",
+    "design-rationale",
+    "literate-programming",
+    "comment-annotations",
+    "name-resolution",
+    "code-queries",
+    "controlled-language",
+    "agent-context",
+    "doc-reference-checkers",
 )
 
 # The chapters the index lead fixes, in order: what the work is, where grund
@@ -188,7 +201,7 @@ class RelatedWorkTests(unittest.TestCase):
         named = tuple(match.group(1) for line in lines if (match := INDEX_CHAPTER.match(line)))
         self.assertEqual(CHAPTERS, named)
 
-    def test_the_folder_declares_the_eight_entries(self):
+    def test_the_folder_declares_every_entry(self):
         problems, declared = [], set()
         for page in sorted(FOLDER.rglob("*.md")):
             if page == INDEX:

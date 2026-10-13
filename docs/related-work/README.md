@@ -51,3 +51,15 @@ once it ships.
 - [§REL-schema-later](REL-schema-later.md#rel-schema-later-pay-as-you-go-structure-schema-added-where-it-pays) — pay-as-you-go structure, schema added where it pays
 - [§REL-traceability-tools](REL-traceability-tools.md#rel-traceability-tools-requirements-traceability-tools-the-neighbours-beside-grund) — requirements-traceability tools, the neighbours beside grund
 - [§REL-spec-driven-development](REL-spec-driven-development.md#rel-spec-driven-development-spec-driven-development-the-current-wave-of-agent-tools) — spec-driven development, the current wave of agent tools
+- [§REL-explicit-traceability](REL-explicit-traceability.md#rel-explicit-traceability-explicit-traceability-links-written-by-hand) — explicit traceability, links written by hand
+- [§REL-trace-link-recovery](REL-trace-link-recovery.md#rel-trace-link-recovery-trace-link-recovery-links-proposed-after-the-fact) — trace-link recovery, links proposed after the fact
+- [§REL-comment-annotations](REL-comment-annotations.md#rel-comment-annotations-annotation-languages-in-comments-a-checked-sublanguage-beside-the-code) — annotation languages in comments, a checked sublanguage beside the code
+- [§REL-comment-code-consistency](REL-comment-code-consistency.md#rel-comment-code-consistency-comment-code-consistency-claims-inferred-from-comments) — comment-code consistency, claims inferred from comments
+- [§REL-documentation-decay](REL-documentation-decay.md#rel-documentation-decay-documentation-decay-references-that-fall-behind-the-code) — documentation decay, references that fall behind the code
+- [§REL-doc-reference-checkers](REL-doc-reference-checkers.md#rel-doc-reference-checkers-documentation-tools-that-check-their-own-references) — documentation tools that check their own references
+- [§REL-name-resolution](REL-name-resolution.md#rel-name-resolution-name-resolution-and-robust-locations-references-that-survive-edits) — name resolution and robust locations, references that survive edits
+- [§REL-literate-programming](REL-literate-programming.md#rel-literate-programming-literate-programming-and-executable-documentation-prose-and-code-in-one-source) — literate programming and executable documentation, prose and code in one source
+- [§REL-design-rationale](REL-design-rationale.md#rel-design-rationale-architecture-decisions-and-rationale-the-why-kept-as-records) — architecture decisions and rationale, the why kept as records
+- [§REL-code-queries](REL-code-queries.md#rel-code-queries-queries-and-conformance-over-program-facts-rules-over-what-was-extracted) — queries and conformance over program facts, rules over what was extracted
+- [§REL-controlled-language](REL-controlled-language.md#rel-controlled-language-controlled-natural-languages-english-with-a-fixed-grammar) — controlled natural languages, English with a fixed grammar
+- [§REL-agent-context](REL-agent-context.md#rel-agent-context-repository-context-for-coding-agents-what-an-agent-is-given-to-read) — repository context for coding agents, what an agent is given to read

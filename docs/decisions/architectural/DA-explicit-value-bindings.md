@@ -17,7 +17,7 @@ Checks compare the current tree only. The feature stores no prior fingerprint, r
 
 ## 3. Why
 
-Backticks and the exact adjacency grammar record author intent without guessing which nearby token belongs to a citation. Keeping unbackticked prose ordinary preserves byte-identical behavior until a kind and a use both opt in. Keeping the binding citation in the graph prevents a second resolution model from disagreeing with `check`, queries, workspaces, or the LSP.
+Backticks and the exact adjacency grammar record author intent without guessing which nearby token belongs to a citation, unlike the comment checkers that infer claims from prose ([§REL-comment-code-consistency](../../related-work/REL-comment-code-consistency.md#rel-comment-code-consistency-comment-code-consistency-claims-inferred-from-comments)). Keeping unbackticked prose ordinary preserves byte-identical behavior until a kind and a use both opt in. Keeping the binding citation in the graph prevents a second resolution model from disagreeing with `check`, queries, workspaces, or the LSP.
 
 Home JSON already gives code and prose one readable source. Code generation would create a second artifact whose freshness must be managed, while history would change a deterministic current-tree check into a stateful database. Neither is needed to catch the reported mismatch.
 
