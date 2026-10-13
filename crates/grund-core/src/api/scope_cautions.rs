@@ -106,7 +106,7 @@ fn handed_a_hidden_file(config: &Config, path: &Path, path_provided: bool) -> bo
 /// warning — it never changes the exit code. Which of the three messages it
 /// carries is a question about *why* nothing was read, so the hidden file is
 /// asked first: it was skipped before either of the arms below could decide.
-fn empty_scan_warning(config: &Config, path: &Path, path_provided: bool) -> Diagnostic {
+pub(super) fn empty_scan_warning(config: &Config, path: &Path, path_provided: bool) -> Diagnostic {
     // `grund`, `grund check .`, and `grund check <repo-root>` all walk `[scan] include`
     // relative to the config root — so the "looked under include" message is the
     // accurate one whenever the requested path *is* that root, not just when the
@@ -249,39 +249,4 @@ fn display_lexical_scope(config: &Config, path: &Path) -> String {
         }
     }
     display_path(config, path)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::empty_scan_warning;
-    use crate::config::{Config, load_config_at};
-    use crate::testing::{test_root, write};
-
-    /// A project at `name` whose `[scan] extensions` is `extensions`, holding a
-    /// hidden `.notes.txt`, loaded from its own `grund.toml`.
-    fn hidden_notes_project(name: &str, extensions: &str) -> Config {
-        let root = test_root(name);
-        write(
-            &root.join("grund.toml"),
-            &format!("[scan]\nextensions = [{extensions}]\n"),
-        );
-        write(&root.join(".notes.txt"), "# Notes\n");
-        load_config_at(&root, &root).expect("load the project")
-    }
-
-    /// §FS-check.2.2.2, §AR-scanner.1.13: the hidden-file message is the read
-    /// predicate's answer, so it follows the extension list the run was given: a
-    /// hidden `.txt` file is named hidden once `txt` is listed, and keeps the
-    /// extension message, the second of its two reasons, while it is not.
-    #[test]
-    fn the_handed_hidden_file_branch_asks_the_read_predicate() {
-        let unlisted = hidden_notes_project("hidden_file_branch_unlisted", "\"md\"");
-        let hidden = unlisted.root.join(".notes.txt");
-        let message = empty_scan_warning(&unlisted, &hidden, true).message;
-        assert!(message.contains("matched grund's extensions"), "{message}");
-        let listed = hidden_notes_project("hidden_file_branch_listed", "\"md\", \"txt\"");
-        let hidden = listed.root.join(".notes.txt");
-        let message = empty_scan_warning(&listed, &hidden, true).message;
-        assert!(message.contains("is a hidden file"), "{message}");
-    }
 }

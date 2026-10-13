@@ -1,5 +1,5 @@
 //! A configured file root the walk did not read because its extension is unlisted
-//! (§FS-scan.scope.extensions.root): recorded by the walk's root gate with the row
+//! (§FS-scan.checks.unread-scan-root): recorded by the walk's root gate with the row
 //! that made the file a root (§AR-scanner.1.6), so the report names the row without
 //! asking the extension list again (§AR-scanner.1.13). Only `check` reads it
 //! (§FS-scan.checks.unread-scan-root.scope).
