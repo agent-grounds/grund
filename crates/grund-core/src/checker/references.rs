@@ -214,9 +214,10 @@ pub(super) fn check_citation_resolution(
         {
             continue;
         }
-        // §FS-citations.checks.mixed-path: grund before 0.18.0 skipped a citation of a
-        // name under a number, so what it newly fails warns until the window closes.
+        // §FS-citations.checks.mixed-path: grund before 0.18.0 skipped a marked citation
+        // of a name under a number, so what it newly fails warns until the window closes.
         let mixed = tier == ReferenceTier::Configured
+            && cite.has_marker
             && cite.section.as_deref().is_some_and(name_under_number);
         // §FS-check.3.1 / §FS-workspace.4.1: a citation whose ID is declared
         // nowhere in its target namespace is dangling.
