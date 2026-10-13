@@ -185,20 +185,33 @@ a run from `<dir>` sees (#621). No row of scope remains open.
 The requirement is proved by asking every surface each question on one tree, and each
 equivalence on both of its inputs, through each surface's own entrypoint, and by checking
 each answer against the point that defines it as well, because two surfaces wrong alike
-agree. `crates/grund-cli/tests/command_agreement.rs` is that comparison, seeded thin so
-that the gate it runs in does not grow unpaid: it asks the command line's surfaces
+agree. `crates/grund-cli/tests/command_agreement.rs` is that comparison. The control
+baseline entering S4 was seeded thin so that its gate did not grow unpaid: it asked
+the command line's surfaces
 over the reproduced rows of the ledger behind this list, one tree per row of
 [§REQ-one-answer.differences](REQ-one-answer.md#differences-the-differences-known-when-this-requirement-landed) the command line can show, and the first plain project of a fixed
-set of end-to-end families, and its divergence ledger fails on a divergence it does not
+set of end-to-end families. Its retained divergence ledger fails on a divergence it does not
 list and on a row that no longer reproduces. A row only the editor, shell completion or
 an unsaved buffer shows is deferred there by name, with the step that builds its harness.
-Until it drives the editor and the bindings itself,
-`tests/integration/lsp_cli_parity.rs` compares the editor's diagnostics with `check`'s over
+The enabled `agreement_acceptance::s4_executes_the_complete_corpus_matrix` now drives
+the candidate corpus materializer and CLI/editor/Python/Node entrypoints. Completed
+receipts identify original cases, variants, requests, answers, source-byte witnesses,
+reviewed manifest goldens and individually validated applicability. Execution and
+paid timing must be established before discharging S4; the control baseline above
+is not a claim of delivered candidate coverage.
+
+No engine sweep has been removed. `tests/integration/lsp_cli_parity.rs` still compares
+the real editor server's diagnostics with `check`'s over
 the end-to-end corpus ([§REQ-one-answer.text.parity](REQ-one-answer.md#textparity-the-editor-answers-as-the-command-line-does)) and
 `crates/grund-cli/tests/stub_resolution_agreement.rs` the stub answers of every surface
 ([§REQ-one-answer.stubs](REQ-one-answer.md#stubs-what-a-stub-answers)), and `crates/grund-cli/tests/kind_verdict_agreement.rs` asks every
 kind-taking surface about one name on one tree ([§REQ-one-answer.identity.kinds](REQ-one-answer.md#identitykinds-every-command-reads-one-kind-verdict),
-[§REQ-one-answer.sections.named](REQ-one-answer.md#sectionsnamed-every-command-reads-a-kinds-named-sections-under-its-own-project)); a section none of the four compares is held by review.
+[§REQ-one-answer.sections.named](REQ-one-answer.md#sectionsnamed-every-command-reads-a-kinds-named-sections-under-its-own-project)). Real-server URI/range/code/severity/message
+delivery, both workspace warnings and plural/singular/zero hover wording remain
+transport assertions there. Independent completeness of generic source-site witnesses,
+unrepresented equivalences and paid gate timing remain review obligations until the
+execution and timing receipts establish them; matching host envelopes alone is no
+independent truth about an omitted answer.
 
 Every row of every ledger behind the list carries a ruling in the sense of
 [§REQ-one-answer.differences](REQ-one-answer.md#differences-the-differences-known-when-this-requirement-landed): the migration rows of `tests/integration/citation_ledger.toml`, the
