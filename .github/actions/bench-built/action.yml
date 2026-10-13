@@ -1,0 +1,12 @@
+# §AR-ci.5: a shard measures the build job's binaries and builds nothing of its own, checked
+# rather than assumed. Shared by ci.yml's shards and bench-nightly.yml's, after their runs.
+name: Check the shard measured the build job's binary
+description: Fail, naming both digests, when the shard's target/release/grund differs from the one the build job built.
+runs:
+  using: composite
+  steps:
+    - name: The head binary is the build job's
+      shell: bash
+      run: |
+        built=$(cat bench-bin/head-grund.sha256) measured=$(sha256sum target/release/grund | cut -d' ' -f1)
+        [ "$built" = "$measured" ] || { echo "target/release/grund was rebuilt: built $built, measured $measured"; exit 1; }

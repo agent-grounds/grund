@@ -43,6 +43,7 @@ jobs:
           cargo build --profile bench -p grund-py --features extension-module --locked --quiet
           mkdir -p bench-bin
           tar -cf bench-bin/target.tar --exclude=target/release/incremental target/release
+          sha256sum target/release/grund | cut -d' ' -f1 > bench-bin/head-grund.sha256
 
       - uses: actions/upload-artifact@v4
         with:
@@ -86,6 +87,9 @@ jobs:
         run: |
           cargo bench -p grund --features bench --locked --quiet --bench instructions -- --save-summary=json
           python3 scripts/bench_record.py record --environment ci --tier nightly --out "$RECORDS/nightly-${{ matrix.shard }}.json"
+
+      # §AR-ci.5: the harness measured the build job's binary; a shard that rebuilt it fails.
+      - uses: ./.github/actions/bench-built
 
       - name: Upload this shard's partial record
         if: always()
