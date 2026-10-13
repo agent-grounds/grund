@@ -151,5 +151,6 @@ The rulings the one-answer work is built from, one record per step family, each 
 - [§DF-one-answer-rulings-grammar](DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary) — one grammar keeps the documented refusal bytes and order, and one kind universe keeps each command's vocabulary
 - [§DF-one-kind-verdict](DF-one-kind-verdict.md#df-one-kind-verdict-every-command-reads-one-kind-verdict-in-its-own-scope-and-refuses-a-rule-sentence-for-the-first-stage-it-fails) — every command reads one kind verdict in its own scope, and refuses a rule sentence for the first stage it fails
 - [§DF-unread-scan-root](DF-unread-scan-root.md#df-unread-scan-root-a-configured-file-root-whose-extension-is-unlisted-is-named-not-read) — a configured file root whose extension is unlisted is named, not read
+- [§DF-unread-hidden-root](DF-unread-hidden-root.md#df-unread-hidden-root-a-configured-file-root-with-a-hidden-name-is-named-not-read) — a configured file root with a hidden name is named, not read
 
 This index is navigational — citations should target the decision ID directly, never this file.

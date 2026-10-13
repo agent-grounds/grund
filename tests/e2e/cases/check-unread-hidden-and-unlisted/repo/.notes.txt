@@ -1,0 +1,3 @@
+# TXT-a: A note
+
+See §GOAL-ghost2.

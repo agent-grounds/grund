@@ -1,0 +1,15 @@
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "GOAL"
+file = "docs/goals.md"
+
+[[kinds]]
+kind = "HOOKS"
+citable = false
+file = ".pre-commit-config.yaml"
+
+[scan]
+include = ["docs"]
+extensions = ["md"]

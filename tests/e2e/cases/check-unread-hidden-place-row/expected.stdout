@@ -1,0 +1,1 @@
+grund.toml:11: warning: [[kinds]] HOOKS home `.pre-commit-config.yaml` is not read — its name begins with `.`, and `yaml` is not in [scan] extensions, so nothing in it is checked. Rename the file to a name that is not hidden and an extension the list holds, or set `scan = false` on the row if it only lists a place.

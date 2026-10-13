@@ -4,8 +4,8 @@
 //! distinction the gate turns on: a root that *is* an outward link is refused,
 //! a root written *below* one is canonicalized before the walk begins and is
 //! ordinary scope (§DF-undeclared-blind-spots). The gate also records a file root
-//! the extension filter refuses, with its row, for `check` to name
-//! (§FS-scan.checks.unread-scan-root).
+//! the extension filter or the hidden-file rule refuses, with its row, for `check`
+//! to name (§FS-scan.checks.unread-scan-root).
 
 use crate::model::RootOrigin;
 use crate::testing::{
@@ -202,17 +202,75 @@ fn a_directory_root_is_not_recorded() {
     );
 }
 
-/// §FS-scan.checks.unread-scan-root.silent: a hidden-named root is the declared
-/// blind spot of §FS-scan.scope.hidden; the hidden rule is asked first, so a name
-/// both hidden and unlisted is not recorded.
+/// §FS-scan.scope.hidden: a file root whose own name is hidden is not read, and the
+/// gate records it with its row like an extension refusal (§AR-scanner.1.13), whether
+/// a `[[kinds]]` home or an `include` entry named it (§FS-scan.checks.unread-scan-root).
 #[test]
-fn a_hidden_named_root_is_not_recorded() {
-    let config = unread_root_project("a_hidden_named_root_is_not_recorded", ".notes.txt", "docs");
+fn a_hidden_named_root_is_recorded_with_its_row() {
+    let config = unread_root_project(
+        "a_hidden_named_root_is_recorded_with_its_row",
+        ".notes.md",
+        ".extra.md",
+    );
+    write(&config.root.join(".notes.md"), "TXT-a\n");
+    write(&config.root.join(".extra.md"), "extra\n");
+    let (findings, _) = scan_tree(&config, None, false).expect("scan");
+    let rows: Vec<_> = findings
+        .unread_roots
+        .iter()
+        .map(|row| (row.origin.clone(), row.written.as_str(), row.line))
+        .collect();
+    let home = RootOrigin::Home {
+        kind: "TXT".into(),
+        citable: true,
+    };
+    assert_eq!(
+        rows,
+        vec![
+            (RootOrigin::Include, ".extra.md", 9),
+            (home, ".notes.md", 6)
+        ],
+        "§FS-scan.scope.hidden: a hidden file root is named at its row"
+    );
+}
+
+/// §DF-unread-hidden-root.2.1: a root both hidden and unlisted is one unread root, so
+/// the gate records it once rather than once per rule that refuses it.
+#[test]
+fn a_root_both_hidden_and_unlisted_is_recorded_once() {
+    let config = unread_root_project(
+        "a_root_both_hidden_and_unlisted_is_recorded_once",
+        ".notes.txt",
+        "docs",
+    );
     write(&config.root.join(".notes.txt"), "TXT-a\n");
+    let (findings, _) = scan_tree(&config, None, false).expect("scan");
+    let rows: Vec<_> = findings
+        .unread_roots
+        .iter()
+        .map(|row| (row.written.as_str(), row.line))
+        .collect();
+    assert_eq!(
+        rows,
+        vec![(".notes.txt", 6)],
+        "§FS-scan.checks.unread-scan-root: one record for one root"
+    );
+}
+
+/// §FS-scan.checks.unread-scan-root.silent: a dotfile inside a directory root was
+/// named by nothing in the configuration, so the gate records nothing for it.
+#[test]
+fn a_dotfile_inside_a_directory_root_is_not_recorded() {
+    let config = unread_root_project(
+        "a_dotfile_inside_a_directory_root_is_not_recorded",
+        "notes.md",
+        "docs",
+    );
+    write(&config.root.join("docs/.notes.md"), "TXT-a\n");
     let (findings, _) = scan_tree(&config, None, false).expect("scan");
     assert!(
         findings.unread_roots.is_empty(),
-        "§FS-scan.scope.hidden is asked first"
+        "§FS-scan.checks.unread-scan-root.silent"
     );
 }
 

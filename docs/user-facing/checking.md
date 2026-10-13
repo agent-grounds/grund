@@ -53,16 +53,20 @@ global location order, so a clean `grund check --format=json` prints nothing.
 Some warnings are about what the run did not read rather than what it found.
 A file the configuration names as a scan root — a `[[kinds]]` `file` home, a
 version-2 `files` entry, or an `[scan] include` entry that is a file — is read
-only if `[scan] extensions` lists its extension. When it does not, the file stays
-unread and `check` says so at the line of the key that named it, keeping the exit
-code at 0 and withholding `success`:
+only if `[scan] extensions` lists its extension and its name does not begin with
+`.`. When either rule keeps it out, the file stays unread and `check` says so at
+the line of the key that named it, keeping the exit code at 0 and withholding
+`success`:
 
 ```text
 grund.toml:10: warning: [[kinds]] TXT home `notes.txt` is not read — `txt` is not in [scan] extensions, so nothing in it is checked. Add "txt" to [scan] extensions, or give the file an extension the list holds.
+grund.toml:10: warning: [[kinds]] NOTE home `.notes.md` is not read — its name begins with `.`, and grund reads no hidden file, so nothing in it is checked. Rename the file to a name that is not hidden.
 ```
 
-List the extension, or give the file one the list holds; a row that names the file
-only as a place in the Project map says so with `scan = false`. `--ignore
+List the extension, or give the file one the list holds; grund reads no hidden
+file, so a dotfile is renamed rather than listed, and a file refused by both
+rules gets one warning naming both. A row that names the file only as a place in
+the Project map says so with `scan = false`. `--ignore
 unread-scan-root` drops the warning
 ([§FS-scan.checks.unread-scan-root](../functional-spec/FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read)).
 

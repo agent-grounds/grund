@@ -1,0 +1,10 @@
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "GOAL"
+file = "docs/goals.md"
+
+[[kinds]]
+kind = "NOTE"
+file = ".notes.md"
