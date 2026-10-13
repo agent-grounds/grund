@@ -381,9 +381,9 @@ CI carries a cheap floor on [§GOAL-fast-feedback](../goals.md#goal-fast-feedbac
 
 ## 5. Benchmark job
 
-A separate `bench` job runs the instruction-counting harness ([§AR-benchmarks](AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands)). Because the harness runs `grund` under Callgrind, the job first installs `valgrind` and `cargo install`s `iai-callgrind-runner` pinned to the same version as the `iai-callgrind` dev-dependency. It runs on one representative platform (the harness measures instruction counts, not cross-platform behavior — [§AR-ci.2](AR-ci.md#2-platform-scope)'s reasoning applies) and on every push and pull request, so the numbers are recorded per commit.
+Three jobs run the instruction-counting harness ([§AR-benchmarks](AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands)) on a pull request or a push. The **build job**, `bench-build`, builds every binary the shards measure, once: on a pull request the base commit's `grund` and the head's `grund` and `grund-lsp`, on a push the head's, each with the profile `cargo bench` builds, and it uploads them as one artifact. The **shard job**, `bench`, is a matrix over `shard: [1, …, n]`, where `n` is the catalog's `shards` ([§AR-benchmarks.1.2.2](AR-benchmarks.md#122-shards)); it `needs:` the build job, downloads its binaries, builds none of them again, and runs the harness on its shard with `GRUND_BENCH_SHARD=<shard>/<n>`. The **record job**, `bench-record`, `needs:` the shards, merges their partial records into one record per revision ([§AR-benchmarks.7.1.1](AR-benchmarks.md#711-one-record-per-revision-merged-from-its-shards)) and prints the comparison of the merged base and head to the job summary; a merge that refuses fails it. Because the harness runs `grund` under Callgrind, each shard first installs `valgrind` and `cargo install`s `iai-callgrind-runner` pinned to the same version as the `iai-callgrind` dev-dependency. It runs on one representative platform (the harness measures instruction counts, not cross-platform behavior — [§AR-ci.2](AR-ci.md#2-platform-scope)'s reasoning applies) and on every push and pull request, so the numbers are recorded per commit.
 
-Everything the count depends on is pinned in this job, and only in this job, so two counts recorded months apart were taken in one named environment:
+Everything the count depends on is pinned in these jobs, and only in them, so two counts recorded months apart were taken in one named environment. The build job and every shard carry the same container image and the same job `env:`, because a binary built under one pin and measured under another is a count of neither; Valgrind and the runner are installed in the shards, which run them:
 
 - it runs in `container: rust:<release>-bookworm@sha256:<digest>`, an image named by its digest, which fixes the Rust compiler and the C library together;
 - it runs that container with `--security-opt seccomp=unconfined`, because iai-callgrind starts Valgrind under `setarch -R` to turn ASLR off and Docker's default seccomp profile refuses that call, so every Callgrind run would exit 1; the option is scoped to this one job's container;
@@ -392,13 +392,13 @@ Everything the count depends on is pinned in this job, and only in this job, so 
 - it sets `LC_ALL=C.UTF-8`, `TZ=UTC`, `RAYON_NUM_THREADS=4`, `CARGO_INCREMENTAL=0` and an empty `RUSTFLAGS` for the whole job;
 - it has no `@stable` toolchain step: the image's compiler is the one it builds with. The test jobs keep tracking stable.
 
-The cargo cache key of this job carries the image digest, so a `target/` another compiler built is never restored into it. Every identity field the run record carries ([§AR-benchmarks.7](AR-benchmarks.md#7-the-run-record-and-its-series)) is read from this environment.
+The cargo cache key of each of these jobs carries the image digest, so a `target/` another compiler built is never restored into it. Every identity field the run record carries ([§AR-benchmarks.7](AR-benchmarks.md#7-the-run-record-and-its-series)) is read from this environment.
 
 ### 5.1 Pull requests and pushes
 
-On pull requests, base and head are measured by the pull request's own harness on one fixture bundle ([§AR-benchmarks.5](AR-benchmarks.md#5-comparing-two-revisions)); only the base *binary* comes from the base branch. The job builds the base commit's `grund` binary, and nothing else, with the profile `cargo bench` builds, and keeps it outside `target/`. It checks out the pull request again and runs `cargo bench -p grund --features bench --locked --quiet --bench instructions -- --save-baseline=main --save-summary=json` with `GRUND_BENCH_BIN` naming the base binary, then the same harness on the pull request's own binary with `-- --baseline=main --save-summary=json`. Each run writes a run record, and the job summary prints the comparison of the two. A scenario the base binary refuses is not a failure: it is reported as `no base, not compared`, the head run still measures it, and only a scenario both binaries ran can fail the job on its relative limit ([§AR-benchmarks.5.1](AR-benchmarks.md#51-a-scenario-the-base-binary-refuses)); a scenario with no base is still held to its ceiling ([§AR-benchmarks.5.2](AR-benchmarks.md#52-a-scenario-with-no-base)).
+On pull requests, base and head are measured by the pull request's own harness on one fixture bundle ([§AR-benchmarks.5](AR-benchmarks.md#5-comparing-two-revisions)); only the base *binary* comes from the base branch. The build job builds the base commit's `grund` binary, and nothing else, with the profile `cargo bench` builds, and keeps it outside `target/`. Each shard, on its own rows, runs `cargo bench -p grund --features bench --locked --quiet --bench instructions -- --save-baseline=main --save-summary=json` with `GRUND_BENCH_BIN` naming the base binary, then the same harness on the pull request's own binary with `-- --baseline=main --save-summary=json`. Each run writes a partial run record, and the record job prints the comparison of the merged two. A scenario the base binary refuses is not a failure: it is reported as `no base, not compared`, the head run still measures it, and only a scenario both binaries ran can fail the job on its relative limit ([§AR-benchmarks.5.1](AR-benchmarks.md#51-a-scenario-the-base-binary-refuses)); a scenario with no base is still held to its ceiling ([§AR-benchmarks.5.2](AR-benchmarks.md#52-a-scenario-with-no-base)).
 
-On pushes to `main`, the job runs the suite twice on the same binary, writes a run record for each, and fails when a scenario's two counts differ by more than the same-binary bound of [§AR-benchmarks.7.3](AR-benchmarks.md#73-the-same-binary-bound). If that check ever fails on an unchanged binary, it is reported as a flaky test, with the labels `bug` and `flaky-test`. A push compares against nothing else. The job does not run on a merge-queue group ([§AR-ci.12](AR-ci.md#12-a-merge-queue-lands-every-pull-request)): the pull request already compared, and the push the queue makes to `main` records.
+On pushes to `main`, each shard runs its rows twice on the same binary, writes a partial record for each, and fails when a scenario's two counts differ by more than the same-binary bound of [§AR-benchmarks.7.3](AR-benchmarks.md#73-the-same-binary-bound). If that check ever fails on an unchanged binary, it is reported as a flaky test, with the labels `bug` and `flaky-test`. A push compares against nothing else. None of the three jobs runs on a merge-queue group ([§AR-ci.12](AR-ci.md#12-a-merge-queue-lands-every-pull-request)): the pull request already compared, and the push the queue makes to `main` records.
 
 ### 5.2 Regression limits
 
@@ -419,6 +419,10 @@ The job first deletes `target/iai`, which the cache restores from another commit
 ### 5.3 The `bench` feature
 
 The harness body is gated behind the `bench` Cargo feature, so the regular build and test matrix compiles only a no-op bench target and stays free of the Valgrind dependency — only this job needs it; that gate is also why [§AR-ci.1](AR-ci.md#1-pre-commit-is-the-source-of-truth)'s "CI installs hook prerequisites" pattern is followed here as a dedicated job rather than folded into the test matrix.
+
+### 5.4 The nightly tier
+
+`.github/workflows/bench-nightly.yml` runs the `nightly` tier of [§AR-benchmarks.1.2.1](AR-benchmarks.md#121-two-tiers): every row of both tiers, with `GRUND_BENCH_TIER=nightly`, on `main`'s head, in the pinned environment of section 5, against the absolute ceilings alone, since there is no base to compare with. It may split the rows into shards the way the pull-request tier does, and it writes one run record by the same merge ([§AR-benchmarks.7.1.1](AR-benchmarks.md#711-one-record-per-revision-merged-from-its-shards)), with `tier: nightly`. It runs on a `schedule:` once a day, on `workflow_dispatch:`, and on `workflow_call:`, and `pre-release-checks.yml` calls it, so the whole catalog has passed its ceilings before a release ships. It is no required check of a pull request: a ceiling a nightly row crosses is fixed by a change of its own.
 
 ## 6. PGO stays out of development CI
 
@@ -547,7 +551,7 @@ Beside push, pull request and merge-queue group ([§AR-ci.12](AR-ci.md#12-a-merg
 
 `main` takes a pull request only through GitHub's merge queue. The queue tests each pull request on `main` together with every pull request queued ahead of it, under the checks a pull request must pass — the `cargo test` legs of Ubuntu and Windows, each the aggregate of its operating system's jobs ([§AR-ci.13.2](AR-ci.md#132-the-required-check-is-an-aggregate)) — and lands exactly the commit it tested, so nothing reaches `main` that CI has not passed, as [§FS-distribution.4.4.1](../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed) holds the release helpers to. That is why no pull request has to be current with `main` itself, and the up-to-date requirement is off: a pull request that went green on an older `main` is not rebased and run again for every merge ahead of it. The requirement is not merely dropped, because in this repository two pull requests that are each green often fail together — one moves a point the other still cites, and only their combination is red. The queue meets that combination on its own ref, before `main`; the requirement switched off without a queue would let it land, and `main` would go red on a commit no run had judged ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)).
 
-The workflow runs on `merge_group` for the queue. The test matrix runs there as it does on a push, and the commit-message job scans the group's `base_sha..head_sha` ([§AR-ci.8.2](AR-ci.md#82-the-scanned-range)). The benchmark job does not run: on a pull request it compares against the base branch, and on a push to `main` it records counts ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)), and the queue's push to `main` still runs it. That push run stays the record of `main`. `tests/integration/test_merge_queue_runs.py` holds the trigger and both jobs to this.
+The workflow runs on `merge_group` for the queue. The test matrix runs there as it does on a push, and the commit-message job scans the group's `base_sha..head_sha` ([§AR-ci.8.2](AR-ci.md#82-the-scanned-range)). The three benchmark jobs, the build job, the shards and the record job, do not run: on a pull request they compare against the base branch, and on a push to `main` they record counts ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)), and the queue's push to `main` still runs them. That push run stays the record of `main`. `tests/integration/test_merge_queue_runs.py` holds the trigger and the jobs to this.
 
 ## 13. Each operating system's suites run as parallel jobs
 
@@ -582,8 +586,11 @@ acceptance a second time.
 Ubuntu and Windows each keep one job named `cargo test (<os>)`, the name the
 ruleset requires and the merge queue waits for, so neither changes. It runs no
 suite of its own. It `needs:` every job that runs a command of [§AR-ci.13.1](AR-ci.md#131-one-job-per-language) on
-its operating system — on Ubuntu, the pre-commit job too, and the bench job, so
-that the limits of [§AR-ci.5.2](AR-ci.md#52-regression-limits) hold a merge — and no job of another. That is why the language jobs are a job per operating system rather
+its operating system — on Ubuntu, the pre-commit job too, and the three benchmark
+jobs of [§AR-ci.5](AR-ci.md#5-benchmark-job), so that the limits of [§AR-ci.5.2](AR-ci.md#52-regression-limits) hold a merge on every shard —
+and no job of another. The shard job is a matrix over shards, not operating systems:
+every leg runs on Ubuntu, so its result, all its legs together, is exactly "every
+shard passed". That is why the language jobs are a job per operating system rather
 than a matrix: a matrix job's result, as a job needing it reads it, is all its
 legs' results together, so an aggregate needing one would judge every operating
 system's suites and wait for all of them.
@@ -592,8 +599,8 @@ It passes only when every job it needs succeeded. Its `if:` is `always()`,
 because a job whose need failed is otherwise skipped, and a skipped required
 check counts as passed; its step then fails on any result other than
 `success`, so a need that failed, was cancelled or was skipped fails it. The one
-exception is the bench job's skip in a merge-queue group, where that job never
-runs ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)): the Ubuntu check accepts it there and nowhere else. It runs
+exception is the benchmark jobs' skip in a merge-queue group, where they never
+run ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)): the Ubuntu check accepts each one's skip there and nowhere else. It runs
 on `ubuntu-latest` whichever operating system it judges.
 
 ### 13.3 Every hook runs once
@@ -623,7 +630,9 @@ target's cache of [§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build
 `tests/integration/test_ci_language_jobs.py` reads `ci.yml` as text, expands
 each `matrix.os` list, and holds the workflow to [§AR-ci.13.1](AR-ci.md#131-one-job-per-language), [§AR-ci.13.2](AR-ci.md#132-the-required-check-is-an-aggregate) and
 [§AR-ci.13.4](AR-ci.md#134-cache-keys-are-per-job); it runs its checks against fixture workflows too, so a check that
-can no longer fail is caught.
+can no longer fail is caught. `tests/integration/test_bench_tier_ci.py` holds the
+benchmark jobs' shape: the build job, a shard matrix of the catalog's `shards`
+legs, the record job, the aggregate needing all three, and their pins.
 
 ### 13.6 Only a push to main saves a cache
 
