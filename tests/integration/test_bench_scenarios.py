@@ -135,6 +135,10 @@ class EveryRowHasALimitAndACeiling(unittest.TestCase):
                 self.assertGreaterEqual(ceiling, floor,
                                         "the ceiling sits less than one relative limit above "
                                         "the count it was set from")
+                margin = math.ceil(source["ir"] * (1 + 2 * row["limit_pct"] / 100) / 1e6)
+                self.assertEqual(margin * 1_000_000, ceiling,
+                                 "the ceiling is not two relative limits above the count it "
+                                 "was set from, rounded up to a whole million")
 
 
 class TheHarnessIsGeneratedFromTheCatalog(unittest.TestCase):
