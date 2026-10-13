@@ -211,6 +211,91 @@ refuses a row that names neither, a difference row that cites no record, and a s
 names, without reaching the forge: a step is live because it is listed, and the change that
 closes a step deletes its entry.
 
+### proof.matrix: The complete comparison matrix
+
+S4 completes the comparison over **every case** discovered under `tests/e2e/cases/`,
+not just the first plain project of selected families. Each original case maps to
+executed evidence or an explicit, justified inapplicability. Discovery includes
+`.agents`-only, nested and absent configurations, no-input-repository creation and
+refusal cases, command cwd/path/stdin context and symlink manifests. `expected.repo/`
+is a result oracle, not an additional input. Deduplication preserves all of those
+semantics and maps every original case to its execution; byte equality alone is
+insufficient. Mutating `fmt` questions use independent copies.
+
+For each applicable input, execute whole-tree, narrowed, explicit path-argument and
+editor-overlay variants. Ask each answering surface its applicable questions:
+declaration sites and kind verdicts, sections and ambiguity, citations and resolution,
+stub targets/sites, bodies and spans, scope/refusals/warnings and written anchors.
+The surfaces include CLI `check`, direct and batch `show`, `refs`, `list` and
+`list --size`, `cover` and `cover --lines`, `fmt`, the core editor snapshot and the
+actual Python and Node packages built from the same source. Host conversion checked
+against a Rust oracle does not replace either host's execution.
+
+Compare facts on their common domain: `cover` bounds its scan
+([§FS-scan.path.cover](../functional-spec/FS-scan.md#pathcover-cover-runs-one-narrowed-scan)),
+while `check` bounds its report
+([§FS-scan.path.check](../functional-spec/FS-scan.md#pathcheck-check-reads-more-than-it-reports)).
+CLI and bindings compare isolated saved edits; the editor compares the equivalent
+held edit, without adding public buffer parameters
+([§REQ-one-answer.contract](REQ-one-answer.md#contract-one-question-one-tree-one-answer)).
+Record the reason and defining point for each inapplicable case/variant/question/surface
+cell, and assert its applicability accounting. An observed refusal is an answer,
+not permission to discard the case. Root-config filters, blanket skips and swallowed
+refusals cannot discharge this matrix.
+
+### proof.evidence: Execution and independent truth
+
+The executable acceptance observes completed entrypoint calls and their inputs and
+results, not source strings, deleted debt labels or counts reported by the comparison
+itself. Evidence identifies the original case, materialized tree, cwd/path/config and
+symlink context, variant, question, surface and expected fact. It accounts for every
+discovered case as the corpus grows, without freezing today's case count as a cap.
+
+Surface agreement is accompanied by independent, defining-point expectations:
+reviewed corpus exit/stdout/stderr/result-tree goldens and explicit question-specific
+fixture facts. A second engine call, equality of `list` and `list --size`, an absent
+golden treated as an empty answer or regenerated expectations cannot prove truth.
+Each compared question needs its own expected fact or a justified applicability
+decision; one unrelated golden cannot stand for all answers on a tree.
+
+Keep positive controls, unlisted and stale divergence rejection and requirement-row
+accounting. Existing ruled differences remain outside the contract until closed;
+newly observed pre-existing differences require an amendment naming the baseline,
+and differences introduced by the widening must be fixed
+([§REQ-one-answer.differences](REQ-one-answer.md#differences-the-differences-known-when-this-requirement-landed)).
+
+### proof.transport: The editor wire remains a separate proof
+
+The widened core snapshot comparison can replace duplicated engine sweeps only once
+equivalent coverage is demonstrated. `tests/integration/lsp_cli_parity.rs` (or an
+explicitly documented transport replacement) continues to launch the real server
+and assert published diagnostics, URI/path and range/line conversion, diagnostic
+code, severity and message, both workspace-warning shapes and actual hover usage
+wording for plural, singular and zero counts. Core snapshot equality proves none of
+those wire behaviors
+([§FS-lsp.1.1.3](../functional-spec/FS-lsp.md#113-workspace-warnings-on-the-runs-warning-channel),
+[§FS-lsp.1.2.5](../functional-spec/FS-lsp.md#125-what-a-whole-id-title-counts),
+[§FS-lsp.4](../functional-spec/FS-lsp.md#4-determinism-and-parity-with-the-cli)).
+
+### proof.delivery: Paid widening and honest closure
+
+S4 closes only after the complete matrix executes: empty `WIDENING`, remove S4's
+live entry and every operational dependent row, and retain offline ledger integrity
+checks. Synthetic parser literals are not operational debt. Repointing debt does
+not complete it. Until then the thin-seed accounting above remains the baseline;
+the ignored acceptance test is forced red before implementation, then enabled by
+the implementation. On delivery, replace the baseline description with the executed
+coverage and name any remaining obligations held only by review.
+
+The delivery records fixed control/candidate SHAs, repeated comparable runner/cache/
+toolchain/build samples, raw CI job timings and URLs, and added/removed seconds and
+net delta for each affected gate, including native builds and host startup. Pay for
+growth within that gate: savings in another parallel job, one warm local run or merely
+staying under fifteen minutes do not establish payment
+([AR-ci.requirements.1](../architecture/AR-ci.md#requirements1-every-gate-averages-at-most-fifteen-minutes--directional)).
+Distinguish paired experimental evidence from the eight-run rolling main measurement;
+unrelated baseline drift does not expand this change's scope.
+
 ## why: Why this exists
 
 Each of these promises used to live inside the command or the finding that met it first,

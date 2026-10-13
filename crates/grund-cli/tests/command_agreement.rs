@@ -24,8 +24,12 @@
 //! is added there by an amendment naming its baseline, or kept as a ledger-only row
 //! with its reason (the list rule of §REQ-one-answer); it is never kept in this file alone.
 
+#[path = "support/agreement_acceptance.rs"]
+mod agreement_acceptance;
 #[path = "support/agreement_buffers.rs"]
 mod agreement_buffers;
+#[path = "support/agreement_evidence.rs"]
+mod agreement_evidence;
 #[path = "support/agreement_identity.rs"]
 mod agreement_identity;
 #[path = "support/agreement_sections.rs"]
