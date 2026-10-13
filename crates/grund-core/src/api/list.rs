@@ -18,7 +18,6 @@ use crate::queries::{
     ListCitationCounts, ListNarrowing, Owner, check_list_scope, require_unique_literal,
 };
 use crate::resolver::{WorkspaceProject, load_workspace_context};
-use crate::rules::sentence::RuleSubject;
 
 use super::report::context_run_warnings;
 use crate::scanner::api_scan_error;
@@ -178,28 +177,18 @@ fn list_run(
 
     // Validate the selector against the selected catalog before producing any
     // rows. Kind selectors may span workspace members; an exact literal must
-    // resolve once, just as a rule subject does (§FS-rules.2, §FS-rules.8).
-    if let Some(subject) = &selector {
-        let resolution = match subject {
-            RuleSubject::ExactDeclaration(literal) => Some((
-                literal.clone(),
-                entries
-                    .iter()
-                    .filter(|entry| render_id(&entry.project_config.grammar, entry.id) == *literal)
-                    .count(),
-            )),
-            RuleSubject::ExactChapter {
-                declaration,
-                path,
-                separator,
-            } => Some((
-                format!("{declaration}{separator}{path}"),
-                entries
-                    .iter()
-                    .filter(|entry| {
-                        render_id(&entry.project_config.grammar, entry.id) == *declaration
-                    })
-                    .map(|entry| {
+    // resolve once, just as a rule subject does (§FS-rules.8), counted by the
+    // one subject matcher (§AR-rules.2).
+    if let Some(subject) = &selector
+        && let Some(literal) = subject.literal()
+    {
+        let exact_matches = entries
+            .iter()
+            .map(|entry| {
+                let label = render_id(&entry.project_config.grammar, entry.id);
+                let kind = &entry.id.kind;
+                usize::from(subject.selects(kind, &label, None))
+                    + subject.chapter_path(kind, &label).map_or(0, |path| {
                         usize::from(entry.home.sections.contains_key(path))
                             + entry
                                 .home
@@ -208,13 +197,9 @@ fn list_run(
                                 .filter(|(section, _)| section == path)
                                 .count()
                     })
-                    .sum(),
-            )),
-            _ => None,
-        };
-        if let Some((literal, exact_matches)) = resolution {
-            require_unique_literal(&literal, exact_matches)?;
-        }
+            })
+            .sum();
+        require_unique_literal(&literal, exact_matches)?;
     }
 
     let render_qualified = |entry: &Entry<'_>| -> String {
@@ -269,23 +254,17 @@ fn list_run(
                     })
                     .collect(),
             };
+            let label = render_id(&entry.project_config.grammar, entry.id);
             match &selector {
                 None => vec![base()],
-                Some(RuleSubject::Kind(kind)) if kind == &entry.id.kind => {
+                // §FS-rules.8: the one subject matcher (§AR-rules.2) says what a row is.
+                Some(subject) if subject.selects(&entry.id.kind, &label, None) => {
                     vec![base()]
                 }
-                Some(RuleSubject::ExactDeclaration(subject))
-                    if subject == &render_id(&entry.project_config.grammar, entry.id) =>
-                {
-                    vec![base()]
-                }
-                // §FS-rules.2.1: a chapter subject names one whole path, so each
-                // declaration contributes at most the one chapter at it.
+                // A chapter subject names one whole path, so each declaration
+                // contributes at most the one chapter at it (§FS-rules.8).
                 Some(subject) => subject
-                    .chapter_path(
-                        &entry.id.kind,
-                        &render_id(&entry.project_config.grammar, entry.id),
-                    )
+                    .chapter_path(&entry.id.kind, &label)
                     .and_then(|path| entry.home.sections.get_key_value(path))
                     .map(|(section, info)| {
                         let mut row = base();

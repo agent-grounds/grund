@@ -13,8 +13,19 @@
 
 use super::forms::{Form, Refusal, refuse};
 use super::recovery::{Recovered, Suggestion, as_if_enabled, recover};
-use super::{RuleLevel, RulePolarity, RuleSubject, RuleVocabulary};
+use super::{RuleLevel, RulePolarity, RuleSubject, RuleVocabulary, unnamed_component};
 use crate::grammar::{named_section_component, parse_id_arg, render_id};
+
+/// The reason a subject opening with the fixed word in the wrong case is
+/// refused for: the rule's own (§FS-rule-refusals.sentences), which a
+/// selector appends to its literal-subject reason (§FS-rule-refusals.selectors).
+pub(super) const EACH_IS_CASE_SENSITIVE: &str = "fixed word \"Each\" is case-sensitive";
+
+/// What follows a lower-case `each `, where `text` opens with one: the one
+/// test both surfaces read the wrong case with (§FS-rule-refusals.selectors).
+pub(super) fn lower_case_each(text: &str) -> Option<&str> {
+    text.strip_prefix("each ")
+}
 
 /// Which production of a subject failed (§FS-rule-refusals.sentences).
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -116,7 +127,12 @@ impl SubjectRefusal {
             SubjectFault::UnknownKind(kind) => vocabulary.kind_refusal(legacy, kind),
             // §FS-errors.3.8: a selector spelled `KIND` or `KIND.NAME`.
             SubjectFault::IdGrammar if self.spelling == Spelling::Literal => {
-                vocabulary.kind_refusal(legacy, &self.head)
+                let reason = vocabulary.kind_refusal(legacy, &self.head);
+                // §FS-rule-refusals.selectors: `each FS` adds the rule's reason; nothing moves.
+                match lower_case_each(&self.text) {
+                    Some(_) => format!("{reason} — {EACH_IS_CASE_SENSITIVE}"),
+                    None => reason,
+                }
             }
             _ => legacy,
         }
@@ -236,9 +252,7 @@ pub(super) fn parse_subject(
     // §FS-rule-refusals.sentences.chapter-path: the first empty or all-digit component decides;
     // empty is no number.
     if let Some(section) = path
-        && let Some(part) = section
-            .split('.')
-            .find(|part| part.is_empty() || part.bytes().all(|b| b.is_ascii_digit()))
+        && let Some(part) = unnamed_component(section)
     {
         return Err(literal(if part.is_empty() {
             SubjectFault::SectionGrammar(Component::Malformed)

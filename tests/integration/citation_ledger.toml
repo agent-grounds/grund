@@ -144,20 +144,6 @@ owners = [
   "crates/grund-core/src/rules/sentence/targets.rs",
 ]
 
-# Each matches a subject on its own rather than asking the sentence grammar's
-# matcher; S1 gives list --selector, list --size and the engine one.
-[[family.migration]]
-file = "crates/grund-core/src/api/list.rs"
-step = "S1"
-
-[[family.migration]]
-file = "crates/grund-core/src/queries/sizes.rs"
-step = "S1"
-
-[[family.migration]]
-file = "crates/grund-core/src/rules/markdown.rs"
-step = "S1"
-
 # Closes a chapter where 0.17 closes it, through scanner/compat.rs's TodayOwnerEnds;
 # #639 retires it with them.
 [[family.migration]]

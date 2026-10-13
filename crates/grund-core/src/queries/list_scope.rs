@@ -35,7 +35,13 @@ pub(crate) fn check_list_scope(
         let headline = match table.verdict(scope, kind) {
             KindVerdict::Citable => continue,
             KindVerdict::NonCitable(entry) => entry.non_citable_reason(Quote::Backtick),
-            _ => format!("unknown kind `{kind}`"),
+            // §FS-list.1.1: `code` with no row keeps `unknown kind` in front of its reason.
+            _ => table.unknown_or_complement(
+                scope,
+                kind,
+                format!("unknown kind `{kind}`"),
+                Quote::Backtick,
+            ),
         };
         return Err(anyhow!("{headline}\n{}", table.known_kinds_line(scope)));
     }

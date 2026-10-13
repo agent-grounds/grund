@@ -277,6 +277,20 @@ pub(crate) struct MarkdownLineCitation {
     pub(crate) section: Option<String>,
 }
 
+/// The one lenient alias split (§FS-workspace.1): `token` at its *last* `/`,
+/// since an alias path may carry slashes and an ID never does
+/// (§FS-workspace.6.1), into the alias and the rest. Nothing is validated, so a
+/// token being completed, recovered from a refusal, or read as a test label is
+/// never refused here; a token with no `/`, or with an empty alias before its
+/// last one, is kept whole. A strict reading that refuses an alias path is
+/// `split_qualified_id_arg`'s.
+pub(crate) fn split_alias_path(token: &str) -> (Option<&str>, &str) {
+    match token.rsplit_once('/') {
+        Some((alias, rest)) if !alias.is_empty() => (Some(alias), rest),
+        _ => (None, token),
+    }
+}
+
 /// Render an existing `Id` for a report, listing, or message, preserving the
 /// provider spelling policy of a per-kind override (§FS-config.3.2).
 pub(crate) fn render_id(grammar: &Grammar, id: &Id) -> String {

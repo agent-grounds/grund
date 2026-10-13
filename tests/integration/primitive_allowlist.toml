@@ -4,10 +4,9 @@
 # them, listed live in one_answer_steps.toml, or the decision record that keeps
 # them (`ruling`). Seeded from the code at 53e981e6e9; it only shrinks.
 #
-# S1 gives the four hand-rolled alias splits their one home in grammar/ids.rs, and
-# S2 reads declaration headings and citations off the file record instead of
-# re-parsing them. The alias lexer in config/citations.rs and
-# config/workspace_block.rs is an owner of `split on /` (PRIMITIVES), not a row.
+# The alias lexer in config/citations.rs and config/workspace_block.rs, and the
+# lenient alias split in grammar/ids.rs, are owners of `split on /` (PRIMITIVES),
+# not rows.
 #
 # A writer owns the disk calls it makes to write (WRITERS in PRIMITIVES): it is an
 # owner because it is the one that writes, not because no run reads its output.
@@ -18,32 +17,12 @@
 # `exempt` holds the three hits of the `split on /` pattern that split something
 # other than a coordinate, each with its reason. The test refuses a fourth.
 
-[[allow]]
-file = "api/complete_ids.rs"
-primitives = ["split on /"]
-step = "S1"
-
-[[allow]]
-file = "queries/editor_hover.rs"
-primitives = ["split on /"]
-step = "S1"
-
 # The selectors.rs row moved here with the old first-`/` split, which the
 # §FS-rules.7.9 ramp keeps to tell a newly matched site; it goes with the ramp.
 [[allow]]
 file = "rules/engine/ramp.rs"
 primitives = ["split on /"]
 ruling = "DF-nested-alias-rule-targets"
-
-[[allow]]
-file = "rules/sentence/recovery.rs"
-primitives = ["split on /"]
-step = "S1"
-
-[[allow]]
-file = "scanner/e2e.rs"
-primitives = ["split on /"]
-step = "S1"
 
 [[exempt]]
 file = "checker/references.rs"

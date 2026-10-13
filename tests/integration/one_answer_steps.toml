@@ -11,7 +11,7 @@
 # still waiting on it.
 #
 # S1-S4 are the follow-ups the plan approved on #600 files under #576 once it
-# lands; each id becomes its issue number when it is filed.
+# lands; each id becomes its issue number when it is filed. S1 became #671.
 
 [[step]]
 id = "#621"
@@ -42,11 +42,6 @@ what = "the 0.19.0 wrapper and title span (P16)"
 id = "#680"
 ruling = "DF-one-answer-rulings-grammar"
 what = "G09's flip: the homeless kind code refused as declaring no IDs alone, without unknown kind, in 0.19.0"
-
-[[step]]
-id = "S1"
-ruling = "DF-one-answer-rulings-grammar"
-what = "one grammar's leftovers: one subject matcher, the alias splits onto grammar/ids.rs, G06 and G09"
 
 [[step]]
 id = "S4"

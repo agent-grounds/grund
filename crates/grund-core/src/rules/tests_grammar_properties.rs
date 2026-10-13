@@ -30,12 +30,7 @@ const DEFERRED: &[(&str, &str)] = &[];
 
 /// Known violations: `(property, input)`, each a row the step it names closes.
 /// Seeded from today's code; a row whose violation is gone fails.
-const LEDGER: &[(&str, &str)] = &[
-    // §REQ-one-answer.differences.identity G06: the rule refuses `each` as a fixed word
-    // in the wrong case, the selector as a literal subject; S1 fixes it as
-    // §DF-one-answer-rulings-grammar rules.
-    ("rule <=> selector", "each FS: two failures"),
-];
+const LEDGER: &[(&str, &str)] = &[];
 
 /// Rule sentences a refusal answers with a form.
 const REFUSED_RULES: &[&str] = &[
@@ -137,6 +132,13 @@ fn failure(message: &str) -> &str {
     &message[..end]
 }
 
+/// Whether a selector's failure names the rule's: the same text, or a reason
+/// kept as a verbatim prefix with the rule's appended after ` — `, the route
+/// §FS-rule-refusals.selectors gives `each FS` (§DF-one-answer-rulings-grammar, G06).
+fn names_the_failure(selector: &str, rule: &str) -> bool {
+    selector == rule || selector.ends_with(&format!(" — {rule}"))
+}
+
 /// Every violation of the two askable properties over the corpus.
 fn violations() -> BTreeSet<(&'static str, String)> {
     let vocabulary = vocabulary();
@@ -174,7 +176,7 @@ fn violations() -> BTreeSet<(&'static str, String)> {
                 {
                     found.insert(("offered form reparses", format!("{subject} -> {form}")));
                 }
-                if failure(&refused.message) != failure(&selector) {
+                if !names_the_failure(failure(&selector), failure(&refused.message)) {
                     found.insert(("rule <=> selector", format!("{subject}: two failures")));
                 }
             }

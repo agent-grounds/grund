@@ -34,6 +34,36 @@ pub(crate) enum RuleSubject {
 }
 
 impl RuleSubject {
+    /// The one subject matcher (§FS-rules.2, §FS-rules.8): whether this subject
+    /// selects, in a declaration of `kind` rendered as `declaration`, the
+    /// declaration itself (`section` is `None`) or its chapter at `section`.
+    /// `list`, `list --size` and literal resolution all ask it, so a subject
+    /// selects one set of units wherever it is read.
+    pub(crate) fn selects(&self, kind: &str, declaration: &str, section: Option<&str>) -> bool {
+        match section {
+            None => match self {
+                Self::Kind(wanted) => wanted == kind,
+                Self::ExactDeclaration(wanted) => wanted == declaration,
+                _ => false,
+            },
+            Some(section) => self.chapter_path(kind, declaration) == Some(section),
+        }
+    }
+
+    /// The literal a subject spelled by name writes, which must name exactly
+    /// one unit (§FS-rules.4, §FS-rules.8); `None` for a quantified subject.
+    pub(crate) fn literal(&self) -> Option<String> {
+        match self {
+            Self::ExactDeclaration(literal) => Some(literal.clone()),
+            Self::ExactChapter {
+                declaration,
+                path,
+                separator,
+            } => Some(format!("{declaration}{separator}{path}")),
+            Self::Kind(_) | Self::ChapterOfKind { .. } => None,
+        }
+    }
+
     /// The section path this subject selects in a declaration of `kind`
     /// rendered as `declaration`, or `None` where it selects no chapter there.
     /// A chapter-of-kind `NAME` is the whole path, never its last component
@@ -50,6 +80,15 @@ impl RuleSubject {
             _ => None,
         }
     }
+}
+
+/// The first component of a chapter path no subject can name: an all-digit one,
+/// or an empty one, which is no number but no name either
+/// (§FS-rule-refusals.sentences.chapter-path). A section holding one is no rule
+/// unit (§FS-rules.2), so the facts adapter and the subject parser ask this.
+pub(crate) fn unnamed_component(path: &str) -> Option<&str> {
+    path.split('.')
+        .find(|part| part.bytes().all(|byte| byte.is_ascii_digit()))
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]

@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use crate::config::{Frame, Schema, root_scope_roots};
-use crate::grammar::{Grammar, literal_after_kind_placeholder, parse_id_arg};
+use crate::grammar::{Grammar, literal_after_kind_placeholder, parse_id_arg, split_alias_path};
 use crate::model::{Catalog, Declaration, DeclarationSource, E2eCase, E2eSpecRef, Id};
 use crate::model::{format_path, sort_path_key};
 
@@ -222,15 +222,9 @@ fn e2e_spec_ref_from_line(schema: &Schema, frame: Frame<'_>, line: &str) -> Opti
         return None;
     }
     let token = token.strip_prefix(&schema.citation.marker).unwrap_or(token);
-    // §FS-workspace.6.1: an alias path may carry slashes and an ID never does,
-    // so the last separator is the boundary.
-    // coordinate-lexer: a test label, read without the slug check that would refuse it
-    let (namespace, id_text) = match token.rsplit_once('/') {
-        Some((namespace, id_text)) if !namespace.is_empty() => {
-            (Some(namespace.to_string()), id_text)
-        }
-        _ => (None, token),
-    };
+    // §FS-workspace.6.1: a test label, read without the slug check that would refuse it.
+    let (namespace, id_text) = split_alias_path(token);
+    let namespace = namespace.map(str::to_string);
     if let Ok((id, _section)) = parse_id_arg(id_text, frame.grammar()) {
         return Some(E2eSpecRef {
             namespace,

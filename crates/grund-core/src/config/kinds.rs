@@ -270,9 +270,11 @@ impl KindTable {
     /// §FS-config.3.9.5: the verdict on a name a config reads as a `[citations]`
     /// kind, citing or cited — [`Self::verdict`] with one explicit case. `code`,
     /// the complement a config that writes none of its own still has
-    /// (§FS-config.3.9.2), has no row, so every other surface calls it unknown
-    /// (§FS-list.1.1); config has always read it as configured and not citable,
-    /// a kind that cites and is never cited, and keeps that answer.
+    /// (§FS-config.3.9.2), has no row; config has always read it as configured
+    /// and not citable, a kind that cites and is never cited, and keeps that
+    /// answer. Every other surface called it unknown, and until the window of
+    /// §FS-errors.3.8 closes keeps that reason in front of this verdict's
+    /// (§FS-errors.2.5.1, [`Self::unknown_or_complement`]).
     pub(crate) fn config_verdict<'s>(
         &'s self,
         scope: KindScope<'s>,
@@ -292,6 +294,25 @@ impl KindTable {
         }
     }
 
+    /// §FS-errors.3.8: `legacy`, the refusal a surface gives a name `scope`
+    /// does not configure, with §FS-errors.2.5.1's reason in `quote`'s spelling
+    /// appended where the name is the complement `code` that has no row
+    /// (§FS-list.1.1); `legacy` alone for any other name.
+    pub(crate) fn unknown_or_complement(
+        &self,
+        scope: KindScope<'_>,
+        name: &str,
+        legacy: String,
+        quote: Quote,
+    ) -> String {
+        match self.config_verdict(scope, name) {
+            KindVerdict::NonCitable(entry) => {
+                one_grammar_window(&legacy, &entry.non_citable_reason(quote))
+            }
+            _ => legacy,
+        }
+    }
+
     /// The citable kinds of `scope`, once each, in configuration order: the
     /// names its `known kinds:` line lists (§FS-list.1.1).
     pub(crate) fn citable<'s>(&'s self, scope: KindScope<'s>) -> Vec<&'s str> {
@@ -308,12 +329,19 @@ impl KindTable {
     }
 
     /// The kinds of `scope` that are configured and citable in none of it,
-    /// each with the entry that names its home.
+    /// each with the entry that names its home, and `code` where it is the
+    /// complement with no row that nothing in scope configures otherwise
+    /// (§FS-errors.2.5.1).
     pub(crate) fn non_citable<'s>(&'s self, scope: KindScope<'s>) -> Vec<&'s KindEntry> {
         let mut seen = BTreeSet::new();
         self.in_scope(scope)
-            .flat_map(KindProject::non_citable)
-            .filter(|entry| matches!(self.verdict(scope, &entry.name), KindVerdict::NonCitable(_)))
+            .flat_map(|project| project.non_citable().chain(&project.implicit_complement))
+            .filter(|entry| {
+                matches!(
+                    self.config_verdict(scope, &entry.name),
+                    KindVerdict::NonCitable(_)
+                )
+            })
             .filter(|entry| seen.insert(entry.name.as_str()))
             .collect()
     }

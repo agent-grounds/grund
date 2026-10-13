@@ -49,15 +49,8 @@ pub(super) fn unresolved_subject_diagnostic_indexed(
     if subject_resolves(rule, facts, index) {
         return None;
     }
-    let literal = match &rule.subject {
-        RuleSubject::ExactDeclaration(value) => value.clone(),
-        RuleSubject::ExactChapter {
-            declaration,
-            path,
-            separator,
-        } => format!("{declaration}{separator}{path}"),
-        _ => return None,
-    };
+    // §FS-rules.4: the literal a subject spelled, as `list --selector` names it.
+    let literal = rule.subject.literal()?;
     Some(Diagnostic {
         code: "invalid-rule",
         path: (!rule.anchor.path.is_empty()).then(|| rule.anchor.path.clone().into()),
