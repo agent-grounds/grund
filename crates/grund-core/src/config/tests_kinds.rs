@@ -93,10 +93,14 @@ fn a_kind_has_one_verdict_per_scope() {
         table.known_kinds_line(KindScope::Any),
         "known kinds: FS, AR, skill"
     );
-    assert!(
-        table.non_citable(KindScope::Any).is_empty(),
-        "skill is citable in `web`"
-    );
+    // `skill` is citable in `web`; only the homeless kind's default name, which
+    // neither project declares, is not citable (§FS-config.3.9.2).
+    let non_citable: Vec<&str> = table
+        .non_citable(KindScope::Any)
+        .into_iter()
+        .map(|entry| entry.name.as_str())
+        .collect();
+    assert_eq!(non_citable, ["code"], "skill is citable in `web`");
 }
 
 /// §FS-rules.4.1: with no workspace, a scope naming other projects cannot be

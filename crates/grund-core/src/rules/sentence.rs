@@ -84,15 +84,6 @@ impl RuleSubject {
     }
 }
 
-/// The first component of a chapter path no subject can name: an all-digit one,
-/// or an empty one, which is no number but no name either
-/// (§FS-rule-refusals.sentences.chapter-path). A section holding one is no rule
-/// unit (§FS-rules.2), so the facts adapter and the subject parser ask this.
-pub(crate) fn unnamed_component(path: &str) -> Option<&str> {
-    path.split('.')
-        .find(|part| part.bytes().all(|byte| byte.is_ascii_digit()))
-}
-
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub(crate) enum RuleLevel {
     Required,

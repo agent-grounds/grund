@@ -99,7 +99,7 @@ pub(crate) use comment_block::{
 pub(crate) use comment_line::{comment_envelope, comment_strip_prefixes, strip_block_closer};
 pub(crate) use compiled::{
     AGENTS_BLOCK_END, QUALIFIED_CITATION_PREFIX, STUB_LINK_HEADING, is_valid_project_alias,
-    named_mode_section_path, named_section_component, section_path,
+    named_mode_section_path, named_section_component, section_path, unnamed_component,
     value_binding_section_shape_is_valid,
 };
 // The bare fence reader serves the record's doc-comment headings and the template
