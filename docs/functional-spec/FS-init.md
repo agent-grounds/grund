@@ -225,7 +225,7 @@ Bare `init`, with no `--scaffold`, writes these two and nothing else ([§FS-init
 With `--scaffold`, additionally the template's starter files ([§FS-init.2.1.3](FS-init.md#213-the-software-development-starter-files)). These are the `software-development` template's; the `none` template has none ([§FS-init.1.6.4](FS-init.md#164-none-has-nothing-to-scaffold)):
 
 - `<path>/requirements.md`
-- `<path>/docs/requirements/README.md`, when the config declares `REQ` (§FS-init.2.1.3)
+- `<path>/docs/requirements/README.md`, when the config declares `REQ` ([§FS-init.2.1.3](FS-init.md#213-the-software-development-starter-files))
 - `<path>/docs/grund.md`
 - `<path>/docs/goals.md`
 - `<path>/docs/roadmap.md`
