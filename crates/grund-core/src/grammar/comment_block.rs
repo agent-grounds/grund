@@ -2,7 +2,7 @@ use super::Grammar;
 use super::near_miss::declaration_id_on_line;
 use super::settings::LexicalSettings;
 use super::source_line::{
-    BlockCommentScanState, PythonDocstringScanState, SourceScanLine, source_scan_line,
+    BlockCommentScanState, PythonDocstringScanState, SourceScanLine, prefix_forms, source_scan_line,
 };
 use crate::model::Id;
 
@@ -54,21 +54,18 @@ pub(crate) fn line_comment_block_marker(
     }
 }
 
+/// The marker a line keys its block by: a `//` form keys its own block, any
+/// other configured prefix's forms key the prefix's, so a `;;` line and a `;`
+/// line are one block (§FS-languages.prefixes.forms, §FS-languages.comment-block.forms).
+/// The longest form across the configured prefixes wins, so `//` does not shadow `///`.
 fn line_comment_marker(trimmed: &str, comment_prefixes: &[String]) -> Option<String> {
-    for marker in ["///", "//!", "//"] {
-        if comment_prefixes.iter().any(|prefix| prefix == "//") && trimmed.starts_with(marker) {
-            return Some(marker.to_string());
-        }
-    }
-    let mut prefixes = comment_prefixes
+    comment_prefixes
         .iter()
-        .filter(|prefix| !matches!(prefix.as_str(), "" | "//" | "*" | "/*"))
-        .collect::<Vec<_>>();
-    prefixes.sort_by_key(|prefix| std::cmp::Reverse(prefix.len()));
-    prefixes
-        .into_iter()
-        .find(|prefix| trimmed.starts_with(prefix.as_str()))
-        .map(|prefix| prefix.to_string())
+        .filter(|prefix| !matches!(prefix.as_str(), "" | "*" | "/*"))
+        .map(|prefix| prefix_forms(prefix))
+        .filter_map(|forms| Some((forms.len_at(trimmed)?, forms.block_key(trimmed)?)))
+        .max_by_key(|(len, _)| *len)
+        .map(|(_, key)| key.to_string())
 }
 
 /// Every comment / docstring block in a source file, as 0-indexed inclusive line
@@ -273,6 +270,14 @@ pub(crate) enum DocCommentRule {
     None,
 }
 
+impl DocCommentRule {
+    /// Whether this is the Lisp position row, whose ungrounded doc-comments are
+    /// reported on the `warning:` channel through 0.18.x (§FS-check.3.6.2.2).
+    pub(crate) fn is_lisp(self) -> bool {
+        matches!(self, Self::Position(DefinitionStart::LispDefinition))
+    }
+}
+
 /// What the line under a position language's doc comment begins with
 /// (§FS-inline-citation-style.1.1.3). Recognition, not parsing: the test reads one
 /// line, so a Go `var` inside a function body classifies as a definition and a
@@ -290,6 +295,10 @@ pub(crate) enum DefinitionStart {
     /// SQL's `create`, matched case-insensitively so `CREATE OR REPLACE
     /// FUNCTION …` counts with `create table …`.
     SqlCreate,
+    /// A Lisp form whose head symbol starts with `def` or `cl-def`, or is `ns`
+    /// (§FS-inline-citation-style.1.1.2): `(defun`, `(defn-`, `(define`,
+    /// `(cl-defun`, `(ns app.core)`, but not `(let` or `(nsx-route)`.
+    LispDefinition,
 }
 
 /// Whether one comment block is a doc comment rather than an inline note
@@ -365,7 +374,24 @@ fn definition_opens(start: DefinitionStart, next: &str) -> bool {
             .any(|keyword| opens_with_keyword(next, keyword, false)),
         DefinitionStart::ShellFunction => shell_function_opens(next),
         DefinitionStart::SqlCreate => opens_with_keyword(next, "create", true),
+        DefinitionStart::LispDefinition => lisp_definition_opens(next),
     }
+}
+
+/// Whether `line` opens a Lisp form whose head symbol is a definition-starter
+/// (§FS-inline-citation-style.1.1.2): the run after the `(` up to whitespace, a
+/// parenthesis or the end of the line starts with `def` or `cl-def`, or is `ns`.
+/// A prefix test, so `(default-value` matches as the accepted corner of
+/// §FS-inline-citation-style.1.1.3.
+fn lisp_definition_opens(line: &str) -> bool {
+    let Some(form) = line.strip_prefix('(') else {
+        return false;
+    };
+    let head = form
+        .split(|ch: char| ch.is_whitespace() || ch == '(' || ch == ')')
+        .next()
+        .unwrap_or("");
+    head.starts_with("def") || head.starts_with("cl-def") || head == "ns"
 }
 
 /// Whether `line` begins with `keyword` followed by a non-identifier character

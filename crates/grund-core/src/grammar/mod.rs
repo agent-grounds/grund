@@ -160,7 +160,9 @@ pub(crate) use shorthand::{
     IdArgError, ParsedId, ShorthandIndex, parse_id_arg_with_shorthand, resolve_shorthand_citations,
     resolve_shorthands, shorthand_candidates, shorthand_names,
 };
-pub(crate) use source_line::{PythonDocstringScanState, SourceScanLine, source_scan_line};
+pub(crate) use source_line::{
+    PythonDocstringScanState, SourceScanLine, longest_form_at, prefix_forms, source_scan_line,
+};
 
 // What another component's tests read (§AR-core-module-layout.1.1): the GitHub
 // slugger, which the scanner's file-pass cases assert their anchors against.

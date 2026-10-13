@@ -10,30 +10,119 @@
 
 use std::borrow::Cow;
 
-/// Build the alternation a declaration/section heading may be prefixed by — one
-/// entry per `[scan] comment_prefixes` value (§FS-config.3.5), with `//` widened to
-/// also catch Rust/JS doc-comment forms `///` and `//!`, and `/*` widened to the
-/// `/**` and `/*!` openers, so inline declarations in code are seen (§AR-scanner.4.3,
-/// §FS-declarations.line.block-comment). Longest-first so `//` does not shadow `///`.
+/// The forms one configured comment prefix stands for (§FS-languages.prefixes.forms,
+/// §AR-scanner.4.3): the prefix itself, and the doc-comment spellings its languages
+/// write by doubling or marking it. The one table every reader of a line's comment
+/// marker reads — the declaration and section-heading alternation below, the
+/// note-text stripper and the comment wrapper (`comment_line.rs`), the block keying
+/// (`comment_block.rs`) and the embedded-value reader — so no reader widens a prefix
+/// by hand. The frozen 0.17 reader (`scanner/compat_envelope.rs`) keeps its own list.
+#[derive(Clone, Copy)]
+pub(crate) struct PrefixForms<'a> {
+    prefix: &'a str,
+    /// The literal forms beyond the prefix itself.
+    widened: &'static [&'static str],
+    /// The prefix is one character and any run of it is a form (`;`, `;;`, `;;;`, …).
+    run: bool,
+    /// Each form keys a comment block of its own, so a `///` run is a block apart
+    /// from a `//` run (§FS-languages.comment-block.forms); otherwise every form
+    /// keys the prefix's block, so a `;` block stays keyed on `;`.
+    keyed_by_form: bool,
+}
+
+/// The forms `prefix` stands for, by the table of §FS-languages.prefixes.forms. A
+/// prefix outside it, such as a custom `%`, stands only for itself.
+pub(crate) fn prefix_forms(prefix: &str) -> PrefixForms<'_> {
+    let (widened, run, keyed_by_form): (&'static [&'static str], _, _) = match prefix {
+        "//" => (&["///", "//!"], false, true),
+        "/*" => (&["/**", "/*!"], false, false),
+        "--" => (&["---", "-- |", "--|", "-- ^", "--^"], false, false),
+        ";" => (&[], true, false),
+        _ => (&[], false, false),
+    };
+    PrefixForms {
+        prefix,
+        widened,
+        run,
+        keyed_by_form,
+    }
+}
+
+impl<'a> PrefixForms<'a> {
+    /// The byte length of the longest form `rest` opens with, or `None` when it
+    /// opens with none. Recognition of the marker only: what follows it is the
+    /// caller's question, so `----` opens with `---` here and the declaration
+    /// alternation, which needs whitespace after the form, still declines it.
+    pub(crate) fn len_at(&self, rest: &str) -> Option<usize> {
+        if self.prefix.is_empty() {
+            return None;
+        }
+        if self.run {
+            let len = rest.len() - rest.trim_start_matches(self.prefix).len();
+            return (len > 0).then_some(len);
+        }
+        self.widened
+            .iter()
+            .copied()
+            .chain([self.prefix])
+            .filter(|form| rest.starts_with(form))
+            .map(str::len)
+            .max()
+    }
+
+    /// The marker a line opening with one of these forms keys its comment block
+    /// by: the form itself where forms key their own blocks, the prefix otherwise.
+    pub(crate) fn block_key<'r>(&self, rest: &'r str) -> Option<&'r str>
+    where
+        'a: 'r,
+    {
+        let len = self.len_at(rest)?;
+        Some(if self.keyed_by_form {
+            &rest[..len]
+        } else {
+            &rest[..self.prefix.len()]
+        })
+    }
+
+    /// One regex alternative per form, each a literal except a run's `;+`.
+    fn regex_alternatives(&self) -> Vec<String> {
+        if self.run {
+            return vec![format!("{}+", regex::escape(self.prefix))];
+        }
+        self.widened
+            .iter()
+            .copied()
+            .chain([self.prefix])
+            .map(regex::escape)
+            .collect()
+    }
+}
+
+/// The byte length of the longest form of any of `prefixes` that `rest` opens
+/// with (§FS-languages.prefixes.forms): what a reader strips as the line's comment
+/// marker.
+pub(crate) fn longest_form_at(rest: &str, prefixes: &[PrefixForms<'_>]) -> Option<usize> {
+    prefixes.iter().filter_map(|forms| forms.len_at(rest)).max()
+}
+
+/// Build the alternation a declaration/section heading may be prefixed by — every
+/// form of every `[scan] comment_prefixes` value (§FS-config.3.5,
+/// §FS-languages.prefixes.forms), so `///`, `/**`, `---`, `-- |` and `;;` declare
+/// as their bare prefixes do (§AR-scanner.4.3, §FS-declarations.line.block-comment).
+/// Longest-first so `//` does not shadow `///`; each alternative is a flat literal
+/// or a run, so the near-miss prefilter reads every first byte off it.
 pub(super) fn comment_prefix_regex(comment_prefixes: &[String]) -> String {
-    let mut prefixes = comment_prefixes
+    let mut alternatives = comment_prefixes
         .iter()
         .filter(|prefix| !prefix.is_empty())
-        .map(|prefix| {
-            if prefix == "//" {
-                r"//[/!]?".to_string()
-            } else if prefix == "/*" {
-                r"/\*[*!]?".to_string()
-            } else {
-                regex::escape(prefix)
-            }
-        })
+        .flat_map(|prefix| prefix_forms(prefix).regex_alternatives())
         .collect::<Vec<_>>();
-    prefixes.sort_by_key(|prefix| std::cmp::Reverse(prefix.len()));
-    if prefixes.is_empty() {
+    alternatives.sort_by(|a, b| b.len().cmp(&a.len()).then_with(|| a.cmp(b)));
+    alternatives.dedup();
+    if alternatives.is_empty() {
         "(?!)".to_string()
     } else {
-        format!("(?:{})", prefixes.join("|"))
+        format!("(?:{})", alternatives.join("|"))
     }
 }
 
