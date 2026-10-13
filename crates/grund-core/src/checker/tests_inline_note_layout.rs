@@ -200,7 +200,7 @@ fn agents_sentence_teaches_the_configured_layout() {
     };
     assert_eq!(
         sentence(&|project| project.schema.notes.layout = "any".into()),
-        "Inline notes: ≤ 1 line preferred, hard cap 3 lines; ≤ 100 columns. A note is one comment block: a blank line splits it, an empty comment line does not. Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell or SQL comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there."
+        "Inline notes: ≤ 1 line preferred, hard cap 3 lines; ≤ 100 columns. A note is one comment block: a blank line splits it, an empty comment line does not. Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell, SQL or Lisp comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there."
     );
 
     let colon = |project: &mut Project| project.schema.notes.layout = "citation-first-colon".into();
@@ -209,7 +209,7 @@ fn agents_sentence_teaches_the_configured_layout() {
             colon(project);
             project.schema.notes.layout_check = "error".into();
         }),
-        "Inline notes: ≤ 1 line preferred, hard cap 3 lines; ≤ 100 columns. A note is one comment block: a blank line splits it, an empty comment line does not. Lay each note out citation-first: `// §<ID>: <note>` (several citations: `// §<ID>, §<ID>: <note>`). Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell or SQL comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there."
+        "Inline notes: ≤ 1 line preferred, hard cap 3 lines; ≤ 100 columns. A note is one comment block: a blank line splits it, an empty comment line does not. Lay each note out citation-first: `// §<ID>: <note>` (several citations: `// §<ID>, §<ID>: <note>`). Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell, SQL or Lisp comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there."
     );
 
     // The enforcement level is not an instruction: `off` renders the same
@@ -228,7 +228,7 @@ fn agents_sentence_teaches_the_configured_layout() {
     });
     assert_eq!(
         citation_only,
-        "Inline citations carry no prose — put rationale in the spec. Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell or SQL comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there."
+        "Inline citations carry no prose — put rationale in the spec. Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell, SQL or Lisp comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there."
     );
     assert!(
         citation_only.contains("are documentation, not notes"),

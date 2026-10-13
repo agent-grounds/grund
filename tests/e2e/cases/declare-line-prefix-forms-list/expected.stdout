@@ -1,0 +1,9 @@
+AR-clojure        src/clojure/router.clj:1  clojure router
+AR-elisp          src/elisp/router.el:1  elisp router
+AR-haskell        src/haskell/Router.hs:3  Haskell router
+AR-haskell-caret  src/haskell/Router.hs:13  the request path
+AR-lisp           src/lisp/router.lisp:1  lisp router
+AR-lua            src/lua/router.lua:1  Lua router
+AR-rust           src/rust/router.rs:1  Rust router
+AR-sql            src/sql/router.sql:1  SQL router
+FS-entry          docs/functional-spec/FS-entry.md:1  Entrypoint
