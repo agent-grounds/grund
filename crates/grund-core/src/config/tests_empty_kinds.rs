@@ -1,12 +1,12 @@
 //! Test module: `kinds = []`, the empty kind set (§FS-config.3.4.4.5) — distinct
 //! from an omitted `[[kinds]]`, which keeps the built-in rows with the older `FS`
 //! home (§FS-config.3.4.4.4); refused when it is not empty or a table follows it;
-//! and the meaning each template's config has before `init` writes it
-//! (§FS-init.1.6.1, §FS-init.2.4.9).
+//! and what each template's config means against the built-in defaults
+//! (§FS-init.2.4.3, §FS-init.2.4.9).
 
 use std::path::PathBuf;
 
-use crate::config::{Config, load_config};
+use crate::config::{Config, Extent, Place, load_config};
 use crate::templates::{Template, render_grund_toml};
 use crate::testing::{test_root, write};
 
@@ -90,10 +90,12 @@ fn a_table_of_non_citable_kinds_is_still_refused() {
     );
 }
 
-/// §FS-init.1.6.1, §FS-init.2.4.9: each template's config, read back, means
-/// the config `init` rendered the managed block from before writing it.
+/// §FS-init.2.4.3, §FS-init.2.4.9: each template's config, read back, means
+/// the built-in defaults its key set names, except the rows that have none:
+/// the software-development template's `REQ` row, the one kind it declares
+/// without a built-in default.
 #[test]
-fn each_template_config_means_its_pending_config() {
+fn each_template_config_means_its_defaults_but_req() {
     let root = PathBuf::from(".");
     let cases = [
         (
@@ -102,21 +104,48 @@ fn each_template_config_means_its_pending_config() {
         ),
         (Template::None, Config::without_kinds_for(root)),
     ];
-    for (template, pending) in cases {
+    for (template, defaults) in cases {
         let written = load(
             &format!("empty_kinds_template_{}", template.name()),
             &render_grund_toml(template, "demo", None),
         )
         .unwrap_or_else(|err| panic!("{}: {err:#}", template.name()));
+        let mut rows = written.project().schema.rows.clone();
+        let mut titles = written.project().presentation.kinds.clone();
+        let req = rows
+            .iter()
+            .position(|row| row.name == "REQ")
+            .map(|at| rows.remove(at));
+        let req_title = titles.remove("REQ");
+        if template == Template::SoftwareDevelopment {
+            let req = req.expect("the software-development template declares REQ");
+            let ar = defaults
+                .project()
+                .schema
+                .rows
+                .iter()
+                .find(|row| row.name == "AR");
+            assert_eq!(
+                req.places,
+                vec![Place {
+                    extent: Extent::Folder("docs/requirements".into()),
+                    scanned: true,
+                    source: None,
+                }]
+            );
+            // A prose kind like every other folder kind the template declares.
+            assert_eq!(req.kind, ar.and_then(|row| row.kind.clone()));
+            assert_eq!(
+                req_title.as_deref(),
+                Some("Hard requirements: what the project must never break")
+            );
+        } else {
+            assert!(req.is_none() && req_title.is_none(), "{}", template.name());
+        }
+        assert_eq!(rows, defaults.project().schema.rows, "{}", template.name());
         assert_eq!(
-            written.project().schema.rows,
-            pending.project().schema.rows,
-            "{}",
-            template.name()
-        );
-        assert_eq!(
-            written.project().presentation.kinds,
-            pending.project().presentation.kinds,
+            titles,
+            defaults.project().presentation.kinds,
             "{}",
             template.name()
         );

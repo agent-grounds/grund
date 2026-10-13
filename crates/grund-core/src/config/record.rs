@@ -288,8 +288,8 @@ pub(super) const GROUNDING_LEVELS: std::ops::RangeInclusive<usize> = 1..=6;
 impl Config {
     /// The built-in defaults — the canonical grammar a conformant tree gets with
     /// no config at all (§FS-config.3, §GOAL-zero-config): the v1 default project
-    /// (§AR-config.3.2) under a run rooted at `root`. `grund init` writes these
-    /// same values out verbatim as a teaching surface (§FS-init.2.4.3).
+    /// (§AR-config.3.2) under a run rooted at `root`. Every key `grund init`
+    /// writes that has a built-in default matches it (§FS-init.2.4.3).
     #[cfg(test)]
     pub(crate) fn default_for(root: PathBuf) -> Self {
         Self::from_project(&v1::default_project(false), root).expect("default grammar must compile")

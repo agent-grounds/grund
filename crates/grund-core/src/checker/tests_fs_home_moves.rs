@@ -3,7 +3,7 @@
 //! still ahead (§FS-check.checks.fs-home-moves.2).
 
 use super::fs_home_moves::FS_HOME_FLIP;
-use crate::testing::{check_run, codes, only, test_root, write};
+use crate::testing::{codes, only, test_root, write, zero_config_check_run};
 
 fn warnings(run: &crate::api::CheckRun) -> usize {
     codes(run)
@@ -21,7 +21,7 @@ fn a_zero_config_fs_declaration_in_requirements_md_is_warned() {
         &root.join("requirements.md"),
         "# Requirements\n\n## FS-001-login: Login\n\nBody.\n",
     );
-    let run = check_run(&root, false);
+    let run = zero_config_check_run(&root);
     let warning = only(&run, "fs-home-moves");
     assert_eq!(warning.line, Some(3));
     assert!(
@@ -47,7 +47,7 @@ fn a_config_file_silences_it() {
         &root.join("grund.toml"),
         "grund_config_version = 1\n\n[[kinds]]\nkind = \"FS\"\nfile = \"requirements.md\"\n",
     );
-    assert_eq!(warnings(&check_run(&root, false)), 0);
+    assert_eq!(warnings(&zero_config_check_run(&root)), 0);
 }
 
 /// §FS-check.checks.fs-home-moves: one edit clears every declaration, so the
@@ -61,7 +61,7 @@ fn one_warning_per_project_at_the_lowest_line() {
          ## FS-001-second: Second\n\nAfter §FS-009-first.\n\n\
          ## FS-005-third: Third\n\nAfter §FS-001-second.\n",
     );
-    let run = check_run(&root, false);
+    let run = zero_config_check_run(&root);
     assert_eq!(warnings(&run), 1, "{:?}", codes(&run));
     let warning = only(&run, "fs-home-moves");
     assert_eq!(warning.line, Some(3));
