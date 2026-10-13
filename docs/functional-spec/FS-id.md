@@ -72,12 +72,12 @@ The title becomes a slug deterministically: the same title and the same configur
 
 1. Unicode-normalize the title to NFKD and strip combining marks (`Café log-in` → `Cafe log-in`).
 2. Lower-case, ASCII only; a non-ASCII letter that survives step 1 passes to step 3 unchanged and is filtered there.
-3. Replace every run of characters outside the repeating character class of the configured `slug_pattern` ([§FS-config.3.2](FS-config.md#32-id--id-grammar)) — its last `[...]` bracket expression, or `[a-z0-9-]` when it has none — with a single `-`. Under the default pattern, spaces, punctuation and quotes all become `-`.
+3. Replace every run of characters outside the repeating character class of the configured `slug_pattern` ([§FS-config.3.2](FS-config.md#32-id--id-grammar)) — its last `[...]` bracket expression, or `[a-z0-9-]` when it has none — with a single `-`. Under the default pattern, spaces, punctuation and quotes all become `-`. The class is all this step reads of the pattern, so the slug it yields is not yet one the pattern accepts: a pattern that requires a leading letter, or a class without `-`, can still refuse it ([§FS-id.3.2](FS-id.md#32-a-slug-the-pattern-refuses)).
 4. Trim leading and trailing `-`. For example, `---login---` becomes `login`, including when the configured character class accepts hyphens.
 5. Collapse runs of two or more `-` into one.
 6. Truncate to 60 characters at the nearest preceding `-`, so a slug never ends mid-word.
 
-An empty slug is refused ([§FS-id.3.1](FS-id.md#31-an-empty-slug)).
+An empty slug is refused ([§FS-id.3.1](FS-id.md#31-an-empty-slug)), and so is a slug the configured pattern does not accept ([§FS-id.3.2](FS-id.md#32-a-slug-the-pattern-refuses)).
 
 ### 3.1 An empty slug
 
@@ -88,6 +88,16 @@ title produces empty slug after normalization: "<original title>"
 ```
 
 `id` invents no fallback — a meaningless slug is worse than an error — so the author supplies a title with at least one slug character.
+
+### 3.2 A slug the pattern refuses
+
+Once the slug is derived, the whole proposed ID — kind, number and slug under the kind's effective format ([§FS-id.2.1](FS-id.md#21---format-text-default)) — is matched against the same compiled `[id]` grammar `check` accepts a new declaration by ([§FS-config.3.2](FS-config.md#32-id--id-grammar)). `id` prints only an ID that `check` would accept. When the candidate does not match, `id` exits `1` with a bare query-failure line on stderr, no `error:` prefix ([§FS-id.6](FS-id.md#6-exit-codes)), naming the derived slug, the effective `slug_pattern` and the original title:
+
+```
+title produces slug "<slug>" that slug_pattern "<slug_pattern>" does not accept: "<original title>"
+```
+
+Under `slug_pattern = "[a-z][a-z0-9-]*"`, `3D printing` derives `3d-printing`, which the pattern refuses for its leading digit; under `slug_pattern = "[a-z]+"`, `user login` derives `user-login`, which the pattern refuses for its `-`. As with an empty slug, `id` invents no other slug: the author rewords the title, or loosens the pattern.
 
 ## 4. Next-number derivation
 
@@ -125,7 +135,7 @@ Authors disambiguate by editing the title.
 ## 6. Exit codes
 
 - `0` — proposed ID emitted.
-- `1` — empty slug ([§FS-id.3.1](FS-id.md#31-an-empty-slug)) or collision ([§FS-id.5](FS-id.md#5-collision-check)). These are query failures — the request was well-formed but has no ID to return — so they print a bare stderr line with no `error:` prefix, as ID queries do for `ID not found` ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)).
+- `1` — empty slug ([§FS-id.3.1](FS-id.md#31-an-empty-slug)), a slug the pattern refuses ([§FS-id.3.2](FS-id.md#32-a-slug-the-pattern-refuses)), or collision ([§FS-id.5](FS-id.md#5-collision-check)). These are query failures — the request was well-formed but has no ID to return — so they print a bare stderr line with no `error:` prefix, as ID queries do for `ID not found` ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)).
 - `2` — a scan or I/O error, an unknown kind, an unknown `--format`, or any other CLI-level error ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)). These print `error: <message>` on stderr — the prefix CI scripts grep for to tell a launch-time failure from a clean run.
 
 ## 7. What `id` does **not** do
@@ -139,5 +149,5 @@ Authors disambiguate by editing the title.
 Three callers, one source of truth:
 
 1. **Authors.** Picking the next free number by listing a directory invites a typo that creates a duplicate `grund check` catches hours later; `id` removes the typo class.
-2. **Agents.** An LLM cannot reliably read a directory listing and increment the right number, and even a right answer drifts with the next file added. `grund id` is cheap, deterministic, and committed to the same regex grammar as the checker.
+2. **Agents.** An LLM cannot reliably read a directory listing and increment the right number, and even a right answer drifts with the next file added. `grund id` is cheap, deterministic, and committed to the same regex grammar as the checker: it never prints an ID `check` would refuse ([§FS-id.3.2](FS-id.md#32-a-slug-the-pattern-refuses)).
 3. **The optional LSP server.** A "new declaration" code action in [§FS-lsp](FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server) would need the number `grund id` would compute; sharing the engine through `grund-core` makes exactly one allocator, not three subtly different ones.
