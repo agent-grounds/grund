@@ -10,8 +10,9 @@
 //! in one place and each suite iterates all of them.
 //!
 //! The six shapes are the forms §FS-fmt.7.2 names. `clean-markdown` rewrites
-//! every class and meets no scan error, though `check` reports its absent-target
-//! line (§FS-fmt.7.5.2). `strict-abort` is the whole-declaration-set path refusing up
+//! every class, including the citations inside section headings that other
+//! files link to (§FS-fmt.6.3.3), and meets no scan error, though `check`
+//! reports its absent-target line (§FS-fmt.7.5.2). `strict-abort` is the whole-declaration-set path refusing up
 //! front (§FS-fmt.3.2). `partial-source` is a source-only scope, where no rewrite
 //! needs the whole set, so the run reports its rewrites *and* names the path it
 //! could not read. `two-scopes` narrows the rewrite to one directory while the
@@ -151,6 +152,17 @@ const DECLARATION: &str = "# FS-001-alpha: Alpha\n\nAlpha is the first thing.\n\
 /// on three lines, so a preview has something to be a preview of (§FS-fmt.7.5.2).
 const CITING_NOTES: &str = "# Notes\n\nSee $$FS-001-alpha for the rest.\n\n\
      Bare here: FS-001-alpha.\n\nShorthand here: $$FS-001.\n";
+/// Two section headings whose own citation the run expands — a number-only
+/// shorthand and a declaration-local one — so the heading's anchor moves in the
+/// same run that links to it (§FS-fmt.6.3.3, §FS-fmt.7.5.2). The second
+/// heading's local citation names the first, so one rewritten heading also links
+/// to the other.
+const EXPANDING_HEADINGS: &str = "# FS-002-beta: Beta\n\nBeta builds on alpha.\n\n\
+     ## 1. See \u{a7}FS-001\n\nBeta defers to alpha.\n\n\
+     ## 2. Back to \u{a7}1\n\nBeta looks back.\n";
+/// The links into those headings, from another file, each on its own line.
+const HEADING_NOTES: &str = "# Heading notes\n\nThe shorthand heading: \u{a7}FS-002-beta.1\n\n\
+     The local heading: \u{a7}FS-002-beta.2\n";
 const CITING_SOURCE: &str = "//! FS-001-alpha: Alpha\n//!\n//! Alpha is the first thing.\n\n\
      // Cites $$FS-001-alpha from a comment.\n";
 
@@ -158,6 +170,8 @@ fn build_clean_markdown(root: &Path) {
     write(root, "grund.toml", MARKDOWN_SCOPE);
     write(root, "docs/FS-001-alpha.md", DECLARATION);
     write(root, "docs/notes.md", CITING_NOTES);
+    write(root, "docs/FS-002-beta.md", EXPANDING_HEADINGS);
+    write(root, "docs/heading-notes.md", HEADING_NOTES);
 }
 
 fn build_strict_abort(root: &Path) {

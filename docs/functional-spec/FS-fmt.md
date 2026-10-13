@@ -397,6 +397,10 @@ How an existing wrap is recognized, for the re-derive and the no-double-wrap rul
 
 An exact marked off-grammar citation backed by a catalog declaration ([§FS-config.3.2](FS-config.md#32-id--id-grammar)) is the same durable source and may be wrapped or re-derived like any conforming citation. Unmarked and declaration-less off-grammar candidates stay untouched. The formatter consumes the shared scanner result and does not relax its marker, shorthand, or authoring grammar independently.
 
+#### 6.3.3 An anchor names the heading as the same run leaves it
+
+A run that expands a number-only shorthand or a declaration-local citation inside a section heading ([§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)) moves that heading's anchor ([§FS-fmt.6.2.2](FS-fmt.md#622-the-anchor-slugifies-the-headings-rendered-text)). Every link that run writes to the heading — from another file, its own, or another rewritten heading — carries the anchor of the text the run leaves on disk, not the text it read; otherwise the next run rewrites the link and `--check` fails straight after a `--write`.
+
 ### 6.4 What is never wrapped
 
 The citation bytes inside a recognized value binding are never wrapped or otherwise rewritten, because the explicit form is the only compared grammar; existing trigger and safe shorthand behavior may still apply where it preserves that form ([§FS-values.8](FS-values.md#8-formatting-stability)).
@@ -489,6 +493,7 @@ E2E fixtures pin the pass ([§FS-fmt.6.8.1](FS-fmt.md#681-wrapping-parity-and-sk
 - source-file declaration link with no anchor
 - `anchor_format = "none"` produces file-only links
 - each named renderer profile (`github`, `gitlab`, `mkdocs`, `pandoc`) produces its expected slug for a curated heading set. For `github`, that set includes headings whose punctuation closes up into runs of `-` that GitHub keeps and a naive collapser would not ([§FS-fmt.6.2.3](FS-fmt.md#623-the-github-profile-reproduces-github-slugger)), and a section heading that itself carries a citation, with another citation pointing at that section: the anchor derives from the heading's rendered text ([§FS-fmt.6.2.2](FS-fmt.md#622-the-anchor-slugifies-the-headings-rendered-text)), so it is identical before and after `--cross-refs` wraps the heading's own citation.
+- a link to a section heading the same `--write` expands carries the expanded heading's anchor ([§FS-fmt.6.3.3](FS-fmt.md#633-an-anchor-names-the-heading-as-the-same-run-leaves-it))
 
 #### 6.8.3 Suppressed scopes
 
@@ -550,7 +555,7 @@ Rules 7.1 to 7.3 are cross-run properties: each compares two invocations, so no 
 
 #### 7.5.2 The rewritable tree holds every rewrite class
 
-Two runs that both skip a class agree about it, so a property asserted over a corpus that holds no site of a class is satisfied by any preview and any write of that class. The clean rewritable tree therefore holds at least one site of every rewrite class `fmt` performs — among them a typed trigger, a bare token `--marker` marks, a number-only shorthand, and a declaration-local section citation ([§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)) — and where the shape also rewrites through another class, the preview-equivalence suite asserts the class by its own line rather than by the shape: a shape that rewrites through one class keeps a whole-shape assertion green after another class stops firing.
+Two runs that both skip a class agree about it, so a property asserted over a corpus that holds no site of a class is satisfied by any preview and any write of that class. The clean rewritable tree therefore holds at least one site of every rewrite class `fmt` performs — among them a typed trigger, a bare token `--marker` marks, a number-only shorthand, and a declaration-local section citation ([§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)) — and a section heading holding each of the last two, cited from another file ([§FS-fmt.6.3.3](FS-fmt.md#633-an-anchor-names-the-heading-as-the-same-run-leaves-it)) — and where the shape also rewrites through another class, the preview-equivalence suite asserts the class by its own line rather than by the shape: a shape that rewrites through one class keeps a whole-shape assertion green after another class stops firing.
 
 The declaration-local class is held twice, each site on its own line: once with a target section the declaration records, which both modes rewrite, and once with a target it does not record, which both modes leave byte-identical ([§FS-fmt.2.4.6](FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)). The absent target is the one place a preview and a write could split on this class, and the property compares line sets, so two sites sharing a line would hide that split behind the line the other site changes. The six shapes of [§FS-fmt.7.5](FS-fmt.md#75-measurable) stay as they are: the classes are the content of the rewritable shape, not shapes of their own.
 
