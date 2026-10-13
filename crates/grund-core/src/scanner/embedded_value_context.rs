@@ -7,7 +7,7 @@ use std::path::Path;
 use super::value_context::SourceValueLineContext;
 use crate::config::{Frame, Schema};
 use crate::grammar::named_mode_section_path;
-use crate::grammar::{PythonDocstringScanState, source_scan_line};
+use crate::grammar::{PythonDocstringScanState, longest_form_at, prefix_forms, source_scan_line};
 use crate::model::{Catalog, Declaration, DeclarationSource, Id, InvalidValueSite};
 
 pub(crate) const EMBEDDED_VALUE_MARKER: &str = "<!-- grund:value -->";
@@ -231,26 +231,16 @@ pub(super) fn semantic_comment_content<'a>(
     if matches!(content, "/*" | "/**" | "/*!" | "*" | "*/") {
         return "";
     }
-    let mut prefixes = schema
+    // §FS-languages.prefixes.forms: the marker is the longest form of a configured
+    // prefix, so `;;` and `-- |` go whole as `///` does.
+    let prefixes = schema
         .sources
         .comment_prefixes
         .iter()
-        .map(String::as_str)
+        .map(|prefix| prefix_forms(prefix))
         .collect::<Vec<_>>();
-    if schema
-        .sources
-        .comment_prefixes
-        .iter()
-        .any(|prefix| prefix == "//")
-    {
-        prefixes.extend(["///", "//!", "//"]);
-    }
-    prefixes.sort_by_key(|prefix| std::cmp::Reverse(prefix.len()));
-    if let Some(prefix) = prefixes
-        .into_iter()
-        .find(|prefix| content.starts_with(prefix))
-    {
-        content = content[prefix.len()..].trim();
+    if let Some(len) = longest_form_at(content, &prefixes) {
+        content = content[len..].trim();
     }
     without_source_block_close(content, block_comment).trim()
 }

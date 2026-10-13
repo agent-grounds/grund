@@ -25,6 +25,7 @@ use std::path::{Path, PathBuf};
 use super::comment_line::{comment_strip_prefixes, strip_comment_tokens};
 use super::never_rewrite::DocstringContent;
 use super::settings::LexicalSettings;
+use super::source_line::{PrefixForms, longest_form_at};
 
 /// The fixed text of a suppression directive (§FS-fmt.2.5.2). Not configurable,
 /// for the same reason the fence syntax is not: a marker that reads differently
@@ -107,7 +108,7 @@ pub(crate) struct FmtDirectives<'a> {
     /// file, the comment prefixes to strip — built once per file rather than
     /// once per line, because `comment_strip_prefixes` allocates and sorts
     /// (§GOAL-fast-feedback).
-    prefixes: Option<Vec<&'a str>>,
+    prefixes: Option<Vec<PrefixForms<'a>>>,
 }
 
 impl<'a> FmtDirectives<'a> {
@@ -159,9 +160,7 @@ impl<'a> FmtDirectives<'a> {
                 // own (§FS-fmt.2.3.1.1); every other source line must actually be
                 // a comment, or a string holding this text would toggle a region.
                 if !docstring.is_docstring()
-                    && !prefixes
-                        .iter()
-                        .any(|prefix| text.trim_start().starts_with(prefix))
+                    && longest_form_at(text.trim_start(), prefixes).is_none()
                 {
                     return None;
                 }

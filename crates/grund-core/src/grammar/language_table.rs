@@ -22,6 +22,7 @@ const RUBY: DocCommentRule =
     DocCommentRule::Position(DefinitionStart::Keywords(RUBY_DEFINITION_STARTERS));
 const SHELL: DocCommentRule = DocCommentRule::Position(DefinitionStart::ShellFunction);
 const SQL: DocCommentRule = DocCommentRule::Position(DefinitionStart::SqlCreate);
+const LISP: DocCommentRule = DocCommentRule::Position(DefinitionStart::LispDefinition);
 /// A language read through a comment prefix alone (§FS-languages.prefixes): it
 /// has a row, so the default reads it, and no doc-comment notion of its own.
 const PREFIX_ONLY: DocCommentRule = DocCommentRule::None;
@@ -49,9 +50,9 @@ const LANGUAGE_TABLE: &[(&str, DocCommentRule)] = &[
     ("rb", RUBY),
     ("php", C_FAMILY),
     ("cs", C_FAMILY),
-    ("lisp", PREFIX_ONLY),
-    ("scm", PREFIX_ONLY),
-    ("clj", PREFIX_ONLY),
+    ("lisp", LISP),
+    ("scm", LISP),
+    ("clj", LISP),
     ("sql", SQL),
     ("hs", DocCommentRule::Haddock),
     ("lhs", DocCommentRule::Haddock),
@@ -79,6 +80,12 @@ const LANGUAGE_TABLE: &[(&str, DocCommentRule)] = &[
     ("sh", SHELL),
     ("bash", SHELL),
     ("zsh", SHELL),
+    ("cl", LISP),
+    ("el", LISP),
+    ("ss", LISP),
+    ("rkt", LISP),
+    ("cljs", LISP),
+    ("cljc", LISP),
 ];
 
 /// Every extension the built-in language table names, in table order — what

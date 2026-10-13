@@ -3,6 +3,7 @@ use super::comment_line::{
     remove_inline_citation_tokens, strip_comment_tokens,
 };
 use super::settings::{AliasGrammar, LexicalSettings};
+use super::source_line::PrefixForms;
 
 /// The layouts `[reference] inline_note_layout` selects, as the two dimensions a
 /// value picks: where the citation run sits on the line, and what separates it
@@ -102,7 +103,7 @@ pub(crate) const CITATION_RUN_SEPARATOR: &str = ", ";
 /// further along is the continuation of a note that already opened correctly.
 pub(crate) fn inline_layout_violations(
     block: &mut BlockCitations<'_>,
-    prefixes: &[&str],
+    prefixes: &[PrefixForms<'_>],
     first_line: usize,
     has_note: bool,
 ) -> Vec<usize> {
@@ -137,7 +138,7 @@ pub(crate) fn inline_layout_violations(
 pub(crate) fn line_layout_view<'a>(
     line: &'a str,
     ranges: &[(usize, usize)],
-    prefixes: &[&str],
+    prefixes: &[PrefixForms<'_>],
 ) -> Option<(&'a str, Vec<(usize, usize)>)> {
     let (start, end) = comment_content_range(line, prefixes);
     let content_start = start + list_marker_len(&line[start..end]);
@@ -306,7 +307,7 @@ pub(crate) fn block_has_inline_note(
     lines: &[&str],
     lexical: LexicalSettings<'_>,
     alias_grammars: &[AliasGrammar<'_>],
-    prefixes: &[&str],
+    prefixes: &[PrefixForms<'_>],
 ) -> bool {
     lines.iter().any(|line| {
         let ranges = line_citation_ranges(line, lexical, alias_grammars);
@@ -318,7 +319,7 @@ pub(crate) fn block_has_inline_note(
 /// tokenization is kept rather than dropped.
 pub(crate) fn block_has_inline_note_memoized(
     block: &mut BlockCitations<'_>,
-    prefixes: &[&str],
+    prefixes: &[PrefixForms<'_>],
 ) -> bool {
     (0..block.len()).any(|index| {
         let (line, ranges) = block.line(index);
@@ -331,7 +332,7 @@ pub(crate) fn block_has_inline_note_memoized(
 pub(crate) fn line_says_something(
     line: &str,
     ranges: &[(usize, usize)],
-    prefixes: &[&str],
+    prefixes: &[PrefixForms<'_>],
 ) -> bool {
     let tokenless = remove_inline_citation_tokens(line, ranges);
     !strip_comment_tokens(&tokenless, prefixes).trim().is_empty()

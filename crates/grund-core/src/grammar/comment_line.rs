@@ -3,6 +3,7 @@ use super::id_format::parse_longest_id_prefix;
 use super::ids::parse_loose_qualified_id_prefix;
 use super::never_rewrite::{is_inside_inline_code, is_inside_string_literal};
 use super::settings::{AliasGrammar, LexicalSettings};
+use super::source_line::{PrefixForms, longest_form_at, prefix_forms};
 use crate::model::BlockForm;
 
 /// Every recognized citation token on one line, as byte ranges into it
@@ -170,7 +171,7 @@ fn is_citation_run_separator(gap: &str) -> bool {
         && gap.chars().all(|ch| ch == ',' || ch.is_whitespace())
 }
 
-pub(crate) fn strip_comment_tokens<'a>(line: &'a str, prefixes: &[&str]) -> &'a str {
+pub(crate) fn strip_comment_tokens<'a>(line: &'a str, prefixes: &[PrefixForms<'_>]) -> &'a str {
     let (start, end) = comment_content_range(line, prefixes);
     &line[start..end]
 }
@@ -185,23 +186,22 @@ pub(crate) fn strip_comment_tokens<'a>(line: &'a str, prefixes: &[&str]) -> &'a 
 /// down: it is a pure function of the configured comment prefixes, so rebuilding
 /// and re-sorting it per line — twice per line, once the layout pass runs — bought
 /// nothing (§GOAL-fast-feedback).
-pub(crate) fn comment_content_range(line: &str, prefixes: &[&str]) -> (usize, usize) {
+pub(crate) fn comment_content_range(line: &str, prefixes: &[PrefixForms<'_>]) -> (usize, usize) {
     let body_start = line
         .char_indices()
         .find_map(|(idx, ch)| (!ch.is_whitespace()).then_some(idx))
         .unwrap_or(line.len());
     let mut offset = body_start;
     let mut rest = &line[body_start..];
-    for prefix in prefixes {
-        if let Some(stripped) = rest.strip_prefix(*prefix) {
-            // §FS-inline-citation-style.3.3.8: whatever indents the content past the
-            // prefix goes with it: a wrapped Rustdoc continuation, an aligned ` * `
-            // filler, a tab after `#`. Content starts at the first byte that says something.
-            let after = stripped.trim_start_matches([' ', '\t']);
-            offset += rest.len() - after.len();
-            rest = after;
-            break;
-        }
+    // §FS-languages.prefixes.forms: the marker is the longest form, so `;;` and
+    // `-- |` go whole rather than leaving a `;` or a `|` that reads as note text.
+    if let Some(len) = longest_form_at(rest, prefixes) {
+        // §FS-inline-citation-style.3.3.8: whatever indents the content past the
+        // prefix goes with it: a wrapped Rustdoc continuation, an aligned ` * `
+        // filler, a tab after `#`. Content starts at the first byte that says something.
+        let after = rest[len..].trim_start_matches([' ', '\t']);
+        offset += rest.len() - after.len();
+        rest = after;
     }
     let trimmed_end = rest.trim_end();
     // Trimmed again after the closer: `/* §<ID>: */` must leave `§<ID>:`, so a
@@ -239,10 +239,14 @@ pub(crate) fn comment_envelope<'a>(line: &'a str, form: &BlockForm) -> &'a str {
     let behind = |rest: &'a str| rest.strip_prefix(' ').unwrap_or(rest);
     match form {
         BlockForm::Docstring => line,
-        BlockForm::Line(marker) => line
-            .trim_start()
-            .strip_prefix(marker.as_str())
-            .map_or(line, behind),
+        // §FS-languages.comment-wrapper: the whole form the line was written in goes,
+        // so behind `;` the line's whole run of semicolons (§FS-languages.prefixes.forms).
+        BlockForm::Line(marker) => {
+            let trimmed = line.trim_start();
+            prefix_forms(marker)
+                .len_at(trimmed)
+                .map_or(line, |len| behind(&trimmed[len..]))
+        }
         BlockForm::Block => {
             let trimmed = line.trim_start();
             // §FS-declarations.line.block-comment: `/**` and `/*!` are openers as `/*` is.
@@ -269,18 +273,19 @@ pub(crate) fn comment_envelope<'a>(line: &'a str, form: &BlockForm) -> &'a str {
     }
 }
 
-pub(crate) fn comment_strip_prefixes<'a>(lexical: LexicalSettings<'a>) -> Vec<&'a str> {
-    let mut prefixes = vec!["/**", "/*", "*/", "\"\"\"", "'''"];
+/// What a reader strips as a comment line's marker: every form of every configured
+/// prefix (§FS-languages.prefixes.forms), the `*` gutter where `/*` is configured,
+/// and the closers and docstring quotes a line of any block may open with.
+pub(crate) fn comment_strip_prefixes<'a>(lexical: LexicalSettings<'a>) -> Vec<PrefixForms<'a>> {
+    let mut prefixes = ["/**", "/*", "*/", "\"\"\"", "'''"]
+        .into_iter()
+        .map(prefix_forms)
+        .collect::<Vec<_>>();
     for prefix in lexical.comment_prefixes {
-        if prefix == "//" {
-            prefixes.extend(["///", "//!", "//"]);
-        } else if prefix == "/*" {
-            prefixes.extend(["/*", "*"]);
-        } else if !prefix.is_empty() {
-            prefixes.push(prefix.as_str());
+        if prefix == "/*" {
+            prefixes.push(prefix_forms("*"));
         }
+        prefixes.push(prefix_forms(prefix));
     }
-    prefixes.sort_by_key(|prefix| std::cmp::Reverse(prefix.len()));
-    prefixes.dedup();
     prefixes
 }
