@@ -81,6 +81,9 @@ pub(crate) const REQUIREMENTS_TEMPLATE: &str =
     include_str!("../../assets/templates/software-development/requirements.md");
 pub(crate) const FS_README_TEMPLATE: &str =
     include_str!("../../assets/templates/software-development/functional-spec-README.md");
+/// The `REQ` folder's index starter (§FS-init.2.1.3, §FS-init.2.4.10).
+pub(crate) const REQ_README_TEMPLATE: &str =
+    include_str!("../../assets/templates/software-development/requirements-README.md");
 pub(crate) const E2E_README_TEMPLATE: &str =
     include_str!("../../assets/templates/software-development/e2e-README.md");
 pub(crate) const AS_README_TEMPLATE: &str =

@@ -13,9 +13,12 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
+#[cfg(test)]
 use anyhow::Result;
 
-use super::compiled::{Compiled, compile};
+use super::compiled::Compiled;
+#[cfg(test)]
+use super::compiled::compile;
 use super::frame::{Display, Frame};
 use super::kinds::KindTable;
 use super::project::{Project, Rules, Schema};
@@ -261,15 +264,6 @@ impl Config {
         self.with_project(project)
     }
 
-    /// This project under another identity line — the name and description a
-    /// scaffold renders (§FS-init.2.4).
-    pub(crate) fn with_identity(&self, name: Option<String>, description: Option<String>) -> Self {
-        let mut project = self.project().clone();
-        project.name = name;
-        project.presentation.description = description;
-        self.with_project(project)
-    }
-
     /// The façade over `project` with this run and this compiled grammar, which
     /// an edit that touches neither the ID grammar nor the scan demand keeps.
     fn with_project(&self, project: Project) -> Self {
@@ -290,6 +284,7 @@ impl Config {
 
     /// The façade a loaded project starts from: `project` compiled, under a run
     /// that has decided nothing but its root (§AR-config.5).
+    #[cfg(test)]
     pub(super) fn from_project(project: &Project, root: PathBuf) -> Result<Self> {
         let compiled = compile(project)?;
         Ok(Self::from_records(project, &Run::at(root), &compiled))

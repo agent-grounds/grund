@@ -40,6 +40,11 @@ file = "requirements.md"
 title = "What: behavior, requirements, and constraints"
 
 [[kinds]]
+kind = "REQ"
+folder = "docs/requirements"
+title = "Hard requirements: what the project must never break"
+
+[[kinds]]
 kind = "AR"
 folder = "docs/architecture"
 title = "How: high-level implementation, structure, and design"
@@ -118,6 +123,10 @@ anchor_format = "github" # github | gitlab | mkdocs | pandoc | none
 # [citations.FS]
 # should = ["GOAL|FS"]
 # must-not = ["AR"]              # the What may never depend on the How
+#
+# [citations.REQ]
+# should = ["GRUND|GOAL"]
+# must-not = ["AR"]              # a hard requirement never depends on the How
 #
 # [citations.AR]
 # should = ["FS|GOAL"]

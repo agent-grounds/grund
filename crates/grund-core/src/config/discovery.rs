@@ -251,12 +251,34 @@ fn read_config(
     // §FS-check.6.1.1: cover this effective input before its shared read.
     let text = super::input_read_to_string(read_path)
         .with_context(|| format!("read {}", format_path(report_path)))?;
-    let project = if v2::selects(&text) {
-        let project = v2::read(&text, report_path, root)?;
+    config_from_text(&text, report_path, root, run, invocation)
+}
+
+/// The façade the config `grund init` is about to write at `root` will load
+/// to, before it is on disk: `text` read as `root`'s `grund.toml` by the reader
+/// a discovered file goes through, so the managed block `init` renders describes
+/// exactly the file it writes, a kind with no built-in default included
+/// (§FS-init.2.3.8, §FS-init.2.4.10).
+pub(crate) fn pending_config(text: &str, root: &Path, invocation: &Invocation) -> Result<Config> {
+    let run = Run::of(root.to_path_buf(), root.to_path_buf(), invocation);
+    config_from_text(text, Path::new("grund.toml"), root, run, invocation)
+}
+
+/// The façade `text` loads to as the config at `root`, judged and compiled as
+/// a file read from disk is (§AR-config.2).
+fn config_from_text(
+    text: &str,
+    report_path: &Path,
+    root: &Path,
+    run: Run,
+    invocation: &Invocation,
+) -> Result<Config> {
+    let project = if v2::selects(text) {
+        let project = v2::read(text, report_path, root)?;
         validate::reference(report_path, &project)?;
         project
     } else {
-        let read = v1::read_sections(&text, report_path)?;
+        let read = v1::read_sections(text, report_path)?;
         validate::reference(report_path, &read.project)?;
         read.lower_kinds(report_path, root)?
     };
