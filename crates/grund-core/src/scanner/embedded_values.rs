@@ -13,6 +13,7 @@ use super::embedded_value_context::{
 use super::value_context::SourceValueLineContext;
 use super::values::{recorded_component, value_declaration_is_in_home};
 use crate::config::{Frame, Schema};
+use crate::grammar::is_lone_block_marker;
 use crate::model::{
     Catalog, EmbeddedValueRoot, InvalidValueSite, ValueRootOrigin, authored_component,
     component_text_is_valid,
@@ -242,7 +243,7 @@ pub(super) fn validate_embedded_value_roots(
                 };
                 let markdown = is_md || *docstring;
                 let content = semantic_comment_content(line, markdown, *block_comment, schema);
-                if content.is_empty() || matches!(content, "/*" | "/**" | "/*!" | "*" | "*/") {
+                if content.is_empty() || is_lone_block_marker(content) {
                     continue;
                 }
                 let child = recorded(line_no).map(str::to_string).or_else(|| {

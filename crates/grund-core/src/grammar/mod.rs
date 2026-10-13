@@ -161,7 +161,8 @@ pub(crate) use shorthand::{
     resolve_shorthands, shorthand_candidates, shorthand_names,
 };
 pub(crate) use source_line::{
-    PythonDocstringScanState, SourceScanLine, longest_form_at, prefix_forms, source_scan_line,
+    PythonDocstringScanState, SourceScanLine, is_lone_block_marker, longest_form_at, prefix_forms,
+    source_scan_line,
 };
 
 // What another component's tests read (§AR-core-module-layout.1.1): the GitHub

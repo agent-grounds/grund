@@ -15,8 +15,9 @@ use std::borrow::Cow;
 /// write by doubling or marking it. The one table every reader of a line's comment
 /// marker reads — the declaration and section-heading alternation below, the
 /// note-text stripper and the comment wrapper (`comment_line.rs`), the block keying
-/// (`comment_block.rs`) and the embedded-value reader — so no reader widens a prefix
-/// by hand. The frozen 0.17 reader (`scanner/compat_envelope.rs`) keeps its own list.
+/// (`comment_block.rs`), the lone-opener test of the embedded-value readers and the
+/// near-miss prefilter — so no reader widens a prefix by hand. The frozen 0.17 reader
+/// (`scanner/compat_envelope.rs`) keeps its own list.
 #[derive(Clone, Copy)]
 pub(crate) struct PrefixForms<'a> {
     prefix: &'a str,
@@ -24,6 +25,10 @@ pub(crate) struct PrefixForms<'a> {
     widened: &'static [&'static str],
     /// The prefix is one character and any run of it is a form (`;`, `;;`, `;;;`, …).
     run: bool,
+    /// A widened form counts only where whitespace or the end of the line follows
+    /// it (§FS-languages.prefixes.forms), so `----` and `-- |---|` open with `--`.
+    /// Set for the forms 0.18 added; `//` and `/*` read as they always have.
+    bounded: bool,
     /// Each form keys a comment block of its own, so a `///` run is a block apart
     /// from a `//` run (§FS-languages.comment-block.forms); otherwise every form
     /// keys the prefix's block, so a `;` block stays keyed on `;`.
@@ -33,26 +38,27 @@ pub(crate) struct PrefixForms<'a> {
 /// The forms `prefix` stands for, by the table of §FS-languages.prefixes.forms. A
 /// prefix outside it, such as a custom `%`, stands only for itself.
 pub(crate) fn prefix_forms(prefix: &str) -> PrefixForms<'_> {
-    let (widened, run, keyed_by_form): (&'static [&'static str], _, _) = match prefix {
-        "//" => (&["///", "//!"], false, true),
-        "/*" => (&["/**", "/*!"], false, false),
-        "--" => (&["---", "-- |", "--|", "-- ^", "--^"], false, false),
-        ";" => (&[], true, false),
-        _ => (&[], false, false),
+    let (widened, run, bounded, keyed_by_form): (&'static [&'static str], _, _, _) = match prefix {
+        "//" => (&["///", "//!"], false, false, true),
+        "/*" => (&["/**", "/*!"], false, false, false),
+        "--" => (&["---", "-- |", "--|", "-- ^", "--^"], false, true, false),
+        ";" => (&[], true, false, false),
+        _ => (&[], false, false, false),
     };
     PrefixForms {
         prefix,
         widened,
         run,
+        bounded,
         keyed_by_form,
     }
 }
 
 impl<'a> PrefixForms<'a> {
     /// The byte length of the longest form `rest` opens with, or `None` when it
-    /// opens with none. Recognition of the marker only: what follows it is the
-    /// caller's question, so `----` opens with `---` here and the declaration
-    /// alternation, which needs whitespace after the form, still declines it.
+    /// opens with none. A bounded widened form needs whitespace or the end of the
+    /// line after it, so `----` and `-- |---|` open with `--`; the bare prefix and a
+    /// run need nothing, so `--x` and `;x` open with theirs as they always have.
     pub(crate) fn len_at(&self, rest: &str) -> Option<usize> {
         if self.prefix.is_empty() {
             return None;
@@ -61,13 +67,33 @@ impl<'a> PrefixForms<'a> {
             let len = rest.len() - rest.trim_start_matches(self.prefix).len();
             return (len > 0).then_some(len);
         }
+        let bounded = |form: &str| {
+            !self.bounded
+                || form == self.prefix
+                || rest[form.len()..]
+                    .chars()
+                    .next()
+                    .is_none_or(char::is_whitespace)
+        };
         self.widened
             .iter()
             .copied()
             .chain([self.prefix])
-            .filter(|form| rest.starts_with(form))
+            .filter(|form| rest.starts_with(form) && bounded(form))
             .map(str::len)
             .max()
+    }
+
+    /// Whether `text` is exactly one of these forms and nothing more, such as a
+    /// lone `/**` opener line.
+    pub(crate) fn is_form(&self, text: &str) -> bool {
+        self.len_at(text) == Some(text.len())
+    }
+
+    /// The first byte every form opens with: the prefix's own, since each form
+    /// widens the prefix rather than replacing it (§FS-languages.prefixes.forms).
+    pub(crate) fn first_byte(&self) -> Option<u8> {
+        self.prefix.as_bytes().first().copied()
     }
 
     /// The marker a line opening with one of these forms keys its comment block
@@ -103,6 +129,13 @@ impl<'a> PrefixForms<'a> {
 /// marker.
 pub(crate) fn longest_form_at(rest: &str, prefixes: &[PrefixForms<'_>]) -> Option<usize> {
     prefixes.iter().filter_map(|forms| forms.len_at(rest)).max()
+}
+
+/// Whether a trimmed comment line is a `/* … */` block's envelope alone: a lone
+/// opener in any form of `/*` (§FS-languages.prefixes.forms), a lone `*` gutter or
+/// a lone closer — a line that says nothing (§FS-declarations.line.block-comment).
+pub(crate) fn is_lone_block_marker(content: &str) -> bool {
+    prefix_forms("/*").is_form(content) || matches!(content, "*" | "*/")
 }
 
 /// Build the alternation a declaration/section heading may be prefixed by — every

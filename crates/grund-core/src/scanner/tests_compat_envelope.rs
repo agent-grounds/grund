@@ -4,7 +4,7 @@
 //! verbatim; the title a `--toc` section map gives a source chapter is the label its
 //! author wrote (§FS-rules.5.1.1, §FS-show.3.1.3).
 
-use super::{clean_body_line, section_title};
+use super::{OwnMarker, clean_body_line, section_title};
 
 #[test]
 fn block_continuation_drops_whitespace_before_star() {
@@ -89,11 +89,21 @@ fn a_markdown_toc_title_keeps_a_trailing_closer() {
 #[test]
 fn a_toc_title_drops_its_own_dash_dash_or_semicolon_marker() {
     assert_eq!(
-        section_title("-- ## terms: Terms", "terms", false, Some("--")),
+        section_title(
+            "-- ## terms: Terms",
+            "terms",
+            false,
+            Some(&OwnMarker::bare("--"))
+        ),
         "Terms"
     );
     assert_eq!(
-        section_title("; ## terms: Terms", "terms", false, Some(";")),
+        section_title(
+            "; ## terms: Terms",
+            "terms",
+            false,
+            Some(&OwnMarker::bare(";"))
+        ),
         "Terms"
     );
 }

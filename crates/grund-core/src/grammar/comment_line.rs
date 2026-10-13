@@ -249,13 +249,10 @@ pub(crate) fn comment_envelope<'a>(line: &'a str, form: &BlockForm) -> &'a str {
         }
         BlockForm::Block => {
             let trimmed = line.trim_start();
-            // §FS-declarations.line.block-comment: `/**` and `/*!` are openers as `/*` is.
-            let content = if let Some(rest) = trimmed
-                .strip_prefix("/**")
-                .or_else(|| trimmed.strip_prefix("/*!"))
-                .or_else(|| trimmed.strip_prefix("/*"))
-            {
-                behind(rest)
+            // §FS-declarations.line.block-comment: `/**` and `/*!` are openers as `/*` is,
+            // read off the forms of `/*` (§FS-languages.prefixes.forms).
+            let content = if let Some(len) = prefix_forms("/*").len_at(trimmed) {
+                behind(&trimmed[len..])
             } else if !trimmed.starts_with("*/")
                 && let Some(rest) = trimmed.strip_prefix('*')
             {
@@ -275,9 +272,10 @@ pub(crate) fn comment_envelope<'a>(line: &'a str, form: &BlockForm) -> &'a str {
 
 /// What a reader strips as a comment line's marker: every form of every configured
 /// prefix (§FS-languages.prefixes.forms), the `*` gutter where `/*` is configured,
-/// and the closers and docstring quotes a line of any block may open with.
+/// and the openers in every form of `/*`, closers and docstring quotes a line of any
+/// block may open with.
 pub(crate) fn comment_strip_prefixes<'a>(lexical: LexicalSettings<'a>) -> Vec<PrefixForms<'a>> {
-    let mut prefixes = ["/**", "/*", "*/", "\"\"\"", "'''"]
+    let mut prefixes = ["/*", "*/", "\"\"\"", "'''"]
         .into_iter()
         .map(prefix_forms)
         .collect::<Vec<_>>();

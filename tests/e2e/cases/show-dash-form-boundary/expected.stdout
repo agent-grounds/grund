@@ -1,0 +1,6 @@
+Routes requests by path.
+
+a | b |
+|---|---|
+--
+-@param path

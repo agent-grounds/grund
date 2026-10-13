@@ -385,6 +385,7 @@ impl Grammar {
                         NearMissGrammar::build(
                             &regex::escape(&kind.name),
                             &comment_prefix,
+                            comment_prefixes,
                             literal,
                             effective,
                         )

@@ -14,6 +14,7 @@ use super::embedded_value_context::{
 use super::section_record::section_is_chapter_value_root;
 use super::value_context::SourceValueLineContext;
 use crate::config::{Frame, Schema, kind_value_chapter};
+use crate::grammar::is_lone_block_marker;
 use crate::model::{Catalog, InvalidValueSite};
 use crate::sources::paths_same_location;
 
@@ -91,7 +92,7 @@ pub(super) fn validate_declared_value_chapters(
                 }
             } else {
                 let content = semantic_comment_content(line, markdown, *block_comment, schema);
-                if content.is_empty() || matches!(content, "/*" | "/**" | "/*!" | "*" | "*/") {
+                if content.is_empty() || is_lone_block_marker(content) {
                     continue;
                 }
             }

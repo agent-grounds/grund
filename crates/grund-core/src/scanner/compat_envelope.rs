@@ -12,7 +12,9 @@ use crate::grammar::{
 /// The line-style markers this file has always read on its own, by a fixed list
 /// rather than by the declaration's marker. Every other marker the configured
 /// `comment_prefixes` know — `--`, `;`, or a repository's own — is read as the
-/// declaration's own comment family instead (`own_line_marker`).
+/// declaration's own comment family instead (`own_line_marker`). This file's lists
+/// are the one sanctioned copy of markers outside `grammar::prefix_forms`: they are
+/// 0.17's reading, frozen until 0.19.0, and must not follow the forms table.
 const FIXED_LINE_MARKERS: [&str; 4] = ["///", "//!", "//", "#"];
 
 /// Strip one of the fixed comment markers (`///`, `//!`, `//`, `#`, `*`, `/**`,
@@ -61,6 +63,30 @@ pub(super) fn is_line_style_comment_line(line: &str) -> bool {
         || trimmed.starts_with("--")
 }
 
+/// The marker a line-style declaration's body lines open with, when it is not one
+/// of the `FIXED_LINE_MARKERS` (§FS-show.2.3.1.1), and how much of a body line it
+/// takes off (§FS-show.2.3.2).
+pub(super) struct OwnMarker {
+    /// The scanner's marker for the declaration line, which keys its block.
+    marker: String,
+    /// The declaration line is written in a form beyond the bare marker (`;;`,
+    /// `---`, `-- |`, …), so 0.17 never found it and its body loses the whole form
+    /// of each line (§FS-languages.prefixes.forms). A declaration behind the bare
+    /// `;` or `--` was found before, and keeps 0.17's reading — the bare marker and
+    /// nothing more — until 0.19.0 (§DF-line-prefix-forms-declare.4).
+    whole_form: bool,
+}
+
+impl OwnMarker {
+    #[cfg(test)]
+    pub(super) fn bare(marker: &str) -> Self {
+        Self {
+            marker: marker.to_string(),
+            whole_form: false,
+        }
+    }
+}
+
 /// The marker a line-style declaration's body lines must open with, when it is
 /// not one of the `FIXED_LINE_MARKERS`: the scanner's marker for the declaration
 /// line, so a `--` or `;` block is read line by line as the same comment prefix
@@ -68,9 +94,13 @@ pub(super) fn is_line_style_comment_line(line: &str) -> bool {
 pub(super) fn own_line_marker(
     declaration_line: &str,
     lexical: LexicalSettings<'_>,
-) -> Option<String> {
-    line_comment_block_marker(declaration_line, lexical)
-        .filter(|marker| !FIXED_LINE_MARKERS.contains(&marker.as_str()))
+) -> Option<OwnMarker> {
+    let marker = line_comment_block_marker(declaration_line, lexical)
+        .filter(|marker| !FIXED_LINE_MARKERS.contains(&marker.as_str()))?;
+    let whole_form = prefix_forms(&marker)
+        .len_at(declaration_line.trim_start())
+        .is_some_and(|len| len > marker.len());
+    Some(OwnMarker { marker, whole_form })
 }
 
 /// Whether a non-blank body line continues the declaration's comment block
@@ -79,26 +109,35 @@ pub(super) fn own_line_marker(
 /// markers otherwise.
 pub(super) fn continues_comment_body(
     line: &str,
-    own_marker: Option<&str>,
+    own_marker: Option<&OwnMarker>,
     lexical: LexicalSettings<'_>,
 ) -> bool {
     match own_marker {
-        Some(marker) => line_comment_block_marker(line, lexical).as_deref() == Some(marker),
+        Some(own) => line_comment_block_marker(line, lexical).as_deref() == Some(&own.marker),
         None => is_comment_body_line(line),
     }
 }
 
 /// What is left of a body line once its envelope is off (§FS-show.2.3.2): behind
-/// the declaration's own marker, the whitespace in front of it, the whole form of
-/// that marker the line was written in (§FS-languages.prefixes.forms, so a `;;`
-/// run goes whole), and one following space go and nothing else does; otherwise
-/// `clean_body_line`.
-pub(super) fn clean_envelope_line(line: &str, is_md: bool, own_marker: Option<&str>) -> String {
-    let Some(marker) = own_marker.filter(|_| !is_md) else {
+/// the declaration's own marker, the whitespace in front of it, the marker, and
+/// one following space go and nothing else does; otherwise `clean_body_line`. For
+/// a declaration 0.17 never found, the marker that goes is the whole form the line
+/// was written in (§FS-languages.prefixes.forms, so a `;;` run goes whole).
+pub(super) fn clean_envelope_line(
+    line: &str,
+    is_md: bool,
+    own_marker: Option<&OwnMarker>,
+) -> String {
+    let Some(own) = own_marker.filter(|_| !is_md) else {
         return clean_body_line(line, is_md);
     };
     let trimmed = line.trim_start();
-    match prefix_forms(marker).len_at(trimmed) {
+    let len = if own.whole_form {
+        prefix_forms(&own.marker).len_at(trimmed)
+    } else {
+        trimmed.starts_with(&own.marker).then_some(own.marker.len())
+    };
+    match len {
         Some(len) => {
             let rest = &trimmed[len..];
             rest.strip_prefix(' ').unwrap_or(rest).to_string()
@@ -126,7 +165,7 @@ pub(super) fn section_title(
     line: &str,
     section: &str,
     markdown_heading: bool,
-    own_marker: Option<&str>,
+    own_marker: Option<&OwnMarker>,
 ) -> String {
     let clean = clean_envelope_line(line, markdown_heading, own_marker);
     let clean = if markdown_heading {
