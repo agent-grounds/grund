@@ -683,8 +683,8 @@ jobs:
     # it is repeated in BENCH_IMAGE and in both cache keys, so change all four together.
     container:
       image: rust:1.95.0-bookworm@sha256:6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1
-      # iai-callgrind runs Valgrind under `setarch -R`, with ASLR off, and the default
-      # seccomp profile refuses that personality call.
+      # §AR-ci.5: iai-callgrind runs Valgrind under `setarch -R`, with ASLR off, and the
+      # default seccomp profile refuses that personality call.
       options: --security-opt seccomp=unconfined
     # bash -eo pipefail, so a check piped into the job summary still fails the step.
     defaults:
@@ -717,10 +717,12 @@ jobs:
         run: |
           # The container runs as root over a workspace the runner owns.
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          apt-get update -qq
-          # Valgrind depends on libc6-dbg, which must equal the image's libc6: pinned, a
-          # newer C library fails the install rather than replacing the image's.
-          apt-get install -y -qq --no-install-recommends valgrind=1:3.19.0-1 \
+          # §AR-ci.5: one snapshot is the only source, so libc6-dbg can equal the image's
+          # libc6 after bookworm moves on; the timestamp moves only with the image digest.
+          rm -f /etc/apt/sources.list.d/* && echo "deb [check-valid-until=no] \
+            https://snapshot.debian.org/archive/debian/20261001T000000Z bookworm main" > /etc/apt/sources.list
+          apt-get -o Acquire::Retries=5 update -qq
+          apt-get -o Acquire::Retries=5 install -y -qq --no-install-recommends valgrind=1:3.19.0-1 \
             libc6-dbg="$(dpkg-query -W -f '${Version}' libc6)"
           # The runner version must match the `iai-callgrind` dev-dependency in Cargo.toml.
           cargo install iai-callgrind-runner --version 0.16.1 --locked --quiet

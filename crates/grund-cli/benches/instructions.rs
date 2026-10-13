@@ -107,8 +107,14 @@ impl Invocation {
     }
 }
 
+/// A scenario's invocation, or why its setup failed under the binary being measured.
 #[cfg(feature = "bench")]
-fn command(invocation: Invocation) -> Command {
+type Setup = Result<Invocation, String>;
+
+/// Under the scenario's own binary a failed setup fails the harness loudly.
+#[cfg(feature = "bench")]
+fn command(setup: Setup) -> Command {
+    let invocation = setup.unwrap_or_else(|reason| panic!("benchmark setup failed: {reason}"));
     Command::new(grund()).args(invocation.0).build()
 }
 
@@ -120,12 +126,20 @@ fn refused_file() -> PathBuf {
     )
 }
 
-/// §AR-benchmarks.5.1: under `GRUND_BENCH_BIN`, run a scenario's invocation once outside
-/// Callgrind; a scenario the base binary refuses is listed and left out of the base run.
+/// §AR-benchmarks.5.1: under `GRUND_BENCH_BIN`, run a scenario's setup and invocation once
+/// outside Callgrind; a scenario the base binary refuses, in either, is listed and left out
+/// of the base run.
 #[cfg(feature = "bench")]
-fn accepts(scenario: &str, invocation: fn() -> Invocation) -> bool {
+fn accepts(scenario: &str, setup: fn() -> Setup) -> bool {
     let Some(binary) = std::env::var_os(BENCH_BIN_VAR) else {
         return true;
+    };
+    let invocation = match setup() {
+        Ok(invocation) => invocation,
+        Err(reason) => {
+            refuse(scenario, &reason);
+            return false;
+        }
     };
     ProcessCommand::new("python3")
         .arg(Path::new(REPO).join("scripts/bench_record.py"))
@@ -137,10 +151,29 @@ fn accepts(scenario: &str, invocation: fn() -> Invocation) -> bool {
         .arg("--refused")
         .arg(refused_file())
         .arg("--")
-        .args(invocation().0)
+        .args(invocation.0)
         .status()
         .expect("run the benchmark probe")
         .success()
+}
+
+/// List a scenario whose setup the base binary refused, as the probe lists a refused run.
+#[cfg(feature = "bench")]
+fn refuse(scenario: &str, reason: &str) {
+    use std::io::Write as _;
+    let path = refused_file();
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).expect("create the refused-scenario list's directory");
+    }
+    let mut out = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&path)
+        .expect("open the refused-scenario list");
+    writeln!(out, "{scenario}").expect("list the refused scenario");
+    eprintln!(
+        "the base binary refuses the setup of `{scenario}` ({reason}); it is no base, not compared"
+    );
 }
 
 #[cfg(feature = "bench")]
@@ -171,7 +204,7 @@ fn canonical_repo() -> PathBuf {
 /// the measured `--check` exits successfully on a canonical tree, under the binary
 /// being measured. §AR-benchmarks.1.3
 #[cfg(feature = "bench")]
-fn canonical_fmt_repo() -> PathBuf {
+fn canonical_fmt_repo() -> Result<PathBuf, String> {
     let root = canonical_repo();
     let status = ProcessCommand::new(grund())
         .args(["fmt", "--write"])
@@ -179,8 +212,11 @@ fn canonical_fmt_repo() -> PathBuf {
         .stdout(Stdio::null())
         .status()
         .expect("normalize formatter benchmark fixture");
-    assert!(status.success(), "formatter benchmark setup failed");
-    root
+    if status.success() {
+        Ok(root)
+    } else {
+        Err(format!("`fmt --write` exited with {status}"))
+    }
 }
 
 // Each scenario's invocation is a function of its own, so the probe of §AR-benchmarks.5.1
@@ -188,8 +224,8 @@ fn canonical_fmt_repo() -> PathBuf {
 
 // `grund check <fixture>` — validate every citation in the tree.
 #[cfg(feature = "bench")]
-fn check_args() -> Invocation {
-    Invocation::default().args(["check"]).arg(canonical_repo())
+fn check_args() -> Setup {
+    Ok(Invocation::default().args(["check"]).arg(canonical_repo()))
 }
 
 #[cfg(feature = "bench")]
@@ -200,12 +236,12 @@ fn check() -> Command {
 
 // `grund check <large-fixture>` — the 10k-file budget input.
 #[cfg(feature = "bench")]
-fn check_large_10k_args() -> Invocation {
-    Invocation::default().args(["check"]).arg(ensure_fixture(
+fn check_large_10k_args() -> Setup {
+    Ok(Invocation::default().args(["check"]).arg(ensure_fixture(
         LARGE_REPO_REL,
         LARGE_REPO_FILE_COUNT,
         false,
-    ))
+    )))
 }
 
 #[cfg(feature = "bench")]
@@ -218,12 +254,12 @@ fn check_large_10k() -> Command {
 // (classify + obligation + prohibition passes, §FS-config.3.9). Same file count
 // as `check`, so the delta against it is the direction-checking overhead.
 #[cfg(feature = "bench")]
-fn check_citations_args() -> Invocation {
-    Invocation::default().args(["check"]).arg(ensure_fixture(
+fn check_citations_args() -> Setup {
+    Ok(Invocation::default().args(["check"]).arg(ensure_fixture(
         CITATIONS_REPO_REL,
         CANONICAL_FILE_COUNT,
         true,
-    ))
+    )))
 }
 
 #[cfg(feature = "bench")]
@@ -234,8 +270,8 @@ fn check_citations() -> Command {
 
 // `grund list <fixture>` — every declared ID.
 #[cfg(feature = "bench")]
-fn list_args() -> Invocation {
-    Invocation::default().args(["list"]).arg(canonical_repo())
+fn list_args() -> Setup {
+    Ok(Invocation::default().args(["list"]).arg(canonical_repo()))
 }
 
 #[cfg(feature = "bench")]
@@ -246,10 +282,10 @@ fn list() -> Command {
 
 // `grund <ID> --brief <fixture>` — title plus first paragraph.
 #[cfg(feature = "bench")]
-fn show_brief_args() -> Invocation {
-    Invocation::default()
+fn show_brief_args() -> Setup {
+    Ok(Invocation::default()
         .args(["show", FIXTURE_ID, "--brief"])
-        .arg(canonical_repo())
+        .arg(canonical_repo()))
 }
 
 #[cfg(feature = "bench")]
@@ -260,10 +296,10 @@ fn show_brief() -> Command {
 
 // `grund <ID> <fixture>` — the lead-default declaration read.
 #[cfg(feature = "bench")]
-fn show_args() -> Invocation {
-    Invocation::default()
+fn show_args() -> Setup {
+    Ok(Invocation::default()
         .args(["show", FIXTURE_ID])
-        .arg(canonical_repo())
+        .arg(canonical_repo()))
 }
 
 #[cfg(feature = "bench")]
@@ -274,10 +310,10 @@ fn show() -> Command {
 
 // `grund <ID> --full <fixture>` — one full declaration body.
 #[cfg(feature = "bench")]
-fn show_full_args() -> Invocation {
-    Invocation::default()
+fn show_full_args() -> Setup {
+    Ok(Invocation::default()
         .args(["show", FIXTURE_ID, "--full"])
-        .arg(canonical_repo())
+        .arg(canonical_repo()))
 }
 
 #[cfg(feature = "bench")]
@@ -288,10 +324,10 @@ fn show_full() -> Command {
 
 // `grund refs <ID> <fixture>` — every citation site of an ID.
 #[cfg(feature = "bench")]
-fn refs_args() -> Invocation {
-    Invocation::default()
+fn refs_args() -> Setup {
+    Ok(Invocation::default()
         .args(["refs", FIXTURE_ID])
-        .arg(canonical_repo())
+        .arg(canonical_repo()))
 }
 
 #[cfg(feature = "bench")]
@@ -302,8 +338,8 @@ fn refs() -> Command {
 
 // `grund cover <fixture>` — the citation graph grouped by scanned file.
 #[cfg(feature = "bench")]
-fn cover_args() -> Invocation {
-    Invocation::default().args(["cover"]).arg(canonical_repo())
+fn cover_args() -> Setup {
+    Ok(Invocation::default().args(["cover"]).arg(canonical_repo()))
 }
 
 #[cfg(feature = "bench")]
@@ -314,10 +350,10 @@ fn cover() -> Command {
 
 // `grund fmt --check <fixture>` — report (without writing) any non-canonical citation.
 #[cfg(feature = "bench")]
-fn fmt_check_args() -> Invocation {
-    Invocation::default()
+fn fmt_check_args() -> Setup {
+    Ok(Invocation::default()
         .args(["fmt", "--check"])
-        .arg(canonical_fmt_repo())
+        .arg(canonical_fmt_repo()?))
 }
 
 #[cfg(feature = "bench")]

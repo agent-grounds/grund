@@ -328,7 +328,8 @@ A separate `bench` job runs the instruction-counting harness ([§AR-benchmarks](
 Everything the count depends on is pinned in this job, and only in this job, so two counts recorded months apart were taken in one named environment:
 
 - it runs in `container: rust:<release>-bookworm@sha256:<digest>`, an image named by its digest, which fixes the Rust compiler and the C library together;
-- it installs Valgrind as `valgrind=<exact Debian version>`, so a package that is gone fails the install instead of floating to another;
+- it runs that container with `--security-opt seccomp=unconfined`, because iai-callgrind starts Valgrind under `setarch -R` to turn ASLR off and Docker's default seccomp profile refuses that call, so every Callgrind run would exit 1; the option is scoped to this one job's container;
+- it installs Valgrind as `valgrind=<exact Debian version>` and Valgrind's `libc6-dbg` at exactly the image's `libc6` version, both from `snapshot.debian.org` at one pinned timestamp (`20261001T000000Z`) that is the job's only package source: `libc6-dbg` must equal the image's C library, and bookworm's live archive keeps only its newest point release, so installing from it would break the required job at the next glibc update. The snapshot never moves, so the install keeps working and the C library still cannot float. If the snapshot is unreachable the step fails; rerun it. The timestamp moves only with the image digest, in a change of its own;
 - it installs `iai-callgrind-runner` at 0.16.1, the version of the `iai-callgrind` dev-dependency;
 - it sets `LC_ALL=C.UTF-8`, `TZ=UTC`, `RAYON_NUM_THREADS=4`, `CARGO_INCREMENTAL=0` and an empty `RUSTFLAGS` for the whole job;
 - it has no `@stable` toolchain step: the image's compiler is the one it builds with. The test jobs keep tracking stable.
