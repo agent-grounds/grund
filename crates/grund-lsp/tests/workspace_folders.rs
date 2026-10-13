@@ -237,7 +237,7 @@ fn removing_one_of_two_folders_keeps_the_shared_project_snapshot() {
 
 #[test]
 fn a_zero_config_folder_uses_its_anchor_for_hover_reads() {
-    let root = std::env::temp_dir().join(format!(
+    let root = fixture_base().join(format!(
         "grund-lsp-zero-config-anchor-{}",
         std::process::id()
     ));
@@ -268,7 +268,11 @@ fn a_zero_config_folder_uses_its_anchor_for_hover_reads() {
         hover["contents"]["value"]
             .as_str()
             .is_some_and(|body| body.contains("Right body") && !body.contains("Wrong body")),
-        "hover must rescan the second zero-config anchor, not the server cwd: {hover}"
+        "hover must rescan the second zero-config anchor; a config at or above it is {}: {hover}",
+        covering_config(&second).map_or_else(
+            || "absent".to_string(),
+            |config| config.display().to_string()
+        )
     );
 
     stop_server(&mut child, &mut stdin, &receiver, 3);

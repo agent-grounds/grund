@@ -56,8 +56,9 @@ pub fn server_binary() -> PathBuf {
     }
 }
 
+/// A fresh configured fixture root under [`fixture_base`] (§AR-ci.10.3).
 pub fn test_root(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!(
+    let dir = fixture_base().join(format!(
         "grund-lsp-{name}-{}-{:?}",
         std::process::id(),
         std::thread::current().id()
@@ -342,8 +343,37 @@ pub fn hover_result(
 /// discovery climbs past the fixture and a covered base would hand it the
 /// config it found there; when no candidate is clean the suite fails here.
 pub fn fixture_base() -> PathBuf {
-    // Stub until the guard lands: unguarded, as every suite built its base before.
-    std::env::temp_dir()
+    static BASE: std::sync::OnceLock<Result<PathBuf, String>> = std::sync::OnceLock::new();
+    match BASE.get_or_init(|| uncovered_base(&temp_candidates())) {
+        Ok(base) => base.clone(),
+        Err(reason) => panic!("{reason}"),
+    }
+}
+
+/// The temp directories a fixture base may be, in preference order: the system
+/// one, then `/tmp` on unix where that differs (§AR-ci.10.3).
+fn temp_candidates() -> Vec<PathBuf> {
+    let system = std::env::temp_dir();
+    #[cfg(unix)]
+    let fallbacks = [PathBuf::from("/tmp")];
+    #[cfg(not(unix))]
+    let fallbacks: [PathBuf; 0] = [];
+    std::iter::once(system.clone())
+        .chain(fallbacks.into_iter().filter(|path| *path != system))
+        .collect()
+}
+
+/// The first config, under either name discovery reads, at `dir` or at any
+/// ancestor of its canonical path, or `None` when nothing covers it
+/// (§AR-ci.10.3). Discovery's own probe is crate-private to grund-core, so the
+/// two names are mirrored here, in discovery's precedence.
+pub fn covering_config(dir: &Path) -> Option<PathBuf> {
+    let walk = fs::canonicalize(dir).unwrap_or_else(|_| dir.to_path_buf());
+    walk.ancestors().find_map(|level| {
+        [level.join("grund.toml"), level.join(".agents/grund.toml")]
+            .into_iter()
+            .find(|config| config.is_file())
+    })
 }
 
 /// The first of `candidates` no config covers, under either name
@@ -351,9 +381,26 @@ pub fn fixture_base() -> PathBuf {
 /// canonical path (§AR-ci.10.3), returned as given. The `Err` names `TMPDIR`,
 /// each candidate and the config that covers it.
 pub fn uncovered_base(candidates: &[PathBuf]) -> Result<PathBuf, String> {
-    // Stub until the guard lands: takes the first candidate without probing it.
-    candidates
-        .first()
-        .cloned()
-        .ok_or_else(|| "no temp candidate".to_string())
+    let mut refusals = Vec::new();
+    for candidate in candidates {
+        match fs::canonicalize(candidate) {
+            Ok(walk) => match covering_config(&walk) {
+                None => return Ok(candidate.clone()),
+                Some(config) => refusals.push(format!(
+                    "{} is covered by {}",
+                    candidate.display(),
+                    config.display()
+                )),
+            },
+            Err(error) => {
+                refusals.push(format!("{} is unusable: {error}", candidate.display()));
+            }
+        }
+    }
+    Err(format!(
+        "grund-lsp's fixtures need a temp root no config covers, because discovery climbs from \
+         a fixture root to the filesystem root and a zero-config case would read what it finds; \
+         point TMPDIR at a directory no grund.toml or .agents/grund.toml sits above ({})",
+        refusals.join("; ")
+    ))
 }
