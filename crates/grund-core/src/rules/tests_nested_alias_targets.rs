@@ -49,6 +49,7 @@ fn facts() -> RuleFacts {
                 },
                 newly_counted: false,
                 lent: false,
+                mixed: false,
             },
         )
     };
@@ -281,6 +282,7 @@ fn facts_with_section_site() -> RuleFacts {
                 anchor: anchor(line),
                 newly_counted,
                 lent: false,
+                mixed: false,
             },
         );
     }

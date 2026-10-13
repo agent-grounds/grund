@@ -413,10 +413,9 @@ pub(super) fn add_markers(
         }
         // §FS-fmt.2.3 / §FS-check.1.1.2: an unmarked named coordinate is one
         // prose token under the opt-in and is never promoted by `fmt --marker`.
-        if config.grammar.has_reserved_named_tail(line, found.end)
-            || config
-                .grammar
-                .is_named_section(caps.name("sec").map(|sec| sec.as_str()))
+        if config
+            .grammar
+            .is_named_section(caps.name("sec").map(|sec| sec.as_str()))
         {
             continue;
         }

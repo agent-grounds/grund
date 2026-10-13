@@ -16,7 +16,7 @@ use crate::grammar::FMT_DIRECTIVE;
 use crate::model::{Catalog, SECTION_LOCK_DIR};
 use crate::resolver::{SettledHeadings, ShorthandTargets, WorkspaceContext, index_link_targets};
 use crate::scanner::{
-    ApiScanError, api_scan_error, may_give_relative_heading, walk_scannable_files,
+    ApiScanError, api_scan_error, may_give_locked_heading, walk_scannable_files,
     walk_scannable_files_reporting,
 };
 
@@ -228,7 +228,7 @@ pub(crate) fn fmt_tree(
         })?;
         let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");
         relative_seen =
-            relative_seen || is_md && may_give_relative_heading(config.frame(), &path, &original);
+            relative_seen || is_md && may_give_locked_heading(config.frame(), &path, &original);
         // §FS-fmt.2.5.1: an excluded file keeps its bytes, so the ordinary pass
         // is off here — every rewrite with it (§FS-fmt.2.5).
         let file_excluded = excluded.contains(&path);

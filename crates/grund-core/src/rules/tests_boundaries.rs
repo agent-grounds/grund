@@ -309,6 +309,7 @@ fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
                 anchor: anchor("facts/spec.graph", 7),
                 newly_counted: false,
                 lent: false,
+                mixed: false,
             },
         )]),
     };

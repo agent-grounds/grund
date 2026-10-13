@@ -194,9 +194,6 @@ pub(super) fn scan_workspace_qualified_pass(
         let Some(parsed) = parsed else {
             continue;
         };
-        if target_grammar.has_reserved_named_tail(id_rest, parsed.len) {
-            continue;
-        }
         let token_end = id_start + parsed.len;
         findings.citations.push(Citation {
             namespace: Some(alias.to_string()),

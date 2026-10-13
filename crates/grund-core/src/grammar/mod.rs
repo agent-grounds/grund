@@ -60,7 +60,10 @@
 //! grammar and its component boundary (§FS-config.3.3.4), and both readers of
 //! it sit above — `grund refs --descendants` in the api (§FS-refs.2) and the
 //! declaration-side title in the editor queries (§FS-lsp.1.3.1). Written twice
-//! it would be written wrong once, so it is written here.
+//! it would be written wrong once, so it is written here. The predicates over one
+//! path's components joined it from `compiled.rs` when a name under a number
+//! became a section (§FS-config.3.3.1): they ask the same grammar, of a path
+//! rather than of a line.
 
 mod anchors;
 mod comment_block;
@@ -98,9 +101,7 @@ pub(crate) use comment_block::{
 };
 pub(crate) use comment_line::{comment_envelope, comment_strip_prefixes, strip_block_closer};
 pub(crate) use compiled::{
-    AGENTS_BLOCK_END, QUALIFIED_CITATION_PREFIX, STUB_LINK_HEADING, is_valid_project_alias,
-    named_mode_section_path, named_section_component, section_path, unnamed_component,
-    value_binding_section_shape_is_valid,
+    QUALIFIED_CITATION_PREFIX, STUB_LINK_HEADING, is_valid_project_alias, section_path,
 };
 // The bare fence reader serves the record's doc-comment headings and the template
 // tests, which look for a fenced example rather than for a heading (§FS-check.1.1.5).
@@ -125,9 +126,9 @@ pub(crate) use inline_note_layout::{
     layout_pass_enabled, line_says_something,
 };
 pub(crate) use managed_block::{
-    AGENT_GUIDANCE_BLOCK_VERSION, AGENTS_BLOCK_VERSION, AgentsBlock, AgentsBlockLookup,
-    agent_guidance_markers, find_agent_guidance_block, find_agents_block, find_managed_block,
-    integrations_block_markers,
+    AGENT_GUIDANCE_BLOCK_VERSION, AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlock,
+    AgentsBlockLookup, agent_guidance_markers, find_agent_guidance_block, find_agents_block,
+    find_managed_block, integrations_block_markers,
 };
 pub(crate) use markdown_blocks::{MarkdownBlocks, MarkdownLine, markdown_line_kinds};
 // The version a managed integrations block is written and read at: the command
@@ -148,7 +149,10 @@ pub(crate) use relative_heading::{
     expand_relative_heading, may_hold_relative_heading, relative_heading_form,
     relative_heading_hint, relative_to_ancestor,
 };
-pub(crate) use section_paths::path_at_or_under;
+pub(crate) use section_paths::{
+    mixed_heading_path, named_mode_section_path, named_section_component, path_at_or_under,
+    unnamed_component, value_binding_section_shape_is_valid,
+};
 pub(crate) use settings::{AliasGrammar, GrammarKind, LexicalSettings, require_kinds};
 pub(crate) use shorthand::{
     IdArgError, ParsedId, ShorthandIndex, parse_id_arg_with_shorthand, resolve_shorthand_citations,

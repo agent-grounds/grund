@@ -362,13 +362,6 @@ pub(super) fn scan_shorthand_citations(
             continue;
         };
         let match_end = caps.get(0).map_or(0, |found| found.end());
-        if line
-            .frame
-            .grammar()
-            .has_reserved_named_tail(rest, match_end)
-        {
-            continue;
-        }
         // §DF-number-only-citation-shorthand.2.6: the pattern is anchored only at
         // the start, so without this the `FS-042` inside the rejected full ID
         // `§FS-042-User-Login` would be reported as a token the file does not hold.

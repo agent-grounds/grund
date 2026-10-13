@@ -107,7 +107,8 @@ fn section_heading_note(project: &Project, marker: &str) -> String {
     let heading_policy = format!(
         " In a Markdown declaration body a heading may instead write only the component it adds and take the rest from the heading one level up: `{child}` under `{parent}` declares `{marker}<ID>{sep}{path}`, the one coordinate it is cited and reported by. After citing such a heading, run `grund fmt --write` so the section lock records it, and commit the lock. Every non-declaration heading inside a Markdown declaration body must carry a numbered or enabled named section path; file titles, headings that close the body, fenced examples, non-ATX text, and source doc-comments stay exempt, while bold labels remain the non-citable alternative."
     );
-    // §FS-init.2.3.4.5: enabled repositories teach explicit complete handles.
+    // §FS-init.2.3.4.5: enabled repositories teach explicit complete handles, and since
+    // v17 a name under a number in Markdown, which the section lock guards.
     if ids.named_sections {
         let verdict = match ids.section_heading_levels.as_str() {
             "strict" => "an error",
@@ -117,7 +118,7 @@ fn section_heading_note(project: &Project, marker: &str) -> String {
             _ => "recommended for readability",
         };
         return format!(
-            "Named sections are enabled: use explicit complete paths (`## goals: Goals`, `### goals.performance: Performance`, `### goals.3: Ordered child`) so `{marker}<ID>{sep}goals.performance` resolves; handles are letter-first lowercase names, `name.number` is legal, and `number.name` is reserved. Heading depth must match each path component ({verdict}). Purely numbered headings remain citable.{heading_policy}"
+            "Named sections are enabled: use explicit complete paths (`## goals: Goals`, `### goals.performance: Performance`, `### goals.3: Ordered child`) so `{marker}<ID>{sep}goals.performance` resolves; handles are letter-first lowercase names, `name.number` is legal, and in a Markdown declaration body so is `number.name`; a cited address with a name under a number is recorded in the section lock. Heading depth must match each path component ({verdict}). Purely numbered headings remain citable.{heading_policy}"
         );
     }
     match ids.section_heading_levels.as_str() {

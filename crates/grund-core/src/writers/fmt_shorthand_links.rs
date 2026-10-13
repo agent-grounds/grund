@@ -67,10 +67,7 @@ pub(super) fn accepted_shorthand_link(
     }
     let caps = shorthand.prefix_re().captures(rest)?;
     let consumed = caps.get(0)?.end();
-    if target_config
-        .grammar
-        .has_reserved_named_tail(rest, consumed)
-        || !target_config.grammar.id_token_ends_cleanly(rest, consumed)
+    if !target_config.grammar.id_token_ends_cleanly(rest, consumed)
         || target_config.grammar.shorthand_sits_in_numeric_run(
             &citing_config.marker,
             rest,

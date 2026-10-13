@@ -14,8 +14,8 @@ use super::relative_fingerprint::relative_nested_headings;
 use crate::config::{Frame, Schema};
 use crate::grammar::render_id;
 use crate::model::{
-    Catalog, Citation, Declaration, Id, LockEntry, LockLines, paired_declarations, read_lock_lines,
-    section_lock_path,
+    Catalog, Citation, Declaration, Id, LockEntry, LockLines, locked, paired_declarations,
+    read_lock_lines, section_lock_path,
 };
 use crate::sources::sha256_hex;
 
@@ -46,16 +46,16 @@ pub(crate) enum EntryVerdict {
     /// Its section was edited in place, or a pointer acknowledged its move: the
     /// fingerprint to record, `None` for `-` (§FS-section-lock.move.pointer).
     Refresh(Option<String>),
-    /// Nothing cites its address, a relative heading no longer holds it, or an
-    /// earlier line enters the same coordinate.
+    /// Nothing cites its address, it is no longer a locked address, or an earlier
+    /// line enters the same coordinate.
     Drop,
     /// Its recorded text sits at `to`, another section of the declaration, and
     /// nothing acknowledged the move (§FS-section-lock.checks.section-address-changed).
     Moved { to: String },
 }
 
-/// One lock file judged against the tree: the one that exists, the one a cited
-/// relative address needs, or both (§FS-section-lock.file.shard).
+/// One lock file judged against the tree: the one that exists, the one a locked
+/// address needs, or both (§FS-section-lock.file.shard).
 pub(crate) struct LockJudgement<'a> {
     /// The project its citations go into when that is another one
     /// (§FS-section-lock.file.members).
@@ -72,8 +72,8 @@ pub(crate) struct LockJudgement<'a> {
     pub(crate) decl: Option<&'a Declaration>,
     /// Each entry the file holds, in file order, with what becomes of it.
     pub(crate) verdicts: Vec<(LockEntry, EntryVerdict)>,
-    /// Each cited relative address the file holds no entry for, with its
-    /// citations and the fingerprint to record, `None` for `-`.
+    /// Each locked address the file holds no entry for, with its citations and
+    /// the fingerprint to record, `None` for `-`.
     pub(crate) unrecorded: Vec<(String, Vec<&'a Citation>, Option<String>)>,
 }
 
@@ -126,13 +126,13 @@ struct LockTarget<'a, 'b> {
     frame: Frame<'b>,
 }
 
-/// Judge every lock file the scan read and every one a cited relative address
-/// needs, in path order (§FS-section-lock): a citation into another project
+/// Judge every lock file the scan read and every one a locked address needs, in
+/// path order (§FS-section-lock): a citation into another project
 /// against `targets`, the projects the run loaded, by its alias, and a lock
 /// file of an alias the run did not load not at all
 /// (§FS-section-lock.file.members). Empty, and nothing sliced, in a tree with
-/// neither a lock nor a cited relative section. Whether a citation's section is
-/// relative is asked of the declaration it resolves to, through its stubs, so a
+/// neither a lock nor a cited locked address. Whether a citation's section is
+/// locked is asked of the declaration it resolves to, through its stubs, so a
 /// section in a stub's target outside `[scan] include` is locked as one inside it
 /// (§FS-section-lock.holds.entry).
 pub(crate) fn judge_section_locks<'a>(
@@ -161,10 +161,11 @@ pub(crate) fn judge_section_locks<'a>(
             continue;
         };
         let alias = citation.namespace.as_deref();
+        // §FS-section-lock.holds.entry: a relative heading's or a mixed path's address.
         if target_of(alias)
             .and_then(|target| sole_declaration(target.catalog, &citation.id))
             .and_then(|decl| decl.sections.get(section))
-            .is_some_and(|info| info.relative)
+            .is_some_and(|info| locked(section, info))
         {
             cited
                 .entry((alias, &citation.id))
@@ -174,7 +175,7 @@ pub(crate) fn judge_section_locks<'a>(
                 .push(citation);
         }
     }
-    // §FS-section-lock: a tree that cites no relative section and has no lock reads none.
+    // §FS-section-lock: a tree that cites no locked address and has no lock reads none.
     if cited.is_empty() && findings.section_locks.is_empty() {
         return Vec::new();
     }
@@ -235,7 +236,7 @@ pub(crate) fn judge_section_locks<'a>(
 }
 
 /// The one declaration `id`'s citations resolve to, as the pairing of its stubs
-/// answers it: a cited relative address is a section of it (§FS-section-lock.terms).
+/// answers it: a locked address is a section of it (§FS-section-lock.terms).
 fn sole_declaration<'a>(findings: &'a Catalog, id: &Id) -> Option<&'a Declaration> {
     let sole = paired_declarations(findings.declarations.get(id)?).sole()?;
     Some(sole.record)
@@ -318,7 +319,7 @@ fn judge_entries<'a>(
         let section = entry.section.as_str();
         let held = decl
             .and_then(|decl| decl.sections.get(section))
-            .is_some_and(|info| info.relative);
+            .is_some_and(|info| locked(section, info));
         let verdict = match (current(section), held && was_cited.contains(section)) {
             _ if chosen.get(section) != Some(&index) => EntryVerdict::Drop,
             // A text no slice could read is no evidence of an edit or a move.

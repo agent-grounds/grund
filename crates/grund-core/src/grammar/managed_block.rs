@@ -11,7 +11,7 @@
 //! Why all three live here rather than one being derived from the others: they
 //! are three spellings of the same protocol, and the differences are real.
 //! §FS-init's block is bounded by fixed HTML-comment delimiters matched by the
-//! compiled regexes beside this file, carries its version in a `## Grounding
+//! regexes at the top of this file, carries its version in a `## Grounding
 //! with grund (vN)` heading *inside* the block rather than in a delimiter,
 //! still recognizes the pre-v4 heading-bounded form, and reports a broken
 //! delimiter with the byte offset a diagnostic is line-anchored from
@@ -28,11 +28,29 @@
 //! when there is none, what verb the run reports, and what bytes the block
 //! carries.
 
-use regex::Match;
+use once_cell::sync::Lazy;
+use regex::{Match, Regex};
 
-use super::compiled::{
-    AGENTS_BLOCK_BEGIN, AGENTS_BLOCK_END, AGENTS_BLOCK_H2, AGENTS_SECTION_BOUNDARY,
-};
+/// The explicit managed-block delimiters (§FS-init.2.3.9,
+/// §DF-managed-block-delimiters): standard `BEGIN`/`END` HTML-comment lines
+/// bound the managed region from block v4 on. Legacy v3-and-earlier blocks have
+/// no delimiters and are found by `AGENTS_BLOCK_H2` alone.
+pub(crate) static AGENTS_BLOCK_BEGIN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?m)^<!-- BEGIN GRUND MANAGED BLOCK -->[ \t]*\r?$").unwrap());
+pub(crate) static AGENTS_BLOCK_END: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?m)^<!-- END GRUND MANAGED BLOCK -->[ \t]*\r?$").unwrap());
+/// The managed block's version marker: an H2 heading carrying the block
+/// version. Inside a delimited block it names the schema version; for a legacy
+/// block it is also the begin marker, and the block runs until the next H1/H2
+/// or EOF (§FS-init.2.3.1).
+pub(crate) static AGENTS_BLOCK_H2: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(?m)^##[ \t]+Grounding with grund[ \t]+\(v(?P<version>\d+)\)[ \t]*\r?$").unwrap()
+});
+/// The next H1 or H2 heading after a position — the implicit end of a legacy
+/// managed section. A legacy block ends at this line's start, or at EOF if no
+/// such line follows.
+pub(crate) static AGENTS_SECTION_BOUNDARY: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?m)^#{1,2}[ \t]+\S").unwrap());
 
 /// v5 (§FS-init.2.3.6.2, §DF-integrations-command, §DF-repo-conversation-opinion):
 /// the block gains the `### Clickable citations` section — the fixed
@@ -80,9 +98,13 @@ use super::compiled::{
 /// is that base with v13's `### Chapter rules` section.
 /// v16 (§FS-init.2.3.4.5, §DF-relative-section-headings): the declaration forms
 /// teach the relative section heading, `.<component>` under its parent, and the
-/// `grund fmt --write` that records a cited one in the section lock. v17 is that
-/// base with v15's `### Chapter rules` section.
-pub(crate) const AGENTS_BLOCK_VERSION: u32 = 17;
+/// `grund fmt --write` that records a cited one in the section lock.
+/// v17 (§FS-init.2.3.4.5, §DF-number-name-sections): with named sections on, the
+/// declaration forms teach that a name may follow a number in a Markdown
+/// declaration body and that a cited address with one is locked. v18 is that base
+/// with v16's rule-enabled `### Chapter rules` section, so a rule-enabled v17 block
+/// is one version behind.
+pub(crate) const AGENTS_BLOCK_VERSION: u32 = 18;
 
 /// The byte span and `vN` version of the managed block inside an `AGENTS.md`
 /// (§FS-init.2.3) — what both `grund init`'s update and `grund check`'s validation

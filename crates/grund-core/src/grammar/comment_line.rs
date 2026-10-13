@@ -38,9 +38,6 @@ fn citation_token_ranges(
         let token_end = offset + full.end();
         let namespace = caps.name("namespace");
         let has_marker = line[..token_start].ends_with(lexical.marker);
-        if lexical.grammar.has_reserved_named_tail(line, token_end) {
-            continue;
-        }
         if namespace.is_some() && !has_marker {
             continue;
         }
