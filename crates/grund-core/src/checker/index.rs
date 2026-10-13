@@ -9,6 +9,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use super::index_entries::KindIndexEntries;
 use super::index_mention::index_mentions;
@@ -17,10 +18,11 @@ use crate::grammar::{
     cross_ref_wrap, is_inside_inline_code, markdown_line_kinds, never_rewrite_context, render_id,
 };
 use crate::model::{
-    Catalog, CheckReport, Citation, Declaration, Diagnostic, HeadingKind, Id,
+    Catalog, CheckReport, Citation, Declaration, Diagnostic, FileRecord, HeadingKind, Id,
     configured_home_path_key, paired_declarations, scanned_decl_relative_path, scanned_path_key,
     section_resolves,
 };
+use crate::scanner::record_of_text;
 use crate::sources::{Sources, path_is_dir, physical_path_key};
 
 /// One kind's index obligation, resolved against the config root
@@ -214,6 +216,24 @@ pub(crate) const INDEX_RULE_PRIOR_RELEASE: &str = "0.11.0";
 /// error on arrival — the "to" half of that pair.
 pub(crate) const INDEX_RULE_RELEASE: &str = "0.12.0";
 
+/// The record of an index's saved `text`, which every look at its lines reads
+/// (§DF-four-editor-checks-read-saved-text): the scan's own `record`, read under
+/// the key the scan read the file by, where the scan read those bytes, and the
+/// scanner's record of the saved text where it read an editor's unsaved buffer
+/// instead, so a heading is asked about the line it is on (§AR-scanner.2.8.5).
+fn saved_record(
+    file: &Path,
+    record: &Arc<FileRecord>,
+    text: &str,
+    schema: &Schema,
+    frame: Frame<'_>,
+) -> Option<Arc<FileRecord>> {
+    if record.text.as_str() == text {
+        return Some(Arc::clone(record));
+    }
+    record_of_text(file, text, schema, frame).ok()
+}
+
 /// §AR-checker.2.16 — the kind-index rule (§FS-check.3.18, §FS-check.3.17). One
 /// pass per configured index: read the file once, classify the citations the
 /// scanner already recorded in it, then judge each declaration the index owns.
@@ -283,7 +303,6 @@ pub(super) fn check_kind_indexes(
     // §FS-check.3.18.8: which index files *this run* read. The entries come from the
     // scan and the form from disk, so an index the run never scanned would
     // otherwise look empty and report every declaration in the folder as unlisted.
-    // Each is mapped to the path the scan read it under, its record's key (§AR-scanner.2.8.5).
     let index_scanned: BTreeMap<&Path, &Path> = findings
         .scanned_files
         .iter()
@@ -334,6 +353,11 @@ pub(super) fn check_kind_indexes(
             .unwrap_or_default();
         // §FS-check.1.1.5.1: which of those lines may hold a heading at all.
         let kinds = markdown_line_kinds(lines.iter().copied());
+        // §AR-scanner.2.8.5: which are declaration headings, off the record of these lines.
+        let record = scanned_as
+            .and_then(|file| findings.files.get(*file).map(|record| (*file, record)))
+            .zip(text.as_deref())
+            .and_then(|((file, record), text)| saved_record(file, record, text, schema, frame));
         // §FS-check.3.17.4: a bare citation is an entry only where `fmt --write`
         // may wrap it. A link through this index path to a target outside the
         // physical config root is readable but not writable by the formatter.
@@ -349,15 +373,13 @@ pub(super) fn check_kind_indexes(
             };
             // §FS-fmt.6.4: `fmt` leaves a declaration heading alone, so a citation on one
             // is no more repairable than one in inline code. A fence records no citation
-            // and a raw-text HTML block holds no heading (§FS-check.1.1.5.1). Whether the
-            // line is one is the scan's record of the file it cited from (§AR-scanner.2.8.5).
+            // and a raw-text HTML block holds no heading (§FS-check.1.1.5.1).
             let heading_position = kinds
                 .get(citation.line.saturating_sub(1))
                 .is_some_and(|kind| kind.may_be_heading());
             if heading_position
-                && findings
-                    .files
-                    .get(&citation.file)
+                && record
+                    .as_ref()
                     .and_then(|record| record.heading_at(citation.line))
                     .is_some_and(|heading| heading.kind == HeadingKind::Declaration)
             {
@@ -402,11 +424,10 @@ pub(super) fn check_kind_indexes(
         let mentioned = if unentered.is_empty() {
             BTreeSet::new()
         } else {
-            let record = scanned_as.and_then(|file| findings.files.get(*file));
             index_mentions(
                 frame,
                 &schema.citation.marker,
-                record.map(|record| &**record),
+                record.as_deref(),
                 &lines,
                 &unentered,
             )
