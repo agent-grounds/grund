@@ -171,6 +171,15 @@ fn propose_id_run(
         },
     };
     let rendered = format_id(&id, &config, opts.width);
+    // §FS-id.3.2: print only what `check` accepts, read by the parser a declaration is read by.
+    if config.grammar.parse_token(&rendered).as_ref() != Some(&id) {
+        return Ok(IdProposalOutcome::Rejected {
+            message: format!(
+                "title produces slug \"{slug}\" that slug_pattern \"{}\" does not accept: \"{title}\"",
+                config.slug_pattern
+            ),
+        });
+    }
     if let Some(decls) = findings.declarations.get(&id)
         && let Some(decl) = decls.first()
     {
