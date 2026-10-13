@@ -225,7 +225,7 @@ Bare `init`, with no `--scaffold`, writes these two and nothing else ([§FS-init
 With `--scaffold`, additionally the template's starter files ([§FS-init.2.1.3](FS-init.md#213-the-software-development-starter-files)). These are the `software-development` template's; the `none` template has none ([§FS-init.1.6.4](FS-init.md#164-none-has-nothing-to-scaffold)):
 
 - `<path>/requirements.md`
-- `<path>/docs/requirements/README.md`
+- `<path>/docs/requirements/README.md`, when the config declares `REQ` (§FS-init.2.1.3)
 - `<path>/docs/grund.md`
 - `<path>/docs/goals.md`
 - `<path>/docs/roadmap.md`
@@ -273,7 +273,7 @@ Each scaffolded markdown file is a minimal starter — enough structure to teach
 - `grund.md` — the H1 plus a one-line note on how the project's reason for being is declared inline (`# GRUND-NNN-slug: …`), then the three H2 sections (`## 1. The problem`, `## 2. What this project does about it`, `## 3. Who it is for`), each with a one-line italic prompt to be replaced.
 - `goals.md` — the H1 plus a one-line note on how goals are declared inline (`# GOAL-NNN-slug: …`).
 - `requirements.md` — the H1 plus a one-line note on how `FS-` requirements/spec IDs are declared inline as H2 headings in that file.
-- `requirements/README.md` — the index of the `REQ` folder ([§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements)), in the shape of the decision READMEs below: the H1, the note on how `REQ-` IDs declare into the directory, the index rule, and an empty `| ID | Subject |` table. It is written right after the FS home.
+- `requirements/README.md` — the index of the `REQ` folder ([§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements)), in the shape of the decision READMEs below: the H1, the note on how `REQ-` IDs declare into the directory, the index rule, and an empty `| ID | Subject |` table. It is written right after the FS home, as `README.md` in the folder the governing config's `REQ` row names, and only when that config declares `REQ` as a `folder`: a config with no `REQ` row, as every config an earlier `init` wrote, gets no `REQ` starter.
 - `roadmap.md`, `changelog.md` — the H1 plus a single `<!-- placeholder - replace with real content -->` line.
 - `architecture/README.md` — the H1, the navigational note about how `AR-` IDs declare into the directory and the rule that the index lists every architecture declaration as a full link ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)), and an empty `| ID | Subject |` table to fill in.
 - `decisions/architectural/README.md`, `decisions/functional/README.md` — the same shape for the two decision folders: the H1, the note on how `DA-`/`DF-` IDs declare into the directory and on citing a decision from the declaration it settles, the index rule, and an empty `| ID | Subject |` table. Every citable `folder` kind whose `index` the generated config leaves at its default gets one, which under those defaults is `REQ`, `AR`, `DF`, and `DA` — the two test kinds are non-citable and have no index at all ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)).

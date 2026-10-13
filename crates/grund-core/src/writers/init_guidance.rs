@@ -183,11 +183,19 @@ pub(crate) fn docs_scaffold_for_config(
             render_scaffold_id_shapes(FS_README_TEMPLATE, "FS", project),
         )),
     }
-    // §FS-init.2.1.3: the `REQ` index lands right after the FS home.
-    files.push((
-        "docs/requirements/README.md".to_string(),
-        render_scaffold_id_shapes(REQ_README_TEMPLATE, "REQ", project),
-    ));
+    // §FS-init.2.1.3: the `REQ` index lands right after the FS home, in the
+    // folder the config's `REQ` row names, and only where it declares one.
+    if let Some(folder) = config
+        .kinds
+        .iter()
+        .find(|kind| kind.kind == "REQ")
+        .and_then(|kind| kind.folder.as_ref())
+    {
+        files.push((
+            format!("{folder}/README.md"),
+            render_scaffold_id_shapes(REQ_README_TEMPLATE, "REQ", project),
+        ));
+    }
     files.extend(
         [
             (
