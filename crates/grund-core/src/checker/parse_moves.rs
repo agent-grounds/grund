@@ -204,9 +204,9 @@ fn check_rejected_headings(
 }
 
 /// The fourth shape of §FS-declarations.checks.parse-moves.2: a relative heading in a source
-/// doc-comment declaration body, prose today, takes the meaning 0.19.0 gives it
-/// (§FS-declarations.section.relative.where). Its answer is the one the Markdown parent pass
-/// gives (§FS-declarations.section.relative.parent), and a form the rules refuse is left alone.
+/// doc-comment declaration body, prose today, takes the meaning 0.19.0 gives it. Its answer is
+/// `relative_answer`'s, the one the Markdown parent pass gives, and a form the rules refuse is
+/// left alone.
 /// Only a source file whose record holds a plain heading is read further.
 fn check_relative_headings(
     findings: &Catalog,

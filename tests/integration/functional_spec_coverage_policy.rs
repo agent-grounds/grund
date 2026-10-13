@@ -257,7 +257,6 @@ pub(super) const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
 
 #[rustfmt::skip]
 pub(super) const TEMPORARY_EXCEPTIONS: &[Exception<'static>] = &[
-    Exception { id: "FS-declarations.checks.parse-moves.4", reason: "specified ahead of its release; the 0.19.0 change of #639 removes the check and proves it" },
     Exception { id: "FS-examples.3", reason: "example explanation proof spans the runner and docs" },
     Exception { id: "FS-examples.4", reason: "example maintenance proof spans the runner and docs" },
     Exception { id: "FS-fetch.remote.all", reason: "specified ahead of its release; the Drift piece of remote projects proves it" },
