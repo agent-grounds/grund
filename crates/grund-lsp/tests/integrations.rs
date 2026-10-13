@@ -110,7 +110,11 @@ fn preview_snapshots_effective_extensions_and_quoted_commands() {
     let preview_text = stdout(&preview);
     assert_import_steps(&preview_text);
     let default_template = template_from(&preview_text);
-    assert_template(&default_template, DEFAULT_EXTENSIONS, &sandbox.binary);
+    assert_template(
+        &default_template,
+        &default_extensions(&default_project),
+        &sandbox.binary,
+    );
     fs::write(
         default_project.join("grund.toml"),
         "grund_config_version = 1\n[reference]\ntrigger = \"%%\"\n",
@@ -181,7 +185,7 @@ fn write_is_exact_idempotent_and_preserves_every_conflict() {
     assert_import_steps(&String::from_utf8(readme.clone()).expect("README is UTF-8"));
     assert_template(
         &serde_json::from_slice(&template).expect("template is JSON"),
-        DEFAULT_EXTENSIONS,
+        &default_extensions(&project),
         &sandbox.binary,
     );
 
@@ -224,7 +228,7 @@ fn packaged_crate_runs_without_the_repository_editor_tree() {
     assert_success(&preview, "packaged preview");
     assert_template(
         &template_from(&stdout(&preview)),
-        DEFAULT_EXTENSIONS,
+        &default_extensions(&project),
         &sandbox.binary,
     );
 }
