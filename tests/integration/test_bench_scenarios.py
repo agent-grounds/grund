@@ -67,6 +67,12 @@ def rows():
     return catalog()["scenarios"]
 
 
+def section_1_2():
+    """The text of §AR-benchmarks.1.2 and its subsections, up to section 1.3."""
+    text = AR_BENCHMARKS.read_text(encoding="utf-8")
+    return text.split("\n### 1.2 ", 1)[1].split("\n### 1.3 ", 1)[0]
+
+
 def describe(product):
     result = subprocess.run([sys.executable, "-I", str(TRAIN), "describe", product],
                             capture_output=True, text=True, encoding="utf-8", check=False)
@@ -98,18 +104,29 @@ class TheCatalogIsTheScenarioList(unittest.TestCase):
         self.assertEqual(list(TODAY), found[:len(TODAY)],
                          "a scenario of cf706c4530 changed its name, invocation or limit")
 
-    def test_the_architecture_table_renders_the_catalog_row_for_row(self):
-        """§AR-benchmarks.1.2: the table names each row and its invocation, in catalog order."""
-        text = AR_BENCHMARKS.read_text(encoding="utf-8")
-        table = re.findall(r"^\| `([a-z_0-9]+)` \| `([^`]+)` \|", text, re.M)
-        self.assertEqual([row["name"] for row in rows()], [name for name, _ in table],
-                         "the table's Benchmark column is not the catalog's row names")
-        for row, (name, invocation) in zip(rows(), table):
+    def test_the_architecture_table_renders_the_pr_tier_row_for_row(self):
+        """§AR-benchmarks.1.2: the table names each pr row and its invocation, in catalog order."""
+        pr = [row for row in rows() if row.get("tier") == "pr"]
+        table = re.findall(r"^\| `([a-z_0-9]+)` \| `([^`]+)` \|", section_1_2(), re.M)
+        self.assertEqual([row["name"] for row in pr], [name for name, _ in table],
+                         "the table's Benchmark column is not the pr tier's row names")
+        for row, (name, invocation) in zip(pr, table):
             with self.subTest(scenario=name):
                 args = [arg.replace("{id}", "<ID>") for arg in row["args"]]
-                command = " ".join(["grund"] + args)
-                self.assertTrue(invocation.startswith(command + " <"),
+                process = {"lsp": "grund-lsp", "python": "python"}.get(row.get("frontend"))
+                command = process or " ".join(["grund"] + args)
+                self.assertTrue(invocation.startswith(command + " "),
                                 f"{invocation!r} is not {command!r} on its fixture")
+
+    def test_the_nightly_tier_renders_one_line_per_group_with_its_count(self):
+        """§AR-benchmarks.1.2.1: groups in order of first appearance, each with its row count."""
+        groups = {}
+        for row in rows():
+            if row.get("tier") == "nightly":
+                groups[row.get("group")] = groups.get(row.get("group"), 0) + 1
+        table = re.findall(r"^\| `([a-z0-9-]+)` \| (\d+) \|", section_1_2(), re.M)
+        self.assertEqual(list(groups.items()), [(name, int(count)) for name, count in table])
+        self.assertTrue(groups, "the catalog has no nightly tier to render")
 
     def test_names_are_unique(self):
         names = [row["name"] for row in rows()]
