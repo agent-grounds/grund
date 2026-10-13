@@ -516,7 +516,7 @@ Discovery climbs from the path it is given to the filesystem root, probing both 
 
 The helper takes its base from a short candidate list, the system temp directory first and, on unix, `/tmp` where that differs, and uses the first candidate no config covers. It asks through discovery's own probe, so the guard reads exactly the names discovery reads. When every candidate is covered, the suite fails at the helper, naming `TMPDIR`, each candidate and the config that covers it, rather than handing out a covered root and letting a zero-config case invert into a failure about the fixture. This is the version-control guard `fixture_root` in `crates/grund-cli/tests/init_refused_targets.rs` already holds, applied to config files. The check belongs to the helper and not to the cases: no case sets `TMPDIR`, because the process environment is shared by every case running beside it.
 
-Stated so a test can hold `crates/grund-core/src/testing.rs` (`test_root`) to it: **no config under either name sits at or above a root the helper returns.** A zero-config case that does find one names the absolute path it found, so the failure says where the config came from.
+Stated so a test can hold each fixture helper to it, `crates/grund-core/src/testing.rs` (`test_root`) and the base `crates/grund-lsp/tests/support/mod.rs` (`fixture_base`) gives every root grund-lsp's integration suites build, a zero-config one built by hand included: **no config under either name sits at or above a root the helper returns.** A zero-config case that does find one names the absolute path it found, so the failure says where the config came from.
 
 ### 10.4 Git descendants stay inside the fixture lifetime
 

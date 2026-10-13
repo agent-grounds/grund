@@ -335,3 +335,25 @@ pub fn hover_result(
     );
     recv_response_or_panic(receiver, child, id)["result"].clone()
 }
+
+/// The base every grund-lsp fixture root is built under: a temp directory no
+/// config covers at or above it, chosen once per process (§AR-ci.10.3). A
+/// zero-config case built by hand takes its base from here too, because
+/// discovery climbs past the fixture and a covered base would hand it the
+/// config it found there; when no candidate is clean the suite fails here.
+pub fn fixture_base() -> PathBuf {
+    // Stub until the guard lands: unguarded, as every suite built its base before.
+    std::env::temp_dir()
+}
+
+/// The first of `candidates` no config covers, under either name
+/// (`grund.toml`, `.agents/grund.toml`), at it or at any ancestor of its
+/// canonical path (§AR-ci.10.3), returned as given. The `Err` names `TMPDIR`,
+/// each candidate and the config that covers it.
+pub fn uncovered_base(candidates: &[PathBuf]) -> Result<PathBuf, String> {
+    // Stub until the guard lands: takes the first candidate without probing it.
+    candidates
+        .first()
+        .cloned()
+        .ok_or_else(|| "no temp candidate".to_string())
+}
