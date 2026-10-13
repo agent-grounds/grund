@@ -255,8 +255,9 @@ names it by ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rul
 The second step asks nothing about declarations, which is why the files of a non-citable
 kind, which declare none, count as that kind because of where they are
 ([§FS-config.3.4.1.1](FS-config.md#3411-what-a-non-citable-kind-keeps)). An `E2E` case's obligations are
-judged per case, over the citation sites in its files and its `spec.refs` lines together
-([§FS-config.3.9.1.2](FS-config.md#3912-e2e-obligations-are-per-case)).
+judged per case, over its `spec.refs` lines and any citation sites the run scans inside it, and
+a run over the project scans none there ([§FS-declarations.e2e-case.walk](FS-declarations.md#e2e-casewalk-the-walk-stops-at-a-case-directory),
+[§FS-config.3.9.1.2](FS-config.md#3912-e2e-obligations-are-per-case)).
 
 ## checks: Checks
 
