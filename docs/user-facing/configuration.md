@@ -83,7 +83,7 @@ The ID grammar: the shape of every declared ID and section path. [§FS-config.3.
 
 ### `[[kinds]]`
 
-One row per kind: where its declarations live and how they are read. [§FS-config.3.4](../functional-spec/FS-config.md#34-kinds--recognized-kinds)
+One row per kind: where its declarations live and how they are read. `kinds = []` declares no kinds; leaving the key out keeps the built-in ones. [§FS-config.3.4](../functional-spec/FS-config.md#34-kinds--recognized-kinds)
 
 | Key | Type | Default | What it sets |
 |---|---|---|---|

@@ -228,7 +228,8 @@ class ConfigSchemaTests(unittest.TestCase):
                             self.assertIn(path[-1], stderr, f"{text}\n{stderr}")
 
     def test_every_committed_config_the_reader_accepts_validates(self):
-        configs = [REPO_ROOT / "grund.toml", REPO_ROOT / "templates" / "grund.toml"]
+        configs = [REPO_ROOT / "grund.toml"]
+        configs += sorted((REPO_ROOT / "templates").glob("*/grund.toml"))
         configs += sorted(p for base in ("examples", "tests/e2e/cases")
                           for p in (REPO_ROOT / base).rglob("grund.toml")
                           if "expected.repo" not in p.parts)

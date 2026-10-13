@@ -310,7 +310,7 @@
         },
         "kinds": {
           "type": "array",
-          "description": "One row per kind: where its declarations live and how they are read.",
+          "description": "One row per kind: where its declarations live and how they are read. `kinds = []` declares no kinds; leaving the key out keeps the built-in ones.",
           "x-grund-spec": {
             "id": "FS-config.3.4",
             "href": "docs/functional-spec/FS-config.md#34-kinds--recognized-kinds"
