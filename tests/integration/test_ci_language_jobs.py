@@ -13,9 +13,8 @@ import unittest
 from test_release_workflow import WORKFLOWS, jobs, squash, steps
 
 CI = WORKFLOWS / "ci.yml"
-SYSTEMS = ("ubuntu-latest", "macos-latest", "windows-latest")
-# §AR-ci.13.1: macOS may keep its suites in one job.
-SPLIT = ("ubuntu-latest", "windows-latest")
+# §AR-ci.13.1: macOS is no leg of `ci.yml`; its suites run once a day (§AR-ci.14).
+SYSTEMS = ("ubuntu-latest", "windows-latest")
 RUNNER_OS = {"ubuntu-latest": "Linux", "macos-latest": "macOS", "windows-latest": "Windows"}
 GATE = "python scripts/run_python_gate.py"
 SUITES = {
@@ -213,13 +212,13 @@ def bench_guard_problems(text):
 
 
 def split_problems(text):
-    """§AR-ci.13.1: on the split systems no job runs two suites; every leg command runs once."""
+    """§AR-ci.13.1: no job runs two suites; every leg command runs once."""
     found = instances(text)
     problems = []
     for instance in found:
         ran = [suite for suite, command in SUITES.items() if runs(instance, command)]
         ran += ["python gate"] if GATE in instance["commands"] else []
-        if instance["system"] in SPLIT and len(ran) > 1:
+        if len(ran) > 1:
             problems.append(f"{instance['name']!r} on {instance['system']} runs {ran} one after "
                             "another in one job")
         if GATE in instance["commands"]:
@@ -293,7 +292,7 @@ def fixture(cache_key="${{ runner.os }}-cargo-${{ github.job }}", node_rust_merg
     rust = list(RUST_CHECKS.values())[:3] + [SUITES["rust"]]
     selfcheck = '      - run: |\n          python - "check", ".", "--format", "json", "--full"\n'
     text = "jobs:\n"
-    for system in SPLIT:
+    for system in SYSTEMS:
         short = system.split("-")[0]
         body_cache = cache(cache_key)
         text += leg(f"rust-{short}", system, *rust).replace("    steps:\n", "    steps:\n" + body_cache) + selfcheck
@@ -301,7 +300,6 @@ def fixture(cache_key="${{ runner.os }}-cargo-${{ github.job }}", node_rust_merg
         text += leg(f"python-{short}", system, *python_runs).replace("    steps:\n", "    steps:\n" + body_cache)
         text += leg(f"node-{short}", system, SUITES["node"]).replace("    steps:\n", "    steps:\n" + body_cache)
     text += leg("pre-commit", "ubuntu-latest", PRE_COMMIT)
-    text += leg("macos", "macos-latest", *rust, SUITES["python"], SUITES["node"]) + selfcheck
     ubuntu = ["rust-ubuntu", "python-ubuntu", "node-ubuntu"] + (["pre-commit"] if needs_pre_commit else [])
     text += leg("bench", "ubuntu-latest", BENCH)
     if bench_skip_anywhere:
@@ -309,7 +307,6 @@ def fixture(cache_key="${{ runner.os }}-cargo-${{ github.job }}", node_rust_merg
     else:
         text += aggregate("ubuntu-latest", ubuntu, guard, condition, "bench" if needs_bench else None)
     text += aggregate("windows-latest", ["rust-windows", "python-windows", "node-windows"], guard, condition)
-    text += aggregate("macos-latest", ["macos"], guard, condition)
     return text
 
 

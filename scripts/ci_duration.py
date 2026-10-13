@@ -140,13 +140,14 @@ def requirement_link(repo: str | None) -> str:
     return f"[AR-ci.requirements.1](https://github.com/{repo}/blob/main/docs/architecture/AR-ci.md)"
 
 
-def issue_action(open_issues: list):
+def issue_action(open_issues: list, marker: str = MARKER):
     """Edit the open issue whose body begins with the marker line, or open one when none does.
 
     An issue that only quotes the marker further down is not the drift issue
-    (§AR-ci.requirements.3)."""
+    (§AR-ci.requirements.3). The macOS failure issue is found by the same rule under its
+    own marker (§AR-ci.14.2)."""
     for issue in open_issues:
-        if (issue.get("body") or "").lstrip().startswith(MARKER):
+        if (issue.get("body") or "").lstrip().startswith(marker):
             return ("update", issue["number"])
     return ("open", None)
 

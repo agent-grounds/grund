@@ -1,4 +1,5 @@
-"""§AR-ci.13.6 — every cache is restored on every event and saved only by a push to main.
+"""§AR-ci.13.6 — every cache is restored on every event and saved only by a push to main,
+or by the scheduled run of a workflow on main (§AR-ci.14.1).
 
 Read as text, the way `test_ci_language_jobs.py` reads `ci.yml`: the CI Python
 has no YAML parser. Every workflow under `.github/workflows/` is held to it, and
@@ -11,8 +12,8 @@ import unittest
 from test_release_workflow import WORKFLOWS, jobs, squash, step_name, steps
 
 MAIN_ONLY = re.compile(
-    r"github\.event_name\s*==\s*'push'\s*&&\s*github\.ref\s*==\s*'refs/heads/main'"
-    r"|github\.ref\s*==\s*'refs/heads/main'\s*&&\s*github\.event_name\s*==\s*'push'"
+    r"github\.event_name\s*==\s*'(push|schedule)'\s*&&\s*github\.ref\s*==\s*'refs/heads/main'"
+    r"|github\.ref\s*==\s*'refs/heads/main'\s*&&\s*github\.event_name\s*==\s*'(push|schedule)'"
 )
 # A path a cargo build writes: the registry, the git checkouts or a target directory.
 CARGO_PATH = re.compile(r"\.cargo/|target")
@@ -63,7 +64,7 @@ def step_id(step):
 
 
 def save_problems(text):
-    """No combined step; a save is guarded to a push to main; a restore is not guarded."""
+    """No combined step; a save is guarded to a push or a schedule on main; a restore is not guarded."""
     problems = []
     for job, body in jobs(text).items():
         guard = job_condition(body)
@@ -74,7 +75,7 @@ def save_problems(text):
                 problems.append(f"{where} is a combined actions/cache step, which saves on "
                                 "every event its workflow runs on")
             elif action == "save" and not MAIN_ONLY.search(f"{condition(step)} {guard}"):
-                problems.append(f"{where} saves without the push-to-main guard")
+                problems.append(f"{where} saves without the push- or schedule-on-main guard")
             elif action == "restore" and re.search(r"github\.(event_name|ref)", condition(step)):
                 problems.append(f"{where} restores on some events only")
     return problems
@@ -158,7 +159,9 @@ class CacheSavesCheckTests(unittest.TestCase):
 
     def test_the_layout_asked_for_passes_every_check(self):
         primary = "          key: ${{ steps.cargo.outputs.cache-primary-key }}\n"
-        for text in (fixture(), fixture(job_guard=True), fixture(save_key=primary)):
+        scheduled = "github.event_name == 'schedule' && github.ref == 'refs/heads/main'"
+        for text in (fixture(), fixture(job_guard=True), fixture(save_key=primary),
+                     fixture(guard=scheduled)):
             for check in CHECKS:
                 with self.subTest(check=check.__name__):
                     self.assertEqual([], check(text))
@@ -167,7 +170,9 @@ class CacheSavesCheckTests(unittest.TestCase):
         self.assertTrue(save_problems(fixture(combined=True)))
 
     def test_an_unguarded_or_half_guarded_save_is_caught(self):
-        for guard in (None, "github.ref == 'refs/heads/main'", "github.event_name == 'push'"):
+        for guard in (None, "github.ref == 'refs/heads/main'", "github.event_name == 'push'",
+                      "github.event_name == 'schedule'",
+                      "github.event_name == 'pull_request' && github.ref == 'refs/heads/main'"):
             with self.subTest(guard=guard):
                 self.assertTrue(save_problems(fixture(guard=guard)))
 
