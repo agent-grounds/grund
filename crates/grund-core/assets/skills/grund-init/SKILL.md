@@ -185,7 +185,7 @@ Relax only to match existing IDs.
 
 ### `[[kinds]]`
 
-Default kinds: `GRUND`, `GOAL`, `FS`, `AR`, `DF`, `DA`, `E2E`, `RM`.
+Default kinds: `GRUND`, `GOAL`, `FS`, `AR`, `DF`, `DA`, `E2E`, `RM`. The config `grund init` writes also declares `REQ`, hard requirements the project must never break, in `docs/requirements/`. `REQ` has no built-in default, so a config that leaves `[[kinds]]` out has none. `FS` stays in `requirements.md` until grund 0.19.0 moves its default home to `docs/functional-spec/` ([the decision](https://github.com/agent-grounds/grund/blob/main/docs/decisions/functional/DF-fs-home-moves-from-0-19.md)); a repository with no `grund.toml` whose `requirements.md` declares `FS` is warned `fs-home-moves` until then, and running `grund init` keeps it there.
 
 Ask whether to keep defaults, remove unused kinds, or add project-specific kinds. To start from none instead, `grund init --template=none` writes `kinds = []`, and each kind is then added as its own `[[kinds]]` table.
 

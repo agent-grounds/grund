@@ -14,12 +14,15 @@ allowed values, and whether anything else may appear — in the [fields guide](.
 | --- | --- | --- |
 | `GRUND` | Why: project motivation | `docs/grund.md` (one declaration, all of it inline) |
 | `GOAL` | Where: project direction and outcomes | `docs/goals.md` (one file, all goals inline) |
-| `FS` | What: behavior, requirements, and constraints | `requirements.md` |
+| `FS` | What: behavior, requirements, and constraints | `requirements.md`; from grund 0.19.0 the default is `docs/functional-spec/` ([§DF-fs-home-moves-from-0-19](../decisions/functional/DF-fs-home-moves-from-0-19.md#df-fs-home-moves-from-0-19-the-built-in-fs-home-moves-back-to-docsfunctional-spec-in-0190-and-the-template-declares-req-now)) |
+| `REQ` † | Hard requirements: what the project must never break | `docs/requirements/` |
 | `AR` | How: high-level implementation, structure, and design | `docs/architecture/` — **or inline in a class / module doc-comment** |
 | `DF` | product behavior decisions and tradeoffs | `docs/decisions/functional/` (append-only) |
 | `DA` | architecture decisions and tradeoffs | `docs/decisions/architectural/` (append-only) |
 | `RM`   | planned milestones and sequencing           | `docs/roadmap.md`                              |
 | `e2e` * / `integration` * | proof: the spec as a user sees it, and the parts fitting as designed | `tests/e2e/` (must cite `FS`), `tests/integration/` (should cite `AR`) |
+
+† `REQ` is declared by the config `grund init` writes ([§FS-init.2.4.10](../functional-spec/FS-init.md#2410-req-is-declared-in-docsrequirements)) and has no built-in default: a project with no config, or a config that leaves `[[kinds]]` out, has no `REQ`. A project with no config whose `FS` declarations sit in `requirements.md` is warned `fs-home-moves` until 0.19.0 moves that home; running `grund init` writes a config that keeps them there ([§FS-check.checks.fs-home-moves](../functional-spec/FS-check.md#checksfs-home-moves-the-built-in-fs-home-moves-in-grund-0190)).
 
 
 **ID format:**

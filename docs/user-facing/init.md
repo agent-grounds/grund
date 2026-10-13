@@ -30,7 +30,7 @@ grund init --scaffold
 ```
 
 `--scaffold` also lays the template's starter files — `requirements.md`,
-`docs/grund.md`, `docs/goals.md`, the architecture and decision READMEs, and the
+the `docs/requirements/` index for `REQ`, `docs/grund.md`, `docs/goals.md`, the architecture and decision READMEs, and the
 two test homes — at the homes the config names ([§FS-init.2.1.3](../functional-spec/FS-init.md#213-the-software-development-starter-files)). An existing
 starter file is left alone unless you pass `--force`. Use it on an empty
 repository, or one that wants to move to the canonical layout.

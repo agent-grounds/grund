@@ -70,6 +70,20 @@ the Project map says so with `scan = false`. `--ignore
 unread-scan-root` drops the warning
 ([§FS-scan.checks.unread-scan-root](../functional-spec/FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read)).
 
+One warning is about where the defaults are going. A repository with no
+`grund.toml` takes its `FS` home from the built-in default, `requirements.md`, and
+grund 0.19.0 moves that default to `docs/functional-spec/`. Until then, such a
+repository whose `requirements.md` declares `FS` hears it once, at the first
+declaration, with the exit code unchanged:
+
+```text
+requirements.md:3: warning: FS-001-login is in requirements.md, the FS home only by default, and grund 0.19.0 moves that default to docs/functional-spec/ — run `grund init` to write a grund.toml that keeps FS in requirements.md, or move the FS declarations into docs/functional-spec/
+```
+
+Either edit clears it; a repository with any config file never sees it. `--ignore
+fs-home-moves` drops it
+([§FS-check.checks.fs-home-moves](../functional-spec/FS-check.md#checksfs-home-moves-the-built-in-fs-home-moves-in-grund-0190)).
+
 `grund check --watch` checks immediately and updates the terminal after saves;
 Ctrl-C restores an owned alternate screen and returns the last completed status.
 Redirected output appends ordinary reports, and clean JSON runs have no visible
