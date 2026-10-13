@@ -7,8 +7,8 @@
 use std::collections::BTreeSet;
 
 use crate::config::Frame;
-use crate::grammar::{MarkdownBlocks, declaration_id_on_line, parse_id};
-use crate::model::{Declaration, Id};
+use crate::grammar::{MarkdownBlocks, parse_id};
+use crate::model::{Declaration, FileRecord, HeadingKind, Id};
 
 /// Whether `line` names `file_name` as a **whole** file name
 /// (§FS-check.3.18.5.1). The character on either side must be one that cannot
@@ -51,17 +51,23 @@ fn line_names_file(line: &str, file_name: &str) -> bool {
 /// true both of a citation the scan recorded and discarded (§FS-check.3.17.4) and
 /// of a markerless mention it never recorded at all.
 ///
+/// Whether a line is a declaration heading is the scan's answer, read off the
+/// index's `record` (§AR-scanner.2.8.5); an index the scan holds no record of has
+/// no line the scan read as one.
+///
 /// Called once per index target, and only where that target already owes at
 /// least one finding, so an index whose declarations are all entered — every
 /// index in a green repository — pays nothing (§GOAL-fast-feedback).
 pub(super) fn index_mentions<'a>(
     frame: Frame<'_>,
+    marker: &str,
+    record: Option<&FileRecord>,
     lines: &[&str],
     unentered: &[(&'a Id, &'a Declaration)],
 ) -> BTreeSet<&'a Id> {
     let mut mentioned: BTreeSet<&Id> = BTreeSet::new();
     let mut blocks = MarkdownBlocks::default();
-    for line in lines {
+    for (index, line) in lines.iter().enumerate() {
         let block = blocks.line(line);
         if block.in_fence() {
             continue;
@@ -69,16 +75,18 @@ pub(super) fn index_mentions<'a>(
         // §FS-check.1.1.5.1: a heading-shaped line in a raw-text HTML block
         // declares nothing, so what it names is a mention like any prose.
         if block.may_be_heading()
-            && declaration_id_on_line(frame.grammar(), line, false, true).is_some()
+            && record
+                .and_then(|record| record.heading_at(index + 1))
+                .is_some_and(|heading| heading.kind == HeadingKind::Declaration)
         {
             continue;
         }
-        // The grammar's own notion of an ID-shaped token, parsed the way the
-        // scanner parses one: a longer ID containing this one parses as itself
-        // and is therefore not a mention of it, while a namespaced or
-        // section-suffixed occurrence counts as one of the ID it names.
-        for caps in frame.grammar().citation_re.captures_iter(line) {
-            let Some(found) = parse_id(&caps, frame.grammar()) else {
+        // §AR-scanner.2.8.5: the scanner's own token reader, so a longer ID containing
+        // this one parses as itself and is not a mention of it, while a namespaced,
+        // section-suffixed or markerless occurrence, or a pattern's ID head, names it.
+        let tokens = frame.grammar().citation_captures(line, marker);
+        for (_, caps) in tokens.captures.iter().chain(&tokens.pattern_heads) {
+            let Some(found) = parse_id(caps, frame.grammar()) else {
                 continue;
             };
             for (id, _) in unentered {
