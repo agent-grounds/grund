@@ -3,85 +3,95 @@
     "check": {
       "scenarios": ["check", "check_large_10k", "check_citations"],
       "flags": {
-        "--format": {"waiver": "Changes only how the findings the scan produced are printed; the scan the check rows count is the same, and #699 is to add a json row."},
-        "--full": {"waiver": "Widens the walk past [scan] include to every reachable file; this repository's own pre-commit hook and CI self-check run it, so it is on their commit path, and #699 is to add a scenario for it."},
-        "--ignore": {"waiver": "Filters finding codes after the scan the check rows already count."},
-        "--only": {"waiver": "Filters finding codes after the scan the check rows already count."},
-        "--only-rule": {"waiver": "Narrows the output of --rule, after the scan the check rows already count; it is covered with --rule."},
-        "--path-base": {"waiver": "Rewrites the paths in the report, after the scan the check rows already count."},
-        "--require-grounding": {"waiver": "Adds one per-file grounding test over the catalog the scan already built; #699 is to add a scenario for it."},
-        "--rule": {"waiver": "An ad hoc controlled-English rule added at the prompt rather than in the committed gate; #699 is to add a scenario for rule evaluation."},
-        "--suggestions": {"waiver": "Surfaces should/avoid findings on demand, not on the save or commit path; #699 is to add a scenario for it."},
+        "--format": {"scenarios": ["check_json", "check_json_citations", "check_json_large_10k", "check_workspace_json", "check_rules_json", "check_values_json"]},
+        "--full": {"scenarios": ["check_full", "check_full_citations"]},
+        "--ignore": {"scenarios": ["check_ignore"]},
+        "--only": {"scenarios": ["check_only"]},
+        "--only-rule": {"scenarios": ["check_only_rule"]},
+        "--path-base": {"scenarios": ["check_path_base"]},
+        "--require-grounding": {"scenarios": ["check_require_grounding", "check_require_grounding_citations"]},
+        "--rule": {"scenarios": ["check_rule", "check_only_rule", "check_rules_rule"]},
+        "--suggestions": {"scenarios": ["check_suggestions", "check_suggestions_canonical"]},
         "--watch": {"waiver": "A long-running loop whose cost per change is one rerun of the check the check rows already count, plus filesystem-notification waiting no instruction count measures."}
       }
     },
     "show": {
       "scenarios": ["show", "show_brief", "show_full"],
       "flags": {
-        "--all": {"waiver": "Only meaningful with --batch, which is waived; #699 is to add a batch scenario that covers both."},
-        "--batch": {"waiver": "A bulk query from stdin, which the harness has no way to feed today; #699 is to add a scenario for it."},
-        "--format": {"waiver": "Changes only how the resolved body is printed; the resolution the show rows count is the same."},
+        "--all": {"scenarios": ["show_batch_all", "show_batch_all_large_10k"]},
+        "--batch": {"scenarios": ["show_batch", "show_batch_all", "show_batch_toc", "show_batch_all_large_10k"]},
+        "--format": {"scenarios": ["show_json", "show_batch", "show_batch_all", "show_md", "show_text", "show_full_json", "show_batch_toc", "show_batch_all_large_10k"]},
         "--path": {"waiver": "Picks the tree to resolve in; the show rows already resolve in a whole fixture tree."},
         "--path-base": {"waiver": "Rewrites the printed paths, after the resolution the show rows already count."},
-        "--section": {"waiver": "Selects a subsection of the body the show rows already resolve; #699 is to add a scenario for it."},
-        "--toc": {"waiver": "A depth between --brief and --full, both of which have rows; #699 is to add a row for it."}
+        "--section": {"scenarios": ["show_section", "show_section_child", "show_values"]},
+        "--toc": {"scenarios": ["show_toc", "show_toc_canonical", "show_batch_toc"]}
       }
     },
     "list": {
       "scenarios": ["list"],
       "flags": {
-        "--format": {"waiver": "Changes only how the listing is printed; #699 is to add a json row, since json adds a refs count per declaration."},
-        "--kind": {"waiver": "Filters the declarations the list row already scans."},
+        "--format": {"scenarios": ["list_json", "list_unused_json", "list_json_citations", "list_json_large_10k", "list_workspace_json"]},
+        "--kind": {"scenarios": ["list_kind", "list_rules", "list_external_facts"]},
         "--path-base": {"waiver": "Rewrites the printed paths, after the scan the list row already counts."},
-        "--selector": {"waiver": "Selector evaluation over the catalog the list row already builds; #699 is to add a scenario for it."},
-        "--size": {"waiver": "Measures declaration sizes on demand for authors, not on the save or commit path; #699 is to add a scenario for it."},
-        "--summary": {"waiver": "Folds the list row's output into one row per kind."},
-        "--top": {"waiver": "Requires --size, which is waived, and only truncates its output."},
-        "--unused": {"waiver": "Joins the listing with citations on demand, not on the save or commit path; #699 is to add a scenario for it."}
+        "--selector": {"scenarios": ["list_selector"]},
+        "--size": {"scenarios": ["list_size", "list_size_top", "list_size_large_10k", "list_size_named_sections"]},
+        "--summary": {"scenarios": ["list_summary"]},
+        "--top": {"scenarios": ["list_size_top"]},
+        "--unused": {"scenarios": ["list_unused", "list_unused_json"]}
       }
     },
     "refs": {
       "scenarios": ["refs"],
       "flags": {
-        "--descendants": {"waiver": "Widens the refs row's lookup to the subsections; #699 is to add a scenario for it."},
-        "--format": {"waiver": "Changes only how the citations the refs row finds are printed."},
+        "--descendants": {"scenarios": ["refs_descendants"]},
+        "--format": {"scenarios": ["refs_json", "refs_citations_json"]},
         "--path-base": {"waiver": "Rewrites the printed paths, after the scan the refs row already counts."},
-        "--section": {"waiver": "Narrows the refs row's lookup to one section."},
-        "--summary": {"waiver": "Groups the citations the refs row finds by file."},
-        "--total": {"waiver": "Counts the citations the refs row finds instead of printing them."}
+        "--section": {"scenarios": ["refs_section", "refs_section_named"]},
+        "--summary": {"scenarios": ["refs_citations", "refs_summary"]},
+        "--total": {"scenarios": ["refs_total"]}
       }
     },
     "cover": {
       "scenarios": ["cover"],
       "flags": {
-        "--format": {"waiver": "Changes only how the cover row's records are printed."},
-        "--lines": {"waiver": "One scan plus a line-ownership pass over one file, which the opt-in co-change commit-msg and CI recipe runs on each diff hunk, so it is on that commit path; #699 is to add a scenario for it."},
+        "--format": {"scenarios": ["cover_json", "cover_json_canonical"]},
+        "--lines": {"scenarios": ["cover_lines", "cover_lines_ranges"]},
         "--path-base": {"waiver": "Rewrites the printed paths, after the scan the cover row already counts."}
       }
     },
     "fmt": {
       "scenarios": ["fmt_check"],
       "flags": {
-        "--cross-refs": {"waiver": "An opt-in rewrite into Markdown links, not part of the default fmt gate; #699 is to add a scenario for it."},
-        "--marker": {"waiver": "An opt-in rewrite of bare IDs, not part of the default fmt gate; #699 is to add a scenario for it."},
+        "--cross-refs": {"scenarios": ["fmt_cross_refs", "fmt_cross_refs_marker", "fmt_cross_refs_large"]},
+        "--marker": {"scenarios": ["fmt_marker", "fmt_cross_refs_marker", "fmt_marker_large"]},
         "--path-base": {"waiver": "Rewrites the printed paths, after the planning the fmt_check row already counts."},
         "--write": {"waiver": "Computes the same rewrites fmt_check counts and then writes them; fmt_check runs it as its uncounted setup, and a counted row would change the fixture between runs."}
       }
     },
     "fetch": {"waiver": "Materializes one external snapshot over the network, run by hand when a fact changes; its cost is the remote fetch, which no instruction count measures."},
-    "id": {"waiver": "Run once per new declaration while authoring, not on the save, commit or push path; #699 is to add a scenario for it."},
+    "id": {
+      "scenarios": ["id", "id_width", "id_explain"],
+      "flags": {
+        "--path-base": {"waiver": "Rewrites the one path --explain prints, after the scan the id rows already count."}
+      }
+    },
     "init": {"waiver": "Run once when a repository adopts grund, and scaffolds files rather than scanning a tree."},
     "config": {"waiver": "Reads and validates one grund.toml, run by hand; the same config load is inside every counted row."},
     "agent-setup-instructions": {"waiver": "Prints fixed text and scans nothing."},
     "completions": {"waiver": "Prints a fixed shell script once per shell setup and scans nothing; the ID lookup it installs runs `grund complete ids` on each Tab, which is inventoried as the hidden command `complete`."},
-    "complete": {"waiver": "The hidden shell-completion helper: one scan of the tree per Tab that asks for IDs, never on the save, commit or push path; #699 may add a row for it."},
+    "complete": {"scenarios": ["complete_ids", "complete_ids_all", "complete_ids_sections"]},
     "integrations": {"waiver": "Prints or installs editor and terminal integration snippets once per machine and scans nothing."}
   },
   "modes": {
-    "parallel-scan": {"scenarios": ["check", "check_large_10k"]},
-    "workspace": {"waiver": "No catalog fixture has workspace members yet; #699 is to add a workspace fixture and scenario."},
-    "lsp": {"waiver": "The language server is driven over JSON-RPC, which the command-line harness cannot run; #699 is to bench its rescan on save."},
-    "python": {"waiver": "The binding calls the same engine entry points the CLI rows count, and the harness runs only the grund binary; #699 is to bench the frontends."},
-    "node": {"waiver": "#580's approved proposal waives the Node addon until its instruction counts are shown repeatable."}
+    "parallel-scan": {"scenarios": ["check_par_256", "check"]},
+    "workspace": {"scenarios": ["check_workspace", "list_workspace", "check_workspace_json", "check_workspace_large", "list_workspace_large", "list_workspace_json", "cover_workspace", "refs_workspace"]},
+    "lsp": {"scenarios": ["lsp", "lsp_canonical", "lsp_workspace", "lsp_named_sections"]},
+    "python": {"scenarios": ["python_check", "python_list", "python_show_brief", "python_show_full", "python_refs", "python_cover", "python_fmt"]},
+    "node": {"waiver": "V8's JIT and garbage-collector threads move the Node addon's instruction counts between runs of one build, so a count would not hold the same-binary bound; it stays waived until its counts are shown repeatable."},
+    "sequential-scan": {"scenarios": ["check_seq_255"]},
+    "rules": {"scenarios": ["check_rules", "check_rules_json", "check_rules_large", "check_rules_rule", "list_rules"]},
+    "named-sections": {"scenarios": ["check_named_sections", "show_toc", "show_section", "refs_descendants", "show_section_child", "refs_section", "complete_ids_sections", "check_named_sections_large", "show_full_named_sections", "refs_section_named", "list_size_named_sections", "cover_named_sections"]},
+    "values": {"scenarios": ["check_values", "check_values_large", "check_values_json", "show_values", "refs_values"]},
+    "external-facts": {"scenarios": ["check_external_facts", "check_external_facts_large", "show_external_fact", "refs_external_fact", "list_external_facts"]}
   }
 }

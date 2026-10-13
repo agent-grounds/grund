@@ -1,4 +1,5 @@
 {
+  "shards": 7,
   "fixtures": {
     "canonical": {
       "dir": "target/bench-fixtures/canonical-repo",
@@ -15,6 +16,130 @@
       "dir": "target/bench-fixtures/canonical-citations-repo",
       "files": 1500,
       "citations": true
+    },
+    "scan-sequential": {
+      "dir": "target/bench-fixtures/scan-255-repo",
+      "files": 254,
+      "citations": false
+    },
+    "scan-parallel": {
+      "dir": "target/bench-fixtures/scan-256-repo",
+      "files": 255,
+      "citations": false
+    },
+    "workspace": {
+      "dir": "target/bench-fixtures/workspace-repo",
+      "files": 1500,
+      "citations": false,
+      "members": 5
+    },
+    "rules": {
+      "dir": "target/bench-fixtures/rules-repo",
+      "files": 1500,
+      "citations": false,
+      "feature": "rules"
+    },
+    "named-sections": {
+      "dir": "target/bench-fixtures/named-sections-repo",
+      "files": 1500,
+      "citations": false,
+      "subject": "FS-00001-feature-00001",
+      "feature": "named-sections"
+    },
+    "values": {
+      "dir": "target/bench-fixtures/values-repo",
+      "files": 1500,
+      "citations": false,
+      "subject": "FS-00001-feature-00001",
+      "feature": "values"
+    },
+    "external-facts": {
+      "dir": "target/bench-fixtures/external-facts-repo",
+      "files": 1500,
+      "citations": false,
+      "subject": "TICKET-1",
+      "feature": "external-facts"
+    },
+    "cross-refs": {
+      "dir": "target/bench-fixtures/cross-refs-repo",
+      "files": 1500,
+      "citations": false,
+      "subject": "FS-feature-00001",
+      "feature": "cross-refs"
+    },
+    "small": {
+      "dir": "target/bench-fixtures/small-repo",
+      "files": 100,
+      "citations": false,
+      "subject": "FS-00001-feature-00001"
+    },
+    "medium": {
+      "dir": "target/bench-fixtures/medium-repo",
+      "files": 500,
+      "citations": false,
+      "subject": "FS-00001-feature-00001"
+    },
+    "big": {
+      "dir": "target/bench-fixtures/big-repo",
+      "files": 3000,
+      "citations": false,
+      "subject": "FS-00001-feature-00001"
+    },
+    "huge": {
+      "dir": "target/bench-fixtures/huge-repo",
+      "files": 5000,
+      "citations": false,
+      "subject": "FS-00001-feature-00001"
+    },
+    "citations-big": {
+      "dir": "target/bench-fixtures/citations-big-repo",
+      "files": 5000,
+      "citations": true
+    },
+    "citations-large": {
+      "dir": "target/bench-fixtures/citations-large-repo",
+      "files": 10000,
+      "citations": true
+    },
+    "workspace-large": {
+      "dir": "target/bench-fixtures/workspace-large-repo",
+      "files": 5000,
+      "citations": false,
+      "members": 10
+    },
+    "rules-large": {
+      "dir": "target/bench-fixtures/rules-large-repo",
+      "files": 5000,
+      "citations": false,
+      "feature": "rules"
+    },
+    "named-sections-large": {
+      "dir": "target/bench-fixtures/named-sections-large-repo",
+      "files": 5000,
+      "citations": false,
+      "subject": "FS-00001-feature-00001",
+      "feature": "named-sections"
+    },
+    "values-large": {
+      "dir": "target/bench-fixtures/values-large-repo",
+      "files": 5000,
+      "citations": false,
+      "subject": "FS-00001-feature-00001",
+      "feature": "values"
+    },
+    "external-facts-large": {
+      "dir": "target/bench-fixtures/external-facts-large-repo",
+      "files": 5000,
+      "citations": false,
+      "subject": "TICKET-1",
+      "feature": "external-facts"
+    },
+    "cross-refs-large": {
+      "dir": "target/bench-fixtures/cross-refs-large-repo",
+      "files": 5000,
+      "citations": false,
+      "subject": "FS-feature-00001",
+      "feature": "cross-refs"
     }
   },
   "scenarios": [
@@ -24,6 +149,7 @@
         "check"
       ],
       "fixture": "canonical",
+      "tier": "pr",
       "limit_pct": 12.5,
       "ceiling_ir": 903000000,
       "ceiling_from": {
@@ -40,6 +166,7 @@
         "check"
       ],
       "fixture": "large",
+      "tier": "pr",
       "limit_pct": 5.0,
       "ceiling_ir": 5060000000,
       "ceiling_from": {
@@ -54,6 +181,7 @@
         "check"
       ],
       "fixture": "citations",
+      "tier": "pr",
       "limit_pct": 12.5,
       "ceiling_ir": 863000000,
       "ceiling_from": {
@@ -68,6 +196,7 @@
         "list"
       ],
       "fixture": "canonical",
+      "tier": "pr",
       "limit_pct": 12.5,
       "ceiling_ir": 792000000,
       "ceiling_from": {
@@ -86,6 +215,7 @@
         "--brief"
       ],
       "fixture": "canonical",
+      "tier": "pr",
       "limit_pct": 12.5,
       "ceiling_ir": 582000000,
       "ceiling_from": {
@@ -104,6 +234,7 @@
         "{id}"
       ],
       "fixture": "canonical",
+      "tier": "pr",
       "limit_pct": 12.5,
       "ceiling_ir": 582000000,
       "ceiling_from": {
@@ -123,6 +254,7 @@
         "--full"
       ],
       "fixture": "canonical",
+      "tier": "pr",
       "limit_pct": 12.5,
       "ceiling_ir": 582000000,
       "ceiling_from": {
@@ -141,6 +273,7 @@
         "{id}"
       ],
       "fixture": "canonical",
+      "tier": "pr",
       "limit_pct": 12.5,
       "ceiling_ir": 630000000,
       "ceiling_from": {
@@ -158,6 +291,7 @@
         "cover"
       ],
       "fixture": "canonical",
+      "tier": "pr",
       "limit_pct": 12.5,
       "ceiling_ir": 741000000,
       "ceiling_from": {
@@ -175,6 +309,7 @@
         "--check"
       ],
       "fixture": "canonical",
+      "tier": "pr",
       "setup": [
         "fmt",
         "--write"
@@ -188,6 +323,2335 @@
       "pgo": {
         "api": "fmt preview"
       }
+    },
+    {
+      "name": "check_seq_255",
+      "args": [
+        "check"
+      ],
+      "fixture": "scan-sequential",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 165000000,
+      "ceiling_from": {
+        "ir": 131403220,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_par_256",
+      "args": [
+        "check"
+      ],
+      "fixture": "scan-parallel",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 181000000,
+      "ceiling_from": {
+        "ir": 144124013,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_json",
+      "args": [
+        "check",
+        "--format",
+        "json"
+      ],
+      "fixture": "canonical",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 853000000,
+      "ceiling_from": {
+        "ir": 682022907,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_full",
+      "args": [
+        "check",
+        "--full"
+      ],
+      "fixture": "canonical",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 969000000,
+      "ceiling_from": {
+        "ir": 774947678,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_require_grounding",
+      "args": [
+        "check",
+        "--require-grounding"
+      ],
+      "fixture": "canonical",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 949000000,
+      "ceiling_from": {
+        "ir": 758504105,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_rule",
+      "args": [
+        "check",
+        "--rule",
+        "Each FS should have at most 1 Terms chapter."
+      ],
+      "fixture": "canonical",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 950000000,
+      "ceiling_from": {
+        "ir": 759393806,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_suggestions",
+      "args": [
+        "check",
+        "--suggestions"
+      ],
+      "fixture": "citations",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 883000000,
+      "ceiling_from": {
+        "ir": 705791121,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_workspace",
+      "args": [
+        "check"
+      ],
+      "fixture": "workspace",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1081000000,
+      "ceiling_from": {
+        "ir": 864761012,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_rules",
+      "args": [
+        "check"
+      ],
+      "fixture": "rules",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1330000000,
+      "ceiling_from": {
+        "ir": 1063562733,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_named_sections",
+      "args": [
+        "check"
+      ],
+      "fixture": "named-sections",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 2086000000,
+      "ceiling_from": {
+        "ir": 1668306173,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_values",
+      "args": [
+        "check"
+      ],
+      "fixture": "values",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1443000000,
+      "ceiling_from": {
+        "ir": 1154117200,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_external_facts",
+      "args": [
+        "check"
+      ],
+      "fixture": "external-facts",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 927000000,
+      "ceiling_from": {
+        "ir": 741129214,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_json",
+      "args": [
+        "list",
+        "--format",
+        "json"
+      ],
+      "fixture": "canonical",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 753000000,
+      "ceiling_from": {
+        "ir": 602259900,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_selector",
+      "args": [
+        "list",
+        "--selector",
+        "FS"
+      ],
+      "fixture": "canonical",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 743000000,
+      "ceiling_from": {
+        "ir": 593746173,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_size",
+      "args": [
+        "list",
+        "--size"
+      ],
+      "fixture": "canonical",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 809000000,
+      "ceiling_from": {
+        "ir": 646571993,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_unused",
+      "args": [
+        "list",
+        "--unused"
+      ],
+      "fixture": "canonical",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 719000000,
+      "ceiling_from": {
+        "ir": 574825970,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_workspace",
+      "args": [
+        "list"
+      ],
+      "fixture": "workspace",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 972000000,
+      "ceiling_from": {
+        "ir": 777380015,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_large_10k",
+      "args": [
+        "list"
+      ],
+      "fixture": "large",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 5026000000,
+      "ceiling_from": {
+        "ir": 4020570614,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_toc",
+      "args": [
+        "show",
+        "{id}",
+        "--toc"
+      ],
+      "fixture": "named-sections",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1059000000,
+      "ceiling_from": {
+        "ir": 847194357,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_section",
+      "args": [
+        "show",
+        "{id}",
+        "--section",
+        "format"
+      ],
+      "fixture": "named-sections",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1060000000,
+      "ceiling_from": {
+        "ir": 847811513,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_json",
+      "args": [
+        "show",
+        "{id}",
+        "--format",
+        "json"
+      ],
+      "fixture": "canonical",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 533000000,
+      "ceiling_from": {
+        "ir": 425970274,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_batch",
+      "args": [
+        "show",
+        "--batch",
+        "--format",
+        "json"
+      ],
+      "fixture": "canonical",
+      "stdin": [
+        "{\"id\":\"{id}\"}",
+        "{\"id\":\"FS-00002-feature-00002\"}",
+        "{\"id\":\"FS-00003-feature-00003\"}",
+        "{\"id\":\"FS-00004-feature-00004\"}"
+      ],
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 534000000,
+      "ceiling_from": {
+        "ir": 426468630,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_batch_all",
+      "args": [
+        "show",
+        "--batch",
+        "--all",
+        "--format",
+        "json"
+      ],
+      "fixture": "canonical",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 725000000,
+      "ceiling_from": {
+        "ir": 579533842,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "refs_descendants",
+      "args": [
+        "refs",
+        "{id}.format",
+        "--descendants"
+      ],
+      "fixture": "named-sections",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1114000000,
+      "ceiling_from": {
+        "ir": 890993794,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "refs_citations",
+      "args": [
+        "refs",
+        "FS-00002-feature-00002",
+        "--summary"
+      ],
+      "fixture": "citations",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 594000000,
+      "ceiling_from": {
+        "ir": 474698877,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "cover_lines",
+      "args": [
+        "cover",
+        "--lines",
+        "1-40"
+      ],
+      "fixture": "canonical",
+      "path": "docs/functional-spec/README.md",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 122000000,
+      "ceiling_from": {
+        "ir": 97139987,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "cover_json",
+      "args": [
+        "cover",
+        "--format",
+        "json"
+      ],
+      "fixture": "citations",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 739000000,
+      "ceiling_from": {
+        "ir": 590969410,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "fmt_cross_refs",
+      "args": [
+        "fmt",
+        "--check",
+        "--cross-refs"
+      ],
+      "fixture": "cross-refs",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 2231000000,
+      "ceiling_from": {
+        "ir": 1784797571,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "fmt_marker",
+      "args": [
+        "fmt",
+        "--check",
+        "--marker"
+      ],
+      "fixture": "cross-refs",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 2680000000,
+      "ceiling_from": {
+        "ir": 2143233055,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "id",
+      "args": [
+        "id",
+        "FS",
+        "bench feature"
+      ],
+      "fixture": "canonical",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 580000000,
+      "ceiling_from": {
+        "ir": 463528805,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "complete_ids",
+      "args": [
+        "complete",
+        "ids",
+        "--prefix",
+        "FS-001"
+      ],
+      "fixture": "canonical",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 539000000,
+      "ceiling_from": {
+        "ir": 430498533,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "lsp",
+      "args": [
+        "session"
+      ],
+      "fixture": "scan-parallel",
+      "frontend": "lsp",
+      "tier": "pr",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1181000000,
+      "ceiling_from": {
+        "ir": 944330143,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_100",
+      "args": [
+        "check"
+      ],
+      "fixture": "small",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 87000000,
+      "ceiling_from": {
+        "ir": 69202179,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_100",
+      "args": [
+        "list"
+      ],
+      "fixture": "small",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 80000000,
+      "ceiling_from": {
+        "ir": 63515133,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_full_100",
+      "args": [
+        "show",
+        "{id}",
+        "--full"
+      ],
+      "fixture": "small",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 67000000,
+      "ceiling_from": {
+        "ir": 53567280,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "refs_100",
+      "args": [
+        "refs",
+        "{id}"
+      ],
+      "fixture": "small",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 71000000,
+      "ceiling_from": {
+        "ir": 56171439,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "cover_100",
+      "args": [
+        "cover"
+      ],
+      "fixture": "small",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 75000000,
+      "ceiling_from": {
+        "ir": 59998185,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_500",
+      "args": [
+        "check"
+      ],
+      "fixture": "medium",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 308000000,
+      "ceiling_from": {
+        "ir": 245870617,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_500",
+      "args": [
+        "list"
+      ],
+      "fixture": "medium",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 273000000,
+      "ceiling_from": {
+        "ir": 217861021,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_full_500",
+      "args": [
+        "show",
+        "{id}",
+        "--full"
+      ],
+      "fixture": "medium",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 206000000,
+      "ceiling_from": {
+        "ir": 164495923,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "refs_500",
+      "args": [
+        "refs",
+        "{id}"
+      ],
+      "fixture": "medium",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 223000000,
+      "ceiling_from": {
+        "ir": 177957714,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "cover_500",
+      "args": [
+        "cover"
+      ],
+      "fixture": "medium",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 255000000,
+      "ceiling_from": {
+        "ir": 203554002,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_3k",
+      "args": [
+        "check"
+      ],
+      "fixture": "big",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1661000000,
+      "ceiling_from": {
+        "ir": 1328104181,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_3k",
+      "args": [
+        "list"
+      ],
+      "fixture": "big",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1441000000,
+      "ceiling_from": {
+        "ir": 1152504288,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_full_3k",
+      "args": [
+        "show",
+        "{id}",
+        "--full"
+      ],
+      "fixture": "big",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1011000000,
+      "ceiling_from": {
+        "ir": 808190150,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "refs_3k",
+      "args": [
+        "refs",
+        "{id}"
+      ],
+      "fixture": "big",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1107000000,
+      "ceiling_from": {
+        "ir": 885379895,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "cover_3k",
+      "args": [
+        "cover"
+      ],
+      "fixture": "big",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1347000000,
+      "ceiling_from": {
+        "ir": 1077062556,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_5k",
+      "args": [
+        "check"
+      ],
+      "fixture": "huge",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 2787000000,
+      "ceiling_from": {
+        "ir": 2229252917,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_5k",
+      "args": [
+        "list"
+      ],
+      "fixture": "huge",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 2419000000,
+      "ceiling_from": {
+        "ir": 1934641357,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_full_5k",
+      "args": [
+        "show",
+        "{id}",
+        "--full"
+      ],
+      "fixture": "huge",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1674000000,
+      "ceiling_from": {
+        "ir": 1338536411,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "refs_5k",
+      "args": [
+        "refs",
+        "{id}"
+      ],
+      "fixture": "huge",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1834000000,
+      "ceiling_from": {
+        "ir": 1466580506,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "cover_5k",
+      "args": [
+        "cover"
+      ],
+      "fixture": "huge",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 2258000000,
+      "ceiling_from": {
+        "ir": 1806136539,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_citations_5k",
+      "args": [
+        "check"
+      ],
+      "fixture": "citations-big",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 2878000000,
+      "ceiling_from": {
+        "ir": 2302367169,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_citations_10k",
+      "args": [
+        "check"
+      ],
+      "fixture": "citations-large",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 5816000000,
+      "ceiling_from": {
+        "ir": 4652458732,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "cover_citations_10k",
+      "args": [
+        "cover"
+      ],
+      "fixture": "citations-large",
+      "tier": "nightly",
+      "group": "scale",
+      "limit_pct": 12.5,
+      "ceiling_ir": 4668000000,
+      "ceiling_from": {
+        "ir": 3734274353,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_json_citations",
+      "args": [
+        "check",
+        "--format",
+        "json"
+      ],
+      "fixture": "citations",
+      "tier": "nightly",
+      "group": "check-flags",
+      "limit_pct": 12.5,
+      "ceiling_ir": 883000000,
+      "ceiling_from": {
+        "ir": 705895416,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_full_citations",
+      "args": [
+        "check",
+        "--full"
+      ],
+      "fixture": "citations",
+      "tier": "nightly",
+      "group": "check-flags",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1009000000,
+      "ceiling_from": {
+        "ir": 806441751,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_require_grounding_citations",
+      "args": [
+        "check",
+        "--require-grounding"
+      ],
+      "fixture": "citations",
+      "tier": "nightly",
+      "group": "check-flags",
+      "limit_pct": 12.5,
+      "ceiling_ir": 982000000,
+      "ceiling_from": {
+        "ir": 785250846,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_suggestions_canonical",
+      "args": [
+        "check",
+        "--suggestions"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "check-flags",
+      "limit_pct": 12.5,
+      "ceiling_ir": 853000000,
+      "ceiling_from": {
+        "ir": 681686572,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_only",
+      "args": [
+        "check",
+        "--only",
+        "dangling"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "check-flags",
+      "limit_pct": 12.5,
+      "ceiling_ir": 853000000,
+      "ceiling_from": {
+        "ir": 681622248,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_ignore",
+      "args": [
+        "check",
+        "--ignore",
+        "dangling"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "check-flags",
+      "limit_pct": 12.5,
+      "ceiling_ir": 853000000,
+      "ceiling_from": {
+        "ir": 681718825,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_only_rule",
+      "args": [
+        "check",
+        "--rule",
+        "Each FS should have at most 1 Terms chapter.",
+        "--only-rule"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "check-flags",
+      "limit_pct": 12.5,
+      "ceiling_ir": 949000000,
+      "ceiling_from": {
+        "ir": 759148409,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_path_base",
+      "args": [
+        "check",
+        "--path-base",
+        "invocation"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "check-flags",
+      "limit_pct": 12.5,
+      "ceiling_ir": 853000000,
+      "ceiling_from": {
+        "ir": 681853416,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_json_large_10k",
+      "args": [
+        "check",
+        "--format",
+        "json"
+      ],
+      "fixture": "large",
+      "tier": "nightly",
+      "group": "check-flags",
+      "limit_pct": 12.5,
+      "ceiling_ir": 5777000000,
+      "ceiling_from": {
+        "ir": 4621109181,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_md",
+      "args": [
+        "show",
+        "{id}",
+        "--format",
+        "md"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "show-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 533000000,
+      "ceiling_from": {
+        "ir": 425770171,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_text",
+      "args": [
+        "show",
+        "{id}",
+        "--format",
+        "text"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "show-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 533000000,
+      "ceiling_from": {
+        "ir": 425695370,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_toc_canonical",
+      "args": [
+        "show",
+        "{id}",
+        "--toc"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "show-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 532000000,
+      "ceiling_from": {
+        "ir": 425553113,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_section_child",
+      "args": [
+        "show",
+        "{id}",
+        "--section",
+        "format.1"
+      ],
+      "fixture": "named-sections",
+      "tier": "nightly",
+      "group": "show-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1060000000,
+      "ceiling_from": {
+        "ir": 847666241,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_bare",
+      "args": [
+        "{id}"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "show-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 532000000,
+      "ceiling_from": {
+        "ir": 425303912,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_brief_large_10k",
+      "args": [
+        "show",
+        "FS-00001-feature-00001",
+        "--brief"
+      ],
+      "fixture": "large",
+      "tier": "nightly",
+      "group": "show-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 3427000000,
+      "ceiling_from": {
+        "ir": 2740808695,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_full_json",
+      "args": [
+        "show",
+        "{id}",
+        "--full",
+        "--format",
+        "json"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "show-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 533000000,
+      "ceiling_from": {
+        "ir": 426159664,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_batch_toc",
+      "args": [
+        "show",
+        "--batch",
+        "--toc",
+        "--format",
+        "json"
+      ],
+      "fixture": "canonical",
+      "stdin": [
+        "{\"id\":\"{id}\"}",
+        "{\"id\":\"FS-00002-feature-00002\"}",
+        "{\"id\":\"FS-00003-feature-00003\"}",
+        "{\"id\":\"FS-00004-feature-00004\"}"
+      ],
+      "tier": "nightly",
+      "group": "show-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 534000000,
+      "ceiling_from": {
+        "ir": 426980745,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_batch_all_large_10k",
+      "args": [
+        "show",
+        "--batch",
+        "--all",
+        "--format",
+        "json"
+      ],
+      "fixture": "large",
+      "tier": "nightly",
+      "group": "show-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 4870000000,
+      "ceiling_from": {
+        "ir": 3895423244,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_kind",
+      "args": [
+        "list",
+        "--kind",
+        "FS"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "list-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 743000000,
+      "ceiling_from": {
+        "ir": 593832236,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_summary",
+      "args": [
+        "list",
+        "--summary"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "list-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 735000000,
+      "ceiling_from": {
+        "ir": 587515448,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_size_words",
+      "args": [
+        "list",
+        "--size=words"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "list-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 800000000,
+      "ceiling_from": {
+        "ir": 639763921,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_size_top",
+      "args": [
+        "list",
+        "--size",
+        "--top",
+        "10"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "list-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 794000000,
+      "ceiling_from": {
+        "ir": 634997510,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_unused_json",
+      "args": [
+        "list",
+        "--unused",
+        "--format",
+        "json"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "list-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 720000000,
+      "ceiling_from": {
+        "ir": 575468763,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_json_citations",
+      "args": [
+        "list",
+        "--format",
+        "json"
+      ],
+      "fixture": "citations",
+      "tier": "nightly",
+      "group": "list-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 774000000,
+      "ceiling_from": {
+        "ir": 619114119,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_size_large_10k",
+      "args": [
+        "list",
+        "--size"
+      ],
+      "fixture": "large",
+      "tier": "nightly",
+      "group": "list-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 5530000000,
+      "ceiling_from": {
+        "ir": 4423459099,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_json_large_10k",
+      "args": [
+        "list",
+        "--format",
+        "json"
+      ],
+      "fixture": "large",
+      "tier": "nightly",
+      "group": "list-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 5102000000,
+      "ceiling_from": {
+        "ir": 4081134845,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "refs_section",
+      "args": [
+        "refs",
+        "{id}",
+        "--section",
+        "parse"
+      ],
+      "fixture": "named-sections",
+      "tier": "nightly",
+      "group": "refs-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1114000000,
+      "ceiling_from": {
+        "ir": 890987512,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "refs_summary",
+      "args": [
+        "refs",
+        "{id}",
+        "--summary"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "refs-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 580000000,
+      "ceiling_from": {
+        "ir": 463685289,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "refs_total",
+      "args": [
+        "refs",
+        "{id}",
+        "--total"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "refs-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 581000000,
+      "ceiling_from": {
+        "ir": 464205940,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "refs_json",
+      "args": [
+        "refs",
+        "{id}",
+        "--format",
+        "json"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "refs-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 580000000,
+      "ceiling_from": {
+        "ir": 463256114,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "refs_citations_json",
+      "args": [
+        "refs",
+        "FS-00002-feature-00002",
+        "--format",
+        "json"
+      ],
+      "fixture": "citations",
+      "tier": "nightly",
+      "group": "refs-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 593000000,
+      "ceiling_from": {
+        "ir": 474288300,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "refs_large_10k",
+      "args": [
+        "refs",
+        "FS-00001-feature-00001"
+      ],
+      "fixture": "large",
+      "tier": "nightly",
+      "group": "refs-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 3747000000,
+      "ceiling_from": {
+        "ir": 2996996855,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "cover_json_canonical",
+      "args": [
+        "cover",
+        "--format",
+        "json"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "cover-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 722000000,
+      "ceiling_from": {
+        "ir": 577234928,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "cover_file",
+      "args": [
+        "cover"
+      ],
+      "fixture": "canonical",
+      "path": "docs/functional-spec/README.md",
+      "tier": "nightly",
+      "group": "cover-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 131000000,
+      "ceiling_from": {
+        "ir": 104642365,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "cover_lines_ranges",
+      "args": [
+        "cover",
+        "--lines",
+        "1-10",
+        "--lines",
+        "100-400"
+      ],
+      "fixture": "canonical",
+      "path": "docs/functional-spec/README.md",
+      "tier": "nightly",
+      "group": "cover-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 122000000,
+      "ceiling_from": {
+        "ir": 97171470,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "cover_large_10k",
+      "args": [
+        "cover"
+      ],
+      "fixture": "large",
+      "tier": "nightly",
+      "group": "cover-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 4690000000,
+      "ceiling_from": {
+        "ir": 3751363952,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "fmt_check_cross_refs_fixture",
+      "args": [
+        "fmt",
+        "--check"
+      ],
+      "fixture": "cross-refs",
+      "tier": "nightly",
+      "group": "fmt-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 2232000000,
+      "ceiling_from": {
+        "ir": 1785254785,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "fmt_cross_refs_marker",
+      "args": [
+        "fmt",
+        "--check",
+        "--cross-refs",
+        "--marker"
+      ],
+      "fixture": "cross-refs",
+      "tier": "nightly",
+      "group": "fmt-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 2681000000,
+      "ceiling_from": {
+        "ir": 2144112197,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "fmt_cross_refs_large",
+      "args": [
+        "fmt",
+        "--check",
+        "--cross-refs"
+      ],
+      "fixture": "cross-refs-large",
+      "tier": "nightly",
+      "group": "fmt-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 11129000000,
+      "ceiling_from": {
+        "ir": 8902699792,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "fmt_marker_large",
+      "args": [
+        "fmt",
+        "--check",
+        "--marker"
+      ],
+      "fixture": "cross-refs-large",
+      "tier": "nightly",
+      "group": "fmt-modes",
+      "limit_pct": 12.5,
+      "ceiling_ir": 13072000000,
+      "ceiling_from": {
+        "ir": 10457203529,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "id_width",
+      "args": [
+        "id",
+        "FS",
+        "bench feature",
+        "--width",
+        "5"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "query",
+      "limit_pct": 12.5,
+      "ceiling_ir": 581000000,
+      "ceiling_from": {
+        "ir": 464431663,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "id_explain",
+      "args": [
+        "id",
+        "FS",
+        "bench feature",
+        "--explain"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "query",
+      "limit_pct": 12.5,
+      "ceiling_ir": 580000000,
+      "ceiling_from": {
+        "ir": 463392715,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "id_json",
+      "args": [
+        "id",
+        "FS",
+        "bench feature",
+        "--format",
+        "json"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "query",
+      "limit_pct": 12.5,
+      "ceiling_ir": 581000000,
+      "ceiling_from": {
+        "ir": 464286967,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "id_large_10k",
+      "args": [
+        "id",
+        "FS",
+        "bench feature"
+      ],
+      "fixture": "large",
+      "tier": "nightly",
+      "group": "query",
+      "limit_pct": 12.5,
+      "ceiling_ir": 3744000000,
+      "ceiling_from": {
+        "ir": 2995009450,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "complete_ids_all",
+      "args": [
+        "complete",
+        "ids"
+      ],
+      "fixture": "canonical",
+      "tier": "nightly",
+      "group": "query",
+      "limit_pct": 12.5,
+      "ceiling_ir": 540000000,
+      "ceiling_from": {
+        "ir": 431304376,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "complete_ids_sections",
+      "args": [
+        "complete",
+        "ids",
+        "--sections",
+        "--prefix",
+        "FS-001"
+      ],
+      "fixture": "named-sections",
+      "tier": "nightly",
+      "group": "query",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1091000000,
+      "ceiling_from": {
+        "ir": 872401597,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_workspace_json",
+      "args": [
+        "check",
+        "--format",
+        "json"
+      ],
+      "fixture": "workspace",
+      "tier": "nightly",
+      "group": "workspace",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1081000000,
+      "ceiling_from": {
+        "ir": 864165181,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_workspace_large",
+      "args": [
+        "check"
+      ],
+      "fixture": "workspace-large",
+      "tier": "nightly",
+      "group": "workspace",
+      "limit_pct": 12.5,
+      "ceiling_ir": 3291000000,
+      "ceiling_from": {
+        "ir": 2632392205,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_workspace_large",
+      "args": [
+        "list"
+      ],
+      "fixture": "workspace-large",
+      "tier": "nightly",
+      "group": "workspace",
+      "limit_pct": 12.5,
+      "ceiling_ir": 2925000000,
+      "ceiling_from": {
+        "ir": 2339309168,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_workspace_json",
+      "args": [
+        "list",
+        "--format",
+        "json"
+      ],
+      "fixture": "workspace",
+      "tier": "nightly",
+      "group": "workspace",
+      "limit_pct": 12.5,
+      "ceiling_ir": 983000000,
+      "ceiling_from": {
+        "ir": 786006252,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "cover_workspace",
+      "args": [
+        "cover"
+      ],
+      "fixture": "workspace",
+      "tier": "nightly",
+      "group": "workspace",
+      "limit_pct": 12.5,
+      "ceiling_ir": 928000000,
+      "ceiling_from": {
+        "ir": 741987783,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "refs_workspace",
+      "args": [
+        "refs",
+        "m02/FS-00001-feature-00001"
+      ],
+      "fixture": "workspace",
+      "tier": "nightly",
+      "group": "workspace",
+      "limit_pct": 12.5,
+      "ceiling_ir": 805000000,
+      "ceiling_from": {
+        "ir": 643992182,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_rules_json",
+      "args": [
+        "check",
+        "--format",
+        "json"
+      ],
+      "fixture": "rules",
+      "tier": "nightly",
+      "group": "rules",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1330000000,
+      "ceiling_from": {
+        "ir": 1063456378,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_rules_large",
+      "args": [
+        "check"
+      ],
+      "fixture": "rules-large",
+      "tier": "nightly",
+      "group": "rules",
+      "limit_pct": 12.5,
+      "ceiling_ir": 4613000000,
+      "ceiling_from": {
+        "ir": 3689945663,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_rules_rule",
+      "args": [
+        "check",
+        "--rule",
+        "Each FS should have at most 1 Terms chapter."
+      ],
+      "fixture": "rules",
+      "tier": "nightly",
+      "group": "rules",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1333000000,
+      "ceiling_from": {
+        "ir": 1066035025,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_rules",
+      "args": [
+        "list",
+        "--kind",
+        "RULE"
+      ],
+      "fixture": "rules",
+      "tier": "nightly",
+      "group": "rules",
+      "limit_pct": 12.5,
+      "ceiling_ir": 752000000,
+      "ceiling_from": {
+        "ir": 601113977,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_named_sections_large",
+      "args": [
+        "check"
+      ],
+      "fixture": "named-sections-large",
+      "tier": "nightly",
+      "group": "named-sections",
+      "limit_pct": 12.5,
+      "ceiling_ir": 7043000000,
+      "ceiling_from": {
+        "ir": 5634216604,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_full_named_sections",
+      "args": [
+        "show",
+        "{id}",
+        "--full"
+      ],
+      "fixture": "named-sections",
+      "tier": "nightly",
+      "group": "named-sections",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1059000000,
+      "ceiling_from": {
+        "ir": 846604761,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "refs_section_named",
+      "args": [
+        "refs",
+        "{id}",
+        "--section",
+        "format.1"
+      ],
+      "fixture": "named-sections",
+      "tier": "nightly",
+      "group": "named-sections",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1114000000,
+      "ceiling_from": {
+        "ir": 890758220,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_size_named_sections",
+      "args": [
+        "list",
+        "--size"
+      ],
+      "fixture": "named-sections",
+      "tier": "nightly",
+      "group": "named-sections",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1917000000,
+      "ceiling_from": {
+        "ir": 1533264573,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "cover_named_sections",
+      "args": [
+        "cover"
+      ],
+      "fixture": "named-sections",
+      "tier": "nightly",
+      "group": "named-sections",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1267000000,
+      "ceiling_from": {
+        "ir": 1013353650,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_values_large",
+      "args": [
+        "check"
+      ],
+      "fixture": "values-large",
+      "tier": "nightly",
+      "group": "values",
+      "limit_pct": 12.5,
+      "ceiling_ir": 4837000000,
+      "ceiling_from": {
+        "ir": 3868846235,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_values_json",
+      "args": [
+        "check",
+        "--format",
+        "json"
+      ],
+      "fixture": "values",
+      "tier": "nightly",
+      "group": "values",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1440000000,
+      "ceiling_from": {
+        "ir": 1151597110,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_values",
+      "args": [
+        "show",
+        "{id}",
+        "--section",
+        "values"
+      ],
+      "fixture": "values",
+      "tier": "nightly",
+      "group": "values",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1096000000,
+      "ceiling_from": {
+        "ir": 876557579,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "refs_values",
+      "args": [
+        "refs",
+        "{id}.values.limit.1"
+      ],
+      "fixture": "values",
+      "tier": "nightly",
+      "group": "values",
+      "limit_pct": 12.5,
+      "ceiling_ir": 1124000000,
+      "ceiling_from": {
+        "ir": 899055718,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "check_external_facts_large",
+      "args": [
+        "check"
+      ],
+      "fixture": "external-facts-large",
+      "tier": "nightly",
+      "group": "external-facts",
+      "limit_pct": 12.5,
+      "ceiling_ir": 3126000000,
+      "ceiling_from": {
+        "ir": 2500005352,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "show_external_fact",
+      "args": [
+        "show",
+        "{id}"
+      ],
+      "fixture": "external-facts",
+      "tier": "nightly",
+      "group": "external-facts",
+      "limit_pct": 12.5,
+      "ceiling_ir": 607000000,
+      "ceiling_from": {
+        "ir": 484894326,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "refs_external_fact",
+      "args": [
+        "refs",
+        "{id}"
+      ],
+      "fixture": "external-facts",
+      "tier": "nightly",
+      "group": "external-facts",
+      "limit_pct": 12.5,
+      "ceiling_ir": 637000000,
+      "ceiling_from": {
+        "ir": 508871101,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "list_external_facts",
+      "args": [
+        "list",
+        "--kind",
+        "TICKET"
+      ],
+      "fixture": "external-facts",
+      "tier": "nightly",
+      "group": "external-facts",
+      "limit_pct": 12.5,
+      "ceiling_ir": 814000000,
+      "ceiling_from": {
+        "ir": 651155044,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "python_check",
+      "args": [
+        "check"
+      ],
+      "fixture": "canonical",
+      "frontend": "python",
+      "tier": "nightly",
+      "group": "frontends",
+      "limit_pct": 12.5,
+      "ceiling_ir": 902000000,
+      "ceiling_from": {
+        "ir": 721595863,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "python_list",
+      "args": [
+        "list"
+      ],
+      "fixture": "canonical",
+      "frontend": "python",
+      "tier": "nightly",
+      "group": "frontends",
+      "limit_pct": 12.5,
+      "ceiling_ir": 887000000,
+      "ceiling_from": {
+        "ir": 709003075,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "python_show_brief",
+      "args": [
+        "show",
+        "{id}",
+        "--brief"
+      ],
+      "fixture": "canonical",
+      "frontend": "python",
+      "tier": "nightly",
+      "group": "frontends",
+      "limit_pct": 12.5,
+      "ceiling_ir": 612000000,
+      "ceiling_from": {
+        "ir": 488854328,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "python_show_full",
+      "args": [
+        "show",
+        "{id}",
+        "--full"
+      ],
+      "fixture": "canonical",
+      "frontend": "python",
+      "tier": "nightly",
+      "group": "frontends",
+      "limit_pct": 12.5,
+      "ceiling_ir": 612000000,
+      "ceiling_from": {
+        "ir": 488835338,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "python_refs",
+      "args": [
+        "refs",
+        "{id}"
+      ],
+      "fixture": "canonical",
+      "frontend": "python",
+      "tier": "nightly",
+      "group": "frontends",
+      "limit_pct": 12.5,
+      "ceiling_ir": 629000000,
+      "ceiling_from": {
+        "ir": 502929849,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "python_cover",
+      "args": [
+        "cover"
+      ],
+      "fixture": "canonical",
+      "frontend": "python",
+      "tier": "nightly",
+      "group": "frontends",
+      "limit_pct": 12.5,
+      "ceiling_ir": 999000000,
+      "ceiling_from": {
+        "ir": 799174564,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "python_fmt",
+      "args": [
+        "fmt"
+      ],
+      "fixture": "canonical",
+      "frontend": "python",
+      "tier": "nightly",
+      "group": "frontends",
+      "limit_pct": 12.5,
+      "ceiling_ir": 2370000000,
+      "ceiling_from": {
+        "ir": 1895880125,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "lsp_canonical",
+      "args": [
+        "session"
+      ],
+      "fixture": "canonical",
+      "frontend": "lsp",
+      "tier": "nightly",
+      "group": "frontends",
+      "limit_pct": 12.5,
+      "ceiling_ir": 6138000000,
+      "ceiling_from": {
+        "ir": 4909886304,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "lsp_workspace",
+      "args": [
+        "session"
+      ],
+      "fixture": "workspace",
+      "frontend": "lsp",
+      "tier": "nightly",
+      "group": "frontends",
+      "limit_pct": 12.5,
+      "ceiling_ir": 7183000000,
+      "ceiling_from": {
+        "ir": 5746226716,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
+    },
+    {
+      "name": "lsp_named_sections",
+      "args": [
+        "session"
+      ],
+      "fixture": "named-sections",
+      "frontend": "lsp",
+      "tier": "nightly",
+      "group": "frontends",
+      "limit_pct": 12.5,
+      "ceiling_ir": 16353000000,
+      "ceiling_from": {
+        "ir": 13081850381,
+        "commit": "f6dde86ba65d3faebd8bb3c1d6116efb4028e1e9"
+      },
+      "pgo": false
     }
   ]
 }

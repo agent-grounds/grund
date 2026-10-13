@@ -1,0 +1,61 @@
+# §AR-ci.5: what a benchmark shard sets up before it measures, shared by ci.yml's shards and
+# bench-nightly.yml's — the cargo registry, Valgrind and iai-callgrind-runner pinned, and the
+# build job's binaries. It runs inside the job's digest-pinned container.
+name: Set up a benchmark shard
+description: Restore the cargo registry, install the pinned Valgrind and runner, unpack the build job's binaries.
+inputs:
+  artifact:
+    description: The build job's artifact of binaries.
+    required: true
+  save-registry:
+    description: Whether this shard saves the registry it filled, when its key missed.
+    default: "false"
+runs:
+  using: composite
+  steps:
+    # Only the registry: the build job's target arrives as its artifact.
+    - name: Restore the cargo registry
+      id: registry
+      uses: actions/cache/restore@v5
+      with:
+        path: /usr/local/cargo/registry
+        key: bench-registry-6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Install Valgrind and iai-callgrind-runner
+      shell: bash
+      run: |
+        # The container runs as root over a workspace the runner owns.
+        git config --global --add safe.directory "$GITHUB_WORKSPACE"
+        # §AR-ci.5: one snapshot is the only source, so libc6-dbg can equal the image's
+        # libc6 after bookworm moves on; the timestamp moves only with the image digest.
+        rm -f /etc/apt/sources.list.d/* && echo "deb [check-valid-until=no] \
+          https://snapshot.debian.org/archive/debian/20261001T000000Z bookworm main" > /etc/apt/sources.list
+        apt-get -o Acquire::Retries=5 update -qq
+        apt-get -o Acquire::Retries=5 install -y -qq --no-install-recommends valgrind=1:3.19.0-1 \
+          libc6-dbg="$(dpkg-query -W -f '${Version}' libc6)"
+        # The runner version must match the `iai-callgrind` dev-dependency in Cargo.toml.
+        cargo install iai-callgrind-runner --version 0.16.1 --locked --quiet
+        cargo fetch --locked --quiet
+        # §AR-benchmarks.7: this run's records, beside the workspace.
+        mkdir -p bench-records && echo "RECORDS=$PWD/bench-records" >> "$GITHUB_ENV"
+
+    # §AR-ci.13.6: the runner's install and the fetch have filled the registry, so it is saved here.
+    - name: Save the cargo registry
+      if: inputs.save-registry == 'true' && steps.registry.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: /usr/local/cargo/registry
+        key: bench-registry-6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1-${{ hashFiles('**/Cargo.lock') }}
+
+    - uses: actions/download-artifact@v5
+      with:
+        name: ${{ inputs.artifact }}
+        path: bench-bin
+
+    # The checkout is dated back and the archive keeps its own times, so cargo finds every
+    # build output newer than its sources and runs the harness without building again.
+    - name: Unpack the build job's binaries
+      shell: bash
+      run: |
+        git ls-files -z | xargs -0 touch -h -d 2000-01-01T00:00:00Z
+        tar -xf bench-bin/target.tar

@@ -89,8 +89,10 @@ class TheCatalogIsTheScenarioList(unittest.TestCase):
         self.assertIsInstance(data.get("scenarios"), list, "the catalog lists no `scenarios`")
 
     def test_the_fixtures_are_the_generated_ones(self):
+        # §AR-benchmarks.1.2: the three fixtures the ten rows run on keep their entries; the
+        # tiers add fixtures of their own beside them.
         fixtures = catalog()["fixtures"]
-        self.assertEqual(sorted(FIXTURES), sorted(fixtures))
+        self.assertLessEqual(set(FIXTURES), set(fixtures))
         for name, (directory, files, citations) in FIXTURES.items():
             with self.subTest(fixture=name):
                 self.assertEqual(directory, fixtures[name]["dir"])

@@ -168,10 +168,13 @@ class CiPreCommitParityTests(unittest.TestCase):
         workflow_env = self.ci_text.split("\nenv:\n", 1)[1].split("\njobs:\n", 1)[0]
         rustflags = _rustflags(workflow_env)
         self.assertEqual(["-Dwarnings"], rustflags, "the workflow-level env does not deny warnings")
-        # §AR-ci.5: the bench job alone overrides it, with the pinned empty flags its counts need.
+        # §AR-ci.5: the benchmark build job and its shards alone override it, with the pinned
+        # empty flags their counts need.
         overrides = {job: _rustflags(body) for job, body in jobs(self.ci_text).items()}
-        self.assertEqual({"bench": [""]}, {job: flags for job, flags in overrides.items() if flags},
-                         "a job other than bench overrides RUSTFLAGS, or bench's is not empty")
+        self.assertEqual({"bench-build": [""], "bench": [""]},
+                         {job: flags for job, flags in overrides.items() if flags},
+                         "a job other than the benchmark build and shards overrides RUSTFLAGS,"
+                         " or theirs is not empty")
 
     def test_the_pre_commit_step_skips_exactly_the_hooks_another_job_runs(self):
         # §AR-ci.13.3: a hook no job runs is never skipped, and one a job runs is not run twice.

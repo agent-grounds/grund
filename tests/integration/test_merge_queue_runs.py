@@ -3,7 +3,7 @@
 The queue tests each group under the checks a pull request must pass and lands
 exactly the commit it tested, which is only true while `ci.yml` answers the
 `merge_group` event. On a group the commit-message job scans what the group puts
-on `main` (§AR-ci.8.2), and the benchmark job stays out (§AR-ci.5.1). Read as
+on `main` (§AR-ci.8.2), and the three benchmark jobs stay out (§AR-ci.5.1). Read as
 text, the way `test_release_workflow.py` reads the workflows."""
 
 import re
@@ -12,6 +12,8 @@ import unittest
 from test_release_workflow import WORKFLOWS, jobs, squash, step_name, steps
 
 CI = WORKFLOWS / "ci.yml"
+# §AR-ci.5: the build job, the shard matrix and the record job.
+BENCH_JOBS = ("bench-build", "bench", "bench-record")
 
 
 class MergeQueueRunTests(unittest.TestCase):
@@ -38,21 +40,23 @@ class MergeQueueRunTests(unittest.TestCase):
             with self.subTest(job=job):
                 header = self.jobs[job].split("steps:", 1)[0]
                 condition = re.search(r"(?m)^    if:\s*(.+)$", header)
-                if job == "bench":
-                    # §AR-ci.13.2: the one judged job a group skips; the aggregate accepts it there.
+                if job in BENCH_JOBS:
+                    # §AR-ci.13.2: the judged jobs a group skips; the aggregate accepts it there.
                     flat = " ".join(self.jobs["test-ubuntu"].split())
-                    self.assertIn("needs.bench.result == 'skipped' && github.event_name == 'merge_group'",
+                    self.assertIn(f"needs.{job}.result == 'skipped' && github.event_name == 'merge_group'",
                                   flat, "cargo test (ubuntu-latest) does not accept the group's skip")
                 elif condition:
                     self.assertEqual("always()", condition.group(1).replace("${{", "")
                                      .replace("}}", "").strip(),
                                      "the required checks must report on a queue group too")
 
-    def test_the_benchmark_job_is_skipped_on_merge_queue_groups(self):
-        header = self.jobs["bench"].split("steps:", 1)[0]
-        condition = re.search(r"(?m)^    if:\s*(.+)$", header)
-        self.assertIsNotNone(condition, "the bench job runs on merge-queue groups")
-        self.assertEqual("github.event_name != 'merge_group'", condition.group(1).strip())
+    def test_the_benchmark_jobs_are_skipped_on_merge_queue_groups(self):
+        for job in BENCH_JOBS:
+            with self.subTest(job=job):
+                header = self.jobs[job].split("steps:", 1)[0]
+                condition = re.search(r"(?m)^    if:\s*(.+)$", header)
+                self.assertIsNotNone(condition, f"the {job} job runs on merge-queue groups")
+                self.assertEqual("github.event_name != 'merge_group'", condition.group(1).strip())
 
     def test_the_commit_message_range_covers_the_group(self):
         (scan,) = [step for step in steps(self.jobs["commit-messages"])

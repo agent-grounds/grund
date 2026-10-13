@@ -54,3 +54,7 @@ jobs:
             printf '%s\n' "$out" >&2
             exit 1
           fi
+
+  # §AR-ci.5.4: the whole catalog passes its ceilings before a release ships.
+  nightly-benchmarks:
+    uses: ./.github/workflows/bench-nightly.yml

@@ -76,6 +76,7 @@ docker run --rm --security-opt seccomp=unconfined -v "$PWD":/work -w /work \
     apt-get update -qq && apt-get install -y -qq --no-install-recommends valgrind=1:3.19.0-1 \
       libc6-dbg="$(dpkg-query -W -f "\${Version}" libc6)" &&
     cargo install iai-callgrind-runner --version 0.16.1 --locked --quiet &&
+    cargo build --profile bench -p grund-lsp --locked --quiet &&
     cargo bench -p grund --features bench --locked --quiet --bench instructions -- --save-summary=json &&
     python3 scripts/bench_record.py record --environment local \
       --commit "$BENCH_COMMIT" --binary target/bench-image/release/grund \
@@ -99,6 +100,31 @@ as a code change. After a plain `cargo bench` outside the image,
 The run in the image above records `local` too: the host's processor can still move a
 count the image does not pin and the series key does not name, so a count taken this
 way is checked against CI's rather than joining its series.
+
+## Tiers and Shards
+
+The catalog has two tiers ([§AR-benchmarks.1.2.1](architecture/AR-benchmarks.md#121-two-tiers)).
+A pull request runs the `pr` tier, split into the catalog's `shards` shards, one CI job
+each; a scheduled workflow, `bench-nightly.yml`, runs every row of both tiers on `main`
+against the absolute ceilings alone ([§AR-ci.5.4](architecture/AR-ci.md#54-the-nightly-tier)).
+A plain `cargo bench` runs the whole `pr` tier. Two variables narrow or widen it
+([§AR-benchmarks.1.2.2](architecture/AR-benchmarks.md#122-shards)):
+
+```sh
+python3 scripts/bench_shards.py select 3/7       # the rows of shard 3
+GRUND_BENCH_SHARD=3/7 cargo bench -p grund --features bench --locked --bench instructions
+GRUND_BENCH_TIER=nightly cargo bench -p grund --features bench --locked --bench instructions
+```
+
+The `lsp` rows run `grund-lsp` from beside `grund`, so build it first with
+`cargo build --profile bench -p grund-lsp`. The nightly tier's `python` rows load the
+extension the same way, built with
+`cargo build --profile bench -p grund-py --features extension-module`
+([§AR-benchmarks.1.7](architecture/AR-benchmarks.md#17-frontends)). Each shard's run
+writes a partial record with `bench_record.py record --tier pr` (or `nightly`), and
+`bench_record.py merge --out <record> <partial>…` joins one revision's partials into
+one record, refusing partials of two series, two binaries or two tiers, and a scenario
+two partials both measured ([§AR-benchmarks.7.1.1](architecture/AR-benchmarks.md#711-one-record-per-revision-merged-from-its-shards)).
 
 ## Instructions
 

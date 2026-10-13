@@ -8,6 +8,10 @@ PGO reader. The language server is driven through an editor session over stdio.
 `scripts/pgo-build.sh` runs this with the instrumented payload, and reads `describe` for
 the evidence it records.
 
+§AR-benchmarks.1.7: the benchmark harness reads the same definitions. `session --root <dir>`
+prints the editor session as framed JSON-RPC for `grund-lsp`'s stdin, and `python-call`
+runs one catalog row through the Python extension, once.
+
 Plain Python 3.6 syntax and the standard library only, because `pgo-build.sh`'s
 `find_python` accepts any Python 3.6 or newer to run it; in the manylinux2014 image the
 Linux release builds in, that is `/opt/python/cp312-cp312/bin/python3`.
@@ -50,11 +54,15 @@ def arguments(row):
     return [arg.replace("{id}", subject()) if "{id}" in arg else arg for arg in row["args"]]
 
 
+def step(args, ident=None):
+    """A row's arguments as the native call that runs it: the operation, its ID, its mode."""
+    return {"op": args[0], "id": ident,
+            "mode": next((MODES[arg] for arg in args if arg in MODES), "lead")}
+
+
 def steps():
-    """Each `pgo` row as the native call that runs it: the operation, its ID, its mode."""
-    return [{"op": row["args"][0], "id": row["pgo"].get("id"),
-             "mode": next((MODES[arg] for arg in row["args"] if arg in MODES), "lead")}
-            for row in subset()]
+    """Each `pgo` row as the native call that runs it."""
+    return [step(row["args"], row["pgo"].get("id")) for row in subset()]
 
 
 def workload(product):
@@ -68,6 +76,62 @@ def workload(product):
 
 
 DOCUMENTS = ("README.md", "docs/functional-spec/FS-check.md", "crates/grund-core/src/lib.rs")
+
+
+def documents(repo):
+    """The documents the session opens: the training ones in this repository, or, in a
+    generated fixture that has none of them, its first three Markdown files by path."""
+    if all(os.path.isfile(os.path.join(repo, document)) for document in DOCUMENTS):
+        return list(DOCUMENTS)
+    found = []
+    for directory, folders, files in os.walk(repo):
+        folders[:] = [name for name in folders if not name.startswith(".")]
+        found += [os.path.relpath(os.path.join(directory, name), repo).replace(os.sep, "/")
+                  for name in files if name.endswith(".md")]
+    return sorted(found)[:3]
+
+
+def session(repo, process_id=None):
+    """§AR-benchmarks.1.7, §DA-pgo-release: the editor session `LSP` describes, written once
+    for the training client and the benchmark: `(method, params, is_request)` in order."""
+    messages = [("initialize", {"processId": process_id, "rootUri": uri(repo),
+                                "workspaceFolders": [{"uri": uri(repo), "name": "grund"}],
+                                "capabilities": {}}, True),
+                ("initialized", {}, False)]
+    hovers = []
+    for document in documents(repo):
+        path = os.path.join(repo, document)
+        with open(path, encoding="utf-8") as handle:
+            text = handle.read()
+        address = uri(path)
+        language = "markdown" if document.endswith(".md") else "rust"
+        messages.append(("textDocument/didOpen", {"textDocument": {
+            "uri": address, "languageId": language, "version": 1, "text": text}}, False))
+        # The server publishes only where it finds something, and answers in order: the
+        # hover's answer is what says this document was checked and published.
+        line, character = first_citation(text)
+        hovers.append(("textDocument/hover", {"textDocument": {"uri": address},
+                                              "position": {"line": line,
+                                                           "character": character}}, True))
+    return messages + hovers + [("shutdown", {}, True), ("exit", {}, False)]
+
+
+def frame(message):
+    body = json.dumps(message).encode("utf-8")
+    return b"Content-Length: %d\r\n\r\n" % len(body) + body
+
+
+def framed_session(repo):
+    """§AR-benchmarks.1.7: the session as the bytes a client writes, requests numbered from 1,
+    with no process ID, so one fixture always gives the server one input."""
+    out, next_id = [], 0
+    for method, params, request in session(os.path.abspath(repo)):
+        message = {"jsonrpc": "2.0", "method": method, "params": params}
+        if request:
+            next_id += 1
+            message["id"] = next_id
+        out.append(frame(message))
+    return b"".join(out)
 
 
 class Session:
@@ -101,8 +165,7 @@ class Session:
         if request:
             self.next_id += 1
             message["id"] = self.next_id
-        body = json.dumps(message).encode("utf-8")
-        self.process.stdin.write(b"Content-Length: %d\r\n\r\n" % len(body) + body)
+        self.process.stdin.write(frame(message))
         self.process.stdin.flush()
         return message.get("id")
 
@@ -138,28 +201,14 @@ def first_citation(text):
 
 
 def language_server(payload, repo):
-    session = Session([payload])
-    session.request("initialize", {"processId": os.getpid(), "rootUri": uri(repo),
-                                   "workspaceFolders": [{"uri": uri(repo), "name": "grund"}],
-                                   "capabilities": {}})
-    session.send("initialized", request=False)
-    for document in DOCUMENTS:
-        path = os.path.join(repo, document)
-        with open(path, encoding="utf-8") as handle:
-            text = handle.read()
-        address = uri(path)
-        language = "markdown" if document.endswith(".md") else "rust"
-        session.send("textDocument/didOpen", {"textDocument": {
-            "uri": address, "languageId": language, "version": 1, "text": text}}, request=False)
-        # The server publishes only where it finds something, and answers in order: the
-        # hover's answer is what says this document was checked and published.
-        line, character = first_citation(text)
-        session.request("textDocument/hover", {"textDocument": {"uri": address},
-                                               "position": {"line": line, "character": character}})
-    session.request("shutdown")
-    session.send("exit", request=False)
-    session.process.stdin.close()
-    return session.process.wait(timeout=60)
+    client = Session([payload])
+    for method, params, request in session(repo, os.getpid()):
+        if request:
+            client.request(method, params)
+        else:
+            client.send(method, params, request=False)
+    client.process.stdin.close()
+    return client.process.wait(timeout=60)
 
 
 NODE_SCRIPT = r"""
@@ -180,12 +229,8 @@ const call = {
 })().catch((error) => { console.error(error); process.exitCode = 1; });
 """
 
-PYTHON_SCRIPT = r"""
-import json
-import sys
-sys.path.insert(0, sys.argv[1])
-import grund
-root = sys.argv[2]
+# The Python call of each operation, shared by the training script and `python-call`.
+PYTHON_CALLS = r"""
 call = {
     "check": lambda step: grund.check(root),
     "list": lambda step: grund.list_ids(root=root),
@@ -194,6 +239,14 @@ call = {
     "cover": lambda step: grund.cover(root=root),
     "fmt": lambda step: grund.fmt(root=root),
 }
+"""
+PYTHON_SCRIPT = r"""
+import json
+import sys
+sys.path.insert(0, sys.argv[1])
+import grund
+root = sys.argv[2]
+""" + PYTHON_CALLS + r"""
 for _ in range(3):
     for step in json.loads(sys.argv[3]):
         call[step["op"]](step)
@@ -229,14 +282,32 @@ def node_addon(payload, repo, work, target):
                             repo, json.dumps(steps())])
 
 
-def python_extension(payload, repo, work):
+def stage_python(payload, repo, work):
+    """The `grund` package as an install lays it out, its extension `payload`."""
     stage = os.path.join(work, "python")
     shutil.rmtree(stage, ignore_errors=True)
     shutil.copytree(os.path.join(repo, "python", "grund"), os.path.join(stage, "grund"))
     suffix = ".pyd" if payload.endswith(".dll") else ".abi3.so"
     shutil.copyfile(payload, os.path.join(stage, "grund", "_native" + suffix))
+    return stage
+
+
+def python_extension(payload, repo, work):
+    stage = stage_python(payload, repo, work)
     python = os.environ.get("GRUND_PGO_PYTHON") or sys.executable
     return subprocess.call([python, "-c", PYTHON_SCRIPT, stage, repo, json.dumps(steps())])
+
+
+def python_call(payload, repo, work, root, args):
+    """§AR-benchmarks.1.7: one row's operation through the extension, once, in this
+    interpreter, so Callgrind toggled on at the extension's entry point counts that call."""
+    sys.path.insert(0, stage_python(payload, repo, work))
+    import grund  # noqa: F401 - the staged package, read by PYTHON_CALLS
+    scope = {"grund": grund, "root": root}
+    exec(PYTHON_CALLS, scope)
+    ident = args[1] if args[0] in ("show", "refs") else None
+    scope["call"][args[0]](step(args, ident))
+    return 0
 
 
 def executable(payload, repo):
@@ -258,6 +329,14 @@ def main(argv):
     if argv[:1] == ["describe"]:
         print(json.dumps(workload(argv[1])))
         return 0
+    if argv[:2] == ["session", "--root"] and len(argv) == 3:
+        out = getattr(sys.stdout, "buffer", sys.stdout)
+        out.write(framed_session(argv[2]))
+        out.flush()
+        return 0
+    if argv[:1] == ["python-call"]:
+        payload, repo, work, root = argv[1:5]
+        return python_call(payload, repo, work, root, argv[5:])
     product, payload, repo, work, target = argv
     os.makedirs(work, exist_ok=True)
     if product == "grund":
