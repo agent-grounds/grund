@@ -78,7 +78,8 @@ fn a_deeper_relative_heading_hashes_with_its_path_below_the_section() {
 #[test]
 fn a_heading_shaped_line_the_map_does_not_record_hashes_as_written() {
     // A fenced line and a dotted line of prose are no headings of the section map.
-    let text = "Goals.\n\n```markdown\n#### 1.1.1. Latency\n```\n\nThe text `#### 1.1.2. Other` stays.";
+    let text =
+        "Goals.\n\n```markdown\n#### 1.1.1. Latency\n```\n\nThe text `#### 1.1.2. Other` stays.";
     assert_eq!(
         entered("fingerprint_fenced_heading", text),
         section_fingerprint(text)

@@ -146,7 +146,7 @@ pub(crate) use never_rewrite::{
 };
 pub(crate) use relative_heading::{
     expand_relative_heading, may_hold_relative_heading, relative_heading_form,
-    relative_heading_hint,
+    relative_heading_hint, relative_to_ancestor,
 };
 pub(crate) use section_paths::path_at_or_under;
 pub(crate) use settings::{AliasGrammar, GrammarKind, LexicalSettings, require_kinds};
