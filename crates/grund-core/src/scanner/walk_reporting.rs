@@ -182,7 +182,7 @@ pub(crate) fn walk_scannable_files_with_sources(
                     files.push(scan_root);
                 }
                 // §AR-scanner.1.13: the predicate's own answer, kept with the row
-                // that made the file a root (§FS-scan.scope.extensions.root).
+                // that made the file a root (§FS-scan.checks.unread-scan-root.location).
                 Some(Unread::Extension) => {
                     let rows =
                         file_rows.get_or_insert_with(|| file_root_rows(schema, frame.root()));
