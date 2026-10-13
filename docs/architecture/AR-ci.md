@@ -141,17 +141,19 @@ oracle it is given must come back as that same file's absolute path.
 
 #### 3.4.1 The Node acceptance's shared build target
 
-`GRUND_NODE_TARGET` is the fourth input: one Cargo target directory that every
+`GRUND_NODE_TARGET` is the fourth input: the root of the Cargo target that every
 build of the Node acceptance ([§AR-bindings.5](AR-bindings.md#5-grund-node-the-napi-rs-binding)) shares. Unset, the wrapper prepares
 `~/ag/tmp/grund-node-target`, outside the checkout and kept between runs, and CI
 restores that directory from a cache step of its own, so a job starts with the
 dependency tree already compiled. The acceptance's own helper reads the
 same variable and falls back to the same directory, so `tests/bindings/node/run.py`
-run on its own shares it too. Every build site names this target or a directory
-under it, never a fresh temporary one: the source package and its bundled
-fallback rebuild, the documented native builder and its test-seams build, and
-the CLI. The CLI the acceptance compares against is built once per run and
-reused by every test that needs it. Cargo's own lock makes the sharing safe.
+run on its own shares it too. What the root holds is one target per source
+checkout ([§AR-ci.3.4.1.2](AR-ci.md#3412-one-target-per-source-checkout)), which the helper derives under it, and every build
+site names that checkout's target or a directory under it, never a fresh
+temporary one: the source package and its bundled fallback rebuild, the
+documented native builder and its test-seams build, and the CLI. The CLI the
+acceptance compares against is built once per run and reused by every test
+that needs it.
 
 That cache is not the cargo cache's. Its key is
 `<os>-node-target-v2-1.95.0-<Cargo.lock hash>`: the runner's OS, a version to
@@ -185,10 +187,11 @@ from a populated cache.
 
 `tests/integration/test_node_shared_target.py` holds this: with the variable set,
 every `--target-dir` the source package and the CLI build name lies under it and
-the CLI is built once; every other build site names this target, the rehearsal's,
-or a directory under one of them; unset, the wrapper and the helper agree on one
-persistent directory outside the checkout, which a CI cache step of its own
-restores, under a key that is not the cargo cache's.
+the CLI is built once; every other build site names the helper's target, the
+rehearsal's, or a directory under one of them; unset, the wrapper prepares one
+persistent root outside the checkout, the helper's target lies under it, and a
+CI cache step of its own restores that root, under a key that is not the cargo
+cache's.
 
 ##### 3.4.1.1 One release build, and every build on one line
 
@@ -227,6 +230,38 @@ of the binding resolves to the release profile, and it is the documented native
 builder's; a build the harness runs prints its one line naming its profile,
 target and seconds; the wrapper shows those lines, and only those, on a green
 run; and the CI cache key carries the `v2` this point bumped.
+
+##### 3.4.1.2 One target per source checkout
+
+The root is shared, a target is not: each source checkout builds into its own
+directory under `GRUND_NODE_TARGET`, named by a short digest of the checkout's
+resolved root, so the same checkout gets the same directory on every run and
+two worktrees of the repository never get one directory between them. The
+helper derives that directory once, and every build site reaches it through the
+helper; the wrapper and CI still prepare, cache and restore only the root.
+
+Cargo's lock does not make one target safe to share across source trees,
+because it serialises builds and separates nothing else. Two things in a target
+are keyed by neither the source tree nor the run. Cargo gives a workspace path
+package the same unit in every checkout, then judges it fresh by modification
+time, so a build from one tree, after another tree's newer build, links the
+other tree's `grund-core` with no concurrency at all. And each uplifted artifact,
+`debug/grund` and the binding's library, is one path per target, which another
+tree's build overwrites between this run's build and its copy or execution of
+it. Either way the acceptance compares an addon or an oracle built from sources
+other than the commit under test, which is what the same-source parity of
+[§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity) and the independent oracle of [§FS-distribution.3.2.3.1](../functional-spec/FS-distribution.md#3231-execution)
+rule out. A lock held from build through copy would cure the second and not the
+first, so the remedy is the separate target.
+
+The price is the third-party dependency tree: each checkout compiles its own
+once, where worktrees used to share one. A CI runner has one checkout path, so
+its directory is the same on every run, and the cached root holds it.
+
+`tests/integration/test_node_shared_target.py` holds this too: two checkouts
+under one root get disjoint targets, both under it; one checkout gets the same
+target on every call and every run; and every `--target-dir` a checkout's
+source package and CLI build name lies under that checkout's own target.
 
 #### 3.4.2 Per-test durations
 
