@@ -1,0 +1,16 @@
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "GOAL"
+file = "docs/goals.md"
+
+[[kinds]]
+kind = "LICENSE"
+citable = false
+scan = false
+file = "LICENSE.txt"
+
+[scan]
+include = ["docs"]
+extensions = ["md"]

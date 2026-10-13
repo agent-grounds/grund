@@ -169,7 +169,7 @@ Scanning every home closes a trap that had nothing to do with non-citable kinds 
 
 ### scope.roots: A scan root outruns every rule about descent
 
-A home is a **scan root**, and no scan root is pruned by `exclude`, an ignore file, or the hidden-directory rule ([AR-scanner.1](../architecture/AR-scanner.md#1-tree-walk)) — so a home the repository also excludes is read, while everything *below* it is filtered as usual. That is the honest reading of a config that says both: the `[[kinds]]` entry names the directory, and `exclude` was written about descendants. All three are rules about a descent, which is why a root outruns them; the hidden-file rule is about a name, so a root does not outrun it ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)).
+A home is a **scan root**, and no scan root is pruned by `exclude`, an ignore file, or the hidden-directory rule ([AR-scanner.1](../architecture/AR-scanner.md#1-tree-walk)) — so a home the repository also excludes is read, while everything *below* it is filtered as usual. That is the honest reading of a config that says both: the `[[kinds]]` entry names the directory, and `exclude` was written about descendants. All three are rules about a descent, which is why a root outruns them. Two rules are about a file's own name, and a root does not outrun either: the hidden-file rule ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)) and the `extensions` list ([§FS-scan.scope.extensions.root](FS-scan.md#scopeextensionsroot-a-file-root-whose-extension-is-unlisted-is-not-read-and-check-says-so)). A file root the list refuses is not read, and `check` names it rather than passing over it.
 
 ### scope.not-a-fence: `include` is a scan scope, not a fence
 
@@ -182,6 +182,12 @@ The scan skips a hidden directory by not descending into it; it skips a file who
 ### scope.extensions: An extension makes a file readable, not declarable
 
 Listing an extension makes a file *readable*, not declarable. A prose markup format other than Markdown — AsciiDoc, reStructuredText, LaTeX — has its citations checked as soon as its extension appears in `extensions`, because the citation grammar is format-agnostic; its native heading syntax still declares nothing, since a declaration is a `#`-prefixed heading or a comment-prefixed line. Whether those formats should be declaration homes of their own is an open discussion ([§DISC-markup-format-declarations](../discussions/proposals/2026-05-25-markup-format-declarations.md#disc-markup-format-declarations-declarations-in-asciidoc-restructuredtext-latex-and-similar-markup-document-formats)), not a configured behavior.
+
+#### scope.extensions.root: A file root whose extension is unlisted is not read, and `check` says so
+
+A scan root that is a single file — a `[[kinds]]` `file` home, a version-2 `files` entry, or an `[scan] include` entry naming a file — is read only if its extension is one `extensions` lists, or in a version-2 file one a language of `[schema.sources] languages` reads. A file with no extension at all, such as `NOTES`, has none the list can hold, so it is refused by the same rule. The list is not widened for a root: an unlisted extension has no comment prefixes to read the file with, and a row may name a file only as a place in the Project map. What the root earns instead is a report: every `grund check` that has the root in its configured scope prints the warning of [§FS-scan.checks.unread-scan-root](FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read), located at the row that made the file a root, so a configuration that names a file to read and a list that keeps it out never passes as `success` ([§REQ-no-missed-citation.1](../requirements/REQ-no-missed-citation.md#1-no-silent-skips)).
+
+Three such files earn nothing. A row marked `scan = false` is not a root ([§FS-scan.scope.homes](FS-scan.md#scopehomes-every-configured-kind-home-is-scanned)), a home that does not exist scans as nothing, and a hidden-named file is the declared blind spot of [§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent), whose rule is asked first. A directory root is filtered file by file, which is what `extensions` means, so it earns nothing either. The other commands that scan — `list`, `refs`, `show`, `cover`, `fmt` — read the same files and say nothing about the root: the fact is about the coverage of `check`'s verdict ([§DF-unread-scan-root](../decisions/functional/DF-unread-scan-root.md#df-unread-scan-root-a-configured-file-root-whose-extension-is-unlisted-is-named-not-read)).
 
 ### scope.ignore-files: `respect_gitignore` — the ignore files
 
@@ -240,3 +246,71 @@ A file's text is what saving it would write: the editor's open buffer where ther
 ### text.buffer-only: A buffer with no file behind it is a file
 
 A buffer with no file on disk behind it, a new file the editor has not saved, is a file of the run. It exists for a stub, so a stub to it is never `stub link target missing` and is judged on the buffer's text ([§FS-declarations.stubs.target.1](FS-declarations.md#stubstarget1-the-target-is-read-as-a-save-would-write-it)). The walk reads it or skips it by the rules of [§FS-scan.scope](FS-scan.md#scope-which-files-a-run-reads) exactly as it would the saved file: `include` and the kind homes bring it in, and a hidden name, an unlisted extension, `exclude`, an ignore file of any form [§FS-scan.scope.ignore-files](FS-scan.md#scopeignore-files-respect_gitignore--the-ignore-files) names, a `scan = false` home and another project's root keep it out. Where the editor holds a buffer for a file the walk skips, the walk's rule wins: the buffer is the file, and the file is not read. A stub's target outside `include` is read as if it were scanned ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), a buffer as much as a saved file, and only by the name and extension rules of [§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing).
+
+## checks: Checks
+
+### checks.unread-scan-root: A configured file root is not read
+
+A scan root that is a single file — a `[[kinds]]` `file` home, a version-2 `files` entry, or an `[scan] include` entry naming a file — whose extension the extension list leaves out ([§FS-scan.scope.extensions.root](FS-scan.md#scopeextensionsroot-a-file-root-whose-extension-is-unlisted-is-not-read-and-check-says-so)). Nothing in the file was read: no declaration in it reached a catalog and no citation in it was resolved or reported, so the configuration names a file to check and the run checks none of it. Saying so is this finding's whole job ([§REQ-no-missed-citation.1](../requirements/REQ-no-missed-citation.md#1-no-silent-skips)).
+
+It is one located warning per unread root, at the line of the row that made the file a root ([§FS-scan.checks.unread-scan-root.location](FS-scan.md#checksunread-scan-rootlocation-one-warning-per-unread-root-at-its-rows-line)), in the exact bytes of [§FS-scan.checks.unread-scan-root.message](FS-scan.md#checksunread-scan-rootmessage-the-message). Some roots earn nothing ([§FS-scan.checks.unread-scan-root.silent](FS-scan.md#checksunread-scan-rootsilent-what-stays-silent)). It is printed on stdout and moves no exit code ([§FS-scan.checks.unread-scan-root.channel](FS-scan.md#checksunread-scan-rootchannel-a-located-finding-on-stdout-and-the-exit-code-does-not-move)), it is asked of the configured scope by `check` alone ([§FS-scan.checks.unread-scan-root.scope](FS-scan.md#checksunread-scan-rootscope-asked-of-the-configured-scope-by-check-alone)), its JSON form is [§FS-scan.checks.unread-scan-root.json](FS-scan.md#checksunread-scan-rootjson-its-json-form-is-on-stdout), and it stands in place of the empty-scan caution ([§FS-scan.checks.unread-scan-root.empty-scan](FS-scan.md#checksunread-scan-rootempty-scan-it-stands-in-place-of-the-empty-scan-caution)).
+
+- **Code:** `unread-scan-root` ([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)).
+
+#### checks.unread-scan-root.location: One warning per unread root, at its row's line
+
+One warning per unread root, located in the `grund.toml` that configured it, at the line of the key that named the file: the `file` key of its `[[kinds]]` row, the `files` key of its version-2 row, or the `[scan] include` key. Two entries of one `include` array share that line and sort by message ([§FS-errors.4](FS-errors.md#4-determinism)). The path is spelled as every located finding in that config spells it ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)).
+
+#### checks.unread-scan-root.message: The message
+
+The message is `<row> is not read — <reason>, so nothing in it is checked. <fix>.` The row names the file as the configuration wrote it:
+
+| Root | `<row>` |
+|---|---|
+| a `[[kinds]]` `file` home | ``[[kinds]] <KIND> home `<file>` `` |
+| an `[scan] include` entry | ``[scan] include entry `<entry>` `` |
+| a version-2 `files` entry | ``[schema.kinds.<KIND>] file `<file>` `` |
+
+The reason names the extension as the file name spells it, the part after the last `.`, or says there is none:
+
+| Configuration | The file has an extension | The file has none |
+|---|---|---|
+| version 1 | `` `<ext>` is not in [scan] extensions`` | `it has no extension, and [scan] extensions reads a file only by its extension` |
+| version 2 | ``no language in [schema.sources] languages reads `.<ext>` `` | `it has no extension, and [schema.sources] languages reads a file only by its extension` |
+
+The fix is the one edit that makes the row say what it means. Listing the extension is offered only where there is one to list, so a file with none is never told to add it:
+
+| Root | The file has an extension | The file has none |
+|---|---|---|
+| a version-1 `[[kinds]]` home | `Add "<ext>" to [scan] extensions, or give the file an extension the list holds` | `Rename the file to an extension the list holds` |
+| an `[scan] include` entry | `Add "<ext>" to [scan] extensions, or drop the entry` | `Rename the file to an extension the list holds, or drop the entry` |
+| a version-2 `files` entry | `Give the file an extension a listed language reads` | `Give the file an extension a listed language reads` |
+
+A home on a row with `citable = false` may name the file only as a place in the Project map, so its fix also offers the key that says so ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)): the last `, or` of the version-1 fix becomes `,`, and the fix ends ``, or set `scan = false` on the row if it only lists a place``. A version-2 row's single fix gains the same ending. So, for one root of each shape:
+
+```
+grund.toml:10: warning: [[kinds]] TXT home `notes.txt` is not read — `txt` is not in [scan] extensions, so nothing in it is checked. Add "txt" to [scan] extensions, or give the file an extension the list holds.
+grund.toml:9: warning: [scan] include entry `extra.txt` is not read — `txt` is not in [scan] extensions, so nothing in it is checked. Add "txt" to [scan] extensions, or drop the entry.
+grund.toml:7: warning: [[kinds]] NOTES home `NOTES` is not read — it has no extension, and [scan] extensions reads a file only by its extension, so nothing in it is checked. Rename the file to an extension the list holds, or set `scan = false` on the row if it only lists a place.
+grund.toml:8: warning: [schema.kinds.TXT] file `notes.txt` is not read — no language in [schema.sources] languages reads `.txt`, so nothing in it is checked. Give the file an extension a listed language reads.
+```
+
+#### checks.unread-scan-root.silent: What stays silent
+
+A row marked `scan = false` is not a root and earns nothing ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)), and neither does a home or entry that does not exist ([§FS-scan.scope.homes](FS-scan.md#scopehomes-every-configured-kind-home-is-scanned)). A hidden-named file is the declared blind spot of [§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent): the hidden rule is asked first, so a name both hidden and unlisted earns nothing here. A directory root is filtered file by file, which is what the extension list means; a directory whose files are all unlisted earns nothing here, and the empty-scan caution still speaks when the run read nothing at all ([§FS-check.2.2](FS-check.md#22-empty-scan)).
+
+#### checks.unread-scan-root.channel: A located finding on stdout, and the exit code does not move
+
+It is a warning, so the exit code stays `0` and `success` is withheld ([§FS-check.2.1.3](FS-check.md#213-the-success-line)), and like [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent) it is a located finding on stdout rather than a CLI-level caution ([§FS-check.4.9.4](FS-check.md#494-a-located-finding-on-stdout-not-a-cli-level-caution)): a statement about the coverage of a report belongs in the report. It is not an error, because nothing the run read is wrong; what is at stake is only how much the verdict covers. It names no release and stays a warning, like [§FS-check.4.9.6](FS-check.md#496-it-names-no-release): a row that names a file the list keeps out is a configuration that says two things, and the edit that makes it say one is the repository's to choose. `--ignore unread-scan-root` and `--only` select it like any code ([§FS-check.2.1.2](FS-check.md#212-selection-filters-the-complete-report)).
+
+#### checks.unread-scan-root.scope: Asked of the configured scope, by `check` alone
+
+Every `check` run that loads the configuration asks it of every configured file root, `--full` included: `--full` keeps the configured roots ([§FS-check.1.3.2](FS-check.md#132-the-wider-scan-reads-a-superset-each-file-once)), so it prints the same warnings and no finding from inside the file, which it does not read either. A run given an explicit path reports it only where the path covers the `grund.toml` that holds the row, like any located finding ([§FS-scan.path.check](FS-scan.md#pathcheck-check-reads-more-than-it-reports)); `grund check notes.txt` keeps the caution of [§FS-check.2.2.2.2](FS-check.md#2222-an-explicit-path) instead. In a workspace each project is asked on its own, and the warning is located in that project's own `grund.toml`. `list`, `refs`, `show`, `cover` and `fmt` read the same files and do not say it ([§DF-unread-scan-root.2.1](../decisions/functional/DF-unread-scan-root.md#21-check-alone-says-it)).
+
+#### checks.unread-scan-root.json: Its JSON form is on stdout
+
+Under `--format=json` it is one warning finding on stdout with `path` and `line` set and `sites` null, like every other located finding ([§FS-errors.5](FS-errors.md#5-json-format)), carrying the message of [§FS-scan.checks.unread-scan-root.message](FS-scan.md#checksunread-scan-rootmessage-the-message) byte for byte.
+
+#### checks.unread-scan-root.empty-scan: It stands in place of the empty-scan caution
+
+It is a finding about the default scope, so where the unread root was the only thing the run would have read, it suppresses the generic empty-scan caution ([§FS-check.2.2.3](FS-check.md#223-exit-code-json-and-what-suppresses-it)) and the run's stderr is empty. That caution points at `include` and `grund init --docs`, the wrong fix for a file the configuration already names; this warning names the row and the edit.
