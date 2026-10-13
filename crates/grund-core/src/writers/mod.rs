@@ -82,6 +82,7 @@ mod fmt_rewrite;
 mod fmt_section_lock;
 mod fmt_settle;
 mod fmt_shorthand_links;
+mod fmt_suppressed;
 mod fmt_tree;
 mod fmt_value_bindings;
 mod fmt_workspace;
