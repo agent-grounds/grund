@@ -1,0 +1,101 @@
+//! Persistent actual same-source hosts (§REQ-one-answer.proof.matrix), with
+//! completed request/result receipts (§REQ-one-answer.proof.evidence).
+
+use serde_json::{Value, json};
+use std::io::{BufRead, BufReader, Write};
+use std::path::PathBuf;
+use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
+
+pub struct Host {
+    child: Child,
+    input: Option<ChildStdin>,
+    output: BufReader<ChildStdout>,
+    pub provenance: Value,
+}
+
+pub fn repository() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../..")
+        .canonicalize()
+        .expect("repository")
+}
+
+impl Host {
+    pub fn new() -> Self {
+        let root = repository();
+        let mut child = Command::new(std::env::var_os("PYTHON").unwrap_or_else(|| "python".into()))
+            .arg(root.join("tests/bindings/agreement_host.py"))
+            .current_dir(&root)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::inherit())
+            .spawn()
+            .expect("start same-source hosts");
+        let input = child.stdin.take();
+        let output = BufReader::new(child.stdout.take().expect("host stdout"));
+        let mut host = Self {
+            child,
+            input,
+            output,
+            provenance: Value::Null,
+        };
+        host.provenance = host.read()["ready"].clone();
+        let sha = Command::new("git")
+            .args(["rev-parse", "HEAD"])
+            .current_dir(root)
+            .output()
+            .expect("source SHA");
+        assert_eq!(
+            host.provenance["sourceSha"].as_str(),
+            Some(String::from_utf8_lossy(&sha.stdout).trim())
+        );
+        host
+    }
+
+    fn read(&mut self) -> Value {
+        let mut line = String::new();
+        assert!(
+            self.output.read_line(&mut line).expect("host response") > 0,
+            "host terminated without a response: {:?}",
+            self.child.try_wait()
+        );
+        serde_json::from_str(&line).unwrap_or_else(|error| panic!("host response {error}: {line}"))
+    }
+
+    pub fn request(&mut self, request: Value) -> Value {
+        let input = self.input.as_mut().expect("live host");
+        serde_json::to_writer(&mut *input, &request).expect("encode host request");
+        writeln!(input).expect("request delimiter");
+        input.flush().expect("send request");
+        self.read()
+    }
+
+    pub fn call(&mut self, surface: &str, request: Value) -> Value {
+        let response = self.request(json!({"op":surface,"request":request}));
+        assert_eq!(
+            response["request"], request,
+            "host response belongs to another call"
+        );
+        let cwd = PathBuf::from(request["cwd"].as_str().unwrap());
+        super::agreement_evidence::receipt(surface, &cwd, request, response["envelope"].clone());
+        super::agreement_evidence::seconds(
+            response["seconds"].as_f64().expect("actual host duration"),
+        );
+        response["envelope"].clone()
+    }
+}
+
+impl Drop for Host {
+    fn drop(&mut self) {
+        drop(self.input.take());
+        if std::thread::panicking() {
+            let _ = self.child.kill();
+            let _ = self.child.wait();
+        } else {
+            assert!(
+                self.child.wait().expect("host exit").success(),
+                "host failed on shutdown"
+            );
+        }
+    }
+}

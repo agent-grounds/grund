@@ -4,15 +4,13 @@
 //! checked against the point that defines it as well, because two surfaces wrong
 //! alike agree.
 //!
-//! Seeded thin under §AR-ci.requirements.1. The trees are the reproduced rows of
-//! #576 (r1, r2 and r3), one tree per row of §REQ-one-answer.differences, and a
-//! fixed sample of the end-to-end corpus: the first case of each family in
-//! `SAMPLED_FAMILIES` whose fixture is a plain project. The surfaces are the
-//! command line's, and for `agreement_buffers::TREES` the editor snapshot and `show` over an
-//! edit held as a buffer, against the same edit saved (§FS-scan.text.buffer);
-//! the bindings, and the editor against the command line, are compared by
-//! `lsp_cli_parity.rs` and `stub_resolution_agreement.rs` until this test
-//! drives them too.
+//! Corpus execution belongs to `agreement_acceptance`: every original case,
+//! applicable invocation variant and real CLI/editor/Python/Node entrypoint
+//! (§REQ-one-answer.proof.matrix). The dedicated trees here keep each ruled
+//! difference and positive regression control individually identifiable.
+//! `lsp_cli_parity.rs` retains the distinct real-server wire assertions
+//! (§REQ-one-answer.proof.transport). Gate timing is measured separately at
+//! fixed source SHAs (§AR-ci.requirements.1).
 //!
 //! `LEDGER` is the divergence ledger: one row per known divergence, naming the
 //! tree and the invariant. `DEFERRED` names each row of §REQ-one-answer.differences
@@ -28,10 +26,30 @@
 mod agreement_acceptance;
 #[path = "support/agreement_buffers.rs"]
 mod agreement_buffers;
+#[path = "support/agreement_compare.rs"]
+mod agreement_compare;
+#[path = "support/agreement_corpus.rs"]
+mod agreement_corpus;
+#[path = "support/agreement_editor.rs"]
+mod agreement_editor;
 #[path = "support/agreement_evidence.rs"]
 mod agreement_evidence;
+#[path = "support/agreement_facts.rs"]
+mod agreement_facts;
+#[path = "support/agreement_host.rs"]
+mod agreement_host;
 #[path = "support/agreement_identity.rs"]
 mod agreement_identity;
+#[path = "support/agreement_manifest.rs"]
+mod agreement_manifest;
+#[path = "support/agreement_materialization.rs"]
+mod agreement_materialization;
+#[path = "support/agreement_mutations.rs"]
+mod agreement_mutations;
+#[path = "support/agreement_oracles.rs"]
+mod agreement_oracles;
+#[path = "support/agreement_questions.rs"]
+mod agreement_questions;
 #[path = "support/agreement_sections.rs"]
 mod agreement_sections;
 #[path = "support/agreement_stubs.rs"]
@@ -43,10 +61,10 @@ use agreement_buffers as buffers;
 use agreement_identity as identity;
 use agreement_sections as sections;
 use agreement_stubs as stubs;
-use agreement_tree::{Verdict, grund, json_lines, listed_steps, stdout};
+use agreement_tree::{Verdict, listed_steps};
 use std::collections::BTreeSet;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// `(row of #576's ledger or of §REQ-one-answer.differences, tree, invariant)`.
 /// G01 is a defect every surface shares, kept here alone as #576's ruling V-D04
@@ -225,78 +243,6 @@ const WIDENING: &[(&str, &str)] = &[(
     "S4",
 )];
 
-/// The families of `tests/e2e/cases/` whose first plain project is sampled.
-const SAMPLED_FAMILIES: &[&str] = &[
-    "check",
-    "show",
-    "refs",
-    "list",
-    "fmt",
-    "stub",
-    "workspace",
-    "symlink",
-    "doccomment",
-    "scan",
-    "glob",
-    "cover",
-];
-
-/// Every ID `list` prints is the ID `list --size` measures, at the same
-/// `path:line` (§REQ-one-answer.identity.declarations).
-fn one_declared_set(root: &Path) -> Verdict {
-    let sites = |args: &[&str]| -> BTreeSet<(String, String, u64)> {
-        json_lines(&stdout(&grund(root, args)))
-            .iter()
-            .filter(|row| row["section"].is_null())
-            .map(|row| {
-                (
-                    row["id"].as_str().unwrap_or("").to_string(),
-                    row["path"].as_str().unwrap_or("").to_string(),
-                    row["line"].as_u64().unwrap_or(0),
-                )
-            })
-            .collect()
-    };
-    let listed = sites(&["list", "--format", "json"]);
-    let measured = sites(&["list", "--size", "--format", "json"]);
-    if listed != measured {
-        let only_list: Vec<_> = listed.difference(&measured).collect();
-        let only_size: Vec<_> = measured.difference(&listed).collect();
-        return Err(format!(
-            "list only {only_list:?}; list --size only {only_size:?}"
-        ));
-    }
-    Ok(())
-}
-
-/// The sampled end-to-end trees: the first plain project of each family.
-fn sampled_trees() -> Vec<(String, PathBuf)> {
-    let cases = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/e2e/cases");
-    let mut names: Vec<String> = fs::read_dir(&cases)
-        .expect("read e2e cases")
-        .map(|entry| {
-            entry
-                .expect("case")
-                .file_name()
-                .to_string_lossy()
-                .into_owned()
-        })
-        .collect();
-    names.sort();
-    SAMPLED_FAMILIES
-        .iter()
-        .filter_map(|family| {
-            names
-                .iter()
-                .find(|name| {
-                    name.starts_with(&format!("{family}-"))
-                        && cases.join(name).join("repo/grund.toml").is_file()
-                })
-                .map(|name| (name.clone(), cases.join(name).join("repo")))
-        })
-        .collect()
-}
-
 /// Every divergence found, as `(tree, invariant, the answers that differ)`.
 fn divergences() -> Vec<(String, &'static str, String)> {
     let mut found = Vec::new();
@@ -308,11 +254,6 @@ fn divergences() -> Vec<(String, &'static str, String)> {
     for (_, tree, verdict) in buffers::TREES {
         if let Err(answers) = verdict() {
             found.push((tree.to_string(), buffers::INVARIANT, answers));
-        }
-    }
-    for (name, root) in sampled_trees() {
-        if let Err(answers) = one_declared_set(&root) {
-            found.push((name, "one-declared-set", answers));
         }
     }
     found
@@ -493,15 +434,5 @@ fn the_ledger_fails_on_a_new_divergence_and_on_a_stale_row() {
     assert_eq!(
         problems(&[], &[("X01", "t", "i")]),
         ["ledger row X01 (t / i) no longer reproduces: take it out"]
-    );
-}
-
-#[test]
-fn the_sample_names_one_tree_per_family() {
-    let sampled = sampled_trees();
-    assert_eq!(
-        sampled.len(),
-        SAMPLED_FAMILIES.len(),
-        "a family has no plain project to sample: {sampled:?}"
     );
 }
