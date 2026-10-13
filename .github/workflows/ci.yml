@@ -25,7 +25,7 @@ env:
 # written out rather than generated so the tests can read them as text. Each OS's
 # required check, `cargo test (<os>)`, is the aggregate at the end that judges them.
 
-# macOS is not here: its suites run once a day in macos.yml (§AR-ci.14).
+# macOS runs once a day in macos.yml and here on a dispatch alone (§AR-ci.14.2).
 
 # §AR-ci.13.6: each job restores its caches first and saves them last, on a push to main
 # alone. A cache failure only warns: actions/cache/restore and /save report one as a
@@ -608,6 +608,11 @@ jobs:
           path: |
             ~/ag/tmp/grund-node-target
           key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+
+  # §AR-ci.14.2: a release candidate is judged on macOS too; no other event runs it.
+  macos:
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/macos-suites.yml
 
   # §AR-ci.13.2: the required checks. Each runs no suite of its own; it runs whatever its
   # needs did, and fails unless every one of them succeeded.

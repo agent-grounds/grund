@@ -1,9 +1,10 @@
-"""§AR-ci.14 — the macOS suites run once a day in `macos.yml`, and a failed scheduled
-run opens or edits one issue.
+"""§AR-ci.14 — the macOS suites run once a day in `macos.yml` and on every release
+candidate in `ci.yml`, both through `macos-suites.yml`, and a failed scheduled run
+opens or edits one issue.
 
 Read as text, the way `test_ci_language_jobs.py` reads `ci.yml`: the CI Python has no
 YAML parser. The report and its open-or-edit decision are functions of the forge's
-JSON, so they are held offline, against canned jobs (§AR-ci.14.3)."""
+JSON, so they are held offline, against canned jobs (§AR-ci.14.4)."""
 
 import importlib.util
 import re
@@ -17,6 +18,8 @@ from test_release_workflow import WORKFLOWS, jobs, squash
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT_PATH = ROOT / "scripts" / "macos_daily.py"
 MACOS = WORKFLOWS / "macos.yml"
+SUITES = WORKFLOWS / "macos-suites.yml"
+CALL = "uses: ./.github/workflows/macos-suites.yml"
 MARKER = "<!-- macos-daily-failure -->"
 
 
@@ -44,20 +47,33 @@ def failed_job(name, *steps, conclusion="failure"):
             "steps": [{"name": step, "conclusion": result} for step, result in steps]}
 
 
+def callers(text):
+    """The job heads of `text` that call the reusable macOS suite workflow."""
+    return [squash(job_head(body)) for body in jobs(text).values() if CALL in body]
+
+
 class WorkflowTests(unittest.TestCase):
-    """§AR-ci.14 and §AR-ci.14.1 on `macos.yml`, and §AR-ci.13.1 on `ci.yml`."""
+    """§AR-ci.14.1 and §AR-ci.14.2 on the three workflows that run or call the macOS suites."""
 
     @classmethod
     def setUpClass(cls):
         cls.text = MACOS.read_text(encoding="utf-8")
         cls.jobs = jobs(cls.text)
+        cls.suites = SUITES.read_text(encoding="utf-8")
+        cls.ci = CI.read_text(encoding="utf-8")
 
     def test_it_runs_on_a_schedule_and_by_hand_and_never_as_a_gate(self):
         self.assertEqual(sorted(triggers(self.text)), ["schedule", "workflow_dispatch"])
         self.assertRegex(self.text, r'(?m)^    - cron: "[^"]+"$')
+        self.assertEqual(len(callers(self.text)), 1)
+
+    def test_the_suite_workflow_is_only_called_and_asks_for_contents_read_alone(self):
+        self.assertEqual(triggers(self.suites), ["workflow_call"])
+        self.assertRegex(self.suites, r"(?m)^permissions:\n  contents: read\n\n")
+        self.assertNotRegex(self.suites, r"(?m)^ +permissions:")
 
     def test_one_job_runs_every_suite_once(self):
-        suites = [i for i in instances(self.text) if i["runs_on"] == "macos-latest"]
+        suites = [i for i in instances(self.suites) if i["runs_on"] == "macos-latest"]
         self.assertEqual([i["name"] for i in suites], ["suites (macos-latest)"])
         for key, command in leg_commands("macos-latest").items():
             with self.subTest(command=key):
@@ -65,10 +81,14 @@ class WorkflowTests(unittest.TestCase):
                     else suites[0]["commands"].count(command)
                 self.assertEqual(found, 1)
 
-    def test_ci_runs_nothing_on_macos(self):
-        text = CI.read_text(encoding="utf-8")
-        self.assertNotIn("macos-latest", text)
-        self.assertFalse(any(runs(i, command) for i in instances(text)
+    def test_ci_calls_the_suites_on_a_dispatch_and_on_no_other_event(self):
+        self.assertIn("workflow_dispatch", triggers(self.ci))
+        self.assertEqual(callers(self.ci), [callers(self.ci)[0]])
+        self.assertIn("if: github.event_name == 'workflow_dispatch'", callers(self.ci)[0])
+
+    def test_ci_runs_no_macos_job_of_its_own(self):
+        self.assertNotIn("macos-latest", self.ci)
+        self.assertFalse(any(runs(i, command) for i in instances(self.ci)
                              for command in leg_commands("macos-latest").values()
                              if i["runs_on"].startswith("macos")))
 
@@ -84,7 +104,7 @@ class WorkflowTests(unittest.TestCase):
 
 
 class ReportTests(unittest.TestCase):
-    """§AR-ci.14.2: what the report says and which issue it lands on."""
+    """§AR-ci.14.3: what the report says and which issue it lands on."""
 
     @classmethod
     def setUpClass(cls):

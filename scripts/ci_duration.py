@@ -145,7 +145,7 @@ def issue_action(open_issues: list, marker: str = MARKER):
 
     An issue that only quotes the marker further down is not the drift issue
     (§AR-ci.requirements.3). The macOS failure issue is found by the same rule under its
-    own marker (§AR-ci.14.2)."""
+    own marker (§AR-ci.14.3)."""
     for issue in open_issues:
         if (issue.get("body") or "").lstrip().startswith(marker):
             return ("update", issue["number"])
