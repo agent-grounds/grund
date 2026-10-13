@@ -17,6 +17,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -160,7 +161,10 @@ def summary_ir(iai_dir: Path) -> dict:
     counts = {}
     for path in sorted(Path(iai_dir).rglob("summary.json")):
         summary = load(path)
-        name = summary["function_name"] + (f".{summary['id']}" if summary.get("id") else "")
+        # A bench added through `binary_benchmark_attribute!` carries its own name as its id.
+        name, bench_id = summary["function_name"], summary.get("id")
+        if bench_id and bench_id != name:
+            name = f"{name}.{bench_id}"
         for profile in summary["profiles"]:
             if profile["tool"] != "Callgrind":
                 continue
@@ -188,6 +192,17 @@ def tool_version(*command: str) -> str:
     return (result.stdout.strip() or result.stderr.strip() or "unknown").splitlines()[0]
 
 
+def runner_version() -> str:
+    """`iai-callgrind-runner` has no `--version`; the refusal it prints names its version."""
+    try:
+        result = subprocess.run(["iai-callgrind-runner", "--version"], capture_output=True,
+                                text=True, check=False)
+    except FileNotFoundError:
+        return "absent"
+    found = re.search(r"iai-callgrind-runner \((\d[\w.+-]*)\)", result.stdout + result.stderr)
+    return found.group(1) if found else "unknown"
+
+
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
     with Path(path).open("rb") as data:
@@ -205,7 +220,7 @@ def environment_identity(environment: str, image: str, fixtures_dir: Path) -> di
         "image": image if environment == "ci" else "local",
         "rustc": tool_version("rustc", "--version"),
         "valgrind": tool_version("valgrind", "--version"),
-        "runner": tool_version("iai-callgrind-runner", "--version").split()[-1],
+        "runner": runner_version(),
         "build_flags": {
             "RUSTFLAGS": os.environ.get("RUSTFLAGS", ""),
             "CARGO_INCREMENTAL": os.environ.get("CARGO_INCREMENTAL", ""),
