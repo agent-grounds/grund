@@ -95,3 +95,31 @@ impl ProjectSnapshot {
             .then(|| self.root.components().count())
     }
 }
+
+/// A config that will not load, as the editor is told about it (§FS-lsp.2.2.4.1):
+/// the file and line the load error names, and the error `grund check` prints.
+/// Read off the core's own error, never out of its message text, so the editor
+/// and the CLI locate it the same way (§FS-lsp.1.1).
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+struct ConfigFailure {
+    file: PathBuf,
+    line: Option<usize>,
+    code: &'static str,
+    message: String,
+    /// The project left on its last good scan, if it has one (§FS-lsp.2.2.4).
+    retained_root: Option<PathBuf>,
+}
+
+impl ConfigFailure {
+    /// `None` for a failure that names no config file: it stays on stderr alone.
+    fn of(error: &anyhow::Error, retained_root: Option<PathBuf>) -> Option<Self> {
+        let diagnostic = error.downcast_ref::<grund_core::OperationDiagnostic>()?;
+        Some(Self {
+            file: diagnostic.file.clone()?,
+            line: diagnostic.line,
+            code: diagnostic.code,
+            message: format!("{error:#}"),
+            retained_root,
+        })
+    }
+}

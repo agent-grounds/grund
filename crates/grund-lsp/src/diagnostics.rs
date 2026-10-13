@@ -29,6 +29,9 @@ impl Server {
                 }
             }
         }
+        for (uri, diagnostic) in self.config_failure_diagnostics() {
+            by_uri.entry(uri).or_default().push(diagnostic);
+        }
         let next_diagnostic_uris: BTreeSet<Url> = by_uri.keys().cloned().collect();
         for uri in self.diagnostic_uris.difference(&next_diagnostic_uris) {
             self.connection
@@ -56,6 +59,52 @@ impl Server {
                 )))?;
         }
         Ok(())
+    }
+
+    /// One `error` on each config that will not load, at the line its load
+    /// error names or the file's first line, carrying the error `grund check`
+    /// prints and, when the project kept a scan, saying the rest is from it
+    /// (§FS-lsp.2.2.4.1). Two folders that fail on one config are one failure,
+    /// so the editor sees it once. Recovery needs no publish of its own: a config
+    /// no longer here is cleared with the other URIs that lost their diagnostics.
+    fn config_failure_diagnostics(&self) -> Vec<(Url, Diagnostic)> {
+        let failures: BTreeSet<&ConfigFailure> = self
+            .folder_config_failures
+            .values()
+            .chain(self.scan_config_failures.values())
+            .collect();
+        failures
+            .into_iter()
+            .filter_map(|failure| {
+                let uri = path_uri(&failure.file)?;
+                let line = failure.line.unwrap_or(1).saturating_sub(1) as u32;
+                let retained = failure.retained_root.as_ref().is_some_and(|root| {
+                    self.projects.iter().any(|project| &project.root == root)
+                });
+                let message = if retained {
+                    format!(
+                        "{}. The project's other diagnostics are from its last good scan.",
+                        failure.message.trim_end_matches('.')
+                    )
+                } else {
+                    failure.message.clone()
+                };
+                Some((
+                    uri,
+                    Diagnostic {
+                        range: Range {
+                            start: Position { line, character: 0 },
+                            end: Position { line, character: 1 },
+                        },
+                        severity: Some(DiagnosticSeverity::ERROR),
+                        code: Some(lsp_types::NumberOrString::String(failure.code.to_string())),
+                        source: Some("grund".to_string()),
+                        message,
+                        ..Diagnostic::default()
+                    },
+                ))
+            })
+            .collect()
     }
 
     /// Turn one finding into the diagnostic the editor shows, or `None` when

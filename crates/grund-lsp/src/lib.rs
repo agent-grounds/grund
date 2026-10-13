@@ -197,6 +197,11 @@ struct Server {
     /// Last successful project-root discovery for each folder anchor. This is
     /// what lets a temporarily invalid config keep serving its last snapshot.
     folder_roots: BTreeMap<Url, PathBuf>,
+    /// The config each folder failed to load on its latest discovery, and the
+    /// config a project's latest scan failed to load, keyed by its root: both
+    /// are published on that config until it loads (§FS-lsp.2.2.4.1).
+    folder_config_failures: BTreeMap<Url, ConfigFailure>,
+    scan_config_failures: BTreeMap<PathBuf, ConfigFailure>,
     projects: Vec<ProjectSnapshot>,
     open_docs: BTreeMap<Url, String>,
     diagnostic_uris: BTreeSet<Url>,
@@ -218,6 +223,8 @@ impl Server {
             connection,
             workspace_folders,
             folder_roots: BTreeMap::new(),
+            folder_config_failures: BTreeMap::new(),
+            scan_config_failures: BTreeMap::new(),
             projects: Vec::new(),
             open_docs: BTreeMap::new(),
             diagnostic_uris: BTreeSet::new(),
@@ -298,14 +305,17 @@ impl Server {
     /// untouched.
     ///
     /// One failing project never takes the others with it. A folder whose
-    /// config will not load, or whose scan errors out, is reported on stderr
-    /// and keeps whatever snapshot it last had — so a half-typed `grund.toml`
-    /// in one editor folder cannot silently freeze diagnostics across the whole
+    /// config will not load, or whose scan errors out, is noted on stderr and
+    /// keeps whatever snapshot it last had — so a half-typed `grund.toml` in one
+    /// editor folder cannot silently freeze diagnostics across the whole
     /// session, which is what collecting the batch into one `Result` did
-    /// (§FS-lsp.2.2.4, §REQ-never-crashes).
+    /// (§FS-lsp.2.2.4, §REQ-never-crashes). A config that will not load, at
+    /// discovery or in the scan, is also recorded for `publish_diagnostics` to
+    /// put on that config (§FS-lsp.2.2.4.1).
     fn rebuild(&mut self, changed: Option<PathBuf>) {
         let mut roots = BTreeSet::new();
         let mut discoverable_roots = BTreeSet::new();
+        self.folder_config_failures.clear();
         for (folder_uri, folder) in &self.workspace_folders {
             match project_root(folder) {
                 Ok(root) => {
@@ -318,9 +328,12 @@ impl Server {
                         "grund-lsp: workspace folder `{}` has no usable config: {err:#}",
                         folder.display()
                     );
-                    if let Some(previous_root) = self.folder_roots.get(folder_uri) {
-                        roots.insert(previous_root.clone());
+                    let previous_root = self.folder_roots.get(folder_uri).cloned();
+                    if let Some(failure) = ConfigFailure::of(&err, previous_root.clone()) {
+                        self.folder_config_failures
+                            .insert(folder_uri.clone(), failure);
                     }
+                    roots.extend(previous_root);
                 }
             }
         }
@@ -330,6 +343,10 @@ impl Server {
             .map(|project| (project.root.clone(), project))
             .collect();
         let mut projects = Vec::new();
+        // A root no folder discovers any more has no scan of its own to fail:
+        // what is wrong with it is the folder's failure, recorded above.
+        self.scan_config_failures
+            .retain(|root, _| discoverable_roots.contains(root));
         for root in roots {
             let existing = previous.remove(&root);
             // Discovery itself failed for every anchor that last named this
@@ -354,9 +371,18 @@ impl Server {
                 path_provided: true,
                 open_documents: overlays.clone(),
             }) {
-                Ok(snapshot) => projects.push(ProjectSnapshot::with_completion(root, snapshot)),
+                Ok(snapshot) => {
+                    self.scan_config_failures.remove(&root);
+                    projects.push(ProjectSnapshot::with_completion(root, snapshot));
+                }
                 Err(err) => {
                     eprintln!("grund-lsp: scan of `{}` failed: {err:#}", root.display());
+                    // §FS-lsp.2.2.4.1: a member's config, say, that fails in the scan.
+                    let retained = existing.as_ref().map(|project| project.root.clone());
+                    match ConfigFailure::of(&err, retained) {
+                        Some(failure) => self.scan_config_failures.insert(root, failure),
+                        None => self.scan_config_failures.remove(&root),
+                    };
                     projects.extend(existing);
                 }
             }
