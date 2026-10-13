@@ -43,6 +43,15 @@ error: kind `skill` declares no IDs — skills/ is not a citable home
 known kinds: GRUND, GOAL, FS, AR, DF, DA, RM
 ```
 
+`code`, the homeless kind's default name, in a project whose `[[kinds]]` declares no homeless kind ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)), is not citable either, but it has no row, so `--kind code` printed `unknown kind` for it. Until `0.19.0` that reason stays a verbatim prefix and [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)'s reason for `code`, which has no home, follows it through the window of [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration):
+
+```text
+error: unknown kind `code` — kind `code` declares no IDs; this wording changes in grund 0.19.0
+known kinds: GRUND, GOAL, FS, AR, DF, DA, RM
+```
+
+From `0.19.0` the headline is ``error: kind `code` declares no IDs`` alone ([§FS-errors.3.8.1](FS-errors.md#381-the-final-templates)).
+
 The `known kinds:` line lists the citable kinds only: they are the whole set this selector accepts. Under `--project` that set is the selected projects' kinds ([§FS-list.1.2](FS-list.md#12---project)).
 
 Selected workspace projects may configure one kind differently. The kind is accepted when any selected project has it citable, which is exactly when the `known kinds:` line names it, and it is refused as non-citable only when none does. In a workspace whose `root` project configures `SKILL` with `citable = false` and whose member `api` has `SKILL` citable, `grund list --kind SKILL` lists `api/SKILL-intro`, while `grund list --project root --kind SKILL` is refused with the headline above and `known kinds: FS, AR`. The verdict is the one every command reads for a kind name in its scope ([§FS-scan.projects.kinds](FS-scan.md#projectskinds-whose-kinds-a-run-reads)), and the headline is [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)'s.
