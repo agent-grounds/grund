@@ -118,6 +118,8 @@ pub(crate) use legacy::{
     legacy_catalog_ids, match_legacy_tail, promote_legacy_candidate, resolve_id_arg,
     sort_citations,
 };
+pub(crate) use record::{bare_block_line, enveloped_line};
+pub(crate) use relative_sections::{RelativeAnswer, doc_comment_relative_answers};
 pub(crate) use scan_error::api_scan_error;
 pub(crate) use scope_probe::effective_scope_reads_any_file;
 pub(crate) use section_locks::{may_give_relative_heading, section_locks_present};
@@ -136,6 +138,8 @@ mod tests_chapter_values;
 mod tests_compat;
 #[cfg(test)]
 mod tests_config_scan;
+#[cfg(test)]
+mod tests_doc_comment_relative;
 #[cfg(test)]
 mod tests_embedded_value_boundaries;
 #[cfg(test)]

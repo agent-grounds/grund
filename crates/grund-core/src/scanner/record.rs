@@ -234,6 +234,15 @@ fn doc_comment_plain_headings(
     plain
 }
 
+/// Source line `lineno` as its comment block's section reading sees it: inside its
+/// docstring's delimiters, with the block's envelope off and the whitespace around it
+/// trimmed (§FS-languages.comment-wrapper.headings), or `None` outside every block.
+pub(crate) fn enveloped_line(record: &FileRecord, lineno: usize) -> Option<&str> {
+    let block = record.block_at(lineno)?;
+    let line = record.line(lineno)?;
+    Some(comment_envelope(scanned_line(record, lineno, line), &block.form).trim())
+}
+
 /// The fences of a source file's comment blocks, read line by line as the scan
 /// meets them (§FS-languages.fence.comment-block): a delimiter is read on the
 /// line with its comment wrapper off, and a fence still open where its block

@@ -1,6 +1,7 @@
 //! §FS-declarations.checks.parse-moves: the three shapes of tree on which 0.19.0's one parse
-//! moves a `check` verdict (§DF-one-parse-answers-from-0-19.4), each warned at the line that
-//! moves it. Today's answer is what the catalog already holds; 0.19.0's is read off the file
+//! moves a `check` verdict (§DF-one-parse-answers-from-0-19.4), and the fourth that moves with
+//! them, a relative heading in a doc-comment declaration body
+//! (§DF-doc-comment-relative-headings), each warned at the line that moves it. Today's answer is what the catalog already holds; 0.19.0's is read off the file
 //! record the scan kept (§AR-scanner.2.8), so the pass reads no file. It goes with today's
 //! answers in 0.19.0 (§FS-declarations.checks.parse-moves.4).
 
@@ -9,13 +10,20 @@ use std::path::Path;
 
 use super::sizes::{lead_budgets, site_coordinate};
 use crate::config::{Frame, LeadSizeWarning, Schema, Strength, measure_point_text};
-use crate::grammar::flatten_cross_ref_links;
+use crate::grammar::{expand_relative_heading, flatten_cross_ref_links};
 use crate::model::{
     Catalog, CheckReport, Declaration, DeclarationSource, Diagnostic, FileRecord, HeadingKind, Id,
     RecordedHeading, SectionInfo,
 };
 use crate::resolver::point_body_pair;
-use crate::scanner::{becomes_section, record_lead};
+use crate::scanner::{
+    RelativeAnswer, bare_block_line, becomes_section, doc_comment_relative_answers, enveloped_line,
+    record_lead,
+};
+
+/// The release whose one parse moves every shape this pass warns of, named by each message
+/// and the release that removes the pass (§FS-declarations.checks.parse-moves.4).
+pub(crate) const ONE_PARSE_FLIP: &str = "0.19.0";
 
 /// §FS-declarations.checks.parse-moves.3: every shape is a warning, so a run it alone
 /// reports exits `0`.
@@ -27,6 +35,7 @@ pub(super) fn check_parse_moves(
 ) {
     check_closing_headings(findings, schema, frame, report);
     check_rejected_headings(findings, schema, frame, report);
+    check_relative_headings(findings, schema, frame, report);
 }
 
 /// The first shape of §FS-declarations.checks.parse-moves.2: a doc-comment heading the record
@@ -104,7 +113,7 @@ fn check_closing_headings(
             path,
             line,
             format!(
-                "from grund 0.19.0 this heading ends {coordinate}, so the citation on line {first} leaves it; make the heading deeper, or move the citation above it, to keep it in {coordinate}"
+                "from grund {ONE_PARSE_FLIP} this heading ends {coordinate}, so the citation on line {first} leaves it; make the heading deeper, or move the citation above it, to keep it in {coordinate}"
             ),
         );
     }
@@ -161,7 +170,7 @@ fn check_rejected_headings(
                         path,
                         heading.line,
                         format!(
-                            "from grund 0.19.0 this line is the heading of {coordinate}; prefix it with ` * ` to make it {coordinate} in both releases, or rewrite it as prose to keep it out of both"
+                            "from grund {ONE_PARSE_FLIP} this line is the heading of {coordinate}; prefix it with ` * ` to make it {coordinate} in both releases, or rewrite it as prose to keep it out of both"
                         ),
                     );
                 }
@@ -189,6 +198,73 @@ fn check_rejected_headings(
                 if section.is_some() {
                     site.check(findings, schema, frame, &budgets, heading, section, report);
                 }
+            }
+        }
+    }
+}
+
+/// The fourth shape of §FS-declarations.checks.parse-moves.2: a relative heading in a source
+/// doc-comment declaration body, prose today, takes the meaning 0.19.0 gives it
+/// (§FS-declarations.section.relative.where). Its answer is the one the Markdown parent pass
+/// gives (§FS-declarations.section.relative.parent), and a form the rules refuse is left alone.
+/// Only a source file whose record holds a plain heading is read further.
+fn check_relative_headings(
+    findings: &Catalog,
+    schema: &Schema,
+    frame: Frame<'_>,
+    report: &mut CheckReport,
+) {
+    let named_sections = schema.ids.named_sections;
+    let mut by_file: Option<HashMap<&Path, Vec<(&Id, &Declaration)>>> = None;
+    for (path, record) in &findings.files {
+        if record.markdown
+            || !record
+                .headings
+                .iter()
+                .any(|heading| heading.kind == HeadingKind::Plain)
+        {
+            continue;
+        }
+        let declarations = by_file
+            .get_or_insert_with(|| text_declarations(findings))
+            .get(path.as_path())
+            .map(Vec::as_slice)
+            .unwrap_or_default();
+        for owner in record
+            .headings
+            .iter()
+            .filter(|heading| heading.kind == HeadingKind::Declaration)
+        {
+            let Some((id, declaration)) = declarations
+                .iter()
+                .find(|(_, declaration)| declaration.line == owner.line)
+            else {
+                continue;
+            };
+            for (heading, answer) in
+                doc_comment_relative_answers(record, declaration, owner.end, named_sections)
+            {
+                // §FS-declarations.checks.parse-moves.1: the two messages shape 4 takes.
+                let message = match answer {
+                    RelativeAnswer::Section(section) => {
+                        let coordinate = site_coordinate(schema, frame, id, Some(&section));
+                        let written = enveloped_line(record, heading.line).unwrap_or_default();
+                        let complete = expand_relative_heading(written, &section);
+                        let edit = if bare_block_line(record, heading.line) {
+                            format!("prefix it with ` * ` and write it `{complete}`")
+                        } else {
+                            format!("write it `{complete}`")
+                        };
+                        format!(
+                            "from grund {ONE_PARSE_FLIP} this line is the heading of {coordinate}; {edit} to make it {coordinate} in both releases, or make it a bold label or a code span to keep it prose in both"
+                        )
+                    }
+                    RelativeAnswer::NoParent => format!(
+                        "from grund {ONE_PARSE_FLIP} this line is a relative section heading with no section one level up, a relative-section-parent error; make it a bold label or a code span to keep it prose in both releases"
+                    ),
+                    RelativeAnswer::Refused => continue,
+                };
+                push_warning(report, path, heading.line, message);
             }
         }
     }
@@ -270,7 +346,7 @@ impl LeadSite<'_> {
             &self.declaration.file,
             cutter.line,
             format!(
-                "from grund 0.19.0 this heading no longer cuts the lead of {coordinate}, which then measures {actual} {}, over the configured maximum of {}; make it a section of {coordinate} to keep the cut",
+                "from grund {ONE_PARSE_FLIP} this heading no longer cuts the lead of {coordinate}, which then measures {actual} {}, over the configured maximum of {}; make it a section of {coordinate} to keep the cut",
                 warning.unit.as_str(),
                 warning.max,
             ),
