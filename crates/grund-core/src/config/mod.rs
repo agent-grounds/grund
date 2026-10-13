@@ -133,7 +133,7 @@ pub(crate) use run_warnings::RunWarning;
 pub(crate) use scope_roots::{
     canonical_config_root, file_root_rows, root_scope_roots, unwalked_home_roots, unwalked_homes,
 };
-pub(crate) use v1::{parse_string_list, strip_comment};
+pub(crate) use v1::{LEGACY_FS_FOLDER, parse_string_list, strip_comment};
 pub(crate) use workspace_block::{
     INVALID_ALIAS_PATH_EXPECTED, both_member_lists_message, invalid_alias_path_segment,
     invalid_project_alias_message, is_valid_project_alias, optional_member_alias_segment,

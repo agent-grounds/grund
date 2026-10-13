@@ -20,6 +20,7 @@ pub const CHECK_FINDING_CODES: &[&str] = &[
     "escaped-citation-resolves",
     "excluded-stub-target",
     "forbidden-citation",
+    "fs-home-moves",
     "full-scope-ignored",
     "glob-citation",
     "inline-citation-style",

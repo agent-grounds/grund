@@ -25,6 +25,7 @@ use std::path::Path;
 use super::project::Project;
 use kind_table::ParsedKind;
 
+pub(crate) use defaults::LEGACY_FS_FOLDER;
 pub(super) use defaults::default_project;
 pub(super) use kind_values::{ValueLines, rule_kind_refusal, validate_kind_value_keys};
 pub(super) use parse::{bail_config, parse_bool, parse_string, parse_usize};
@@ -65,7 +66,8 @@ impl Read {
 
 /// The project a v1 file means when it writes `kinds = []` and nothing else:
 /// the defaults with the empty kind set (§FS-config.3.4.4.5) — what the `none`
-/// template's config means before it is written (§FS-init.2.4.9).
+/// template's config means (§FS-init.2.4.9).
+#[cfg(test)]
 pub(super) fn default_project_without_kinds() -> Project {
     let mut project = default_project(false);
     kind_rows::lower_parsed_kinds(

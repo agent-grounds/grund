@@ -292,6 +292,7 @@ fn issue_49_check_help_exposes_the_sorted_public_code_catalog() {
         "escaped-citation-resolves",
         "excluded-stub-target",
         "forbidden-citation",
+        "fs-home-moves",
         "full-scope-ignored",
         "glob-citation",
         "inline-citation-style",
