@@ -1,36 +1,36 @@
 # FS-section-lock: a cited relative section keeps its text, or check says where the text went
 
-A relative heading takes its address from its parent ([§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)), so a section can change address without a byte of its heading changing. Swap the `### .1` blocks under `## format:` and `## parse:` and every citation of `FS-login.format.1` silently reads the other section's text, while `grund check` stays green. A complete-path heading cannot do this, because its address is written on it and moves with it. The section lock is what catches it: a committed file that records, for every relative address the tree cites, a fingerprint of the text it held, so `check` can tell an edit in place from text that left for another address ([§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution), [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration)). Decided in [§DF-relative-section-headings.lock](../decisions/functional/DF-relative-section-headings.md#lock-a-cited-relative-address-is-locked-to-its-text).
+A relative heading takes its address from its parent ([§FS-declarations.section.relative](FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)), so a section can change address without a byte of its heading changing. Swap the `### .1` blocks under `## format:` and `## parse:` and every citation of `FS-login.format.1` silently reads the other section's text, while `grund check` stays green. A complete-path heading whose path holds no name under a number cannot do this, because its address is written on it and moves with it. A mixed path ([§FS-config.3.3.1](FS-config.md#331-named-components)) can, however it is written: renumber `## 1. Overview` to `## 2.` and insert a new `## 1.` with its own `1.goals`, and a citation of `FS-x.1.goals` reads the new chapter's goals. The section lock is what catches both: a committed file that records, for every locked address the tree cites, a fingerprint of the text it held, so `check` can tell an edit in place from text that left for another address ([§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution), [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration)). Decided in [§DF-relative-section-headings.lock](../decisions/functional/DF-relative-section-headings.md#lock-a-cited-relative-address-is-locked-to-its-text). A mixed address is enrolled since [§DF-number-name-sections.decision.lock](../decisions/functional/DF-number-name-sections.md#decisionlock-the-lock-is-what-answers-178).
 
-The lock is part of the tree. `check` reads it and no history, so its verdict stays a function of the tree ([§FS-check.3.6.4](FS-check.md#364-a-pure-function-of-the-tree)); only `grund fmt --write` writes it ([§FS-section-lock.write](FS-section-lock.md#write-who-writes-the-lock)). A repository that cites no relative heading has no lock and reads none, and complete-path headings are never enrolled.
+The lock is part of the tree. `check` reads it and no history, so its verdict stays a function of the tree ([§FS-check.3.6.4](FS-check.md#364-a-pure-function-of-the-tree)); only `grund fmt --write` writes it ([§FS-section-lock.write](FS-section-lock.md#write-who-writes-the-lock)). A repository that cites no locked address has no lock and reads none, and a complete-path heading is enrolled only when its path is mixed ([§FS-section-lock.holds.entry](FS-section-lock.md#holdsentry-one-line-per-locked-address)).
 
 ## terms: Terms
 
 Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, body, section, coordinate, relative heading, canonical path, section lock), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (citation), and [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, config root, workspace, member, alias).
 
-- **cited relative address** — A coordinate some citation in the project resolves to, whose section is a relative heading.
-- **entry** — One line of a lock file: a cited relative address and its fingerprint.
+- **locked address** — A coordinate some citation in the project resolves to, whose section is a relative heading or whose canonical path is a mixed path ([§FS-config.3.3.1](FS-config.md#331-named-components)), whichever spelling declared it.
+- **entry** — One line of a lock file: a locked address and its fingerprint.
 - **fingerprint** — Sixteen lowercase hex digits that stand for the text a section held ([§FS-section-lock.holds.fingerprint](FS-section-lock.md#holdsfingerprint-the-fingerprint)).
 - **recorded address** — The coordinate an entry names.
 
 ## holds: What the lock holds
 
-### holds.entry: One line per cited relative address
+### holds.entry: One line per locked address
 
-A lock file holds one entry per cited relative address of one declaration, `<coordinate> <fingerprint>`, one space between them, one entry per line, sorted bytewise by coordinate, each line ending in LF:
+A lock file holds one entry per locked address of one declaration, `<coordinate> <fingerprint>`, one space between them, one entry per line, sorted bytewise by coordinate, each line ending in LF:
 
 ```text
 FS-login.format.1 8b1a5e0c2f9d7a64
 FS-login.parse.user 0d3c9e51b7f2a816
 ```
 
-Nothing else is recorded: no title, no line number, no history. A coordinate of a complete-path heading is not an entry, cited or not, and neither is an address nothing cites. A relative heading in a stub's target is entered like one in a scanned file, wherever the target lies: one outside `[scan] include` still lends the stub its sections ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)), so a citation of one is a cited relative address.
+Nothing else is recorded: no title, no line number, no history. An address is enrolled exactly when its heading is relative or its canonical path has a numeric component followed, at any later depth, by a named one, a test of the path's parsed components and never of digits or letters in the ID. So `FS-x.1.goals`, `FS-x.1.goals.3`, `FS-x.1.goals.latency` and `FS-x.goals.3.latency` are entries once cited, written `### 1.goals: Goals` or `### .goals: Goals` alike, and so is a relative `### .3:` under `## goals:`; a complete-path `FS-x.goals.3`, `FS-x.1.2` or `FS-x.format.goals` is not an entry, cited or not, and neither is an address nothing cites. A locked address in a stub's target is entered like one in a scanned file, wherever the target lies: one outside `[scan] include` still lends the stub its sections ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)), so a citation of one is a locked address.
 
 ### holds.fingerprint: The fingerprint
 
 The fingerprint is the first 16 hex digits, lowercase, of the SHA-256 of the section's text: what `grund <coordinate> --full` prints in text format below the heading line, which is the section and everything nested in it. Before hashing, line endings are made LF, trailing spaces and tabs are removed from each line, leading and trailing empty lines are dropped, and the lines are joined with LF with no final LF; a section with no text hashes the empty string. Because the text is `show`'s, cross-reference links are already flattened ([§FS-show.3.2](FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json)): `fmt` re-deriving an anchor, a wrapped against a bare citation, a CRLF checkout and trailing whitespace all give one fingerprint, so two installs agree on it ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). The digest is grund's one SHA-256, the algorithm [§FS-remote-projects.bytes.digest](FS-remote-projects.md#bytesdigest-the-digest-is-over-exact-bytes) names.
 
-Before hashing, every line the declaration's section map records as the heading of a section nested in the fingerprinted one is written with its path relative to that section: the `#` run, the punctuation after the path and the title stay as written, and the path becomes `.` followed by the components it has below the fingerprinted section. Take `FS-x.1.1`, a `### .1. Goals` under `## 1. Overview`: a `#### 1.1.1. Latency` in it hashes as `#### .1. Latency`, exactly as a `#### .1. Latency` does, and a `##### .1. P95` below either hashes as `##### .1.1. P95`. A line is matched to the map by its position, never by its shape, so a heading-shaped line in a fence or in prose hashes as written. The fingerprint is therefore what the section says and not where its parent stands: renumbering an ancestor changes the spelling of every complete-path heading nested in the section, and without this a renumber alone would make the moved section's text read as edited in place ([§FS-section-lock.limits.edit-and-move](FS-section-lock.md#limitsedit-and-move-a-section-moved-and-edited-in-one-change)), so `check` would pass and `fmt --write` would record the replacement at the old address. With it the move is reported ([§FS-section-lock.checks.section-address-changed](FS-section-lock.md#checkssection-address-changed-a-cited-sections-text-sits-at-another-address)) whichever way the nested headings are written. What `show` prints, and what the file says, do not change. Decided in [§DF-section-lock-relative-fingerprint](../decisions/functional/DF-section-lock-relative-fingerprint.md#df-section-lock-relative-fingerprint-a-locked-sections-nested-headings-are-fingerprinted-relative-to-it-so-a-renumber-is-still-caught).
+Before hashing, every line the declaration's section map records as the heading of a section nested in the fingerprinted one is written with its path relative to that section: the `#` run, the punctuation after the path and the title stay as written, and the path becomes `.` followed by the components it has below the fingerprinted section. Take `FS-x.1.1`, a `### .1. Goals` under `## 1. Overview`: a `#### 1.1.1. Latency` in it hashes as `#### .1. Latency`, exactly as a `#### .1. Latency` does, and a `##### .1. P95` below either hashes as `##### .1.1. P95`. Under `FS-x.1.goals`, `#### 1.goals.latency: Latency` and `#### .latency: Latency` both hash as `#### .latency: Latency`, and a `##### .p95: P95` below either as `##### .latency.p95: P95`. A line is matched to the map by its position, never by its shape, so a heading-shaped line in a fence or in prose hashes as written. The fingerprint is therefore what the section says and not where its parent stands: renumbering an ancestor changes the spelling of every complete-path heading nested in the section, and without this a renumber alone would make the moved section's text read as edited in place ([§FS-section-lock.limits.edit-and-move](FS-section-lock.md#limitsedit-and-move-a-section-moved-and-edited-in-one-change)), so `check` would pass and `fmt --write` would record the replacement at the old address. With it the move is reported ([§FS-section-lock.checks.section-address-changed](FS-section-lock.md#checkssection-address-changed-a-cited-sections-text-sits-at-another-address)) whichever way the nested headings are written. What `show` prints, and what the file says, do not change. Decided in [§DF-section-lock-relative-fingerprint](../decisions/functional/DF-section-lock-relative-fingerprint.md#df-section-lock-relative-fingerprint-a-locked-sections-nested-headings-are-fingerprinted-relative-to-it-so-a-renumber-is-still-caught).
 
 ### holds.repeated: A text the declaration repeats
 
@@ -40,7 +40,7 @@ When another section of the same declaration has the same fingerprint, the two c
 
 ### file.shard: One file per cited declaration
 
-The entries for the cited relative addresses of declaration `<ID>` live in `.grund/sections/<ID>.lock` under the config root of the project whose files hold the citations. Two changes that cite sections of different declarations never touch the same file, and two changes that cite different sections of one declaration touch different lines of a sorted file, so the lock is no file every change edits. The file is named by the ID, not the declaring file, so moving or renaming a spec file leaves its lock alone. A file with no entry does not exist, and neither does an empty `.grund/sections/`. The scan never enters `.grund/` ([§FS-scan](FS-scan.md#fs-scan-what-a-path-argument-means-which-projects-a-run-loads-and-which-files-it-reads)), so a lock file is never read as a source.
+The entries for the locked addresses of declaration `<ID>` live in `.grund/sections/<ID>.lock` under the config root of the project whose files hold the citations. Two changes that cite sections of different declarations never touch the same file, and two changes that cite different sections of one declaration touch different lines of a sorted file, so the lock is no file every change edits. The file is named by the ID, not the declaring file, so moving or renaming a spec file leaves its lock alone. A file with no entry does not exist, and neither does an empty `.grund/sections/`. The scan never enters `.grund/` ([§FS-scan](FS-scan.md#fs-scan-what-a-path-argument-means-which-projects-a-run-loads-and-which-files-it-reads)), so a lock file is never read as a source.
 
 ### file.members: Citations into another project
 
@@ -54,9 +54,9 @@ Such an entry's coordinate is the one the citation names, `<ID>` and its path as
 
 Only `grund fmt --write` writes lock files, and only when its scope is a project's config root or the workspace root; `fmt` narrowed to a file or directory leaves every lock alone, and neither `check`, the editor, nor any other command writes one. A run brings each lock file to what the tree needs:
 
-- **add** an entry for each cited relative address that has none;
+- **add** an entry for each locked address that has none;
 - **refresh** an entry whose section was edited in place — its recorded fingerprint is found at no address of the declaration, so its text changed where it stands — to the section's current fingerprint;
-- **drop** an entry whose address nothing cites any more, or whose address is no longer held by a relative heading.
+- **drop** an entry whose address nothing cites any more, or whose address is no longer a locked address.
 
 An entry that already matches is left alone, so a second run writes nothing. A stale entry is never a `check` finding: it is something `fmt --write` drops.
 
@@ -86,7 +86,7 @@ A cited section that moves changes its address, and [§REQ-spec-section-names.pe
 
 ### move.citations: Update every citation
 
-Change every citation of the old address to the new one and run `fmt --write`. The old entry is no longer cited, so it is dropped; the new address is added. Until `fmt --write` runs, `check` reports each citation of the new address as [§FS-section-lock.checks.unrecorded-section-citation](FS-section-lock.md#checksunrecorded-section-citation-a-cited-relative-address-the-lock-does-not-hold).
+Change every citation of the old address to the new one and run `fmt --write`. The old entry is no longer cited, so it is dropped; the new address is added. Until `fmt --write` runs, `check` reports each citation of the new address as [§FS-section-lock.checks.unrecorded-section-citation](FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold).
 
 ### move.pointer: Leave a pointer
 
@@ -114,7 +114,7 @@ The lock compares a section only with the other sections of its own declaration.
 
 ### limits.baseline: A baseline the lock never saw
 
-The lock can report a move only from a text it recorded before the move. Where it holds no such record, `fmt --write` records the text the address holds now, and `check` has nothing older to compare it with. That happens on a citation added for the first time, on the first `fmt --write` after an upgrade that changed how a fingerprint is computed, on a lock file deleted and written again, and on an entry dropped because its citation was removed for a while ([§FS-section-lock.write.rules](FS-section-lock.md#writerules-add-refresh-drop)). Take `FS-x` citing only `FS-x` itself; chapter `1` is renumbered `2` and a new chapter `1` inserted, and only then does someone write `<§>FS-x.1.1`. `check` reports it unrecorded ([§FS-section-lock.checks.unrecorded-section-citation](FS-section-lock.md#checksunrecorded-section-citation-a-cited-relative-address-the-lock-does-not-hold)), and after `fmt --write` it passes with the new chapter's text recorded. The only trace is the added or changed line in the lock diff, which is why the lock is committed with the citations it records and reviewed with them.
+The lock can report a move only from a text it recorded before the move. Where it holds no such record, `fmt --write` records the text the address holds now, and `check` has nothing older to compare it with. That happens on a citation added for the first time, on the first `fmt --write` after an upgrade that changed how a fingerprint is computed, on a lock file deleted and written again, and on an entry dropped because its citation was removed for a while ([§FS-section-lock.write.rules](FS-section-lock.md#writerules-add-refresh-drop)). Take `FS-x` citing only `FS-x` itself; chapter `1` is renumbered `2` and a new chapter `1` inserted, and only then does someone write `<§>FS-x.1.1`. `check` reports it unrecorded ([§FS-section-lock.checks.unrecorded-section-citation](FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold)), and after `fmt --write` it passes with the new chapter's text recorded. The only trace is the added or changed line in the lock diff, which is why the lock is committed with the citations it records and reviewed with them.
 
 A lock that survives keeps its records. `fmt --write` alone never overwrites an entry whose text moved ([§FS-section-lock.write.never-a-move](FS-section-lock.md#writenever-a-move-fmt-never-approves-a-move)), and a lock grund cannot read is rebuilt from the entries it still can ([§FS-section-lock.write.rebuild](FS-section-lock.md#writerebuild-a-lock-grund-cannot-read-is-rebuilt)). No check refuses a new baseline: telling a first record from a lost one needs history, and `check` reads none ([§FS-check.3.6.4](FS-check.md#364-a-pure-function-of-the-tree)).
 
@@ -124,11 +124,11 @@ An edit that `fmt --write` never recorded leaves the old fingerprint in place, w
 
 ## checks: Checks
 
-Each is a located `grund check` error with its code in [§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog), selected by `--only` and `--ignore` like any other, and rendered in text, JSON (`"sites":null`) and the LSP as [§FS-check.2.1](FS-check.md#21-report-format) says. None fires in a repository with no lock file and no citation of a relative address. A message names the lock file as the report names every path, so from the workspace root a member's lock is `packages/api/.grund/sections/FS-login.lock`.
+Each is a located `grund check` error with its code in [§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog), selected by `--only` and `--ignore` like any other, and rendered in text, JSON (`"sites":null`) and the LSP as [§FS-check.2.1](FS-check.md#21-report-format) says. None fires in a repository with no lock file and no citation of a locked address. A message names the lock file as the report names every path, so from the workspace root a member's lock is `packages/api/.grund/sections/FS-login.lock`.
 
 ### checks.section-address-changed: A cited section's text sits at another address
 
-When an entry's recorded address is cited and held by a relative heading, the section there no longer has the recorded fingerprint, and another address of the same declaration does, the text that was cited has moved and the address now holds something else. The error is located at the heading that now holds the recorded address:
+When an entry's recorded address is cited and is a locked address, the section there no longer has the recorded fingerprint, and another address of the same declaration does, the text that was cited has moved and the address now holds something else. The error is located at the heading that now holds the recorded address:
 
 ```text
 FS-login.format.1 is cited, and what .grund/sections/FS-login.lock recorded for it now sits at FS-login.parse.1; move it back, cite FS-login.parse.1 instead, or leave a pointer to it at FS-login.format.1; if FS-login.parse.1 is a copy, edit the copy or cite it from FS-login.format.1
@@ -136,19 +136,27 @@ FS-login.format.1 is cited, and what .grund/sections/FS-login.lock recorded for 
 
 The three fixes are the move undone, [§FS-section-lock.move.citations](FS-section-lock.md#movecitations-update-every-citation) and [§FS-section-lock.move.pointer](FS-section-lock.md#movepointer-leave-a-pointer); the last clause is the way out of [§FS-section-lock.move.copy](FS-section-lock.md#movecopy-copy-then-edit-the-original). When the fingerprint sits at more than one other address, the first in document order is named. It is reported for a swap of two sections with or without the same title, for a parent rename after which a sibling takes the old address, and for a section moved under another parent whose old address another section took. It is not reported when the section at the recorded address cites the address it names, nor for an entry written `-`.
 
-### checks.unrecorded-section-citation: A cited relative address the lock does not hold
+### checks.unrecorded-section-citation: A locked address the lock does not hold
 
-A citation that resolves to a relative heading's address with no entry in the lock is an error at the citation's site:
+A citation that resolves to a locked address with no entry in the lock is an error at the citation's site:
 
 ```text
 FS-login.format.1 is cited but has no entry in .grund/sections/FS-login.lock; run grund fmt --write
 ```
 
+When the address is a mixed path, the message adds the releases, because grund before 0.18.0 skipped such a citation without a word ([§DF-number-name-sections.decision.citations](../decisions/functional/DF-number-name-sections.md#decisioncitations-a-citation-that-was-skipped-is-now-checked)):
+
+```text
+FS-x.1.goals is cited but has no entry in .grund/sections/FS-x.lock; run grund fmt --write; grund 0.17 skipped a citation of a name under a number, and 0.18.0 records it in the section lock
+```
+
+The error is immediate rather than ramped: the one command it names repairs it ([§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)). A mixed address whose heading is relative takes the same clause. The clause goes with the warning window of [§FS-citations.checks.mixed-path](FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190) ([§RM-mixed-path-citation-error](../roadmap.md#rm-mixed-path-citation-error-make-a-citation-of-a-name-under-a-number-that-resolves-to-nothing-an-error-in-0190)).
+
 Without an entry the address is unguarded, so the citation is not taken as checked until `fmt --write` records it. A citation that resolves to no section at all is [§FS-check.3.2](FS-check.md#32-missing-section) and never this.
 
 ### checks.invalid-section-lock: A lock line grund cannot read
 
-A line of a lock file that is not an entry, as [§FS-section-lock.holds.entry](FS-section-lock.md#holdsentry-one-line-per-cited-relative-address) defines one, is an error at that line:
+A line of a lock file that is not an entry, as [§FS-section-lock.holds.entry](FS-section-lock.md#holdsentry-one-line-per-locked-address) defines one, is an error at that line:
 
 ```text
 section lock line is not <coordinate> <fingerprint>; run grund fmt --write to rebuild the file

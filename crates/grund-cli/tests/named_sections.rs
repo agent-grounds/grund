@@ -210,16 +210,17 @@ fn named_sections_drive_show_refs_json_and_completion() {
 
 /// §FS-config.3.3.3: `missing.performance` is an orphan because the prefix
 /// `missing` is recorded nowhere in the declaration, however the Markdown
-/// nests it. §FS-config.3.3.1: the reserved `number.name` shape — `FS-doc.1.goals`
-/// — is neither a named heading nor an alias for section `1`, so the query
-/// fails instead of truncating to the numeric section.
+/// nests it. §FS-config.3.3.1: a mixed path — `FS-doc.1.goals` — is one
+/// address and never an alias for section `1`, so where no `1.goals` heading
+/// exists the query fails instead of truncating to the numeric section.
 ///
 /// §FS-check.1.1.2 (§FS-citations.recognized.named-candidates): the fixture runs at `strict = false` and holds all three
 /// candidate readings at once — the marker-prefixed `<§>FS-doc.absent` is a
 /// citation even though the named section is missing, the unmarked
 /// `FS-doc.absent` is one prose token suppressed whole rather than falling
-/// back to a bare-ID citation, and the reserved `<§>FS-doc.1.goals` is never
-/// truncated to its numeric prefix.
+/// back to a bare-ID citation, and the mixed `<§>FS-doc.1.goals` is never
+/// truncated to its numeric prefix: it is a citation of that missing section,
+/// whose finding warns until 0.19.0 (§FS-citations.checks.mixed-path).
 #[test]
 fn named_sections_report_missing_reserved_orphan_depth_and_duplicates() {
     let repo = Repo::new("diagnostics");
@@ -237,7 +238,7 @@ fn named_sections_report_missing_reserved_orphan_depth_and_duplicates() {
         "# FS-reader: Reader\n\n\
          Marked missing \u{a7}FS-doc.absent.\n\
          Unmarked FS-doc.absent must stay prose.\n\
-         Reserved \u{a7}FS-doc.1.goals must not truncate.\n",
+         Mixed \u{a7}FS-doc.1.goals must not truncate.\n",
     );
 
     let check = grund(repo.path(), &["check"]);
@@ -255,6 +256,14 @@ fn named_sections_report_missing_reserved_orphan_depth_and_duplicates() {
         "orphan heading line: {findings}"
     );
     assert!(findings.contains("heading level mismatch"));
+    assert!(
+        findings.contains(
+            "FS-reader.md:5: warning: section not found: FS-doc.1.goals; write <§> before it \
+             to show the shape without citing it; a citation of a name under a number is now \
+             checked, and this warning becomes an error in grund 0.19.0"
+        ),
+        "the missing mixed citation warns whole: {findings}"
+    );
 
     let ambiguous = grund(repo.path(), &["show", "FS-doc.goals"]);
     assert_eq!(ambiguous.status.code(), Some(1));
@@ -273,7 +282,7 @@ fn named_sections_report_missing_reserved_orphan_depth_and_duplicates() {
     let refs = stdout(&refs);
     assert!(refs.contains("\u{a7}FS-doc.absent"));
     assert!(!refs.contains("Unmarked FS-doc.absent"));
-    assert!(!refs.contains("\u{a7}FS-doc.1.goals"));
+    assert!(refs.contains("\u{a7}FS-doc.1.goals"));
 }
 
 #[test]
@@ -405,5 +414,51 @@ fn init_teaches_false_and_the_disabled_gate_is_an_operational_guard() {
     let enabled_guidance = fs::read_to_string(enabled.path().join("AGENTS.md")).unwrap();
     assert!(enabled_guidance.contains("goals.performance"));
     assert!(enabled_guidance.contains("goals.3"));
-    assert!(enabled_guidance.contains("number.name"));
+    assert!(enabled_guidance.contains(
+        "`name.number` is legal, and in a Markdown declaration body so is `number.name`; \
+         a cited address with a name under a number is recorded in the section lock."
+    ));
+    assert!(!enabled_guidance.contains("`number.name` is reserved"));
+}
+
+/// §FS-citations.recognized.named-candidates (§FS-config.3.3.1): with a
+/// `### 1.goals: Goals` heading under `## 1. Overview`, a marked
+/// `<§>FS-x.1.goals` is one citation of section `1.goals` — neither suppressed
+/// nor truncated to `FS-x.1` — beside a plain citation of section `1`.
+#[test]
+fn a_marked_mixed_path_is_one_citation_of_the_whole_address() {
+    let repo = Repo::new("mixed-citation");
+    repo.enabled(true);
+    repo.write(
+        "docs/FS-x.md",
+        "# FS-x: Example\n\n## 1. Overview\n\nOverview lead.\n\n\
+         ### 1.goals: Goals\n\nGoals target.\n",
+    );
+    repo.write(
+        "docs/FS-reader.md",
+        "# FS-reader: Reader\n\nUses \u{a7}FS-x.1.goals here and \u{a7}FS-x.1 there.\n",
+    );
+
+    let refs = grund(repo.path(), &["refs", "FS-x", "--format", "json"]);
+    expect_success(&refs, "refs of a mixed citation");
+    let records = stdout(&refs)
+        .lines()
+        .map(|line| serde_json::from_str::<Value>(line).expect("refs NDJSON"))
+        .map(|record| {
+            let field = |key: &str| record[key].as_str().unwrap_or_default().to_string();
+            (record["column"].as_i64(), field("section"), field("text"))
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        records,
+        vec![
+            (
+                Some(6),
+                "1.goals".to_string(),
+                "\u{a7}FS-x.1.goals".to_string()
+            ),
+            (Some(30), "1".to_string(), "\u{a7}FS-x.1".to_string()),
+        ],
+        "one citation per token, the mixed one whole"
+    );
 }

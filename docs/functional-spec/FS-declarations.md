@@ -469,10 +469,11 @@ A relative heading writes one `.` and exactly one component, a number `[0-9]+` o
 | `## 3. Third` | `### .1 Username` or `### .1. Username` | `3.1` | `### 3.1 Username` or `### 3.1. Username` |
 | `## format: Formatting` | `### .1: Username` | `format.1` | `### format.1: Username` |
 | `## format: Formatting` | `### .user: Username` | `format.user` | `### format.user: Username` |
+| `## 1. Overview` | `### .goals: Goals` | `1.goals` | `### 1.goals: Goals` |
 | the declaration | `## .format: Formatting` | `format` | `## format: Formatting` |
 | the declaration | `## .3 Third` | `3` | `## 3 Third` |
 
-Expanding a relative heading is inserting its parent's path before the `.`. Everything the complete-path heading would be refused for, the relative heading is refused for too: a name with `named_sections` off, a name after a numeric parent path (the reserved `number.name` order), the colon form on a purely numeric path, and a numeric path written without its space or period. A dotted heading that is not this form — two components (`#### .a.b: Deep`), an empty component (`### .: Title`), or any of the refusals above — declares nothing and stays an [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) error, whose message then also shows the relative form ([§FS-declarations.checks.unmarked-heading.2.1](FS-declarations.md#checksunmarked-heading21-a-dotted-heading-is-also-shown-the-relative-form)). Only a name needs `named_sections`: with it off, `### .1 Username` under `## 3. Third` is still section `3.1`.
+Expanding a relative heading is inserting its parent's path before the `.`. Everything the complete-path heading would be refused for, the relative heading is refused for too: a name with `named_sections` off, the colon form on a purely numeric path, and a numeric path written without its space or period. A dotted heading that is not this form — two components (`#### .a.b: Deep`), an empty component (`### .: Title`), or any of the refusals above — declares nothing and stays an [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) error, whose message then also shows the relative form ([§FS-declarations.checks.unmarked-heading.2.1](FS-declarations.md#checksunmarked-heading21-a-dotted-heading-is-also-shown-the-relative-form)). Only a name needs `named_sections`: with it off, `### .1 Username` under `## 3. Third` is still section `3.1`.
 
 #### section.relative.parent: The parent
 
@@ -484,7 +485,9 @@ A relative heading sits one level below its parent by construction, so it never 
 
 #### section.relative.where: Markdown declaration bodies, and doc-comments from 0.19.0
 
-The form is recognised in an ATX heading inside a Markdown declaration body, the headings [§FS-declarations.checks.unmarked-heading.1](FS-declarations.md#checksunmarked-heading1-which-headings-participate) judges. In a source doc-comment declaration body, the headings the doc-comment's section reading sees ([§FS-languages.comment-wrapper.headings](FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line)), a line of the form keeps in 0.18.0 the meaning it has without this form, and warns with `parse-moves` ([§FS-declarations.checks.parse-moves.2](FS-declarations.md#checksparse-moves2-the-four-shapes), shape 4); from 0.19.0 it declares its section under the same form, parent, lock and display rules as in Markdown. Giving it that meaning at once would move verdicts that pass today, so it takes the warning route of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), decided in [§DF-doc-comment-relative-headings](../decisions/functional/DF-doc-comment-relative-headings.md#df-doc-comment-relative-headings-a-relative-heading-in-a-doc-comment-warns-in-0180-and-is-a-section-from-0190).
+The form is recognised in an ATX heading inside a Markdown declaration body, the headings [§FS-declarations.checks.unmarked-heading.1](FS-declarations.md#checksunmarked-heading1-which-headings-participate) judges. In a source doc-comment declaration body, the headings the doc-comment's section reading sees ([§FS-languages.comment-wrapper.headings](FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line)), a line of the form keeps in 0.18.0 the meaning it has without this form, and warns with `parse-moves` ([§FS-declarations.checks.parse-moves.2](FS-declarations.md#checksparse-moves2-the-five-shapes), shape 4); from 0.19.0 it declares its section under the same form, parent, lock and display rules as in Markdown. Giving it that meaning at once would move verdicts that pass today, so it takes the warning route of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), decided in [§DF-doc-comment-relative-headings](../decisions/functional/DF-doc-comment-relative-headings.md#df-doc-comment-relative-headings-a-relative-heading-in-a-doc-comment-warns-in-0180-and-is-a-section-from-0190).
+
+A heading whose canonical path is mixed ([§FS-config.3.3.1](FS-config.md#331-named-components)) follows the same timing in a doc-comment, in both spellings: a complete `/// ### 1.goals: Goals` and a relative `/// ### .goals: Goals` under `/// ## 1. Overview` are prose in 0.18.0 and warn `parse-moves` (shapes 5 and 4), and both declare their section from 0.19.0 ([§DF-number-name-sections.decision.doc-comments](../decisions/functional/DF-number-name-sections.md#decisiondoc-comments-doc-comments-wait-for-639)). In a Markdown declaration body both are sections at once.
 
 The same dotted line keeps exactly the meaning it has without this form everywhere else, in both releases: in a file title before the first declaration, after a heading that closed the body, in a file or comment block with no declaration, and in a fence or raw HTML block.
 
@@ -874,12 +877,14 @@ parse moves a `check` verdict ([§DF-one-parse-answers-from-0-19](../decisions/f
 answers as before and warns, at the line that moves it, naming the edit that keeps today's
 meaning in both releases. A fourth shape moves with them: 0.19.0 also gives a relative
 heading in a doc-comment declaration body its meaning
-([§FS-declarations.section.relative.where](FS-declarations.md#sectionrelativewhere-markdown-declaration-bodies-and-doc-comments-from-0190)), and it warns the same way. A tree with none
-of these four shapes gets no `parse-moves` finding,
+([§FS-declarations.section.relative.where](FS-declarations.md#sectionrelativewhere-markdown-declaration-bodies-and-doc-comments-from-0190)), and it warns the same way. A fifth moves with the fourth: 0.19.0 gives a
+complete-path heading whose path puts a name under a number its meaning in a doc-comment
+too ([§FS-declarations.section.relative.where](FS-declarations.md#sectionrelativewhere-markdown-declaration-bodies-and-doc-comments-from-0190)). A tree with none
+of these five shapes gets no `parse-moves` finding,
 and every other answer that moves in 0.19.0 changes printed bytes only and warns nowhere.
 
 The message is [§FS-declarations.checks.parse-moves.1](FS-declarations.md#checksparse-moves1-the-message), the shapes are
-[§FS-declarations.checks.parse-moves.2](FS-declarations.md#checksparse-moves2-the-four-shapes), rendering and selection
+[§FS-declarations.checks.parse-moves.2](FS-declarations.md#checksparse-moves2-the-five-shapes), rendering and selection
 [§FS-declarations.checks.parse-moves.3](FS-declarations.md#checksparse-moves3-rendering-exit-and-selection), and the release that removes it
 [§FS-declarations.checks.parse-moves.4](FS-declarations.md#checksparse-moves4-removed-in-0190).
 
@@ -896,6 +901,7 @@ from grund 0.19.0 this line is the heading of <coordinate>; prefix it with ` * `
 from grund 0.19.0 this heading no longer cuts the lead of <coordinate>, which then measures <actual> <unit>, over the configured maximum of <max>; make it a section of <coordinate> to keep the cut
 from grund 0.19.0 this line is the heading of <coordinate>; write it `<heading>` to make it <coordinate> in both releases, or make it a bold label or a code span to keep it prose in both
 from grund 0.19.0 this line is a relative section heading with no section one level up, a relative-section-parent error; make it a bold label or a code span to keep it prose in both releases
+from grund 0.19.0 this line is the heading of <coordinate>; make it a bold label or a code span to keep it prose in both releases
 ```
 
 `<coordinate>` is local in a member-local check and workspace-qualified at a workspace root,
@@ -909,9 +915,16 @@ everything after the relative component as written, so `### .1: Username` under
 ` * `, the edit reads `prefix it with ` * ` and write it `<heading>``, since only the
 prefixed line is that section in 0.18.0 too. A line that would claim a path another heading
 claims takes the first of the two, naming the coordinate it would share; a line with no
-usable parent one level up takes the second.
+usable parent one level up takes the second. A line whose canonical path is mixed takes the
+last message instead of the first, because the complete-path heading for it is prose in
+0.18.0 as well, so no spelling makes it that section in both releases.
 
-#### checks.parse-moves.2: The four shapes
+Shape 5 takes the last message, `<coordinate>` being the line's own path. The coordinate a
+line is named by reads its parents as 0.19.0 will: a complete mixed heading held back as
+prose still seeds the path of the relative headings below it, so `/// #### .latency:
+Latency` under `/// ### 1.goals: Goals` is named `<ID>.1.goals.latency`.
+
+#### checks.parse-moves.2: The five shapes
 
 1. **A heading that will end a doc-comment section above a citation.** In a source
    doc-comment, a heading of the open section's depth or shallower, numbered or plain, and
@@ -945,6 +958,16 @@ usable parent one level up takes the second.
    finding and never shape 2's, which needs a complete path. Each line gets one finding,
    and the citations that move into its section get none of their own: the line's
    warning is the notice for them.
+5. **A complete-path heading with a name under a number in a doc-comment declaration
+   body.** A numbered or named heading whose path is mixed ([§FS-config.3.3.1](FS-config.md#331-named-components)), such as
+   `/// ### 1.goals: Goals` under `/// ## 1. Overview`, is recorded as prose until 0.19.0,
+   passes `check`, and creates no lock entry, though the same line in Markdown is a section
+   in 0.18.0. From 0.19.0 it declares its section, so it warns wherever shape 4 would: its
+   section, a `duplicate-section` claim, or an `orphan-section`. The exemptions of shape 4
+   apply. A `/** … */` line without ` * ` that reads as a mixed path gets this shape's one
+   finding and never shape 2's. A citation of its coordinate stays unresolved in 0.18.0 and
+   takes the warning of [§FS-citations.checks.mixed-path](FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190); the citations below the line that
+   move into its section get none of their own.
 
 #### checks.parse-moves.3: Rendering, exit, and selection
 

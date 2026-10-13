@@ -42,7 +42,7 @@ Completion is invoked on every tab press, so config and scan failures are quiet:
 - `--prefix <prefix>` filters candidates by byte prefix. Without it, every candidate for the selected mode is printed.
 - Without `--sections`, candidates are declared IDs, rendered in each kind's effective `[[kinds]].format` override or repository `[id].format` default ([§FS-config.3.2](FS-config.md#32-id--id-grammar)).
 - When `--prefix` already contains the configured `[id].section_separator`, section candidates are printed instead of bare IDs. `--sections` forces section-candidate mode even when the prefix has no separator.
-- Section candidates have the shape `<ID><section_separator><section>`, e.g. `FS-cli.1` and, in an opted-in repository, `FS-plan.goals`, `FS-plan.goals.performance`, and `FS-plan.goals.3`. They come from the same section table the ID query uses ([§FS-show.2.2](FS-show.md#22-section)), so only recorded, legal coordinates are emitted. A reserved `number.name` shape is never a candidate. Sorting and prefix filtering apply to the complete rendered candidate.
+- Section candidates have the shape `<ID><section_separator><section>`, e.g. `FS-cli.1` and, in an opted-in repository, `FS-plan.goals`, `FS-plan.goals.performance`, `FS-plan.goals.3`, and a mixed coordinate such as `FS-plan.1.goals` ([§FS-config.3.3.1](FS-config.md#331-named-components)). They come from the same section table the ID query uses ([§FS-show.2.2](FS-show.md#22-section)), so only recorded, legal coordinates are emitted. A relative heading is offered at its canonical path, never as written. Sorting and prefix filtering apply to the complete rendered candidate.
 
 ### 2.2 What the catalog offers
 

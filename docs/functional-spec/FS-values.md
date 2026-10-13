@@ -105,7 +105,7 @@ The sole binding form is a nonempty single-backtick-delimited authored literal, 
 `1200 USD` (§CONST-field-price)
 ```
 
-The marker is mandatory even when `[reference] strict = false`. The literal may not be empty or multiline and may not have edge whitespace, a backtick, or a control character.
+A valid root path is a marked root's numeric path or a declared chapter's direct named child, and never a path that puts a name under a number ([§FS-config.3.3.1](FS-config.md#331-named-components)): a declared chapter is a direct named chapter ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)) and a marked root is a numeric heading ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)), so `### 2.values: Values` and everything below it are ordinary sections that bind nothing. The marker is mandatory even when `[reference] strict = false`. The literal may not be empty or multiline and may not have edge whitespace, a backtick, or a control character.
 
 #### 3.1.1 Invalid attempts and non-attempts
 

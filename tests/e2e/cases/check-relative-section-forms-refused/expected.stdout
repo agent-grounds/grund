@@ -1,3 +1,2 @@
 docs/functional-spec/FS-bad.md:7: error: unmarked heading inside FS-bad; number it (#### format.1.1: .a.b: Deep) as FS-bad.format.1.1, declare an ID, or use a bold label; this became an error in grund 0.16.0; under FS-bad.format.1 a relative heading is written #### .1: Deep
 docs/functional-spec/FS-bad.md:13: error: unmarked heading inside FS-bad; number it (### 3.1. .1: Colon) as FS-bad.3.1, declare an ID, or use a bold label; this became an error in grund 0.16.0; under FS-bad.3 a relative heading is written ### .1. Colon
-docs/functional-spec/FS-bad.md:17: error: unmarked heading inside FS-bad; number it (### 3.2. .x: Name) as FS-bad.3.2, declare an ID, or use a bold label; this became an error in grund 0.16.0; under FS-bad.3 a relative heading is written ### .2. Name

@@ -939,6 +939,19 @@ At `0.19.0` these findings become errors on the ordinary `must` channel, and thi
 becomes a pointer as [§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160) did. The decision and its compatibility route are
 [§DF-stub-target-citations-and-chapters](../decisions/functional/DF-stub-target-citations-and-chapters.md#df-stub-target-citations-and-chapters-a-stubs-target-lends-the-stubbed-declaration-its-citations-and-chapters-and-what-that-newly-raises-warns-until-0190).
 
+
+### 7.12 A finding only a citation of a name under a number raises warns until 0.19.0
+
+Before 0.18.0 a marked citation of a mixed path ([§FS-config.3.3.1](FS-config.md#331-named-components)), such as `<§>FS-x.1.goals`, was skipped, so it was no edge a rule counted. From 0.18.0 it resolves and counts ([§FS-rules.5.1](FS-rules.md#51-facts-and-identity)). The verdicts that newly pass land at once. A required-level finding that exists only because such citations now count is carried on the warnings channel rather than the errors channel until 0.19.0: a prohibition's `forbidden-citation` at such a site, and the `citation-cardinality` or `uncited-unit` of an `at most N` or `exactly N` count, outbound, per-target or inbound, that the same count without those sites satisfies. A count that fails without them is still an error, and a prohibition that any other citation breaks is still an error at that citation's site.
+
+```text
+docs/use.md:3: warning: FS must not cite GOAL (--rule) — re-point the citation or downgrade it to a plain Markdown link; a citation of a name under a number is now checked, and this warning becomes an error in grund 0.19.0
+```
+
+The warning is the error's message unchanged, followed by `; a citation of a name under a number is now checked, and this warning becomes an error in grund 0.19.0`, the clause of [§FS-citations.checks.mixed-path](FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190). The same window and clause carry the `[citations]` findings such citations newly produce ([§FS-check.3.11](FS-check.md#311-missing-required-citation), [§FS-check.3.12](FS-check.md#312-forbidden-citation)). The finding keeps the code it will carry as an error, leaves the exit status where the rest of the run put it, and at the recommended level is an ordinary suggestion that owes no ramp, all as in [§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180). A finding that also qualifies under [§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180) to [§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190) stays a warning until the latest of their releases and carries each clause it qualifies for, in the order of these subsections, as [§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190) says.
+
+At `0.19.0` these findings become errors on the ordinary `must` channel, and this subsection becomes a pointer as [§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160) did ([§RM-mixed-path-citation-error](../roadmap.md#rm-mixed-path-citation-error-make-a-citation-of-a-name-under-a-number-that-resolves-to-nothing-an-error-in-0190)). The decision and its compatibility route are [§DF-number-name-sections.decision.citations](../decisions/functional/DF-number-name-sections.md#decisioncitations-a-citation-that-was-skipped-is-now-checked).
+
 ## 8. Command surfaces
 
 `grund check --rule "<sentence>" [<path>]` adds exactly one ad-hoc rule to all
