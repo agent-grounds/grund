@@ -72,7 +72,9 @@ already requires.
 ## line: What a line in declaration position declares
 
 A line is in declaration position where a declaration could open: a Markdown heading, a
-comment-prefixed line in a source file, a bare line inside a Python docstring, or a line
+comment-prefixed line in a source file — behind a configured prefix or any form it stands for,
+so `--- ID:`, `-- | ID:` and `;; ID:` as well as `-- ID:` and `; ID:`
+([§FS-languages.prefixes.forms](FS-languages.md#prefixesforms-the-forms-a-prefix-stands-for)) — a bare line inside a Python docstring, or a line
 inside a `/* … */` block comment, with or without its ` * ` gutter
 ([§FS-declarations.line.block-comment](FS-declarations.md#lineblock-comment-a-line-inside-a-block-comment), [§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)). The position is necessary and not sufficient. The token that opens the
 line has to be the shape a declaration takes, and one shape that starts out like it is

@@ -189,6 +189,8 @@ mod tests_inline_code_span;
 #[cfg(test)]
 mod tests_inline_note_layout;
 #[cfg(test)]
+mod tests_line_prefix_forms;
+#[cfg(test)]
 mod tests_markdown_blocks;
 #[cfg(test)]
 mod tests_never_rewrite;

@@ -77,7 +77,7 @@ This generalizes the exemption a doc-comment that *declares* an ID already has (
 Which kind a block is, is read from the file's extension and one test on the block itself — never by parsing the host language ([§FS-inline-citation-style.6](FS-inline-citation-style.md#6-non-goals)). Two recognizers and a default:
 
 1. **Prefix languages** spell a doc-comment with a comment prefix of their own, so the prefix *is* the language's own answer. The block is a doc-comment when its line-comment prefix — or, for a block comment, its opening line — is the doc form.
-2. **Position languages** spell a doc-comment exactly like every other comment (Go `//`, Ruby `#`, shell `#`, SQL `--`), so position answers instead. The block is a doc-comment when the line immediately below it, with no blank line between, is a **definition-starter** for that language, or when the block is the file's **leading comment**: every line above it is blank, or is line 1 and a `#!` shebang. A leading comment is how these languages spell a module doc — a header at the top of a Go, Ruby, shell, or SQL file documents the file, the way `//!` and a module docstring do where a doc prefix exists.
+2. **Position languages** spell a doc-comment exactly like every other comment (Go `//`, Ruby `#`, shell `#`, SQL `--`, Lisp `;`), so position answers instead. The block is a doc-comment when the line immediately below it, with no blank line between, is a **definition-starter** for that language, or when the block is the file's **leading comment**: every line above it is blank, or is line 1 and a `#!` shebang. A leading comment is how these languages spell a module doc — a header at the top of a Go, Ruby, shell, SQL, or Lisp file (the `;;; foo.el --- summary` line) documents the file, the way `//!` and a module docstring do where a doc prefix exists.
 3. **Any other extension** has no doc-comment notion, so every comment block in it is inline. That is the behavior of every release before this rule, so nothing a conformant tree already passes changes on its account.
 
 #### 1.1.2 Languages
@@ -95,17 +95,18 @@ Each extension belongs to one recognizer of [§FS-inline-citation-style.1.1.1](F
 | `rb` | position | definition-starters `class`, `module`, `def`. |
 | `sh` `bash` `zsh` | position | `function <name>`, or `<name>()` / `<name> ()`, with `<name>` matching `[A-Za-z_][A-Za-z0-9_]*`. |
 | `sql` | position | the definition-starter `create`, matched case-insensitively, so `CREATE OR REPLACE FUNCTION …` counts. |
+| `lisp` `cl` `el` `scm` `ss` `rkt` `clj` `cljs` `cljc` | position | a form whose head symbol starts with `def` or `cl-def`, or is `ns`: the next line, with leading whitespace removed, opens `(` and then that symbol, so `(defun`, `(defn-`, `(defmacro`, `(define`, `(defvar`, `(cl-defun` and `(ns app.core)` match and `(let` does not. Lisp, Scheme, Clojure and Emacs Lisp write `;;` both above a definition and inside a body, so the run of semicolons cannot say "documentation" the way Lua's `---` does; a `;;` block inside a function body stays a note, measured by the caps. |
 
 Every extension this table names is read by the default configuration, which follows the table rather than a list of its own ([§FS-scan.scope.extensions.default](FS-scan.md#scopeextensionsdefault-the-extensions-default-follows-the-language-table)): a doc form this table claims is never one a project that wrote no `extensions` cannot reach.
 
-A **definition-starter** matches when the next line, with leading whitespace removed, begins with the keyword followed by a non-identifier character or the end of the line: `func(` and `func main` match, `functional` does not, and an indented Ruby `def` inside a `class` still counts.
+A **definition-starter** matches when the next line, with leading whitespace removed, begins with the keyword followed by a non-identifier character or the end of the line: `func(` and `func main` match, `functional` does not, and an indented Ruby `def` inside a `class` still counts. A Lisp head symbol is the run after the `(` up to whitespace, a parenthesis or the end of the line; `ns` must be the whole symbol, so `(nsx-route)` does not match, while `def` and `cl-def` need only begin it, so `(default-value` matches as an accepted corner ([§FS-inline-citation-style.1.1.3](FS-inline-citation-style.md#113-accepted-corners)).
 
 #### 1.1.3 Accepted corners
 
 Four corners are known and accepted rather than repaired ([§DF-doc-comments-are-not-notes.2.6](../decisions/functional/DF-doc-comments-are-not-notes.md#26-the-corners-it-accepts)):
 
 - A **dangling doc-comment** — a `/** … */` or `///` inside a method body, which `javac`'s `-Xlint:dangling-doc-comments` and `rustc`'s `unused_doc_comments` already warn about — is a doc-comment by its prefix and is not measured. The language's own lint is the tool for a doc-comment in the wrong place.
-- **Position recognition is recognition, not parsing.** A Go `var` inside a function body and a Ruby `private def` are classified by the same one-line test: the first reads as a doc-comment, the second does not. A miss in either direction only changes whether a block is *measured*; it never changes what a citation resolves to, or whether it resolves at all. The starter sets can widen later without a `grund_config_version` bump ([§FS-config.5](FS-config.md#5-schema-versioning)).
+- **Position recognition is recognition, not parsing.** A Go `var` inside a function body and a Ruby `private def` are classified by the same one-line test: the first reads as a doc-comment, the second does not. So is a Lisp call whose head merely starts with `def`, such as `(default-value 'fill-column)`: a `;;` block above it reads as a doc-comment. A miss in either direction only changes whether a block is *measured*; it never changes what a citation resolves to, or whether it resolves at all. The starter sets can widen later without a `grund_config_version` bump ([§FS-config.5](FS-config.md#5-schema-versioning)).
 - A comment **trailing code** on the same line (`foo(); // §<ID>: note`) is what it already was: not a site ([§FS-inline-citation-style.3.3.6](FS-inline-citation-style.md#336-same-scope-as-the-rest-of-this-spec)).
 - **Blank-line adjacency is adjacency.** A `#` block, a blank line, then a `def` is an inline comment — the blank line broke the block off the definition, the same way it breaks one block into two ([§FS-inline-citation-style.1.2](FS-inline-citation-style.md#12-comment-blocks)).
 
@@ -360,7 +361,7 @@ The sentence names a house style for the comments an agent writes, and it is del
 
 One last sentence closes the rendered copy at **every** `inline_style`, after whatever the keys above produced, because where the gate stops is part of the house style an agent needs:
 
-``Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell or SQL comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there.``
+``Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell, SQL or Lisp comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there.``
 
 Without it the author and the linter disagree in the expensive direction: the agent reads a budget, sees a Javadoc that cites, and moves the citation to a detached `//` line above the block — out of the generated documentation and away from the sentence it supported — to satisfy a rule that never applied ([§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites)).
 

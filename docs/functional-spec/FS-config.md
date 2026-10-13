@@ -838,7 +838,7 @@ same and lowers to the same record ([§FS-fields.content.values](FS-fields.md#co
 [scan]
 include            = ["requirements.md", "docs", "e2e", "src"]
 exclude            = ["target", "node_modules", ".git", "dist", "build", ".venv"]
-extensions         = ["md", "rs", "go", "java", "kt", "ts", "tsx", "js", "py", "c", "cpp", "swift", "scala", "rb", "php", "cs", "lisp", "scm", "clj", "sql", "hs", "lhs", "lua", "ada", "adb", "ads", "h", "cc", "cxx", "hpp", "hh", "hxx", "m", "mm", "kts", "jsx", "mjs", "cjs", "dart", "r", "R", "sh", "bash", "zsh"]
+extensions         = ["md", "rs", "go", "java", "kt", "ts", "tsx", "js", "py", "c", "cpp", "swift", "scala", "rb", "php", "cs", "lisp", "scm", "clj", "sql", "hs", "lhs", "lua", "ada", "adb", "ads", "h", "cc", "cxx", "hpp", "hh", "hxx", "m", "mm", "kts", "jsx", "mjs", "cjs", "dart", "r", "R", "sh", "bash", "zsh", "cl", "el", "ss", "rkt", "cljs", "cljc"]
 comment_prefixes   = ["//", "#", ";", "--", "*", "/*"]
 docstring_python   = true
 respect_gitignore  = true
