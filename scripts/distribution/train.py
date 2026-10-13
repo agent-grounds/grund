@@ -40,8 +40,14 @@ def subset():
 
 
 def arguments(row):
-    """A row's `args` with `{id}` this repository's subject rather than the fixture's."""
-    return [arg.replace("{id}", row["pgo"].get("id", "")) for arg in row["args"]]
+    """A row's `args` with `{id}` this repository's subject rather than the fixture's.
+    The subject is read only for an argument that names `{id}`, so a row that needs one and
+    gives none fails with a `KeyError` naming the row instead of training on ''."""
+    def subject():
+        if "id" not in row["pgo"]:
+            raise KeyError("pgo row %r uses {id} but names no `id`" % row["name"])
+        return row["pgo"]["id"]
+    return [arg.replace("{id}", subject()) if "{id}" in arg else arg for arg in row["args"]]
 
 
 def steps():
