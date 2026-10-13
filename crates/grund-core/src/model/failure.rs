@@ -12,6 +12,10 @@ pub struct OperationDiagnostic {
     pub path: Option<String>,
     pub line: Option<usize>,
     pub column: Option<usize>,
+    /// The file on disk `path` and `line` are in, absolute, for a frontend that
+    /// points at the file rather than printing its rendered path: the config a
+    /// load failed on, which an editor marks (§FS-lsp.2.2.4.1).
+    pub file: Option<std::path::PathBuf>,
     pub details: Value,
     pub partial_output: Value,
     source: Option<std::sync::Arc<anyhow::Error>>,
@@ -27,6 +31,7 @@ impl OperationDiagnostic {
             path: None,
             line: None,
             column: None,
+            file: None,
             details: json!({}),
             partial_output: Value::Null,
             source: None,
