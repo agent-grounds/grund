@@ -272,10 +272,10 @@ can read is the same silence in a new spelling.
   stripped bodies ([§FS-show.2.3](../../docs/functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments), [§FS-languages.comment-wrapper](../../docs/functional-spec/FS-languages.md#comment-wrapper-the-comment-wrapper)), and `doccomment-polyglot-top20-refs`
   every plain-comment citation ([§FS-refs.3.1](../../docs/functional-spec/FS-refs.md#31---format-text-default)). The fixture lists every extension in
   `[scan] extensions`, so it leaves the default list of [grund#705](https://github.com/agent-grounds/grund/issues/705) unsettled. The goldens pin
-  known defects for their fixes to remove on refresh: the `unknown reference AR-<lang>` lines and
-  the missing Lua, Haskell, Clojure and Emacs Lisp bodies are [grund#703](https://github.com/agent-grounds/grund/issues/703), the
-  `unknown project alias api` lines are [grund#702](https://github.com/agent-grounds/grund/issues/702), and the trailing `</summary>` in the C# body is
-  an unfiled wart
+  known defects for their fixes to remove on refresh: the `unknown project alias api` lines are
+  [grund#702](https://github.com/agent-grounds/grund/issues/702), and the trailing `</summary>` in the C# body is an unfiled wart. The
+  `unknown reference AR-haskell-block` lines are no defect: `{-| -}` is declined as a host by
+  [§FS-languages.prefixes.haskell-block](../../docs/functional-spec/FS-languages.md#prefixeshaskell-block-a-haskell-block-comment-hosts-no-declaration)
 - missing stub-link target
 - stub-link target is a directory
 - stub-link target has an unsupported extension

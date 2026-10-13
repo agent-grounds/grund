@@ -1,13 +1,5 @@
-docs/architecture/README.md:6: error: unknown reference AR-clojure
-docs/architecture/README.md:10: error: unknown reference AR-elisp
-docs/architecture/README.md:12: error: unknown reference AR-haskell; did you mean AR-shell?
 docs/architecture/README.md:13: error: unknown reference AR-haskell-block
-docs/architecture/README.md:18: error: unknown reference AR-lua
-docs/functional-spec/FS-entry.md:8: error: unknown reference AR-clojure
-docs/functional-spec/FS-entry.md:12: error: unknown reference AR-elisp
-docs/functional-spec/FS-entry.md:14: error: unknown reference AR-haskell; did you mean AR-shell?
 docs/functional-spec/FS-entry.md:15: error: unknown reference AR-haskell-block
-docs/functional-spec/FS-entry.md:20: error: unknown reference AR-lua
 src/BlockRouter.hs:12: error: unknown reference FS-gone-haskell-block
 src/MarkdownRouter.java:8: error: unknown reference FS-gone-java-markdown
 src/MarkdownRouter.java:12: error: unknown project alias api
