@@ -3,8 +3,7 @@
 
 use super::RuleAnchor;
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
-use super::sentence::unnamed_component;
-use crate::grammar::{Grammar, render_id, section_display_name};
+use crate::grammar::{Grammar, render_id, section_display_name, unnamed_component};
 use crate::model::{Catalog, Id, paired_declarations, section_resolves};
 use std::collections::BTreeMap;
 

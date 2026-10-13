@@ -11,8 +11,8 @@
 //! (§FS-errors.2.5.1), or refused otherwise — so no two surfaces disagree, and
 //! none disagrees with the point that defines the answer. A second test holds a
 //! member's named chapter to one answer (§REQ-one-answer.sections.named), and a
-//! third pins the one name that still has two, `code`, while its row stands
-//! (§REQ-one-answer.differences.identity).
+//! third pins the wording `code` keeps while its row stands: its legacy refusal
+//! in front of its one verdict (§REQ-one-answer.differences.identity).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -85,6 +85,15 @@ const ROWS: &[Row] = &[
         name: "SKILL",
         workspace: NonCitable,
         root: Refused,
+        api: NonCitable,
+        any: NonCitable,
+    },
+    // The homeless kind's default name, which neither project configures and
+    // `[[kinds]]` leaves without IDs (§FS-config.3.9.2).
+    Row {
+        name: "code",
+        workspace: NonCitable,
+        root: NonCitable,
         api: NonCitable,
         any: NonCitable,
     },
@@ -291,25 +300,28 @@ fn every_surface_gives_a_kind_name_one_verdict_in_its_scope() {
 }
 
 /// §REQ-one-answer.differences.identity, row G09: `code`, the homeless kind's
-/// default name, has no `[[kinds]]` row in either project (§FS-config.3.9.2), so it
-/// keeps the two answers it had before the kind table: configured and not citable
-/// on a `[citations]` target, bare, pinned or `*/`, and unknown on every other
-/// surface. Closing the row changes this test with it.
+/// default name, has no `[[kinds]]` row in either project (§FS-config.3.9.2). It
+/// is refused as not citable everywhere, but until its flip every surface other
+/// than a `[citations]` target keeps its legacy text in front — `unknown kind`, or
+/// a bare selector's `literal subject` — and gives the non-citable reason after
+/// it, with the notice that the wording changes (§FS-errors.3.8). Closing the row
+/// changes this test with it.
 #[test]
-fn the_homeless_kinds_default_name_keeps_its_two_answers_while_its_row_stands() {
+fn the_homeless_kinds_default_name_keeps_unknown_in_front_until_its_flip() {
     let mut wrong = Vec::new();
     for scope in [Scope::Workspace, Scope::Root, Scope::Api, Scope::Any] {
         for (surface, output) in surfaces(scope, "code") {
-            let expected = if surface.starts_with("[citations.") {
-                NonCitable
-            } else {
-                Refused
-            };
-            let (got, stderr) = verdict(&output);
-            if got != expected {
+            if surface.starts_with("[citations.") {
+                continue;
+            }
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            let legacy = stderr
+                .find("unknown kind ")
+                .or_else(|| stderr.find("literal subject "));
+            let reason = stderr.find("declares no IDs; this wording changes in grund 0.19.0");
+            if !matches!((legacy, reason), (Some(legacy), Some(reason)) if legacy < reason) {
                 wrong.push(format!(
-                    "code in {scope:?}: {surface}\n  expected {expected:?}, got {got:?} \
-                     (exit {:?})\n  stderr {stderr:?}",
+                    "code in {scope:?}: {surface}\n  (exit {:?})\n  stderr {stderr:?}",
                     output.status.code()
                 ));
             }
@@ -317,7 +329,7 @@ fn the_homeless_kinds_default_name_keeps_its_two_answers_while_its_row_stands() 
     }
     assert!(
         wrong.is_empty(),
-        "`code` moved off the two answers G09 records:\n{}",
+        "`code` lost the legacy text G09 keeps in front:\n{}",
         wrong.join("\n")
     );
 }

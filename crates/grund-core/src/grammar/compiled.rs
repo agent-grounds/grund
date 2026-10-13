@@ -34,6 +34,15 @@ pub(crate) fn named_section_component(part: &str) -> bool {
     NAMED_COMPONENT_RE.is_match(part)
 }
 
+/// The first component of a chapter path no subject can name: an all-digit one,
+/// or an empty one, which is no number but no name either
+/// (§FS-rule-refusals.sentences.chapter-path). A section holding one is no rule
+/// unit (§FS-rules.2), so the facts adapter and the subject parser ask this.
+pub(crate) fn unnamed_component(path: &str) -> Option<&str> {
+    path.split('.')
+        .find(|part| part.bytes().all(|byte| byte.is_ascii_digit()))
+}
+
 /// Whether a `.`-joined path is a named-mode section path (§FS-config.3.3.1): every
 /// component a handle or a number, and no handle after a number, so `2.values` stays
 /// reserved. What counts as a number is the caller's question — a value binding

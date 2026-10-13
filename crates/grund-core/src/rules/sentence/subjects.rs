@@ -13,8 +13,8 @@
 
 use super::forms::{Form, Refusal, refuse};
 use super::recovery::{Recovered, Suggestion, as_if_enabled, recover};
-use super::{RuleLevel, RulePolarity, RuleSubject, RuleVocabulary, unnamed_component};
-use crate::grammar::{named_section_component, parse_id_arg, render_id};
+use super::{RuleLevel, RulePolarity, RuleSubject, RuleVocabulary};
+use crate::grammar::{named_section_component, parse_id_arg, render_id, unnamed_component};
 
 /// The reason a subject opening with the fixed word in the wrong case is
 /// refused for: the rule's own (§FS-rule-refusals.sentences), which a
