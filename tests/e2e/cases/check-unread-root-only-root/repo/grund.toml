@@ -1,0 +1,10 @@
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "TXT"
+file = "notes.txt"
+
+[scan]
+include = []
+extensions = ["md"]

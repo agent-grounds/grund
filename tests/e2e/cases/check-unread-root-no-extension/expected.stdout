@@ -1,0 +1,1 @@
+grund.toml:7: warning: [[kinds]] NOTES home `NOTES` is not read — it has no extension, and [scan] extensions reads a file only by its extension, so nothing in it is checked. Rename the file to an extension the list holds, or set `scan = false` on the row if it only lists a place.

@@ -1,0 +1,15 @@
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "NOTES"
+citable = false
+file = "NOTES"
+
+[[kinds]]
+kind = "GOAL"
+file = "docs/goals.md"
+
+[scan]
+include = ["docs"]
+extensions = ["md"]

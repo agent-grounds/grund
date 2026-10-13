@@ -1,0 +1,14 @@
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "GOAL"
+file = "docs/goals.md"
+
+[[kinds]]
+kind = "TXT"
+file = "notes.txt"
+
+[scan]
+include = ["docs"]
+extensions = ["md"]

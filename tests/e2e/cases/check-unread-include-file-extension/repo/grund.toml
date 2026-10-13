@@ -1,0 +1,10 @@
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "GOAL"
+file = "docs/goals.md"
+
+[scan]
+include = ["docs", "extra.txt"]
+extensions = ["md"]
