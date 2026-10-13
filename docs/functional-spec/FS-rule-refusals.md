@@ -482,6 +482,13 @@ unknown kind. An empty component, left by a doubled or trailing separator, is
 not a number in any spelling, so it gets the section-grammar reason and no
 breadcrumb ([§FS-rule-refusals.sentences.chapter-path](FS-rule-refusals.md#sentenceschapter-path-a-chapter-path-is-refused-for-the-component-that-failed)).
 
+A fixed word in the wrong case, as in `each FS`, keeps the reason the selector
+has always printed and adds the rule's. The literal-subject reason stays a
+verbatim contiguous prefix ([§FS-errors.3](FS-errors.md#3-message-text)), followed by ` — ` and the rule's
+`fixed word "Each" is case-sensitive`, and the `known kinds:` line still
+follows it. The append moves no verdict, so no release is named
+([§DF-one-answer-rulings-grammar](../decisions/functional/DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary), G06).
+
 The suggestion is built from what was typed and from the configured kinds,
 never from a fixed template:
 
@@ -565,6 +572,7 @@ refusals. A line marked *hint* is the breadcrumb above.
 | `Each POLICY` | `unknown kind "POLICY"` | `known kinds: FS` |
 | `POLICY.requirements` | `literal subject "POLICY.requirements" does not match the configured ID grammar` | `known kinds: FS` |
 | `requirements` | `literal subject "requirements" does not match the configured ID grammar` | `known kinds: FS` |
+| `each FS` | `literal subject "each FS" does not match the configured ID grammar — fixed word "Each" is case-sensitive` | `known kinds: FS` |
 | `Each chapter of each POLICY` | `chapter-quantified subjects are not accepted in phase 1` | `known kinds: FS`, then hint |
 | `API.requirements.1` | `numbered chapter subjects can detach when headings move` | `known kinds: FS`, then hint |
 | `FS-login must cite at least one GOAL.` | `a rule sentence is not a selector; accepted selector: FS-login` | none |

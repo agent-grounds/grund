@@ -1,0 +1,1 @@
+check --rule 'Each code must have exactly one terms chapter.' {repo}

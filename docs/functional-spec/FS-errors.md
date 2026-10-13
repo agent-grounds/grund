@@ -215,6 +215,20 @@ documents for it, *a non-citable target kind*.
 window of [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration): until `0.19.0` they keep the reason they printed
 before and append this one.
 
+The homeless kind under its default name, `code`, in a project whose
+`[[kinds]]` declares no homeless kind ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)), has no row, yet it
+is the kind `[citations]` refuses as not citable, so every surface above
+refuses it with this reason too. It has no home, so the reason ends at
+`declares no IDs`:
+
+```text
+kind `code` declares no IDs
+kind "code" declares no IDs
+```
+
+All four surfaces called it unknown before, `list --kind` included, so all
+four reach it through the window of [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration).
+
 ## 3. Message text
 
 The shape is structural; the text is human-readable. Style rules apply to every shape:
@@ -340,7 +354,11 @@ rather than changing outright ([§DF-one-answer-rulings-grammar](../decisions/fu
   `check --rule` or a configured rule declaration, was refused as though it
   were not configured: `unknown kind "<KIND>"`, or, for a selector spelled
   `KIND` or `KIND.NAME`, `literal subject "<selector>" does not match the
-  configured ID grammar`. Its reason is §FS-errors.2.5.1's.
+  configured ID grammar`. Its reason is §FS-errors.2.5.1's. So was `code`,
+  the homeless kind's default name, in a project whose `[[kinds]]` declares no
+  homeless kind, on those surfaces and on `list --kind`, where the legacy
+  reason is ``unknown kind `code` ``. Its reason is [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)'s form
+  with no home ([§DF-one-answer-rulings-grammar](../decisions/functional/DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary), G09).
 - A subject with a section-component wildcard in a sentence that joins clauses
   with `and` was refused as a conjunction. Under the order of
   [§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails) the wildcard is refused first.
@@ -365,7 +383,20 @@ these are the exact lines the window prints:
 The first four are each followed by `known kinds: FS, RULE`, and the fifth by
 nothing, as before. Exact-line consumers migrate during the window to the
 reason after the ` — `, which is what `0.19.0` prints alone; a prefix matcher
-reads what it read before. Retiring the window is [§RM-one-grammar-flip](../roadmap.md#rm-one-grammar-flip-end-the-one-grammar-window-in-0190).
+reads what it read before.
+
+The same repository declares no homeless kind, so `code` has no row there,
+and these are the exact lines the window prints for it. Each is followed by
+`known kinds: FS, RULE`, as before:
+
+| Input | Exact reason |
+|---|---|
+| `list --kind code` | ``unknown kind `code` — kind `code` declares no IDs; this wording changes in grund 0.19.0`` |
+| `list --selector 'Each code'` | `unknown kind "code" — kind "code" declares no IDs; this wording changes in grund 0.19.0` |
+| `check --rule 'Each code must have exactly one terms chapter.'` | `unknown kind "code" — kind "code" declares no IDs; this wording changes in grund 0.19.0` |
+| `check --rule 'Each FS must cite at least one code.'` | `unknown kind "code" — kind "code" declares no IDs; this wording changes in grund 0.19.0` |
+
+Retiring the window is [§RM-one-grammar-flip](../roadmap.md#rm-one-grammar-flip-end-the-one-grammar-window-in-0190).
 
 #### 3.8.1 The final templates
 
@@ -377,6 +408,9 @@ From `0.19.0` the legacy prefix and the suffix go, and the reasons are exactly
 kind "<KIND>" declares no IDs — <home>/ is not a citable home
 section-component wildcards are not accepted in phase 1
 ```
+
+`code` with no row gets the form with no home, `kind "code" declares no IDs`,
+and ``kind `code` declares no IDs`` on `list --kind` (#680).
 
 The wildcard reason is then followed by the accepted form
 [§FS-rule-refusals.sentences.rewrite](FS-rule-refusals.md#sentencesrewrite-an-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced) builds, where it builds one; for a
