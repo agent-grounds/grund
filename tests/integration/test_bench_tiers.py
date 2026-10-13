@@ -159,6 +159,77 @@ class ThePrTierIsSharded(unittest.TestCase):
                 self.assertIn(variable, source)
 
 
+class ABaseRefusalLeavesTheBundle(unittest.TestCase):
+    """§AR-benchmarks.7.1.1, §AR-benchmarks.5.1: a shard's bundle is its selected rows'
+    fixtures, refused or not, so its base and head stay one series whatever the base refuses."""
+
+    @classmethod
+    def setUpClass(cls):
+        import test_bench_record
+        cls.record_module = test_bench_record
+        cls.module = test_bench_record.load()
+
+    def test_the_harness_ensures_every_selected_fixture_before_a_probe(self):
+        source = HARNESS.read_text(encoding="utf-8")
+        body = source[source.index("fn commands_group"):]
+        self.assertIn("ensure_fixture(", body)
+        self.assertLess(body.index("ensure_fixture("), body.index("accepts("),
+                        "a fixture is generated only once its row's probe accepts it")
+
+    def records(self, shard, bundle_of):
+        """A base record that refused every frontend row and a head that measured them all,
+        each digesting the fixtures `bundle_of` names for the rows it is given."""
+        by_name = {row["name"]: row for row in rows()}
+        refused = [name for name in shard if by_name[name].get("frontend")]
+        ran = [name for name in shard if name not in refused]
+
+        def build(names, measured, commit, binary, refusals):
+            identity = dict(self.record_module.IDENTITY)
+            identity["fixtures"] = {
+                name: {"schema_version": 1, "digest": name.encode().hex()[:64].ljust(64, "0")}
+                for name in sorted({by_name[row]["fixture"] for row in bundle_of(names)})}
+            return self.module.build_record(commit=commit, binary_sha256=binary,
+                                            identity=identity, refused=refusals,
+                                            ir={name: 1_000_000 for name in measured})
+
+        base = build(shard, ran, "1" * 40, "2" * 64, refused)
+        head = build(shard, shard, "3" * 40, "4" * 64, [])
+        return refused, ran, base, head
+
+    def compare(self, base, head):
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = []
+            for name, record in (("base", base), ("head", head)):
+                path = Path(tmp) / f"{name}.json"
+                path.write_text(json.dumps(record), encoding="utf-8")
+                paths.append(path)
+            return subprocess.run([sys.executable, "-I", str(self.record_module.SCRIPT),
+                                   "compare", *map(str, paths)],
+                                  capture_output=True, text=True, check=False)
+
+    def test_every_shard_compares_whatever_the_base_refuses(self):
+        # Each real shard, and one built so a refused row is alone on its fixture: R2-01's case.
+        shards = shards_module().assign(catalog())
+        by_name = {row["name"]: row for row in rows()}
+        lsp = by_name["lsp"]
+        other = next(row["name"] for row in tier("pr")
+                     if not row.get("frontend") and row["fixture"] != lsp["fixture"])
+        shards.append([other, "lsp"])
+        for index, shard in enumerate(shards, start=1):
+            refused, ran, base, head = self.records(shard, lambda names: names)
+            with self.subTest(shard=index):
+                result = self.compare(base, head)
+                self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                self.assertEqual(refused, base["refused"])
+                for name in refused:
+                    self.assertTrue(any(name in line and "no base, not compared" in line
+                                        for line in result.stdout.splitlines()),
+                                    f"`{name}` is not reported as refused:\n{result.stdout}")
+        # The bundle of the accepted rows alone is another series, which compare refuses.
+        _, ran, _, head = self.records(shards[-1], lambda names: names)
+        _, _, narrow, _ = self.records(shards[-1], lambda names: [n for n in names if n in ran])
+        self.assertNotEqual(0, self.compare(narrow, head).returncode)
+
 class TheScanPairStraddlesTheThreshold(unittest.TestCase):
     """§AR-benchmarks.1.8: one row below the parallel threshold, one at it."""
 

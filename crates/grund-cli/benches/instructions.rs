@@ -35,7 +35,7 @@ use iai_callgrind::{
 use serde::Deserialize;
 #[cfg(feature = "bench")]
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, BTreeSet},
     ffi::OsString,
     path::{Path, PathBuf},
     process::{Command as ProcessCommand, Stdio},
@@ -485,6 +485,17 @@ fn commands_group(group: &mut BinaryBenchmarkGroup) {
     }
     let catalog = catalog();
     let selected = selected();
+    // §AR-benchmarks.7.1.1: the bundle is every selected row's fixture, refused or not, so a
+    // shard's base and head digest one bundle whatever the base binary refuses.
+    let fixtures: BTreeSet<&str> = catalog
+        .scenarios
+        .iter()
+        .filter(|scenario| selected.contains(&scenario.name))
+        .map(|scenario| scenario.fixture.as_str())
+        .collect();
+    for fixture in fixtures {
+        ensure_fixture(&catalog.fixtures[fixture]);
+    }
     // §AR-benchmarks.1.3: a row's setup runs after every other row's fixture is ensured, so
     // no later regeneration undoes it before Callgrind measures.
     let (plain, set_up): (Vec<&Scenario>, Vec<&Scenario>) = catalog
