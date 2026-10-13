@@ -574,7 +574,13 @@
                 "R",
                 "sh",
                 "bash",
-                "zsh"
+                "zsh",
+                "cl",
+                "el",
+                "ss",
+                "rkt",
+                "cljs",
+                "cljc"
               ],
               "x-grund-spec": {
                 "id": "FS-config.3.5.13",
