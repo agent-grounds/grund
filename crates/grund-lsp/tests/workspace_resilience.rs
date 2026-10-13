@@ -288,6 +288,12 @@ const BROKEN_CONFIG: &str = "grund_config_version = 1\n[scan\n";
 /// §FS-lsp.2.2.4.1: the load error `grund check` prints for `[scan` on line 2,
 /// as one `error` from `grund` on `grund.toml` at line index 1.
 fn assert_config_diagnostic(diagnostics: &[Value]) {
+    assert_config_error_at(diagnostics, 1, "grund.toml:2: expected `key = value`");
+}
+
+/// One `error` from `grund` at line index `line`, opening with `grund check`'s
+/// text for it (§FS-lsp.2.2.4.1).
+fn assert_config_error_at(diagnostics: &[Value], line: u64, cli_text: &str) {
     assert_eq!(
         diagnostics.len(),
         1,
@@ -297,12 +303,12 @@ fn assert_config_diagnostic(diagnostics: &[Value]) {
     assert_eq!(diagnostic["severity"], 1, "an error: {diagnostic}");
     assert_eq!(diagnostic["source"], "grund", "from grund: {diagnostic}");
     assert_eq!(
-        diagnostic["range"]["start"]["line"], 1,
-        "at line 2: {diagnostic}"
+        diagnostic["range"]["start"]["line"], line,
+        "at line index {line}: {diagnostic}"
     );
     let message = diagnostic["message"].as_str().unwrap_or_default();
     assert!(
-        message.contains("expected `key = value`"),
+        message.starts_with(cli_text),
         "the CLI's error text: {message}"
     );
 }
@@ -391,6 +397,98 @@ fn a_server_started_on_a_broken_config_publishes_it_on_grund_toml() {
     assert_config_diagnostic(&diagnostics);
 
     stop_server(&mut child, &mut stdin, &receiver, 2);
+    drop(stdin);
+    wait_for_exit(&mut child);
+    let _ = fs::remove_dir_all(&base);
+}
+
+#[test]
+fn a_workspace_block_that_absorbs_the_scan_is_published_on_its_members_line() {
+    let base = std::env::temp_dir().join(format!("grund-lsp-config-absorb-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&base);
+    let root = base.join("project");
+    let (spec, source) = write_project(&root, "Use");
+    let config = root.join("grund.toml");
+    let config_uri = file_uri(&config);
+
+    let (mut child, mut stdin, receiver) = start_server_with_workspace_folders(&base, &[&root]);
+    assert!(
+        cites(
+            &references(&mut child, &mut stdin, &receiver, 2, &spec),
+            &source
+        ),
+        "the healthy config's scan is the last good one before the config breaks"
+    );
+
+    // §FS-check.3.30: a `members` list that swallows the whole scan fails to load,
+    // and `grund check` names its `members` line, the sixth.
+    write(&root.join("docs/grund.toml"), "project_name = \"d\"\n");
+    write(
+        &config,
+        "grund_config_version = 1\nproject_name = \"root\"\n[scan]\ninclude = [\"docs\"]\n\
+         [workspace]\nmembers = [\"docs\"]\n",
+    );
+    changed_watched_files(&mut stdin);
+    let diagnostics = recv_publish_for(
+        &receiver,
+        &mut child,
+        &config_uri,
+        "the absorbed-scan load error",
+        |diagnostics| !diagnostics.is_empty(),
+    );
+    assert_config_error_at(
+        &diagnostics,
+        5,
+        "grund.toml:6: [workspace] members swallows",
+    );
+
+    stop_server(&mut child, &mut stdin, &receiver, 3);
+    drop(stdin);
+    wait_for_exit(&mut child);
+    let _ = fs::remove_dir_all(&base);
+}
+
+#[test]
+fn a_member_config_two_folders_fail_on_is_published_once_from_the_member() {
+    let base = std::env::temp_dir().join(format!("grund-lsp-config-member-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&base);
+    let root = base.join("workspace");
+    write_project(&root, "Use");
+    let root_config = root.join("grund.toml");
+    let healthy = fs::read_to_string(&root_config).expect("read config");
+    write(
+        &root_config,
+        &format!("{healthy}[workspace]\nmembers = [\"m\"]\n"),
+    );
+    let member = root.join("m");
+    let (spec, source) = write_project(&member, "Member");
+    let config = member.join("grund.toml");
+    let config_uri = file_uri(&config);
+
+    let (mut child, mut stdin, receiver) =
+        start_server_with_workspace_folders(&base, &[&root, &member]);
+    assert!(
+        cites(
+            &references(&mut child, &mut stdin, &receiver, 2, &spec),
+            &source
+        ),
+        "the member's healthy scan is the last good one before its config breaks"
+    );
+
+    // The member folder spells its config `grund.toml`, the root's scan
+    // `m/grund.toml`: one diagnostic, spelled from the member (§FS-lsp.2.2.4.1).
+    write(&config, BROKEN_CONFIG);
+    changed_watched_files(&mut stdin);
+    let diagnostics = recv_publish_for(
+        &receiver,
+        &mut child,
+        &config_uri,
+        "the member's config load error",
+        |diagnostics| !diagnostics.is_empty(),
+    );
+    assert_config_diagnostic(&diagnostics);
+
+    stop_server(&mut child, &mut stdin, &receiver, 3);
     drop(stdin);
     wait_for_exit(&mut child);
     let _ = fs::remove_dir_all(&base);

@@ -64,17 +64,27 @@ impl Server {
     /// One `error` on each config that will not load, at the line its load
     /// error names or the file's first line, carrying the error `grund check`
     /// prints and, when the project kept a scan, saying the rest is from it
-    /// (§FS-lsp.2.2.4.1). Two folders that fail on one config are one failure,
-    /// so the editor sees it once. Recovery needs no publish of its own: a config
-    /// no longer here is cleared with the other URIs that lost their diagnostics.
+    /// (§FS-lsp.2.2.4.1). Every failure on one config is one diagnostic, however
+    /// many folders and projects hit it, so the editor sees it once: the failure
+    /// that spells the config from its own project, else the first in order.
+    /// Recovery needs no publish of its own: a config no longer here is cleared
+    /// with the other URIs that lost their diagnostics.
     fn config_failure_diagnostics(&self) -> Vec<(Url, Diagnostic)> {
-        let failures: BTreeSet<&ConfigFailure> = self
+        let mut by_file: BTreeMap<&Path, &ConfigFailure> = BTreeMap::new();
+        for failure in self
             .folder_config_failures
             .values()
             .chain(self.scan_config_failures.values())
-            .collect();
-        failures
-            .into_iter()
+        {
+            let chosen = by_file.entry(&failure.file).or_insert(failure);
+            if (!failure.spelled_from_own_project(), failure)
+                < (!chosen.spelled_from_own_project(), *chosen)
+            {
+                *chosen = failure;
+            }
+        }
+        by_file
+            .into_values()
             .filter_map(|failure| {
                 let uri = path_uri(&failure.file)?;
                 let line = failure.line.unwrap_or(1).saturating_sub(1) as u32;

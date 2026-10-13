@@ -106,6 +106,8 @@ struct ConfigFailure {
     line: Option<usize>,
     code: &'static str,
     message: String,
+    /// The config's path as `message` spells it.
+    report_path: Option<String>,
     /// The project left on its last good scan, if it has one (§FS-lsp.2.2.4).
     retained_root: Option<PathBuf>,
 }
@@ -119,7 +121,25 @@ impl ConfigFailure {
             line: diagnostic.line,
             code: diagnostic.code,
             message: format!("{error:#}"),
+            report_path: diagnostic.path.clone(),
             retained_root,
         })
+    }
+
+    /// Whether `message` spells the config from its own project, `grund.toml`
+    /// rather than the `m/grund.toml` a workspace root's scan reads it as: the
+    /// one `grund check` prints when run in that project.
+    fn spelled_from_own_project(&self) -> bool {
+        let Some(dir) = self.file.parent() else {
+            return false;
+        };
+        let own = if dir.file_name().is_some_and(|name| name == ".agents") {
+            dir.parent().unwrap_or(dir)
+        } else {
+            dir
+        };
+        self.report_path
+            .as_deref()
+            .is_some_and(|path| own.join(path) == self.file)
     }
 }
