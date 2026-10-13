@@ -51,7 +51,7 @@ use crate::grammar::{
 };
 use crate::model::{
     Catalog, Citation, Declaration, DeclarationSource, FileRecord, FileText, HeadingKind, Id,
-    NearMissHeading, UnmarkedHeadingCandidate,
+    NearMissHeading, UnmarkedHeadingCandidate, name_under_number,
 };
 use crate::workspace::WorkspaceCitationTarget;
 
@@ -338,9 +338,12 @@ pub(super) fn scan_file_text(
 
         // §FS-languages.fence.comment-block: a fence in a comment block hides its headings only.
         let heading_structure = structure && !record.in_comment_fence(lineno);
+        // §FS-declarations.checks.parse-moves.2 (shape 5): until 0.19.0 a doc-comment heading
+        // whose path puts a name under a number stays the prose it was before 0.18.0.
         let section_caps = heading_structure
             .then(|| grammar.section_re.captures(scan_line))
-            .flatten();
+            .flatten()
+            .filter(|caps| is_md || !section_path(caps).is_some_and(name_under_number));
         let recognized_section = section_caps.as_ref().and_then(section_path).is_some();
         // §FS-declarations.line.block-comment: under a declaration a bare line opened, a bare
         // `## 1. Sub` is as deep as its own `#` run, so it is that declaration's section `.1`.
@@ -462,12 +465,6 @@ pub(super) fn scan_file_text(
             let has_marker = scan_line[..token_start].ends_with(marker);
             if has_marker {
                 claimed_markers.push(token_start - marker.len());
-            }
-            // §FS-check.1.1.2 / §AR-scanner.2.3.4: a reserved `number.name`
-            // candidate is consumed as one rejected token, never shortened to
-            // the valid numeric prefix the regex necessarily matched.
-            if grammar.has_reserved_named_tail(scan_line, token_end) {
-                continue;
             }
             // §FS-check.1.1.9 / §AR-scanner.2.3.1: the never-rewrite zones are asked
             // before the unmarked-`alias/ID` rule and the strict gate, so the escape

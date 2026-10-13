@@ -221,11 +221,6 @@ pub(crate) fn parse_longest_id_prefix(raw: &str, grammar: &Grammar) -> Option<Pa
         .collect::<Vec<_>>();
     for end in ends.into_iter().rev() {
         if let Ok(parsed) = parse_id_arg_with_shorthand(&raw[..end], grammar) {
-            // §FS-config.3.3.1 / §AR-scanner.2.3.4: do not return the numeric prefix
-            // of a reserved name-bearing candidate.
-            if grammar.has_reserved_named_tail(raw, end) {
-                return None;
-            }
             // §DF-number-only-citation-shorthand.2.6: a shorthand match here is
             // always a proper prefix of something longer, so it counts only if
             // what follows cannot continue the token.
@@ -523,7 +518,6 @@ pub(crate) fn id_token_end_at(line: &str, at: usize, grammar: &Grammar) -> Optio
         .citation_re
         .find_at(line, at)
         .filter(|found| found.start() == at)
-        .filter(|found| !grammar.has_reserved_named_tail(line, found.end()))
     {
         // §FS-check.1.1.11: a pattern has no ID to mark, so its trigger stays as written.
         if let CandidateReading::Pattern(_) =
@@ -540,7 +534,6 @@ pub(crate) fn id_token_end_at(line: &str, at: usize, grammar: &Grammar) -> Optio
         // §DF-number-only-citation-shorthand.2.6: `$$FS-042abc` is not a
         // shorthand, so the trigger before it is not rewritable either.
         .filter(|found| grammar.id_token_ends_cleanly(rest, found.end()))
-        .filter(|found| !grammar.has_reserved_named_tail(rest, found.end()))
         .max_by_key(|found| found.end())
         // §FS-check.1.1.11: nor does a pattern on a shorthand prefix (`$$FS-001-*`).
         .filter(|found| {

@@ -87,6 +87,7 @@ fn facts() -> RuleFacts {
                     anchor: anchor(7),
                     newly_counted: false,
                     lent: false,
+                    mixed: false,
                 },
             ),
             (
@@ -96,6 +97,7 @@ fn facts() -> RuleFacts {
                     anchor: anchor(8),
                     newly_counted: false,
                     lent: false,
+                    mixed: false,
                 },
             ),
         ]),

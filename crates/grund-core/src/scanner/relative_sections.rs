@@ -10,6 +10,7 @@ use std::collections::BTreeMap;
 use super::context::section_path_is_numeric;
 use super::embedded_value_context::invalid_embedded_marker;
 use super::extents::{DeclarationBodies, body_end};
+use super::held_mixed_headings::seed_held_mixed_headings;
 use super::section_record::section_value_root;
 use crate::config::Schema;
 use crate::grammar::{named_mode_section_path, reduce_heading_text, relative_heading_form};
@@ -210,7 +211,7 @@ fn resolve_relative_sections(
 /// whichever form each was written in (§FS-declarations.checks.duplicate-section.5).
 /// Returns the line of the heading that became the duplicate, with its value
 /// marker's column if it was a marked root.
-fn claim(
+pub(super) fn claim(
     decl: &mut Declaration,
     path: String,
     info: SectionInfo,
@@ -276,8 +277,9 @@ pub(crate) fn relative_answer(
         format!("{parent}.{}", form.component)
     };
     let numeric = section_path_is_numeric(&canonical);
-    // §FS-declarations.section.relative.form: refused wherever the complete
-    // form would be — a name with the gate off, `number.name`, the wrong punctuation.
+    // §FS-declarations.section.relative.form: refused wherever the complete form
+    // would be — a name with the gate off, the wrong punctuation; a name under a
+    // number is a section, as its complete form is (§FS-config.3.3.1).
     let shaped = numeric
         || (named_sections
             && named_mode_section_path(&canonical, |part| {
@@ -292,18 +294,24 @@ pub(crate) fn relative_answer(
 /// 0.19.0's answer for each relative heading of one source doc-comment declaration
 /// body, which 0.18.0 keeps as prose (§FS-declarations.section.relative.where): the
 /// parent pass run on a copy of `decl`, shallowest first and claiming as it goes,
-/// so a relative parent is settled before its child asks for it. Only the plain
-/// headings the record holds in the body are read, so the file is not.
+/// so a relative parent is settled before its child asks for it. The complete
+/// mixed headings 0.18.0 holds back as prose are claimed on the copy first, as the
+/// per-file pass records a complete heading before the parent pass runs, so a
+/// relative heading below one is named under it
+/// (§FS-declarations.checks.parse-moves.1). Only the plain headings the record
+/// holds in the body are read, so the file is not.
 pub(crate) fn doc_comment_relative_answers<'a>(
     record: &'a FileRecord,
     decl: &Declaration,
     end: usize,
     named_sections: bool,
 ) -> Vec<(&'a RecordedHeading, RelativeAnswer)> {
-    let mut candidates: Vec<&RecordedHeading> = record
+    let plain = record
         .headings_between(decl.line + 1, end)
         .iter()
-        .filter(|heading| heading.kind == HeadingKind::Plain)
+        .filter(|heading| heading.kind == HeadingKind::Plain);
+    let mut candidates: Vec<&RecordedHeading> = plain
+        .clone()
         .filter(|heading| relative_heading_form(record.heading_text(heading)).is_some())
         .collect();
     if candidates.is_empty() {
@@ -311,6 +319,9 @@ pub(crate) fn doc_comment_relative_answers<'a>(
     }
     candidates.sort_by_key(|heading| (heading.level, heading.line));
     let mut settled = decl.clone();
+    if named_sections {
+        seed_held_mixed_headings(record, decl, plain, &mut settled);
+    }
     let mut answers = Vec::with_capacity(candidates.len());
     for heading in candidates {
         let title = record.heading_text(heading);

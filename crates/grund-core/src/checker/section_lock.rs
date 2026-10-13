@@ -7,13 +7,14 @@
 use std::collections::BTreeMap;
 
 use crate::config::{Frame, Schema};
-use crate::model::{CheckReport, Diagnostic};
+use crate::model::{CheckReport, Diagnostic, name_under_number};
 use crate::resolver::{EntryVerdict, WorkspaceCheckTarget, judge_section_locks};
+use crate::rules::engine::UNRECORDED_MIXED_CLAUSE;
 
-/// §FS-section-lock.checks: a lock line grund cannot read, a cited relative
+/// §FS-section-lock.checks: a lock line grund cannot read, a cited locked
 /// address the lock does not hold, and a cited section whose recorded text now
 /// sits at another address. None fires in a tree with no lock file and no
-/// citation of a relative address. A citation into another project is judged
+/// citation of a locked address. A citation into another project is judged
 /// against that project in `targets` (§FS-section-lock.file.members).
 pub(super) fn check_section_locks<'a>(
     findings: &'a crate::model::Catalog,
@@ -37,15 +38,20 @@ pub(super) fn check_section_locks<'a>(
                     .to_string(),
             ));
         }
-        // §FS-section-lock.checks.unrecorded-section-citation: at each citation's site.
+        // §FS-section-lock.checks.unrecorded-section-citation: at each citation's site,
+        // naming the releases for a mixed address, which grund before 0.18.0 skipped.
         for (section, citations, _) in &judgement.unrecorded {
+            let clause = match name_under_number(section) {
+                true => UNRECORDED_MIXED_CLAUSE,
+                false => "",
+            };
             for citation in citations {
                 report.errors.push(located(
                     "unrecorded-section-citation",
                     citation.file.clone(),
                     citation.line,
                     format!(
-                        "{} is cited but has no entry in {lock}; run grund fmt --write",
+                        "{} is cited but has no entry in {lock}; run grund fmt --write{clause}",
                         coordinate(section)
                     ),
                 ));

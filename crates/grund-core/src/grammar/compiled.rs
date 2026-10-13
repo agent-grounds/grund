@@ -18,79 +18,16 @@ use crate::model::Id;
 
 const NUMERIC_SECTION_PATTERN: &str = r"\d+(?:\.\d+)*";
 /// One named section component, the handle `named_sections` admits (§FS-config.3.3.1).
-const NAMED_COMPONENT_PATTERN: &str = "[a-z][a-z0-9-]*";
-/// A named-mode section path: named components, then any numeric ones — a numeric
-/// component may follow a named prefix, never the other way round (§FS-config.3.3.1).
-static NAMED_SECTION_PATTERN: Lazy<String> =
-    Lazy::new(|| format!(r"{NAMED_COMPONENT_PATTERN}(?:\.{NAMED_COMPONENT_PATTERN})*(?:\.\d+)*"));
-static NAMED_COMPONENT_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(&format!(r"\A{NAMED_COMPONENT_PATTERN}\z")).unwrap());
-
-/// Whether `part` is one `[a-z][a-z0-9-]*` section handle (§FS-config.3.3.1): the
-/// component grammar the section regexes compile, asked of one component. The
-/// handles `value_chapter` and the values fields name are held to it too
-/// (§FS-config.3.2.7, §FS-config.3.4.13), and so is a rule's chapter path.
-pub(crate) fn named_section_component(part: &str) -> bool {
-    NAMED_COMPONENT_RE.is_match(part)
-}
-
-/// The first component of a chapter path no subject can name: an all-digit one,
-/// or an empty one, which is no number but no name either
-/// (§FS-rule-refusals.sentences.chapter-path). A section holding one is no rule
-/// unit (§FS-rules.2), so the facts adapter and the subject parser ask this.
-pub(crate) fn unnamed_component(path: &str) -> Option<&str> {
-    path.split('.')
-        .find(|part| part.bytes().all(|byte| byte.is_ascii_digit()))
-}
-
-/// Whether a `.`-joined path is a named-mode section path (§FS-config.3.3.1): every
-/// component a handle or a number, and no handle after a number, so `2.values` stays
-/// reserved. What counts as a number is the caller's question — a value binding
-/// admits only positive ones (§FS-values.3.1) — so it is passed in.
-pub(crate) fn named_mode_section_path(path: &str, numeric: impl Fn(&str) -> bool) -> bool {
-    let mut seen_numeric = false;
-    path.split('.').all(|part| {
-        if numeric(part) {
-            seen_numeric = true;
-            true
-        } else {
-            !seen_numeric && named_section_component(part)
-        }
-    })
-}
-
-/// Whether a binding's cited section path is a value-binding shape at all: a
-/// valid root path — every component numeric, or a named prefix as
-/// §FS-config.3.3.1 permits — optionally followed by one positive numeric
-/// immediate coordinate (§FS-values.3.1). A path with no coordinate is the root
-/// itself (§FS-values.3.1.2), and a bare ID has no path to check. Which of the
-/// two readings a path takes, and whether its root *is* a root, is the checker's
-/// question (§FS-values.5.1); this is only the grammar.
-pub(crate) fn value_binding_section_shape_is_valid(section: &str) -> bool {
-    named_mode_section_path(section, crate::model::positive_numeric_component)
-}
+pub(super) const NAMED_COMPONENT_PATTERN: &str = "[a-z][a-z0-9-]*";
+/// A named-mode section path that holds a name: a number or a name at every
+/// position, so `goals.3`, `1.goals` and `1.goals.latency` match whole
+/// (§FS-config.3.3.1). It is tried before the purely numeric path, so a mixed
+/// path is never cut back to its numeric prefix (§AR-scanner.2.3.4).
+static NAMED_SECTION_PATTERN: Lazy<String> = Lazy::new(|| {
+    format!(r"(?:\d+\.)*{NAMED_COMPONENT_PATTERN}(?:\.(?:\d+|{NAMED_COMPONENT_PATTERN}))*")
+});
 pub(crate) static STUB_LINK_HEADING: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^\s*:\s*\[[^\]]*\]\(\s*(?P<path>[^)\s]+)\s*\)\s*$").unwrap());
-/// The explicit managed-block delimiters (§FS-init.2.3.9,
-/// §DF-managed-block-delimiters): standard `BEGIN`/`END` HTML-comment lines
-/// bound the managed region from block v4 on. Legacy v3-and-earlier blocks have
-/// no delimiters and are found by `AGENTS_BLOCK_H2` alone.
-pub(crate) static AGENTS_BLOCK_BEGIN: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(?m)^<!-- BEGIN GRUND MANAGED BLOCK -->[ \t]*\r?$").unwrap());
-pub(crate) static AGENTS_BLOCK_END: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(?m)^<!-- END GRUND MANAGED BLOCK -->[ \t]*\r?$").unwrap());
-/// The managed block's version marker: an H2 heading carrying the block
-/// version. Inside a delimited block it names the schema version; for a legacy
-/// block it is also the begin marker, and the block runs until the next H1/H2
-/// or EOF (§FS-init.2.3.1).
-pub(crate) static AGENTS_BLOCK_H2: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"(?m)^##[ \t]+Grounding with grund[ \t]+\(v(?P<version>\d+)\)[ \t]*\r?$").unwrap()
-});
-/// The next H1 or H2 heading after a position — the implicit end of a legacy
-/// managed section. A legacy block ends at this line's start, or at EOF if no
-/// such line follows.
-pub(crate) static AGENTS_SECTION_BOUNDARY: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(?m)^#{1,2}[ \t]+\S").unwrap());
 /// ID grammar compiled from [id].format + [[kinds]] — the single place that knows the
 /// shape of a declaration heading or a citation. Built once per config load.
 /// Realizes §FS-config.3.1, §FS-config.3.2, §FS-config.3.3 and the regex-not-a-parser
@@ -324,7 +261,7 @@ impl Grammar {
 
         let sep_quoted = regex::escape(section_separator);
         let section_pattern = if named_sections {
-            format!(r"(?:{NUMERIC_SECTION_PATTERN}|{})", *NAMED_SECTION_PATTERN)
+            format!(r"(?:{}|{NUMERIC_SECTION_PATTERN})", *NAMED_SECTION_PATTERN)
         } else {
             NUMERIC_SECTION_PATTERN.to_string()
         };
@@ -518,17 +455,6 @@ impl Grammar {
                 path.split('.')
                     .any(|part| part.as_bytes().first().is_some_and(u8::is_ascii_lowercase))
             })
-    }
-
-    /// Whether a valid prefix is followed by the reserved `number.name` order.
-    /// The regex crate has no lookahead, so this whole-token rejection is the
-    /// post-match half of the grammar (§AR-scanner.2.3.4, §FS-config.3.3.1).
-    pub(crate) fn has_reserved_named_tail(&self, text: &str, end: usize) -> bool {
-        self.named_sections
-            && text[end..]
-                .strip_prefix('.')
-                .and_then(|tail| tail.as_bytes().first())
-                .is_some_and(u8::is_ascii_lowercase)
     }
 
     /// Whether `rest`, the text directly after an ID-shaped token in declaration

@@ -178,9 +178,6 @@ fn markdown_link_citations(
     {
         let Some(token) = caps.get(0) else { continue };
         let full = (offset + token.start())..(offset + token.end());
-        if config.grammar.has_reserved_named_tail(line, full.end) {
-            continue;
-        }
         // §FS-check.1.1.11: `fmt` never links a pattern's prefix; a qualified
         // tail is read with the grammar of the project its alias names.
         let grammar = caps
@@ -265,13 +262,7 @@ fn collect_workspace_markdown_link_citations(
         let Some(id_rest) = line.get(id_start..) else {
             continue;
         };
-        let parsed_prefix = parse_longest_id_prefix(id_rest, &target_project.config.grammar)
-            .filter(|parsed| {
-                !target_project
-                    .config
-                    .grammar
-                    .has_reserved_named_tail(id_rest, parsed.len)
-            });
+        let parsed_prefix = parse_longest_id_prefix(id_rest, &target_project.config.grammar);
         // §FS-check.1.1.11: the target's grammar reads the tail whole; a pattern stays text.
         let prefix_len = parsed_prefix.as_ref().map_or(0, |parsed| parsed.len);
         if let CandidateReading::Pattern(_) = target_project

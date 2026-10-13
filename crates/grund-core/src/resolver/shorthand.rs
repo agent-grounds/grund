@@ -228,9 +228,6 @@ pub(crate) fn expand_shorthand_citations_with_origins(
             continue;
         };
         let match_end = caps.get(0).map_or(0, |found| found.end());
-        if target_grammar.has_reserved_named_tail(rest, alias_len + match_end) {
-            continue;
-        }
         // §DF-number-only-citation-shorthand.2.6: the pattern is anchored only at
         // the start, so rewriting `§FS-042-User-Login` on its `FS-042` prefix would
         // corrupt the file — see the gate order above.

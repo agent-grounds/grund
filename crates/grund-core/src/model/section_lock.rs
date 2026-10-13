@@ -4,6 +4,8 @@
 
 use std::path::{Path, PathBuf};
 
+use super::SectionInfo;
+
 /// The directory under a config root that holds the lock files
 /// (§FS-section-lock.file.shard).
 pub(crate) const SECTION_LOCK_DIR: &str = ".grund/sections";
@@ -35,6 +37,29 @@ pub(crate) struct LockEntry {
 pub(crate) struct LockLines {
     pub(crate) entries: Vec<LockEntry>,
     pub(crate) invalid: Vec<usize>,
+}
+
+/// Whether `path`, a recorded section path, is a **mixed path** (§FS-config.3.3.1):
+/// a numeric component followed, at any later depth, by a named one, as in
+/// `1.goals`, `1.goals.3` and `goals.3.latency`. The one test of the shape, read
+/// over the path's components and never over digits or letters in an ID: what the
+/// lock enrols by ([`locked`]), what a citation's warning window selects
+/// (§FS-citations.checks.mixed-path), what a doc-comment holds back until 0.19.0
+/// (§FS-declarations.checks.parse-moves.2), and what a value root refuses
+/// (§FS-values.3.1).
+pub(crate) fn name_under_number(path: &str) -> bool {
+    let numeric = |part: &str| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit());
+    let mut parts = path.split('.');
+    parts.by_ref().any(numeric) && parts.any(|part| !part.is_empty() && !numeric(part))
+}
+
+/// Whether the section at `path`, recorded as `info`, is a **locked address**
+/// once cited (§FS-section-lock.holds.entry): its heading is relative, or its
+/// canonical path is mixed, whichever spelling declared it. The one predicate
+/// enrolment, entry retention and the formatter's no-lock shortcut read
+/// (§DF-number-name-sections.decision.enrolment).
+pub(crate) fn locked(path: &str, info: &SectionInfo) -> bool {
+    info.relative || name_under_number(path)
 }
 
 /// The lock file of `id` under `root` (§FS-section-lock.file.shard), in the
@@ -99,7 +124,31 @@ pub(crate) fn render_lock(entries: &[(String, Option<String>)]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{LockEntry, read_lock_lines, render_lock};
+    use super::{LockEntry, name_under_number, read_lock_lines, render_lock};
+
+    #[test]
+    fn a_mixed_path_has_a_name_somewhere_under_a_number() {
+        for path in [
+            "1.goals",
+            "1.goals.3",
+            "1.goals.latency",
+            "goals.3.latency",
+            "2.1.x",
+        ] {
+            assert!(name_under_number(path), "`{path}` is mixed");
+        }
+        for path in [
+            "1",
+            "1.2",
+            "goals",
+            "goals.3",
+            "format.goals",
+            "goals.3.4",
+            "",
+        ] {
+            assert!(!name_under_number(path), "`{path}` is not mixed");
+        }
+    }
 
     #[test]
     fn an_entry_is_a_coordinate_and_a_fingerprint_or_a_dash() {

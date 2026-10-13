@@ -1,9 +1,13 @@
 //! §FS-declarations.checks.parse-moves: the three shapes of tree on which 0.19.0's one parse
-//! moves a `check` verdict (§DF-one-parse-answers-from-0-19.4), and the fourth that moves with
+//! moves a `check` verdict (§DF-one-parse-answers-from-0-19.4), the fourth that moves with
 //! them, a relative heading in a doc-comment declaration body
-//! (§DF-doc-comment-relative-headings), each warned at the line that moves it. Today's answer is what the catalog already holds; 0.19.0's is read off the file
+//! (§DF-doc-comment-relative-headings), and the fifth, a complete mixed heading there, in
+//! `mixed.rs` (§DF-number-name-sections.decision.doc-comments), each warned at the line that
+//! moves it. Today's answer is what the catalog already holds; 0.19.0's is read off the file
 //! record the scan kept (§AR-scanner.2.8), so the pass reads no file. It goes with today's
 //! answers in 0.19.0 (§FS-declarations.checks.parse-moves.4).
+
+mod mixed;
 
 use std::collections::{BTreeMap, HashMap};
 use std::path::Path;
@@ -13,7 +17,7 @@ use crate::config::{Frame, LeadSizeWarning, Schema, Strength, measure_point_text
 use crate::grammar::{expand_relative_heading, flatten_cross_ref_links};
 use crate::model::{
     Catalog, CheckReport, Declaration, DeclarationSource, Diagnostic, FileRecord, HeadingKind, Id,
-    RecordedHeading, SectionInfo,
+    RecordedHeading, SectionInfo, name_under_number,
 };
 use crate::resolver::point_body_pair;
 use crate::scanner::{
@@ -36,6 +40,7 @@ pub(super) fn check_parse_moves(
     check_closing_headings(findings, schema, frame, report);
     check_rejected_headings(findings, schema, frame, report);
     check_relative_headings(findings, schema, frame, report);
+    mixed::check_mixed_headings(findings, schema, frame, report);
 }
 
 /// The first shape of §FS-declarations.checks.parse-moves.2: a doc-comment heading the record
@@ -244,8 +249,12 @@ fn check_relative_headings(
             for (heading, answer) in
                 doc_comment_relative_answers(record, declaration, owner.end, named_sections)
             {
-                // §FS-declarations.checks.parse-moves.1: the two messages shape 4 takes.
+                // §FS-declarations.checks.parse-moves.1: the two messages shape 4 takes, and the
+                // last for a mixed path, whose complete heading is prose in 0.18.0 as well.
                 let message = match answer {
+                    RelativeAnswer::Section(section) if name_under_number(&section) => {
+                        mixed::held_message(&site_coordinate(schema, frame, id, Some(&section)))
+                    }
                     RelativeAnswer::Section(section) => {
                         let coordinate = site_coordinate(schema, frame, id, Some(&section));
                         let written = enveloped_line(record, heading.line).unwrap_or_default();

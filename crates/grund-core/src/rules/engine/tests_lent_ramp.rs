@@ -22,6 +22,7 @@ const PLAIN: Marks = Marks {
     counted: false,
     matched: false,
     lent: false,
+    mixed: false,
 };
 const LENT: Marks = Marks {
     lent: true,

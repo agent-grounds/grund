@@ -45,6 +45,7 @@ fn facts() -> RuleFacts {
                 },
                 newly_counted,
                 lent: false,
+                mixed: false,
             },
         )
     };

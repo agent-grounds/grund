@@ -43,6 +43,9 @@ pub(crate) struct SiteMeta {
     /// (§FS-declarations.stubs.target.5): read to ramp, like `newly_counted`, and
     /// gone with the ramp at 0.19.0 (§FS-rules.7.11).
     pub(crate) lent: bool,
+    /// A citation of a name under a number, which grund before 0.18.0 skipped:
+    /// read to ramp, and gone with the ramp at 0.19.0 (§FS-rules.7.12).
+    pub(crate) mixed: bool,
 }
 
 /// Every declaration/chapter exists independently of citations and every

@@ -7,15 +7,19 @@ use super::citations::{citation_matches_target, citing_side_label};
 use crate::config::{
     CitationLevel, CitationTarget, NamespaceMatch, Rules, Schema, render_citation_target,
 };
-use crate::model::{CITATION_DIRECTION_REPAIR, Catalog, CheckReport, Citation, Diagnostic};
-use crate::rules::engine::LENT_CLAUSE;
+use crate::model::{
+    CITATION_DIRECTION_REPAIR, Catalog, CheckReport, Citation, Diagnostic, name_under_number,
+};
+use crate::rules::engine::{LENT_CLAUSE, MIXED_CLAUSE};
 
 /// §AR-checker.2.10 / §FS-check.3.12: a citation site whose citing kind prohibits
 /// its target is a `forbidden-citation` error (`must-not`) or a
 /// `discouraged-citation` suggestion (`should-not`). The error carries
 /// §FS-check.3.12's repair suffix; the suggestion does not (§FS-check.2.3). A
 /// citation a stub's target lends is a site of its kind at its line in the target,
-/// and its error warns until 0.19.0 (§FS-check.3.12, §FS-rules.7.11).
+/// and its error warns until 0.19.0 (§FS-check.3.12, §FS-rules.7.11), as does one
+/// at a citation of a name under a number, which grund before 0.18.0 skipped
+/// (§FS-rules.7.12), with the clauses in subsection order.
 pub(super) fn check_citation_prohibitions(
     findings: &Catalog,
     rules: &Rules,
@@ -23,8 +27,9 @@ pub(super) fn check_citation_prohibitions(
     report: &mut CheckReport,
 ) {
     for (cite, lent) in findings.marked_edges() {
+        let mixed = cite.section.as_deref().is_some_and(name_under_number);
         match citation_site_level(rules, cite) {
-            Some(CitationLevel::MustNot) if lent => {
+            Some(CitationLevel::MustNot) if lent || mixed => {
                 let mut diagnostic = prohibition_diagnostic(
                     "forbidden-citation",
                     schema,
@@ -32,7 +37,12 @@ pub(super) fn check_citation_prohibitions(
                     "must not",
                     CITATION_DIRECTION_REPAIR,
                 );
-                diagnostic.message.push_str(LENT_CLAUSE);
+                if lent {
+                    diagnostic.message.push_str(LENT_CLAUSE);
+                }
+                if mixed {
+                    diagnostic.message.push_str(&MIXED_CLAUSE);
+                }
                 report.warnings.push(diagnostic);
             }
             Some(CitationLevel::MustNot) => report.errors.push(prohibition_diagnostic(

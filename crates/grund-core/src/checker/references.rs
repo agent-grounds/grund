@@ -18,8 +18,9 @@ use super::support::{
 };
 use crate::config::{Frame, KindResolution, Origin, Schema};
 use crate::grammar::render_qualified_id;
-use crate::model::{Catalog, CheckReport, Diagnostic, section_resolves};
+use crate::model::{Catalog, CheckReport, Diagnostic, name_under_number, section_resolves};
 use crate::resolver::{WorkspaceCheckTarget, join_alternatives, target_for_citation};
+use crate::rules::engine::MIXED_CLAUSE;
 use crate::workspace::namespace_is_unverified;
 use std::collections::BTreeMap;
 
@@ -213,6 +214,10 @@ pub(super) fn check_citation_resolution(
         {
             continue;
         }
+        // §FS-citations.checks.mixed-path: grund before 0.18.0 skipped a citation of a
+        // name under a number, so what it newly fails warns until the window closes.
+        let mixed = tier == ReferenceTier::Configured
+            && cite.section.as_deref().is_some_and(name_under_number);
         // §FS-check.3.1 / §FS-workspace.4.1: a citation whose ID is declared
         // nowhere in its target namespace is dangling.
         if !target.catalog.declarations.contains_key(&cite.id) {
@@ -269,7 +274,7 @@ pub(super) fn check_citation_resolution(
                     false,
                 )
             };
-            let diagnostic = Diagnostic {
+            let mut diagnostic = Diagnostic {
                 code,
                 path: Some(cite.file.clone()),
                 line: Some(cite.line),
@@ -278,7 +283,10 @@ pub(super) fn check_citation_resolution(
                 sites: Vec::new(),
                 authority: Vec::new(),
             };
-            if warning {
+            if mixed && !warning {
+                diagnostic.message.push_str(&MIXED_CLAUSE);
+                report.warnings.push(diagnostic);
+            } else if warning {
                 // §FS-check.4.12: `should` is a distinct fixed warning and
                 // leaves a warning-only check at exit 0.
                 report.warnings.push(diagnostic);
@@ -313,12 +321,16 @@ pub(super) fn check_citation_resolution(
                 } else {
                     format!("missing section {coordinate}")
                 };
-                report.errors.push(Diagnostic {
+                let (sink, clause) = match mixed {
+                    true => (&mut report.warnings, MIXED_CLAUSE.as_str()),
+                    false => (&mut report.errors, ""),
+                };
+                sink.push(Diagnostic {
                     code: "missing-section",
                     path: Some(cite.file.clone()),
                     line: Some(cite.line),
                     column: Some(cite.column),
-                    message,
+                    message: format!("{message}{clause}"),
                     sites: Vec::new(),
                     authority: Vec::new(),
                 });

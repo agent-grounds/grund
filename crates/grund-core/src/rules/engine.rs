@@ -21,7 +21,7 @@ pub(crate) use authority::one_rules_authority;
 use cites::evaluate_cites;
 use index::FactIndex;
 pub(crate) use precedence::citation_precedence;
-pub(crate) use ramp::{LENT_CLAUSE, route_stubbed_rules};
+pub(crate) use ramp::{LENT_CLAUSE, MIXED_CLAUSE, UNRECORDED_MIXED_CLAUSE, route_stubbed_rules};
 use ramp::{Marks, Windows, matched_before, node_lent, nodes_matched_before, route, site_marks};
 pub(crate) use resolution::unresolved_subject_diagnostic;
 use resolution::unresolved_subject_diagnostic_indexed;
@@ -33,6 +33,8 @@ use unreached::report_unreached;
 
 #[cfg(test)]
 mod tests_lent_ramp;
+#[cfg(test)]
+mod tests_mixed_ramp;
 
 /// One level of evaluation: the channel a rule finding has always had at that
 /// level, and the ramp's warnings beside it.

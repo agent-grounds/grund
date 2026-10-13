@@ -65,6 +65,7 @@ mod embedded_value_context;
 mod embedded_values;
 mod extents;
 mod file_pass;
+mod held_mixed_headings;
 mod json;
 mod legacy;
 mod legacy_inline;
@@ -113,6 +114,7 @@ pub(crate) use compat::{
 pub(crate) use context::{file_home_kind, markdown_heading_level, section_path_is_numeric};
 pub(crate) use e2e::e2e_case_dir_name;
 pub(crate) use embedded_value_context::EMBEDDED_VALUE_MARKER;
+pub(crate) use held_mixed_headings::held_mixed_headings;
 pub(crate) use legacy::{
     collect_local_legacy_markdown_citations, configured_catalog_ids, id_arg_targets,
     legacy_catalog_ids, match_legacy_tail, promote_legacy_candidate, resolve_id_arg,
@@ -123,7 +125,7 @@ pub(crate) use record::{bare_block_line, enveloped_line};
 pub(crate) use relative_sections::{RelativeAnswer, doc_comment_relative_answers};
 pub(crate) use scan_error::api_scan_error;
 pub(crate) use scope_probe::effective_scope_reads_any_file;
-pub(crate) use section_locks::{may_give_relative_heading, section_locks_present};
+pub(crate) use section_locks::{may_give_locked_heading, section_locks_present};
 pub(crate) use stub_homes::lend_citations;
 pub(crate) use tree::{
     ScanError, record_of_text, scan_tree, scan_tree_strict, scan_tree_with_workspace,
