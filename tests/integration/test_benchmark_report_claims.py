@@ -16,6 +16,7 @@ factual review as well.
 """
 
 import hashlib
+import json
 import re
 import unittest
 from pathlib import Path
@@ -26,7 +27,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 GENERATOR = REPO_ROOT / "scripts/local-benchmark-report.py"
 REPORT = REPO_ROOT / "docs/benchmarks.md"
 README = REPO_ROOT / "README.md"
-HARNESS = REPO_ROOT / "crates/grund-cli/benches/instructions.rs"
+# §AR-ci.5.2: each scenario's relative limit is a row of the catalog, not a harness constant.
+CATALOG = REPO_ROOT / "crates/grund-cli/benches/scenarios.json"
 AR_BENCHMARKS = REPO_ROOT / "docs/architecture/AR-benchmarks.md"
 # Every document that describes the benchmark limits to a reader.
 BENCHMARK_DOCS = (
@@ -35,7 +37,6 @@ BENCHMARK_DOCS = (
 )
 INTENDED_LIMITS = re.compile(r"\bintended\b(?:\W+\w+){0,3}\W+limits?\b|"
                              r"\blimits?\b(?:\W+\w+){0,3}\W+intended\b", re.IGNORECASE)
-LIMIT_CONST = re.compile(r"const (\w+_IR_LIMIT_PCT): f64 = ([0-9.]+);")
 BOUND = re.compile(r"The same-binary bound is \*\*([0-9.]+)%\*\* `Ir`")
 
 # One limit stated for every benchmark, which §AR-ci.5.2 contradicts: 5% holds the
@@ -229,12 +230,13 @@ class TheLimitsAreEnforcedAndClearOfJitter(unittest.TestCase):
     def test_every_ir_limit_is_five_times_the_same_binary_bound(self):
         bound = BOUND.search(AR_BENCHMARKS.read_text(encoding="utf-8"))
         self.assertIsNotNone(bound, "§AR-benchmarks.7.3 states no same-binary bound")
-        limits = dict(LIMIT_CONST.findall(HARNESS.read_text(encoding="utf-8")))
-        self.assertTrue(limits, f"{HARNESS.name} declares no `*_IR_LIMIT_PCT`")
-        for name, value in limits.items():
-            with self.subTest(limit=name):
-                self.assertGreaterEqual(float(value), 5 * float(bound.group(1)),
-                                        f"{name} is within five times the same-binary bound")
+        scenarios = json.loads(CATALOG.read_text(encoding="utf-8"))["scenarios"]
+        self.assertTrue(scenarios, f"{CATALOG.name} lists no scenario")
+        for row in scenarios:
+            with self.subTest(scenario=row["name"]):
+                self.assertGreaterEqual(float(row["limit_pct"]), 5 * float(bound.group(1)),
+                                        f"{row['name']}'s limit is within five times the "
+                                        "same-binary bound")
 
     def test_the_intended_detector_finds_the_retired_wording(self):
         self.assertTrue(INTENDED_LIMITS.search(
