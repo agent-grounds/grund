@@ -67,12 +67,8 @@ fn complete_ids_run(opts: CompleteIdsOpts, run_warnings: &mut Vec<Finding>) -> R
     let mut candidates = BTreeSet::new();
     // §FS-workspace.8.4.1: split an alias path (§FS-workspace.6.1) at its *last* `/`;
     // the right is an ID-prefix. An unfinished token is completed, not validated.
-    let alias_split = match split_alias_path(&opts.prefix) {
-        (Some(alias_prefix), id_prefix) => Some((alias_prefix, id_prefix)),
-        // A leading `/` is still an alias path, with the empty alias before it.
-        (None, prefix) => prefix.strip_prefix('/').map(|id_prefix| ("", id_prefix)),
-    };
-    if let Some((alias_prefix, id_prefix)) = alias_split {
+    // A leading `/` is still an alias path, with the empty alias before it.
+    if let (Some(alias_prefix), id_prefix) = split_alias_path(&opts.prefix) {
         if !context.workspace_loaded {
             return Ok(Vec::new());
         }

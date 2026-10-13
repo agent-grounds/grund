@@ -20,7 +20,7 @@
 //! property above does not.
 
 use super::RuleAnchor;
-use super::sentence::{RuleVocabulary, parse_rule, parse_selector};
+use super::sentence::{RuleVocabulary, lower_case_each, parse_rule, parse_selector};
 use crate::config::{Config, KindTable};
 use std::collections::BTreeSet;
 use std::path::PathBuf;
@@ -132,11 +132,13 @@ fn failure(message: &str) -> &str {
     &message[..end]
 }
 
-/// Whether a selector's failure names the rule's: the same text, or a reason
-/// kept as a verbatim prefix with the rule's appended after ` — `, the route
-/// §FS-rule-refusals.selectors gives `each FS` (§DF-one-answer-rulings-grammar, G06).
-fn names_the_failure(selector: &str, rule: &str) -> bool {
-    selector == rule || selector.ends_with(&format!(" — {rule}"))
+/// Whether a selector's failure names the rule's: the same text, or, for a
+/// `subject` opening with a lower-case `each`, a reason kept as a verbatim prefix
+/// with the rule's appended after ` — `, the route §FS-rule-refusals.selectors
+/// gives `each FS` (§DF-one-answer-rulings-grammar, G06).
+fn names_the_failure(subject: &str, selector: &str, rule: &str) -> bool {
+    selector == rule
+        || (lower_case_each(subject).is_some() && selector.ends_with(&format!(" — {rule}")))
 }
 
 /// Every violation of the two askable properties over the corpus.
@@ -176,7 +178,7 @@ fn violations() -> BTreeSet<(&'static str, String)> {
                 {
                     found.insert(("offered form reparses", format!("{subject} -> {form}")));
                 }
-                if !names_the_failure(failure(&selector), failure(&refused.message)) {
+                if !names_the_failure(subject, failure(&selector), failure(&refused.message)) {
                     found.insert(("rule <=> selector", format!("{subject}: two failures")));
                 }
             }

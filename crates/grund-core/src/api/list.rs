@@ -175,10 +175,9 @@ fn list_run(
         });
     }
 
-    // Validate the selector against the selected catalog before producing any
-    // rows. Kind selectors may span workspace members; an exact literal must
-    // resolve once, just as a rule subject does (§FS-rules.8), counted by the
-    // one subject matcher (§AR-rules.2).
+    // Validate the selector before producing rows: kind selectors may span members; an exact
+    // literal must resolve once, as a rule subject does (§FS-rules.8), counted by the one
+    // subject matcher (§AR-rules.2).
     if let Some(subject) = &selector
         && let Some(literal) = subject.literal()
     {

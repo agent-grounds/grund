@@ -281,13 +281,13 @@ pub(crate) struct MarkdownLineCitation {
 /// since an alias path may carry slashes and an ID never does
 /// (§FS-workspace.6.1), into the alias and the rest. Nothing is validated, so a
 /// token being completed, recovered from a refusal, or read as a test label is
-/// never refused here; a token with no `/`, or with an empty alias before its
-/// last one, is kept whole. A strict reading that refuses an alias path is
-/// `split_qualified_id_arg`'s.
+/// never refused here; a token with no `/` is kept whole, and one whose only
+/// `/` is leading reports the empty alias, `Some("")`, for the caller to read.
+/// A strict reading that refuses an alias path is `split_qualified_id_arg`'s.
 pub(crate) fn split_alias_path(token: &str) -> (Option<&str>, &str) {
     match token.rsplit_once('/') {
-        Some((alias, rest)) if !alias.is_empty() => (Some(alias), rest),
-        _ => (None, token),
+        Some((alias, rest)) => (Some(alias), rest),
+        None => (None, token),
     }
 }
 

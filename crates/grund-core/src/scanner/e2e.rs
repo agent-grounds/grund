@@ -223,8 +223,12 @@ fn e2e_spec_ref_from_line(schema: &Schema, frame: Frame<'_>, line: &str) -> Opti
     }
     let token = token.strip_prefix(&schema.citation.marker).unwrap_or(token);
     // §FS-workspace.6.1: a test label, read without the slug check that would refuse it.
-    let (namespace, id_text) = split_alias_path(token);
-    let namespace = namespace.map(str::to_string);
+    let (namespace, id_text) = match split_alias_path(token) {
+        (Some(namespace), id_text) if !namespace.is_empty() => {
+            (Some(namespace.to_string()), id_text)
+        }
+        _ => (None, token),
+    };
     if let Ok((id, _section)) = parse_id_arg(id_text, frame.grammar()) {
         return Some(E2eSpecRef {
             namespace,
