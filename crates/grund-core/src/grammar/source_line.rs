@@ -354,11 +354,7 @@ fn python_assigned_data_quote(line: &str) -> Option<(usize, usize, &'static str)
     while bytes.get(cursor).is_some_and(u8::is_ascii_alphabetic) {
         cursor += 1;
     }
-    let prefix = &line[literal_start..cursor];
-    if !matches!(
-        prefix.to_ascii_lowercase().as_str(),
-        "" | "r" | "u" | "b" | "f" | "t" | "br" | "rb" | "fr" | "rf" | "tr" | "rt"
-    ) {
+    if !is_python_string_prefix(&line[literal_start..cursor]) {
         return None;
     }
     let quote = if line[cursor..].starts_with("\"\"\"") {
@@ -369,6 +365,16 @@ fn python_assigned_data_quote(line: &str) -> Option<(usize, usize, &'static str)
         return None;
     };
     Some((literal_start, cursor, quote))
+}
+
+/// Whether `prefix` is one of the string prefixes §FS-check.1.1.3.1 approves —
+/// read by the assigned-data opener above and by the Python row of the
+/// multi-line form table, which names the same list.
+pub(super) fn is_python_string_prefix(prefix: &str) -> bool {
+    matches!(
+        prefix.to_ascii_lowercase().as_str(),
+        "" | "r" | "u" | "b" | "f" | "t" | "br" | "rb" | "fr" | "rf" | "tr" | "rt"
+    )
 }
 
 /// Find the top-level assignment after an annotation without parsing the
