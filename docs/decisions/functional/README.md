@@ -115,6 +115,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-remote-projects](DF-remote-projects.md#df-remote-projects-a-remote-project-is-a-workspace-member-whose-bytes-were-fetched-mounted-as-its-own-root) — a remote project is a workspace member whose bytes were fetched, mounted as its own root
 - [§DF-undeclared-blind-spots](DF-undeclared-blind-spots.md#df-undeclared-blind-spots-two-skips-no-section-named-become-located-findings) — two skips no section named become located findings
 - [§DF-default-extensions-follow-language-table](DF-default-extensions-follow-language-table.md#df-default-extensions-follow-language-table-the-scan-extensions-default-reads-every-language-grund-classifies) — the `[scan] extensions` default reads every language grund classifies
+- [§DF-fs-home-moves-from-0-19](DF-fs-home-moves-from-0-19.md#df-fs-home-moves-from-0-19-the-built-in-fs-home-moves-back-to-docsfunctional-spec-in-0190-and-the-template-declares-req-now) — the built-in FS home moves back to docs/functional-spec/ in 0.19.0, and the template declares REQ now
 
 ## The command surface
 

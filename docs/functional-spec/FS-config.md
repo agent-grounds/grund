@@ -95,7 +95,7 @@ Each reader has its own assignment, derived from its own parse sites. The one ab
 
 Eight requirements on the key set as a whole, each carrying a **mark**: *realized* where `grund` behaves this way today and a section of this specification says so; *directional* where it binds what is written from here on rather than describing everything already written; *deferred* where a named follow-up owes it. The mark is part of the requirement — a direction is never a statement about how `grund` behaves today, and reading one as the other is the mistake this chapter exists to prevent.
 
-There is no ninth. *Every key appears in a user-facing reference* is a property of this repository's documentation rather than of what `grund` does, and `FS` states behavior; its behavioral half — that a generated `grund.toml` carries exactly these keys, no extra keys and none missing — is already required, and more strongly, by [§FS-init.2.4.3](FS-init.md#243-every-written-key-is-the-default).
+There is no ninth. *Every key appears in a user-facing reference* is a property of this repository's documentation rather than of what `grund` does, and `FS` states behavior; its behavioral half — that a generated `grund.toml` carries exactly these keys, no extra keys and none missing — is already required, and more strongly, by [§FS-init.2.4.3](FS-init.md#243-every-written-key-that-has-a-built-in-default-matches-it).
 
 ### requirements.1: Every default is overridable where it has a meaning — directional
 
@@ -554,7 +554,9 @@ file   = "docs/roadmap.md"
 title  = "Planned milestones and sequencing"
 ```
 
-A project that overrides this list replaces the defaults entirely — there is no merge. To extend rather than replace, copy the defaults and add to them.
+A project that overrides this list replaces the defaults entirely — there is no merge. To extend rather than replace, copy the defaults and add to them. The list has no `REQ`: the `software-development` template declares one, with no built-in default behind it ([§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements)).
+
+From grund 0.19.0 the `FS` row of this list is `folder = "docs/functional-spec"`, and the template's `FS` row moves with it in the same release ([issue #723](https://github.com/agent-grounds/grund/issues/723)); until then a project with no config whose FS declarations live in `requirements.md` earns the `fs-home-moves` warning ([§FS-check.checks.fs-home-moves](FS-check.md#checksfs-home-moves-the-built-in-fs-home-moves-in-grund-0190), [§DF-fs-home-moves-from-0-19](../decisions/functional/DF-fs-home-moves-from-0-19.md#df-fs-home-moves-from-0-19-the-built-in-fs-home-moves-back-to-docsfunctional-spec-in-0190-and-the-template-declares-req-now)).
 
 ##### 3.4.4.1 Where each citable default declares
 
@@ -570,7 +572,7 @@ A test cites the document whose claim it proves, and is never cited back: an `e2
 
 ##### 3.4.4.4 A config that omits `[[kinds]]` keeps the older `FS` home
 
-Compatibility note: a pre-existing `grund.toml` that omits `[[kinds]]` keeps the pre-`requirements.md` implicit FS home (`folder = "docs/functional-spec"`) until the project writes an explicit `[[kinds]]` table. New zero-config projects and freshly generated configs use the canonical defaults in [§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds), where `FS` is `file = "requirements.md"`. This preserves existing configs without adding a new schema version.
+Compatibility note: a pre-existing `grund.toml` that omits `[[kinds]]` keeps the pre-`requirements.md` implicit FS home (`folder = "docs/functional-spec"`) until the project writes an explicit `[[kinds]]` table. New zero-config projects and freshly generated configs use the canonical defaults in [§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds), where `FS` is `file = "requirements.md"`. This preserves existing configs without adding a new schema version. The special case is retired in grund 0.19.0, when the built-in `FS` home itself becomes `folder = "docs/functional-spec"` ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)) and a config that omits `[[kinds]]` and a project with no config give the same answer.
 
 ##### 3.4.4.5 `kinds = []` declares no kinds
 

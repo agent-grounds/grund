@@ -225,6 +225,7 @@ Bare `init`, with no `--scaffold`, writes these two and nothing else ([§FS-init
 With `--scaffold`, additionally the template's starter files ([§FS-init.2.1.3](FS-init.md#213-the-software-development-starter-files)). These are the `software-development` template's; the `none` template has none ([§FS-init.1.6.4](FS-init.md#164-none-has-nothing-to-scaffold)):
 
 - `<path>/requirements.md`
+- `<path>/docs/requirements/README.md`
 - `<path>/docs/grund.md`
 - `<path>/docs/goals.md`
 - `<path>/docs/roadmap.md`
@@ -272,9 +273,10 @@ Each scaffolded markdown file is a minimal starter — enough structure to teach
 - `grund.md` — the H1 plus a one-line note on how the project's reason for being is declared inline (`# GRUND-NNN-slug: …`), then the three H2 sections (`## 1. The problem`, `## 2. What this project does about it`, `## 3. Who it is for`), each with a one-line italic prompt to be replaced.
 - `goals.md` — the H1 plus a one-line note on how goals are declared inline (`# GOAL-NNN-slug: …`).
 - `requirements.md` — the H1 plus a one-line note on how `FS-` requirements/spec IDs are declared inline as H2 headings in that file.
+- `requirements/README.md` — the index of the `REQ` folder ([§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements)), in the shape of the decision READMEs below: the H1, the note on how `REQ-` IDs declare into the directory, the index rule, and an empty `| ID | Subject |` table. It is written right after the FS home.
 - `roadmap.md`, `changelog.md` — the H1 plus a single `<!-- placeholder - replace with real content -->` line.
 - `architecture/README.md` — the H1, the navigational note about how `AR-` IDs declare into the directory and the rule that the index lists every architecture declaration as a full link ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)), and an empty `| ID | Subject |` table to fill in.
-- `decisions/architectural/README.md`, `decisions/functional/README.md` — the same shape for the two decision folders: the H1, the note on how `DA-`/`DF-` IDs declare into the directory and on citing a decision from the declaration it settles, the index rule, and an empty `| ID | Subject |` table. Every citable `folder` kind whose `index` the generated config leaves at its default gets one, which under those defaults is `AR`, `DF`, and `DA` — the two test kinds are non-citable and have no index at all ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)).
+- `decisions/architectural/README.md`, `decisions/functional/README.md` — the same shape for the two decision folders: the H1, the note on how `DA-`/`DF-` IDs declare into the directory and on citing a decision from the declaration it settles, the index rule, and an empty `| ID | Subject |` table. Every citable `folder` kind whose `index` the generated config leaves at its default gets one, which under those defaults is `REQ`, `AR`, `DF`, and `DA` — the two test kinds are non-citable and have no index at all ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)).
 - `tests/e2e/README.md` — the H1 (`# e2e`) plus a note that every behaviour described in the effective FS home has at least one case, and that each case cites the declaration it proves. It is a layout note, not an index: `e2e` is a non-citable kind ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) and has no declarations to list. `tests/integration/` gets the `.gitkeep` instead of a README of its own, so the second configured test home survives a `git add` without a second near-identical note.
 
 Every scaffold-owned ID-shape example uses the effective format of the kind it
@@ -291,7 +293,7 @@ The rule covers the declaration example in `grund.md`, `goals.md`, and the
 effective FS home (`requirements.md` or `functional-spec/README.md`); the
 declaration/bare ID, citation ID portion (without changing its marker or section
 suffix), and inline-stub ID in `architecture/README.md`; and the declaration
-example in each decision README.
+example in each decision README and in `requirements/README.md`.
 
 The `.gitkeep` file exists solely so an empty directory that gets no README of its own survives a `git add`; its content is a single line: `# placeholder — replace this directory's contents with real integration tests`.
 
@@ -734,7 +736,7 @@ When a companion path is a symlink to `AGENTS.md`, `init` does not touch it sepa
 
 ### 2.4 Generated `grund.toml`
 
-`init` writes `<path>/grund.toml` — the bare, root-visible form — and **only when the target has no config at all**, in either discovery location ([§FS-init.2.4.1](FS-init.md#241-both-discovery-locations-are-probed)). An existing config is never overwritten, not even with `--force` ([§FS-init.2.4.2](FS-init.md#242-an-existing-config-is-never-overwritten)). The file it does write is the template's config ([§FS-init.1.6](FS-init.md#16-templates)) and a teaching surface ([§FS-init.2.4.3](FS-init.md#243-every-written-key-is-the-default)); [§FS-init.2.4.4](FS-init.md#244-named_sections-is-written-off) to [§FS-init.2.4.8](FS-init.md#248-values-are-illustrated-not-enabled) say how particular keys are written, and [§FS-init.2.4.9](FS-init.md#249-the-none-templates-config) what the `none` template writes instead.
+`init` writes `<path>/grund.toml` — the bare, root-visible form — and **only when the target has no config at all**, in either discovery location ([§FS-init.2.4.1](FS-init.md#241-both-discovery-locations-are-probed)). An existing config is never overwritten, not even with `--force` ([§FS-init.2.4.2](FS-init.md#242-an-existing-config-is-never-overwritten)). The file it does write is the template's config ([§FS-init.1.6](FS-init.md#16-templates)) and a teaching surface ([§FS-init.2.4.3](FS-init.md#243-every-written-key-that-has-a-built-in-default-matches-it)); [§FS-init.2.4.4](FS-init.md#244-named_sections-is-written-off) to [§FS-init.2.4.8](FS-init.md#248-values-are-illustrated-not-enabled) and [§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements) say how particular keys are written, and [§FS-init.2.4.9](FS-init.md#249-the-none-templates-config) what the `none` template writes instead.
 
 #### 2.4.1 Both discovery locations are probed
 
@@ -744,9 +746,9 @@ Both discovery locations of [§FS-config.1](FS-config.md#1-file-location-and-dis
 
 An existing config is the repo's configuration — the one surface a project customizes ([§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable)) — and `init` never overwrites it, not even with `--force`: an existing config is reported as `exists` and left byte-for-byte unchanged ([§FS-init.3](FS-init.md#3-non-intrusive-guarantees)). `--force` resets the things `init` owns end to end — the canonical `AGENTS.md` and the starter files `--scaffold` lays — not the user's settings; a customized config that `init --force` clobbered would be a footgun.
 
-#### 2.4.3 Every written key is the default
+#### 2.4.3 Every written key that has a built-in default matches it
 
-When the file is absent and `init` does write it, every key written matches the built-in default for that key — including `FS` as `file = "requirements.md"` — so the file is a teaching surface, not an override surface, and a new user can see the schema they will be editing. Top of file is `grund_config_version = 1` per [§FS-config.5](FS-config.md#5-schema-versioning); the schema written is exactly the one in [§FS-config.3](FS-config.md#3-keys), no extra keys, no missing keys.
+When the file is absent and `init` does write it, every written key that has a built-in default matches it — including `FS` as `file = "requirements.md"` — so the file is a teaching surface, not an override surface, and a new user can see the schema they will be editing. A row the template declares beyond the built-in kinds has no default to match and is written as the template's own choice. The `REQ` row of [§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements) is the one such row, and writing it gives `REQ` no built-in default: a config that omits `[[kinds]]`, and a project with no config, declare no `REQ` ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)). Top of file is `grund_config_version = 1` per [§FS-config.5](FS-config.md#5-schema-versioning); the schema written is exactly the one in [§FS-config.3](FS-config.md#3-keys), no extra keys, no missing keys.
 
 #### 2.4.4 `named_sections` is written off
 
@@ -767,7 +769,7 @@ is selection guidance, not a validation rule. The examples neither exhaust the
 accepted strings nor restrict markers to a single character: the marker grammar
 remains defined by [§FS-config.3.1](FS-config.md#31-reference--citation-form).
 The written value remains the default under
-[§FS-init.2.4.3](FS-init.md#243-every-written-key-is-the-default). This guidance
+[§FS-init.2.4.3](FS-init.md#243-every-written-key-that-has-a-built-in-default-matches-it). This guidance
 also applies to the `none` template under
 [§FS-init.2.4.9](FS-init.md#249-the-none-templates-config).
 
@@ -781,7 +783,7 @@ with every generated key, the written value is the built-in default
 
 #### 2.4.7 `project_name` and `project_description`
 
-A single `project_name = "<name>"` key appears at the top above the section tables. `init` consumes it as the generated project-name default when no explicit `--name` is supplied ([§FS-init.2.3.8](FS-init.md#238-substituted-content)); no other non-workspace subcommand consumes it. It also remains metadata that downstream tooling (IDE status bars, CI dashboards) can read without re-deriving the name. Directly below it the file teaches the optional `project_description` key ([§FS-config.3](FS-config.md#3-keys)): a commented `# project_description = "<one line shown next to this project in workspace member lists>"` line by default, or the real `project_description = "<text>"` key when `--description` was given ([§FS-init.1](FS-init.md#1-inputs)). The commented form is a teaching comment like the finite-value-set comments ([§FS-init.2.4.5](FS-init.md#245-finite-value-sets-are-named-in-comments)), not a schema key, so the "no extra keys, no missing keys" guarantee ([§FS-init.2.4.3](FS-init.md#243-every-written-key-is-the-default)) is unchanged.
+A single `project_name = "<name>"` key appears at the top above the section tables. `init` consumes it as the generated project-name default when no explicit `--name` is supplied ([§FS-init.2.3.8](FS-init.md#238-substituted-content)); no other non-workspace subcommand consumes it. It also remains metadata that downstream tooling (IDE status bars, CI dashboards) can read without re-deriving the name. Directly below it the file teaches the optional `project_description` key ([§FS-config.3](FS-config.md#3-keys)): a commented `# project_description = "<one line shown next to this project in workspace member lists>"` line by default, or the real `project_description = "<text>"` key when `--description` was given ([§FS-init.1](FS-init.md#1-inputs)). The commented form is a teaching comment like the finite-value-set comments ([§FS-init.2.4.5](FS-init.md#245-finite-value-sets-are-named-in-comments)), not a schema key, so the "no extra keys, no missing keys" guarantee ([§FS-init.2.4.3](FS-init.md#243-every-written-key-that-has-a-built-in-default-matches-it)) is unchanged.
 
 #### 2.4.8 Values are illustrated, not enabled
 
@@ -789,7 +791,28 @@ The shipped template illustrates values only as a commented `CONST` row with `va
 
 #### 2.4.9 The `none` template's config
 
-The `none` template ([§FS-init.1.6.2](FS-init.md#162-none)) writes the same file with its kinds taken out. `kinds = []` stands in for the `[[kinds]]` tables, the commented `CONST` illustration among them ([§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)), as a top-level key above `[reference]`, because TOML admits a top-level key nowhere after a table, with a comment teaching how to replace it with the first `[[kinds]]` table. The commented `[citations]` ruleset goes with the kinds it names, and a comment pointing at the citation-directions guide stays. Every other key is written as [§FS-init.2.4.3](FS-init.md#243-every-written-key-is-the-default) to [§FS-init.2.4.7](FS-init.md#247-project_name-and-project_description) write it, `[scan] include` included, so the file differs from the default template's in its kinds alone.
+The `none` template ([§FS-init.1.6.2](FS-init.md#162-none)) writes the same file with its kinds taken out. `kinds = []` stands in for the `[[kinds]]` tables, the commented `CONST` illustration among them ([§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)), as a top-level key above `[reference]`, because TOML admits a top-level key nowhere after a table, with a comment teaching how to replace it with the first `[[kinds]]` table. The commented `[citations]` ruleset goes with the kinds it names, and a comment pointing at the citation-directions guide stays. Every other key is written as [§FS-init.2.4.3](FS-init.md#243-every-written-key-that-has-a-built-in-default-matches-it) to [§FS-init.2.4.7](FS-init.md#247-project_name-and-project_description) write it, `[scan] include` included, so the file differs from the default template's in its kinds alone.
+
+#### 2.4.10 `REQ` is declared in `docs/requirements/`
+
+The `software-development` template declares `REQ`, the requirements a project must never break, apart from the behaviour `FS` specifies, as grund keeps its own. Its row follows the `FS` row:
+
+```toml
+[[kinds]]
+kind = "REQ"
+folder = "docs/requirements"
+title = "Hard requirements: what the project must never break"
+```
+
+`FS` stays `file = "requirements.md"` until grund 0.19.0 moves the built-in `FS` home and the template's `FS` row together ([§FS-config.3.4.4.4](FS-config.md#3444-a-config-that-omits-kinds-keeps-the-older-fs-home), [§DF-fs-home-moves-from-0-19](../decisions/functional/DF-fs-home-moves-from-0-19.md#df-fs-home-moves-from-0-19-the-built-in-fs-home-moves-back-to-docsfunctional-spec-in-0190-and-the-template-declares-req-now)). The managed block renders the kinds the written config declares ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)), so the project map gains `- [REQ](docs/requirements): Hard requirements: what the project must never break` right after the `FS` row, and the `KIND ∈ {…}` vocabulary lists `REQ` right after `FS`. The commented canonical ruleset under `[citations]` gains, right after `[citations.FS]`:
+
+```toml
+# [citations.REQ]
+# should = ["GRUND|GOAL"]
+# must-not = ["AR"]              # a hard requirement never depends on the How
+```
+
+It stays commented like the rest of the ruleset, so the rendered citation directions gain `REQ` when a project adopts the ruleset, not before. `[scan] include` is unchanged: `docs` already reads `docs/requirements/`.
 
 ## 3. Non-intrusive guarantees
 
