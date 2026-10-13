@@ -131,6 +131,7 @@ points = [
 owners = [
   "crates/grund-core/src/config/citations.rs",
   "crates/grund-core/src/config/kinds.rs",
+  "crates/grund-core/src/grammar/compiled.rs",
   "crates/grund-core/src/grammar/settings.rs",
   "crates/grund-core/src/rules/sentence.rs",
   "crates/grund-core/src/rules/sentence/conjunction.rs",
