@@ -298,13 +298,16 @@ class NodeSharedTargetTests(unittest.TestCase):
             self.assertNotIn(noise, output)
 
     def test_the_ci_key_drops_entries_saved_before_the_per_checkout_targets(self):
-        steps = CI.read_text(encoding="utf-8").split("\n      - ")
-        keys = [line.strip() for step in steps for line in step.splitlines()
-                if "~/ag/tmp/grund-node-target" in step and line.strip().startswith("key:")]
-        self.assertTrue(keys, "no job caches the Node target")
-        for key in keys:
-            self.assertIn("-node-target-v3-", key,
-                          "an entry saved before the per-checkout targets holds none of them")
+        # The macOS suites left ci.yml for their own workflow (§AR-ci.14) and cache the same target.
+        for workflow in (CI, CI.with_name("macos-suites.yml")):
+            steps = workflow.read_text(encoding="utf-8").split("\n      - ")
+            keys = [line.strip() for step in steps for line in step.splitlines()
+                    if "~/ag/tmp/grund-node-target" in step and line.strip().startswith("key:")]
+            self.assertTrue(keys, f"no job in {workflow.name} caches the Node target")
+            for key in keys:
+                self.assertIn("-node-target-v3-", key,
+                              f"{workflow.name}: an entry saved before the per-checkout targets "
+                              "holds none of them")
 
     def test_unset_the_wrapper_and_the_helper_share_one_persistent_target_ci_restores(self):
         built = self.temp / "grund-built-unused"
