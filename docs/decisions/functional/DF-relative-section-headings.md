@@ -31,7 +31,7 @@ The parent is the nearest shallower heading, which must be exactly one level up 
 
 ### decision.where: Markdown declaration bodies only
 
-The form is recognised only where today's verdict on it is already an error: inside a Markdown declaration body ([§FS-declarations.section.relative.where](../../functional-spec/FS-declarations.md#sectionrelativewhere-only-in-markdown-declaration-bodies)). In a source doc-comment the same dotted line is prose today and passes, so giving it a meaning would move a verdict; that follow-up takes the warning route on its own, tracked under #643.
+The form is recognised only where today's verdict on it is already an error: inside a Markdown declaration body ([§FS-declarations.section.relative.where](../../functional-spec/FS-declarations.md#sectionrelativewhere-markdown-declaration-bodies-and-doc-comments-from-0190)). In a source doc-comment the same dotted line is prose today and passes, so giving it a meaning would move a verdict; that follow-up takes the warning route on its own, tracked under #643.
 
 ### decision.shown: Canonical where a coordinate is copied, bytes everywhere else
 

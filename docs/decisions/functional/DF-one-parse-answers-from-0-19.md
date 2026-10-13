@@ -66,6 +66,10 @@ verdict, so it is announced by the release note below and warns nowhere: no save
 repository has anything to migrate. P07's tree already fails `check` with
 `unmarked-heading`, so no passing Markdown repository holds it.
 
+A fourth shape rides the same code: a relative heading in a doc-comment declaration body,
+prose today and a section from 0.19.0
+([§DF-doc-comment-relative-headings](DF-doc-comment-relative-headings.md#df-doc-comment-relative-headings-a-relative-heading-in-a-doc-comment-warns-in-0180-and-is-a-section-from-0190)).
+
 ## 5. Rejected alternatives
 
 - **A caution on every `show` and `refs` whose answer will change.** It would add a
