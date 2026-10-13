@@ -352,7 +352,7 @@ fn print_subcommand_help(cmd: &str) {
                 "  grund init --description \"Billing service\"  # the one-liner workspace lists show"
             );
             println!(
-                "  grund init --docs --force          # rewrite AGENTS.md and the docs/ scaffolds"
+                "  grund init --scaffold --force      # rewrite AGENTS.md and the starter files"
             );
             println!(
                 "  grund init --no-vcs ../scratch     # scaffold a directory no VCS tracks"
