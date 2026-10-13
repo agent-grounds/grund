@@ -1,7 +1,7 @@
-//! The warning a configured file root earns when the extension list keeps it out of
-//! the walk (§FS-scan.checks.unread-scan-root): built from the rows the root gate
-//! recorded (§AR-scanner.1.6), so the report asks no extension question of its own
-//! (§AR-scanner.1.13). `grund check` and the LSP snapshot both build it here, so an
+//! The warning a configured file root earns when its hidden name or the extension list
+//! keeps it out of the walk (§FS-scan.checks.unread-scan-root): built from the rows and
+//! refusals the root gate recorded (§AR-scanner.1.6), so the report asks no name
+//! question of its own (§AR-scanner.1.13). `grund check` and the LSP snapshot both build it here, so an
 //! editor and a terminal over one tree say the same thing (§FS-lsp.4.1).
 
 use std::path::Path;
@@ -36,7 +36,7 @@ pub(super) fn unread_root_warnings(config: &Config, findings: &Catalog) -> Vec<D
 
 /// `<row> is not read — <reason>, so nothing in it is checked. <fix>.`, in the exact
 /// bytes of §FS-scan.checks.unread-scan-root.message.
-fn unread_root_message(row: &RootRow, v2: bool) -> String {
+pub(super) fn unread_root_message(row: &RootRow, v2: bool) -> String {
     // The part of the file name after its last `.`, as the name spells it.
     let ext = Path::new(&row.written)
         .extension()
@@ -56,13 +56,36 @@ fn unread_root_message(row: &RootRow, v2: bool) -> String {
     } else {
         "[scan] extensions"
     };
+    let (reason, mut fixes) = if row.refused.hidden {
+        hidden_reason_and_fixes(row, ext, v2, list)
+    } else {
+        extension_reason_and_fixes(row, ext, v2, list)
+    };
+    // §FS-config.3.4.7: a non-citable row may name the file only as a place.
+    if matches!(row.origin, RootOrigin::Home { citable: false, .. }) {
+        fixes.push("set `scan = false` on the row if it only lists a place".to_string());
+    }
+    format!(
+        "{label} is not read — {reason}, so nothing in it is checked. {}.",
+        alternatives(&fixes)
+    )
+}
+
+/// The reason, then the fixes, for a root only the extension list refuses: the
+/// first two tables of §FS-scan.checks.unread-scan-root.message.
+fn extension_reason_and_fixes(
+    row: &RootRow,
+    ext: Option<&str>,
+    v2: bool,
+    list: &str,
+) -> (String, Vec<String>) {
     let reason = match (ext, v2) {
         (Some(ext), false) => format!("`{ext}` is not in {list}"),
         (Some(ext), true) => format!("no language in {list} reads `.{ext}`"),
         (None, _) => format!("it has no extension, and {list} reads a file only by its extension"),
     };
     // Listing the extension is offered only where there is one to list.
-    let mut fixes: Vec<String> = match (&row.origin, ext, v2) {
+    let fixes: Vec<String> = match (&row.origin, ext, v2) {
         (_, _, true) => vec!["Give the file an extension a listed language reads".to_string()],
         (RootOrigin::Include, Some(ext), false) => vec![
             format!("Add \"{ext}\" to [scan] extensions"),
@@ -80,14 +103,40 @@ fn unread_root_message(row: &RootRow, v2: bool) -> String {
             vec!["Rename the file to an extension the list holds".to_string()]
         }
     };
-    // §FS-config.3.4.7: a non-citable row may name the file only as a place.
-    if matches!(row.origin, RootOrigin::Home { citable: false, .. }) {
-        fixes.push("set `scan = false` on the row if it only lists a place".to_string());
+    (reason, fixes)
+}
+
+/// The reason, then the fixes, for a root whose name begins with `.`: the hidden
+/// tables of §FS-scan.checks.unread-scan-root.message. The reason names the extension
+/// too where the list refuses it as well, and the one fix is a rename that satisfies
+/// both rules (§DF-unread-hidden-root.2.1).
+fn hidden_reason_and_fixes(
+    row: &RootRow,
+    ext: Option<&str>,
+    v2: bool,
+    list: &str,
+) -> (String, Vec<String>) {
+    let rule = match (row.refused.extension, ext, v2) {
+        (false, _, _) => "grund reads no hidden file".to_string(),
+        (true, Some(ext), false) => format!("`{ext}` is not in {list}"),
+        (true, Some(ext), true) => format!("no language in {list} reads `.{ext}`"),
+        (true, None, _) => "it has no extension".to_string(),
+    };
+    let reason = format!("its name begins with `.`, and {rule}");
+    let rename = match (row.refused.extension, v2) {
+        (false, _) => "Rename the file to a name that is not hidden",
+        (true, false) => {
+            "Rename the file to a name that is not hidden and an extension the list holds"
+        }
+        (true, true) => {
+            "Rename the file to a name that is not hidden and an extension a listed language reads"
+        }
+    };
+    let mut fixes = vec![rename.to_string()];
+    if row.origin == RootOrigin::Include {
+        fixes.push("drop the entry".to_string());
     }
-    format!(
-        "{label} is not read — {reason}, so nothing in it is checked. {}.",
-        alternatives(&fixes)
-    )
+    (reason, fixes)
 }
 
 /// `a`, `a, or b`, `a, b, or c`: the last alternative alone takes the `or`.

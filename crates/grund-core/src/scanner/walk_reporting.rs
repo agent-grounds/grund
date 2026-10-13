@@ -5,14 +5,14 @@ use anyhow::{Result, anyhow};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-use super::read_predicate::{Unread, name_refusal};
+use super::read_predicate::{Unread, extension_refusal, name_refusal};
 use super::tree::ScanError;
 use super::value_json::value_json_sources;
 use super::walk::{scan_roots, scannable_walker};
 use super::walk_boundaries::{is_scannable, outward_directory_link_root, owned_by_another_project};
 use super::walk_errors::{symlink_loop_report, walk_error_report};
 use crate::config::{Frame, Schema, canonical_config_root, file_root_rows};
-use crate::model::{RootRow, sort_path_key};
+use crate::model::{Refused, RootRow, sort_path_key};
 use crate::sources::{
     canonical_path, is_directory, is_regular_file, path_exists, path_is_file, paths_same_location,
     physical_path_key,
@@ -61,8 +61,8 @@ pub(crate) struct WalkedTree {
     /// answered it: only such a `fmt --write` writes a section lock
     /// (§FS-section-lock.write).
     pub(crate) root_scope: bool,
-    /// The configured file roots the extension filter refused, each with the row
-    /// that made it a root, for `check`'s report (§AR-scanner.1.6,
+    /// The configured file roots a name rule refused, each with the row that made it
+    /// a root and the rules that refused it, for `check`'s report (§AR-scanner.1.6,
     /// §FS-scan.checks.unread-scan-root).
     pub(crate) unread_roots: Vec<RootRow>,
 }
@@ -131,7 +131,7 @@ pub(crate) fn walk_scannable_files_with_sources(
     // resolved path. Equal to `config.root` for the roots `grund` discovers, which
     // are canonical already (§FS-config.1) — one `stat` per run either way.
     let physical_root = canonical_config_root(frame.root());
-    // §AR-scanner.1.6: the file roots the extension filter refused, with their rows,
+    // §AR-scanner.1.6: the file roots a name rule refused, with their rows,
     // and the rows themselves, read only once a root is refused.
     let mut unread_roots = Vec::new();
     let mut file_rows = None;
@@ -183,7 +183,14 @@ pub(crate) fn walk_scannable_files_with_sources(
                 }
                 // §AR-scanner.1.13: the predicate's own answer, kept with the row
                 // that made the file a root (§FS-scan.checks.unread-scan-root.location).
-                Some(Unread::Extension) => {
+                Some(refusal) => {
+                    // §AR-scanner.1.6: the hidden rule is asked first, so a hidden root
+                    // also asks the one extension test, and the record names both.
+                    let hidden = refusal == Unread::HiddenName;
+                    let refused = Refused {
+                        hidden,
+                        extension: !hidden || extension_refusal(&scan_root, schema).is_some(),
+                    };
                     let rows =
                         file_rows.get_or_insert_with(|| file_root_rows(schema, frame.root()));
                     // §FS-scan.checks.unread-scan-root.silent: a value row's JSON home is
@@ -198,11 +205,9 @@ pub(crate) fn walk_scannable_files_with_sources(
                             .iter()
                             .any(|home| paths_same_location(home, &scan_root))
                     {
-                        record_unread_root(&mut unread_roots, rows, &scan_root);
+                        record_unread_root(&mut unread_roots, rows, &scan_root, refused);
                     }
                 }
-                // §FS-scan.checks.unread-scan-root.silent: the hidden rule is asked first.
-                Some(_) => {}
             }
             continue;
         }
@@ -344,13 +349,23 @@ pub(crate) fn walk_scannable_files_with_sources(
 /// Record the row that made `scan_root` a root, once however many roots spell it:
 /// under version 2 a `files` entry is an `include` root and a home at once
 /// (§FS-scan.checks.unread-scan-root.location). A root no configured key names, a
-/// path typed on the command line, has no row to report at.
-fn record_unread_root(unread: &mut Vec<RootRow>, rows: &[(PathBuf, RootRow)], scan_root: &Path) {
+/// path typed on the command line, has no row to report at. The record carries the
+/// rules that refused the root, so one root is one record (§DF-unread-hidden-root.2.1).
+fn record_unread_root(
+    unread: &mut Vec<RootRow>,
+    rows: &[(PathBuf, RootRow)],
+    scan_root: &Path,
+    refused: Refused,
+) {
     let Some((_, row)) = rows.iter().find(|(path, _)| path == scan_root) else {
         return;
     };
-    if !unread.contains(row) {
-        unread.push(row.clone());
+    let row = RootRow {
+        refused,
+        ..row.clone()
+    };
+    if !unread.contains(&row) {
+        unread.push(row);
     }
 }
 
