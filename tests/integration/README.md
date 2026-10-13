@@ -65,3 +65,15 @@ instance of that convention: its four tests are ignored and deliberately red
 when forced until production `rules` code exists. The implementation replaces
 the sentinels with parser-only, hand-built evaluator, producer-replacement and
 incomplete-snapshot assertions, then enables them ([§AR-rules.6](../../docs/architecture/AR-rules.md#6-boundary-tests)).
+
+The command-agreement acceptance is enabled in the ordinary Cargo suite
+([§REQ-one-answer.proof.matrix](../../docs/requirements/REQ-one-answer.md#proofmatrix-the-complete-comparison-matrix)).
+Run `cargo test -p grund --test command_agreement agreement_acceptance::s4_executes_the_complete_corpus_matrix -- --exact --nocapture`;
+set `GRUND_AGREEMENT_EVIDENCE` to a writable file to retain its full JSON receipts.
+The test prepares actual mixed Python and Node packages from this checkout once,
+using CPython, Node 22/24 and Rust 1.95.0. Scratch builds use explicit targets under
+`~/ag/tmp`; requests reuse one Python process and one Node process
+([§FS-distribution.3.0.3](../../docs/functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)).
+Corpus manifests and physical fixture bytes are read independently of engine answers;
+`expected.repo` is only a result oracle. The real-server transport sweep remains
+([§REQ-one-answer.proof.transport](../../docs/requirements/REQ-one-answer.md#prooftransport-the-editor-wire-remains-a-separate-proof)).
