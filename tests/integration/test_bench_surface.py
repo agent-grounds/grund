@@ -3,7 +3,7 @@
 prints and every designated performance-sensitive mode (§AR-benchmarks.1.6.1) either
 scenarios from the catalog of §AR-benchmarks.1.2 or a waiver with a reason.
 
-Static reads only: the commands come from `SUBCOMMANDS`, the flags from the help pages'
+Static reads only: the commands come from `SUBCOMMANDS` and `HIDDEN_SUBCOMMANDS`, the flags from the help pages'
 source, the modes from the spec. No build and no Valgrind, so it runs in pre-commit.
 """
 
@@ -29,11 +29,22 @@ CALL = re.compile(r"\b(print_[a-z_]+)\(")
 NOT_INVENTORIED = {"--help"}
 
 
+def table(name):
+    """The string entries of the `const <name>: &[&str]` table in lib.rs."""
+    found = re.search(r"const " + name + r": &\[&str\] = &\[(.*?)\];",
+                      LIB.read_text(encoding="utf-8"), re.S)
+    assert found is not None, f"lib.rs has no {name} table"
+    return [literal[1:-1] for literal in STRING.findall(found.group(1))]
+
+
 def subcommands():
-    """The `SUBCOMMANDS` table, the list the CLI dispatches on."""
-    table = re.search(r"const SUBCOMMANDS: &\[&str\] = &\[(.*?)\];", LIB.read_text(encoding="utf-8"),
-                      re.S)
-    return [literal[1:-1] for literal in STRING.findall(table.group(1))]
+    """The `SUBCOMMANDS` table, the commands the CLI dispatches on and has help pages for."""
+    return table("SUBCOMMANDS")
+
+
+def commands():
+    """Every dispatched command: `SUBCOMMANDS`, then the help-less `HIDDEN_SUBCOMMANDS`."""
+    return subcommands() + table("HIDDEN_SUBCOMMANDS")
 
 
 def block(text, start):
@@ -185,6 +196,11 @@ class TheSurfaceIsReadFromTheCli(unittest.TestCase):
         missing = [command for command in subcommands() if help_arm(command) is None]
         self.assertEqual(missing, [], "print_subcommand_help has no arm for these SUBCOMMANDS")
 
+    def test_the_hidden_subcommands_are_commands_without_flags(self):
+        self.assertIn("complete", commands())
+        self.assertNotIn("complete", subcommands())
+        self.assertIsNone(help_flags("complete"))
+
     def test_the_flag_reader_sees_the_flags_the_help_pages_print(self):
         self.assertTrue({"--brief", "--full", "--toc", "--path-base"} <= help_flags("show"))
         self.assertTrue({"--watch", "--suggestions", "--format", "--path-base"}
@@ -217,14 +233,14 @@ class TheInventoryCoversTheSurface(unittest.TestCase):
         self.assertEqual(sorted(self.surface), ["commands", "modes"])
 
     def test_every_subcommand_has_an_entry(self):
-        missing = [command for command in subcommands() if command not in self.commands]
+        missing = [command for command in commands() if command not in self.commands]
         self.assertEqual(missing, [], f"commands with no scenario and no waiver; {EDIT}")
 
     def test_every_flag_is_covered(self):
         uncovered = []
-        for command in subcommands():
+        for command in commands():
             entry = self.commands.get(command, {})
-            if "waiver" in entry:
+            if not isinstance(entry, dict) or "waiver" in entry:
                 continue  # §AR-benchmarks.1.6: a waived command waives its flags with it.
             carried = {arg for row in self.rows.values() if row["args"][0] == command
                        for arg in row["args"]}
@@ -243,6 +259,8 @@ class TheInventoryCoversTheSurface(unittest.TestCase):
             body = {key: value for key, value in entry.items() if key != "flags"} \
                 if isinstance(entry, dict) else entry
             problems += entry_problems(f"command {command}", body, self.rows, command)
+            if not isinstance(entry, dict):
+                continue
             for flag, flag_entry in sorted(entry.get("flags", {}).items()):
                 problems += entry_problems(f"flag {command} {flag}", flag_entry, self.rows,
                                            command, flag)
@@ -251,12 +269,13 @@ class TheInventoryCoversTheSurface(unittest.TestCase):
         self.assertEqual(problems, [])
 
     def test_no_entry_is_stale(self):
-        known = set(subcommands())
+        known = set(commands())
         stale = [f"command {command}" for command in sorted(self.commands) if command not in known]
         for command in sorted(set(self.commands) & known):
+            entry = self.commands[command]
             flags = help_flags(command) or set()
             stale += [f"flag {command} {flag}"
-                      for flag in sorted(self.commands[command].get("flags", {}))
+                      for flag in sorted(entry.get("flags", {}) if isinstance(entry, dict) else ())
                       if flag not in flags]
         designated = set(designated_modes())
         stale += [f"mode {mode}" for mode in sorted(self.modes) if mode not in designated]
