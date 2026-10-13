@@ -15,7 +15,7 @@ from it. It is the current wave of the design whose codebases grund is for
   numbers tasks `T001` on. Its
   [analysis command](https://github.com/github/spec-kit/blob/main/templates/commands/analyze.md)
   is a prompt the user's coding agent runs, and its report is advisory. Its experimental
-  [MCP server](https://github.com/github/spec-kit/blob/main/docs/reference/mcp.md)
+  [MCP server](https://github.github.com/spec-kit/reference/mcp.html)
   "supports only the dotted command `version`".
 - Kiro ([kiro.dev](https://kiro.dev/)), AWS's agentic development environment, turns
   prompts into requirements, architectural designs and sequenced tasks, kept as
@@ -30,8 +30,9 @@ from it. It is the current wave of the design whose codebases grund is for
   (2026-10-06), checked 2026-10-13, has the repository description "Spec-driven development
   (SDD) for AI coding assistants". Its requirements are named by heading,
   `### Requirement: …` with `#### Scenario:` blocks beneath, not by ID, and the header is
-  ["the exact name"](https://github.com/Fission-AI/OpenSpec/blob/main/docs/agent-contract.md)
-  a change matches, so a rename needs a `RENAMED` delta. Its
+  the name a change matches, where
+  ["archive matching is exact"](https://openspec.dev/docs/cli#openspec-show), so a rename
+  needs a `RENAMED` delta. Its
   [CLI](https://github.com/Fission-AI/OpenSpec/blob/main/docs/cli.md) `validate` checks the
   Markdown under `openspec/` "for structural issues" and exits 1 on a failure, and
   `show -r <n>` returns one requirement by position. Outside CI, the CLI reports command

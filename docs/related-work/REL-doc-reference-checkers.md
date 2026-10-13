@@ -14,7 +14,7 @@ tool's documentation states, at the version named, checked 2026-10-13; they do n
 the tools.
 
 - **rustdoc intra-doc links**, Rust 1.99.0 (2026-10-01), MIT OR Apache-2.0
-  ([README](https://github.com/rust-lang/rust/blob/main/README.md),
+  ([licences](https://rust-lang.org/policies/licenses/),
   [releases](https://github.com/rust-lang/rust/releases)). Rust RFC 1946,
   [*intra-rustdoc links*](https://rust-lang.github.io/rfcs/1946-intra-rustdoc-links.html),
   proposed "a notation how to create relative links in documentation comments (based on
@@ -45,7 +45,7 @@ the tools.
   definition's documentation; it documents no diagnostic for a broken link.
 - **javadoc and DocLint**, JDK 27, generally available 2026-09-15
   ([JDK 27](https://openjdk.org/projects/jdk/27/)); OpenJDK is GPL-2.0 with the Classpath
-  Exception ([LICENSE](https://github.com/openjdk/jdk/blob/master/LICENSE)). The
+  Exception ([licence](https://openjdk.org/legal/gplv2+ce.html)). The
   [documentation comment specification](https://docs.oracle.com/en/java/javase/27/docs/specs/javadoc/doc-comment-spec.html)
   has "two kinds of documentation comments: traditional documentation comments, and
   Markdown documentation comments". A reference names a Java element,
