@@ -1,0 +1,10 @@
+grund_config_version = 1
+
+[id]
+format = "{kind}-{slug}"
+
+[reference]
+strict = true
+
+[scan]
+extensions = ["md", "rs", "cs", "c", "h", "cpp", "hpp", "m", "java", "kt", "scala", "swift", "js", "ts", "php", "dart", "py", "go", "rb", "sh", "sql", "lua", "hs", "clj", "el"]
