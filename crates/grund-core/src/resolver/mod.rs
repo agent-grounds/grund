@@ -78,6 +78,7 @@ mod legacy_promotion;
 mod link_targets;
 mod point_body;
 mod section_lock;
+mod settled_headings;
 mod shorthand;
 mod unread_block;
 
@@ -103,6 +104,7 @@ pub(crate) use link_targets::{
 };
 pub(crate) use point_body::point_body_pair;
 pub(crate) use section_lock::{EntryVerdict, judge_section_locks};
+pub(crate) use settled_headings::SettledHeadings;
 pub(crate) use shorthand::{
     ShorthandTargets, expand_shorthand_citations_with_origins, shorthand_token_expansion,
 };

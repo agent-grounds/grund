@@ -6,6 +6,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use super::settled_headings::{SettledLines, settled_heading_text};
 use crate::grammar::{anchor_slug, reduce_heading_text, without_closing_sequence};
 use crate::model::FileRecord;
 
@@ -14,9 +15,11 @@ use crate::model::FileRecord;
 /// file, `<base>-1`, `<base>-2`, … under `github`, `gitlab` and `pandoc`, and
 /// `<base>_1`, `<base>_2`, … under `mkdocs` (§FS-fmt.6.2.3,
 /// §DF-repeated-heading-anchor.decision.count). Without a record, or where the
-/// record has no heading on `line`, `base` comes back as it is.
+/// record has no heading on `line`, `base` comes back as it is. Each heading is
+/// counted with the text the run leaves it (`settled`, §FS-fmt.6.3.3).
 pub(crate) fn numbered_anchor(
     record: Option<&FileRecord>,
+    settled: Option<&SettledLines>,
     line: usize,
     base: String,
     profile: &str,
@@ -36,7 +39,9 @@ pub(crate) fn numbered_anchor(
     let mut slugs = Slugs::new(profile);
     for heading in headings {
         let slug = anchor_slug(
-            without_closing_sequence(&reduce_heading_text(record.heading_text(heading))),
+            without_closing_sequence(&reduce_heading_text(settled_heading_text(
+                record, settled, heading,
+            ))),
             profile,
         );
         let numbered = slugs.take(slug.clone());

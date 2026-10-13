@@ -9,11 +9,12 @@ use std::path::{Path, PathBuf};
 use super::fmt_complete_findings::{CompleteFindings, CompleteScan};
 use super::fmt_rewrite::{FmtLineOpts, rewrite_file};
 use super::fmt_section_lock::{LockChange, section_lock_changes};
+use super::fmt_settle::settle_headings;
 use crate::checker::{KindIndexEntries, KindIndexFiles};
 use crate::config::{Config, display_path, fmt_excluded};
 use crate::grammar::FMT_DIRECTIVE;
 use crate::model::{Catalog, SECTION_LOCK_DIR};
-use crate::resolver::{ShorthandTargets, WorkspaceContext, index_link_targets};
+use crate::resolver::{SettledHeadings, ShorthandTargets, WorkspaceContext, index_link_targets};
 use crate::scanner::{
     ApiScanError, api_scan_error, may_give_relative_heading, walk_scannable_files,
     walk_scannable_files_reporting,
@@ -87,6 +88,10 @@ pub(crate) struct FmtRunOpts<'a> {
     /// runs at all; dry-run and write mode both enable this carve-out so the
     /// former previews the exact index-entry wraps the latter applies.
     pub(crate) index_cross_refs: bool,
+    /// The heading lines a workspace run leaves in every project, settled before
+    /// its first project is walked, since a link crosses into a project its own
+    /// walk has not reached yet (§FS-fmt.6.3.3). `None` settles this walk's own.
+    pub(crate) settled: Option<&'a SettledHeadings>,
 }
 
 /// Walk the tree and rewrite each scannable file line by line — never touching a
@@ -174,6 +179,24 @@ pub(crate) fn fmt_tree(
     // §FS-fmt.2.4.5: built once for the whole walk, not once per line — see
     // `ShorthandTargets`. Rebuilt at most once, when the deferred scan lands.
     let mut shorthand_targets = ShorthandTargets::new(config.frame(), findings, workspace);
+    // §FS-fmt.6.3.3: every anchor the link pass writes names its heading as this
+    // run leaves it, so the heading lines are settled before the first is written.
+    let own_settled = match (opts.settled, findings) {
+        (None, Some(findings)) if link_pass => settle_headings(
+            config,
+            walked
+                .files
+                .iter()
+                .filter(|path| !walked.outside_root.contains(*path)),
+            &excluded,
+            add_marker,
+            findings,
+            workspace,
+            &shorthand_targets,
+        ),
+        _ => SettledHeadings::default(),
+    };
+    let settled = opts.settled.unwrap_or(&own_settled);
     // §FS-fmt.3.1: the paths this walk could not read, rendered here while the
     // config that names them is at hand — the same account `check` owes of the
     // tree it walks (§FS-check.2.4).
@@ -224,6 +247,7 @@ pub(crate) fn fmt_tree(
                 config.schema(),
                 config.frame(),
                 findings,
+                settled,
             );
             index_entries = Some(KindIndexEntries::new(
                 findings,
@@ -250,6 +274,7 @@ pub(crate) fn fmt_tree(
                 findings,
                 workspace,
                 shorthand_targets: &shorthand_targets,
+                settled,
             },
             &mut changes,
         );
@@ -274,6 +299,7 @@ pub(crate) fn fmt_tree(
                     findings,
                     workspace,
                     shorthand_targets: &shorthand_targets,
+                    settled,
                 },
                 &mut changes,
             );

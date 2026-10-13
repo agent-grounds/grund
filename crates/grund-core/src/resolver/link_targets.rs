@@ -18,6 +18,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use super::anchor_numbering::numbered_anchor;
+use super::settled_headings::SettledHeadings;
 use crate::config::{Frame, Presentation, Schema};
 use crate::grammar::{
     Grammar, anchor_slug, reduce_heading_text, render_id, without_closing_sequence,
@@ -50,7 +51,17 @@ pub(crate) fn markdown_link_target(
     frame: Frame<'_>,
     findings: &Catalog,
 ) -> Option<String> {
-    markdown_link_target_with_root(from_file, id, section, presentation, frame, findings, None)
+    let settled = SettledHeadings::default();
+    markdown_link_target_with_root(
+        from_file,
+        id,
+        section,
+        presentation,
+        frame,
+        findings,
+        None,
+        &settled,
+    )
 }
 
 /// The canonical bare-ID link of every citation an index file records, keyed by
@@ -59,12 +70,14 @@ pub(crate) fn markdown_link_target(
 /// reading the anchor profile (§AR-checker.1.3, §AR-checker.2.16,
 /// §FS-check.3.18.3). An index is a citable folder row's Markdown `index`, and
 /// a citation is looked up under the first row of its own kind that keeps that
-/// file, as the kind-index pass looks it up.
+/// file, as the kind-index pass looks it up. `settled` is the heading lines a
+/// `fmt` run leaves (§FS-fmt.6.3.3), empty for every other caller.
 pub(crate) fn index_link_targets(
     presentation: &Presentation,
     schema: &Schema,
     frame: Frame<'_>,
     findings: &Catalog,
+    settled: &SettledHeadings,
 ) -> BTreeMap<(PathBuf, Id), String> {
     let mut indexes: BTreeMap<PathBuf, Vec<(&str, PathBuf)>> = BTreeMap::new();
     for row in &schema.rows {
@@ -109,13 +122,15 @@ pub(crate) fn index_link_targets(
         if targets.contains_key(&key) {
             continue;
         }
-        if let Some(target) = markdown_link_target(
+        if let Some(target) = markdown_link_target_with_root(
             index_file,
             &citation.id,
             None,
             presentation,
             frame,
             findings,
+            None,
+            settled,
         ) {
             targets.insert(key, target);
         }
@@ -128,6 +143,9 @@ pub(crate) fn index_link_targets(
 /// and frame still drive the anchor profile (§FS-fmt.6.7.1), and its catalog the
 /// stub verdicts, but the link path is anchored at `path_root` (the workspace
 /// root) when the citing file and the target's home live in different projects.
+/// The anchor names the heading as `settled` says the run leaves it
+/// (§FS-fmt.6.3.3), and as the scan read it where `settled` is silent.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn markdown_link_target_with_root(
     from_file: &Path,
     id: &Id,
@@ -136,6 +154,7 @@ pub(crate) fn markdown_link_target_with_root(
     frame: Frame<'_>,
     findings: &Catalog,
     path_root: Option<&Path>,
+    settled: &SettledHeadings,
 ) -> Option<String> {
     // §FS-fmt.6.4.2: only an ID with one declaration, not a broken stub, is linked, read
     // off the verdict the scan recorded on each stub (§AR-scanner.4.6).
@@ -157,7 +176,14 @@ pub(crate) fn markdown_link_target_with_root(
         return Some(rel);
     }
     // §FS-fmt.6.2.1.1: a bare ID's heading is the scan's record too.
-    let anchor = numbered_heading_anchor(record, section, presentation, frame, &findings.files)?;
+    let anchor = anchor_as_left(
+        record,
+        section,
+        presentation,
+        frame,
+        &findings.files,
+        settled,
+    )?;
     Some(format!("{}#{}", rel, anchor))
 }
 
@@ -182,15 +208,23 @@ pub(crate) fn takes_heading_anchor(home: &Path, presentation: &Presentation) -> 
 /// are sections, and where the body ends, are the scan's answer, the one `check`
 /// reports against, so a heading the scan leaves out of the body gives no anchor
 /// (§FS-fmt.6.4.1, §AR-scanner.2.4.1). The caller has already checked
-/// `takes_heading_anchor` and passes the record the scan made of the home.
+/// `takes_heading_anchor` and passes the record the scan made of the home. A
+/// section heading `settled` says the run rewrites is anchored as the run leaves
+/// it (§FS-fmt.6.3.3); a declaration heading is one `fmt` never rewrites.
 pub(crate) fn heading_anchor(
     decl: &Declaration,
     section: Option<&str>,
     presentation: &Presentation,
     frame: Frame<'_>,
+    settled: &SettledHeadings,
 ) -> Option<String> {
     let heading = match section {
-        Some(sec) => decl.sections.get(sec)?.title.clone(),
+        Some(sec) => {
+            let info = decl.sections.get(sec)?;
+            settled
+                .section_title(&decl.file, sec, info)
+                .unwrap_or_else(|| info.title.clone())
+        }
         // §DF-declaration-anchor: a bare-ID citation to a Markdown home links to
         // that declaration's own heading anchor, not just the file.
         None => declaration_heading_text(decl, frame.grammar()),
@@ -200,7 +234,7 @@ pub(crate) fn heading_anchor(
 
 /// [`heading_anchor`], numbered as the renderer numbers a repeated slug among
 /// the headings of `decl`'s home (§DF-repeated-heading-anchor.decision.count):
-/// the anchor `fmt --cross-refs` writes and `show` reports.
+/// the anchor `show` reports of the tree as it stands.
 pub(crate) fn numbered_heading_anchor(
     decl: &Declaration,
     section: Option<&str>,
@@ -208,7 +242,22 @@ pub(crate) fn numbered_heading_anchor(
     frame: Frame<'_>,
     files: &FileRecords,
 ) -> Option<String> {
-    let base = heading_anchor(decl, section, presentation, frame)?;
+    let settled = SettledHeadings::default();
+    anchor_as_left(decl, section, presentation, frame, files, &settled)
+}
+
+/// [`numbered_heading_anchor`] of the tree as a `fmt` run leaves it: the anchor
+/// `fmt --cross-refs` writes, with every heading of the home read as `settled`
+/// says the run writes it (§FS-fmt.6.3.3).
+fn anchor_as_left(
+    decl: &Declaration,
+    section: Option<&str>,
+    presentation: &Presentation,
+    frame: Frame<'_>,
+    files: &FileRecords,
+    settled: &SettledHeadings,
+) -> Option<String> {
+    let base = heading_anchor(decl, section, presentation, frame, settled)?;
     let line = match section {
         Some(sec) => decl.sections.get(sec)?.line,
         None => decl.line,
@@ -219,6 +268,7 @@ pub(crate) fn numbered_heading_anchor(
     }
     Some(numbered_anchor(
         files.get(&decl.file).map(AsRef::as_ref),
+        settled.of_file(&decl.file),
         line,
         base,
         &presentation.fmt.anchor_format,
@@ -235,7 +285,7 @@ pub(crate) fn section_site_anchor(
     home: Option<&FileRecord>,
 ) -> String {
     let base = rendered_anchor(&site.title, presentation);
-    numbered_anchor(home, site.line, base, &presentation.fmt.anchor_format)
+    numbered_anchor(home, None, site.line, base, &presentation.fmt.anchor_format)
 }
 
 /// The anchor of a heading's stored text, slugged from its rendered text: a

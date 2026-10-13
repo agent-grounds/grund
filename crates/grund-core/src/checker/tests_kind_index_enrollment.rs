@@ -55,6 +55,7 @@ fn scanned_index(root: &Path) -> (Config, Catalog, KindIndexEntries) {
         config.schema(),
         config.frame(),
         &findings,
+        &crate::resolver::SettledHeadings::default(),
     );
     let entries = KindIndexEntries::new(&findings, config.schema(), config.frame(), &targets);
     (config, findings, entries)

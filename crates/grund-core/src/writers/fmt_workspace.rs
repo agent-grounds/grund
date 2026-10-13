@@ -1,9 +1,10 @@
 use anyhow::Result;
 
 use super::fmt_error::FmtScanAbort;
+use super::fmt_settle::settle_project_headings;
 use super::fmt_tree::{FmtRunOpts, FmtTreeOutcome, auto_cross_refs_for_scope, fmt_tree};
 use crate::config::Config;
-use crate::resolver::WorkspaceContext;
+use crate::resolver::{SettledHeadings, WorkspaceContext};
 
 /// Run one formatter pass across every project in a workspace-root scope.
 ///
@@ -27,6 +28,19 @@ pub(crate) fn fmt_workspace_projects(
     };
     let mut preflight_scan_errors = Vec::new();
     let mut strict_abort = false;
+    // §FS-fmt.6.3.3: a qualified link names a heading in another project as this
+    // run leaves it, so every project's headings are settled before any is walked.
+    let mut settled = SettledHeadings::default();
+    for project in &context.projects {
+        if let Some(findings) = project.complete_findings() {
+            settled.extend(settle_project_headings(
+                &project.config,
+                add_marker,
+                findings.findings(),
+                context,
+            )?);
+        }
+    }
 
     for project in &context.projects {
         let auto_cross_refs =
@@ -40,6 +54,7 @@ pub(crate) fn fmt_workspace_projects(
             precomputed_findings: project.complete_findings(),
             // §FS-fmt.6.1.3: check previews the same index carve-out write applies.
             index_cross_refs: true,
+            settled: Some(&settled),
         };
         match fmt_tree(&project.config, Some(&project.config.root), true, &run_opts) {
             Ok(mut walked) => {

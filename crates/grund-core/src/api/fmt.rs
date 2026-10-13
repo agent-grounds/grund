@@ -138,6 +138,7 @@ fn format_references_run(opts: FmtOpts, cautions: &mut Vec<Finding>) -> Result<F
             precomputed_findings: reusable_findings,
             // §FS-fmt.6.1.3: check previews the same index carve-out write applies.
             index_cross_refs: true,
+            settled: None,
         };
         let walked = fmt_tree(&config, Some(&opts.path), opts.path_provided, &run_opts)?;
         (walked.changes, walked.scan_errors, walked.refused_writes)

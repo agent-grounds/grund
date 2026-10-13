@@ -220,6 +220,7 @@ fn a_missing_section_across_projects_under_the_none_profile_gives_no_link() {
             api.config.frame(),
             &api.findings,
             Some(&context.render_root),
+            &super::SettledHeadings::default(),
         )
     };
     assert_eq!(

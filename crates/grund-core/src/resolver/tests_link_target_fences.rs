@@ -48,6 +48,7 @@ fn anchor_of_a_1(name: &str, home: &str) -> (bool, Option<String>) {
             Some("1"),
             &config.project().presentation,
             config.frame(),
+            &super::SettledHeadings::default(),
         ),
     )
 }

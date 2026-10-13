@@ -24,7 +24,7 @@ use crate::grammar::{
 };
 use crate::model::{Catalog, Id};
 use crate::resolver::{
-    ShorthandTargets, WorkspaceContext, markdown_link_target, markdown_link_target_with_root,
+    SettledHeadings, ShorthandTargets, WorkspaceContext, markdown_link_target_with_root,
 };
 use crate::scanner::{
     collect_local_legacy_markdown_citations, legacy_catalog_ids, match_legacy_tail,
@@ -50,11 +50,16 @@ pub(crate) fn wrap_markdown_links(
     only_ids: Option<&BTreeSet<Id>>,
 ) -> String {
     let targets = ShorthandTargets::new(config.frame(), Some(findings), workspace);
-    wrap_markdown_links_with_targets(line, path, config, findings, workspace, only_ids, &targets)
+    let settled = SettledHeadings::default();
+    wrap_markdown_links_with_targets(
+        line, path, config, findings, workspace, only_ids, &targets, &settled,
+    )
 }
 
 /// The production §FS-fmt.6 wrapper pass, sharing §FS-fmt.2.4.5's already-built
-/// target indexes so accepted shorthand adds no per-citation catalog scan.
+/// target indexes so accepted shorthand adds no per-citation catalog scan. Every
+/// anchor names its heading as `settled` says the run leaves it (§FS-fmt.6.3.3).
+#[allow(clippy::too_many_arguments)]
 pub(super) fn wrap_markdown_links_with_targets(
     line: &str,
     path: &Path,
@@ -63,6 +68,7 @@ pub(super) fn wrap_markdown_links_with_targets(
     workspace: Option<&WorkspaceContext>,
     only_ids: Option<&BTreeSet<Id>>,
     shorthand_targets: &ShorthandTargets<'_>,
+    settled: &SettledHeadings,
 ) -> String {
     let mut output = String::new();
     let mut cursor = 0;
@@ -100,15 +106,18 @@ pub(super) fn wrap_markdown_links_with_targets(
                     target_project.config.frame(),
                     &target_project.findings,
                     Some(&workspace.render_root),
+                    settled,
                 )
             }
-            None => markdown_link_target(
+            None => markdown_link_target_with_root(
                 path,
                 &citation.id,
                 citation.section.as_deref(),
                 &config.project().presentation,
                 config.frame(),
                 findings,
+                None,
+                settled,
             ),
         };
         let Some(target) = target else {
