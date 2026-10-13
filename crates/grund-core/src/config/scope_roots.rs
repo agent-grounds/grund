@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 
 use super::project::Schema;
 use super::rows::Extent;
-use crate::model::{RootOrigin, RootRow};
+use crate::model::{Refused, RootOrigin, RootRow};
 
 /// Where the config root physically is, for the comparisons that have to be made
 /// against a resolved path. Equal to `config.root` for every root `grund`
@@ -107,6 +107,7 @@ pub(crate) fn file_root_rows(schema: &Schema, root: &Path) -> Vec<(PathBuf, Root
                 written: entry.clone(),
                 config: source.path.clone(),
                 line: source.line,
+                refused: Refused::default(),
             };
             (as_root(entry), row)
         })
@@ -125,6 +126,7 @@ pub(crate) fn file_root_rows(schema: &Schema, root: &Path) -> Vec<(PathBuf, Root
             written: file.clone(),
             config: source.path.clone(),
             line: source.line,
+            refused: Refused::default(),
         };
         Some((as_root(file), row))
     });

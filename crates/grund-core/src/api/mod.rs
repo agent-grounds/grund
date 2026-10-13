@@ -154,6 +154,8 @@ mod tests_stub_home_overlays;
 mod tests_stub_overlays;
 #[cfg(test)]
 mod tests_stub_section_overlays;
+#[cfg(test)]
+mod tests_unread_roots;
 
 #[cfg(test)]
 mod tests_kind_title_refs;

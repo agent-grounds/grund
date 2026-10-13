@@ -7,7 +7,7 @@
 //! the extension filter or the hidden-file rule refuses, with its row, for `check`
 //! to name (§FS-scan.checks.unread-scan-root).
 
-use crate::model::RootOrigin;
+use crate::model::{Refused, RootOrigin};
 use crate::testing::{
     canonical_test_path, legacy_fs_folder_config, scan_tree, scanned, symlink, test_root, write,
 };
@@ -187,6 +187,17 @@ fn a_refused_file_root_is_recorded_with_its_row() {
         ],
         "§AR-scanner.1.6: each refused file root, with its row, in the roots' order"
     );
+    let extension_only = Refused {
+        hidden: false,
+        extension: true,
+    };
+    assert!(
+        findings
+            .unread_roots
+            .iter()
+            .all(|row| row.refused == extension_only),
+        "§AR-scanner.1.13: a name that is not hidden leaves the extension the only refusal"
+    );
 }
 
 /// §FS-scan.checks.unread-scan-root.silent: a directory root is filtered file by
@@ -232,6 +243,17 @@ fn a_hidden_named_root_is_recorded_with_its_row() {
         ],
         "§FS-scan.scope.hidden: a hidden file root is named at its row"
     );
+    let hidden_only = Refused {
+        hidden: true,
+        extension: false,
+    };
+    assert!(
+        findings
+            .unread_roots
+            .iter()
+            .all(|row| row.refused == hidden_only),
+        "§AR-scanner.1.6: a listed extension leaves the hidden rule the only refusal"
+    );
 }
 
 /// §DF-unread-hidden-root.2.1: a root both hidden and unlisted is one unread root, so
@@ -254,6 +276,14 @@ fn a_root_both_hidden_and_unlisted_is_recorded_once() {
         rows,
         vec![(".notes.txt", 6)],
         "§FS-scan.checks.unread-scan-root: one record for one root"
+    );
+    let both = Refused {
+        hidden: true,
+        extension: true,
+    };
+    assert_eq!(
+        findings.unread_roots[0].refused, both,
+        "§DF-unread-hidden-root.2.1: the one record names both rules"
     );
 }
 
