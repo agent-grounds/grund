@@ -254,7 +254,7 @@ reader and nowhere else.
 | Default | Record path | What v1 means |
 |---|---|---|
 | `built-in kinds` | `schema.rows` | A config with no `[[kinds]]` gets the canonical rows of [§FS-config.3.4.4](../functional-spec/FS-config.md#344-the-default-kinds), with their homes, titles and citability. A declared `[[kinds]]` table replaces them all. |
-| `legacy FS home` | `schema.rows` | A `grund.toml` that exists and declares no `[[kinds]]` gives `FS` the folder `docs/functional-spec` instead of the file `requirements.md`. A zero-config tree gets the file. |
+| `legacy FS home` | `schema.rows` | A `grund.toml` that exists and declares no `[[kinds]]` gives `FS` the folder `docs/functional-spec` instead of the file `requirements.md`. A zero-config tree gets the file. That folder is the home grund 0.19.0 makes the default; until then the checker names it, through the one constant, when it warns a zero-config tree whose `FS` is in the file ([§FS-check.checks.fs-home-moves](../functional-spec/FS-check.md#checksfs-home-moves-the-built-in-fs-home-moves-in-grund-0190)). |
 | `name-keyed index` | `schema.rows` | A declared citable folder row that does not set `index` takes the default for its name: `E2E` has no index, every other name indexes `README.md`. |
 | `fetch resolves must` | `rules.resolution` | A row with `fetch` and no `resolve` resolves at `must`. |
 | `kind grounding inherits` | `rules.grounding` | A row that sets neither grounding key takes the `[reference]` values. |
@@ -264,6 +264,14 @@ reader and nowhere else.
 | `named sections` | `schema.ids` | `named_sections` is off. |
 | `scan exclusions` | `schema.sources` | `exclude` is `target`, `node_modules`, `.git`, `dist`, `build` and `.venv`. |
 | `version` | `version` | A file that omits `grund_config_version` is version `1`. |
+
+The built-in kinds are not every kind a generated config declares. The
+`software-development` template declares `REQ`, which has no row here
+([§FS-init.2.4.10](../functional-spec/FS-init.md#2410-req-is-declared-in-docsrequirements)), so
+`init` does not describe the config it is about to write from these defaults: it
+reads the rendered template text through the same reader a file on disk goes
+through (`pending_config`), and the managed block it renders lists exactly the
+kinds that file declares.
 
 ### 3.3 What the table is held to
 

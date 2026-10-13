@@ -58,19 +58,19 @@ $ grund check
 `grund init` lays a project out in layers, each citing the one that explains it, under
 rules it writes commented out in `grund.toml` until you adopt them:
 
-|           | Kind        | Home                            | Cites                                   |
-|-----------|-------------|---------------------------------|-----------------------------------------|
-| Why       | GRUND       | `docs/grund.md`                 |                                         |
-| Where     | GOAL        | `docs/goals.md`                 | should cite GRUND or GOAL               |
-| What      | FS          | `docs/functional-spec/`         | should cite GOAL or FS; **never** AR    |
-|           | REQ         | `docs/requirements/`            | should cite GRUND or GOAL; **never** AR |
-| How       | AR          | `docs/architecture/`            | should cite FS or GOAL                  |
-| Proof     | e2e         | `tests/e2e/`                    | **must** cite FS; avoid AR              |
-|           | integration | `tests/integration/`            | should cite AR                          |
-| Code      | code        | any other file                  | should cite FS or AR                    |
-| Decisions | DF          | `docs/decisions/functional/`    | should cite FS or GOAL                  |
-|           | DA          | `docs/decisions/architectural/` | should cite AR or FS                    |
-| Plan      | RM          | `docs/roadmap.md`               |                                         |
+|           | Kind        | Home                                                    | Cites                                   |
+|-----------|-------------|---------------------------------------------------------|-----------------------------------------|
+| Why       | GRUND       | `docs/grund.md`                                         |                                         |
+| Where     | GOAL        | `docs/goals.md`                                         | should cite GRUND or GOAL               |
+| What      | FS          | `requirements.md` (`docs/functional-spec/` from 0.19.0) | should cite GOAL or FS; **never** AR    |
+|           | REQ         | `docs/requirements/`                                    | should cite GRUND or GOAL; **never** AR |
+| How       | AR          | `docs/architecture/`                                    | should cite FS or GOAL                  |
+| Proof     | e2e         | `tests/e2e/`                                            | **must** cite FS; avoid AR              |
+|           | integration | `tests/integration/`                                    | should cite AR                          |
+| Code      | code        | any other file                                          | should cite FS or AR                    |
+| Decisions | DF          | `docs/decisions/functional/`                            | should cite FS or GOAL                  |
+|           | DA          | `docs/decisions/architectural/`                         | should cite AR or FS                    |
+| Plan      | RM          | `docs/roadmap.md`                                       |                                         |
 
 Every rule `grund check` holds a project to, what each one means underneath, and the
 finding it reports is listed in
