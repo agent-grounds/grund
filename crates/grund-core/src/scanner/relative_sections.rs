@@ -14,8 +14,8 @@ use super::section_record::section_value_root;
 use crate::config::Schema;
 use crate::grammar::{named_mode_section_path, reduce_heading_text, relative_heading_form};
 use crate::model::{
-    Catalog, Declaration, EmbeddedValueRoot, FileRecord, InvalidValueSite, RelativeSectionParent,
-    SectionInfo, UnmarkedHeadingCandidate,
+    Catalog, Declaration, EmbeddedValueRoot, FileRecord, HeadingKind, InvalidValueSite,
+    RecordedHeading, RelativeSectionParent, SectionInfo, UnmarkedHeadingCandidate,
 };
 
 /// A relative candidate, with the finding its value marker earns if no
@@ -131,46 +131,38 @@ fn resolve_relative_sections(
         owned.sort_by_key(|(candidate, _)| (candidate.heading_level, candidate.line));
         for (heading, mut marker) in owned {
             let level = heading.heading_level;
-            let parent = parent_path(record, decl, end, heading.line, level);
-            let Some(parent) = parent else {
-                markers.extend(marker);
-                findings
-                    .relative_section_parents
-                    .push(RelativeSectionParent {
-                        file: heading.file.clone(),
-                        line: heading.line,
-                        column: heading.column,
-                        heading: heading.heading.clone(),
-                        owner: decl.id.clone(),
-                        written: written(&heading),
-                        needed_level: level - 1,
-                        under: nearest_usable(record, decl, end, heading.line, level - 1),
-                    });
-                continue;
+            let canonical = match relative_answer(
+                record,
+                decl,
+                end,
+                heading.line,
+                level,
+                &heading.title,
+                named_sections,
+            ) {
+                RelativeAnswer::Section(canonical) => canonical,
+                RelativeAnswer::NoParent => {
+                    markers.extend(marker);
+                    findings
+                        .relative_section_parents
+                        .push(RelativeSectionParent {
+                            file: heading.file.clone(),
+                            line: heading.line,
+                            column: heading.column,
+                            heading: heading.heading.clone(),
+                            owner: decl.id.clone(),
+                            written: written(&heading),
+                            needed_level: level - 1,
+                            under: nearest_usable(record, decl, end, heading.line, level - 1),
+                        });
+                    continue;
+                }
+                RelativeAnswer::Refused => {
+                    markers.extend(marker);
+                    unmarked.push(heading);
+                    continue;
+                }
             };
-            let Some(form) = relative_heading_form(&heading.title) else {
-                markers.extend(marker);
-                unmarked.push(heading);
-                continue;
-            };
-            let canonical = if parent.is_empty() {
-                form.component.to_string()
-            } else {
-                format!("{parent}.{}", form.component)
-            };
-            let numeric = section_path_is_numeric(&canonical);
-            // §FS-declarations.section.relative.form: refused wherever the complete
-            // form would be — a name with the gate off, `number.name`, the wrong punctuation.
-            let shaped = numeric
-                || (named_sections
-                    && named_mode_section_path(&canonical, |part| {
-                        part.bytes().all(|byte| byte.is_ascii_digit())
-                    }));
-            if !shaped || !form.fits(numeric) {
-                markers.extend(marker);
-                unmarked.push(heading);
-                continue;
-            }
             let column = marker.as_ref().and_then(|site| site.column);
             let value_root = section_value_root(schema, &decl.id.kind, &canonical, column);
             if value_root
@@ -246,6 +238,115 @@ fn claim(
     Some(at)
 }
 
+/// What a relative heading is in its declaration's body (§FS-declarations.section.relative):
+/// the section at its canonical path, a heading with no usable parent one level up
+/// (§FS-declarations.checks.relative-section-parent), or a line the form's rules refuse,
+/// which keeps the meaning it has without this form.
+#[derive(Debug, Eq, PartialEq)]
+pub(crate) enum RelativeAnswer {
+    Section(String),
+    NoParent,
+    Refused,
+}
+
+/// The one answer to what the relative heading titled `title`, at `level` on `line`
+/// of `decl`'s body ending on `end`, would be: its parent by
+/// §FS-declarations.section.relative.parent, then the title syntax its canonical
+/// path takes (§FS-declarations.section.relative.form). The Markdown parent pass
+/// and the doc-comment warning of §FS-declarations.checks.parse-moves.2 (shape 4)
+/// both ask it, so the two readings cannot drift.
+pub(crate) fn relative_answer(
+    record: &FileRecord,
+    decl: &Declaration,
+    end: usize,
+    line: usize,
+    level: usize,
+    title: &str,
+    named_sections: bool,
+) -> RelativeAnswer {
+    let Some(parent) = parent_path(record, decl, end, line, level) else {
+        return RelativeAnswer::NoParent;
+    };
+    let Some(form) = relative_heading_form(title) else {
+        return RelativeAnswer::Refused;
+    };
+    let canonical = if parent.is_empty() {
+        form.component.to_string()
+    } else {
+        format!("{parent}.{}", form.component)
+    };
+    let numeric = section_path_is_numeric(&canonical);
+    // §FS-declarations.section.relative.form: refused wherever the complete
+    // form would be — a name with the gate off, `number.name`, the wrong punctuation.
+    let shaped = numeric
+        || (named_sections
+            && named_mode_section_path(&canonical, |part| {
+                part.bytes().all(|byte| byte.is_ascii_digit())
+            }));
+    if !shaped || !form.fits(numeric) {
+        return RelativeAnswer::Refused;
+    }
+    RelativeAnswer::Section(canonical)
+}
+
+/// 0.19.0's answer for each relative heading of one source doc-comment declaration
+/// body, which 0.18.0 keeps as prose (§FS-declarations.section.relative.where): the
+/// parent pass run on a copy of `decl`, shallowest first and claiming as it goes,
+/// so a relative parent is settled before its child asks for it. Only the plain
+/// headings the record holds in the body are read, so the file is not.
+pub(crate) fn doc_comment_relative_answers<'a>(
+    record: &'a FileRecord,
+    decl: &Declaration,
+    end: usize,
+    named_sections: bool,
+) -> Vec<(&'a RecordedHeading, RelativeAnswer)> {
+    let mut candidates: Vec<&RecordedHeading> = record
+        .headings_between(decl.line + 1, end)
+        .iter()
+        .filter(|heading| heading.kind == HeadingKind::Plain)
+        .filter(|heading| relative_heading_form(record.heading_text(heading)).is_some())
+        .collect();
+    if candidates.is_empty() {
+        return Vec::new();
+    }
+    candidates.sort_by_key(|heading| (heading.level, heading.line));
+    let mut settled = decl.clone();
+    let mut answers = Vec::with_capacity(candidates.len());
+    for heading in candidates {
+        let title = record.heading_text(heading);
+        let answer = relative_answer(
+            record,
+            &settled,
+            end,
+            heading.line,
+            heading.level,
+            title,
+            named_sections,
+        );
+        if let RelativeAnswer::Section(canonical) = &answer {
+            let info = SectionInfo {
+                title: reduce_heading_text(title),
+                line: heading.line,
+                heading_level: heading.level,
+                value: None,
+                value_root: None,
+                relative: true,
+            };
+            claim(&mut settled, canonical.clone(), info);
+        }
+        answers.push((heading, answer));
+    }
+    answers.sort_by_key(|(heading, _)| heading.line);
+    answers
+}
+
+/// Whether `heading` is one a body's section reading sees: an ATX heading in
+/// Markdown, and every heading the record holds of a source doc-comment, which it
+/// read through the comment's envelope (§FS-languages.comment-wrapper.headings).
+fn read_as_heading(record: &FileRecord, heading: &RecordedHeading) -> bool {
+    heading.atx || !record.markdown
+}
+
 /// The path of the parent a relative heading at `level` on `line` takes, empty
 /// for the declaration itself, or `None` when the nearest shallower heading is
 /// not one level up or not usable (§FS-declarations.section.relative.parent).
@@ -260,7 +361,7 @@ fn parent_path(
         .headings_between(decl.line, line - 1)
         .iter()
         .rev()
-        .find(|heading| heading.atx && heading.level < level)?;
+        .find(|heading| read_as_heading(record, heading) && heading.level < level)?;
     if nearest.level + 1 != level {
         return None;
     }
@@ -309,7 +410,7 @@ fn nearest_usable(
         .headings_between(decl.line, line - 1)
         .iter()
         .rev()
-        .filter(|heading| heading.atx && heading.level < needed)
+        .filter(|heading| read_as_heading(record, heading) && heading.level < needed)
         .find_map(|heading| usable(decl, end, heading.line))
         .unwrap_or_default()
 }

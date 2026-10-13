@@ -155,6 +155,8 @@ mod tests_managed_block_drift;
 #[cfg(test)]
 mod tests_nothing_recognized;
 #[cfg(test)]
+mod tests_parse_moves_flip;
+#[cfg(test)]
 mod tests_post_scan_readers;
 #[cfg(test)]
 mod tests_relative_section_titles;
