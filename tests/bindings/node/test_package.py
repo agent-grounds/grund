@@ -8,7 +8,8 @@ import unittest
 from unittest import mock
 
 from launch import cargo_probe
-from support import NODE, REPO, SCRATCH, Rehearsal, checked, dev_env, node_target
+from support import (NODE, REPO, SCRATCH, Rehearsal, checked, dev_env, node_target,
+                     typescript_compiler)
 
 
 class NodePackageTests(unittest.TestCase):
@@ -136,13 +137,12 @@ class NodePackageTests(unittest.TestCase):
                 self.assertEqual("", self.r.run("platform-load.cjs", extra_env=env))
 
     def strict_typescript_check(self, rehearsal):
-        checked(["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund",
-                 "--save-dev", "--save-exact", "typescript@5.9.3"],
-                cwd=rehearsal.consumer)
+        # §AR-ci.3.4.1.3: the prepared compiler, run from the consumer so its types resolve there.
+        tsc = typescript_compiler()
         for name in ("consumer.mts", "consumer.cts"):
             shutil.copyfile(REPO / "tests" / "bindings" / "node" / name,
                             rehearsal.consumer / name)
-        checked(["node", "node_modules/typescript/bin/tsc", "--strict",
+        checked(["node", tsc, "--strict",
                  "--noEmit", "--module", "NodeNext", "--moduleResolution", "NodeNext",
                  "--target", "ES2022", "consumer.mts", "consumer.cts"],
                 cwd=rehearsal.consumer)
