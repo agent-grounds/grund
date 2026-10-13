@@ -352,7 +352,7 @@ pub(crate) fn current_block() -> String {
 }
 
 pub(crate) fn current_marker() -> &'static str {
-    "## Grounding with grund (v16)"
+    "## Grounding with grund (v17)"
 }
 
 /// Run a just-written script, waiting out a kernel that still calls it busy.
