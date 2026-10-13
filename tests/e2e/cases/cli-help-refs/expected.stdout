@@ -18,6 +18,7 @@ Options:
   --path-base project|invocation
                        project (default) spells report paths from the config root;
                        invocation: relative to the path you passed, or the current directory if you passed none.
+                       e.g. grund refs FS-login src/ --path-base=invocation
                        --path-base=invocation replaces a committed `[output] relative_paths = false`.
                        --format json replaces a committed `[output] format = "json"`; a flag outranks its key.
 
@@ -31,3 +32,4 @@ Examples:
   grund refs FS-login --summary   # one row per citing file
   grund refs FS-login --total     # how many sites, in how many files
   grund refs FS-login.3           # only citations of section 3
+  grund refs FS-login --format json # one NDJSON record per citation site

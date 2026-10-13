@@ -18,6 +18,7 @@ Options:
   --path-base project|invocation
                        project (default) spells report paths from the config root;
                        invocation: relative to the path you passed, or the current directory if you passed none.
+                       e.g. grund integrations --path-base=invocation
                        --path-base=invocation replaces a committed `[output] relative_paths = false`.
 
 Preview and install examples:
@@ -27,6 +28,7 @@ Preview and install examples:
   grund integrations --write --conversation link  # preference only
   grund integrations --write --conversation-target vscodium  # open in the editor
   grund integrations --write --agent codex --conversation-target web  # that agent only
+  grund integrations wezterm --format json  # the same, as a JSON plan
 
 Exit:  0 printed or installed · 2 invalid options, missing write target, or a newer block.
 

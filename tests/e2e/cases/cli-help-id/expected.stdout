@@ -13,6 +13,7 @@ Options:
   --path-base project|invocation
                        project (default) spells report paths from the config root;
                        invocation: relative to the path you passed, or the current directory if you passed none.
+                       e.g. grund id FS "x" docs/ --explain --path-base=invocation
                        --path-base=invocation replaces a committed `[output] relative_paths = false`.
 
 Exit:  0 ID emitted · 1 empty slug / collision · 2 unknown kind, scan, or CLI error.
@@ -20,3 +21,4 @@ Exit:  0 ID emitted · 1 empty slug / collision · 2 unknown kind, scan, or CLI 
 Examples:
   grund id FS "User can log in"          # -> FS-007-user-can-log-in (or FS-user-can-log-in)
   ID=$(grund id FS "User can log in"); $EDITOR "docs/functional-spec/$ID.md"
+  grund id FS "User can log in" --format json  # the ID with its kind, number, slug, folder

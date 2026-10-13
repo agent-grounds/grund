@@ -23,6 +23,7 @@ Options:
   --path-base project|invocation
                        project (default) spells report paths from the config root;
                        invocation: relative to the path you passed, or the current directory if you passed none.
+                       e.g. grund check docs/ --path-base=invocation
                        --path-base=invocation replaces a committed `[output] relative_paths = false`.
                        --format json replaces a committed `[output] format = "json"`; a flag outranks its key.
 
@@ -120,6 +121,8 @@ Examples:
   grund check --ignore agents-init # ask whether the selected content report has errors
   grund check --rule "Each FS must have exactly one security chapter." --only-rule # what does this sentence find?
   grund check --format json | jq # machine-readable diagnostics for CI
+  grund check --only dangling --only duplicate # only those two codes
+  grund check --require-grounding src/ # every source file must cite a declared ID
 
 Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/watch.md
 Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/rules.md

@@ -9,6 +9,7 @@ Options:
   --path-base project|invocation
                        project (default) spells report paths from the config root;
                        invocation: relative to the path you passed, or the current directory if you passed none.
+                       e.g. grund config show docs/ --path-base=invocation
                        --path-base=invocation replaces a committed `[output] relative_paths = false`.
 
 PATH defaults to `.`; config is discovered by walking up from it — the root `grund.toml` is the home, `.agents/grund.toml` a deprecated fallback.

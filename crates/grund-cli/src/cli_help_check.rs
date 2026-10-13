@@ -55,7 +55,7 @@ fn print_check_help() {
     println!(
         "  --only-rule          retain only what the --rule sentence found; requires --rule."
     );
-    print_run_flag_help(true);
+    print_run_flag_help("grund check docs/", true);
     println!();
     println!(
         "Findings go to stdout (the linter convention) — `grund check | …` and `grund check"
@@ -105,6 +105,8 @@ fn print_check_help() {
         "  grund check --rule \"Each FS must have exactly one security chapter.\" --only-rule # what does this sentence find?"
     );
     println!("  grund check --format json | jq # machine-readable diagnostics for CI");
+    println!("  grund check --only dangling --only duplicate # only those two codes");
+    println!("  grund check --require-grounding src/ # every source file must cite a declared ID");
     print_guide_links(
         &[
             "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/watch.md",
