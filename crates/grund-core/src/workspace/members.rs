@@ -214,7 +214,7 @@ pub(super) fn workspace_member_root(
     written: &str,
     lexical: &Path,
 ) -> Result<PathBuf> {
-    let located = |message: String| config_location_error(source, message);
+    let located = |message: String| config_location_error(config, source, message);
     if !path_is_dir(lexical) {
         // §FS-workspace.2.2.4: the unchanged default, one clause longer.
         return Err(located(format!(

@@ -30,7 +30,11 @@ use crate::model::Diagnostic;
 use crate::sources::path_is_dir;
 
 pub(super) fn workspace_optional_members_error(config: &Config, message: String) -> anyhow::Error {
-    config_location_error(config.workspace_optional_members_source.as_ref(), message)
+    config_location_error(
+        config,
+        config.workspace_optional_members_source.as_ref(),
+        message,
+    )
 }
 
 /// §FS-workspace.2.2: fold this block's `optional_members` into the expanded

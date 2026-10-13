@@ -16,8 +16,8 @@ use super::findings::reject_absorbed_scan;
 use super::members::{WorkspaceMember, canonical_workspace_path, expand_workspace_member_list};
 use crate::config::display_path;
 use crate::config::{
-    Config, ConfigLocation, Invocation, RunWarning, Selection, config_at, discover_config,
-    discovery_start_dir, invalid_project_alias_message, is_valid_project_alias,
+    Config, ConfigLocation, Invocation, RunWarning, Selection, config_at, config_file_in,
+    discover_config, discovery_start_dir, invalid_project_alias_message, is_valid_project_alias,
 };
 use crate::model::format_path;
 
@@ -177,14 +177,19 @@ fn configured_member_root_candidate(
 }
 
 pub(super) fn workspace_members_error(config: &Config, message: String) -> anyhow::Error {
-    config_location_error(config.workspace_members_source.as_ref(), message)
+    config_location_error(config, config.workspace_members_source.as_ref(), message)
 }
 
 pub(super) fn project_name_error(config: &Config, message: String) -> anyhow::Error {
-    config_location_error(config.project_name_source.as_ref(), message)
+    config_location_error(config, config.project_name_source.as_ref(), message)
 }
 
+/// The config load error about a key of `config`'s own file, located at `source`.
+/// It names that file on disk too, as the error a load raises does, so an editor
+/// marks a `[workspace]` or `project_name` refusal where it marks a parse error
+/// (§FS-lsp.2.2.4.1).
 pub(super) fn config_location_error(
+    config: &Config,
     source: Option<&ConfigLocation>,
     message: String,
 ) -> anyhow::Error {
@@ -196,6 +201,7 @@ pub(super) fn config_location_error(
     );
     failure.path = source.map(|s| format_path(&s.path));
     failure.line = source.map(|s| s.line);
+    failure.file = source.and_then(|_| config_file_in(&config.root));
     failure.into()
 }
 
