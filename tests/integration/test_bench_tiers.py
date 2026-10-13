@@ -275,9 +275,12 @@ class TheFrontendsAreMeasured(unittest.TestCase):
             length = int(re.search(rb"Content-Length: (\d+)", head).group(1))
             methods.append(json.loads(rest[:length])["method"])
             data = rest[length:]
-        collapsed = [m for i, m in enumerate(methods) if i == 0 or methods[i - 1] != m]
-        self.assertEqual(["initialize", "initialized", "textDocument/didOpen",
-                          "textDocument/hover", "shutdown", "exit"], collapsed)
+        # The training client sends each document's hover right after its `didOpen`.
+        opened = methods.count("textDocument/didOpen")
+        self.assertGreater(opened, 0, "the session opens no document")
+        self.assertEqual(["initialize", "initialized"]
+                         + ["textDocument/didOpen", "textDocument/hover"] * opened
+                         + ["shutdown", "exit"], methods)
 
     def test_the_training_evidence_keeps_its_bytes(self):
         result = subprocess.run([sys.executable, "-I", str(TRAIN), "describe", "grund-lsp"],

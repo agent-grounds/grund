@@ -98,7 +98,6 @@ def session(repo, process_id=None):
                                 "workspaceFolders": [{"uri": uri(repo), "name": "grund"}],
                                 "capabilities": {}}, True),
                 ("initialized", {}, False)]
-    hovers = []
     for document in documents(repo):
         path = os.path.join(repo, document)
         with open(path, encoding="utf-8") as handle:
@@ -110,10 +109,10 @@ def session(repo, process_id=None):
         # The server publishes only where it finds something, and answers in order: the
         # hover's answer is what says this document was checked and published.
         line, character = first_citation(text)
-        hovers.append(("textDocument/hover", {"textDocument": {"uri": address},
-                                              "position": {"line": line,
-                                                           "character": character}}, True))
-    return messages + hovers + [("shutdown", {}, True), ("exit", {}, False)]
+        messages.append(("textDocument/hover", {"textDocument": {"uri": address},
+                                                "position": {"line": line,
+                                                             "character": character}}, True))
+    return messages + [("shutdown", {}, True), ("exit", {}, False)]
 
 
 def frame(message):
