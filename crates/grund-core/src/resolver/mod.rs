@@ -121,6 +121,8 @@ mod tests_link_target_no_anchor;
 #[cfg(test)]
 mod tests_section_lock;
 #[cfg(test)]
+mod tests_section_lock_fingerprint;
+#[cfg(test)]
 mod tests_shorthand_numeric_run;
 #[cfg(test)]
 mod tests_shorthand_rewrite;
