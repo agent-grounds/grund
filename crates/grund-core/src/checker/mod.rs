@@ -149,6 +149,8 @@ mod tests_kind_index_entry_form;
 #[cfg(test)]
 mod tests_kind_index_mention;
 #[cfg(test)]
+mod tests_kind_index_value_bindings;
+#[cfg(test)]
 mod tests_local_section_citations;
 #[cfg(test)]
 mod tests_managed_block_drift;

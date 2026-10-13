@@ -1,0 +1,1 @@
+docs/competition/README.md:5: error: value mismatch for COMP-zz-a.values.price.1: bound `31`, declared `30` at docs/competition/COMP-zz-a.md:7
