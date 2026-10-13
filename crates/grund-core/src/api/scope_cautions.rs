@@ -250,3 +250,30 @@ fn display_lexical_scope(config: &Config, path: &Path) -> String {
     }
     display_path(config, path)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::empty_scan_warning;
+    use crate::config::Config;
+    use crate::testing::{test_root, write};
+
+    /// §FS-check.2.2.2, §AR-scanner.1.13: the hidden-file message is the read
+    /// predicate's answer, so it follows the extension list the run was given: a
+    /// hidden `.txt` file is named hidden once `txt` is listed, and keeps the
+    /// extension message, the second of its two reasons, while it is not.
+    #[test]
+    fn the_handed_hidden_file_branch_asks_the_read_predicate() {
+        let root = test_root("the_handed_hidden_file_branch_asks_the_read_predicate");
+        let hidden = root.join(".notes.txt");
+        write(&hidden, "# Notes\n");
+        let mut config = Config::default_for(root);
+        let unlisted = empty_scan_warning(&config, &hidden, true).message;
+        assert!(
+            unlisted.contains("matched grund's extensions"),
+            "{unlisted}"
+        );
+        config.extensions.push("txt".to_string());
+        let listed = empty_scan_warning(&config, &hidden, true).message;
+        assert!(listed.contains("is a hidden file"), "{listed}");
+    }
+}
