@@ -85,7 +85,7 @@ pub(crate) use records::{LegacyCitationCandidate, LocalSectionCitationCandidate,
 pub(crate) use report::{CheckReport, Diagnostic, LANDED_CLAUSE, Site};
 pub(crate) use section_lock::{
     LockEntry, LockLines, SECTION_LOCK_DIR, SectionLockFile, locked, name_under_number,
-    read_lock_lines, render_lock, section_lock_path,
+    named_section_path, read_lock_lines, render_lock, section_lock_path,
 };
 pub(crate) use stub_resolution::{
     PairedDeclarations, StubResolution, paired_declarations, section_resolves,

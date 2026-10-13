@@ -23,7 +23,7 @@ use crate::config::{Frame, Schema};
 use crate::grammar::render_id;
 use crate::model::{
     Catalog, CheckReport, Diagnostic, LANDED_CLAUSE, SectionHeadingOutsideDeclaration, Site,
-    paired_declarations,
+    named_section_path, paired_declarations,
 };
 use crate::resolver::WorkspaceProject;
 use crate::scanner::section_path_is_numeric;
@@ -64,11 +64,7 @@ pub(super) fn check_section_headings(
     // candidates are errors since 0.16.0, independent of the marked-section heading-level mode.
     report.errors.extend(findings.unmarked_headings.iter().map(|heading| {
         let rendered_owner = render_id(frame.grammar(), &heading.owner);
-        let separator = if heading
-            .suggested_path
-            .split('.')
-            .any(|part| part.bytes().any(|byte| byte.is_ascii_lowercase()))
-        {
+        let separator = if named_section_path(&heading.suggested_path) {
             ":"
         } else {
             "."

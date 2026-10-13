@@ -450,11 +450,7 @@ impl Grammar {
 
     /// A name-shaped section matched by the opted-in grammar (§FS-check.1.1.2).
     pub(crate) fn is_named_section(&self, section: Option<&str>) -> bool {
-        self.named_sections
-            && section.is_some_and(|path| {
-                path.split('.')
-                    .any(|part| part.as_bytes().first().is_some_and(u8::is_ascii_lowercase))
-            })
+        self.named_sections && section.is_some_and(crate::model::named_section_path)
     }
 
     /// Whether `rest`, the text directly after an ID-shaped token in declaration
