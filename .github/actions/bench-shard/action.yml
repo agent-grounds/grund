@@ -60,4 +60,4 @@ runs:
         git ls-files -z | xargs -0 touch -h -d 2000-01-01T00:00:00Z
         tar -xf bench-bin/target.tar
         # An artifact drops the mode bits, so the loose base binary is made executable again.
-        find bench-bin -type f ! -name target.tar -exec chmod +x {} +
+        find bench-bin -type f ! -name target.tar ! -name '*.sha256' -exec chmod +x {} +

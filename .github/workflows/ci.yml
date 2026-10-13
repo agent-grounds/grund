@@ -762,6 +762,7 @@ jobs:
           # executable bits an artifact drops.
           mkdir -p bench-bin
           tar -cf bench-bin/target.tar --exclude=target/release/incremental target/release
+          sha256sum target/release/grund | cut -d' ' -f1 > bench-bin/head-grund.sha256
 
       - uses: actions/upload-artifact@v4
         with:
@@ -847,6 +848,9 @@ jobs:
           cargo bench -p grund --features bench --locked --quiet --bench instructions -- --save-summary=json
           python3 scripts/bench_record.py record --environment ci --tier pr --out "$RECORDS/second-${{ matrix.shard }}.json"
           python3 scripts/bench_record.py jitter "$RECORDS/first-${{ matrix.shard }}.json" "$RECORDS/second-${{ matrix.shard }}.json" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # §AR-ci.5: the harness measured the build job's binary; a shard that rebuilt it fails.
+      - uses: ./.github/actions/bench-built
 
       - if: always()
         uses: actions/upload-artifact@v4
