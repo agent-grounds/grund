@@ -301,8 +301,10 @@ class NodeSharedTargetTests(unittest.TestCase):
         # The macOS suites left ci.yml for their own workflow (§AR-ci.14) and cache the same target.
         for workflow in (CI, CI.with_name("macos-suites.yml")):
             steps = workflow.read_text(encoding="utf-8").split("\n      - ")
+            # The root's own path line: the compiler's directory beneath it has a cache of its own.
             keys = [line.strip() for step in steps for line in step.splitlines()
-                    if "~/ag/tmp/grund-node-target" in step and line.strip().startswith("key:")]
+                    if "            ~/ag/tmp/grund-node-target\n" in step
+                    and line.strip().startswith("key:")]
             self.assertTrue(keys, f"no job in {workflow.name} caches the Node target")
             for key in keys:
                 self.assertIn("-node-target-v3-", key,
