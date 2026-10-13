@@ -306,6 +306,7 @@ pub(super) fn scan_value_bindings(
             file: citation.file.clone(),
             line: citation.line,
             column: line.column_offset + open_tick + 1,
+            citation_column: citation.column,
         });
     }
     scan_noncanonical_value_binding_attempts(

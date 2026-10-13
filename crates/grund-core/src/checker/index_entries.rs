@@ -19,13 +19,16 @@ use crate::sources::{Sources, physical_path_key};
 /// original folder-membership rule; `owed` additionally holds external inline
 /// declarations enrolled by a canonical link. Their exact sites stay separate
 /// so another citation of the same external ID on the page remains real use
-/// (§DF-index-not-an-inbound-citation.2.2).
+/// (§DF-index-not-an-inbound-citation.2.2). `binding_sites` holds the citation
+/// sites of the recognized value bindings on each index, which are use rather
+/// than the entry even for a folder-owned ID (§FS-check.4.1.2.1).
 pub(crate) struct KindIndexEntries {
     configured_root: PathBuf,
     physical_root: PathBuf,
     owed: BTreeMap<PathBuf, BTreeSet<Id>>,
     folder_owed: BTreeMap<PathBuf, BTreeSet<Id>>,
     external_sites: BTreeMap<PathBuf, BTreeSet<(usize, usize)>>,
+    binding_sites: BTreeMap<PathBuf, BTreeSet<(usize, usize)>>,
 }
 
 impl KindIndexEntries {
@@ -67,12 +70,15 @@ impl KindIndexEntries {
             index_targets,
             &mut owed,
         );
+        let binding_sites =
+            index_value_binding_sites(findings, &folder_owed, &configured_root, &physical_root);
         Self {
             configured_root,
             physical_root,
             owed,
             folder_owed,
             external_sites,
+            binding_sites,
         }
     }
 
@@ -92,6 +98,9 @@ impl KindIndexEntries {
     /// §FS-check.4.1.2 / §DF-index-not-an-inbound-citation.2.2: folder-owned IDs
     /// keep PR #134's accounting. For an external ID only the canonical link site
     /// is navigation; a second same-ID citation in the index is ordinary use.
+    /// §FS-check.4.1.2.1: a folder-owned ID's entry is a citation of the
+    /// declaration itself, so a section citation, or the citation inside a
+    /// recognized value binding (a root-aimed one with no section included), is use.
     pub(crate) fn is_index_entry(&self, citation: &Citation) -> bool {
         if citation.namespace.is_some() || self.owed.is_empty() {
             return false;
@@ -101,14 +110,50 @@ impl KindIndexEntries {
         else {
             return false;
         };
-        self.folder_owed
-            .get(relative.as_ref())
-            .is_some_and(|ids| ids.contains(&citation.id))
+        let site = (citation.line, citation.column);
+        (citation.section.is_none()
+            && self
+                .folder_owed
+                .get(relative.as_ref())
+                .is_some_and(|ids| ids.contains(&citation.id))
+            && !self
+                .binding_sites
+                .get(relative.as_ref())
+                .is_some_and(|sites| sites.contains(&site)))
             || self
                 .external_sites
                 .get(relative.as_ref())
-                .is_some_and(|sites| sites.contains(&(citation.line, citation.column)))
+                .is_some_and(|sites| sites.contains(&site))
     }
+}
+
+/// The citation sites of the scanner's recognized value bindings on each kind
+/// index (§FS-check.4.1.2.1, §FS-values.3.2), read off the catalog's binding
+/// records rather than re-parsed.
+fn index_value_binding_sites(
+    findings: &Catalog,
+    folder_owed: &BTreeMap<PathBuf, BTreeSet<Id>>,
+    configured_root: &Path,
+    physical_root: &Path,
+) -> BTreeMap<PathBuf, BTreeSet<(usize, usize)>> {
+    let mut sites: BTreeMap<PathBuf, BTreeSet<(usize, usize)>> = BTreeMap::new();
+    for binding in &findings.value_bindings {
+        if binding.namespace.is_some() {
+            continue;
+        }
+        let Some(relative) =
+            scanned_decl_relative_path(&binding.file, configured_root, physical_root)
+        else {
+            continue;
+        };
+        if folder_owed.contains_key(relative.as_ref()) {
+            sites
+                .entry(relative.into_owned())
+                .or_default()
+                .insert((binding.line, binding.citation_column));
+        }
+    }
+    sites
 }
 
 /// Add every canonical external-inline enrollment to `owed`, returning the
