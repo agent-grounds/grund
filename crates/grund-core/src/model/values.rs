@@ -96,6 +96,10 @@ pub struct ValueBinding {
     pub file: PathBuf,
     pub line: usize,
     pub column: usize,
+    /// The column of the ordinary citation this binding rides on, so a reader
+    /// keyed on citation sites can tell a binding's citation from another one
+    /// (§FS-check.4.1.2.1).
+    pub citation_column: usize,
 }
 
 /// A readable declaration or attempted binding that violates the explicit
