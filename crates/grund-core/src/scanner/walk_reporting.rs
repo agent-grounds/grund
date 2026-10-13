@@ -135,7 +135,7 @@ pub(crate) fn walk_scannable_files_with_sources(
     // and the rows themselves, read only once a root is refused.
     let mut unread_roots = Vec::new();
     let mut file_rows = None;
-    let mut value_homes: Option<Vec<PathBuf>> = None;
+    let mut value_homes: Option<Option<Vec<PathBuf>>> = None;
     for scan_root in roots {
         // §FS-check.6.1.1: the actual walk roots are covered before traversal.
         if !crate::config::observe_input(&scan_root, true) {
@@ -186,15 +186,17 @@ pub(crate) fn walk_scannable_files_with_sources(
                 Some(Unread::Extension) => {
                     let rows =
                         file_rows.get_or_insert_with(|| file_root_rows(schema, frame.root()));
-                    // §FS-values.2.2: a value row's JSON home is read, by the value pass.
+                    // §FS-scan.checks.unread-scan-root.silent: a value row's JSON home is
+                    // read by the value pass; when that pass cannot list them, record none.
                     let value_homes = value_homes.get_or_insert_with(|| {
                         value_json_sources(schema, frame)
+                            .ok()
                             .map(|sources| sources.into_iter().map(|(path, _)| path).collect())
-                            .unwrap_or_default()
                     });
-                    if !value_homes
-                        .iter()
-                        .any(|home| paths_same_location(home, &scan_root))
+                    if let Some(value_homes) = value_homes
+                        && !value_homes
+                            .iter()
+                            .any(|home| paths_same_location(home, &scan_root))
                     {
                         record_unread_root(&mut unread_roots, rows, &scan_root);
                     }

@@ -42,6 +42,7 @@ MIGRATED = {
     "FS-check": ("glob-citation",),
     "FS-citations": ("unclosed-wrapper",),
     "FS-rules": ("unreached-declaration",),
+    "FS-scan": ("unread-scan-root",),
     "FS-fields": (
         "invalid-field-value",
         "misplaced-field",

@@ -345,7 +345,7 @@
               },
               "file": {
                 "type": "string",
-                "description": "A single-file home: every declaration is a heading in this document.",
+                "description": "A single-file home: every declaration is a heading in this document. It is read only if its extension is in `[scan] extensions`, or, on a `values = true` row, as its JSON home by the value pass; otherwise `grund check` warns at this line.",
                 "x-grund-spec": {
                   "id": "FS-config.3.4",
                   "href": "docs/functional-spec/FS-config.md#34-kinds--recognized-kinds"
@@ -493,7 +493,7 @@
               "items": {
                 "type": "string"
               },
-              "description": "Directories and files to scan, from the config root; every kind's home is scanned as well.",
+              "description": "Directories and files to scan, from the config root; every kind's home is scanned as well. A file named here is read only if its extension is in `extensions`; when it is not, `grund check` warns at this line.",
               "default": [
                 "requirements.md",
                 "docs",
