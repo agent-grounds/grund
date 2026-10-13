@@ -9,12 +9,12 @@
 #
 # Three phases: build an instrumented payload (`-Cprofile-generate`), train it on
 # its own product's workload to produce `.profraw` profiles, merge them, then
-# rebuild the payload with `-Cprofile-use` (§FS-distribution-candidate.7.1). The
-# `grund` executable trains on the hot command list `crates/grund-cli/benches/
-# instructions.rs` benchmarks, against this repo's own conformant tree; the
-# language server, the Node addon and the Python extension train through
-# `scripts/distribution/train.py` (§AR-benchmarks.1.5). The generated
-# `check_large_10k` benchmark is a CI budget input, not release-profile training data.
+# rebuild the payload with `-Cprofile-use` (§FS-distribution-candidate.7.1). Every
+# product trains through `scripts/distribution/train.py`: the `grund` executable on
+# the `pgo` subset of the benchmark scenario catalog `crates/grund-cli/benches/
+# scenarios.json`, against this repo's own conformant tree (§AR-benchmarks.1.5). The
+# generated `check_large_10k` benchmark is a CI budget input, not release-profile
+# training data.
 #
 # A profile is keyed by compiler, target, source SHA, product, features and ABI
 # (§FS-distribution-candidate.7.2): the key is written beside the merged profile,
@@ -153,7 +153,6 @@ case "$product:$host" in
   python-extension:*) artifact="lib_native.so" ;;
 esac
 payload="$cargo_target/release/$artifact"
-grund="$payload"
 
 # §FS-distribution-candidate.7.2: everything that changes the code a profile describes.
 features_json="[]"
@@ -240,33 +239,15 @@ else
   generate_sha256="$(sha256 "$payload")"
 
   echo "==> 2/3  training run — the $product workload"
-  if [ "$product" = grund ]; then
-    training="$(sed -n 's/^ *"\$grund" \(.*\) "\$repo".*$/"grund \1"/p' "$repo/scripts/pgo-build.sh" | paste -sd, -)"
-    training="[${training//,/, }]"
-  else
-    python="$(find_python)"
-    training="$("$python" scripts/distribution/train.py describe "$product")"
-  fi
+  # §AR-benchmarks.1.5: train.py reads the scenario catalog's `pgo` subset, for every product.
+  python="$(find_python)"
+  training="$("$python" scripts/distribution/train.py describe "$product")"
 fi
 
-# Keep this self-repo hot command list in sync with crates/grund-cli/benches/instructions.rs.
 # Exit codes are irrelevant here (a non-canonical tree makes `fmt --check` exit
 # 1); we only want the code paths exercised.
 set +e
-if [ -n "$profile" ]; then
-  :
-elif [ "$product" = grund ]; then
-  for _ in 1 2 3; do
-    "$grund" check "$repo"                   >/dev/null 2>&1
-    "$grund" list "$repo"                    >/dev/null 2>&1
-    "$grund" show FS-check --brief "$repo"   >/dev/null 2>&1
-    "$grund" show FS-check "$repo"           >/dev/null 2>&1
-    "$grund" show FS-check --full "$repo"    >/dev/null 2>&1
-    "$grund" refs GOAL-fast-feedback "$repo" >/dev/null 2>&1
-    "$grund" cover "$repo"                   >/dev/null 2>&1
-    "$grund" fmt --check "$repo"             >/dev/null 2>&1
-  done
-else
+if [ -z "$profile" ]; then
   "$python" scripts/distribution/train.py "$product" "$pgo_dir/instrumented/$artifact" \
     "$repo" "$pgo_dir/work" "$host" >/dev/null
 fi

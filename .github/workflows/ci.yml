@@ -735,6 +735,8 @@ jobs:
       RAYON_NUM_THREADS: 4
       CARGO_INCREMENTAL: 0
       RUSTFLAGS: ""
+      # §AR-ci.5.2: every run here is CI's series, held to the catalog's absolute ceilings.
+      GRUND_BENCH_CEILINGS: 1
     steps:
       - uses: actions/checkout@v6
         with:

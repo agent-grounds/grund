@@ -1,14 +1,16 @@
-"""The training workloads of the products that are not the `grund` executable.
+"""The PGO training workload of every product.
 
 §FS-distribution-candidate.7.1: each product trains on its own workload, so a profile
-describes the code that product runs. The language server is driven through an editor
-session over stdio; the Node addon and the Python extension through native API calls
-over the operations of §AR-benchmarks.1.5's list. `scripts/pgo-build.sh` runs this
-with the instrumented payload, and reads `describe` for the evidence it records.
+describes the code that product runs. §AR-benchmarks.1.5: the `grund` executable runs the
+scenario catalog's `pgo` subset against this repository's tree, and the Node addon and the
+Python extension run the same subset through native API calls; this is the catalog's one
+PGO reader. The language server is driven through an editor session over stdio.
+`scripts/pgo-build.sh` runs this with the instrumented payload, and reads `describe` for
+the evidence it records.
 
-Plain Python 3.6 syntax, because `pgo-build.sh`'s `find_python` accepts any Python 3.6
-or newer to run it; in the manylinux2014 image the Linux release builds in, that is
-`/opt/python/cp312-cp312/bin/python3`.
+Plain Python 3.6 syntax and the standard library only, because `pgo-build.sh`'s
+`find_python` accepts any Python 3.6 or newer to run it; in the manylinux2014 image the
+Linux release builds in, that is `/opt/python/cp312-cp312/bin/python3`.
 """
 
 import json
@@ -20,16 +22,45 @@ import sys
 import threading
 import time
 
+CATALOG = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__)))), "crates", "grund-cli", "benches", "scenarios.json")
 LSP = ["initialize", "initialized", "textDocument/didOpen README.md",
        "textDocument/didOpen docs/functional-spec/FS-check.md",
        "textDocument/didOpen crates/grund-core/src/lib.rs",
        "textDocument/hover on the first citation of each document, answered after its diagnostics",
        "shutdown", "exit"]
-API = ["check(root)", "list(root)", "show FS-check --brief", "show FS-check",
-       "show FS-check --full", "refs GOAL-fast-feedback", "cover(root)", "fmt preview"]
-WORKLOADS = {"grund-lsp": ["grund-lsp " + step for step in LSP],
-             "node-addon": ["node " + step for step in API],
-             "python-extension": ["python " + step for step in API]}
+# `show`'s depth flags, as the native APIs name the mode (§AR-benchmarks.1.2).
+MODES = {"--brief": "brief", "--full": "full"}
+
+
+def subset():
+    """§AR-benchmarks.1.5: the catalog's `pgo` rows, in catalog order."""
+    with open(CATALOG, encoding="utf-8") as handle:
+        return [row for row in json.load(handle)["scenarios"] if row["pgo"]]
+
+
+def arguments(row):
+    """A row's `args` with `{id}` this repository's subject rather than the fixture's."""
+    return [arg.replace("{id}", row["pgo"].get("id", "")) for arg in row["args"]]
+
+
+def steps():
+    """Each `pgo` row as the native call that runs it: the operation, its ID, its mode."""
+    return [{"op": row["args"][0], "id": row["pgo"].get("id"),
+             "mode": next((MODES[arg] for arg in row["args"] if arg in MODES), "lead")}
+            for row in subset()]
+
+
+def workload(product):
+    """The training `describe` prints, which the release evidence records byte for byte."""
+    if product == "grund":
+        return ["grund " + " ".join(arguments(row)) for row in subset()]
+    if product == "grund-lsp":
+        return ["grund-lsp " + step for step in LSP]
+    prefix = {"node-addon": "node ", "python-extension": "python "}[product]
+    return [prefix + row["pgo"]["api"] for row in subset()]
+
+
 DOCUMENTS = ("README.md", "docs/functional-spec/FS-check.md", "crates/grund-core/src/lib.rs")
 
 
@@ -128,31 +159,38 @@ def language_server(payload, repo):
 NODE_SCRIPT = r"""
 const grund = require(process.argv[1]);
 const root = process.argv[2];
+const call = {
+  check: () => grund.check(root),
+  list: () => grund.list({root}),
+  show: (step) => grund.show(step.id, {root, mode: step.mode}),
+  refs: (step) => grund.refs(step.id, {root}),
+  cover: () => grund.cover({root}),
+  fmt: () => grund.fmt({root}),
+};
 (async () => {
   for (let i = 0; i < 3; i++) {
-    await grund.check(root);
-    await grund.list({root});
-    for (const mode of ['brief', 'lead', 'full']) await grund.show('FS-check', {root, mode});
-    await grund.refs('GOAL-fast-feedback', {root});
-    await grund.cover({root});
-    await grund.fmt({root});
+    for (const step of JSON.parse(process.argv[3])) await call[step.op](step);
   }
 })().catch((error) => { console.error(error); process.exitCode = 1; });
 """
 
 PYTHON_SCRIPT = r"""
+import json
 import sys
 sys.path.insert(0, sys.argv[1])
 import grund
 root = sys.argv[2]
+call = {
+    "check": lambda step: grund.check(root),
+    "list": lambda step: grund.list_ids(root=root),
+    "show": lambda step: grund.show(step["id"], mode=step["mode"], root=root),
+    "refs": lambda step: grund.refs(step["id"], root=root),
+    "cover": lambda step: grund.cover(root=root),
+    "fmt": lambda step: grund.fmt(root=root),
+}
 for _ in range(3):
-    grund.check(root)
-    grund.list_ids(root=root)
-    for mode in ("brief", "lead", "full"):
-        grund.show("FS-check", mode=mode, root=root)
-    grund.refs("GOAL-fast-feedback", root=root)
-    grund.cover(root=root)
-    grund.fmt(root=root)
+    for step in json.loads(sys.argv[3]):
+        call[step["op"]](step)
 """
 
 
@@ -182,7 +220,7 @@ def node_addon(payload, repo, work, target):
     node_binary = os.environ.get("GRUND_PGO_NODE") or shutil.which("node") or "node"
     # A directory is required through its `main`, which the package leaves to `exports`.
     return subprocess.call([node_binary, "-e", NODE_SCRIPT, os.path.join(stage, "index.cjs"),
-                            repo])
+                            repo, json.dumps(steps())])
 
 
 def python_extension(payload, repo, work):
@@ -192,15 +230,32 @@ def python_extension(payload, repo, work):
     suffix = ".pyd" if payload.endswith(".dll") else ".abi3.so"
     shutil.copyfile(payload, os.path.join(stage, "grund", "_native" + suffix))
     python = os.environ.get("GRUND_PGO_PYTHON") or sys.executable
-    return subprocess.call([python, "-c", PYTHON_SCRIPT, stage, repo])
+    return subprocess.call([python, "-c", PYTHON_SCRIPT, stage, repo, json.dumps(steps())])
+
+
+def executable(payload, repo):
+    """§AR-benchmarks.1.5: the `pgo` subset against this repository's own tree, three times.
+    Exit codes are not the point (a non-canonical tree makes `fmt --check` exit 1): only the
+    code paths run, and a payload that cannot run leaves no profile for `pgo-build.sh` to find."""
+    for _ in range(3):
+        for row in subset():
+            try:
+                subprocess.call([payload] + arguments(row) + [repo], stdout=subprocess.DEVNULL,
+                                stderr=subprocess.DEVNULL)
+            except OSError as error:
+                print("error: cannot run %s: %s" % (payload, error), file=sys.stderr)
+                return 1
+    return 0
 
 
 def main(argv):
     if argv[:1] == ["describe"]:
-        print(json.dumps(WORKLOADS[argv[1]]))
+        print(json.dumps(workload(argv[1])))
         return 0
     product, payload, repo, work, target = argv
     os.makedirs(work, exist_ok=True)
+    if product == "grund":
+        return executable(payload, repo)
     if product == "grund-lsp":
         return language_server(payload, repo)
     if product == "node-addon":
