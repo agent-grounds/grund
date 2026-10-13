@@ -3,7 +3,7 @@ project_name = "api"
 # project_description = "<one line shown next to this project in workspace member lists>"
 
 [reference]
-marker = "§"
+marker = "§" # § | ∵ | ⊢ | ※ | ⏚ | any rare character
 trigger = "$$"
 strict = true
 shorthand = "canonical" # canonical | accepted
