@@ -4,8 +4,10 @@ import hashlib
 import json
 import atexit
 import os
+import re
 import shutil
 import tempfile
+import time
 from pathlib import Path
 from functools import lru_cache
 
@@ -15,6 +17,16 @@ REPO = Path(__file__).resolve().parents[3]
 SCRATCH = Path.home() / "ag" / "tmp"
 NODE = REPO / "crates" / "grund-node"
 CASES = REPO / "tests" / "e2e" / "cases"
+TYPESCRIPT = "5.9.3"
+# What a retry can cure: the registry was not reached (§AR-ci.3.4.1.3).
+NETWORK_ERRORS = ("ENOTFOUND", "EAI_AGAIN", "ETIMEDOUT", "ECONNRESET", "ECONNREFUSED")
+INSTALL_ATTEMPTS = 3
+
+
+def node_root():
+    """The shared root every checkout's Node target lives under (§AR-ci.3.4.1)."""
+    given = os.environ.get("GRUND_NODE_TARGET")
+    return Path(given).expanduser() if given else SCRATCH / "grund-node-target"
 
 
 def node_target():
@@ -22,12 +34,54 @@ def node_target():
 
     One per source checkout, keyed by a digest of its resolved root (§AR-ci.3.4.1.2).
     """
-    given = os.environ.get("GRUND_NODE_TARGET")
-    root = Path(given).expanduser() if given else SCRATCH / "grund-node-target"
+    root = node_root()
     key = hashlib.sha256(os.fsencode(REPO)).hexdigest()[:16]
     target = root / key
     target.mkdir(parents=True, exist_ok=True)
     return target.resolve()
+
+
+def typescript_compiler():
+    """The pinned TypeScript compiler, prepared once beside the targets (§AR-ci.3.4.1.3).
+
+    A prepared directory is returned with nothing run. A cold one is installed into a
+    fresh sibling, retried only on a network-class npm error, and renamed into place
+    only once the install succeeded, so no failed install leaves it looking ready.
+    """
+    tools = node_root() / "tools"
+    home = tools / f"typescript-{TYPESCRIPT}"
+    tsc = home / "node_modules" / "typescript" / "bin" / "tsc"
+    if tsc.is_file():
+        return tsc.resolve()
+    tools.mkdir(parents=True, exist_ok=True)
+    for attempt in range(1, INSTALL_ATTEMPTS + 1):
+        sibling = Path(tempfile.mkdtemp(prefix=f".{home.name}-", dir=tools))
+        try:
+            (sibling / "package.json").write_text('{"private":true}\n', encoding="utf-8")
+            argv = ["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund",
+                    "--save-exact", "--prefix", sibling, f"typescript@{TYPESCRIPT}"]
+            result = command(argv, cwd=sibling)
+            if result.returncode == 0:
+                try:
+                    sibling.rename(home)
+                except OSError:
+                    # Another run renamed its own copy into place first; theirs is as good.
+                    if not tsc.is_file():
+                        raise
+                return tsc.resolve()
+        finally:
+            shutil.rmtree(sibling, ignore_errors=True)
+        output = f"{result.stdout}\n{result.stderr}"
+        network = any(re.search(rf"\b{code}\b", output) for code in NETWORK_ERRORS)
+        retry = network and attempt < INSTALL_ATTEMPTS
+        if not retry:
+            # A failed preparation fails the test, never skips it (§AR-ci.3.4).
+            raise AssertionError(
+                f"command failed ({result.returncode}) on attempt {attempt}: "
+                f"{' '.join(map(str, argv))}\nstdout:\n{result.stdout}\n"
+                f"stderr:\n{result.stderr}"
+            )
+        time.sleep(2 * attempt)
 
 
 def dev_env(base=None):
