@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use super::read_predicate::{excluding_rule, name_refusal};
+use super::read_predicate::{Unread, excluding_rule, name_refusal};
 use super::tree::scan_unwalked_file;
 use crate::config::{Frame, Run, Schema};
 use crate::grammar::{Grammar, resolve_shorthands};
@@ -118,7 +118,8 @@ fn resolves(findings: &Catalog, cite: &Citation) -> bool {
 }
 
 /// The verdict on `stub`, asked in the order of §AR-scanner.4.6; `None` for a
-/// declaration that is not a stub.
+/// declaration that is not a stub. Keep the shared name predicate's extension
+/// refusal for the checker's explanation (§FS-declarations.stubs.target.3).
 fn resolve_stub(
     frame: Frame<'_>,
     id: &Id,
@@ -134,11 +135,24 @@ fn resolve_stub(
     if !sources.exists(&resolved) {
         return Some(StubResolution::Missing);
     }
+    if !sources.is_file(&resolved) {
+        return Some(StubResolution::NotRead);
+    }
     // §FS-declarations.stubs.target.3, §AR-scanner.1.13: only the name and
     // extension reasons, judged by the name the stub wrote before any record is
     // paired with it, so a symlink under a hidden or unlisted name never pairs.
-    if !sources.is_file(&resolved) || name_refusal(&resolved, targets.schema).is_some() {
-        return Some(StubResolution::NotRead);
+    if let Some(reason) = name_refusal(&resolved, targets.schema) {
+        return Some(if reason == Unread::Extension {
+            StubResolution::UnlistedExtension(
+                resolved
+                    .extension()
+                    .and_then(|ext| ext.to_str())
+                    .unwrap_or("")
+                    .to_string(),
+            )
+        } else {
+            StubResolution::NotRead
+        });
     }
     if paths_same_location(&frame.root().join(&stub.file), &resolved) {
         let declared = decls
