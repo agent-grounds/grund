@@ -101,10 +101,10 @@ def load(path: Path) -> dict:
 def merge(partials: list) -> tuple:
     """§AR-benchmarks.7.1.1: the shards' partial records of one revision as its one record.
 
-    Partials that differ in an identity field, in `commit`, `binary_sha256` or `tier`, or
-    that both hold one scenario, are refused, each cause named; the record holds the union
-    of the counts, of the refusals and of the fixtures, which differ only by digesting one
-    fixture two ways."""
+    `fixtures` is merged as a bundle: the union of the partials' fixture maps, refusing a
+    fixture two partials digest differently. Partials that differ in any other identity
+    field, in `commit`, `binary_sha256` or `tier`, or that both hold one scenario, are
+    refused, each cause named; the record holds the union of the counts and the refusals."""
     first, problems = partials[0], []
     fixtures = {}
     for other in partials:

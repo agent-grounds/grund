@@ -1,6 +1,7 @@
 """§AR-benchmarks.7.1, §AR-benchmarks.7.1.1 — a run record carries the `tier` that ran it,
 outside the series key, and `bench_record.py merge` folds the shards' partial records into
-one record per revision, refusing partials that do not belong together."""
+one record per revision, merging `fixtures` as a bundle and refusing partials that do not
+belong together."""
 
 import json
 import tempfile
@@ -86,6 +87,34 @@ class MergeFoldsTheShards(unittest.TestCase):
                 result, _ = self.merge(partial(self.module, {"check": 10}),
                                        partial(self.module, {"show": 30}, **other))
                 self.assertNotEqual(0, result.returncode, result.stdout)
+
+    def bundle(self, *names):
+        return dict(IDENTITY, fixtures={name: {"schema_version": 1, "digest": name[0] * 64}
+                                        for name in names})
+
+    def merged_series(self, tier, *shards):
+        result, out = self.merge(*(partial(self.module, {f"{tier}-{index}": 1}, tier=tier,
+                                           identity=self.bundle(*names))
+                                   for index, names in enumerate(shards)))
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        return json.loads(out.read_text(encoding="utf-8"))["series"]
+
+    def test_each_tier_is_a_series_of_its_own(self):
+        # The bundle is the fixtures of the rows a tier ran, so two pull-request runs share a
+        # key, and a nightly run, whose rows generate more fixtures, gets another one.
+        pr = self.merged_series("pr", ["canonical-repo"], ["large-repo"])
+        self.assertEqual(pr, self.merged_series("pr", ["large-repo"], ["canonical-repo"]))
+        nightly = self.merged_series("nightly", ["canonical-repo", "small-repo"],
+                                     ["large-repo"])
+        self.assertNotEqual(pr, nightly)
+
+    def test_a_fixture_two_partials_digest_differently_is_refused(self):
+        drifted = dict(IDENTITY, fixtures={"canonical-repo": {"schema_version": 1,
+                                                              "digest": "e" * 64}})
+        result, _ = self.merge(partial(self.module, {"check": 10}),
+                               partial(self.module, {"show": 30}, identity=drifted))
+        self.assertNotEqual(0, result.returncode, "a fixture digested two ways was merged")
+        self.assertIn("canonical-repo", result.stdout + result.stderr)
 
     def test_a_scenario_in_two_partials_is_refused(self):
         result, _ = self.merge(partial(self.module, {"check": 10}),
