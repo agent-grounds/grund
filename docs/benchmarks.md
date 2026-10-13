@@ -55,20 +55,22 @@ CI takes its counts in one pinned environment
 digest, Valgrind `1:3.19.0-1`, `iai-callgrind-runner` 0.16.1, `LC_ALL=C.UTF-8`,
 `TZ=UTC`, `RAYON_NUM_THREADS=4`, `CARGO_INCREMENTAL=0` and an empty `RUSTFLAGS`. To
 take the same counts on another machine, run the suite in that image from the
-repository root; it builds into `target/bench-image`, as root:
+repository root. It builds into `target/bench-image`, as root, and takes the commit
+from the host, since a worktree's `.git` points outside the container. The seccomp
+option lets iai-callgrind turn address-space randomization off, as CI does:
 
 ```sh
-docker run --rm -v "$PWD":/work -w /work \
+docker run --rm --security-opt seccomp=unconfined -v "$PWD":/work -w /work \
   -e LC_ALL=C.UTF-8 -e TZ=UTC -e RAYON_NUM_THREADS=4 -e CARGO_INCREMENTAL=0 -e RUSTFLAGS= \
-  -e CARGO_TARGET_DIR=/work/target/bench-image \
+  -e CARGO_TARGET_DIR=/work/target/bench-image -e BENCH_COMMIT="$(git rev-parse HEAD)" \
   rust:1.95.0-bookworm@sha256:6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1 \
-  bash -c 'git config --global --add safe.directory /work &&
-    apt-get update -qq && apt-get install -y -qq --no-install-recommends valgrind=1:3.19.0-1 &&
+  bash -c 'apt-get update -qq && apt-get install -y -qq --no-install-recommends valgrind=1:3.19.0-1 \
+      libc6-dbg="$(dpkg-query -W -f "\${Version}" libc6)" &&
     cargo install iai-callgrind-runner --version 0.16.1 --locked --quiet &&
     cargo bench -p grund --features bench --locked --quiet --bench instructions -- --save-summary=json &&
     python3 scripts/bench_record.py record --environment ci --image sha256:6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1 \
-      --binary target/bench-image/release/grund --iai target/bench-image/iai \
-      --out target/bench-image/record.json'
+      --commit "$BENCH_COMMIT" --binary target/bench-image/release/grund \
+      --iai target/bench-image/iai --out target/bench-image/record.json'
 ```
 
 Every run, in CI or locally, is written down as one run record by
