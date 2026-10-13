@@ -13,7 +13,7 @@ project_name = "repo"
 kinds = []
 
 [reference]
-marker = "§"
+marker = "§" # § | ∵ | ⊢ | ※ | ⏚ | any rare character
 trigger = "$$"
 strict = true
 shorthand = "canonical" # canonical | accepted

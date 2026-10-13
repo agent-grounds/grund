@@ -18,6 +18,9 @@ mod configured_star_slug;
 #[path = "support/stub_extension_diagnostic.rs"]
 mod stub_extension_diagnostic;
 
+#[path = "support/init_marker_guidance.rs"]
+mod init_marker_guidance;
+
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases, discover_examples,

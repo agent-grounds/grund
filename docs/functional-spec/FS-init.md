@@ -756,6 +756,21 @@ The generated `[id]` table includes the uncommented Boolean `named_sections = fa
 
 Because the generated config is also a usability surface, non-boolean keys with a finite accepted value set carry inline comments listing that set. Boolean keys are left uncommented: spelling out `true | false` is not useful guidance and should not be emitted. Free-form keys instead describe their grammar or omit the comment when a finite list would be misleading. For example, `[reference].inline_style` names `citation-with-note | citation-only`, `[id].section_heading_levels` names `strict | warn | loose`, `[output].format` names `text | json`, and `[fmt.cross_refs].anchor_format` names `github | gitlab | mkdocs | pandoc | none`. These comments are explanatory only; they are not schema keys and do not change parsing under [§FS-config.3](FS-config.md#3-keys).
 
+The generated `[reference]` table writes this exact marker line:
+
+```toml
+marker = "§" # § | ∵ | ⊢ | ※ | ⏚ | any rare character
+```
+
+The comment gives open-ended examples for choosing a marker; `any rare character`
+is selection guidance, not a validation rule. The examples neither exhaust the
+accepted strings nor restrict markers to a single character: the marker grammar
+remains defined by [§FS-config.3.1](FS-config.md#31-reference--citation-form).
+The written value remains the default under
+[§FS-init.2.4.3](FS-init.md#243-every-written-key-is-the-default). This guidance
+also applies to the `none` template under
+[§FS-init.2.4.9](FS-init.md#249-the-none-templates-config).
+
 #### 2.4.6 `shorthand` is written out
 
 The generated `[reference]` table writes
