@@ -14,6 +14,10 @@ mod chapter_diagnostics;
 #[path = "support/configured_star_slug.rs"]
 mod configured_star_slug;
 
+// §FS-declarations.stubs.target.3: the extension-refusal explanation and its controls.
+#[path = "support/stub_extension_diagnostic.rs"]
+mod stub_extension_diagnostic;
+
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases, discover_examples,

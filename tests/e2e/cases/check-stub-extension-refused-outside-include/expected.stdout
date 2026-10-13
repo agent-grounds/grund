@@ -1,0 +1,1 @@
+{"severity":"error","path":"docs/architecture/AR-c.md","line":1,"code":"broken-stub","message":"stub link target src/c/router.h is not scanned: extension h is not in [scan] extensions","sites":null,"authority":null}

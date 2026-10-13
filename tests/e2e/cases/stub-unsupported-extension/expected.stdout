@@ -1,1 +1,1 @@
-docs/architecture/AR-001-router.md:1: error: stub link target lacks AR-001-router: src/router.txt
+docs/architecture/AR-001-router.md:1: error: stub link target src/router.txt is not scanned: extension txt is not in [scan] extensions
