@@ -3,6 +3,7 @@
 
 use super::RuleAnchor;
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
+use super::sentence::unnamed_component;
 use crate::grammar::{Grammar, render_id, section_display_name};
 use crate::model::{Catalog, Id, paired_declarations, section_resolves};
 use std::collections::BTreeMap;
@@ -38,7 +39,7 @@ pub(crate) fn adapt_markdown(
 /// Adapt the complete resolved workspace while keeping the selected member's
 /// subjects local. External declarations carry qualified kind/labels, so the
 /// same engine handles local, pinned, and any-member object selectors without
-/// learning resolver records (§FS-rules.2, §AR-rules.3). An ID's declarations, its
+/// learning resolver records (§FS-rules.5.1, §AR-rules.3). An ID's declarations, its
 /// nodes, the edges into it and the sections a citation of it reaches are read off
 /// each stub's verdict (§AR-scanner.4.6), and a declaration's chapters and
 /// citations off the record it is paired with, so a stub's target outside the walk
@@ -261,11 +262,10 @@ pub(crate) fn adapt_workspace(
     facts
 }
 
-/// A section with an all-digit component is no rule unit (§FS-rules.2).
+/// A section is a rule unit where a chapter subject could name it, which the
+/// sentence grammar answers (§AR-rules.2, §AR-rules.3).
 fn is_rule_unit(section: &str) -> bool {
-    !section
-        .split('.')
-        .any(|part| part.bytes().all(|byte| byte.is_ascii_digit()))
+    unnamed_component(section).is_none()
 }
 
 /// The chapter at `path`, or at its nearest ancestor that is one: numbered

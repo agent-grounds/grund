@@ -117,7 +117,7 @@ pub(crate) use id_rules::{
 };
 pub(crate) use ids::{
     MarkdownLineCitation, parse_id, parse_id_arg, parse_qualified_id_prefix, render_id,
-    render_qualified_id,
+    render_qualified_id, split_alias_path,
 };
 pub(crate) use inline_note_layout::{
     BlockCitations, CITATION_RUN_SEPARATOR, LayoutChannel, block_has_inline_note_memoized,

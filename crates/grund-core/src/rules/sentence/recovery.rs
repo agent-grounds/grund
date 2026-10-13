@@ -11,7 +11,7 @@
 
 use super::subjects::{Spelling, SubjectRefusal, parse_subject, validate_named_path};
 use super::{RuleSubject, RuleVocabulary};
-use crate::grammar::{Grammar, named_section_component};
+use crate::grammar::{Grammar, named_section_component, split_alias_path};
 
 /// What §FS-rule-refusals.selectors's four steps recovered from a refused subject.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -67,11 +67,8 @@ impl Recovered {
 /// §FS-rule-refusals.selectors's four steps over a refusal, or `None` where no configured
 /// kind can be recovered.
 pub(super) fn recover(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> Option<Recovered> {
-    let head = refusal
-        .head
-        // coordinate-lexer: recovery of refused text, which no grammar admits
-        .rsplit_once('/')
-        .map_or(refusal.head.as_str(), |(_, local)| local);
+    // §FS-workspace.1: recovery of refused text, which no grammar admits, so the lenient split.
+    let (_, head) = split_alias_path(&refusal.head);
     let kind = recovered_kind(head, vocabulary)?;
     let declaration = (refusal.spelling == Spelling::Literal && is_declaration(head, vocabulary))
         .then(|| head.to_string());

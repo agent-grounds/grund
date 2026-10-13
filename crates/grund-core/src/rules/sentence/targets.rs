@@ -55,7 +55,13 @@ fn known_target(
         KindVerdict::NonCitable(entry) => {
             one_grammar_window(&legacy, &entry.non_citable_reason(Quote::Double))
         }
-        KindVerdict::Unknown | KindVerdict::UnknownAlias => legacy,
+        // §FS-errors.2.5.1: `code` with no row is refused as not citable too.
+        KindVerdict::Unknown => {
+            vocab
+                .objects
+                .unknown_or_complement(scope, kind, legacy, Quote::Double)
+        }
+        KindVerdict::UnknownAlias => legacy,
     };
     Err(refuse(reason, missing))
 }

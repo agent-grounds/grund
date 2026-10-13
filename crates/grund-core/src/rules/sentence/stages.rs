@@ -6,7 +6,8 @@ use super::conjunction::{conjunction_forms, first_clause};
 use super::forms::{Form, Refusal, refuse};
 use super::predicate::parse_predicate;
 use super::subjects::{
-    Spelling, SubjectFault, SubjectRefusal, parse_subject, refused, split_modality,
+    EACH_IS_CASE_SENSITIVE, Spelling, SubjectFault, SubjectRefusal, lower_case_each, parse_subject,
+    refused, split_modality,
 };
 use super::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
@@ -125,9 +126,9 @@ fn terminal_period(reading: &mut Reading<'_>) -> Result<(), Refusal> {
 /// each`, and a section-component wildcard.
 fn phase_one_subject(reading: &mut Reading<'_>) -> Result<(), Refusal> {
     let (title, vocabulary) = (reading.title, reading.vocabulary);
-    if let Some(rest) = title.strip_prefix("each ") {
+    if let Some(rest) = lower_case_each(title) {
         return Err(refuse(
-            "fixed word \"Each\" is case-sensitive",
+            EACH_IS_CASE_SENSITIVE,
             Form::One(format!("Each {rest}")),
         ));
     }

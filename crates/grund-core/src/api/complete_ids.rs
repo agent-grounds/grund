@@ -10,7 +10,7 @@ use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 use crate::config::Config;
-use crate::grammar::render_id;
+use crate::grammar::{render_id, split_alias_path};
 use crate::model::{Catalog, Finding};
 use crate::resolver::load_workspace_context;
 
@@ -66,9 +66,13 @@ fn complete_ids_run(opts: CompleteIdsOpts, run_warnings: &mut Vec<Finding>) -> R
         .unwrap_or_else(|| context.render_config());
     let mut candidates = BTreeSet::new();
     // §FS-workspace.8.4.1: split an alias path (§FS-workspace.6.1) at its *last* `/`;
-    // the right is an ID-prefix.
-    // coordinate-lexer: an unfinished token, completed rather than validated
-    if let Some((alias_prefix, id_prefix)) = opts.prefix.rsplit_once('/') {
+    // the right is an ID-prefix. An unfinished token is completed, not validated.
+    let alias_split = match split_alias_path(&opts.prefix) {
+        (Some(alias_prefix), id_prefix) => Some((alias_prefix, id_prefix)),
+        // A leading `/` is still an alias path, with the empty alias before it.
+        (None, prefix) => prefix.strip_prefix('/').map(|id_prefix| ("", id_prefix)),
+    };
+    if let Some((alias_prefix, id_prefix)) = alias_split {
         if !context.workspace_loaded {
             return Ok(Vec::new());
         }

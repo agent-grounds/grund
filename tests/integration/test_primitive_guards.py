@@ -60,7 +60,8 @@ PRIMITIVES = {
     "section_re": (r"\bsection_re\b", ("scanner/", "grammar/")),
     "citation_re": (r"\bcitation_re\b", ("scanner/", "grammar/")),
     "split on /": (r"\b(?:r?split_once|r?splitn?|split_terminator)\(\s*(?:'/'|\"/\")",
-                   ("workspace/id_arg.rs", "config/citations.rs", "config/workspace_block.rs")),
+                   ("workspace/id_arg.rs", "config/citations.rs", "config/workspace_block.rs",
+                    "grammar/ids.rs")),
 }
 
 

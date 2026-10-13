@@ -75,8 +75,10 @@ pub fn a_narrowed_run_resolves_what_check_resolves() -> Verdict {
     Ok(())
 }
 
-/// Row G06: the subject `each FS` is refused for one reason as a rule's subject
-/// and as a selector (§REQ-one-answer.identity).
+/// Row G06, closed: the subject `each FS` is refused for one reason as a rule's
+/// subject and as a selector, which keeps its literal-subject reason in front and
+/// appends the rule's after ` — ` (§FS-rule-refusals.selectors,
+/// §REQ-one-answer.identity).
 pub fn a_lowercase_subject_is_refused_once() -> Verdict {
     let config = format!("{CONFIG_SLUG}[[kinds]]\nkind = \"GOAL\"\nfile = \"docs/goals.md\"\n");
     let tree = Tree::new(
@@ -87,10 +89,14 @@ pub fn a_lowercase_subject_is_refused_once() -> Verdict {
             ("docs/goals.md", "# GOAL-a: A\n\nThe aim.\n"),
         ],
     );
+    let selector = reason(&tree.error(&["list", "--selector", "each FS"]));
     agree(
         "the rule subject / the selector",
         reason(&tree.error(&["check", "--rule", "each FS must cite at least one GOAL."])),
-        reason(&tree.error(&["list", "--selector", "each FS"])),
+        selector
+            .rsplit_once(" — ")
+            .map_or(selector.as_str(), |(_, appended)| appended)
+            .to_string(),
     )
 }
 

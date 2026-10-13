@@ -12,7 +12,6 @@ use crate::model::{
     sort_path_key,
 };
 use crate::resolver::{load_workspace_context, point_body_pair};
-use crate::rules::sentence::RuleSubject;
 use crate::scanner::api_scan_error;
 
 pub use super::size_output::{ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput};
@@ -166,48 +165,20 @@ fn list_sizes_run(
             ))
     });
     if let Some(subject) = &selector {
-        let resolution = match subject {
-            RuleSubject::ExactDeclaration(literal) => Some((
-                literal.clone(),
-                pending
-                    .iter()
-                    .filter(|row| {
-                        row.section.is_none()
-                            && render_id(&row.project_config.grammar, row.id) == *literal
-                    })
-                    .count(),
-            )),
-            RuleSubject::ExactChapter {
-                declaration,
-                path,
-                separator,
-            } => Some((
-                format!("{declaration}{separator}{path}"),
-                pending
-                    .iter()
-                    .filter(|row| {
-                        row.section.is_some_and(|(section, _)| section == path)
-                            && render_id(&row.project_config.grammar, row.id) == *declaration
-                    })
-                    .count(),
-            )),
-            _ => None,
+        // §FS-rules.8: the one subject matcher (§AR-rules.2) says which rows a
+        // selector keeps, read as `list` reads it, and a literal counts the same.
+        let selected = |row: &Pending<'_>| {
+            let label = render_id(&row.project_config.grammar, row.id);
+            subject.selects(
+                &row.id.kind,
+                &label,
+                row.section.map(|(section, _)| section),
+            )
         };
-        if let Some((literal, matches)) = resolution {
-            require_unique_literal(&literal, matches)?;
+        if let Some(literal) = subject.literal() {
+            require_unique_literal(&literal, pending.iter().filter(|row| selected(row)).count())?;
         }
-        pending.retain(|row| {
-            let rendered = render_id(&row.project_config.grammar, row.id);
-            match (subject, row.section) {
-                (RuleSubject::Kind(kind), None) => kind == &row.id.kind,
-                (RuleSubject::ExactDeclaration(literal), None) => literal == &rendered,
-                // §FS-rules.2.1: the whole path, read as `list` reads it (§FS-rules.8).
-                (subject, Some((section, _))) => {
-                    subject.chapter_path(&row.id.kind, &rendered) == Some(section)
-                }
-                _ => false,
-            }
-        });
+        pending.retain(selected);
     }
 
     let render_config = context.render_config();

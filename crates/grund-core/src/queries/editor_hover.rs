@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use super::editor_snapshot::{LspCitation, LspSnapshot};
-use crate::grammar::path_at_or_under;
+use crate::grammar::{path_at_or_under, split_alias_path};
 
 /// How much of the tree leans on one declaration-side title: citation sites and
 /// the distinct files those sites live in (§FS-lsp.1.2.5).
@@ -39,7 +39,8 @@ pub fn citation_under_title(
     citation_query_id: &str,
     section_separator: &str,
 ) -> bool {
-    let local_title = title_query_id.rsplit('/').next().unwrap_or(title_query_id);
+    // §FS-workspace.1: the snapshot qualified it, so the lenient split finds its local ID.
+    let (_, local_title) = split_alias_path(title_query_id);
     let descendant_separator = if local_title.contains(section_separator) {
         "."
     } else {
