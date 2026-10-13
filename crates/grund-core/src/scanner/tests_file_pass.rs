@@ -2,7 +2,9 @@
 
 use crate::checker::check_findings;
 use crate::config::{Config, load_config};
-use crate::grammar::{anchor_slug_github, reduce_heading_text, section_anchor_text};
+use crate::grammar::{
+    anchor_slug_github, reduce_heading_text, section_anchor_text, section_display_name,
+};
 use crate::model::{Id, ShowRenderMode};
 use crate::queries::show_declaration;
 use crate::testing::{
@@ -272,6 +274,21 @@ fn section_anchor_uses_visible_markdown_link_text() {
     assert_eq!(
         anchor_slug_github(&text),
         "22-dangling-citations-fs-check31"
+    );
+}
+
+/// §FS-declarations.heading.rendered-text: a name under a number reads in the
+/// named grammar, so `1.goals: Goals` is slugged from its rendered text, colon
+/// and all, as GitHub does, and its display name is the title after the path.
+#[test]
+fn a_mixed_section_reads_in_the_named_grammar() {
+    let text = section_anchor_text("### 1.goals: Goals", "1.goals");
+    assert_eq!(anchor_slug_github(&text), "1goals-goals");
+    let deep = section_anchor_text("#### 1.goals.latency: Latency", "1.goals.latency");
+    assert_eq!(anchor_slug_github(&deep), "1goalslatency-latency");
+    assert_eq!(
+        section_display_name("1.goals: Goals", "1.goals", false),
+        "Goals"
     );
 }
 

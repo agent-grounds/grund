@@ -39,6 +39,18 @@ pub(crate) struct LockLines {
     pub(crate) invalid: Vec<usize>,
 }
 
+/// Whether `path` is a **named-mode** section path (§FS-config.3.3.1): one with a
+/// named component at any depth, whatever comes before it, so `goals`, `goals.3`
+/// and `1.goals` are, and `1.2` is not. The one test of which grammar a path is
+/// read in, asked over its components: the anchor and display name a heading
+/// takes, the separator a suggested heading uses, the opted-in grammar's
+/// named-section check, and the orphan prefix
+/// (§FS-declarations.checks.orphan-section) all read it.
+pub(crate) fn named_section_path(path: &str) -> bool {
+    path.split('.')
+        .any(|part| part.as_bytes().first().is_some_and(u8::is_ascii_lowercase))
+}
+
 /// Whether `path`, a recorded section path, is a **mixed path** (§FS-config.3.3.1):
 /// a numeric component followed, at any later depth, by a named one, as in
 /// `1.goals`, `1.goals.3` and `goals.3.latency`. The one test of the shape, read

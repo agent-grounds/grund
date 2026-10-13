@@ -124,10 +124,7 @@ impl Declaration {
     /// relative heading's parent, so the two never disagree on which is one.
     pub(crate) fn missing_section_prefix(&self, path: &str) -> Option<String> {
         let parts = path.split('.').collect::<Vec<_>>();
-        let named = parts
-            .iter()
-            .any(|part| part.as_bytes().first().is_some_and(u8::is_ascii_lowercase));
-        if !named {
+        if !super::named_section_path(path) {
             return None;
         }
         (1..parts.len())

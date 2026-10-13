@@ -93,9 +93,7 @@ pub(crate) fn relative_to_ancestor(line: &str, written: &str, below: &str) -> St
 /// and the authored title less its leading dotted token, or `Untitled`.
 pub(crate) fn relative_heading_hint(level: usize, suggested: &str, title: &str) -> String {
     let component = suggested.rsplit('.').next().unwrap_or(suggested);
-    let named = suggested
-        .split('.')
-        .any(|part| part.bytes().any(|byte| byte.is_ascii_lowercase()));
+    let named = crate::model::named_section_path(suggested);
     let rest = title
         .trim_start()
         .split_once([' ', '\t'])

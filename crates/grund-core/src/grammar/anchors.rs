@@ -19,6 +19,7 @@ use unicode_normalization::UnicodeNormalization;
 
 use super::heading_text::reduce_heading_text;
 use super::relative_heading::expand_relative_heading;
+use crate::model::named_section_path;
 
 /// Slugify a heading into a fragment anchor, dispatching on the configured
 /// `[fmt.cross_refs] anchor_format` profile (github / gitlab / mkdocs / pandoc) —
@@ -114,11 +115,7 @@ pub(crate) fn section_anchor_text(line: &str, section: &str) -> String {
     // §FS-declarations.heading.rendered-text: named anchors derive from the complete
     // rendered heading, so its explicit colon reaches the renderer (`goals: Scope`).
     // Numeric paths retain their historical normalized stored text byte for byte.
-    if section
-        .as_bytes()
-        .first()
-        .is_some_and(u8::is_ascii_lowercase)
-    {
+    if named_section_path(section) {
         return reduce_heading_text(trimmed.trim_start_matches('#').trim_start());
     }
     let heading = trimmed
@@ -153,11 +150,7 @@ pub(crate) fn section_display_name<'a>(
         let complete = expand_relative_heading(title, section);
         return Cow::Owned(section_display_name(&complete, section, false).into_owned());
     }
-    if !section
-        .as_bytes()
-        .first()
-        .is_some_and(u8::is_ascii_lowercase)
-    {
+    if !named_section_path(section) {
         return Cow::Borrowed(title);
     }
     Cow::Borrowed(

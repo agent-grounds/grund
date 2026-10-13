@@ -411,7 +411,8 @@ contains an inline link (including a citation that `--cross-refs` has already wr
 as if it read `## 4. Refining §FS-<x>.1` (the destination URL is not part of the text),
 and `## RM-read: grund <ID>` reads as `## RM-read: grund ` (the `<ID>` is dropped) —
 exactly as a Markdown renderer treats them. For an explicit named heading, the rendered
-text includes the name and colon: `## goals: Scope` reads `goals: Scope`.
+text includes the name and colon: `## goals: Scope` reads `goals: Scope`, and so does a
+name under a number: `### 1.goals: Goals` reads `1.goals: Goals`.
 
 A closing sequence of `#` characters, and the spaces or tabs before it, is not part of the
 rendered text, exactly as CommonMark reads an ATX heading: `## 1. Steps ##` reads `1. Steps`,
