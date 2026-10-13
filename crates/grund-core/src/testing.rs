@@ -521,6 +521,15 @@ pub(crate) fn check_run(root: &Path, full: bool) -> CheckRun {
     run_check(root, true, false, full, None).expect("check run")
 }
 
+/// The tree checked as a zero-config project is loaded: no path argument, the
+/// run rooted at `root` (§GOAL-zero-config). An explicit path is only the
+/// report scope there (§FS-check.1.3.6.1), so `check_run` would root it at
+/// the working directory instead.
+pub(crate) fn zero_config_check_run(root: &Path) -> CheckRun {
+    crate::config::with_embedding_base(root, || run_check(root, false, false, false, None))
+        .expect("check run")
+}
+
 /// A symlink, for the cases that are about one. Unix only: creating one on
 /// Windows needs developer mode, and every caller is `#[cfg(unix)]` too.
 #[cfg(unix)]
