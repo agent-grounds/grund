@@ -145,7 +145,7 @@ fn section_heading_note(project: &Project, marker: &str) -> String {
 /// (§FS-inline-citation-style.5.6): the sentence is rendered, not live, and a
 /// block that predates this correction teaches a wider rule than the gate
 /// enforces until the repository's next `grund init`.
-const DOC_COMMENT_SENTENCE: &str = " Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell or SQL comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there.";
+const DOC_COMMENT_SENTENCE: &str = " Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell, SQL or Lisp comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there.";
 
 /// §FS-inline-citation-style.5.2: the sentence that follows the budgets and
 /// precedes the layout sentence, under `citation-with-note` only — restating

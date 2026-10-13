@@ -44,7 +44,7 @@ grund check <empty-repo> --format json
 If the scan reads no scannable files, exit `0`, stdout empty, stderr contains one JSON warning object:
 
 ```json
-{"severity":"warning","path":null,"line":null,"code":"empty-scan","message":"nothing to scan — no files under `<path>` matched grund's extensions (md, rs, go, java, kt, ts, tsx, js, py, c, cpp, swift, scala, rb, php, cs, lisp, scm, clj, sql, hs, lhs, lua, ada, adb, ads, h, cc, cxx, hpp, hh, hxx, m, mm, kts, jsx, mjs, cjs, dart, r, R, sh, bash, zsh).","sites":null,"authority":null}
+{"severity":"warning","path":null,"line":null,"code":"empty-scan","message":"nothing to scan — no files under `<path>` matched grund's extensions (md, rs, go, java, kt, ts, tsx, js, py, c, cpp, swift, scala, rb, php, cs, lisp, scm, clj, sql, hs, lhs, lua, ada, adb, ads, h, cc, cxx, hpp, hh, hxx, m, mm, kts, jsx, mjs, cjs, dart, r, R, sh, bash, zsh, cl, el, ss, rkt, cljs, cljc).","sites":null,"authority":null}
 ```
 
 A clean non-empty JSON check emits nothing on stdout and nothing on stderr. There is no success object.
