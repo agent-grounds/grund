@@ -8,9 +8,11 @@ entry raises. The roadmap does not count as that citer, because it deletes a
 point once the point ships. No architecture point describes this repository's
 own documents, so this test cites the points it holds them to instead.
 
-§REQ-readme.1 and §REQ-readme.evidence require a short README path to a sourced,
-task-oriented comparison. The assertions below detect the reported misleading
-passages and preserve addresses; factual source review remains required."""
+§REQ-readme.1 and §REQ-readme.evidence require a short README path to a sourced
+comparison: the root README links the folder's index, which holds the comparison
+tables and links the task-oriented comparison of the traceability tools. The
+assertions below detect the reported misleading passages and preserve addresses;
+factual source review remains required."""
 
 import re
 import subprocess
@@ -181,7 +183,7 @@ def _positioning_defects(text):
 
 def _has_comparison_link(text):
     return bool(re.search(
-        r"(?:\]\(|\]:\s*)[^\s]*docs/related-work/REL-traceability-tools\.md(?:[#)\s]|$)",
+        r"(?:\]\(|\]:\s*)[^\s]*docs/related-work/README\.md(?:[#)\s]|$)",
         text,
     ))
 
@@ -242,10 +244,20 @@ class RelatedWorkTests(unittest.TestCase):
         uncited = [f"REL-{slug}" for slug in ENTRIES if not citers.get(f"REL-{slug}")]
         self.assertEqual([], uncited, f"cited only from {HOME}/ or the roadmap, or not at all")
 
-    def test_readme_links_to_the_existing_comparison(self):
+    def test_readme_links_to_the_related_work_comparison(self):
         self.assertTrue(
             _has_comparison_link(README.read_text(encoding="utf-8")),
-            "README has no Markdown link to docs/related-work/REL-traceability-tools.md",
+            "README has no Markdown link to docs/related-work/README.md",
+        )
+
+    def test_the_index_holds_the_comparisons_and_links_the_task_comparison(self):
+        lines = list(_prose_lines(INDEX.read_text(encoding="utf-8")))
+        for heading in ("## Academic work, compared", "## Open tools, compared"):
+            with self.subTest(heading=heading):
+                self.assertIn(heading, lines)
+        self.assertTrue(
+            any("](REL-traceability-tools.md" in line for line in lines),
+            "the index has no Markdown link to REL-traceability-tools.md",
         )
 
     def test_traceability_comparison_uses_prose_without_rankings_or_promises(self):
@@ -317,11 +329,12 @@ class PositioningDetectorProbes(unittest.TestCase):
         ))
 
     def test_comparison_link_must_be_a_markdown_destination(self):
-        target = "docs/related-work/REL-traceability-tools.md"
-        for text in ("", target, "[comparison](docs/other.md)"):
+        target = "docs/related-work/README.md"
+        for text in ("", target, "[comparison](docs/other.md)",
+                     "[comparison](docs/related-work/REL-traceability-tools.md)"):
             with self.subTest(text=text):
                 self.assertFalse(_has_comparison_link(text))
-        for text in (f"[comparison]({target}#workmatrix)", f"[comparison]: {target}"):
+        for text in (f"[comparison]({target}#open-tools-compared)", f"[comparison]: {target}"):
             with self.subTest(text=text):
                 self.assertTrue(_has_comparison_link(text))
 

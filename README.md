@@ -367,7 +367,7 @@ than only repos that ship an editor config.
 | [Values](docs/user-facing/values.md) | one value, declared once, checked wherever it is quoted |
 | [External facts](docs/user-facing/external-facts.md) | cite tickets as committed offline snapshots |
 | [Workspaces](docs/user-facing/repository-options.md#workspaces-and-sub-projects) | citations across sub-projects |
-| [Related work](docs/related-work/REL-traceability-tools.md) | `grund` beside the requirements-traceability tools it descends from |
+| [Related work](docs/related-work/README.md) | where `grund` stands among academic work and open tools |
 | [All guides](docs/user-facing/README.md) | each beside its runnable example |
 
 `grund --help` is one screen; `grund <command> --help` is one page with flags, examples,
