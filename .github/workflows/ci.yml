@@ -245,9 +245,9 @@ jobs:
         with:
           path: |
             ~/ag/tmp/grund-node-target
-          key: ${{ runner.os }}-node-target-v2-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-node-target-v2-1.95.0-
+            ${{ runner.os }}-node-target-v3-1.95.0-
 
       # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
       # including a PR merge checkout, before the Python gate runs.
@@ -280,7 +280,7 @@ jobs:
         with:
           path: |
             ~/ag/tmp/grund-node-target
-          key: ${{ runner.os }}-node-target-v2-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('**/Cargo.lock') }}
 
   # `.pre-commit-config.yaml` is the local gate; CI runs it directly so every
   # pre-commit hook remains enforced remotely (§AR-ci.1), less the hooks whose command a
@@ -569,9 +569,9 @@ jobs:
         with:
           path: |
             ~/ag/tmp/grund-node-target
-          key: ${{ runner.os }}-node-target-v2-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-node-target-v2-1.95.0-
+            ${{ runner.os }}-node-target-v3-1.95.0-
 
       # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
       # including a PR merge checkout, before the Python gate runs.
@@ -605,7 +605,7 @@ jobs:
         with:
           path: |
             ~/ag/tmp/grund-node-target
-          key: ${{ runner.os }}-node-target-v2-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('**/Cargo.lock') }}
 
   # §AR-ci.13.1: macOS keeps its suites in one job; the merge queue shares its five slots.
   macos:
@@ -658,9 +658,9 @@ jobs:
         with:
           path: |
             ~/ag/tmp/grund-node-target
-          key: ${{ runner.os }}-node-target-v2-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-node-target-v2-1.95.0-
+            ${{ runner.os }}-node-target-v3-1.95.0-
 
       - name: cargo fmt --check
         run: cargo fmt --all -- --check
@@ -755,7 +755,7 @@ jobs:
         with:
           path: |
             ~/ag/tmp/grund-node-target
-          key: ${{ runner.os }}-node-target-v2-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('**/Cargo.lock') }}
 
   # §AR-ci.13.2: the required checks. Each runs no suite of its own; it runs whatever its
   # needs did, and fails unless every one of them succeeded.
