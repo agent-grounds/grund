@@ -12,16 +12,21 @@ parser. What is asserted is job and step *shape* — which step precedes which,
 what a condition names, what a budget multiplies out to — never the formatting,
 so a reflow of these files does not fail this module."""
 
+import json
 import re
+import subprocess
+import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 WORKFLOWS = REPO_ROOT / ".github" / "workflows"
 RELEASE = WORKFLOWS / "release.yml"
 PGO_SCRIPT = REPO_ROOT / "scripts" / "pgo-build.sh"
-BENCHES = REPO_ROOT / "crates" / "grund-cli" / "benches" / "instructions.rs"
+CATALOG = REPO_ROOT / "crates" / "grund-cli" / "benches" / "scenarios.json"
+TRAIN = REPO_ROOT / "scripts" / "distribution" / "train.py"
 GUARD = "scripts/check_release_ramps.py"
 ENTRIES = "docs/changelog/unreleased"
 # The retired hold's interface, which no helper may carry again (§FS-distribution.4.4).
@@ -83,14 +88,15 @@ def step_name(step):
     return named.group(1).strip() if named else ""
 
 
-def training_invocations(script):
-    """The instrumented-binary calls of `pgo-build.sh`'s training loop.
-
-    Bounded by the `set +e` / `set -e` pair the loop runs under, so the
-    script's own closing `--version` smoke call is not mistaken for training
-    input."""
-    block = script.split("\nset +e\n", 1)[1].split("\nset -e\n", 1)[0]
-    return [line.strip() for line in block.splitlines() if line.strip().startswith('"$grund" ')]
+def train_module():
+    """`scripts/distribution/train.py`, imported so its `grund` training run can be
+    observed without a payload."""
+    sys.path.insert(0, str(TRAIN.parent))
+    try:
+        import train
+    finally:
+        sys.path.pop(0)
+    return train
 
 
 def step_index(job_steps, wanted):
@@ -352,22 +358,37 @@ class ProfileGuidedOptimizationTests(unittest.TestCase):
         self.assertEqual(3, len(re.findall(r"pgo_required:\s*true", matrix)))
 
     def test_the_training_run_uses_this_repositorys_own_tree(self):
-        trainers = training_invocations(self.script)
-        self.assertGreaterEqual(len(trainers), 6, trainers)
-        for invocation in trainers:
-            with self.subTest(invocation=invocation):
-                self.assertIn('"$repo"', invocation)
+        """§DA-pgo-release.3.2: `pgo-build.sh` hands `train.py` the repository root, and
+        `train.py` runs every `pgo` row with that root as its last argument."""
+        trainer = re.search(r'"\$python" scripts/distribution/train\.py "\$product" [^\n]*\\\n'
+                            r'\s*"\$repo" ', self.script)
+        self.assertIsNotNone(trainer, "pgo-build.sh does not pass \"$repo\" to train.py")
+        train = train_module()
+        with mock.patch.object(train.subprocess, "call", return_value=0) as call:
+            self.assertEqual(0, train.executable("payload", "/the/repo"))
+        runs = [invocation.args[0] for invocation in call.call_args_list]
+        self.assertEqual(3 * len(train.subset()), len(runs), runs)
+        for run in runs:
+            with self.subTest(run=run):
+                self.assertEqual("payload", run[0])
+                self.assertEqual("/the/repo", run[-1])
 
     def test_the_training_commands_are_the_benchmark_hot_command_list(self):
-        """§AR-benchmarks' list and the training corpus are one list by
-        contract, so the two files are compared rather than each pinned to a
-        hand-written copy of it."""
-        trained = {invocation.split()[1] for invocation in training_invocations(self.script)}
-        benched = set(re.findall(r'\.args?\(\[?"([a-z]+)"', BENCHES.read_text(encoding="utf-8")))
-        self.assertEqual(benched, trained)
-        for depth in ("show FS-check --brief", "show FS-check", "show FS-check --full", "fmt --check"):
-            with self.subTest(command=depth):
-                self.assertIn(f'"$grund" {depth}', squash(self.script))
+        """§AR-benchmarks.1.5: the training corpus is the scenario catalog's `pgo` subset,
+        so `train.py describe grund` is compared with the catalog rather than each being
+        pinned to a hand-written copy of the list."""
+        scenarios = json.loads(CATALOG.read_text(encoding="utf-8"))["scenarios"]
+        train = train_module()
+        self.assertTrue(train.subset(), "the catalog has no `pgo` subset")
+        for row in train.subset():
+            with self.subTest(row=row["name"]):
+                self.assertIn(row, scenarios)
+        expected = ["grund " + " ".join(row["pgo"]["id"] if arg == "{id}" else arg
+                                        for arg in row["args"])
+                    for row in scenarios if row["pgo"]]
+        described = subprocess.run([sys.executable, "-I", str(TRAIN), "describe", "grund"],
+                                   capture_output=True, text=True, encoding="utf-8", check=True)
+        self.assertEqual(expected, json.loads(described.stdout))
 
     def test_an_empty_training_run_fails_the_build(self):
         self.assertIn("PGO training produced no .profraw files", self.script)
