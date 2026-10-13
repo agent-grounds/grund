@@ -176,7 +176,8 @@ fn check_misplaced(
 
 /// §FS-declarations.checks.broken-stub: the verdict the scan recorded on each stub
 /// (§AR-scanner.4.6), its target missing, not read, or not declaring
-/// the ID (§AR-checker.2.5).
+/// the ID (§AR-checker.2.5). An extension refusal explains why the target is not
+/// scanned rather than claiming it lacks the ID (§FS-declarations.stubs.target.3).
 fn check_broken_stubs(findings: &Catalog, frame: Frame<'_>, report: &mut CheckReport) {
     for (id, decls) in &findings.declarations {
         for decl in decls {
@@ -187,6 +188,11 @@ fn check_broken_stubs(findings: &Catalog, frame: Frame<'_>, report: &mut CheckRe
                 StubResolution::Missing => {
                     format!("stub link target missing: {}", format_path(target))
                 }
+                StubResolution::UnlistedExtension(extension) => format!(
+                    "stub link target {} is not scanned: extension {} is not in [scan] extensions",
+                    format_path(target),
+                    extension
+                ),
                 StubResolution::NotRead | StubResolution::LacksId => format!(
                     "stub link target lacks {}: {}",
                     render_id(frame.grammar(), id),

@@ -10,16 +10,21 @@ use super::paths::sort_path_key;
 use super::records::{Catalog, Declaration, Id};
 
 /// What the scan found at a stub's target, in the order the scanner asks
-/// (§AR-scanner.4.6). `Missing`, `NotRead` and `LacksId` are a broken stub
-/// (§FS-declarations.checks.broken-stub).
+/// (§AR-scanner.4.6). `Missing`, `NotRead`, `UnlistedExtension` and `LacksId`
+/// are a broken stub (§FS-declarations.checks.broken-stub). Extension refusal
+/// keeps its reason for the diagnostic (§FS-declarations.stubs.target.3).
 #[derive(Debug, Clone)]
 pub(crate) enum StubResolution {
     /// Nothing is at the path the stub links to.
     Missing,
     /// The scan does not read the target: not a file, a name that begins with `.`,
-    /// an extension `[scan] extensions` does not list, or a file it cannot read
+    /// or a file it cannot read
     /// (§FS-declarations.stubs.target.3). Judged on the name the stub wrote.
     NotRead,
+    /// The shared name predicate refused the target's extension, kept as judged
+    /// on the name the stub wrote for the explanation that it is not scanned
+    /// (§FS-declarations.stubs.target.3).
+    UnlistedExtension(String),
     /// The target was read, as the scan reads it on the text a save would write,
     /// and does not declare the ID (§AR-scanner.4.6,
     /// §FS-declarations.stubs.target.2).
@@ -37,9 +42,13 @@ pub(crate) enum StubResolution {
 }
 
 impl StubResolution {
-    /// Whether `check` reports the stub broken (§FS-declarations.checks.broken-stub).
+    /// Whether `check` reports the stub broken (§FS-declarations.checks.broken-stub),
+    /// including an extension refusal (§FS-declarations.stubs.target.3).
     pub(crate) fn is_broken(&self) -> bool {
-        matches!(self, Self::Missing | Self::NotRead | Self::LacksId)
+        matches!(
+            self,
+            Self::Missing | Self::NotRead | Self::UnlistedExtension(_) | Self::LacksId
+        )
     }
 }
 
