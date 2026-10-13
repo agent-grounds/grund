@@ -215,3 +215,23 @@ fn a_hidden_named_root_is_not_recorded() {
         "§FS-scan.scope.hidden is asked first"
     );
 }
+
+/// §FS-values.2.2: a value row's JSON home is read by the value pass rather than the
+/// walk, so although the extension list leaves `json` out, the file is read and the
+/// gate records nothing: nothing about it is unchecked.
+#[test]
+fn a_value_rows_json_home_is_not_recorded() {
+    let root = test_root("a_value_rows_json_home_is_not_recorded");
+    write(
+        &root.join("grund.toml"),
+        "[id]\nformat = \"{kind}-{slug}\"\n\n[[kinds]]\nkind = \"CONST\"\nfile = \"values.json\"\n\
+         values = true\n\n[scan]\ninclude = []\nextensions = [\"md\"]\n",
+    );
+    write(&root.join("values.json"), "{\"CONST-a\": 1}\n");
+    let config = crate::config::load_config_at(&root, &root).expect("load the project");
+    let (findings, _) = scan_tree(&config, None, false).expect("scan");
+    assert!(
+        findings.unread_roots.is_empty(),
+        "§FS-values.2.2: the value pass reads it"
+    );
+}
