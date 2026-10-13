@@ -62,6 +62,26 @@ reads "every written key that has a built-in default matches it".
   move touches a project depends on what the scan finds, so the finding has a site, and an editor
   can put it on the line.
 
+## 4. The cases the warning leaves alone
+
+The warning ([§FS-check.checks.fs-home-moves](../../functional-spec/FS-check.md#checksfs-home-moves-the-built-in-fs-home-moves-in-grund-0190)) fires on the one case the move
+breaks, and each case it leaves alone has its reason:
+
+- **A config that omits `[[kinds]]`.** It already homes `FS` at `docs/functional-spec`
+  ([§FS-config.3.4.4.4](../../functional-spec/FS-config.md#3444-a-config-that-omits-kinds-keeps-the-older-fs-home)), so the move does not touch it.
+- **A config that writes `kinds = []`.** It declares no `FS` at all ([§FS-config.3.4.4.5](../../functional-spec/FS-config.md#3445-kinds---declares-no-kinds)).
+- **Any config with a `[[kinds]]` table**, a generated one included. Every config `grund init`
+  has written names its `FS` home explicitly, and an explicit home does not move.
+- **A declared `FS` row that names no `file` or `folder`.** Only the built-in rows read the
+  per-kind default, so such a row has no home today and none after the move.
+- **A project with no config whose `requirements.md` holds no `FS` declaration**, or which has no
+  `requirements.md`. Nothing in it moves.
+
+A workspace member loaded with no config of its own takes the built-in rows as a root with no
+config does, so its home moves too, and it is warned at its own `requirements.md`. One edit, `grund
+init` or a move, clears every declaration of a project, so one warning is the whole finding: a
+second `FS` declaration in the same file adds no second line.
+
 ## release-note: Release note
 
 - [§DF-fs-home-moves-from-0-19](DF-fs-home-moves-from-0-19.md#df-fs-home-moves-from-0-19-the-built-in-fs-home-moves-back-to-docsfunctional-spec-in-0190-and-the-template-declares-req-now), [§FS-check.checks.fs-home-moves](../../functional-spec/FS-check.md#checksfs-home-moves-the-built-in-fs-home-moves-in-grund-0190), [§FS-init.2.4.10](../../functional-spec/FS-init.md#2410-req-is-declared-in-docsrequirements), [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path): **the `software-development` template declares `REQ` in `docs/requirements/`, and from 0.19.0 the built-in `FS` home is `docs/functional-spec/`.** A fresh `grund init --scaffold` declares `REQ` as `folder = "docs/requirements"`, writes `docs/requirements/README.md`, lists `REQ` in the managed block's project map, and carries a commented `[citations.REQ]` block; `FS` stays in `requirements.md` in this release. **Who this affects:** only a project with no `grund.toml` whose `FS` declarations live in `requirements.md`. Its `grund check` now prints the `fs-home-moves` warning, at exit `0`, naming 0.19.0 as the release where the default moves; run `grund init` to write a config that keeps `FS` in `requirements.md`, or move the declarations into `docs/functional-spec/`. Every config `grund init` has written names its `FS` home and is unaffected. The move is [issue #723](https://github.com/agent-grounds/grund/issues/723).
