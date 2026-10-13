@@ -136,6 +136,7 @@ pub fn compare_tree(expected: &Path, actual: &Path) -> Result<(), String> {
 /// than the independently discovered acceptance catalog.
 pub fn execute() -> Vec<String> {
     let mut host = Host::new();
+    let mut editor_worker = super::agreement_editor_worker::Worker::new();
     evidence::receipt(
         "host-provenance",
         &repository(),
@@ -195,28 +196,41 @@ pub fn execute() -> Vec<String> {
                 json!({"case":name,"variant":variant,"base":context["base"],
                 "saved":context["saved"],"cwd":context["cwd"],"path":context["path"]}),
                 || {
-                    exercise(&mut host, &context, &mut errors);
+                    exercise(&mut host, &mut editor_worker, &context, &mut errors);
                 },
             );
         }
+        editor_worker.release();
         host.request(json!({"op":"release","case":name}));
     }
     errors
 }
 
-fn exercise(host: &mut Host, context: &Value, errors: &mut Vec<String>) {
+fn exercise(
+    host: &mut Host,
+    worker: &mut super::agreement_editor_worker::Worker,
+    context: &Value,
+    errors: &mut Vec<String>,
+) {
     let start = errors.len();
-    let loaded = editor::snapshot(context, errors);
+    let loaded = editor::snapshot(worker, context, errors);
     if let Some(loaded) = &loaded {
-        editor::saved_control(context, loaded, errors);
+        editor::saved_control(worker, context, loaded, errors);
     }
     let cwd = text(context, "cwd");
     let mut coordinates = BTreeSet::new();
     let mut tree_answers = std::collections::BTreeMap::new();
-    for question in tree_questions(context) {
+    for mut question in tree_questions(context) {
+        if question.path != text(context, "path") {
+            let mut scope_context = context.clone();
+            scope_context["explicit"] = json!(question.explicit);
+            question.scopes =
+                host.request(json!({"op":"scope","context":scope_context,"path":question.path}));
+        }
+        let scoped = question.context(context, "cli");
         let output = invoke(Path::new(&cwd), &question.cli_args(), None);
         let actual = rows(&output);
-        match witnesses(context, &actual, question.point) {
+        match witnesses(&scoped, &actual, question.point) {
             Ok(expected) => evidence::witness(expected),
             Err(error) => errors.push(error),
         }
@@ -225,7 +239,12 @@ fn exercise(host: &mut Host, context: &Value, errors: &mut Vec<String>) {
         if question.surface == "check"
             && let Some(loaded) = &loaded
         {
-            editor::check(context, loaded, &answer["python"], errors);
+            editor::check(
+                &question.context(context, "python"),
+                loaded,
+                &answer["python"],
+                errors,
+            );
         }
         if question.surface == "list-size" {
             for row in answer["python"]["result"]["entries"]
@@ -247,7 +266,9 @@ fn exercise(host: &mut Host, context: &Value, errors: &mut Vec<String>) {
             }
         }
     }
-    super::agreement_facts::declarations(context, &tree_answers, errors);
+    let mut scoped = context.clone();
+    scoped["reportBase"] = context["scopes"]["python"]["reportBase"].clone();
+    super::agreement_facts::declarations(&scoped, &tree_answers, loaded.as_ref(), errors);
     if coordinates.is_empty() {
         coordinates.insert("FS-agreement-absent".into());
     }
@@ -255,14 +276,14 @@ fn exercise(host: &mut Host, context: &Value, errors: &mut Vec<String>) {
         for question in coordinate_questions(context, &coordinate) {
             let output = invoke(Path::new(&cwd), &question.cli_args(), None);
             let actual = rows(&output);
-            match witnesses(context, &actual, question.point) {
+            match witnesses(&question.context(context, "cli"), &actual, question.point) {
                 Ok(expected) => evidence::witness(expected),
                 Err(error) => errors.push(error),
             }
             let answer = compare::hosts(host, context, &question, &output, errors);
             if question.surface == "show" {
                 super::agreement_facts::sections(
-                    context,
+                    &scoped,
                     &coordinate,
                     &answer["python"],
                     &tree_answers["show-batch"],
@@ -272,23 +293,21 @@ fn exercise(host: &mut Host, context: &Value, errors: &mut Vec<String>) {
                 );
             } else {
                 super::agreement_facts::citations(
-                    context,
+                    &scoped,
                     &answer["python"],
                     &tree_answers["cover"],
                     errors,
                 );
             }
-            if question.surface == "show"
-                && let Some(loaded) = &loaded
-            {
+            if question.surface == "show" && loaded.is_some() {
                 let bodies: Vec<_> = actual
                     .iter()
                     .filter(|row| row.get("body").is_some())
                     .cloned()
                     .collect();
                 editor::show(
-                    context,
-                    loaded,
+                    worker,
+                    &question.context(context, "cli"),
                     &coordinate,
                     &bodies,
                     !output.status.success(),

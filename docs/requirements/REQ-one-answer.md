@@ -195,12 +195,22 @@ list and on a row that no longer reproduces. A row only the editor, shell comple
 an unsaved buffer shows is deferred there by name, with the step that builds its harness.
 The enabled `agreement_acceptance::s4_executes_the_complete_corpus_matrix` now drives
 the candidate corpus materializer and CLI/editor/Python/Node entrypoints. Completed
-receipts identify original cases, variants, requests, answers, source-byte witnesses,
+receipts identify original cases, variants, requests, answers, source-byte corroboration,
 reviewed manifest goldens and individually validated applicability. Execution and
 paid timing must be established before discharging S4; the control baseline above
 is not a claim of delivered candidate coverage.
 
-No engine sweep has been removed. `tests/integration/lsp_cli_parity.rs` still compares
+The fix candidate isolates disposable inputs from ancestor configurations, records
+project and invocation report bases, and compares structured logical snapshot paths.
+It compares the complete common Python and Node envelopes directly and each host
+with the CLI, removing the additional Python embedding peer for each question,
+the additional Node peer for non-show questions, and two mutable writer copies.
+Node's extra show/batch metadata retains its native-peer comparison. Those peers
+are not answering surfaces in the matrix. This source reduction has no measured payment yet. Complete independent
+generic expectations, including resulting formatter bytes, remain unfinished;
+returned-site corroboration and matching envelopes cannot discharge them.
+
+No LSP corpus sweep has been removed. `tests/integration/lsp_cli_parity.rs` still compares
 the real editor server's diagnostics with `check`'s over
 the end-to-end corpus ([§REQ-one-answer.text.parity](REQ-one-answer.md#textparity-the-editor-answers-as-the-command-line-does)) and
 `crates/grund-cli/tests/stub_resolution_agreement.rs` the stub answers of every surface

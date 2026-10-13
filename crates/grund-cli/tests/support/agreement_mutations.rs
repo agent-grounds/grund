@@ -5,7 +5,6 @@ use super::agreement_corpus::{compare_tree, invoke};
 use super::agreement_evidence as evidence;
 use super::agreement_host::Host;
 use super::agreement_oracles::text;
-use grund_core::{EmbeddingRequest, embedding_call, node_embedding_call, node_request};
 use serde_json::{Value, json};
 use std::path::Path;
 
@@ -17,6 +16,16 @@ fn clone(host: &mut Host, context: &Value, name: &str) -> Value {
         cloned[field] =
             json!(text(context, field).replacen(&original, destination.as_str().unwrap(), 1));
     }
+    for surface in ["cli", "python", "node"] {
+        for field in ["projectRoot", "reportBase", "invocationBase", "configFile"] {
+            if let Some(path) = context["scopes"][surface][field].as_str()
+                && let Ok(relative) = Path::new(path).strip_prefix(&original)
+            {
+                cloned["scopes"][surface][field] =
+                    json!(Path::new(destination.as_str().unwrap()).join(relative));
+            }
+        }
+    }
     compare_tree(
         Path::new(&original),
         Path::new(cloned["saved"].as_str().unwrap()),
@@ -25,47 +34,27 @@ fn clone(host: &mut Host, context: &Value, name: &str) -> Value {
     cloned
 }
 
-fn normalized(mut value: Value, context: &Value) -> Value {
-    fn visit(value: &mut Value, root: &str) {
-        match value {
-            Value::String(s) => *s = s.replace(root, "<repo>"),
-            Value::Array(values) => values.iter_mut().for_each(|v| visit(v, root)),
-            Value::Object(values) => values.values_mut().for_each(|v| visit(v, root)),
-            _ => {}
-        }
-    }
-    visit(&mut value, &text(context, "saved"));
-    value
+fn normalized(value: Value, context: &Value) -> Value {
+    super::agreement_paths::logical_value(value, context)
 }
 
 pub fn execute(host: &mut Host, context: &Value, errors: &mut Vec<String>) {
     let cli = clone(host, context, "fmt-cli");
     let python = clone(host, context, "fmt-python");
     let node = clone(host, context, "fmt-node");
-    let rust_python = clone(host, context, "fmt-rust-python");
-    let rust_node = clone(host, context, "fmt-rust-node");
     let mut args = vec!["fmt".into(), "--write".into(), "--cross-refs".into()];
     if context["explicit"] == true {
         args.push(text(&cli, "path"));
     }
     let output = invoke(Path::new(&text(&cli, "cwd")), &args, None);
-    let witness = json!({"oracle":"independent-mutation-input-bytes",
+    let witness = json!({"oracle":"independent-mutation-input-bytes","complete":false,
         "point":"§REQ-one-answer.writes.anchors","before":context["savedInventory"]});
     evidence::witness(witness.clone());
     let request = json!({"operation":"fmt","cwd":python["cwd"],"root":python["path"],
-        "explicit":context["explicit"],"args":[],"options":{"write":true,"cross_refs":true}});
+        "explicit":context["explicit"],"args":[],"options":{"write":true,"cross_refs":true},
+        "scope":python["scopes"]["python"]});
     let actual = host.call("python", request);
     evidence::witness(witness.clone());
-    let expected = embedding_call(EmbeddingRequest {
-        operation: "fmt".into(),
-        root: text(&rust_python, "path").into(),
-        explicit: context["explicit"] == true,
-        args: Vec::new(),
-        options: json!({"write":true,"cross_refs":true}),
-    });
-    if normalized(actual.clone(), &python) != normalized(expected, &rust_python) {
-        errors.push("Python fmt write envelope differs from its independent-copy peer".into());
-    }
     let options = if context["explicit"] == true {
         json!({"root":node["path"],"write":true,"crossRefs":true})
     } else {
@@ -73,23 +62,21 @@ pub fn execute(host: &mut Host, context: &Value, errors: &mut Vec<String>) {
     };
     let actual_node = host.call(
         "node",
-        json!({"operation":"fmt","cwd":node["cwd"],"args":[options]}),
+        json!({"operation":"fmt","cwd":node["cwd"],"args":[options],"scope":node["scopes"]["node"]}),
     );
     evidence::witness(witness);
-    let options = if context["explicit"] == true {
-        json!({"root":rust_node["path"],"write":true,"crossRefs":true})
-    } else {
-        json!({"write":true,"crossRefs":true})
-    };
-    let expected = node_embedding_call(node_request(
-        "fmt",
-        vec![options],
-        Path::new(&text(&rust_node, "cwd")),
-    ));
-    if normalized(actual_node.clone(), &node) != normalized(expected, &rust_node) {
-        errors.push("Node fmt write envelope differs from its independent-copy peer".into());
+    let expected = super::agreement_host_projection::from_python(actual.clone(), "fmt");
+    if normalized(actual_node.clone(), &node) != normalized(expected, &python) {
+        errors.push("actual mutable host complete envelopes differ".into());
     }
-    for peer in [&python, &node, &rust_python, &rust_node] {
+    let projected = super::agreement_sites::output("fmt", &output, &cli);
+    for (answer, copy) in [(&actual, &python), (&actual_node, &node)] {
+        if !answer["failure"].is_null() {
+            let normalized = normalized(answer.clone(), copy);
+            super::agreement_refusals::compare(&projected, &normalized["failure"], errors);
+        }
+    }
+    for peer in [&python, &node] {
         if let Err(error) = compare_tree(
             Path::new(&text(&cli, "saved")),
             Path::new(&text(peer, "saved")),

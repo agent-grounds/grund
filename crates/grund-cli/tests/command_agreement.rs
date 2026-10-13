@@ -28,16 +28,22 @@ mod agreement_acceptance;
 mod agreement_buffers;
 #[path = "support/agreement_compare.rs"]
 mod agreement_compare;
+#[path = "support/agreement_controls.rs"]
+mod agreement_controls;
 #[path = "support/agreement_corpus.rs"]
 mod agreement_corpus;
 #[path = "support/agreement_editor.rs"]
 mod agreement_editor;
+#[path = "support/agreement_editor_worker.rs"]
+mod agreement_editor_worker;
 #[path = "support/agreement_evidence.rs"]
 mod agreement_evidence;
 #[path = "support/agreement_facts.rs"]
 mod agreement_facts;
 #[path = "support/agreement_host.rs"]
 mod agreement_host;
+#[path = "support/agreement_host_projection.rs"]
+mod agreement_host_projection;
 #[path = "support/agreement_identity.rs"]
 mod agreement_identity;
 #[path = "support/agreement_manifest.rs"]
@@ -48,10 +54,18 @@ mod agreement_materialization;
 mod agreement_mutations;
 #[path = "support/agreement_oracles.rs"]
 mod agreement_oracles;
+#[path = "support/agreement_paths.rs"]
+mod agreement_paths;
 #[path = "support/agreement_questions.rs"]
 mod agreement_questions;
+#[path = "support/agreement_refusals.rs"]
+mod agreement_refusals;
 #[path = "support/agreement_sections.rs"]
 mod agreement_sections;
+#[path = "support/agreement_sites.rs"]
+mod agreement_sites;
+#[path = "support/agreement_snapshot.rs"]
+mod agreement_snapshot;
 #[path = "support/agreement_stubs.rs"]
 mod agreement_stubs;
 #[path = "support/agreement_tree.rs"]
