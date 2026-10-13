@@ -373,7 +373,7 @@ This is the carve-out [§FS-check.1.1.5](FS-check.md#115-contexts-read-as-neithe
 
 A line inside a raw-text HTML block such as `<pre>` ([§FS-check.1.1.5.1](FS-check.md#1151-a-raw-html-block-holds-no-heading)) is likewise never structure, by the same four clauses and for the same reason: the scan does not read a heading there either. Citations in it stay live, so flattening is not suspended inside it.
 
-Inside a code or docstring comment block ([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)) a fence read through the wrapper hides headings alone ([§FS-languages.fence.comment-block](FS-languages.md#fencecomment-block-a-fence-inside-a-comment-block-hides-its-headings)), as the scan reads it.
+Inside a code or docstring comment block ([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)) a fence hides only its headings ([§FS-languages.fence.comment-block](FS-languages.md#fencecomment-block-a-fence-inside-a-comment-block-hides-its-headings)), as the scan reads it.
 
 ### 2.6 Batch resolution
 
