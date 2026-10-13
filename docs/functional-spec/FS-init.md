@@ -65,6 +65,8 @@ Argument order is flexible: positional `<path>` may appear before or after the f
 - **A user-global instruction file is refused, unconditionally.** `init` declines when any path it would write, append to, or update — the canonical `AGENTS.md` included — is one of the file-backed user-global targets of [§FS-integrations.4.3](FS-integrations.md#43-user-preference-and-global-agent-instructions) ([§FS-init.1.2.2](FS-init.md#122-user-global-instruction-files)).
 - **A target outside version control is refused unless `--no-vcs` is passed.** `init` looks for a `.git`, `.hg`, `.jj`, or `.svn` entry in `<path>` or any ancestor and declines when it finds none, naming the flag that proceeds anyway ([§FS-init.1.2.3](FS-init.md#123-version-control)).
 
+- **An entrypoint whose managed block `init` cannot update is refused.** A planned entrypoint that already exists and carries a malformed block ([§FS-init.2.3.11](FS-init.md#2311-malformed-delimiters)) or a newer block version than the binary supports ([§FS-init.2.3.10.2](FS-init.md#23102-a-newer-block-version)) declines the whole run, every other planned entrypoint included ([§FS-init.1.2.6](FS-init.md#126-entrypoint-blocks-are-read-before-any-is-written)).
+
 Which of two problems a run is told about first is [§FS-init.1.2.4](FS-init.md#124-which-refusal-is-reported-first), and what a refusal says is [§FS-init.1.2.5](FS-init.md#125-the-refusal-message).
 
 #### 1.2.1 The home directory
@@ -98,6 +100,12 @@ error: /tmp/nowhere is not inside a version-controlled tree — no .git, .hg, .j
 ```
 
 These are refusals, not prompts: `init` still never asks a question ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)); it declines and names the flag that would have let the run through. That is the only shape a guard can take in a non-interactive command, and it is why the two unconditional rules have no flag at all — a rule nobody means to trip does not need one.
+
+#### 1.2.6 Entrypoint blocks are read before any is written
+
+The location rules are not the only refusals a run can meet. Every planned entrypoint that already exists — the canonical `AGENTS.md` and each companion alike ([§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent)) — is read and its managed block classified before the first one is written, and a block `init` would refuse to update refuses the run: a malformed delimiter pair ([§FS-init.2.3.11](FS-init.md#2311-malformed-delimiters)) or a block newer than the binary ([§FS-init.2.3.10.2](FS-init.md#23102-a-newer-block-version)). The refusal is total in the sense of [§FS-init.1.2](FS-init.md#12-refused-targets): no entrypoint is created, appended, or updated, `grund.toml` and the `--docs` scaffold are not written, no `wrote`, `appended`, or `updated` line is reported, and `init` exits `2` with the message that names the file and the defect. It does not matter where the refused file sits in the order the entrypoints are written; a clean `CLAUDE.md` planned before a malformed `GEMINI.md` is left byte-for-byte as it was. `--dry-run` and `--check` report the same refusal rather than a preview.
+
+The check runs after the user-global rule ([§FS-init.1.2.4](FS-init.md#124-which-refusal-is-reported-first)), because both read the same plan; a run with several refused blocks is told about the first in the order the entrypoints are written. Checking in the write pass alone is not enough: by the time it meets the second entrypoint it has already written the first, and a run that exits `2` would leave a half-scaffolded tree that `grund check` cannot even read for want of a `grund.toml`.
 
 ### 1.3 `--docs` and the effective config
 
@@ -599,11 +607,11 @@ If the file already contains any supported block version, including the current 
 
 ##### 2.3.10.2 A newer block version
 
-If an agent entrypoint contains a newer block version than the running binary supports, `init` exits 2 and leaves the file unchanged.
+If an agent entrypoint contains a newer block version than the running binary supports, `init` exits 2 and writes nothing: neither that file nor any other entrypoint, `grund.toml`, or the `--docs` scaffold is touched, because the version is read before the first write ([§FS-init.1.2.6](FS-init.md#126-entrypoint-blocks-are-read-before-any-is-written)).
 
 #### 2.3.11 Malformed delimiters
 
-A file whose delimiters are present but broken is **malformed**: a `BEGIN` delimiter with no `END` after it, an `END` with no `BEGIN` before it, more than one `BEGIN`, or a delimited region that contains no `## Grounding with grund (vN)` version heading. `init` refuses to touch a malformed file — it exits 2 with a message naming the file and the specific defect, and rewrites nothing — because any splice against broken delimiters risks eating user content; `grund check` reports the same defect as an error ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)). Fixing the delimiter pair by hand (or deleting the remnants of the block) and re-running `grund init` is the recovery path.
+A file whose delimiters are present but broken is **malformed**: a `BEGIN` delimiter with no `END` after it, an `END` with no `BEGIN` before it, more than one `BEGIN`, or a delimited region that contains no `## Grounding with grund (vN)` version heading. `init` refuses to touch a malformed file — it exits 2 with a message naming the file and the specific defect, and rewrites nothing, in that file or any other the run planned ([§FS-init.1.2.6](FS-init.md#126-entrypoint-blocks-are-read-before-any-is-written)) — because any splice against broken delimiters risks eating user content; `grund check` reports the same defect as an error ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)). Fixing the delimiter pair by hand (or deleting the remnants of the block) and re-running `grund init` is the recovery path.
 
 #### 2.3.12 Supported agents and their entrypoints
 
