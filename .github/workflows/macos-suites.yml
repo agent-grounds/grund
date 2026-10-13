@@ -69,9 +69,9 @@ jobs:
         with:
           path: |
             ~/ag/tmp/grund-node-target
-          key: ${{ runner.os }}-node-target-v2-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-node-target-v2-1.95.0-
+            ${{ runner.os }}-node-target-v3-1.95.0-
 
       - name: cargo fmt --check
         run: cargo fmt --all -- --check
@@ -166,4 +166,4 @@ jobs:
         with:
           path: |
             ~/ag/tmp/grund-node-target
-          key: ${{ runner.os }}-node-target-v2-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('**/Cargo.lock') }}
