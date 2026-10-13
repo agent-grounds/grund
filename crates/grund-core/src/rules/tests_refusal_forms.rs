@@ -414,3 +414,21 @@ fn a_many_fault_sentence_ends_without_looping() {
         ),
     ]);
 }
+
+/// §FS-rule-refusals.selectors: a subject whose only `/` is leading names the empty alias, so the
+/// kind is recovered from what follows it and the form is still offered.
+#[test]
+fn a_leading_slash_subject_still_recovers_its_kind() {
+    assert_rows(&[
+        (
+            "/FS-x must cite at least one FS.",
+            "subject namespaces must be local in phase 1; accepted form: FS-x must cite at least one FS.",
+            false,
+        ),
+        (
+            "Each /FS must cite at least one FS.",
+            "unknown kind \"/FS\"; accepted form: Each FS must cite at least one FS.",
+            false,
+        ),
+    ]);
+}

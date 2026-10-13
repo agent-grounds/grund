@@ -1,0 +1,2 @@
+error: literal subject "code" does not match the configured ID grammar — kind "code" declares no IDs; this wording changes in grund 0.19.0
+known kinds: FS, RULE

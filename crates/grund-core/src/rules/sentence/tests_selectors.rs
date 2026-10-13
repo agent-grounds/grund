@@ -154,6 +154,19 @@ fn each_namespaced_kind_gets_the_namespace_reason_the_rule_sentence_gets() {
     );
 }
 
+/// A leading `/` is the empty alias: the kind after it is still recovered.
+#[test]
+fn a_leading_slash_subject_still_recovers_its_kind() {
+    assert_eq!(
+        refusal("/FS-x"),
+        "subject namespaces must be local in phase 1; accepted selector: FS-x"
+    );
+    assert_eq!(
+        refusal("/FS"),
+        "subject namespaces must be local in phase 1; accepted selector: FS"
+    );
+}
+
 #[test]
 fn a_pasted_rule_sentence_is_answered_with_its_subject() {
     assert_eq!(

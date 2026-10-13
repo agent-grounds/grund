@@ -393,6 +393,7 @@ and these are the exact lines the window prints for it. Each is followed by
 |---|---|
 | `list --kind code` | ``unknown kind `code` — kind `code` declares no IDs; this wording changes in grund 0.19.0`` |
 | `list --selector 'Each code'` | `unknown kind "code" — kind "code" declares no IDs; this wording changes in grund 0.19.0` |
+| `list --selector code` | `literal subject "code" does not match the configured ID grammar — kind "code" declares no IDs; this wording changes in grund 0.19.0` |
 | `check --rule 'Each code must have exactly one terms chapter.'` | `unknown kind "code" — kind "code" declares no IDs; this wording changes in grund 0.19.0` |
 | `check --rule 'Each FS must cite at least one code.'` | `unknown kind "code" — kind "code" declares no IDs; this wording changes in grund 0.19.0` |
 

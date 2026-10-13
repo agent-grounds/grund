@@ -17,6 +17,8 @@ use stages::read;
 use std::collections::{BTreeMap, BTreeSet};
 
 pub(crate) use selectors::parse_selector;
+#[cfg(test)]
+pub(super) use subjects::lower_case_each;
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub(crate) enum RuleSubject {

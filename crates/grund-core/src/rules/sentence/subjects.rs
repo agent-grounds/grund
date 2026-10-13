@@ -23,7 +23,7 @@ pub(super) const EACH_IS_CASE_SENSITIVE: &str = "fixed word \"Each\" is case-sen
 
 /// What follows a lower-case `each `, where `text` opens with one: the one
 /// test both surfaces read the wrong case with (§FS-rule-refusals.selectors).
-pub(super) fn lower_case_each(text: &str) -> Option<&str> {
+pub(in crate::rules) fn lower_case_each(text: &str) -> Option<&str> {
     text.strip_prefix("each ")
 }
 
