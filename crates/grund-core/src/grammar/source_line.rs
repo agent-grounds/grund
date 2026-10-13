@@ -30,7 +30,7 @@ pub(crate) struct PrefixForms<'a> {
     /// Set for the forms 0.18 added; `//` and `/*` read as they always have.
     bounded: bool,
     /// Each form keys a comment block of its own, so a `///` run is a block apart
-    /// from a `//` run (§FS-languages.comment-block.forms); otherwise every form
+    /// from a `//` run (§AR-scanner.4.3); otherwise every form
     /// keys the prefix's block, so a `;` block stays keyed on `;`.
     keyed_by_form: bool,
 }

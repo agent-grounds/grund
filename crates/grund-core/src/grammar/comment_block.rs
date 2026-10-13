@@ -56,7 +56,7 @@ pub(crate) fn line_comment_block_marker(
 
 /// The marker a line keys its block by: a `//` form keys its own block, any
 /// other configured prefix's forms key the prefix's, so a `;;` line and a `;`
-/// line are one block (§FS-languages.prefixes.forms, §FS-languages.comment-block.forms).
+/// line are one block (§FS-languages.prefixes.forms, §FS-languages.comment-wrapper).
 /// The longest form across the configured prefixes wins, so `//` does not shadow `///`.
 fn line_comment_marker(trimmed: &str, comment_prefixes: &[String]) -> Option<String> {
     comment_prefixes

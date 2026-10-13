@@ -107,15 +107,18 @@ existing code rather than a false verdict corrected, so it takes the deprecation
 The declarations and the Lisp row move verdicts under
 [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), and each of its five conditions holds.
 
-1. *Prior prohibition.* A citation of a declaration its author wrote was reported as an
-   `unknown reference`, which [§REQ-no-wrong-citation.2](../../requirements/REQ-no-wrong-citation.md#2-no-false-alarms) forbids; the default prefixes
-   have carried `--` and `;` since 0.1.0.
-2. *Accepted proof.* This record. Deprecation keeps the false error alive a release longer,
-   and there is nothing to migrate: the comments are right as written.
+1. *Prior prohibition.* The old verdict violated [§REQ-no-wrong-citation.2](../../requirements/REQ-no-wrong-citation.md#2-no-false-alarms), which
+   already applied when that verdict shipped: a citation of a declaration its author wrote
+   was reported as an `unknown reference`. The default prefixes have carried `--` and `;`
+   since 0.1.0.
+2. *Accepted proof.* This record. The [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) deprecation path does not fit the declarations, because it keeps the false error alive a release longer. The
+   [§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) mechanical migration has nothing to migrate: the
+   comments are right as written.
 3. *Named release.* The release note below.
 4. *Actionable findings.* Every finding that replaces the old verdict is one the bare
    prefix's form already gets, at the declaring line, naming the edit.
-5. *No new licence.* No rule or finding is new. The six new default extensions take
+5. *No new licence.* This is not a licence for anything else. No rule or finding is new.
+   The six new default extensions take
    [§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise): those files had no scan meaning, as `lisp`, `scm` and `clj`
    had none before 0.10.1. The new grounding units take the warning of
    [§DF-line-prefix-forms-declare.grounding](DF-line-prefix-forms-declare.md#grounding-a-lisp-doc-block-that-cites-nothing-warns-first).
@@ -123,17 +126,17 @@ The declarations and the Lisp row move verdicts under
 ## release-note: Release note
 
 - [§DF-line-prefix-forms-declare](DF-line-prefix-forms-declare.md#df-line-prefix-forms-declare-lua-haskell-and-lisp-doc-comment-forms-declare-and-a-lisp-doc-block-is-not-a-note), [§FS-languages.prefixes.forms](../../functional-spec/FS-languages.md#prefixesforms-the-forms-a-prefix-stands-for),
-  [§FS-inline-citation-style.1.1.2](../../functional-spec/FS-inline-citation-style.md#112-languages), [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids): **Lua `---`, Haskell
+  [§FS-inline-citation-style.1.1.2](../../functional-spec/FS-inline-citation-style.md#112-languages), [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), [§REQ-no-wrong-citation.2](../../requirements/REQ-no-wrong-citation.md#2-no-false-alarms): **Lua `---`, Haskell
   `-- |` and `-- ^`, and Lisp `;;` and `;;;` comments now host declarations, and a Lisp
   doc block is no longer measured as a note.** Their declarations appear in `list`,
   `refs` and `show`, and the false `unknown reference` on every citation of them goes.
   A `;;` block directly above a `def…`, `cl-def…` or `ns` form, or at the top of the file,
   is documentation; one inside a body is still a note. Haskell's `{-| … -}` hosts no
   declaration. The `[scan] extensions` default gains `cl`, `el`, `ss`, `rkt`, `cljs` and
-  `cljc`. **Who this breaks:** a repository that declared such an ID a second time
+  `cljc`. The verdict moves both ways. **Who this breaks:** a repository that declared such an ID a second time
   elsewhere to work around this (now a duplicate at both sites), one with `--- FS-Bad:` or
   `;; FS-Bad:` lines (now a `declaration-near-miss`), and a project with no `extensions`
   key that keeps a stale `§` citation in a file of one of the six new extensions (now an
-  `unknown reference`). Under `grounding_level` 2 or higher a Lisp doc block that cites
+  `unknown reference`); every finding names its location and the fix. Under `grounding_level` 2 or higher a Lisp doc block that cites
   nothing is a warning in this release and an error from grund 0.19.0. Closes
   [#703](https://github.com/agent-grounds/grund/issues/703).
