@@ -160,9 +160,16 @@ fn markdown_link_citations(
             &mut citations,
         );
     }
-    for caps in config.grammar.citation_re.captures_iter(line) {
-        let Some(full) = caps.get(0) else { continue };
-        if config.grammar.has_reserved_named_tail(line, full.end()) {
+    // §AR-scanner.2.8.5: the scanner's token reader, over the line as this run has
+    // rewritten it, so a citation born earlier in the run is read like any other.
+    for (offset, caps) in config
+        .grammar
+        .citation_captures(line, &config.marker)
+        .captures
+    {
+        let Some(token) = caps.get(0) else { continue };
+        let full = (offset + token.start())..(offset + token.end());
+        if config.grammar.has_reserved_named_tail(line, full.end) {
             continue;
         }
         // §FS-check.1.1.11: `fmt` never links a pattern's prefix; a qualified
@@ -172,12 +179,12 @@ fn markdown_link_citations(
             .and_then(|alias| workspace?.project_by_alias(alias.as_str()))
             .map_or(&config.grammar, |target| &target.config.grammar);
         if let CandidateReading::Pattern(_) =
-            grammar.read_qualified_candidate(&line[full.start()..], full.len())
+            grammar.read_qualified_candidate(&line[full.start..], full.len())
         {
             continue;
         }
-        let marker_start = full.start().saturating_sub(config.marker.len());
-        if !line[..full.start()].ends_with(&config.marker) {
+        let marker_start = full.start.saturating_sub(config.marker.len());
+        if !line[..full.start].ends_with(&config.marker) {
             continue;
         }
         // §FS-citations.zones.link-destination: inline code and every destination
@@ -190,7 +197,7 @@ fn markdown_link_citations(
         };
         citations.push(MarkdownLineCitation {
             marker_start,
-            token_end: full.end(),
+            token_end: full.end,
             namespace: caps.name("namespace").map(|m| m.as_str().to_string()),
             id,
             section: caps.name("sec").map(|m| m.as_str().to_string()),

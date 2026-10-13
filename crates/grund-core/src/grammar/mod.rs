@@ -133,7 +133,11 @@ pub(crate) use markdown_blocks::{MarkdownBlocks, MarkdownLine, markdown_line_kin
 // that installs one stamps it, and that command is the CLI's
 // (§FS-integrations.4.2, §AR-bindings.3).
 pub use managed_block::INTEGRATIONS_BLOCK_VERSION;
-pub(crate) use near_miss::{declaration_captures, declaration_id_on_line, near_miss_heading};
+// §AR-scanner.2.8.5: outside the grammar a declaration line is read off the file
+// record, so only the grammar's own tests still parse one through this.
+#[cfg(test)]
+pub(crate) use near_miss::declaration_id_on_line;
+pub(crate) use near_miss::{declaration_captures, near_miss_heading};
 pub(crate) use never_rewrite::{
     DocstringContent, DocstringCursor, bare_token_in_never_rewrite_zone, in_escape_position,
     is_escaped, is_inside_inline_code, is_inside_markdown_link_destination, never_rewrite_context,

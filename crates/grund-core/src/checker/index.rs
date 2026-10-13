@@ -14,12 +14,12 @@ use super::index_entries::KindIndexEntries;
 use super::index_mention::index_mentions;
 use crate::config::{Frame, Schema};
 use crate::grammar::{
-    cross_ref_wrap, declaration_id_on_line, is_inside_inline_code, markdown_line_kinds,
-    never_rewrite_context, render_id,
+    cross_ref_wrap, is_inside_inline_code, markdown_line_kinds, never_rewrite_context, render_id,
 };
 use crate::model::{
-    Catalog, CheckReport, Citation, Declaration, Diagnostic, Id, configured_home_path_key,
-    paired_declarations, scanned_decl_relative_path, scanned_path_key, section_resolves,
+    Catalog, CheckReport, Citation, Declaration, Diagnostic, HeadingKind, Id,
+    configured_home_path_key, paired_declarations, scanned_decl_relative_path, scanned_path_key,
+    section_resolves,
 };
 use crate::sources::{Sources, path_is_dir, physical_path_key};
 
@@ -283,11 +283,14 @@ pub(super) fn check_kind_indexes(
     // §FS-check.3.18.8: which index files *this run* read. The entries come from the
     // scan and the form from disk, so an index the run never scanned would
     // otherwise look empty and report every declaration in the folder as unlisted.
-    let index_scanned: BTreeSet<&Path> = findings
+    // Each is mapped to the path the scan read it under, its record's key (§AR-scanner.2.8.5).
+    let index_scanned: BTreeMap<&Path, &Path> = findings
         .scanned_files
         .iter()
-        .filter_map(|file| scanned_decl_relative_path(file, &configured_root, &physical_root))
-        .filter_map(|relative| index_keys.get(relative.as_ref()).copied())
+        .filter_map(|file| {
+            let relative = scanned_decl_relative_path(file, &configured_root, &physical_root)?;
+            Some((*index_keys.get(relative.as_ref())?, file.as_path()))
+        })
         .collect();
 
     // R06a of §REQ-one-answer.differences.text: the index as saved
@@ -297,8 +300,8 @@ pub(super) fn check_kind_indexes(
         // `is_file`, not `exists`: a path that is not a readable file is not an index
         // this run failed to read, it is an index that is not there — a missing one or
         // a directory wearing the name — which is §FS-check.3.18.7's finding, not silence.
-        if !index_scanned.contains(target.index_key.as_path()) && saved.is_file(&target.index_file)
-        {
+        let scanned_as = index_scanned.get(target.index_key.as_path());
+        if scanned_as.is_none() && saved.is_file(&target.index_file) {
             continue;
         }
         let Some(owed) = index_entries.entries_in(&target.index_file) else {
@@ -346,12 +349,17 @@ pub(super) fn check_kind_indexes(
             };
             // §FS-fmt.6.4: `fmt` leaves a declaration heading alone, so a citation on one
             // is no more repairable than one in inline code. A fence records no citation
-            // and a raw-text HTML block holds no heading (§FS-check.1.1.5.1).
+            // and a raw-text HTML block holds no heading (§FS-check.1.1.5.1). Whether the
+            // line is one is the scan's record of the file it cited from (§AR-scanner.2.8.5).
             let heading_position = kinds
                 .get(citation.line.saturating_sub(1))
                 .is_some_and(|kind| kind.may_be_heading());
             if heading_position
-                && declaration_id_on_line(frame.grammar(), line, false, true).is_some()
+                && findings
+                    .files
+                    .get(&citation.file)
+                    .and_then(|record| record.heading_at(citation.line))
+                    .is_some_and(|heading| heading.kind == HeadingKind::Declaration)
             {
                 continue;
             }
@@ -394,7 +402,14 @@ pub(super) fn check_kind_indexes(
         let mentioned = if unentered.is_empty() {
             BTreeSet::new()
         } else {
-            index_mentions(frame, &lines, &unentered)
+            let record = scanned_as.and_then(|file| findings.files.get(*file));
+            index_mentions(
+                frame,
+                &schema.citation.marker,
+                record.map(|record| &**record),
+                &lines,
+                &unentered,
+            )
         };
 
         for (id, decl) in covered {

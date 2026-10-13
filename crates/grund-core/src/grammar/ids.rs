@@ -68,10 +68,13 @@ impl Grammar {
     /// Every candidate is read whole first (§FS-check.1.1.11): a marked pattern
     /// claims its span and is returned apart, an unmarked one is dropped whole.
     /// Context exclusions remain the caller's decision over these same captures.
+    /// It is the one reader of a line's citation tokens (§AR-scanner.2.8.5): the
+    /// scanner, the index mention look, `fmt --marker` and the cross-ref pass read it.
     pub(crate) fn citation_captures<'a>(&self, line: &'a str, marker: &str) -> CitationTokens<'a> {
         let bare_matches: Vec<_> = self.citation_re.captures_iter(line).collect();
         let mut matches = Vec::new();
         let mut patterns = Vec::new();
+        let mut pattern_heads = Vec::new();
         if !marker.is_empty() {
             let mut claimed_end = 0;
             for (marker_start, _) in line.char_indices() {
@@ -97,6 +100,7 @@ impl Grammar {
                     CandidateReading::Pattern(len) => {
                         claimed_end = offset + len;
                         patterns.push(marker_start..claimed_end);
+                        pattern_heads.extend(prefix.map(|caps| (offset, caps)));
                         continue;
                     }
                 };
@@ -127,13 +131,14 @@ impl Grammar {
                     }
                 }
                 // §FS-check.1.1.11: an unmarked pattern is one prose token, suppressed whole.
-                CandidateReading::Pattern(_) => {}
+                CandidateReading::Pattern(_) => pattern_heads.push((0, caps)),
             }
         }
         matches.sort_by_key(|(offset, caps)| offset + caps.get(0).unwrap().start());
         CitationTokens {
             captures: matches,
             patterns,
+            pattern_heads,
         }
     }
 

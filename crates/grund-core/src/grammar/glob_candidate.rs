@@ -26,9 +26,12 @@ pub(crate) enum CandidateReading {
 /// The tokens a line's citation passes start from: every full-ID capture (with the
 /// offset that rebases it onto the line) and every marked candidate read as a
 /// pattern, as the range from its marker to its end (§FS-check.checks.glob-citation).
+/// `pattern_heads` is the full-ID prefix a pattern, marked or not, opens with: never a
+/// citation, but the index mention look reads it as naming that ID (§AR-scanner.2.8.5).
 pub(crate) struct CitationTokens<'a> {
     pub(crate) captures: Vec<(usize, regex::Captures<'a>)>,
     pub(crate) patterns: Vec<Range<usize>>,
+    pub(crate) pattern_heads: Vec<(usize, regex::Captures<'a>)>,
 }
 
 impl Grammar {

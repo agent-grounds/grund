@@ -22,10 +22,9 @@ use super::fmt_links::wrap_markdown_links_with_targets;
 use super::fmt_local_sections::expand_local_section_citations;
 use crate::config::Config;
 use crate::grammar::{
-    CandidateReading, DocstringContent, DocstringCursor, FmtDirectives, MarkdownBlocks,
-    MarkdownLine, bare_block_lines, declaration_id_on_source_line, id_token_end_at,
-    in_escape_position, is_inside_inline_code, is_inside_markdown_link_destination,
-    string_literal_in,
+    DocstringContent, DocstringCursor, FmtDirectives, MarkdownBlocks, MarkdownLine,
+    bare_block_lines, declaration_id_on_source_line, id_token_end_at, in_escape_position,
+    is_inside_inline_code, is_inside_markdown_link_destination, string_literal_in,
 };
 use crate::model::{Catalog, Id};
 use crate::resolver::{
@@ -425,51 +424,52 @@ pub(super) fn add_markers(
     let mut output = String::new();
     let mut cursor = 0;
     let mut inserted_at = Vec::new();
-    for caps in config.grammar.citation_re.captures_iter(line) {
-        let Some(found) = caps.get(0) else { continue };
+    // §AR-scanner.2.8.5: the scanner's token reader, which already drops an
+    // unmarked pattern whole (§FS-check.1.1.11) and returns a marked one apart.
+    for (offset, caps) in config
+        .grammar
+        .citation_captures(line, &config.marker)
+        .captures
+    {
+        let Some(token) = caps.get(0) else { continue };
+        let found = (offset + token.start())..(offset + token.end());
         // §FS-workspace.1.3: a `path/ID` token without a marker is text, not a
         // citation — `fmt --marker` must not auto-promote it to `§path/ID`.
         if caps.name("namespace").is_some() {
             continue;
         }
-        if line[..found.start()].ends_with(&config.marker) {
+        if line[..found.start].ends_with(&config.marker) {
             continue;
         }
         // §FS-fmt.2.3 / §FS-check.1.1.9: a marker spliced inside the escape brackets
         // would turn the illustration into a live citation, and every later pass —
         // the cross-reference wrap included — follows the marker.
-        if in_escape_position(line, found.start(), &config.marker) {
+        if in_escape_position(line, found.start, &config.marker) {
             continue;
         }
         // §FS-fmt.2.3 / §FS-check.1.1.2: an unmarked named coordinate is one
         // prose token under the opt-in and is never promoted by `fmt --marker`.
-        if config.grammar.has_reserved_named_tail(line, found.end())
+        if config.grammar.has_reserved_named_tail(line, found.end)
             || config
                 .grammar
                 .is_named_section(caps.name("sec").map(|sec| sec.as_str()))
         {
             continue;
         }
-        if is_md && is_inside_inline_code(line, found.start()) {
+        if is_md && is_inside_inline_code(line, found.start) {
             continue;
         }
-        // §FS-check.1.1.11: an unmarked pattern is one prose token; promoting its
-        // prefix would write the very edge the reading forbids.
-        let rest = &line[found.start()..];
-        if let CandidateReading::Pattern(_) = config.grammar.read_candidate(rest, found.len()) {
+        if is_md && is_inside_markdown_link_destination(line, found.start) {
             continue;
         }
-        if is_md && is_inside_markdown_link_destination(line, found.start()) {
+        if !is_md && string_literal_in(docstring, line, found.start) {
             continue;
         }
-        if !is_md && string_literal_in(docstring, line, found.start()) {
-            continue;
-        }
-        output.push_str(&line[cursor..found.start()]);
-        inserted_at.push(found.start());
+        output.push_str(&line[cursor..found.start]);
+        inserted_at.push(found.start);
         output.push_str(&config.marker);
-        output.push_str(found.as_str());
-        cursor = found.end();
+        output.push_str(&line[found.clone()]);
+        cursor = found.end;
     }
     output.push_str(&line[cursor..]);
     // §FS-fmt.2.4.3: the shorthand pass reads the rewritten line, so carry each
