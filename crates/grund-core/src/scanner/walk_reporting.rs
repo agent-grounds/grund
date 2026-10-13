@@ -7,13 +7,15 @@ use std::path::{Path, PathBuf};
 
 use super::read_predicate::{Unread, name_refusal};
 use super::tree::ScanError;
+use super::value_json::value_json_sources;
 use super::walk::{scan_roots, scannable_walker};
 use super::walk_boundaries::{is_scannable, outward_directory_link_root, owned_by_another_project};
 use super::walk_errors::{symlink_loop_report, walk_error_report};
 use crate::config::{Frame, Schema, canonical_config_root, file_root_rows};
 use crate::model::{RootRow, sort_path_key};
 use crate::sources::{
-    canonical_path, is_directory, is_regular_file, path_exists, path_is_file, physical_path_key,
+    canonical_path, is_directory, is_regular_file, path_exists, path_is_file, paths_same_location,
+    physical_path_key,
 };
 
 /// The tree walk for the callers that ask a yes/no question about the tree and
@@ -133,6 +135,7 @@ pub(crate) fn walk_scannable_files_with_sources(
     // and the rows themselves, read only once a root is refused.
     let mut unread_roots = Vec::new();
     let mut file_rows = None;
+    let mut value_homes: Option<Vec<PathBuf>> = None;
     for scan_root in roots {
         // §FS-check.6.1.1: the actual walk roots are covered before traversal.
         if !crate::config::observe_input(&scan_root, true) {
@@ -183,7 +186,18 @@ pub(crate) fn walk_scannable_files_with_sources(
                 Some(Unread::Extension) => {
                     let rows =
                         file_rows.get_or_insert_with(|| file_root_rows(schema, frame.root()));
-                    record_unread_root(&mut unread_roots, rows, &scan_root);
+                    // §FS-values.2.2: a value row's JSON home is read, by the value pass.
+                    let value_homes = value_homes.get_or_insert_with(|| {
+                        value_json_sources(schema, frame)
+                            .map(|sources| sources.into_iter().map(|(path, _)| path).collect())
+                            .unwrap_or_default()
+                    });
+                    if !value_homes
+                        .iter()
+                        .any(|home| paths_same_location(home, &scan_root))
+                    {
+                        record_unread_root(&mut unread_roots, rows, &scan_root);
+                    }
                 }
                 // §FS-scan.checks.unread-scan-root.silent: the hidden rule is asked first.
                 Some(_) => {}
