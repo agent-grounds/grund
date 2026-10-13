@@ -1,7 +1,7 @@
 use super::compiled::QUALIFIED_CITATION_PREFIX;
 use super::id_format::parse_longest_id_prefix;
 use super::ids::parse_loose_qualified_id_prefix;
-use super::never_rewrite::{is_inside_inline_code, is_inside_string_literal};
+use super::never_rewrite::{is_inside_string_literal, qualified_suppressed_in_source};
 use super::settings::{AliasGrammar, LexicalSettings};
 use super::source_line::{PrefixForms, longest_form_at, prefix_forms};
 use crate::model::BlockForm;
@@ -24,6 +24,7 @@ use crate::model::BlockForm;
 /// is how two rules come to disagree about one comment.
 fn citation_token_ranges(
     line: &str,
+    entry: usize,
     lexical: LexicalSettings<'_>,
     alias_grammars: &[AliasGrammar<'_>],
 ) -> Vec<(usize, usize)> {
@@ -52,7 +53,7 @@ fn citation_token_ranges(
         {
             continue;
         }
-        if !has_marker && is_inside_string_literal(line, token_start) {
+        if !has_marker && is_inside_string_literal(line, entry, token_start) {
             continue;
         }
         let start = if has_marker {
@@ -62,7 +63,7 @@ fn citation_token_ranges(
         };
         if namespace.is_some()
             && has_marker
-            && (is_inside_inline_code(line, start) || is_inside_string_literal(line, start))
+            && qualified_suppressed_in_source(line, entry, false, start)
         {
             continue;
         }
@@ -74,7 +75,7 @@ fn citation_token_ranges(
     }
     for (marker_start, _) in line.match_indices(lexical.marker) {
         if ranges.iter().any(|(start, _)| *start == marker_start)
-            || is_inside_string_literal(line, marker_start)
+            || is_inside_string_literal(line, entry, marker_start)
         {
             continue;
         }
@@ -112,13 +113,16 @@ fn citation_token_ranges(
 }
 
 /// One line's citation tokens, sorted and deduplicated, so every reader of that
-/// line sees the same tokenization.
+/// line sees the same tokenization. `entry` is the state the line begins in
+/// (§FS-languages.multi-line-string), so a comment-shaped line inside a
+/// multi-line literal is tokenized as the scanner reads it.
 pub(crate) fn line_citation_ranges(
     line: &str,
+    entry: usize,
     lexical: LexicalSettings<'_>,
     alias_grammars: &[AliasGrammar<'_>],
 ) -> Vec<(usize, usize)> {
-    let mut ranges = citation_token_ranges(line, lexical, alias_grammars);
+    let mut ranges = citation_token_ranges(line, entry, lexical, alias_grammars);
     ranges.sort_unstable();
     ranges.dedup();
     ranges

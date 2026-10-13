@@ -236,6 +236,7 @@ fn citation_run_end(content: &str, tokens: &[(usize, usize)]) -> Option<usize> {
 /// (§GOAL-fast-feedback).
 pub(crate) fn inline_note_verdicts(
     lines: &[&str],
+    literal_entries: &[usize],
     first_line: usize,
     lexical: LexicalSettings<'_>,
     alias_grammars: &[AliasGrammar<'_>],
@@ -243,11 +244,11 @@ pub(crate) fn inline_note_verdicts(
     let prefixes = comment_strip_prefixes(lexical);
     if !layout_pass_enabled(lexical) {
         return (
-            block_has_inline_note(lines, lexical, alias_grammars, &prefixes),
+            block_has_inline_note(lines, literal_entries, lexical, alias_grammars, &prefixes),
             Vec::new(),
         );
     }
-    let mut block = BlockCitations::new(lines, lexical, alias_grammars);
+    let mut block = BlockCitations::new(lines, literal_entries, lexical, alias_grammars);
     let has_note = block_has_inline_note_memoized(&mut block, &prefixes);
     let layout_violations = inline_layout_violations(&mut block, &prefixes, first_line, has_note);
     (has_note, layout_violations)
@@ -265,6 +266,9 @@ pub(crate) fn inline_note_verdicts(
 /// of the memo empty (§GOAL-fast-feedback).
 pub(crate) struct BlockCitations<'a> {
     pub(crate) lines: &'a [&'a str],
+    /// Each line's literal entry state (§FS-languages.multi-line-string), from the
+    /// block's first line; a line past its end begins in code.
+    pub(crate) literal_entries: &'a [usize],
     pub(crate) lexical: LexicalSettings<'a>,
     pub(crate) alias_grammars: &'a [AliasGrammar<'a>],
     pub(crate) ranges: Vec<Option<Vec<(usize, usize)>>>,
@@ -273,11 +277,13 @@ pub(crate) struct BlockCitations<'a> {
 impl<'a> BlockCitations<'a> {
     pub(crate) fn new(
         lines: &'a [&'a str],
+        literal_entries: &'a [usize],
         lexical: LexicalSettings<'a>,
         alias_grammars: &'a [AliasGrammar<'a>],
     ) -> Self {
         Self {
             lines,
+            literal_entries,
             lexical,
             alias_grammars,
             ranges: vec![None; lines.len()],
@@ -293,8 +299,9 @@ impl<'a> BlockCitations<'a> {
     fn line(&mut self, index: usize) -> (&'a str, &[(usize, usize)]) {
         let (line, lexical, alias_grammars) =
             (self.lines[index], self.lexical, self.alias_grammars);
+        let entry = self.literal_entries.get(index).copied().unwrap_or(0);
         let ranges = self.ranges[index]
-            .get_or_insert_with(|| line_citation_ranges(line, lexical, alias_grammars));
+            .get_or_insert_with(|| line_citation_ranges(line, entry, lexical, alias_grammars));
         (line, ranges)
     }
 }
@@ -305,12 +312,14 @@ impl<'a> BlockCitations<'a> {
 /// as far as the answer needs it.
 pub(crate) fn block_has_inline_note(
     lines: &[&str],
+    literal_entries: &[usize],
     lexical: LexicalSettings<'_>,
     alias_grammars: &[AliasGrammar<'_>],
     prefixes: &[PrefixForms<'_>],
 ) -> bool {
-    lines.iter().any(|line| {
-        let ranges = line_citation_ranges(line, lexical, alias_grammars);
+    lines.iter().enumerate().any(|(index, line)| {
+        let entry = literal_entries.get(index).copied().unwrap_or(0);
+        let ranges = line_citation_ranges(line, entry, lexical, alias_grammars);
         line_says_something(line, &ranges, prefixes)
     })
 }

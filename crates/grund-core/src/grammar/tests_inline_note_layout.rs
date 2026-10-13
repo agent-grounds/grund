@@ -13,7 +13,7 @@ use crate::testing::{
 };
 
 fn conforms(config: &Config, line: &str) -> bool {
-    let ranges = line_citation_ranges(line, config.lexical(), &[]);
+    let ranges = line_citation_ranges(line, 0, config.lexical(), &[]);
     let prefixes = comment_strip_prefixes(config.lexical());
     match line_layout_view(line, &ranges, &prefixes) {
         // §FS-inline-citation-style.3.3.1, rule 1: no citation in the content,
@@ -30,6 +30,7 @@ fn conforms(config: &Config, line: &str) -> bool {
 fn has_note(config: &Config, block: &[&str]) -> bool {
     block_has_inline_note(
         block,
+        &[],
         config.lexical(),
         &[],
         &comment_strip_prefixes(config.lexical()),
@@ -38,7 +39,7 @@ fn has_note(config: &Config, block: &[&str]) -> bool {
 
 fn violations(config: &Config, block: &[&str], has_note: bool) -> Vec<usize> {
     inline_layout_violations(
-        &mut BlockCitations::new(block, config.lexical(), &[]),
+        &mut BlockCitations::new(block, &[], config.lexical(), &[]),
         &comment_strip_prefixes(config.lexical()),
         1,
         has_note,
@@ -376,7 +377,7 @@ fn no_layout_records_no_violations() {
 
     for config in [any, citation_only, documented_only] {
         assert!(!layout_pass_enabled(config.lexical()));
-        let (_, violations) = inline_note_verdicts(&block, 1, config.lexical(), &[]);
+        let (_, violations) = inline_note_verdicts(&block, &[], 1, config.lexical(), &[]);
         assert!(violations.is_empty(), "the line must not be classified");
     }
 }
@@ -395,7 +396,7 @@ fn an_unknown_check_level_classifies_nothing() {
     config.inline_note_layout_check = "info".into();
     assert!(layout_channel(config.lexical()).is_none());
     assert!(!layout_pass_enabled(config.lexical()));
-    let (_, violations) = inline_note_verdicts(&block, 1, config.lexical(), &[]);
+    let (_, violations) = inline_note_verdicts(&block, &[], 1, config.lexical(), &[]);
     assert!(violations.is_empty());
 }
 
@@ -430,7 +431,8 @@ fn note_walk_tokenizes_only_the_lines_it_reads() {
     let documented_only = layout_config(root.clone(), "citation-first-colon");
     assert_eq!(documented_only.inline_note_layout_check, "off");
     assert!(!layout_pass_enabled(documented_only.lexical()));
-    let (has_note, violations) = inline_note_verdicts(&block, 1, documented_only.lexical(), &[]);
+    let (has_note, violations) =
+        inline_note_verdicts(&block, &[], 1, documented_only.lexical(), &[]);
     assert!(has_note);
     assert!(
         violations.is_empty(),
@@ -442,7 +444,7 @@ fn note_walk_tokenizes_only_the_lines_it_reads() {
     let gated_config = checked_layout_config(root, "citation-first-colon");
     assert!(layout_pass_enabled(gated_config.lexical()));
     let prefixes = comment_strip_prefixes(gated_config.lexical());
-    let mut gated = BlockCitations::new(&block, gated_config.lexical(), &[]);
+    let mut gated = BlockCitations::new(&block, &[], gated_config.lexical(), &[]);
     let has_note = block_has_inline_note_memoized(&mut gated, &prefixes);
     assert_eq!(
         filled_slots(&gated),

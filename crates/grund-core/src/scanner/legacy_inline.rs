@@ -75,8 +75,10 @@ fn inline_note_verdicts_from_ranges(
             .any(|(line, ranges)| line_says_something(line, ranges, &prefixes));
         return (has_note, Vec::new());
     }
+    // The ranges are the scanner's own citations, already read in each line's state.
     let mut block = BlockCitations {
         lines,
+        literal_entries: &[],
         lexical: frame.compiled.lexical(schema),
         alias_grammars: &[],
         ranges: ranges.into_iter().map(Some).collect(),

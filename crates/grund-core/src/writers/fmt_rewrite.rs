@@ -24,8 +24,9 @@ use super::fmt_suppressed::suppressed_line;
 use crate::config::Config;
 use crate::grammar::{
     DocstringContent, DocstringCursor, FmtDirectives, MarkdownBlocks, MarkdownLine,
-    bare_block_lines, declaration_id_on_source_line, id_token_end_at, in_escape_position,
-    is_inside_inline_code, is_inside_markdown_link_destination, string_literal_in,
+    MultiLineStrings, bare_block_lines, declaration_id_on_source_line, id_token_end_at,
+    in_escape_position, is_inside_inline_code, is_inside_markdown_link_destination,
+    string_literal_in,
 };
 use crate::model::{Catalog, Id};
 use crate::resolver::{
@@ -65,7 +66,9 @@ pub(super) fn rewrite_file(
     // the scanner's docstring state — advanced on *every* line, including the ones
     // passed through untouched, or one unvisited `"""` desynchronizes the file.
     let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");
-    let mut docstrings = DocstringCursor::new(is_py, config.docstring_python);
+    // §FS-languages.multi-line-string: and the literal each line begins inside.
+    let literals = MultiLineStrings::of(path, original, config.docstring_python);
+    let mut docstrings = DocstringCursor::new(is_py, config.docstring_python, &literals);
     // §FS-declarations.line.block-comment: a bare block line declares as the scan reads it.
     let bare_block = bare_block_lines(original, is_md, is_py, config.lexical());
     for (idx, line) in original.lines().enumerate() {
@@ -192,7 +195,7 @@ pub(crate) struct FmtLineOpts<'a> {
 #[allow(clippy::too_many_arguments)]
 fn fmt_line_at(
     line: &str,
-    docstrings: DocstringCursor,
+    docstrings: DocstringCursor<'_>,
     path: &Path,
     lineno: usize,
     config: &Config,
@@ -309,7 +312,7 @@ fn fmt_line_at(
 #[cfg(test)]
 pub(crate) fn fmt_line(
     line: &str,
-    docstrings: DocstringCursor,
+    docstrings: DocstringCursor<'_>,
     path: &Path,
     config: &Config,
     is_md: bool,

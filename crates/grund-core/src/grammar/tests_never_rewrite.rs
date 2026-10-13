@@ -83,7 +83,7 @@ fn the_shared_zone_predicate_answers_for_the_escape_in_both_host_languages() {
     let start = line.find("FS-001-login").expect("the illustrated token");
     for is_md in [true, false] {
         assert!(
-            bare_token_in_never_rewrite_zone(line, is_md, start, "§"),
+            bare_token_in_never_rewrite_zone(line, 0, is_md, start, "§"),
             "the escape position is a never-rewrite zone with is_md = {is_md}"
         );
     }
@@ -92,7 +92,7 @@ fn the_shared_zone_predicate_answers_for_the_escape_in_both_host_languages() {
     let bare_start = bare.find("FS-001-login").expect("the bare token");
     for is_md in [true, false] {
         assert!(
-            !bare_token_in_never_rewrite_zone(bare, is_md, bare_start, "§"),
+            !bare_token_in_never_rewrite_zone(bare, 0, is_md, bare_start, "§"),
             "an ordinary bare token in prose is in no zone with is_md = {is_md}"
         );
     }

@@ -20,7 +20,7 @@ use super::fmt_value_bindings::markdown_citation_is_value_binding;
 use crate::config::Config;
 use crate::grammar::{
     CandidateReading, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, cross_ref_wrap,
-    never_rewrite_context, parse_id, parse_longest_id_prefix,
+    markdown_never_rewrite_context, parse_id, parse_longest_id_prefix,
 };
 use crate::model::{Catalog, Id};
 use crate::resolver::{
@@ -195,7 +195,7 @@ fn markdown_link_citations(
         }
         // §FS-citations.zones.link-destination: inline code and every destination
         // the line holds, read with the one extent every other pass reads.
-        if never_rewrite_context(line, true, marker_start) {
+        if markdown_never_rewrite_context(line, marker_start) {
             continue;
         }
         let Some(id) = parse_id(&caps, &config.grammar) else {
@@ -241,7 +241,7 @@ fn collect_workspace_markdown_link_citations(
         return;
     }
     for (marker_start, _) in line.match_indices(&config.marker) {
-        if never_rewrite_context(line, true, marker_start) {
+        if markdown_never_rewrite_context(line, marker_start) {
             continue;
         }
         let token_start = marker_start + config.marker.len();

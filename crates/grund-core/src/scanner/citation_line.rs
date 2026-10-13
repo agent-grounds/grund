@@ -6,7 +6,9 @@ use std::path::Path;
 
 use super::value_context::SourceValueLineContext;
 use crate::config::{Frame, Schema};
-use crate::grammar::DocstringContent;
+use crate::grammar::{
+    DocstringContent, bare_token_in_never_rewrite_zone, qualified_suppressed_in_source,
+};
 use crate::model::InlineCitationSite;
 
 pub(super) struct CitationLine<'a> {
@@ -37,4 +39,37 @@ pub(super) struct CitationLine<'a> {
     pub(super) value_comment: Option<SourceValueLineContext>,
     pub(super) inline_sites: &'a BTreeMap<usize, InlineCitationSite>,
     pub(super) inline_block_lines: &'a BTreeMap<usize, std::sync::Arc<[String]>>,
+}
+
+impl CitationLine<'_> {
+    /// The literal entry state of `scan_line`: how many of its leading bytes are
+    /// inside a string literal an earlier line opened (§FS-languages.multi-line-string).
+    fn literal_entry(&self) -> usize {
+        self.docstring.literal_entry_from(self.column_offset)
+    }
+
+    /// §AR-scanner.2.3.2: whether the marked qualified citation at `scan_line` offset
+    /// `marker_start` is suppressed — asked in the state the line begins in, so the
+    /// interior of a multi-line literal is a string here too
+    /// (§FS-citations.recognized.string-literals).
+    pub(super) fn qualified_suppressed(&self, marker_start: usize) -> bool {
+        qualified_suppressed_in_source(
+            self.scan_line,
+            self.literal_entry(),
+            self.is_md,
+            marker_start,
+        )
+    }
+
+    /// §AR-scanner.2.3.1: whether the bare token at `scan_line` offset `pos` sits in a
+    /// never-rewrite zone, read in the state the line begins in.
+    pub(super) fn bare_token_in_zone(&self, pos: usize, marker: &str) -> bool {
+        bare_token_in_never_rewrite_zone(
+            self.scan_line,
+            self.literal_entry(),
+            self.is_md,
+            pos,
+            marker,
+        )
+    }
 }

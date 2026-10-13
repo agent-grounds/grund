@@ -45,9 +45,9 @@ use super::value_context::recognized_source_value_contexts;
 use super::values::scan_value_bindings;
 use crate::config::{Frame, Schema};
 use crate::grammar::{
-    DocstringContent, MarkdownBlocks, MarkdownLine, PythonDocstringScanState, atx_heading_text,
-    bare_token_in_never_rewrite_zone, declaration_captures, near_miss_heading, parse_id,
-    qualified_suppressed_in_source, section_path, source_scan_line,
+    DocstringContent, MarkdownBlocks, MarkdownLine, MultiLineStrings, PythonDocstringScanState,
+    atx_heading_text, declaration_captures, near_miss_heading, parse_id, section_path,
+    source_scan_line,
 };
 use crate::model::{
     Catalog, Citation, Declaration, DeclarationSource, FileRecord, FileText, HeadingKind, Id,
@@ -115,13 +115,16 @@ pub(super) fn scan_file_text(
     let mut record = FileRecord::new(file_text, is_md);
     let shared = record.text.clone();
     let text = shared.as_str();
+    // §FS-languages.multi-line-string: what each line begins inside, read off the whole file.
+    let literals = MultiLineStrings::of(path, text, schema.sources.docstring_python);
     // §AR-scanner.2.8.1: the comment blocks, walked once, are what the inline-note sites read.
     let (inline_sites, inline_block_lines) = if is_md {
         Default::default()
     } else {
         let lines = text.lines().collect::<Vec<_>>();
         record.blocks = walk_blocks(path, &lines, is_py, schema, frame);
-        inline_citation_sites(&lines, &record.blocks, schema, frame, workspace_targets)
+        let blocks = &record.blocks;
+        inline_citation_sites(&lines, &literals, blocks, schema, frame, workspace_targets)
     };
     let in_docs = super::stub_shape::stub_by_docs(path);
     let mut markdown_blocks = MarkdownBlocks::default();
@@ -431,7 +434,7 @@ pub(super) fn scan_file_text(
         let citation_line = CitationLine {
             scan_line,
             raw_line: line,
-            docstring: DocstringContent::of(&scan, line),
+            docstring: DocstringContent::of(&scan, line, literals.entry(idx)),
             column_offset: scan.column_offset,
             lineno,
             path,
@@ -469,8 +472,7 @@ pub(super) fn scan_file_text(
             // §FS-check.1.1.9 / §AR-scanner.2.3.1: the never-rewrite zones are asked
             // before the unmarked-`alias/ID` rule and the strict gate, so the escape
             // is what exempts `<§>ID` and `<§>alias/ID` alike, in both modes.
-            let bare_zone = !has_marker
-                && bare_token_in_never_rewrite_zone(scan_line, is_md, token_start, marker);
+            let bare_zone = !has_marker && citation_line.bare_token_in_zone(token_start, marker);
             if bare_zone {
                 continue;
             }
@@ -502,10 +504,7 @@ pub(super) fn scan_file_text(
             } else {
                 token_start
             };
-            if namespace.is_some()
-                && has_marker
-                && qualified_suppressed_in_source(scan_line, is_md, start)
-            {
+            if namespace.is_some() && has_marker && citation_line.qualified_suppressed(start) {
                 continue;
             }
             if let Some(decl) = current.as_ref()
