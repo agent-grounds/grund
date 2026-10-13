@@ -32,6 +32,8 @@ Every benchmark scans a **generated conformant fixture**, never this repository'
 - a **10k-file** fixture for the large-repo budget benchmark, backing the large-repo promise ([§GOAL-small-and-large.2](../goals.md#2-large-repo-promise)) and fast-feedback target ([§GOAL-fast-feedback.1](../goals.md#1-performance-targets));
 - a **citations-enabled** fixture (`--citations`) so one benchmark exercises the citing-side classification and direction passes ([§FS-config.3.9](../functional-spec/FS-config.md#39-citations--citation-direction-rules)), which the other fixtures (no `[citations]`) deliberately skip.
 
+Every generated fixture carries a `manifest.json` at its root, outside the scanned `docs/` tree, holding the generator's `schema_version` and a SHA-256 `digest` over the fixture's sorted relative paths and their contents, the manifest itself excluded. Equal generator arguments give an equal digest, and one changed byte gives another. The schema version changes whenever the generator's output changes shape. Base and head are measured on one fixture bundle, so their digests must match; the run record carries them ([§AR-benchmarks.7.1](AR-benchmarks.md#71-what-a-record-holds)), and a changed digest starts a new series rather than reading as a code change.
+
 ### 1.2 The benched commands
 
 The benched subcommands are the ones the agent loop and the CI/pre-commit gate run most:
@@ -78,8 +80,9 @@ The millisecond budget itself is still backstopped by the cheap wall-clock guard
 
 ## 3. How it runs
 
-- Locally: `cargo bench -p grund --features bench --bench instructions` (requires `valgrind`, `python3`, and `iai-callgrind-runner` on `PATH`). With no prior run, iai-callgrind records the counts and exits clean; on a later run in the same `target/` it prints the delta against the previous run. Every fixture is regenerated on each run ([§AR-benchmarks.1.1](AR-benchmarks.md#11-generated-fixtures-never-this-repository)).
-- In CI: the dedicated `bench` job of [§AR-ci.5](AR-ci.md#5-benchmark-job) installs the Callgrind toolchain and runs the harness. Pull requests first save a `main` baseline from the base branch, then rerun the PR ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)); the intended limits and their current wiring are [§AR-ci.5.2](AR-ci.md#52-regression-limits). Pushes to `main` record the current counts and save JSON summaries for inspection.
+- Locally: `cargo bench -p grund --features bench --bench instructions` (requires `valgrind`, `python3`, and `iai-callgrind-runner` on `PATH`). With no prior run, iai-callgrind records the counts and exits clean; on a later run in the same `target/` it prints the delta against the previous run. Every fixture is regenerated on each run ([§AR-benchmarks.1.1](AR-benchmarks.md#11-generated-fixtures-never-this-repository)). Its record says `environment: local`, a series of its own ([§AR-benchmarks.7.4](AR-benchmarks.md#74-a-local-run-is-a-series-of-its-own)).
+- In CI: the dedicated `bench` job of [§AR-ci.5](AR-ci.md#5-benchmark-job) runs the harness in a pinned environment. A pull request measures the base binary and its own under its own harness ([§AR-benchmarks.5](AR-benchmarks.md#5-comparing-two-revisions), [§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)), and growth past the limits of [§AR-ci.5.2](AR-ci.md#52-regression-limits) fails the job. A push to `main` runs the suite twice on one binary and checks the same-binary bound ([§AR-benchmarks.7.3](AR-benchmarks.md#73-the-same-binary-bound)).
+- Every run, local or CI, writes one run record, and two records are compared only within one series ([§AR-benchmarks.7](AR-benchmarks.md#7-the-run-record-and-its-series)).
 
 ## 4. Relationship to the rest of the tree
 
@@ -94,6 +97,43 @@ The counts are deterministic for a given **binary**, not for a given source tree
 
 So benching a branch in one checkout against `main` in another measures the build as much as the change, and it fails by producing a plausible number rather than an error. Take both numbers in **one worktree**, switching the source under a single `target/`, and against the branch's **merge base** rather than whatever `main` has since become.
 
+Two revisions are compared by **one harness on one fixture bundle**, and only the binaries differ. The harness takes the binary under test from `GRUND_BENCH_BIN` when it is set, and its own freshly built `grund` otherwise. Measuring the base revision means building the base's `grund` binary alone, then running the newer revision's harness with `GRUND_BENCH_BIN` naming it and `--save-baseline`, and the same harness on its own binary with `--baseline`. The base revision's harness and fixture generator are never run, so a change to either cannot read as a change in the code.
+
+### 5.1 A scenario the base binary refuses
+
+A scenario the base binary cannot run — it names a flag or a mode the base does not know — is not compared, and it does not fail the comparison. Before measuring a scenario under `GRUND_BENCH_BIN`, the harness runs its invocation once outside Callgrind; when that exits non-zero, the harness leaves the scenario out of the base run and the base's run record lists it as refused. The head run still measures it. The comparison reports it as `no base, not compared`, and only a scenario both binaries ran can fail.
+
 ## 6. Scope
 
 This is a build-and-CI tool, not a CLI surface: it adds no subcommand, no flag, no output shape, so the `tests/e2e/cases/*` corpus is unchanged and nothing here is covered by the [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) user-visible-surface contract. The benched commands are specified by their functional specs ([§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-citation-in-a-repo), [§FS-show](../functional-spec/FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id), [§FS-list](../functional-spec/FS-list.md#fs-list-grund-lists-every-declared-id), [§FS-refs](../functional-spec/FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id), [§FS-cover](../functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file), [§FS-fmt](../functional-spec/FS-fmt.md#fs-fmt-grund-normalizes-citations-in-bulk), [§FS-cli](../functional-spec/FS-cli.md#fs-cli-grunds-command-line-surface-conventions)) rather than re-specified here.
+
+## 7. The run record and its series
+
+Every run of the harness, in CI or locally, is normalized by `scripts/bench_record.py` into one compact JSON **run record**, and two records are compared only when they belong to one **series**. The record is what makes a count readable apart from the job that took it: it says what was measured, with what, and on which input.
+
+### 7.1 What a record holds
+
+A record holds the `commit` and the SHA-256 of the binary measured (`binary_sha256`), the `ir` count per scenario that ran, and the scenarios the binary `refused` ([§AR-benchmarks.5.1](AR-benchmarks.md#51-a-scenario-the-base-binary-refuses)). Beside them it holds its identity fields:
+
+- `record_version`, the version of this record format;
+- `environment`, `ci` or `local`;
+- `image`, the container image's digest, or `local`;
+- `rustc`, `valgrind` and `runner`, the versions of the compiler, of Valgrind and of `iai-callgrind-runner`;
+- `build_flags`, the `RUSTFLAGS`, `CARGO_INCREMENTAL` and Cargo profile the binary was built with;
+- `locale` and `timezone`, the `LC_ALL` and `TZ` of the run;
+- `threads`, the `RAYON_NUM_THREADS` of the run;
+- `fixtures`, each fixture's `schema_version` and `digest` ([§AR-benchmarks.1.1](AR-benchmarks.md#11-generated-fixtures-never-this-repository)).
+
+A record missing an identity field is refused when it is written.
+
+### 7.2 The series key
+
+The series key is the SHA-256 of the identity fields, and of nothing else: the commit and the binary digest are what a comparison compares, so they never change the key, while a change to any identity field does. `bench_record.py compare` refuses two records whose keys differ, exits non-zero, and names each identity field that differs, so a fixture, toolchain or environment change cannot be read as a code change. The first record after such a change starts a new series; records before it are never compared with it.
+
+### 7.3 The same-binary bound
+
+The same-binary bound is **1%** `Ir`: two runs of one binary on one fixture bundle, in one series, give each scenario counts that differ by at most that much. A push to `main` checks it ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)) with `bench_record.py jitter`, which fails naming each scenario past the bound. If that check ever fails on an unchanged binary, it is reported as a flaky test, with the labels `bug` and `flaky-test`. Every regression limit stays at least five times this bound ([§AR-ci.5.2](AR-ci.md#52-regression-limits)).
+
+### 7.4 A local run is a series of its own
+
+A local `cargo bench` runs outside the pinned image, so its record says `environment: local` and `image: local`, and it is a series of its own by construction. That is the honest reading of the gap between the same commit's counts locally and in CI. `docs/benchmarks.md` gives the one `docker run` command that reproduces CI's environment.

@@ -6,6 +6,10 @@ paragraph — must name that gate, and none of it may still say the
 limits are not enforced, because a reader who believes either the wrong way
 reads a red bench job, or a green one, wrongly (§AR-benchmarks).
 
+§AR-benchmarks.3 retires the last copy that called the limits "intended", and
+§AR-ci.5.2 holds every limit at no less than five times the same-binary bound of
+§AR-benchmarks.7.3, so jitter alone never crosses one.
+
 §REQ-readme.evidence makes the report an archive: new measurements must write
 elsewhere, and the archived rows stay byte for byte. Text detectors require
 factual review as well.
@@ -22,6 +26,17 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 GENERATOR = REPO_ROOT / "scripts/local-benchmark-report.py"
 REPORT = REPO_ROOT / "docs/benchmarks.md"
 README = REPO_ROOT / "README.md"
+HARNESS = REPO_ROOT / "crates/grund-cli/benches/instructions.rs"
+AR_BENCHMARKS = REPO_ROOT / "docs/architecture/AR-benchmarks.md"
+# Every document that describes the benchmark limits to a reader.
+BENCHMARK_DOCS = (
+    REPORT, GENERATOR, AR_BENCHMARKS, REPO_ROOT / "docs/architecture/AR-ci.md",
+    REPO_ROOT / "docs/decisions/architectural/DA-benchmark-instruction-counting.md",
+)
+INTENDED_LIMITS = re.compile(r"\bintended\b(?:\W+\w+){0,3}\W+limits?\b|"
+                             r"\blimits?\b(?:\W+\w+){0,3}\W+intended\b", re.IGNORECASE)
+LIMIT_CONST = re.compile(r"const (\w+_IR_LIMIT_PCT): f64 = ([0-9.]+);")
+BOUND = re.compile(r"The same-binary bound is \*\*([0-9.]+)%\*\* `Ir`")
 
 # One limit stated for every benchmark, which §AR-ci.5.2 contradicts: 5% holds the
 # 10k-file fixture alone.
@@ -201,6 +216,31 @@ class TheBenchmarkComparisonGatesTheBuild(unittest.TestCase):
             "historical measurement/provenance cells or raw samples changed",
         )
 
+
+class TheLimitsAreEnforcedAndClearOfJitter(unittest.TestCase):
+    """§AR-benchmarks.3, §AR-ci.5.2, §AR-benchmarks.7.3"""
+
+    def test_no_benchmark_doc_calls_the_limits_intended(self):
+        for path in BENCHMARK_DOCS:
+            with self.subTest(doc=path.relative_to(REPO_ROOT).as_posix()):
+                found = [m.group(0) for m in INTENDED_LIMITS.finditer(path.read_text(encoding="utf-8"))]
+                self.assertEqual([], found, f"{path.name} still calls the enforced limits intended")
+
+    def test_every_ir_limit_is_five_times_the_same_binary_bound(self):
+        bound = BOUND.search(AR_BENCHMARKS.read_text(encoding="utf-8"))
+        self.assertIsNotNone(bound, "§AR-benchmarks.7.3 states no same-binary bound")
+        limits = dict(LIMIT_CONST.findall(HARNESS.read_text(encoding="utf-8")))
+        self.assertTrue(limits, f"{HARNESS.name} declares no `*_IR_LIMIT_PCT`")
+        for name, value in limits.items():
+            with self.subTest(limit=name):
+                self.assertGreaterEqual(float(value), 5 * float(bound.group(1)),
+                                        f"{name} is within five times the same-binary bound")
+
+    def test_the_intended_detector_finds_the_retired_wording(self):
+        self.assertTrue(INTENDED_LIMITS.search(
+            "the intended limits and their current wiring are §AR-ci.5.2"))
+        self.assertTrue(INTENDED_LIMITS.search("limits that were only intended"))
+        self.assertFalse(INTENDED_LIMITS.search("growth past a limit fails the build"))
 
 class PerformanceDetectorProbes(unittest.TestCase):
     def test_positive_instruction_gate_claims_are_rejected(self):

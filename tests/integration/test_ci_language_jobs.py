@@ -5,7 +5,10 @@ Read as text, the way `test_release_workflow.py` reads the workflows: the CI
 Python has no YAML parser. A job's `matrix.os` list is expanded into one
 instance per operating system, and each check returns the problems it finds, so
 the same check runs against `ci.yml` and against fixture workflows that show it
-can still fail (§AR-ci.13.5)."""
+can still fail (§AR-ci.13.5).
+
+The bench job's pinned environment (§AR-ci.5) and its one-harness comparison
+(§AR-ci.5.1, §AR-benchmarks.5) are read the same way."""
 
 import re
 import unittest
@@ -37,6 +40,10 @@ PRE_COMMIT = "pre-commit run --all-files"
 BENCH = ("cargo bench -p grund --features bench --locked --quiet --bench instructions"
          " -- --baseline=main --save-summary=json")
 AGGREGATE = re.compile(r"cargo test \((.+)\)")
+# §AR-ci.5: the bench job's image, named by its digest.
+BENCH_IMAGE = re.compile(r"(?m)^\s+(?:container|image):\s*rust:[\w.-]+-bookworm@sha256:([0-9a-f]{64})\s*$")
+BENCH_ENV = {"LC_ALL": "C.UTF-8", "TZ": "UTC", "RAYON_NUM_THREADS": "4",
+             "CARGO_INCREMENTAL": "0", "RUSTFLAGS": ""}
 
 
 def header(body):
@@ -260,6 +267,120 @@ def cache_problems(text):
             for key, jobs_ in sorted(owners.items()) if len(jobs_) > 1]
 
 
+def job_env(head):
+    """The job-level `env:` of a bench job header, unquoted."""
+    block = re.search(r"(?m)^    env:\s*\n((?:      .*\n?)+)", head + "\n")
+    if not block:
+        return {}
+    pairs = re.findall(r"(?m)^      ([A-Z_]+):[ \t]*(.*)$", block.group(1))
+    return {key: value.strip().strip("'\"") for key, value in pairs}
+
+
+def bench_pin_problems(text):
+    """§AR-ci.5: the bench job runs in one environment named by digest, and only it."""
+    body = jobs(text).get("bench")
+    if body is None:
+        return ["no `bench` job"]
+    head, job_steps = header(body), steps(body)
+    problems = []
+    image = BENCH_IMAGE.search(head)
+    if not image:
+        problems.append("the bench job names no `rust:<release>-bookworm@sha256:<digest>` container")
+    if any("rust-toolchain" in step for step in job_steps):
+        problems.append("the bench job installs a toolchain instead of using the image's compiler")
+    env = job_env(head)
+    for key, value in BENCH_ENV.items():
+        if env.get(key) != value:
+            problems.append(f"the bench job sets {key}={env.get(key)!r}, not {value!r}")
+    if not re.search(r"\bvalgrind=\S+", body):
+        problems.append("the bench job installs Valgrind without an exact version")
+    if "iai-callgrind-runner --version 0.16.1" not in body:
+        problems.append("the bench job does not pin iai-callgrind-runner 0.16.1")
+    keys = [key for step in job_steps if "actions/cache" in step
+            for key in re.findall(r"(?m)^\s*key:\s*(.+)$", step)]
+    if image and (not keys or any(image.group(1) not in key for key in keys)):
+        problems.append(f"the bench job's cache keys {keys} do not carry the image digest")
+    return problems
+
+
+def bench_comparison_problems(text):
+    """§AR-ci.5.1, §AR-benchmarks.5: one harness measures both binaries; main checks jitter."""
+    body = jobs(text).get("bench")
+    if body is None:
+        return ["no `bench` job"]
+    job_steps = steps(body)
+    problems = []
+    base = [step for step in job_steps if "github.base_ref" in step or "pull_request.base.sha" in step]
+    if not base:
+        problems.append("no step takes the base commit")
+    for step in base:
+        if "cargo bench" in step:
+            problems.append("the base commit's step runs its own harness: " + squash(step)[:120])
+        if "cargo build" not in step:
+            problems.append("the base commit's step does not build the base binary")
+    saving = [step for step in job_steps if "--save-baseline=main" in step]
+    if len(saving) != 1:
+        problems.append(f"{len(saving)} steps save the baseline, not one")
+    for step in saving:
+        if "GRUND_BENCH_BIN" not in step:
+            problems.append("the baseline run does not measure the base binary via GRUND_BENCH_BIN")
+        if "git checkout" in step or "github.base_ref" in step:
+            problems.append("the baseline run checks out the base: it is not the PR's harness")
+    for step in (step for step in job_steps if BENCH in commands(step)):
+        if "GRUND_BENCH_BIN" in step:
+            problems.append("the comparing run measures the base binary, not the PR's own")
+    flat = squash(body)
+    for wanted in ("bench_record.py record", "bench_record.py compare", "GITHUB_STEP_SUMMARY"):
+        if wanted not in flat:
+            problems.append(f"the bench job does not run `{wanted}`")
+    jitter = [step for step in job_steps if "bench_record.py jitter" in step]
+    if not jitter:
+        problems.append("a push to main does not check the same-binary bound")
+    for step in jitter:
+        if "refs/heads/main" not in step:
+            problems.append("the jitter check is not limited to a push to main")
+    return problems
+
+
+PINNED_BENCH = """jobs:
+  bench:
+    name: cargo bench (instruction counts)
+    if: github.event_name != 'merge_group'
+    runs-on: ubuntu-latest
+    container: rust:1.90.0-bookworm@sha256:{digest}
+    env:
+      LC_ALL: C.UTF-8
+      TZ: UTC
+      RAYON_NUM_THREADS: 4
+      CARGO_INCREMENTAL: 0
+      RUSTFLAGS: ""
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/cache/restore@v5
+        with:
+          key: bench-{digest}-${{{{ hashFiles('**/Cargo.lock') }}}}
+      - run: |
+          apt-get install -y valgrind=1:3.19.0-1
+          cargo install iai-callgrind-runner --version 0.16.1 --locked --quiet
+      - if: github.event_name == 'pull_request'
+        run: |
+          git checkout --force "origin/${{{{ github.base_ref }}}}"
+          cargo build --profile bench -p grund --bin grund --locked
+          git checkout --force "${{{{ github.sha }}}}"
+      - if: github.event_name == 'pull_request'
+        env:
+          GRUND_BENCH_BIN: ../grund-base
+        run: cargo bench -p grund --features bench --locked --quiet --bench instructions -- --save-baseline=main --save-summary=json
+      - if: github.event_name == 'pull_request'
+        run: {bench}
+      - run: |
+          python3 scripts/bench_record.py record --out head.json
+          python3 scripts/bench_record.py compare base.json head.json >> "$GITHUB_STEP_SUMMARY"
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: python3 scripts/bench_record.py jitter first.json second.json
+""".format(digest="0" * 64, bench=BENCH)
+
+
 def leg(job_id, system, *runs_, extra=""):
     lines = "".join(f"      - run: {command}\n" for command in runs_)
     return f"  {job_id}:\n    runs-on: {system}\n{extra}    steps:\n{lines}"
@@ -336,6 +457,51 @@ class LanguageJobsTests(unittest.TestCase):
     def test_no_two_jobs_on_one_system_share_a_cache_key(self):
         # §AR-ci.13.4
         self.assertEqual([], cache_problems(self.text))
+
+
+class BenchJobTests(unittest.TestCase):
+    """§AR-ci.5 and §AR-ci.5.1 on `ci.yml`."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.text = CI.read_text(encoding="utf-8")
+
+    def test_the_bench_job_runs_in_a_pinned_environment(self):
+        # §AR-ci.5
+        self.assertEqual([], bench_pin_problems(self.text))
+
+    def test_one_harness_measures_both_binaries_and_main_checks_jitter(self):
+        # §AR-ci.5.1, §AR-benchmarks.5, §AR-benchmarks.7.3
+        self.assertEqual([], bench_comparison_problems(self.text))
+
+
+class BenchJobCheckTests(unittest.TestCase):
+    """The bench checks pass the job §AR-ci.5 asks for and fail each way off it."""
+
+    def test_the_job_asked_for_passes(self):
+        self.assertEqual([], bench_pin_problems(PINNED_BENCH))
+        self.assertEqual([], bench_comparison_problems(PINNED_BENCH))
+
+    def test_a_floating_environment_is_caught(self):
+        for old, new in (("@sha256:" + "0" * 64, ""), ("valgrind=1:3.19.0-1", "valgrind"),
+                         ("      TZ: UTC\n", ""), ("bench-" + "0" * 64, "bench")):
+            with self.subTest(drop=old):
+                self.assertTrue(bench_pin_problems(PINNED_BENCH.replace(old, new)))
+        toolchain = PINNED_BENCH.replace(
+            "      - uses: actions/checkout@v6\n",
+            "      - uses: actions/checkout@v6\n      - uses: dtolnay/rust-toolchain@stable\n")
+        self.assertTrue(bench_pin_problems(toolchain))
+
+    def test_a_base_harness_is_caught(self):
+        base_harness = PINNED_BENCH.replace(
+            "cargo build --profile bench -p grund --bin grund --locked",
+            "cargo bench -p grund --features bench --bench instructions -- --save-baseline=main")
+        self.assertTrue(bench_comparison_problems(base_harness))
+        self.assertTrue(bench_comparison_problems(PINNED_BENCH.replace("GRUND_BENCH_BIN", "GRUND_BIN")))
+
+    def test_a_missing_jitter_check_is_caught(self):
+        self.assertTrue(bench_comparison_problems(
+            PINNED_BENCH.replace("bench_record.py jitter", "bench_record.py record")))
 
 
 class LanguageJobsCheckTests(unittest.TestCase):
