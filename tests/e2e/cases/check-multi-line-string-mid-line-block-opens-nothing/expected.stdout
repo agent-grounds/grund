@@ -1,0 +1,2 @@
+src/app.js:5: error: unknown reference api/FS-gone-after-mid-line-block
+src/lib.rs:5: error: unknown reference api/FS-gone-after-mid-line-block-rs

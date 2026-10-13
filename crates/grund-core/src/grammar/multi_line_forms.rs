@@ -64,6 +64,20 @@ impl Language {
         }
     }
 
+    /// A quote-like byte at `i` that this language reads otherwise than the
+    /// per-line toggle does, where no quote is open
+    /// (§FS-languages.multi-line-string.bound): a Rust character literal or
+    /// lifetime, a JavaScript or TypeScript regular-expression literal.
+    pub(super) fn skip_at(self, line: &[u8], i: usize) -> Option<Skip> {
+        match (self, line[i]) {
+            (Self::Rust, b'\'') => Some(Skip::To(rust_char_end(line, i).unwrap_or(i + 1))),
+            (Self::Template, b'/') if regex_may_start(&line[..i]) => {
+                Some(regex_end(line, i).map_or(Skip::Line, Skip::To))
+            }
+            _ => None,
+        }
+    }
+
     /// Whether this language's forms are heredocs, whose body starts on the next
     /// line and of which only the first on a line is carried
     /// (§FS-languages.multi-line-string.forms).
@@ -98,6 +112,14 @@ impl Language {
             Self::Php => php_opener(line, i),
         }
     }
+}
+
+/// What the opener search does with a byte [`Language::skip_at`] claims.
+pub(super) enum Skip {
+    /// Resume at this column, with nothing between opened or toggled.
+    To(usize),
+    /// Open nothing more on this line: a regular expression with no closing `/`.
+    Line,
 }
 
 /// How one recognized form ends (§FS-languages.multi-line-string.forms).
@@ -178,6 +200,87 @@ fn rust_opener(line: &[u8], i: usize, word_start: bool) -> Option<(usize, Closer
     Some((j + 1, text_closer(&needle, false)))
 }
 
+/// The end of the Rust character or byte literal whose `'` is at `i` — `'x'`,
+/// `'\n'`, `'\''`, `'"'`, `'\u{1F600}'` — or `None` for a lifetime, a label
+/// or a stray apostrophe (§FS-languages.multi-line-string.bound).
+fn rust_char_end(line: &[u8], i: usize) -> Option<usize> {
+    let rest = line.get(i + 1..)?;
+    let close = if *rest.first()? == b'\\' {
+        // `\` and the byte it escapes, then the rest of a `\x7f` or `\u{…}`.
+        2 + rest
+            .get(2..)?
+            .iter()
+            .take(10)
+            .position(|byte| *byte == b'\'')?
+    } else {
+        let width = match rest[0] {
+            b'\'' => return None,
+            0x00..=0x7f => 1,
+            0xc0..=0xdf => 2,
+            0xe0..=0xef => 3,
+            _ => 4,
+        };
+        (rest.get(width) == Some(&b'\'')).then_some(width)?
+    };
+    Some(i + 1 + close + 1)
+}
+
+/// The words after which a JavaScript `/` begins a regular expression rather than
+/// a division (§FS-languages.multi-line-string.bound).
+const REGEX_KEYWORDS: [&[u8]; 14] = [
+    b"return",
+    b"typeof",
+    b"instanceof",
+    b"in",
+    b"of",
+    b"new",
+    b"delete",
+    b"void",
+    b"throw",
+    b"case",
+    b"do",
+    b"else",
+    b"yield",
+    b"await",
+];
+
+/// Whether a `/` after `before` is in expression position: the start of the line,
+/// after an operator or opening punctuation, or after one of [`REGEX_KEYWORDS`].
+fn regex_may_start(before: &[u8]) -> bool {
+    let before = before.trim_ascii_end();
+    let Some(&last) = before.last() else {
+        return true;
+    };
+    if b"(,=:[!&|?{};+-*%<>~^".contains(&last) {
+        return true;
+    }
+    let word = before.len()
+        - before
+            .iter()
+            .rev()
+            .take_while(|byte| is_identifier_byte(**byte))
+            .count();
+    REGEX_KEYWORDS.contains(&&before[word..])
+}
+
+/// The end of the regular-expression literal whose `/` is at `i`: its closing `/`
+/// on the same line, neither escaped nor inside a `[…]` class.
+fn regex_end(line: &[u8], i: usize) -> Option<usize> {
+    let mut class = false;
+    let mut j = i + 1;
+    while j < line.len() {
+        match line[j] {
+            b'\\' => j += 1,
+            b'[' => class = true,
+            b']' => class = false,
+            b'/' if !class => return Some(j + 1),
+            _ => {}
+        }
+        j += 1;
+    }
+    None
+}
+
 /// C#: a verbatim `@"`, `$@"` or `@$"`, or a raw run of three or more `"` after
 /// any number of `$`.
 fn csharp_opener(line: &[u8], i: usize) -> Option<(usize, Closer)> {
@@ -254,17 +357,26 @@ fn python_opener(line: &[u8], i: usize, word_start: bool) -> Option<(usize, Clos
 }
 
 /// Shell: `<<` or `<<-`, optional blanks, then a word bare or quoted; a `<<` next
-/// to another `<` is a here-string or PHP's opener, not a heredoc.
+/// to another `<` is a here-string or PHP's opener, and one inside `(( … ))` a
+/// shift, not a heredoc.
 fn shell_opener(line: &[u8], i: usize) -> Option<(usize, Closer)> {
     if !line[i..].starts_with(b"<<")
         || (i > 0 && line[i - 1] == b'<')
         || line.get(i + 2) == Some(&b'<')
+        || in_arithmetic(&line[..i])
     {
         return None;
     }
     let strip_tabs = line.get(i + 2) == Some(&b'-');
     let (word, end) = heredoc_word(line, i + 2 + usize::from(strip_tabs))?;
     Some((end, Closer::Heredoc { word, strip_tabs }))
+}
+
+/// Whether `before` leaves a shell arithmetic `(( … ))` open, where `<<` is a shift
+/// (§FS-languages.multi-line-string.bound).
+fn in_arithmetic(before: &[u8]) -> bool {
+    let count = |pair: &[u8]| before.windows(2).filter(|window| *window == pair).count();
+    count(b"((") > count(b"))")
 }
 
 /// PHP: `<<<`, optional blanks, then an identifier bare or quoted.

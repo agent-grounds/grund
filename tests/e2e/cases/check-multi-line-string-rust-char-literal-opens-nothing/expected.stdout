@@ -1,0 +1,2 @@
+src/char_quote.rs:3: error: unknown reference api/FS-gone-after-char-quote
+src/static_str.rs:3: error: unknown reference api/FS-gone-after-static-str
