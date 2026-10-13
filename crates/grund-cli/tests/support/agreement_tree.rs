@@ -65,11 +65,13 @@ impl Drop for Tree {
 }
 
 pub fn grund(root: &Path, args: &[&str]) -> Output {
-    Command::new(env!("CARGO_BIN_EXE_grund"))
+    let output = Command::new(env!("CARGO_BIN_EXE_grund"))
         .args(args)
         .current_dir(root)
         .output()
-        .unwrap_or_else(|error| panic!("run grund {args:?}: {error}"))
+        .unwrap_or_else(|error| panic!("run grund {args:?}: {error}"));
+    super::agreement_evidence::cli(root, args, &output);
+    output
 }
 
 pub fn stdout(output: &Output) -> String {
