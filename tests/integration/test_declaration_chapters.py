@@ -91,7 +91,9 @@ CITED = (
     ("section.map", "REQ-one-answer.sections.map"),
 )
 # Bytes on main at 3613f4e9fd; every source the move takes text from ends below it.
-BASELINES = {"FS-show.md": 61180, "FS-fmt.md": 87635}
+# FS-fmt.md grew past its move baseline by one point of fmt's own, not a restatement:
+# §FS-fmt.6.3.3 (grund#642).
+BASELINES = {"FS-show.md": 61180, "FS-fmt.md": 88600}
 
 
 def _flat(text):
