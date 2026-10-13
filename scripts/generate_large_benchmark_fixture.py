@@ -4,10 +4,16 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import shutil
 from pathlib import Path
 
 
+# §AR-benchmarks.1.1: raise this whenever the generated output changes shape, so a
+# changed workload starts a new series (§AR-benchmarks.7.2).
+SCHEMA_VERSION = 1
+MANIFEST = "manifest.json"
 DEFAULT_FILE_COUNT = 10_000
 DEFAULT_COMPONENT_COUNT = 100
 
@@ -55,6 +61,28 @@ def declaration_body(index: int, file_count: int, component_count: int) -> str:
     )
 
 
+def fixture_digest(root: Path) -> str:
+    """§AR-benchmarks.1.1: SHA-256 over the sorted relative paths and their contents,
+    the manifest itself left out."""
+    digest = hashlib.sha256()
+    files = sorted(
+        (path.relative_to(root).as_posix(), path)
+        for path in root.rglob("*")
+        if path.is_file() and path.relative_to(root).as_posix() != MANIFEST
+    )
+    for relative, path in files:
+        data = path.read_bytes()
+        digest.update(f"{relative}\0{len(data)}\0".encode("utf-8"))
+        digest.update(data)
+    return digest.hexdigest()
+
+
+def write_manifest(root: Path) -> None:
+    """The manifest sits at the fixture root, outside the scanned `docs/` tree."""
+    manifest = {"schema_version": SCHEMA_VERSION, "digest": fixture_digest(root)}
+    (root / MANIFEST).write_text(json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8")
+
+
 def generate_fixture(
     root: Path, file_count: int, component_count: int, citations: bool = False
 ) -> None:
@@ -88,6 +116,7 @@ def generate_fixture(
 
     index_path = root / "docs" / "functional-spec" / "README.md"
     index_path.write_text("".join(index_lines), encoding="utf-8")
+    write_manifest(root)
 
 
 def parse_args() -> argparse.Namespace:

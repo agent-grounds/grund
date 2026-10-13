@@ -26,9 +26,12 @@ baseline that current pull-request CI uses.
 
 Current benchmarks use generated fixtures rather than the live repository
 ([§AR-benchmarks.1.1](architecture/AR-benchmarks.md#11-generated-fixtures-never-this-repository)).
-Pull-request CI measures the base branch and then the PR commit, recording the `Ir`
-comparison in summaries; pushes to `main` record counts without comparing against
-themselves ([§AR-ci.5.1](architecture/AR-ci.md#51-pull-requests-and-pushes)).
+Pull-request CI builds the base branch's binary alone and measures it and the PR's
+own binary with the PR's harness on one fixture bundle, printing the `Ir` comparison
+in the job summary; pushes to `main` run the suite twice on one binary and hold the
+two counts within the same-binary bound
+([§AR-ci.5.1](architecture/AR-ci.md#51-pull-requests-and-pushes),
+[§AR-benchmarks.5](architecture/AR-benchmarks.md#5-comparing-two-revisions)).
 Instruction-regression limits are enforced: growth in `Ir` past 5% on the generated
 10k-file fixture, or past 12.5% on any other benchmark, fails the bench job and the
 `cargo test (ubuntu-latest)` required check
@@ -44,6 +47,43 @@ the source change under review. Compare revisions under consistent build conditi
 is excluded from development CI ([§AR-ci.6](architecture/AR-ci.md#6-pgo-stays-out-of-development-ci)).
 The archival provenance below does not record compiler flags or PGO state; it cannot
 establish comparability with a differently built binary today.
+
+## Reproducing CI's Numbers
+
+CI takes its counts in one pinned environment
+([§AR-ci.5](architecture/AR-ci.md#5-benchmark-job)): the image below, named by its
+digest, Valgrind `1:3.19.0-1`, `iai-callgrind-runner` 0.16.1, `LC_ALL=C.UTF-8`,
+`TZ=UTC`, `RAYON_NUM_THREADS=4`, `CARGO_INCREMENTAL=0` and an empty `RUSTFLAGS`. To
+take the same counts on another machine, run the suite in that image from the
+repository root; it builds into `target/bench-image`, as root:
+
+```sh
+docker run --rm -v "$PWD":/work -w /work \
+  -e LC_ALL=C.UTF-8 -e TZ=UTC -e RAYON_NUM_THREADS=4 -e CARGO_INCREMENTAL=0 -e RUSTFLAGS= \
+  -e CARGO_TARGET_DIR=/work/target/bench-image \
+  rust:1.95.0-bookworm@sha256:6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1 \
+  bash -c 'git config --global --add safe.directory /work &&
+    apt-get update -qq && apt-get install -y -qq --no-install-recommends valgrind=1:3.19.0-1 &&
+    cargo install iai-callgrind-runner --version 0.16.1 --locked --quiet &&
+    cargo bench -p grund --features bench --locked --quiet --bench instructions -- --save-summary=json &&
+    python3 scripts/bench_record.py record --environment ci --image sha256:6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1 \
+      --binary target/bench-image/release/grund --iai target/bench-image/iai \
+      --out target/bench-image/record.json'
+```
+
+Every run, in CI or locally, is written down as one run record by
+`scripts/bench_record.py` ([§AR-benchmarks.7](architecture/AR-benchmarks.md#7-the-run-record-and-its-series)):
+the count per scenario, and the identity fields the counts were taken with, which are
+the image, the compiler, Valgrind, the runner, the build flags, the locale, the
+timezone, the thread count and each fixture's schema version and digest. Those fields,
+and nothing else, make the record's **series**. Two records are compared only within
+one series: `bench_record.py compare` refuses records of two series and names each
+field that differs ([§AR-benchmarks.7.2](architecture/AR-benchmarks.md#72-the-series-key)),
+so a fixture, toolchain or environment change starts a new series instead of reading
+as a code change. A plain `cargo bench` outside the image records `environment: local`,
+a series of its own ([§AR-benchmarks.7.4](architecture/AR-benchmarks.md#74-a-local-run-is-a-series-of-its-own)).
+The host's processor can still move a count the image does not pin, so a count taken
+this way is checked against CI's rather than assumed equal to it.
 
 ## Instructions
 
