@@ -240,3 +240,158 @@ fn an_external_unreadable_file_still_publishes_its_scan_error() {
     wait_for_exit(&mut child);
     let _ = fs::remove_dir_all(&base);
 }
+
+/// The next `publishDiagnostics` for exactly `uri` that `accept` takes, or a
+/// panic naming what was waited for — unlike `recv_diagnostics`, an empty
+/// publish counts, which is how a cleared config diagnostic arrives.
+fn recv_publish_for(
+    receiver: &mpsc::Receiver<Value>,
+    child: &mut Child,
+    uri: &str,
+    waiting_for: &str,
+    accept: impl Fn(&[Value]) -> bool,
+) -> Vec<Value> {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    loop {
+        let remaining = deadline.saturating_duration_since(std::time::Instant::now());
+        match receiver.recv_timeout(remaining) {
+            Ok(message)
+                if message.get("method").and_then(Value::as_str)
+                    == Some("textDocument/publishDiagnostics")
+                    && message["params"]["uri"].as_str() == Some(uri) =>
+            {
+                let diagnostics = message["params"]["diagnostics"]
+                    .as_array()
+                    .cloned()
+                    .unwrap_or_default();
+                if accept(&diagnostics) {
+                    return diagnostics;
+                }
+            }
+            Ok(_) => {}
+            Err(_) => {
+                let _ = child.kill();
+                let _ = child.wait();
+                let mut stderr = String::new();
+                if let Some(child_stderr) = child.stderr.as_mut() {
+                    use std::io::Read;
+                    let _ = child_stderr.read_to_string(&mut stderr);
+                }
+                panic!("no publish for {uri} with {waiting_for}; server stderr: {stderr}");
+            }
+        }
+    }
+}
+
+const BROKEN_CONFIG: &str = "grund_config_version = 1\n[scan\n";
+
+/// §FS-lsp.2.2.4.1: the load error `grund check` prints for `[scan` on line 2,
+/// as one `error` from `grund` on `grund.toml` at line index 1.
+fn assert_config_diagnostic(diagnostics: &[Value]) {
+    assert_eq!(
+        diagnostics.len(),
+        1,
+        "one config diagnostic: {diagnostics:?}"
+    );
+    let diagnostic = &diagnostics[0];
+    assert_eq!(diagnostic["severity"], 1, "an error: {diagnostic}");
+    assert_eq!(diagnostic["source"], "grund", "from grund: {diagnostic}");
+    assert_eq!(
+        diagnostic["range"]["start"]["line"], 1,
+        "at line 2: {diagnostic}"
+    );
+    let message = diagnostic["message"].as_str().unwrap_or_default();
+    assert!(
+        message.contains("expected `key = value`"),
+        "the CLI's error text: {message}"
+    );
+}
+
+fn changed_watched_files(stdin: &mut ChildStdin) {
+    send_message(
+        stdin,
+        json!({
+            "jsonrpc": "2.0",
+            "method": "workspace/didChangeWatchedFiles",
+            "params": { "changes": [] }
+        }),
+    );
+}
+
+#[test]
+fn a_config_that_stops_loading_is_published_on_grund_toml_until_it_loads_again() {
+    let base = std::env::temp_dir().join(format!("grund-lsp-config-diag-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&base);
+    let root = base.join("project");
+    let (spec, source) = write_project(&root, "Use");
+    let config = root.join("grund.toml");
+    let healthy = fs::read_to_string(&config).expect("read config");
+    let config_uri = file_uri(&config);
+
+    let (mut child, mut stdin, receiver) = start_server_with_workspace_folders(&base, &[&root]);
+    assert!(
+        cites(
+            &references(&mut child, &mut stdin, &receiver, 2, &spec),
+            &source
+        ),
+        "the healthy config's scan is the last good one before the config breaks"
+    );
+
+    write(&config, BROKEN_CONFIG);
+    changed_watched_files(&mut stdin);
+    let diagnostics = recv_publish_for(
+        &receiver,
+        &mut child,
+        &config_uri,
+        "the config load error",
+        |diagnostics| !diagnostics.is_empty(),
+    );
+    assert_config_diagnostic(&diagnostics);
+    let message = diagnostics[0]["message"].as_str().unwrap_or_default();
+    assert!(
+        message.contains("last good scan"),
+        "says the other diagnostics are from the last good scan: {message}"
+    );
+
+    write(&config, &healthy);
+    changed_watched_files(&mut stdin);
+    recv_publish_for(
+        &receiver,
+        &mut child,
+        &config_uri,
+        "an empty publish clearing the config error",
+        <[Value]>::is_empty,
+    );
+
+    stop_server(&mut child, &mut stdin, &receiver, 3);
+    drop(stdin);
+    wait_for_exit(&mut child);
+    let _ = fs::remove_dir_all(&base);
+}
+
+#[test]
+fn a_server_started_on_a_broken_config_publishes_it_on_grund_toml() {
+    let base = std::env::temp_dir().join(format!("grund-lsp-config-start-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&base);
+    let root = base.join("project");
+    write_project(&root, "Use");
+    let config = root.join("grund.toml");
+    write(&config, BROKEN_CONFIG);
+    let config_uri = file_uri(&config);
+
+    let (mut child, mut stdin, receiver) = start_server_with_workspace_folders(&base, &[&root]);
+
+    let diagnostics = recv_publish_for(
+        &receiver,
+        &mut child,
+        &config_uri,
+        "the config load error at startup",
+        |diagnostics| !diagnostics.is_empty(),
+    );
+    assert_config_diagnostic(&diagnostics);
+
+    stop_server(&mut child, &mut stdin, &receiver, 2);
+    drop(stdin);
+    wait_for_exit(&mut child);
+    let _ = fs::remove_dir_all(&base);
+}
