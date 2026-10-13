@@ -14,3 +14,4 @@ index = false
 
 [scan]
 include = ["docs", "src"]
+extensions = ["md"]

@@ -21,7 +21,7 @@ fn assert_cases(names: &[&str]) {
 }
 
 /// §FS-declarations.stubs.target.3: a real C doc-comment declares AR-c, but h
-/// is absent from the default extensions. Only the explanation changes: text
+/// is absent from the extensions the case lists (only md). Only the explanation changes: text
 /// and JSON retain an error at the stub line and exit 1, inside and outside include.
 #[test]
 fn an_unlisted_extension_explains_why_the_target_is_not_scanned() {
