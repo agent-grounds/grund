@@ -266,6 +266,7 @@ fn exercise(host: &mut Host, context: &Value, errors: &mut Vec<String>) {
                     &coordinate,
                     &answer["python"],
                     &tree_answers["show-batch"],
+                    &tree_answers["list"],
                     loaded.as_ref(),
                     errors,
                 );
@@ -285,7 +286,14 @@ fn exercise(host: &mut Host, context: &Value, errors: &mut Vec<String>) {
                     .filter(|row| row.get("body").is_some())
                     .cloned()
                     .collect();
-                editor::show(context, loaded, &coordinate, &bodies, errors);
+                editor::show(
+                    context,
+                    loaded,
+                    &coordinate,
+                    &bodies,
+                    !output.status.success(),
+                    errors,
+                );
             }
         }
     }

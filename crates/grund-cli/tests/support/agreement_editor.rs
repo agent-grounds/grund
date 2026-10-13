@@ -62,6 +62,7 @@ pub fn show(
     loaded: &LspSnapshotWithCompletion,
     coordinate: &str,
     cli: &[Value],
+    cli_refused: bool,
     errors: &mut Vec<String>,
 ) {
     let result = show_from_snapshot(&loaded.show, coordinate, ShowMode::Toc, ShowFormat::Json);
@@ -89,7 +90,8 @@ pub fn show(
             let outside_selection = actual["path"].as_str().is_some_and(|path| {
                 !super::agreement_oracles::physical(context, path).starts_with(&selected)
             });
-            if cli.is_empty()
+            if cli_refused
+                && cli.is_empty()
                 && context["variant"] != "whole-tree"
                 && context["variant"] != "editor-overlay"
                 && outside_selection
@@ -109,7 +111,7 @@ pub fn show(
                 ));
             }
         }
-    } else if !cli.is_empty() {
+    } else if !cli_refused || !cli.is_empty() {
         errors.push(format!("editor refuses {coordinate}, CLI answers {cli:?}"));
     } else {
         agreement_evidence::witness(json!({"oracle":"authored-coordinate-search",
