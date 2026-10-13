@@ -34,7 +34,7 @@ All of this is checked rather than remembered: `tests/integration/test_ci_precom
 
 ## 2. Platform scope
 
-The full Rust build and test matrix runs on every configured operating system: on Ubuntu and Windows for every push, pull request and merge-queue group, and on macOS once a day ([§AR-ci.14](AR-ci.md#14-macos-runs-once-a-day)). The pre-commit gate may run on one representative CI platform when the hooks are platform-independent, because its job is policy parity with local commits, not cross-platform behavior coverage. Platform-specific behavior belongs in the build and test jobs.
+The full Rust build and test matrix runs on every configured operating system: on Ubuntu and Windows for every push, pull request and merge-queue group, and on macOS once a day and on every release candidate ([§AR-ci.14](AR-ci.md#14-macos-runs-once-a-day)). The pre-commit gate may run on one representative CI platform when the hooks are platform-independent, because its job is policy parity with local commits, not cross-platform behavior coverage. Platform-specific behavior belongs in the build and test jobs.
 
 CI dependency and build caches are performance optimizations only. A cache restore/save failure must not abort the matrix before the actual checks run; the job should continue cold and let `fmt`, Python tests, pre-commit, build, self-check, tests, or benchmarks decide pass/fail.
 
@@ -460,7 +460,7 @@ tree has no outliving writer.
 
 ## 11. A release candidate is dispatched the same CI
 
-Beside push, pull request and merge-queue group ([§AR-ci.12](AR-ci.md#12-a-merge-queue-lands-every-pull-request)), the workflow runs on `workflow_dispatch`, and that trigger is the release helpers': each dispatches it on its release commit and on the `-dev` advance built over it, and pushes neither to `main` until both have passed ([§FS-distribution.4.4.1](../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)). A dispatched run is the same CI a push to `main` gets, not a narrower one, because the commit it judges is about to become `main`. It behaves as a push does: the benchmark job records counts without comparing ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)), and the commit-message job, given no `before` to scan from, narrows to the tip commit ([§AR-ci.8.2](AR-ci.md#82-the-scanned-range)). `tests/integration/test_release_candidate_runs.py` holds the trigger to the helpers that use it.
+Beside push, pull request and merge-queue group ([§AR-ci.12](AR-ci.md#12-a-merge-queue-lands-every-pull-request)), the workflow runs on `workflow_dispatch`, and that trigger is the release helpers': each dispatches it on its release commit and on the `-dev` advance built over it, and pushes neither to `main` until both have passed ([§FS-distribution.4.4.1](../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)). A dispatched run is the CI a push to `main` gets and the macOS suites besides ([§AR-ci.14.2](AR-ci.md#142-a-release-candidate-runs-them-too)), never a narrower one, because the commit it judges is about to become `main`. It behaves as a push does: the benchmark job records counts without comparing ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)), and the commit-message job, given no `before` to scan from, narrows to the tip commit ([§AR-ci.8.2](AR-ci.md#82-the-scanned-range)). `tests/integration/test_release_candidate_runs.py` holds the trigger to the helpers that use it.
 
 ## 12. A merge queue lands every pull request
 
@@ -590,20 +590,34 @@ agent-grounds/grund#659 measured — and the free plan's five concurrent macOS j
 are shared by every run, the queue's groups included ([§AR-ci.12](AR-ci.md#12-a-merge-queue-lands-every-pull-request)). Ubuntu and Windows
 still judge every change before it lands, so what this gives up is a regression
 only macOS shows, which reaches `main` and is reported within a day instead of
-refused. A release candidate's dispatched CI is `ci.yml` alone
-([§AR-ci.11](AR-ci.md#11-a-release-candidate-is-dispatched-the-same-ci)), so the last daily run before a release is the macOS verdict it ships
-under. Serves [§GOAL-fast-feedback.3](../goals.md#3-measurable).
+refused. A release is the exception: no release ships what macOS fails
+([§AR-ci.14.2](AR-ci.md#142-a-release-candidate-runs-them-too)). Serves [§GOAL-fast-feedback.3](../goals.md#3-measurable).
 
 ### 14.1 One job runs every suite
 
-The workflow's one suite job, `suites (macos-latest)`, runs each command of
-[§AR-ci.13.1](AR-ci.md#131-one-job-per-language) exactly once, one after another: nobody waits on it, so splitting it would
-spend macOS slots and buy nothing. It saves its caches on its scheduled run
-([§AR-ci.13.6](AR-ci.md#136-only-a-push-to-main-saves-a-cache)), so the next day's run finds them.
+The one suite job, `suites (macos-latest)`, runs each command of [§AR-ci.13.1](AR-ci.md#131-one-job-per-language)
+exactly once, one after another: nobody waits on it but a release, so splitting it
+would spend macOS slots and buy little. It is written once, in the reusable workflow
+`.github/workflows/macos-suites.yml`, which `macos.yml` calls on its schedule and
+`ci.yml` calls on a dispatch ([§AR-ci.14.2](AR-ci.md#142-a-release-candidate-runs-them-too)). It saves its caches on the scheduled run alone
+([§AR-ci.13.6](AR-ci.md#136-only-a-push-to-main-saves-a-cache)), so the next day's run finds them: a called workflow sees its caller's event,
+so a release candidate's call saves nothing.
 
-### 14.2 A failed daily run opens one issue
+### 14.2 A release candidate runs them too
 
-When the scheduled run's suite job fails, a report job after it, with
+No release ships with macOS broken. `ci.yml` calls the suite job on
+`workflow_dispatch`, the release helpers' trigger ([§AR-ci.11](AR-ci.md#11-a-release-candidate-is-dispatched-the-same-ci)), and on no other event,
+so each candidate commit is judged on macOS beside Ubuntu and Windows before `main`
+moves to it: a failed macOS job fails the dispatched run, and the helpers move
+nothing until that run has passed ([§FS-distribution.4.4.1](../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)). That holds whatever the
+last daily run said, because the daily run judged an older commit. The reusable
+workflow asks for `contents: read` alone, and the report job of [§AR-ci.14.3](AR-ci.md#143-a-failed-daily-run-opens-one-issue) stays
+in `macos.yml`: a called workflow may not ask for more than its caller grants, and
+`ci.yml`'s token grants no issue writes.
+
+### 14.3 A failed daily run opens one issue
+
+When the scheduled run's suite job fails, a report job of `macos.yml` after it, with
 `issues: write`, runs `scripts/macos_daily.py`. It reads the run's jobs from the
 forge and writes one report naming the commit, the run and each failed step, and
 puts it on one open issue by the rule of [§AR-ci.requirements.3](AR-ci.md#requirements3-the-average-is-measured-and-drift-is-reported--realized), with its own
@@ -614,12 +628,13 @@ this script calls with its own marker. A green run writes nothing, so closing th
 issue is a person's call, and a dispatched run reports nothing, because whoever
 dispatched it is watching it.
 
-### 14.3 The workflow test
+### 14.4 The workflow test
 
-`tests/integration/test_ci_macos_daily.py` reads both workflows as text and holds
-them to this point — `macos.yml`'s triggers, its suite job's commands and its
-report job's wiring, and that `ci.yml` runs nothing on macOS — and holds the
-report and the open-or-edit decision to [§AR-ci.14.2](AR-ci.md#142-a-failed-daily-run-opens-one-issue) offline, against canned jobs.
+`tests/integration/test_ci_macos_daily.py` reads the three workflows as text and
+holds them to this point — `macos.yml`'s triggers and its report job's wiring,
+`macos-suites.yml`'s one suite job and its permissions, and that `ci.yml` calls it
+on a dispatch and on no other event and runs no macOS job of its own — and holds the
+report and the open-or-edit decision to [§AR-ci.14.3](AR-ci.md#143-a-failed-daily-run-opens-one-issue) offline, against canned jobs.
 
 ## requirements: What CI's wall clock and its log hold to
 

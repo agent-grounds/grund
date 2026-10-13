@@ -1,4 +1,4 @@
-"""The report of §AR-ci.14.2: when the daily macOS run fails, open or edit one issue
+"""The report of §AR-ci.14.3: when the daily macOS run fails, open or edit one issue
 naming the commit, the run and each failed step.
 
     macos_daily.py
