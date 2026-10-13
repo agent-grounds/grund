@@ -1591,40 +1591,12 @@ Every release before grund 0.19.0 reports the finding as a warning at exit `0`, 
 
 ### checks.fs-home-moves: The built-in FS home moves in grund 0.19.0
 
-A project loaded with **no config file**, in either discovery form ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), takes its `FS` home from the built-in default, `file = "requirements.md"` ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)). grund 0.19.0 moves that default to `folder = "docs/functional-spec"` ([issue #723](https://github.com/agent-grounds/grund/issues/723)), so the FS declarations such a project keeps in its root `requirements.md` would leave the FS home without any edit of its own. This release warns about exactly that case, the warning release of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), recorded in [§DF-fs-home-moves-from-0-19](../decisions/functional/DF-fs-home-moves-from-0-19.md#df-fs-home-moves-from-0-19-the-built-in-fs-home-moves-back-to-docsfunctional-spec-in-0190-and-the-template-declares-req-now).
-
-The warning fires when all three hold:
-
-1. the project was loaded with no config file, in either discovery form;
-2. its `FS` row is therefore the built-in one, homed at `requirements.md`;
-3. the scan read at least one `FS` declaration in that root `requirements.md`.
-
-It is **one warning per project**, located at the first `FS` declaration in `requirements.md`, the one with the lowest line, with code `fs-home-moves` and this message:
-
-```text
-<ID> is in requirements.md, the FS home only by default, and grund 0.19.0 moves that default to docs/functional-spec/ — run `grund init` to write a grund.toml that keeps FS in requirements.md, or move the FS declarations into docs/functional-spec/
-```
-
-`<ID>` is that first declaration's ID. Text output is `<path>:<line>: warning: <message>`, for example:
-
-```text
-requirements.md:3: warning: FS-001-login is in requirements.md, the FS home only by default, and grund 0.19.0 moves that default to docs/functional-spec/ — run `grund init` to write a grund.toml that keeps FS in requirements.md, or move the FS declarations into docs/functional-spec/
-```
-
-JSON carries the same path, line, code, and message with `"severity":"warning"` and `"sites":null` ([§FS-errors.5](FS-errors.md#5-json-format)). The finding leaves the exit status where the rest of the run put it ([§FS-check.2](FS-check.md#2-outputs)), so a tree that was clean still exits `0` and prints this line where it printed `success`. `--only fs-home-moves` keeps it and `--ignore fs-home-moves` removes it ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)). One edit clears every declaration at once, so one line is the whole finding: a second `FS` declaration in the same file adds no second warning.
+A project loaded with **no config file**, in either discovery form ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), takes its `FS` home from the built-in default `file = "requirements.md"` ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)), which grund 0.19.0 moves to `folder = "docs/functional-spec"` ([§DF-fs-home-moves-from-0-19](../decisions/functional/DF-fs-home-moves-from-0-19.md#df-fs-home-moves-from-0-19-the-built-in-fs-home-moves-back-to-docsfunctional-spec-in-0190-and-the-template-declares-req-now)). When the scan reads an `FS` declaration in that root `requirements.md`, the project earns **one** warning with code `fs-home-moves`, at the declaration with the lowest line, `<path>:<line>: warning: <message>` in text and `"severity":"warning"`, `"sites":null` in JSON ([§FS-errors.5](FS-errors.md#5-json-format)), whose message is `` <ID> is in requirements.md, the FS home only by default, and grund 0.19.0 moves that default to docs/functional-spec/ — run `grund init` to write a grund.toml that keeps FS in requirements.md, or move the FS declarations into docs/functional-spec/ ``, with `<ID>` that declaration's ID. It leaves the exit status where the rest of the run put it ([§FS-check.2](FS-check.md#2-outputs)), and `--only` and `--ignore` select it by its code ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)).
 
 #### checks.fs-home-moves.1: Where it stays silent
 
-Nothing else earns the warning, and each silent case has its reason:
-
-- **A config that omits `[[kinds]]`.** It already homes `FS` at `docs/functional-spec` ([§FS-config.3.4.4.4](FS-config.md#3444-a-config-that-omits-kinds-keeps-the-older-fs-home)), so the move does not touch it.
-- **A config that writes `kinds = []`.** It declares no `FS` at all ([§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)).
-- **Any config with a `[[kinds]]` table**, a generated one included. Every config `grund init` has written names its `FS` home explicitly, and an explicit home does not move.
-- **A declared `FS` row that names no `file` or `folder`.** Only the built-in rows read the per-kind default, so such a row has no home today and none after the move.
-- **A project with no config whose `requirements.md` holds no `FS` declaration**, or which has no `requirements.md`. Nothing in it moves.
-
-A workspace member always carries its own config ([§FS-workspace.2](FS-workspace.md#2-workspace-configuration)), so only a root with no config can carry the warning.
+Any config file silences it, whether it omits `[[kinds]]`, writes `kinds = []`, or names its own `FS` home, as every config `grund init` has written does; so does a project with no config whose `requirements.md` holds no `FS` declaration ([§DF-fs-home-moves-from-0-19.4](../decisions/functional/DF-fs-home-moves-from-0-19.md#4-the-cases-the-warning-leaves-alone)). A workspace member loaded with no config of its own ([§FS-workspace.2](FS-workspace.md#2-workspace-configuration)) is such a project too, and is warned at its own `requirements.md`.
 
 #### checks.fs-home-moves.2: grund 0.19.0 removes it
 
-The message names grund 0.19.0 as the release where the home moves, and that release removes the check along with the move ([issue #723](https://github.com/agent-grounds/grund/issues/723)). Its clause is not in the release guard's closed vocabulary ([§FS-distribution.4.2.3](FS-distribution.md#423-the-vocabulary-is-closed)), so a unit test holds the pending half instead ([§FS-distribution.4.2.1](FS-distribution.md#421-a-test-can-hold-only-the-pending-half)): it fails once the running version reaches 0.19.0 while the check still exists.
+grund 0.19.0 removes the check along with the move ([issue #723](https://github.com/agent-grounds/grund/issues/723)). Its clause is outside the release guard's closed vocabulary ([§FS-distribution.4.2.3](FS-distribution.md#423-the-vocabulary-is-closed)), so a unit test holds the pending half ([§FS-distribution.4.2.1](FS-distribution.md#421-a-test-can-hold-only-the-pending-half)): it fails once the running version reaches 0.19.0 while the check still exists.
