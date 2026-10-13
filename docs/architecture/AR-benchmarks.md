@@ -48,7 +48,7 @@ The benched subcommands are the ones the agent loop and the CI/pre-commit gate r
   - `ceiling_ir` and `ceiling_from`: the absolute `Ir` ceiling, and the CI count it was set from ([§AR-ci.5.2](AR-ci.md#52-regression-limits));
   - `pgo`: `false`, or the row's place in PGO training (section 1.5).
 
-Adding a row adds a scenario, and the harness needs no other change. Each row is measured with exactly the invocation the table below gives for it. The table is the catalog's rendering:
+Adding a row adds a scenario, and the harness needs no other change. Each row is measured with exactly the invocation the table below gives for it. The table is the catalog's rendering, row for row, and `tests/integration/test_bench_scenarios.py` holds the two to each other:
 
 | Benchmark | Invocation | Who runs it, how often |
 |---|---|---|
@@ -56,12 +56,12 @@ Adding a row adds a scenario, and the harness needs no other change. Each row is
 | `check_large_10k` | `grund check <10k-file fixture>` | The large-repo budget input from [§GOAL-fast-feedback.1](../goals.md#1-performance-targets). |
 | `check_citations` | `grund check <citations-enabled fixture>` | The citation-direction code path ([§FS-config.3.9](../functional-spec/FS-config.md#39-citations--citation-direction-rules)); its delta against `check` (same file count) is the direction-checking overhead. |
 | `list` | `grund list <fixture>` | An agent discovering the right `<ID>` before it cites one. |
-| `show --brief` | `grund <ID> --brief <fixture>` | An agent or LSP hover checking the title plus first paragraph. |
-| `show` | `grund <ID> <fixture>` | An agent grounding itself on a bare citation — the lead-default read AGENTS.md / CLAUDE.md tell it to do first, before editing the code that realizes a cited ID. |
-| `show --full` | `grund <ID> --full <fixture>` | An agent escalating to the full declaration body when the narrower slices are not enough. |
+| `show_brief` | `grund show <ID> --brief <fixture>` | An agent or LSP hover checking the title plus first paragraph. |
+| `show` | `grund show <ID> <fixture>` | An agent grounding itself on a bare citation — the lead-default read AGENTS.md / CLAUDE.md tell it to do first, before editing the code that realizes a cited ID. |
+| `show_full` | `grund show <ID> --full <fixture>` | An agent escalating to the full declaration body when the narrower slices are not enough. |
 | `refs` | `grund refs <ID> <fixture>` | An agent checking a declaration's blast radius before changing or moving it. |
 | `cover` | `grund cover <fixture>` | What the diff-aware co-change recipe ([§RM-cochange-gate](../roadmap.md#rm-cochange-gate-an-opt-in-commit-msg--ci-recipe-for-spec-and-test-edits)) and CI consume. |
-| `fmt --check` | `grund fmt --check <fixture>` | The pre-commit / CI normalization gate. |
+| `fmt_check` | `grund fmt --check <fixture>` | The pre-commit / CI normalization gate. |
 
 ### 1.3 `fmt --check` measures a canonical fixture
 

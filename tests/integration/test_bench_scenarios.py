@@ -98,6 +98,19 @@ class TheCatalogIsTheScenarioList(unittest.TestCase):
         self.assertEqual(list(TODAY), found[:len(TODAY)],
                          "a scenario of cf706c4530 changed its name, invocation or limit")
 
+    def test_the_architecture_table_renders_the_catalog_row_for_row(self):
+        """§AR-benchmarks.1.2: the table names each row and its invocation, in catalog order."""
+        text = AR_BENCHMARKS.read_text(encoding="utf-8")
+        table = re.findall(r"^\| `([a-z_0-9]+)` \| `([^`]+)` \|", text, re.M)
+        self.assertEqual([row["name"] for row in rows()], [name for name, _ in table],
+                         "the table's Benchmark column is not the catalog's row names")
+        for row, (name, invocation) in zip(rows(), table):
+            with self.subTest(scenario=name):
+                args = [arg.replace("{id}", "<ID>") for arg in row["args"]]
+                command = " ".join(["grund"] + args)
+                self.assertTrue(invocation.startswith(command + " <"),
+                                f"{invocation!r} is not {command!r} on its fixture")
+
     def test_names_are_unique(self):
         names = [row["name"] for row in rows()]
         self.assertEqual(len(names), len(set(names)), "a scenario name repeats")
