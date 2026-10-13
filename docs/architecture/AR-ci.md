@@ -271,6 +271,64 @@ target on every call and every run; every `--target-dir` a checkout's
 source package and CLI build name lies under that checkout's own target; and
 the CI cache key carries the `v3` this point bumped.
 
+##### 3.4.1.3 The TypeScript compiler, a prepared input
+
+The acceptance's strict TypeScript consumer check ([§FS-distribution.3.2.3](../functional-spec/FS-distribution.md#323-workers-loading-and-source-builds)) needs
+one package that is not built from this checkout: the TypeScript compiler, at the
+version the harness pins, `support.TYPESCRIPT`. It is the only registry fetch in
+the whole acceptance, since the tarball the consumer installs is local, so it is
+prepared like the other inputs rather than fetched by the test. Installing it into
+each test's fresh consumer on every run put a live registry fetch inside the
+acceptance, and a fresh CI runner has no npm cache to fall back on, so one DNS
+blip on the runner failed the whole Node job.
+
+`support.typescript_compiler()` is the one place it is prepared, and it returns
+the path of the compiler's `node_modules/typescript/bin/tsc`. The compiler lives
+in `tools/typescript-<version>` under the root of [§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build-target), beside the
+per-checkout targets, so every checkout and every run on a machine share one copy
+and a version bump gets a directory of its own. When that directory already holds
+the compiler, the helper returns it and runs nothing, so a run with the directory
+present never touches the network. Otherwise it installs the pinned version
+exactly, once, into a fresh temporary sibling of that directory, and renames the
+sibling into place only after the install succeeds. An interrupted or failed
+install therefore never leaves a directory that a later run takes as ready.
+
+That one fetch is retried, and only for what a retry can cure. An install that
+fails with a network-class npm error code, `ENOTFOUND`, `EAI_AGAIN`, `ETIMEDOUT`,
+`ECONNRESET` or `ECONNREFUSED`, is tried again after a short pause, up to three
+attempts in all. Any other failure, and a third network failure, fails the test
+that asked, with npm's own output, and never turns into a skip
+([§AR-ci.3.4](AR-ci.md#34-the-python-gates-inputs)). npm's own `fetch-retries` does not replace this: it already ran on
+the CI attempt that failed.
+
+The strict check then compiles the consumer's ESM and CommonJS files with that
+compiler from the consumer's directory, under the same flags as before, so the
+package's types still resolve from the consumer's own install of the tarball.
+Nothing about the check is weaker. Only where the compiler comes from has changed.
+
+CI restores the directory with a cache step of its own in every job that runs the
+Node acceptance, keyed `<os>-node-typescript-<version>`, and saves it under the
+rules of [§AR-ci.13.6](AR-ci.md#136-only-a-push-to-main-saves-a-cache). It does not ride on the node-target cache, because that
+key moves only with `Cargo.lock`: a `v3` entry hits exactly whenever the lock has
+not changed, and an exact hit never saves, so a directory added under the root
+would not be cached until the next lock change, and a later TypeScript bump would
+go uncached again. A key that names the version saves exactly when the version
+changes. A node-target entry may also hold a copy of the directory, which is the
+same pinned version and harmless. A cold cache still fetches once, with the
+retry, so what remains exposed to the registry is a cache miss, not every run.
+
+`tests/integration/test_node_typescript_input.py` holds the helper to this
+against a stand-in npm: a prepared directory is returned with no command run, a
+cold one is installed once into a sibling and renamed, a network error is retried
+up to three attempts, any other error is not retried, and no failed install
+leaves the directory behind. It also holds every workflow that runs the Node
+acceptance to a restore and a save of that directory under a key naming the
+pinned version, shared with no other cache step.
+`test_package.NodePackageTests.test_strict_typescript_check_needs_no_registry_once_prepared`
+runs the strict check once and then again with the registry unreachable and an
+empty npm cache, which is a CI runner meeting a DNS blip after its cache
+restore. The second run must pass.
+
 #### 3.4.2 Per-test durations
 
 The wrapper times every test it runs and ends with a short table of the slowest
