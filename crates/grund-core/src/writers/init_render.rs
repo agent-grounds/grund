@@ -12,13 +12,13 @@ use std::path::Path;
 
 use super::init_target::derive_default_name;
 use super::init_workspace_members::render_workspace_members_section_with_run_warnings;
-use crate::config::{Config, Invocation, Selection, config_file_in};
+use crate::config::{Config, Invocation, Selection, config_file_in, pending_config};
 use crate::model::Finding;
-use crate::templates::Template;
 #[cfg(test)]
 use crate::templates::{
     ConversationSurface, render_agents_append_block, render_agents_md_from_block,
 };
+use crate::templates::{Template, render_grund_toml};
 use crate::workspace::open;
 
 /// The `### Workspace members` section one `init` run renders (§FS-init.2.3.4.15),
@@ -52,11 +52,10 @@ pub(super) fn agents_workspace_members_section(
 /// The config and generated name that `grund init` will leave governing
 /// `target`, which the generated `AGENTS.md` must describe (§FS-init.2.3.8):
 /// `target`'s existing config in either discovery form if there is one
-/// (§FS-config.1), otherwise `template`'s (§FS-init.1.6) — the defaults, or for
-/// `none` the defaults with no kinds (§FS-init.2.4.9) — plus the *pending* `project_name` and
-/// `project_description` that `init` is about to write into `target/grund.toml`
-/// (§FS-init.2.4.7). The `pending` in the name flags that the returned `Config`
-/// may carry values that are not yet on disk — callers must not treat it as
+/// (§FS-config.1), otherwise the `grund.toml` `template` renders (§FS-init.1.6),
+/// read as `init` is about to write it into `target`, with its *pending*
+/// `project_name` and `project_description` (§FS-init.2.4.7). The `pending` in
+/// the name flags that the returned `Config` may carry values that are not yet on disk — callers must not treat it as
 /// reflecting persisted state. We do **not** walk up to an ancestor's config
 /// here — `init` always writes a config *in* `target` when one is absent.
 ///
@@ -72,25 +71,25 @@ pub(super) fn init_pending_effective_config(
     explicit_name: Option<&str>,
     description: Option<&str>,
 ) -> Result<(Config, String)> {
-    let config = if config_file_in(target).is_some() {
-        open(&Invocation::new(target, true, Selection::Discovery))?
-    } else {
-        match template {
-            Template::SoftwareDevelopment => Config::default_for(target.to_path_buf()),
-            Template::None => Config::without_kinds_for(target.to_path_buf()),
-        }
-    };
-    // §FS-init.2.3.8: every canonical renderer consumes one generated identity:
-    // the explicit flag, then target-local config, then the target basename.
-    let name = match explicit_name.or(config.project_name.as_deref()) {
+    if config_file_in(target).is_some() {
+        let config = open(&Invocation::new(target, true, Selection::Discovery))?;
+        // §FS-init.2.3.8: every canonical renderer consumes one generated identity:
+        // the explicit flag, then target-local config, then the target basename.
+        let name = match explicit_name.or(config.project_name.as_deref()) {
+            Some(name) => name.to_string(),
+            None => derive_default_name(target)?,
+        };
+        return Ok((config, name));
+    }
+    let name = match explicit_name {
         Some(name) => name.to_string(),
         None => derive_default_name(target)?,
     };
-    if config.config_file.is_none() {
-        let config = config.with_identity(Some(name.clone()), description.map(str::to_string));
-        return Ok((config, name));
-    }
-    Ok((config, name))
+    // §FS-init.2.4.10: the block describes the file `init` writes, read as it will
+    // be read, so a row with no built-in default (`REQ`) reaches the map too.
+    let text = render_grund_toml(template, &name, description);
+    let invocation = Invocation::new(target, true, Selection::Discovery);
+    Ok((pending_config(&text, target, &invocation)?, name))
 }
 
 /// `templates::render_agents_append_block` with the §FS-init.2.3.4.15 section

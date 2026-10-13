@@ -5,7 +5,7 @@ use crate::config::Config;
 use crate::scanner::CANONICAL_AGENT_ENTRYPOINT;
 use crate::templates::{
     AS_README_TEMPLATE, DA_README_TEMPLATE, DF_README_TEMPLATE, E2E_README_TEMPLATE,
-    FS_README_TEMPLATE, GITKEEP_TEMPLATE, GOALS_TEMPLATE, GRUND_DOC_TEMPLATE,
+    FS_README_TEMPLATE, GITKEEP_TEMPLATE, GOALS_TEMPLATE, GRUND_DOC_TEMPLATE, REQ_README_TEMPLATE,
     REQUIREMENTS_TEMPLATE, canonical_template_text, render_scaffold_id_shapes,
 };
 
@@ -183,6 +183,11 @@ pub(crate) fn docs_scaffold_for_config(
             render_scaffold_id_shapes(FS_README_TEMPLATE, "FS", project),
         )),
     }
+    // §FS-init.2.1.3: the `REQ` index lands right after the FS home.
+    files.push((
+        "docs/requirements/README.md".to_string(),
+        render_scaffold_id_shapes(REQ_README_TEMPLATE, "REQ", project),
+    ));
     files.extend(
         [
             (

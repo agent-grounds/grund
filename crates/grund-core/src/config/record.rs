@@ -22,6 +22,7 @@ use super::point_sizes::LeadSizeWarning;
 use super::project::Schema;
 use super::run_warnings::RunWarning;
 use super::slots::{Content, Handle, Slot};
+#[cfg(test)]
 use super::v1;
 #[cfg(test)]
 use crate::grammar::GrammarKind;
@@ -289,14 +290,15 @@ impl Config {
     /// no config at all (§FS-config.3, §GOAL-zero-config): the v1 default project
     /// (§AR-config.3.2) under a run rooted at `root`. `grund init` writes these
     /// same values out verbatim as a teaching surface (§FS-init.2.4.3).
+    #[cfg(test)]
     pub(crate) fn default_for(root: PathBuf) -> Self {
         Self::from_project(&v1::default_project(false), root).expect("default grammar must compile")
     }
 
     /// The defaults with the empty kind set `kinds = []` declares
-    /// (§FS-config.3.4.4.5): what the `none` template's config means, which
-    /// `grund init` renders the managed block from before it writes the file
+    /// (§FS-config.3.4.4.5): what the `none` template's config means
     /// (§FS-init.2.4.9).
+    #[cfg(test)]
     pub(crate) fn without_kinds_for(root: PathBuf) -> Self {
         Self::from_project(&v1::default_project_without_kinds(), root)
             .expect("the empty kind set must compile")

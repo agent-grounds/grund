@@ -45,7 +45,7 @@ pub(crate) use agents_block::{
 };
 pub(crate) use assets::{
     AS_README_TEMPLATE, DA_README_TEMPLATE, DF_README_TEMPLATE, E2E_README_TEMPLATE,
-    FS_README_TEMPLATE, GITKEEP_TEMPLATE, GOALS_TEMPLATE, GRUND_DOC_TEMPLATE,
+    FS_README_TEMPLATE, GITKEEP_TEMPLATE, GOALS_TEMPLATE, GRUND_DOC_TEMPLATE, REQ_README_TEMPLATE,
     REQUIREMENTS_TEMPLATE, Template, render_grund_toml, render_scaffold_id_shapes,
 };
 pub(crate) use citation_directions::citation_directions_section;

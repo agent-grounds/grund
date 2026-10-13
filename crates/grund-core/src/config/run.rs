@@ -243,9 +243,10 @@ impl Run {
         }
     }
 
-    /// A run rooted at `root` that has decided nothing yet: the façade a test or
-    /// `init` states without a config file (§AR-config.5), under the caller's
+    /// A run rooted at `root` that has decided nothing yet: the façade a test
+    /// states without a config file (§AR-config.5), under the caller's
     /// `--path-base` (§FS-cli.3.4).
+    #[cfg(test)]
     pub(crate) fn at(root: PathBuf) -> Self {
         Self::of(
             root.clone(),

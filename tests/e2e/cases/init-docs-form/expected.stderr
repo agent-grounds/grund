@@ -2,6 +2,7 @@ warning: --docs is deprecated and is removed in grund 0.19.0; use --scaffold, wh
 wrote AGENTS.md
 wrote grund.toml
 wrote requirements.md
+wrote docs/requirements/README.md
 wrote docs/grund.md
 wrote docs/goals.md
 wrote docs/roadmap.md
