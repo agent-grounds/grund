@@ -327,6 +327,7 @@ fn changed_watched_files(stdin: &mut ChildStdin) {
 
 #[test]
 fn a_config_that_stops_loading_is_published_on_grund_toml_until_it_loads_again() {
+    // §FS-lsp.requirements.config-errors: the editor gets the command line's error.
     let base = std::env::temp_dir().join(format!("grund-lsp-config-diag-{}", std::process::id()));
     let _ = fs::remove_dir_all(&base);
     let root = base.join("project");

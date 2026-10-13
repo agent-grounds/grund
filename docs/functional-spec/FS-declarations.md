@@ -43,7 +43,7 @@ ID followed by a section path is a coordinate in every declaration position, and
 declaration colon after it the whole token is the near miss, never a declaration of the
 shorter ID ([§FS-declarations.line.section-suffix](FS-declarations.md#linesection-suffix-an-id-with-a-section-after-it-declares-nothing), [§FS-declarations.line.section-suffix.2](FS-declarations.md#linesection-suffix2-with-the-colon-the-whole-token-is-the-near-miss)); a
 heading inside a fence or a raw-text HTML block is an example ([§FS-declarations.heading](FS-declarations.md#heading-what-a-heading-is),
-[§FS-declarations.checks.broken-stub.2](FS-declarations.md#checksbroken-stub2-a-heading-inside-a-fence-of-the-target-declares-nothing)); and an ID in inline code or in Markdown prose
+[§FS-declarations.stubs.target.2](FS-declarations.md#stubstarget2-a-heading-inside-a-fence-of-the-target-declares-nothing)); and an ID in inline code or in Markdown prose
 declares nothing and is no near miss ([§FS-declarations.checks.declaration-near-miss.3](FS-declarations.md#checksdeclaration-near-miss3-never-in-inline-code-prose-or-a-fenced-block)). One
 case is owed. Every comment-prefixed line of a source file is a declaration position
 ([§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares)), so `// FS-x: …` inside a function body, a citation whose marker was
@@ -56,7 +56,7 @@ declaration only in a doc-comment that documents the definition after it is **de
 Every finding of [§FS-declarations.checks](FS-declarations.md#checks-checks) is located at the fault — the
 declaration or heading in question, or the stub whose link is broken — never at a line with
 nothing to fix: a declaration reached through stubs is named at its target, not at a stub
-([§FS-declarations.checks.duplicate.3](FS-declarations.md#checksduplicate3-a-declaration-reached-through-stubs-is-named-at-its-target)), with every other site listed in the message
+([§FS-declarations.stubs.pairing.3](FS-declarations.md#stubspairing3-a-declaration-reached-through-stubs-is-named-at-its-target)), with every other site listed in the message
 ([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration), [§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path)). The message
 states what is true and the choices the author has, and no command applies one: no corrected
 ID is proposed ([§FS-declarations.checks.declaration-near-miss.4](FS-declarations.md#checksdeclaration-near-miss4-facts-not-a-guessed-rename),

@@ -1,6 +1,7 @@
-//! §FS-fmt.6.3 — one `fmt --write` is a fixed point: a second run with no
-//! intervening edits finds nothing to do. The property compares two runs, so no
-//! single golden states it; it is asserted over every shape of the corpus.
+//! §FS-fmt.6.3, §FS-fmt.requirements.fixed-point — one `fmt --write` is a fixed
+//! point: a second run with no intervening edits finds nothing to do. The property
+//! compares two runs, so no single golden states it; it is asserted over every
+//! shape of the corpus.
 //!
 //! The shape that makes it more than vacuous is `clean-markdown`, whose section
 //! headings carry citations the run expands while other lines link to those
