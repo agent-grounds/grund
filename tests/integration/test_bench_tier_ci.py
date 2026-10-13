@@ -9,7 +9,7 @@ import json
 import re
 import unittest
 
-from test_ci_language_jobs import BENCH_ENV, BENCH_IMAGE, header, job_env, needs
+from test_ci_language_jobs import BENCH_ENV, BENCH_IMAGE, header, job_env, needs, with_local_actions
 from test_release_workflow import REPO_ROOT, WORKFLOWS, jobs, squash
 
 CI = WORKFLOWS / "ci.yml"
@@ -29,7 +29,7 @@ class TheBenchmarkJobsAreBuildShardsAndRecord(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.jobs = jobs(CI.read_text(encoding="utf-8"))
+        cls.jobs = jobs(with_local_actions(CI.read_text(encoding="utf-8")))
 
     def job(self, name):
         self.assertIn(name, self.jobs, f"ci.yml has no `{name}` job")

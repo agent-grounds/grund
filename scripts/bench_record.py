@@ -6,6 +6,7 @@ compact JSON record whose identity fields name what it was measured with, and tw
 records are compared only within one series.
 
   record   write a record from iai-callgrind's `summary.json` files
+  merge    fold the partial records of a run's shards into its one record
   compare  print base against head per scenario; refuse two series
   jitter   fail when one binary's two runs differ past the same-binary bound
   probe    run one scenario on a base binary outside Callgrind (§AR-benchmarks.5.1)
@@ -23,7 +24,8 @@ import sys
 from pathlib import Path
 
 
-RECORD_VERSION = 1
+# §AR-benchmarks.7.1: 2 since a record carries the `tier` that ran it.
+RECORD_VERSION = 2
 # §AR-benchmarks.7.1: the fields that say what a count was measured with.
 IDENTITY_FIELDS = (
     "record_version",
@@ -40,18 +42,23 @@ IDENTITY_FIELDS = (
 )
 # §AR-benchmarks.7.3: two runs of one binary differ by at most this much `Ir`.
 JITTER_BOUND_PCT = 1.0
+# §AR-benchmarks.1.2.1: the tiers a record can say ran it; neither is in the series key.
+TIERS = ("pr", "nightly")
 NOT_COMPARED = "no base, not compared"
 REPO = Path(__file__).resolve().parents[1]
 
 
 def build_record(*, commit: str, binary_sha256: str, identity: dict, ir: dict,
-                 refused: list) -> dict:
-    """§AR-benchmarks.7.1: a record missing an identity field is refused here."""
+                 refused: list, tier: str = "pr") -> dict:
+    """§AR-benchmarks.7.1: a record missing an identity field is refused here. The `tier`
+    is recorded beside the counts, outside the identity, so it never moves the series."""
     missing = [name for name in IDENTITY_FIELDS if name not in identity]
     if missing:
         raise ValueError(f"the run record lacks identity field(s): {', '.join(missing)}")
+    if tier not in TIERS:
+        raise ValueError(f"the tier {tier!r} is not one of {', '.join(TIERS)}")
     record = {name: identity[name] for name in IDENTITY_FIELDS}
-    record.update(commit=commit, binary_sha256=binary_sha256,
+    record.update(commit=commit, binary_sha256=binary_sha256, tier=tier,
                   ir=dict(sorted(ir.items())), refused=list(refused))
     record["series"] = series_key(record)
     return record
@@ -89,6 +96,49 @@ def refuse_two_series(base: dict, head: dict, what: str) -> bool:
 
 def load(path: Path) -> dict:
     return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def merge(partials: list) -> tuple:
+    """§AR-benchmarks.7.1.1: the shards' partial records of one revision as its one record.
+
+    Partials that differ in an identity field, in `commit`, `binary_sha256` or `tier`, or
+    that both hold one scenario, are refused, each cause named; the record holds the union
+    of the counts and of the refusals."""
+    first, problems = partials[0], []
+    for other in partials[1:]:
+        for name in series_differences(first, other):
+            problems.append(f"different series, not merged: `{name}` is "
+                            f"{json.dumps(first.get(name))} in the first partial and "
+                            f"{json.dumps(other.get(name))} in another")
+        for name in ("commit", "binary_sha256", "tier"):
+            if first.get(name) != other.get(name):
+                problems.append(f"not one revision's run, not merged: `{name}` is "
+                                f"{json.dumps(first.get(name))} in the first partial and "
+                                f"{json.dumps(other.get(name))} in another")
+    owners = {}
+    for index, partial in enumerate(partials):
+        for name in partial["ir"]:
+            owners.setdefault(name, []).append(index + 1)
+    for name, held in sorted(owners.items()):
+        if len(held) > 1:
+            problems.append(f"scenario `{name}` is in partials {held}: a shard measures each "
+                            "row once")
+    if problems:
+        return None, problems
+    ir, refused = {}, []
+    for partial in partials:
+        ir.update(partial["ir"])
+        refused += [name for name in partial["refused"] if name not in refused]
+    record = build_record(commit=first["commit"], binary_sha256=first["binary_sha256"],
+                          identity={name: first[name] for name in IDENTITY_FIELDS},
+                          ir=ir, refused=refused, tier=first.get("tier", "pr"))
+    return record, []
+
+
+def write(record: dict, out: Path) -> None:
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n",
+                   encoding="utf-8")
 
 
 def compare(base: dict, head: dict) -> tuple:
@@ -137,11 +187,13 @@ def jitter(first: dict, second: dict) -> tuple:
     return int(failed), lines
 
 
-def probe(binary: str, scenario: str, refused: Path, args: list) -> int:
+def probe(binary: str, scenario: str, refused: Path, args: list, stdin=None) -> int:
     """§AR-benchmarks.5.1: run a scenario's invocation once, outside Callgrind; a
-    refusal is recorded so the harness leaves the scenario out of the base run."""
-    result = subprocess.run([binary, *args], stdout=subprocess.DEVNULL,
-                            stderr=subprocess.PIPE, text=True, check=False)
+    refusal is recorded so the harness leaves the scenario out of the base run. A row
+    that reads stdin (§AR-benchmarks.1.2) is fed the same file Callgrind feeds it."""
+    with open(stdin if stdin else os.devnull, "rb") as feed:
+        result = subprocess.run([binary, *args], stdin=feed, stdout=subprocess.DEVNULL,
+                                stderr=subprocess.PIPE, text=True, check=False)
     if result.returncode == 0:
         return 0
     refused = Path(refused)
@@ -254,6 +306,12 @@ def parse_args(argv: list) -> argparse.Namespace:
     record.add_argument("--iai", type=Path, default=REPO / "target/iai")
     record.add_argument("--fixtures", type=Path, default=REPO / "target/bench-fixtures")
     record.add_argument("--refused", type=Path, help="the file `probe` appended refusals to")
+    record.add_argument("--tier", choices=TIERS, default="pr",
+                        help="the tier the run measured (§AR-benchmarks.1.2.1)")
+
+    merge_mode = modes.add_parser("merge", help="fold the shards' partial records into one")
+    merge_mode.add_argument("--out", type=Path, required=True)
+    merge_mode.add_argument("partials", type=Path, nargs="+")
 
     for name in ("compare", "jitter"):
         mode = modes.add_parser(name)
@@ -264,6 +322,7 @@ def parse_args(argv: list) -> argparse.Namespace:
     probe_mode.add_argument("--bin", required=True)
     probe_mode.add_argument("--scenario", required=True)
     probe_mode.add_argument("--refused", type=Path, required=True)
+    probe_mode.add_argument("--stdin", type=Path, help="the file the scenario reads on stdin")
     probe_mode.add_argument("args", nargs=argparse.REMAINDER)
     return parser.parse_args(argv)
 
@@ -272,7 +331,7 @@ def main(argv: list) -> int:
     args = parse_args(argv)
     if args.mode == "probe":
         rest = args.args[1:] if args.args[:1] == ["--"] else args.args
-        return probe(args.bin, args.scenario, args.refused, rest)
+        return probe(args.bin, args.scenario, args.refused, rest, args.stdin)
     if args.mode == "record":
         ir = summary_ir(args.iai)
         if not ir:
@@ -284,11 +343,20 @@ def main(argv: list) -> int:
             identity=environment_identity(args.environment, args.image, args.fixtures),
             ir=ir,
             refused=read_refused(args.refused) if args.refused else [],
+            tier=args.tier,
         )
-        args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n",
-                            encoding="utf-8")
+        write(record, args.out)
         print(f"recorded {len(ir)} scenario(s) of series {record['series'][:12]} to {args.out}")
+        return 0
+    if args.mode == "merge":
+        record, problems = merge([load(path) for path in args.partials])
+        for problem in problems:
+            print(problem, file=sys.stderr)
+        if record is None:
+            return 1
+        write(record, args.out)
+        print(f"merged {len(args.partials)} partial(s), {len(record['ir'])} scenario(s) of "
+              f"series {record['series'][:12]}, to {args.out}")
         return 0
     check = compare if args.mode == "compare" else jitter
     status, lines = check(load(args.first), load(args.second))

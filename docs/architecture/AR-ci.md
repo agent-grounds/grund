@@ -392,7 +392,7 @@ Everything the count depends on is pinned in these jobs, and only in them, so tw
 - it sets `LC_ALL=C.UTF-8`, `TZ=UTC`, `RAYON_NUM_THREADS=4`, `CARGO_INCREMENTAL=0` and an empty `RUSTFLAGS` for the whole job;
 - it has no `@stable` toolchain step: the image's compiler is the one it builds with. The test jobs keep tracking stable.
 
-The cargo cache key of each of these jobs carries the image digest, so a `target/` another compiler built is never restored into it. Every identity field the run record carries ([§AR-benchmarks.7](AR-benchmarks.md#7-the-run-record-and-its-series)) is read from this environment.
+The cargo cache key of each of these jobs carries the image digest, so a `target/` another compiler built is never restored into it. What both benchmark workflows repeat is written once, as a composite action under `.github/actions/`: `bench-cache` restores, or prunes and saves, the build jobs' registry and `target/`, and `bench-shard` installs a shard's pins and unpacks the build job's binaries. The tests that hold this section read each one in place of the step that uses it, so its pins are checked as the job's own text. Every identity field the run record carries ([§AR-benchmarks.7](AR-benchmarks.md#7-the-run-record-and-its-series)) is read from this environment.
 
 ### 5.1 Pull requests and pushes
 
@@ -414,7 +414,7 @@ A relative limit holds one step, not a level: a run of 12% regressions, each und
 - The ceilings hold only the harness's own binary. Under `GRUND_BENCH_BIN` ([§AR-benchmarks.5](AR-benchmarks.md#5-comparing-two-revisions)) the harness sets no `hard_limits`, so saving the base binary's baseline never fails for the base's own counts.
 - A new row takes its ceiling in the change that adds it, set from that change's own CI count.
 
-The job first deletes `target/iai`, which the cache restores from another commit: under limits, saving the baseline or recording a push would otherwise compare against those stale counts and could fail a step that only records. A limit or a ceiling is raised only by a change of its own that says why, never to let one pull request through. Raising a ceiling records the new CI count it was set from in `ceiling_from`.
+A shard measures in the `target/release` the build job packed, and restores no `target/` of its own, so no `target/iai` from another commit reaches it: under limits, saving the baseline or recording a push would otherwise compare against those stale counts and could fail a step that only records. A limit or a ceiling is raised only by a change of its own that says why, never to let one pull request through. Raising a ceiling records the new CI count it was set from in `ceiling_from`.
 
 ### 5.3 The `bench` feature
 

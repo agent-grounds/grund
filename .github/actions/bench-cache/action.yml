@@ -1,0 +1,42 @@
+# §AR-ci.13.6: the benchmark build jobs' cargo registry and target, shared by ci.yml's build
+# job and bench-nightly.yml's. Every key carries the image digest (§AR-ci.5), so a new image
+# never restores another's build. It restores; `save: true` prunes what every run rebuilds
+# from its own sources and saves, which only ci.yml's push to main asks for.
+name: Restore or save the benchmark build cache
+description: Restore the cargo registry and target of the pinned benchmark image, or prune and save them.
+inputs:
+  save:
+    description: Prune and save instead of restoring.
+    default: "false"
+outputs:
+  cache-hit:
+    description: Whether the restore found this exact key.
+    value: ${{ steps.restore.outputs.cache-hit }}
+runs:
+  using: composite
+  steps:
+    - name: Restore cargo registry and target
+      id: restore
+      if: inputs.save != 'true'
+      uses: actions/cache/restore@v5
+      with:
+        path: |
+          /usr/local/cargo/registry
+          target
+        key: bench-6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          bench-6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1-
+
+    - name: Prune what every run rebuilds
+      if: inputs.save == 'true'
+      shell: bash
+      run: bash scripts/prune_cargo_cache.sh
+
+    - name: Save cargo registry and target
+      if: inputs.save == 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: |
+          /usr/local/cargo/registry
+          target
+        key: bench-6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1-${{ hashFiles('**/Cargo.lock') }}

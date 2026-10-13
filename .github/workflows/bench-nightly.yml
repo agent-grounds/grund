@@ -1,0 +1,120 @@
+# §AR-ci.5.4: the nightly tier of the instruction benchmarks (§AR-benchmarks.1.2.1) — every
+# catalog row of both tiers, on main's head, against the absolute ceilings alone, in the
+# pinned environment of §AR-ci.5. No pull request requires it; the pre-release checks call it.
+name: Nightly benchmarks
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  bench-build:
+    name: cargo bench nightly (build)
+    runs-on: ubuntu-latest
+    container:
+      image: rust:1.95.0-bookworm@sha256:6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1
+      options: --security-opt seccomp=unconfined
+    defaults:
+      run:
+        shell: bash
+    env:
+      BENCH_IMAGE: sha256:6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1
+      LC_ALL: C.UTF-8
+      TZ: UTC
+      RAYON_NUM_THREADS: 4
+      CARGO_INCREMENTAL: 0
+      RUSTFLAGS: ""
+      GRUND_BENCH_CEILINGS: 1
+      GRUND_BENCH_TIER: nightly
+    steps:
+      - uses: actions/checkout@v6
+
+      # Read-only: ci.yml's push to main saves this key.
+      - uses: ./.github/actions/bench-cache
+
+      # §AR-benchmarks.1.7: `grund`, the harness, `grund-lsp`, and the Python extension the
+      # `frontend: python` rows load, all with the profile `cargo bench` builds.
+      - name: Build the binaries and the harness
+        run: |
+          cargo bench -p grund --features bench --locked --quiet --bench instructions --no-run
+          cargo build --profile bench -p grund-lsp --locked --quiet
+          cargo build --profile bench -p grund-py --features extension-module --locked --quiet
+          mkdir -p bench-bin
+          tar -cf bench-bin/target.tar --exclude=target/release/incremental target/release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bench-nightly-binaries
+          path: bench-bin
+          retention-days: 1
+
+  bench:
+    name: cargo bench nightly (shard ${{ matrix.shard }})
+    needs: [bench-build]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7]
+    container:
+      image: rust:1.95.0-bookworm@sha256:6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1
+      options: --security-opt seccomp=unconfined
+    defaults:
+      run:
+        shell: bash
+    env:
+      BENCH_IMAGE: sha256:6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1
+      LC_ALL: C.UTF-8
+      TZ: UTC
+      RAYON_NUM_THREADS: 4
+      CARGO_INCREMENTAL: 0
+      RUSTFLAGS: ""
+      GRUND_BENCH_CEILINGS: 1
+      # §AR-benchmarks.1.2.2: every row of both tiers, split as the pull-request tier is.
+      GRUND_BENCH_TIER: nightly
+      GRUND_BENCH_SHARD: ${{ matrix.shard }}/7
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/bench-shard
+        with:
+          artifact: bench-nightly-binaries
+
+      - name: cargo bench
+        run: |
+          cargo bench -p grund --features bench --locked --quiet --bench instructions -- --save-summary=json
+          python3 scripts/bench_record.py record --environment ci --tier nightly --out "$RECORDS/nightly-${{ matrix.shard }}.json"
+
+      - name: Upload this shard's partial record
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-nightly-records-${{ matrix.shard }}
+          path: |
+            target/iai/**/summary.json
+            bench-records/*.json
+
+  bench-record:
+    name: cargo bench nightly (record)
+    needs: [bench]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: bench-nightly-records-*
+          path: shards
+
+      # §AR-benchmarks.7.1.1: one `tier: nightly` record, merged from every shard's partial.
+      - name: Merge the shards' records
+        run: |
+          mkdir -p bench-records
+          python3 scripts/bench_record.py merge --out bench-records/nightly.json shards/*/bench-records/nightly-*.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bench-nightly-record
+          path: bench-records/nightly.json

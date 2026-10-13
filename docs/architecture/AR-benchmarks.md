@@ -39,11 +39,13 @@ Every generated fixture carries a `manifest.json` at its root, outside the scann
 The benched subcommands are the ones the agent loop and the CI/pre-commit gate run most. They are the rows of one declarative **scenario catalog**, `crates/grund-cli/benches/scenarios.json`, and the harness builds its benchmark group from that file rather than from a hand-written list of `#[binary_benchmark]` functions. Python 3.6 reads JSON with no new dependency, which is why the catalog is JSON (section 1.5). The catalog has three parts:
 
 - `shards` is the number of shards the pull-request tier is split into (section 1.2.2).
-- `fixtures` names each generated fixture of [§AR-benchmarks.1.1](AR-benchmarks.md#11-generated-fixtures-never-this-repository) by its directory under the repository root, its file count, whether it declares `[citations]`, and, for the canonical fixture, the `subject` ID its single-ID scenarios read (`FS-00001-feature-00001`).
+- `fixtures` names each generated fixture of [§AR-benchmarks.1.1](AR-benchmarks.md#11-generated-fixtures-never-this-repository) by its directory under the repository root, its file count, whether it declares `[citations]`, and, where its rows read one, the `subject` ID its single-ID scenarios read (`FS-00001-feature-00001` for the canonical fixture). A fixture that exercises a feature also names it as `feature`, one of the generator's `--feature` values (`rules`, `named-sections`, `values`, `external-facts`, `cross-refs`), and a workspace names its member count as `members`, which splits the file count among that many member projects that cite into each other.
 - `scenarios` is the ordered list of rows. Each row gives:
   - `name`: the benchmark's id. iai-callgrind and the run record of [§AR-benchmarks.7.1](AR-benchmarks.md#71-what-a-record-holds) both key on it, so a row keeps its name for as long as it exists;
-  - `args`: the arguments before the fixture path, with `{id}` standing for the subject;
+  - `args`: the arguments before the fixture path, with `{id}` standing for the subject. A `frontend: lsp` row's `args` is `["session"]`, the editor session of section 1.7, and a `frontend: python` row's `args` name the API call the way a `grund` row names its command, `["show", "{id}", "--full"]` for `show(id, mode="full")`;
   - `fixture`: a key of `fixtures`. The fixture's path is the last argument;
+  - `path`: optional, a file under the fixture named instead of the fixture's root, for a command that reads one file, as `cover --lines` does;
+  - `stdin`: optional, the lines the harness feeds the row on stdin, with `{id}` standing for the subject, for a command that reads its queries there, as `show --batch` does. The harness writes them to a file under `target/` outside Callgrind;
   - `setup`: optional arguments the harness runs once outside Callgrind, on the binary under test and on the same fixture, before it measures the row (section 1.3);
   - `limit_pct`: the relative `Ir` limit of [§AR-ci.5.2](AR-ci.md#52-regression-limits);
   - `ceiling_ir` and `ceiling_from`: the absolute `Ir` ceiling, and the CI count it was set from ([§AR-ci.5.2](AR-ci.md#52-regression-limits));
@@ -68,6 +70,38 @@ Adding a row adds a scenario, and the harness needs no other change. Each `pr` r
 | `refs` | `grund refs <ID> <fixture>` | An agent checking a declaration's blast radius before changing or moving it. |
 | `cover` | `grund cover <fixture>` | What the diff-aware co-change recipe ([§RM-cochange-gate](../roadmap.md#rm-cochange-gate-an-opt-in-commit-msg--ci-recipe-for-spec-and-test-edits)) and CI consume. |
 | `fmt_check` | `grund fmt --check <fixture>` | The pre-commit / CI normalization gate. |
+| `check_seq_255` | `grund check <255-file fixture>` | The sequential scan, one file under the parallel threshold (section 1.8); every small repository takes this path. |
+| `check_par_256` | `grund check <256-file fixture>` | The parallel scan at exactly the threshold (section 1.8); its delta against `check_seq_255` is the cost of going parallel. |
+| `check_json` | `grund check --format json <fixture>` | CI and editors reading findings as JSON. |
+| `check_full` | `grund check --full <fixture>` | CI's self-check, which walks past `[scan] include` ([§FS-check.1.3](../functional-spec/FS-check.md#13-the-full-tree-scope---full)). |
+| `check_require_grounding` | `grund check --require-grounding <fixture>` | A repository that requires every source file to cite a declared ID. |
+| `check_rule` | `grund check --rule Each FS should have at most 1 Terms chapter. <fixture>` | An author trying a controlled-English rule before committing it. |
+| `check_suggestions` | `grund check --suggestions <citations-enabled fixture>` | An author asking for the `should` findings as well. |
+| `check_workspace` | `grund check <5-member workspace>` | A workspace root checking its member projects together (`workspace` mode). |
+| `check_rules` | `grund check <rules fixture>` | Committed rule declarations evaluated on every check (`rules` mode). |
+| `check_named_sections` | `grund check <named-sections fixture>` | Named section paths and the section lock (`named-sections` mode). |
+| `check_values` | `grund check <values fixture>` | Value bindings compared against their declared values (`values` mode). |
+| `check_external_facts` | `grund check <external-facts fixture>` | A fetched external snapshot scanned and cited like any declaration (`external-facts` mode). |
+| `list_json` | `grund list --format json <fixture>` | Tools reading the catalog as NDJSON. |
+| `list_selector` | `grund list --selector FS <fixture>` | An agent narrowing the catalog to one kind or chapter. |
+| `list_size` | `grund list --size <fixture>` | An agent finding heavy leads to split before reading them. |
+| `list_unused` | `grund list --unused <fixture>` | An author finding declarations nothing cites yet. |
+| `list_workspace` | `grund list <5-member workspace>` | Listing a workspace's members at once. |
+| `list_large_10k` | `grund list <10k-file fixture>` | Listing the large repository. |
+| `show_toc` | `grund show <ID> --toc <named-sections fixture>` | An agent choosing which subsection to read next. |
+| `show_section` | `grund show <ID> --section format <named-sections fixture>` | An agent reading one named section. |
+| `show_json` | `grund show <ID> --format json <fixture>` | Tools reading a lead as JSON. |
+| `show_batch` | `grund show --batch --format json <fixture> < queries` | An agent grounding several citations in one process. |
+| `show_batch_all` | `grund show --batch --all --format json <fixture>` | Exporting every declaration and section at once. |
+| `refs_descendants` | `grund refs <ID>.format --descendants <named-sections fixture>` | A section's blast radius, its subsections included. |
+| `refs_citations` | `grund refs FS-00002-feature-00002 --summary <citations-enabled fixture>` | Citation sites grouped by file on the citations fixture. |
+| `cover_lines` | `grund cover --lines 1-40 <fixture>/docs/functional-spec/README.md` | Who owns a range of lines of one file, as the co-change recipe asks. |
+| `cover_json` | `grund cover --format json <citations-enabled fixture>` | Coverage as JSON on the citations fixture. |
+| `fmt_cross_refs` | `grund fmt --check --cross-refs <cross-refs fixture>` | The normalization gate of a repository that links its citations. |
+| `fmt_marker` | `grund fmt --check --marker <cross-refs fixture>` | The normalization gate of a repository that marks bare IDs. |
+| `id` | `grund id FS bench feature <fixture>` | An author minting the next free ID. |
+| `complete_ids` | `grund complete ids --prefix FS-001 <fixture>` | Shell and editor completion of an ID prefix. |
+| `lsp` | `grund-lsp < session on <256-file fixture>` | The language server answering an editor session on stdin (section 1.7). |
 
 #### 1.2.1 Two tiers
 
@@ -77,6 +111,20 @@ At this size a table row per scenario would cost every reader of this point more
 
 | Group | Rows | What it isolates |
 |---|---|---|
+| `scale` | 23 | `check`, `list`, `show --full`, `refs` and `cover` at 100 to 5,000 files, and the citations fixture at 5,000 and 10,000. |
+| `check-flags` | 9 | `check`'s flags on the fixtures the `pr` tier does not run them on, and `--only`, `--ignore`, `--only-rule`, `--path-base`. |
+| `show-modes` | 9 | Every `show` mode and format, the bare `grund <ID>` form, and `--batch` with `--toc` and at 10,000 files. |
+| `list-modes` | 8 | `list --kind`, `--summary`, each `--size` unit and `--top`, and JSON at 10,000 files. |
+| `refs-modes` | 6 | `refs --section`, `--summary`, `--total` and JSON. |
+| `cover-modes` | 4 | `cover` of one file, several `--lines` ranges, and 10,000 files. |
+| `fmt-modes` | 4 | `fmt --check` with `--cross-refs` and `--marker`, together and at 5,000 files. |
+| `query` | 6 | `id --width`, `--explain` and JSON, and `complete ids` with and without sections. |
+| `workspace` | 6 | A 10-member workspace of 5,000 files, and `refs` across members. |
+| `rules` | 4 | Rule declarations at 5,000 files, and a `--rule` on top of them. |
+| `named-sections` | 5 | Named sections at 5,000 files, their subsections and their size. |
+| `values` | 4 | Value bindings at 5,000 files and the values chapter itself. |
+| `external-facts` | 4 | External snapshots at 5,000 files, and `show`, `refs`, `list` of a fact. |
+| `frontends` | 10 | The Python extension on the canonical fixture, one call per API entry, and `grund-lsp` on larger fixtures. |
 
 #### 1.2.2 Shards
 
@@ -87,7 +135,9 @@ The `pr` tier is split into `shards` shards, six to eight, which run side by sid
 The `fmt --check` benchmark setup first runs `fmt --write` on its generated
 fixture outside Callgrind. This keeps the measured input canonical under the
 revision being benchmarked, so the command exits successfully while its
-instruction count still covers the complete dry-run scan.
+instruction count still covers the complete dry-run scan. Other rows share the
+fixture, and the harness regenerates a fixture that is not the generator's, so
+it sets up a row with a `setup` after it has prepared every other row of its run.
 
 ### 1.4 Two cost shapes, and a clean exit
 
@@ -154,7 +204,7 @@ Which frontends are measured, and how, is [§DA-benchmark-frontends](../decision
 
 - **No core-library scenario.** Every frontend calls the core, and a `grund` row already counts it together with the start-up an agent pays.
 - **`lsp`, in the `pr` tier.** A row with `frontend: lsp` runs the `grund-lsp` binary under Callgrind, driven over stdio by the editor session its PGO training runs: `initialize`, `didOpen`, `hover`, `shutdown`. The session is written once, in `scripts/distribution/train.py`; `train.py session --root <fixture>` prints it as framed JSON-RPC, and the harness feeds that to the server's stdin, so Callgrind counts the server and no client. `describe grund-lsp` stays byte for byte what it was.
-- **`python`, in the `nightly` tier.** A row with `frontend: python` runs a pinned interpreter on the built extension with Callgrind's collection off at start and toggled on at the extension's entry point, so interpreter start-up does not drown the engine. It is nightly because building the extension would cost the pull-request wall clock.
+- **`python`, in the `nightly` tier.** A row with `frontend: python` runs a pinned interpreter on the built extension with Callgrind's collection off at start and toggled on at the extension's entry point, so interpreter start-up does not drown the engine. A toggle holds only on the thread that enters the function, so collection also toggles on in the body of each worker thread the engine starts, and a row counts the same engine work its `grund` row does. It is nightly because building the extension would cost the pull-request wall clock.
 - **`node`, waived.** V8's JIT and garbage-collector threads move instruction counts between runs of one build, so a count would not hold the same-binary bound of section 7.3. The inventory records the waiver and this reason until the counts are shown repeatable.
 
 ### 1.8 The sequential and parallel scan pair

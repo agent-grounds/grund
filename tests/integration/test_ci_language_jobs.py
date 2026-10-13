@@ -7,8 +7,9 @@ instance per operating system, and each check returns the problems it finds, so
 the same check runs against `ci.yml` and against fixture workflows that show it
 can still fail (§AR-ci.13.5).
 
-The bench job's pinned environment (§AR-ci.5) and its one-harness comparison
-(§AR-ci.5.1, §AR-benchmarks.5) are read the same way."""
+The benchmark jobs' pinned environment (§AR-ci.5) and their one-harness comparison
+(§AR-ci.5.1, §AR-benchmarks.5) are read the same way: a build job, a shard matrix and a
+record job."""
 
 import re
 import unittest
@@ -36,7 +37,9 @@ RUST_CHECKS = {
     "self-check": '"check", ".", "--format", "json", "--full"',
 }
 PRE_COMMIT = "pre-commit run --all-files"
-# §AR-ci.5.2: the bench job's comparing step, which the harness's `Ir` limits fail.
+# §AR-ci.5: the build job, the shard matrix that measures, and the record job.
+BENCH_BUILD, BENCH_SHARD, BENCH_RECORD = "bench-build", "bench", "bench-record"
+# §AR-ci.5.2: the shard job's comparing step, which the harness's `Ir` limits fail.
 BENCH = ("cargo bench -p grund --features bench --locked --quiet --bench instructions"
          " -- --baseline=main --save-summary=json")
 AGGREGATE = re.compile(r"cargo test \((.+)\)")
@@ -45,6 +48,16 @@ BENCH_IMAGE = re.compile(r"(?m)^\s+(?:container|image):\s*rust:[\w.-]+-bookworm@
 SNAPSHOT = re.compile(r"https://snapshot\.debian\.org/archive/debian/\d{8}T\d{6}Z\b")
 BENCH_ENV = {"LC_ALL": "C.UTF-8", "TZ": "UTC", "RAYON_NUM_THREADS": "4",
              "CARGO_INCREMENTAL": "0", "RUSTFLAGS": ""}
+
+
+def with_local_actions(text):
+    """A job's steps with each local composite action's steps in place of its `uses:`, so a
+    pin the shard takes from `.github/actions/` is read as the job's own (§AR-ci.5)."""
+    def inline(found):
+        action = (WORKFLOWS.parent / "actions" / found.group(1) / "action.yml").read_text(
+            encoding="utf-8")
+        return re.sub(r"(?m)^(?=.)", "  ", action.split("\n  steps:\n", 1)[1])
+    return re.sub(r"(?m)^      - uses: \./\.github/actions/([\w-]+)\n(?:        .*\n)*", inline, text)
 
 
 def header(body):
@@ -147,8 +160,16 @@ def leg_jobs(found, system):
 
 
 def bench_jobs(found):
-    """The jobs that run the bench comparison; the Ubuntu aggregate judges them (§AR-ci.13.2)."""
-    return [i for i in found if not i["aggregate"] and BENCH in i["commands"]]
+    """The jobs that run the bench comparison, and the jobs they need or that need them —
+    the build and record jobs of §AR-ci.5; the Ubuntu aggregate judges them (§AR-ci.13.2)."""
+    jobs_ = [i for i in found if not i["aggregate"]]
+    names = {i["job"] for i in jobs_ if BENCH in i["commands"]}
+    while True:
+        linked = {need for i in jobs_ if i["job"] in names for need in i["needs"]}
+        linked |= {i["job"] for i in jobs_ if names & set(i["needs"])}
+        if linked <= names:
+            return [i for i in jobs_ if i["job"] in names]
+        names |= linked
 
 
 def required_check_problems(text):
@@ -278,46 +299,61 @@ def job_env(head):
 
 
 def bench_pin_problems(text):
-    """§AR-ci.5: the bench job runs in one environment named by digest, and only it."""
-    body = jobs(text).get("bench")
-    if body is None:
-        return ["no `bench` job"]
-    head, job_steps = header(body), steps(body)
+    """§AR-ci.5: the build job and the shards run in one environment named by digest, and
+    only they; the shards, which run Valgrind, install it pinned."""
+    found = jobs(text)
+    missing = [f"no `{name}` job" for name in (BENCH_BUILD, BENCH_SHARD) if name not in found]
+    if missing:
+        return missing
     problems = []
-    image = BENCH_IMAGE.search(head)
-    if not image:
-        problems.append("the bench job names no `rust:<release>-bookworm@sha256:<digest>` container")
-    if any("rust-toolchain" in step for step in job_steps):
-        problems.append("the bench job installs a toolchain instead of using the image's compiler")
-    env = job_env(head)
-    for key, value in BENCH_ENV.items():
-        if env.get(key) != value:
-            problems.append(f"the bench job sets {key}={env.get(key)!r}, not {value!r}")
+    for name in (BENCH_BUILD, BENCH_SHARD):
+        problems += [f"{name}: {problem}" for problem in environment_problems(found[name])]
+    body = found[BENCH_SHARD]
     if not re.search(r"\bvalgrind=\S+", body):
         problems.append("the bench job installs Valgrind without an exact version")
     if not re.search(r"\blibc6-dbg=\S+", body):
         problems.append("the bench job installs libc6-dbg without an exact version")
     if not SNAPSHOT.search(body) or re.search(r"deb\.debian\.org", body):
         problems.append("the bench job's packages do not come from one snapshot.debian.org timestamp")
-    if image and env.get("BENCH_IMAGE") != "sha256:" + image.group(1):
-        problems.append(f"BENCH_IMAGE {env.get('BENCH_IMAGE')!r} is not the container's digest")
     if "iai-callgrind-runner --version 0.16.1" not in body:
         problems.append("the bench job does not pin iai-callgrind-runner 0.16.1")
+    return problems
+
+
+def environment_problems(body):
+    """§AR-ci.5: one job's digest-pinned image, its env, and cache keys that carry the digest."""
+    head, job_steps = header(body), steps(body)
+    problems = []
+    image = BENCH_IMAGE.search(head)
+    if not image:
+        problems.append("the job names no `rust:<release>-bookworm@sha256:<digest>` container")
+    if any("rust-toolchain" in step for step in job_steps):
+        problems.append("the job installs a toolchain instead of using the image's compiler")
+    env = job_env(head)
+    for key, value in BENCH_ENV.items():
+        if env.get(key) != value:
+            problems.append(f"the job sets {key}={env.get(key)!r}, not {value!r}")
+    if image and env.get("BENCH_IMAGE") != "sha256:" + image.group(1):
+        problems.append(f"BENCH_IMAGE {env.get('BENCH_IMAGE')!r} is not the container's digest")
     keys = [key for step in job_steps if "actions/cache" in step
             for key in re.findall(r"(?m)^\s*key:\s*(.+)$", step)]
     if image and (not keys or any(image.group(1) not in key for key in keys)):
-        problems.append(f"the bench job's cache keys {keys} do not carry the image digest")
+        problems.append(f"the job's cache keys {keys} do not carry the image digest")
     return problems
 
 
 def bench_comparison_problems(text):
-    """§AR-ci.5.1, §AR-benchmarks.5: one harness measures both binaries; main checks jitter."""
-    body = jobs(text).get("bench")
-    if body is None:
-        return ["no `bench` job"]
-    job_steps = steps(body)
+    """§AR-ci.5.1, §AR-benchmarks.5: the build job builds the base binary, one harness in
+    each shard measures both binaries, the record job merges, and main checks jitter."""
+    found = jobs(text)
+    missing = [f"no `{name}` job" for name in (BENCH_BUILD, BENCH_SHARD, BENCH_RECORD)
+               if name not in found]
+    if missing:
+        return missing
+    job_steps = steps(found[BENCH_SHARD])
     problems = []
-    base = [step for step in job_steps if "github.base_ref" in step or "pull_request.base.sha" in step]
+    base = [step for step in steps(found[BENCH_BUILD])
+            if "github.base_ref" in step or "pull_request.base.sha" in step]
     if not base:
         problems.append("no step takes the base commit")
     for step in base:
@@ -336,10 +372,15 @@ def bench_comparison_problems(text):
     for step in (step for step in job_steps if BENCH in commands(step)):
         if "GRUND_BENCH_BIN" in step:
             problems.append("the comparing run measures the base binary, not the PR's own")
-    flat = squash(body)
-    for wanted in ("bench_record.py record", "bench_record.py compare", "GITHUB_STEP_SUMMARY"):
+    if any("git checkout" in step and "base" in step for step in job_steps):
+        problems.append("a shard checks out the base: only the build job takes it")
+    flat = squash(found[BENCH_SHARD])
+    if "bench_record.py record" not in flat:
+        problems.append("the shards do not run `bench_record.py record`")
+    flat = squash(found[BENCH_RECORD])
+    for wanted in ("bench_record.py merge", "bench_record.py compare", "GITHUB_STEP_SUMMARY"):
         if wanted not in flat:
-            problems.append(f"the bench job does not run `{wanted}`")
+            problems.append(f"the record job does not run `{wanted}`")
     jitter = [step for step in job_steps if "bench_record.py jitter" in step]
     if not jitter:
         problems.append("a push to main does not check the same-binary bound")
@@ -350,8 +391,7 @@ def bench_comparison_problems(text):
 
 
 PINNED_BENCH = """jobs:
-  bench:
-    name: cargo bench (instruction counts)
+  bench-build:
     if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     container: rust:1.90.0-bookworm@sha256:{digest}
@@ -367,26 +407,53 @@ PINNED_BENCH = """jobs:
       - uses: actions/cache/restore@v5
         with:
           key: bench-{digest}-${{{{ hashFiles('**/Cargo.lock') }}}}
-      - run: |
-          echo "deb https://snapshot.debian.org/archive/debian/20261001T000000Z bookworm main" > /etc/apt/sources.list
-          apt-get install -y valgrind=1:3.19.0-1 libc6-dbg=2.36-9+deb12u14
-          cargo install iai-callgrind-runner --version 0.16.1 --locked --quiet
       - if: github.event_name == 'pull_request'
         run: |
           git checkout --force "origin/${{{{ github.base_ref }}}}"
           cargo build --profile bench -p grund --bin grund --locked
           git checkout --force "${{{{ github.sha }}}}"
+      - run: cargo bench -p grund --features bench --locked --quiet --bench instructions --no-run
+      - uses: actions/upload-artifact@v4
+  bench:
+    name: cargo bench (shard ${{{{ matrix.shard }}}})
+    needs: [bench-build]
+    if: github.event_name != 'merge_group'
+    runs-on: ubuntu-latest
+    container: rust:1.90.0-bookworm@sha256:{digest}
+    env:
+      BENCH_IMAGE: sha256:{digest}
+      LC_ALL: C.UTF-8
+      TZ: UTC
+      RAYON_NUM_THREADS: 4
+      CARGO_INCREMENTAL: 0
+      RUSTFLAGS: ""
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/cache/restore@v5
+        with:
+          key: bench-registry-{digest}-${{{{ hashFiles('**/Cargo.lock') }}}}
+      - run: |
+          echo "deb https://snapshot.debian.org/archive/debian/20261001T000000Z bookworm main" > /etc/apt/sources.list
+          apt-get install -y valgrind=1:3.19.0-1 libc6-dbg=2.36-9+deb12u14
+          cargo install iai-callgrind-runner --version 0.16.1 --locked --quiet
+      - uses: actions/download-artifact@v5
       - if: github.event_name == 'pull_request'
         env:
           GRUND_BENCH_BIN: ../grund-base
         run: cargo bench -p grund --features bench --locked --quiet --bench instructions -- --save-baseline=main --save-summary=json
       - if: github.event_name == 'pull_request'
         run: {bench}
-      - run: |
-          python3 scripts/bench_record.py record --out head.json
-          python3 scripts/bench_record.py compare base.json head.json >> "$GITHUB_STEP_SUMMARY"
+      - run: python3 scripts/bench_record.py record --out head-1.json
       - if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: python3 scripts/bench_record.py jitter first.json second.json
+  bench-record:
+    needs: [bench]
+    if: github.event_name != 'merge_group'
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          python3 scripts/bench_record.py merge --out head.json head-*.json
+          python3 scripts/bench_record.py compare base.json head.json >> "$GITHUB_STEP_SUMMARY"
 """.format(digest="0" * 64, bench=BENCH)
 
 
@@ -395,16 +462,16 @@ def leg(job_id, system, *runs_, extra=""):
     return f"  {job_id}:\n    runs-on: {system}\n{extra}    steps:\n{lines}"
 
 
-def aggregate(system, needed, guard=True, condition="always()", bench=None):
+def aggregate(system, needed, guard=True, condition="always()", bench=()):
     check = ("      - if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, "
              "'cancelled') || contains(needs.*.result, 'skipped') }}\n        run: exit 1\n"
              if guard else "      - run: echo done\n")
     if guard and bench:
         others = " || ".join(f"needs.{need}.result != 'success'" for need in needed)
-        check = (f"      - if: ${{{{ {others} || !(needs.{bench}.result == 'success' || "
-                 f"needs.{bench}.result == 'skipped' && github.event_name == 'merge_group') }}}}\n"
-                 "        run: exit 1\n")
-        needed = needed + [bench]
+        skips = " || ".join(f"!(needs.{job}.result == 'success' || needs.{job}.result == "
+                            "'skipped' && github.event_name == 'merge_group')" for job in bench)
+        check = f"      - if: ${{{{ {others} || {skips} }}}}\n        run: exit 1\n"
+        needed = needed + list(bench)
     cond = f"    if: {condition}\n" if condition else ""
     return (f"  test-{system.split('-')[0]}:\n    name: cargo test ({system})\n    runs-on: ubuntu-latest\n"
             f"    needs: [{', '.join(needed)}]\n{cond}    steps:\n{check}")
@@ -431,11 +498,16 @@ def fixture(cache_key="${{ runner.os }}-cargo-${{ github.job }}", node_rust_merg
         text += leg(f"node-{short}", system, SUITES["node"]).replace("    steps:\n", "    steps:\n" + body_cache)
     text += leg("pre-commit", "ubuntu-latest", PRE_COMMIT)
     ubuntu = ["rust-ubuntu", "python-ubuntu", "node-ubuntu"] + (["pre-commit"] if needs_pre_commit else [])
-    text += leg("bench", "ubuntu-latest", BENCH)
+    bench = [BENCH_BUILD, BENCH_SHARD, BENCH_RECORD]
+    text += leg(BENCH_BUILD, "ubuntu-latest", "cargo bench --no-run")
+    text += leg(BENCH_SHARD, "ubuntu-latest", BENCH, extra=f"    needs: [{BENCH_BUILD}]\n")
+    text += leg(BENCH_RECORD, "ubuntu-latest", "python3 scripts/bench_record.py merge",
+                extra=f"    needs: [{BENCH_SHARD}]\n")
     if bench_skip_anywhere:
-        text += aggregate("ubuntu-latest", ubuntu + ["bench"], guard, condition)
+        text += aggregate("ubuntu-latest", ubuntu + bench, guard, condition)
     else:
-        text += aggregate("ubuntu-latest", ubuntu, guard, condition, "bench" if needs_bench else None)
+        text += aggregate("ubuntu-latest", ubuntu, guard, condition,
+                          bench if needs_bench else bench[:1] + bench[2:])
     text += aggregate("windows-latest", ["rust-windows", "python-windows", "node-windows"], guard, condition)
     return text
 
@@ -473,7 +545,7 @@ class BenchJobTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.text = CI.read_text(encoding="utf-8")
+        cls.text = with_local_actions(CI.read_text(encoding="utf-8"))
 
     def test_the_bench_job_runs_in_a_pinned_environment(self):
         # §AR-ci.5
