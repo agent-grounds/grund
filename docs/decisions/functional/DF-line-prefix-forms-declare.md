@@ -59,7 +59,7 @@ already read and checked, so nothing written there is missed.
 
 The Lisp row names `lisp cl el scm ss rkt clj cljs cljc`. `lisp`, `scm` and `clj` were
 already in the `[scan] extensions` default; `cl`, `el`, `ss`, `rkt`, `cljs` and `cljc` join
-it ([§FS-config.3.5](../../functional-spec/FS-config.md#35-scan--what-gets-scanned)), appended after the entries already there, so every extension a
+it, because that default follows the language table ([§FS-scan.scope.extensions.default](../../functional-spec/FS-scan.md#scopeextensionsdefault-the-extensions-default-follows-the-language-table)) and the six rows are appended after the entries already there, so every extension a
 recognizer classifies is read by a project that wrote no `extensions`, and each has its
 dangling-citation proof ([§REQ-no-missed-citation.3](../../requirements/REQ-no-missed-citation.md#3-proven-per-host-language)). `.cl` is OpenCL's extension too,
 which is harmless: only lines led by a configured prefix are read.
