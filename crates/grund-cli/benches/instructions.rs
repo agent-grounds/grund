@@ -244,7 +244,13 @@ fn invocation(catalog: &Catalog, scenario: &Scenario) -> Setup {
     let mut invocation: Invocation = scenario
         .args
         .iter()
-        .map(|arg| OsString::from(arg.replace(SUBJECT, subject())))
+        .map(|arg| {
+            if arg.contains(SUBJECT) {
+                OsString::from(arg.replace(SUBJECT, subject()))
+            } else {
+                OsString::from(arg)
+            }
+        })
         .collect();
     invocation.push(root.into_os_string());
     Ok(invocation)
