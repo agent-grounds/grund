@@ -25,10 +25,11 @@ pub(crate) struct RootRow {
 /// is one record naming both (§DF-unread-hidden-root.2.1).
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub(crate) struct Refused {
-    /// Its name begins with `.` (§FS-scan.scope.hidden).
+    /// Its name begins with `.`: the hidden reason of
+    /// §FS-scan.checks.unread-scan-root.message.
     pub(crate) hidden: bool,
-    /// The extension list leaves out its extension, or it has none
-    /// (§FS-scan.scope.extensions.root).
+    /// The extension list leaves out its extension, or it has none: the extension
+    /// reason of §FS-scan.checks.unread-scan-root.message.
     pub(crate) extension: bool,
 }
 
