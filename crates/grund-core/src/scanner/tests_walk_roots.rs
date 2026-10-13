@@ -3,8 +3,11 @@
 //! `tests_walk.rs`; these start the walk at or below the link, which is the
 //! distinction the gate turns on: a root that *is* an outward link is refused,
 //! a root written *below* one is canonicalized before the walk begins and is
-//! ordinary scope (§DF-undeclared-blind-spots).
+//! ordinary scope (§DF-undeclared-blind-spots). The gate also records a file root
+//! the extension filter refuses, with its row, for `check` to name
+//! (§FS-scan.checks.unread-scan-root).
 
+use crate::model::RootOrigin;
 use crate::testing::{
     canonical_test_path, legacy_fs_folder_config, scan_tree, scanned, symlink, test_root, write,
 };
@@ -136,5 +139,79 @@ fn the_root_fence_preserves_intentional_external_and_in_root_scope() {
         scanned(&config, &file_link),
         vec!["linked-file.md"],
         "§FS-config.3.5.1: the directory boundary leaves external file links readable"
+    );
+}
+
+/// A project whose `grund.toml` declares a `TXT` row with `home` as its `file`, on
+/// line 6, and `[scan] include = ["docs", <include>]` on line 9, with only `md` listed.
+fn unread_root_project(name: &str, home: &str, include: &str) -> crate::config::Config {
+    let root = test_root(name);
+    write(
+        &root.join("grund.toml"),
+        &format!(
+            "[id]\nformat = \"{{kind}}-{{slug}}\"\n\n[[kinds]]\nkind = \"TXT\"\nfile = \"{home}\"\n\n\
+             [scan]\ninclude = [\"docs\", \"{include}\"]\nextensions = [\"md\"]\n"
+        ),
+    );
+    write(&root.join("docs/a.md"), "# A\n");
+    crate::config::load_config_at(&root, &root).expect("load the project")
+}
+
+/// §AR-scanner.1.6: the root gate records a file root the extension filter refuses
+/// with the row that made it a root and the line of its key, the predicate's own
+/// `Unread::Extension` answer (§AR-scanner.1.13, §FS-scan.checks.unread-scan-root).
+#[test]
+fn a_refused_file_root_is_recorded_with_its_row() {
+    let config = unread_root_project(
+        "a_refused_file_root_is_recorded_with_its_row",
+        "notes.txt",
+        "extra.txt",
+    );
+    write(&config.root.join("notes.txt"), "TXT-a\n");
+    write(&config.root.join("extra.txt"), "extra\n");
+    let (findings, _) = scan_tree(&config, None, false).expect("scan");
+    let rows: Vec<_> = findings
+        .unread_roots
+        .iter()
+        .map(|row| (row.origin.clone(), row.written.as_str(), row.line))
+        .collect();
+    let home = RootOrigin::Home {
+        kind: "TXT".into(),
+        citable: true,
+    };
+    assert_eq!(
+        rows,
+        vec![
+            (RootOrigin::Include, "extra.txt", 9),
+            (home, "notes.txt", 6)
+        ],
+        "§AR-scanner.1.6: each refused file root, with its row, in the roots' order"
+    );
+}
+
+/// §FS-scan.checks.unread-scan-root.silent: a directory root is filtered file by
+/// file, which is what the extension list means, so the gate records nothing.
+#[test]
+fn a_directory_root_is_not_recorded() {
+    let config = unread_root_project("a_directory_root_is_not_recorded", "notes.md", "texts");
+    write(&config.root.join("texts/a.txt"), "text\n");
+    let (findings, _) = scan_tree(&config, None, false).expect("scan");
+    assert!(
+        findings.unread_roots.is_empty(),
+        "§FS-scan.checks.unread-scan-root.silent"
+    );
+}
+
+/// §FS-scan.checks.unread-scan-root.silent: a hidden-named root is the declared
+/// blind spot of §FS-scan.scope.hidden; the hidden rule is asked first, so a name
+/// both hidden and unlisted is not recorded.
+#[test]
+fn a_hidden_named_root_is_not_recorded() {
+    let config = unread_root_project("a_hidden_named_root_is_not_recorded", ".notes.txt", "docs");
+    write(&config.root.join(".notes.txt"), "TXT-a\n");
+    let (findings, _) = scan_tree(&config, None, false).expect("scan");
+    assert!(
+        findings.unread_roots.is_empty(),
+        "§FS-scan.scope.hidden is asked first"
     );
 }
