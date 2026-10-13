@@ -297,14 +297,14 @@ class NodeSharedTargetTests(unittest.TestCase):
         for noise in ("Compiling grund", "test_x ... ok", "noise out"):
             self.assertNotIn(noise, output)
 
-    def test_the_ci_key_drops_entries_saved_before_the_dev_builds(self):
+    def test_the_ci_key_drops_entries_saved_before_the_per_checkout_targets(self):
         steps = CI.read_text(encoding="utf-8").split("\n      - ")
         keys = [line.strip() for step in steps for line in step.splitlines()
                 if "~/ag/tmp/grund-node-target" in step and line.strip().startswith("key:")]
         self.assertTrue(keys, "no job caches the Node target")
         for key in keys:
-            self.assertIn("-node-target-v2-", key,
-                          "an entry saved before the dev builds holds none of their dependencies")
+            self.assertIn("-node-target-v3-", key,
+                          "an entry saved before the per-checkout targets holds none of them")
 
     def test_unset_the_wrapper_and_the_helper_share_one_persistent_target_ci_restores(self):
         built = self.temp / "grund-built-unused"

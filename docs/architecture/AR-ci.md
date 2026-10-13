@@ -156,7 +156,7 @@ acceptance compares against is built once per run and reused by every test
 that needs it.
 
 That cache is not the cargo cache's. Its key is
-`<os>-node-target-v2-1.95.0-<Cargo.lock hash>`: the runner's OS, a version to
+`<os>-node-target-v3-1.95.0-<Cargo.lock hash>`: the runner's OS, a version to
 bump when what it holds must be thrown away, the binding toolchain, and the lock
 file, with the same key less its hash as the restore prefix. A key of its own is
 what makes it save at all: an entry is never overwritten, so a save to a primary
@@ -165,7 +165,10 @@ whenever `Cargo.lock` has not changed, so a path added to it would never be writ
 binding's and the dev builds' compiled dependencies and no incremental state;
 `v2` is the bump that came with the dev builds of [§AR-ci.3.4.1.1](AR-ci.md#3411-one-release-build-and-every-build-on-one-line), whose
 dependencies an entry saved before them does not hold and, on an exact hit,
-would never save.
+would never save. `v3` is the bump that came with the per-checkout targets of
+[§AR-ci.3.4.1.2](AR-ci.md#3412-one-target-per-source-checkout): a `v2` entry holds its artifacts at the root rather than in the
+checkout's directory under it, and an exact hit skips the save, so the
+per-checkout target would never be cached.
 It cannot leave that state out, because a cache archives a listed
 directory whole, so the builds never write it: the CLI builds with
 `CARGO_INCREMENTAL=0`, and so do the dev builds of the binding, the release
@@ -229,7 +232,8 @@ support module's source package and every other build site, exactly one build
 of the binding resolves to the release profile, and it is the documented native
 builder's; a build the harness runs prints its one line naming its profile,
 target and seconds; the wrapper shows those lines, and only those, on a green
-run; and the CI cache key carries the `v2` this point bumped.
+run; and the CI cache key has moved past the `v2` this point bumped, to the
+`v3` of [§AR-ci.3.4.1.2](AR-ci.md#3412-one-target-per-source-checkout).
 
 ##### 3.4.1.2 One target per source checkout
 
@@ -256,12 +260,16 @@ first, so the remedy is the separate target.
 
 The price is the third-party dependency tree: each checkout compiles its own
 once, where worktrees used to share one. A CI runner has one checkout path, so
-its directory is the same on every run, and the cached root holds it.
+its directory is the same on every run, and the cached root holds it once the
+key has moved to `v3`, which this point bumped: an exact hit on a `v2` entry,
+whose artifacts lie at the root, would skip the save and never cache the
+checkout's directory.
 
 `tests/integration/test_node_shared_target.py` holds this too: two checkouts
 under one root get disjoint targets, both under it; one checkout gets the same
-target on every call and every run; and every `--target-dir` a checkout's
-source package and CLI build name lies under that checkout's own target.
+target on every call and every run; every `--target-dir` a checkout's
+source package and CLI build name lies under that checkout's own target; and
+the CI cache key carries the `v3` this point bumped.
 
 #### 3.4.2 Per-test durations
 
