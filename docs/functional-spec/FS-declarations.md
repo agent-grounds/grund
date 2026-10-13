@@ -519,7 +519,8 @@ Serves [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-i
 
 ### e2e-case.id: A case directory and the ID it declares
 
-A directory is a case directory when all three hold:
+On a run over the project, where the `E2E` folder holds no `expected.exit` of its own, a
+directory is a case directory when all three hold:
 
 1. it sits directly in the `E2E` folder — a directory deeper down is not a case, whatever it holds;
 2. it contains a file named `expected.exit`;
@@ -529,8 +530,9 @@ A directory is a case directory when all three hold:
 That ID is what the directory declares: under the default `{kind}-{number}-{slug}` the
 directory `007-login` declares `E2E-007-login`, and under `{kind}-{slug}` the directory
 `login` declares `E2E-login`. A directory that fails any of the three — `.gitkeep`, a folder
-with no `expected.exit`, a name the grammar does not read — declares nothing, so the `E2E`
-folder itself is never a declaration.
+with no `expected.exit`, a name the grammar does not read — declares nothing. What a run
+scoped to a path inside the folder declares, or a folder that holds `expected.exit` itself,
+is not specified here.
 
 A case declaration is located at its directory, line 1. It is never a stub and has no
 sections, so a citation of it with a section suffix names a section that does not exist

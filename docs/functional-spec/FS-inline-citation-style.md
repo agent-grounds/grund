@@ -296,7 +296,7 @@ The soft cap counts lines only: there is no `suggested_columns` knob, and column
 
 ### 4.4 Warnings and errors — opt-in layout deviations
 
-Off by default, twice over: `inline_note_layout = "any"` means there is no layout to deviate from, and `inline_note_layout_check = "off"` means a layout that *is* configured stays documentation. A project that sets only `inline_note_layout` has told its agents the house style through [§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering) and asked `check` for nothing — the same standing the soft cap has under `warn_on_suggested = false`. At `off` no line is classified at all: the verdicts the scanner would record ([§FS-inline-citation-style.4](FS-inline-citation-style.md#4-enforcement-grund-check)) have no consumer, so a project that documents a layout without gating it scans exactly as fast as one that has none.
+Off by default, twice over: `inline_note_layout = "any"` means there is no layout to deviate from, and `inline_note_layout_check = "off"` means a layout that *is* configured stays documentation. A project that sets only `inline_note_layout` has told its agents the house style through [§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering) and asked `check` for nothing — the same standing the soft cap has under `warn_on_suggested = false`. At `off` no line is classified at all: the per-line layout verdicts ([§FS-inline-citation-style.4.4.1](FS-inline-citation-style.md#441-one-finding-per-nonconforming-line)) have no consumer, so a project that documents a layout without gating it scans exactly as fast as one that has none.
 
 With `inline_note_layout = "citation-first-colon"`:
 

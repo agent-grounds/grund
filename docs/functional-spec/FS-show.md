@@ -285,7 +285,7 @@ The doc-comment forms are [§FS-show.2.3.5](FS-show.md#235-the-doc-comment-forms
 
 #### 2.3.1 What counts as the "comment block"
 
-A declaration is found on a "declaration line" — a line in declaration position that opens with the shape a declaration takes ([§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares)) *and* sits inside a comment or docstring. Which lines around it form its block is [§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block).
+A declaration is found on a "declaration line" — a line in declaration position ([§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares)) that also sits inside a comment or docstring. Which of the lines around it form its block is [§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block).
 
 ##### 2.3.1.1 Find the open boundary
 
@@ -307,7 +307,7 @@ The result is the markdown that the declaration's author wrote, identical to wha
 
 #### 2.3.3 Section selection inside a doc-comment
 
-Section selection (`AR-<event-bus>.2`) works the same way inside a doc-comment as inside a markdown file: the scanner records the numbered subsection headings declared within the doc-comment block and `show` slices to the requested section. Section depth is measured relative to the declaration's heading depth exactly as in markdown ([§FS-config.3.3.2](FS-config.md#332-section_heading_levels--heading-depth-against-path-depth)) — an `AR-<event-bus>:` declaration inside a `///` block is "depth 1", so `## 1.` is a depth-1 section. The comment-stripping pass leaves these headings intact.
+Section selection (`AR-<event-bus>.2`) works the same way inside a doc-comment as inside a markdown file: the scanner records the numbered subsection headings declared within the doc-comment block and `show` slices to the requested section. Section depth is relative to the declaration's heading depth, as in markdown ([§FS-config.3.3.2](FS-config.md#332-section_heading_levels--heading-depth-against-path-depth)) — an `AR-<event-bus>:` declaration inside a `///` block is "depth 1", so `## 1.` is a depth-1 section. The comment-stripping pass leaves these headings intact.
 
 So `/// # 1. Sub` is a same-level heading, not a section. When a `/** … */` line without ` * ` that reads `## 1. Sub` is a section is [§FS-languages.comment-wrapper](FS-languages.md#comment-wrapper-the-comment-wrapper).
 
@@ -324,7 +324,7 @@ This is the same "found something other than exactly one body" family as `ID not
 
 #### 2.3.5 The doc-comment forms
 
-The scanner recognizes a declaration in every doc-comment form whose block [§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks) bounds — Javadoc, JSDoc/TSDoc, Doxygen, KDoc, Scaladoc, PHPDoc, Rustdoc (`///`, `//!`, `/** … */`), C# XML doc-comments, Go's `// …` doc blocks, Ruby `#` comments, and Python `""" … """` docstrings. This means an architecture declaration can live directly in the class-level Javadoc, and `grund AR-<event-bus>` returns the comment-stripped Javadoc lead ([§FS-show.2.3.2](FS-show.md#232-stripping-comment-prefixes)); the optional LSP server's hover shows the `--toc` slice of the same prose, the lead plus its section map ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview)). The stub at `docs/architecture/AR-<event-bus>.md` is a single-line H1 — `# AR-<event-bus>: [<path>](<path>)` — pointing at the file.
+The scanner recognizes the doc-comment forms of [§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks) — Javadoc, JSDoc/TSDoc, Doxygen, KDoc, Scaladoc, PHPDoc, Rustdoc (`///`, `//!`, `/** … */`), C# XML doc-comments, Go's `// …` doc blocks, Ruby `#` comments, and Python `""" … """` docstrings. So an architecture declaration can live in the class-level Javadoc, and `grund AR-<event-bus>` returns the comment-stripped Javadoc lead ([§FS-show.2.3.2](FS-show.md#232-stripping-comment-prefixes)); the optional LSP server's hover shows the `--toc` slice of the same prose, the lead plus its section map ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview)). The stub at `docs/architecture/AR-<event-bus>.md` is a single-line H1 — `# AR-<event-bus>: [<path>](<path>)` — pointing at the file.
 
 #### 2.3.6 Several declarations in one doc-comment
 
