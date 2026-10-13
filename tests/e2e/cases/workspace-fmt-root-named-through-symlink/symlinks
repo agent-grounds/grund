@@ -1,0 +1,4 @@
+# The workspace root under a second name. A run handed this spelling names the
+# config root, so it walks the root project and every member (FS-workspace.5):
+# both projects' citations are linked, not only the root's.
+alias -> project

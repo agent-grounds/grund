@@ -4,11 +4,10 @@
 # them, listed live in one_answer_steps.toml, or the decision record that keeps
 # them (`ruling`). Seeded from the code at 53e981e6e9; it only shrinks.
 #
-# S1 gives the four hand-rolled alias splits their one home in grammar/ids.rs, S2
-# reads declaration headings and citations off the file record instead of
-# re-parsing them, and S3 has fmt read through sources and the run's scope. The
-# alias lexer in config/citations.rs and config/workspace_block.rs is an owner of
-# `split on /` (PRIMITIVES), not a row.
+# S1 gives the four hand-rolled alias splits their one home in grammar/ids.rs, and
+# S2 reads declaration headings and citations off the file record instead of
+# re-parsing them. The alias lexer in config/citations.rs and
+# config/workspace_block.rs is an owner of `split on /` (PRIMITIVES), not a row.
 #
 # A writer owns the disk calls it makes to write (WRITERS in PRIMITIVES): it is an
 # owner because it is the one that writes, not because no run reads its output.
@@ -23,11 +22,6 @@
 file = "api/complete_ids.rs"
 primitives = ["split on /"]
 step = "S1"
-
-[[allow]]
-file = "api/fmt.rs"
-primitives = ["canonicalize", "std::fs"]
-step = "S3"
 
 [[allow]]
 file = "checker/index.rs"
@@ -70,11 +64,6 @@ step = "S2"
 file = "writers/fmt_rewrite.rs"
 primitives = ["citation_re"]
 step = "S2"
-
-[[allow]]
-file = "writers/fmt_tree.rs"
-primitives = ["std::fs"]
-step = "S3"
 
 [[exempt]]
 file = "checker/references.rs"
