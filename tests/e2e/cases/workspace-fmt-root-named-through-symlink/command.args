@@ -1,0 +1,1 @@
+fmt {repo_copy}/alias --cross-refs --write
