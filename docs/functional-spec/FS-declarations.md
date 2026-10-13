@@ -509,6 +509,46 @@ A section's lead is the same cut one level down: the prose between that heading 
 first *child* heading (`#### 3.1.1 ...` under `### 3.1 ...`). A section that opens
 directly with a child heading has an empty lead.
 
+## e2e-case: What an E2E case directory declares
+
+The `E2E` kind is the one kind no heading line declares: a **case directory** does. Where a
+project configures a citable kind named `E2E` with a `folder` ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)), that folder
+holds the cases. A project with no citable `E2E` kind, or one whose `E2E` row names no folder,
+has no case directories, and every directory this point describes is ordinary tree there.
+Serves [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration): a `§E2E-<name>` citation resolves exactly where its case exists.
+
+### e2e-case.id: A case directory and the ID it declares
+
+A directory is a case directory when all three hold:
+
+1. it sits directly in the `E2E` folder — a directory deeper down is not a case, whatever it holds;
+2. it contains a file named `expected.exit`;
+3. its name, written after `E2E` and the literal that follows `{kind}` in `[id] format`
+   ([§FS-config.3.2](FS-config.md#32-id--id-grammar)), reads as an `E2E` ID with no section.
+
+That ID is what the directory declares: under the default `{kind}-{number}-{slug}` the
+directory `007-login` declares `E2E-007-login`, and under `{kind}-{slug}` the directory
+`login` declares `E2E-login`. A directory that fails any of the three — `.gitkeep`, a folder
+with no `expected.exit`, a name the grammar does not read — declares nothing, so the `E2E`
+folder itself is never a declaration.
+
+A case declaration is located at its directory, line 1. It is never a stub and has no
+sections, so a citation of it with a section suffix names a section that does not exist
+([§FS-show.2.4.1](FS-show.md#241-the-slices-over-a-manifest)). Its body is the manifest `grund E2E-<name>` prints ([§FS-show.2.4](FS-show.md#24-e2e-cases)), and
+a case that nothing cites is not reported as unused ([§FS-check.4.1.3](FS-check.md#413-e2e-declarations-are-exempt)).
+
+### e2e-case.walk: The walk stops at a case directory
+
+A case directory is a boundary of the ordinary walk. The case is registered through its
+manifest, and the walk does not descend into the directory: the fixture repository a case
+carries — its own `grund.toml`, its specs, its own nested cases — is not this project's
+content, and nothing in it is read as a declaration or a citation of this project. The
+boundary holds wherever the walk would enter the directory, under its own name or through a
+symlink that resolves to it, and `--full` keeps it ([§FS-check.1.3.1](FS-check.md#131-the-scan-covers-the-whole-config-root)). It stops a walk that
+would enter a case, not one that starts below it: a path argument naming a file or directory
+inside a case directory is where that run's walk starts ([§FS-scan.path.discovery](FS-scan.md#pathdiscovery-a-path-is-where-discovery-starts)), and it
+is read.
+
 ## checks: Checks
 
 Each section below is one check `grund check` enforces about a declaration, and its name
