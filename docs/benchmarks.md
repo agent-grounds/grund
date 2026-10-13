@@ -123,8 +123,9 @@ extension the same way, built with
 ([§AR-benchmarks.1.7](architecture/AR-benchmarks.md#17-frontends)). Each shard's run
 writes a partial record with `bench_record.py record --tier pr` (or `nightly`), and
 `bench_record.py merge --out <record> <partial>…` joins one revision's partials into
-one record, refusing partials of two series, two binaries or two tiers, and a scenario
-two partials both measured ([§AR-benchmarks.7.1.1](architecture/AR-benchmarks.md#711-one-record-per-revision-merged-from-its-shards)).
+one record. Each shard digests its own rows' fixtures, so merge joins their `fixtures`
+as one bundle and refuses a fixture two partials digest differently, any other differing
+identity field, two binaries, two tiers, and a scenario two partials both measured ([§AR-benchmarks.7.1.1](architecture/AR-benchmarks.md#711-one-record-per-revision-merged-from-its-shards)).
 
 ## Instructions
 
