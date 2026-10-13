@@ -11,7 +11,7 @@
 
 use std::path::Path;
 
-use super::multi_line_forms::{Closer, Language, is_identifier_byte, quote_run};
+use super::multi_line_forms::{Closer, Language, Skip, is_identifier_byte, quote_run};
 use super::never_rewrite::is_escaped;
 use super::source_line::{BlockCommentScanState, PythonDocstringScanState, source_scan_line};
 
@@ -71,6 +71,14 @@ impl MultiLineStrings {
     }
 }
 
+/// What opens on a line and runs past it.
+enum Opened {
+    /// A form: where its closer ends, and the first line of its body.
+    Form(Pos, usize),
+    /// A `/* … */` opened after code: where its `*/` ends.
+    Comment(Pos),
+}
+
 /// A position in the file: a line index and a byte column on it.
 type Pos = (usize, usize);
 
@@ -89,6 +97,9 @@ impl Reader<'_> {
         let mut blocks = BlockCommentScanState::default();
         let mut docstrings = PythonDocstringScanState::default();
         let python_docstrings = docstring_python && self.language == Language::Python;
+        // Where a `/* … */` opened after code on an earlier line closes: nothing
+        // before it opens a form (§FS-languages.multi-line-string.bound).
+        let mut comment_until: Option<Pos> = None;
         for index in 0..self.lines.len() {
             let line = self.lines[index];
             // §FS-languages.multi-line-string: block and docstring state are read
@@ -97,17 +108,26 @@ impl Reader<'_> {
             let excluded = python_docstrings
                 .then(|| python_excluded(line, &mut docstrings))
                 .flatten();
-            let start = entries[index];
+            let mut start = entries[index];
+            if let Some((close_line, close_end)) = comment_until {
+                if index < close_line {
+                    continue;
+                }
+                start = start.max(close_end);
+                comment_until = None;
+            }
             if start == WHOLE_LINE || in_block {
                 continue;
             }
-            if let Some(((close_line, close_end), body_from)) =
-                self.open_on_line(index, start, excluded)
-            {
-                for entry in &mut entries[body_from..close_line] {
-                    *entry = WHOLE_LINE;
+            match self.open_on_line(index, start, excluded) {
+                Some(Opened::Form((close_line, close_end), body_from)) => {
+                    for entry in &mut entries[body_from..close_line] {
+                        *entry = WHOLE_LINE;
+                    }
+                    entries[close_line] = close_end;
                 }
-                entries[close_line] = close_end;
+                Some(Opened::Comment(close)) => comment_until = Some(close),
+                None => {}
             }
         }
         entries
@@ -116,25 +136,44 @@ impl Reader<'_> {
     /// The first form that opens on line `index` and closes on a later line, read
     /// from column `start` — where the previous form closed — with the per-line
     /// toggle starting neutral there (§FS-languages.multi-line-string). Returns
-    /// where it closes and the first line of its body. A form that closes on this
-    /// line carries nothing, and the search resumes after its closer.
+    /// where it closes and the first line of its body, or where a `/* … */` that
+    /// opens here closes on a later line. A form that closes on this line carries
+    /// nothing, and the search resumes after its closer.
     fn open_on_line(
         &mut self,
         index: usize,
         start: usize,
         excluded: Option<(usize, usize)>,
-    ) -> Option<(Pos, usize)> {
+    ) -> Option<Opened> {
         let line = self.lines[index].as_bytes();
         let tail = &line[start..];
         let (mut single, mut double, mut backtick) = (false, false, false);
         // The end of a one-line form already read: nothing inside it opens another.
         let mut inside_until = start;
-        for i in start..line.len() {
+        let mut i = start;
+        while i < line.len() {
             let neutral = !single && !double && !backtick;
             let open_here =
                 neutral && i >= inside_until && !excluded.is_some_and(|(s, e)| s <= i && i < e);
             if open_here && self.language.comment_at(line, i) {
-                return None;
+                // §FS-languages.multi-line-string.bound: a block opened after code
+                // stops the search to its `*/`, once that is found.
+                return line[i..]
+                    .starts_with(b"/*")
+                    .then(|| self.block_close((index, i + 2)))
+                    .flatten()
+                    .filter(|(close_line, _)| *close_line > index)
+                    .map(Opened::Comment);
+            }
+            if open_here {
+                match self.language.skip_at(line, i) {
+                    Some(Skip::To(end)) => {
+                        i = end;
+                        continue;
+                    }
+                    Some(Skip::Line) => return None,
+                    None => {}
+                }
             }
             if open_here && let Some((opener_end, closer)) = self.language.opener_at(line, i) {
                 let from = if self.language.heredoc() {
@@ -144,7 +183,7 @@ impl Reader<'_> {
                 };
                 match self.find(&closer, from) {
                     Some((close_line, close_end)) if close_line > index => {
-                        return Some(((close_line, close_end), index + 1));
+                        return Some(Opened::Form((close_line, close_end), index + 1));
                     }
                     Some((_, close_end)) => inside_until = close_end,
                     // §FS-languages.multi-line-string.bound: no closer, so the
@@ -153,16 +192,31 @@ impl Reader<'_> {
                 }
             }
             // The per-line toggle of §FS-fmt.2.3.1, exactly as
-            // `is_inside_string_literal` reads it, from `start`.
+            // `is_inside_string_literal` reads it, from `start` — except that Rust
+            // reads its own `'` above and never as a quote.
             let escaped = is_escaped(tail, i - start);
             match line[i] {
-                b'\'' if !double && !backtick && !escaped => single = !single,
+                b'\'' if !double && !backtick && !escaped && self.language != Language::Rust => {
+                    single = !single;
+                }
                 b'"' if !single && !backtick && !escaped => double = !double,
                 b'`' if !single && !double && !escaped => backtick = !backtick,
                 _ => {}
             }
+            i += 1;
         }
         None
+    }
+
+    /// Where the first `*/` at or after `from` ends.
+    fn block_close(&self, from: Pos) -> Option<Pos> {
+        self.span_close(
+            &Closer::Text {
+                needle: b"*/".to_vec(),
+                escapable: false,
+            },
+            from,
+        )
     }
 
     /// Where `closer` ends, searching from `from` (§FS-languages.multi-line-string.bound).

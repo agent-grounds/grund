@@ -25,6 +25,10 @@ use crate::workspace::resolve_workspace_config;
 /// with its own invariant — the trigger converts eagerly and the shorthand
 /// expands only at a token boundary — and that invariant is what a reader comes
 /// here for.
+///
+/// Given one line and no document, it cannot see a multi-line string literal an
+/// earlier line opened (§FS-languages.multi-line-string): an interior line of one
+/// reads as code here.
 pub fn can_replace_trigger_at(
     path: &Path,
     line: &str,
@@ -45,8 +49,11 @@ pub fn can_replace_trigger_at(
 /// `docstring` is where this line's Python docstring content sits
 /// (§FS-fmt.2.3.1.1). One line cannot say — only a walk from the top of the document
 /// can — so the single-line `can_replace_trigger_at` above passes the empty view
-/// and reads a `"""` as the quote it looks like; `on_type_line_edits`, which is
-/// handed the document, passes the real one and agrees with `grund fmt`.
+/// and reads a `"""` as the quote it looks like. A lone line cannot see a
+/// multi-line string literal an earlier line opened either
+/// (§FS-languages.multi-line-string), so it reads an interior line of one as
+/// code. `on_type_line_edits`, which is handed the document, passes the real view
+/// and agrees with `grund fmt`.
 fn can_replace_trigger_with_config(
     config: &Config,
     docstring: DocstringContent<'_>,

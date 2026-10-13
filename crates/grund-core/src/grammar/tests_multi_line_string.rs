@@ -197,3 +197,56 @@ fn the_shared_predicate_starts_in_the_entry_state() {
         6
     ));
 }
+
+/// §FS-languages.multi-line-string.bound: Rust's `'` is read as Rust reads it — a
+/// character literal is one unit, a lifetime is no quote — so neither `'"'` nor an
+/// odd count of lifetimes turns a later `"` into an opener or hides one.
+#[test]
+fn rust_char_literals_and_lifetimes_are_read_as_rust_reads_them() {
+    let after_static = "const M: &'static str = \"it's\";\n// x\nfn f() { g(\"y\"); }\n";
+    assert_eq!(entries("a.rs", after_static), [0, 0, 0]);
+    let char_quote = "fn q(s: &'static str) -> bool { s.contains('\"') }\n// x\nh(\"y\");\n";
+    assert_eq!(entries("a.rs", char_quote), [0, 0, 0]);
+    // A string opened after a lifetime is carried.
+    assert_eq!(
+        entries("a.rs", "fn f<'a>() -> &'a str { \"a\nb\" }\n"),
+        [0, 2]
+    );
+    assert_eq!(
+        entries("a.rs", "let c = '\\''; let s = b\"x\ny\";\n"),
+        [0, 2]
+    );
+}
+
+/// §FS-languages.multi-line-string.bound: a `/* … */` opened after code opens
+/// nothing up to its `*/`, and the search resumes after it.
+#[test]
+fn a_block_comment_opened_after_code_opens_nothing_to_its_close() {
+    let js = "foo(); /* runs on\n and `bar\n*/ x();\nconst t = `y`;\n";
+    assert_eq!(entries("a.js", js), [0, 0, 0, 0]);
+    let rust = "f(); /* \"a\n*/ let s = \"b\nc\";\n";
+    assert_eq!(entries("a.rs", rust), [0, 0, 2]);
+}
+
+/// §FS-languages.multi-line-string.bound: a backtick inside a regular-expression
+/// literal opens no template; a division does not start one.
+#[test]
+fn a_regex_literal_hides_its_backticks_and_a_division_does_not() {
+    let regex = "s.replace(/`/g, \"\");\n// x\nconst t = `y`;\n";
+    assert_eq!(entries("a.js", regex), [0, 0, 0]);
+    assert_eq!(entries("a.ts", "return /[/`]/.test(s);\nf(`a`);\n"), [0, 0]);
+    // An unclosed regex opens nothing more on its line.
+    assert_eq!(entries("a.js", "x = /`\ny`\n"), [0, 0]);
+    // `a / b` divides, so the template after it is carried.
+    assert_eq!(entries("a.js", "x = a / b + `c\nd`;\n"), [0, 2]);
+}
+
+/// §FS-languages.multi-line-string.bound: `<<` inside `(( … ))` is a shift.
+#[test]
+fn a_shell_shift_inside_arithmetic_is_no_heredoc() {
+    assert_eq!(entries("a.sh", "x=$(( 1 << n ))\necho a\nn\n"), [0, 0, 0]);
+    assert_eq!(
+        entries("a.sh", "(( 1 )); cat <<EOF\nbody\nEOF\n"),
+        [0, W, 3]
+    );
+}

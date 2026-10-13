@@ -27,7 +27,7 @@ The table is a bounded lexical distinction, like the assigned-data rule of [§DF
 
 ### 2.2 Two bounds, so a misread opener costs nothing
 
-An opener counts only in code, and a form counts only once its closer is found later in the file ([§FS-languages.multi-line-string.bound](../../functional-spec/FS-languages.md#multi-line-stringbound-what-keeps-a-misread-opener-from-swallowing-a-file)). The second is the rule a `/* … */` block already follows. Together they mean a wrong guess about an opener can only leave a file as it reads today; it can never start a span that hides a citation.
+An opener counts only in code, and a form counts only once its closer is found later in the file ([§FS-languages.multi-line-string.bound](../../functional-spec/FS-languages.md#multi-line-stringbound-what-keeps-a-misread-opener-from-swallowing-a-file)). The second is the rule a `/* … */` block already follows. Together they mean a wrong guess about an opener can only leave a file as it reads today; it can never start a span that hides a citation. Holding that took three readings closer to the language than the per-line toggle: in Rust a character literal is one unit and a lifetime is no quote, so `&'static str = "it's"` opens nothing; a `/* … */` opened after code is skipped to its `*/`; and in JavaScript and TypeScript a regular-expression literal is skipped, so `` /`/g `` opens no template. A string opened after a lifetime on the same line is therefore carried like any other.
 
 ### 2.3 The forms left out are declared, and fail toward reporting
 

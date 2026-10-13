@@ -23,7 +23,7 @@ use ignore::gitignore::Gitignore;
 use std::path::{Path, PathBuf};
 
 use super::comment_line::{comment_strip_prefixes, strip_comment_tokens};
-use super::never_rewrite::DocstringContent;
+use super::never_rewrite::{DocstringContent, string_literal_in};
 use super::settings::LexicalSettings;
 use super::source_line::{PrefixForms, longest_form_at};
 
@@ -162,6 +162,12 @@ impl<'a> FmtDirectives<'a> {
                 if !docstring.is_docstring()
                     && longest_form_at(text.trim_start(), prefixes).is_none()
                 {
+                    return None;
+                }
+                // §FS-fmt.2.5.2.2: a comment-shaped line inside a multi-line literal
+                // is the literal's data.
+                let comment_start = line.len() - line.trim_start().len();
+                if !docstring.is_docstring() && string_literal_in(docstring, line, comment_start) {
                     return None;
                 }
                 strip_comment_tokens(text, prefixes)

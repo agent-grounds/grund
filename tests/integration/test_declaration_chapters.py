@@ -94,9 +94,12 @@ CITED = (
 # FS-fmt.md grew past its move baseline by one point of fmt's own, not a restatement:
 # §FS-fmt.6.3.3 (grund#642).
 
+# It grew again by the 217-byte clause of §FS-fmt.2.5.2.2: a directive inside a
+# multi-line string literal is data (grund#702).
+
 # Each adds the bytes of the requirements chapter its spec gained since (#634: 5295
 # and 4680), so the room a restatement could grow back into is what it was.
-BASELINES = {"FS-show.md": 66475, "FS-fmt.md": 93280}
+BASELINES = {"FS-show.md": 66475, "FS-fmt.md": 93497}
 
 
 def _flat(text):
