@@ -195,9 +195,9 @@ match = "exact"
 rules = ["workflows"]
 kind = "structural"
 until = "indefinite"
-max_accepted = { value = 597, unit = "lines" }
+max_accepted = { value = 493, unit = "lines" }
 reason = """
-§AR-ci.13 runs each operating system's suites as jobs of their own: a Rust, a Python and a Node job on Ubuntu and on Windows, one job on macOS, the Ubuntu pre-commit job and one required `cargo test (<os>)` aggregate each. Every job checks out, installs its toolchains, restores its own caches and saves them again on a push to main (§AR-ci.13.6), so the setup repeats seven times, and §AR-ci.13 writes the jobs out rather than generating them with YAML anchors because the tests that hold the layout read the workflow as text. A composite action or a reusable workflow would move that setup where those tests cannot see it, which is the indirection the layout test exists to refuse; the oracle build already left for scripts/prepare_binding_oracle.py, the one step that was code rather than setup. The ceiling follows the number of jobs, not logic accruing in any of them.
+§AR-ci.13 runs each operating system's suites as jobs of their own: a Rust, a Python and a Node job on Ubuntu and on Windows, the Ubuntu pre-commit job and one required `cargo test (<os>)` aggregate each; macOS runs once a day in a workflow of its own (§AR-ci.14). Every job checks out, installs its toolchains, restores its own caches and saves them again on a push to main (§AR-ci.13.6), so the setup repeats six times, and §AR-ci.13 writes the jobs out rather than generating them with YAML anchors because the tests that hold the layout read the workflow as text. A composite action or a reusable workflow would move that setup where those tests cannot see it, which is the indirection the layout test exists to refuse; the oracle build already left for scripts/prepare_binding_oracle.py, the one step that was code rather than setup. The ceiling follows the number of jobs, not logic accruing in any of them.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-config.md"

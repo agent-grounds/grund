@@ -34,7 +34,7 @@ All of this is checked rather than remembered: `tests/integration/test_ci_precom
 
 ## 2. Platform scope
 
-The full Rust build and test matrix still runs on every configured operating system. The pre-commit gate may run on one representative CI platform when the hooks are platform-independent, because its job is policy parity with local commits, not cross-platform behavior coverage. Platform-specific behavior belongs in the build and test jobs.
+The full Rust build and test matrix runs on every configured operating system: on Ubuntu and Windows for every push, pull request and merge-queue group, and on macOS once a day ([§AR-ci.14](AR-ci.md#14-macos-runs-once-a-day)). The pre-commit gate may run on one representative CI platform when the hooks are platform-independent, because its job is policy parity with local commits, not cross-platform behavior coverage. Platform-specific behavior belongs in the build and test jobs.
 
 CI dependency and build caches are performance optimizations only. A cache restore/save failure must not abort the matrix before the actual checks run; the job should continue cold and let `fmt`, Python tests, pre-commit, build, self-check, tests, or benchmarks decide pass/fail.
 
@@ -464,7 +464,7 @@ Beside push, pull request and merge-queue group ([§AR-ci.12](AR-ci.md#12-a-merg
 
 ## 12. A merge queue lands every pull request
 
-`main` takes a pull request only through GitHub's merge queue. The queue tests each pull request on `main` together with every pull request queued ahead of it, under the checks a pull request must pass — the three `cargo test` legs, each the aggregate of its operating system's jobs ([§AR-ci.13.2](AR-ci.md#132-the-required-check-is-an-aggregate)) — and lands exactly the commit it tested, so nothing reaches `main` that CI has not passed, as [§FS-distribution.4.4.1](../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed) holds the release helpers to. That is why no pull request has to be current with `main` itself, and the up-to-date requirement is off: a pull request that went green on an older `main` is not rebased and run again for every merge ahead of it. The requirement is not merely dropped, because in this repository two pull requests that are each green often fail together — one moves a point the other still cites, and only their combination is red. The queue meets that combination on its own ref, before `main`; the requirement switched off without a queue would let it land, and `main` would go red on a commit no run had judged ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)).
+`main` takes a pull request only through GitHub's merge queue. The queue tests each pull request on `main` together with every pull request queued ahead of it, under the checks a pull request must pass — the `cargo test` legs of Ubuntu and Windows, each the aggregate of its operating system's jobs ([§AR-ci.13.2](AR-ci.md#132-the-required-check-is-an-aggregate)) — and lands exactly the commit it tested, so nothing reaches `main` that CI has not passed, as [§FS-distribution.4.4.1](../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed) holds the release helpers to. That is why no pull request has to be current with `main` itself, and the up-to-date requirement is off: a pull request that went green on an older `main` is not rebased and run again for every merge ahead of it. The requirement is not merely dropped, because in this repository two pull requests that are each green often fail together — one moves a point the other still cites, and only their combination is red. The queue meets that combination on its own ref, before `main`; the requirement switched off without a queue would let it land, and `main` would go red on a commit no run had judged ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)).
 
 The workflow runs on `merge_group` for the queue. The test matrix runs there as it does on a push, and the commit-message job scans the group's `base_sha..head_sha` ([§AR-ci.8.2](AR-ci.md#82-the-scanned-range)). The benchmark job does not run: on a pull request it compares against the base branch, and on a push to `main` it records counts ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)), and the queue's push to `main` still runs it. That push run stays the record of `main`. `tests/integration/test_merge_queue_runs.py` holds the trigger and both jobs to this.
 
@@ -488,10 +488,8 @@ scripts/run_python_gate.py --without-node-acceptance`, and the **Node** job
 runs `python scripts/run_python_gate.py --only-node-acceptance`
 ([§AR-ci.3.4.3](AR-ci.md#343-selecting-the-node-acceptance)). No job on those two runs more than one of the three suites.
 
-`macos-latest` may keep them in one job. It is the shortest leg, and the free
-plan's five concurrent macOS jobs are shared by every run, the merge queue's
-concurrent groups included ([§AR-ci.12](AR-ci.md#12-a-merge-queue-lands-every-pull-request)), so splitting it buys little and can
-starve the queue.
+`macos-latest` is not a leg of `ci.yml`: its suites run once a day, in one job
+of their own workflow ([§AR-ci.14](AR-ci.md#14-macos-runs-once-a-day)).
 
 On every operating system each of those commands runs exactly once: none is
 dropped by the split and none repeated by it. The plain `python
@@ -500,7 +498,7 @@ acceptance a second time.
 
 ### 13.2 The required check is an aggregate
 
-Each operating system keeps one job named `cargo test (<os>)`, the name the
+Ubuntu and Windows each keep one job named `cargo test (<os>)`, the name the
 ruleset requires and the merge queue waits for, so neither changes. It runs no
 suite of its own. It `needs:` every job that runs a command of [§AR-ci.13.1](AR-ci.md#131-one-job-per-language) on
 its operating system — on Ubuntu, the pre-commit job too, and the bench job, so
@@ -515,8 +513,7 @@ check counts as passed; its step then fails on any result other than
 `success`, so a need that failed, was cancelled or was skipped fails it. The one
 exception is the bench job's skip in a merge-queue group, where that job never
 runs ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)): the Ubuntu check accepts it there and nowhere else. It runs
-on `ubuntu-latest` whichever operating system it judges, so it takes no macOS
-slot.
+on `ubuntu-latest` whichever operating system it judges.
 
 ### 13.3 Every hook runs once
 
@@ -550,7 +547,8 @@ can no longer fail is caught.
 ### 13.6 Only a push to main saves a cache
 
 Every cache is restored on every event, and saved only by a push to
-`refs/heads/main`. A run restores from its own ref or the default branch's and
+`refs/heads/main`, or by the daily macOS run of [§AR-ci.14](AR-ci.md#14-macos-runs-once-a-day), which the schedule starts on that
+same ref. A run restores from its own ref or the default branch's and
 nowhere else, so an entry saved from `refs/pull/<n>/merge`, from a merge queue's
 `gh-readonly-queue/main/pr-<n>-<sha>`, from a tag or from a dispatch is never read
 again; it only counts against the repository's 10 GB limit, and the forge makes
@@ -563,7 +561,8 @@ So no workflow under `.github/workflows/` uses the combined `actions/cache`, whi
 saves on every event its workflow runs on. Each cache is an `actions/cache/restore`
 step with no event guard, and an `actions/cache/save` step after the work, with the
 same path and key, guarded by `github.event_name == 'push' && github.ref ==
-'refs/heads/main'` on the step or its job. A workflow that never runs on a push to
+'refs/heads/main'` on the step or its job — `'schedule'` in place of `'push'` in a
+scheduled workflow. A workflow that never runs on a push to
 main has no save step, since its guard could never be true. `release.yml`, run from
 tags and dispatches, caches nothing: no run ever saves a key it could read, so it
 builds cold. `pre-release-checks.yml`, dispatched only, restores and never saves, so
@@ -580,6 +579,47 @@ as the Node target's builds already do ([§AR-ci.3.4.1](AR-ci.md#341-the-node-ac
 `tests/integration/test_ci_cache_saves.py` reads every workflow as text and holds
 it to this point, and it runs its checks against fixture workflows too, so a check
 that can no longer fail is caught.
+
+## 14. macOS runs once a day
+
+The macOS suites are no gate. `.github/workflows/macos.yml` runs them once a day on
+`main`, on a schedule, and on `workflow_dispatch`, and never on a push, a pull
+request or a merge-queue group, so no pull request waits for them. They were the
+slowest gate — `suites (macos-latest)` averaged 20.2 minutes over the eight pushes
+agent-grounds/grund#659 measured — and the free plan's five concurrent macOS jobs
+are shared by every run, the queue's groups included ([§AR-ci.12](AR-ci.md#12-a-merge-queue-lands-every-pull-request)). Ubuntu and Windows
+still judge every change before it lands, so what this gives up is a regression
+only macOS shows, which reaches `main` and is reported within a day instead of
+refused. A release candidate's dispatched CI is `ci.yml` alone
+([§AR-ci.11](AR-ci.md#11-a-release-candidate-is-dispatched-the-same-ci)), so the last daily run before a release is the macOS verdict it ships
+under. Serves [§GOAL-fast-feedback.3](../goals.md#3-measurable).
+
+### 14.1 One job runs every suite
+
+The workflow's one suite job, `suites (macos-latest)`, runs each command of
+[§AR-ci.13.1](AR-ci.md#131-one-job-per-language) exactly once, one after another: nobody waits on it, so splitting it would
+spend macOS slots and buy nothing. It saves its caches on its scheduled run
+([§AR-ci.13.6](AR-ci.md#136-only-a-push-to-main-saves-a-cache)), so the next day's run finds them.
+
+### 14.2 A failed daily run opens one issue
+
+When the scheduled run's suite job fails, a report job after it, with
+`issues: write`, runs `scripts/macos_daily.py`. It reads the run's jobs from the
+forge and writes one report naming the commit, the run and each failed step, and
+puts it on one open issue by the rule of [§AR-ci.requirements.3](AR-ci.md#requirements3-the-average-is-measured-and-drift-is-reported--realized), with its own
+marker line, `<!-- macos-daily-failure -->`: it opens the issue when no open
+issue's body begins with the marker, and edits the one that does instead of opening
+a second. The one implementation of that rule is `scripts/ci_duration.py`'s, which
+this script calls with its own marker. A green run writes nothing, so closing the
+issue is a person's call, and a dispatched run reports nothing, because whoever
+dispatched it is watching it.
+
+### 14.3 The workflow test
+
+`tests/integration/test_ci_macos_daily.py` reads both workflows as text and holds
+them to this point — `macos.yml`'s triggers, its suite job's commands and its
+report job's wiring, and that `ci.yml` runs nothing on macOS — and holds the
+report and the open-or-edit decision to [§AR-ci.14.2](AR-ci.md#142-a-failed-daily-run-opens-one-issue) offline, against canned jobs.
 
 ## requirements: What CI's wall clock and its log hold to
 
