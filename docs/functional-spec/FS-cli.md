@@ -74,6 +74,10 @@ The whole page fits one screen ([§GOAL-friendliness-first.1](../goals.md#1-hard
 
 Where a user guide or a runnable example covers the command, its page ends with that guide's and example's public address: `Guide:` lines, then `Example:` lines, each giving a `https://github.com/agent-grounds/grund/blob/main/<file>` or `https://github.com/agent-grounds/grund/tree/main/<directory>` address. The address names `main`, never a version tag, because a development build has no tag ([§REQ-shipped-surfaces.1](../requirements/REQ-shipped-surfaces.md#1-no-shipped-or-printed-byte-names-a-declaration-of-this-repository)). Every such address `grund` prints names a file (`blob`) or a directory (`tree`) that exists in the tree it was built from, so a printed link cannot go stale.
 
+#### 2.3.1 Every flag has an example
+
+A flag's one-line example is a command line that runs the page's subcommand — `grund <subcommand> …`, or for `show`, the default command, `grund …` as well — and passes that flag, spelled `--flag`, `--flag VALUE` or `--flag=VALUE`. It is written on the flag's own option entry after `e.g.`, or as one line of the page's examples block (a block whose heading ends in `examples:`). A bare value is not an example: `e.g. FS.requirements` or `e.g. --section 3.1` says what the flag takes, not how the command is run. The rule holds every flag the page names, whether in its usage lines or as an option entry, including the run flags every page shares ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)): a page that names a flag gives it an example.
+
 ## 3. Cross-subcommand flags
 
 - `--format text|json` — accepted by the subcommands with a machine-readable result or finding surface ([§FS-errors.5](FS-errors.md#5-json-format) lists them, [§FS-integrations.5](FS-integrations.md#5-json-format)). `text` is the default; `json` opts into the stable machine shapes, on the streams of [§FS-cli.3.1](FS-cli.md#31-the---format-json-streams). It is not a global flag: the operational commands [§FS-errors.5](FS-errors.md#5-json-format) lists, whose output is human text or generated files, reject `--format`.
