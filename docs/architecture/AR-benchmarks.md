@@ -84,6 +84,44 @@ The command list is defined once, as the catalog of [§AR-benchmarks.1.2](AR-ben
 
 The training evidence a release records ([§FS-distribution-candidate.7.3](../functional-spec/FS-distribution-candidate.md#73-the-packaged-payload-is-the-profile-use-build)) is `describe`'s output. It stays byte for byte what the hand-written loop produced: `["grund check", "grund list", "grund show FS-check --brief", "grund show FS-check", "grund show FS-check --full", "grund refs GOAL-fast-feedback", "grund cover", "grund fmt --check"]`. If it changed, `training_sha256` and the profile key would move with no change to the training. `check_large_10k` and `check_citations` are deliberately excluded from PGO training: the first is a CI budget input, and the second is a fixture configuration, so neither is a representative release invocation. The list trains the `grund` executable alone. The language server trains on a workload of its own, and the Node addon and the Python extension train on the subset's operations through their APIs ([§FS-distribution-candidate.7.1](../functional-spec/FS-distribution-candidate.md#71-each-product-trains-on-its-own-workload)), so the list stays the one definition of the hot operations without becoming another product's profile. PGO stays out of the development build and push/PR CI loop ([§AR-ci.6](AR-ci.md#6-pgo-stays-out-of-development-ci)): the release pipeline runs it, and so does explicit benchmark work comparing the optimized release artifact.
 
+### 1.6 The performance-surface inventory
+
+Choosing the benched commands by how often they run ([§AR-benchmarks.1.2](AR-benchmarks.md#12-the-benched-commands)) leaves a gap: a command, a flag or a mode can ship with functional tests and no scenario, and nobody has to decide that it needs none. The **performance-surface inventory**, `crates/grund-cli/benches/surface.json`, closes that gap. Every item of grund's public surface either names scenarios from the catalog or carries a waiver that says why it has none. The inventory sits beside the catalog rather than inside it, so the harness and `scripts/distribution/train.py` read the catalog exactly as before. It adds no scenario, and the catalog stays the one list of scenarios.
+
+The inventory covers three kinds of item, and only the third is kept by hand:
+
+- **Commands**: every entry of the `SUBCOMMANDS` table in `crates/grund-cli/src/lib.rs`, the list the CLI dispatches on. The inventory never copies that list. The test reads it.
+- **Flags**: every `--flag` the command's help page prints, read from the help page's source: the arm of `print_subcommand_help` in `crates/grund-cli/src/cli_help.rs` for that command, the `print_*_help` function the arm calls, and every `print_*` helper those call, such as `print_run_flag_help`. Its string literals are the text `grund <command> --help` prints. `--help` itself is left out, because every command takes it and it scans nothing. A positional word such as `config show` or `completions bash` is not a flag.
+- **Designated performance-sensitive modes**: ways of running the engine that no command or flag names, so the CLI definition cannot list them. They are the list in section 1.6.1. That list is the one part of the surface written by hand, and adding a mode means adding it there.
+
+`surface.json` holds an object with two keys. `commands` maps each command to its entry, and that entry may carry a `flags` object that maps each of its flags to an entry of its own. `modes` maps each designated mode to its entry. An entry is valid when it has exactly one of two keys:
+
+- `scenarios`: a non-empty list of catalog row names. Each name must be a `name` in `scenarios.json`. For a command, each named row's first argument must be that command. For a flag, each named row's first argument must be the command and its `args` must carry the flag.
+- `waiver`: a reason, as a non-empty string, why the item has no scenario. "Not on the save, commit or push path" is a reason. An empty string is not.
+
+A flag is covered in one of three ways. A catalog row of its command carries it in `args`, and then it needs no entry. Or it has an entry of its own under its command's `flags`. Or its command is waived, and the waiver covers the command's flags with it, because a command with no scenario has no flag worth a separate one.
+
+`tests/integration/test_bench_surface.py` holds the inventory to the surface, and it is a static read, so it runs in pre-commit. It fails, naming the item and `surface.json`, in each of these cases:
+
+- a command has no entry;
+- a flag is not covered;
+- a designated mode has no entry;
+- an entry names a scenario the catalog lacks, or one that does not measure its item;
+- an entry has neither `scenarios` nor `waiver`, has both, or has an empty reason;
+- an entry is stale, because it names a command, a flag or a mode that no longer exists.
+
+Adding a subcommand, a flag or a designated mode with neither a scenario nor a waiver therefore fails the gate, and the person adding it has to make the decision.
+
+#### 1.6.1 The designated performance-sensitive modes
+
+Each line names a mode by its key in `surface.json`'s `modes`:
+
+- `parallel-scan`: the scan of a large file list on several threads, which merges in sorted path order ([§AR-scanner.1.12](AR-scanner.md#112-the-extension-filter-and-the-scan-order)).
+- `workspace`: a scan from a workspace root over its member projects ([§AR-workspace](AR-workspace.md#ar-workspace-how-the-config-time-workspace-layer-composes-with-the-config-loader-and-the-scanner)).
+- `lsp`: the `grund-lsp` language server, which rescans on every save ([§AR-lsp](AR-lsp.md#ar-lsp-how-the-lsp-server-is-built)).
+- `python`: the Python extension, `grund-py`, which drives the engine through its API ([§AR-bindings](AR-bindings.md#ar-bindings-target-shape-for-exposing-the-rust-engine-on-three-platforms)).
+- `node`: the Node addon, `grund-node`. #580's approved proposal waives it until its counts are shown repeatable.
+
 ## 2. Why instruction counts, not wall-clock
 
 Callgrind reports the number of CPU instructions executed (plus cache-miss estimates), and that number is **deterministic** for a given binary and input — it does not move when the CI runner is loaded, when a neighbour VM is noisy, or when the kernel reschedules. A wall-clock harness (criterion and friends) measures the thing the [§GOAL-fast-feedback.1](../goals.md#1-performance-targets) budget is literally written in (milliseconds), but its variance on shared CI is large enough that "fail on regression" either flakes (tight threshold) or misses real regressions (loose threshold). Instruction count is the proxy that makes the [§AR-ci.5](AR-ci.md#5-benchmark-job) regression gate implementable: a quadratic walk or an accidental second read pass moves the instruction count by a margin no scheduling noise can mask. The full rationale, and the alternatives weighed, is [§DA-benchmark-instruction-counting](../decisions/architectural/DA-benchmark-instruction-counting.md#da-benchmark-instruction-counting-the-performance-harness-counts-instructions-not-wall-clock-seconds).
@@ -125,7 +163,7 @@ iai-callgrind 0.16.1 already behaves this way: a soft limit is checked only when
 
 ## 6. Scope
 
-This is a build-and-CI tool, not a CLI surface: it adds no subcommand, no flag, no output shape, so the `tests/e2e/cases/*` corpus is unchanged and nothing here is covered by the [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) user-visible-surface contract. The benched commands are specified by their functional specs ([§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-citation-in-a-repo), [§FS-show](../functional-spec/FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id), [§FS-list](../functional-spec/FS-list.md#fs-list-grund-lists-every-declared-id), [§FS-refs](../functional-spec/FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id), [§FS-cover](../functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file), [§FS-fmt](../functional-spec/FS-fmt.md#fs-fmt-grund-normalizes-citations-in-bulk), [§FS-cli](../functional-spec/FS-cli.md#fs-cli-grunds-command-line-surface-conventions)) rather than re-specified here.
+This is a build-and-CI tool, not a CLI surface: it adds no subcommand, no flag, no output shape, so the `tests/e2e/cases/*` corpus is unchanged and nothing here is covered by the [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) user-visible-surface contract. The performance-surface inventory of [§AR-benchmarks.1.6](AR-benchmarks.md#16-the-performance-surface-inventory) is repository policy in the same way: it reads the CLI's surface and changes none of it. The benched commands are specified by their functional specs ([§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-citation-in-a-repo), [§FS-show](../functional-spec/FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id), [§FS-list](../functional-spec/FS-list.md#fs-list-grund-lists-every-declared-id), [§FS-refs](../functional-spec/FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id), [§FS-cover](../functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file), [§FS-fmt](../functional-spec/FS-fmt.md#fs-fmt-grund-normalizes-citations-in-bulk), [§FS-cli](../functional-spec/FS-cli.md#fs-cli-grunds-command-line-surface-conventions)) rather than re-specified here.
 
 ## 7. The run record and its series
 
