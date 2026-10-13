@@ -166,11 +166,17 @@ fn a_one_line_form_carries_nothing_and_the_search_resumes() {
     assert_eq!(entries("a.rs", "f(r#\"a\"#, \"\nb\");\n"), [0, 2]);
 }
 
-/// §FS-languages.multi-line-string.forms: an extension the table does not name
-/// carries nothing.
+/// §FS-languages.multi-line-string.unrecognized: the forms left out carry nothing —
+/// a Ruby heredoc, a Lua long string, a shell ordinary string, a C backslash
+/// continuation, and a second heredoc on one line.
 #[test]
-fn an_unlisted_extension_carries_nothing() {
+fn the_unrecognized_forms_carry_nothing() {
     assert_eq!(entries("a.rb", "s = <<~EOF\nbody\nEOF\n"), [0, 0, 0]);
+    assert_eq!(entries("a.lua", "s = [[\nbody\n]]\n"), [0, 0, 0]);
+    assert_eq!(entries("a.sh", "s=\"first\nbody\n\"\n"), [0, 0, 0]);
+    assert_eq!(entries("a.c", "s = \"a\\\nb\";\n"), [0, 0]);
+    let two = "cat <<A <<B\na\nA\nb\nB\n";
+    assert_eq!(entries("a.sh", two), [0, W, 1, 0, 0]);
 }
 
 /// §AR-scanner.2.3.1: the shared predicate reads a line in the state it begins in —

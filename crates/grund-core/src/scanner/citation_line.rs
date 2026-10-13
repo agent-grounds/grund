@@ -51,7 +51,7 @@ impl CitationLine<'_> {
     /// §AR-scanner.2.3.2: whether the marked qualified citation at `scan_line` offset
     /// `marker_start` is suppressed — asked in the state the line begins in, so the
     /// interior of a multi-line literal is a string here too
-    /// (§FS-citations.recognized.string-literals).
+    /// (§FS-languages.multi-line-string).
     pub(super) fn qualified_suppressed(&self, marker_start: usize) -> bool {
         qualified_suppressed_in_source(
             self.scan_line,

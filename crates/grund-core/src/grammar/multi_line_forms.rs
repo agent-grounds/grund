@@ -3,6 +3,8 @@
 //! close. `multi_line_string.rs` walks a file with it; this file only recognizes,
 //! one opener at a time, so the table reads as the spec's table does.
 
+use super::source_line::is_python_string_prefix;
+
 /// One row family of the form table (§FS-languages.multi-line-string.forms).
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum Language {
@@ -235,12 +237,8 @@ fn python_opener(line: &[u8], i: usize, word_start: bool) -> Option<(usize, Clos
     } else {
         0
     };
-    // §FS-citations.recognized.string-literals.assigned-data: its prefixes.
-    let spelled = String::from_utf8_lossy(&line[i..i + prefix]).to_ascii_lowercase();
-    if !matches!(
-        spelled.as_str(),
-        "" | "r" | "u" | "b" | "f" | "t" | "br" | "rb" | "fr" | "rf" | "tr" | "rt"
-    ) {
+    // The prefixes the assigned-data opener reads, by the one list it reads them from.
+    if !is_python_string_prefix(&String::from_utf8_lossy(&line[i..i + prefix])) {
         return None;
     }
     let quote_start = i + prefix;
