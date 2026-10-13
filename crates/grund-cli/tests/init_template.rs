@@ -106,3 +106,52 @@ fn a_first_kind_replaces_the_empty_set() {
         "{block}"
     );
 }
+
+/// §FS-init.2.4.10, §FS-init-fixtures.2: a fresh `software-development`
+/// scaffold declares `REQ` in `docs/requirements/` beside the `FS` row, which
+/// stays in `requirements.md` until 0.19.0, and passes both of its gates.
+#[test]
+fn a_fresh_scaffold_declares_req_in_docs_requirements() {
+    let target = workdir("init_template_scaffold_declares_req");
+    let (ok, stderr) = init(&target, &["--scaffold"]);
+    assert!(ok, "{stderr}");
+    assert!(
+        stderr.contains(
+            "wrote requirements.md\nwrote docs/requirements/README.md\nwrote docs/grund.md\n"
+        ),
+        "{stderr}"
+    );
+    assert!(target.join("docs/requirements/README.md").is_file());
+
+    let config = fs::read_to_string(target.join("grund.toml")).unwrap();
+    let rows = "[[kinds]]\nkind = \"FS\"\nfile = \"requirements.md\"\n\
+                title = \"What: behavior, requirements, and constraints\"\n\n\
+                [[kinds]]\nkind = \"REQ\"\nfolder = \"docs/requirements\"\n\
+                title = \"Hard requirements: what the project must never break\"\n\n";
+    assert!(config.contains(rows), "{config}");
+    let ruleset = "# [citations.FS]\n# should = [\"GOAL|FS\"]\n\
+                   # must-not = [\"AR\"]              # the What may never depend on the How\n#\n\
+                   # [citations.REQ]\n# should = [\"GRUND|GOAL\"]\n\
+                   # must-not = [\"AR\"]              # a hard requirement never depends on the How\n#\n";
+    assert!(config.contains(ruleset), "{config}");
+
+    let block = fs::read_to_string(target.join("AGENTS.md")).unwrap();
+    assert!(
+        block.contains("(`KIND ∈ {GRUND, GOAL, FS, REQ, AR, DF, DA, RM}`)"),
+        "{block}"
+    );
+    let map = "- [FS](requirements.md): What: behavior, requirements, and constraints\n\
+               - [REQ](docs/requirements): Hard requirements: what the project must never break\n\
+               - [AR](docs/architecture): How: high-level implementation, structure, and design\n";
+    assert!(block.contains(map), "{block}");
+
+    let check = run_grund(&["check", target.to_str().unwrap()], manifest_dir());
+    assert!(
+        check.status.success(),
+        "grund check: {}{}",
+        String::from_utf8_lossy(&check.stdout),
+        String::from_utf8_lossy(&check.stderr)
+    );
+    let (ok, stderr) = init(&target, &["--check"]);
+    assert!(ok, "grund init --check: {stderr}");
+}

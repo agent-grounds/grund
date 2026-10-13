@@ -39,7 +39,7 @@ AGENTS.md
 grund.toml
 ```
 
-`AGENTS.md` contains exactly one delimiter-bounded managed block — `<!-- BEGIN GRUND MANAGED BLOCK -->` through `<!-- END GRUND MANAGED BLOCK -->` ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) — headed `## Grounding with grund (vN)` at the current schema version. `grund.toml` is the default generated config from [§FS-init.2.4](FS-init.md#24-generated-grundtoml), including `grund_config_version = 1`, `project_name`, `[reference]` (including the inline citation style keys from [§FS-inline-citation-style.2](FS-inline-citation-style.md#2-configuration)), `[id]`, every default `[[kinds]]`, `[scan]`, `[output]`, and `[fmt.cross_refs]`. Constrained keys include the inline value-set comments required by [§FS-init.2.4](FS-init.md#24-generated-grundtoml).
+`AGENTS.md` contains exactly one delimiter-bounded managed block — `<!-- BEGIN GRUND MANAGED BLOCK -->` through `<!-- END GRUND MANAGED BLOCK -->` ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) — headed `## Grounding with grund (vN)` at the current schema version. `grund.toml` is the default generated config from [§FS-init.2.4](FS-init.md#24-generated-grundtoml), including `grund_config_version = 1`, `project_name`, `[reference]` (including the inline citation style keys from [§FS-inline-citation-style.2](FS-inline-citation-style.md#2-configuration)), `[id]`, every default `[[kinds]]` with the template's `REQ` row after `FS` ([§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements)), `[scan]`, `[output]`, and `[fmt.cross_refs]`. Constrained keys include the inline value-set comments required by [§FS-init.2.4](FS-init.md#24-generated-grundtoml).
 
 ### 1.1 Populated configured form
 
@@ -119,6 +119,7 @@ Exit `0`, stdout empty, stderr:
 wrote AGENTS.md
 wrote grund.toml
 wrote requirements.md
+wrote docs/requirements/README.md
 wrote docs/grund.md
 wrote docs/goals.md
 wrote docs/roadmap.md
@@ -143,6 +144,7 @@ Final tree includes the default-form files plus exactly these docs and tests sca
 
 ```text
 requirements.md
+docs/requirements/README.md
 docs/grund.md
 docs/goals.md
 docs/roadmap.md
@@ -153,6 +155,20 @@ docs/decisions/functional/README.md
 tests/e2e/README.md
 tests/integration/.gitkeep
 ```
+
+The scaffold's `AGENTS.md` project map lists `REQ` right after `FS`, and its vocabulary line lists it in the same place ([§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements)):
+
+```text
+- [FS](requirements.md): What: behavior, requirements, and constraints
+- [REQ](docs/requirements): Hard requirements: what the project must never break
+- [AR](docs/architecture): How: high-level implementation, structure, and design
+```
+
+```text
+(`KIND ∈ {GRUND, GOAL, FS, REQ, AR, DF, DA, RM}`)
+```
+
+`grund check` and `grund init --check` both exit `0` on the scaffolded tree, unmodified.
 
 ## 3. Existing files
 
