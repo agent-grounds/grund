@@ -20,6 +20,7 @@ Options:
   --path-base project|invocation
                        project (default) spells report paths from the config root;
                        invocation: relative to the path you passed, or the current directory if you passed none.
+                       e.g. grund list docs/ --path-base=invocation
                        --path-base=invocation replaces a committed `[output] relative_paths = false`.
                        --format json replaces a committed `[output] format = "json"`; a flag outranks its key.
 
@@ -33,5 +34,6 @@ Examples:
   grund list --size=words --top 10 # largest coordinate leads
   grund list --unused             # uncited declarations (specs, decisions, …) — E2E cases excluded
   grund list --unused --kind E2E  # uncited e2e cases only, for inventory
+  grund list --kind FS --format json # one NDJSON record per ID, with its refs count
 
 Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/coordinate-sizes.md

@@ -18,16 +18,17 @@ fn print_show_help() {
     println!("  --full                 + every subsection body      e.g. grund --full FS-login");
     println!();
     println!("Other options:");
-    println!("  --section S            show only that section path, e.g. --section 3.1");
+    println!("  --section S            show only that section path  e.g. grund FS-login --section 3.1");
     println!(
         "  --format text|md|json  text (default) is the body; md keeps the heading; json wraps it"
     );
     println!("  --path PATH            repo or subtree to resolve the ID in (default `.`)");
+    println!("                         e.g. grund FS-login --path docs/");
     println!(
         "  --batch                 read ordered {{\"id\":…,\"section\":…}} NDJSON queries from stdin"
     );
     println!("  --all                   with --batch, query every declaration and section");
-    print_run_flag_help(false);
+    print_run_flag_help("grund FS-login docs/", false);
     println!();
     println!(
         "Exit:  0 printed · 1 ID not found / ambiguous / broken stub / unknown section · 2 unknown project alias, or CLI error."

@@ -11,14 +11,16 @@ Modes form an ordered ladder (each adds to the previous):
   --full                 + every subsection body      e.g. grund --full FS-login
 
 Other options:
-  --section S            show only that section path, e.g. --section 3.1
+  --section S            show only that section path  e.g. grund FS-login --section 3.1
   --format text|md|json  text (default) is the body; md keeps the heading; json wraps it
   --path PATH            repo or subtree to resolve the ID in (default `.`)
+                         e.g. grund FS-login --path docs/
   --batch                 read ordered {"id":…,"section":…} NDJSON queries from stdin
   --all                   with --batch, query every declaration and section
   --path-base project|invocation
                        project (default) spells report paths from the config root;
                        invocation: relative to the path you passed, or the current directory if you passed none.
+                       e.g. grund FS-login docs/ --path-base=invocation
                        --path-base=invocation replaces a committed `[output] relative_paths = false`.
 
 Exit:  0 printed · 1 ID not found / ambiguous / broken stub / unknown section · 2 unknown project alias, or CLI error.

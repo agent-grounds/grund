@@ -12,6 +12,7 @@ Options:
   --path-base project|invocation
                        project (default) spells report paths from the config root;
                        invocation: relative to the path you passed, or the current directory if you passed none.
+                       e.g. grund fmt docs/ --path-base=invocation
                        --path-base=invocation replaces a committed `[output] relative_paths = false`.
 
 With neither --check nor --write, fmt previews every change --write would apply and exits 1 if any.

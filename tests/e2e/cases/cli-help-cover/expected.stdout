@@ -14,6 +14,7 @@ Options:
   --path-base project|invocation
                        project (default) spells report paths from the config root;
                        invocation: relative to the path you passed, or the current directory if you passed none.
+                       e.g. grund cover src/ --path-base=invocation
                        --path-base=invocation replaces a committed `[output] relative_paths = false`.
                        --format json replaces a committed `[output] format = "json"`; a flag outranks its key.
 

@@ -13,7 +13,7 @@ fn print_config_help() {
     );
     println!();
     println!("Options:");
-    print_run_flag_help(false);
+    print_run_flag_help("grund config show docs/", false);
     println!();
     println!(
         "PATH defaults to `.`; config is discovered by walking up from it — the root `grund.toml` is the home, `.agents/grund.toml` a deprecated fallback."

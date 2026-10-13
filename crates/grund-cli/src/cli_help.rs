@@ -43,12 +43,15 @@ fn print_guide_links(guides: &[&str], examples: &[&str]) {
 /// §FS-cli.3.4: the run-flag lines of every command that takes `--path-base`, naming
 /// the flag that replaces each `[output]` key; the commands that honour
 /// `[output] format` also name `--format json` as its replacement (§FS-cli.3).
-fn print_run_flag_help(honours_format: bool) {
+/// `invocation` is the page's own command line the flag's example extends, so each
+/// page shows the flag on the command it documents (§FS-cli.2.3.1).
+fn print_run_flag_help(invocation: &str, honours_format: bool) {
     println!("  --path-base project|invocation");
     println!("                       project (default) spells report paths from the config root;");
     println!(
         "                       invocation: relative to the path you passed, or the current directory if you passed none."
     );
+    println!("                       e.g. {invocation} --path-base=invocation");
     println!(
         "                       --path-base=invocation replaces a committed `[output] relative_paths = false`."
     );
@@ -60,7 +63,7 @@ fn print_run_flag_help(honours_format: bool) {
 }
 
 /// Per-subcommand `--help` / `help <subcommand>` page (§FS-cli.2.3, §FS-cli.3): what
-/// it takes, every flag with a one-line example, the exit codes, and the common
+/// it takes, every flag with a one-line example (§FS-cli.2.3.1), the exit codes, and the common
 /// recovery path. Goes to stdout, exit 0 — help is never an error.
 fn print_subcommand_help(cmd: &str) {
     match cmd {
@@ -115,7 +118,7 @@ fn print_subcommand_help(cmd: &str) {
             println!(
                 "  --format text|json   text (default) is the table on stdout; json emits NDJSON (adds `refs` count)."
             );
-            print_run_flag_help(true);
+            print_run_flag_help("grund list docs/", true);
             println!();
             println!(
                 "Exit:  0 scan succeeded (an empty catalog prints nothing) · 2 unreadable tree, or an unknown --kind."
@@ -131,6 +134,7 @@ fn print_subcommand_help(cmd: &str) {
                 "  grund list --unused             # uncited declarations (specs, decisions, …) — E2E cases excluded"
             );
             println!("  grund list --unused --kind E2E  # uncited e2e cases only, for inventory");
+            println!("  grund list --kind FS --format json # one NDJSON record per ID, with its refs count");
             print_guide_links(
                 &["https://github.com/agent-grounds/grund/blob/main/docs/user-facing/coordinate-sizes.md"],
                 &[],
@@ -175,7 +179,7 @@ fn print_subcommand_help(cmd: &str) {
             println!(
                 "  --format text|json   text (default) prints `path:line: <citation>`; json emits NDJSON."
             );
-            print_run_flag_help(true);
+            print_run_flag_help("grund refs FS-login src/", true);
             println!();
             println!(
                 "The citation list is the result, so it goes to stdout (text and json alike) —"
@@ -193,6 +197,7 @@ fn print_subcommand_help(cmd: &str) {
             println!("  grund refs FS-login --summary   # one row per citing file");
             println!("  grund refs FS-login --total     # how many sites, in how many files");
             println!("  grund refs FS-login.3           # only citations of section 3");
+            println!("  grund refs FS-login --format json # one NDJSON record per citation site");
         }
         "cover" => {
             println!("grund cover — group the citation graph by scanned file.");
@@ -212,7 +217,7 @@ fn print_subcommand_help(cmd: &str) {
             println!(
                 "  --lines N|N-M        report the owners of these lines of FILE; repeatable, one record per range."
             );
-            print_run_flag_help(true);
+            print_run_flag_help("grund cover src/", true);
             println!();
             println!("Exit:  0 scan succeeded · 2 unreadable tree, incomplete scan, or CLI error.");
             println!();
@@ -249,7 +254,7 @@ fn print_subcommand_help(cmd: &str) {
             println!(
                 "  --format text|json   text (default) is the bare ID on stdout; json adds kind/number/slug/folder."
             );
-            print_run_flag_help(false);
+            print_run_flag_help("grund id FS \"x\" docs/ --explain", false);
             println!();
             println!(
                 "Exit:  0 ID emitted · 1 empty slug / collision · 2 unknown kind, scan, or CLI error."
@@ -261,6 +266,9 @@ fn print_subcommand_help(cmd: &str) {
             );
             println!(
                 "  ID=$(grund id FS \"User can log in\"); $EDITOR \"docs/functional-spec/$ID.md\""
+            );
+            println!(
+                "  grund id FS \"User can log in\" --format json  # the ID with its kind, number, slug, folder"
             );
         }
         "init" => {
@@ -328,6 +336,21 @@ fn print_subcommand_help(cmd: &str) {
             println!(
                 "  grund init --claude --gemini        # create/update both agent entrypoints"
             );
+            println!(
+                "  grund init --agents-md --cursor     # AGENTS.md beside the Cursor rules"
+            );
+            println!(
+                "  grund init --pi --copilot --windsurf --zed  # those agents' entrypoints too"
+            );
+            println!(
+                "  grund init --description \"Billing service\"  # the one-liner workspace lists show"
+            );
+            println!(
+                "  grund init --docs --force          # rewrite AGENTS.md and the docs/ scaffolds"
+            );
+            println!(
+                "  grund init --no-vcs ../scratch     # scaffold a directory no VCS tracks"
+            );
             print_guide_links(
                 &["https://github.com/agent-grounds/grund/blob/main/docs/user-facing/init-repo-shapes.md"],
                 &["https://github.com/agent-grounds/grund/tree/main/examples"],
@@ -378,7 +401,7 @@ fn print_subcommand_help(cmd: &str) {
             println!("of the machine. --format json emits a plan.");
             println!();
             println!("Options:");
-            print_run_flag_help(false);
+            print_run_flag_help("grund integrations", false);
             println!();
             println!("Preview and install examples:");
             println!("  grund integrations                    # detect and list what applies");
@@ -391,6 +414,7 @@ fn print_subcommand_help(cmd: &str) {
             println!(
                 "  grund integrations --write --agent codex --conversation-target web  # that agent only"
             );
+            println!("  grund integrations wezterm --format json  # the same, as a JSON plan");
             println!();
             println!(
                 "Exit:  0 printed or installed · 2 invalid options, missing write target, or a newer block."
