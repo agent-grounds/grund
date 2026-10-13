@@ -103,10 +103,22 @@ def merge(partials: list) -> tuple:
 
     Partials that differ in an identity field, in `commit`, `binary_sha256` or `tier`, or
     that both hold one scenario, are refused, each cause named; the record holds the union
-    of the counts and of the refusals."""
+    of the counts, of the refusals and of the fixtures, which differ only by digesting one
+    fixture two ways."""
     first, problems = partials[0], []
+    fixtures = {}
+    for other in partials:
+        # Each shard digests only the fixtures its rows generated: the record's bundle is
+        # their union, and a fixture two partials digest differently is a drifted pin.
+        for name, identity in (other.get("fixtures") or {}).items():
+            if fixtures.setdefault(name, identity) != identity:
+                problems.append(f"different series, not merged: `fixtures` gives `{name}` "
+                                f"{json.dumps(fixtures[name])} in one partial and "
+                                f"{json.dumps(identity)} in another")
     for other in partials[1:]:
         for name in series_differences(first, other):
+            if name == "fixtures":
+                continue
             problems.append(f"different series, not merged: `{name}` is "
                             f"{json.dumps(first.get(name))} in the first partial and "
                             f"{json.dumps(other.get(name))} in another")
@@ -130,7 +142,8 @@ def merge(partials: list) -> tuple:
         ir.update(partial["ir"])
         refused += [name for name in partial["refused"] if name not in refused]
     record = build_record(commit=first["commit"], binary_sha256=first["binary_sha256"],
-                          identity={name: first[name] for name in IDENTITY_FIELDS},
+                          identity=dict({name: first[name] for name in IDENTITY_FIELDS},
+                                        fixtures=dict(sorted(fixtures.items()))),
                           ir=ir, refused=refused, tier=first.get("tier", "pr"))
     return record, []
 
