@@ -67,6 +67,12 @@ def _lines(text):
     return [line.strip() for line in text.splitlines() if line.strip() and not line.strip().startswith("#")]
 
 
+def _rustflags(text):
+    """The value of each `RUSTFLAGS:` line in a span of the workflow, quotes and spaces removed."""
+    return [re.sub(r'[\s"]', "", line.partition(":")[2])
+            for line in _lines(text) if line.startswith("RUSTFLAGS:")]
+
+
 def _run_lines(lines):
     return [line[len("run:"):].strip() for line in lines if line.startswith("run:")]
 
@@ -159,9 +165,13 @@ class CiPreCommitParityTests(unittest.TestCase):
 
     def test_warnings_are_denied_on_both_sides(self):
         self.assertTrue(self.by_id["cargo-build"]["entry"].startswith(ENV_PREFIX))
-        rustflags = [line for line in self.ci_lines if line.startswith("RUSTFLAGS:")]
-        self.assertEqual(1, len(rustflags), rustflags)
-        self.assertEqual("-Dwarnings", re.sub(r'[\s"]', "", rustflags[0].partition(":")[2]))
+        workflow_env = self.ci_text.split("\nenv:\n", 1)[1].split("\njobs:\n", 1)[0]
+        rustflags = _rustflags(workflow_env)
+        self.assertEqual(["-Dwarnings"], rustflags, "the workflow-level env does not deny warnings")
+        # §AR-ci.5: the bench job alone overrides it, with the pinned empty flags its counts need.
+        overrides = {job: _rustflags(body) for job, body in jobs(self.ci_text).items()}
+        self.assertEqual({"bench": [""]}, {job: flags for job, flags in overrides.items() if flags},
+                         "a job other than bench overrides RUSTFLAGS, or bench's is not empty")
 
     def test_the_pre_commit_step_skips_exactly_the_hooks_another_job_runs(self):
         # §AR-ci.13.3: a hook no job runs is never skipped, and one a job runs is not run twice.
