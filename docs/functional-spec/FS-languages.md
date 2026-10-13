@@ -1,6 +1,6 @@
 # FS-languages: how a source file's lines are read
 
-How a scanned file's lines are read, defined once for every command that reads them: which lines form a comment block, which bytes of a comment line are its wrapper rather than its text, how a Python docstring is read, what opens and closes a Markdown fence, and which comment prefixes a file's extension brings. `show` slices a body by these rules ([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)), `check` skips a fence by them ([§FS-citations.recognized.contexts](FS-citations.md#recognizedcontexts-contexts-read-as-neither-prose-nor-code)), and a chapter's label is read through them ([§FS-rules.5.1.1](FS-rules.md#511-a-chapters-display-name-is-the-label-its-author-wrote)); none of them restates what this page says. Serves [§GOAL-polyglot-citation](../goals.md#goal-polyglot-citation-ids-cite-cleanly-from-anywhere-they-are-useful), which is why a declaration and a citation are read alike from a Markdown file, a line comment, a block comment and a docstring.
+How a scanned file's lines are read, defined once for every command that reads them: which lines form a comment block, which bytes of a comment line are its wrapper rather than its text, how a Python docstring is read, what opens and closes a Markdown fence, which comment prefixes a file's extension brings, and which string literals are read as one literal across lines. `show` slices a body by these rules ([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)), `check` skips a fence by them ([§FS-citations.recognized.contexts](FS-citations.md#recognizedcontexts-contexts-read-as-neither-prose-nor-code)), every string-literal reading starts a line in the state they give it ([§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule)), and a chapter's label is read through them ([§FS-rules.5.1.1](FS-rules.md#511-a-chapters-display-name-is-the-label-its-author-wrote)); none of them restates what this page says. Serves [§GOAL-polyglot-citation](../goals.md#goal-polyglot-citation-ids-cite-cleanly-from-anywhere-they-are-useful), which is why a declaration and a citation are read alike from a Markdown file, a line comment, a block comment and a docstring.
 
 ## terms: Terms
 
@@ -117,3 +117,62 @@ The forms hang off the configured prefix, not the file's language, the way `///`
 ### prefixes.haskell-block: A Haskell block comment hosts no declaration
 
 Haskell's block comment `{- … -}`, the Haddock `{-| … -}` included, is no prefix and no form of one, so no line inside it is in declaration position: `{-| FS-b: Beta` declares nothing, and a citation of `FS-b` that it was meant to answer is an `unknown reference`. The line form `-- |` documents everything the block form does and declares by [§FS-languages.prefixes.forms](FS-languages.md#prefixesforms-the-forms-a-prefix-stands-for). A marked citation inside the block is still read and checked, so a dangling or missing-section citation written inside `{-| … -}` is reported at its line as anywhere else; nothing written there is missed, only declined as a host. Decided in [§DF-line-prefix-forms-declare](../decisions/functional/DF-line-prefix-forms-declare.md#df-line-prefix-forms-declare-lua-haskell-and-lisp-doc-comment-forms-declare-and-a-lisp-doc-block-is-not-a-note).
+
+## multi-line-string: A string literal that spans lines
+
+Which string literals are read as one literal across line breaks, defined once for every reading that asks whether a column of a source line is inside a string: the per-line scan of [§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule), and through it the source-string skips of [§FS-citations.recognized.string-literals](FS-citations.md#recognizedstring-literals-string-literals-in-source-files) and [§FS-citations.recognized.contexts](FS-citations.md#recognizedcontexts-contexts-read-as-neither-prose-nor-code), every `grund fmt` pass, the LSP on-type transform ([§FS-lsp.1.4.3](FS-lsp.md#143-where-the-expansion-refuses)) and completion ([§FS-lsp.1.6.1](FS-lsp.md#161-eligibility-exclusions-and-triggering)). None of them restates the forms below. Serves [§REQ-no-wrong-citation.2](../requirements/REQ-no-wrong-citation.md#2-no-false-alarms), because text a program prints is data rather than a citation on its interior lines as much as on its first, and [§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own), because `grund fmt` does not own those bytes. Decided in [§DF-multi-line-string-literals](../decisions/functional/DF-multi-line-string-literals.md#df-multi-line-string-literals-a-string-literal-that-spans-lines-is-one-literal-for-a-fixed-set-of-forms).
+
+What carries across a line break is never the per-line quote toggle of [§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule): that toggle still flips on `'`, `"` and `` ` `` and still starts every line neutral, because carrying it would let one apostrophe in `// don't`, a character literal or a Rust lifetime `'a` hide every later citation in the file ([§REQ-no-missed-citation.1](../requirements/REQ-no-missed-citation.md#1-no-silent-skips)). What carries is a **recognized multi-line form**: one of the fixed openers of [§FS-languages.multi-line-string.forms](FS-languages.md#multi-line-stringforms-the-recognized-forms), in a file whose extension the form names, with that form's exact closer.
+
+A form is read in three parts:
+
+- **The opening line** is judged exactly as it is without this rule. The opener only marks where the form begins.
+- **A line that begins inside a form** is inside a string literal from its first column up to the end of the form's closer. When the closer is on that line, the rest of the line after it is read by the per-line toggle, starting neutral. When the closer is not on that line, the whole line is inside the literal.
+- **Every other line** is judged exactly as it is without this rule.
+
+Forms are found in file order: once a form opens, nothing inside it opens another, and the search for the next opener resumes after its closer — so a form that opens and closes on one line carries nothing, and a second opener on the line after it is still found. Being inside a form changes only the answer to "is this column inside a string literal". Which lines are in declaration position ([§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares)), where a `/* … */` block opens and closes, and which lines form a comment block ([§FS-languages.comment-block](FS-languages.md#comment-block-the-comment-block)) are read as they are without it.
+
+### multi-line-string.forms: The recognized forms
+
+| Files | Form | Opener | Closer |
+|---|---|---|---|
+| `rs` | raw string | `r`, `br` or `cr`, then *n* `#` (*n* ≥ 0), then `"` | `"` followed by *n* `#` |
+| `rs` | ordinary string | `"` | the next `"` not preceded by an odd run of `\` |
+| `java` `kt` `kts` `scala` `swift` `dart` | triple-quoted | `"""`; in `dart` also `'''` | the next run of the same three characters |
+| `cs` | raw string | a run of three or more `"`, optionally preceded by `$` characters | the next run of exactly as many `"` |
+| `cs` | verbatim string | `@"`, `$@"` or `@$"` | a `"` that is not immediately followed by another `"` — `""` is a quote inside the string |
+| `cpp` `cc` `cxx` `h` `hpp` `hh` `hxx` | raw string | `R"`, optionally prefixed `u8`, `u`, `U` or `L`, then a delimiter of at most 16 characters other than space, `(`, `)` and `\`, then `(` | `)`, the same delimiter, `"` |
+| `go` | raw string | `` ` `` | the next `` ` `` |
+| `js` `jsx` `mjs` `cjs` `ts` `tsx` | template literal | `` ` `` | the next `` ` `` not preceded by an odd run of `\` and not inside an interpolation |
+| `py` | triple-quoted string | `"""` or `'''`, optionally prefixed as [§FS-citations.recognized.string-literals.assigned-data](FS-citations.md#recognizedstring-literalsassigned-data-assigned-python-triple-quoted-data) lists, that is not the first non-whitespace text on its line | the next unescaped run of the same three characters |
+| `sh` `bash` `zsh` | heredoc | `<<` or `<<-`, optional spaces or tabs, then a word — an identifier, bare or wrapped in `'…'` or `"…"` — where the `<<` is neither preceded nor followed by another `<` | a line that is exactly the word; after `<<-`, leading tabs are dropped first |
+| `php` | heredoc or nowdoc | `<<<`, optional spaces or tabs, then an identifier, bare or wrapped in `'…'` or `"…"` | a line whose first non-whitespace text is the identifier, not followed by an identifier character |
+
+Four clarifications hold the table to one reading:
+
+1. **A prefix is a whole word.** The letters before a Rust, C++ or Python opener are its prefix only when no identifier character comes before them: `bar"` opens a Rust ordinary string, not a raw one.
+2. **In Rust, `'` opens nothing.** A lifetime, a character literal and an apostrophe are never an opener, and a `"` written as the character literal `'"'` is not one either.
+3. **A heredoc's body starts on the next line.** The rest of the opener's own line is code, so `cat <<EOF | sort` keeps `| sort` live; the same holds for PHP. Only the first heredoc opened on a line is carried.
+4. **A template literal tracks its interpolations.** Inside a template, `${` opens an interpolation and `{` and `}` nest within it, counted lexically; a `` ` `` inside an interpolation opens a nested template rather than closing the outer one, and the nested template has its own interpolations. The template closes at a `` ` `` when no interpolation is open. If the nesting does not balance before a closer is found, the template opens nothing ([§FS-languages.multi-line-string.bound](FS-languages.md#multi-line-stringbound-what-keeps-a-misread-opener-from-swallowing-a-file)).
+
+In a `.py` file a docstring ([§FS-languages.docstring](FS-languages.md#docstring-docstrings)) and an assigned-data span ([§FS-citations.recognized.string-literals.assigned-data](FS-citations.md#recognizedstring-literalsassigned-data-assigned-python-triple-quoted-data)) keep their own rules and win wherever they apply; the Python row adds only the triple-quoted string that neither of them claims, such as `call("""`, and applies whatever `[scan] docstring_python` says.
+
+### multi-line-string.bound: What keeps a misread opener from swallowing a file
+
+Two rules bound every form, so that a wrongly detected opener costs at most today's reading and never hides a citation:
+
+1. **An opener counts only in code.** It does not count where the per-line toggle of [§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule) already has a quote open, after a comment prefix that opens a line comment there ([§FS-languages.prefixes](FS-languages.md#prefixes-comment_prefixes-compose-with-extensions)), on a line inside a `/* … */` block ([§FS-declarations.line.block-comment](FS-declarations.md#lineblock-comment-a-line-inside-a-block-comment)), inside a Python docstring, or inside an assigned-data span. `# cat <<EOF` in a shell comment opens nothing.
+2. **A form counts only once its closer is found later in the file.** An opener with no closer, or a template literal whose interpolations do not balance before its closer, opens nothing, and the file reads as it would without this rule. A `/* … */` block follows the same rule: it hosts declarations only once its `*/` is found ([§FS-declarations.line.block-comment](FS-declarations.md#lineblock-comment-a-line-inside-a-block-comment)).
+
+### multi-line-string.unrecognized: The forms that are not carried
+
+These forms are not recognized, and on the lines after their first they keep the per-line reading:
+
+- an ordinary quoted string that spans lines in shell, Ruby, PHP, Lisp, SQL or Lua, where `'` is a quote and an apostrophe alike;
+- a Ruby heredoc and `%q{…}` and its relatives, where `<<` is also the append operator;
+- a Lua long string `[[…]]`;
+- a backslash line continuation inside an ordinary string, in any language;
+- a second heredoc opened on the same line as the first;
+- every form in a file whose extension the table of [§FS-languages.multi-line-string.forms](FS-languages.md#multi-line-stringforms-the-recognized-forms) does not name.
+
+Each of these fails in one direction only. An interior line read as code can raise a false `unknown reference` for a qualified citation, and `grund fmt` can offer to rewrite it; neither can hide a citation, because no unrecognized form starts a span. This list is the declared blind spot [§REQ-no-missed-citation.2](../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded) asks for.

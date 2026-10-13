@@ -111,6 +111,8 @@ mod tests_editor_completion_overlap;
 #[cfg(test)]
 mod tests_editor_completion_workspace;
 #[cfg(test)]
+mod tests_editor_multi_line_string;
+#[cfg(test)]
 mod tests_lsp_hover;
 #[cfg(test)]
 mod tests_stub_home;

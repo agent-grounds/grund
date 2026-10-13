@@ -72,11 +72,11 @@ This list is the ownership boundary for the one writer that rewrites text anywhe
 
 The string-literal exclusion is deterministic, not heuristic. For every candidate transform site on a source-file line:
 
-1. Scan the line left-to-right from column 0 up to the candidate's start column.
+1. Scan the line left-to-right from column 0, in the state [§FS-languages.multi-line-string](FS-languages.md#multi-line-string-a-string-literal-that-spans-lines) gives it, to the candidate's start.
 2. Track an open-quote state per `'`, `"`, and `` ` ``. Toggling rules: an unescaped (no immediately preceding `\`) quote of a given kind toggles its state, but only when no other kind is currently open.
 3. If any quote state is open at the candidate's start column, the candidate is inside a string literal and is **not** rewritten.
 
-Markdown files (`.md`) are not subject to this rule — they have no string literals. The rule applies only to files matched by the `extensions` list excluding `md`. In a Python docstring the scan runs over the docstring's content rather than the raw line ([§FS-fmt.2.3.1.1](FS-fmt.md#2311-a-python-docstring-is-scanned-for-its-content)).
+Markdown files (`.md`) are not subject to this rule — they have no string literals; every other scanned file is. In a Python docstring the scan runs over the docstring's content rather than the raw line ([§FS-fmt.2.3.1.1](FS-fmt.md#2311-a-python-docstring-is-scanned-for-its-content)).
 
 This gives two correctly-configured installs identical output on identical input ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)).
 
@@ -88,7 +88,7 @@ A qualifying top-level assigned triple-quoted string is data, not that docstring
 
 Without this one docstring gets three verdicts by line — the delimiter opens a literal on the opening line, closes nothing on an interior one, and precedes or follows the citation on the closing one — and the reason for the exclusion, that rewriting would change runtime behavior ([§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten)), describes none of them. A docstring is documentation, which is what [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical) exists to canonicalize.
 
-Everything else keeps the raw-line rule, unchanged: an ordinary string literal on a **code** line — runtime text outside the assigned-data rule — every line of a `.py` file scanned with `docstring_python = false`, and every file of every other language. On a docstring's closing line the content ends at the delimiter, so a candidate in the code after it is judged on the raw line like any other code.
+Everything else keeps the raw-line rule: an ordinary string literal on a **code** line — runtime text outside the assigned-data rule — every line of a `.py` file scanned with `docstring_python = false`, and every file of every other language. On a docstring's closing line the content ends at the delimiter, so a candidate in the code after it is judged on the raw line like any other code.
 
 #### 2.3.2 A link that leaves the config root is not written through
 

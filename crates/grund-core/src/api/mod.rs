@@ -135,6 +135,8 @@ mod tests_fmt_workspace;
 #[cfg(test)]
 mod tests_init_guidance;
 #[cfg(test)]
+mod tests_multi_line_string;
+#[cfg(test)]
 mod tests_python_assigned_data;
 #[cfg(test)]
 mod tests_refs_descendants;

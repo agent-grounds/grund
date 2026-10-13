@@ -1,0 +1,4 @@
+src/Help.java:4: error: unknown reference api/FS-gone-after-text-block
+src/help.js:3: error: unknown reference api/FS-gone-after-template
+src/help.py:4: error: unknown reference api/FS-gone-after-python-call
+src/raw.rs:5: error: unknown reference api/FS-gone-after-raw-string
