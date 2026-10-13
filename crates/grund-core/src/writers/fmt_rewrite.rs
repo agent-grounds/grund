@@ -20,6 +20,7 @@ use std::path::{Path, PathBuf};
 use super::fmt_anchor_row::link_row as link_row_of;
 use super::fmt_links::wrap_markdown_links_with_targets;
 use super::fmt_local_sections::expand_local_section_citations;
+use super::fmt_suppressed::suppressed_line;
 use crate::config::Config;
 use crate::grammar::{
     DocstringContent, DocstringCursor, FmtDirectives, MarkdownBlocks, MarkdownLine,
@@ -327,48 +328,6 @@ pub(crate) fn fmt_line(
         suppressed,
         saw_shorthand_candidate,
     )
-}
-
-/// One line of a suppressed scope (§FS-fmt.2.5): an excluded file, or a
-/// `grund:fmt off` region. Every rewrite is off here — the trigger, the marker
-/// upgrade, the shorthand expansion, and the ordinary wrap alike — so the line
-/// keeps its bytes and the report says nothing about it.
-///
-/// The one survivor is the always-linkify carve-out (§FS-fmt.2.5.3): a kind's
-/// index entries are wrapped in a suppressed scope exactly as they are under
-/// `[fmt.cross_refs] enabled = false`, because a suppression that could leave an
-/// index in a state §FS-check.3.17 reports and `fmt` refuses to repair would
-/// reopen the hole §DF-index-always-linkified closed. `index_entry_ids` is
-/// `None` for every file that is not a configured index, which is the ordinary
-/// case and returns the line untouched.
-fn suppressed_line(
-    line: &str,
-    path: &Path,
-    config: &Config,
-    is_md: bool,
-    opts: &FmtLineOpts<'_>,
-) -> (String, String) {
-    let unchanged = || (line.to_string(), String::new());
-    if !is_md {
-        return unchanged();
-    }
-    let (Some(entry_ids), Some(findings)) = (opts.index_entry_ids, opts.findings) else {
-        return unchanged();
-    };
-    let wrapped = wrap_markdown_links_with_targets(
-        line,
-        path,
-        config,
-        findings,
-        opts.workspace,
-        Some(entry_ids),
-        opts.shorthand_targets,
-        opts.settled,
-    );
-    if wrapped == line {
-        return unchanged();
-    }
-    (wrapped, "markdown link".to_string())
 }
 
 /// Rewrite each `$$<ID>` trigger to `§<ID>` — but only where `$$` is immediately
