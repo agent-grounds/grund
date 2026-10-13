@@ -78,7 +78,7 @@ The ID grammar: the shape of every declared ID and section path. [§FS-config.3.
 | `section_separator` | string | `"."` | The separator between an ID and its section path. [§FS-config.3.2.2](../functional-spec/FS-config.md#322-section_separator-must-stay-distinguishable) |
 | `number_pattern` | string | `"\\d+"` | Regex for `{number}`. [§FS-config.3.2.4](../functional-spec/FS-config.md#324-each-pattern-compiles-on-its-own) |
 | `slug_pattern` | string | `"[a-z0-9][a-z0-9-]*"` | Regex for `{slug}`. [§FS-config.3.2.4](../functional-spec/FS-config.md#324-each-pattern-compiles-on-its-own) |
-| `named_sections` | boolean | `false` | Enable named section components, such as `## goals:`, matching `[a-z][a-z0-9-]*`. [§FS-config.3.2.7](../functional-spec/FS-config.md#327-named_sections--the-gate-for-explicit-section-names) |
+| `named_sections` | boolean | `false` | Enable named section components, such as `## goals:`, matching `[a-z][a-z0-9-]*`: a name at any depth, under a name or a number. [§FS-config.3.2.7](../functional-spec/FS-config.md#327-named_sections--the-gate-for-explicit-section-names) |
 | `section_heading_levels` | `"strict"` \| `"warn"` \| `"loose"` | `"strict"` | How a heading whose depth does not match its section path is reported: an error, a warning, or not at all. [§FS-config.3.3.2](../functional-spec/FS-config.md#332-section_heading_levels--heading-depth-against-path-depth) |
 
 ### `[[kinds]]`

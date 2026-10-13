@@ -284,7 +284,7 @@
             },
             "named_sections": {
               "type": "boolean",
-              "description": "Enable named section components, such as `## goals:`, matching `[a-z][a-z0-9-]*`.",
+              "description": "Enable named section components, such as `## goals:`, matching `[a-z][a-z0-9-]*`: a name at any depth, under a name or a number.",
               "default": false,
               "x-grund-spec": {
                 "id": "FS-config.3.2.7",
