@@ -529,7 +529,7 @@
               "items": {
                 "type": "string"
               },
-              "description": "The file extensions the scan reads.",
+              "description": "The file extensions the scan reads. The default is `md` plus every extension grund's built-in language table names, so a language grund learns is read without a config change.",
               "default": [
                 "md",
                 "rs",
@@ -556,7 +556,25 @@
                 "lua",
                 "ada",
                 "adb",
-                "ads"
+                "ads",
+                "h",
+                "cc",
+                "cxx",
+                "hpp",
+                "hh",
+                "hxx",
+                "m",
+                "mm",
+                "kts",
+                "jsx",
+                "mjs",
+                "cjs",
+                "dart",
+                "r",
+                "R",
+                "sh",
+                "bash",
+                "zsh"
               ],
               "x-grund-spec": {
                 "id": "FS-config.3.5.13",

@@ -1,6 +1,7 @@
 //! Test module: the v1 `[scan] extensions` default follows grund's built-in
 //! language table (§FS-scan.scope.extensions.default), and the copies `grund
-//! init` writes out as teaching material say the same (§FS-init.2.4.3).
+//! init` writes out as teaching material and the JSON Schema publishes say the same
+//! (§FS-init.2.4.3, §FS-config.4).
 
 use std::path::Path;
 
@@ -78,4 +79,20 @@ fn init_templates_write_the_compiled_default() {
     for template in templates {
         assert_eq!(template_extensions(template), default_extensions());
     }
+}
+
+/// The JSON Schema publishes each key's default (§FS-config.4), and the
+/// reference page is rendered from it, so its copy must be the compiled one.
+#[test]
+fn schema_publishes_the_compiled_default() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../schemas/grund.schema.json");
+    let schema: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(path).expect("the schema is readable"))
+            .expect("the schema is JSON");
+    let published: Vec<String> = serde_json::from_value(
+        schema["definitions"]["v1"]["properties"]["scan"]["properties"]["extensions"]["default"]
+            .clone(),
+    )
+    .expect("the schema publishes an extensions default");
+    assert_eq!(published, default_extensions());
 }
