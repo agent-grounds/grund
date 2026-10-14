@@ -197,6 +197,30 @@ exits 2 before anything is checked
 | an empty or repeated `one_of` | `field DF.status has an empty one_of; a scalar needs at least one value` |
 | a field on a value kind | `CONST is form = "value": its children are numbered components, so it takes no fields` |
 
+## The agent is told the shape
+
+`grund init` writes each kind's fields into the managed block as a
+`### Declaration shapes` section, in the words of `grund schema`'s field lines,
+so an agent reads the shape before it writes a declaration rather than learning
+it from the finding ([§FS-init.2.3.5.12.2](../functional-spec/FS-init.md#235122-declaration-shapes)):
+
+```markdown
+### Declaration shapes
+
+`grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them:
+
+- **DF**
+  - field status must · first · one of Proposed, Accepted, Superseded
+  - closed must
+```
+
+The section sits in the `AGENTS.md` of the directory above the kind's places,
+or in the root block under `[presentation] rules = "root"`
+([scoped guidance](init.md#scoped-guidance-in-a-version-2-config)). A declared
+field moves the block to v21, or v22 where a rule kind is enabled, so the first
+`grund check` after adding one reports the block outdated until `grund init`
+runs.
+
 ## Fields beside chapter rules
 
 A chapter rule such as `Each FS must have exactly one Terms chapter.` stays

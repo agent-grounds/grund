@@ -198,6 +198,14 @@ collapse semantically and name sorted authorities, for example
 rule, the existing config finding wins byte-for-byte and no rule tail is added.
 <!-- END chapter-rules -->
 
+In a version-2 config, a rule's bullet is written where its subject kind's
+guidance lands: the `### Chapter rules` section of the `AGENTS.md` above that
+kind's places, with its link relative to that file, rather than the root
+entrypoint ([§FS-init.2.3.5.11](../functional-spec/FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)). A rule about a kind with no place, or
+about another project's kind, stays in the root block, and
+`[presentation] rules = "root"` keeps every rule there
+([setting up with `grund init`](init.md#scoped-guidance-in-a-version-2-config)).
+
 A namespaced object kind — `api/REQ` or `*/REQ` — is resolved against the
 workspace the run's own `grund.toml` declares, so it resolves at the workspace
 root and in any run that loaded that workspace. A run rooted inside a member

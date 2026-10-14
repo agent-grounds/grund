@@ -27,7 +27,7 @@ docs/requirements/REQ-no-wrong-citation.md:7: error: missing section FS-check.3.
 3. No ID is declared in two places. *(duplicates)*
 4. Every deeper ATX heading inside a scanned Markdown declaration body is another declaration or carries a numeric or enabled named section coordinate. Fences, file titles, body-closing headings, source doc-comments, setext text, and bold labels are exempt. *(unmarked headings)*
 5. Every stub heading `# <ID>: [<text>](<path>)` points at a file containing the inline declaration. *(broken stubs)*
-6. The `AGENTS.md` / `CLAUDE.md` entry-point block is up to date. *(stale init)*
+6. The `AGENTS.md` / `CLAUDE.md` entry-point block is up to date. *(stale init)* In a version-2 config that includes each scoped `AGENTS.md` the root block lists: one that is missing, stale, or no longer placed by the config is reported at that file ([§FS-check.3.5](../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)). A scoped `AGENTS.md` is guidance about its directory, never one of its units, so it is not held to that directory's citation rules.
 7. Declared-but-uncited IDs are flagged. *(unused — warning, not error; a configured `E2E` kind's cases are exempt)*
 8. *(opt-in)* With `require_grounding = true`: every source file — or every file of one configured place, down to every `##` section or doc-comment block of it — carries at least one citation. *(ungrounded source file)*
 9. *(workspace)* Alias-qualified citations resolve across configured sub-projects. *(cross-project references — see [§FS-workspace](../functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace))*

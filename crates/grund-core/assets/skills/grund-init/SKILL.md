@@ -37,10 +37,7 @@ Analyze:
 
 ## Asking Style
 
-Ask the user to confirm or change a recommendation, never a blank preference survey.
-Each prompt must include the recommended value, evidence from repo analysis, pros,
-cons, and when to choose a different value. Let the user accept the full set quickly
-while still seeing and overriding every option.
+Ask the user to confirm or change a recommendation, never a blank preference survey. Each prompt must include the recommended value, evidence from repo analysis, pros, cons, and when to choose a different value. Let the user accept the full set quickly while still seeing and overriding every option.
 
 ## Init Questions
 
@@ -189,11 +186,7 @@ Cons: replacing defaults means the full list must be copied; no merge.
 
 For each kind ask: `kind`, `folder`, `title`.
 
-A directory that holds agent-facing content rather than declarations — skills,
-runbooks, a prompt library, a test suite — is a kind with `citable = false`: it
-gets a home, a title and citation rules, and declares no IDs. Ask for one
-wherever the repo has such a directory and the answer to "should an agent be
-told this exists?" is yes.
+A directory that holds agent-facing content rather than declarations — skills, runbooks, a prompt library, a test suite — is a kind with `citable = false`: it gets a home, a title and citation rules, and declares no IDs. Ask for one wherever the repo has such a directory and the answer to "should an agent be told this exists?" is yes.
 
 ### `[scan]`
 
@@ -566,6 +559,14 @@ If custom config affects `AGENTS.md`, ensure `grund.toml` exists before `grund i
 
 If a project needs its own grammar or independent check, follow
 [Splitting off a member](#splitting-off-a-member), then validate from the workspace root.
+
+## Scoped Guidance
+
+In a version-2 config, `grund init` writes each row's guidance — its citation directions, its clause of the grounding sentence, its kind's declaration shape and the chapter rules about its kind — into the managed block of an `AGENTS.md` in the deepest directory holding the row's places, rather than into the root entrypoint ([scoped guidance](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)). Folders `docs/spec/core` and `docs/spec/plugins` land in `docs/spec/AGENTS.md`; a row whose places share no directory, a kind with no place, and the complement over the whole root stay in the root block. The root block's `### Scoped guidance` section lists every scoped file it wrote, and `init` owns exactly the files on that list: it updates them, mirrors a root `CLAUDE.md` or `GEMINI.md` symlink beside them, and removes the ones a later config no longer places. `grund check` reports a scoped file that is missing, stale or orphaned as `agents-init`, and `grund init` fixes it.
+
+Before writing in a directory, read the scoped `AGENTS.md` of that directory or the nearest one above it when your agent has not already loaded it: it holds the rules and the shape the files you are about to write are checked against. Some agents load a nested `AGENTS.md` by themselves and some do not ([which do](https://github.com/agent-grounds/grund/blob/main/docs/decisions/functional/DF-scoped-guidance.md#loading-which-agents-load-a-scoped-file-by-themselves)); the pointer in the root block is there for the ones that do not.
+
+A team that wants every rule in the root file sets `[presentation] rules = "root"` in `grund.toml`; the root block is then the one a version-1 config renders, plus the declaration shapes. Version-1 configs always render at the root. Offer the opt-out when the team uses an agent that reads only the root entrypoint and will not follow the pointer.
 
 ## Seeing the Schema
 
