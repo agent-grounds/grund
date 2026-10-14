@@ -28,6 +28,9 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 - **Measure**: a quantity a constraint compares against a threshold, such as a note's lines or a lead's words. A measure is a table name and its strengths are its keys ([§FS-config-v2.schema.measures](FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys)).
 - **Ladder**: one or more grounding rungs (a strength paired with a unit) written as one setting ([§FS-config-v2.rules.grounding](FS-config-v2.md#rulesgrounding-grounding-is-a-ladder-replaced-whole)).
 - **Epoch**: the defaults a version fixes. A later binary never changes them ([§FS-config-v2.defaults](FS-config-v2.md#defaults-the-v2-epoch)).
+- **Place**: one entry of a row's `files` or `folders`, a path from the config root ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)).
+- **Complement**: the row named `code`, which owns every scanned file no other place claims ([§FS-config-v2.schema.places.complement](FS-config-v2.md#schemaplacescomplement-code-is-the-complement-by-name)).
+- **Owner**: the one row a scanned file belongs to: a listed file's row, else the row of the deepest folder containing it, else the complement ([§FS-config-v2.schema.places.ownership](FS-config-v2.md#schemaplacesownership-a-listed-file-then-the-deepest-folder)).
 - **Rollout refusal**: a located load error for a v2 clause the format defines but this binary does not yet execute ([§FS-config-v2.rollout](FS-config-v2.md#rollout-what-this-grund-executes-and-what-it-refuses)).
 
 ## requirements: What every version-2 config holds to
@@ -44,7 +47,7 @@ Every constraint draws its strength from one closed set, and the strength moves 
 
 ### requirements.ahead: What the format defines and this grund refuses is owed to its owners — deferred
 
-The format is published whole and executed in part ([§FS-config-v2.rollout](FS-config-v2.md#rollout-what-this-grund-executes-and-what-it-refuses)). Owed, and refused at its authored line until it lands: a row with more than one place, a place inside another row's, and a `code` row with places, to #457 ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)); `[presentation] rules` to #460; and every `anchors` and `links` value but the formatter's existing one to its own change ([§FS-config-v2.presentation](FS-config-v2.md#presentation-the-presentation-concern)). Migration from v1, which the records are kept apart for, is #461's ([§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart)). None of them loads with a v1 meaning meanwhile ([§FS-config-v2.requirements.no-v1-meaning](FS-config-v2.md#requirementsno-v1-meaning-a-v2-file-is-read-under-v2s-rules-or-refused-never-under-v1s--realized)). Serves [§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable).
+The format is published whole and executed in part ([§FS-config-v2.rollout](FS-config-v2.md#rollout-what-this-grund-executes-and-what-it-refuses)). Owed, and refused at its authored line until it lands: `[presentation] rules` to #460; and every `anchors` and `links` value but the formatter's existing one to its own change ([§FS-config-v2.presentation](FS-config-v2.md#presentation-the-presentation-concern)). Migration from v1, which the records are kept apart for, is #461's ([§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart)). None of them loads with a v1 meaning meanwhile ([§FS-config-v2.requirements.no-v1-meaning](FS-config-v2.md#requirementsno-v1-meaning-a-v2-file-is-read-under-v2s-rules-or-refused-never-under-v1s--realized)). Serves [§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable).
 
 ## reader: The reader
 
@@ -52,7 +55,7 @@ The format is published whole and executed in part ([§FS-config-v2.rollout](FS-
 
 The v2 reader admits exactly the tables and keys this file names, at the scope each is named at. An unknown table is ``unknown config section `<table>` ``. An unknown key is ``unknown key `<key>` in [<table>]``. A key written at a table that does not admit it is refused the same way. A key repeated inside one table is ``duplicate key `<key>` in [<table>] (first written at line <n>)``. Every refusal is located at the offending line, per [§FS-config.4.3](FS-config.md#43-invalid-config-behavior).
 
-v1's spellings are not v2 keys. `[reference]`, `[id]`, `[[kinds]]`, `[scan]`, `[output]`, `[citations]` and `[fmt.cross_refs]` are unknown sections in v2, and so are `strict`, `named_sections`, `include`, and every other discarded alias ([§DISC-core-concerns.7.4](../discussions/proposals/2026-09-30-core-concerns.md#74-what-the-format-leaves-out)). v2 reads no `include`: the scan is the union of the rows' places ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)). Report preferences are run flags ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)), so `[output]` has no v2 spelling either.
+v1's spellings are not v2 keys. `[reference]`, `[id]`, `[[kinds]]`, `[scan]`, `[output]`, `[citations]` and `[fmt.cross_refs]` are unknown sections in v2, and so are `strict`, `named_sections`, `include`, and every other discarded alias ([§DISC-core-concerns.7.4](../discussions/proposals/2026-09-30-core-concerns.md#74-what-the-format-leaves-out)). v2 reads no `include`: the scan is the union of the rows' places and the complement's extent ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)). Report preferences are run flags ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)), so `[output]` has no v2 spelling either.
 
 ### reader.2: Every row and field is written under its own header
 
@@ -82,7 +85,7 @@ A key a v2 file omits takes the value below. These are the v2 epoch, and no late
 | `[schema.sources] respect_gitignore` | `true` | `true` |
 | `[schema.sources] exclude` | `[]` | `[scan] exclude`, six directory names |
 | `[schema.sources] declarations` | `"doc-comments"` | every comment in declaration position |
-| The scan | the union of the rows' places, and the config root when no row has a place | `[scan] include` |
+| The scan | the union of the scanned rows' places and the complement's extent, which is the config root unless `[schema.kinds.code]` lists places | `[scan] include` |
 | `[rules.citations] default` | `may` | no default level |
 | Languages | the epoch's default rows ([§FS-config-v2.schema.sources.epoch](FS-config-v2.md#schemasourcesepoch-the-v2-language-epoch)) | `[scan] extensions` and `comment_prefixes` |
 
@@ -100,7 +103,56 @@ The v2 language set, with its suffixes, declaration hosts and explicit opt-in la
 
 ### schema.places: Rows and their places
 
-A row is `[schema.kinds.<NAME>]`. It admits `files` and `folders`, lists of paths from the config root, which are its places; `citable`, default `true`; `scan`, default `true`; `index`; `id_format`; `fetch`; `form`; and `closed`, with its `fields` tables under it ([§FS-config-v2.schema.fields](FS-config-v2.md#schemafields-fields-and-forms)). A citable row with no place is declared in doc-comments only. These keys mean what the v1 row keys of [§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds) mean, written as lists and under v2 names: `id_format` is v1's row `format` and `fetch` is v1's `fetch`.
+A row is `[schema.kinds.<NAME>]`. It admits `files` and `folders`, lists of paths from the config root, which are its places; `citable`, default `true`; `scan`, default `true`; `index`; `id_format`; `fetch`; `form`; and `closed`, with its `fields` tables under it ([§FS-config-v2.schema.fields](FS-config-v2.md#schemafields-fields-and-forms)). These keys mean what the v1 row keys of [§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds) mean, written as lists and under v2 names: `id_format` is v1's row `format` and `fetch` is v1's `fetch`. A row may list any number of places, and both keys on one row: a v1 home is a one-element list. The scan is the union of every scanned row's places and the complement's extent ([§FS-config-v2.schema.places.complement](FS-config-v2.md#schemaplacescomplement-code-is-the-complement-by-name)); v2 keeps no second list of scan roots ([§FS-config-v2.reader.1](FS-config-v2.md#reader1-tables-and-keys-are-closed)). A citable row with no place is declared in doc-comments only and adds nothing to the scan.
+
+```toml
+grund_config_version = 2
+[schema.kinds.FS]
+folders = ["docs/spec/core", "docs/spec/plugins"]
+[schema.kinds.test]
+citable = false
+folders = ["tests/e2e", "tests/integration"]
+[schema.kinds.page]
+citable = false
+folders = ["docs"]
+files = ["README.md", "AGENTS.md", "crates/grund/README.md"]
+[schema.kinds.code]
+folders = ["crates"]
+```
+
+This scans `docs`, the three listed files, both test folders and `crates`, and nothing else. `docs/spec/core/login.md` is `FS`'s, because the deepest place containing it is; `crates/grund/README.md` is `page`'s, because a listed file outranks every folder; every other file under `crates` is `code`'s ([§FS-config-v2.schema.places.ownership](FS-config-v2.md#schemaplacesownership-a-listed-file-then-the-deepest-folder)). The decisions behind the complement and ownership rules are [§DF-v2-place-ownership](../decisions/functional/DF-v2-place-ownership.md#df-v2-place-ownership-in-v2-the-row-named-code-is-the-complement-and-a-file-belongs-to-its-listed-row-or-else-its-deepest-folder).
+
+#### schema.places.complement: `code` is the complement, by name
+
+The row named `code` is the **complement**: the one row that holds source declarations of every kind, and the owner of every scanned file no other place claims. It is non-citable by definition: `citable = false` on it is redundant and accepted, and `citable = true` is refused at its line: `` `[schema.kinds.code]` is the complement and declares no IDs ``. Its places are its **extent**. A `code` row with no place, or no `code` row at all, has the config root as its extent, so a v2 file narrows the scan only by writing `[schema.kinds.code] folders = [...]` ([§FS-config-v2.defaults.1](FS-config-v2.md#defaults1-what-v2-fixes)). A file outside every place is then not read, except by `--full` ([§FS-config-v2.schema.places.boundaries](FS-config-v2.md#schemaplacesboundaries-what-a-place-may-name)). `[rules.citations.code]` governs the complement's files whether or not the row is written.
+
+Every other row with no place is told apart by `citable`. A citable one is declared only in doc-comments ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)). A non-citable one is a place with no place, refused at its header: `` `[schema.kinds.<NAME>]` has no place: give it `folders` or `files`, or name the complement `code` ``.
+
+A root `AGENTS.md` is scanned exactly when a place covers it: listed in some row's `files`, or inside the complement's extent, which it is when that extent is the config root ([§REQ-agents-md.4](../requirements/REQ-agents-md.md#4-scanned-like-everything-else)).
+
+#### schema.places.ownership: A listed file, then the deepest folder
+
+Every scanned file belongs to exactly one row. A file listed in a row's `files` belongs to that row. Otherwise it belongs to the row whose folder containing it is deepest, the complement's folders included; and a file in no place belongs to the complement. No tie can arise, because two equal places are refused ([§FS-config-v2.schema.places.boundaries](FS-config-v2.md#schemaplacesboundaries-what-a-place-may-name)). Two nested folders of one row are both that row's, and the deepest one owns the file. This replaces v1's rule, under which a file in two nested homes falls to the complement ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)), for v2 files only.
+
+Every per-file rule asks this one question, so a nested place is never outside them:
+
+- **Citation directions and grounding.** A file is held to its owner's `[rules.citations.<NAME>]` and ladder ([§FS-config-v2.rules.citations](FS-config-v2.md#rulescitations-rulescitations), [§FS-config-v2.rules.grounding](FS-config-v2.md#rulesgrounding-grounding-is-a-ladder-replaced-whole)). A finding that names a non-citable row by its place names the place that owns the file, such as `tests/integration/ must cite FS`.
+- **Misplaced declarations.** A declaration of kind `K` belongs in a file owned by `K` or by the complement; a row whose places are all files keeps v1's single-file exactness across those files ([§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home)).
+- **Indexes.** Each folder of a citable row has its own index, the row's `index` name resolved in that folder, which lists the declarations that folder owns. A declaration in a nested place of another row is listed in that row's index, and a `files` place is not indexed ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)).
+- **Stubs.** A stub for a source declaration may sit in any folder of its kind, and one is enough ([§FS-declarations.stubs](FS-declarations.md#stubs-what-a-stub-points-at)).
+- **What the views print.** `grund schema` lists every place of a row, and draws a `code` row that has places as the complement ([§FS-schema.4](FS-schema.md#4-nodes)). The Project map gives each kind one row linking every place ([§FS-init.2.3.4.4.1](FS-init.md#23441-rows-for-places)). `grund id` names every folder ([§FS-id.2.2](FS-id.md#22---format-json)). `grund config show` prints one `files` and one `folders` list per row, in that order, each in written order and normalized, and prints no `citable = false` on `code`; a place that does not exist is printed like any other, and an implicit complement prints no row.
+
+#### schema.places.boundaries: What a place may name
+
+Each rule here is a load error located at the entry it names unless it says otherwise ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)).
+
+1. **Normalized before compared.** A place is compared after lexical normalization: `./docs`, `docs/` and `docs` are one place. Comparison is byte-exact; two spellings that differ only in case and name one directory on a case-insensitive filesystem resolve to one target and meet rule 3. A place that is absolute, or that climbs out of the config root with `..`, is refused, because its index, stubs and entrypoint would be written outside the project ([§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own)): ``place `<p>` in `[schema.kinds.<NAME>] <key>` is outside the config root``.
+2. **One place, one row.** The same normalized place written twice, on two rows or on one, `files` against `folders` included, is refused at the later entry, naming the earlier: ``place `<p>` in `[schema.kinds.<NAME>] <key>` is already a place of `[schema.kinds.<OTHER>]` (line <n>); a place belongs to one row``. `<p>` is the later entry as written.
+3. **Decided on the path as written.** Ownership reads the path as written, not its link target, as a v1 home does ([§FS-config.3.4.11](FS-config.md#3411-what-a-home-is-used-for)). Two places whose resolved targets coincide are the duplicate of rule 2, because the walk keeps one spelling of a file ([§DF-symlink-scan.2.3](../decisions/functional/DF-symlink-scan.md#23-the-report-names-the-link-never-the-target)) and the other place would be silently empty. A folder place that is a directory link leaving the project root is refused rather than pruned ([§DF-symlink-scan.2.2](../decisions/functional/DF-symlink-scan.md#22-the-canonical-project-root-fences-directory-links-not-file-links-or-scan-paths)): ``place `<p>` in `[schema.kinds.<NAME>] folders` links out of the project root``. A `files` place that is a link is followed, as `CLAUDE.md -> AGENTS.md` is.
+4. **A missing place is quiet.** A place that does not exist scans nothing and earns no finding, as a v1 home does ([§FS-config.3.5.8](FS-config.md#358-every-configured-kind-home-is-scanned)), so a fresh repository loads clean.
+5. **Not inside a member.** A place at or inside a workspace member's root, at any nesting depth, is refused, because the root scan never enters a member ([§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)): ``place `<p>` in `[schema.kinds.<NAME>] <key>` is inside workspace member `<m>`, which the root never reads``.
+6. **`scan = false` covers the row.** The key belongs to the row and covers every place of it; places that differ in it are two rows. Ownership answers nesting both ways: a scanned place under an unscanned one is walked and its files are its row's, and an unscanned place under a scanned one is pruned. `scan = false` on `code` is refused at its line: `` `[schema.kinds.code] scan = false` cannot unwalk the complement; narrow its places or use `[schema.sources] exclude` ``.
+7. **`--full` widens past the places.** `grund check --full` reads the whole config root past every place and past `scan = false`, as it reads past v1's `include` ([§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)); a file no place claims is the complement's and is reported in the outside-the-scope tier. A member's root stays out under `--full`. An explicit path argument reads what it names, an unscanned place included, and the files it reads have the owners a whole run gives them.
 
 ### schema.sources: `[schema.sources]`
 
@@ -334,13 +386,13 @@ The format is published whole, and this binary executes part of it. A clause the
 | Envelope, `[workspace]` | executed | #455 |
 | `[schema]` keys, `heading_depth` | executed | #455 |
 | `[schema.notes.*]`, `[schema.leads.words]` | executed | #455 |
-| A row with at most one place, one entry in `files` or `folders`; `citable`, `scan`, `index`, `id_format`, `fetch` | executed | #455 |
+| A row with one place; `citable`, `scan`, `index`, `id_format`, `fetch` | executed | #455 |
 | `[rules.citations]`, ladders, `[rules.resolution]` | executed | #455 |
 | `[presentation]` `description`, `trigger`, `conversation`, `[presentation.kinds.*] title`, `[presentation.fmt] exclude` | executed | #455 |
 | `[presentation.fmt]` `anchors = "github"`, `links = "index"` | executed | #455 |
 | `languages = ["markdown"]` | executed | #455 |
 | Every other `languages` value, an omitted `languages`, `declarations`, `[schema.sources.extensions]`, `[schema.sources.definitions.*]`, `[schema.sources] exclude` | executed | #456 |
-| A row with more than one place, a place inside another row's place, a `code` row with places | refused | #457 |
+| A row with more than one place, a place inside another row's place, a `code` row with or without places | executed | #457 |
 | `[schema.kinds.*.fields.*]`, `form`, `closed` | executed | #458 |
 | Any other `anchors` or `links` value | refused | its own change; #459 closed without it |
 | `[presentation] rules` | refused | #460 |
@@ -362,3 +414,6 @@ Both readers lower into the same records, so the records hold every state either
 | Grounding keys inherited one by one | a narrower ladder replaces the wider one whole | the effective pair v1 resolves, per row |
 | `resolve = "should"` warns | `[rules.resolution] <KIND> = "warn"` | the missing-snapshot warning |
 | A note budget, silent or opted into a warning | `may` or `warn` on the measure | the guidance threshold, and the warning threshold |
+| A file in two nested homes belongs to the complement | none: the deepest place owns it | the nesting rule, `NestedPlaceFallsToComplement` against v2's `DeepestPlaceWins` |
+| A complement renamed by a non-citable homeless row | none: the complement is `code`, titled by `[presentation.kinds.code] title` | the complement's row name |
+| `[scan] include`, separate from the homes | none: the scan is the places and the complement's extent | the derived scan roots |

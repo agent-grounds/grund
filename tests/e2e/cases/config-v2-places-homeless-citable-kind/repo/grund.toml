@@ -1,0 +1,9 @@
+grund_config_version = 2
+project_name = "example"
+[schema.sources]
+languages = ["markdown", "rust"]
+[schema.kinds.FS]
+files = ["requirements.md"]
+[schema.kinds.API]
+[schema.kinds.code]
+folders = ["crates"]

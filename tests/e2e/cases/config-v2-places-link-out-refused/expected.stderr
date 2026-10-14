@@ -1,0 +1,1 @@
+error: grund.toml:9: place `outside` in `[schema.kinds.page] folders` links out of the project root

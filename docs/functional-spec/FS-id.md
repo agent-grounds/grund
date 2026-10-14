@@ -60,7 +60,7 @@ FS-user-can-log-in-with-email
 {"id":"FS-008-user-can-log-in-with-email","kind":"FS","number":8,"slug":"user-can-log-in-with-email","folder":"","file":"requirements.md"}
 ```
 
-`folder` and `file` are the kind's configured `[[kinds]]` home ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)); usually exactly one is non-empty. They are there so an editor "create new declaration" action can place the declaration without a second lookup. Under a number-less effective format, `number` is `null` ([§FS-id.4.1](FS-id.md#41-number-less-id-formats)).
+`folder` and `file` are the kind's configured `[[kinds]]` home ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)); usually exactly one is non-empty. They are there so an editor "create new declaration" action can place the declaration without a second lookup. In a version-2 config a kind may have several folders ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)): `folder` is the first listed, so an existing reader keeps working, and the object adds `"folders"`, every folder in written order, right after it. A version-1 object is unchanged. Under a number-less effective format, `number` is `null` ([§FS-id.4.1](FS-id.md#41-number-less-id-formats)).
 
 ### 2.3 `--explain` (text only)
 

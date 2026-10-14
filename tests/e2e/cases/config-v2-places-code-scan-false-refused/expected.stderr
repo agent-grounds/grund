@@ -1,0 +1,1 @@
+error: grund.toml:9: `[schema.kinds.code] scan = false` cannot unwalk the complement; narrow its places or use `[schema.sources] exclude`

@@ -16,4 +16,4 @@ Every repository rule below the managed block cites the spec point that owns it 
 
 ## 4. Scanned like everything else
 
-`AGENTS.md` is named in `[scan] include` ([§FS-config.3.5](../functional-spec/FS-config.md#35-scan--what-gets-scanned)), so the citations its rules carry are checked, not decorative.
+`AGENTS.md` is covered by a place in a version-2 config ([§FS-config-v2.schema.places.complement](../functional-spec/FS-config-v2.md#schemaplacescomplement-code-is-the-complement-by-name)), or named in `[scan] include` in a version-1 one ([§FS-config.3.5](../functional-spec/FS-config.md#35-scan--what-gets-scanned)), so the citations its rules carry are checked, not decorative.

@@ -1,0 +1,2 @@
+crates/grund/README.md:1: error: crates/grund/README.md must cite FS (citation direction)
+crates/grund/notes.md:3: error: code must not cite GOAL (citation direction) — re-point the citation or downgrade it to a plain Markdown link

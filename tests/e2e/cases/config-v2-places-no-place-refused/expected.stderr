@@ -1,0 +1,1 @@
+error: grund.toml:7: `[schema.kinds.page]` has no place: give it `folders` or `files`, or name the complement `code`

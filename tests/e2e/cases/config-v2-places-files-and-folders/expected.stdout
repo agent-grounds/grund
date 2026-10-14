@@ -1,0 +1,3 @@
+README.md:1: error: README.md must cite FS (citation direction)
+docs/guide.md:1: error: docs/ must cite FS (citation direction)
+requirements.md:3: warning: declared but never cited: FS-login

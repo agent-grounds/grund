@@ -1,0 +1,1 @@
+error: grund.toml:9: place `../shared` in `[schema.kinds.page] folders` is outside the config root
