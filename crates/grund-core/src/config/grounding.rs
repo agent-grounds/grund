@@ -46,6 +46,17 @@ pub(crate) fn grounding_level_for_kind(schema: &Schema, rules: &Rules, kind: &st
         .map_or_else(|| level(schema.complement_name()), |row| level(&row.name))
 }
 
+/// The unit a grounding level spells (§FS-config-v2.rules.grounding): `file`
+/// for the file, `h2` to `h6` for a heading level. One spelling for the v2
+/// reader, its renderer and the schema view's badge (§FS-schema.6).
+pub(crate) fn grounding_unit(level: usize) -> String {
+    if level <= 1 {
+        "file".to_string()
+    } else {
+        format!("h{level}")
+    }
+}
+
 /// The effective `require_grounding` default (§FS-config.3.4.8.3): the
 /// `[reference]` key, or `grund check --require-grounding`, which sets the same
 /// default for one run (§FS-check.3.5) — so an explicit row `false` still wins.

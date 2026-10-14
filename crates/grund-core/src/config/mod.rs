@@ -36,7 +36,8 @@
 //! The concern records of §AR-config.1 are `project.rs` and `rows.rs`, with the
 //! invocation's facts in `run.rs` and what is derived once in `compiled.rs`;
 //! a kind's declared fields are `fields.rs`, and its slots over them `slots.rs`
-//! (§FS-fields.record);
+//! (§FS-fields.record), and the schema view lowered from them on demand
+//! `schema_view.rs` (§AR-config.6.3);
 //! `facade.rs` builds `Config` from them and holds every per-run setter
 //! (§AR-config.5), and `v1/` is the version-1 reader with its defaults
 //! (§AR-config.3).
@@ -63,6 +64,7 @@ mod report_paths;
 mod rows;
 mod run;
 mod run_warnings;
+mod schema_view;
 mod scope_roots;
 mod slots;
 mod v1;
@@ -103,6 +105,10 @@ pub use rows::{Extent, Form, Kind, Nesting, Origin, Place, Row};
 pub(crate) use run::{Invocation, Selection, scope_is_config_root};
 #[allow(unused_imports)]
 pub use run::{Run, RunScope, RunWorkspace};
+pub use schema_view::{
+    BadgeRung, EdgeTarget, Junction, NodeClass, STRENGTH_ORDER, SchemaEdge, SchemaNode, SchemaSlot,
+    SchemaView,
+};
 #[allow(unused_imports)]
 pub use slots::{Content, Handle, Slot};
 

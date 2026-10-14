@@ -29,6 +29,13 @@ use grund_core::{
 };
 use grund_core::{CHECK_FINDING_CODES, CheckFindingSelection};
 
+// §AR-config.6.3: the schema view the engine lowers and `grund schema` prints
+// (§FS-schema, §DA-engine-renders-nothing).
+use grund_core::{
+    EdgeTarget, Extent, FieldContent, NodeClass, Placement, SchemaEdge, SchemaNode, SchemaSlot,
+    SchemaView, schema_view,
+};
+
 // §FS-integrations.1.3: what `grund integrations` is assembled from. The engine
 // answers with data — the client set, the detection, the agent surfaces and the
 // managed writes — and this crate prints every byte of it (§AR-bindings.3).
@@ -54,6 +61,7 @@ const SUBCOMMANDS: &[&str] = &[
     "id",
     "init",
     "config",
+    "schema",
     "agent-setup-instructions",
     "completions",
     "integrations",
@@ -95,6 +103,7 @@ include!("cli_help_show.rs");
 include!("cli_help_fmt.rs");
 include!("cli_help_fetch.rs");
 include!("cli_help_config.rs");
+include!("cli_help_schema.rs");
 include!("cli.rs");
 include!("cli_check.rs");
 include!("cli_watch.rs");
@@ -114,6 +123,9 @@ include!("cli_fetch.rs");
 include!("cli_id.rs");
 include!("cli_init.rs");
 include!("cli_config.rs");
+include!("cli_schema.rs");
+include!("cli_schema_table.rs");
+include!("cli_schema_graph.rs");
 include!("cli_complete.rs");
 include!("cli_integrations.rs");
 include!("cli_integrations_write.rs");

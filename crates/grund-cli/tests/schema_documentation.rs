@@ -92,7 +92,10 @@ fn both_skill_copies_teach_grund_schema_beside_config_show() {
         "crates/grund-core/assets/skills/grund-init/SKILL.md",
     ] {
         let text = read(skill);
-        assert!(text.contains("grund schema"), "{skill} does not name `grund schema`");
+        assert!(
+            text.contains("grund schema"),
+            "{skill} does not name `grund schema`"
+        );
         assert!(
             text.contains("kinds and places") && text.contains("citations"),
             "{skill} does not show an example of the schema table"
