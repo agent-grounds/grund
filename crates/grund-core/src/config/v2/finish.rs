@@ -248,7 +248,13 @@ fn lower_row(draft: &RowDraft, fields: &[FieldDraft], path: &Path) -> Row {
         scanned: true,
         source: None,
     });
-    let places = draft.places.iter().map(|place| Place {
+    // Files, then folders, each in written order: the one place order, which
+    // `config show` prints and so loads back to these rows (§FS-config-v2.schema.places).
+    let (files, folders): (Vec<_>, Vec<_>) = draft
+        .places
+        .iter()
+        .partition(|place| matches!(place.extent, Extent::File(_)));
+    let places = files.into_iter().chain(folders).map(|place| Place {
         extent: place.extent.clone(),
         scanned: draft.scan,
         source: Some(ConfigLocation {
