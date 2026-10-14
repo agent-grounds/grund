@@ -6,7 +6,9 @@ use std::path::{Component, PathBuf};
 use std::process::Output;
 
 fn location(row: &mut Value, key: &str, context: &Value) {
-    if let Some(path) = row[key].as_str() {
+    if let Some(field) = row.get_mut(key)
+        && let Some(path) = field.as_str()
+    {
         let path = super::agreement_paths::physical(context, path);
         let mut normalized = PathBuf::new();
         for component in path.components() {
@@ -18,7 +20,7 @@ fn location(row: &mut Value, key: &str, context: &Value) {
                 other => normalized.push(other.as_os_str()),
             }
         }
-        row[key] = json!(super::agreement_paths::logical_path(
+        *field = json!(super::agreement_paths::logical_path(
             &normalized.to_string_lossy(),
             context
         ));
@@ -27,8 +29,10 @@ fn location(row: &mut Value, key: &str, context: &Value) {
 
 fn finding(row: &mut Value, context: &Value) {
     location(row, "path", context);
-    for site in row["sites"].as_array_mut().into_iter().flatten() {
-        location(site, "path", context);
+    if let Some(sites) = row.get_mut("sites").and_then(Value::as_array_mut) {
+        for site in sites {
+            location(site, "path", context);
+        }
     }
 }
 
@@ -36,13 +40,18 @@ pub fn rows(surface: &str, rows: &mut [Value], context: &Value) {
     for row in rows {
         match surface {
             "show-batch" => {
-                finding(&mut row["result"], context);
-                finding(&mut row["error"], context);
+                for key in ["result", "error"] {
+                    if let Some(value) = row.get_mut(key) {
+                        finding(value, context);
+                    }
+                }
             }
             "cover" => {
                 location(row, "path", context);
-                for citation in row["citations"].as_array_mut().into_iter().flatten() {
-                    location(citation, "path", context);
+                if let Some(citations) = row.get_mut("citations").and_then(Value::as_array_mut) {
+                    for citation in citations {
+                        location(citation, "path", context);
+                    }
                 }
             }
             _ => {
@@ -54,39 +63,62 @@ pub fn rows(surface: &str, rows: &mut [Value], context: &Value) {
 }
 
 pub fn host(surface: &str, mut host: Value, context: &Value) -> Value {
-    finding(&mut host["failure"], context);
-    let out = &mut host["result"];
+    if let Some(failure) = host.get_mut("failure") {
+        finding(failure, context);
+    }
+    if let Some(out) = host.get_mut("result") {
+        result(surface, out, context);
+    }
+    host
+}
+
+fn result(surface: &str, out: &mut Value, context: &Value) {
     match surface {
         "show" => show(out, context),
         "show-batch" => {
-            for record in out["records"].as_array_mut().into_iter().flatten() {
-                show(&mut record["result"], context);
-                finding(&mut record["failure"], context);
+            for record in out
+                .get_mut("records")
+                .and_then(Value::as_array_mut)
+                .into_iter()
+                .flatten()
+            {
+                if let Some(result) = record.get_mut("result") {
+                    show(result, context);
+                }
+                if let Some(failure) = record.get_mut("failure") {
+                    finding(failure, context);
+                }
             }
         }
         "check" => {
-            for key in ["errors", "warnings", "suggestions"] {
-                if let Some(findings) = out["selected_report"][key].as_array_mut() {
-                    rows(surface, findings, context);
+            for report in ["report", "selected_report"] {
+                if let Some(report) = out.get_mut(report) {
+                    for key in ["errors", "warnings", "suggestions"] {
+                        if let Some(findings) = report.get_mut(key).and_then(Value::as_array_mut) {
+                            rows(surface, findings, context);
+                        }
+                    }
                 }
             }
         }
         _ => {
             for key in ["entries", "records", "hits"] {
-                if let Some(entries) = out[key].as_array_mut() {
+                if let Some(entries) = out.get_mut(key).and_then(Value::as_array_mut) {
                     rows(surface, entries, context);
                 }
             }
         }
     }
-    host
 }
 
 fn show(out: &mut Value, context: &Value) {
-    if let Some(serialized) = out["json"].as_str() {
-        let mut body: Value = serde_json::from_str(serialized).unwrap();
+    location(out, "path", context);
+    if let Some(serialized) = out.get_mut("json")
+        && let Some(text) = serialized.as_str()
+    {
+        let mut body: Value = serde_json::from_str(text).unwrap();
         finding(&mut body, context);
-        out["json"] = json!(body.to_string());
+        *serialized = json!(body.to_string());
     }
 }
 

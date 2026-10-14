@@ -33,9 +33,15 @@ pub fn snapshot(worker: &mut Worker, context: &Value, errors: &mut Vec<String>) 
         "scope":context["scopes"]["editor"]}),
         response.clone(),
     );
+    evidence::seconds(worker.last_seconds);
+    if context.get("truth").is_some() {
+        super::agreement_truth::editor(context, "editor:snapshot", &response, errors);
+    }
     if response.get("failure").is_some() {
-        evidence::witness(json!({"point":"§FS-lsp.2.2.1","complete":false,
-            "oracle":"fixture-config-bytes","configs":context["sourceInventory"]}));
+        if context.get("truth").is_none() {
+            evidence::witness(json!({"point":"§FS-lsp.2.2.1","complete":false,
+                "oracle":"fixture-config-bytes","configs":context["sourceInventory"]}));
+        }
         return None;
     }
     assert_eq!(
@@ -47,19 +53,21 @@ pub fn snapshot(worker: &mut Worker, context: &Value, errors: &mut Vec<String>) 
             .unwrap(),
         "editor loaded a project outside the independently discovered context"
     );
-    let rows: Vec<_> = ["declarations", "sections"]
-        .into_iter()
-        .flat_map(|key| response["snapshot"][key].as_array().unwrap())
-        .map(|site| {
-            json!({"path":saved_path(context,Path::new(site["path"].as_str().unwrap())),
+    if context.get("truth").is_none() {
+        let rows: Vec<_> = ["declarations", "sections"]
+            .into_iter()
+            .flat_map(|key| response["snapshot"][key].as_array().unwrap())
+            .map(|site| {
+                json!({"path":saved_path(context,Path::new(site["path"].as_str().unwrap())),
             "line":site["line"]})
-        })
-        .collect();
-    let mut scoped = context.clone();
-    scoped["reportBase"] = context["scopes"]["cli"]["reportBase"].clone();
-    match witnesses(&scoped, &rows, "§REQ-one-answer.identity.declarations") {
-        Ok(witness) => evidence::witness(witness),
-        Err(error) => errors.push(error),
+            })
+            .collect();
+        let mut scoped = context.clone();
+        scoped["reportBase"] = context["scopes"]["cli"]["reportBase"].clone();
+        match witnesses(&scoped, &rows, "§REQ-one-answer.identity.declarations") {
+            Ok(witness) => evidence::witness(witness),
+            Err(error) => errors.push(error),
+        }
     }
     Some(response)
 }
@@ -81,17 +89,28 @@ pub fn show(
             "scope":context["scopes"]["editor"]}),
         response.clone(),
     );
+    evidence::seconds(worker.last_seconds);
+    if context.get("truth").is_some() {
+        super::agreement_truth::editor(
+            context,
+            &format!("editor:show:{coordinate}"),
+            &response,
+            errors,
+        );
+    }
     if let Some(serialized) = response["json"].as_str() {
         let actual: Value = serde_json::from_str(serialized).unwrap();
         let mut editor_scope = context.clone();
         editor_scope["reportBase"] = context["scopes"]["editor"]["reportBase"].clone();
-        let mut saved_actual = actual.clone();
-        if let Some(path) = actual["path"].as_str() {
-            saved_actual["path"] = json!(saved_path(context, &physical(&editor_scope, path)));
-        }
-        match witnesses(context, &[saved_actual], "§REQ-one-answer.text.parity") {
-            Ok(witness) => evidence::witness(witness),
-            Err(error) => errors.push(error),
+        if context.get("truth").is_none() {
+            let mut saved_actual = actual.clone();
+            if let Some(path) = actual["path"].as_str() {
+                saved_actual["path"] = json!(saved_path(context, &physical(&editor_scope, path)));
+            }
+            match witnesses(context, &[saved_actual], "§REQ-one-answer.text.parity") {
+                Ok(witness) => evidence::witness(witness),
+                Err(error) => errors.push(error),
+            }
         }
         if logical_value(json!(cli), context) != logical_value(json!([actual.clone()]), context) {
             let selected = PathBuf::from(text(context, "path"));
@@ -123,7 +142,7 @@ pub fn show(
         }
     } else if !cli_refused || !cli.is_empty() {
         errors.push(format!("editor refuses {coordinate}, CLI answers {cli:?}"));
-    } else {
+    } else if context.get("truth").is_none() {
         evidence::witness(
             json!({"oracle":"authored-coordinate-search","complete":false,
             "coordinate":coordinate,"point":"§REQ-one-answer.sections.map"}),
@@ -150,6 +169,7 @@ pub fn saved_control(
             "relative":context["overlayRelative"]}),
         saved.clone(),
     );
+    evidence::seconds(worker.last_seconds);
     if logical_value(loaded.clone(), context) != logical_value(saved.clone(), context) {
         errors.push(format!(
             "held/saved editor snapshot: {loaded} against {saved}"

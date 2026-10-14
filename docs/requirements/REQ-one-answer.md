@@ -202,13 +202,25 @@ is not a claim of delivered candidate coverage.
 
 The fix candidate isolates disposable inputs from ancestor configurations, records
 project and invocation report bases, and compares structured logical snapshot paths.
-It compares the complete common Python and Node envelopes directly and each host
-with the CLI, removing the additional Python embedding peer for each question,
+It compares common Python and Node envelopes directly and each host with the CLI.
+The refs comparison checks Python's returned site/file totals and every returned
+file-summary field against the hit inventory before projecting the host schemas;
+Node's additional unique-line summaries remain compared. Complete and partial
+results use the same checks. Site normalization preserves absent and null fields,
+including successful batch records, rather than manufacturing refusal objects.
+Python's removed duplicate caution fields are checked against the compared warning
+channel; successful batch records retain that check before projection.
+This removes the additional Python embedding peer for each question,
 the additional Node peer for non-show questions, and two mutable writer copies.
 Node's extra show/batch metadata retains its native-peer comparison. Those peers
 are not answering surfaces in the matrix. This source reduction has no measured payment yet. Complete independent
 generic expectations, including resulting formatter bytes, remain unfinished;
 returned-site corroboration and matching envelopes cannot discharge them.
+The candidate checks for input-authored question manifests before preparing native
+packages or executing the matrix. Missing or incomplete manifests fail construction
+readiness; this early refusal is not executed matrix evidence or paid gate savings.
+Cost receipts retain host/editor process preparation and complete host RPC wall
+time, including startup work that a binding's internal operation timer excludes.
 
 No LSP corpus sweep has been removed. `tests/integration/lsp_cli_parity.rs` still compares
 the real editor server's diagnostics with `check`'s over
