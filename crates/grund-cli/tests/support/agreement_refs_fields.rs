@@ -7,7 +7,8 @@ use serde_json::{Value, json};
 use std::collections::BTreeMap;
 
 pub fn validate(envelope: &Value, errors: &mut Vec<String>) {
-    let result = if envelope["failure"].is_null() {
+    let partial = !envelope["failure"].is_null();
+    let result = if !partial {
         Some(&envelope["result"])
     } else {
         envelope["failure"]
@@ -15,6 +16,16 @@ pub fn validate(envelope: &Value, errors: &mut Vec<String>) {
             .filter(|v| !v.is_null())
     };
     let Some(result) = result else { return };
+    // §FS-distribution.3.3.2: partial_output is generic JSON, not a complete
+    // RefsResult. Only fields actually returned there have summary obligations.
+    if partial
+        && result.get("hits").is_none()
+        && ["site_total", "file_total", "file_summaries"]
+            .iter()
+            .all(|key| result.get(key).is_none())
+    {
+        return;
+    }
     let Some(hits) = result.get("hits").and_then(Value::as_array) else {
         errors.push("Python refs result/partial output has no hits array".into());
         return;
@@ -36,7 +47,8 @@ pub fn validate(envelope: &Value, errors: &mut Vec<String>) {
         *files.entry((project, path.into())).or_default() += 1;
     }
     for (field, expected) in [("site_total", hits.len()), ("file_total", files.len())] {
-        if result.get(field) != Some(&json!(expected)) {
+        if (!partial || result.get(field).is_some()) && result.get(field) != Some(&json!(expected))
+        {
             errors.push(format!(
                 "Python refs returned {field}: {} against {expected}",
                 result[field]
@@ -47,7 +59,9 @@ pub fn validate(envelope: &Value, errors: &mut Vec<String>) {
         .into_iter()
         .map(|((project, path), sites)| json!({"project":project,"path":path,"sites":sites}))
         .collect();
-    if result.get("file_summaries") != Some(&json!(expected)) {
+    if (!partial || result.get("file_summaries").is_some())
+        && result.get("file_summaries") != Some(&json!(expected))
+    {
         errors.push(format!(
             "Python refs returned file_summaries: {} against {expected:?}",
             result["file_summaries"]

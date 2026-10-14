@@ -219,6 +219,24 @@ fn every_returned_refs_count_and_summary_field_is_observable_including_partials(
             let mut errors = Vec::new();
             projection::from_python(wrap(result.clone()), "refs", &mut errors);
             assert!(errors.is_empty(), "{errors:?}");
+            if partial {
+                let mut sparse = result.clone();
+                for field in ["site_total", "file_total", "file_summaries"] {
+                    sparse.as_object_mut().unwrap().remove(field);
+                }
+                projection::from_python(wrap(sparse.clone()), "refs", &mut errors);
+                assert!(
+                    errors.is_empty(),
+                    "sparse generic partial JSON is valid: {errors:?}"
+                );
+                for field in ["site_total", "file_total"] {
+                    let mut wrong = sparse.clone();
+                    wrong[field] = json!(99999);
+                    errors.clear();
+                    projection::from_python(wrap(wrong), "refs", &mut errors);
+                    assert!(!errors.is_empty(), "returned sparse partial count escaped");
+                }
+            }
             let mut corruptions = Vec::new();
             for field in ["site_total", "file_total"] {
                 let mut wrong = result.clone();
