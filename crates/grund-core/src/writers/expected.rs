@@ -7,7 +7,7 @@
 //! directions (§AR-checker.2.7). The chapter-rule section is rendered from the
 //! check run's own catalog, so building it adds no walk (§FS-init.2.3.4.15).
 
-use crate::sources::{path_exists, path_is_symlink};
+use crate::sources::path_exists;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
@@ -21,7 +21,9 @@ use crate::resolver::{
 use crate::scanner::{CANONICAL_AGENT_ENTRYPOINT, companion_agent_entrypoints};
 
 use super::guidance::{Guidance, RuleGuidance};
-use super::scoped_files::{OwnedCompanion, ScopedRecord, owned_companions, scoped_companions};
+use super::scoped_files::{
+    OrphanFile, OwnedCompanion, ScopedRecord, orphan_files, owned_companions, scoped_companions,
+};
 
 /// Render `Expected` for one project's check (§AR-checker.1.3).
 ///
@@ -96,11 +98,11 @@ pub(crate) fn expected(
 }
 
 /// The scoped entrypoints `check` compares (§FS-check.3.5): each destination's
-/// `AGENTS.md` and the standalone companions beside it, then each orphan the
-/// list on disk names, all only where a root entrypoint already carries a
-/// block. Returns every scoped file and companion no row's `files` lists, which
-/// are guidance about a directory's units and never one of them
-/// (§FS-init.2.3.5.11).
+/// `AGENTS.md` and the standalone companions beside it, then the files of each
+/// orphan the list on disk names that lose their block (§FS-init.2.3.5.14.3),
+/// all only where a root entrypoint already carries a block. Returns every
+/// scoped file and companion no row's `files` lists, which are guidance about a
+/// directory's units and never one of them (§FS-init.2.3.5.11).
 fn scoped_entrypoints(
     config: &Config,
     guidance: &Guidance<'_>,
@@ -109,12 +111,7 @@ fn scoped_entrypoints(
     let root = &config.root;
     let record = ScopedRecord::read(root);
     let live: Vec<&str> = guidance.layout.scoped_dirs().collect();
-    let orphans: Vec<&str> = record
-        .listed
-        .iter()
-        .filter_map(|path| path.strip_suffix("/AGENTS.md"))
-        .filter(|dir| !live.contains(dir))
-        .collect();
+    let orphans = record.orphans(&live);
     let mut files = BTreeSet::new();
     for (dir, orphan) in live
         .iter()
@@ -124,32 +121,27 @@ fn scoped_entrypoints(
         let agents = root.join(dir).join(CANONICAL_AGENT_ENTRYPOINT);
         let companions = scoped_companions(&root.join(dir));
         files.insert(agents.clone());
-        files.extend(companions.iter().map(|(path, _)| path.clone()));
+        files.extend(companions);
         if !record.managed {
             continue;
         }
-        let expect = |path: PathBuf, require: bool| match orphan {
-            false => guidance.scoped_entrypoint(dir, path, require),
-            true => ExpectedEntrypoint {
-                path,
-                require_block: false,
-                sections: Vec::new(),
-                scoped: Some(ScopedExpectation::Orphan),
-            },
-        };
-        entrypoints.push(expect(agents, true));
         if orphan {
-            // §FS-init.2.3.5.14.3: an orphan's standalone companions lose
-            // their block, whichever root name is mirrored.
-            for (path, linked) in companions {
-                if !linked && !path_is_symlink(&path) {
-                    entrypoints.push(expect(path, false));
+            for (name, what) in orphan_files(root, dir) {
+                if what != OrphanFile::Linked {
+                    entrypoints.push(ExpectedEntrypoint {
+                        path: root.join(dir).join(name),
+                        require_block: false,
+                        sections: Vec::new(),
+                        scoped: Some(ScopedExpectation::Orphan),
+                    });
                 }
             }
         } else {
+            entrypoints.push(guidance.scoped_entrypoint(dir, agents, true));
             for (name, owned) in owned_companions(root, dir) {
                 if owned == OwnedCompanion::Standalone {
-                    entrypoints.push(expect(root.join(dir).join(name), true));
+                    let path = root.join(dir).join(name);
+                    entrypoints.push(guidance.scoped_entrypoint(dir, path, true));
                 }
             }
         }
