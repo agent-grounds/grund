@@ -110,6 +110,17 @@ Four corners are known and accepted rather than repaired ([§DF-doc-comments-are
 - A comment **trailing code** on the same line (`foo(); // §<ID>: note`) is what it already was: not a site ([§FS-inline-citation-style.3.3.6](FS-inline-citation-style.md#336-same-scope-as-the-rest-of-this-spec)).
 - **Blank-line adjacency is adjacency.** A `#` block, a blank line, then a `def` is an inline comment — the blank line broke the block off the definition, the same way it breaks one block into two ([§FS-inline-citation-style.1.2](FS-inline-citation-style.md#12-comment-blocks)).
 
+#### 1.1.4 Declaration applicability
+
+Under v2's `declarations = "doc-comments"`, the recognizers of [§FS-inline-citation-style.1.1.1](FS-inline-citation-style.md#111-recognizers) also decide which comments may declare an ID ([§FS-config-v2.schema.sources.declarations](FS-config-v2.md#schemasourcesdeclarations-declarations-picks-which-comments-declare)), through the doc profile a v2 language names ([§FS-config-v2.schema.sources.epoch](FS-config-v2.md#schemasourcesepoch-the-v2-language-epoch)). The same classifier answers both questions, so the two cannot disagree about what documentation is; but a measurement and a declaration differ in what a miss costs, so for declarations each profile is frozen as it stood at the v2 epoch, with the corners of [§FS-inline-citation-style.1.1.3](FS-inline-citation-style.md#113-accepted-corners) as stated rules rather than accepted misses:
+
+- `c-family`: a `///` or `//!` run and a `/**` or `/*!` block qualify, dangling inside a body or not; a plain `//` or `/* … */` block, a PHP `#` block and a comment trailing code do not; nor do the lookalikes `////` and `/**/`.
+- `python`: a docstring qualifies, read lexically, with the assigned-data exclusion of [§FS-check.1.1.3.1](FS-check.md#1131-assigned-python-triple-quoted-data); a `#` block does not.
+- `ldoc`: a `--` run whose first line opens with exactly `---`; `----` does not qualify. `haddock`: a `--` run whose first content is `|` or `^` after optional spaces. `roxygen`: a `#` run opening `#'`.
+- `go`, `ruby`, `shell`, `sql`: a block whose next line, with no blank line between, is a definition-starter of [§FS-inline-citation-style.1.1.2](FS-inline-citation-style.md#112-languages) — Go's `func`, `type`, `var`, `const` and `package`, a local `var` included; Ruby's `class`, `module` and `def`, and not `private def` — or the file's leading block, after blank lines or a line-1 shebang. A detached block, and a block separated from its definition by a blank line, do not qualify.
+
+These are recognition limits, not a claim about what a comment documents: no host language is parsed ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)). The starter sets [§FS-inline-citation-style.1.1.3](FS-inline-citation-style.md#113-accepted-corners) lets widen do widen for measurement; for declarations a change to a profile's membership or block boundary is a new profile, a new opt-in language, or a new config version ([§FS-config-v2.schema.sources.epoch](FS-config-v2.md#schemasourcesepoch-the-v2-language-epoch)). Decided in [§DF-declarations-in-doc-comments](../decisions/functional/DF-declarations-in-doc-comments.md#df-declarations-in-doc-comments-a-v2-source-declares-in-documentation-not-in-a-note).
+
 ### 1.2 Comment blocks
 
 The block forms say where a block begins and ends, and are [§FS-languages.comment-block.forms](FS-languages.md#comment-blockforms-comment-blocks). They are the scanner's existing normalization, not a verdict on which blocks are sites.
