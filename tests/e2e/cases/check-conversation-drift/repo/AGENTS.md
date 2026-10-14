@@ -1,6 +1,6 @@
 # case3 — agent instructions
 
-## Grounding with grund (v17)
+## Grounding with grund (v19)
 
 This project uses [`grund`](https://github.com/agent-grounds/grund): every spec, goal, decision, and end-to-end test has a stable ID `<KIND>-<NNN>-<slug>[.<section>]` (`KIND ∈ {GRUND, GOAL, FS, AR, DF, DA, RM}`), cited with the marker `§` — e.g. `§FS-042-user-login.3.1` (the `FS-042-user-login` here is a shape illustration, not a real ID in this repo). Type `$$` in a grund-aware editor and it becomes `§`. Bare ID-shaped tokens are ignored — `[reference] strict = true` is set in `.agents/grund.toml`, so only `§`-prefixed citations are checked.
 
@@ -27,14 +27,6 @@ A `§<ID>` is a pointer to a fact, not a file path. Resolve it with `grund` and 
 - [DA](docs/decisions/architectural): Architecture decisions and tradeoffs
 - [E2E](e2e/cases): Executable user scenarios
 - [RM](docs/roadmap.md): Planned milestones and sequencing
-
-### Project namespaces
-
-A namespace is a project boundary, not a docs folder. The current project is the local namespace: cite its IDs as `§<ID>`.
-
-Create or use a separate namespace when work introduces an independently checked app, package, service, or subproject. Give that project its own `.agents/grund.toml`, add it to the workspace root's `[workspace] members`, run `grund init` there, and set a stable `project_name`.
-
-Do not create a namespace for a regular module or component that still belongs to this project. Cite across namespaces as `§alias/<ID>` and run `grund check` from the workspace root.
 
 ### Declarations and citations
 

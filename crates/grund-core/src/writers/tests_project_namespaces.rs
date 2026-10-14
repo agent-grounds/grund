@@ -8,6 +8,20 @@ use std::path::Path;
 // §FS-init.2.3.4.16: frozen before extraction at 4115eeab9a; independent of assets.
 const BEFORE: &str = include_str!("fixtures/project-namespaces-v17.txt");
 
+/// §FS-init.2.3.4.16: the extracted production fragment retains independent baseline bytes.
+#[test]
+fn project_namespaces_extracted_fragment_preserves_bytes_and_marker() {
+    for marker in ["§", "@"] {
+        assert_eq!(
+            crate::templates::render_project_namespaces_section(marker),
+            format!(
+                "\n\n{}",
+                BEFORE.trim_end_matches('\n').replace("{MARKER}", marker)
+            ),
+        );
+    }
+}
+
 fn render(target: &Path) -> String {
     let config = load_config(target).expect("load fixture config");
     render_agents_md("demo", &config, target, true)

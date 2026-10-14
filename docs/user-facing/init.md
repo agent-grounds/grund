@@ -23,6 +23,15 @@ specs. The config is the default template's, `software-development`: the
 `e2e` and `integration` test homes. `grund init --template=software-development`
 is the same run.
 
+The managed block teaches Project namespaces only for workspace roots and
+claimed members. Standalone repositories omit it. A discovered workspace keeps
+that guidance even if a missing member or duplicate alias prevents its Workspace
+members list from rendering
+([§FS-init.2.3.4.16](../functional-spec/FS-init.md#23416-project-boundaries)).
+For when and how to split off an independently checked app, package, service or
+subproject, run `grund agent-setup-instructions` and read “Splitting off a member”
+([§FS-init.5.4](../functional-spec/FS-init.md#54-splitting-off-a-member)).
+
 ## `--scaffold`: a fresh repository
 
 ```bash

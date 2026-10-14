@@ -1,6 +1,6 @@
 //! What one `grund init` run feeds the templates (§FS-init.2.3.8): the effective
-//! config it will leave governing the target, and the one managed-block section
-//! that reads the tree rather than the config.
+//! config it will leave governing the target, and the workspace guidance
+//! that reads the tree rather than the config (§FS-init.2.3.4.16).
 //!
 //! The split this file is the writers' half of. What a block *says* is a
 //! function of config alone and is `templates/` (§AR-system.2.11); everything
@@ -11,17 +11,17 @@ use anyhow::Result;
 use std::path::Path;
 
 use super::init_target::derive_default_name;
-use super::init_workspace_members::render_workspace_members_section_with_run_warnings;
+use super::init_workspace_members::render_workspace_guidance_with_run_warnings;
 use crate::config::{Config, Invocation, Selection, config_file_in, pending_config};
 use crate::model::Finding;
 #[cfg(test)]
 use crate::templates::{
     ConversationSurface, render_agents_append_block, render_agents_md_from_block,
 };
-use crate::templates::{Template, render_grund_toml};
+use crate::templates::{Template, WorkspaceGuidance, render_grund_toml};
 use crate::workspace::open;
 
-/// The `### Workspace members` section one `init` run renders (§FS-init.2.3.4.15),
+/// Workspace presence (§FS-init.2.3.4.16) and the member section (§FS-init.2.3.4.15),
 /// built here rather than inside the block substitutions so it is built
 /// **once**. It does not vary by `ConversationSurface`, and a run that writes
 /// both `AGENTS.md` and a `CLAUDE.md` companion renders two blocks from one
@@ -31,13 +31,13 @@ use crate::workspace::open;
 ///
 /// Canonical target identity omits self regardless of whether this run selected
 /// the canonical `AGENTS.md` or only a companion.
-pub(super) fn agents_workspace_members_section(
+pub(super) fn agents_workspace_guidance(
     name: &str,
     config: &Config,
     target: &Path,
     canonical_agent_entrypoint_selected: bool,
-) -> (String, Vec<Finding>) {
-    render_workspace_members_section_with_run_warnings(
+) -> (WorkspaceGuidance, Vec<Finding>) {
+    render_workspace_guidance_with_run_warnings(
         target,
         Some(name),
         // Collect effective pending metadata. The renderer omits self (and its
@@ -92,7 +92,8 @@ pub(super) fn init_pending_effective_config(
     Ok((pending_config(&text, target, &invocation)?, name))
 }
 
-/// `templates::render_agents_append_block` with the §FS-init.2.3.4.15 section
+/// `templates::render_agents_append_block` with the §FS-init.2.3.4.16 discovery
+/// and §FS-init.2.3.4.15 section
 /// rendered for it — the shape `command_init` had before the section was hoisted
 /// out of the substitutions, kept for the tests that render one block from a
 /// target and have no second surface for the walk-up to be repeated by.
@@ -104,14 +105,14 @@ pub(crate) fn render_agents_append_block_at(
     canonical_agent_entrypoint_selected: bool,
     surface: ConversationSurface,
 ) -> String {
-    let (workspace_members, _) =
-        agents_workspace_members_section(name, config, target, canonical_agent_entrypoint_selected);
+    let (workspace, _) =
+        agents_workspace_guidance(name, config, target, canonical_agent_entrypoint_selected);
     render_agents_append_block(
         name,
         config.project(),
         config.run(),
         config.compiled(),
-        &workspace_members,
+        &workspace,
         surface,
     )
 }

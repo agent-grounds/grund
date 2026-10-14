@@ -7,7 +7,7 @@ pub(crate) use super::init_guidance::init_fs_home;
 use super::init_guidance::{InitNext, docs_scaffold_for_config};
 use super::init_notes::{duplicate_agent_entrypoint_notes, shadowed_claude_entrypoint_note};
 use super::init_plan::selected_init_agent_entrypoints;
-use super::init_render::{agents_workspace_members_section, init_pending_effective_config};
+use super::init_render::{agents_workspace_guidance, init_pending_effective_config};
 use super::init_target::{refuse_init_global_instruction_paths, refuse_init_target};
 use super::init_template::{
     StarterWrite, lay_starter_files, resolve_template, template_config_note,
@@ -27,14 +27,15 @@ use crate::workspace::{declared_member_schemas, populate_workspace_boundary};
 pub use super::init_output::{InitError, InitEvent, InitOpts, InitOutput};
 
 /// Insert the shared, entrypoint-relative chapter-rule section while leaving
-/// non-rule projects untouched (§FS-init.2.3.5.10).
+/// non-rule projects untouched (§FS-init.2.3.5.10), promoting the base version
+/// to the rule-enabled version (§FS-init.2.3.7.1).
 fn render_chapter_rules(mut block: String, section: Option<&str>) -> String {
     let Some(section) = section else {
         return block;
     };
     block = block.replacen(
-        "Grounding with grund (v17)",
-        "Grounding with grund (v18)",
+        "Grounding with grund (v19)",
+        "Grounding with grund (v20)",
         1,
     );
     let insertion = block
@@ -253,10 +254,10 @@ fn init_run(
         return Err(InitError::new(message));
     }
 
-    // §FS-init.2.3.4.15, §FS-check.3.29: walked once and handed to both surfaces —
+    // §FS-init.2.3.4.16, §FS-check.3.29: walked once and handed to both surfaces —
     // the section does not vary by surface, and this walk is where every block is
     // asked whether its members swallowed its scan, once per run.
-    let (workspace_members, run_warnings) = agents_workspace_members_section(
+    let (workspace, run_warnings) = agents_workspace_guidance(
         &resolved_name,
         &init_config,
         &target,
@@ -272,7 +273,7 @@ fn init_run(
             init_config.project(),
             init_config.run(),
             init_config.compiled(),
-            &workspace_members,
+            &workspace,
             surface,
         )
     };

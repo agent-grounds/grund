@@ -650,10 +650,9 @@ The canonical text for a given block version `vN` is embedded in the `grund` bin
 
 The workspace-only Project namespaces change ([§FS-init.2.3.4.16](FS-init.md#23416-project-boundaries)) advances the
 current base and rule-enabled versions as one pair, keeping rule-enabled at base
-plus one. The observed `main` baseline is **v17/v18** at
-`11974b19732947cafa3f7186a944ede7c0b85046` (2026-10-14); the reserved next pair is
-**v19/v20**, subject to revalidation against `main` when implementing. If another
-change advances the block first, use the next free pair above that baseline.
+plus one. The implementation-time `main` baseline is **v17/v18** at
+`23010de6dfbfd37864a6c9cef753041594219920` (2026-10-14); the current pair is
+**v19/v20**: v19 without a rule kind, v20 with one.
 The maximum supported version, checker selector, template heading and rule-heading
 promotion must agree on that pair. All earlier blocks, including workspace blocks,
 are reported outdated by `grund check` and `grund init --check`; one `grund init`

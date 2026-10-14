@@ -26,9 +26,8 @@
 //! a repository has is a probe over the tree and is
 //! `scanner/agent_entrypoints.rs`; which of them this invocation writes is
 //! `writers/init_plan.rs`; the effective config a run leaves governing the
-//! target and the one section that reads the tree — the workspace members of
-//! §FS-init.2.3.4.15 — are `writers/init_render.rs`, which hands that section in
-//! already rendered.
+//! target and workspace discovery (§FS-init.2.3.4.16) are `writers/init_render.rs`,
+//! which hands presence and the rendered members (§FS-init.2.3.4.15) in together.
 
 mod agents_block;
 mod assets;
@@ -41,7 +40,8 @@ pub use assets::{AGENT_SETUP_INSTRUCTIONS, canonical_template_text};
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
 pub(crate) use agents_block::{
-    markdown_link_destination, render_agents_append_block, render_agents_md_from_block,
+    WorkspaceGuidance, markdown_link_destination, render_agents_append_block,
+    render_agents_md_from_block,
 };
 pub(crate) use assets::{
     AS_README_TEMPLATE, DA_README_TEMPLATE, DF_README_TEMPLATE, E2E_README_TEMPLATE,
@@ -56,6 +56,8 @@ pub(crate) use clickable_citations::{ConversationSurface, clickable_citations_se
 // citation-level legend went beside the cases that assert it stands alone.
 #[cfg(test)]
 pub(crate) use agents_block::inline_citation_style_sentence;
+#[cfg(test)]
+pub(crate) use agents_block::render_project_namespaces_section;
 
 // The cases that pin this component, one module per behaviour area
 // (§AR-core-module-layout.1.3).
