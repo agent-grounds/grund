@@ -172,7 +172,10 @@ it has a chapter at that path, and it is unreached exactly when it has none.
 The normative language is the following closed controlled-English grammar.
 Fixed words and kind names are case-sensitive, every rule ends with exactly one
 terminal `.`, and one sentence contains exactly one semantic verb. `N` is a
-positive base-10 integer. `one` takes singular `chapter`; every numeric `N`
+positive base-10 integer no larger than the largest supported count, the
+largest value of the platform's unsigned machine word (`18446744073709551615`
+on a 64-bit platform); a larger `N` is refused for its range
+([§FS-rule-refusals.sentences.count-range](FS-rule-refusals.md#sentencescount-range-a-count-above-the-largest-supported-count-is-refused-for-its-range)). `one` takes singular `chapter`; every numeric `N`
 other than one takes `chapters`. A lower bound and an exact count spell one as
 the word `one` and refuse the numeral, so `at least 1` and `exactly 1` are not
 sentences; an upper bound spells it as the numeral, so `at most 1` is the only

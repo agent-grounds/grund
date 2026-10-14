@@ -277,6 +277,45 @@ In the same repository `The requirements chapter of each FS` and
 correct these reasons in place is
 [§DF-rule-refusal-reasons](../decisions/functional/DF-rule-refusal-reasons.md#df-rule-refusal-reasons-a-chapter-path-is-refused-for-the-component-that-failed-corrected-in-place).
 
+### sentences.count-range: A count above the largest supported count is refused for its range
+
+A count `N` ([§FS-rules.3](FS-rules.md#3-the-five-sentence-families)) is held in the platform's unsigned machine word, so
+the largest supported count is that word's largest value,
+`18446744073709551615` on a 64-bit platform, and that count is accepted. A
+numeral whose value is larger is refused for its range rather than its
+spelling: it may be canonical, and the reader is sent to the numeric domain,
+not the grammar. The reason keeps the count refusal's text whole as its prefix,
+so a consumer matching that text still matches ([§FS-errors.3](FS-errors.md#3-message-text)), and
+appends the bound, printed from the platform's word rather than written down:
+
+```text
+count must be a canonical positive base-10 integer; the count is above the largest supported count, 18446744073709551615
+```
+
+Counts are not made arbitrary-precision: the accepted language is unchanged,
+and only the refusal of a count it already refused names the cause.
+
+#### sentences.count-range.shapes: Every count reads it
+
+The refusal is the same for a floor, a ceiling and an exact count (`at least
+N`, `at most N`, `exactly N`) and for a per-target count (`at least N times`,
+`at most N times`, `exactly N times`), on both rule surfaces: `check --rule`
+prints it in the shape of [§FS-errors.2.5](FS-errors.md#25-refused-input), and a configured rule declaration's
+`invalid-rule` finding carries it after `is not a valid rule: `
+([§FS-rules.7.1](FS-rules.md#71-invalid-rule)).
+
+#### sentences.count-range.leading-zeros: Leading zeros do not hide it
+
+The value is read after any leading zeros, so `018446744073709551616` is
+refused for its range too, and a count with leading zeros whose value is in
+range keeps the leading-zeros refusal and its form
+([§FS-rule-refusals.sentences.rewrite.by-refusal](FS-rule-refusals.md#sentencesrewriteby-refusal-the-rewrite-each-refusal-makes)).
+
+#### sentences.count-range.no-form: No form is offered
+
+There is no count in range the sentence names, so the reason stands alone and
+nothing follows it ([§FS-rule-refusals.sentences.rewrite.no-form](FS-rule-refusals.md#sentencesrewriteno-form-where-no-form-is-offered)).
+
 ### sentences.rewrite: An accepted form is the typed sentence with the failed part replaced
 
 Every sentence a rule surface offers after `accepted form:`, `accepted forms:`
@@ -347,7 +386,8 @@ is anything else, nothing follows the reason. A configured rule declaration's
 | numeric `at least 1`, `exactly 1` | `at least one`, `exactly one` | — |
 | numeric `at least 1 times`, `exactly 1 times` | `at least once`, `exactly once` | — |
 | a per-target count without `times` | the count typed after the bound, then `times` | that count is not a numeral |
-| a count with leading zeros | the count without them | the count is zero or is not a numeral |
+| a count with leading zeros | the count without them | the count is zero, is not a numeral, or is above the largest supported count |
+| a count above the largest supported count ([§FS-rule-refusals.sentences.count-range](FS-rule-refusals.md#sentencescount-range-a-count-above-the-largest-supported-count-is-refused-for-its-range)) | — | always |
 | quantifier `a` | two forms, `at least one` and `exactly one` | either form is refused |
 | clauses joined by `and` ([§FS-rule-refusals.sentences.conjunction](FS-rule-refusals.md#sentencesconjunction-any-clauses-joined-by-and-are-refused-as-a-conjunction)) | one form per clause | any form is refused |
 | a prohibition without `cite any` | `cite [count] KINDS` becomes `cite any KINDS` | the predicate is anything else |
@@ -411,6 +451,7 @@ configured rule declaration's finding carries the same text after
 | `Each FS must reference at least one FS.` | `verb is not accepted` | none |
 | `Each FS must cite some FS.` | `count is not accepted; the canonical counts are "at least one", "at least N", "at most N", "exactly one" and "exactly N" for a base-10 N` | none |
 | `Each FS must cite at least two FS.` | `count must be a canonical positive base-10 integer` | none |
+| `Each FS must cite at least 18446744073709551616 FS.` | `count must be a canonical positive base-10 integer; the count is above the largest supported count, 18446744073709551615` | none |
 
 The fourth row is offered a form only after a second pass: appending the `.`
 leaves `at least 1`, which the next pass rewrites. The conjunction and the last

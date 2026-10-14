@@ -213,6 +213,12 @@ fn fs_only_rows() -> Vec<(&'static str, &'static str, &'static str)> {
             "count must be a canonical positive base-10 integer",
             "",
         ),
+        (
+            "Each FS must cite at least 18446744073709551616 FS.",
+            "count must be a canonical positive base-10 integer; \
+             the count is above the largest supported count, 18446744073709551615",
+            "",
+        ),
     ]
 }
 

@@ -8,6 +8,8 @@ mod authority;
 mod chapter_path_reasons;
 #[path = "rules_contract/conjunctions.rs"]
 mod conjunctions;
+#[path = "rules_contract/count_range.rs"]
+mod count_range;
 #[path = "rules_contract/documentation.rs"]
 mod documentation;
 #[path = "rules_contract/paste_back.rs"]
