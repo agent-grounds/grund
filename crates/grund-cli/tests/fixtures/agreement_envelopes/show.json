@@ -1,0 +1,58 @@
+{
+  "point": "§REQ-one-answer.proof.evidence",
+  "provenance": {
+    "sha": "e7e43b8d1cb46f5607e0dc7ce70932d65d36f9a5",
+    "source": "review-2/host-control-calls.json",
+    "role": "recorded real comparator inputs; not independent generic truth"
+  },
+  "surface": "show",
+  "cli": {
+    "args": [
+      "show",
+      "FS-999-missing",
+      "--toc",
+      "/fixture/repo",
+      "--format",
+      "json"
+    ],
+    "exit": 1,
+    "stdout": "",
+    "stderr": "{\"severity\":\"error\",\"path\":null,\"line\":null,\"code\":\"not-found\",\"message\":\"ID not found: FS-999-missing\",\"sites\":null,\"authority\":null}"
+  },
+  "python": {
+    "failure": {
+      "run_cautions": [],
+      "kind": "query",
+      "code": "not-found",
+      "message": "ID not found: FS-999-missing",
+      "path": null,
+      "line": null,
+      "column": null,
+      "sites": [],
+      "authority": [],
+      "causes": [],
+      "partial_output": null,
+      "details": {}
+    },
+    "result": null,
+    "run_cautions": []
+  },
+  "node": {
+    "failure": {
+      "path": null,
+      "line": null,
+      "column": null,
+      "sites": [],
+      "authority": [],
+      "causes": [],
+      "details": {},
+      "partial": null,
+      "code": "not-found",
+      "kind": "query",
+      "message": "ID not found: FS-999-missing",
+      "operation": "show"
+    },
+    "result": null,
+    "run_cautions": []
+  }
+}

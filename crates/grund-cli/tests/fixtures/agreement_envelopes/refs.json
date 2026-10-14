@@ -1,0 +1,54 @@
+{
+  "point": "§REQ-one-answer.proof.evidence",
+  "provenance": {
+    "sha": "e7e43b8d1cb46f5607e0dc7ce70932d65d36f9a5",
+    "source": "review-2/host-control-calls.json",
+    "role": "recorded real comparator inputs; not independent generic truth"
+  },
+  "surface": "refs",
+  "cli": {
+    "args": [
+      "refs",
+      "FS-999-missing",
+      "/fixture/repo",
+      "--format",
+      "json"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "note: FS-999-missing is neither declared nor cited — run `grund list` to see every declared ID\n"
+  },
+  "python": {
+    "failure": null,
+    "result": {
+      "run_cautions": [],
+      "output_format": "text",
+      "workspace": false,
+      "hits": [],
+      "note": "FS-999-missing is neither declared nor cited — run `grund list` to see every declared ID",
+      "scan_errors": [],
+      "kind_title": "What: behavior, requirements, and constraints",
+      "site_total": 0,
+      "file_total": 0,
+      "file_summaries": []
+    },
+    "run_cautions": []
+  },
+  "node": {
+    "failure": null,
+    "result": {
+      "hits": [],
+      "kind_title": "What: behavior, requirements, and constraints",
+      "note": "FS-999-missing is neither declared nor cited — run `grund list` to see every declared ID",
+      "output_format": "text",
+      "scan_errors": [],
+      "summaries": [],
+      "totals": {
+        "files": 0,
+        "sites": 0
+      },
+      "workspace": false
+    },
+    "run_cautions": []
+  }
+}

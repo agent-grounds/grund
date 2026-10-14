@@ -3,7 +3,7 @@
 //! applicability and independent witnesses are validated by acceptance.
 
 use super::agreement_host::{Host, repository};
-use super::agreement_oracles::{golden, rows, text, witnesses};
+use super::agreement_oracles::{golden, rows, text};
 use super::agreement_questions::{coordinate_questions, tree_questions};
 use super::{
     agreement_compare as compare, agreement_editor as editor, agreement_evidence as evidence,
@@ -134,7 +134,7 @@ pub fn compare_tree(expected: &Path, actual: &Path) -> Result<(), String> {
 
 /// Every live corpus directory is visited; preparation cannot return fewer cases
 /// than the independently discovered acceptance catalog.
-pub fn execute() -> Vec<String> {
+pub fn execute(manifests: &std::collections::BTreeMap<String, Value>) -> Vec<String> {
     let mut host = Host::new();
     let mut editor_worker = super::agreement_editor_worker::Worker::new();
     evidence::receipt(
@@ -144,10 +144,23 @@ pub fn execute() -> Vec<String> {
         host.provenance.clone(),
     );
     let discovered = host.request(json!({"op":"discover"}));
+    let names: BTreeSet<_> = discovered
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_str().unwrap().to_string())
+        .collect();
+    assert_eq!(
+        names,
+        manifests.keys().cloned().collect(),
+        "prepared corpus differs from authored discovery"
+    );
     let mut errors = Vec::new();
     for name in discovered.as_array().expect("discovered cases") {
         for variant in VARIANTS {
-            let context = host.request(json!({"op":"prepare","case":name,"variant":variant}));
+            let mut context = host.request(json!({"op":"prepare","case":name,"variant":variant}));
+            let facts = &manifests[name.as_str().unwrap()]["variants"][*variant];
+            super::agreement_truth::bind(&mut context, facts);
             let attribution = json!({"case":name,"variant":variant,"base":context["base"],
                 "saved":context["saved"],"cwd":context["cwd"],"path":context["path"]});
             evidence::context(attribution, || {
@@ -186,11 +199,12 @@ pub fn execute() -> Vec<String> {
                 continue;
             }
             // Recreate after a manifest that may write; no generic read sees its result.
-            let context = if *variant == "whole-tree" {
+            let mut context = if *variant == "whole-tree" {
                 host.request(json!({"op":"prepare","case":name,"variant":variant}))
             } else {
                 context
             };
+            super::agreement_truth::bind(&mut context, facts);
             super::agreement_materialization::verify(&context);
             evidence::context(
                 json!({"case":name,"variant":variant,"base":context["base"],
@@ -218,7 +232,8 @@ fn exercise(
         editor::saved_control(worker, context, loaded, errors);
     }
     let cwd = text(context, "cwd");
-    let mut coordinates = BTreeSet::new();
+    let coordinates = super::agreement_expectations::coordinates(&context["truth"])
+        .expect("preflight requires an independent complete coordinate inventory");
     let mut tree_answers = std::collections::BTreeMap::new();
     for mut question in tree_questions(context) {
         if question.path != text(context, "path") {
@@ -229,11 +244,7 @@ fn exercise(
         }
         let scoped = question.context(context, "cli");
         let output = invoke(Path::new(&cwd), &question.cli_args(), None);
-        let actual = rows(&output);
-        match witnesses(&scoped, &actual, question.point) {
-            Ok(expected) => evidence::witness(expected),
-            Err(error) => errors.push(error),
-        }
+        super::agreement_truth::cli(&scoped, &question, &output, errors);
         let answer = compare::hosts(host, context, &question, &output, errors);
         tree_answers.insert(question.surface, answer["python"].clone());
         if question.surface == "check"
@@ -246,40 +257,20 @@ fn exercise(
                 errors,
             );
         }
-        if question.surface == "list-size" {
-            for row in answer["python"]["result"]["entries"]
-                .as_array()
-                .into_iter()
-                .flatten()
-            {
-                let mut coordinate = row["id"].as_str().expect("listed ID").to_string();
-                if let Some(section) = row["section"].as_str() {
-                    coordinate.push_str(row["section_separator"].as_str().unwrap_or("."));
-                    coordinate.push_str(section);
-                }
-                if let Some(project) = row["project"].as_str() {
-                    if !coordinate.starts_with(&format!("{project}/")) {
-                        coordinate = format!("{project}/{coordinate}");
-                    }
-                }
-                coordinates.insert(coordinate);
-            }
-        }
     }
     let mut scoped = context.clone();
     scoped["reportBase"] = context["scopes"]["python"]["reportBase"].clone();
     super::agreement_facts::declarations(&scoped, &tree_answers, loaded.as_ref(), errors);
-    if coordinates.is_empty() {
-        coordinates.insert("FS-agreement-absent".into());
-    }
     for coordinate in coordinates {
         for question in coordinate_questions(context, &coordinate) {
             let output = invoke(Path::new(&cwd), &question.cli_args(), None);
             let actual = rows(&output);
-            match witnesses(&question.context(context, "cli"), &actual, question.point) {
-                Ok(expected) => evidence::witness(expected),
-                Err(error) => errors.push(error),
-            }
+            super::agreement_truth::cli(
+                &question.context(context, "cli"),
+                &question,
+                &output,
+                errors,
+            );
             let answer = compare::hosts(host, context, &question, &output, errors);
             if question.surface == "show" {
                 super::agreement_facts::sections(

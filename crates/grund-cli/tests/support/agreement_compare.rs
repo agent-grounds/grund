@@ -2,7 +2,7 @@
 //! Rust envelope is an agreement peer, never the independent truth oracle.
 
 use super::agreement_host::Host;
-use super::agreement_oracles::{entries, rows, text, without_keys, witnesses};
+use super::agreement_oracles::{entries, rows, text, without_keys};
 use super::agreement_questions::Question;
 use grund_core::{node_embedding_call, node_request};
 use serde_json::{Value, json};
@@ -20,7 +20,9 @@ fn equal<T: PartialEq + std::fmt::Debug>(
     }
 }
 
-/// Exact lossless host envelopes accompany command-specific CLI projections.
+/// Common host envelopes accompany command-specific CLI projections. Python's
+/// refs fields are asserted before projection; Node-only show metadata has its
+/// native peer (§FS-distribution.3.3.1, §REQ-one-answer.proof.evidence).
 pub fn hosts(
     host: &mut Host,
     context: &Value,
@@ -32,20 +34,16 @@ pub fn hosts(
     let request = question.python_request(&cwd);
     let python = host.call("python", request.clone());
     let python_context = question.context(context, "python");
-    let independent = match witnesses(
-        &python_context,
-        &fact_rows(question, &python),
-        question.point,
-    ) {
-        Ok(witness) => witness,
-        Err(error) => {
-            errors.push(error);
-            json!({"oracleError":"physical-source-bytes"})
-        }
-    };
-    super::agreement_evidence::witness(independent.clone());
+    super::agreement_truth::host(&python_context, question, "python", &python, errors);
     let node_req = question.node_request(&cwd);
     let node = host.call("node", node_req.clone());
+    super::agreement_truth::host(
+        &question.context(context, "node"),
+        question,
+        "node",
+        &node,
+        errors,
+    );
     if matches!(question.surface, "show" | "show-batch") {
         let node_rust = node_embedding_call(node_request(
             question.node_operation,
@@ -54,24 +52,17 @@ pub fn hosts(
         ));
         equal("Node complete metadata envelope", &node, &node_rust, errors);
     }
+    let common_python = super::agreement_host_projection::from_python(
+        python.clone(),
+        question.node_operation,
+        errors,
+    );
     equal(
         "actual host complete common envelopes",
         super::agreement_host_projection::node_common(node.clone(), question.node_operation),
-        super::agreement_host_projection::from_python(python.clone(), question.node_operation),
+        common_python,
         errors,
     );
-    let node_independent = match witnesses(
-        &question.context(context, "node"),
-        &fact_rows(question, &node),
-        question.point,
-    ) {
-        Ok(witness) => witness,
-        Err(error) => {
-            errors.push(error);
-            json!({"oracleError":"physical-source-bytes"})
-        }
-    };
-    super::agreement_evidence::witness(node_independent);
     let cli_context = question.context(context, "cli");
     let projected = super::agreement_sites::output(question.surface, cli, &cli_context);
     compare_cli(
@@ -90,7 +81,7 @@ pub fn hosts(
         ),
         errors,
     );
-    json!({"python":python,"node":node,"witness":independent,"request":request})
+    json!({"python":python,"node":node,"request":request})
 }
 
 pub fn fact_rows(question: &Question, envelope: &Value) -> Vec<Value> {

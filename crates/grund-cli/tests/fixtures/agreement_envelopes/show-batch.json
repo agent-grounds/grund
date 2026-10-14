@@ -1,0 +1,118 @@
+{
+  "point": "§REQ-one-answer.proof.evidence",
+  "provenance": {
+    "sha": "e7e43b8d1cb46f5607e0dc7ce70932d65d36f9a5",
+    "source": "review-2/host-control-calls.json",
+    "role": "recorded real comparator inputs; not independent generic truth"
+  },
+  "surface": "show-batch",
+  "cli": {
+    "args": [
+      "show",
+      "--batch",
+      "--all",
+      "--toc",
+      "/fixture/repo",
+      "--format",
+      "json"
+    ],
+    "exit": 0,
+    "stdout": "{\"query\":{\"id\":\"FS-001-alpha\",\"section\":null},\"ok\":true,\"result\":{\"id\":\"FS-001-alpha\",\"section\":null,\"body\":\"Alpha overview.\\n\\n## 1. First\\n\",\"sections\":[{\"path\":\"1\",\"title\":\"First\",\"depth\":1,\"anchor\":\"1-first\"}],\"kind_title\":\"What: behavior, requirements, and constraints\",\"anchor\":\"fs-001-alpha-alpha\",\"path\":\"docs/functional-spec/FS-001-alpha.md\",\"line\":1},\"error\":null}\n{\"query\":{\"id\":\"FS-001-alpha\",\"section\":\"1\"},\"ok\":true,\"result\":{\"id\":\"FS-001-alpha\",\"section\":\"1\",\"body\":\"## 1. First\\n\\nFirst body.\\n\",\"sections\":[],\"kind_title\":\"What: behavior, requirements, and constraints\",\"anchor\":\"1-first\",\"path\":\"docs/functional-spec/FS-001-alpha.md\",\"line\":5},\"error\":null}\n",
+    "stderr": ""
+  },
+  "python": {
+    "failure": null,
+    "result": {
+      "run_cautions": [],
+      "records": [
+        {
+          "query": {
+            "id": "FS-001-alpha",
+            "section": null
+          },
+          "result": {
+            "run_cautions": [],
+            "body": "Alpha overview.\n\n## 1. First\n",
+            "path": "docs/functional-spec/FS-001-alpha.md",
+            "line": 1,
+            "json": "{\"id\":\"FS-001-alpha\",\"section\":null,\"body\":\"Alpha overview.\\n\\n## 1. First\\n\",\"sections\":[{\"path\":\"1\",\"title\":\"First\",\"depth\":1,\"anchor\":\"1-first\"}],\"kind_title\":\"What: behavior, requirements, and constraints\",\"anchor\":\"fs-001-alpha-alpha\",\"path\":\"docs/functional-spec/FS-001-alpha.md\",\"line\":1}",
+            "sections": [
+              {
+                "path": "1",
+                "title": "First",
+                "depth": 1
+              }
+            ]
+          },
+          "failure": null
+        },
+        {
+          "query": {
+            "id": "FS-001-alpha",
+            "section": "1"
+          },
+          "result": {
+            "run_cautions": [],
+            "body": "## 1. First\n\nFirst body.\n",
+            "path": "docs/functional-spec/FS-001-alpha.md",
+            "line": 5,
+            "json": "{\"id\":\"FS-001-alpha\",\"section\":\"1\",\"body\":\"## 1. First\\n\\nFirst body.\\n\",\"sections\":[],\"kind_title\":\"What: behavior, requirements, and constraints\",\"anchor\":\"1-first\",\"path\":\"docs/functional-spec/FS-001-alpha.md\",\"line\":5}",
+            "sections": []
+          },
+          "failure": null
+        }
+      ]
+    },
+    "run_cautions": []
+  },
+  "node": {
+    "failure": null,
+    "result": {
+      "records": [
+        {
+          "ok": true,
+          "query": {
+            "id": "FS-001-alpha",
+            "section": null
+          },
+          "result": {
+            "body": "Alpha overview.\n\n## 1. First\n",
+            "id": "FS-001-alpha",
+            "json": "{\"id\":\"FS-001-alpha\",\"section\":null,\"body\":\"Alpha overview.\\n\\n## 1. First\\n\",\"sections\":[{\"path\":\"1\",\"title\":\"First\",\"depth\":1,\"anchor\":\"1-first\"}],\"kind_title\":\"What: behavior, requirements, and constraints\",\"anchor\":\"fs-001-alpha-alpha\",\"path\":\"docs/functional-spec/FS-001-alpha.md\",\"line\":1}",
+            "kind_title": "What: behavior, requirements, and constraints",
+            "line": 1,
+            "manifest": null,
+            "path": "docs/functional-spec/FS-001-alpha.md",
+            "section": null,
+            "sections": [
+              {
+                "depth": 1,
+                "path": "1",
+                "title": "First"
+              }
+            ]
+          }
+        },
+        {
+          "ok": true,
+          "query": {
+            "id": "FS-001-alpha",
+            "section": "1"
+          },
+          "result": {
+            "body": "## 1. First\n\nFirst body.\n",
+            "id": "FS-001-alpha",
+            "json": "{\"id\":\"FS-001-alpha\",\"section\":\"1\",\"body\":\"## 1. First\\n\\nFirst body.\\n\",\"sections\":[],\"kind_title\":\"What: behavior, requirements, and constraints\",\"anchor\":\"1-first\",\"path\":\"docs/functional-spec/FS-001-alpha.md\",\"line\":5}",
+            "kind_title": "What: behavior, requirements, and constraints",
+            "line": 5,
+            "manifest": null,
+            "path": "docs/functional-spec/FS-001-alpha.md",
+            "section": "1",
+            "sections": []
+          }
+        }
+      ]
+    },
+    "run_cautions": []
+  }
+}
