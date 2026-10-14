@@ -32,7 +32,7 @@ mod support;
 use serde_json::{Value, json};
 use std::collections::BTreeSet;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{Duration, Instant};
 use support::{file_uri, hover_result, send_message, start_server, test_root, wait_for_exit};
@@ -158,6 +158,29 @@ fn cli_findings(grund: &Path, root: &Path) -> Option<(BTreeSet<Finding>, BTreeSe
     Some((findings, run_warnings))
 }
 
+/// `path` with its longest existing ancestor canonicalized, so a finding on a
+/// file that does not exist yet (a missing scoped `AGENTS.md`, FS-check.3.5)
+/// still compares against the canonical root.
+fn canonicalize_existing_prefix(path: &Path) -> PathBuf {
+    let mut rest = Vec::new();
+    let mut ancestor = path;
+    loop {
+        if let Ok(canonical) = fs::canonicalize(ancestor) {
+            return rest
+                .iter()
+                .rev()
+                .fold(canonical, |acc, part| acc.join(part));
+        }
+        match (ancestor.parent(), ancestor.file_name()) {
+            (Some(parent), Some(name)) => {
+                rest.push(name.to_os_string());
+                ancestor = parent;
+            }
+            _ => return path.to_path_buf(),
+        }
+    }
+}
+
 /// Everything the server publishes between `initialized` and the `shutdown`
 /// response: messages are handled in order, so the diagnostics the handshake
 /// pushed are all on the wire before the response to the request sent after it.
@@ -190,7 +213,7 @@ fn lsp_findings(root: &Path) -> (BTreeSet<Finding>, BTreeSet<String>) {
             .unwrap_or_else(|| panic!("diagnostic uri is not a file path: {uri}"));
         // Canonical on both sides: Windows spells a canonical path with a
         // `\\?\` prefix that a URI-derived one lacks.
-        let path = fs::canonicalize(&path).unwrap_or(path);
+        let path = canonicalize_existing_prefix(&path);
         let relative = path
             .strip_prefix(&canonical_root)
             .or_else(|_| path.strip_prefix(root))
