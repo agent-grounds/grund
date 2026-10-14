@@ -7,7 +7,7 @@
 //! directions (§AR-checker.2.7). The chapter-rule section is rendered from the
 //! check run's own catalog, so building it adds no walk (§FS-init.2.3.4.15).
 
-use crate::sources::path_exists;
+use crate::sources::{path_exists, path_is_symlink};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
@@ -21,7 +21,7 @@ use crate::resolver::{
 use crate::scanner::{CANONICAL_AGENT_ENTRYPOINT, companion_agent_entrypoints};
 
 use super::guidance::{Guidance, RuleGuidance};
-use super::scoped_files::{ScopedRecord, mirrored, scoped_companions};
+use super::scoped_files::{OwnedCompanion, ScopedRecord, owned_companions, scoped_companions};
 
 /// Render `Expected` for one project's check (§AR-checker.1.3).
 ///
@@ -138,13 +138,19 @@ fn scoped_entrypoints(
             },
         };
         entrypoints.push(expect(agents, true));
-        for (path, linked) in companions {
-            if !linked {
-                let name = path
-                    .file_name()
-                    .and_then(|name| name.to_str())
-                    .unwrap_or("");
-                entrypoints.push(expect(path.clone(), mirrored(root, name)));
+        if orphan {
+            // §FS-init.2.3.5.14.3: an orphan's standalone companions lose
+            // their block, whichever root name is mirrored.
+            for (path, linked) in companions {
+                if !linked && !path_is_symlink(&path) {
+                    entrypoints.push(expect(path, false));
+                }
+            }
+        } else {
+            for (name, owned) in owned_companions(root, dir) {
+                if owned == OwnedCompanion::Standalone {
+                    entrypoints.push(expect(root.join(dir).join(name), true));
+                }
             }
         }
     }

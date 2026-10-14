@@ -13,10 +13,10 @@ use super::guidance::Guidance;
 use super::init::{verb_appended, verb_updated, verb_wrote};
 use super::init_block::{AgentsUpdateResult, update_agents_block, update_agents_text};
 use super::init_output::InitEvent;
-use super::scoped_files::{SCOPED_COMPANIONS, ScopedRecord, mirrored, scoped_companions};
+use super::scoped_files::{OwnedCompanion, ScopedRecord, owned_companions, scoped_companions};
 use crate::grammar::{AgentsBlockLookup, find_agents_block};
 use crate::scanner::CANONICAL_AGENT_ENTRYPOINT;
-use crate::sources::{Sources, link_metadata, path_exists, path_is_entry, path_is_symlink};
+use crate::sources::{Sources, path_exists, path_is_entry, path_is_symlink};
 
 /// What one run does to scoped files, in report order (§FS-init.2.3.5.14.4).
 pub(super) struct ScopedPlan {
@@ -58,24 +58,14 @@ pub(super) fn plan_scoped(guidance: &Guidance<'_>, root: &Path, target: &Path) -
         .iter()
         .map(|dir| {
             let path = target.join(dir).join(CANONICAL_AGENT_ENTRYPOINT);
-            let companions = SCOPED_COMPANIONS
-                .iter()
-                .filter(|name| mirrored(target, name))
-                .filter_map(|name| {
-                    let companion = target.join(dir).join(name);
+            let companions = owned_companions(target, dir)
+                .into_iter()
+                .map(|(name, owned)| {
+                    let path = target.join(dir).join(name);
                     let rel = format!("{dir}/{name}");
-                    match link_metadata(&companion) {
-                        Err(_) => Some(Companion::Link {
-                            path: companion,
-                            rel,
-                        }),
-                        // An existing symlink, to this `AGENTS.md` or elsewhere,
-                        // is left as it is.
-                        Ok(meta) if meta.file_type().is_symlink() => None,
-                        Ok(_) => Some(Companion::Splice {
-                            path: companion,
-                            rel,
-                        }),
+                    match owned {
+                        OwnedCompanion::Free => Companion::Link { path, rel },
+                        OwnedCompanion::Standalone => Companion::Splice { path, rel },
                     }
                 })
                 .collect();
