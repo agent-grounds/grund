@@ -111,7 +111,7 @@ The CodeQL Terms and Conditions reference below must cite GitHub's underlying
   blocks a pull request at an alert threshold; none of the CLI's
   [exit codes](https://docs.github.com/code-security/codeql-cli/exit-codes/) signals alerts
   found. The CLI is proprietary, under the
-  [GitHub CodeQL Terms and Conditions](https://github.com/github/codeql-cli-binaries/blob/main/LICENSE.md);
+  [GitHub CodeQL Terms and Conditions](https://raw.githubusercontent.com/github/codeql-cli-binaries/main/LICENSE.md);
   the queries and libraries in [github/codeql](https://github.com/github/codeql) are MIT.
 - **Semgrep Community Edition**, 1.180.0, released 2026-10-07
   ([release](https://github.com/semgrep/semgrep/releases/tag/v1.180.0)), LGPL-2.1
