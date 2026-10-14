@@ -321,15 +321,16 @@ impl LeadSite<'_> {
         }) else {
             return;
         };
-        let lexical = frame.compiled.lexical(schema);
+        // §FS-languages.prefixes: the lead is read through its own file's hosts.
+        let reading = frame.compiled.reading(schema, &self.declaration.file);
         let lead = record_lead(
             self.record,
             self.declaration.line,
             site.line,
             lead_end,
-            lexical,
+            reading.lexical,
         );
-        let lead = flatten_cross_ref_links(&lead, lexical, false);
+        let lead = flatten_cross_ref_links(&lead, reading.lexical, false);
         let Some((warning, actual)) = budgets.iter().find_map(|(_, warning)| {
             let actual = measure_point_text(&lead, warning.unit);
             (actual > warning.max).then_some((*warning, actual))

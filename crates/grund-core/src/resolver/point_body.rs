@@ -87,11 +87,12 @@ pub(crate) fn point_body_pair(
     let mut views = views.into_iter().map(TodaySink::finish);
     let (mut lead, _) = views.next().unwrap_or_default();
     let (mut full, _) = views.next().unwrap_or_default();
+    // §FS-config-v2.schema.sources: Markdown-ness is the file's language's.
+    let reading = frame.compiled.reading(schema, &declaration.file);
     // Text and JSON `show` flatten generated wrappers; point measurements promise
     // those same bytes (§FS-show.3.2.2, §FS-list.3.4.1). Markdown measurements retain
     // authored destination bytes inside fences.
-    let markdown_body = declaration.file.extension().and_then(|ext| ext.to_str()) == Some("md");
-    lead = flatten_cross_ref_links(&lead, frame.compiled.lexical(schema), markdown_body);
-    full = flatten_cross_ref_links(&full, frame.compiled.lexical(schema), markdown_body);
+    lead = flatten_cross_ref_links(&lead, reading.lexical, reading.markdown);
+    full = flatten_cross_ref_links(&full, reading.lexical, reading.markdown);
     Ok(Some((lead, full)))
 }

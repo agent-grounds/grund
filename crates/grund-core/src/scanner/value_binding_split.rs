@@ -119,7 +119,7 @@ fn text_run<'a>(line: &CitationLine<'a>, context: (usize, usize)) -> Option<(Tex
         return Some((TextRun::Docstring, content));
     }
     let comment = line.value_comment?;
-    let text = semantic_comment_content(content, false, comment.block_comment, line.schema);
+    let text = semantic_comment_content(content, false, comment.block_comment, line.lexical);
     Some((
         TextRun::Comment {
             block: comment.block,

@@ -59,7 +59,9 @@ pub(super) fn settle_headings<'a>(
         {
             continue;
         }
-        let rewritten = rewrite_file(record.text(), path, config, true, &opts, &mut Vec::new());
+        // The record was read as Markdown, and the resolver says the same again.
+        let reading = config.reading(path);
+        let rewritten = rewrite_file(record.text(), path, config, reading, &opts, &mut Vec::new());
         for heading in record.headings.iter().filter(|heading| heading.atx) {
             let (Some(read), Some(left)) = (
                 record.line(heading.line),

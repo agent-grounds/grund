@@ -19,7 +19,7 @@ use crate::checker::{ScanScope, scope_read_any_file};
 use crate::config::{Config, display_path, kind_prefixes};
 use crate::grammar::id_shape;
 use crate::model::{Catalog, Diagnostic, format_path, normalize_path_lexically};
-use crate::scanner::{Unread, extension_refusal, name_refusal};
+use crate::scanner::{Unread, extension_refusal, name_refusal, pruning_pattern};
 use crate::workspace::scope_is_config_root;
 
 fn nothing_recognized(findings: &Catalog) -> bool {
@@ -141,11 +141,19 @@ pub(super) fn empty_scan_warning(config: &Config, path: &Path, path_provided: bo
              path explicitly (`grund check <dir>`).",
             quoted_list(dirs)
         ),
-        _ => format!(
-            "nothing to scan — no files under `{}` matched grund's extensions ({}).",
-            format_path(path),
-            config.extensions.join(", ")
-        ),
+        // §FS-check.2.2.2.2: under v2 a pattern can prune what the extensions admit.
+        _ => match pruning_pattern(config.schema(), config.frame(), path) {
+            Some(pattern) => format!(
+                "nothing to scan — every file under `{}` that grund would read is excluded by \
+                 the [schema.sources] exclude pattern `{pattern}`.",
+                format_path(path)
+            ),
+            None => format!(
+                "nothing to scan — no files under `{}` matched grund's extensions ({}).",
+                format_path(path),
+                config.extensions.join(", ")
+            ),
+        },
     };
     Diagnostic {
         code: "empty-scan",

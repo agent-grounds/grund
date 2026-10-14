@@ -1,14 +1,12 @@
-use crate::sources::{canonical_path, is_directory, is_regular_file, path_exists, path_is_file};
+use crate::sources::{canonical_path, is_directory, path_exists, path_is_file};
 use anyhow::{Result, anyhow};
 use ignore::WalkBuilder;
-use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use std::path::{Path, PathBuf};
 
 use super::e2e::{e2e_cases_folder, e2e_id_from_case_dir_name};
+use super::exclude_globs::ExcludeGlobs;
 use super::read_predicate::{Unread, directory_refusal};
-use super::walk_boundaries::{
-    is_directory_symlink, is_scannable, outward_directory_link_root, owned_by_another_project,
-};
+use super::walk_boundaries::{is_directory_symlink, owned_by_another_project};
 pub(super) use super::walk_reporting::walk_scannable_files_reporting;
 use crate::config::{Frame, Schema, canonical_config_root, root_scope_roots, unwalked_homes};
 use crate::grammar::Grammar;
@@ -69,82 +67,6 @@ pub(super) fn scannable_walker(
     Ok(builder.build())
 }
 
-/// §FS-check.4.10.2: whether a walk of `scan_root` under this config would read a
-/// file — the same builder, the same filter and the same `is_scannable` test the
-/// reporting walk applies, stopped at the first hit.
-///
-/// The question a `[workspace]` block that opted out of being a project is asked
-/// about its own tree, and it is asked of the scanner rather than of the spec text
-/// so the two cannot drift apart. `Walk` is a lazy iterator, so `any` *is* the
-/// early exit: the cost is "is there one file here", not the size of the tree, and
-/// only a block that opted out ever pays it (§GOAL-fast-feedback).
-///
-/// Every root is **gated first**, exactly as the reporting walk gates it: an
-/// outward directory link crosses the canonical project-root fence
-/// (§FS-config.3.5.1), while a canonical root inside one of this config's
-/// boundary roots, or one another project of the run owns, is that project's
-/// tree rather than this block's (§FS-workspace.6). The gate has to be applied
-/// to the root by hand, because the filter below is never asked about it — a walk
-/// root is never pruned at depth zero (§FS-config.3.5.9), and a file root reaches
-/// no filter at all.
-///
-/// A root that is not a directory takes `is_scannable` directly, which is the same
-/// answer the walk above gives a file root — including that a hidden *file* is
-/// skipped even as a root, while a walk root is never pruned by `exclude`, an
-/// ignore file, or the hidden-directory rule (§FS-config.3.5.12).
-///
-/// A path the walk cannot read is not an error here the way it is in
-/// [`walk_scannable_files_reporting`]: no run is scanning this tree, so there is no
-/// report to raise it into, and the question — would a project have read something
-/// — is answered by the files that can be read.
-pub(crate) fn walk_reads_any_file(schema: &Schema, frame: Frame<'_>, scan_root: &Path) -> bool {
-    if !path_exists(&scan_root) {
-        return false;
-    }
-    let canonical_scan_root = canonical_path(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
-    let physical_root = canonical_config_root(frame.root());
-    // §FS-config.3.5.1, §FS-workspace.6: the reporting walk's own scan-root
-    // gates, ahead of the branch below, because neither a file root nor a walk
-    // root ever reaches the filter.
-    if outward_directory_link_root(scan_root, &canonical_scan_root, &physical_root)
-        || frame
-            .run
-            .workspace
-            .boundary_roots
-            .iter()
-            .any(|root| canonical_scan_root.starts_with(root))
-        || owned_by_another_project(
-            &frame.run.workspace.project_roots,
-            &physical_root,
-            &canonical_scan_root,
-        )
-    {
-        return false;
-    }
-    if path_is_file(&scan_root) {
-        return is_scannable(scan_root, schema);
-    }
-    let link_roots = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
-    let looping_links = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
-    let Ok(walker) = scannable_walker(
-        schema,
-        frame,
-        scan_root,
-        &canonical_scan_root,
-        &physical_root,
-        &link_roots,
-        &looping_links,
-    ) else {
-        return false;
-    };
-    walker.filter_map(Result::ok).any(|entry| {
-        entry
-            .file_type()
-            .is_some_and(|file_type| is_regular_file(file_type))
-            && is_scannable(entry.path(), schema)
-    })
-}
-
 /// The directory filter the walk runs on every entry it meets: the workspace
 /// boundary (§AR-workspace.6), hidden names and `[scan] exclude`
 /// (§FS-config.3.5.3), and the E2E case directories the manifest pass owns
@@ -173,9 +95,9 @@ pub(super) struct WalkDirFilter {
     boundary_suffixes: Vec<PathBuf>,
     boundary_roots: Vec<PathBuf>,
     excluded: Vec<String>,
-    /// A v2 project's `[schema.sources] exclude`, compiled over config-root paths
-    /// (§FS-config-v2.schema.sources.exclude); `None` for v1 and for an empty list.
-    globs: Option<std::sync::Arc<Gitignore>>,
+    /// A v2 project's `[schema.sources] exclude` (§FS-config-v2.schema.sources.exclude);
+    /// `None` for v1 and for an empty list.
+    globs: Option<ExcludeGlobs>,
     /// The `scan = false` homes this walk prunes, as home path keys
     /// (§FS-config.3.4.7.2). Empty under `--full`, and empty in the tree that
     /// configures no such kind — which is every tree that never pays for the
@@ -223,7 +145,7 @@ impl WalkDirFilter {
             boundary_suffixes,
             boundary_roots: frame.run.workspace.boundary_roots.clone(),
             excluded: schema.sources.exclude.clone(),
-            globs: exclude_globs(schema),
+            globs: ExcludeGlobs::of(schema),
             e2e_cases_root: e2e_cases_folder(schema).map(|folder| frame.root().join(folder)),
             physical_root: physical_root.to_path_buf(),
             unwalked_homes: walk_pruned_home_keys(schema, frame, scan_root, physical_root),
@@ -296,7 +218,9 @@ impl WalkDirFilter {
         }
         // §FS-config-v2.schema.sources.exclude.roots: below a root, a glob prunes a
         // file or a directory by the spelling the walk reached it under.
-        if self.excluded_by_glob(path, is_dir) {
+        if let Some(globs) = &self.globs
+            && globs.excluding(&self.root, path, is_dir).is_some()
+        {
             return Some(Unread::ExcludedPath);
         }
         if !is_dir {
@@ -327,24 +251,6 @@ impl WalkDirFilter {
             return Some(Unread::LoopingLink);
         }
         None
-    }
-
-    /// Whether a v2 `exclude` glob matches `path` (§FS-config-v2.schema.sources.exclude).
-    /// A path under the config root is matched by its config-relative spelling; one
-    /// outside it by its own name alone, so an anchored pattern never reaches outside
-    /// the root while an unanchored one still applies below it (rule 5).
-    fn excluded_by_glob(&self, path: &Path, is_dir: bool) -> bool {
-        let Some(globs) = &self.globs else {
-            return false;
-        };
-        let relative = match path.strip_prefix(&self.root) {
-            Ok(relative) => relative,
-            Err(_) => match path.file_name() {
-                Some(name) => Path::new(name),
-                None => return false,
-            },
-        };
-        globs.matched(relative, is_dir).is_ignore()
     }
 
     /// The canonical path of a directory the walk reached **through** a symlink
@@ -560,18 +466,4 @@ fn walk_pruned_home_keys(
     let asked_for_one = scanned_decl_relative_path(scan_root, frame.root(), physical_root)
         .is_some_and(|relative| homes.iter().any(|home| relative.starts_with(home)));
     if asked_for_one { Vec::new() } else { homes }
-}
-
-/// §FS-config-v2.schema.sources.exclude: a v2 project's globs, compiled once per
-/// walk. The reader refused any pattern the builder refuses, so none fails here.
-fn exclude_globs(schema: &Schema) -> Option<std::sync::Arc<Gitignore>> {
-    let model = schema.sources.model.as_ref()?;
-    if model.exclude.is_empty() {
-        return None;
-    }
-    let mut builder = GitignoreBuilder::new("");
-    for pattern in &model.exclude {
-        builder.add_line(None, pattern).ok()?;
-    }
-    builder.build().ok().map(std::sync::Arc::new)
 }

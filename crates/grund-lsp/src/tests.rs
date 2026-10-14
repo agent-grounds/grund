@@ -252,3 +252,6 @@ mod answer_cost;
 
 #[path = "tests_hover_snapshot.rs"]
 mod hover_snapshot;
+
+#[path = "tests_v2_sources.rs"]
+mod v2_sources;

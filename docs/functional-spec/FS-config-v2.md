@@ -201,7 +201,7 @@ The file's language is the one [§FS-config-v2.schema.sources](FS-config-v2.md#s
 
 ##### schema.sources.declarations.gate: One gate, before every recognizer
 
-Eligibility is decided once per block, from the language and the block alone, whether or not the block carries a citation and whether or not the inline-style budgets measured it. It is decided before the canonical declaration recognizer, the off-grammar and legacy fallback recognizers ([§FS-config.3.2.5](FS-config.md#325-off-grammar-declarations-stay-readable)) and the near-miss check ([§FS-declarations.checks.declaration-near-miss.1](FS-declarations.md#checksdeclaration-near-miss1-what-counts)), so a line in an ineligible block declares nothing, is no near miss, and cannot reach the catalog by a fallback. Every consumer of a declaration reads the same answer: body ranges and sections ([§FS-show.2.3.1](FS-show.md#231-what-counts-as-the-comment-block)), anchors, stub verification ([§FS-declarations.stubs](FS-declarations.md#stubs-what-a-stub-points-at)), the formatter's protection of declaration lines, and the editor. A section-suffixed token declares nothing in either mode ([§FS-declarations.line.section-suffix](FS-declarations.md#linesection-suffix-an-id-with-a-section-after-it-declares-nothing)).
+Eligibility is decided once per block, from the language and the block alone, whether or not the block carries a citation and whether or not the inline-style budgets measured it. It is decided before the canonical declaration recognizer, the off-grammar and legacy fallback recognizers ([§FS-config.3.2.5](FS-config.md#325-off-grammar-declarations-stay-readable)) and the near-miss check ([§FS-declarations.checks.declaration-near-miss.1](FS-declarations.md#checksdeclaration-near-miss1-what-counts)), so a line in an ineligible block declares nothing, is no near miss, and cannot reach the catalog by a fallback. Every consumer of a declaration reads the same answer: body ranges and sections ([§FS-show.2.3.1](FS-show.md#231-what-counts-as-the-comment-block)), anchors, stub verification ([§FS-declarations.stubs](FS-declarations.md#stubs-what-a-stub-points-at)), the formatter's protection of declaration lines, and the editor. A section-suffixed token never declares its root ID in either mode ([§FS-declarations.line.section-suffix.2](FS-declarations.md#linesection-suffix2-with-the-colon-the-whole-token-is-the-near-miss)).
 
 ##### schema.sources.declarations.prose: An ineligible declaration-shaped line draws no new finding
 
@@ -230,6 +230,14 @@ A negation never rescues a file below a directory the scan already pruned, as in
 5. A root outside the config root is matched by its lexical spelling relative to the config root: an anchored pattern never reaches outside the root, and an unanchored one still applies below it.
 
 Scanner and formatter share the grammar and not the effect: `[presentation.fmt] exclude` keeps a file from being rewritten while the scan still reads it, and `[schema.sources] exclude` keeps the scan from reading it at all.
+
+##### schema.sources.exclude.stubs: A pattern is the `exclude` reason a stub's target is not read
+
+Under v2 a pattern is the `exclude` reason of [§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing), in place of v1's directory names. It is asked as the walk asks it, of each directory on a stub target's path and of the target itself, from each scan root the run walks and from the config root, and at each step before the ignore files. Until grund 0.19.0 it decides nothing about what the target declares, and where the stub pairs `check` warns at the stub ([§FS-declarations.checks.excluded-stub-target](FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-broken-from-grund-0190)), naming the pattern as the list writes it:
+
+```text
+docs/fs/x.md:1: warning: FS-x is a stub to ../gen/a.md, which the scan does not read because [schema.sources] exclude matches it by gen, and grund 0.19.0 reports this stub as broken-stub — move the target out of what gen matches, or take gen out of [schema.sources] exclude, to keep the stub
+```
 
 #### schema.sources.effective: The admitted set is read from the configuration alone
 

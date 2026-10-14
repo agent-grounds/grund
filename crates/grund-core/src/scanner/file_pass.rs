@@ -43,11 +43,10 @@ use super::unmarked_headings::assign_unmarked_heading_owners;
 use super::value_binding_split::scan_split_binding;
 use super::value_context::recognized_source_value_contexts;
 use super::values::scan_value_bindings;
-use crate::config::{FileReading, Frame, Schema};
+use crate::config::{Frame, Schema};
 use crate::grammar::{
-    DocstringContent, MarkdownBlocks, MarkdownLine, MultiLineStrings, PythonDocstringScanState,
-    atx_heading_text, declaration_captures, near_miss_heading, parse_id, section_path,
-    source_scan_line,
+    DocstringContent, MarkdownBlocks, MarkdownLine, PythonDocstringScanState, atx_heading_text,
+    declaration_captures, near_miss_heading, parse_id, section_path, source_scan_line,
 };
 use crate::model::{
     Catalog, Citation, Declaration, DeclarationSource, FileRecord, FileText, HeadingKind, Id,
@@ -107,30 +106,29 @@ pub(super) fn scan_file_text(
     findings: &mut Catalog,
     workspace_targets: &[WorkspaceCitationTarget],
 ) -> Result<()> {
-    let grammar = frame.grammar();
     let marker = &schema.citation.marker;
-    // §FS-config-v2.schema.sources: a v2 file is read as its language is.
-    let reading = FileReading::of(schema.sources.model.as_ref(), path);
+    // §FS-config-v2.schema.sources: a v2 file is read as its language is, hosts and all.
+    let reading = frame.compiled.reading(schema, path);
+    let grammar = reading.lexical.grammar;
     let (is_md, is_py) = (reading.markdown, reading.python);
-    let docstring_python = frame.compiled.lexical_for(schema, path).docstring_python;
+    let docstring_python = reading.lexical.docstring_python;
     // §AR-scanner.2.8.1: the record keeps the text as read, and the pass reads it there.
     let mut record = FileRecord::new(file_text, is_md);
     let shared = record.text.clone();
     let text = shared.as_str();
     // §FS-languages.multi-line-string: what each line begins inside, read off the whole file.
-    let literals = MultiLineStrings::of(path, text, docstring_python);
+    let literals = reading.literals(text);
     // §AR-scanner.2.8.1: the comment blocks, walked once, are what the inline-note sites read.
     let (inline_sites, inline_block_lines) = if is_md {
         Default::default()
     } else {
-        let targets = workspace_targets;
-        inline_citation_sites(path, &literals, &mut record, is_py, schema, frame, targets)
+        inline_citation_sites(&reading, &literals, &mut record, schema, workspace_targets)
     };
     let in_docs = super::stub_shape::stub_by_docs(path);
     let mut markdown_blocks = MarkdownBlocks::default();
     let mut comment_fences = CommentFences::default();
     let mut py_docstring = PythonDocstringScanState::default();
-    let mut wrappers = UnclosedWrappers::new(schema, frame, is_md);
+    let mut wrappers = UnclosedWrappers::new(&reading);
     let mut current: Option<Declaration> = None;
     // §FS-declarations.line.block-comment: `current` was found on a bare block line, so its
     // block's bare headings are read at their own depth, as the record reads them.
@@ -146,7 +144,7 @@ pub(super) fn scan_file_text(
             .any(|target| value_kind(&target.schema));
     let has_binding_candidate = text.contains('`') && text.contains(marker);
     let value_line_contexts = ((scan_values || has_binding_candidate) && !is_md)
-        .then(|| recognized_source_value_contexts(&text, is_py, schema, frame));
+        .then(|| recognized_source_value_contexts(&text, &reading));
     // §AR-scanner.2.4.2: citing-side classification feeds citation-direction and chapter
     // rules, so the caller asks for it: `check`, the LSP, `cover` and `refs` pass `true`;
     // `list`, `show`, `fmt`, ID completion, `sizes` and `batch` pass `false`.
@@ -202,7 +200,7 @@ pub(super) fn scan_file_text(
         // declaration position, read as a docstring line is, where the comment reading finds none.
         let bare_block = !is_md && !scan.in_py_docstring && bare_block_line(&record, lineno);
         // §FS-config-v2.schema.sources.declarations.gate: one answer, before every recognizer.
-        let eligible = declaration_eligible(&record, schema, lineno);
+        let eligible = declaration_eligible(&record, &reading, lineno);
         let mut declared = false;
         if heading_position
             && eligible
@@ -413,7 +411,7 @@ pub(super) fn scan_file_text(
                 scan_line,
                 is_md || scan.in_py_docstring,
                 source_value_context.is_some_and(|context| context.block_comment),
-                schema,
+                reading.lexical,
             )
             .is_some()
         {
@@ -439,6 +437,7 @@ pub(super) fn scan_file_text(
             path,
             schema,
             frame,
+            lexical: reading.lexical,
             is_md,
             may_be_heading: heading_position,
             value_comment: source_value_context,
@@ -612,8 +611,7 @@ pub(super) fn scan_file_text(
     due.validate_values(
         path,
         text,
-        is_md,
-        is_py,
+        &reading,
         schema,
         frame,
         value_line_contexts.as_deref(),

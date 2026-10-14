@@ -349,7 +349,7 @@ When the scope is the repo root (no path argument, or `grund check .`) and `[sca
 
 ##### 2.2.2.2 An explicit path
 
-When an explicit path was given, the message names that path and the recognized extensions, since the usual cause is pointing `grund` at a tree with no `.md`/source files.
+When an explicit path was given, the message names that path and the recognized extensions, since the usual cause is pointing `grund` at a tree with no `.md`/source files. Under a v2 configuration the path can instead hold files grund reads that a `[schema.sources] exclude` pattern prunes ([§FS-config-v2.schema.sources.exclude.roots](FS-config-v2.md#schemasourcesexcluderoots-how-exclude-composes-with-the-other-filters)); the extensions were never the cause there, so the message names the pattern that prunes the first file the walk would otherwise read on its way down from the path: ``warning: nothing to scan — every file under `src` that grund would read is excluded by the [schema.sources] exclude pattern `gen`.``
 
 ##### 2.2.2.3 A hidden file
 

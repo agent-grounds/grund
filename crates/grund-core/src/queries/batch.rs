@@ -270,10 +270,10 @@ fn show_batch_query_with_metadata(
         false,
     )
     .map_err(|error| with_member_id_candidates(error, context, alias.as_deref(), raw_id))?;
-    let markdown_body = output.path.extension().and_then(|ext| ext.to_str()) == Some("md");
     // §FS-show.2.5, §FS-show.3.2.1: batch reads use the same Markdown fence
     // precedence and ordinary-prose inverse as single reads.
-    output.body = flatten_cross_ref_links(&output.body, config.lexical(), markdown_body);
+    let reading = config.reading(&output.path);
+    output.body = flatten_cross_ref_links(&output.body, reading.lexical, reading.markdown);
     output.json = Some(render_show_output_json(
         config,
         &project.findings.files,

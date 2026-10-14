@@ -4,10 +4,10 @@ use std::path::Path;
 use crate::config::{Config, fmt_excluded};
 use crate::grammar::{
     DocstringContent, DocstringCursor, FmtDirectives, MarkdownBlocks, MarkdownLine,
-    MultiLineStrings, bare_block_lines, declaration_id_on_source_line, id_token_end_at,
-    is_inside_inline_code, is_inside_markdown_link_destination, never_rewrite_context_in,
-    string_literal_in,
+    MultiLineStrings, id_token_end_at, is_inside_inline_code, is_inside_markdown_link_destination,
+    never_rewrite_context_in, string_literal_in,
 };
+use crate::scanner::DeclarationLines;
 use crate::sources::canonical_snapshot_path;
 
 use crate::resolver::shorthand_token_expansion;
@@ -70,8 +70,8 @@ fn can_replace_trigger_with_config(
     if id_token_end_at(line, after, &config.grammar) != Some(token_end) {
         return false;
     }
-    let is_md = path.extension().and_then(|ext| ext.to_str()) == Some("md");
-    if is_md {
+    // §FS-config-v2.schema.sources: the file is read as `grund fmt` reads it.
+    if config.reading(path).markdown {
         !is_inside_inline_code(line, trigger_start)
             && !is_inside_markdown_link_destination(line, trigger_start)
     } else {
@@ -124,22 +124,14 @@ pub fn on_type_line_edits(
         return Ok(Vec::new());
     };
     let cursor = cursor_byte.min(line.len());
-    let is_py = path.extension().and_then(|ext| ext.to_str()) == Some("py");
     if let Some(edit) = trigger_marker_edit(&config, path, text, line_index, line, cursor) {
         return Ok(vec![edit]);
     }
-    Ok(shorthand_expansion_edit(
-        &config,
-        path,
-        text,
-        line_index,
-        is_py,
-        line,
-        cursor,
-        declarations,
+    Ok(
+        shorthand_expansion_edit(&config, path, text, line_index, line, cursor, declarations)
+            .into_iter()
+            .collect(),
     )
-    .into_iter()
-    .collect())
 }
 
 /// Where the edited line's Python docstring content sits (§FS-fmt.2.3.1.1). Only a
@@ -154,10 +146,12 @@ pub(super) fn docstring_content_at<'a>(
     text: &'a str,
     line_index: usize,
 ) -> DocstringContent<'a> {
-    let is_py = path.extension().and_then(|ext| ext.to_str()) == Some("py");
-    // §FS-languages.multi-line-string: the same pre-pass `rewrite_file` reads.
-    let literals = MultiLineStrings::of(path, text, config.docstring_python);
-    let mut docstrings = DocstringCursor::new(is_py, config.docstring_python, &literals);
+    // §FS-config-v2.schema.sources, §FS-languages.multi-line-string: the same
+    // reading and pre-pass `rewrite_file` reads.
+    let reading = config.reading(path);
+    let literals = reading.literals(text);
+    let mut docstrings =
+        DocstringCursor::new(reading.python, reading.lexical.docstring_python, &literals);
     let mut content = DocstringContent::default();
     for (index, line) in text.lines().enumerate() {
         content = docstrings.advance(line);
@@ -188,22 +182,25 @@ pub(super) fn docstring_content_at<'a>(
 /// editor would start disagreeing with the command it previews.
 pub(super) fn line_is_rewritable(
     config: &Config,
+    path: &Path,
     text: &str,
     line_index: usize,
-    is_md: bool,
-    is_py: bool,
 ) -> bool {
+    // §FS-config-v2.schema.sources: the file is read as `rewrite_file` reads it.
+    let reading = config.reading(path);
+    let is_md = reading.markdown;
     let mut markdown_blocks = MarkdownBlocks::default();
     // §FS-fmt.2.3.1.1: `rewrite_file` reads a docstring line's content when it asks
     // whether the line is a declaration heading, so this walk does too.
     // It asks no string question, so it reads no multi-line literal.
+    let docstring_python = reading.lexical.docstring_python;
     let mut docstrings =
-        DocstringCursor::new(is_py, config.docstring_python, MultiLineStrings::NONE);
+        DocstringCursor::new(reading.python, docstring_python, MultiLineStrings::NONE);
     // §FS-fmt.2.5.2.1: every file starts with the rewrite on — a region never
     // carries across files, so the walk starts at the top of this one.
-    let mut directives = FmtDirectives::new(config.lexical(), is_md);
-    // §FS-declarations.line.block-comment: `rewrite_file`'s bare block lines, read the same way.
-    let bare_block = bare_block_lines(text, is_md, is_py, config.lexical());
+    let mut directives = FmtDirectives::new(reading.lexical, is_md);
+    // §FS-config-v2.schema.sources.declarations.gate: `rewrite_file`'s declaration lines.
+    let declarations = DeclarationLines::of(text, reading);
     for (index, line) in text.lines().enumerate() {
         let block = if is_md {
             markdown_blocks.line(line)
@@ -237,14 +234,9 @@ pub(super) fn line_is_rewritable(
             // §FS-check.1.1.5.1: a raw-text HTML block holds no declaration heading.
             return directives.rewriting()
                 && (!block.may_be_heading()
-                    || declaration_id_on_source_line(
-                        &config.grammar,
-                        docstring.text_of(line),
-                        docstring.is_docstring(),
-                        bare_block.get(index).copied().unwrap_or(false),
-                        is_md,
-                    )
-                    .is_none());
+                    || declarations
+                        .declared(index, docstring.text_of(line), docstring.is_docstring())
+                        .is_none());
         }
     }
     false
@@ -348,13 +340,11 @@ fn trigger_marker_edit(
 /// Why a *fresh* numeric run still expands: the author has not written the second
 /// number yet when this keystroke fires, so that expansion is visible and
 /// undoable — the loud failure, not the silent one.
-#[allow(clippy::too_many_arguments)]
 fn shorthand_expansion_edit(
     config: &Config,
     path: &Path,
     text: &str,
     line_index: usize,
-    is_py: bool,
     line: &str,
     cursor: usize,
     declarations: &[DeclaredId<'_>],
@@ -374,11 +364,11 @@ fn shorthand_expansion_edit(
     // §FS-fmt.2.3, §FS-fmt.2.5: the contexts the bulk pass refuses are the
     // contexts the live transform refuses, so a citation illustrated in inline
     // code stays as typed and so does one in a scope the repository suppressed.
-    let is_md = path.extension().and_then(|ext| ext.to_str()) == Some("md");
+    let is_md = config.reading(path).markdown;
     let docstring = docstring_content_at(config, path, text, line_index);
     if never_rewrite_context_in(docstring, line, is_md, marker_start)
         || file_is_fmt_excluded(config, path)
-        || !line_is_rewritable(config, text, line_index, is_md, is_py)
+        || !line_is_rewritable(config, path, text, line_index)
     {
         return None;
     }

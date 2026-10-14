@@ -137,36 +137,6 @@ impl SourceModel {
     }
 }
 
-/// How the text scan reads one file (§FS-config-v2.schema.sources): with the
-/// Markdown reader, and whether it reads Python docstrings. A v2 file takes both
-/// from its language, so a remapped suffix is read as its target is; a v1 file,
-/// or one no admitted language claims, from its extension (§FS-config.5.2).
-#[derive(Clone, Copy)]
-pub(crate) struct FileReading<'a> {
-    pub(crate) markdown: bool,
-    pub(crate) python: bool,
-    /// The file's v2 language, `None` for a v1 file.
-    pub(crate) language: Option<&'a Language>,
-}
-
-impl<'a> FileReading<'a> {
-    pub(crate) fn of(model: Option<&'a SourceModel>, path: &Path) -> Self {
-        let extension = path.extension().and_then(|ext| ext.to_str());
-        match model.and_then(|model| model.language_of(path)) {
-            Some(language) => Self {
-                markdown: language.class == LanguageClass::Document,
-                python: language.docstrings,
-                language: Some(language),
-            },
-            None => Self {
-                markdown: extension == Some("md"),
-                python: extension == Some("py"),
-                language: None,
-            },
-        }
-    }
-}
-
 /// One built-in row of the epoch table (§FS-config-v2.schema.sources.epoch).
 struct Row {
     name: &'static str,
@@ -178,6 +148,10 @@ struct Row {
 }
 
 const C_HOSTS: &[&str] = &["//", "/*", "*"];
+/// The prefixes a Markdown file reads a comment-led line through, v1's defaults:
+/// its own hosts, so a v2 `.md` reads as a v1 one does and no source language's
+/// hosts reach it (§FS-languages.prefixes, §FS-config-v2.schema.sources.definitions).
+const MARKDOWN_HOSTS: &[&str] = &["//", "#", ";", "--", "*", "/*"];
 
 const fn source(
     name: &'static str,
@@ -211,7 +185,7 @@ const EPOCH: &[Row] = &[
         default: true,
         class: LanguageClass::Document,
         suffixes: &["md"],
-        prefixes: &[],
+        prefixes: MARKDOWN_HOSTS,
         profile: DocProfile::None,
     },
     Row {

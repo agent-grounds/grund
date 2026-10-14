@@ -127,8 +127,13 @@ pub(super) fn slice_site(
     let record = files
         .get(&declaration.file)
         .ok_or_else(|| anyhow!("read {}: not scanned", declaration.file.display()))?;
-    let lexical = frame.compiled.lexical(schema);
-    match today_slices(record, site, section, &mut sinks, lexical) {
+    // §FS-languages.prefixes: the body is read through its own file's hosts, and a
+    // v2 file's fixed markers are only those its language hosts.
+    let reading = frame.compiled.reading(schema, &declaration.file);
+    let hosts = reading
+        .language
+        .map(|language| language.comment_prefixes.as_slice());
+    match today_slices(record, site, section, &mut sinks, reading.lexical, hosts) {
         Ok(line) => Ok((line, sinks)),
         Err(TodayMiss::Declaration) => {
             Err(anyhow!("ID not found: {}", render_id(frame.grammar(), id)))

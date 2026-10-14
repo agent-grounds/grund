@@ -9,7 +9,7 @@
 
 use std::sync::Arc;
 
-use super::compiled::{Compiled, scan_demand};
+use super::compiled::{Compiled, host_grammars, scan_demand};
 use super::facade::Records;
 use super::fields::Field;
 use super::kind::KindConfig;
@@ -29,6 +29,8 @@ impl Config {
         let mut run = self.records.run.clone();
         self.write_run_fields(&mut run);
         let compiled = Compiled {
+            hosts: host_grammars(&self.grammar, &project.schema.sources)
+                .expect("a façade's grammar compiles over its own languages' hosts"),
             grammar: self.grammar.clone(),
             demand: scan_demand(&project),
         };

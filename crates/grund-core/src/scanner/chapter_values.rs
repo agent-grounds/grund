@@ -13,8 +13,8 @@ use super::embedded_value_context::{
 };
 use super::section_record::section_is_chapter_value_root;
 use super::value_context::SourceValueLineContext;
-use crate::config::{Frame, Schema, kind_value_chapter};
-use crate::grammar::is_lone_block_marker;
+use crate::config::{FileReading, Schema, kind_value_chapter};
+use crate::grammar::{LexicalSettings, is_lone_block_marker};
 use crate::model::{Catalog, InvalidValueSite};
 use crate::sources::paths_same_location;
 
@@ -31,14 +31,14 @@ const CHAPTER_CONTENT: &str = "a declared value chapter holds only named value-r
 pub(super) fn validate_declared_value_chapters(
     path: &Path,
     text: &str,
-    is_md: bool,
-    is_py: bool,
+    reading: &FileReading<'_>,
     schema: &Schema,
-    frame: Frame<'_>,
     source_contexts: Option<&[Option<SourceValueLineContext>]>,
     findings: &mut Catalog,
 ) {
-    let normalized = normalized_value_lines(text, is_py, schema, source_contexts);
+    // §FS-config-v2.schema.sources: a chapter is read through its file's own hosts.
+    let (is_md, lexical) = (reading.markdown, reading.lexical);
+    let normalized = normalized_value_lines(text, reading, source_contexts);
     let mut invalid = Vec::new();
     for decl in findings
         .declarations
@@ -60,7 +60,7 @@ pub(super) fn validate_declared_value_chapters(
                 continue;
             };
             let markdown = is_md || *docstring;
-            let level = authored_heading_level(line, markdown, *block_comment, schema);
+            let level = authored_heading_level(line, markdown, *block_comment, lexical);
             // The chapter ends at the next heading of its own depth or above;
             // everything from there is another chapter's business.
             if level.is_some_and(|found| found <= chapter_level) {
@@ -79,11 +79,11 @@ pub(super) fn validate_declared_value_chapters(
                     chapter_level + 1,
                     decl.body_end,
                     is_md,
-                    schema,
+                    lexical,
                 );
                 // §FS-values.2.5: a relative root is read at the path the record holds.
                 let path = relative.get(&line_no).cloned().or_else(|| {
-                    authored_heading_path(line, markdown, *block_comment, true, schema, frame)
+                    authored_heading_path(line, markdown, *block_comment, true, lexical)
                 });
                 if path.is_some_and(|found| {
                     section_is_chapter_value_root(schema, &decl.id.kind, &found)
@@ -91,7 +91,7 @@ pub(super) fn validate_declared_value_chapters(
                     continue;
                 }
             } else {
-                let content = semantic_comment_content(line, markdown, *block_comment, schema);
+                let content = semantic_comment_content(line, markdown, *block_comment, lexical);
                 if content.is_empty() || is_lone_block_marker(content) {
                     continue;
                 }
@@ -118,14 +118,14 @@ fn child_subtree_end(
     level: usize,
     body_end: usize,
     is_md: bool,
-    schema: &Schema,
+    lexical: LexicalSettings<'_>,
 ) -> usize {
     ((line_no + 1)..=body_end)
         .find(|candidate| {
             normalized
                 .get(candidate.saturating_sub(1))
                 .and_then(|(line, _, docstring, block_comment)| {
-                    authored_heading_level(line, is_md || *docstring, *block_comment, schema)
+                    authored_heading_level(line, is_md || *docstring, *block_comment, lexical)
                 })
                 .is_some_and(|found| found <= level)
         })

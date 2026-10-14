@@ -28,6 +28,13 @@ pub(super) fn check_excluded_stub_targets(
                         "move the target out of {entry}, or take {entry} out of [scan] exclude"
                     ),
                 ),
+                ExcludingRule::Pattern(pattern) => (
+                    format!("[schema.sources] exclude matches it by {pattern}"),
+                    format!(
+                        "move the target out of what {pattern} matches, or take {pattern} out of \
+                         [schema.sources] exclude"
+                    ),
+                ),
                 ExcludingRule::IgnoreFile { file, pattern } => (
                     format!("{file} ignores it by {pattern}"),
                     format!(

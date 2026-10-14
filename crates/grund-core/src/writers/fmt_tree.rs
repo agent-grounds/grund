@@ -42,7 +42,7 @@ fn scope_contains_markdown(
     Ok(
         walk_scannable_files(config.schema(), config.frame(), scope, explicit_scope)?
             .iter()
-            .any(|path| path.extension().and_then(|ext| ext.to_str()) == Some("md")),
+            .any(|path| config.reading(path).markdown),
     )
 }
 
@@ -226,9 +226,12 @@ pub(crate) fn fmt_tree(
                 &refused_writes,
             )
         })?;
-        let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");
-        relative_seen =
-            relative_seen || is_md && may_give_locked_heading(config.frame(), &path, &original);
+        // §FS-config-v2.schema.sources: each file is read as its language is.
+        let reading = config.reading(&path);
+        let is_md = reading.markdown;
+        let markdown = |target: &Path| config.reading(target).markdown;
+        relative_seen = relative_seen
+            || is_md && may_give_locked_heading(config.frame(), &path, &original, &markdown);
         // §FS-fmt.2.5.1: an excluded file keeps its bytes, so the ordinary pass
         // is off here — every rewrite with it (§FS-fmt.2.5).
         let file_excluded = excluded.contains(&path);
@@ -265,7 +268,7 @@ pub(crate) fn fmt_tree(
             &original,
             &path,
             config,
-            is_md,
+            reading,
             &FmtLineOpts {
                 add_marker,
                 cross_refs,
@@ -290,7 +293,7 @@ pub(crate) fn fmt_tree(
                 &original,
                 &path,
                 config,
-                is_md,
+                reading,
                 &FmtLineOpts {
                     add_marker,
                     cross_refs,

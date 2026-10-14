@@ -17,7 +17,7 @@ use crate::config::rows::{Extent, Form, Kind, Origin, Place, Row};
 use crate::config::v1::{ValueLines, rule_kind_refusal, validate_kind_value_keys};
 
 use super::schema::RowDraft;
-use super::sources;
+use super::{sources, sources_model};
 
 /// §FS-config-v2.reader.4: judge the file whole, then lower its rows. `root` is
 /// the config root a value home must exist under (§FS-fields.forms).
@@ -38,7 +38,7 @@ pub(super) fn finish(mut r: Reader, root: &Path) -> Result<Project> {
         form_prerequisites(&r, row, root)?;
     }
     lower(&mut r);
-    sources::lower(&mut r);
+    sources_model::lower(&mut r);
     Ok(r.project)
 }
 

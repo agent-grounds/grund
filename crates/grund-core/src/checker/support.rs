@@ -66,10 +66,15 @@ pub(super) fn missing_snapshot_message(
 /// span, the signal that a dangling `§`-citation may be an illustration. Only
 /// the rare dangling path asks, so this reads the one line out of the file record
 /// the scan kept (§AR-scanner.2.8) rather than widening every `Citation`; source
-/// files (columns shifted by stripped comment prefixes) never qualify. Any
-/// bounds failure yields `false` — no hint.
-pub(super) fn citation_in_markdown_inline_code(findings: &Catalog, cite: &Citation) -> bool {
-    if cite.file.extension().and_then(|e| e.to_str()) != Some("md") {
+/// files (columns shifted by stripped comment prefixes) never qualify, and
+/// `markdown` is whether the citing file reads as Markdown. Any bounds failure
+/// yields `false` — no hint.
+pub(super) fn citation_in_markdown_inline_code(
+    findings: &Catalog,
+    cite: &Citation,
+    markdown: bool,
+) -> bool {
+    if !markdown {
         return false;
     }
     let record = findings.files.get(&cite.file);

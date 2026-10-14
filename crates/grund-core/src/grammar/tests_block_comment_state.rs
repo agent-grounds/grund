@@ -5,7 +5,7 @@
 //! in a block whose `*/` is found.
 
 use super::source_line::{BlockCommentLine, BlockCommentScanState};
-use super::{CommentBlockKind, bare_block_lines, comment_blocks};
+use super::{CommentBlockKind, comment_blocks, is_bare_block_line};
 use crate::testing::{numbered_config, test_root};
 
 /// Where each line stands to a block, read by one state from the top.
@@ -82,10 +82,15 @@ fn a_one_line_block_opens_and_closes_on_its_line() {
 fn only_a_closed_block_has_bare_lines() {
     let config = numbered_config(test_root("only_a_closed_block_has_bare_lines"));
     let closed = ["/**", "FS-b: Beta", " * starred", "*/", "/*", "FS-c: Gamma"];
-    assert_eq!(
-        bare_block_lines(&closed.join("\n"), false, false, config.lexical()),
-        [false, true, false, false, false, false]
-    );
+    let mut bare = vec![false; closed.len()];
+    for (start, end, kind) in comment_blocks(&closed, false, config.lexical()) {
+        if let CommentBlockKind::Block { closed: found } = kind {
+            for index in start..=end {
+                bare[index] = is_bare_block_line(closed[index], found);
+            }
+        }
+    }
+    assert_eq!(bare, [false, true, false, false, false, false]);
 }
 
 /// `comment_blocks` reads its `/* … */` spans off the line reader's state: each

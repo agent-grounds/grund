@@ -2,7 +2,7 @@
 //! (§FS-values.3.2, §AR-scanner.2.3.5).
 
 use super::citation_line::CitationLine;
-use crate::config::{Frame, Schema};
+use crate::config::FileReading;
 use crate::grammar::{CommentBlockKind, comment_blocks};
 
 pub(super) fn value_binding_context(line: &CitationLine<'_>) -> Option<(usize, usize)> {
@@ -38,13 +38,12 @@ pub(super) fn binding_span_is_inside(context: (usize, usize), start: usize, end:
 /// declare embedded values (§FS-values.2.4.1, §FS-values.3.2).
 pub(super) fn recognized_source_value_contexts(
     text: &str,
-    is_py: bool,
-    schema: &Schema,
-    frame: Frame<'_>,
+    reading: &FileReading<'_>,
 ) -> Vec<Option<SourceValueLineContext>> {
     let lines = text.lines().collect::<Vec<_>>();
     let mut contexts = vec![None; lines.len()];
-    for (start, end, kind) in comment_blocks(&lines, is_py, frame.compiled.lexical(schema)) {
+    // §FS-config-v2.schema.sources: the blocks are the file's own language's.
+    for (start, end, kind) in comment_blocks(&lines, reading.python, reading.lexical) {
         match kind {
             CommentBlockKind::PythonDocstring => {
                 // `source_scan_line` already slices each docstring line to its

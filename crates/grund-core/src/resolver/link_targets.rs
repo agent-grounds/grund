@@ -172,7 +172,12 @@ pub(crate) fn markdown_link_target_with_root(
     if section.is_some_and(|sec| !record.sections.contains_key(sec)) {
         return None;
     }
-    if !takes_heading_anchor(&record.file, presentation) {
+    // The scan read the home's file as its language reads it, and recorded that.
+    let markdown = findings
+        .files
+        .get(&record.file)
+        .is_some_and(|file| file.markdown);
+    if !takes_heading_anchor(markdown, presentation) {
         return Some(rel);
     }
     // §FS-fmt.6.2.1.1: a bare ID's heading is the scan's record too.
@@ -187,13 +192,14 @@ pub(crate) fn markdown_link_target_with_root(
     Some(format!("{}#{}", rel, anchor))
 }
 
-/// Whether a link into `home` carries a heading anchor at all: only a Markdown
-/// home does, and not under the `none` profile (§FS-fmt.6.2, §FS-fmt.6.7.1).
-/// `show --format=json` asks the same question for its `anchor` field, so a
-/// `null` there is exactly a bare file link here (§FS-show.3.1.3.1).
-pub(crate) fn takes_heading_anchor(home: &Path, presentation: &Presentation) -> bool {
-    home.extension().and_then(|e| e.to_str()) == Some("md")
-        && presentation.fmt.anchor_format != "none"
+/// Whether a link into a home carries a heading anchor at all: only a home that
+/// reads as Markdown does (`markdown`, its language's answer,
+/// §FS-config-v2.schema.sources.extensions), and not under the `none` profile
+/// (§FS-fmt.6.2, §FS-fmt.6.7.1). `show --format=json` asks the same question for
+/// its `anchor` field, so a `null` there is exactly a bare file link here
+/// (§FS-show.3.1.3.1).
+pub(crate) fn takes_heading_anchor(markdown: bool, presentation: &Presentation) -> bool {
+    markdown && presentation.fmt.anchor_format != "none"
 }
 
 /// The heading anchor, without its `#`, of `decl` in its Markdown home: the

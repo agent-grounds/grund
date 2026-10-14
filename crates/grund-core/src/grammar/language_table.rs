@@ -4,8 +4,6 @@
 //! recognizer a file gets, and the v1 `extensions` default reads every extension
 //! it names (§FS-scan.scope.extensions.default).
 
-use std::path::Path;
-
 use super::comment_block::{DefinitionStart, DocCommentRule};
 
 /// Go's definition keywords — `package` included, so a file-header comment above
@@ -94,26 +92,26 @@ pub(crate) fn classified_extensions() -> impl Iterator<Item = &'static str> {
     LANGUAGE_TABLE.iter().map(|(extension, _)| *extension)
 }
 
-/// The doc-comment recognizer for one file, keyed on its extension: a lookup in
+/// The doc-comment recognizer the table gives `extension`: a lookup in
 /// [`LANGUAGE_TABLE`] (§FS-inline-citation-style.1.1.2, §AR-scanner.4). Built in
 /// and not configurable: what a note *is* must not differ between two installs
 /// (§FS-non-goals.13). An extension the table does not name has no doc notion,
 /// so every one of its comment blocks stays an inline site and nothing a tree
-/// already passes changes.
-pub(crate) fn doc_comment_rule(path: &Path) -> DocCommentRule {
-    let Some(extension) = path.extension().and_then(|ext| ext.to_str()) else {
-        return DocCommentRule::None;
-    };
-    extension_rule(extension)
-}
-
-/// The recognizer the table gives `extension`, `None` where it names none.
+/// already passes changes. Which extension a file is asked under is config's
+/// answer (`FileReading`), never a path's alone.
 pub(crate) fn extension_rule(extension: &str) -> DocCommentRule {
     LANGUAGE_TABLE
         .iter()
         .find(|(named, _)| *named == extension)
         .map_or(DocCommentRule::None, |(_, rule)| *rule)
 }
+
+/// Go's and Ruby's definition starters as they stood at the v2 epoch, frozen for
+/// the declarations their profiles admit (§FS-inline-citation-style.1.1.4). The
+/// table's sets above may widen for measurement (§FS-inline-citation-style.1.1.3);
+/// these are a profile's membership and change only with a new profile.
+const GO_EPOCH_STARTERS: &[&str] = &["func", "type", "var", "const", "package"];
+const RUBY_EPOCH_STARTERS: &[&str] = &["class", "module", "def"];
 
 /// A frozen doc-comment recognizer a v2 language names, for the declarations it
 /// admits (§FS-config-v2.schema.sources.epoch, §FS-inline-citation-style.1.1.4).
@@ -170,16 +168,18 @@ impl DocProfile {
     }
 
     /// The recognizer this profile asks (§FS-inline-citation-style.1.1.4): the
-    /// one the v1 table gives the language's own extensions.
+    /// one the v1 table gave the language's own extensions at the v2 epoch, built
+    /// from this profile's own starter sets so that widening the table's for
+    /// measurement never widens what may declare.
     pub(crate) fn rule(self) -> DocCommentRule {
         match self {
-            Self::None => PREFIX_ONLY,
-            Self::CFamily => C_FAMILY,
+            Self::None => DocCommentRule::None,
+            Self::CFamily => DocCommentRule::CFamily,
             Self::Python => DocCommentRule::Docstring,
-            Self::Go => GO,
-            Self::Ruby => RUBY,
-            Self::Shell => SHELL,
-            Self::Sql => SQL,
+            Self::Go => DocCommentRule::Position(DefinitionStart::Keywords(GO_EPOCH_STARTERS)),
+            Self::Ruby => DocCommentRule::Position(DefinitionStart::Keywords(RUBY_EPOCH_STARTERS)),
+            Self::Shell => DocCommentRule::Position(DefinitionStart::ShellFunction),
+            Self::Sql => DocCommentRule::Position(DefinitionStart::SqlCreate),
             Self::Ldoc => DocCommentRule::LuaDoc,
             Self::Haddock => DocCommentRule::Haddock,
             Self::Roxygen => DocCommentRule::Roxygen,

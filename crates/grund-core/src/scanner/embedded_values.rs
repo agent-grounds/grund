@@ -12,7 +12,7 @@ use super::embedded_value_context::{
 };
 use super::value_context::SourceValueLineContext;
 use super::values::{recorded_component, value_declaration_is_in_home};
-use crate::config::{Frame, Schema};
+use crate::config::{FileReading, Frame, Schema};
 use crate::grammar::is_lone_block_marker;
 use crate::model::{
     Catalog, EmbeddedValueRoot, InvalidValueSite, ValueRootOrigin, authored_component,
@@ -26,14 +26,15 @@ use crate::sources::paths_same_location;
 pub(super) fn validate_embedded_value_roots(
     path: &Path,
     text: &str,
-    is_md: bool,
-    is_py: bool,
+    reading: &FileReading<'_>,
     schema: &Schema,
     frame: Frame<'_>,
     source_contexts: Option<&[Option<SourceValueLineContext>]>,
     findings: &mut Catalog,
 ) {
-    let normalized = normalized_value_lines(text, is_py, schema, source_contexts);
+    // §FS-config-v2.schema.sources: a root is read through its file's own hosts.
+    let (is_md, lexical) = (reading.markdown, reading.lexical);
+    let normalized = normalized_value_lines(text, reading, source_contexts);
 
     let mut invalid = Vec::new();
     for decl in findings
@@ -183,7 +184,7 @@ pub(super) fn validate_embedded_value_roots(
             let root_title_valid = normalized
                 .get(root_line.saturating_sub(1))
                 .and_then(|(line, _, _, block_comment)| {
-                    recorded_component(line, recorded(root_line), frame)
+                    recorded_component(line, recorded(root_line), lexical.grammar)
                         .map(|(title, column)| (title, column, *block_comment))
                 })
                 .and_then(|(title, _, block_comment)| {
@@ -218,7 +219,7 @@ pub(super) fn validate_embedded_value_roots(
                                 line,
                                 is_md || *docstring,
                                 *block_comment,
-                                schema,
+                                lexical,
                             )
                         })
                         .is_some_and(|level| level <= root_level)
@@ -242,21 +243,14 @@ pub(super) fn validate_embedded_value_roots(
                     continue;
                 };
                 let markdown = is_md || *docstring;
-                let content = semantic_comment_content(line, markdown, *block_comment, schema);
+                let content = semantic_comment_content(line, markdown, *block_comment, lexical);
                 if content.is_empty() || is_lone_block_marker(content) {
                     continue;
                 }
                 let child = recorded(line_no).map(str::to_string).or_else(|| {
-                    authored_heading_path(
-                        line,
-                        markdown,
-                        *block_comment,
-                        chapter_root,
-                        schema,
-                        frame,
-                    )
+                    authored_heading_path(line, markdown, *block_comment, chapter_root, lexical)
                 });
-                let level = authored_heading_level(line, markdown, *block_comment, schema);
+                let level = authored_heading_level(line, markdown, *block_comment, lexical);
                 let expected_path = format!("{root_path}.{expected}");
                 let immediate_numeric = child.as_deref().is_some_and(|path| {
                     path.strip_prefix(&format!("{root_path}."))
@@ -300,7 +294,8 @@ pub(super) fn validate_embedded_value_roots(
                             .to_string(),
                     ));
                 }
-                let Some((component, column)) = recorded_component(line, recorded(line_no), frame)
+                let Some((component, column)) =
+                    recorded_component(line, recorded(line_no), lexical.grammar)
                 else {
                     reasons.push((
                         line_no,

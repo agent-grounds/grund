@@ -60,9 +60,11 @@ mod compat;
 mod compat_envelope;
 mod context;
 mod declaration_line;
+mod declaration_lines;
 mod e2e;
 mod embedded_value_context;
 mod embedded_values;
+mod exclude_globs;
 mod extents;
 mod file_pass;
 mod held_mixed_headings;
@@ -112,6 +114,7 @@ pub(crate) use compat::{
     TodayMiss, TodaySink, TodaySite, becomes_section, record_lead, today_slices,
 };
 pub(crate) use context::{file_home_kind, markdown_heading_level, section_path_is_numeric};
+pub(crate) use declaration_lines::DeclarationLines;
 pub(crate) use e2e::e2e_case_dir_name;
 pub(crate) use embedded_value_context::EMBEDDED_VALUE_MARKER;
 pub(crate) use held_mixed_headings::held_mixed_headings;
@@ -124,13 +127,15 @@ pub(crate) use read_predicate::{Unread, extension_refusal, name_refusal};
 pub(crate) use record::{bare_block_line, enveloped_line};
 pub(crate) use relative_sections::{RelativeAnswer, doc_comment_relative_answers};
 pub(crate) use scan_error::api_scan_error;
-pub(crate) use scope_probe::effective_scope_reads_any_file;
+pub(crate) use scope_probe::{
+    effective_scope_reads_any_file, pruning_pattern, walk_reads_any_file,
+};
 pub(crate) use section_locks::{may_give_locked_heading, section_locks_present};
 pub(crate) use stub_homes::lend_citations;
 pub(crate) use tree::{
     ScanError, record_of_text, scan_tree, scan_tree_strict, scan_tree_with_workspace,
 };
-pub(crate) use walk::{scan_roots_for, walk_reads_any_file};
+pub(crate) use walk::scan_roots_for;
 pub(crate) use walk_reporting::{
     walk_scannable_files, walk_scannable_files_reporting, walk_scannable_files_with_sources,
 };

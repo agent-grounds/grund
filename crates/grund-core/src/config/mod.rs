@@ -50,6 +50,7 @@ mod facade;
 #[cfg(test)]
 mod facade_sync;
 mod fields;
+mod file_reading;
 mod fmt_block;
 mod frame;
 mod grounding;
@@ -120,6 +121,7 @@ pub(crate) use discovery::{
 };
 #[cfg(test)]
 pub(crate) use discovery::{load_config, load_config_at};
+pub(crate) use file_reading::FileReading;
 pub(crate) use fmt_block::fmt_excluded;
 pub(crate) use grounding::{
     any_place_grounded, grounding_level_for_kind, homeless_row_grounding, row_grounding,
@@ -139,7 +141,6 @@ pub(crate) use run_warnings::RunWarning;
 pub(crate) use scope_roots::{
     canonical_config_root, file_root_rows, root_scope_roots, unwalked_home_roots, unwalked_homes,
 };
-pub(crate) use sources::{FileReading, Language};
 pub(crate) use v1::{LEGACY_FS_FOLDER, parse_string_list, strip_comment};
 pub(crate) use workspace_block::{
     INVALID_ALIAS_PATH_EXPECTED, both_member_lists_message, invalid_alias_path_segment,

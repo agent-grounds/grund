@@ -7,7 +7,7 @@ use std::path::Path;
 
 use crate::config::{Frame, Schema};
 use crate::grammar::{
-    BlockCitations, block_has_inline_note_memoized, comment_strip_prefixes,
+    BlockCitations, LexicalSettings, block_has_inline_note_memoized, comment_strip_prefixes,
     inline_layout_violations, layout_pass_enabled, line_says_something,
 };
 use crate::model::{Citation, InlineCitationSite};
@@ -44,8 +44,10 @@ pub(super) fn reconcile_promoted_inline_site(
         line_ranges.dedup();
     }
     let lines = block_lines.iter().map(String::as_str).collect::<Vec<_>>();
+    // §FS-config-v2.schema.sources: the block is read through its file's own hosts.
+    let lexical = frame.compiled.reading(schema, file).lexical;
     let (has_note, layout_violations) =
-        inline_note_verdicts_from_ranges(&lines, site.first_line, schema, frame, ranges);
+        inline_note_verdicts_from_ranges(&lines, site.first_line, lexical, ranges);
     site.has_note = has_note;
     site.layout_violations = layout_violations;
     for citation in citations.iter_mut() {
@@ -63,12 +65,11 @@ pub(super) fn reconcile_promoted_inline_site(
 fn inline_note_verdicts_from_ranges(
     lines: &[&str],
     first_line: usize,
-    schema: &Schema,
-    frame: Frame<'_>,
+    lexical: LexicalSettings<'_>,
     ranges: Vec<Vec<(usize, usize)>>,
 ) -> (bool, Vec<usize>) {
-    let prefixes = comment_strip_prefixes(frame.compiled.lexical(schema));
-    if !layout_pass_enabled(frame.compiled.lexical(schema)) {
+    let prefixes = comment_strip_prefixes(lexical);
+    if !layout_pass_enabled(lexical) {
         let has_note = lines
             .iter()
             .zip(&ranges)
@@ -79,7 +80,7 @@ fn inline_note_verdicts_from_ranges(
     let mut block = BlockCitations {
         lines,
         literal_entries: &[],
-        lexical: frame.compiled.lexical(schema),
+        lexical,
         alias_grammars: &[],
         ranges: ranges.into_iter().map(Some).collect(),
     };
