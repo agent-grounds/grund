@@ -432,3 +432,65 @@ fn a_leading_slash_subject_still_recovers_its_kind() {
         ),
     ]);
 }
+
+/// The sentences that carry `count` in every count shape: the three bounds of a
+/// relation count and the three of a per-target count.
+fn every_count_shape(count: &str) -> Vec<String> {
+    ["at least", "at most", "exactly"]
+        .into_iter()
+        .flat_map(|bound| {
+            [
+                format!("Each FS must cite {bound} {count} FS."),
+                format!("FS-login.requirements must cite each FS {bound} {count} times."),
+            ]
+        })
+        .collect()
+}
+
+/// §FS-rule-refusals.sentences.count-range: a count above the largest supported count is refused for
+/// its range in every count shape, leading zeros or none, and is offered no form.
+#[test]
+fn a_count_above_the_largest_supported_count_is_refused_for_its_range() {
+    let reason = format!(
+        "count must be a canonical positive base-10 integer; \
+         the count is above the largest supported count, {}",
+        usize::MAX
+    );
+    let above = (usize::MAX as u128 + 1).to_string();
+    let rows: Vec<Row> = [above.clone(), format!("0{above}")]
+        .iter()
+        .flat_map(|count| every_count_shape(count))
+        .map(|sentence| -> Row { (sentence.leak(), reason.clone().leak(), false) })
+        .collect();
+    assert_rows(&rows);
+    // The largest count with a leading zero keeps the leading-zeros refusal and its form.
+    let largest = format!("Each FS must cite at most {} FS.", usize::MAX);
+    let padded = largest.replace("at most ", "at most 0");
+    assert_rows(&[(
+        padded.leak(),
+        format!("count must be a canonical positive base-10 integer; accepted form: {largest}")
+            .leak(),
+        false,
+    )]);
+}
+
+/// Guard for §FS-rules.3, green before and after §FS-rule-refusals.sentences.count-range: the
+/// largest supported count is accepted in every count shape.
+#[test]
+fn the_largest_supported_count_is_accepted_in_every_count_shape() {
+    let vocabulary = vocabulary();
+    let refused: Vec<String> = every_count_shape(&usize::MAX.to_string())
+        .into_iter()
+        .filter_map(|sentence| {
+            let anchor = RuleAnchor {
+                path: "docs/rules/RULE-x.md".into(),
+                line: 1,
+                column: None,
+            };
+            parse_rule(&sentence, "RULE-x".into(), anchor, &vocabulary)
+                .err()
+                .map(|refusal| format!("{sentence:?}: {}", refusal.message))
+        })
+        .collect();
+    assert!(refused.is_empty(), "{}", refused.join("\n"));
+}
