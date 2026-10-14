@@ -128,7 +128,7 @@ The row named `code` is the **complement**: the one row that holds source declar
 
 Every other row with no place is told apart by `citable`. A citable one is declared only in doc-comments ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)). A non-citable one is a place with no place, refused at its header: `` `[schema.kinds.<NAME>]` has no place: give it `folders` or `files`, or name the complement `code` ``.
 
-A root `AGENTS.md` is scanned exactly when a place covers it: listed in some row's `files`, or inside the complement's extent, which it is when that extent is the config root ([§REQ-agents-md.4](../requirements/REQ-agents-md.md#4-scanned-like-everything-else)).
+A scoped `AGENTS.md` that `grund init` generates ([§FS-init.2.3.5.11](FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)) is not a unit of the place it sits in unless a row lists it in `files`, which claims it like any other file ([§FS-init.2.3.5.15](FS-init.md#23515-a-generated-scoped-entrypoint-is-not-a-unit-of-its-place)). A root `AGENTS.md` is scanned exactly when a place covers it: listed in some row's `files`, or inside the complement's extent, which it is when that extent is the config root ([§REQ-agents-md.4](../requirements/REQ-agents-md.md#4-scanned-like-everything-else)).
 
 #### schema.places.ownership: A listed file, then the deepest folder
 
@@ -395,7 +395,7 @@ A ladder is one setting. A row that writes a ladder replaces the project's ladde
 
 ## presentation: The presentation concern
 
-`[presentation]` admits `description`, `trigger`, `conversation` and `rules`. `[presentation.kinds.<NAME>]` admits `title`, and `[presentation.fmt]` admits `anchors`, `links` and `exclude`. `description`, `trigger`, `conversation` and a kind's `title` mean what `project_description`, `[reference] trigger`, `[reference] conversation` and a row's `title` mean in v1 ([§FS-config.3](FS-config.md#3-keys)). `[presentation.fmt] exclude` is v1's `[fmt] exclude` ([§FS-config.3.10](FS-config.md#310-fmt--suppressing-the-rewrite)), and `anchors = "github"` with `links = "index"` is the formatter's existing effect. Every other value of `anchors` and `links`, and `rules`, are subject to [§FS-config-v2.rollout](FS-config-v2.md#rollout-what-this-grund-executes-and-what-it-refuses).
+`[presentation]` admits `description`, `trigger`, `conversation` and `rules`. `[presentation.kinds.<NAME>]` admits `title`, and `[presentation.fmt]` admits `anchors`, `links` and `exclude`. `rules` says where each row's guidance is written: `"home"`, the default, writes it into the `AGENTS.md` of the deepest directory holding the row's places ([§FS-init.2.3.5.11](FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)), and `"root"` writes every row into the root entrypoint, exactly as a version-1 config renders ([§FS-init.2.3.5.11.5](FS-init.md#235115-rules--root-and-every-version-1-config-render-at-the-root)). Any other value is refused at its line: `` unknown [presentation] rules `<value>` (expected home or root) ``. `description`, `trigger`, `conversation` and a kind's `title` mean what `project_description`, `[reference] trigger`, `[reference] conversation` and a row's `title` mean in v1 ([§FS-config.3](FS-config.md#3-keys)). `[presentation.fmt] exclude` is v1's `[fmt] exclude` ([§FS-config.3.10](FS-config.md#310-fmt--suppressing-the-rewrite)), and `anchors = "github"` with `links = "index"` is the formatter's existing effect. Every other value of `anchors` and `links` is subject to [§FS-config-v2.rollout](FS-config-v2.md#rollout-what-this-grund-executes-and-what-it-refuses).
 
 ## rollout: What this grund executes, and what it refuses
 
@@ -415,7 +415,7 @@ The format is published whole, and this binary executes part of it. A clause the
 | A row with more than one place, a place inside another row's place, a `code` row with or without places | executed | #457 |
 | `[schema.kinds.*.fields.*]`, `form`, `closed` | executed | #458 |
 | Any other `anchors` or `links` value | refused | its own change; #459 closed without it |
-| `[presentation] rules` | refused | #460 |
+| `[presentation] rules` | executed | #460 |
 
 The published example of [§DISC-core-concerns.7.1](../discussions/proposals/2026-09-30-core-concerns.md#71-the-canonical-example) parses once each owner has landed, and every refusal above is pinned by a test that turns into an executed case on that day.
 
@@ -436,4 +436,5 @@ Both readers lower into the same records, so the records hold every state either
 | A note budget, silent or opted into a warning | `may` or `warn` on the measure | the guidance threshold, and the warning threshold |
 | A file in two nested homes belongs to the complement | none: the deepest place owns it | the nesting rule, `NestedPlaceFallsToComplement` against v2's `DeepestPlaceWins` |
 | A complement renamed by a non-citable homeless row | none: the complement is `code`, titled by `[presentation.kinds.code] title` | the complement's row name |
+| Every row's guidance renders in the root entrypoint | `[presentation] rules = "root"`, which a migrated file writes explicitly; a v2 file that omits it renders scoped guidance ([§FS-init.2.3.5.11](FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)) | the layout of the generated guidance, so a migrated config writes the files its v1 config wrote |
 | `[scan] include`, separate from the homes | none: the scan is the places and the complement's extent | the derived scan roots |

@@ -1,0 +1,10 @@
+wrote AGENTS.md
+wrote docs/fs/AGENTS.md
+wrote docs/df/AGENTS.md
+exists grund.toml
+
+next:
+  1. re-run with --scaffold to scaffold the FS home (docs/fs), docs/, and tests/ (or create them yourself)
+  2. run `grund check` — a scaffolded tree is clean
+  3. allocate an ID:  ID=$(grund id FS "…")  then add it under docs/fs
+see AGENTS.md for the full workflow.

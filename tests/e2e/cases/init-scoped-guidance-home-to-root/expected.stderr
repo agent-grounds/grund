@@ -1,0 +1,6 @@
+updated AGENTS.md
+removed docs/spec/AGENTS.md
+removed docs/spec/CLAUDE.md
+removed tests/AGENTS.md
+removed tests/CLAUDE.md
+exists grund.toml

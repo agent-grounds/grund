@@ -1,0 +1,9 @@
+grund_config_version = 2
+project_name = "file-and-folder"
+[schema.kinds.GOAL]
+files = ["goals.md"]
+[schema.kinds.FS]
+files = ["docs/overview.md"]
+folders = ["docs/spec/core"]
+[rules.citations.FS]
+must = ["GOAL"]

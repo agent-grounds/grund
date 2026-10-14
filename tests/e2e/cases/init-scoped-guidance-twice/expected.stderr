@@ -1,0 +1,4 @@
+exists AGENTS.md
+exists docs/spec/AGENTS.md
+exists tests/AGENTS.md
+exists grund.toml
