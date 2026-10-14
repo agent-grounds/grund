@@ -113,7 +113,8 @@ The network pass writes lychee's JSON report (`--format json`, to a file through
 each failing `url` with a `status` whose `code` is the HTTP status and whose
 `text` is lychee's reason; a timeout carries no `code`, and the report carries
 no line numbers. Lychee then prints nothing of its own, so the wrapper prints
-every failure it keeps with its URL, source file and status.
+every failure it keeps with its URL, source file, status and lychee's reason:
+`text`, followed by the report's `details` when `text` does not already say it.
 
 A failure is a **candidate** when its `code` is 500 to 599 and its host is
 exactly `github.com`. Every other failure — any 4xx, a timeout, a failure without
