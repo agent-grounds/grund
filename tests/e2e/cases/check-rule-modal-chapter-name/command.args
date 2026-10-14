@@ -1,0 +1,1 @@
+check --rule 'The must chapter of each FS must cite at least one FS.' {repo}

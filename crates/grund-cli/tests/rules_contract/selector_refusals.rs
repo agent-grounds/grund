@@ -118,6 +118,10 @@ fn rows() -> Vec<(&'static str, String)> {
             "The should chapter of each FS must cite at least one FS.",
             "error: a rule sentence is not a selector; accepted selector: The should chapter of each FS\n".into(),
         ),
+        (
+            "The should chapter of each FS should cite at least one FS.",
+            "error: literal subject \"The\" does not match the configured ID grammar — chapter name \"should\" is read as the rule's modality, so rename the chapter\nknown kinds: FS\n".into(),
+        ),
     ]
 }
 
