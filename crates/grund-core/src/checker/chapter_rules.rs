@@ -8,13 +8,14 @@ use crate::model::{Catalog, CheckReport, Declaration, Diagnostic, paired_declara
 use crate::resolver::WorkspaceCheckTarget;
 use crate::rules::RuleAnchor;
 use crate::rules::engine::{
-    citation_precedence, evaluate, evaluate_suggestions, one_rules_authority, route_stubbed_rules,
+    evaluate, evaluate_suggestions, one_rules_authority, route_stubbed_rules,
     unresolved_subject_diagnostic,
 };
 use crate::rules::markdown::{MarkdownProject, adapt_markdown, adapt_workspace};
 use crate::rules::sentence::{ParsedRule, RuleVocabulary, parse_rule};
 use std::collections::{BTreeMap, BTreeSet};
 
+use super::direction_findings::directions;
 use super::fields::pair_fields_with_rules;
 use super::support::sort_diagnostics;
 
@@ -369,7 +370,7 @@ pub(crate) fn check_chapter_rules(
     if let Some(rule) = ad_hoc {
         parsed_rules.push(rule);
     }
-    let precedence = citation_precedence(&rules.citations);
+    let precedence = directions(findings, rules, schema, frame, &parsed_rules);
     // §FS-rules.7: one channel per level, so the absence arrives among the
     // errors its level already fills and every caller's own sort orders it.
     let (mut errors, mut ramp_warnings) = evaluate(&parsed_rules, &precedence, &facts);

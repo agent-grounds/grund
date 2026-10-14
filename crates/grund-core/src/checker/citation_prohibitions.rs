@@ -3,13 +3,14 @@
 //! citation site resolves to one level, and `must-not`, `warn-not` and
 //! `should-not` each report on their own channel (§FS-config-v2.rules.strengths).
 
-use super::citations::{citation_matches_target, citing_side_label};
+use super::citations::{
+    DirectionChannel, DirectionSink, citation_matches_target, citing_side_label,
+};
 use crate::config::{
-    CitationLevel, CitationTarget, NamespaceMatch, Rules, Schema, render_citation_target,
+    CitationDisjunction, CitationLevel, CitationTarget, NamespaceMatch, Rules, Schema,
+    render_citation_target,
 };
-use crate::model::{
-    CITATION_DIRECTION_REPAIR, Catalog, CheckReport, Citation, Diagnostic, name_under_number,
-};
+use crate::model::{CITATION_DIRECTION_REPAIR, Catalog, Citation, Diagnostic, name_under_number};
 use crate::rules::engine::{LENT_CLAUSE, MIXED_CLAUSE};
 
 /// §AR-checker.2.10 / §FS-check.3.12: a citation site whose citing kind prohibits
@@ -24,12 +25,15 @@ pub(super) fn check_citation_prohibitions(
     findings: &Catalog,
     rules: &Rules,
     schema: &Schema,
-    report: &mut CheckReport,
+    report: &mut impl DirectionSink,
 ) {
     for (cite, lent) in findings.marked_edges() {
         let mixed = cite.section.as_deref().is_some_and(name_under_number);
-        match citation_site_level(rules, cite) {
-            Some(CitationLevel::MustNot) if lent || mixed => {
+        let Some((level, entries)) = citation_site_level(rules, cite) else {
+            continue;
+        };
+        let (channel, diagnostic) = match level {
+            CitationLevel::MustNot if lent || mixed => {
                 let mut diagnostic = prohibition_diagnostic(
                     "forbidden-citation",
                     schema,
@@ -43,33 +47,37 @@ pub(super) fn check_citation_prohibitions(
                 if mixed {
                     diagnostic.message.push_str(&MIXED_CLAUSE);
                 }
-                report.warnings.push(diagnostic);
+                (DirectionChannel::Warnings, diagnostic)
             }
-            Some(CitationLevel::MustNot) => report.errors.push(prohibition_diagnostic(
-                "forbidden-citation",
-                schema,
-                cite,
-                "must not",
-                CITATION_DIRECTION_REPAIR,
-            )),
+            CitationLevel::MustNot => (
+                DirectionChannel::Errors,
+                prohibition_diagnostic(
+                    "forbidden-citation",
+                    schema,
+                    cite,
+                    "must not",
+                    CITATION_DIRECTION_REPAIR,
+                ),
+            ),
             // §FS-config-v2.rules.strengths: the `must-not` finding, code, message
             // and repair, on the warning channel.
-            Some(CitationLevel::WarnNot) => report.warnings.push(prohibition_diagnostic(
-                "forbidden-citation",
-                schema,
-                cite,
-                "must not",
-                CITATION_DIRECTION_REPAIR,
-            )),
-            Some(CitationLevel::ShouldNot) => report.suggestions.push(prohibition_diagnostic(
-                "discouraged-citation",
-                schema,
-                cite,
-                "should not",
-                "",
-            )),
-            _ => {}
-        }
+            CitationLevel::WarnNot => (
+                DirectionChannel::Warnings,
+                prohibition_diagnostic(
+                    "forbidden-citation",
+                    schema,
+                    cite,
+                    "must not",
+                    CITATION_DIRECTION_REPAIR,
+                ),
+            ),
+            CitationLevel::ShouldNot => (
+                DirectionChannel::Suggestions,
+                prohibition_diagnostic("discouraged-citation", schema, cite, "should not", ""),
+            ),
+            _ => continue,
+        };
+        report.push(channel, &cite.source_kind, level, &entries, diagnostic);
     }
 }
 
@@ -106,24 +114,34 @@ fn prohibition_diagnostic(
 }
 
 /// The direction level a citation site resolves to (§FS-config.3.9.4): the
-/// explicit list it matches under its citing kind's rules, else the per-kind
-/// `default`, else the global `default`, else `may`.
-fn citation_site_level(rules: &Rules, cite: &Citation) -> Option<CitationLevel> {
+/// explicit list it matches under its citing kind's rules, with the entries of
+/// that list it matches, else the per-kind `default`, else the global
+/// `default`, else `may`; a default level has no entry behind it.
+fn citation_site_level<'r>(
+    rules: &'r Rules,
+    cite: &Citation,
+) -> Option<(CitationLevel, Vec<&'r CitationDisjunction>)> {
     if let Some(kind_rules) = rules.citations.per_kind.get(&cite.source_kind) {
         for (level, disjunctions) in kind_rules.lists() {
-            for disjunction in disjunctions {
-                if disjunction
-                    .targets
-                    .iter()
-                    .any(|target| citation_matches_target(cite, target))
-                {
-                    return Some(level);
-                }
+            let entries = disjunctions
+                .iter()
+                .filter(|disjunction| {
+                    disjunction
+                        .targets
+                        .iter()
+                        .any(|target| citation_matches_target(cite, target))
+                })
+                .collect::<Vec<_>>();
+            if !entries.is_empty() {
+                return Some((level, entries));
             }
         }
         if let Some(default) = kind_rules.default {
-            return Some(default);
+            return Some((default, Vec::new()));
         }
     }
-    rules.citations.global_default
+    rules
+        .citations
+        .global_default
+        .map(|level| (level, Vec::new()))
 }

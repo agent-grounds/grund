@@ -15,12 +15,13 @@ use super::{
 };
 use crate::model::{CITATION_DIRECTION_REPAIR, Diagnostic};
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
 
 use authority::Authority;
 pub(crate) use authority::one_rules_authority;
 use cites::evaluate_cites;
 use index::FactIndex;
-pub(crate) use precedence::citation_precedence;
+pub(crate) use precedence::{Direction, citation_precedence, direction_rule};
 pub(crate) use ramp::{LENT_CLAUSE, MIXED_CLAUSE, UNRECORDED_MIXED_CLAUSE, route_stubbed_rules};
 use ramp::{Marks, Windows, matched_before, node_lent, nodes_matched_before, route, site_marks};
 pub(crate) use resolution::unresolved_subject_diagnostic;
@@ -63,7 +64,7 @@ struct SemanticRule {
 /// engine never reparses prose or asks a producer for more facts (§AR-rules.4).
 pub(crate) fn evaluate(
     rules: &[ParsedRule],
-    precedence: &[ParsedRule],
+    precedence: &[Direction],
     facts: &RuleFacts,
 ) -> LevelFindings {
     evaluate_level(rules, precedence, facts, RuleLevel::Required, true)
@@ -74,7 +75,7 @@ pub(crate) fn evaluate(
 /// (§AR-rules.1, §AR-rules.5).
 pub(crate) fn evaluate_suggestions(
     rules: &[ParsedRule],
-    precedence: &[ParsedRule],
+    precedence: &[Direction],
     facts: &RuleFacts,
 ) -> Vec<Diagnostic> {
     // §FS-rules.7.8: the recommended level owes no ramp, so its field stays empty.
@@ -85,17 +86,14 @@ pub(crate) fn evaluate_suggestions(
 /// literal resolution (§FS-rules.5.3, §AR-rules.3.1).
 fn evaluate_level(
     rules: &[ParsedRule],
-    precedence: &[ParsedRule],
+    precedence: &[Direction],
     facts: &RuleFacts,
     level: RuleLevel,
     include_invalid: bool,
 ) -> LevelFindings {
     let index = FactIndex::new(facts);
     let mut groups: BTreeMap<SemanticRule, BTreeSet<String>> = BTreeMap::new();
-    let precedence = precedence
-        .iter()
-        .map(SemanticRule::from)
-        .collect::<BTreeSet<_>>();
+    let precedence = reported_by_direction(precedence);
     let mut out = Vec::new();
     let mut ramp = Vec::new();
     for rule in rules {
@@ -114,13 +112,60 @@ fn evaluate_level(
             .insert(rule.origin.clone());
     }
     for (rule, origins) in groups {
-        if precedence.contains(&rule) {
-            continue;
-        }
         let authority = Authority::new(origins);
-        evaluate_one(&rule, &authority, facts, &index, &mut out, &mut ramp);
+        let Some(reported) = precedence.get(&rule) else {
+            evaluate_one(&rule, &authority, facts, &index, &mut out, &mut ramp);
+            continue;
+        };
+        // §FS-rules.6: a duplicate of a direction is evaluated all the same, and
+        // loses only the findings the direction reported itself, unit by unit.
+        let (mut own, mut own_ramp) = (Vec::new(), Vec::new());
+        evaluate_one(&rule, &authority, facts, &index, &mut own, &mut own_ramp);
+        let unreported = |finding: &Diagnostic| !reported.contains(&reported_at(finding));
+        out.extend(own.into_iter().filter(unreported));
+        ramp.extend(own_ramp.into_iter().filter(unreported));
     }
     (out, ramp)
+}
+
+/// Where a finding is reported, as config-to-rule deduplication compares it: its
+/// code at its unit or site (§FS-rules.6).
+type ReportedAt<'a> = (&'static str, Option<&'a Path>, Option<usize>, Option<usize>);
+
+fn reported_at(finding: &Diagnostic) -> ReportedAt<'_> {
+    (
+        finding.code,
+        finding.path.as_deref(),
+        finding.line,
+        finding.column,
+    )
+}
+
+/// Each direction's semantic constraint and everything entries expressing it
+/// reported: entries that normalize alike are one direction (§FS-rules.6).
+fn reported_by_direction(
+    precedence: &[Direction],
+) -> BTreeMap<SemanticRule, BTreeSet<ReportedAt<'_>>> {
+    let mut directions: BTreeMap<SemanticRule, BTreeSet<ReportedAt<'_>>> = BTreeMap::new();
+    for direction in precedence {
+        directions
+            .entry(SemanticRule::from(&direction.rule))
+            .or_default()
+            .extend(direction.reported.iter().map(reported_at));
+    }
+    directions
+}
+
+/// Whether any of `rules` expresses the same constraint as one of `directions`
+/// (§FS-rules.6), so that only then are the directions' findings gathered.
+pub(crate) fn duplicates_a_direction(rules: &[ParsedRule], directions: &[ParsedRule]) -> bool {
+    let directions = directions
+        .iter()
+        .map(SemanticRule::from)
+        .collect::<BTreeSet<_>>();
+    rules
+        .iter()
+        .any(|rule| directions.contains(&SemanticRule::from(rule)))
 }
 
 impl From<&ParsedRule> for SemanticRule {
