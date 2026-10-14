@@ -106,6 +106,17 @@ class ChangedLineGateTests(unittest.TestCase):
         )
         self.assertNotEqual(0, variable_code, variable_output)
 
+    def test_diff_prefix_config_does_not_change_the_verdict(self):
+        # R1-01: a user's diff prefixes must not hide an added dead link locally (§AR-ci.1.1).
+        gate, _ = self.fixture()
+        gate.append("docs/a.md", "\nSee [a new dead page](<{host}/dead-new>).\n")
+        for setting in ("'diff.mnemonicprefix=true'", "'diff.noprefix=true'"):
+            with self.subTest(setting=setting):
+                gate.reset()
+                code, output = gate.run("docs", git_config=setting)
+                self.assertNotEqual(0, code, output)
+                self.assertEqual(["/dead-new"], sorted(gate.requested()), output)
+
     def test_no_diff_base_checks_no_external_url_and_says_so(self):
         gate, _ = self.fixture()
         gate.append("docs/a.md", "\nSee [a new dead page](<{host}/dead-new>).\n")
