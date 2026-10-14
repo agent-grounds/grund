@@ -483,7 +483,8 @@ test, as section 3.3 holds the reader ([§FS-config-migrate.mapping](../function
 
 ### 8.3 The write is a shared writer
 
-The atomic replace `fetch` uses (`atomic_install` in `writers/fetch_install.rs`)
-moves into a writer both call, unchanged in behaviour, and gains the
-concurrent-edit check migration needs ([§FS-config-migrate.6.2](../functional-spec/FS-config-migrate.md#62-atomic),
+The atomic replace `fetch` used is `writers/atomic_install.rs`, a writer both
+call, unchanged in behaviour for `fetch`, which maps each failure into its own
+refusal. It gains the concurrent-edit check migration needs: the bytes the run
+read are passed in and read again just before the rename ([§FS-config-migrate.6.2](../functional-spec/FS-config-migrate.md#62-atomic),
 [§FS-config-migrate.6.3](../functional-spec/FS-config-migrate.md#63-a-concurrent-edit)).

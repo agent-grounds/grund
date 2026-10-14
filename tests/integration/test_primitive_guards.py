@@ -37,14 +37,14 @@ EXEMPTABLE = frozenset({"checker/references.rs", "config/v1/scan_block.rs",
 # the one that writes, not because no run reads its output (init writes grund.toml
 # and AGENTS.md, which every run reads). What a writer reads - the scanned tree, a
 # file a run reads, the file it replaces - it asks the sources component for, so
-# fetch_install.rs, init.rs, init_block.rs and fmt_tree.rs keep only their writes.
+# atomic_install.rs, init.rs, init_block.rs and fmt_tree.rs keep only their writes.
 # init_target.rs only resolves the directory init writes into, init_template.rs only
 # writes the starter files a template lays (asking sources whether one exists),
 # init_scoped.rs only writes, links and removes the scoped entrypoints init owns
 # (asking sources what is on disk), and the integrations read only the
 # machine-level client files they themselves write. Any other file under writers/
 # is no owner.
-WRITERS = ("writers/fetch_install.rs", "writers/init.rs", "writers/init_block.rs",
+WRITERS = ("writers/atomic_install.rs", "writers/init.rs", "writers/init_block.rs",
            "writers/init_companions.rs", "writers/init_scoped.rs", "writers/init_target.rs",
            "writers/init_template.rs", "writers/integrations_", "writers/fmt_tree.rs")
 # primitive -> (the pattern that finds a use of it, the directories or files that own it)

@@ -1,11 +1,11 @@
 //! Snapshot-home discovery and declaration ownership for the explicit
-//! materializer (§FS-fetch.4, §FS-fetch.5); `fetch_install.rs` installs what
-//! they decide (§REQ-no-data-loss.2).
+//! materializer (§FS-fetch.4, §FS-fetch.5); the shared writer in
+//! `atomic_install.rs` installs what they decide (§REQ-no-data-loss.2).
 
 use std::path::{Path, PathBuf};
 
+use super::atomic_install::{Install, InstallFailure, atomic_install};
 use super::fetch::{FetchFailure, fetch_io, fetch_operational};
-use super::fetch_install::atomic_install;
 use crate::config::Config;
 use crate::grammar::{
     Grammar, MarkdownBlocks, near_miss_heading, parse_id_arg, parse_longest_id_prefix,
@@ -207,7 +207,7 @@ pub(super) fn write_file_home(
         replacement.extend_from_slice(line_ending);
     }
     replacement.extend_from_slice(&original[end..]);
-    atomic_install(path, &replacement, diagnostic)
+    install(path, &replacement, diagnostic)
 }
 
 /// §FS-fetch.5: replace the unique declaring file or create `<ID>.md`.
@@ -316,5 +316,24 @@ pub(super) fn write_folder_home(
             target.display()
         )));
     }
-    atomic_install(&target, snapshot, diagnostic)
+    install(&target, snapshot, diagnostic)
+}
+
+/// §FS-fetch.4 / §FS-fetch.5: install complete bytes through the shared writer,
+/// each of its failures as fetch's refusal.
+fn install(
+    path: &Path,
+    bytes: &[u8],
+    diagnostic: &mut Option<anyhow::Error>,
+) -> std::result::Result<(), FetchFailure> {
+    let install = Install {
+        bytes,
+        tag: "fetch",
+        expected: None,
+    };
+    atomic_install(path, install).map_err(|failure| match failure {
+        InstallFailure::Io { error, context } => fetch_io(diagnostic, path, error, context),
+        InstallFailure::Operational(message) => fetch_operational(message),
+        InstallFailure::Changed => fetch_operational(format!("{} changed", path.display())),
+    })
 }
