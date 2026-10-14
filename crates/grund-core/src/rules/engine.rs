@@ -15,7 +15,6 @@ use super::{
 };
 use crate::model::{CITATION_DIRECTION_REPAIR, Diagnostic};
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
 
 use authority::Authority;
 pub(crate) use authority::one_rules_authority;
@@ -121,37 +120,32 @@ fn evaluate_level(
         // loses only the findings the direction reported itself, unit by unit.
         let (mut own, mut own_ramp) = (Vec::new(), Vec::new());
         evaluate_one(&rule, &authority, facts, &index, &mut own, &mut own_ramp);
-        let unreported = |finding: &Diagnostic| !reported.contains(&reported_at(finding));
+        let unreported = |finding: &Diagnostic| {
+            !reported
+                .iter()
+                .any(|direction| same_place(direction, finding))
+        };
         out.extend(own.into_iter().filter(unreported));
         ramp.extend(own_ramp.into_iter().filter(unreported));
     }
     (out, ramp)
 }
 
-/// Where a finding is reported, as config-to-rule deduplication compares it: its
-/// code at its unit or site (§FS-rules.6).
-type ReportedAt<'a> = (&'static str, Option<&'a Path>, Option<usize>, Option<usize>);
-
-fn reported_at(finding: &Diagnostic) -> ReportedAt<'_> {
-    (
-        finding.code,
-        finding.path.as_deref(),
-        finding.line,
-        finding.column,
-    )
+/// Whether two findings are reported alike, as config-to-rule deduplication
+/// compares them: the same code at the same unit or site (§FS-rules.6).
+fn same_place(a: &Diagnostic, b: &Diagnostic) -> bool {
+    a.code == b.code && a.path == b.path && a.line == b.line && a.column == b.column
 }
 
 /// Each direction's semantic constraint and everything entries expressing it
 /// reported: entries that normalize alike are one direction (§FS-rules.6).
-fn reported_by_direction(
-    precedence: &[Direction],
-) -> BTreeMap<SemanticRule, BTreeSet<ReportedAt<'_>>> {
-    let mut directions: BTreeMap<SemanticRule, BTreeSet<ReportedAt<'_>>> = BTreeMap::new();
-    for direction in precedence {
+fn reported_by_direction(precedence: &[Direction]) -> BTreeMap<SemanticRule, Vec<&Diagnostic>> {
+    let mut directions: BTreeMap<SemanticRule, Vec<&Diagnostic>> = BTreeMap::new();
+    for (rule, reported) in precedence {
         directions
-            .entry(SemanticRule::from(&direction.rule))
+            .entry(SemanticRule::from(rule))
             .or_default()
-            .extend(direction.reported.iter().map(reported_at));
+            .extend(reported);
     }
     directions
 }

@@ -29,10 +29,7 @@ pub(super) fn directions(
     let mut directions = Reported(
         precedence
             .into_iter()
-            .map(|rule| Direction {
-                rule,
-                reported: Vec::new(),
-            })
+            .map(|rule| (rule, Vec::new()))
             .collect(),
     );
     if duplicated {
@@ -56,10 +53,7 @@ impl DirectionSink for Reported {
     ) {
         for entry in entries {
             if let Some(rule) = direction_rule(kind, level, entry) {
-                self.0.push(Direction {
-                    rule,
-                    reported: vec![diagnostic.clone()],
-                });
+                self.0.push((rule, vec![diagnostic.clone()]));
             }
         }
     }

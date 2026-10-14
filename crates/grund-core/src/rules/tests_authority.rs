@@ -143,10 +143,7 @@ fn a_suppressed_group_leaves_no_authority_behind() {
     let declared = rule("RULE-goalref");
     let mut config = evaluate(std::slice::from_ref(&declared), &[], &facts()).0;
     config[0].authority.clear();
-    let direction = Direction {
-        rule: declared.clone(),
-        reported: config,
-    };
+    let direction: Direction = (declared.clone(), config);
     let suppressed = evaluate(std::slice::from_ref(&declared), &[direction], &facts()).0;
     assert!(suppressed.is_empty());
 }

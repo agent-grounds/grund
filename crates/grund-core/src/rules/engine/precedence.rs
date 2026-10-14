@@ -11,11 +11,9 @@ use crate::rules::{
 /// One `[citations]` entry as an engine rule, with the findings the direction
 /// itself reported. A duplicate rule's finding is absorbed only where one of
 /// these names the same code at the same unit or site (§FS-rules.6), because the
-/// direction counts a token the rule does not.
-pub(crate) struct Direction {
-    pub(crate) rule: ParsedRule,
-    pub(crate) reported: Vec<Diagnostic>,
-}
+/// direction counts a token the rule does not. It is a pair rather than a type
+/// so that the engine/checker crossing stays `Diagnostic` (§AR-rules.5).
+pub(crate) type Direction = (ParsedRule, Vec<Diagnostic>);
 
 /// The project's `[citations]` directions as engine rules; it reads the rules
 /// record alone, not the configuration façade (§AR-config.5).

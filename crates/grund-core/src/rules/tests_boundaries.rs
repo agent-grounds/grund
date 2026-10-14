@@ -186,16 +186,10 @@ fn logic_engine_owns_precedence_and_existing_report_channels() {
     let snapshot = facts(Completeness::Complete);
     let mut config = evaluate(std::slice::from_ref(&hard), &[], &snapshot).0;
     config[0].authority.clear();
-    let reporting = Direction {
-        rule: hard.clone(),
-        reported: config,
-    };
+    let reporting: Direction = (hard.clone(), config);
     let suppressed = evaluate(std::slice::from_ref(&hard), &[reporting], &snapshot).0;
     assert!(suppressed.is_empty());
-    let passing = Direction {
-        rule: hard.clone(),
-        reported: Vec::new(),
-    };
+    let passing: Direction = (hard.clone(), Vec::new());
     let kept = evaluate(std::slice::from_ref(&hard), &[passing], &snapshot).0;
     assert_eq!(kept.len(), 1);
     assert_eq!(kept[0].authority, vec!["RULE-fs".to_string()]);
