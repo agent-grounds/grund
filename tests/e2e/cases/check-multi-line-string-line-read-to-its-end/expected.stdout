@@ -1,0 +1,11 @@
+src/block-close-then-template.js:5: error: unknown reference api/FS-gone-after-block-close
+src/block-sequence.js:5: error: unknown reference api/FS-gone-after-block-sequence
+src/block-then-template.js:4: error: unknown reference api/FS-gone-after-block-then-template
+src/char-quote-string.rs:4: error: unknown reference api/FS-gone-after-char-quote-string
+src/comment-then-template.js:4: error: unknown reference api/FS-gone-after-comment-then-template
+src/jsx-close-template.js:4: error: unknown reference api/FS-gone-after-jsx-close
+src/line-initial-nested.rs:6: error: unknown reference api/FS-gone-after-line-initial-nested
+src/line-start-division.js:5: error: unknown reference api/FS-gone-after-line-start-division
+src/nested-block.kt:5: error: unknown reference api/FS-gone-after-nested-kt-block
+src/regex-quote-template.js:4: error: unknown reference api/FS-gone-after-regex-quote
+src/unclosed-block.js:4: error: unknown reference api/FS-gone-after-unclosed-block

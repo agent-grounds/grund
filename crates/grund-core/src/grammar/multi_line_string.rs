@@ -9,11 +9,12 @@
 //! cannot know that yet. Recognition, not parsing (§FS-non-goals.3): the table of
 //! §FS-languages.multi-line-string.forms is all it knows of each language.
 
+use std::collections::HashMap;
 use std::path::Path;
 
 use super::multi_line_forms::{Closer, Language, Skip, is_identifier_byte, quote_run};
 use super::never_rewrite::is_escaped;
-use super::source_line::{BlockCommentScanState, PythonDocstringScanState, source_scan_line};
+use super::source_line::{PythonDocstringScanState, source_scan_line};
 
 /// The entry state of a line that begins inside a form whose closer is on a later
 /// line: every byte of it is inside the literal.
@@ -53,6 +54,7 @@ impl MultiLineStrings {
             language,
             lines: &lines,
             failed: Vec::new(),
+            templates: HashMap::new(),
         };
         Self {
             entries: reader.read(docstring_python),
@@ -71,16 +73,33 @@ impl MultiLineStrings {
     }
 }
 
-/// What opens on a line and runs past it.
+/// What the rest of a line opens that runs past it.
+#[derive(Clone, Copy, PartialEq, Eq)]
 enum Opened {
+    /// Nothing: the next line begins in code.
+    Nothing,
     /// A form: where its closer ends, and the first line of its body.
     Form(Pos, usize),
-    /// A `/* … */` opened after code: where its `*/` ends.
+    /// A `/* … */` block: where its `*/` ends.
     Comment(Pos),
+    /// The search cannot tell, so it ends here (§FS-languages.multi-line-string.bound).
+    Unknown,
 }
 
 /// A position in the file: a line index and a byte column on it.
 type Pos = (usize, usize);
+
+/// How many readings past or through a guessed skip one line may take before the
+/// search gives it up as [`Opened::Unknown`] (§FS-languages.multi-line-string.bound):
+/// enough for a line of JSX, and a bound on what a minified line costs.
+const GUESSES: usize = 32;
+
+/// The readings one line has taken past or through a guessed skip, by the column
+/// each starts at, and how many more it may take.
+struct Guesses {
+    read: Vec<(usize, Opened)>,
+    left: usize,
+}
 
 struct Reader<'a> {
     language: Language,
@@ -89,22 +108,24 @@ struct Reader<'a> {
     /// started from: a later search for the same closer from at or after it cannot
     /// succeed either, so a file of unclosed openers is read once, not once each.
     failed: Vec<(Closer, Pos)>,
+    /// Where each template searched for closes, by where its content begins: its
+    /// search depends on its nesting, so only one from the same column has the same
+    /// answer — as when both readings of a guessed skip reach the same opener.
+    templates: HashMap<Pos, Option<Pos>>,
 }
 
 impl Reader<'_> {
     fn read(&mut self, docstring_python: bool) -> Vec<usize> {
         let mut entries = vec![0; self.lines.len()];
-        let mut blocks = BlockCommentScanState::default();
         let mut docstrings = PythonDocstringScanState::default();
         let python_docstrings = docstring_python && self.language == Language::Python;
-        // Where a `/* … */` opened after code on an earlier line closes: nothing
-        // before it opens a form (§FS-languages.multi-line-string.bound).
+        // Where a `/* … */` opened on an earlier line closes: nothing before it
+        // opens a form (§FS-languages.multi-line-string.bound).
         let mut comment_until: Option<Pos> = None;
         for index in 0..self.lines.len() {
             let line = self.lines[index];
-            // §FS-languages.multi-line-string: block and docstring state are read
-            // as without this rule, so both advance on every line.
-            let in_block = self.language.has_block_comments() && blocks.advance(line).inside;
+            // §FS-languages.multi-line-string: docstring state is read as without
+            // this rule, so it advances on every line.
             let excluded = python_docstrings
                 .then(|| python_excluded(line, &mut docstrings))
                 .flatten();
@@ -116,35 +137,43 @@ impl Reader<'_> {
                 start = start.max(close_end);
                 comment_until = None;
             }
-            if start == WHOLE_LINE || in_block {
+            if start == WHOLE_LINE {
                 continue;
             }
-            match self.open_on_line(index, start, excluded) {
-                Some(Opened::Form((close_line, close_end), body_from)) => {
+            let mut guesses = Guesses {
+                read: Vec::new(),
+                left: GUESSES,
+            };
+            match self.open_on_line(index, start, excluded, &mut guesses) {
+                Opened::Form((close_line, close_end), body_from) => {
                     for entry in &mut entries[body_from..close_line] {
                         *entry = WHOLE_LINE;
                     }
                     entries[close_line] = close_end;
                 }
-                Some(Opened::Comment(close)) => comment_until = Some(close),
-                None => {}
+                Opened::Comment(close) => comment_until = Some(close),
+                Opened::Nothing => {}
+                // §FS-languages.multi-line-string.bound: every later line reads as
+                // it would without this rule.
+                Opened::Unknown => break,
             }
         }
         entries
     }
 
     /// The first form that opens on line `index` and closes on a later line, read
-    /// from column `start` — where the previous form closed — with the per-line
-    /// toggle starting neutral there (§FS-languages.multi-line-string). Returns
+    /// from column `start` — where the previous form or block closed — with the
+    /// per-line toggle neutral there (§FS-languages.multi-line-string). Returns
     /// where it closes and the first line of its body, or where a `/* … */` that
-    /// opens here closes on a later line. A form that closes on this line carries
-    /// nothing, and the search resumes after its closer.
+    /// opens here closes on a later line. A form or block that closes on this line
+    /// carries nothing, and the search resumes after its closer.
     fn open_on_line(
         &mut self,
         index: usize,
         start: usize,
         excluded: Option<(usize, usize)>,
-    ) -> Option<Opened> {
+        guesses: &mut Guesses,
+    ) -> Opened {
         let line = self.lines[index].as_bytes();
         let tail = &line[start..];
         let (mut single, mut double, mut backtick) = (false, false, false);
@@ -156,10 +185,18 @@ impl Reader<'_> {
             let open_here =
                 neutral && i >= inside_until && !excluded.is_some_and(|(s, e)| s <= i && i < e);
             if open_here && self.language.comment_at(line, i) {
-                return line[i..]
-                    .starts_with(b"/*")
-                    .then(|| self.block_from(index, i))
-                    .flatten();
+                if !line[i..].starts_with(b"/*") {
+                    return Opened::Nothing;
+                }
+                // §FS-languages.multi-line-string.bound: a block is read to its `*/`.
+                match self.block_close((index, i + 2)) {
+                    Some(close) if close.0 > index => return Opened::Comment(close),
+                    Some((_, close_end)) => {
+                        i = close_end;
+                        continue;
+                    }
+                    None => return Opened::Unknown,
+                }
             }
             if open_here {
                 match self.language.skip_at(line, i) {
@@ -167,7 +204,9 @@ impl Reader<'_> {
                         i = end;
                         continue;
                     }
-                    Some(Skip::Line) => return self.block_from(index, i),
+                    Some(Skip::Guess(end)) => {
+                        return self.either(index, (end, i + 1), excluded, guesses);
+                    }
                     None => {}
                 }
             }
@@ -179,7 +218,7 @@ impl Reader<'_> {
                 };
                 match self.find(&closer, from) {
                     Some((close_line, close_end)) if close_line > index => {
-                        return Some(Opened::Form((close_line, close_end), index + 1));
+                        return Opened::Form((close_line, close_end), index + 1);
                     }
                     Some((_, close_end)) => inside_until = close_end,
                     // §FS-languages.multi-line-string.bound: no closer, so the
@@ -201,24 +240,57 @@ impl Reader<'_> {
             }
             i += 1;
         }
-        None
+        Opened::Nothing
     }
 
-    /// The first `/* … */` that opens at or after column `from` of line `index` and
-    /// closes on a later line: the search stops to its `*/`
+    /// The rest of line `index` after a guessed skip, read both from `past`, after
+    /// it, and from `through`, inside it, with the toggle neutral at each: what both
+    /// readings open, or [`Opened::Unknown`] where they differ
     /// (§FS-languages.multi-line-string.bound).
-    fn block_from(&self, index: usize, from: usize) -> Option<Opened> {
-        let line = self.lines[index].as_bytes();
-        let open = from + line[from..].windows(2).position(|pair| pair == b"/*")?;
-        self.block_close((index, open + 2))
-            .filter(|(close_line, _)| *close_line > index)
-            .map(Opened::Comment)
+    fn either(
+        &mut self,
+        index: usize,
+        (past, through): (usize, usize),
+        excluded: Option<(usize, usize)>,
+        guesses: &mut Guesses,
+    ) -> Opened {
+        let skipped = self.guessed_from(index, past, excluded, guesses);
+        if skipped == Opened::Unknown {
+            return skipped;
+        }
+        let read = self.guessed_from(index, through, excluded, guesses);
+        if skipped == read {
+            skipped
+        } else {
+            Opened::Unknown
+        }
+    }
+
+    /// [`Self::open_on_line`] from `start`, taken once per line and column, within
+    /// the line's budget of [`GUESSES`].
+    fn guessed_from(
+        &mut self,
+        index: usize,
+        start: usize,
+        excluded: Option<(usize, usize)>,
+        guesses: &mut Guesses,
+    ) -> Opened {
+        if let Some(&(_, opened)) = guesses.read.iter().find(|(at, _)| *at == start) {
+            return opened;
+        }
+        if guesses.left == 0 {
+            return Opened::Unknown;
+        }
+        guesses.left -= 1;
+        let opened = self.open_on_line(index, start, excluded, guesses);
+        guesses.read.push((start, opened));
+        opened
     }
 
     /// Where the `*/` that closes a block opened just before `from` ends: the first
-    /// one, or in Rust, whose blocks nest, the one that balances it.
+    /// one, or where blocks nest, the one that balances it.
     fn block_close(&self, from: Pos) -> Option<Pos> {
-        let nests = self.language == Language::Rust;
+        let nests = self.language.blocks_nest();
         let mut depth = 0;
         for index in from.0..self.lines.len() {
             let line = self.lines[index].as_bytes();
@@ -249,7 +321,10 @@ impl Reader<'_> {
             return None;
         }
         let found = match closer {
-            Closer::Template => template_close(self.lines, from),
+            Closer::Template => *self
+                .templates
+                .entry(from)
+                .or_insert_with(|| template_close(self.lines, from)),
             Closer::Heredoc { word, strip_tabs } => self.line_close(from, |line| {
                 let body = if *strip_tabs {
                     line.trim_start_matches('\t')
