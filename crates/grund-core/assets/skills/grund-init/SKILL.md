@@ -562,6 +562,24 @@ If custom config affects `AGENTS.md`, ensure `grund.toml` exists before `grund i
 If a project needs its own grammar or independent check, follow
 [Splitting off a member](#splitting-off-a-member), then validate from the workspace root.
 
+## Seeing the Schema
+
+Before writing a declaration or a citation, run `grund schema` to see what the repository is held to: its kinds and places, each kind's fields, which units must be grounded, and who must cite whom and how strongly. It reads the configuration alone, so it answers on a tree whose citations are still broken:
+
+```text
+api · grund.toml · v1
+
+kinds and places
+  FS    kind        docs/
+  code  complement  every scanned file no other row claims
+
+citations
+  FS    should  FS (itself)
+  code  —
+```
+
+`--format mermaid` and `--format dot` print the same facts as graph source. `grund config show` is for the effective TOML, every value filled in.
+
 ## Querying the Structure
 
 Once the tree checks clean, read its structure with grund's queries rather than by parsing heading lines: `grund list --selector` takes a rule subject as a query, and its `{id, section}` rows are the input `grund show --batch` expands. Each answer's `.result.sections[]` lists the unit's subpoints as `path`, `title` and `depth`:

@@ -75,6 +75,8 @@ rules it writes commented out in `grund.toml` until you adopt them:
 Every rule `grund check` holds a project to, what each one means underneath, and the
 finding it reports is listed in
 [Schema and links](docs/user-facing/structure.md#schema-and-links-the-rules-a-repository-is-held-to).
+`grund schema` prints the ones a repository is held to on one screen, read from its
+`grund.toml` alone; [`examples/schema/`](examples/schema/) shows its table and Mermaid output.
 
 ## Agent instructions
 
