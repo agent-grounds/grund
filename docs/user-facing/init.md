@@ -107,7 +107,12 @@ declaration shape and the chapter rules about its kind. Folders
 `docs/spec/core` and `docs/spec/plugins` land in `docs/spec/AGENTS.md`, a
 file place counts as its parent directory, and a row whose places share no
 directory stays in the root block, as does a destination directory that does
-not exist yet. The example under
+not exist yet. A scoped block holds the citation-directions legend, the
+bullets of the rows that land there and the closing line; the root block keeps
+the bullets of the rows that land at the root
+([§FS-init.2.3.5.12.1](../functional-spec/FS-init.md#235121-what-a-scoped-block-holds-in-order)), so the single section the
+[citation-directions page](citation-directions.md) shows is split by
+directory. The example under
 [`examples/scoped-guidance`](../../examples/scoped-guidance/) records one run:
 
 ```text
