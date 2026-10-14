@@ -156,14 +156,10 @@ impl Reader<'_> {
             let open_here =
                 neutral && i >= inside_until && !excluded.is_some_and(|(s, e)| s <= i && i < e);
             if open_here && self.language.comment_at(line, i) {
-                // §FS-languages.multi-line-string.bound: a block opened after code
-                // stops the search to its `*/`, once that is found.
                 return line[i..]
                     .starts_with(b"/*")
-                    .then(|| self.block_close((index, i + 2)))
-                    .flatten()
-                    .filter(|(close_line, _)| *close_line > index)
-                    .map(Opened::Comment);
+                    .then(|| self.block_from(index, i))
+                    .flatten();
             }
             if open_here {
                 match self.language.skip_at(line, i) {
@@ -171,7 +167,7 @@ impl Reader<'_> {
                         i = end;
                         continue;
                     }
-                    Some(Skip::Line) => return None,
+                    Some(Skip::Line) => return self.block_from(index, i),
                     None => {}
                 }
             }
@@ -196,7 +192,7 @@ impl Reader<'_> {
             // reads its own `'` above and never as a quote.
             let escaped = is_escaped(tail, i - start);
             match line[i] {
-                b'\'' if !double && !backtick && !escaped && self.language != Language::Rust => {
+                b'\'' if !double && !backtick && !escaped && self.language.is_quote(b'\'') => {
                     single = !single;
                 }
                 b'"' if !single && !backtick && !escaped => double = !double,
@@ -208,15 +204,39 @@ impl Reader<'_> {
         None
     }
 
-    /// Where the first `*/` at or after `from` ends.
+    /// The first `/* … */` that opens at or after column `from` of line `index` and
+    /// closes on a later line: the search stops to its `*/`
+    /// (§FS-languages.multi-line-string.bound).
+    fn block_from(&self, index: usize, from: usize) -> Option<Opened> {
+        let line = self.lines[index].as_bytes();
+        let open = from + line[from..].windows(2).position(|pair| pair == b"/*")?;
+        self.block_close((index, open + 2))
+            .filter(|(close_line, _)| *close_line > index)
+            .map(Opened::Comment)
+    }
+
+    /// Where the `*/` that closes a block opened just before `from` ends: the first
+    /// one, or in Rust, whose blocks nest, the one that balances it.
     fn block_close(&self, from: Pos) -> Option<Pos> {
-        self.span_close(
-            &Closer::Text {
-                needle: b"*/".to_vec(),
-                escapable: false,
-            },
-            from,
-        )
+        let nests = self.language == Language::Rust;
+        let mut depth = 0;
+        for index in from.0..self.lines.len() {
+            let line = self.lines[index].as_bytes();
+            let mut i = if index == from.0 { from.1 } else { 0 };
+            while i + 1 < line.len() {
+                match &line[i..i + 2] {
+                    b"*/" if depth == 0 => return Some((index, i + 2)),
+                    b"*/" => depth -= 1,
+                    b"/*" if nests => depth += 1,
+                    _ => {
+                        i += 1;
+                        continue;
+                    }
+                }
+                i += 2;
+            }
+        }
+        None
     }
 
     /// Where `closer` ends, searching from `from` (§FS-languages.multi-line-string.bound).

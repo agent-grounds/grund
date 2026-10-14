@@ -1,0 +1,6 @@
+src/division-block.js:5: error: unknown reference api/FS-gone-after-div-block
+src/division-comment.js:3: error: unknown reference api/FS-gone-after-div-comment
+src/jsx-link.js:3: error: unknown reference api/FS-gone-after-jsx-link
+src/jsx.js:3: error: unknown reference api/FS-gone-after-jsx
+src/line-start.js:4: error: unknown reference api/FS-gone-after-line-start-div
+src/postfix.js:3: error: unknown reference api/FS-gone-after-postfix

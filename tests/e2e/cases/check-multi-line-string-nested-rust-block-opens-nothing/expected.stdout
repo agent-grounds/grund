@@ -1,0 +1,2 @@
+src/nested.rs:5: error: unknown reference api/FS-gone-after-nested-mid
+src/nested_runs_past.rs:5: error: unknown reference api/FS-gone-after-nested-runs-past
