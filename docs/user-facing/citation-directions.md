@@ -68,3 +68,12 @@ should = ["FS|AR"]
 - Each source file outside the Project map (**code**) that cites anything should cite FS or AR.
 Anything not listed above is allowed.
 ```
+
+That is one section in a version-1 config. In a version-2 config each row's
+bullet, and its clause of the grounding sentence, moves to the `AGENTS.md` of
+the deepest directory holding the row's places, which holds the legend, those
+bullets and the closing line; the root block keeps the rows that land at the
+root and lists the others' files under `### Scoped guidance`
+([§FS-init.2.3.5.11](../functional-spec/FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places), [§FS-init.2.3.5.12.1](../functional-spec/FS-init.md#235121-what-a-scoped-block-holds-in-order)). `[presentation] rules = "root"`
+keeps the single section above
+([setting up with `grund init`](init.md#scoped-guidance-in-a-version-2-config)).

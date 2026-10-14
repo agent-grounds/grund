@@ -139,11 +139,12 @@ pub(crate) fn judge(
     // §FS-citations.checks.unclosed-wrapper: a wrap 0.19.0 reads differently.
     check_unclosed_wrappers(findings, expected, &index_entries, targets, &mut report);
 
+    // §FS-init.2.3.5.11: a scoped `AGENTS.md` no row's `files` lists is not a
+    // unit, so neither pass below holds it to its directory's rules.
+    let mut units = CheckReport::default();
+
     // §FS-check.3.6 / §DF-require-grounding: the grounding pass, per `[[kinds]]`
     // row and per unit, in `grounding.rs` (§AR-checker.2.8).
-    // §FS-init.2.3.5.11: a scoped `AGENTS.md` no row's `files` lists is not a
-    // unit, so neither pass holds it to its directory's rules.
-    let mut units = CheckReport::default();
     let kind_homes = KindHomeIndex::new(schema, frame);
     check_grounding(
         findings,

@@ -148,10 +148,9 @@ pub(crate) fn check_agent_block_path(
                 authority: Vec::new(),
             });
         } else {
-            // §FS-check.3.5 / §FS-init.2.3.5.8: the generated sections follow
-            // config, so the version marker alone cannot catch a config edit that
-            // left the block stale. Byte-compare each against `Expected`; a
-            // section expected empty must be absent.
+            // §FS-check.3.5 / §FS-init.2.3.5.8: the version marker alone misses a
+            // config edit, so byte-compare each section against `Expected`; one
+            // expected empty must be absent.
             let mut stale = false;
             for section in &entrypoint.sections {
                 if section_in_block(&block_text, section.heading).unwrap_or("")
