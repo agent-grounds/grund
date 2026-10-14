@@ -351,10 +351,12 @@ jobs:
         # they resolved in a browser the whole time. lychee reads GITHUB_TOKEN
         # from the environment; the workflow-scoped one is enough, because the
         # point is the authenticated rate limit rather than access to anything
-        # private. The same token, as GH_TOKEN, feeds the hook's `gh api`
-        # re-check of a github.com 5xx, which gh reads first (§AR-ci.3.1.2).
+        # private.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # §AR-ci.3.1.2: the same token, as GH_TOKEN, which gh reads first, feeds
+          # the hook's `gh api` re-check of a github.com 5xx.
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # §AR-ci.13.3: exactly the hooks whose command the Rust, Python and Node jobs run.
           SKIP: cargo-fmt-check,cargo-build,cargo-test,python-test
