@@ -21,6 +21,8 @@ fn v2_places_contract() {
         "config-v2-places-duplicate-normalized-refused",
         "config-v2-places-duplicate-refused",
         "config-v2-places-files-and-folders",
+        "config-v2-places-full-scanned-under-unscanned",
+        "config-v2-places-full-under-scanned-non-citable",
         "config-v2-places-homeless-citable-kind",
         "config-v2-places-id-json",
         "config-v2-places-index-per-folder",
