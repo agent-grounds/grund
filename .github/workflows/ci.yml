@@ -319,8 +319,7 @@ jobs:
 
       - name: Install Python
         uses: actions/setup-python@v6
-        with:
-          python-version: "3.x"
+        with: { python-version: "3.x" }
 
       # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
       - name: Restore cargo registry and target
