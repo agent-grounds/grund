@@ -126,7 +126,7 @@ fn members(located: &Located) -> Vec<String> {
 /// §FS-config-migrate.5.2: `check --suggestions` on the root with the file as
 /// read and with the candidate in its place; the lines that differ, `- ` for
 /// version 1 and `+ ` for the candidate.
-fn report_gate(
+pub(super) fn report_gate(
     located: &Located,
     v1: &Project,
     candidate: &str,
@@ -171,19 +171,20 @@ fn lines(
     line_map: Option<&[(usize, usize)]>,
     config: &str,
 ) -> Vec<String> {
+    let v1_line = |map: &[(usize, usize)], at: usize| {
+        map.iter()
+            .find(|(v2, _)| *v2 == at)
+            .map_or(usize::MAX, |(_, v1)| *v1)
+    };
     let finding = |channel: &str, f: &Finding| {
         let mut line = f.line;
         if let Some(map) = line_map
             && f.path.as_deref() == Some(config)
         {
-            line = f.line.map(|at| {
-                map.iter()
-                    .find(|(v2, _)| *v2 == at)
-                    .map_or(usize::MAX, |(_, v1)| *v1)
-            });
+            line = f.line.map(|at| v1_line(map, at));
         }
         let message = match line_map {
-            Some(_) => v1_spelling(&f.message),
+            Some(map) => v1_spelling(&config_lines(&f.message, config, |at| v1_line(map, at))),
             None => f.message.clone(),
         };
         format!(
@@ -211,8 +212,34 @@ fn lines(
     out
 }
 
+/// Each `<config>:<line>` a message names, its line moved by `v1_line`: a
+/// message that points into the config points at the key's v1 line.
+pub(super) fn config_lines(
+    message: &str,
+    config: &str,
+    v1_line: impl Fn(usize) -> usize,
+) -> String {
+    let prefix = format!("{config}:");
+    let mut out = String::new();
+    let mut rest = message;
+    while let Some(at) = rest.find(&prefix) {
+        let (head, tail) = rest.split_at(at + prefix.len());
+        out.push_str(head);
+        let digits = tail.len() - tail.trim_start_matches(|c: char| c.is_ascii_digit()).len();
+        // `sub/grund.toml:3` names another config, not this one.
+        let other = rest[..at].ends_with(|c: char| c == '/' || c == '\\' || c.is_alphanumeric());
+        match tail[..digits].parse::<usize>() {
+            Ok(line) if !other => out.push_str(&v1_line(line).to_string()),
+            _ => out.push_str(&tail[..digits]),
+        }
+        rest = &tail[digits..];
+    }
+    out.push_str(rest);
+    out
+}
+
 /// §FS-config-migrate.5.2: the config-table names in a message, spelled as v1.
-fn v1_spelling(message: &str) -> String {
+pub(super) fn v1_spelling(message: &str) -> String {
     const NAMES: &[(&str, &str)] = &[
         ("[schema.sources] exclude", "[scan] exclude"),
         ("[schema.sources] extensions", "[scan] extensions"),

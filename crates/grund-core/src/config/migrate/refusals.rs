@@ -120,7 +120,8 @@ pub(super) fn settings(v1: &Project, keys: &Keys, root: &Path) -> Vec<MigrateRef
 
 /// §FS-config-migrate.mapping `[reference] grounding_level`: a level on a place
 /// grounding is off for, which only `--require-grounding` would switch on, and
-/// which no version-2 rung waits for.
+/// which no version-2 rung waits for. A row whose own `require_grounding =
+/// false` the flag cannot override reads no level, so it is not refused.
 fn grounding(v1: &Project, keys: &Keys) -> Vec<MigrateRefusal> {
     let rules = &v1.rules;
     let repair = "set require_grounding = true, or remove grounding_level, under version 1";
@@ -138,7 +139,13 @@ fn grounding(v1: &Project, keys: &Keys) -> Vec<MigrateRefusal> {
     }
     for row in &v1.schema.rows {
         let (require, level) = configured_row_grounding(rules, &row.name);
-        if !require && level != 1 {
+        // An explicit row `false` wins over the flag (§FS-config.3.4.8.3).
+        let explicit = rules
+            .grounding
+            .kinds
+            .get(&row.name)
+            .and_then(|row| row.require);
+        if !require && level != 1 && explicit.is_none() {
             out.push(refusal(
                 at(keys.row_line(&row.name, "grounding_level")),
                 format!(

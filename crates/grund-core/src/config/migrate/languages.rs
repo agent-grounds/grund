@@ -108,7 +108,7 @@ pub(super) fn translate(
         let (name, class, profile, docstrings) = reading(suffix, sources.docstring_python);
         if class == LanguageClass::Source && prefixes.is_empty() && !docstrings {
             refusals.push(MigrateRefusal {
-                anchor: anchor(extensions_line),
+                anchor: anchor(extensions_line.or(prefixes_line)),
                 what: format!(
                     "[scan] extensions names `{suffix}`, which reads no comment with an empty comment_prefixes, and a version 2 definition must read one"
                 ),
@@ -120,7 +120,7 @@ pub(super) fn translate(
         let hosts = profile.hosts();
         if !hosts.is_empty() && !hosts.iter().any(|host| prefixes.iter().any(|p| p == host)) {
             refusals.push(MigrateRefusal {
-                anchor: anchor(extensions_line),
+                anchor: anchor(extensions_line.or(prefixes_line)),
                 what: format!(
                     "[scan] extensions names `{suffix}`, whose doc comments no prefix of [scan] comment_prefixes spells, and version 2 refuses an unreachable profile"
                 ),

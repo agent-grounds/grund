@@ -99,7 +99,12 @@ fn reduce(p: &Project, root: &Path) -> Vec<Section> {
     }
     let grounding: Vec<_> = names
         .iter()
-        .map(|name| (name.to_string(), configured_row_grounding(&p.rules, name)))
+        .map(|name| {
+            let (require, level) = configured_row_grounding(&p.rules, name);
+            // Off, a level reads nothing: an inherited `false` with a level is
+            // refused first, and an explicit one wins over the flag.
+            (name.to_string(), (require, require.then_some(level)))
+        })
         .collect();
     let resolution: Vec<_> = p
         .rules
