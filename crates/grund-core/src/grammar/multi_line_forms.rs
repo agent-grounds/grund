@@ -3,6 +3,7 @@
 //! close. `multi_line_string.rs` walks a file with it; this file only recognizes,
 //! one opener at a time, so the table reads as the spec's table does.
 
+use super::never_rewrite::is_escaped;
 use super::source_line::is_python_string_prefix;
 
 /// One row family of the form table (§FS-languages.multi-line-string.forms).
@@ -64,18 +65,30 @@ impl Language {
         }
     }
 
+    /// Whether the opener search's per-line toggle reads `byte` as a quote: a
+    /// Rust `'` it never does (§FS-languages.multi-line-string.bound).
+    pub(super) fn is_quote(self, byte: u8) -> bool {
+        matches!(byte, b'"' | b'`') || (byte == b'\'' && self != Self::Rust)
+    }
+
     /// A quote-like byte at `i` that this language reads otherwise than the
     /// per-line toggle does, where no quote is open
     /// (§FS-languages.multi-line-string.bound): a Rust character literal or
     /// lifetime, a JavaScript or TypeScript regular-expression literal.
     pub(super) fn skip_at(self, line: &[u8], i: usize) -> Option<Skip> {
-        match (self, line[i]) {
-            (Self::Rust, b'\'') => Some(Skip::To(rust_char_end(line, i).unwrap_or(i + 1))),
-            (Self::Template, b'/') if regex_may_start(&line[..i]) => {
-                Some(regex_end(line, i).map_or(Skip::Line, Skip::To))
-            }
-            _ => None,
-        }
+        let end = match (self, line[i]) {
+            (Self::Rust, b'\'') => rust_char_end(line, i).unwrap_or(i + 1),
+            (Self::Template, b'/') if regex_may_start(&line[..i]) => match regex_end(line, i) {
+                Some(end) => end,
+                None => return Some(Skip::Line),
+            },
+            _ => return None,
+        };
+        // A misread skip must not pass what the search would have read: a quote
+        // toggles, a comment opener ends the search.
+        let passes = (i + 1..end)
+            .any(|j| (self.is_quote(line[j]) && !is_escaped(line, j)) || self.comment_at(line, j));
+        Some(if passes { Skip::Line } else { Skip::To(end) })
     }
 
     /// Whether this language's forms are heredocs, whose body starts on the next
@@ -118,7 +131,8 @@ impl Language {
 pub(super) enum Skip {
     /// Resume at this column, with nothing between opened or toggled.
     To(usize),
-    /// Open nothing more on this line: a regular expression with no closing `/`.
+    /// Open no form more on this line: a regular expression with no closing `/`,
+    /// or a skip that would pass a quote or a comment opener.
     Line,
 }
 

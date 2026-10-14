@@ -226,6 +226,9 @@ fn a_block_comment_opened_after_code_opens_nothing_to_its_close() {
     assert_eq!(entries("a.js", js), [0, 0, 0, 0]);
     let rust = "f(); /* \"a\n*/ let s = \"b\nc\";\n";
     assert_eq!(entries("a.rs", rust), [0, 0, 2]);
+    // Rust's blocks nest, so the search resumes at the `*/` that balances.
+    let nested = "f(); /* a\n /* b */ \"c\n*/ let s = \"d\ne\";\n";
+    assert_eq!(entries("a.rs", nested), [0, 0, 0, 2]);
 }
 
 /// §FS-languages.multi-line-string.bound: a backtick inside a regular-expression
@@ -239,6 +242,23 @@ fn a_regex_literal_hides_its_backticks_and_a_division_does_not() {
     assert_eq!(entries("a.js", "x = /`\ny`\n"), [0, 0]);
     // `a / b` divides, so the template after it is carried.
     assert_eq!(entries("a.js", "x = a / b + `c\nd`;\n"), [0, 2]);
+}
+
+/// §FS-languages.multi-line-string.bound: a skip that would pass a quote or a
+/// comment opener ends the search on its line, so a misread one opens nothing,
+/// and a block opened after it still stops the search to its `*/`.
+#[test]
+fn a_skip_never_passes_a_quote_or_a_comment() {
+    let jsx = "x = <b>a</b>{\"/d\"}{\"`\"};\n// x\nconst t = `y`;\n";
+    assert_eq!(entries("a.jsx", jsx), [0, 0, 0]);
+    let postfix = "x = i++ / 2; // the ` key\n// x\nconst t = `y`;\n";
+    assert_eq!(entries("a.js", postfix), [0, 0, 0]);
+    let block = "x = i++ / 2; /* on\n `a\n*/\nconst t = `y`;\n";
+    assert_eq!(entries("a.js", block), [0, 0, 0, 0]);
+    let after_quote = "x = i++ / 2 + \"s\"; /* on\n `a\n*/\nconst t = `y`;\n";
+    assert_eq!(entries("a.js", after_quote), [0, 0, 0, 0]);
+    // A quote-free regex is still skipped, and an escaped quote in it is no quote.
+    assert_eq!(entries("a.js", "f(/\\`/, `a\nb`);\n"), [0, 2]);
 }
 
 /// §FS-languages.multi-line-string.bound: `<<` inside `(( … ))` is a shift.
