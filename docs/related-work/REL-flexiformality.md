@@ -22,7 +22,7 @@ Kohlhase, Michael Kohlhase and Christoph Lange, MKM 2010, pages 355–369, DOI
 [record](https://cris.fau.de/publications/106429884/)), applies the question to the
 documents of a software engineering project. It does not use the word "flexiformal".
 
-sTeX, Kohlhase's semantic LaTeX ([CTAN](https://ctan.org/pkg/stex)), is the closest system
+sTeX, Kohlhase's semantic LaTeX ([source](https://github.com/slatex/sTeX)), is the closest system
 in mechanism: a symbol is declared, a reference names it, and a reference to a symbol that
 is not found is an error.
 
