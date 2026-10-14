@@ -128,7 +128,7 @@ comment_prefixes = ["%"]
 |---|---|---|
 | `class` | `document`, `data`, `source` | required |
 | `comment_prefixes` | literal, nonempty strings, each once | `[]` |
-| `doc_comments` | `none`, `c-family`, `python`, `go`, `ruby`, `shell`, `sql`, `ldoc`, `haddock`, `roxygen` | `none` |
+| `doc_comments` | `none`, `c-family`, `python`, `go`, `ruby`, `shell`, `sql`, `ldoc`, `haddock`, `roxygen`, `lisp` | `none` |
 | `docstrings` | `off`, `python` | `off` |
 
 A name matches `[a-z][a-z0-9_]*` and cannot reuse a built-in name. The reader
@@ -173,6 +173,9 @@ What each doc profile accepts ([§FS-inline-citation-style.1.1.4](../functional-
 - `go`, `ruby`, `shell`, `sql`: a block directly above a definition, such as
   Go's `func` or Ruby's `def`, with no blank line between, or the file's leading
   block.
+- `lisp`: a `;` block directly above a form whose head starts with `def` or
+  `cl-def`, or is `ns`. It exists for `grund config migrate --to 2`, which
+  carries version 1's Lisp extensions with it.
 - `none`: every comment behind the language's hosts, so Lisp, Scheme, Clojure,
   Ada and a definition without `doc_comments` can still declare.
 
