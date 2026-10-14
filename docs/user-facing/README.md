@@ -12,6 +12,7 @@ command's own `--help` page links the guide and example that cover it
 | [Setting up a repository](setup.md) | [`examples/scheme-*`](../../examples/) |
 | [Checking a repository](checking.md) | — |
 | [The `grund.toml` reference](configuration.md), with its [JSON Schema](../../schemas/grund.schema.json) | [`examples/places`](../../examples/places/) |
+| [Migrating a config to version 2](migrating.md) | [`examples/migrate`](../../examples/migrate/) |
 | [Python API](python-api.md) | [`examples/python-api`](../../examples/python-api/) |
 | [Citation directions](citation-directions.md) | — |
 | [Seeing a repository's schema](schema.md) | [`examples/schema`](../../examples/schema/) |
