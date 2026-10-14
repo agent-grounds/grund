@@ -8,7 +8,7 @@
 use anyhow::{Result, anyhow};
 use std::path::Path;
 
-use super::parse::{bail_config, parse_string, parse_string_list};
+use super::values::{bail_config, parse_string, parse_string_list};
 use crate::config::citations::{
     CitationDisjunction, CitationLevel, CitationRules, CitationTarget, parse_citation_target_entry,
 };

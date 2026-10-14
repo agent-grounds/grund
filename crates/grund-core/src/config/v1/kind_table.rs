@@ -11,7 +11,7 @@ use anyhow::Result;
 use std::path::{Component, Path};
 
 use super::grounding::ParsedGrounding;
-use super::parse::{bail_config, parse_bool, parse_string};
+use super::values::{bail_config, parse_bool, parse_string};
 use crate::config::kind::{KindConfig, KindIndex, KindResolution};
 use crate::grammar::id_grammar_literal_slash_error;
 use crate::grammar::named_section_component;

@@ -17,13 +17,16 @@ use std::path::Path;
 use super::citations::parse_citation_entry;
 use super::grounding::{check_grounding_level, parse_kind_grounding_key};
 use super::kind_table::{ParsedKind, parse_empty_kinds, parse_kinds_key, refuse_kinds_after_empty};
+use super::lines::LinePass;
 use super::scan_block::parse_scan_exclude;
+use super::values::{
+    bail_config, parse_bool, parse_string, parse_string_list, parse_usize, strip_comment,
+};
 use crate::config::fmt_block::validate_fmt_exclude;
 use crate::config::point_sizes::parse_lead_size_warning;
 use crate::config::project::Project;
 use crate::config::record::{ConfigLocation, ShorthandPolicy};
-use crate::grammar::{id_grammar_key_slash_error, is_escaped};
-use crate::model::format_path;
+use crate::grammar::id_grammar_key_slash_error;
 
 /// Lower one `grund.toml` over `project`, all but its `[[kinds]]` table — the schema of §FS-config.3 and its
 /// subsections (`[reference]` 3.1, `[id]` 3.2/3.3, `[[kinds]]` 3.4, `[scan]` 3.5,
@@ -37,6 +40,7 @@ pub(super) fn parse_config_file(
     text: &str,
     report_path: &Path,
     project: &mut Project,
+    pass: &mut LinePass,
 ) -> Result<Option<Vec<ParsedKind>>> {
     // Everything below reports problems against the stable relative path.
     let path = report_path;
@@ -54,6 +58,7 @@ pub(super) fn parse_config_file(
     };
     for (idx, raw_line) in text.lines().enumerate() {
         let line_no = idx + 1;
+        pass.see(line_no, raw_line, &section);
         let line = strip_comment(raw_line).trim();
         if line.is_empty() {
             continue;
@@ -316,7 +321,8 @@ pub(super) fn parse_config_file(
                 project.schema.sources.include_source = at(line_no);
             }
             ("scan", "exclude") => {
-                project.schema.sources.exclude = parse_scan_exclude(path, line_no, value)?
+                let tolerant = pass.tolerant;
+                project.schema.sources.exclude = parse_scan_exclude(path, line_no, value, tolerant)?
             }
             ("scan", "extensions") => {
                 project.schema.sources.extensions = parse_string_list(path, line_no, value)?
@@ -411,97 +417,4 @@ pub(super) fn parse_config_file(
     // [[kinds]] replaces the built-in rows entirely (§FS-config.3.4), and only
     // where the file declared the block at all; `v1::Read` lowers it.
     Ok(kinds_block_seen.then_some(parsed_kinds))
-}
-
-/// Drop a trailing `#`-comment from a `grund.toml` line (§FS-config.3).
-pub(crate) fn strip_comment(line: &str) -> &str {
-    // A `#` inside a quoted string is not a comment marker. Walk the line and stop at the
-    // first unquoted `#`; otherwise return the line unchanged.
-    let bytes = line.as_bytes();
-    let mut in_string = false;
-    let mut i = 0;
-    while i < bytes.len() {
-        match bytes[i] {
-            b'"' if !is_escaped(bytes, i) => in_string = !in_string,
-            b'#' if !in_string => return &line[..i],
-            _ => {}
-        }
-        i += 1;
-    }
-    line
-}
-
-/// Fail config parsing with a `path:line: message` error — the located-finding
-/// shape applied to a malformed `grund.toml` (§FS-config.4.3, §FS-errors.2.1).
-pub(in crate::config) fn bail_config<T>(path: &Path, line: usize, message: String) -> Result<T> {
-    // §FS-distribution.3.3.2: preserve the parser's location without parsing Display.
-    let mut failure = crate::model::OperationDiagnostic::new(
-        "config",
-        "config",
-        format!("{}:{}: {}", format_path(path), line, message),
-    );
-    failure.path = Some(format_path(path));
-    failure.line = Some(line);
-    Err(failure.into())
-}
-
-pub(in crate::config) fn parse_string(path: &Path, line: usize, value: &str) -> Result<String> {
-    if !(value.starts_with('"') && value.ends_with('"') && value.len() >= 2) {
-        return bail_config(path, line, "expected string".to_string());
-    }
-    let inner = &value[1..value.len() - 1];
-    let mut out = String::with_capacity(inner.len());
-    let mut chars = inner.chars();
-    while let Some(c) = chars.next() {
-        if c != '\\' {
-            out.push(c);
-            continue;
-        }
-        match chars.next() {
-            Some('\\') => out.push('\\'),
-            Some('"') => out.push('"'),
-            Some('n') => out.push('\n'),
-            Some('t') => out.push('\t'),
-            Some('r') => out.push('\r'),
-            Some(other) => {
-                return bail_config(
-                    path,
-                    line,
-                    format!("invalid escape sequence `\\{other}` in string"),
-                );
-            }
-            None => {
-                return bail_config(path, line, "trailing backslash in string".to_string());
-            }
-        }
-    }
-    Ok(out)
-}
-
-pub(in crate::config) fn parse_bool(path: &Path, line: usize, value: &str) -> Result<bool> {
-    match value {
-        "true" => Ok(true),
-        "false" => Ok(false),
-        _ => bail_config(path, line, "expected boolean".to_string()),
-    }
-}
-
-pub(in crate::config) fn parse_usize(path: &Path, line: usize, value: &str) -> Result<usize> {
-    value
-        .parse::<usize>()
-        .or_else(|_| bail_config(path, line, "expected non-negative integer".to_string()))
-}
-
-pub(crate) fn parse_string_list(path: &Path, line: usize, value: &str) -> Result<Vec<String>> {
-    if !value.starts_with('[') || !value.ends_with(']') {
-        return bail_config(path, line, "expected string list".to_string());
-    }
-    let inner = value[1..value.len() - 1].trim();
-    if inner.is_empty() {
-        return Ok(Vec::new());
-    }
-    inner
-        .split(',')
-        .map(|part| parse_string(path, line, part.trim()))
-        .collect()
 }

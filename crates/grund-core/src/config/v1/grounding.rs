@@ -9,7 +9,7 @@ use anyhow::Result;
 use std::path::Path;
 
 use super::kind_table::ParsedKind;
-use super::parse::{bail_config, parse_bool, parse_usize};
+use super::values::{bail_config, parse_bool, parse_usize};
 use crate::config::record::GROUNDING_LEVELS;
 
 /// Where a `[[kinds]]` row wrote each grounding key. The *values* live on the

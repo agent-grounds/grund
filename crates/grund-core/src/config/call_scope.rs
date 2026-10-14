@@ -1,5 +1,6 @@
 //! Per-call inputs no option carries: embedding's zero-config discovery base
-//! (§FS-distribution.3.3.3) and the run's `--path-base` (§FS-cli.3.4).
+//! (§FS-distribution.3.3.3), the run's `--path-base` (§FS-cli.3.4), and the
+//! config text migration's report gate checks a tree under (§FS-config-migrate.5.2).
 //!
 //! The embedding base: existing options do not carry a fallback cwd. Scope that
 //! one discovery input to the synchronous embedding call, instead of changing
@@ -76,5 +77,35 @@ pub fn with_report_path_base<T>(base: Option<PathBase>, operation: impl FnOnce()
         }
     }
     let _restore = Restore(REPORT_PATH_BASE.with(|slot| slot.replace(base)));
+    operation()
+}
+
+thread_local! {
+    static CONFIG_TEXT: RefCell<Option<(PathBuf, String)>> = const { RefCell::new(None) };
+}
+
+/// The text a run reads for the config file at `path` in place of the disk's,
+/// when one synchronous call has put it there (§FS-config-migrate.5.2).
+pub(crate) fn config_text_override(path: &Path) -> Option<String> {
+    CONFIG_TEXT.with(|slot| {
+        let slot = slot.borrow();
+        let (scoped, text) = slot.as_ref()?;
+        crate::sources::paths_same_location(scoped, path).then(|| text.clone())
+    })
+}
+
+/// Run `operation` reading `text` as the config file at `path`: the report gate's
+/// second run, which checks the tree as the candidate would govern it without
+/// writing it (§FS-config-migrate.5.2, §AR-config.8.1). The guard restores the
+/// caller's scope on return and unwind.
+pub(crate) fn with_config_text<T>(path: &Path, text: &str, operation: impl FnOnce() -> T) -> T {
+    struct Restore(Option<(PathBuf, String)>);
+    impl Drop for Restore {
+        fn drop(&mut self) {
+            CONFIG_TEXT.with(|slot| *slot.borrow_mut() = self.0.take());
+        }
+    }
+    let scoped = Some((path.to_path_buf(), text.to_string()));
+    let _restore = Restore(CONFIG_TEXT.with(|slot| slot.replace(scoped)));
     operation()
 }
