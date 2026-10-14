@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 use super::expected::{block_version, chapter_rules_section};
 use crate::config::Config;
 use crate::model::{Catalog, ExpectedEntrypoint, ExpectedSection, ScopedExpectation};
+use crate::sources::path_is_dir;
 use crate::templates::{
     ConversationSurface, Layout, citation_directions_section, clickable_citations_section,
     declaration_shapes_section,
@@ -43,7 +44,7 @@ impl<'a> Guidance<'a> {
             .unwrap_or_default();
         let root = &config.root;
         let layout = Layout::of(config.project(), config.run(), &subjects, &|dir| {
-            root.join(dir).is_dir()
+            path_is_dir(root.join(dir))
         });
         // §FS-init.2.3.7.1: a scoped file or a declaration shape adds two.
         let shapes = declaration_shapes_section(config.project(), &|_| true).is_some();
