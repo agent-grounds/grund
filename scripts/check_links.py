@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check links while resolving this repository's main-branch URLs locally (§AR-ci.3.1), and
-settle a github.com 5xx through GitHub's API (§AR-ci.3.1.2)."""
+settle a github.com 5xx through GitHub's API (§AR-ci.3.1.2) and any other transient failure
+through one more lychee pass (§AR-ci.3.1.3)."""
 
 from __future__ import annotations
 
@@ -10,6 +11,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path, PurePosixPath
 from typing import Callable, Sequence
 from urllib.parse import unquote, urlsplit
@@ -18,6 +20,7 @@ from urllib.parse import unquote, urlsplit
 SELF_PREFIX = "https://github.com/agent-grounds/grund/blob/main/"
 SELF_PATH_PREFIX = "/agent-grounds/grund/blob/main/"
 SELF_PATH_PREFIXES = {"blob": SELF_PATH_PREFIX, "tree": "/agent-grounds/grund/tree/main/"}
+RECHECK_PAUSE = 5  # seconds before the transient re-check (§AR-ci.3.1.3)
 
 
 class SelfLinkError(Exception):
@@ -116,7 +119,7 @@ def check_links(
         failures = _report_failures(report_path)
     if failures is None:
         return returncode
-    return _settle(failures, repo_root, runner, returncode)
+    return _settle(failures, repo_root, runner, returncode, lychee)
 
 
 GITHUB_ENDPOINTS = (
@@ -144,6 +147,47 @@ def _is_candidate(url: str, status: dict) -> bool:
     """A 5xx from exactly `github.com`; nothing else is re-checked (§AR-ci.3.1.2)."""
     code = status.get("code")
     return isinstance(code, int) and 500 <= code <= 599 and urlsplit(url).netloc == "github.com"
+
+
+def _is_transient(url: str, status: dict) -> bool:
+    """A failure lychee may answer differently once more: a 5xx from any host but
+    `github.com`, a 403, 408 or 429, or a code-less http(s) failure other than a
+    missing fragment (§AR-ci.3.1.3)."""
+    parsed = urlsplit(url)
+    if parsed.scheme not in ("http", "https"):
+        return False
+    code = status.get("code")
+    if code:
+        return code in (403, 408, 429) or (
+            isinstance(code, int) and 500 <= code <= 599 and parsed.netloc != "github.com"
+        )
+    return "Cannot find fragment" not in f"{status.get('text') or ''} {status.get('details') or ''}"
+
+
+def _recheck_transient(
+    urls: Sequence[str],
+    repo_root: Path,
+    runner: Callable[..., subprocess.CompletedProcess[str]],
+    lychee: str,
+) -> dict[str, dict] | None:
+    """The `{url: status}` still failing after one lychee pass over just `urls`, or
+    None when its report is missing or unreadable (§AR-ci.3.1.3)."""
+    time.sleep(RECHECK_PAUSE)
+    document = "".join(f"[re-check](<{url}>)\n" for url in urls)
+    with tempfile.TemporaryDirectory(prefix="grund-recheck-") as scratch:
+        report_path = Path(scratch) / "lychee.json"
+        command = [lychee, "--no-progress", "--include-fragments", "--format", "json",
+                   "--output", str(report_path), "-"]
+        try:
+            returncode = runner(
+                command, cwd=repo_root, input=document, text=True, check=False
+            ).returncode
+        except OSError:
+            return None
+        failures = _report_failures(report_path)
+    if failures is None or (returncode != 0 and not failures):
+        return None
+    return {url: status for _, url, status in failures}
 
 
 def github_endpoint(url: str) -> str | None:
@@ -213,18 +257,28 @@ def _settle(
     repo_root: Path,
     runner: Callable[..., subprocess.CompletedProcess[str]],
     returncode: int,
+    lychee: str = "lychee",
 ) -> int:
-    """Pass only when every failure is a confirmed github.com 5xx (§AR-ci.3.1.2)."""
+    """Pass only when every failure is a confirmed github.com 5xx (§AR-ci.3.1.2) or
+    a transient failure the lychee re-check answered (§AR-ci.3.1.3)."""
     outcomes = {"confirmed": 0, "broken": 0, "unsettled": 0}
-    kept = []
+    kept, transient = [], []
     for source, url, status in failures:
-        if not _is_candidate(url, status):
+        if _is_candidate(url, status):
+            outcome = _recheck(url, repo_root, runner)
+            outcomes[outcome] += 1
+            if outcome != "confirmed":
+                kept.append(_failure_line(source, url, status, outcome))
+        elif _is_transient(url, status):
+            transient.append((source, url, status))
+        else:
             kept.append(_failure_line(source, url, status))
-            continue
-        outcome = _recheck(url, repo_root, runner)
-        outcomes[outcome] += 1
-        if outcome != "confirmed":
-            kept.append(_failure_line(source, url, status, outcome))
+    urls = list(dict.fromkeys(url for _, url, _ in transient))
+    still = _recheck_transient(urls, repo_root, runner, lychee) if urls else {}
+    for source, url, status in transient:
+        # A missing report fails every URL with its first status (§AR-ci.3.1.3).
+        if still is None or url in still:
+            kept.append(_failure_line(source, url, (still or {}).get(url, status)))
     for line in kept:
         print(line)
     checked = sum(outcomes.values())
@@ -232,6 +286,12 @@ def _settle(
         print(
             f"{checked} GitHub 5xx re-checked through the API: {outcomes['confirmed']} confirmed, "
             f"{outcomes['broken']} broken, {outcomes['unsettled']} unsettled"
+        )
+    if urls:
+        failed = len(urls) if still is None else sum(url in still for url in urls)
+        print(
+            f"{len(urls)} transient failures re-checked with lychee: "
+            f"{len(urls) - failed} passed, {failed} failed"
         )
     if kept or not failures:
         return returncode
