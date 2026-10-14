@@ -11,7 +11,7 @@
 # A writer owns the disk calls it makes to write (WRITERS in PRIMITIVES): it is an
 # owner because it is the one that writes, not because no run reads its output.
 # What a writer reads it asks sources for, so the guard, which sees a file and not
-# a call, can let a writer's file own its writes: fetch_install.rs, init.rs and
+# a call, can let a writer's file own its writes: atomic_install.rs, init.rs and
 # init_block.rs are WRITERS.
 #
 # `exempt` holds the three hits of the `split on /` pattern that split something
