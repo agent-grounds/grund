@@ -1,0 +1,4 @@
+would-update AGENTS.md
+would-update docs/spec/CLAUDE.md
+would-remove tests/CLAUDE.md
+exists grund.toml

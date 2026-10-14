@@ -1,13 +1,14 @@
 //! Test module: the scoped files `init` owns (§FS-init.2.3.5.13.1,
 //! §FS-init.2.3.5.14): the list on disk it reads them from, the byte-exact test
-//! that deletes an orphan only when its block was the whole file, and a chapter
-//! rule written into its subject kind's scoped block.
+//! that deletes an orphan only when its block was the whole file, which files
+//! of an orphan's directory lose their block, and a chapter rule written into
+//! its subject kind's scoped block.
 
 use std::fs;
 
 use super::init::{InitOpts, init};
 use super::init_scoped::cut_block;
-use super::scoped_files::listed_scoped_files;
+use super::scoped_files::{OrphanFile, listed_scoped_files, orphan_files};
 use crate::testing::{test_root, write};
 
 const BLOCK: &str = "<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (v21)\n\nScoped.\n<!-- END GRUND MANAGED BLOCK -->\n";
@@ -57,6 +58,42 @@ fn an_orphan_is_deleted_only_when_its_block_was_the_whole_file() {
     write(&plain, "# Notes\n");
     assert!(matches!(cut_block(&plain, false), Ok(None)));
     assert_eq!(fs::read_to_string(&plain).unwrap(), "# Notes\n");
+}
+
+/// §FS-init.2.3.5.14.3: the `AGENTS.md` and each standalone companion of an
+/// orphan's directory lose their block each on its own account, whether the
+/// `AGENTS.md` is there or not, and only a symlink to that `AGENTS.md` is
+/// touched, never one that is itself the `AGENTS.md`.
+#[cfg(unix)]
+#[test]
+fn an_orphans_files_lose_their_block_each_on_its_own_account() {
+    use OrphanFile::{Agents, Linked, Standalone};
+    use std::os::unix::fs::symlink;
+    let root = test_root("scoped_orphan_files");
+    write(&root.join("both/AGENTS.md"), BLOCK);
+    symlink("AGENTS.md", root.join("both/CLAUDE.md")).unwrap();
+    write(&root.join("both/GEMINI.md"), BLOCK);
+    assert_eq!(
+        orphan_files(&root, "both"),
+        [
+            ("AGENTS.md", Agents),
+            ("CLAUDE.md", Linked),
+            ("GEMINI.md", Standalone)
+        ]
+    );
+
+    write(&root.join("gone/CLAUDE.md"), BLOCK);
+    symlink("AGENTS.md", root.join("gone/GEMINI.md")).unwrap();
+    assert_eq!(
+        orphan_files(&root, "gone"),
+        [("CLAUDE.md", Standalone), ("GEMINI.md", Linked)]
+    );
+
+    write(&root.join("AGENTS.md"), BLOCK);
+    write(&root.join("linked/GEMINI.md"), BLOCK);
+    symlink("../AGENTS.md", root.join("linked/AGENTS.md")).unwrap();
+    symlink("../AGENTS.md", root.join("linked/CLAUDE.md")).unwrap();
+    assert_eq!(orphan_files(&root, "linked"), [("GEMINI.md", Standalone)]);
 }
 
 /// §FS-init.2.3.5.11, §FS-init.2.3.5.10: a chapter rule renders in the scoped

@@ -1,14 +1,15 @@
 //! The scoped files a run owns on disk (§FS-init.2.3.5.13.1, §FS-init.2.3.5.14.3):
 //! the list the root block records, the companions beside a scoped `AGENTS.md`,
-//! and which root companions a scoped directory mirrors. Read the same way by
-//! `init` before it writes and by `Expected` before `check` compares.
+//! which root companions a scoped directory mirrors, and which files of an
+//! orphan's directory lose their block. Read the same way by `init` before it
+//! writes and by `Expected` before `check` compares.
 
 use std::path::{Component, Path, PathBuf};
 
 use crate::checker::section_in_block;
 use crate::grammar::{AgentsBlockLookup, find_agents_block};
 use crate::scanner::{CANONICAL_AGENT_ENTRYPOINT, companion_agent_entrypoints, is_symlink_to};
-use crate::sources::{Sources, link_metadata, path_is_entry};
+use crate::sources::{Sources, link_metadata, observe_input, path_is_entry};
 
 /// The companions a scoped directory can carry; the root-only entrypoints are
 /// never mirrored (§FS-init.2.3.5.14.3).
@@ -44,6 +45,16 @@ impl ScopedRecord {
             }
         }
         Self::default()
+    }
+
+    /// The directories the list on disk names that no destination in `live`
+    /// is, in list order: the orphans (§FS-init.2.3.5.13.1).
+    pub(crate) fn orphans<'a>(&'a self, live: &[&str]) -> Vec<&'a str> {
+        self.listed
+            .iter()
+            .filter_map(|path| path.strip_suffix("/AGENTS.md"))
+            .filter(|dir| !live.contains(dir))
+            .collect()
     }
 }
 
@@ -100,17 +111,49 @@ pub(crate) fn owned_companions(root: &Path, dir: &str) -> Vec<(&'static str, Own
         .collect()
 }
 
+/// What a file in an orphan's directory is to `init` (§FS-init.2.3.5.14.3).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum OrphanFile {
+    /// The orphan's own `AGENTS.md`: its block is cut.
+    Agents,
+    /// A standalone `CLAUDE.md` or `GEMINI.md`: its block is cut too.
+    Standalone,
+    /// A symlink to that `AGENTS.md`: deleted when `init` deletes it.
+    Linked,
+}
+
+/// The files of the orphan directory `dir` under `root` that `init` touches,
+/// each with its name and what it is, `AGENTS.md` first (§FS-init.2.3.5.14.3):
+/// the `AGENTS.md` and each standalone companion lose their block on their own
+/// account, and of the symlinks only one to that `AGENTS.md`, which goes with
+/// it. `init` cuts from this and `Expected` compares it, so the two agree.
+pub(crate) fn orphan_files(root: &Path, dir: &str) -> Vec<(&'static str, OrphanFile)> {
+    let agents = root.join(dir).join(CANONICAL_AGENT_ENTRYPOINT);
+    std::iter::once(CANONICAL_AGENT_ENTRYPOINT)
+        .chain(SCOPED_COMPANIONS)
+        .filter_map(|name| {
+            let path = root.join(dir).join(name);
+            // §FS-check.6.1.3: an absent one is an input too, which may appear.
+            observe_input(&path, false);
+            let is_symlink = link_metadata(&path).ok()?.file_type().is_symlink();
+            match (name == CANONICAL_AGENT_ENTRYPOINT, is_symlink) {
+                (true, false) => Some((name, OrphanFile::Agents)),
+                (false, false) => Some((name, OrphanFile::Standalone)),
+                (false, true) if is_symlink_to(&path, &agents).unwrap_or(false) => {
+                    Some((name, OrphanFile::Linked))
+                }
+                _ => None,
+            }
+        })
+        .collect()
+}
+
 /// The companions beside the scoped `AGENTS.md` in `dir`: each name that
-/// exists there, and whether it is a symlink to that `AGENTS.md`.
-pub(crate) fn scoped_companions(dir: &Path) -> Vec<(PathBuf, bool)> {
-    let agents = dir.join(CANONICAL_AGENT_ENTRYPOINT);
+/// exists there.
+pub(crate) fn scoped_companions(dir: &Path) -> Vec<PathBuf> {
     SCOPED_COMPANIONS
         .iter()
         .map(|name| dir.join(name))
         .filter(|path| path_is_entry(path))
-        .map(|path| {
-            let linked = is_symlink_to(&path, &agents).unwrap_or(false);
-            (path, linked)
-        })
         .collect()
 }

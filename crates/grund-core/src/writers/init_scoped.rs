@@ -13,7 +13,9 @@ use super::guidance::Guidance;
 use super::init::{verb_appended, verb_updated, verb_wrote};
 use super::init_block::{AgentsUpdateResult, update_agents_block, update_agents_text};
 use super::init_output::InitEvent;
-use super::scoped_files::{OwnedCompanion, ScopedRecord, owned_companions, scoped_companions};
+use super::scoped_files::{
+    OrphanFile, OwnedCompanion, ScopedRecord, orphan_files, owned_companions,
+};
 use crate::grammar::{AgentsBlockLookup, find_agents_block};
 use crate::scanner::CANONICAL_AGENT_ENTRYPOINT;
 use crate::sources::{Sources, path_exists, path_is_entry, path_is_symlink};
@@ -21,7 +23,8 @@ use crate::sources::{Sources, path_exists, path_is_entry, path_is_symlink};
 /// What one run does to scoped files, in report order (§FS-init.2.3.5.14.4).
 pub(super) struct ScopedPlan {
     files: Vec<ScopedFile>,
-    orphans: Vec<Orphan>,
+    /// Each orphan's directory, its files `AGENTS.md` first.
+    orphans: Vec<Vec<OrphanEntry>>,
 }
 
 /// A destination's `AGENTS.md`, its block, and its companions.
@@ -39,12 +42,12 @@ enum Companion {
     Splice { path: PathBuf, rel: String },
 }
 
-/// An orphan's `AGENTS.md` and the companions beside it, each with whether it
-/// is a symlink to that `AGENTS.md`.
-struct Orphan {
+/// A file of an orphan's directory that `init` touches, and what it is
+/// (§FS-init.2.3.5.14.3).
+struct OrphanEntry {
     path: PathBuf,
     rel: String,
-    companions: Vec<(PathBuf, String, bool)>,
+    what: OrphanFile,
 }
 
 /// Plan the scoped writes under `target`. `root` is the loaded config's root,
@@ -78,21 +81,17 @@ pub(super) fn plan_scoped(guidance: &Guidance<'_>, root: &Path, target: &Path) -
         })
         .collect();
     let orphans = record
-        .listed
-        .iter()
-        .filter_map(|rel| Some((rel, rel.strip_suffix("/AGENTS.md")?)))
-        .filter(|(_, dir)| !live.contains(dir))
-        .map(|(rel, dir)| Orphan {
-            path: target.join(rel),
-            rel: rel.clone(),
-            companions: scoped_companions(&target.join(dir))
+        .orphans(&live)
+        .into_iter()
+        .map(|dir| {
+            orphan_files(target, dir)
                 .into_iter()
-                .map(|(path, linked)| {
-                    let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-                    let rel = format!("{dir}/{name}");
-                    (path, rel, linked)
+                .map(|(name, what)| OrphanEntry {
+                    path: target.join(dir).join(name),
+                    rel: format!("{dir}/{name}"),
+                    what,
                 })
-                .collect(),
+                .collect()
         })
         .collect();
     ScopedPlan { files, orphans }
@@ -129,18 +128,12 @@ pub(super) fn refuse_scoped(plan: &ScopedPlan) -> Option<(PathBuf, anyhow::Error
             }
         }
     }
-    let orphans = plan.orphans.iter().flat_map(|orphan| {
-        let companions = orphan
-            .companions
-            .iter()
-            .filter(|(_, _, linked)| !linked)
-            .map(|(path, _, _)| path);
-        std::iter::once(&orphan.path).chain(companions)
-    });
-    for path in orphans {
-        if path_is_symlink(path) || !path_exists(path) {
-            continue;
-        }
+    let cut = plan
+        .orphans
+        .iter()
+        .flatten()
+        .filter(|entry| entry.what != OrphanFile::Linked);
+    for OrphanEntry { path, .. } in cut {
         if let Ok(text) = Sources::on_disk().text(path)
             && let AgentsBlockLookup::Malformed { message, .. } = find_agents_block(&text)
         {
@@ -195,25 +188,25 @@ pub(super) fn write_scoped(
         }
     }
     for orphan in &plan.orphans {
-        if path_is_symlink(&orphan.path) {
-            continue;
-        }
-        let Some(removed) = cut_block(&orphan.path, dry_run)? else {
-            continue;
-        };
-        push(cut_verb(removed, dry_run), orphan.rel.clone());
-        for (path, rel, linked) in &orphan.companions {
-            if *linked {
-                if removed {
+        // §FS-init.2.3.5.14.3: each file loses its block on its own account,
+        // and a link goes only with the `AGENTS.md` this run deleted.
+        let mut agents_removed = false;
+        for OrphanEntry { path, rel, what } in orphan {
+            match what {
+                OrphanFile::Agents | OrphanFile::Standalone => {
+                    let removed = cut_block(path, dry_run)?;
+                    agents_removed |= *what == OrphanFile::Agents && removed == Some(true);
+                    if let Some(removed) = removed {
+                        push(cut_verb(removed, dry_run), rel.clone());
+                    }
+                }
+                OrphanFile::Linked if agents_removed => {
                     if !dry_run {
                         fs::remove_file(path).map_err(|err| (path.clone(), err.into()))?;
                     }
                     push(cut_verb(true, dry_run), rel.clone());
                 }
-            } else if !path_is_symlink(path)
-                && let Some(removed) = cut_block(path, dry_run)?
-            {
-                push(cut_verb(removed, dry_run), rel.clone());
+                OrphanFile::Linked => {}
             }
         }
     }
