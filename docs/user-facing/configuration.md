@@ -366,7 +366,7 @@ The bytes grund writes: the trigger, the conversation opinion, kind titles and `
 | `description` | string | — | A one-line description shown beside the project in generated workspace member lists. [§FS-config-v2.presentation](../functional-spec/FS-config-v2.md#presentation-the-presentation-concern) |
 | `trigger` | string | `"$$"` | The typed sequence the editor and `grund fmt` turn into the marker. [§FS-config-v2.presentation](../functional-spec/FS-config-v2.md#presentation-the-presentation-concern) |
 | `conversation` | `"link"` | — | The repository's opinion on how agents render citations in conversation: `link`, or absent for none. [§FS-config-v2.presentation](../functional-spec/FS-config-v2.md#presentation-the-presentation-concern) |
-| `rules` | refused | — | Reserved; refused today. [§FS-config-v2.presentation](../functional-spec/FS-config-v2.md#presentation-the-presentation-concern) |
+| `rules` | `"home"` \| `"root"` | `"home"` | Where each row's agent guidance is written: `home`, the `AGENTS.md` of the deepest directory holding the row's places; `root`, the root entrypoint, as a version-1 config renders it. [§FS-config-v2.presentation](../functional-spec/FS-config-v2.md#presentation-the-presentation-concern) |
 
 ### `[presentation.kinds.<NAME>]`
 

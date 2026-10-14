@@ -1497,8 +1497,13 @@
               }
             },
             "rules": {
-              "not": {},
-              "description": "Reserved; refused today.",
+              "type": "string",
+              "enum": [
+                "home",
+                "root"
+              ],
+              "default": "home",
+              "description": "Where each row's agent guidance is written: `home`, the `AGENTS.md` of the deepest directory holding the row's places; `root`, the root entrypoint, as a version-1 config renders it.",
               "x-grund-spec": {
                 "id": "FS-config-v2.presentation",
                 "href": "docs/functional-spec/FS-config-v2.md#presentation-the-presentation-concern"
