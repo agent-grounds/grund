@@ -171,6 +171,13 @@ pub(super) fn row_key(
                         format!("place `{written}` in `{clause}` is outside the config root");
                     return r.fail(line, message);
                 };
+                if path.is_empty() {
+                    let message = format!(
+                        "place `{written}` in `{clause}` names the config root, \
+                         which is the complement's extent"
+                    );
+                    return r.fail(line, message);
+                }
                 let extent = if key == "files" {
                     Extent::File(path)
                 } else {
