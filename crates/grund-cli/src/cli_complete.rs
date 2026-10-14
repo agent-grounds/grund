@@ -102,7 +102,48 @@ fn command_completions(args: &[String]) -> ExitCode {
     }
 }
 
+/// The completions' one-line summary of each top-level subcommand, the zsh menu's
+/// `name:description` text; `None` only for a name `SUBCOMMANDS` does not hold.
+fn completion_summary(command: &str) -> Option<&'static str> {
+    Some(match command {
+        "check" => "validate every reference in a repo",
+        "show" => "print one declaration body by ID",
+        "list" => "list declared IDs",
+        "refs" => "list citations of an ID",
+        "cover" => "group citations by file",
+        "fmt" => "normalize citation syntax",
+        "fetch" => "materialize one external fact snapshot",
+        "id" => "emit the next conflict-free ID",
+        "init" => "scaffold AGENTS.md and config",
+        "config" => "inspect the effective config",
+        "schema" => "print the kinds, places, shapes and citation rules",
+        "agent-setup-instructions" => "print the guided setup instructions for AI agents",
+        "completions" => "print shell completion script",
+        "integrations" => "print or install clickable-citation integrations",
+        _ => return None,
+    })
+}
+
+/// Every script's subcommand list is read from `SUBCOMMANDS`, so a command the CLI
+/// dispatches is one the shells complete (§FS-completions.1).
+fn completion_words() -> String {
+    SUBCOMMANDS.join(" ")
+}
+
+/// The zsh `commands=( … )` entries, one `'name:summary'` line per subcommand.
+fn zsh_completion_commands() -> String {
+    SUBCOMMANDS
+        .iter()
+        .map(|command| {
+            let summary = completion_summary(command).unwrap_or_default();
+            format!("    '{command}:{summary}'")
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 fn print_bash_completion() {
+    let words = completion_words();
     print!(
         r#"# bash completion for grund
 _grund_complete_ids() {{
@@ -122,7 +163,7 @@ _grund() {{
     COMPREPLY=()
 
     if [[ $COMP_CWORD -eq 1 ]]; then
-        local commands=($(compgen -W "check show list refs cover fmt fetch id init config agent-setup-instructions completions" -- "$cur"))
+        local commands=($(compgen -W "{words}" -- "$cur"))
         # IDs start with an uppercase kind (FS-…, GOAL-…), but workspace aliases
         # are lowercase (`api/FS-login`). Once the user has typed a non-flag
         # prefix, ask the helper for matching IDs and aliases.
@@ -147,6 +188,7 @@ complete -F _grund grund
 }
 
 fn print_zsh_completion() {
+    let commands = zsh_completion_commands();
     println!(
         r#"#compdef grund
 
@@ -174,18 +216,7 @@ _grund_ids() {{
 _grund() {{
   local -a commands
   commands=(
-    'check:validate every reference in a repo'
-    'show:print one declaration body by ID'
-    'list:list declared IDs'
-    'refs:list citations of an ID'
-    'cover:group citations by file'
-    'fmt:normalize citation syntax'
-    'fetch:materialize one external fact snapshot'
-    'id:emit the next conflict-free ID'
-    'init:scaffold AGENTS.md and config'
-    'config:inspect the effective config'
-    'agent-setup-instructions:print the guided setup instructions for AI agents'
-    'completions:print shell completion script'
+{commands}
   )
 
   if (( CURRENT == 2 )); then
@@ -210,6 +241,7 @@ _grund "$@"
 }
 
 fn print_fish_completion() {
+    let words = completion_words();
     println!(
         r#"# fish completion for grund
 function __grund_complete_ids
@@ -217,11 +249,36 @@ function __grund_complete_ids
     grund complete ids --prefix "$token" 2>/dev/null
 end
 
-complete -c grund -f -n "__fish_use_subcommand" -a "check show list refs cover fmt fetch id init config agent-setup-instructions completions"
+complete -c grund -f -n "__fish_use_subcommand" -a "{words}"
 # IDs start with an uppercase kind, but workspace aliases are lowercase. Once a
 # non-flag prefix exists, ask the helper for matching IDs/aliases.
 complete -c grund -f -k -n "__fish_use_subcommand; and test -n (commandline -ct); and not string match -qr '^-' -- (commandline -ct)" -a "(__grund_complete_ids)"
 complete -c grund -f -k -n "__fish_seen_subcommand_from show refs fetch" -a "(__grund_complete_ids)"
 "#
     );
+}
+
+/// Test module: the completion scripts read the dispatched subcommand list
+/// (§FS-completions.1).
+#[cfg(test)]
+mod tests_complete {
+    use super::*;
+
+    #[test]
+    fn every_subcommand_has_a_completion_summary() {
+        for command in SUBCOMMANDS {
+            assert!(completion_summary(command).is_some(), "no summary for `{command}`");
+        }
+        assert_eq!(completion_summary("complete"), None);
+    }
+
+    #[test]
+    fn zsh_commands_list_every_subcommand_in_order() {
+        let lines = zsh_completion_commands();
+        let names: Vec<&str> = lines
+            .lines()
+            .map(|line| line.trim().trim_start_matches('\'').split(':').next().unwrap())
+            .collect();
+        assert_eq!(names, SUBCOMMANDS);
+    }
 }

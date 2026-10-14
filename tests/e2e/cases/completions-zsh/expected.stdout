@@ -34,8 +34,10 @@ _grund() {
     'id:emit the next conflict-free ID'
     'init:scaffold AGENTS.md and config'
     'config:inspect the effective config'
+    'schema:print the kinds, places, shapes and citation rules'
     'agent-setup-instructions:print the guided setup instructions for AI agents'
     'completions:print shell completion script'
+    'integrations:print or install clickable-citation integrations'
   )
 
   if (( CURRENT == 2 )); then
