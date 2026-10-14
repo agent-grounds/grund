@@ -146,13 +146,33 @@ Every per-file rule asks this one question, so a nested place is never outside t
 
 Each rule here is a load error located at the entry it names unless it says otherwise ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)).
 
-1. **Normalized before compared.** A place is compared after lexical normalization: `./docs`, `docs/` and `docs` are one place. Comparison is byte-exact; two spellings that differ only in case and name one directory on a case-insensitive filesystem resolve to one target and meet rule 3. A place that is absolute, or that climbs out of the config root with `..`, is refused, because its index, stubs and entrypoint would be written outside the project ([§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own)): ``place `<p>` in `[schema.kinds.<NAME>] <key>` is outside the config root``.
-2. **One place, one row.** The same normalized place written twice, on two rows or on one, `files` against `folders` included, is refused at the later entry, naming the earlier: ``place `<p>` in `[schema.kinds.<NAME>] <key>` is already a place of `[schema.kinds.<OTHER>]` (line <n>); a place belongs to one row``. `<p>` is the later entry as written.
-3. **Decided on the path as written.** Ownership reads the path as written, not its link target, as a v1 home does ([§FS-config.3.4.11](FS-config.md#3411-what-a-home-is-used-for)). Two places whose resolved targets coincide are the duplicate of rule 2, because the walk keeps one spelling of a file ([§DF-symlink-scan.2.3](../decisions/functional/DF-symlink-scan.md#23-the-report-names-the-link-never-the-target)) and the other place would be silently empty. A folder place that is a directory link leaving the project root is refused rather than pruned ([§DF-symlink-scan.2.2](../decisions/functional/DF-symlink-scan.md#22-the-canonical-project-root-fences-directory-links-not-file-links-or-scan-paths)): ``place `<p>` in `[schema.kinds.<NAME>] folders` links out of the project root``. A `files` place that is a link is followed, as `CLAUDE.md -> AGENTS.md` is.
-4. **A missing place is quiet.** A place that does not exist scans nothing and earns no finding, as a v1 home does ([§FS-config.3.5.8](FS-config.md#358-every-configured-kind-home-is-scanned)), so a fresh repository loads clean.
-5. **Not inside a member.** A place at or inside a workspace member's root, at any nesting depth, is refused, because the root scan never enters a member ([§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)): ``place `<p>` in `[schema.kinds.<NAME>] <key>` is inside workspace member `<m>`, which the root never reads``.
-6. **`scan = false` covers the row.** The key belongs to the row and covers every place of it; places that differ in it are two rows. Ownership answers nesting both ways: a scanned place under an unscanned one is walked and its files are its row's, and an unscanned place under a scanned one is pruned. `scan = false` on `code` is refused at its line: `` `[schema.kinds.code] scan = false` cannot unwalk the complement; narrow its places or use `[schema.sources] exclude` ``.
-7. **`--full` widens past the places.** `grund check --full` reads the whole config root past every place and past `scan = false`, as it reads past v1's `include` ([§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)); a file no place claims is the complement's and is reported in the outside-the-scope tier. A member's root stays out under `--full`. An explicit path argument reads what it names, an unscanned place included, and the files it reads have the owners a whole run gives them.
+##### schema.places.boundaries.1: Normalized before compared
+
+A place is compared after lexical normalization: `./docs`, `docs/` and `docs` are one place. Comparison is byte-exact; two spellings that differ only in case and name one directory on a case-insensitive filesystem resolve to one target and meet [§FS-config-v2.schema.places.boundaries.3](FS-config-v2.md#schemaplacesboundaries3-decided-on-the-path-as-written). A place that is absolute, or that climbs out of the config root with `..`, is refused, because its index, stubs and entrypoint would be written outside the project ([§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own)): ``place `<p>` in `[schema.kinds.<NAME>] <key>` is outside the config root``. A place that normalizes to the config root itself, such as `.` or `docs/..`, is refused too, because the complement already has the root as its extent ([§FS-config-v2.schema.places.complement](FS-config-v2.md#schemaplacescomplement-code-is-the-complement-by-name)): ``place `<p>` in `[schema.kinds.<NAME>] <key>` names the config root, which is the complement's extent``.
+
+##### schema.places.boundaries.2: One place, one row
+
+The same normalized place written twice, on two rows or on one, `files` against `folders` included, is refused at the later entry, naming the earlier: ``place `<p>` in `[schema.kinds.<NAME>] <key>` is already a place of `[schema.kinds.<OTHER>]` (line <n>); a place belongs to one row``. `<p>` is the later entry as written.
+
+##### schema.places.boundaries.3: Decided on the path as written
+
+Ownership reads the path as written, not its link target, as a v1 home does ([§FS-config.3.4.11](FS-config.md#3411-what-a-home-is-used-for)). Two places whose resolved targets coincide are the duplicate of [§FS-config-v2.schema.places.boundaries.2](FS-config-v2.md#schemaplacesboundaries2-one-place-one-row), because the walk keeps one spelling of a file ([§DF-symlink-scan.2.3](../decisions/functional/DF-symlink-scan.md#23-the-report-names-the-link-never-the-target)) and the other place would be silently empty. A folder place that is a directory link leaving the project root is refused rather than pruned ([§DF-symlink-scan.2.2](../decisions/functional/DF-symlink-scan.md#22-the-canonical-project-root-fences-directory-links-not-file-links-or-scan-paths)): ``place `<p>` in `[schema.kinds.<NAME>] folders` links out of the project root``. A `files` place that is a link is followed, as `CLAUDE.md -> AGENTS.md` is.
+
+##### schema.places.boundaries.4: A missing place is quiet
+
+A place that does not exist scans nothing and earns no finding, as a v1 home does ([§FS-config.3.5.8](FS-config.md#358-every-configured-kind-home-is-scanned)), so a fresh repository loads clean.
+
+##### schema.places.boundaries.5: Not inside a member
+
+A place at or inside a workspace member's root, at any nesting depth, is refused, because the root scan never enters a member ([§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)): ``place `<p>` in `[schema.kinds.<NAME>] <key>` is inside workspace member `<m>`, which the root never reads``.
+
+##### schema.places.boundaries.6: `scan = false` covers the row
+
+The key belongs to the row and covers every place of it; places that differ in it are two rows. Ownership answers nesting both ways: a scanned place under an unscanned one is walked and its files are its row's, and an unscanned place under a scanned one is pruned. `scan = false` on `code` is refused at its line: `` `[schema.kinds.code] scan = false` cannot unwalk the complement; narrow its places or use `[schema.sources] exclude` ``.
+
+##### schema.places.boundaries.7: `--full` widens past the places
+
+`grund check --full` reads the whole config root past every place and past `scan = false`, as it reads past v1's `include` ([§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)); a file no place claims is the complement's and is reported in the outside-the-scope tier. A member's root stays out under `--full`. An explicit path argument reads what it names, an unscanned place included, and the files it reads have the owners a whole run gives them.
 
 ### schema.sources: `[schema.sources]`
 

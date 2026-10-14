@@ -37,7 +37,7 @@ pub(super) fn judge(
                 )
             };
             let target = canonical_path(root.join(place.path())).ok();
-            // §FS-config-v2.schema.places.boundaries.2-3: the same place, or one target, twice.
+            // The same place, or one target, twice (§FS-config-v2.schema.places.boundaries.3).
             let earlier = seen.iter().find(|(_, other, other_target)| {
                 other.path() == place.path()
                     || target.is_some() && target.as_ref() == other_target.as_ref()
@@ -53,7 +53,7 @@ pub(super) fn judge(
                     .as_ref()
                     .is_some_and(|target| !target.starts_with(&canonical_root))
             {
-                // §FS-config-v2.schema.places.boundaries.3: refused, not pruned (§DF-symlink-scan.2.2).
+                // Refused, not pruned (§FS-config-v2.schema.places.boundaries.3).
                 late.push(at("links out of the project root".to_string()));
             } else if let Some(member) = members
                 .iter()
