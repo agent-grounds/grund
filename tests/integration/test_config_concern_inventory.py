@@ -300,6 +300,8 @@ V2_HANDLERS = {
     "workspace_key": ("workspace", "arms"),
     "schema_key": ("schema", "arms"),
     "sources_key": ("schema.sources", "arms"),
+    "extension_key": ("schema.sources.extensions", "suffix"),
+    "definition_key": ("schema.sources.definitions.<name>", "arms"),
     "row_key": ("schema.kinds.<NAME>", "arms"),
     "field_key": ("schema.kinds.<NAME>.fields.<name>", "arms"),
     "measure_key": ("schema.notes.lines|schema.notes.columns|schema.leads.words", "strength"),
@@ -372,6 +374,8 @@ def v2_keys():
             names = V2_SINGLE.findall(body)
         elif mode == "strength":
             names = _strengths() if "Strength::parse(key)" in body else []
+        elif mode == "suffix":
+            names = ["<suffix>"]
         else:
             names = ["<KIND>"]
         keys.extend((table, key) for table in tables.split("|") for key in names)
