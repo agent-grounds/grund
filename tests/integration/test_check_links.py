@@ -328,6 +328,27 @@ class GitHub5xxRecheckTests(unittest.TestCase):
         self.assertReported(output, 1, 1, 0, 0)
         self.assertIn(gone, output)
 
+    def test_a_kept_code_less_failure_prints_lychee_s_reason(self):
+        missing = {"url": "file:///repo/docs/b.md#nosuch", "status": {
+            "text": "Cannot find fragment",
+            "details": "Fragment not found in document. Check if fragment exists or page structure",
+        }}
+        refused = {"url": "http://127.0.0.1:9/x", "status": {
+            "text": "Network error: Connection refused - server may be down or port blocked",
+            "details": "Connection refused - server may be down or port blocked",
+        }}
+        gate = StubbedGate({"docs/a.md": [missing, refused]})
+        code, output = gate.run()
+        self.assertNotEqual(0, code)
+        self.assertIn(
+            "[ERROR] file:///repo/docs/b.md#nosuch (docs/a.md) | Cannot find fragment: "
+            "Fragment not found in document.", output,
+        )
+        self.assertIn(
+            "[ERROR] http://127.0.0.1:9/x (docs/a.md) | Network error: Connection refused"
+            " - server may be down or port blocked\n", output,
+        )
+
     def test_a_failed_network_pass_without_a_report_fails(self):
         gate = StubbedGate({"docs/changelog.md": [failure(GRUND_PULL, 500)]}, write_report=False)
         code, _ = gate.run()

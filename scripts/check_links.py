@@ -189,6 +189,25 @@ def _status_label(status: dict) -> str:
     return "TIMEOUT" if status.get("text") == "Timeout" else "ERROR"
 
 
+def _status_reason(status: dict) -> str:
+    """Lychee's reason as its console printed it: `text`, then `details` when `text`
+    does not already carry it (§AR-ci.3.1.2)."""
+    text, details = status.get("text") or "", status.get("details") or ""
+    if details and details not in text:
+        return f"{text}: {details}" if text else details
+    return text
+
+
+def _failure_line(source: str, url: str, status: dict, outcome: str | None = None) -> str:
+    """One kept failure: label, URL, source, the API outcome if re-checked, and
+    lychee's reason (§AR-ci.3.1.2)."""
+    line = f"[{_status_label(status)}] {url} ({source})"
+    if outcome is not None:
+        line += f": {outcome} through the API"
+    reason = _status_reason(status)
+    return f"{line} | {reason}" if reason else line
+
+
 def _settle(
     failures: list[tuple[str, str, dict]],
     repo_root: Path,
@@ -200,12 +219,12 @@ def _settle(
     kept = []
     for source, url, status in failures:
         if not _is_candidate(url, status):
-            kept.append(f"[{_status_label(status)}] {url} ({source})")
+            kept.append(_failure_line(source, url, status))
             continue
         outcome = _recheck(url, repo_root, runner)
         outcomes[outcome] += 1
         if outcome != "confirmed":
-            kept.append(f"[{_status_label(status)}] {url} ({source}): {outcome} through the API")
+            kept.append(_failure_line(source, url, status, outcome))
     for line in kept:
         print(line)
     checked = sum(outcomes.values())
