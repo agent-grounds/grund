@@ -1,0 +1,16 @@
+grund_config_version = 1
+project_name = "v1"
+[[kinds]]
+kind = "GOAL"
+file = "docs/goals.md"
+[[kinds]]
+kind = "FS"
+folder = "docs/spec"
+[[kinds]]
+kind = "e2e"
+citable = false
+folder = "tests/e2e"
+[citations.FS]
+must = ["GOAL"]
+[citations.e2e]
+must = ["FS"]

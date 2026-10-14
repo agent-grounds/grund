@@ -115,7 +115,13 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// (§FS-check.3.18.3), and the files holding an unclosed-wrapper note that
 /// `[fmt] exclude` names (§FS-citations.checks.unclosed-wrapper). The
 /// chapter-rule section is rendered from the check run's own catalog, so
-/// building it adds no walk (§FS-init.2.3.4.15). A presentation-only change can
+/// building it adds no walk (§FS-init.2.3.4.15). Under scoped guidance
+/// (§FS-init.2.3.5.11) it also lists every destination with the bytes its
+/// scoped block should carry, and the orphans the root block's `### Scoped
+/// guidance` list on disk names (§FS-init.2.3.5.13.1), read from that one file
+/// rather than by a walk; `grund init` plans its writes and removals from the
+/// same value, so `init --check` and `check` cannot disagree about a file.
+/// A presentation-only change can
 /// therefore move a drift finding through these bytes, and an `[fmt] exclude`
 /// change can move the unclosed-wrapper warning; it cannot move any other
 /// verdict.
@@ -203,7 +209,9 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// ### 2.7 Invalid agent-entrypoint init block (§FS-check.3.5)
 ///
 /// When `<root>/AGENTS.md` exists, verify its versioned `grund init` block (and the
-/// matching block in any non-symlink companion entrypoint that is present): a
+/// matching block in any non-symlink companion entrypoint that is present, and
+/// under scoped guidance every destination and orphan `Expected` names,
+/// §FS-init.2.3.5.8): a
 /// missing block, an older version, or a newer unsupported version is one error at
 /// the entrypoint's line. When only companion entrypoints exist, validate the ones
 /// that already contain a managed block and leave project-owned unmanaged files

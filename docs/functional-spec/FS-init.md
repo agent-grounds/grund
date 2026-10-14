@@ -220,6 +220,7 @@ warning: --docs is deprecated and is removed in grund 0.19.0; use --scaffold, wh
 Bare `init`, with no `--scaffold`, writes these two and nothing else ([§FS-init.3.6](FS-init.md#36-bare-init-writes-the-config-and-the-entrypoints-and-nothing-in-a-home)):
 
 - Agent entrypoints — see [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints). In automatic mode ([§FS-init.1.5](FS-init.md#15-agent-entrypoint-flags)), existing known entrypoints are appended or updated in place: `<path>/AGENTS.md`, `<path>/AGENTS.override.md`, `<path>/CLAUDE.md`, `<path>/.claude/CLAUDE.md`, `<path>/GEMINI.md`, `<path>/.pi/AGENTS.md`, `<path>/.github/copilot-instructions.md`, `<path>/.cursor/rules/grund.mdc`, `<path>/.cursorrules`, and `<path>/.windsurfrules`, excluding companion symlinks to `AGENTS.md`. If none exist, a missing companion is created for each agent whose agent directory already exists, one per agent ([§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent)); if there are still no entrypoints to update or create, canonical `AGENTS.md` is written. [§FS-init.2.1.2](FS-init.md#212-automatic-entrypoint-selection) gives the rules of each step. Explicit flags (`--agents-md`, `--claude`, `--gemini`, `--pi`, `--copilot`, `--cursor`, `--windsurf`, `--zed`) create or update their requested entrypoints regardless of automatic detection, under the same one-per-agent rule ([§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent)).
+- Scoped entrypoints: under scoped guidance ([§FS-init.2.3.5.11](FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)), `<dir>/AGENTS.md` in each destination directory that already exists, with the `CLAUDE.md` and `GEMINI.md` symlinks [§FS-init.2.3.5.14.3](FS-init.md#235143-companions-in-a-scoped-directory) mirrors there, and the removal of the ones the list on disk names that no longer receive guidance ([§FS-init.2.3.5.14.2](FS-init.md#235142-orphans-are-removed)).
 - `<path>/grund.toml` — see [§FS-init.2.4](FS-init.md#24-generated-grundtoml). Written only when the target carries no config in either discovery form ([§FS-config.1](FS-config.md#1-file-location-and-discovery)); a target that already has one is reported with `exists ` at the name it was found under (`exists .agents/grund.toml` for a repo on that form) and gets no second config.
 
 With `--scaffold`, additionally the template's starter files ([§FS-init.2.1.3](FS-init.md#213-the-software-development-starter-files)). These are the `software-development` template's; the `none` template has none ([§FS-init.1.6.4](FS-init.md#164-none-has-nothing-to-scaffold)):
@@ -306,7 +307,7 @@ wrote AGENTS.md
 wrote grund.toml
 ```
 
-The prefix is `wrote ` for a newly written or overwritten file, including an agent-directory-triggered companion; `appended ` when the versioned `grund` block was added to an existing agent entrypoint; `updated ` when an existing managed block's bytes changed (an older block upgraded, or a same-version block re-rendered against a changed template or config — [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)); and `exists ` when an existing file was left unchanged — including an agent entrypoint whose managed block already matches the current rendered block byte-for-byte, in which case `init` rewrites nothing, so re-running `grund init` on an up-to-date repo touches no files. Under `--dry-run`, those three write prefixes are replaced with `would-write `, `would-append `, and `would-update ` and nothing is written to disk; `exists ` lines are identical to a non-dry run. A companion file that is a symlink to `AGENTS.md` is omitted from the output; when the canonical file is selected, that update already covers the symlink target.
+The prefix is `wrote ` for a newly written or overwritten file, including an agent-directory-triggered companion; `appended ` when the versioned `grund` block was added to an existing agent entrypoint; `updated ` when an existing managed block's bytes changed (an older block upgraded, or a same-version block re-rendered against a changed template or config — [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)); and `exists ` when an existing file was left unchanged — including an agent entrypoint whose managed block already matches the current rendered block byte-for-byte, in which case `init` rewrites nothing, so re-running `grund init` on an up-to-date repo touches no files. Under `--dry-run`, those three write prefixes are replaced with `would-write `, `would-append `, and `would-update ` and nothing is written to disk; `exists ` lines are identical to a non-dry run. A companion file that is a symlink to `AGENTS.md` is omitted from the output; when the canonical file is selected, that update already covers the symlink target. Scoped files add two prefixes, `linked ` for a companion symlink created and `removed ` for a file or symlink deleted, with `would-link ` and `would-remove ` under `--dry-run`, and their lines follow the root entrypoints' ([§FS-init.2.3.5.14.4](FS-init.md#235144-the-report-names-every-scoped-file-and-link-it-touched)).
 
 After the file list come any `note:` lines ([§FS-init.2.2.1](FS-init.md#221-notes)), then the `next:` block ([§FS-init.2.2.2](FS-init.md#222-the-next-block)). `--check` ([§FS-init.1](FS-init.md#1-inputs)) prints the same conditional report as `--dry-run` and everything after it — the `note:` lines, the `next:` block, and the rule that suppresses it — so the two runs differ in one thing only: the exit code each draws from what it printed ([§FS-init.4](FS-init.md#4-exit-codes)).
 
@@ -332,6 +333,8 @@ A run with no `--scaffold` is a **refresh of a complete setup** when both hold:
 
 - every reported path is `exists ` or `updated ` — under `--dry-run` and `--check`, `exists ` or `would-update ` — so a single `wrote `, `appended `, `would-write `, or `would-append ` line makes the run something else;
 - the effective FS home exists on disk: the configured FS `file`, else the configured FS `folder`, else `requirements.md`, resolved against the target directory.
+
+The lines for scoped files and their companion symlinks ([§FS-init.2.3.5.14.4](FS-init.md#235144-the-report-names-every-scoped-file-and-link-it-touched)) are not counted in the first condition: they follow the root block, so a refresh that moves a row's guidance, creating one scoped file and removing another, is still a refresh.
 
 Such a run prints no `next:` block. It is where `grund check` sends a repository whose managed block a `grund.toml` change made stale ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)); after it the user again has the complete, current setup the suppression above describes, and the advice to scaffold an FS home that exists would send them hunting for a detection failure that did not happen. Their next step is the `grund check` that sent them here.
 
@@ -547,6 +550,8 @@ The section is what an agent reads *instead of* `grund.toml`, so it states rules
 
 The section opens with one paragraph — the fixed legend ``must`/`never` are `grund check` errors; `should`/`avoid` are suggestions (`grund check --suggestions`).``, followed by the grounding sentence ([§FS-init.2.3.5.7](FS-init.md#2357-the-grounding-sentence)) where any row's effective `require_grounding` is on — then one bullet per citing kind that has any rule, in `[[kinds]]` order with the homeless kind ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) last, then one closing line ([§FS-init.2.3.5.6](FS-init.md#2356-the-closing-line)). An unscanned kind ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)) has no bullet at all: it can carry no `[citations.<kind>]` rule.
 
+This layout is per destination. Under scoped guidance ([§FS-init.2.3.5.11](FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)) the root block's section holds only the rows whose destination is the root; with none there it holds the legend and the closing line, the closing line stating the global default as before. Each scoped block lays out its own rows the same way ([§FS-init.2.3.5.12.1](FS-init.md#235121-what-a-scoped-block-holds-in-order)). Under `rules = "root"` and in every version-1 config there is one destination, the root, and the layout is the single one above ([§FS-init.2.3.5.11.5](FS-init.md#235115-rules--root-and-every-version-1-config-render-at-the-root)).
+
 ##### 2.3.5.2 The subject names its unit
 
 **Every bullet names its unit**, because the units the levels are checked per are not interchangeable and one verb over three of them says nothing ([§FS-check.3.11](FS-check.md#311-missing-required-citation)):
@@ -587,9 +592,13 @@ The grounding sentence is generated from each row's effective `require_grounding
 
 The sentence distinguishes citing from declaring: `Every source file must cite a declared ID or declare one inline`, extended with `; every file under skills/ and tests/e2e/ must cite one` for the scanned non-citable homes whose rows have it on, because a declaration in such a home is misplaced ([§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home)) and those files can therefore only cite. An unscanned home ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)) is left out: nothing in it is scanned, so the rule never reaches it.
 
+Under scoped guidance ([§FS-init.2.3.5.11](FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)) each destination's sentence names only the rows that land there. The source-file clause belongs to the complement and renders at its destination. A non-citable home's clause renders at its row's destination, after the source-file clause where both land in one place and on its own as `Every file under tests/e2e/ and tests/integration/ must cite one.` where they do not.
+
 ##### 2.3.5.8 The drift check
 
 Because the section's content derives from config rather than the template alone, the block version ([§FS-init.2.3.7](FS-init.md#237-the-block-version)) is no longer sufficient to detect staleness: editing `[citations]` without re-running `grund init` would leave guidance that disagrees with the live rules under a current version number. `grund check` therefore re-renders the section from the live config and byte-compares it against the section in the block; a mismatch is an `agents-init` finding ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)) telling the author to re-run `grund init`. Rendering determinism is what makes the comparison sound — the render *is* the hash.
+
+Under scoped guidance ([§FS-init.2.3.5.11](FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)) the comparison is per file. The root block's config-derived sections, `### Declaration shapes` and `### Scoped guidance` among them, are compared as above. Each destination's `AGENTS.md` and each standalone companion beside it must carry the scoped block as rendered, byte for byte: a missing file or block is a missing block, differing bytes are a stale one, and each orphan the list on disk names ([§FS-init.2.3.5.13.1](FS-init.md#235131-the-list-on-disk-records-what-init-owns)) that still carries a managed block is a stale one too, its section named `scoped guidance`. Every one is `agents-init` ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)), and `grund init --check` reports the same files as `would-…` lines, because both read one rendering of what each file should carry.
 
 ##### 2.3.5.9 The block versions this section moved
 
@@ -606,6 +615,11 @@ lifecycle are [§FS-rules.4](FS-rules.md#4-validation-lifecycle) and
 [§FS-rules.9](FS-rules.md#9-managed-guidance-and-editor-parity)'s. `check`
 re-renders and byte-compares it as config-derived content; a mismatch is
 `agents-init`.
+
+Under scoped guidance ([§FS-init.2.3.5.11](FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)) a chapter rule renders in the block
+of its subject kind's destination, and its live citation is relative to that
+file. The rule that `init` followed by `fmt --write` is stable below holds per
+file.
 
 The live citation uses the configured canonical cross-reference representation
 ([§FS-fmt.6.2](FS-fmt.md#62-form)): with `[fmt.cross_refs] enabled = true`,
@@ -632,6 +646,96 @@ run writes equal to the bytes a run holding the whole workspace would write for
 the same file ([§FS-rules.9.1](FS-rules.md#91-one-tree-renders-one-block)). A path-scoped `check` likewise compares the
 section against the render a whole-tree run compares against ([§FS-rules.9.1.1](FS-rules.md#911-a-path-scoped-check-compares-against-the-same-render)).
 
+##### 2.3.5.11 Scoped guidance: a row's guidance lands above its places
+
+In a version-2 config whose `[presentation] rules` is `home`, its default ([§FS-config-v2.presentation](FS-config-v2.md#presentation-the-presentation-concern)), each row's guidance is written into the managed block of the `AGENTS.md` in the row's **destination**, the deepest directory that contains every one of its places, rather than into the root entrypoint. A row's guidance is its citation-direction bullet, its clause of the grounding sentence ([§FS-init.2.3.5.7](FS-init.md#2357-the-grounding-sentence)), its kind's declaration shape ([§FS-init.2.3.5.12.2](FS-init.md#235122-declaration-shapes)) and the chapter rules whose subject is its kind ([§FS-init.2.3.5.10](FS-init.md#23510-chapter-rules)). An agent writing in a place then finds that kind's rules and shape in the directory it works in, before it writes ([§GOAL-agent-grounding.1](../goals.md#1-the-three-layers)), and reads that kind's rules rather than every kind's ([§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file)). The decision, what it rejected, and which agents load such a file by themselves are [§DF-scoped-guidance](../decisions/functional/DF-scoped-guidance.md#df-scoped-guidance-a-version-2-rows-guidance-is-written-above-its-places-with-a-root-pointer-for-agents-that-do-not-load-nested-files).
+
+###### 2.3.5.11.1 The deepest common directory
+
+A folder place counts as itself and a file place as its parent directory, and the destination is the longest run of leading path components those directories share. `docs/spec/core` and `docs/spec/plugins` land in `docs/spec`; `docs/spec` alone lands in `docs/spec`; `docs/goals.md` lands in `docs`; `docs/spec/core` with `docs/goals.md` lands in `docs`. A file at the config root, or places that share no leading component, make the destination the root. The **root destination** is the root entrypoint's own block: a row whose destination is the root renders there exactly as [§FS-init.2.3.5.1](FS-init.md#2351-layout) lays it out.
+
+###### 2.3.5.11.2 A citable kind with no place, and the complement
+
+A citable kind with no place, declared only in doc-comments ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)), lands at the root. The complement `code` lands at the root when its extent is the config root, and at the deepest common directory of its places when it lists some ([§FS-config-v2.schema.places.complement](FS-config-v2.md#schemaplacescomplement-code-is-the-complement-by-name)). A `scan = false` row renders no bullet ([§FS-init.2.3.5.1](FS-init.md#2351-layout)) and no grounding clause ([§FS-init.2.3.5.7.1](FS-init.md#23571-citing-not-declaring)), so it has no destination unless its kind has fields or chapter rules.
+
+###### 2.3.5.11.3 Only a row that renders something has a destination
+
+A row with no citation-direction bullet, no grounding clause, no field and no chapter rule has no destination and writes nothing anywhere. A version-2 config with no citation rule, no grounding, no field and no chapter rule therefore writes no scoped file, and its root block is the one [§FS-init.2.3.5.1](FS-init.md#2351-layout) lays out.
+
+###### 2.3.5.11.4 A destination directory that does not exist renders at the root
+
+When the destination directory does not exist, the row renders in the root block as though its destination were the root, and `init` creates no directory ([§FS-init.3.6](FS-init.md#36-bare-init-writes-the-config-and-the-entrypoints-and-nothing-in-a-home)). Whether it exists is read at the run, so creating the directory later moves the live render: `grund check` reports the root block stale and the scoped block missing ([§FS-init.2.3.5.8](FS-init.md#2358-the-drift-check)), and one `grund init` moves the guidance.
+
+###### 2.3.5.11.5 `rules = "root"`, and every version-1 config, render at the root
+
+With `[presentation] rules = "root"`, and in every version-1 config, every row's destination is the root: no scoped file is written and no `### Scoped guidance` section renders. Such a config's root block is byte for byte the block it rendered before scoped guidance existed, at the version [§FS-init.2.3.7.1](FS-init.md#2371-the-current-version) selects for it, save that a version-2 config with fields also renders their shapes there ([§FS-init.2.3.5.12.2](FS-init.md#235122-declaration-shapes)).
+
+##### 2.3.5.12 The scoped block
+
+###### 2.3.5.12.1 What a scoped block holds, in order
+
+A scoped block is bounded by the delimiters and the version heading of [§FS-init.2.3.9](FS-init.md#239-delimiters), at the same `vN` as the root block of the same run. A blank line follows the heading, then one line naming the scope, `` These rules cover the files under `<dir>/`; the rest of this project's grund guidance is in the root `AGENTS.md`. ``, then each of these sections that has content, in this order and separated by a blank line:
+
+1. `### Citation directions`: the legend followed by the destination's grounding sentence ([§FS-init.2.3.5.7](FS-init.md#2357-the-grounding-sentence)) as one paragraph, a blank line, the bullets of the rows that land there in the order of [§FS-init.2.3.5.1](FS-init.md#2351-layout), and the closing line for the global default ([§FS-init.2.3.5.6](FS-init.md#2356-the-closing-line)). It renders when a bullet or a grounding clause lands there.
+2. `### Declaration shapes` ([§FS-init.2.3.5.12.2](FS-init.md#235122-declaration-shapes)), when a kind that lands there has fields.
+3. `### Chapter rules`: the legend and the bullets whose subject kind lands there ([§FS-init.2.3.5.10](FS-init.md#23510-chapter-rules)).
+4. `### Scoped guidance` ([§FS-init.2.3.5.13](FS-init.md#23513-the--scoped-guidance-pointer)), in the complement's destination when that is not the root, so a source declaration's guidance names where its kind's shape lives.
+
+###### 2.3.5.12.2 Declaration shapes
+
+A kind's declaration shape is rendered from the record the checks read ([§FS-fields.record](FS-fields.md#record-the-record)), in the words of `grund schema`'s field lines ([§FS-schema.4.1](FS-schema.md#41-fields-are-lines-inside-their-kinds-node)), so the block, the view and the checks cannot describe two shapes. The section is `### Declaration shapes`, a blank line, the paragraph `` `grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them: ``, a blank line, then one bullet `- **<KIND>**` per kind that lands at the destination and declares fields, in row order, each followed by one nested bullet per line [§FS-schema.4.1](FS-schema.md#41-fields-are-lines-inside-their-kinds-node) prints under that kind's node, in its order, with a single space where the view pads columns: `  - field terms must · first`, `  - closed must`. In the root block, under `rules = "root"` or for a kind whose destination is the root, the section renders after `### Citation directions` and before `### Chapter rules`.
+
+###### 2.3.5.12.3 A scoped file `init` creates is the block alone
+
+A scoped `AGENTS.md` that `init` creates holds the managed block and nothing else: no generated title, unlike the root file ([§FS-init.2.3.10](FS-init.md#2310-writing-the-block)), and the end delimiter's line ending is its last byte. That is what makes "nothing but the block is left" a byte comparison rather than a guess ([§FS-init.2.3.5.14.2](FS-init.md#235142-orphans-are-removed)).
+
+##### 2.3.5.13 The `### Scoped guidance` pointer
+
+When at least one row lands outside the root, the root block renders a `### Scoped guidance` section after the config-derived sections that precede it (`### Citation directions`, `### Declaration shapes`, `### Chapter rules`) and before `### Clickable citations`:
+
+```markdown
+### Scoped guidance
+
+Some places' citation directions and declaration shapes are in the `AGENTS.md` of the directory above them. If your agent has not already loaded that file, read it before writing there:
+
+- `docs/spec/AGENTS.md`: FS
+- `tests/AGENTS.md`: tests/e2e/, tests/integration/
+```
+
+There is one line per destination, ordered by the first row that lands there. Each names its rows as a bullet's subject names them ([§FS-init.2.3.5.2](FS-init.md#2352-the-subject-names-its-unit)): a citable kind by its name, a non-citable row by its places with a trailing `/` for a folder, the complement as `code`, joined by `, ` in row order. The pointer is the fallback the decision approves for an agent that does not load a nested file by itself ([§DF-scoped-guidance.loading](../decisions/functional/DF-scoped-guidance.md#loading-which-agents-load-a-scoped-file-by-themselves)). A config that renders no scoped file renders no such section.
+
+###### 2.3.5.13.1 The list on disk records what `init` owns
+
+The `### Scoped guidance` list of the root block **on disk** is the record of the scoped files `init` wrote, so neither `init` nor `check` walks the tree for managed blocks. `init` reads it before it rewrites the root block, and `check` reads it beside the live render: a path the list on disk names that is not a destination of the live render is an **orphan**. Only a line `` - `<path>`: … `` inside that section of a delimited root block names a path; a path that is absolute, contains `..`, or does not end in `/AGENTS.md` is ignored. A scoped block the list does not name is not `init`'s and is never touched.
+
+##### 2.3.5.14 Writing scoped files
+
+###### 2.3.5.14.1 Create or update
+
+For each destination other than the root, `init` writes `<dir>/AGENTS.md` as it writes an entrypoint ([§FS-init.2.3.10](FS-init.md#2310-writing-the-block)): a missing file is created holding the block alone ([§FS-init.2.3.5.12.3](FS-init.md#235123-a-scoped-file-init-creates-is-the-block-alone)), an existing file without a block has it appended after its content, and an existing block is re-rendered in place, with every byte around it preserved ([§FS-init.3.2](FS-init.md#32-user-authored-content-in-agent-entrypoints-is-preserved)) and a byte-identical block left untouched and reported `exists `. The read-before-write rules hold for these files too: a newer block version ([§FS-init.2.3.10.2](FS-init.md#23102-a-newer-block-version)) or malformed delimiters ([§FS-init.2.3.11](FS-init.md#2311-malformed-delimiters)) in a scoped file exit `2` and write nothing anywhere ([§FS-init.1.2.6](FS-init.md#126-entrypoint-blocks-are-read-before-any-is-written)), and so does a scoped `AGENTS.md` that is a symlink, which `init` never writes through. `--force` never replaces a scoped file whole ([§FS-init.3.5](FS-init.md#35-what---force-does-not-replace)).
+
+###### 2.3.5.14.2 Orphans are removed
+
+For each orphan ([§FS-init.2.3.5.13.1](FS-init.md#235131-the-list-on-disk-records-what-init-owns)) whose file carries a managed block, `init` removes the block. It deletes the file only when the managed block was the whole file, byte for byte. Otherwise it cuts the region from the begin delimiter through the end delimiter's line ending and leaves every other byte as it was, handwritten text before and after the block included. An orphan whose file is gone, or carries no block, is left alone and not reported.
+
+###### 2.3.5.14.3 Companions in a scoped directory
+
+Where the root `CLAUDE.md` or `GEMINI.md` is a symlink to `AGENTS.md` ([§FS-init.2.3.12.2](FS-init.md#23122-a-companion-symlinked-to-agentsmd)), each destination gets the same name as a symlink to its own `AGENTS.md` when that name is free there; an existing symlink to `AGENTS.md` is left as it is, and an existing standalone file has the block appended or re-rendered as a companion's is ([§FS-init.3.5](FS-init.md#35-what---force-does-not-replace)). When an orphan's `AGENTS.md` is deleted, the symlinks to it in its directory are deleted with it, and a standalone `CLAUDE.md` or `GEMINI.md` there has its block removed under [§FS-init.2.3.5.14.2](FS-init.md#235142-orphans-are-removed). The root-only entrypoints are never mirrored: `AGENTS.override.md`, `.claude/CLAUDE.md`, `.pi/AGENTS.md`, `.github/copilot-instructions.md`, `.cursor/rules/grund.mdc`, `.cursorrules`, `.windsurfrules` and `.rules`.
+
+###### 2.3.5.14.4 The report names every scoped file and link it touched
+
+`init` deletes files now, so its report ([§FS-init.2.2](FS-init.md#22-stdout--stderr)) names each scoped file and companion symlink it creates, updates or removes. After the root entrypoints' lines and before the config's, it prints one line per scoped file in pointer order, each followed by its companions, then one line per orphan in the order the list on disk names them, each followed by its companions:
+
+- `wrote <dir>/AGENTS.md` for a created file, `appended ` and `updated ` as for any entrypoint, `updated ` also for a kept file whose orphaned block was cut, and `exists ` for a current one;
+- `linked <dir>/CLAUDE.md -> AGENTS.md` for a created companion symlink;
+- `removed <path>` for a deleted scoped file or companion symlink.
+
+An existing companion symlink that the run leaves as it is prints nothing, as at the root. Under `--dry-run` and `--check` the new prefixes read `would-link ` and `would-remove `, and both earn `--check`'s `1` ([§FS-init.4.1](FS-init.md#41-what-earns-the-1)).
+
+##### 2.3.5.15 A generated scoped entrypoint is not a unit of its place
+
+A scoped `AGENTS.md` that is a destination of the live render, or that the list on disk names, and a companion beside it, are not units of the place they sit in: they draw no grounding, citation-direction, index or misplaced-declaration finding as a file of that row ([§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in), [§FS-check.3.11](FS-check.md#311-missing-required-citation)). Their citations are still resolved, so a chapter rule's live citation in a scoped block is still checked. A row that lists the file in its `files` claims it, and it is then that row's unit like any other file, while `init` still writes its block ([§FS-config-v2.schema.places.complement](FS-config-v2.md#schemaplacescomplement-code-is-the-complement-by-name)).
+
 #### 2.3.6 Clickable citations
 
 The managed block renders a `### Clickable citations` section carrying the content sections in [§FS-init.2.3.4.17](FS-init.md#23417-clickable-citations): the fixed repository-web sentence always, plus the local-conversation sentence when `[reference] conversation = "link"` is set. The section is deterministic from the effective config and the entrypoint's own agent ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)): byte-identical in every project with the same key state, for the same entrypoint file. The per-agent split of [§FS-init.2.3.4.17.2](FS-init.md#234172-the-form-per-agent) is the one axis on which two entrypoints in the *same* repository differ, and it is a pure function of the target path, so it is as reproducible as the rest.
@@ -649,6 +753,20 @@ Adding the fixed sentence bumped the managed-block version to **v4**; adding the
 The canonical text for a given block version `vN` is embedded in the `grund` binary; its one copy in the source tree is `crates/grund-core/assets/templates/AGENTS.md`, which the binary embeds. The `vN` in the delimiter lines ([§FS-init.2.3.9](FS-init.md#239-delimiters)) is what versions it under [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations), so changing the block's fixed canonical text is itself a block-version bump, carried by that mechanism, not a silent rewrite. What `vN` versions is that fixed text, not the lines substituted in ([§FS-init.2.3.8](FS-init.md#238-substituted-content)): the inline citation style sentences among them ([§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering)) move no version, because they are rendered, not live ([§FS-inline-citation-style.5.6](FS-inline-citation-style.md#56-no-managed-block-version)).
 
 ##### 2.3.7.1 The current version
+
+Scoped guidance ([§FS-init.2.3.5.11](FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)) adds a second current pair, **v21/v22**,
+which the config selects: a config that renders a scoped file or a declaration
+shape ([§FS-init.2.3.5.12.2](FS-init.md#235122-declaration-shapes)) renders v21, or v22 with a rule kind. Every other
+config keeps the v19/v20 pair below byte for byte: every version-1 config, a
+version-2 config with `rules = "root"` and no field, and one that renders no
+scoped file and no shape. The implementation-time baseline is `main` at
+`aa4484657d` (2026-10-14), whose pair is v19/v20, and the maximum supported
+version becomes v22. A block older than the version the live config selects is
+outdated as below. A v21 or v22 block where the live config selects v19 or v20
+is stale instead, its `### Scoped guidance` or `### Declaration shapes` section
+differing from the render, and one `grund init` re-renders it either way. One
+universal bump was rejected because it changes version-1 bytes when version-1
+content does not change ([§DF-scoped-guidance](../decisions/functional/DF-scoped-guidance.md#df-scoped-guidance-a-version-2-rows-guidance-is-written-above-its-places-with-a-root-pointer-for-agents-that-do-not-load-nested-files)).
 
 The workspace-only Project namespaces change ([§FS-init.2.3.4.16](FS-init.md#23416-project-boundaries)) advances the
 current base and rule-enabled versions as one pair, keeping rule-enabled at base
@@ -740,7 +858,7 @@ A file whose delimiters are present but broken is **malformed**: a `BEGIN` delim
 
 #### 2.3.12 Supported agents and their entrypoints
 
-`AGENTS.md` is the canonical fallback entrypoint. The supported-agent set is fixed and is the superset used by every agent-facing feature: AGENTS-compatible agents (including Codex), Claude Code, Gemini, Pi, GitHub Copilot, Cursor, Windsurf, and Zed. The built-in companion set covers their common root or repository instruction files: Codex override instructions (`AGENTS.override.md`), Claude Code (`CLAUDE.md`, `.claude/CLAUDE.md`), Gemini (`GEMINI.md`), Pi (`.pi/AGENTS.md`), GitHub Copilot (`.github/copilot-instructions.md`), Cursor (`.cursor/rules/grund.mdc`, plus the legacy `.cursorrules`), Windsurf (`.windsurfrules`), and Zed (`.rules`).
+`AGENTS.md` is the canonical fallback entrypoint. The supported-agent set is fixed and is the superset used by every agent-facing feature: AGENTS-compatible agents (including Codex), Claude Code, Gemini, Pi, GitHub Copilot, Cursor, Windsurf, and Zed. The built-in companion set covers their common root or repository instruction files: Codex override instructions (`AGENTS.override.md`), Claude Code (`CLAUDE.md`, `.claude/CLAUDE.md`), Gemini (`GEMINI.md`), Pi (`.pi/AGENTS.md`), GitHub Copilot (`.github/copilot-instructions.md`), Cursor (`.cursor/rules/grund.mdc`, plus the legacy `.cursorrules`), Windsurf (`.windsurfrules`), and Zed (`.rules`). Under scoped guidance a destination directory carries `AGENTS.md` and mirrors only the `CLAUDE.md` and `GEMINI.md` symlinks ([§FS-init.2.3.5.14.3](FS-init.md#235143-companions-in-a-scoped-directory)); which agents load such a nested file by themselves, and what the others are told, is [§DF-scoped-guidance.loading](../decisions/functional/DF-scoped-guidance.md#loading-which-agents-load-a-scoped-file-by-themselves).
 
 ##### 2.3.12.1 Which companions are created
 
@@ -839,7 +957,7 @@ What `init` won't touch, in one list; the detail lives at the section cited besi
 - **Automatic mode never adds a competing entrypoint** ([§FS-init.1.5](FS-init.md#15-agent-entrypoint-flags), [§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place)).
 - **`init` never creates a second file for an agent that already has one** ([§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent)), save the Claude entrypoint an explicit `--claude` writes beside a symlinked companion in a `conversation = "link"` repository ([§FS-init.2.1.1.1](FS-init.md#2111-a-symlinked-companion-under-conversation--link)).
 - **Ambiguous companions need an unambiguous signal** ([§FS-init.3.1](FS-init.md#31-ambiguous-companions-need-an-unambiguous-signal)).
-- **User-authored content in agent entrypoints is preserved** ([§FS-init.3.2](FS-init.md#32-user-authored-content-in-agent-entrypoints-is-preserved)).
+- **User-authored content in agent entrypoints is preserved** ([§FS-init.3.2](FS-init.md#32-user-authored-content-in-agent-entrypoints-is-preserved)), in scoped entrypoints too; a scoped file is deleted only when the block was the whole file ([§FS-init.2.3.5.14.2](FS-init.md#235142-orphans-are-removed)).
 - **Line endings outside the managed block are preserved** ([§FS-init.2.3.2](FS-init.md#232-line-endings)).
 - **An existing `grund.toml` is never overwritten**, in either discovery location, not even by `--force` ([§FS-init.2.4.1](FS-init.md#241-both-discovery-locations-are-probed), [§FS-init.2.4.2](FS-init.md#242-an-existing-config-is-never-overwritten)).
 - **No prompts, ever.** Every choice is a flag ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)).
@@ -855,6 +973,8 @@ The `--force` semantics behind the config and "refuse to clobber" guarantees are
 ### 3.2 User-authored content in agent entrypoints is preserved
 
 Unless `--force` replaces the canonical `AGENTS.md` whole ([§FS-init.3.4](FS-init.md#34-with---force)), only the delimiter-bounded managed `## Grounding with grund (vN)` block is touched. Everything before and after the block is byte-for-byte preserved, including the block's position within the file ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints), [§FS-init.2.3.1](FS-init.md#231-position-invariants)). The delimiter is the ownership boundary [§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own) is written around.
+
+The same holds for every scoped entrypoint and its standalone companions ([§FS-init.2.3.5.14](FS-init.md#23514-writing-scoped-files)). Removing an orphaned block is the one deletion `init` makes, and it deletes the file only when the managed block was the whole file, byte for byte; any other byte in the file keeps it, with the block cut out and nothing else changed ([§FS-init.2.3.5.14.2](FS-init.md#235142-orphans-are-removed)). A companion symlink `init` mirrored goes with the file it points at.
 
 ### 3.3 Without `--force`
 
@@ -880,7 +1000,7 @@ With `--force`, a selected canonical `AGENTS.md` and the starter files `--scaffo
 
 - It writes the template's `grund.toml`, and only when the target has no config in either discovery location. It never overwrites one, not even with `--force` ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)).
 - It writes or updates the managed `grund` block in the agent entrypoints the repository already has; only a repository with none gets the canonical `AGENTS.md` ([§FS-init.1.5](FS-init.md#15-agent-entrypoint-flags), [§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent), [§FS-init.2.1.2](FS-init.md#212-automatic-entrypoint-selection)).
-- It creates nothing under any kind home, and nothing under `docs/` or `tests/`: no starter file, no directory, no `.gitkeep`. That is what makes it safe on a repository that already has specs, and what the `grund-init` skill relies on when it leaves the scaffold off an existing repository ([§DF-skill-init-existing-specs](../decisions/functional/DF-skill-init-existing-specs.md#df-skill-init-existing-specs-grund-init-adopts-existing-specs-before-scaffolding)).
+- It creates nothing under any kind home, and nothing under `docs/` or `tests/`: no starter file, no directory, no `.gitkeep`. The one exception is scoped guidance ([§FS-init.2.3.5.11](FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)): the managed scoped `AGENTS.md`, and the companion symlinks mirrored beside it, written only into a destination directory that already exists ([§FS-init.2.3.5.11.4](FS-init.md#235114-a-destination-directory-that-does-not-exist-renders-at-the-root)). That is what makes it safe on a repository that already has specs, and what the `grund-init` skill relies on when it leaves the scaffold off an existing repository ([§DF-skill-init-existing-specs](../decisions/functional/DF-skill-init-existing-specs.md#df-skill-init-existing-specs-grund-init-adopts-existing-specs-before-scaffolding)).
 - It prints the `next:` block, whose first step points at `--scaffold`, or at creating the homes by hand, while the effective FS home does not exist ([§FS-init.2.2.2](FS-init.md#222-the-next-block)).
 
 ## 4. Exit codes

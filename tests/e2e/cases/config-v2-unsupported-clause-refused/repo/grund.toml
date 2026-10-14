@@ -4,5 +4,5 @@ project_name = "example"
 languages = ["markdown"]
 [schema.kinds.FS]
 files = ["requirements.md"]
-[presentation]
-rules = "home"
+[presentation.fmt]
+anchors = "gitlab"

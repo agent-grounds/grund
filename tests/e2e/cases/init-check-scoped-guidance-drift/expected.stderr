@@ -1,0 +1,5 @@
+would-update AGENTS.md
+would-write docs/spec/AGENTS.md
+would-update tests/AGENTS.md
+would-remove old/AGENTS.md
+exists grund.toml

@@ -1,0 +1,21 @@
+grund_config_version = 2
+project_name = "shapes"
+[schema.kinds.GOAL]
+files = ["docs/goals.md"]
+[schema.kinds.FS]
+folders = ["docs/fs"]
+[schema.kinds.FS.fields.terms]
+title = "Terms"
+presence = "must"
+position = "first"
+[schema.kinds.DF]
+folders = ["docs/df"]
+closed = "must"
+[schema.kinds.DF.fields.status]
+one_of = ["Proposed", "Accepted", "Superseded"]
+presence = "must"
+position = "first"
+[rules.citations.FS]
+must = ["GOAL"]
+[presentation]
+rules = "root"
