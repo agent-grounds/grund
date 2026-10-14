@@ -299,7 +299,7 @@ impl ShowAnchors {
             sections: vec![None; output.sections.len()],
         };
         let presentation = &config.project().presentation;
-        if !takes_heading_anchor(&output.path, presentation)
+        if !takes_heading_anchor(config.reading(&output.path).markdown, presentation)
             || decl.is_stub
             || !paths_same_location(&decl.file, &output.path)
         {

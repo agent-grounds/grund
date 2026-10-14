@@ -64,13 +64,17 @@ impl ObligationUnit<'_> {
 ///   the kinds that are usually all Markdown, which is most of them: the
 ///   exemption reasons about implementation-versus-document, and a home the
 ///   maintainer named is neither guess.
+///
+/// `markdown` says whether the citing file reads as Markdown, which its language
+/// decides rather than its extension (§FS-config-v2.schema.sources.extensions).
 pub(super) fn file_is_obligation_unit(
     non_citable: &BTreeSet<&str>,
     homeless: &str,
     cite: &Citation,
+    markdown: impl FnOnce() -> bool,
 ) -> bool {
     if cite.source_kind == homeless {
-        return cite.file.extension().and_then(|ext| ext.to_str()) != Some("md");
+        return !markdown();
     }
     non_citable.contains(cite.source_kind.as_str())
 }

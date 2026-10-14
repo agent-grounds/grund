@@ -62,6 +62,26 @@ impl Grammar {
             &source.comment_prefixes,
         )
     }
+
+    /// This grammar compiled over `comment_prefixes` in place of the list it was
+    /// built with: the grammar a v2 file reads, through its own language's hosts
+    /// and no other's (§FS-languages.prefixes). Only the declaration, section and
+    /// near-miss patterns read the prefixes, so a citation reads the same in both.
+    pub(crate) fn with_hosts(&self, comment_prefixes: &[String]) -> Result<Self> {
+        let source = &self.source;
+        if source.comment_prefixes == comment_prefixes {
+            return Ok(self.clone());
+        }
+        Self::build(
+            &source.format,
+            &source.kinds,
+            &source.number_pattern,
+            &source.slug_pattern,
+            &source.section_separator,
+            self.named_sections,
+            comment_prefixes,
+        )
+    }
 }
 
 /// The compiled grammar plus the scalar keys a lexical reader consults beside it

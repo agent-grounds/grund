@@ -10,7 +10,6 @@
 //! §FS-languages.multi-line-string.forms is all it knows of each language.
 
 use std::collections::HashMap;
-use std::path::Path;
 
 use super::multi_line_forms::{Closer, Language, Skip, is_identifier_byte, quote_run};
 use super::never_rewrite::is_escaped;
@@ -37,16 +36,13 @@ impl MultiLineStrings {
         entries: Vec::new(),
     };
 
-    /// Read `text` by the row of §FS-languages.multi-line-string.forms its
-    /// extension names. `docstring_python` is `[scan] docstring_python`: where it is
-    /// on, a docstring and an assigned-data span keep their own rules and open no
-    /// form (§FS-languages.multi-line-string.bound).
-    pub(crate) fn of(path: &Path, text: &str, docstring_python: bool) -> Self {
-        let Some(language) = path
-            .extension()
-            .and_then(|extension| extension.to_str())
-            .and_then(Language::of)
-        else {
+    /// Read `text` by the row of §FS-languages.multi-line-string.forms that the
+    /// suffix `forms` names, the one config resolved the file's language to.
+    /// `docstring_python` is whether the file reads docstrings: where it does, a
+    /// docstring and an assigned-data span keep their own rules and open no form
+    /// (§FS-languages.multi-line-string.bound).
+    pub(crate) fn of(forms: Option<&str>, text: &str, docstring_python: bool) -> Self {
+        let Some(language) = forms.and_then(Language::of) else {
             return Self::default();
         };
         let lines = text.lines().collect::<Vec<_>>();

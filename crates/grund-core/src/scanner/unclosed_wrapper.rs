@@ -8,7 +8,7 @@
 
 use super::citation_line::CitationLine;
 use super::citations::scanned_citation_rewritable;
-use crate::config::{Frame, Schema};
+use crate::config::FileReading;
 use crate::grammar::{DocstringContent, FmtDirectives, cross_ref_wrap};
 use crate::model::{Catalog, Declaration, UnclosedWrapperNote};
 
@@ -25,9 +25,11 @@ pub(super) struct UnclosedWrappers<'a> {
 }
 
 impl<'a> UnclosedWrappers<'a> {
-    pub(super) fn new(schema: &'a Schema, frame: Frame<'a>, is_md: bool) -> Self {
+    pub(super) fn new(reading: &FileReading<'a>) -> Self {
         Self {
-            directives: is_md.then(|| FmtDirectives::new(frame.compiled.lexical(schema), true)),
+            directives: reading
+                .markdown
+                .then(|| FmtDirectives::new(reading.lexical, true)),
             reach: None,
         }
     }

@@ -7,7 +7,8 @@ use std::path::Path;
 use super::value_context::SourceValueLineContext;
 use crate::config::{Frame, Schema};
 use crate::grammar::{
-    DocstringContent, bare_token_in_never_rewrite_zone, qualified_suppressed_in_source,
+    DocstringContent, LexicalSettings, bare_token_in_never_rewrite_zone,
+    qualified_suppressed_in_source,
 };
 use crate::model::InlineCitationSite;
 
@@ -28,6 +29,8 @@ pub(super) struct CitationLine<'a> {
     pub(super) path: &'a Path,
     pub(super) schema: &'a Schema,
     pub(super) frame: Frame<'a>,
+    /// The file's own hosts and grammar (§FS-config-v2.schema.sources).
+    pub(super) lexical: LexicalSettings<'a>,
     pub(super) is_md: bool,
     /// Whether this line may be a heading: false inside a raw-text HTML block,
     /// whose lines are never headings (§FS-check.1.1.5.1).

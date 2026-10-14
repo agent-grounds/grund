@@ -6,7 +6,7 @@
 use std::path::Path;
 
 use super::v1::default_project;
-use crate::grammar::{DocCommentRule, classified_extensions, doc_comment_rule};
+use crate::grammar::{DocCommentRule, classified_extensions, extension_rule};
 
 fn default_extensions() -> Vec<String> {
     default_project(false).schema.sources.extensions
@@ -41,9 +41,8 @@ fn default_is_md_then_the_language_table_in_order() {
 fn every_classified_extension_is_in_the_default() {
     let default = default_extensions();
     for extension in SPEC_CLASSIFIED {
-        let path = format!("src/file.{extension}");
         assert!(
-            !matches!(doc_comment_rule(Path::new(&path)), DocCommentRule::None),
+            !matches!(extension_rule(extension), DocCommentRule::None),
             "`{extension}` should have a doc-comment recognizer"
         );
         assert!(

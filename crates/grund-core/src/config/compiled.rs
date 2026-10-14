@@ -7,8 +7,9 @@ use std::path::Path;
 
 use anyhow::Result;
 
+use super::file_reading::FileReading;
 use super::grounding::finest_grounding_level_for_kind;
-use super::project::{Project, Schema};
+use super::project::{Project, Schema, Sources};
 use super::record::DEFAULT_GROUNDING_LEVEL;
 use super::rows::Row;
 use crate::grammar::{Grammar, GrammarKind, LexicalSettings, require_kinds};
@@ -18,6 +19,10 @@ use crate::grammar::{Grammar, GrammarKind, LexicalSettings, require_kinds};
 pub struct Compiled {
     pub grammar: Grammar,
     pub demand: ScanDemand,
+    /// A v2 project's grammar per distinct host list of its admitted languages
+    /// (§FS-languages.prefixes): a file reads through its own language's hosts.
+    /// Empty for v1, whose one list `grammar` was built over.
+    pub(crate) hosts: Vec<(Vec<String>, Grammar)>,
 }
 
 /// §AR-config.6.1: what the scanner must record beyond the catalog — the rows
@@ -62,22 +67,19 @@ impl Compiled {
         }
     }
 
-    /// The lexical settings one file is read with: a v2 file's comment hosts and
-    /// docstring reading are its language's (§FS-config-v2.schema.sources), never
-    /// another language's; a v1 file's are the project's (§FS-languages.prefixes).
-    pub(crate) fn lexical_for<'a>(
-        &'a self,
-        schema: &'a Schema,
-        path: &Path,
-    ) -> LexicalSettings<'a> {
-        let mut lexical = self.lexical(schema);
-        if let Some(model) = &schema.sources.model
-            && let Some(language) = model.language_of(path)
-        {
-            lexical.comment_prefixes = &language.comment_prefixes;
-            lexical.docstring_python = language.docstrings;
-        }
-        lexical
+    /// How `path` is read under this project (§FS-config-v2.schema.sources): the
+    /// one resolver every consumer asks for a file's language, hosts and gate.
+    pub(crate) fn reading<'a>(&'a self, schema: &'a Schema, path: &'a Path) -> FileReading<'a> {
+        FileReading::of(self, schema, path)
+    }
+
+    /// The grammar a file of a language with these `comment_prefixes` reads with:
+    /// the one built over them, or the project's where v1 built only that one.
+    pub(crate) fn grammar_for(&self, comment_prefixes: &[String]) -> &Grammar {
+        self.hosts
+            .iter()
+            .find(|(hosts, _)| hosts == comment_prefixes)
+            .map_or(&self.grammar, |(_, grammar)| grammar)
     }
 }
 
@@ -100,9 +102,30 @@ pub(crate) fn compile(project: &Project) -> Result<Compiled> {
         &project.schema.sources.comment_prefixes,
     )?;
     Ok(Compiled {
+        hosts: host_grammars(&grammar, &project.schema.sources)?,
         grammar,
         demand: scan_demand(project),
     })
+}
+
+/// §FS-languages.prefixes: a v2 file has no global prefix list, so each distinct
+/// host list an admitted language reads through gets its own grammar, built once
+/// here. A v1 project has one list and needs none.
+pub(super) fn host_grammars(
+    grammar: &Grammar,
+    sources: &Sources,
+) -> Result<Vec<(Vec<String>, Grammar)>> {
+    let mut hosts: Vec<(Vec<String>, Grammar)> = Vec::new();
+    let Some(model) = &sources.model else {
+        return Ok(hosts);
+    };
+    for language in &model.admitted {
+        let prefixes = &language.comment_prefixes;
+        if !hosts.iter().any(|(built, _)| built == prefixes) {
+            hosts.push((prefixes.clone(), grammar.with_hosts(prefixes)?));
+        }
+    }
+    Ok(hosts)
 }
 
 /// The citable rows as the ID grammar reads them (§FS-config.3.4): the name

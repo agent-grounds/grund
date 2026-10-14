@@ -103,7 +103,7 @@ enum Step {
 /// Today's slice of one declaration or section into every sink in one walk
 /// (§DF-one-parse-answers-from-0-19, P01, P02, P03, P07, P10, D17a, D17d): the
 /// body runs from the declaration line until a declaration-shaped line, the end
-/// of its comment by today's markers, the `*/` that closes it, an empty
+/// of its comment by today's markers (those `hosts` holds, for a v2 file), the `*/` that closes it, an empty
 /// docstring-closing line, or the published body end; a section runs until any
 /// numbered heading as deep as it, or a second claimant of its path; a lead stops
 /// at any numbered heading. Answers the line the slice starts at.
@@ -113,6 +113,7 @@ pub(crate) fn today_slices(
     section: Option<&str>,
     sinks: &mut [TodaySink],
     lexical: LexicalSettings<'_>,
+    hosts: Option<&[String]>,
 ) -> Result<usize, TodayMiss> {
     let is_md = record.markdown;
     let decl_line = site.declaration_line;
@@ -175,7 +176,7 @@ pub(crate) fn today_slices(
                 && (if line.trim().is_empty() {
                     line_style
                 } else {
-                    !continues_comment_body(scan_line, own_marker, lexical)
+                    !continues_comment_body(scan_line, own_marker, lexical, hosts)
                 })
             {
                 break;

@@ -153,7 +153,9 @@ pub(super) fn comment_prefix_regex(comment_prefixes: &[String]) -> String {
     alternatives.sort_by(|a, b| b.len().cmp(&a.len()).then_with(|| a.cmp(b)));
     alternatives.dedup();
     if alternatives.is_empty() {
-        "(?!)".to_string()
+        // An empty class: no prefix, so nothing opens a comment line. The regex
+        // crate has no look-around, so `(?!)` would refuse the whole grammar.
+        r"[^\s\S]".to_string()
     } else {
         format!("(?:{})", alternatives.join("|"))
     }

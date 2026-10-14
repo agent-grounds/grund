@@ -11,8 +11,8 @@ use super::value_binding_attempts::{
     invalid_value_binding_site, scan_noncanonical_value_binding_attempts,
 };
 use super::value_context::{binding_span_is_inside, value_binding_context};
-use crate::config::{Frame, Schema};
-use crate::grammar::{expand_relative_heading, value_binding_section_shape_is_valid};
+use crate::config::{FileReading, Frame, Schema};
+use crate::grammar::{Grammar, expand_relative_heading, value_binding_section_shape_is_valid};
 use crate::model::{
     Catalog, Id, InvalidValueSite, ValueBinding, authored_component, component_text_is_valid,
 };
@@ -41,11 +41,12 @@ pub(super) fn value_declaration_is_in_home(
 pub(super) fn validate_markdown_value_declarations(
     path: &Path,
     text: &str,
-    is_md: bool,
+    reading: &FileReading<'_>,
     schema: &Schema,
     frame: Frame<'_>,
     findings: &mut Catalog,
 ) {
+    let is_md = reading.markdown;
     if schema.value_rows().next().is_none() {
         return;
     }
@@ -118,7 +119,7 @@ pub(super) fn validate_markdown_value_declarations(
                 continue;
             };
             let recorded = info.relative.then_some(coordinate.as_str());
-            match recorded_component(line, recorded, frame) {
+            match recorded_component(line, recorded, reading.lexical.grammar) {
                 Some((component, column)) if component_text_is_valid(component) => {
                     info.value = Some(authored_component(component, column));
                 }
@@ -178,8 +179,8 @@ fn empty_citable_value_heading(line: &str, declaration_level: usize, frame: Fram
     (numeric || named) && rest[token.len()..].trim().is_empty()
 }
 
-pub(crate) fn markdown_component<'a>(line: &'a str, frame: Frame<'_>) -> Option<(&'a str, usize)> {
-    let captures = frame.grammar().section_re.captures(line)?;
+pub(crate) fn markdown_component<'a>(line: &'a str, grammar: &Grammar) -> Option<(&'a str, usize)> {
+    let captures = grammar.section_re.captures(line)?;
     let coordinate = captures.name("sec")?;
     // Numeric heading punctuation is optional and intentionally sits outside
     // the `sec` capture; it delimits the title but is not part of it
@@ -199,14 +200,14 @@ pub(crate) fn markdown_component<'a>(line: &'a str, frame: Frame<'_>) -> Option<
 pub(crate) fn recorded_component<'a>(
     line: &'a str,
     recorded: Option<&str>,
-    frame: Frame<'_>,
+    grammar: &Grammar,
 ) -> Option<(&'a str, usize)> {
     let Some(path) = recorded else {
-        return markdown_component(line, frame);
+        return markdown_component(line, grammar);
     };
     let complete = expand_relative_heading(line, path);
     // The expansion keeps everything after the path, so the component ends `line`.
-    let start = line.len() - markdown_component(&complete, frame)?.0.len();
+    let start = line.len() - markdown_component(&complete, grammar)?.0.len();
     Some((&line[start..], start + 1))
 }
 

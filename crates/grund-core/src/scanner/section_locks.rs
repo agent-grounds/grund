@@ -26,8 +26,14 @@ pub(crate) fn section_locks_present(frame: Frame<'_>) -> bool {
 /// With `section_locks_present`, what makes a run that has not scanned ask for a
 /// scan of the lock pass (§FS-section-lock.write): it may answer yes where the
 /// scan finds no locked address, and never no where it finds one, because the
-/// judgement it stands in for is made on the scan alone.
-pub(crate) fn may_give_locked_heading(frame: Frame<'_>, path: &Path, text: &str) -> bool {
+/// judgement it stands in for is made on the scan alone. `markdown` says whether a
+/// file reads as Markdown, which its language decides (§FS-config-v2.schema.sources).
+pub(crate) fn may_give_locked_heading(
+    frame: Frame<'_>,
+    path: &Path,
+    text: &str,
+    markdown: &dyn Fn(&Path) -> bool,
+) -> bool {
     let sources = frame.sources();
     let named = frame.grammar().named_sections;
     let may_hold = |text: &str| {
@@ -45,7 +51,7 @@ pub(crate) fn may_give_locked_heading(frame: Frame<'_>, path: &Path, text: &str)
     may_hold(text)
         || text.lines().filter_map(linked).any(|target| {
             let target = Path::new(&target);
-            target.extension().and_then(|ext| ext.to_str()) == Some("md")
+            markdown(target)
                 && sources
                     .text(&sources.stub_target(frame.root(), path, target))
                     .is_ok_and(|text| may_hold(&text))

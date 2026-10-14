@@ -9,7 +9,7 @@ use super::chapter_values::validate_declared_value_chapters;
 use super::embedded_values::validate_embedded_value_roots;
 use super::value_context::SourceValueLineContext;
 use super::values::validate_markdown_value_declarations;
-use crate::config::{Frame, Schema, kind_uses_values, kind_value_chapter};
+use crate::config::{FileReading, Frame, Schema, kind_uses_values, kind_value_chapter};
 use crate::model::Catalog;
 
 /// The closing steps `scan_file_text` runs for one file.
@@ -53,24 +53,21 @@ impl AfterPass {
         &self,
         path: &Path,
         text: &str,
-        is_md: bool,
-        is_py: bool,
+        reading: &FileReading<'_>,
         schema: &Schema,
         frame: Frame<'_>,
         source_contexts: Option<&[Option<SourceValueLineContext>]>,
         findings: &mut Catalog,
     ) {
         if self.value_declarations {
-            validate_markdown_value_declarations(path, text, is_md, schema, frame, findings);
+            validate_markdown_value_declarations(path, text, reading, schema, frame, findings);
         }
         if self.declared_chapters {
             validate_declared_value_chapters(
                 path,
                 text,
-                is_md,
-                is_py,
+                reading,
                 schema,
-                frame,
                 source_contexts,
                 findings,
             );
@@ -79,8 +76,7 @@ impl AfterPass {
             validate_embedded_value_roots(
                 path,
                 text,
-                is_md,
-                is_py,
+                reading,
                 schema,
                 frame,
                 source_contexts,

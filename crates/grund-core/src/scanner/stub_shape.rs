@@ -27,7 +27,8 @@ pub(super) fn note_stub_shapes(
     frame: Frame<'_>,
     findings: &mut Catalog,
 ) {
-    if path.extension().and_then(|e| e.to_str()) != Some("md") {
+    // §FS-config-v2.schema.sources.extensions: a stub is Markdown by the file's language.
+    if !frame.compiled.reading(schema, path).markdown {
         return;
     }
     // A heading of the stub shape is a stub where the `docs` test holds, and a

@@ -53,7 +53,7 @@ fn today(
     view: ShowRenderMode,
 ) -> (String, Vec<(String, String, usize)>) {
     let mut sinks = [TodaySink::new(view, false)];
-    if today_slices(record, site, section, &mut sinks, config.lexical()).is_err() {
+    if today_slices(record, site, section, &mut sinks, config.lexical(), None).is_err() {
         panic!("today's slicer finds the site");
     }
     let [sink] = sinks;

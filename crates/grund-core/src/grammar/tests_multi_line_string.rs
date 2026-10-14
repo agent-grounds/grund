@@ -11,7 +11,11 @@ const W: usize = WHOLE_LINE;
 
 /// The entry state of every line of `text`, read as a file named `name`.
 fn entries(name: &str, text: &str) -> Vec<usize> {
-    let literals = MultiLineStrings::of(Path::new(name), text, true);
+    let literals = MultiLineStrings::of(
+        Path::new(name).extension().and_then(|e| e.to_str()),
+        text,
+        true,
+    );
     (0..text.lines().count())
         .map(|index| literals.entry(index))
         .collect()

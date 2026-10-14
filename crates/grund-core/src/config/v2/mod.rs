@@ -8,7 +8,8 @@
 //! headers, duplicate keys, the strength-key collision; `tables.rs` names the
 //! table a header opens; `schema.rs`, `measures.rs`, `rules.rs` and
 //! `presentation.rs` read the keys of each concern, `fields.rs` a kind's
-//! fields (§FS-fields) and `sources.rs` the source model; `finish.rs` judges what
+//! fields (§FS-fields) and `sources.rs` the source model, which `sources_model.rs`
+//! lowers and renders; `finish.rs` judges what
 //! only the whole file can say and lowers the rows; `defaults.rs` is the v2
 //! epoch; and `render.rs` writes a project back out in v2 spelling.
 
@@ -21,6 +22,7 @@ mod render;
 mod rules;
 mod schema;
 mod sources;
+mod sources_model;
 mod tables;
 mod walk;
 

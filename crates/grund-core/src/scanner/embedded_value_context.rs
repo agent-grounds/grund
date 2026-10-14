@@ -5,10 +5,11 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 use super::value_context::SourceValueLineContext;
-use crate::config::{Frame, Schema};
+use crate::config::FileReading;
 use crate::grammar::named_mode_section_path;
 use crate::grammar::{
-    PythonDocstringScanState, is_lone_block_marker, longest_form_at, prefix_forms, source_scan_line,
+    LexicalSettings, PythonDocstringScanState, is_lone_block_marker, longest_form_at, prefix_forms,
+    source_scan_line,
 };
 use crate::model::{Catalog, Declaration, DeclarationSource, Id, InvalidValueSite};
 
@@ -68,8 +69,7 @@ pub(super) fn embedded_value_marker_for_line(
 /// comment (§FS-values.2.4.1).
 pub(super) fn normalized_value_lines(
     text: &str,
-    is_py: bool,
-    schema: &Schema,
+    reading: &FileReading<'_>,
     source_contexts: Option<&[Option<SourceValueLineContext>]>,
 ) -> Vec<(String, usize, bool, bool)> {
     let mut py_docstring = PythonDocstringScanState::default();
@@ -78,8 +78,8 @@ pub(super) fn normalized_value_lines(
         .map(|(index, line)| {
             let scan = source_scan_line(
                 line,
-                is_py,
-                schema.sources.docstring_python,
+                reading.python,
+                reading.lexical.docstring_python,
                 &mut py_docstring,
             );
             (
@@ -155,7 +155,7 @@ pub(super) fn authored_heading_level(
     line: &str,
     markdown: bool,
     block_comment: bool,
-    schema: &Schema,
+    lexical: LexicalSettings<'_>,
 ) -> Option<usize> {
     // Strip a source wrapper—including `#`—before authored heading hashes;
     // Python docstrings arrive as Markdown after quote normalization
@@ -163,7 +163,7 @@ pub(super) fn authored_heading_level(
     let content = if markdown {
         line.trim_start()
     } else {
-        semantic_comment_content(line, false, block_comment, schema).trim_start()
+        semantic_comment_content(line, false, block_comment, lexical).trim_start()
     };
     let level = content.bytes().take_while(|byte| *byte == b'#').count();
     (level > 0
@@ -188,13 +188,12 @@ pub(super) fn authored_heading_path(
     markdown: bool,
     block_comment: bool,
     named: bool,
-    schema: &Schema,
-    frame: Frame<'_>,
+    lexical: LexicalSettings<'_>,
 ) -> Option<String> {
     let content = if markdown {
         line.trim_start()
     } else {
-        semantic_comment_content(line, false, block_comment, schema).trim_start()
+        semantic_comment_content(line, false, block_comment, lexical).trim_start()
     };
     let level = content.bytes().take_while(|byte| *byte == b'#').count();
     let rest = content.get(level..)?;
@@ -204,7 +203,7 @@ pub(super) fn authored_heading_path(
     let token = rest.trim_start().split_whitespace().next()?;
     // §FS-config.3.3.1: a numeric heading's full stop is optional punctuation
     // and a name-bearing one's colon is mandatory; neither is part of the path.
-    if let Some(coordinate) = (named && frame.grammar().named_sections)
+    if let Some(coordinate) = (named && lexical.grammar.named_sections)
         .then(|| token.strip_suffix(':'))
         .flatten()
     {
@@ -224,7 +223,7 @@ pub(super) fn semantic_comment_content<'a>(
     line: &'a str,
     markdown: bool,
     block_comment: bool,
-    schema: &Schema,
+    lexical: LexicalSettings<'_>,
 ) -> &'a str {
     let mut content = line.trim();
     if markdown {
@@ -233,10 +232,9 @@ pub(super) fn semantic_comment_content<'a>(
     if is_lone_block_marker(content) {
         return "";
     }
-    // §FS-languages.prefixes.forms: the marker is the longest form of a configured
-    // prefix, so `;;` and `-- |` go whole as `///` does.
-    let prefixes = schema
-        .sources
+    // §FS-languages.prefixes.forms: the marker is the longest form of one of the
+    // file's hosts (§FS-languages.prefixes), so `;;` and `-- |` go whole as `///` does.
+    let prefixes = lexical
         .comment_prefixes
         .iter()
         .map(|prefix| prefix_forms(prefix))

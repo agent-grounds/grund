@@ -24,9 +24,11 @@ use super::run_warnings::RunWarning;
 use super::slots::{Content, Handle, Slot};
 #[cfg(test)]
 use super::v1;
+use crate::grammar::Grammar;
 #[cfg(test)]
 use crate::grammar::GrammarKind;
-use crate::grammar::{Grammar, LexicalSettings};
+#[cfg(test)]
+use crate::grammar::LexicalSettings;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ConfigLocation {
@@ -341,7 +343,10 @@ impl Config {
     /// grammar always sees the value this record holds *now*: the component
     /// below must not be able to disagree with the config above it about what a
     /// citation or a comment looks like, and a snapshot taken when the grammar
-    /// was compiled could (§AR-system.4).
+    /// was compiled could (§AR-system.4). A reader of one file asks
+    /// [`Config::reading`] instead, whose hosts are that file's
+    /// (§FS-config-v2.schema.sources), so only the grammar's own cases read this.
+    #[cfg(test)]
     pub(crate) fn lexical(&self) -> LexicalSettings<'_> {
         LexicalSettings {
             grammar: &self.grammar,

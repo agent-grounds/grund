@@ -18,7 +18,6 @@ use crate::config::{
     DEFAULT_GROUNDING_LEVEL, Frame, Row, Rules, Schema, Strength, any_place_grounded,
     grounding_level_for_kind, homeless_row_grounding, row_grounding, soft_grounding_rungs,
 };
-use crate::grammar::doc_comment_rule;
 use crate::model::{Catalog, CheckReport, Citation, Diagnostic, FileStructure};
 use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
 use crate::workspace::namespace_is_unverified;
@@ -115,7 +114,12 @@ pub(super) fn check_grounding(
         // §FS-config-v2.rules.grounding: rungs run strongest first, and a unit a
         // stronger rung already reported is not reported again by a finer one.
         let mut reported: Vec<(usize, usize)> = Vec::new();
-        let lisp = doc_comment_rule(file).is_lisp();
+        // §FS-config-v2.schema.sources.extensions: the file's language's recognizer.
+        let lisp = frame
+            .compiled
+            .reading(schema, file)
+            .measurement_rule()
+            .is_lisp();
         for (channel, level) in rungs {
             for unit in grounding_units(findings.file_structure.get(file), level) {
                 if reported.contains(&(unit.start, unit.end))
@@ -192,7 +196,8 @@ fn governing_grounding<'a>(
     home: Option<&DeclarationHome<'_>>,
     file: &Path,
 ) -> Option<(&'a str, (bool, usize))> {
-    let is_markdown = file.extension().and_then(|ext| ext.to_str()) == Some("md");
+    // §FS-config-v2.schema.sources.extensions: Markdown by the file's language.
+    let is_markdown = frame.compiled.reading(schema, file).markdown;
     let row_of = |kind: &str| {
         schema.rows.iter().find(|row| row.name == kind).map(|row| {
             (

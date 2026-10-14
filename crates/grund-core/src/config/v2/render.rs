@@ -78,7 +78,7 @@ impl Project {
             string(&ids.number_pattern),
             string(&ids.section_separator),
         );
-        super::sources::render(out, &schema.sources);
+        super::sources_model::render(out, &schema.sources);
         let notes = &schema.notes;
         let _ = writeln!(out, "\n[schema.notes.lines]\nmust = {}", notes.max_lines);
         if notes.warn_on_suggested {

@@ -98,17 +98,15 @@ pub use compiled::Grammar;
 // directory that can name any of it.
 pub(crate) use anchors::{anchor_slug, section_anchor_text, section_display_name};
 pub(crate) use comment_block::{
-    CommentBlockKind, DocCommentRule, bare_block_lines, block_declares_id, block_is_doc_comment,
-    comment_blocks, declaration_id_on_source_line, first_content_line, is_bare_block_line,
+    CommentBlockKind, DocCommentRule, block_declares_id, block_is_doc_comment, comment_blocks,
+    declaration_id_on_source_line, first_content_line, is_bare_block_line,
     line_comment_block_marker,
 };
 pub(crate) use comment_line::{comment_envelope, comment_strip_prefixes, strip_block_closer};
 pub(crate) use compiled::{
     QUALIFIED_CITATION_PREFIX, STUB_LINK_HEADING, is_valid_project_alias, section_path,
 };
-pub(crate) use language_table::{
-    DocProfile, classified_extensions, doc_comment_rule, extension_rule,
-};
+pub(crate) use language_table::{DocProfile, classified_extensions, extension_rule};
 // The bare fence reader serves the record's doc-comment headings and the template
 // tests, which look for a fenced example rather than for a heading (§FS-check.1.1.5).
 pub(crate) use fence::{MarkdownFence, markdown_fence_delimiter};
@@ -189,6 +187,8 @@ mod tests_comment_block;
 mod tests_comment_block_position;
 #[cfg(test)]
 mod tests_declaration_line;
+#[cfg(test)]
+mod tests_doc_profiles;
 #[cfg(test)]
 mod tests_fmt_cross_refs;
 #[cfg(test)]

@@ -214,8 +214,10 @@ fn enroll_external_inline_declarations(
         let Some(decls) = findings.declarations.get(&citation.id) else {
             continue;
         };
-        if external_inline_home(decls, &target.folder_key, configured_root, physical_root).is_none()
-        {
+        // The scan read each file as its language reads it, and recorded that.
+        let markdown = |file: &Path| findings.files.get(file).is_some_and(|file| file.markdown);
+        let roots = (configured_root, physical_root);
+        if external_inline_home(decls, &target.folder_key, roots, &markdown).is_none() {
             continue;
         }
         let Some(line) = lines_by_index
@@ -252,21 +254,19 @@ fn enroll_external_inline_declarations(
 /// multiple independent homes remain the duplicate error rather than becoming
 /// an index membership `grund` guessed (§REQ-no-wrong-citation.1). The ID has one
 /// only where it has one declaration once its stubs are paired by their verdicts
-/// (§AR-scanner.4.6).
+/// (§AR-scanner.4.6). `markdown` says whether a file reads as Markdown, which its
+/// language decides (§FS-config-v2.schema.sources.extensions).
 fn external_inline_home<'a>(
     decls: &'a [Declaration],
     folder_key: &Path,
-    configured_root: &Path,
-    physical_root: &Path,
+    (configured_root, physical_root): (&Path, &Path),
+    markdown: &dyn Fn(&Path) -> bool,
 ) -> Option<&'a Declaration> {
     if declarations_under_folder(decls, folder_key, configured_root, physical_root) {
         return None;
     }
     let home = paired_declarations(decls).sole()?.stand_in;
-    if home.is_stub
-        || home.e2e_case.is_some()
-        || home.file.extension().and_then(|ext| ext.to_str()) == Some("md")
-    {
+    if home.is_stub || home.e2e_case.is_some() || markdown(&home.file) {
         return None;
     }
     Some(home)

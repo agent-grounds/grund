@@ -108,7 +108,8 @@ pub(super) fn check_citation_obligations(
         }
     }
     for cite in &findings.citations {
-        if file_is_obligation_unit(&non_citable, homeless, cite) {
+        let markdown = || frame.compiled.reading(schema, &cite.file).markdown;
+        if file_is_obligation_unit(&non_citable, homeless, cite, markdown) {
             by_file
                 .entry((cite.source_kind.as_str(), cite.file.as_path()))
                 .or_default()

@@ -1,0 +1,1 @@
+warning: nothing to scan — every file under `tests/e2e/cases/check-empty-scan-v2-exclude-pattern/repo/src` that grund would read is excluded by the [schema.sources] exclude pattern `gen`.

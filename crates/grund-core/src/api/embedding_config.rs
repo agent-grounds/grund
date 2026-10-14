@@ -81,6 +81,27 @@ fn disjunctions(values: &[CitationDisjunction]) -> Vec<String> {
         .collect()
 }
 
+/// A v2 project's resolved source model (§FS-config-v2.schema.sources): every
+/// admitted language with its own hosts, since v2 has no global prefix list and
+/// its `scan.comment_prefixes` is empty (§FS-languages.prefixes). `None` for v1.
+fn sources(c: &Config) -> Option<Value> {
+    let model = c.schema().sources.model.as_ref()?;
+    let languages = model.admitted.iter().map(|l| {
+        json!({"name":l.name,"class":l.class.name(),"suffixes":l.suffixes,
+            "comment_prefixes":l.comment_prefixes,"doc_comments":l.doc_comments.name(),
+            "docstrings":l.docstrings,"builtin":l.builtin})
+    });
+    let extensions: serde_json::Map<String, Value> = model
+        .extensions
+        .iter()
+        .map(|(suffix, name)| (suffix.clone(), json!(name)))
+        .collect();
+    Some(
+        json!({"languages":languages.collect::<Vec<_>>(),"extensions":extensions,
+        "declarations":model.declarations.name(),"exclude":model.exclude}),
+    )
+}
+
 /// Every persisted setting, with derived engine caches excluded from the public
 /// schema so #466 can change those caches independently (§FS-distribution.3.1).
 pub(super) fn schema(c: &Config) -> Value {
@@ -102,7 +123,7 @@ pub(super) fn schema(c: &Config) -> Value {
         }
         citations.insert(kind.clone(), rules);
     }
-    json!({"grund_config_version":c.project().version,"project_name":c.project_name,"project_description":c.project_description,
+    let mut schema = json!({"grund_config_version":c.project().version,"project_name":c.project_name,"project_description":c.project_description,
         "reference": {"marker":c.marker,"trigger":c.trigger,"strict":c.strict,
             "shorthand":c.shorthand.as_str(),"require_grounding":c.require_grounding,
             "grounding_level":c.grounding_level,"conversation":c.conversation,
@@ -127,5 +148,9 @@ pub(super) fn schema(c: &Config) -> Value {
             "citable":k.citable,"scan":k.scan,"require_grounding":k.require_grounding,
             "grounding_level":k.grounding_level,"values":k.values,"value_chapter":k.value_chapter,
             "rules":k.rules,"format":k.format,"resolve":k.resolve.map(|r|match r{KindResolution::Must=>"must",KindResolution::Should=>"should"}),"fetch":k.fetch})).collect::<Vec<_>>(),
-        "citations":citations})
+        "citations":citations});
+    if let Some(sources) = sources(c) {
+        schema["sources"] = sources;
+    }
+    schema
 }

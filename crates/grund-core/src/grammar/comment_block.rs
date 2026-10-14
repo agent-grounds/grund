@@ -164,31 +164,6 @@ pub(crate) fn is_bare_block_line(line: &str, closed: bool) -> bool {
     closed && !trimmed.starts_with('*') && !trimmed.starts_with("/*")
 }
 
-/// For every line of a source file, whether it is a bare block line
-/// (`is_bare_block_line`), read off the blocks `comment_blocks` walks — what a
-/// reader without the scanner's file record replays (§FS-declarations.line.block-comment).
-/// A Markdown file has no comment blocks, so no line of it is one.
-pub(crate) fn bare_block_lines(
-    text: &str,
-    is_md: bool,
-    is_py: bool,
-    lexical: LexicalSettings<'_>,
-) -> Vec<bool> {
-    if is_md {
-        return Vec::new();
-    }
-    let lines = text.lines().collect::<Vec<_>>();
-    let mut bare = vec![false; lines.len()];
-    for (start, end, kind) in comment_blocks(&lines, is_py, lexical) {
-        if let CommentBlockKind::Block { closed } = kind {
-            for (flag, line) in bare[start..=end].iter_mut().zip(&lines[start..=end]) {
-                *flag = is_bare_block_line(line, closed);
-            }
-        }
-    }
-    bare
-}
-
 /// The ID a source line declares, read in comment position first and, on a bare
 /// block line, as a docstring line is (§FS-declarations.line.block-comment): one
 /// order every re-reader of a declaration line shares with the scanner's gate.
@@ -248,7 +223,7 @@ pub(crate) fn block_declares_id(
 /// comment with its own marker, so the marker decides; a **position** language
 /// spells it like any other comment, so where it sits decides. Neither parses
 /// the host language (§FS-non-goals.3).
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum DocCommentRule {
     /// The C family: a `///` or `//!` line run, a `/**` or `/*!` block.
     CFamily,
@@ -283,7 +258,7 @@ impl DocCommentRule {
 /// line, so a Go `var` inside a function body classifies as a definition and a
 /// Ruby `private def` does not. A miss only means a block is measured that need
 /// not be; it never changes what a citation resolves to.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum DefinitionStart {
     /// Keywords, each matched at an identifier boundary so `func(` and
     /// `func main` open a definition while `functional` does not.

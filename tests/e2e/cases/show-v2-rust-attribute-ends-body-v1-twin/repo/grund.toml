@@ -1,0 +1,15 @@
+grund_config_version = 1
+project_name = "fixture"
+
+[reference]
+strict = true
+require_grounding = false
+
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "FS"
+
+[scan]
+include = ["src"]

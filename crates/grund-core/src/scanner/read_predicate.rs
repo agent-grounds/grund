@@ -22,6 +22,7 @@ use ignore::{
     gitignore::{GitignoreBuilder, Glob},
 };
 
+use super::exclude_globs::ExcludeGlobs;
 use super::walk::WalkDirFilter;
 use crate::config::{Frame, Schema, canonical_config_root};
 use crate::model::{ExcludingRule, format_path, is_hidden};
@@ -120,22 +121,24 @@ pub(crate) fn excluding_rule(
         return None;
     }
     let mut refusal = None;
+    let globs = ExcludeGlobs::of(schema);
     let roots = roots.iter().map(|root| canonicalize_existing_prefix(root));
     for root in std::iter::once(physical_root.clone()).chain(roots) {
         let Ok(relative) = file.strip_prefix(&root) else {
             continue;
         };
-        let rule = excluding_rule_under(schema, &physical_root, &root, relative)?;
+        let rule = excluding_rule_under(schema, globs.as_ref(), &physical_root, &root, relative)?;
         refusal.get_or_insert(rule);
     }
     refusal
 }
 
 /// `excluding_rule` for one root `relative` lies below: the first rule met on the way
-/// down, and at one directory the `exclude` entry before the ignore files, the
-/// walk's own order (§FS-declarations.checks.excluded-stub-target).
+/// down, and at one directory the `exclude` entry or a v2 `exclude` pattern before
+/// the ignore files, the walk's own order (§FS-declarations.checks.excluded-stub-target).
 fn excluding_rule_under(
     schema: &Schema,
+    globs: Option<&ExcludeGlobs>,
     physical_root: &Path,
     root: &Path,
     relative: &Path,
@@ -151,6 +154,11 @@ fn excluding_rule_under(
     for (depth, name) in names.iter().enumerate() {
         path.push(name);
         let is_dir = depth + 1 < names.len();
+        // §FS-config-v2.schema.sources.exclude.stubs: a pattern, at a directory or the target.
+        if let Some(pattern) = globs.and_then(|globs| globs.excluding(physical_root, &path, is_dir))
+        {
+            return Some(ExcludingRule::Pattern(pattern.to_string()));
+        }
         // §FS-declarations.stubs.target.3: a hidden directory is no reason in this release.
         if is_dir
             && !is_hidden(&path)

@@ -5,7 +5,7 @@ use std::path::Path;
 use super::extents::body_has_content;
 use super::line_owners::{LineOwners, resolve_requested_lines};
 use super::record::walk_blocks;
-use crate::config::{Frame, Schema};
+use crate::config::{FileReading, Frame, Schema};
 use crate::grammar::{AliasGrammar, MultiLineStrings, block_declares_id, inline_note_verdicts};
 use crate::model::{
     BlockForm, Catalog, FileRecord, InlineCitationSite, SectionHeadingOutsideDeclaration,
@@ -280,12 +280,10 @@ fn lexical_targets(targets: &[WorkspaceCitationTarget]) -> Vec<AliasGrammar<'_>>
 /// inline citation style says applies to one (§FS-inline-citation-style.1.1,
 /// §AR-scanner.4).
 pub(super) fn inline_citation_sites(
-    path: &Path,
+    reading: &FileReading<'_>,
     literals: &MultiLineStrings,
     record: &mut FileRecord,
-    is_py: bool,
     schema: &Schema,
-    frame: Frame<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
 ) -> (
     BTreeMap<usize, InlineCitationSite>,
@@ -293,7 +291,7 @@ pub(super) fn inline_citation_sites(
 ) {
     let text = record.text.clone();
     let lines = text.as_str().lines().collect::<Vec<_>>();
-    record.blocks = walk_blocks(path, &lines, is_py, schema, frame);
+    record.blocks = walk_blocks(&lines, reading);
     let blocks = &record.blocks;
     let mut sites = BTreeMap::new();
     let mut site_lines = BTreeMap::new();
@@ -304,7 +302,7 @@ pub(super) fn inline_citation_sites(
     // per file — which project's grammar reads a qualified token's ID tail is all
     // the tokenizer below needs of a target (§AR-system.2.1).
     let alias_grammars = lexical_targets(workspace_targets);
-    let lexical = frame.compiled.lexical_for(schema, path);
+    let lexical = reading.lexical;
     for recorded in blocks {
         let (start, end) = (recorded.start - 1, recorded.end - 1);
         let block = &lines[start..=end];

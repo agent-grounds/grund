@@ -14,15 +14,15 @@ fn markdown_component_excludes_the_complete_numeric_coordinate_delimiter() {
     let config = Config::default_for(PathBuf::from("."));
 
     assert_eq!(
-        markdown_component("## 1. 1200", config.frame()),
+        markdown_component("## 1. 1200", config.frame().grammar()),
         Some(("1200", 7))
     );
     assert_eq!(
-        markdown_component("## 1 USD", config.frame()),
+        markdown_component("## 1 USD", config.frame().grammar()),
         Some(("USD", 6))
     );
     assert_eq!(
-        markdown_component("### 1.2. low / base / high", config.frame()),
+        markdown_component("### 1.2. low / base / high", config.frame().grammar()),
         Some(("low / base / high", 10))
     );
 }

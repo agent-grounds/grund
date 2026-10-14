@@ -10,7 +10,7 @@
 //! A setter refreshes its own field rather than rebuilding the whole façade:
 //! tests still set façade fields directly, and a whole rebuild would undo them.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 #[cfg(test)]
@@ -19,6 +19,7 @@ use anyhow::Result;
 use super::compiled::Compiled;
 #[cfg(test)]
 use super::compiled::compile;
+use super::file_reading::FileReading;
 use super::frame::{Display, Frame};
 use super::kinds::KindTable;
 use super::project::{Project, Rules, Schema};
@@ -130,6 +131,12 @@ impl Config {
     /// What was derived from the project once (§AR-config.1.5).
     pub(crate) fn compiled(&self) -> &Compiled {
         &self.records().compiled
+    }
+
+    /// How `path` is read under this project (§FS-config-v2.schema.sources): what a
+    /// writer or a query asks of a file, so it reads the file as the scan does.
+    pub(crate) fn reading<'a>(&'a self, path: &'a Path) -> FileReading<'a> {
+        self.compiled().reading(self.schema(), path)
     }
 
     /// The schema a stage below the writers is handed (§AR-config.1.2,

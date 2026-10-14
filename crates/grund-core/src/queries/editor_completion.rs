@@ -182,9 +182,9 @@ impl LspCompletionContext {
         if cursor > line.len() || !line.is_char_boundary(cursor) {
             return Vec::new();
         }
-        let is_md = path.extension().and_then(|s| s.to_str()) == Some("md");
-        let is_py = path.extension().and_then(|s| s.to_str()) == Some("py");
-        if !line_is_rewritable(&owner.config, text, line_index, is_md, is_py) {
+        // §FS-config-v2.schema.sources: the file is read as `grund fmt` reads it.
+        let is_md = owner.config.reading(path).markdown;
+        if !line_is_rewritable(&owner.config, path, text, line_index) {
             return Vec::new();
         }
         let Some(token) = token::active_token(self, owner, line, cursor) else {

@@ -21,17 +21,17 @@ use super::fmt_anchor_row::link_row as link_row_of;
 use super::fmt_links::wrap_markdown_links_with_targets;
 use super::fmt_local_sections::expand_local_section_citations;
 use super::fmt_suppressed::suppressed_line;
-use crate::config::Config;
+use crate::config::{Config, FileReading};
 use crate::grammar::{
     DocstringContent, DocstringCursor, FmtDirectives, MarkdownBlocks, MarkdownLine,
-    MultiLineStrings, bare_block_lines, declaration_id_on_source_line, id_token_end_at,
-    in_escape_position, is_inside_inline_code, is_inside_markdown_link_destination,
-    string_literal_in,
+    id_token_end_at, in_escape_position, is_inside_inline_code,
+    is_inside_markdown_link_destination, string_literal_in,
 };
 use crate::model::{Catalog, Id};
 use crate::resolver::{
     SettledHeadings, ShorthandTargets, WorkspaceContext, expand_shorthand_citations_with_origins,
 };
+use crate::scanner::DeclarationLines;
 
 /// One file's rewritten lines plus what the walk needs to decide afterwards:
 /// whether anything changed, and whether a shorthand expansion was wanted but
@@ -51,26 +51,27 @@ pub(super) fn rewrite_file(
     original: &str,
     path: &Path,
     config: &Config,
-    is_md: bool,
+    reading: FileReading<'_>,
     opts: &FmtLineOpts<'_>,
     changes: &mut Vec<(PathBuf, usize, String)>,
 ) -> RewrittenFile {
+    // §FS-config-v2.schema.sources: the file is rewritten as the scan reads it.
+    let (is_md, is_py) = (reading.markdown, reading.python);
     let mut markdown_blocks = MarkdownBlocks::default();
     let mut lines = Vec::new();
     let mut changed = false;
     let mut saw_shorthand_candidate = false;
     // §FS-fmt.2.5.2.1: every file starts with the rewrite on — a region never
     // carries across files.
-    let mut directives = FmtDirectives::new(config.lexical(), is_md);
+    let mut directives = FmtDirectives::new(reading.lexical, is_md);
+    // §FS-languages.multi-line-string: the literal each line begins inside.
+    let literals = reading.literals(original);
     // §FS-fmt.2.3.1.1: `fmt` judges a docstring line on its content, so it carries
     // the scanner's docstring state — advanced on *every* line, including the ones
     // passed through untouched, or one unvisited `"""` desynchronizes the file.
-    let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");
-    // §FS-languages.multi-line-string: and the literal each line begins inside.
-    let literals = MultiLineStrings::of(path, original, config.docstring_python);
-    let mut docstrings = DocstringCursor::new(is_py, config.docstring_python, &literals);
-    // §FS-declarations.line.block-comment: a bare block line declares as the scan reads it.
-    let bare_block = bare_block_lines(original, is_md, is_py, config.lexical());
+    let mut docstrings = DocstringCursor::new(is_py, reading.lexical.docstring_python, &literals);
+    // §FS-config-v2.schema.sources.declarations.gate: the lines the scan declares on.
+    let declarations = DeclarationLines::of(original, reading);
     for (idx, line) in original.lines().enumerate() {
         let block = if is_md {
             markdown_blocks.line(line)
@@ -99,14 +100,9 @@ pub(super) fn rewrite_file(
         // §FS-check.1.1.5.1: a heading-shaped line in a raw-text HTML block
         // declares nothing, so its citations are rewritten like any prose.
         if block.may_be_heading()
-            && declaration_id_on_source_line(
-                &config.grammar,
-                docstring.text_of(line),
-                docstring.is_docstring(),
-                bare_block.get(idx).copied().unwrap_or(false),
-                is_md,
-            )
-            .is_some()
+            && declarations
+                .declared(idx, docstring.text_of(line), docstring.is_docstring())
+                .is_some()
         {
             lines.push(line.to_string());
             continue;

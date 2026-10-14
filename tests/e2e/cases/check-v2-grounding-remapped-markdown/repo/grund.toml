@@ -1,0 +1,15 @@
+grund_config_version = 2
+project_name = "fixture"
+
+[schema.sources]
+languages = ["markdown", "rust"]
+
+[schema.sources.extensions]
+mdx = "markdown"
+
+[schema.kinds.FS]
+folders = ["docs"]
+index = false
+
+[rules.citations.grounding]
+must = "file"

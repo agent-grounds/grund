@@ -43,12 +43,17 @@ pub(super) fn clean_body_line(line: &str, is_md: bool) -> String {
 
 /// Whether a line still looks like part of the comment block by the fixed
 /// markers — used to decide where an inline declaration's body ends
-/// (§FS-show.2.3.1.2) when it has no `own_line_marker`.
-pub(super) fn is_comment_body_line(line: &str) -> bool {
+/// (§FS-show.2.3.1.2) when it has no `own_line_marker`. A v2 file's `hosts` keep
+/// only the markers its language hosts, so a line no host opens is no comment and
+/// ends the body, as `#[derive]` ends a Rust one (§FS-languages.prefixes).
+pub(super) fn is_comment_body_line(line: &str, hosts: Option<&[String]>) -> bool {
     let trimmed = line.trim_start();
+    let hosted = |marker: &str| {
+        hosts.is_none_or(|hosts| hosts.iter().any(|host| marker.starts_with(host.as_str())))
+    };
     ["///", "//!", "//", "#", "*", "/*", "*/"]
         .iter()
-        .any(|prefix| trimmed.starts_with(prefix))
+        .any(|prefix| hosted(prefix) && trimmed.starts_with(prefix))
 }
 
 /// Whether a declaration heading line sits inside a *line-style* comment
@@ -106,15 +111,16 @@ pub(super) fn own_line_marker(
 /// Whether a non-blank body line continues the declaration's comment block
 /// (§FS-show.2.3.1.2): behind its own marker when it has one — the scanner's
 /// marker for the line must be the same (§FS-show.2.3.1.1) — and by the fixed
-/// markers otherwise.
+/// markers otherwise, which a v2 file's `hosts` narrow.
 pub(super) fn continues_comment_body(
     line: &str,
     own_marker: Option<&OwnMarker>,
     lexical: LexicalSettings<'_>,
+    hosts: Option<&[String]>,
 ) -> bool {
     match own_marker {
         Some(own) => line_comment_block_marker(line, lexical).as_deref() == Some(&own.marker),
-        None => is_comment_body_line(line),
+        None => is_comment_body_line(line, hosts),
     }
 }
 
