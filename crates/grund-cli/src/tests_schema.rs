@@ -115,6 +115,24 @@ mod tests_schema {
         assert!(table.contains("      should not  AR\n"), "{table}");
     }
 
+    /// §FS-schema.9, §FS-schema.10: a target outside the project is a generated
+    /// `x<i>` node labelled as written.
+    #[test]
+    fn a_target_outside_the_project_is_an_x_node() {
+        let nodes = vec![node("FS", NodeClass::Kind, vec![Extent::Folder("fs".into())])];
+        let other = EdgeTarget {
+            label: "other/FS".to_string(),
+            node: None,
+        };
+        let view = view(nodes, vec![edge(0, CitationLevel::ShouldNot, vec![other])]);
+        let dot = schema_dot(&view);
+        assert!(dot.contains("  x0 [label=\"other/FS\"];\n"), "{dot}");
+        assert!(dot.contains(r#"n0 -> x0 [label="should not", style=dashed, arrowhead=tee];"#));
+        let mermaid = schema_mermaid(&view);
+        assert!(mermaid.contains("  x0[\"other/FS\"]\n"), "{mermaid}");
+        assert!(mermaid.contains("n0 -. should not .-x x0"), "{mermaid}");
+    }
+
     /// §FS-schema.5.1: a subject's line into a `must` junction has no head, and
     /// the junction's unlabelled arrows keep the thick style; a second subject of
     /// the same junction draws only its own line.
