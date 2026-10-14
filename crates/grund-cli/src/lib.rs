@@ -35,6 +35,13 @@ use grund_core::{
     EdgeTarget, Extent, NodeClass, SchemaEdge, SchemaNode, SchemaSlot, SchemaView, schema_view,
 };
 
+// §FS-config-migrate: the one record `grund config migrate --to 2` returns, which
+// this crate renders (§AR-config.8).
+use grund_core::{
+    Gate, GateResult, ListedComment, MigrateFailure, MigrateOpts, MigrateOutcome, MigrateReport,
+    RefusalAnchor, config_migrate,
+};
+
 // §FS-integrations.1.3: what `grund integrations` is assembled from. The engine
 // answers with data — the client set, the detection, the agent surfaces and the
 // managed writes — and this crate prints every byte of it (§AR-bindings.3).
@@ -122,6 +129,7 @@ include!("cli_fetch.rs");
 include!("cli_id.rs");
 include!("cli_init.rs");
 include!("cli_config.rs");
+include!("cli_config_migrate.rs");
 include!("cli_schema.rs");
 include!("cli_schema_table.rs");
 include!("cli_schema_graph.rs");
