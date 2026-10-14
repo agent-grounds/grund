@@ -9,7 +9,7 @@ use super::citations::NamespaceMatch;
 use super::citations::{CitationDisjunction, CitationLevel, render_citation_target};
 use super::discovery::config_file_in;
 use super::fields::{FieldContent, Placement};
-use super::grounding::grounding_unit;
+use super::grounding::{configured_row_grounding, grounding_unit, soft_grounding_rungs};
 use super::project::{Project, Strength};
 use super::record::Config;
 use super::rows::{Extent, Row};
@@ -330,31 +330,21 @@ fn node(project: &Project, row: &Row) -> SchemaNode {
     }
 }
 
-/// §FS-schema.6: the effective grounding ladder of the row named `name` — its
-/// own v2 ladder, else the project's, else v1's pair as a `must` rung.
+/// §FS-schema.6: the effective grounding ladder of the row named `name`, read
+/// from the resolvers check enforces (§REQ-one-answer): the `must` rung its pair
+/// asks for, then the `warn` and `should` rungs. A `may` rung checks nothing, so
+/// it is no rung of the badge.
 fn badge(project: &Project, name: &str) -> Vec<BadgeRung> {
-    let grounding = &project.rules.grounding;
-    let row = grounding.kinds.get(name);
-    if let Some(ladder) = row
-        .and_then(|row| row.ladder.as_ref())
-        .or(grounding.ladder.as_ref())
-    {
-        return ladder
-            .iter()
-            .map(|rung| BadgeRung {
-                strength: rung.strength,
-                level: rung.level,
-            })
-            .collect();
-    }
-    let require = row.and_then(|row| row.require).unwrap_or(grounding.require);
-    let level = row.and_then(|row| row.level).unwrap_or(grounding.level);
-    if require {
-        vec![BadgeRung {
-            strength: Strength::Must,
-            level,
-        }]
-    } else {
-        Vec::new()
-    }
+    let (require, level) = configured_row_grounding(&project.rules, name);
+    let must = require.then_some(BadgeRung {
+        strength: Strength::Must,
+        level,
+    });
+    must.into_iter()
+        .chain(
+            soft_grounding_rungs(&project.rules, name)
+                .into_iter()
+                .map(|(strength, level)| BadgeRung { strength, level }),
+        )
+        .collect()
 }

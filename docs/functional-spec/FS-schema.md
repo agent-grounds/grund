@@ -181,7 +181,8 @@ its ladder, each rung `<strength> · <unit>` and rungs joined by `, `
 (`grounded: must · file`). It is never an edge, because grounding names no target
 kind. A row the project's grounding applies to carries the project's ladder, a
 row with its own ladder carries that one, and a row that need not be grounded
-carries no badge. In the table the badge is the `grounded` column of the row's
+carries no badge. A `may` rung checks nothing, so it is no rung of the badge: the
+rungs are the ones `grund check` enforces. In the table the badge is the `grounded` column of the row's
 first citations line.
 
 ## 7. Order
