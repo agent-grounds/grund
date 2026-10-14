@@ -8,7 +8,7 @@ use std::path::{Component, Path, PathBuf};
 use crate::checker::section_in_block;
 use crate::grammar::{AgentsBlockLookup, find_agents_block};
 use crate::scanner::{CANONICAL_AGENT_ENTRYPOINT, companion_agent_entrypoints, is_symlink_to};
-use crate::sources::{Sources, path_is_entry};
+use crate::sources::{Sources, link_metadata, path_is_entry};
 
 /// The companions a scoped directory can carry; the root-only entrypoints are
 /// never mirrored (§FS-init.2.3.5.14.3).
@@ -72,6 +72,32 @@ pub(crate) fn listed_scoped_files(block_text: &str) -> Vec<String> {
 /// what a scoped directory mirrors (§FS-init.2.3.5.14.3).
 pub(crate) fn mirrored(root: &Path, name: &str) -> bool {
     is_symlink_to(&root.join(name), &root.join(CANONICAL_AGENT_ENTRYPOINT)).unwrap_or(false)
+}
+
+/// What a live destination's companion is to `init` (§FS-init.2.3.5.14.3).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum OwnedCompanion {
+    /// The name is free: `init` links it to the `AGENTS.md` beside it.
+    Free,
+    /// A standalone file: `init` splices the block into it, and `check`
+    /// compares it.
+    Standalone,
+}
+
+/// The companions of the live destination `dir` under `root` that `init`
+/// owns, each with its name and what it is (§FS-init.2.3.5.14.3): only a
+/// mirrored name, and never a symlink, which is left as it is. `init` plans
+/// its writes from this and `Expected` its comparisons, so the two agree.
+pub(crate) fn owned_companions(root: &Path, dir: &str) -> Vec<(&'static str, OwnedCompanion)> {
+    SCOPED_COMPANIONS
+        .iter()
+        .filter(|name| mirrored(root, name))
+        .filter_map(|name| match link_metadata(root.join(dir).join(name)) {
+            Err(_) => Some((*name, OwnedCompanion::Free)),
+            Ok(meta) if meta.file_type().is_symlink() => None,
+            Ok(_) => Some((*name, OwnedCompanion::Standalone)),
+        })
+        .collect()
 }
 
 /// The companions beside the scoped `AGENTS.md` in `dir`: each name that
