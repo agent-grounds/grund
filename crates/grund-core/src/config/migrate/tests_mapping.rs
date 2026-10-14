@@ -80,12 +80,12 @@ macro_rules! fs_with {
 }
 
 // The cases, one file per half of the table; they spell their files with the macros above.
-mod cases_rows;
-mod cases_settings;
+mod tests_rows;
+mod tests_settings;
 
 /// Every case, the settings' and then the rows' and the rest.
 fn cases() -> impl Iterator<Item = &'static Case> {
-    cases_settings::CASES.iter().chain(cases_rows::CASES)
+    tests_settings::CASES.iter().chain(tests_rows::CASES)
 }
 
 /// The v1 file of `toml`: the version line, the case, and `[id] named_sections =

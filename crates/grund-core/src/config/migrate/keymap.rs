@@ -41,10 +41,10 @@ fn definitions(v2: &Project) -> String {
 fn include(plan: &Include) -> String {
     let mut parts = Vec::new();
     if !plan.folders.is_empty() {
-        parts.push(format!("folders, {}", plan.folders.join(", ")));
+        parts.push(format!("folders, {}", joined(&plan.folders)));
     }
     if !plan.files.is_empty() {
-        parts.push(format!("files, {}", plan.files.join(", ")));
+        parts.push(format!("files, {}", joined(&plan.files)));
     }
     let duplicates: Vec<String> = plan
         .duplicates
