@@ -1,0 +1,9 @@
+grund_config_version = 2
+project_name = "pair"
+[schema.sources]
+languages = ["markdown"]
+[schema.kinds.FS]
+folders = ["docs/fs"]
+index = false
+[presentation]
+rules = "root"
