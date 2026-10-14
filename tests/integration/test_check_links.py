@@ -16,7 +16,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from subprocess import CompletedProcess
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -158,12 +158,31 @@ class StubbedGate:
     missing `gh` is the runner raising FileNotFoundError, as subprocess.run does.
     """
 
-    def __init__(self, error_map, api=None, api_default=200, write_report=True):
+    def __init__(self, error_map, api=None, api_default=200, write_report=True, recovers=()):
         self.report = lychee_report(error_map)
+        self.statuses = {e["url"]: e["status"] for es in error_map.values() for e in es}
         self.api = api or {}
         self.api_default = api_default
         self.write_report = write_report
+        self.recovers = set(recovers)
         self.endpoints = []
+        self.passes = []
+        self.rechecked = []
+
+    def _requested(self, command, kwargs):
+        """The failing URLs a later lychee call names, on its command line, its
+        stdin, or in a file it reads (§AR-ci.3.1.3)."""
+        texts = [kwargs.get("input") or ""]
+        for part in command:
+            path = Path(kwargs.get("cwd") or ".", part)
+            if path.is_file() and path.stat().st_size < 1 << 20:
+                texts.append(path.read_text(encoding="utf-8", errors="replace"))
+        return [
+            url for url in self.statuses
+            if url in command or any(
+                re.search(re.escape(url) + r"(?=[\s)>\]\"']|$)", text) for text in texts
+            )
+        ]
 
     def runner(self, command, *args, **kwargs):
         command = [str(part) for part in command]
@@ -180,7 +199,18 @@ class StubbedGate:
             (command[i + 1] for i, part in enumerate(command) if part in ("-o", "--output")),
             None,
         )
+        self.passes.append(command)
         report = json.dumps(self.report)
+        if len(self.passes) > 1:
+            # A re-check: every named URL fails again unless it recovers.
+            urls = self._requested(command, kwargs)
+            self.rechecked.append(urls)
+            still = [{"url": u, "status": self.statuses[u]} for u in urls
+                     if u not in self.recovers]
+            report = json.dumps(lychee_report({"-": still} if still else {}))
+            if output is not None:
+                Path(kwargs.get("cwd") or ".", output).write_text(report, encoding="utf-8")
+            return CompletedProcess(args=command, returncode=2 if still else 0, stdout="")
         if output is not None:
             if self.write_report:
                 Path(kwargs.get("cwd") or ".", output).write_text(report, encoding="utf-8")
@@ -191,7 +221,8 @@ class StubbedGate:
 
     def run(self):
         out = io.StringIO()
-        with tempfile.TemporaryDirectory() as tmp:
+        with tempfile.TemporaryDirectory() as tmp, \
+                patch.object(check_links, "RECHECK_PAUSE", 0, create=True):
             with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
                 code = check_links.check_links(["docs"], Path(tmp), runner=self.runner)
         return code, out.getvalue()

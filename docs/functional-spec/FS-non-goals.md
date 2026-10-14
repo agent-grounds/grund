@@ -21,7 +21,8 @@ uses a bounded request timeout and retry policy to tolerate transient network
 delays only when a subsequent attempt obtains a successful response. When a
 page on `github.com` answers a server error, a successful answer about the same
 resource from GitHub's API is that successful response; nothing passes without
-one. A modestly slow response and recovery after four retryable failures must
+one. For a failure of a transient shape from any host, a second check of the same
+URL after the gate's own pass is such a subsequent attempt. A modestly slow response and recovery after four retryable failures must
 be tolerated; persistent timeouts and HTTP 404 responses must still fail the
 gate. No finite budget guarantees success through arbitrary external outages.
 
