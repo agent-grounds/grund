@@ -14,20 +14,10 @@ use crate::config::project::{
 use crate::config::record::ShorthandPolicy;
 use crate::config::rows::Nesting;
 
-/// The scan exclusions every version applies; `[schema.sources] exclude` is
-/// #456's and refused until it lands (§FS-config-v2.rollout).
-const EXCLUDE: &[&str] = &["target", "node_modules", ".git", "dist", "build", ".venv"];
-/// The comment prefixes a note may sit behind. v2 executes Markdown alone
-/// (§FS-config-v2.defaults.2), so they reach only a fenced example's reading.
-const COMMENT_PREFIXES: &[&str] = &["//", "#", ";", "--", "*", "/*"];
-
-fn strings(values: &[&str]) -> Vec<String> {
-    values.iter().map(|value| value.to_string()).collect()
-}
-
 /// The project a v2 file means before any key (§FS-config-v2.defaults.1). It
-/// has no rows: v1's built-in kind list belongs to v1. The scan and the
-/// extensions follow from the rows and `languages`, in `finish.rs`.
+/// has no rows: v1's built-in kind list belongs to v1. The scan follows from
+/// the rows, in `finish.rs`, and what it reads from `[schema.sources]`, in
+/// `sources.rs` (§FS-config-v2.schema.sources).
 pub(super) fn default_project() -> Project {
     Project {
         name: None,
@@ -56,11 +46,13 @@ pub(super) fn default_project() -> Project {
             sources: Sources {
                 include: None,
                 include_source: None,
-                exclude: strings(EXCLUDE),
-                extensions: vec!["md".to_string()],
-                comment_prefixes: strings(COMMENT_PREFIXES),
+                // §FS-config-v2.defaults.1: `exclude = []`; v1's names are not v2's.
+                exclude: Vec::new(),
+                extensions: Vec::new(),
+                comment_prefixes: Vec::new(),
                 docstring_python: false,
                 respect_gitignore: true,
+                model: None,
             },
             notes: NoteStyle {
                 inline_style: "citation-with-note".into(),

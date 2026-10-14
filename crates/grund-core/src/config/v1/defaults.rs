@@ -90,6 +90,7 @@ pub(in crate::config) fn default_project(existing_config: bool) -> Project {
                 comment_prefixes: strings(DEFAULT_COMMENT_PREFIXES),
                 docstring_python: true,
                 respect_gitignore: true,
+                model: None,
             },
             notes: NoteStyle {
                 inline_style: "citation-with-note".into(),

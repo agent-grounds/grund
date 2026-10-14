@@ -7,7 +7,7 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use crate::config::{Frame, Schema};
+use crate::config::{FileReading, Frame, Language, Schema};
 use crate::grammar::{
     CommentBlockKind, DocCommentRule, MarkdownFence, SourceScanLine, atx_heading_text,
     block_is_doc_comment, comment_blocks, comment_envelope, doc_comment_rule, first_content_line,
@@ -30,32 +30,61 @@ pub(super) fn walk_blocks(
     schema: &Schema,
     frame: Frame<'_>,
 ) -> Vec<RecordedBlock> {
-    let doc_rule = doc_comment_rule(path);
+    let model = schema.sources.model.as_ref();
+    let language = FileReading::of(model, path).language;
+    // §FS-config-v2.schema.sources.extensions: a v2 file is classified as its language is.
+    let doc_rule = language.map_or_else(|| doc_comment_rule(path), Language::measurement_rule);
+    let declaration_rule = language.map(|language| language.doc_comments.rule());
     // Only a position language asks where the file's leading comment is.
-    let leading_limit = match doc_rule {
-        DocCommentRule::Position(_) => first_content_line(lines),
-        _ => 0,
+    let position = |rule: Option<DocCommentRule>| matches!(rule, Some(DocCommentRule::Position(_)));
+    let leading_limit = if position(Some(doc_rule)) || position(declaration_rule) {
+        first_content_line(lines)
+    } else {
+        0
     };
-    comment_blocks(lines, is_py, frame.compiled.lexical(schema))
+    comment_blocks(lines, is_py, frame.compiled.lexical_for(schema, path))
         .into_iter()
-        .map(|(start, end, kind)| RecordedBlock {
-            start: start + 1,
-            end: end + 1,
-            closed: !matches!(kind, CommentBlockKind::Block { closed: false }),
-            doc: block_is_doc_comment(
-                doc_rule,
-                &kind,
-                &lines[start..=end],
-                lines.get(end + 1).copied(),
-                start <= leading_limit,
-            ),
-            form: match kind {
-                CommentBlockKind::Line(marker) => BlockForm::Line(marker),
-                CommentBlockKind::Block { .. } => BlockForm::Block,
-                CommentBlockKind::PythonDocstring => BlockForm::Docstring,
-            },
+        .map(|(start, end, kind)| {
+            let is_doc = |rule| {
+                block_is_doc_comment(
+                    rule,
+                    &kind,
+                    &lines[start..=end],
+                    lines.get(end + 1).copied(),
+                    start <= leading_limit,
+                )
+            };
+            RecordedBlock {
+                start: start + 1,
+                end: end + 1,
+                closed: !matches!(kind, CommentBlockKind::Block { closed: false }),
+                doc: is_doc(doc_rule),
+                // §FS-config-v2.schema.sources.declarations.gate: decided once per block,
+                // from the language and the block alone, citation or none.
+                declares: match (model, language, declaration_rule) {
+                    (Some(model), Some(language), Some(rule)) => {
+                        language.declares_in(model.declarations, is_doc(rule))
+                    }
+                    _ => true,
+                },
+                form: match kind {
+                    CommentBlockKind::Line(marker) => BlockForm::Line(marker),
+                    CommentBlockKind::Block { .. } => BlockForm::Block,
+                    CommentBlockKind::PythonDocstring => BlockForm::Docstring,
+                },
+            }
         })
         .collect()
+}
+
+/// §FS-config-v2.schema.sources.declarations.gate: whether a line in declaration
+/// position at `lineno` may declare. In a v2 source file only a line of an
+/// eligible comment block of the file's own language may; a Markdown heading and
+/// every v1 line are not asked (§FS-config.5.2).
+pub(crate) fn declaration_eligible(record: &FileRecord, schema: &Schema, lineno: usize) -> bool {
+    record.markdown
+        || schema.sources.model.is_none()
+        || record.block_at(lineno).is_some_and(|block| block.declares)
 }
 
 /// Whether line `lineno` of a source file is a bare line of a closed `/* … */`

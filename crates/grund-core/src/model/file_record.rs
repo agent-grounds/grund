@@ -100,6 +100,9 @@ pub(crate) struct RecordedBlock {
     pub(crate) form: BlockForm,
     /// Whether the file's language calls it documentation (§FS-inline-citation-style.1.1.1).
     pub(crate) doc: bool,
+    /// Whether a line in declaration position in it may declare: always in v1, and
+    /// in v2 as the declaration gate decides (§FS-config-v2.schema.sources.declarations.gate).
+    pub(crate) declares: bool,
     /// Whether a `/* … */` block's `*/` was found; only a closed block has bare
     /// lines in declaration position (§FS-declarations.line.block-comment). Always
     /// `true` for the other forms, which have no closer to miss.

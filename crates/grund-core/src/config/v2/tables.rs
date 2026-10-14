@@ -15,6 +15,10 @@ pub(super) enum Table {
     Parent,
     Schema,
     Sources,
+    /// `[schema.sources.extensions]` (§FS-config-v2.schema.sources.extensions).
+    Extensions,
+    /// `[schema.sources.definitions.<name>]`: the index of its draft.
+    Definition(usize),
     /// `[schema.notes.lines]`, `[schema.notes.columns]`, `[schema.leads.words]`:
     /// the strength keys read so far (§FS-config-v2.schema.measures).
     Measure(Measure, Vec<Written>),
@@ -73,6 +77,8 @@ pub(super) enum Opened {
     Row(String),
     /// A field header, its kind and its name; the reader makes its draft.
     Field(String, String),
+    /// A language definition's header and its name; the reader makes its draft.
+    Definition(String),
     Refused(String),
 }
 
@@ -91,13 +97,14 @@ pub(super) fn open(name: &str) -> Opened {
     let table = match segments.as_slice() {
         ["schema"] => Table::Schema,
         ["schema", "sources"] => Table::Sources,
-        // §FS-config-v2.rollout: #456's language tables.
-        ["schema", "sources", "extensions"] | ["schema", "sources", "definitions", ..] => {
-            return Opened::Refused(not_yet(&format!("[{name}]")));
+        ["schema", "sources", "extensions"] => Table::Extensions,
+        ["schema", "sources", "definitions", language] => {
+            return Opened::Definition(language.to_string());
         }
-        ["schema", "notes" | "leads" | "kinds"] | ["rules"] | ["presentation", "kinds"] => {
-            Table::Parent
-        }
+        ["schema", "notes" | "leads" | "kinds"]
+        | ["schema", "sources", "definitions"]
+        | ["rules"]
+        | ["presentation", "kinds"] => Table::Parent,
         ["schema", "notes", "lines"] => Table::Measure(Measure::Lines, Vec::new()),
         ["schema", "notes", "columns"] => Table::Measure(Measure::Columns, Vec::new()),
         ["schema", "notes", "text"] => Table::Text,

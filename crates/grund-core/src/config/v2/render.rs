@@ -14,11 +14,11 @@ use crate::config::project::Strength;
 use crate::config::project::{Project, Rung, Threshold};
 use crate::config::rows::{Extent, Form, Kind};
 
-fn string(value: &str) -> String {
+pub(super) fn string(value: &str) -> String {
     format!("\"{}\"", escape_toml_basic(value))
 }
 
-fn list<'a>(values: impl IntoIterator<Item = &'a String>) -> String {
+pub(super) fn list<'a>(values: impl IntoIterator<Item = &'a String>) -> String {
     let values: Vec<String> = values.into_iter().map(|value| string(value)).collect();
     format!("[{}]", values.join(", "))
 }
@@ -78,11 +78,7 @@ impl Project {
             string(&ids.number_pattern),
             string(&ids.section_separator),
         );
-        let _ = writeln!(
-            out,
-            "\n[schema.sources]\nlanguages = [\"markdown\"]\nrespect_gitignore = {}",
-            schema.sources.respect_gitignore
-        );
+        super::sources::render(out, &schema.sources);
         let notes = &schema.notes;
         let _ = writeln!(out, "\n[schema.notes.lines]\nmust = {}", notes.max_lines);
         if notes.warn_on_suggested {
