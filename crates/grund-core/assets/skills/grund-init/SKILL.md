@@ -518,6 +518,10 @@ Ownership in one line: a file listed in a row's `files` is that row's, otherwise
 
 When multiple language examples apply, merge them conservatively: union the real include dirs, union the extensions actually present, and union generated/cache excludes. Prefer a narrower first config that passes cleanly over an over-broad config that floods the user with findings — and then run `grund check --full .`, which reports the citations that resolve to nothing in the directories `include` left out. A narrow `include` is a good starting point precisely because that check exists; without it, the citations the first config forgot are invisible rather than merely unchecked ([the full-tree scope](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#13-the-full-tree-scope---full)).
 
+### Version 1 to version 2
+
+To move an existing version-1 `grund.toml` to version 2, never hand-translate it: run `grund config migrate --to 2` without `--write` first, which previews the candidate on stdout and the report on stderr and writes nothing; make each refusal's repair as a version-1 edit, checked with `grund check` and committed on its own, and preview again; then add `--write`, and add `--drop-comments` only after reading the comments the preview lists, because it drops exactly those ([migrating guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/migrating.md)).
+
 ## Splitting off a member
 
 Split off a member when an app, package, service, or subproject needs to be
