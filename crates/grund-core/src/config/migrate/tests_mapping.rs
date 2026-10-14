@@ -1,1 +1,214 @@
-//! §FS-config-migrate.mapping: the mapping cases.
+//! Test module: the mapping cases of §FS-config-migrate.mapping, one or more per
+//! row of the v1 lowering table (§AR-config.3), and the test that fails when a
+//! row of `v1/mapping.rs` has none. Each case writes a small v1 tree, translates
+//! it, and holds the outcome the table names: *mapped* and *written* pass the
+//! records gate (§FS-config-migrate.5.1) with the spelling in the candidate, a
+//! *notice* is reported, a *refused* key names its repair.
+
+use super::{GateResult, Located, MigrateReport, Prepared, translate};
+use crate::config::v1::mapping::{DEFAULTS, KEYS};
+use crate::testing::{test_root, write};
+
+/// What a case expects of the translation.
+pub(super) enum Outcome {
+    /// Nothing refused, the records gate passes, and the candidate holds this.
+    Mapped(&'static str),
+    /// As `Mapped`, but the candidate must not hold this.
+    Lacks(&'static str),
+    /// A `written:` line names this default.
+    Written(&'static str),
+    /// A notice says this, and the records gate passes.
+    Notice(&'static str),
+    /// A refusal says this.
+    Refused(&'static str),
+    /// The v1 reader itself rejects the file with this, before any mapping.
+    Invalid(&'static str),
+}
+use Outcome::*;
+
+/// One mapping case: the table row it covers, the v1 file after its version
+/// line, the paths it needs beyond `docs/FS-a.md` (a trailing `/` is a folder),
+/// and what it expects.
+pub(super) struct Case {
+    row: &'static str,
+    toml: &'static str,
+    paths: &'static [(&'static str, &'static str)],
+    expect: &'static [Outcome],
+}
+
+pub(super) const fn case(
+    row: &'static str,
+    toml: &'static str,
+    expect: &'static [Outcome],
+) -> Case {
+    Case {
+        row,
+        toml,
+        paths: &[],
+        expect,
+    }
+}
+
+pub(super) const fn with(
+    row: &'static str,
+    toml: &'static str,
+    paths: &'static [(&'static str, &'static str)],
+    expect: &'static [Outcome],
+) -> Case {
+    Case {
+        row,
+        toml,
+        paths,
+        expect,
+    }
+}
+
+pub(super) const FS: &str = "[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\n";
+
+/// `FS` after a section, so the section's keys stay in that section.
+macro_rules! then_fs {
+    ($toml:literal) => {
+        concat!($toml, "[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\n")
+    };
+}
+
+/// A section after `FS`, which names the row's keys.
+macro_rules! fs_with {
+    ($toml:literal) => {
+        concat!("[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\n", $toml)
+    };
+}
+
+// The cases, one file per half of the table; they spell their files with the macros above.
+mod cases_rows;
+mod cases_settings;
+
+/// Every case, the settings' and then the rows' and the rest.
+fn cases() -> impl Iterator<Item = &'static Case> {
+    cases_settings::CASES.iter().chain(cases_rows::CASES)
+}
+
+/// The v1 file of `toml`: the version line, the case, and `[id] named_sections =
+/// true` unless the case speaks of it, since unset is itself refused.
+fn v1_file(toml: &str) -> String {
+    let mut text = format!("grund_config_version = 1\n{toml}");
+    if !toml.contains("named_sections") {
+        if text.contains("[id]\n") {
+            text = text.replacen("[id]\n", "[id]\nnamed_sections = true\n", 1);
+        } else {
+            text.push_str("[id]\nnamed_sections = true\n");
+        }
+    }
+    text
+}
+
+/// Lay `case` down under a fresh root and translate it, or the reader's error.
+fn translate_case(index: usize, case: &Case) -> Result<MigrateReport, String> {
+    let root = test_root(&format!("migrate-mapping-{index}"));
+    write(&root.join("docs/FS-a.md"), "# FS-a: A\n\nText.\n");
+    for (path, text) in case.paths {
+        if let Some(folder) = path.strip_suffix('/') {
+            std::fs::create_dir_all(root.join(folder)).expect("create folder");
+        } else {
+            write(&root.join(path), text);
+        }
+    }
+    write(&root.join("grund.toml"), &v1_file(case.toml));
+    let located = Located {
+        file: root.join("grund.toml"),
+        root: root.clone(),
+        config: "grund.toml".into(),
+    };
+    let prepared = translate(&located, false, false).map_err(|error| format!("{error:#}"));
+    let _ = std::fs::remove_dir_all(&root);
+    match prepared? {
+        Prepared::Translated { report, .. } => Ok(*report),
+        Prepared::AlreadyV2 => Err("read as version 2".into()),
+    }
+}
+
+/// Why `report` (or the reader's error) misses `outcome`, or `None`.
+fn missed(outcome: &Outcome, report: &Result<MigrateReport, String>) -> Option<String> {
+    let report = match (outcome, report) {
+        (Invalid(text), Err(error)) => {
+            return (!error.contains(text)).then(|| format!("error {error:?}"));
+        }
+        (_, Err(error)) => return Some(format!("the reader refused it: {error}")),
+        (Invalid(_), Ok(_)) => return Some("the reader accepted it".into()),
+        (_, Ok(report)) => report,
+    };
+    let candidate = report.candidate.as_deref().unwrap_or_default();
+    let refusals: Vec<&str> = report.refusals.iter().map(|r| r.what.as_str()).collect();
+    if let Refused(text) = outcome {
+        return (!refusals.iter().any(|what| what.contains(text)))
+            .then(|| format!("refusals {refusals:?}"));
+    }
+    if !refusals.is_empty() {
+        return Some(format!("refused: {refusals:?}"));
+    }
+    if report.gates != Some(GateResult::Equal) {
+        return Some(format!("records gate: {:?}", report.gates));
+    }
+    let held = match outcome {
+        Mapped(text) => candidate.contains(text),
+        Lacks(text) => !candidate.contains(text),
+        Written(text) => report.written.iter().any(|line| line.starts_with(text)),
+        Notice(text) => report
+            .notices
+            .iter()
+            .any(|notice| notice.why.contains(text)),
+        Refused(_) | Invalid(_) => unreachable!("answered above"),
+    };
+    (!held).then(|| format!("candidate:\n{candidate}\nwritten: {:?}", report.written))
+}
+
+/// §FS-config-migrate.mapping: every case translates to the outcome its row of
+/// the table names.
+#[test]
+fn every_mapping_case_holds_its_outcome() {
+    let mut failures = Vec::new();
+    for (index, case) in cases().enumerate() {
+        let report = translate_case(index, case);
+        for outcome in case.expect {
+            if let Some(why) = missed(outcome, &report) {
+                failures.push(format!("{} ({:?}): {why}", case.row, case.toml));
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n\n"));
+}
+
+/// §FS-config-migrate.mapping: "a test fails when a row of the v1 lowering
+/// table has none" — each row of `KEYS` and `DEFAULTS` has a case.
+#[test]
+fn every_lowering_row_has_a_mapping_case() {
+    let missing: Vec<&str> = KEYS
+        .iter()
+        .chain(DEFAULTS)
+        .map(|(name, _)| *name)
+        .filter(|name| !cases().any(|case| case.row == *name))
+        .collect();
+    assert!(missing.is_empty(), "rows with no mapping case: {missing:?}");
+}
+
+/// The cases name only rows the table or the spec has, so a renamed row is
+/// noticed here rather than passing with a stale case.
+#[test]
+fn every_mapping_case_names_a_row() {
+    const SPEC_ONLY: &[&str] = &["any-comment declarations", "guidance at the root"];
+    for case in cases() {
+        let known = KEYS
+            .iter()
+            .chain(DEFAULTS)
+            .any(|(name, _)| *name == case.row)
+            || SPEC_ONLY.contains(&case.row);
+        assert!(known, "case for unknown row {:?}", case.row);
+    }
+}
+
+#[test]
+fn v1_file_sets_named_sections_unless_the_case_does() {
+    assert!(v1_file("").ends_with("[id]\nnamed_sections = true\n"));
+    assert!(v1_file("[id]\nformat = \"x\"\n").contains("[id]\nnamed_sections = true\nformat"));
+    assert!(!v1_file("# no named_sections\n").contains("named_sections = true"));
+}
