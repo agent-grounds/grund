@@ -1,0 +1,14 @@
+grund_config_version = 2
+project_name = "fixture"
+[schema.sources]
+languages = ["markdown"]
+[schema.kinds.FS]
+folders = ["docs/spec/core", "docs/spec/plugins"]
+[schema.kinds.page]
+citable = false
+folders = ["docs"]
+files = ["README.md"]
+[schema.kinds.code]
+folders = ["crates", "scripts"]
+[rules.citations.page]
+must = ["FS"]

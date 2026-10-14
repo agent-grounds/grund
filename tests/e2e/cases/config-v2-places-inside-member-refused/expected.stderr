@@ -1,0 +1,1 @@
+error: grund.toml:10: place `member/src` in `[schema.kinds.code] folders` is inside workspace member `member`, which the root never reads

@@ -1,0 +1,1 @@
+error: grund.toml:6: place `./docs/` in `[schema.kinds.FS] folders` is already a place of `[schema.kinds.FS]` (line 6); a place belongs to one row

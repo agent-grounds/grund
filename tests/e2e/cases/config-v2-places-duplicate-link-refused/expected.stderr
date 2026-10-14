@@ -1,0 +1,1 @@
+error: grund.toml:10: place `alias` in `[schema.kinds.page] folders` is already a place of `[schema.kinds.FS]` (line 6); a place belongs to one row

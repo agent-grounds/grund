@@ -1,0 +1,20 @@
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "page"
+citable = false
+folder = "docs"
+
+[[kinds]]
+kind = "FS"
+folder = "docs/spec/core"
+index = false
+
+[[kinds]]
+kind = "AR"
+folder = "arch"
+index = false
+
+[scan]
+include = ["docs", "arch"]

@@ -428,7 +428,8 @@ fields the warning channel reads, beside `must` and `should`
 | v2 spelling | Record |
 |---|---|
 | `[schema.kinds.<NAME>]` | one `Row`, in authored order; `citable = false` leaves `kind` empty |
-| the rows' scanned places | `schema.sources.include`, or the config root when no row has a place |
+| the rows' scanned places and the complement's extent | `schema.sources.include`, the one channel `scope_roots.rs` reads; the config root unless `[schema.kinds.code]` lists places ([§FS-config-v2.schema.places.complement](../functional-spec/FS-config-v2.md#schemaplacescomplement-code-is-the-complement-by-name)) |
+| ownership of a nested place | `schema.nesting` = `DeepestPlaceWins`: a listed file, then the deepest folder ([§FS-config-v2.schema.places.ownership](../functional-spec/FS-config-v2.md#schemaplacesownership-a-listed-file-then-the-deepest-folder)) |
 | `[schema.notes.lines]` | `must` → `max_lines`; the weakest softer threshold → `suggested_lines`, warning when it is `warn`; the rest kept as thresholds |
 | `[schema.notes.columns]` | `must` → `max_columns`; the rest kept as thresholds |
 | `[schema.leads.words]` | `warn` → `leads`; the rest kept as thresholds |

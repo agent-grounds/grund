@@ -1,0 +1,10 @@
+grund_config_version = 2
+project_name = "root"
+[workspace]
+members = ["member"]
+[schema.sources]
+languages = ["markdown"]
+[schema.kinds.FS]
+files = ["requirements.md"]
+[schema.kinds.code]
+folders = ["member/src"]

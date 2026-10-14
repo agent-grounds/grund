@@ -50,6 +50,12 @@ The distinction prevents a path alias from importing a foreign tree while
 preserving the explicit configuration and file-link uses whose intent is
 available without discovering an ancestor workspace.
 
+A version-2 place is a declared place rather than a scan path, so the fence is
+not a silent prune there: a folder place that is itself a directory link leaving
+the project root is a load error at the place, and a `files` place that is a
+link is followed as a file link is here
+([§FS-config-v2.schema.places.boundaries](../../functional-spec/FS-config-v2.md#schemaplacesboundaries-what-a-place-may-name)).
+
 ### 2.3 The report names the link, never the target
 
 Everything a link met **inside a walked tree** produces is reported at the in-tree link path. The target path may be absolute, may sit outside the config root, and may not be reachable at all from where the reader is standing, so a finding wearing it is a finding nobody can jump to ([§FS-errors.2.1](../../functional-spec/FS-errors.md#21-located-finding)) and one that `relative_paths` cannot render ([§FS-config.3.6](../../functional-spec/FS-config.md#36-output--report-format)). Naming the link is also what keeps `--full` purely additive ([§FS-check.1.3](../../functional-spec/FS-check.md#13-the-full-tree-scope---full)): the in-scope lines of a `--full` run are the plain run's, spelling included, which only holds while the spelling is a property of the walk rather than of the filesystem underneath it.
@@ -57,6 +63,8 @@ Everything a link met **inside a walked tree** produces is reported at the in-tr
 An explicit path argument is not that case and is left as it was: `grund check docs/FS-beta.md` resolves the scope before any walk begins, so a finding there wears the target's path — absolute, when the target is outside the root. That predates this decision, it is the same resolution that makes `grund check <path>` work at all, and narrowing it belongs to whoever revisits explicit scopes.
 
 Because one physical file can now be reached under two spellings within a single walk, the walk keeps the first and the rule for "first" is written down rather than inherited from readdir order: the earlier root wins, and within one root the lexicographically first path does ([§FS-errors.4](../../functional-spec/FS-errors.md#4-determinism)).
+
+In a version-2 config the same fact makes two places whose resolved targets coincide one place written twice: the walk would keep one spelling and leave the other place silently empty, so the second is a duplicate-place load error instead ([§FS-config-v2.schema.places.boundaries](../../functional-spec/FS-config-v2.md#schemaplacesboundaries-what-a-place-may-name)).
 
 ### 2.4 A link the walk cannot resolve is reported and the walk continues
 

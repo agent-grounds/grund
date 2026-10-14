@@ -1,0 +1,46 @@
+grund_config_version = 2
+project_name = "example"
+
+[schema]
+marker = "§"
+shorthand = "canonical"
+id_format = "{kind}-{slug}"
+slug_pattern = "[a-z][a-z0-9-]*"
+number_pattern = "\\d+"
+section_separator = "."
+heading_depth = "must"
+
+[schema.sources]
+languages = ["markdown"]
+declarations = "doc-comments"
+exclude = []
+respect_gitignore = true
+
+[schema.notes.lines]
+must = 3
+
+[schema.notes.columns]
+must = 100
+
+[schema.notes.text]
+must = true
+
+[schema.kinds.FS]
+folders = ["docs/spec/core", "docs/spec/plugins"]
+index = false
+
+[schema.kinds.page]
+files = ["README.md", "AGENTS.md"]
+folders = ["docs"]
+citable = false
+
+[schema.kinds.code]
+folders = ["crates"]
+
+[presentation]
+trigger = "$$"
+
+[presentation.fmt]
+anchors = "github"
+links = "index"
+exclude = []

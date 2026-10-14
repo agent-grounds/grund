@@ -228,6 +228,31 @@ fn v2_show_round_trips() {
     );
 }
 
+/// §FS-config-v2.schema.places.boundaries, §FS-config.4.2: a row with several
+/// places prints one `files` and one `folders` list, normalized, in written
+/// order, and loads back to the same rows; `code` prints no `citable = false`.
+#[test]
+fn v2_show_round_trips_several_places() {
+    let toml = format!(
+        "{HEAD}[schema.kinds.FS]\nfolders = [\"docs/spec/core\", \"./docs/spec/plugins/\"]\n\
+         [schema.kinds.page]\ncitable = false\nfolders = [\"docs\"]\n\
+         files = [\"README.md\", \"AGENTS.md\"]\n[schema.kinds.code]\nfolders = [\"crates\"]\n"
+    );
+    let first = load("v2_show_places_first", &toml).unwrap_or_else(|err| panic!("{err:#}"));
+    let shown = first.project().v2_toml().expect("a v2 project prints v2");
+    for row in [
+        "[schema.kinds.FS]\nfolders = [\"docs/spec/core\", \"docs/spec/plugins\"]\n",
+        "[schema.kinds.page]\nfiles = [\"README.md\", \"AGENTS.md\"]\nfolders = [\"docs\"]\ncitable = false\n",
+        "[schema.kinds.code]\nfolders = [\"crates\"]\n\n",
+    ] {
+        assert!(shown.contains(row), "expected {row:?} in:\n{shown}");
+    }
+    let second =
+        load("v2_show_places_second", &shown).unwrap_or_else(|err| panic!("{err:#}\n{shown}"));
+    assert_eq!(second.project().v2_toml().as_deref(), Some(shown.as_str()));
+    assert_eq!(first.project().schema.rows, second.project().schema.rows);
+}
+
 /// §FS-config-v2.defaults.1: a v2 file with no citable row has no kinds and
 /// still loads, where v1 refuses a table with no citable kind.
 #[test]

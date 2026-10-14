@@ -407,6 +407,8 @@ The scan scope (`[scan].include` / `[scan].exclude`) is *not* surfaced here — 
 
 A **non-citable kind** ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) is named by its **place** rather than its name — `- [skills/](skills): Agent review and automation skills` — because its name is a config key an agent can never write in a citation, while the directory is something it can go and read. An unscanned kind ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)) is rendered the same way; the row is the point of configuring it. The **homeless kind** ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) — `code`, or whatever the project named it — has no place and therefore no row.
 
+In a version-2 config a kind with several places is still one row, whose link list names every place in written order — `- [FS](docs/spec/core), [docs/spec/plugins](docs/spec/plugins): What` — and a non-citable row is named by all of its places the same way. The complement, `code`, gets a row named by its places when it lists any, and none when its extent is the config root ([§FS-config-v2.schema.places.complement](FS-config-v2.md#schemaplacescomplement-code-is-the-complement-by-name)).
+
 ###### 2.3.4.4.2 No kinds yet
 
 A config that declares no kinds ([§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)) has no row to render, and an empty map teaches nothing. The map is then one paragraph that teaches the first kind in the config's own spelling. For a version-1 config:

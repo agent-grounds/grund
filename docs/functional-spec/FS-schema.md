@@ -113,6 +113,10 @@ word, never shown by colour or line alone:
 A folder home is printed with a trailing `/`, a file home as written, and the
 complement as `every scanned file no other row claims`. A row with more than one
 place lists every one, comma-separated, in written order (`docs/a/, docs/b/`).
+In a version-2 config a `code` row that lists places is the complement node, and
+its home column lists those places in the same way (`crates/, scripts/`) in place
+of `every scanned file no other row claims`; no second, implicit complement is
+drawn beside it ([§FS-config-v2.schema.places.complement](FS-config-v2.md#schemaplacescomplement-code-is-the-complement-by-name)).
 
 ### 4.1 Fields are lines inside their kind's node
 

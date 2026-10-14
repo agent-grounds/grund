@@ -625,6 +625,9 @@ Workspace members are project boundaries. When the root project is checked as
 part of a workspace, the root scan does not scan member project directories or
 their descendants, even if the root project's `[scan] include` names a path
 inside a member. The member is scanned separately under its own config and alias.
+A version-2 config has no `include` to prune: a place at or inside a member's
+root is a load error instead, located at the place, because the place would be
+empty without a word ([§FS-config-v2.schema.places.boundaries](FS-config-v2.md#schemaplacesboundaries-what-a-place-may-name)).
 
 This prevents a child project declaration from accidentally becoming a duplicate
 or dependency of the root project. It also has a limit: a `members` list that

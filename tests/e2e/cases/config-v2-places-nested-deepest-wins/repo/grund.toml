@@ -1,0 +1,13 @@
+grund_config_version = 2
+project_name = "example"
+[schema.sources]
+languages = ["markdown"]
+[schema.kinds.page]
+citable = false
+folders = ["docs"]
+[schema.kinds.FS]
+folders = ["docs/spec/core"]
+index = false
+[schema.kinds.AR]
+folders = ["arch"]
+index = false
