@@ -326,6 +326,9 @@ first ` should not `, else the first ` must `, else the first ` should `. So
 `The should chapter of each FS`, because ` must ` is tried before ` should `,
 and `The must chapter of each FS should not cite any AR.` has the subject
 `The must chapter of each FS`, because ` should not ` is tried before ` must `.
+Where the split reaches a chapter's modal-word name first, as in
+`The must chapter of each FS must cite at least one FS.`, the subject left is
+`The`, and the refusal names the chapter ([§FS-rule-refusals.sentences.modal-chapter](FS-rule-refusals.md#sentencesmodal-chapter-a-chapter-named-after-a-modal-word-is-refused-for-that-name)).
 
 ## 4. Validation lifecycle
 

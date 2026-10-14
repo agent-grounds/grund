@@ -316,6 +316,63 @@ range keeps the leading-zeros refusal and its form
 There is no count in range the sentence names, so the reason stands alone and
 nothing follows it ([§FS-rule-refusals.sentences.rewrite.no-form](FS-rule-refusals.md#sentencesrewriteno-form-where-no-form-is-offered)).
 
+### sentences.modal-chapter: A chapter named after a modal word is refused for that name
+
+A chapter subject whose `NAME` is a modal word, as in
+`The must chapter of each FS must cite at least one FS.`, is cut at that word:
+[§FS-rules.3.6](FS-rules.md#36-where-a-sentences-subject-ends) ends the subject at the first modality it finds in its fixed order, and
+the `NAME` is the first. The subject left is `The`, which stage 5 of
+[§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails) refuses for the ID grammar. That reason is true of the
+word `The` and names nothing the author can fix, so it is followed by the one
+that can:
+
+```text
+literal subject "The" does not match the configured ID grammar — chapter name "must" is read as the rule's modality, so rename the chapter
+```
+
+The test is on what was typed: the subject the split leaves is exactly `The`,
+and the text after the modality opens `chapter of each `. The name quoted is the
+modality the split took, as typed: `must`, `must not`, `should` or
+`should not`. The split is not moved and no sentence it refuses today is
+accepted: making such a chapter reachable by name would change what
+[§FS-rules.3.6](FS-rules.md#36-where-a-sentences-subject-ends) means, and is not this point.
+
+The released reason stays a verbatim contiguous prefix ([§FS-errors.3](FS-errors.md#3-message-text)) and the
+rest is appended after ` — `, as a selector's `each FS` adds the rule's reason
+([§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)). The append moves no verdict, so no release is named.
+Nothing in the sentence says what the chapter should be called, so no form is
+offered ([§FS-rule-refusals.sentences.rewrite.no-form](FS-rule-refusals.md#sentencesrewriteno-form-where-no-form-is-offered)), and the `known kinds:` line that
+followed the reason still follows it on `check --rule`. A configured rule
+declaration's `invalid-rule` finding carries the same reason after
+`is not a valid rule: ` ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)). A selector that is such a sentence, or
+that is such a subject with a two-word modal name, splits where the rule does
+([§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)), so `list --selector` gives the same reason, then its own
+`known kinds:` line.
+
+In the repository of [§FS-rule-refusals.sentences.rewrite.fs-only](FS-rule-refusals.md#sentencesrewritefs-only-exact-rows-where-fs-is-the-only-kind), whose one kind is `FS`,
+these are the exact refusals. Each `error:` line opens with
+`literal subject "The" does not match the configured ID grammar — `, the table
+gives what follows it, and on `check --rule` and `list --selector` the line
+`known kinds: FS` comes next:
+
+| Refused input | After the released reason |
+|---|---|
+| `check --rule 'The must chapter of each FS must cite at least one FS.'` | `chapter name "must" is read as the rule's modality, so rename the chapter` |
+| `check --rule 'The must chapter of each FS should cite at least one FS.'` | `chapter name "must" is read as the rule's modality, so rename the chapter` |
+| `check --rule 'The should chapter of each FS should cite at least one FS.'` | `chapter name "should" is read as the rule's modality, so rename the chapter` |
+| `check --rule 'The must not chapter of each FS should not cite any FS.'` | `chapter name "must not" is read as the rule's modality, so rename the chapter` |
+| `check --rule 'The should not chapter of each FS should cite at least one FS.'` | `chapter name "should not" is read as the rule's modality, so rename the chapter` |
+| `list --selector 'The should chapter of each FS should cite at least one FS.'` | `chapter name "should" is read as the rule's modality, so rename the chapter` |
+| `list --selector 'The must not chapter of each FS'` | `chapter name "must not" is read as the rule's modality, so rename the chapter` |
+
+In the same repository a split that reaches the name later is not refused,
+because the modality it takes first is the rule's own:
+`The should chapter of each FS must cite at least one FS.`,
+`The must chapter of each FS should not cite any FS.` and
+`The should chapter of each FS must not cite any FS.` are accepted, and so is
+the selector `The must chapter of each FS`, which is a subject and is never
+split.
+
 ### sentences.rewrite: An accepted form is the typed sentence with the failed part replaced
 
 Every sentence a rule surface offers after `accepted form:`, `accepted forms:`
@@ -396,6 +453,7 @@ is anything else, nothing follows the reason. A configured rule declaration's
 | a presence `NAME` with whitespace ([§FS-rule-refusals.sentences.whitespace](FS-rule-refusals.md#sentenceswhitespace-presence-name-whitespace-refusal)) | the `NAME` trimmed of its surrounding whitespace | the `NAME` is empty or has whitespace inside |
 | a chapter subject in a presence rule | the subject's declaration, or `Each KIND` | — |
 | a refused subject: an unknown kind, `*/`, a section-component wildcard, a numbered chapter, the section grammar, the ID grammar, `Each chapter of each` | the subject, rebuilt as [§FS-rule-refusals.sentences.rewrite.recovered](FS-rule-refusals.md#sentencesrewriterecovered-only-what-can-be-recovered-is-supplied) says | no configured kind is recovered, or the subject holds a clause; `known kinds:` follows |
+| the ID grammar for a subject `The` cut short at a chapter named after a modal word ([§FS-rule-refusals.sentences.modal-chapter](FS-rule-refusals.md#sentencesmodal-chapter-a-chapter-named-after-a-modal-word-is-refused-for-that-name)) | — | always; `known kinds:` follows |
 | a path subject, `Each file in …` | — | always; `known kinds:` follows |
 | an unknown or malformed object kind | — | always; `known kinds:` follows |
 | no modality, an unknown verb, a count that is not accepted, a count with no object | — | always |
@@ -447,6 +505,7 @@ configured rule declaration's finding carries the same text after
 | `Each file in vendor/ must cite at least one FS.` | `path subjects are not accepted in phase 1` | `known kinds: FS` |
 | `Each FS must cite at least one POLICY.` | `unknown kind "POLICY"` | `known kinds: FS` |
 | `FS-*.requirements must cite at least one GOAL.` | `literal subject "FS-*.requirements" does not match the configured ID grammar` | `known kinds: FS` |
+| `The must chapter of each FS must cite at least one FS.` | `literal subject "The" does not match the configured ID grammar — chapter name "must" is read as the rule's modality, so rename the chapter` | `known kinds: FS` |
 | `Each FS cites at least one FS.` | `rule has no accepted modality` | none |
 | `Each FS must reference at least one FS.` | `verb is not accepted` | none |
 | `Each FS must cite some FS.` | `count is not accepted; the canonical counts are "at least one", "at least N", "at most N", "exactly one" and "exactly N" for a base-10 N` | none |
@@ -524,7 +583,7 @@ as one table so it does not depend on how one phrase of another point is read:
 | 2. fixed word and phase-1 subject | `each` for `Each`, and the deliberate phase-1 absences of [§FS-rules.12](FS-rules.md#12-deliberate-phase-1-absences): a path subject (`Each file in`), `Each */KIND`, `Each chapter of each KIND`, and a section-component wildcard in the first clause's subject, in any spelling | `FS-x.* must cite at least one FS and must not cite any FS.` | `section-component wildcards are not accepted in phase 1` |
 | 3. conjunction | clauses joined by `and` ([§FS-rule-refusals.sentences.conjunction](FS-rule-refusals.md#sentencesconjunction-any-clauses-joined-by-and-are-refused-as-a-conjunction)) | `Each FS may not cite any FS and must cite at least one FS.` | `conjunctions are not accepted` |
 | 4. modality | no accepted modality, `may not` included | `Each POLICY may not cite any FS.` | `modality "may not" is not accepted` |
-| 5. the rest of the subject | an unknown or non-citable kind, named sections off, the section grammar, a numbered chapter, the ID grammar | `Each POLICY must cite no FS.` | `unknown kind "POLICY"` |
+| 5. the rest of the subject | an unknown or non-citable kind, named sections off, the section grammar, a numbered chapter, the ID grammar, a chapter named after a modal word ([§FS-rule-refusals.sentences.modal-chapter](FS-rule-refusals.md#sentencesmodal-chapter-a-chapter-named-after-a-modal-word-is-refused-for-that-name)) | `Each POLICY must cite no FS.` | `unknown kind "POLICY"` |
 | 6. the predicate | the verb, quantifier, count and object kind, and a chapter subject that would have chapters | `Each FS must cite no FS.` | `"cite no" is not accepted` |
 
 The examples are read in a repository whose one kind is `FS`, with named
@@ -666,6 +725,7 @@ refusals. A line marked *hint* is the breadcrumb above.
 | `API.requirements.1` | `numbered chapter subjects can detach when headings move` | `known kinds: FS`, then hint |
 | `FS-login must cite at least one GOAL.` | `a rule sentence is not a selector; accepted selector: FS-login` | none |
 | `The should chapter of each FS must cite at least one FS.` | `a rule sentence is not a selector; accepted selector: The should chapter of each FS` | none |
+| `The should chapter of each FS should cite at least one FS.` | `literal subject "The" does not match the configured ID grammar — chapter name "should" is read as the rule's modality, so rename the chapter` | `known kinds: FS` |
 
 With named sections off in the same repository, these are the exact refusals.
 None of them earns the breadcrumb.

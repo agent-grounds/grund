@@ -37,6 +37,8 @@ mod tests_grammar_properties;
 #[cfg(test)]
 mod tests_index_contract;
 #[cfg(test)]
+mod tests_modal_chapter;
+#[cfg(test)]
 mod tests_named_off_subjects;
 #[cfg(test)]
 mod tests_nested_alias_targets;

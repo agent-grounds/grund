@@ -194,6 +194,11 @@ fn fs_only_rows() -> Vec<(&'static str, &'static str, &'static str)> {
             kinds,
         ),
         (
+            "The must chapter of each FS must cite at least one FS.",
+            "literal subject \"The\" does not match the configured ID grammar — chapter name \"must\" is read as the rule's modality, so rename the chapter",
+            kinds,
+        ),
+        (
             "Each FS cites at least one FS.",
             "rule has no accepted modality",
             "",
