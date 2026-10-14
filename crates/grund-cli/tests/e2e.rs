@@ -31,6 +31,21 @@ fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
 
+/// §FS-init.2.3.4.16: standalone omission and existing workspace-root/member controls.
+#[test]
+fn project_namespaces_golden_contract() {
+    let root = repo_root();
+    let outcomes = [
+        "init-no-workspace-members",
+        "init-workspace-root",
+        "init-workspace-member",
+    ]
+    .iter()
+    .map(|name| run_case(&root, &root.join("tests/e2e/cases").join(name), E2e))
+    .collect::<Vec<_>>();
+    assert_every_case_passed("project namespaces", &outcomes);
+}
+
 // Every pass collects its per-case outcomes and hands them to
 // `assert_every_case_passed`: a case that mismatched its goldens or that the
 // platform could not build is counted and named there, never left to look

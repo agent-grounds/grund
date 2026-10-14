@@ -13,6 +13,9 @@ use crate::templates::{
 };
 use crate::testing::{current_block, current_marker, scan_tree, test_root, write};
 
+#[path = "tests_member_split_recipe.rs"]
+mod member_split_recipe;
+
 /// §FS-init.5.3: the distributable skill and the binary-embedded copy the CLI
 /// prints must be byte-identical, and a release that edits one surface
 /// without the other is invalid. Nothing enforced that, so an edit to the
