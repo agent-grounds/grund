@@ -449,4 +449,41 @@ what it meant ([§FS-config-v2.mapping](../functional-spec/FS-config-v2.md#mappi
 project: every effective value under the table of its concern, in a fixed
 order, which loads back as v2 to the same records ([§FS-config.4.2](../functional-spec/FS-config.md#42-grund-config-show-path)). It returns
 nothing for a v1 project, whose output stays the bytes it always was; writing a
-v1 file in v2 spelling is migration and not this reader's.
+v1 file in v2 spelling is migration and not this reader's. Migration (section 8)
+reaches the same renderer from the other side: it converts a v1 `Project` into
+v2-shaped records and hands those to `v2_toml`, so `config show` and
+`config migrate` cannot disagree on v2 spelling
+([§FS-config-migrate.2.1](../functional-spec/FS-config-migrate.md#21-stdout-is-the-candidate)).
+
+## 8. Migration translates records
+
+`grund config migrate` ([§FS-config-migrate](../functional-spec/FS-config-migrate.md#fs-config-migrate-grund-config-migrate---to-2-shows-the-version-2-file-that-means-what-a-version-1-config-means-and-writes-it-only-when-asked-and-only-when-it-does)) lives in
+a `migrate` module under `crates/grund-core/src/config/`. It renders nothing: it returns one
+typed record holding the candidate text, the key map, the defaults written out,
+the notices, the refusals, the listed comments and both gates' results, and
+`grund-cli` renders that record in `cli_config_migrate.rs` beside `cli_config.rs`.
+
+### 8.1 What it reads, and how
+
+- **The v1 file, once.** The v1 reader's own line pass records each key's line
+  and its attached comments; migration does not parse the file a second time
+  ([§FS-config-migrate.4.3](../functional-spec/FS-config-migrate.md#43-everything-else-is-listed)). A tolerant mode of that reader, used by migration
+  alone, accepts a path-shaped `[scan] exclude` entry so that it can be
+  diagnosed; every other caller still refuses it.
+- **The candidate, as a file would be read.** The candidate text is loaded back
+  through `pending_config`, the path `init` uses for config text not yet on
+  disk, so the records gate compares what the v2 reader really makes of it
+  ([§FS-config-migrate.5.1](../functional-spec/FS-config-migrate.md#51-the-records-gate)).
+
+### 8.2 The lowering table is its checklist
+
+Every row of section 3's table, key and default alike, is a migration case:
+the code's `KEYS` and `DEFAULTS` are iterated, and a row with no case fails a
+test, as section 3.3 holds the reader ([§FS-config-migrate.mapping](../functional-spec/FS-config-migrate.md#mapping-every-version-1-key-and-default)).
+
+### 8.3 The write is a shared writer
+
+The atomic replace `fetch` uses (`atomic_install` in `writers/fetch_install.rs`)
+moves into a writer both call, unchanged in behaviour, and gains the
+concurrent-edit check migration needs ([§FS-config-migrate.6.2](../functional-spec/FS-config-migrate.md#62-atomic),
+[§FS-config-migrate.6.3](../functional-spec/FS-config-migrate.md#63-a-concurrent-edit)).

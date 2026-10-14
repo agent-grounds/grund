@@ -224,6 +224,7 @@ pub(super) const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-completions.terms", reason: "vocabulary, not a behavioral requirement" },
     Exception { id: "FS-config.terms", reason: "vocabulary, not a behavioral requirement" },
     Exception { id: "FS-config-v2.terms", reason: "vocabulary, not a behavioral requirement" },
+    Exception { id: "FS-config-migrate.terms", reason: "vocabulary, not a behavioral requirement" },
     Exception { id: "FS-cover.terms", reason: "vocabulary, not a behavioral requirement" },
     Exception { id: "FS-declarations.terms", reason: "vocabulary, not a behavioral requirement" },
     Exception { id: "FS-distribution-candidate.terms", reason: "vocabulary, not a behavioral requirement" },
@@ -264,7 +265,7 @@ pub(super) const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
 #[rustfmt::skip]
 pub(super) const TEMPORARY_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-config-v2.requirements.ahead", reason: "specified ahead of its release; each refused clause's owner proves it, and config-v2-unsupported-clause-refused pins the refusal meanwhile" },
-    Exception { id: "FS-config-v2.schema.sources.migration", reason: "specified ahead of its release; agent-grounds/grund#461's migrator executes and proves the translations and refusals" },
+    Exception { id: "FS-config-migrate.6.3", reason: "a concurrent edit between the read and the rename cannot be timed from outside the process; the shared writer's injected-failure unit tests prove it" },
     Exception { id: "FS-distribution.requirements.ecosystems", reason: "npm and PyPI publication is owed to RM-distribution; the cargo half is the release workflow, which no e2e case runs" },
     Exception { id: "FS-distribution.requirements.versions", reason: "the proof is split: cli-version shows the -dev half, test_check_release_ramps.py the release gate, and the shared tag version is the release workflow's" },
     Exception { id: "FS-examples.3", reason: "example explanation proof spans the runner and docs" },
