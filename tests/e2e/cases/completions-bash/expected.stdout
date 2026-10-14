@@ -16,7 +16,7 @@ _grund() {
     COMPREPLY=()
 
     if [[ $COMP_CWORD -eq 1 ]]; then
-        local commands=($(compgen -W "check show list refs cover fmt fetch id init config agent-setup-instructions completions" -- "$cur"))
+        local commands=($(compgen -W "check show list refs cover fmt fetch id init config schema agent-setup-instructions completions integrations" -- "$cur"))
         # IDs start with an uppercase kind (FS-…, GOAL-…), but workspace aliases
         # are lowercase (`api/FS-login`). Once the user has typed a non-flag
         # prefix, ask the helper for matching IDs and aliases.
