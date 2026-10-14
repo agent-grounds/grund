@@ -119,7 +119,8 @@ place lists every one, comma-separated, in written order (`docs/a/, docs/b/`).
 A kind's fields follow its node, in header order, one line each: `field <name>`,
 then its presence, its placement where one is set (`first`, `last`, or
 `after <field>`), and its content where it is not prose (`one of A, B` for a
-scalar field, `values` for a value chapter), joined by ` · `. A kind whose
+scalar field, `values` for a value chapter), joined by ` · `. A value kind's
+numbered children are one line, `field <number>`. A kind whose
 `closed` strength is not `may` adds the line `closed <strength>` after its fields.
 These are the slots the checks read ([§FS-fields.record](FS-fields.md#record-the-record)), so the view and
 `grund check` cannot describe two shapes.
@@ -196,7 +197,8 @@ in the order their first edge is printed. Nothing is sorted alphabetically.
 ## 8. The table
 
 The default format. A header line `<project> · <config path> · v<version>`, the
-config path spelled from the config root; then the `kinds and places` section,
+config path spelled from the config root, or `defaults, no grund.toml` where no
+config file was found; then the `kinds and places` section,
 one line per node with its name, class and places, and its field lines under it;
 then the `citations` section, headed `citations` with `grounded` over the badge
 column, one line per direction of each scanned row in node order, the first line of
@@ -289,13 +291,14 @@ first two lines, `any of = one obligation, met by citing any one of its arrows`,
 and the workspace members line where [§FS-schema.2.1](FS-schema.md#21-a-workspace-root-shows-the-root-and-names-its-members) asks for it. Then, in order:
 the two class definitions `classDef place stroke-dasharray:5 5` and
 `classDef unscanned stroke-dasharray:2 2`; every ruled node, `n<i>["…"]`, its label
-lines joined by `<br/>`; every junction, `j<i>(("any of"))`; the
+lines joined by `<br/>`; every junction, `j<i>(("any of"))`; every target outside
+the project (`alias/KIND`, `*/KIND`), `x<i>["…"]` labelled as written; the
 `no direction rule names these` subgraph holding the unruled nodes; one
 `class <ids> place` and one `class <ids> unscanned` line where such nodes exist;
 then the edges. A node's label lines are its name, its class word, its places, its
 field lines as `field <name>: <facts>`, and its badge. Node identifiers are
-generated, `n` with the row's position and `j` with the junction's, and never come
-from user text.
+generated, `n` with the row's position, `j` with the junction's, and `x` with the
+order a target outside the project is first named, and never come from user text.
 
 ## 10. The DOT source
 
@@ -303,7 +306,8 @@ from user text.
 `node [shape=box]`, ready for `dot -Tsvg`. The comments come first inside it, as
 `//` lines, the same as Mermaid's. Then every ruled node, `n<i> [label="…"]` with
 its label lines joined by `\n` and its style where its class has one; every
-junction, `j<i> [label="any of", shape=circle]`; the unruled nodes inside
+junction, `j<i> [label="any of", shape=circle]`; every target outside the project
+(`alias/KIND`, `*/KIND`), `x<i> [label="…"]`, numbered as in Mermaid; the unruled nodes inside
 `subgraph cluster_unruled` labelled `no direction rule names these`; then the
 edges, each with its `label` and `style`, `arrowhead=none` from a subject to a
 junction. grund runs neither Mermaid nor Graphviz.
@@ -314,7 +318,8 @@ Every title and path is escaped for the printer it reaches, so no configuration
 can break the source or the table ([§REQ-never-crashes](../requirements/REQ-never-crashes.md#req-never-crashes-garbage-in-diagnostic-out)). DOT labels use DOT string
 escapes (`\"`, `\\`, and a newline as `\n`). Mermaid labels are quoted, with `"`
 written `#quot;`, `<` as `#lt;`, `>` as `#gt;` and `&` as `#amp;`. The table
-prints a control character the way `grund config show` prints it in a string.
+writes a control character as its TOML basic-string escape: `\n`, `\t`, `\r`,
+otherwise `\uXXXX`.
 
 ## 12. Exit codes and streams
 
