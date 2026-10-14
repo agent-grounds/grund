@@ -20,8 +20,7 @@ use crate::grammar::{
 };
 use crate::model::{
     Catalog, CheckReport, Citation, Declaration, Diagnostic, FileRecord, HeadingKind, Id,
-    paired_declarations, scanned_decl_relative_path, scanned_path_key,
-    section_resolves,
+    paired_declarations, scanned_decl_relative_path, scanned_path_key, section_resolves,
 };
 use crate::scanner::record_of_text;
 use crate::sources::{Sources, path_is_dir, physical_path_key};

@@ -6,10 +6,10 @@ use super::line_owners::{LineOwners, resolve_requested_lines};
 use super::record::walk_blocks;
 use crate::config::{FileReading, Frame, Owners, Schema};
 use crate::grammar::{AliasGrammar, MultiLineStrings, block_declares_id, inline_note_verdicts};
+use crate::model::sort_path_key;
 use crate::model::{
     BlockForm, Catalog, FileRecord, InlineCitationSite, SectionHeadingOutsideDeclaration,
 };
-use crate::model::sort_path_key;
 use crate::workspace::WorkspaceCitationTarget;
 
 /// Narrow the shared coordinate catalog to each declaration's body and retain

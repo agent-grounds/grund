@@ -167,7 +167,8 @@ pub(super) fn row_key(
                 }
                 // §FS-config-v2.schema.places.boundaries.1: normalized, and inside the root.
                 let Some(path) = normalize_place(&written) else {
-                    let message = format!("place `{written}` in `{clause}` is outside the config root");
+                    let message =
+                        format!("place `{written}` in `{clause}` is outside the config root");
                     return r.fail(line, message);
                 };
                 let extent = if key == "files" {

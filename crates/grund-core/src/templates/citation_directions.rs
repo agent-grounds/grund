@@ -1,6 +1,6 @@
 use crate::config::{
-    CitationDisjunction, CitationLevel, CitationTarget, KindCitationRules,
-    NamespaceMatch, Project, Row, Run,
+    CitationDisjunction, CitationLevel, CitationTarget, KindCitationRules, NamespaceMatch, Project,
+    Row, Run,
 };
 
 /// The public citation-directions page the scaffold config and the no-`[citations]`

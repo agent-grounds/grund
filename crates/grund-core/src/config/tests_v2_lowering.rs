@@ -112,7 +112,8 @@ fn v2_note_text_layout_and_leads_lower() {
     );
 }
 
-/// §FS-config-v2.schema.places: `index`, `scan` and `citable` mean v1's row keys.
+/// §FS-config-v2.schema.places: `index`, `scan` and `citable` mean v1's row keys,
+/// and with no `code` row the scan is the config root (§FS-config-v2.schema.places.complement).
 #[test]
 fn v2_row_keys_lower() {
     let toml = format!(
@@ -128,9 +129,8 @@ fn v2_row_keys_lower() {
     assert!(templates.kind.is_none());
     assert!(!templates.places[0].scanned);
     assert_eq!(
-        project.schema.sources.include,
-        Some(vec!["docs/architecture".to_string()]),
-        "the scan is the scanned places"
+        project.schema.sources.include, None,
+        "with no `code` row the complement is the config root, so the scan is the root"
     );
 
     let toml = format!("{HEAD}[schema.kinds.GOAL]\nfiles = [\"goals.md\"]\nindex = false\n");
@@ -152,12 +152,13 @@ fn v2_row_keys_lower() {
         "v2_complement",
         &toml,
         5,
-        "`[schema.kinds.test]` is part of the v2 format",
+        "`[schema.kinds.test]` has no place: give it `folders` or `files`, or name the complement `code`",
     );
 }
 
 /// §FS-config-v2.reader.2: a key belongs to the header written above it, never
-/// to an earlier row; and a place inside another row's place is #457's.
+/// to an earlier row; and a place inside another row's place loads, the deeper
+/// place owning what it holds (§FS-config-v2.schema.places.ownership).
 #[test]
 fn v2_a_key_belongs_to_its_own_header() {
     let toml =
@@ -171,12 +172,9 @@ fn v2_a_key_belongs_to_its_own_header() {
     let toml = format!(
         "{HEAD}[schema.kinds.FS]\nfolders = [\"docs\"]\n[schema.kinds.GOAL]\nfiles = [\"docs/goals.md\"]\n"
     );
-    refused(
-        "v2_nested_place",
-        &toml,
-        8,
-        "`[schema.kinds.GOAL] files` is part of the v2 format",
-    );
+    let project = project("v2_nested_place", &toml);
+    let owner = project.schema.owner(std::path::Path::new("docs/goals.md"));
+    assert_eq!(owner.map(|owner| owner.row.name.as_str()), Some("GOAL"));
 }
 
 /// §FS-config.4.2: a v2 project prints in v2 spelling, and what it prints loads

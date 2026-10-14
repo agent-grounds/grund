@@ -137,6 +137,8 @@ fn render_next_block_for_home(
 }
 
 /// Resolve the configured functional-spec home used by guidance and scaffolds.
+/// One home on purpose: a scaffold seeds one starter, so a v2 row with several
+/// places is seeded at its first file, else its first folder (§FS-init.2.1).
 pub(crate) fn init_fs_home(config: &Config) -> InitFsHome {
     if let Some(kind) = config.kinds.iter().find(|kind| kind.kind == "FS") {
         if let Some(file) = &kind.file {
@@ -184,7 +186,7 @@ pub(crate) fn docs_scaffold_for_config(
         )),
     }
     // §FS-init.2.1.3: the `REQ` index lands right after the FS home, in the
-    // folder the config's `REQ` row names, and only where it declares one.
+    // folder the config's `REQ` row names (its first, one starter), and only where it declares one.
     if let Some(folder) = config
         .kinds
         .iter()

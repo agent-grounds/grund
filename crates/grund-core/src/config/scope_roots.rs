@@ -130,7 +130,10 @@ pub(crate) fn file_root_rows(schema: &Schema, root: &Path) -> Vec<(PathBuf, Root
         })
     });
     // §FS-config-v2.schema.places: every walked file place of every row.
-    let places = schema.rows.iter().flat_map(|row| row.places.iter().map(move |place| (row, place)));
+    let places = schema
+        .rows
+        .iter()
+        .flat_map(|row| row.places.iter().map(move |place| (row, place)));
     let homes = places.filter_map(move |(row, place)| {
         if !place.scanned {
             return None;

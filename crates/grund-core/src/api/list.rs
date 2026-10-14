@@ -48,12 +48,20 @@ impl Default for ListOpts {
     }
 }
 
-fn list_summary_home(kind: &KindConfig) -> String {
-    kind.file
-        .as_deref()
-        .or(kind.folder.as_deref())
-        .unwrap_or_default()
-        .to_string()
+/// §FS-list.3.3: a kind's home as the summary prints it — every place of its row,
+/// comma-separated in written order (§FS-config-v2.schema.places); one place
+/// under v1.
+fn list_summary_home(config: &Config, kind: &KindConfig) -> String {
+    let row = config
+        .schema()
+        .rows
+        .iter()
+        .find(|row| row.name == kind.kind);
+    let places: Vec<&str> = row
+        .into_iter()
+        .flat_map(|row| row.places.iter().filter_map(|place| place.path()))
+        .collect();
+    places.join(", ")
 }
 
 /// Programmatic `list`: return the catalog and per-kind summary rows without
@@ -328,7 +336,7 @@ fn list_run(
                         .title
                         .clone()
                         .unwrap_or_else(|| "Declaration".to_string()),
-                    home: list_summary_home(kind),
+                    home: list_summary_home(&project.config, kind),
                     count,
                 });
             }
@@ -350,7 +358,7 @@ fn list_run(
                     .title
                     .clone()
                     .unwrap_or_else(|| "Declaration".to_string()),
-                home: list_summary_home(kind),
+                home: list_summary_home(render_config, kind),
                 count,
             });
         }

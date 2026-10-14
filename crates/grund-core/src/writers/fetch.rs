@@ -190,6 +190,8 @@ fn fetch_run(
         ))
     })?;
 
+    // The snapshot goes to the kind's first place on purpose: a fetched row's
+    // several places are unspecified (§FS-config-v2.schema.places), one is the home.
     let (home, depth) = match (&kind.file, &kind.folder) {
         (Some(file), None) => (FetchHome::File(selected.root.join(file)), 2),
         (None, Some(folder)) => (FetchHome::Folder(selected.root.join(folder)), 1),

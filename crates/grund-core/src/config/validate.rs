@@ -167,6 +167,7 @@ fn validate_kind_grounding(path: &Path, project: &Project, kinds: &[KindConfig])
         // which §FS-check.3.6.1.1 leaves alone — as `index` means nothing on a file kind.
         // A non-citable `file` home is governed like any other, so there they mean.
         if kind.file.is_some()
+            && kind.folder.is_none()
             && kind.citable
             && let Some((key, line)) = grounding_key_site(grounding)
         {

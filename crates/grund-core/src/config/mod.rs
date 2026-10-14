@@ -95,6 +95,9 @@ pub use compiled::ScanDemand;
 pub use fields::{Field, FieldContent, Placement};
 pub(crate) use inputs::{observe_config, observe_config_candidates, observe_ignore_inputs};
 pub use kind::{KindConfig, KindIndex, KindResolution};
+#[allow(unused_imports)]
+pub use places::Owner;
+pub(crate) use places::Owners;
 pub use point_sizes::{LeadSizeWarning, PointSizeUnit};
 #[allow(unused_imports)]
 pub use project::{
@@ -103,9 +106,6 @@ pub use project::{
     Threshold,
 };
 pub use record::{AbsentOptionalNamespace, Config, ConfigLocation, ShorthandPolicy};
-#[allow(unused_imports)]
-pub use places::Owner;
-pub(crate) use places::Owners;
 pub use rows::{Extent, Form, Kind, Nesting, Origin, Place, Row};
 pub(crate) use run::{Invocation, Selection, scope_is_config_root};
 #[allow(unused_imports)]
@@ -191,6 +191,8 @@ mod tests_slots;
 mod tests_v2_fields;
 #[cfg(test)]
 mod tests_v2_lowering;
+#[cfg(test)]
+mod tests_v2_places;
 #[cfg(test)]
 mod tests_v2_reader;
 #[cfg(test)]
