@@ -24,6 +24,19 @@ SCRIPT = ROOT / "scripts" / "check_links.py"
 LYCHEE = shutil.which("lychee")
 WATCHDOG = 300
 
+# The host's git config never reaches the fixture, so a contract test cannot pass or fail on
+# this machine's settings; a test that pins a setting passes it through `git_config` (§AR-ci.1.1).
+ISOLATED = {"GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1"}
+
+
+def isolated_env(git_config: str | None = None) -> dict[str, str]:
+    env = {k: v for k, v in os.environ.items()
+           if k not in ("LINK_BASE", "GIT_CONFIG_PARAMETERS", "GIT_CONFIG_COUNT")}
+    env.update(ISOLATED)
+    if git_config is not None:
+        env["GIT_CONFIG_PARAMETERS"] = git_config
+    return env
+
 
 class LinkFixture:
     """A repository whose `main` is `origin/main` and whose `HEAD` is a branch on it."""
@@ -73,7 +86,8 @@ class LinkFixture:
 
     def git(self, *args: str) -> str:
         return subprocess.run(
-            ["git", *args], cwd=self.root, check=True, capture_output=True, text=True,
+            ["git", *args], cwd=self.root, env=isolated_env(), check=True,
+            capture_output=True, text=True,
         ).stdout.strip()
 
     def write(self, relative: str, text: str) -> None:
@@ -113,8 +127,10 @@ class LinkFixture:
         with self.lock:
             self.counts.clear()
 
-    def run(self, *args: str, link_base: str | None = None) -> tuple[int, str]:
-        env = {k: v for k, v in os.environ.items() if k != "LINK_BASE"}
+    def run(
+        self, *args: str, link_base: str | None = None, git_config: str | None = None
+    ) -> tuple[int, str]:
+        env = isolated_env(git_config)
         if link_base is not None:
             env["LINK_BASE"] = link_base
         try:

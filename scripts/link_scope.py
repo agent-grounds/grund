@@ -40,10 +40,12 @@ def changed_lines(
 ) -> dict[str, dict[int, str]]:
     """`{path: {line: text}}` for every line added or modified between `base` and the working
     tree under `inputs`, every line of an untracked file git does not ignore included; paths
-    are relative to `repo_root` (§AR-ci.3.1.4)."""
+    are relative to `repo_root` (§AR-ci.3.1.4). Every option that shapes the parsed output is
+    pinned, so no user diff config (`diff.mnemonicPrefix`, `diff.noprefix`, colour, an external
+    diff) changes what the local gate reads from what CI reads (§AR-ci.1.1)."""
     diff = _git(
         repo_root, "diff", "--no-color", "--no-ext-diff", "--no-renames", "--relative",
-        "--unified=0", base, "--", *inputs,
+        "--src-prefix=a/", "--dst-prefix=b/", "--unified=0", base, "--", *inputs,
     )
     if diff.returncode != 0:
         return {}

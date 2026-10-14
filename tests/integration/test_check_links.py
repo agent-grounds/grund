@@ -391,8 +391,9 @@ class GitHub5xxRecheckTests(unittest.TestCase):
 
 @unittest.skipIf(os.name == "nt", "the stub lychee and gh are POSIX scripts")
 class GitHub5xxRecheckScriptTests(unittest.TestCase):
-    """§AR-ci.3.1.2 end to end — the #581 reproducer: the script, run as the hook
-    runs it, passes a GitHub 503 on a blob whose file the contents API confirms."""
+    """§AR-ci.3.1.2 end to end — the #581 reproducer: the script's full external pass
+    (`--all`, §AR-ci.3.1.5) passes a GitHub 503 on a blob whose file the contents API
+    confirms; the settlement is the same wherever an external link is checked."""
 
     def test_hook_passes_a_blob_503_the_contents_api_confirms(self):
         scratch = Path.home() / "ag" / "tmp"
@@ -406,6 +407,7 @@ class GitHub5xxRecheckScriptTests(unittest.TestCase):
                 "import sys\n"
                 "args = sys.argv[1:]\n"
                 f"if '--dump' in args:\n    print({EMACS_BLOB!r}); sys.exit(0)\n"
+                "if '--offline' in args:\n    sys.exit(0)\n"
                 f"report = {json.dumps(report)!r}\n"
                 "out = next((args[i + 1] for i, a in enumerate(args) if a in ('-o', '--output')), None)\n"
                 "if out:\n    open(out, 'w').write(report)\n"
@@ -426,7 +428,7 @@ class GitHub5xxRecheckScriptTests(unittest.TestCase):
                 stub.chmod(stub.stat().st_mode | stat.S_IEXEC)
             env = dict(os.environ, PATH=f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
             proc = subprocess.run(
-                [sys.executable, str(SCRIPT_PATH), "--lychee", str(lychee),
+                [sys.executable, str(SCRIPT_PATH), "--lychee", str(lychee), "--all",
                  "docs/user-facing/lsp.md"],
                 cwd=ROOT, env=env, capture_output=True, text=True, timeout=60,
             )
