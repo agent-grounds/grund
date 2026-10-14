@@ -1,7 +1,7 @@
 //! Executable parser/facts/engine boundary drivers (§AR-rules.6).
 
 use super::RuleAnchor;
-use super::engine::{evaluate, evaluate_suggestions};
+use super::engine::{Direction, evaluate, evaluate_suggestions};
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
 use super::markdown::adapt_markdown;
 use super::sentence::{
@@ -178,16 +178,27 @@ fn logic_engine_evaluates_hand_built_rule_and_facts_without_parser_or_scanner() 
     assert_eq!(diagnostics[0].message, "FS-demo must cite GOAL (RULE-fs)");
 }
 
+/// §FS-rules.6: a direction absorbs its duplicate's finding only at a unit it
+/// reported itself; at a unit it passed, the rule's finding stands as the rule's.
 #[test]
 fn logic_engine_owns_precedence_and_existing_report_channels() {
     let hard = rule();
-    let suppressed = evaluate(
-        std::slice::from_ref(&hard),
-        std::slice::from_ref(&hard),
-        &facts(Completeness::Complete),
-    )
-    .0;
+    let snapshot = facts(Completeness::Complete);
+    let mut config = evaluate(std::slice::from_ref(&hard), &[], &snapshot).0;
+    config[0].authority.clear();
+    let reporting = Direction {
+        rule: hard.clone(),
+        reported: config,
+    };
+    let suppressed = evaluate(std::slice::from_ref(&hard), &[reporting], &snapshot).0;
     assert!(suppressed.is_empty());
+    let passing = Direction {
+        rule: hard.clone(),
+        reported: Vec::new(),
+    };
+    let kept = evaluate(std::slice::from_ref(&hard), &[passing], &snapshot).0;
+    assert_eq!(kept.len(), 1);
+    assert_eq!(kept[0].authority, vec!["RULE-fs".to_string()]);
 
     let recommended = ParsedRule {
         level: RuleLevel::Recommended,

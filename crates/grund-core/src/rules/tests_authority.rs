@@ -8,7 +8,7 @@
 //! one order, and that a diagnostic *about* a rule still names it.
 
 use super::RuleAnchor;
-use super::engine::{evaluate, unresolved_subject_diagnostic};
+use super::engine::{Direction, evaluate, unresolved_subject_diagnostic};
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts};
 use super::sentence::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
@@ -141,11 +141,12 @@ fn an_unresolved_subject_diagnostic_carries_its_one_rules_origin() {
 #[test]
 fn a_suppressed_group_leaves_no_authority_behind() {
     let declared = rule("RULE-goalref");
-    let suppressed = evaluate(
-        std::slice::from_ref(&declared),
-        std::slice::from_ref(&declared),
-        &facts(),
-    )
-    .0;
+    let mut config = evaluate(std::slice::from_ref(&declared), &[], &facts()).0;
+    config[0].authority.clear();
+    let direction = Direction {
+        rule: declared.clone(),
+        reported: config,
+    };
+    let suppressed = evaluate(std::slice::from_ref(&declared), &[direction], &facts()).0;
     assert!(suppressed.is_empty());
 }

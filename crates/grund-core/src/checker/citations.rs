@@ -13,8 +13,8 @@ use super::obligation_units::{
     ObligationUnit, file_is_obligation_unit, non_citable_kind_names, obligation_units,
 };
 use crate::config::{
-    CitationDisjunction, CitationTarget, Frame, KindCitationRules, NamespaceMatch, Row, Rules,
-    Schema, render_citation_target, row_grounding,
+    CitationDisjunction, CitationLevel, CitationTarget, Frame, KindCitationRules, NamespaceMatch,
+    Row, Rules, Schema, render_citation_target, row_grounding,
 };
 use crate::model::{Catalog, CheckReport, Citation, Diagnostic, E2eSpecRef, Id};
 use crate::rules::engine::LENT_CLAUSE;
@@ -35,6 +35,46 @@ pub(super) fn citing_side_label(schema: &Schema, kind: &str) -> String {
         .unwrap_or_else(|| kind.to_string())
 }
 
+/// The channel a direction finding is reported on.
+#[derive(Clone, Copy)]
+pub(super) enum DirectionChannel {
+    Errors,
+    Warnings,
+    Suggestions,
+}
+
+/// Where the direction passes put each finding, with the citing kind, the level
+/// and the entries it is reported under: the report, or the config-to-rule
+/// pairing that asks which entry reported what (§FS-rules.6). A finding no
+/// entry stands behind passes none.
+pub(super) trait DirectionSink {
+    fn push(
+        &mut self,
+        channel: DirectionChannel,
+        kind: &str,
+        level: CitationLevel,
+        entries: &[&CitationDisjunction],
+        diagnostic: Diagnostic,
+    );
+}
+
+impl DirectionSink for CheckReport {
+    fn push(
+        &mut self,
+        channel: DirectionChannel,
+        _: &str,
+        _: CitationLevel,
+        _: &[&CitationDisjunction],
+        diagnostic: Diagnostic,
+    ) {
+        match channel {
+            DirectionChannel::Errors => self.errors.push(diagnostic),
+            DirectionChannel::Warnings => self.warnings.push(diagnostic),
+            DirectionChannel::Suggestions => self.suggestions.push(diagnostic),
+        }
+    }
+}
+
 /// §AR-checker.2.9 / §FS-check.3.11: every top-level declaration of a citing
 /// kind with a `must` / `should` obligation must carry, in its body, a citation
 /// satisfying each obligation entry. `must` misses are `missing-citation`
@@ -48,7 +88,7 @@ pub(super) fn check_citation_obligations(
     rules: &Rules,
     schema: &Schema,
     frame: Frame<'_>,
-    report: &mut CheckReport,
+    report: &mut impl DirectionSink,
 ) {
     // Index every citation once, up front, so each citing kind's obligation pass
     // is a map lookup rather than a fresh O(citations) scan per declaration
@@ -123,7 +163,13 @@ pub(super) fn check_citation_obligations(
                 kind_rules,
             )
         {
-            report.warnings.push(warning);
+            report.push(
+                DirectionChannel::Warnings,
+                citing_kind,
+                CitationLevel::Must,
+                &[],
+                warning,
+            );
         }
         for unit in units {
             for entry in &kind_rules.must {
@@ -131,36 +177,43 @@ pub(super) fn check_citation_obligations(
                     let mut diagnostic =
                         obligation_diagnostic("missing-citation", frame, &unit, entry, "must");
                     // §FS-rules.7.11: a unit only a stub's target supplies warns until 0.19.0.
-                    if unit.lent {
+                    let channel = if unit.lent {
                         diagnostic.message.push_str(LENT_CLAUSE);
-                        report.warnings.push(diagnostic);
+                        DirectionChannel::Warnings
                     } else {
-                        report.errors.push(diagnostic);
-                    }
+                        DirectionChannel::Errors
+                    };
+                    report.push(
+                        channel,
+                        citing_kind,
+                        CitationLevel::Must,
+                        &[entry],
+                        diagnostic,
+                    );
                 }
             }
             // §FS-config-v2.rules.strengths: `warn` is the `must` finding, code
             // and message, on the warning channel.
             for entry in &kind_rules.warn {
                 if !entry.targets.iter().any(|t| unit.satisfies(t)) {
-                    report.warnings.push(obligation_diagnostic(
-                        "missing-citation",
-                        frame,
-                        &unit,
-                        entry,
-                        "must",
-                    ));
+                    report.push(
+                        DirectionChannel::Warnings,
+                        citing_kind,
+                        CitationLevel::Warn,
+                        &[entry],
+                        obligation_diagnostic("missing-citation", frame, &unit, entry, "must"),
+                    );
                 }
             }
             for entry in &kind_rules.should {
                 if !entry.targets.iter().any(|t| unit.satisfies(t)) {
-                    report.suggestions.push(obligation_diagnostic(
-                        "suggested-citation",
-                        frame,
-                        &unit,
-                        entry,
-                        "should",
-                    ));
+                    report.push(
+                        DirectionChannel::Suggestions,
+                        citing_kind,
+                        CitationLevel::Should,
+                        &[entry],
+                        obligation_diagnostic("suggested-citation", frame, &unit, entry, "should"),
+                    );
                 }
             }
         }
