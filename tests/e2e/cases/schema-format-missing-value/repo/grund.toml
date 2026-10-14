@@ -1,0 +1,4 @@
+grund_config_version = 2
+project_name = "bad"
+[schema.kinds.FS]
+folder = "docs"

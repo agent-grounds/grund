@@ -1,0 +1,15 @@
+root · grund.toml · v1
+
+kinds and places
+  GOAL  kind        goals.md
+  code  complement  every scanned file no other row claims
+
+citations           grounded
+  GOAL  —           must · file
+  code  —           must · file
+
+must = check error · warn = check warning · should = suggestion (check --suggestions)
+may = allowed · must not / warn not / should not = forbidden at that strength
+A|B = one obligation, met by citing either · — = no direction rule names it
+
+members: api, web — run grund schema <member>

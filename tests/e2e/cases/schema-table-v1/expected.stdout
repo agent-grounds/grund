@@ -1,0 +1,20 @@
+fixture · grund.toml · v1
+
+kinds and places
+  GOAL    kind                docs/goals.md
+  FS      kind                docs/fs/
+  AR      kind                docs/ar/
+  vendor  place, not scanned  vendor/
+  code    complement          every scanned file no other row claims
+
+citations                     grounded
+  GOAL    —                   must · file
+  FS      should  GOAL|FS     must · file
+  AR      must    FS          must · file
+          should  AR (itself)
+  code    —                   must · file
+  vendor  not scanned: cites nothing and is never checked
+
+must = check error · warn = check warning · should = suggestion (check --suggestions)
+may = allowed · must not / warn not / should not = forbidden at that strength
+A|B = one obligation, met by citing either · — = no direction rule names it

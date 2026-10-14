@@ -1,0 +1,24 @@
+example · grund.toml · v2
+
+kinds and places
+  GOAL    kind                docs/goals.md
+  FS      kind                docs/fs/
+            field status      should · first · one of Draft, Accepted
+  AR      kind                docs/ar/
+  test    place               tests/
+  vendor  place, not scanned  vendor/
+  code    complement          every scanned file no other row claims
+
+citations                     grounded
+  GOAL    —                   must · file
+  FS      should  GOAL|FS     must · file
+          may     AR
+  AR      must    FS          must · file
+          should  AR (itself)
+  test    must    FS          warn · h2
+  code    —                   must · file
+  vendor  not scanned: cites nothing and is never checked
+
+must = check error · warn = check warning · should = suggestion (check --suggestions)
+may = allowed · must not / warn not / should not = forbidden at that strength
+A|B = one obligation, met by citing either · — = no direction rule names it

@@ -45,7 +45,7 @@ never resolved by a guess. Serves [§GOAL-friendliness-first](../goals.md#goal-f
 
 - `grund` with no arguments is a CLI-level error ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)): the fallback that ran `grund check .` was removed in grund 0.16.0, and the message names the explicit forms to write instead.
 - `grund <ID>[.<section>] …` (where the first non-flag word is not a known subcommand) is the ID-read query specified by [§FS-show.1](FS-show.md#1-inputs), byte-for-byte equivalent to the explicit `show` subcommand, including show flags written before the ID: `grund --toc FS-check` reads the same body as `grund FS-check --toc`. With no path, both resolve from `.`. A first non-flag word that *is* a known subcommand, after leading flags, is not this query but the misplaced-flag error of [§FS-cli.4.1](FS-cli.md#41-a-flag-placed-before-the-subcommand).
-- `grund <subcommand> …` dispatches to that subcommand: `check`, `show`, `list`, `refs`, `cover`, `fmt`, `fetch`, `id`, `init`, `config`, `agent-setup-instructions`, `completions`, `integrations`. The hidden `complete` subcommand is reserved for generated shell scripts ([§FS-completions.2](FS-completions.md#2-internal-dynamic-helper)); `fetch` is the explicit one-ID writer specified by [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot).
+- `grund <subcommand> …` dispatches to that subcommand: `check`, `show`, `list`, `refs`, `cover`, `fmt`, `fetch`, `id`, `init`, `config`, `schema`, `agent-setup-instructions`, `completions`, `integrations`. The hidden `complete` subcommand is reserved for generated shell scripts ([§FS-completions.2](FS-completions.md#2-internal-dynamic-helper)); `fetch` is the explicit one-ID writer specified by [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot).
 
 ### 1.1 Why these defaults
 
@@ -73,7 +73,7 @@ A help request with an unknown first word remains an unknown-command error, beca
 
 ```
 error: unknown command: bogus
-known commands: check, show, list, refs, cover, fmt, fetch, id, init, config, agent-setup-instructions, completions, integrations
+known commands: check, show, list, refs, cover, fmt, fetch, id, init, config, schema, agent-setup-instructions, completions, integrations
 ```
 
 Empty stdout, exit `2` — a CLI-level error like any other unknown subcommand ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)).
@@ -93,8 +93,8 @@ Help is never an error: it goes to stdout, exit `0`, so `grund --help | …` wor
 `grund --help` (alias `grund -h`) prints the top-level help on stdout and exits `0`. The page, top to bottom:
 
 - **A statement.** One line saying what `grund` is.
-- **A usage line.** One line naming the invocation forms `grund <ID>[.<section>]`, `grund <COMMAND> [ARGS]`, `grund <COMMAND> -h` and `grund -V`.
-- **The commands, grouped by intent.** Three groups, in this order and with a blank line between them: *Query the catalog* (`show`, `list`, `refs`, `cover`), *Check and author* (`check`, `fmt`, `id`, `fetch`) and *Set up* (`init`, `config`, `integrations`, `completions`, `agent-setup-instructions`). Each row gives the command, a one-line description in the vocabulary of [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) and [§FS-terms.terms.2](FS-terms.md#terms2-citations), and a sample call.
+- **A usage line.** Directly under the statement, with no blank line between them, one line naming the invocation forms `grund <ID>[.<section>]`, `grund <COMMAND> [ARGS]`, `grund <COMMAND> -h` and `grund -V`.
+- **The commands, grouped by intent.** Three groups, in this order and with a blank line between them: *Query the catalog* (`show`, `list`, `refs`, `cover`), *Check and author* (`check`, `fmt`, `id`, `fetch`) and *Set up* (`init`, `config`, `schema`, `integrations`, `completions`, `agent-setup-instructions`). Each row gives the command, a one-line description in the vocabulary of [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) and [§FS-terms.terms.2](FS-terms.md#terms2-citations), and a sample call.
 - **A footer.** One line giving the public address of the user guides and their runnable examples, `https://github.com/agent-grounds/grund/tree/main/docs/user-facing`: an address a reader with only the installed binary can open, never a path in grund's own source tree.
 
 There is no options block. A flag's place is on each command's own page ([§FS-cli.2.3](FS-cli.md#23-a-subcommands-help-page)), and a flag written before the subcommand is answered by the error of [§FS-cli.4.1](FS-cli.md#41-a-flag-placed-before-the-subcommand), which names where it goes.
@@ -122,6 +122,7 @@ A flag's one-line example is a command line that runs the page's subcommand — 
   | `check` (incl. `--watch`), `list`, `refs`, `cover` | `text\|json` | yes | yes |
   | `show` (incl. `--batch` and the bare-ID form), `id`, `integrations` | `text\|json` | no — the key never reached them, and a tree that commits `format = "json"` must not change their bytes on upgrade ([§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered)) | yes |
   | `fmt`, `config validate`, `config show` | rejected | — | yes: they render paths and config-load errors |
+  | `schema` | its own `table\|mermaid\|dot` ([§FS-schema.1](FS-schema.md#1-the-command)); `text` and `json` are refused | no | yes: it renders config-load errors |
   | `init`, `fetch`, `completions`, `agent-setup-instructions` | rejected | — | rejected |
 
   A rejected flag is a CLI-level error of the command's own flag rules — `unknown flag`, or `agent-setup-instructions takes no arguments` — as today, per [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location). `fmt` and `config` gain no JSON surface here: designing one is their own spec's business ([§FS-errors.5](FS-errors.md#5-json-format)). The inert `[output] color` key gets no run-flag counterpart and there is no `--color`.
@@ -134,7 +135,7 @@ The stream split is the same as the text form ([§FS-errors.1](FS-errors.md#1-st
 
 ### 3.2 At most one path
 
-A second positional — `grund check a b`, `grund <ID> a b`, `grund refs ID a b`, `grund cover a b`, `grund fmt a b`, `grund list a b`, `grund id FS "t" a b` — is a CLI-level error (`error: <subcommand> takes at most one path argument`, exit `2`, [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)), never a silent use of one and a quiet drop of the rest. `config` and `agent-setup-instructions` already enforce this; the rule is uniform across the surface, so a typo'd path is reported, never absorbed.
+A second positional — `grund check a b`, `grund <ID> a b`, `grund refs ID a b`, `grund cover a b`, `grund fmt a b`, `grund list a b`, `grund schema a b`, `grund id FS "t" a b` — is a CLI-level error (`error: <subcommand> takes at most one path argument`, exit `2`, [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)), never a silent use of one and a quiet drop of the rest. `config` and `agent-setup-instructions` already enforce this; the rule is uniform across the surface, so a typo'd path is reported, never absorbed.
 
 ### 3.3 The `check` selector help
 
@@ -214,4 +215,4 @@ prevents the batch from running ([§FS-show.2.6](FS-show.md#26-batch-resolution)
 - No generic `--quiet` / `--verbose` knobs — severity is fixed ([§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization)), and a clean text `grund check` already has a single fixed `success` line ([§GOAL-friendliness-first.1](../goals.md#1-hard-requirements)). The explicit `check --only <code>` / `--ignore <code>` surface is a scoped query over stable finding identities, not a presentation mode or a project policy knob ([§FS-check.1](FS-check.md#1-inputs)).
 - No `--config <file>` override — config is discovered by walking up from the command path ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), not pointed at directly, to keep two installs on the same tree in agreement ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). `grund config show [path]` reports what was discovered from that starting path.
 - No interactive flags, no TUI, no prompts ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)).
-- No `grund graph`, no `grund new` — graph visualisation is a non-goal ([§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking)), and file creation for a new declaration is the caller's job after `grund id` ([§FS-id.7](FS-id.md#7-what-id-does-not-do)).
+- No `grund graph`, no `grund new` — visualising the ID graph is a non-goal ([§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking)), and file creation for a new declaration is the caller's job after `grund id` ([§FS-id.7](FS-id.md#7-what-id-does-not-do)). `grund schema` ([§FS-schema](FS-schema.md#fs-schema-grund-schema-shows-what-a-repository-is-held-to-read-from-its-configuration-alone)) draws the configuration — kinds, places and the rules between them — never declarations or their citations.

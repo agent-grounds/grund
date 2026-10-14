@@ -133,6 +133,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-fmt-one-model](DF-fmt-one-model.md#df-fmt-one-model-fmt-is-the-shared-verified-model-plus-a-write-step-and-completeness-is-a-precondition-rather-than-a-convention) — `fmt` is the shared verified model plus a write step, and completeness is a precondition rather than a convention
 - [§DF-refs-resolver-rejection](DF-refs-resolver-rejection.md#df-refs-resolver-rejection-an-id-rejected-by-a-selected-grammar-is-a-failed-query) — an ID rejected by a selected grammar is a failed query
 - [§DF-bare-grund-lands-on-an-error](DF-bare-grund-lands-on-an-error.md#df-bare-grund-lands-on-an-error-bare-grund-lands-on-a-cli-level-error-not-the-top-level-help-page) — bare `grund` lands on a CLI-level error, not the top-level help page
+- [§DF-schema-view](DF-schema-view.md#df-schema-view-the-schema-view-is-its-own-command-prints-no-json-yet-shows-a-workspaces-root-and-draws-an-any-of-entry-through-one-junction) — the schema view is its own command, prints no JSON yet, shows a workspace's root, and draws an any-of entry through one junction
 
 ## Agent-facing surfaces
 

@@ -1,0 +1,13 @@
+api · grund.toml · v1
+
+kinds and places
+  FS    kind        docs/
+  code  complement  every scanned file no other row claims
+
+citations
+  FS    should  FS (itself)
+  code  —
+
+must = check error · warn = check warning · should = suggestion (check --suggestions)
+may = allowed · must not / warn not / should not = forbidden at that strength
+A|B = one obligation, met by citing either · — = no direction rule names it

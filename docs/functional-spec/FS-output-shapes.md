@@ -290,6 +290,8 @@ For each case above, [§FS-output-shapes.7.1](FS-output-shapes.md#71-the-matrix)
 | bad flag / malformed CLI | empty | raw `error:` text | `2` |
 | invalid config during `config validate` | empty | raw `error: <path>:<line>:` text | `1` |
 | invalid config blocking another command | empty | raw `error: <path>:<line>:` text | `2` |
+| `schema`, any format, printed | the view | empty | `0` |
+| `schema`, invalid config or usage error | empty | raw `error:` text, plus `known formats:` for an unknown format | `2` |
 | semantic value finding, text | located finding lines | empty | `1` |
 | semantic value finding, JSON | finding NDJSON with declaration `sites` | empty | `1` |
 | home JSON that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete | partial findings if any | incomplete-scan finding | `2` |

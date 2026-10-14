@@ -1,0 +1,9 @@
+grund_config_version = 1
+project_name = "root"
+[reference]
+require_grounding = true
+[[kinds]]
+kind = "GOAL"
+file = "goals.md"
+[workspace]
+members = ["api", "web"]

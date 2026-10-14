@@ -1,0 +1,29 @@
+grund schema — the kinds, places, shapes and citation rules a repository is held to.
+
+Usage:  grund schema [PATH] [--format table|mermaid|dot]
+
+Reads only the effective grund.toml discovered from PATH: no scan, so a broken tree still shows.
+
+Options:
+  --format table|mermaid|dot
+                       table (default): the terminal view, with a legend.
+                       mermaid, dot: the same facts as Mermaid or Graphviz source; grund runs neither.
+                       e.g. grund schema --format mermaid
+  --path-base project|invocation
+                       project (default) spells report paths from the config root;
+                       invocation: relative to the path you passed, or the current directory if you passed none.
+                       e.g. grund schema docs/ --path-base=invocation
+
+PATH defaults to `.`; config is discovered by walking up from it.
+At a workspace root the root project is shown, with one line naming its members.
+
+Exit:  0 printed · 2 the config couldn't be read, or a usage error.
+
+Examples:
+  grund schema                         # the quick terminal view
+  grund schema --format mermaid        # Mermaid source, e.g. for a GitHub comment
+  grund schema --format dot | dot -Tsvg > schema.svg
+  grund schema docs/ --path-base=invocation
+
+Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/schema.md
+Example:  https://github.com/agent-grounds/grund/tree/main/examples/schema
