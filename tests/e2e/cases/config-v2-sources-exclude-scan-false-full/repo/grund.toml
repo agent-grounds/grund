@@ -1,0 +1,12 @@
+grund_config_version = 2
+project_name = "fixture"
+[schema.sources]
+languages = ["markdown"]
+exclude = ["generated/"]
+[schema.kinds.FS]
+folders = ["docs"]
+index = false
+[schema.kinds.archive]
+citable = false
+scan = false
+folders = ["archive"]
