@@ -75,10 +75,9 @@ fn exact_authored_generic_facts_reject_omissions_and_every_complex_field_corrupt
 
 #[test]
 fn exact_question_inventory_is_independent_of_a_returned_empty_catalog() {
-    let variant = json!({"coordinates":["FS-alpha","FS-alpha.1","FS-absent"],
-        "calls":{"editor:snapshot":{"editor":{"snapshot":{}}}}});
+    let variant = super::agreement_query_controls::variant();
     let coordinates = expectations::coordinates(&variant).unwrap();
-    assert_eq!(coordinates.len(), 3);
+    assert_eq!(coordinates.len(), 9);
     let obligations = expectations::obligations(&variant).unwrap();
     for coordinate in coordinates {
         for producer in ["cli", "python", "node"] {
@@ -97,10 +96,19 @@ fn exact_question_inventory_is_independent_of_a_returned_empty_catalog() {
 
 #[test]
 fn generic_writer_oracle_rejects_common_wrong_anchors_and_pins_unchanged_bytes() {
-    let text = format!("See [{}FS-alpha](fs.md#fs-alpha-alpha).\n", '§');
+    let original = format!("See {}FS-alpha.\nUnrelated bytes.\n", '§');
+    let text = format!(
+        "See [{}FS-alpha](fs.md#fs-alpha-alpha).\nUnrelated bytes.\n",
+        '§'
+    );
+    let declaration = "# FS-alpha: Alpha\n\nAuthored body.\n";
     let expected_tree = Tree::new(
-        "authored-writer-output",
-        &[("grund.toml", CONFIG_SLUG), ("docs/citations.md", &text)],
+        "authored-writer-input",
+        &[
+            ("grund.toml", CONFIG_SLUG),
+            ("docs/citations.md", &original),
+            ("docs/fs.md", declaration),
+        ],
     );
     let before = bytes::inventory(&expected_tree.0);
     assert_eq!(bytes::resulting(&before, &json!({})).unwrap(), before);
@@ -110,11 +118,24 @@ fn generic_writer_oracle_rejects_common_wrong_anchors_and_pins_unchanged_bytes()
     );
     let changes = json!({"docs/citations.md":{"bytes":text.as_bytes()}});
     let expected = bytes::resulting(&before, &changes).unwrap();
+    assert_ne!(
+        expected, before,
+        "authored replacement must change the input"
+    );
+    let corruptions = [
+        text.replace("#fs-alpha-alpha", "#wrong-anchor"),
+        text.replace("(fs.md#", "(wrong.md#"),
+        original.clone(), // A writer omitting the replacement is wrong.
+        text.replace("Unrelated bytes.", "Changed unrelated bytes."),
+    ];
     for producer in ["cli", "python", "node"] {
-        let wrong = text.replace("#fs-alpha-alpha", "#wrong-anchor");
         let tree = Tree::new(
             producer,
-            &[("grund.toml", CONFIG_SLUG), ("docs/citations.md", &wrong)],
+            &[
+                ("grund.toml", CONFIG_SLUG),
+                ("docs/citations.md", &text),
+                ("docs/fs.md", declaration),
+            ],
         );
         let mut definition = json!({
             "point":"§REQ-one-answer.writes.anchors","authoredFrom":"authored resulting anchor bytes",
@@ -129,9 +150,39 @@ fn generic_writer_oracle_rejects_common_wrong_anchors_and_pins_unchanged_bytes()
             &expected,
             &mut errors,
         );
+        assert!(errors.is_empty(), "authored correct output: {errors:?}");
+        for wrong in &corruptions {
+            std::fs::write(tree.0.join("docs/citations.md"), wrong).unwrap();
+            errors.clear();
+            truth::writer(
+                &context,
+                producer,
+                json!({"failure":null,"result":{}}),
+                &expected,
+                &mut errors,
+            );
+            assert!(
+                !errors.is_empty(),
+                "wrong target/anchor/omitted replacement/unrelated bytes escaped"
+            );
+        }
+        std::fs::write(tree.0.join("docs/citations.md"), &text).unwrap();
+        std::fs::write(
+            tree.0.join("docs/fs.md"),
+            "changed protected declaration bytes\n",
+        )
+        .unwrap();
+        errors.clear();
+        truth::writer(
+            &context,
+            producer,
+            json!({"failure":null,"result":{}}),
+            &expected,
+            &mut errors,
+        );
         assert!(
             !errors.is_empty(),
-            "generic writer must reject equal-but-wrong output bytes"
+            "generic writer must protect every unchanged input file"
         );
     }
 }

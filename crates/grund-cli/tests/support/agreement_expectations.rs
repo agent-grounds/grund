@@ -36,7 +36,15 @@ pub fn coordinates(variant: &Value) -> Result<BTreeSet<String>, String> {
     if coordinates.len() != list.len() || coordinates.is_empty() {
         return Err("coordinates must be nonempty and unique (include an authored absent query for an empty tree)".into());
     }
-    Ok(coordinates)
+    let closure = super::agreement_query_inventory::closure(&variant["queryInventory"])?;
+    if coordinates != closure {
+        return Err(format!(
+            "coordinates differ from physical-fact closure: missing {:?}, extra {:?}",
+            closure.difference(&coordinates).collect::<Vec<_>>(),
+            coordinates.difference(&closure).collect::<Vec<_>>()
+        ));
+    }
+    Ok(closure)
 }
 
 pub fn obligations(variant: &Value) -> Result<BTreeSet<(String, String)>, String> {
@@ -96,7 +104,7 @@ pub fn validate_variant(variant: &Value) -> Result<(), String> {
         ) {
             return Err(format!("unsupported authored inapplicability: {reason}"));
         }
-        if ["coordinates", "calls", "writtenChanges"]
+        if ["coordinates", "calls", "writtenChanges", "queryInventory"]
             .iter()
             .any(|key| variant.get(key).is_some())
         {
@@ -199,6 +207,8 @@ pub fn load(cases: &Path) -> Result<BTreeMap<String, Value>, Vec<String>> {
                 return Err(format!("{name}: exact variant inventory differs"));
             }
             for (variant, facts) in variants {
+                super::agreement_query_inventory::validate_inputs(facts, &document["inputFiles"])
+                    .map_err(|e| format!("{name}/{variant}: {e}"))?;
                 validate_variant(facts).map_err(|e| format!("{name}/{variant}: {e}"))?;
             }
             Ok(document)

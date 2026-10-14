@@ -28,6 +28,10 @@ mod agreement_acceptance;
 mod agreement_buffers;
 #[path = "support/agreement_compare.rs"]
 mod agreement_compare;
+#[path = "support/agreement_context.rs"]
+mod agreement_context;
+#[path = "support/agreement_context_controls.rs"]
+mod agreement_context_controls;
 #[path = "support/agreement_controls.rs"]
 mod agreement_controls;
 #[path = "support/agreement_corpus.rs"]
@@ -62,6 +66,10 @@ mod agreement_oracles;
 mod agreement_paths;
 #[path = "support/agreement_projection_controls.rs"]
 mod agreement_projection_controls;
+#[path = "support/agreement_query_controls.rs"]
+mod agreement_query_controls;
+#[path = "support/agreement_query_inventory.rs"]
+mod agreement_query_inventory;
 #[path = "support/agreement_questions.rs"]
 mod agreement_questions;
 #[path = "support/agreement_refs_fields.rs"]

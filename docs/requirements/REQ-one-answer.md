@@ -274,6 +274,10 @@ while `check` bounds its report
 CLI and bindings compare isolated saved edits; the editor compares the equivalent
 held edit, without adding public buffer parameters
 ([§REQ-one-answer.contract](REQ-one-answer.md#contract-one-question-one-tree-one-answer)).
+Authored invocation identities normalize filesystem fields and overlay path keys,
+preserving the distinct held and saved copies when both exist. Held text, source
+ranges and section-coordinate map keys retain their authored values; moving an
+overlay to a different file is a different input.
 Record the reason and defining point for each inapplicable case/variant/question/surface
 cell, and assert its applicability accounting. An observed refusal is an answer,
 not permission to discard the case. Root-config filters, blanket skips and swallowed
@@ -293,6 +297,11 @@ fixture facts. A second engine call, equality of `list` and `list --size`, an ab
 golden treated as an empty answer or regenerated expectations cannot prove truth.
 Each compared question needs its own expected fact or a justified applicability
 decision; one unrelated golden cannot stand for all answers on a tree.
+Query completeness is checked before execution against the independently authored
+physical inventory, including declarations, nested sections, citations and aliases.
+Removing a physical fact and its questions together must fail the inventory check.
+The driver and receipt accounting use the same validated closure, including absent
+and refused questions; a nonempty coordinate array does not establish completeness.
 
 Keep positive controls, unlisted and stale divergence rejection and requirement-row
 accounting. Existing ruled differences remain outside the contract until closed;
