@@ -1,0 +1,19 @@
+# Configuration for the example project.
+# Reviewed with grund config migrate.
+
+grund_config_version = 1
+project_name = "example"
+
+[id]
+format = "{kind}-{slug}" # the IDs are slugs
+named_sections = true
+slug_pattern = "[a-z][a-z0-9-]*"
+
+# The specification is one file at the root.
+[[kinds]]
+kind = "FS"
+file = "requirements.md"
+
+[scan]
+include = ["requirements.md"]
+extensions = ["md"]

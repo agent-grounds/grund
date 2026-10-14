@@ -121,7 +121,7 @@ A flag's one-line example is a command line that runs the page's subcommand — 
   |---|---|---|---|
   | `check` (incl. `--watch`), `list`, `refs`, `cover` | `text\|json` | yes | yes |
   | `show` (incl. `--batch` and the bare-ID form), `id`, `integrations` | `text\|json` | no — the key never reached them, and a tree that commits `format = "json"` must not change their bytes on upgrade ([§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered)) | yes |
-  | `fmt`, `config validate`, `config show` | rejected | — | yes: they render paths and config-load errors |
+  | `fmt`, `config validate`, `config show`, `config migrate` | rejected | — | yes: they render paths and config-load errors |
   | `schema` | its own `table\|mermaid\|dot` ([§FS-schema.1](FS-schema.md#1-the-command)); `text` and `json` are refused | no | yes: it renders config-load errors |
   | `init`, `fetch`, `completions`, `agent-setup-instructions` | rejected | — | rejected |
 

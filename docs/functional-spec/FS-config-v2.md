@@ -47,7 +47,7 @@ Every constraint draws its strength from one closed set, and the strength moves 
 
 ### requirements.ahead: What the format defines and this grund refuses is owed to its owners — deferred
 
-The format is published whole and executed in part ([§FS-config-v2.rollout](FS-config-v2.md#rollout-what-this-grund-executes-and-what-it-refuses)). Owed, and refused at its authored line until it lands: `[presentation] rules` to #460; and every `anchors` and `links` value but the formatter's existing one to its own change ([§FS-config-v2.presentation](FS-config-v2.md#presentation-the-presentation-concern)). Migration from v1, which the records are kept apart for, is #461's ([§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart)). None of them loads with a v1 meaning meanwhile ([§FS-config-v2.requirements.no-v1-meaning](FS-config-v2.md#requirementsno-v1-meaning-a-v2-file-is-read-under-v2s-rules-or-refused-never-under-v1s--realized)). Serves [§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable).
+The format is published whole and executed in part ([§FS-config-v2.rollout](FS-config-v2.md#rollout-what-this-grund-executes-and-what-it-refuses)). Owed, and refused at its authored line until it lands: `[presentation] rules` to #460; and every `anchors` and `links` value but the formatter's existing one to its own change ([§FS-config-v2.presentation](FS-config-v2.md#presentation-the-presentation-concern)). Migration from v1, which the records are kept apart for, is realized by [§FS-config-migrate](FS-config-migrate.md#fs-config-migrate-grund-config-migrate---to-2-shows-the-version-2-file-that-means-what-a-version-1-config-means-and-writes-it-only-when-asked-and-only-when-it-does). None of them loads with a v1 meaning meanwhile ([§FS-config-v2.requirements.no-v1-meaning](FS-config-v2.md#requirementsno-v1-meaning-a-v2-file-is-read-under-v2s-rules-or-refused-never-under-v1s--realized)). Serves [§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable).
 
 ## reader: The reader
 
@@ -237,15 +237,17 @@ A definition adds a language to the names `languages` and `[schema.sources.exten
 |---|---|---|
 | `class` | `document`, `data`, `source` | required |
 | `comment_prefixes` | literal, nonempty, single-line strings, each once | `[]` |
-| `doc_comments` | `none`, `c-family`, `python`, `go`, `ruby`, `shell`, `sql`, `ldoc`, `haddock`, `roxygen` | `none` |
+| `doc_comments` | `none`, `c-family`, `python`, `go`, `ruby`, `shell`, `sql`, `ldoc`, `haddock`, `roxygen`, `lisp` | `none` |
 | `docstrings` | `off`, `python` | `off` |
 
 A definition without `class` is refused at its header: ``[schema.sources.definitions.<name>] needs `class` ``. Each value outside its column is refused at its line, naming the values it expected. The combinations below are refused at the line of the key that breaks them:
 
 - A `document` definition reads its files with the Markdown reader, a `data` definition with the JSON value-file reader. Neither takes a doc profile or docstrings other than `none` and `off`. A `document` definition may keep comment prefixes, for a fenced example's reading, as v1's Markdown does; a `data` definition takes none. Each is refused at the offending key's line: `` [schema.sources.definitions.<name>] class = "<class>" takes no <key> ``.
 - A `source` definition needs a comment host: at least one prefix, or `docstrings = "python"`. One with neither is ``[schema.sources.definitions.<name>] reads no comment: give it comment_prefixes or docstrings = "python"``, at its header.
-- `doc_comments = "python"` needs `docstrings = "python"`, and a marker profile whose marker no configured prefix can reach — `c-family` without `//` or `/*`, `ldoc`, `haddock` or `sql` without `--`, `roxygen`, `ruby` or `shell` without `#`, `go` without `//` — is refused at the `doc_comments` line: `` doc_comments = "<profile>" is unreachable: no comment prefix of [schema.sources.definitions.<name>] spells it ``.
+- `doc_comments = "python"` needs `docstrings = "python"`, and a marker profile whose marker no configured prefix can reach — `c-family` without `//` or `/*`, `ldoc`, `haddock` or `sql` without `--`, `roxygen`, `ruby` or `shell` without `#`, `go` without `//`, `lisp` without `;` — is refused at the `doc_comments` line: `` doc_comments = "<profile>" is unreachable: no comment prefix of [schema.sources.definitions.<name>] spells it ``.
 - A prefix written twice is refused at the `comment_prefixes` line.
+
+`lisp` is v1's Lisp position recognizer, frozen as it stands at this change ([§FS-inline-citation-style.1.1.2](FS-inline-citation-style.md#112-languages)): a comment block is a doc-comment when the next line opens a form whose head symbol starts with `def` or `cl-def`, or is `ns`. It is additive ([§FS-config.5.1](FS-config.md#51-new-keys-are-not-a-new-version)): an older binary refuses `lisp` at its line. It exists so that migration can carry the `lisp`, `scm`, `clj` and other Lisp extensions in v1's default extension list, which no other profile reads the same way ([§FS-config-migrate](FS-config-migrate.md#fs-config-migrate-grund-config-migrate---to-2-shows-the-version-2-file-that-means-what-a-version-1-config-means-and-writes-it-only-when-asked-and-only-when-it-does)).
 
 A prefix is literal: matched byte for byte at the first non-blank column, the longest configured prefix first, and standing for nothing beyond itself. A definition's prefixes are its own; there is no global prefix list in v2.
 
@@ -327,10 +329,10 @@ A v2 snapshot still publishes the v1-shaped `scan` mapping, whose keys are v1's.
 
 #### schema.sources.migration: What a v1 source configuration becomes
 
-These are the rules agent-grounds/grund#461's `grund config migrate --to 2` applies to v1's `[scan]` source keys; this change specifies them and does not build the migrator. Every translation writes its defaults out, so the v2 file keeps v1's meaning after any later edit to the tree, and a report that matches on one tree is no proof of equivalence ([§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart)).
+These are the rules `grund config migrate --to 2` applies to v1's `[scan]` source keys ([§FS-config-migrate](FS-config-migrate.md#fs-config-migrate-grund-config-migrate---to-2-shows-the-version-2-file-that-means-what-a-version-1-config-means-and-writes-it-only-when-asked-and-only-when-it-does)). Every translation writes its defaults out, so the v2 file keeps v1's meaning after any later edit to the tree, and a report that matches on one tree is no proof of equivalence ([§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart)).
 
 1. `declarations = "any-comment"` is written, which is v1's declaration recognition.
-2. `languages` is written explicitly. Each v1 extension becomes a definition of its own, named after the extension, of the class its v1 reader is — `document` for `md`, `source` otherwise — copying the **whole** v1 `comment_prefixes` list and the doc profile [§FS-inline-citation-style.1.1.2](FS-inline-citation-style.md#112-languages) gives that extension, and is mapped by `[schema.sources.extensions]`. A Markdown definition keeps v1's prefixes, since v1 reads a Markdown fence through them.
+2. `languages` is written explicitly. Each distinct v1 reading becomes one definition, named `v1_<profile>`: `v1_markdown` for `md`, `v1_<doc profile>` for a source extension, with `-` written `_` (`v1_c_family`, `v1_python`, `v1_lisp`), and `v1_plain` for a source extension with no doc profile. Its class is the one its v1 reader is — `document` for `md`, `source` otherwise — and it copies the **whole** v1 `comment_prefixes` list and the doc profile [§FS-inline-citation-style.1.1.2](FS-inline-citation-style.md#112-languages) gives those extensions. Each v1 extension is mapped to its definition by `[schema.sources.extensions]`. *Amended by agent-grounds/grund#461:* this rule first named each definition after its extension, which cannot always be done, because a definition may not take a built-in name (`c`, `go`, `java`, `lua`, `sql`, `lisp`, `ada` and others are built-in) and `R` breaks the name grammar. A Markdown definition keeps v1's prefixes, since v1 reads a Markdown fence through them.
 3. `.py` takes `docstrings = "python"` and the `python` profile when `docstring_python = true`, and `docstrings = "off"` with no Python profile when it is `false`, which keeps v1's raw-line reading of a triple-quoted string.
 4. Each v1 `[scan] exclude` name becomes the escaped, directory-only glob `<name>/`, which matches that directory at any depth, as v1 did.
 
@@ -421,7 +423,7 @@ The published example of [§DISC-core-concerns.7.1](../discussions/proposals/202
 
 ## mapping: What the records keep apart
 
-Both readers lower into the same records, so the records hold every state either one can mean. A v1 state that v2 does not spell keeps its meaning. Migration is agent-grounds/grund#461's. This table is what a migration audits against, and tests on the records hold it, not a comparison of one tree's reports.
+Both readers lower into the same records, so the records hold every state either one can mean. A v1 state that v2 does not spell keeps its meaning. Migration is [§FS-config-migrate](FS-config-migrate.md#fs-config-migrate-grund-config-migrate---to-2-shows-the-version-2-file-that-means-what-a-version-1-config-means-and-writes-it-only-when-asked-and-only-when-it-does), and it refuses each row below whose v2 spelling is `none`. This table is what a migration audits against, and tests on the records hold it, not a comparison of one tree's reports.
 
 | v1 state | v2 spelling | What the records keep |
 |---|---|---|
@@ -438,3 +440,8 @@ Both readers lower into the same records, so the records hold every state either
 | A complement renamed by a non-citable homeless row | none: the complement is `code`, titled by `[presentation.kinds.code] title` | the complement's row name |
 | Every row's guidance renders in the root entrypoint | `[presentation] rules = "root"`, which a migrated file writes explicitly; a v2 file that omits it renders scoped guidance ([§FS-init.2.3.5.11](FS-init.md#23511-scoped-guidance-a-rows-guidance-lands-above-its-places)) | the layout of the generated guidance, so a migrated config writes the files its v1 config wrote |
 | `[scan] include`, separate from the homes | none: the scan is the places and the complement's extent | the derived scan roots |
+| A row's `value_chapter` | a field, which adds a "Declaration shapes" section to the generated guidance | the chapter's value roots, apart from the field model |
+| `lead_size_warning` counted in lines or bytes | `[schema.leads.words]` only | the lead budget and its unit |
+| `[fmt.cross_refs] enabled = false`, or an `anchor_format` other than `"github"` | none in this grund ([§FS-config-v2.rollout](FS-config-v2.md#rollout-what-this-grund-executes-and-what-it-refuses)) | the formatter's link policy |
+| An `include` entry that does not exist | none: a place is a file or a folder | the authored scan root, of no known type |
+| A project `grounding_level` that only `--require-grounding` switches on | a rung of a ladder, which is always on | the level, apart from whether it is enforced |

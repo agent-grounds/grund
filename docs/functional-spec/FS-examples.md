@@ -165,3 +165,16 @@ to invoke Grund under [§FS-examples.5.3](FS-examples.md#53-commandargs-is-read-
 [§FS-cochange-recipe.examples](FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance) uses this seam for its maintained Git walkthrough;
 there is no separate example executor. Executable-spawn failures name the case
 and external executable and never count as golden success.
+
+### 5.5 An example may pin several runs
+
+An example whose walkthrough has more than one step keeps one run per step in
+its own subdirectory, each shaped exactly like a single-run example (`repo/`,
+`expected.*`, an optional `command.args`), with the example's `README.md` beside
+them. Discovery takes a top-level example directory that holds no
+`expected.exit` and runs each direct subdirectory that does, in name order,
+through the same shared runner; nothing deeper is searched. An example directory
+with neither an `expected.exit` nor such a subdirectory is not a runnable
+example, as before. `examples/migrate/` is the first: its two runs are the
+preview that refuses and the preview after the repairs it names
+([§FS-config-migrate.3.1](FS-config-migrate.md#31-a-refusal-names-a-v1-repair)).

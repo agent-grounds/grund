@@ -93,9 +93,20 @@ pub fn discover_e2e_cases(manifest_dir: &Path) -> Vec<PathBuf> {
     cases
 }
 
+/// Every runnable example: a top-level directory with an `expected.exit`, or,
+/// for an example that pins several runs, each direct subdirectory of one that
+/// has none (§FS-examples.5.5).
 pub fn discover_examples(manifest_dir: &Path) -> Vec<PathBuf> {
     let examples_dir = manifest_dir.join("examples");
-    let cases = discover_case_dirs(&examples_dir, |path| path.join("expected.exit").is_file());
+    let runnable = |path: &Path| path.join("expected.exit").is_file();
+    let mut cases = Vec::new();
+    for example in discover_case_dirs(&examples_dir, |_| true) {
+        if runnable(&example) {
+            cases.push(example);
+        } else {
+            cases.extend(discover_case_dirs(&example, runnable));
+        }
+    }
     assert!(
         !cases.is_empty(),
         "expected at least one runnable example under {}",
