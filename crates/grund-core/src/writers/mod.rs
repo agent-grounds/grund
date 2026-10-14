@@ -190,6 +190,8 @@ mod tests_local_section_citations;
 #[cfg(test)]
 mod tests_open_resolver;
 #[cfg(test)]
+mod tests_scoped_guidance;
+#[cfg(test)]
 mod tests_workspace_members;
 
 // §FS-distribution.3.1: additive managed-install orchestration.

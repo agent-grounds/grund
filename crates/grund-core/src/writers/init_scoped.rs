@@ -265,7 +265,10 @@ fn cut_verb(removed: bool, dry_run: bool) -> &'static str {
 /// otherwise the block is cut through its end delimiter's line ending. `None`
 /// when the file is gone or carries no block, which is left alone unreported;
 /// `Some(true)` when it was deleted.
-fn cut_block(path: &Path, dry_run: bool) -> Result<Option<bool>, (PathBuf, anyhow::Error)> {
+pub(super) fn cut_block(
+    path: &Path,
+    dry_run: bool,
+) -> Result<Option<bool>, (PathBuf, anyhow::Error)> {
     let Ok(text) = Sources::on_disk().text(path) else {
         return Ok(None);
     };
