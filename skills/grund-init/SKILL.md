@@ -520,6 +520,9 @@ h = "c"
 
 Only doc comments declare an ID in v2; `declarations = "any-comment"` keeps v1's reading.
 
+A v2 row may list several places, `[schema.kinds.FS] folders = ["docs/spec/core", "docs/spec/plugins"]`, and `[schema.kinds.code] folders = ["src", "scripts"]` names what v1's `include` did.
+Ownership in one line: a file listed in a row's `files` is that row's, otherwise the deepest folder holding it decides, and a file in no place is `code`'s ([ownership](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config-v2.md#schemaplacesownership-a-listed-file-then-the-deepest-folder)).
+
 When multiple language examples apply, merge them conservatively: union the real include dirs, union the extensions actually present, and union generated/cache excludes. Prefer a narrower first config that passes cleanly over an over-broad config that floods the user with findings — and then run `grund check --full .`, which reports the citations that resolve to nothing in the directories `include` left out. A narrow `include` is a good starting point precisely because that check exists; without it, the citations the first config forgot are invisible rather than merely unchecked ([the full-tree scope](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#13-the-full-tree-scope---full)).
 
 ## Splitting off a member

@@ -156,3 +156,29 @@ by the binary, and a version-1 file keeps its meaning unchanged.
 `grund config show` prints a version-2 file back in version-2 spelling. What
 this release reads, and the clauses it still refuses, are in
 [§FS-config-v2](../functional-spec/FS-config-v2.md#fs-config-v2-grund-reads-a-version-2-config-by-concern-with-one-strength-vocabulary-and-fixed-defaults).
+
+### Several places per row
+
+A v2 row lists its places, as many as the repository needs, and they may nest:
+
+```toml
+[schema.kinds.FS]
+folders = ["docs/spec/core", "docs/spec/plugins"]
+
+[schema.kinds.page]
+citable = false
+folders = ["docs"]
+
+[schema.kinds.code]
+folders = ["crates", "scripts"]
+```
+
+A file listed in a row's `files` belongs to that row; otherwise the deepest
+folder holding it decides, so `docs/spec/core/login.md` is `FS`'s, not
+`page`'s; and a file in no place belongs to `code`. The row named `code` is the
+complement: it declares no IDs, and listing places on it narrows the scan to
+the places written. With no `code` row every file under the config root is
+read. One place belongs to one row, a place stays inside the config root and
+outside every workspace member, and `scan = false` covers every place of its
+row. The runnable [`examples/places/`](../../examples/places/) walks through it
+([§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places)).

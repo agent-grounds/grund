@@ -284,15 +284,15 @@ How many words a declaration's lead may take, by strength. [§FS-config-v2.schem
 
 ### `[schema.kinds.<NAME>]`
 
-One kind: its homes, its form, and its fields. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places)
+One row: its places, its form, and its fields. A row may list several places; a file listed in `files` belongs to its row, otherwise the deepest folder holding it decides, and a file in no place belongs to `code`. The row named `code` is the complement: it declares no IDs, and listing places on it narrows the scan to every place written. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places)
 
 | Key | Type | Default | What it sets |
 |---|---|---|---|
-| `files` | array of strings | `[]` | Single-file homes: every declaration is a heading in one of these documents. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
-| `folders` | array of strings | `[]` | Folder homes: each declaration is the H1 of its own file under one of these directories. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
-| `citable` | boolean | `true` | `false` makes this a place: it cites, but declares no IDs. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
-| `scan` | boolean | `true` | `false` lists the kind in the Project map without walking it. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
-| `index` | string or `false` | README.md (no E2E special case in v2) | The folder's index file, which must list every declaration; `false` opts out. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
+| `files` | array of strings | `[]` | Files from the config root, in written order. A listed file belongs to this row even inside another row's folder. On a citable row with no folders, every declaration is a heading in one of these documents. A place is normalized (`./a/` is `a`), must stay inside the config root, and belongs to one row. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
+| `folders` | array of strings | `[]` | Folders from the config root, in written order. Each declaration is the H1 of its own file under one of them; a file in nested folders belongs to the deepest. A place is normalized, must stay inside the config root and outside every workspace member, belongs to one row, and a folder may not link out of the project root. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
+| `citable` | boolean | `true` | `false` makes this a place: it cites, but declares no IDs. A non-citable row must list a place unless it is `code`, which is non-citable by name; `citable = true` on `code` is refused. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
+| `scan` | boolean | `true` | `false` lists the kind in the Project map without walking any of its places; a scanned place nested under it is still walked. Refused on `code`: narrow its places or use `[schema.sources] exclude`. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
+| `index` | string or `false` | README.md (no E2E special case in v2) | The index file each folder keeps, which must list every declaration that folder owns; `false` opts out. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
 | `id_format` | string | inherits `[schema] id_format` | This kind's ID template, overriding `[schema] id_format`. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
 | `fetch` | string | — | The executable `grund fetch` runs to save a missing external snapshot. [§FS-config-v2.schema.places](../functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places) |
 | `form` | `"prose"` \| `"value"` \| `"rule"` | `"prose"` | What a declaration is: ordinary `prose`, a first-class `value`, or an executable `rule`. [§FS-fields.declare.form](../functional-spec/FS-fields.md#declareform-form-is-a-row-key) |
