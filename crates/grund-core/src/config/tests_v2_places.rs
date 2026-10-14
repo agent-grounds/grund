@@ -141,7 +141,22 @@ fn a_place_repeated_by_spelling_case_or_link_is_refused() {
         write(&root.join("grund.toml"), &toml);
         let err = refusal(load_config(&root));
         assert!(
-            err.contains("grund.toml:8: place `alias` in `[schema.kinds.page] folders` is already a place of `[schema.kinds.FS]` (line 6)"),
+            err.contains("grund.toml:9: place `alias` in `[schema.kinds.page] folders` is already a place of `[schema.kinds.FS]` (line 6)"),
+            "{err}"
+        );
+    }
+}
+
+/// §FS-config-v2.schema.places.boundaries.1: a place that normalizes to the
+/// config root is refused at its key, since the complement already covers it.
+#[test]
+fn a_place_at_the_config_root_is_refused() {
+    for written in [".", "docs/.."] {
+        let toml =
+            format!("{HEAD}[schema.kinds.page]\ncitable = false\nfolders = [\"{written}\"]\n");
+        let err = refusal(load("places_root", &toml));
+        assert!(
+            err.contains(&format!("grund.toml:7: place `{written}` in `[schema.kinds.page] folders` names the config root, which is the complement's extent")),
             "{err}"
         );
     }
