@@ -1,0 +1,13 @@
+grund_config_version = 2
+project_name = "fixture"
+[schema.sources]
+languages = ["markdown", "json"]
+[schema.sources.extensions]
+jsonc = "json"
+[schema.kinds.CONST]
+folders = ["values"]
+index = false
+form = "value"
+[schema.kinds.FS]
+folders = ["docs"]
+index = false

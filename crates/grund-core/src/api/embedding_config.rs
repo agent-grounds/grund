@@ -81,8 +81,8 @@ fn disjunctions(values: &[CitationDisjunction]) -> Vec<String> {
         .collect()
 }
 
-/// A v2 project's resolved source model (§FS-config-v2.schema.sources): every
-/// admitted language with its own hosts, since v2 has no global prefix list and
+/// A v2 project's resolved source model (§FS-config-v2.schema.sources.effective.bindings):
+/// every admitted language with its own hosts, since v2 has no global prefix list and
 /// its `scan.comment_prefixes` is empty (§FS-languages.prefixes). `None` for v1.
 fn sources(c: &Config) -> Option<Value> {
     let model = c.schema().sources.model.as_ref()?;

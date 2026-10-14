@@ -1,0 +1,2 @@
+{"id":"FS-noted","kind":"FS","path":"values/a.json","line":1,"title":"Read as notes, not as values","stub":false,"defines":null,"refs":0,"duplicate":false}
+{"id":"FS-x","kind":"FS","path":"docs/FS-x.md","line":1,"title":"X","stub":false,"defines":null,"refs":0,"duplicate":false}

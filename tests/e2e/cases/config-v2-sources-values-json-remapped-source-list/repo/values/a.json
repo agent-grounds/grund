@@ -1,0 +1,4 @@
+%% FS-noted: Read as notes, not as values
+{
+  "CONST-a": ["never a value"]
+}

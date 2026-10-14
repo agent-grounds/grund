@@ -125,6 +125,8 @@ mod tests_cover_workspace;
 #[cfg(test)]
 mod tests_embedding;
 #[cfg(test)]
+mod tests_embedding_sources;
+#[cfg(test)]
 mod tests_enclosing_unit;
 #[cfg(test)]
 mod tests_external_facts;

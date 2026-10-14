@@ -92,11 +92,13 @@ pub(super) fn value_json_sources<'a>(
     frame: Frame<'a>,
 ) -> std::result::Result<Vec<(PathBuf, &'a str)>, (PathBuf, String)> {
     let mut sources = Vec::new();
+    // §FS-config-v2.schema.sources.values: the home picks the files, their language the reader.
+    let reads_values = |path: &Path| frame.compiled.reading(schema, path).values();
     for row in schema.value_rows() {
         let kind = row.name.as_str();
         if let Some(file) = row.file() {
             let path = normalize_path_lexically(&frame.root().join(file));
-            if path.extension().and_then(|extension| extension.to_str()) == Some("json") {
+            if reads_values(&path) {
                 sources.push((path, kind));
             }
             continue;
@@ -112,9 +114,7 @@ pub(super) fn value_json_sources<'a>(
             let entry =
                 entry.map_err(|error| (folder.clone(), format!("read value home: {error}")))?;
             let path = normalize_path_lexically(&entry.path());
-            if path.extension().and_then(|extension| extension.to_str()) == Some("json")
-                && disk.is_file(&path)
-            {
+            if reads_values(&path) && disk.is_file(&path) {
                 sources.push((path, kind));
             }
         }
@@ -122,7 +122,7 @@ pub(super) fn value_json_sources<'a>(
             if path
                 .parent()
                 .is_some_and(|parent| paths_same_location(parent, &folder))
-                && path.extension().and_then(|extension| extension.to_str()) == Some("json")
+                && reads_values(&path)
             {
                 sources.push((path, kind));
             }

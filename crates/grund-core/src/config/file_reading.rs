@@ -15,8 +15,8 @@ use super::project::Schema;
 use super::sources::{DeclarationMode, Language, LanguageClass};
 use crate::grammar::{DocCommentRule, LexicalSettings, MultiLineStrings, extension_rule};
 
-/// How the text scan, the formatter, the editor, the checker and `show` read one
-/// file (§FS-config-v2.schema.sources).
+/// How the text scan, the value homes, the formatter, the editor, the checker and
+/// `show` read one file (§FS-config-v2.schema.sources).
 #[derive(Clone, Copy)]
 pub(crate) struct FileReading<'a> {
     /// Read with the Markdown reader.
@@ -63,6 +63,16 @@ impl<'a> FileReading<'a> {
                 extension,
                 lexical,
             },
+        }
+    }
+
+    /// Whether a value home reads this file with the JSON value-file reader
+    /// (§FS-config-v2.schema.sources.values): a v2 file whose language is a `data`
+    /// one, and a v1 file, or one no admitted language claims, named `.json`.
+    pub(crate) fn values(&self) -> bool {
+        match self.language {
+            Some(language) => language.class == LanguageClass::Data,
+            None => self.extension == Some("json"),
         }
     }
 

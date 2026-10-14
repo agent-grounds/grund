@@ -1,0 +1,16 @@
+grund_config_version = 2
+project_name = "fixture"
+[schema.sources]
+languages = ["markdown", "notes"]
+[schema.sources.extensions]
+json = "notes"
+[schema.sources.definitions.notes]
+class = "source"
+comment_prefixes = ["%%"]
+[schema.kinds.CONST]
+folders = ["values"]
+index = false
+form = "value"
+[schema.kinds.FS]
+folders = ["docs"]
+index = false
