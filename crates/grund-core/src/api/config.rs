@@ -9,7 +9,7 @@ use std::path::Path;
 
 use super::config_findings::config_diagnostics;
 use super::report::public_run_warnings;
-use crate::config::{Config, Invocation, Project, Selection};
+use crate::config::{Config, Invocation, Project, SchemaView, Selection, config_file_in};
 use crate::model::Finding;
 use crate::resolver::settled_run_warnings;
 use crate::workspace::{expand_workspace_tree, open, resolve_workspace_config};
@@ -36,6 +36,32 @@ pub fn effective_config(path: &Path) -> Result<Config> {
 /// in place of the `Config` façade, which is on its way out (§AR-config.5).
 pub fn effective_project(path: &Path) -> Result<Project> {
     Ok(effective_config(path)?.project().clone())
+}
+
+/// The schema view of the project the config for `path` describes
+/// (§FS-schema, §AR-config.6.3): discovered as [`effective_config`] discovers it
+/// (§FS-schema.2), lowered from its `Project` and nothing else — no scan, so a
+/// tree whose citations are broken shows the same view (§FS-schema.3). The
+/// header's config path is spelled from the config root, whatever the run's
+/// `--path-base` (§FS-schema.1), and a nameless project is named by its root.
+pub fn schema_view(path: &Path) -> Result<SchemaView> {
+    let config = effective_config(path)?;
+    let mut view = SchemaView::of(config.project());
+    if let Some(file) = config_file_in(&config.root) {
+        let relative = file.strip_prefix(&config.root).unwrap_or(&file);
+        view.config_file = relative.to_string_lossy().replace('\\', "/");
+    }
+    if view.project.is_empty() {
+        let root = config
+            .root
+            .canonicalize()
+            .unwrap_or_else(|_| config.root.clone());
+        view.project = root
+            .file_name()
+            .map(|name| name.to_string_lossy().into_owned())
+            .unwrap_or_default();
+    }
+    Ok(view)
 }
 
 /// Validate config discovery/parsing for a path without printing CLI output

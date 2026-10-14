@@ -265,6 +265,8 @@ pub fn main_entry() -> ExitCode {
         Some("id") => with_path_base(&args[1..], command_id),
         Some("init") => command_init(&args[1..]),
         Some("config") => with_path_base(&args[1..], command_config),
+        // §FS-schema.1.1: a subcommand, so it wins over the default ID query.
+        Some("schema") => with_path_base(&args[1..], command_schema),
         Some("agent-setup-instructions") => command_agent_setup_instructions(&args[1..]),
         Some("completions") => command_completions(&args[1..]),
         Some("integrations") => with_path_base(&args[1..], command_integrations),

@@ -10,6 +10,7 @@ use crate::config::citations::{
     CitationDisjunction, CitationLevel, namespaces_overlap, parse_citation_target_entry,
     render_citation_target,
 };
+use crate::config::grounding::grounding_unit as unit;
 use crate::config::kind::KindResolution;
 use crate::config::project::{KindGrounding, Rung, Strength};
 use crate::config::v1::{parse_string, parse_string_list};
@@ -190,15 +191,6 @@ pub(super) fn ladder_key(
         source: r.at(line),
     });
     Ok(true)
-}
-
-/// The unit a rung's level spells.
-pub(super) fn unit(level: usize) -> String {
-    if level <= 1 {
-        "file".to_string()
-    } else {
-        format!("h{level}")
-    }
 }
 
 /// §FS-config-v2.rules.grounding: order a ladder, then lower it whole. Its

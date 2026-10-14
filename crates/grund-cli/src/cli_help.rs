@@ -3,7 +3,6 @@
 /// `grund help <cmd>` defers to `print_subcommand_help`.
 fn print_help() {
     println!("grund — ground your agents in the spec: §<ID>.<section> citations checked across docs and code.");
-    println!();
     println!("Usage:  grund <ID>[.<section>]  ·  grund <COMMAND> [ARGS]  ·  grund <COMMAND> -h  ·  grund -V");
     println!();
     println!("Query the catalog:");
@@ -21,6 +20,7 @@ fn print_help() {
     println!("Set up:");
     println!("  init          Scaffold agent instructions + grund.toml.               grund init --scaffold");
     println!("  config        Validate or show the effective grund.toml.              grund config show");
+    println!("  schema        Kinds, places, shapes and citation rules at a glance.   grund schema");
     println!("  integrations  Print/install clickable-citation integrations.          grund integrations wezterm");
     println!("  completions   Print shell completion scripts.                         grund completions bash");
     println!("  agent-setup-instructions  Print the setup guide for AI agents.");
@@ -366,6 +366,7 @@ fn print_subcommand_help(cmd: &str) {
             );
         }
         "config" => print_config_help(),
+        "schema" => print_schema_help(),
         "completions" => {
             println!("grund completions — print a shell completion script for grund.");
             println!();

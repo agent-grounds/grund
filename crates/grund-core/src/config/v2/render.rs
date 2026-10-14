@@ -6,9 +6,9 @@
 
 use std::fmt::Write;
 
-use super::rules::unit;
 use crate::config::citations::{CitationDisjunction, render_citation_target};
 use crate::config::fields::{FieldContent, Placement};
+use crate::config::grounding::grounding_unit as unit;
 use crate::config::kind::{KindIndex, KindResolution, escape_toml_basic};
 use crate::config::project::Strength;
 use crate::config::project::{Project, Rung, Threshold};

@@ -103,6 +103,15 @@ pub use config::{
 // §FS-cli.3.4: the run's `--path-base`, which a frontend parses and scopes.
 // `#[doc(hidden)]`, like the check-input observer.
 pub use config::{PathBase, with_report_path_base};
+// §AR-config.6.3: the schema view `grund schema` prints, and its parts. Hidden
+// while the record still moves: a published shape would freeze it (§FS-schema.13).
+#[doc(hidden)]
+pub use api::schema_view;
+#[doc(hidden)]
+pub use config::{
+    BadgeRung, EdgeTarget, Extent, FieldContent, Junction, NodeClass, Placement, STRENGTH_ORDER,
+    SchemaEdge, SchemaNode, SchemaSlot, SchemaView, Strength,
+};
 
 /// The validated configuration façade, built from [`Project`], [`Run`] and
 /// [`Compiled`] (§AR-config.5): kept on the deprecation path of
