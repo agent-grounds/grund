@@ -41,8 +41,19 @@ pub(super) fn presentation_key(
             }
             r.project.presentation.conversation = Some(opinion);
         }
-        // §FS-config-v2.rollout: where rules render is #460's.
-        "rules" => return r.fail(line, not_yet("[presentation] rules")),
+        // §FS-config-v2.presentation: where each row's guidance is written.
+        "rules" => {
+            r.project.presentation.rules_at_root = match presentation(r)?.as_str() {
+                "home" => false,
+                "root" => true,
+                other => {
+                    return r.fail(
+                        line,
+                        format!("unknown [presentation] rules `{other}` (expected home or root)"),
+                    );
+                }
+            };
+        }
         _ => return Ok(false),
     }
     Ok(true)

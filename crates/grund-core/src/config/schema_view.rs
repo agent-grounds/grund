@@ -67,6 +67,27 @@ pub struct SchemaNode {
     pub ruled: bool,
 }
 
+impl SchemaNode {
+    /// §FS-schema.4.1: the lines `grund schema` prints under this node, one per
+    /// slot and one for a `closed` that is not `may`, with a single space where the
+    /// view pads columns — the managed block's declaration shape
+    /// (§FS-init.2.3.5.12.2).
+    pub fn shape_lines(&self) -> Vec<String> {
+        let mut lines: Vec<String> = self
+            .slots
+            .iter()
+            .map(|slot| {
+                let (name, facts) = slot.field_line();
+                format!("field {name} {facts}")
+            })
+            .collect();
+        if let Some(closed) = self.closed {
+            lines.push(format!("closed {}", closed.as_str()));
+        }
+        lines
+    }
+}
+
 /// §FS-schema.4.1: one slot of a kind's shape (§AR-config.6.2), owned.
 #[derive(Clone, Debug, PartialEq)]
 pub struct SchemaSlot {
@@ -75,6 +96,29 @@ pub struct SchemaSlot {
     pub presence: Strength,
     pub placement: Option<Placement>,
     pub content: FieldContent,
+}
+
+impl SchemaSlot {
+    /// §FS-schema.4.1: the slot's name and its facts — presence, placement where
+    /// set, content where it is not prose — joined by ` · `. The one wording of a
+    /// field line, which `grund schema` pads into columns and the managed block's
+    /// `### Declaration shapes` prints as is (§FS-init.2.3.5.12.2).
+    pub fn field_line(&self) -> (String, String) {
+        let name = self.name.clone().unwrap_or_else(|| "<number>".to_string());
+        let mut facts = vec![self.presence.as_str().to_string()];
+        match &self.placement {
+            Some(Placement::First) => facts.push("first".to_string()),
+            Some(Placement::Last) => facts.push("last".to_string()),
+            Some(Placement::After(field)) => facts.push(format!("after {field}")),
+            None => {}
+        }
+        match &self.content {
+            FieldContent::Prose => {}
+            FieldContent::Values => facts.push("values".to_string()),
+            FieldContent::OneOf(values) => facts.push(format!("one of {}", values.join(", "))),
+        }
+        (name, facts.join(" · "))
+    }
 }
 
 /// §FS-schema.6: one rung of a grounding badge.

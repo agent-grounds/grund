@@ -12,7 +12,7 @@ use crate::rules::engine::{
     unresolved_subject_diagnostic,
 };
 use crate::rules::markdown::{MarkdownProject, adapt_markdown, adapt_workspace};
-use crate::rules::sentence::{ParsedRule, RuleVocabulary, parse_rule};
+use crate::rules::sentence::{ParsedRule, RuleSubject, RuleVocabulary, parse_rule};
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::direction_findings::directions;
@@ -248,6 +248,11 @@ pub(crate) struct ConfiguredRules {
     /// per rendered rule — every valid rule and every rule unverifiable here
     /// (§FS-rules.9).
     pub(crate) rows: Vec<(String, String)>,
+    /// Each rendered rule's subject kind, by qualified rule ID: the kind whose
+    /// destination its bullet lands in (§FS-init.2.3.5.11). A rule about another
+    /// project's kind, or a declaration no local kind names, has none and lands
+    /// at the root.
+    pub(crate) subjects: BTreeMap<String, String>,
     /// One located `invalid-rule` per rule this scope cannot verify. `init`
     /// reports these and writes anyway; `check` leaves them to
     /// `check_chapter_rules`, which reports them at the rule's own site.
@@ -272,6 +277,7 @@ pub(crate) fn configured_rule_sentences(
     let facts = adapt_markdown(findings, markdown_project(frame.name, &local), true);
     let mut rows = Vec::new();
     let mut unverifiable = Vec::new();
+    let mut subjects = BTreeMap::new();
     for rule in rule_declarations(findings, schema, frame) {
         let title = rule
             .record
@@ -294,10 +300,17 @@ pub(crate) fn configured_rule_sentences(
         if let Some(message) = unverifiable_here {
             unverifiable.push(rule.invalid(&message));
         }
+        if let Some(kind) = subject_kind(&parsed.subject, schema) {
+            subjects.insert(rule.origin.clone(), kind);
+        }
         rows.push((rule.origin, title.to_string()));
     }
     rows.sort_by(|a, b| a.0.cmp(&b.0));
-    Ok(ConfiguredRules { rows, unverifiable })
+    Ok(ConfiguredRules {
+        rows,
+        subjects,
+        unverifiable,
+    })
 }
 
 /// Append configured and optional ad-hoc rule results to the shared report.
@@ -409,4 +422,31 @@ fn invalid_rule(origin: &str, path: &str, line: usize, message: &str) -> Diagnos
         sites: Vec::new(),
         authority: one_rules_authority(origin),
     }
+}
+
+/// The local kind a rule is about (§FS-init.2.3.5.11): a kind subject's own, or
+/// the kind whose prefix names the declaration an exact subject selects.
+fn subject_kind(subject: &RuleSubject, schema: &Schema) -> Option<String> {
+    let named = match subject {
+        RuleSubject::Kind(kind) | RuleSubject::ChapterOfKind { kind, .. } => {
+            return (!kind.contains('/')).then(|| kind.clone());
+        }
+        RuleSubject::ExactDeclaration(declaration)
+        | RuleSubject::ExactChapter { declaration, .. } => declaration,
+    };
+    if named.contains('/') {
+        return None;
+    }
+    schema
+        .rows
+        .iter()
+        .filter(|row| row.kind.is_some())
+        .map(|row| row.name.as_str())
+        .filter(|kind| {
+            named
+                .strip_prefix(kind)
+                .is_some_and(|rest| rest.starts_with('-'))
+        })
+        .max_by_key(|kind| kind.len())
+        .map(str::to_string)
 }

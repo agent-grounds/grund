@@ -1,8 +1,9 @@
 use crate::grammar::{
     AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup, find_agents_block,
 };
-use crate::model::{CheckReport, Diagnostic, Expected, ExpectedEntrypoint};
+use crate::model::{CheckReport, Diagnostic, Expected, ExpectedEntrypoint, ScopedExpectation};
 use crate::sources::Sources;
+use std::path::Path;
 
 /// One of §FS-errors.3.6.1's five final templates around its `detail`: the
 /// `repo maintenance: ` classification ahead, and the reminder that the finding
@@ -66,6 +67,11 @@ pub(crate) fn check_agent_block_path(
     // observed before its read (§DF-four-editor-checks-read-saved-text).
     let saved = Sources::saved();
     if !saved.exists(path) {
+        // §FS-init.2.3.5.8: a destination of the live render with no file is a
+        // missing block.
+        if matches!(entrypoint.scoped, Some(ScopedExpectation::Block(_))) {
+            report.errors.push(missing_block(path, expected_version));
+        }
         return;
     }
     let Ok(text) = saved.text(path) else {
@@ -105,6 +111,14 @@ pub(crate) fn check_agent_block_path(
     };
     if let Some(block) = block {
         let line = line_for_byte_index(&text, block.start);
+        let block_text = text[block.start..block.end].replace('\r', "");
+        if let Some(ScopedExpectation::Orphan) = entrypoint.scoped {
+            // §FS-init.2.3.5.13.1: an orphan still carrying a block is stale.
+            report
+                .errors
+                .push(stale_block(path, line, "scoped guidance"));
+            return;
+        }
         if block.version < expected_version {
             report.errors.push(Diagnostic {
                 code: "agents-init",
@@ -118,7 +132,9 @@ pub(crate) fn check_agent_block_path(
                 sites: Vec::new(),
                 authority: Vec::new(),
             });
-        } else if block.version > AGENTS_BLOCK_VERSION || block.version > expected_version {
+        } else if block.version > AGENTS_BLOCK_VERSION
+            || unscoped_version(block.version) > unscoped_version(expected_version)
+        {
             report.errors.push(Diagnostic {
                 code: "agents-init",
                 path: Some(path.to_path_buf()),
@@ -134,24 +150,26 @@ pub(crate) fn check_agent_block_path(
         } else {
             // §FS-check.3.5 / §FS-init.2.3.5.8: the generated sections follow
             // config, so the version marker alone cannot catch a config edit that
-            // left the block stale. Byte-compare each against `Expected`.
-            let block_text = text[block.start..block.end].replace('\r', "");
+            // left the block stale. Byte-compare each against `Expected`; a
+            // section expected empty must be absent.
+            let mut stale = false;
             for section in &entrypoint.sections {
-                if section_in_block(&block_text, section.heading) != Some(section.bytes.trim_end())
+                if section_in_block(&block_text, section.heading).unwrap_or("")
+                    != section.bytes.trim_end()
                 {
-                    let noun = section.noun;
-                    report.errors.push(Diagnostic {
-                        code: "agents-init",
-                        path: Some(path.to_path_buf()),
-                        line: Some(line),
-                        column: None,
-                        message: agents_init_message(format!(
-                            "stale grund init block: {noun} differ from grund.toml — run `grund init` to refresh"
-                        )),
-                        sites: Vec::new(),
-                        authority: Vec::new(),
-                    });
+                    stale = true;
+                    report.errors.push(stale_block(path, line, section.noun));
                 }
+            }
+            // §FS-init.2.3.5.12: a scoped block is the render, byte for byte, so
+            // a difference no section names is still a stale one.
+            if let Some(ScopedExpectation::Block(bytes)) = &entrypoint.scoped
+                && !stale
+                && block_text.trim_end() != bytes.trim_end()
+            {
+                report
+                    .errors
+                    .push(stale_block(path, line, "scoped guidance"));
             }
         }
         return;
@@ -159,18 +177,44 @@ pub(crate) fn check_agent_block_path(
     if !require_block {
         return;
     }
-    report.errors.push(Diagnostic {
+    report.errors.push(missing_block(path, expected_version));
+}
+
+/// The version a block would carry without scoped guidance: v21 and v22 are v19
+/// and v20 plus the scoped sections (§FS-init.2.3.7.1), so a scoped block where
+/// an unscoped one is expected is stale rather than unsupported.
+fn unscoped_version(version: u32) -> u32 {
+    if version >= 21 { version - 2 } else { version }
+}
+
+/// §FS-check.3.5.3: a block that should be there and is not.
+fn missing_block(path: &Path, expected_version: u32) -> Diagnostic {
+    Diagnostic {
         code: "agents-init",
         path: Some(path.to_path_buf()),
         line: Some(1),
         column: None,
         message: agents_init_message(format!(
-            "missing grund init block v{} — run `grund init` to install it",
-            expected_version
+            "missing grund init block v{expected_version} — run `grund init` to install it"
         )),
         sites: Vec::new(),
         authority: Vec::new(),
-    });
+    }
+}
+
+/// §FS-check.3.5.3: a block whose `noun` differs from the render.
+fn stale_block(path: &Path, line: usize, noun: &str) -> Diagnostic {
+    Diagnostic {
+        code: "agents-init",
+        path: Some(path.to_path_buf()),
+        line: Some(line),
+        column: None,
+        message: agents_init_message(format!(
+            "stale grund init block: {noun} differ from grund.toml — run `grund init` to refresh"
+        )),
+        sites: Vec::new(),
+        authority: Vec::new(),
+    }
 }
 
 /// The text of a `heading`-led section inside the managed block, from the heading

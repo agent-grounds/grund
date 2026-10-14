@@ -127,23 +127,9 @@ fn schema_places(node: &SchemaNode) -> String {
     places.join(", ")
 }
 
-/// §FS-schema.4.1: a slot's name and its facts — presence, placement where set,
-/// content where it is not prose — joined by ` · `.
+/// §FS-schema.4.1: a slot's name and its facts, in the one wording core keeps.
 fn schema_slot(slot: &SchemaSlot) -> (String, String) {
-    let name = slot.name.clone().unwrap_or_else(|| "<number>".to_string());
-    let mut facts = vec![slot.presence.as_str().to_string()];
-    match &slot.placement {
-        Some(Placement::First) => facts.push("first".to_string()),
-        Some(Placement::Last) => facts.push("last".to_string()),
-        Some(Placement::After(field)) => facts.push(format!("after {field}")),
-        None => {}
-    }
-    match &slot.content {
-        FieldContent::Prose => {}
-        FieldContent::Values => facts.push("values".to_string()),
-        FieldContent::OneOf(values) => facts.push(format!("one of {}", values.join(", "))),
-    }
-    (name, facts.join(" · "))
+    slot.field_line()
 }
 
 /// §FS-schema.6: a badge's ladder, `<strength> · <unit>` rungs joined by `, `.

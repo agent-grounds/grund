@@ -33,6 +33,7 @@ mod agents_block;
 mod assets;
 mod citation_directions;
 mod clickable_citations;
+mod scoped_guidance;
 
 pub use assets::{AGENT_SETUP_INSTRUCTIONS, canonical_template_text};
 
@@ -50,6 +51,7 @@ pub(crate) use assets::{
 };
 pub(crate) use citation_directions::citation_directions_section;
 pub(crate) use clickable_citations::{ConversationSurface, clickable_citations_section};
+pub(crate) use scoped_guidance::{Layout, declaration_shapes_section};
 
 // What another component's tests read (§AR-core-module-layout.1.3): the
 // inline-citation-style sentence the checker's layout cases read per key. The

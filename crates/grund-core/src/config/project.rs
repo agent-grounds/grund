@@ -224,6 +224,10 @@ pub struct Presentation {
     pub conversation: Option<String>,
     pub trigger: String,
     pub output: OutputPresentation,
+    /// Whether every row's guidance renders in the root entrypoint: always for
+    /// v1, and for v2 under `[presentation] rules = "root"`; otherwise each row's
+    /// guidance lands above its places (§FS-init.2.3.5.11, §FS-config-v2.presentation).
+    pub rules_at_root: bool,
 }
 
 /// `[fmt]` and `[fmt.cross_refs]` (§FS-config.3.7, §FS-config.3.10).

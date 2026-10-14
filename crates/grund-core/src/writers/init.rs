@@ -1,13 +1,14 @@
 use std::fs;
 use std::path::Path;
 
-use super::expected::chapter_rules_section;
+use super::guidance::{Guidance, RuleGuidance};
 use super::init_block::{refuse_planned_agent_blocks, write_or_update_canonical_agent_entrypoint};
 pub(crate) use super::init_guidance::init_fs_home;
 use super::init_guidance::{InitNext, docs_scaffold_for_config};
 use super::init_notes::{duplicate_agent_entrypoint_notes, shadowed_claude_entrypoint_note};
 use super::init_plan::selected_init_agent_entrypoints;
 use super::init_render::{agents_workspace_guidance, init_pending_effective_config};
+use super::init_scoped::{plan_scoped, refuse_scoped, write_scoped};
 use super::init_target::{refuse_init_global_instruction_paths, refuse_init_target};
 use super::init_template::{
     StarterWrite, lay_starter_files, resolve_template, template_config_note,
@@ -25,29 +26,6 @@ use crate::templates::{
 use crate::workspace::{declared_member_schemas, populate_workspace_boundary};
 
 pub use super::init_output::{InitError, InitEvent, InitOpts, InitOutput};
-
-/// Insert the shared, entrypoint-relative chapter-rule section while leaving
-/// non-rule projects untouched (§FS-init.2.3.5.10), promoting the base version
-/// to the rule-enabled version (§FS-init.2.3.7.1).
-fn render_chapter_rules(mut block: String, section: Option<&str>) -> String {
-    let Some(section) = section else {
-        return block;
-    };
-    block = block.replacen(
-        "Grounding with grund (v19)",
-        "Grounding with grund (v20)",
-        1,
-    );
-    let insertion = block
-        .find("\n### Clickable citations")
-        .or_else(|| block.find("\n<!-- END GRUND MANAGED BLOCK -->"));
-    if let Some(index) = insertion {
-        block.insert_str(index, &format!("\n{section}"));
-    } else {
-        block.push_str(&format!("\n{section}"));
-    }
-    block
-}
 
 /// Scaffold a grund setup into `opts.target` from a template (§FS-init.1.6): the
 /// agent-instruction entrypoints, the template's `grund.toml`, and — with
@@ -167,7 +145,7 @@ fn init_run(
     // §FS-rules.4 / §FS-init.2.3.5: validate scanned rule declarations before
     // any entrypoint write, then reuse their exact titles in managed guidance.
     let rule_kind_enabled = init_config.kinds.iter().any(|kind| kind.rules);
-    let (rule_rows, rule_errors, rule_findings) = if rule_kind_enabled {
+    let (rule_rows, rule_subjects, rule_errors, rule_findings) = if rule_kind_enabled {
         let (findings, errors) = scan_tree(
             init_config.schema(),
             init_config.frame(),
@@ -206,6 +184,7 @@ fn init_run(
         ) {
             Ok(rules) => (
                 rules.rows,
+                rules.subjects,
                 rules
                     .unverifiable
                     .into_iter()
@@ -224,8 +203,22 @@ fn init_run(
             }
         }
     } else {
-        (Vec::new(), Vec::new(), Catalog::default())
+        (
+            Vec::new(),
+            Default::default(),
+            Vec::new(),
+            Catalog::default(),
+        )
     };
+    // §FS-init.2.3.5.11: one placement for the root block and every scoped file.
+    let guidance = Guidance::new(
+        &init_config,
+        rule_kind_enabled.then_some(RuleGuidance {
+            findings: &rule_findings,
+            rows: &rule_rows,
+            subjects: &rule_subjects,
+        }),
+    );
 
     let agent_entrypoints = match selected_init_agent_entrypoints(&target, &agent_selection, reach)
     {
@@ -249,6 +242,14 @@ fn init_run(
     // §FS-init.1.2.6: a malformed or newer block in any planned entrypoint
     // refuses the run before the first write or report line, not mid-plan.
     if let Some((path, err)) = refuse_planned_agent_blocks(&target, &agent_entrypoints, force) {
+        let (source, message) = super::init_companions::update_failure(&path, &err);
+        *diagnostic = Some(source);
+        return Err(InitError::new(message));
+    }
+    // §FS-init.2.3.5.14.1: the scoped files are read before the first write too,
+    // and the list on disk before the root block is rewritten.
+    let scoped = plan_scoped(&guidance, &init_config.root, &target);
+    if let Some((path, err)) = refuse_scoped(&scoped) {
         let (source, message) = super::init_companions::update_failure(&path, &err);
         *diagnostic = Some(source);
         return Err(InitError::new(message));
@@ -283,9 +284,7 @@ fn init_run(
         let path = init_config
             .root
             .join(path.strip_prefix(&target).unwrap_or(path));
-        let section = rule_kind_enabled
-            .then(|| chapter_rules_section(&init_config, &path, &rule_findings, &rule_rows));
-        render_chapter_rules(block, section.as_deref())
+        guidance.finish_root_block(block, &path)
     };
     let agents_block = render_block(ConversationSurface::Plain);
     let claude_block = agent_entrypoints
@@ -354,6 +353,17 @@ fn init_run(
         workflow_entrypoint: &mut workflow_entrypoint,
         any_change: &mut any_change,
     })?;
+    // §FS-init.2.3.5.14.4: after the root entrypoints' lines, before the config's.
+    let scoped_from = events.len();
+    match write_scoped(&scoped, dry_run, &mut events) {
+        Ok(changed) => any_change |= changed,
+        Err((path, err)) => {
+            let (source, message) = super::init_companions::update_failure(&path, &err);
+            *diagnostic = Some(source);
+            return Err(InitError::with_events(events, message));
+        }
+    }
+    let scoped_lines = scoped_from..events.len();
 
     // `grund.toml` is the project's configuration (§GOAL-configurable): written
     // only when the target has none (§FS-config.1), never overwritten, reported
@@ -444,7 +454,9 @@ fn init_run(
         && declares_kinds
         && events
             .iter()
-            .all(|event| !event.is_change() || event.verb == verb_updated(dry_run))
+            .enumerate()
+            .filter(|(index, _)| !scoped_lines.contains(index))
+            .all(|(_, event)| !event.is_change() || event.verb == verb_updated(dry_run))
         && path_exists(target.join(fs_home.path()));
     let next = (any_change && !refresh_of_complete_setup).then(|| {
         // §FS-init.2.2.2: only no-`--scaffold` guidance asks this question. The probe

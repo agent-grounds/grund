@@ -106,7 +106,10 @@ pub(crate) static AGENTS_SECTION_BOUNDARY: Lazy<Regex> =
 /// is one version behind.
 /// v19 (§FS-init.2.3.4.16, §FS-init.2.3.7.1): Project namespaces appears only
 /// for discovered workspace targets. v20 is that base with Chapter rules.
-pub(crate) const AGENTS_BLOCK_VERSION: u32 = 20;
+/// v21 and v22 (§FS-init.2.3.5.11, §FS-init.2.3.7.1): v19 and v20 when a row's
+/// guidance lands in a scoped `AGENTS.md` or a declaration shape renders; every
+/// other config keeps rendering v19 or v20 byte for byte.
+pub(crate) const AGENTS_BLOCK_VERSION: u32 = 22;
 
 /// The byte span and `vN` version of the managed block inside an `AGENTS.md`
 /// (§FS-init.2.3) — what both `grund init`'s update and `grund check`'s validation

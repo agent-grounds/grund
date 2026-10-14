@@ -14,14 +14,14 @@ use std::path::{Path, PathBuf};
 use crate::checker::{configured_rule_sentences, workspace_vocabulary};
 use crate::config::{Config, fmt_excluded};
 use crate::grammar::parse_id_arg;
-use crate::model::{Catalog, Expected, ExpectedEntrypoint, ExpectedSection};
+use crate::model::{Catalog, Expected, ExpectedEntrypoint, ScopedExpectation};
 use crate::resolver::{
     SettledHeadings, WorkspaceCheckTarget, index_link_targets, markdown_link_target,
 };
 use crate::scanner::{CANONICAL_AGENT_ENTRYPOINT, companion_agent_entrypoints};
-use crate::templates::{
-    ConversationSurface, citation_directions_section, clickable_citations_section,
-};
+
+use super::guidance::{Guidance, RuleGuidance};
+use super::scoped_files::{ScopedRecord, mirrored, scoped_companions};
 
 /// Render `Expected` for one project's check (§AR-checker.1.3).
 ///
@@ -43,7 +43,7 @@ pub(crate) fn expected(
     config: &Config,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
 ) -> Expected {
-    let rule_rows = config
+    let rules = config
         .kinds
         .iter()
         .any(|kind| kind.rules)
@@ -51,27 +51,36 @@ pub(crate) fn expected(
             let vocab = workspace_vocabulary(config.schema(), config.frame(), workspace);
             configured_rule_sentences(findings, config.schema(), config.frame(), &vocab).ok()
         })
-        .flatten()
-        .map(|rules| rules.rows);
+        .flatten();
     // §FS-init.2.3.5.10: render destinations from the same loaded declarations
     // that supplied the validated, ordered rule sentences.
-    let rule_guidance = rule_rows.as_deref().map(|rows| (findings, rows));
+    let guidance = Guidance::new(
+        config,
+        rules.as_ref().map(|rules| RuleGuidance {
+            findings,
+            rows: &rules.rows,
+            subjects: &rules.subjects,
+        }),
+    );
     let root = &config.root;
     let canonical = root.join(CANONICAL_AGENT_ENTRYPOINT);
     let canonical_exists = path_exists(&canonical);
     let mut entrypoints = Vec::new();
     if canonical_exists {
-        entrypoints.push(expected_entrypoint(config, canonical, true, rule_guidance));
+        entrypoints.push(guidance.root_entrypoint(canonical, true));
     }
     let mut entrypoint_probe_error = None;
     match companion_agent_entrypoints(root) {
-        Ok(companions) => entrypoints.extend(companions.into_iter().map(|companion| {
-            expected_entrypoint(config, companion, canonical_exists, rule_guidance)
-        })),
+        Ok(companions) => entrypoints.extend(
+            companions
+                .into_iter()
+                .map(|companion| guidance.root_entrypoint(companion, canonical_exists)),
+        ),
         Err(error) => entrypoint_probe_error = Some(error),
     }
+    let non_units = scoped_entrypoints(config, &guidance, &mut entrypoints);
     Expected {
-        block_version: block_version(config),
+        block_version: guidance.version,
         entrypoints,
         entrypoint_probe_error,
         index_targets: index_link_targets(
@@ -82,7 +91,72 @@ pub(crate) fn expected(
             &SettledHeadings::default(),
         ),
         fmt_excluded: noted_fmt_excluded(findings, config),
+        non_units,
     }
+}
+
+/// The scoped entrypoints `check` compares (§FS-check.3.5): each destination's
+/// `AGENTS.md` and the standalone companions beside it, then each orphan the
+/// list on disk names, all only where a root entrypoint already carries a
+/// block. Returns every scoped file and companion no row's `files` lists, which
+/// are guidance about a directory's units and never one of them
+/// (§FS-init.2.3.5.11).
+fn scoped_entrypoints(
+    config: &Config,
+    guidance: &Guidance<'_>,
+    entrypoints: &mut Vec<ExpectedEntrypoint>,
+) -> BTreeSet<PathBuf> {
+    let root = &config.root;
+    let record = ScopedRecord::read(root);
+    let live: Vec<&str> = guidance.layout.scoped_dirs().collect();
+    let orphans: Vec<&str> = record
+        .listed
+        .iter()
+        .filter_map(|path| path.strip_suffix("/AGENTS.md"))
+        .filter(|dir| !live.contains(dir))
+        .collect();
+    let mut files = BTreeSet::new();
+    for (dir, orphan) in live
+        .iter()
+        .map(|dir| (*dir, false))
+        .chain(orphans.iter().map(|dir| (*dir, true)))
+    {
+        let agents = root.join(dir).join(CANONICAL_AGENT_ENTRYPOINT);
+        let companions = scoped_companions(&root.join(dir));
+        files.insert(agents.clone());
+        files.extend(companions.iter().map(|(path, _)| path.clone()));
+        if !record.managed {
+            continue;
+        }
+        let expect = |path: PathBuf, require: bool| match orphan {
+            false => guidance.scoped_entrypoint(dir, path, require),
+            true => ExpectedEntrypoint {
+                path,
+                require_block: false,
+                sections: Vec::new(),
+                scoped: Some(ScopedExpectation::Orphan),
+            },
+        };
+        entrypoints.push(expect(agents, true));
+        for (path, linked) in companions {
+            if !linked {
+                let name = path
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .unwrap_or("");
+                entrypoints.push(expect(path.clone(), mirrored(root, name)));
+            }
+        }
+    }
+    let claimed: BTreeSet<PathBuf> = config
+        .schema()
+        .rows
+        .iter()
+        .flat_map(|row| row.files())
+        .map(|file| root.join(file))
+        .collect();
+    files.retain(|path| !claimed.contains(path));
+    files
 }
 
 /// The files holding an unclosed-wrapper note that `[fmt] exclude` names
@@ -104,52 +178,14 @@ fn noted_fmt_excluded(findings: &Catalog, config: &Config) -> BTreeSet<PathBuf> 
         .collect()
 }
 
-/// The managed-block version this config asks for: v20 once a kind declares
-/// rules, v19 otherwise (§FS-init.2.3.7.1).
+/// The managed-block version this config asks for without scoped guidance:
+/// v20 once a kind declares rules, v19 otherwise (§FS-init.2.3.7.1); `Guidance`
+/// adds two for a scoped file or a declaration shape.
 pub(crate) fn block_version(config: &Config) -> u32 {
     if config.kinds.iter().any(|kind| kind.rules) {
         20
     } else {
         19
-    }
-}
-
-/// One entrypoint's config-derived sections, rendered for its own surface
-/// (§FS-init.2.3.6.1): the local-conversation sentence derives from
-/// `[reference] conversation` and varies by entrypoint (§FS-init.2.3.4.17.2), so
-/// each file is rendered for the surface `init` chose for it.
-pub(crate) fn expected_entrypoint(
-    config: &Config,
-    path: PathBuf,
-    require_block: bool,
-    rule_guidance: Option<(&Catalog, &[(String, String)])>,
-) -> ExpectedEntrypoint {
-    let mut sections = vec![
-        ExpectedSection {
-            heading: "### Citation directions",
-            noun: "citation directions",
-            bytes: citation_directions_section(config.project(), config.run()),
-        },
-        ExpectedSection {
-            heading: "### Clickable citations",
-            noun: "clickable citations",
-            bytes: clickable_citations_section(
-                config.project(),
-                ConversationSurface::for_entrypoint(&path),
-            ),
-        },
-    ];
-    if let Some((findings, rows)) = rule_guidance {
-        sections.push(ExpectedSection {
-            heading: "### Chapter rules",
-            noun: "chapter rules",
-            bytes: chapter_rules_section(config, &path, findings, rows),
-        });
-    }
-    ExpectedEntrypoint {
-        path,
-        require_block,
-        sections,
     }
 }
 

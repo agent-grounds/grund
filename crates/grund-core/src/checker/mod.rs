@@ -85,6 +85,7 @@ pub(crate) use chapter_rules::{
 // does (§AR-core-module-layout.1.3).
 #[cfg(test)]
 pub(crate) use crate::testing::{check_findings, check_with_workspace};
+pub(crate) use agents::section_in_block;
 #[cfg(test)]
 pub(crate) use chapter_rules::markdown_project;
 pub(crate) use index::KindIndexFiles;

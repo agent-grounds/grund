@@ -141,6 +141,9 @@ pub(crate) fn judge(
 
     // §FS-check.3.6 / §DF-require-grounding: the grounding pass, per `[[kinds]]`
     // row and per unit, in `grounding.rs` (§AR-checker.2.8).
+    // §FS-init.2.3.5.11: a scoped `AGENTS.md` no row's `files` lists is not a
+    // unit, so neither pass holds it to its directory's rules.
+    let mut units = CheckReport::default();
     let kind_homes = KindHomeIndex::new(schema, frame);
     check_grounding(
         findings,
@@ -149,15 +152,28 @@ pub(crate) fn judge(
         frame,
         &kind_homes,
         targets,
-        &mut report,
+        &mut units,
     );
 
     // §FS-config.3.9 / §FS-check.3.11 / §FS-check.3.12: citation-direction
     // obligations and prohibitions, when the project declares `[citations]`.
     if rules.citations.declared {
-        check_citation_obligations(findings, rules, schema, frame, &mut report);
-        check_citation_prohibitions(findings, rules, schema, frame, &mut report);
+        check_citation_obligations(findings, rules, schema, frame, &mut units);
+        check_citation_prohibitions(findings, rules, schema, frame, &mut units);
     }
+    let unit = |diagnostic: &Diagnostic| {
+        diagnostic
+            .path
+            .as_ref()
+            .is_none_or(|path| !expected.non_units.contains(path))
+    };
+    report.errors.extend(units.errors.into_iter().filter(unit));
+    report
+        .warnings
+        .extend(units.warnings.into_iter().filter(unit));
+    report
+        .suggestions
+        .extend(units.suggestions.into_iter().filter(unit));
     report
 }
 

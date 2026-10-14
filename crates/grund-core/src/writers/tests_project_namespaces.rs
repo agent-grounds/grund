@@ -157,7 +157,8 @@ fn project_namespaces_version_selectors_advance_together() {
     );
     let rules = super::super::block_version(&load_config(&root).unwrap());
     assert_eq!(rules, base + 1);
-    assert_eq!(crate::grammar::AGENTS_BLOCK_VERSION, rules);
+    // §FS-init.2.3.5.11: scoped guidance adds two above the rule-enabled base.
+    assert_eq!(crate::grammar::AGENTS_BLOCK_VERSION, rules + 2);
     assert!(
         base > 18,
         "workspace-only guidance must advance beyond v17/v18"

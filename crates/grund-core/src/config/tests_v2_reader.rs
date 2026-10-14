@@ -304,20 +304,12 @@ fn v2_presentation_lowers() {
 #[test]
 fn v2_unexecuted_clauses_are_refused_at_their_line() {
     let not_yet = "is part of the v2 format but not supported by this grund yet";
-    let cases = [
-        (
-            "anchors",
-            format!("{HEAD}[presentation.fmt]\nanchors = \"gitlab\"\n"),
-            6,
-            "`[presentation.fmt] anchors`",
-        ),
-        (
-            "rules",
-            format!("{HEAD}[presentation]\nrules = \"home\"\n"),
-            6,
-            "`[presentation] rules`",
-        ),
-    ];
+    let cases = [(
+        "anchors",
+        format!("{HEAD}[presentation.fmt]\nanchors = \"gitlab\"\n"),
+        6,
+        "`[presentation.fmt] anchors`",
+    )];
     for (name, toml, line, clause) in cases {
         refused(
             &format!("v2_rollout_{name}"),
@@ -326,6 +318,30 @@ fn v2_unexecuted_clauses_are_refused_at_their_line() {
             &format!("{clause} {not_yet}"),
         );
     }
+}
+
+/// §FS-config-v2.presentation: `rules` is executed — `home`, the default, scopes
+/// each row's guidance, `root` keeps it in the root entrypoint as v1 always does,
+/// and any other value is refused at its line.
+#[test]
+fn v2_presentation_rules_says_where_guidance_lands() {
+    let at_root = |name: &str, toml: &str| project(name, toml).presentation.rules_at_root;
+    assert!(!at_root("v2_rules_default", &format!("{HEAD}{FS_GOAL}")));
+    assert!(!at_root(
+        "v2_rules_home",
+        &format!("{HEAD}[presentation]\nrules = \"home\"\n")
+    ));
+    assert!(at_root(
+        "v2_rules_root",
+        &format!("{HEAD}[presentation]\nrules = \"root\"\n")
+    ));
+    assert!(at_root("v1_rules_root", "[reference]\nstrict = true\n"));
+    refused(
+        "v2_rules_unknown",
+        &format!("{HEAD}[presentation]\nrules = \"nested\"\n"),
+        6,
+        "unknown [presentation] rules `nested` (expected home or root)",
+    );
 }
 
 /// §FS-config-v2.mapping: the v1 states v2 does not spell keep their meaning
