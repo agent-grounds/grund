@@ -15,10 +15,12 @@ pub struct Worker {
     child: Child,
     input: Option<ChildStdin>,
     output: BufReader<ChildStdout>,
+    pub last_seconds: f64,
 }
 
 impl Worker {
     pub fn new() -> Self {
+        let start = std::time::Instant::now();
         let mut child = Command::new(std::env::current_exe().expect("test executable"))
             .args(["--exact", "agreement_editor_worker::serve", "--nocapture"])
             .env("GRUND_AGREEMENT_EDITOR_WORKER", "1")
@@ -34,8 +36,15 @@ impl Worker {
             child,
             input,
             output,
+            last_seconds: 0.0,
         };
         assert_eq!(worker.read(), json!({"ready":true}));
+        super::agreement_evidence::receipt(
+            "editor-provenance",
+            &super::agreement_host::repository(),
+            json!({}),
+            json!({"startupSeconds":start.elapsed().as_secs_f64()}),
+        );
         worker
     }
 
@@ -54,11 +63,14 @@ impl Worker {
     }
 
     pub fn call(&mut self, request: Value) -> Value {
+        let start = std::time::Instant::now();
         let input = self.input.as_mut().unwrap();
         serde_json::to_writer(&mut *input, &request).unwrap();
         writeln!(input).unwrap();
         input.flush().unwrap();
-        self.read()
+        let result = self.read();
+        self.last_seconds = start.elapsed().as_secs_f64();
+        result
     }
 
     pub fn release(&mut self) {

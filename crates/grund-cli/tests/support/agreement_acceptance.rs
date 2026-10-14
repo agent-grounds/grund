@@ -21,10 +21,19 @@ fn s4_executes_the_complete_corpus_matrix() {
         .filter(|path| path.is_dir())
         .map(|path| path.file_name().unwrap().to_string_lossy().into_owned())
         .collect();
+    let manifests = super::agreement_expectations::load(&cases).unwrap_or_else(|missing| {
+        if let Some(output) = std::env::var_os("GRUND_AGREEMENT_READINESS") {
+            fs::write(output,serde_json::to_vec_pretty(&serde_json::json!({
+                "kind":"construction-readiness","completedCalls":0,"missingFacts":missing
+            })).unwrap()).expect("write readiness diagnostics (not execution receipts)");
+        }
+        panic!("S4 independent truth construction is unfinished: {} invalid/missing case manifests; first {:?}. No native preparation or matrix execution attempted.",
+            missing.len(), missing.first());
+    });
     let mut errors = Vec::new();
     let calls = agreement_evidence::capture(|| {
         errors.extend(problems(&divergences(), LEDGER));
-        errors.extend(agreement_corpus::execute());
+        errors.extend(agreement_corpus::execute(&manifests));
     });
     if let Some(output) = std::env::var_os("GRUND_AGREEMENT_EVIDENCE") {
         fs::write(
@@ -38,6 +47,7 @@ fn s4_executes_the_complete_corpus_matrix() {
     let mut materializations = BTreeMap::new();
     let mut host_questions = BTreeSet::new();
     let mut incomplete_truth = Vec::new();
+    let mut authored_questions = BTreeSet::new();
     for call in &calls {
         let Some(context) = &call.context else {
             continue;
@@ -105,7 +115,7 @@ fn s4_executes_the_complete_corpus_matrix() {
                     assert!(call.exit.is_some(), "CLI receipt has no completed process");
                     assert!(!call.request.is_null());
                     if call.expected["oracle"] != "reviewed-manifest-golden"
-                        && call.expected["oracle"] != "independent-mutation-input-bytes"
+                        && call.expected["key"] != "fmt-write"
                     {
                         if variant == "narrowed" {
                             assert_eq!(
@@ -139,9 +149,23 @@ fn s4_executes_the_complete_corpus_matrix() {
             if call.expected["complete"] == false {
                 incomplete_truth.push(format!("{case} / {variant} / {}", call.surface));
             }
+            if let Some(question) =
+                super::agreement_truth_accounting::observe(call, &manifests, &case, &variant)
+            {
+                assert!(
+                    authored_questions.insert(question),
+                    "duplicate generic question receipt"
+                );
+            }
             cells.insert((case, variant, call.surface.clone()));
         }
     }
+    let required_questions =
+        super::agreement_truth_accounting::required(&manifests, &materializations);
+    assert_eq!(
+        authored_questions, required_questions,
+        "exact authored question/coordinate accounting differs"
+    );
     let mut missing = Vec::new();
     for case in &expected {
         for variant in agreement_corpus::VARIANTS {

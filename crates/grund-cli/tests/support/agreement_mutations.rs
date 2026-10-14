@@ -2,7 +2,6 @@
 //! (§REQ-one-answer.proof.matrix, §REQ-one-answer.writes.anchors, §FS-fmt.6.2).
 
 use super::agreement_corpus::{compare_tree, invoke};
-use super::agreement_evidence as evidence;
 use super::agreement_host::Host;
 use super::agreement_oracles::text;
 use serde_json::{Value, json};
@@ -39,6 +38,7 @@ fn normalized(value: Value, context: &Value) -> Value {
 }
 
 pub fn execute(host: &mut Host, context: &Value, errors: &mut Vec<String>) {
+    let expected_files = super::agreement_truth::expected_written(context);
     let cli = clone(host, context, "fmt-cli");
     let python = clone(host, context, "fmt-python");
     let node = clone(host, context, "fmt-node");
@@ -47,14 +47,24 @@ pub fn execute(host: &mut Host, context: &Value, errors: &mut Vec<String>) {
         args.push(text(&cli, "path"));
     }
     let output = invoke(Path::new(&text(&cli, "cwd")), &args, None);
-    let witness = json!({"oracle":"independent-mutation-input-bytes","complete":false,
-        "point":"§REQ-one-answer.writes.anchors","before":context["savedInventory"]});
-    evidence::witness(witness.clone());
+    super::agreement_truth::writer(
+        &cli,
+        "cli",
+        super::agreement_truth::cli_fact("fmt", &output, &cli),
+        &expected_files,
+        errors,
+    );
     let request = json!({"operation":"fmt","cwd":python["cwd"],"root":python["path"],
         "explicit":context["explicit"],"args":[],"options":{"write":true,"cross_refs":true},
         "scope":python["scopes"]["python"]});
     let actual = host.call("python", request);
-    evidence::witness(witness.clone());
+    super::agreement_truth::writer(
+        &python,
+        "python",
+        normalized(actual.clone(), &python),
+        &expected_files,
+        errors,
+    );
     let options = if context["explicit"] == true {
         json!({"root":node["path"],"write":true,"crossRefs":true})
     } else {
@@ -64,8 +74,14 @@ pub fn execute(host: &mut Host, context: &Value, errors: &mut Vec<String>) {
         "node",
         json!({"operation":"fmt","cwd":node["cwd"],"args":[options],"scope":node["scopes"]["node"]}),
     );
-    evidence::witness(witness);
-    let expected = super::agreement_host_projection::from_python(actual.clone(), "fmt");
+    super::agreement_truth::writer(
+        &node,
+        "node",
+        normalized(actual_node.clone(), &node),
+        &expected_files,
+        errors,
+    );
+    let expected = super::agreement_host_projection::from_python(actual.clone(), "fmt", errors);
     if normalized(actual_node.clone(), &node) != normalized(expected, &python) {
         errors.push("actual mutable host complete envelopes differ".into());
     }

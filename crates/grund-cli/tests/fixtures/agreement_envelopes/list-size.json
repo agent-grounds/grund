@@ -1,0 +1,218 @@
+{
+  "point": "§REQ-one-answer.proof.evidence",
+  "provenance": {
+    "sha": "e7e43b8d1cb46f5607e0dc7ce70932d65d36f9a5",
+    "source": "review-2/host-control-calls.json",
+    "role": "recorded real comparator inputs; not independent generic truth"
+  },
+  "surface": "list-size",
+  "cli": {
+    "args": [
+      "list",
+      "--size",
+      "/fixture/repo",
+      "--format",
+      "json"
+    ],
+    "exit": 0,
+    "stdout": "{\"id\":\"AR-001-auth\",\"section\":null,\"kind\":\"AR\",\"path\":\"docs/architecture/AR-001-auth.md\",\"line\":1,\"stub\":false,\"defines\":null,\"duplicate\":false,\"lead_lines\":1,\"full_lines\":1,\"lead_words\":2,\"full_words\":2,\"lead_bytes\":27,\"full_bytes\":27}\n{\"id\":\"FS-001-login\",\"section\":null,\"kind\":\"FS\",\"path\":\"docs/functional-spec/FS-001-login.md\",\"line\":1,\"stub\":false,\"defines\":null,\"duplicate\":false,\"lead_lines\":1,\"full_lines\":1,\"lead_words\":3,\"full_words\":3,\"lead_bytes\":16,\"full_bytes\":16}\n{\"id\":\"FS-002-session\",\"section\":null,\"kind\":\"FS\",\"path\":\"docs/functional-spec/FS-002-session.md\",\"line\":1,\"stub\":false,\"defines\":null,\"duplicate\":false,\"lead_lines\":1,\"full_lines\":1,\"lead_words\":6,\"full_words\":6,\"lead_bytes\":49,\"full_bytes\":49}\n",
+    "stderr": ""
+  },
+  "python": {
+    "failure": null,
+    "result": {
+      "run_cautions": [],
+      "output_format": "text",
+      "workspace": false,
+      "entries": [
+        {
+          "project": null,
+          "id": "AR-001-auth",
+          "section": null,
+          "section_separator": ".",
+          "kind": "AR",
+          "path": "docs/architecture/AR-001-auth.md",
+          "line": 1,
+          "stub": false,
+          "defines": null,
+          "duplicate": false,
+          "measurements": [
+            {
+              "unit": "lines",
+              "lead": 1,
+              "full": 1
+            },
+            {
+              "unit": "words",
+              "lead": 2,
+              "full": 2
+            },
+            {
+              "unit": "bytes",
+              "lead": 27,
+              "full": 27
+            }
+          ]
+        },
+        {
+          "project": null,
+          "id": "FS-001-login",
+          "section": null,
+          "section_separator": ".",
+          "kind": "FS",
+          "path": "docs/functional-spec/FS-001-login.md",
+          "line": 1,
+          "stub": false,
+          "defines": null,
+          "duplicate": false,
+          "measurements": [
+            {
+              "unit": "lines",
+              "lead": 1,
+              "full": 1
+            },
+            {
+              "unit": "words",
+              "lead": 3,
+              "full": 3
+            },
+            {
+              "unit": "bytes",
+              "lead": 16,
+              "full": 16
+            }
+          ]
+        },
+        {
+          "project": null,
+          "id": "FS-002-session",
+          "section": null,
+          "section_separator": ".",
+          "kind": "FS",
+          "path": "docs/functional-spec/FS-002-session.md",
+          "line": 1,
+          "stub": false,
+          "defines": null,
+          "duplicate": false,
+          "measurements": [
+            {
+              "unit": "lines",
+              "lead": 1,
+              "full": 1
+            },
+            {
+              "unit": "words",
+              "lead": 6,
+              "full": 6
+            },
+            {
+              "unit": "bytes",
+              "lead": 49,
+              "full": 49
+            }
+          ]
+        }
+      ],
+      "scan_errors": []
+    },
+    "run_cautions": []
+  },
+  "node": {
+    "failure": null,
+    "result": {
+      "entries": [
+        {
+          "defines": null,
+          "duplicate": false,
+          "id": "AR-001-auth",
+          "kind": "AR",
+          "line": 1,
+          "measurements": [
+            {
+              "full": 1,
+              "lead": 1,
+              "unit": "lines"
+            },
+            {
+              "full": 2,
+              "lead": 2,
+              "unit": "words"
+            },
+            {
+              "full": 27,
+              "lead": 27,
+              "unit": "bytes"
+            }
+          ],
+          "path": "docs/architecture/AR-001-auth.md",
+          "project": null,
+          "section": null,
+          "section_separator": ".",
+          "stub": false
+        },
+        {
+          "defines": null,
+          "duplicate": false,
+          "id": "FS-001-login",
+          "kind": "FS",
+          "line": 1,
+          "measurements": [
+            {
+              "full": 1,
+              "lead": 1,
+              "unit": "lines"
+            },
+            {
+              "full": 3,
+              "lead": 3,
+              "unit": "words"
+            },
+            {
+              "full": 16,
+              "lead": 16,
+              "unit": "bytes"
+            }
+          ],
+          "path": "docs/functional-spec/FS-001-login.md",
+          "project": null,
+          "section": null,
+          "section_separator": ".",
+          "stub": false
+        },
+        {
+          "defines": null,
+          "duplicate": false,
+          "id": "FS-002-session",
+          "kind": "FS",
+          "line": 1,
+          "measurements": [
+            {
+              "full": 1,
+              "lead": 1,
+              "unit": "lines"
+            },
+            {
+              "full": 6,
+              "lead": 6,
+              "unit": "words"
+            },
+            {
+              "full": 49,
+              "lead": 49,
+              "unit": "bytes"
+            }
+          ],
+          "path": "docs/functional-spec/FS-002-session.md",
+          "project": null,
+          "section": null,
+          "section_separator": ".",
+          "stub": false
+        }
+      ],
+      "output_format": "text",
+      "scan_errors": [],
+      "workspace": false
+    },
+    "run_cautions": []
+  }
+}

@@ -22,6 +22,7 @@ pub fn repository() -> PathBuf {
 
 impl Host {
     pub fn new() -> Self {
+        let start = std::time::Instant::now();
         let root = repository();
         let mut child = Command::new(std::env::var_os("PYTHON").unwrap_or_else(|| "python".into()))
             .arg(root.join("tests/bindings/agreement_host.py"))
@@ -40,6 +41,9 @@ impl Host {
             provenance: Value::Null,
         };
         host.provenance = host.read()["ready"].clone();
+        // §REQ-one-answer.proof.delivery: preparation includes copies/imports
+        // and process startup, beyond setupCommands' individual build timers.
+        host.provenance["hostStartupSeconds"] = json!(start.elapsed().as_secs_f64());
         let sha = Command::new("git")
             .args(["rev-parse", "HEAD"])
             .current_dir(root)
@@ -71,6 +75,7 @@ impl Host {
     }
 
     pub fn call(&mut self, surface: &str, request: Value) -> Value {
+        let start = std::time::Instant::now();
         let response = self.request(json!({"op":surface,"request":request}));
         assert_eq!(
             response["request"], request,
@@ -78,9 +83,9 @@ impl Host {
         );
         let cwd = PathBuf::from(request["cwd"].as_str().unwrap());
         super::agreement_evidence::receipt(surface, &cwd, request, response["envelope"].clone());
-        super::agreement_evidence::seconds(
-            response["seconds"].as_f64().expect("actual host duration"),
-        );
+        // §REQ-one-answer.proof.delivery: include IPC and first Node startup;
+        // the remote operation timer excludes these costs.
+        super::agreement_evidence::seconds(start.elapsed().as_secs_f64());
         response["envelope"].clone()
     }
 }

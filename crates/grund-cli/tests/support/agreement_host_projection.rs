@@ -1,6 +1,8 @@
 //! Explicit host schema projections without another engine scan
 //! (§FS-distribution.3.2.2.1, §FS-distribution.3.2.2.2). These are agreement
 //! projections, never independent expected source facts.
+//! Python's returned refs totals and every summary field must first pass
+//! `agreement_refs_fields::validate` (§FS-distribution.3.3.1), including partials.
 
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
@@ -56,12 +58,29 @@ fn folds(result: &mut Value) {
         "files":result["summaries"].as_array().unwrap().len()});
 }
 
-pub fn from_python(mut value: Value, operation: &str) -> Value {
+pub fn from_python(mut value: Value, operation: &str, errors: &mut Vec<String>) -> Value {
+    if operation == "refs" {
+        super::agreement_refs_fields::validate(&value, errors);
+    }
+    // These Python fields duplicate the compared envelope channel. Assert them
+    // before removing them; their absence from Node is not permission to ignore
+    // a corrupt returned Python field (§FS-distribution.3.3.1).
+    let cautions = value.get("run_cautions").cloned();
+    let primary = if value["failure"].is_null() {
+        &value["result"]
+    } else {
+        &value["failure"]
+    };
+    if primary.is_object() && primary.get("run_cautions") != cautions.as_ref() {
+        errors.push("Python result/failure run_cautions differs from its envelope channel".into());
+    }
     if !value["failure"].is_null() {
         failure(&mut value["failure"], operation);
         return value;
     }
-    let out = &mut value["result"];
+    let Some(out) = value.get_mut("result").filter(|v| v.is_object()) else {
+        return value;
+    };
     if operation == "refs" {
         folds(out);
         for key in ["site_total", "file_total", "file_summaries"] {
@@ -69,15 +88,24 @@ pub fn from_python(mut value: Value, operation: &str) -> Value {
         }
     }
     if operation == "showBatch" {
-        for record in out["records"].as_array_mut().into_iter().flatten() {
+        for record in out
+            .get_mut("records")
+            .and_then(Value::as_array_mut)
+            .into_iter()
+            .flatten()
+        {
             let ok = record["failure"].is_null();
             record["ok"] = json!(ok);
             if ok {
                 record.as_object_mut().unwrap().remove("failure");
-                record["result"]
-                    .as_object_mut()
-                    .unwrap()
-                    .remove("run_cautions");
+                if let Some(result) = record.get_mut("result").and_then(Value::as_object_mut) {
+                    if result.get("run_cautions") != cautions.as_ref() {
+                        errors.push(
+                            "Python batch result run_cautions differs from batch channel".into(),
+                        );
+                    }
+                    result.remove("run_cautions");
+                }
             } else {
                 let cautions = record["failure"]["run_cautions"].clone();
                 failure(&mut record["failure"], "show");
@@ -91,7 +119,7 @@ pub fn from_python(mut value: Value, operation: &str) -> Value {
 }
 
 /// Node's additional show metadata retains its full native-peer assertion.
-/// Everything shared with Python is still compared directly and completely.
+/// Common fields are compared after the explicit Python refs-field assertions.
 pub fn node_common(mut value: Value, operation: &str) -> Value {
     let strip = |out: &mut Value| {
         if let Some(object) = out.as_object_mut() {
@@ -101,15 +129,21 @@ pub fn node_common(mut value: Value, operation: &str) -> Value {
         }
     };
     if operation == "show" {
-        strip(&mut value["result"]);
+        if let Some(result) = value.get_mut("result") {
+            strip(result);
+        }
     }
     if operation == "showBatch" {
-        for record in value["result"]["records"]
-            .as_array_mut()
+        for record in value
+            .get_mut("result")
+            .and_then(|v| v.get_mut("records"))
+            .and_then(Value::as_array_mut)
             .into_iter()
             .flatten()
         {
-            strip(&mut record["result"]);
+            if let Some(result) = record.get_mut("result") {
+                strip(result);
+            }
         }
     }
     value

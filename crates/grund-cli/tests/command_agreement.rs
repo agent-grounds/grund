@@ -38,6 +38,10 @@ mod agreement_editor;
 mod agreement_editor_worker;
 #[path = "support/agreement_evidence.rs"]
 mod agreement_evidence;
+#[path = "support/agreement_expectations.rs"]
+mod agreement_expectations;
+#[path = "support/agreement_expected_bytes.rs"]
+mod agreement_expected_bytes;
 #[path = "support/agreement_facts.rs"]
 mod agreement_facts;
 #[path = "support/agreement_host.rs"]
@@ -56,8 +60,12 @@ mod agreement_mutations;
 mod agreement_oracles;
 #[path = "support/agreement_paths.rs"]
 mod agreement_paths;
+#[path = "support/agreement_projection_controls.rs"]
+mod agreement_projection_controls;
 #[path = "support/agreement_questions.rs"]
 mod agreement_questions;
+#[path = "support/agreement_refs_fields.rs"]
+mod agreement_refs_fields;
 #[path = "support/agreement_refusals.rs"]
 mod agreement_refusals;
 #[path = "support/agreement_sections.rs"]
@@ -70,6 +78,12 @@ mod agreement_snapshot;
 mod agreement_stubs;
 #[path = "support/agreement_tree.rs"]
 mod agreement_tree;
+#[path = "support/agreement_truth.rs"]
+mod agreement_truth;
+#[path = "support/agreement_truth_accounting.rs"]
+mod agreement_truth_accounting;
+#[path = "support/agreement_truth_controls.rs"]
+mod agreement_truth_controls;
 
 use agreement_buffers as buffers;
 use agreement_identity as identity;

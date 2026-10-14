@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "case": "cli-no-args",
+  "inputFiles": {
+    "command.args": {"bytes":[10]},
+    "expected.exit": {"bytes":[50,10]},
+    "expected.stderr": {"bytes":[101,114,114,111,114,58,32,110,111,32,99,111,109,109,97,110,100,32,103,105,118,101,110,59,32,116,104,101,32,98,97,114,101,32,96,103,114,117,110,100,96,32,102,97,108,108,98,97,99,107,32,116,104,97,116,32,114,97,110,32,96,103,114,117,110,100,32,99,104,101,99,107,32,46,96,32,119,97,115,32,114,101,109,111,118,101,100,32,105,110,32,103,114,117,110,100,32,48,46,49,54,46,48,10,104,105,110,116,58,32,114,117,110,32,96,103,114,117,110,100,32,99,104,101,99,107,96,32,116,111,32,118,97,108,105,100,97,116,101,32,116,104,105,115,32,114,101,112,111,115,105,116,111,114,121,10,104,105,110,116,58,32,114,117,110,32,96,103,114,117,110,100,32,45,45,104,101,108,112,96,32,102,111,114,32,116,104,101,32,108,105,115,116,32,111,102,32,115,117,98,99,111,109,109,97,110,100,115,10]},
+    "expected.stdout": {"bytes":[10]},
+    "spec.refs": {"bytes":[70,83,45,99,108,105,46,52,10]}
+  },
+  "variants": {
+    "whole-tree": {"absent":"no input repository: command grammar/process case","point":"§REQ-one-answer.proof.matrix","authoredFrom":"The original has no repo directory; only its exact authored command/goldens are applicable."},
+    "narrowed": {"absent":"no input repository: command grammar/process case","point":"§REQ-one-answer.proof.matrix","authoredFrom":"The original has no repo directory; only its exact authored command/goldens are applicable."},
+    "path-argument": {"absent":"no input repository: command grammar/process case","point":"§REQ-one-answer.proof.matrix","authoredFrom":"The original has no repo directory; only its exact authored command/goldens are applicable."},
+    "editor-overlay": {"absent":"no input repository: command grammar/process case","point":"§REQ-one-answer.proof.matrix","authoredFrom":"The original has no repo directory; only its exact authored command/goldens are applicable."}
+  }
+}
