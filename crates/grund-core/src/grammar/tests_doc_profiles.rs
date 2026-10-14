@@ -13,7 +13,7 @@ use super::language_table::DocProfile;
 /// position profiles' starters are exactly the epoch's.
 #[test]
 fn each_profile_names_its_epoch_recognizer() {
-    use DefinitionStart::{Keywords, ShellFunction, SqlCreate};
+    use DefinitionStart::{Keywords, LispDefinition, ShellFunction, SqlCreate};
     let expected = [
         (DocProfile::None, DocCommentRule::None),
         (DocProfile::CFamily, DocCommentRule::CFamily),
@@ -31,6 +31,7 @@ fn each_profile_names_its_epoch_recognizer() {
         (DocProfile::Ldoc, DocCommentRule::LuaDoc),
         (DocProfile::Haddock, DocCommentRule::Haddock),
         (DocProfile::Roxygen, DocCommentRule::Roxygen),
+        (DocProfile::Lisp, DocCommentRule::Position(LispDefinition)),
     ];
     assert_eq!(
         DocProfile::ALL.len(),
@@ -147,4 +148,27 @@ fn position_profiles_admit_exactly_the_epoch_starters() {
         &["-- FS-a: A"],
         "alter table t"
     ));
+}
+
+/// §FS-config-v2.schema.sources.definitions `lisp`: v1's Lisp position recognizer,
+/// a `;` block above a `def…`, `cl-def…` or `ns` form, spelled only by `;`.
+#[test]
+fn lisp_admits_a_block_above_a_definition_form() {
+    let semi = line(";");
+    for next in [
+        "(defun f (x) x)",
+        "(cl-defun f ())",
+        "(ns app.core)",
+        "(define x 1)",
+    ] {
+        assert!(doc(DocProfile::Lisp, &semi, &["; FS-a: A"], next), "{next}");
+    }
+    assert!(!doc(
+        DocProfile::Lisp,
+        &semi,
+        &["; FS-a: A"],
+        "(let ((x 1)) x)"
+    ));
+    assert_eq!(DocProfile::Lisp.hosts(), [";"]);
+    assert_eq!(DocProfile::parse("lisp"), Some(DocProfile::Lisp));
 }

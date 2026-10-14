@@ -130,11 +130,14 @@ pub(crate) enum DocProfile {
     Ldoc,
     Haddock,
     Roxygen,
+    /// v1's Lisp position recognizer, frozen as it stood when migration needed it
+    /// (§FS-config-v2.schema.sources.definitions).
+    Lisp,
 }
 
 impl DocProfile {
     /// Every profile, in the order `[schema.sources.definitions]` names them.
-    pub(crate) const ALL: [DocProfile; 10] = [
+    pub(crate) const ALL: [DocProfile; 11] = [
         Self::None,
         Self::CFamily,
         Self::Python,
@@ -145,6 +148,7 @@ impl DocProfile {
         Self::Ldoc,
         Self::Haddock,
         Self::Roxygen,
+        Self::Lisp,
     ];
 
     /// The name a v2 file writes for this profile.
@@ -160,6 +164,7 @@ impl DocProfile {
             Self::Ldoc => "ldoc",
             Self::Haddock => "haddock",
             Self::Roxygen => "roxygen",
+            Self::Lisp => "lisp",
         }
     }
 
@@ -183,6 +188,7 @@ impl DocProfile {
             Self::Ldoc => DocCommentRule::LuaDoc,
             Self::Haddock => DocCommentRule::Haddock,
             Self::Roxygen => DocCommentRule::Roxygen,
+            Self::Lisp => DocCommentRule::Position(DefinitionStart::LispDefinition),
         }
     }
 
@@ -197,6 +203,7 @@ impl DocProfile {
             Self::Go => &["//"],
             Self::Ruby | Self::Shell | Self::Roxygen => &["#"],
             Self::Sql | Self::Ldoc | Self::Haddock => &["--"],
+            Self::Lisp => &[";"],
         }
     }
 }
