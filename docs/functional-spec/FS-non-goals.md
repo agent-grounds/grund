@@ -16,20 +16,31 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 
 ### 1.1 This repository's external-link gate
 
-This repository runs lychee alongside its offline grund checks. Its link gate
-uses a bounded request timeout and retry policy to tolerate transient network
-delays only when a subsequent attempt obtains a successful response. When a
+This repository runs lychee alongside its offline grund checks, in two places.
+The gate - every pull request, every merge-queue group, and the local
+`pre-commit run --all-files` - checks every internal link across the whole
+tree without the network: relative paths, fragments, and canonical links to
+this repository's default branch. It sends an external URL to the network only
+where the change adds or modifies the line that carries it. A scheduled sweep
+on the default branch checks every external URL in the tree, and reports what
+it finds dead rather than failing anyone's change. So a dead link a change adds
+or edits fails that change; a link already in the tree that goes dead fails the
+sweep, and no pull request that leaves it alone.
+
+Wherever an external URL is checked, the same tolerance applies. A bounded
+request timeout and retry policy tolerates transient network delays only when a
+subsequent attempt obtains a successful response. When a
 page on `github.com` answers a server error, a successful answer about the same
 resource from GitHub's API is that successful response; nothing passes without
 one. For a failure of a transient shape from any host, a second check of the same
 URL after the gate's own pass is such a subsequent attempt. A modestly slow response and recovery after four retryable failures must
 be tolerated; persistent timeouts and HTTP 404 responses must still fail the
-gate. No finite budget guarantees success through arbitrary external outages.
+check that met them. No finite budget guarantees success through arbitrary external outages.
 
 Canonical links to this repository's default branch must first pass local
 target and fragment validation. Missing targets and bad fragments stop before
 network work; only the exact successfully checked self URLs are excluded from
-the network pass. This is the repository's own maintenance gate, not a workflow
+the network. This is the repository's own maintenance gate, not a workflow
 required of grund users, and it adds no network I/O to verification
 ([§FS-non-goals.11](FS-non-goals.md#11-network-access-during-a-check)).
 
