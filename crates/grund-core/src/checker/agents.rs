@@ -133,7 +133,7 @@ pub(crate) fn check_agent_block_path(
                 authority: Vec::new(),
             });
         } else if block.version > AGENTS_BLOCK_VERSION
-            || unscoped_version(block.version) > unscoped_version(expected_version)
+            || newer_than_selected(block.version, expected_version)
         {
             report.errors.push(Diagnostic {
                 code: "agents-init",
@@ -160,6 +160,14 @@ pub(crate) fn check_agent_block_path(
                     report.errors.push(stale_block(path, line, section.noun));
                 }
             }
+            // §FS-init.2.3.7.1: a scoped-pair block where the unscoped pair is
+            // selected is stale even when no compared section tells it apart.
+            if !stale && block.version != expected_version {
+                stale = true;
+                report
+                    .errors
+                    .push(stale_block(path, line, "scoped guidance"));
+            }
             // §FS-init.2.3.5.12: a scoped block is the render, byte for byte, so
             // a difference no section names is still a stale one.
             if let Some(ScopedExpectation::Block(bytes)) = &entrypoint.scoped
@@ -179,11 +187,12 @@ pub(crate) fn check_agent_block_path(
     report.errors.push(missing_block(path, expected_version));
 }
 
-/// The version a block would carry without scoped guidance: v21 and v22 are v19
-/// and v20 plus the scoped sections (§FS-init.2.3.7.1), so a scoped block where
-/// an unscoped one is expected is stale rather than unsupported.
-fn unscoped_version(version: u32) -> u32 {
-    if version >= 21 { version - 2 } else { version }
+/// Whether a supported block is newer than the version the config selects. A
+/// v21 or v22 block where v19 or v20 is selected is not: it is stale, not
+/// unsupported (§FS-init.2.3.7.1).
+fn newer_than_selected(version: u32, expected_version: u32) -> bool {
+    let scoped_where_unscoped = version >= 21 && expected_version <= 20;
+    !scoped_where_unscoped && version > expected_version
 }
 
 /// §FS-check.3.5.3: a block that should be there and is not.
