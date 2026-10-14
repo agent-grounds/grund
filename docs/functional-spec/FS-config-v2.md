@@ -44,7 +44,7 @@ Every constraint draws its strength from one closed set, and the strength moves 
 
 ### requirements.ahead: What the format defines and this grund refuses is owed to its owners — deferred
 
-The format is published whole and executed in part ([§FS-config-v2.rollout](FS-config-v2.md#rollout-what-this-grund-executes-and-what-it-refuses)). Owed, and refused at its authored line or at the version key until it lands: every `languages` value but `["markdown"]`, an omitted `languages` and the epoch set it stands for, `[schema.sources.extensions]`, `[schema.sources.definitions.*]` and `[schema.sources] exclude`, to agent-grounds/grund#456 ([§FS-config-v2.defaults.2](FS-config-v2.md#defaults2-the-language-set-is-fixed-before-it-is-executed), [§FS-config-v2.schema.sources](FS-config-v2.md#schemasources-schemasources)); a row with more than one place, a place inside another row's, and a `code` row with places, to #457 ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)); `[presentation] rules` to #460; and every `anchors` and `links` value but the formatter's existing one to its own change ([§FS-config-v2.presentation](FS-config-v2.md#presentation-the-presentation-concern)). Migration from v1, which the records are kept apart for, is #461's ([§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart)). None of them loads with a v1 meaning meanwhile ([§FS-config-v2.requirements.no-v1-meaning](FS-config-v2.md#requirementsno-v1-meaning-a-v2-file-is-read-under-v2s-rules-or-refused-never-under-v1s--realized)). Serves [§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable).
+The format is published whole and executed in part ([§FS-config-v2.rollout](FS-config-v2.md#rollout-what-this-grund-executes-and-what-it-refuses)). Owed, and refused at its authored line until it lands: a row with more than one place, a place inside another row's, and a `code` row with places, to #457 ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)); `[presentation] rules` to #460; and every `anchors` and `links` value but the formatter's existing one to its own change ([§FS-config-v2.presentation](FS-config-v2.md#presentation-the-presentation-concern)). Migration from v1, which the records are kept apart for, is #461's ([§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart)). None of them loads with a v1 meaning meanwhile ([§FS-config-v2.requirements.no-v1-meaning](FS-config-v2.md#requirementsno-v1-meaning-a-v2-file-is-read-under-v2s-rules-or-refused-never-under-v1s--realized)). Serves [§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable).
 
 ## reader: The reader
 
@@ -80,15 +80,17 @@ A key a v2 file omits takes the value below. These are the v2 epoch, and no late
 | Named sections | always enabled; there is no switch | `named_sections = false` |
 | `[schema] heading_depth` | `must` | `section_heading_levels = "strict"` |
 | `[schema.sources] respect_gitignore` | `true` | `true` |
+| `[schema.sources] exclude` | `[]` | `[scan] exclude`, six directory names |
+| `[schema.sources] declarations` | `"doc-comments"` | every comment in declaration position |
 | The scan | the union of the rows' places, and the config root when no row has a place | `[scan] include` |
 | `[rules.citations] default` | `may` | no default level |
-| Languages | the epoch set of #456's approved proposal | `[scan] extensions` and `comment_prefixes` |
+| Languages | the epoch's default rows ([§FS-config-v2.schema.sources.epoch](FS-config-v2.md#schemasourcesepoch-the-v2-language-epoch)) | `[scan] extensions` and `comment_prefixes` |
 
 The marker, `shorthand`, `section_separator` and `number_pattern` keep their v1 defaults. A v2 file that declares no `[schema.kinds]` row, or only rows with `citable = false`, has no kinds and still loads: it declares no IDs, and v1's built-in kind list and v1's refusal of a table with no citable kind belong to v1.
 
 ### defaults.2: The language set is fixed before it is executed
 
-The v2 language set, with its suffixes, declaration hosts and explicit opt-in languages, is the one agent-grounds/grund#456's proposal fixed on 2026-10-06. Until a binary executes that exact set, a v2 file that omits `[schema.sources] languages` is refused at the version key: `v2 needs an explicit [schema.sources] languages: this grund does not support the v2 default language set yet`. The v1 extension list is never substituted for it. `languages = ["markdown"]` is executed now, by the Markdown scanner every version shares.
+The v2 language set, with its suffixes, declaration hosts and explicit opt-in languages, is the one agent-grounds/grund#456's proposal fixed on 2026-10-06, and [§FS-config-v2.schema.sources.epoch](FS-config-v2.md#schemasourcesepoch-the-v2-language-epoch) is its table. A v2 file that omits `[schema.sources] languages` admits that table's default rows. The v1 extension list is never substituted for it, and a later binary never adds a row to the default set.
 
 ## schema: The schema concern
 
@@ -102,7 +104,153 @@ A row is `[schema.kinds.<NAME>]`. It admits `files` and `folders`, lists of path
 
 ### schema.sources: `[schema.sources]`
 
-`[schema.sources]` admits `languages`, `exclude` and `respect_gitignore`, plus the tables `[schema.sources.extensions]` and `[schema.sources.definitions.<name>]`. `exclude` holds gitignore-style globs.
+`[schema.sources]` admits `languages`, `declarations`, `exclude` and `respect_gitignore`, plus the tables `[schema.sources.extensions]` and `[schema.sources.definitions.<name>]`. Together they say which files a v2 project reads, which reader and comment hosts each file takes, and which comments may declare an ID, and every one of those answers is read from the configuration and the file's own name, never from a kind row's `syntax` and never from the file's contents ([§GOAL-polyglot-citation](../goals.md#goal-polyglot-citation-ids-cite-cleanly-from-anywhere-they-are-useful)). A file's **language** is the one its final extension maps to: an entry of `[schema.sources.extensions]` first, then the epoch suffix of an admitted language ([§FS-config-v2.schema.sources.epoch](FS-config-v2.md#schemasourcesepoch-the-v2-language-epoch)). A file whose extension maps to no admitted language is not read, as a file of an unlisted extension is not read in v1 ([§FS-scan.scope.extensions](FS-scan.md#scopeextensions-an-extension-makes-a-file-readable-not-declarable)).
+
+```toml
+grund_config_version = 2
+[schema.sources]
+languages = ["markdown", "rust", "notes"]
+declarations = "doc-comments"
+exclude = ["generated", "/docs/archive", "src/**/vendor/**"]
+[schema.sources.extensions]
+rustdoc = "rust"
+note = "notes"
+[schema.sources.definitions.notes]
+class = "source"
+comment_prefixes = ["%%"]
+```
+
+This reads `.md`, `.rs` and `.rustdoc` files, the last as Rust, and `.note` files through the `%%` prefix; it lets only Rust doc comments, and any `%%` comment of a `.note` file, declare an ID; and it skips every `generated` file or directory at any depth, the root's `docs/archive`, and every `vendor` subtree below `src`.
+
+#### schema.sources.languages: `languages` admits languages, and only it does
+
+`languages` is a list of language names, built-in or defined under `[schema.sources.definitions]`. An omitted `languages` is the epoch's **default** set, in the epoch's order ([§FS-config-v2.schema.sources.epoch](FS-config-v2.md#schemasourcesepoch-the-v2-language-epoch)). An explicit list replaces that set whole, `[]` included: a list is one value ([§FS-config.principle.unit](FS-config.md#principleunit-one-leaf-key-overrides-and-one-value-is-whole)), and `[]` admits nothing, so no file is read. Neither a definition nor an extension mapping admits a language; only `languages` does.
+
+A name that is neither built-in nor defined is refused at the `languages` line: ``unknown language `<name>` in [schema.sources] languages``. A name written twice is refused at that line: ``language `<name>` is listed twice in [schema.sources] languages``. The default set is fixed at the epoch, so installing a later binary never widens an omitted `languages`: a language added to grund after the epoch is an **opt-in** row, admitted only by naming it.
+
+#### schema.sources.epoch: The v2 language epoch
+
+These are the built-in languages of v2, fixed on 2026-10-06 by agent-grounds/grund#456's approved proposal. A suffix is matched case-sensitively and written without its leading dot. Every **default** row is admitted by an omitted `languages`, in this order; an **opt-in** row is admitted only by naming it. Any other suffix, such as `h`, `hpp`, `jsx`, `mjs` or `kts`, is read only through an explicit `[schema.sources.extensions]` entry.
+
+| Admission | Class | Language: suffixes | Comment hosts | Doc profile |
+|---|---|---|---|---|
+| default | document | `markdown`: `md` | Markdown headings | none |
+| default | data | `json`: `json` | the JSON value-file reader of [§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations) | none |
+| default | source | `rust`: `rs`; `c`: `c`; `cpp`: `cpp`; `java`: `java`; `kotlin`: `kt`; `scala`: `scala`; `swift`: `swift`; `javascript`: `js`; `typescript`: `ts`, `tsx`; `csharp`: `cs`; `php`: `php` | `//`, `/*`, `*`; PHP also `#` | `c-family` |
+| default | source | `python`: `py` | `#`, and triple-quoted docstrings | `python` |
+| default | source | `go`: `go` | `//` | `go` |
+| default | source | `ruby`: `rb` | `#` | `ruby` |
+| default | source | `sql`: `sql` | `--` | `sql` |
+| default | source | `lua`: `lua` | `--` | `ldoc` |
+| default | source | `haskell`: `hs`, `lhs` | `--` | `haddock` |
+| default | source | `lisp`: `lisp`; `scheme`: `scm`; `clojure`: `clj` | `;` | none |
+| default | source | `ada`: `ada`, `adb`, `ads` | `--` | none |
+| opt-in | source | `shell`: `sh`, `bash`, `zsh` | `#` | `shell` |
+| opt-in | source | `r`: `r`, `R` | `#`, and roxygen's `#'` | `roxygen` |
+| opt-in | source | `objectivec`: `m`, `mm`; `dart`: `dart` | `//`, `/*`, `*` | `c-family` |
+
+A language's comment hosts are the prefixes it reads a comment behind, each standing for the forms of [§FS-languages.prefixes.forms](FS-languages.md#prefixesforms-the-forms-a-prefix-stands-for), matched longest first. Its **doc profile** is the frozen recognizer [§FS-config-v2.schema.sources.declarations](FS-config-v2.md#schemasourcesdeclarations-declarations-picks-which-comments-declare) asks which of its comments are documentation; the profiles are those of [§FS-inline-citation-style.1.1.2](FS-inline-citation-style.md#112-languages) as they stood at the epoch, and [§FS-inline-citation-style.1.1.4](FS-inline-citation-style.md#114-declaration-applicability) fixes what each admits. A row is never changed once published: a language, a suffix or a profile that changes membership or a block boundary is a new opt-in row, a new profile name, or a new config version ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)).
+
+#### schema.sources.extensions: `[schema.sources.extensions]` maps a suffix to a language
+
+Each key is a suffix and each value a language name. An entry overrides the epoch's assignment of that suffix, so `h = "c"` reads `.h` files as C and `md = "notes"` takes Markdown's suffix away from it. A key is a nonempty literal final extension: no dot, no path separator, and no glob character among `*`, `?`, `[`, `]`, `{`, `}` or `!`. A malformed key is refused at its line: ``invalid suffix `<key>` in [schema.sources.extensions] (expected a final extension with no dot, separator or glob)``.
+
+A value must name a language that `languages` admits. An unknown name is refused at the entry's line: ``unknown language `<name>` in [schema.sources.extensions]``; a known name that `languages` does not admit is refused there too: ``[schema.sources.extensions] <key> maps to `<name>`, which [schema.sources] languages does not admit``. The mapped file takes the target language whole: its reader, its comment hosts, its doc profile and, for `python`, its docstring reading, all together. A mapping selects none of them separately.
+
+#### schema.sources.definitions: `[schema.sources.definitions.<name>]` defines a language
+
+A definition adds a language to the names `languages` and `[schema.sources.extensions]` may use; it admits nothing and maps no suffix by itself, so a definition that no admitted mapping reaches loads and reads nothing. Its name matches `[a-z][a-z0-9_]*` and is not a built-in name: ``[schema.sources.definitions.<name>] cannot redefine the built-in language `<name>` ``, and a name outside the grammar is ``invalid language name `<name>` (expected [a-z][a-z0-9_]*)``, both at the header's line. It admits four keys, and an unknown key is refused at its line per [§FS-config-v2.reader.1](FS-config-v2.md#reader1-tables-and-keys-are-closed):
+
+| Key | Values | Default |
+|---|---|---|
+| `class` | `document`, `data`, `source` | required |
+| `comment_prefixes` | literal, nonempty, single-line strings, each once | `[]` |
+| `doc_comments` | `none`, `c-family`, `python`, `go`, `ruby`, `shell`, `sql`, `ldoc`, `haddock`, `roxygen` | `none` |
+| `docstrings` | `off`, `python` | `off` |
+
+A definition without `class` is refused at its header: ``[schema.sources.definitions.<name>] needs `class` ``. Each value outside its column is refused at its line, naming the values it expected. The combinations below are refused at the line of the key that breaks them:
+
+- A `document` definition reads its files with the Markdown reader, a `data` definition with the JSON value-file reader. Neither takes a doc profile or docstrings other than `none` and `off`. A `document` definition may keep comment prefixes, for a fenced example's reading, as v1's Markdown does; a `data` definition takes none. Each is refused at the offending key's line: `` [schema.sources.definitions.<name>] class = "<class>" takes no <key> ``.
+- A `source` definition needs a comment host: at least one prefix, or `docstrings = "python"`. One with neither is ``[schema.sources.definitions.<name>] reads no comment: give it comment_prefixes or docstrings = "python"``, at its header.
+- `doc_comments = "python"` needs `docstrings = "python"`, and a marker profile whose marker no configured prefix can reach — `c-family` without `//` or `/*`, `ldoc`, `haddock` or `sql` without `--`, `roxygen`, `ruby` or `shell` without `#`, `go` without `//` — is refused at the `doc_comments` line: `` doc_comments = "<profile>" is unreachable: no comment prefix of [schema.sources.definitions.<name>] spells it ``.
+- A prefix written twice is refused at the `comment_prefixes` line.
+
+A prefix is literal: matched byte for byte at the first non-blank column, the longest configured prefix first, and standing for nothing beyond itself. A definition's prefixes are its own; there is no global prefix list in v2.
+
+#### schema.sources.declarations: `declarations` picks which comments declare
+
+`declarations` takes `"doc-comments"`, the v2 default, or `"any-comment"`. A line in declaration position ([§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares)) in a source file declares only when the comment block it sits in is **eligible**. Under `"any-comment"` every comment block is eligible, as in v1; under `"doc-comments"` the blocks below are. A Markdown heading and a value file are not comments and are not asked. The key changes nothing about citations: a marked citation in any comment is recognized, resolved and checked as before. Any other value is refused at its line: ``unknown [schema.sources] declarations `<value>` (expected doc-comments or any-comment)``. v1 has no such key, and its declarations stay those of every comment in declaration position ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)).
+
+```rust
+/// FS-existing: Real documentation
+fn example() {
+    // FS-existing: Ordinary root-ID note
+    // See §FS-existing.
+}
+```
+
+Here v1 declares `FS-existing` twice and reports the duplicate; v2 declares it once, at line 1, and the ordinary comment's citation still resolves to it.
+
+##### schema.sources.declarations.eligible: Which blocks are eligible
+
+The file's language is the one [§FS-config-v2.schema.sources](FS-config-v2.md#schemasources-schemasources) resolves from its name, never a kind row's setting, and that language's doc profile decides:
+
+- a language whose profile is not `none` makes a block eligible exactly when the profile's recognizer classifies it as a doc comment, with the frozen applicability of [§FS-inline-citation-style.1.1.4](FS-inline-citation-style.md#114-declaration-applicability);
+- a language whose profile is `none` — Lisp, Scheme, Clojure and Ada in the epoch, and a definition that writes no `doc_comments` — makes every comment block behind its configured hosts eligible, so a language with no notion of documentation can still declare;
+- a `docstrings = "python"` language makes each docstring eligible, and under the `python` profile its `#` blocks are not.
+
+##### schema.sources.declarations.gate: One gate, before every recognizer
+
+Eligibility is decided once per block, from the language and the block alone, whether or not the block carries a citation and whether or not the inline-style budgets measured it. It is decided before the canonical declaration recognizer, the off-grammar and legacy fallback recognizers ([§FS-config.3.2.5](FS-config.md#325-off-grammar-declarations-stay-readable)) and the near-miss check ([§FS-declarations.checks.declaration-near-miss.1](FS-declarations.md#checksdeclaration-near-miss1-what-counts)), so a line in an ineligible block declares nothing, is no near miss, and cannot reach the catalog by a fallback. Every consumer of a declaration reads the same answer: body ranges and sections ([§FS-show.2.3.1](FS-show.md#231-what-counts-as-the-comment-block)), anchors, stub verification ([§FS-declarations.stubs](FS-declarations.md#stubs-what-a-stub-points-at)), the formatter's protection of declaration lines, and the editor. A section-suffixed token declares nothing in either mode ([§FS-declarations.line.section-suffix](FS-declarations.md#linesection-suffix-an-id-with-a-section-after-it-declares-nothing)).
+
+##### schema.sources.declarations.prose: An ineligible declaration-shaped line draws no new finding
+
+A declaration-shaped line in an ineligible block is prose. It gets no finding of its own, and `declaration-near-miss` is not reused to report it. A marked citation written on it is still a citation and draws every finding a citation does.
+
+#### schema.sources.exclude: `exclude` is a gitignore-style glob list
+
+`exclude` is a list of gitignore-style patterns resolved against the config root ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), the grammar `[presentation.fmt] exclude` already uses ([§FS-config.3.10.1](FS-config.md#3101-entries-are-gitignore-style-globs)). Its default is `[]`: v1's built-in names `target`, `node_modules`, `.git`, `dist`, `build` and `.venv` are not v2 defaults, and a v2 project that wants them writes them. A pattern is read as a `.gitignore` line is:
+
+- a pattern with no `/` but a trailing one matches a file or directory of that name at any depth, so `generated` skips `generated/` and `a/b/generated` alike;
+- a pattern with a leading or inner `/` is anchored at the config root, so `/docs/archive` skips the root's `docs/archive` and not `lib/docs/archive`;
+- a trailing `/` matches directories only, so `build/` leaves a file named `build` read;
+- `*`, `?`, bracket classes, `**` and backslash escapes mean what they mean in `.gitignore`, so `src/**/vendor/**` skips every file below any `vendor` directory under `src`;
+- a `#` line is a comment, and `!` negates a pattern the list has already matched, the later line winning.
+
+A negation never rescues a file below a directory the scan already pruned, as in git: `["build/", "!build/keep.md"]` leaves `build/keep.md` unread. A pattern the parser refuses is refused at the `exclude` line, per [§FS-config.4.3](FS-config.md#43-invalid-config-behavior).
+
+##### schema.sources.exclude.roots: How `exclude` composes with the other filters
+
+`exclude` is a rule about descent, so it composes as v1's component names do ([§FS-scan.scope.roots](FS-scan.md#scoperoots-a-scan-root-outruns-every-rule-about-descent)):
+
+1. A **scan root** — a row's place, or a path handed to the command — is read even where a pattern names it; what lies below it is filtered. The hidden-file rule ([§FS-scan.scope.hidden](FS-scan.md#scopehidden-a-hidden-file-is-not-read-and-the-rule-is-not-about-descent)) and language admission are rules about a file's own name and still win at a root.
+2. Below a root, a path is read only if neither `exclude` nor an ignore file matches it. `respect_gitignore = false` turns the ignore files off and leaves `exclude` in force; the two are separate filters, and a `!` in one never overrides the other.
+3. A row with `scan = false` is pruned from the default scope, and an explicit path argument or `--full` reaches it ([§FS-config.3.4.7.3](FS-config.md#3473-an-explicit-path-argument-still-reads-it), [§FS-config.3.4.7.5](FS-config.md#3475-under---full)); `--full` still applies `exclude`, the ignore files and the hidden rules. A narrowed `check` narrows only what it reports, never what resolves ([§FS-scan.path.check](FS-scan.md#pathcheck-check-reads-more-than-it-reports)).
+4. A path reached through a symlink is matched by the spelling the walk reached it under ([§FS-scan.scope.links.names](FS-scan.md#scopelinksnames-the-directory-rules-apply-under-the-link-name)). Workspace ownership, the directory-link fences, E2E fixture boundaries, loop refusals and the one-read-per-physical-file rule are decided before `exclude` and are not loosened by it ([§FS-scan.identity.read-once](FS-scan.md#identityread-once-one-physical-file-is-read-once)).
+5. A root outside the config root is matched by its lexical spelling relative to the config root: an anchored pattern never reaches outside the root, and an unanchored one still applies below it.
+
+Scanner and formatter share the grammar and not the effect: `[presentation.fmt] exclude` keeps a file from being rewritten while the scan still reads it, and `[schema.sources] exclude` keeps the scan from reading it at all.
+
+#### schema.sources.effective: The admitted set is read from the configuration alone
+
+The resolved source model — every admitted language with its class, suffixes, comment hosts and doc profile, the `declarations` mode, `exclude` and `respect_gitignore` — is computed from the configuration without reading a source file. `grund config show` prints it in v2 spelling ([§FS-config.requirements.6](FS-config.md#requirements6-the-effective-configuration-is-inspectable--realized-provenance-deferred)): `languages` always, written out in full, so an omitted list prints as the epoch's default set; `declarations`, `exclude` and `respect_gitignore` always; and each `[schema.sources.extensions]` entry and each definition with every key, the defaults included. Built-in rows are not printed, since the epoch fixes them. The output loads back to the same model.
+
+#### schema.sources.migration: What a v1 source configuration becomes
+
+These are the rules agent-grounds/grund#461's `grund config migrate --to 2` applies to v1's `[scan]` source keys; this change specifies them and does not build the migrator. Every translation writes its defaults out, so the v2 file keeps v1's meaning after any later edit to the tree, and a report that matches on one tree is no proof of equivalence ([§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart)).
+
+1. `declarations = "any-comment"` is written, which is v1's declaration recognition.
+2. `languages` is written explicitly. Each v1 extension becomes a definition of its own, named after the extension, of the class its v1 reader is — `document` for `md`, `source` otherwise — copying the **whole** v1 `comment_prefixes` list and the doc profile [§FS-inline-citation-style.1.1.2](FS-inline-citation-style.md#112-languages) gives that extension, and is mapped by `[schema.sources.extensions]`. A Markdown definition keeps v1's prefixes, since v1 reads a Markdown fence through them.
+3. `.py` takes `docstrings = "python"` and the `python` profile when `docstring_python = true`, and `docstrings = "off"` with no Python profile when it is `false`, which keeps v1's raw-line reading of a triple-quoted string.
+4. Each v1 `[scan] exclude` name becomes the escaped, directory-only glob `<name>/`, which matches that directory at any depth, as v1 did.
+
+Migration refuses, and leaves the config's bytes unchanged, rather than approximate:
+
+- a path-shaped v1 `exclude` entry, one containing `/`, which never matched in v1: activating it as the glob it looks like would change what is scanned ([§DISC-core-concerns.8.3.1](../discussions/proposals/2026-09-30-core-concerns.md#831-amended-a-path-shaped-entry-is-refused-not-activated)); a project that wants the glob adopts it by hand;
+- a v1 arrangement that scans `.json` as text while a kind's `values` also reads it as a value source, or that admits `.json` only through a value home: one class and one admission cannot hold both;
+- a v1 extension or prefix outside the domains of [§FS-config-v2.schema.sources.extensions](FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language) and [§FS-config-v2.schema.sources.definitions](FS-config-v2.md#schemasourcesdefinitions-schemasourcesdefinitionsname-defines-a-language), a source extension that would read no comment, and a reader v2 has no class for.
+
+A `.json` extension scanned explicitly in v1 with no value authority becomes a `source` definition with its prefixes.
 
 ### schema.measures: Measures are tables, strengths are keys
 
@@ -161,7 +309,7 @@ A ladder is one setting. A row that writes a ladder replaces the project's ladde
 
 ## rollout: What this grund executes, and what it refuses
 
-The format is published whole, and this binary executes part of it. A clause the format defines but this binary does not execute is never accepted and ignored. It is refused at its authored line with `` `<clause>` is part of the v2 format but not supported by this grund yet ``, where `<clause>` is a table's header, `[schema.kinds.FS.fields.terms]`, or a table and key, `[presentation.fmt] anchors`. An omitted default that cannot be executed is refused at the version key ([§FS-config-v2.defaults.2](FS-config-v2.md#defaults2-the-language-set-is-fixed-before-it-is-executed)). The refusal lifts when the feature's owner lands, and it never falls back to a v1 meaning.
+The format is published whole, and this binary executes part of it. A clause the format defines but this binary does not execute is never accepted and ignored. It is refused at its authored line with `` `<clause>` is part of the v2 format but not supported by this grund yet ``, where `<clause>` is a table's header, `[schema.kinds.FS.fields.terms]`, or a table and key, `[presentation.fmt] anchors`. An omitted default that cannot be executed is refused at the version key; since #456 none is left. The refusal lifts when the feature's owner lands, and it never falls back to a v1 meaning.
 
 | Clause | Status in this grund | Owner |
 |---|---|---|
@@ -173,7 +321,7 @@ The format is published whole, and this binary executes part of it. A clause the
 | `[presentation]` `description`, `trigger`, `conversation`, `[presentation.kinds.*] title`, `[presentation.fmt] exclude` | executed | #455 |
 | `[presentation.fmt]` `anchors = "github"`, `links = "index"` | executed | #455 |
 | `languages = ["markdown"]` | executed | #455 |
-| Any other `languages` value, an omitted `languages`, `[schema.sources.extensions]`, `[schema.sources.definitions.*]`, `[schema.sources] exclude` | refused | #456 |
+| Every other `languages` value, an omitted `languages`, `declarations`, `[schema.sources.extensions]`, `[schema.sources.definitions.*]`, `[schema.sources] exclude` | executed | #456 |
 | A row with more than one place, a place inside another row's place, a `code` row with places | refused | #457 |
 | `[schema.kinds.*.fields.*]`, `form`, `closed` | executed | #458 |
 | Any other `anchors` or `links` value | refused | its own change; #459 closed without it |
