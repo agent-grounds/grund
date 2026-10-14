@@ -1,0 +1,31 @@
+grund_config_version = 2
+project_name = "places-example"
+
+[schema.sources]
+languages = ["markdown", "rust", "shell"]
+
+# One kind, two folders: each folder keeps its own index.
+[schema.kinds.FS]
+folders = ["docs/spec/core", "docs/spec/plugins"]
+
+# A file listed inside the `page` folder belongs to this row, not to `page`.
+[schema.kinds.GOAL]
+files = ["docs/guide/goals.md"]
+
+# Every file under docs/ that no deeper place and no listed file claims.
+[schema.kinds.page]
+citable = false
+folders = ["docs"]
+
+# The complement: with places, it narrows the scan to them.
+[schema.kinds.code]
+folders = ["crates", "scripts"]
+
+[rules.citations.FS]
+should = ["GOAL"]
+
+[rules.citations.page]
+must = ["GOAL"]
+
+[rules.citations.code]
+must = ["FS"]

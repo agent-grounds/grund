@@ -20,6 +20,20 @@ exclude = ["vendor/", "tmp/", "log/", "coverage/"]
 [sources guide](sources.md) has the language table and the suffix and
 definition tables.
 
+Where v1's `[scan] include` names the directories to read, v2 writes them as
+the places of the `code` row, and a kind spread across directories lists each:
+
+```toml
+[schema.kinds.AR]
+folders = ["app/models/docs", "app/services/docs"]
+
+[schema.kinds.code]
+folders = ["app", "lib", "script"]
+```
+
+A file in nested places belongs to the deepest
+([§FS-config-v2.schema.places.ownership](../functional-spec/FS-config-v2.md#schemaplacesownership-a-listed-file-then-the-deepest-folder)).
+
 ## Ruby / Rails
 
 Evidence: `Gemfile`, `app/`, `lib/`, `spec/`, `test/`.

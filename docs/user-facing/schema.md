@@ -56,6 +56,11 @@ A|B = one obligation, met by citing either · — = no direction rule names it
   checked but declare nothing, `place, not scanned` is never read, and the
   `complement` is every scanned file no other row claims. A kind's fields follow
   it, one `field` line each: presence, placement, and what the chapter may say.
+  A row with several places lists every one, comma-separated in written order
+  (`docs/a/, docs/b/`). In a version-2 config, a `code` row that lists places
+  is the complement, drawn with those places (`crates/, scripts/`) and no
+  second complement beside it; [`examples/places/`](../../examples/places/)
+  shows one.
 - **citations.** One line per direction rule, in row order and then from the
   strongest strength down. `GOAL|FS` is one obligation, met by citing either;
   `AR (itself)` is a kind citing its own kind. `—` is a row with no direction

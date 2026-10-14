@@ -9,6 +9,11 @@ lists every accepted sentence and refusal rewrite; the runnable
 deduplication behavior ([§FS-rules](../functional-spec/FS-rules.md#fs-rules-grounded-declarations-state-and-enforce-chapter-rules)).
 A version-2 kind can declare its chapters as fields — their order, titles and
 allowed values, and whether anything else may appear — in the [fields guide](../user-facing/fields.md), with the runnable [`examples/fields/`](../../examples/fields/) ([§FS-fields](../functional-spec/FS-fields.md#fs-fields-a-v2-kind-states-the-shape-of-its-declarations-and-check-holds-every-declaration-to-it)).
+A version-2 row may list several places — `folders = ["docs/spec/core", "docs/spec/plugins"]` — and
+places may nest: a file listed in a row's `files` is that row's, otherwise the deepest folder
+holding it decides, and a file in no place is `code`'s. Each folder of a kind keeps its own index.
+The runnable [`examples/places/`](../../examples/places/) shows all three
+([§FS-config-v2.schema.places.ownership](../functional-spec/FS-config-v2.md#schemaplacesownership-a-listed-file-then-the-deepest-folder)).
 
 | Kind | What it is | Where it lives |
 | --- | --- | --- |

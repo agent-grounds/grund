@@ -1631,7 +1631,7 @@
     },
     "v2Kind": {
       "type": "object",
-      "description": "One kind: its homes, its form, and its fields.",
+      "description": "One row: its places, its form, and its fields. A row may list several places; a file listed in `files` belongs to its row, otherwise the deepest folder holding it decides, and a file in no place belongs to `code`. The row named `code` is the complement: it declares no IDs, and listing places on it narrows the scan to every place written.",
       "x-grund-spec": {
         "id": "FS-config-v2.schema.places",
         "href": "docs/functional-spec/FS-config-v2.md#schemaplaces-rows-and-their-places"
@@ -1642,7 +1642,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Single-file homes: every declaration is a heading in one of these documents.",
+          "description": "Files from the config root, in written order. A listed file belongs to this row even inside another row's folder. On a citable row with no folders, every declaration is a heading in one of these documents. A place is normalized (`./a/` is `a`), must stay inside the config root, and belongs to one row.",
           "default": [],
           "x-grund-spec": {
             "id": "FS-config-v2.schema.places",
@@ -1654,7 +1654,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Folder homes: each declaration is the H1 of its own file under one of these directories.",
+          "description": "Folders from the config root, in written order. Each declaration is the H1 of its own file under one of them; a file in nested folders belongs to the deepest. A place is normalized, must stay inside the config root and outside every workspace member, belongs to one row, and a folder may not link out of the project root.",
           "default": [],
           "x-grund-spec": {
             "id": "FS-config-v2.schema.places",
@@ -1663,7 +1663,7 @@
         },
         "citable": {
           "type": "boolean",
-          "description": "`false` makes this a place: it cites, but declares no IDs.",
+          "description": "`false` makes this a place: it cites, but declares no IDs. A non-citable row must list a place unless it is `code`, which is non-citable by name; `citable = true` on `code` is refused.",
           "default": true,
           "x-grund-spec": {
             "id": "FS-config-v2.schema.places",
@@ -1672,7 +1672,7 @@
         },
         "scan": {
           "type": "boolean",
-          "description": "`false` lists the kind in the Project map without walking it.",
+          "description": "`false` lists the kind in the Project map without walking any of its places; a scanned place nested under it is still walked. Refused on `code`: narrow its places or use `[schema.sources] exclude`.",
           "default": true,
           "x-grund-spec": {
             "id": "FS-config-v2.schema.places",
@@ -1688,7 +1688,7 @@
               "const": false
             }
           ],
-          "description": "The folder's index file, which must list every declaration; `false` opts out.",
+          "description": "The index file each folder keeps, which must list every declaration that folder owns; `false` opts out.",
           "x-grund-default": "README.md (no E2E special case in v2)",
           "x-grund-spec": {
             "id": "FS-config-v2.schema.places",
