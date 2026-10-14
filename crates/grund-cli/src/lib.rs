@@ -130,3 +130,4 @@ include!("cli_complete.rs");
 include!("cli_integrations.rs");
 include!("cli_integrations_write.rs");
 include!("tests_integrations.rs");
+include!("tests_schema.rs");
