@@ -8,6 +8,7 @@ use std::path::{Component, Path, PathBuf};
 use crate::checker::section_in_block;
 use crate::grammar::{AgentsBlockLookup, find_agents_block};
 use crate::scanner::{CANONICAL_AGENT_ENTRYPOINT, companion_agent_entrypoints, is_symlink_to};
+use crate::sources::{Sources, path_is_entry};
 
 /// The companions a scoped directory can carry; the root-only entrypoints are
 /// never mirrored (§FS-init.2.3.5.14.3).
@@ -31,7 +32,7 @@ impl ScopedRecord {
         let mut candidates = vec![root.join(CANONICAL_AGENT_ENTRYPOINT)];
         candidates.extend(companion_agent_entrypoints(root).unwrap_or_default());
         for path in candidates {
-            let Ok(text) = std::fs::read_to_string(&path) else {
+            let Ok(text) = Sources::on_disk().text(&path) else {
                 continue;
             };
             if let AgentsBlockLookup::Found(block) = find_agents_block(&text) {
@@ -80,7 +81,7 @@ pub(crate) fn scoped_companions(dir: &Path) -> Vec<(PathBuf, bool)> {
     SCOPED_COMPANIONS
         .iter()
         .map(|name| dir.join(name))
-        .filter(|path| path.symlink_metadata().is_ok())
+        .filter(|path| path_is_entry(path))
         .map(|path| {
             let linked = is_symlink_to(&path, &agents).unwrap_or(false);
             (path, linked)

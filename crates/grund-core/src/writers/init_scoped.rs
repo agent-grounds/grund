@@ -16,7 +16,7 @@ use super::init_output::InitEvent;
 use super::scoped_files::{SCOPED_COMPANIONS, ScopedRecord, mirrored, scoped_companions};
 use crate::grammar::{AgentsBlockLookup, find_agents_block};
 use crate::scanner::CANONICAL_AGENT_ENTRYPOINT;
-use crate::sources::Sources;
+use crate::sources::{Sources, link_metadata, path_exists, path_is_entry, path_is_symlink};
 
 /// What one run does to scoped files, in report order (§FS-init.2.3.5.14.4).
 pub(super) struct ScopedPlan {
@@ -64,7 +64,7 @@ pub(super) fn plan_scoped(guidance: &Guidance<'_>, root: &Path, target: &Path) -
                 .filter_map(|name| {
                     let companion = target.join(dir).join(name);
                     let rel = format!("{dir}/{name}");
-                    match companion.symlink_metadata() {
+                    match link_metadata(&companion) {
                         Err(_) => Some(Companion::Link {
                             path: companion,
                             rel,
@@ -108,11 +108,6 @@ pub(super) fn plan_scoped(guidance: &Guidance<'_>, root: &Path, target: &Path) -
     ScopedPlan { files, orphans }
 }
 
-fn is_symlink(path: &Path) -> bool {
-    path.symlink_metadata()
-        .is_ok_and(|meta| meta.file_type().is_symlink())
-}
-
 /// §FS-init.2.3.5.14.1: a newer or malformed block in any file the plan
 /// splices, or a scoped `AGENTS.md` that is a symlink, refuses the run before
 /// anything is written; so does an orphan whose delimiters cannot be cut.
@@ -128,13 +123,13 @@ pub(super) fn refuse_scoped(plan: &ScopedPlan) -> Option<(PathBuf, anyhow::Error
         std::iter::once((&file.path, &file.rel)).chain(companions)
     });
     for (path, rel) in spliced {
-        if is_symlink(path) {
+        if path_is_symlink(path) {
             return Some((
                 path.clone(),
                 anyhow!("{rel} is a symlink; grund init does not write through it"),
             ));
         }
-        if path.exists() {
+        if path_exists(path) {
             let refusal = match Sources::on_disk().text(path) {
                 Ok(text) => update_agents_text(&text, "", rel).err(),
                 Err(err) => Some(err.into()),
@@ -153,7 +148,7 @@ pub(super) fn refuse_scoped(plan: &ScopedPlan) -> Option<(PathBuf, anyhow::Error
         std::iter::once(&orphan.path).chain(companions)
     });
     for path in orphans {
-        if is_symlink(path) || !path.exists() {
+        if path_is_symlink(path) || !path_exists(path) {
             continue;
         }
         if let Ok(text) = Sources::on_disk().text(path)
@@ -182,7 +177,7 @@ pub(super) fn write_scoped(
         events.push(InitEvent { verb, path });
     };
     for file in &plan.files {
-        if file.path.symlink_metadata().is_err() {
+        if !path_is_entry(&file.path) {
             // §FS-init.2.3.5.12.3: a created scoped file is the block alone.
             if !dry_run {
                 fs::write(&file.path, &file.block)
@@ -210,7 +205,7 @@ pub(super) fn write_scoped(
         }
     }
     for orphan in &plan.orphans {
-        if is_symlink(&orphan.path) {
+        if path_is_symlink(&orphan.path) {
             continue;
         }
         let Some(removed) = cut_block(&orphan.path, dry_run)? else {
@@ -225,7 +220,7 @@ pub(super) fn write_scoped(
                     }
                     push(cut_verb(true, dry_run), rel.clone());
                 }
-            } else if !is_symlink(path)
+            } else if !path_is_symlink(path)
                 && let Some(removed) = cut_block(path, dry_run)?
             {
                 push(cut_verb(removed, dry_run), rel.clone());
