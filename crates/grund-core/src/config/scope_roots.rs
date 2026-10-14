@@ -85,27 +85,17 @@ pub(crate) fn root_scope_roots(schema: &Schema, root: &Path, full: bool) -> Vec<
             .chain(std::iter::once(root.to_path_buf()))
             .collect(),
         (false, true) => include.chain(homes).collect(),
-        // No `include` key: the whole root is walked, and every home is under
-        // it, so there is nothing left for the homes to add — but a v2 scanned
-        // place under an unscanned one, which the walk's prune would hide
-        // (§FS-config-v2.schema.places.boundaries.6).
-        (false, false) => std::iter::once(root.to_path_buf())
-            .chain(scanned_under_unwalked(schema, root))
-            .collect(),
+        // No `include` key, v1: the whole root is walked, and every home is under
+        // it, so there is nothing left for the homes to add.
+        (false, false) if schema.nesting == Nesting::NestedPlaceFallsToComplement => {
+            vec![root.to_path_buf()]
+        }
+        // v2 with the complement at the root: each scanned place is still a scan
+        // root, read where `exclude` names it (§FS-config-v2.schema.sources.exclude.roots)
+        // and walked under an unscanned place (§FS-config-v2.schema.places.boundaries.6),
+        // ahead of the root so a file reached twice keeps the place's spelling.
+        (false, false) => homes.chain(std::iter::once(root.to_path_buf())).collect(),
     }
-}
-
-/// §FS-config-v2.schema.places.boundaries.6: in v2 a scanned place under an
-/// unscanned one is walked, so it is a root of its own; v1 prunes it with the
-/// home around it (§FS-config.3.4.7).
-fn scanned_under_unwalked(schema: &Schema, root: &Path) -> Vec<PathBuf> {
-    if schema.nesting != Nesting::DeepestPlaceWins {
-        return Vec::new();
-    }
-    let unwalked = unwalked_home_roots(schema, root);
-    kind_home_roots(schema, root)
-        .filter(|home| unwalked.iter().any(|around| home.starts_with(around)))
-        .collect()
 }
 
 /// Each configured key that can make a single file a scan root, as the path
