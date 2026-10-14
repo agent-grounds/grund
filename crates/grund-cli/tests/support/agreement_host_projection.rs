@@ -33,7 +33,7 @@ fn failure(f: &mut Value, operation: &str) {
         json!({"operation":operation,"result":partial})
     };
     if let Some(result) = f.get_mut("partial").and_then(|p| p.get_mut("result")) {
-        if operation == "refs" {
+        if operation == "refs" && result.is_object() {
             folds(result);
         }
         if let Some(object) = result.as_object_mut() {
