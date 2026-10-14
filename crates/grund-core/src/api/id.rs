@@ -42,7 +42,11 @@ pub struct IdProposal {
     pub kind: String,
     pub number: Option<u32>,
     pub slug: String,
+    /// The kind's first folder, which every reader of `folder` keeps reading.
     pub folder: Option<String>,
+    /// Every folder of the kind's row in written order, for a version-2 config
+    /// only (§FS-id.2.2); `None` under v1, whose object is unchanged.
+    pub folders: Option<Vec<String>>,
     pub file: Option<String>,
     pub e2e_case_dir: Option<String>,
     /// Whether the kind's configured `file` already holds exactly one
@@ -233,6 +237,13 @@ fn propose_id_run(
         number,
         slug,
         folder: kind_config.folder.clone(),
+        folders: (config.project().version == 2).then(|| {
+            let row = config.schema().rows.iter().find(|row| row.name == kind);
+            row.into_iter()
+                .flat_map(|row| row.folders())
+                .map(str::to_string)
+                .collect()
+        }),
         file: kind_config.file.clone(),
     }))
 }

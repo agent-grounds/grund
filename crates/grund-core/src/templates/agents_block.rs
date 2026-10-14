@@ -280,7 +280,10 @@ fn declaration_map(project: &Project) -> String {
             };
             link(&label, home)
         });
-        Some(format!("- {}: {title}", links.collect::<Vec<_>>().join(", ")))
+        Some(format!(
+            "- {}: {title}",
+            links.collect::<Vec<_>>().join(", ")
+        ))
     });
     let rows = rows.collect::<Vec<_>>();
     if rows.is_empty() {

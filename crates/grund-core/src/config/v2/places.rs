@@ -30,7 +30,12 @@ pub(super) fn judge(
     for row in rows {
         for place in &row.places {
             let clause = format!("`[schema.kinds.{}] {}`", row.name, place.key());
-            let at = |what: String| (place.line, format!("place `{}` in {clause} {what}", place.written));
+            let at = |what: String| {
+                (
+                    place.line,
+                    format!("place `{}` in {clause} {what}", place.written),
+                )
+            };
             let target = canonical_path(root.join(place.path())).ok();
             // §FS-config-v2.schema.places.boundaries.2-3: the same place, or one target, twice.
             let earlier = seen.iter().find(|(_, other, other_target)| {
@@ -55,7 +60,8 @@ pub(super) fn judge(
                 .find_map(|member| member_holding(member, place.path()))
             {
                 // §FS-config-v2.schema.places.boundaries.5, §FS-workspace.6.
-                let what = format!("is inside workspace member `{member}`, which the root never reads");
+                let what =
+                    format!("is inside workspace member `{member}`, which the root never reads");
                 late.push(at(what));
             }
             seen.push((row, place, target));

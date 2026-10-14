@@ -1,4 +1,3 @@
-
 use super::record::Config;
 
 /// One `[[kinds]]` entry: the kind name plus the folder its declarations live in

@@ -105,8 +105,9 @@ impl Place {
 
     /// How deep the place sits: the deepest folder wins (§FS-config-v2.schema.places.ownership).
     fn depth(&self) -> usize {
-        self.path()
-            .map_or(0, |path| configured_home_path_key(path).components().count())
+        self.path().map_or(0, |path| {
+            configured_home_path_key(path).components().count()
+        })
     }
 }
 
@@ -192,9 +193,9 @@ impl Schema {
         }
         match self.nesting {
             Nesting::NestedPlaceFallsToComplement => true,
-            Nesting::DeepestPlaceWins => self.owner(relative).is_some_and(|owner| {
-                matches!(&owner.place.extent, Extent::Folder(owned) if owned == folder)
-            }),
+            Nesting::DeepestPlaceWins => self.owner(relative).is_some_and(
+                |owner| matches!(&owner.place.extent, Extent::Folder(owned) if owned == folder),
+            ),
         }
     }
 

@@ -100,8 +100,16 @@ fn command_id(args: &[String]) -> ExitCode {
 
 fn print_id_proposal(proposal: &IdProposal, format: &str, explain: bool) {
     if format == "json" {
+        // §FS-id.2.2: a v2 object adds `folders` right after `folder`.
+        let folders = proposal.folders.as_ref().map(|folders| {
+            let folders: Vec<String> = folders
+                .iter()
+                .map(|folder| format!("\"{}\"", json_escape(folder)))
+                .collect();
+            format!(",\"folders\":[{}]", folders.join(","))
+        });
         println!(
-            "{{\"id\":\"{}\",\"kind\":\"{}\",\"number\":{},\"slug\":\"{}\",\"folder\":\"{}\",\"file\":\"{}\"}}",
+            "{{\"id\":\"{}\",\"kind\":\"{}\",\"number\":{},\"slug\":\"{}\",\"folder\":\"{}\"{},\"file\":\"{}\"}}",
             json_escape(&proposal.id),
             json_escape(&proposal.kind),
             proposal
@@ -110,6 +118,7 @@ fn print_id_proposal(proposal: &IdProposal, format: &str, explain: bool) {
                 .unwrap_or_else(|| "null".to_string()),
             json_escape(&proposal.slug),
             json_escape(proposal.folder.as_deref().unwrap_or("")),
+            folders.unwrap_or_default(),
             json_escape(proposal.file.as_deref().unwrap_or(""))
         );
         return;

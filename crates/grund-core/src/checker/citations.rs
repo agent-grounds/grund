@@ -315,7 +315,10 @@ fn empty_citation_obligation_warning(
 fn kind_entry_file(file: &Path, frame: Frame<'_>, row: &Row) -> bool {
     // §FS-config-v2.schema.places.ownership: each folder has its own entry file.
     let entries: Vec<PathBuf> = if row.kind.is_some() {
-        row.index_paths().into_iter().map(|(_, index)| index).collect()
+        row.index_paths()
+            .into_iter()
+            .map(|(_, index)| index)
+            .collect()
     } else {
         row.folders()
             .map(|folder| Path::new(folder).join("README.md"))

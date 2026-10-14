@@ -306,12 +306,6 @@ fn v2_unexecuted_clauses_are_refused_at_their_line() {
     let not_yet = "is part of the v2 format but not supported by this grund yet";
     let cases = [
         (
-            "two_places",
-            format!("{HEAD}[schema.kinds.FS]\nfolders = [\"a\", \"b\"]\n"),
-            6,
-            "`[schema.kinds.FS] folders`",
-        ),
-        (
             "anchors",
             format!("{HEAD}[presentation.fmt]\nanchors = \"gitlab\"\n"),
             6,

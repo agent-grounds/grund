@@ -123,6 +123,8 @@ pub(super) fn schema(c: &Config) -> Value {
         }
         citations.insert(kind.clone(), rules);
     }
+    // The bindings' `kinds` keep the v1 shape on purpose, a v2 row's first
+    // folder and first file (§AR-bindings.2); `config show` prints every place.
     let mut schema = json!({"grund_config_version":c.project().version,"project_name":c.project_name,"project_description":c.project_description,
         "reference": {"marker":c.marker,"trigger":c.trigger,"strict":c.strict,
             "shorthand":c.shorthand.as_str(),"require_grounding":c.require_grounding,

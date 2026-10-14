@@ -317,9 +317,12 @@ fn node(project: &Project, row: &Row) -> SchemaNode {
     SchemaNode {
         name: row.name.clone(),
         class,
+        // §FS-schema.4: a `code` row that lists places shows them instead of the
+        // root extent it carries first (§FS-config-v2.schema.places.complement).
         places: row
             .places
             .iter()
+            .filter(|place| place.extent != Extent::Complement || row.places.len() == 1)
             .map(|place| place.extent.clone())
             .collect(),
         slots: slots.collect(),

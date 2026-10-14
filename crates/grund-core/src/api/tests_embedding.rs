@@ -104,6 +104,7 @@ fn public_embedding_api_checks_and_shows_without_cli_dispatch() {
             number: Some(2),
             slug: "beta".to_string(),
             folder: Some("docs/functional-spec".to_string()),
+            folders: None,
             file: None,
             e2e_case_dir: None,
             file_holds_single_declaration: false,

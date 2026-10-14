@@ -162,7 +162,6 @@ impl Row {
             Extent::Folder(_) | Extent::Complement => None,
         }
     }
-
 }
 
 impl Kind {
@@ -196,11 +195,11 @@ impl Project {
     /// from the concern that holds each (§AR-config.3.1).
     fn kind_config(&self, row: &Row) -> KindConfig {
         let place = row.places.first();
-        let (folder, file) = match place.map(|place| &place.extent) {
-            Some(Extent::Folder(path)) => (Some(path.clone()), None),
-            Some(Extent::File(path)) => (None, Some(path.clone())),
-            Some(Extent::Complement) | None => (None, None),
-        };
+        // The v1 shape has one `folder` and one `file`: a v2 row with several
+        // places shows its first of each, which `grund id` keeps as `folder`
+        // (§FS-id.2.2); every reader of all places asks the row instead.
+        let folder = row.folders().next().map(str::to_string);
+        let file = row.files().next().map(str::to_string);
         let kind = row.kind.as_ref();
         let form = kind.map(|kind| kind.form);
         let (values, rules) = (form == Some(Form::Value), form == Some(Form::Rule));
