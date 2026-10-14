@@ -267,7 +267,7 @@ fn declaration_map(project: &Project) -> String {
         }
         // A citable kind is named by its name, a non-citable or unwalked one
         // (§FS-config.3.4.7, §FS-init.2.3.5) by its place; each further place is
-        // one more link, in written order (§FS-init.2.3.4.4.1).
+        // one more link, in place order (§FS-init.2.3.4.4.1).
         let links = places.iter().enumerate().map(|(index, place)| {
             let home = place.path().unwrap_or_default();
             let label = match (&row.kind, index) {

@@ -129,7 +129,7 @@ impl Row {
     }
 
     /// Every place of this row named as a finding names one, comma-separated in
-    /// written order (§FS-schema.4); `None` for a row with no place to look at.
+    /// place order (§FS-schema.4); `None` for a row with no place to look at.
     pub fn place_labels(&self) -> Option<String> {
         let labels: Vec<String> = self.places.iter().filter_map(Place::label).collect();
         (!labels.is_empty()).then(|| labels.join(", "))

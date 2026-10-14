@@ -2,7 +2,7 @@ fixture · grund.toml · v2
 
 kinds and places
   FS    kind        docs/spec/core/, docs/spec/plugins/
-  page  place       docs/, README.md
+  page  place       README.md, docs/
   code  complement  crates/, scripts/
 
 citations
