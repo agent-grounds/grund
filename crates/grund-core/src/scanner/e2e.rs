@@ -31,14 +31,16 @@ fn cases_root_in_ordinary_scope(schema: &Schema, frame: Frame<'_>, cases_root: &
         })
 }
 
-/// The folder a citable `E2E` kind keeps its cases in (§AR-scanner.6): its first,
-/// on purpose, since the cases are one tree (§FS-config-v2.schema.places).
+/// The folder a citable `E2E` kind keeps its cases in (§AR-scanner.6): its first
+/// folder, on purpose, since the cases are one tree. Not its first place: a row
+/// lists its files before its folders (§FS-config-v2.schema.places), so a row
+/// with both would otherwise have no cases root at all.
 pub(super) fn e2e_cases_folder(schema: &Schema) -> Option<&str> {
     schema
         .rows
         .iter()
         .find(|row| row.name == "E2E" && row.kind.is_some())
-        .and_then(|row| row.folder())
+        .and_then(|row| row.folders().next())
 }
 
 /// Discover `e2e/cases/<name>/` directories and register each as an `E2E-<name>`
