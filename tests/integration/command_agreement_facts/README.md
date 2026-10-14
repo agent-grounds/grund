@@ -10,7 +10,9 @@ The loader and consumers are in the CLI test support modules. They follow
 **Construction status:** the twelve cases without input repositories have
 input-pinned applicability manifests here. The 1,511 input cases still lack
 complete generic fact manifests. The matrix rejects that gap before native
-preparation. The regression-envelope JSON
+preparation. Query consumers now require physical-fact partitions; no input-case
+partition or full answer/writer dataset is supplied by this consumer repair.
+The regression-envelope JSON
 files in the CLI fixtures are recorded comparator inputs, not oracle manifests.
 This directory and the loader do not discharge S4.
 
@@ -24,15 +26,50 @@ Each original corpus directory needs one `<case>.json` file with these fields:
   answers must be authored from the inputs and defining points.
 - `variants`: exactly `whole-tree`, `narrowed`, `path-argument`, `editor-overlay`.
   Each applicable variant has an explicit nullable `absent`, `context`, a
-  nonempty unique `coordinates` array, `calls` and `writtenChanges`.
+  `queryInventory`, a nonempty unique `coordinates` array, `calls` and
+  `writtenChanges`.
 
 The invocation context contains exactly `relative`, `path`, `cwd`, `editorPath`,
 `explicit`, `overlays`, `overlayRelative`, `heldBytes`, `bufferOnly` and `scopes`.
 Missing optional context fields are explicitly null. Physical copied roots use
-`<repo>`; owner-relative paths, field values and buffer bytes retain their meaning.
+`<repo>` when there is one copy. An overlay context distinguishes `<held>` and
+`<saved>`, including overlay map keys and each scope's filesystem fields. Native,
+slash and Windows verbatim spellings are normalized only in those filesystem
+fields; held text and arbitrary map keys retain their bytes. Answer paths still
+use their common `<repo>` domain through the separate answer normalizer.
 The held edit is the input-authored file plus the materializer's deterministic
 newline, or its explicitly authored buffer-only file. Each question's scope uses
 its actual producer/report base; section-map paths remain section coordinates.
+
+`queryInventory.files` maps every physical input file under `repo/` to its exact
+`bytes` and an authored `segments` array. The saved newline edit (or buffer-only
+control) replaces that file's bytes before comparison with the inventory. Each
+segment has byte offsets `start` and `end`, exactly one `source` UTF-8 string or
+`sourceBytes` array, and a `role`. Segments partition all bytes consecutively,
+without gaps or overlaps. Empty files have an empty partition. Physical file
+membership is compared to the pinned original inputs independently of the
+partition; removing a file from both the facts and queries cannot shrink it.
+
+Each role carries `point` and `authoredFrom`, plus these defining facts:
+
+- `declaration`: `id`, explicit nullable `project`, and `sectionSeparator`.
+  Its site identity is `<file>:<start-byte-offset>`.
+- `section`: a `declaration` site reference, its physically written `component`,
+  and a nullable `parent` section site. Relative components inherit their parent's
+  path; missing parents, wrong owners and cycles are errors.
+- `citation`: its physically written `query`, including undeclared coordinates.
+- `alias`: physically written `alias` and explicit nullable target `project`.
+- `excluded`: a defining-point `reason` for bytes that contribute no query fact.
+  Exclusion classifications need independent semantic review; a complete byte
+  partition alone does not prove that those classifications are correct.
+
+The closure includes all declaration and section questions, qualified alias
+questions, cited coordinates and the explicit `absentQuery` control (also through
+each alias). `coordinates` must equal that closure. The same derivation supplies
+both the driver and receipt obligations; matching deleted calls cannot certify
+a smaller supplied list. Deleting an inventoried fact leaves an invalid physical
+partition. This representation is source construction, not executed corpus proof:
+all actual input-case classifications and expected answers remain to be authored.
 
 `calls` has these exact keys:
 
