@@ -1010,24 +1010,39 @@
                   "type": "array",
                   "items": {
                     "type": "string",
-                    "enum": [
-                      "markdown"
-                    ]
+                    "pattern": "^[a-z][a-z0-9_]*$"
                   },
-                  "minItems": 1,
-                  "maxItems": 1,
-                  "description": "The source languages a version-2 project is read in. Required, and `[\"markdown\"]` is the only value today.",
+                  "uniqueItems": true,
+                  "description": "The languages a version-2 project reads: built-in names from the v2 epoch, or names defined under `[schema.sources.definitions]`. Omitted, the epoch's default set; `[]` reads nothing.",
+                  "x-grund-default": "the epoch's default languages",
                   "x-grund-spec": {
-                    "id": "FS-config-v2.schema.sources",
-                    "href": "docs/functional-spec/FS-config-v2.md#schemasources-schemasources"
+                    "id": "FS-config-v2.schema.sources.languages",
+                    "href": "docs/functional-spec/FS-config-v2.md#schemasourceslanguages-languages-admits-languages-and-only-it-does"
+                  }
+                },
+                "declarations": {
+                  "type": "string",
+                  "enum": [
+                    "doc-comments",
+                    "any-comment"
+                  ],
+                  "default": "doc-comments",
+                  "description": "Which comment blocks of a source file may declare an ID: only those the language's doc profile calls documentation, or every comment as in version 1. Citations are read in every comment either way.",
+                  "x-grund-spec": {
+                    "id": "FS-config-v2.schema.sources.declarations",
+                    "href": "docs/functional-spec/FS-config-v2.md#schemasourcesdeclarations-declarations-picks-which-comments-declare"
                   }
                 },
                 "exclude": {
-                  "not": {},
-                  "description": "Reserved; refused today.",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "default": [],
+                  "description": "Gitignore-style patterns, resolved against the config root, for paths the scan never reads. Unlike version 1 there are no built-in names.",
                   "x-grund-spec": {
-                    "id": "FS-config-v2.schema.sources",
-                    "href": "docs/functional-spec/FS-config-v2.md#schemasources-schemasources"
+                    "id": "FS-config-v2.schema.sources.exclude",
+                    "href": "docs/functional-spec/FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list"
                   }
                 },
                 "respect_gitignore": {
@@ -1040,18 +1055,119 @@
                   }
                 },
                 "extensions": {
-                  "not": {},
-                  "description": "Reserved; refused today."
+                  "type": "object",
+                  "x-grund-key": "<suffix>",
+                  "description": "Maps a file suffix, written without its dot, to an admitted language; an entry overrides the epoch's own assignment of that suffix.",
+                  "x-grund-spec": {
+                    "id": "FS-config-v2.schema.sources.extensions",
+                    "href": "docs/functional-spec/FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language"
+                  },
+                  "propertyNames": {
+                    "pattern": "^[^./\\\\*?\\[\\]{}!]+$"
+                  },
+                  "additionalProperties": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*$",
+                    "description": "The admitted language files with this suffix are read as.",
+                    "x-grund-spec": {
+                      "id": "FS-config-v2.schema.sources.extensions",
+                      "href": "docs/functional-spec/FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language"
+                    },
+                    "examples": [
+                      "markdown"
+                    ]
+                  }
                 },
                 "definitions": {
-                  "not": {},
-                  "description": "Reserved; refused today."
+                  "type": "object",
+                  "x-grund-key": "<name>",
+                  "description": "Languages of your own, which `languages` may then admit and `[schema.sources.extensions]` may map a suffix to.",
+                  "x-grund-spec": {
+                    "id": "FS-config-v2.schema.sources.definitions",
+                    "href": "docs/functional-spec/FS-config-v2.md#schemasourcesdefinitions-schemasourcesdefinitionsname-defines-a-language"
+                  },
+                  "propertyNames": {
+                    "pattern": "^[a-z][a-z0-9_]*$"
+                  },
+                  "additionalProperties": {
+                    "type": "object",
+                    "description": "One defined language.",
+                    "x-grund-spec": {
+                      "id": "FS-config-v2.schema.sources.definitions",
+                      "href": "docs/functional-spec/FS-config-v2.md#schemasourcesdefinitions-schemasourcesdefinitionsname-defines-a-language"
+                    },
+                    "properties": {
+                      "class": {
+                        "type": "string",
+                        "enum": [
+                          "document",
+                          "data",
+                          "source"
+                        ],
+                        "description": "The reader: Markdown, the JSON value-file reader, or the source reader through the comment hosts. Required.",
+                        "x-grund-default": "required",
+                        "x-grund-spec": {
+                          "id": "FS-config-v2.schema.sources.definitions",
+                          "href": "docs/functional-spec/FS-config-v2.md#schemasourcesdefinitions-schemasourcesdefinitionsname-defines-a-language"
+                        }
+                      },
+                      "comment_prefixes": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "uniqueItems": true,
+                        "default": [],
+                        "description": "The literal prefixes a comment is read behind, longest first.",
+                        "x-grund-spec": {
+                          "id": "FS-config-v2.schema.sources.definitions",
+                          "href": "docs/functional-spec/FS-config-v2.md#schemasourcesdefinitions-schemasourcesdefinitionsname-defines-a-language"
+                        }
+                      },
+                      "doc_comments": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "c-family",
+                          "python",
+                          "go",
+                          "ruby",
+                          "shell",
+                          "sql",
+                          "ldoc",
+                          "haddock",
+                          "roxygen"
+                        ],
+                        "default": "none",
+                        "description": "The frozen doc profile that says which comments are documentation; `none` lets every comment declare.",
+                        "x-grund-spec": {
+                          "id": "FS-config-v2.schema.sources.definitions",
+                          "href": "docs/functional-spec/FS-config-v2.md#schemasourcesdefinitions-schemasourcesdefinitionsname-defines-a-language"
+                        }
+                      },
+                      "docstrings": {
+                        "type": "string",
+                        "enum": [
+                          "off",
+                          "python"
+                        ],
+                        "default": "off",
+                        "description": "Whether triple-quoted Python docstrings are read as comments.",
+                        "x-grund-spec": {
+                          "id": "FS-config-v2.schema.sources.definitions",
+                          "href": "docs/functional-spec/FS-config-v2.md#schemasourcesdefinitions-schemasourcesdefinitionsname-defines-a-language"
+                        }
+                      }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                      "class"
+                    ]
+                  }
                 }
               },
-              "additionalProperties": false,
-              "required": [
-                "languages"
-              ]
+              "additionalProperties": false
             },
             "notes": {
               "type": "object",

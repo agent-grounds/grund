@@ -488,22 +488,8 @@ comment_prefixes = ["//", "/*", "*"]
 Pros: covers normal solution layout.
 Cons: generated code folders may need extra excludes.
 
-More repository-shape examples for Ruby/Rails, PHP, Swift, and Scala live in
+More repository-shape examples for Ruby/Rails, PHP, Swift, Scala, and SQL live in
 the [supplementary init examples](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/init-repo-shapes.md).
-
-### SQL / Data Projects
-
-Evidence: `db/`, `migrations/`, `models/`, `*.sql`, `dbt_project.yml`.
-
-```toml
-include = ["requirements.md", "docs", "e2e", "db", "migrations", "models", "tests"]
-extensions = ["md", "sql", "py", "yml", "yaml"]
-exclude = ["target", "logs", ".venv", ".git"]
-comment_prefixes = ["--", "#"]
-```
-
-Pros: covers dbt and migration-heavy repos.
-Cons: YAML comments are line-only; generated dbt target dirs must stay excluded.
 
 ### Polyglot Monorepo
 
@@ -519,6 +505,20 @@ docstring_python = true
 
 Pros: broad coverage for adoption across teams.
 Cons: can be noisy; recommend narrowing after the first `grund check`, then `grund check --full .` to see what the narrowing left out.
+
+### Version 2: `[schema.sources]`
+
+With `grund_config_version = 2` there is no `[scan]`: name the languages the evidence shows, map each suffix the v2 epoch lacks, and write generated paths as gitignore-style globs, which have no built-in defaults ([sources guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/sources.md)). For C with headers:
+
+```toml
+[schema.sources]
+languages = ["markdown", "c"]
+exclude = ["build/"]
+[schema.sources.extensions]
+h = "c"
+```
+
+Only doc comments declare an ID in v2; `declarations = "any-comment"` keeps v1's reading.
 
 When multiple language examples apply, merge them conservatively: union the real include dirs, union the extensions actually present, and union generated/cache excludes. Prefer a narrower first config that passes cleanly over an over-broad config that floods the user with findings — and then run `grund check --full .`, which reports the citations that resolve to nothing in the directories `include` left out. A narrow `include` is a good starting point precisely because that check exists; without it, the citations the first config forgot are invisible rather than merely unchecked ([the full-tree scope](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#13-the-full-tree-scope---full)).
 

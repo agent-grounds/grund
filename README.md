@@ -146,6 +146,7 @@ Then:
 
 - add `grund check` to [pre-commit and CI](docs/user-facing/checking.md#in-pre-commit-and-ci);
 - look up any key in the [`grund.toml` reference](docs/user-facing/configuration.md), and point your editor at its [JSON Schema](schemas/grund.schema.json);
+- `grund.toml` has two versions: version 1, the default, reads the extensions `[scan]` lists, and version 2 (`grund_config_version = 2`) names the languages it reads, maps suffixes to them, and lets only doc comments declare — see [sources](docs/user-facing/sources.md) and its [runnable example](examples/sources/);
 - for prebuilt binaries and the Python and Node APIs, see [installation](docs/user-facing/installation.md).
 
 ## Declaration format
@@ -365,6 +366,7 @@ than only repos that ship an editor config.
 | [Querying grund](docs/user-facing/querying.md) | selectors, batch reads, `refs`, `cover` |
 | [Reviewing code](docs/user-facing/reviewing.md) | a citation's blast radius, diff recipes |
 | [Chapter rules](docs/user-facing/rules.md) | checked rules in controlled English — [runnable example](examples/rules/) |
+| [Sources](docs/user-facing/sources.md) | which files a version-2 project reads, and which comments declare — [runnable example](examples/sources/) |
 | [Fields](docs/user-facing/fields.md) | a version-2 kind's chapters as fields, their order, titles and values checked — [runnable example](examples/fields/) |
 | [Values](docs/user-facing/values.md) | one value, declared once, checked wherever it is quoted |
 | [External facts](docs/user-facing/external-facts.md) | cite tickets as committed offline snapshots |

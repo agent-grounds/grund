@@ -206,11 +206,29 @@ The sources a version-2 project is read from. [§FS-config-v2.schema.sources](..
 
 | Key | Type | Default | What it sets |
 |---|---|---|---|
-| `languages` | array of `"markdown"` | — | The source languages a version-2 project is read in. Required, and `["markdown"]` is the only value today. [§FS-config-v2.schema.sources](../functional-spec/FS-config-v2.md#schemasources-schemasources) |
-| `exclude` | refused | — | Reserved; refused today. [§FS-config-v2.schema.sources](../functional-spec/FS-config-v2.md#schemasources-schemasources) |
+| `languages` | array of strings | the epoch's default languages | The languages a version-2 project reads: built-in names from the v2 epoch, or names defined under `[schema.sources.definitions]`. Omitted, the epoch's default set; `[]` reads nothing. [§FS-config-v2.schema.sources.languages](../functional-spec/FS-config-v2.md#schemasourceslanguages-languages-admits-languages-and-only-it-does) |
+| `declarations` | `"doc-comments"` \| `"any-comment"` | `"doc-comments"` | Which comment blocks of a source file may declare an ID: only those the language's doc profile calls documentation, or every comment as in version 1. Citations are read in every comment either way. [§FS-config-v2.schema.sources.declarations](../functional-spec/FS-config-v2.md#schemasourcesdeclarations-declarations-picks-which-comments-declare) |
+| `exclude` | array of strings | `[]` | Gitignore-style patterns, resolved against the config root, for paths the scan never reads. Unlike version 1 there are no built-in names. [§FS-config-v2.schema.sources.exclude](../functional-spec/FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list) |
 | `respect_gitignore` | boolean | `true` | Skip what `.gitignore` and other ignore files exclude. [§FS-config-v2.schema.sources](../functional-spec/FS-config-v2.md#schemasources-schemasources) |
-| `extensions` | refused | — | Reserved; refused today. |
-| `definitions` | refused | — | Reserved; refused today. |
+
+### `[schema.sources.extensions]`
+
+Maps a file suffix, written without its dot, to an admitted language; an entry overrides the epoch's own assignment of that suffix. [§FS-config-v2.schema.sources.extensions](../functional-spec/FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language)
+
+| Key | Type | Default | What it sets |
+|---|---|---|---|
+| `<suffix>` | string | — | The admitted language files with this suffix are read as. [§FS-config-v2.schema.sources.extensions](../functional-spec/FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language) |
+
+### `[schema.sources.definitions.<name>]`
+
+One defined language. [§FS-config-v2.schema.sources.definitions](../functional-spec/FS-config-v2.md#schemasourcesdefinitions-schemasourcesdefinitionsname-defines-a-language)
+
+| Key | Type | Default | What it sets |
+|---|---|---|---|
+| `class` | `"document"` \| `"data"` \| `"source"` | required | The reader: Markdown, the JSON value-file reader, or the source reader through the comment hosts. Required. [§FS-config-v2.schema.sources.definitions](../functional-spec/FS-config-v2.md#schemasourcesdefinitions-schemasourcesdefinitionsname-defines-a-language) |
+| `comment_prefixes` | array of strings | `[]` | The literal prefixes a comment is read behind, longest first. [§FS-config-v2.schema.sources.definitions](../functional-spec/FS-config-v2.md#schemasourcesdefinitions-schemasourcesdefinitionsname-defines-a-language) |
+| `doc_comments` | `"none"` \| `"c-family"` \| `"python"` \| `"go"` \| `"ruby"` \| `"shell"` \| `"sql"` \| `"ldoc"` \| `"haddock"` \| `"roxygen"` | `"none"` | The frozen doc profile that says which comments are documentation; `none` lets every comment declare. [§FS-config-v2.schema.sources.definitions](../functional-spec/FS-config-v2.md#schemasourcesdefinitions-schemasourcesdefinitionsname-defines-a-language) |
+| `docstrings` | `"off"` \| `"python"` | `"off"` | Whether triple-quoted Python docstrings are read as comments. [§FS-config-v2.schema.sources.definitions](../functional-spec/FS-config-v2.md#schemasourcesdefinitions-schemasourcesdefinitionsname-defines-a-language) |
 
 ### `[schema.notes.lines]`
 

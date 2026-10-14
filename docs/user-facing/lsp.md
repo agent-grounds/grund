@@ -57,6 +57,8 @@ Rust toolchain, and put the same `grund-lsp` command on `PATH`; see
 
 Use the same file types you scan in `grund.toml`. Markdown is the usual minimum; add Rust, Python, Go, JavaScript, TypeScript, or any other source languages in your `[scan] extensions`.
 
+In a version-2 `grund.toml` the file types are the languages `[schema.sources]` admits rather than `[scan] extensions`: attach the server to each admitted language and to every suffix `[schema.sources.extensions]` maps, such as `.h` when `h = "c"`. A suffix the configuration does not admit is not read, so the server reports nothing in it. See [sources](sources.md).
+
 ## Write a citation
 
 Completion is available in the source version of `grund-lsp`; use the workspace

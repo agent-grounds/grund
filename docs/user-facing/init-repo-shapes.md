@@ -5,6 +5,21 @@ without making the shipped init skill's primary workflow harder to scan. They
 apply the generated-config contract in [§FS-init.2.4](../functional-spec/FS-init.md#24-generated-grundtoml); include only directories
 that exist in the repository under analysis.
 
+The shapes below are version-1 `[scan]` tables. A version-2 `grund.toml`
+selects the same files by language instead: name the languages the evidence
+shows, map any suffix the v2 epoch lacks, and write the generated paths as
+globs. For the Ruby / Rails shape:
+
+```toml
+[schema.sources]
+languages = ["markdown", "ruby"]
+exclude = ["vendor/", "tmp/", "log/", "coverage/"]
+```
+
+`.git` needs no entry: the hidden-file rule already skips it. The
+[sources guide](sources.md) has the language table and the suffix and
+definition tables.
+
 ## Ruby / Rails
 
 Evidence: `Gemfile`, `app/`, `lib/`, `spec/`, `test/`.
@@ -60,3 +75,17 @@ comment_prefixes = ["//", "/*", "*"]
 
 Pros: covers sbt source layout.
 Cons: generated sources may need explicit exclusion.
+
+## SQL / Data Projects
+
+Evidence: `db/`, `migrations/`, `models/`, `*.sql`, `dbt_project.yml`.
+
+```toml
+include = ["requirements.md", "docs", "e2e", "db", "migrations", "models", "tests"]
+extensions = ["md", "sql", "py", "yml", "yaml"]
+exclude = ["target", "logs", ".venv", ".git"]
+comment_prefixes = ["--", "#"]
+```
+
+Pros: covers dbt and migration-heavy repos.
+Cons: YAML comments are line-only; generated dbt target dirs must stay excluded.

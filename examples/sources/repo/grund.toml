@@ -1,0 +1,33 @@
+grund_config_version = 2
+project_name = "sources-example"
+
+[schema.sources]
+# Markdown, C, and a language of this project's own; nothing else is read.
+languages = ["markdown", "c", "notes"]
+# The v2 default: only a doc comment declares an ID.
+declarations = "doc-comments"
+# Gitignore-style, from this file's directory: every `generated` directory.
+exclude = ["generated/"]
+
+[schema.sources.extensions]
+# `.h` is not an epoch suffix; read it as C.
+h = "c"
+note = "notes"
+
+[schema.sources.definitions.notes]
+class = "source"
+comment_prefixes = ["%%"]
+
+[schema.kinds.FS]
+folders = ["docs/fs"]
+index = false
+
+# Architecture is declared in the C headers' doc comments.
+[schema.kinds.AR]
+folders = ["src"]
+index = false
+
+# Terms are declared in `.note` files, through the `notes` language.
+[schema.kinds.TERM]
+folders = ["notes"]
+index = false
