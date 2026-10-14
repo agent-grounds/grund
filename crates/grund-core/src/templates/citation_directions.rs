@@ -1,6 +1,6 @@
 use crate::config::{
-    CitationDisjunction, CitationLevel, CitationTarget, KindCitationRules, KindConfig,
-    NamespaceMatch, Project, Run,
+    CitationDisjunction, CitationLevel, CitationTarget, KindCitationRules,
+    NamespaceMatch, Project, Row, Run,
 };
 
 /// The public citation-directions page the scaffold config and the no-`[citations]`
@@ -118,11 +118,17 @@ fn citation_grounding_sentence(project: &Project, run: &Run) -> Option<String> {
     }
     let base = "Every source file must cite a declared ID or declare one inline";
     let homeless = project.schema.complement_name();
+    // §FS-config-v2.schema.places: every place of each such row.
     let homes = project
-        .kind_configs()
+        .schema
+        .rows
         .iter()
-        .filter(|kind| !kind.citable && kind.scan && kind.kind != homeless)
-        .filter_map(KindConfig::place_label)
+        .filter(|row| {
+            row.kind.is_none()
+                && row.places.first().is_none_or(|place| place.scanned)
+                && row.name != homeless
+        })
+        .filter_map(Row::place_labels)
         .collect::<Vec<_>>();
     if homes.is_empty() {
         return Some(format!("{base}."));
@@ -159,19 +165,19 @@ fn citation_direction_subject(project: &Project, kind: &str, homeless: &str) -> 
             "Each source file outside the Project map (**{kind}**{scope}) that cites anything"
         );
     }
-    let configured = kinds
+    let configured = project
+        .schema
+        .rows
         .iter()
-        .find(|configured| configured.kind == kind && !configured.citable);
+        .find(|row| row.name == kind && row.kind.is_none());
+    // §FS-config-v2.schema.places: a row with several places names every one.
+    let places = configured.and_then(Row::place_labels).unwrap_or_default();
     match configured {
-        Some(place) if place.folder.is_some() => {
-            format!(
-                "Each file in **{}**",
-                place.place_label().unwrap_or_default()
-            )
-        }
+        Some(row) if row.folders().next().is_some() => format!("Each file in **{places}**"),
         // A single-file non-citable home is one file, so "each file in" would
         // promise a directory that is not there.
-        Some(place) => format!("The file **{}**", place.place_label().unwrap_or_default()),
+        Some(row) if row.files().nth(1).is_some() => format!("Each of the files **{places}**"),
+        Some(_) => format!("The file **{places}**"),
         None => format!("Each **{kind}** declaration"),
     }
 }

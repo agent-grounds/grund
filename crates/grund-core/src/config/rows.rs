@@ -9,10 +9,8 @@
 //! row and the per-kind facts the other two concerns hold, in `kind_config`
 //! below — the one place that knows how the two shapes meet (§AR-config.5).
 
-use std::path::{Path, PathBuf};
-
 use super::fields::{Field, FieldContent};
-use super::kind::{DEFAULT_KIND_INDEX, KindConfig, KindIndex};
+use super::kind::{KindConfig, KindIndex};
 use super::project::{Project, Schema, Strength};
 use super::record::{CODE_SOURCE_KIND, ConfigLocation};
 
@@ -90,12 +88,15 @@ pub enum Origin {
     External { fetch: String },
 }
 
-/// §AR-config.3.2: what a place nested inside another row's place means. v1
-/// has one answer, so it is the only variant; #457 may add another.
+/// §AR-config.3.2: what a place nested inside another row's place means, which
+/// [`Schema::owner`] answers by (§AR-config.7.3).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Nesting {
-    /// The nested place's files go to the complement (§FS-config.3.9.2).
+    /// v1: the nested place's files go to the complement (§FS-config.3.9.2).
     NestedPlaceFallsToComplement,
+    /// v2: a listed file, then the deepest folder, owns the file
+    /// (§FS-config-v2.schema.places.ownership).
+    DeepestPlaceWins,
 }
 
 impl Schema {
@@ -135,14 +136,17 @@ impl Schema {
 }
 
 impl Row {
-    /// Whether this row is the complement (§FS-config.3.9.2.1).
+    /// Whether this row is the complement (§FS-config.3.9.2.1). A v2 `code` row
+    /// carries the complement place first and its extent's places after it
+    /// (§FS-config-v2.schema.places.complement).
     pub fn is_complement(&self) -> bool {
         self.places
             .iter()
             .any(|place| place.extent == Extent::Complement)
     }
 
-    /// The folder this row's first place names, if it names one (§AR-config.1.3).
+    /// The folder this row's first place names, if it names one (§AR-config.1.3):
+    /// a v1 home. A v2 row may list more; [`Row::folders`] reads them all.
     pub fn folder(&self) -> Option<&str> {
         match &self.places.first()?.extent {
             Extent::Folder(path) => Some(path),
@@ -150,7 +154,8 @@ impl Row {
         }
     }
 
-    /// The file this row's first place names, if it names one (§AR-config.1.3).
+    /// The file this row's first place names, if it names one (§AR-config.1.3);
+    /// [`Row::files`] reads every one.
     pub fn file(&self) -> Option<&str> {
         match &self.places.first()?.extent {
             Extent::File(path) => Some(path),
@@ -158,26 +163,6 @@ impl Row {
         }
     }
 
-    /// How this row's place is named in a finding: `<folder>/`, or its file
-    /// (§FS-check.3.11); `None` for a row with no place to look at.
-    pub fn place_label(&self) -> Option<String> {
-        if let Some(folder) = self.folder() {
-            return Some(format!("{folder}/"));
-        }
-        self.file().map(str::to_string)
-    }
-
-    /// The index file a citable folder row keeps, relative to the config root
-    /// (§FS-config.3.4): `None` for a row with no kind, no folder, or
-    /// `index = false`.
-    pub fn index_path(&self) -> Option<PathBuf> {
-        let name = match &self.kind.as_ref()?.index {
-            KindIndex::Disabled => return None,
-            KindIndex::Default => DEFAULT_KIND_INDEX,
-            KindIndex::Named(name) => name.as_str(),
-        };
-        Some(Path::new(self.folder()?).join(name))
-    }
 }
 
 impl Kind {

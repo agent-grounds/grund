@@ -31,7 +31,8 @@ fn cases_root_in_ordinary_scope(schema: &Schema, frame: Frame<'_>, cases_root: &
         })
 }
 
-/// The folder a citable `E2E` kind keeps its cases in (§AR-scanner.6).
+/// The folder a citable `E2E` kind keeps its cases in (§AR-scanner.6): its first,
+/// on purpose, since the cases are one tree (§FS-config-v2.schema.places).
 pub(super) fn e2e_cases_folder(schema: &Schema) -> Option<&str> {
     schema
         .rows

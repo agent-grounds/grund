@@ -5,10 +5,9 @@
 //! value was written at, and the first one in the file is the one reported.
 
 use anyhow::Result;
-use std::path::{Component, Path};
+use std::path::Path;
 
 use super::fields::{FieldDraft, kind_checks};
-use super::tables::not_yet;
 use super::walk::Reader;
 use crate::config::kind::{KindConfig, KindIndex, KindResolution};
 use crate::config::project::{Project, Strength};
@@ -17,7 +16,7 @@ use crate::config::rows::{Extent, Form, Kind, Origin, Place, Row};
 use crate::config::v1::{ValueLines, rule_kind_refusal, validate_kind_value_keys};
 
 use super::schema::RowDraft;
-use super::{sources, sources_model};
+use super::{places, sources, sources_model};
 
 /// §FS-config-v2.reader.4: judge the file whole, then lower its rows. `root` is
 /// the config root a value home must exist under (§FS-fields.forms).
@@ -29,7 +28,7 @@ pub(super) fn finish(mut r: Reader, root: &Path) -> Result<Project> {
         let fields: Vec<&FieldDraft> = r.fields.iter().filter(|f| f.kind == row.name).collect();
         kind_checks(&row.name, &fields, &mut late);
     }
-    nested_places(&r.rows, &mut late);
+    places::judge(&r.rows, root, &r.project.workspace, &mut late);
     named_rows(&r, &mut late);
     if let Some((line, message)) = late.into_iter().min_by_key(|(line, _)| *line) {
         return r.fail(line, message);
@@ -54,7 +53,7 @@ fn form_prerequisites(r: &Reader, row: &RowDraft, root: &Path) -> Result<()> {
     let place = |file: bool| {
         row.places
             .iter()
-            .find_map(|(extent, _)| match (extent, file) {
+            .find_map(|place| match (&place.extent, file) {
                 (Extent::File(path), true) | (Extent::Folder(path), false) => Some(path.clone()),
                 _ => None,
             })
@@ -90,14 +89,22 @@ fn form_prerequisites(r: &Reader, row: &RowDraft, root: &Path) -> Result<()> {
 }
 
 /// §FS-config-v2.schema.places: what one row's keys must say together, each
-/// combination v1 refuses on its `[[kinds]]` row (§FS-config.3.4), and the
-/// rows #457 owns (§FS-config-v2.rollout).
+/// combination v1 refuses on its `[[kinds]]` row (§FS-config.3.4), and what the
+/// complement and a row with no place may say
+/// (§FS-config-v2.schema.places.complement).
 fn row_checks(row: &RowDraft, late: &mut Vec<(usize, String)>) {
     let name = &row.name;
-    // §FS-config-v2.rollout: the complement's identity is #457's, whether the
-    // reserved name or a non-citable row with no place spells it.
-    if name == CODE_SOURCE_KIND || (!row.citable && row.places.is_empty()) {
-        late.push((row.line, not_yet(&format!("[schema.kinds.{name}]"))));
+    let complement = name == CODE_SOURCE_KIND;
+    if complement && row.citable {
+        let line = row.citable_line.unwrap_or(row.line);
+        let message = format!("`[schema.kinds.{name}]` is the complement and declares no IDs");
+        late.push((line, message));
+    }
+    if !complement && !row.citable && row.places.is_empty() {
+        let message = format!(
+            "`[schema.kinds.{name}]` has no place: give it `folders` or `files`, or name the complement `code`"
+        );
+        late.push((row.line, message));
     }
     if let Some((_, line)) = &row.id_format
         && !row.citable
@@ -123,7 +130,7 @@ fn row_checks(row: &RowDraft, late: &mut Vec<(usize, String)>) {
         let folder = row
             .places
             .iter()
-            .any(|(extent, _)| matches!(extent, Extent::Folder(_)));
+            .any(|place| matches!(place.extent, Extent::Folder(_)));
         if !row.citable || !folder {
             let message = format!(
                 "`[schema.kinds.{name}] index` needs a citable row with a folder place (an index lists a folder's declarations)"
@@ -134,7 +141,13 @@ fn row_checks(row: &RowDraft, late: &mut Vec<(usize, String)>) {
     if let Some(line) = row.scan_line
         && !row.scan
     {
-        if row.citable {
+        if complement {
+            // §FS-config-v2.schema.places.boundaries.6
+            let message = format!(
+                "`[schema.kinds.{name}] scan = false` cannot unwalk the complement; narrow its places or use `[schema.sources] exclude`"
+            );
+            late.push((line, message));
+        } else if row.citable {
             let message = format!(
                 "`[schema.kinds.{name}] scan = false` needs `citable = false` (an unwalked row's declarations would be invisible)"
             );
@@ -145,55 +158,6 @@ fn row_checks(row: &RowDraft, late: &mut Vec<(usize, String)>) {
             late.push((line, message));
         }
     }
-}
-
-/// §FS-config-v2.rollout: a place at or inside another row's place is #457's,
-/// refused at the inner place's key.
-fn nested_places(rows: &[RowDraft], late: &mut Vec<(usize, String)>) {
-    for (index, inner) in rows.iter().enumerate() {
-        for (extent, line) in &inner.places {
-            let inside = rows.iter().enumerate().any(|(other, outer)| {
-                other != index
-                    && outer
-                        .places
-                        .iter()
-                        .any(|(around, _)| within(path_of(extent), path_of(around)))
-            });
-            if inside {
-                late.push((
-                    *line,
-                    not_yet(&format!("[schema.kinds.{}] {}", inner.name, key_of(extent))),
-                ));
-            }
-        }
-    }
-}
-
-fn path_of(extent: &Extent) -> &str {
-    match extent {
-        Extent::Folder(path) | Extent::File(path) => path,
-        Extent::Complement => "",
-    }
-}
-
-fn key_of(extent: &Extent) -> &'static str {
-    match extent {
-        Extent::File(_) => "files",
-        _ => "folders",
-    }
-}
-
-/// Whether `inner` is `outer` or under it, component by component.
-fn within(inner: &str, outer: &str) -> bool {
-    let normal = |path: &str| -> Vec<String> {
-        Path::new(path)
-            .components()
-            .filter(|component| !matches!(component, Component::CurDir))
-            .map(|component| component.as_os_str().to_string_lossy().into_owned())
-            .collect()
-    };
-    let (inner, outer) = (normal(inner), normal(outer));
-    !outer.is_empty() && inner.starts_with(&outer)
 }
 
 /// The tables that name a row: a row ladder (§FS-config-v2.rules.grounding), a
@@ -218,7 +182,7 @@ fn named_rows(r: &Reader, late: &mut Vec<(usize, String)>) {
             && row
                 .places
                 .iter()
-                .any(|(extent, _)| matches!(extent, Extent::File(_)))
+                .any(|place| matches!(place.extent, Extent::File(_)))
         {
             let message = format!(
                 "{table} names a citable single-file row (one declaration document, which the grounding rule leaves alone)"
@@ -242,24 +206,28 @@ fn named_rows(r: &Reader, late: &mut Vec<(usize, String)>) {
 }
 
 /// §FS-config-v2.schema.places: the drafts as the schema's rows, in authored
-/// order; the scan as the union of their scanned places, or the config root
-/// when no row has one (§FS-config-v2.defaults.1); and a fetched kind's
-/// resolution, `must` unless `[rules.resolution]` says `warn`.
+/// order; the scan as the union of their scanned places and the complement's
+/// extent, the config root unless `code` lists places
+/// (§FS-config-v2.schema.places.complement, §FS-config-v2.defaults.1); and a fetched kind's resolution, `must`
+/// unless `[rules.resolution]` says `warn`.
 fn lower(r: &mut Reader) {
     let rows: Vec<Row> = r
         .rows
         .iter()
         .map(|row| lower_row(row, &r.fields, r.path))
         .collect();
-    let any_place = rows.iter().any(|row| !row.places.is_empty());
+    let narrowed = r
+        .rows
+        .iter()
+        .any(|row| row.name == CODE_SOURCE_KIND && !row.places.is_empty());
     let include = rows
         .iter()
         .flat_map(|row| row.places.iter())
         .filter(|place| place.scanned)
-        .map(|place| path_of(&place.extent).to_string())
+        .filter_map(|place| place.path().map(str::to_string))
         .collect();
     let schema = &mut r.project.schema;
-    schema.sources.include = any_place.then_some(include);
+    schema.sources.include = narrowed.then_some(include);
     schema.rows = rows;
     let resolution = &mut r.project.rules.resolution;
     for row in &r.rows {
@@ -273,20 +241,24 @@ fn lower(r: &mut Reader) {
 }
 
 fn lower_row(draft: &RowDraft, fields: &[FieldDraft], path: &Path) -> Row {
+    // §FS-config-v2.schema.places.complement: `code` is the complement place, and
+    // its own places, after it, are the complement's extent.
+    let complement = (draft.name == CODE_SOURCE_KIND).then_some(Place {
+        extent: Extent::Complement,
+        scanned: true,
+        source: None,
+    });
+    let places = draft.places.iter().map(|place| Place {
+        extent: place.extent.clone(),
+        scanned: draft.scan,
+        source: Some(ConfigLocation {
+            path: path.to_path_buf(),
+            line: place.line,
+        }),
+    });
     Row {
         name: draft.name.clone(),
-        places: draft
-            .places
-            .iter()
-            .map(|(extent, line)| Place {
-                extent: extent.clone(),
-                scanned: draft.scan,
-                source: Some(ConfigLocation {
-                    path: path.to_path_buf(),
-                    line: *line,
-                }),
-            })
-            .collect(),
+        places: complement.into_iter().chain(places).collect(),
         kind: draft.citable.then(|| Kind {
             id_format: draft.id_format.as_ref().map(|(format, _)| format.clone()),
             form: draft.form.map_or(Form::Prose, |(form, _)| form),

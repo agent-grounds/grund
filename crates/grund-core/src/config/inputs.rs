@@ -20,14 +20,15 @@ pub(crate) fn observe_config(config: &super::Config) {
     for root in super::root_scope_roots(config.schema(), &config.root, config.scan_full) {
         observe_input(&root, true);
     }
-    for kind in &config.kinds {
-        if let Some(file) = &kind.file {
+    // §FS-config-v2.schema.places: every place of every row, and each folder's index.
+    for row in &config.schema().rows {
+        for file in row.files() {
             observe_input(&config.root.join(file), false);
         }
-        if let Some(folder) = &kind.folder {
+        for folder in row.folders() {
             observe_input(&config.root.join(folder), true);
         }
-        if let Some(index) = kind.index_path() {
+        for (_, index) in row.index_paths() {
             observe_input(&config.root.join(index), false);
         }
     }

@@ -7,14 +7,14 @@
 //! declaration-shape rules and the diagnostic helpers they share.
 
 use std::collections::BTreeMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use super::obligation_units::{
     ObligationUnit, file_is_obligation_unit, non_citable_kind_names, obligation_units,
 };
 use crate::config::{
     CitationDisjunction, CitationLevel, CitationTarget, Frame, KindCitationRules, NamespaceMatch,
-    Row, Rules, Schema, render_citation_target, row_grounding,
+    Owners, Place, Row, Rules, Schema, render_citation_target, row_grounding,
 };
 use crate::model::{Catalog, CheckReport, Citation, Diagnostic, E2eSpecRef, Id};
 use crate::rules::engine::LENT_CLAUSE;
@@ -24,15 +24,27 @@ use crate::sources::paths_same_location;
 /// How a citing kind is named in a finding (§FS-check.3.11, §FS-check.3.12.1): a
 /// citable kind by its name, which is the prefix of every ID in it; a
 /// non-citable one by its home, which is all a reader of the message could go
-/// and look at. `code` keeps its own name — it is the one non-citable kind with
-/// no place, being the complement of every home there is.
-pub(super) fn citing_side_label(schema: &Schema, kind: &str) -> String {
-    schema
+/// and look at. `code` keeps its own name — it is the complement of every home
+/// there is, its own places included (§FS-config-v2.schema.places.complement).
+pub(super) fn citing_side_label(owners: &Owners<'_>, kind: &str, file: &Path) -> String {
+    citing_place(owners, kind, file).unwrap_or_else(|| kind.to_string())
+}
+
+/// The place a non-citable, non-complement citing kind is named by in a finding
+/// about `file`: the place of it that owns the file, one row having several
+/// (§FS-config-v2.schema.places.ownership), else its first. `None` for a kind
+/// that is named by its name.
+pub(super) fn citing_place(owners: &Owners<'_>, kind: &str, file: &Path) -> Option<String> {
+    let row = owners
+        .schema()
         .rows
         .iter()
-        .find(|row| row.name == kind && row.kind.is_none())
-        .and_then(Row::place_label)
-        .unwrap_or_else(|| kind.to_string())
+        .find(|row| row.name == kind && row.kind.is_none() && !row.is_complement())?;
+    owners
+        .of(file)
+        .filter(|owner| owner.row.name == kind)
+        .map(|owner| owner.label())
+        .or_else(|| row.places.first().and_then(Place::label))
 }
 
 /// The channel a direction finding is reported on.
@@ -100,6 +112,7 @@ pub(super) fn check_citation_obligations(
     // time would make the pass O(citations × kinds) for no gain (§AR-benchmarks).
     let non_citable = non_citable_kind_names(schema);
     let homeless = schema.complement_name();
+    let owners = Owners::new(schema, frame);
     // §FS-declarations.stubs.target.5: a declaration's citations are its edges, those a
     // stub's target lends included; a file's are the ones the walk found in it.
     for cite in findings.edges() {
@@ -146,7 +159,7 @@ pub(super) fn check_citation_obligations(
         let units = obligation_units(
             citing_kind,
             rules,
-            schema,
+            &owners,
             findings,
             &by_decl,
             &by_file,
@@ -234,8 +247,15 @@ fn empty_citation_obligation_warning(
     citing_kind: &str,
     kind_rules: &KindCitationRules,
 ) -> Option<Diagnostic> {
-    let row = schema.rows.iter().find(|row| row.name == citing_kind)?;
-    let folder = row.folder()?;
+    let row = schema
+        .rows
+        .iter()
+        .find(|row| row.name == citing_kind && !row.is_complement())?;
+    // §FS-config-v2.schema.places: every folder of the row, named together.
+    let folders: Vec<String> = row.folders().map(|folder| format!("{folder}/")).collect();
+    if folders.is_empty() {
+        return None;
+    }
     let scanned = row.places.first().is_none_or(|place| place.scanned);
     if !scanned
         || !findings.scanned_files.iter().any(|file| {
@@ -253,7 +273,7 @@ fn empty_citation_obligation_warning(
     } else {
         "should"
     };
-    let place = format!("{folder}/");
+    let place = folders.join(", ");
     // §FS-config-v2.rules.citations: v2 names the table, and the row key, its own way.
     let v2 = frame.version == 2;
     let table = if v2 { "rules.citations" } else { "citations" };
@@ -293,13 +313,17 @@ fn empty_citation_obligation_warning(
 /// the effective citable index, or literal `README.md` for a non-citable home
 /// (§FS-check.2.2.1.1). `index = false` naturally has no entry path.
 fn kind_entry_file(file: &Path, frame: Frame<'_>, row: &Row) -> bool {
-    let entry = if row.kind.is_some() {
-        row.index_path()
+    // §FS-config-v2.schema.places.ownership: each folder has its own entry file.
+    let entries: Vec<PathBuf> = if row.kind.is_some() {
+        row.index_paths().into_iter().map(|(_, index)| index).collect()
     } else {
-        row.folder()
+        row.folders()
             .map(|folder| Path::new(folder).join("README.md"))
+            .collect()
     };
-    entry.is_some_and(|entry| paths_same_location(file, &frame.root().join(entry)))
+    entries
+        .iter()
+        .any(|entry| paths_same_location(file, &frame.root().join(entry)))
 }
 
 fn obligation_diagnostic(

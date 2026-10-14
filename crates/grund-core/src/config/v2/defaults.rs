@@ -70,7 +70,8 @@ pub(super) fn default_project() -> Project {
             leads: None,
             lead_thresholds: Vec::new(),
             rows: Vec::new(),
-            nesting: Nesting::NestedPlaceFallsToComplement,
+            // §AR-config.7.3: a listed file, then the deepest folder.
+            nesting: Nesting::DeepestPlaceWins,
         },
         rules: Rules {
             citations: Default::default(),

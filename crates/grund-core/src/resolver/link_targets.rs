@@ -80,10 +80,12 @@ pub(crate) fn index_link_targets(
     settled: &SettledHeadings,
 ) -> BTreeMap<(PathBuf, Id), String> {
     let mut indexes: BTreeMap<PathBuf, Vec<(&str, PathBuf)>> = BTreeMap::new();
-    for row in &schema.rows {
-        let Some(index) = row.index_path() else {
-            continue;
-        };
+    // §FS-config-v2.schema.places.ownership: one index in each folder of the row.
+    for (row, index) in schema
+        .rows
+        .iter()
+        .flat_map(|row| row.index_paths().into_iter().map(move |(_, index)| (row, index)))
+    {
         if index.extension().and_then(|ext| ext.to_str()) != Some("md") {
             continue;
         }

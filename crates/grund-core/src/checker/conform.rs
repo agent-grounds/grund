@@ -6,7 +6,7 @@ use super::excluded_stub_target::check_excluded_stub_targets;
 use super::fields::check_fields;
 use super::fs_home_moves::check_fs_home_moves;
 use super::glob_citations::check_glob_citations;
-use super::homes::{KindHomeIndex, paths_same_location_key};
+use super::homes::KindHomeIndex;
 use super::inline_style::check_inline_citation_style;
 use super::near_miss::check_declaration_near_misses;
 use super::parse_moves::check_parse_moves;
@@ -123,7 +123,7 @@ fn check_misplaced(
         for decl in decls {
             if let Some(expected) = kind_homes.single_file_for_kind(&id.kind)
                 && !decl.is_stub
-                && !paths_same_location_key(&decl.file, &expected.physical_path)
+                && !expected.holds(&decl.file)
             {
                 report.errors.push(Diagnostic {
                     code: "misplaced-declaration",
@@ -133,7 +133,7 @@ fn check_misplaced(
                     message: format!(
                         "{} must be declared in {} (single-file kind)",
                         render_id(frame.grammar(), id),
-                        expected.path
+                        expected.label()
                     ),
                     sites: Vec::new(),
                     authority: Vec::new(),

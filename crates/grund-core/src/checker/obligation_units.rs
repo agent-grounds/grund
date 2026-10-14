@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use super::citations::{citation_matches_target, e2e_spec_ref_matches_target};
 use super::grounding::file_obligation_units;
-use crate::config::{CitationTarget, Rules, Schema};
+use crate::config::{CitationTarget, Owners, Rules, Schema};
 use crate::grammar::{Grammar, render_id};
 use crate::model::{Catalog, Citation, E2eSpecRef, Id, paired_declarations};
 
@@ -103,19 +103,20 @@ pub(super) fn non_citable_kind_names(schema: &Schema) -> BTreeSet<&str> {
 pub(super) fn obligation_units<'a>(
     citing_kind: &str,
     rules: &Rules,
-    schema: &Schema,
+    owners: &Owners<'_>,
     findings: &'a Catalog,
     by_decl: &BTreeMap<&'a Id, Vec<&'a Citation>>,
     by_file: &BTreeMap<(&'a str, &'a Path), Vec<&'a Citation>>,
     e2e_by_case: &BTreeMap<&'a Path, Vec<&'a Citation>>,
 ) -> Vec<ObligationUnit<'a>> {
+    let schema = owners.schema();
     if citing_kind == schema.complement_name()
         || non_citable_kind_names(schema).contains(citing_kind)
     {
         // §FS-check.3.11.3: a kind with no declarations answers with its files,
         // cut by the row's `grounding_level` — the same unit §FS-check.3.6 asks
         // for grounding, in `grounding.rs`.
-        return file_obligation_units(citing_kind, rules, schema, findings, by_file);
+        return file_obligation_units(citing_kind, rules, owners, findings, by_file);
     }
 
     let mut units = Vec::new();

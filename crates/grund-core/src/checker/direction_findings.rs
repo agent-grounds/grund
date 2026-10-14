@@ -34,7 +34,7 @@ pub(super) fn directions(
     );
     if duplicated {
         check_citation_obligations(findings, rules, schema, frame, &mut directions);
-        check_citation_prohibitions(findings, rules, schema, &mut directions);
+        check_citation_prohibitions(findings, rules, schema, frame, &mut directions);
     }
     directions.0
 }

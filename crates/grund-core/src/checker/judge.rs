@@ -156,7 +156,7 @@ pub(crate) fn judge(
     // obligations and prohibitions, when the project declares `[citations]`.
     if rules.citations.declared {
         check_citation_obligations(findings, rules, schema, frame, &mut report);
-        check_citation_prohibitions(findings, rules, schema, &mut report);
+        check_citation_prohibitions(findings, rules, schema, frame, &mut report);
     }
     report
 }

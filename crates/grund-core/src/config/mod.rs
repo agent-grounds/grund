@@ -57,6 +57,7 @@ mod grounding;
 mod inputs;
 mod kind;
 mod kinds;
+mod places;
 mod point_sizes;
 mod project;
 mod project_records;
@@ -103,6 +104,8 @@ pub use project::{
 };
 pub use record::{AbsentOptionalNamespace, Config, ConfigLocation, ShorthandPolicy};
 #[allow(unused_imports)]
+pub use places::Owner;
+pub(crate) use places::Owners;
 pub use rows::{Extent, Form, Kind, Nesting, Origin, Place, Row};
 pub(crate) use run::{Invocation, Selection, scope_is_config_root};
 #[allow(unused_imports)]
