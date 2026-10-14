@@ -182,7 +182,11 @@ def _recheck(
 
 
 def _status_label(status: dict) -> str:
-    return str(status.get("code") or status.get("text") or "unknown")
+    """The label lychee's console prints, which `--output` silences: the code, else
+    TIMEOUT or ERROR."""
+    if status.get("code"):
+        return str(status["code"])
+    return "TIMEOUT" if status.get("text") == "Timeout" else "ERROR"
 
 
 def _settle(
