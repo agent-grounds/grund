@@ -8,13 +8,17 @@ use std::path::{Path, PathBuf};
 
 use super::references::{ReferenceTier, check_citation_resolution};
 use super::sections::retain_heading_findings_in_scope;
-use crate::config::{Frame, Schema, unwalked_home_roots};
+use crate::config::{Frame, Nesting, Schema, unwalked_home_roots};
 use crate::grammar::Grammar;
-use crate::model::{Catalog, CheckReport, DeclarationSource, Diagnostic, sort_path_key};
+use crate::model::{
+    Catalog, CheckReport, DeclarationSource, Diagnostic, scanned_decl_relative_path,
+    scanned_path_key, sort_path_key,
+};
 use crate::resolver::{WorkspaceCheckTarget, WorkspaceProject};
 use crate::scanner::{
     CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS, lend_citations, scan_roots_for,
 };
+use crate::sources::physical_path_key;
 use crate::workspace::scope_is_config_root;
 
 /// The roots a run *without* `--full` walks: the explicit path argument, or
@@ -31,6 +35,16 @@ pub(crate) struct ScanScope {
     /// The `scan = false` homes under those roots (§FS-config.3.4.7.5): listed by
     /// the config, and read by this run only because `--full` widened the walk.
     unwalked: Vec<PathBuf>,
+    /// v2 only: the schema whose ownership rule settles a path under an unwalked
+    /// place, and the config root's two spellings to ask it relative to.
+    owners: Option<PlaceOwners>,
+}
+
+/// [`Schema::owner_walked`] kept with the scope (§FS-config-v2.schema.places.boundaries.6).
+struct PlaceOwners {
+    schema: Schema,
+    configured_root: PathBuf,
+    physical_root: PathBuf,
 }
 
 impl ScanScope {
@@ -38,8 +52,18 @@ impl ScanScope {
         // §FS-config.3.4.7.5: a file in a home the config lists without walking is
         // outside the configured scope even when a root above it is inside — the
         // scope is a set of roots, less the homes a run without `--full` never reads.
+
+        // In v2 the place that owns the file decides, so a scanned place under an
+        // unscanned one stays in scope (§FS-config-v2.schema.places.boundaries.6).
         if self.unwalked.iter().any(|home| path.starts_with(home)) {
-            return false;
+            let walked = self.owners.as_ref().is_some_and(|owners| {
+                let roots = (&owners.configured_root, &owners.physical_root);
+                scanned_decl_relative_path(path, roots.0, roots.1)
+                    .is_some_and(|relative| owners.schema.owner_walked(&relative))
+            });
+            if !walked {
+                return false;
+            }
         }
         self.roots
             .iter()
@@ -78,7 +102,18 @@ pub(crate) fn configured_scope(
     unwalked.extend(canonical);
     unwalked.sort_by_key(|home| sort_path_key(home));
     unwalked.dedup();
-    Ok(Some(ScanScope { roots, unwalked }))
+    let owners = (schema.nesting == Nesting::DeepestPlaceWins && !unwalked.is_empty()).then(|| {
+        PlaceOwners {
+            schema: schema.clone(),
+            configured_root: scanned_path_key(frame.root()),
+            physical_root: physical_path_key(frame.root()),
+        }
+    });
+    Ok(Some(ScanScope {
+        roots,
+        unwalked,
+        owners,
+    }))
 }
 
 /// §FS-check.1.3.6.1: the **report** scope of this run — the set of files a finding
@@ -113,6 +148,7 @@ pub(crate) fn path_report_scope(
     Ok(Some(ScanScope {
         roots,
         unwalked: Vec::new(),
+        owners: None,
     }))
 }
 

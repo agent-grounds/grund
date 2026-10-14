@@ -207,6 +207,13 @@ impl Schema {
             .any(|owner| !owner.row.is_complement())
     }
 
+    /// Whether a run without `--full` reads `relative` by its owner: in v2 a file
+    /// is unwalked only when the place that owns it is `scan = false`, so a scanned
+    /// place under an unscanned one is read (§FS-config-v2.schema.places.boundaries.6).
+    pub fn owner_walked(&self, relative: &Path) -> bool {
+        self.owner(relative).is_none_or(|owner| owner.place.scanned)
+    }
+
     /// Every place that holds `relative`, in row order, the complement's own
     /// places included.
     fn holders<'a, 'p>(&'a self, relative: &'p Path) -> impl Iterator<Item = Owner<'a>> + 'p
