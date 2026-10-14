@@ -206,7 +206,8 @@ It compares common Python and Node envelopes directly and each host with the CLI
 The refs comparison checks Python's returned site/file totals and every returned
 file-summary field against the hit inventory before projecting the host schemas;
 Node's additional unique-line summaries remain compared. Complete and partial
-results use the same checks. Site normalization preserves absent and null fields,
+results use the same checks for returned fields; a partial JSON carrier need not
+contain a complete typed result. Site normalization preserves absent and null fields,
 including successful batch records, rather than manufacturing refusal objects.
 Python's removed duplicate caution fields are checked against the compared warning
 channel; successful batch records retain that check before projection.
