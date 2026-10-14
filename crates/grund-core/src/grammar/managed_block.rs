@@ -104,7 +104,9 @@ pub(crate) static AGENTS_SECTION_BOUNDARY: Lazy<Regex> =
 /// declaration body and that a cited address with one is locked. v18 is that base
 /// with v16's rule-enabled `### Chapter rules` section, so a rule-enabled v17 block
 /// is one version behind.
-pub(crate) const AGENTS_BLOCK_VERSION: u32 = 18;
+/// v19 (§FS-init.2.3.4.16, §FS-init.2.3.7.1): Project namespaces appears only
+/// for discovered workspace targets. v20 is that base with Chapter rules.
+pub(crate) const AGENTS_BLOCK_VERSION: u32 = 20;
 
 /// The byte span and `vN` version of the managed block inside an `AGENTS.md`
 /// (§FS-init.2.3) — what both `grund init`'s update and `grund check`'s validation

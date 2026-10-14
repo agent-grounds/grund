@@ -15,6 +15,9 @@ use crate::config::{Project, escape_toml_basic};
 use crate::grammar::id_shape;
 
 pub(super) const AGENTS_TEMPLATE: &str = include_str!("../../assets/templates/AGENTS.md");
+/// Workspace-only project-boundary guidance (§FS-init.2.3.4.16).
+pub(super) const AGENTS_PROJECT_NAMESPACES_TEMPLATE: &str =
+    include_str!("../../assets/templates/AGENTS-project-namespaces.md");
 /// The scaffold config teaches open-ended marker choices (§FS-init.2.4.5).
 /// Its `[citations]` block comment explains the five levels
 /// and hands the reader the `CITATION_DIRECTIONS_URL` of

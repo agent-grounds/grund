@@ -7,16 +7,35 @@
 //! render its config-derived sections into `Expected`, which `check` byte-compares
 //! for drift (§FS-check.3.5): rendering is deterministic, so a fresh render is
 //! the hash.
-//! Nothing here reads the tree — the one section that does, the workspace
-//! members of §FS-init.2.3.4.15, arrives already rendered from the run that
-//! walked for it (`writers/init_render.rs`).
+//! Nothing here reads the tree — workspace presence (§FS-init.2.3.4.16) and
+//! member text (§FS-init.2.3.4.15) arrive from the run that walked for them
+//! (`writers/init_render.rs`).
 
-use super::assets::{AGENTS_TEMPLATE, canonical_template_text};
+use super::assets::{AGENTS_PROJECT_NAMESPACES_TEMPLATE, AGENTS_TEMPLATE, canonical_template_text};
 use super::citation_directions::citation_directions_section;
 use super::clickable_citations::{ConversationSurface, clickable_citations_section};
 use crate::config::{Compiled, Project, Run, kind_prefixes};
 use crate::grammar::{id_shape, inline_note_layout_sentence};
 use crate::model::plural;
+
+/// Workspace discovery and member-list expansion are independent (§FS-init.2.3.4.16).
+/// A discovered workspace retains project-boundary guidance even when its members
+/// cannot be rendered (§FS-init.2.3.4.15). Writers settle both once per invocation.
+#[derive(Default)]
+pub(crate) struct WorkspaceGuidance {
+    pub present: bool,
+    pub members: String,
+}
+
+/// The fixed workspace-only fragment, with the configured marker (§FS-init.2.3.4.16).
+pub(crate) fn render_project_namespaces_section(marker: &str) -> String {
+    format!(
+        "\n\n{}",
+        canonical_template_text(AGENTS_PROJECT_NAMESPACES_TEMPLATE)
+            .trim_end_matches('\n')
+            .replace("{MARKER}", marker)
+    )
+}
 
 /// The substitutions that turn `templates/AGENTS.md` into a concrete `AGENTS.md`
 /// for a repo (§FS-init.2.3.8): the project name, plus the ID/marker shape taken
@@ -25,8 +44,8 @@ use crate::model::plural;
 /// kinds show up in the kind set, and so on. Everything *not* substituted here is
 /// fixed for the block version. `{ID_SHAPE_SEC}` is listed before `{ID_SHAPE}`
 /// only for readability; neither placeholder is a substring of the other.
-/// `workspace_members` arrives already rendered (§FS-init.2.3.4.15): it is the
-/// one substitution that reads the tree rather than the config, it does not vary
+/// `workspace` arrives already discovered (§FS-init.2.3.4.16), with its members
+/// rendered (§FS-init.2.3.4.15): these read the tree rather than the config and do not vary
 /// by surface, and its walk-up must run once per `init` invocation rather than
 /// once per entrypoint file — see `writers/init_render.rs`. Which is also why
 /// nothing here needs the target directory any more.
@@ -37,7 +56,7 @@ use crate::model::plural;
 fn agents_template_substitutions(
     name: &str,
     (project, run, compiled): (&Project, &Run, &Compiled),
-    workspace_members: &str,
+    workspace: &WorkspaceGuidance,
     surface: ConversationSurface,
 ) -> Vec<(&'static str, String)> {
     let ids = &project.schema.ids;
@@ -91,7 +110,15 @@ fn agents_template_substitutions(
             "{CLICKABLE_CITATIONS}",
             clickable_citations_section(project, surface),
         ),
-        ("{WORKSPACE_MEMBERS}", workspace_members.to_string()),
+        (
+            "{PROJECT_NAMESPACES}",
+            if workspace.present {
+                render_project_namespaces_section(marker)
+            } else {
+                String::new()
+            },
+        ),
+        ("{WORKSPACE_MEMBERS}", workspace.members.clone()),
     ]
 }
 
@@ -268,20 +295,20 @@ fn row(label: &str, home: &str, title: &str) -> String {
 /// The managed block — just the H2 section that `init` appends to, or replaces
 /// inside, an existing `AGENTS.md` (§FS-init.2.3.10). The template *is* the block;
 /// the H2 line carrying the version is its own begin marker (§FS-init.2.3.1).
-/// `workspace_members` is the §FS-init.2.3.4.15 section, rendered once per `init`
-/// invocation by `writers/init_render.rs` against the directory being
-/// initialized and handed to every surface that block is written to.
+/// `workspace` carries the §FS-init.2.3.4.16 discovery and §FS-init.2.3.4.15
+/// member section, settled once per `init` invocation by `writers/init_render.rs`
+/// and handed to every surface that block is written to.
 pub(crate) fn render_agents_append_block(
     name: &str,
     project: &Project,
     run: &Run,
     compiled: &Compiled,
-    workspace_members: &str,
+    workspace: &WorkspaceGuidance,
     surface: ConversationSurface,
 ) -> String {
     let mut rendered = canonical_template_text(AGENTS_TEMPLATE);
     for (placeholder, value) in
-        agents_template_substitutions(name, (project, run, compiled), workspace_members, surface)
+        agents_template_substitutions(name, (project, run, compiled), workspace, surface)
     {
         rendered = rendered.replace(placeholder, &value);
     }

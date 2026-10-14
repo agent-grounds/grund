@@ -5,35 +5,34 @@ use crate::config::{Config, config_file_in, is_valid_project_alias, run_warning_
 use crate::model::{Finding, normalize_path_lexically};
 use crate::resolver::settled_run_warnings;
 use crate::sources::{canonical_path, path_exists};
-use crate::templates::markdown_link_destination;
+use crate::templates::{WorkspaceGuidance, markdown_link_destination};
 use crate::workspace::{
     AncestorWorkspaces, apply_workspace_boundary, enclosing_workspace_of,
     expand_workspace_tree_with_report_base, open_at,
 };
 
 /// One resolved workspace project — the alias, canonical root, and optional
-/// one-line description — collected by [`find_init_workspace_context`] so the
+/// one-line description — collected by [`collect_init_workspace_projects`] so the
 /// workspace-members renderer never has to talk to the config layer directly
 /// (§FS-init.2.3.4.15, §DF-workspace-member-descriptions).
 ///
 /// What this file holds: the workspace half of the `init` renderer
 /// (§FS-init.2.3.4.15), in a file of its own beside `init_render.rs`
 /// (§AR-core-module-layout.1) — finding the workspace a target sits in, and
-/// rendering the member list the managed block carries. `init_templates.rs`
-/// keeps the block itself and the generated config.
+/// rendering the member list the managed block carries. `templates/agents_block.rs`
+/// keeps the fixed project-boundary fragment (§FS-init.2.3.4.16).
 struct InitWorkspaceProject {
     alias: String,
     project_root: PathBuf,
     description: Option<String>,
 }
 
-/// Walk up from `target` to the outermost ancestor whose `grund.toml` — either
-/// discovery form (§FS-config.1) — declares `[workspace]`, then expand the
-/// whole tree and derive each alias the same way `grund check` does
+/// Expand the discovered workspace separately from its presence (§FS-init.2.3.4.16)
+/// and derive each alias the same way `grund check` does
 /// (§FS-workspace.2 / §FS-workspace.3 / §FS-workspace.6.1). Returns the
 /// alias-sorted project list (every block's root, subject to its own
 /// `include_root`, plus every member at every depth) when `target` sits inside
-/// a workspace; `None` otherwise. Returns `None` rather than an error on any
+/// a workspace. Returns `None` rather than an error on any
 /// workspace configuration problem (missing member, duplicate alias, member
 /// cycle, …) — init must not fail because a sibling member is misconfigured;
 /// the next `grund check` will surface the issue (§FS-init.2.3.4.15).
@@ -46,13 +45,18 @@ struct InitWorkspaceProject {
 /// The renderer later omits that canonical self project; only its pending name
 /// can still affect the section, by colliding with a foreign alias during the
 /// ambiguity check below.
-fn find_init_workspace_context(
+fn collect_init_workspace_projects(
     target: &Path,
+    mut root_config: Config,
+    run_root: &Path,
     pending_project_name: Option<&str>,
     pending_project_description: Option<&str>,
     run_warnings: &mut Vec<Finding>,
 ) -> Option<Vec<InitWorkspaceProject>> {
-    let (mut root_config, run_root) = find_init_workspace_root(target, run_warnings)?;
+    // §FS-init.2.3.4.16: boundary expansion suppresses only members, not discovery.
+    // §FS-check.3.29: ask the climbed block about its scan before expansion asks
+    // the remaining blocks, once per block per run.
+    apply_workspace_boundary(&mut root_config).ok()?;
     // `expand_workspace_tree` returns canonical project roots, so canonicalize
     // `target` before §FS-init.2.3.4.15.4's identity-based self omission.
     let target_canonical = canonical_path(target).ok()?;
@@ -60,7 +64,7 @@ fn find_init_workspace_context(
     // §FS-check.3.29.7: the expansion below is the only route that walks *down* from
     // a root above the run, so it is the only one that has to be told where the
     // run is — every other command re-roots onto it first (§AR-workspace.5.1).
-    let expanded = expand_workspace_tree_with_report_base(&mut root_config, &run_root);
+    let expanded = expand_workspace_tree_with_report_base(&mut root_config, run_root);
     // §FS-check.4.10.7: `init` is a walking command like any other, so
     // the cautions the expansion settled reach the reader whether or not the
     // members section itself can be rendered (§FS-distribution.3.1).
@@ -166,10 +170,6 @@ fn find_init_workspace_root(
     if !climbed || !config.workspace_declared {
         return None;
     }
-    // §FS-check.3.29: the one route to `expand_workspace_tree` that does not come
-    // through `resolve_workspace_config`, and the expansion asks every block but
-    // this one — so without this, `init` says nothing about the block it is on.
-    apply_workspace_boundary(&mut config).ok()?;
     Some((config, run_root))
 }
 
@@ -189,7 +189,7 @@ pub(crate) fn render_workspace_members_section(
     citation_marker: &str,
     canonical_agent_entrypoint_selected: bool,
 ) -> String {
-    render_workspace_members_section_with_run_warnings(
+    render_workspace_guidance_with_run_warnings(
         target,
         pending_project_name,
         pending_project_description,
@@ -197,35 +197,47 @@ pub(crate) fn render_workspace_members_section(
         canonical_agent_entrypoint_selected,
     )
     .0
+    .members
 }
 
 /// [`render_workspace_members_section`] with the run's `[workspace]` warnings the
 /// walk-up settled (§FS-check.4.10.7, §FS-workspace.6.1.7.6). `init`
 /// resolves a block's member boundary like every other walking command, and the
 /// section it renders is not where a caution belongs — it is one of the run's,
-/// carried out to `InitOutput` (§FS-distribution.3.1).
-pub(crate) fn render_workspace_members_section_with_run_warnings(
+/// carried out to `InitOutput` (§FS-distribution.3.1). Discovery is carried
+/// separately from expansion so project boundaries survive a suppressed member
+/// list (§FS-init.2.3.4.16).
+pub(crate) fn render_workspace_guidance_with_run_warnings(
     target: &Path,
     pending_project_name: Option<&str>,
     pending_project_description: Option<&str>,
     citation_marker: &str,
     _canonical_agent_entrypoint_selected: bool,
-) -> (String, Vec<Finding>) {
+) -> (WorkspaceGuidance, Vec<Finding>) {
     let mut run_warnings = Vec::new();
-    let Some(projects) = find_init_workspace_context(
+    let Some((root_config, run_root)) = find_init_workspace_root(target, &mut run_warnings) else {
+        return (WorkspaceGuidance::default(), run_warnings);
+    };
+    let mut guidance = WorkspaceGuidance {
+        present: true,
+        members: String::new(),
+    };
+    let Some(projects) = collect_init_workspace_projects(
         target,
+        root_config,
+        &run_root,
         pending_project_name,
         pending_project_description,
         &mut run_warnings,
     ) else {
-        return (String::new(), run_warnings);
+        return (guidance, run_warnings);
     };
-    // `find_init_workspace_context` already required `target` to canonicalize
+    // `collect_init_workspace_projects` already required `target` to canonicalize
     // before it returned `Some`, so this call cannot fail in practice; bail
     // out instead of falling back to a non-canonical path that would break
     // the `is_self` comparison below.
     let Ok(target_canonical) = canonical_path(target) else {
-        return (String::new(), run_warnings);
+        return (guidance, run_warnings);
     };
     let mut bullets = Vec::with_capacity(projects.len());
     for project in &projects {
@@ -269,7 +281,8 @@ pub(crate) fn render_workspace_members_section_with_run_warnings(
         "\n\n### Workspace members\n\nCross-project citations use {citation_marker}alias/<ID>.\n\n",
     );
     out.push_str(&bullets.join("\n"));
-    (out, run_warnings)
+    guidance.members = out;
+    (guidance, run_warnings)
 }
 
 /// Compute a relative POSIX-style path from `from_dir` to `to`. Both inputs
