@@ -14,6 +14,7 @@ command's own `--help` page links the guide and example that cover it
 | [The `grund.toml` reference](configuration.md), with its [JSON Schema](../../schemas/grund.schema.json) | — |
 | [Python API](python-api.md) | [`examples/python-api`](../../examples/python-api/) |
 | [Citation directions](citation-directions.md) | — |
+| [Seeing a repository's schema](schema.md) | [`examples/schema`](../../examples/schema/) |
 | [Clickable citations](clickable-citations.md) | — |
 | [Coordinate sizes](coordinate-sizes.md) | — |
 | [Distribution runbook](distribution-runbook.md) | — |

@@ -174,6 +174,8 @@ sentence, is a question asked of that snapshot. There are two kinds of rule.
 **Schema rules** say what a fact may look like and where it may live, which
 decides whether it enters the graph at all. **Link rules** say which citations
 must, should, or must not exist between the facts once they are there.
+`grund schema` prints both kinds for one repository, read from its configuration
+alone ([seeing a repository's schema](schema.md)).
 
 ### What a scan builds
 
