@@ -140,6 +140,14 @@ fn v2_sources_contract() {
         "config-v2-sources-unknown-definition-refused",
         "config-v2-sources-invalid-definition-refused",
         "config-scan-exclude-name-every-depth",
+        "config-v2-sources-no-languages-list",
+        "config-v2-sources-json-only-list",
+        "config-v2-sources-exclude-scan-false-full",
+        "declarations-off-grammar-plain-note-v2-doc-comments-check",
+        "declarations-off-grammar-plain-note-v2-any-comment-check",
+        "declarations-ineligible-line-in-body-v2-show",
+        "declarations-stub-ineligible-target-v2-doc-comments-check",
+        "declarations-stub-ineligible-target-v2-any-comment-check",
     ]
     .iter()
     .map(|name| run_case(&root, &cases.join(name), E2e))
