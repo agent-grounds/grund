@@ -52,8 +52,6 @@ fn agent_setup_instructions_name_the_ordered_adoption_workflow() {
         "Inspect the target repo before asking questions",
         "roadmaps, changelogs, decisions, plans, tests, and agent instruction files",
         "repo evidence",
-        "- Pros.",
-        "- Cons.",
         "confirm or override every option",
         "grund config validate",
         "grund check",
@@ -61,6 +59,32 @@ fn agent_setup_instructions_name_the_ordered_adoption_workflow() {
         assert!(
             text.contains(phrase),
             "the setup instructions must name {phrase:?}"
+        );
+    }
+
+    let asking_style = text
+        .split_once("## Asking Style\n")
+        .expect("the instructions explain the asking style")
+        .1
+        .split("\n## ")
+        .next()
+        .unwrap()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ");
+    let prompt_advice = asking_style
+        .split_once("Each prompt must include ")
+        .expect("Asking Style must name the advice required in each prompt")
+        .1
+        .split('.')
+        .next()
+        .unwrap();
+    for requirement in ["pros", "cons"] {
+        assert!(
+            prompt_advice
+                .split(|c: char| !c.is_alphanumeric())
+                .any(|word| word == requirement),
+            "Asking Style must require {requirement} in each prompt"
         );
     }
 
