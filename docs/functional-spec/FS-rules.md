@@ -1149,6 +1149,21 @@ Five independent pins prevent drift:
    whose chapter is gone and asserts the section's quoted reason clause is
    part of the `invalid-rule` message the binary emits.
 
+### 10.1. Example refusal inventory
+
+The refusal inventory in `examples/rules/README.md` teaches the refusal actually
+printed by `check --rule`, under the example's configured kind vocabulary. Its
+path-subject entry retains `Each file in vendor/ must cite at least one FS.` and
+shows the reason and `known kinds:` line, explaining that no accepted-form
+rewrite is offered, as
+[§FS-rule-refusals.sentences.rewrite.no-form](FS-rule-refusals.md#sentencesrewriteno-form-where-no-form-is-offered)
+and [§FS-rule-refusals.sentences.rewrite.by-refusal](FS-rule-refusals.md#sentencesrewriteby-refusal-the-rewrite-each-refusal-makes)
+define. The inventory's introduction acknowledges refusals without a rewrite
+rather than promising an accepted rewrite for every entry. A regression reads
+this maintained entry and compares it to a CLI invocation; a copied prose
+fixture or a runtime-only assertion does not hold the example to this contract
+([§FS-examples.4](FS-examples.md#4-maintenance-contract)).
+
 ## 11. Functional architecture constraint
 
 Only two representations cross the parsing/evaluation boundary. The sentence
