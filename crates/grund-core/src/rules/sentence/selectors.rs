@@ -63,7 +63,7 @@ pub(crate) fn parse_selector(
     };
     // §FS-rule-refusals.selectors: a pasted rule sentence is answered with its subject, which
     // ends where the rule sentence's does (§FS-rules.3.6).
-    let Some((subject, ..)) = split_modality(text) else {
+    let Some(split @ (subject, ..)) = split_modality(text) else {
         return Err(answer(&refusal, vocabulary));
     };
     Err(match select(subject, vocabulary) {
@@ -73,7 +73,8 @@ pub(crate) fn parse_selector(
             after_enabling: false,
             hint: false,
         },
-        Err(own) => answer(&own, vocabulary),
+        // §FS-rule-refusals.sentences.modal-chapter: cut where the rule is, named as it is.
+        Err(own) => answer(&own.cut_at(split), vocabulary),
     })
 }
 

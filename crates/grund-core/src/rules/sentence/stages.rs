@@ -193,11 +193,14 @@ fn modality(reading: &mut Reading<'_>) -> Result<(), Refusal> {
 
 /// Stage 5, the rest of the subject.
 fn rest_of_subject(reading: &mut Reading<'_>) -> Result<(), Refusal> {
-    let Some((subject, ..)) = reading.split else {
+    let Some(split @ (subject, ..)) = reading.split else {
         return Ok(());
     };
-    let parsed = parse_subject(subject, reading.vocabulary)
-        .map_err(|refusal| subject_refusal(refusal, subject, reading.title, reading.vocabulary))?;
+    let parsed = parse_subject(subject, reading.vocabulary).map_err(|refusal| {
+        // §FS-rule-refusals.sentences.modal-chapter
+        let refusal = refusal.cut_at(split);
+        subject_refusal(refusal, subject, reading.title, reading.vocabulary)
+    })?;
     reading.subject = Some(parsed);
     Ok(())
 }
