@@ -80,6 +80,10 @@ checked 2026-10-13. None of them documents a model of references or addresses: a
 rule reports program elements or matches at locations in files, so whether a reference
 survives a moved file or a reworded title does not arise.
 
+The CodeQL Terms and Conditions reference below must cite GitHub's underlying
+`LICENSE.md` file in `github/codeql-cli-binaries` at `main`, served directly by
+`raw.githubusercontent.com`.
+
 - **CodeQL**, CLI 2.27.2, released 2026-10-07
   ([release](https://github.com/github/codeql-cli-binaries/releases/tag/v2.27.2)); its
   documentation is unversioned and describes the most recent CLI. The
