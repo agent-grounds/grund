@@ -1,4 +1,4 @@
-"""Real CLI coverage for §FS-non-goals.1.1 and §AR-ci.3.1.1.
+"""Real CLI coverage for §FS-non-goals.1.1, §AR-ci.3.1.1 and §AR-ci.3.1.3.
 
 Port the issue-403 triage reproducer's loopback assertions. The production
 configuration is copied unchanged for delayed-response and permanent-timeout
@@ -12,6 +12,7 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -25,7 +26,10 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 LYCHEE = shutil.which("lychee")
 SELF_BASE = "https://github.com/agent-grounds/grund/blob/main/docs/"
-WATCHDOG = 240  # Greater than 5 * 30 + (1 + 2 + 4 + 8), with ample overhead.
+# Two lychee budgets of 5 * 30 + (1 + 2 + 4 + 8) and the pause, with ample overhead.
+WATCHDOG = 420
+ONCE = {"/once503": 503, "/once502": 502, "/once403": 403}
+RECHECK_LINE = re.compile(r"(\d+) transient failures re-checked with lychee: (\d+) passed, (\d+) failed")
 
 
 class LinkGatePolicyTests(unittest.TestCase):
@@ -76,7 +80,13 @@ class LoopbackGate:
                     fixture.stop.wait(2)
                 if self.path == "/persistent_timeout":
                     fixture.stop.wait(300)
+                if self.path == "/once_malformed" and attempt == 1:
+                    self.wfile.write(b"NOT HTTP AT ALL\r\n\r\n")
+                    self.close_connection = True
+                    return
                 code = 404 if self.path == "/missing" else 200
+                if self.path == "/always503" or (self.path in ONCE and attempt == 1):
+                    code = ONCE.get(self.path, 503)
                 body = b"<html><body><h1 id='present'>Present</h1></body></html>"
                 try:
                     self.send_response(code)
@@ -163,8 +173,8 @@ class LinkGateNetworkTests(unittest.TestCase):
             self.assert_success(transient_result)
             self.assertEqual(1, gate.counts["/transient"])
             self.assertGreater(gate.successes["/transient"], 0)
-        with self.subTest("persistent timeout exhausts exactly five attempts"):
-            self.assertEqual(5, gate.counts["/persistent_timeout"])
+        with self.subTest("persistent timeout exhausts five attempts in each of two passes"):
+            self.assertEqual(10, gate.counts["/persistent_timeout"])
 
         # The original triage control: an unchanged rerun can succeed once
         # the four delayed attempts have been exhausted on the old policy.
@@ -206,6 +216,74 @@ class LinkGateNetworkTests(unittest.TestCase):
             "Cannot find fragment",
         )
         self.assertEqual(0, gate.counts["/ready"])
+
+
+@unittest.skipUnless(LYCHEE, "Network fixture requires CI-pinned lychee 0.23.0 on PATH")
+class TransientRecheckNetworkTests(unittest.TestCase):
+    """§AR-ci.3.1.3 — lychee sends a rejected 5xx, a 403 and a malformed response
+    once; the wrapper checks such a URL once more, and a later 200 passes
+    (§FS-non-goals.1.1). Ported from the issue-738 triage reproducer."""
+
+    @classmethod
+    def setUpClass(cls):
+        LinkGateNetworkTests.setUpClass()
+
+    def fixture(self):
+        gate = LoopbackGate()
+        self.addCleanup(gate.close)
+        return gate
+
+    def assert_recheck_line(self, output, checked, passed, failed):
+        match = RECHECK_LINE.search(output)
+        self.assertIsNotNone(match, f"no re-check report line in:\n{output}")
+        self.assertEqual((checked, passed, failed), tuple(int(g) for g in match.groups()))
+
+    def assert_passes_on_the_second_request(self, path):
+        gate = self.fixture()
+        code, output = gate.check(path.strip("/"), [gate.base + path])
+        self.assertEqual(0, code, output)
+        self.assertEqual(2, gate.counts[path])
+        self.assert_recheck_line(output, 1, 1, 0)
+
+    def test_a_503_once_then_200_passes(self):
+        self.assert_passes_on_the_second_request("/once503")
+
+    def test_a_502_once_then_200_passes(self):
+        self.assert_passes_on_the_second_request("/once502")
+
+    def test_a_403_once_then_200_passes(self):
+        self.assert_passes_on_the_second_request("/once403")
+
+    def test_a_malformed_response_once_then_200_passes(self):
+        self.assert_passes_on_the_second_request("/once_malformed")
+
+    def test_every_transient_link_is_rechecked_in_one_pass(self):
+        gate = self.fixture()
+        paths = [*ONCE, "/once_malformed"]
+        code, output = gate.check("all_once", [gate.base + p for p in paths])
+        self.assertEqual(0, code, output)
+        self.assertEqual({p: 2 for p in paths}, {p: gate.counts[p] for p in paths})
+        self.assert_recheck_line(output, 4, 4, 0)
+
+    def test_a_persistent_503_is_rejected(self):
+        gate = self.fixture()
+        code, output = gate.check("always503", [gate.base + "/always503"])
+        self.assertEqual(2, code, output)
+        self.assertIn(gate.base + "/always503", output)
+
+    def test_a_persistent_503_is_rechecked_once_and_reported(self):
+        gate = self.fixture()
+        code, output = gate.check("always503_reported", [gate.base + "/always503"])
+        self.assertEqual(2, code, output)
+        self.assertEqual(2, gate.counts["/always503"])
+        self.assert_recheck_line(output, 1, 0, 1)
+
+    def test_a_persistent_404_is_rejected_without_a_recheck(self):
+        gate = self.fixture()
+        code, output = gate.check("missing_once", [gate.base + "/missing"])
+        self.assertEqual(2, code, output)
+        self.assertEqual(1, gate.counts["/missing"])
+        self.assertIsNone(RECHECK_LINE.search(output), output)
 
 
 if __name__ == "__main__":

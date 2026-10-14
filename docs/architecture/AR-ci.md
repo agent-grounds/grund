@@ -78,7 +78,8 @@ The existing network pass uses lychee 0.23.0 with explicit `timeout = 30`
 and `retry_wait_time = 1` (seconds for the exponential-backoff base).
 Five attempts have nominal waits of 1, 2, 4, and 8 seconds. A persistent
 whole-request timeout therefore consumes a nominal 165 seconds, plus overhead
-and possible host-specific pacing, before a nonzero exit. HTTP 404 responses
+and possible host-specific pacing, in each of the two passes [§AR-ci.3.1.3](AR-ci.md#313-a-transient-failure-from-any-host-is-checked-once-more)
+allows before a nonzero exit. HTTP 404 responses
 remain failures, and unresolved timeouts are never accepted as successes.
 
 The pinned binary retains a separate fixed 10-second connection timeout; the
@@ -96,8 +97,8 @@ production policy and evidence exercising the unscaled policy. A subprocess
 watchdog exceeds the selected finite budget; expiration is an infrastructure
 failure, not evidence that lychee rejected a persistent link. The wrapper's
 routing, exact self-link exclusions, hook invocation, checked documents, and
-lychee version stay as described above, apart from the per-URL re-check of
-[§AR-ci.3.1.2](AR-ci.md#312-a-github-5xx-is-settled-through-the-api); no outer whole-tree retry is added.
+lychee version stay as described above, apart from the per-URL re-checks of
+[§AR-ci.3.1.2](AR-ci.md#312-a-github-5xx-is-settled-through-the-api) and [§AR-ci.3.1.3](AR-ci.md#313-a-transient-failure-from-any-host-is-checked-once-more); no outer whole-tree retry is added.
 
 #### 3.1.2 A GitHub 5xx is settled through the API
 
@@ -117,8 +118,8 @@ every failure it keeps with its URL, source file, status and lychee's reason:
 `text`, followed by the report's `details` when `text` does not already say it.
 
 A failure is a **candidate** when its `code` is 500 to 599 and its host is
-exactly `github.com`. Every other failure — any 4xx, a timeout, a failure without
-a code, a 5xx from any other host — keeps today's verdict and is never re-checked.
+exactly `github.com`. No other failure is a candidate, and none is re-checked
+through the API; [§AR-ci.3.1.3](AR-ci.md#313-a-transient-failure-from-any-host-is-checked-once-more) says which of them lychee checks a second time.
 A candidate re-checks through the endpoint its URL shape names, a fragment
 dropped:
 
@@ -140,7 +141,8 @@ retry, and `gh` authenticates as it always does (`GH_TOKEN`, `GITHUB_TOKEN`, or
   it does today.
 
 The hook passes only when the network pass failed, its report was read, and every
-failure in it is a confirmed candidate. A missing or unreadable report keeps
+failure in it is a confirmed candidate or passed the re-check of [§AR-ci.3.1.3](AR-ci.md#313-a-transient-failure-from-any-host-is-checked-once-more).
+A missing or unreadable report keeps
 lychee's exit code. Whenever there is a candidate, one line reports the re-check,
 `N GitHub 5xx re-checked through the API: x confirmed, y broken, z unsettled`,
 and each broken or unsettled candidate is named with its URL, source file and
@@ -156,6 +158,55 @@ needs nothing more, so the re-check works on a pull request from a fork too.
 
 `tests/integration/test_check_links.py` holds the wrapper to each outcome
 against a stubbed lychee report and a stubbed `gh`.
+
+#### 3.1.3 A transient failure from any host is checked once more
+
+Lychee 0.23.0 does not retry every failure its retry loop could cure: it sends a
+request that is answered with a rejected status, a 5xx or a 403 among them,
+exactly once, and so it does with a network error such as an HTTP/2 protocol
+error or a malformed response. A host that answers one such failure and then
+200 fails the network pass, and
+[§FS-non-goals.1.1](../functional-spec/FS-non-goals.md#11-this-repositorys-external-link-gate) already counts a later
+successful attempt as passing. So after the network pass, and after the API
+re-check of [§AR-ci.3.1.2](AR-ci.md#312-a-github-5xx-is-settled-through-the-api), the wrapper checks each remaining failure of a
+**transient** shape once more:
+
+- a 5xx from any host other than exactly `github.com`, whose 5xx stays with the
+  API re-check alone;
+- a 403, 408 or 429 from any host;
+- a timeout, or a failure without a code, on an `http` or `https` URL.
+
+Everything else keeps its verdict and is never checked again: a 404, a 410 and
+every other 4xx, a failure on any other scheme, a local file, and a missing
+fragment, which lychee reports without a code as `Cannot find fragment`. A
+transient URL that failed in several files is checked once and settles every
+one of them.
+
+The re-check is one lychee invocation over just those URLs, after a pause of
+`RECHECK_PAUSE` seconds, 5 in the wrapper, so a server that shed load has a
+moment to recover. It runs the same pinned lychee from the same directory, so
+it reads the same `lychee.toml`, with the network pass's `--include-fragments`
+and its JSON report written through `--output`, and the wrapper reads that
+report as it reads the first. A URL the re-check does not list as failing
+passes. A URL it does list, and a re-check whose report is missing or
+unreadable, fails as it did, named with its URL, source file, the re-check's
+status and lychee's reason. Whenever a URL is re-checked, one line reports it,
+`N transient failures re-checked with lychee: x passed, y failed`, where `N`
+counts URLs.
+
+This is a re-check of named URLs, not the whole-tree retry
+[§AR-ci.3.1.1](AR-ci.md#311-bounded-external-link-tolerance) rules out: the tree is not walked again, and a URL that passed the
+network pass is not requested again. Nothing passes without a successful
+response from the same URL, so a persistent timeout and a 404 still fail. A
+persistent timeout now spends lychee's whole budget twice, a nominal 335
+seconds with the pause, before the hook fails.
+
+The real-lychee loopback tests of `tests/integration/test_check_links_network.py`
+hold the re-check to a 503, a 502, a 403 and a malformed response once followed
+by 200 passing, and to a persistent 503 failing with the report line and a
+persistent 404 failing without a second request. Their watchdog exceeds the two
+budgets. The stubbed tests of `tests/integration/test_check_links_recheck.py` hold the
+classification above.
 
 ### 3.2 The managed block's text
 
