@@ -15,7 +15,7 @@ use super::init_block::{AgentsUpdateResult, update_agents_block, update_agents_t
 use super::init_output::InitEvent;
 use super::scoped_files::{SCOPED_COMPANIONS, ScopedRecord, mirrored, scoped_companions};
 use crate::grammar::{AgentsBlockLookup, find_agents_block};
-use crate::scanner::{CANONICAL_AGENT_ENTRYPOINT, is_symlink_to};
+use crate::scanner::CANONICAL_AGENT_ENTRYPOINT;
 use crate::sources::Sources;
 
 /// What one run does to scoped files, in report order (§FS-init.2.3.5.14.4).
@@ -219,7 +219,7 @@ pub(super) fn write_scoped(
         push(cut_verb(removed, dry_run), orphan.rel.clone());
         for (path, rel, linked) in &orphan.companions {
             if *linked {
-                if removed && is_symlink_to(path, &orphan.path).unwrap_or(false) {
+                if removed {
                     if !dry_run {
                         fs::remove_file(path).map_err(|err| (path.clone(), err.into()))?;
                     }
