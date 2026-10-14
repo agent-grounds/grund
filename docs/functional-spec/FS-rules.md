@@ -37,7 +37,7 @@ Three requirements on the rule language as a whole, each carrying a mark — *re
 
 ### requirements.unseen: Nothing a rule governs passes unseen — realized, one case deferred
 
-A rule that cannot run is reported at its own heading and never silently omitted: the run keeps its other findings and exits nonzero, and `init` writes no block over an invalid rule ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)); a sentence the run's scope cannot verify is reported all the same ([§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)); and a run narrowed to the rule-produced codes keeps every `invalid-rule` row ([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)). A declaration a quantified chapter subject cannot reach is reported where it is declared rather than passed over ([§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration)), and an incomplete snapshot yields no closed-world absence or count and keeps exit 2 ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)). A chapter-presence rule beside a chapter-scoped citation rule suppresses nothing, but it counts display names where the citation rule selects handles ([§FS-rules.3.1](FS-rules.md#31-chapter-presence), [§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)), so the two report one absence together only where chapters are titled by their handles, as `## terms: Terms` is. One case is **deferred**, owed to its own change: a trial sentence that duplicates a `[citations]` direction authors nothing, so `check --rule … --only-rule` prints `success` while the tree's own findings stand ([§FS-rules.8](FS-rules.md#8-command-surfaces)). Serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work), on the model [§REQ-no-missed-citation.1](../requirements/REQ-no-missed-citation.md#1-no-silent-skips) sets for a file the scan cannot read.
+A rule that cannot run is reported at its own heading and never silently omitted: the run keeps its other findings and exits nonzero, and `init` writes no block over an invalid rule ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)); a sentence the run's scope cannot verify is reported all the same ([§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)); and a run narrowed to the rule-produced codes keeps every `invalid-rule` row ([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)). A declaration a quantified chapter subject cannot reach is reported where it is declared rather than passed over ([§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration)), and an incomplete snapshot yields no closed-world absence or count and keeps exit 2 ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)). A chapter-presence rule beside a chapter-scoped citation rule suppresses nothing, but it counts display names where the citation rule selects handles ([§FS-rules.3.1](FS-rules.md#31-chapter-presence), [§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)), so the two report one absence together only where chapters are titled by their handles, as `## terms: Terms` is. A `[citations]` direction absorbs a duplicate rule's finding only where it reports the same unit itself, so a unit only the rule fails, because its only citation of the target kind does not resolve, is reported as the rule's ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)). One case is **deferred**, owed to its own change: a trial sentence that duplicates a `[citations]` direction authors nothing for a unit the direction itself reports, so `check --rule … --only-rule` prints `success` there while the tree's own findings stand ([§FS-rules.8](FS-rules.md#8-command-surfaces)). Serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work), on the model [§REQ-no-missed-citation.1](../requirements/REQ-no-missed-citation.md#1-no-silent-skips) sets for a file the scan cannot read.
 
 ### requirements.addition: The language grows by addition — directional
 
@@ -591,17 +591,40 @@ cannot disagree. A jointly authored finding therefore names `--rule` in its
 tail is unchanged by that: there is no marker, no reordering, and no second
 line.
 
-Config-to-rule deduplication is intentionally narrower. It applies only where
-an existing `[citations]` entry and a rule express the same local bare citing
-kind, declaration-wide unit, modality/level, `cite` relation, normalized target
-entry, and cardinality. If config participates, its existing
+Config-to-rule deduplication is intentionally narrower, and like field-to-rule
+pairing below it is decided on the findings, unit by unit, rather than by
+discarding the rule before it runs. It applies only where an existing
+`[citations]` entry and a rule express the same local bare citing kind,
+declaration-wide unit, modality/level, `cite` relation, normalized target
+entry, and cardinality. Where, for one unit or site, config reports its existing
 `missing-citation`, `suggested-citation`, `forbidden-citation`, or
-`discouraged-citation` finding wins byte-for-byte: no rule ID is appended, its
-`authority` stays empty, and JSON gains no `sites` list. `[citations]` remains
-authored, rendered, and interpreted as before. A rule that loses to config this
-way authored nothing, so a trial sentence duplicating a `[citations]` direction
-is invisible to a report scoped by `authority`
+`discouraged-citation` finding and the rule reports the same code there on the
+same channel, config's finding wins byte-for-byte and the rule's is dropped: no
+rule ID is appended, its `authority` stays empty, and JSON gains no `sites`
+list. `[citations]` remains authored, rendered, and interpreted as before. A
+rule that loses to config this way authored nothing for that unit, so a trial
+sentence duplicating a `[citations]` direction that reports the same unit is
+invisible to a report scoped by `authority`
 ([§FS-rules.8](FS-rules.md#8-command-surfaces)).
+
+The two need not agree. A direction
+([§FS-config.3.9.1.1](FS-config.md#3911-obligations-and-prohibitions)) counts a
+citation by the kind its token names whether or not the token resolves, and the
+token keeps its own `unknown reference` or `missing section` finding
+([§FS-check.3.1](FS-check.md#31-dangling-citation),
+[§FS-check.3.2](FS-check.md#32-missing-section)); a rule counts only a citation
+that resolves
+([§FS-rules.5.1](FS-rules.md#51-facts-and-identity)). So a declaration whose only
+`REQ` citation is the dangling `<§>REQ-missing` or a missing section such as
+`<§>REQ-b.9` satisfies `[citations.FS] must = ["REQ"]` and fails `Each FS must
+cite at least one REQ.`, and a dangling `<§>mem/AR-x` into a workspace member
+does the same to a `mem/AR` direction and rule.
+A defect only the rule sees is still reported, as the rule's own finding with
+the rule's `authority`, beside the token's `unknown reference` or `missing
+section`, on every channel the rule's level reaches. Adding a `[citations]`
+entry therefore never hides a finding the rule alone would report, and a trial
+sentence scoped by `--only-rule` reports it and fails the run. The decision is
+[§DF-direction-absorbs-findings-not-rules](../decisions/functional/DF-direction-absorbs-findings-not-rules.md#df-direction-absorbs-findings-not-rules-a-citations-direction-absorbs-a-duplicate-rules-finding-for-a-unit-it-reports-not-the-rule).
 
 Field-to-rule pairing is narrower still, and it happens after evaluation
 rather than before it. A version-2 field expresses a chapter-presence rule when
@@ -984,13 +1007,18 @@ authority and its message bytes exactly as an unscoped run renders them. The
 sentence did author it, and scoping is not the place to relitigate the merge.
 
 A trial sentence duplicating a `[citations]` direction yields an **empty** scoped
-report. The config finding wins byte-for-byte and the rule authored nothing
+report wherever the direction reports the same units. The config finding wins
+byte-for-byte and the rule authored nothing for those units
 ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)), so there is nothing for
 `authority` to name, and the run prints `success` and exits `0`
 ([§FS-check.2.1.3](FS-check.md#213-the-success-line)) while the tree's own
 findings still stand. This is known behavior, recorded here so it cannot change
 by accident; making such a sentence visible is a separate question this point
 does not answer.
+A unit the direction passes and the sentence fails, because its only citation
+of the target kind does not resolve, is not that case: the sentence's finding
+stands with `--rule` as its authority, and the scoped run reports it and exits
+`1` ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)).
 
 A `should`-level trial sentence produces findings only in the suggestions
 channel, which the default run withholds
