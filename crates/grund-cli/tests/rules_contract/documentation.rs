@@ -44,6 +44,71 @@ fn guide_example_readmes_and_goldens_ship_together() {
     assert!(examples.contains("rules/"));
 }
 
+/// §FS-rules.10.1: the maintained example must teach the path-subject refusal
+/// actually printed, including no form where none is offered.
+#[test]
+fn example_path_subject_entry_teaches_the_cli_refusal_without_a_rewrite() {
+    let root = repo_root();
+    let readme = fs::read_to_string(root.join("examples/rules/README.md"))
+        .expect("maintained rules example README");
+    let inventory = readme
+        .split_once("## Refusal inventory")
+        .expect("refusal inventory")
+        .1
+        .split("\n## ")
+        .next()
+        .expect("inventory body");
+    let sentence = "Each file in vendor/ must cite at least one FS.";
+    // Join continuation lines so wrapping the prose or an inline code span
+    // cannot change what this entry teaches.
+    let entry = inventory
+        .split("\n- ")
+        .skip(1)
+        .map(collapsed)
+        .find(|entry| entry.contains(sentence))
+        .expect("maintained path-subject entry");
+    let output = run(
+        &root.join("examples/rules/repo"),
+        &["check", ".", "--only-rule", "--rule", sentence],
+    );
+    let stderr = text(&output.stderr);
+    assert_run(
+        &output,
+        2,
+        "",
+        "error: path subjects are not accepted in phase 1\n\
+         known kinds: GOAL, REQ, FS, AR, RULE\n",
+    );
+    assert!(!stderr.contains("accepted form"), "CLI offered a rewrite");
+
+    let documented: Vec<&str> = entry.split('`').skip(1).step_by(2).collect();
+    let mut printed = vec![sentence];
+    printed.extend(
+        stderr
+            .trim()
+            .lines()
+            .map(|line| line.strip_prefix("error: ").unwrap_or(line)),
+    );
+    assert_eq!(
+        documented,
+        printed,
+        "examples/rules/README.md path-subject entry disagrees with the CLI\n\
+         README entry: {entry}\nCLI exit: {:?}\nCLI stderr:\n{stderr}",
+        output.status.code(),
+    );
+    assert!(
+        ["no rewrite", "no accepted form", "no accepted-form"]
+            .iter()
+            .any(|phrase| entry.contains(phrase)),
+        "path-subject entry must explain that no rewrite is offered: {entry}"
+    );
+    let introduction = collapsed(inventory.split("\n- ").next().expect("introduction"));
+    assert!(
+        !introduction.contains("the right-hand text is the exact accepted rewrite"),
+        "inventory still promises an accepted rewrite for every entry: {introduction}"
+    );
+}
+
 #[test]
 fn guide_writing_section_and_both_skill_copies_are_byte_identical() {
     let root = repo_root();
