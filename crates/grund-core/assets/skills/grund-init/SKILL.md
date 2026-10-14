@@ -37,17 +37,10 @@ Analyze:
 
 ## Asking Style
 
-Do not ask as a blank preference survey. Ask the user to confirm or change a recommendation.
-
-Each prompt must include:
-
-- Recommended value.
-- Evidence from repo analysis.
-- Pros.
-- Cons.
-- When to choose a different value.
-
-The user should be able to accept the full recommendation set quickly, but still see and override every option.
+Ask the user to confirm or change a recommendation, never a blank preference survey.
+Each prompt must include the recommended value, evidence from repo analysis, pros,
+cons, and when to choose a different value. Let the user accept the full set quickly
+while still seeing and overriding every option.
 
 ## Init Questions
 
@@ -379,57 +372,15 @@ target and use `|` for alternatives.
 
 ## Recommendation Heuristics
 
-### `--template` and `--scaffold`
-
-Recommend `grund init --scaffold` when the repo has little or no `docs/` or `tests/` structure: the default `--template=software-development` lays the canonical kinds and their starter files.
-
-Recommend no `--scaffold` when the repo already has meaningful docs or tests, and suggest adding only missing grund files. When it keeps its own taxonomy, recommend `grund init --template=none`, then replace `kinds = []` in `grund.toml` with the repo's `[[kinds]]` and run `grund init` again; `--template=none --scaffold` is refused, as `none` has no starter files.
-
-### `[reference].strict`
-
-Recommend the default `strict = true` for first adoption, especially when the repo has noisy ID-like tokens or wants deliberate citation hygiene.
-
-Recommend `strict = false` only when the repo already relies on bare citations and needs a compatibility window before running `grund fmt --marker`.
-
-### `[reference].require_grounding`
-
-Recommend `false` for initial adoption.
-
-Recommend `true` only when the repo already has broad spec-to-code citation coverage or the user explicitly wants a strict co-change discipline.
-
-### `[id].format`
-
-Recommend `{kind}-{number}-{slug}` for fresh repos and teams that want stable IDs with readable names.
-
-Recommend `{kind}-{number}` when existing docs already use ADR/RFC-style numbered IDs.
-
-Recommend `{kind}-{slug}` when existing docs are title/slug based and stable numeric allocation would feel artificial.
-
-### `[[kinds]]`
-
-Start from the default kinds.
-
-Recommend adding custom kinds when the repo already has clear categories such as `ADR`, `RFC`, `REQ`, `API`, `SEC`, or `OPS`.
-
-Recommend removing defaults only when they would clearly confuse the project.
-
-### `[scan].include`
-
-Base this on actual directories:
-
-- Rust workspace: include `["docs", "e2e", "src", "crates", "tests"]` when present.
-- JS monorepo: include `["docs", "e2e", "src", "packages", "apps", "tests"]` when present.
-- Go repo: include `["docs", "e2e", "cmd", "internal", "pkg", "tests"]` when present.
-
-### `[fmt.cross_refs].anchor_format`
-
-Recommend:
-
-- `github` when the repo is hosted on GitHub or no renderer is evident.
-- `gitlab` for GitLab repos.
-- `mkdocs` when `mkdocs.yml` exists.
-- `pandoc` when Pandoc config/build scripts are evident.
-- `none` when Markdown links should only point to files without section anchors.
+| Setting | Recommendation from repo evidence |
+| --- | --- |
+| `--template` and `--scaffold` | With little or no `docs/` or `tests/` structure, use `grund init --scaffold`: the default `--template=software-development` lays canonical kinds and starter files. With meaningful docs or tests, omit `--scaffold` and add only missing grund files. For an existing taxonomy, use `grund init --template=none`, replace `kinds = []` in `grund.toml` with the repo's `[[kinds]]`, then run `grund init` again. `--template=none --scaffold` is refused because `none` has no starter files. |
+| `[reference].strict` | Recommend the default `strict = true` for first adoption, especially with noisy ID-like tokens or deliberate citation hygiene. Use `strict = false` only for existing bare citations that need a compatibility window before `grund fmt --marker`. |
+| `[reference].require_grounding` | Recommend `false` initially; `true` only with broad spec-to-code citation coverage or an explicit request for strict co-change discipline. |
+| `[id].format` | Use `{kind}-{number}-{slug}` for fresh repos or stable IDs with readable names; `{kind}-{number}` for existing ADR/RFC-style numbered IDs; `{kind}-{slug}` for title/slug-based docs where numeric allocation would feel artificial. |
+| `[[kinds]]` | Start from defaults. Add custom kinds for existing categories such as `ADR`, `RFC`, `REQ`, `API`, `SEC`, or `OPS`; remove defaults only when they would clearly confuse the project. |
+| `[scan].include` | Include only actual directories: Rust workspace `["docs", "e2e", "src", "crates", "tests"]`; JS monorepo `["docs", "e2e", "src", "packages", "apps", "tests"]`; Go repo `["docs", "e2e", "cmd", "internal", "pkg", "tests"]`. |
+| `[fmt.cross_refs].anchor_format` | Use `github` for GitHub or no evident renderer; `gitlab` for GitLab; `mkdocs` when `mkdocs.yml` exists; `pandoc` with evident Pandoc config/build scripts; `none` for file-only links without section anchors. |
 
 ## Language And Repo Shape Examples
 
