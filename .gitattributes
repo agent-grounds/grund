@@ -2,5 +2,7 @@ scripts/*.sh text eol=lf
 tests/e2e/cases/** text eol=lf
 examples/** text eol=lf
 crates/grund-core/assets/** text eol=lf
+# Keep the independent workspace-byte oracle exact on Windows (§FS-init.2.3.4.16).
+crates/grund-core/src/writers/fixtures/project-namespaces-v17.txt text eol=lf
 skills/** text eol=lf
 docs/user-facing/** text eol=lf
