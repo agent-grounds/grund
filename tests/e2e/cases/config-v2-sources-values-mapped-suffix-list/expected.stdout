@@ -1,0 +1,3 @@
+{"id":"CONST-a","kind":"CONST","path":"values/a.json","line":2,"title":null,"stub":false,"defines":null,"refs":1,"duplicate":false}
+{"id":"CONST-b","kind":"CONST","path":"values/b.jsonc","line":2,"title":null,"stub":false,"defines":null,"refs":1,"duplicate":false}
+{"id":"FS-x","kind":"FS","path":"docs/FS-x.md","line":1,"title":"X","stub":false,"defines":null,"refs":0,"duplicate":false}
