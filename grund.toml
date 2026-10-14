@@ -49,7 +49,7 @@ folder = "docs/architecture"
 title = "How: high-level implementation, structure, and design"
 
 # DF before DA, matching the canonical default kind order (FS-config.3.4,
-# templates/software-development/grund.toml).
+# crates/grund-core/assets/templates/software-development/grund.toml).
 [[kinds]]
 kind = "DF"
 folder = "docs/decisions/functional"
@@ -150,15 +150,14 @@ folder = "scripts"
 citable = false
 title = "Repository scripts: hook checks, release preparation, benchmarks, PGO build"
 
-# The reference copies of what `grund init` writes (FS-init.2.1); the binary
-# embeds byte-identical copies under crates/grund-core/assets, which `[scan]
-# exclude` keeps out. Listed, not walked (FS-config.3.4.7): these files land
-# verbatim in other repositories, so a citation in one would ship as a dangling
-# reference — nothing here is this repository's to check, and the row in the
-# Project map is what an agent needs.
+# What `grund init` writes (FS-init.2.1): the one copy, which the binary embeds
+# (FS-init.2.3.7) and `[scan] exclude` keeps out through `assets`. Listed, not
+# walked (FS-config.3.4.7): these files land verbatim in other repositories, so
+# a citation in one would ship as a dangling reference — nothing here is this
+# repository's to check, and the row in the Project map is what an agent needs.
 [[kinds]]
 kind = "template"
-folder = "templates"
+folder = "crates/grund-core/assets/templates"
 citable = false
 scan = false
 title = "Init scaffold templates: what grund init writes, verbatim"

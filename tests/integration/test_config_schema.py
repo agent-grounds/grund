@@ -229,7 +229,11 @@ class ConfigSchemaTests(unittest.TestCase):
 
     def test_every_committed_config_the_reader_accepts_validates(self):
         configs = [REPO_ROOT / "grund.toml"]
-        configs += sorted((REPO_ROOT / "templates").glob("*/grund.toml"))
+        # §FS-init.2.3.7: the templates' one copy is the asset `grund init` embeds.
+        templates = sorted((REPO_ROOT / "crates/grund-core/assets/templates").glob("*/grund.toml"))
+        self.assertEqual({"software-development", "none"}, {p.parent.name for p in templates},
+                         "the template configs were not found where grund init reads them")
+        configs += templates
         configs += sorted(p for base in ("examples", "tests/e2e/cases")
                           for p in (REPO_ROOT / base).rglob("grund.toml")
                           if "expected.repo" not in p.parts)

@@ -40,12 +40,12 @@ word to fill it is the drift this file exists to close.
 
 The *Displaces* sentences below bind prose. They do not reach a shipped surface or a
 frozen text: the `value_chapter` config key, the `unknown reference` message, the
-`namespace` bytes `grund init` writes from `templates/`, the ID `DF-chapter-rules`, and
-the accepted GOAL, REQ and decision-record texts keep the words they have. The debt
-they create is never a precondition: a retired word is rewritten as prose is written or
-rewritten, so no change owes a pass of its own and none is held for one. A pass
-commissioned on purpose is the other way to pay it and is permitted; it answers for the
-words it names and for nothing else.
+`namespace` bytes `grund init` writes from `crates/grund-core/assets/templates/`, the
+ID `DF-chapter-rules`, and the accepted GOAL, REQ and decision-record texts keep the
+words they have. The debt they create is never a precondition: a retired word is
+rewritten as prose is written or rewritten, so no change owes a pass of its own and none
+is held for one. A pass commissioned on purpose is the other way to pay it and is
+permitted; it answers for the words it names and for nothing else.
 
 [§GRUND-links.2](../grund.md#2-holding-every-edit-to-them) promises that every cited ID and section coordinate resolves. A term
 here is a bold label, not a coordinate, so `grund check` holds the sections that contain

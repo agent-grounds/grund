@@ -20,7 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # Directories whose whole content ships: what the binary embeds, and the tree
 # copies `test_asset_sync.py` keeps byte-identical to it.
-SHIPPED_TREES = ["crates/grund-core/assets", "templates", "skills"]
+SHIPPED_TREES = ["crates/grund-core/assets", "skills"]
 
 # An ID-shaped token under this repository's `[id] format` — matched loosely and
 # then looked up in the catalog, so `FS-check-full` is one token and not a hit
