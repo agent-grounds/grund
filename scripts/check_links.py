@@ -1,20 +1,28 @@
 #!/usr/bin/env python3
 """Check links while resolving this repository's main-branch URLs locally (§AR-ci.3.1), and
 settle a github.com 5xx through GitHub's API (§AR-ci.3.1.2) and any other transient failure
-through one more lychee pass (§AR-ci.3.1.3)."""
+through one more lychee pass (§AR-ci.3.1.3).
+
+With no flag this is the gate: the internal pass over the whole tree, offline, then only the
+external URLs on the lines the change touches (§AR-ci.3.1.4). `--all` is the sweep: the
+internal pass, then every external URL of the tree (§AR-ci.3.1.5).
+"""
 
 from __future__ import annotations
 
 import argparse
-import json
+import os
 import re
 import subprocess
 import sys
 import tempfile
-import time
 from pathlib import Path, PurePosixPath
 from typing import Callable, Sequence
 from urllib.parse import unquote, urlsplit
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from link_scope import changed_lines, changed_urls, diff_base  # noqa: E402
+from link_settle import check_urls, report_failures, settle, write_report  # noqa: E402
 
 
 SELF_PREFIX = "https://github.com/agent-grounds/grund/blob/main/"
@@ -79,12 +87,15 @@ def _local_url(url: str, repo_root: Path) -> str:
     return f"{target.as_uri()}{fragment}"
 
 
-def check_links(
+def internal_pass(
     inputs: Sequence[str],
     repo_root: Path,
     lychee: str = "lychee",
     runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
-) -> int:
+) -> tuple[int, list[str]]:
+    """Every internal link of the inputs, without the network: same-repository URLs against
+    the checkout, then relative paths and fragments offline (§AR-ci.3.1). Returns lychee's
+    exit code and the self-links that passed, which no network pass may request."""
     dumped = runner(
         [lychee, "--dump", *inputs],
         cwd=repo_root,
@@ -93,7 +104,7 @@ def check_links(
         check=False,
     )
     if dumped.returncode != 0:
-        return dumped.returncode
+        return dumped.returncode, []
     urls = self_links(dumped.stdout)
     if urls:
         local_document = "".join(f"[self-link](<{_local_url(url, repo_root)}>)\n" for url in urls)
@@ -105,209 +116,125 @@ def check_links(
             check=False,
         )
         if local.returncode != 0:
-            return local.returncode
+            return local.returncode, urls
+    offline = runner(
+        [lychee, "--no-progress", "--offline", "--include-fragments", *inputs],
+        cwd=repo_root,
+        check=False,
+    )
+    return offline.returncode, urls
+
+
+def check_links(
+    inputs: Sequence[str],
+    repo_root: Path,
+    lychee: str = "lychee",
+    runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+    kept: list[tuple[str, str, dict, str | None]] | None = None,
+) -> int:
+    """The sweep, `--all`: the internal pass, then one network pass over every external URL
+    of the inputs (§AR-ci.3.1.5). `kept` collects the failures the run keeps."""
+    returncode, urls = internal_pass(inputs, repo_root, lychee, runner)
+    if returncode != 0:
+        return returncode
 
     command = [lychee, "--no-progress", "--include-fragments"]
     for url in urls:
         command.extend(["--exclude", f"^{re.escape(url)}$"])
+    command.extend(["--scheme", "http", "--scheme", "https"])
     with tempfile.TemporaryDirectory(prefix="grund-links-") as scratch:
         report_path = Path(scratch) / "lychee.json"
         command.extend(["--format", "json", "--output", str(report_path), *inputs])
         returncode = runner(command, cwd=repo_root, check=False).returncode
         if returncode == 0:
             return 0
-        failures = _report_failures(report_path)
+        failures = report_failures(report_path)
     if failures is None:
         return returncode
-    return _settle(failures, repo_root, runner, returncode, lychee)
+    return settle(
+        failures, repo_root, runner, returncode, lychee, report=kept, pause=RECHECK_PAUSE
+    )
 
 
-GITHUB_ENDPOINTS = (
-    (re.compile(r"/([^/]+)/([^/]+)/pull/(\d+)"), "repos/{0}/{1}/pulls/{2}"),
-    (re.compile(r"/([^/]+)/([^/]+)/issues/(\d+)"), "repos/{0}/{1}/issues/{2}"),
-    (re.compile(r"/([^/]+)/([^/]+)/blob/([^/]+)/(.+)"), "repos/{0}/{1}/contents/{3}?ref={2}"),
-)
-
-
-def _report_failures(report_path: Path) -> list[tuple[str, str, dict]] | None:
-    """Every `(source, url, status)` in lychee's JSON report, or None when it is
-    missing or unreadable, which keeps lychee's verdict (§AR-ci.3.1.2)."""
-    try:
-        error_map = json.loads(report_path.read_text(encoding="utf-8"))["error_map"]
-        return [
-            (source, entry["url"], entry.get("status") or {})
-            for source, entries in error_map.items()
-            for entry in entries
-        ]
-    except (OSError, ValueError, KeyError, TypeError, AttributeError):
-        return None
-
-
-def _is_candidate(url: str, status: dict) -> bool:
-    """A 5xx from exactly `github.com`; nothing else is re-checked (§AR-ci.3.1.2)."""
-    code = status.get("code")
-    return isinstance(code, int) and 500 <= code <= 599 and urlsplit(url).netloc == "github.com"
-
-
-def _is_transient(url: str, status: dict) -> bool:
-    """A failure lychee may answer differently once more: a 5xx from any host but
-    `github.com`, a 403, 408 or 429, or a code-less http(s) failure other than a
-    missing fragment (§AR-ci.3.1.3)."""
-    parsed = urlsplit(url)
-    if parsed.scheme not in ("http", "https"):
-        return False
-    code = status.get("code")
-    if code:
-        return code in (403, 408, 429) or (
-            isinstance(code, int) and 500 <= code <= 599 and parsed.netloc != "github.com"
-        )
-    return "Cannot find fragment" not in f"{status.get('text') or ''} {status.get('details') or ''}"
-
-
-def _recheck_transient(
-    urls: Sequence[str],
+def check_changed(
+    inputs: Sequence[str],
     repo_root: Path,
-    runner: Callable[..., subprocess.CompletedProcess[str]],
-    lychee: str,
-) -> dict[str, dict] | None:
-    """The `{url: status}` still failing after one lychee pass over just `urls`, or
-    None when its report is missing or unreadable (§AR-ci.3.1.3)."""
-    time.sleep(RECHECK_PAUSE)
-    document = "".join(f"[re-check](<{url}>)\n" for url in urls)
-    with tempfile.TemporaryDirectory(prefix="grund-recheck-") as scratch:
-        report_path = Path(scratch) / "lychee.json"
-        command = [lychee, "--no-progress", "--include-fragments", "--format", "json",
-                   "--output", str(report_path), "-"]
-        try:
-            returncode = runner(
-                command, cwd=repo_root, input=document, text=True, check=False
-            ).returncode
-        except OSError:
-            return None
-        failures = _report_failures(report_path)
-    if failures is None or (returncode != 0 and not failures):
-        return None
-    return {url: status for _, url, status in failures}
-
-
-def github_endpoint(url: str) -> str | None:
-    """The `gh api` endpoint a github.com pull, issue or blob URL names, its
-    fragment dropped, or None for any other shape (§AR-ci.3.1.2)."""
-    path = urlsplit(url).path
-    for pattern, endpoint in GITHUB_ENDPOINTS:
-        match = pattern.fullmatch(path)
-        if match:
-            return endpoint.format(*match.groups())
-    return None
-
-
-def _recheck(
-    url: str, repo_root: Path, runner: Callable[..., subprocess.CompletedProcess[str]]
-) -> str:
-    """confirmed, broken or unsettled: one `gh api` call, no retry (§AR-ci.3.1.2)."""
-    endpoint = github_endpoint(url)
-    if endpoint is None:
-        return "unsettled"
-    try:
-        answer = runner(
-            ["gh", "api", endpoint],
-            cwd=repo_root,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-    except OSError:
-        return "unsettled"
-    if answer.returncode == 0:
-        return "confirmed"
-    if "(HTTP 404)" in (answer.stderr or ""):
-        return "broken"
-    return "unsettled"
-
-
-def _status_label(status: dict) -> str:
-    """The label lychee's console prints, which `--output` silences: the code, else
-    TIMEOUT or ERROR."""
-    if status.get("code"):
-        return str(status["code"])
-    return "TIMEOUT" if status.get("text") == "Timeout" else "ERROR"
-
-
-def _status_reason(status: dict) -> str:
-    """Lychee's reason as its console printed it: `text`, then `details` when `text`
-    does not already carry it (§AR-ci.3.1.2)."""
-    text, details = status.get("text") or "", status.get("details") or ""
-    if details and details not in text:
-        return f"{text}: {details}" if text else details
-    return text
-
-
-def _failure_line(source: str, url: str, status: dict, outcome: str | None = None) -> str:
-    """One kept failure: label, URL, source, the API outcome if re-checked, and
-    lychee's reason (§AR-ci.3.1.2)."""
-    line = f"[{_status_label(status)}] {url} ({source})"
-    if outcome is not None:
-        line += f": {outcome} through the API"
-    reason = _status_reason(status)
-    return f"{line} | {reason}" if reason else line
-
-
-def _settle(
-    failures: list[tuple[str, str, dict]],
-    repo_root: Path,
-    runner: Callable[..., subprocess.CompletedProcess[str]],
-    returncode: int,
     lychee: str = "lychee",
+    runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+    link_base: str | None = None,
 ) -> int:
-    """Pass only when every failure is a confirmed github.com 5xx (§AR-ci.3.1.2) or
-    a transient failure the lychee re-check answered (§AR-ci.3.1.3)."""
-    outcomes = {"confirmed": 0, "broken": 0, "unsettled": 0}
-    kept, transient = [], []
-    for source, url, status in failures:
-        if _is_candidate(url, status):
-            outcome = _recheck(url, repo_root, runner)
-            outcomes[outcome] += 1
-            if outcome != "confirmed":
-                kept.append(_failure_line(source, url, status, outcome))
-        elif _is_transient(url, status):
-            transient.append((source, url, status))
-        else:
-            kept.append(_failure_line(source, url, status))
-    urls = list(dict.fromkeys(url for _, url, _ in transient))
-    still = _recheck_transient(urls, repo_root, runner, lychee) if urls else {}
-    for source, url, status in transient:
-        # A missing report fails every URL with its first status (§AR-ci.3.1.3).
-        if still is None or url in still:
-            kept.append(_failure_line(source, url, (still or {}).get(url, status)))
-    for line in kept:
-        print(line)
-    checked = sum(outcomes.values())
-    if checked:
-        print(
-            f"{checked} GitHub 5xx re-checked through the API: {outcomes['confirmed']} confirmed, "
-            f"{outcomes['broken']} broken, {outcomes['unsettled']} unsettled"
-        )
-    if urls:
-        failed = len(urls) if still is None else sum(url in still for url in urls)
-        print(
-            f"{len(urls)} transient failures re-checked with lychee: "
-            f"{len(urls) - failed} passed, {failed} failed"
-        )
-    if kept or not failures:
+    """The gate: the internal pass, then a network pass over only the external URLs on lines
+    the change adds or modifies (§AR-ci.3.1.4); none at all when it touches none."""
+    returncode, self_urls = internal_pass(inputs, repo_root, lychee, runner)
+    if returncode != 0:
         return returncode
-    return 0
+    base = diff_base(repo_root, link_base)
+    if base is None:
+        print(
+            "no diff base: LINK_BASE is unset or unresolvable and HEAD has no merge base with "
+            "origin/main, so no external URL is checked; the scheduled sweep checks them all"
+        )
+        return 0
+    changed = changed_lines(repo_root, base, inputs)
+    if not changed:
+        return 0
+    dumped = runner(
+        [lychee, "--dump", "--verbose", *inputs],
+        cwd=repo_root,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+        check=False,
+    )
+    if dumped.returncode != 0:
+        return dumped.returncode
+    locations = changed_urls(dumped.stdout, changed, set(self_urls))
+    if not locations:
+        return 0
+    returncode, failures = check_urls(list(locations), repo_root, runner, lychee, "link")
+    if returncode == 0:
+        return 0
+    if failures is None:
+        return returncode
+    # The document lychee read is stdin; name the changed lines instead (§AR-ci.3.1.4).
+    failures = [
+        (", ".join(sorted(set(locations.get(url, [source])))), url, status)
+        for source, url, status in failures
+    ]
+    return settle(failures, repo_root, runner, returncode, lychee, pause=RECHECK_PAUSE)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Check links, resolving canonical same-repository main-branch URLs locally."
+        " With no flag, only the external URLs on lines changed since the diff base go to the"
+        " network (LINK_BASE, else the merge base with origin/main)."
     )
     parser.add_argument("--lychee", default="lychee", help="lychee executable (default: lychee)")
+    parser.add_argument(
+        "--all", action="store_true",
+        help="the full pass: every external URL of the inputs, as the nightly sweep runs it",
+    )
+    parser.add_argument(
+        "--report", type=Path, metavar="PATH",
+        help="with --all, write each failing URL with every file and line that carries it",
+    )
     parser.add_argument("inputs", nargs="+", help="files and directories passed to lychee")
     args = parser.parse_args(argv)
+    if args.report is not None and not args.all:
+        parser.error("--report needs --all")
 
+    repo_root = Path.cwd()
     try:
-        return check_links(args.inputs, Path.cwd(), args.lychee)
+        if not args.all:
+            return check_changed(
+                args.inputs, repo_root, args.lychee, link_base=os.environ.get("LINK_BASE")
+            )
+        kept: list[tuple[str, str, dict, str | None]] = []
+        returncode = check_links(args.inputs, repo_root, args.lychee, kept=kept)
+        if args.report is not None:
+            write_report(args.report, kept, args.inputs, repo_root, args.lychee)
+        return returncode
     except SelfLinkError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2

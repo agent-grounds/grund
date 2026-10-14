@@ -1,0 +1,75 @@
+# §AR-ci.3.1.5: the scheduled sweep of every external link, on main's head, with the gate's
+# tolerance and re-checks. No pull request or merge-queue group requires it (§AR-ci.5.4); the
+# one open issue it files below is the record of what is dead.
+name: Nightly link sweep
+
+on:
+  schedule:
+    - cron: "41 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sweep:
+    name: lychee --all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with: { python-version: "3.x" }
+
+      # The lychee the gate pins (§AR-ci.3.1.1).
+      - name: Install lychee
+        run: cargo install lychee --version 0.23.0 --locked --quiet
+
+      - name: Check every external link
+        id: sweep
+        env:
+          # lychee reads GITHUB_TOKEN for the authenticated rate limit, and gh reads GH_TOKEN
+          # for the API re-check of a github.com 5xx (§AR-ci.3.1.2).
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPORT: ${{ runner.temp }}/link-sweep.md
+        run: python scripts/check_links.py --all --report "$REPORT" README.md docs examples skills crates/grund-core/assets/templates crates/grund-core/assets/templates/software-development/grund.toml crates/grund-core/assets/templates/none/grund.toml
+
+      # One open issue, labelled bug: a new failing run comments on it rather than opening a
+      # second. A dispatch on another branch files nothing.
+      - name: File the failing links
+        if: failure() && steps.sweep.outcome == 'failure' && github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPORT: ${{ runner.temp }}/link-sweep.md
+          TITLE: "Nightly link sweep: external links failing"
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          body="$RUNNER_TEMP/issue-body.md"
+          {
+            echo "The [nightly link sweep]($RUN_URL) failed on \`$GITHUB_SHA\`."
+            echo
+            if [ -s "$REPORT" ]; then
+              echo "Each failing URL, with every file and line that carries it:"
+              echo
+              cat "$REPORT"
+            else
+              echo "It failed before it could report a URL; the run log says why."
+            fi
+          } > "$body"
+          number=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --search "\"$TITLE\" in:title" --json number,title \
+            --jq "map(select(.title == env.TITLE)) | .[0].number // empty")
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body-file "$body"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --label bug \
+              --body-file "$body"
+          fi

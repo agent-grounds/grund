@@ -47,8 +47,7 @@ jobs:
 
       - name: Install Python
         uses: actions/setup-python@v6
-        with:
-          python-version: "3.x"
+        with: { python-version: "3.x" }
 
       # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
       - name: Restore cargo registry and target
@@ -142,8 +141,7 @@ jobs:
 
       - name: Install Python
         uses: actions/setup-python@v6
-        with:
-          python-version: "3.x"
+        with: { python-version: "3.x" }
 
       # §FS-distribution.3.2.3.2: acceptance uses a supported Node major.
       - name: Install Node
@@ -311,6 +309,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          # §AR-ci.3.1.4: the lychee hook diffs against LINK_BASE, which must be present.
+          fetch-depth: 0
 
       # Pinned to a tagged release rather than @master so a compromise of the
       # action repo doesn't silently change CI behavior on unrelated PRs.
@@ -357,6 +358,9 @@ jobs:
           # §AR-ci.3.1.2: the same token, as GH_TOKEN, which gh reads first, feeds
           # the hook's `gh api` re-check of a github.com 5xx.
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # §AR-ci.3.1.4: the lychee hook requests only the external URLs on lines changed
+          # since this base, the one the commit-messages job reads; a push to main sets none.
+          LINK_BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
           # §AR-ci.13.3: exactly the hooks whose command the Rust, Python and Node jobs run.
           SKIP: cargo-fmt-check,cargo-build,cargo-test,python-test
         run: pre-commit run --all-files
@@ -691,8 +695,7 @@ jobs:
 
       - name: Install Python
         uses: actions/setup-python@v6
-        with:
-          python-version: "3.x"
+        with: { python-version: "3.x" }
 
       - name: scan commit messages
         shell: bash

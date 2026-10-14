@@ -119,7 +119,7 @@ class LoopbackGate:
         try:
             result = subprocess.run(
                 [sys.executable, str(ROOT / "scripts/check_links.py"),
-                 "--lychee", LYCHEE, document.name],
+                 "--lychee", LYCHEE, "--all", document.name],
                 cwd=self.root, capture_output=True, text=True, timeout=WATCHDOG,
             )
         except subprocess.TimeoutExpired as exc:

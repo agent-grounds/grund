@@ -45,15 +45,17 @@ class CheckLinksTests(unittest.TestCase):
                     CompletedProcess(args=[], returncode=0, stdout=f"{url}\n"),
                     CompletedProcess(args=[], returncode=0),
                     CompletedProcess(args=[], returncode=0),
+                    CompletedProcess(args=[], returncode=0),
                 ]
             )
 
             self.assertEqual(0, check_links.check_links(["SKILL.md"], root, runner=runner))
 
-            dump_call, local_call, network_call = runner.call_args_list
+            dump_call, local_call, offline_call, network_call = runner.call_args_list
             self.assertEqual(["lychee", "--dump", "SKILL.md"], dump_call.args[0])
             local_document = local_call.kwargs["input"]
             self.assertIn(target.resolve().as_uri() + "#new-on-this-branch", local_document)
+            self.assertIn("--offline", offline_call.args[0])
             self.assertEqual(
                 ["--exclude", f"^{re.escape(url)}$"],
                 network_call.args[0][3:5],
@@ -193,7 +195,8 @@ class StubbedGate:
             if isinstance(answer, BaseException):
                 raise answer
             return answer
-        if "--dump" in command:
+        if "--dump" in command or "--offline" in command:
+            # The dump and the internal pass (§AR-ci.3.1) find nothing.
             return CompletedProcess(args=command, returncode=0, stdout="")
         output = next(
             (command[i + 1] for i, part in enumerate(command) if part in ("-o", "--output")),
