@@ -96,7 +96,65 @@ production policy and evidence exercising the unscaled policy. A subprocess
 watchdog exceeds the selected finite budget; expiration is an infrastructure
 failure, not evidence that lychee rejected a persistent link. The wrapper's
 routing, exact self-link exclusions, hook invocation, checked documents, and
-lychee version stay as described above; no outer whole-tree retry is added.
+lychee version stay as described above, apart from the per-URL re-check of
+[§AR-ci.3.1.2](AR-ci.md#312-a-github-5xx-is-settled-through-the-api); no outer whole-tree retry is added.
+
+#### 3.1.2 A GitHub 5xx is settled through the API
+
+GitHub's HTML views fail to serve for long stretches while the resource behind
+them exists: the blob pages of a very large repository answer 503 for hours, and
+pull request and issue pages answer scattered 500s under load. Lychee's retries
+cannot outlast that, so the wrapper asks GitHub's API instead, which is the
+"successful answer about the same resource" of
+[§FS-non-goals.1.1](../functional-spec/FS-non-goals.md#11-this-repositorys-external-link-gate).
+
+The network pass writes lychee's JSON report (`--format json`, to a file through
+`--output`). In lychee 0.23.0 the report's `error_map` lists, per input file,
+each failing `url` with a `status` whose `code` is the HTTP status and whose
+`text` is lychee's reason; a timeout carries no `code`, and the report carries
+no line numbers. Lychee then prints nothing of its own, so the wrapper prints
+every failure it keeps with its URL, source file and status.
+
+A failure is a **candidate** when its `code` is 500 to 599 and its host is
+exactly `github.com`. Every other failure — any 4xx, a timeout, a failure without
+a code, a 5xx from any other host — keeps today's verdict and is never re-checked.
+A candidate re-checks through the endpoint its URL shape names, a fragment
+dropped:
+
+| URL on `github.com`             | `gh api` endpoint                        |
+|---------------------------------|------------------------------------------|
+| `/{owner}/{repo}/pull/{n}`        | `repos/{owner}/{repo}/pulls/{n}`           |
+| `/{owner}/{repo}/issues/{n}`      | `repos/{owner}/{repo}/issues/{n}`          |
+| `/{owner}/{repo}/blob/{ref}/{path}` | `repos/{owner}/{repo}/contents/{path}?ref={ref}` |
+
+`{ref}` is the one segment after `blob`. The wrapper runs `gh api <endpoint>`
+through the same runner it runs lychee with, once per candidate and without a
+retry, and `gh` authenticates as it always does (`GH_TOKEN`, `GITHUB_TOKEN`, or
+`gh auth login`). Each candidate ends in one of three outcomes:
+
+- **confirmed** — `gh` exits 0. The link passes.
+- **broken** — the API answers 404. The link fails, named as broken.
+- **unsettled** — anything else: an API 5xx or other error, `gh` missing or
+  unauthenticated, or a URL shape the table does not name. The link fails, as
+  it does today.
+
+The hook passes only when the network pass failed, its report was read, and every
+failure in it is a confirmed candidate. A missing or unreadable report keeps
+lychee's exit code. Whenever there is a candidate, one line reports the re-check,
+`N GitHub 5xx re-checked through the API: x confirmed, y broken, z unsettled`,
+and each broken or unsettled candidate is named with its URL, source file and
+status.
+
+Nothing passes for lack of evidence, so the local hook and CI can now differ in
+one direction only: a machine without `gh` or its authentication fails a 5xx
+that CI confirms, never the reverse, and
+[§AR-ci.1](AR-ci.md#1-pre-commit-is-the-source-of-truth) holds for every tree CI
+passes. CI gives the pre-commit step the workflow's token as `GH_TOKEN`, which
+`gh` (preinstalled on the Ubuntu runner) reads first; reading a public resource
+needs nothing more, so the re-check works on a pull request from a fork too.
+
+`tests/integration/test_check_links.py` holds the wrapper to each outcome
+against a stubbed lychee report and a stubbed `gh`.
 
 ### 3.2 The managed block's text
 

@@ -18,10 +18,12 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 
 This repository runs lychee alongside its offline grund checks. Its link gate
 uses a bounded request timeout and retry policy to tolerate transient network
-delays only when a subsequent attempt obtains a successful response. A modestly
-slow response and recovery after four retryable failures must be tolerated;
-persistent timeouts and HTTP 404 responses must still fail the gate. No finite
-budget guarantees success through arbitrary external outages.
+delays only when a subsequent attempt obtains a successful response. When a
+page on `github.com` answers a server error, a successful answer about the same
+resource from GitHub's API is that successful response; nothing passes without
+one. A modestly slow response and recovery after four retryable failures must
+be tolerated; persistent timeouts and HTTP 404 responses must still fail the
+gate. No finite budget guarantees success through arbitrary external outages.
 
 Canonical links to this repository's default branch must first pass local
 target and fragment validation. Missing targets and bad fragments stop before
