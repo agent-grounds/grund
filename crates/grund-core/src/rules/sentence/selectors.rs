@@ -13,7 +13,7 @@ use super::subjects::{
     Spelling, SubjectFault, SubjectRefusal, parse_subject, refused, split_modality,
     validate_named_path,
 };
-use super::{RuleSubject, RuleVocabulary};
+use super::{RulePolarity, RuleSubject, RuleVocabulary};
 
 /// §FS-rule-refusals.selectors: the breadcrumb a numbered, wildcard or quantified refusal adds.
 const HINT: &str = "hint: grund show --batch --toc expands each selected unit into its sections";
@@ -73,8 +73,12 @@ pub(crate) fn parse_selector(
             after_enabling: false,
             hint: false,
         },
-        // §FS-rule-refusals.sentences.modal-chapter: cut where the rule is, named as it is.
-        Err(own) => answer(&own.cut_at(split), vocabulary),
+        // §FS-rule-refusals.sentences.modal-chapter: a pasted sentence, or a two-word modal
+        // name, is cut where the rule is and named as it is; a bare subject is not.
+        Err(own) if split.2 == RulePolarity::Prohibiting || split_modality(split.3).is_some() => {
+            answer(&own.cut_at(split), vocabulary)
+        }
+        Err(own) => answer(&own, vocabulary),
     })
 }
 
