@@ -1,4 +1,8 @@
-"""Clean source/sdist/type/docs handoff (§FS-distribution.3.3.7)."""
+"""Clean source/sdist/type/docs handoff (§FS-distribution.3.3.7).
+
+The binding is one directory, `crates/grund-py/`: a clean checkout installs from it,
+and the sdist built there installs on its own once unpacked.
+"""
 
 import os
 import json
@@ -12,6 +16,8 @@ import unittest
 import venv
 
 from support import REPO, temporary
+
+CRATE = Path("crates/grund-py")
 
 
 def run(arguments, cwd, env=None):
@@ -43,9 +49,10 @@ class BuildTests(unittest.TestCase):
                 else:
                     shutil.copy2(original, destination)
             python = environment(temp)
+            crate = source / CRATE
             env = dict(os.environ, CARGO_TARGET_DIR=str(Path(temp) / "cargo-target"),
-                       GRUND_ACCEPTANCE_SOURCE=str(source))
-            run([python, "-m", "pip", "install", str(source)], source, env)
+                       GRUND_ACCEPTANCE_SOURCE=str(crate))
+            run([python, "-m", "pip", "install", str(crate)], source, env)
             smoke = ('import grund; r=grund.check("tests/e2e/cases/json-report/repo"); '
                      'assert [(f.code,f.line) for f in r.report]==[("dangling",3)]; '
                      'assert "FS-999-missing" in grund.show("FS-001-alpha", '
@@ -55,7 +62,8 @@ class BuildTests(unittest.TestCase):
                      'if e.group=="console_scripts"]')
             run([python, "-c", smoke], source, env)
             run([python, "-m", "pip", "install", "build"], source, env)
-            run([python, "-m", "build", "--sdist", "--outdir", Path(temp) / "dist"], source, env)
+            run([python, "-m", "build", "--sdist", "--outdir", Path(temp) / "dist", crate],
+                source, env)
             archive, = (Path(temp) / "dist").glob("*.tar.gz")
             unpacked = Path(temp) / "unpacked"
             unpacked.mkdir()
@@ -67,8 +75,11 @@ class BuildTests(unittest.TestCase):
                 package.extractall(unpacked)
             sdist, = unpacked.iterdir()
             for name in ("Cargo.toml", "Cargo.lock", "pyproject.toml", "crates/grund-core/src/lib.rs",
-                         "crates/grund-py/Cargo.toml", "python/grund/py.typed", "LICENSE"):
+                         "crates/grund-py/Cargo.toml", "python/grund/py.typed"):
                 self.assertTrue((sdist / name).is_file(), f"sdist omitted {name}")
+            # The crate's `license-file` carries the licence, beside the crate manifest.
+            self.assertEqual((REPO / "LICENSE").read_bytes(),
+                             (sdist / CRATE / "LICENSE").read_bytes())
             separate = Path(temp) / "independent"
             separate.mkdir()
             other = environment(separate)
@@ -81,17 +92,17 @@ class BuildTests(unittest.TestCase):
                 separate, other_env)
 
     def test_native_abi_source_metadata_and_type_marker(self):
-        self.assertTrue((REPO / "python/grund/py.typed").is_file())
+        self.assertTrue((REPO / CRATE / "python/grund/py.typed").is_file())
         metadata = json.loads(run(["cargo", "metadata", "--locked", "--format-version", "1"], REPO).stdout)
         identities = {p["id"] for p in metadata["packages"] if p["name"] == "pyo3"}
         features = {f for n in metadata["resolve"]["nodes"] if n["id"] in identities
                     for f in n["features"]}
         self.assertIn("abi3-py310", features, "resolved PyO3 feature policy")
-        project = (REPO / "pyproject.toml").read_text()
+        project = (REPO / CRATE / "pyproject.toml").read_text()
         self.assertIn("maturin", project)
         self.assertIn("grund._native", project)
         self.assertRegex(project, r'requires-python\s*=\s*["\']>=3\.10')
-        self.assertTrue((REPO / "crates/grund-py/README.md").is_file())
+        self.assertTrue((REPO / CRATE / "README.md").is_file())
 
     def test_user_documentation_and_examples_execute(self):
         document = REPO / "docs/user-facing/python-api.md"

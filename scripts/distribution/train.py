@@ -285,7 +285,9 @@ def stage_python(payload, repo, work):
     """The `grund` package as an install lays it out, its extension `payload`."""
     stage = os.path.join(work, "python")
     shutil.rmtree(stage, ignore_errors=True)
-    shutil.copytree(os.path.join(repo, "python", "grund"), os.path.join(stage, "grund"))
+    # §FS-distribution.3.3.7: the package is the binding crate's Python half.
+    shutil.copytree(os.path.join(repo, "crates", "grund-py", "python", "grund"),
+                    os.path.join(stage, "grund"))
     suffix = ".pyd" if payload.endswith(".dll") else ".abi3.so"
     shutil.copyfile(payload, os.path.join(stage, "grund", "_native" + suffix))
     return stage

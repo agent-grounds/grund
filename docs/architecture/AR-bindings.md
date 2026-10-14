@@ -46,13 +46,22 @@ grund/
 │   ├── grund-lsp/    # the LSP server binary. Speaks LSP over stdio. Published to Cargo as `grund-lsp`; npm/PyPI planned.
 │   ├── grund-node/   # napi-rs binding. Published to npm as `grund-cli` (with the prebuilt CLI binary).
 │   └── grund-py/     # PyO3 binding. Published to PyPI as `grund`.
+│       ├── pyproject.toml   # selects maturin
+│       ├── python/grund/    # the public API, types and py.typed
+│       └── src/             # PyO3 glue
 ├── docs/
 └── tests/
+    └── bindings/     # shared corpus and oracle
+        ├── node/     # Node adapter, tests and runner
+        └── python/   # Python adapter, tests and runner
 ```
+
+Each binding is one directory: everything it owns is under its crate, and its
+acceptance tests sit beside the other binding's under `tests/bindings/`.
 
 All four frontend crates take their engine logic from `grund-core` alone and depend on none of each other. `tests/integration/test_frontend_isolation.py` holds this on the resolved dependency graph `cargo metadata` reports rather than on the manifests' intent: the CLI's tree carries no LSP transport, the server's no CLI, and the engine's no frontend. That is what lets [§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary) hold: no JSON-RPC machinery or LSP type reaches `grund-core`, so none is in `grund-cli`'s tree.
 
-Python joins the resolved graph proof in `tests/bindings/test_isolation.py`:
+Python joins the resolved graph proof in `tests/bindings/python/test_isolation.py`:
 grund-py depends directly on core and transitively on no frontend. The ordinary
 Cargo CLI graph excludes PyO3/Python build dependencies ([§FS-distribution.3.3.7](../functional-spec/FS-distribution.md#337-local-source-and-typing-handoff)).
 This extends, rather than replaces, the existing CLI/LSP isolation proof.
@@ -160,17 +169,20 @@ publication, registry changes and version bumps are outside local readiness.
 
 ## 6. grund-py: the PyO3 binding
 
-The planned grund-py crate owns only PyO3 conversion and exception policy over supported core
+The grund-py crate is the whole Python binding, as `crates/grund-node/` is the whole
+Node one. Its Rust half owns only PyO3 conversion and exception policy over supported core
 data APIs ([§FS-distribution.3.3](../functional-spec/FS-distribution.md#33-python-grund-pypi-package)). Frozen dataclasses, tuples and read-only config
-mappings in `python/grund` expose the public schema; private `grund._native` holds
-the abi3-py310 extension. Root `pyproject.toml` selects maturin, with source inclusion
-for independently installing an unpacked sdist and accurate types/py.typed.
+mappings in `crates/grund-py/python/grund` expose the public schema; private
+`grund._native` holds the abi3-py310 extension. `crates/grund-py/pyproject.toml` selects
+maturin, which puts the workspace manifest, lockfile and `grund-core` into the sdist for
+independently installing it unpacked, with accurate types/py.typed.
 
 Rust work runs with the GIL released; calls check Python interrupts on return and
 carry per-call scope rather than changing cwd ([§FS-distribution.3.3.4](../functional-spec/FS-distribution.md#334-silent-synchronous-calls)).
 Core supplies warning/failure/path/install adapters; Python does not walk, resolve,
 check, parse or reproduce managed-write behavior. No dependency on CLI/LSP/Node is
-allowed. `tests/bindings/` compares complete data and canonical bytes, separately
+allowed. `tests/bindings/python/` compares complete data and canonical bytes against the
+shared oracle in `tests/bindings/`, separately
 from the frozen CLI wire projection ([§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)).
 
 Local build readiness does not claim published wheels. #471 owns cibuildwheel

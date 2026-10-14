@@ -858,11 +858,13 @@ data-preservation contracts and CLI defaults remain unchanged.
 #### 3.3.7 Local source and typing handoff
 
 Require CPython 3.10+ with GIL and abi3-py310. PyPy and free-threaded Python support
-are not promised. Root pyproject.toml selects maturin; python/grund supplies the
-public API/types/py.typed and grund._native is private. Clean checkout and independently
-unpacked sdist both install importable grund without registry credentials. The sdist
-includes necessary workspace manifests, lockfile, Rust sources/assets, Python/types
-and licence. Python-only dependencies do not become ordinary Cargo CLI requirements.
+are not promised. The binding is one directory, `crates/grund-py/`: its pyproject.toml
+selects maturin, its python/grund supplies the public API/types/py.typed, and
+grund._native is private. The repository root carries no pyproject.toml or python/, and
+a checkout installs the binding with `python -m pip install crates/grund-py`. Clean
+checkout and independently unpacked sdist both install importable grund without registry
+credentials. The sdist includes necessary workspace manifests, lockfile, Rust
+sources/assets, Python/types and licence. Python-only dependencies do not become ordinary Cargo CLI requirements.
 Add no competing CLI console entrypoint; release matrix, prebuilt CLI placement and
 publication belong to #471. Accurate signatures/type information and runnable
 check/iteration/show examples belong in user documentation and example indexes.

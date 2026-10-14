@@ -7,7 +7,8 @@ from pathlib import Path
 import unittest
 import typing
 
-from support import binding, fixture, plain, temporary, tree_bytes
+from adapter import binding, plain
+from support import fixture, temporary, tree_bytes
 
 # (positional defaults: Ellipsis means required, keyword defaults). root is added
 # to tree operations. This is the approved inventory, not native signature guesses.

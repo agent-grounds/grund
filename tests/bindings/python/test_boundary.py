@@ -12,7 +12,8 @@ import time
 import unittest
 from unittest.mock import patch
 
-from support import REPO, binding, fixture, plain, temporary, tree_bytes
+from adapter import binding, plain
+from support import REPO, fixture, temporary, tree_bytes
 
 
 def workload(parent):

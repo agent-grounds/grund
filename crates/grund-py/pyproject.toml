@@ -1,4 +1,4 @@
-# Local mixed package and #471 source handoff (§FS-distribution.3.3.7).
+# The Python binding, one directory with its crate (§FS-distribution.3.3.7).
 [build-system]
 requires = ["maturin>=1.9,<2"]
 build-backend = "maturin"
@@ -8,20 +8,16 @@ name = "grund"
 version = "0.17.1.dev0"
 requires-python = ">=3.10"
 description = "Embed the grund documentation grounding engine in Python"
-readme = "crates/grund-py/README.md"
+readme = "README.md"
 license = "MIT"
 classifiers = ["Programming Language :: Python :: Implementation :: CPython"]
 
 [tool.maturin]
-manifest-path = "crates/grund-py/Cargo.toml"
 python-source = "python"
 module-name = "grund._native"
 features = ["extension-module"]
+# maturin bundles the workspace manifest, the lockfile and the path dependencies
+# itself; the licence reaches the sdist through `license-file` in Cargo.toml.
 include = [
-  { path = "Cargo.toml", format = "sdist" },
-  { path = "Cargo.lock", format = "sdist" },
-  { path = "crates/**/*", format = "sdist" },
-  { path = "tests/integration/**/*", format = "sdist" },
   { path = "python/**/*", format = "sdist" },
-  { path = "LICENSE", format = "sdist" },
 ]

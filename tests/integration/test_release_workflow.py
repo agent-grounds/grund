@@ -183,7 +183,8 @@ class NoChangelogHoldTests(unittest.TestCase):
 
 class VersionBumpTests(unittest.TestCase):
     """§FS-distribution.4.5 — both helpers write every version source with one
-    tool, for the release and for the `-dev` advance, and commit `pyproject.toml`."""
+    tool, for the release and for the `-dev` advance, and commit
+    `crates/grund-py/pyproject.toml`."""
 
     def test_both_helpers_write_every_version_source(self):
         for name in NoChangelogHoldTests.HELPERS:
@@ -195,7 +196,7 @@ class VersionBumpTests(unittest.TestCase):
                 self.assertIn('scripts/distribution/candidate.py set-version "$dev"', text)
                 staged = re.search(r"(?m)^\s+git add Cargo\.toml .*$", text)
                 self.assertIsNotNone(staged, "the release commit stages no version source")
-                self.assertIn("pyproject.toml", staged.group(0).split())
+                self.assertIn("crates/grund-py/pyproject.toml", staged.group(0).split())
 
 
 class VerifyJobTests(unittest.TestCase):
@@ -245,8 +246,8 @@ class VerifyJobTests(unittest.TestCase):
         self.assertNotIn("cargo-edit", self.text)
 
     def test_every_version_source_carries_the_requested_version(self):
-        """§FS-distribution-candidate.6.2: `pyproject.toml` is a version source too,
-        read at the release source ref, which is the tag when recovering one."""
+        """§FS-distribution-candidate.6.2: `crates/grund-py/pyproject.toml` is a version
+        source too, read at the release source ref, which is the tag when recovering one."""
         self.assertIn("python3 scripts/distribution/candidate.py versions", self.verify)
         self.assertIn('--ref "$manifest_ref" --expect "${{ steps.version.outputs.version }}"',
                       self.verify)

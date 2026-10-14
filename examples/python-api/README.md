@@ -5,7 +5,7 @@ This workflow embeds the engine through the locally installed Python package
 From the repository root:
 
 ```sh
-python -m pip install .
+python -m pip install crates/grund-py
 python examples/python-api/read_fixture.py
 ```
 

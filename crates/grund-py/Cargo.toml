@@ -3,7 +3,9 @@ name = "grund-py"
 description = "Thin CPython frontend over the grund-core engine"
 version.workspace = true
 edition.workspace = true
-license.workspace = true
+# maturin refuses `..` in an include pattern, so this is how the sdist built from
+# this directory carries the licence (§FS-distribution.3.3.7).
+license-file = "../../LICENSE"
 repository.workspace = true
 publish = false
 

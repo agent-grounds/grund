@@ -373,6 +373,23 @@ class ShareTests(unittest.TestCase):
         self.assertNotIn(b"\r", (out / "manifest.json").read_bytes())
 
 
+class LayoutTests(unittest.TestCase):
+    """§FS-distribution.3.3.7 — the Python binding is one directory, its crate."""
+
+    def test_the_python_binding_lives_under_its_crate(self):
+        for name in ("pyproject.toml", "python"):
+            with self.subTest(root=name):
+                self.assertFalse((REPO / name).exists(),
+                                 f"{name} belongs under crates/grund-py/, not at the root")
+        crate = REPO / "crates" / "grund-py"
+        self.assertTrue((crate / "pyproject.toml").is_file())
+        self.assertTrue((crate / "python" / "grund" / "py.typed").is_file())
+
+
+# §FS-distribution-candidate.6.2: the binding's manifest is a version source, under its crate.
+PYPROJECT = "crates/grund-py/pyproject.toml"
+
+
 class VersionTests(unittest.TestCase):
     """§FS-distribution-candidate.6.2, §FS-distribution.4.5 — every version source,
     read and written by one tool."""
@@ -381,8 +398,8 @@ class VersionTests(unittest.TestCase):
         temp = scratch("grund-versions-")
         self.addCleanup(temp.cleanup)
         root = Path(temp.name)
-        tracked = subprocess.run(["git", "ls-files", "Cargo.toml", "Cargo.lock", "pyproject.toml",
-                                  "crates", "python"], cwd=REPO, capture_output=True, text=True,
+        tracked = subprocess.run(["git", "ls-files", "Cargo.toml", "Cargo.lock", "crates"],
+                                 cwd=REPO, capture_output=True, text=True,
                                  check=True).stdout.splitlines()
         for name in tracked:
             (root / name).parent.mkdir(parents=True, exist_ok=True)
@@ -397,16 +414,16 @@ class VersionTests(unittest.TestCase):
         result = candidate("versions", "--root", REPO, "--expect", version)
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual(pep440(version),
-                         tomllib.loads((REPO / "pyproject.toml").read_text())["project"]["version"])
+                         tomllib.loads((REPO / PYPROJECT).read_text())["project"]["version"])
 
     def test_a_disagreeing_source_is_named(self):
         root = self.copy()
-        pyproject = root / "pyproject.toml"
+        pyproject = root / PYPROJECT
         pyproject.write_text(re.sub(r'(?m)^version = ".*"$', 'version = "9.9.9"',
                                     pyproject.read_text(), count=1))
         result = candidate("versions", "--root", root)
         self.assertNotEqual(0, result.returncode)
-        self.assertIn("pyproject.toml", result.stderr)
+        self.assertIn(PYPROJECT, result.stderr)
 
     def test_an_unexpected_version_is_refused(self):
         result = candidate("versions", "--root", REPO, "--expect", "9.9.9")
@@ -436,7 +453,7 @@ class VersionTests(unittest.TestCase):
                 self.assertEqual(0, result.returncode, result.stderr)
                 self.assertEqual(version, self.workspace_version(root))
                 self.assertEqual(pep440(version), tomllib.loads(
-                    (root / "pyproject.toml").read_text())["project"]["version"])
+                    (root / PYPROJECT).read_text())["project"]["version"])
                 for crate in ("grund-cli", "grund-lsp"):
                     manifest = tomllib.loads((root / "crates" / crate / "Cargo.toml").read_text())
                     self.assertEqual(version, manifest["dependencies"]["grund-core"]["version"])
