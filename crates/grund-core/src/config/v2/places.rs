@@ -73,11 +73,8 @@ pub(super) fn judge(
 /// the member itself, or, for a `<dir>/*` pattern, the one directory under it
 /// the place sits in (§FS-workspace.6).
 fn member_holding(pattern: &str, place: &str) -> Option<String> {
-    let pattern: Vec<&str> = pattern
-        .split('/')
-        .filter(|part| !part.is_empty() && *part != ".")
-        .collect();
-    let place: Vec<&str> = place.split('/').filter(|part| !part.is_empty()).collect();
+    let pattern = segments(pattern);
+    let place = segments(place);
     if pattern.is_empty() || place.len() < pattern.len() {
         return None;
     }
@@ -86,4 +83,15 @@ fn member_holding(pattern: &str, place: &str) -> Option<String> {
         .zip(&place)
         .all(|(pattern, part)| *pattern == "*" || pattern == part);
     matched.then(|| place[..pattern.len()].join("/"))
+}
+
+/// The named segments of a config-root-relative path, without `.` or empty ones.
+fn segments(path: &str) -> Vec<&str> {
+    Path::new(path)
+        .components()
+        .filter_map(|part| match part {
+            std::path::Component::Normal(part) => part.to_str(),
+            _ => None,
+        })
+        .collect()
 }
