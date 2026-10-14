@@ -38,12 +38,8 @@ pub fn bind(context: &mut Value, facts: &Value) {
         facts["absent"].is_null(),
         "authored applicability cannot discard a real input"
     );
-    let mut actual = json!({});
-    for field in CONTEXT {
-        actual[*field] = context[*field].clone();
-    }
     assert_eq!(
-        paths::logical_value(actual, context),
+        super::agreement_context::identity(context).expect("unambiguous invocation identity"),
         facts["context"],
         "variant invocation/configuration/held-edit facts differ"
     );
