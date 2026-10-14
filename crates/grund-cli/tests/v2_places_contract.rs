@@ -20,6 +20,7 @@ fn v2_places_contract() {
         "config-v2-places-duplicate-link-refused",
         "config-v2-places-duplicate-normalized-refused",
         "config-v2-places-duplicate-refused",
+        "config-v2-places-e2e-file-and-folder",
         "config-v2-places-files-and-folders",
         "config-v2-places-full-scanned-under-unscanned",
         "config-v2-places-full-under-scanned-non-citable",
