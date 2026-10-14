@@ -10,9 +10,11 @@ use super::source_line::is_python_string_prefix;
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum Language {
     Rust,
-    /// `java` `kt` `kts` `scala` `swift`, and `dart`, which also writes `'''`.
+    /// `java` `kt` `kts` `scala` `swift`, and `dart`, which also writes `'''`; all
+    /// but `java` nest their `/* … */` blocks.
     TripleQuoted {
         single_too: bool,
+        nests: bool,
     },
     CSharp,
     Cpp,
@@ -28,8 +30,18 @@ impl Language {
     pub(super) fn of(extension: &str) -> Option<Self> {
         Some(match extension {
             "rs" => Self::Rust,
-            "java" | "kt" | "kts" | "scala" | "swift" => Self::TripleQuoted { single_too: false },
-            "dart" => Self::TripleQuoted { single_too: true },
+            "java" => Self::TripleQuoted {
+                single_too: false,
+                nests: false,
+            },
+            "kt" | "kts" | "scala" | "swift" => Self::TripleQuoted {
+                single_too: false,
+                nests: true,
+            },
+            "dart" => Self::TripleQuoted {
+                single_too: true,
+                nests: true,
+            },
             "cs" => Self::CSharp,
             "cpp" | "cc" | "cxx" | "h" | "hpp" | "hh" | "hxx" => Self::Cpp,
             "go" => Self::Go,
@@ -41,17 +53,11 @@ impl Language {
         })
     }
 
-    /// Whether this language writes `/* … */` blocks, whose lines open nothing
-    /// (§FS-languages.multi-line-string.bound).
-    pub(super) fn has_block_comments(self) -> bool {
-        !matches!(self, Self::Python | Self::Shell)
-    }
-
-    /// Whether a line comment opens at byte `i` of `line`, where the per-line
-    /// toggle has no quote open (§FS-languages.multi-line-string.bound). The
-    /// language's own line comment, not the configured prefix list, which names
-    /// `#` for every file and would read Rust's `r#"` as a comment. A mid-line
-    /// `/*` ends the search as well: what follows it is comment, not code.
+    /// Whether a comment opens at byte `i` of `line`, where the per-line toggle has
+    /// no quote open (§FS-languages.multi-line-string.bound). The language's own
+    /// line comment, not the configured prefix list, which names `#` for every file
+    /// and would read Rust's `r#"` as a comment, or a `/*`, which opens a block
+    /// wherever it stands on the line.
     pub(super) fn comment_at(self, line: &[u8], i: usize) -> bool {
         let rest = &line[i..];
         match self {
@@ -65,6 +71,12 @@ impl Language {
         }
     }
 
+    /// Whether a `/*` inside a block opens one more that its `*/` must balance
+    /// (§FS-languages.multi-line-string.bound).
+    pub(super) fn blocks_nest(self) -> bool {
+        matches!(self, Self::Rust | Self::TripleQuoted { nests: true, .. })
+    }
+
     /// Whether the opener search's per-line toggle reads `byte` as a quote: a
     /// Rust `'` it never does (§FS-languages.multi-line-string.bound).
     pub(super) fn is_quote(self, byte: u8) -> bool {
@@ -76,19 +88,24 @@ impl Language {
     /// (§FS-languages.multi-line-string.bound): a Rust character literal or
     /// lifetime, a JavaScript or TypeScript regular-expression literal.
     pub(super) fn skip_at(self, line: &[u8], i: usize) -> Option<Skip> {
-        let end = match (self, line[i]) {
-            (Self::Rust, b'\'') => rust_char_end(line, i).unwrap_or(i + 1),
-            (Self::Template, b'/') if regex_may_start(&line[..i]) => match regex_end(line, i) {
-                Some(end) => end,
-                None => return Some(Skip::Line),
-            },
-            _ => return None,
-        };
-        // A misread skip must not pass what the search would have read: a quote
-        // toggles, a comment opener ends the search.
-        let passes = (i + 1..end)
-            .any(|j| (self.is_quote(line[j]) && !is_escaped(line, j)) || self.comment_at(line, j));
-        Some(if passes { Skip::Line } else { Skip::To(end) })
+        match (self, line[i]) {
+            // Rust's own reading: `'x'` is a character literal and nothing else.
+            (Self::Rust, b'\'') => Some(Skip::To(rust_char_end(line, i).unwrap_or(i + 1))),
+            (Self::Template, b'/') if regex_may_start(&line[..i]) => {
+                // A `/` with no closing `/` on its line begins no literal.
+                let end = regex_end(line, i)?;
+                // A guess: a span holding what the search reads is read both ways.
+                let holds = (i + 1..end).any(|j| {
+                    (self.is_quote(line[j]) && !is_escaped(line, j)) || self.comment_at(line, j)
+                });
+                Some(if holds {
+                    Skip::Guess(end)
+                } else {
+                    Skip::To(end)
+                })
+            }
+            _ => None,
+        }
     }
 
     /// Whether this language's forms are heredocs, whose body starts on the next
@@ -106,7 +123,7 @@ impl Language {
         let word_start = i == 0 || !is_identifier_byte(line[i - 1]);
         match self {
             Self::Rust => rust_opener(line, i, word_start),
-            Self::TripleQuoted { single_too } => {
+            Self::TripleQuoted { single_too, .. } => {
                 let quote = if rest.starts_with(b"\"\"\"") {
                     b"\"\"\""
                 } else if single_too && rest.starts_with(b"'''") {
@@ -129,11 +146,12 @@ impl Language {
 
 /// What the opener search does with a byte [`Language::skip_at`] claims.
 pub(super) enum Skip {
-    /// Resume at this column, with nothing between opened or toggled.
+    /// Resume at this column, with nothing between opened or toggled: the
+    /// language's own reading, or a guess whose span holds nothing the search reads.
     To(usize),
-    /// Open no form more on this line: a regular expression with no closing `/`,
-    /// or a skip that would pass a quote or a comment opener.
-    Line,
+    /// A regular expression ending at this column whose span holds a quote or a
+    /// comment opener: read the rest of the line both past it and through it.
+    Guess(usize),
 }
 
 /// How one recognized form ends (§FS-languages.multi-line-string.forms).

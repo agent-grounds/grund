@@ -218,10 +218,11 @@ fn rust_char_literals_and_lifetimes_are_read_as_rust_reads_them() {
     );
 }
 
-/// §FS-languages.multi-line-string.bound: a `/* … */` opened after code opens
-/// nothing up to its `*/`, and the search resumes after it.
+/// §FS-languages.multi-line-string.bound: a `/* … */` opens nothing up to its
+/// `*/`, wherever on its line it starts, and the search resumes after the `*/` —
+/// on the same line or a later one — so a form opened past it is still carried.
 #[test]
-fn a_block_comment_opened_after_code_opens_nothing_to_its_close() {
+fn a_block_comment_opens_nothing_to_its_close_and_the_search_resumes() {
     let js = "foo(); /* runs on\n and `bar\n*/ x();\nconst t = `y`;\n";
     assert_eq!(entries("a.js", js), [0, 0, 0, 0]);
     let rust = "f(); /* \"a\n*/ let s = \"b\nc\";\n";
@@ -229,26 +230,57 @@ fn a_block_comment_opened_after_code_opens_nothing_to_its_close() {
     // Rust's blocks nest, so the search resumes at the `*/` that balances.
     let nested = "f(); /* a\n /* b */ \"c\n*/ let s = \"d\ne\";\n";
     assert_eq!(entries("a.rs", nested), [0, 0, 0, 2]);
+    let line_initial_nested = "/* a\n /* b */\n \"c\n*/\nlet s = \"d\";\n";
+    assert_eq!(entries("a.rs", line_initial_nested), [0, 0, 0, 0, 0]);
+    // So do Kotlin's, Scala's, Swift's and Dart's; Java's do not.
+    let triple = "/* a /* b */ val s = \"\"\"x\n c\n*/\nval t = \"\"\"y\"\"\"\n";
+    for name in ["a.kt", "a.kts", "a.scala", "a.swift", "a.dart"] {
+        assert_eq!(entries(name, triple), [0, 0, 0, 0], "{name}");
+    }
+    assert_eq!(entries("a.java", triple), [0, W, W, 11]);
+    // A block that closes on its own line, at its start or after code.
+    assert_eq!(entries("a.js", "/* n */ const t = `a\nb`;\n"), [0, 2]);
+    let sequence = "f(); /* a */ g(); /* b\n `c\n*/\nconst t = `y`;\n";
+    assert_eq!(entries("a.js", sequence), [0, 0, 0, 0]);
+    // Code after the `*/` of a block that opened at a line's start.
+    assert_eq!(
+        entries("a.js", "/* a\n `b\n*/ const t = `c\nd`;\n"),
+        [0, 0, 0, 2]
+    );
+}
+
+/// §FS-languages.multi-line-string.bound: a `/*` with no `*/` later ends the
+/// search, and every later line reads as it would without the rule.
+#[test]
+fn an_unclosed_block_comment_ends_the_search() {
+    assert_eq!(entries("a.js", "f(); /* a\nconst t = `b\nc`;\n"), [0, 0, 0]);
+    assert_eq!(entries("a.js", "/* a\nconst t = `b\nc`;\n"), [0, 0, 0]);
 }
 
 /// §FS-languages.multi-line-string.bound: a backtick inside a regular-expression
-/// literal opens no template; a division does not start one.
+/// literal opens no template; a division does not start one, and neither does a
+/// `/` with no closing `/` on its line.
 #[test]
 fn a_regex_literal_hides_its_backticks_and_a_division_does_not() {
     let regex = "s.replace(/`/g, \"\");\n// x\nconst t = `y`;\n";
     assert_eq!(entries("a.js", regex), [0, 0, 0]);
     assert_eq!(entries("a.ts", "return /[/`]/.test(s);\nf(`a`);\n"), [0, 0]);
-    // An unclosed regex opens nothing more on its line.
-    assert_eq!(entries("a.js", "x = /`\ny`\n"), [0, 0]);
     // `a / b` divides, so the template after it is carried.
     assert_eq!(entries("a.js", "x = a / b + `c\nd`;\n"), [0, 2]);
+    // A division at a line's start, and the `</` of a JSX closing tag.
+    assert_eq!(entries("a.js", "x = a\n  / b + `c\nd`;\n"), [0, 0, 2]);
+    assert_eq!(entries("a.jsx", "x = <p>a</p>; t = `b\nc`;\n"), [0, 2]);
 }
 
-/// §FS-languages.multi-line-string.bound: a skip that would pass a quote or a
-/// comment opener ends the search on its line, so a misread one opens nothing,
-/// and a block opened after it still stops the search to its `*/`.
+/// §FS-languages.multi-line-string.bound: a regular expression that holds a quote
+/// or a comment opener is a guess, so the rest of its line is read both past it and
+/// through it. Where the two open the same thing it is carried; where they differ,
+/// the search ends and no later line is read as inside a form.
 #[test]
-fn a_skip_never_passes_a_quote_or_a_comment() {
+fn a_guessed_skip_is_read_both_ways_and_ends_the_search_where_they_differ() {
+    assert_eq!(entries("a.js", "x = /\"a\"/; t = `b\nc`;\n"), [0, 2]);
+    let differ = "r = /a\"/; t = `b\nc`;\n// x\nu = `d\ne`;\n";
+    assert_eq!(entries("a.js", differ), [0, 0, 0, 0, 0]);
     let jsx = "x = <b>a</b>{\"/d\"}{\"`\"};\n// x\nconst t = `y`;\n";
     assert_eq!(entries("a.jsx", jsx), [0, 0, 0]);
     let postfix = "x = i++ / 2; // the ` key\n// x\nconst t = `y`;\n";
@@ -259,6 +291,14 @@ fn a_skip_never_passes_a_quote_or_a_comment() {
     assert_eq!(entries("a.js", after_quote), [0, 0, 0, 0]);
     // A quote-free regex is still skipped, and an escaped quote in it is no quote.
     assert_eq!(entries("a.js", "f(/\\`/, `a\nb`);\n"), [0, 2]);
+}
+
+/// §FS-languages.multi-line-string.bound: a Rust character literal is no guess,
+/// so `'"'` is skipped whole and a string opened after it is carried.
+#[test]
+fn a_rust_char_literal_holding_a_quote_is_skipped_whole() {
+    let char_quote = "f() { let c = '\"'; let s = \"a\nb\"; }\n// x\ng(\"y\");\n";
+    assert_eq!(entries("a.rs", char_quote), [0, 2, 0, 0]);
 }
 
 /// §FS-languages.multi-line-string.bound: `<<` inside `(( … ))` is a shift.
