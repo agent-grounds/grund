@@ -206,6 +206,10 @@ impl Project {
         if let Some(conversation) = &presentation.conversation {
             let _ = writeln!(out, "conversation = {}", string(conversation));
         }
+        // §FS-config-v2.presentation: `home` is the default, so only `root` is spelled.
+        if presentation.rules_at_root {
+            out.push_str("rules = \"root\"\n");
+        }
         for (kind, title) in &presentation.kinds {
             let _ = writeln!(
                 out,

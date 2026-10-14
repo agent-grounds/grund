@@ -19,7 +19,7 @@ use crate::resolver::WorkspaceCheckTarget;
 use crate::scanner::ScanError;
 use crate::templates::ConversationSurface;
 use crate::workspace::WorkspaceCitationTarget;
-use crate::writers::{block_version, expected, expected_entrypoint, render_agents_append_block_at};
+use crate::writers::{Guidance, expected, render_agents_append_block_at};
 // The embedded `grund-open` script, read only by the harness that runs it.
 #[cfg(unix)]
 use crate::writers::GRUND_OPEN_RESOLVER;
@@ -91,8 +91,9 @@ pub(crate) fn check_agent_block_path(
     report: &mut CheckReport,
     require_block: bool,
 ) {
-    let entrypoint = expected_entrypoint(config, path.to_path_buf(), require_block, None);
-    crate::checker::compare_agent_block(&entrypoint, block_version(config), report);
+    let guidance = Guidance::new(config, None);
+    let entrypoint = guidance.root_entrypoint(path.to_path_buf(), require_block);
+    crate::checker::compare_agent_block(&entrypoint, guidance.version, report);
 }
 
 /// A fresh fixture root, under a temp directory no config covers at or above it

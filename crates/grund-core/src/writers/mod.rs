@@ -86,6 +86,7 @@ mod fmt_suppressed;
 mod fmt_tree;
 mod fmt_value_bindings;
 mod fmt_workspace;
+mod guidance;
 mod id;
 mod init;
 mod init_block;
@@ -95,6 +96,7 @@ mod init_notes;
 mod init_output;
 mod init_plan;
 mod init_render;
+mod init_scoped;
 mod init_target;
 mod init_template;
 mod init_workspace_members;
@@ -105,6 +107,7 @@ mod integrations_detect;
 mod integrations_guidance;
 mod integrations_install;
 mod integrations_user_config;
+mod scoped_files;
 
 pub use fetch::{FetchFailure, FetchFailureKind, fetch_snapshot, fetch_snapshot_with_run_warnings};
 pub use fmt_error::FmtScanAbort;
@@ -150,11 +153,13 @@ pub use integrations_user_config::{
 // pair, the scaffold, the block render and the terminal snippets. The rest went
 // beside their own cases.
 #[cfg(test)]
-pub(crate) use expected::{block_version, expected_entrypoint};
+pub(crate) use expected::block_version;
 #[cfg(test)]
 pub(crate) use fmt_links::wrap_markdown_links;
 #[cfg(test)]
 pub(crate) use fmt_rewrite::{FmtLineOpts, fmt_line};
+#[cfg(test)]
+pub(crate) use guidance::Guidance;
 #[cfg(test)]
 pub(crate) use init_guidance::docs_scaffold;
 #[cfg(test)]

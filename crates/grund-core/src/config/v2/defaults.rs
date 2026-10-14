@@ -99,6 +99,7 @@ pub(super) fn default_project() -> Project {
                 relative_paths: true,
                 color: None,
             },
+            rules_at_root: false,
         },
     }
 }

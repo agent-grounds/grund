@@ -29,6 +29,10 @@ pub struct Expected {
     /// The files holding an `unclosed-wrapper` note that `[fmt] exclude` names, a
     /// suppressed scope where only index entries are linked (§FS-fmt.2.5.3).
     pub fmt_excluded: BTreeSet<PathBuf>,
+    /// The scoped `AGENTS.md` files and their companions that no row's `files`
+    /// lists: guidance about a directory's units, never a unit of it
+    /// (§FS-init.2.3.5.11).
+    pub non_units: BTreeSet<PathBuf>,
 }
 
 /// §AR-checker.1.3: one entrypoint and the config-derived sections its managed
@@ -40,6 +44,20 @@ pub struct ExpectedEntrypoint {
     /// Whether a missing block is a finding here (§FS-check.3.5).
     pub require_block: bool,
     pub sections: Vec<ExpectedSection>,
+    /// What the file's whole managed block should be, for a scoped entrypoint
+    /// (§FS-init.2.3.5.12): the block of a destination of the live render, or
+    /// `None` for an orphan the list on disk names (§FS-init.2.3.5.13.1). Root
+    /// entrypoints are held to their sections alone.
+    pub scoped: Option<ScopedExpectation>,
+}
+
+/// §FS-init.2.3.5.8: what a scoped entrypoint is held to.
+#[derive(Clone, Debug, PartialEq)]
+pub enum ScopedExpectation {
+    /// A destination's block, byte for byte.
+    Block(String),
+    /// An orphan: any block it still carries is stale.
+    Orphan,
 }
 
 /// One generated `###` section: its heading, the noun a drift message names it

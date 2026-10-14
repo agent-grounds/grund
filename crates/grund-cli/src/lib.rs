@@ -32,8 +32,7 @@ use grund_core::{CHECK_FINDING_CODES, CheckFindingSelection};
 // §AR-config.6.3: the schema view the engine lowers and `grund schema` prints
 // (§FS-schema, §DA-engine-renders-nothing).
 use grund_core::{
-    EdgeTarget, Extent, FieldContent, NodeClass, Placement, SchemaEdge, SchemaNode, SchemaSlot,
-    SchemaView, schema_view,
+    EdgeTarget, Extent, NodeClass, SchemaEdge, SchemaNode, SchemaSlot, SchemaView, schema_view,
 };
 
 // §FS-integrations.1.3: what `grund integrations` is assembled from. The engine

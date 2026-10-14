@@ -140,6 +140,7 @@ pub(in crate::config) fn default_project(existing_config: bool) -> Project {
                 relative_paths: true,
                 color: None,
             },
+            rules_at_root: true,
         },
     }
 }

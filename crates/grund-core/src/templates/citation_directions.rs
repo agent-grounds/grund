@@ -32,17 +32,28 @@ const CITATION_DIRECTIONS_URL: &str =
 pub(crate) const CITATION_LEVEL_LEGEND: &str = "`must`/`never` are `grund check` errors; `should`/`avoid` are suggestions (`grund check --suggestions`).";
 
 /// Render the `### Citation directions` managed-block section (§FS-init.2.3.5)
-/// from the effective config. When no `[citations]` section is declared, the
-/// static climbing-rule sentence stands in, so a config that predates the
-/// feature keeps a stable block (§FS-init.2.3.4.10); the grounding sentence
-/// renders under either, because it is generated from `[reference]
-/// require_grounding` and not from the direction rules (§FS-check.3.6).
+/// from the effective config, every row in it: the root block of a config whose
+/// guidance all renders at the root (§FS-init.2.3.5.11.5).
 pub(crate) fn citation_directions_section(project: &Project, run: &Run) -> String {
+    root_citation_directions(project, run, &|_| true)
+}
+
+/// The root block's `### Citation directions` (§FS-init.2.3.5.1), holding the
+/// rows `here` says land at the root. When no `[citations]` section is
+/// declared, the static climbing-rule sentence stands in, so a config that
+/// predates the feature keeps a stable block (§FS-init.2.3.4.10); the grounding
+/// sentence renders under either, because it is generated from `[reference]
+/// require_grounding` and not from the direction rules (§FS-check.3.6).
+pub(crate) fn root_citation_directions(
+    project: &Project,
+    run: &Run,
+    here: &dyn Fn(&str) -> bool,
+) -> String {
     // Built as lines joined with `\n` and returned without a trailing newline:
     // the `{CITATION_DIRECTIONS}` placeholder in the template supplies the single
     // block-final newline, so `grund init` stays idempotent on re-run.
     let mut lines = vec!["### Citation directions".to_string(), String::new()];
-    let grounding = citation_grounding_sentence(project, run);
+    let grounding = citation_grounding_sentence(project, run, here);
     if !project.rules.citations.declared {
         // §FS-init.2.3.4.4.2: the climbing-rule sentence names kinds; a config
         // with no citable kind is told that no direction applies yet instead.
@@ -60,31 +71,7 @@ pub(crate) fn citation_directions_section(project: &Project, run: &Run) -> Strin
     }
     lines.push(join_sentences(CITATION_LEVEL_LEGEND, grounding.as_deref()));
     lines.push(String::new());
-    // `[[kinds]]` order, then the homeless kind last (§FS-init.2.3.5.1) — wherever
-    // in the table a project happened to declare it, because it is the
-    // complement of every row above it and reads as the closing case.
-    let homeless = project.schema.complement_name();
-    let rows = project.kind_configs();
-    let mut kinds: Vec<&str> = rows
-        .iter()
-        .map(|kind| kind.kind.as_str())
-        .filter(|kind| *kind != homeless)
-        .collect();
-    if project.rules.citations.per_kind.contains_key(homeless) {
-        kinds.push(homeless);
-    }
-    for kind in kinds {
-        let Some(rules) = project.rules.citations.per_kind.get(kind) else {
-            continue;
-        };
-        let Some(clauses) = citation_direction_clauses(project, rules) else {
-            continue;
-        };
-        lines.push(format!(
-            "- {} {clauses}.",
-            citation_direction_subject(project, kind, homeless)
-        ));
-    }
+    lines.extend(citation_bullets(project, here));
     // Load-bearing (§FS-init.2.3.5.6): silence is open only when the global default
     // leaves it open, and a per-kind default never reaches it — that one is
     // folded into its own bullet, which is *listed above*.
@@ -92,6 +79,83 @@ pub(crate) fn citation_directions_section(project: &Project, run: &Run) -> Strin
         project.rules.citations.global_default,
     ));
     lines.join("\n")
+}
+
+/// A scoped block's `### Citation directions` (§FS-init.2.3.5.12.1): the legend
+/// and this destination's grounding sentence, its rows' bullets and the closing
+/// line for the global default — or nothing, when no bullet and no grounding
+/// clause lands here.
+pub(crate) fn scoped_citation_directions(
+    project: &Project,
+    run: &Run,
+    here: &dyn Fn(&str) -> bool,
+) -> Option<String> {
+    let grounding = citation_grounding_sentence(project, run, here);
+    let bullets = citation_bullets(project, here);
+    if grounding.is_none() && bullets.is_empty() {
+        return None;
+    }
+    let mut lines = vec![
+        "### Citation directions".to_string(),
+        String::new(),
+        join_sentences(CITATION_LEVEL_LEGEND, grounding.as_deref()),
+        String::new(),
+    ];
+    lines.extend(bullets);
+    lines.push(citation_closing_line(
+        project.rules.citations.global_default,
+    ));
+    Some(lines.join("\n"))
+}
+
+/// The rows a bullet is rendered for, in the order §FS-init.2.3.5.1 lays them
+/// out: `[[kinds]]` order, then the homeless kind last — wherever in the table a
+/// project happened to declare it, because it is the complement of every row
+/// above it and reads as the closing case. Placement walks the same order, so
+/// the pointer lists destinations as the bullets would (§FS-init.2.3.5.13).
+pub(crate) fn bullet_row_order(project: &Project) -> Vec<&str> {
+    let homeless = project.schema.complement_name();
+    let mut rows: Vec<&str> = project
+        .schema
+        .rows
+        .iter()
+        .map(|row| row.name.as_str())
+        .filter(|name| *name != homeless)
+        .collect();
+    rows.push(homeless);
+    rows
+}
+
+/// Whether `row` renders a citation-direction bullet (§FS-init.2.3.5.1).
+pub(crate) fn row_has_bullet(project: &Project, row: &str) -> bool {
+    project.rules.citations.declared
+        && project
+            .rules
+            .citations
+            .per_kind
+            .get(row)
+            .and_then(|rules| citation_direction_clauses(project, rules))
+            .is_some()
+}
+
+/// The bullets of the rows `here` admits, in [`bullet_row_order`].
+fn citation_bullets(project: &Project, here: &dyn Fn(&str) -> bool) -> Vec<String> {
+    if !project.rules.citations.declared {
+        return Vec::new();
+    }
+    let homeless = project.schema.complement_name();
+    bullet_row_order(project)
+        .into_iter()
+        .filter(|kind| here(kind))
+        .filter_map(|kind| {
+            let rules = project.rules.citations.per_kind.get(kind)?;
+            let clauses = citation_direction_clauses(project, rules)?;
+            Some(format!(
+                "- {} {clauses}.",
+                citation_direction_subject(project, kind, homeless)
+            ))
+        })
+        .collect()
 }
 
 /// Two sentences of one paragraph, space-joined, with the second optional.
@@ -112,31 +176,59 @@ fn join_sentences(first: &str, second: Option<&str>) -> String {
 /// reaches it. Per-row grounding levels (§FS-config.3.4.8) are not this sentence's.
 /// It reads the effective value, the project's OR the run's `--require-grounding`
 /// (§FS-check.3.6), so the drift `check --require-grounding` reports is unchanged.
-fn citation_grounding_sentence(project: &Project, run: &Run) -> Option<String> {
-    if !(project.rules.grounding.require || run.scope.require_grounding) {
+fn citation_grounding_sentence(
+    project: &Project,
+    run: &Run,
+    here: &dyn Fn(&str) -> bool,
+) -> Option<String> {
+    if !grounding_on(project, run) {
         return None;
     }
     let base = "Every source file must cite a declared ID or declare one inline";
     let homeless = project.schema.complement_name();
-    // §FS-config-v2.schema.places: every place of each such row.
+    // §FS-config-v2.schema.places: every place of each such row; §FS-init.2.3.5.7.1:
+    // under scoped guidance only the rows that land here.
     let homes = project
         .schema
         .rows
         .iter()
-        .filter(|row| {
-            row.kind.is_none()
-                && row.places.first().is_none_or(|place| place.scanned)
-                && row.name != homeless
-        })
+        .filter(|row| row_has_home_clause(row, homeless) && here(&row.name))
         .filter_map(Row::place_labels)
         .collect::<Vec<_>>();
-    if homes.is_empty() {
-        return Some(format!("{base}."));
+    let homes = (!homes.is_empty()).then(|| join_english_list(&homes, "and"));
+    match (here(homeless), homes) {
+        (true, None) => Some(format!("{base}.")),
+        (true, Some(homes)) => Some(format!("{base}; every file under {homes} must cite one.")),
+        (false, Some(homes)) => Some(format!("Every file under {homes} must cite one.")),
+        (false, None) => None,
     }
-    Some(format!(
-        "{base}; every file under {} must cite one.",
-        join_english_list(&homes, "and")
-    ))
+}
+
+/// Whether the grounding sentence renders at all (§FS-init.2.3.5.7).
+fn grounding_on(project: &Project, run: &Run) -> bool {
+    project.rules.grounding.require || run.scope.require_grounding
+}
+
+/// Whether `row` is a scanned non-citable home, which the grounding sentence
+/// names (§FS-init.2.3.5.7.1); an unwalked home is left out.
+fn row_has_home_clause(row: &Row, homeless: &str) -> bool {
+    row.kind.is_none()
+        && row.places.first().is_none_or(|place| place.scanned)
+        && row.name != homeless
+        && row.place_labels().is_some()
+}
+
+/// Whether `row` carries a clause of the grounding sentence: the complement's
+/// source-file clause, or a scanned non-citable home's (§FS-init.2.3.5.7.1).
+pub(crate) fn row_has_grounding_clause(project: &Project, run: &Run, row: &str) -> bool {
+    let homeless = project.schema.complement_name();
+    grounding_on(project, run)
+        && (row == homeless
+            || project
+                .schema
+                .rows
+                .iter()
+                .any(|candidate| candidate.name == row && row_has_home_clause(candidate, homeless)))
 }
 
 /// What one bullet's rules are checked *per* (§FS-init.2.3.5.2) — the unit the

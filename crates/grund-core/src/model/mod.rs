@@ -49,7 +49,7 @@ mod unread_roots;
 mod values;
 
 pub use e2e::{E2eCase, E2eSpecRef};
-pub use expected::{Expected, ExpectedEntrypoint, ExpectedSection};
+pub use expected::{Expected, ExpectedEntrypoint, ExpectedSection, ScopedExpectation};
 pub(crate) use failure::OperationContext;
 pub use failure::OperationDiagnostic;
 pub use headings::{
