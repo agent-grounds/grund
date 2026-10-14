@@ -499,7 +499,9 @@ When a foreign project's `AGENTS.md` exists on disk at the time `init` runs, the
 
 ##### 2.3.4.16 Project Boundaries
 
-The block always emits a `### Project namespaces` section that teaches agents the workspace namespace concept before they start creating or citing declarations. It distinguishes project namespaces from documentation folders; names the current project as the local namespace; tells agents to create or use a separate namespace only for independently checked apps, packages, services, or subprojects; and gives the operational steps for that split: create the member's `grund.toml`, add it to the workspace root's `[workspace] members`, run `grund init` in the member, and set a stable `project_name`. It also teaches the cross-namespace citation form `<marker>alias/<ID>`, one alias segment per workspace level, and says full cross-namespace validation runs from the workspace root with `grund check` ([§FS-workspace.1](FS-workspace.md#1-citation-syntax), [§FS-workspace.2](FS-workspace.md#2-workspace-configuration), [§FS-workspace.5](FS-workspace.md#5-command-scope)).
+The block emits `### Project namespaces` when — and only when — the init target lies in a workspace found by the claimed-chain discovery of [§FS-init.2.3.4.15.1](FS-init.md#234151-which-workspace) and [§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces). A standalone target, including one below an ancestor workspace that does not claim it, gets neither this section nor Workspace members. Discovery and member expansion are separate facts: once a workspace is found, an expansion error or duplicate alias may suppress Workspace members under [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members) but must retain Project namespaces. Nested and unclaimed-ancestor discovery semantics do not change.
+
+For a workspace target, the section retains its existing wording and spacing byte for byte, including the configured marker in local and qualified citation examples. That frozen wording distinguishes project boundaries from documentation folders, identifies the current project as local, and gives the member-splitting recipe. It remains before Workspace members when that section is present. Every selected entrypoint uses the same discovery result; companion selection, `--name`, descriptions, `include_root`, and an empty or suppressed member list do not decide workspace presence. `init`, `--check`, `--dry-run`, and `--force` render the same condition under their existing ownership and preview rules. Setup instructions teach the complete split even for standalone repositories ([§FS-init.5.4](FS-init.md#54-splitting-off-a-member)); `init` itself does not configure topology or initialize siblings ([§FS-init.2.3.4.15.7](FS-init.md#234157-what-init-does-not-do)).
 
 ##### 2.3.4.17 Clickable Citations
 
@@ -646,7 +648,20 @@ The canonical text for a given block version `vN` is embedded in the `grund` bin
 
 ##### 2.3.7.1 The current version
 
-The current schema for a repository without a rule kind is **v17**; v17 teaches
+The workspace-only Project namespaces change ([§FS-init.2.3.4.16](FS-init.md#23416-project-boundaries)) advances the
+current base and rule-enabled versions as one pair, keeping rule-enabled at base
+plus one. The observed `main` baseline is **v17/v18** at
+`11974b19732947cafa3f7186a944ede7c0b85046` (2026-10-14); the reserved next pair is
+**v19/v20**, subject to revalidation against `main` when implementing. If another
+change advances the block first, use the next free pair above that baseline.
+The maximum supported version, checker selector, template heading and rule-heading
+promotion must agree on that pair. All earlier blocks, including workspace blocks,
+are reported outdated by `grund check` and `grund init --check`; one `grund init`
+re-renders them, preserving unmanaged content. The decision's release note must
+name the actual before/after pair and this remedy ([§DF-project-namespaces-in-workspaces.release-note](../decisions/functional/DF-project-namespaces-in-workspaces.md#release-note-release-note),
+[§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)).
+
+The preceding schema for a repository without a rule kind is **v17**; v17 teaches
 that a name may follow a number in a Markdown declaration body and that a cited
 address with one is locked ([§FS-init.2.3.4.5](FS-init.md#2345-declaration-forms)). A rule-enabled repository uses
 **v18** because [§FS-init.2.3.5.10](FS-init.md#23510-chapter-rules) adds byte-compared content. Removing the opt-in
@@ -895,6 +910,8 @@ The asymmetry between `--dry-run`'s `0` and `--check`'s `1` is deliberate. `1` i
 
 The output reads like an agent skill rather than a human tutorial. It instructs the agent to inspect the target repo first, identify the existing specs, artifact types, roadmaps, changelogs, decisions, plans, tests, and agent instruction files, recommend suitable `grund init` and `grund.toml` choices with evidence, show pros and cons for every config option, ask the user to confirm or override the recommendations, write `grund.toml`, run `grund init`, then validate with `grund config validate` and `grund check`. The config must be written before `grund init` so the generated managed block reflects the selected ID grammar, marker, strict mode, kinds, and existing artifact layout.
 
+Repository-shape advice includes the complete member-splitting recipe of [§FS-init.5.4](FS-init.md#54-splitting-off-a-member), and validation guidance points back to it. It is available whether the target is standalone or already in a workspace.
+
 ### 5.2 Adopting an existing docs-heavy repo
 
 For an existing docs-heavy repo, the instructions make the adoption choice explicit before any write: show the canonical `grund` artifact types, including `GRUND` for the grounding doc, beside the detected project-specific sections, tags, or document classes, then ask whether to use canonical `grund`, canonical core plus project-specific extras, or the existing structure with `grund` citations. The recommended `grund init` form omits `--scaffold` unless the user selects a canonical-layout migration; existing specs are represented in `[[kinds]]` and `[scan]` settings rather than replaced by generic scaffold folders. For the existing-structure model the starting config is `grund init --template=none`'s, which declares no kinds for the agent to fill with the repository's own ([§FS-init.1.6.2](FS-init.md#162-none)) before `grund init` runs again to render them. This follows [§DF-skill-init-existing-specs](../decisions/functional/DF-skill-init-existing-specs.md#df-skill-init-existing-specs-grund-init-adopts-existing-specs-before-scaffolding).
@@ -902,6 +919,12 @@ For an existing docs-heavy repo, the instructions make the adoption choice expli
 ### 5.3 One body, two surfaces
 
 The core instructions must not fork from the distributable skill. The repository keeps the distributable skill at `skills/grund-init/SKILL.md` and the binary-embedded copy at `crates/grund-core/assets/skills/grund-init/SKILL.md`; they must be byte-identical, and `grund agent-setup-instructions` prints that Markdown source byte-for-byte. The source package therefore exposes the instructions in two ways with one body: agents that can read the repository may load `skills/grund-init/SKILL.md` as a skill; agents that only have the installed CLI may run `grund agent-setup-instructions`. A release that edits one surface without the other is invalid. The skill's `### [citations]` section contains a marked byte-identical copy of `docs/user-facing/citation-directions.md`; its marked `### Chapter rules` section likewise contains the byte-identical writing section from `docs/user-facing/rules.md`. The asset-sync integration check prevents either pair from drifting ([§FS-rules.10](FS-rules.md#10-documentation-and-executable-examples)).
+
+### 5.4 Splitting off a member
+
+Both byte-identical surfaces ([§FS-init.5.3](FS-init.md#53-one-body-two-surfaces)) teach when and how to split off a member. An independently checked app, package, service, or subproject warrants its own member; an ordinary module or component that still belongs to the current project does not. A documentation folder alone is not a project boundary. New prose uses member and alias ([§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure)); the frozen workspace template wording is retained ([§FS-init.2.3.4.16](FS-init.md#23416-project-boundaries)).
+
+The recipe gives the member its own `grund.toml` and a stable `project_name`, registers it in the workspace root's `[workspace] members` (creating that root configuration when splitting a standalone repository), and runs `grund init` in the member. Local IDs remain local; qualified citations use `<marker>alias/<ID>` with one alias segment per nesting level. Run `grund check` from the workspace root for full validation ([§FS-workspace.1](FS-workspace.md#1-citation-syntax), [§FS-workspace.2](FS-workspace.md#2-workspace-configuration), [§FS-workspace.5](FS-workspace.md#5-command-scope)). Setup advice explains this topology; it does not claim that `grund init` creates it automatically ([§FS-init.2.3.4.15.7](FS-init.md#234157-what-init-does-not-do)).
 
 ## 6. Why this exists
 

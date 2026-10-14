@@ -278,7 +278,7 @@ Precondition: `{repo_copy}` exists and contains no `[workspace]` block in its co
 
 Command: `grund init {repo_copy}`.
 
-The generated `AGENTS.md` contains no `### Workspace members` section anywhere. The `### Project map` block is byte-identical to the default-form fixture ([§FS-init-fixtures.1](FS-init-fixtures.md#1-default-form)) — surfacing workspace mode is gated on a `[workspace]` block, the target's own or a claiming ancestor's, so a single-project repo's block is unchanged from before [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members) landed.
+The generated `AGENTS.md` contains neither `### Workspace members` nor `### Project namespaces` ([§FS-init.2.3.4.16](FS-init.md#23416-project-boundaries)). The `### Project map` block is byte-identical to the default-form fixture ([§FS-init-fixtures.1](FS-init-fixtures.md#1-default-form)). Re-running `grund init` followed by `grund init --check` succeeds without restoring either section; configured markers and selected companion entrypoints follow the same omission.
 
 ### 6.4 Workspace member descriptions
 

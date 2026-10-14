@@ -6,6 +6,9 @@ use crate::config::Config;
 use crate::templates::{Template, render_grund_toml};
 use crate::testing::{test_root, write};
 
+#[path = "tests_project_namespaces.rs"]
+mod project_namespaces;
+
 /// §FS-init.2.3.4.15: `render_workspace_members_section` returns the empty
 /// string for a target that is not inside a workspace. The Project Map
 /// section is unchanged from the no-workspace fixture (§FS-init-fixtures.6.3).
