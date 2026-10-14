@@ -43,8 +43,8 @@ an **invalid-rule** finding; a malformed `check --rule` sentence is refused
 before scanning.
 
 See the [chapter-rules guide](../../docs/user-facing/rules.md) for every accepted
-sentence, every common refusal and its exact rewrite, and the finding produced
-by each family.
+sentence, every common refusal and any rewrite offered, and the finding
+produced by each family.
 
 ## Complete sentence inventory
 
@@ -87,8 +87,9 @@ precedence.
 
 ## Refusal inventory
 
-Each left-hand sentence is refused; the right-hand text is the exact accepted
-rewrite grund reports:
+Each left-hand sentence is refused; the right-hand text describes the refusal
+and any accepted rewrite grund reports. Some refusals offer no rewrite
+([§FS-rules.10.1](../../docs/functional-spec/FS-rules.md#101-example-refusal-inventory)):
 
 - `Each FS may not cite any AR.` → `Each FS must not cite any AR.`
 - `Each FS must cite no AR.` → `Each FS must not cite any AR.`
@@ -98,7 +99,8 @@ rewrite grund reports:
 - `Each FS must cite at least one GOAL and must not cite any AR.` → split it into `Each FS must cite at least one GOAL.` and `Each FS must not cite any AR.`
 - `Each FS must cite at least one GOAL` → add the terminal `.`.
 - `each FS must cite at least one GOAL.` → `Each FS must cite at least one GOAL.`
-- `Each file in vendor/ must cite at least one FS.` → `Each FS must cite at least one GOAL.`
+- `Each file in vendor/ must cite at least one FS.` → `path subjects are not accepted in phase 1`,
+  then `known kinds: GOAL, REQ, FS, AR, RULE`; no rewrite is offered.
 - `Each */FS must cite at least one GOAL.` → `Each FS must cite at least one GOAL.`
 - `FS-demo.* must cite at least one REQ.` → `FS-demo.requirements must cite at least one REQ.`
 - `Each chapter of each FS must cite at least one REQ.` → `The requirements chapter of each FS must cite at least one REQ.`
