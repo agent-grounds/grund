@@ -68,10 +68,21 @@ pub(crate) fn requires_grounding_by_default(rules: &Rules, run: &Run) -> bool {
 /// the row's word where it has one, else the default. The records' reading of
 /// `Config::kind_grounding`, for a stage handed no façade (§AR-config.5).
 pub(crate) fn row_grounding(rules: &Rules, run: &Run, kind: &str) -> (bool, usize) {
+    row_pair(rules, requires_grounding_by_default(rules, run), kind)
+}
+
+/// The effective pair for the row named `kind` as the configuration alone says
+/// it, with no run's `--require-grounding`: the `must` rung the schema view
+/// badges (§FS-schema.6).
+pub(crate) fn configured_row_grounding(rules: &Rules, kind: &str) -> (bool, usize) {
+    row_pair(rules, rules.grounding.require, kind)
+}
+
+/// The row's word where it has one, else `require_default` and the default level.
+fn row_pair(rules: &Rules, require_default: bool, kind: &str) -> (bool, usize) {
     let row = rules.grounding.kinds.get(kind);
     (
-        row.and_then(|row| row.require)
-            .unwrap_or_else(|| requires_grounding_by_default(rules, run)),
+        row.and_then(|row| row.require).unwrap_or(require_default),
         row.and_then(|row| row.level)
             .unwrap_or(rules.grounding.level),
     )

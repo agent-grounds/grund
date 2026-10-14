@@ -139,6 +139,25 @@ fn grounding_is_a_badge_and_never_an_edge() {
     assert!(view.nodes.iter().all(|node| !node.ruled));
 }
 
+/// §FS-schema.6: a `may` rung checks nothing, so a ladder of `may` alone is no
+/// badge, and a `may` rung beside a `must` adds no rung to it (§REQ-one-answer).
+#[test]
+fn a_may_rung_is_no_badge() {
+    let rules = "[rules.citations.grounding]\nmay = \"file\"\n\
+                 [rules.citations.FS.grounding]\nmust = \"h2\"\nmay = \"h3\"\n";
+    let view = SchemaView::of(&project("schema-view-may-rung", &format!("{KINDS}{rules}")));
+    assert!(node(&view, "GOAL").grounding.is_empty());
+    assert!(node(&view, "test").grounding.is_empty());
+    assert!(node(&view, "code").grounding.is_empty());
+    assert_eq!(
+        node(&view, "FS").grounding,
+        [BadgeRung {
+            strength: Strength::Must,
+            level: 2
+        }]
+    );
+}
+
 /// §FS-schema.7, §FS-schema.5.2: edges follow their subject's row, then strength
 /// from `must` down with the prohibitions last, then written order — never the
 /// order the lists were written in.
