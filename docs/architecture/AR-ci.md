@@ -56,15 +56,31 @@ the two selections CI passes it, and its discovery directory and pattern.
 
 The gate also runs `grund check --full`, including the grounding floor from [§FS-check.3.6](../functional-spec/FS-check.md#36-ungrounded-unit-opt-in), `grund fmt --write` for canonical citation links, and `lychee` for Markdown links. Running both in CI preserves the boundary [§FS-non-goals.1](../functional-spec/FS-non-goals.md#1-markdown-link-validation) draws: `grund` owns ID citations across docs and source, `lychee` regular Markdown links and URLs.
 
+Links are checked in two places, through one wrapper, `scripts/check_links.py`.
+The **gate** is the `lychee` hook, so it runs on every pull request, in every
+merge-queue group and in the local `pre-commit run --all-files`. It makes two
+passes. The **internal pass** checks every internal link of the whole tree
+without the network: relative paths, fragments, and the same-repository links
+below. The **changed-line pass** sends to the network only the external URLs on
+lines the change adds or modifies ([§AR-ci.3.1.4](AR-ci.md#314-the-gate-checks-an-external-url-only-where-the-change-touches-it)), so a change that touches no
+external URL makes no network request at all, and an outside host that is down
+fails no change that leaves its links alone. The **sweep** is a scheduled job on
+`main` that sends every external URL of the tree to the network
+([§AR-ci.3.1.5](AR-ci.md#315-a-scheduled-sweep-checks-every-external-url)), through the same wrapper's `--all`, which is also how anyone
+runs the full pass by hand. Both passes and the sweep read the same inputs: the
+paths the hook names.
+
 A canonical `https://github.com/agent-grounds/grund/blob/main/<path>` link in
-the checked tree is a same-repository link. Before the network pass, the link
-gate maps it to `<path>` in the current checkout and asks `lychee` to validate
-that local file and any fragment. Only the exact URLs that pass this local
-check are excluded from the network pass; missing paths, bad fragments,
-malformed self URLs, and links to every other repository or host remain
-failures of the local or network check. This makes a durable default-branch URL
+the checked tree is a same-repository link, and so is the `tree/main/<path>`
+form. The internal pass maps it to `<path>` in the current checkout and asks
+`lychee` to validate that local file and any fragment. Only the exact URLs that
+pass this local check are excluded from the network; missing paths, bad
+fragments, malformed self URLs fail the internal pass, and links to every other
+repository or host are external. This makes a durable default-branch URL
 checkable on the branch that first adds its target without accepting a 404 or
-pinning a shipped address to that branch.
+pinning a shipped address to that branch. The internal pass runs before any
+network request, on the gate and on the sweep alike, and a failure in it stops
+the run before one is made.
 
 `--full` ([§FS-check.1.3](../functional-spec/FS-check.md#13-the-full-tree-scope---full)) is here because a citation in a file outside `grund`'s own `[scan] include` and every kind home ([§FS-config.3.5](../functional-spec/FS-config.md#35-scan--what-gets-scanned)) is invisible to the plain run rather than merely unchecked — the drift this repository asks its users to guard against is one it can suffer too. The flag is purely additive, so the gate still asserts everything it asserted before.
 
@@ -73,7 +89,7 @@ pinning a shipped address to that branch.
 The repository's `scripts/check_links.py` wrapper and `lychee.toml` serve both
 local pre-commit and Ubuntu CI, realizing
 [§FS-non-goals.1.1](../functional-spec/FS-non-goals.md#11-this-repositorys-external-link-gate).
-The existing network pass uses lychee 0.23.0 with explicit `timeout = 30`
+Every network pass, the gate's changed-line pass and the sweep alike, uses lychee 0.23.0 with explicit `timeout = 30`
 (seconds for the whole request), `max_retries = 4` (after the initial attempt),
 and `retry_wait_time = 1` (seconds for the exponential-backoff base).
 Five attempts have nominal waits of 1, 2, 4, and 8 seconds. A persistent
@@ -97,7 +113,7 @@ production policy and evidence exercising the unscaled policy. A subprocess
 watchdog exceeds the selected finite budget; expiration is an infrastructure
 failure, not evidence that lychee rejected a persistent link. The wrapper's
 routing, exact self-link exclusions, hook invocation, checked documents, and
-lychee version stay as described above, apart from the per-URL re-checks of
+lychee version stay as described in [§AR-ci.3.1](AR-ci.md#31-citations-and-links), apart from the per-URL re-checks of
 [§AR-ci.3.1.2](AR-ci.md#312-a-github-5xx-is-settled-through-the-api) and [§AR-ci.3.1.3](AR-ci.md#313-a-transient-failure-from-any-host-is-checked-once-more); no outer whole-tree retry is added.
 
 #### 3.1.2 A GitHub 5xx is settled through the API
@@ -121,7 +137,7 @@ A failure is a **candidate** when its `code` is 500 to 599 and its host is
 exactly `github.com`. No other failure is a candidate, and none is re-checked
 through the API; [§AR-ci.3.1.3](AR-ci.md#313-a-transient-failure-from-any-host-is-checked-once-more) says which of them lychee checks a second time.
 A candidate re-checks through the endpoint its URL shape names, a fragment
-dropped:
+dropped, whether the changed-line pass or the sweep met it:
 
 | URL on `github.com`             | `gh api` endpoint                        |
 |---------------------------------|------------------------------------------|
@@ -194,7 +210,8 @@ status and lychee's reason. Whenever a URL is re-checked, one line reports it,
 `N transient failures re-checked with lychee: x passed, y failed`, where `N`
 counts URLs.
 
-This is a re-check of named URLs, not the whole-tree retry
+The re-check follows whichever network pass met the failure, the gate's
+changed-line pass or the sweep. This is a re-check of named URLs, not the whole-tree retry
 [§AR-ci.3.1.1](AR-ci.md#311-bounded-external-link-tolerance) rules out: the tree is not walked again, and a URL that passed the
 network pass is not requested again. Nothing passes without a successful
 response from the same URL, so a persistent timeout and a 404 still fail. A
@@ -207,6 +224,67 @@ by 200 passing, and to a persistent 503 failing with the report line and a
 persistent 404 failing without a second request. Their watchdog exceeds the two
 budgets. The stubbed tests of `tests/integration/test_check_links_recheck.py` hold the
 classification above.
+
+#### 3.1.4 The gate checks an external URL only where the change touches it
+
+The changed-line pass judges the working tree against one **diff base**, taken
+from one place: the commit `LINK_BASE` names when that variable is set and
+non-empty, otherwise the merge base of `HEAD` with `origin/main`. A line is
+**changed** when it is added or modified between that base and the working
+tree - committed, staged or not yet staged - and every line of a file that is
+new since the base counts, an untracked file that git does not ignore among
+them. A deleted line checks nothing. The pass collects the external URLs on
+changed lines of the files under the hook's inputs, and only those, each once,
+go to the network, with the tolerance of [§AR-ci.3.1.1](AR-ci.md#311-bounded-external-link-tolerance) and the re-checks of
+[§AR-ci.3.1.2](AR-ci.md#312-a-github-5xx-is-settled-through-the-api) and [§AR-ci.3.1.3](AR-ci.md#313-a-transient-failure-from-any-host-is-checked-once-more). A URL on an unchanged line is not requested,
+even in a file the change edits elsewhere.
+
+When neither the variable nor the merge base resolves - no `origin/main`, a
+shallow clone that lacks the base, a directory outside git - the gate checks no
+external URL rather than all of them, still runs the internal pass, and says so
+on one line beginning `no diff base:`. That is the right failure direction for
+a gate: the sweep checks every external URL whatever the gate skipped.
+
+This keeps the verdict parity of [§AR-ci.1.1](AR-ci.md#11-stages-without-a-file-list), because every invocation reads its
+base by the same rule. A local run on a branch measures from the merge base
+with `origin/main`, as a pull request does. CI's pre-commit job sets
+`LINK_BASE` to `github.event.pull_request.base.sha` on a pull request and to
+`github.event.merge_group.base_sha` in a merge-queue group, the bases the
+`commit-messages` job reads ([§AR-ci.8.2](AR-ci.md#82-the-scanned-range)), and checks out with `fetch-depth: 0`
+so that commit is present. A push to `main` sets nothing and measures from the
+merge base of `HEAD` with `origin/main`, which is `HEAD` itself: it checks no
+external URL, and the sweep covers `main`.
+
+`tests/integration/test_check_links_scope.py` runs the wrapper with the real
+lychee against a git fixture and a loopback host that counts every request: an
+unchanged dead URL is never requested, an added or edited one fails the gate, a
+broken internal link in an untouched file fails it, and the variable and the
+merge-base fallback reach the same verdict on one fixture.
+
+#### 3.1.5 A scheduled sweep checks every external URL
+
+`.github/workflows/links-nightly.yml` runs on a `schedule:` once a day and on
+`workflow_dispatch:`, on `main`'s head, and runs
+`scripts/check_links.py --all` with the hook's own inputs. `--all` is the
+internal pass followed by one network pass over every external URL of the
+tree, with the tolerance of [§AR-ci.3.1.1](AR-ci.md#311-bounded-external-link-tolerance) and both re-checks, the pass the gate
+made before [§AR-ci.3.1.4](AR-ci.md#314-the-gate-checks-an-external-url-only-where-the-change-touches-it). It is never a check of a pull request or a
+merge-queue group, the precedent [§AR-ci.5.4](AR-ci.md#54-the-nightly-tier) sets for the benchmarks: a link
+that goes dead is fixed by a change of its own, and no change that leaves it
+alone waits for that.
+
+With `--report <path>`, `--all` writes a Markdown report of every failure it
+keeps, one line each, `- <url> - <file>:<line> - <status>`, naming every
+line that carries the URL in every input file. The workflow, with
+`permissions: issues: write`, files that report when the sweep fails: if an open
+issue titled `Nightly link sweep: external links failing` exists, the report is
+added to it as a comment; otherwise one is opened with that title and the label
+`bug`. One open issue is the record of what is dead, so a second run never opens
+a second issue. A clean tree passes the sweep and files nothing.
+
+`tests/integration/test_check_links_sweep.py` holds `--all` and its report
+against a loopback host, and the workflow's triggers, command, permissions and
+title against this section.
 
 ### 3.2 The managed block's text
 
