@@ -225,10 +225,19 @@ impl SchemaView {
     /// (§FS-schema.1), and a project with no `project_name` named by its root.
     pub(crate) fn of_config(config: &Config) -> Self {
         let mut view = Self::of(config.project());
-        if let Some(file) = config_file_in(&config.root) {
-            let relative = file.strip_prefix(&config.root).unwrap_or(&file);
-            view.config_file = relative.to_string_lossy().replace('\\', "/");
-        }
+        // §FS-schema.8: the file the run read, never one beside a fallback root.
+        let read = config
+            .run()
+            .config_file
+            .as_ref()
+            .and(config_file_in(&config.root));
+        view.config_file = match read {
+            Some(file) => {
+                let relative = file.strip_prefix(&config.root).unwrap_or(&file);
+                relative.to_string_lossy().replace('\\', "/")
+            }
+            None => "defaults, no grund.toml".to_string(),
+        };
         if view.project.is_empty() {
             let root = config.root.canonicalize();
             let root = root.as_deref().unwrap_or(&config.root);

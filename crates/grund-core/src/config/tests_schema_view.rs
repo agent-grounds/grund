@@ -234,3 +234,18 @@ fn a_kind_carries_its_slots_and_closed_strength() {
         Some(Strength::Warn)
     );
 }
+
+/// §FS-schema.8: with no config file found, the header names none.
+#[test]
+fn a_tree_without_a_config_file_names_none_in_the_header() {
+    let root = test_root("schema-view-no-config");
+    std::fs::create_dir_all(&root).expect("root");
+    let config = load_config(&root).expect("defaults load");
+    assert_eq!(
+        SchemaView::of_config(&config).config_file,
+        "defaults, no grund.toml"
+    );
+    write(&root.join("grund.toml"), HEAD);
+    let config = load_config(&root).expect("the file should load");
+    assert_eq!(SchemaView::of_config(&config).config_file, "grund.toml");
+}
