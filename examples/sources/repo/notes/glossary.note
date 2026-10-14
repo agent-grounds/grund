@@ -1,0 +1,3 @@
+%% TERM-expression: What one line of input reads as
+%%
+%% The parser returns one per line, §FS-parser.

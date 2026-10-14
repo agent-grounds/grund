@@ -156,7 +156,8 @@ def sample(node):
     return {"string": "x", "boolean": True, "integer": node.get("minimum", 1), "array": []}[kind]
 
 
-PLACEHOLDERS = {"<KIND>": "FS", "<NAME>": "FS", "<field>": "summary"}
+PLACEHOLDERS = {"<KIND>": "FS", "<NAME>": "FS", "<field>": "summary", "<suffix>": "mdx",
+                "<name>": "notes"}
 
 
 def leaf_keys(node, path=()):
@@ -191,6 +192,18 @@ BASE = {
 }
 
 
+def table_schema(version, path):
+    """The schema of the table that holds the key at `path`."""
+    node = resolve(SCHEMA["definitions"][version])
+    for part in path[:-1]:
+        if part == "[]":
+            node = resolve(node["items"])
+        else:
+            properties = node.get("properties", {})
+            node = resolve(properties[part] if part in properties else node["additionalProperties"])
+    return node
+
+
 def config_naming(version, path, value):
     config = json.loads(json.dumps(BASE[version]))
     node = config
@@ -202,6 +215,11 @@ def config_naming(version, path, value):
         else:
             node = node.setdefault(part, {})
     node[path[-1]] = value
+    # A key is named in a table that otherwise holds only what the table requires.
+    table = table_schema(version, path)
+    for key in table.get("required", []):
+        if key not in node:
+            node[key] = sample(table["properties"][key])
     return config
 
 
