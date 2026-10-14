@@ -1,6 +1,6 @@
 """Every version source, read and written by one tool.
 
-§FS-distribution-candidate.6.2: the Cargo manifests, `Cargo.lock` and `pyproject.toml`
+§FS-distribution-candidate.6.2: the Cargo manifests, `Cargo.lock` and the binding's `pyproject.toml`
 carry one version, Python's spelled in PEP 440. `check` reads them, from the working
 tree or from a ref (§FS-distribution.4.3: the verify job reads the release source,
 not the checkout), and fails naming each one that disagrees. `set_version` writes them
@@ -19,7 +19,7 @@ from pathlib import Path
 
 from plan import pep440
 
-PYPROJECT = "pyproject.toml"
+PYPROJECT = "crates/grund-py/pyproject.toml"
 
 
 class Source:

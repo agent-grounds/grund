@@ -1,7 +1,7 @@
 """§FS-distribution-candidate.5.4, §FS-distribution.2 — the binding acceptance corpus,
 run against the installed packages of this row rather than a checkout build.
 
-Python: the acceptance modules of `tests/bindings` run under each promised
+Python: the acceptance modules of `tests/bindings/python` run under each promised
 interpreter with the row's wheel installed from its file, so `binding()` accepts it
 only because `GRUND_ACCEPTANCE_SOURCE` names that wheel. Node: the parity corpus of
 `tests/bindings/node` runs against `grund-cli` installed from the loopback registry,
@@ -25,7 +25,9 @@ from rehearsal_support import (
 sys.path.insert(0, str(REPO / "tests" / "bindings" / "node"))
 import test_parity as node_parity  # noqa: E402
 
+# §AR-bindings.6: Python's acceptance modules sit beside the shared oracle they import.
 BINDINGS = REPO / "tests" / "bindings"
+PYTHON_ACCEPTANCE = BINDINGS / "python"
 ACCEPTANCE = ("test_api", "test_parity", "test_regressions")
 
 
@@ -40,10 +42,12 @@ class PythonApiTests(unittest.TestCase):
             with self.subTest(python=python):
                 environment, env, wheel = venv(python, "grund")
                 # §FS-distribution.3.0.3: the corpus writes and pipes UTF-8, as ci.yml runs it.
-                env = dict(env, GRUND_ACCEPTANCE_SOURCE=str(wheel), PYTHONUTF8="1")
+                env = dict(env, GRUND_ACCEPTANCE_SOURCE=str(wheel), PYTHONUTF8="1",
+                           PYTHONPATH=str(BINDINGS))
                 ran = subprocess.run([str(interpreter(environment)), "-m", "unittest", "-v",
-                                      *ACCEPTANCE], cwd=BINDINGS, env=env, capture_output=True,
-                                     text=True, encoding="utf-8", errors="replace", timeout=3600)
+                                      *ACCEPTANCE], cwd=PYTHON_ACCEPTANCE, env=env,
+                                     capture_output=True, text=True, encoding="utf-8",
+                                     errors="replace", timeout=3600)
                 self.assertEqual(0, ran.returncode, ran.stderr[-4000:])
 
 

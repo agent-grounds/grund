@@ -99,7 +99,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # §FS-distribution-candidate.6.2: every version source, `pyproject.toml` included.
+          # §FS-distribution-candidate.6.2: every version source,
+          # `crates/grund-py/pyproject.toml` included.
           python3 scripts/distribution/candidate.py set-version "${{ steps.versions.outputs.next }}"
           cargo update --workspace
           printf 'grund %s\n' "${{ steps.versions.outputs.next }}" > tests/e2e/cases/cli-version/expected.stdout
@@ -120,7 +121,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
 
-          git add Cargo.toml crates/grund-core/Cargo.toml crates/grund-cli/Cargo.toml crates/grund-lsp/Cargo.toml Cargo.lock pyproject.toml tests/e2e/cases/cli-version/expected.stdout docs/changelog.md docs/changelog
+          git add Cargo.toml crates/grund-core/Cargo.toml crates/grund-cli/Cargo.toml crates/grund-lsp/Cargo.toml Cargo.lock crates/grund-py/pyproject.toml tests/e2e/cases/cli-version/expected.stdout docs/changelog.md docs/changelog
           git commit -m "Release v${next}"
           git push -u origin "$branch"
 

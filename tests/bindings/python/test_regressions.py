@@ -5,7 +5,8 @@ import os
 from pathlib import Path
 import unittest
 
-from support import binding, canonical, fixture, plain, python_call, rust_call, temporary, tree_bytes
+from adapter import binding, plain, python_call
+from support import canonical, fixture, rust_call, temporary, tree_bytes
 
 
 class RegressionTests(unittest.TestCase):

@@ -28,6 +28,11 @@ SUMMARY = {"grund": "The grund CLI and its Python API: check and read ID-based c
            "grund-lsp": "The grund language server, alone: diagnostics, hover and completion "
                         "for ID-based citations"}
 CRATES = {"grund": ("grund-core", "grund-cli", "grund-py"), "grund-lsp": ("grund-core", "grund-lsp")}
+# §FS-distribution.3.3.7: the binding's Python half lives in its crate; both archives
+# carry it at the path they always did, `grund/` in the wheel and `python/grund/` in
+# the sdist, so a checkout's layout never reaches what is published.
+BINDING = "crates/grund-py/"
+PYTHON = BINDING + "python/"
 
 
 def metadata(product, version):
@@ -53,8 +58,8 @@ def wheel(path, product, version, row, placed):
     info = f"{dist}-{pv}.dist-info"
     entries = list(placed)
     if product == "grund":
-        entries += [(name.removeprefix("python/"), (matrix.REPO / name).read_bytes(), packing.FILE)
-                    for name in sources.tracked("python/grund")]
+        entries += [(name.removeprefix(PYTHON), (matrix.REPO / name).read_bytes(), packing.FILE)
+                    for name in sources.tracked(PYTHON + "grund")]
     tag = f"{plan.WHEEL_ABI[product]}-{matrix.wheel_tag(row)}"
     header = f"Wheel-Version: 1.0\nGenerator: grund-candidate\nRoot-Is-Purelib: false\nTag: {tag}\n"
     entries += [(f"{info}/METADATA", metadata(product, version), packing.FILE),
@@ -97,9 +102,13 @@ def sdist(path, product, version, sha, work):
     sources.closure(CRATES[product], tree, sha)
     grund = product == "grund"
     if grund:
-        for name in sources.tracked("python/grund"):
-            (tree / name).parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(matrix.REPO / name, tree / name)
+        # The generated pyproject below is the build's; the checkout's stays out of it.
+        (tree / BINDING / "pyproject.toml").unlink()
+        shutil.rmtree(tree / PYTHON)
+        for name in sources.tracked(PYTHON + "grund"):
+            staged = tree / name.removeprefix(BINDING)
+            staged.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(matrix.REPO / name, staged)
         (tree / "build_backend").mkdir()
         shutil.copyfile(HERE / "grund_build.py", tree / "build_backend" / "grund_build.py")
     (tree / "pyproject.toml").write_text(PYPROJECT.format(

@@ -3,7 +3,7 @@
 Build the local extension from a checkout with CPython 3.10+ and Rust:
 
 ```sh
-python -m pip install .
+python -m pip install crates/grund-py
 ```
 
 The Python API is supplied locally; PyPI publication and release wheels remain
@@ -35,7 +35,7 @@ Required operands are positional. Other options are keywords. Every disk-tree
 operation below also accepts `root=None`, except `scan(root)` (required) and
 `init(target=None)`. `check` accepts root positionally. `integrations` is
 user-global and setup instructions have no root. The callable definitions and
-inline annotations are in `python/grund`; `py.typed` marks them for type checkers.
+inline annotations are in `crates/grund-py/python/grund`; `py.typed` marks them for type checkers.
 The full inventory implements
 [§FS-distribution.3.3.5](../functional-spec/FS-distribution.md#335-complete-initial-inventory).
 

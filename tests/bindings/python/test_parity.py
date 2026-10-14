@@ -9,7 +9,8 @@ import unicodedata
 from unittest.mock import patch
 
 from corpus import FILE_READ_CASES, READ_CASES, MUTATIONS
-from support import REPO, binding, canonical, fixture, plain, python_call, rust_call, temporary, tree_bytes
+from adapter import binding, plain, python_call
+from support import REPO, canonical, fixture, rust_call, temporary, tree_bytes
 
 
 def cli_json(value):
