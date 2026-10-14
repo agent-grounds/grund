@@ -14,10 +14,12 @@ mod kind_rows;
 mod kind_table;
 mod kind_values;
 // Read by the unit tests that hold the reader to it (§AR-config.3.3).
+mod lines;
 #[cfg(test)]
 pub(super) mod mapping;
 mod parse;
 mod scan_block;
+mod values;
 
 use anyhow::Result;
 use std::path::Path;
@@ -25,11 +27,13 @@ use std::path::Path;
 use super::project::Project;
 use kind_table::ParsedKind;
 
+pub(crate) use lines::{LineKind, LinePass, LineRecord};
+
 pub(crate) use defaults::LEGACY_FS_FOLDER;
 pub(super) use defaults::default_project;
 pub(super) use kind_values::{ValueLines, rule_kind_refusal, validate_kind_value_keys};
-pub(super) use parse::{bail_config, parse_bool, parse_string, parse_usize};
-pub(crate) use parse::{parse_string_list, strip_comment};
+pub(super) use values::{bail_config, parse_bool, parse_string, parse_usize};
+pub(crate) use values::{parse_string_list, strip_comment};
 
 /// A v1 file read, its `[[kinds]]` table not yet lowered (§AR-config.2).
 /// The two steps are apart so the `[reference]` meanings are judged before
@@ -46,8 +50,18 @@ pub(super) struct Read {
 /// lowers. `report_path` is the path every error names. Only spelling is refused
 /// here; the lowered project is judged by `config/validate.rs`.
 pub(super) fn read_sections(text: &str, report_path: &Path) -> Result<Read> {
+    read_sections_with(text, report_path, &mut LinePass::default())
+}
+
+/// [`read_sections`], recording each line in `pass` as the walk meets it and
+/// reading as tolerantly as `pass` says: migration's read (§AR-config.8.1).
+pub(super) fn read_sections_with(
+    text: &str,
+    report_path: &Path,
+    pass: &mut LinePass,
+) -> Result<Read> {
     let mut project = default_project(true);
-    let kinds = parse::parse_config_file(text, report_path, &mut project)?;
+    let kinds = parse::parse_config_file(text, report_path, &mut project, pass)?;
     Ok(Read { project, kinds })
 }
 

@@ -248,9 +248,13 @@ fn read_config(
     run: Run,
     invocation: &Invocation,
 ) -> Result<Config> {
-    // §FS-check.6.1.1: cover this effective input before its shared read.
-    let text = super::input_read_to_string(read_path)
-        .with_context(|| format!("read {}", format_path(report_path)))?;
+    // §FS-config-migrate.5.2: the report gate's candidate, read in the file's place.
+    let text = match super::call_scope::config_text_override(read_path) {
+        Some(text) => text,
+        // §FS-check.6.1.1: cover this effective input before its shared read.
+        None => super::input_read_to_string(read_path)
+            .with_context(|| format!("read {}", format_path(report_path)))?,
+    };
     config_from_text(&text, report_path, root, run, invocation)
 }
 

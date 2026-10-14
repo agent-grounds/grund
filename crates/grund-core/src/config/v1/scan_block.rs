@@ -10,14 +10,20 @@
 use anyhow::Result;
 use std::path::Path;
 
-use super::parse::{bail_config, parse_string_list};
+use super::values::{bail_config, parse_string_list};
 
 /// Read `[scan] exclude` at `line`, refusing the first entry in list order that
 /// contains `/` with the single located error of §FS-config.4.3, as
-/// §FS-config.3.5.16 specifies.
-pub(super) fn parse_scan_exclude(path: &Path, line: usize, value: &str) -> Result<Vec<String>> {
+/// §FS-config.3.5.16 specifies — unless the pass is `tolerant`, which only
+/// migration's is, to diagnose the entry (§FS-config-migrate.3.1.4).
+pub(super) fn parse_scan_exclude(
+    path: &Path,
+    line: usize,
+    value: &str,
+    tolerant: bool,
+) -> Result<Vec<String>> {
     let exclude = parse_string_list(path, line, value)?;
-    match scan_exclude_slash_error(&exclude) {
+    match scan_exclude_slash_error(&exclude).filter(|_| !tolerant) {
         Some(message) => bail_config(path, line, message),
         None => Ok(exclude),
     }
