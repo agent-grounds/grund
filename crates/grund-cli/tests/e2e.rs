@@ -101,7 +101,7 @@ fn v2_config_reader_contract() {
         "config-v1-grounding-keys-inherited-independently",
         "config-v2-grounding-ladder-order-refused",
         "config-v2-unsupported-clause-refused",
-        "config-v2-languages-omitted-refused",
+        "config-v2-languages-omitted-epoch",
         "config-v2-repeated-table-refused",
         "config-v2-v1-key-refused",
         "config-v2-strength-table-collision-refused",
@@ -112,6 +112,39 @@ fn v2_config_reader_contract() {
     .map(|name| run_case(&root, &cases.join(name), E2e))
     .collect::<Vec<_>>();
     assert_every_case_passed("v2 config reader", &outcomes);
+}
+
+/// §FS-config-v2.schema.sources, §FS-config-v2.schema.sources.declarations: v2 sources and
+/// the doc-comment declaration gate, run alone. Every case is also in the full
+/// pass; the `*-v1-*` cases are the v1 halves that must not move.
+#[test]
+fn v2_sources_contract() {
+    let root = repo_root();
+    let cases = root.join("tests/e2e/cases");
+    let outcomes = [
+        "declarations-ordinary-comment-v1-list",
+        "declarations-ordinary-comment-v1-check",
+        "declarations-ordinary-comment-v1-refs",
+        "declarations-ordinary-comment-v2-list",
+        "declarations-ordinary-comment-v2-check",
+        "declarations-ordinary-comment-v2-refs",
+        "declarations-ordinary-comment-v2-show",
+        "declarations-ordinary-comment-v2-any-comment-list",
+        "config-v2-languages-omitted-epoch",
+        "config-v2-sources-accepted-list",
+        "config-v2-sources-exclude-globs-list",
+        "config-v2-sources-exclude-root-outruns-list",
+        "config-v2-sources-config-show",
+        "config-v2-sources-config-show-epoch",
+        "config-v2-sources-unknown-language-refused",
+        "config-v2-sources-unknown-definition-refused",
+        "config-v2-sources-invalid-definition-refused",
+        "config-scan-exclude-name-every-depth",
+    ]
+    .iter()
+    .map(|name| run_case(&root, &cases.join(name), E2e))
+    .collect::<Vec<_>>();
+    assert_every_case_passed("v2 sources", &outcomes);
 }
 
 /// §FS-fields: a v2 kind's fields, `closed` and `form`, run alone. Every case is

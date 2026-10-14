@@ -1,0 +1,4 @@
+/// FS-remapped: Read as Rust
+pub fn r() {
+    // FS-remapped-note: A plain note
+}

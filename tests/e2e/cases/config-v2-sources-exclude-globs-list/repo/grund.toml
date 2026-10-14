@@ -1,0 +1,14 @@
+grund_config_version = 2
+project_name = "fixture"
+[schema.sources]
+languages = ["markdown", "rust"]
+exclude = [
+  "generated",
+  "/docs/archive",
+  "src/**/vendor/**",
+  "build/",
+  "!build/keep.rs",
+  "*.gen.rs",
+  "!keep.gen.rs",
+]
+[schema.kinds.FS]

@@ -1,0 +1,6 @@
+{"id":"FS-build-file","kind":"FS","path":"src/build.rs","line":1,"title":"A file named build is not a directory","stub":false,"defines":null,"refs":0,"duplicate":false}
+{"id":"FS-generated-file","kind":"FS","path":"generated.rs","line":1,"title":"A file whose name only starts with generated","stub":false,"defines":null,"refs":0,"duplicate":false}
+{"id":"FS-keep-gen","kind":"FS","path":"src/keep.gen.rs","line":1,"title":"Negated back in","stub":false,"defines":null,"refs":0,"duplicate":false}
+{"id":"FS-kept-archive","kind":"FS","path":"lib/docs/archive/kept.rs","line":1,"title":"Not the root archive","stub":false,"defines":null,"refs":0,"duplicate":false}
+{"id":"FS-target","kind":"FS","path":"target/t.rs","line":1,"title":"v1 names are not v2 defaults","stub":false,"defines":null,"refs":0,"duplicate":false}
+{"id":"FS-top-vendor","kind":"FS","path":"vendor/top.rs","line":1,"title":"Not below src","stub":false,"defines":null,"refs":0,"duplicate":false}

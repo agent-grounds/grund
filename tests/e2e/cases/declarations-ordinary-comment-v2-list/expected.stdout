@@ -1,0 +1,2 @@
+{"id":"FS-existing","kind":"FS","path":"src/lib.rs","line":1,"title":"Real documentation","stub":false,"defines":null,"refs":1,"duplicate":false}
+{"id":"FS-other","kind":"FS","path":"src/lib.rs","line":10,"title":"Another point","stub":false,"defines":null,"refs":1,"duplicate":false}

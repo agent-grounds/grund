@@ -1,0 +1,1 @@
+src/lib.rs:1: error: duplicate declaration of FS-existing (also declared at src/lib.rs:5)

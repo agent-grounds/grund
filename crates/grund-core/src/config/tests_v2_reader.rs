@@ -7,8 +7,8 @@
 use super::*;
 use crate::testing::{test_root, write};
 
-/// The envelope and the Markdown-only source line every executable v2 file
-/// needs while the v2 language set is refused (§FS-config-v2.defaults.2).
+/// The envelope and a Markdown-only source line, so a case reads no source file
+/// (§FS-config-v2.schema.sources.languages).
 const HEAD: &str = "grund_config_version = 2\nproject_name = \"example\"\n[schema.sources]\nlanguages = [\"markdown\"]\n";
 const FS_GOAL: &str = "[schema.kinds.FS]\nfiles = [\"requirements.md\"]\n\
                        [schema.kinds.GOAL]\nfiles = [\"docs/goals.md\"]\n";
@@ -312,25 +312,6 @@ fn v2_unexecuted_clauses_are_refused_at_their_line() {
             "`[schema.kinds.FS] folders`",
         ),
         (
-            "extensions",
-            format!("{HEAD}[schema.sources.extensions]\nmdx = \"markdown\"\n"),
-            5,
-            "`[schema.sources.extensions]`",
-        ),
-        (
-            "languages",
-            "grund_config_version = 2\n[schema.sources]\nlanguages = [\"markdown\", \"rust\"]\n"
-                .to_string(),
-            3,
-            "`[schema.sources] languages`",
-        ),
-        (
-            "exclude",
-            format!("{HEAD}exclude = [\"vendor\"]\n"),
-            5,
-            "`[schema.sources] exclude`",
-        ),
-        (
             "anchors",
             format!("{HEAD}[presentation.fmt]\nanchors = \"gitlab\"\n"),
             6,
@@ -351,14 +332,6 @@ fn v2_unexecuted_clauses_are_refused_at_their_line() {
             &format!("{clause} {not_yet}"),
         );
     }
-}
-
-/// §FS-config-v2.defaults.2: an omitted language set is refused at the version key.
-#[test]
-fn v2_an_omitted_language_set_is_refused_at_the_version_key() {
-    let toml = "grund_config_version = 2\n[schema.kinds.FS]\nfiles = [\"requirements.md\"]\n";
-    let message = "v2 needs an explicit [schema.sources] languages";
-    refused("v2_languages_omitted", toml, 1, message);
 }
 
 /// §FS-config-v2.mapping: the v1 states v2 does not spell keep their meaning
