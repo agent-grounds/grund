@@ -14,7 +14,7 @@
 use super::assets::{AGENTS_PROJECT_NAMESPACES_TEMPLATE, AGENTS_TEMPLATE, canonical_template_text};
 use super::citation_directions::citation_directions_section;
 use super::clickable_citations::{ConversationSurface, clickable_citations_section};
-use crate::config::{Compiled, Project, Run, kind_prefixes};
+use crate::config::{Compiled, Place, Project, Run, kind_prefixes};
 use crate::grammar::{id_shape, inline_note_layout_sentence};
 use crate::model::plural;
 
@@ -243,29 +243,45 @@ pub(crate) fn markdown_link_destination(raw: &str) -> String {
 fn declaration_map(project: &Project) -> String {
     // §FS-init.2.3.4.4.1: the homeless kind gets no row. Every row is a link to a
     // place, and it is the one kind that is not a place — the complement of all
-    // of them. Its citation directions still render (§FS-init.2.3.5).
+    // of them — unless a v2 `code` row lists the places its extent is
+    // (§FS-config-v2.schema.places.complement). Its citation directions still
+    // render (§FS-init.2.3.5).
     let homeless = project.schema.complement_name();
-    let kinds = project.kind_configs();
-    let rows = kinds
-        .iter()
-        .filter(|kind| kind.kind != homeless)
-        .map(|kind| {
-            let title = kind.title.as_deref().unwrap_or("Declaration");
-            // A non-citable kind is labelled by its home, which `place_label`
-            // already renders. An unwalked kind (§FS-config.3.4.7) is one of them;
-            // its missing directions bullet is §FS-init.2.3.5's.
-            match (
-                kind.file.as_deref().or(kind.folder.as_deref()),
-                kind.citable,
-            ) {
-                (Some(home), true) => row(&kind.kind, home, title),
-                (Some(home), false) => row(&kind.place_label().unwrap_or_default(), home, title),
-                (None, _) => format!(
+    let rows = project.schema.rows.iter().filter_map(|row| {
+        let title = project
+            .presentation
+            .kinds
+            .get(&row.name)
+            .map_or("Declaration", String::as_str);
+        let places: Vec<&Place> = row
+            .places
+            .iter()
+            .filter(|place| place.path().is_some())
+            .collect();
+        if places.is_empty() {
+            // A citable kind with no home is declared inline only.
+            return (row.name != homeless && row.kind.is_some()).then(|| {
+                format!(
                     "- `{}`: {title} (inline / configured by convention)",
-                    kind.kind.replace('`', "\\`")
-                ),
-            }
+                    row.name.replace('`', "\\`")
+                )
+            });
+        }
+        // A citable kind is named by its name, a non-citable one by its place,
+        // which an unwalked kind (§FS-config.3.4.7) is too; its missing directions
+        // bullet is §FS-init.2.3.5's. Each further place of the row is one more
+        // link, in written order (§FS-init.2.3.4.4.1).
+        let links = places.iter().enumerate().map(|(index, place)| {
+            let home = place.path().unwrap_or_default();
+            let label = match (&row.kind, index) {
+                (Some(_), 0) => row.name.clone(),
+                (Some(_), _) => home.to_string(),
+                (None, _) => place.label().unwrap_or_default(),
+            };
+            link(&label, home)
         });
+        Some(format!("- {}: {title}", links.collect::<Vec<_>>().join(", ")))
+    });
     let rows = rows.collect::<Vec<_>>();
     if rows.is_empty() {
         return first_kind_paragraph(project);
@@ -283,10 +299,10 @@ fn first_kind_paragraph(project: &Project) -> String {
     "No kinds are declared yet: `grund.toml` sets `kinds = []`. Replace it with one `[[kinds]]` table per kind of document this repository gives IDs to — `kind = \"FS\"`, then `folder = \"docs/specs\"` or `file = \"requirements.md\"`, and a `title` — and run `grund init` again to list them here.".to_string()
 }
 
-/// One Project map row: a Markdown link from `label` to `home`, then the title.
-fn row(label: &str, home: &str, title: &str) -> String {
+/// One Project map link, from `label` to `home`.
+fn link(label: &str, home: &str) -> String {
     format!(
-        "- [{}]({}): {title}",
+        "[{}]({})",
         markdown_link_label(label),
         markdown_link_destination(home)
     )

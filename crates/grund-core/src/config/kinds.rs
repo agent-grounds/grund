@@ -90,7 +90,8 @@ impl KindProject {
                 .map(|row| KindEntry {
                     name: row.name.clone(),
                     citable: row.kind.is_some(),
-                    home: row.place_label(),
+                    // §FS-config-v2.schema.places: every place, and none for the complement.
+                    home: row.place_labels().filter(|_| !row.is_complement()),
                 })
                 .collect(),
             named_sections: schema.ids.named_sections,

@@ -6,7 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use super::index::{KindIndexTarget, declarations_under_folder, kind_index_targets};
-use crate::config::{Frame, Schema};
+use crate::config::{Frame, Owners, Schema};
 use crate::grammar::{cross_ref_wrap, markdown_never_rewrite_context};
 use crate::model::{
     Catalog, Citation, Declaration, Id, paired_declarations, scanned_decl_relative_path,
@@ -43,16 +43,12 @@ impl KindIndexEntries {
         let configured_root = scanned_path_key(frame.root());
         let physical_root = physical_path_key(frame.root());
         let targets = kind_index_targets(schema, frame);
+        let owners = Owners::new(schema, frame);
         let mut folder_owed: BTreeMap<PathBuf, BTreeSet<Id>> = BTreeMap::new();
         for target in &targets {
             for (id, decls) in &findings.declarations {
                 if id.kind == target.kind
-                    && declarations_under_folder(
-                        decls,
-                        &target.folder_key,
-                        &configured_root,
-                        &physical_root,
-                    )
+                    && declarations_under_folder(decls, target.folder, &owners)
                 {
                     folder_owed
                         .entry(target.index_key.clone())
@@ -65,6 +61,7 @@ impl KindIndexEntries {
         let external_sites = enroll_external_inline_declarations(
             findings,
             &targets,
+            &owners,
             &configured_root,
             &physical_root,
             index_targets,
@@ -163,6 +160,7 @@ fn index_value_binding_sites(
 fn enroll_external_inline_declarations(
     findings: &Catalog,
     targets: &[KindIndexTarget<'_>],
+    owners: &Owners<'_>,
     configured_root: &Path,
     physical_root: &Path,
     index_targets: &BTreeMap<(PathBuf, Id), String>,
@@ -216,8 +214,7 @@ fn enroll_external_inline_declarations(
         };
         // The scan read each file as its language reads it, and recorded that.
         let markdown = |file: &Path| findings.files.get(file).is_some_and(|file| file.markdown);
-        let roots = (configured_root, physical_root);
-        if external_inline_home(decls, &target.folder_key, roots, &markdown).is_none() {
+        if external_inline_home(decls, target.folder, owners, &markdown).is_none() {
             continue;
         }
         let Some(line) = lines_by_index
@@ -258,11 +255,11 @@ fn enroll_external_inline_declarations(
 /// language decides (§FS-config-v2.schema.sources.extensions).
 fn external_inline_home<'a>(
     decls: &'a [Declaration],
-    folder_key: &Path,
-    (configured_root, physical_root): (&Path, &Path),
+    folder: &str,
+    owners: &Owners<'_>,
     markdown: &dyn Fn(&Path) -> bool,
 ) -> Option<&'a Declaration> {
-    if declarations_under_folder(decls, folder_key, configured_root, physical_root) {
+    if declarations_under_folder(decls, folder, owners) {
         return None;
     }
     let home = paired_declarations(decls).sole()?.stand_in;

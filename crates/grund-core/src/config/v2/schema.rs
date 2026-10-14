@@ -7,10 +7,10 @@ use anyhow::Result;
 use std::path::{Component, Path};
 
 use super::fields::bodiless;
-use super::tables::not_yet;
 use super::walk::Reader;
 use crate::config::kind::KindIndex;
 use crate::config::project::Strength;
+use crate::config::record::CODE_SOURCE_KIND;
 use crate::config::record::ShorthandPolicy;
 use crate::config::rows::{Extent, Form};
 use crate::config::v1::{parse_bool, parse_string, parse_string_list};
@@ -22,9 +22,11 @@ pub(super) struct RowDraft {
     pub(super) name: String,
     /// The row's header line.
     pub(super) line: usize,
-    /// Its places, each at the line of the key that wrote it.
-    pub(super) places: Vec<(Extent, usize)>,
+    /// Its places, normalized, each at the line of the key that wrote it.
+    pub(super) places: Vec<PlaceDraft>,
     pub(super) citable: bool,
+    /// The line `citable` was written at, which the complement's refusal names.
+    pub(super) citable_line: Option<usize>,
     pub(super) scan: bool,
     pub(super) scan_line: Option<usize>,
     pub(super) index: Option<(KindIndex, usize)>,
@@ -36,13 +38,43 @@ pub(super) struct RowDraft {
     pub(super) closed: Option<(Strength, usize)>,
 }
 
+/// One place as written (§FS-config-v2.schema.places.boundaries): its extent
+/// under the normalized path, the line of its key, and the entry as written,
+/// which a refusal quotes.
+pub(super) struct PlaceDraft {
+    pub(super) extent: Extent,
+    pub(super) line: usize,
+    pub(super) written: String,
+}
+
+impl PlaceDraft {
+    /// The normalized path the place names.
+    pub(super) fn path(&self) -> &str {
+        match &self.extent {
+            Extent::Folder(path) | Extent::File(path) => path,
+            Extent::Complement => "",
+        }
+    }
+
+    /// The key that wrote the place.
+    pub(super) fn key(&self) -> &'static str {
+        match self.extent {
+            Extent::File(_) => "files",
+            _ => "folders",
+        }
+    }
+}
+
 impl RowDraft {
     pub(super) fn new(name: String, line: usize) -> Self {
+        // §FS-config-v2.schema.places.complement: `code` declares no IDs.
+        let citable = name != CODE_SOURCE_KIND;
         Self {
             name,
             line,
             places: Vec::new(),
-            citable: true,
+            citable,
+            citable_line: None,
             scan: true,
             scan_line: None,
             index: None,
@@ -129,23 +161,32 @@ pub(super) fn row_key(
     let clause = format!("[schema.kinds.{}] {key}", r.rows[index].name);
     match key {
         "files" | "folders" => {
-            for path in parse_string_list(r.path, line, value)? {
-                if path.is_empty() {
+            for written in parse_string_list(r.path, line, value)? {
+                if written.is_empty() {
                     return r.fail(line, format!("`{clause}` names an empty path"));
                 }
+                // §FS-config-v2.schema.places.boundaries.1: normalized, and inside the root.
+                let Some(path) = normalize_place(&written) else {
+                    let message = format!("place `{written}` in `{clause}` is outside the config root");
+                    return r.fail(line, message);
+                };
                 let extent = if key == "files" {
                     Extent::File(path)
                 } else {
                     Extent::Folder(path)
                 };
-                r.rows[index].places.push((extent, line));
-            }
-            // §FS-config-v2.rollout: a row with more than one place is #457's.
-            if r.rows[index].places.len() > 1 {
-                return r.fail(line, not_yet(&clause));
+                let place = PlaceDraft {
+                    extent,
+                    line,
+                    written,
+                };
+                r.rows[index].places.push(place);
             }
         }
-        "citable" => r.rows[index].citable = parse_bool(r.path, line, value)?,
+        "citable" => {
+            r.rows[index].citable = parse_bool(r.path, line, value)?;
+            r.rows[index].citable_line = Some(line);
+        }
         "scan" => {
             r.rows[index].scan = parse_bool(r.path, line, value)?;
             r.rows[index].scan_line = Some(line);
@@ -220,6 +261,24 @@ pub(super) fn close_row(r: &Reader, index: usize) -> Result<()> {
         return r.fail(line, format!("{why}, so it cannot be closed"));
     }
     Ok(())
+}
+
+/// §FS-config-v2.schema.places.boundaries.1: a place as one lexical path from
+/// the config root, `./` and a trailing `/` folded away; `None` for a place that
+/// is absolute or climbs out of the root with `..`.
+pub(super) fn normalize_place(written: &str) -> Option<String> {
+    let mut parts: Vec<&str> = Vec::new();
+    for component in Path::new(written).components() {
+        match component {
+            Component::CurDir => {}
+            Component::ParentDir => {
+                parts.pop()?;
+            }
+            Component::Normal(part) => parts.push(part.to_str()?),
+            Component::RootDir | Component::Prefix(_) => return None,
+        }
+    }
+    Some(parts.join("/"))
 }
 
 /// Why an `index` value cannot name the folder's index: it must be a Markdown

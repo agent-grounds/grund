@@ -14,7 +14,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::project::Schema;
-use super::rows::Extent;
+use super::rows::{Extent, Nesting};
 use crate::model::{Refused, RootOrigin, RootRow};
 
 /// Where the config root physically is, for the comparisons that have to be made
@@ -86,9 +86,26 @@ pub(crate) fn root_scope_roots(schema: &Schema, root: &Path, full: bool) -> Vec<
             .collect(),
         (false, true) => include.chain(homes).collect(),
         // No `include` key: the whole root is walked, and every home is under
-        // it, so there is nothing left for the homes to add.
-        (false, false) => vec![root.to_path_buf()],
+        // it, so there is nothing left for the homes to add — but a v2 scanned
+        // place under an unscanned one, which the walk's prune would hide
+        // (§FS-config-v2.schema.places.boundaries.6).
+        (false, false) => std::iter::once(root.to_path_buf())
+            .chain(scanned_under_unwalked(schema, root))
+            .collect(),
     }
+}
+
+/// §FS-config-v2.schema.places.boundaries.6: in v2 a scanned place under an
+/// unscanned one is walked, so it is a root of its own; v1 prunes it with the
+/// home around it (§FS-config.3.4.7).
+fn scanned_under_unwalked(schema: &Schema, root: &Path) -> Vec<PathBuf> {
+    if schema.nesting != Nesting::DeepestPlaceWins {
+        return Vec::new();
+    }
+    let unwalked = unwalked_home_roots(schema, root);
+    kind_home_roots(schema, root)
+        .filter(|home| unwalked.iter().any(|around| home.starts_with(around)))
+        .collect()
 }
 
 /// Each configured key that can make a single file a scan root, as the path
@@ -112,8 +129,12 @@ pub(crate) fn file_root_rows(schema: &Schema, root: &Path) -> Vec<(PathBuf, Root
             (as_root(entry), row)
         })
     });
-    let homes = schema.rows.iter().filter_map(move |row| {
-        let place = row.places.first().filter(|place| place.scanned)?;
+    // §FS-config-v2.schema.places: every walked file place of every row.
+    let places = schema.rows.iter().flat_map(|row| row.places.iter().map(move |place| (row, place)));
+    let homes = places.filter_map(move |(row, place)| {
+        if !place.scanned {
+            return None;
+        }
         let (Extent::File(file), Some(source)) = (&place.extent, &place.source) else {
             return None;
         };
@@ -162,14 +183,10 @@ pub(crate) fn unwalked_homes(schema: &Schema) -> impl Iterator<Item = &str> + '_
         .map(|(home, _)| home)
 }
 
-/// Each row's home — its first place, when that is a folder or a file — and
-/// whether the walk reads it (§AR-config.1.3, §FS-config.3.4.7).
+/// Every row's places that name a folder or a file, and whether the walk reads
+/// each (§AR-config.1.3, §FS-config.3.4.7, §FS-config-v2.schema.places).
 fn homes(schema: &Schema) -> impl Iterator<Item = (&str, bool)> + '_ {
-    schema.rows.iter().filter_map(|row| {
-        let place = row.places.first()?;
-        match &place.extent {
-            Extent::Folder(home) | Extent::File(home) => Some((home.as_str(), place.scanned)),
-            Extent::Complement => None,
-        }
-    })
+    schema
+        .places()
+        .filter_map(|(_, place)| Some((place.path()?, place.scanned)))
 }

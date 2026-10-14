@@ -13,14 +13,14 @@ use std::sync::Arc;
 
 use super::index_entries::KindIndexEntries;
 use super::index_mention::index_mentions;
-use crate::config::{Frame, Schema};
+use crate::config::{Frame, Owners, Schema};
 use crate::grammar::{
     cross_ref_wrap, is_inside_inline_code, markdown_line_kinds, markdown_never_rewrite_context,
     render_id,
 };
 use crate::model::{
     Catalog, CheckReport, Citation, Declaration, Diagnostic, FileRecord, HeadingKind, Id,
-    configured_home_path_key, paired_declarations, scanned_decl_relative_path, scanned_path_key,
+    paired_declarations, scanned_decl_relative_path, scanned_path_key,
     section_resolves,
 };
 use crate::scanner::record_of_text;
@@ -32,14 +32,16 @@ use crate::sources::{Sources, path_is_dir, physical_path_key};
 /// `index_file` is the readable path.
 pub(super) struct KindIndexTarget<'a> {
     pub(super) kind: &'a str,
-    pub(super) folder_key: PathBuf,
+    /// The folder place the index lists, as written in the config.
+    pub(super) folder: &'a str,
     pub(super) index_key: PathBuf,
     pub(super) index_file: PathBuf,
 }
 
-/// Every `[[kinds]]` entry that carries both a `folder` and an enabled `index`
-/// (§FS-config.3.4). A kind with no folder, or with `index = false`, is absent
-/// from this list and is therefore invisible to every rule below.
+/// Every folder of a `[[kinds]]` entry that carries an enabled `index`
+/// (§FS-config.3.4), one target per folder (§FS-config-v2.schema.places.ownership).
+/// A kind with no folder, or with `index = false`, is absent from this list and is
+/// therefore invisible to every rule below.
 ///
 /// Why a non-`.md` `index` is dropped rather than reported: every rule below is
 /// stated in terms of what `grund fmt --cross-refs` would write, and that pass
@@ -53,9 +55,12 @@ pub(super) fn kind_index_targets<'a>(
     schema
         .rows
         .iter()
-        .filter_map(|row| {
-            let folder = row.folder()?;
-            let index = row.index_path()?;
+        .flat_map(|row| {
+            row.index_paths()
+                .into_iter()
+                .map(move |(folder, index)| (row, folder, index))
+        })
+        .filter_map(|(row, folder, index)| {
             // §FS-config.3.4 rejects an `index` that does not name a `.md` file,
             // so this filter never fires on a config that loaded; it states the
             // Markdown assumption every rule below rests on.
@@ -64,7 +69,7 @@ pub(super) fn kind_index_targets<'a>(
             }
             Some(KindIndexTarget {
                 kind: row.name.as_str(),
-                folder_key: configured_home_path_key(folder),
+                folder,
                 index_key: scanned_path_key(&index),
                 index_file: frame.root().join(&index),
             })
@@ -179,18 +184,19 @@ fn index_home_declaration(decls: &[Declaration]) -> Option<&Declaration> {
     paired_declarations(decls).stand_ins().next()
 }
 
-/// Whether any of `decls` sits under `folder_key` — the recursive membership
-/// test of §FS-check.3.18.2: a stub in the folder is what puts an inline-homed ID
-/// in it, and a folder's whole subtree counts, not its top level.
+/// Whether any of `decls` sits in `folder` — the recursive membership test of
+/// §FS-check.3.18.2: a stub in the folder is what puts an inline-homed ID in it,
+/// and a folder's whole subtree counts, not its top level, short of a nested
+/// place that owns the file (§FS-config-v2.schema.places.ownership).
 pub(super) fn declarations_under_folder(
     decls: &[Declaration],
-    folder_key: &Path,
-    configured_root: &Path,
-    physical_root: &Path,
+    folder: &str,
+    owners: &Owners<'_>,
 ) -> bool {
     decls.iter().any(|decl| {
-        scanned_decl_relative_path(&decl.file, configured_root, physical_root)
-            .is_some_and(|relative| relative.starts_with(folder_key))
+        owners
+            .relative(&decl.file)
+            .is_some_and(|relative| owners.schema().folder_owns(folder, &relative))
     })
 }
 

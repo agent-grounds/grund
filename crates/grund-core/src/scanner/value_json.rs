@@ -96,35 +96,36 @@ pub(super) fn value_json_sources<'a>(
     let reads_values = |path: &Path| frame.compiled.reading(schema, path).values();
     for row in schema.value_rows() {
         let kind = row.name.as_str();
-        if let Some(file) = row.file() {
+        // §FS-config-v2.schema.places: every file and folder of the row is a value home.
+        for file in row.files() {
             let path = normalize_path_lexically(&frame.root().join(file));
             if reads_values(&path) {
                 sources.push((path, kind));
             }
-            continue;
         }
-        let Some(folder) = row.folder() else { continue };
-        let folder = normalize_path_lexically(&frame.root().join(folder));
-        // §FS-check.6.1.1: cover this effective input before its shared read.
-        let disk = frame.sources();
-        let entries = disk
-            .read_dir(&folder)
-            .map_err(|error| (folder.clone(), format!("read value home: {error}")))?;
-        for entry in entries {
-            let entry =
-                entry.map_err(|error| (folder.clone(), format!("read value home: {error}")))?;
-            let path = normalize_path_lexically(&entry.path());
-            if reads_values(&path) && disk.is_file(&path) {
-                sources.push((path, kind));
+        for folder in row.folders() {
+            let folder = normalize_path_lexically(&frame.root().join(folder));
+            // §FS-check.6.1.1: cover this effective input before its shared read.
+            let disk = frame.sources();
+            let entries = disk
+                .read_dir(&folder)
+                .map_err(|error| (folder.clone(), format!("read value home: {error}")))?;
+            for entry in entries {
+                let entry =
+                    entry.map_err(|error| (folder.clone(), format!("read value home: {error}")))?;
+                let path = normalize_path_lexically(&entry.path());
+                if reads_values(&path) && disk.is_file(&path) {
+                    sources.push((path, kind));
+                }
             }
-        }
-        for path in disk.buffer_only_files() {
-            if path
-                .parent()
-                .is_some_and(|parent| paths_same_location(parent, &folder))
-                && reads_values(&path)
-            {
-                sources.push((path, kind));
+            for path in disk.buffer_only_files() {
+                if path
+                    .parent()
+                    .is_some_and(|parent| paths_same_location(parent, &folder))
+                    && reads_values(&path)
+                {
+                    sources.push((path, kind));
+                }
             }
         }
     }

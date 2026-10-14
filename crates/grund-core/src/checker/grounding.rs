@@ -12,10 +12,11 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
+use super::citations::citing_place;
 use super::homes::{DeclarationHome, KindHomeIndex};
 use super::obligation_units::ObligationUnit;
 use crate::config::{
-    DEFAULT_GROUNDING_LEVEL, Frame, Row, Rules, Schema, Strength, any_place_grounded,
+    DEFAULT_GROUNDING_LEVEL, Frame, Owners, Rules, Schema, Strength, any_place_grounded,
     grounding_level_for_kind, homeless_row_grounding, row_grounding, soft_grounding_rungs,
 };
 use crate::model::{Catalog, CheckReport, Citation, Diagnostic, FileStructure};
@@ -292,20 +293,18 @@ fn grounding_unit_spans(structure: Option<&FileStructure>, level: usize) -> Vec<
 pub(super) fn file_obligation_units<'a>(
     citing_kind: &str,
     rules: &Rules,
-    schema: &Schema,
+    owners: &Owners<'_>,
     findings: &'a Catalog,
     by_file: &BTreeMap<(&'a str, &'a Path), Vec<&'a Citation>>,
 ) -> Vec<ObligationUnit<'a>> {
-    let place = schema
-        .rows
-        .iter()
-        .find(|row| row.name == citing_kind)
-        .and_then(Row::place_label);
+    let schema = owners.schema();
     let level = grounding_level_for_kind(schema, rules, citing_kind);
     by_file
         .iter()
         .filter(|((kind, _), _)| *kind == citing_kind)
         .flat_map(|((_, file), citations)| {
+            // §FS-config-v2.schema.places.ownership: named by the place that owns the file.
+            let place = citing_place(owners, citing_kind, file);
             grounding_unit_spans(findings.file_structure.get(*file), level)
                 .into_iter()
                 .filter_map(|(start, end)| {

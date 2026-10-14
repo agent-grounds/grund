@@ -17,6 +17,7 @@ mod defaults;
 mod fields;
 mod finish;
 mod measures;
+mod places;
 mod presentation;
 mod render;
 mod rules;

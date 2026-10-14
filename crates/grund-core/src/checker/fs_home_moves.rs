@@ -29,7 +29,8 @@ pub(super) fn check_fs_home_moves(
     let Some(home) = homes.single_file_for_kind("FS") else {
         return;
     };
-    let Some(first) = first_declaration_in(catalog, "FS", &home.physical_path) else {
+    let (file, physical) = home.first();
+    let Some(first) = first_declaration_in(catalog, "FS", physical) else {
         return;
     };
     report.warnings.push(Diagnostic {
@@ -42,7 +43,7 @@ pub(super) fn check_fs_home_moves(
              that default to {LEGACY_FS_FOLDER}/ — run `grund init` to write a grund.toml \
              that keeps FS in {file}, or move the FS declarations into {LEGACY_FS_FOLDER}/",
             id = render_id(frame.grammar(), &first.id),
-            file = home.path,
+            file = file,
         ),
         sites: Vec::new(),
         authority: Vec::new(),

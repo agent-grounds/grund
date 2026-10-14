@@ -1,11 +1,11 @@
 use std::path::{Path, PathBuf};
 
-use crate::config::{Frame, Schema};
-use crate::model::{configured_home_path_key, scanned_decl_relative_path, scanned_path_key};
+use crate::config::{Extent, Frame, Owners, Schema};
 use crate::sources::physical_path_key;
 
 pub(super) struct DeclarationHome<'a> {
     pub(super) kind: &'a str,
+    /// The owning place as written in the config, a folder without its `/`.
     pub(super) path: &'a str,
     /// Whether the home's kind declares IDs (§FS-config.3.4). A non-citable home
     /// admits no declaration at all, so the finding it produces names the home
@@ -30,148 +30,89 @@ impl DeclarationHome<'_> {
     }
 }
 
+/// A single-file kind: a citable row whose places are all files
+/// (§FS-declarations.checks.misplaced-declaration.1). v1 has one; a v2 row may
+/// list several, and is single-file across them.
 pub(super) struct SingleFileHome<'a> {
     kind: &'a str,
-    pub(super) path: &'a str,
-    pub(super) physical_path: PathBuf,
+    /// Each file as written, with its physical key, in written order.
+    files: Vec<(&'a str, PathBuf)>,
 }
 
-struct ConfiguredHome<'a> {
-    kind: &'a str,
-    path: &'a str,
-    key: PathBuf,
-    exact: bool,
-    citable: bool,
+impl SingleFileHome<'_> {
+    /// The first file, as written and as its physical key: the built-in home a
+    /// zero-config `FS` has (§FS-check.checks.fs-home-moves).
+    pub(super) fn first(&self) -> (&str, &Path) {
+        let (path, physical) = &self.files[0];
+        (path, physical)
+    }
+
+    /// Whether `file` is one of the kind's files, compared by physical location.
+    pub(super) fn holds(&self, file: &Path) -> bool {
+        let key = physical_path_key(file);
+        self.files.iter().any(|(_, physical)| *physical == key)
+    }
+
+    /// The files, comma-separated in written order, as a finding names them.
+    pub(super) fn label(&self) -> String {
+        let files: Vec<&str> = self.files.iter().map(|(path, _)| *path).collect();
+        files.join(", ")
+    }
 }
 
+/// The checker's reading of where a declaration may sit: the single-file kinds,
+/// and the owner of every file by the one ownership rule
+/// (§FS-config-v2.schema.places.ownership, §AR-scanner.4.7).
 pub(super) struct KindHomeIndex<'a> {
-    configured_root: PathBuf,
-    physical_root: PathBuf,
+    owners: Owners<'a>,
     single_files: Vec<SingleFileHome<'a>>,
-    homes: Vec<ConfiguredHome<'a>>,
-    overlapping_homes: bool,
 }
 
 impl<'a> KindHomeIndex<'a> {
     pub(super) fn new(schema: &'a Schema, frame: Frame<'_>) -> Self {
-        let configured_root = scanned_path_key(frame.root());
-        let physical_root = physical_path_key(frame.root());
-        let mut single_files = Vec::new();
-        let mut homes = Vec::new();
-
-        for row in &schema.rows {
-            let citable = row.kind.is_some();
-            if let Some(file) = row.file() {
-                // §FS-declarations.checks.misplaced-declaration: only a citable kind has
-                // declarations to keep in one document, so the single-file rule says nothing about
-                // a non-citable `file` home — the home-kind rule below reports what is there, once.
-                if citable {
-                    single_files.push(SingleFileHome {
-                        kind: row.name.as_str(),
-                        path: file,
-                        physical_path: physical_path_key(&frame.root().join(file)),
-                    });
-                }
-                homes.push(ConfiguredHome {
+        // §FS-declarations.checks.misplaced-declaration: only a citable kind has
+        // declarations to keep in one document, so the single-file rule says nothing
+        // about a non-citable `file` home — the home-kind rule reports what is there.
+        let single_files = schema
+            .rows
+            .iter()
+            .filter(|row| row.kind.is_some() && row.folders().next().is_none())
+            .filter_map(|row| {
+                let files: Vec<(&str, PathBuf)> = row
+                    .files()
+                    .map(|file| (file, physical_path_key(&frame.root().join(file))))
+                    .collect();
+                (!files.is_empty()).then_some(SingleFileHome {
                     kind: row.name.as_str(),
-                    path: file,
-                    key: configured_home_path_key(file),
-                    exact: true,
-                    citable,
-                });
-            }
-
-            if let Some(folder) = row.folder() {
-                homes.push(ConfiguredHome {
-                    kind: row.name.as_str(),
-                    path: folder,
-                    key: configured_home_path_key(folder),
-                    exact: false,
-                    citable,
-                });
-            }
-        }
-
-        let overlapping_homes = homes_have_overlap(&homes);
-        if !overlapping_homes {
-            homes.sort_by(|left, right| left.exact.cmp(&right.exact));
-        }
-
+                    files,
+                })
+            })
+            .collect();
         Self {
-            configured_root,
-            physical_root,
-            overlapping_homes,
+            owners: Owners::new(schema, frame),
             single_files,
-            homes,
         }
     }
 
-    /// The `[[kinds]].file` setting for `kind`, if any — the single document every
-    /// declaration of that kind must live in (§FS-config.3.4). Returns `None` for
-    /// multi-file kinds (those configured with `folder` instead).
+    /// The single-file home of `kind`, if it has one — the documents every
+    /// declaration of that kind must live in (§FS-config.3.4). `None` for a kind
+    /// with a folder.
     pub(super) fn single_file_for_kind(&self, kind: &str) -> Option<&SingleFileHome<'a>> {
         self.single_files.iter().find(|home| home.kind == kind)
     }
 
-    /// The configured kind home that contains `path`, when exactly one
-    /// `[[kinds]]` home matches it. `file` homes are exact; `folder` homes are
-    /// path-prefix matches against the scanner-recorded path, not the symlink
-    /// target (§FS-config.3.4.11, §FS-declarations.checks.misplaced-declaration.2).
+    /// The place that owns `path`, other than the complement's, by the one
+    /// ownership rule: v1's unique home, v2's listed file or deepest folder.
+    /// Ownership is decided on the scanner-recorded path, not the symlink target
+    /// (§FS-config.3.4.11, §FS-declarations.checks.misplaced-declaration.2).
     pub(super) fn unique_decl_home_for_file(&self, path: &Path) -> Option<DeclarationHome<'a>> {
-        let path = scanned_decl_relative_path(path, &self.configured_root, &self.physical_root)?;
-        if !self.overlapping_homes {
-            return self
-                .homes
-                .iter()
-                .find(|home| home_contains_path(home, path.as_ref()))
-                .map(|home| DeclarationHome {
-                    kind: home.kind,
-                    path: home.path,
-                    citable: home.citable,
-                    exact: home.exact,
-                });
-        }
-
-        let mut matches = self.homes.iter().filter_map(|home| {
-            home_contains_path(home, path.as_ref()).then_some(DeclarationHome {
-                kind: home.kind,
-                path: home.path,
-                citable: home.citable,
-                exact: home.exact,
-            })
-        });
-
-        let first = matches.next()?;
-        if matches.next().is_some() {
-            return None;
-        }
-        Some(first)
-    }
-}
-
-fn home_contains_path(home: &ConfiguredHome<'_>, path: &Path) -> bool {
-    if home.exact {
-        path == home.key
-    } else {
-        path.starts_with(&home.key)
-    }
-}
-
-fn homes_have_overlap(homes: &[ConfiguredHome<'_>]) -> bool {
-    homes.iter().enumerate().any(|(index, left)| {
-        homes
-            .iter()
-            .skip(index + 1)
-            .any(|right| homes_overlap(left, right))
-    })
-}
-
-fn homes_overlap(left: &ConfiguredHome<'_>, right: &ConfiguredHome<'_>) -> bool {
-    match (left.exact, right.exact) {
-        (true, true) => left.key == right.key,
-        (true, false) => left.key.starts_with(&right.key),
-        (false, true) => right.key.starts_with(&left.key),
-        (false, false) => left.key.starts_with(&right.key) || right.key.starts_with(&left.key),
+        let owner = self.owners.of(path)?;
+        Some(DeclarationHome {
+            kind: owner.row.name.as_str(),
+            path: owner.place.path()?,
+            citable: owner.row.kind.is_some(),
+            exact: matches!(owner.place.extent, Extent::File(_)),
+        })
     }
 }
 

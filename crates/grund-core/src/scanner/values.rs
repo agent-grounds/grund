@@ -25,13 +25,15 @@ pub(super) fn value_declaration_is_in_home(
     path: &Path,
     id: &Id,
 ) -> bool {
+    // §FS-config-v2.schema.places: any file or folder of the row.
     schema.value_rows().any(|row| {
         row.name == id.kind
-            && match (row.file(), row.folder()) {
-                (Some(file), _) => paths_same_location(path, &frame.root().join(file)),
-                (_, Some(folder)) => path_starts_with(path, &frame.root().join(folder)),
-                _ => false,
-            }
+            && (row
+                .files()
+                .any(|file| paths_same_location(path, &frame.root().join(file)))
+                || row
+                    .folders()
+                    .any(|folder| path_starts_with(path, &frame.root().join(folder))))
     })
 }
 

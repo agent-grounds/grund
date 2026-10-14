@@ -1,4 +1,3 @@
-use std::path::{Path, PathBuf};
 
 use super::record::Config;
 
@@ -125,23 +124,6 @@ impl KindConfig {
             return Some(format!("{folder}/"));
         }
         self.file.clone()
-    }
-
-    /// This kind's index file, relative to the config root — `None` for a kind
-    /// with no `folder` or with `index = false` (§FS-config.3.4). Joined onto
-    /// `folder`, because the key names a file *in* the folder it indexes, which
-    /// is what `kind_index_name_error` holds the value to.
-    pub(crate) fn index_path(&self) -> Option<PathBuf> {
-        if !self.citable {
-            return None;
-        }
-        let folder = self.folder.as_deref()?;
-        let name = match &self.index {
-            KindIndex::Disabled => return None,
-            KindIndex::Default => DEFAULT_KIND_INDEX,
-            KindIndex::Named(name) => name.as_str(),
-        };
-        Some(Path::new(folder).join(name))
     }
 }
 

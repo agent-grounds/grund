@@ -7,8 +7,8 @@ use super::citations::{
     DirectionChannel, DirectionSink, citation_matches_target, citing_side_label,
 };
 use crate::config::{
-    CitationDisjunction, CitationLevel, CitationTarget, NamespaceMatch, Rules, Schema,
-    render_citation_target,
+    CitationDisjunction, CitationLevel, CitationTarget, Frame, NamespaceMatch, Owners, Rules,
+    Schema, render_citation_target,
 };
 use crate::model::{CITATION_DIRECTION_REPAIR, Catalog, Citation, Diagnostic, name_under_number};
 use crate::rules::engine::{LENT_CLAUSE, MIXED_CLAUSE};
@@ -25,8 +25,10 @@ pub(super) fn check_citation_prohibitions(
     findings: &Catalog,
     rules: &Rules,
     schema: &Schema,
+    frame: Frame<'_>,
     report: &mut impl DirectionSink,
 ) {
+    let owners = Owners::new(schema, frame);
     for (cite, lent) in findings.marked_edges() {
         let mixed = cite.section.as_deref().is_some_and(name_under_number);
         let Some((level, entries)) = citation_site_level(rules, cite) else {
@@ -36,7 +38,7 @@ pub(super) fn check_citation_prohibitions(
             CitationLevel::MustNot if lent || mixed => {
                 let mut diagnostic = prohibition_diagnostic(
                     "forbidden-citation",
-                    schema,
+                    &owners,
                     cite,
                     "must not",
                     CITATION_DIRECTION_REPAIR,
@@ -53,7 +55,7 @@ pub(super) fn check_citation_prohibitions(
                 DirectionChannel::Errors,
                 prohibition_diagnostic(
                     "forbidden-citation",
-                    schema,
+                    &owners,
                     cite,
                     "must not",
                     CITATION_DIRECTION_REPAIR,
@@ -65,7 +67,7 @@ pub(super) fn check_citation_prohibitions(
                 DirectionChannel::Warnings,
                 prohibition_diagnostic(
                     "forbidden-citation",
-                    schema,
+                    &owners,
                     cite,
                     "must not",
                     CITATION_DIRECTION_REPAIR,
@@ -73,7 +75,7 @@ pub(super) fn check_citation_prohibitions(
             ),
             CitationLevel::ShouldNot => (
                 DirectionChannel::Suggestions,
-                prohibition_diagnostic("discouraged-citation", schema, cite, "should not", ""),
+                prohibition_diagnostic("discouraged-citation", &owners, cite, "should not", ""),
             ),
             _ => continue,
         };
@@ -83,7 +85,7 @@ pub(super) fn check_citation_prohibitions(
 
 fn prohibition_diagnostic(
     code: &'static str,
-    schema: &Schema,
+    owners: &Owners<'_>,
     cite: &Citation,
     verb: &str,
     repair: &str,
@@ -105,7 +107,7 @@ fn prohibition_diagnostic(
             // §FS-check.3.12.1: a non-citable citing kind is named by its place —
             // the same label §FS-check.3.11.2 and the generated directions use,
             // because its name is a config handle and not a thing to read.
-            citing_side_label(schema, &cite.source_kind),
+            citing_side_label(owners, &cite.source_kind, &cite.file),
             render_citation_target(&target)
         ),
         sites: Vec::new(),

@@ -12,14 +12,17 @@ use crate::config::grounding::grounding_unit as unit;
 use crate::config::kind::{KindIndex, KindResolution, escape_toml_basic};
 use crate::config::project::Strength;
 use crate::config::project::{Project, Rung, Threshold};
-use crate::config::rows::{Extent, Form, Kind};
+use crate::config::rows::{Form, Kind};
 
 pub(super) fn string(value: &str) -> String {
     format!("\"{}\"", escape_toml_basic(value))
 }
 
-pub(super) fn list<'a>(values: impl IntoIterator<Item = &'a String>) -> String {
-    let values: Vec<String> = values.into_iter().map(|value| string(value)).collect();
+pub(super) fn list(values: impl IntoIterator<Item = impl AsRef<str>>) -> String {
+    let values: Vec<String> = values
+        .into_iter()
+        .map(|value| string(value.as_ref()))
+        .collect();
     format!("[{}]", values.join(", "))
 }
 
@@ -115,15 +118,17 @@ impl Project {
         }
         for row in &schema.rows {
             let _ = writeln!(out, "\n[schema.kinds.{}]", row.name);
-            for place in &row.places {
-                let (key, path) = match &place.extent {
-                    Extent::File(path) => ("files", path),
-                    Extent::Folder(path) => ("folders", path),
-                    Extent::Complement => continue,
-                };
-                let _ = writeln!(out, "{key} = {}", list([path]));
+            // §FS-config-v2.schema.places.ownership: one `files` and one `folders`
+            // list, in that order, each normalized and in written order.
+            let files: Vec<&str> = row.files().collect();
+            let folders: Vec<&str> = row.folders().collect();
+            for (key, paths) in [("files", files), ("folders", folders)] {
+                if !paths.is_empty() {
+                    let _ = writeln!(out, "{key} = {}", list(paths));
+                }
             }
-            if row.kind.is_none() {
+            // §FS-config-v2.schema.places.complement: `code` is non-citable by name.
+            if row.kind.is_none() && !row.is_complement() {
                 out.push_str("citable = false\n");
             }
             if row.places.iter().any(|place| !place.scanned) {
