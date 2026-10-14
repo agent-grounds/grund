@@ -445,6 +445,45 @@ class VersionTests(unittest.TestCase):
         result = candidate("versions", "--root", root, "--ref", "HEAD", "--expect", version)
         self.assertEqual(0, result.returncode, result.stderr)
 
+    def pre_move_ref(self, python_version):
+        """A committed tree shaped like a tag from before the binding moved: no
+        `crates/grund-py/`, and the Python version, if any, in the root `pyproject.toml`."""
+        root = self.copy()
+        pyproject = (root / PYPROJECT).read_text()
+        shutil.rmtree(root / "crates" / "grund-py")
+        if python_version is not None:
+            (root / "pyproject.toml").write_text(re.sub(
+                r'(?m)^version = ".*"$', f'version = "{python_version}"', pyproject, count=1))
+        git = ["git", "-C", str(root), "-c", "user.name=t", "-c", "user.email=t@t",
+               "-c", "maintenance.auto=false", "-c", "gc.auto=0", "-c", "core.fsmonitor=false"]
+        subprocess.run([*git, "init", "-q"], check=True)
+        subprocess.run([*git, "add", "-A"], check=True)
+        subprocess.run([*git, "commit", "-qm", "pre-move release"], check=True)
+        return root
+
+    def test_a_pre_move_ref_reads_the_root_pyproject(self):
+        """§FS-distribution-candidate.6.2: at a ref from before the binding moved, the root
+        `pyproject.toml` is the Python version source, so its disagreement is named."""
+        root = self.pre_move_ref("9.9.9")
+        result = candidate("versions", "--root", root, "--ref", "HEAD")
+        self.assertNotEqual(0, result.returncode,
+                            f"the root pyproject.toml at 9.9.9 went unread:\n{result.stdout}")
+        self.assertRegex(result.stderr, r"(?m)^error: pyproject\.toml at HEAD .*9\.9\.9")
+
+    def test_a_pre_move_ref_that_agrees_passes(self):
+        """§FS-distribution-candidate.6.2: a consistent old release still checks clean."""
+        root = self.pre_move_ref(pep440(self.workspace_version()))
+        result = candidate("versions", "--root", root, "--ref", "HEAD",
+                           "--expect", self.workspace_version(root))
+        self.assertEqual(0, result.returncode, result.stderr)
+
+    def test_a_ref_with_no_pyproject_has_no_python_source(self):
+        """§FS-distribution-candidate.6.2: a ref from before the Python distribution
+        existed carries no Python version to read, and is not refused for it."""
+        root = self.pre_move_ref(None)
+        result = candidate("versions", "--root", root, "--ref", "HEAD")
+        self.assertEqual(0, result.returncode, result.stderr)
+
     def test_set_version_writes_every_source(self):
         root = self.copy()
         for version in ("0.17.0", "0.17.1-dev"):

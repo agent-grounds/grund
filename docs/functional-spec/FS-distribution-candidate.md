@@ -152,7 +152,7 @@ The candidate's `manifest.json` records: its schema version and scope; the packa
 
 ### 6.2 One version across every package
 
-A full release carries one version in every crate, npm package and Python distribution, and one engine version in every payload. Python spells it in PEP 440, so a development version `X.Y.Z-dev` is `X.Y.Z.dev0` there and a release `X.Y.Z` is `X.Y.Z` everywhere. `scripts/distribution/candidate.py versions` reads every version source — the Cargo manifests, `Cargo.lock` and `crates/grund-py/pyproject.toml` — and fails when they disagree; `candidate.py set-version` writes all of them, and both bump helpers use it ([§FS-distribution.4.5](FS-distribution.md#45-what-the-version-bump-includes)).
+A full release carries one version in every crate, npm package and Python distribution, and one engine version in every payload. Python spells it in PEP 440, so a development version `X.Y.Z-dev` is `X.Y.Z.dev0` there and a release `X.Y.Z` is `X.Y.Z` everywhere. `scripts/distribution/candidate.py versions` reads every version source — the Cargo manifests, `Cargo.lock` and `crates/grund-py/pyproject.toml` — and fails when they disagree. At a ref from before the binding moved, where `crates/grund-py/pyproject.toml` is absent, the Python version source is the root `pyproject.toml` that ref carries, so checking an old release still reads its Python version; only a ref with neither file has no Python version source to read; `candidate.py set-version` writes all of them, and both bump helpers use it ([§FS-distribution.4.5](FS-distribution.md#45-what-the-version-bump-includes)).
 
 ### 6.3 A binding-only candidate never claims completeness
 
