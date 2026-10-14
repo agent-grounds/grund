@@ -7,9 +7,11 @@
 
 use super::citations::NamespaceMatch;
 use super::citations::{CitationDisjunction, CitationLevel, render_citation_target};
+use super::discovery::config_file_in;
 use super::fields::{FieldContent, Placement};
 use super::grounding::grounding_unit;
 use super::project::{Project, Strength};
+use super::record::Config;
 use super::rows::{Extent, Row};
 use super::slots::{Content, Handle};
 
@@ -123,7 +125,7 @@ impl SchemaEdge {
 
 /// §FS-schema.5.2: the order strengths are printed in, which is not the order a
 /// citation site is matched in.
-pub const STRENGTH_ORDER: [CitationLevel; 7] = [
+const STRENGTH_ORDER: [CitationLevel; 7] = [
     CitationLevel::Must,
     CitationLevel::Warn,
     CitationLevel::Should,
@@ -214,6 +216,28 @@ impl SchemaView {
                 .filter(|l| *l != CitationLevel::May),
             members,
         }
+    }
+}
+
+impl SchemaView {
+    /// §FS-schema.8: the view of a loaded config, its header filled in — the
+    /// config file spelled from the config root whatever the run's `--path-base`
+    /// (§FS-schema.1), and a project with no `project_name` named by its root.
+    pub(crate) fn of_config(config: &Config) -> Self {
+        let mut view = Self::of(config.project());
+        if let Some(file) = config_file_in(&config.root) {
+            let relative = file.strip_prefix(&config.root).unwrap_or(&file);
+            view.config_file = relative.to_string_lossy().replace('\\', "/");
+        }
+        if view.project.is_empty() {
+            let root = config.root.canonicalize();
+            let root = root.as_deref().unwrap_or(&config.root);
+            let name = root
+                .file_name()
+                .map(|name| name.to_string_lossy().into_owned());
+            view.project = name.unwrap_or_default();
+        }
+        view
     }
 }
 

@@ -16,8 +16,8 @@ The grammar is: entries in one array are all required, while `|` inside one
 entry means any one of its alternatives. Therefore `must = ["FS|GOAL"]`
 requires a citation to either `FS` or `GOAL`, whereas `must = ["FS", "GOAL"]`
 requires citations to both. Nearly every real rule is one entry with `|`.
-`grund schema` draws a repository's directions with each `|` entry as one
-obligation ([seeing a repository's schema](schema.md)).
+`grund schema` draws a repository's directions, each `|` entry as one
+obligation.
 
 The citing side may be any configured kind, including a non-citable kind, or
 the homeless `code` kind. The cited side must be citable, because a citation

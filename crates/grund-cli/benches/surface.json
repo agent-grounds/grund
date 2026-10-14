@@ -77,6 +77,7 @@
     },
     "init": {"waiver": "Run once when a repository adopts grund, and scaffolds files rather than scanning a tree."},
     "config": {"waiver": "Reads and validates one grund.toml, run by hand; the same config load is inside every counted row."},
+    "schema": {"waiver": "Reads one grund.toml and prints its view, run by hand; it scans no tree, and the same config load is inside every counted row."},
     "agent-setup-instructions": {"waiver": "Prints fixed text and scans nothing."},
     "completions": {"waiver": "Prints a fixed shell script once per shell setup and scans nothing; the ID lookup it installs runs `grund complete ids` on each Tab, which is inventoried as the hidden command `complete`."},
     "complete": {"scenarios": ["complete_ids", "complete_ids_all", "complete_ids_sections"]},
