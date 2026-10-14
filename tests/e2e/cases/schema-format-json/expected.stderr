@@ -1,0 +1,2 @@
+error: unsupported schema format `json`
+known formats: table, mermaid, dot

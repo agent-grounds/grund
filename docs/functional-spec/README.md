@@ -17,6 +17,7 @@ The subcommands a user runs on the command line.
 - [§FS-id](FS-id.md#fs-id-grund-proposes-ids-for-new-declarations) — grund proposes IDs for new declarations
 - [§FS-completions](FS-completions.md#fs-completions-grund-completes-declared-ids-in-shells) — grund completes declared IDs in shells
 - [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot) — grund materializes one external fact snapshot
+- [§FS-schema](FS-schema.md#fs-schema-grund-schema-shows-what-a-repository-is-held-to-read-from-its-configuration-alone) — grund schema shows what a repository is held to, read from its configuration alone
 
 ## Editor integration
 

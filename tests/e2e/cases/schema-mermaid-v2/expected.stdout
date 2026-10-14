@@ -1,0 +1,25 @@
+flowchart LR
+  %% fixture · grund.toml · v2
+  %% must = check error · warn = check warning · should = suggestion (check --suggestions)
+  %% may = allowed · must not / warn not / should not = forbidden at that strength
+  %% any of = one obligation, met by citing any one of its arrows
+  classDef place stroke-dasharray:5 5
+  classDef unscanned stroke-dasharray:2 2
+  n0["GOAL<br/>kind<br/>docs/goals.md<br/>grounded: must · file"]
+  n1["FS<br/>kind<br/>docs/fs/<br/>field status: should · first · one of Draft, Accepted<br/>grounded: must · file"]
+  n2["AR<br/>kind<br/>docs/ar/<br/>grounded: must · file"]
+  n3["test<br/>place<br/>tests/<br/>grounded: warn · h2"]
+  j0(("any of"))
+  subgraph unruled["no direction rule names these"]
+    n4["vendor<br/>place, not scanned<br/>vendor/"]
+    n5["code<br/>complement<br/>every scanned file no other row claims<br/>grounded: must · file"]
+  end
+  class n3 place
+  class n4 unscanned
+  n1 -. should .- j0
+  j0 -.-> n0
+  j0 -.-> n1
+  n1 -. may .-> n2
+  n2 == must ==> n1
+  n2 -. should .-> n2
+  n3 == must ==> n1

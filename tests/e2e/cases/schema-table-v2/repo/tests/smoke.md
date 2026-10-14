@@ -1,0 +1,3 @@
+# Smoke
+
+Cites nothing.

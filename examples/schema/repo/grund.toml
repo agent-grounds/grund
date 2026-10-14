@@ -1,0 +1,33 @@
+grund_config_version = 2
+project_name = "example"
+[schema.sources]
+languages = ["markdown"]
+[schema.kinds.GOAL]
+files = ["docs/goals.md"]
+[schema.kinds.FS]
+folders = ["docs/fs"]
+[schema.kinds.FS.fields.status]
+one_of = ["Draft", "Accepted"]
+presence = "should"
+position = "first"
+[schema.kinds.AR]
+folders = ["docs/ar"]
+[schema.kinds.test]
+citable = false
+folders = ["tests"]
+[schema.kinds.vendor]
+citable = false
+scan = false
+folders = ["vendor"]
+[rules.citations.FS]
+should = ["GOAL|FS"]
+may = ["AR"]
+[rules.citations.AR]
+must = ["FS"]
+should = ["AR"]
+[rules.citations.test]
+must = ["FS"]
+[rules.citations.grounding]
+must = "file"
+[rules.citations.test.grounding]
+warn = "h2"

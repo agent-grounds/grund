@@ -360,6 +360,20 @@ value chapter arrives as one of those fields. Conformance reads a kind's value
 shape through `slots()` ([§AR-checker.1.1](../../crates/grund-core/src/checker/report.rs)), so the checks and a schema view read
 one sequence.
 
+### 6.3 The schema view is lowered from a `Project` on demand
+
+`SchemaView`, in `config/` beside `compiled.rs`, is the record [§FS-schema](../functional-spec/FS-schema.md#fs-schema-grund-schema-shows-what-a-repository-is-held-to-read-from-its-configuration-alone) prints:
+its nodes in row order with their class, places, slots and grounding badge, its
+junctions, and its edges in the order [§FS-schema.7](../functional-spec/FS-schema.md#7-order) fixes. One function lowers it
+from a `Project` — the rows, `Kind::slots()` ([§AR-config.6.2](AR-config.md#62-a-kinds-shape-is-a-sequence-of-slots-derived-from-its-form)), `rules.citations`,
+`rules.grounding` and the kind titles — and reads no scan, no `Catalog` and no ID
+graph. It is built only by the command that prints it, not inside `compile`, so
+`check` pays nothing for it. The loading path is the one `config show` already
+uses, so the view and the checks read one record. The engine returns the record and
+`grund-cli` holds the three printers ([§DA-engine-renders-nothing](../decisions/architectural/DA-engine-renders-nothing.md#da-engine-renders-nothing-the-engine-renders-nothing-so-the-deprecated-compat-frontend-retires)); the managed
+block's renderer is untouched, and can later read the same record without depending
+on CLI code.
+
 ## 7. The v2 reader
 
 `config/v2/` reads a file that writes `grund_config_version = 2`

@@ -1,5 +1,4 @@
 grund — ground your agents in the spec: §<ID>.<section> citations checked across docs and code.
-
 Usage:  grund <ID>[.<section>]  ·  grund <COMMAND> [ARGS]  ·  grund <COMMAND> -h  ·  grund -V
 
 Query the catalog:
@@ -17,6 +16,7 @@ Check and author:
 Set up:
   init          Scaffold agent instructions + grund.toml.               grund init --scaffold
   config        Validate or show the effective grund.toml.              grund config show
+  schema        Kinds, places, shapes and citation rules at a glance.   grund schema
   integrations  Print/install clickable-citation integrations.          grund integrations wezterm
   completions   Print shell completion scripts.                         grund completions bash
   agent-setup-instructions  Print the setup guide for AI agents.

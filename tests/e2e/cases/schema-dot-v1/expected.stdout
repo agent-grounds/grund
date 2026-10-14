@@ -1,0 +1,22 @@
+digraph schema {
+  // fixture · grund.toml · v1
+  // must = check error · warn = check warning · should = suggestion (check --suggestions)
+  // may = allowed · must not / warn not / should not = forbidden at that strength
+  // any of = one obligation, met by citing any one of its arrows
+  rankdir=LR;
+  node [shape=box];
+  n0 [label="GOAL\nkind\ndocs/goals.md\ngrounded: must · file"];
+  n1 [label="FS\nkind\ndocs/fs/\ngrounded: must · file"];
+  n2 [label="AR\nkind\ndocs/ar/\ngrounded: must · file"];
+  j0 [label="any of", shape=circle];
+  subgraph cluster_unruled {
+    label="no direction rule names these";
+    n3 [label="vendor\nplace, not scanned\nvendor/", style=dotted];
+    n4 [label="code\ncomplement\nevery scanned file no other row claims\ngrounded: must · file"];
+  }
+  n1 -> j0 [label="should", style=dashed, arrowhead=none];
+  j0 -> n0 [style=dashed];
+  j0 -> n1 [style=dashed];
+  n2 -> n1 [label="must", style=bold];
+  n2 -> n2 [label="should", style=dashed];
+}
