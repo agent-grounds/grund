@@ -21,7 +21,6 @@ include = [
   "scripts",
   "tests",
   "skills",
-  "templates",
   "editor",
   "examples",
   ".github",

@@ -1,8 +1,8 @@
 """§FS-init.5.3 — what the binary embeds is what the tree shows: the `grund-init`
-skill under `skills/` and every scaffold template under `templates/`
-(§FS-init.2.1) are byte-identical to their copies under
+skill under `skills/` is byte-identical to its copy under
 `crates/grund-core/assets/`, in both directions, so neither can drift from the
-other unnoticed."""
+other unnoticed. The scaffold templates have one copy only, the embedded one
+(§FS-init.2.3.7), so there is no second tree to keep in step."""
 
 import unittest
 from pathlib import Path
@@ -37,28 +37,14 @@ class AssetSyncTests(unittest.TestCase):
             "the marked skill copy must stay byte-identical to the canonical citation-directions page",
         )
 
-    def test_every_template_matches_its_embedded_asset_in_both_directions(self):
-        # §DF-init-templates.2.5: one directory per template, so the two trees
-        # are compared by relative path at every depth.
-        repo_templates = REPO_ROOT / "templates"
+    def test_the_templates_have_one_copy_the_embedded_one(self):
+        # §FS-init.2.3.7: the source tree's one copy is the asset `grund init` embeds.
+        self.assertFalse((REPO_ROOT / "templates").exists(),
+                         "templates/ must not exist: crates/grund-core/assets/templates/ is the one copy")
         embedded_templates = ASSETS / "templates"
-
-        def names(root):
-            return {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file()}
-
-        repo_names = names(repo_templates)
-        embedded_names = names(embedded_templates)
-        self.assertEqual(repo_names, embedded_names, "templates/ and the embedded copies name different files")
-        self.assertGreaterEqual(len(repo_names), 12)
-        self.assertIn("software-development/grund.toml", repo_names)
-        self.assertIn("none/grund.toml", repo_names)
-        for name in sorted(repo_names):
-            with self.subTest(template=name):
-                self.assertEqual(
-                    (repo_templates / name).read_bytes(),
-                    (embedded_templates / name).read_bytes(),
-                    f"templates/{name} must stay byte-identical to the embedded asset",
-                )
+        self.assertTrue((embedded_templates / "AGENTS.md").is_file())
+        self.assertTrue((embedded_templates / "software-development" / "grund.toml").is_file())
+        self.assertTrue((embedded_templates / "none" / "grund.toml").is_file())
 
 
 if __name__ == "__main__":
