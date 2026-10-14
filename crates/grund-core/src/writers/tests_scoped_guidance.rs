@@ -8,7 +8,7 @@ use std::fs;
 
 use super::init::{InitOpts, init};
 use super::init_scoped::cut_block;
-use super::scoped_files::{OrphanFile, listed_scoped_files, orphan_files};
+use super::scoped_files::listed_scoped_files;
 use crate::testing::{test_root, write};
 
 const BLOCK: &str = "<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (v21)\n\nScoped.\n<!-- END GRUND MANAGED BLOCK -->\n";
@@ -67,7 +67,8 @@ fn an_orphan_is_deleted_only_when_its_block_was_the_whole_file() {
 #[cfg(unix)]
 #[test]
 fn an_orphans_files_lose_their_block_each_on_its_own_account() {
-    use OrphanFile::{Agents, Linked, Standalone};
+    use super::scoped_files::OrphanFile::{Agents, Linked, Standalone};
+    use super::scoped_files::orphan_files;
     use std::os::unix::fs::symlink;
     let root = test_root("scoped_orphan_files");
     write(&root.join("both/AGENTS.md"), BLOCK);
