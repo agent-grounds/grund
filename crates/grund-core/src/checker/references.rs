@@ -239,7 +239,7 @@ pub(super) fn check_citation_resolution(
                 let should_warn = tier == ReferenceTier::Configured
                     && resolve(cite.namespace.as_deref(), &row.name)
                         == Some(KindResolution::Should);
-                // First place on purpose: a fetched row has exactly one (§FS-config-v2.schema.places).
+                // First place on purpose: a fetched row has one (§FS-config-v2.schema.places).
                 let home = row
                     .file()
                     .or(row.folder())

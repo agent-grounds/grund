@@ -95,7 +95,7 @@ fn v1_keeps_a_nested_file_on_the_complement() {
     assert_eq!(owner(&config, "docs/spec/login.md"), Some("FS"));
 }
 
-/// §FS-config-v2.schema.places.boundaries.1-3: two spellings of one place, and
+/// §FS-config-v2.schema.places.boundaries.3: two spellings of one place, and
 /// two places linking to one target, are one place; a case-only difference is
 /// one place exactly where the filesystem folds case.
 #[test]

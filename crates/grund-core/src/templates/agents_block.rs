@@ -241,11 +241,9 @@ pub(crate) fn markdown_link_destination(raw: &str) -> String {
 /// Either way, every kind with a home links to it, and an unwalked kind is one
 /// of them: its row is why it is configured.
 fn declaration_map(project: &Project) -> String {
-    // §FS-init.2.3.4.4.1: the homeless kind gets no row. Every row is a link to a
-    // place, and it is the one kind that is not a place — the complement of all
-    // of them — unless a v2 `code` row lists the places its extent is
-    // (§FS-config-v2.schema.places.complement). Its citation directions still
-    // render (§FS-init.2.3.5).
+    // The homeless kind gets no row unless a v2 `code` row lists places
+    // (§FS-init.2.3.4.4.1, §FS-config-v2.schema.places.complement); its
+    // citation directions still render (§FS-init.2.3.5).
     let homeless = project.schema.complement_name();
     let rows = project.schema.rows.iter().filter_map(|row| {
         let title = project
@@ -267,10 +265,9 @@ fn declaration_map(project: &Project) -> String {
                 )
             });
         }
-        // A citable kind is named by its name, a non-citable one by its place,
-        // which an unwalked kind (§FS-config.3.4.7) is too; its missing directions
-        // bullet is §FS-init.2.3.5's. Each further place of the row is one more
-        // link, in written order (§FS-init.2.3.4.4.1).
+        // A citable kind is named by its name, a non-citable or unwalked one
+        // (§FS-config.3.4.7, §FS-init.2.3.5) by its place; each further place is
+        // one more link, in written order (§FS-init.2.3.4.4.1).
         let links = places.iter().enumerate().map(|(index, place)| {
             let home = place.path().unwrap_or_default();
             let label = match (&row.kind, index) {

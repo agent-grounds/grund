@@ -90,10 +90,9 @@ pub(crate) fn root_scope_roots(schema: &Schema, root: &Path, full: bool) -> Vec<
         (false, false) if schema.nesting == Nesting::NestedPlaceFallsToComplement => {
             vec![root.to_path_buf()]
         }
-        // v2 with the complement at the root: each scanned place is still a scan
-        // root, read where `exclude` names it (§FS-config-v2.schema.sources.exclude.roots)
-        // and walked under an unscanned place (§FS-config-v2.schema.places.boundaries.6),
-        // ahead of the root so a file reached twice keeps the place's spelling.
+        // v2, complement at the root: each place stays a root, ahead of the root so a
+        // file reached twice keeps its spelling (§FS-config-v2.schema.sources.exclude.roots,
+        // §FS-config-v2.schema.places.boundaries.6).
         (false, false) => homes.chain(std::iter::once(root.to_path_buf())).collect(),
     }
 }
