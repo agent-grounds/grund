@@ -1,0 +1,16 @@
+grund_config_version = 2
+project_name = "example"
+[schema.sources]
+languages = ["markdown", "rust", "notes"]
+declarations = "any-comment"
+exclude = ["generated", "/docs/archive"]
+respect_gitignore = false
+[schema.sources.extensions]
+rustdoc = "rust"
+note = "notes"
+[schema.sources.definitions.notes]
+class = "source"
+comment_prefixes = ["%%", "#"]
+doc_comments = "shell"
+[schema.kinds.FS]
+files = ["requirements.md"]

@@ -1,0 +1,3 @@
+{"id":"FS-custom","kind":"FS","path":"notes/a.note","line":1,"title":"A custom prefix declares","stub":false,"defines":null,"refs":0,"duplicate":false}
+{"id":"FS-lib","kind":"FS","path":"src/lib.rs","line":1,"title":"Library","stub":false,"defines":null,"refs":0,"duplicate":false}
+{"id":"FS-remapped","kind":"FS","path":"src/extra.rustdoc","line":1,"title":"Read as Rust","stub":false,"defines":null,"refs":0,"duplicate":false}

@@ -1,0 +1,13 @@
+grund_config_version = 2
+project_name = "fixture"
+[schema.sources]
+languages = ["markdown", "rust", "notes"]
+declarations = "doc-comments"
+exclude = ["generated", "/docs/archive", "src/**/vendor/**"]
+[schema.sources.extensions]
+rustdoc = "rust"
+note = "notes"
+[schema.sources.definitions.notes]
+class = "source"
+comment_prefixes = ["%%"]
+[schema.kinds.FS]

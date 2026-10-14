@@ -181,6 +181,8 @@ mod tests_v2_lowering;
 #[cfg(test)]
 mod tests_v2_reader;
 #[cfg(test)]
+mod tests_v2_sources;
+#[cfg(test)]
 mod tests_validation;
 
 // §FS-distribution.3.3.3: explicit embedding roots never change process cwd.
