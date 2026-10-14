@@ -75,6 +75,8 @@ python3 -m venv .venv
 .venv/bin/grund --version
 ```
 
+For what `import grund` gives a script, see the [Python API](python-api.md).
+
 From npm tarballs, the package and its row's platform package together.
 `--offline` keeps npm from asking a registry for the other rows' platform
 packages, which it skips:
