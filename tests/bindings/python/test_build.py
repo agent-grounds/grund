@@ -118,4 +118,9 @@ class BuildTests(unittest.TestCase):
         self.assertTrue(scripts, "publish the tested example workflow")
         for script in scripts:
             run([sys.executable, script], REPO)
-        self.assertIn("python-api", (REPO / "README.md").read_text())
+        # The README reaches the Python API guide through the installation guide.
+        readme = (REPO / "README.md").read_text()
+        self.assertIn("(docs/user-facing/installation.md)", readme)
+        installation = (REPO / "docs/user-facing/installation.md").read_text()
+        self.assertIn("(python-api.md)", installation,
+                      "the installation guide must link the Python API guide")
