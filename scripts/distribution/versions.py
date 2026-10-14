@@ -20,6 +20,7 @@ from pathlib import Path
 from plan import pep440
 
 PYPROJECT = "crates/grund-py/pyproject.toml"
+PRE_MOVE_PYPROJECT = "pyproject.toml"
 
 
 class Source:
@@ -71,9 +72,12 @@ def readings(source):
         for package in tomllib.loads(lock).get("package", []):
             if package["name"] in names and "source" not in package:
                 found.append(("Cargo.lock", f"package {package['name']}", package["version"]))
-    pyproject = source.read(PYPROJECT)
+    python, pyproject = PYPROJECT, source.read(PYPROJECT)
+    if pyproject is None and source.ref is not None:
+        # §FS-distribution-candidate.6.2: a ref from before the binding moved keeps it at the root.
+        python, pyproject = PRE_MOVE_PYPROJECT, source.read(PRE_MOVE_PYPROJECT)
     if pyproject is not None:
-        found.append((PYPROJECT, "project.version",
+        found.append((python, "project.version",
                       tomllib.loads(pyproject)["project"]["version"]))
     return workspace, found
 
@@ -84,7 +88,7 @@ def check(root, ref=None, expect=None):
     where = f" at {ref}" if ref else ""
     problems = []
     for name, what, value in found:
-        wanted = pep440(version) if name == PYPROJECT else version
+        wanted = pep440(version) if name in (PYPROJECT, PRE_MOVE_PYPROJECT) else version
         if value != wanted:
             problems.append(f"{name}{where} ({what}) is {value}, not {wanted}")
     if expect is not None and version != expect:
