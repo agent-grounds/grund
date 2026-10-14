@@ -1,0 +1,23 @@
+grund_config_version = 1
+
+[reference]
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "REQ"
+folder = "docs/req"
+index = false
+
+[[kinds]]
+kind = "FS"
+folder = "docs/fs"
+index = false
+
+[citations.FS]
+must = ["REQ"]
+
+[scan]
+include = ["docs"]

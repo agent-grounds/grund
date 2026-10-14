@@ -1,0 +1,1 @@
+check --ignore unused --rule 'Each FS must cite at least one REQ.' --only-rule {repo}

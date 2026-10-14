@@ -1,0 +1,18 @@
+project_name = "root"
+grund_config_version = 1
+
+[reference]
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+
+[scan]
+include = ["docs"]
+
+[workspace]
+members = ["mem"]
+include_root = true
+
+[citations.FS]
+must = ["mem/AR"]
