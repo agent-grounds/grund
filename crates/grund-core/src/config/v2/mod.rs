@@ -7,8 +7,8 @@
 //! `walk.rs` is the line walk and the bookkeeping every table shares — explicit
 //! headers, duplicate keys, the strength-key collision; `tables.rs` names the
 //! table a header opens; `schema.rs`, `measures.rs`, `rules.rs` and
-//! `presentation.rs` read the keys of each concern, and `fields.rs` a kind's
-//! fields (§FS-fields); `finish.rs` judges what
+//! `presentation.rs` read the keys of each concern, `fields.rs` a kind's
+//! fields (§FS-fields) and `sources.rs` the source model; `finish.rs` judges what
 //! only the whole file can say and lowers the rows; `defaults.rs` is the v2
 //! epoch; and `render.rs` writes a project back out in v2 spelling.
 
@@ -20,6 +20,7 @@ mod presentation;
 mod render;
 mod rules;
 mod schema;
+mod sources;
 mod tables;
 mod walk;
 

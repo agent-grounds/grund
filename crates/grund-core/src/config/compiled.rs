@@ -3,6 +3,7 @@
 //! either is built, so a grammar cannot disagree with the schema it came from.
 
 use std::collections::BTreeSet;
+use std::path::Path;
 
 use anyhow::Result;
 
@@ -59,6 +60,24 @@ impl Compiled {
             inline_note_layout: &notes.layout,
             inline_note_layout_check: &notes.layout_check,
         }
+    }
+
+    /// The lexical settings one file is read with: a v2 file's comment hosts and
+    /// docstring reading are its language's (§FS-config-v2.schema.sources), never
+    /// another language's; a v1 file's are the project's (§FS-languages.prefixes).
+    pub(crate) fn lexical_for<'a>(
+        &'a self,
+        schema: &'a Schema,
+        path: &Path,
+    ) -> LexicalSettings<'a> {
+        let mut lexical = self.lexical(schema);
+        if let Some(model) = &schema.sources.model
+            && let Some(language) = model.language_of(path)
+        {
+            lexical.comment_prefixes = &language.comment_prefixes;
+            lexical.docstring_python = language.docstrings;
+        }
+        lexical
     }
 }
 

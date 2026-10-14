@@ -4,11 +4,11 @@ use std::path::Path;
 
 use super::extents::body_has_content;
 use super::line_owners::{LineOwners, resolve_requested_lines};
+use super::record::walk_blocks;
 use crate::config::{Frame, Schema};
 use crate::grammar::{AliasGrammar, MultiLineStrings, block_declares_id, inline_note_verdicts};
 use crate::model::{
-    BlockForm, Catalog, FileRecord, InlineCitationSite, RecordedBlock,
-    SectionHeadingOutsideDeclaration,
+    BlockForm, Catalog, FileRecord, InlineCitationSite, SectionHeadingOutsideDeclaration,
 };
 use crate::model::{scanned_decl_relative_path, scanned_path_key, sort_path_key};
 use crate::workspace::WorkspaceCitationTarget;
@@ -274,15 +274,16 @@ fn lexical_targets(targets: &[WorkspaceCitationTarget]) -> Vec<AliasGrammar<'_>>
 }
 
 /// Locate the source-comment blocks that can host inline citation sites
-/// (§FS-inline-citation-style.1), from the blocks the record walked once
+/// (§FS-inline-citation-style.1), from the blocks walked once into the record
 /// (§AR-scanner.2.8.1). Markdown prose is deliberately out of scope, and so is a
 /// *doc comment*: documentation is not a note about a clause, so nothing the
 /// inline citation style says applies to one (§FS-inline-citation-style.1.1,
 /// §AR-scanner.4).
 pub(super) fn inline_citation_sites(
-    lines: &[&str],
+    path: &Path,
     literals: &MultiLineStrings,
-    blocks: &[RecordedBlock],
+    record: &mut FileRecord,
+    is_py: bool,
     schema: &Schema,
     frame: Frame<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
@@ -290,6 +291,10 @@ pub(super) fn inline_citation_sites(
     BTreeMap<usize, InlineCitationSite>,
     BTreeMap<usize, std::sync::Arc<[String]>>,
 ) {
+    let text = record.text.clone();
+    let lines = text.as_str().lines().collect::<Vec<_>>();
+    record.blocks = walk_blocks(path, &lines, is_py, schema, frame);
+    let blocks = &record.blocks;
     let mut sites = BTreeMap::new();
     let mut site_lines = BTreeMap::new();
     if blocks.is_empty() {
@@ -299,19 +304,24 @@ pub(super) fn inline_citation_sites(
     // per file — which project's grammar reads a qualified token's ID tail is all
     // the tokenizer below needs of a target (§AR-system.2.1).
     let alias_grammars = lexical_targets(workspace_targets);
+    let lexical = frame.compiled.lexical_for(schema, path);
     for recorded in blocks {
         let (start, end) = (recorded.start - 1, recorded.end - 1);
         let block = &lines[start..=end];
         // §FS-inline-citation-style.1.1: a doc comment hosts no site — the same
         // skip a block that *declares* an ID already earned, and for the same
         // reason: its shape is not this spec's to govern.
+
+        // §FS-config-v2.schema.sources.declarations.prose: a block the gate keeps from
+        // declaring is prose, so it is measured as any note is.
         if !recorded.doc
-            && !block_declares_id(
-                block,
-                recorded.form == BlockForm::Docstring,
-                recorded.form == BlockForm::Block && recorded.closed,
-                frame.compiled.lexical(schema),
-            )
+            && !(recorded.declares
+                && block_declares_id(
+                    block,
+                    recorded.form == BlockForm::Docstring,
+                    recorded.form == BlockForm::Block && recorded.closed,
+                    lexical,
+                ))
         {
             // §FS-inline-citation-style.3.3: both verdicts are taken here, while
             // the block's lines are in hand, so the checker never re-reads one
@@ -321,7 +331,7 @@ pub(super) fn inline_citation_sites(
                 // §FS-languages.multi-line-string: each line read in the state it begins in.
                 literals.starting_at(start),
                 start + 1,
-                frame.compiled.lexical(schema),
+                lexical,
                 &alias_grammars,
             );
             let site = InlineCitationSite {

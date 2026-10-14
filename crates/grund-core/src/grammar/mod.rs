@@ -106,7 +106,9 @@ pub(crate) use comment_line::{comment_envelope, comment_strip_prefixes, strip_bl
 pub(crate) use compiled::{
     QUALIFIED_CITATION_PREFIX, STUB_LINK_HEADING, is_valid_project_alias, section_path,
 };
-pub(crate) use language_table::{classified_extensions, doc_comment_rule};
+pub(crate) use language_table::{
+    DocProfile, classified_extensions, doc_comment_rule, extension_rule,
+};
 // The bare fence reader serves the record's doc-comment headings and the template
 // tests, which look for a fenced example rather than for a heading (§FS-check.1.1.5).
 pub(crate) use fence::{MarkdownFence, markdown_fence_delimiter};

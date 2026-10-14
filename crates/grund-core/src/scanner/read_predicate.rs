@@ -39,6 +39,8 @@ pub(crate) enum Unread {
     Extension,
     /// A hidden directory, or one `[scan] exclude` names (§AR-scanner.1.2).
     ExcludedDirectory,
+    /// A path a v2 `[schema.sources] exclude` glob matches (§AR-scanner.1.12).
+    ExcludedPath,
     /// An ignore file (§AR-scanner.1.1).
     IgnoreFile,
     /// Outside every scan root (§AR-scanner.1.6).

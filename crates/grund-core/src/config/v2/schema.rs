@@ -1,7 +1,7 @@
 //! The schema concern's keys (§FS-config-v2.schema): `[schema]`'s grammar keys
-//! and `heading_depth`, `[schema.sources]`, and each `[schema.kinds.<NAME>]`
-//! row, read into a draft that `finish.rs` judges and lowers once every row is
-//! known. The measure tables are `measures.rs`'s.
+//! and `heading_depth`, and each `[schema.kinds.<NAME>]` row, read into a draft
+//! that `finish.rs` judges and lowers once every row is known. The measure tables
+//! are `measures.rs`'s, and `[schema.sources]` is `sources.rs`'s.
 
 use anyhow::Result;
 use std::path::{Component, Path};
@@ -112,26 +112,6 @@ pub(super) fn schema_key(r: &mut Reader, key: &str, value: &str, line: usize) ->
                 }
             };
             r.project.schema.ids.section_heading_levels = mode.to_string();
-        }
-        _ => return Ok(false),
-    }
-    Ok(true)
-}
-
-/// §FS-config-v2.schema.sources: `[schema.sources]`. Markdown alone is executed
-/// (§FS-config-v2.defaults.2); the rest of #456's clauses are refused.
-pub(super) fn sources_key(r: &mut Reader, key: &str, value: &str, line: usize) -> Result<bool> {
-    match key {
-        "languages" => {
-            let languages = parse_string_list(r.path, line, value)?;
-            if languages != ["markdown"] {
-                return r.fail(line, not_yet("[schema.sources] languages"));
-            }
-            r.languages = true;
-        }
-        "exclude" => return r.fail(line, not_yet("[schema.sources] exclude")),
-        "respect_gitignore" => {
-            r.project.schema.sources.respect_gitignore = parse_bool(r.path, line, value)?;
         }
         _ => return Ok(false),
     }

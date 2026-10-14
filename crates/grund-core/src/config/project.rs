@@ -16,6 +16,7 @@ use super::kind::KindResolution;
 use super::point_sizes::LeadSizeWarning;
 use super::record::{ConfigLocation, ShorthandPolicy};
 use super::rows::{Nesting, Row};
+use super::sources::SourceModel;
 
 /// The `[citations]` table under its concern's name (§AR-config.1.2): the
 /// direction rules, unchanged in shape from the record `Config` carried.
@@ -99,6 +100,9 @@ pub struct Sources {
     pub comment_prefixes: Vec<String>,
     pub docstring_python: bool,
     pub respect_gitignore: bool,
+    /// The resolved v2 source model (§FS-config-v2.schema.sources); `None` for a v1
+    /// file, whose `[scan]` keys above keep their meaning (§FS-config.5.2).
+    pub(crate) model: Option<SourceModel>,
 }
 
 /// §AR-config.1.2: how an inline note is written (§FS-inline-citation-style).

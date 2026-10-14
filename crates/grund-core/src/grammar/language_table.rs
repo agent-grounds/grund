@@ -104,8 +104,99 @@ pub(crate) fn doc_comment_rule(path: &Path) -> DocCommentRule {
     let Some(extension) = path.extension().and_then(|ext| ext.to_str()) else {
         return DocCommentRule::None;
     };
+    extension_rule(extension)
+}
+
+/// The recognizer the table gives `extension`, `None` where it names none.
+pub(crate) fn extension_rule(extension: &str) -> DocCommentRule {
     LANGUAGE_TABLE
         .iter()
         .find(|(named, _)| *named == extension)
         .map_or(DocCommentRule::None, |(_, rule)| *rule)
+}
+
+/// A frozen doc-comment recognizer a v2 language names, for the declarations it
+/// admits (§FS-config-v2.schema.sources.epoch, §FS-inline-citation-style.1.1.4).
+/// Each profile is one of the recognizers above, fixed as it stood at the v2
+/// epoch; `None` is a language with no notion of documentation, every comment of
+/// which may declare (§FS-config-v2.schema.sources.declarations.eligible).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum DocProfile {
+    None,
+    CFamily,
+    Python,
+    Go,
+    Ruby,
+    Shell,
+    Sql,
+    Ldoc,
+    Haddock,
+    Roxygen,
+}
+
+impl DocProfile {
+    /// Every profile, in the order `[schema.sources.definitions]` names them.
+    pub(crate) const ALL: [DocProfile; 10] = [
+        Self::None,
+        Self::CFamily,
+        Self::Python,
+        Self::Go,
+        Self::Ruby,
+        Self::Shell,
+        Self::Sql,
+        Self::Ldoc,
+        Self::Haddock,
+        Self::Roxygen,
+    ];
+
+    /// The name a v2 file writes for this profile.
+    pub(crate) fn name(self) -> &'static str {
+        match self {
+            Self::None => "none",
+            Self::CFamily => "c-family",
+            Self::Python => "python",
+            Self::Go => "go",
+            Self::Ruby => "ruby",
+            Self::Shell => "shell",
+            Self::Sql => "sql",
+            Self::Ldoc => "ldoc",
+            Self::Haddock => "haddock",
+            Self::Roxygen => "roxygen",
+        }
+    }
+
+    pub(crate) fn parse(name: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|profile| profile.name() == name)
+    }
+
+    /// The recognizer this profile asks (§FS-inline-citation-style.1.1.4): the
+    /// one the v1 table gives the language's own extensions.
+    pub(crate) fn rule(self) -> DocCommentRule {
+        match self {
+            Self::None => PREFIX_ONLY,
+            Self::CFamily => C_FAMILY,
+            Self::Python => DocCommentRule::Docstring,
+            Self::Go => GO,
+            Self::Ruby => RUBY,
+            Self::Shell => SHELL,
+            Self::Sql => SQL,
+            Self::Ldoc => DocCommentRule::LuaDoc,
+            Self::Haddock => DocCommentRule::Haddock,
+            Self::Roxygen => DocCommentRule::Roxygen,
+        }
+    }
+
+    /// The comment prefix whose forms spell this profile's marker or position
+    /// block, one of which a definition's prefixes must hold for the profile to
+    /// be reachable (§FS-config-v2.schema.sources.definitions); empty for the
+    /// profiles no prefix spells.
+    pub(crate) fn hosts(self) -> &'static [&'static str] {
+        match self {
+            Self::None | Self::Python => &[],
+            Self::CFamily => &["//", "/*"],
+            Self::Go => &["//"],
+            Self::Ruby | Self::Shell | Self::Roxygen => &["#"],
+            Self::Sql | Self::Ldoc | Self::Haddock => &["--"],
+        }
+    }
 }

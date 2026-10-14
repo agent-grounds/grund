@@ -33,7 +33,7 @@ use super::extents::assign_extents;
 use super::qualified_citations::{
     scan_fallback_qualified_citations, scan_workspace_qualified_pass,
 };
-use super::record::{CommentFences, HeadingLine, bare_block_line, walk_blocks, zone_of};
+use super::record::{CommentFences, HeadingLine, bare_block_line, declaration_eligible, zone_of};
 use super::relative_sections::HeldHeadings;
 use super::section_record::record_section_heading;
 use super::tree::heading_level_for_line;
@@ -43,7 +43,7 @@ use super::unmarked_headings::assign_unmarked_heading_owners;
 use super::value_binding_split::scan_split_binding;
 use super::value_context::recognized_source_value_contexts;
 use super::values::scan_value_bindings;
-use crate::config::{Frame, Schema};
+use crate::config::{FileReading, Frame, Schema};
 use crate::grammar::{
     DocstringContent, MarkdownBlocks, MarkdownLine, MultiLineStrings, PythonDocstringScanState,
     atx_heading_text, declaration_captures, near_miss_heading, parse_id, section_path,
@@ -109,22 +109,22 @@ pub(super) fn scan_file_text(
 ) -> Result<()> {
     let grammar = frame.grammar();
     let marker = &schema.citation.marker;
-    let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");
-    let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");
+    // §FS-config-v2.schema.sources: a v2 file is read as its language is.
+    let reading = FileReading::of(schema.sources.model.as_ref(), path);
+    let (is_md, is_py) = (reading.markdown, reading.python);
+    let docstring_python = frame.compiled.lexical_for(schema, path).docstring_python;
     // §AR-scanner.2.8.1: the record keeps the text as read, and the pass reads it there.
     let mut record = FileRecord::new(file_text, is_md);
     let shared = record.text.clone();
     let text = shared.as_str();
     // §FS-languages.multi-line-string: what each line begins inside, read off the whole file.
-    let literals = MultiLineStrings::of(path, text, schema.sources.docstring_python);
+    let literals = MultiLineStrings::of(path, text, docstring_python);
     // §AR-scanner.2.8.1: the comment blocks, walked once, are what the inline-note sites read.
     let (inline_sites, inline_block_lines) = if is_md {
         Default::default()
     } else {
-        let lines = text.lines().collect::<Vec<_>>();
-        record.blocks = walk_blocks(path, &lines, is_py, schema, frame);
-        let blocks = &record.blocks;
-        inline_citation_sites(&lines, &literals, blocks, schema, frame, workspace_targets)
+        let targets = workspace_targets;
+        inline_citation_sites(path, &literals, &mut record, is_py, schema, frame, targets)
     };
     let in_docs = super::stub_shape::stub_by_docs(path);
     let mut markdown_blocks = MarkdownBlocks::default();
@@ -175,12 +175,7 @@ pub(super) fn scan_file_text(
         // declares nothing and opens no section, but its citations stay live below.
         let heading_position = block.may_be_heading();
         let trimmed = line.trim_start();
-        let scan = source_scan_line(
-            line,
-            is_py,
-            schema.sources.docstring_python,
-            &mut py_docstring,
-        );
+        let scan = source_scan_line(line, is_py, docstring_python, &mut py_docstring);
         record.zones.extend(zone_of(lineno, &scan));
         if !is_md {
             comment_fences.read(&mut record, lineno);
@@ -206,8 +201,11 @@ pub(super) fn scan_file_text(
         // §FS-declarations.line.block-comment: a bare line of a closed `/* … */` block is in
         // declaration position, read as a docstring line is, where the comment reading finds none.
         let bare_block = !is_md && !scan.in_py_docstring && bare_block_line(&record, lineno);
+        // §FS-config-v2.schema.sources.declarations.gate: one answer, before every recognizer.
+        let eligible = declaration_eligible(&record, schema, lineno);
         let mut declared = false;
         if heading_position
+            && eligible
             && let Some((caps, bare)) =
                 declaration_captures(grammar, scan_line, scan.in_py_docstring, is_md)
                     .map(|caps| (caps, false))
@@ -275,6 +273,7 @@ pub(super) fn scan_file_text(
         // near-miss pattern whether it looked like one, here rather than in a second read of the
         // tree — the scan has the line, the position rules and the fence/docstring state.
         if structure
+            && eligible
             && let Some(((text, format, kind), bare)) =
                 near_miss_heading(grammar, scan_line, scan.in_py_docstring, is_md)
                     .map(|miss| (miss, false))

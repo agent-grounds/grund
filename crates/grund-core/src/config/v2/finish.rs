@@ -17,18 +17,13 @@ use crate::config::rows::{Extent, Form, Kind, Origin, Place, Row};
 use crate::config::v1::{ValueLines, rule_kind_refusal, validate_kind_value_keys};
 
 use super::schema::RowDraft;
+use super::sources;
 
 /// §FS-config-v2.reader.4: judge the file whole, then lower its rows. `root` is
 /// the config root a value home must exist under (§FS-fields.forms).
 pub(super) fn finish(mut r: Reader, root: &Path) -> Result<Project> {
     let mut late: Vec<(usize, String)> = Vec::new();
-    // §FS-config-v2.defaults.2: the epoch's language set is not executed yet.
-    if !r.languages {
-        late.push((
-            r.version_line,
-            "v2 needs an explicit [schema.sources] languages: this grund does not support the v2 default language set yet".to_string(),
-        ));
-    }
+    sources::judge(&r.sources, &mut late);
     for row in &r.rows {
         row_checks(row, &mut late);
         let fields: Vec<&FieldDraft> = r.fields.iter().filter(|f| f.kind == row.name).collect();
@@ -43,6 +38,7 @@ pub(super) fn finish(mut r: Reader, root: &Path) -> Result<Project> {
         form_prerequisites(&r, row, root)?;
     }
     lower(&mut r);
+    sources::lower(&mut r);
     Ok(r.project)
 }
 

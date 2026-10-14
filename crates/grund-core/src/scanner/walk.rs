@@ -1,6 +1,7 @@
 use crate::sources::{canonical_path, is_directory, is_regular_file, path_exists, path_is_file};
 use anyhow::{Result, anyhow};
 use ignore::WalkBuilder;
+use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use std::path::{Path, PathBuf};
 
 use super::e2e::{e2e_cases_folder, e2e_id_from_case_dir_name};
@@ -172,6 +173,9 @@ pub(super) struct WalkDirFilter {
     boundary_suffixes: Vec<PathBuf>,
     boundary_roots: Vec<PathBuf>,
     excluded: Vec<String>,
+    /// A v2 project's `[schema.sources] exclude`, compiled over config-root paths
+    /// (§FS-config-v2.schema.sources.exclude); `None` for v1 and for an empty list.
+    globs: Option<std::sync::Arc<Gitignore>>,
     /// The `scan = false` homes this walk prunes, as home path keys
     /// (§FS-config.3.4.7.2). Empty under `--full`, and empty in the tree that
     /// configures no such kind — which is every tree that never pays for the
@@ -219,6 +223,7 @@ impl WalkDirFilter {
             boundary_suffixes,
             boundary_roots: frame.run.workspace.boundary_roots.clone(),
             excluded: schema.sources.exclude.clone(),
+            globs: exclude_globs(schema),
             e2e_cases_root: e2e_cases_folder(schema).map(|folder| frame.root().join(folder)),
             physical_root: physical_root.to_path_buf(),
             unwalked_homes: walk_pruned_home_keys(schema, frame, scan_root, physical_root),
@@ -289,6 +294,11 @@ impl WalkDirFilter {
         {
             return Some(Unread::UnwalkedHome);
         }
+        // §FS-config-v2.schema.sources.exclude.roots: below a root, a glob prunes a
+        // file or a directory by the spelling the walk reached it under.
+        if self.excluded_by_glob(path, is_dir) {
+            return Some(Unread::ExcludedPath);
+        }
         if !is_dir {
             return None;
         }
@@ -317,6 +327,24 @@ impl WalkDirFilter {
             return Some(Unread::LoopingLink);
         }
         None
+    }
+
+    /// Whether a v2 `exclude` glob matches `path` (§FS-config-v2.schema.sources.exclude).
+    /// A path under the config root is matched by its config-relative spelling; one
+    /// outside it by its own name alone, so an anchored pattern never reaches outside
+    /// the root while an unanchored one still applies below it (rule 5).
+    fn excluded_by_glob(&self, path: &Path, is_dir: bool) -> bool {
+        let Some(globs) = &self.globs else {
+            return false;
+        };
+        let relative = match path.strip_prefix(&self.root) {
+            Ok(relative) => relative,
+            Err(_) => match path.file_name() {
+                Some(name) => Path::new(name),
+                None => return false,
+            },
+        };
+        globs.matched(relative, is_dir).is_ignore()
     }
 
     /// The canonical path of a directory the walk reached **through** a symlink
@@ -532,4 +560,18 @@ fn walk_pruned_home_keys(
     let asked_for_one = scanned_decl_relative_path(scan_root, frame.root(), physical_root)
         .is_some_and(|relative| homes.iter().any(|home| relative.starts_with(home)));
     if asked_for_one { Vec::new() } else { homes }
+}
+
+/// §FS-config-v2.schema.sources.exclude: a v2 project's globs, compiled once per
+/// walk. The reader refused any pattern the builder refuses, so none fails here.
+fn exclude_globs(schema: &Schema) -> Option<std::sync::Arc<Gitignore>> {
+    let model = schema.sources.model.as_ref()?;
+    if model.exclude.is_empty() {
+        return None;
+    }
+    let mut builder = GitignoreBuilder::new("");
+    for pattern in &model.exclude {
+        builder.add_line(None, pattern).ok()?;
+    }
+    builder.build().ok().map(std::sync::Arc::new)
 }

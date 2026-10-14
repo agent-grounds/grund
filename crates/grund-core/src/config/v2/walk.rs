@@ -11,6 +11,7 @@ use std::path::Path;
 
 use super::fields::FieldDraft;
 use super::schema::RowDraft;
+use super::sources::{self, SourcesDraft};
 use super::tables::{self, Opened, Table};
 use super::{defaults, fields, measures, presentation, rules, schema};
 use crate::config::kind::KindResolution;
@@ -28,11 +29,8 @@ pub(super) struct Reader<'a> {
     /// The `[schema.kinds.<NAME>.fields.<field>]` tables, in header order
     /// (§FS-fields.declare.field).
     pub(super) fields: Vec<FieldDraft>,
-    /// Where `grund_config_version` was written: the anchor of an omitted
-    /// default this grund cannot execute (§FS-config-v2.defaults.2).
-    pub(super) version_line: usize,
-    /// Whether `[schema.sources] languages` was written.
-    pub(super) languages: bool,
+    /// `[schema.sources]` and its tables as written (§FS-config-v2.schema.sources).
+    pub(super) sources: SourcesDraft,
     /// The explicit `[rules.resolution]` entries.
     pub(super) resolution: Vec<(String, KindResolution, usize)>,
     /// The place each row ladder names, at its header.
@@ -52,8 +50,7 @@ impl<'a> Reader<'a> {
             project: defaults::default_project(),
             rows: Vec::new(),
             fields: Vec::new(),
-            version_line: 1,
-            languages: false,
+            sources: SourcesDraft::default(),
             resolution: Vec::new(),
             row_ladders: Vec::new(),
             presentation_kinds: Vec::new(),
@@ -94,6 +91,9 @@ impl<'a> Reader<'a> {
             Opened::Field(row, field) => {
                 Table::Field(fields::open_field(self, &row, &field, line)?)
             }
+            Opened::Definition(name) => {
+                Table::Definition(sources::open_definition(self, &name, line)?)
+            }
             Opened::Table(table) => table,
         };
         let citations = &mut self.project.rules.citations;
@@ -129,7 +129,15 @@ impl<'a> Reader<'a> {
         }
         self.keys.insert(key.to_string(), line);
         let mut table = std::mem::replace(&mut self.table, Table::Root);
-        let admitted = bare(key) && self.read_key(&mut table, key, value, line)?;
+        // §FS-config-v2.schema.sources.extensions: a suffix key may be quoted, so a
+        // malformed one reaches the suffix check rather than the bare-key one.
+        let quoted = key.len() >= 2 && key.starts_with('"') && key.ends_with('"');
+        let admitted = if matches!(table, Table::Extensions) && quoted {
+            let key = parse_string(self.path, line, key)?;
+            self.read_key(&mut table, &key, value, line)?
+        } else {
+            bare(key) && self.read_key(&mut table, key, value, line)?
+        };
         self.table = table;
         if !admitted {
             return self.fail(line, format!("unknown key `{key}` {at}"));
@@ -142,7 +150,9 @@ impl<'a> Reader<'a> {
             Table::Root => self.envelope_key(key, value, line),
             Table::Parent => Ok(false),
             Table::Schema => schema::schema_key(self, key, value, line),
-            Table::Sources => schema::sources_key(self, key, value, line),
+            Table::Sources => sources::sources_key(self, key, value, line),
+            Table::Extensions => sources::extension_key(self, key, value, line),
+            Table::Definition(index) => sources::definition_key(self, *index, key, value, line),
             Table::Row(index) => schema::row_key(self, *index, key, value, line),
             Table::Field(index) => fields::field_key(self, *index, key, value, line),
             Table::Measure(_, written) => measures::measure_key(self, written, key, value, line),
@@ -164,8 +174,8 @@ impl<'a> Reader<'a> {
     /// The envelope (§FS-config.concerns): the version and the project's name.
     fn envelope_key(&mut self, key: &str, value: &str, line: usize) -> Result<bool> {
         match key {
-            // `selects` read this key's value; the reader keeps where it was.
-            "grund_config_version" => self.version_line = line,
+            // `selects` read this key's value.
+            "grund_config_version" => {}
             "project_name" => {
                 self.project.name = Some(parse_string(self.path, line, value)?);
                 self.project.name_source = self.at(line);
@@ -189,7 +199,8 @@ impl<'a> Reader<'a> {
 
 /// §FS-config-v2.reader: walk `text` into `reader`, header by header.
 pub(super) fn walk(text: &str, reader: &mut Reader) -> Result<()> {
-    for (idx, raw) in text.lines().enumerate() {
+    let mut lines = text.lines().enumerate();
+    while let Some((idx, raw)) = lines.next() {
         let line_no = idx + 1;
         let line = strip_comment(raw).trim();
         if line.is_empty() {
@@ -204,9 +215,45 @@ pub(super) fn walk(text: &str, reader: &mut Reader) -> Result<()> {
         let Some((key, value)) = line.split_once('=') else {
             return reader.fail(line_no, "expected `key = value`".to_string());
         };
-        reader.entry(key.trim(), value.trim(), line_no)?;
+        // §FS-config-v2.reader.4: an array written across lines is one value, read
+        // at the line of its key.
+        let mut value = value.trim().to_string();
+        while value.starts_with('[') && open_brackets(&value) > 0 {
+            let Some((_, next)) = lines.next() else {
+                return reader.fail(line_no, "unclosed array".to_string());
+            };
+            value.push(' ');
+            value.push_str(strip_comment(next).trim());
+        }
+        reader.entry(key.trim(), &array_value(&value), line_no)?;
     }
     reader.close()
+}
+
+/// How many `[` of `value` are still open, outside its strings.
+fn open_brackets(value: &str) -> i32 {
+    let (mut depth, mut in_string, mut escaped) = (0, false, false);
+    for c in value.chars() {
+        match c {
+            _ if escaped => escaped = false,
+            '\\' if in_string => escaped = true,
+            '"' => in_string = !in_string,
+            '[' if !in_string => depth += 1,
+            ']' if !in_string => depth -= 1,
+            _ => {}
+        }
+    }
+    depth
+}
+
+/// An array value with the trailing comma TOML allows before its `]` taken off.
+fn array_value(value: &str) -> String {
+    match value.strip_suffix(']') {
+        Some(inner) if value.starts_with('[') && inner.trim_end().ends_with(',') => {
+            format!("{}]", inner.trim_end().trim_end_matches(','))
+        }
+        _ => value.to_string(),
+    }
 }
 
 /// The dotted name a header line writes. v2 writes every table under its own
