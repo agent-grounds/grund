@@ -106,8 +106,7 @@ pub(crate) use run::{Invocation, Selection, scope_is_config_root};
 #[allow(unused_imports)]
 pub use run::{Run, RunScope, RunWorkspace};
 pub use schema_view::{
-    BadgeRung, EdgeTarget, Junction, NodeClass, STRENGTH_ORDER, SchemaEdge, SchemaNode, SchemaSlot,
-    SchemaView,
+    BadgeRung, EdgeTarget, Junction, NodeClass, SchemaEdge, SchemaNode, SchemaSlot, SchemaView,
 };
 #[allow(unused_imports)]
 pub use slots::{Content, Handle, Slot};

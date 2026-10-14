@@ -2,7 +2,7 @@
 
 The evidence [§DISC-grund-core-public-surface](2026-09-22-grund-core-public-surface.md#disc-grund-core-public-surface-what-grund-cores-public-root-surface-is-and-what-it-should-be) argues from. It classifies nothing on its own authority: the counting convention is [§DISC-grund-core-public-surface.3](2026-09-22-grund-core-public-surface.md#3-what-counts-as-a-public-root-name), the columns are [§DISC-grund-core-public-surface.4](2026-09-22-grund-core-public-surface.md#4-what-every-inventory-row-carries), and `tests/integration/test_public_surface_inventory.py` holds the first column equal to the crate root's export list ([§DISC-grund-core-public-surface.5](2026-09-22-grund-core-public-surface.md#5-what-is-checked)).
 
-The original 182-name audit uses the baseline [§DISC-grund-core-public-surface.2](2026-09-22-grund-core-public-surface.md#2-the-audited-baseline) records — `7283e23bb0`, workspace `0.14.2-dev`, `v0.14.1-26-g7283e23bb0`. Four additive completion exports were read at `abba38146e` and seven additive Python-binding exports at `fa57931b17`, both workspace `0.16.2-dev`, three hidden, data-only watch seams of [§AR-bindings.3](../../architecture/AR-bindings.md#3-cratesgrund-cli-the-cli-binary) extend it, and eight additive `cover --lines` exports of [§FS-cover.6](../../functional-spec/FS-cover.md#6-line-ownership) were read at `1f129faef7`, and two hidden run-flag seams of [§FS-cli.3.4](../../functional-spec/FS-cli.md#34---path-base--where-report-paths-are-spelled-from) carry the `--path-base` a frontend parses, and eight additive Node-binding exports of [§FS-distribution.3.2](../../functional-spec/FS-distribution.md#32-node-grund-cli-npm-package) were read at `92bd7ff28d`; the concern records `Catalog`, `Project`, `Run` and `Compiled` of [§AR-config.1](../../architecture/AR-config.md#1-the-records), with `effective_project`, followed, and `Config`, `KindConfig` and `CitationRules` became the deprecated aliases that ramp removes, and `show_from_snapshot` with its `LspShowContext` took the place of `show_with_overlays` when the editor's citation hover began answering from its snapshot ([§FS-lsp.responsiveness.3](../../functional-spec/FS-lsp.md#responsiveness3-a-citation-hover-reads-nothing-the-snapshot-did-not)); the existing rows retain their original evidence. The two writer-fault exports exist only with `test-binding-writes`; `visible` describes their definitions when that feature is enabled. **220 rows, one per public root name**, including feature-gated exports. The counts below include every addition; the Python and Node frontends now supply consumer evidence alongside CLI and LSP.
+The original 182-name audit uses the baseline [§DISC-grund-core-public-surface.2](2026-09-22-grund-core-public-surface.md#2-the-audited-baseline) records — `7283e23bb0`, workspace `0.14.2-dev`, `v0.14.1-26-g7283e23bb0`. Four additive completion exports were read at `abba38146e` and seven additive Python-binding exports at `fa57931b17`, both workspace `0.16.2-dev`, three hidden, data-only watch seams of [§AR-bindings.3](../../architecture/AR-bindings.md#3-cratesgrund-cli-the-cli-binary) extend it, and eight additive `cover --lines` exports of [§FS-cover.6](../../functional-spec/FS-cover.md#6-line-ownership) were read at `1f129faef7`, and two hidden run-flag seams of [§FS-cli.3.4](../../functional-spec/FS-cli.md#34---path-base--where-report-paths-are-spelled-from) carry the `--path-base` a frontend parses, and eight additive Node-binding exports of [§FS-distribution.3.2](../../functional-spec/FS-distribution.md#32-node-grund-cli-npm-package) were read at `92bd7ff28d`; the concern records `Catalog`, `Project`, `Run` and `Compiled` of [§AR-config.1](../../architecture/AR-config.md#1-the-records), with `effective_project`, followed, and `Config`, `KindConfig` and `CitationRules` became the deprecated aliases that ramp removes, the hidden schema view of [§AR-config.6.3](../../architecture/AR-config.md#63-the-schema-view-is-lowered-from-a-project-on-demand), `schema_view` and the twelve record types `grund schema` prints from, followed, and `show_from_snapshot` with its `LspShowContext` took the place of `show_with_overlays` when the editor's citation hover began answering from its snapshot ([§FS-lsp.responsiveness.3](../../functional-spec/FS-lsp.md#responsiveness3-a-citation-hover-reads-nothing-the-snapshot-did-not)); the existing rows retain their original evidence. The two writer-fault exports exist only with `test-binding-writes`; `visible` describes their definitions when that feature is enabled. **220 rows, one per public root name**, including feature-gated exports. The counts below include every addition; the Python and Node frontends now supply consumer evidence alongside CLI and LSP.
 
 ## How a cell reads
 
@@ -24,16 +24,16 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 | Reading | Count |
 | --- | --- |
-| Public root names | 227 |
+| Public root names | 240 |
 | Rustdoc-visible | 202 |
-| `#[doc(hidden)]` | 25 |
+| `#[doc(hidden)]` | 38 |
 | Named, a related API, or a data type of one | 126 |
-| Outside that closure | 101 |
-| Named by a frontend or its tests | 134 |
+| Outside that closure | 114 |
+| Named by a frontend or its tests | 147 |
 | Reached structurally only | 43 |
 | No repository consumer of either kind | 50 |
 | Disposition keep | 135 |
-| Disposition keep, hidden | 25 |
+| Disposition keep, hidden | 38 |
 | Disposition keep, name in the spec | 18 |
 | Disposition hide | 11 |
 | Disposition retire with the ramp | 4 |
@@ -53,6 +53,7 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `ApiOutcome` | api | visible | no | grund-node `grund-node/src/lib.rs:165` | — | keep |
 | `ApiPartialOutput` | api | visible | no | none found | via ApiOutcome → ApiFailure → ApiPartialOutput `grund-node/src/lib.rs:165` | keep |
 | `ApiScanError` | scanner | visible | data type of `refs` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
+| `BadgeRung` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/tests_schema.rs:8` | — | keep, hidden |
 | `BatchShowFailure` | queries | `#[doc(hidden)]` | no | none found | via show_batch_with_scope → BatchShowRecord → BatchShowFailure `grund-cli/src/cli_show_batch.rs:63` | keep, hidden |
 | `BatchShowQuery` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
 | `BatchShowRecord` | queries | `#[doc(hidden)]` | no | none found | via show_batch_with_scope → BatchShowRecord `grund-cli/src/cli_show_batch.rs:63` | keep, hidden |
@@ -115,16 +116,19 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `DocCommentBlock` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `E2eCase` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `E2eSpecRef` | model | visible | data type of `Catalog` | none found | none found | keep |
+| `EdgeTarget` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | keep, hidden |
 | `effective_config` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/integrations.rs:103` | — | keep |
 | `effective_project` | api | visible | related API | none found | none found | keep |
 | `EmbeddedValueRoot` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `embedding_call` | api | visible | related API | grund-py `grund-py/src/lib.rs:3`; oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | keep |
 | `EmbeddingRequest` | api | visible | data type of `embedding_call` | grund-py `grund-py/src/lib.rs:3`; grund-node `grund-node/src/lib.rs:7`; oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | keep |
 | `expand_target` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
+| `Extent` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | keep, hidden |
 | `fetch_snapshot` | writers | visible | no | none found | none found | keep, name in the spec |
 | `fetch_snapshot_with_run_warnings` | writers | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
 | `FetchFailure` | writers | visible | no | none found | via fetch_snapshot_with_run_warnings → FetchFailure `grund-cli/src/cli_fetch.rs:8` | keep, name in the spec |
 | `FetchFailureKind` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, name in the spec |
+| `FieldContent` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | keep, hidden |
 | `FileHeading` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `FileStructure` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `Finding` | model | visible | data type of `refs` | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
@@ -161,6 +165,7 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `IntegrationClient` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `INTEGRATIONS_BLOCK_VERSION` | grammar | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `InvalidValueSite` | model | visible | data type of `Catalog` | none found | none found | keep |
+| `Junction` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/tests_schema.rs:8` | — | keep, hidden |
 | `KindCitationRules` | config | visible | data type of `validate_config` | none found | via CitationRules → KindCitationRules `grund-cli/src/lib.rs:13` | keep |
 | `KindConfig` | config | visible | data type of `validate_config` | none found | via Config → KindConfig `grund-cli/src/lib.rs:13` | retire with the ramp |
 | `KindIndex` | config | visible | data type of `validate_config` | none found | via Config → KindConfig → KindIndex `grund-cli/src/lib.rs:13` | keep |
@@ -211,10 +216,12 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `needs_wezterm_wiring` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `node_embedding_call` | api | visible | related API | grund-node `grund-node/src/lib.rs:7`; oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | keep |
 | `node_request` | api | visible | related API | oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | keep |
+| `NodeClass` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | keep, hidden |
 | `on_type_line_edits` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
 | `OperationDiagnostic` | model | visible | no | none found | none found | keep, name in the spec |
 | `parse_cover_line_range` | api | visible | related API | none found | none found | keep |
 | `PathBase` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli.rs:58` | — | keep, hidden |
+| `Placement` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | keep, hidden |
 | `PointSizeUnit` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `Project` | config | visible | named | none found | none found | keep |
 | `propose_id` | api | visible | related API | none found | none found | keep |
@@ -239,6 +246,11 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `Run` | config | visible | no | none found | none found | keep |
 | `scan` | api | visible | named | none found | none found | keep |
 | `scan_user_config` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
+| `schema_view` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:36` | — | keep, hidden |
+| `SchemaEdge` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | keep, hidden |
+| `SchemaNode` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | keep, hidden |
+| `SchemaSlot` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | keep, hidden |
+| `SchemaView` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | keep, hidden |
 | `SectionHeadingOutsideDeclaration` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `SectionInfo` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `ShorthandPolicy` | config | visible | data type of `validate_config` | none found | via Config → ShorthandPolicy `grund-cli/src/lib.rs:13` | keep |
@@ -254,6 +266,7 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `ShowOutput` | model | visible | data type of `show` | none found | via show_with_scope → ShowOutput `grund-cli/src/cli_show.rs:166` | keep |
 | `ShowQueryError` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `ShowSection` | model | visible | data type of `show` | none found | via show_with_scope → ShowOutput → ShowSection `grund-cli/src/cli_show.rs:166` | keep |
+| `Strength` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/tests_schema.rs:8` | — | keep, hidden |
 | `UnmarkedHeading` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `usage_clause` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | via lsp_title_hover_body → usage_clause `grund-lsp/src/lib.rs:4` | keep |
 | `usage_over_paths` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | via title_usage → usage_over_paths `grund-lsp/src/lib.rs:4` | keep |

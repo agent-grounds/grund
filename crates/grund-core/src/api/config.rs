@@ -9,7 +9,7 @@ use std::path::Path;
 
 use super::config_findings::config_diagnostics;
 use super::report::public_run_warnings;
-use crate::config::{Config, Invocation, Project, SchemaView, Selection, config_file_in};
+use crate::config::{Config, Invocation, Project, SchemaView, Selection};
 use crate::model::Finding;
 use crate::resolver::settled_run_warnings;
 use crate::workspace::{expand_workspace_tree, open, resolve_workspace_config};
@@ -45,23 +45,7 @@ pub fn effective_project(path: &Path) -> Result<Project> {
 /// header's config path is spelled from the config root, whatever the run's
 /// `--path-base` (§FS-schema.1), and a nameless project is named by its root.
 pub fn schema_view(path: &Path) -> Result<SchemaView> {
-    let config = effective_config(path)?;
-    let mut view = SchemaView::of(config.project());
-    if let Some(file) = config_file_in(&config.root) {
-        let relative = file.strip_prefix(&config.root).unwrap_or(&file);
-        view.config_file = relative.to_string_lossy().replace('\\', "/");
-    }
-    if view.project.is_empty() {
-        let root = config
-            .root
-            .canonicalize()
-            .unwrap_or_else(|_| config.root.clone());
-        view.project = root
-            .file_name()
-            .map(|name| name.to_string_lossy().into_owned())
-            .unwrap_or_default();
-    }
-    Ok(view)
+    Ok(SchemaView::of_config(&effective_config(path)?))
 }
 
 /// Validate config discovery/parsing for a path without printing CLI output

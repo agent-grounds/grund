@@ -1,7 +1,7 @@
 //! Test module: the schema view lowered from a `Project` (§AR-config.6.3) — the
 //! class of each node, one junction per any-of entry and strength, grounding as a
 //! badge, the order of edges, every place of a row, and `everything else`
-//! (§FS-schema).
+//! (§FS-schema), in the vocabulary of node, junction and badge (§FS-schema.terms).
 
 use super::*;
 use crate::testing::{test_root, write};

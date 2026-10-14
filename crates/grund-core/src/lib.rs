@@ -109,8 +109,8 @@ pub use config::{PathBase, with_report_path_base};
 pub use api::schema_view;
 #[doc(hidden)]
 pub use config::{
-    BadgeRung, EdgeTarget, Extent, FieldContent, Junction, NodeClass, Placement, STRENGTH_ORDER,
-    SchemaEdge, SchemaNode, SchemaSlot, SchemaView, Strength,
+    BadgeRung, EdgeTarget, Extent, FieldContent, Junction, NodeClass, Placement, SchemaEdge,
+    SchemaNode, SchemaSlot, SchemaView, Strength,
 };
 
 /// The validated configuration façade, built from [`Project`], [`Run`] and
