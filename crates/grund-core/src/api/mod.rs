@@ -36,6 +36,7 @@ mod check;
 mod complete_ids;
 mod config;
 mod config_findings;
+mod config_migrate;
 mod cover;
 mod cover_lines;
 mod embedding;
@@ -73,6 +74,7 @@ pub use config::{
     ReferenceStyle, config_run_warnings, config_warnings, effective_config, effective_project,
     reference_style, schema_view, validate_config,
 };
+pub use config_migrate::{MigrateOpts, config_migrate};
 pub use cover::{
     CoverCitation, CoverEntry, CoverOpts, CoverOutput, CoverTextCitation, CoverTextEntry,
     CoverTextOutput, cover, cover_text, cover_text_with_run_warnings, cover_with_run_warnings,

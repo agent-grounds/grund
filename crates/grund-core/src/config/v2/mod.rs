@@ -37,7 +37,7 @@ use super::v1::strip_comment;
 /// `grund_config_version = 2` among the top-level keys, before any header. An
 /// omitted version, an explicit `1`, and every other value stay with v1, which
 /// refuses a version it does not know.
-pub(super) fn selects(text: &str) -> bool {
+pub(crate) fn selects(text: &str) -> bool {
     for raw in text.lines() {
         let line = strip_comment(raw).trim();
         if line.starts_with('[') {

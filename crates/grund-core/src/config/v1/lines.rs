@@ -16,10 +16,11 @@ pub(crate) enum LineKind {
     Blank,
     /// A line holding only a `#` comment.
     Comment,
-    /// `[name]`, or `[[name]]` when `array`.
+    /// `[name]`, or `[[name]]` when `array`, with any trailing comment.
     Header {
         name: String,
         array: bool,
+        trailing: Option<String>,
     },
     /// `key = value` inside `section` (`""` before any header), with the
     /// trailing `#` comment the line carries, if any.
@@ -60,6 +61,8 @@ impl LinePass {
     pub(super) fn see(&mut self, line: usize, raw: &str, section: &str) {
         let code = strip_comment(raw);
         let trimmed = code.trim();
+        let trailing = raw[code.len()..].trim();
+        let trailing = (!trailing.is_empty()).then(|| trailing.to_string());
         let kind = if trimmed.is_empty() {
             if raw.trim().is_empty() {
                 LineKind::Blank
@@ -70,15 +73,15 @@ impl LinePass {
             LineKind::Header {
                 name: trimmed.trim_matches(['[', ']']).to_string(),
                 array: trimmed.starts_with("[[") && trimmed.ends_with("]]"),
+                trailing,
             }
         } else {
             let (key, value) = trimmed.split_once('=').unwrap_or((trimmed, ""));
-            let trailing = raw[code.len()..].trim();
             LineKind::Key {
                 section: section.to_string(),
                 key: key.trim().to_string(),
                 value: value.trim().to_string(),
-                trailing: (!trailing.is_empty()).then(|| trailing.to_string()),
+                trailing,
             }
         };
         self.lines.push(LineRecord {

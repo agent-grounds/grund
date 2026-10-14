@@ -107,6 +107,15 @@ pub use config::{PathBase, with_report_path_base};
 // while the record still moves: a published shape would freeze it (§FS-schema.13).
 #[doc(hidden)]
 pub use api::schema_view;
+// §FS-config-migrate: `grund config migrate --to 2` and the one record it returns.
+// Hidden while the record still moves, like the schema view.
+#[doc(hidden)]
+pub use api::{MigrateOpts, config_migrate};
+#[doc(hidden)]
+pub use config::migrate::{
+    Gate, GateResult, ListedComment, MappedKey, MigrateFailure, MigrateNotice, MigrateOutcome,
+    MigrateRefusal, MigrateReport, RefusalAnchor,
+};
 #[doc(hidden)]
 pub use config::{
     BadgeRung, EdgeTarget, Extent, FieldContent, Junction, NodeClass, Placement, SchemaEdge,

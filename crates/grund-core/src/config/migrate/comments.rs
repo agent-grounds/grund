@@ -1,0 +1,235 @@
+//! §FS-config-migrate.4: the v1 file's comments in the candidate. A comment
+//! attached to a key that maps one-to-one moves above the v2 key or header it
+//! became, a trailing one stays on that line, the header block stays at the top,
+//! and every other comment is listed with its lines. The lines come from the v1
+//! reader's own line pass (§FS-config-migrate.4.3).
+
+use super::keys::Keys;
+use super::record::ListedComment;
+use crate::config::v1::{LineKind, LineRecord};
+
+/// Where a carried comment lands in the candidate.
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum Target {
+    Header(String),
+    Key(String, String),
+}
+
+/// §FS-config-migrate.4.1: the v2 header or key a v1 key maps one-to-one to,
+/// or `None` for a key that is dropped, split or merged.
+fn key_target(section: &str, key: &str, row: Option<&str>) -> Option<Target> {
+    let k = |table: &str, key: &str| Some(Target::Key(table.into(), key.into()));
+    match (section, key) {
+        ("", "grund_config_version") | ("", "project_name") => k("", key),
+        ("", "project_description") => k("presentation", "description"),
+        ("reference", "conversation") | ("reference", "trigger") => k("presentation", key),
+        ("reference", "marker") | ("reference", "shorthand") => k("schema", key),
+        ("reference", "inline_note_max_lines") => k("schema.notes.lines", "must"),
+        ("reference", "inline_note_max_columns") => k("schema.notes.columns", "must"),
+        ("reference", "inline_style") => k("schema.notes.text", "must"),
+        ("reference", "lead_size_warning") => k("schema.leads.words", "warn"),
+        ("id", "format") => k("schema", "id_format"),
+        ("id", "number_pattern" | "section_separator" | "slug_pattern") => k("schema", key),
+        ("id", "section_heading_levels") => k("schema", "heading_depth"),
+        ("kinds", _) => {
+            let row = row?;
+            let table = format!("schema.kinds.{row}");
+            match key {
+                "kind" => Some(Target::Header(table)),
+                "file" => k(&table, "files"),
+                "folder" => k(&table, "folders"),
+                "format" => k(&table, "id_format"),
+                "rules" | "values" => k(&table, "form"),
+                "citable" | "scan" | "index" | "fetch" => k(&table, key),
+                "title" => k(&format!("presentation.kinds.{row}"), "title"),
+                "resolve" => k("rules.resolution", row),
+                _ => None,
+            }
+        }
+        ("scan", "exclude" | "respect_gitignore") => k("schema.sources", key),
+        ("fmt.cross_refs", "anchor_format") => k("presentation.fmt", "anchors"),
+        ("fmt.cross_refs", "enabled") => k("presentation.fmt", "links"),
+        ("fmt", "exclude") => k("presentation.fmt", "exclude"),
+        ("workspace", _) => k("workspace", key),
+        ("citations", "default") => k("rules.citations", "default"),
+        (section, key) if section.starts_with("citations.") => k(&format!("rules.{section}"), key),
+        _ => None,
+    }
+}
+
+/// §FS-config-migrate.4.1: the v2 header a v1 header maps one-to-one to.
+fn header_target(name: &str, row: Option<&str>) -> Option<Target> {
+    match name {
+        "kinds" => row.map(|row| Target::Header(format!("schema.kinds.{row}"))),
+        "workspace" => Some(Target::Header("workspace".into())),
+        name if name == "citations" || name.starts_with("citations.") => {
+            Some(Target::Header(format!("rules.{name}")))
+        }
+        _ => None,
+    }
+}
+
+/// The v1 key a line is, as the report names it.
+fn v1_key(record: &LineRecord) -> String {
+    match &record.kind {
+        LineKind::Header { name, array, .. } if *array => format!("[[{name}]]"),
+        LineKind::Header { name, .. } => format!("[{name}]"),
+        LineKind::Key { section, key, .. } if section.is_empty() => key.clone(),
+        LineKind::Key { section, key, .. } if section == "kinds" => format!("[[kinds]] {key}"),
+        LineKind::Key { section, key, .. } => format!("[{section}] {key}"),
+        _ => String::new(),
+    }
+}
+
+/// The candidate with the carried comments in, and the comments it lists.
+pub(super) struct Carried {
+    pub(super) text: String,
+    pub(super) listed: Vec<ListedComment>,
+}
+
+/// §FS-config-migrate.4: place `lines`' comments into `body`, the rendered candidate.
+pub(super) fn carry(body: &str, lines: &[LineRecord], keys: &Keys) -> Carried {
+    let index = TableIndex::of(body);
+    let mut above: Vec<Vec<String>> = vec![Vec::new(); index.lines.len()];
+    let mut trailing: Vec<Option<String>> = vec![None; index.lines.len()];
+    let mut listed = Vec::new();
+    let mut header = Vec::new();
+    let mut i = 0;
+    while i < lines.len() {
+        let record = &lines[i];
+        let target_of = |record: &LineRecord| {
+            let row = keys.row_at(record.line).map(|block| block.name.as_str());
+            match &record.kind {
+                LineKind::Key { section, key, .. } => key_target(section, key, row),
+                LineKind::Header { name, .. } => header_target(name, row),
+                _ => None,
+            }
+        };
+        if record.kind != LineKind::Comment {
+            let comment = match &record.kind {
+                LineKind::Key { trailing, .. } | LineKind::Header { trailing, .. } => {
+                    trailing.clone()
+                }
+                _ => None,
+            };
+            if let Some(comment) = comment {
+                match target_of(record).and_then(|t| index.find(&t)) {
+                    Some(at) => trailing[at] = Some(comment),
+                    None => listed.push(ListedComment {
+                        first: record.line,
+                        last: record.line,
+                        place: format!("inside {}", v1_key(record)),
+                    }),
+                }
+            }
+            i += 1;
+            continue;
+        }
+        let start = i;
+        while i < lines.len() && lines[i].kind == LineKind::Comment {
+            i += 1;
+        }
+        let run: Vec<String> = lines[start..i]
+            .iter()
+            .map(|r| r.raw.trim().to_string())
+            .collect();
+        let (first, last) = (lines[start].line, lines[i - 1].line);
+        if first == 1 {
+            header = run;
+            continue;
+        }
+        let next = lines.get(i).filter(|r| !matches!(r.kind, LineKind::Blank));
+        let Some(next) = next else {
+            listed.push(ListedComment {
+                first,
+                last,
+                place: "standing alone".into(),
+            });
+            continue;
+        };
+        match target_of(next).and_then(|t| index.find(&t)) {
+            Some(at) => above[at].extend(run),
+            None => listed.push(ListedComment {
+                first,
+                last,
+                place: format!("above {}", v1_key(next)),
+            }),
+        }
+    }
+    let mut text = String::new();
+    if !header.is_empty() {
+        for line in &header {
+            text.push_str(line);
+            text.push('\n');
+        }
+        text.push('\n');
+    }
+    for (at, line) in index.lines.iter().enumerate() {
+        for comment in &above[at] {
+            text.push_str(comment);
+            text.push('\n');
+        }
+        text.push_str(line);
+        if let Some(comment) = &trailing[at] {
+            text.push(' ');
+            text.push_str(comment);
+        }
+        text.push('\n');
+    }
+    Carried { text, listed }
+}
+
+/// The candidate's lines, each with the table it sits in.
+struct TableIndex<'a> {
+    lines: Vec<&'a str>,
+    tables: Vec<String>,
+}
+
+impl<'a> TableIndex<'a> {
+    fn of(body: &'a str) -> Self {
+        let mut table = String::new();
+        let mut tables = Vec::new();
+        let lines: Vec<&str> = body.lines().collect();
+        for line in &lines {
+            if line.starts_with('[') {
+                table = line.trim_matches(['[', ']']).to_string();
+            }
+            tables.push(table.clone());
+        }
+        Self { lines, tables }
+    }
+
+    fn find(&self, target: &Target) -> Option<usize> {
+        (0..self.lines.len()).find(|&at| {
+            let line = self.lines[at];
+            match target {
+                Target::Header(name) => line.starts_with('[') && self.tables[at] == *name,
+                Target::Key(table, key) => {
+                    !line.starts_with('[')
+                        && self.tables[at] == *table
+                        && line.split_once('=').is_some_and(|(k, _)| k.trim() == key)
+                }
+            }
+        })
+    }
+}
+
+/// §FS-config-migrate.5.2: each candidate line that carries a key, with the v1
+/// line of the key it came from, through which a finding located in the config
+/// is compared.
+pub(super) fn line_map(text: &str, lines: &[LineRecord], keys: &Keys) -> Vec<(usize, usize)> {
+    let index = TableIndex::of(text);
+    let mut out = Vec::new();
+    for record in lines {
+        let row = keys.row_at(record.line).map(|block| block.name.as_str());
+        let target = match &record.kind {
+            LineKind::Key { section, key, .. } => key_target(section, key, row),
+            LineKind::Header { name, .. } => header_target(name, row),
+            _ => None,
+        };
+        if let Some(at) = target.and_then(|target| index.find(&target)) {
+            out.push((at + 1, record.line));
+        }
+    }
+    out
+}

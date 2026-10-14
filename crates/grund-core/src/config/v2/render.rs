@@ -1,8 +1,9 @@
 //! A v2 project written back out in v2 spelling (§FS-config.4.2): what
 //! `grund config show` prints for a v2 config, every effective value under the
 //! table that holds its concern. What it prints loads back as v2 to the same
-//! effective values; a v1 project is never written in v2 spelling here, which
-//! would be migration, agent-grounds/grund#461's.
+//! effective values. `grund config show` never writes a v1 project in v2
+//! spelling; migration does, by converting it to v2-shaped records first
+//! (§FS-config-migrate).
 
 use std::fmt::Write;
 

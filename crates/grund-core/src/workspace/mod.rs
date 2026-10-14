@@ -64,10 +64,9 @@ pub(crate) use scope::{
 };
 pub(crate) use unlisted::{unlisted_workspace_block_errors, unlisted_workspace_block_run_warnings};
 
-// What another component's tests read (§AR-core-module-layout.1.3): the
-// boundary-root form of an expanded member list, which the scanner's
-// parallel-scan cases compare against. The other two went beside their cases.
-#[cfg(test)]
+// The boundary-root form of an expanded member list: the scanner's parallel-scan
+// cases compare against it (§AR-core-module-layout.1.3), and migration names each
+// member still on version 1 from it (§FS-config-migrate.8).
 pub(crate) use members::expand_workspace_members;
 
 // The cases that pin this component, one module per behaviour area
