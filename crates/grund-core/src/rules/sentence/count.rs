@@ -123,20 +123,28 @@ pub(super) fn numeral(raw: &str) -> bool {
 }
 
 /// A positive count. A refusal's form is the count without its leading zeros,
-/// or none where it is zero or no numeral (§FS-rule-refusals.sentences.rewrite.by-refusal).
+/// or none where it is zero or no numeral (§FS-rule-refusals.sentences.rewrite.by-refusal),
+/// and a numeral past `usize::MAX` is refused for its range (§FS-rule-refusals.sentences.count-range).
 pub(super) fn positive(raw: &str) -> Result<usize, Refusal> {
-    let canonical = raw.bytes().all(|byte| byte.is_ascii_digit()) && !raw.starts_with('0');
-    canonical
-        .then(|| raw.parse::<usize>().ok())
-        .flatten()
-        .filter(|n| *n > 0)
-        .ok_or_else(|| {
-            let digits = raw.trim_start_matches('0');
-            let form = if numeral(raw) && !digits.is_empty() && digits != raw {
-                Form::One(digits.into())
-            } else {
-                Form::None { kind: false }
-            };
-            refuse("count must be a canonical positive base-10 integer", form)
-        })
+    const REASON: &str = "count must be a canonical positive base-10 integer";
+    let digits = raw.trim_start_matches('0');
+    if !numeral(raw) || digits.is_empty() {
+        return Err(refuse(REASON, Form::None { kind: false }));
+    }
+    // §FS-rule-refusals.sentences.count-range.leading-zeros: the value is read
+    // after the zeros, so an overflow is refused for its range either way.
+    let Ok(n) = digits.parse::<usize>() else {
+        // §FS-rule-refusals.sentences.count-range.no-form: nothing in range to offer.
+        return Err(refuse(
+            format!(
+                "{REASON}; the count is above the largest supported count, {}",
+                usize::MAX
+            ),
+            Form::None { kind: false },
+        ));
+    };
+    if digits != raw {
+        return Err(refuse(REASON, Form::One(digits.into())));
+    }
+    Ok(n)
 }
