@@ -32,7 +32,7 @@ pub(super) fn load(path: &Path, validate: bool) -> (Vec<Finding>, anyhow::Result
 fn cautions(config: &Config) -> Vec<Finding> {
     let mut cautions = config_run_warnings(config);
     cautions.extend(
-        super::config_findings::config_diagnostics(config).map(|d| Finding {
+        super::config_findings::config_diagnostics(config, config.display()).map(|d| Finding {
             severity: "warning",
             code: d.code,
             path: d.path.map(|p| crate::config::display_path(config, &p)),

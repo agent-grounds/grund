@@ -224,7 +224,9 @@ pub(super) fn run_check_with_run_warnings(
     // What the config itself carries (§FS-check.4.3, §FS-check.4.11,
     // §FS-config.4.1), outside `report_is_silent`: a repository mid-migration
     // must not lose the scope caution just because it also has a config pair.
-    report.warnings.extend(config_diagnostics(&config));
+    report
+        .warnings
+        .extend(config_diagnostics(&config, config.display()));
     // §FS-check.1.3.7, also after the scope caution: `--full` cancels `[scan] include`,
     // and an explicit path other than the config root already bypasses that key — so
     // the flag changed nothing, and the caller who typed it wanted a wider search.
@@ -404,10 +406,14 @@ fn run_workspace_check(
     // §FS-check.4.3, §FS-check.4.11.3: the root's config and every member's, each
     // named where that project loaded it — one config, not one scope, and a
     // workspace may mix the two discovery forms (§FS-workspace.2).
-    report.warnings.extend(config_diagnostics(&root_config));
+    report
+        .warnings
+        .extend(config_diagnostics(&root_config, root_config.display()));
     for project in &projects {
         if project.config.root != root_config.root {
-            report.warnings.extend(config_diagnostics(&project.config));
+            report
+                .warnings
+                .extend(config_diagnostics(&project.config, root_config.display()));
         }
     }
     // §FS-check.3.29.11: per project — the candidates are what *that* walk reached, and

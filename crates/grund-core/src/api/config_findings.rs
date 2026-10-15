@@ -13,9 +13,7 @@
 /// the bare `grund.toml` won, and the `.agents/grund.toml` beside it is read by
 /// nothing (§FS-config.1.1). `line`-less, so it prints as a CLI-level `warning:`
 /// on stderr: it says which file the run read, not what is wrong at a site.
-use std::path::Path;
-
-use crate::config::{Config, home_form_of};
+use crate::config::{Config, Display, config_file_under, home_form_of};
 use crate::model::{Diagnostic, format_path};
 
 fn redundant_config_warning(config: &Config) -> Option<Diagnostic> {
@@ -88,25 +86,21 @@ pub(super) fn version_1_caution(file: &str, dir: Option<&str>) -> String {
 /// nothing rereads the file; a zero-config project also loads v1's defaults but
 /// has no `config_file`, and no file means no caution (§GOAL-zero-config).
 ///
-/// The directory is the project root as a report path: the file's own directory,
-/// or the one above `.agents/` for a config read there.
-fn config_version_1_warning(config: &Config) -> Option<Diagnostic> {
-    let file = config.config_file.as_ref()?;
+/// The file and the project root it configures are both report paths, spelled
+/// by `display`, the report's own (§FS-config.3.6.1): in a workspace that is the
+/// root's, not the member's (§FS-workspace.8.1).
+fn config_version_1_warning(config: &Config, display: Display<'_>) -> Option<Diagnostic> {
+    let read = config.config_file.as_ref()?;
     if config.project().version != 1 {
         return None;
     }
-    let home = home_form_of(file);
-    let dir = home
-        .as_deref()
-        .unwrap_or(file)
-        .parent()
-        .unwrap_or(Path::new(""));
+    let file = config_file_under(&config.root, read);
     Some(Diagnostic {
         code: CONFIG_VERSION_1,
         path: None,
         line: None,
         column: None,
-        message: version_1_caution(&format_path(file), Some(&format_path(dir))),
+        message: version_1_caution(&display.path(&file), Some(&display.path(&config.root))),
         sites: Vec::new(),
         authority: Vec::new(),
     })
@@ -122,9 +116,12 @@ fn config_version_1_warning(config: &Config) -> Option<Diagnostic> {
 /// project and `grund config validate` and `grund config show` name them for
 /// one, and a finding that reached only some of those surfaces would be a
 /// finding a repository can hide from by choosing a command.
-pub(super) fn config_diagnostics(config: &Config) -> impl Iterator<Item = Diagnostic> {
+pub(super) fn config_diagnostics<'a>(
+    config: &'a Config,
+    display: Display<'_>,
+) -> impl Iterator<Item = Diagnostic> + 'a {
     redundant_config_warning(config)
         .into_iter()
         .chain(deprecated_config_location_warning(config))
-        .chain(config_version_1_warning(config))
+        .chain(config_version_1_warning(config, display))
 }
