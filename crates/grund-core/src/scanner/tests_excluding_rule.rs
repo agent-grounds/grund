@@ -1,6 +1,5 @@
-//! Test module: the rule that keeps the walk from a stub's target, which warns until
-//! grund 0.19.0 (§FS-declarations.stubs.target.3,
-//! §FS-declarations.checks.excluded-stub-target, §AR-scanner.1.13).
+//! Test module: the rule that keeps the walk from a stub's target
+//! (§FS-declarations.stubs.target.3, §AR-scanner.1.13).
 
 use std::path::PathBuf;
 
@@ -108,4 +107,29 @@ fn a_target_outside_the_config_root_is_no_reason() {
         ),
         None
     );
+}
+
+/// §FS-declarations.stubs.target.3: a root outruns rules only under the spelling
+/// walked, not through every alias of the same physical directory.
+#[cfg(unix)]
+#[test]
+fn an_explicit_root_does_not_clear_a_differently_filtered_alias() {
+    for ignore in [false, true] {
+        let config = project(
+            &format!("excluding_rule_alias_root_{ignore}"),
+            if ignore {
+                "respect_gitignore = true"
+            } else {
+                "exclude = [\"gen\"]"
+            },
+        );
+        let root = config.frame().root();
+        std::os::unix::fs::symlink("gen", root.join("notes/readable")).unwrap();
+        if ignore {
+            write(&root.join(".ignore"), "notes/gen/\n");
+        }
+        assert!(rule(&config, &["notes/readable"], "notes/gen/a.md").is_some());
+        assert_eq!(rule(&config, &["notes/gen"], "notes/gen/a.md"), None);
+        assert_eq!(rule(&config, &["docs"], "notes/readable/a.md"), None);
+    }
 }

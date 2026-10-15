@@ -16,7 +16,7 @@ use crate::config::{Frame, Run, Schema};
 use crate::grammar::{Grammar, resolve_shorthands};
 use crate::model::{
     Catalog, Citation, Declaration, ExcludingRule, FileRecord, Id, StubResolution,
-    paired_declarations, section_resolves,
+    paired_declarations, scanned_path_key, section_resolves,
 };
 use crate::sources::{paths_same_location, physical_path_key};
 use crate::workspace::WorkspaceCitationTarget;
@@ -197,6 +197,8 @@ struct UnwalkedTargets<'a> {
     roots: &'a [PathBuf],
     workspace_targets: &'a [WorkspaceCitationTarget],
     read: BTreeMap<PathBuf, Option<TargetRead>>,
+    /// Eligibility belongs to the spelling; content reads above retain physical
+    /// deduplication (§FS-declarations.stubs.target.3).
     excluded: BTreeMap<PathBuf, Option<ExcludingRule>>,
     files: BTreeMap<PathBuf, Arc<FileRecord>>,
     lendable: Vec<Citation>,
@@ -229,11 +231,12 @@ impl<'a> UnwalkedTargets<'a> {
     }
 
     /// The `exclude` entry or ignore-file rule that keeps the walk from `path`, asked
-    /// once per target, before reading or pairing (§FS-declarations.stubs.target.3).
+    /// once per lexical spelling, before reading or pairing
+    /// (§FS-declarations.stubs.target.3).
     fn excluding_rule(&mut self, path: &Path) -> Option<ExcludingRule> {
         let (schema, frame, roots) = (self.schema, self.frame, self.roots);
         self.excluded
-            .entry(physical_path_key(path))
+            .entry(scanned_path_key(path))
             .or_insert_with(|| excluding_rule(schema, frame, roots, path))
             .clone()
     }
