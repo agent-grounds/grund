@@ -1,5 +1,12 @@
 # Sources: which files grund reads
 
+Exclusion also refuses a stub target before it can lend content
+([§FS-config-v2.schema.sources.exclude.stubs](../functional-spec/FS-config-v2.md#schemasourcesexcludestubs-a-pattern-is-the-exclude-reason-a-stubs-target-is-not-read), [§FS-declarations.stubs.target.3](../functional-spec/FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)).
+This applies to v1 directory names and v2 patterns, plus enabled ignore rules.
+`respect_gitignore = false` disables ignore only; an explicit scan root outruns
+descent exclusions. Being outside v1 `include` alone remains allowed.
+Formatter exclusions only prevent rewrites and do not refuse a target.
+
 A version-2 `grund.toml` says in one table, `[schema.sources]`, which files grund
 reads, which reader and comment syntax each one takes, and which comments may
 declare an ID. The contract is [§FS-config-v2.schema.sources](../functional-spec/FS-config-v2.md#schemasources-schemasources); this guide covers

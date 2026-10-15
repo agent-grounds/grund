@@ -1,6 +1,5 @@
-//! Real-server regression for the excluded-stub-target warning: a stub whose target
-//! `[scan] exclude` keeps the walk from reading is shown at the stub with warning
-//! severity (§FS-declarations.checks.excluded-stub-target, §FS-lsp.1.1).
+//! Real-server regression: an excluded stub target is broken at the stub with
+//! error severity (§FS-declarations.stubs.target.3, §FS-lsp.1.1).
 
 mod support;
 
@@ -9,7 +8,7 @@ use std::fs;
 use support::*;
 
 #[test]
-fn a_stub_to_an_excluded_target_warns_at_the_stub() {
+fn a_stub_to_an_excluded_target_errors_at_the_stub() {
     let root = test_root("excluded-stub-target");
     fs::write(
         root.join("grund.toml"),
@@ -28,18 +27,23 @@ fn a_stub_to_an_excluded_target_warns_at_the_stub() {
     let diagnostics = recv_diagnostics(&receiver, &mut child, "x.md");
     let warning = diagnostics
         .iter()
-        .find(|diagnostic| diagnostic["code"].as_str() == Some("excluded-stub-target"))
-        .unwrap_or_else(|| panic!("excluded-stub-target diagnostic: {diagnostics:?}"));
-    assert_eq!(warning["severity"], json!(2), "warning severity");
+        .find(|diagnostic| diagnostic["code"].as_str() == Some("broken-stub"))
+        .unwrap_or_else(|| panic!("broken-stub diagnostic: {diagnostics:?}"));
+    assert_eq!(warning["severity"], json!(1), "error severity");
     assert_eq!(warning["range"]["start"]["line"], json!(0), "at the stub");
     assert!(
         warning["message"]
             .as_str()
             .is_some_and(|message| message.starts_with(
-                "FS-x is a stub to ../../notes/gen/a.md, which the scan does not read because \
-                 [scan] exclude names gen, and grund 0.19.0 reports this stub as broken-stub"
+                "stub link target ../../notes/gen/a.md is not scanned: \
+                 [scan] exclude names gen; this became an error in grund 0.19.0 — "
             )),
         "{warning}"
+    );
+    assert!(
+        diagnostics
+            .iter()
+            .all(|d| d["code"] != "excluded-stub-target")
     );
 
     send_message(

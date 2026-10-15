@@ -1,1 +1,1 @@
-
+docs/fs/x.md:1: error: stub link target ../../notes/gen/a.md is not scanned: [scan] exclude names gen; this became an error in grund 0.19.0 — move the target out of gen, or take gen out of [scan] exclude

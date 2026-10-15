@@ -53,6 +53,7 @@ const fn row(name: &'static str, include: &'static [&'static str], target: &'sta
         editor: &[],
         broken: false,
         declarations: TARGET,
+        sections: &[],
     }
 }
 
@@ -178,4 +179,61 @@ fn a_symlinked_target_is_judged_by_the_name_the_stub_wrote() {
 #[test]
 fn unsaved_text_moves_every_answer_as_saving_it_would() {
     assert_rows_agree(EDITOR_ROWS);
+}
+
+const EXCLUDED_CONFIG: &str = "grund_config_version = 1\n\
+    [reference]\nstrict = true\nrequire_grounding = false\n\
+    [id]\nformat = \"{kind}-{slug}\"\n\
+    [[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\nindex = false\n\
+    [scan]\ninclude = [\"docs\"]\nexclude = [\"notes\"]\n";
+const WITH_SECTION: &str = "# FS-a: A\n\nLead.\n\n## 1. Detail\n\nContent.\n";
+
+/// §FS-declarations.stubs.target.5: the very same section is offered when only
+/// include omits the target, establishing that absence below means refusal.
+#[test]
+fn outside_include_sections_remain_available_to_completion() {
+    assert_rows_agree(&[Row {
+        files: &[("notes/a.md", WITH_SECTION)],
+        sections: &["FS-a.1"],
+        ..row("outside-section", OUTSIDE, "a.md")
+    }]);
+}
+
+/// §FS-declarations.stubs.target.3: the recorded exclude refusal reaches check,
+/// show, refs, list/size, fmt and the editor without another eligibility rule.
+#[test]
+fn every_command_refuses_an_excluded_target() {
+    assert_rows_agree(&[Row {
+        files: &[
+            ("grund.toml", EXCLUDED_CONFIG),
+            ("notes/a.md", WITH_SECTION),
+        ],
+        broken: true,
+        declarations: STUB,
+        ..row("excluded-target", OUTSIDE, "a.md")
+    }]);
+}
+
+/// §FS-declarations.stubs.target.3: ignore refusal is the same verdict.
+#[test]
+fn every_command_refuses_an_ignored_target() {
+    assert_rows_agree(&[Row {
+        files: &[(".ignore", "notes/\n"), ("notes/a.md", WITH_SECTION)],
+        broken: true,
+        declarations: STUB,
+        ..row("ignored-target", OUTSIDE, "a.md")
+    }]);
+}
+
+/// §FS-declarations.stubs.target.1: unsaved declarations and sections cannot
+/// bypass a target refusal (§FS-declarations.stubs.target.5).
+#[test]
+fn an_editor_buffer_cannot_repair_an_excluded_target() {
+    assert_rows_agree(&[Row {
+        files: &[("grund.toml", EXCLUDED_CONFIG), ("notes/a.md", NONE)],
+        editor: &[("notes/a.md", WITH_SECTION)],
+        broken: true,
+        declarations: STUB,
+        ..row("excluded-editor", OUTSIDE, "a.md")
+    }]);
 }

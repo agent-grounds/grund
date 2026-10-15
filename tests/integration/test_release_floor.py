@@ -16,6 +16,17 @@ GUARD = ROOT / "scripts/check_release_ramps.py"
 
 
 class SharedReleaseFloorTests(unittest.TestCase):
+    def test_this_activation_cannot_ship_as_0_18_1_because_of_shared_floor(self):
+        result = subprocess.run(
+            [sys.executable, str(GUARD), "0.18.1", "--root", str(ROOT)],
+            capture_output=True, text=True, check=False,
+        )
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn(
+            "scripts/release-floor.txt:1: minimum publishable release is 0.19.0.",
+            result.stderr,
+        )
+
     def test_this_tree_installs_one_single_line_floor(self):
         floor = ROOT / "scripts/release-floor.txt"
         self.assertTrue(floor.is_file(), "shared release floor is not installed")

@@ -1,5 +1,13 @@
 # Checking a repository
 
+From grund 0.19.0, an excluded or ignored stub target produces `broken-stub`
+with error severity and exit 1 ([§FS-declarations.stubs.target.3](../functional-spec/FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)). For example, a
+stub to `notes/gen/a.md` under `exclude = ["gen"]` warned in 0.18.0; now it
+errors and show refuses. Move the target or change the rule named in the error.
+The old `excluded-stub-target` code is spent: `--ignore excluded-stub-target`
+leaves the new error visible; `--only excluded-stub-target` selects no findings.
+Use `broken-stub` for the replacement ([§FS-declarations.checks.excluded-stub-target](../functional-spec/FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-broken-from-grund-0190)).
+
 `grund check` is the gate: it scans the tree, resolves every citation against every
 declaration, and exits non-zero when one dangles or breaks a rule the repository
 declared ([§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-citation-in-a-repo)). Run it in pre-commit and in CI.

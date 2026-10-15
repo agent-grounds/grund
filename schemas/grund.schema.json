@@ -510,7 +510,7 @@
               "items": {
                 "type": "string"
               },
-              "description": "Directory names skipped at any depth.",
+              "description": "Directory names skipped at any depth; matching stub targets are broken ([§FS-declarations.stubs.target.3](../functional-spec/FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)).",
               "default": [
                 "target",
                 "node_modules",
@@ -617,7 +617,7 @@
             },
             "respect_gitignore": {
               "type": "boolean",
-              "description": "Skip what `.gitignore` and other ignore files exclude.",
+              "description": "Skip what `.gitignore` and other ignore files exclude, including stub targets ([§FS-declarations.stubs.target.3](../functional-spec/FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)).",
               "default": true,
               "x-grund-spec": {
                 "id": "FS-config.3.5.15",
@@ -1039,7 +1039,7 @@
                     "type": "string"
                   },
                   "default": [],
-                  "description": "Gitignore-style patterns, resolved against the config root, for paths the scan never reads. Unlike version 1 there are no built-in names.",
+                  "description": "Gitignore-style patterns, resolved against the config root, for paths the scan never reads. Matching stub targets are broken ([§FS-config-v2.schema.sources.exclude.stubs](../functional-spec/FS-config-v2.md#schemasourcesexcludestubs-a-pattern-is-the-exclude-reason-a-stubs-target-is-not-read)). Unlike version 1 there are no built-in names.",
                   "x-grund-spec": {
                     "id": "FS-config-v2.schema.sources.exclude",
                     "href": "docs/functional-spec/FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list"
@@ -1047,7 +1047,7 @@
                 },
                 "respect_gitignore": {
                   "type": "boolean",
-                  "description": "Skip what `.gitignore` and other ignore files exclude.",
+                  "description": "Skip what `.gitignore` and other ignore files exclude, including stub targets ([§FS-declarations.stubs.target.3](../functional-spec/FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)).",
                   "default": true,
                   "x-grund-spec": {
                     "id": "FS-config-v2.schema.sources",

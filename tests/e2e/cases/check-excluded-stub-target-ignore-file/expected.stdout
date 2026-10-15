@@ -1,1 +1,1 @@
-docs/fs/x.md:1: warning: FS-x is a stub to ../../notes/gen/a.md, which the scan does not read because .ignore ignores it by notes/gen/, and grund 0.19.0 reports this stub as broken-stub — move the target out of what .ignore ignores, or stop ignoring it there, to keep the stub
+docs/fs/x.md:1: error: stub link target ../../notes/gen/a.md is not scanned: .ignore ignores it by notes/gen/; this became an error in grund 0.19.0 — move the target out of what .ignore ignores, or stop ignoring it there

@@ -1,5 +1,11 @@
 # The structure that gets cited
 
+From grund 0.19.0, exclude and enabled ignore rules also refuse a stub's target
+([§FS-declarations.stubs.target.3](../functional-spec/FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)). With `include = ["docs"]`, a stub pointing at
+`notes/gen/a.md` is broken if `exclude = ["gen"]`; removing that exclusion keeps
+the outside-include target readable. A rejected target lends no body, sections,
+chapters or citation edges ([§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)).
+
 Every fact has a stable ID. The default kinds, all configurable — `*` marks a *place* rather than an ID namespace (`citable = false`: a home, a title and citation rules, no declarations), which is what a test is, and what any directory an agent must be told about can be. See [Citation directions](../user-facing/citation-directions.md) for the complete `[citations]` grammar and its rendered examples:
 
 Repositories can also declare controlled-English constraints over declarations,
