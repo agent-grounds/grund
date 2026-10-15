@@ -80,7 +80,7 @@ fn value_shapes(section: &str, value_lines: &[(String, usize)]) -> Vec<MigrateRe
             (!bullets.is_empty()).then(|| MigrateRefusal {
                 anchor: RefusalAnchor::Line(*line),
                 what: format!(
-                    "[[kinds]] `{row}` values = true gives the row a declaration shape in version 2, which adds a \"Declaration shapes\" section to the AGENTS.md block grund init writes, and grund check compares it"
+                    "[[kinds]] `{row}` values = true adds a \"Declaration shapes\" section to the AGENTS.md block in version 2, which grund check compares"
                 ),
                 details: bullets
                     .iter()

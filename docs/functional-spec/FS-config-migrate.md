@@ -210,7 +210,7 @@ The candidate is loaded through the v2 reader, the path a file on disk goes thro
 Migration also renders in memory what `grund init` would write into each `AGENTS.md`, for the file as read and for the candidate, whether or not an `AGENTS.md` exists yet. A difference `grund check` compares, the block's version or one of its config-derived sections, is a refusal, because the next `grund init` would write it and `check` would then hold the tree to it. A value row is the common case: version 2 gives it a declaration shape, which adds a section version 1 never wrote:
 
 ```text
-refused: grund.toml:11: [[kinds]] `TERM` values = true gives the row a declaration shape in version 2, which adds a "Declaration shapes" section to the AGENTS.md block grund init writes, and grund check compares it
+refused: grund.toml:11: [[kinds]] `TERM` values = true adds a "Declaration shapes" section to the AGENTS.md block in version 2, which grund check compares
   would write: - **TERM**
   would write:   - field <number> may · values
   repair: none keeps the generated guidance; remove values under version 1 only if that section may change
