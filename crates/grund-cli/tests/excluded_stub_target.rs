@@ -302,21 +302,25 @@ fn spent_warning_ignore_leaves_the_replacement_visible() {
 }
 
 /// §FS-declarations.stubs.target.3: global git ignores use the same matcher,
-/// and name the absolute ignore file plus the authored pattern.
+/// and name the absolute ignore file plus the authored pattern. The pattern is
+/// unanchored because the walk roots the global matcher at the working directory,
+/// which on Windows never carries the `\\?\` spelling of the canonical paths it walks.
 #[test]
 fn a_global_ignore_refuses_and_names_its_file() {
     let root = tree("global-ignore").canonicalize().unwrap();
     let global = root.with_extension("ignore");
-    fs::write(&global, "notes/gen/\n").unwrap();
+    fs::write(&global, "gen/\n").unwrap();
     write(
         &root,
         "xdg/git/config",
         &format!("[core]\nexcludesFile = {}\n", global.display()),
     );
     let output = check(&root, &[]);
+    // §FS-errors.4: the report spells the file with `/` on every platform.
+    let file = global.to_string_lossy().replace('\\', "/");
     assert_eq!(
         String::from_utf8_lossy(&output.stdout),
-        refusal(global.to_str().unwrap(), "notes/gen/")
+        refusal(&file, "gen/")
     );
     assert_eq!(output.status.code(), Some(1));
 }
