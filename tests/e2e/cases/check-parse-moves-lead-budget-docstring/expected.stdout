@@ -1,1 +1,0 @@
-src/m.py:6: warning: from grund 0.19.0 this heading no longer cuts the lead of FS-p, which then measures 8 words, over the configured maximum of 4; make it a section of FS-p to keep the cut

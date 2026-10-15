@@ -84,8 +84,8 @@ pub fn the_anchor_is_one_and_the_headings() -> Verdict {
     Ok(())
 }
 
-/// Row P01: in a file with no sections, the body `show --full` prints is the one
-/// `refs` places a citation in (§REQ-one-answer.sections.map).
+/// Row P01, closed in 0.19.0: in a file with no sections, the body `show --full`
+/// prints is the one `refs` places a citation in (§REQ-one-answer.sections.map).
 pub fn a_body_ends_where_refs_ends_it() -> Verdict {
     let tree = Tree::new(
         "p01-plain-appendix",
@@ -104,8 +104,8 @@ pub fn a_body_ends_where_refs_ends_it() -> Verdict {
     )
 }
 
-/// Row P02: a `/** … */` heading written without ` * ` is a section for `--toc`
-/// and for a direct query alike (§REQ-one-answer.sections.map).
+/// Row P02, closed in 0.19.0: a `/** … */` heading written without ` * ` is a
+/// section for `--toc` and for a direct query alike (§REQ-one-answer.sections.map).
 pub fn a_block_comment_section_is_one_section() -> Verdict {
     let tree = Tree::new(
         "p02-bare-block-heading",
@@ -120,9 +120,8 @@ pub fn a_block_comment_section_is_one_section() -> Verdict {
     toc_and_query_agree(&tree, "FS-b")
 }
 
-/// Row P03: `/// # 1. Sub` is a section for `--toc` and for a direct query alike
-/// (§REQ-one-answer.sections.map). P12's tree diverges only through this
-/// construct, so closing P03 may close that tree while P12 stays open.
+/// Row P03, closed in 0.19.0: `/// # 1. Sub` is a section for neither `--toc` nor
+/// a direct query (§REQ-one-answer.sections.map).
 pub fn a_top_level_doc_heading_is_one_section() -> Verdict {
     let tree = Tree::new(
         "p03-top-level-doc-heading",
@@ -137,8 +136,8 @@ pub fn a_top_level_doc_heading_is_one_section() -> Verdict {
     toc_and_query_agree(&tree, "FS-b")
 }
 
-/// Row P07: a plain `## Notes` after `## 1. One` is in section 1 for `show` and
-/// for `refs` alike (§REQ-one-answer.sections.map).
+/// Row P07, closed in 0.19.0: a plain `## Notes` after `## 1. One` ends section 1
+/// for `show` and for `refs` alike (§REQ-one-answer.sections.map).
 pub fn a_plain_heading_is_in_one_section() -> Verdict {
     let tree = Tree::new(
         "p07-plain-notes",
@@ -157,8 +156,8 @@ pub fn a_plain_heading_is_in_one_section() -> Verdict {
     )
 }
 
-/// Row P10: a `//` note next to a `///` body is in the declaration for `show`
-/// and for `refs` alike (§REQ-one-answer.sections.map).
+/// Row P10, closed in 0.19.0: a `//` note next to a `///` body is outside the
+/// declaration for `show` and for `refs` alike (§REQ-one-answer.sections.map).
 pub fn an_adjacent_note_is_in_one_body() -> Verdict {
     let tree = Tree::new(
         "p10-adjacent-note",
@@ -177,11 +176,9 @@ pub fn an_adjacent_note_is_in_one_body() -> Verdict {
     )
 }
 
-/// Row P12: in a doc-comment, the heading that ends a section for `show` ends it
-/// for line ownership too (§REQ-one-answer.sections.map). A plain heading agrees
-/// on this tree today; the numbered top-level heading shows the row. That heading
-/// is P03's construct, so closing P03 may close this tree while P12 stays open: a
-/// tree only P12 shows is then needed before the row is closed.
+/// Row P12, closed in 0.19.0: in a doc-comment, the heading that ends a section for
+/// `show` ends it for line ownership too, here a shallower numbered one
+/// (§REQ-one-answer.sections.map).
 pub fn a_doc_comment_section_ends_once() -> Verdict {
     let tree = Tree::new(
         "p12-doc-comment-ownership",
@@ -204,10 +201,8 @@ pub fn a_doc_comment_section_ends_once() -> Verdict {
     )
 }
 
-/// Row P12 on a tree only P12 shows: a duplicate `## 1.` ends section 2 for `show`,
-/// and `refs` still places the citation below it in section 2
-/// (§REQ-one-answer.sections.map). It uses no heading P03 reads differently, so it
-/// stays open when P03 closes.
+/// Row P12 on a tree only P12 showed, closed in 0.19.0: a duplicate `## 1.` ends
+/// section 2 for `show` and for `refs` alike (§REQ-one-answer.sections.map).
 pub fn a_doc_comment_section_ends_at_a_duplicate() -> Verdict {
     let tree = Tree::new(
         "p12-doc-comment-duplicate",

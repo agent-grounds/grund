@@ -41,9 +41,8 @@ pub(crate) fn named_mode_section_path(path: &str, numeric: impl Fn(&str) -> bool
 /// The path of a heading's rendered text, the `#` run and its space set aside, when
 /// it reads as a complete-path heading whose path puts a name under a number
 /// (§FS-config.3.3.1): the path, its colon, then the title every section heading
-/// carries. What makes a doc-comment line held back as prose in 0.18.0 a section
-/// in 0.19.0 (§FS-declarations.checks.parse-moves.2, shape 5), and a Markdown file
-/// worth a lock pass (§FS-section-lock.holds.entry).
+/// carries. What makes a Markdown file worth a lock pass
+/// (§FS-section-lock.holds.entry).
 pub(crate) fn mixed_heading_path(text: &str) -> Option<&str> {
     let (path, title) = text.split_once(':')?;
     let number = |part: &str| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit());

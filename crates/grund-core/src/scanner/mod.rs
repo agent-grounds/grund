@@ -56,8 +56,6 @@ mod agent_entrypoints;
 mod chapter_values;
 mod citation_line;
 mod citations;
-mod compat;
-mod compat_envelope;
 mod context;
 mod declaration_line;
 mod declaration_lines;
@@ -67,7 +65,6 @@ mod embedded_values;
 mod exclude_globs;
 mod extents;
 mod file_pass;
-mod held_mixed_headings;
 mod json;
 mod legacy;
 mod legacy_inline;
@@ -81,6 +78,7 @@ mod scan_error;
 mod scope_probe;
 mod section_locks;
 mod section_record;
+mod slices;
 mod stub_homes;
 mod tree;
 mod unclosed_wrapper;
@@ -110,27 +108,22 @@ pub(crate) use agent_entrypoints::{
     existing_init_companion_agent_entrypoints, is_file_or_symlink, is_symlink_to,
     path_missing_without_following_symlinks,
 };
-pub(crate) use compat::{
-    TodayMiss, TodaySink, TodaySite, becomes_section, record_lead, today_slices,
-};
 pub(crate) use context::{file_home_kind, markdown_heading_level, section_path_is_numeric};
 pub(crate) use declaration_lines::DeclarationLines;
 pub(crate) use e2e::e2e_case_dir_name;
 pub(crate) use embedded_value_context::EMBEDDED_VALUE_MARKER;
-pub(crate) use held_mixed_headings::held_mixed_headings;
 pub(crate) use legacy::{
     collect_local_legacy_markdown_citations, configured_catalog_ids, id_arg_targets,
     legacy_catalog_ids, match_legacy_tail, promote_legacy_candidate, resolve_id_arg,
     sort_citations,
 };
 pub(crate) use read_predicate::{Unread, extension_refusal, name_refusal};
-pub(crate) use record::{bare_block_line, enveloped_line};
-pub(crate) use relative_sections::{RelativeAnswer, doc_comment_relative_answers};
 pub(crate) use scan_error::api_scan_error;
 pub(crate) use scope_probe::{
     effective_scope_reads_any_file, pruning_pattern, walk_reads_any_file,
 };
 pub(crate) use section_locks::{may_give_locked_heading, section_locks_present};
+pub(crate) use slices::{SliceMiss, SliceSink, record_slices};
 pub(crate) use stub_homes::lend_citations;
 pub(crate) use tree::{
     ScanError, record_of_text, scan_tree, scan_tree_strict, scan_tree_with_workspace,
@@ -144,8 +137,6 @@ pub(crate) use walk_reporting::{
 // (§AR-core-module-layout.1.3).
 #[cfg(test)]
 mod tests_chapter_values;
-#[cfg(test)]
-mod tests_compat;
 #[cfg(test)]
 mod tests_config_scan;
 #[cfg(test)]

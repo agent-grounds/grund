@@ -1,1 +1,0 @@
-{"severity":"warning","path":"src/lib.rs","line":9,"code":"parse-moves","message":"from grund 0.19.0 this heading ends FS-b.1, so the citation on line 11 leaves it; make the heading deeper, or move the citation above it, to keep it in FS-b.1","sites":null,"authority":null}

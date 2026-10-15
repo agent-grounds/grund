@@ -48,7 +48,6 @@ pub const CHECK_FINDING_CODES: &[&str] = &[
     "out-of-scope-shorthand-citation",
     "out-of-scope-unknown-project",
     "oversized-lead",
-    "parse-moves",
     "redundant-config",
     "relative-section-parent",
     "section-address-changed",

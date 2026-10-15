@@ -50,7 +50,7 @@ use crate::grammar::{
 };
 use crate::model::{
     Catalog, Citation, Declaration, DeclarationSource, FileRecord, FileText, HeadingKind, Id,
-    NearMissHeading, UnmarkedHeadingCandidate, name_under_number,
+    NearMissHeading, UnmarkedHeadingCandidate,
 };
 use crate::workspace::WorkspaceCitationTarget;
 
@@ -131,9 +131,6 @@ pub(super) fn scan_file_text(
     let mut py_docstring = PythonDocstringScanState::default();
     let mut wrappers = UnclosedWrappers::new(&reading);
     let mut current: Option<Declaration> = None;
-    // §FS-declarations.line.block-comment: `current` was found on a bare block line, so its
-    // block's bare headings are read at their own depth, as the record reads them.
-    let mut current_bare = false;
     // A marker enables value authority in any scanned document (§FS-values.1),
     // and a declared chapter is recognized in the same source doc-comments
     // (§FS-values.2.5); unopted trees gain no extra read (§FS-values.9).
@@ -217,7 +214,6 @@ pub(super) fn scan_file_text(
             && let Some(id) = parse_id(&caps, grammar)
         {
             close_declaration(&mut current, findings);
-            current_bare = bare;
             // §FS-declarations.line.configured-slug: the matched delimiter belongs to the tail.
             let tail = &scan_line[caps.name("id").unwrap().end()..];
             let (is_stub, defined_in, title) = stub_and_title(tail, stub_home);
@@ -284,7 +280,6 @@ pub(super) fn scan_file_text(
                     })
         {
             close_declaration(&mut current, findings);
-            current_bare = bare;
             findings.near_miss_headings.push(NearMissHeading {
                 file: path.to_path_buf(),
                 line: lineno,
@@ -338,16 +333,13 @@ pub(super) fn scan_file_text(
 
         // §FS-languages.fence.comment-block: a fence in a comment block hides its headings only.
         let heading_structure = structure && !record.in_comment_fence(lineno);
-        // §FS-declarations.checks.parse-moves.2 (shape 5): until 0.19.0 a doc-comment heading
-        // whose path puts a name under a number stays the prose it was before 0.18.0.
         let section_caps = heading_structure
             .then(|| grammar.section_re.captures(scan_line))
-            .flatten()
-            .filter(|caps| is_md || !section_path(caps).is_some_and(name_under_number));
+            .flatten();
         let recognized_section = section_caps.as_ref().and_then(section_path).is_some();
-        // §FS-declarations.line.block-comment: under a declaration a bare line opened, a bare
-        // `## 1. Sub` is as deep as its own `#` run, so it is that declaration's section `.1`.
-        let markdown_depth = is_md || scan.in_py_docstring || (bare_block && current_bare);
+        // §FS-languages.comment-wrapper.headings: a bare block line is read as written, so a
+        // bare `## 1. Sub` is as deep as its own `#` run, its declaration's section `.1`.
+        let markdown_depth = is_md || scan.in_py_docstring || bare_block;
         // §AR-scanner.2.8.1: every heading the loop meets, settled once the bodies are known.
         if let Some(caps) = section_caps.as_ref()
             && let Some(sec) = section_path(caps)
@@ -579,6 +571,7 @@ pub(super) fn scan_file_text(
 
     close_declaration(&mut current, findings);
     record.total_lines = total_lines;
+    held_headings.hold_doc_comment(findings, &mut record, path);
     held_headings.resolve(findings, &mut record, grammar.named_sections, schema);
     // §AR-scanner.2.8.2: every declaration's and section's extents, on every run.
     assign_extents(&mut record, findings);
@@ -589,8 +582,6 @@ pub(super) fn scan_file_text(
     let due = AfterPass::of(findings, schema, scan_values);
     let has_unmarked_headings = !held_headings.unmarked.is_empty();
     let has_local_section_candidates = !findings.local_section_citation_candidates.is_empty();
-    // §DF-one-parse-answers-from-0-19: the catalog publishes spans where 0.17 did, which bounds
-    // today's `show`; the record holds them on every run.
     if classify
         // §FS-cover.6.2: a `cover --lines` request reads the body spans too.
         || !frame.run.scope.owner_lines.is_empty()

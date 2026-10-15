@@ -37,8 +37,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// (§AR-scanner.4.6), so the broken-stub rule, a cited section, a value binding's
 /// target and a rule's `cites` fact read that record instead of the file
 /// (§AR-resolver.5). Nor is a home's body: the opt-in lead budget
-/// (§FS-declarations.checks.oversized-lead) and the parse-moves warning
-/// (§FS-declarations.checks.parse-moves) slice the file record the scan keeps
+/// (§FS-declarations.checks.oversized-lead) slices the file record the scan keeps
 /// (§AR-scanner.2.8). What is read after the scan is:
 ///
 /// - §AR-checker.2.3's hint: the line of a dangling Markdown citation, from disk.

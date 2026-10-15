@@ -46,7 +46,7 @@ fn finding(message: String) -> Diagnostic {
 
 /// §FS-rules.7.12: the window closes at a release still to come; once this crate
 /// reaches it, the window, its clauses and the site mark must go, and this test
-/// says so, as `parse-moves` is held to its release.
+/// says so, as every flip is held to its release.
 #[test]
 fn the_mixed_path_flip_is_still_ahead() {
     let parse = |version: &str| -> Vec<u64> {

@@ -56,8 +56,8 @@ pub(crate) fn named_section_path(path: &str) -> bool {
 /// `1.goals`, `1.goals.3` and `goals.3.latency`. The one test of the shape, read
 /// over the path's components and never over digits or letters in an ID: what the
 /// lock enrols by ([`locked`]), what a citation's warning window selects
-/// (§FS-citations.checks.mixed-path), what a doc-comment holds back until 0.19.0
-/// (§FS-declarations.checks.parse-moves.2), and what a value root refuses
+/// (§FS-citations.checks.mixed-path), what makes a mixed heading a section in Markdown
+/// and a doc-comment alike (§FS-declarations.section.relative.where), and what a value root refuses
 /// (§FS-values.3.1).
 pub(crate) fn name_under_number(path: &str) -> bool {
     let numeric = |part: &str| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit());

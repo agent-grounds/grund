@@ -100,7 +100,6 @@ pub(crate) use anchors::{anchor_slug, section_anchor_text, section_display_name}
 pub(crate) use comment_block::{
     CommentBlockKind, DocCommentRule, block_declares_id, block_is_doc_comment, comment_blocks,
     declaration_id_on_source_line, first_content_line, is_bare_block_line,
-    line_comment_block_marker,
 };
 pub(crate) use comment_line::{comment_envelope, comment_strip_prefixes, strip_block_closer};
 pub(crate) use compiled::{

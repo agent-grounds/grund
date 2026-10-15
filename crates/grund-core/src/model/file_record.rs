@@ -117,8 +117,6 @@ pub(crate) struct LineZone {
     /// The scanned bytes, relative to the line's start.
     pub(crate) start: usize,
     pub(crate) end: usize,
-    /// The line closes its docstring.
-    pub(crate) closes: bool,
 }
 
 /// Every scanned file's record, by the path the scan read it under (§AR-scanner.2.8).

@@ -2,7 +2,7 @@
 //! and `--brief` reshape a finished body. They are pure functions of text, split
 //! out of `body.rs` so that file keeps to choosing the views; the walk that fills
 //! them, and what one comment line reads as once its envelope is off, are the
-//! scanner's (`compat.rs`, `compat_envelope.rs`).
+//! scanner's (`slices.rs`).
 
 /// `--toc` joins the default body with the section-map body, separated by one
 /// blank line. Empty halves are dropped; if both are empty the result is empty.

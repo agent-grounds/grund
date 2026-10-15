@@ -1,8 +1,8 @@
 //! Test module: one answer to what a relative heading is (§FS-declarations.section.relative.parent),
-//! asked by the Markdown parent pass and by the doc-comment warning of
-//! §FS-declarations.checks.parse-moves.2 (shape 4) alike.
+//! given by the parent pass to a Markdown body and a doc-comment body alike
+//! (§FS-declarations.section.relative.where).
 
-use super::{RelativeAnswer, doc_comment_relative_answers};
+use super::relative_sections::RelativeAnswer;
 use crate::config::load_config;
 use crate::grammar::relative_heading_form;
 use crate::model::Catalog;
@@ -56,31 +56,35 @@ fn a_doc_comment_body_gets_the_markdown_answer() {
             .find(|decl| decl.id.slug.as_deref() == Some(slug))
             .expect("declaration")
     };
-    let login = declaration("login");
-    let markdown: Vec<String> = BODY
-        .lines()
-        .enumerate()
-        .filter(|(_, line)| relative_heading_form(line.trim_start_matches('#').trim()).is_some())
-        .map(|(index, _)| {
-            let line = index + 3;
-            let answer = if let Some((path, _)) = login
-                .sections
-                .iter()
-                .find(|(_, info)| info.relative && info.line == line)
-            {
-                RelativeAnswer::Section(path.clone())
-            } else if findings
-                .relative_section_parents
-                .iter()
-                .any(|failed| failed.line == line)
-            {
-                RelativeAnswer::NoParent
-            } else {
-                RelativeAnswer::Refused
-            };
-            shown(line, &answer)
-        })
-        .collect();
+    // Each relative line's answer as the scan recorded it on `decl`.
+    let answers = |decl: &crate::model::Declaration| -> Vec<String> {
+        BODY.lines()
+            .enumerate()
+            .filter(|(_, line)| {
+                relative_heading_form(line.trim_start_matches('#').trim()).is_some()
+            })
+            .map(|(index, _)| {
+                let line = index + 3;
+                let answer = if let Some((path, _)) = decl
+                    .sections
+                    .iter()
+                    .find(|(_, info)| info.relative && info.line == line)
+                {
+                    RelativeAnswer::Section(path.clone())
+                } else if findings
+                    .relative_section_parents
+                    .iter()
+                    .any(|failed| failed.line == line && failed.owner == decl.id)
+                {
+                    RelativeAnswer::NoParent
+                } else {
+                    RelativeAnswer::Refused
+                };
+                shown(line, &answer)
+            })
+            .collect()
+    };
+    let markdown = answers(declaration("login"));
     assert_eq!(
         markdown,
         [
@@ -92,20 +96,5 @@ fn a_doc_comment_body_gets_the_markdown_answer() {
             "15: Section(\"notes.a\")",
         ]
     );
-
-    let logout = declaration("logout");
-    let record = findings
-        .files
-        .iter()
-        .find(|(path, _)| path.ends_with("src/lib.rs"))
-        .map(|(_, record)| record)
-        .expect("record");
-    let doc_comment: Vec<String> =
-        doc_comment_relative_answers(record, logout, logout.body_end, true)
-            .iter()
-            .map(|(heading, answer)| shown(heading.line, answer))
-            .collect();
-    assert_eq!(doc_comment, markdown);
-    // §FS-declarations.section.relative.where: in 0.18.0 the doc-comment keeps it prose.
-    assert!(logout.sections.keys().all(|path| path == "format"));
+    assert_eq!(answers(declaration("logout")), markdown);
 }

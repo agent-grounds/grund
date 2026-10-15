@@ -17,12 +17,12 @@
 
 use anyhow::Result;
 
-use super::body::{site_of, slice_site};
+use super::body::slice_site;
 use super::e2e_body::show_e2e_case;
 use crate::config::{Frame, Schema};
 use crate::grammar::flatten_cross_ref_links;
 use crate::model::{Declaration, DeclarationSource, FileRecords, Id, SectionInfo, ShowRenderMode};
-use crate::scanner::TodaySink;
+use crate::scanner::SliceSink;
 
 /// Return the lead/full text pair for one catalog site. JSON values and E2E
 /// cases already carry their canonical show bodies in scanner records; text
@@ -64,27 +64,13 @@ pub(crate) fn point_body_pair(
         return Ok(Some((lead, full)));
     }
 
-    let site = site_of(
-        declaration,
-        section.is_some(),
-        section.map(|(_, info)| info.line),
-    );
     let sinks = vec![
-        TodaySink::new(ShowRenderMode::Default, false),
-        TodaySink::new(ShowRenderMode::Full, false),
+        SliceSink::new(ShowRenderMode::Default, false),
+        SliceSink::new(ShowRenderMode::Full, false),
     ];
     let section_path = section.map(|(path, _)| path);
-    let (_, views) = slice_site(
-        files,
-        id,
-        declaration,
-        site,
-        section_path,
-        sinks,
-        schema,
-        frame,
-    )?;
-    let mut views = views.into_iter().map(TodaySink::finish);
+    let (_, views) = slice_site(files, id, declaration, section_path, sinks, schema, frame)?;
+    let mut views = views.into_iter().map(SliceSink::finish);
     let (mut lead, _) = views.next().unwrap_or_default();
     let (mut full, _) = views.next().unwrap_or_default();
     // §FS-config-v2.schema.sources: Markdown-ness is the file's language's.

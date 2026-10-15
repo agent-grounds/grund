@@ -16,8 +16,7 @@ use std::borrow::Cow;
 /// marker reads — the declaration and section-heading alternation below, the
 /// note-text stripper and the comment wrapper (`comment_line.rs`), the block keying
 /// (`comment_block.rs`), the lone-opener test of the embedded-value readers and the
-/// near-miss prefilter — so no reader widens a prefix by hand. The frozen 0.17 reader
-/// (`scanner/compat_envelope.rs`) keeps its own list.
+/// near-miss prefilter — so no reader widens a prefix by hand.
 #[derive(Clone, Copy)]
 pub(crate) struct PrefixForms<'a> {
     prefix: &'a str,
