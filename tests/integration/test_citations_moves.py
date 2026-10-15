@@ -91,7 +91,7 @@ MOVES = (
      ("it closes at the next run of **exactly** *n* backticks",
       "One reading serves every caller, because they have to agree")),
     ("FS-fmt.md", "6.3.1", "wrap.recognized",
-     ("its immediately-preceding character is `[` and its immediately-following text begins `](`",)),
+     ("its immediately-preceding character is `[` and its immediately-following text is `](…)`",)),
 )
 # FS-fmt.2.3 keeps its list but its zone entries now name the zones chapter.
 ZONE_LIST = ("FS-fmt.md", "2.3", "zones",
