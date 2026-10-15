@@ -223,8 +223,11 @@ impl InitCompanionAgentEntrypoint {
 /// which companion files does this repository have — and a second copy of that
 /// walk is a place for `check` and `init` to disagree about what an entrypoint
 /// is (§FS-check.3.5.1, §AR-checker.2.7).
-pub(crate) fn companion_agent_entrypoints(root: &Path) -> Result<Vec<PathBuf>, (PathBuf, String)> {
-    let (_, companions) = existing_init_companion_agent_entrypoints(root)?;
+pub(crate) fn companion_agent_entrypoints(
+    root: &Path,
+    sources: Sources<'_>,
+) -> Result<Vec<PathBuf>, (PathBuf, String)> {
+    let (_, companions) = existing_init_companion_agent_entrypoints(root, sources)?;
     Ok(companions
         .iter()
         .map(|companion| companion.path().to_path_buf())
@@ -245,6 +248,7 @@ pub(crate) fn companion_agent_entrypoints(root: &Path) -> Result<Vec<PathBuf>, (
 /// second walk of the same table.
 pub(crate) fn existing_init_companion_agent_entrypoints(
     root: &Path,
+    sources: Sources<'_>,
 ) -> Result<(Vec<PathBuf>, Vec<InitCompanionAgentEntrypoint>), (PathBuf, String)> {
     let mut paths = Vec::new();
     let mut canonical_symlinks = Vec::new();
@@ -258,7 +262,7 @@ pub(crate) fn existing_init_companion_agent_entrypoints(
                     continue;
                 }
                 Ok(false) => {
-                    if companion_selected_by_evidence(root, entrypoint, &path) {
+                    if companion_selected_by_evidence(root, entrypoint, &path, sources) {
                         paths.push(InitCompanionAgentEntrypoint::Existing(path));
                     }
                 }
@@ -307,7 +311,10 @@ pub(crate) fn agents_with_own_entrypoint(
             // A symlink to the canonical file is grund-owned by construction, so
             // only a file standing on its own has to prove it.
             Ok(true) => agents.push(agent),
-            Ok(false) if companion_selected_by_evidence(root, entrypoint, &path) => {
+            // `init` alone asks, and it reads what it is about to replace.
+            Ok(false)
+                if companion_selected_by_evidence(root, entrypoint, &path, Sources::on_disk()) =>
+            {
                 agents.push(agent)
             }
             Ok(false) => continue,
@@ -342,19 +349,20 @@ fn companion_selected_by_evidence(
     root: &Path,
     entrypoint: &CompanionAgentEntrypoint,
     path: &Path,
+    sources: Sources<'_>,
 ) -> bool {
     entrypoint.discovery
         || companion_workspace_exists(root, entrypoint)
-        || companion_has_managed_block(path)
+        || companion_has_managed_block(path, sources)
 }
 
-fn companion_has_managed_block(path: &Path) -> bool {
+fn companion_has_managed_block(path: &Path, sources: Sources<'_>) -> bool {
     // Malformed delimiters still prove grund ownership — selecting the file
     // lets `check` surface the defect instead of silently skipping it.
 
-    // §FS-check.6.1.1: cover this effective input before its shared read; R06c of
-    // §REQ-one-answer.differences.text reads it as saved.
-    Sources::saved()
+    // §FS-check.6.1.1: cover this effective input before its shared read, as a
+    // save would write it (§FS-scan.text.buffer).
+    sources
         .text(path)
         .is_ok_and(|text| !matches!(find_agents_block(&text), AgentsBlockLookup::Absent))
 }

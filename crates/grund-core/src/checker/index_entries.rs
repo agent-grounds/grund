@@ -65,6 +65,7 @@ impl KindIndexEntries {
             &configured_root,
             &physical_root,
             index_targets,
+            frame.sources(),
             &mut owed,
         );
         let binding_sites =
@@ -164,6 +165,7 @@ fn enroll_external_inline_declarations(
     configured_root: &Path,
     physical_root: &Path,
     index_targets: &BTreeMap<(PathBuf, Id), String>,
+    sources: Sources<'_>,
     owed: &mut BTreeMap<PathBuf, BTreeSet<Id>>,
 ) -> BTreeMap<PathBuf, BTreeSet<(usize, usize)>> {
     let mut targets_by_index: BTreeMap<&Path, Vec<&KindIndexTarget<'_>>> = BTreeMap::new();
@@ -176,10 +178,9 @@ fn enroll_external_inline_declarations(
     let lines_by_index: BTreeMap<&Path, Vec<String>> = targets
         .iter()
         .filter_map(|target| {
-            // §FS-check.6.1.1: cover this effective input before its shared read;
-            // R06a of §REQ-one-answer.differences.text reads it as saved
-            // (§DF-four-editor-checks-read-saved-text).
-            let text = Sources::saved().text(&target.index_file).ok()?;
+            // §FS-check.6.1.1: cover this effective input before its shared read,
+            // as a save would write it (§FS-scan.text.buffer).
+            let text = sources.text(&target.index_file).ok()?;
             Some((
                 target.index_key.as_path(),
                 text.lines().map(str::to_string).collect(),

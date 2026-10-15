@@ -6,6 +6,7 @@ use crate::model::Id;
 #[cfg(unix)]
 use crate::scanner::companion_agent_entrypoints;
 #[cfg(unix)]
+use crate::sources::Sources;
 use crate::testing::current_block;
 use crate::testing::{scan_tree, test_root, write};
 
@@ -461,7 +462,8 @@ fn claude_symlink_to_agents_is_not_a_companion_entrypoint() {
     std::os::unix::fs::symlink("AGENTS.md", root.join("CLAUDE.md"))
         .expect("create CLAUDE.md symlink");
 
-    let companions = companion_agent_entrypoints(&root).expect("discover companions");
+    let companions =
+        companion_agent_entrypoints(&root, Sources::on_disk()).expect("discover companions");
 
     assert!(
         companions.is_empty(),

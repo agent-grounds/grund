@@ -115,7 +115,7 @@ impl Buffers {
 }
 
 /// What a reader asks for a file's text and existence (§AR-system.2.13): the
-/// run's buffers in front of the disk, or the `saved` view, the disk alone.
+/// run's buffers in front of the disk, or `on_disk`, the disk alone.
 #[derive(Clone, Copy)]
 pub(crate) struct Sources<'a> {
     buffers: Option<&'a Buffers>,
@@ -132,14 +132,6 @@ impl<'a> Sources<'a> {
     /// The disk alone, for a reader no run is handed to: a configuration read
     /// before any run is built, or a writer reading what it is about to replace.
     pub(crate) fn on_disk() -> Sources<'static> {
-        Sources { buffers: None }
-    }
-
-    /// The disk past the buffers, for the readers §REQ-one-answer.differences.text
-    /// still lists until each row closes (§DF-four-editor-checks-read-saved-text).
-    /// It is the one name those readers use, so finding `Sources::saved()` finds
-    /// every one of them.
-    pub(crate) fn saved() -> Sources<'static> {
         Sources { buffers: None }
     }
 

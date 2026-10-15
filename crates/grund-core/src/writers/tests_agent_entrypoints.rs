@@ -12,6 +12,7 @@ use crate::scanner::{
     AgentEntrypoint, CanonicalSurfaceReach, InitCompanionAgentEntrypoint,
     agents_with_own_entrypoint, companion_agent_entrypoints,
 };
+use crate::sources::Sources;
 use crate::testing::{current_block, scan_tree, test_root, write};
 
 #[test]
@@ -27,7 +28,8 @@ fn discovers_known_companion_agent_entrypoints() {
         "# Copilot notes\n",
     );
 
-    let companions = companion_agent_entrypoints(&root).expect("discover companions");
+    let companions =
+        companion_agent_entrypoints(&root, Sources::on_disk()).expect("discover companions");
     let rels = companions
         .iter()
         .map(|path| {

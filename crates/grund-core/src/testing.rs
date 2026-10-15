@@ -93,7 +93,12 @@ pub(crate) fn check_agent_block_path(
 ) {
     let guidance = Guidance::new(config, None);
     let entrypoint = guidance.root_entrypoint(path.to_path_buf(), require_block);
-    crate::checker::compare_agent_block(&entrypoint, guidance.version, report);
+    crate::checker::compare_agent_block(
+        &entrypoint,
+        guidance.version,
+        crate::sources::Sources::on_disk(),
+        report,
+    );
 }
 
 /// A fresh fixture root, under a temp directory no config covers at or above it

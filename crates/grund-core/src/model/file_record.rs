@@ -23,11 +23,6 @@ impl FileText {
             Self::Buffer(text) => text,
         }
     }
-
-    /// Whether the text is an editor's open buffer rather than the saved file.
-    pub(crate) fn is_buffer(&self) -> bool {
-        matches!(self, Self::Buffer(_))
-    }
 }
 
 /// What a recorded heading is to the scan (§AR-scanner.2.8.1).

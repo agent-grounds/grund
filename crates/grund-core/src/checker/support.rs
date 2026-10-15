@@ -1,7 +1,6 @@
 use crate::config::{Frame, Schema};
 use crate::grammar::{is_inside_inline_code, render_id, render_qualified_id};
 use crate::model::{Catalog, Citation, Diagnostic, Id, sort_path_key};
-use crate::sources::Sources;
 
 /// §FS-check.3.1: the dangling message. A near same-kind ID is a likely typo; a
 /// Markdown inline-code context is a likely illustration. Offer whichever
@@ -71,18 +70,19 @@ pub(super) fn missing_snapshot_message(
 /// yields `false` — no hint.
 pub(super) fn citation_in_markdown_inline_code(
     findings: &Catalog,
+    frame: Frame<'_>,
     cite: &Citation,
     markdown: bool,
 ) -> bool {
     if !markdown {
         return false;
     }
-    let record = findings.files.get(&cite.file);
-    let line = match record {
-        Some(record) if !record.text.is_buffer() => record.line(cite.line).map(str::to_string),
-        // R06b of §REQ-one-answer.differences.text reads an open buffer's file as
-        // saved (§DF-four-editor-checks-read-saved-text, §FS-check.6.1.1).
-        _ => Sources::saved().text(&cite.file).ok().and_then(|text| {
+    // §FS-scan.text.buffer: the record holds what a save would write, an open
+    // buffer's included; a file without one is read as the run reads it.
+    let line = match findings.files.get(&cite.file) {
+        Some(record) => record.line(cite.line).map(str::to_string),
+        // §FS-check.6.1.1: cover this effective input before its shared read.
+        None => frame.sources().text(&cite.file).ok().and_then(|text| {
             let line = text.lines().nth(cite.line.saturating_sub(1))?;
             Some(line.to_string())
         }),

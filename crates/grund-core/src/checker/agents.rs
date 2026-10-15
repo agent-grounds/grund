@@ -1,3 +1,4 @@
+use crate::config::Frame;
 use crate::grammar::{
     AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup, find_agents_block,
 };
@@ -27,9 +28,13 @@ fn agents_init_message(detail: String) -> String {
 /// exactly when the writers could render it, which is every case but a
 /// genuinely invalid rule — and that one carries its own located error at the
 /// rule's heading, from `check_chapter_rules`.
-pub(super) fn check_agents_block_version(expected: &Expected, report: &mut CheckReport) {
+pub(super) fn check_agents_block_version(
+    expected: &Expected,
+    frame: Frame<'_>,
+    report: &mut CheckReport,
+) {
     for entrypoint in &expected.entrypoints {
-        check_agent_block_path(entrypoint, expected.block_version, report);
+        check_agent_block_path(entrypoint, expected.block_version, frame.sources(), report);
     }
     if let Some((path, message)) = &expected.entrypoint_probe_error {
         report.errors.push(Diagnostic {
@@ -57,16 +62,16 @@ pub(super) fn check_agents_block_version(expected: &Expected, report: &mut Check
 pub(crate) fn check_agent_block_path(
     entrypoint: &ExpectedEntrypoint,
     expected_version: u32,
+    sources: Sources<'_>,
     report: &mut CheckReport,
 ) {
     let path = entrypoint.path.as_path();
     let require_block = entrypoint.require_block;
     // §FS-check.6.1.3: retain this probe when the entrypoint is absent.
     crate::config::observe_input(path, false);
-    // §FS-check.6.1.1, R06c of §REQ-one-answer.differences.text: the saved file,
-    // observed before its read (§DF-four-editor-checks-read-saved-text).
-    let saved = Sources::saved();
-    if !saved.exists(path) {
+    // §FS-check.6.1.1: observed before its read, as a save would write it
+    // (§FS-scan.text.buffer).
+    if !sources.exists(path) {
         // §FS-init.2.3.5.8: a destination of the live render with no file is a
         // missing block.
         if matches!(entrypoint.scoped, Some(ScopedExpectation::Block(_))) {
@@ -74,7 +79,7 @@ pub(crate) fn check_agent_block_path(
         }
         return;
     }
-    let Ok(text) = saved.text(path) else {
+    let Ok(text) = sources.text(path) else {
         let file_name = path
             .file_name()
             .and_then(|name| name.to_str())
