@@ -182,7 +182,6 @@ fn command_list(args: &[String]) -> ExitCode {
             units,
             top,
         }) {
-        
             Ok(output) => output,
             Err(err) => {
                 eprintln!("error: {err:#}");
