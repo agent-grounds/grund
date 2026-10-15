@@ -177,10 +177,9 @@ sections, and every finding about a stubbed declaration itself to the target
 
 ### differences.scope: Scope
 
-- **R01.** `check sub` resolves `FS-001-a`, which `grund FS-001-a sub` reports not found.
-  R. Ruled by [§DF-one-answer-rulings-run](../decisions/functional/DF-one-answer-rulings-run.md#df-one-answer-rulings-run-a-path-narrows-the-report-a-stub-reads-what-the-walk-reads-and-a-file-is-one-file-however-it-is-spelled-or-held), ruling D1 (#621).
-- **R02.** In a workspace, `check docs` reports `unknown project alias` for a citation the
-  root `check` and `list docs` resolve. R. Ruled by [§DF-one-answer-rulings-run](../decisions/functional/DF-one-answer-rulings-run.md#df-one-answer-rulings-run-a-path-narrows-the-report-a-stub-reads-what-the-walk-reads-and-a-file-is-one-file-however-it-is-spelled-or-held), ruling D14 (#621).
+R01 and R02 closed with [§DF-path-narrows-the-report-in-0-19](../decisions/functional/DF-path-narrows-the-report-in-0-19.md#df-path-narrows-the-report-in-0-19-in-0190-a-path-narrows-what-show-list-and-id-report-not-what-they-resolve-and-workspace-check--resolves-every-project-it-sees) in 0.19.0, when `show`, `list`
+and `id` came to resolve against the owning project and a workspace `check <dir>` the projects
+a run from `<dir>` sees (#621). No row of scope remains open.
 
 ## proof: Proved by comparison
 
