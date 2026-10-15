@@ -154,9 +154,9 @@ unknown by a rule's subject and object, `list --kind` and `list --selector`. It 
 P01, P02, P03, P07, P10 and P12 closed with [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves) in 0.19.0, when
 every command came to read one parse of each file (#639).
 
-- **P16.** The editor snapshot's span for a C-family section keeps `*/`, the `--toc` title
-  does not; the core fields only. R. Ruled by [§DF-fmt-and-editor-answers-from-0-19](../decisions/functional/DF-fmt-and-editor-answers-from-0-19.md#df-fmt-and-editor-answers-from-0-19-fmts-link-wrapper-and-the-editors-title-span-change-in-0190-after-a-release-that-announces-them), which
-  moves it in 0.19.0.
+P16, the editor snapshot's span for a C-family section title keeping the `*/` the `--toc`
+title leaves out, closed in 0.19.0 with [§DF-fmt-and-editor-answers-from-0-19](../decisions/functional/DF-fmt-and-editor-answers-from-0-19.md#df-fmt-and-editor-answers-from-0-19-fmts-link-wrapper-and-the-editors-title-span-change-in-0190-after-a-release-that-announces-them)
+([§FS-lsp.1.3.4](../functional-spec/FS-lsp.md#134-origin-span-and-result-shape)).
 
 ### differences.stubs: Stubs
 

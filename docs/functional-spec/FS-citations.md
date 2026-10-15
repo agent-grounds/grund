@@ -228,15 +228,11 @@ A wrap is the form `grund fmt --cross-refs` writes ([§FS-fmt.6.2](FS-fmt.md#62-
 
 ### wrap.recognized: An existing wrap is recognized by its brackets
 
-A citation is already wrapped when its immediately-preceding character is `[` and its immediately-following text begins `](`. The one test decides both the re-derive of [§FS-fmt.6.3](FS-fmt.md#63-idempotency-and-re-derive) and the no-double-wrap rule; a citation that fails it is wrapped fresh. One function holds the test, and `fmt`, `show`'s flatten ([§FS-show.3.2.1](FS-show.md#321-the-wrap-shape-it-collapses)) and `check`'s kind-index entry form ([§FS-check.3.17.4](FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)) each call it rather than writing it again.
+A citation is already wrapped when its immediately-preceding character is `[` and its immediately-following text is `](…)` closed by the `)` that balances its `(`. The one test decides both the re-derive of [§FS-fmt.6.3](FS-fmt.md#63-idempotency-and-re-derive) and the no-double-wrap rule; a citation that fails it is wrapped fresh. One function holds the test, and `fmt`, `show`'s flatten ([§FS-show.3.2.1](FS-show.md#321-the-wrap-shape-it-collapses)) and `check`'s kind-index entry form ([§FS-check.3.17.4](FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)) each call it rather than writing it again.
 
-Until grund 0.19.0, what `fmt --cross-refs` does with a wrap turns on whether its destination closes by the extent of [§FS-citations.zones.link-destination](FS-citations.md#zoneslink-destination-a-link-destination-is-the-url), and where it ends is still read at the first `)`:
+So a wrap's whole destination is re-derived: `[§<ID>](old(1).md)` keeps no `.md)`. And a `[§<ID>](` whose destination never closes is no wrap, whether or not a later `)` stands on its line: `[§<ID>](stale and an aside (keep me) end.` is wrapped fresh, the `](`, the later `)` and the text before it kept, exactly as `[§<ID>](stale and more` is.
 
-- **A wrap whose destination closes** is re-derived up to the first `)` after its `](`, as it has been since the pass shipped. Where parentheses inside the URL balance, as in `[§<ID>](old(1).md)`, the text after that first `)` stays.
-- **A wrap whose destination never closes, with a later `)` on the line**, as in `[§<ID>](stale and an aside (keep me) end.`, is left as written: neither re-derived nor wrapped fresh. That `)` closes the author's own parenthesis rather than the wrap's, so the bytes before it are the author's ([§FS-citations.zones.link-destination](FS-citations.md#zoneslink-destination-a-link-destination-is-the-url)), and `check` warns at the line ([§FS-citations.checks.unclosed-wrapper](FS-citations.md#checksunclosed-wrapper-unclosed-wrapper-read-differently-from-grund-0190)).
-- **A `[§<ID>](` with no `)` after it on the line**, as in `[§<ID>](stale and more`, is wrapped fresh, as before.
-
-From grund 0.19.0 a wrap is `[§<ID>](…)` closed by the `)` that balances its `(`, and only that: its whole destination is re-derived, so `[§<ID>](old(1).md)` keeps no `.md)`, and a `[§<ID>](` that never closes is no wrap and is wrapped fresh, the later `)` and the text before it kept. The route is [§DF-fmt-and-editor-answers-from-0-19](../decisions/functional/DF-fmt-and-editor-answers-from-0-19.md#df-fmt-and-editor-answers-from-0-19-fmts-link-wrapper-and-the-editors-title-span-change-in-0190-after-a-release-that-announces-them).
+Both answers are grund 0.19.0's, which ended the first-`)` reading; decided in [§DF-fmt-and-editor-answers-from-0-19](../decisions/functional/DF-fmt-and-editor-answers-from-0-19.md#df-fmt-and-editor-answers-from-0-19-fmts-link-wrapper-and-the-editors-title-span-change-in-0190-after-a-release-that-announces-them).
 
 ## citing-kind: Which kind a citation site counts as
 
@@ -265,30 +261,7 @@ The checks a citation's wrap is held to. Each is a section named by its diagnost
 
 ### checks.unclosed-wrapper: Unclosed wrapper read differently from grund 0.19.0
 
-A citation `fmt --cross-refs` would link ([§FS-fmt.6.4](FS-fmt.md#64-what-is-never-wrapped)) that has `[` immediately before it and `](` immediately after it, whose destination never closes by the extent of [§FS-citations.zones.link-destination](FS-citations.md#zoneslink-destination-a-link-destination-is-the-url) but would close at a later `)` by the first-`)` reading of [§FS-citations.wrap.recognized](FS-citations.md#wraprecognized-an-existing-wrap-is-recognized-by-its-brackets), is one **warning** at its line:
-
-```text
-docs/notes.md:3: warning: the link after FS-x never closes, so grund fmt --cross-refs leaves it as written, and from grund 0.19.0 it is not read as FS-x's link and FS-x is linked on its own — add the ')' that ends the link to keep it
-```
-
-for a `docs/notes.md` whose third line reads
-
-```markdown
-Then [§FS-x](stale-dest and an aside (keep me) end.
-```
-
-Those are exactly the lines whose `fmt --check` verdict moves in 0.19.0: today's `fmt` leaves them as written, and 0.19.0's wraps them fresh. A `[§<ID>](` with no `)` after it on the line gets nothing, because it is wrapped fresh in every release, and so does a wrap whose destination closes, whatever it holds. Adding the `)` that ends the link gives the same answer in both releases:
-
-```markdown
-Then [§FS-x](stale-dest) and an aside (keep me) end.
-```
-
-is a closed wrap whose destination `fmt` re-derives, and the aside keeps its bytes.
-
-The warning is read off the citation's own line on a Markdown line the scan reads, in prose: not in a fenced code block, an inline code span, a suppressed scope, or a destination, and not on a declaration heading line. A kind's index entry is judged the same way, because its entries are always linked ([§FS-fmt.6.1.2](FS-fmt.md#612-the-carve-out-is-scoped-to-the-entries-not-the-page)). The scan records each site as it reads the line, and `check` reports what was recorded, so no command reads the file a second time for it.
-
-- **Code:** `unclosed-wrapper`, with `"severity":"warning"` and `"sites":null` in JSON ([§FS-errors.5](FS-errors.md#5-json-format)). It leaves the exit status where the rest of the run put it ([§FS-check.2](FS-check.md#2-outputs)). `--only unclosed-wrapper` keeps it and `--ignore unclosed-wrapper` removes it ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)), and the editor shows it at the line with warning severity ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
-- **Release:** grund 0.19.0 reads a wrap as closed only by the `)` that balances its `(`, and with that reading removes every line this check reports. The route is [§DF-fmt-and-editor-answers-from-0-19](../decisions/functional/DF-fmt-and-editor-answers-from-0-19.md#df-fmt-and-editor-answers-from-0-19-fmts-link-wrapper-and-the-editors-title-span-change-in-0190-after-a-release-that-announces-them).
+Retired in grund 0.19.0: a wrap is read as closed only by the `)` that balances its `(` ([§FS-citations.wrap.recognized](FS-citations.md#wraprecognized-an-existing-wrap-is-recognized-by-its-brackets)), so no line is read differently any more and the warning, its code and its catalog row are gone ([§DF-fmt-and-editor-answers-from-0-19](../decisions/functional/DF-fmt-and-editor-answers-from-0-19.md#df-fmt-and-editor-answers-from-0-19-fmts-link-wrapper-and-the-editors-title-span-change-in-0190-after-a-release-that-announces-them)). An `--only unclosed-wrapper` or `--ignore unclosed-wrapper` left in a script then names an unknown code and is refused as any unknown code is ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)). This address is kept so citations written before the change still resolve.
 
 ### checks.mixed-path: A citation of a name under a number is checked, and warns until 0.19.0
 
