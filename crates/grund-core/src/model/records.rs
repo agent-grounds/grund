@@ -11,7 +11,6 @@ use super::line_owners::FileLineOwnership;
 use super::patterns::GlobCitation;
 use super::section_lock::SectionLockFile;
 use super::stub_resolution::StubResolution;
-use super::unclosed_wrappers::UnclosedWrapperNote;
 use super::unread_roots::RootRow;
 use super::values::{
     DeclarationSource, EmbeddedValueRoot, InvalidValueSite, ValueBinding, ValueComponent,
@@ -266,10 +265,6 @@ pub(crate) struct LegacyCitationCandidate {
     pub(crate) source_kind: String,
     pub(crate) enclosing_declaration: Option<Id>,
     pub(crate) enclosing_section: Option<String>,
-    /// Where the marker sits right after a `[` on a Markdown prose line `fmt`
-    /// reads, whether a `grund:fmt off` region holds that line; `None` elsewhere.
-    /// Promotion asks the rest of the wrap (§FS-citations.checks.unclosed-wrapper).
-    pub(crate) wrap_opener: Option<bool>,
 }
 
 /// The enclosing source-comment citation site for one citation
@@ -378,9 +373,6 @@ pub struct Catalog {
     /// not a declaration, so the rule costs one regex on heading-shaped lines
     /// rather than a second read of the tree.
     pub near_miss_headings: Vec<NearMissHeading>,
-    /// Wraps whose destination never closes before a later `)`, until 0.19.0
-    /// (§FS-citations.checks.unclosed-wrapper).
-    pub(crate) unclosed_wrapper_notes: Vec<UnclosedWrapperNote>,
     /// Stubs whose target the walk excludes or ignores, until 0.19.0, noted where
     /// each stub's verdict is reached (§FS-declarations.checks.excluded-stub-target).
     pub(crate) excluded_stub_target_notes: Vec<ExcludedStubTargetNote>,

@@ -44,7 +44,6 @@ mod report;
 mod section_lock;
 mod stub_resolution;
 mod text;
-mod unclosed_wrappers;
 mod unread_roots;
 mod values;
 
@@ -91,7 +90,6 @@ pub(crate) use stub_resolution::{
     PairedDeclarations, StubResolution, paired_declarations, section_resolves,
 };
 pub(crate) use text::{CITATION_DIRECTION_REPAIR, format_list, json_escape, plural};
-pub(crate) use unclosed_wrappers::UnclosedWrapperNote;
 pub(crate) use unread_roots::{Refused, RootOrigin, RootRow};
 pub(crate) use values::{
     JSON_NUMBER_RE, authored_component, component_text_is_valid, first_unequal_component,

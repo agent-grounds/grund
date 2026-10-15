@@ -111,8 +111,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// conversation surface (§FS-init.2.3.6.1) in today's comparison order, the
 /// entrypoint probe's io error kept as data, the canonical link target of
 /// each index-file citation that external enrollment inspects
-/// (§FS-check.3.18.3), and the files holding an unclosed-wrapper note that
-/// `[fmt] exclude` names (§FS-citations.checks.unclosed-wrapper). The
+/// (§FS-check.3.18.3). The
 /// chapter-rule section is rendered from the check run's own catalog, so
 /// building it adds no walk (§FS-init.2.3.4.15). Under scoped guidance
 /// (§FS-init.2.3.5.11) it also lists every destination with the bytes its
@@ -121,8 +120,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// rather than by a walk; `grund init` plans its writes and removals from the
 /// same value, so `init --check` and `check` cannot disagree about a file.
 /// A presentation-only change can
-/// therefore move a drift finding through these bytes, and an `[fmt] exclude`
-/// change can move the unclosed-wrapper warning; it cannot move any other
+/// therefore move a drift finding through these bytes; it cannot move any other
 /// verdict.
 ///
 /// ### 1.4 The merge and its order

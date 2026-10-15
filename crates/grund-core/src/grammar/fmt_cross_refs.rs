@@ -44,62 +44,31 @@ fn formatter_wrapper_label_is_citation(label: &str, grammar: &Grammar) -> bool {
 }
 
 /// A cross-reference wrap around one citation, as its brackets show it
-/// (§FS-citations.wrap.recognized): the destination opens at `url_start`, and its
-/// two ends are where the one extent of §FS-citations.zones.link-destination
-/// balances it and where today's first-`)` reading stops.
+/// (§FS-citations.wrap.recognized): the destination opens at `url_start` and
+/// ends at `close`, the `)` that balances its `(` by the one extent of
+/// §FS-citations.zones.link-destination.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) struct CrossRefWrap {
     pub(crate) url_start: usize,
-    /// The `)` that balances the wrap's `(`; `None` when the destination never
-    /// closes on the line.
-    pub(crate) close: Option<usize>,
-    /// The first `)` after the `](`, the end `fmt` re-derives up to and `show`
-    /// flattens up to until grund 0.19.0, which reads only `close`
-    /// (§DF-fmt-and-editor-answers-from-0-19).
-    pub(crate) first_close: Option<usize>,
-}
-
-impl CrossRefWrap {
-    /// The `)` `fmt --cross-refs` re-derives the destination up to, until 0.19.0:
-    /// the first `)`, and only where the destination closes at all
-    /// (§FS-citations.wrap.recognized).
-    pub(crate) fn rederived_close(self) -> Option<usize> {
-        self.close.and(self.first_close)
-    }
-
-    /// Whether the wrap never closes and yet has a later `)` on its line — the
-    /// line `fmt` leaves as written and 0.19.0 wraps fresh
-    /// (§FS-citations.checks.unclosed-wrapper).
-    pub(crate) fn unclosed_before_paren(self) -> bool {
-        self.close.is_none() && self.first_close.is_some()
-    }
+    pub(crate) close: usize,
 }
 
 /// The one bracket test of §FS-citations.wrap.recognized: the citation spanning
-/// `start..end` is wrapped when the byte before it is `[` and the text after it
-/// begins `](`. `fmt`, `show`'s flatten and `check`'s kind-index entry form all
-/// ask it here, so none of them can recognize a wrap the others do not.
+/// `start..end` is wrapped when the byte before it is `[`, the text after it
+/// begins `](`, and that destination closes on the line. A `[§<ID>](` that never
+/// closes is no wrap, whatever later `)` stands on the line. `fmt`, `show`'s
+/// flatten and `check`'s kind-index entry form all ask it here, so none of them
+/// can recognize a wrap the others do not.
 pub(crate) fn cross_ref_wrap(line: &str, start: usize, end: usize) -> Option<CrossRefWrap> {
     if start == 0 || line.as_bytes().get(start - 1) != Some(&b'[') {
         return None;
     }
-    cross_ref_wrap_after(line, end)
-}
-
-/// The half of [`cross_ref_wrap`] after the citation, for a caller that saw the
-/// `[` before it on an earlier pass: an off-grammar citation, whose end is known
-/// only once the catalog promotes it (§FS-config.3.2.6).
-pub(crate) fn cross_ref_wrap_after(line: &str, end: usize) -> Option<CrossRefWrap> {
     if !line.get(end..)?.starts_with("](") {
         return None;
     }
-    let bytes = line.as_bytes();
     let url_start = end + 2;
-    Some(CrossRefWrap {
-        url_start,
-        close: link_destination_close(bytes, url_start),
-        first_close: line[url_start..].find(')').map(|rel| url_start + rel),
-    })
+    let close = link_destination_close(line.as_bytes(), url_start)?;
+    Some(CrossRefWrap { url_start, close })
 }
 
 /// Flatten `grund fmt --cross-refs` link wrappers before an ID query
@@ -173,11 +142,9 @@ fn flatten_cross_ref_links_line(line: &str, settings: LexicalSettings<'_>) -> St
         if is_inside_inline_code(line, bracket_pos) {
             continue;
         }
-        // §FS-show.3.2.1: the bracket test `fmt` asks, collapsed up to the first
-        // `)` until grund 0.19.0.
-        let Some(close) =
-            cross_ref_wrap(line, marker_start, cite_end).and_then(|wrap| wrap.first_close)
-        else {
+        // §FS-show.3.2.1: the bracket test `fmt` asks, collapsed whole to the
+        // balancing `)`; a wrap that never closes is printed as written.
+        let Some(CrossRefWrap { close, .. }) = cross_ref_wrap(line, marker_start, cite_end) else {
             continue;
         };
         if bracket_pos < cursor {

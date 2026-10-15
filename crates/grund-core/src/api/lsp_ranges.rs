@@ -10,11 +10,12 @@
 use std::path::{Path, PathBuf};
 
 use crate::model::{
-    Citation, Declaration, DeclarationSource, SectionInfo, StubResolution, paired_declarations,
+    Citation, Declaration, DeclarationSource, FileRecords, SectionInfo, StubResolution,
+    paired_declarations,
 };
 use crate::resolver::{WorkspaceContext, WorkspaceProject};
 use crate::scanner::EMBEDDED_VALUE_MARKER;
-use crate::sources::{Sources, canonicalize_existing_prefix};
+use crate::sources::canonicalize_existing_prefix;
 
 pub(super) fn lsp_query_id(
     context: &WorkspaceContext,
@@ -71,9 +72,9 @@ pub(super) fn lsp_target_for_stub(stub: &Declaration) -> Option<(PathBuf, usize)
 }
 
 pub(super) fn declaration_range_parts(
+    files: &FileRecords,
     decl: &Declaration,
     rendered_id: &str,
-    sources: Sources<'_>,
 ) -> (usize, String) {
     match &decl.source {
         DeclarationSource::Json {
@@ -81,15 +82,15 @@ pub(super) fn declaration_range_parts(
             key_text,
             ..
         } => (*key_column, key_text.clone()),
-        DeclarationSource::Text => heading_span_parts(&decl.file, decl.line, rendered_id, sources),
+        DeclarationSource::Text => heading_span_parts(files, &decl.file, decl.line, rendered_id),
     }
 }
 
 pub(super) fn section_range_parts(
+    files: &FileRecords,
     decl: &Declaration,
     info: &SectionInfo,
     section: &str,
-    sources: Sources<'_>,
 ) -> (usize, String) {
     if matches!(decl.source, DeclarationSource::Json { .. })
         && let Some(value) = &info.value
@@ -102,7 +103,7 @@ pub(super) fn section_range_parts(
         _ if info.relative => format!(".{section}"),
         _ => section.to_string(),
     };
-    let (column, mut text) = heading_span_parts(&decl.file, info.line, &needle, sources);
+    let (column, mut text) = heading_span_parts(files, &decl.file, info.line, &needle);
     if info.value_root.is_some()
         && let Some(marker) = text.rfind(&format!(" {EMBEDDED_VALUE_MARKER}"))
     {
@@ -115,28 +116,36 @@ pub(super) fn section_range_parts(
 
 /// The 1-based start column and title text of a heading-line token: the span
 /// from `needle` (the rendered ID for a declaration, the section number for a
-/// section heading) to the end of the trimmed line. Falls back to column 1 and
-/// the bare `needle` when the line cannot be read.
+/// section heading) to where the heading's rendered text ends — the `--toc`
+/// title's end, read off the heading the scan recorded rather than the line
+/// again, so a C-family `*/` and a Markdown heading's closing hashes are not
+/// part of it (§FS-lsp.1.3.4). Falls back to column 1 and the bare `needle`
+/// when the scan recorded no heading there.
 pub(super) fn heading_span_parts(
+    files: &FileRecords,
     file: &Path,
     line: usize,
     needle: &str,
-    sources: Sources<'_>,
 ) -> (usize, String) {
-    // §AR-system.2.13: the line as a save would write it.
-    sources
-        .text(file)
-        .ok()
-        .and_then(|text| text.lines().nth(line.saturating_sub(1)).map(str::to_string))
-        .and_then(|line| {
-            let start = line.find(needle)?;
-            let end = line.trim_end().len();
-            let text = line
-                .get(start..end)
-                .filter(|text| !text.is_empty())
+    files
+        .get(file)
+        .and_then(|record| {
+            let heading = record.heading_at(line)?;
+            let line_start = record.line_start(line)?;
+            let text = record.text();
+            let rendered = &text[heading.text.clone()];
+            let start = match rendered.find(needle) {
+                Some(at) => heading.text.start + at,
+                None => {
+                    heading.span.start + text[heading.span.start..heading.text.end].find(needle)?
+                }
+            };
+            let title = text
+                .get(start..heading.text.end)
+                .filter(|title| !title.is_empty())
                 .unwrap_or(needle)
                 .to_string();
-            Some((start + 1, text))
+            Some((start - line_start + 1, title))
         })
         .unwrap_or_else(|| (1, needle.to_string()))
 }

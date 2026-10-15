@@ -14,7 +14,6 @@ use super::index::check_kind_indexes;
 use super::index_entries::KindIndexEntries;
 use super::references::{ReferenceTier, check_citation_resolution};
 use super::section_lock::check_section_locks;
-use super::unclosed_wrapper::check_unclosed_wrappers;
 use super::values::check_values;
 use crate::config::{Frame, KindResolution, Rules, Schema};
 use crate::grammar::{render_id, render_qualified_id};
@@ -131,13 +130,10 @@ pub(crate) fn judge(
         &mut report,
     );
 
-    // One read of every index for the two rules that tell an entry apart
-    // (§AR-checker.2.6): the unused rule, and unclosed-wrapper, because `fmt`
-    // links an entry wherever its ordinary pass is off (§FS-fmt.2.5.3).
+    // One read of every index for the unused rule, which tells an entry apart
+    // (§AR-checker.2.6).
     let index_entries = KindIndexEntries::new(findings, schema, frame, &expected.index_targets);
     check_unused(findings, frame, &index_entries, targets, &mut report);
-    // §FS-citations.checks.unclosed-wrapper: a wrap 0.19.0 reads differently.
-    check_unclosed_wrappers(findings, expected, &index_entries, targets, &mut report);
 
     // §FS-init.2.3.5.11: a scoped `AGENTS.md` no row's `files` lists is not a
     // unit, so neither pass below holds it to its directory's rules.

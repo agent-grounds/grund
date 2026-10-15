@@ -283,9 +283,8 @@ fn link_target_at_citation<'a>(line: &'a str, citation: &Citation) -> Option<&'a
     if line.get(start..end)? != citation.text {
         return None;
     }
-    // §FS-citations.wrap.recognized: the formatter's own bracket test, to the `)`
-    // it re-derives up to, with something before it.
+    // §FS-citations.wrap.recognized: the formatter's own bracket test, to the
+    // balancing `)` it re-derives up to, with something before it.
     let wrap = cross_ref_wrap(line, start, end)?;
-    let close = wrap.first_close?;
-    (close > wrap.url_start).then(|| &line[wrap.url_start..close])
+    (wrap.close > wrap.url_start).then(|| &line[wrap.url_start..wrap.close])
 }

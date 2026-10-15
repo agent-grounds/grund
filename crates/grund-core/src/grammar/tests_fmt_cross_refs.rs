@@ -1,5 +1,5 @@
-//! Test module: the one bracket test of §FS-citations.wrap.recognized and the two
-//! ends it returns for a wrap's destination until grund 0.19.0.
+//! Test module: the one bracket test of §FS-citations.wrap.recognized and the one
+//! end it returns for a wrap's destination, the `)` that balances its `(`.
 
 use super::*;
 
@@ -9,40 +9,28 @@ fn wrap_of(line: &str) -> Option<fmt_cross_refs::CrossRefWrap> {
     cross_ref_wrap(line, start, end)
 }
 
-/// A closed wrap is re-derived up to the first `)`, even where its parentheses
-/// balance later; that first `)` is the end `show` collapses up to as well.
+/// A closed wrap ends at the `)` that balances its `(`, not at the first `)`;
+/// that is the end `fmt` re-derives up to and `show` collapses up to.
 #[test]
-fn a_closed_wrap_is_rederived_up_to_its_first_paren() {
+fn a_closed_wrap_ends_at_its_balancing_paren() {
     let line = "Balanced: [\u{a7}FS-x](old(1).md) after.";
     let wrap = wrap_of(line).expect("a wrap");
-    assert_eq!(
-        wrap.close,
-        Some(line.find(".md)").unwrap() + 3),
-        "balancing `)`"
-    );
-    assert_eq!(
-        wrap.first_close,
-        Some(line.find("1)").unwrap() + 1),
-        "first `)`"
-    );
-    assert_eq!(wrap.rederived_close(), wrap.first_close);
-    assert!(!wrap.unclosed_before_paren());
+    assert_eq!(wrap.url_start, line.find("old").unwrap());
+    assert_eq!(wrap.close, line.find(".md)").unwrap() + 3, "balancing `)`");
 }
 
-/// A wrap that never closes, with a later `)` on its line, is left as written and
-/// is the line `unclosed-wrapper` warns at; one with no `)` at all is wrapped fresh.
+/// A `[§ID](` that never closes is no wrap, whether or not a later `)` stands on
+/// its line: `fmt` wraps it fresh and `show` prints it as written.
 #[test]
-fn an_unclosed_wrap_has_no_rederived_end() {
-    let aside =
-        wrap_of("Then [\u{a7}FS-x](stale-dest and an aside (keep me) end.").expect("a wrap");
-    assert_eq!(aside.close, None);
-    assert!(aside.first_close.is_some());
-    assert_eq!(aside.rederived_close(), None);
-    assert!(aside.unclosed_before_paren());
-
-    let bare = wrap_of("No close at all: [\u{a7}FS-x](stale-dest and more").expect("a wrap");
-    assert_eq!((bare.close, bare.first_close), (None, None));
-    assert!(!bare.unclosed_before_paren());
+fn an_unclosed_wrap_is_no_wrap() {
+    assert_eq!(
+        wrap_of("Then [\u{a7}FS-x](stale-dest and an aside (keep me) end."),
+        None
+    );
+    assert_eq!(
+        wrap_of("No close at all: [\u{a7}FS-x](stale-dest and more"),
+        None
+    );
 }
 
 /// No `[` before the citation, or no `](` after it, is no wrap.

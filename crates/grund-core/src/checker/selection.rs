@@ -58,7 +58,6 @@ pub const CHECK_FINDING_CODES: &[&str] = &[
     "stub-shape",
     "suggested-citation",
     "uncited-unit",
-    "unclosed-wrapper",
     "undeclared-chapter",
     "ungrounded",
     "unknown-project",

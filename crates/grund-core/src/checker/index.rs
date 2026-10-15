@@ -81,7 +81,7 @@ pub(super) fn kind_index_targets<'a>(
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum IndexCitationForm {
     /// Wrapped as `[§<ID>…](<target>)` — the form `grund fmt --cross-refs`
-    /// writes (§FS-fmt.6.2), which is what the entry has to be.
+    /// writes in a kind's index (§FS-fmt.6.1.1), which is what the entry has to be.
     Link,
     /// A recognized citation of the ID, unwrapped, **and one the
     /// cross-reference pass would wrap on its next `--write`**. §FS-check.3.17.4's
@@ -128,10 +128,10 @@ fn index_citation_form(line: &str, text: &str, marker: &str) -> IndexCitationFor
         // marker, which is multi-byte under the default `§`, and slicing one byte
         // into it would panic (§REQ-never-crashes).
         cursor = end;
-        // §FS-citations.wrap.recognized: the formatter's own bracket test, with a
-        // destination that reaches a first `)` and holds something before it.
-        let wrapped = cross_ref_wrap(line, start, end)
-            .is_some_and(|wrap| wrap.first_close.is_some_and(|close| close > wrap.url_start));
+        // §FS-check.3.17.4: the formatter's own bracket test, with a destination
+        // closed by its balancing `)` and holding something before it.
+        let wrapped =
+            cross_ref_wrap(line, start, end).is_some_and(|wrap| wrap.close > wrap.url_start);
         if wrapped {
             if is_inside_inline_code(line, start - 1) {
                 continue;
@@ -403,7 +403,7 @@ pub(super) fn check_kind_indexes(
                 .section
                 .as_deref()
                 .is_none_or(|section| section_resolves(findings, &citation.id, section));
-            // §FS-fmt.6.2.1: `fmt` skips a section citation with no link target and
+            // §FS-fmt.6.4.1: `fmt` skips a section citation with no link target and
             // reports `rewrote 0 lines`. The physical-root predicate above is the
             // other §FS-check.3.17.4 gate; only the bare form is gated.
             let form = if form == IndexCitationForm::Bare && (!bare_repairable || !section_known) {

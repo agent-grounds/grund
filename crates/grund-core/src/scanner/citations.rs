@@ -101,13 +101,7 @@ pub(super) fn scan_local_section_candidates(
 /// catalog reconciliation promotes only exact declaration-backed spellings
 /// (§FS-check.1.1.1, §FS-config.3.2.6). The remainder of the already-read line is
 /// enough to defer token/section precedence without a second file read.
-/// `wrap_opener` says whether a marker opens a wrap `fmt` could read, for the
-/// unclosed-wrapper note promotion owes (§FS-citations.checks.unclosed-wrapper).
-pub(super) fn scan_legacy_citation_candidates(
-    line: &CitationLine<'_>,
-    wrap_opener: impl Fn(usize) -> Option<bool>,
-    findings: &mut Catalog,
-) {
+pub(super) fn scan_legacy_citation_candidates(line: &CitationLine<'_>, findings: &mut Catalog) {
     if line.schema.citation.marker.is_empty()
         || !line.scan_line.contains(&line.schema.citation.marker)
     {
@@ -149,7 +143,6 @@ pub(super) fn scan_legacy_citation_candidates(
                 source_kind: String::new(),
                 enclosing_declaration: None,
                 enclosing_section: None,
-                wrap_opener: wrap_opener(marker_start),
             });
     }
 }
