@@ -332,7 +332,7 @@ Only the file at `PATH` is migrated; mixed versions are legal ([§FS-config.5](F
 | `[[kinds]] scan` | `scan = false` | mapped |
 | `[[kinds]] title` | `[presentation.kinds.<NAME>] title` | mapped |
 | `[[kinds]] value_chapter` | a field, which would add a section `check` compares | refused ([§FS-config-migrate.3.1.7](FS-config-migrate.md#317-settings-this-grund-has-no-v2-spelling-for-yet)) |
-| `[[kinds]] values` | `form = "value"` | mapped, under the guidance comparison |
+| `[[kinds]] values` | `form = "value"` | refused by the guidance comparison ([§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance)): version 2 gives every value row a declaration shape |
 | `[scan] comment_prefixes` | each definition's `comment_prefixes`, the whole list | mapped |
 | `[scan] docstring_python` | `.py`'s definition, `docstrings` python or off | mapped |
 | `[scan] exclude` | `[schema.sources] exclude`, each name as the escaped glob `<name>/` | mapped; a path-shaped entry refused ([§FS-config-migrate.3.1.4](FS-config-migrate.md#314-a-path-shaped-scan-exclude-entry)) |
