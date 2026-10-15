@@ -1,7 +1,8 @@
 # DF-homeless-code-declares-no-ids: `code` with no row is refused as declaring no IDs alone from 0.19.0
 
-**Status:** Accepted
 **Date:** 2026-10-15
+
+## status: Accepted
 
 ## context: Context
 
