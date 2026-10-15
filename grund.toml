@@ -143,11 +143,32 @@ files = ["docs/goals.md"]
 [schema.kinds.FS]
 folders = ["docs/functional-spec"]
 
+# Every FS opens with its Terms chapter (FS-fields). RULE-terms stays beside the
+# field: the rule counts chapters titled Terms, the field holds the one named
+# `terms` to its place and title, and an absence is reported once, as the
+# field's finding (DISC-core-concerns.10.2).
+[schema.kinds.FS.fields.terms]
+title = "Terms"
+presence = "must"
+position = "first"
+
 [schema.kinds.REQ]
 folders = ["docs/requirements"]
 
 [schema.kinds.AR]
 folders = ["docs/architecture"]
+
+# Every AR page opens with the chapter that names its box in AR-system, then its
+# Terms chapter (AR-system.5). Each page titles its placement chapter for
+# itself ("Where the scanner sits"), so that field sets no title.
+[schema.kinds.AR.fields.placement]
+presence = "must"
+position = "first"
+
+[schema.kinds.AR.fields.terms]
+title = "Terms"
+presence = "must"
+after = "placement"
 
 # DF before DA, matching the canonical default kind order (FS-config.3.4,
 # crates/grund-core/assets/templates/software-development/grund.toml).
