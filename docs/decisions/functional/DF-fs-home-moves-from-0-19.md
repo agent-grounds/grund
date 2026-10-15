@@ -12,7 +12,7 @@
 
 Two answers already exist for where `FS` lives. The built-in default is `file =
 "requirements.md"` (§FS-config.3.4.4), and every config `grund init` writes names it explicitly,
-because a written key matches its default ([§FS-init.2.4.3](../../functional-spec/FS-init.md#243-every-written-key-that-has-a-built-in-default-matches-it)). A config that omits `[[kinds]]`
+because a written key matches its default ([§FS-init.2.4.3](../../functional-spec/FS-init.md#243-every-written-key-differs-from-its-default)). A config that omits `[[kinds]]`
 keeps the older `folder = "docs/functional-spec"` ([§FS-config.3.4.4.4](../../functional-spec/FS-config.md#3444-a-config-that-omits-kinds-keeps-the-older-fs-home)). Moving only the
 template would add a third answer; moving the default would move the FS home of every project
 that relies on it.
@@ -46,7 +46,7 @@ The `software-development` template declares `REQ` as `folder = "docs/requiremen
 ([§FS-init.2.4.10](../../functional-spec/FS-init.md#2410-req-is-declared-in-docsrequirements)), with a starter index, a row in the project map and the vocabulary, and a
 commented `[citations.REQ]` block in its canonical ruleset. `REQ` gets no built-in default: one
 would add a row to the managed block of every repository whose config omits `[[kinds]]`, and
-`grund init --check` would fail there for a change nobody asked for. [§FS-init.2.4.3](../../functional-spec/FS-init.md#243-every-written-key-that-has-a-built-in-default-matches-it) therefore
+`grund init --check` would fail there for a change nobody asked for. [§FS-init.2.4.3](../../functional-spec/FS-init.md#243-every-written-key-differs-from-its-default) therefore
 reads "every written key that has a built-in default matches it".
 
 ## 3. Rejected alternatives

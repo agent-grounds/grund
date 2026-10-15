@@ -1,0 +1,6 @@
+grund_config_version = 1
+project_name = "legacy"
+
+[[kinds]]
+kind = "FS"
+folder = "docs/specs"

@@ -43,8 +43,8 @@ Version 1, the default.
 | Key | Type | Default | What it sets |
 |---|---|---|---|
 | `grund_config_version` | `1` | `1` | The config format version. Omitted means 1. [§FS-config.5](../functional-spec/FS-config.md#5-schema-versioning) |
-| `project_name` | string | — | The project's name; in a workspace, also its alias in `§alias/<ID>` citations. [§FS-config.3](../functional-spec/FS-config.md#3-keys) |
-| `project_description` | string | — | One-line description shown next to the project in generated workspace member lists. [§FS-config.3](../functional-spec/FS-config.md#3-keys) |
+| `project_name` | string | — | The project's name; in a workspace, also its alias in `§alias/<ID>` citations. [§FS-config.3](../functional-spec/FS-config.md#3-keys-version-1) |
+| `project_description` | string | — | One-line description shown next to the project in generated workspace member lists. [§FS-config.3](../functional-spec/FS-config.md#3-keys-version-1) |
 
 ### `[reference]`
 
@@ -184,7 +184,7 @@ Version 2: keys grouped by concern — `[schema]` for what exists, `[rules]` for
 | Key | Type | Default | What it sets |
 |---|---|---|---|
 | `grund_config_version` | `2` | — | The config format version: 2 selects the version-2 reader. [§FS-config.5](../functional-spec/FS-config.md#5-schema-versioning) |
-| `project_name` | string | — | The project's name; in a workspace, also its alias in `§alias/<ID>` citations. [§FS-config.3](../functional-spec/FS-config.md#3-keys) |
+| `project_name` | string | — | The project's name; in a workspace, also its alias in `§alias/<ID>` citations. [§FS-config.3](../functional-spec/FS-config.md#3-keys-version-1) |
 
 ### `[schema]`
 

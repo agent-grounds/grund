@@ -88,8 +88,9 @@ code ([§FS-check.2](../../functional-spec/FS-check.md#2-outputs)), so a reposit
 ### 2.3 `grund init` writes the bare `grund.toml`
 
 `grund init` generates `<target>/grund.toml`, not `<target>/.agents/grund.toml`
-([§FS-init.2.4](../../functional-spec/FS-init.md#24-generated-grundtoml)). The generated config is a teaching surface — every default written out explicitly —
-and what it teaches first is where the file lives. A tool that supports both forms and generates
+([§FS-init.2.4](../../functional-spec/FS-init.md#24-generated-grundtoml)). The generated config teaches where the file lives by being there; what each setting
+is set to is `grund config show`'s to teach, since the file holds only what differs from
+a default ([§DF-v2-onboarding](DF-v2-onboarding.md#df-v2-onboarding-grund-init-writes-a-minimal-version-2-file-and-grund-config-show-does-the-teaching)). A tool that supports both forms and generates
 the one that needs a directory created for it is recommending the other one by omission.
 
 The bare form is also what the rest of the ecosystem does. `Cargo.toml`, `package.json`,

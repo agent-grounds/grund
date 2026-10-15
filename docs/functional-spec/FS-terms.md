@@ -151,7 +151,7 @@ part of it.
 
 ### terms.9: The configuration's concerns
 
-- **schema** — The concern a config key belongs to when it says what exists and what a well-formed one looks like: a finding from a schema key is about one node on its own. The concern, never the whole key set — that list is [§FS-config.3](FS-config.md#3-keys).
+- **schema** — The concern a config key belongs to when it says what exists and what a well-formed one looks like: a finding from a schema key is about one node on its own. The concern, never the whole key set — that list is [§FS-config.3](FS-config.md#3-keys-version-1).
 - **rules** — The concern a config key belongs to when it says how nodes relate: a finding from a rules key needs at least two. Always plural and always the concern; one *rule* is [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions)'s word, and a rules key is what makes one.
 - **presentation** — The concern a config key belongs to when it decides bytes `grund` writes or shows: it produces no finding except where a written byte has drifted from what the config now renders. *rendering* stays the integrations' word for their own layer.
 - **envelope** — The config keys outside the three concerns: the file's version and identity, and the workspace membership that says which projects there are. Read before any concern and constraining no node, so not a fourth one.

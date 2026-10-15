@@ -26,11 +26,13 @@ wrote AGENTS.md
 wrote grund.toml
 
 next:
-  1. re-run with --scaffold to scaffold the FS home (requirements.md), docs/, and tests/ (or create them yourself) — until then `grund check` has nothing to scan
+  1. re-run with --scaffold to scaffold the FS home (requirements.md), docs/, and tests/ (or create them yourself)
   2. run `grund check` — a scaffolded tree is clean
   3. allocate an ID:  ID=$(grund id FS "…")  then add it to requirements.md
 see AGENTS.md for the full workflow.
 ```
+
+Step 1 carries no ` — until then \`grund check\` has nothing to scan` suffix: the version-2 starter scans its config root, and `AGENTS.md` is there to read ([§FS-init.2.2.2](FS-init.md#222-the-next-block)).
 
 Final tree:
 
@@ -39,7 +41,7 @@ AGENTS.md
 grund.toml
 ```
 
-`AGENTS.md` contains exactly one delimiter-bounded managed block — `<!-- BEGIN GRUND MANAGED BLOCK -->` through `<!-- END GRUND MANAGED BLOCK -->` ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) — headed `## Grounding with grund (vN)` at the current schema version. `grund.toml` is the default generated config from [§FS-init.2.4](FS-init.md#24-generated-grundtoml), including `grund_config_version = 1`, `project_name`, `[reference]` (including the inline citation style keys from [§FS-inline-citation-style.2](FS-inline-citation-style.md#2-configuration)), `[id]`, every default `[[kinds]]` with the template's `REQ` row after `FS` ([§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements)), `[scan]`, `[output]`, and `[fmt.cross_refs]`. Constrained keys include the inline value-set comments required by [§FS-init.2.4](FS-init.md#24-generated-grundtoml).
+`AGENTS.md` contains exactly one delimiter-bounded managed block — `<!-- BEGIN GRUND MANAGED BLOCK -->` through `<!-- END GRUND MANAGED BLOCK -->` ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) — headed `## Grounding with grund (vN)` at the current schema version. `grund.toml` is the `software-development` starter of [§FS-init.2.4.3](FS-init.md#243-every-written-key-differs-from-its-default), byte for byte: the comment line, `grund_config_version = 2`, `project_name`, the ten `[schema.kinds]` rows with their places, `REQ` after `FS` ([§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements)), and their ten `[presentation.kinds]` titles. Nothing else is written: no `[schema.sources]`, no `[schema] id_format`, no `[rules]`, and no commented-out key. A second `grund init {repo_copy}` reports `exists AGENTS.md` and `exists grund.toml`, prints no `next:` block, and leaves the tree byte-identical ([§FS-init.3.3](FS-init.md#33-without---force)).
 
 ### 1.1 Populated configured form
 
@@ -66,9 +68,11 @@ next:
 see AGENTS.md for the full workflow.
 ```
 
-The default form above is the exact counter-case: when the effective scanner
-would read no file, step 1 retains the suffix ` — until then \`grund check\` has
-nothing to scan` byte-for-byte. The populated form changes no other guidance
+The counter-case is a version-1 config whose effective scanner would read no
+file, such as one whose `[scan] include` names only paths that do not exist yet:
+step 1 then retains the suffix ` — until then \`grund check\` has nothing to
+scan` byte-for-byte. The default form above no longer is that counter-case,
+because the version-2 starter scans its config root ([§FS-init.2.2.2](FS-init.md#222-the-next-block)). The populated form changes no other guidance
 byte and does not suppress the scaffold advice.
 
 ### 1.2 Refresh of a scaffolded tree
@@ -168,7 +172,9 @@ The scaffold's `AGENTS.md` project map lists `REQ` right after `FS`, and its voc
 (`KIND ∈ {GRUND, GOAL, FS, REQ, AR, DF, DA, RM}`)
 ```
 
-`grund check` and `grund init --check` both exit `0` on the scaffolded tree, unmodified.
+Every scaffold-owned ID example takes the starter's slug-only format, so `docs/goals.md` teaches `# GOAL-<slug>: …` and `requirements.md` teaches `## FS-<slug>: …` ([§FS-init.2.1.3](FS-init.md#213-the-software-development-starter-files)).
+
+`grund check` and `grund init --check` both exit `0` on the scaffolded tree, unmodified, and `grund.toml` is the version-2 starter of [§FS-init-fixtures.1](FS-init-fixtures.md#1-default-form).
 
 ## 3. Existing files
 
@@ -274,7 +280,7 @@ Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 
 ### 6.3 Non-workspace repo
 
-Precondition: `{repo_copy}` exists and contains no `[workspace]` block in its config (or no config at all, in which case the defaults apply per [§FS-init.2.4](FS-init.md#24-generated-grundtoml)), and no ancestor workspace claims it ([§FS-init.2.3.4.15.1](FS-init.md#234151-which-workspace)).
+Precondition: `{repo_copy}` exists and contains no `[workspace]` block in its config (or no config at all, in which case `init` writes the starter of [§FS-init.2.4](FS-init.md#24-generated-grundtoml)), and no ancestor workspace claims it ([§FS-init.2.3.4.15.1](FS-init.md#234151-which-workspace)).
 
 Command: `grund init {repo_copy}`.
 
@@ -282,7 +288,7 @@ The generated `AGENTS.md` contains neither `### Workspace members` nor `### Proj
 
 ### 6.4 Workspace member descriptions
 
-Same shape as [§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init), but the root and two members carry `project_description` metadata ([§FS-config.3](FS-config.md#3-keys), [§FS-workspace.3](FS-workspace.md#3-aliases), [§DF-workspace-member-descriptions](../decisions/functional/DF-workspace-member-descriptions.md#df-workspace-member-descriptions-member-side-project_description-for-workspace-member-lists)). Precondition: `{repo_copy}` exists with `grund.toml`:
+Same shape as [§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init), but the root and two members carry `project_description` metadata ([§FS-config.3](FS-config.md#3-keys-version-1), [§FS-workspace.3](FS-workspace.md#3-aliases), [§DF-workspace-member-descriptions](../decisions/functional/DF-workspace-member-descriptions.md#df-workspace-member-descriptions-member-side-project_description-for-workspace-member-lists)). Precondition: `{repo_copy}` exists with `grund.toml`:
 
 ```toml
 project_name = "root"
@@ -333,7 +339,7 @@ next:
 see AGENTS.md for the full workflow.
 ```
 
-The final tree is the precondition's plus `AGENTS.md` and `grund.toml`, and nothing under `docs/` or `tests/` changes ([§FS-init.3.6](FS-init.md#36-bare-init-writes-the-config-and-the-entrypoints-and-nothing-in-a-home)). `grund.toml` is the config of [§FS-init.2.4.9](FS-init.md#249-the-none-templates-config), `kinds = []` in place of the kind tables, and the block's Project map is the paragraph of [§FS-init.2.3.4.4.2](FS-init.md#23442-no-kinds-yet). `grund check` over that tree exits `0` and `grund init --check` reports `exists AGENTS.md` and `exists grund.toml`.
+The final tree is the precondition's plus `AGENTS.md` and `grund.toml`, and nothing under `docs/` or `tests/` changes ([§FS-init.3.6](FS-init.md#36-bare-init-writes-the-config-and-the-entrypoints-and-nothing-in-a-home)). `grund.toml` is the version-2 envelope of [§FS-init.2.4.9](FS-init.md#249-the-none-templates-config), with no `[schema.kinds]` row, and the block's Project map is the paragraph of [§FS-init.2.3.4.4.2](FS-init.md#23442-no-kinds-yet). `grund check` over that tree exits `0` and `grund init --check` reports `exists AGENTS.md` and `exists grund.toml`.
 
 ### 7.1 Refused template runs
 
