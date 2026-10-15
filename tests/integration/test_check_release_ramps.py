@@ -294,19 +294,16 @@ class ThisRepositoryTests(unittest.TestCase):
         ]
         self.assertEqual([], golden)
 
-    def test_the_flips_this_tree_landed_hold_the_floor_at_0_16_0(self):
-        """§FS-distribution.4.2 — every 0.16.0 flip has landed, and together
-        they set the floor: among them the bare-`grund` fallback reports `was
-        removed in 0.16.0` (§FS-cli.4) and `unreached-declaration` reports
-        `became an error in 0.16.0` (§FS-rules.checks.unreached-declaration),
-        as do unmarked headings, near-miss declarations and the absorbed
-        workspace scan, so the tree cannot be cut below `0.16.0` and each
-        refuses a 0.15.x release on its own. The earlier unlisted-`[workspace]` flip is still read and still
-        refuses a 0.14.x release (§FS-check.3.29.14), and so are the older
-        landed clauses: a 0.12.x release is still refused by the `prefix`
-        removal."""
+    def test_the_landed_stub_target_flip_holds_the_floor_at_0_19_0(self):
+        """§FS-distribution.4.2.2 — excluded and ignored stub targets became
+        errors in 0.19.0 (§FS-declarations.stubs.target.3), raising the message
+        floor independently of the shared floor. Historical landed clauses
+        still refuse lower releases: the bare-`grund` removal (§FS-cli.4) and
+        unreached-declaration flip (§FS-rules.checks.unreached-declaration)
+        refuse 0.15.x, the unlisted-`[workspace]` flip (§FS-check.3.29.14)
+        refuses 0.14.x, and the `prefix` removal refuses 0.12.x."""
         floor, _ = ramps.release_window(self.claims)
-        self.assertEqual(floor, "0.16.0")
+        self.assertEqual(floor, "0.19.0")
         report = ramps.report(self.claims, "0.15.0")
         self.assertTrue(
             any(
@@ -335,6 +332,28 @@ class ThisRepositoryTests(unittest.TestCase):
             "the `prefix` removal is still read as a landed clause of this tree",
         )
 
+    def test_the_stub_target_message_alone_refuses_0_18_1_in_source_and_goldens(self):
+        """§FS-distribution.4.2.2 — the active diagnostic and its exclude/ignore
+        goldens name the landed 0.19.0 change (§FS-declarations.stubs.target.3).
+        Read those actual bytes and attribute the 0.18.1 refusal to each home,
+        without supplying the independent shared floor."""
+        report = ramps.report(self.claims, "0.18.1")
+        self.assertEqual(report[0], "error: this tree cannot be released as 0.18.1")
+        for path in (
+            "crates/grund-core/src/checker/conform.rs",
+            "tests/e2e/cases/check-excluded-stub-target-exclude-entry/expected.stdout",
+            "tests/e2e/cases/check-excluded-stub-target-ignore-file/expected.stdout",
+        ):
+            with self.subTest(path=path):
+                self.assertTrue(any(
+                    claim.path == path and claim.clause == "became an error in"
+                    and claim.release == "0.19.0" and claim.direction == ramps.LANDED
+                    for claim in self.claims
+                ), f"{path} must carry the landed stub-target clause")
+                self.assertTrue(any(
+                    path + ":" in line and "`became an error in 0.19.0`" in line
+                    for line in report
+                ), f"{path} must explicitly refuse a 0.18.1 release")
 
     def test_the_attribution_pairs_this_tree_ships_are_read(self):
         """§FS-distribution.4.2.3.1 — two shipped rules print the pair, and two
@@ -348,21 +367,14 @@ class ThisRepositoryTests(unittest.TestCase):
         self.assertIn("crates", homes)
         self.assertIn("tests", homes)
 
-    def test_reading_the_landed_half_leaves_this_trees_window_where_it_was(self):
-        """§FS-distribution.4.2.5 — the invariant across this change. The pairs
-        this tree ships name 0.12.0 and 0.14.0, both below the 0.16.0 floor its
-        own landed flips already set, so reading them moves neither bound. A
-        window that moves here has caught something other than this defect.
-
-        The window opens at 0.16.0: every 0.16.0 ramp has landed, from the
-        bare-`grund` removal and the `unreached-declaration` promotion to the
-        seven that closed the empty window. The section-citation ramp landed at
-        0.18.0 with no clause of its own, so it sets no floor, and the ceiling
-        is 0.19.0, the earliest release a ramp still open names: the nested
-        alias pin's among them, moved there because no release before 0.18.0
-        carried it (§FS-distribution.4.2.5, §FS-cli.4,
-        §FS-rules.checks.unreached-declaration, §FS-rules.7.8, §FS-rules.7.9)."""
-        self.assertEqual(ramps.release_window(self.claims), ("0.16.0", "0.19.0"))
+    def test_the_landed_stub_target_flip_closes_this_trees_window_at_0_19_0(self):
+        """§FS-distribution.4.2.5 — the stub-target activation's landed message
+        sets a 0.19.0 floor (§FS-declarations.stubs.target.3), while the pending
+        init ramp still sets a 0.19.0 ceiling. The message-only window is empty.
+        The older attribution pairs name 0.12.0 and 0.14.0, below this floor,
+        so reading them moves neither bound. No shared floor is supplied here;
+        its independent enforcement has its own regression."""
+        self.assertEqual(ramps.release_window(self.claims), ("0.19.0", "0.19.0"))
 
 
 if __name__ == "__main__":
