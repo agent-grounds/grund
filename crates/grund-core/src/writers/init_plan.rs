@@ -7,6 +7,7 @@ use crate::scanner::{
     companion_workspace_exists, existing_init_companion_agent_entrypoints, is_file_or_symlink,
     is_symlink_to, path_missing_without_following_symlinks,
 };
+use crate::sources::Sources;
 use crate::templates::ConversationSurface;
 
 /// The plan one `grund init` run makes: which entrypoint files *this*
@@ -115,7 +116,7 @@ pub(super) fn selected_init_agent_entrypoints(
     let canonical = target.join(CANONICAL_AGENT_ENTRYPOINT);
     let canonical_exists = is_file_or_symlink(&canonical);
     let (canonical_symlinks, existing_companions) =
-        existing_init_companion_agent_entrypoints(target)?;
+        existing_init_companion_agent_entrypoints(target, Sources::on_disk())?;
     if canonical_exists || !existing_companions.is_empty() {
         return Ok(SelectedInitAgentEntrypoints {
             canonical: canonical_exists || !canonical_symlinks.is_empty(),

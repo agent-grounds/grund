@@ -63,16 +63,8 @@ pub const TREES: &[(Option<&str>, &str, fn() -> Verdict)] = &[
     ),
     (None, "r06a", an_index_entry_is_judged_on_the_buffer),
     (None, "r06b", the_inline_code_hint_reads_the_buffer),
-    (
-        None,
-        "r06c",
-        the_agents_block_is_judged_on_the_buffer,
-    ),
-    (
-        None,
-        "r06d",
-        the_e2e_manifest_is_read_from_the_buffer,
-    ),
+    (None, "r06c", the_agents_block_is_judged_on_the_buffer),
+    (None, "r06d", the_e2e_manifest_is_read_from_the_buffer),
 ];
 
 /// A stub at `docs/a.md` to `target` and a citation of `FS-a` beside it.

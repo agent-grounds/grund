@@ -9,7 +9,6 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 use super::index_entries::KindIndexEntries;
 use super::index_mention::index_mentions;
@@ -19,11 +18,10 @@ use crate::grammar::{
     render_id,
 };
 use crate::model::{
-    Catalog, CheckReport, Citation, Declaration, Diagnostic, FileRecord, HeadingKind, Id,
-    paired_declarations, scanned_decl_relative_path, scanned_path_key, section_resolves,
+    Catalog, CheckReport, Citation, Declaration, Diagnostic, HeadingKind, Id, paired_declarations,
+    scanned_decl_relative_path, scanned_path_key, section_resolves,
 };
-use crate::scanner::record_of_text;
-use crate::sources::{Sources, path_is_dir, physical_path_key};
+use crate::sources::{path_is_dir, physical_path_key};
 
 /// One kind's index obligation, resolved against the config root
 /// (§FS-config.3.4). `folder_key` and `index_key` are config-root-relative and
@@ -224,24 +222,6 @@ pub(crate) const INDEX_RULE_PRIOR_RELEASE: &str = "0.11.0";
 /// error on arrival — the "to" half of that pair.
 pub(crate) const INDEX_RULE_RELEASE: &str = "0.12.0";
 
-/// The record of an index's saved `text`, which every look at its lines reads
-/// (§DF-four-editor-checks-read-saved-text): the scan's own `record`, read under
-/// the key the scan read the file by, where the scan read those bytes, and the
-/// scanner's record of the saved text where it read an editor's unsaved buffer
-/// instead, so a heading is asked about the line it is on (§AR-scanner.2.8.5).
-fn saved_record(
-    file: &Path,
-    record: &Arc<FileRecord>,
-    text: &str,
-    schema: &Schema,
-    frame: Frame<'_>,
-) -> Option<Arc<FileRecord>> {
-    if record.text.as_str() == text {
-        return Some(Arc::clone(record));
-    }
-    record_of_text(file, text, schema, frame).ok()
-}
-
 /// §AR-checker.2.16 — the kind-index rule (§FS-check.3.18, §FS-check.3.17). One
 /// pass per configured index: read the file once, classify the citations the
 /// scanner already recorded in it, then judge each declaration the index owns.
@@ -309,8 +289,8 @@ pub(super) fn check_kind_indexes(
         }
     }
     // §FS-check.3.18.8: which index files *this run* read. The entries come from the
-    // scan and the form from disk, so an index the run never scanned would
-    // otherwise look empty and report every declaration in the folder as unlisted.
+    // scan and the form from the index's text, so an index the run never scanned
+    // would otherwise look empty and report every declaration in the folder as unlisted.
     let index_scanned: BTreeMap<&Path, &Path> = findings
         .scanned_files
         .iter()
@@ -320,15 +300,14 @@ pub(super) fn check_kind_indexes(
         })
         .collect();
 
-    // R06a of §REQ-one-answer.differences.text: the index as saved
-    // (§DF-four-editor-checks-read-saved-text).
-    let saved = Sources::saved();
+    // §FS-scan.text.buffer: the index as a save would write it.
+    let sources = frame.sources();
     for target in &targets {
         // `is_file`, not `exists`: a path that is not a readable file is not an index
         // this run failed to read, it is an index that is not there — a missing one or
         // a directory wearing the name — which is §FS-check.3.18.7's finding, not silence.
         let scanned_as = index_scanned.get(target.index_key.as_path());
-        if scanned_as.is_none() && saved.is_file(&target.index_file) {
+        if scanned_as.is_none() && sources.is_file(&target.index_file) {
             continue;
         }
         let Some(owed) = index_entries.entries_in(&target.index_file) else {
@@ -348,11 +327,11 @@ pub(super) fn check_kind_indexes(
         // §FS-check.3.18.7: an absent index is reported once per declaration;
         // distinguish missing files, directories and unreadable files.
         // §FS-check.6.1.1: cover this effective input before its shared read.
-        let text = saved.text(&target.index_file).ok();
+        let text = sources.text(&target.index_file).ok();
         let absent = match &text {
             Some(_) => "",
             None if path_is_dir(&target.index_file) => " (the index file is a directory)",
-            None if saved.exists(&target.index_file) => " (the index file could not be read)",
+            None if sources.exists(&target.index_file) => " (the index file could not be read)",
             None => " (the index file does not exist)",
         };
         let lines: Vec<&str> = text
@@ -361,11 +340,11 @@ pub(super) fn check_kind_indexes(
             .unwrap_or_default();
         // §FS-check.1.1.5.1: which of those lines may hold a heading at all.
         let kinds = markdown_line_kinds(lines.iter().copied());
-        // §AR-scanner.2.8.5: which are declaration headings, off the record of these lines.
+        // §AR-scanner.2.8.5: which are declaration headings, off the record of these
+        // lines, the scan's own: both read the text a save would write.
         let record = scanned_as
-            .and_then(|file| findings.files.get(*file).map(|record| (*file, record)))
-            .zip(text.as_deref())
-            .and_then(|((file, record), text)| saved_record(file, record, text, schema, frame));
+            .and_then(|file| findings.files.get(*file))
+            .map(|record| &**record);
         // §FS-check.3.17.4: a bare citation is an entry only where `fmt --write`
         // may wrap it. A link through this index path to a target outside the
         // physical config root is readable but not writable by the formatter.
@@ -387,7 +366,6 @@ pub(super) fn check_kind_indexes(
                 .is_some_and(|kind| kind.may_be_heading());
             if heading_position
                 && record
-                    .as_ref()
                     .and_then(|record| record.heading_at(citation.line))
                     .is_some_and(|heading| heading.kind == HeadingKind::Declaration)
             {
@@ -432,13 +410,7 @@ pub(super) fn check_kind_indexes(
         let mentioned = if unentered.is_empty() {
             BTreeSet::new()
         } else {
-            index_mentions(
-                frame,
-                &schema.citation.marker,
-                record.as_deref(),
-                &lines,
-                &unentered,
-            )
+            index_mentions(frame, &schema.citation.marker, record, &lines, &unentered)
         };
 
         for (id, decl) in covered {

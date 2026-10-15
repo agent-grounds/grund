@@ -55,7 +55,7 @@ struct OrphanEntry {
 /// (§FS-init.2.3.5.10). The list on disk is read here, before the root block
 /// is rewritten (§FS-init.2.3.5.13.1).
 pub(super) fn plan_scoped(guidance: &Guidance<'_>, root: &Path, target: &Path) -> ScopedPlan {
-    let record = ScopedRecord::read(target);
+    let record = ScopedRecord::read(target, Sources::on_disk());
     let live: Vec<&str> = guidance.layout.scoped_dirs().collect();
     let files = live
         .iter()

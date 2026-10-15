@@ -40,13 +40,14 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// (§FS-declarations.checks.oversized-lead) slices the file record the scan keeps
 /// (§AR-scanner.2.8). What is read after the scan is:
 ///
-/// - §AR-checker.2.3's hint: the line of a dangling Markdown citation, from disk.
-/// - §AR-checker.2.6: every configured kind index, from disk, through
+/// - §AR-checker.2.3's hint: the line of a dangling Markdown citation, from its
+///   record, or from the run's sources where the scan kept none.
+/// - §AR-checker.2.6: every configured kind index, through
 ///   §AR-checker.2.16's membership derivation, so that an index entry is not
 ///   counted as an inbound citation (§DF-index-not-an-inbound-citation).
-/// - §AR-checker.2.7: each agent entrypoint, from disk. Its companions are listed,
+/// - §AR-checker.2.7: each agent entrypoint. Its companions are listed,
 ///   and read, by the writers before the check, in `Expected` (§AR-checker.1.3).
-/// - §AR-checker.2.16: every configured kind index, from disk.
+/// - §AR-checker.2.16: every configured kind index.
 ///
 /// ## terms: Terms
 ///

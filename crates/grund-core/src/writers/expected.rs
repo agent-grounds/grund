@@ -72,7 +72,7 @@ pub(crate) fn expected(
         entrypoints.push(guidance.root_entrypoint(canonical, true));
     }
     let mut entrypoint_probe_error = None;
-    match companion_agent_entrypoints(root) {
+    match companion_agent_entrypoints(root, config.frame().sources()) {
         Ok(companions) => entrypoints.extend(
             companions
                 .into_iter()
@@ -108,7 +108,7 @@ fn scoped_entrypoints(
     entrypoints: &mut Vec<ExpectedEntrypoint>,
 ) -> BTreeSet<PathBuf> {
     let root = &config.root;
-    let record = ScopedRecord::read(root);
+    let record = ScopedRecord::read(root, config.frame().sources());
     let live: Vec<&str> = guidance.layout.scoped_dirs().collect();
     let orphans = record.orphans(&live);
     let mut files = BTreeSet::new();

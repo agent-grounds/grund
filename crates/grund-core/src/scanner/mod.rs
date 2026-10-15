@@ -123,9 +123,7 @@ pub(crate) use scope_probe::{
 pub(crate) use section_locks::{may_give_locked_heading, section_locks_present};
 pub(crate) use slices::{SliceMiss, SliceSink, record_slices};
 pub(crate) use stub_homes::lend_citations;
-pub(crate) use tree::{
-    ScanError, record_of_text, scan_tree, scan_tree_strict, scan_tree_with_workspace,
-};
+pub(crate) use tree::{ScanError, scan_tree, scan_tree_strict, scan_tree_with_workspace};
 pub(crate) use walk::scan_roots_for;
 pub(crate) use walk_reporting::{
     walk_scannable_files, walk_scannable_files_reporting, walk_scannable_files_with_sources,

@@ -1,7 +1,6 @@
 use anyhow::{Result, anyhow};
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 use super::e2e::scan_e2e_cases;
 use super::file_pass::scan_file_text;
@@ -14,7 +13,7 @@ use super::value_json::{scan_value_json_sources, value_json_sources};
 use super::walk::{scan_roots, walk_scannable_files_reporting};
 use crate::config::{Frame, Schema};
 use crate::grammar::resolve_shorthand_citations;
-use crate::model::{Catalog, FileRecord, FileText, normalize_path_lexically, sort_path_key};
+use crate::model::{Catalog, normalize_path_lexically, sort_path_key};
 use crate::sources::{canonicalize_existing_prefix, paths_same_location};
 use crate::workspace::WorkspaceCitationTarget;
 
@@ -97,25 +96,6 @@ pub(super) fn scan_unwalked_file(
             .sort_by_key(|cite| (cite.line, cite.column));
     }
     Ok(findings)
-}
-
-/// The record the per-file pass makes of `text`, outside any walk: the saved
-/// text of an index whose scan read the editor's buffer, so the index's heading
-/// test reads the same text as the look it serves (§AR-scanner.2.8.5,
-/// §DF-four-editor-checks-read-saved-text).
-pub(crate) fn record_of_text(
-    file: &Path,
-    text: &str,
-    schema: &Schema,
-    frame: Frame<'_>,
-) -> Result<Arc<FileRecord>> {
-    let mut findings = Catalog::default();
-    let text = FileText::Disk(Arc::new(text.to_string()));
-    scan_file_text(file, text, schema, frame, &mut findings, &[])?;
-    findings
-        .files
-        .remove(file)
-        .ok_or_else(|| anyhow!("no record of {}", file.display()))
 }
 
 fn scan_file_results(

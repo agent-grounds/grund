@@ -27,13 +27,14 @@ pub(crate) struct ScopedRecord {
 }
 
 impl ScopedRecord {
-    /// Read `AGENTS.md` at `root`, then each companion, and take the list from
-    /// the first that carries a block.
-    pub(crate) fn read(root: &Path) -> Self {
+    /// Read `AGENTS.md` at `root`, then each companion, through `sources` (the
+    /// run's for check, the disk's for init), and take the list from the first
+    /// that carries a block.
+    pub(crate) fn read(root: &Path, sources: Sources<'_>) -> Self {
         let mut candidates = vec![root.join(CANONICAL_AGENT_ENTRYPOINT)];
-        candidates.extend(companion_agent_entrypoints(root).unwrap_or_default());
+        candidates.extend(companion_agent_entrypoints(root, sources).unwrap_or_default());
         for path in candidates {
-            let Ok(text) = Sources::on_disk().text(&path) else {
+            let Ok(text) = sources.text(&path) else {
                 continue;
             };
             if let AgentsBlockLookup::Found(block) = find_agents_block(&text) {

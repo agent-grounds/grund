@@ -15,18 +15,17 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 /// The calls that read a file's text: the shared read of an effective input
-/// (§FS-check.6.1.1) or the standard library's, the saved view of the run's
-/// sources, which the readers §REQ-one-answer.differences.text lists take past
-/// the editor's buffers (§AR-system.2.13), and the calls a rule reaches such
-/// a read through in another file — the scanner's listing of agent-entrypoint
-/// companions, which reads a companion's text, and the kind-index membership
-/// derivation, which reads every configured index.
+/// (§FS-check.6.1.1) or the standard library's, the run's sources, which put
+/// the editor's buffers in front of the disk (§AR-system.2.13), and the calls a
+/// rule reaches such a read through in another file — the scanner's listing of
+/// agent-entrypoint companions, which reads a companion's text, and the
+/// kind-index membership derivation, which reads every configured index.
 /// A stub's target is read by the scan alone (§AR-scanner.4.6), and every rule
 /// reads its record, so no call that reaches it is a read here. The resolver's
 /// point-body slicer reads the file record too, not the file (§AR-scanner.2.8).
 const READ_CALLS: &[&str] = &[
     "input_read_to_string",
-    "Sources::saved",
+    "sources",
     "read_to_string",
     "fs::read",
     "File::open",
@@ -39,14 +38,14 @@ const READ_CALLS: &[&str] = &[
 /// whose read has gone.
 const READERS: &[(&str, &str, &str)] = &[
     // The inline-code hint on a dangling Markdown citation.
-    ("support.rs", "Sources::saved", "AR-checker.2.3"),
+    ("support.rs", "sources", "AR-checker.2.3"),
     // The unused-declaration rule, which reads every index to tell an index entry
     // from an inbound citation.
     ("judge.rs", "KindIndexEntries::new", "AR-checker.2.6"),
-    ("agents.rs", "Sources::saved", "AR-checker.2.7"),
-    ("index.rs", "Sources::saved", "AR-checker.2.16"),
+    ("agents.rs", "sources", "AR-checker.2.7"),
+    ("index.rs", "sources", "AR-checker.2.16"),
     ("index.rs", "KindIndexEntries::new", "AR-checker.2.16"),
-    ("index_entries.rs", "Sources::saved", "AR-checker.2.16"),
+    ("index_entries.rs", "sources", "AR-checker.2.16"),
 ];
 
 fn component_dir() -> PathBuf {

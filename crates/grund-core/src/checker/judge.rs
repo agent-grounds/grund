@@ -67,7 +67,7 @@ pub(crate) fn judge(
     // §FS-check.3.5: managed agent-entrypoint blocks that are out of date (or
     // newer than this binary), or whose generated sections have drifted from
     // `Expected`'s bytes (§AR-checker.2.7), are check errors.
-    check_agents_block_version(expected, &mut report);
+    check_agents_block_version(expected, frame, &mut report);
 
     // §FS-check.3.1 / §FS-check.3.2 / §FS-check.3.8 / §FS-check.3.13: the
     // reference-resolution family, in `references.rs` (§AR-checker.2.13,

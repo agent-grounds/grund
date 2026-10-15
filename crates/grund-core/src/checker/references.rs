@@ -226,7 +226,7 @@ pub(super) fn check_citation_resolution(
             });
             // §FS-config-v2.schema.sources: Markdown is the citing file's language's.
             let markdown = frame.compiled.reading(schema, &cite.file).markdown;
-            let in_inline_code = citation_in_markdown_inline_code(findings, cite, markdown);
+            let in_inline_code = citation_in_markdown_inline_code(findings, frame, cite, markdown);
             let (code, message, warning) = if let Some(row) = snapshot_row {
                 // §FS-check.3.14.1: out-of-scope citations stay fixed dangling errors;
                 // a target kind's in-scope `should` must not demote this opt-in tier.

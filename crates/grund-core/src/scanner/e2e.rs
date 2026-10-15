@@ -172,13 +172,12 @@ pub(crate) fn e2e_case_dir_name(schema: &Schema, rendered: &str) -> String {
 /// `check`), `expected.exit`, `spec.refs`, and the recursive fixture file list —
 /// the data `grund E2E-<name>` renders or checks (§FS-show.2.4, §FS-config.3.9).
 fn read_e2e_case(schema: &Schema, frame: Frame<'_>, dir: &Path) -> Result<E2eCase> {
-    // R06d of §REQ-one-answer.differences.text: the manifest as saved
-    // (§DF-four-editor-checks-read-saved-text).
-    let saved = Sources::saved();
+    // §FS-scan.text.buffer: the manifest as a save would write it.
+    let sources = frame.sources();
     let command_args = dir.join("command.args");
     let args = if path_is_file(&command_args) {
         // §FS-check.6.1.1: cover this effective input before its shared read.
-        saved
+        sources
             .text(&command_args)?
             .split_whitespace()
             .map(str::to_string)
@@ -187,7 +186,7 @@ fn read_e2e_case(schema: &Schema, frame: Frame<'_>, dir: &Path) -> Result<E2eCas
         vec!["check".to_string()]
     };
     // §FS-check.6.1.1: cover this effective input before its shared read.
-    let expected_exit = saved
+    let expected_exit = sources
         .text(&dir.join("expected.exit"))?
         .trim()
         .parse::<i32>()
@@ -210,9 +209,9 @@ fn read_e2e_spec_refs(schema: &Schema, frame: Frame<'_>, dir: &Path) -> Result<V
     if !path_is_file(&path) {
         return Ok(Vec::new());
     }
-    // §FS-check.6.1.1: cover this effective input before its shared read; R06d of
-    // §REQ-one-answer.differences.text reads it as saved (§DF-four-editor-checks-read-saved-text).
-    let text = Sources::saved().text(&path)?;
+    // §FS-check.6.1.1: cover this effective input before its shared read, as a
+    // save would write it (§FS-scan.text.buffer).
+    let text = frame.sources().text(&path)?;
     Ok(text
         .lines()
         .filter_map(|line| e2e_spec_ref_from_line(schema, frame, line.trim()))
