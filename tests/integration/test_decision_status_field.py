@@ -113,7 +113,6 @@ class DecisionStatusFieldTest(unittest.TestCase):
         ]
         self.assertEqual([], found)
 
-    @unittest.expectedFailure
     def test_the_config_declares_the_shapes_at_must(self):
         config = tomllib.loads(CONFIG.read_text(encoding="utf-8"))
         self.assertEqual(2, config.get("grund_config_version"))

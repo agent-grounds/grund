@@ -176,10 +176,11 @@ after = "placement"
 folders = ["docs/decisions/functional"]
 
 # A decision record opens with its status, one of the two values records use:
-# a record merges once accepted, and one replaced says so (DISC-core-concerns.10.2).
+# a record merges once accepted, and one replaced says so. `must`, raised once
+# no record was left without it (DISC-core-concerns.10.2).
 [schema.kinds.DF.fields.status]
 one_of = ["Accepted", "Superseded"]
-presence = "warn"
+presence = "must"
 position = "first"
 
 [schema.kinds.DA]
@@ -188,7 +189,7 @@ folders = ["docs/decisions/architectural"]
 # The same status as DF records (DISC-core-concerns.10.2).
 [schema.kinds.DA.fields.status]
 one_of = ["Accepted", "Superseded"]
-presence = "warn"
+presence = "must"
 position = "first"
 
 # The two test homes are places, not ID namespaces (FS-config.3.4.1,
