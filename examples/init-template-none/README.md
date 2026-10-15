@@ -22,31 +22,32 @@ echo $?    # 0
 The run writes two files and touches nothing under `docs/`
 ([§FS-init.3.6](../../docs/functional-spec/FS-init.md#36-bare-init-writes-the-config-and-the-entrypoints-and-nothing-in-a-home)), which `expected.repo/` records byte for byte:
 
-- `grund.toml`, the `none` template's config ([§FS-init.2.4.9](../../docs/functional-spec/FS-init.md#249-the-none-templates-config)). It
-  sets `kinds = []`, which declares no kinds
-  ([§FS-config.3.4.4.5](../../docs/functional-spec/FS-config.md#3445-kinds---declares-no-kinds)), where leaving `[[kinds]]` out would
-  have kept the nine defaults.
-- `AGENTS.md`, whose Project map teaches the first `[[kinds]]` table rather than
-  listing an empty one ([§FS-init.2.3.4.4.2](../../docs/functional-spec/FS-init.md#23442-no-kinds-yet)).
+- `grund.toml`, the `none` template's config ([§FS-init.2.4.9](../../docs/functional-spec/FS-init.md#249-the-none-templates-config)): a
+  version-2 file holding the version, the project name and a comment on
+  declaring a first kind. With no `[schema.kinds]` row it declares no kinds, and
+  `grund config show` prints every setting it leaves at its default
+  ([§FS-config.4.2](../../docs/functional-spec/FS-config.md#42-grund-config-show-path)).
+- `AGENTS.md`, whose Project map teaches the first `[schema.kinds]` table rather
+  than listing an empty one ([§FS-init.2.3.4.4.2](../../docs/functional-spec/FS-init.md#23442-no-kinds-yet)).
 
 On stderr it reports those two paths, then a `next:` block whose first step is
 to declare a first kind ([§FS-init.2.2.2.2](../../docs/functional-spec/FS-init.md#2222-a-project-with-no-kinds)). Stdout is empty.
 
 ## What to do next
 
-Replace `kinds = []` with the repository's own kinds, then run `grund init`
-again so the entrypoint lists them:
+Add the repository's own kinds, then run `grund init` again so the entrypoint
+lists them:
 
 ```toml
-[[kinds]]
-kind = "ADR"
-folder = "docs/adr"
-title = "Architecture decisions"
-
-[[kinds]]
-kind = "runbook"
-folder = "docs/runbooks"
+[schema.kinds.ADR]
+folders = ["docs/adr"]
+[schema.kinds.runbook]
 citable = false
+folders = ["docs/runbooks"]
+
+[presentation.kinds.ADR]
+title = "Architecture decisions"
+[presentation.kinds.runbook]
 title = "Operational runbooks"
 ```
 

@@ -1,12 +1,4 @@
-grund_config_version = 1
+grund_config_version = 2
 
-[id]
-format = "{kind}-{slug}"
-named_sections = true
-
-[[kinds]]
-kind = "FS"
-folder = "docs/functional-spec"
-
-[scan]
-include = ["src"]
+[schema.kinds.FS]
+folders = ["docs/functional-spec"]

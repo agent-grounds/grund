@@ -119,7 +119,8 @@ fn the_none_template_writes_a_config_with_no_kinds() {
 }
 
 /// §FS-init.2.3.4.4.2: the block a config with no kinds renders names no empty
-/// set, and teaches the first `[[kinds]]` table instead.
+/// set, and teaches the first `[schema.kinds.<KIND>]` table of the v2 file
+/// `none` writes instead (§FS-init.2.4.9).
 #[test]
 fn the_none_template_block_teaches_the_first_kind() {
     let root = test_root("init_template_none_block");
@@ -131,7 +132,9 @@ fn the_none_template_block_teaches_the_first_kind() {
     );
     assert!(!block.contains("KIND ∈ {}"), "{block}");
     assert!(
-        block.contains("### Project map\n\nNo kinds are declared yet: `grund.toml` sets `kinds = []`. Replace it with one `[[kinds]]` table"),
+        block.contains(
+            "### Project map\n\nNo kinds are declared yet. Add one `[schema.kinds.<KIND>]` table"
+        ),
         "{block}"
     );
     assert!(

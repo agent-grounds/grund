@@ -1,6 +1,6 @@
 # Requirements
 
-Hard requirements — what the project must never break, kept apart from the behavior it specifies. One file per requirement; each H1 declares a `REQ-<NNN>-<slug>` ID and the body is the requirement.
+Hard requirements — what the project must never break, kept apart from the behavior it specifies. One file per requirement; each H1 declares a `REQ-<slug>` ID and the body is the requirement.
 
 Cite a requirement from the goal it protects, and cite it from every spec point that must keep it, so a change that would break it meets it first.
 

@@ -25,7 +25,10 @@ fn init(target: &Path, flags: &[&str]) -> (bool, String) {
 
 /// `grund config show` over `target`: its success and its stdout.
 fn show(target: &Path) -> (bool, String) {
-    let output = run_grund(&["config", "show", target.to_str().unwrap()], manifest_dir());
+    let output = run_grund(
+        &["config", "show", target.to_str().unwrap()],
+        manifest_dir(),
+    );
     (
         output.status.success(),
         String::from_utf8_lossy(&output.stdout).into_owned(),
@@ -96,8 +99,15 @@ fn a_second_init_over_the_starter_changes_nothing() {
         let before = tree(&target);
         let (ok, stderr) = init(&target, &[]);
         assert!(ok, "{stderr}");
-        assert_eq!(stderr, "exists AGENTS.md\nexists grund.toml\n", "{template}");
-        assert_eq!(tree(&target), before, "{template}: the second run changed the tree");
+        assert_eq!(
+            stderr, "exists AGENTS.md\nexists grund.toml\n",
+            "{template}"
+        );
+        assert_eq!(
+            tree(&target),
+            before,
+            "{template}: the second run changed the tree"
+        );
     }
 }
 
@@ -114,7 +124,10 @@ fn the_starter_shown_loads_back_to_the_same_settings() {
         fs::write(reread.join("grund.toml"), &shown).unwrap();
         let (ok, again) = show(&reread);
         assert!(ok, "{template}: {again}");
-        assert_eq!(again, shown, "{template}: the display does not load back to itself");
+        assert_eq!(
+            again, shown,
+            "{template}: the display does not load back to itself"
+        );
     }
 }
 
