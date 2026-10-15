@@ -5,7 +5,7 @@
 use super::forms::{Form, Refusal, refuse};
 use super::{RuleTargets, RuleVocabulary, TargetMode};
 use crate::config::{
-    KindScope, KindVerdict, NamespaceMatch, Quote, one_grammar_window, parse_citation_target_entry,
+    KindScope, KindVerdict, NamespaceMatch, Quote, parse_citation_target_entry,
     render_citation_target, unverifiable_reason,
 };
 
@@ -52,9 +52,7 @@ fn known_target(
             return Ok(render_citation_target(&parsed));
         }
         // §FS-errors.3.8: a kind its scope configures without IDs says so.
-        KindVerdict::NonCitable(entry) => {
-            one_grammar_window(&legacy, &entry.non_citable_reason(Quote::Double))
-        }
+        KindVerdict::NonCitable(entry) => entry.refusal(&legacy, Quote::Double),
         // §FS-errors.2.5.1: `code` with no row is refused as not citable too.
         KindVerdict::Unknown => {
             vocab

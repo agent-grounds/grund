@@ -48,6 +48,9 @@ pub(crate) struct KindEntry {
     pub(crate) citable: bool,
     /// `<folder>/` or the file, `None` for a kind with no place (§FS-check.3.11).
     pub(crate) home: Option<String>,
+    /// `code` where the config writes no complement of its own
+    /// (§FS-config.3.9.2): a kind with no row, whose window has closed.
+    pub(crate) rowless: bool,
 }
 
 impl KindEntry {
@@ -58,6 +61,19 @@ impl KindEntry {
         match &self.home {
             Some(home) => format!("kind {kind} declares no IDs — {home} is not a citable home"),
             None => format!("kind {kind} declares no IDs"),
+        }
+    }
+
+    /// The one refusal of this kind where a surface printed `legacy` before
+    /// the reason moved: §FS-errors.2.5.1's reason through the window of
+    /// §FS-errors.3.8, and alone for `code` with no row, whose window closed
+    /// in `0.19.0` (§FS-errors.3.8.1, §DF-homeless-code-declares-no-ids).
+    pub(crate) fn refusal(&self, legacy: &str, quote: Quote) -> String {
+        let reason = self.non_citable_reason(quote);
+        if self.rowless {
+            reason
+        } else {
+            one_grammar_window(legacy, &reason)
         }
     }
 }
@@ -92,6 +108,7 @@ impl KindProject {
                     citable: row.kind.is_some(),
                     // §FS-config-v2.schema.places: every place, and none for the complement.
                     home: row.place_labels().filter(|_| !row.is_complement()),
+                    rowless: false,
                 })
                 .collect(),
             named_sections: schema.ids.named_sections,
@@ -100,6 +117,7 @@ impl KindProject {
                     name: CODE_SOURCE_KIND.to_string(),
                     citable: false,
                     home: None,
+                    rowless: true,
                 }
             }),
         }
@@ -197,6 +215,7 @@ impl KindTable {
                         name: name.clone(),
                         citable: true,
                         home: None,
+                        rowless: false,
                     })
                     .collect(),
                 named_sections: false,
@@ -273,9 +292,9 @@ impl KindTable {
     /// the complement a config that writes none of its own still has
     /// (§FS-config.3.9.2), has no row; config has always read it as configured
     /// and not citable, a kind that cites and is never cited, and keeps that
-    /// answer. Every other surface called it unknown, and until the window of
-    /// §FS-errors.3.8 closes keeps that reason in front of this verdict's
-    /// (§FS-errors.2.5.1, [`Self::unknown_or_complement`]).
+    /// answer. Every other surface called it unknown, and since `0.19.0` gives
+    /// this verdict's reason alone (§FS-errors.3.8.1,
+    /// [`Self::unknown_or_complement`]).
     pub(crate) fn config_verdict<'s>(
         &'s self,
         scope: KindScope<'s>,
@@ -295,10 +314,10 @@ impl KindTable {
         }
     }
 
-    /// §FS-errors.3.8: `legacy`, the refusal a surface gives a name `scope`
-    /// does not configure, with §FS-errors.2.5.1's reason in `quote`'s spelling
-    /// appended where the name is the complement `code` that has no row
-    /// (§FS-list.1.1); `legacy` alone for any other name.
+    /// §FS-errors.3.8.1: `legacy`, the refusal a surface gives a name `scope`
+    /// does not configure, or, where the name is the complement `code` that has
+    /// no row, §FS-errors.2.5.1's reason in `quote`'s spelling in its place
+    /// (§FS-list.1.1, [`KindEntry::refusal`]).
     pub(crate) fn unknown_or_complement(
         &self,
         scope: KindScope<'_>,
@@ -307,9 +326,7 @@ impl KindTable {
         quote: Quote,
     ) -> String {
         match self.config_verdict(scope, name) {
-            KindVerdict::NonCitable(entry) => {
-                one_grammar_window(&legacy, &entry.non_citable_reason(quote))
-            }
+            KindVerdict::NonCitable(entry) => entry.refusal(&legacy, quote),
             _ => legacy,
         }
     }
@@ -347,12 +364,12 @@ impl KindTable {
             .collect()
     }
 
-    /// The same kinds by name, each with the double-quoted reason a selector
-    /// and a rule refuse it with (§FS-errors.2.5.1).
-    pub(crate) fn non_citable_reasons(&self, scope: KindScope<'_>) -> BTreeMap<String, String> {
+    /// The same kinds by name, each with the entry a selector and a rule
+    /// refuse it by (§FS-errors.2.5.1, [`KindEntry::refusal`]).
+    pub(crate) fn non_citable_entries(&self, scope: KindScope<'_>) -> BTreeMap<String, KindEntry> {
         self.non_citable(scope)
             .into_iter()
-            .map(|entry| (entry.name.clone(), entry.non_citable_reason(Quote::Double)))
+            .map(|entry| (entry.name.clone(), entry.clone()))
             .collect()
     }
 

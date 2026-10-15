@@ -133,7 +133,7 @@ pub(crate) use grounding::{
 };
 pub(crate) use kind::escape_toml_basic;
 pub(crate) use kinds::{
-    KindScope, KindTable, KindVerdict, Quote, install_kind_table, known_kinds_line,
+    KindEntry, KindScope, KindTable, KindVerdict, Quote, install_kind_table, known_kinds_line,
     one_grammar_window, unverifiable_reason,
 };
 pub(crate) use point_sizes::measure_point_text;

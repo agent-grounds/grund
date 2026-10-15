@@ -11,7 +11,7 @@ mod subjects;
 mod targets;
 
 use super::RuleAnchor;
-use crate::config::{KindTable, one_grammar_window};
+use crate::config::{KindEntry, KindTable, Quote};
 use crate::grammar::Grammar;
 use stages::read;
 use std::collections::{BTreeMap, BTreeSet};
@@ -149,9 +149,9 @@ pub(crate) struct RuleVocabulary {
     /// Kinds whose own project turns named sections on, where the vocabulary
     /// spans projects that set it differently (§AR-config.1.5).
     pub(crate) named_kinds: BTreeSet<String>,
-    /// Configured kinds that declare no IDs, each with the reason it is refused
-    /// for (§FS-errors.2.5.1); the bare object kinds share the subjects' scope.
-    pub(crate) non_citable: BTreeMap<String, String>,
+    /// Configured kinds that declare no IDs, each with the entry it is refused
+    /// by (§FS-errors.2.5.1); the bare object kinds share the subjects' scope.
+    pub(crate) non_citable: BTreeMap<String, KindEntry>,
     /// Effective lexical grammars for the catalogs this vocabulary can select.
     /// The sentence front end sees syntax, never scan facts (§AR-rules.1).
     pub(crate) id_grammars: Vec<Grammar>,
@@ -167,10 +167,11 @@ impl RuleVocabulary {
 
     /// §FS-errors.3.8: `legacy`, a refusal that names `kind`, with
     /// §FS-errors.2.5.1's reason appended where `kind` is configured but not
-    /// citable here, until the window closes.
+    /// citable here, until the window closes; the reason alone for `code` with
+    /// no row (§FS-errors.3.8.1).
     pub(crate) fn kind_refusal(&self, legacy: String, kind: &str) -> String {
         match self.non_citable.get(kind) {
-            Some(reason) => one_grammar_window(&legacy, reason),
+            Some(entry) => entry.refusal(&legacy, Quote::Double),
             None => legacy,
         }
     }

@@ -35,7 +35,7 @@ pub(crate) fn check_list_scope(
         let headline = match table.verdict(scope, kind) {
             KindVerdict::Citable => continue,
             KindVerdict::NonCitable(entry) => entry.non_citable_reason(Quote::Backtick),
-            // §FS-list.1.1: `code` with no row keeps `unknown kind` in front of its reason.
+            // §FS-list.1.1: `code` with no row is refused for its reason alone (§FS-errors.3.8.1).
             _ => table.unknown_or_complement(
                 scope,
                 kind,
@@ -71,7 +71,7 @@ pub(crate) fn check_list_scope(
             .into_iter()
             .map(str::to_string)
             .collect(),
-        non_citable: table.non_citable_reasons(scope),
+        non_citable: table.non_citable_entries(scope),
         id_grammars: selected_projects()
             .map(|project| project.config.grammar.clone())
             .collect(),

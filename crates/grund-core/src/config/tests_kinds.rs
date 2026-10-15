@@ -166,6 +166,7 @@ fn the_non_citable_reason_renders_in_both_quotings() {
         name: "skill".to_string(),
         citable: false,
         home: Some("skills/".to_string()),
+        rowless: false,
     };
     assert_eq!(
         entry.non_citable_reason(Quote::Backtick),

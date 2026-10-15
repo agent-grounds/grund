@@ -120,7 +120,7 @@ pub(crate) fn vocabulary(schema: &Schema, frame: Frame<'_>) -> RuleVocabulary {
         kinds,
         named_sections: table.named_sections(scope),
         named_kinds: BTreeSet::new(),
-        non_citable: table.non_citable_reasons(scope),
+        non_citable: table.non_citable_entries(scope),
         objects: table,
         id_grammars: vec![frame.grammar().clone()],
         section_separators: vec![schema.ids.section_separator.clone()],
