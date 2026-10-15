@@ -69,7 +69,17 @@ pub(crate) fn point_body_pair(
         SliceSink::new(ShowRenderMode::Full, false),
     ];
     let section_path = section.map(|(path, _)| path);
-    let (_, views) = slice_site(files, id, declaration, section_path, sinks, schema, frame)?;
+    let claimant = section.map(|(_, info)| info.line);
+    let (_, views) = slice_site(
+        files,
+        id,
+        declaration,
+        section_path,
+        claimant,
+        sinks,
+        schema,
+        frame,
+    )?;
     let mut views = views.into_iter().map(SliceSink::finish);
     let (mut lead, _) = views.next().unwrap_or_default();
     let (mut full, _) = views.next().unwrap_or_default();

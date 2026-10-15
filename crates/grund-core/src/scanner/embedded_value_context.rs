@@ -15,6 +15,10 @@ use crate::model::{Catalog, Declaration, DeclarationSource, Id, InvalidValueSite
 
 pub(crate) const EMBEDDED_VALUE_MARKER: &str = "<!-- grund:value -->";
 
+/// The finding a marker on a heading that is no numeric section earns (§FS-values.2.4).
+pub(super) const MISPLACED_MARKER: &str =
+    "embedded value marker must be on a citable numeric section heading";
+
 /// Return the marker's byte offset only for the one authored suffix that grants
 /// authority: one ASCII separator space, exact lowercase marker bytes, then
 /// optional trailing whitespace (§FS-values.2.4). Lookalikes stay prose.

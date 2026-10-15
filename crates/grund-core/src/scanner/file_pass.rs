@@ -26,8 +26,8 @@ use super::context::{
 };
 use super::declaration_line::{close_declaration, stub_and_title};
 use super::embedded_value_context::{
-    EMBEDDED_VALUE_MARKER, authored_heading_level, embedded_value_marker_for_line,
-    invalid_embedded_marker, push_invalid_embedded_marker,
+    EMBEDDED_VALUE_MARKER, MISPLACED_MARKER, authored_heading_level,
+    embedded_value_marker_for_line, invalid_embedded_marker, push_invalid_embedded_marker,
 };
 use super::extents::assign_extents;
 use super::qualified_citations::{
@@ -255,7 +255,7 @@ pub(super) fn scan_file_text(
                     lineno,
                     scan.column_offset,
                     marker_start,
-                    "embedded value marker must be on a citable numeric section heading",
+                    MISPLACED_MARKER,
                 );
             }
             declared = true;
@@ -412,7 +412,7 @@ pub(super) fn scan_file_text(
                 path,
                 lineno,
                 scan.column_offset + embedded_marker.unwrap() + 1,
-                "embedded value marker must be on a citable numeric section heading",
+                MISPLACED_MARKER,
             );
             // §FS-values.2.4: a relative heading's marker is the parent pass's to attach.
             findings
