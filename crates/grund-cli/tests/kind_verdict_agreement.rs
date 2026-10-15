@@ -11,8 +11,8 @@
 //! (§FS-errors.2.5.1), or refused otherwise — so no two surfaces disagree, and
 //! none disagrees with the point that defines the answer. A second test holds a
 //! member's named chapter to one answer (§REQ-one-answer.sections.named), and a
-//! third pins the wording `code` keeps while its row stands: its legacy refusal
-//! in front of its one verdict (§REQ-one-answer.differences.identity).
+//! third pins the wording `code` is refused with since its window closed: its one
+//! verdict's reason alone (§FS-errors.3.8.1).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -299,15 +299,14 @@ fn every_surface_gives_a_kind_name_one_verdict_in_its_scope() {
     );
 }
 
-/// §REQ-one-answer.differences.identity, row G09: `code`, the homeless kind's
-/// default name, has no `[[kinds]]` row in either project (§FS-config.3.9.2). It
-/// is refused as not citable everywhere, but until its flip every surface other
-/// than a `[citations]` target keeps its legacy text in front — `unknown kind`, or
-/// a bare selector's `literal subject` — and gives the non-citable reason after
-/// it, with the notice that the wording changes (§FS-errors.3.8). Closing the row
-/// changes this test with it.
+/// §FS-errors.3.8.1: `code`, the homeless kind's default name, has no `[[kinds]]`
+/// row in either project (§FS-config.3.9.2). Since its window closed (#680, row G09
+/// of §REQ-one-answer.differences.identity) every surface other than a `[citations]`
+/// target refuses it with §FS-errors.2.5.1's form with no home alone: no legacy
+/// `unknown kind` or `literal subject` in front, and no notice that the wording
+/// changes.
 #[test]
-fn the_homeless_kinds_default_name_keeps_unknown_in_front_until_its_flip() {
+fn the_homeless_kinds_default_name_is_refused_as_declaring_no_ids_alone() {
     let mut wrong = Vec::new();
     for scope in [Scope::Workspace, Scope::Root, Scope::Api, Scope::Any] {
         for (surface, output) in surfaces(scope, "code") {
@@ -315,11 +314,13 @@ fn the_homeless_kinds_default_name_keeps_unknown_in_front_until_its_flip() {
                 continue;
             }
             let stderr = String::from_utf8_lossy(&output.stderr);
-            let legacy = stderr
-                .find("unknown kind ")
-                .or_else(|| stderr.find("literal subject "));
-            let reason = stderr.find("declares no IDs; this wording changes in grund 0.19.0");
-            if !matches!((legacy, reason), (Some(legacy), Some(reason)) if legacy < reason) {
+            let headline = stderr.lines().next().unwrap_or_default();
+            let alone = [
+                "error: kind \"code\" declares no IDs",
+                "error: kind `code` declares no IDs",
+            ]
+            .contains(&headline);
+            if !alone || output.status.code() != Some(2) {
                 wrong.push(format!(
                     "code in {scope:?}: {surface}\n  (exit {:?})\n  stderr {stderr:?}",
                     output.status.code()
@@ -329,7 +330,7 @@ fn the_homeless_kinds_default_name_keeps_unknown_in_front_until_its_flip() {
     }
     assert!(
         wrong.is_empty(),
-        "`code` lost the legacy text G09 keeps in front:\n{}",
+        "`code` is not refused with the no-home reason alone:\n{}",
         wrong.join("\n")
     );
 }

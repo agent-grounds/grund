@@ -53,7 +53,7 @@ legacy reason and append the new one ([§FS-errors.3.8](functional-spec/FS-error
 `0.19.0` ([§FS-config.3.9.5.2](functional-spec/FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds)). This milestone is `0.19.0`, the release those
 messages name.
 
-GitHub: follows [#599](https://github.com/agent-grounds/grund/issues/599), which ships the window; [#680](https://github.com/agent-grounds/grund/issues/680) flips the window [#671](https://github.com/agent-grounds/grund/issues/671) opens for the homeless kind `code`.
+GitHub: follows [#599](https://github.com/agent-grounds/grund/issues/599), which ships the window; [#680](https://github.com/agent-grounds/grund/issues/680) flipped the window [#671](https://github.com/agent-grounds/grund/issues/671) opened for the homeless kind `code`, ahead of the rest, under [§DF-homeless-code-declares-no-ids](decisions/functional/DF-homeless-code-declares-no-ids.md#df-homeless-code-declares-no-ids-code-with-no-row-is-refused-as-declaring-no-ids-alone-from-0190).
 
 ### 1. What
 
