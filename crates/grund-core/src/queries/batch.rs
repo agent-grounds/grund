@@ -272,7 +272,7 @@ fn show_batch_query_with_metadata(
 /// the final bytewise sort is over the public qualified spelling. A path narrower
 /// than its config root bounds which declarations generate coordinates, as it
 /// bounds the entries `list` prints, and every query still resolves against the
-/// whole project (§FS-show.2.6.2, §AR-resolver.3.3).
+/// whole project (§FS-scan.path.show, §FS-show.2.6.2, §AR-resolver.3.3).
 fn exhaustive_batch_queries(
     context: &WorkspaceContext,
     path: &Path,

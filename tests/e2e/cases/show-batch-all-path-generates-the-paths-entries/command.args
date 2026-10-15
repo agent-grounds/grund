@@ -1,0 +1,1 @@
+show --batch --all specs/b --format=json
