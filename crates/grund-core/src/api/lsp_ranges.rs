@@ -9,6 +9,7 @@
 
 use std::path::{Path, PathBuf};
 
+use crate::grammar::strip_block_closer;
 use crate::model::{
     Citation, Declaration, DeclarationSource, FileRecords, SectionInfo, StubResolution,
     paired_declarations,
@@ -116,11 +117,11 @@ pub(super) fn section_range_parts(
 
 /// The 1-based start column and title text of a heading-line token: the span
 /// from `needle` (the rendered ID for a declaration, the section number for a
-/// section heading) to where the heading's rendered text ends — the `--toc`
-/// title's end, read off the heading the scan recorded rather than the line
-/// again, so a C-family `*/` and a Markdown heading's closing hashes are not
-/// part of it (§FS-lsp.1.3.4). Falls back to column 1 and the bare `needle`
-/// when the scan recorded no heading there.
+/// section heading) to where the `--toc` title ends on the heading the scan
+/// recorded: a C-family `*/` is envelope and not part of it, while a Markdown or
+/// docstring heading ends where `--toc` prints it, closing hashes included
+/// (§FS-lsp.1.3.4). Falls back to column 1 and the bare `needle` when the scan
+/// recorded no heading there.
 pub(super) fn heading_span_parts(
     files: &FileRecords,
     file: &Path,
@@ -140,8 +141,19 @@ pub(super) fn heading_span_parts(
                     heading.span.start + text[heading.span.start..heading.text.end].find(needle)?
                 }
             };
+            // A docstring heading is read inside its delimiters, as `--toc` reads it.
+            let zone = record.zone_at(line);
+            let scanned = &text[line_start..heading.span.end];
+            let scanned = zone.map_or(scanned, |zone| &scanned[..zone.end.min(scanned.len())]);
+            let scanned = scanned.trim_end();
+            let title_end = line_start
+                + if record.markdown || zone.is_some() {
+                    scanned.len()
+                } else {
+                    strip_block_closer(scanned).len()
+                };
             let title = text
-                .get(start..heading.text.end)
+                .get(start..title_end)
                 .filter(|title| !title.is_empty())
                 .unwrap_or(needle)
                 .to_string();
