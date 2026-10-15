@@ -228,12 +228,11 @@ satisfies `The goal chapter of each BENCH must cite at least one GOAL.`, an
 outbound or per-target count counts it toward `GOAL-x`, `GOAL-x must be cited
 by at least one BENCH.` counts it while still not counting `GOAL-x.outcome`,
 and `must not cite any GOAL` reports it at the citation. Numbered sections
-count only since grund 0.17.0, so until 0.18.0 a finding that only such a
-citation produces — a forbidden citation, or an `at most` or `exactly` count
-it pushes out of bounds — is a warning with the code it will have as an error,
-ending `; a citation to a numbered section now counts, and this warning
-becomes an error in grund 0.18.0`. Move or remove the citation, loosen the
-count, or `--ignore` the code. [§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity) [§FS-rules.3.4](../functional-spec/FS-rules.md#34-inbound-citation-count-and-prohibition) [§FS-rules.7.8](../functional-spec/FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)
+count since grund 0.16.1. In 0.16.1 and 0.17.0 a finding that only such a
+citation produced — a forbidden citation, or an `at most` or `exactly` count
+it pushed out of bounds — was a warning; from 0.18.0 it is an ordinary error
+and fails the run. Move or remove the citation, loosen the count, or
+`--ignore` the code. [§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity) [§FS-rules.3.4](../functional-spec/FS-rules.md#34-inbound-citation-count-and-prohibition) [§FS-rules.7.8](../functional-spec/FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)
 
 A rule reads a declaration written behind a stub on what its target says, even
 where the target is outside `[scan] include`: the target's citations count, its

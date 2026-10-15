@@ -77,8 +77,8 @@ The verdict moves in three ways, and no message template changes.
   declaration. So a prohibition or an `at most N` or `exactly N` count can newly report, and an
   `at least` count can newly pass, while no chapter subject or count of chapters reaches the
   home's chapters, as before. A named chapter reports as an error. A numbered section reports
-  as the warning [§FS-rules.7.8](../../functional-spec/FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180) gives a newly counted section citation until grund 0.18.0, and the
-  run still exits 0 until then.
+  as the warning [§FS-rules.7.8](../../functional-spec/FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180) gave a newly counted section citation until grund 0.18.0, and the
+  run still exited 0 until then; from 0.18.0 it reports as an error.
 
   ```console
   $ grund check --rule "Each FS must not cite any AR." --only-rule   # AR-second's stub targets ../../source.rs, outside the scan

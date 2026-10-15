@@ -32,7 +32,7 @@ removing an error breaks no run, and a [§REQ-backwards-compatibility.2](../../r
 where something will break" ([§FS-config.1.2.2](../../functional-spec/FS-config.md#122-why-no-deadline-is-owed)). What can break is a run that deselects
 `invalid-rule` today and would start seeing a rule it never ran: where the target is outside
 the include, the rule's required-level findings warn until 0.19.0, in the ramp vocabulary
-[§FS-rules.7.8](../../functional-spec/FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180) and [§FS-rules.7.9](../../functional-spec/FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0180) already use. Where the scan reads the target nothing new
+[§FS-rules.7.8](../../functional-spec/FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180) and [§FS-rules.7.9](../../functional-spec/FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190) already use. Where the scan reads the target nothing new
 applies, so nothing warns.
 
 ### 2.2 What a stub is changes in 0.19.0, and `check` warns now
