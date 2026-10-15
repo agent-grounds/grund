@@ -2,7 +2,7 @@
 //! section walk in `parse.rs` met it — blank, a comment, a table header, or a key
 //! with its section, its value and any trailing comment. Migration reads the key
 //! lines and the comments from here rather than parsing the file a second time
-//! (§FS-config-migrate.4.3); every other reader ignores it.
+//! (§FS-config-migrate.4.3); ordinary readers skip capture entirely.
 //!
 //! The pass also carries the one tolerance only migration asks for: a
 //! path-shaped `[scan] exclude` entry is read rather than refused, so it can be
@@ -40,25 +40,33 @@ pub(crate) struct LineRecord {
     pub(crate) kind: LineKind,
 }
 
-/// The line pass's record, and whether it reads tolerantly.
+/// The shared capture policy (§AR-config.8.1): the default pass neither
+/// constructs nor retains migration's records and reads strictly.
 #[derive(Clone, Debug, Default)]
 pub(crate) struct LinePass {
+    capture: bool,
     /// Read a path-shaped `[scan] exclude` entry instead of refusing it.
     pub(crate) tolerant: bool,
     pub(crate) lines: Vec<LineRecord>,
 }
 
 impl LinePass {
-    /// The pass migration reads a file with (§FS-config-migrate.3.1.4).
+    /// Migration explicitly requests complete records (§AR-config.8.1) and
+    /// tolerant exclusion reads (§FS-config-migrate.3.1.4) in the same pass.
     pub(crate) fn tolerant() -> Self {
         Self {
+            capture: true,
             tolerant: true,
             lines: Vec::new(),
         }
     }
 
-    /// Record line `line`, `raw`, met inside `section`.
+    /// Record line `line`, `raw`, met inside `section`, only when requested;
+    /// ordinary reads skip all record construction (§AR-config.8.1).
     pub(super) fn see(&mut self, line: usize, raw: &str, section: &str) {
+        if !self.capture {
+            return;
+        }
         let code = strip_comment(raw);
         let trimmed = code.trim();
         let trailing = raw[code.len()..].trim();
