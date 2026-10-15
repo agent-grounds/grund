@@ -8,9 +8,14 @@
 use std::path::{Path, PathBuf};
 
 use super::config_migrate::{config_lines, report_gate, surplus, v1_spelling};
+use super::config_migrate_guidance::refusals as guidance;
 use crate::config::Project;
-use crate::config::migrate::{GateResult, Located, MigrateOutcome, Prepared, translate};
+use crate::config::migrate::{
+    GateResult, Located, MigrateOutcome, Prepared, RefusalAnchor, translate,
+};
+use crate::model::ExpectedSection;
 use crate::testing::{test_root, write};
+use crate::writers::RootGuidance;
 use crate::{MigrateOpts, config_migrate};
 
 const FS: &str = "[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\n";
@@ -190,4 +195,66 @@ fn report_gate_compares_the_runs_as_multisets() {
     let after = [line("b"), line("a")];
     assert_eq!(surplus(&before, &after, "- "), ["- a"]);
     assert_eq!(surplus(&after, &before, "+ "), Vec::<String>::new());
+}
+
+/// §FS-config-migrate.5.3: a v1 value row gains a declaration shape in version
+/// 2, so the guidance comparison refuses at its `values` line even where no
+/// `AGENTS.md` exists for the report gate to compare.
+#[test]
+fn guidance_refuses_a_value_row_with_no_agents_md() {
+    let config = v1_config(&format!(
+        "{FS}[[kinds]]\nkind = \"TERM\"\nfile = \"terms.md\"\nvalues = true\n[scan]\ninclude = [\"docs\", \"terms.md\"]\n"
+    ));
+    let root = tree(
+        "values-guidance",
+        &config,
+        &[
+            ("docs/FS-a.md", "# FS-a: A\n\nText.\n"),
+            ("terms.md", "# Terms\n\n## TERM-a: A\n\nThe first term.\n"),
+        ],
+    );
+    let opts = MigrateOpts {
+        path: root.clone(),
+        write: true,
+        drop_comments: false,
+    };
+    let Ok(MigrateOutcome::Migrated(report)) = config_migrate(&opts) else {
+        panic!("migrates");
+    };
+    let refusals: Vec<_> = report
+        .refusals
+        .iter()
+        .map(|r| {
+            (
+                r.anchor,
+                r.what.contains("`TERM` values = true"),
+                r.details.len(),
+            )
+        })
+        .collect();
+    assert_eq!(refusals, [(RefusalAnchor::Line(8), true, 2)]);
+    assert!(!report.wrote);
+    assert!(std::fs::read_to_string(root.join("grund.toml")).is_ok_and(|text| text == config));
+}
+
+/// §FS-config-migrate.5.3: a compared section that differs for another cause
+/// is one block with its lines, and a version alone is one block too.
+#[test]
+fn guidance_refuses_a_changed_section_or_version() {
+    let section = |bytes: &str| ExpectedSection {
+        heading: "### Citation directions",
+        noun: "citation directions",
+        bytes: bytes.into(),
+    };
+    let block = |version, bytes: &str| RootGuidance {
+        version,
+        sections: vec![section(bytes)],
+    };
+    let changed = guidance(&block(19, "a\nb\n"), &block(19, "a\nc\n"), &[]);
+    assert_eq!(changed.len(), 1);
+    assert_eq!(changed[0].details, ["- b", "+ c"]);
+    assert!(changed[0].what.contains("its citation directions section"));
+    let version = guidance(&block(19, "a\n"), &block(21, "a\n"), &[]);
+    assert!(version[0].what.contains("from v19 to v21"), "{version:?}");
+    assert!(guidance(&block(19, "a\n"), &block(19, "a\n"), &[]).is_empty());
 }

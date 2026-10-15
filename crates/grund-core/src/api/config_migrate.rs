@@ -8,6 +8,7 @@
 use std::path::{Path, PathBuf};
 
 use super::check::{CheckOpts, CheckOutput, check_with_projects};
+use super::config_migrate_guidance::guidance_refusals;
 use crate::config::migrate::{
     Gate, GateResult, Located, MigrateFailure, MigrateOutcome, MigrateReport, Prepared, locate,
     member_on_v1, translate,
@@ -34,7 +35,7 @@ pub fn config_migrate(opts: &MigrateOpts) -> Result<MigrateOutcome, MigrateFailu
     };
     let prepared =
         translate(&located, opts.write, opts.drop_comments).map_err(MigrateFailure::Load)?;
-    let (mut report, v1_text, v1, line_map) = match prepared {
+    let (mut report, v1_text, v1, line_map, value_lines) = match prepared {
         Prepared::AlreadyV2 => {
             return Ok(MigrateOutcome::AlreadyV2 {
                 config: located.config,
@@ -45,12 +46,21 @@ pub fn config_migrate(opts: &MigrateOpts) -> Result<MigrateOutcome, MigrateFailu
             v1_text,
             v1,
             line_map,
-        } => (*report, v1_text, *v1, line_map),
+            value_lines,
+        } => (*report, v1_text, *v1, line_map, value_lines),
     };
     if !report.refusals.is_empty() {
         return Ok(MigrateOutcome::Migrated(report));
     }
     report.members = members(&located);
+    // §FS-config-migrate.5.3: guidance `check` would compare refuses before the report gate.
+    if let (Some(GateResult::Equal), Some(candidate)) = (&report.gates, &report.candidate)
+        && let Some(refusals) = guidance_refusals(&located, candidate, &value_lines)
+        && !refusals.is_empty()
+    {
+        report.refusals = refusals;
+        return Ok(MigrateOutcome::Migrated(report));
+    }
     if let (Some(GateResult::Equal), Some(candidate)) = (&report.gates, &report.candidate) {
         let lines = report_gate(&located, &v1, candidate, &line_map, &report.config);
         if !lines.is_empty() {
