@@ -43,7 +43,6 @@ mod citation_prohibitions;
 mod citations;
 mod conform;
 mod direction_findings;
-mod excluded_stub_target;
 mod fields;
 mod fs_home_moves;
 mod glob_citations;
