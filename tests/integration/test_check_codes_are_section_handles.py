@@ -60,7 +60,6 @@ MIGRATED = {
         "misplaced-declaration",
         "orphan-section",
         "oversized-lead",
-        "parse-moves",
         "relative-section-parent",
         "section-heading-level",
         "section-outside-declaration",

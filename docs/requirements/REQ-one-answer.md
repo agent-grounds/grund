@@ -151,17 +151,9 @@ unknown by a rule's subject and object, `list --kind` and `list --selector`. It 
 
 ### differences.sections: Sections
 
-- **P01.** In a file with no sections, `show --full` runs a body past a plain `# Appendix`,
-  while `refs` ends it before. R. Ruled by [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves), which moves it in 0.19.0 (#639).
-- **P02.** A `/** … */` section without ` * ` is listed by `--toc` and refused by a direct
-  query. R. Ruled by [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves), which moves it in 0.19.0 (#639).
-- **P03.** `/// # 1. Sub` is listed by `--toc` and refused by `grund FS-b.1`. R. Ruled by [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves), which moves it in 0.19.0 (#639).
-- **P07.** `## 1. One` then a plain `## Notes`: `--full` includes Notes, `refs` gives the
-  citations under it no section. R. Ruled by [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves), which moves it in 0.19.0 (#639).
-- **P10.** `show` includes an adjacent `//` note in a `///` body, `refs` gives it no
-  enclosing declaration. R. Ruled by [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves), which moves it in 0.19.0 (#639).
-- **P12.** In a doc-comment, ownership continues a section past a duplicate heading that
-  ends it for `show`. R. Ruled by [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves), which moves it in 0.19.0 (#639).
+P01, P02, P03, P07, P10 and P12 closed with [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves) in 0.19.0, when
+every command came to read one parse of each file (#639).
+
 - **P16.** The editor snapshot's span for a C-family section keeps `*/`, the `--toc` title
   does not; the core fields only. R. Ruled by [§DF-fmt-and-editor-answers-from-0-19](../decisions/functional/DF-fmt-and-editor-answers-from-0-19.md#df-fmt-and-editor-answers-from-0-19-fmts-link-wrapper-and-the-editors-title-span-change-in-0190-after-a-release-that-announces-them), which
   moves it in 0.19.0.

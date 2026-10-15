@@ -583,7 +583,6 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `out-of-scope-shorthand-citation` | error | — | `--full` | [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) |
 | `out-of-scope-unknown-project` | error | — | `--full` | [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) |
 | `oversized-lead` | warning | — | `[reference] lead_size_warning` | [§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in) |
-| `parse-moves` | warning | — | — | [§FS-declarations.checks.parse-moves](FS-declarations.md#checksparse-moves-a-verdict-that-moves-in-0190) |
 | `redundant-config` | warning | — | — | [§FS-check.4.3](FS-check.md#43-redundant-config-pair) |
 | `relative-section-parent` | error | — | — | [§FS-declarations.checks.relative-section-parent](FS-declarations.md#checksrelative-section-parent-a-relative-heading-without-its-parent) |
 | `remote-missing` | error | — | a `[workspace.remotes]` table | [§FS-remote-projects.checks.remote-missing](FS-remote-projects.md#checksremote-missing-a-declared-remote-has-no-pinned-projection) |
