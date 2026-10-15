@@ -46,7 +46,7 @@ fn assert_scaffold_shape(root: &Path, shape: &str) {
     for (relative, expected) in [
         ("docs/grund.md", "# GRUND-{shape}: …"),
         ("docs/goals.md", "# GOAL-{shape}: …"),
-        ("requirements.md", "## FS-{shape}: …"),
+        ("docs/functional-spec/README.md", "`FS-{shape}` ID"),
         ("docs/architecture/README.md", "`AR-{shape}` ID"),
         (
             "docs/architecture/README.md",
@@ -82,7 +82,7 @@ fn init_scaffold_force_refreshes_every_example_to_the_repository_format() {
     let scaffold_paths = [
         "docs/grund.md",
         "docs/goals.md",
-        "requirements.md",
+        "docs/functional-spec/README.md",
         "docs/architecture/README.md",
         "docs/decisions/architectural/README.md",
         "docs/decisions/functional/README.md",
@@ -133,9 +133,8 @@ fn init_scaffold_force_refreshes_every_example_to_the_repository_format() {
 }
 
 #[test]
-fn init_scaffold_renders_kind_overrides_and_fallbacks_in_compatibility_fs_home() {
-    let target =
-        workdir("init_scaffold_renders_kind_overrides_and_fallbacks_in_compatibility_fs_home");
+fn init_scaffold_renders_kind_overrides_and_fallbacks_in_the_fs_folder() {
+    let target = workdir("init_scaffold_renders_kind_overrides_and_fallbacks_in_the_fs_folder");
     fs::create_dir_all(target.join(".agents")).expect("create config directory");
     fs::write(
         target.join(".agents/grund.toml"),
@@ -175,7 +174,7 @@ format = "{kind}_{number}_{slug}"
     );
     assert!(
         !target.join("requirements.md").exists(),
-        "the compatibility FS folder replaces the file-form FS home"
+        "the configured FS folder is the FS home; no requirements.md is written"
     );
 
     // GRUND, DF, and DA have no row; GOAL has a row without an override. All
@@ -190,8 +189,8 @@ format = "{kind}_{number}_{slug}"
     }
 
     // FS and AR demonstrate authoritative kind overrides: slug-only in the
-    // compatibility home and numbered-with-slug with literal underscores.
-    assert_example(&target, "docs/functional-spec/README.md", "# FS:<slug>: …");
+    // FS folder's index and numbered-with-slug with literal underscores.
+    assert_example(&target, "docs/functional-spec/README.md", "`FS:<slug>` ID");
     for expected in [
         "`AR_<NNN>_<slug>` ID",
         "`§AR_<NNN>_<slug>.<section>`",

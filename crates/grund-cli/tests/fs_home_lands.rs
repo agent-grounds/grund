@@ -17,6 +17,9 @@ use std::process::{Command, Output};
 const VERSION_1_CAUTION: &str =
     "warning: grund.toml is version 1; migrate it with grund config migrate --to 2";
 
+/// The same caution as one `--format json` finding line carries it.
+const VERSION_1_JSON_CODE: &str = "\"code\":\"config-version-1\"";
+
 /// A `grund.toml` that omits `[[kinds]]`, the side of each comparison that
 /// already had the folder home before 0.19.0.
 const KINDLESS_CONFIG: &str = "grund_config_version = 1\n";
@@ -80,14 +83,18 @@ fn transcript(output: &Output) -> String {
     )
 }
 
-/// A run's exit and findings with the version-1 caution taken out, and the
-/// `success` line it stands in for, so a zero-config run and a kindless-config
-/// run can be compared whole.
+/// A run's exit and findings with the version-1 caution taken out, in text and
+/// in JSON, and the `success` line it stands in for, so a zero-config run and a
+/// kindless-config run can be compared whole.
 fn answer(output: &Output) -> (Option<i32>, String, String) {
     let strip = |bytes: &[u8]| {
         String::from_utf8_lossy(bytes)
             .lines()
-            .filter(|line| *line != VERSION_1_CAUTION && *line != "success")
+            .filter(|line| {
+                *line != VERSION_1_CAUTION
+                    && *line != "success"
+                    && !line.contains(VERSION_1_JSON_CODE)
+            })
             .map(|line| format!("{line}\n"))
             .collect::<String>()
     };
@@ -164,15 +171,16 @@ fn zero_config_requirements_md_gets_the_kindless_answer_and_no_warning() {
 #[test]
 fn the_scaffold_homes_fs_in_docs_functional_spec() {
     let root = tree("scaffold", &[]);
+    // `grund init --check` wants a version-controlled tree, as a real one is.
+    let git = Command::new("git")
+        .args(["init", "-q", "."])
+        .current_dir(&root)
+        .output()
+        .expect("spawn git init");
+    assert!(git.status.success(), "git init {}", root.display());
     let init = run(
         &root,
-        &[
-            "init",
-            "--template",
-            "software-development",
-            "--scaffold",
-            "--no-vcs",
-        ],
+        &["init", "--template", "software-development", "--scaffold"],
     );
     assert_eq!(init.status.code(), Some(0), "{}", transcript(&init));
     let config = fs::read_to_string(root.join("grund.toml")).expect("grund.toml written");
