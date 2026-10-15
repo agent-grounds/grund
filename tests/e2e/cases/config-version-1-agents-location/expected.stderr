@@ -1,0 +1,2 @@
+warning: .agents/grund.toml is a deprecated config location — move it to grund.toml
+warning: .agents/grund.toml is version 1; migrate it with grund config migrate --to 2

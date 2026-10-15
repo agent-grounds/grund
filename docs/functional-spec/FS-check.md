@@ -1604,3 +1604,19 @@ Any config file silences it, whether it omits `[[kinds]]`, writes `kinds = []`, 
 #### checks.fs-home-moves.2: grund 0.19.0 removes it
 
 grund 0.19.0 removes the check along with the move ([issue #723](https://github.com/agent-grounds/grund/issues/723)). Its clause is outside the release guard's closed vocabulary ([§FS-distribution.4.2.3](FS-distribution.md#423-the-vocabulary-is-closed)), so a unit test holds the pending half ([§FS-distribution.4.2.1](FS-distribution.md#421-a-test-can-hold-only-the-pending-half)): it fails once the running version reaches 0.19.0 while the check still exists.
+
+### checks.config-version-1: A config file read as version 1
+
+A config file read as version 1 ([§FS-config.5.3](FS-config.md#53-a-version-1-config-is-cautioned-and-never-retired)) earns one warning with code `config-version-1`, naming the file and the command that migrates it:
+
+```text
+warning: grund.toml is version 1; migrate it with grund config migrate --to 2
+```
+
+The message is byte for byte the line [§FS-config-migrate.8](FS-config-migrate.md#8-workspaces) prints after `member: ` for a member still on version 1, and one renderer writes both, so the two cannot drift apart. `<file>` is the config file as a report path ([§FS-config.3.6](FS-config.md#36-output--report-format)); after `--to 2` comes the directory of the project it configures, as a report path, and that directory is left out when it is the report's base, which is why a single project's line ends at `--to 2`. For an `.agents/grund.toml` the directory is the project root, not `.agents/`. It fires when the loaded project has a config file read as version 1, whether that file writes `grund_config_version = 1` or writes no version, and never for a version 2 file or a project with no config file.
+
+It is [§FS-check.4.11](FS-check.md#411-config-read-from-the-deprecated-agents-location)'s finding in everything but its trigger and its text: a CLI-level `warning:` on stderr with no site ([§FS-check.4.11.1](FS-check.md#4111-fs-check43s-finding-in-everything-but-its-trigger)), on `check`, `config validate` and `config show` and no other command, `init` included ([§FS-check.4.11.2](FS-check.md#4112-the-same-three-surfaces-as-fs-check43-and-no-more)), once per config rather than once per scope ([§FS-check.4.11.3](FS-check.md#4113-once-per-config-not-once-per-scope)), and under `--format=json` one warning finding on stderr with `path`, `line` and `sites` null ([§FS-check.4.11.5](FS-check.md#4115-under---formatjson-one-warning-finding-on-stderr)). It leaves the exit code alone and stands in place of the `success` line ([§FS-check.4.11.6](FS-check.md#4116-it-stands-in-place-of-the-success-line)); a caller that wants the old bytes passes `--ignore config-version-1` ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)).
+
+#### checks.config-version-1.1: Order beside the other config findings
+
+A project whose config was read from `.agents/grund.toml` on version 1 earns two lines, [§FS-check.4.11](FS-check.md#411-config-read-from-the-deprecated-agents-location)'s first and this one second. A workspace names the root's config before each member's, in the order the members are loaded ([§FS-errors.4](FS-errors.md#4-determinism)), and a config on version 2 earns no line: a version 2 root with one version 1 member at `packages/beta` prints exactly `warning: packages/beta/grund.toml is version 1; migrate it with grund config migrate --to 2 packages/beta`.
