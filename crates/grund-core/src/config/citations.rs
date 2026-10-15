@@ -124,13 +124,20 @@ pub struct CitationRules {
 
 /// The order a file wrote some keyed tables in. It is how the file was laid
 /// out, not what it means, so two orders always compare equal: a file and its
-/// `config show` output load to the same rules (§FS-config.4.2.4).
-#[derive(Clone, Debug, Default)]
+/// `config show` output load to the same rules (§FS-config.4.2.4). For the same
+/// reason its `Debug` prints no order, so a record compared by `Debug` agrees.
+#[derive(Clone, Default)]
 pub struct WrittenOrder(pub Vec<String>);
 
 impl PartialEq for WrittenOrder {
     fn eq(&self, _: &Self) -> bool {
         true
+    }
+}
+
+impl std::fmt::Debug for WrittenOrder {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("WrittenOrder")
     }
 }
 /// Parse the released namespace-aware target-entry grammar without attaching a

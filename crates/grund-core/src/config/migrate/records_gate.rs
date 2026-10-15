@@ -89,8 +89,6 @@ fn reduce(p: &Project, root: &Path) -> Vec<Section> {
         .map(bare)
         .collect();
     let mut citations = p.rules.citations.clone();
-    // The order tables were written in is layout, not a record (§FS-config.4.2.4).
-    citations.written = Default::default();
     citations.global_default = may_default(citations.global_default);
     for rules in citations.per_kind.values_mut() {
         rules.default = may_default(rules.default);
