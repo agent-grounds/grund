@@ -8,6 +8,7 @@ use std::process::{Command, Output};
 
 /// `relative_paths` is a version 1 key, so the fixture stays on version 1 and its `check`
 /// runs leave out the caution that earns (§FS-check.checks.config-version-1).
+#[cfg(unix)]
 const V1: &str = "config-version-1";
 
 fn manifest_dir() -> PathBuf {
