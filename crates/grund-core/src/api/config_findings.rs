@@ -1,7 +1,8 @@
 //! What a loaded config carries on its own (§AR-system.2.9): the redundant
-//! discovery pair (§FS-check.4.3) and the deprecated `.agents/` location
-//! (§FS-check.4.11), both known from the file the run read rather than from the
-//! walk.
+//! discovery pair (§FS-check.4.3), the deprecated `.agents/` location
+//! (§FS-check.4.11) and a file read as version 1
+//! (§FS-check.checks.config-version-1), all known from the file the run read
+//! rather than from the walk.
 //!
 //! They are data because the published `config_warnings` reads them
 //! (§FS-config.4.1) and so does the run beside them. Neither prints: the
@@ -12,6 +13,8 @@
 /// the bare `grund.toml` won, and the `.agents/grund.toml` beside it is read by
 /// nothing (§FS-config.1.1). `line`-less, so it prints as a CLI-level `warning:`
 /// on stderr: it says which file the run read, not what is wrong at a site.
+use std::path::Path;
+
 use crate::config::{Config, home_form_of};
 use crate::model::{Diagnostic, format_path};
 
@@ -61,10 +64,59 @@ fn deprecated_config_location_warning(config: &Config) -> Option<Diagnostic> {
     })
 }
 
+/// §FS-check.checks.config-version-1: the caution's code, which the migrate report
+/// gate drops from both runs it compares (§FS-config-migrate.5.2).
+pub(super) const CONFIG_VERSION_1: &str = "config-version-1";
+
+/// §FS-check.checks.config-version-1: the one sentence that tells a reader the
+/// config at `file` is on version 1 and names the command that migrates it,
+/// ending at `--to 2` when `dir` is the report's base. `config migrate` prints
+/// it for a member (§FS-config-migrate.8) and the caution below prints it for
+/// any config, so the two cannot drift apart.
+pub(super) fn version_1_caution(file: &str, dir: Option<&str>) -> String {
+    let mut line = format!("{file} is version 1; migrate it with grund config migrate --to 2");
+    if let Some(dir) = dir.filter(|dir| !dir.is_empty()) {
+        line.push(' ');
+        line.push_str(dir);
+    }
+    line
+}
+
+/// §FS-check.checks.config-version-1, §FS-config.5.3: the caution a config file
+/// read as version 1 earns, whether it wrote `1` or no version. The reader the
+/// file chose already recorded its version on the project (§FS-config.5), so
+/// nothing rereads the file; a zero-config project also loads v1's defaults but
+/// has no `config_file`, and no file means no caution (§GOAL-zero-config).
+///
+/// The directory is the project root as a report path: the file's own directory,
+/// or the one above `.agents/` for a config read there.
+fn config_version_1_warning(config: &Config) -> Option<Diagnostic> {
+    let file = config.config_file.as_ref()?;
+    if config.project().version != 1 {
+        return None;
+    }
+    let home = home_form_of(file);
+    let dir = home
+        .as_deref()
+        .unwrap_or(file)
+        .parent()
+        .unwrap_or(Path::new(""));
+    Some(Diagnostic {
+        code: CONFIG_VERSION_1,
+        path: None,
+        line: None,
+        column: None,
+        message: version_1_caution(&format_path(file), Some(&format_path(dir))),
+        sites: Vec::new(),
+        authority: Vec::new(),
+    })
+}
+
 /// The findings a loaded config carries on its own — the redundant discovery
-/// pair (§FS-check.4.3) and the deprecated `.agents/` location (§FS-check.4.11).
-/// Both are known from the file the run read rather than from the walk, which is
-/// why they arrive together.
+/// pair (§FS-check.4.3), the deprecated `.agents/` location (§FS-check.4.11)
+/// and a file read as version 1 (§FS-check.checks.config-version-1), in that
+/// order (§FS-check.checks.config-version-1.1). All are known from the file the
+/// run read rather than from the walk, which is why they arrive together.
 ///
 /// One list rather than a call each at each site: `grund check` names them per
 /// project and `grund config validate` and `grund config show` name them for
@@ -74,4 +126,5 @@ pub(super) fn config_diagnostics(config: &Config) -> impl Iterator<Item = Diagno
     redundant_config_warning(config)
         .into_iter()
         .chain(deprecated_config_location_warning(config))
+        .chain(config_version_1_warning(config))
 }

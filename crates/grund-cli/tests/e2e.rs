@@ -224,7 +224,13 @@ fn refused_queries_recommend_check_only_for_existing_paths() {
         assert_eq!(String::from_utf8_lossy(&output.stdout), stdout, "{args:?}");
         assert_eq!(String::from_utf8_lossy(&output.stderr), stderr, "{args:?}");
     };
-    assert_output(&["check", "."], 0, "success\n", "");
+    // §FS-check.checks.config-version-1: the fixture is on version 1.
+    assert_output(
+        &["check", "."],
+        0,
+        "",
+        "warning: grund.toml is version 1; migrate it with grund config migrate --to 2\n",
+    );
     assert_output(
         &["FS-widget", "--brief"],
         0,
@@ -276,8 +282,8 @@ fn refused_queries_recommend_check_only_for_existing_paths() {
     assert_output(
         &command.split_whitespace().collect::<Vec<_>>(),
         0,
-        "success\n",
         "",
+        "warning: grund.toml is version 1; migrate it with grund config migrate --to 2\n",
     );
 
     let outcomes = [

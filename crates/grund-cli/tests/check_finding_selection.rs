@@ -281,6 +281,7 @@ fn issue_49_check_help_exposes_the_sorted_public_code_catalog() {
         "broken-stub",
         "chapter-cardinality",
         "citation-cardinality",
+        "config-version-1",
         "dangling",
         "declaration-near-miss",
         "deprecated-config-location",

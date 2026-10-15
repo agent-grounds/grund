@@ -9,6 +9,7 @@ pub const CHECK_FINDING_CODES: &[&str] = &[
     "broken-stub",
     "chapter-cardinality",
     "citation-cardinality",
+    "config-version-1",
     "dangling",
     "declaration-near-miss",
     "deprecated-config-location",
