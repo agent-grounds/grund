@@ -88,10 +88,19 @@ fn cases() -> impl Iterator<Item = &'static Case> {
     tests_settings::CASES.iter().chain(tests_rows::CASES)
 }
 
-/// The v1 file of `toml`: the version line, the case, and `[id] named_sections =
-/// true` unless the case speaks of it, since unset is itself refused.
+/// The v1 file of `toml`: the version line, the case, `[scan] include =
+/// ["docs"]` unless the case speaks of include, and `[id] named_sections = true`
+/// unless it speaks of that, since a missing default include entry and an unset
+/// `named_sections` are each refused.
 fn v1_file(toml: &str) -> String {
     let mut text = format!("grund_config_version = 1\n{toml}");
+    if !toml.contains("include =") && !toml.contains("# default include") {
+        if text.contains("[scan]\n") {
+            text = text.replacen("[scan]\n", "[scan]\ninclude = [\"docs\"]\n", 1);
+        } else {
+            text.push_str("[scan]\ninclude = [\"docs\"]\n");
+        }
+    }
     if !toml.contains("named_sections") {
         if text.contains("[id]\n") {
             text = text.replacen("[id]\n", "[id]\nnamed_sections = true\n", 1);
@@ -204,6 +213,16 @@ fn every_mapping_case_names_a_row() {
             || SPEC_ONLY.contains(&case.row);
         assert!(known, "case for unknown row {:?}", case.row);
     }
+}
+
+#[test]
+fn v1_file_sets_include_unless_the_case_does() {
+    assert!(v1_file("").contains("[scan]\ninclude = [\"docs\"]\n"));
+    assert!(
+        v1_file("[scan]\nextensions = [\"md\"]\n")
+            .contains("[scan]\ninclude = [\"docs\"]\nextensions")
+    );
+    assert!(!v1_file("# default include\n").contains("include ="));
 }
 
 #[test]

@@ -8,6 +8,7 @@
 use std::fs;
 use std::path::Path;
 
+use super::keymap::joined;
 use super::keys::Keys;
 use super::record::{MigrateRefusal, RefusalAnchor};
 use crate::config::project::Project;
@@ -62,8 +63,9 @@ fn at_or_inside(path: &str, home: &str) -> bool {
 }
 
 /// §FS-config-migrate.mapping `[scan] include`: each entry by what it is on
-/// disk under `root`. Only an authored list refuses; a default entry that does
-/// not exist read nothing in v1 and is dropped.
+/// disk under `root`. A missing entry is refused, the default list's included,
+/// since a later `src` would be read under v1 and not under v2
+/// (§FS-config-migrate.3.1.3).
 pub(super) fn include(v1: &Project, keys: &Keys, root: &Path) -> Include {
     let mut out = Include::default();
     let Some(entries) = &v1.schema.sources.include else {
@@ -72,6 +74,7 @@ pub(super) fn include(v1: &Project, keys: &Keys, root: &Path) -> Include {
     let line = keys.line("scan", "include");
     let anchor = line.map_or(RefusalAnchor::Unset, RefusalAnchor::Line);
     let homes = homes(v1);
+    let mut missing = Vec::new();
     for raw in entries {
         let entry = raw
             .trim_start_matches("./")
@@ -118,7 +121,9 @@ pub(super) fn include(v1: &Project, keys: &Keys, root: &Path) -> Include {
             out.folders.push(entry);
         } else if on_disk.is_file() {
             out.files.push(entry);
-        } else if line.is_some() {
+        } else if line.is_none() {
+            missing.push(raw.clone());
+        } else {
             out.refusals.push(MigrateRefusal {
                 anchor,
                 what: format!(
@@ -131,7 +136,37 @@ pub(super) fn include(v1: &Project, keys: &Keys, root: &Path) -> Include {
             });
         }
     }
+    if !missing.is_empty() {
+        out.refusals.push(missing_defaults(entries, &missing));
+    }
     out
+}
+
+/// §FS-config-migrate.3.1.3: the one block for the default list's missing
+/// entries, whose repair authors the list without them.
+fn missing_defaults(entries: &[String], missing: &[String]) -> MigrateRefusal {
+    let named: Vec<String> = missing.iter().map(|entry| format!("`{entry}`")).collect();
+    let (which, each) = match missing {
+        [_] => ("which does not exist", "it is"),
+        _ => ("which do not exist", "each is"),
+    };
+    let kept: Vec<String> = entries
+        .iter()
+        .filter(|entry| !missing.contains(entry))
+        .map(|entry| format!("{entry:?}"))
+        .collect();
+    MigrateRefusal {
+        anchor: RefusalAnchor::Unset,
+        what: format!(
+            "[scan] include is not set, so version 1 reads its default, which names {}, {which}, and version 2 must know whether {each} a folder or a file",
+            joined(&named)
+        ),
+        details: Vec::new(),
+        repair: format!(
+            "add [scan] include = [{}] under version 1; grund check shows its effect",
+            kept.join(", ")
+        ),
+    }
 }
 
 /// §FS-config-migrate.3.1.5: a home inside another row's folder home, with

@@ -25,7 +25,13 @@ fn translated(name: &str, toml: &str, paths: &[&str]) -> (Project, Project, Path
     for path in paths {
         write(&root.join(path), "// x\n");
     }
-    let text = format!("grund_config_version = 1\n{toml}{NAMED}");
+    // A missing default include entry is refused (§FS-config-migrate.3.1.3).
+    let include = if toml.contains("include =") {
+        ""
+    } else {
+        "[scan]\ninclude = [\"docs\"]\n"
+    };
+    let text = format!("grund_config_version = 1\n{toml}{include}{NAMED}");
     write(&root.join("grund.toml"), &text);
     let located = Located {
         file: root.join("grund.toml"),
@@ -107,7 +113,7 @@ fn records_gate_ignores_the_dropped_output_preferences() {
 /// than by the language names that carry it.
 #[test]
 fn records_gate_ignores_the_language_names_of_the_source_model() {
-    let toml = format!("[scan]\nextensions = [\"md\", \"rs\", \"py\"]\n{FS}");
+    let toml = format!("[scan]\ninclude = [\"docs\"]\nextensions = [\"md\", \"rs\", \"py\"]\n{FS}");
     let (v1, v2, root) = translated("sources", &toml, &[]);
     differs("sources", &v1.schema.sources, &v2.schema.sources);
     assert_eq!(compare(&v1, &v2, &root), Vec::<String>::new());

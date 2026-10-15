@@ -151,6 +151,16 @@ pub(super) const CASES: &[Case] = &[
         then_fs!("[scan]\ninclude = [\"docs\", \"nope\"]\n"),
         &[Refused("names `nope`, which does not exist")],
     ),
+    // §FS-config-migrate.3.1.3: the default list's missing entries are refused
+    // too, in one block whose repair authors the list without them.
+    with(
+        "[scan] include",
+        then_fs!("# default include\n"),
+        &[("requirements.md", "Text.\n"), ("src/a.rs", "// x\n")],
+        &[Refused(
+            "[scan] include is not set, so version 1 reads its default, which names `e2e`, which does not exist",
+        )],
+    ),
     case(
         "[scan] respect_gitignore",
         then_fs!("[scan]\nrespect_gitignore = false\n"),

@@ -47,8 +47,15 @@ fn prepared(root: &Path) -> (Located, Project, String, Vec<(usize, usize)>) {
     (located, *v1, candidate, line_map)
 }
 
+/// The v1 file of `body`, with `[scan] include = ["docs"]` unless `body` sets
+/// it, since a missing default entry is refused (§FS-config-migrate.3.1.3).
 fn v1_config(body: &str) -> String {
-    format!("grund_config_version = 1\n{body}[id]\nnamed_sections = true\n")
+    let include = if body.contains("include =") {
+        ""
+    } else {
+        "[scan]\ninclude = [\"docs\"]\n"
+    };
+    format!("grund_config_version = 1\n{body}{include}[id]\nnamed_sections = true\n")
 }
 
 /// §FS-config-migrate.5.2: a candidate that would change the findings — here
@@ -58,7 +65,7 @@ fn v1_config(body: &str) -> String {
 fn report_gate_catches_a_candidate_that_changes_the_findings() {
     let root = tree(
         "marker",
-        &v1_config(FS),
+        &v1_config(&format!("{FS}[scan]\ninclude = [\"docs\", \"src\"]\n")),
         &[
             ("docs/FS-a.md", "# FS-a: A\n\nText.\n"),
             ("src/main.rs", "// Implements \u{a7}FS-a.\nfn main() {}\n"),
