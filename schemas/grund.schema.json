@@ -1630,8 +1630,7 @@
         }
       },
       "required": [
-        "grund_config_version",
-        "schema"
+        "grund_config_version"
       ],
       "additionalProperties": false
     },
