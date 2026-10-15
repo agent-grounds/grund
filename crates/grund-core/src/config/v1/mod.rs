@@ -51,12 +51,13 @@ pub(super) struct Read {
 /// (§AR-config.3.2), all but its `[[kinds]]` table, which [`Read::lower_kinds`]
 /// lowers. `report_path` is the path every error names. Only spelling is refused
 /// here; the lowered project is judged by `config/validate.rs`.
+/// The ordinary pass skips migration's line records (§AR-config.8.1).
 pub(super) fn read_sections(text: &str, report_path: &Path) -> Result<Read> {
     read_sections_with(text, report_path, &mut LinePass::default())
 }
 
-/// [`read_sections`], recording each line in `pass` as the walk meets it and
-/// reading as tolerantly as `pass` says: migration's read (§AR-config.8.1).
+/// [`read_sections`], capturing each line only when `pass` requests it and
+/// reading as tolerantly as `pass` says (§AR-config.8.1).
 pub(super) fn read_sections_with(
     text: &str,
     report_path: &Path,
