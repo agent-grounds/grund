@@ -199,8 +199,7 @@ pub(crate) fn markdown_component<'a>(line: &'a str, grammar: &Grammar) -> Option
 /// the record holds for it — when it is written in the relative form, so its
 /// component is its complete form's; the column stays on the line as written
 /// (§FS-values.2.4). A doc-comment line is expanded after its comment prefix, so
-/// its relative form reads as its complete form does
-/// (§FS-declarations.section.relative.where).
+/// its relative form reads as its complete form does.
 pub(crate) fn recorded_component<'a>(
     line: &'a str,
     recorded: Option<&str>,
