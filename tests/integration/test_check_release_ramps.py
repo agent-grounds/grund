@@ -356,10 +356,13 @@ class ThisRepositoryTests(unittest.TestCase):
 
         The window opens at 0.16.0: every 0.16.0 ramp has landed, from the
         bare-`grund` removal and the `unreached-declaration` promotion to the
-        seven that closed the empty window. Its ceiling is 0.18.0, the release
-        the section-citation ramp names (§FS-distribution.4.2.5, §FS-cli.4,
-        §FS-rules.checks.unreached-declaration, §FS-rules.7.8)."""
-        self.assertEqual(ramps.release_window(self.claims), ("0.16.0", "0.18.0"))
+        seven that closed the empty window. The section-citation ramp landed at
+        0.18.0 with no clause of its own, so it sets no floor, and the ceiling
+        is 0.19.0, the earliest release a ramp still open names: the nested
+        alias pin's among them, moved there because no release before 0.18.0
+        carried it (§FS-distribution.4.2.5, §FS-cli.4,
+        §FS-rules.checks.unreached-declaration, §FS-rules.7.8, §FS-rules.7.9)."""
+        self.assertEqual(ramps.release_window(self.claims), ("0.16.0", "0.19.0"))
 
 
 if __name__ == "__main__":

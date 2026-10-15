@@ -1,16 +1,16 @@
 //! The window of a rule declared through a stub whose target the scan does not
 //! read (§FS-rules.7.10): a required finding only such rules author warns and
 //! names 0.19.0; one another rule also authors stays an error; an
-//! `invalid-rule` about the rule stays an error; and a finding §FS-rules.7.8 or
-//! §FS-rules.7.9 already ramped keeps its clauses and gains this one after them.
+//! `invalid-rule` about the rule stays an error; and a finding §FS-rules.7.9
+//! already ramped keeps its clause and gains this one after it. §FS-rules.7.8's
+//! window closed at 0.18.0, so no finding reaches this one carrying its clause.
 
 use super::engine::route_stubbed_rules;
 use crate::model::Diagnostic;
 use std::collections::BTreeSet;
 
 const STUB: &str = "; a rule declared through a stub now applies, and this warning becomes an error in grund 0.19.0";
-const COUNTED: &str = "; a citation to a numbered section now counts, and this warning becomes an error in grund 0.18.0";
-const MATCHED: &str = "; a target pinned at the rule's own nested alias path now matches, and this warning becomes an error in grund 0.18.0";
+const MATCHED: &str = "; a target pinned at the rule's own nested alias path now matches, and this warning becomes an error in grund 0.19.0";
 
 fn finding(code: &'static str, message: &str, authority: &[&str]) -> Diagnostic {
     Diagnostic {
@@ -82,25 +82,19 @@ fn an_invalid_rule_about_a_stubbed_rule_stays_an_error() {
 }
 
 #[test]
-fn a_finding_ramped_by_7_8_and_7_9_carries_every_clause_in_order() {
+fn a_finding_ramped_by_7_9_carries_its_clause_then_this_one() {
     let mut errors = Vec::new();
     let mut warnings = vec![
-        finding("citation-cardinality", &format!("m{COUNTED}"), &["RULE-r"]),
-        finding(
-            "citation-cardinality",
-            &format!("m{COUNTED}{MATCHED}"),
-            &["RULE-r"],
-        ),
-        finding("citation-cardinality", &format!("m{COUNTED}"), &["RULE-q"]),
+        finding("citation-cardinality", &format!("m{MATCHED}"), &["RULE-r"]),
+        finding("citation-cardinality", &format!("m{MATCHED}"), &["RULE-q"]),
     ];
     route_stubbed_rules(&stubbed(), &mut errors, &mut warnings);
     assert!(errors.is_empty());
     assert_eq!(
         messages(&warnings),
         vec![
-            format!("m{COUNTED}{STUB}").as_str(),
-            format!("m{COUNTED}{MATCHED}{STUB}").as_str(),
-            format!("m{COUNTED}").as_str(),
+            format!("m{MATCHED}{STUB}").as_str(),
+            format!("m{MATCHED}").as_str(),
         ]
     );
 }

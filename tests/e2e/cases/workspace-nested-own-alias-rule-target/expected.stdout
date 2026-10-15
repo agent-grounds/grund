@@ -1,1 +1,1 @@
-group/api/docs/api/API-a.md:3: warning: API must not cite group/api/AR (RULE-y) — re-point the citation or downgrade it to a plain Markdown link; a target pinned at the rule's own nested alias path now matches, and this warning becomes an error in grund 0.18.0
+group/api/docs/api/API-a.md:3: warning: API must not cite group/api/AR (RULE-y) — re-point the citation or downgrade it to a plain Markdown link; a target pinned at the rule's own nested alias path now matches, and this warning becomes an error in grund 0.19.0

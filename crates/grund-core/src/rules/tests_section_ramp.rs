@@ -1,6 +1,7 @@
-//! The ramp split over hand-built facts (§FS-rules.7.8): a required finding
-//! that only a newly counted numbered-section site produces warns and names its
-//! error release; one the count breaks without those sites stays an error.
+//! The counted-section window closed at 0.18.0 (§FS-rules.7.8), over hand-built
+//! facts: a required finding that only a numbered-section site produces, a site
+//! §FS-rules.5.1 counts, is the same code's ordinary error with no clause after
+//! its message, and nothing is left on the warnings channel.
 
 use super::engine::{evaluate, evaluate_suggestions};
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
@@ -11,7 +12,8 @@ use super::{
 use crate::model::Diagnostic;
 use std::collections::BTreeMap;
 
-const CLAUSE: &str = "; a citation to a numbered section now counts, and this warning becomes an error in grund 0.18.0";
+/// The clause the window's warnings ended with, which no finding carries any more.
+const CLAUSE: &str = "; a citation to a numbered section now counts";
 
 fn anchor(line: usize) -> RuleAnchor {
     RuleAnchor {
@@ -21,8 +23,9 @@ fn anchor(line: usize) -> RuleAnchor {
     }
 }
 
-/// `BENCH-a` cites `GOAL-a` twice: site `old` at line 7 as before, and site
-/// `new` at line 8 only because its numbered section now counts (§FS-rules.5.1).
+/// `BENCH-a` cites `GOAL-a` twice: site `old` at line 7, and site `new` at line 8
+/// through a numbered section, which counts like any other (§FS-rules.5.1). The
+/// producer marks it `newly_counted` until that mark is deleted with the window.
 fn facts() -> RuleFacts {
     let node = |key: &str, label: &str, line| {
         (
@@ -104,21 +107,21 @@ fn codes(diagnostics: &[Diagnostic]) -> Vec<(&str, Option<usize>)> {
 }
 
 #[test]
-fn a_count_only_the_newly_counted_site_breaks_warns() {
+fn a_count_only_the_numbered_section_site_breaks_is_an_error() {
     for mode in [TargetMode::Aggregate, TargetMode::PerTarget] {
         let (errors, warnings) = evaluate(&[at_most(1, mode)], &[], &facts());
-        assert!(errors.is_empty(), "{mode:?}: {:?}", codes(&errors));
-        assert_eq!(codes(&warnings), [("citation-cardinality", Some(1))]);
+        assert!(warnings.is_empty(), "{mode:?}: {:?}", codes(&warnings));
+        assert_eq!(codes(&errors), [("citation-cardinality", Some(1))]);
         assert!(
-            warnings[0].message.ends_with(CLAUSE),
+            !errors[0].message.contains(CLAUSE),
             "{mode:?}: {}",
-            warnings[0].message
+            errors[0].message
         );
     }
 }
 
 #[test]
-fn a_count_broken_without_the_newly_counted_site_stays_an_error() {
+fn a_count_broken_without_the_numbered_section_site_stays_an_error() {
     for mode in [TargetMode::Aggregate, TargetMode::PerTarget] {
         let (errors, warnings) = evaluate(&[at_most(0, mode)], &[], &facts());
         assert!(warnings.is_empty(), "{mode:?}: {:?}", codes(&warnings));
@@ -128,7 +131,7 @@ fn a_count_broken_without_the_newly_counted_site_stays_an_error() {
 }
 
 #[test]
-fn an_inbound_count_only_the_newly_counted_site_breaks_warns() {
+fn an_inbound_count_only_the_numbered_section_site_breaks_is_an_error() {
     let inbound = ParsedRule {
         subject: RuleSubject::Kind("GOAL".into()),
         relation: RuleRelation::BeCitedBy,
@@ -139,25 +142,30 @@ fn an_inbound_count_only_the_newly_counted_site_breaks_warns() {
         ..at_most(1, TargetMode::Aggregate)
     };
     let (errors, warnings) = evaluate(&[inbound], &[], &facts());
-    assert!(errors.is_empty(), "{:?}", codes(&errors));
-    assert_eq!(codes(&warnings), [("uncited-unit", Some(20))]);
-    assert!(warnings[0].message.ends_with(CLAUSE));
+    assert!(warnings.is_empty(), "{:?}", codes(&warnings));
+    assert_eq!(codes(&errors), [("uncited-unit", Some(20))]);
+    assert!(!errors[0].message.contains(CLAUSE));
 }
 
 #[test]
-fn a_prohibition_warns_at_the_newly_counted_site_only() {
+fn a_prohibition_is_an_error_at_the_numbered_section_site_too() {
     let ban = ParsedRule {
         polarity: RulePolarity::Prohibiting,
         cardinality: Cardinality::NONE,
         ..at_most(0, TargetMode::Aggregate)
     };
     let (errors, warnings) = evaluate(std::slice::from_ref(&ban), &[], &facts());
-    assert_eq!(codes(&errors), [("forbidden-citation", Some(7))]);
-    assert_eq!(codes(&warnings), [("forbidden-citation", Some(8))]);
+    assert!(warnings.is_empty(), "{:?}", codes(&warnings));
     assert_eq!(
-        warnings[0].message,
-        format!("{}{CLAUSE}", errors[0].message),
-        "the warning is the error's message unchanged, then the clause"
+        codes(&errors),
+        [
+            ("forbidden-citation", Some(7)),
+            ("forbidden-citation", Some(8))
+        ]
+    );
+    assert_eq!(
+        errors[0].message, errors[1].message,
+        "the site through a numbered section reads as the other one does"
     );
     let recommended = ParsedRule {
         level: RuleLevel::Recommended,
