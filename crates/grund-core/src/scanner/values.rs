@@ -198,7 +198,9 @@ pub(crate) fn markdown_component<'a>(line: &'a str, grammar: &Grammar) -> Option
 /// [`markdown_component`] of a heading, read at `recorded` — the canonical path
 /// the record holds for it — when it is written in the relative form, so its
 /// component is its complete form's; the column stays on the line as written
-/// (§FS-values.2.4).
+/// (§FS-values.2.4). A doc-comment line is expanded after its comment prefix, so
+/// its relative form reads as its complete form does
+/// (§FS-declarations.section.relative.where).
 pub(crate) fn recorded_component<'a>(
     line: &'a str,
     recorded: Option<&str>,
@@ -207,7 +209,18 @@ pub(crate) fn recorded_component<'a>(
     let Some(path) = recorded else {
         return markdown_component(line, grammar);
     };
-    let complete = expand_relative_heading(line, path);
+    // The heading's `#` run starts the line or follows whitespace after the prefix.
+    let heading = line
+        .char_indices()
+        .filter(|&(at, ch)| ch == '#' && (at == 0 || line[..at].ends_with([' ', '\t'])))
+        .map(|(at, _)| at)
+        .find(|&at| expand_relative_heading(&line[at..], path) != line[at..])
+        .unwrap_or(0);
+    let complete = format!(
+        "{}{}",
+        &line[..heading],
+        expand_relative_heading(&line[heading..], path)
+    );
     // The expansion keeps everything after the path, so the component ends `line`.
     let start = line.len() - markdown_component(&complete, grammar)?.0.len();
     Some((&line[start..], start + 1))

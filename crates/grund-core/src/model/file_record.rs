@@ -72,11 +72,11 @@ pub(crate) struct RecordedHeading {
     /// canonical and not the bytes the line carries.
     pub(crate) relative: bool,
     pub(crate) kind: HeadingKind,
-    /// On a declaration or an accepted section: the last line of its body
-    /// (§FS-declarations.body, §AR-scanner.2.4.4); `0` on any other heading.
+    /// On a declaration, an accepted section or a duplicate claimant: the last line of
+    /// its body (§FS-declarations.body, §AR-scanner.2.4.4); `0` on any other heading.
     pub(crate) end: usize,
-    /// On a declaration or an accepted section: the last line of its lead
-    /// (§FS-declarations.lead); `0` on any other heading.
+    /// On a declaration, an accepted section or a duplicate claimant: the last line of
+    /// its lead (§FS-declarations.lead); `0` on any other heading.
     pub(crate) lead_end: usize,
 }
 

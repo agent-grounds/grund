@@ -68,7 +68,7 @@ pub(crate) fn extract_declaration_body(
         ShowRenderMode::Brief => vec![SliceSink::new(ShowRenderMode::Default, section.is_none())],
         mode => vec![SliceSink::new(mode, include_heading)],
     };
-    let (line, views) = slice_site(files, id, declaration, section, views, schema, frame)?;
+    let (line, views) = slice_site(files, id, declaration, section, None, views, schema, frame)?;
     let mut views = views.into_iter().map(SliceSink::finish);
     let (body, sections) = views.next().unwrap_or_default();
     let (body, sections) = match mode {
@@ -90,11 +90,14 @@ pub(crate) fn extract_declaration_body(
 
 /// One slice of the declaration's record into `sinks` (§FS-show.2.1), with the
 /// line the slice starts at, or the refusal a missing declaration or section is.
+/// `claimant` pins which claimant of `section` is sliced (§FS-list.3.4).
+#[allow(clippy::too_many_arguments)]
 pub(super) fn slice_site(
     files: &FileRecords,
     id: &Id,
     declaration: &Declaration,
     section: Option<&str>,
+    claimant: Option<usize>,
     mut sinks: Vec<SliceSink>,
     schema: &Schema,
     frame: Frame<'_>,
@@ -102,7 +105,7 @@ pub(super) fn slice_site(
     let record = files
         .get(&declaration.file)
         .ok_or_else(|| anyhow!("read {}: not scanned", declaration.file.display()))?;
-    match record_slices(record, declaration, section, &mut sinks) {
+    match record_slices(record, declaration, section, claimant, &mut sinks) {
         Ok(line) => Ok((line, sinks)),
         Err(SliceMiss::Declaration) => {
             Err(anyhow!("ID not found: {}", render_id(frame.grammar(), id)))

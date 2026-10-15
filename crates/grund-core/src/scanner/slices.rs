@@ -71,12 +71,15 @@ pub(crate) enum SliceMiss {
 /// heading the record holds for it, its lead down to the recorded lead end
 /// (§FS-declarations.lead), its body down to the recorded end (§FS-declarations.body,
 /// §FS-declarations.section), and its section map, the sections and duplicate
-/// claimants of `decl` inside that span (§FS-declarations.section.map). Answers the
-/// line the slice starts at.
+/// claimants of `decl` inside that span (§FS-declarations.section.map). `claimant` is
+/// the heading line of the claimant of `section` to slice, so a duplicate's size row is
+/// its own (§FS-list.3.4); without it the path's first claimant is. Answers the line
+/// the slice starts at.
 pub(crate) fn record_slices(
     record: &FileRecord,
     decl: &Declaration,
     section: Option<&str>,
+    claimant: Option<usize>,
     sinks: &mut [SliceSink],
 ) -> Result<usize, SliceMiss> {
     let declared = |kind: HeadingKind| move |heading: &&RecordedHeading| heading.kind == kind;
@@ -85,11 +88,10 @@ pub(crate) fn record_slices(
         .filter(declared(HeadingKind::Declaration))
         .ok_or(SliceMiss::Declaration)?;
     let top = match section {
-        Some(path) => decl
-            .sections
-            .get(path)
-            .and_then(|info| record.heading_at(info.line))
-            .filter(declared(HeadingKind::Section))
+        Some(path) => claimant
+            .or_else(|| decl.sections.get(path).map(|info| info.line))
+            .and_then(|line| record.heading_at(line))
+            .filter(|heading| matches!(heading.kind, HeadingKind::Section | HeadingKind::Duplicate))
             .filter(|heading| heading.path.as_deref() == Some(path))
             .ok_or(SliceMiss::Section)?,
         None => decl_heading,
@@ -113,13 +115,15 @@ pub(crate) fn record_slices(
         })
         .collect();
     for sink in sinks.iter_mut() {
+        // §FS-show.3.1.2: the heading-carrying form opens on the declaration's heading line.
+        if sink.include_heading {
+            sink.lines.push(body_line(record, decl_heading.line));
+        }
         // §FS-show.2.1.1: a selected section always opens on its own heading, outside the map.
-        let heading = match section {
-            Some(_) => (sink.view != ShowRenderMode::Outline)
-                .then(|| sink.heading_line(body_line(record, top.line), top)),
-            None => sink.include_heading.then(|| body_line(record, top.line)),
-        };
-        sink.lines.extend(heading);
+        if section.is_some() && sink.view != ShowRenderMode::Outline {
+            let line = sink.heading_line(body_line(record, top.line), top);
+            sink.lines.push(line);
+        }
         match sink.view {
             ShowRenderMode::Outline => {
                 for heading in &map {

@@ -149,3 +149,60 @@ fn a_marker_no_relative_root_takes_is_reported_at_the_marker() {
         ]
     );
 }
+
+/// §FS-declarations.section.relative.where, §FS-values.2.4: a marked relative
+/// heading in a doc-comment is the root its complete form and the Markdown
+/// relative form are, and holds the same component.
+#[test]
+fn a_doc_comment_relative_root_is_judged_as_its_complete_and_markdown_forms() {
+    let root = test_root("relative_value_doc_comment");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\n\n[reference]\nstrict = true\n\
+         require_grounding = false\n\n[id]\nformat = \"{kind}-{slug}\"\n\n\
+         [[kinds]]\nkind = \"DOC\"\nfolder = \"docs\"\nindex = false\n\n\
+         [scan]\ninclude = [\"docs\", \"src\"]\n",
+    );
+    let body = |path: &str, prefix: &str| {
+        let complete = path.is_empty();
+        let (root, leaf) = if complete {
+            ("1.1.", "1.1.1.")
+        } else {
+            (".1.", ".1.")
+        };
+        format!(
+            "{prefix}## 1. Overview\n{prefix}\n{prefix}### {root} Floor <!-- grund:value -->\n\
+             {prefix}\n{prefix}#### {leaf} 45\n"
+        )
+    };
+    write(
+        &root.join("src/a.rs"),
+        &format!(
+            "/// DOC-rel: Relative\n///\n{}pub fn a() {{}}\n\n\
+             /// DOC-abs: Complete\n///\n{}pub fn b() {{}}\n",
+            body("rel", "/// "),
+            body("", "/// "),
+        ),
+    );
+    write(
+        &root.join("docs/m.md"),
+        &format!("# DOC-md: Markdown\n\n{}", body("rel", "")),
+    );
+    let config = load_config(&root).expect("load config");
+    let findings = scan_findings(&config, &root);
+    assert_eq!(invalid(&findings), Vec::<String>::new());
+    for slug in ["rel", "abs", "md"] {
+        let decl = findings
+            .declarations
+            .values()
+            .flatten()
+            .find(|decl| decl.id.slug.as_deref() == Some(slug))
+            .expect("declared");
+        let held = decl
+            .sections
+            .iter()
+            .filter_map(|(path, info)| Some(format!("{path}={}", info.value.as_ref()?.decoded)))
+            .collect::<Vec<_>>();
+        assert_eq!(held, ["1.1.1=45"], "DOC-{slug}");
+    }
+}

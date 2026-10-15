@@ -8,7 +8,7 @@
 use std::collections::BTreeMap;
 
 use super::context::section_path_is_numeric;
-use super::embedded_value_context::invalid_embedded_marker;
+use super::embedded_value_context::{MISPLACED_MARKER, invalid_embedded_marker};
 use super::extents::{DeclarationBodies, body_end, declaration_bodies};
 use super::record::record_doc_comment_plain_headings;
 use super::section_record::section_value_root;
@@ -65,7 +65,7 @@ impl HeldHeadings {
     /// (§FS-declarations.section.relative.where, §FS-languages.comment-wrapper.headings).
     pub(super) fn hold_doc_comment(
         &mut self,
-        findings: &Catalog,
+        findings: &mut Catalog,
         record: &mut FileRecord,
         path: &std::path::Path,
     ) {
@@ -74,7 +74,8 @@ impl HeldHeadings {
         }
         let mut decls: Vec<&Declaration> = findings.declarations.values().flatten().collect();
         decls.sort_by_key(|decl| decl.line);
-        record_doc_comment_plain_headings(record, &declaration_bodies(record, &decls));
+        let bodies = declaration_bodies(record, &decls);
+        record_doc_comment_plain_headings(record, &bodies);
         for heading in &record.headings {
             let title = record.heading_text(heading);
             if heading.kind != HeadingKind::Plain || relative_heading_form(title).is_none() {
@@ -91,7 +92,8 @@ impl HeldHeadings {
                     heading_level: heading.level,
                     title: title.to_string(),
                 },
-                None,
+                // §FS-values.2.4: the line's misplaced marker is the parent pass's to attach.
+                take_marker(findings, path, heading.line),
             ));
         }
     }
@@ -120,6 +122,20 @@ impl HeldHeadings {
         resolve_relative_sections(findings, record, relative, named_sections, schema, unmarked);
         self.unmarked.sort_by_key(|candidate| candidate.line);
     }
+}
+
+/// The misplaced-marker finding the per-file pass gave `line` of `path`, taken back
+/// for the parent pass, as `HeldHeadings::hold_marker` takes a Markdown one.
+fn take_marker(
+    findings: &mut Catalog,
+    path: &std::path::Path,
+    line: usize,
+) -> Option<InvalidValueSite> {
+    let sites = &mut findings.invalid_value_declarations;
+    let index = sites.iter().position(|site| {
+        site.file == path && site.line == line && site.message == MISPLACED_MARKER
+    })?;
+    Some(sites.remove(index))
 }
 
 /// Resolve every relative candidate of one file — a heading whose text

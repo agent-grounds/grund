@@ -78,8 +78,9 @@ pub(super) fn body_has_content(record: &FileRecord, decl_line: usize, end: usize
         .any(|line| !line.trim().is_empty())
 }
 
-/// Write every declaration's and accepted section's end and lead end onto its
-/// recorded heading (§AR-scanner.2.8.1). Declarations come first: a section is
+/// Write every declaration's, accepted section's and duplicate claimant's end and
+/// lead end onto its recorded heading (§AR-scanner.2.8.1), a claimant's its own
+/// (§FS-list.3.4). Declarations come first: a section is
 /// capped at its declaration's body, and only a heading inside a body is an
 /// accepted section of it.
 pub(super) fn assign_extents(record: &mut FileRecord, findings: &Catalog) {
@@ -96,7 +97,7 @@ pub(super) fn assign_extents(record: &mut FileRecord, findings: &Catalog) {
                 };
                 (end, lead_end(record, heading.line, end, true))
             }
-            HeadingKind::Section => {
+            HeadingKind::Section | HeadingKind::Duplicate => {
                 let cap = owning_body(&bodies, heading.line).unwrap_or(heading.line);
                 let end = section_end(record, index, cap);
                 (end, lead_end(record, heading.line, end, false))
