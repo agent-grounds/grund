@@ -4,6 +4,15 @@
 
 ## status: Accepted
 
+## landed: The 0.19.0 half landed in 0.19.0
+
+The move this record scheduled landed in grund 0.19.0 ([issue #723](https://github.com/agent-grounds/grund/issues/723)): the built-in `FS`
+home is `folder = "docs/functional-spec"` ([§FS-config.3.4.4](../../functional-spec/FS-config.md#344-the-default-kinds)), the template's `FS` row names the
+same folder ([§FS-init.2.4.10](../../functional-spec/FS-init.md#2410-req-is-declared-in-docsrequirements)), and the special case and the `fs-home-moves` warning are retired.
+This record's notice shipped with 0.18.0 and is not published again ([§FS-distribution.4.6.4](../../functional-spec/FS-distribution.md#464-compatibility-notices-come-from-the-decisions));
+[§DF-fs-home-lands-in-0-19](DF-fs-home-lands-in-0-19.md#df-fs-home-lands-in-0-19-the-built-in-fs-home-is-docsfunctional-spec-from-0190) carries the landing release's own. The sections below are the
+decision as it was taken, and their citations of retired points resolve to those points' stubs.
+
 ## 1. Context
 
 [Issue #661](https://github.com/agent-grounds/grund/issues/661) asks that the structure

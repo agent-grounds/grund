@@ -499,7 +499,7 @@ correction are recorded in
 
 #### 3.4.4 The default kinds
 
-The defaults declare these nine, in this order (an existing `grund.toml` that omits `[[kinds]]` gets them with the older `FS` home of [§FS-config.3.4.4.4](FS-config.md#3444-a-config-that-omits-kinds-keeps-the-older-fs-home), and one that writes `kinds = []` gets none, [§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)):
+The defaults declare these nine, in this order, for a project with no config and for a `grund.toml` that omits `[[kinds]]` alike (one that writes `kinds = []` gets none, [§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)):
 
 ```toml
 [[kinds]]
@@ -514,7 +514,7 @@ title  = "Where: project direction and outcomes"
 
 [[kinds]]
 kind   = "FS"
-file   = "requirements.md"
+folder = "docs/functional-spec"
 title  = "What: behavior, requirements, and constraints"
 
 [[kinds]]
@@ -552,11 +552,11 @@ title  = "Planned milestones and sequencing"
 
 A project that overrides this list replaces the defaults entirely — there is no merge. To extend rather than replace, copy the defaults and add to them. The list has no `REQ`: the `software-development` template declares one, with no built-in default behind it ([§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements)).
 
-From grund 0.19.0 the `FS` row of this list is `folder = "docs/functional-spec"`, and the template's `FS` row moves with it in the same release ([issue #723](https://github.com/agent-grounds/grund/issues/723)); until then a project with no config whose FS declarations live in `requirements.md` earns the `fs-home-moves` warning ([§FS-check.checks.fs-home-moves](FS-check.md#checksfs-home-moves-the-built-in-fs-home-moves-in-grund-0190), [§DF-fs-home-moves-from-0-19](../decisions/functional/DF-fs-home-moves-from-0-19.md#df-fs-home-moves-from-0-19-the-built-in-fs-home-moves-back-to-docsfunctional-spec-in-0190-and-the-template-declares-req-now)).
+The `FS` row is the home grund 0.19.0 moved it to from `file = "requirements.md"`, after 0.18.0 warned every project the move touched ([§DF-fs-home-lands-in-0-19](../decisions/functional/DF-fs-home-lands-in-0-19.md#df-fs-home-lands-in-0-19-the-built-in-fs-home-is-docsfunctional-spec-from-0190)); the `software-development` template's `FS` row names the same folder ([§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements)).
 
 ##### 3.4.4.1 Where each citable default declares
 
-`GRUND` is the H1 of the single file `docs/grund.md` (the project's reason for being — one declaration, all of it inline); `GOAL` declarations are H2 headings inside the single file `docs/goals.md` (one file, all goals inline); `FS` declarations are H2 headings inside the single file `requirements.md` (one obvious requirements entry for new projects); `RM` declarations are likewise H2 headings inside the single file `docs/roadmap.md` (one file, all milestones inline) — those four are single-file kinds (`file = "<path>"`); `AR`, `DF`, and `DA` declarations are the H1 of a file in their `folder` (an `AR` declaration may instead live inline in a source doc-comment with an optional stub in `folder` — [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)). A single-file kind can always be broken up later by swapping `file = "<path>"` for `folder = "<dir>"` and moving the document into that folder — this specification models the transition as exchanging one key for the other, not setting both.
+`GRUND` is the H1 of the single file `docs/grund.md` (the project's reason for being — one declaration, all of it inline); `GOAL` declarations are H2 headings inside the single file `docs/goals.md` (one file, all goals inline); `RM` declarations are likewise H2 headings inside the single file `docs/roadmap.md` (one file, all milestones inline) — those three are single-file kinds (`file = "<path>"`); `FS`, `AR`, `DF`, and `DA` declarations are the H1 of a file in their `folder` (an `AR` declaration may instead live inline in a source doc-comment with an optional stub in `folder` — [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)). A single-file kind can always be broken up later by swapping `file = "<path>"` for `folder = "<dir>"` and moving the document into that folder — this specification models the transition as exchanging one key for the other, not setting both.
 
 ##### 3.4.4.2 The two test kinds are non-citable, and lowercase
 
@@ -568,11 +568,11 @@ A test cites the document whose claim it proves, and is never cited back: an `e2
 
 ##### 3.4.4.4 A config that omits `[[kinds]]` keeps the older `FS` home
 
-Compatibility note: a pre-existing `grund.toml` that omits `[[kinds]]` keeps the pre-`requirements.md` implicit FS home (`folder = "docs/functional-spec"`) until the project writes an explicit `[[kinds]]` table. New zero-config projects and freshly generated configs use the canonical defaults in [§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds), where `FS` is `file = "requirements.md"`. This preserves existing configs without adding a new schema version. The special case is retired in grund 0.19.0, when the built-in `FS` home itself becomes `folder = "docs/functional-spec"` ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)) and a config that omits `[[kinds]]` and a project with no config give the same answer.
+Retired in grund 0.19.0: a `grund.toml` that omits `[[kinds]]` kept `folder = "docs/functional-spec"` as its `FS` home while a project with no config took `file = "requirements.md"`. The built-in `FS` row is now that folder ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)), so both get the same rows and there is no special case left ([§DF-fs-home-lands-in-0-19](../decisions/functional/DF-fs-home-lands-in-0-19.md#df-fs-home-lands-in-0-19-the-built-in-fs-home-is-docsfunctional-spec-from-0190)). This address is kept so citations written before the change still resolve.
 
 ##### 3.4.4.5 `kinds = []` declares no kinds
 
-A v1 config that writes the top-level key `kinds = []` declares an empty kind set: no row, no ID namespace, no home, and none of the defaults above, where omitting `[[kinds]]` keeps them with the older `FS` home of [§FS-config.3.4.4.4](FS-config.md#3444-a-config-that-omits-kinds-keeps-the-older-fs-home). It is how a repository that declares its own kinds starts ([§FS-init.1.6.2](FS-init.md#162-none)), and the one kind set with no citable kind that v1 loads: a `[[kinds]]` table whose every row sets `citable = false` is still refused. Only the empty array is accepted. A non-empty one is refused at its line with the instruction to write `[[kinds]]` tables, and a `[[kinds]]` table after `kinds = []` is refused at its header, as TOML refuses a table appended to a static array. A version-2 file needs no key for this: one with no `[schema.kinds]` row already has no kinds ([§FS-config-v2.defaults.1](FS-config-v2.md#defaults1-what-v2-fixes)). What follows is each command's to say: the scan reads `[scan] include` and nothing else, because there is no home to add to it ([§FS-scan.scope.homes](FS-scan.md#scopehomes-every-configured-kind-home-is-scanned)); no marked token is a citation, so `check` reports none ([§FS-citations.recognized.no-kinds](FS-citations.md#recognizedno-kinds-with-no-kind-no-token-is-a-citation)); `grund id` has no kind to allocate in ([§FS-list.1.1.1](FS-list.md#111-a-scope-with-no-citable-kind)); and the managed block teaches the first kind rather than listing none ([§FS-init.2.3.4.4.2](FS-init.md#23442-no-kinds-yet)).
+A v1 config that writes the top-level key `kinds = []` declares an empty kind set: no row, no ID namespace, no home, and none of the defaults above, where omitting `[[kinds]]` keeps them ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)). It is how a repository that declares its own kinds starts ([§FS-init.1.6.2](FS-init.md#162-none)), and the one kind set with no citable kind that v1 loads: a `[[kinds]]` table whose every row sets `citable = false` is still refused. Only the empty array is accepted. A non-empty one is refused at its line with the instruction to write `[[kinds]]` tables, and a `[[kinds]]` table after `kinds = []` is refused at its header, as TOML refuses a table appended to a static array. A version-2 file needs no key for this: one with no `[schema.kinds]` row already has no kinds ([§FS-config-v2.defaults.1](FS-config-v2.md#defaults1-what-v2-fixes)). What follows is each command's to say: the scan reads `[scan] include` and nothing else, because there is no home to add to it ([§FS-scan.scope.homes](FS-scan.md#scopehomes-every-configured-kind-home-is-scanned)); no marked token is a citation, so `check` reports none ([§FS-citations.recognized.no-kinds](FS-citations.md#recognizedno-kinds-with-no-kind-no-token-is-a-citation)); `grund id` has no kind to allocate in ([§FS-list.1.1.1](FS-list.md#111-a-scope-with-no-citable-kind)); and the managed block teaches the first kind rather than listing none ([§FS-init.2.3.4.4.2](FS-init.md#23442-no-kinds-yet)).
 
 #### 3.4.5 Name rules
 
@@ -843,6 +843,8 @@ respect_gitignore  = true
 ```
 
 Which files these keys make a run read is [§FS-scan.scope](FS-scan.md#scope-which-files-a-run-reads). `comment_prefixes` are the tokens recognized when looking for source declarations and citations in source files, composed with `extensions` ([§FS-config.3.5.14](FS-config.md#3514-comment_prefixes-compose-with-extensions)); `docstring_python` enables Python triple-quoted-string scanning in addition to `#` comments. The `extensions` default is not a list of its own choosing: it is `md` plus every extension grund's built-in language table names ([§FS-scan.scope.extensions.default](FS-scan.md#scopeextensionsdefault-the-extensions-default-follows-the-language-table)).
+
+The `include` default keeps `requirements.md` although no built-in kind homes there any more ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)): dropping it would stop reading a file in a project that changed nothing, a verdict no release warned about ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)).
 
 An opted-in kind's home JSON is catalog input rather than part of this scan. The exact discovery and independence from every key in this table are fixed by [§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations) and [§FS-values.2.2](FS-values.md#22-json-declarations-from-the-kind-home).
 

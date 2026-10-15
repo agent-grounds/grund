@@ -77,7 +77,7 @@ Per [§FS-non-goals.10](FS-non-goals.md#10-interactive-mode), `init` is non-inte
 ```
 grund init                       # cwd: the config and the agent entrypoint, no starter files
 grund init path/to/repo          # auto-detect existing entrypoint, else AGENTS.md
-grund init --scaffold            # cwd, plus the starter files: requirements.md, docs/, tests/e2e/, tests/integration/
+grund init --scaffold            # cwd, plus the starter files: docs/, tests/e2e/, tests/integration/
 grund init --scaffold path/to/repo # explicit target, with the same starter files
 grund init --template=none       # a grund.toml that declares no kinds, for a repo that declares its own
 grund init --dry-run path/to/repo # preview without writing anything
@@ -140,7 +140,7 @@ The check runs after the user-global rule ([§FS-init.1.2.4](FS-init.md#124-whic
 
 ### 1.3 `--scaffold` and the effective config
 
-The root-level `requirements.md` starter file is scaffolded because the generated config's `FS` row lists it as its one place, `files = ["requirements.md"]` ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)). Every home `--scaffold` lays is a place the governing config names: a row's `files` and `folders` in a version-2 config, a row's `file` or `folder` in a version-1 one. An existing config that omits `[[kinds]]` instead keeps the compatibility FS home from [§FS-config.3.4.4.4](FS-config.md#3444-a-config-that-omits-kinds-keeps-the-older-fs-home), so `--scaffold` lays `docs/functional-spec/README.md` and points next-step guidance at `docs/functional-spec`. `roadmap.md` and `changelog.md` are scaffolded because the generated managed block's `docs/` table links to them ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)).
+The `docs/functional-spec/README.md` starter file is scaffolded because the generated config's `FS` row lists that folder as its one place, `folders = ["docs/functional-spec"]` ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)), and no `requirements.md` is laid. Every home `--scaffold` lays is a place the governing config names: a row's `files` and `folders` in a version-2 config, a row's `file` or `folder` in a version-1 one. An existing config that omits `[[kinds]]` takes the same folder from the built-in `FS` row ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)), so `--scaffold` lays `docs/functional-spec/README.md` there too and points next-step guidance at `docs/functional-spec`. `roadmap.md` and `changelog.md` are scaffolded because the generated managed block's `docs/` table links to them ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)).
 
 ### 1.4 Why `--check` exists
 
@@ -225,7 +225,7 @@ Bare `init`, with no `--scaffold`, writes these two and nothing else ([§FS-init
 
 With `--scaffold`, additionally the template's starter files ([§FS-init.2.1.3](FS-init.md#213-the-software-development-starter-files)). These are the `software-development` template's; the `none` template has none ([§FS-init.1.6.4](FS-init.md#164-none-has-nothing-to-scaffold)):
 
-- `<path>/requirements.md`
+- `<path>/docs/functional-spec/README.md`
 - `<path>/docs/requirements/README.md`, when the config declares `REQ` ([§FS-init.2.1.3](FS-init.md#213-the-software-development-starter-files))
 - `<path>/docs/grund.md`
 - `<path>/docs/goals.md`
@@ -273,11 +273,11 @@ Each scaffolded markdown file is a minimal starter — enough structure to teach
 
 - `grund.md` — the H1 plus a one-line note on how the project's reason for being is declared inline (`# GRUND-NNN-slug: …`), then the three H2 sections (`## 1. The problem`, `## 2. What this project does about it`, `## 3. Who it is for`), each with a one-line italic prompt to be replaced.
 - `goals.md` — the H1 plus a one-line note on how goals are declared inline (`# GOAL-NNN-slug: …`).
-- `requirements.md` — the H1 plus a one-line note on how `FS-` requirements/spec IDs are declared inline as H2 headings in that file.
+- `functional-spec/README.md` — the index of the `FS` folder, in the shape of the decision READMEs below: the H1, the note on how `FS-` IDs declare one per file into the directory, the index rule, and an empty `| ID | Subject |` table. It is written as `README.md` in the folder the governing config's `FS` row names; a config whose `FS` row is a `file` gets that file instead, holding the H1 and a one-line note on how `FS-` IDs are declared inline as H2 headings in it.
 - `requirements/README.md` — the index of the `REQ` folder ([§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements)), in the shape of the decision READMEs below: the H1, the note on how `REQ-` IDs declare into the directory, the index rule, and an empty `| ID | Subject |` table. It is written right after the FS home, as `README.md` in the folder the governing config's `REQ` row names, and only when that config declares `REQ` as a `folder`: a config with no `REQ` row, as every config an earlier `init` wrote, gets no `REQ` starter.
 - `roadmap.md`, `changelog.md` — the H1 plus a single `<!-- placeholder - replace with real content -->` line.
 - `architecture/README.md` — the H1, the navigational note about how `AR-` IDs declare into the directory and the rule that the index lists every architecture declaration as a full link ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)), and an empty `| ID | Subject |` table to fill in.
-- `decisions/architectural/README.md`, `decisions/functional/README.md` — the same shape for the two decision folders: the H1, the note on how `DA-`/`DF-` IDs declare into the directory and on citing a decision from the declaration it settles, the index rule, and an empty `| ID | Subject |` table. Every citable folder kind whose `index` the generated config leaves at its default gets one, which under those defaults is `REQ`, `AR`, `DF`, and `DA` — the two test kinds are non-citable and have no index at all ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)).
+- `decisions/architectural/README.md`, `decisions/functional/README.md` — the same shape for the two decision folders: the H1, the note on how `DA-`/`DF-` IDs declare into the directory and on citing a decision from the declaration it settles, the index rule, and an empty `| ID | Subject |` table. Every citable folder kind whose `index` the generated config leaves at its default gets one, which under those defaults is `FS`, `REQ`, `AR`, `DF`, and `DA` — the two test kinds are non-citable and have no index at all ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)).
 - `tests/e2e/README.md` — the H1 (`# e2e`) plus a note that every behaviour described in the effective FS home has at least one case, and that each case cites the declaration it proves. It is a layout note, not an index: `e2e` is a non-citable kind ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) and has no declarations to list. `tests/integration/` gets the `.gitkeep` instead of a README of its own, so the second configured test home survives a `git add` without a second near-identical note.
 
 Every scaffold-owned ID-shape example uses the effective format of the kind it
@@ -321,7 +321,7 @@ Under `--dry-run` a note is written in the conditional, like every other line of
 
 #### 2.2.2 The `next:` block
 
-After the notes, stderr prints a short `next:` block — a blank line, then numbered first steps, then `see <entrypoint> for the full workflow.` — so the user is not left at a bare list of paths wondering what to do. `<entrypoint>` is the first agent entrypoint `init` wrote, updated, or found already current. The steps are: run `grund check` (a fresh tree is clean); allocate an ID with `ID=$(grund id FS "…")` and add it to the effective FS home (`requirements.md` with the `## <ID>: …` H2 for generated defaults, or under the configured FS folder with `# <ID>: …` when compatibility or explicit config makes FS a folder); cite it as `§<ID>` from the docs and e2e tests that depend on it.
+After the notes, stderr prints a short `next:` block — a blank line, then numbered first steps, then `see <entrypoint> for the full workflow.` — so the user is not left at a bare list of paths wondering what to do. `<entrypoint>` is the first agent entrypoint `init` wrote, updated, or found already current. The steps are: run `grund check` (a fresh tree is clean); allocate an ID with `ID=$(grund id FS "…")` and add it to the effective FS home (under the FS folder with `# <ID>: …`, as the generated config and the built-in default make it, or in the configured FS file with the `## <ID>: …` H2 when explicit config makes FS a file); cite it as `§<ID>` from the docs and e2e tests that depend on it.
 
 When `--scaffold` was *not* passed, a re-run advice is inserted as step 1, the following steps move down, the allocation step drops its second line — the one naming the `## <ID>: …` H2 or `# <ID>: …` H1, which prints only under `--scaffold` — and the citation step is omitted. Whenever it is printed, that advice points at re-running with `--scaffold` (or creating the effective FS home, `docs/`, and `tests/` by hand); a refresh of a complete setup does not print it at all ([§FS-init.2.2.2.1](FS-init.md#2221-a-refresh-of-a-complete-setup-teaches-nothing)). It appends the clause `until then \`grund check\` has nothing to scan` only when the effective scanner would read no file — exactly the scan decision of the governing config's version. For version 2 that is the scanned rows' places and the complement's extent, the config root unless `[schema.kinds.code]` lists places ([§FS-config-v2.schema.places.complement](FS-config-v2.md#schemaplacescomplement-code-is-the-complement-by-name)), so the starter's own tree, `AGENTS.md` included, is read and a fresh run does not print the clause. For version 1 it is the scan decision in [§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned): configured extensions, ignore and exclude rules, hidden-file and symlink handling, workspace boundaries, configured include paths, scanned kind homes, and `scan = false` all retain their scanner meanings. Path existence or a non-empty directory alone does not make the clause false. A config that declares no kinds gets the block of [§FS-init.2.2.2.2](FS-init.md#2222-a-project-with-no-kinds) instead.
 
@@ -332,7 +332,7 @@ The `next:` block is suppressed entirely when every reported path is `exists ` (
 A run with no `--scaffold` is a **refresh of a complete setup** when both hold:
 
 - every reported path is `exists ` or `updated ` — under `--dry-run` and `--check`, `exists ` or `would-update ` — so a single `wrote `, `appended `, `would-write `, or `would-append ` line makes the run something else;
-- the effective FS home exists on disk: the configured FS `file`, else the configured FS `folder`, else `requirements.md`, resolved against the target directory.
+- the effective FS home exists on disk: the configured FS `file`, else the configured FS `folder`, else the built-in `FS` folder `docs/functional-spec` ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)), resolved against the target directory.
 
 The lines for scoped files and their companion symlinks ([§FS-init.2.3.5.14.4](FS-init.md#235144-the-report-names-every-scoped-file-and-link-it-touched)) are not counted in the first condition: they follow the root block, so a refresh that moves a row's guidance, creating one scoped file and removing another, is still a refresh.
 
@@ -907,7 +907,7 @@ files = ["docs/grund.md"]
 [schema.kinds.GOAL]
 files = ["docs/goals.md"]
 [schema.kinds.FS]
-files = ["requirements.md"]
+folders = ["docs/functional-spec"]
 [schema.kinds.REQ]
 folders = ["docs/requirements"]
 [schema.kinds.AR]
@@ -1004,7 +1004,7 @@ folders = ["docs/requirements"]
 title = "Hard requirements: what the project must never break"
 ```
 
-`FS` stays `files = ["requirements.md"]` until grund 0.19.0 moves the template's `FS` row ([§DF-fs-home-moves-from-0-19](../decisions/functional/DF-fs-home-moves-from-0-19.md#df-fs-home-moves-from-0-19-the-built-in-fs-home-moves-back-to-docsfunctional-spec-in-0190-and-the-template-declares-req-now)). The managed block renders the kinds the written config declares ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)), so the project map gains `- [REQ](docs/requirements): Hard requirements: what the project must never break` right after the `FS` row, and the `KIND ∈ {…}` vocabulary lists `REQ` right after `FS`. A version-1 config without a `REQ` row, as every config an earlier `init` wrote, declares no `REQ` ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)).
+`FS` is `folders = ["docs/functional-spec"]`, the built-in `FS` home ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)), so the template and the default give one answer ([§DF-fs-home-moves-from-0-19.2.1](../decisions/functional/DF-fs-home-moves-from-0-19.md#21-the-built-in-fs-home-moves-back-to-docsfunctional-spec)). The managed block renders the kinds the written config declares ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)), so the project map gains `- [REQ](docs/requirements): Hard requirements: what the project must never break` right after the `FS` row, and the `KIND ∈ {…}` vocabulary lists `REQ` right after `FS`. A version-1 config without a `REQ` row, as every config an earlier `init` wrote, declares no `REQ` ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)).
 
 ## 3. Non-intrusive guarantees
 
