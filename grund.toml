@@ -384,6 +384,12 @@ title = "Init scaffold templates: what grund init writes, verbatim"
 [presentation.kinds.readme]
 title = "The README: the shop window for users, which links the user guides and cites no spec"
 
+# The complement row: its places are the ones v1's `[scan] include` named, and
+# it also takes every scanned file no other row claims
+# (FS-config-v2.schema.places.complement).
+[presentation.kinds.code]
+title = "The engine, CLI and bindings, and every scanned file no other row claims"
+
 [presentation.fmt]
 anchors = "github"
 links = "index"

@@ -39,7 +39,7 @@ A `§<ID>` is a pointer to a fact, not a file path. Resolve it with `grund` and 
 - [scripts/](scripts): Repository scripts: hook checks, release preparation, benchmarks, PGO build
 - [crates/grund-core/assets/templates/](crates/grund-core/assets/templates): Init scaffold templates: what grund init writes, verbatim
 - [README.md](README.md): The README: the shop window for users, which links the user guides and cites no spec
-- [AGENTS.md](AGENTS.md), [docs/](docs), [crates/](crates), [tests/bindings/](tests/bindings): Declaration
+- [AGENTS.md](AGENTS.md), [docs/](docs), [crates/](crates), [tests/bindings/](tests/bindings): The engine, CLI and bindings, and every scanned file no other row claims
 
 ### Declarations and citations
 
@@ -71,7 +71,7 @@ Declarations are heading lines `# <ID>: …` in markdown. In a code doc-comment 
 - Each file in **.github/workflows/** should cite FS or AR.
 - Each file in **scripts/** should cite FS or AR.
 - The file **README.md** must not cite FS and AR.
-- Each source file outside the Project map (**code**) that cites anything should cite FS or AR.
+- Each source file outside the Project map (**code**: The engine, CLI and bindings, and every scanned file no other row claims) that cites anything should cite FS or AR.
 Anything not listed above is allowed.
 
 ### Chapter rules
