@@ -1,1 +1,2 @@
+warning: grund.toml is version 1; migrate it with grund config migrate --to 2
 warning: nothing to scan — this [workspace] block put no project in scope: include_root = false and every member it has is an absent optional one, each named in the report. Nothing is misconfigured; a fuller checkout is what changes it.

@@ -1,1 +1,3 @@
-
+warning: grund.toml is version 1; migrate it with grund config migrate --to 2
+warning: packages/other/grund.toml is version 1; migrate it with grund config migrate --to 2 packages/other
+warning: packages/sub/grund.toml is version 1; migrate it with grund config migrate --to 2 packages/sub

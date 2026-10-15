@@ -1,1 +1,2 @@
+warning: grund.toml is version 1; migrate it with grund config migrate --to 2
 warning: nothing to scan — grund looked under [scan] include = ["requirements.md", "docs", "e2e", "src"] and found no files. This project declares no kinds yet: replace `kinds = []` in `grund.toml` with a `[[kinds]]` table for its first kind, point `[scan] include` at your sources, or pass a path explicitly (`grund check <dir>`).

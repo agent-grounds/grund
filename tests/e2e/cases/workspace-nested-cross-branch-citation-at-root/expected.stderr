@@ -1,1 +1,5 @@
-
+warning: final/grund.toml is version 1; migrate it with grund config migrate --to 2 final
+warning: final/pod/grund.toml is version 1; migrate it with grund config migrate --to 2 final/pod
+warning: grund.toml is version 1; migrate it with grund config migrate --to 2
+warning: hardware/grund.toml is version 1; migrate it with grund config migrate --to 2 hardware
+warning: hardware/pod/grund.toml is version 1; migrate it with grund config migrate --to 2 hardware/pod

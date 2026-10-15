@@ -1,1 +1,2 @@
 warning: --full has no effect with an explicit PATH — sim already resolves against [scan] include, and the report is the path either way
+warning: grund.toml is version 1; migrate it with grund config migrate --to 2

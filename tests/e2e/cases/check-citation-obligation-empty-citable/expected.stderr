@@ -1,1 +1,2 @@
 warning: [citations.SKILL] must applies to nothing — skills/ declares no SKILL ID; did you mean `citable = false`?
+warning: grund.toml is version 1; migrate it with grund config migrate --to 2
