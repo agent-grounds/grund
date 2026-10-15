@@ -1,8 +1,8 @@
 //! §FS-scan.path: the files a narrowed `list` or `show --batch --all` reports
-//! entries from. The run already resolved against the whole owning project
-//! (`load_reported_workspace_context`), so the path only bounds which
-//! declarations print, by the predicate `check <path>` filters its report with
-//! (§FS-scan.path.check, §AR-system.principle).
+//! entries from (§FS-scan.path.show). The run already resolved against the whole
+//! owning project (`load_reported_workspace_context`), so the path only bounds
+//! which declarations print, by the predicate `check <path>` filters its report
+//! with (§FS-scan.path.check, §AR-system.principle).
 
 use anyhow::Result;
 use std::path::Path;
