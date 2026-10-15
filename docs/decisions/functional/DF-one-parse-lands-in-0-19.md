@@ -1,7 +1,8 @@
 # DF-one-parse-lands-in-0-19: every command answers from one parse in 0.19.0, and the managed block teaches doc-comment sections
 
-**Status:** Accepted
 **Date:** 2026-10-15
+
+## status: Accepted
 
 ## 1. Context
 

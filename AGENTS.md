@@ -1,7 +1,7 @@
 # grund — agent instructions
 
 <!-- BEGIN GRUND MANAGED BLOCK -->
-## Grounding with grund (v24)
+## Grounding with grund (v26)
 
 This project uses [`grund`](https://github.com/agent-grounds/grund): every spec, goal, decision, and end-to-end test has a stable ID `<KIND>-<slug>[.<section>]` (`KIND ∈ {GRUND, GOAL, FS, REQ, AR, DF, DA, RM, DISC, RULE, REL}`), cited with the marker `§` — e.g. `<§>FS-user-login.3.1`, where the ID is a shape illustration rather than a real one in this repo, which is what the `<§>` escape says. Type `$$` in a grund-aware editor and it becomes `§`. Bare ID-shaped tokens are ignored — `[reference] strict = true` is set in `grund.toml`, so only `§`-prefixed citations are checked.
 
@@ -39,6 +39,7 @@ A `§<ID>` is a pointer to a fact, not a file path. Resolve it with `grund` and 
 - [scripts/](scripts): Repository scripts: hook checks, release preparation, benchmarks, PGO build
 - [crates/grund-core/assets/templates/](crates/grund-core/assets/templates): Init scaffold templates: what grund init writes, verbatim
 - [README.md](README.md): The README: the shop window for users, which links the user guides and cites no spec
+- [AGENTS.md](AGENTS.md), [docs/](docs), [crates/](crates), [tests/bindings/](tests/bindings): The engine, CLI and bindings, and every scanned file no other row claims
 
 ### Declarations and citations
 
@@ -70,8 +71,22 @@ Declarations are heading lines `# <ID>: …` in markdown. In a code doc-comment 
 - Each file in **.github/workflows/** should cite FS or AR.
 - Each file in **scripts/** should cite FS or AR.
 - The file **README.md** must not cite FS and AR.
-- Each source file outside the Project map (**code**) that cites anything should cite FS or AR.
+- Each source file outside the Project map (**code**: The engine, CLI and bindings, and every scanned file no other row claims) that cites anything should cite FS or AR.
 Anything not listed above is allowed.
+
+### Declaration shapes
+
+`grund check` holds each declaration of these kinds to these fields, as `grund schema` lists them:
+
+- **FS**
+  - field terms must · first
+- **AR**
+  - field placement must · first
+  - field terms must · after placement
+- **DF**
+  - field status must · first · one of Accepted, Superseded
+- **DA**
+  - field status must · first · one of Accepted, Superseded
 
 ### Chapter rules
 
