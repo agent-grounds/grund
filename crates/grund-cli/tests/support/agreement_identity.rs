@@ -51,7 +51,7 @@ pub fn citation_is_its_whole_token() -> Verdict {
     Ok(())
 }
 
-/// r2, row R01: a path argument narrows what is reported, never what resolves —
+/// r2, row R01 until #621: a path argument narrows what is reported, never what resolves —
 /// the ID `check sub` resolves, `grund <ID> sub` shows
 /// (§REQ-one-answer.scope.narrowed, §REQ-one-answer.identity.declarations).
 pub fn a_narrowed_run_resolves_what_check_resolves() -> Verdict {
@@ -125,7 +125,7 @@ pub fn the_homeless_kind_is_one_verdict() -> Verdict {
     )
 }
 
-/// Row R02: in a workspace, a citation the root `check` resolves is one `check
+/// r02, row R02 until #621: in a workspace, a citation the root `check` resolves is one `check
 /// docs` resolves (§REQ-one-answer.scope.narrowed).
 pub fn a_narrowed_workspace_run_resolves_the_alias() -> Verdict {
     let tree = Tree::new(
