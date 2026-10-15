@@ -38,7 +38,7 @@ Completion is invoked on every tab press, so config and scan failures are quiet:
 
 ### 2.1 Arguments and candidate modes
 
-- `<path>` / `--path <path>` choose the repo or subtree used for config discovery and scanning. Both default to `.`.
+- `<path>` / `--path <path>` choose the repo or subtree used for config discovery and scanning. Both default to `.`. A path narrower than its config root bounds the candidates to the entries `list <path>` prints ([§FS-scan.path.list](FS-scan.md#pathlist-list-reports-the-paths-entries-and-resolves-against-the-project)), even though `grund <ID> <path>` resolves an ID the project declares outside it ([§FS-scan.path.show](FS-scan.md#pathshow-show-resolves-the-id-against-the-project-the-path-discovers)).
 - `--prefix <prefix>` filters candidates by byte prefix. Without it, every candidate for the selected mode is printed.
 - Without `--sections`, candidates are declared IDs, rendered in each kind's effective `[[kinds]].format` override or repository `[id].format` default ([§FS-config.3.2](FS-config.md#32-id--id-grammar)).
 - When `--prefix` already contains the configured `[id].section_separator`, section candidates are printed instead of bare IDs. `--sections` forces section-candidate mode even when the prefix has no separator.
@@ -54,7 +54,7 @@ The helper never invokes a configured fetcher, even when a candidate's kind is f
 
 ## 3. Determinism
 
-The helper uses the same config discovery and scanner as `grund list`, `grund <ID>`, and `grund refs`; a clean repo therefore has one shared declaration catalog across listing, retrieval, reverse lookup, and completion. Candidate ordering is deterministic for a given tree and config.
+The helper uses the same config discovery and scanner as `grund list`, `grund <ID>`, and `grund refs`; a clean repo therefore has one shared declaration catalog across listing, retrieval, reverse lookup, and completion, and an explicit narrower path bounds completion's candidates as it bounds `list`'s entries ([§FS-completions.2.1](FS-completions.md#21-arguments-and-candidate-modes)). Candidate ordering is deterministic for a given tree and config.
 
 ## 4. Installation examples
 

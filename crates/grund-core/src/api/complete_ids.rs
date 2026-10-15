@@ -58,6 +58,7 @@ pub fn complete_ids_with_run_warnings(
 }
 
 fn complete_ids_run(opts: CompleteIdsOpts, run_warnings: &mut Vec<Finding>) -> Result<Vec<String>> {
+    // §FS-completions.2.1: a narrower path bounds the candidates as `list <path>` does.
     let context = load_workspace_context(&opts.path, opts.path_provided)?;
     *run_warnings = context_run_warnings(&context);
     let current_config = context
