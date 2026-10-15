@@ -6,6 +6,10 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
+/// `relative_paths` is a version 1 key, so the fixture stays on version 1 and its `check`
+/// runs leave out the caution that earns (§FS-check.checks.config-version-1).
+const V1: &str = "config-version-1";
+
 fn manifest_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
@@ -121,7 +125,7 @@ fn relative_paths_false_from_subdirectory_reaches_workspace_member() {
         let link = root.join("docs/external-link.md");
         std::os::unix::fs::symlink(&external, &link).expect("create external file symlink");
 
-        let check = run_grund(&["check", "docs/external-link.md"], &root);
+        let check = run_grund(&["check", "docs/external-link.md", "--ignore", V1], &root);
         assert_eq!(check.status.code(), Some(1));
         assert_eq!(
             String::from_utf8_lossy(&check.stdout),
@@ -132,7 +136,10 @@ fn relative_paths_false_from_subdirectory_reaches_workspace_member() {
         );
         assert_eq!(String::from_utf8_lossy(&check.stderr), "");
 
-        let full_check = run_grund(&["check", "docs/external-link.md", "--full"], &root);
+        let full_check = run_grund(
+            &["check", "docs/external-link.md", "--full", "--ignore", V1],
+            &root,
+        );
         assert_eq!(full_check.status.code(), Some(1));
         assert_eq!(
             String::from_utf8_lossy(&full_check.stdout),
@@ -150,6 +157,8 @@ fn relative_paths_false_from_subdirectory_reaches_workspace_member() {
                 "--full",
                 "--format",
                 "json",
+                "--ignore",
+                V1,
             ],
             &root,
         );
