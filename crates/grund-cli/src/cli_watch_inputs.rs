@@ -355,10 +355,14 @@ impl WatchSubscriptions {
 
 /// The backend or resolver found no path: it vanished before it could be covered
 /// (§FS-check.6.1.4). Watch limits, permissions and backend errors are not this.
+/// The Windows backend reports a missing path only as this generic message.
 fn watch_path_vanished(err: &notify::Error) -> bool {
     match &err.kind {
         notify::ErrorKind::PathNotFound => true,
         notify::ErrorKind::Io(err) => err.kind() == std::io::ErrorKind::NotFound,
+        notify::ErrorKind::Generic(message) => {
+            message == "Input watch path is neither a file nor a directory."
+        }
         _ => false,
     }
 }
