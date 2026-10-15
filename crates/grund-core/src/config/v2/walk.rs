@@ -102,6 +102,7 @@ impl<'a> Reader<'a> {
             Table::CitationKind(kind, _) => {
                 citations.declared = true;
                 citations.per_kind.entry(kind.clone()).or_default();
+                citations.written.0.push(kind.clone());
             }
             Table::Ladder(Some(place), _) => self.row_ladders.push((place.clone(), line)),
             Table::PresentationKind(kind) => self.presentation_kinds.push((kind.clone(), line)),

@@ -134,11 +134,11 @@ pub(crate) fn render_scaffold_id_shapes(template: &str, kind: &str, project: &Pr
     canonical_template_text(template).replace(&format!("{{{kind}_ID_SHAPE}}"), &shape)
 }
 
-/// The generated `grund.toml` — `template`'s config, every default written out
-/// explicitly as a teaching surface, with only `project_name` substituted
-/// (§FS-init.2.4.3, §FS-init.2.4.9). With `--description`, the commented
-/// `project_description` teaching line becomes the real key (§FS-init.2.4.7,
-/// §DF-workspace-member-descriptions).
+/// The generated `grund.toml` — `template`'s minimal version-2 config, with
+/// only `project_name` substituted (§FS-init.2.4.3, §FS-init.2.4.9). With
+/// `--description`, a `[presentation]` table holding `description` stands right
+/// above the first `[presentation.kinds]` table, or ends a file that has none
+/// (§FS-init.2.4.7, §DF-workspace-member-descriptions).
 pub(crate) fn render_grund_toml(
     template: Template,
     name: &str,
@@ -147,13 +147,20 @@ pub(crate) fn render_grund_toml(
     let mut rendered =
         canonical_template_text(template.grund_toml()).replace("{NAME}", &escape_toml_basic(name));
     if let Some(description) = description {
-        rendered = rendered.replace(
-            "# project_description = \"<one line shown next to this project in workspace member lists>\"",
-            &format!(
-                "project_description = \"{}\"",
-                escape_toml_basic(description)
-            ),
+        let table = format!(
+            "[presentation]\ndescription = \"{}\"\n",
+            escape_toml_basic(description)
         );
+        match rendered.find("\n[presentation.kinds.") {
+            Some(at) => rendered.insert_str(at + 1, &table),
+            None => {
+                if !rendered.ends_with('\n') {
+                    rendered.push('\n');
+                }
+                rendered.push('\n');
+                rendered.push_str(&table);
+            }
+        }
     }
     rendered
 }

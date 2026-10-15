@@ -163,7 +163,9 @@ impl Project {
             if let Some(default) = citations.global_default {
                 let _ = writeln!(out, "default = \"{}\"", default.as_str());
             }
-            for (kind, kind_rules) in &citations.per_kind {
+            let written = citations.written.0.iter().map(String::as_str);
+            for kind in self.row_order(citations.per_kind.keys().map(String::as_str), written) {
+                let kind_rules = &citations.per_kind[kind];
                 let _ = writeln!(out, "\n[rules.citations.{kind}]");
                 if let Some(default) = kind_rules.default {
                     let _ = writeln!(out, "default = \"{}\"", default.as_str());
@@ -179,8 +181,9 @@ impl Project {
             out.push_str("\n[rules.citations.grounding]\n");
             rungs(out, ladder);
         }
-        for (place, grounding) in &rules.grounding.kinds {
-            if let Some(ladder) = &grounding.ladder {
+        let places = rules.grounding.kinds.keys().map(String::as_str);
+        for place in self.row_order(places, std::iter::empty()) {
+            if let Some(ladder) = &rules.grounding.kinds[place].ladder {
                 let _ = writeln!(out, "\n[rules.citations.{place}.grounding]");
                 rungs(out, ladder);
             }
@@ -197,6 +200,25 @@ impl Project {
         }
     }
 
+    /// §FS-config.4.2.4: the names of tables keyed by a row name, in the order
+    /// the file writes its `[schema.kinds]` rows, then each name that is no row
+    /// in `written` order, then any left over, in name order.
+    fn row_order<'a>(
+        &'a self,
+        names: impl Iterator<Item = &'a str>,
+        written: impl Iterator<Item = &'a str>,
+    ) -> Vec<&'a str> {
+        let names: Vec<&str> = names.collect();
+        let rows = self.schema.rows.iter().map(|row| row.name.as_str());
+        let mut ordered: Vec<&str> = Vec::with_capacity(names.len());
+        for name in rows.chain(written).chain(names.iter().copied()) {
+            if names.contains(&name) && !ordered.contains(&name) {
+                ordered.push(name);
+            }
+        }
+        ordered
+    }
+
     fn presentation_tables(&self, out: &mut String) {
         let presentation = &self.presentation;
         out.push_str("\n[presentation]\n");
@@ -211,7 +233,9 @@ impl Project {
         if presentation.rules_at_root {
             out.push_str("rules = \"root\"\n");
         }
-        for (kind, title) in &presentation.kinds {
+        let kinds = presentation.kinds.keys().map(String::as_str);
+        for kind in self.row_order(kinds, std::iter::empty()) {
+            let title = &presentation.kinds[kind];
             let _ = writeln!(
                 out,
                 "\n[presentation.kinds.{kind}]\ntitle = {}",
