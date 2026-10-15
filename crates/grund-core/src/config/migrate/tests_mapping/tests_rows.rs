@@ -114,11 +114,18 @@ pub(super) const CASES: &[Case] = &[
     ),
     case(
         "[scan] docstring_python",
-        then_fs!("[scan]\ndocstring_python = false\n"),
+        then_fs!("[scan]\nextensions = [\"md\", \"py\"]\ndocstring_python = false\n"),
         &[
             Mapped("py = \"v1_plain\"\n"),
             Lacks("docstrings = \"python\""),
+            Lacks("v1_python"),
+            Maps("docstrings of definition v1_plain (off)"),
         ],
+    ),
+    case(
+        "[scan] docstring_python",
+        then_fs!("[scan]\nextensions = [\"md\", \"py\"]\ndocstring_python = true\n"),
+        &[Maps("docstrings of definition v1_python")],
     ),
     case(
         "[scan] exclude",
@@ -303,7 +310,10 @@ pub(super) const CASES: &[Case] = &[
         "fetch resolves must",
         "[[kinds]]\nkind = \"TICKET\"\nfolder = \"tickets\"\nfetch = \"scripts/fetch\"\n",
         &[("tickets/", "")],
-        &[Mapped("fetch = \"scripts/fetch\"\n")],
+        &[
+            Mapped("fetch = \"scripts/fetch\"\n"),
+            Lacks("[rules.resolution]"),
+        ],
     ),
     case(
         "kind grounding inherits",
