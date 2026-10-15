@@ -8,7 +8,7 @@
 //! refuses a cut below `0.16.0` now is `scripts/check_release_ramps.py`, on
 //! every publication path (§FS-distribution.4.2.6).
 
-use super::support::{absent_chapter, assert_run, run};
+use super::support::{absent_chapter, assert_v1_run, run};
 
 /// §FS-rules.checks.unreached-declaration: at the recommended level the
 /// absence follows the rule's own level. It is a suggestion, so it is
@@ -21,7 +21,7 @@ fn a_recommended_chapter_rule_reports_the_absence_as_a_suggestion() {
     let root = absent_chapter("unreached-recommended");
 
     let quiet = ["check", ".", "--rule", sentence, "--format", "json"];
-    assert_run(&run(&root, &quiet), 0, "", "");
+    assert_v1_run(&run(&root, &quiet), 0, "", "");
 
     let shown = [
         "check",
@@ -32,7 +32,7 @@ fn a_recommended_chapter_rule_reports_the_absence_as_a_suggestion() {
         "--format",
         "json",
     ];
-    assert_run(
+    assert_v1_run(
         &run(&root, &shown),
         0,
         "{\"channel\":\"suggestion\",\"path\":\"docs/fs/FS-demo.md\",\"line\":1,\
@@ -62,5 +62,5 @@ fn the_absence_is_selectable_like_every_other_code() {
         "--format",
         "json",
     ];
-    assert_run(&run(&root, &ignored), 0, "", "");
+    assert_v1_run(&run(&root, &ignored), 0, "", "");
 }

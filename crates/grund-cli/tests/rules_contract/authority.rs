@@ -8,7 +8,9 @@
 //! `surfaces.rs`: scoping is one question — *what does this sentence find?* —
 //! and these cases fail together when the answer moves.
 
-use super::support::{assert_run, fixture, run, scratch, text, write};
+use super::support::{
+    assert_run, assert_v1_run, fixture, run, scratch, text, without_caution, write,
+};
 use std::fs;
 
 /// The trial sentence used throughout: it authors exactly one finding in the
@@ -38,7 +40,7 @@ const UNSCOPED: &str = concat!(
 #[test]
 fn a_scoped_report_is_the_trial_sentences_findings_alone() {
     let root = fixture();
-    assert_run(
+    assert_v1_run(
         &run(&root, &["check", ".", "--rule", TRIAL]),
         1,
         UNSCOPED,
@@ -53,7 +55,7 @@ fn a_scoped_report_is_the_trial_sentences_findings_alone() {
 /// passes today, and its job is to keep passing.
 #[test]
 fn bare_rule_keeps_its_bytes_and_its_exit() {
-    assert_run(
+    assert_v1_run(
         &run(&fixture(), &["check", ".", "--rule", TRIAL]),
         1,
         UNSCOPED,
@@ -300,7 +302,7 @@ fn every_finding_record_carries_the_authority_that_produced_it() {
         "\"code\":\"missing-citation\",\"message\":\"FS-demo.requirements must cite REQ ",
         "(RULE-requirements)\",\"sites\":null,\"authority\":[\"RULE-requirements\"]}\n",
     );
-    assert_run(&output, 1, expected, "");
+    assert_v1_run(&output, 1, expected, "");
 }
 
 /// §FS-rules.6, §FS-errors.5.1: a jointly authored record names both origins in
@@ -404,7 +406,7 @@ fn a_scoped_run_drops_a_run_level_warning_as_the_code_axis_does() {
     );
     assert_eq!(text(&plain.stdout), "", "a warning is not stdout's");
     assert!(
-        text(&plain.stderr).starts_with("warning: nothing to scan"),
+        without_caution(&text(&plain.stderr)).starts_with("warning: nothing to scan"),
         "the premise does not hold — the plain run says no such warning:\n{}",
         text(&plain.stderr)
     );
