@@ -558,14 +558,14 @@
 {"project":"tests/e2e/cases/init-conversation-link-claude/repo","show":[0,"fddd00933eb6fca3",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-conversation-link/expected.repo","show":[0,"fddd00933eb6fca3",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-conversation-link/repo","show":[0,"fddd00933eb6fca3",""],"validate":[0,"e3b0c44298fc1c14",""]}
-{"project":"tests/e2e/cases/init-docs-form/expected.repo","show":[0,"4118b7e5c32e8bde",""],"validate":[0,"e3b0c44298fc1c14",""]}
+{"project":"tests/e2e/cases/init-docs-form/expected.repo","show":[0,"ca3d912f25919d18",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-force-keeps-existing-config/expected.repo","show":[0,"6119672bf68d9523",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-force-keeps-existing-config/repo","show":[0,"6119672bf68d9523",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-grund-toml-conflict-no-force/repo","show":[0,"af56f373e6b3ee9f",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-invalid-config-is-an-error/repo","show":[2,"e3b0c44298fc1c14","error: grund.toml:4: unknown [reference] conversation `plain` (expected link)\n"],"validate":[1,"e3b0c44298fc1c14","error: grund.toml:4: unknown [reference] conversation `plain` (expected link)\n"]}
 {"project":"tests/e2e/cases/init-kind-scan-false-block/expected.repo","show":[0,"485c4ed211320a81",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-kind-scan-false-block/repo","show":[0,"485c4ed211320a81",""],"validate":[0,"e3b0c44298fc1c14",""]}
-{"project":"tests/e2e/cases/init-no-workspace-members/expected.repo","show":[0,"4118b7e5c32e8bde",""],"validate":[0,"e3b0c44298fc1c14",""]}
+{"project":"tests/e2e/cases/init-no-workspace-members/expected.repo","show":[0,"ca3d912f25919d18",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-non-citable-kind-block/expected.repo","show":[0,"6680989d25c557cf",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-non-citable-kind-block/repo","show":[0,"6680989d25c557cf",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-populated-configured-form/repo","show":[0,"52a6bf9dfcf0f59f",""],"validate":[0,"e3b0c44298fc1c14",""]}
@@ -577,7 +577,7 @@
 {"project":"tests/e2e/cases/init-workspace-member-descriptions/repo/apps/api","show":[0,"d8f9e500f04ce99b",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-workspace-member-descriptions/repo/packages/core","show":[0,"0b803bb2fa935630",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-workspace-member/expected.repo","show":[0,"73f25d271e3adee6",""],"validate":[0,"e3b0c44298fc1c14",""]}
-{"project":"tests/e2e/cases/init-workspace-member/expected.repo/apps/api","show":[0,"e5788de3df2a6a6a",""],"validate":[0,"e3b0c44298fc1c14",""]}
+{"project":"tests/e2e/cases/init-workspace-member/expected.repo/apps/api","show":[0,"05950ce612609e1f",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-workspace-member/repo","show":[0,"73f25d271e3adee6",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-workspace-pinned-rule-invalid-sibling/expected.repo","show":[0,"6f3dbe5690bc4fdd",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-workspace-pinned-rule-invalid-sibling/expected.repo/member","show":[0,"1d9b042416597608",""],"validate":[0,"e3b0c44298fc1c14",""]}
