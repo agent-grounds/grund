@@ -169,11 +169,10 @@ sections, and every finding about a stubbed declaration itself to the target
 
 ### differences.text: Text
 
-- **R06a.** An index link edited to a bare citation is clean in the editor and
-  `unlinked-index-entry` once saved. R. Ruled by [§DF-four-editor-checks-read-saved-text](../decisions/functional/DF-four-editor-checks-read-saved-text.md#df-four-editor-checks-read-saved-text-four-editor-checks-read-the-saved-file-for-one-more-release) (#624).
-- **R06b.** The inline-code hint on a dangling citation differs between buffer and save. R. Ruled by [§DF-four-editor-checks-read-saved-text](../decisions/functional/DF-four-editor-checks-read-saved-text.md#df-four-editor-checks-read-saved-text-four-editor-checks-read-the-saved-file-for-one-more-release) (#624).
-- **R06c.** An `AGENTS.md` block edit is judged on the old disk text until saved. R. Ruled by [§DF-four-editor-checks-read-saved-text](../decisions/functional/DF-four-editor-checks-read-saved-text.md#df-four-editor-checks-read-saved-text-four-editor-checks-read-the-saved-file-for-one-more-release) (#624).
-- **R06d.** An end-to-end manifest edit is read from disk until saved. R. Ruled by [§DF-four-editor-checks-read-saved-text](../decisions/functional/DF-four-editor-checks-read-saved-text.md#df-four-editor-checks-read-saved-text-four-editor-checks-read-the-saved-file-for-one-more-release) (#624).
+No reader differs on text. R06a to R06d, the index check, the inline-code hint on a dangling
+citation, the `AGENTS.md` block check and the end-to-end manifest reader, closed in 0.19.0 with
+[§DF-four-editor-checks-read-saved-text](../decisions/functional/DF-four-editor-checks-read-saved-text.md#df-four-editor-checks-read-saved-text-four-editor-checks-read-the-saved-file-for-one-more-release), and every reader now reads the text a save
+would write ([§FS-scan.text.buffer](../functional-spec/FS-scan.md#textbuffer-a-files-text-is-what-a-save-would-write)).
 
 ### differences.scope: Scope
 

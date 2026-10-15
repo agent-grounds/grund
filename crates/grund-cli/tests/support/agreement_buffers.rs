@@ -4,8 +4,9 @@
 //! (§FS-scan.text.buffer, §REQ-one-answer.text.targets). A buffer is the file
 //! under every spelling (§FS-scan.identity.buffers), and a buffer with no file
 //! behind it is a file the walk reads or skips as it would the saved file
-//! (§FS-scan.text.buffer-only). The rows still listed at
-//! §REQ-one-answer.differences.text are trees here too, booked in the ledger.
+//! (§FS-scan.text.buffer-only). R06a to R06d, the index check, the inline-code
+//! hint, the `AGENTS.md` block check and the end-to-end manifest reader, closed
+//! with §DF-four-editor-checks-read-saved-text, so their trees must agree too.
 
 use super::agreement_tree::Verdict;
 use grund_core::{
@@ -35,7 +36,8 @@ fn config(extra: &[&str]) -> String {
 pub const INVARIANT: &str = "a-buffer-answers-as-saved";
 
 /// `(row, tree, the question asked of the tree)`. A tree with no row holds a
-/// point the closed rows R04 and R05 left behind, so its two answers must agree.
+/// point the closed rows R04, R05 and R06a to R06d left behind, so its two
+/// answers must agree.
 pub const TREES: &[(Option<&str>, &str, fn() -> Verdict)] = &[
     (
         None,
@@ -59,15 +61,15 @@ pub const TREES: &[(Option<&str>, &str, fn() -> Verdict)] = &[
         "r05b",
         a_buffer_only_file_the_walk_ignores_is_not_read,
     ),
-    (Some("R06a"), "r06a", an_index_entry_is_judged_on_the_buffer),
-    (Some("R06b"), "r06b", the_inline_code_hint_reads_the_buffer),
+    (None, "r06a", an_index_entry_is_judged_on_the_buffer),
+    (None, "r06b", the_inline_code_hint_reads_the_buffer),
     (
-        Some("R06c"),
+        None,
         "r06c",
         the_agents_block_is_judged_on_the_buffer,
     ),
     (
-        Some("R06d"),
+        None,
         "r06d",
         the_e2e_manifest_is_read_from_the_buffer,
     ),

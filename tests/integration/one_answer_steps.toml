@@ -14,11 +14,6 @@
 # lands; each id becomes its issue number when it is filed. S1 became #671.
 
 [[step]]
-id = "#624"
-ruling = "DF-four-editor-checks-read-saved-text"
-what = "the four editor checks read the saved text (R06a-d)"
-
-[[step]]
 id = "S4"
 ruling = "DA-one-fact-one-point-one-implementation"
 what = "widen command agreement to every end-to-end tree, cover, the editor snapshot and the bindings"

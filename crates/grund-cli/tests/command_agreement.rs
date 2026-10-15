@@ -47,15 +47,7 @@ use std::path::{Path, PathBuf};
 /// `(row of #576's ledger or of §REQ-one-answer.differences, tree, invariant)`.
 /// G01 is a defect every surface shares, kept here alone as #576's ruling V-D04
 /// says; every other row is listed in §REQ-one-answer.differences.
-const LEDGER: &[(&str, &str, &str)] = &[
-    ("G01", "r1", "citation-is-its-whole-token"),
-    // R06a-d keep the saved text for one release (DF-four-editor-checks-read-saved-text);
-    // their flip is #624.
-    ("R06a", "r06a", "a-buffer-answers-as-saved"),
-    ("R06b", "r06b", "a-buffer-answers-as-saved"),
-    ("R06c", "r06c", "a-buffer-answers-as-saved"),
-    ("R06d", "r06d", "a-buffer-answers-as-saved"),
-];
+const LEDGER: &[(&str, &str, &str)] = &[("G01", "r1", "citation-is-its-whole-token")];
 
 /// `(row, tree, invariant, the question asked of the tree)`: each tree this test
 /// builds, the reproduced rows of #576 first, then one per row of
@@ -395,6 +387,12 @@ fn listing_problems(rows: &[String]) -> Vec<String> {
         .filter_map(|(row, ..)| *row)
         .chain(buffers::TREES.iter().filter_map(|(row, ..)| *row))
         .collect();
+    listing_problems_against(rows, &built)
+}
+
+/// [`listing_problems`] against the rows `built` names rather than the rows the
+/// trees here carry.
+fn listing_problems_against(rows: &[String], built: &BTreeSet<&str>) -> Vec<String> {
     let deferred: BTreeSet<&str> = DEFERRED.iter().map(|(row, ..)| *row).collect();
     let listed = |row: &str| rows.iter().any(|r| r == row);
     let mut wrong = Vec::new();
@@ -431,14 +429,12 @@ fn every_listed_difference_has_its_tree() {
 }
 
 /// A built row the requirement drops is refused like a deferred one, and only the
-/// ledger-only rows stay here unlisted (§REQ-one-answer.proof).
+/// ledger-only rows stay here unlisted (§REQ-one-answer.proof). No listed row is
+/// open since R06a to R06d closed with #624, so R06a stands in as still built.
 #[test]
 fn a_row_the_requirement_drops_is_refused() {
-    let rows: Vec<String> = difference_rows()
-        .into_iter()
-        .filter(|r| r != "R06a")
-        .collect();
-    let wrong = listing_problems(&rows);
+    let built = BTreeSet::from(["G01", "R06a"]);
+    let wrong = listing_problems_against(&difference_rows(), &built);
     assert_eq!(
         wrong,
         vec!["R06a is no longer listed: take it out of this test".to_string()]
