@@ -6,9 +6,10 @@ use std::path::PathBuf;
 use crate::model::sort_path_key;
 
 /// Sort one walk list while preserving the input order of equal formatted keys
-/// (§AR-scanner.1.12), including distinct spellings with the same lossy key.
+/// (§AR-scanner.1.12), constructing each key once for this sort alone.
+/// Distinct spellings with the same lossy key keep their input order.
 pub(super) fn sort_paths(paths: &mut [PathBuf]) {
-    paths.sort_by_key(|path| {
+    paths.sort_by_cached_key(|path| {
         let key = sort_path_key(path);
         #[cfg(test)]
         tests::key_created();
