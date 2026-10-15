@@ -62,7 +62,7 @@ fn command_id(args: &[String]) -> ExitCode {
         .get(2)
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from("."));
-    let (run_warnings, proposed, narrowing) = propose_id_narrowed(
+    let (run_warnings, proposed) = propose_id_with_run_warnings(
         kind,
         title,
         IdOpts {
@@ -92,7 +92,6 @@ fn command_id(args: &[String]) -> ExitCode {
         }
         IdProposalOutcome::Proposed(proposal) => {
             print_id_proposal(&proposal, &format, explain);
-            render_path_narrowing(&narrowing);
             ExitCode::SUCCESS
         }
     }

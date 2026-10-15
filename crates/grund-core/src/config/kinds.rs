@@ -241,12 +241,6 @@ impl KindTable {
         self.workspace |= self.projects.len() > before;
     }
 
-    /// Whether the run holds a workspace one of whose projects `alias` names
-    /// (`queries::name_the_workspace_root`).
-    pub(crate) fn holds_alias(&self, alias: &str) -> bool {
-        self.workspace && self.projects.iter().any(|project| project.alias == alias)
-    }
-
     /// The projects `scope` reads, in load order. A pinned alias the table
     /// does not hold reads none.
     fn in_scope<'s>(&'s self, scope: KindScope<'s>) -> impl Iterator<Item = &'s KindProject> {
@@ -394,8 +388,8 @@ impl KindTable {
 /// table from `projects`, each by alias, judges every project's pinned and `*/`
 /// `[citations]` targets against it once (§FS-config.3.9.5.2), puts their
 /// warnings on `root`'s run channel, and has `root` and every project hold it.
-/// Expansion makes it for a full run, and a narrowed run makes it over the
-/// workspace its config declares (§FS-scan.projects.kinds).
+/// Expansion makes it for a full run, and a narrowed `cover` run makes it over
+/// the workspace its config declares (§FS-scan.projects.kinds).
 pub(crate) fn install_kind_table<'a>(
     root: &mut Config,
     projects: impl IntoIterator<Item = (&'a str, &'a mut Config)>,

@@ -169,12 +169,9 @@ pub use queries::{
     LspCompletionContext, LspDeclaration, LspFindingRange, LspShowContext, LspSnapshot,
     LspSnapshotOpts, LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub, LspUsage,
     ShowFormat, ShowMode, ShowOpts, ShowQueryError, can_replace_trigger_at, citation_under_title,
-    list_sizes, list_sizes_narrowed, list_sizes_with_run_warnings, lsp_hover_with_kind_title,
-    lsp_title_hover_body, on_type_line_edits, show_batch_narrowed, show_batch_with_scope,
-    usage_clause, usage_over_paths,
+    list_sizes, list_sizes_with_run_warnings, lsp_hover_with_kind_title, lsp_title_hover_body,
+    on_type_line_edits, show_batch_with_scope, usage_clause, usage_over_paths,
 };
-#[doc(hidden)]
-pub use queries::{ListNarrowing, ListShown};
 
 // §AR-system.2.11 templates: the setup skill a command prints byte-for-byte and
 // the newline canonicalization every template is read through (§FS-init.5.3,
@@ -218,12 +215,11 @@ pub use api::{
     complete_ids_with_run_warnings, config_run_warnings, config_warnings, cover, cover_lines,
     cover_lines_with_run_warnings, cover_text, cover_text_with_run_warnings,
     cover_with_run_warnings, effective_config, effective_project, embedding_call,
-    format_references, format_references_with_run_warnings, list, list_narrowed,
-    list_with_run_warnings, lsp_snapshot, lsp_snapshot_with_completion, lsp_snapshot_with_metadata,
-    node_embedding_call, node_request, parse_cover_line_range, propose_id, propose_id_narrowed,
-    propose_id_with_run_warnings, reference_style, refs, refs_outcome, refs_with_metadata,
-    render_finding_sites_json, scan, show, show_from_snapshot, show_narrowed, show_with_scope,
-    validate_config,
+    format_references, format_references_with_run_warnings, list, list_with_run_warnings,
+    lsp_snapshot, lsp_snapshot_with_completion, lsp_snapshot_with_metadata, node_embedding_call,
+    node_request, parse_cover_line_range, propose_id, propose_id_with_run_warnings,
+    reference_style, refs, refs_outcome, refs_with_metadata, render_finding_sites_json, scan, show,
+    show_from_snapshot, show_with_scope, validate_config,
 };
 #[cfg(feature = "test-binding-writes")]
 pub use writers::{BindingWriteFaultGuard, binding_write_fault};

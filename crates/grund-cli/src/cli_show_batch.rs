@@ -60,7 +60,7 @@ fn command_show_batch(path: PathBuf, path_provided: bool, mode: ShowMode, all: b
             }
         }
     };
-    let (run_warnings, batch, narrowing) = show_batch_narrowed(
+    let (run_warnings, batch) = show_batch_with_scope(
         queries,
         ShowOpts {
             path,
@@ -108,7 +108,6 @@ fn command_show_batch(path: PathBuf, path_provided: bool, mode: ShowMode, all: b
             }
         }
     }
-    render_path_narrowing(&narrowing);
     if failed {
         ExitCode::FAILURE
     } else {

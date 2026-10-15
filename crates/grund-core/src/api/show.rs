@@ -12,15 +12,15 @@
 
 use anyhow::{Result, anyhow};
 
-use crate::config::{Invocation, Selection, display_path};
+use crate::config::display_path;
 use crate::grammar::flatten_cross_ref_links;
 use crate::model::{Finding, ShowOutput};
 use crate::queries::{
-    LspShowContext, Owner, ShowFormat, ShowMode, ShowOpts, render_show_output_json,
+    LspShowContext, ShowFormat, ShowMode, ShowOpts, render_show_output_json,
     show_declaration_with_home,
 };
 use crate::resolver::{
-    WorkspaceContext, load_invoked_workspace_context, with_member_id_candidates,
+    WorkspaceContext, load_reported_workspace_context, with_member_id_candidates,
 };
 
 use super::report::context_run_warnings;
@@ -53,30 +53,8 @@ pub fn show_with_scope(
         path_provided,
         &mut run_warnings,
         &mut serde_json::Value::Null,
-        None,
     );
     (run_warnings, output)
-}
-
-/// [`show_with_scope`] for the CLI, with the line a path narrower than its config
-/// root owes where the owning project would answer otherwise (`queries::narrowing`),
-/// which the frontend writes after everything else.
-#[doc(hidden)]
-pub fn show_narrowed(
-    id_arg: &str,
-    opts: ShowOpts,
-    path_provided: bool,
-) -> (Vec<Finding>, Result<ShowOutput>, Vec<String>) {
-    let (mut run_warnings, mut narrowing) = (Vec::new(), Vec::new());
-    let output = show_run(
-        id_arg,
-        opts,
-        path_provided,
-        &mut run_warnings,
-        &mut serde_json::Value::Null,
-        Some(&mut narrowing),
-    );
-    (run_warnings, output, narrowing)
 }
 
 /// Query metadata from the same loaded context (§FS-distribution.3.2.2.2).
@@ -87,7 +65,7 @@ pub(super) fn show_data(
 ) -> (Vec<Finding>, Result<(ShowOutput, serde_json::Value)>) {
     let mut warnings = Vec::new();
     let mut metadata = serde_json::Value::Null;
-    let result = show_run(id, opts, explicit, &mut warnings, &mut metadata, None);
+    let result = show_run(id, opts, explicit, &mut warnings, &mut metadata);
     (warnings, result.map(|out| (out, metadata)))
 }
 
@@ -97,19 +75,12 @@ fn show_run(
     path_provided: bool,
     run_warnings: &mut Vec<Finding>,
     metadata: &mut serde_json::Value,
-    narrowing: Option<&mut Vec<String>>,
 ) -> Result<ShowOutput> {
     // §AR-config.1.5: a command-line run has no buffers; the editor's answer is
     // `show_from_snapshot`, over the context its snapshot loaded with them.
-    let invocation = Invocation::new(&opts.path, path_provided, Selection::Project).classify(false);
-    let context = load_invoked_workspace_context(&invocation)?;
+    // §AR-resolver.3.3: the ID resolves against the whole owning project.
+    let context = load_reported_workspace_context(&opts.path, path_provided)?;
     *run_warnings = context_run_warnings(&context);
-    // `Owner::of` reads the owning project only where the path narrows.
-    if let Some(lines) = narrowing
-        && let Some(owner) = Owner::of(&context, &opts.path, path_provided)
-    {
-        lines.extend(owner.show_line(&context, id_arg));
-    }
     show_answer(
         &context,
         id_arg,

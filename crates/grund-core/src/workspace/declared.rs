@@ -28,8 +28,8 @@ pub(crate) fn declared_member_schemas(config: &Config) -> Vec<(String, Schema)> 
         .collect()
 }
 
-/// The config a command whose `<path>` narrows the walk runs on: `check`,
-/// `cover` and `cover --lines` (§FS-scan.projects.narrowed). This is the one
+/// The config a command whose `<path>` narrows the walk runs on: `cover` and
+/// `cover --lines` (§FS-scan.path.cover). This is the one
 /// place a narrowed scan of a config that declares `[workspace]` is set up, so
 /// each of them judges the pinned and `*/` `[citations]` targets its whole run
 /// judges and puts the same warnings on the run's channel

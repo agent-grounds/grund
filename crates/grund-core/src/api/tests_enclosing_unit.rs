@@ -10,11 +10,9 @@ use std::path::{Path, PathBuf};
 
 use super::*;
 
-use crate::config::{Invocation, Selection};
 use crate::resolver::{
-    load_classifying_workspace_context, load_invoked_workspace_context, load_workspace_context,
+    load_classifying_workspace_context, load_reported_workspace_context, load_workspace_context,
 };
-use crate::sources::Buffers;
 use crate::testing::{test_root, write};
 
 const CONFIG: &str = "grund_config_version = 1\n\
@@ -153,10 +151,10 @@ fn refs_carries_the_citing_sites_enclosing_unit() {
 }
 
 /// §AR-scanner.2.4.2, §GOAL-fast-feedback: the queries that publish none of the
-/// three citing-side fields still skip the post-pass. `list`, `fmt`,
-/// `complete_ids`, `sizes` and `batch` enter through `load_workspace_context`
-/// and `show` through `load_invoked_workspace_context` with classification off, so
-/// those two loaders are where the skip has to hold; `refs` has its own entry
+/// three citing-side fields still skip the post-pass. `fmt` and `complete_ids`
+/// enter through `load_workspace_context`, and `show`, `list`, `sizes` and `batch`
+/// through `load_reported_workspace_context` (§FS-scan.path), so those two
+/// loaders are where the skip has to hold; `refs` has its own entry
 /// precisely so that turning the pass on for it did not turn it on for six.
 ///
 /// This is the case that stands between §GOAL-fast-feedback and a later
@@ -179,19 +177,16 @@ fn the_queries_that_publish_no_enclosing_unit_still_skip_classification() {
             .count()
     };
     assert_eq!(classified(&root, false), 0, "load_workspace_context");
-    let invocation = Invocation::new(&root, true, Selection::Project)
-        .classify(false)
-        .buffers(Buffers::default());
-    let overlaid = load_invoked_workspace_context(&invocation).expect("load context with overlays");
+    let reported = load_reported_workspace_context(&root, true).expect("load reported context");
     assert_eq!(
-        overlaid
+        reported
             .projects
             .iter()
             .flat_map(|project| &project.findings.citations)
             .filter(|citation| citation.enclosing_declaration.is_some())
             .count(),
         0,
-        "load_invoked_workspace_context(classify off) — show's entry"
+        "load_reported_workspace_context — show's and list's entry"
     );
     // Three of the four sites sit in a declaration body, so the classifying
     // loader is the one that answers: the assertion above is a skip, not an

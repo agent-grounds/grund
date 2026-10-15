@@ -97,44 +97,6 @@ fn render_run_warnings(warnings: &[Finding]) {
     }
 }
 
-/// The lines a path narrower than its config root owes, in the shape the core's
-/// `queries::narrowing` gives them, after every other line the command writes to stderr.
-fn render_path_narrowing(lines: &[String]) {
-    for line in lines {
-        eprintln!("warning: {line}");
-    }
-}
-
-/// `list`'s exit: its scan errors, then the lines a narrowed path owes for the
-/// fields this output prints — a JSON row `refs` and the duplicate flag, a text
-/// row the duplicate note, `--summary` neither, as `ListShown` selects them.
-fn exit_after_listing(
-    scan_errors: &[ApiScanError],
-    narrowing: &ListNarrowing,
-    format: &str,
-    summary: bool,
-) -> ExitCode {
-    let code = exit_after_scan_errors(scan_errors);
-    let shown = ListShown {
-        refs: format == "json" && !summary,
-        duplicate: !summary,
-    };
-    render_path_narrowing(&narrowing.lines(shown));
-    code
-}
-
-/// `list --size`'s exit: its scan errors, then the lines a narrowed path owes. A
-/// size row prints the duplicate flag and no `refs`.
-fn exit_after_sizes(scan_errors: &[ApiScanError], narrowing: &ListNarrowing) -> ExitCode {
-    let code = exit_after_scan_errors(scan_errors);
-    let shown = ListShown {
-        refs: false,
-        duplicate: true,
-    };
-    render_path_narrowing(&narrowing.lines(shown));
-    code
-}
-
 fn exit_after_scan_errors(scan_errors: &[ApiScanError]) -> ExitCode {
     if scan_errors.is_empty() {
         return ExitCode::SUCCESS;

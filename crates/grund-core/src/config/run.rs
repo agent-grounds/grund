@@ -92,11 +92,11 @@ pub(crate) enum Selection {
     /// The config discovery finds for the path, with no member rewrite and no
     /// boundary: what `config show` reads and the embedding preflight climbs.
     Discovery,
-    /// The project the path belongs to, resolved within its tree: `show`,
-    /// `list`, `id`, `refs`, `cover`, `fmt` and the editor's lookups.
+    /// The project the path belongs to, resolved within its tree: `refs`,
+    /// `cover`, `fmt` and the editor's lookups.
     Project,
-    /// `check <path>`: below the root the path bounds the report, never
-    /// resolution (§FS-check.1.3.6.1).
+    /// `check`, `show`, `list` and `id`: below the root the path bounds the
+    /// report, never resolution (§FS-scan.path, §FS-check.1.3.6.1).
     Check,
     /// The editor snapshot: `Check`'s two scopes in a project with no
     /// `[workspace]` (§AR-lsp.5.1.1), and an explicit zero-config folder is the

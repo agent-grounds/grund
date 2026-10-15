@@ -108,8 +108,8 @@ optional members, and the run's kind table: one row per project the config
 declares, holding that project's kinds and its named-sections setting, built,
 judged against the pinned `[citations]` targets and held by one call into
 `config/kinds.rs`. Workspace expansion makes that call where it stamps the
-project roots, and a narrowed run makes it over the workspace its config
-declares; a standalone run holds a table of one project. Every kind-name
+project roots, and a narrowed `cover` run makes it over the workspace its
+config declares; a standalone run holds a table of one project. Every kind-name
 question a command asks is answered from that table, within the command's own
 scope ([§FS-scan.projects.kinds](../functional-spec/FS-scan.md#projectskinds-whose-kinds-a-run-reads)). A rule vocabulary judges its objects with a table of
 the same type, built from the projects its own run loaded, so a narrowed run's
@@ -120,10 +120,11 @@ keyed by physical path, which every reader of the run reads as the files they
 name through `sources` ([§AR-system.2.13](README.md#213-sources), [§FS-scan.text.buffer](../functional-spec/FS-scan.md#textbuffer-a-files-text-is-what-a-save-would-write)); a command-line run has
 none. The selection is which projects load, what the path bounds for resolution
 and what it bounds for the report ([§FS-scan.path](../functional-spec/FS-scan.md#path-what-a-path-argument-means), [§FS-scan.projects](../functional-spec/FS-scan.md#projects-which-projects-a-run-loads)). Each
-command keeps its own: `check <path>` resolves against the whole project, `show`,
-`list`, `id`, `refs` and `cover` with a path resolve within the path's tree, a
-workspace `check <dir>` is one narrowed scan, and the editor's root lookup skips
-the member rewrite.
+command keeps its own: `check`, `show`, `list` and `id` with a path resolve
+against the whole project the path discovers and narrow only what they report,
+a workspace `check <dir>` outside every member is the root run narrowed to the
+path ([§FS-scan.projects.narrowed](../functional-spec/FS-scan.md#projectsnarrowed-a-path-below-the-config-root-loads-what-a-run-from-it-would-see)), `refs` and `cover` with a path resolve
+within the path's tree, and the editor's root lookup skips the member rewrite.
 
 One function builds every `Run` from what the invocation decided: `open()`, in
 the workspace component, the lowest that knows both the config and the members.
@@ -136,8 +137,8 @@ completed afterwards is only what the run discovers rather than decides:
 workspace expansion, which runs once a workspace check has its root config,
 builds each member's `Run` through the same constructor and then records the
 `workspace` facts it found (the boundary roots, project roots, scope path and
-absent optional members, and the kind table, which a narrowed run reads from its
-declared workspace instead) and the run warnings it raised. No other `Run` field
+absent optional members, and the kind table, which a narrowed `cover` run reads
+from its declared workspace instead) and the run warnings it raised. No other `Run` field
 is read from a file. A command-line override of
 a file's value, such as `--require-grounding`, is a `Run` fact the façade applies
 over the `Project` value. `Compiled { grammar, demand }` is `compile(&Project)`:

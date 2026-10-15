@@ -92,7 +92,7 @@ pub(crate) use body::extract_declaration_body;
 pub(crate) use citation_target::{WorkspaceCheckTarget, citation_resolves, target_for_citation};
 pub(crate) use context::{
     WorkspaceContext, WorkspaceProject, load_classifying_workspace_context,
-    load_invoked_workspace_context, load_narrowable_workspace_context,
+    load_narrowable_workspace_context, load_reported_workspace_context,
     load_resolved_workspace_context, load_workspace_context, load_workspace_projects,
 };
 pub(crate) use e2e_body::show_e2e_case;

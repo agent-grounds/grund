@@ -1,9 +1,9 @@
 use anyhow::{Result, anyhow};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use super::citation_counts::ListCitationCounts;
 use super::list_scope::check_list_scope;
-use super::narrowing::{ListNarrowing, Owner};
+use super::report_scope::{reported_scope, reports};
 use super::selector_refusal::require_unique_literal;
 use crate::config::{Config, display_path, measure_point_text, run_warning_findings};
 use crate::grammar::render_id;
@@ -11,7 +11,7 @@ use crate::model::{
     Declaration, FileRecords, Finding, Id, SectionInfo, format_path, paired_declarations,
     sort_path_key,
 };
-use crate::resolver::{load_workspace_context, point_body_pair};
+use crate::resolver::{load_reported_workspace_context, point_body_pair};
 use crate::scanner::api_scan_error;
 
 pub use super::size_output::{ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput};
@@ -28,33 +28,19 @@ pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
 /// Additive cautions survive a later refusal (§FS-distribution.3.1).
 pub fn list_sizes_with_run_warnings(opts: ListSizeOpts) -> (Vec<Finding>, Result<ListSizeOutput>) {
     let mut cautions = Vec::new();
-    let result = list_sizes_run(opts, &mut cautions, None);
+    let result = list_sizes_run(opts, &mut cautions);
     (cautions, result)
 }
 
-/// [`list_sizes_with_run_warnings`] for the CLI, with what a path narrower than
-/// its config root moves about each printed entry (`ListNarrowing`).
-#[doc(hidden)]
-pub fn list_sizes_narrowed(
-    opts: ListSizeOpts,
-) -> (Vec<Finding>, Result<ListSizeOutput>, ListNarrowing) {
-    let (mut cautions, mut narrowing) = (Vec::new(), ListNarrowing::default());
-    let result = list_sizes_run(opts, &mut cautions, Some(&mut narrowing));
-    (cautions, result, narrowing)
-}
-
-fn list_sizes_run(
-    opts: ListSizeOpts,
-    cautions: &mut Vec<Finding>,
-    narrowing: Option<&mut ListNarrowing>,
-) -> Result<ListSizeOutput> {
+fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<ListSizeOutput> {
     if opts.units.is_empty() {
         return Err(anyhow!("at least one size unit is required"));
     }
     if matches!(opts.top, Some(0)) {
         return Err(anyhow!("top must be positive"));
     }
-    let context = load_workspace_context(&opts.path, opts.path_provided)?;
+    // §AR-resolver.3.3: the same rows as `list`, with the project's answers.
+    let context = load_reported_workspace_context(&opts.path, opts.path_provided)?;
     *cautions = run_warning_findings(context.render_config(), context.run_warnings.clone());
     // §FS-workspace.8.3.2: the same scope check as `list`, before any row is read.
     let selector = check_list_scope(
@@ -63,6 +49,7 @@ fn list_sizes_run(
         &opts.kind_filter,
         opts.selector.as_deref(),
     )?;
+    let reported = reported_scope(&context, &opts.path, opts.path_provided)?;
 
     struct Pending<'a> {
         project_alias: &'a str,
@@ -105,6 +92,9 @@ fn list_sizes_run(
             let duplicate_declaration = paired.len() > 1;
             for one in paired.iter() {
                 let declaration = one.record;
+                if !reports(reported.as_ref(), declarations, declaration) {
+                    continue;
+                }
                 pending.push(Pending {
                     project_alias: &project.alias,
                     project_config: &project.config,
@@ -245,19 +235,6 @@ fn list_sizes_run(
                 .then(std::cmp::Ordering::Equal)
         });
         entries.truncate(top);
-    }
-    // `Owner::of` reads the owning project only where the path narrows,
-    // and an entry gets one line however many of its coordinates print. A section
-    // row prints the duplicate flag too, so no size row is a chapter row.
-    if let Some(narrowing) = narrowing
-        && let Some(owner) = Owner::of(&context, &opts.path, opts.path_provided)
-    {
-        let mut seen = BTreeSet::new();
-        let printed = entries
-            .iter()
-            .filter(|entry| seen.insert(entry.id.as_str()))
-            .map(|entry| (entry.id.as_str(), false));
-        *narrowing = ListNarrowing::of(owner.list_moves(&context, opts.unused_only), printed);
     }
 
     Ok(ListSizeOutput {

@@ -15,18 +15,18 @@ use super::report::public_run_warnings;
 use super::scope_cautions::{full_scope_ignored_warning, scan_scope_caution};
 use super::unread_roots::unread_root_warnings;
 use crate::checker::{
-    CheckWorkspace, check_chapter_rules, check_project, configured_scope, out_of_scope_references,
-    out_of_scope_section_headings, parse_ad_hoc, parse_ad_hoc_with_workspace, path_report_scope,
-    retain_diagnostics_in_report_scope, retain_findings_in_scope, sort_diagnostics,
-    workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
+    CheckWorkspace, ScanScope, check_chapter_rules, check_project, configured_scope,
+    out_of_scope_references, out_of_scope_section_headings, parse_ad_hoc,
+    parse_ad_hoc_with_workspace, path_report_scope, retain_diagnostics_in_report_scope,
+    retain_findings_in_scope, sort_diagnostics, workspace_out_of_scope_references,
+    workspace_out_of_scope_section_headings,
 };
 use crate::config::{Config, Invocation, ProjectRecords, Selection};
 use crate::model::{CheckReport, Diagnostic, Finding};
-use crate::queries::name_the_workspace_root;
 use crate::resolver::{WorkspaceCheckTarget, load_workspace_projects, settled_run_warnings};
 use crate::scanner::scan_tree;
 use crate::workspace::{
-    absent_only_workspace_caution, absent_optional_member_warnings, open_narrowable,
+    absent_only_workspace_caution, absent_optional_member_warnings, open,
     unlisted_workspace_block_errors,
 };
 use crate::writers::expected;
@@ -105,15 +105,17 @@ pub(super) fn run_check_with_run_warnings(
     let invocation = Invocation::new(path, path_provided, Selection::Check)
         .full(full)
         .require_grounding(force_require_grounding);
-    // §AR-config.1.5: a narrowed run still judges the `[citations]`
-    // targets its declared workspace's kinds answer, and says so on this channel.
-    let config = open_narrowable(&invocation)?;
+    let config = open(&invocation)?;
     // §FS-check.4.10.8: root boundary population has answered
     // everything a failed expansion is allowed to carry. Capture it before a
     // nested member can refuse; questions below the root do not exist yet.
     *run_warnings = public_run_warnings(&config, settled_run_warnings(config.run()));
-    if config.workspace_declared && invocation.names_root(&config.root) {
-        let run = run_workspace_check(config, full, ad_hoc_sentence)?;
+    // §FS-check.1.3.6.1: a config that still declares `[workspace]` after the
+    // member rewrite is the root run's, at the root or below it outside every member,
+    // and a path below the root narrows only what that run reports.
+    if config.workspace_declared {
+        let report_scope = path_report_scope(config.schema(), config.frame(), path, path_provided)?;
+        let run = run_workspace_check(config, full, ad_hoc_sentence, report_scope.as_ref())?;
         // §FS-check.4.10.8: successful expansion may settle more
         // blocks, so the successful side channel is the complete ordered set.
         *run_warnings = public_run_warnings(&run.config, settled_run_warnings(run.config.run()));
@@ -199,10 +201,6 @@ pub(super) fn run_check_with_run_warnings(
         config.frame(),
         report_scope.as_ref(),
     );
-    // Below the root, an alias the workspace resolves says so.
-    if report_scope.is_some() {
-        name_the_workspace_root(&mut report.errors, &findings.citations, &config, path);
-    }
     // §FS-check.2.2 / §FS-check.4.5: a walk that read no files, or read them and
     // recognized nothing in them, is almost always a misconfigured scope rather
     // than a clean repo — say so on stderr instead of exiting 0 in silence.
@@ -278,10 +276,18 @@ pub(super) fn run_check_with_run_warnings(
 /// so beside them (§FS-check.2.2). The LSP builds both from
 /// `check_workspace_context`, which is the same decision made from the same place
 /// (§FS-lsp.4.1).
+///
+/// §FS-check.1.3.6.1: `report_scope` is the path of a `check <path>` below
+/// the root and outside every member, `None` at the root. Every project is still
+/// checked completely, and the report then narrows to the path the way the
+/// single-project arm narrows it: a finding anchored outside it
+/// is dropped unless it names a site inside, and a file the run could not read out
+/// there leaves the errors for a caution (§FS-check.1.3.6.3).
 fn run_workspace_check(
     root_config: Config,
     full: bool,
     ad_hoc_sentence: Option<&str>,
+    report_scope: Option<&ScanScope>,
 ) -> Result<CheckRun> {
     let mut root_config = ProjectRecords::of(root_config);
     // §FS-check.3.5: `--require-grounding` reaches every member's run through the
@@ -343,6 +349,7 @@ fn run_workspace_check(
     );
     let mut report = CheckReport::default();
     let mut had_scan_errors = false;
+    let mut unread_outside_report_scope = Vec::new();
     for project in &projects {
         let expected = expected(&project.findings, &project.config, &workspace);
         // §FS-workspace.8.1: the report is rendered from the workspace root,
@@ -379,7 +386,14 @@ fn run_workspace_check(
         report.errors.append(&mut project_report.errors);
         report.warnings.append(&mut project_report.warnings);
         report.suggestions.append(&mut project_report.suggestions);
-        had_scan_errors |= append_scan_errors(&mut report, project.scan_errors.iter().cloned());
+        // §FS-check.1.3.6.3: as the single-project arm partitions them.
+        let (inside, outside): (Vec<_>, Vec<_>) = project
+            .scan_errors
+            .iter()
+            .cloned()
+            .partition(|(file, _)| report_scope.is_none_or(|scope| scope.contains(file)));
+        unread_outside_report_scope.extend(outside);
+        had_scan_errors |= append_scan_errors(&mut report, inside);
         // §FS-check.2.2 / §FS-check.4.5.3 / §FS-workspace.5: the same two cautions as
         // the single-project path, asked per project — one member's empty scope or
         // grammar mismatch says nothing about another's, and each names its own.
@@ -428,6 +442,14 @@ fn run_workspace_check(
         ));
     }
     report.errors.extend(out_of_scope);
+    // §FS-check.1.3.6.1: the root run's report, narrowed to the path (§AR-resolver.3.3).
+    let frame = root_config.frame();
+    retain_diagnostics_in_report_scope(&mut report.errors, frame, report_scope);
+    retain_diagnostics_in_report_scope(&mut report.warnings, frame, report_scope);
+    retain_diagnostics_in_report_scope(&mut report.suggestions, frame, report_scope);
+    report.warnings.extend(unread_resolution_source_cautions(
+        unread_outside_report_scope,
+    ));
     sort_diagnostics(&mut report.errors);
     sort_diagnostics(&mut report.warnings);
     sort_diagnostics(&mut report.suggestions);

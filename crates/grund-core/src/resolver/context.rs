@@ -146,6 +146,23 @@ pub(crate) fn load_workspace_context(path: &Path, path_provided: bool) -> Result
     )
 }
 
+/// The load `show`, `list` and `--batch` answer from (§FS-scan.path): the projects
+/// the path discovers, each read as `check`'s resolution scope is
+/// (§FS-scan.path.check), so a path narrower than its config root bounds what the
+/// command reports and never what it resolves against (§FS-scan.path.show,
+/// §FS-scan.path.list). The `Check` selection is the one place that reading is
+/// decided, so the four commands cannot answer one tree two ways
+/// (§REQ-one-answer.scope.narrowed).
+pub(crate) fn load_reported_workspace_context(
+    path: &Path,
+    path_provided: bool,
+) -> Result<WorkspaceContext> {
+    record_test_workspace_load();
+    load_invoked_workspace_context(
+        &Invocation::new(path, path_provided, Selection::Check).classify(false),
+    )
+}
+
 /// The same load for a query that **publishes** citing-side attribution rather
 /// than only resolving targets — today `grund refs` alone (§FS-refs.3.2).
 ///
@@ -282,18 +299,16 @@ fn single_project_context(
 /// than only choosing which config answers — today that is `grund cover`
 /// ([§FS-cover.1](FS-cover.md)).
 ///
-/// `grund check` draws this line already: it takes the workspace-aggregate path
-/// only when the scope *is* the config root, and otherwise runs one narrowed scan
-/// (`scope_is_config_root`, §FS-check.1.3.6). A scope narrower than the root has to
-/// stay narrow — and §AR-resolver.3.3 is which narrowness that is: which *projects*
-/// a walk covers and which *files* are reported, never which declarations resolution
-/// reads. Widening the projects would answer a question the caller did not ask and
-/// lose the files the narrowing was for; widening the declarations is what a path
-/// scope already does one layer down (§FS-check.1.3.6.1).
+/// A scope narrower than the root stays one narrowed scan (§FS-scan.path.cover):
+/// §AR-resolver.3.3 is which narrowness that is — which *projects* a walk covers
+/// and which *files* are reported, never which declarations resolution reads.
+/// `cover` is outside the ruling that gave `check <dir>` the projects a run from
+/// `<dir>` sees (§FS-scan.projects.narrowed), so it keeps this one.
 ///
-/// `list`, `show`, completions, and `fmt` keep [`load_workspace_context`], and
-/// `refs` [`load_classifying_workspace_context`]: their `<path>` selects a
-/// project, it does not bound a walk (§FS-workspace.8.8).
+/// `list` and `show` take [`load_reported_workspace_context`], completions and
+/// `fmt` [`load_workspace_context`], and `refs`
+/// [`load_classifying_workspace_context`]: their `<path>` selects a project, it
+/// does not bound a walk (§FS-workspace.8.8).
 ///
 /// Both branches ask for the citing-side classification post-pass, because
 /// `cover --format json` publishes the enclosing declaration and section of every
