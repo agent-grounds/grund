@@ -10,7 +10,7 @@ const RESTORE: &[u8] = b"\x1b[?1049l";
 fn watch_text_json_text_format_transitions() {
     let _serial = crate::support::serial();
     let f = Fixture::new();
-    let mut h = Harness::screen(&f, true);
+    let mut h = Harness::screen_selected(&f, true, without_caution());
     assert_eq!(h.completed().stdout, [ENTER, b"success\n"].concat());
     f.write(
         "grund.toml",

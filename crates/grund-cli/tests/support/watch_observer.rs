@@ -14,6 +14,13 @@ use std::{
 };
 
 pub const CONFIG: &str = "grund_config_version = 1\n[id]\nformat = \"{kind}-{slug}\"\n";
+/// The fixture's `[id] format` is a v1-only key, so a clean run earns the version 1 caution;
+/// tests whose subject is an empty or `success` run ignore it (§FS-check.checks.config-version-1).
+pub fn without_caution() -> CheckFindingSelection {
+    let mut selection = CheckFindingSelection::default();
+    selection.add_ignore("config-version-1").unwrap();
+    selection
+}
 pub const CLEAN: &str = "// \u{a7}FS-live\n";
 pub const BAD: &str = "// \u{a7}FS-live\n// \u{a7}FS-missing\n";
 const LIMIT: Duration = Duration::from_secs(10);
@@ -114,14 +121,10 @@ impl Harness {
         Self::construct(opts, selection, format, pause, fail, None)
     }
     pub fn screen(f: &Fixture, eligible: bool) -> Self {
-        Self::construct(
-            f.opts(),
-            CheckFindingSelection::default(),
-            None,
-            None,
-            None,
-            Some(eligible),
-        )
+        Self::screen_selected(f, eligible, CheckFindingSelection::default())
+    }
+    pub fn screen_selected(f: &Fixture, eligible: bool, selection: CheckFindingSelection) -> Self {
+        Self::construct(f.opts(), selection, None, None, None, Some(eligible))
     }
     fn construct(
         opts: CheckOpts,

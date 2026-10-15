@@ -7,12 +7,13 @@ use grund_core::CheckFindingSelection;
 fn watch_json_clean_dangling_repaired_completion() {
     let _serial = crate::support::serial();
     let f = Fixture::new();
-    let mut h = Harness::start(&f, Some("json"), None);
+    let quiet = without_caution();
+    let mut h = Harness::options(f.opts(), quiet.clone(), Some("json"), None, None);
     let clean = h.completed();
     assert_eq!(clean.status, 0);
     assert!(clean.stdout.is_empty() && clean.stderr.is_empty());
     f.write("src/main.rs", BAD);
-    let bad = watch_test::one_shot(f.opts(), &CheckFindingSelection::default(), Some("json"));
+    let bad = watch_test::one_shot(f.opts(), &quiet, Some("json"));
     assert_ne!(bad.stdout, clean.stdout);
     h.matches(&bad);
     f.write("src/main.rs", CLEAN);
