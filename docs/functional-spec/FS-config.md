@@ -1177,6 +1177,10 @@ In the backward direction the gate is what [§REQ-backwards-compatibility.1](../
 
 That holds of the records, not only of the reports. A v1 state that v2 cannot spell, such as a positive citation default or `strict = false`, keeps its meaning in the records the engine reads, and the tests that hold it read the records ([§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart)). The v1 reader keeps v1's validation too: v2's stricter rules never refuse a file v1 accepts.
 
+### 5.3 A version 1 config is cautioned and never retired
+
+A config file read as version 1, whether it writes `grund_config_version = 1` or writes no version at all, earns one warning naming the file and the `grund config migrate --to 2` that moves it ([§FS-check.checks.config-version-1](FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)). The caution is the deprecation path's warning without a deadline ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)): it never becomes an error or a refusal, no release is named in which it would, and the file keeps its meaning under [§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning). It keys on a *file*: a project with no config file is read as v1 too, but wrote nothing to migrate, so it earns no caution ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree)).
+
 
 ## 6. What is NOT configured here
 

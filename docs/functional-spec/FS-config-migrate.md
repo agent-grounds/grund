@@ -215,7 +215,7 @@ The candidate is loaded through the v2 reader, the path a file on disk goes thro
 
 - a finding located in the config itself, whose line is mapped through the key map before comparing; a finding with no mapped line is a difference;
 - the config-table names inside messages, such as `[scan] exclude` against `[schema.sources] exclude`: both runs are spelled as v1;
-- the caution about running on a v1 config that agent-grounds/grund#756 adds, once it exists.
+- the `config-version-1` caution ([§FS-check.checks.config-version-1](FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)), which the run on the file as read carries and the candidate's run never does, so it is dropped from both before comparing.
 
 ### 5.3 Guidance
 
