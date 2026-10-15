@@ -26,15 +26,14 @@ const DEFAULT_SLUG_PATTERN: &str = r"[a-z0-9][a-z0-9-]*";
 /// and the comment prefixes a declaration or an inline note may sit behind. The
 /// compiled grammar takes `comment_prefixes` as an argument and holds no opinion
 /// about what it should be (§AR-system.2.1). The extensions it reads are not
-/// listed here: see [`default_scan_extensions`].
+/// listed here: see [`default_scan_extensions`]. `requirements.md` stays in
+/// `include` although no built-in kind homes there since grund 0.19.0: dropping
+/// it would stop reading a file in a project that changed nothing, a verdict no
+/// release warned about (§FS-config.3.5). Do not "clean it up".
 const DEFAULT_INCLUDE: &[&str] = &["requirements.md", "docs", "e2e", "src"];
 const DEFAULT_COMMENT_PREFIXES: &[&str] = &["//", "#", ";", "--", "*", "/*"];
 /// §AR-config.3.2 `scan exclusions`.
 const DEFAULT_EXCLUDE: &[&str] = &["target", "node_modules", ".git", "dist", "build", ".venv"];
-/// §AR-config.3.2 `legacy FS home`: the folder a `grund.toml` written before
-/// the `requirements.md` default still gets for `FS`, and the home grund 0.19.0
-/// makes the default for every project (§FS-check.checks.fs-home-moves).
-pub(crate) const LEGACY_FS_FOLDER: &str = "docs/functional-spec";
 
 fn strings(values: &[&str]) -> Vec<String> {
     values.iter().map(|value| value.to_string()).collect()
@@ -52,11 +51,9 @@ fn default_scan_extensions() -> Vec<String> {
 }
 
 /// The project a v1 file means before any key: the built-in defaults of
-/// §FS-config.3 (§GOAL-zero-config). `existing_config` is §AR-config.3.2's
-/// `legacy FS home` — an already-authored `grund.toml` that predates the
-/// `requirements.md` default and declares no `[[kinds]]` keeps `FS` in its
-/// old folder until it opts into the file.
-pub(in crate::config) fn default_project(existing_config: bool) -> Project {
+/// §FS-config.3 (§GOAL-zero-config). A tree with no config and a `grund.toml`
+/// that omits `[[kinds]]` mean the same project (§FS-config.3.4.4).
+pub(in crate::config) fn default_project() -> Project {
     Project {
         name: None,
         name_source: None,
@@ -107,7 +104,7 @@ pub(in crate::config) fn default_project(existing_config: bool) -> Project {
             },
             leads: None,
             lead_thresholds: Vec::new(),
-            rows: built_in_rows(existing_config),
+            rows: built_in_rows(),
             // §AR-config.3.2 `nesting`.
             nesting: Nesting::NestedPlaceFallsToComplement,
         },
@@ -147,14 +144,11 @@ pub(in crate::config) fn default_project(existing_config: bool) -> Project {
 
 /// §AR-config.3.2 `built-in kinds`: the canonical rows of §FS-config.3.4.4, with
 /// their homes and citability. A declared `[[kinds]]` table replaces them all.
-fn built_in_rows(existing_config: bool) -> Vec<Row> {
+fn built_in_rows() -> Vec<Row> {
     DEFAULT_KINDS
         .iter()
         .map(|name| {
             let extent = match (default_kind_folder(name), default_kind_file(name)) {
-                _ if existing_config && *name == "FS" => {
-                    Some(Extent::Folder(LEGACY_FS_FOLDER.into()))
-                }
                 (Some(folder), _) => Some(Extent::Folder(folder.into())),
                 (None, Some(file)) => Some(Extent::File(file.into())),
                 (None, None) => None,

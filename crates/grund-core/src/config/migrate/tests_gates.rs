@@ -88,7 +88,7 @@ fn records_gate_catches_a_changed_project_name() {
 fn records_gate_catches_a_lost_citation_rule() {
     let toml = format!("{FS}[citations.FS]\nmust = [\"FS\"]\n");
     let (v1, mut v2, root) = translated("citations", &toml, &[]);
-    v2.rules.citations = crate::config::v1::default_project(true).rules.citations;
+    v2.rules.citations = crate::config::v1::default_project().rules.citations;
     assert!(!compare(&v1, &v2, &root).is_empty());
 }
 

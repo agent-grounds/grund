@@ -41,7 +41,6 @@ SPELLED_ELSEWHERE = {"[[kinds]] index"}
 # add rows, but it may not lose one of these.
 REQUIRED_DEFAULTS = {
     "built-in kinds",
-    "legacy FS home",
     "name-keyed index",
     "strict",
     "named sections",

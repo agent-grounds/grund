@@ -22,7 +22,6 @@ pub const CHECK_FINDING_CODES: &[&str] = &[
     // §FS-declarations.checks.excluded-stub-target: spent, accepted without selecting broken-stub.
     "excluded-stub-target",
     "forbidden-citation",
-    "fs-home-moves",
     "full-scope-ignored",
     "glob-citation",
     "inline-citation-style",

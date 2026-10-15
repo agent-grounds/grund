@@ -291,14 +291,6 @@ pub(super) const CASES: &[Case] = &[
         )],
     ),
     with(
-        "legacy FS home",
-        "",
-        &[("docs/functional-spec/FS-b.md", "# FS-b: B\n")],
-        &[Mapped(
-            "[schema.kinds.FS]\nfolders = [\"docs/functional-spec\"]\n",
-        )],
-    ),
-    with(
         "name-keyed index",
         fs_with!("[[kinds]]\nkind = \"E2E\"\nfolder = \"e2e\"\n"),
         &[("e2e/", "")],

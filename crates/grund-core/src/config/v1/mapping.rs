@@ -108,7 +108,6 @@ pub(in crate::config) const KEYS: &[(&str, &str)] = &[
 /// in `defaults.rs` or `kind_table.rs` and nowhere else.
 pub(in crate::config) const DEFAULTS: &[(&str, &str)] = &[
     ("built-in kinds", "schema.rows"),
-    ("legacy FS home", "schema.rows"),
     ("name-keyed index", "schema.rows"),
     ("fetch resolves must", "rules.resolution"),
     ("kind grounding inherits", "rules.grounding.kinds"),

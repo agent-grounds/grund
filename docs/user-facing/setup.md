@@ -6,7 +6,7 @@ which declares the shape of what the project knows, and the managed block in
 
 ```bash
 grund init                  # writes AGENTS.md and grund.toml in the cwd
-grund init --scaffold       # also lays the starter files: requirements.md, docs/ and tests/
+grund init --scaffold       # also lays the starter files: docs/ and tests/
 grund init --template=none  # a grund.toml that declares no kinds, for a repo with its own
 grund init --check          # writes nothing; exits 1 if anything is still pending
 ```

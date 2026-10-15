@@ -364,7 +364,6 @@ Only the file at `PATH` is migrated; mixed versions are legal ([§FS-config.5](F
 | `[citations.<KIND>] default` | `[rules.citations.<KIND>] default` | as above |
 | `[citations.<KIND>] may`, `must`, `must-not`, `should`, `should-not` | the same key of `[rules.citations.<KIND>]` | mapped |
 | *built-in kinds* | every built-in row, written out | written |
-| *legacy FS home* | the FS row with its legacy folder | written |
 | *name-keyed index* | each row's `index`, the E2E `index = false` included | written |
 | *fetch resolves must* | nothing; v2's default for a fetched kind is `must` | mapped |
 | *kind grounding inherits* | the effective pair per row, as whole ladders | written |

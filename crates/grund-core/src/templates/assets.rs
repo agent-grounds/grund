@@ -80,8 +80,11 @@ pub(crate) const GRUND_DOC_TEMPLATE: &str =
     include_str!("../../assets/templates/software-development/grund.md");
 pub(crate) const GOALS_TEMPLATE: &str =
     include_str!("../../assets/templates/software-development/goals.md");
-pub(crate) const REQUIREMENTS_TEMPLATE: &str =
-    include_str!("../../assets/templates/software-development/requirements.md");
+/// The `FS` starter where the governing config homes `FS` in one file, which
+/// the template itself no longer does (§FS-init.2.1.3).
+pub(crate) const FS_FILE_TEMPLATE: &str =
+    include_str!("../../assets/templates/software-development/functional-spec-file.md");
+/// The `FS` folder's index starter, the template's own home (§FS-init.2.1.3).
 pub(crate) const FS_README_TEMPLATE: &str =
     include_str!("../../assets/templates/software-development/functional-spec-README.md");
 /// The `REQ` folder's index starter (§FS-init.2.1.3, §FS-init.2.4.10).

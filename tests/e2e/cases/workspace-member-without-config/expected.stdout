@@ -1,1 +1,1 @@
-apps/api/docs/functional-spec/FS-001-session.md:1: error: FS-001-session must be declared in requirements.md (single-file kind)
+apps/api/docs/functional-spec/FS-001-session.md:1: error: FS-001-session is not listed in apps/api/docs/functional-spec/README.md (the index file does not exist) — became an error in grund 0.13.0

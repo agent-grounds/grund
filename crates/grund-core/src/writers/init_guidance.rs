@@ -1,12 +1,12 @@
 //! The typed post-init guidance and the `--scaffold` starter files
 //! (§FS-init.2.1–2.2).
 
-use crate::config::Config;
+use crate::config::{Config, default_kind_folder};
 use crate::scanner::CANONICAL_AGENT_ENTRYPOINT;
 use crate::templates::{
     AS_README_TEMPLATE, DA_README_TEMPLATE, DF_README_TEMPLATE, E2E_README_TEMPLATE,
-    FS_README_TEMPLATE, GITKEEP_TEMPLATE, GOALS_TEMPLATE, GRUND_DOC_TEMPLATE, REQ_README_TEMPLATE,
-    REQUIREMENTS_TEMPLATE, canonical_template_text, render_scaffold_id_shapes,
+    FS_FILE_TEMPLATE, FS_README_TEMPLATE, GITKEEP_TEMPLATE, GOALS_TEMPLATE, GRUND_DOC_TEMPLATE,
+    REQ_README_TEMPLATE, canonical_template_text, render_scaffold_id_shapes,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -159,10 +159,12 @@ pub(crate) fn init_fs_home(config: &Config) -> InitFsHome {
             };
         }
     }
-    InitFsHome::File {
-        path: "requirements.md".to_string(),
-        heading_name: "H2",
-        heading_marker: "##",
+    // §FS-init.2.2.2.1: no FS row falls back to the built-in FS folder, read
+    // from the one table that defines it (§FS-config.3.4.4).
+    InitFsHome::Folder {
+        path: default_kind_folder("FS")
+            .expect("FS has a built-in folder")
+            .to_string(),
     }
 }
 
@@ -178,7 +180,7 @@ pub(crate) fn docs_scaffold_for_config(
     match fs_home {
         InitFsHome::File { path, .. } => files.push((
             path.clone(),
-            render_scaffold_id_shapes(REQUIREMENTS_TEMPLATE, "FS", project),
+            render_scaffold_id_shapes(FS_FILE_TEMPLATE, "FS", project),
         )),
         InitFsHome::Folder { path } => files.push((
             format!("{path}/README.md"),

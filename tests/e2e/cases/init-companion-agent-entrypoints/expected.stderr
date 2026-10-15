@@ -13,7 +13,7 @@ note: CLAUDE.md and .claude/CLAUDE.md both carry the managed block, so Claude re
 note: .cursor/rules/grund.mdc and .cursorrules both carry the managed block, so Cursor reads it twice; delete the one you do not want — `grund init` creates only one
 
 next:
-  1. re-run with --scaffold to scaffold the FS home (requirements.md), docs/, and tests/ (or create them yourself)
+  1. re-run with --scaffold to scaffold the FS home (docs/functional-spec), docs/, and tests/ (or create them yourself)
   2. run `grund check` — a scaffolded tree is clean
-  3. allocate an ID:  ID=$(grund id FS "…")  then add it to requirements.md
+  3. allocate an ID:  ID=$(grund id FS "…")  then add it under docs/functional-spec
 see AGENTS.md for the full workflow.

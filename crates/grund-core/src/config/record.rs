@@ -294,7 +294,7 @@ impl Config {
     /// writes that has a built-in default matches it (§FS-init.2.4.3).
     #[cfg(test)]
     pub(crate) fn default_for(root: PathBuf) -> Self {
-        Self::from_project(&v1::default_project(false), root).expect("default grammar must compile")
+        Self::from_project(&v1::default_project(), root).expect("default grammar must compile")
     }
 
     /// The defaults with the empty kind set `kinds = []` declares

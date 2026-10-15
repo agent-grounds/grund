@@ -132,7 +132,7 @@ pub(crate) fn translate(located: &Located, write: bool, drop_comments: bool) -> 
             details: Vec::new(),
             repair: "replace the link with the file it points to, or migrate that file where it is the config".into(),
         });
-        return Ok(translated(report, String::new(), v1::default_project(true)));
+        return Ok(translated(report, String::new(), v1::default_project()));
     }
     let shown = Path::new(&located.config);
     let text = super::input_read_to_string(&located.file)

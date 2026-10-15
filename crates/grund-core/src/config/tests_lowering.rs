@@ -7,7 +7,6 @@
 use std::path::{Path, PathBuf};
 
 use super::tests_lowering_keys::lower;
-use super::v1::default_project;
 use super::v1::mapping::DEFAULTS;
 use super::*;
 use crate::testing::{test_root, write};
@@ -56,13 +55,6 @@ fn every_default_means_what_its_row_says() {
                     assert!(row(project, "e2e").kind.is_none());
                     assert_eq!(project.presentation.kinds.len(), 9);
                 }
-            }
-            "legacy FS home" => {
-                let legacy = Extent::Folder("docs/functional-spec".into());
-                assert_eq!(row(&no_kinds, "FS").places[0].extent, legacy);
-                let zero_config = default_project(false);
-                let home = Extent::File("requirements.md".into());
-                assert_eq!(row(&zero_config, "FS").places[0].extent, home);
             }
             "name-keyed index" => {
                 let index = |name: &str| row(&declared, name).kind.unwrap().index;
