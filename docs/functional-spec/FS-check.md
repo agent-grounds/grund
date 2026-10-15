@@ -1537,7 +1537,7 @@ Lexical directory aliases retain their link-replacement anchors while sharing ph
 
 #### 6.1.4 Uncertain notifications and recovery
 
-Lost events, overflow, unknown-path/uncertain events and internal queue saturation force full input rediscovery, rescan and subscription reconciliation. Replacement uses parent anchors to reattach. A failed setup/runtime subscription or failed watcher recovery is fatal under [§FS-check.6.3.2](FS-check.md#632-fatal-watcher-failures); the process must not silently remain resident with stale results. An ordinary input failure during that rescan remains recoverable under [§FS-check.6.3.1](FS-check.md#631-recoverable-runs) if usable discovery coverage can be retained.
+Lost events, overflow, unknown-path/uncertain events and internal queue saturation force full input rediscovery, rescan and subscription reconciliation. Replacement uses parent anchors to reattach. A coverage path that no longer exists by the time it is resolved or subscribed — deleted after the event or check that named it — is a missing input, not a failed subscription: its nearest existing parent anchor covers it, as [§FS-check.6.1.3](FS-check.md#613-effective-input-inventory) says, and a rescan follows so that its recreation is seen. Otherwise a failed setup/runtime subscription or failed watcher recovery is fatal under [§FS-check.6.3.2](FS-check.md#632-fatal-watcher-failures); the process must not silently remain resident with stale results. An ordinary input failure during that rescan remains recoverable under [§FS-check.6.3.1](FS-check.md#631-recoverable-runs) if usable discovery coverage can be retained.
 
 ### 6.2 Each run is a plain `grund check`
 

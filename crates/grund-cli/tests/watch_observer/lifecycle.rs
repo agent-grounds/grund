@@ -257,3 +257,40 @@ fn watch_delete_during_scan_retires_dead_subscription() {
     h.matches(&absent);
     h.stop(absent.status);
 }
+
+/// §FS-check.6.1.4: a root deleted after recovery resolved it, before it is subscribed,
+/// is a missing input met by its parent anchor, not a fatal failed recovery.
+#[test]
+fn watch_root_deleted_between_resolve_and_subscribe_stays_resident() {
+    let _serial = crate::support::serial();
+    let f = Fixture::new();
+    let mut h = Harness::start(&f, None, None);
+    h.completed();
+    // Recovery subscribes in path order: the root's anchor `f.0` before `f.0/src`.
+    let anchor = format!("subscribed:{}", f.0.display());
+    let release = h.pause(&anchor);
+    h.control.saturate();
+    h.stage(&anchor);
+    std::fs::remove_dir_all(f.0.join("src")).unwrap();
+    release.send(()).unwrap();
+    let absent = f.ordinary();
+    loop {
+        match h.event() {
+            WatchObservation::Completed(status, stdout, stderr)
+                if status == absent.status
+                    && stdout == absent.stdout
+                    && stderr == absent.stderr =>
+            {
+                break;
+            }
+            WatchObservation::Stopped => panic!(
+                "watch stopped on the vanished root instead of reattaching: {:?}",
+                String::from_utf8_lossy(&h.control.take_output()[1])
+            ),
+            _ => {}
+        }
+    }
+    f.write("src/main.rs", BAD);
+    h.matches(&f.ordinary());
+    h.stop(1);
+}

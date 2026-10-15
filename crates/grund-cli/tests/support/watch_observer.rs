@@ -97,6 +97,7 @@ pub fn key(event: &WatchObservation) -> String {
         WatchObservation::StdoutFlushed => "stdout-flushed".into(),
         WatchObservation::StderrFlushed => "stderr-flushed".into(),
         WatchObservation::Input(input) => format!("input:{}", input.path.display()),
+        WatchObservation::Subscribed(path, _) => format!("subscribed:{}", path.display()),
         _ => String::new(),
     }
 }
