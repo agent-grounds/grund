@@ -1,7 +1,8 @@
 # DF-reference-marker: Use § as the reference marker, with $$ as the typing trigger
 
-**Status:** Accepted
 **Date:** 2026-05-08
+
+## status: Accepted
 
 ## 1. Context
 

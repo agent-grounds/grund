@@ -1,7 +1,8 @@
 # DA-engine-renders-nothing: the engine renders nothing, so the deprecated compat frontend retires
 
-**Status:** Accepted
 **Date:** 2026-09-18
+
+## status: Accepted
 
 ## 1. Context
 

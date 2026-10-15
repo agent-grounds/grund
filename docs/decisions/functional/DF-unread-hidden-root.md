@@ -1,7 +1,8 @@
 # DF-unread-hidden-root: a configured file root with a hidden name is named, not read
 
-**Status:** Accepted
 **Date:** 2026-10-13
+
+## status: Accepted
 
 ## 1. Context
 

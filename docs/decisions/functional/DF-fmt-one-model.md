@@ -1,7 +1,8 @@
 # DF-fmt-one-model: `fmt` is the shared verified model plus a write step, and completeness is a precondition rather than a convention
 
-**Status:** Accepted
 **Date:** 2026-09-05
+
+## status: Accepted
 
 ## 1. Context
 

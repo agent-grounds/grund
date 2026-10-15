@@ -1,7 +1,8 @@
 # DF-managed-block-delimiters: standard BEGIN/END delimiters for the managed agent-instructions block
 
-**Status:** Accepted
 **Date:** 2026-08-07
+
+## status: Accepted
 
 ## 1. Context
 

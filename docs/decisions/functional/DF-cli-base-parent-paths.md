@@ -1,7 +1,8 @@
 # DF-cli-base-parent-paths: `relative_paths = false` keeps one CLI base and may climb within the loaded root
 
-**Status:** Accepted
 **Date:** 2026-08-30
+
+## status: Accepted
 
 ## 1. Context
 

@@ -1,7 +1,8 @@
 # DF-one-answer-rulings-grammar: one grammar keeps the documented refusal bytes and order, and one kind universe keeps each command's vocabulary
 
-**Status:** Accepted
 **Date:** 2026-10-11
+
+## status: Accepted
 
 ## context: Context
 

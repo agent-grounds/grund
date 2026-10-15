@@ -1,7 +1,8 @@
 # DF-index-compatibility-ramp: a finding's ramp follows its fix command, not the size of the offence
 
-**Status:** Accepted
 **Date:** 2026-08-25
+
+## status: Accepted
 
 ## 1. Context
 

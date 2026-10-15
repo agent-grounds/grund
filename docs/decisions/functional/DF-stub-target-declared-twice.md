@@ -1,7 +1,8 @@
 # DF-stub-target-declared-twice: a stub's target that declares its ID twice is two homes, scanned or not
 
-**Status:** Accepted
 **Date:** 2026-10-09
+
+## status: Accepted
 
 ## 1. Context
 

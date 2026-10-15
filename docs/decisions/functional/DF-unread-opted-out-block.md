@@ -1,7 +1,8 @@
 # DF-unread-opted-out-block: the unread files of an opted-out block are a conditional warning that never ramps
 
-**Status:** Accepted
 **Date:** 2026-09-05
+
+## status: Accepted
 
 ## 1. Context
 

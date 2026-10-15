@@ -1,7 +1,8 @@
 # DF-stub-target-section-declared-twice: a section a stub's target declares twice is reported where it is written, scanned or not
 
-**Status:** Accepted
 **Date:** 2026-10-12
+
+## status: Accepted
 
 ## 1. Context
 

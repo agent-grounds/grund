@@ -1,7 +1,8 @@
 # DF-stub-target-fenced-heading: a heading inside a fence of a stub's target does not declare its ID
 
-**Status:** Accepted
 **Date:** 2026-10-08
+
+## status: Accepted
 
 ## 1. Context
 

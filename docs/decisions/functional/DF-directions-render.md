@@ -1,9 +1,10 @@
 # DF-directions-render: the citation-directions wording is chosen once, against a canonical config
 
-**Status:** Accepted
 **Date:** 2026-09-02
 
 Fixes the render [§DF-citation-directions.2.7](DF-citation-directions.md#27-generated-agent-entrypoint-section-with-a-drift-check) introduced and [§FS-init.2.3.5](../../functional-spec/FS-init.md#235-citation-directions) specifies. Serves [§GOAL-agent-grounding](../../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work) (the rule an agent reads before writing a declaration is the rule the checker enforces) and [§GOAL-friendliness-first](../../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible) (an entrypoint that states rules, not config syntax).
+
+## status: Accepted
 
 ## 1. Context
 

@@ -1,7 +1,8 @@
 # DA-lsp-optional: LSP server ships as a separate, optional binary
 
-**Status:** Accepted
 **Date:** 2026-05-09
+
+## status: Accepted
 
 ## 1. Context
 

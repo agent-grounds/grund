@@ -1,7 +1,8 @@
 # DA-one-fact-one-point-one-implementation: every fact grund decides has one defining point, one implementation, and reads of it everywhere else
 
-**Status:** Accepted
 **Date:** 2026-10-11
+
+## status: Accepted
 
 ## context: Context
 

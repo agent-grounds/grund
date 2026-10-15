@@ -1,7 +1,8 @@
 # DF-closing-hashes-are-not-the-heading: a heading's closing hashes are not part of its anchor
 
-**Status:** Accepted
 **Date:** 2026-10-12
+
+## status: Accepted
 
 ## 1. Context
 

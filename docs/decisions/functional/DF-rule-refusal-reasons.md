@@ -1,7 +1,8 @@
 # DF-rule-refusal-reasons: a chapter path is refused for the component that failed, corrected in place
 
-**Status:** Accepted
 **Date:** 2026-10-09
+
+## status: Accepted
 
 ## 1. Context
 

@@ -1,7 +1,8 @@
 # DF-glob-citation: a glob operator ends no citation, and the prefix it left behind is removed
 
-**Status:** Accepted
 **Date:** 2026-10-10
+
+## status: Accepted
 
 ## 1. Context and decision
 

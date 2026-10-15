@@ -1,7 +1,8 @@
 # DF-shorthand-numeric-run: a marked shorthand glued to another number is a numeral, not a citation
 
-**Status:** Accepted
 **Date:** 2026-08-19
+
+## status: Accepted
 
 ## 1. Context
 

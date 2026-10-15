@@ -1,9 +1,10 @@
 # DA-pypi-package-name: PyPI uses gnd-cli as the package name
 
-**Status:** Superseded
 **Date:** 2026-05-11
 **Supersedes:** [§DA-reference-checker-name](DA-reference-checker-name.md#da-reference-checker-name-name-for-the-spec-reference-checker-tool) for the PyPI package name only.
 **Superseded by:** [§DA-rename-to-grund](DA-rename-to-grund.md#da-rename-to-grund-rename-gnd-to-grund-before-first-publish) — the rename to `grund` voids the PyPI-collision premise below (the old working-title package clash does not exist for `grund`); see that record for the package names that actually ship.
+
+## status: Superseded
 
 ## 1. Context
 

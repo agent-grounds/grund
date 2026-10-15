@@ -121,7 +121,7 @@ def _correction_route_errors(text, release_entries, catalog):
     declaration = re.match(r"# ((?:DF|DA)-[a-z0-9-]+):", text)
     if not declaration:
         return ["the decision must declare a DF or DA ID"]
-    if "**Status:** Accepted" not in text:
+    if not re.search(r"^## status: Accepted$", text, re.M):
         errors.append("the decision must be accepted")
 
     route_sections = [
@@ -286,7 +286,7 @@ class DecisionRouteTests(unittest.TestCase):
     def test_unproved_synthetic_correction_is_rejected(self):
         synthetic = """# DF-synthetic: invalid correction
 
-**Status:** Accepted
+## status: Accepted
 
 ## 1. Consequences
 

@@ -1,10 +1,11 @@
 # DF-canonical-slug-declarations: configured slug punctuation retains its canonical declaration identity
 
-**Status:** Accepted
 **Date:** 2026-10-07
 
 Honor the configured slug grammar throughout declaration discovery and exact
 reads ([§FS-declarations.line.configured-slug](../../functional-spec/FS-declarations.md#lineconfigured-slug-characters-admitted-by-the-slug-pattern-belong-to-the-canonical-id)).
+
+## status: Accepted
 
 ## 1. Conflict with the existing requirement
 

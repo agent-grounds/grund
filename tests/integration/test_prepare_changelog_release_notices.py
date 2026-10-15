@@ -27,7 +27,7 @@ FUNCTIONAL, ARCHITECTURAL = "docs/decisions/functional", "docs/decisions/archite
 
 def decision(identifier: str, note: str | None) -> str:
     """A decision record, with `note` as its `release-note` section's text where given."""
-    record = f"# {identifier}: a decision\n\n**Status:** Accepted\n\n## 1. Decision\n\nDecided.\n"
+    record = f"# {identifier}: a decision\n\n## status: Accepted\n\n## 1. Decision\n\nDecided.\n"
     return record if note is None else f"{record}\n## release-note: Release note\n\n{note}"
 
 

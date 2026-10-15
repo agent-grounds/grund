@@ -1,8 +1,9 @@
 # DF-nested-workspaces: a nested project is named by its whole alias path
 
-**Status:** Accepted
 **Date:** 2026-08-17
 **Authors:** Claude Opus 5, Vojin Jovanovic
+
+## status: Accepted
 
 ## 1. Context
 

@@ -1,7 +1,8 @@
 # DF-relative-section-headings: a heading may write only the component it adds
 
-**Status:** Accepted
 **Date:** 2026-10-12
+
+## status: Accepted
 
 ## context: Context
 

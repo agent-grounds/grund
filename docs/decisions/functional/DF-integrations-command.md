@@ -1,7 +1,8 @@
 # DF-integrations-command: integrations earns a CLI slot as one-time setup, where a per-citation `link` command did not
 
-**Status:** Accepted
 **Date:** 2026-07-06
+
+## status: Accepted
 
 ## 1. Context
 

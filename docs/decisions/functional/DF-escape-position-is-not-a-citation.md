@@ -1,7 +1,8 @@
 # DF-escape-position-is-not-a-citation: an escape position is not a citation, in either strict mode
 
-**Status:** Accepted
 **Date:** 2026-09-28
+
+## status: Accepted
 
 ## 1. Context
 

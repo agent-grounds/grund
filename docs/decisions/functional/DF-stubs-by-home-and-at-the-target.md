@@ -1,7 +1,8 @@
 # DF-stubs-by-home-and-at-the-target: a rule declared through a stub applies now, and a stub is read by its home and shown at its target from 0.19.0
 
-**Status:** Accepted
 **Date:** 2026-10-12
+
+## status: Accepted
 
 ## 1. Context
 

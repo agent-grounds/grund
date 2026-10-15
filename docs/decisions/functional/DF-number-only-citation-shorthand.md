@@ -1,10 +1,11 @@
 # DF-number-only-citation-shorthand: the number-only shorthand is authoring sugar, and a persisted one is a check error
 
-**Status:** Accepted
 **Date:** 2026-08-14
 
 The title names the default policy retained by this record; [§DF-number-only-citation-shorthand.2](DF-number-only-citation-shorthand.md#2-decision) also defines the
 committed, per-project `accepted` exception.
+
+## status: Accepted
 
 ## 1. Context
 

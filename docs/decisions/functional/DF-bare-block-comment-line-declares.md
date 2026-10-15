@@ -1,7 +1,8 @@
 # DF-bare-block-comment-line-declares: a line inside a block comment declares with or without its gutter, behind any of its openers
 
-**Status:** Accepted
 **Date:** 2026-10-12
+
+## status: Accepted
 
 ## 1. Context
 

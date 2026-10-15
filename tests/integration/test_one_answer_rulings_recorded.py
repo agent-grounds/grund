@@ -140,7 +140,7 @@ class RulingsRecordedTest(unittest.TestCase):
             text = _record(record_id)
             if not text.startswith(f"# {record_id}:"):
                 gaps.append(f"{record_id}: the H1 does not declare it")
-            if not re.search(r"^\*\*Status:\*\* Accepted\b", text, re.M):
+            if not re.search(r"^## status: Accepted$", text, re.M):
                 gaps.append(f"{record_id}: status is not Accepted")
             if f"[{MARKER}{record_id}]({record_id}.md#" not in index:
                 gaps.append(f"{record_id}: no line in the functional index")

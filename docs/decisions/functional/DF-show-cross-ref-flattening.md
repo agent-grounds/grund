@@ -1,7 +1,8 @@
 # DF-show-cross-ref-flattening: grund show flattens cross-reference link wrappers
 
-**Status:** Accepted
 **Date:** 2026-05-11
+
+## status: Accepted
 
 ## 1. Context
 

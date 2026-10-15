@@ -1,7 +1,8 @@
 # DF-a-buffer-is-the-file: an editor buffer is the file it names, under every spelling and with no file saved behind it
 
-**Status:** Accepted
 **Date:** 2026-10-12
+
+## status: Accepted
 
 ## 1. Context
 

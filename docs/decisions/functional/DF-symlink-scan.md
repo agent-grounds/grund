@@ -1,7 +1,8 @@
 # DF-symlink-scan: a symlink in the scanned tree is followed, and the report names the link
 
-**Status:** Accepted
 **Date:** 2026-08-21
+
+## status: Accepted
 
 ## 1. Context
 

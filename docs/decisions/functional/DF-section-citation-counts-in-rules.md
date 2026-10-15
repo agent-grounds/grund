@@ -1,7 +1,8 @@
 # DF-section-citation-counts-in-rules: a resolved citation to a numbered section counts in chapter rules
 
-**Status:** Accepted
 **Date:** 2026-10-05
+
+## status: Accepted
 
 ## 1. Context
 

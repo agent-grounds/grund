@@ -1,7 +1,8 @@
 # DF-four-editor-checks-read-saved-text: four editor checks read the saved file for one more release
 
-**Status:** Accepted
 **Date:** 2026-10-12
+
+## status: Accepted
 
 ## 1. Context
 

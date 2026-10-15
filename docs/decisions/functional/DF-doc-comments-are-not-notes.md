@@ -1,7 +1,8 @@
 # DF-doc-comments-are-not-notes: a doc comment is documentation, not a note, and is never an inline citation site
 
-**Status:** Accepted
 **Date:** 2026-08-27
+
+## status: Accepted
 
 ## 1. Context
 

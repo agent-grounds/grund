@@ -1,7 +1,8 @@
 # DF-md-link-emission: grund fmt may emit clickable Markdown links alongside §-prefixed citations
 
-**Status:** Accepted
 **Date:** 2026-05-09
+
+## status: Accepted
 
 ## 1. Context
 

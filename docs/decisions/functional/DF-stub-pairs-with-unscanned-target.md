@@ -1,7 +1,8 @@
 # DF-stub-pairs-with-unscanned-target: a stub pairs with its target whether or not the scan reaches it
 
-**Status:** Accepted
 **Date:** 2026-10-08
+
+## status: Accepted
 
 ## 1. Context
 

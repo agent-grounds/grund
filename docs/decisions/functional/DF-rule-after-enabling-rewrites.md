@@ -1,7 +1,8 @@
 # DF-rule-after-enabling-rewrites: a rule subject that needs named sections is answered with one they make valid, in place
 
-**Status:** Accepted
 **Date:** 2026-10-08
+
+## status: Accepted
 
 ## 1. Context
 

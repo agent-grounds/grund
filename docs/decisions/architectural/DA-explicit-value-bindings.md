@@ -1,7 +1,8 @@
 # DA-explicit-value-bindings: compare only authored delimited value bindings
 
-**Status:** Accepted
 **Date:** 2026-09-07
+
+## status: Accepted
 
 ## 1. Context
 

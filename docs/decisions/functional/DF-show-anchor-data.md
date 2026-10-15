@@ -1,7 +1,8 @@
 # DF-show-anchor-data: show JSON carries the heading anchor grund already derives
 
-**Status:** Accepted
 **Date:** 2026-10-07
+
+## status: Accepted
 
 ## 1. Context
 

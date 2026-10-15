@@ -1,7 +1,8 @@
 # DF-refs-resolver-rejection: an ID rejected by a selected grammar is a failed query
 
-**Status:** Accepted
 **Date:** 2026-09-09
+
+## status: Accepted
 
 ## 1. Context
 

@@ -1,7 +1,8 @@
 # DF-a-title-citation-is-a-citation: a citation on a declaration's heading is a citation, unless it cites the ID that heading declares
 
-**Status:** Accepted
 **Date:** 2026-10-12
+
+## status: Accepted
 
 ## 1. Context
 

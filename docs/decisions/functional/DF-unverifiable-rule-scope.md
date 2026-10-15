@@ -1,7 +1,8 @@
 # DF-unverifiable-rule-scope: a rule the scope cannot judge is reported, rendered, and written
 
-**Status:** Accepted
 **Date:** 2026-09-28
+
+## status: Accepted
 
 ## 1. Context
 

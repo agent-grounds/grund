@@ -1,7 +1,8 @@
 # DF-cover-workspace-scope: cover indexes the whole run and counts cross-project citations
 
-**Status:** Accepted
 **Date:** 2026-08-23
+
+## status: Accepted
 
 ## 1. Context
 

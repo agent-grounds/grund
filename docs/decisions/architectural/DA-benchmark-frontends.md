@@ -1,7 +1,8 @@
 # DA-benchmark-frontends: the benchmarks measure the language server and the Python extension, not the core library or the Node addon
 
-**Status:** Accepted
 **Date:** 2026-10-13
+
+## status: Accepted
 
 ## 1. Context
 

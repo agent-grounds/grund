@@ -1,7 +1,8 @@
 # DF-md-link-anchor-strategy: heading-text slugs, re-derived on every fmt pass
 
-**Status:** Accepted
 **Date:** 2026-05-09
+
+## status: Accepted
 
 ## 1. Context
 

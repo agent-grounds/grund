@@ -1,7 +1,8 @@
 # DF-id-number-width: grund id zero-pads minted numbers to a default width of 3
 
-**Status:** Accepted
 **Date:** 2026-05-11
+
+## status: Accepted
 
 ## 1. Context
 

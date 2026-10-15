@@ -1,7 +1,8 @@
 # DF-doc-comment-fenced-heading: a heading inside a fence in a comment block is not a section
 
-**Status:** Accepted
 **Date:** 2026-10-13
+
+## status: Accepted
 
 ## 1. Context
 

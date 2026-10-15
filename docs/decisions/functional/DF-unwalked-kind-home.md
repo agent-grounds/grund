@@ -1,7 +1,8 @@
 # DF-unwalked-kind-home: a kind may be a place that is listed but not walked
 
-**Status:** Accepted
 **Date:** 2026-08-26
+
+## status: Accepted
 
 ## 1. Context
 

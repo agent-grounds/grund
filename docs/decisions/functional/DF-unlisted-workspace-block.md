@@ -1,7 +1,8 @@
 # DF-unlisted-workspace-block: an unlisted workspace block is reported by the walk that meets it
 
-**Status:** Accepted
 **Date:** 2026-09-04
+
+## status: Accepted
 
 ## 1. Context
 

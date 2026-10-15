@@ -1,7 +1,8 @@
 # DF-one-answer-rulings-parse: one parse gives every command the same extents, comment blocks, anchors and title citations
 
-**Status:** Accepted
 **Date:** 2026-10-11
+
+## status: Accepted
 
 ## context: Context
 

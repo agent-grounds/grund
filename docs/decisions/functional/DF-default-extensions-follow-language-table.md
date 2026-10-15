@@ -1,7 +1,8 @@
 # DF-default-extensions-follow-language-table: the `[scan] extensions` default reads every language grund classifies
 
-**Status:** Accepted
 **Date:** 2026-10-13
+
+## status: Accepted
 
 ## 1. Context
 

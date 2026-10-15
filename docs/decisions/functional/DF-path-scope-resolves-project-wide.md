@@ -1,7 +1,8 @@
 # DF-path-scope-resolves-project-wide: a path-scoped `check` resolves against the whole project and reports only the path
 
-**Status:** Accepted
 **Date:** 2026-10-01
+
+## status: Accepted
 
 ## 1. Context
 

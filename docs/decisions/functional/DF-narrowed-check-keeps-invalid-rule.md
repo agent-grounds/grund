@@ -1,7 +1,8 @@
 # DF-narrowed-check-keeps-invalid-rule: a check narrowed to a rule's code keeps the error that says the rule could not run
 
-**Status:** Accepted
 **Date:** 2026-10-04
+
+## status: Accepted
 
 ## 1. Context
 

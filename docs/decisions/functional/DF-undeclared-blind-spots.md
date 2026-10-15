@@ -1,7 +1,8 @@
 # DF-undeclared-blind-spots: two skips no section named become located findings
 
-**Status:** Accepted
 **Date:** 2026-09-24
+
+## status: Accepted
 
 ## 1. Context
 

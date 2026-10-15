@@ -1,7 +1,8 @@
 # DA-benchmark-instruction-counting: the performance harness counts instructions, not wall-clock seconds
 
-**Status:** Accepted
 **Date:** 2026-05-11
+
+## status: Accepted
 
 ## 1. Context
 

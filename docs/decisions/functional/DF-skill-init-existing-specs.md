@@ -1,7 +1,8 @@
 # DF-skill-init-existing-specs: `grund-init` adopts existing specs before scaffolding
 
-**Status:** Accepted
 **Date:** 2026-05-20
+
+## status: Accepted
 
 ## 1. Context
 

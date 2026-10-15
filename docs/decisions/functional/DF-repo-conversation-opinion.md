@@ -1,7 +1,8 @@
 # DF-repo-conversation-opinion: repositories may commit a link-only conversation-rendering opinion
 
-**Status:** Accepted
 **Date:** 2026-07-21
+
+## status: Accepted
 
 ## 1. Context
 

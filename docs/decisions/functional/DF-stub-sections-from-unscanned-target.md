@@ -1,7 +1,8 @@
 # DF-stub-sections-from-unscanned-target: a stub's sections are its target's whether or not the scan reaches it
 
-**Status:** Accepted
 **Date:** 2026-10-08
+
+## status: Accepted
 
 ## 1. Context
 

@@ -1,7 +1,8 @@
 # DF-non-citable-kinds: a kind may declare no IDs, and stays one `[[kinds]]` table when it does
 
-**Status:** Accepted
 **Date:** 2026-08-25
+
+## status: Accepted
 
 ## 1. Context
 

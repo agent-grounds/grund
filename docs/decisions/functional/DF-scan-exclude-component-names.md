@@ -1,7 +1,8 @@
 # DF-scan-exclude-component-names: a `[scan] exclude` entry containing `/` is a config error
 
-**Status:** Accepted
 **Date:** 2026-10-06
+
+## status: Accepted
 
 ## 1. Context
 

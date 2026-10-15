@@ -1,7 +1,8 @@
 # DF-stub-target-citations-and-chapters: a stub's target lends the stubbed declaration its citations and chapters, and what that newly raises warns until 0.19.0
 
-**Status:** Accepted
 **Date:** 2026-10-12
+
+## status: Accepted
 
 ## 1. Context
 

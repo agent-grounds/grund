@@ -1,7 +1,8 @@
 # DF-duplicate-section-path: a section coordinate names one heading, or the run says so
 
-**Status:** Accepted
 **Date:** 2026-08-22
+
+## status: Accepted
 
 ## 1. Context
 

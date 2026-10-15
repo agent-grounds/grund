@@ -1,7 +1,8 @@
 # DF-direction-absorbs-findings-not-rules: a `[citations]` direction absorbs a duplicate rule's finding for a unit it reports, not the rule
 
-**Status:** Accepted
 **Date:** 2026-10-14
+
+## status: Accepted
 
 ## 1. Context
 

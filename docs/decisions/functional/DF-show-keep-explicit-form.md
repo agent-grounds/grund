@@ -1,7 +1,8 @@
 # DF-show-keep-explicit-form: grund keeps `show` as a subcommand alongside the bare-ID default
 
-**Status:** Accepted
 **Date:** 2026-05-18
+
+## status: Accepted
 
 ## 1. Context
 

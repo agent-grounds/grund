@@ -1,7 +1,8 @@
 # DF-one-answer-rulings-stubs: a stub is found by its home and shape, read as the scan reads, and shown where its target is
 
-**Status:** Accepted
 **Date:** 2026-10-11
+
+## status: Accepted
 
 ## context: Context
 
