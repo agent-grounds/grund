@@ -28,7 +28,8 @@ refused and each component is bound by its coordinate instead.
 
 The stability analysis deliberately still assumes `0.002 s`, the step before it was
 tuned, producing the golden `value-mismatch` below. Change it to `0.001 s` and the
-repository prints `success`.
+repository passes; its config is on version 1, so the run prints that caution
+where `success` would stand ([§FS-check.checks.config-version-1](../../docs/functional-spec/FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)).
 
 `DOC-solver.1` is the second authority form: an ordinary section inside the solver
 document, outside any `values = true` kind, owns the strict component
