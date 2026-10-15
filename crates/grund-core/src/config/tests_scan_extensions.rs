@@ -57,26 +57,16 @@ fn every_classified_extension_is_in_the_default() {
 }
 
 /// The quoted strings of the template's `extensions = [...]` line.
-fn template_extensions(template: &str) -> Vec<String> {
-    let line = template
-        .lines()
-        .find(|line| line.trim_start().starts_with("extensions"))
-        .expect("the template writes `extensions` out");
-    line.split('"')
-        .skip(1)
-        .step_by(2)
-        .map(str::to_string)
-        .collect()
-}
-
+/// §FS-init.2.4.3: the starters write no `extensions`, so a new project
+/// takes the compiled default rather than a copy that could fall behind it.
 #[test]
-fn init_templates_write_the_compiled_default() {
+fn init_templates_leave_extensions_at_the_compiled_default() {
     let templates = [
         include_str!("../../assets/templates/software-development/grund.toml"),
         include_str!("../../assets/templates/none/grund.toml"),
     ];
     for template in templates {
-        assert_eq!(template_extensions(template), default_extensions());
+        assert!(!template.contains("extensions"), "{template}");
     }
 }
 

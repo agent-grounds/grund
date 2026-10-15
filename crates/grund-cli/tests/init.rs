@@ -181,8 +181,8 @@ fn init_scaffold_default_requirements_file_is_scanned() {
 
 #[test]
 fn init_description_flag_writes_config_key() {
-    // §FS-init.1 + §FS-init.2.4.7: `--description` replaces the commented
-    // teaching line in the generated config with the real key.
+    // §FS-init.1 + §FS-init.2.4.7: `--description` writes the v2
+    // `[presentation] description` key; without it nothing is written.
     let target = workdir("init_description_flag_writes_config_key");
     let output = run_grund(
         &[
@@ -203,12 +203,12 @@ fn init_description_flag_writes_config_key() {
 
     let grund_toml = fs::read_to_string(target.join("grund.toml")).expect("read grund.toml");
     assert!(
-        grund_toml.contains("project_description = \"Payment API service\""),
-        "grund.toml must carry project_description from --description"
+        grund_toml.contains("[presentation]\ndescription = \"Payment API service\"\n"),
+        "grund.toml must carry [presentation] description from --description:\n{grund_toml}"
     );
     assert!(
-        !grund_toml.contains("# project_description ="),
-        "the teaching comment must be replaced by the real key"
+        !grund_toml.contains("project_description"),
+        "the v1 spelling is not written:\n{grund_toml}"
     );
 
     let validate = run_grund(
@@ -217,7 +217,7 @@ fn init_description_flag_writes_config_key() {
     );
     assert!(
         validate.status.success(),
-        "generated config with project_description must validate: {}",
+        "generated config with a description must validate: {}",
         String::from_utf8_lossy(&validate.stderr)
     );
 }

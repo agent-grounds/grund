@@ -20,40 +20,43 @@ fn assert_example(root: &Path, relative: &str, expected: &str) {
     );
 }
 
-fn assert_one_example(root: &Path, relative: &str, expected: &[&str]) {
-    let contents = fs::read_to_string(root.join(relative)).expect("read expected scaffold");
-    assert!(
-        expected.iter().any(|example| contents.contains(example)),
-        "{relative} should contain one of the numbered teaching examples {expected:?}, got:\n{contents}"
-    );
-}
-
-fn replace_repo_format(root: &Path, replacement: &str) {
+/// §FS-init.2.4.3: the starter writes no `id_format`, so a project sets one by
+/// adding `[schema] id_format` below the envelope.
+fn set_repo_format(root: &Path, format: &str) {
     let path = root.join("grund.toml");
     let before = fs::read_to_string(&path).expect("read generated grund.toml");
-    let needle = "format = \"{kind}-{number}-{slug}\"";
     assert!(
-        before.contains(needle),
-        "generated config should contain the default ID format"
+        !before.contains("id_format"),
+        "generated config should leave the ID format at its default"
     );
-    fs::write(&path, before.replacen(needle, replacement, 1)).expect("write configured format");
+    let envelope = "project_name = \"";
+    let at = before
+        .find(envelope)
+        .expect("generated config names its project");
+    let at = at + before[at..].find('\n').expect("project_name ends its line") + 1;
+    let after = format!(
+        "{}\n[schema]\nid_format = \"{format}\"\n{}",
+        &before[..at],
+        &before[at..]
+    );
+    fs::write(&path, after).expect("write configured format");
 }
 
-fn assert_slug_only_scaffold(root: &Path) {
+fn assert_scaffold_shape(root: &Path, shape: &str) {
     for (relative, expected) in [
-        ("docs/grund.md", "# GRUND-<slug>: …"),
-        ("docs/goals.md", "# GOAL-<slug>: …"),
-        ("requirements.md", "## FS-<slug>: …"),
-        ("docs/architecture/README.md", "`AR-<slug>` ID"),
-        ("docs/architecture/README.md", "`§AR-<slug>.<section>`"),
+        ("docs/grund.md", "# GRUND-{shape}: …"),
+        ("docs/goals.md", "# GOAL-{shape}: …"),
+        ("requirements.md", "## FS-{shape}: …"),
+        ("docs/architecture/README.md", "`AR-{shape}` ID"),
+        ("docs/architecture/README.md", "`§AR-{shape}.<section>`"),
         (
             "docs/architecture/README.md",
-            "`# AR-<slug>: [<path>](<path>)`",
+            "`# AR-{shape}: [<path>](<path>)`",
         ),
-        ("docs/decisions/architectural/README.md", "`DA-<slug>` ID"),
-        ("docs/decisions/functional/README.md", "`DF-<slug>` ID"),
+        ("docs/decisions/architectural/README.md", "`DA-{shape}` ID"),
+        ("docs/decisions/functional/README.md", "`DF-{shape}` ID"),
     ] {
-        assert_example(root, relative, expected);
+        assert_example(root, relative, &expected.replace("{shape}", shape));
     }
 }
 
@@ -70,17 +73,8 @@ fn init_scaffold_force_refreshes_every_example_to_the_repository_format() {
         String::from_utf8_lossy(&first.stderr)
     );
 
-    // The default remains the numbered-with-slug teaching shape.
-    assert_one_example(
-        &target,
-        "docs/grund.md",
-        &["GRUND-NNN-slug", "GRUND-<NNN>-<slug>"],
-    );
-    assert_one_example(
-        &target,
-        "docs/architecture/README.md",
-        &["§AR-NNN-<slug>.<section>", "§AR-<NNN>-<slug>.<section>"],
-    );
+    // §FS-init.2.4.3: the default is v2's slug-only teaching shape.
+    assert_scaffold_shape(&target, "<slug>");
 
     let scaffold_paths = [
         "docs/grund.md",
@@ -95,7 +89,7 @@ fn init_scaffold_force_refreshes_every_example_to_the_repository_format() {
         .map(|relative| (*relative, fs::read(target.join(relative)).unwrap()))
         .collect::<Vec<_>>();
 
-    replace_repo_format(&target, "format = \"{kind}-{slug}\"");
+    set_repo_format(&target, "{kind}-{number}-{slug}");
     let configured = fs::read(target.join("grund.toml")).expect("read configured grund.toml");
 
     // Without --force, an owned scaffold remains byte-for-byte untouched even
@@ -131,8 +125,8 @@ fn init_scaffold_force_refreshes_every_example_to_the_repository_format() {
         configured,
         "--force must preserve the effective configuration (§FS-init.3.5)"
     );
-    assert_example(&target, "AGENTS.md", "<KIND>-<slug>[.<section>]");
-    assert_slug_only_scaffold(&target);
+    assert_example(&target, "AGENTS.md", "<KIND>-<NNN>-<slug>[.<section>]");
+    assert_scaffold_shape(&target, "<NNN>-<slug>");
 }
 
 #[test]

@@ -87,10 +87,9 @@ fn a_first_kind_replaces_the_empty_set() {
     let target = workdir("init_template_none_first_kind");
     let (ok, stderr) = init(&target, &["--template", "none"]);
     assert!(ok, "{stderr}");
-    let config = fs::read_to_string(target.join("grund.toml")).unwrap();
-    let config = config.replace(
-        "kinds = []\n",
-        "[[kinds]]\nkind = \"FS\"\nfolder = \"docs/specs\"\ntitle = \"Specs\"\n",
+    let mut config = fs::read_to_string(target.join("grund.toml")).unwrap();
+    config.push_str(
+        "\n[schema.kinds.FS]\nfolders = [\"docs/specs\"]\n\n[presentation.kinds.FS]\ntitle = \"Specs\"\n",
     );
     fs::write(target.join("grund.toml"), config).unwrap();
     let (ok, stderr) = init(&target, &[]);
@@ -124,16 +123,16 @@ fn a_fresh_scaffold_declares_req_in_docs_requirements() {
     assert!(target.join("docs/requirements/README.md").is_file());
 
     let config = fs::read_to_string(target.join("grund.toml")).unwrap();
-    let rows = "[[kinds]]\nkind = \"FS\"\nfile = \"requirements.md\"\n\
-                title = \"What: behavior, requirements, and constraints\"\n\n\
-                [[kinds]]\nkind = \"REQ\"\nfolder = \"docs/requirements\"\n\
-                title = \"Hard requirements: what the project must never break\"\n\n";
+    let rows = "[schema.kinds.FS]\nfiles = [\"requirements.md\"]\n\
+                [schema.kinds.REQ]\nfolders = [\"docs/requirements\"]\n";
     assert!(config.contains(rows), "{config}");
-    let ruleset = "# [citations.FS]\n# should = [\"GOAL|FS\"]\n\
-                   # must-not = [\"AR\"]              # the What may never depend on the How\n#\n\
-                   # [citations.REQ]\n# should = [\"GRUND|GOAL\"]\n\
-                   # must-not = [\"AR\"]              # a hard requirement never depends on the How\n#\n";
-    assert!(config.contains(ruleset), "{config}");
+    let titles = "[presentation.kinds.FS]\n\
+                  title = \"What: behavior, requirements, and constraints\"\n\
+                  [presentation.kinds.REQ]\n\
+                  title = \"Hard requirements: what the project must never break\"\n";
+    assert!(config.contains(titles), "{config}");
+    // §FS-init.2.4.5: no commented citation ruleset; no direction is enforced.
+    assert!(!config.contains("citations"), "{config}");
 
     let block = fs::read_to_string(target.join("AGENTS.md")).unwrap();
     assert!(

@@ -449,21 +449,29 @@ fn workspace_members_at_a_group_its_parent_does_not_list_names_its_own_tree() {
     );
 }
 
-/// §FS-init.2.4.7 + §DF-workspace-member-descriptions: the generated config
-/// teaches `project_description` with a commented line by default, and
-/// `--description` turns it into the real key.
+/// §FS-init.2.4.7 + §DF-workspace-member-descriptions: without `--description`
+/// the generated config writes no description and no placeholder; with it, a
+/// `[presentation]` table stands right above the first `[presentation.kinds]`
+/// table, or ends a config that has none.
 #[test]
-fn grund_toml_description_teaching_line_and_substitution() {
-    let teaching_line = "# project_description = \"<one line shown next to this project in workspace member lists>\"";
-    let without = render_grund_toml(Template::SoftwareDevelopment, "demo", None);
-    assert!(without.contains(teaching_line));
-    assert!(!without.contains("\nproject_description = "));
+fn grund_toml_description_is_written_only_when_given() {
+    for template in [Template::SoftwareDevelopment, Template::None] {
+        let without = render_grund_toml(template, "demo", None);
+        assert!(!without.contains("description"), "{without}");
+    }
 
     let with = render_grund_toml(
         Template::SoftwareDevelopment,
         "demo",
         Some("Demo \"quoted\" service"),
     );
-    assert!(!with.contains(teaching_line));
-    assert!(with.contains("project_description = \"Demo \\\"quoted\\\" service\""));
+    assert!(with.contains(
+        "\n\n[presentation]\ndescription = \"Demo \\\"quoted\\\" service\"\n[presentation.kinds.GRUND]\n"
+    ), "{with}");
+
+    let none = render_grund_toml(Template::None, "demo", Some("Demo"));
+    assert!(
+        none.ends_with("lists them.\n\n[presentation]\ndescription = \"Demo\"\n"),
+        "{none}"
+    );
 }

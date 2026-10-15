@@ -348,18 +348,20 @@ fn named_section_formatting_uses_rendered_anchor_and_never_changes_handles() {
     assert!(reader.contains("\u{a7}FS-doc.goals"));
 }
 
-/// §FS-config.4.2.3: `named_sections` prints only when enabled — an absent key
-/// and an explicit `false` produce byte-identical `config show` output, so a
-/// repository that never opted in keeps the bytes it had.
+/// §FS-init.2.4.4: the v2 starter writes no section switch and its block
+/// teaches named section paths. §FS-config.4.2.3: in v1, `named_sections`
+/// prints only when enabled — an absent key and an explicit `false` produce
+/// byte-identical `config show` output, so a repository that never opted in
+/// keeps the bytes it had.
 #[test]
-fn init_teaches_false_and_the_disabled_gate_is_an_operational_guard() {
+fn init_writes_no_switch_and_the_disabled_gate_is_an_operational_guard() {
     let initialized = Repo::new("init");
     let init = grund(initialized.path(), &["init", "--no-vcs"]);
-    expect_success(&init, "initialize named-section teaching default");
+    expect_success(&init, "initialize the v2 starter");
     let generated = fs::read_to_string(initialized.path().join("grund.toml")).unwrap();
-    assert!(generated.contains("named_sections = false"));
+    assert!(!generated.contains("named_sections"), "{generated}");
     let default_guidance = fs::read_to_string(initialized.path().join("AGENTS.md")).unwrap();
-    assert!(!default_guidance.contains("goals.performance"));
+    assert!(default_guidance.contains("goals.performance"));
 
     let absent = Repo::new("absent");
     absent.write(
