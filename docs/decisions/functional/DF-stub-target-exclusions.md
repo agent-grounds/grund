@@ -22,15 +22,15 @@ is [§FS-declarations.checks.excluded-stub-target](../../functional-spec/FS-decl
 
 ## release-note: Release note
 
-From grund 0.19.0, a stub whose target is excluded or ignored by an enabled
-ignore rule is an error coded `broken-stub`, instead of the
-`excluded-stub-target` warning shipped in 0.18.0. Check exits 1 and show refuses.
-Rejected targets no longer lend bodies, sections, chapters or citation edges.
-Move the target or change the refusing rule named in the error.
-An old `--ignore excluded-stub-target` no longer suppresses this finding;
-select or ignore `broken-stub` instead. `--only excluded-stub-target` still
-parses but selects no findings ([§FS-declarations.checks.excluded-stub-target](../../functional-spec/FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-broken-from-grund-0190)).
-Targets outside include alone and explicit scan-root precedence keep their behavior.
-The shared 0.19.0 release floor ([§FS-distribution.release-floor](../../functional-spec/FS-distribution.md#release-floor-one-shared-minimum-publishable-release)) prevents publishing
-this activation in a 0.18.x patch; the diagnostic's landed clause is not a separate
-release-floor source.
+- From grund 0.19.0, a stub whose target is excluded or ignored by an enabled
+  ignore rule is an error coded `broken-stub`, instead of the
+  `excluded-stub-target` warning shipped in 0.18.0. Check exits 1 and show refuses.
+  Rejected targets no longer lend bodies, sections, chapters or citation edges.
+  Move the target or change the refusing rule named in the error.
+  An old `--ignore excluded-stub-target` no longer suppresses this finding;
+  select or ignore `broken-stub` instead. `--only excluded-stub-target` still
+  parses but selects no findings ([§FS-declarations.checks.excluded-stub-target](../../functional-spec/FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-broken-from-grund-0190)).
+  Targets outside include alone and explicit scan-root precedence keep their behavior.
+  The shared 0.19.0 release floor ([§FS-distribution.release-floor](../../functional-spec/FS-distribution.md#release-floor-one-shared-minimum-publishable-release)) independently prevents publishing
+  this activation in a 0.18.x patch even without diagnostic text; delivery relies
+  on that shared floor. The guard also enforces the diagnostic's landed-message bound.
