@@ -39,7 +39,7 @@ A file in nested places belongs to the deepest
 Evidence: `Gemfile`, `app/`, `lib/`, `spec/`, `test/`.
 
 ```toml
-include = ["requirements.md", "docs", "e2e", "app", "lib", "spec", "test"]
+include = ["docs", "e2e", "app", "lib", "spec", "test"]
 extensions = ["md", "rb"]
 exclude = ["vendor", "tmp", "log", "coverage", ".git"]
 comment_prefixes = ["#"]
@@ -53,7 +53,7 @@ Cons: Rails apps may need to skip generated schema or fixture-heavy paths.
 Evidence: `composer.json`, `src/`, `app/`, `tests/`.
 
 ```toml
-include = ["requirements.md", "docs", "e2e", "src", "app", "tests"]
+include = ["docs", "e2e", "src", "app", "tests"]
 extensions = ["md", "php"]
 exclude = ["vendor", "var", "cache", "build", ".git"]
 comment_prefixes = ["//", "#", "/*", "*"]
@@ -67,7 +67,7 @@ Cons: framework cache dirs vary; inspect before finalizing.
 Evidence: `Package.swift`, `Sources/`, `Tests/`.
 
 ```toml
-include = ["requirements.md", "docs", "e2e", "Sources", "Tests"]
+include = ["docs", "e2e", "Sources", "Tests"]
 extensions = ["md", "swift"]
 exclude = [".build", "DerivedData", ".git"]
 comment_prefixes = ["//", "/*", "*"]
@@ -81,7 +81,7 @@ Cons: Xcode projects may have different app/test directories.
 Evidence: `build.sbt`, `src/main/scala`, `src/test/scala`.
 
 ```toml
-include = ["requirements.md", "docs", "e2e", "src"]
+include = ["docs", "e2e", "src"]
 extensions = ["md", "scala"]
 exclude = ["target", "project/target", ".bloop", ".metals", ".git"]
 comment_prefixes = ["//", "/*", "*"]
@@ -95,7 +95,7 @@ Cons: generated sources may need explicit exclusion.
 Evidence: `db/`, `migrations/`, `models/`, `*.sql`, `dbt_project.yml`.
 
 ```toml
-include = ["requirements.md", "docs", "e2e", "db", "migrations", "models", "tests"]
+include = ["docs", "e2e", "db", "migrations", "models", "tests"]
 extensions = ["md", "sql", "py", "yml", "yaml"]
 exclude = ["target", "logs", ".venv", ".git"]
 comment_prefixes = ["--", "#"]

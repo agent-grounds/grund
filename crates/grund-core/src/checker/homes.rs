@@ -40,13 +40,6 @@ pub(super) struct SingleFileHome<'a> {
 }
 
 impl SingleFileHome<'_> {
-    /// The first file, as written and as its physical key: the built-in home a
-    /// zero-config `FS` has (§FS-check.checks.fs-home-moves).
-    pub(super) fn first(&self) -> (&str, &Path) {
-        let (path, physical) = &self.files[0];
-        (path, physical)
-    }
-
     /// Whether `file` is one of the kind's files, compared by physical location.
     pub(super) fn holds(&self, file: &Path) -> bool {
         let key = physical_path_key(file);
@@ -114,12 +107,4 @@ impl<'a> KindHomeIndex<'a> {
             exact: matches!(owner.place.extent, Extent::File(_)),
         })
     }
-}
-
-/// The one location test written against a key that has already been taken
-/// (§FS-declarations.checks.misplaced-declaration.1): the single-file rule holds one `physical_path` per kind home
-/// and compares every declaration's file to it, so re-deriving the right-hand
-/// side per declaration would canonicalize the same home once per ID.
-pub(super) fn paths_same_location_key(left: &Path, right: &Path) -> bool {
-    physical_path_key(left) == right
 }

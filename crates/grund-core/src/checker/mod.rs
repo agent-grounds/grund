@@ -44,7 +44,6 @@ mod citations;
 mod conform;
 mod direction_findings;
 mod fields;
-mod fs_home_moves;
 mod glob_citations;
 mod grounding;
 mod homes;
@@ -131,8 +130,6 @@ mod tests_duplicate_sections;
 mod tests_empty_folder_obligations;
 #[cfg(test)]
 mod tests_finding_selection;
-#[cfg(test)]
-mod tests_fs_home_moves;
 #[cfg(test)]
 mod tests_grounding_per_place;
 #[cfg(test)]

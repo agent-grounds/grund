@@ -45,7 +45,7 @@ fn the_three_row_states_are_distinct_by_construction() {
         places: vec![place(Extent::Complement)],
         kind: None,
     };
-    let mut project = default_project(false);
+    let mut project = default_project();
     project.schema.rows = vec![place_only, homeless, complement];
 
     let places: Vec<_> = project.schema.places().map(|(name, _)| name).collect();
@@ -69,7 +69,7 @@ fn the_three_row_states_are_distinct_by_construction() {
 /// never cited (§FS-config.3.4).
 #[test]
 fn the_built_in_rows_have_nine_places_and_seven_kinds() {
-    let project = default_project(false);
+    let project = default_project();
     let places: Vec<_> = project.schema.places().map(|(name, _)| name).collect();
     let kinds: Vec<_> = project.schema.kinds().map(|(name, _)| name).collect();
     assert_eq!(
@@ -96,14 +96,14 @@ fn the_built_in_rows_have_nine_places_and_seven_kinds() {
 fn the_default_facade_is_built_from_its_records() {
     let root = PathBuf::from("/repo");
     let config = Config::default_for(root.clone());
-    assert_eq!(config.project(), &default_project(false));
+    assert_eq!(config.project(), &default_project());
     assert_eq!(config.run().root, root);
     assert_eq!(config.cli_base, root);
-    assert_eq!(config.kinds, default_project(false).kind_configs());
+    assert_eq!(config.kinds, default_project().kind_configs());
     assert!(!config.grounding_units);
     assert!(config.classify_citation_sources);
 
-    let legacy = Config::from_project(&default_project(true), root).unwrap();
+    let legacy = Config::from_project(&default_project(), root).unwrap();
     let fs = legacy.kinds.iter().find(|kind| kind.kind == "FS").unwrap();
     assert_eq!(fs.folder.as_deref(), Some("docs/functional-spec"));
     assert_eq!(fs.file, None);

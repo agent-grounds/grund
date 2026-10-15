@@ -62,7 +62,7 @@ rules it writes commented out in `grund.toml` until you adopt them:
 |-----------|-------------|---------------------------------------------------------|-----------------------------------------|
 | Why       | GRUND       | `docs/grund.md`                                         |                                         |
 | Where     | GOAL        | `docs/goals.md`                                         | should cite GRUND or GOAL               |
-| What      | FS          | `requirements.md` (`docs/functional-spec/` from 0.19.0) | should cite GOAL or FS; **never** AR    |
+| What      | FS          | `docs/functional-spec/`                                 | should cite GOAL or FS; **never** AR    |
 |           | REQ         | `docs/requirements/`                                    | should cite GRUND or GOAL; **never** AR |
 | How       | AR          | `docs/architecture/`                                    | should cite FS or GOAL                  |
 | Proof     | e2e         | `tests/e2e/`                                            | **must** cite FS; avoid AR              |

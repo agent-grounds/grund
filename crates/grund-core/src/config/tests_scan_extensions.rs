@@ -9,7 +9,7 @@ use super::v1::default_project;
 use crate::grammar::{DocCommentRule, classified_extensions, extension_rule};
 
 fn default_extensions() -> Vec<String> {
-    default_project(false).schema.sources.extensions
+    default_project().schema.sources.extensions
 }
 
 /// The default before #705. A language the table gains is appended, so every

@@ -4,8 +4,8 @@ use crate::testing::{test_root, write};
 use crate::writers::{InitFsHome, InitOpts, InitOutput, docs_scaffold, init};
 
 #[test]
-fn init_next_guidance_uses_effective_legacy_fs_home() {
-    let root = test_root("init_next_guidance_uses_effective_legacy_fs_home");
+fn init_next_guidance_uses_the_built_in_fs_folder() {
+    let root = test_root("init_next_guidance_uses_the_built_in_fs_folder");
     write(&root.join("grund.toml"), "grund_config_version = 1\n");
 
     let init_output = init(InitOpts {
@@ -28,11 +28,11 @@ fn init_next_guidance_uses_effective_legacy_fs_home() {
     let rendered = next.render();
     assert!(
         rendered.contains("then add it under docs/functional-spec"),
-        "next guidance should point at the effective legacy FS home: {rendered}"
+        "next guidance should point at the built-in FS folder: {rendered}"
     );
     assert!(
         !rendered.contains("requirements.md"),
-        "next guidance must not rebuild the new default FS home for compatibility configs: {rendered}"
+        "next guidance must not name the pre-0.19.0 FS file: {rendered}"
     );
 }
 

@@ -25,7 +25,7 @@ The runnable [`examples/places/`](../../examples/places/) shows all three
 | --- | --- | --- |
 | `GRUND` | Why: project motivation | `docs/grund.md` (one declaration, all of it inline) |
 | `GOAL` | Where: project direction and outcomes | `docs/goals.md` (one file, all goals inline) |
-| `FS` | What: behavior, requirements, and constraints | `requirements.md`; from grund 0.19.0 the default is `docs/functional-spec/` ([§DF-fs-home-moves-from-0-19](../decisions/functional/DF-fs-home-moves-from-0-19.md#df-fs-home-moves-from-0-19-the-built-in-fs-home-moves-back-to-docsfunctional-spec-in-0190-and-the-template-declares-req-now)) |
+| `FS` | What: behavior, requirements, and constraints | `docs/functional-spec/` ([§DF-fs-home-lands-in-0-19](../decisions/functional/DF-fs-home-lands-in-0-19.md#df-fs-home-lands-in-0-19-the-built-in-fs-home-is-docsfunctional-spec-from-0190)) |
 | `REQ` † | Hard requirements: what the project must never break | `docs/requirements/` |
 | `AR` | How: high-level implementation, structure, and design | `docs/architecture/` — **or inline in a class / module doc-comment** |
 | `DF` | product behavior decisions and tradeoffs | `docs/decisions/functional/` (append-only) |
@@ -33,7 +33,7 @@ The runnable [`examples/places/`](../../examples/places/) shows all three
 | `RM`   | planned milestones and sequencing           | `docs/roadmap.md`                              |
 | `e2e` * / `integration` * | proof: the spec as a user sees it, and the parts fitting as designed | `tests/e2e/` (must cite `FS`), `tests/integration/` (should cite `AR`) |
 
-† `REQ` is declared by the config `grund init` writes ([§FS-init.2.4.10](../functional-spec/FS-init.md#2410-req-is-declared-in-docsrequirements)) and has no built-in default: a project with no config, or a config that leaves `[[kinds]]` out, has no `REQ`. A project with no config whose `FS` declarations sit in `requirements.md` is warned `fs-home-moves` until 0.19.0 moves that home; running `grund init` writes a config that keeps them there ([§FS-check.checks.fs-home-moves](../functional-spec/FS-check.md#checksfs-home-moves-the-built-in-fs-home-moves-in-grund-0190)).
+† `REQ` is declared by the config `grund init` writes ([§FS-init.2.4.10](../functional-spec/FS-init.md#2410-req-is-declared-in-docsrequirements)) and has no built-in default: a project with no config, or a config that leaves `[[kinds]]` out, has no `REQ`. Before grund 0.19.0 a project with no config homed `FS` in `requirements.md`; such a project now runs `grund init` to write a config that keeps it there, or moves its declarations into `docs/functional-spec/` ([§FS-config.3.4.4](../functional-spec/FS-config.md#344-the-default-kinds)).
 
 
 **ID format:**

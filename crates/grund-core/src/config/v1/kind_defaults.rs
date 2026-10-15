@@ -49,12 +49,14 @@ pub(super) fn default_kind_citable(kind: &str) -> bool {
 
 /// Default home folder for each built-in kind — the directory `grund id` proposes
 /// a path under and `grund check` expects the declaration to live in (§FS-config.3.4.11).
-pub(super) fn default_kind_folder(kind: &str) -> Option<&'static str> {
+pub(crate) fn default_kind_folder(kind: &str) -> Option<&'static str> {
     match kind {
         "AR" => Some("docs/architecture"),
         "DA" => Some("docs/decisions/architectural"),
         "DF" => Some("docs/decisions/functional"),
         "E2E" => Some("e2e/cases"),
+        // §FS-config.3.4.4: FS moved here from `requirements.md` in grund 0.19.0.
+        "FS" => Some("docs/functional-spec"),
         "e2e" => Some("tests/e2e"),
         "integration" => Some("tests/integration"),
         // GRUND, GOAL, RM are single-file kinds — see `default_kind_file`. A
@@ -65,14 +67,13 @@ pub(super) fn default_kind_folder(kind: &str) -> Option<&'static str> {
 }
 
 /// Default single-file home for kinds whose declarations all live in one
-/// document — `GRUND` in `docs/grund.md`, `GOAL` in `docs/goals.md`, `FS` in
-/// `requirements.md`, and `RM` in `docs/roadmap.md` (§FS-config.3.4). Other
-/// built-in kinds have no `file` (each declaration is its own file).
+/// document — `GRUND` in `docs/grund.md`, `GOAL` in `docs/goals.md`, and `RM` in
+/// `docs/roadmap.md` (§FS-config.3.4). Other built-in kinds have no `file`
+/// (each declaration is its own file).
 pub(super) fn default_kind_file(kind: &str) -> Option<&'static str> {
     match kind {
         "GRUND" => Some("docs/grund.md"),
         "GOAL" => Some("docs/goals.md"),
-        "FS" => Some("requirements.md"),
         "RM" => Some("docs/roadmap.md"),
         _ => None,
     }

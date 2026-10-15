@@ -292,7 +292,7 @@ fn print_subcommand_help(cmd: &str) {
                 "  --template NAME  software-development (default: the canonical kinds) or none (no kinds, for a repo that declares its own)"
             );
             println!(
-                "  --scaffold     also write the template's starter files: requirements.md, docs/ and tests/ (--docs is the deprecated spelling)"
+                "  --scaffold     also write the template's starter files: docs/ and tests/ (--docs is the deprecated spelling)"
             );
             println!(
                 "  --name NAME    project name (default: target project_name, then directory name)"

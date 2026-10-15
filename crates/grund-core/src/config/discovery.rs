@@ -226,7 +226,7 @@ pub(crate) fn config_at(
 /// The zero-config façade under `run` (§GOAL-zero-config): the v1 default
 /// project, which no file narrowed (§AR-config.3.2).
 fn defaults_under(run: Run, invocation: &Invocation) -> Config {
-    let project = v1::default_project(false);
+    let project = v1::default_project();
     let compiled = compile(&project).expect("default grammar must compile");
     settled(&project, &compiled, run, invocation)
 }

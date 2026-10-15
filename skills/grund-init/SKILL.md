@@ -175,7 +175,7 @@ Relax only to match existing IDs.
 
 ### `[[kinds]]`
 
-Default kinds: `GRUND`, `GOAL`, `FS`, `AR`, `DF`, `DA`, `E2E`, `RM`. The config `grund init` writes also declares `REQ`, hard requirements the project must never break, in `docs/requirements/`. `REQ` has no built-in default, so a config that leaves `[[kinds]]` out has none. `FS` stays in `requirements.md` until grund 0.19.0 moves its default home to `docs/functional-spec/` ([the decision](https://github.com/agent-grounds/grund/blob/main/docs/decisions/functional/DF-fs-home-moves-from-0-19.md)); a repository with no `grund.toml` whose `requirements.md` declares `FS` is warned `fs-home-moves` until then, and running `grund init` keeps it there.
+Default kinds: `GRUND`, `GOAL`, `FS`, `AR`, `DF`, `DA`, `E2E`, `RM`. The config `grund init` writes also declares `REQ`, hard requirements the project must never break, in `docs/requirements/`. `REQ` has no built-in default, so a config that leaves `[[kinds]]` out has none. `FS` lives in `docs/functional-spec/`, one declaration per file, with no `grund.toml` and in the config `grund init` writes alike: `grund init --scaffold` writes `docs/functional-spec/README.md`, the `FS` index, and no `requirements.md`. Before grund 0.19.0 a repository with no `grund.toml` homed `FS` in `requirements.md` ([the decision](https://github.com/agent-grounds/grund/blob/main/docs/decisions/functional/DF-fs-home-lands-in-0-19.md)); to keep `FS` there, run `grund init` and write `files = ["requirements.md"]` on its `FS` row.
 
 Ask whether to keep defaults, remove unused kinds, or add project-specific kinds. To start from none instead, `grund init --template=none` writes a version-2 file with no `[schema.kinds]` row, and each kind is then added as its own `[schema.kinds.<KIND>]` table.
 
@@ -389,7 +389,7 @@ Evidence: `Cargo.toml`, `Cargo.lock`, `crates/`, `src/**/*.rs`.
 
 ```toml
 [scan]
-include = ["requirements.md", "docs", "e2e", "src", "crates", "tests"]
+include = ["docs", "e2e", "src", "crates", "tests"]
 extensions = ["md", "rs"]
 exclude = ["target", ".git"]
 comment_prefixes = ["//", "/*", "*"]
@@ -403,7 +403,7 @@ Cons: may miss generated docs outside `docs/`.
 Evidence: `package.json`, `pnpm-workspace.yaml`, `tsconfig.json`, `src/`, `apps/`, `packages/`.
 
 ```toml
-include = ["requirements.md", "docs", "e2e", "src", "apps", "packages", "tests"]
+include = ["docs", "e2e", "src", "apps", "packages", "tests"]
 extensions = ["md", "ts", "tsx", "js", "jsx"]
 exclude = ["node_modules", "dist", "build", "coverage", ".next", ".turbo", ".git"]
 comment_prefixes = ["//", "/*", "*"]
@@ -417,7 +417,7 @@ Cons: broad monorepos may need narrower package selection.
 Evidence: `pyproject.toml`, `setup.py`, `requirements.txt`, `src/`, package dirs, `tests/`.
 
 ```toml
-include = ["requirements.md", "docs", "e2e", "src", "tests"]
+include = ["docs", "e2e", "src", "tests"]
 extensions = ["md", "py"]
 exclude = [".venv", "__pycache__", ".pytest_cache", ".mypy_cache", "build", "dist", ".git"]
 comment_prefixes = ["#"]
@@ -432,7 +432,7 @@ Cons: docstring scanning can surface intentional prose examples.
 Evidence: `go.mod`, `cmd/`, `internal/`, `pkg/`, `*.go`.
 
 ```toml
-include = ["requirements.md", "docs", "e2e", "cmd", "internal", "pkg", "tests"]
+include = ["docs", "e2e", "cmd", "internal", "pkg", "tests"]
 extensions = ["md", "go"]
 exclude = ["vendor", "dist", "build", ".git"]
 comment_prefixes = ["//", "/*", "*"]
@@ -446,7 +446,7 @@ Cons: single-package repos may only need `["docs", "src"]` or `["docs", "."]` if
 Evidence: `pom.xml`, `build.gradle`, `settings.gradle`, `src/main`, `src/test`.
 
 ```toml
-include = ["requirements.md", "docs", "e2e", "src"]
+include = ["docs", "e2e", "src"]
 extensions = ["md", "java", "kt"]
 exclude = ["target", "build", ".gradle", ".git"]
 comment_prefixes = ["//", "/*", "*"]
@@ -460,7 +460,7 @@ Cons: multi-module builds may need module directories added explicitly.
 Evidence: `CMakeLists.txt`, `Makefile`, `src/`, `include/`, `lib/`, `tests/`.
 
 ```toml
-include = ["requirements.md", "docs", "e2e", "src", "include", "lib", "tests"]
+include = ["docs", "e2e", "src", "include", "lib", "tests"]
 extensions = ["md", "c", "cpp", "h", "hpp"]
 exclude = ["build", "dist", "out", ".git"]
 comment_prefixes = ["//", "/*", "*"]
@@ -474,7 +474,7 @@ Cons: vendored headers should be excluded if present.
 Evidence: `*.csproj`, `*.sln`, `src/`, `test/`, `tests/`.
 
 ```toml
-include = ["requirements.md", "docs", "e2e", "src", "test", "tests"]
+include = ["docs", "e2e", "src", "test", "tests"]
 extensions = ["md", "cs"]
 exclude = ["bin", "obj", "TestResults", ".git"]
 comment_prefixes = ["//", "/*", "*"]
@@ -491,7 +491,7 @@ the [supplementary init examples](https://github.com/agent-grounds/grund/blob/ma
 Evidence: multiple manifests and top-level `apps/`, `packages/`, `services/`, `libs/`, `tools/`.
 
 ```toml
-include = ["requirements.md", "docs", "e2e", "apps", "packages", "services", "libs", "tools", "tests"]
+include = ["docs", "e2e", "apps", "packages", "services", "libs", "tools", "tests"]
 extensions = ["md", "rs", "go", "java", "kt", "ts", "tsx", "js", "py", "c", "cpp", "cs", "rb", "php"]
 exclude = ["target", "node_modules", ".git", "dist", "build", ".venv", "coverage", ".next", ".turbo"]
 comment_prefixes = ["//", "#", ";", "--", "*", "/*"]

@@ -31,8 +31,8 @@ use kind_table::ParsedKind;
 
 pub(crate) use lines::{LineKind, LinePass, LineRecord};
 
-pub(crate) use defaults::LEGACY_FS_FOLDER;
 pub(super) use defaults::default_project;
+pub(crate) use kind_defaults::default_kind_folder;
 pub(super) use kind_values::{ValueLines, rule_kind_refusal, validate_kind_value_keys};
 pub(super) use values::{bail_config, parse_bool, parse_string, parse_usize};
 pub(crate) use values::{parse_string_list, strip_comment};
@@ -63,7 +63,7 @@ pub(super) fn read_sections_with(
     report_path: &Path,
     pass: &mut LinePass,
 ) -> Result<Read> {
-    let mut project = default_project(true);
+    let mut project = default_project();
     let kinds = parse::parse_config_file(text, report_path, &mut project, pass)?;
     Ok(Read { project, kinds })
 }
@@ -86,7 +86,7 @@ impl Read {
 /// template's config means (§FS-init.2.4.9).
 #[cfg(test)]
 pub(super) fn default_project_without_kinds() -> Project {
-    let mut project = default_project(false);
+    let mut project = default_project();
     kind_rows::lower_parsed_kinds(
         Path::new("grund.toml"),
         Path::new("."),
