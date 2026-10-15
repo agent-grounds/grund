@@ -283,7 +283,9 @@ fn external_facts_config_validation_pins_coupling_enum_homes_and_default() {
         "# FS-alpha: Alpha\n\nFact.\n",
     );
     write(&legacy, "docs/guide.md", "# Guide\n\nSee \u{a7}FS-alpha.\n");
-    let output = run(&legacy, &["check", "."]);
+    // Version 1 is this fixture's point, so its caution is deselected
+    // (§FS-check.checks.config-version-1) and the clean run still prints `success`.
+    let output = run(&legacy, &["check", ".", "--ignore", "config-version-1"]);
     assert_code(&output, 0, "absent keys retain schema-v1 behavior");
     assert_eq!(stdout(&output), "success\n");
 }

@@ -8,11 +8,11 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
-const CONFIG: &str = "grund_config_version = 1\n\n\
-     [reference]\nstrict = true\nrequire_grounding = false\n\n\
-     [id]\nformat = \"{kind}-{slug}\"\n\n\
-     [[kinds]]\nkind = \"FS\"\nfolder = \"docs/fs\"\nindex = false\n\n\
-     [scan]\ninclude = [\"docs\", \"notes\"]\nrespect_gitignore = true\n";
+const CONFIG: &str = "grund_config_version = 2\n\n\
+     [schema]\nid_format = \"{kind}-{slug}\"\n\n\
+     [schema.sources]\nrespect_gitignore = true\n\n\
+     [schema.kinds.FS]\nfolders = [\"docs/fs\"]\nindex = false\n\n\
+     [schema.kinds.code]\nfolders = [\"docs\", \"notes\"]\n";
 
 /// The tree of the ticket's example: `docs/fs/x.md` stubs `notes/gen/a.md`, which
 /// declares `FS-x`, and `docs/refs.md` cites it so nothing else is reported.

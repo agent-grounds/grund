@@ -83,7 +83,7 @@ fn copy_dir(from: &Path, to: &Path) {
 }
 
 /// §FS-config.1.4: from `docs/functional-spec/`, a bare name finds the
-/// `grund.toml` two levels up, whose `[id] format` and folder `FS` home both
+/// `grund.toml` two levels up, whose `id_format` and folder `FS` home both
 /// disagree with the built-in defaults, so a run on the defaults cannot pass.
 #[test]
 fn bare_file_check_from_a_subdirectory_loads_the_config_above_it() {

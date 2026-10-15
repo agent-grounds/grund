@@ -61,9 +61,16 @@ fn watch_lexical_project_link_retargets() {
 }
 
 /// §FS-check.6.2.1, §FS-check.6.3.3: immediate text, save, repair and status 0.
+/// The config is version 2, so the clean run's bytes are `success` and no
+/// version 1 caution (§FS-check.checks.config-version-1).
 #[test]
 fn watch_text_checks_immediately_then_reports_save_and_repair() {
     let f = Fixture::new();
+    f.write(
+        "grund.toml",
+        "grund_config_version = 2\n\n[schema]\nid_format = \"{kind}-{slug}\"\n\n\
+         [schema.kinds.FS]\nfolders = [\"docs/functional-spec\"]\n",
+    );
     let clean = f.check(&[]);
     assert_eq!(clean.status.code(), Some(0));
     assert_eq!(clean.stdout, b"success\n");
