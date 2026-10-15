@@ -83,6 +83,10 @@ Anything not listed above is allowed.
 - **AR**
   - field placement must · first
   - field terms must · after placement
+- **DF**
+  - field status warn · first · one of Accepted, Superseded
+- **DA**
+  - field status warn · first · one of Accepted, Superseded
 
 ### Chapter rules
 
