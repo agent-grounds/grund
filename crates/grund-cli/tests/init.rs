@@ -97,7 +97,7 @@ fn init_scaffold_form_emits_full_scaffold_and_check_is_clean() {
         "docs/goals.md",
         "docs/roadmap.md",
         "docs/changelog.md",
-        "requirements.md",
+        "docs/functional-spec/README.md",
         "docs/architecture/README.md",
         "docs/decisions/architectural/README.md",
         "docs/decisions/functional/README.md",
@@ -141,10 +141,10 @@ fn init_scaffold_form_emits_full_scaffold_and_check_is_clean() {
 }
 
 #[test]
-fn init_scaffold_default_requirements_file_is_scanned() {
-    // §FS-init.2.1 / §FS-init.2.4.3: the generated FS home is a row place v2 scans,
+fn init_scaffold_default_fs_folder_is_scanned() {
+    // §FS-init.2.1 / §FS-init.2.4.10: the generated FS home is a row place v2 scans,
     // so slug-only declarations added where `init` points users are resolvable.
-    let target = workdir("init_scaffold_default_requirements_file_is_scanned");
+    let target = workdir("init_scaffold_default_fs_folder_is_scanned");
     let output = run_grund(
         &["init", target.to_str().unwrap(), "--scaffold"],
         manifest_dir(),
@@ -155,11 +155,19 @@ fn init_scaffold_default_requirements_file_is_scanned() {
         String::from_utf8_lossy(&output.stderr)
     );
 
+    let index = target.join("docs/functional-spec/README.md");
+    let readme = fs::read_to_string(&index).expect("read the FS index");
+    let readme = readme.replacen(
+        "|---|---|\n",
+        "|---|---|\n| [\u{a7}FS-session](FS-session.md) | Sessions |\n",
+        1,
+    );
+    fs::write(&index, readme).expect("list FS-session in the FS index");
     fs::write(
-        target.join("requirements.md"),
-        "# Requirements\n\n## FS-session: Sessions can be created\n",
+        target.join("docs/functional-spec/FS-session.md"),
+        "# FS-session: Sessions can be created\n",
     )
-    .expect("write requirements.md");
+    .expect("write FS-session.md");
     fs::create_dir_all(target.join("src")).expect("create src");
     fs::write(
         target.join("src/lib.rs"),
@@ -170,7 +178,7 @@ fn init_scaffold_default_requirements_file_is_scanned() {
     let check = run_grund(&["check", target.to_str().unwrap()], manifest_dir());
     assert!(
         check.status.success(),
-        "FS declaration in generated requirements.md should resolve:\nstdout={}\nstderr={}",
+        "FS declaration in the generated FS folder should resolve:\nstdout={}\nstderr={}",
         String::from_utf8_lossy(&check.stdout),
         String::from_utf8_lossy(&check.stderr)
     );
@@ -356,21 +364,20 @@ title = "Architecture decision"
     );
 }
 
-/// §FS-config.3.4.4.4 / §FS-init.2.1: existing configs without explicit kind homes keep
-/// the legacy FS folder, and `init --scaffold` must scaffold that effective home.
+/// §FS-config.3.4.4 / §FS-init.2.1: a config without explicit kind homes takes the
+/// built-in FS folder, and `init --scaffold` must scaffold that effective home.
 /// §FS-init.1.3 is that rule seen from the `--scaffold` side: a config that omits
-/// `[[kinds]]` keeps the compatibility FS home, so the scaffold writes
-/// `docs/functional-spec/README.md` and the next-step guidance points at
-/// `docs/functional-spec` rather than at the generated `requirements.md`.
+/// `[[kinds]]` homes FS in `docs/functional-spec`, so the scaffold writes
+/// `docs/functional-spec/README.md` and the next-step guidance points there.
 #[test]
-fn init_scaffold_existing_implicit_legacy_config_uses_legacy_fs_home() {
-    let target = workdir("init_scaffold_existing_implicit_legacy_config_uses_legacy_fs_home");
+fn init_scaffold_existing_kindless_config_uses_the_built_in_fs_home() {
+    let target = workdir("init_scaffold_existing_kindless_config_uses_the_built_in_fs_home");
     fs::create_dir_all(target.join(".agents")).expect("create .agents");
     fs::write(
         target.join(".agents/grund.toml"),
         "grund_config_version = 1\n",
     )
-    .expect("write legacy implicit config");
+    .expect("write kindless config");
 
     let output = run_grund(
         &["init", target.to_str().unwrap(), "--scaffold"],
@@ -385,15 +392,15 @@ fn init_scaffold_existing_implicit_legacy_config_uses_legacy_fs_home() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
         stderr.contains("wrote docs/functional-spec/README.md"),
-        "legacy implicit config should scaffold legacy FS folder, got:\n{stderr}"
+        "a kindless config should scaffold the built-in FS folder, got:\n{stderr}"
     );
     assert!(
         stderr.contains("then add it under docs/functional-spec"),
-        "next guidance should target the effective legacy FS folder, got:\n{stderr}"
+        "next guidance should target the built-in FS folder, got:\n{stderr}"
     );
     assert!(
         !target.join("requirements.md").exists(),
-        "legacy implicit config must not scaffold the new FS file"
+        "a kindless config must not scaffold a requirements.md"
     );
 }
 
@@ -634,7 +641,7 @@ fn init_dry_run_with_scaffold_previews_scaffold_without_writing() {
         "docs/goals.md",
         "docs/roadmap.md",
         "docs/changelog.md",
-        "requirements.md",
+        "docs/functional-spec/README.md",
         "docs/architecture/README.md",
         "docs/decisions/architectural/README.md",
         "docs/decisions/functional/README.md",

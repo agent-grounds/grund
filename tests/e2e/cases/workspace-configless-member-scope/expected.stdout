@@ -1,3 +1,5 @@
 docs/functional-spec/FS-001-session.md:1: error: FS-001-session is not listed in docs/functional-spec/README.md (the index file does not exist) — became an error in grund 0.13.0
 docs/functional-spec/FS-001-session.md:3: error: unknown project alias root
+docs/notes.md:3: error: GOAL-001-sessions must be declared in docs/goals.md (single-file kind)
 docs/functional-spec/FS-001-session.md:1: warning: declared but never cited: FS-001-session
+docs/notes.md:3: warning: declared but never cited: GOAL-001-sessions

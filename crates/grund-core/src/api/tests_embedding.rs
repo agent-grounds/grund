@@ -334,6 +334,10 @@ fn public_embedding_api_checks_and_shows_without_cli_dispatch() {
 fn list_summary_reports_single_file_kind_home() {
     let root = test_root("list_summary_reports_single_file_kind_home");
     write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\n\n[[kinds]]\nkind = \"FS\"\nfile = \"requirements.md\"\n",
+    );
+    write(
         &root.join("requirements.md"),
         "# Requirements\n\n## FS-001-alpha: Alpha\n\nLead.\n",
     );

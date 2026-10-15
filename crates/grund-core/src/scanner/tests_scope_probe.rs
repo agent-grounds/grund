@@ -22,7 +22,7 @@ fn effective_scope_recognizes_include_and_kind_home_files() {
     );
 
     let home_root = test_root("effective_scope_recognizes_a_kind_home_file");
-    write(&home_root.join("requirements.md"), "# Requirements\n");
+    write(&home_root.join("docs/goals.md"), "# Goals\n");
     let mut home_config = Config::default_for(home_root);
     home_config.include = Some(Vec::new());
 
@@ -67,6 +67,7 @@ fn effective_scope_rejects_files_the_scanner_skips() {
         .iter_mut()
         .find(|kind| kind.kind == "FS")
         .expect("default FS kind");
+    fs.folder = None;
     fs.file = Some("content/templates/template.md".to_string());
     fs.scan = false;
 

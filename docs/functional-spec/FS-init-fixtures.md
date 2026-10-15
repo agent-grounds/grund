@@ -172,7 +172,7 @@ The scaffold's `AGENTS.md` project map lists `REQ` right after `FS`, and its voc
 (`KIND ∈ {GRUND, GOAL, FS, REQ, AR, DF, DA, RM}`)
 ```
 
-Every scaffold-owned ID example takes the starter's slug-only format, so `docs/goals.md` teaches `# GOAL-<slug>: …` and `docs/functional-spec/README.md` teaches `# FS-<slug>: …` ([§FS-init.2.1.3](FS-init.md#213-the-software-development-starter-files)). No `requirements.md` is written: the template homes `FS` in `docs/functional-spec/` ([§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements)).
+Every scaffold-owned ID example takes the starter's slug-only format, so `docs/goals.md` teaches `# GOAL-<slug>: …` and `docs/functional-spec/README.md` teaches the `FS-<slug>` ID ([§FS-init.2.1.3](FS-init.md#213-the-software-development-starter-files)). No `requirements.md` is written: the template homes `FS` in `docs/functional-spec/` ([§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements)).
 
 `grund check` and `grund init --check` both exit `0` on the scaffolded tree, unmodified, and `grund.toml` is the version-2 starter of [§FS-init-fixtures.1](FS-init-fixtures.md#1-default-form).
 

@@ -107,8 +107,8 @@ fn a_first_kind_replaces_the_empty_set() {
 }
 
 /// §FS-init.2.4.10, §FS-init-fixtures.2: a fresh `software-development`
-/// scaffold declares `REQ` in `docs/requirements/` beside the `FS` row, which
-/// stays in `requirements.md` until 0.19.0, and passes both of its gates.
+/// scaffold declares `REQ` in `docs/requirements/` beside the `FS` row in
+/// `docs/functional-spec/`, and passes both of its gates.
 #[test]
 fn a_fresh_scaffold_declares_req_in_docs_requirements() {
     let target = workdir("init_template_scaffold_declares_req");
@@ -116,14 +116,14 @@ fn a_fresh_scaffold_declares_req_in_docs_requirements() {
     assert!(ok, "{stderr}");
     assert!(
         stderr.contains(
-            "wrote requirements.md\nwrote docs/requirements/README.md\nwrote docs/grund.md\n"
+            "wrote docs/functional-spec/README.md\nwrote docs/requirements/README.md\nwrote docs/grund.md\n"
         ),
         "{stderr}"
     );
     assert!(target.join("docs/requirements/README.md").is_file());
 
     let config = fs::read_to_string(target.join("grund.toml")).unwrap();
-    let rows = "[schema.kinds.FS]\nfiles = [\"requirements.md\"]\n\
+    let rows = "[schema.kinds.FS]\nfolders = [\"docs/functional-spec\"]\n\
                 [schema.kinds.REQ]\nfolders = [\"docs/requirements\"]\n";
     assert!(config.contains(rows), "{config}");
     let titles = "[presentation.kinds.FS]\n\
@@ -139,7 +139,7 @@ fn a_fresh_scaffold_declares_req_in_docs_requirements() {
         block.contains("(`KIND ∈ {GRUND, GOAL, FS, REQ, AR, DF, DA, RM}`)"),
         "{block}"
     );
-    let map = "- [FS](requirements.md): What: behavior, requirements, and constraints\n\
+    let map = "- [FS](docs/functional-spec): What: behavior, requirements, and constraints\n\
                - [REQ](docs/requirements): Hard requirements: what the project must never break\n\
                - [AR](docs/architecture): How: high-level implementation, structure, and design\n";
     assert!(block.contains(map), "{block}");

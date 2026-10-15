@@ -49,7 +49,7 @@ EXPECTED_TESTS_BY_PATH = {
     "crates/grund-core/src/api/tests_init_guidance.rs": {
         "e2e_readme_scaffold_uses_effective_fs_home",
         "init_next_guidance_uses_effective_custom_fs_file",
-        "init_next_guidance_uses_effective_legacy_fs_home",
+        "init_next_guidance_uses_the_built_in_fs_folder",
     },
     "crates/grund-core/src/writers/tests_integrations.rs": {
         "claude_symlink_to_agents_md_is_detected",
