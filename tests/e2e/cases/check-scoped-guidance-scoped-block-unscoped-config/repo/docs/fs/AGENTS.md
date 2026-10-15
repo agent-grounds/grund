@@ -1,5 +1,5 @@
 <!-- BEGIN GRUND MANAGED BLOCK -->
-## Grounding with grund (v22)
+## Grounding with grund (v26)
 
 These rules cover the files under `docs/fs/`; the rest of this project's grund guidance is in the root `AGENTS.md`.
 
