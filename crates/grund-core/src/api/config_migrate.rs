@@ -50,7 +50,7 @@ pub fn config_migrate(opts: &MigrateOpts) -> Result<MigrateOutcome, MigrateFailu
         } => (*report, v1_text, *v1, line_map, value_lines),
     };
     if !report.refusals.is_empty() {
-        return Ok(MigrateOutcome::Migrated(report));
+        return Ok(MigrateOutcome::Migrated(Box::new(report)));
     }
     report.members = members(&located);
     // §FS-config-migrate.5.3: guidance `check` would compare refuses before the report gate.
@@ -59,7 +59,7 @@ pub fn config_migrate(opts: &MigrateOpts) -> Result<MigrateOutcome, MigrateFailu
         && !refusals.is_empty()
     {
         report.refusals = refusals;
-        return Ok(MigrateOutcome::Migrated(report));
+        return Ok(MigrateOutcome::Migrated(Box::new(report)));
     }
     if let (Some(GateResult::Equal), Some(candidate)) = (&report.gates, &report.candidate) {
         let lines = report_gate(&located, &v1, candidate, &line_map, &report.config);
@@ -74,7 +74,7 @@ pub fn config_migrate(opts: &MigrateOpts) -> Result<MigrateOutcome, MigrateFailu
         write(&located, &v1_text, &report)?;
         report.wrote = true;
     }
-    Ok(MigrateOutcome::Migrated(report))
+    Ok(MigrateOutcome::Migrated(Box::new(report)))
 }
 
 /// §FS-config-migrate.6: the candidate over the config, by the shared writer,

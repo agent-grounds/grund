@@ -10,7 +10,7 @@ pub enum MigrateOutcome {
     /// (§FS-config-migrate.6.6). `config` is its path from the report base.
     AlreadyV2 { config: String },
     /// A version-1 config, previewed or written.
-    Migrated(MigrateReport),
+    Migrated(Box<MigrateReport>),
 }
 
 /// §FS-config-migrate.2.2: the report on one version-1 config.

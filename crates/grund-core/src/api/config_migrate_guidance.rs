@@ -38,9 +38,11 @@ pub(super) fn refusals(
         if old.bytes.trim_end() == new.bytes.trim_end() {
             continue;
         }
-        let shapes = (old.heading == "### Declaration shapes")
-            .then(|| value_shapes(&new.bytes, value_lines))
-            .unwrap_or_default();
+        let shapes = if old.heading == "### Declaration shapes" {
+            value_shapes(&new.bytes, value_lines)
+        } else {
+            Vec::new()
+        };
         if shapes.is_empty() {
             out.push(section_refusal(old.noun, &old.bytes, &new.bytes));
         } else {

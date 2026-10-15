@@ -144,7 +144,7 @@ fn records_gate_ignores_include_spelled_as_places() {
 #[test]
 fn records_gate_ignores_the_nesting_rule_when_nothing_nests() {
     let (v1, v2, root) = translated("nesting", FS, &[]);
-    differs("nesting", &v1.schema.nesting, &v2.schema.nesting);
+    differs("nesting", v1.schema.nesting, v2.schema.nesting);
     assert_eq!(compare(&v1, &v2, &root), Vec::<String>::new());
 }
 
