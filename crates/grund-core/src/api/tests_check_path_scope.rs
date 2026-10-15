@@ -7,7 +7,7 @@
 
 use std::path::PathBuf;
 
-use crate::testing::{check_run, codes, findings, test_root, write};
+use crate::testing::{check_run, codes, findings, graph_codes, test_root, write};
 
 const CONFIG: &str = "grund_config_version = 1\n\
     project_name = \"fixture\"\n\n\
@@ -142,7 +142,7 @@ fn a_duplicate_whose_twin_lies_outside_the_path_is_reported() {
         "§FS-check.1.3.6.1: the path-scoped run and the whole-tree run stop disagreeing"
     );
     assert_eq!(
-        codes(&check_run(
+        graph_codes(&check_run(
             &root.join("docs/functional-spec/FS-widget.md"),
             false
         )),
@@ -458,7 +458,7 @@ fn a_duplicate_is_reported_from_the_twin_it_is_not_anchored_at() {
         "§FS-check.1.3.6.2: the anchor is the other twin, and the run still reports it"
     );
     assert_eq!(
-        codes(&twin),
+        graph_codes(&twin),
         vec!["duplicate".to_string()],
         "a run over the twin exits 1 rather than printing `success`"
     );
@@ -489,7 +489,7 @@ fn a_value_mismatch_is_reported_from_the_declaring_file() {
 
     let whole_tree = check_run(&root, false);
     assert_eq!(
-        codes(&whole_tree),
+        graph_codes(&whole_tree),
         vec!["value-mismatch".to_string()],
         "the whole-tree run reports the mismatch, got {:?}",
         findings(&whole_tree)

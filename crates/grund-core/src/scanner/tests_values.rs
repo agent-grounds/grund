@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use super::values::markdown_component;
 use crate::config::{Config, load_config};
 use crate::grammar::value_binding_section_shape_is_valid;
-use crate::testing::{check_run, codes, scan_findings, test_root, write};
+use crate::testing::{check_run, codes, graph_codes, scan_findings, test_root, write};
 
 #[test]
 fn markdown_component_excludes_the_complete_numeric_coordinate_delimiter() {
@@ -147,7 +147,7 @@ fn malformed_delimiters_are_errors_but_unbackticked_adjacency_is_prose() {
         ),
     ] {
         assert_eq!(
-            codes(&check_run(&value_repo(name, binding), false)),
+            graph_codes(&check_run(&value_repo(name, binding), false)),
             vec!["invalid-value-binding"],
             "{name} should be an invalid attempted binding"
         );
