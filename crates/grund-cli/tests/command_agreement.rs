@@ -49,8 +49,6 @@ use std::path::{Path, PathBuf};
 /// says; every other row is listed in §REQ-one-answer.differences.
 const LEDGER: &[(&str, &str, &str)] = &[
     ("G01", "r1", "citation-is-its-whole-token"),
-    ("R01", "r2", "narrowed-resolves-as-check"),
-    ("R02", "r02", "a-narrowed-workspace-run-resolves-the-alias"),
     // R06a-d keep the saved text for one release (DF-four-editor-checks-read-saved-text);
     // their flip is #624.
     ("R06a", "r06a", "a-buffer-answers-as-saved"),
@@ -64,8 +62,8 @@ const LEDGER: &[(&str, &str, &str)] = &[
 /// §REQ-one-answer.differences the command line, shell completion or the editor
 /// snapshot can show. A tree with no row holds a row that closed, U01 and U05 with
 /// #597, U04, U07 and U08 with #651, G06 with #671, G09 with #680, Placement,
-/// U03a to U03d and U06 with #650, P01, P02, P03, P07, P10 and P12 with #639, and P16
-/// with #655, so its two answers must agree.
+/// U03a to U03d and U06 with #650, P01, P02, P03, P07, P10 and P12 with #639, P16
+/// with #655, and R01 and R02 with #621, so its two answers must agree.
 const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
     (
         Some("G01"),
@@ -74,7 +72,7 @@ const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
         identity::citation_is_its_whole_token,
     ),
     (
-        Some("R01"),
+        None,
         "r2",
         "narrowed-resolves-as-check",
         identity::a_narrowed_run_resolves_what_check_resolves,
@@ -212,7 +210,7 @@ const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
         stubs::refs_lists_the_targets_citation,
     ),
     (
-        Some("R02"),
+        None,
         "r02",
         "a-narrowed-workspace-run-resolves-the-alias",
         identity::a_narrowed_workspace_run_resolves_the_alias,
@@ -438,12 +436,12 @@ fn every_listed_difference_has_its_tree() {
 fn a_row_the_requirement_drops_is_refused() {
     let rows: Vec<String> = difference_rows()
         .into_iter()
-        .filter(|r| r != "R01")
+        .filter(|r| r != "R06a")
         .collect();
     let wrong = listing_problems(&rows);
     assert_eq!(
         wrong,
-        vec!["R01 is no longer listed: take it out of this test".to_string()]
+        vec!["R06a is no longer listed: take it out of this test".to_string()]
     );
 }
 

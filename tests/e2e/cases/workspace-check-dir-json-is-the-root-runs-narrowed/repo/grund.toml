@@ -1,0 +1,16 @@
+grund_config_version = 1
+project_name = "root"
+
+[reference]
+marker = "§"
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "FS"
+file = "docs/fs.md"
+
+[workspace]
+members = ["api"]
