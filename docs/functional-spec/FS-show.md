@@ -84,7 +84,7 @@ In a kind whose effective format carries both `{number}` and `{slug}`, the numbe
 
 ### 1.4 `<path>` and `--path`
 
-What `<path>` scans is [§FS-scan.path.show](FS-scan.md#pathshow-show-resolves-the-id-in-the-paths-tree). `--path <path>` is an accepted alias for scripts that prefer to pass it as a flag; the two forms are equivalent.
+What `<path>` means is [§FS-scan.path.show](FS-scan.md#pathshow-show-resolves-the-id-against-the-project-the-path-discovers). `--path <path>` is an accepted alias for scripts that prefer to pass it as a flag; the two forms are equivalent.
 
 #### 1.4.1 A second coordinate in the path slot
 

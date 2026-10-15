@@ -5,8 +5,8 @@ of, `FS-config`, `FS-workspace`, `FS-check`, `FS-list`, `FS-show`, `FS-refs` and
 For each move this holds three things: the destination chapter holds the moved
 sentence, the source section no longer does, and the source cites the destination,
 so a restatement that grows back fails here. It also holds the page's chapter map,
-that the page describes each command's path as it is today rather than the unified
-meaning a later step rules on (§REQ-one-answer.differences.scope), the text its
+that the page describes each command's path as it is today, `list`, `show` and `id`
+resolving as `check` does now that §REQ-one-answer.differences.scope lists no row, the text its
 sibling move leaves where it is, and that each frozen spec ends smaller."""
 
 import re
@@ -82,11 +82,11 @@ MOVES = (
     ("FS-workspace.md", "5", "projects.workspace-root",
      ("and all configured members, aggregates findings",)),
     ("FS-workspace.md", "5", "projects.narrowed",
-     ("narrower than the config root is one narrowed scan of the enclosing project",)),
+     ("narrower than the config root loads the projects a run from `<path>` would load",)),
     ("FS-workspace.md", "5.1", "projects.member",
      ("discovers the member's own config first and, for a member that declares no `[workspace]` block of its own, validates it as an independent project",)),
     ("FS-workspace.md", "8.6.1", "path.cover",
-     ("draws the aggregate/narrow line where `grund check` draws it and not where `list` does",)),
+     ("a scope narrower than the config root is one narrowed scan of the enclosing project",)),
     ("FS-workspace.md", "8.8", "projects.discovery",
      ("A scope inside a member with no config of its own is member-local all the same",)),
     ("FS-workspace.md", "8.8", "path.discovery",
@@ -95,13 +95,13 @@ MOVES = (
      ("is the set of files the run reads so that citations resolve and citation edges count",
       "because a path may lie outside `include` and must still be read")),
     ("FS-list.md", "1", "path.list",
-     ("is the directory or file whose tree is scanned, `.` by default",)),
+     ("is the directory or file whose entries are reported, `.` by default",)),
     ("FS-show.md", "1.4", "path.show",
-     ("is the directory or file whose tree is scanned to resolve the ID",)),
+     ("chooses the project the ID resolves in",)),
     ("FS-refs.md", "1", "path.refs",
      ("directory or file whose tree is scanned, default `.`",)),
     ("FS-id.md", "1", "path.id",
-     ("the directory whose tree is scanned for the next free number",)),
+     ("is the directory whose project is numbered",)),
 )
 
 # What the move leaves where it is: the key table's text-reading keys, which the
@@ -124,7 +124,7 @@ KEPT = (
 # 3.5.14 is the languages step's to rewrite (#589).
 KEPT_SECTIONS = (("FS-config.md", "3.5.14"), ("FS-config.md", "3.5.16"))
 # Text the page must not carry: the languages step's grammar, the stale copy of
-# `check`'s path meaning, and the unified path meaning a later step rules on.
+# `check`'s path meaning, and `check`'s rule restated where the page cites it instead.
 NOT_MOVED = (
     "comment_prefixes",
     "triple-quoted",
