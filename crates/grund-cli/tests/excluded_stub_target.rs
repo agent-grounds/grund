@@ -12,6 +12,14 @@ const CONFIG: &str = "grund_config_version = 2\n\n\
      [schema.kinds.FS]\nfolders = [\"docs/fs\"]\nindex = false\n\n\
      [schema.kinds.code]\nfolders = [\"docs\", \"notes\"]\n";
 
+/// The cases about `[scan] include` and `exclude`, version 1 keys, stay on version 1;
+/// they read only stdout, where its caution never lands (§FS-check.checks.config-version-1).
+const V1: &str = "grund_config_version = 1\n\n\
+     [reference]\nstrict = true\nrequire_grounding = false\n\n\
+     [id]\nformat = \"{kind}-{slug}\"\n\n\
+     [[kinds]]\nkind = \"FS\"\nfolder = \"docs/fs\"\nindex = false\n\n\
+     [scan]\ninclude = [\"docs\", \"notes\"]\nrespect_gitignore = true\n";
+
 /// The tree of the ticket's example: `docs/fs/x.md` stubs `notes/gen/a.md`, which
 /// declares `FS-x`, and `docs/refs.md` cites it so nothing else is reported.
 fn tree(name: &str) -> PathBuf {
@@ -162,7 +170,7 @@ fn outside(root: &Path, scan: &str) {
     write(
         root,
         "grund.toml",
-        &CONFIG.replace(
+        &V1.replace(
             "include = [\"docs\", \"notes\"]",
             &format!("include = [\"docs\"]\n{scan}"),
         ),
@@ -205,7 +213,7 @@ fn an_explicit_root_outruns_exclude() {
     write(
         &root,
         "grund.toml",
-        &CONFIG.replace(
+        &V1.replace(
             "include = [\"docs\", \"notes\"]",
             "include = [\"docs\", \"notes/gen\"]\nexclude = [\"gen\"]",
         ),
@@ -399,7 +407,7 @@ fn an_explicit_root_outruns_ignore() {
     write(
         &root,
         "grund.toml",
-        &CONFIG.replace(
+        &V1.replace(
             "include = [\"docs\", \"notes\"]",
             "include = [\"docs\", \"notes/gen\"]",
         ),
