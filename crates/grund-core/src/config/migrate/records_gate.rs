@@ -168,16 +168,14 @@ fn reduce(p: &Project, root: &Path) -> Vec<Section> {
     ]
 }
 
+/// One suffix as the records gate reads it: the suffix, its reader class,
+/// comment prefixes, docstring reading, note-measurement rule and eligibility.
+type SuffixReading = (String, bool, Vec<String>, bool, DocCommentRule, bool);
+
 /// The source model suffix by suffix: reader class, comment prefixes, docstring
 /// reading, note-measurement rule and declaration eligibility, with the exclusions
 /// as globs and the gitignore switch.
-fn sources(
-    p: &Project,
-) -> (
-    Vec<(String, bool, Vec<String>, bool, DocCommentRule, bool)>,
-    Vec<String>,
-    bool,
-) {
+fn sources(p: &Project) -> (Vec<SuffixReading>, Vec<String>, bool) {
     let sources = &p.schema.sources;
     let mut suffixes = Vec::new();
     let exclude = match &sources.model {
