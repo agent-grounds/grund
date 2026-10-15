@@ -1,7 +1,8 @@
 # DF-one-kind-verdict: every command reads one kind verdict in its own scope, and refuses a rule sentence for the first stage it fails
 
-**Status:** Accepted
 **Date:** 2026-10-12
+
+## status: Accepted
 
 ## context: Context
 

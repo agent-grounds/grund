@@ -1,7 +1,8 @@
 # DF-fmt-and-editor-answers-from-0-19: `fmt`'s link wrapper and the editor's title span change in 0.19.0, after a release that announces them
 
-**Status:** Accepted
 **Date:** 2026-10-12
+
+## status: Accepted
 
 ## 1. Context
 

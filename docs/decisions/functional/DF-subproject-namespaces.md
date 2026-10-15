@@ -1,8 +1,9 @@
 # DF-subproject-namespaces: alias-namespace model for sub-projects and external repos
 
-**Status:** Accepted
 **Date:** 2026-05-16
 **Authors:** GPT-5.5, Claude Opus 4.7, Vojin Jovanovic
+
+## status: Accepted
 
 ## 1. Context
 

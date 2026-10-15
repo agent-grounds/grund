@@ -105,7 +105,6 @@ def records():
 
 
 class DecisionStatusFieldTest(unittest.TestCase):
-    @unittest.expectedFailure
     def test_every_record_opens_with_an_admitted_status_field(self):
         found = [
             problem

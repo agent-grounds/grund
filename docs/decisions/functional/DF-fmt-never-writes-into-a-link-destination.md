@@ -1,7 +1,8 @@
 # DF-fmt-never-writes-into-a-link-destination: `fmt` never writes into a link destination it does not maintain
 
-**Status:** Accepted
 **Date:** 2026-10-12
+
+## status: Accepted
 
 ## 1. Context
 

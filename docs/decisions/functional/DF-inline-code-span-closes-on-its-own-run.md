@@ -1,7 +1,8 @@
 # DF-inline-code-span-closes-on-its-own-run: an inline code span closes on a run of its own length
 
-**Status:** Accepted
 **Date:** 2026-10-04
+
+## status: Accepted
 
 ## 1. Context
 

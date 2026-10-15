@@ -1,8 +1,9 @@
 # DF-declaration-anchor: a bare-ID Markdown link points at the declaration's heading anchor
 
-**Status:** Accepted
 **Date:** 2026-05-11
 **Amends:** [§FS-fmt.6.2](../../functional-spec/FS-fmt.md#62-form) — the "no section → no anchor" rule; extends [§DF-md-link-anchor-strategy.2.1](DF-md-link-anchor-strategy.md#21-strategy)
+
+## status: Accepted
 
 ## 1. Context
 

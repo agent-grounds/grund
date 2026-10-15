@@ -1,7 +1,8 @@
 # DA-pgo-release: distributed binaries are PGO-built, trained on the benchmark workload
 
-**Status:** Accepted
 **Date:** 2026-05-11
+
+## status: Accepted
 
 ## 1. Context
 

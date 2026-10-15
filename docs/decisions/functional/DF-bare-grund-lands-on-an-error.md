@@ -1,7 +1,8 @@
 # DF-bare-grund-lands-on-an-error: bare `grund` lands on a CLI-level error, not the top-level help page
 
-**Status:** Accepted
 **Date:** 2026-09-27
+
+## status: Accepted
 
 ## 1. Context
 

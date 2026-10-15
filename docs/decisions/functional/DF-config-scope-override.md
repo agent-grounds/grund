@@ -1,7 +1,8 @@
 # DF-config-scope-override: the committed scopes are one relation, stated once
 
-**Status:** Accepted
 **Date:** 2026-09-24
+
+## status: Accepted
 
 ## 1. Context
 

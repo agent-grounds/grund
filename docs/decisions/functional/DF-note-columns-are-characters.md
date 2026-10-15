@@ -1,7 +1,8 @@
 # DF-note-columns-are-characters: a note column is one character, not one byte and not one display cell
 
-**Status:** Accepted
 **Date:** 2026-08-23
+
+## status: Accepted
 
 ## 1. Context
 

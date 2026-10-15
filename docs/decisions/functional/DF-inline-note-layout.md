@@ -1,7 +1,8 @@
 # DF-inline-note-layout: inline note layout is a configured house style, checked per line and never normalized
 
-**Status:** Accepted
 **Date:** 2026-08-16
+
+## status: Accepted
 
 ## 1. Context
 

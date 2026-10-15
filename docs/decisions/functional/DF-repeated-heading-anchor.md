@@ -1,7 +1,8 @@
 # DF-repeated-heading-anchor: a repeated heading's anchor is numbered as the renderer numbers it
 
-**Status:** Accepted
 **Date:** 2026-10-12
+
+## status: Accepted
 
 ## context: Context
 

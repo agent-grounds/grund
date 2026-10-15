@@ -1,7 +1,8 @@
 # DF-unread-scan-root: a configured file root whose extension is unlisted is named, not read
 
-**Status:** Accepted
 **Date:** 2026-10-13
+
+## status: Accepted
 
 ## 1. Context
 

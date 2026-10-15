@@ -1,7 +1,8 @@
 # DF-one-answer-rulings-fmt-editor: `fmt` writes only into a complete link wrapper, never into a link destination
 
-**Status:** Accepted
 **Date:** 2026-10-11
+
+## status: Accepted
 
 ## context: Context
 

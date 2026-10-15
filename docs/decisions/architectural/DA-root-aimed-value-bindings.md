@@ -1,8 +1,9 @@
 # DA-root-aimed-value-bindings: a value binding may aim at the whole root, its components joined by one ASCII space
 
-**Status:** Accepted
 **Date:** 2026-10-01
 **Supersedes:** The binding-grammar clause of [§DA-explicit-value-bindings.2](DA-explicit-value-bindings.md#2-decision) — that `grund` compares only the binding grammar of [§FS-values.3.1](../../functional-spec/FS-values.md#31-the-only-binding-grammar) as it then stood, one component coordinate per binding. Its authority model, its JSON runtime surface and its current-tree-only check stand, and so does that record.
+
+## status: Accepted
 
 ## 1. Context
 

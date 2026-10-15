@@ -1,7 +1,8 @@
 # DF-neural-link-generation: agents compose clickable citation links themselves; grund does not grow a `link` command
 
-**Status:** Accepted
 **Date:** 2026-07-02
+
+## status: Accepted
 
 ## 1. Decision
 

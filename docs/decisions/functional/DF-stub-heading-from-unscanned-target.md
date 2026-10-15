@@ -1,7 +1,8 @@
 # DF-stub-heading-from-unscanned-target: a bare-ID link through a stub anchors on its target's heading whether or not the scan reaches it
 
-**Status:** Accepted
 **Date:** 2026-10-09
+
+## status: Accepted
 
 ## 1. Context
 

@@ -1,7 +1,8 @@
 # DF-rule-refusal-rewrites: a refused rule's accepted form is the typed sentence with the failed part replaced, in place
 
-**Status:** Accepted
 **Date:** 2026-10-09
+
+## status: Accepted
 
 ## 1. Context
 

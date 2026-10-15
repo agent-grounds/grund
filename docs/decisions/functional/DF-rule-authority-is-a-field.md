@@ -1,7 +1,8 @@
 # DF-rule-authority-is-a-field: a finding's rule authority is a record field, and the trial-sentence selector is a query over it
 
-**Status:** Accepted
 **Date:** 2026-09-30
+
+## status: Accepted
 
 ## 1. Context
 

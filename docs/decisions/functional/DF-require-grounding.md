@@ -1,7 +1,8 @@
 # DF-require-grounding: an opt-in check that every source file cites a spec
 
-**Status:** Accepted
 **Date:** 2026-05-10
+
+## status: Accepted
 
 ## 1. Context
 

@@ -1,7 +1,8 @@
 # DF-project-namespaces-in-workspaces: teach project boundaries in workspace blocks and member splitting in setup instructions
 
-**Status:** Accepted
 **Date:** 2026-10-14
+
+## status: Accepted
 
 ## 1. Context
 

@@ -1,7 +1,8 @@
 # DF-index-not-an-inbound-citation: an index entry is navigation, not use
 
-**Status:** Accepted
 **Date:** 2026-08-25
+
+## status: Accepted
 
 ## 1. Context
 

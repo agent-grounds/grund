@@ -1,7 +1,8 @@
 # DF-check-full-scope: `check --full` walks past `[scan] include` and reports unresolved references plus orphaned section headings out there
 
-**Status:** Accepted
 **Date:** 2026-08-15
+
+## status: Accepted
 
 ## 1. Context
 

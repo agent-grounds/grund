@@ -1,8 +1,9 @@
 # DF-workspace-member-descriptions: member-side `project_description` for workspace member lists
 
-**Status:** Accepted
 **Date:** 2026-06-12
 **Authors:** Claude Fable 5, Vojin Jovanovic
+
+## status: Accepted
 
 ## 1. Context
 

@@ -1,7 +1,8 @@
 # DF-verdict-vocabulary-freeze: the freeze is on the verdict vocabulary, not on which rules a project holds in force
 
-**Status:** Accepted
 **Date:** 2026-09-26
+
+## status: Accepted
 
 ## 1. Context
 

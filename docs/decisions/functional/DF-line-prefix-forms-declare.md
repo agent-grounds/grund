@@ -1,7 +1,8 @@
 # DF-line-prefix-forms-declare: Lua, Haskell and Lisp doc-comment forms declare, and a Lisp doc block is not a note
 
-**Status:** Accepted
 **Date:** 2026-10-13
+
+## status: Accepted
 
 ## 1. Context
 

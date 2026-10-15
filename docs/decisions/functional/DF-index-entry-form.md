@@ -1,7 +1,8 @@
 # DF-index-entry-form: an index entry is one full link per ID, and nothing else about the page
 
-**Status:** Accepted
 **Date:** 2026-08-25
+
+## status: Accepted
 
 ## 1. Context
 

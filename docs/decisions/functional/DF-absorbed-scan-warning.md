@@ -1,7 +1,8 @@
 # DF-absorbed-scan-warning: a scan its own members swallowed is a warning with a named release, not an error
 
-**Status:** Accepted
 **Date:** 2026-09-04
+
+## status: Accepted
 
 ## 1. Context
 

@@ -1,7 +1,8 @@
 # DF-one-answer-rulings-run: a path narrows the report, a stub reads what the walk reads, and a file is one file however it is spelled or held
 
-**Status:** Accepted
 **Date:** 2026-10-11
+
+## status: Accepted
 
 ## context: Context
 

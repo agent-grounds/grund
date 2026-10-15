@@ -1,7 +1,8 @@
 # DF-word-character-citation-markers: recognize accepted word-character markers
 
-**Status:** Accepted
 **Date:** 2026-10-06
+
+## status: Accepted
 
 ## 1. Context and decision
 

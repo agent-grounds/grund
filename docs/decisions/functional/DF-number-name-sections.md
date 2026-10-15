@@ -1,7 +1,8 @@
 # DF-number-name-sections: a name may follow a number (`1.goals`), and a cited address with one is locked
 
-**Status:** Accepted
 **Date:** 2026-10-13
+
+## status: Accepted
 
 ## context: Context
 

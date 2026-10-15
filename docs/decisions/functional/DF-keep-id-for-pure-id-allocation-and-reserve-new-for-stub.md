@@ -1,7 +1,8 @@
 # DF-keep-id-for-pure-id-allocation-and-reserve-new-for-stub: Keep `id` for pure ID allocation and reserve `new` for stub creation
 
-**Status:** Accepted
 **Date:** 2026-05-12
+
+## status: Accepted
 
 ## 1. Context
 

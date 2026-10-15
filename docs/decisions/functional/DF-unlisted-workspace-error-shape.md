@@ -1,7 +1,8 @@
 # DF-unlisted-workspace-error-shape: `check` and the editor take the located shape, the five walking surfaces keep the CLI-level line
 
-**Status:** Accepted
 **Date:** 2026-09-24
+
+## status: Accepted
 
 ## 1. Context
 

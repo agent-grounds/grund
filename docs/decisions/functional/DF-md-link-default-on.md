@@ -1,8 +1,9 @@
 # DF-md-link-default-on: Markdown cross-reference links default on for GitHub review and discovery
 
-**Status:** Accepted
 **Date:** 2026-05-19
 **Authors:** kimeta, vjovanov
+
+## status: Accepted
 
 ## 1. Context
 

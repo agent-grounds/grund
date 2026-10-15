@@ -1,7 +1,8 @@
 # DF-one-parse-answers-from-0-19: one parse's other answers ship in 0.19.0, after a release that announces them and warns where a verdict moves
 
-**Status:** Accepted
 **Date:** 2026-10-12
+
+## status: Accepted
 
 ## 1. Context
 

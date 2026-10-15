@@ -1,8 +1,9 @@
 # DF-show-default-token-cheap: grund show defaults to the cheap read; the full body is opt-in
 
-**Status:** Accepted
 **Date:** 2026-05-14
 **Supersedes:** [§DF-show-token-cheap-reads](DF-show-token-cheap-reads.md#df-show-token-cheap-reads-grund-show-keeps-the-full-body-default-token-cheap-slices-are-opt-in) (which pinned the full body as the default and kept the cheap slices opt-in).
+
+## status: Accepted
 
 ## 1. Context
 

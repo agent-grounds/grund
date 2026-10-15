@@ -1,7 +1,8 @@
 # DF-local-section-absent-target-escape: an owned local section citation whose section is absent is answered with the escape, in place
 
-**Status:** Accepted
 **Date:** 2026-10-09
+
+## status: Accepted
 
 ## 1. Context
 

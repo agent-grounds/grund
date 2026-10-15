@@ -1,7 +1,8 @@
 # DA-config-concern-records: the configuration becomes three concern records inside an envelope, and the checker splits in two
 
-**Status:** Accepted
 **Date:** 2026-09-30
+
+## status: Accepted
 
 ## 1. Context
 

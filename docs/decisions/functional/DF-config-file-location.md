@@ -1,7 +1,8 @@
 # DF-config-file-location: grund.toml is discovered at two names per directory, and init writes the bare one
 
-**Status:** Accepted
 **Date:** 2026-08-13
+
+## status: Accepted
 
 ## 1. Context
 

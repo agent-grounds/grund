@@ -1,7 +1,8 @@
 # DF-block-teaches-structural-queries: the managed block teaches the structural query inline and links the query guide
 
-**Status:** Accepted
 **Date:** 2026-10-07
+
+## status: Accepted
 
 ## 1. Context
 

@@ -1,7 +1,8 @@
 # DF-chapter-rule-reaches-every-declaration: a chapter-scoped citation rule reports the declaration that has no such chapter
 
-**Status:** Accepted
 **Date:** 2026-10-01
+
+## status: Accepted
 
 ## 1. Context
 

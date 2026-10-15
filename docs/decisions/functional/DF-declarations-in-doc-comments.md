@@ -1,7 +1,8 @@
 # DF-declarations-in-doc-comments: a v2 source declares in documentation, not in a note
 
-**Status:** Accepted
 **Date:** 2026-10-06
+
+## status: Accepted
 
 ## 1. Context
 

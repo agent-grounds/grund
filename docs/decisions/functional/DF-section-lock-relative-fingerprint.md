@@ -1,7 +1,8 @@
 # DF-section-lock-relative-fingerprint: a locked section's nested headings are fingerprinted relative to it, so a renumber is still caught
 
-**Status:** Accepted
 **Date:** 2026-10-13
+
+## status: Accepted
 
 ## context: Context
 

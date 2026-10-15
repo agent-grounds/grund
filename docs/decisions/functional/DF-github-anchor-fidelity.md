@@ -1,8 +1,9 @@
 # DF-github-anchor-fidelity: the github anchor profile reproduces github-slugger exactly
 
-**Status:** Accepted
 **Date:** 2026-05-11
 **Corrects:** [§DF-md-link-anchor-strategy.2.3](DF-md-link-anchor-strategy.md#23-renderer-profiles) — the `github` profile's slug algorithm
+
+## status: Accepted
 
 ## 1. Context
 

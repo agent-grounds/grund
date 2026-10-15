@@ -1,7 +1,8 @@
 # DF-scoped-guidance: a version-2 row's guidance is written above its places, with a root pointer for agents that do not load nested files
 
-**Status:** Accepted
 **Date:** 2026-10-14
+
+## status: Accepted
 
 ## 1. Context
 

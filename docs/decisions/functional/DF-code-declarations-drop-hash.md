@@ -1,7 +1,8 @@
 # DF-code-declarations-drop-hash: code-resident declarations may drop the `#` prefix
 
-**Status:** Accepted
 **Date:** 2026-05-14
+
+## status: Accepted
 
 ## 1. Context
 

@@ -1,7 +1,8 @@
 # DF-config-concerns: a key's concern is derived from what a finding from it can be about
 
-**Status:** Accepted
 **Date:** 2026-09-30
+
+## status: Accepted
 
 ## 1. Context
 

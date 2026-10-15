@@ -1,7 +1,8 @@
 # DF-schema-view: the schema view is its own command, prints no JSON yet, shows a workspace's root, and draws an any-of entry through one junction
 
-**Status:** Accepted
 **Date:** 2026-10-14
+
+## status: Accepted
 
 ## 1. Context
 

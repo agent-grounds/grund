@@ -1,7 +1,8 @@
 # DF-watch-terminal-loop: a terminal watch loop preserves ordinary check reports
 
-**Status:** Accepted
 **Date:** 2026-10-06
+
+## status: Accepted
 
 ## 1. Context
 

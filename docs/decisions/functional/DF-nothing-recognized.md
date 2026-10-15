@@ -1,7 +1,8 @@
 # DF-nothing-recognized: a run that recognized nothing says so, and says it as a warning
 
-**Status:** Accepted
 **Date:** 2026-08-23
+
+## status: Accepted
 
 ## 1. Context
 

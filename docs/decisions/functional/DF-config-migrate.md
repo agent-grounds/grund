@@ -1,7 +1,8 @@
 # DF-config-migrate: migration refuses what version 2 cannot spell, names a version-1 repair, and writes only past two gates
 
-**Status:** Accepted
 **Date:** 2026-10-14
+
+## status: Accepted
 
 ## 1. Context
 

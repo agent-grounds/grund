@@ -1,12 +1,13 @@
 # DF-citation-directions: encode citation directions as checked config with RFC-2119 levels
 
-**Status:** Accepted
 **Date:** 2026-06-13
 
 Decides the design proposed in [§DISC-citation-directions](../../discussions/proposals/2026-06-13-citation-directions.md#disc-citation-directions-encode-citation-directions-as-checked-config). Serves
 [§GOAL-agent-grounding](../../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work) (the climbing rule is the discipline that keeps the three
 layers connected) and [§GOAL-friendliness-first](../../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible) (one source of truth for the rule an
 agent reads and the rule the checker enforces).
+
+## status: Accepted
 
 ## 1. Context
 

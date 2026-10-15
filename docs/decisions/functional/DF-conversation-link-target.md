@@ -1,7 +1,8 @@
 # DF-conversation-link-target: the conversation link form is a Markdown link over an absolute URI, addressed per machine
 
-**Status:** Accepted
 **Date:** 2026-08-11
+
+## status: Accepted
 
 ## 1. Context
 

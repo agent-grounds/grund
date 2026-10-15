@@ -1,8 +1,9 @@
 # DA-reference-checker-name: Name for the spec-reference checker tool
 
-**Status:** Superseded
 **Date:** 2026-05-08
 **Superseded by:** [§DA-rename-to-grund](DA-rename-to-grund.md#da-rename-to-grund-rename-gnd-to-grund-before-first-publish) — `gnd` was the working title carried through pre-release development; the tool ships as `grund`. This record is kept for the name-evaluation reasoning, which still applies.
+
+## status: Superseded
 
 ## 1. Context
 

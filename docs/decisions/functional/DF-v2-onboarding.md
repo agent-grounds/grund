@@ -1,7 +1,8 @@
 # DF-v2-onboarding: `grund init` writes a minimal version-2 file, and `grund config show` does the teaching
 
-**Status:** Accepted
 **Date:** 2026-10-15
+
+## status: Accepted
 
 ## 1. Context
 

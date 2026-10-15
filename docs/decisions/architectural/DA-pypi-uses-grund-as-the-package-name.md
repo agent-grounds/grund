@@ -1,8 +1,9 @@
 # DA-pypi-uses-grund-as-the-package-name: PyPI uses grund as the package name
 
-**Status:** Accepted
 **Date:** 2026-05-14
 **Supersedes:** The PyPI-package part of [§DA-rename-to-grund](DA-rename-to-grund.md#da-rename-to-grund-rename-gnd-to-grund-before-first-publish), which left the final `grund` vs. `grund-cli` choice to the pre-release registry-name check.
+
+## status: Accepted
 
 ## 1. Context
 

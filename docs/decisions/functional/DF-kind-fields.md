@@ -1,7 +1,8 @@
 # DF-kind-fields: a kind states its fields by section name, and a present optional field is still checked
 
-**Status:** Accepted
 **Date:** 2026-10-11
+
+## status: Accepted
 
 ## 1. Context
 

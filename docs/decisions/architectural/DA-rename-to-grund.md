@@ -1,8 +1,9 @@
 # DA-rename-to-grund: Rename gnd to grund before first publish
 
-**Status:** Accepted
 **Date:** 2026-05-11
 **Supersedes:** [§DA-reference-checker-name](DA-reference-checker-name.md#da-reference-checker-name-name-for-the-spec-reference-checker-tool) (the name decision) and [§DA-pypi-package-name](DA-pypi-package-name.md#da-pypi-package-name-pypi-uses-gnd-cli-as-the-package-name) (whose PyPI-collision premise the rename voids).
+
+## status: Accepted
 
 ## 1. Context
 

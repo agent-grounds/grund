@@ -1,7 +1,8 @@
 # DF-index-always-linkified: the cross-reference pass always runs on a kind's index file
 
-**Status:** Accepted
 **Date:** 2026-08-25
+
+## status: Accepted
 
 ## 1. Context
 

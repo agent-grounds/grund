@@ -1,7 +1,8 @@
 # DF-doc-comment-relative-headings: a relative heading in a doc-comment warns in 0.18.0 and is a section from 0.19.0
 
-**Status:** Accepted
 **Date:** 2026-10-13
+
+## status: Accepted
 
 ## context: Context
 

@@ -1,7 +1,8 @@
 # DF-chapter-rules: chapter rules are grounded controlled-English declarations over producer-neutral facts
 
-**Status:** Accepted
 **Date:** 2026-09-19
+
+## status: Accepted
 
 ## 1. Context
 

@@ -44,7 +44,7 @@ How the sections are written.
 """
 DECISION = """# DF-new: cover fails a broken workspace
 
-**Status:** Accepted
+## status: Accepted
 
 ## 1. Decision
 

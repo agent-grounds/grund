@@ -1,7 +1,8 @@
 # DF-declaration-local-section-shorthand: local numeric section citations are recognized but never canonical
 
-**Status:** Accepted
 **Date:** 2026-09-20
+
+## status: Accepted
 
 ## 1. Context
 

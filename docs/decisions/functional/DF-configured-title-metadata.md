@@ -1,7 +1,10 @@
 # DF-configured-title-metadata: kind titles are separate target metadata
 
-**Status:** Accepted by issue 243's checkpoint-10 supervisory ruling; show ordering corrected by the checkpoint-18 operator ruling
 **Date:** 2026-09-19
+
+## status: Accepted
+
+By issue 243's checkpoint-10 supervisory ruling; show ordering corrected by the checkpoint-18 operator ruling.
 
 ## 1. Context
 

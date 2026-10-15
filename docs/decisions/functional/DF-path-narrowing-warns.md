@@ -1,7 +1,8 @@
 # DF-path-narrowing-warns: a path that narrows what show, list and id resolve, or what check <dir> resolves an alias against, says so for one release
 
-**Status:** Accepted
 **Date:** 2026-10-12
+
+## status: Accepted
 
 ## context: Context
 

@@ -1,7 +1,8 @@
 # DF-fmt-suppression: fmt suppression is per file and per region, and the index carve-out outranks both
 
-**Status:** Accepted
 **Date:** 2026-09-03
+
+## status: Accepted
 
 ## 1. Context
 

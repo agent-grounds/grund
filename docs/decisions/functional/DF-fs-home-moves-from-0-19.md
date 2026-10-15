@@ -1,7 +1,8 @@
 # DF-fs-home-moves-from-0-19: the built-in FS home moves back to docs/functional-spec/ in 0.19.0, and the template declares REQ now
 
-**Status:** Accepted
 **Date:** 2026-10-13
+
+## status: Accepted
 
 ## 1. Context
 

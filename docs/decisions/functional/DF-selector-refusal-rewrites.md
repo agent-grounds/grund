@@ -1,7 +1,8 @@
 # DF-selector-refusal-rewrites: a refused selector is answered with a selector, and its old lines are replaced, not appended to
 
-**Status:** Accepted
 **Date:** 2026-10-07
+
+## status: Accepted
 
 ## 1. Context
 

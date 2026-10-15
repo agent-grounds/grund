@@ -1,7 +1,8 @@
 # DF-v2-place-ownership: in v2 the row named `code` is the complement, and a file belongs to its listed row or else its deepest folder
 
-**Status:** Accepted
 **Date:** 2026-10-14
+
+## status: Accepted
 
 ## 1. Context
 

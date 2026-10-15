@@ -1,7 +1,8 @@
 # DF-optional-workspace-members: an absent member is declared in a sibling list, and the run announces the namespace it did not check
 
-**Status:** Accepted
 **Date:** 2026-09-05
+
+## status: Accepted
 
 ## 1. Context
 

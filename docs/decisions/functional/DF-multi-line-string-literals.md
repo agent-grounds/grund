@@ -1,7 +1,8 @@
 # DF-multi-line-string-literals: a string literal that spans lines is one literal, for a fixed set of forms
 
-**Status:** Accepted
 **Date:** 2026-10-13
+
+## status: Accepted
 
 ## 1. Context
 

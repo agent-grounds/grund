@@ -1,7 +1,8 @@
 # DF-nested-alias-rule-targets: a rule target pinned at its own nested alias matches like the bare kind
 
-**Status:** Accepted
 **Date:** 2026-10-12
+
+## status: Accepted
 
 ## 1. Context
 

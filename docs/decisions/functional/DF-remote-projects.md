@@ -1,7 +1,8 @@
 # DF-remote-projects: a remote project is a workspace member whose bytes were fetched, mounted as its own root
 
-**Status:** Accepted
 **Date:** 2026-10-07
+
+## status: Accepted
 
 ## 1. Context
 
