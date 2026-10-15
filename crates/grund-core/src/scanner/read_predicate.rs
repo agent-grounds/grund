@@ -9,9 +9,9 @@
 //! filter of each directory. A file that exists only as a buffer, which the
 //! walk never meets on disk, is read or skipped by `unread`, exactly as the
 //! saved file would be (§AR-system.2.13). A stub's target asks
-//! `name_refusal` for its verdict, the two reasons §FS-declarations.stubs.target.3
-//! honours, and `excluding_rule` for the warning that the exclude and ignore-file
-//! reasons decide it from grund 0.19.0. And a link the walker could not resolve asks `name_refusal` or
+//! `name_refusal` then `excluding_rule` for its verdict, retaining the first
+//! refusing rule (§FS-declarations.stubs.target.3). And a link the walker could
+//! not resolve asks `name_refusal` or
 //! `directory_refusal`, with `ignored`, whether the walk would have read it
 //! (§FS-config.3.5.6), since the walker filters no error entry itself.
 
@@ -59,8 +59,8 @@ pub(crate) enum Unread {
     Unobserved,
 }
 
-/// The name and extension reasons, which hold wherever the file lies: all a
-/// stub's target honours (§FS-declarations.stubs.target.3), and the test
+/// The name and extension reasons, which hold wherever the file lies: the reasons
+/// a stub's target asks first (§FS-declarations.stubs.target.3), and the test
 /// the walk asks of every file it yields (§FS-config.3.5).
 pub(crate) fn name_refusal(path: &Path, schema: &Schema) -> Option<Unread> {
     if is_hidden(path) {
@@ -102,8 +102,7 @@ fn excluded_entry<'a>(path: &Path, exclude: &'a [String]) -> Option<&'a str> {
 }
 
 /// The `[scan] exclude` entry or ignore-file rule that keeps the walk from reading a
-/// stub's target, which until grund 0.19.0 is a warning and not a verdict
-/// (§FS-declarations.stubs.target.3, §FS-declarations.checks.excluded-stub-target).
+/// stub's target, saved in its broken verdict (§FS-declarations.stubs.target.3).
 /// Asked as the walk asks it, from the config root in place of `include` and from each
 /// of `roots`, so a root that reads the target outruns the rule (§AR-scanner.1.7);
 /// the config root's answer names the rule. A target outside the config root is no
@@ -135,7 +134,7 @@ pub(crate) fn excluding_rule(
 
 /// `excluding_rule` for one root `relative` lies below: the first rule met on the way
 /// down, and at one directory the `exclude` entry or a v2 `exclude` pattern before
-/// the ignore files, the walk's own order (§FS-declarations.checks.excluded-stub-target).
+/// the ignore files, the walk's own order (§FS-declarations.stubs.target.3).
 fn excluding_rule_under(
     schema: &Schema,
     globs: Option<&ExcludeGlobs>,
@@ -159,7 +158,7 @@ fn excluding_rule_under(
         {
             return Some(ExcludingRule::Pattern(pattern.to_string()));
         }
-        // §FS-declarations.stubs.target.3: a hidden directory is no reason in this release.
+        // §FS-declarations.stubs.target.3: a hidden directory alone is no refusal.
         if is_dir
             && !is_hidden(&path)
             && let Some(entry) = excluded_entry(&path, &schema.sources.exclude)
@@ -267,7 +266,7 @@ pub(super) fn ignored(path: &Path, is_dir: bool) -> bool {
 }
 
 /// The ignore file and the line of it that drop `path`, for a reader that names the
-/// rule (§FS-declarations.checks.excluded-stub-target): the rule `ignored` matches,
+/// rule (§FS-declarations.stubs.target.3): the rule `ignored` matches,
 /// kept only where the walker, asked of an entry on disk, drops it too.
 fn ignoring_rule(path: &Path, is_dir: bool) -> Option<IgnoredBy> {
     let rule = ignored_by_rules(path, is_dir)?;

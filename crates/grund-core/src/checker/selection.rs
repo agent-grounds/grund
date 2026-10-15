@@ -19,6 +19,7 @@ pub const CHECK_FINDING_CODES: &[&str] = &[
     "empty-citation-obligation",
     "empty-scan",
     "escaped-citation-resolves",
+    // §FS-declarations.checks.excluded-stub-target: spent, accepted without selecting broken-stub.
     "excluded-stub-target",
     "forbidden-citation",
     "fs-home-moves",

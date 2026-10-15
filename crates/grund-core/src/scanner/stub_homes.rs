@@ -15,8 +15,8 @@ use super::tree::scan_unwalked_file;
 use crate::config::{Frame, Run, Schema};
 use crate::grammar::{Grammar, resolve_shorthands};
 use crate::model::{
-    Catalog, Citation, Declaration, ExcludedStubTargetNote, ExcludingRule, FileRecord, Id,
-    StubResolution, paired_declarations, section_resolves,
+    Catalog, Citation, Declaration, ExcludingRule, FileRecord, Id, StubResolution,
+    paired_declarations, section_resolves,
 };
 use crate::sources::{paths_same_location, physical_path_key};
 use crate::workspace::WorkspaceCitationTarget;
@@ -26,10 +26,10 @@ use crate::workspace::WorkspaceCitationTarget;
 /// (§FS-declarations.stubs.verdict). A target the walk did not record the ID
 /// in is read through the walk's own pass over one file, on the text a save would
 /// write (§FS-declarations.stubs.target.1), once per target however many
-/// stubs and IDs name it. An ID no stub declares is passed over. A stub that pairs
-/// with a target the walk from `roots` would not read, for an `exclude` entry or an
-/// ignore file, is noted for the warning (§FS-declarations.checks.excluded-stub-target).
-/// Once every verdict is in, such a target lends the declaration its citations
+/// stubs and IDs name it. An ID no stub declares is passed over. A stub pointing
+/// at a target the walk from `roots` would not read, for an `exclude` entry or an
+/// ignore file, is refused before reading or pairing (§FS-declarations.stubs.target.3).
+/// Once every verdict is in, an eligible target lends the declaration its citations
 /// (§FS-declarations.stubs.target.5).
 pub(super) fn resolve_stubs(
     schema: &Schema,
@@ -39,14 +39,13 @@ pub(super) fn resolve_stubs(
     findings: &mut Catalog,
 ) {
     let mut targets = UnwalkedTargets::new(schema, frame, roots, workspace_targets);
-    let mut notes = Vec::new();
     for (id, decls) in &mut findings.declarations {
         if !decls.iter().any(|decl| decl.is_stub) {
             continue;
         }
         let verdicts: Vec<Option<StubResolution>> = decls
             .iter()
-            .map(|decl| resolve_stub(frame, id, decl, decls.as_slice(), &mut targets, &mut notes))
+            .map(|decl| resolve_stub(frame, id, decl, decls.as_slice(), &mut targets))
             .collect();
         for (decl, verdict) in decls.iter_mut().zip(verdicts) {
             decl.stub_resolution = verdict;
@@ -54,7 +53,6 @@ pub(super) fn resolve_stubs(
     }
     // §AR-scanner.2.8: a target read here is sliced from its record like any scanned file.
     findings.files.extend(targets.files);
-    findings.excluded_stub_target_notes.extend(notes);
     lend_citations(frame.grammar(), findings, targets.lendable);
 }
 
@@ -118,15 +116,14 @@ fn resolves(findings: &Catalog, cite: &Citation) -> bool {
 }
 
 /// The verdict on `stub`, asked in the order of §AR-scanner.4.6; `None` for a
-/// declaration that is not a stub. Keep the shared name predicate's extension
-/// refusal for the checker's explanation (§FS-declarations.stubs.target.3).
+/// declaration that is not a stub. Keep the shared predicate's extension and
+/// exclusion refusals for the checker's explanation (§FS-declarations.stubs.target.3).
 fn resolve_stub(
     frame: Frame<'_>,
     id: &Id,
     stub: &Declaration,
     decls: &[Declaration],
     targets: &mut UnwalkedTargets<'_>,
-    notes: &mut Vec<ExcludedStubTargetNote>,
 ) -> Option<StubResolution> {
     let target = stub.defined_in.as_ref().filter(|_| stub.is_stub)?;
     // §FS-scan.text.buffer-only: a buffer with no file behind it is there.
@@ -138,9 +135,8 @@ fn resolve_stub(
     if !sources.is_file(&resolved) {
         return Some(StubResolution::NotRead);
     }
-    // §FS-declarations.stubs.target.3, §AR-scanner.1.13: only the name and
-    // extension reasons, judged by the name the stub wrote before any record is
-    // paired with it, so a symlink under a hidden or unlisted name never pairs.
+    // §FS-declarations.stubs.target.3: name and extension refusals precede exclude and ignore,
+    // judged by the name the stub wrote, so a hidden or unlisted symlink never pairs.
     if let Some(reason) = name_refusal(&resolved, targets.schema) {
         return Some(if reason == Unread::Extension {
             StubResolution::UnlistedExtension(
@@ -153,6 +149,10 @@ fn resolve_stub(
         } else {
             StubResolution::NotRead
         });
+    }
+    // §FS-declarations.stubs.target.3: save the refusal before reading or pairing any records.
+    if let Some(rule) = targets.excluding_rule(&resolved) {
+        return Some(StubResolution::Excluded(rule));
     }
     if paths_same_location(&frame.root().join(&stub.file), &resolved) {
         let declared = decls
@@ -176,19 +176,6 @@ fn resolve_stub(
         };
         // §FS-declarations.stubs.target.5: the records' citations, once per target.
         targets.lend(&resolved, id);
-        // §FS-declarations.stubs.target.3: a target the walk did not read keeps its
-        // verdict until 0.19.0, and warns where it pairs.
-        if !walked.is_empty()
-            && let Some(rule) = targets.excluding_rule(&resolved)
-        {
-            notes.push(ExcludedStubTargetNote {
-                file: stub.file.clone(),
-                line: stub.line,
-                id: id.clone(),
-                target: target.clone(),
-                rule,
-            });
-        }
     }
     walked.sort_by_key(|decl| decl.line);
     Some(if walked.is_empty() {
@@ -242,7 +229,7 @@ impl<'a> UnwalkedTargets<'a> {
     }
 
     /// The `exclude` entry or ignore-file rule that keeps the walk from `path`, asked
-    /// once per target (§FS-declarations.checks.excluded-stub-target).
+    /// once per target, before reading or pairing (§FS-declarations.stubs.target.3).
     fn excluding_rule(&mut self, path: &Path) -> Option<ExcludingRule> {
         let (schema, frame, roots) = (self.schema, self.frame, self.roots);
         self.excluded

@@ -2,7 +2,6 @@
 //! declaration and heading is judged against its own kind's shape and nothing
 //! else, so the half is handed the schema and no `Rules` (§AR-config.5).
 
-use super::excluded_stub_target::check_excluded_stub_targets;
 use super::fields::check_fields;
 use super::fs_home_moves::check_fs_home_moves;
 use super::glob_citations::check_glob_citations;
@@ -14,8 +13,8 @@ use super::sizes::check_oversized_leads;
 use crate::config::{Frame, Schema};
 use crate::grammar::render_id;
 use crate::model::{
-    Catalog, CheckReport, Diagnostic, Site, StubResolution, format_path, paired_declarations,
-    sort_path_key,
+    Catalog, CheckReport, Diagnostic, ExcludingRule, Site, StubResolution, format_path,
+    paired_declarations, sort_path_key,
 };
 
 /// §AR-checker.1.1: duplicate, misplaced-declaration, broken-stub and
@@ -40,8 +39,6 @@ pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> C
     // claimants, through the shared show slicer. Warnings never affect exit.
     check_oversized_leads(catalog, schema, frame, &mut report);
     check_broken_stubs(catalog, frame, &mut report);
-    // §FS-declarations.checks.excluded-stub-target: a stub 0.19.0 reports as broken.
-    check_excluded_stub_targets(catalog, frame, &mut report);
     // §FS-declarations.checks.declaration-near-miss: headings that open like a declaration and
     // parse as none.
     check_declaration_near_misses(catalog, &mut report);
@@ -172,8 +169,8 @@ fn check_misplaced(
 
 /// §FS-declarations.checks.broken-stub: the verdict the scan recorded on each stub
 /// (§AR-scanner.4.6), its target missing, not read, or not declaring
-/// the ID (§AR-checker.2.5). An extension refusal explains why the target is not
-/// scanned rather than claiming it lacks the ID (§FS-declarations.stubs.target.3).
+/// the ID (§AR-checker.2.5). Extension and exclusion refusals explain why the target
+/// is not scanned rather than claiming it lacks the ID (§FS-declarations.stubs.target.3).
 fn check_broken_stubs(findings: &Catalog, frame: Frame<'_>, report: &mut CheckReport) {
     for (id, decls) in &findings.declarations {
         for decl in decls {
@@ -189,6 +186,7 @@ fn check_broken_stubs(findings: &Catalog, frame: Frame<'_>, report: &mut CheckRe
                     format_path(target),
                     extension
                 ),
+                StubResolution::Excluded(rule) => excluded_target_message(target, rule),
                 StubResolution::NotRead | StubResolution::LacksId => format!(
                     "stub link target lacks {}: {}",
                     render_id(frame.grammar(), id),
@@ -207,4 +205,31 @@ fn check_broken_stubs(findings: &Catalog, frame: Frame<'_>, report: &mut CheckRe
             });
         }
     }
+}
+
+/// Render the saved refusal without rechecking the target or its rules
+/// (§FS-declarations.stubs.target.3, §AR-checker.2.5).
+fn excluded_target_message(target: &std::path::Path, rule: &ExcludingRule) -> String {
+    let (reason, remedy) = match rule {
+        ExcludingRule::Exclude(entry) => (
+            format!("[scan] exclude names {entry}"),
+            format!("move the target out of {entry}, or take {entry} out of [scan] exclude"),
+        ),
+        ExcludingRule::Pattern(pattern) => (
+            format!("[schema.sources] exclude matches it by {pattern}"),
+            format!(
+                "move the target out of what {pattern} matches, or take {pattern} out of \
+                 [schema.sources] exclude"
+            ),
+        ),
+        ExcludingRule::IgnoreFile { file, pattern } => (
+            format!("{file} ignores it by {pattern}"),
+            format!("move the target out of what {file} ignores, or stop ignoring it there"),
+        ),
+    };
+    format!(
+        "stub link target {} is not scanned: {reason}; \
+         this became an error in grund 0.19.0 — {remedy}",
+        format_path(target)
+    )
 }

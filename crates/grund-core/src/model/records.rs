@@ -2,7 +2,6 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use super::e2e::E2eCase;
-use super::excluded_stub_targets::ExcludedStubTargetNote;
 use super::file_record::FileRecords;
 use super::headings::{
     NearMissHeading, RelativeSectionParent, SectionHeadingOutsideDeclaration, UnmarkedHeading,
@@ -373,9 +372,6 @@ pub struct Catalog {
     /// not a declaration, so the rule costs one regex on heading-shaped lines
     /// rather than a second read of the tree.
     pub near_miss_headings: Vec<NearMissHeading>,
-    /// Stubs whose target the walk excludes or ignores, until 0.19.0, noted where
-    /// each stub's verdict is reached (§FS-declarations.checks.excluded-stub-target).
-    pub(crate) excluded_stub_target_notes: Vec<ExcludedStubTargetNote>,
     /// The owners of the line ranges a `cover --lines` run asked for, one entry
     /// per scanned file (§FS-cover.6, §AR-scanner.2.4.4). Empty — and never
     /// computed — unless `Config::owner_lines` is set.

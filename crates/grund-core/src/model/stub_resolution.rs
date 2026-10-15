@@ -6,13 +6,14 @@
 
 use std::cmp::Ordering;
 
+use super::ExcludingRule;
 use super::paths::sort_path_key;
 use super::records::{Catalog, Declaration, Id};
 
 /// What the scan found at a stub's target, in the order the scanner asks
-/// (§AR-scanner.4.6). `Missing`, `NotRead`, `UnlistedExtension` and `LacksId`
-/// are a broken stub (§FS-declarations.checks.broken-stub). Extension refusal
-/// keeps its reason for the diagnostic (§FS-declarations.stubs.target.3).
+/// (§AR-scanner.4.6). `Missing`, `NotRead`, `UnlistedExtension`, `Excluded` and
+/// `LacksId` are a broken stub (§FS-declarations.checks.broken-stub). Extension and
+/// exclusion refusals keep their reason for the diagnostic (§FS-declarations.stubs.target.3).
 #[derive(Debug, Clone)]
 pub(crate) enum StubResolution {
     /// Nothing is at the path the stub links to.
@@ -25,6 +26,9 @@ pub(crate) enum StubResolution {
     /// on the name the stub wrote for the explanation that it is not scanned
     /// (§FS-declarations.stubs.target.3).
     UnlistedExtension(String),
+    /// The shared predicate refused the target by exclude or an enabled ignore
+    /// rule, saved before reading or pairing (§FS-declarations.stubs.target.3).
+    Excluded(ExcludingRule),
     /// The target was read, as the scan reads it on the text a save would write,
     /// and does not declare the ID (§AR-scanner.4.6,
     /// §FS-declarations.stubs.target.2).
@@ -43,11 +47,15 @@ pub(crate) enum StubResolution {
 
 impl StubResolution {
     /// Whether `check` reports the stub broken (§FS-declarations.checks.broken-stub),
-    /// including an extension refusal (§FS-declarations.stubs.target.3).
+    /// including extension and exclusion refusals (§FS-declarations.stubs.target.3).
     pub(crate) fn is_broken(&self) -> bool {
         matches!(
             self,
-            Self::Missing | Self::NotRead | Self::UnlistedExtension(_) | Self::LacksId
+            Self::Missing
+                | Self::NotRead
+                | Self::UnlistedExtension(_)
+                | Self::Excluded(_)
+                | Self::LacksId
         )
     }
 }

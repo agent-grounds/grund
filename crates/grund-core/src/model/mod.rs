@@ -69,7 +69,7 @@ pub use values::{
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
-pub(crate) use excluded_stub_targets::{ExcludedStubTargetNote, ExcludingRule};
+pub(crate) use excluded_stub_targets::ExcludingRule;
 pub(crate) use file_record::{
     BlockForm, FileRecord, FileRecords, FileText, HeadingKind, LineZone, RecordedBlock,
     RecordedHeading,
