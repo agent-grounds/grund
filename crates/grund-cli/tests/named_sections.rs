@@ -220,7 +220,7 @@ fn named_sections_drive_show_refs_json_and_completion() {
 /// `FS-doc.absent` is one prose token suppressed whole rather than falling
 /// back to a bare-ID citation, and the mixed `<§>FS-doc.1.goals` is never
 /// truncated to its numeric prefix: it is a citation of that missing section,
-/// whose finding warns until 0.19.0 (§FS-citations.checks.mixed-path).
+/// whose finding is an ordinary error (§FS-citations.checks.mixed-path).
 #[test]
 fn named_sections_report_missing_reserved_orphan_depth_and_duplicates() {
     let repo = Repo::new("diagnostics");
@@ -258,11 +258,10 @@ fn named_sections_report_missing_reserved_orphan_depth_and_duplicates() {
     assert!(findings.contains("heading level mismatch"));
     assert!(
         findings.contains(
-            "FS-reader.md:5: warning: section not found: FS-doc.1.goals; write <§> before it \
-             to show the shape without citing it; a citation of a name under a number is now \
-             checked, and this warning becomes an error in grund 0.19.0"
+            "FS-reader.md:5: error: section not found: FS-doc.1.goals; write <§> before it \
+             to show the shape without citing it"
         ),
-        "the missing mixed citation warns whole: {findings}"
+        "the missing mixed citation errors whole: {findings}"
     );
 
     let ambiguous = grund(repo.path(), &["show", "FS-doc.goals"]);

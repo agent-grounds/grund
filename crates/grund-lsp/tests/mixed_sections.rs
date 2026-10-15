@@ -25,6 +25,39 @@ struct Fixture {
     usage: PathBuf,
 }
 
+/// §FS-citations.checks.mixed-path, §FS-lsp.1.1.2: ordinary error severity,
+/// codes, messages and lines reach the editor through the shared checker.
+#[test]
+fn unresolved_mixed_citations_publish_ordinary_errors() {
+    let fx = fixture("mixed-sections-errors");
+    fs::write(
+        &fx.usage,
+        "# Use\n\nMissing \u{a7}FS-x.1.nope.\nUnknown \u{a7}FS-nope.1.goals.\n",
+    )
+    .unwrap();
+    let (child, stdin, receiver) = start_server(&fx.root);
+    let mut child = child;
+    let diagnostics = recv_diagnostics(&receiver, &mut child, "use.md");
+    shut_down(stdin, &receiver, child, &fx.root);
+    assert_eq!(diagnostics.len(), 2, "{diagnostics:#?}");
+    for (code, line, message) in [
+        (
+            "missing-section",
+            2,
+            "section not found: FS-x.1.nope; write <§> before it to show the shape without citing it",
+        ),
+        ("dangling", 3, "unknown reference FS-nope"),
+    ] {
+        let finding = diagnostics
+            .iter()
+            .find(|d| d["code"] == code)
+            .unwrap_or_else(|| panic!("missing {code}: {diagnostics:#?}"));
+        assert_eq!(finding["severity"], 1, "{finding:#?}");
+        assert_eq!(finding["range"]["start"]["line"], line);
+        assert_eq!(finding["message"], message);
+    }
+}
+
 /// A named-sections tree whose `FS-x` carries `### 1.goals: Goals` (line 6)
 /// beneath `## 1. Overview` (line 2), cited once from `docs/use.md`.
 fn fixture(name: &str) -> Fixture {

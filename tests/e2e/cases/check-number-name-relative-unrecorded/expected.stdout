@@ -1,1 +1,1 @@
-docs/use.md:3: error: FS-x.1.goals is cited but has no entry in .grund/sections/FS-x.lock; run grund fmt --write; grund 0.17 skipped a citation of a name under a number, and 0.18.0 records it in the section lock
+docs/use.md:3: error: FS-x.1.goals is cited but has no entry in .grund/sections/FS-x.lock; run grund fmt --write

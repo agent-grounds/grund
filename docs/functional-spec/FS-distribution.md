@@ -870,6 +870,24 @@ publication belong to #471. Accurate signatures/type information and runnable
 check/iteration/show examples belong in user documentation and example indexes.
 Local support is described independently of unpublished PyPI availability.
 
+## release-floor: One shared minimum publishable release
+
+The tree records one explicit minimum publishable release in the single-line
+`scripts/release-floor.txt`. The release guard, `scripts/check_release_ramps.py`,
+reads that value from the tree being checked and refuses every version below it,
+even when no diagnostic message names a landed change. All release transitions
+share this one value; none adds a floor of its own. The floor remains in force
+after a helper rewrites the development manifest for a release.
+
+The effective lower bound is the greater of this floor and the message-derived
+landed bound of [§FS-distribution.4.2.2](FS-distribution.md#422-the-release-guard-reads-the-releases-the-tree-names). The pending-message ceiling still applies.
+At the floor a release is allowed when no independent promise forbids it; when
+the lower bound meets or exceeds the ceiling, no release is possible. The
+refusal identifies the floor file and value as well as contradictory messages
+and the resulting release window ([§FS-distribution.4.2.5](FS-distribution.md#425-the-refusal-names-the-window-left)). Development versions
+need not equal the floor; every publication path runs the guard
+([§FS-distribution.4.2.6](FS-distribution.md#426-every-publication-path-runs-the-release-guard)).
+
 ## 4. Release process
 
 The implemented release workflow publishes the Cargo CLI today and builds downloadable PGO binaries for every supported desktop CI platform. `release.yml` publishes a commit that already carries its version ([§FS-distribution.4.3](FS-distribution.md#43-releaseyml-publishes-a-commit-that-already-carries-its-version)), and two helper workflows make that commit on a candidate they validate first ([§FS-distribution.4.4](FS-distribution.md#44-two-helper-workflows-bump-the-version-on-a-validated-candidate)), with a version bump that covers the manifests, the lockfile, `--version` fixtures, ramp constants and the changelog rotation ([§FS-distribution.4.5](FS-distribution.md#45-what-the-version-bump-includes)). The release writes its own changelog section, listing the pull requests merged since the previous tag and the compatibility notices the decision records added since it ([§FS-distribution.4.6](FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)), so no change waits in the tree for it ([§FS-distribution.4.12](FS-distribution.md#412-pending-changelog-entries-are-one-file-each)); the bump writes that section inline ([§FS-distribution.4.5](FS-distribution.md#45-what-the-version-bump-includes)), and the changelog supplies the GitHub release notes ([§FS-distribution.4.7](FS-distribution.md#47-the-changelog-is-the-source-of-release-notes)). Linux binaries build in digest-pinned `manylinux2014` containers and every job on one pinned toolchain ([§FS-distribution.4.8](FS-distribution.md#48-one-old-glibc-baseline-one-pinned-toolchain)); distributed binaries are PGO-built, with an LTO-only fallback for a platform whose PGO training is broken ([§FS-distribution.4.9](FS-distribution.md#49-distributed-binaries-are-profile-guided-optimized)); crates publish to crates.io in dependency order before artifacts upload ([§FS-distribution.4.10](FS-distribution.md#410-cratesio-publishes-in-dependency-order-and-artifacts-upload-last)). npm and PyPI take a lane of their own rather than joining `release.yml`: a candidate is assembled and rehearsed without credentials, and a separate, disabled publisher may one day upload exactly it ([§FS-distribution.4.13](FS-distribution.md#413-a-candidate-is-rehearsed-before-anything-is-published), [§FS-distribution.4.11](FS-distribution.md#411-the-full-ecosystem-release)).
@@ -890,7 +908,7 @@ A unit test can hold the pending half — the bump that reaches a deadline bumps
 
 #### 4.2.2 The release guard reads the releases the tree names
 
-The release path asks directly: the release guard, `scripts/check_release_ramps.py <version>`, reads the release each message names out of the tree's own message text — the Rust sources under `crates/`, and the checked `expected.stdout` and `expected.stderr` goldens under `tests/e2e/cases/` that pin the bytes a user sees — and refuses a version that contradicts one:
+The release path asks directly: the release guard, `scripts/check_release_ramps.py <version>`, reads the release each message names out of the tree's own message text — the Rust sources under `crates/`, and the checked `expected.stdout` and `expected.stderr` goldens under `tests/e2e/cases/` that pin the bytes a user sees — and refuses a version that contradicts one, together with the shared minimum of [§FS-distribution.release-floor](FS-distribution.md#release-floor-one-shared-minimum-publishable-release):
 
 | clause | what the line claims | the version being cut |
 |---|---|---|
@@ -920,7 +938,7 @@ The scalar clause is the one the `refs` warning of grund 0.14.0 and 0.15.0 was w
 
 #### 4.2.5 The refusal names the window left
 
-The refusal names every line that disagrees and the window of releases the tree may still be cut as — which can be empty, when a tree has landed one ramp and still promises another at the same release, and an empty window is itself the answer: nothing may be published until the rest of that release's ramps land.
+The refusal names every line that disagrees and the window of releases the tree may still be cut as, combining message bounds with [§FS-distribution.release-floor](FS-distribution.md#release-floor-one-shared-minimum-publishable-release). That window can be empty when the shared floor or a landed ramp reaches an independent pending promise. Nothing may be published until the conflicting promises are fulfilled or the changes are reverted.
 
 #### 4.2.6 Every publication path runs the release guard
 

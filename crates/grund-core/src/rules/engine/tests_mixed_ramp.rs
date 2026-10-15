@@ -1,17 +1,16 @@
-//! The window of a citation of a name under a number (§FS-rules.7.12): a count only
-//! the mixed sites break warns and names 0.19.0, one that fails without them stays
-//! an error, and the release it names is still ahead of this crate
-//! (§FS-citations.checks.mixed-path).
+//! §FS-rules.7.12: mixed sites are ordinary when computing the window that remains.
+//! These assertions pin eligibility as well as the clause, so merely stripping
+//! the mixed clause after routing is insufficient.
 
 use super::super::{Cardinality, RuleLevel};
-use super::ramp::{MIXED_CLAUSE, MIXED_PATH_FLIP, Marks, Windows, route};
+use super::ramp::{Marks, Windows, route};
 use crate::model::Diagnostic;
 
+const MATCH: &str = "; a target pinned at the rule's own nested alias path now matches, and this warning becomes an error in grund 0.19.0";
 const AT_MOST_ONE: Cardinality = Cardinality {
     minimum: None,
     maximum: Some(1),
 };
-
 const PLAIN: Marks = Marks {
     matched: false,
     mixed: false,
@@ -20,16 +19,13 @@ const MIXED: Marks = Marks {
     mixed: true,
     ..PLAIN
 };
+const MATCHED: Marks = Marks {
+    matched: true,
+    ..PLAIN
+};
 
 fn windows(sites: &[Marks]) -> Windows {
     Windows::of_count(RuleLevel::Required, AT_MOST_ONE, sites.iter().copied())
-}
-
-fn mixed_only() -> Windows {
-    Windows {
-        mixed: true,
-        ..Windows::default()
-    }
 }
 
 fn finding(message: String) -> Diagnostic {
@@ -44,51 +40,73 @@ fn finding(message: String) -> Diagnostic {
     }
 }
 
-/// §FS-rules.7.12: the window closes at a release still to come; once this crate
-/// reaches it, the window, its clauses and the site mark must go, and this test
-/// says so, as every flip is held to its release.
 #[test]
-fn the_mixed_path_flip_is_still_ahead() {
-    let parse = |version: &str| -> Vec<u64> {
-        version
-            .split(['.', '-'])
-            .take(3)
-            .map(|part| part.parse().expect("numeric version"))
-            .collect()
-    };
-    assert!(
-        parse(env!("CARGO_PKG_VERSION")) < parse(MIXED_PATH_FLIP),
-        "grund {} has reached {MIXED_PATH_FLIP}: make the mixed-path window errors",
-        env!("CARGO_PKG_VERSION")
-    );
-    assert!(MIXED_CLAUSE.ends_with(&format!("an error in grund {MIXED_PATH_FLIP}")));
-}
-
-#[test]
-fn a_count_only_the_mixed_sites_break_warns_until_0_19_0() {
-    assert_eq!(windows(&[PLAIN, MIXED]), mixed_only());
-    let (mut out, mut ramp) = (Vec::new(), Vec::new());
-    let (sink, message) = route(
-        mixed_only(),
-        &mut out,
-        &mut ramp,
-        "FS must not cite GOAL (RULE-r)".into(),
-    );
+fn a_count_only_the_mixed_site_breaks_is_an_ordinary_error() {
+    let flags = windows(&[PLAIN, MIXED]);
+    assert_eq!(flags, Windows::default());
+    let (mut errors, mut warnings) = (Vec::new(), Vec::new());
+    let (sink, message) = route(flags, &mut errors, &mut warnings, "ordinary message".into());
     sink.push(finding(message));
-    assert!(out.is_empty(), "a ramped finding leaves the errors");
-    assert_eq!(
-        ramp[0].message,
-        format!("FS must not cite GOAL (RULE-r){}", *MIXED_CLAUSE)
-    );
+    assert!(warnings.is_empty());
+    assert_eq!(errors[0].message, "ordinary message");
 }
 
 #[test]
-fn a_count_that_fails_without_the_mixed_sites_stays_an_error() {
+fn a_count_that_fails_without_mixed_sites_stays_an_error() {
     assert_eq!(windows(&[PLAIN, PLAIN, MIXED]), Windows::default());
 }
 
 #[test]
 fn a_recommended_count_owes_no_ramp() {
-    let windows = Windows::of_count(RuleLevel::Recommended, AT_MOST_ONE, [PLAIN, MIXED]);
-    assert_eq!(windows, Windows::default());
+    assert_eq!(
+        Windows::of_count(RuleLevel::Recommended, AT_MOST_ONE, [PLAIN, MIXED]),
+        Windows::default()
+    );
+}
+
+#[test]
+fn removing_mixed_sites_cannot_make_a_matched_count_eligible() {
+    // Even without the matched site, the two ordinary sites exceed the bound.
+    assert_eq!(windows(&[PLAIN, MATCHED, MIXED]), Windows::default());
+}
+
+#[test]
+fn an_independently_matched_mixed_site_keeps_only_alias_relief() {
+    let flags = windows(&[
+        PLAIN,
+        Marks {
+            matched: true,
+            ..MIXED
+        },
+    ]);
+    assert_eq!(
+        flags,
+        Windows {
+            matched: true,
+            ..Windows::default()
+        }
+    );
+    let (mut errors, mut warnings) = (Vec::new(), Vec::new());
+    let (sink, message) = route(flags, &mut errors, &mut warnings, "ordinary message".into());
+    sink.push(finding(message));
+    assert!(errors.is_empty());
+    assert_eq!(warnings[0].message, format!("ordinary message{MATCH}"));
+}
+
+#[test]
+fn mixed_ordinary_sites_do_not_erase_the_remaining_relief() {
+    // The matched sites alone repair this count; the mixed site counts as ordinary.
+    let flags = windows(&[MIXED, MATCHED, MATCHED]);
+    assert_eq!(
+        flags,
+        Windows {
+            matched: true,
+            ..Windows::default()
+        }
+    );
+    let (mut errors, mut warnings) = (Vec::new(), Vec::new());
+    let (sink, message) = route(flags, &mut errors, &mut warnings, "ordinary message".into());
+    sink.push(finding(message));
+    assert!(errors.is_empty());
+    assert_eq!(warnings[0].message, format!("ordinary message{MATCH}"));
 }
