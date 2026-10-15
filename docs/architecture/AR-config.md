@@ -465,11 +465,19 @@ the notices, the refusals, the listed comments and both gates' results, and
 
 ### 8.1 What it reads, and how
 
-- **The v1 file, once.** The v1 reader's own line pass records each key's line
-  and its attached comments; migration does not parse the file a second time
+- **The v1 file, once.** Migration opts into the v1 reader's owned line records,
+  including raw text, key locations and attached comments, during its existing
+  single parse; migration does not parse the file a second time
   ([§FS-config-migrate.4.3](../functional-spec/FS-config-migrate.md#43-everything-else-is-listed)). A tolerant mode of that reader, used by migration
   alone, accepts a path-shaped `[scan] exclude` entry so that it can be
-  diagnosed; every other caller still refuses it.
+  diagnosed; every other caller still refuses it. The ordinary reader's default
+  pass neither constructs nor retains migration-only records
+  ([§FS-config-migrate.4.3](../functional-spec/FS-config-migrate.md#43-everything-else-is-listed)). That policy is defined once at the shared reader, so all
+  ordinary callers skip capture. Capturing leaves lowering and the first-error
+  order of section 4 unchanged; migration keeps every comment and the same
+  records, report and guidance equivalence gates ([§FS-config-migrate.4.1](../functional-spec/FS-config-migrate.md#41-attached-comments-move-with-a-one-to-one-key),
+  [§FS-config-migrate.4.2](../functional-spec/FS-config-migrate.md#42-the-header-block-stays-at-the-top), [§FS-config-migrate.4.3](../functional-spec/FS-config-migrate.md#43-everything-else-is-listed), [§FS-config-migrate.5.1](../functional-spec/FS-config-migrate.md#51-the-records-gate),
+  [§FS-config-migrate.5.2](../functional-spec/FS-config-migrate.md#52-the-report-gate), [§FS-config-migrate.5.3](../functional-spec/FS-config-migrate.md#53-guidance)).
 - **The candidate, as a file would be read.** The candidate text is loaded back
   through `pending_config`, the path `init` uses for config text not yet on
   disk, so the records gate compares what the v2 reader really makes of it
