@@ -45,7 +45,6 @@ pub(super) fn merge_findings(target: &mut Catalog, mut source: Catalog) {
     target
         .near_miss_headings
         .append(&mut source.near_miss_headings);
-    target.stub_shape_notes.append(&mut source.stub_shape_notes);
     target
         .unclosed_wrapper_notes
         .append(&mut source.unclosed_wrapper_notes);

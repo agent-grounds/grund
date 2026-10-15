@@ -75,7 +75,7 @@ pub(crate) use file_record::{
     BlockForm, FileRecord, FileRecords, FileText, HeadingKind, LineZone, RecordedBlock,
     RecordedHeading,
 };
-pub(crate) use headings::{StubShapeNote, StubShapeReading, UnmarkedHeadingCandidate};
+pub(crate) use headings::UnmarkedHeadingCandidate;
 pub(crate) use paths::{
     configured_home_path_key, format_path, is_hidden, normalize_path_lexically, relative_from_base,
     scanned_decl_relative_path, scanned_path_key, sort_path_key,

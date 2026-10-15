@@ -12,7 +12,6 @@ use super::near_miss::check_declaration_near_misses;
 use super::parse_moves::check_parse_moves;
 use super::sections::check_section_headings;
 use super::sizes::check_oversized_leads;
-use super::stub_shape::check_stub_shapes;
 use crate::config::{Frame, Schema};
 use crate::grammar::render_id;
 use crate::model::{
@@ -20,7 +19,7 @@ use crate::model::{
     sort_path_key,
 };
 
-/// §AR-checker.1.1: duplicate, misplaced-declaration, broken-stub, stub-shape and
+/// §AR-checker.1.1: duplicate, misplaced-declaration, broken-stub and
 /// declaration-near-miss (§FS-declarations.checks), the section family, inline
 /// citation style, the opt-in lead budget, the parse-moves warning
 /// (§FS-declarations.checks.parse-moves) and the field family (§FS-fields.checks), each pass in the order the single
@@ -47,8 +46,6 @@ pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> C
     check_broken_stubs(catalog, frame, &mut report);
     // §FS-declarations.checks.excluded-stub-target: a stub 0.19.0 reports as broken.
     check_excluded_stub_targets(catalog, frame, &mut report);
-    // §FS-declarations.checks.stub-shape: a stub-shaped heading 0.19.0 reads differently.
-    check_stub_shapes(catalog, frame, &mut report);
     // §FS-declarations.checks.declaration-near-miss: headings that open like a declaration and
     // parse as none.
     check_declaration_near_misses(catalog, &mut report);

@@ -145,16 +145,12 @@ fn list_run(
             if opts.unused_only && id.kind == "E2E" && !opts.kind_filter.contains("E2E") {
                 continue;
             }
-            // §AR-scanner.4.6: the declarations every command counts. A
-            // stub whose target declares the ID twice is one row, and two declarations
-            // (§FS-declarations.stubs.pairing.2).
+            // §AR-scanner.4.6: the declarations every command counts, each at its record,
+            // so a paired declaration is its target's, one row per declaration the target
+            // holds, wherever it sits (§FS-declarations.stubs.pairing.4, §FS-list.2.5).
             let paired = paired_declarations(decls);
             let duplicate = paired.len() > 1;
-            let mut stand_ins: Vec<&Declaration> = paired.stand_ins().collect();
-            stand_ins.sort_by(|a, b| {
-                (sort_path_key(&a.file), a.line).cmp(&(sort_path_key(&b.file), b.line))
-            });
-            for home in stand_ins {
+            for home in paired.records() {
                 entries.push(Entry {
                     project_alias: project.alias.as_str(),
                     project_config: &project.config,

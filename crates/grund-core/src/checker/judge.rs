@@ -181,9 +181,10 @@ pub(crate) fn judge(
 /// §FS-check.4.1: a declaration nothing cites is a warning, not an error —
 /// except E2E cases, which are proof artifacts, not citation targets. An
 /// index entry is not an inbound citation (§DF-index-not-an-inbound-citation).
-/// The warning sits at the first stand-in of the ID's declarations once its stubs
-/// are paired by their verdicts (§AR-scanner.4.6), and a citation a stub's target
-/// lends is use (§FS-refs.2, §FS-declarations.stubs.target.5).
+/// The warning sits at the first of the ID's declarations once its stubs are
+/// paired by their verdicts (§AR-scanner.4.6), at its line in a stub's target
+/// wherever that target sits (§FS-declarations.stubs.pairing.4), and a citation a
+/// stub's target lends is use (§FS-refs.2, §FS-declarations.stubs.target.5).
 fn check_unused(
     findings: &Catalog,
     frame: Frame<'_>,
@@ -212,7 +213,7 @@ fn check_unused(
             continue;
         }
         if !cited.contains(id)
-            && let Some(decl) = paired_declarations(decls).stand_ins().next()
+            && let Some(decl) = paired_declarations(decls).iter().next().map(|p| p.record)
         {
             report.warnings.push(Diagnostic {
                 code: "unused",

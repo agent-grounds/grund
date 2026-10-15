@@ -82,7 +82,6 @@ mod scope_probe;
 mod section_locks;
 mod section_record;
 mod stub_homes;
-mod stub_shape;
 mod tree;
 mod unclosed_wrapper;
 mod units;
@@ -187,8 +186,6 @@ mod tests_section_outside_declaration;
 mod tests_source_section_titles;
 #[cfg(test)]
 mod tests_stub_homes;
-#[cfg(test)]
-mod tests_stub_shape;
 #[cfg(test)]
 mod tests_unmarked_headings;
 #[cfg(test)]

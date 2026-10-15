@@ -3,7 +3,7 @@
 //! destination but would close at a later `)` by the first-`)` reading `fmt`
 //! keeps until grund 0.19.0 (§FS-citations.wrap.recognized). The scan notes it as it reads
 //! the line, through the one bracket test `fmt` asks, and `check` reports what was
-//! noted, as it does for `stub-shape`. An off-grammar citation is noted where the
+//! noted. An off-grammar citation is noted where the
 //! catalog promotes it (`legacy.rs`), from the opener this pass saw.
 
 use super::citation_line::CitationLine;

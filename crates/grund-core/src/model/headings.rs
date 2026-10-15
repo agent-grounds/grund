@@ -76,25 +76,3 @@ pub struct NearMissHeading {
     pub text: String,
     pub format: String,
 }
-
-/// A declaration heading of the stub shape that the two stub tests of
-/// §FS-declarations.stubs.shape read differently, noted by the scanner where it
-/// read the heading (§AR-scanner.4.7) and reported as `stub-shape`
-/// (§FS-declarations.checks.stub-shape). Nothing else reads it: the heading is
-/// read as the `docs` test reads it until 0.19.0.
-pub(crate) struct StubShapeNote {
-    pub(crate) file: PathBuf,
-    pub(crate) line: usize,
-    pub(crate) id: Id,
-    pub(crate) reading: StubShapeReading,
-}
-
-/// Which way the two tests disagree on one heading.
-pub(crate) enum StubShapeReading {
-    /// A stub today only because a directory on its path is named `docs`; outside
-    /// every kind's home, so a declaration from 0.19.0.
-    StubOnlyByDocs,
-    /// A declaration titled with a link today; in a kind's home, so from 0.19.0 a
-    /// stub to `path`, the link's destination as written.
-    StubByHome { path: String },
-}

@@ -37,7 +37,6 @@ fn facts() -> RuleFacts {
             NodeMeta {
                 label: label.into(),
                 anchor: anchor(line),
-                lent: false,
             },
         )
     };
@@ -50,7 +49,6 @@ fn facts() -> RuleFacts {
                     column: Some(3),
                     ..anchor(line)
                 },
-                lent: false,
                 mixed: false,
             },
         )
@@ -262,7 +260,6 @@ fn facts_with_uncited_own_target() -> RuleFacts {
         NodeMeta {
             label: "AR-c".into(),
             anchor: anchor(25),
-            lent: false,
         },
     );
     facts
@@ -283,7 +280,6 @@ fn facts_with_section_site() -> RuleFacts {
             SiteMeta {
                 label: "AR-b".into(),
                 anchor: anchor(line),
-                lent: false,
                 mixed: false,
             },
         );

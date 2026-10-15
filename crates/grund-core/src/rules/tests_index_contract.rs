@@ -74,7 +74,6 @@ fn facts() -> RuleFacts {
                     NodeMeta {
                         label: label.into(),
                         anchor: anchor(line),
-                        lent: false,
                     },
                 )
             })
@@ -85,7 +84,6 @@ fn facts() -> RuleFacts {
                 SiteMeta {
                     label: "REQ-a.part.detail".into(),
                     anchor: anchor(7),
-                    lent: false,
                     mixed: false,
                 },
             ),
@@ -94,7 +92,6 @@ fn facts() -> RuleFacts {
                 SiteMeta {
                     label: "REQ-a.part.detail".into(),
                     anchor: anchor(8),
-                    lent: false,
                     mixed: false,
                 },
             ),

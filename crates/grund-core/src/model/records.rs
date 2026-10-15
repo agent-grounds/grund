@@ -5,8 +5,7 @@ use super::e2e::E2eCase;
 use super::excluded_stub_targets::ExcludedStubTargetNote;
 use super::file_record::FileRecords;
 use super::headings::{
-    NearMissHeading, RelativeSectionParent, SectionHeadingOutsideDeclaration, StubShapeNote,
-    UnmarkedHeading,
+    NearMissHeading, RelativeSectionParent, SectionHeadingOutsideDeclaration, UnmarkedHeading,
 };
 use super::line_owners::FileLineOwnership;
 use super::patterns::GlobCitation;
@@ -379,9 +378,6 @@ pub struct Catalog {
     /// not a declaration, so the rule costs one regex on heading-shaped lines
     /// rather than a second read of the tree.
     pub near_miss_headings: Vec<NearMissHeading>,
-    /// Stub-shaped headings the two stub tests read differently, until 0.19.0
-    /// (§FS-declarations.checks.stub-shape, §AR-scanner.4.7).
-    pub(crate) stub_shape_notes: Vec<StubShapeNote>,
     /// Wraps whose destination never closes before a later `)`, until 0.19.0
     /// (§FS-citations.checks.unclosed-wrapper).
     pub(crate) unclosed_wrapper_notes: Vec<UnclosedWrapperNote>,
@@ -406,7 +402,7 @@ impl Catalog {
     /// target lends (§FS-declarations.stubs.target.5, §AR-scanner.4.6). `refs`, the
     /// counts, `unused`, the rules and the `[citations]` directions read these.
     pub(crate) fn edges(&self) -> impl Iterator<Item = &Citation> + '_ {
-        self.marked_edges().map(|(citation, _)| citation)
+        self.citations.iter().chain(self.lent_citations.iter())
     }
 
     /// The same edges, to be rewritten in place: the cross-namespace shorthand pass
@@ -422,13 +418,6 @@ impl Catalog {
     /// own (§FS-declarations.stubs.target.5).
     pub(crate) fn retain_lent(&mut self, keep: impl FnMut(&Citation) -> bool) {
         self.lent_citations.retain(keep);
-    }
-
-    /// The same edges, each marked whether a stub's target lends it, which the
-    /// §FS-rules.7.11 window reads.
-    pub(crate) fn marked_edges(&self) -> impl Iterator<Item = (&Citation, bool)> + '_ {
-        let walked = self.citations.iter().map(|citation| (citation, false));
-        walked.chain(self.lent_citations.iter().map(|citation| (citation, true)))
     }
 }
 

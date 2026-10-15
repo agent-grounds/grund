@@ -6,7 +6,7 @@ use super::show::{render_show_output_json, show_declaration_with_home};
 use super::show_query::{ShowFormat, ShowOpts, ShowQueryError};
 use crate::config::{display_path, run_warning_findings};
 use crate::grammar::{flatten_cross_ref_links, render_id};
-use crate::model::{Finding, FindingSite, ShowOutput};
+use crate::model::{Finding, FindingSite, ShowOutput, paired_declarations};
 use crate::resolver::{WorkspaceContext, load_workspace_context, with_member_id_candidates};
 use crate::scanner::resolve_id_arg;
 use crate::workspace::split_qualified_id_arg;
@@ -304,8 +304,10 @@ fn exhaustive_batch_queries(context: &WorkspaceContext) -> Vec<BatchShowQuery> {
                 id: qualified_id.clone(),
                 section: None,
             });
-            let sections: BTreeSet<&str> = declarations
-                .iter()
+            // §FS-declarations.stubs.target.5: a paired declaration's sections are its
+            // target's, scanned or not.
+            let sections: BTreeSet<&str> = paired_declarations(declarations)
+                .records()
                 .flat_map(|declaration| {
                     declaration.sections.keys().map(String::as_str).chain(
                         declaration

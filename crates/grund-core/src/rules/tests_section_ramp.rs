@@ -33,7 +33,6 @@ fn facts() -> RuleFacts {
             NodeMeta {
                 label: label.into(),
                 anchor: anchor(line),
-                lent: false,
             },
         )
     };
@@ -46,7 +45,6 @@ fn facts() -> RuleFacts {
                     column: Some(3),
                     ..anchor(line)
                 },
-                lent: false,
                 mixed: false,
             },
         )

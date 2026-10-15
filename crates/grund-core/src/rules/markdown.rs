@@ -42,7 +42,8 @@ pub(crate) fn adapt_markdown(
 /// nodes, the edges into it and the sections a citation of it reaches are read off
 /// each stub's verdict (§AR-scanner.4.6), and a declaration's chapters and
 /// citations off the record it is paired with, so a stub's target outside the walk
-/// lends both, each marked for §FS-rules.7.11 (§FS-declarations.stubs.target.5).
+/// lends both, judged as scanned ones since §FS-rules.7.11 closed
+/// (§FS-declarations.stubs.target.5).
 pub(crate) fn adapt_workspace(
     selected: &str,
     projects: &[(&str, &Catalog, MarkdownProject<'_>)],
@@ -84,15 +85,14 @@ pub(crate) fn adapt_workspace(
             // (§FS-rules.5.1).
             let paired = paired_declarations(homes);
             for (ordinal, home) in paired.stand_ins().enumerate() {
-                // §FS-declarations.stubs.target.5: the chapters are the paired record's, a
-                // target's outside the walk lent and marked for §FS-rules.7.11.
+                // §FS-declarations.stubs.target.5: the chapters are the paired record's,
+                // and §FS-declarations.stubs.pairing.4 anchors the declaration at it.
                 let records = paired
                     .iter()
                     .filter(|paired| std::ptr::eq(paired.stand_in, home));
                 for (nth, record) in records.enumerate() {
-                    let lent = !std::ptr::eq(record.record, home);
                     // A target declaring the ID twice is two declarations, as scanned: each
-                    // record its own node, anchored where the stub stands for it.
+                    // record its own node, anchored at its own line.
                     let ordinal = match nth {
                         0 => ordinal.to_string(),
                         nth => format!("{ordinal}.{nth}"),
@@ -114,11 +114,10 @@ pub(crate) fn adapt_workspace(
                         NodeMeta {
                             label: label.clone(),
                             anchor: RuleAnchor {
-                                path: home.file.to_string_lossy().into_owned(),
-                                line: home.line,
+                                path: record.record.file.to_string_lossy().into_owned(),
+                                line: record.record.line,
                                 column: None,
                             },
-                            lent: false,
                         },
                     );
                     for (section, info) in &record.record.sections {
@@ -146,7 +145,6 @@ pub(crate) fn adapt_workspace(
                                     line: info.line,
                                     column: None,
                                 },
-                                lent,
                             },
                         );
                     }
@@ -157,7 +155,7 @@ pub(crate) fn adapt_workspace(
 
     for (alias, findings, _) in projects {
         // §FS-declarations.stubs.target.5: a stub's target lends its citations as edges.
-        for (ordinal, (citation, lent)) in findings.marked_edges().enumerate() {
+        for (ordinal, citation) in findings.edges().enumerate() {
             let Some(source_id) = citation.enclosing_declaration.as_ref() else {
                 continue;
             };
@@ -240,7 +238,6 @@ pub(crate) fn adapt_workspace(
                         line: citation.line,
                         column: Some(citation.column),
                     },
-                    lent,
                     mixed,
                 },
             );

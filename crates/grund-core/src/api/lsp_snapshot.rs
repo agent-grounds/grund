@@ -169,6 +169,8 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
             let rendered = render_id(&project.config.grammar, id);
             let query_id = lsp_query_id(&context, project, &rendered, None);
             // §FS-config.3.4.3: metadata follows the declaration's owning project.
+            // §AR-scanner.4.6: the ID's declarations once its stubs are paired.
+            let paired = paired_declarations(decls);
             if let Some(title) = project
                 .config
                 .kinds
@@ -177,16 +179,15 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                 .and_then(|kind| kind.title.as_ref())
             {
                 kind_titles.insert(query_id.clone(), title.clone());
-                for section in decls.iter().flat_map(|decl| decl.sections.keys()) {
+                for section in paired.records().flat_map(|decl| decl.sections.keys()) {
                     kind_titles.insert(
                         lsp_query_id(&context, project, &rendered, Some(section)),
                         title.clone(),
                     );
                 }
             }
-            // §AR-scanner.4.6: a title for each stand-in of the ID's paired
-            // declarations, and a stub title for each stub that only points at one.
-            let paired = paired_declarations(decls);
+            // A title for each stand-in of the ID's paired declarations, and a stub title
+            // for each stub that only points at one.
             let mut stand_ins: Vec<&Declaration> = paired.stand_ins().collect();
             stand_ins.sort_by(|a, b| {
                 (sort_path_key(&a.file), a.line).cmp(&(sort_path_key(&b.file), b.line))
@@ -209,9 +210,15 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                     section_separator: project.config.section_separator.clone(),
                     hover_text: None,
                 });
-                // Each citable section heading is its own declaration-side
-                // title: editors navigate `<ID>.<section>` to that section's
-                // citations, the same way the whole-ID title does (§FS-lsp.1.3.1).
+            }
+            // Each section heading is a title editors navigate to (§FS-lsp.1.3.1), read
+            // off the paired record, a target's scanned or not (§FS-declarations.stubs.target.5).
+            for home in paired.records() {
+                let display = if context.workspace_loaded {
+                    display_path(context.render_config(), &home.file)
+                } else {
+                    display_path(&project.config, &home.file)
+                };
                 for (section, info) in &home.sections {
                     let (column, text) = section_range_parts(home, info, section, sources);
                     // §FS-lsp.1.2.4: `.1: Username` hovers as `format.1: Username`.

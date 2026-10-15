@@ -17,7 +17,6 @@ use crate::config::{
     Owners, Place, Row, Rules, Schema, render_citation_target, row_grounding,
 };
 use crate::model::{Catalog, CheckReport, Citation, Diagnostic, E2eSpecRef, Id};
-use crate::rules::engine::LENT_CLAUSE;
 use crate::scanner::file_home_kind;
 use crate::sources::paths_same_location;
 
@@ -188,17 +187,10 @@ pub(super) fn check_citation_obligations(
         for unit in units {
             for entry in &kind_rules.must {
                 if !entry.targets.iter().any(|t| unit.satisfies(t)) {
-                    let mut diagnostic =
+                    let diagnostic =
                         obligation_diagnostic("missing-citation", frame, &unit, entry, "must");
-                    // §FS-rules.7.11: a unit only a stub's target supplies warns until 0.19.0.
-                    let channel = if unit.lent {
-                        diagnostic.message.push_str(LENT_CLAUSE);
-                        DirectionChannel::Warnings
-                    } else {
-                        DirectionChannel::Errors
-                    };
                     report.push(
-                        channel,
+                        DirectionChannel::Errors,
                         citing_kind,
                         CitationLevel::Must,
                         &[entry],
