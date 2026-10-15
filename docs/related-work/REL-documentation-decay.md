@@ -24,7 +24,7 @@ resolves ([§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cite
 - Emad Aghajani, Csaba Nagy, Olga Lucero Vega-Márquez, Mario Linares-Vásquez, Laura Moreno,
   Gabriele Bavota and Michele Lanza, *Software Documentation Issues Unveiled*, ICSE 2019,
   DOI 10.1109/ICSE.2019.00122
-  ([PDF](https://www.inf.usi.ch/faculty/lanza/PUBS/P/Agha2019a.pdf)), mined 878
+  ([DOI](https://doi.org/10.1109/ICSE.2019.00122)), mined 878
   documentation-related artifacts from mailing lists, Stack Overflow discussions, issue
   trackers and pull requests into a taxonomy of 162 types of documentation issues, in four
   categories: what the documentation's content says, how that content is written and
@@ -35,10 +35,9 @@ resolves ([§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cite
   traceability between documentation and code. The follow-up, Emad Aghajani, Csaba Nagy,
   Mario Linares-Vásquez, Laura Moreno, Gabriele Bavota, Michele Lanza and David C.
   Shepherd, *Software Documentation: The Practitioners' Perspective*, ICSE 2020, DOI
-  10.1145/3377811.3380405
-  ([PDF](https://www.inf.usi.ch/faculty/lanza/PUBS/P/Agha2020a.pdf)), surveyed 146
-  practitioners on which documentation issues they find most relevant and which types of
-  documentation they consider important for specific tasks.
+  10.1145/3377811.3380405, surveyed 146 practitioners on which documentation issues they
+  find most relevant and which types of documentation they consider important for specific
+  tasks.
 - Wen Siang Tan, Markus Wagner and Christoph Treude, *Detecting outdated code element
   references in software repository documentation* (DOCER), Empirical Software Engineering
   29, 2024, DOI 10.1007/s10664-023-10397-6
