@@ -100,6 +100,13 @@ refused: grund.toml:12: [scan] include names `src`, which does not exist, and ve
   repair: create src, or remove it from include; grund check under version 1 shows the effect
 ```
 
+A file that omits `[scan] include` reads that same default list, and a missing default entry is refused too, never dropped: a `src` created later would be scanned under version 1 and not under version 2. One block names every missing default entry, and its repair authors the list without them:
+
+```text
+refused: grund.toml: [scan] include is not set, so version 1 reads its default, which names `e2e` and `src`, which do not exist, and version 2 must know whether each is a folder or a file
+  repair: add [scan] include = ["requirements.md", "docs"] under version 1; grund check shows its effect
+```
+
 #### 3.1.4 A path-shaped `[scan] exclude` entry
 
 The v1 reader refuses an entry containing `/`. Migration reads the file tolerantly, only to diagnose it ([§DF-scan-exclude-component-names.2.4](../decisions/functional/DF-scan-exclude-component-names.md#24-what-this-leaves-to-the-v2-migration)), and names each entry with the files on this tree the glob it resembles would stop reading. Removing the entry keeps what is scanned exactly as it was; a project that wants the glob adopts it in version 2 by hand.
@@ -311,7 +318,7 @@ Only the file at `PATH` is migrated; mixed versions are legal ([§FS-config.5](F
 | `[scan] docstring_python` | `.py`'s definition, `docstrings` python or off | mapped |
 | `[scan] exclude` | `[schema.sources] exclude`, each name as the escaped glob `<name>/` | mapped; a path-shaped entry refused ([§FS-config-migrate.3.1.4](FS-config-migrate.md#314-a-path-shaped-scan-exclude-entry)) |
 | `[scan] extensions` | `languages`, `[schema.sources.definitions.v1_<profile>]` and `[schema.sources.extensions]` | mapped; JSON mixed with value authority, unreachable profiles and out-of-domain suffixes refused as [§FS-config-v2.schema.sources.migration](FS-config-v2.md#schemasourcesmigration-what-a-v1-source-configuration-becomes) says |
-| `[scan] include` | `[schema.kinds.code] files` and `folders`, by what each entry is on disk | mapped; an entry at or inside a scanned home dropped as a duplicate; refused when missing ([§FS-config-migrate.3.1.3](FS-config-migrate.md#313-an-include-entry-that-does-not-exist)), outside the root, inside a member, or inside an unscanned home |
+| `[scan] include` | `[schema.kinds.code] files` and `folders`, by what each entry is on disk | mapped; an entry at or inside a scanned home dropped as a duplicate; refused when missing, the default list's entries included ([§FS-config-migrate.3.1.3](FS-config-migrate.md#313-an-include-entry-that-does-not-exist)), outside the root, inside a member, or inside an unscanned home |
 | `[scan] respect_gitignore` | `[schema.sources] respect_gitignore` | mapped |
 | `[output] color` | none | notice: nothing reads it |
 | `[output] format` | none | notice; `"json"` names `--format json` |
