@@ -8,6 +8,7 @@
 use std::path::{Path, PathBuf};
 
 use super::check::{CheckOpts, CheckOutput, check_with_projects};
+use super::config_findings::{CONFIG_VERSION_1, version_1_caution};
 use super::config_migrate_guidance::guidance_refusals;
 use crate::config::migrate::{
     Gate, GateResult, Located, MigrateFailure, MigrateOutcome, MigrateReport, Prepared, locate,
@@ -120,9 +121,8 @@ fn members(located: &Located) -> Vec<String> {
             let file = member_on_v1(root)?;
             let member = format_path(&relative_from_base(&located.root, root));
             let file = format_path(&relative_from_base(&located.root, &file));
-            Some(format!(
-                "{file} is version 1; migrate it with grund config migrate --to 2 {member}"
-            ))
+            // §FS-check.checks.config-version-1: the caution's renderer, so both say it alike.
+            Some(version_1_caution(&file, Some(&member)))
         })
         .collect()
 }
@@ -209,7 +209,14 @@ fn lines(
             f.column.map_or("-".into(), |c| c.to_string()),
         )
     };
-    let mut out: Vec<String> = warnings.iter().map(|w| finding("run-warning", w)).collect();
+    // §FS-config-migrate.5.2: the v1 run's own caution is what migrating ends, not a
+    // difference the candidate makes, so neither run carries it.
+    let compared = |f: &&Finding| f.code != CONFIG_VERSION_1;
+    let mut out: Vec<String> = warnings
+        .iter()
+        .filter(compared)
+        .map(|w| finding("run-warning", w))
+        .collect();
     match output {
         Ok((output, projects)) => {
             out.extend(projects.iter().map(|root| {
@@ -217,10 +224,34 @@ fn lines(
                 format!("project {}", if shown.is_empty() { "." } else { &shown })
             }));
             let report = &output.report;
-            out.extend(report.errors.iter().map(|f| finding("error", f)));
-            out.extend(report.warnings.iter().map(|f| finding("warning", f)));
-            out.extend(report.suggestions.iter().map(|f| finding("suggestion", f)));
-            out.extend(output.warnings.iter().map(|f| finding("run-warning", f)));
+            out.extend(
+                report
+                    .errors
+                    .iter()
+                    .filter(compared)
+                    .map(|f| finding("error", f)),
+            );
+            out.extend(
+                report
+                    .warnings
+                    .iter()
+                    .filter(compared)
+                    .map(|f| finding("warning", f)),
+            );
+            out.extend(
+                report
+                    .suggestions
+                    .iter()
+                    .filter(compared)
+                    .map(|f| finding("suggestion", f)),
+            );
+            out.extend(
+                output
+                    .warnings
+                    .iter()
+                    .filter(compared)
+                    .map(|f| finding("run-warning", f)),
+            );
             let failed = !report.errors.is_empty() || output.had_scan_errors;
             out.push(format!("exit {}", u8::from(failed)));
         }

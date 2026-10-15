@@ -126,6 +126,8 @@ mod tests_check_run_warnings;
 #[cfg(test)]
 mod tests_config_migrate_gates;
 #[cfg(test)]
+mod tests_config_version_1;
+#[cfg(test)]
 mod tests_cover_workspace;
 #[cfg(test)]
 mod tests_embedding;

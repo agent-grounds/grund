@@ -128,6 +128,43 @@ fn report_gate_moves_a_config_finding_through_the_key_map() {
     }
 }
 
+/// §FS-config-migrate.5.2: the v1 run's `config-version-1` caution is the one
+/// thing migrating ends, so a clean v1 project previews with no `differs:` even
+/// though its own run carries the caution and the candidate's does not.
+#[test]
+fn report_gate_drops_the_version_1_caution() {
+    let root = tree(
+        "version-1-caution",
+        &v1_config(FS),
+        &[("docs/FS-a.md", "# FS-a: A\n\nText.\n")],
+    );
+    let (warnings, output) = super::check::check_with_projects(super::check::CheckOpts {
+        path: root.clone(),
+        path_provided: true,
+        ..super::check::CheckOpts::default()
+    });
+    assert!(warnings.is_empty());
+    let (output, _) = output.expect("the tree checks");
+    assert!(
+        output
+            .report
+            .warnings
+            .iter()
+            .any(|f| f.code == "config-version-1"),
+        "the v1 run carries the caution the gate must drop"
+    );
+    let (located, v1, candidate, map) = prepared(&root);
+    assert!(report_gate(&located, &v1, &candidate, &map, "grund.toml").is_empty());
+    match config_migrate(&MigrateOpts {
+        path: root,
+        write: false,
+        drop_comments: false,
+    }) {
+        Ok(MigrateOutcome::Migrated(report)) => assert_eq!(report.gates, Some(GateResult::Equal)),
+        other => panic!("{other:?}"),
+    }
+}
+
 /// §FS-config-migrate.5.2: "a finding with no mapped line is a difference".
 #[test]
 fn report_gate_counts_an_unmapped_config_finding_as_a_difference() {

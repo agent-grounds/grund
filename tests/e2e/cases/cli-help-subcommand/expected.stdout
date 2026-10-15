@@ -49,6 +49,7 @@ Supported check finding codes:
   broken-stub
   chapter-cardinality
   citation-cardinality
+  config-version-1
   dangling
   declaration-near-miss
   deprecated-config-location
