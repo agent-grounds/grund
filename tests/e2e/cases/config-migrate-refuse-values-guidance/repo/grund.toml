@@ -1,0 +1,20 @@
+grund_config_version = 1
+project_name = "example"
+
+[id]
+format = "{kind}-{slug}"
+named_sections = true
+slug_pattern = "[a-z][a-z0-9-]*"
+
+[[kinds]]
+kind = "FS"
+folder = "docs"
+
+[[kinds]]
+kind = "TERM"
+file = "terms.md"
+values = true
+
+[scan]
+include = ["docs", "terms.md"]
+extensions = ["md"]

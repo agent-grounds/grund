@@ -96,6 +96,9 @@ pub(crate) enum Prepared {
         v1_text: String,
         v1: Box<Project>,
         line_map: Vec<(usize, usize)>,
+        /// Each value row with the line of its `values` key, which the
+        /// guidance comparison names (§FS-config-migrate.5.3).
+        value_lines: Vec<(String, usize)>,
     },
 }
 
@@ -204,9 +207,20 @@ pub(crate) fn translate(located: &Located, write: bool, drop_comments: bool) -> 
     });
     let line_map = comments::line_map(&carried.text, &lines, &keys);
     report.candidate = Some(carried.text);
+    let value_lines = project
+        .schema
+        .value_rows()
+        .filter_map(|row| Some((row.name.clone(), keys.row_line(&row.name, "values")?)))
+        .collect();
     let mut prepared = translated(report, text, project);
-    if let Prepared::Translated { line_map: map, .. } = &mut prepared {
+    if let Prepared::Translated {
+        line_map: map,
+        value_lines: values,
+        ..
+    } = &mut prepared
+    {
         *map = line_map;
+        *values = value_lines;
     }
     Ok(prepared)
 }
@@ -217,5 +231,6 @@ fn translated(report: MigrateReport, v1_text: String, v1: Project) -> Prepared {
         v1_text,
         v1: Box::new(v1),
         line_map: Vec::new(),
+        value_lines: Vec::new(),
     }
 }

@@ -37,6 +37,7 @@ mod complete_ids;
 mod config;
 mod config_findings;
 mod config_migrate;
+mod config_migrate_guidance;
 mod cover;
 mod cover_lines;
 mod embedding;

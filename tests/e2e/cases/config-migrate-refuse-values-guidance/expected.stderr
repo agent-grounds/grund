@@ -1,0 +1,5 @@
+grund.toml: version 1 → 2, preview, nothing written
+refused: grund.toml:16: [[kinds]] `TERM` values = true gives the row a declaration shape in version 2, which adds a "Declaration shapes" section to the AGENTS.md block grund init writes, and grund check compares it
+  would write: - **TERM**
+  would write:   - field <number> may · values
+  repair: none keeps the generated guidance; remove values under version 1 only if that section may change

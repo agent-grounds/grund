@@ -207,7 +207,26 @@ The candidate is loaded through the v2 reader, the path a file on disk goes thro
 
 ### 5.3 Guidance
 
-Migration also renders in memory what `grund init` would write into each `AGENTS.md`. A difference `grund check` compares is a refusal. The Project map row the complement gains once its places are listed is a `note:` line, because only `init` writes that table and `check` does not compare it ([§FS-init.2.3.7.2](FS-init.md#2372-what-check-compares)): `` note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check does not compare that table ``.
+Migration also renders in memory what `grund init` would write into each `AGENTS.md`, for the file as read and for the candidate, whether or not an `AGENTS.md` exists yet. A difference `grund check` compares, the block's version or one of its config-derived sections, is a refusal, because the next `grund init` would write it and `check` would then hold the tree to it. A value row is the common case: version 2 gives it a declaration shape, which adds a section version 1 never wrote:
+
+```text
+refused: grund.toml:11: [[kinds]] `TERM` values = true gives the row a declaration shape in version 2, which adds a "Declaration shapes" section to the AGENTS.md block grund init writes, and grund check compares it
+  would write: - **TERM**
+  would write:   - field <number> may · values
+  repair: none keeps the generated guidance; remove values under version 1 only if that section may change
+```
+
+Any other compared difference is one block per section, its lines prefixed `- ` for version 1 and `+ ` for the candidate, or a version alone when no section differs:
+
+```text
+refused: grund.toml: the AGENTS.md block grund init writes would change its citation directions section, which grund check compares
+  + <line>
+  repair: none keeps the generated guidance; keep version 1 until that section may change
+refused: grund.toml: the AGENTS.md block grund init writes would go from v19 to v21, which grund check compares
+  repair: none keeps the generated guidance; keep version 1 until that block may change
+```
+
+The Project map row the complement gains once its places are listed is a `note:` line, because only `init` writes that table and `check` does not compare it ([§FS-init.2.3.7.2](FS-init.md#2372-what-check-compares)): `` note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check does not compare that table ``.
 
 ### 5.4 The result, and a difference
 

@@ -75,6 +75,12 @@ differing lines, `- ` for version 1 and `+ ` for the candidate, and refuses:
 the candidate would change a meaning, so nothing is written
 ([§FS-config-migrate.5.4](../functional-spec/FS-config-migrate.md#54-the-result-and-a-difference)).
 
+The `AGENTS.md` block `grund init` would write is compared too, whether or not
+the file exists yet. A difference `grund check` would hold the tree to is
+refused: most often a `values = true` row, which version 2 gives a declaration
+shape that adds a `Declaration shapes` section
+([§FS-config-migrate.5.3](../functional-spec/FS-config-migrate.md#53-guidance)).
+
 ## 5. Write
 
 Add `--write` (and `--drop-comments` if the preview listed comments). The file is

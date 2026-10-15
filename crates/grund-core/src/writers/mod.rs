@@ -108,6 +108,7 @@ mod integrations_detect;
 mod integrations_guidance;
 mod integrations_install;
 mod integrations_user_config;
+mod migrate_guidance;
 mod scoped_files;
 
 pub use fetch::{FetchFailure, FetchFailureKind, fetch_snapshot, fetch_snapshot_with_run_warnings};
@@ -162,12 +163,14 @@ pub(crate) use fmt_links::wrap_markdown_links;
 pub(crate) use fmt_rewrite::{FmtLineOpts, fmt_line};
 #[cfg(test)]
 pub(crate) use guidance::Guidance;
+// §FS-config-migrate.5.3: the root block migration compares.
 #[cfg(test)]
 pub(crate) use init_guidance::docs_scaffold;
 #[cfg(test)]
 pub(crate) use init_render::render_agents_append_block_at;
 #[cfg(test)]
 pub(crate) use integrations_clients::{ITERM2_SNIPPET, KITTY_SNIPPET, WEZTERM_SNIPPET};
+pub(crate) use migrate_guidance::{RootGuidance, root_guidance};
 
 // The cases that pin this component, one module per behaviour area
 // (§AR-core-module-layout.1.3).
