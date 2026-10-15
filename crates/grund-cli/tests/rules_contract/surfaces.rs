@@ -2,7 +2,9 @@
 //! §FS-rules.3, §FS-rules.4, §FS-rules.6, §FS-rules.7, §FS-rules.8 and
 //! §FS-rules.9.
 
-use super::support::{assert_run, fixture, run, scratch, text, write};
+use super::support::{
+    NO_RULE_FORM_V2, assert_run, assert_v1_run, fixture, run, scratch, text, write,
+};
 use std::fs;
 
 const TEXT_FINDINGS: &str = concat!(
@@ -18,7 +20,7 @@ const TEXT_FINDINGS: &str = concat!(
 #[test]
 fn chapter_scope_and_exact_once_coverage_are_hard_findings() {
     let output = run(&fixture(), &["check", "."]);
-    assert_run(&output, 1, TEXT_FINDINGS, "");
+    assert_v1_run(&output, 1, TEXT_FINDINGS, "");
 }
 
 /// §FS-rules.7.6: rule-derived JSON adds no source-list field, and same-anchor
@@ -39,7 +41,7 @@ fn rule_findings_have_exact_ndjson_codes_and_bytes() {
         "\"code\":\"missing-citation\",\"message\":\"FS-demo.requirements must cite REQ ",
         "(RULE-requirements)\",\"sites\":null,\"authority\":[\"RULE-requirements\"]}\n",
     );
-    assert_run(&output, 1, expected, "");
+    assert_v1_run(&output, 1, expected, "");
 }
 
 /// §FS-rules.3.1, §FS-rules.7.2, §FS-check.3.26: a `have` sentence counts the named
@@ -55,7 +57,7 @@ fn ad_hoc_rule_is_additive_and_suggestions_do_not_change_the_exit() {
     let expected = format!(
         "{TEXT_FINDINGS}docs/fs/FS-demo.md:1: suggestion: FS-demo has 0 security chapters; --rule requires exactly one; expected display name \"security\" (case-insensitive, not section handle); observed direct chapters: \"goals: Goals\", \"requirements: Requirements\"\n"
     );
-    assert_run(&output, 1, &expected, "");
+    assert_v1_run(&output, 1, &expected, "");
 }
 
 #[test]
@@ -478,13 +480,12 @@ fn formatter_treats_the_rule_sentence_as_a_grammar_island() {
     assert_eq!(after.lines().next(), Some(first.as_str()));
 }
 
-/// §FS-rules.1: without a `rules = true` row, check output and the managed
+/// §FS-rules.1: without a rule form on any kind, check output and the managed
 /// block are what they were before the feature.
 #[test]
 fn a_project_without_rule_opt_in_keeps_the_old_check_bytes() {
     let root = scratch("no-opt-in");
-    let config = fs::read_to_string(root.join("grund.toml")).expect("fixture config");
-    write(&root, "grund.toml", &config.replace("rules = true\n", ""));
+    write(&root, "grund.toml", NO_RULE_FORM_V2);
     let output = run(&root, &["check", "."]);
     assert_run(&output, 0, "success\n", "");
 

@@ -34,6 +34,31 @@ pub fn assert_run(output: &Output, exit: i32, stdout: &str, stderr: &str) {
     assert_eq!(text(&output.stderr), stderr, "unexpected stderr");
 }
 
+/// `assert_run` over a version 1 fixture, comparing stderr without the
+/// `config-version-1` caution: that is a run-level line about the config
+/// (§FS-check.checks.config-version-1), and these fixtures are version 1 because
+/// the e2e cases sharing them are, not because the version is the test's subject.
+pub fn assert_v1_run(output: &Output, exit: i32, stdout: &str, stderr: &str) {
+    assert_eq!(output.status.code(), Some(exit), "unexpected exit");
+    assert_eq!(text(&output.stdout), stdout, "unexpected stdout");
+    assert_eq!(
+        without_caution(&text(&output.stderr)),
+        stderr,
+        "unexpected stderr"
+    );
+}
+
+/// Stderr with its `config-version-1` lines, text or JSON, dropped.
+pub fn without_caution(stderr: &str) -> String {
+    stderr
+        .split_inclusive('\n')
+        .filter(|line| {
+            !line.contains("\"code\":\"config-version-1\"")
+                && !line.contains(" is version 1; migrate it with grund config migrate --to 2")
+        })
+        .collect()
+}
+
 pub fn scratch(name: &str) -> PathBuf {
     scratch_from(&fixture(), name)
 }
@@ -106,3 +131,41 @@ pub fn unconfigured_rules(name: &str) -> PathBuf {
     .expect("disable configured rules");
     root
 }
+
+/// The fixture's config as version 2 without a `form = "rule"` kind, so a clean
+/// run's stdout is `success` rather than the version 1 caution
+/// (§FS-check.checks.config-version-1).
+pub const NO_RULE_FORM_V2: &str = r#"grund_config_version = 2
+
+[schema]
+id_format = "{kind}-{slug}"
+
+[schema.kinds.GOAL]
+folders = ["docs/goals"]
+index = false
+
+[schema.kinds.REQ]
+folders = ["docs/req"]
+index = false
+
+[schema.kinds.FS]
+folders = ["docs/fs"]
+index = false
+
+[schema.kinds.AR]
+folders = ["docs/ar"]
+index = false
+
+[schema.kinds.RULE]
+folders = ["docs/rules"]
+index = false
+
+[schema.kinds.code]
+folders = ["docs"]
+
+[rules.citations.RULE]
+must = ["GOAL"]
+
+[presentation]
+rules = "root"
+"#;

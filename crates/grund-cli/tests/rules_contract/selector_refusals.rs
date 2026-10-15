@@ -7,7 +7,7 @@
 //! with a named `requirements` chapter holding two numbered sections and a named
 //! `should` chapter.
 
-use super::support::{assert_run, case_repo, run, scratch_from, text};
+use super::support::{assert_run, assert_v1_run, case_repo, run, scratch_from, text};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -368,7 +368,7 @@ fn the_rule_side_keeps_its_reading_of_a_sentence_with_a_modality_named_chapter()
             "The should chapter of each FS must cite at least one FS.",
         ],
     );
-    assert_run(
+    assert_v1_run(
         &output,
         1,
         "docs/functional-spec/FS-login.md:11: error: FS-login.should must cite FS (--rule)\n\

@@ -8,7 +8,7 @@
 //! `check-rules-modal-chapter-declaration` case's, which adds a `rules = true`
 //! declaration written as such a sentence.
 
-use super::support::{assert_run, case_repo, run, text};
+use super::support::{assert_v1_run, case_repo, run, text};
 use std::path::{Path, PathBuf};
 
 /// The released reason every row opens with.
@@ -100,7 +100,7 @@ fn the_invalid_rule_finding_names_the_modal_word_chapter() {
         &case_repo("check-rules-modal-chapter-declaration"),
         &["check", "."],
     );
-    assert_run(
+    assert_v1_run(
         &output,
         1,
         &format!(

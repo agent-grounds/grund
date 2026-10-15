@@ -3,7 +3,8 @@
 //! the quoted `invalid-rule` message.
 
 use super::support::{
-    absent_chapter, assert_run, fixture, repo_root, run, scratch, text, unconfigured_rules,
+    absent_chapter, assert_run, assert_v1_run, fixture, repo_root, run, scratch, text,
+    unconfigured_rules,
 };
 use std::fs;
 
@@ -307,7 +308,7 @@ fn a_chapter_rule_reports_the_declaration_without_the_chapter() {
     // clause in its own bytes (§FS-rules.7, §FS-errors.5.5).
     let unfiltered = ["check", ".", "--rule", sentence, "--format", "json"];
     let absent = absent_chapter("documented-absent-chapter");
-    assert_run(
+    assert_v1_run(
         &run(&absent, &unfiltered),
         1,
         "{\"severity\":\"error\",\"path\":\"docs/fs/FS-demo.md\",\"line\":1,\
@@ -352,7 +353,7 @@ fn the_documented_invalid_rule_quote_is_the_binarys() {
             "json",
         ],
     );
-    assert_run(
+    assert_v1_run(
         &output,
         1,
         "{\"severity\":\"error\",\"path\":null,\"line\":1,\
