@@ -112,6 +112,15 @@ target the scan reads moves nothing, because nothing is lent. Rows U04, U07 and 
 [§REQ-one-answer.differences.stubs](../../requirements/REQ-one-answer.md#differencesstubs-stubs), and U06 widens to every finding about the declaration that
 still lands at the stub.
 
+The window [§DF-stub-target-citations-and-chapters.2.4](DF-stub-target-citations-and-chapters.md#24-what-it-newly-raises-warns-until-0190) opened is complete. It shipped in grund
+0.18.0 and closed in grund 0.19.0, with [§FS-rules.7.10](../../functional-spec/FS-rules.md#710-a-rule-declared-through-a-stub-warns-until-0190)'s, in the change that ended that one
+(agent-grounds/grund#650). A finding that only the citations and chapters an outside target lends
+produce is the same code's ordinary error, its message byte for byte the scanned tree's, with no
+clause after it, and a finding about the declaration itself is located at its line in the target
+([§FS-declarations.stubs.pairing.4](../../functional-spec/FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target)), so U06 left [§REQ-one-answer.differences.stubs](../../requirements/REQ-one-answer.md#differencesstubs-stubs) with it.
+[§FS-rules.7.11](../../functional-spec/FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190) is kept as a pointer, heading text included, so the citations written during the
+window still resolve, and the notice below is not rewritten ([§FS-distribution.4.6.4](../../functional-spec/FS-distribution.md#464-compatibility-notices-come-from-the-decisions)).
+
 ## release-note: Release note
 
 - [§DF-stub-target-citations-and-chapters](DF-stub-target-citations-and-chapters.md#df-stub-target-citations-and-chapters-a-stubs-target-lends-the-stubbed-declaration-its-citations-and-chapters-and-what-that-newly-raises-warns-until-0190), [§FS-declarations.stubs.target.5](../../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged), [§FS-rules.7.11](../../functional-spec/FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190), [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path): **a stub's target outside the scan now lends the stubbed declaration its citations and chapters, so rules, `[citations]`, `refs` and `unused` read it as if it were scanned.** A rule or `[citations]` obligation the target's citations meet no longer fails at the stub, a chapter rule counts the target's chapters, and `grund refs` lists the target's citations. **Who this affects:** repositories with a stub to a declaration outside `[scan] include`. A prohibition the target's citations break, a count or chapter count they now exceed, and a `[citations]` `must` on a target that cites nothing are reported as warnings ending `; a citation or chapter a stub's target holds now counts, and this warning becomes an error in grund 0.19.0`, and become errors in 0.19.0. Nothing is reported about the target file itself, and a citation there that resolves to nothing still counts for nothing.

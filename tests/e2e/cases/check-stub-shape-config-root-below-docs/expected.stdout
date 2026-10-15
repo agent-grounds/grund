@@ -1,0 +1,1 @@
+notes/y.md:1: error: duplicate declaration of FS-y (also declared at src/y.rs:1)

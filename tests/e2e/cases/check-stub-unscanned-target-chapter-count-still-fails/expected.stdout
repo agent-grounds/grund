@@ -1,1 +1,1 @@
-docs/fs/x.md:1: error: FS-x has 2 Terms chapters; --rule requires exactly one; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: "terms: Terms", "more: Terms"
+src/x.rs:1: error: FS-x has 2 Terms chapters; --rule requires exactly one; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: "terms: Terms", "more: Terms"

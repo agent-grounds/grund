@@ -1,1 +1,0 @@
-src/x.rs:3: warning: FS must not cite GOAL (citation direction) — re-point the citation or downgrade it to a plain Markdown link; a citation or chapter a stub's target holds now counts, and this warning becomes an error in grund 0.19.0

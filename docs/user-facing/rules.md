@@ -237,10 +237,10 @@ and fails the run. Move or remove the citation, loosen the count, or
 A rule reads a declaration written behind a stub on what its target says, even
 where the target is outside `[scan] include`: the target's citations count, its
 chapters are counted, and a forbidden citation there is reported at its line in
-the target. Those citations and chapters count only since this release, so
-until 0.19.0 a finding only they produce is a warning ending `; a citation or
-chapter a stub's target holds now counts, and this warning becomes an error in
-grund 0.19.0`. §FS-declarations.stubs.target.5 §FS-rules.7.11
+the target. A count or chapter count the declaration fails is reported at its
+line in the target too. In 0.18.0 a finding only those citations and chapters
+produced was a warning; from 0.19.0 it is an ordinary error and fails the run.
+[§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged) [§FS-declarations.stubs.pairing.4](../functional-spec/FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target) [§FS-rules.7.11](../functional-spec/FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)
 
 The runnable [`examples/rules/`](../../examples/rules/) repository includes a
 passing and violated instance of all five families, shared-prefix coverage

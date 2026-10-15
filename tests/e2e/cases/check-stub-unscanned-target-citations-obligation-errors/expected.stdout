@@ -1,0 +1,2 @@
+src/x.rs:1: error: FS-x must cite GOAL (citation direction)
+docs/goals/g.md:1: warning: declared but never cited: GOAL-g

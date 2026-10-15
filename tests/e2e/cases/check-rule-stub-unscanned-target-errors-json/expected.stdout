@@ -1,0 +1,1 @@
+{"severity":"error","path":"docs/fs/a.md","line":3,"code":"forbidden-citation","message":"FS must not cite GOAL (RULE-r) — re-point the citation or downgrade it to a plain Markdown link","sites":null,"authority":["RULE-r"]}
