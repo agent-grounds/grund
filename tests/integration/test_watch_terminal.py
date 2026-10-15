@@ -146,7 +146,8 @@ class WatchTerminalTests(unittest.TestCase):
 
     def test_watch_json_terminal_never_enters_or_clears(self):
         (self.root / "src/main.rs").write_text("// \u00a7FS-live\n// \u00a7FS-missing\n")
-        self.check_pair("shared", args=("--format=json",))
+        # The fixture's [id] format is v1-only; the caution would interleave the shared terminal.
+        self.check_pair("shared", args=("--format=json", "--ignore=config-version-1"))
 
 
 if __name__ == "__main__":

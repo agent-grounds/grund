@@ -21,6 +21,7 @@ import functools
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import unittest
@@ -56,6 +57,13 @@ def projects():
     return sorted(found)
 
 
+# The version 1 caution (§FS-check.checks.config-version-1) came after the captures and
+# is not the lowering's; it is dropped from what is compared.
+CAUTION = re.compile(
+    r"^warning: \S+ is version 1; migrate it with grund config migrate --to 2( \S+)?\n", re.M
+)
+
+
 def _run(project, command):
     result = subprocess.run(
         [_grund(), "config", command, project],
@@ -65,7 +73,7 @@ def _run(project, command):
     return [
         result.returncode,
         hashlib.sha256(result.stdout).hexdigest()[:16],
-        result.stderr.decode("utf-8", "replace"),
+        CAUTION.sub("", result.stderr.decode("utf-8", "replace")),
     ]
 
 

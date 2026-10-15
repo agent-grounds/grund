@@ -89,8 +89,9 @@ class NodeParityTests(unittest.TestCase):
             for redundant in (False, True):
                 raw = self.r.root / ("raw-member-caution" if redundant else "raw-member")
                 (raw / "members").mkdir(parents=True)
+                # Version 2, so the run's cautions are the redundant pair's alone.
                 (raw / "grund.toml").write_text(
-                    'grund_config_version = 1\n[workspace]\nmembers = ["members/*"]\n',
+                    'grund_config_version = 2\n[workspace]\nmembers = ["members/*"]\n',
                     encoding="utf-8",
                 )
                 member = os.fsencode(raw / "members") + b"/\xff"
@@ -110,7 +111,7 @@ class NodeParityTests(unittest.TestCase):
                     config.write(b"grund_config_version = 1\n")
                 if redundant:
                     (raw / ".agents").mkdir()
-                    (raw / ".agents/grund.toml").write_text('grund_config_version = 1\n')
+                    (raw / ".agents/grund.toml").write_text('grund_config_version = 2\n')
                 raw_workspaces[str(raw)] = redundant
                 requests.append(("validateConfig", [{"root": str(raw)}]))
         if sys.platform.startswith("linux"):
