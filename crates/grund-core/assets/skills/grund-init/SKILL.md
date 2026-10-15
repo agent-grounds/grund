@@ -13,7 +13,7 @@ Guide the user through `grund` adoption. `grund init` itself is non-interactive,
 2. Present a short "detected repo shape" summary and recommended setup.
 3. If existing specs or spec-like artifacts are present, show the canonical `grund` artifact types beside the detected project-specific sections/tags/document classes, then ask which artifact model to adopt before writing config or refactoring docs.
 4. Ask each remaining setup/config question below. For every question, include the recommended value, repo evidence, pros, cons, and when to choose something else.
-5. Write `grund.toml` from the analysis before running `grund init`, so generated guidance reflects the repository's actual grammar, marker, strict mode, kinds, artifact folders, and scan scope. For the existing-structure model, `grund init --template=none` lays a starting `grund.toml` that declares no kinds (`kinds = []`): replace that line with the repo's own `[[kinds]]` tables, then run `grund init` again so the entrypoints teach them.
+5. Write `grund.toml` from the analysis before running `grund init`, so generated guidance reflects the repository's actual grammar, marker, strict mode, kinds, artifact folders, and scan scope. On a fresh setup with no `grund.toml`, `grund init` writes the version-2 starter itself: a short file holding only what differs from a default — the project name, each kind's row and places, and each kind's title. Run it first, then add only the settings the user chose to change. `grund config show` prints every effective setting, defaults included, in the file's own version; show it to the user rather than writing defaults out, and copy a line from it into `grund.toml` to change that setting. For the existing-structure model, `grund init --template=none` lays a version-2 `grund.toml` that declares no kinds: add one `[schema.kinds.<KIND>]` table per kind of the repo's own, with the `folders` or `files` its declarations live in, then run `grund init` again so the entrypoints teach them.
 6. Run `grund init [path] [--name NAME] [--force]`, adding `--scaffold` only when the repo is fresh or the user selected a canonical-layout migration that needs the template's starter files. Omit `--name` to reuse a target config's `project_name`, falling back to the target directory name when the config has none; pass it only to override that generated identity for this run. Preview the run with `--dry-run` if the user wants to inspect what will change before committing, and offer `--check` — the same preview, writing nothing and exiting `1` when a file is still pending — as the pre-commit or CI gate that catches a managed block whose text drifted while its version heading stayed current. `init` refuses a target that no `.git`, `.hg`, `.jj`, or `.svn` marker covers, in it or any ancestor: for a directory not yet under version control, either run the VCS's own init first or pass `--no-vcs`. It also refuses the home directory and the machine-global agent instruction files (`~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, and the rest of that set) with no flag at all — those say the path is wrong, not that an option is missing, so re-point the run rather than trying to force it.
 7. Run `grund config validate [path]` and `grund check [path]`.
 8. Summarize generated files, validation results, existing specs/artifacts found, and any follow-up cleanup.
@@ -80,9 +80,9 @@ Ask these in order.
 
 ### Top-level
 
-`grund_config_version = 1`
+`grund_config_version`
 
-Do not ask unless the user is migrating schemas. Keep `1`.
+Do not ask. A fresh setup gets `2` from `grund init`. An existing file keeps its version: a file without the key is version 1 and keeps loading unchanged, and moving it is `grund config migrate` (see Version 1 to version 2). The questions below name each setting by its version-1 key; for a version-2 file, `grund config show` prints the table each one lives in.
 
 `project_name`
 
@@ -177,7 +177,7 @@ Relax only to match existing IDs.
 
 Default kinds: `GRUND`, `GOAL`, `FS`, `AR`, `DF`, `DA`, `E2E`, `RM`. The config `grund init` writes also declares `REQ`, hard requirements the project must never break, in `docs/requirements/`. `REQ` has no built-in default, so a config that leaves `[[kinds]]` out has none. `FS` stays in `requirements.md` until grund 0.19.0 moves its default home to `docs/functional-spec/` ([the decision](https://github.com/agent-grounds/grund/blob/main/docs/decisions/functional/DF-fs-home-moves-from-0-19.md)); a repository with no `grund.toml` whose `requirements.md` declares `FS` is warned `fs-home-moves` until then, and running `grund init` keeps it there.
 
-Ask whether to keep defaults, remove unused kinds, or add project-specific kinds. To start from none instead, `grund init --template=none` writes `kinds = []`, and each kind is then added as its own `[[kinds]]` table.
+Ask whether to keep defaults, remove unused kinds, or add project-specific kinds. To start from none instead, `grund init --template=none` writes a version-2 file with no `[schema.kinds]` row, and each kind is then added as its own `[schema.kinds.<KIND>]` table.
 
 Pros of defaults: matches grund docs and generated scaffold.
 Cons: some repos may not need all categories.
@@ -369,7 +369,7 @@ target and use `|` for alternatives.
 
 | Setting | Recommendation from repo evidence |
 | --- | --- |
-| `--template` and `--scaffold` | With little or no `docs/` or `tests/` structure, use `grund init --scaffold`: the default `--template=software-development` lays canonical kinds and starter files. With meaningful docs or tests, omit `--scaffold` and add only missing grund files. For an existing taxonomy, use `grund init --template=none`, replace `kinds = []` in `grund.toml` with the repo's `[[kinds]]`, then run `grund init` again. `--template=none --scaffold` is refused because `none` has no starter files. |
+| `--template` and `--scaffold` | With little or no `docs/` or `tests/` structure, use `grund init --scaffold`: the default `--template=software-development` lays canonical kinds and starter files. With meaningful docs or tests, omit `--scaffold` and add only missing grund files. For an existing taxonomy, use `grund init --template=none`, add the repo's `[schema.kinds.<KIND>]` tables to `grund.toml`, then run `grund init` again. `--template=none --scaffold` is refused because `none` has no starter files. |
 | `[reference].strict` | Recommend the default `strict = true` for first adoption, especially with noisy ID-like tokens or deliberate citation hygiene. Use `strict = false` only for existing bare citations that need a compatibility window before `grund fmt --marker`. |
 | `[reference].require_grounding` | Recommend `false` initially; `true` only with broad spec-to-code citation coverage or an explicit request for strict co-change discipline. |
 | `[id].format` | Use `{kind}-{number}-{slug}` for fresh repos or stable IDs with readable names; `{kind}-{number}` for existing ADR/RFC-style numbered IDs; `{kind}-{slug}` for title/slug-based docs where numeric allocation would feel artificial. |

@@ -23,6 +23,16 @@ specs. The config is the default template's, `software-development`: the
 `e2e` and `integration` test homes. `grund init --template=software-development`
 is the same run.
 
+The file is short. It is version 2 (`grund_config_version = 2`) and writes only
+what differs from a default: the project name, each kind's row with its places,
+and each kind's title ([§FS-init.2.4.3](../functional-spec/FS-init.md#243-every-written-key-differs-from-its-default)). Every other setting is left to its
+default, so a new project gets slug-only IDs such as `FS-login`, named sections,
+and the whole tree scanned. `grund config show` prints every effective setting,
+defaults included, in the file's own version ([§FS-config.4.2](../functional-spec/FS-config.md#42-grund-config-show-path)); copy a
+line from it into `grund.toml` to change that setting. A version-1 file an
+earlier `init` wrote keeps loading unchanged, and `grund config migrate` converts
+it when you choose to.
+
 The managed block teaches Project namespaces only for workspace roots and
 claimed members. Standalone repositories omit it. A discovered workspace keeps
 that guidance even if a missing member or duplicate alias prevents its Workspace
@@ -54,8 +64,8 @@ warning: --docs is deprecated and is removed in grund 0.19.0; use --scaffold, wh
 ## `--template=none`: a repository with its own kinds
 
 A repository with a taxonomy of its own — ADRs, RFCs, runbooks — does not want
-the nine default kinds. `--template=none` writes a `grund.toml` that declares
-none ([§FS-init.1.6.2](../functional-spec/FS-init.md#162-none)):
+the default template's kinds. `--template=none` writes a version-2 `grund.toml`
+that declares none ([§FS-init.1.6.2](../functional-spec/FS-init.md#162-none)):
 
 ```bash
 $ grund init --template=none
@@ -69,20 +79,22 @@ next:
 see AGENTS.md for the full workflow.
 ```
 
-The config holds `kinds = []`, the spelling of an empty kind set
-([§FS-config.3.4.4.5](../functional-spec/FS-config.md#3445-kinds---declares-no-kinds)). It is not the same as leaving `[[kinds]]` out, which keeps
-the built-in kinds. Until a kind is declared, nothing is an ID: `grund check`
+The config holds the version, the project name and a comment on declaring a
+first kind, and no `[schema.kinds]` row
+([§FS-init.2.4.9](../functional-spec/FS-init.md#249-the-none-templates-config)). Version 2 has no built-in kinds, so no row means
+no kinds. Until a kind is declared, nothing is an ID: `grund check`
 passes and says why it found nothing, `grund id` answers `known kinds: none`,
 and the managed block's Project map tells the agent how to add the first kind
 instead of listing an empty one.
 
-To declare the repository's kinds, replace `kinds = []` with one `[[kinds]]`
-table per kind:
+To declare the repository's kinds, add one `[schema.kinds.<KIND>]` table per
+kind, and a `[presentation.kinds.<KIND>]` title for the Project map:
 
 ```toml
-[[kinds]]
-kind = "ADR"
-folder = "docs/adr"
+[schema.kinds.ADR]
+folders = ["docs/adr"]
+
+[presentation.kinds.ADR]
 title = "Architecture decisions"
 ```
 

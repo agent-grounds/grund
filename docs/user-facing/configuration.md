@@ -2,11 +2,16 @@
 
 # The `grund.toml` reference
 
-Every key `grund.toml` accepts, table by table: first version 1, the default, then
-version 2, which a file selects with `grund_config_version = 2`. A key you leave out
+Every key `grund.toml` accepts, table by table: first version 1, which a file
+without `grund_config_version` is read as and keeps loading as, then version 2,
+which a file selects with `grund_config_version = 2` and which `grund init` writes,
+holding only what differs from a default
+([§FS-init.2.4.3](../functional-spec/FS-init.md#243-every-written-key-differs-from-its-default)). A key you leave out
 takes the default shown. `grund config validate` checks a file against these keys and
-`grund config show` prints the configuration in effect
-([§FS-config.4](../functional-spec/FS-config.md#4-validation-and-inspection)).
+`grund config show` prints the configuration in effect, defaults included, in the
+file's own version; for version 2 its tables keyed by a kind follow the order the
+file writes its `[schema.kinds]` rows
+([§FS-config.4.2.4](../functional-spec/FS-config.md#424-the-order-show-prints-in)).
 
 ## Editor support
 
