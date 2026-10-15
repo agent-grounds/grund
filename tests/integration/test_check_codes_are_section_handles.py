@@ -36,12 +36,10 @@ CODE_CELL = re.compile(r"^`?([a-z][a-z0-9-]*)`?$")
 
 # The four chapter-rule codes that shipped before it stay on NOT_YET_MIGRATED
 # until the `FS-rules` slice moves them.
-# `glob-citation` is born the same way, at `FS-check.checks.glob-citation`, and
-# `unclosed-wrapper` at `FS-citations.checks.unclosed-wrapper`, and so is
-# `fs-home-moves`, at `FS-check.checks.fs-home-moves`.
+# `glob-citation` is born the same way, at `FS-check.checks.glob-citation`, and so
+# is `fs-home-moves`, at `FS-check.checks.fs-home-moves`.
 MIGRATED = {
     "FS-check": ("fs-home-moves", "glob-citation"),
-    "FS-citations": ("unclosed-wrapper",),
     "FS-rules": ("unreached-declaration",),
     "FS-scan": ("unread-scan-root",),
     "FS-fields": (

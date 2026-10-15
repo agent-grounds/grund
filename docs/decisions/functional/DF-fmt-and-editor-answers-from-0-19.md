@@ -67,6 +67,19 @@ ships this record, and it waits for the release #598 lands in.
   only the bytes `fmt --write` writes, never a verdict: `fmt --check` fails on it in neither
   release once it has been written.
 
+## 4. The 0.19.0 half landed
+
+Every row of [§DF-fmt-and-editor-answers-from-0-19.2.1](DF-fmt-and-editor-answers-from-0-19.md#21-what-moves-in-0190) moves in grund 0.19.0, on the schedule it
+named (agent-grounds/grund#655). A wrap is `[§<ID>](…)` closed by the `)` that balances its `(`,
+and `fmt --cross-refs`, `show`'s flatten and `check`'s kind-index entry form read it through the
+one wrapper test ([§FS-citations.wrap.recognized](../../functional-spec/FS-citations.md#wraprecognized-an-existing-wrap-is-recognized-by-its-brackets), [§FS-show.3.2.1](../../functional-spec/FS-show.md#321-the-wrap-shape-it-collapses), [§FS-check.3.17.4](../../functional-spec/FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)).
+The `unclosed-wrapper` warning of 2.2 is retired with its code and catalog row, so a selector naming
+it is refused as an unknown code ([§FS-citations.checks.unclosed-wrapper](../../functional-spec/FS-citations.md#checksunclosed-wrapper-unclosed-wrapper-read-differently-from-grund-0190)). The editor's span for a
+declaration or section title is the `--toc` title's ([§FS-lsp.1.3.4](../../functional-spec/FS-lsp.md#134-origin-span-and-result-shape)), and row P16 leaves
+[§REQ-one-answer.differences.sections](../../requirements/REQ-one-answer.md#differencessections-sections). The notice below is not rewritten: it shipped in 0.18.0 naming
+this release, and a notice already released is not published again
+([§FS-distribution.4.6.4](../../functional-spec/FS-distribution.md#464-compatibility-notices-come-from-the-decisions)).
+
 ## release-note: Release note
 
 - [§DF-fmt-and-editor-answers-from-0-19](DF-fmt-and-editor-answers-from-0-19.md#df-fmt-and-editor-answers-from-0-19-fmts-link-wrapper-and-the-editors-title-span-change-in-0190-after-a-release-that-announces-them), [§FS-citations.wrap.recognized](../../functional-spec/FS-citations.md#wraprecognized-an-existing-wrap-is-recognized-by-its-brackets), [§FS-citations.checks.unclosed-wrapper](../../functional-spec/FS-citations.md#checksunclosed-wrapper-unclosed-wrapper-read-differently-from-grund-0190), [§FS-lsp.1.3.4](../../functional-spec/FS-lsp.md#134-origin-span-and-result-shape), [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path): **from 0.19.0, `fmt` reads a link around a citation as complete, and the editor's title span matches the `--toc` title.** A wrap is `[§<ID>](…)` closed by the `)` that balances its `(`. `fmt --cross-refs` re-derives its whole URL, so `[§<ID>](old(1).md)` no longer keeps `.md)`, and a `[§<ID>](` that never closes is wrapped fresh. `show` and the kind-index check read wraps the same way. The editor's span for a declaration or section title ends where the `--toc` title ends, so a C-family `*/` is no longer part of it. **Who this affects:** wherever a verdict moves, 0.18.0 warns with `unclosed-wrapper`, naming the `)` that keeps today's reading; everything else changes output only, with nothing to migrate. The change is [issue #655](https://github.com/agent-grounds/grund/issues/655).

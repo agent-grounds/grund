@@ -50,9 +50,6 @@ use std::path::{Path, PathBuf};
 const LEDGER: &[(&str, &str, &str)] = &[
     ("G01", "r1", "citation-is-its-whole-token"),
     ("R01", "r2", "narrowed-resolves-as-check"),
-    // P16 keeps the editor's span for one release (DF-fmt-and-editor-answers-from-0-19);
-    // its flip is #655.
-    ("P16", "p16", "a-section-title-span-is-the-toc-title"),
     ("R02", "r02", "a-narrowed-workspace-run-resolves-the-alias"),
     // R06a-d keep the saved text for one release (DF-four-editor-checks-read-saved-text);
     // their flip is #624.
@@ -67,8 +64,8 @@ const LEDGER: &[(&str, &str, &str)] = &[
 /// §REQ-one-answer.differences the command line, shell completion or the editor
 /// snapshot can show. A tree with no row holds a row that closed, U01 and U05 with
 /// #597, U04, U07 and U08 with #651, G06 with #671, G09 with #680, Placement,
-/// U03a to U03d and U06 with #650, and P01, P02, P03, P07, P10 and P12 with #639,
-/// so its two answers must agree.
+/// U03a to U03d and U06 with #650, P01, P02, P03, P07, P10 and P12 with #639, and P16
+/// with #655, so its two answers must agree.
 const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
     (
         Some("G01"),
@@ -137,7 +134,7 @@ const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
         sections::a_doc_comment_section_ends_at_a_duplicate,
     ),
     (
-        Some("P16"),
+        None,
         "p16",
         "a-section-title-span-is-the-toc-title",
         sections::a_section_title_span_is_the_toc_title,

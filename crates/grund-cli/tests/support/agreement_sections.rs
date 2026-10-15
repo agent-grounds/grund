@@ -228,8 +228,8 @@ pub fn a_doc_comment_section_ends_at_a_duplicate() -> Verdict {
 /// Row P16: the editor snapshot's span for a C-family section title ends where
 /// the `--toc` title ends, its `*/` left out as comment envelope
 /// (§REQ-one-answer.sections.map, §FS-lsp.1.3.4,
-/// §FS-languages.comment-wrapper.headings). Ruled by
-/// §DF-fmt-and-editor-answers-from-0-19, so the row reproduces until 0.19.0.
+/// §FS-languages.comment-wrapper.headings). The row closed in 0.19.0 with
+/// §DF-fmt-and-editor-answers-from-0-19, so the two answers agree.
 pub fn a_section_title_span_is_the_toc_title() -> Verdict {
     let tree = Tree::new(
         "p16-block-comment-title-span",
