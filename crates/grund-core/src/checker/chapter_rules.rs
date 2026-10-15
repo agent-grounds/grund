@@ -8,8 +8,7 @@ use crate::model::{Catalog, CheckReport, Declaration, Diagnostic, paired_declara
 use crate::resolver::WorkspaceCheckTarget;
 use crate::rules::RuleAnchor;
 use crate::rules::engine::{
-    evaluate, evaluate_suggestions, one_rules_authority, route_stubbed_rules,
-    unresolved_subject_diagnostic,
+    evaluate, evaluate_suggestions, one_rules_authority, unresolved_subject_diagnostic,
 };
 use crate::rules::markdown::{MarkdownProject, adapt_markdown, adapt_workspace};
 use crate::rules::sentence::{ParsedRule, RuleSubject, RuleVocabulary, parse_rule};
@@ -53,12 +52,6 @@ struct RuleDeclaration<'a> {
 }
 
 impl RuleDeclaration<'_> {
-    /// Whether the rule is declared through a stub whose target the scan does not
-    /// read, so its findings warn until 0.19.0 (§FS-rules.7.10).
-    fn through_unscanned_stub(&self) -> bool {
-        self.site.is_stub && !std::ptr::eq(self.record, self.site)
-    }
-
     fn anchor(&self) -> RuleAnchor {
         RuleAnchor {
             path: self.site.file.to_string_lossy().into_owned(),
@@ -349,8 +342,6 @@ pub(crate) fn check_chapter_rules(
         None => adapt_markdown(findings, markdown_project(frame.name, &local), complete),
     };
     let mut parsed_rules = Vec::new();
-    // §FS-rules.7.10: the origins whose findings warn until 0.19.0.
-    let mut stubbed = BTreeSet::new();
     for rule in rule_declarations(findings, schema, frame) {
         let parsed = rule
             .record
@@ -361,9 +352,6 @@ pub(crate) fn check_chapter_rules(
                 parse_rule(title, rule.origin.clone(), rule.anchor(), &vocab)
                     .map_err(|error| error.message)
             });
-        if rule.through_unscanned_stub() {
-            stubbed.insert(rule.origin.clone());
-        }
         match parsed {
             Ok(_) if !rule_has_rationale(rule.record) => {
                 report.errors.push(rule.invalid("rule rationale is empty"));
@@ -386,8 +374,8 @@ pub(crate) fn check_chapter_rules(
     let precedence = directions(findings, rules, schema, frame, &parsed_rules);
     // §FS-rules.7: one channel per level, so the absence arrives among the
     // errors its level already fills and every caller's own sort orders it.
-    let (mut errors, mut ramp_warnings) = evaluate(&parsed_rules, &precedence, &facts);
-    route_stubbed_rules(&stubbed, &mut errors, &mut ramp_warnings);
+    // §FS-rules.7.10: a rule declared through a stub reports on the ordinary channels.
+    let (errors, ramp_warnings) = evaluate(&parsed_rules, &precedence, &facts);
     report.errors.extend(errors);
     // §FS-rules.7.9 / §FS-errors.4.1: the single-project `grund-core` arm is the one
     // caller that does not sort warnings downstream, and the sort is idempotent over

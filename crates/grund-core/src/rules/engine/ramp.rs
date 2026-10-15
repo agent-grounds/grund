@@ -1,11 +1,11 @@
 //! The release windows in which a finding that only a target newly matched at
-//! the rule's own nested alias (§FS-rules.7.9), a rule declared through a stub
-//! whose target the scan does not read (§FS-rules.7.10), a citation or chapter
-//! such a target lends (§FS-rules.7.11), or a citation of a name under a number
-//! (§FS-rules.7.12, §FS-citations.checks.mixed-path) produces warns rather than
-//! fails. All four, the site marks they read and the second field of `evaluate`
+//! the rule's own nested alias (§FS-rules.7.9) or a citation of a name under a
+//! number (§FS-rules.7.12, §FS-citations.checks.mixed-path) produces warns rather
+//! than fails. Both, the site marks they read and the second field of `evaluate`
 //! go away at 0.19.0. A numbered-section citation counts as any other site since
-//! §FS-rules.7.8 landed, so it marks nothing here.
+//! §FS-rules.7.8 landed, and a rule declared through a stub and what a stub's
+//! target lends since §FS-rules.7.10 and §FS-rules.7.11 closed, so none of them
+//! marks anything here.
 
 use super::super::facts::{NodeKey, RuleFacts, SiteKey};
 use super::super::{Cardinality, RuleLevel, RuleTargets};
@@ -18,13 +18,6 @@ use std::collections::BTreeSet;
 /// error's message unchanged, so the release guard reads the promise: the one for
 /// the corrected pinned-target match (§FS-rules.7.9).
 const MATCH_CLAUSE: &str = "; a target pinned at the rule's own nested alias path now matches, and this warning becomes an error in grund 0.19.0";
-
-/// The same pending clause for a rule declared through a stub (§FS-rules.7.10).
-const STUB_CLAUSE: &str = "; a rule declared through a stub now applies, and this warning becomes an error in grund 0.19.0";
-
-/// The same pending clause for what a stub's target lends (§FS-rules.7.11), which
-/// the `[citations]` directions name too (§FS-check.3.11, §FS-check.3.12).
-pub(crate) const LENT_CLAUSE: &str = "; a citation or chapter a stub's target holds now counts, and this warning becomes an error in grund 0.19.0";
 
 /// The release at which a citation of a name under a number stops warning: its
 /// `missing-section` and `dangling` (§FS-citations.checks.mixed-path) and the
@@ -46,34 +39,28 @@ pub(crate) static MIXED_CLAUSE: Lazy<String> = Lazy::new(|| {
 /// at [`MIXED_PATH_FLIP`] (§FS-section-lock.checks.unrecorded-section-citation).
 pub(crate) const UNRECORDED_MIXED_CLAUSE: &str = "; grund 0.17 skipped a citation of a name under a number, and 0.18.0 records it in the section lock";
 
-/// What one counted fact is new by: a target newly matched (§FS-rules.7.9), a
-/// site or chapter a stub's target lends (§FS-rules.7.11), or a citation of a name
-/// under a number (§FS-rules.7.12).
+/// What one counted fact is new by: a target newly matched (§FS-rules.7.9), or a
+/// citation of a name under a number (§FS-rules.7.12).
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub(super) struct Marks {
     pub(super) matched: bool,
-    pub(super) lent: bool,
     pub(super) mixed: bool,
 }
 
-/// Which windows a finding falls in. Any may hold, and then the finding names
-/// each, in the order of their subsections (§FS-rules.7.9, §FS-rules.7.11,
-/// §FS-rules.7.12).
+/// Which windows a finding falls in. Either may hold, and then the finding names
+/// each, in the order of their subsections (§FS-rules.7.9, §FS-rules.7.12).
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub(super) struct Windows {
     pub(super) matched: bool,
-    pub(super) lent: bool,
     pub(super) mixed: bool,
 }
 
 impl Windows {
-    /// Only a required-level finding owes a ramp (§FS-rules.7.9, §FS-rules.7.11,
-    /// §FS-rules.7.12).
+    /// Only a required-level finding owes a ramp (§FS-rules.7.9, §FS-rules.7.12).
     pub(super) fn at(level: RuleLevel, marks: Marks) -> Self {
         if level == RuleLevel::Required {
             Self {
                 matched: marks.matched,
-                lent: marks.lent,
                 mixed: marks.mixed,
             }
         } else {
@@ -85,7 +72,7 @@ impl Windows {
     /// ramped; one that fails without them stays an error. It names a window when
     /// dropping that window's sites alone lets the count hold, and every window
     /// with a marked site when none alone does, since then each change produces it
-    /// by itself (§FS-rules.7.9, §FS-rules.7.11, §FS-rules.7.12). A numbered-section
+    /// by itself (§FS-rules.7.9, §FS-rules.7.12). A numbered-section
     /// site is an ordinary site, so a count it alone breaks is an error (§FS-rules.7.8).
     pub(super) fn of_count(
         level: RuleLevel,
@@ -96,14 +83,11 @@ impl Windows {
         let holds_without = |marked: &dyn Fn(&Marks) -> bool| {
             cardinality.contains(sites.iter().filter(|site| !marked(site)).count())
         };
-        if level != RuleLevel::Required
-            || !holds_without(&|site| site.matched || site.lent || site.mixed)
-        {
+        if level != RuleLevel::Required || !holds_without(&|site| site.matched || site.mixed) {
             return Self::default();
         }
         let alone = Self {
             matched: holds_without(&|site| site.matched),
-            lent: holds_without(&|site| site.lent),
             mixed: holds_without(&|site| site.mixed),
         };
         if alone.any() {
@@ -111,15 +95,14 @@ impl Windows {
         }
         Self {
             matched: sites.iter().any(|site| site.matched),
-            lent: sites.iter().any(|site| site.lent),
             mixed: sites.iter().any(|site| site.mixed),
         }
     }
 
     /// A per-target finding for a target only the corrected match takes into the
     /// universe exists only now, whatever its count, so it is always in
-    /// §FS-rules.7.9's window, and in §FS-rules.7.11's or §FS-rules.7.12's only
-    /// when its count holds without that window's sites.
+    /// §FS-rules.7.9's window, and in §FS-rules.7.12's only when its count holds
+    /// without that window's sites.
     pub(super) fn of_new_target(
         level: RuleLevel,
         cardinality: Cardinality,
@@ -131,40 +114,24 @@ impl Windows {
         };
         let marks = Marks {
             matched: true,
-            lent: holds_without(&|site| site.lent),
             mixed: holds_without(&|site| site.mixed),
         };
         Self::at(level, marks)
     }
 
-    /// A finding about a chapter a stub's target lends exists only because it is
-    /// lent, whatever its count (§FS-rules.7.11).
-    pub(super) fn of_subject(self, level: RuleLevel, lent: bool) -> Self {
-        Self {
-            lent: self.lent || (lent && level == RuleLevel::Required),
-            ..self
-        }
-    }
-
     fn any(self) -> bool {
-        self.matched || self.lent || self.mixed
+        self.matched || self.mixed
     }
 }
 
-/// The marks of one site: lent and mixed read off its facts, newly matched as the
-/// caller found it.
+/// The marks of one site: mixed read off its facts, newly matched as the caller
+/// found it.
 pub(super) fn site_marks(facts: &RuleFacts, site: &SiteKey, matched: bool) -> Marks {
     let meta = facts.sites.get(site);
     Marks {
         matched,
-        lent: meta.is_some_and(|meta| meta.lent),
         mixed: meta.is_some_and(|meta| meta.mixed),
     }
-}
-
-/// Whether a stub's target lends the node, a chapter (§FS-rules.7.11).
-pub(super) fn node_lent(facts: &RuleFacts, node: &NodeKey) -> bool {
-    facts.nodes.get(node).is_some_and(|meta| meta.lent)
 }
 
 /// Whether the matcher before §FS-rules.7.9's correction took `kind` for one of
@@ -204,7 +171,7 @@ pub(super) fn nodes_matched_before(
 
 /// Pick the channel for one finding and word its message for it: a ramped
 /// finding keeps its code and its message, then names its error release
-/// (§FS-rules.7.9, §FS-rules.7.11, §FS-rules.7.12).
+/// (§FS-rules.7.9, §FS-rules.7.12).
 pub(super) fn route<'a>(
     windows: Windows,
     out: &'a mut Vec<Diagnostic>,
@@ -217,62 +184,8 @@ pub(super) fn route<'a>(
     if windows.matched {
         message.push_str(MATCH_CLAUSE);
     }
-    if windows.lent {
-        message.push_str(LENT_CLAUSE);
-    }
     if windows.mixed {
         message.push_str(&MIXED_CLAUSE);
     }
     (ramp, message)
-}
-
-/// §FS-rules.7.10: a required-level finding that only rules declared through a
-/// stub whose target the scan does not read produce — every rule its authority
-/// names is one of `stubbed` — moves from `errors` to `warnings`, and a finding
-/// already ramped by §FS-rules.7.9 keeps its clause and gains
-/// this one after them, and before §FS-rules.7.11's and §FS-rules.7.12's, in
-/// subsection order. A rule's
-/// own `invalid-rule` is about the rule, not by it, and stays an error as it is for
-/// an inline rule.
-pub(crate) fn route_stubbed_rules(
-    stubbed: &BTreeSet<String>,
-    errors: &mut Vec<Diagnostic>,
-    warnings: &mut Vec<Diagnostic>,
-) {
-    if stubbed.is_empty() {
-        return;
-    }
-    let only_stubbed = |diagnostic: &Diagnostic| {
-        diagnostic.code != "invalid-rule"
-            && !diagnostic.authority.is_empty()
-            && diagnostic
-                .authority
-                .iter()
-                .all(|origin| stubbed.contains(origin))
-    };
-    for warning in warnings.iter_mut().filter(|warning| only_stubbed(warning)) {
-        push_stub_clause(&mut warning.message);
-    }
-    let (ramped, kept): (Vec<_>, Vec<_>) =
-        std::mem::take(errors).into_iter().partition(only_stubbed);
-    *errors = kept;
-    warnings.extend(ramped.into_iter().map(|mut diagnostic| {
-        push_stub_clause(&mut diagnostic.message);
-        diagnostic
-    }));
-}
-
-/// §FS-rules.7.11, §FS-rules.7.12: a finding the engine already ramped for what a
-/// stub's target lends, or for a citation of a name under a number, keeps those
-/// clauses last, so the clauses read in subsection order.
-fn push_stub_clause(message: &mut String) {
-    let mut later = String::new();
-    for clause in [MIXED_CLAUSE.as_str(), LENT_CLAUSE] {
-        if let Some(head) = message.strip_suffix(clause) {
-            later.insert_str(0, clause);
-            message.truncate(head.len());
-        }
-    }
-    message.push_str(STUB_CLAUSE);
-    message.push_str(&later);
 }

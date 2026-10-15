@@ -65,7 +65,6 @@ mod sections;
 mod selection;
 mod shorthand;
 mod sizes;
-mod stub_shape;
 mod support;
 mod unclosed_wrapper;
 mod value_mismatch;

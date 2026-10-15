@@ -1,12 +1,12 @@
 //! The `cites` relation's count over one subject (§FS-rules.5.1–5.3), with the
-//! ramp windows a count only newly matched, lent or mixed sites break
-//! (§FS-rules.7.9, §FS-rules.7.11, §FS-rules.7.12).
+//! ramp windows a count only newly matched or mixed sites break
+//! (§FS-rules.7.9, §FS-rules.7.12).
 
 use super::super::facts::{NodeKey, RuleFacts};
 use super::super::{Cardinality, RuleLevel, RuleTargets, TargetMode};
 use super::authority::Authority;
 use super::index::FactIndex;
-use super::ramp::{Marks, Windows, node_lent, nodes_matched_before, route, site_marks};
+use super::ramp::{Marks, Windows, nodes_matched_before, route, site_marks};
 use super::selectors::{citation_matches_targets, label, target_nodes, target_wording};
 use super::{SemanticRule, push_node};
 use crate::model::Diagnostic;
@@ -30,8 +30,7 @@ pub(super) fn evaluate_cites(
     let before = nodes_matched_before(&rule.targets, facts, index);
     for subject in subjects {
         if *mode == TargetMode::PerTarget {
-            // Each owner's sites, marked lent and mixed or not (§FS-rules.7.11,
-            // §FS-rules.7.12).
+            // Each owner's sites, marked mixed or not (§FS-rules.7.12).
             let mut counts: BTreeMap<_, Vec<Marks>> = BTreeMap::new();
             for (site, _, cited) in index.citations_in(subject) {
                 if let Some(owner) = index.owner(cited) {
@@ -49,8 +48,7 @@ pub(super) fn evaluate_cites(
                         Windows::of_count(rule.level, rule.cardinality, sites.iter().copied())
                     } else {
                         Windows::of_new_target(rule.level, rule.cardinality, sites.iter().copied())
-                    }
-                    .of_subject(rule.level, node_lent(facts, subject));
+                    };
                     let (sink, message) = route(
                         windows,
                         out,
@@ -116,10 +114,9 @@ pub(super) fn evaluate_cites(
                         rule.cardinality.wording()
                     )
                 };
-                // §FS-rules.7.9, §FS-rules.7.11, §FS-rules.7.12: a count the newly
-                // matched, lent or mixed sites alone break warns.
-                let windows = Windows::of_count(rule.level, rule.cardinality, sites)
-                    .of_subject(rule.level, node_lent(facts, subject));
+                // §FS-rules.7.9, §FS-rules.7.12: a count the newly matched or mixed
+                // sites alone break warns.
+                let windows = Windows::of_count(rule.level, rule.cardinality, sites);
                 let (sink, message) = route(windows, out, ramp, message);
                 push_node(sink, facts, subject, code, message, authority);
             }

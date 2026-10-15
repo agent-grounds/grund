@@ -101,7 +101,6 @@ fn facts(completeness: Completeness) -> RuleFacts {
                 NodeMeta {
                     label: "FS-demo".into(),
                     anchor: anchor("docs/fs.md", 2),
-                    lent: false,
                 },
             ),
             (
@@ -109,7 +108,6 @@ fn facts(completeness: Completeness) -> RuleFacts {
                 NodeMeta {
                     label: "GOAL-demo".into(),
                     anchor: anchor("docs/goals.md", 3),
-                    lent: false,
                 },
             ),
         ]),
@@ -240,7 +238,6 @@ fn markdown_adapter_and_second_producer_drive_the_same_engine_result() {
             NodeMeta {
                 label: "FS-001-demo".into(),
                 anchor: anchor("replacement/spec.graph", 41),
-                lent: false,
             },
         )]),
         sites: BTreeMap::new(),
@@ -295,7 +292,6 @@ fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
                 NodeMeta {
                     label: "FS-partial".into(),
                     anchor: anchor("facts/spec.graph", 3),
-                    lent: false,
                 },
             ),
             (
@@ -303,7 +299,6 @@ fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
                 NodeMeta {
                     label: "AR-partial".into(),
                     anchor: anchor("facts/architecture.graph", 5),
-                    lent: false,
                 },
             ),
         ]),
@@ -312,7 +307,6 @@ fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
             SiteMeta {
                 label: "AR-partial".into(),
                 anchor: anchor("facts/spec.graph", 7),
-                lent: false,
                 mixed: false,
             },
         )]),

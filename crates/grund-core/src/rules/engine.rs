@@ -21,8 +21,8 @@ pub(crate) use authority::one_rules_authority;
 use cites::evaluate_cites;
 use index::FactIndex;
 pub(crate) use precedence::{Direction, citation_precedence, direction_rule};
-pub(crate) use ramp::{LENT_CLAUSE, MIXED_CLAUSE, UNRECORDED_MIXED_CLAUSE, route_stubbed_rules};
-use ramp::{Marks, Windows, matched_before, node_lent, nodes_matched_before, route, site_marks};
+pub(crate) use ramp::{MIXED_CLAUSE, UNRECORDED_MIXED_CLAUSE};
+use ramp::{Windows, matched_before, nodes_matched_before, route, site_marks};
 pub(crate) use resolution::unresolved_subject_diagnostic;
 use resolution::unresolved_subject_diagnostic_indexed;
 use selectors::{
@@ -32,16 +32,14 @@ use selectors::{
 use unreached::report_unreached;
 
 #[cfg(test)]
-mod tests_lent_ramp;
-#[cfg(test)]
 mod tests_mixed_ramp;
 
 /// One level of evaluation: the channel a rule finding has always had at that
 /// level, and the ramp's warnings beside it.
 ///
 /// A finding that a target newly matched at the rule's own nested alias
-/// (§FS-rules.7.9), what a stub's target lends (§FS-rules.7.11), or a citation of
-/// a name under a number (§FS-rules.7.12) alone produces is carried on the
+/// (§FS-rules.7.9) or a citation of a name under a number (§FS-rules.7.12) alone
+/// produces is carried on the
 /// warnings channel rather than the errors channel, for the length of its ramp
 /// and no longer. It is a pair rather than a type so that the engine/checker
 /// crossing stays `Diagnostic` and nothing else (§AR-rules.5): when those ramps
@@ -203,16 +201,11 @@ fn evaluate_one(
             };
             for subject in subjects {
                 let chapters = index.chapters_of(&subject);
-                // §FS-rules.7.11: a chapter a stub's target lends is marked to ramp.
-                let named = chapters
+                // §FS-rules.7.11: a chapter a stub's target lends counts as a scanned one.
+                let count = chapters
                     .iter()
                     .filter(|row| facts.chapter[**row].2.eq_ignore_ascii_case(name))
-                    .map(|row| Marks {
-                        lent: node_lent(facts, &facts.chapter[*row].0),
-                        ..Marks::default()
-                    })
-                    .collect::<Vec<_>>();
-                let count = named.len();
+                    .count();
                 if !rule.cardinality.contains(count) {
                     // §FS-rules.7.2.1: show accepted direct chapters in source order,
                     // retaining the complete released prefix (§FS-errors.3).
@@ -235,20 +228,13 @@ fn evaluate_one(
                             .collect::<Vec<_>>()
                             .join(", ")
                     };
-                    let windows = Windows::of_count(rule.level, rule.cardinality, named)
-                        .of_subject(rule.level, node_lent(facts, &subject));
-                    let (sink, message) = route(
-                        windows,
-                        out,
-                        ramp,
-                        format!(
-                            "{} has {count} {name} chapters; {authority} requires {}; expected display name \"{name}\" (case-insensitive, not section handle); observed direct chapters: {observed}",
-                            label(facts, &subject),
-                            rule.cardinality.wording()
-                        ),
+                    let message = format!(
+                        "{} has {count} {name} chapters; {authority} requires {}; expected display name \"{name}\" (case-insensitive, not section handle); observed direct chapters: {observed}",
+                        label(facts, &subject),
+                        rule.cardinality.wording()
                     );
                     push_node(
-                        sink,
+                        out,
                         facts,
                         &subject,
                         "chapter-cardinality",
@@ -272,8 +258,8 @@ fn evaluate_one(
                         } else {
                             ("discouraged-citation", "")
                         };
-                        // §FS-rules.7.9, §FS-rules.7.11, §FS-rules.7.12: a required site
-                        // matched, lent or mixed only now warns.
+                        // §FS-rules.7.9, §FS-rules.7.12: a required site matched or mixed
+                        // only now warns.
                         let windows = Windows::at(
                             rule.level,
                             site_marks(
@@ -325,8 +311,7 @@ fn evaluate_one(
                     .collect::<Vec<_>>();
                 let count = sites.len();
                 if !rule.cardinality.contains(count) {
-                    let windows = Windows::of_count(rule.level, rule.cardinality, sites)
-                        .of_subject(rule.level, node_lent(facts, &subject));
+                    let windows = Windows::of_count(rule.level, rule.cardinality, sites);
                     let (sink, message) = route(
                         windows,
                         out,

@@ -49,8 +49,6 @@ mod tests_section_ramp;
 #[cfg(test)]
 mod tests_section_targets;
 #[cfg(test)]
-mod tests_stub_ramp;
-#[cfg(test)]
 mod tests_unreached;
 #[cfg(test)]
 mod tests_unscanned_home;

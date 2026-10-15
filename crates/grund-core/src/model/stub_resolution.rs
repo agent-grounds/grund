@@ -90,6 +90,14 @@ impl<'a> PairedDeclarations<'a> {
         self.paired.iter().copied()
     }
 
+    /// The record of every declaration, in `path:line` order: a paired declaration's
+    /// is its target's, scanned or not, so a reader that enumerates a declaration's
+    /// rows or sections reads them from here as the scanned tree's readers do
+    /// (§FS-declarations.stubs.pairing.4, §FS-declarations.stubs.target.5).
+    pub(crate) fn records(&self) -> impl Iterator<Item = &'a Declaration> + '_ {
+        self.paired.iter().map(|paired| paired.record)
+    }
+
     /// The one declaration of an ID that has exactly one: what a link, a body, a
     /// section and a value read. An ID with more than one is a duplicate, reported
     /// rather than ranked, so none of them answers here.

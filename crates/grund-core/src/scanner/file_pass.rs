@@ -21,7 +21,7 @@ use super::citations::{
     scan_local_section_candidates, scan_shorthand_citations,
 };
 use super::context::{
-    assign_declaration_bodies, inline_citation_sites, markdown_heading_level,
+    assign_declaration_bodies, in_some_home, inline_citation_sites, markdown_heading_level,
     resolve_citation_owners, retain_in_body_sections,
 };
 use super::declaration_line::{close_declaration, stub_and_title};
@@ -124,7 +124,8 @@ pub(super) fn scan_file_text(
     } else {
         inline_citation_sites(&reading, &literals, &mut record, schema, workspace_targets)
     };
-    let in_docs = super::stub_shape::stub_by_docs(path);
+    // §FS-declarations.stubs.shape: a stub is a link-titled heading in a kind's home only.
+    let stub_home = is_md && in_some_home(path, schema, frame);
     let mut markdown_blocks = MarkdownBlocks::default();
     let mut comment_fences = CommentFences::default();
     let mut py_docstring = PythonDocstringScanState::default();
@@ -219,7 +220,7 @@ pub(super) fn scan_file_text(
             current_bare = bare;
             // §FS-declarations.line.configured-slug: the matched delimiter belongs to the tail.
             let tail = &scan_line[caps.name("id").unwrap().end()..];
-            let (is_stub, defined_in, title) = stub_and_title(tail, is_md && in_docs);
+            let (is_stub, defined_in, title) = stub_and_title(tail, stub_home);
             let heading_level =
                 heading_level_for_line(scan_line, is_md || scan.in_py_docstring || bare, &caps);
             record.headings.push(heading.record(
@@ -294,8 +295,7 @@ pub(super) fn scan_file_text(
                 .find(text)
                 .map(|start| start + text.len())
                 .unwrap_or(0);
-            let (is_stub, defined_in, title) =
-                stub_and_title(&scan_line[token_end..], is_md && in_docs);
+            let (is_stub, defined_in, title) = stub_and_title(&scan_line[token_end..], stub_home);
             let heading_level = if is_md || scan.in_py_docstring || bare {
                 scan_line
                     .trim_start()

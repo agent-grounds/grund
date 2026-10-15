@@ -25,10 +25,6 @@ pub(super) struct ObligationUnit<'a> {
     pub(super) line: usize,
     pub(super) citations: Vec<&'a Citation>,
     pub(super) e2e_spec_refs: Vec<&'a E2eSpecRef>,
-    /// The unit is a declaration only a stub's target outside the walk supplies, so
-    /// a finding on it exists only because of what that target lends
-    /// (§FS-check.3.11, §FS-rules.7.11).
-    pub(super) lent: bool,
 }
 
 impl ObligationUnit<'_> {
@@ -92,8 +88,9 @@ pub(super) fn non_citable_kind_names(schema: &Schema) -> BTreeSet<&str> {
 /// The evaluation units for one citing kind's obligations (§FS-config.3.9):
 /// per file for `code` and for every non-citable kind, per case (over the case's
 /// scanned-file citations) for `E2E`, per non-stub declaration otherwise, and per
-/// declaration a stub stands for in a target outside the walk, at the stub, over
-/// the citations that target lends (§FS-check.3.11). Reads
+/// declaration a stub stands for in a target outside the walk, at its line in the
+/// target, over the citations that target lends (§FS-check.3.11,
+/// §FS-declarations.stubs.pairing.4). Reads
 /// the citation indexes built once in [`check_citation_obligations`] rather than
 /// rescanning.
 ///
@@ -144,7 +141,6 @@ pub(super) fn obligation_units<'a>(
                     line: decl.line,
                     citations,
                     e2e_spec_refs,
-                    lent: false,
                 });
             } else {
                 let citations = by_decl.get(id).cloned().unwrap_or_default();
@@ -155,22 +151,20 @@ pub(super) fn obligation_units<'a>(
                     line: decl.line,
                     citations,
                     e2e_spec_refs: Vec::new(),
-                    lent: false,
                 });
             }
         }
         // §FS-check.3.11: a declaration a stub's target outside the walk supplies is a
-        // unit of its own, at the stub until §FS-declarations.stubs.pairing.4 moves it.
+        // unit of its own, at its line in the target (§FS-declarations.stubs.pairing.4).
         for paired in paired_declarations(decls).iter() {
             if paired.stand_in.is_stub && !std::ptr::eq(paired.record, paired.stand_in) {
                 units.push(ObligationUnit {
                     id: Some(id),
                     place: None,
-                    path: paired.stand_in.file.clone(),
-                    line: paired.stand_in.line,
+                    path: paired.record.file.clone(),
+                    line: paired.record.line,
                     citations: by_decl.get(id).cloned().unwrap_or_default(),
                     e2e_spec_refs: Vec::new(),
-                    lent: true,
                 });
             }
         }

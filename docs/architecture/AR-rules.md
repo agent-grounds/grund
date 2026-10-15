@@ -122,10 +122,11 @@ scanner indexes from them. Side metadata is for located diagnostics and never
 participates in logical equality. Every relation key has metadata and refers to
 declared nodes/sites in the same snapshot. A chapter of a stub's home outside the
 walk is a chapter of the stubbed declaration like any other, minted from the record
-the stub is paired with, cited or not, so it is a subject and is counted; it and a
-citation that home lends carry a `lent` mark in their metadata, which only the
-[§FS-rules.7.11](../functional-spec/FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190) ramp reads
-([§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)).
+the stub is paired with, cited or not, so it is a subject and is counted, and the
+declaration's node is anchored at that record's line, so a count it fails is
+located in the target ([§FS-declarations.stubs.pairing.4](../functional-spec/FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target),
+[§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)). What that home lends
+carries no mark: since [§FS-rules.7.11](../functional-spec/FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190) closed it is judged as walked facts are.
 
 Every declaration and accepted chapter gets its own node facts even when no
 citation touches it, so citation edges never define a quantified universe.

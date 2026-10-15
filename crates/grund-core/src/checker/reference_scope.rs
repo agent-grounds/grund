@@ -286,10 +286,6 @@ pub(crate) fn retain_findings_in_scope(
     findings
         .near_miss_headings
         .retain(|heading| scope.contains(&heading.file));
-    // §FS-declarations.checks.stub-shape: judged on the files the configured scope reads.
-    findings
-        .stub_shape_notes
-        .retain(|note| scope.contains(&note.file));
     // §FS-citations.checks.unclosed-wrapper: judged on the files the configured scope reads.
     findings
         .unclosed_wrapper_notes

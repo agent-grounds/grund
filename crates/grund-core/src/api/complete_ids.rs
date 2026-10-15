@@ -11,7 +11,7 @@ use std::path::PathBuf;
 
 use crate::config::Config;
 use crate::grammar::{render_id, split_alias_path};
-use crate::model::{Catalog, Finding};
+use crate::model::{Catalog, Finding, paired_declarations};
 use crate::resolver::load_workspace_context;
 
 use super::report::context_run_warnings;
@@ -126,7 +126,9 @@ fn add_complete_id_candidates(
     for (id, decls) in &findings.declarations {
         let rendered = render_id(&config.grammar, id);
         if include_sections {
-            for decl in decls {
+            // §FS-declarations.stubs.target.5: a paired declaration's sections are its
+            // target's, scanned or not.
+            for decl in paired_declarations(decls).records() {
                 for section in decl.sections.keys() {
                     candidates.insert(format!(
                         "{}{}{}{}",

@@ -1,7 +1,7 @@
 //! A stub's home outside the walk lends the stubbed declaration its chapters
 //! (§FS-declarations.stubs.target.5): a citation of one of them counts for that
 //! chapter, as on the scanned tree (§FS-rules.5.1), each is a node with a chapter
-//! row, cited or not, marked lent for §FS-rules.7.11 (§AR-rules.3), and rules read
+//! row, cited or not, judged as a scanned one since §FS-rules.7.11 closed (§AR-rules.3), and rules read
 //! the home out of the scan's one reading of the stub's target (§AR-scanner.4.6),
 //! never a reading of their own.
 
@@ -84,7 +84,7 @@ fn an_uncited_chapter_of_an_unscanned_home_is_still_lent() {
         facts
             .nodes
             .values()
-            .any(|meta| meta.label == "AR-second.goals" && meta.lent),
+            .any(|meta| meta.label == "AR-second.goals"),
         "§FS-declarations.stubs.target.5: a chapter is lent, cited or not"
     );
 }
@@ -127,10 +127,6 @@ fn a_chapter_of_an_unscanned_home_is_a_lent_chapter() {
     assert!(
         facts.chapter.iter().any(|(node, _, _)| *node == goals.0),
         "§FS-declarations.stubs.target.5: a chapter row, so subjects and counts reach it"
-    );
-    assert!(
-        facts.nodes[&goals.0].lent,
-        "§FS-rules.7.11: marked, so what it newly raises warns"
     );
 }
 

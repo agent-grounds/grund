@@ -1,16 +1,11 @@
 //! The window of a citation of a name under a number (§FS-rules.7.12): a count only
 //! the mixed sites break warns and names 0.19.0, one that fails without them stays
-//! an error, a finding also in an earlier window carries each clause in subsection
-//! order, and the release it names is still ahead of this crate
+//! an error, and the release it names is still ahead of this crate
 //! (§FS-citations.checks.mixed-path).
 
 use super::super::{Cardinality, RuleLevel};
-use super::ramp::{LENT_CLAUSE, MIXED_CLAUSE, MIXED_PATH_FLIP, Marks, Windows, route};
-use super::route_stubbed_rules;
+use super::ramp::{MIXED_CLAUSE, MIXED_PATH_FLIP, Marks, Windows, route};
 use crate::model::Diagnostic;
-use std::collections::BTreeSet;
-
-const STUB: &str = "; a rule declared through a stub now applies, and this warning becomes an error in grund 0.19.0";
 
 const AT_MOST_ONE: Cardinality = Cardinality {
     minimum: None,
@@ -19,15 +14,10 @@ const AT_MOST_ONE: Cardinality = Cardinality {
 
 const PLAIN: Marks = Marks {
     matched: false,
-    lent: false,
     mixed: false,
 };
 const MIXED: Marks = Marks {
     mixed: true,
-    ..PLAIN
-};
-const LENT: Marks = Marks {
-    lent: true,
     ..PLAIN
 };
 
@@ -101,42 +91,4 @@ fn a_count_that_fails_without_the_mixed_sites_stays_an_error() {
 fn a_recommended_count_owes_no_ramp() {
     let windows = Windows::of_count(RuleLevel::Recommended, AT_MOST_ONE, [PLAIN, MIXED]);
     assert_eq!(windows, Windows::default());
-}
-
-#[test]
-fn a_count_no_window_alone_mends_names_lent_before_mixed() {
-    let both = windows(&[PLAIN, LENT, MIXED]);
-    assert_eq!(
-        both,
-        Windows {
-            lent: true,
-            mixed: true,
-            ..Windows::default()
-        }
-    );
-    let (mut out, mut ramp) = (Vec::new(), Vec::new());
-    let (sink, message) = route(both, &mut out, &mut ramp, "FS-x cites GOAL 3 times".into());
-    sink.push(finding(message));
-    assert_eq!(
-        ramp[0].message,
-        format!("FS-x cites GOAL 3 times{LENT_CLAUSE}{}", *MIXED_CLAUSE)
-    );
-}
-
-#[test]
-fn a_mixed_site_a_stubbed_rule_forbids_names_the_stub_window_first() {
-    let stubbed = BTreeSet::from(["RULE-r".to_string()]);
-    let mut errors = Vec::new();
-    let mut warnings = vec![finding(format!(
-        "FS must not cite GOAL (RULE-r){LENT_CLAUSE}{}",
-        *MIXED_CLAUSE
-    ))];
-    route_stubbed_rules(&stubbed, &mut errors, &mut warnings);
-    assert_eq!(
-        warnings[0].message,
-        format!(
-            "FS must not cite GOAL (RULE-r){STUB}{LENT_CLAUSE}{}",
-            *MIXED_CLAUSE
-        )
-    );
 }
