@@ -74,6 +74,15 @@ pub(crate) fn locate(path: &Path) -> Option<Located> {
     None
 }
 
+/// §FS-config-migrate.8: the config of the member at `root` when it is still on
+/// version 1. Config reads the file, so the surface above it never does
+/// (§AR-system.2.13).
+pub(crate) fn member_on_v1(root: &Path) -> Option<PathBuf> {
+    let file = config_file_in(root)?;
+    let text = super::input_read_to_string(&file).ok()?;
+    (!v2::selects(&text)).then_some(file)
+}
+
 /// What the translation found, before the report gate and the write.
 pub(crate) enum Prepared {
     AlreadyV2,
