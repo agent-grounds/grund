@@ -1,0 +1,1 @@
+{"severity":"error","path":"src/x.rs","line":3,"code":"forbidden-citation","message":"FS must not cite GOAL (--rule) — re-point the citation or downgrade it to a plain Markdown link","sites":null,"authority":["--rule"]}

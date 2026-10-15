@@ -209,3 +209,14 @@ until = "the section-path grammar of §FS-config.3.3 leaves for a declaration of
 reason = """
 Over the soft budget at 763 non-blank lines before issue #643 touched it, and promoted by the count of soft edits, so any edit is refused. Missing boundary: §FS-config.3.3, the section-path grammar, is a subject of its own with its own sub-structure, but moving it out is a mapped migration of 43 citing sites across 24 files, which the approved proposal for #643 leaves out of that change by extending the points in place. #643 restates §FS-config.3.3.1 and extends §FS-config.3.3.2, §FS-config.3.3.3, §FS-config.3.3.4 and §FS-config.3.2.7 within their existing paragraphs, and puts the relative-heading grammar itself in §FS-declarations.section.relative, so the file adds no line. The ceiling accepts exactly the measured 763 non-blank lines and permits no growth. Main reached 764 before issue #662 touched it; #662 restates one sentence of §FS-config.3.3.1 in place and adds no line, so the ceiling moves to that measured 764.
 """
+[[exceptions]]
+path = "docs/functional-spec/FS-declarations.md"
+match = "exact"
+rules = ["docs"]
+kind = "deferred"
+max_accepted = { value = 772, unit = "lines" }
+until = "the stubs and checks chapters of the declarations specification move into their own declarations with existing FS-declarations section citations migrated"
+issue = "agent-grounds/grund#650"
+reason = """
+Missing boundary: what a stub is (§FS-declarations.stubs) and the finding catalog (§FS-declarations.checks) still share one declaration with the declaration grammar. Splitting them requires a mapped migration of their stable section IDs, which dozens of files cite; that migration is outside issue #650, which ends the 0.18.0 stub windows in the points that already hold them. The file was 781 non-blank lines before #650 and #650 leaves it at 772, so the ceiling accepts the measured size and permits no growth.
+"""

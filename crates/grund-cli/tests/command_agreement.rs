@@ -64,16 +64,6 @@ const LEDGER: &[(&str, &str, &str)] = &[
         "p12-duplicate",
         "a-doc-comment-section-ends-at-a-duplicate",
     ),
-    (
-        "Placement",
-        "placement",
-        "a-stubbed-declaration-is-at-one-site",
-    ),
-    ("U03a", "u03a", "the-batch-returns-the-targets-section"),
-    ("U03b", "u03b", "completion-offers-the-targets-section"),
-    ("U03c", "u03c", "the-editor-enumerates-the-targets-section"),
-    ("U03d", "u03d", "the-selector-selects-the-targets-chapter"),
-    ("U06", "u06", "an-unused-declaration-is-at-one-site"),
     ("R02", "r02", "a-narrowed-workspace-run-resolves-the-alias"),
     // R06a-d keep the saved text for one release (DF-four-editor-checks-read-saved-text);
     // their flip is #624.
@@ -87,8 +77,8 @@ const LEDGER: &[(&str, &str, &str)] = &[
 /// builds, the reproduced rows of #576 first, then one per row of
 /// §REQ-one-answer.differences the command line, shell completion or the editor
 /// snapshot can show. A tree with no row holds a row that closed, U01 and U05 with
-/// #597, U04, U07 and U08 with #651, G06 with #671 and G09 with #680, so its two
-/// answers must agree.
+/// #597, U04, U07 and U08 with #651, G06 with #671, G09 with #680, and Placement,
+/// U03a to U03d and U06 with #650, so its two answers must agree.
 const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
     (
         Some("G01"),
@@ -163,7 +153,7 @@ const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
         sections::a_section_title_span_is_the_toc_title,
     ),
     (
-        Some("Placement"),
+        None,
         "placement",
         "a-stubbed-declaration-is-at-one-site",
         stubs::a_stubbed_declaration_is_at_one_site,
@@ -175,25 +165,25 @@ const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
         stubs::a_twice_declared_section_is_refused_once,
     ),
     (
-        Some("U03a"),
+        None,
         "u03a",
         "the-batch-returns-the-targets-section",
         stubs::the_batch_returns_the_targets_section,
     ),
     (
-        Some("U03b"),
+        None,
         "u03b",
         "completion-offers-the-targets-section",
         stubs::completion_offers_the_targets_section,
     ),
     (
-        Some("U03c"),
+        None,
         "u03c",
         "the-editor-enumerates-the-targets-section",
         stubs::the_editor_enumerates_the_targets_section,
     ),
     (
-        Some("U03d"),
+        None,
         "u03d",
         "the-selector-selects-the-targets-chapter",
         stubs::the_selector_selects_the_targets_chapter,
@@ -217,7 +207,7 @@ const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
         stubs::a_rule_targets_title_is_read_once,
     ),
     (
-        Some("U06"),
+        None,
         "u06",
         "an-unused-declaration-is-at-one-site",
         stubs::an_unused_declaration_is_at_one_site,

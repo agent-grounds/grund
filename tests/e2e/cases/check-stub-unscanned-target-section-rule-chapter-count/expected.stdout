@@ -1,1 +1,1 @@
-docs/ar/second.md:1: warning: AR-second has 2 Goals chapters; --rule requires at most 1; expected display name "Goals" (case-insensitive, not section handle); observed direct chapters: "goals: Goals", "aims: Goals"; a citation or chapter a stub's target holds now counts, and this warning becomes an error in grund 0.19.0
+source.rs:1: error: AR-second has 2 Goals chapters; --rule requires at most 1; expected display name "Goals" (case-insensitive, not section handle); observed direct chapters: "goals: Goals", "aims: Goals"

@@ -1,0 +1,2 @@
+{"query":{"id":"FS-x","section":null},"ok":true,"result":{"id":"FS-x","section":null,"body":"Lead.\n","anchor":null,"path":"src/x.rs","line":1},"error":null}
+{"query":{"id":"FS-x","section":"1"},"ok":true,"result":{"id":"FS-x","section":"1","body":"## 1. One\n\nFirst.\n","anchor":null,"path":"src/x.rs","line":5},"error":null}

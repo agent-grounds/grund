@@ -246,17 +246,16 @@ Each stub's verdict is reached once per scan, and it is one of five: the target 
 
 A stub is a heading whose title is one link, `<ID>: [<text>](<path>)`, at any heading level,
 in a Markdown file of some kind's home ([§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates)): a file under a kind's `folder`,
-or a kind's `file`, citable or not, however many homes hold it. The complement place is not a
-home ([§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure)), so a heading of that shape there is a declaration titled with a link. That is the test
-from grund 0.19.0 ([§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190)).
+or a kind's `file`, citable or not, however many homes hold it. Whether a file is in a home is
+read from its path below the config root, so where the checkout sits never moves the answer.
+The complement place is not a home ([§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure)), so a heading of that shape there is a
+declaration titled with a link, and so is one in `docs/notes/y.md` where no kind's home holds
+`docs/notes/`. No release has required a stub to be an H1: `## FS-x: [x](../../src/x.rs)` in
+`docs/fs/x.md` is a stub.
 
-Until then a stub is read by the test grund has always used: a heading whose title is one
-link, in a Markdown file with a directory named `docs` anywhere on its path. That path is the
-whole path, not the path below the config root, so in a checkout below a directory named
-`docs` every heading of that shape is a stub. No release has required a stub to be an H1:
-`## FS-x: [x](../../src/x.rs)` in `docs/fs/x.md` is a stub under either test. Every heading
-the two tests read differently is reported as `stub-shape`
-([§FS-declarations.checks.stub-shape](FS-declarations.md#checksstub-shape-stub-shape-read-differently-from-grund-0190)), and is read as the `docs` test reads it until 0.19.0.
+Before grund 0.19.0 a heading of that shape was a stub wherever a directory named `docs` was on
+its whole path; 0.18.0 warned where the readings differ ([§FS-declarations.checks.stub-shape](FS-declarations.md#checksstub-shape-stub-shape-read-differently-from-grund-0190)),
+and [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) removed that test.
 
 ### stubs.target: What a stub's target gives it
 
@@ -331,6 +330,17 @@ its sections is `missing section` as before. A target that declares the ID more 
 pairs as `show` refuses it, ambiguously ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), and lends no section, and so does
 every target of an ID with more than one declaration ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)).
 
+Every reader that enumerates a declaration's sections reads those sections from the paired
+declaration, as the same tree's readers do with the target scanned: `show --batch --all`
+generates a query for each ([§FS-show.2.6.2](FS-show.md#262-exhaustive-generation)), shell completion offers each
+([§FS-completions.2.1](FS-completions.md#21-arguments-and-candidate-modes)), the editor's snapshot holds each for completion and navigation
+([§FS-lsp.1.6](FS-lsp.md#16-declared-id-completion), [§FS-lsp.1.3](FS-lsp.md#13-go-to-definition)), and `list --selector` selects a chapter among them
+([§FS-rules.8](FS-rules.md#8-command-surfaces)). A section path the target declares twice is one generated query, which
+`show --batch --all` answers with the failed envelope of an ambiguous section
+([§FS-show.2.6.3](FS-show.md#263-query-failures-and-run-level-failures)), so the batch exits `1` on the tree `check` already fails. Before grund
+0.19.0 those four readers saw none of an outside target's sections
+([§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190)).
+
 It also gives every verdict those declarations' content feeds, exactly as the same tree with
 the target scanned gives it. Each citation the scanner's pass over the target assigns to one
 of those declarations, the citations in its body, is that declaration's citation: once it
@@ -346,10 +356,10 @@ declaration's own, as scanned. A broken stub pairs with nothing and lends nothin
 
 A finding about one of those citations is reported at the citation's line in the target, where
 the scanned tree reports it: `src/x.rs:3: … FS must not cite GOAL …`. A finding about the
-declaration itself, a count it fails, a chapter count or `unused`, stays at the stub's line,
-row U06 of [§REQ-one-answer.differences.stubs](../requirements/REQ-one-answer.md#differencesstubs-stubs), until [§FS-declarations.stubs.pairing.4](FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target) moves it.
-A required-level finding that only the citations and chapters read this way produce warns
-until 0.19.0 ([§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)); one they remove goes at once.
+declaration itself, a count it fails, a chapter count or `unused`, is reported at the
+declaration's line in the target ([§FS-declarations.stubs.pairing.4](FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target)). Each is an error or a
+warning exactly as the same finding is in the scanned tree: from grund 0.19.0 nothing the
+target lends is held on the warnings channel ([§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)).
 
 Nothing else of the target is judged. Findings about the target file itself — its other
 declarations, its notes and formatting, its leads, whether it is grounded, and whether its
@@ -396,17 +406,20 @@ Where a duplicate error or an ambiguity refusal ([§FS-show.2.2.1](FS-show.md#22
 
 A surface that says where a paired declaration is names the target's declaration, its
 `<path>:<line>` and its title, as the same tree with the target scanned names it: `show`
-([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), `list --size` ([§FS-list.3.4.6](FS-list.md#346-a-home-outside-the-scan)), and the duplicate error and the ambiguity
-refusal ([§FS-declarations.stubs.pairing.3](FS-declarations.md#stubspairing3-a-declaration-reached-through-stubs-is-named-at-its-target)). From grund 0.19.0 plain `list` ([§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical)) and
-a finding about the declaration itself, the `unused` warning ([§FS-check.4.1](FS-check.md#41-unused-declaration)) or a count or
-chapter count it fails ([§FS-rules.7.2](FS-rules.md#72-chapter-cardinality), [§FS-rules.7.3](FS-rules.md#73-outbound-citation-cardinality)), do too. Until then those show it at
-the stub, as they always have: plain `list` prints the stub's line and its link,
-`FS-x  docs/fs/x.md:1  → ../../src/x.rs`, once for all its stubs as
-[§FS-declarations.stubs.pairing.2](FS-declarations.md#stubspairing2-stubs-to-one-target-stand-for-its-declarations-once) says, and `check` places `unused`, and a count or chapter
-count the declaration fails, at the stub's line, whatever of the target's citations and
-chapters the count reads ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)). They
-are the rows Placement and U06 of [§REQ-one-answer.differences.stubs](../requirements/REQ-one-answer.md#differencesstubs-stubs), and
-[§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) announces the move.
+([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), plain `list` ([§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical)), `list --size` ([§FS-list.3.4.6](FS-list.md#346-a-home-outside-the-scan)), the duplicate
+error and the ambiguity refusal ([§FS-declarations.stubs.pairing.3](FS-declarations.md#stubspairing3-a-declaration-reached-through-stubs-is-named-at-its-target)), and every finding about the
+declaration itself — the `unused` warning ([§FS-check.4.1](FS-check.md#41-unused-declaration)), and a count or chapter count it
+fails ([§FS-rules.7.2](FS-rules.md#72-chapter-cardinality), [§FS-rules.7.3](FS-rules.md#73-outbound-citation-cardinality), [§FS-rules.7.4](FS-rules.md#74-inbound-citation-cardinality)), whatever of the target's citations and
+chapters the count reads ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)).
+
+Plain `list` prints one row for each declaration of the ID the target holds, with the
+target's title, once for all its stubs as [§FS-declarations.stubs.pairing.2](FS-declarations.md#stubspairing2-stubs-to-one-target-stand-for-its-declarations-once) says:
+`FS-x  src/x.rs:1  X`. A target that declares the ID twice prints two rows, each marked as
+[§FS-list.2.6](FS-list.md#26-duplicate-declarations) marks a duplicate. `check` reports a finding about the declaration at the
+declaration's line in the target: `src/x.rs:1: warning: declared but never cited: FS-x`.
+
+Before grund 0.19.0 plain `list` printed `FS-x  docs/fs/x.md:1  → ../../src/x.rs` and `check`
+placed those findings at the stub; [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190) moved both.
 
 ## heading: What a heading is
 
@@ -666,39 +679,16 @@ Every command reads each stub's verdict and the declaration count it gives ([§F
 
 ### checks.stub-shape: Stub shape read differently from grund 0.19.0
 
-A heading of the stub shape — its title one link — that the two tests of
-[§FS-declarations.stubs.shape](FS-declarations.md#stubsshape-what-a-stub-looks-like) read differently is one **warning** at its line, in one of two
-messages. In a Markdown file in no kind's home with a directory named `docs` on its path,
-the heading is a stub today and a declaration from 0.19.0:
+The check this heading names is spent: grund 0.19.0 removed the `docs` test of
+[§FS-declarations.stubs.shape](FS-declarations.md#stubsshape-what-a-stub-looks-like), so no heading is read differently by two tests and the check
+never fires. A heading whose title is one link is a stub in a kind's home and a declaration
+titled with a link anywhere else, and nothing warns about either.
 
-```text
-docs/notes/y.md:1: warning: FS-y is read as a stub only because a directory on its path is named docs, and that reading is removed in grund 0.19.0, which reads a stub only in a kind's home — move the file into a kind's folder, or name its folder in [[kinds]], to keep it a stub
-```
-
-In a kind's home with no directory named `docs` on its path, the heading is a declaration
-titled with a link today and a stub to that link's path from 0.19.0:
-
-```text
-spec/fs/x.md:1: warning: FS-x is read as a declaration titled with a link, and that reading is removed in grund 0.19.0, which reads it as a stub to ../../src/x.rs — give the heading a title that is not one link to keep it a declaration
-```
-
-The path the second message names is the link's destination as written. A heading both
-tests read alike gets nothing: a stub at any level in a kind's home under `docs/`, and a
-heading of that shape in no home and with no `docs` on its path. The warning is read off the
-heading's own file, so whether anything cites the ID, and whether the heading would pair or
-be broken, does not move it. Only files the scan reads are judged; a target read for a stub
-reports nothing of its own ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)). The `docs` test reads the whole
-path, so in a checkout below a directory named `docs` the first message fires at every such
-heading outside every home and the second never fires; the test of 0.19.0 reads the path
-below the config root, and the difference goes with the `docs` test.
-
-- **Code:** `stub-shape`, with `"severity":"warning"` and `"sites":null` in JSON
-  ([§FS-errors.5](FS-errors.md#5-json-format)). It leaves the exit status where the rest of the run put it ([§FS-check.2](FS-check.md#2-outputs)).
-  `--only stub-shape` keeps it and `--ignore stub-shape` removes it
-  ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)), and the editor shows it at the heading with warning severity
-  ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
-- **Release:** grund 0.19.0 removes the `docs` test, and with it every heading this check
-  reports. The route is [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190).
+- **Code:** `stub-shape` stays in the catalog of codes, so `--only stub-shape` and
+  `--ignore stub-shape` are still accepted ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)) and select nothing; neither
+  `check` nor the editor ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)) reports it.
+- **Release:** the route was [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190). This address, heading text
+  included, is kept only so citations written during the window still resolve.
 
 ### checks.excluded-stub-target: Stub to a target the walk excludes, broken from grund 0.19.0
 

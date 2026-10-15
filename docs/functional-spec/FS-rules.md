@@ -656,12 +656,12 @@ they appear only with `--suggestions`, carry `"channel":"suggestion"` in JSON,
 and never affect exit status. Structural recommendations retain their
 structural code on that channel. The one rule finding that was a warning is an
 error from 0.16.0 ([§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160)), and those a newly counted section citation
-alone produces are errors from 0.18.0 ([§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)); the only rule
-findings that are warnings now are those a target pinned at the rule's own nested
-alias path alone produces, until 0.19.0 ([§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190)), and those of a rule
-declared through a stub whose target the scan does not read, until 0.19.0
-([§FS-rules.7.10](FS-rules.md#710-a-rule-declared-through-a-stub-warns-until-0190)), and those only the citations and chapters a stub's target outside
-the include lends produce, until 0.19.0 ([§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)).
+alone produces are errors from 0.18.0 ([§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)); the findings of a rule declared through a stub whose target the scan does not read, and those only
+the citations and chapters such a target lends produce, are errors from 0.19.0
+([§FS-rules.7.10](FS-rules.md#710-a-rule-declared-through-a-stub-warns-until-0190), [§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)); the only rule findings that are warnings now are those a
+target pinned at the rule's own nested alias path alone produces, until 0.19.0
+([§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190)), and those only a citation of a name under a number raises, until 0.19.0
+([§FS-rules.7.12](FS-rules.md#712-a-finding-only-a-citation-of-a-name-under-a-number-raises-warns-until-0190)).
 
 ### 7.1 Invalid rule
 
@@ -887,85 +887,45 @@ compatibility route are [§DF-nested-alias-rule-targets](../decisions/functional
 
 ### 7.10 A rule declared through a stub warns until 0.19.0
 
-A rule's sentence and rationale are read from the declaration its ID pairs
-with ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), so a rule written as a stub in its
-kind's home is the rule its target declares, the sentence `grund <ID> --brief`
-prints. Before this release `check` read the stub's own heading instead, whose
-title is a link, and reported `<ID> is not a valid rule: rule declaration has
-no title` at the stub, `invalid-rule`, whether or not the scan reached the
-target. That error goes in the release that ships the change: removing it
-breaks no run.
-
-Where the target is outside `[scan] include`, the rule then applies for the
-first time, and every required-level finding it produces is carried on the
-warnings channel rather than the errors channel until 0.19.0, so a run that
-passed with `--ignore invalid-rule` still passes. The warning is the error's
-message unchanged, followed by `; a rule declared through a stub now applies,
-and this warning becomes an error in grund 0.19.0`, the pending clause of
-[§FS-distribution.4.2.3](FS-distribution.md#423-the-vocabulary-is-closed)'s closed vocabulary:
+The window this heading names is spent: it opened in grund 0.18.0 and closed in grund 0.19.0,
+where every required-level finding of a rule declared through a stub whose target is outside
+`[scan] include` became an error on the ordinary `must` channel. Such a finding is now the same
+code's ordinary error, its message byte for byte the one the same rule declared inline prints,
+with no clause after it, and it moves the exit status as any error does ([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)):
 
 ```text
-docs/fs/a.md:3: warning: FS must not cite GOAL (RULE-r) — re-point the citation or downgrade it to a plain Markdown link; a rule declared through a stub now applies, and this warning becomes an error in grund 0.19.0
+docs/fs/a.md:3: error: FS must not cite GOAL (RULE-r) — re-point the citation or downgrade it to a plain Markdown link
 ```
 
-Where the scan reads the target, the rule already applied from the declaration
-the walk read there, and its findings stay errors: that tree loses the false
-`invalid-rule` and nothing else. A rule declared inline is unchanged. A
-target whose sentence is itself no rule is `invalid-rule` for the reason the
-rule's own text gives, as an inline rule is, at the line the error is reported
-at today, the stub's. The finding keeps the code it will carry as an error,
-leaves the exit status where the rest of the run put it, and at the
-recommended level is an ordinary suggestion that owes no ramp, all as in
-[§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190). A finding that also qualifies under [§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190)
-carries each clause it qualifies for, in the order of these subsections.
-
-At `0.19.0` these findings become errors on the ordinary `must` channel, and
-this subsection becomes a pointer as [§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160) did. The decision and its
-compatibility route are [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190).
+A rule's sentence and rationale are read from the declaration its ID pairs with
+([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), so a rule written as a stub in its kind's home is the rule
+its target declares, the sentence `grund <ID> --brief` prints, whether or not the scan reads
+the target; a target whose sentence is no rule is `invalid-rule` at the stub's line
+([§FS-rules.7.1](FS-rules.md#71-invalid-rule)). The decision and its completed route are [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190).
+This address, heading text included, is kept only so citations written during the window still
+resolve.
 
 ### 7.11 A citation or chapter read through a stub warns until 0.19.0
 
-A stub's target outside `[scan] include` lends the declaration the stub pairs with its
-citations and its chapters ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)), so a rule judges that declaration
-on what its target says, as the same tree with the target scanned judges it. Before this
-release a rule judged the stub's empty record: an outside target's citations were no edges and
-its chapters were none. The verdicts that newly pass — an `at least N` count the lent
-citations meet, which reported `FS-x must cite GOAL` at the stub, and a chapter count the lent
-chapters meet, which reported `FS-x has 0 Terms chapters` — land in the release that ships the
-change, because removing an error breaks no run.
-
-A required-level finding that exists only because of what the target lends is carried on the
-warnings channel rather than the errors channel until 0.19.0. That is a prohibition's
-`forbidden-citation` at a lent citation, reported at its line in the target; the
-`citation-cardinality` or `uncited-unit` of an `at most N` or `exactly N` count, outbound,
-per-target or inbound, that the same count without the lent citations satisfies; and the
-`chapter-cardinality` of a chapter rule the same count without the lent chapters satisfies,
-both reported where a count is reported today, at the stub's line
-([§FS-declarations.stubs.pairing.4](FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target)). A count that fails without them is still an error, its
-message now counting what the target lends:
+The window this heading names is spent: it opened in grund 0.18.0 and closed in grund 0.19.0,
+where every required-level finding that only the citations and chapters a stub's target
+outside `[scan] include` lends produce became an error on the ordinary `must` channel. Such a
+finding is now the same code's ordinary error, its message byte for byte the one the same tree
+with the target scanned prints, with no clause after it, at the line that tree reports it: a
+prohibition's `forbidden-citation` at the lent citation's line in the target, and a count or
+chapter count at the declaration's line there ([§FS-declarations.stubs.pairing.4](FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target)):
 
 ```text
-src/x.rs:3: warning: FS must not cite GOAL (--rule) — re-point the citation or downgrade it to a plain Markdown link; a citation or chapter a stub's target holds now counts, and this warning becomes an error in grund 0.19.0
-docs/fs/x.md:1: warning: FS-x has 2 Terms chapters; --rule requires at most 1; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: "terms: Terms", "more: Terms"; a citation or chapter a stub's target holds now counts, and this warning becomes an error in grund 0.19.0
+src/x.rs:3: error: FS must not cite GOAL (--rule) — re-point the citation or downgrade it to a plain Markdown link
+src/x.rs:1: error: FS-x has 2 Terms chapters; --rule requires at most 1; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: "terms: Terms", "more: Terms"
 ```
 
-The warning is the error's message unchanged, followed by `; a citation or chapter a stub's
-target holds now counts, and this warning becomes an error in grund 0.19.0`, the pending clause
-of [§FS-distribution.4.2.3](FS-distribution.md#423-the-vocabulary-is-closed)'s closed vocabulary. The same window and clause carry the
-`[citations]` findings the lent citations newly produce ([§FS-check.3.11](FS-check.md#311-missing-required-citation), [§FS-check.3.12](FS-check.md#312-forbidden-citation)). The
-finding keeps the code it will carry as an error, leaves the exit status where the rest of the
-run put it, and at the recommended level is an ordinary suggestion that owes no ramp, all as in
-[§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190). A finding that also qualifies under [§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190) or
-[§FS-rules.7.10](FS-rules.md#710-a-rule-declared-through-a-stub-warns-until-0190) stays a warning until the latest of their releases and carries each clause it
-qualifies for, in the order of these subsections; within a count, a window is named as
-[§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190) names one, only when dropping its sites alone lets the count hold, and every
-window the count needs when none alone does. Where the scan reads the target nothing is lent,
-so nothing warns.
-
-At `0.19.0` these findings become errors on the ordinary `must` channel, and this subsection
-becomes a pointer as [§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160) did. The decision and its compatibility route are
-[§DF-stub-target-citations-and-chapters](../decisions/functional/DF-stub-target-citations-and-chapters.md#df-stub-target-citations-and-chapters-a-stubs-target-lends-the-stubbed-declaration-its-citations-and-chapters-and-what-that-newly-raises-warns-until-0190).
-
+The same holds for the `[citations]` findings the lent citations produce ([§FS-check.3.11](FS-check.md#311-missing-required-citation),
+[§FS-check.3.12](FS-check.md#312-forbidden-citation)). What a target lends is specified at [§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged), and the
+decision and its completed route are [§DF-stub-target-citations-and-chapters](../decisions/functional/DF-stub-target-citations-and-chapters.md#df-stub-target-citations-and-chapters-a-stubs-target-lends-the-stubbed-declaration-its-citations-and-chapters-and-what-that-newly-raises-warns-until-0190). A finding that also
+needs a change whose window is still open warns under that window alone ([§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190),
+[§FS-rules.7.12](FS-rules.md#712-a-finding-only-a-citation-of-a-name-under-a-number-raises-warns-until-0190)). This address, heading text included, is kept only so citations written during
+the window still resolve.
 
 ### 7.12 A finding only a citation of a name under a number raises warns until 0.19.0
 
@@ -975,7 +935,7 @@ Before 0.18.0 a marked citation of a mixed path ([§FS-config.3.3.1](FS-config.m
 docs/use.md:3: warning: FS must not cite GOAL (--rule) — re-point the citation or downgrade it to a plain Markdown link; a citation of a name under a number is now checked, and this warning becomes an error in grund 0.19.0
 ```
 
-The warning is the error's message unchanged, followed by `; a citation of a name under a number is now checked, and this warning becomes an error in grund 0.19.0`, the clause of [§FS-citations.checks.mixed-path](FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190). The same window and clause carry the `[citations]` findings such citations newly produce ([§FS-check.3.11](FS-check.md#311-missing-required-citation), [§FS-check.3.12](FS-check.md#312-forbidden-citation)). The finding keeps the code it will carry as an error, leaves the exit status where the rest of the run put it, and at the recommended level is an ordinary suggestion that owes no ramp, all as in [§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190). A finding that also qualifies under [§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190) to [§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190) stays a warning until the latest of their releases and carries each clause it qualifies for, in the order of these subsections, as [§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190) says.
+The warning is the error's message unchanged, followed by `; a citation of a name under a number is now checked, and this warning becomes an error in grund 0.19.0`, the clause of [§FS-citations.checks.mixed-path](FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190). The same window and clause carry the `[citations]` findings such citations newly produce ([§FS-check.3.11](FS-check.md#311-missing-required-citation), [§FS-check.3.12](FS-check.md#312-forbidden-citation)). The finding keeps the code it will carry as an error, leaves the exit status where the rest of the run put it, and at the recommended level is an ordinary suggestion that owes no ramp, all as in [§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190). A finding that also qualifies under [§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190) stays a warning until the latest of their releases and carries each clause it qualifies for, in the order of these subsections; within a count, a window is named as [§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190) names one, only when dropping its sites alone lets the count hold, and every window the count needs when none alone does.
 
 At `0.19.0` these findings become errors on the ordinary `must` channel, and this subsection becomes a pointer as [§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160) did ([§RM-mixed-path-citation-error](../roadmap.md#rm-mixed-path-citation-error-make-a-citation-of-a-name-under-a-number-that-resolves-to-nothing-an-error-in-0190)). The decision and its compatibility route are [§DF-number-name-sections.decision.citations](../decisions/functional/DF-number-name-sections.md#decisioncitations-a-citation-that-was-skipped-is-now-checked).
 

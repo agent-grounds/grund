@@ -1,6 +1,8 @@
-//! Real-server regression for the stub-shape warning: a heading of the stub shape
-//! that grund 0.19.0 reads differently is shown at the heading with warning
-//! severity (§FS-declarations.checks.stub-shape, §FS-lsp.1.1).
+//! Real-server regression for the stub-shape check, which stays catalogued and
+//! never fires from grund 0.19.0: a heading whose title is one link, in a kind's
+//! home with no directory named `docs` on its path, is a stub, and the editor shows
+//! nothing at its heading (§FS-declarations.stubs.shape, §FS-declarations.checks.stub-shape,
+//! §FS-lsp.1.1).
 
 mod support;
 
@@ -9,12 +11,12 @@ use std::fs;
 use support::*;
 
 #[test]
-fn a_link_titled_heading_in_a_home_without_docs_warns_at_the_heading() {
+fn a_link_titled_heading_in_a_home_without_docs_is_a_stub_and_shows_nothing() {
     let root = test_root("stub-shape");
     fs::write(
         root.join("grund.toml"),
-        "grund_config_version = 1\n\n[reference]\nstrict = false\n\n\
-         [[kinds]]\nkind = \"FS\"\nfolder = \"spec/fs\"\nindex = false\n",
+        "grund_config_version = 1\n\n[reference]\nstrict = true\n\n\
+         [id]\nformat = \"{kind}-{slug}\"\n\n[[kinds]]\nkind = \"FS\"\nfolder = \"spec/fs\"\nindex = false\n",
     )
     .expect("write config");
     fs::create_dir_all(root.join("spec/fs")).expect("create spec dir");
@@ -25,28 +27,19 @@ fn a_link_titled_heading_in_a_home_without_docs_warns_at_the_heading() {
     )
     .expect("write target");
     let spec = root.join("spec/fs/x.md");
-    fs::write(&spec, "# FS-x: [x](../../src/x.rs)\n").expect("write heading");
+    // The dangling citation is there so the file has one diagnostic to publish.
+    fs::write(&spec, "# FS-x: [x](../../src/x.rs)\n\nSee \u{a7}FS-nope.\n").expect("write stub");
     let (mut child, mut stdin, receiver) = start_server(&root);
 
     let diagnostics = recv_diagnostics(&receiver, &mut child, "x.md");
-    let warning = diagnostics
+    let codes: Vec<&str> = diagnostics
         .iter()
-        .find(|diagnostic| diagnostic["code"].as_str() == Some("stub-shape"))
-        .unwrap_or_else(|| panic!("stub-shape diagnostic: {diagnostics:?}"));
-    assert_eq!(warning["severity"], json!(2), "warning severity");
+        .filter_map(|diagnostic| diagnostic["code"].as_str())
+        .collect();
     assert_eq!(
-        warning["range"]["start"]["line"],
-        json!(0),
-        "at the heading"
-    );
-    assert!(
-        warning["message"]
-            .as_str()
-            .is_some_and(|message| message.starts_with(
-                "FS-x is read as a declaration titled with a link, and that reading is removed \
-                 in grund 0.19.0, which reads it as a stub to ../../src/x.rs"
-            )),
-        "{warning}"
+        codes,
+        ["dangling"],
+        "a stub in a kind's home draws no stub-shape, duplicate or unused: {diagnostics:?}"
     );
 
     send_message(

@@ -1,9 +1,10 @@
 //! The trees of `command_agreement.rs` for what a stub answers: the rows of
 //! §REQ-one-answer.differences.stubs, each around the stub `docs/x.md` to a
 //! target `src/x.rs` outside `[scan] include`, asked of the command line, of shell
-//! completion and of the editor snapshot. U01 and U05 closed with #597, and U04,
-//! U07 and U08 with #651, so their trees stay here to agree
-//! (§FS-declarations.stubs.target.5, §FS-rules.7.10, §FS-rules.7.11).
+//! completion and of the editor snapshot. U01 and U05 closed with #597, U04, U07
+//! and U08 with #651, and Placement, U03a to U03d and U06 with #650, so every tree
+//! here stays to agree (§FS-declarations.stubs.target.5,
+//! §FS-declarations.stubs.pairing.4, §FS-rules.7.10, §FS-rules.7.11).
 
 use super::agreement_tree::{Tree, Verdict, agree};
 use grund_core::{LspSnapshotOpts, lsp_snapshot};
@@ -42,7 +43,7 @@ fn site_of(tree: &Tree, args: &[&str], id: &str) -> String {
         .unwrap_or_default()
 }
 
-/// Row Placement: a healthy stub's declaration is at one site for `list` and
+/// Closed row Placement: a healthy stub's declaration is at one site for `list` and
 /// `list --size` (§REQ-one-answer.stubs.outside-include).
 pub fn a_stubbed_declaration_is_at_one_site() -> Verdict {
     let tree = stub_tree("placement", CONFIG, TARGET, &[]);
@@ -75,7 +76,7 @@ pub fn a_twice_declared_section_is_refused_once() -> Verdict {
     )
 }
 
-/// Row U03a: exhaustive `show --batch` returns the outside target's section a
+/// Closed row U03a: exhaustive `show --batch` returns the outside target's section a
 /// direct `show` returns (§REQ-one-answer.stubs.outside-include).
 pub fn the_batch_returns_the_targets_section() -> Verdict {
     let tree = stub_tree("u03a", CONFIG, TARGET_SECTION, &[]);
@@ -97,7 +98,7 @@ fn section_tree(name: &str) -> Tree {
     stub_tree(name, CONFIG, TARGET_SECTION, &[])
 }
 
-/// Row U03b: shell completion offers the outside target's section a direct `show`
+/// Closed row U03b: shell completion offers the outside target's section a direct `show`
 /// returns (§REQ-one-answer.stubs.outside-include).
 pub fn completion_offers_the_targets_section() -> Verdict {
     let tree = section_tree("u03b");
@@ -112,7 +113,7 @@ pub fn completion_offers_the_targets_section() -> Verdict {
     )
 }
 
-/// Row U03c: the editor snapshot enumerates the outside target's section a direct
+/// Closed row U03c: the editor snapshot enumerates the outside target's section a direct
 /// `show` returns, so completion and navigation reach it
 /// (§REQ-one-answer.stubs.outside-include).
 pub fn the_editor_enumerates_the_targets_section() -> Verdict {
@@ -134,7 +135,7 @@ pub fn the_editor_enumerates_the_targets_section() -> Verdict {
     )
 }
 
-/// Row U03d: `list --selector FS.terms` selects the outside target's chapter a
+/// Closed row U03d: `list --selector FS.terms` selects the outside target's chapter a
 /// direct `show` returns (§REQ-one-answer.stubs.outside-include).
 pub fn the_selector_selects_the_targets_chapter() -> Verdict {
     let config = CONFIG.replace("[id]\n", "[id]\nnamed_sections = true\n");
@@ -195,7 +196,7 @@ pub fn a_rule_targets_title_is_read_once() -> Verdict {
     )
 }
 
-/// Row U06: the declaration `check --only unused` places is the one `show` places
+/// Closed row U06: the declaration `check --only unused` places is the one `show` places
 /// (§REQ-one-answer.stubs.outside-include).
 pub fn an_unused_declaration_is_at_one_site() -> Verdict {
     let tree = stub_tree("u06", CONFIG, TARGET, &[]);
