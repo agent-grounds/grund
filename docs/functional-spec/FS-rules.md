@@ -463,8 +463,8 @@ family exactly where it satisfies an ordinary `[citations.KIND]` obligation
 Only a citation that does not resolve — an unknown or ambiguous declaration, or
 a section its declaration does not have — retains its ordinary findings and
 contributes no `cites` fact. Counting these sites newly fails some rules on
-trees that pass without them; those findings warn for one release
-([§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)).
+trees that pass without them; those findings warned in 0.16.1 and 0.17.0 and
+are errors from 0.18.0 ([§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)).
 
 #### 5.1.1 A chapter's display name is the label its author wrote
 
@@ -655,10 +655,10 @@ All rule findings use the ordinary text and NDJSON schemas of
 they appear only with `--suggestions`, carry `"channel":"suggestion"` in JSON,
 and never affect exit status. Structural recommendations retain their
 structural code on that channel. The one rule finding that was a warning is an
-error from 0.16.0 ([§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160)); the only rule findings that are
-warnings now are those a newly counted section citation alone produces, until
-0.18.0 ([§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)), those a target pinned at the rule's own nested
-alias path alone produces, until 0.18.0 ([§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0180)), and those of a rule
+error from 0.16.0 ([§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160)), and those a newly counted section citation
+alone produces are errors from 0.18.0 ([§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)); the only rule
+findings that are warnings now are those a target pinned at the rule's own nested
+alias path alone produces, until 0.19.0 ([§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190)), and those of a rule
 declared through a stub whose target the scan does not read, until 0.19.0
 ([§FS-rules.7.10](FS-rules.md#710-a-rule-declared-through-a-stub-warns-until-0190)), and those only the citations and chapters a stub's target outside
 the include lends produce, until 0.19.0 ([§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)).
@@ -821,34 +821,22 @@ kept only so citations written before the promotion still resolve.
 
 ### 7.8 A newly counted section citation warns until 0.18.0
 
-A required-level finding that exists only because [§FS-rules.5.1](FS-rules.md#51-facts-and-identity) counts a
-citation to a numbered section is carried on the warnings channel rather than
-the errors channel, for one release window. It covers every finding that
-counting more sites can newly produce: a prohibition's `forbidden-citation` at
-such a site, and the `citation-cardinality` or `uncited-unit` of an `at most N`
-or `exactly N` count — outbound, per-target, or inbound — that the same count
-without those sites satisfies. A count that fails without them is still an
-error, and a count those sites bring inside its bounds passes at once: the
-verdicts that newly pass land in the release that ships the change, and only
-the ones that newly fail are ramped.
+The ramp this heading names is spent: it opened in grund 0.16.1 and closed in
+grund 0.18.0, where a required-level finding that exists only because
+[§FS-rules.5.1](FS-rules.md#51-facts-and-identity) counts a citation to a numbered section became an error on the
+ordinary `must` channel. Such a finding is now the same code's ordinary error,
+its message byte for byte the one a finding of that code without such a site
+prints, with no clause after it: the code was an error throughout and only these
+findings warned, so no finding is left to tell apart and the landed change has no
+line of its own for the release guard to read, as with
+[§FS-distribution.4.2.4](FS-distribution.md#424-the-scalar-clause-is-the-refs-warnings)'s scalar clause. A finding that also needs a change
+whose window is still open warns under that window alone
+([§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190) to [§FS-rules.7.12](FS-rules.md#712-a-finding-only-a-citation-of-a-name-under-a-number-raises-warns-until-0190)). What counts is specified at
+[§FS-rules.5.1](FS-rules.md#51-facts-and-identity), and the decision and its completed route are
+[§DF-section-citation-counts-in-rules](../decisions/functional/DF-section-citation-counts-in-rules.md#df-section-citation-counts-in-rules-a-resolved-citation-to-a-numbered-section-counts-in-chapter-rules). This address, heading text included, is
+kept only so citations written during the window still resolve.
 
-The warning is the error's message unchanged, followed by `; a citation to a
-numbered section now counts, and this warning becomes an error in grund
-0.18.0`, the pending clause of [§FS-distribution.4.2.3](FS-distribution.md#423-the-vocabulary-is-closed)'s closed vocabulary, so
-the release guard reads the promise out of the shipped text. It carries the
-code it will carry as an error, so `--only` and `--ignore` select it now as they
-will then, and it leaves the exit status where the rest of the run put it. The
-catalog rows of these codes keep `error` and no ramp
-([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)), because the code's
-severity does not move: only the findings this subsection names warn. At the
-recommended level such a finding is an ordinary suggestion and owes no ramp,
-because a suggestion never moves the exit status at any release.
-
-At `0.18.0` these findings become errors on the ordinary `must` channel, and
-this subsection becomes a pointer as [§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160) did. The decision and its
-compatibility route are [§DF-section-citation-counts-in-rules](../decisions/functional/DF-section-citation-counts-in-rules.md#df-section-citation-counts-in-rules-a-resolved-citation-to-a-numbered-section-counts-in-chapter-rules).
-
-### 7.9 A target pinned at its own nested alias warns until 0.18.0
+### 7.9 A target pinned at its own nested alias warns until 0.19.0
 
 A required-level finding that exists only because a target pinned at the
 rule's own member by a nested alias path now matches that member's declarations
@@ -870,19 +858,30 @@ are ramped.
 
 The warning is the error's message unchanged, followed by `; a target pinned at
 the rule's own nested alias path now matches, and this warning becomes an error
-in grund 0.18.0`, the pending clause of [§FS-distribution.4.2.3](FS-distribution.md#423-the-vocabulary-is-closed)'s closed
-vocabulary. It carries the code it will carry as an error, so `--only` and
-`--ignore` select it now as they will then, it leaves the exit status where the
-rest of the run put it, and at the recommended level such a finding is an
-ordinary suggestion and owes no ramp, all as in [§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180). A finding that
-qualifies under both windows stays a warning until the later of their two
-releases and carries both clauses, [§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)'s first. A finding names a
-window only when that window's change is needed for it: a count that still
-breaks without its newly counted sites names this window alone. When each
-change by itself would produce the finding, so neither is needed alone, it
-names both.
+in grund 0.19.0`, the pending clause of [§FS-distribution.4.2.3](FS-distribution.md#423-the-vocabulary-is-closed)'s closed
+vocabulary, so the release guard reads the promise out of the shipped text. It
+carries the code it will carry as an error, so `--only` and `--ignore` select it
+now as they will then, and it leaves the exit status where the rest of the run
+put it. The catalog rows of these codes keep `error` and no ramp
+([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)), because the code's severity does not move: only the
+findings this subsection names warn. At the recommended level such a finding is
+an ordinary suggestion and owes no ramp, because a suggestion never moves the
+exit status at any release. The window opens in 0.18.0, the first release to
+carry this correction, so its error is due no earlier than 0.19.0
+([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)).
 
-At `0.18.0` these findings become errors on the ordinary `must` channel, and
+A newly counted section citation is an ordinary counted site from 0.18.0
+([§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)), so it never puts a finding in this window. A finding is in
+this window only when the corrected match is needed for it: a count is ramped
+when dropping the sites only the corrected match brings lets it hold, with every
+numbered-section site counted as any other, and a prohibition when its site is
+one only the corrected match brings. A finding that needs the corrected match,
+alone or together with a numbered-section site, warns and carries this clause
+alone. A finding that a numbered-section site produces without the corrected
+match is an error, as [§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180) says, whether or not the corrected match
+would produce it too.
+
+At `0.19.0` these findings become errors on the ordinary `must` channel, and
 this subsection becomes a pointer as [§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160) did. The decision and its
 compatibility route are [§DF-nested-alias-rule-targets](../decisions/functional/DF-nested-alias-rule-targets.md#df-nested-alias-rule-targets-a-rule-target-pinned-at-its-own-nested-alias-matches-like-the-bare-kind).
 
@@ -917,9 +916,8 @@ rule's own text gives, as an inline rule is, at the line the error is reported
 at today, the stub's. The finding keeps the code it will carry as an error,
 leaves the exit status where the rest of the run put it, and at the
 recommended level is an ordinary suggestion that owes no ramp, all as in
-[§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180). A finding that also qualifies under [§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180) or
-[§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0180) stays a warning until the latest of their releases and carries
-each clause it qualifies for, in the order of these subsections.
+[§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190). A finding that also qualifies under [§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190)
+carries each clause it qualifies for, in the order of these subsections.
 
 At `0.19.0` these findings become errors on the ordinary `must` channel, and
 this subsection becomes a pointer as [§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160) did. The decision and its
@@ -957,10 +955,10 @@ of [§FS-distribution.4.2.3](FS-distribution.md#423-the-vocabulary-is-closed)'s 
 `[citations]` findings the lent citations newly produce ([§FS-check.3.11](FS-check.md#311-missing-required-citation), [§FS-check.3.12](FS-check.md#312-forbidden-citation)). The
 finding keeps the code it will carry as an error, leaves the exit status where the rest of the
 run put it, and at the recommended level is an ordinary suggestion that owes no ramp, all as in
-[§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180). A finding that also qualifies under [§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180), [§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0180) or
+[§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190). A finding that also qualifies under [§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190) or
 [§FS-rules.7.10](FS-rules.md#710-a-rule-declared-through-a-stub-warns-until-0190) stays a warning until the latest of their releases and carries each clause it
 qualifies for, in the order of these subsections; within a count, a window is named as
-[§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0180) names one, only when dropping its sites alone lets the count hold, and every
+[§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190) names one, only when dropping its sites alone lets the count hold, and every
 window the count needs when none alone does. Where the scan reads the target nothing is lent,
 so nothing warns.
 
@@ -977,7 +975,7 @@ Before 0.18.0 a marked citation of a mixed path ([§FS-config.3.3.1](FS-config.m
 docs/use.md:3: warning: FS must not cite GOAL (--rule) — re-point the citation or downgrade it to a plain Markdown link; a citation of a name under a number is now checked, and this warning becomes an error in grund 0.19.0
 ```
 
-The warning is the error's message unchanged, followed by `; a citation of a name under a number is now checked, and this warning becomes an error in grund 0.19.0`, the clause of [§FS-citations.checks.mixed-path](FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190). The same window and clause carry the `[citations]` findings such citations newly produce ([§FS-check.3.11](FS-check.md#311-missing-required-citation), [§FS-check.3.12](FS-check.md#312-forbidden-citation)). The finding keeps the code it will carry as an error, leaves the exit status where the rest of the run put it, and at the recommended level is an ordinary suggestion that owes no ramp, all as in [§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180). A finding that also qualifies under [§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180) to [§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190) stays a warning until the latest of their releases and carries each clause it qualifies for, in the order of these subsections, as [§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190) says.
+The warning is the error's message unchanged, followed by `; a citation of a name under a number is now checked, and this warning becomes an error in grund 0.19.0`, the clause of [§FS-citations.checks.mixed-path](FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190). The same window and clause carry the `[citations]` findings such citations newly produce ([§FS-check.3.11](FS-check.md#311-missing-required-citation), [§FS-check.3.12](FS-check.md#312-forbidden-citation)). The finding keeps the code it will carry as an error, leaves the exit status where the rest of the run put it, and at the recommended level is an ordinary suggestion that owes no ramp, all as in [§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190). A finding that also qualifies under [§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190) to [§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190) stays a warning until the latest of their releases and carries each clause it qualifies for, in the order of these subsections, as [§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190) says.
 
 At `0.19.0` these findings become errors on the ordinary `must` channel, and this subsection becomes a pointer as [§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160) did ([§RM-mixed-path-citation-error](../roadmap.md#rm-mixed-path-citation-error-make-a-citation-of-a-name-under-a-number-that-resolves-to-nothing-an-error-in-0190)). The decision and its compatibility route are [§DF-number-name-sections.decision.citations](../decisions/functional/DF-number-name-sections.md#decisioncitations-a-citation-that-was-skipped-is-now-checked).
 
