@@ -11,12 +11,11 @@ and which declarations a stub stands for is [§FS-declarations.stubs](FS-declara
 What a heading is and what its rendered text reads, where a body ends, what a section and
 the section map are, and what cuts a lead are [§FS-declarations.heading](FS-declarations.md#heading-what-a-heading-is), [§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends),
 [§FS-declarations.section](FS-declarations.md#section-what-a-section-is) and [§FS-declarations.lead](FS-declarations.md#lead-what-cuts-a-lead).
-The checks below are that sentence enforced, save three. Two hold what an address is worth
+The checks below are that sentence enforced, save two, which hold what an address is worth
 once it resolves: that the declaration is in the form its ID grammar gives it
 ([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)), and that its lead, and every citable section
 lead in its body, stays inside the size its project budgets where that project asks for
-one ([§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)). The third warns, for one release, where
-the next one moves a verdict ([§FS-declarations.checks.parse-moves](FS-declarations.md#checksparse-moves-a-verdict-that-moves-in-0190)). Serves [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) and
+one ([§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)). Serves [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) and
 [§GOAL-token-economy.1](../goals.md#1-what-this-requires).
 
 ## terms: Terms
@@ -447,7 +446,8 @@ rendered text, exactly as CommonMark reads an ATX heading: `## 1. Steps ##` read
 so its anchor is `1-steps` ([§FS-fmt.6.2.2](FS-fmt.md#622-the-anchor-slugifies-the-headings-rendered-text)). A `#` run that is not preceded by a space or tab, or that
 is followed by anything but spaces or tabs, is text: `## C#` reads `C#`. Every anchor `fmt`
 writes and `show` reports is slugged from this text ([§DF-closing-hashes-are-not-the-heading](../decisions/functional/DF-closing-hashes-are-not-the-heading.md#df-closing-hashes-are-not-the-heading-a-headings-closing-hashes-are-not-part-of-its-anchor)).
-Until 0.19.0 the `--toc` `title` still prints the closing run as written
+The `--toc` `title` is this text too: `## 1. Steps ##` is listed with the title `Steps`. grund 0.18.0
+still printed the closing run there; 0.19.0 dropped it
 ([§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves)).
 
 ## body: Where a declaration's body ends
@@ -514,9 +514,9 @@ A relative heading sits one level below its parent by construction, so it never 
 
 #### section.relative.where: Markdown declaration bodies, and doc-comments from 0.19.0
 
-The form is recognised in an ATX heading inside a Markdown declaration body, the headings [§FS-declarations.checks.unmarked-heading.1](FS-declarations.md#checksunmarked-heading1-which-headings-participate) judges. In a source doc-comment declaration body, the headings the doc-comment's section reading sees ([§FS-languages.comment-wrapper.headings](FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line)), a line of the form keeps in 0.18.0 the meaning it has without this form, and warns with `parse-moves` ([§FS-declarations.checks.parse-moves.2](FS-declarations.md#checksparse-moves2-the-five-shapes), shape 4); from 0.19.0 it declares its section under the same form, parent, lock and display rules as in Markdown. Giving it that meaning at once would move verdicts that pass today, so it takes the warning route of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), decided in [§DF-doc-comment-relative-headings](../decisions/functional/DF-doc-comment-relative-headings.md#df-doc-comment-relative-headings-a-relative-heading-in-a-doc-comment-warns-in-0180-and-is-a-section-from-0190).
+The form is recognised in an ATX heading inside a Markdown declaration body, the headings [§FS-declarations.checks.unmarked-heading.1](FS-declarations.md#checksunmarked-heading1-which-headings-participate) judges. In a source doc-comment declaration body, the headings the doc-comment's section reading sees ([§FS-languages.comment-wrapper.headings](FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line)), a line of the form declares its section under the same form, parent, lock and display rules as in Markdown, and citations below it belong to that section. The parent it reads is the section map the record gives that body, so a relative child of a `/** … */` line without ` * ` that reads `## 1. Sub` resolves under `.1` ([§FS-languages.comment-wrapper.headings](FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line)). grund 0.18.0 kept the line as prose and warned `parse-moves` ([§FS-declarations.checks.parse-moves.2](FS-declarations.md#checksparse-moves2-the-five-shapes), shape 4); 0.19.0 gave it this meaning. Giving it that meaning at once would have moved verdicts that passed, so it took the warning route of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), decided in [§DF-doc-comment-relative-headings](../decisions/functional/DF-doc-comment-relative-headings.md#df-doc-comment-relative-headings-a-relative-heading-in-a-doc-comment-warns-in-0180-and-is-a-section-from-0190).
 
-A heading whose canonical path is mixed ([§FS-config.3.3.1](FS-config.md#331-named-components)) follows the same timing in a doc-comment, in both spellings: a complete `/// ### 1.goals: Goals` and a relative `/// ### .goals: Goals` under `/// ## 1. Overview` are prose in 0.18.0 and warn `parse-moves` (shapes 5 and 4), and both declare their section from 0.19.0 ([§DF-number-name-sections.decision.doc-comments](../decisions/functional/DF-number-name-sections.md#decisiondoc-comments-doc-comments-wait-for-639)). In a Markdown declaration body both are sections at once.
+A heading whose canonical path is mixed ([§FS-config.3.3.1](FS-config.md#331-named-components)) follows the same rule in a doc-comment, in both spellings: a complete `/// ### 1.goals: Goals` and a relative `/// ### .goals: Goals` under `/// ## 1. Overview` both declare their section, as they do in Markdown; 0.18.0 kept both as prose and warned `parse-moves` (shapes 5 and 4) ([§DF-number-name-sections.decision.doc-comments](../decisions/functional/DF-number-name-sections.md#decisiondoc-comments-doc-comments-wait-for-639)).
 
 The same dotted line keeps exactly the meaning it has without this form everywhere else, in both releases: in a file title before the first declaration, after a heading that closed the body, in a file or comment block with no declaration, and in a fence or raw HTML block.
 
@@ -922,118 +922,39 @@ An explicit-path check judges only declaration and section sites scanned at that
 
 ### checks.parse-moves: A verdict that moves in 0.19.0
 
-From 0.19.0 every command reads one parse of each file, and on three shapes of tree that
-parse moves a `check` verdict ([§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves)). In 0.18.0 each of them
-answers as before and warns, at the line that moves it, naming the edit that keeps today's
-meaning in both releases. A fourth shape moves with them: 0.19.0 also gives a relative
-heading in a doc-comment declaration body its meaning
-([§FS-declarations.section.relative.where](FS-declarations.md#sectionrelativewhere-markdown-declaration-bodies-and-doc-comments-from-0190)), and it warns the same way. A fifth moves with the fourth: 0.19.0 gives a
-complete-path heading whose path puts a name under a number its meaning in a doc-comment
-too ([§FS-declarations.section.relative.where](FS-declarations.md#sectionrelativewhere-markdown-declaration-bodies-and-doc-comments-from-0190)). A tree with none
-of these five shapes gets no `parse-moves` finding,
-and every other answer that moves in 0.19.0 changes printed bytes only and warns nowhere.
-
-The message is [§FS-declarations.checks.parse-moves.1](FS-declarations.md#checksparse-moves1-the-message), the shapes are
-[§FS-declarations.checks.parse-moves.2](FS-declarations.md#checksparse-moves2-the-five-shapes), rendering and selection
-[§FS-declarations.checks.parse-moves.3](FS-declarations.md#checksparse-moves3-rendering-exit-and-selection), and the release that removes it
-[§FS-declarations.checks.parse-moves.4](FS-declarations.md#checksparse-moves4-removed-in-0190).
-
-- **Code:** `parse-moves` ([§FS-errors.5](FS-errors.md#5-json-format)).
+Retired in grund 0.19.0. From 0.19.0 every command reads one parse of each file
+([§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves)), and a relative or mixed heading in a doc-comment
+declaration body is a section ([§FS-declarations.section.relative.where](FS-declarations.md#sectionrelativewhere-markdown-declaration-bodies-and-doc-comments-from-0190)). grund 0.18.0
+warned `parse-moves` at each line whose `check` verdict that release moved; 0.19.0 gives
+those answers and the check, its code and its catalog row are gone ([#639](https://github.com/agent-grounds/grund/issues/639)). No tree gets
+a `parse-moves` finding, and an `--only parse-moves` or `--ignore parse-moves` left in a
+script names an unknown code and is refused as any unknown code is ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)).
+This address and its four below are kept so citations written before the change still
+resolve.
 
 #### checks.parse-moves.1: The message
 
-The finding is located at the line whose meaning moves, uses code `parse-moves`, severity
-`warning`, and its text after `<path>:<line>: warning: ` is one of these, by shape:
-
-```text
-from grund 0.19.0 this heading ends <coordinate>, so the citation on line <N> leaves it; make the heading deeper, or move the citation above it, to keep it in <coordinate>
-from grund 0.19.0 this line is the heading of <coordinate>; prefix it with ` * ` to make it <coordinate> in both releases, or rewrite it as prose to keep it out of both
-from grund 0.19.0 this heading no longer cuts the lead of <coordinate>, which then measures <actual> <unit>, over the configured maximum of <max>; make it a section of <coordinate> to keep the cut
-from grund 0.19.0 this line is the heading of <coordinate>; write it `<heading>` to make it <coordinate> in both releases, or make it a bold label or a code span to keep it prose in both
-from grund 0.19.0 this line is a relative section heading with no section one level up, a relative-section-parent error; make it a bold label or a code span to keep it prose in both releases
-from grund 0.19.0 this line is the heading of <coordinate>; make it a bold label or a code span to keep it prose in both releases
-```
-
-`<coordinate>` is local in a member-local check and workspace-qualified at a workspace root,
-as in [§FS-declarations.checks.oversized-lead.1](FS-declarations.md#checksoversized-lead1-the-message). `<N>` is the line of the first citation
-that leaves the section; one heading gets one finding however many citations follow it.
-
-Shape 4 takes the last two. `<coordinate>` is the canonical path 0.19.0 gives the line, and
-`<heading>` the complete-path heading for it: the line's own `#` run, the path, and
-everything after the relative component as written, so `### .1: Username` under
-`## format: Formatting` is written `### format.1: Username`. On a `/** … */` line without
-` * `, the edit reads `prefix it with ` * ` and write it `<heading>``, since only the
-prefixed line is that section in 0.18.0 too. A line that would claim a path another heading
-claims takes the first of the two, naming the coordinate it would share; a line with no
-usable parent one level up takes the second. A line whose canonical path is mixed takes the
-last message instead of the first, because the complete-path heading for it is prose in
-0.18.0 as well, so no spelling makes it that section in both releases.
-
-Shape 5 takes the last message, `<coordinate>` being the line's own path. The coordinate a
-line is named by reads its parents as 0.19.0 will: a complete mixed heading held back as
-prose still seeds the path of the relative headings below it, so `/// #### .latency:
-Latency` under `/// ### 1.goals: Goals` is named `<ID>.1.goals.latency`.
+Retired in grund 0.19.0 with the check ([§FS-declarations.checks.parse-moves](FS-declarations.md#checksparse-moves-a-verdict-that-moves-in-0190)).
 
 #### checks.parse-moves.2: The five shapes
 
-1. **A heading that will end a doc-comment section above a citation.** In a source
-   doc-comment, a heading of the open section's depth or shallower, numbered or plain, and
-   any heading that repeats a path already open, today runs on for ownership: `refs`,
-   `cover --lines`, the chapter rules and the editor count a citation below it in the
-   section above. From 0.19.0 it ends that section. It warns when at least one citation
-   between it and the section's 0.18.0 end changes owner.
-2. **A block-comment line without ` * ` that will become a section.** Inside a `/** … */`
-   declaration, a line that reads as a numbered or enabled named heading without the
-   ` * ` prefix ([§FS-languages.comment-wrapper.headings](FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line)) is no section today and
-   is section `<coordinate>` from 0.19.0. It always warns, because a citation of that
-   section moves from `missing section` to resolved and the section starts owning what
-   follows it.
-3. **A heading that will stop cutting a lead past its budget.** Where
-   [§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in) is active, a heading in a source doc-comment that
-   is no section, such as a numbered heading one `#` shallower than a section depth
-   (`/// # 1. Sub`, or `# 1. Sub` in a Python docstring, a `/** … */` block or a `--`
-   comment), cuts the declaration's lead today and cuts nothing from
-   0.19.0 ([§FS-show.2.3.3](FS-show.md#233-section-selection-inside-a-doc-comment)). It warns only when the lead without that cut is over
-   the configured maximum, so 0.19.0 would add an `oversized-lead` the tree does not have.
-4. **A relative heading in a doc-comment declaration body.** A heading of the relative
-   form ([§FS-declarations.section.relative.form](FS-declarations.md#sectionrelativeform-the-form)) among the headings a source doc-comment
-   declaration body holds is no section today and passes `check`. From 0.19.0 it declares
-   its section under the parent rule ([§FS-declarations.section.relative.parent](FS-declarations.md#sectionrelativeparent-the-parent)), so a
-   citation below it changes owner and a citation of its coordinate stops dangling. It
-   warns wherever 0.19.0 gives the line a meaning: its section, a `duplicate-section`
-   claim, or a `relative-section-parent` error. A form the rules refuse, such as a name
-   with `named_sections` off, keeps its meaning in both releases and does not warn; nor
-   does a line in a fence, in a code span or bold label, or outside any declaration body.
-   A `/** … */` line without ` * ` that reads as the relative form gets this shape's one
-   finding and never shape 2's, which needs a complete path. Each line gets one finding,
-   and the citations that move into its section get none of their own: the line's
-   warning is the notice for them.
-5. **A complete-path heading with a name under a number in a doc-comment declaration
-   body.** A numbered or named heading whose path is mixed ([§FS-config.3.3.1](FS-config.md#331-named-components)), such as
-   `/// ### 1.goals: Goals` under `/// ## 1. Overview`, is recorded as prose until 0.19.0,
-   passes `check`, and creates no lock entry, though the same line in Markdown is a section
-   in 0.18.0. From 0.19.0 it declares its section, so it warns wherever shape 4 would: its
-   section, a `duplicate-section` claim, or an `orphan-section`. The exemptions of shape 4
-   apply. A `/** … */` line without ` * ` that reads as a mixed path gets this shape's one
-   finding and never shape 2's. A citation of its coordinate stays unresolved in 0.18.0 and
-   takes the warning of [§FS-citations.checks.mixed-path](FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190); the citations below the line that
-   move into its section get none of their own.
+Retired in grund 0.19.0 with the check. Each of the five shapes is now the answer it
+announced: a heading of the open section's depth or shallower, plain or numbered, or one
+that repeats an open path, ends a doc-comment section for ownership too
+([§FS-declarations.section](FS-declarations.md#section-what-a-section-is)); a `/** … */` line without ` * ` that reads as a heading
+is that section ([§FS-languages.comment-wrapper.headings](FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line)); `/// # 1. Sub` cuts no lead
+([§FS-show.2.3.3](FS-show.md#233-section-selection-inside-a-doc-comment)); and a relative heading, or a complete heading whose path puts a
+name under a number, in a doc-comment declaration body declares its section
+([§FS-declarations.section.relative.where](FS-declarations.md#sectionrelativewhere-markdown-declaration-bodies-and-doc-comments-from-0190)).
 
 #### checks.parse-moves.3: Rendering, exit, and selection
 
-A warning-only run exits `0`. Text output uses the ordinary `<path>:<line>: warning:
-<message>` form, and JSON the ordinary located finding object with `"severity":"warning"`
-and `"sites":null` ([§FS-errors.5](FS-errors.md#5-json-format)). `--only parse-moves` retains it and `--ignore
-parse-moves` removes it through the ordinary exact-code selection rules
-([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)). The LSP publishes the same message, line, code and warning severity
-([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)), reading the buffer's text. No command rewrites the line.
+Retired in grund 0.19.0 with the check ([§FS-declarations.checks.parse-moves](FS-declarations.md#checksparse-moves-a-verdict-that-moves-in-0190)).
 
 #### checks.parse-moves.4: Removed in 0.19.0
 
-In 0.19.0 the answers move, a relative heading in a doc-comment declaration body takes its
-meaning ([§RM-doc-comment-relative-headings](../roadmap.md#rm-doc-comment-relative-headings-give-a-relative-heading-in-a-doc-comment-its-meaning-in-0190)), the check and its code are removed, and the
-catalog row goes with them ([#639](https://github.com/agent-grounds/grund/issues/639)). An `--only parse-moves` or `--ignore parse-moves` left in a
-script then names an unknown code and is refused as any unknown code is.
+The check and its code were removed in 0.19.0, as [§FS-declarations.checks.parse-moves](FS-declarations.md#checksparse-moves-a-verdict-that-moves-in-0190)
+says.
 
 ## why: Why this exists
 

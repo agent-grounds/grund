@@ -82,6 +82,15 @@ prose today and a section from 0.19.0
   keeps two implementations of one fact ([§AR-system.principle](../../architecture/README.md#principle-one-fact-one-point-one-implementation)). Today's answers are instead
   read from the one record by a reading that exists for one release.
 
+## 6. The route is complete
+
+The compatibility reading and `parse-moves` were removed in grund 0.19.0, on the schedule this
+record named, and every answer in the table above is the record's
+([#639](https://github.com/agent-grounds/grund/issues/639)). The notice below is not rewritten:
+it shipped in 0.18.0 naming 0.19.0 as the release that moves, and a notice already released is not
+published again ([§FS-distribution.4.6.4](../../functional-spec/FS-distribution.md#464-compatibility-notices-come-from-the-decisions)). The landing release's own notice, which also covers the
+doc-comment headings and the managed block, is [§DF-one-parse-lands-in-0-19.release-note](DF-one-parse-lands-in-0-19.md#release-note-release-note).
+
 ## release-note: Release note
 
 - [§DF-one-parse-answers-from-0-19](DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves), [§AR-scanner.2.8](../../architecture/AR-scanner.md#28-the-file-record), [§FS-declarations.checks.parse-moves](../../functional-spec/FS-declarations.md#checksparse-moves-a-verdict-that-moves-in-0190), [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path): **from 0.19.0 every command reads one parse of each file, and some printed bodies, sizes and section owners change.** grund 0.18.0 already reads each file once into one record and answers from it, keeping today's output byte for byte. From 0.19.0: `show --full` and `list --size` end a Markdown body at the next same-or-higher heading, plain or declaring, and leave out a `//` note next to a `///` block and a deeper declaration's end; `show` ends a section at a plain heading of its level or above; `--toc` stops listing `/// # 1. Sub` and drops a heading's closing hashes from its `title`; a `/** … */` line without ` * ` that reads `## 1. Sub` becomes section `.1`; and `refs`, `cover --lines` and the chapter rules end a doc-comment section where `show` does. **Who this affects:** where one of these moves a `check` verdict, 0.18.0 warns at the line with `parse-moves`, naming the edit that keeps today's meaning in both releases; everything else changes output only, with nothing to migrate. Tracked in [issue #639](https://github.com/agent-grounds/grund/issues/639).

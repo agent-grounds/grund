@@ -282,13 +282,11 @@ one exists. The scanner answers this while it holds the heading stack: the
 nearest preceding accepted section whose subtree contains the site wins, and a
 same-or-shallower heading closes it. A duplicate occurrence of a section
 path, and a rejected path, cannot own a site; the primary occurrence of a
-duplicated path still can. In a source doc-comment, until 0.19.0, only the next
-accepted section closes one: a duplicate, a rejected path or a plain heading of
-the same depth or shallower leaves the open section owning what follows it, which
-is today's answer kept by the compatibility reading of
-[§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves). From 0.19.0 every such heading closes it, as
-`show` already ends the section there, and where that moves a citation's owner
-0.18.0 warns ([§FS-declarations.checks.parse-moves](../functional-spec/FS-declarations.md#checksparse-moves-a-verdict-that-moves-in-0190)). This is structural attribution,
+duplicated path still can. In a source doc-comment the same holds: a duplicate, a rejected path or a
+plain heading of the same depth or shallower closes the open section, where `show`
+ends it. grund 0.18.0 let only the next accepted section close one there, by the
+compatibility reading of [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves); 0.19.0 removed that
+reading. This is structural attribution,
 not rule evaluation ([§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)). On a `grund cover --lines` run the requested ranges are passed into the file's pass and resolved there, while the heading stack is still held, by the same lookup that fills `enclosing_section` ([§FS-cover.6.2](../functional-spec/FS-cover.md#62-ownership-rules)).
 
 The scanner neither imports the rules component nor constructs `RuleFacts`.
@@ -397,7 +395,7 @@ The per-file pass fills it, on every run, while it holds the heading stack and t
 
 #### 2.8.3 Today's answers for one release
 
-Until 0.19.0 the answers [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves) moves are given by one compatibility reading over the same record, not by a second parser: today's body end, section end, doc-comment owner and table of contents. Nothing else reads it, each of its functions names that record as the one that deletes it, and where its answer and the record's differ in a way that moves a verdict, `check` warns ([§FS-declarations.checks.parse-moves](../functional-spec/FS-declarations.md#checksparse-moves-a-verdict-that-moves-in-0190)).
+Retired in grund 0.19.0. grund 0.18.0 gave the answers [§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves) moves through one compatibility reading over the same record, and warned `parse-moves` where they moved a verdict; 0.19.0 removed both, so every reader answers from the record alone. This address is kept so citations written before the change still resolve.
 
 #### 2.8.4 Why the text is kept
 

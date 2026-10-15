@@ -82,47 +82,15 @@ exit `2`.
 
 ## RM-doc-comment-relative-headings: give a relative heading in a doc-comment its meaning in 0.19.0
 
-In 0.18.0 a relative heading in a source doc-comment declaration body is prose,
-as before, and warns `parse-moves` naming `0.19.0`
-([§FS-declarations.checks.parse-moves.2](functional-spec/FS-declarations.md#checksparse-moves2-the-five-shapes), [§DF-doc-comment-relative-headings](decisions/functional/DF-doc-comment-relative-headings.md#df-doc-comment-relative-headings-a-relative-heading-in-a-doc-comment-warns-in-0180-and-is-a-section-from-0190)).
-This milestone is `0.19.0`, the release that message names.
+This milestone shipped in grund 0.19.0: a relative heading in a source doc-comment
+declaration body, and a heading whose path puts a name under a number there, is a
+section, and `parse-moves` is gone. Its record is the compatibility notice that
+landed it, [§DF-one-parse-answers-from-0-19.release-note](decisions/functional/DF-one-parse-answers-from-0-19.md#release-note-release-note), together with
+[§FS-declarations.section.relative.where](functional-spec/FS-declarations.md#sectionrelativewhere-markdown-declaration-bodies-and-doc-comments-from-0190). The item's own plan is removed, as a
+shipped item's is; this address, heading text included, is kept while the
+decisions and specifications written before it still cite it.
 
-GitHub: lands with [#639](https://github.com/agent-grounds/grund/issues/639), after [#665](https://github.com/agent-grounds/grund/issues/665) ships the warning.
-
-### 1. What
-
-The line declares its section at its canonical path, under the parent rule
-([§FS-declarations.section.relative.parent](functional-spec/FS-declarations.md#sectionrelativeparent-the-parent)), the section lock
-([§FS-section-lock](functional-spec/FS-section-lock.md#fs-section-lock-a-cited-relative-section-keeps-its-text-or-check-says-where-the-text-went)) and the display rules
-([§FS-declarations.section.relative.shown](functional-spec/FS-declarations.md#sectionrelativeshown-how-a-relative-heading-is-shown)), as in Markdown; a line with no usable
-parent is a `relative-section-parent` error. Citations below it move into the new
-section, and the line's warning was their notice. The `parse-moves` shape goes
-with the code, and #639's release note names the change.
-
-### 2. Why now
-
-The warning's release is one constant that a unit test holds ahead of
-`CARGO_PKG_VERSION`, so the version bump that reaches `0.19.0` fails CI until
-this lands.
-
-### 3. Measurable
-
-The e2e cases that pin the warning in Rust, Python, Java and Go doc-comments
-print no `parse-moves` finding, and `grund <ID> --toc` lists the relative
-heading at its canonical path in each.
-
-### 4. Mixed paths in doc-comments
-
-The same release gives a doc-comment heading whose path puts a name under a
-number its meaning, in both spellings: a complete `/// ### 1.goals: Goals` and a
-relative `/// ### .goals: Goals` under `/// ## 1. Overview`
-([§DF-number-name-sections.decision.doc-comments](decisions/functional/DF-number-name-sections.md#decisiondoc-comments-doc-comments-wait-for-639)). Until then each is prose and
-warns `parse-moves`, shape 4 or 5 ([§FS-declarations.checks.parse-moves.2](functional-spec/FS-declarations.md#checksparse-moves2-the-five-shapes)). The
-preview seeds a complete mixed parent before the shared resolver answers its
-relative children, so `/// #### .latency:` under `/// ### 1.goals:` is
-`<ID>.1.goals.latency` in both. Shape 5 goes with the code, and the managed
-block starts teaching both forms for doc-comments
-([§FS-init.2.3.4.5](functional-spec/FS-init.md#2345-declaration-forms)).
+GitHub: [#639](https://github.com/agent-grounds/grund/issues/639).
 
 ## RM-mixed-path-citation-error: make a citation of a name under a number that resolves to nothing an error in 0.19.0
 

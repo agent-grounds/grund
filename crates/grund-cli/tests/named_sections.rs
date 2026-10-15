@@ -417,9 +417,15 @@ fn init_writes_no_switch_and_the_disabled_gate_is_an_operational_guard() {
     assert!(enabled_guidance.contains("goals.performance"));
     assert!(enabled_guidance.contains("goals.3"));
     assert!(enabled_guidance.contains(
-        "`name.number` is legal, and in a Markdown declaration body so is `number.name`; \
+        "and `name.number` and `number.name` are both legal; \
          a cited address with a name under a number is recorded in the section lock."
     ));
+    // §FS-init.2.3.4.5: from v23 the block teaches both forms for doc-comments too.
+    assert!(enabled_guidance.contains(
+        "In a declaration body, Markdown or doc-comment, a heading may instead write only \
+         the component it adds"
+    ));
+    assert!(enabled_guidance.contains("## Grounding with grund (v23)"));
     assert!(!enabled_guidance.contains("`number.name` is reserved"));
 }
 

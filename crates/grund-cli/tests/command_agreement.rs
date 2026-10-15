@@ -50,20 +50,9 @@ use std::path::{Path, PathBuf};
 const LEDGER: &[(&str, &str, &str)] = &[
     ("G01", "r1", "citation-is-its-whole-token"),
     ("R01", "r2", "narrowed-resolves-as-check"),
-    ("P01", "p01", "a-body-ends-where-refs-ends-it"),
-    ("P02", "p02", "a-block-comment-section-is-one-section"),
-    ("P03", "p03", "a-top-level-doc-heading-is-one-section"),
-    ("P07", "p07", "a-plain-heading-is-in-one-section"),
-    ("P10", "p10", "an-adjacent-note-is-in-one-body"),
-    ("P12", "p12", "a-doc-comment-section-ends-once"),
     // P16 keeps the editor's span for one release (DF-fmt-and-editor-answers-from-0-19);
     // its flip is #655.
     ("P16", "p16", "a-section-title-span-is-the-toc-title"),
-    (
-        "P12",
-        "p12-duplicate",
-        "a-doc-comment-section-ends-at-a-duplicate",
-    ),
     ("R02", "r02", "a-narrowed-workspace-run-resolves-the-alias"),
     // R06a-d keep the saved text for one release (DF-four-editor-checks-read-saved-text);
     // their flip is #624.
@@ -77,8 +66,9 @@ const LEDGER: &[(&str, &str, &str)] = &[
 /// builds, the reproduced rows of #576 first, then one per row of
 /// §REQ-one-answer.differences the command line, shell completion or the editor
 /// snapshot can show. A tree with no row holds a row that closed, U01 and U05 with
-/// #597, U04, U07 and U08 with #651, G06 with #671, G09 with #680, and Placement,
-/// U03a to U03d and U06 with #650, so its two answers must agree.
+/// #597, U04, U07 and U08 with #651, G06 with #671, G09 with #680, Placement,
+/// U03a to U03d and U06 with #650, and P01, P02, P03, P07, P10 and P12 with #639,
+/// so its two answers must agree.
 const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
     (
         Some("G01"),
@@ -105,43 +95,43 @@ const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
         identity::the_homeless_kind_is_one_verdict,
     ),
     (
-        Some("P01"),
+        None,
         "p01",
         "a-body-ends-where-refs-ends-it",
         sections::a_body_ends_where_refs_ends_it,
     ),
     (
-        Some("P02"),
+        None,
         "p02",
         "a-block-comment-section-is-one-section",
         sections::a_block_comment_section_is_one_section,
     ),
     (
-        Some("P03"),
+        None,
         "p03",
         "a-top-level-doc-heading-is-one-section",
         sections::a_top_level_doc_heading_is_one_section,
     ),
     (
-        Some("P07"),
+        None,
         "p07",
         "a-plain-heading-is-in-one-section",
         sections::a_plain_heading_is_in_one_section,
     ),
     (
-        Some("P10"),
+        None,
         "p10",
         "an-adjacent-note-is-in-one-body",
         sections::an_adjacent_note_is_in_one_body,
     ),
     (
-        Some("P12"),
+        None,
         "p12",
         "a-doc-comment-section-ends-once",
         sections::a_doc_comment_section_ends_once,
     ),
     (
-        Some("P12"),
+        None,
         "p12-duplicate",
         "a-doc-comment-section-ends-at-a-duplicate",
         sections::a_doc_comment_section_ends_at_a_duplicate,
