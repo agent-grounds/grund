@@ -77,3 +77,47 @@ fn a_lent_citation_is_an_edge_and_never_a_walked_citation() {
         "the edges carry the lent citation"
     );
 }
+
+/// §FS-declarations.stubs.target.5: rejection happens before records or edges
+/// can be imported, even for a target with a real declaration and chapter.
+#[test]
+fn an_excluded_target_lends_neither_records_nor_edges() {
+    let root = test_root("stub_homes_excluded_content");
+    write(
+        &root.join("grund.toml"),
+        &format!("{CONFIG}exclude = [\"src\"]\n"),
+    );
+    write(&root.join("docs/fs/x.md"), "# FS-x: [x](../../src/x.rs)\n");
+    write(&root.join("docs/goals/g.md"), "# GOAL-g: G\n\nThe goal.\n");
+    write(
+        &root.join("src/x.rs"),
+        &TARGET.replace(
+            "pub fn x() {}",
+            "///\n/// ## 1. Detail\n///\n/// Chapter content.\npub fn x() {}",
+        ),
+    );
+    let config = load_config(&root).expect("config");
+    let (catalog, _) = scan_tree(&config, None, false).expect("scan");
+    assert_eq!(
+        catalog
+            .edges()
+            .filter(|cite| cite.file.ends_with("src/x.rs"))
+            .count(),
+        0,
+        "excluded content cannot contribute citation edges"
+    );
+    assert!(catalog.lent_citations.is_empty());
+    let declarations = catalog
+        .declarations
+        .values()
+        .find(|decls| decls[0].id.slug.as_deref() == Some("x"))
+        .unwrap();
+    let paired = crate::model::paired_declarations(declarations);
+    let sole = paired.sole().expect("stub stays a declaration");
+    assert!(sole.is_broken_stub());
+    assert!(
+        sole.record.file.ends_with("docs/fs/x.md"),
+        "no imported target record or chapters"
+    );
+    assert!(sole.record.sections.is_empty());
+}

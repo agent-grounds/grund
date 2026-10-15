@@ -188,8 +188,11 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// the scan recorded on the stub (§AR-scanner.4.6): a
 /// target that is missing draws `stub link target missing`. An extension-refused
 /// target names the target, extension and `[scan] extensions` as the reason it is
-/// not scanned (§FS-declarations.stubs.target.3); other unread targets and targets
-/// read without the ID draw `stub link target lacks <ID>` — one error at the stub site.
+/// not scanned (§FS-declarations.stubs.target.3). An exclude or enabled-ignore
+/// refusal renders the saved rule and remedy from that point, including
+/// `this became an error in grund 0.19.0`; no warning is emitted. Other unread
+/// targets and targets read without the ID draw `stub link target lacks <ID>` —
+/// one error at the stub site.
 /// The rule reads no file and decides nothing of its own, so the stub it reports is
 /// exactly the stub `show` refuses, `list --size` labels and `fmt` will not link
 /// through (§FS-declarations.checks.broken-stub.4), and the verdict is the one a save

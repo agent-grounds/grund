@@ -4,7 +4,8 @@
 //! verdict (§FS-declarations.stubs.verdict).
 
 use grund_core::{
-    LspSnapshotOpts, ShowOpts, lsp_snapshot, lsp_snapshot_with_completion, show_from_snapshot,
+    CompleteIdsOpts, LspSnapshotOpts, ShowOpts, complete_ids, lsp_snapshot,
+    lsp_snapshot_with_completion, show_from_snapshot,
 };
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -39,6 +40,8 @@ pub struct Row {
     pub broken: bool,
     /// The declarations of `FS-a`, its stubs paired, in `path:line` order.
     pub declarations: &'static [(&'static str, usize)],
+    /// Section candidates for shell completion on the saved tree.
+    pub sections: &'static [&'static str],
 }
 
 impl Row {
@@ -381,6 +384,19 @@ fn lsp_column(repo: &Repo, row: &Row, column: &str, out: &mut Disagreements) {
     })
     .expect("lsp snapshot");
     let errors = &snapshot.report.errors;
+    if row.broken {
+        // §FS-declarations.stubs.target.5: rejected records lend no sections.
+        out.expect(
+            row,
+            &format!("{column} imported sections"),
+            snapshot
+                .sections
+                .iter()
+                .filter(|section| section.query_id.starts_with("FS-a."))
+                .count(),
+            0,
+        );
+    }
     let located = |path: &Option<String>, line: Option<usize>| {
         (
             repo.relative(Path::new(path.as_deref().unwrap_or("?"))),
@@ -441,12 +457,13 @@ fn lsp_column(repo: &Repo, row: &Row, column: &str, out: &mut Disagreements) {
 /// from its snapshot (§FS-lsp.responsiveness.3).
 fn show_api_column(repo: &Repo, row: &Row, out: &mut Disagreements) {
     let opts = ShowOpts::default();
-    let shown = lsp_snapshot_with_completion(LspSnapshotOpts {
+    let loaded = lsp_snapshot_with_completion(LspSnapshotOpts {
         path: repo.0.clone(),
         path_provided: true,
         open_documents: repo.editor(row),
     })
-    .and_then(|loaded| show_from_snapshot(&loaded.show, "FS-a", opts.mode, opts.format));
+    .expect("snapshot with completion");
+    let shown = show_from_snapshot(&loaded.show, "FS-a", opts.mode, opts.format);
     let got = match shown {
         Ok(shown) => Shown::Body((repo.relative(&shown.path), shown.line)),
         Err(error) => {
@@ -468,6 +485,21 @@ pub fn assert_rows_agree(rows: &[Row]) {
     let mut out = Disagreements::default();
     for row in rows {
         let saved = Repo::new(row, true);
+        // §FS-declarations.stubs.target.5: shell section completion reads the
+        // paired record. Editor section enumeration is checked in lsp_column.
+        let sections = complete_ids(CompleteIdsOpts {
+            path: saved.0.clone(),
+            path_provided: true,
+            prefix: "FS-a.".to_string(),
+            sections: true,
+        })
+        .expect("section completion");
+        out.expect(
+            row,
+            "completion sections",
+            sections,
+            row.sections.iter().map(|s| s.to_string()).collect(),
+        );
         check_column(&saved, row, &mut out);
         show_column(&saved, row, &mut out);
         refs_column(&saved, row, &mut out);

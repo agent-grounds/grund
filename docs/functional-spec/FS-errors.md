@@ -554,7 +554,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `empty-citation-obligation` | warning | — | a `must` or `should` entry | [§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing) |
 | `empty-scan` | warning | — | — | [§FS-check.2.2](FS-check.md#22-empty-scan) |
 | `escaped-citation-resolves` | none — suggestion | — | `--suggestions` | [§FS-check.2.3.1](FS-check.md#231-escaped-citation-resolves) |
-| `excluded-stub-target` | warning | — | — | [§FS-declarations.checks.excluded-stub-target](FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-broken-from-grund-0190) |
+| `excluded-stub-target` | none — spent, never fires | — | — | [§FS-declarations.checks.excluded-stub-target](FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-broken-from-grund-0190) |
 | `forbidden-citation` | error | — | a `must-not` entry | [§FS-check.3.12](FS-check.md#312-forbidden-citation) |
 | `fs-home-moves` | warning | — | no config file | [§FS-check.checks.fs-home-moves](FS-check.md#checksfs-home-moves-the-built-in-fs-home-moves-in-grund-0190) |
 | `full-scope-ignored` | warning | — | `--full` with an explicit path | [§FS-check.1.3.7](FS-check.md#137-a-path-the-flag-cannot-widen-earns-a-caution-not-a-refusal) |

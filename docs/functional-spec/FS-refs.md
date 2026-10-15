@@ -223,7 +223,7 @@ answer never depends on whether the target is in the scan.
 A stub that cannot be paired refuses nothing. Where its target does not exist, or
 exists and declares no such ID, `refs` lists the citations of the stub's ID and
 exits `0`, as it does for any absent target ([§FS-refs.1](FS-refs.md#1-inputs)). A
-target the scan does not read, by its name or its extension, declares no such ID
+target the scan does not read, by its name, extension, exclusion or enabled ignore rule, declares no such ID
 however many headings of it the target holds
 ([§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)),
 so its stub refuses nothing either. The `broken stub:` refusals belong to `show`,

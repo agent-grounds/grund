@@ -1,9 +1,27 @@
-//! The extension-refused stub's explanation and controls
+//! The unread stub target's explanation and controls
 //! (§FS-declarations.stubs.target.3), using the normal E2E golden runner.
 
 use std::path::PathBuf;
 
 use super::case_runner;
+
+/// §FS-declarations.stubs.target.3: former warning fixtures now refuse targets,
+/// with healthy controls and spent-selector compatibility.
+#[test]
+fn stub_exclusion_activation_golden_contract() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let outcomes = case_runner::discover_e2e_cases(&root)
+        .iter()
+        .filter(|case| {
+            case.file_name()
+                .unwrap()
+                .to_string_lossy()
+                .starts_with("check-excluded-stub-target-")
+        })
+        .map(|case| case_runner::run_case(&root, case, case_runner::CaseKind::E2e))
+        .collect::<Vec<_>>();
+    case_runner::assert_every_case_passed("stub exclusion activation", &outcomes);
+}
 
 fn assert_cases(names: &[&str]) {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");

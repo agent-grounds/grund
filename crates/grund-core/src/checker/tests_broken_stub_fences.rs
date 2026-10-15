@@ -12,6 +12,39 @@ use std::path::{Path, PathBuf};
 
 use crate::testing::{check_run, codes, findings, scan_findings, test_root, write};
 
+/// §FS-declarations.stubs.target.3: the saved verdict retains the refusing rule;
+/// rendering it must not ask the filesystem or current ignore rules again.
+#[test]
+fn an_ignore_refusal_is_saved_before_pairing() {
+    let root = stub_repo(
+        "saved_stub_ignore",
+        "target.md",
+        STUB,
+        "# FS-second: Second\n",
+        false,
+    );
+    write(&root.join(".ignore"), "target.md\n");
+    let config = crate::config::load_config(&root).expect("config");
+    let (catalog, _) = crate::testing::scan_tree(&config, None, false).expect("scan");
+    std::fs::remove_file(root.join(".ignore")).expect("remove ignore after scan");
+    let report = super::conform::conform(config.schema(), &catalog, config.frame());
+    let error = report
+        .errors
+        .iter()
+        .find(|f| f.code == "broken-stub")
+        .expect("saved refusal must remain a broken-stub error after removing the rule");
+    assert!(
+        error.message.contains(".ignore ignores it by target.md"),
+        "{}",
+        error.message
+    );
+    assert!(
+        error
+            .message
+            .contains("this became an error in grund 0.19.0")
+    );
+}
+
 const STUB: &str = "# FS-second: [../target.md](../target.md)\n";
 
 fn stub_repo(name: &str, target_name: &str, stub: &str, target: &str, scanned: bool) -> PathBuf {
