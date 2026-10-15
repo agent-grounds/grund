@@ -316,7 +316,7 @@ dependencies = [
 
 [[package]]
 name = "grund"
-version = "0.18.0"
+version = "0.18.1-dev"
 dependencies = [
  "grund-core",
  "iai-callgrind",
@@ -329,7 +329,7 @@ dependencies = [
 
 [[package]]
 name = "grund-core"
-version = "0.18.0"
+version = "0.18.1-dev"
 dependencies = [
  "anyhow",
  "ignore",
@@ -345,7 +345,7 @@ dependencies = [
 
 [[package]]
 name = "grund-integration-tests"
-version = "0.18.0"
+version = "0.18.1-dev"
 dependencies = [
  "grund-core",
  "serde_json",
@@ -354,7 +354,7 @@ dependencies = [
 
 [[package]]
 name = "grund-lsp"
-version = "0.18.0"
+version = "0.18.1-dev"
 dependencies = [
  "anyhow",
  "grund-core",
@@ -367,7 +367,7 @@ dependencies = [
 
 [[package]]
 name = "grund-node"
-version = "0.18.0"
+version = "0.18.1-dev"
 dependencies = [
  "grund-core",
  "napi",
@@ -379,7 +379,7 @@ dependencies = [
 
 [[package]]
 name = "grund-py"
-version = "0.18.0"
+version = "0.18.1-dev"
 dependencies = [
  "grund-core",
  "pyo3",
