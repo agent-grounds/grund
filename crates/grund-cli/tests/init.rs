@@ -17,7 +17,7 @@ const CITATION_DIRECTIONS_URL: &str =
 #[test]
 fn init_default_writes_canonical_pair_and_passes_check() {
     // §FS-init.2.1 (default form) + §FS-config.1 (config file location) +
-    // §FS-init.2.3.4.10 (reachable static citation-direction guidance).
+    // §FS-init.2.3.4.10 (reachable static citation-direction guidance, in AGENTS.md).
     let target = workdir("init_default_writes_canonical_pair_and_passes_check");
     let output = run_grund(
         &["init", target.to_str().unwrap(), "--agents-md"],
@@ -42,13 +42,14 @@ fn init_default_writes_canonical_pair_and_passes_check() {
         "init must NOT write .agents/grund.toml — that form is discovered, not generated"
     );
 
+    // §FS-init.2.4.5: the managed block links the guide; the minimal grund.toml does not.
     let agents = fs::read_to_string(target.join("AGENTS.md")).expect("read AGENTS.md");
     let grund_toml = fs::read_to_string(target.join("grund.toml")).expect("read grund.toml");
-    for (surface, contents) in [("AGENTS.md", agents), ("grund.toml", grund_toml)] {
-        assert!(
-            contents.contains(CITATION_DIRECTIONS_URL),
-            "fresh {surface} should link to the reachable canonical citation directions page"
-        );
+    assert!(
+        agents.contains(CITATION_DIRECTIONS_URL),
+        "fresh AGENTS.md should link to the reachable canonical citation directions page"
+    );
+    for (surface, contents) in [("AGENTS.md", &agents), ("grund.toml", &grund_toml)] {
         assert!(
             !contents.contains("See docs/user-facing/citation-directions.md"),
             "fresh {surface} must not point at an absent repo-local page"
@@ -68,8 +69,8 @@ fn init_default_writes_canonical_pair_and_passes_check() {
 
 #[test]
 fn init_scaffold_form_emits_full_scaffold_and_check_is_clean() {
-    // §FS-init.2.1.3 (--scaffold form) + §FS-init.2.3.4.10 (reachable static
-    // citation-direction guidance). The scaffolded tree must satisfy `grund check` —
+    // §FS-init.2.1.3 (--scaffold form) + §FS-init.2.3.4.10 (the guide link, in AGENTS.md,
+    // not grund.toml: §FS-init.2.4.5). The scaffolded tree must satisfy `grund check` —
     // i.e. the canonical AGENTS.md + grund.toml + docs skeleton is internally consistent.
     let target = workdir("init_scaffold_form_emits_full_scaffold_and_check_is_clean");
     let output = run_grund(
@@ -126,10 +127,6 @@ fn init_scaffold_form_emits_full_scaffold_and_check_is_clean() {
         "--scaffold AGENTS.md should link to the reachable canonical citation directions page"
     );
     assert!(
-        grund_toml.contains(CITATION_DIRECTIONS_URL),
-        "--scaffold grund.toml should link to the reachable canonical citation directions page"
-    );
-    assert!(
         !agents.contains("See docs/user-facing/citation-directions.md")
             && !grund_toml.contains("See docs/user-facing/citation-directions.md"),
         "--scaffold output must not point at an absent repo-local page"
@@ -145,8 +142,8 @@ fn init_scaffold_form_emits_full_scaffold_and_check_is_clean() {
 
 #[test]
 fn init_scaffold_default_requirements_file_is_scanned() {
-    // §FS-init.2.1 / §FS-config.3.5.8: the generated FS home is in the generated
-    // scan roots, so declarations added where `init` points users are resolvable.
+    // §FS-init.2.1 / §FS-init.2.4.3: the generated FS home is a row place v2 scans,
+    // so slug-only declarations added where `init` points users are resolvable.
     let target = workdir("init_scaffold_default_requirements_file_is_scanned");
     let output = run_grund(
         &["init", target.to_str().unwrap(), "--scaffold"],
@@ -160,13 +157,13 @@ fn init_scaffold_default_requirements_file_is_scanned() {
 
     fs::write(
         target.join("requirements.md"),
-        "# Requirements\n\n## FS-001-session: Sessions can be created\n",
+        "# Requirements\n\n## FS-session: Sessions can be created\n",
     )
     .expect("write requirements.md");
     fs::create_dir_all(target.join("src")).expect("create src");
     fs::write(
         target.join("src/lib.rs"),
-        "/// Creates a user session. §FS-001-session\npub fn create_session() {}\n",
+        "/// Creates a user session. \u{a7}FS-session\npub fn create_session() {}\n",
     )
     .expect("write src/lib.rs");
 
@@ -282,48 +279,6 @@ fn init_failed_scaffold_write_reports_prior_progress() {
     );
     assert!(target.join("AGENTS.md").is_file());
     assert!(target.join("grund.toml").is_file());
-}
-
-#[test]
-fn init_generated_config_comments_list_constrained_values() {
-    // §FS-init.2.4.5: the generated config is a teaching surface, so non-boolean
-    // constrained keys carry inline comments listing their accepted values.
-    let target = workdir("init_generated_config_comments_list_constrained_values");
-    let output = run_grund(&["init", target.to_str().unwrap()], manifest_dir());
-    assert!(
-        output.status.success(),
-        "init failed: stderr={}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-
-    let grund_toml = fs::read_to_string(target.join("grund.toml")).expect("read grund.toml");
-    for expected in [
-        "inline_style = \"citation-with-note\" # citation-with-note | citation-only",
-        "inline_note_layout = \"any\" # any | citation-first-colon",
-        "inline_note_layout_check = \"off\" # off | warn | error",
-        "section_heading_levels = \"strict\" # strict | warn | loose",
-        "format = \"text\" # text | json",
-        "anchor_format = \"github\" # github | gitlab | mkdocs | pandoc | none",
-    ] {
-        assert!(
-            grund_toml.contains(expected),
-            "generated config should include `{expected}`, got:\n{grund_toml}"
-        );
-    }
-    assert!(
-        !grund_toml.contains("# true | false"),
-        "generated config should not enumerate boolean values, got:\n{grund_toml}"
-    );
-
-    let validate = run_grund(
-        &["config", "validate", target.to_str().unwrap()],
-        manifest_dir(),
-    );
-    assert!(
-        validate.status.success(),
-        "commented generated config should validate:\n{}",
-        String::from_utf8_lossy(&validate.stderr)
-    );
 }
 
 /// §FS-inline-citation-style.5.4: the rendered house style closes with the
