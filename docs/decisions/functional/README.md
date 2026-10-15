@@ -1,6 +1,6 @@
 # Functional decisions
 
-Why `grund` behaves the way it does. Each file here is one product-behavior decision: the context that forced it, the call, the alternatives that lost, and what the call costs. The H1 declares a `DF-<slug>` ID, and the spec point a decision settles cites it — so a rule in `docs/functional-spec/` is always one hop from its argument.
+Why `grund` behaves the way it does. Each file here is one product-behavior decision: the context that forced it, the call, the alternatives that lost, and what the call costs. The H1 declares a `DF-<slug>` ID, and the spec point a decision settles cites it — so a rule in `docs/functional-spec/` is always one hop from its argument. Each record's first chapter is `## status:`, holding `Accepted` or `Superseded`; its `Date`, `Superseded by` and other prose lines stay above it, in the lead ([§DISC-core-concerns.10.2](../../discussions/proposals/2026-09-30-core-concerns.md#102-the-five-decisions-the-plan-makes-one-way)).
 
 - [§DF-watch-terminal-loop](DF-watch-terminal-loop.md#df-watch-terminal-loop-a-terminal-watch-loop-preserves-ordinary-check-reports) — Preserve ordinary reports in the terminal watch loop, including recovery, interruption and screen ownership.
 

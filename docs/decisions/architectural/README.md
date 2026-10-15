@@ -1,6 +1,6 @@
 # Architectural decisions
 
-Why `grund` is *built* the way it is. Each file here is one decision about structure, packaging, or measurement: the context, the call, the alternatives, and the cost. The H1 declares a `DA-<slug>` ID, and the architecture point it settles cites it.
+Why `grund` is *built* the way it is. Each file here is one decision about structure, packaging, or measurement: the context, the call, the alternatives, and the cost. The H1 declares a `DA-<slug>` ID, and the architecture point it settles cites it. Each record's first chapter is `## status:`, holding `Accepted` or `Superseded`; its `Date`, `Superseded by` and other prose lines stay above it, in the lead ([§DISC-core-concerns.10.2](../../discussions/proposals/2026-09-30-core-concerns.md#102-the-five-decisions-the-plan-makes-one-way)).
 
 Half of this folder is the record of one rename. That is deliberate: the superseded entries are kept for the evaluation they contain, not for their verdicts, and deleting them would leave the accepted decisions arguing with nobody.
 
