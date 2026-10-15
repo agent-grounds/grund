@@ -149,6 +149,8 @@ mod tests_compat;
 #[cfg(test)]
 mod tests_config_scan;
 #[cfg(test)]
+mod tests_context_homes;
+#[cfg(test)]
 mod tests_doc_comment_relative;
 #[cfg(test)]
 mod tests_embedded_value_boundaries;

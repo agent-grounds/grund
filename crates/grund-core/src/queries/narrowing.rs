@@ -124,12 +124,14 @@ impl Owner {
         let owner = self.project();
         let (config, findings) = (&owner.config, &owner.findings);
         let targets = id_arg_targets(raw_id, config.schema(), config.frame(), findings).ok()?;
+        // A paired declaration is named at its record, as plain `list` names it
+        // (§FS-declarations.stubs.pairing.4).
         let homes = |keep: &dyn Fn(&Id) -> bool| {
             targets
                 .iter()
                 .filter(|(id, _)| keep(id))
                 .filter_map(|(id, _)| findings.declarations.get(id))
-                .flat_map(|decls| paired_declarations(decls).stand_ins().collect::<Vec<_>>())
+                .flat_map(|decls| paired_declarations(decls).records().collect::<Vec<_>>())
                 .collect::<Vec<_>>()
         };
         // Each ID the query names within the path, with its count of homes there.
@@ -220,7 +222,7 @@ impl Owner {
                 .map(|homes| paired_declarations(homes))
                 .filter(|homes| paired_declarations(decls).len() <= 1 && homes.len() > 1)
                 .and_then(|homes| {
-                    let homes = homes.stand_ins().map(|home| ((), &home.file, home.line));
+                    let homes = homes.records().map(|home| ((), &home.file, home.line));
                     self.path.first_outside(config, homes).map(|(_, site)| site)
                 });
             if refs.is_some() || vanishes.is_some() || duplicate.is_some() {

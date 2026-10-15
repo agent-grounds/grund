@@ -595,7 +595,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `section-outside-declaration` | error | — | — | [§FS-declarations.checks.section-outside-declaration](FS-declarations.md#checkssection-outside-declaration-section-outside-a-declaration) |
 | `shorthand-citation` | error | — | — | [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) |
 | `shorthand-numeric-run` | error | — | — | [§FS-check.3.15](FS-check.md#315-shorthand-citation-in-a-numeric-run) |
-| `stub-shape` | warning | — | — | [§FS-declarations.checks.stub-shape](FS-declarations.md#checksstub-shape-stub-shape-read-differently-from-grund-0190) |
+| `stub-shape` | none — spent, never fires | — | — | [§FS-declarations.checks.stub-shape](FS-declarations.md#checksstub-shape-stub-shape-read-differently-from-grund-0190) |
 | `suggested-citation` | none — suggestion | — | `--suggestions`, on a `should` entry | [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) |
 | `uncited-unit` | error | — | `rules = true` on a kind | [§FS-check.3.28](FS-check.md#328-uncited-unit) |
 | `unclosed-wrapper` | warning | — | — | [§FS-citations.checks.unclosed-wrapper](FS-citations.md#checksunclosed-wrapper-unclosed-wrapper-read-differently-from-grund-0190) |

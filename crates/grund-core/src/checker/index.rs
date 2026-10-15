@@ -178,9 +178,11 @@ impl IndexEntryState {
 
 /// The declaration a finding about `id` points at — the same home `grund list`
 /// and the unused warning pick, so a collapsed stub-and-inline pair is named at
-/// the body rather than twice (§AR-scanner.4.6, §DF-index-entry-form.2.5).
+/// the body rather than twice (§AR-scanner.4.6, §DF-index-entry-form.2.5), and a
+/// stubbed declaration at its target whether or not the target is scanned
+/// (§FS-declarations.stubs.pairing.4).
 fn index_home_declaration(decls: &[Declaration]) -> Option<&Declaration> {
-    paired_declarations(decls).stand_ins().next()
+    paired_declarations(decls).records().next()
 }
 
 /// Whether any of `decls` sits in `folder` — the recursive membership test of
