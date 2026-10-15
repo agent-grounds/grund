@@ -5,13 +5,27 @@ mod support;
 
 #[cfg(unix)]
 use std::fs;
+use std::process::Output;
 use support::*;
+
+/// `stderr` without the version 1 caution. `file_config` writes a version 1
+/// config, and the caution is a run-level line about that config
+/// (§FS-check.checks.config-version-1); the fixture's version is not what these tests pin.
+fn stderr_without_version_1_caution(output: &Output) -> String {
+    stderr(output)
+        .lines()
+        .filter(|line| !line.contains(" is version 1; migrate it with grund config migrate"))
+        .map(|line| format!("{line}\n"))
+        .collect()
+}
 
 /// §FS-check.1.1.7 (§FS-citations.recognized.snapshots): a fetched snapshot is not a special input. Once `grund
 /// fetch` has written it, its configured file home sits in the ordinary scan
 /// scope and its declaration and body are recognized by the ordinary rules —
 /// the offline leg runs with the integration renamed away, so `check`, `show`
-/// and `refs` all answer from the scanned file alone.
+/// and `refs` all answer from the scanned file alone. The config is the version 2
+/// spelling of `file_config`'s `should` row, so the offline run prints `success`
+/// rather than the version 1 caution (§FS-check.checks.config-version-1).
 #[cfg(unix)]
 #[test]
 fn external_facts_citation_materializes_then_resolves_offline() {
@@ -19,11 +33,13 @@ fn external_facts_citation_materializes_then_resolves_offline() {
     write(
         &root,
         "grund.toml",
-        &file_config(
-            "docs/tickets.md",
-            Some("should"),
-            Some("scripts/fetch-ticket"),
-        ),
+        "grund_config_version = 2\nproject_name = \"facts\"\n\n\
+         [schema]\nslug_pattern = \"[a-z][a-z-]*\"\n\n\
+         [schema.sources]\nrespect_gitignore = false\n\n\
+         [schema.kinds.TICKET]\nfiles = [\"docs/tickets.md\"]\nid_format = \"{kind}-{number}\"\n\
+         fetch = \"scripts/fetch-ticket\"\n\n\
+         [schema.kinds.code]\nfolders = [\"docs\"]\n\n\
+         [rules.resolution]\nTICKET = \"warn\"\n",
     );
     write(
         &root,
@@ -120,7 +136,7 @@ fn external_facts_missing_snapshot_text_and_json_have_fixed_identities() {
             stdout(&plain),
             format!("docs/guide.md:3: {severity}: {text}\n")
         );
-        assert_eq!(stderr(&plain), "");
+        assert_eq!(stderr_without_version_1_caution(&plain), "");
 
         let json = run(&root, &["check", ".", "--format", "json"]);
         assert_code(&json, exit, &format!("{resolve} json"));

@@ -1,20 +1,17 @@
-grund_config_version = 1
+grund_config_version = 2
 project_name = "fixture"
 
-[reference]
+[schema]
 marker = "§"
-strict = true
-
-[id]
-format = "{kind}-{slug}"
+id_format = "{kind}-{slug}"
 section_separator = "."
 slug_pattern = "[a-z][a-z0-9-]*"
 
-[[kinds]]
-kind = "FS"
-folder = "docs/functional-spec"
-title = "What: behavior"
+[schema.kinds.FS]
+folders = ["docs/functional-spec"]
 
-[scan]
-include = ["docs", "src"]
-extensions = ["md", "rs"]
+[schema.kinds.code]
+folders = ["docs", "src"]
+
+[presentation.kinds.FS]
+title = "What: behavior"
