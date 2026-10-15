@@ -1,2 +1,0 @@
-src/x.rs:5: warning: from grund 0.19.0 this line is the heading of FS-x.1.goals; make it a bold label or a code span to keep it prose in both releases
-src/x.rs:7: warning: from grund 0.19.0 this line is the heading of FS-x.1.goals.latency; make it a bold label or a code span to keep it prose in both releases

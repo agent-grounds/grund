@@ -56,7 +56,6 @@ mod inline_style;
 mod judge;
 mod near_miss;
 mod obligation_units;
-mod parse_moves;
 mod reference_scope;
 mod references;
 mod report;
@@ -160,8 +159,6 @@ mod tests_local_section_citations;
 mod tests_managed_block_drift;
 #[cfg(test)]
 mod tests_nothing_recognized;
-#[cfg(test)]
-mod tests_parse_moves_flip;
 #[cfg(test)]
 mod tests_post_scan_readers;
 #[cfg(test)]

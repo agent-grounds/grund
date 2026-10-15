@@ -80,7 +80,7 @@ pub(crate) fn declaration_eligible(
 /// block, read off the blocks the record walked (§FS-declarations.line.block-comment):
 /// the declaration gate, the near-miss gate and `show`'s reading of the
 /// declaration such a line opens all ask the record this, never the line alone.
-pub(crate) fn bare_block_line(record: &FileRecord, lineno: usize) -> bool {
+pub(super) fn bare_block_line(record: &FileRecord, lineno: usize) -> bool {
     !record.markdown
         && record.block_at(lineno).is_some_and(|block| {
             block.form == BlockForm::Block
@@ -155,16 +155,13 @@ pub(super) fn zone_of(lineno: usize, scan: &SourceScanLine<'_>) -> Option<LineZo
         line: lineno,
         start: scan.column_offset,
         end: scan.column_offset + scan.text.len(),
-        closes: scan.closed_py_docstring,
     })
 }
 
 /// Settle what each section-shaped heading turned out to be: a path its
 /// declaration accepted inside its body, a later claimant of one, or rejected
-/// (§AR-scanner.2.2.3, §FS-declarations.section.map). Then add the plain headings
-/// of the doc-comments that hold a declaration, read through their envelope
-/// (§FS-languages.comment-wrapper.headings). `bodies` maps each declaration line
-/// to its body end and heading level.
+/// (§AR-scanner.2.2.3, §FS-declarations.section.map). `bodies` maps each
+/// declaration line to its body end and heading level.
 pub(super) fn settle_headings(
     record: &mut FileRecord,
     decls: &[&Declaration],
@@ -196,12 +193,20 @@ pub(super) fn settle_headings(
             heading.kind = *kind;
         }
     }
-    if !record.markdown {
-        let plain = doc_comment_plain_headings(record, bodies);
-        if !plain.is_empty() {
-            record.headings.extend(plain);
-            record.headings.sort_by_key(|heading| heading.line);
-        }
+}
+
+/// Add the plain headings of the doc-comments that hold a declaration, read through
+/// their envelope (§FS-languages.comment-wrapper.headings), before the parent pass
+/// reads them as relative headings and parents (§FS-declarations.section.relative.where).
+/// `bodies` maps each declaration line to its body end and heading level.
+pub(super) fn record_doc_comment_plain_headings(
+    record: &mut FileRecord,
+    bodies: &BTreeMap<usize, (usize, usize)>,
+) {
+    let plain = doc_comment_plain_headings(record, bodies);
+    if !plain.is_empty() {
+        record.headings.extend(plain);
+        record.headings.sort_by_key(|heading| heading.line);
     }
 }
 
@@ -255,7 +260,7 @@ fn doc_comment_plain_headings(
 /// Source line `lineno` as its comment block's section reading sees it: inside its
 /// docstring's delimiters, with the block's envelope off and the whitespace around it
 /// trimmed (§FS-languages.comment-wrapper.headings), or `None` outside every block.
-pub(crate) fn enveloped_line(record: &FileRecord, lineno: usize) -> Option<&str> {
+pub(super) fn enveloped_line(record: &FileRecord, lineno: usize) -> Option<&str> {
     let block = record.block_at(lineno)?;
     let line = record.line(lineno)?;
     Some(comment_envelope(scanned_line(record, lineno, line), &block.form).trim())

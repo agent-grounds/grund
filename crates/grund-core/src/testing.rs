@@ -354,7 +354,7 @@ pub(crate) fn current_block() -> String {
 
 /// §FS-init.2.3.7.1: count the current base block rendered by current_block.
 pub(crate) fn current_marker() -> &'static str {
-    "## Grounding with grund (v19)"
+    "## Grounding with grund (v23)"
 }
 
 /// Run a just-written script, waiting out a kernel that still calls it busy.

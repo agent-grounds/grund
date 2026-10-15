@@ -306,12 +306,12 @@ fn agents_init_messages_cover_all_five_final_templates() {
         (
             "outdated",
             "## Grounding with grund (v3)\n\nlegacy body\n",
-            "repo maintenance: outdated grund init block v3 — run `grund init` to update to v19 (does not affect citation validity)",
+            "repo maintenance: outdated grund init block v3 — run `grund init` to update to v23 (does not affect citation validity)",
         ),
         (
             "unsupported",
             "## Grounding with grund (v99)\n\nfuture body\n",
-            "repo maintenance: unsupported grund init block v99 — this grund supports v19 (does not affect citation validity)",
+            "repo maintenance: unsupported grund init block v99 — this grund supports v23 (does not affect citation validity)",
         ),
         (
             "stale",
@@ -321,7 +321,7 @@ fn agents_init_messages_cover_all_five_final_templates() {
         (
             "missing",
             "# Project instructions\n",
-            "repo maintenance: missing grund init block v19 — run `grund init` to install it (does not affect citation validity)",
+            "repo maintenance: missing grund init block v23 — run `grund init` to install it (does not affect citation validity)",
         ),
     ];
 

@@ -146,7 +146,7 @@ impl<'a> Guidance<'a> {
     pub(crate) fn finish_root_block(&self, mut block: String, path: &Path) -> String {
         let (project, run) = (self.config.project(), self.config.run());
         block = block.replacen(
-            "Grounding with grund (v19)",
+            "Grounding with grund (v23)",
             &format!("Grounding with grund (v{})", self.version),
             1,
         );

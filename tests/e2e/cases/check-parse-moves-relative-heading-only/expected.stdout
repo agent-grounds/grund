@@ -1,1 +1,0 @@
-src/lib.rs:5: warning: from grund 0.19.0 this line is the heading of FS-thing.format.1; write it `### format.1: Username` to make it FS-thing.format.1 in both releases, or make it a bold label or a code span to keep it prose in both

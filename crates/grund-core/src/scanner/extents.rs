@@ -85,12 +85,7 @@ pub(super) fn body_has_content(record: &FileRecord, decl_line: usize, end: usize
 pub(super) fn assign_extents(record: &mut FileRecord, findings: &Catalog) {
     let mut decls: Vec<&Declaration> = findings.declarations.values().flatten().collect();
     decls.sort_by_key(|decl| decl.line);
-    let mut bodies: BTreeMap<usize, (usize, usize)> = BTreeMap::new();
-    for (index, decl) in decls.iter().enumerate() {
-        let next = decls.get(index + 1).map(|next| next.line);
-        let end = body_end(record, decl, next);
-        bodies.insert(decl.line, (end, decl.heading_level));
-    }
+    let bodies = declaration_bodies(record, &decls);
     super::record::settle_headings(record, &decls, &bodies);
     for index in 0..record.headings.len() {
         let heading = &record.headings[index];
@@ -112,6 +107,23 @@ pub(super) fn assign_extents(record: &mut FileRecord, findings: &Catalog) {
         heading.end = end;
         heading.lead_end = lead_end;
     }
+}
+
+/// Each of `decls`' body end and heading level by its line, `decls` in line order:
+/// the bodies the extents are capped at and the doc-comment headings are read in.
+pub(super) fn declaration_bodies(
+    record: &FileRecord,
+    decls: &[&Declaration],
+) -> BTreeMap<usize, (usize, usize)> {
+    let mut bodies = BTreeMap::new();
+    for (index, decl) in decls.iter().enumerate() {
+        let next = decls.get(index + 1).map(|next| next.line);
+        bodies.insert(
+            decl.line,
+            (body_end(record, decl, next), decl.heading_level),
+        );
+    }
+    bodies
 }
 
 /// The end of the body that holds `line`: the nearest declaration above it whose

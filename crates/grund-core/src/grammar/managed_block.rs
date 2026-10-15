@@ -109,7 +109,10 @@ pub(crate) static AGENTS_SECTION_BOUNDARY: Lazy<Regex> =
 /// v21 and v22 (§FS-init.2.3.5.11, §FS-init.2.3.7.1): v19 and v20 when a row's
 /// guidance lands in a scoped `AGENTS.md` or a declaration shape renders; every
 /// other config keeps rendering v19 or v20 byte for byte.
-pub(crate) const AGENTS_BLOCK_VERSION: u32 = 22;
+/// v23 to v26 (§FS-init.2.3.4.5, §FS-init.2.3.7.1): each pair four higher, the
+/// declaration forms teaching the relative and `number.name` forms for a source
+/// doc-comment declaration body as well as a Markdown one.
+pub(crate) const AGENTS_BLOCK_VERSION: u32 = 26;
 
 /// The byte span and `vN` version of the managed block inside an `AGENTS.md`
 /// (§FS-init.2.3) — what both `grund init`'s update and `grund check`'s validation

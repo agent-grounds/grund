@@ -148,9 +148,8 @@ fn source_record_holds_blocks_and_doc_comment_headings() {
 }
 
 /// §FS-languages.comment-wrapper.headings: a `/** … */` line written without
-/// ` * ` is kept as written, and a trailing `*/` is envelope only there (D17d).
-/// The line the scan reads as a level-1 path is recorded as rejected, the
-/// reading 0.18.0 keeps (§DF-one-parse-answers-from-0-19).
+/// ` * ` is kept as written, so `## 1. Sub` is section `.1`, and a trailing `*/` is
+/// envelope only there (D17d, §DF-one-parse-answers-from-0-19).
 #[test]
 fn block_comment_lines_are_read_through_their_envelope() {
     let (findings, file) = scan(
@@ -171,8 +170,8 @@ fn block_comment_lines_are_read_through_their_envelope() {
     assert_eq!(
         headings(record),
         vec![
-            (2, HeadingKind::Declaration, "FS-004-delta: Delta", 5, 4),
-            (4, HeadingKind::Rejected, "1. Sub", 0, 0),
+            (2, HeadingKind::Declaration, "FS-004-delta: Delta", 5, 3),
+            (4, HeadingKind::Section, "1. Sub", 4, 4),
             (5, HeadingKind::Section, "2. Next", 5, 5),
         ]
     );

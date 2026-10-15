@@ -177,13 +177,13 @@ fn noted_fmt_excluded(findings: &Catalog, config: &Config) -> BTreeSet<PathBuf> 
 }
 
 /// The managed-block version this config asks for without scoped guidance:
-/// v20 once a kind declares rules, v19 otherwise (§FS-init.2.3.7.1); `Guidance`
+/// v24 once a kind declares rules, v23 otherwise (§FS-init.2.3.7.1); `Guidance`
 /// adds two for a scoped file or a declaration shape.
 pub(crate) fn block_version(config: &Config) -> u32 {
     if config.kinds.iter().any(|kind| kind.rules) {
-        20
+        24
     } else {
-        19
+        23
     }
 }
 

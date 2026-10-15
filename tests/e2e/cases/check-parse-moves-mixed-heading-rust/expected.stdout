@@ -1,2 +1,0 @@
-docs/use.md:1: warning: section not found: FS-x.1.goals; write <§> before it to show the shape without citing it; a citation of a name under a number is now checked, and this warning becomes an error in grund 0.19.0
-src/x.rs:7: warning: from grund 0.19.0 this line is the heading of FS-x.1.goals; make it a bold label or a code span to keep it prose in both releases

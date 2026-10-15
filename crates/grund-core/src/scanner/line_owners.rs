@@ -7,45 +7,45 @@
 use std::path::Path;
 
 use crate::model::{
-    Catalog, FileLineOwnership, FileRecord, Id, OwnerRun, RangeOwnership, SectionRun,
+    Catalog, FileLineOwnership, FileRecord, HeadingKind, Id, OwnerRun, RangeOwnership, SectionRun,
 };
-
-use super::compat::TodayOwnerEnds;
 
 /// One file's declaration bodies with their accepted sections, and the
 /// record's fence-aware headings that close them: the single place a line is given
 /// its owner (§AR-scanner.2.4.3, §AR-scanner.2.4.4). The citation post-pass and a
 /// `cover --lines` request both ask [`LineOwners::owner_at`], so a line and a
 /// citation on it can never be given different owners (§FS-cover.6.2).
-pub(super) struct LineOwners<'a> {
+pub(super) struct LineOwners {
     /// `(body_start, body_end, id, sections)`, each section as
-    /// `(path, heading line, heading level)` in line order.
+    /// `(path, heading line, last line)` in line order.
     bodies: Vec<(usize, usize, Id, Vec<(String, usize, usize)>)>,
-    ends: TodayOwnerEnds<'a>,
 }
 
-impl<'a> LineOwners<'a> {
+impl LineOwners {
     /// Taken after the body spans are assigned, so the lookup is a scan of a
     /// small local list rather than of the file.
-    pub(super) fn new(findings: &Catalog, record: &'a FileRecord) -> Self {
+    pub(super) fn new(findings: &Catalog, record: &FileRecord) -> Self {
         let bodies = findings
             .declarations
             .values()
             .flatten()
             .map(|decl| {
+                // §AR-scanner.2.4.4: a section ends where the record's extent rule ends it.
                 let mut sections = decl
                     .sections
                     .iter()
-                    .map(|(path, info)| (path.clone(), info.line, info.heading_level))
+                    .filter_map(|(path, info)| {
+                        let heading = record
+                            .heading_at(info.line)
+                            .filter(|heading| heading.kind == HeadingKind::Section)?;
+                        Some((path.clone(), info.line, heading.end))
+                    })
                     .collect::<Vec<_>>();
                 sections.sort_by_key(|(_, line, _)| *line);
                 (decl.body_start, decl.body_end, decl.id.clone(), sections)
             })
             .collect();
-        Self {
-            bodies,
-            ends: TodayOwnerEnds::new(record),
-        }
+        Self { bodies }
     }
 
     /// The declaration whose body contains `line` — the nearest preceding one when
@@ -59,22 +59,19 @@ impl<'a> LineOwners<'a> {
             .filter(|(start, end, _, _)| *start <= line && line <= *end)
             // Nearest preceding declaration: the one whose body starts latest.
             .max_by_key(|(start, _, _, _)| *start)?;
-        Some((id, enclosing_section(sections, &self.ends, line)))
+        Some((id, enclosing_section(sections, line)))
     }
 }
 
-/// Resolve the nearest accepted chapter, closed where 0.17 closes it
-/// (§FS-rules.2, §AR-scanner.2.4.4, `TodayOwnerEnds`).
-fn enclosing_section(
-    sections: &[(String, usize, usize)],
-    ends: &TodayOwnerEnds<'_>,
-    site_line: usize,
-) -> Option<String> {
-    let (path, line, depth) = sections
+/// Resolve the nearest accepted chapter, closed where the record closes it: at a
+/// heading of its level or above, numbered, plain or a duplicate claimant
+/// (§AR-scanner.2.4.4).
+fn enclosing_section(sections: &[(String, usize, usize)], site_line: usize) -> Option<String> {
+    let (path, _, end) = sections
         .iter()
         .filter(|(_, line, _)| *line <= site_line)
         .max_by_key(|(_, line, _)| *line)?;
-    (site_line <= ends.end(sections, *line, *depth)).then(|| path.clone())
+    (site_line <= *end).then(|| path.clone())
 }
 
 /// Record, for each range in `requested`, its owner runs and their section runs
@@ -107,7 +104,7 @@ pub(super) fn resolve_requested_lines(
 /// §FS-cover.6.3: the maximal runs of lines owned by one declaration, each split
 /// into maximal runs under one innermost section. Lines nothing owns end a run
 /// and appear in none, so one declaration a nested body interrupts appears twice.
-fn owner_runs(owners: &LineOwners<'_>, start: usize, end: usize) -> Vec<OwnerRun> {
+fn owner_runs(owners: &LineOwners, start: usize, end: usize) -> Vec<OwnerRun> {
     let mut runs: Vec<OwnerRun> = Vec::new();
     let mut previous_owned = false;
     for line in start..=end {

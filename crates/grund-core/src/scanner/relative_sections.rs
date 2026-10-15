@@ -9,8 +9,8 @@ use std::collections::BTreeMap;
 
 use super::context::section_path_is_numeric;
 use super::embedded_value_context::invalid_embedded_marker;
-use super::extents::{DeclarationBodies, body_end};
-use super::held_mixed_headings::seed_held_mixed_headings;
+use super::extents::{DeclarationBodies, body_end, declaration_bodies};
+use super::record::record_doc_comment_plain_headings;
 use super::section_record::section_value_root;
 use crate::config::Schema;
 use crate::grammar::{named_mode_section_path, reduce_heading_text, relative_heading_form};
@@ -23,9 +23,10 @@ use crate::model::{
 /// accepted heading takes the marker (§FS-values.2.4.4).
 pub(super) type RelativeCandidate = (UnmarkedHeadingCandidate, Option<InvalidValueSite>);
 
-/// The Markdown headings the per-file pass holds until the file's headings are
-/// known: the unmarked candidates, and the relative ones the parent pass settles
-/// (§FS-declarations.section.relative.form, §FS-declarations.checks.unmarked-heading).
+/// The headings the per-file pass holds until the file's headings are known: the
+/// unmarked Markdown candidates, and the relative ones the parent pass settles, in
+/// Markdown and in a doc-comment alike (§FS-declarations.section.relative.form,
+/// §FS-declarations.section.relative.where, §FS-declarations.checks.unmarked-heading).
 #[derive(Default)]
 pub(super) struct HeldHeadings {
     pub(super) unmarked: Vec<UnmarkedHeadingCandidate>,
@@ -58,6 +59,43 @@ impl HeldHeadings {
         }
     }
 
+    /// Hold the relative headings of a source file's doc-comment declaration bodies:
+    /// the plain headings the comments' section reading sees, recorded here so the
+    /// parent pass reads them as it reads a Markdown body's
+    /// (§FS-declarations.section.relative.where, §FS-languages.comment-wrapper.headings).
+    pub(super) fn hold_doc_comment(
+        &mut self,
+        findings: &Catalog,
+        record: &mut FileRecord,
+        path: &std::path::Path,
+    ) {
+        if record.markdown || findings.declarations.is_empty() {
+            return;
+        }
+        let mut decls: Vec<&Declaration> = findings.declarations.values().flatten().collect();
+        decls.sort_by_key(|decl| decl.line);
+        record_doc_comment_plain_headings(record, &declaration_bodies(record, &decls));
+        for heading in &record.headings {
+            let title = record.heading_text(heading);
+            if heading.kind != HeadingKind::Plain || relative_heading_form(title).is_none() {
+                continue;
+            }
+            let line = record.line(heading.line).unwrap_or_default();
+            let written = super::record::enveloped_line(record, heading.line).unwrap_or(line);
+            self.relative.push((
+                UnmarkedHeadingCandidate {
+                    file: path.to_path_buf(),
+                    line: heading.line,
+                    column: line.find('#').map_or(1, |column| column + 1),
+                    heading: written.to_string(),
+                    heading_level: heading.level,
+                    title: title.to_string(),
+                },
+                None,
+            ));
+        }
+    }
+
     /// Run the parent pass over the relative headings, leaving the unmarked ones
     /// in line order.
     pub(super) fn resolve(
@@ -71,19 +109,20 @@ impl HeldHeadings {
             return;
         }
         let relative = std::mem::take(&mut self.relative);
-        resolve_relative_sections(
-            findings,
-            record,
-            relative,
-            named_sections,
-            schema,
-            &mut self.unmarked,
-        );
+        // §FS-declarations.section.relative.where: a refused doc-comment line stays prose,
+        // since only a Markdown heading is an unmarked-heading candidate.
+        let mut prose = Vec::new();
+        let unmarked = if record.markdown {
+            &mut self.unmarked
+        } else {
+            &mut prose
+        };
+        resolve_relative_sections(findings, record, relative, named_sections, schema, unmarked);
         self.unmarked.sort_by_key(|candidate| candidate.line);
     }
 }
 
-/// Resolve every relative candidate of one Markdown file — a heading whose text
+/// Resolve every relative candidate of one file — a heading whose text
 /// reads as the relative form (§FS-declarations.section.relative.form) — against its parent
 /// (§FS-declarations.section.relative.parent). An accepted one is recorded on its
 /// declaration at its canonical path and on the record's heading; one with no
@@ -253,9 +292,9 @@ pub(crate) enum RelativeAnswer {
 /// The one answer to what the relative heading titled `title`, at `level` on `line`
 /// of `decl`'s body ending on `end`, would be: its parent by
 /// §FS-declarations.section.relative.parent, then the title syntax its canonical
-/// path takes (§FS-declarations.section.relative.form). The Markdown parent pass
-/// and the doc-comment warning of §FS-declarations.checks.parse-moves.2 (shape 4)
-/// both ask it, so the two readings cannot drift.
+/// path takes (§FS-declarations.section.relative.form). The parent pass asks it
+/// of a Markdown body and a doc-comment body alike
+/// (§FS-declarations.section.relative.where), so the two readings cannot drift.
 pub(crate) fn relative_answer(
     record: &FileRecord,
     decl: &Declaration,
@@ -289,66 +328,6 @@ pub(crate) fn relative_answer(
         return RelativeAnswer::Refused;
     }
     RelativeAnswer::Section(canonical)
-}
-
-/// 0.19.0's answer for each relative heading of one source doc-comment declaration
-/// body, which 0.18.0 keeps as prose (§FS-declarations.section.relative.where): the
-/// parent pass run on a copy of `decl`, shallowest first and claiming as it goes,
-/// so a relative parent is settled before its child asks for it. The complete
-/// mixed headings 0.18.0 holds back as prose are claimed on the copy first, as the
-/// per-file pass records a complete heading before the parent pass runs, so a
-/// relative heading below one is named under it
-/// (§FS-declarations.checks.parse-moves.1). Only the plain headings the record
-/// holds in the body are read, so the file is not.
-pub(crate) fn doc_comment_relative_answers<'a>(
-    record: &'a FileRecord,
-    decl: &Declaration,
-    end: usize,
-    named_sections: bool,
-) -> Vec<(&'a RecordedHeading, RelativeAnswer)> {
-    let plain = record
-        .headings_between(decl.line + 1, end)
-        .iter()
-        .filter(|heading| heading.kind == HeadingKind::Plain);
-    let mut candidates: Vec<&RecordedHeading> = plain
-        .clone()
-        .filter(|heading| relative_heading_form(record.heading_text(heading)).is_some())
-        .collect();
-    if candidates.is_empty() {
-        return Vec::new();
-    }
-    candidates.sort_by_key(|heading| (heading.level, heading.line));
-    let mut settled = decl.clone();
-    if named_sections {
-        seed_held_mixed_headings(record, decl, plain, &mut settled);
-    }
-    let mut answers = Vec::with_capacity(candidates.len());
-    for heading in candidates {
-        let title = record.heading_text(heading);
-        let answer = relative_answer(
-            record,
-            &settled,
-            end,
-            heading.line,
-            heading.level,
-            title,
-            named_sections,
-        );
-        if let RelativeAnswer::Section(canonical) = &answer {
-            let info = SectionInfo {
-                title: reduce_heading_text(title),
-                line: heading.line,
-                heading_level: heading.level,
-                value: None,
-                value_root: None,
-                relative: true,
-            };
-            claim(&mut settled, canonical.clone(), info);
-        }
-        answers.push((heading, answer));
-    }
-    answers.sort_by_key(|(heading, _)| heading.line);
-    answers
 }
 
 /// Whether `heading` is one a body's section reading sees: an ATX heading in
