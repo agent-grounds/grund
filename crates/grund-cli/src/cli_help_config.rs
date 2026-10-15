@@ -1,4 +1,5 @@
-/// The `grund config --help` page (§FS-cli.2.3, §FS-cli.6): `show`, `validate` and
+/// The `grund config --help` page (§FS-cli.2.3, §FS-cli.6): `show` in the file's
+/// own version (§FS-config.4.2), `validate` and
 /// `migrate` (§FS-config-migrate.1), how the config is discovered, and examples of each.
 fn print_config_help() {
     println!("grund config — inspect the effective `grund.toml` discovered from a path.");
@@ -7,7 +8,7 @@ fn print_config_help() {
     println!("        grund config migrate --to 2 [PATH] [--write] [--drop-comments]");
     println!();
     println!(
-        "  show       print the effective config as TOML (defaults filled in for keys you didn't set)."
+        "  show       print the effective config as TOML in the file's own version (defaults filled in for keys you didn't set)."
     );
     println!(
         "  validate   parse the discovered config and report the first error; exit 0 if it's well-formed."

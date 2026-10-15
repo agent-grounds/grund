@@ -1,4 +1,5 @@
 grund init — scaffold agent instructions + a template's `grund.toml` (and, with --scaffold, its starter files).
+The `grund.toml` it writes is a minimal version-2 file; `grund config show` prints every effective setting.
 Idempotent: re-running updates the managed agent-instructions block in place and leaves your edits alone.
 
 Usage:  grund init [PATH] [--template NAME] [--scaffold] [--name NAME] [--description TEXT] [--force] [--dry-run] [--check] [--no-vcs] [--agents-md] [--claude] [--gemini] [--pi] [--copilot] [--cursor] [--windsurf] [--zed]

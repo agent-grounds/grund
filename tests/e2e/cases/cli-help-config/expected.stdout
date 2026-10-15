@@ -3,7 +3,7 @@ grund config — inspect the effective `grund.toml` discovered from a path.
 Usage:  grund config <show | validate> [PATH]
         grund config migrate --to 2 [PATH] [--write] [--drop-comments]
 
-  show       print the effective config as TOML (defaults filled in for keys you didn't set).
+  show       print the effective config as TOML in the file's own version (defaults filled in for keys you didn't set).
   validate   parse the discovered config and report the first error; exit 0 if it's well-formed.
   migrate    print the version-2 file that means what this version-1 config means, and report where each key went;
              writes nothing unless --write is given.

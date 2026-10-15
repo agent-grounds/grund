@@ -275,6 +275,10 @@ fn print_subcommand_help(cmd: &str) {
             println!(
                 "grund init — scaffold agent instructions + a template's `grund.toml` (and, with --scaffold, its starter files)."
             );
+            // §FS-init.2.4.3: the file holds only what differs from a default.
+            println!(
+                "The `grund.toml` it writes is a minimal version-2 file; `grund config show` prints every effective setting."
+            );
             println!(
                 "Idempotent: re-running updates the managed agent-instructions block in place and leaves your edits alone."
             );
