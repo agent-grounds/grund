@@ -96,6 +96,7 @@ mod values;
 mod walk;
 mod walk_boundaries;
 mod walk_errors;
+mod walk_order;
 mod walk_reporting;
 
 pub use scan_error::ApiScanError;

@@ -11,6 +11,7 @@ use super::value_json::value_json_sources;
 use super::walk::{scan_roots, scannable_walker};
 use super::walk_boundaries::{is_scannable, outward_directory_link_root, owned_by_another_project};
 use super::walk_errors::{symlink_loop_report, walk_error_report};
+use super::walk_order::sort_paths;
 use crate::config::{Frame, Schema, canonical_config_root, file_root_rows};
 use crate::model::{Refused, RootRow, sort_path_key};
 use crate::sources::{
@@ -285,7 +286,7 @@ pub(crate) fn walk_scannable_files_with_sources(
         // §FS-errors.4.1: within one root the order is the filesystem's, and the
         // first-seen rule below turns that into a choice of *spelling*. Sorting each
         // root's list first makes the choice ours: earlier root wins, then lexicographic.
-        root_files.sort_by_key(|path| sort_path_key(path));
+        sort_paths(&mut root_files);
         files.append(&mut root_files);
     }
     // One file, one read (§FS-check.1.3.2, §FS-config.3.5.4). Two spellings first,
@@ -309,7 +310,7 @@ pub(crate) fn walk_scannable_files_with_sources(
     if !resolved.is_empty() {
         dedup_by_file_identity(&mut files, &resolved);
     }
-    files.sort_by_key(|path| sort_path_key(path));
+    sort_paths(&mut files);
     // The roots may overlap — `include = ["docs", "docs/api"]` names one subtree
     // twice, and under `--full` every `include` root is walked beside the config root
     // containing it (§FS-check.1.3.2). A file read twice duplicates its own declaration.
@@ -334,7 +335,7 @@ pub(crate) fn walk_scannable_files_with_sources(
     // §FS-errors.4.1: overlapping roots — and `--full`, which walks every `include`
     // root beside the config root containing it — meet the same directory once per
     // root, so one sort and one dedup make the candidate list a set.
-    dirs.sort_by_key(|path| sort_path_key(path));
+    sort_paths(&mut dirs);
     dirs.dedup();
     Ok(WalkedTree {
         files,

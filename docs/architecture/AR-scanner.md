@@ -93,6 +93,14 @@ The probe drops everything downstream of the walk: `Walk` is lazy, so it stops a
 
 ### 1.12 The extension filter and the scan order
 
+The walk's per-root file lists, merged file list and directory list use one
+stable path sorter. It constructs the existing formatted path key at most once
+per element per sort, rather than rebuilding it for each comparison
+([§GOAL-fast-feedback.1](../goals.md#1-performance-targets)). Keys retain their
+lossy UTF-8 and forward-slash spelling; equal keys retain their input order,
+including before the first-seen physical-file deduplication. Temporary keys
+belong only to that sort and are then dropped.
+
 Files are filtered by extension to those that can plausibly contain specs or inline declarations: `.md` and a curated list of source-file extensions, the `[scan] extensions` of [§FS-config.3.5](../functional-spec/FS-config.md#35-scan--what-gets-scanned). The walk produces one sorted file list before scanning starts. Small lists are scanned sequentially; large lists may scan files in parallel, but each file writes into a private result and the merge always happens in sorted path order. That preserves the byte-for-byte report ordering [§FS-errors.4](../functional-spec/FS-errors.md#4-determinism) requires while letting the hot full-tree commands use multiple cores once the thread-pool overhead is worth paying.
 
 A v2 project filters by language instead: a file is read when its final extension resolves to an admitted language, and descent is pruned by `[schema.sources] exclude`, gitignore-style globs at the config root ([§FS-config-v2.schema.sources](../functional-spec/FS-config-v2.md#schemasources-schemasources), [§FS-config-v2.schema.sources.exclude](../functional-spec/FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list)). The source model is resolved from the configuration once, before the walk, and the walk and every file reader take the file's language from it.
