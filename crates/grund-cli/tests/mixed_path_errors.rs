@@ -9,6 +9,9 @@ use std::process::{Command, Output};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+/// The fixtures stay version 1 for `[fmt.cross_refs] enabled = false`, which
+/// has no version 2 spelling (§FS-check.checks.config-version-1).
+const CONFIG_VERSION_1: &str = "config-version-1";
 const MIXED: &str = "a citation of a name under a number is now checked";
 const CONFIG: &str = "grund_config_version = 1\n\
     [reference]\nstrict = true\nrequire_grounding = false\n\
@@ -36,9 +39,17 @@ impl Repo {
         fs::write(path, text).unwrap();
     }
 
+    /// A check ignores the version 1 caution: `[fmt.cross_refs] enabled = false`
+    /// has no version 2 spelling, and the caution is not these cases' subject.
     fn run(&self, args: &[&str]) -> Output {
+        let caution: &[&str] = if args.first() == Some(&"check") {
+            &["--ignore", CONFIG_VERSION_1]
+        } else {
+            &[]
+        };
         Command::new(env!("CARGO_BIN_EXE_grund"))
             .args(args)
+            .args(caution)
             .current_dir(&self.0)
             .output()
             .unwrap()
@@ -102,6 +113,7 @@ fn unresolved_mixed_text_has_exact_ordinary_messages_and_channels() {
         .join("../../tests/e2e/cases/check-number-name-citation-missing/repo");
     let output = Command::new(env!("CARGO_BIN_EXE_grund"))
         .args(["check", root.to_str().unwrap()])
+        .args(["--ignore", CONFIG_VERSION_1])
         .output()
         .unwrap();
     assert!(output.stderr.is_empty(), "{output:?}");
@@ -132,6 +144,7 @@ fn unresolved_mixed_ndjson_keeps_codes_sites_and_filters() {
     ] {
         let output = Command::new(env!("CARGO_BIN_EXE_grund"))
             .args(["check", root.to_str().unwrap(), "--format", "json"])
+            .args(["--ignore", CONFIG_VERSION_1])
             .args(flags)
             .output()
             .unwrap();
