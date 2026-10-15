@@ -30,6 +30,10 @@ use case_runner::{
     golden_form_violations, run_case,
 };
 
+/// A clean run's line on a version 1 config (§FS-check.checks.config-version-1).
+const VERSION_1_CAUTION: &str =
+    "warning: grund.toml is version 1; migrate it with grund config migrate --to 2\n";
+
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
@@ -225,7 +229,7 @@ fn refused_queries_recommend_check_only_for_existing_paths() {
         assert_eq!(String::from_utf8_lossy(&output.stderr), stderr, "{args:?}");
     };
     // §FS-check.checks.config-version-1: the fixture is on version 1.
-    let caution = "warning: grund.toml is version 1; migrate it with grund config migrate --to 2\n";
+    let caution = VERSION_1_CAUTION;
     assert_output(&["check", "."], 0, "", caution);
     assert_output(
         &["FS-widget", "--brief"],
@@ -550,9 +554,10 @@ fn the_values_example_shows_what_it_is_the_example_of() {
         "{prose}"
     );
 
-    // And the caught mismatch, which is the whole of the example's output.
+    // And the caught mismatch, the whole of the example's output beside the
+    // version 1 caution its config earns (§FS-check.checks.config-version-1).
     assert_eq!(read("expected.exit").trim(), "1");
-    assert_eq!(read("expected.stderr"), "\n");
+    assert_eq!(read("expected.stderr"), VERSION_1_CAUTION);
     assert_eq!(
         read("expected.stdout"),
         "docs/solver.md:7: error: value mismatch for CONST-time-step.1: \
