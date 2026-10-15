@@ -109,8 +109,9 @@ fn config_version_1_warning(config: &Config, display: Display<'_>) -> Option<Dia
 /// The findings a loaded config carries on its own — the redundant discovery
 /// pair (§FS-check.4.3), the deprecated `.agents/` location (§FS-check.4.11)
 /// and a file read as version 1 (§FS-check.checks.config-version-1), in that
-/// order (§FS-check.checks.config-version-1.1). All are known from the file the
-/// run read rather than from the walk, which is why they arrive together.
+/// order, which the report then sorts (§FS-check.checks.config-version-1.1). All
+/// are known from the file the run read rather than from the walk, which is why
+/// they arrive together.
 ///
 /// One list rather than a call each at each site: `grund check` names them per
 /// project and `grund config validate` and `grund config show` name them for
