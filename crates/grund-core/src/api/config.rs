@@ -71,7 +71,7 @@ pub fn validate_config(path: &Path) -> Result<Config> {
 /// `grund config validate` and `grund config show` print the same sentences
 /// `grund check` does without depending on the checker's report type.
 pub fn config_warnings(config: &Config) -> Vec<String> {
-    config_diagnostics(config)
+    config_diagnostics(config, config.display())
         .map(|diagnostic| diagnostic.message)
         .collect()
 }

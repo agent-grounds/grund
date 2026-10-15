@@ -77,6 +77,21 @@ pub(crate) fn home_form_of(config_file: &Path) -> Option<PathBuf> {
     Some(config_file.parent()?.parent()?.join(home))
 }
 
+/// The config file `root` read, given `read`, the spelling discovery recorded:
+/// the name it ends in, joined to the root (§FS-config.1). Discovery spells
+/// `read` before `[output] relative_paths` is known, so a message that names the
+/// file re-spells this path the way the report spells every other
+/// (§FS-config.3.6.1).
+pub(crate) fn config_file_under(root: &Path, read: &Path) -> PathBuf {
+    let name = if home_form_of(read).is_some() {
+        CONFIG_NAMES[1]
+    } else {
+        CONFIG_NAMES[0]
+    };
+    name.iter()
+        .fold(root.to_path_buf(), |path, part| path.join(part))
+}
+
 /// The directory a path argument starts discovery from: a file's parent
 /// directory, and the working directory for a file named without a directory
 /// part, whose `parent()` is the empty path rather than `None` (§FS-config.1.4);

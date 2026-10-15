@@ -26,7 +26,7 @@ fn project(name: &str, file: &str, config: Option<&str>) -> PathBuf {
 /// The `config-version-1` findings the config at `root` carries.
 fn cautions(root: &Path) -> Vec<Diagnostic> {
     let config = load_config(root).expect("the config loads");
-    config_diagnostics(&config)
+    config_diagnostics(&config, config.display())
         .filter(|d| d.code == "config-version-1")
         .collect()
 }
@@ -82,7 +82,7 @@ fn an_agents_config_names_the_project_root_after_the_location_warning() {
         Some("grund_config_version = 1\n"),
     );
     let config = load_config(&root).expect("the config loads");
-    let found: Vec<_> = config_diagnostics(&config)
+    let found: Vec<_> = config_diagnostics(&config, config.display())
         .map(|d| (d.code, d.message))
         .collect();
     assert_eq!(found.len(), 2);

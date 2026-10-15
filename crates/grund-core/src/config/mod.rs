@@ -121,7 +121,8 @@ pub use slots::{Content, Handle, Slot};
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
 pub(crate) use discovery::{
-    config_at, config_file_in, discover_config, discovery_start_dir, home_form_of, pending_config,
+    config_at, config_file_in, config_file_under, discover_config, discovery_start_dir,
+    home_form_of, pending_config,
 };
 #[cfg(test)]
 pub(crate) use discovery::{load_config, load_config_at};
