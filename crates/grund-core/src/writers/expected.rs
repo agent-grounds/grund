@@ -12,7 +12,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use crate::checker::{configured_rule_sentences, workspace_vocabulary};
-use crate::config::{Config, fmt_excluded};
+use crate::config::Config;
 use crate::grammar::parse_id_arg;
 use crate::model::{Catalog, Expected, ExpectedEntrypoint, ScopedExpectation};
 use crate::resolver::{
@@ -92,7 +92,6 @@ pub(crate) fn expected(
             findings,
             &SettledHeadings::default(),
         ),
-        fmt_excluded: noted_fmt_excluded(findings, config),
         non_units,
     }
 }
@@ -155,25 +154,6 @@ fn scoped_entrypoints(
         .collect();
     files.retain(|path| !claimed.contains(path));
     files
-}
-
-/// The files holding an unclosed-wrapper note that `[fmt] exclude` names
-/// (§FS-citations.checks.unclosed-wrapper, §FS-fmt.2.5.1). Patterns were
-/// validated at load, so a matcher that fails to build excludes nothing here
-/// and `fmt` refuses to run at all.
-fn noted_fmt_excluded(findings: &Catalog, config: &Config) -> BTreeSet<PathBuf> {
-    if findings.unclosed_wrapper_notes.is_empty() {
-        return BTreeSet::new();
-    }
-    let Ok(excluded) = fmt_excluded(config) else {
-        return BTreeSet::new();
-    };
-    findings
-        .unclosed_wrapper_notes
-        .iter()
-        .filter(|note| excluded.contains(&note.file))
-        .map(|note| note.file.clone())
-        .collect()
 }
 
 /// The managed-block version this config asks for without scoped guidance:

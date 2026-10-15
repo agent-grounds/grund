@@ -81,7 +81,6 @@ mod section_record;
 mod slices;
 mod stub_homes;
 mod tree;
-mod unclosed_wrapper;
 mod units;
 mod unmarked_headings;
 mod value_binding_attempts;

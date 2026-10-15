@@ -90,16 +90,6 @@ owners = [
   "crates/grund-core/src/scanner/slices.rs",
 ]
 
-# Callers of the one wrapper test; #655, the 0.19.0 wrapper, leaves them citing
-# what they write and read.
-[[family.migration]]
-file = "crates/grund-core/src/checker/index.rs"
-step = "#655"
-
-[[family.migration]]
-file = "crates/grund-core/src/writers/fmt_links.rs"
-step = "#655"
-
 [[family]]
 name = "stubs"
 fact = "which declarations an ID has through a stub"

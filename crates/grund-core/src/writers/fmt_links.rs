@@ -31,7 +31,7 @@ use crate::scanner::{
 };
 
 /// Wrap each `§<ID>[.<section>]` citation on this Markdown line as `[§<ID>…](url)`
-/// — the `--cross-refs` rewrite (§FS-fmt.6.2): re-derive an existing wrapper's URL,
+/// — the `--cross-refs` rewrite (§FS-fmt.6.3): re-derive an existing wrapper's URL,
 /// skip citations in inline code or a link destination (§FS-fmt.6.4), and emit
 /// nothing when the target does not resolve (§FS-fmt.6.4).
 ///
@@ -125,19 +125,13 @@ pub(super) fn wrap_markdown_links_with_targets(
         };
         let marked_end = citation.token_end;
         let marker_start = citation.marker_start;
-        // §FS-citations.wrap.recognized: a closed wrap is re-derived up to its first
-        // `)` until 0.19.0; one that never closes before a later `)` is the
-        // author's bytes and is left as written; one with no `)` is wrapped fresh.
+        // §FS-citations.wrap.recognized: a wrap's whole destination is re-derived,
+        // to the `)` that balances its `(`; one that never closes is wrapped fresh.
         if let Some(wrap) = cross_ref_wrap(line, marker_start, marked_end) {
-            if let Some(close) = wrap.rederived_close() {
-                output.push_str(&line[cursor..wrap.url_start]);
-                output.push_str(&target);
-                cursor = close;
-                continue;
-            }
-            if wrap.unclosed_before_paren() {
-                continue;
-            }
+            output.push_str(&line[cursor..wrap.url_start]);
+            output.push_str(&target);
+            cursor = wrap.close;
+            continue;
         }
         output.push_str(&line[cursor..marker_start]);
         let citation = &line[marker_start..marked_end];
@@ -193,8 +187,8 @@ fn markdown_link_citations(
         if !line[..full.start].ends_with(&config.marker) {
             continue;
         }
-        // §FS-citations.zones.link-destination: inline code and every destination
-        // the line holds, read with the one extent every other pass reads.
+        // §FS-fmt.6.4: inline code and every destination the line holds, read
+        // with the one extent every other pass reads.
         if markdown_never_rewrite_context(line, marker_start) {
             continue;
         }
@@ -272,7 +266,7 @@ fn collect_workspace_markdown_link_citations(
         {
             continue;
         }
-        // §FS-workspace.8.5 / §FS-fmt.6.2: resolve a parsed shorthand through the
+        // §FS-workspace.8.5: resolve a parsed shorthand through the
         // target's policy/index before lookup; its slugless parse cannot name a home.
         // Full IDs have already won longest-prefix parsing and remain byte-identical.
         let parsed = match parsed_prefix {

@@ -37,7 +37,6 @@ use super::record::{CommentFences, HeadingLine, bare_block_line, declaration_eli
 use super::relative_sections::HeldHeadings;
 use super::section_record::record_section_heading;
 use super::tree::heading_level_for_line;
-use super::unclosed_wrapper::UnclosedWrappers;
 use super::units::record_file_structure;
 use super::unmarked_headings::assign_unmarked_heading_owners;
 use super::value_binding_split::scan_split_binding;
@@ -129,7 +128,6 @@ pub(super) fn scan_file_text(
     let mut markdown_blocks = MarkdownBlocks::default();
     let mut comment_fences = CommentFences::default();
     let mut py_docstring = PythonDocstringScanState::default();
-    let mut wrappers = UnclosedWrappers::new(&reading);
     let mut current: Option<Declaration> = None;
     // A marker enables value authority in any scanned document (§FS-values.1),
     // and a declared chapter is recognized in the same source doc-comments
@@ -166,7 +164,6 @@ pub(super) fn scan_file_text(
         if block.in_fence() {
             continue;
         }
-        wrappers.read(line);
         // §FS-check.1.1.5.1: a raw-text HTML block line is never a heading, so it
         // declares nothing and opens no section, but its citations stay live below.
         let heading_position = block.may_be_heading();
@@ -546,18 +543,13 @@ pub(super) fn scan_file_text(
             &qualified_marker_starts,
             findings,
         );
-        wrappers.note(&citation_line, citation_start, current.as_ref(), findings);
         scan_local_section_candidates(
             &citation_line,
             &claimed_markers,
             &qualified_marker_starts,
             findings,
         );
-        scan_legacy_citation_candidates(
-            &citation_line,
-            |marker_start| wrappers.opener(&citation_line, marker_start, current.as_ref()),
-            findings,
-        );
+        scan_legacy_citation_candidates(&citation_line, findings);
         scan_escaped_citations(&citation_line, findings);
         // Exact candidates stay in this pass. The checker activates them only
         // for whole or marked authority, keeping unmarked prose inert across

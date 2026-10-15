@@ -66,8 +66,6 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
     let render_config = context.render_config().clone();
     let completion = LspCompletionContext::from_workspace(&context);
     let report = editor_report(&context, &opts.path, report_scope.as_ref());
-    // §AR-system.2.13: every range's text is the run's, as the scan read it.
-    let sources = render_config.frame().sources();
     // LSP routes findings back to project snapshots by filesystem identity.
     // Preserve absolute paths here instead of reconstructing them from rendered
     // `../` paths under Windows verbatim roots (§FS-lsp.1.1, §FS-lsp.2.2.2).
@@ -82,6 +80,9 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
     let mut scan_errors = Vec::new();
 
     for project in &context.projects {
+        // §FS-lsp.1.3.4: a title's span is the heading the scan recorded, in the
+        // run's text as the scan read it (§AR-system.2.13).
+        let files = &project.findings.files;
         scanned_files.extend(
             project
                 .findings
@@ -102,7 +103,7 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                 .iter()
                 .map(|heading| {
                     let (column, text) =
-                        heading_span_parts(&heading.file, heading.line, &heading.path, sources);
+                        heading_span_parts(files, &heading.file, heading.line, &heading.path);
                     LspFindingRange {
                         code: "section-outside-declaration",
                         path: absolutize_path(&heading.file),
@@ -198,7 +199,7 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                 } else {
                     display_path(&project.config, &home.file)
                 };
-                let (column, text) = declaration_range_parts(home, &rendered, sources);
+                let (column, text) = declaration_range_parts(files, home, &rendered);
                 declarations.push(LspDeclaration {
                     project: context.workspace_loaded.then(|| project.alias.clone()),
                     path: absolutize_path(&home.file),
@@ -220,7 +221,7 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                     display_path(&project.config, &home.file)
                 };
                 for (section, info) in &home.sections {
-                    let (column, text) = section_range_parts(home, info, section, sources);
+                    let (column, text) = section_range_parts(files, home, info, section);
                     // §FS-lsp.1.2.4: `.1: Username` hovers as `format.1: Username`.
                     let hover_text = info
                         .relative
@@ -246,7 +247,7 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
             }) {
                 let target = lsp_target_for_stub(stub);
                 if let Some((target_path, target_line)) = target {
-                    let (column, text) = declaration_range_parts(stub, &rendered, sources);
+                    let (column, text) = declaration_range_parts(files, stub, &rendered);
                     stubs.push(LspStub {
                         project: context.workspace_loaded.then(|| project.alias.clone()),
                         path: absolutize_path(&stub.file),
