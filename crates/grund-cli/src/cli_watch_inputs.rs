@@ -199,8 +199,13 @@ impl WatchSubscriptions {
     }
 
     fn subscribe(&mut self, path: PathBuf, recursive: bool) -> Result<(), String> {
-        let path = std::fs::canonicalize(&path)
-            .map_err(|err| format!("resolving watch for {}: {err}", path.display()))?;
+        let resolved = std::fs::canonicalize(&path).map_err(notify::Error::io_watch);
+        let Some(path) = self.present(resolved, |err| {
+            format!("resolving watch for {}: {err}", path.display())
+        })?
+        else {
+            return Ok(());
+        };
         if self.handles.iter().any(|(old, mode)| {
             (*mode && path.starts_with(old)) || (old == &path && !recursive)
         })
@@ -220,12 +225,37 @@ impl WatchSubscriptions {
         } else {
             notify::RecursiveMode::NonRecursive
         };
-        self.watcher
-            .watch(&path, mode)
-            .map_err(|err| format!("subscribing to {}: {err}", path.display()))?;
+        let subscribed = self.watcher.watch(&path, mode);
+        if self
+            .present(subscribed, |err| format!("subscribing to {}: {err}", path.display()))?
+            .is_none()
+        {
+            return Ok(());
+        }
         self.handles.insert(path.clone(), recursive);
         watch_observe!(WatchObservation::Subscribed(path, recursive));
         Ok(())
+    }
+
+    /// A coverage path deleted after the event or check that named it is a missing
+    /// input, not a failed subscription (§FS-check.6.1.4). Its nearest existing
+    /// parent anchor is part of the same input's coverage (§FS-check.6.1.3), so the
+    /// path is skipped (`None`) and a full rescan is forced to see its recreation.
+    /// The backend's own not-found answer is the evidence: re-checking existence
+    /// would race a recreation. Every other failure stays fatal (§FS-check.6.3.2).
+    fn present<T>(
+        &self,
+        result: notify::Result<T>,
+        failed: impl FnOnce(notify::Error) -> String,
+    ) -> Result<Option<T>, String> {
+        match result {
+            Ok(value) => Ok(Some(value)),
+            Err(err) if watch_path_vanished(&err) => {
+                self.lost.store(true, std::sync::atomic::Ordering::Release);
+                Ok(None)
+            }
+            Err(err) => Err(failed(err)),
+        }
     }
 
     fn relevant(&self, event: &notify::Event) -> bool {
@@ -249,8 +279,13 @@ impl WatchSubscriptions {
         let mut handles = BTreeMap::new();
         for input in &self.inputs {
             for (path, recursive) in Self::coverage(input) {
-                let physical = std::fs::canonicalize(&path)
-                    .map_err(|err| format!("resolving watch for {}: {err}", path.display()))?;
+                let resolved = std::fs::canonicalize(&path).map_err(notify::Error::io_watch);
+                let Some(physical) = self.present(resolved, |err| {
+                    format!("resolving watch for {}: {err}", path.display())
+                })?
+                else {
+                    continue;
+                };
                 handles
                     .entry(physical)
                     .and_modify(|old| *old |= recursive)
@@ -266,22 +301,34 @@ impl WatchSubscriptions {
     /// A backend can share handles even between recursive parents and children.
     /// Install the complete retained set before releasing its old owner instead
     /// of unwatching an alias or subtree still needed (§FS-check.6.1.1, §FS-check.6.1.4).
-    fn replace_coverage(&mut self, handles: BTreeMap<PathBuf, bool>) -> Result<(), String> {
+    fn replace_coverage(&mut self, mut handles: BTreeMap<PathBuf, bool>) -> Result<(), String> {
         let mut replacement = native_watch_backend(
             self.tx.clone(),
             self.lost.clone(),
             self.runtime_failure.clone(),
         )?;
+        let mut vanished = Vec::new();
         for (path, recursive) in &handles {
             let mode = if *recursive {
                 notify::RecursiveMode::Recursive
             } else {
                 notify::RecursiveMode::NonRecursive
             };
-            replacement
-                .watch(path, mode)
-                .map_err(|err| format!("recovering watch for {}: {err}", path.display()))?;
+            let subscribed = replacement.watch(path, mode);
+            if self
+                .present(subscribed, |err| {
+                    format!("recovering watch for {}: {err}", path.display())
+                })?
+                .is_none()
+            {
+                // §FS-check.6.1.4: not owned, so the next reconciliation retries it.
+                vanished.push(path.clone());
+                continue;
+            }
             watch_observe!(WatchObservation::Subscribed(path.clone(), *recursive));
+        }
+        for path in vanished {
+            handles.remove(&path);
         }
         std::mem::replace(&mut self.watcher, replacement).close()?;
         for _path in self.handles.keys().filter(|path| !handles.contains_key(*path)) {
@@ -303,6 +350,16 @@ impl WatchSubscriptions {
             self.replace_coverage(wanted)?;
         }
         Ok(())
+    }
+}
+
+/// The backend or resolver found no path: it vanished before it could be covered
+/// (§FS-check.6.1.4). Watch limits, permissions and backend errors are not this.
+fn watch_path_vanished(err: &notify::Error) -> bool {
+    match &err.kind {
+        notify::ErrorKind::PathNotFound => true,
+        notify::ErrorKind::Io(err) => err.kind() == std::io::ErrorKind::NotFound,
+        _ => false,
     }
 }
 
