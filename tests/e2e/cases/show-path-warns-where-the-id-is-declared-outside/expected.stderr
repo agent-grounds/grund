@@ -1,3 +1,0 @@
-ID not found: FS-002-b
-hint: run `grund list` to see every declared ID, or `grund id <KIND> "<title>"` to propose a new one
-warning: FS-002-b is declared at specs/b/fs-b.md:1, outside specs/a; from grund 0.19.0 a path narrows what is reported, not what resolves

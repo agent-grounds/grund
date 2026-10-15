@@ -89,13 +89,9 @@ pub use embedding_node::{node_embedding_call, node_request};
 pub use fmt::{
     FmtChange, FmtOpts, FmtOutput, format_references, format_references_with_run_warnings,
 };
-pub use id::{
-    IdOpts, IdProposal, IdProposalOutcome, propose_id, propose_id_narrowed,
-    propose_id_with_run_warnings,
-};
+pub use id::{IdOpts, IdProposal, IdProposalOutcome, propose_id, propose_id_with_run_warnings};
 pub use list::{
-    ListEntry, ListOpts, ListOutput, ListSummary, ListValueRoot, list, list_narrowed,
-    list_with_run_warnings,
+    ListEntry, ListOpts, ListOutput, ListSummary, ListValueRoot, list, list_with_run_warnings,
 };
 pub use lsp_snapshot::{lsp_snapshot, lsp_snapshot_with_completion, lsp_snapshot_with_metadata};
 pub use refs::{
@@ -103,7 +99,7 @@ pub use refs::{
     RefsWithMetadata, refs, refs_outcome, refs_with_metadata,
 };
 pub use report::render_finding_sites_json;
-pub use show::{show, show_from_snapshot, show_narrowed, show_with_scope};
+pub use show::{show, show_from_snapshot, show_with_scope};
 
 // What another component's tests read (§AR-core-module-layout.1.3): the same run
 // record and entry point the public `check` API uses.

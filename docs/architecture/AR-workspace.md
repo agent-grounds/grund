@@ -151,7 +151,7 @@ must hold for *every* shape of config the loader can return:
   names the local project. A pinned `alias/KIND` or `*/KIND` target names
   other projects, whose kinds the loader of one config does not hold, so it is
   judged once, where the run's kind table is built: at workspace expansion,
-  or over the declared workspace in a narrowed run
+  or over the declared workspace in a narrowed `cover` run
   ([§AR-config.1.5](AR-config.md#15-run-and-compiled), [§FS-config.3.9.5.2](../functional-spec/FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds)), and never also at load.
 - `project_name` is *not* universal. [§FS-config.3](../functional-spec/FS-config.md#3-keys-version-1) makes it free-form metadata
   when the project is standalone, and only an alias when it participates in a
@@ -516,7 +516,8 @@ selection
 | `cover` renders a qualified `id` under the target project's grammar | `tests/e2e/cases/workspace-cover-json-target-grammar`; `a_qualified_id_renders_under_the_target_projects_config` (`crates/grund-core/src/api/tests_cover_workspace.rs`) |
 | `cover` under `include_root = false` drops the root's files with its catalog entry | `tests/e2e/cases/workspace-cover-include-root-false` |
 | `cover` fails a workspace whose members cannot be expanded | `tests/e2e/cases/workspace-cover-broken-members` |
-| `cover <dir>` narrows instead of aggregating, like `check <dir>` | `tests/e2e/cases/workspace-cover-narrowed-path`; `cover_under_a_narrowed_path_loads_no_workspace` (`crates/grund-core/src/api/tests_cover_workspace.rs`) |
+| `check <dir>` outside every member is the root run narrowed to the path; a member directory stays a member run | `tests/e2e/cases/workspace-check-dir-resolves-the-alias`; `tests/e2e/cases/workspace-check-dir-json-is-the-root-runs-narrowed`; `tests/e2e/cases/workspace-check-member-dir-alias-unchanged` |
+| `cover <dir>` narrows instead of aggregating | `tests/e2e/cases/workspace-cover-narrowed-path`; `cover_under_a_narrowed_path_loads_no_workspace` (`crates/grund-core/src/api/tests_cover_workspace.rs`) |
 | `[workspace] members` shape rejected at load     | `tests/e2e/cases/workspace-member-absolute-path`; `tests/e2e/cases/workspace-member-parent-segment`; `tests/e2e/cases/workspace-member-windows-drive`; `tests/e2e/cases/workspace-member-windows-path`; `tests/e2e/cases/workspace-member-multi-glob` |
 | Overlapping workspace member roots rejected      | `tests/e2e/cases/workspace-member-overlap` |
 | `[[workspace]]` array-table form rejected        | `tests/e2e/cases/workspace-section-as-array-table` |

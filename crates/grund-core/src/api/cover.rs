@@ -227,7 +227,7 @@ fn cover_rows(context: &WorkspaceContext) -> Vec<CoverRow<'_>> {
 ///
 /// The narrowable loader, not the plain one: `cover`'s `<path>` bounds the walk
 /// (§FS-cover.1), so a scope inside the workspace root stays one narrowed scan
-/// the way `grund check <dir>` does.
+/// (§AR-resolver.3.3), which `grund check <dir>` no longer is (§FS-check.1.3.6.1).
 ///
 /// §AR-scanner.2.4.2: `cover` publishes each site's enclosing declaration and
 /// section (§FS-cover.3.2), so it performs the citing-side post-pass — one of the

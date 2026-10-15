@@ -172,7 +172,7 @@ fn command_list(args: &[String]) -> ExitCode {
     }
 
     if let Some(units) = size_units {
-        let (_, listed, narrowing) = list_sizes_narrowed(ListSizeOpts {
+        let output = match list_sizes(ListSizeOpts {
             path,
             path_provided,
             kind_filter,
@@ -181,8 +181,8 @@ fn command_list(args: &[String]) -> ExitCode {
             selector,
             units,
             top,
-        });
-        let output = match listed {
+        }) {
+        
             Ok(output) => output,
             Err(err) => {
                 eprintln!("error: {err:#}");
@@ -201,13 +201,13 @@ fn command_list(args: &[String]) -> ExitCode {
         } else {
             render_list_size_text(&output.entries);
         }
-        return exit_after_sizes(&output.scan_errors, &narrowing);
+        return exit_after_scan_errors(&output.scan_errors);
     }
 
     // §FS-check.4.10.7, §FS-workspace.6.1.7: the run's warnings come
     // back beside the catalog, so a refused `--project` or `--kind` still prints
     // the cautions the workspace pass settled before it (§FS-distribution.3.1).
-    let (run_warnings, listed, narrowing) = list_narrowed(ListOpts {
+    let (run_warnings, listed) = list_with_run_warnings(ListOpts {
         path,
         path_provided,
         kind_filter,
@@ -238,5 +238,5 @@ fn command_list(args: &[String]) -> ExitCode {
         render_list_text(&output.entries);
     }
 
-    exit_after_listing(&output.scan_errors, &narrowing, &format, summary)
+    exit_after_scan_errors(&output.scan_errors)
 }

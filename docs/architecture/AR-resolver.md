@@ -151,19 +151,23 @@ so the per-file index needs no merge step and the alias attached to each entry
 is unambiguous.
 
 It reaches the loader through `load_narrowable_workspace_context`, which takes
-the workspace-aggregate arm only when `scope_is_config_root` — the same test
-`run_check` uses — and otherwise returns the one narrowed project
+the workspace-aggregate arm only when `scope_is_config_root` and otherwise
+returns the one narrowed project
 ([§FS-workspace.8.6](../functional-spec/FS-workspace.md#86-grund-cover)). Both
 arms build the single-project context from one helper, so "single project"
 cannot come to mean two things.
 
 ### 3.3 Two scopes, and which narrowness a narrow scope keeps
 
-For a query command a `<path>` selects a **project** and bounds no walk. For `grund check` it is the
-**report scope** — the set of files a finding may be about — while the **resolution scope** it reads
-stays the enclosing project's ordinary scope, `[scan] include` plus every walked kind home, union the path
-([§FS-scan.path.check](../functional-spec/FS-scan.md#pathcheck-check-reads-more-than-it-reports)). The run walks the resolution scope, runs every rule over the whole of it, and drops
-the diagnostics anchored outside the report scope.
+For `refs` a `<path>` selects a **project** and bounds no walk. For `check`, `show`, `list` and `id` it is
+the **report scope** — the set of files a finding or an entry may be about — while the **resolution scope**
+they read stays the enclosing project's ordinary scope, `[scan] include` plus every walked kind home, union
+the path ([§FS-scan.path](../functional-spec/FS-scan.md#path-what-a-path-argument-means), [§FS-scan.path.check](../functional-spec/FS-scan.md#pathcheck-check-reads-more-than-it-reports)). The four load through the one `Check` selection: the queries
+through `load_reported_workspace_context`, which prints only the entries the report scope holds, and
+`check`, which walks the resolution scope, runs every rule over the whole of it, and drops the diagnostics
+anchored outside the report scope. Below a workspace root and outside every member, `check <dir>` is the
+workspace run the root makes, its report narrowed by the same filter
+([§FS-scan.projects.narrowed](../functional-spec/FS-scan.md#projectsnarrowed-a-path-below-the-config-root-loads-what-a-run-from-it-would-see)).
 
 So "a scope narrower than the root has to stay narrow" is a statement about which **projects** a walk covers
 and which **files** are reported. It is not a statement about which declarations resolution reads: widening
