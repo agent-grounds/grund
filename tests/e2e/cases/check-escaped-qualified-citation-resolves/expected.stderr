@@ -1,1 +1,2 @@
-
+warning: api/grund.toml is version 1; migrate it with grund config migrate --to 2 api
+warning: grund.toml is version 1; migrate it with grund config migrate --to 2

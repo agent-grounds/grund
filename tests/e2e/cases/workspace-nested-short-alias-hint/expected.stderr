@@ -1,1 +1,4 @@
-
+warning: group/alpha/grund.toml is version 1; migrate it with grund config migrate --to 2 group/alpha
+warning: group/beta/grund.toml is version 1; migrate it with grund config migrate --to 2 group/beta
+warning: group/grund.toml is version 1; migrate it with grund config migrate --to 2 group
+warning: grund.toml is version 1; migrate it with grund config migrate --to 2

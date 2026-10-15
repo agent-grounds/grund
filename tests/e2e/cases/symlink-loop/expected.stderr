@@ -1,1 +1,2 @@
 error: docs/self: symlink loop: the target is the ancestor directory docs
+warning: grund.toml is version 1; migrate it with grund config migrate --to 2

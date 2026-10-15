@@ -1,1 +1,3 @@
 warning: group/grund.toml:17: no project scans `docs`, so its citations are never checked. Set include_root = true, or point another project's [scan] include at it.
+warning: group/alpha/grund.toml is version 1; migrate it with grund config migrate --to 2 group/alpha
+warning: grund.toml is version 1; migrate it with grund config migrate --to 2

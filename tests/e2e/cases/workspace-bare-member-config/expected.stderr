@@ -1,2 +1,5 @@
 warning: .agents/grund.toml is a deprecated config location — move it to grund.toml
+warning: .agents/grund.toml is version 1; migrate it with grund config migrate --to 2
+warning: packages/alpha/grund.toml is version 1; migrate it with grund config migrate --to 2 packages/alpha
 warning: packages/beta/.agents/grund.toml is a deprecated config location — move it to packages/beta/grund.toml
+warning: packages/beta/.agents/grund.toml is version 1; migrate it with grund config migrate --to 2 packages/beta

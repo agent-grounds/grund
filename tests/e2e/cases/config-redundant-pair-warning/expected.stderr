@@ -1,2 +1,3 @@
 warning: .agents/grund.toml is ignored — grund.toml takes precedence; delete one
+warning: grund.toml is version 1; migrate it with grund config migrate --to 2
 warning: nothing recognized — grund read 1 file and found no declaration and no citation in them. A declaration heading reads `# <KIND>-<NNN>-<slug>: <title>` and a citation `§<KIND>-<NNN>-<slug>`, under [id] format = "{kind}-{number}-{slug}" with <KIND> one of {GRUND, GOAL, FS, AR, DF, DA, RM}. Either nothing is declared yet, or the headings are written to a different shape than that.

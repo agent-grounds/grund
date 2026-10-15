@@ -1,1 +1,2 @@
 warning: grund.toml: [citations.FS] must-not names an unknown target kind `FS` in namespace `api`; this becomes an error in grund 0.19.0
+warning: grund.toml is version 1; migrate it with grund config migrate --to 2

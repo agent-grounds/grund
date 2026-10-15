@@ -1,1 +1,3 @@
-
+warning: grund.toml is version 1; migrate it with grund config migrate --to 2
+warning: member/grund.toml is version 1; migrate it with grund config migrate --to 2 member
+warning: workshop/grund.toml is version 1; migrate it with grund config migrate --to 2 workshop
