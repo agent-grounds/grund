@@ -193,7 +193,7 @@ pub(crate) fn adapt_workspace(
             // §FS-rules.5.1: a resolved section that is no rule unit counts for its nearest
             // named ancestor chapter, or else its declaration. It resolves where `check`
             // finds it, a stub's in its target, scanned or not (§AR-scanner.4.6).
-            let (target, newly_counted, mixed) = match citation.section.as_ref() {
+            let (target, mixed) = match citation.section.as_ref() {
                 Some(section) => {
                     if !section_resolves(target_findings, &citation.id, section) {
                         continue;
@@ -203,11 +203,10 @@ pub(crate) fn adapt_workspace(
                     (
                         nearest_chapter(&chapters, target_alias, &citation.id, section)
                             .unwrap_or(target_declaration),
-                        !is_rule_unit(section) && !mixed,
                         mixed,
                     )
                 }
-                None => (target_declaration, false, false),
+                None => (target_declaration, false),
             };
             // The source side resolves the same way, agreeing with `site_in`.
             let immediate = citation
@@ -241,7 +240,6 @@ pub(crate) fn adapt_workspace(
                         line: citation.line,
                         column: Some(citation.column),
                     },
-                    newly_counted,
                     lent,
                     mixed,
                 },

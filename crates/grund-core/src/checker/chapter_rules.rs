@@ -389,7 +389,7 @@ pub(crate) fn check_chapter_rules(
     let (mut errors, mut ramp_warnings) = evaluate(&parsed_rules, &precedence, &facts);
     route_stubbed_rules(&stubbed, &mut errors, &mut ramp_warnings);
     report.errors.extend(errors);
-    // §FS-rules.7.8 / §FS-errors.4.1: the single-project `grund-core` arm is the one
+    // §FS-rules.7.9 / §FS-errors.4.1: the single-project `grund-core` arm is the one
     // caller that does not sort warnings downstream, and the sort is idempotent over
     // the already-ordered channel every caller hands in, so it needs no guard.
     report.warnings.extend(ramp_warnings);

@@ -35,13 +35,9 @@ pub(crate) struct NodeMeta {
 pub(crate) struct SiteMeta {
     pub(crate) label: String,
     pub(crate) anchor: RuleAnchor,
-    /// The site counts only because its numbered-section target now resolves
-    /// to its nearest unit: side metadata the engine reads to ramp, never a
-    /// relation (§FS-rules.7.8). It goes with the ramp at 0.18.0.
-    pub(crate) newly_counted: bool,
     /// A citation a stub's target outside the walk lends its declaration
-    /// (§FS-declarations.stubs.target.5): read to ramp, like `newly_counted`, and
-    /// gone with the ramp at 0.19.0 (§FS-rules.7.11).
+    /// (§FS-declarations.stubs.target.5): side metadata the engine reads to ramp,
+    /// never a relation, and gone with the ramp at 0.19.0 (§FS-rules.7.11).
     pub(crate) lent: bool,
     /// A citation of a name under a number, which grund before 0.18.0 skipped:
     /// read to ramp, and gone with the ramp at 0.19.0 (§FS-rules.7.12).

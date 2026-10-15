@@ -39,14 +39,14 @@ mod tests_mixed_ramp;
 /// One level of evaluation: the channel a rule finding has always had at that
 /// level, and the ramp's warnings beside it.
 ///
-/// A finding that a newly counted numbered-section citation (§FS-rules.7.8), a
-/// target newly matched at the rule's own nested alias (§FS-rules.7.9), or what a
-/// stub's target lends (§FS-rules.7.11) alone produces is carried on the warnings
-/// channel rather than the errors channel,
-/// for the length of its ramp and no longer. It is a pair rather than a
-/// type so that the engine/checker crossing stays `Diagnostic` and nothing else
-/// (§AR-rules.5): when the ramp closes at `0.18.0` the second half goes away
-/// and the return collapses back to one `Vec`.
+/// A finding that a target newly matched at the rule's own nested alias
+/// (§FS-rules.7.9), what a stub's target lends (§FS-rules.7.11), or a citation of
+/// a name under a number (§FS-rules.7.12) alone produces is carried on the
+/// warnings channel rather than the errors channel, for the length of its ramp
+/// and no longer. It is a pair rather than a type so that the engine/checker
+/// crossing stays `Diagnostic` and nothing else (§AR-rules.5): when those ramps
+/// close at `0.19.0` the second half goes away and the return collapses back to
+/// one `Vec`.
 type LevelFindings = (Vec<Diagnostic>, Vec<Diagnostic>);
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -77,7 +77,7 @@ pub(crate) fn evaluate_suggestions(
     precedence: &[Direction],
     facts: &RuleFacts,
 ) -> Vec<Diagnostic> {
-    // §FS-rules.7.8: the recommended level owes no ramp, so its field stays empty.
+    // §FS-rules.7.9: the recommended level owes no ramp, so its field stays empty.
     evaluate_level(rules, precedence, facts, RuleLevel::Recommended, false).0
 }
 
@@ -272,8 +272,8 @@ fn evaluate_one(
                         } else {
                             ("discouraged-citation", "")
                         };
-                        // §FS-rules.7.8, §FS-rules.7.9, §FS-rules.7.11: a required site
-                        // counted, matched or lent only now warns.
+                        // §FS-rules.7.9, §FS-rules.7.11, §FS-rules.7.12: a required site
+                        // matched, lent or mixed only now warns.
                         let windows = Windows::at(
                             rule.level,
                             site_marks(
@@ -311,7 +311,7 @@ fn evaluate_one(
         RuleRelation::BeCitedBy => {
             for subject in subjects {
                 // §FS-rules.3.4: a numbered section of the subject's own body
-                // reaches it here, so its newly counted sites ramp (§FS-rules.7.8).
+                // reaches it here, an ordinary site since §FS-rules.7.8 landed.
                 // §FS-rules.7.9: a citing kind only the corrected match takes ramps too.
                 let sites = index
                     .citations_to(&subject)

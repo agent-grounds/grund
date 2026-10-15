@@ -1,12 +1,11 @@
-//! The release windows in which a finding that only a newly counted
-//! numbered-section citation (§FS-rules.7.8), or only a target newly matched at
-//! the rule's own nested alias (§FS-rules.7.9), produces warns rather than
-//! fails. Those two, the site mark they read and the second field of
-//! `evaluate` go away at 0.18.0; the window of a rule declared through a stub
-//! whose target the scan does not read (§FS-rules.7.10), and of a citation or
-//! chapter such a target lends (§FS-rules.7.11), go at 0.19.0, and so does the
-//! window of a citation of a name under a number (§FS-rules.7.12,
-//! §FS-citations.checks.mixed-path).
+//! The release windows in which a finding that only a target newly matched at
+//! the rule's own nested alias (§FS-rules.7.9), a rule declared through a stub
+//! whose target the scan does not read (§FS-rules.7.10), a citation or chapter
+//! such a target lends (§FS-rules.7.11), or a citation of a name under a number
+//! (§FS-rules.7.12, §FS-citations.checks.mixed-path) produces warns rather than
+//! fails. All four, the site marks they read and the second field of `evaluate`
+//! go away at 0.19.0. A numbered-section citation counts as any other site since
+//! §FS-rules.7.8 landed, so it marks nothing here.
 
 use super::super::facts::{NodeKey, RuleFacts, SiteKey};
 use super::super::{Cardinality, RuleLevel, RuleTargets};
@@ -16,11 +15,9 @@ use once_cell::sync::Lazy;
 use std::collections::BTreeSet;
 
 /// The pending clause of §FS-distribution.4.2.3's closed vocabulary, after the
-/// error's message unchanged, so the release guard reads the promise (§FS-rules.7.8).
-const RAMP_CLAUSE: &str = "; a citation to a numbered section now counts, and this warning becomes an error in grund 0.18.0";
-
-/// The same pending clause for the corrected pinned-target match (§FS-rules.7.9).
-const MATCH_CLAUSE: &str = "; a target pinned at the rule's own nested alias path now matches, and this warning becomes an error in grund 0.18.0";
+/// error's message unchanged, so the release guard reads the promise: the one for
+/// the corrected pinned-target match (§FS-rules.7.9).
+const MATCH_CLAUSE: &str = "; a target pinned at the rule's own nested alias path now matches, and this warning becomes an error in grund 0.19.0";
 
 /// The same pending clause for a rule declared through a stub (§FS-rules.7.10).
 const STUB_CLAUSE: &str = "; a rule declared through a stub now applies, and this warning becomes an error in grund 0.19.0";
@@ -49,13 +46,11 @@ pub(crate) static MIXED_CLAUSE: Lazy<String> = Lazy::new(|| {
 /// at [`MIXED_PATH_FLIP`] (§FS-section-lock.checks.unrecorded-section-citation).
 pub(crate) const UNRECORDED_MIXED_CLAUSE: &str = "; grund 0.17 skipped a citation of a name under a number, and 0.18.0 records it in the section lock";
 
-/// What one counted fact is new by: a numbered section newly counted
-/// (§FS-rules.7.8), a target newly matched (§FS-rules.7.9), a site or chapter a
-/// stub's target lends (§FS-rules.7.11), or a citation of a name under a number
-/// (§FS-rules.7.12).
+/// What one counted fact is new by: a target newly matched (§FS-rules.7.9), a
+/// site or chapter a stub's target lends (§FS-rules.7.11), or a citation of a name
+/// under a number (§FS-rules.7.12).
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub(super) struct Marks {
-    pub(super) counted: bool,
     pub(super) matched: bool,
     pub(super) lent: bool,
     pub(super) mixed: bool,
@@ -66,19 +61,17 @@ pub(super) struct Marks {
 /// §FS-rules.7.12).
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub(super) struct Windows {
-    pub(super) counted: bool,
     pub(super) matched: bool,
     pub(super) lent: bool,
     pub(super) mixed: bool,
 }
 
 impl Windows {
-    /// Only a required-level finding owes a ramp (§FS-rules.7.8, §FS-rules.7.9,
-    /// §FS-rules.7.11, §FS-rules.7.12).
+    /// Only a required-level finding owes a ramp (§FS-rules.7.9, §FS-rules.7.11,
+    /// §FS-rules.7.12).
     pub(super) fn at(level: RuleLevel, marks: Marks) -> Self {
         if level == RuleLevel::Required {
             Self {
-                counted: marks.counted,
                 matched: marks.matched,
                 lent: marks.lent,
                 mixed: marks.mixed,
@@ -92,7 +85,8 @@ impl Windows {
     /// ramped; one that fails without them stays an error. It names a window when
     /// dropping that window's sites alone lets the count hold, and every window
     /// with a marked site when none alone does, since then each change produces it
-    /// by itself (§FS-rules.7.8, §FS-rules.7.9, §FS-rules.7.11, §FS-rules.7.12).
+    /// by itself (§FS-rules.7.9, §FS-rules.7.11, §FS-rules.7.12). A numbered-section
+    /// site is an ordinary site, so a count it alone breaks is an error (§FS-rules.7.8).
     pub(super) fn of_count(
         level: RuleLevel,
         cardinality: Cardinality,
@@ -103,12 +97,11 @@ impl Windows {
             cardinality.contains(sites.iter().filter(|site| !marked(site)).count())
         };
         if level != RuleLevel::Required
-            || !holds_without(&|site| site.counted || site.matched || site.lent || site.mixed)
+            || !holds_without(&|site| site.matched || site.lent || site.mixed)
         {
             return Self::default();
         }
         let alone = Self {
-            counted: holds_without(&|site| site.counted),
             matched: holds_without(&|site| site.matched),
             lent: holds_without(&|site| site.lent),
             mixed: holds_without(&|site| site.mixed),
@@ -117,7 +110,6 @@ impl Windows {
             return alone;
         }
         Self {
-            counted: sites.iter().any(|site| site.counted),
             matched: sites.iter().any(|site| site.matched),
             lent: sites.iter().any(|site| site.lent),
             mixed: sites.iter().any(|site| site.mixed),
@@ -126,8 +118,8 @@ impl Windows {
 
     /// A per-target finding for a target only the corrected match takes into the
     /// universe exists only now, whatever its count, so it is always in
-    /// §FS-rules.7.9's window, and in §FS-rules.7.8's, §FS-rules.7.11's or
-    /// §FS-rules.7.12's only when its count holds without that window's sites.
+    /// §FS-rules.7.9's window, and in §FS-rules.7.11's or §FS-rules.7.12's only
+    /// when its count holds without that window's sites.
     pub(super) fn of_new_target(
         level: RuleLevel,
         cardinality: Cardinality,
@@ -138,7 +130,6 @@ impl Windows {
             cardinality.contains(sites.iter().filter(|site| !marked(site)).count())
         };
         let marks = Marks {
-            counted: holds_without(&|site| site.counted),
             matched: true,
             lent: holds_without(&|site| site.lent),
             mixed: holds_without(&|site| site.mixed),
@@ -156,16 +147,15 @@ impl Windows {
     }
 
     fn any(self) -> bool {
-        self.counted || self.matched || self.lent || self.mixed
+        self.matched || self.lent || self.mixed
     }
 }
 
-/// The marks of one site: newly counted, lent and mixed read off its facts, newly
-/// matched as the caller found it.
+/// The marks of one site: lent and mixed read off its facts, newly matched as the
+/// caller found it.
 pub(super) fn site_marks(facts: &RuleFacts, site: &SiteKey, matched: bool) -> Marks {
     let meta = facts.sites.get(site);
     Marks {
-        counted: meta.is_some_and(|meta| meta.newly_counted),
         matched,
         lent: meta.is_some_and(|meta| meta.lent),
         mixed: meta.is_some_and(|meta| meta.mixed),
@@ -184,7 +174,7 @@ pub(super) fn matched_before(targets: &RuleTargets, kind: &str, facts: &RuleFact
     let RuleTargets::Kinds { values, .. } = targets else {
         return false;
     };
-    // coordinate-lexer: the old first-`/` matcher, kept for the §FS-rules.7.9 ramp to 0.18.0
+    // coordinate-lexer: the old first-`/` matcher, kept for the §FS-rules.7.9 ramp to 0.19.0
     values.iter().any(|target| match target.split_once('/') {
         None => target == kind,
         Some(("*", target_kind)) => {
@@ -214,7 +204,7 @@ pub(super) fn nodes_matched_before(
 
 /// Pick the channel for one finding and word its message for it: a ramped
 /// finding keeps its code and its message, then names its error release
-/// (§FS-rules.7.8, §FS-rules.7.9, §FS-rules.7.11, §FS-rules.7.12).
+/// (§FS-rules.7.9, §FS-rules.7.11, §FS-rules.7.12).
 pub(super) fn route<'a>(
     windows: Windows,
     out: &'a mut Vec<Diagnostic>,
@@ -223,9 +213,6 @@ pub(super) fn route<'a>(
 ) -> (&'a mut Vec<Diagnostic>, String) {
     if !windows.any() {
         return (out, message);
-    }
-    if windows.counted {
-        message.push_str(RAMP_CLAUSE);
     }
     if windows.matched {
         message.push_str(MATCH_CLAUSE);
@@ -242,7 +229,7 @@ pub(super) fn route<'a>(
 /// §FS-rules.7.10: a required-level finding that only rules declared through a
 /// stub whose target the scan does not read produce — every rule its authority
 /// names is one of `stubbed` — moves from `errors` to `warnings`, and a finding
-/// already ramped by §FS-rules.7.8 or §FS-rules.7.9 keeps its clauses and gains
+/// already ramped by §FS-rules.7.9 keeps its clause and gains
 /// this one after them, and before §FS-rules.7.11's and §FS-rules.7.12's, in
 /// subsection order. A rule's
 /// own `invalid-rule` is about the rule, not by it, and stays an error as it is for
