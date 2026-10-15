@@ -1,12 +1,12 @@
 //! The `cites` relation's count over one subject (§FS-rules.5.1–5.3), with the
-//! ramp windows a count only newly matched or mixed sites break
-//! (§FS-rules.7.9, §FS-rules.7.12).
+//! ramp window a count only newly matched sites break (§FS-rules.7.9). Mixed
+//! sites are ordinary (§FS-rules.7.12).
 
 use super::super::facts::{NodeKey, RuleFacts};
 use super::super::{Cardinality, RuleLevel, RuleTargets, TargetMode};
 use super::authority::Authority;
 use super::index::FactIndex;
-use super::ramp::{Marks, Windows, nodes_matched_before, route, site_marks};
+use super::ramp::{Marks, Windows, nodes_matched_before, route};
 use super::selectors::{citation_matches_targets, label, target_nodes, target_wording};
 use super::{SemanticRule, push_node};
 use crate::model::Diagnostic;
@@ -30,24 +30,20 @@ pub(super) fn evaluate_cites(
     let before = nodes_matched_before(&rule.targets, facts, index);
     for subject in subjects {
         if *mode == TargetMode::PerTarget {
-            // Each owner's sites, marked mixed or not (§FS-rules.7.12).
-            let mut counts: BTreeMap<_, Vec<Marks>> = BTreeMap::new();
-            for (site, _, cited) in index.citations_in(subject) {
+            // Each owner's sites, mixed ones as ordinary ones (§FS-rules.7.12).
+            let mut counts: BTreeMap<_, usize> = BTreeMap::new();
+            for (_, _, cited) in index.citations_in(subject) {
                 if let Some(owner) = index.owner(cited) {
-                    counts
-                        .entry(owner)
-                        .or_default()
-                        .push(site_marks(facts, site, false));
+                    *counts.entry(owner).or_default() += 1;
                 }
             }
             for target in &targets {
-                let sites = counts.get(target).map(Vec::as_slice).unwrap_or_default();
-                let count = sites.len();
+                let count = counts.get(target).copied().unwrap_or_default();
                 if !rule.cardinality.contains(count) {
                     let windows = if before.contains(target) {
-                        Windows::of_count(rule.level, rule.cardinality, sites.iter().copied())
+                        Windows::default()
                     } else {
-                        Windows::of_new_target(rule.level, rule.cardinality, sites.iter().copied())
+                        Windows::of_new_target(rule.level)
                     };
                     let (sink, message) = route(
                         windows,
@@ -75,12 +71,8 @@ pub(super) fn evaluate_cites(
                 .citations_in(subject)
                 .iter()
                 .filter(|(_, _, target)| citation_matches_targets(target, &targets, index))
-                .map(|(site, _, target)| {
-                    site_marks(
-                        facts,
-                        site,
-                        !citation_matches_targets(target, &before, index),
-                    )
+                .map(|(_, _, target)| Marks {
+                    matched: !citation_matches_targets(target, &before, index),
                 })
                 .collect::<Vec<_>>();
             let count = sites.len();
@@ -114,8 +106,7 @@ pub(super) fn evaluate_cites(
                         rule.cardinality.wording()
                     )
                 };
-                // §FS-rules.7.9, §FS-rules.7.12: a count the newly matched or mixed
-                // sites alone break warns.
+                // §FS-rules.7.9: a count the newly matched sites alone break warns.
                 let windows = Windows::of_count(rule.level, rule.cardinality, sites);
                 let (sink, message) = route(windows, out, ramp, message);
                 push_node(sink, facts, subject, code, message, authority);

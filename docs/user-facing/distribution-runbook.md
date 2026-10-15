@@ -13,6 +13,22 @@ are published by `release.yml` as before, and nothing in this lane reaches it
 
 ## The candidate
 
+Before preparing a release, check the version against the checked-out tree:
+
+```bash
+python3 scripts/check_release_ramps.py <version>
+```
+
+The guard reads the single shared minimum publishable release from
+`scripts/release-floor.txt`, currently `0.19.0`, together with bounds named by
+diagnostic messages ([§FS-distribution.release-floor](../functional-spec/FS-distribution.md#release-floor-one-shared-minimum-publishable-release)). Rewriting a development manifest
+does not lower that floor. After this transition merges, a `0.18.x` patch can
+only be cut from a branch made before it. Independent warning windows that
+still promise a change at `0.19.0` can leave no publishable version: the floor
+requires at least `0.19.0`, while those promises require less than `0.19.0`.
+Land the remaining transitions before publication; every publication path
+runs this guard ([§FS-distribution.4.2.6](../functional-spec/FS-distribution.md#426-every-publication-path-runs-the-release-guard)).
+
 A candidate is a directory built from one commit at one version
 ([§FS-distribution-candidate.6.1](../functional-spec/FS-distribution-candidate.md#61-one-commit-produces-one-manifest)):
 

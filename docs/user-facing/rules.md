@@ -242,6 +242,17 @@ line in the target too. In 0.18.0 a finding only those citations and chapters
 produced was a warning; from 0.19.0 it is an ordinary error and fails the run.
 [§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged) [§FS-declarations.stubs.pairing.4](../functional-spec/FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target) [§FS-rules.7.11](../functional-spec/FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)
 
+From grund 0.19.0, a citation of a name under a number is ordinary for required
+rules too. A forbidden citation, or an outbound, per-target or inbound upper
+count that only such a site breaks, is an error. Mixed sites also count as
+ordinary when deciding whether another warning window applies. An
+independently applicable nested-alias window still warns with its own clause.
+Recommended findings remain opt-in suggestions; explicit `warn` and `warn-not`
+strengths remain warnings
+([§FS-rules.7.12](../functional-spec/FS-rules.md#712-a-finding-only-a-citation-of-a-name-under-a-number-raises-warns-until-0190)).
+Repair or remove the citation, adjust the constraint, or filter the finding's
+code with `--ignore`.
+
 The runnable [`examples/rules/`](../../examples/rules/) repository includes a
 passing and violated instance of all five families, shared-prefix coverage
 targets, both deduplication directions, both channels, and the strict refusal

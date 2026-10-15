@@ -49,7 +49,6 @@ fn facts() -> RuleFacts {
                     column: Some(3),
                     ..anchor(line)
                 },
-                mixed: false,
             },
         )
     };
@@ -280,7 +279,6 @@ fn facts_with_section_site() -> RuleFacts {
             SiteMeta {
                 label: "AR-b".into(),
                 anchor: anchor(line),
-                mixed: false,
             },
         );
     }

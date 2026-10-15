@@ -27,13 +27,11 @@ pub(crate) struct NodeMeta {
     pub(crate) label: String,
     pub(crate) anchor: RuleAnchor,
 }
+/// A site's display metadata. Mixed paths need no separate mark (§FS-rules.7.12).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct SiteMeta {
     pub(crate) label: String,
     pub(crate) anchor: RuleAnchor,
-    /// A citation of a name under a number, which grund before 0.18.0 skipped:
-    /// read to ramp, and gone with the ramp at 0.19.0 (§FS-rules.7.12).
-    pub(crate) mixed: bool,
 }
 
 /// Every declaration/chapter exists independently of citations and every

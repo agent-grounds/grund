@@ -7,7 +7,8 @@ change was made in. Both halves are claims about a version, and a release that
 disagrees with one publishes a message the binary it ships in is not.
 
 Given the version about to be cut, this reads the release each message names out
-of the tree's own message text and exits 1 when any of them disagrees.
+of the tree's own message text and the shared minimum publishable release
+(§FS-distribution.release-floor), and exits 1 when either disagrees.
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ from typing import Iterable, NamedTuple, Sequence
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+FLOOR_PATH = "scripts/release-floor.txt"
 
 # The message text: what a user is shown, and the goldens that pin those bytes.
 SOURCES = (("crates", "*.rs"), ("tests/e2e/cases", "expected.stdout"), ("tests/e2e/cases", "expected.stderr"))
@@ -105,9 +107,24 @@ def scan_tree(root: Path) -> list[Claim]:
     return claims
 
 
-def release_window(claims: Sequence[Claim]) -> tuple[str | None, str | None]:
-    """The releases this tree may be cut as: at or above the floor, below the ceiling."""
+def read_release_floor(root: Path) -> str | None:
+    """Read the single shared floor from the checked tree. §FS-distribution.release-floor"""
+    path = root / FLOOR_PATH
+    if not path.exists():
+        return None
+    lines = path.read_text(encoding="utf-8").splitlines()
+    if len(lines) != 1 or not RELEASE_RE.fullmatch(lines[0]):
+        raise ValueError(f"{FLOOR_PATH} must contain one release such as 0.19.0 on one line")
+    return lines[0]
+
+
+def release_window(
+    claims: Sequence[Claim], shared_floor: str | None = None,
+) -> tuple[str | None, str | None]:
+    """Combine floor and message bounds. §FS-distribution.release-floor"""
     landed = [claim.release for claim in claims if claim.direction == LANDED]
+    if shared_floor is not None:
+        landed.append(shared_floor)
     pending = [claim.release for claim in claims if claim.direction == PENDING]
     floor = max(landed, key=version) if landed else None
     ceiling = min(pending, key=version) if pending else None
@@ -121,12 +138,17 @@ def violations(claims: Sequence[Claim], release: str) -> tuple[list[Claim], list
     return behind, ahead
 
 
-def report(claims: Sequence[Claim], release: str) -> list[str]:
+def report(claims: Sequence[Claim], release: str, shared_floor: str | None = None) -> list[str]:
+    """Name every conflicting bound and the window left. §FS-distribution.4.2.5"""
     behind, ahead = violations(claims, release)
-    if not behind and not ahead:
+    below_floor = shared_floor is not None and version(release) < version(shared_floor)
+    if not behind and not ahead and not below_floor:
         return []
 
     lines = [f"error: this tree cannot be released as {release}"]
+    if shared_floor is not None:
+        lines.append("")
+        lines.append(f"  {FLOOR_PATH}:1: minimum publishable release is {shared_floor}.")
     if behind:
         lines.append("")
         lines.append("  these lines say a change has already been made in a later release,")
@@ -138,12 +160,13 @@ def report(claims: Sequence[Claim], release: str) -> list[str]:
         lines.append("  so cutting this version would break the promise rather than keep it:")
         lines.extend(f"    {claim.quoted()}" for claim in ahead)
 
-    floor, ceiling = release_window(claims)
+    floor, ceiling = release_window(claims, shared_floor)
     lines.append("")
     if floor and ceiling and version(floor) >= version(ceiling):
+        basis = "landed changes and its shared floor" if shared_floor else "the changes it has already made"
         lines.append(
-            f"  this tree can be cut as no release at all: at or above {floor} for the changes it "
-            f"has already made, and below {ceiling} for the ones it still only promises —"
+            f"  this tree can be cut as no release at all: at or above {floor} for {basis}, "
+            f"and below {ceiling} for the ones it still only promises —"
         )
         held = next(c for c in claims if c.direction == PENDING and c.release == ceiling)
         lines.append(f"    {held.quoted()}")
@@ -153,7 +176,10 @@ def report(claims: Sequence[Claim], release: str) -> list[str]:
         if ceiling:
             window += f" and below {ceiling}"
         lines.append(f"  this tree can be cut as {window}.")
-        lines.append("  land or revert the ramps above rather than moving the version.")
+        if shared_floor:
+            lines.append("  respect the shared floor and land or revert the ramps above rather than moving the version.")
+        else:
+            lines.append("  land or revert the ramps above rather than moving the version.")
     return lines
 
 
@@ -167,7 +193,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"error: release must look like 0.13.0, got '{args.release}'", file=sys.stderr)
         return 2
 
-    lines = report(scan_tree(args.root), args.release)
+    # §FS-distribution.release-floor: manifest rewrites cannot lower the tree's floor.
+    try:
+        shared_floor = read_release_floor(args.root)
+    except (OSError, ValueError) as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 2
+    lines = report(scan_tree(args.root), args.release, shared_floor)
     if lines:
         print("\n".join(lines), file=sys.stderr)
         return 1

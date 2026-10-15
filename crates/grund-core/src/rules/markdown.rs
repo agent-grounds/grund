@@ -4,7 +4,7 @@
 use super::RuleAnchor;
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
 use crate::grammar::{Grammar, render_id, section_display_name, unnamed_component};
-use crate::model::{Catalog, Id, name_under_number, paired_declarations, section_resolves};
+use crate::model::{Catalog, Id, paired_declarations, section_resolves};
 use std::collections::BTreeMap;
 
 /// What the adapter reads of one project, and nothing more: the rules
@@ -188,23 +188,18 @@ pub(crate) fn adapt_workspace(
             else {
                 continue;
             };
-            // §FS-rules.5.1: a resolved section that is no rule unit counts for its nearest
-            // named ancestor chapter, or else its declaration. It resolves where `check`
-            // finds it, a stub's in its target, scanned or not (§AR-scanner.4.6).
-            let (target, mixed) = match citation.section.as_ref() {
+            // §FS-rules.5.1, §FS-rules.7.12: each section counts for its nearest named ancestor
+            // chapter, or else its declaration, including mixed paths. A stub's sections
+            // resolve from its target, scanned or not (§AR-scanner.4.6).
+            let target = match citation.section.as_ref() {
                 Some(section) => {
                     if !section_resolves(target_findings, &citation.id, section) {
                         continue;
                     }
-                    // §FS-rules.7.12: skipped before 0.18.0, so new by its own window.
-                    let mixed = name_under_number(section);
-                    (
-                        nearest_chapter(&chapters, target_alias, &citation.id, section)
-                            .unwrap_or(target_declaration),
-                        mixed,
-                    )
+                    nearest_chapter(&chapters, target_alias, &citation.id, section)
+                        .unwrap_or(target_declaration)
                 }
-                None => (target_declaration, false),
+                None => target_declaration,
             };
             // The source side resolves the same way, agreeing with `site_in`.
             let immediate = citation
@@ -238,7 +233,6 @@ pub(crate) fn adapt_workspace(
                         line: citation.line,
                         column: Some(citation.column),
                     },
-                    mixed,
                 },
             );
         }

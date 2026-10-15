@@ -94,30 +94,18 @@ GitHub: [#639](https://github.com/agent-grounds/grund/issues/639).
 
 ## RM-mixed-path-citation-error: make a citation of a name under a number that resolves to nothing an error in 0.19.0
 
-In 0.18.0 a marked citation of a mixed path that resolves to nothing, and a rule
-or `[citations]` finding only such citations raise, warn and name `0.19.0`
-([§FS-citations.checks.mixed-path](functional-spec/FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190), [§FS-rules.7.12](functional-spec/FS-rules.md#712-a-finding-only-a-citation-of-a-name-under-a-number-raises-warns-until-0190),
-[§DF-number-name-sections.decision.citations](decisions/functional/DF-number-name-sections.md#decisioncitations-a-citation-that-was-skipped-is-now-checked)). This milestone is `0.19.0`, the
-release that message names.
+Implemented for grund 0.19.0: unresolved mixed citations and required rule or
+`[citations]` findings only they raise use ordinary errors, and unrecorded
+mixed addresses lose their historical suffix. The record is
+[§DF-mixed-path-citation-errors.release-note](decisions/functional/DF-mixed-path-citation-errors.md#release-note-release-note),
+together with [§FS-citations.checks.mixed-path](functional-spec/FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190)
+and [§FS-rules.7.12](functional-spec/FS-rules.md#712-a-finding-only-a-citation-of-a-name-under-a-number-raises-warns-until-0190).
+The shared floor prevents a release below 0.19.0
+([§FS-distribution.release-floor](functional-spec/FS-distribution.md#release-floor-one-shared-minimum-publishable-release)).
+The milestone address and heading remain for existing citations; its plan is
+complete.
 
 GitHub: [#710](https://github.com/agent-grounds/grund/issues/710), filed from [#662](https://github.com/agent-grounds/grund/issues/662).
-
-### 1. What
-
-The warnings become the ordinary `missing-section`, `dangling`, rule and
-`[citations]` errors, the release constant and its clause go, and so does the
-clause `unrecorded-section-citation` appends for a mixed address
-([§FS-section-lock.checks.unrecorded-section-citation](functional-spec/FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold)).
-
-### 2. Why now
-
-The clause's release is one constant that a unit test holds ahead of
-`CARGO_PKG_VERSION`, so the version bump that reaches `0.19.0` fails CI until
-this lands.
-
-### 3. Measurable
-
-The e2e cases that pin the warning exit `1` with the error and no clause.
 
 ## RM-distribution: cargo + npm + pypi from one engine
 

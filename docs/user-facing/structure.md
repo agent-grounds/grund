@@ -147,6 +147,13 @@ A heading inside a declaration body is a citable section. Its path is written in
 
 With named sections on, a name may also follow a number in a Markdown declaration body: `### 1.goals: Goals` under `## 1. Overview` declares `FS-login.1.goals` ([§FS-config.3.3.1](../functional-spec/FS-config.md#331-named-components)). Its address holds the number of the chapter above it, so renumbering that chapter moves it. A cited one is therefore recorded in the section lock described below, as a relative one is ([§FS-section-lock.holds.entry](../functional-spec/FS-section-lock.md#holdsentry-one-line-per-locked-address)).
 
+From grund 0.19.0, a marked citation of that address fails the check if its
+section or declaration is absent, just like any other broken reference. The
+0.18.0 warning window has ended ([§FS-citations.checks.mixed-path](../functional-spec/FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190)).
+After adding a resolving citation, run `grund fmt --write` and commit the lock;
+an unrecorded mixed address still produces an immediate
+`unrecorded-section-citation` error ([§FS-section-lock.checks.unrecorded-section-citation](../functional-spec/FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold)).
+
 A deep path repeats its parent in every heading below it. A **relative heading** writes only the component it adds: a leading `.`, the component, and the same title syntax as the complete form ([§FS-declarations.section.relative](../functional-spec/FS-declarations.md#sectionrelative-a-heading-may-write-only-the-component-it-adds)):
 
 ```markdown
