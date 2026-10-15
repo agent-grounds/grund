@@ -48,7 +48,10 @@ fn assert_scaffold_shape(root: &Path, shape: &str) {
         ("docs/goals.md", "# GOAL-{shape}: …"),
         ("requirements.md", "## FS-{shape}: …"),
         ("docs/architecture/README.md", "`AR-{shape}` ID"),
-        ("docs/architecture/README.md", "`\u{a7}AR-{shape}.<section>`"),
+        (
+            "docs/architecture/README.md",
+            "`\u{a7}AR-{shape}.<section>`",
+        ),
         (
             "docs/architecture/README.md",
             "`# AR-{shape}: [<path>](<path>)`",
