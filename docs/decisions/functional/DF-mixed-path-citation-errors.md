@@ -1,7 +1,8 @@
 # DF-mixed-path-citation-errors: Mixed citation findings use ordinary errors in 0.19.0
 
-**Status:** Accepted
 **Date:** 2026-10-15
+
+## status: Accepted
 
 ## context: Context
 
