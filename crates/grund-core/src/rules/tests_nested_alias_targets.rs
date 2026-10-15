@@ -50,7 +50,6 @@ fn facts() -> RuleFacts {
                     column: Some(3),
                     ..anchor(line)
                 },
-                newly_counted: false,
                 lent: false,
                 mixed: false,
             },
@@ -273,7 +272,7 @@ fn facts_with_uncited_own_target() -> RuleFacts {
 /// section `<§>AR-b.1`, a site counted as any other since §FS-rules.7.8 closed.
 fn facts_with_section_site() -> RuleFacts {
     let mut facts = facts();
-    for (key, line, newly_counted) in [("again", 5, false), ("section", 6, true)] {
+    for (key, line) in [("again", 5), ("section", 6)] {
         let site = SiteKey(key.into());
         facts
             .cites
@@ -284,7 +283,6 @@ fn facts_with_section_site() -> RuleFacts {
             SiteMeta {
                 label: "AR-b".into(),
                 anchor: anchor(line),
-                newly_counted,
                 lent: false,
                 mixed: false,
             },

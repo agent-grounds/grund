@@ -18,7 +18,6 @@ const AT_MOST_ONE: Cardinality = Cardinality {
 };
 
 const PLAIN: Marks = Marks {
-    counted: false,
     matched: false,
     lent: false,
     mixed: false,

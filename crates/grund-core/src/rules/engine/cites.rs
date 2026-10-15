@@ -1,6 +1,6 @@
 //! The `cites` relation's count over one subject (§FS-rules.5.1–5.3), with the
-//! ramp windows a count only newly counted, newly matched or lent sites break
-//! (§FS-rules.7.8, §FS-rules.7.9, §FS-rules.7.11).
+//! ramp windows a count only newly matched, lent or mixed sites break
+//! (§FS-rules.7.9, §FS-rules.7.11, §FS-rules.7.12).
 
 use super::super::facts::{NodeKey, RuleFacts};
 use super::super::{Cardinality, RuleLevel, RuleTargets, TargetMode};
@@ -30,8 +30,8 @@ pub(super) fn evaluate_cites(
     let before = nodes_matched_before(&rule.targets, facts, index);
     for subject in subjects {
         if *mode == TargetMode::PerTarget {
-            // Each owner's sites, marked newly counted and lent or not (§FS-rules.7.8,
-            // §FS-rules.7.11).
+            // Each owner's sites, marked lent and mixed or not (§FS-rules.7.11,
+            // §FS-rules.7.12).
             let mut counts: BTreeMap<_, Vec<Marks>> = BTreeMap::new();
             for (site, _, cited) in index.citations_in(subject) {
                 if let Some(owner) = index.owner(cited) {
@@ -116,8 +116,8 @@ pub(super) fn evaluate_cites(
                         rule.cardinality.wording()
                     )
                 };
-                // §FS-rules.7.8, §FS-rules.7.9, §FS-rules.7.11: a count the newly
-                // counted, newly matched or lent sites alone break warns.
+                // §FS-rules.7.9, §FS-rules.7.11, §FS-rules.7.12: a count the newly
+                // matched, lent or mixed sites alone break warns.
                 let windows = Windows::of_count(rule.level, rule.cardinality, sites)
                     .of_subject(rule.level, node_lent(facts, subject));
                 let (sink, message) = route(windows, out, ramp, message);

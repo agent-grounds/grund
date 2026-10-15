@@ -37,7 +37,7 @@ fn facts() -> RuleFacts {
             },
         )
     };
-    let site = |key: &str, line, newly_counted| {
+    let site = |key: &str, line| {
         (
             SiteKey(key.into()),
             SiteMeta {
@@ -46,7 +46,6 @@ fn facts() -> RuleFacts {
                     column: Some(3),
                     ..anchor(line)
                 },
-                newly_counted,
                 lent: false,
                 mixed: false,
             },
@@ -78,7 +77,7 @@ fn facts() -> RuleFacts {
             .map(|key| (SiteKey(key.into()), NodeKey("bench".into())))
             .into(),
         nodes: BTreeMap::from([node("bench", "BENCH-a", 1), node("goal", "GOAL-a", 20)]),
-        sites: BTreeMap::from([site("old", 7, false), site("new", 8, true)]),
+        sites: BTreeMap::from([site("old", 7), site("new", 8)]),
     }
 }
 
