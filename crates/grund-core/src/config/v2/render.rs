@@ -202,7 +202,8 @@ impl Project {
 
     /// §FS-config.4.2.4: the names of tables keyed by a row name, in the order
     /// the file writes its `[schema.kinds]` rows, then each name that is no row
-    /// in `written` order, then any left over, in name order.
+    /// in `written` order, then any left over, in name order. `config migrate`'s
+    /// candidate prints in this order too (§FS-config-migrate.2.1).
     fn row_order<'a>(
         &'a self,
         names: impl Iterator<Item = &'a str>,

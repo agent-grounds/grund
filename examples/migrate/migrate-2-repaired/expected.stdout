@@ -64,11 +64,11 @@ must = ["GOAL"]
 trigger = "$$"
 rules = "root"
 
-[presentation.kinds.FS]
-title = "What: behavior, requirements, and constraints"
-
 [presentation.kinds.GOAL]
 title = "Where: project direction and outcomes"
+
+[presentation.kinds.FS]
+title = "What: behavior, requirements, and constraints"
 
 [presentation.fmt]
 anchors = "github"
