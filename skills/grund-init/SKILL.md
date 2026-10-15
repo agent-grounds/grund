@@ -524,6 +524,8 @@ When multiple language examples apply, merge them conservatively: union the real
 
 To move an existing version-1 `grund.toml` to version 2, never hand-translate it: run `grund config migrate --to 2` without `--write` first, which previews the candidate on stdout and the report on stderr and writes nothing; make each refusal's repair as a version-1 edit, checked with `grund check` and committed on its own, and preview again; then add `--write`, and add `--drop-comments` only after reading the comments the preview lists, because it drops exactly those ([migrating guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/migrating.md)).
 
+When a run prints `grund.toml is version 1; migrate it with grund config migrate --to 2`, preview that command first, then apply it with `--write` only once the preview shows no `differs:`; do not silence the warning with `--ignore config-version-1`.
+
 ## Splitting off a member
 
 Split off a member when an app, package, service, or subproject needs to be
