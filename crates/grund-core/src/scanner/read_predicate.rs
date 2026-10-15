@@ -25,7 +25,7 @@ use ignore::{
 use super::exclude_globs::ExcludeGlobs;
 use super::walk::WalkDirFilter;
 use crate::config::{Frame, Schema, canonical_config_root};
-use crate::model::{ExcludingRule, format_path, is_hidden};
+use crate::model::{ExcludingRule, format_path, is_hidden, scanned_path_key};
 use crate::sources::{
     canonicalize_existing_prefix, path_exists, path_is_dir, path_is_entry, path_is_file,
     path_is_symlink, read_git_metadata,
@@ -114,19 +114,21 @@ pub(crate) fn excluding_rule(
     roots: &[PathBuf],
     path: &Path,
 ) -> Option<ExcludingRule> {
-    let file = canonicalize_existing_prefix(path);
-    let physical_root = canonical_config_root(frame.root());
-    if !file.starts_with(&physical_root) {
+    // §FS-declarations.stubs.target.3: filters and roots match the link spelling,
+    // as in §FS-scan.scope.links.names, never the physical target's directories.
+    let file = scanned_path_key(path);
+    let config_root = scanned_path_key(frame.root());
+    if !file.starts_with(&config_root) {
         return None;
     }
     let mut refusal = None;
     let globs = ExcludeGlobs::of(schema);
-    let roots = roots.iter().map(|root| canonicalize_existing_prefix(root));
-    for root in std::iter::once(physical_root.clone()).chain(roots) {
+    let roots = roots.iter().map(|root| scanned_path_key(root));
+    for root in std::iter::once(config_root.clone()).chain(roots) {
         let Ok(relative) = file.strip_prefix(&root) else {
             continue;
         };
-        let rule = excluding_rule_under(schema, globs.as_ref(), &physical_root, &root, relative)?;
+        let rule = excluding_rule_under(schema, globs.as_ref(), &config_root, &root, relative)?;
         refusal.get_or_insert(rule);
     }
     refusal
@@ -138,7 +140,7 @@ pub(crate) fn excluding_rule(
 fn excluding_rule_under(
     schema: &Schema,
     globs: Option<&ExcludeGlobs>,
-    physical_root: &Path,
+    config_root: &Path,
     root: &Path,
     relative: &Path,
 ) -> Option<ExcludingRule> {
@@ -154,8 +156,7 @@ fn excluding_rule_under(
         path.push(name);
         let is_dir = depth + 1 < names.len();
         // §FS-config-v2.schema.sources.exclude.stubs: a pattern, at a directory or the target.
-        if let Some(pattern) = globs.and_then(|globs| globs.excluding(physical_root, &path, is_dir))
-        {
+        if let Some(pattern) = globs.and_then(|globs| globs.excluding(config_root, &path, is_dir)) {
             return Some(ExcludingRule::Pattern(pattern.to_string()));
         }
         // §FS-declarations.stubs.target.3: a hidden directory alone is no refusal.
@@ -170,7 +171,7 @@ fn excluding_rule_under(
         {
             let file = ignored
                 .file
-                .strip_prefix(physical_root)
+                .strip_prefix(config_root)
                 .map_or_else(|_| format_path(&ignored.file), format_path);
             return Some(ExcludingRule::IgnoreFile {
                 file,
@@ -262,7 +263,7 @@ fn under_root(
 /// where it is not, the same files are
 /// matched against the name in the walker's order of precedence.
 pub(super) fn ignored(path: &Path, is_dir: bool) -> bool {
-    walker_ignores(path).unwrap_or_else(|| ignored_by_rules(path, is_dir).is_some())
+    walker_ignores(path, false).unwrap_or_else(|| ignored_by_rules(path, is_dir).is_some())
 }
 
 /// The ignore file and the line of it that drop `path`, for a reader that names the
@@ -270,11 +271,15 @@ pub(super) fn ignored(path: &Path, is_dir: bool) -> bool {
 /// kept only where the walker, asked of an entry on disk, drops it too.
 fn ignoring_rule(path: &Path, is_dir: bool) -> Option<IgnoredBy> {
     let rule = ignored_by_rules(path, is_dir)?;
-    (walker_ignores(path) != Some(false)).then_some(rule)
+    // §FS-scan.scope.links.names: a directory link faces directory ignore patterns
+    // when followed, just as it does in scannable_walker.
+    (walker_ignores(path, true) != Some(false)).then_some(rule)
 }
 
 /// The walker's own answer for an entry on disk, `None` where nothing is there.
-fn walker_ignores(path: &Path) -> Option<bool> {
+/// Stub eligibility follows links like the scan; the unresolved-link error probe
+/// instead asks about the link entry without trying to resolve it again.
+fn walker_ignores(path: &Path, follow_links: bool) -> Option<bool> {
     let Some(parent) = path.parent() else {
         return Some(false);
     };
@@ -282,7 +287,10 @@ fn walker_ignores(path: &Path) -> Option<bool> {
         return None;
     }
     let mut builder = WalkBuilder::new(parent);
-    builder.hidden(false).max_depth(Some(1)).follow_links(false);
+    builder
+        .hidden(false)
+        .max_depth(Some(1))
+        .follow_links(follow_links);
     Some(
         !builder
             .build()

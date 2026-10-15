@@ -121,3 +121,119 @@ fn an_excluded_target_lends_neither_records_nor_edges() {
     );
     assert!(sole.record.sections.is_empty());
 }
+
+/// §FS-declarations.stubs.target.5: an excluded or ignored directory alias
+/// cannot import records, sections, chapters or edges from its physical target.
+#[cfg(unix)]
+#[test]
+fn a_refused_alias_lends_neither_records_nor_edges() {
+    for ignore in [false, true] {
+        let root = test_root(&format!("stub_homes_refused_alias_{ignore}"));
+        let exclude = if ignore { "" } else { "exclude = [\"src\"]\n" };
+        write(&root.join("grund.toml"), &format!("{CONFIG}{exclude}"));
+        write(&root.join("docs/fs/x.md"), "# FS-x: [x](../../src/x.rs)\n");
+        write(&root.join("docs/goals/g.md"), "# GOAL-g: G\n\nThe goal.\n");
+        write(
+            &root.join("physical/x.rs"),
+            &TARGET.replace(
+                "pub fn x() {}",
+                "///\n/// ## 1. Detail\n///\n/// Chapter.\npub fn x() {}",
+            ),
+        );
+        std::os::unix::fs::symlink("physical", root.join("src")).unwrap();
+        if ignore {
+            write(&root.join(".ignore"), "src/\n");
+        }
+        let config = load_config(&root).unwrap();
+        let (catalog, errors) = scan_tree(&config, None, false).unwrap();
+        assert!(errors.is_empty());
+        assert!(catalog.lent_citations.is_empty());
+        assert_eq!(
+            catalog.edges().count(),
+            0,
+            "no outgoing edges from refused content"
+        );
+        assert!(
+            catalog
+                .files
+                .keys()
+                .all(|file| !file.ends_with("src/x.rs") && !file.ends_with("physical/x.rs"))
+        );
+        let declarations = catalog
+            .declarations
+            .values()
+            .find(|decls| decls[0].id.slug.as_deref() == Some("x"))
+            .unwrap();
+        let paired = crate::model::paired_declarations(declarations);
+        let sole = paired.sole().expect("only the refused stub remains");
+        assert!(sole.is_broken_stub());
+        assert!(sole.record.file.ends_with("docs/fs/x.md"));
+        assert!(sole.record.sections.is_empty());
+    }
+}
+
+/// §FS-declarations.stubs.target.3, §FS-declarations.stubs.target.5: a refused
+/// spelling cannot borrow the readable spelling's records or lend its edges,
+/// whether it is resolved before or after the readable one in the same run.
+#[cfg(unix)]
+#[test]
+fn mixed_aliases_keep_their_verdicts_and_lent_content_separate() {
+    for ignore in [false, true] {
+        for refused in ["x", "y"] {
+            let allowed = if refused == "x" { "y" } else { "x" };
+            let root = test_root(&format!("stub_homes_mixed_aliases_{ignore}_{refused}"));
+            let exclude = if ignore { "" } else { "exclude = [\"gen\"]\n" };
+            write(&root.join("grund.toml"), &format!("{CONFIG}{exclude}"));
+            write(&root.join("docs/goals/g.md"), "# GOAL-g: G\n\nThe goal.\n");
+            write(
+                &root.join("physical/x.rs"),
+                &TARGET.replace("pub fn", "///\n/// ## 1. Detail\n///\n/// Chapter.\npub fn"),
+            );
+            std::fs::create_dir_all(root.join("notes")).unwrap();
+            for alias in ["gen", "readable"] {
+                std::os::unix::fs::symlink("../physical", root.join("notes").join(alias)).unwrap();
+            }
+            if ignore {
+                write(&root.join(".ignore"), "notes/gen/\n");
+            }
+            for (id, alias) in [(refused, "gen"), (allowed, "readable")] {
+                write(
+                    &root.join(format!("docs/fs/{id}.md")),
+                    &format!("# FS-{id}: [{id}](../../notes/{alias}/x.rs)\n"),
+                );
+            }
+            let config = load_config(&root).unwrap();
+            let (catalog, errors) = scan_tree(&config, None, false).unwrap();
+            assert!(errors.is_empty());
+            assert_eq!(
+                catalog.lent_citations.len(),
+                1,
+                "only the readable ID lends an edge"
+            );
+            assert_eq!(
+                catalog.lent_citations[0]
+                    .enclosing_declaration
+                    .as_ref()
+                    .unwrap()
+                    .slug
+                    .as_deref(),
+                Some(allowed)
+            );
+            for (id, broken) in [(refused, true), (allowed, false)] {
+                let declarations = catalog
+                    .declarations
+                    .values()
+                    .find(|decls| decls[0].id.slug.as_deref() == Some(id))
+                    .unwrap();
+                let paired = crate::model::paired_declarations(declarations);
+                let sole = paired.sole().expect("each stub remains one declaration");
+                assert_eq!(sole.is_broken_stub(), broken);
+                assert_eq!(sole.record.sections.is_empty(), broken);
+                assert_eq!(
+                    sole.record.file.ends_with(format!("docs/fs/{id}.md")),
+                    broken
+                );
+            }
+        }
+    }
+}
