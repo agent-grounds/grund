@@ -4,6 +4,9 @@
 //! names its error release, one the rule produces without it stays an error
 //! (§FS-rules.7.9), and names only the windows its finding needs; a per-target
 //! finding for a target only the pin brings in is newly failing (§FS-rules.7.9).
+//! A numbered-section site counts as any other from 0.18.0 (§FS-rules.7.8): a
+//! finding that needs it and not the pin is an error, and one that needs the pin
+//! carries this window's clause alone.
 
 use super::engine::{evaluate, evaluate_suggestions};
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
@@ -14,7 +17,7 @@ use super::{
 use crate::model::Diagnostic;
 use std::collections::BTreeMap;
 
-const CLAUSE: &str = "; a target pinned at the rule's own nested alias path now matches, and this warning becomes an error in grund 0.18.0";
+const CLAUSE: &str = "; a target pinned at the rule's own nested alias path now matches, and this warning becomes an error in grund 0.19.0";
 
 fn anchor(line: usize) -> RuleAnchor {
     RuleAnchor {
@@ -236,7 +239,8 @@ fn a_recommended_prohibition_through_the_pin_is_an_ordinary_suggestion() {
     assert!(!suggestions[0].message.contains(CLAUSE));
 }
 
-const RAMP_CLAUSE: &str = "; a citation to a numbered section now counts, and this warning becomes an error in grund 0.18.0";
+/// The clause the closed counted-section window's warnings ended with (§FS-rules.7.8).
+const RAMP_CLAUSE: &str = "; a citation to a numbered section now counts";
 
 /// `Each API must cite each …` over `targets`, with the given count.
 fn cites_each(targets: &[&str], cardinality: Cardinality) -> ParsedRule {
@@ -266,7 +270,7 @@ fn facts_with_uncited_own_target() -> RuleFacts {
 }
 
 /// [`facts`] with `API-a` citing `AR-b` twice more, once through its numbered
-/// section `<§>AR-b.1`, the site §FS-rules.7.8 counts only now.
+/// section `<§>AR-b.1`, a site counted as any other since §FS-rules.7.8 closed.
 fn facts_with_section_site() -> RuleFacts {
     let mut facts = facts();
     for (key, line, newly_counted) in [("again", 5, false), ("section", 6, true)] {
@@ -339,18 +343,37 @@ fn a_per_target_bound_names_only_the_window_its_finding_needs() {
     assert!(!errors[0].message.contains(RAMP_CLAUSE));
 }
 
+/// Every mode of `Each API must cite at most 2 …` over `targets`.
+fn at_most_two(targets: &[&str]) -> [ParsedRule; 2] {
+    [cites(targets, at_most(2)), cites_each(targets, at_most(2))]
+}
+
 #[test]
-fn a_per_target_bound_the_section_site_breaks_names_both_windows() {
-    let (errors, warnings) = evaluate(
-        &[cites_each(&["group/api/AR"], at_most(2))],
-        &[],
-        &facts_with_section_site(),
-    );
-    assert!(errors.is_empty(), "{:?}", codes(&errors));
-    assert_eq!(codes(&warnings), [("citation-cardinality", Some(1))]);
-    let message = &warnings[0].message;
-    assert!(
-        message.ends_with(&format!("{RAMP_CLAUSE}{CLAUSE}")),
-        "{message}"
-    );
+fn a_bound_the_pin_and_the_section_site_break_names_only_the_match_window() {
+    for rule in at_most_two(&["group/api/AR"]) {
+        let mode = rule.targets.clone();
+        let (errors, warnings) = evaluate(&[rule], &[], &facts_with_section_site());
+        assert!(errors.is_empty(), "{mode:?}: {:?}", codes(&errors));
+        assert_eq!(codes(&warnings), [("citation-cardinality", Some(1))]);
+        let message = &warnings[0].message;
+        assert!(
+            message.ends_with(CLAUSE) && !message.contains(RAMP_CLAUSE),
+            "{mode:?}: {message}"
+        );
+    }
+}
+
+#[test]
+fn a_bound_only_the_section_site_breaks_through_the_bare_kind_is_an_error() {
+    for rule in at_most_two(&["AR"]) {
+        let mode = rule.targets.clone();
+        let (errors, warnings) = evaluate(&[rule], &[], &facts_with_section_site());
+        assert!(warnings.is_empty(), "{mode:?}: {:?}", codes(&warnings));
+        assert_eq!(codes(&errors), [("citation-cardinality", Some(1))]);
+        let message = &errors[0].message;
+        assert!(
+            !message.contains(RAMP_CLAUSE) && !message.contains(CLAUSE),
+            "{mode:?}: {message}"
+        );
+    }
 }
