@@ -108,7 +108,7 @@ How comments and code evolve together:
   comment changes are made in the same revision as the associated code change.
 - Fengcai Wen, Csaba Nagy, Gabriele Bavota and Michele Lanza, *A Large-Scale Empirical
   Study on Code-Comment Inconsistencies*, ICPC 2019, DOI 10.1109/ICPC.2019.00019
-  ([PDF](https://www.inf.usi.ch/faculty/lanza/PUBS/P/Wen2019a.pdf)), mined 1.3 billion
+  ([DOI](https://doi.org/10.1109/ICPC.2019.00019)), mined 1.3 billion
   AST-level changes from the history of 1,500 systems and manually analysed 500 commits,
   362 of which changed comments. From these they define a taxonomy of comment-related
   changes: 69 types, 25 of them relevant to fixing code-comment inconsistencies, under six
