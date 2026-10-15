@@ -29,11 +29,9 @@ fn heading_project(name: &str) -> PathBuf {
     fs::write(
         root.join("grund.toml"),
         concat!(
-            "grund_config_version = 1\n\n",
-            "[reference]\nstrict = true\n\n",
-            "[id]\nformat = \"{kind}-{slug}\"\n\n",
-            "[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\nindex = false\n\n",
-            "[scan]\ninclude = [\"docs\"]\nextensions = [\"md\"]\n",
+            "grund_config_version = 2\n\n",
+            "[schema]\nid_format = \"{kind}-{slug}\"\n\n",
+            "[schema.kinds.FS]\nfolders = [\"docs\"]\nindex = false\n",
         ),
     )
     .expect("write config");

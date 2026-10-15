@@ -14,13 +14,9 @@ fn fixture(name: &str) -> PathBuf {
     fs::write(
         root.join("grund.toml"),
         concat!(
-            "grund_config_version = 1\nproject_name = \"local-section-cli\"\n\n",
-            "[reference]\nstrict = true\nrequire_grounding = false\n\n",
-            "[id]\nformat = \"{kind}-{slug}\"\nnamed_sections = true\n\n",
-            "[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\nindex = false\n\n",
-            "[scan]\ninclude = [\"docs\"]\nextensions = [\"md\"]\n\n",
-            "[output]\nrelative_paths = true\n\n",
-            "[fmt.cross_refs]\nenabled = false\n",
+            "grund_config_version = 2\nproject_name = \"local-section-cli\"\n\n",
+            "[schema]\nid_format = \"{kind}-{slug}\"\n\n",
+            "[schema.kinds.FS]\nfolders = [\"docs\"]\nindex = false\n",
         ),
     )
     .expect("write config");
@@ -201,13 +197,9 @@ fn following_each_local_section_findings_remedy_clears_its_site() {
     fs::write(
         root.join("grund.toml"),
         concat!(
-            "grund_config_version = 1\nproject_name = \"local-section-remedy\"\n\n",
-            "[reference]\nstrict = true\nrequire_grounding = false\n\n",
-            "[id]\nformat = \"{kind}-{slug}\"\n\n",
-            "[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\nindex = false\n\n",
-            "[scan]\ninclude = [\"docs\"]\nextensions = [\"md\"]\n\n",
-            "[output]\nrelative_paths = true\n\n",
-            "[fmt.cross_refs]\nenabled = false\n",
+            "grund_config_version = 2\nproject_name = \"local-section-remedy\"\n\n",
+            "[schema]\nid_format = \"{kind}-{slug}\"\n\n",
+            "[schema.kinds.FS]\nfolders = [\"docs\"]\nindex = false\n",
         ),
     )
     .expect("write config");

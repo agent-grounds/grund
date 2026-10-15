@@ -8,6 +8,9 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+/// The code of the caution every version 1 config earns.
+const V1: &str = "config-version-1";
+
 static NEXT_ROOT: AtomicUsize = AtomicUsize::new(0);
 
 struct Repo(PathBuf);
@@ -109,7 +112,9 @@ fn absent_config_is_byte_stable_and_word_threshold_is_strict_with_exact_message(
         "# FS-over: Over\n\none two three \u{a7}FS-over\n",
     );
     repo.config(None, "");
-    let before = run(repo.path(), &["check"]);
+    // `lead_size_warning` is a version 1 key, so the fixture stays on version 1 and
+    // leaves out the caution that earns (§FS-check.checks.config-version-1).
+    let before = run(repo.path(), &["check", "--ignore", V1]);
     assert_success(&before);
     assert_eq!(stdout(&before), "success\n");
     assert_eq!(stderr(&before), "");
@@ -127,7 +132,10 @@ fn absent_config_is_byte_stable_and_word_threshold_is_strict_with_exact_message(
     );
     assert_eq!(stderr(&checked), "");
 
-    let ignored = run(repo.path(), &["check", "--ignore", "oversized-lead"]);
+    let ignored = run(
+        repo.path(),
+        &["check", "--ignore", "oversized-lead", "--ignore", V1],
+    );
     assert_success(&ignored);
     assert_eq!(stdout(&ignored), "success\n");
 

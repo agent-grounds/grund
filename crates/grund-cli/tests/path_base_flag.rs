@@ -21,6 +21,13 @@ const MEMBER_CONFIG: &str = "grund_config_version = 1\nproject_name = \"member\"
      [scan]\nrespect_gitignore = false\n\n\
      [[kinds]]\nkind = \"FS\"\nfolder = \"docs/fs\"\nindex = false\n";
 
+/// The two configs' version 2 body, for a case whose subject sets no `[output]` key: the
+/// caution a version 1 file earns (§FS-check.checks.config-version-1) is not its subject.
+const V2_SCHEMA: &str = "[schema]\nid_format = \"{kind}-{slug}\"\n\n\
+     [schema.sources]\nrespect_gitignore = false\n\n\
+     [schema.kinds.FS]\nfolders = [\"docs/fs\"]\nindex = false\n\n\
+     [schema.kinds.code]\nfolders = [\"src\"]\n";
+
 const PATH_BASE_ERROR: &str = "error: unsupported path base `x` (expected project or invocation)\n";
 
 /// Builds the workspace under `target/path-base-flag/<name>`; `output` is appended to
@@ -48,6 +55,20 @@ fn fixture(name: &str, output: &str) -> PathBuf {
         "// \u{a7}FS-m and dangling \u{a7}FS-nope\nfn g() {}\n",
     );
     root.canonicalize().expect("canonical fixture root")
+}
+
+/// Rewrites both configs of a `fixture(name, "")` workspace as version 2.
+fn as_version_2(root: PathBuf) -> PathBuf {
+    let write = |path: &str, head: &str| {
+        let text = format!("grund_config_version = 2\n{head}\n{V2_SCHEMA}");
+        fs::write(root.join(path), text).expect("write version 2 config");
+    };
+    write(
+        "grund.toml",
+        "project_name = \"root\"\n\n[workspace]\nmembers = [\"member\"]\n",
+    );
+    write("member/grund.toml", "project_name = \"member\"\n");
+    root
 }
 
 fn grund(args: &[&str], cwd: &Path) -> Output {
@@ -139,7 +160,7 @@ fn invocation_flag_prints_the_bytes_of_relative_paths_false() {
 /// above cannot pass by both sides drifting together.
 #[test]
 fn invocation_flag_from_a_subdirectory_spells_paths_from_there() {
-    let root = fixture("invocation-literal", "");
+    let root = as_version_2(fixture("invocation-literal", ""));
     let deep = root.join("src/deep");
 
     assert_eq!(
