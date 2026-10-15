@@ -61,7 +61,7 @@ fn report_gate_catches_a_candidate_that_changes_the_findings() {
         &v1_config(FS),
         &[
             ("docs/FS-a.md", "# FS-a: A\n\nText.\n"),
-            ("src/main.rs", "// Implements §FS-a.\nfn main() {}\n"),
+            ("src/main.rs", "// Implements \u{a7}FS-a.\nfn main() {}\n"),
         ],
     );
     let (located, v1, candidate, map) = prepared(&root);

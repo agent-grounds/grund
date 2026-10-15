@@ -10,11 +10,9 @@ use std::path::PathBuf;
 use super::check::{CheckOpts, CheckOutput, check_with_run_warnings};
 use crate::config::migrate::{
     Gate, GateResult, Located, MigrateFailure, MigrateOutcome, MigrateReport, Prepared, locate,
-    translate,
+    member_on_v1, translate,
 };
-use crate::config::{
-    Invocation, PathBase, Project, Selection, config_at, config_file_in, with_report_path_base,
-};
+use crate::config::{Invocation, PathBase, Project, Selection, config_at, with_report_path_base};
 use crate::model::{Finding, format_path, relative_from_base};
 use crate::writers::{Install, InstallFailure, atomic_install};
 
@@ -109,11 +107,7 @@ fn members(located: &Located) -> Vec<String> {
     roots
         .iter()
         .filter_map(|root| {
-            let file = config_file_in(root)?;
-            let text = std::fs::read_to_string(&file).ok()?;
-            if crate::config::selects_v2(&text) {
-                return None;
-            }
+            let file = member_on_v1(root)?;
             let member = format_path(&relative_from_base(&located.root, root));
             let file = format_path(&relative_from_base(&located.root, &file));
             Some(format!(
