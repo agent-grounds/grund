@@ -41,7 +41,7 @@
           "description": "The project's name; in a workspace, also its alias in `§alias/<ID>` citations.",
           "x-grund-spec": {
             "id": "FS-config.3",
-            "href": "docs/functional-spec/FS-config.md#3-keys"
+            "href": "docs/functional-spec/FS-config.md#3-keys-version-1"
           }
         },
         "project_description": {
@@ -49,7 +49,7 @@
           "description": "One-line description shown next to the project in generated workspace member lists.",
           "x-grund-spec": {
             "id": "FS-config.3",
-            "href": "docs/functional-spec/FS-config.md#3-keys"
+            "href": "docs/functional-spec/FS-config.md#3-keys-version-1"
           }
         },
         "reference": {
@@ -914,7 +914,7 @@
           "description": "The project's name; in a workspace, also its alias in `§alias/<ID>` citations.",
           "x-grund-spec": {
             "id": "FS-config.3",
-            "href": "docs/functional-spec/FS-config.md#3-keys"
+            "href": "docs/functional-spec/FS-config.md#3-keys-version-1"
           }
         },
         "schema": {

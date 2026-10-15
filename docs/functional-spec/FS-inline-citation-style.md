@@ -386,7 +386,7 @@ Because they are rendered, not live ([§FS-inline-citation-style.5.5](FS-inline-
 
 ### 5.7 `grund config show` is the machine-readable form
 
-`grund config show` ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)) is the canonical machine-readable form: every key is printed at every value, no collapse ([§FS-inline-citation-style.5.1](FS-inline-citation-style.md#51-the-budgets-line)), so a human or downstream tool diffing config sees the raw shape.
+`grund config show` ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)) is the canonical machine-readable form: every effective setting is printed, in the config file's own version, at its value with no collapse ([§FS-inline-citation-style.5.1](FS-inline-citation-style.md#51-the-budgets-line)), so a human or downstream tool diffing config sees the raw shape.
 
 ## 6. Non-goals
 

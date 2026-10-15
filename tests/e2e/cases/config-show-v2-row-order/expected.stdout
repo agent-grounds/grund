@@ -1,0 +1,66 @@
+grund_config_version = 2
+project_name = "rows"
+
+[schema]
+marker = "§"
+shorthand = "canonical"
+id_format = "{kind}-{slug}"
+slug_pattern = "[a-z][a-z0-9-]*"
+number_pattern = "\\d+"
+section_separator = "."
+heading_depth = "must"
+
+[schema.sources]
+languages = ["markdown", "json", "rust", "c", "cpp", "java", "kotlin", "scala", "swift", "javascript", "typescript", "csharp", "php", "python", "go", "ruby", "sql", "lua", "haskell", "lisp", "scheme", "clojure", "ada"]
+declarations = "doc-comments"
+exclude = []
+respect_gitignore = true
+
+[schema.notes.lines]
+must = 3
+
+[schema.notes.columns]
+must = 100
+
+[schema.notes.text]
+must = true
+
+[schema.kinds.GOAL]
+files = ["docs/goals.md"]
+
+[schema.kinds.FS]
+folders = ["docs/specs"]
+
+[schema.kinds.AR]
+folders = ["docs/architecture"]
+
+[rules.citations]
+
+[rules.citations.GOAL]
+should = ["GOAL"]
+
+[rules.citations.FS]
+must = ["GOAL"]
+
+[rules.citations.AR]
+warn = ["FS"]
+
+[rules.citations.code]
+should = ["FS|AR"]
+
+[presentation]
+trigger = "$$"
+
+[presentation.kinds.GOAL]
+title = "Where: direction"
+
+[presentation.kinds.FS]
+title = "What: behavior"
+
+[presentation.kinds.AR]
+title = "How: design"
+
+[presentation.fmt]
+anchors = "github"
+links = "index"
+exclude = []
