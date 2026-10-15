@@ -11,18 +11,10 @@ const AT_MOST_ONE: Cardinality = Cardinality {
     minimum: None,
     maximum: Some(1),
 };
-const PLAIN: Marks = Marks {
-    matched: false,
-    mixed: false,
-};
-const MIXED: Marks = Marks {
-    mixed: true,
-    ..PLAIN
-};
-const MATCHED: Marks = Marks {
-    matched: true,
-    ..PLAIN
-};
+const PLAIN: Marks = Marks { matched: false };
+// §FS-rules.7.12: a mixed site now carries exactly the ordinary site's marks.
+const MIXED: Marks = PLAIN;
+const MATCHED: Marks = Marks { matched: true };
 
 fn windows(sites: &[Marks]) -> Windows {
     Windows::of_count(RuleLevel::Required, AT_MOST_ONE, sites.iter().copied())
@@ -72,20 +64,9 @@ fn removing_mixed_sites_cannot_make_a_matched_count_eligible() {
 
 #[test]
 fn an_independently_matched_mixed_site_keeps_only_alias_relief() {
-    let flags = windows(&[
-        PLAIN,
-        Marks {
-            matched: true,
-            ..MIXED
-        },
-    ]);
-    assert_eq!(
-        flags,
-        Windows {
-            matched: true,
-            ..Windows::default()
-        }
-    );
+    // A matched site that is also mixed: the mixed mark adds nothing.
+    let flags = windows(&[PLAIN, MATCHED]);
+    assert_eq!(flags, Windows { matched: true });
     let (mut errors, mut warnings) = (Vec::new(), Vec::new());
     let (sink, message) = route(flags, &mut errors, &mut warnings, "ordinary message".into());
     sink.push(finding(message));
@@ -97,13 +78,7 @@ fn an_independently_matched_mixed_site_keeps_only_alias_relief() {
 fn mixed_ordinary_sites_do_not_erase_the_remaining_relief() {
     // The matched sites alone repair this count; the mixed site counts as ordinary.
     let flags = windows(&[MIXED, MATCHED, MATCHED]);
-    assert_eq!(
-        flags,
-        Windows {
-            matched: true,
-            ..Windows::default()
-        }
-    );
+    assert_eq!(flags, Windows { matched: true });
     let (mut errors, mut warnings) = (Vec::new(), Vec::new());
     let (sink, message) = route(flags, &mut errors, &mut warnings, "ordinary message".into());
     sink.push(finding(message));

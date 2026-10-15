@@ -44,6 +44,22 @@ values, with what it means underneath and the finding code it reports, is in
 
 ## The report
 
+With `[id] named_sections = true`, a marked citation of a name under a number
+is checked as a whole. From grund 0.19.0, an absent section or declaration is
+an ordinary error; the warning and its temporary release clause from 0.18.0
+are gone ([§FS-citations.checks.mixed-path](../functional-spec/FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190)). For example, if
+`FS-login` exists but has no `1.goals` section:
+
+```text
+docs/use.md:5: error: section not found: FS-login.1.goals; write <§> before it to show the shape without citing it
+```
+
+The finding goes to stdout and makes the check exit `1`; JSON reports
+`missing-section` with severity `error`. Repair the heading or citation, or
+escape an illustrative shape with `<§>`. When the section resolves but its
+lock entry is missing, run `grund fmt --write` and commit the lock
+([§FS-section-lock.checks.unrecorded-section-citation](../functional-spec/FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold)).
+
 A passing text check prints `success` and exits 0. Findings go to stdout as
 `<path>:<line>: error: <message>`, `warning:`, or opt-in `suggestion:` lines:
 errors come first, then warnings and suggestions, while the location remains the

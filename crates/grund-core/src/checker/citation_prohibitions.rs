@@ -10,17 +10,15 @@ use crate::config::{
     CitationDisjunction, CitationLevel, CitationTarget, Frame, NamespaceMatch, Owners, Rules,
     Schema, render_citation_target,
 };
-use crate::model::{CITATION_DIRECTION_REPAIR, Catalog, Citation, Diagnostic, name_under_number};
-use crate::rules::engine::MIXED_CLAUSE;
+use crate::model::{CITATION_DIRECTION_REPAIR, Catalog, Citation, Diagnostic};
 
 /// §AR-checker.2.10 / §FS-check.3.12: a citation site whose citing kind prohibits
 /// its target is a `forbidden-citation` error (`must-not`) or a
 /// `discouraged-citation` suggestion (`should-not`). The error carries
 /// §FS-check.3.12's repair suffix; the suggestion does not (§FS-check.2.3). A
 /// citation a stub's target lends is a site of its kind at its line in the target,
-/// judged as the scanned tree judges it (§FS-check.3.12, §FS-rules.7.11). The error
-/// at a citation of a name under a number, which grund before 0.18.0 skipped, warns
-/// until 0.19.0 (§FS-rules.7.12).
+/// judged as the scanned tree judges it (§FS-check.3.12, §FS-rules.7.11). A citation
+/// of a name under a number is an ordinary site (§FS-rules.7.12).
 pub(super) fn check_citation_prohibitions(
     findings: &Catalog,
     rules: &Rules,
@@ -30,22 +28,10 @@ pub(super) fn check_citation_prohibitions(
 ) {
     let owners = Owners::new(schema, frame);
     for cite in findings.edges() {
-        let mixed = cite.section.as_deref().is_some_and(name_under_number);
         let Some((level, entries)) = citation_site_level(rules, cite) else {
             continue;
         };
         let (channel, diagnostic) = match level {
-            CitationLevel::MustNot if mixed => {
-                let mut diagnostic = prohibition_diagnostic(
-                    "forbidden-citation",
-                    &owners,
-                    cite,
-                    "must not",
-                    CITATION_DIRECTION_REPAIR,
-                );
-                diagnostic.message.push_str(&MIXED_CLAUSE);
-                (DirectionChannel::Warnings, diagnostic)
-            }
             CitationLevel::MustNot => (
                 DirectionChannel::Errors,
                 prohibition_diagnostic(

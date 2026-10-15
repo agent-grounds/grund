@@ -21,8 +21,7 @@ pub(crate) use authority::one_rules_authority;
 use cites::evaluate_cites;
 use index::FactIndex;
 pub(crate) use precedence::{Direction, citation_precedence, direction_rule};
-pub(crate) use ramp::{MIXED_CLAUSE, UNRECORDED_MIXED_CLAUSE};
-use ramp::{Windows, matched_before, nodes_matched_before, route, site_marks};
+use ramp::{Marks, Windows, matched_before, nodes_matched_before, route};
 pub(crate) use resolution::unresolved_subject_diagnostic;
 use resolution::unresolved_subject_diagnostic_indexed;
 use selectors::{
@@ -38,10 +37,9 @@ mod tests_mixed_ramp;
 /// level, and the ramp's warnings beside it.
 ///
 /// A finding that a target newly matched at the rule's own nested alias
-/// (§FS-rules.7.9) or a citation of a name under a number (§FS-rules.7.12) alone
-/// produces is carried on the
-/// warnings channel rather than the errors channel, for the length of its ramp
-/// and no longer. It is a pair rather than a type so that the engine/checker
+/// (§FS-rules.7.9) alone produces is carried on the warnings channel rather than
+/// the errors channel, for the length of its ramp and no longer. Mixed sites are
+/// ordinary (§FS-rules.7.12). It is a pair rather than a type so that the engine/checker
 /// crossing stays `Diagnostic` and nothing else (§AR-rules.5): when those ramps
 /// close at `0.19.0` the second half goes away and the return collapses back to
 /// one `Vec`.
@@ -258,15 +256,12 @@ fn evaluate_one(
                         } else {
                             ("discouraged-citation", "")
                         };
-                        // §FS-rules.7.9, §FS-rules.7.12: a required site matched or mixed
-                        // only now warns.
+                        // §FS-rules.7.9: a required site newly matched warns.
                         let windows = Windows::at(
                             rule.level,
-                            site_marks(
-                                facts,
-                                site,
-                                !citation_matches_targets(target, &before, index),
-                            ),
+                            Marks {
+                                matched: !citation_matches_targets(target, &before, index),
+                            },
                         );
                         let (sink, message) = route(
                             windows,
@@ -302,10 +297,10 @@ fn evaluate_one(
                 let sites = index
                     .citations_to(&subject)
                     .iter()
-                    .filter_map(|(site, from, _)| {
+                    .filter_map(|(_, from, _)| {
                         let kind = index.declaration_kind(from)?;
-                        target_kind_matches(&rule.targets, kind, facts).then(|| {
-                            site_marks(facts, site, !matched_before(&rule.targets, kind, facts))
+                        target_kind_matches(&rule.targets, kind, facts).then(|| Marks {
+                            matched: !matched_before(&rule.targets, kind, facts),
                         })
                     })
                     .collect::<Vec<_>>();

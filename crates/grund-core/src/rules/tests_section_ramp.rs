@@ -45,7 +45,6 @@ fn facts() -> RuleFacts {
                     column: Some(3),
                     ..anchor(line)
                 },
-                mixed: false,
             },
         )
     };

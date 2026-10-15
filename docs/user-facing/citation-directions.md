@@ -19,6 +19,11 @@ requires citations to both. Nearly every real rule is one entry with `|`.
 `grund schema` draws a repository's directions, each `|` entry as one
 obligation.
 
+From grund 0.19.0, a prohibited citation of a name under a number produces the
+ordinary `forbidden-citation` error and makes the check fail. The mixed-only
+warning window from 0.18.0 has ended. Recommended directions remain opt-in
+suggestions, and explicit `warn`/`warn-not` strengths remain warnings ([§FS-rules.7.12](../functional-spec/FS-rules.md#712-a-finding-only-a-citation-of-a-name-under-a-number-raises-warns-until-0190)).
+
 The citing side may be any configured kind, including a non-citable kind, or
 the homeless `code` kind. The cited side must be citable, because a citation
 needs an ID to point at. A non-citable kind may cite and is labelled by its
