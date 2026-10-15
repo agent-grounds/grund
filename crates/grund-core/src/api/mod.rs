@@ -61,6 +61,7 @@ mod list_output;
 mod lsp_ranges;
 mod lsp_report;
 mod lsp_snapshot;
+mod path_report;
 mod refs;
 mod refs_query;
 mod report;

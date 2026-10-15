@@ -9,7 +9,7 @@ use anyhow::Result;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use super::run::unread_resolution_source_cautions;
+use super::path_report::unread_resolution_source_cautions;
 use super::scope_cautions::scan_scope_caution;
 use super::unread_roots::unread_root_warnings;
 use crate::checker::{
