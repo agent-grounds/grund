@@ -332,6 +332,30 @@ fn watch_atomic_create_rename_delete_and_recreated_root() {
     watch.interrupt(0);
 }
 
+/// §FS-check.6.1.4: a root deleted and recreated while it is being resubscribed is a
+/// missing input met by its parent anchor; the watcher must stay resident throughout.
+#[test]
+fn watch_stays_resident_while_root_is_deleted_and_recreated() {
+    let f = Fixture::new();
+    let mut watch = Watch::start(&f, &[]);
+    watch.report(&f.check(&[]));
+    // Bounded in time so the gate stays cheap; on the defect it dies well within it.
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
+    let mut cycles = 0;
+    while std::time::Instant::now() < deadline {
+        fs::remove_dir_all(f.0.join("src")).unwrap();
+        f.write("src/main.rs", CLEAN);
+        cycles += 1;
+        if cycles % 64 == 0 {
+            watch.assert_resident(&format!("after {cycles} delete/recreate cycles of src"));
+        }
+    }
+    std::thread::sleep(std::time::Duration::from_millis(500));
+    watch.assert_resident(&format!(
+        "settling after {cycles} delete/recreate cycles of src"
+    ));
+}
+
 /// §FS-cli.3.3: terminal discovery must expose the resident mode and its guide.
 #[test]
 fn watch_check_help_describes_mode_and_links_guide() {

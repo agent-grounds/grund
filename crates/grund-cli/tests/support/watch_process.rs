@@ -184,6 +184,19 @@ impl Watch {
         }
     }
 
+    /// Fails with the captured streams if the watcher has exited (§FS-check.6.1.4).
+    pub fn assert_resident(&mut self, context: &str) {
+        self.receive();
+        if let Some(status) = self.child.try_wait().unwrap() {
+            self.join_readers();
+            panic!(
+                "watch exited {context}: status={:?}, stderr={:?}",
+                status.code(),
+                String::from_utf8_lossy(&self.bytes[1])
+            );
+        }
+    }
+
     fn wait_exit(&mut self) -> std::process::ExitStatus {
         let deadline = Instant::now() + DEADLINE;
         loop {
