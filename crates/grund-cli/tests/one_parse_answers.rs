@@ -257,7 +257,7 @@ fn a_relative_child_of_a_bare_block_comment_heading_resolves() {
     assert_eq!(check.status.code(), Some(0), "{}", stdout(&check));
 }
 
-// §FS-declarations.checks.parse-moves: no tree gets a `parse-moves` finding.
+// §FS-declarations.checks.parse-moves.4: no tree gets a `parse-moves` finding.
 #[test]
 fn no_tree_gets_a_parse_moves_finding() {
     let t = Tree::new(
@@ -277,7 +277,7 @@ fn no_tree_gets_a_parse_moves_finding() {
     assert_eq!(check.status.code(), Some(0));
 }
 
-// §FS-declarations.checks.parse-moves: the code is gone, so selecting it is refused.
+// §FS-declarations.checks.parse-moves.4: the code is gone, so selecting it is refused.
 #[test]
 fn selecting_parse_moves_is_refused_as_an_unknown_code() {
     let t = tree("unknown-code", "docs/fs/a.md", "# FS-a: Alpha\n\nBody.\n");

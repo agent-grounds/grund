@@ -96,7 +96,7 @@ fence inside a comment block.
 The blast radius was measured before this record was settled, with a walk over every
 comment block that holds a declaration line, listing each ATX heading inside a fence in it:
 grund, rhei, ephor, fissile, akoe and skopos at their `main`, and the workspace's `scripts`
-and `docs`. It finds one line, in grund's own `check-parse-moves-fence-info-backtick`
+and `docs`. It finds one line, in grund's own 0.18.0 `check-parse-moves-fence-info-backtick`
 fixture, whose ```` ```a`b ```` is not a fence. No real tree has a fenced heading in a
 doc-comment, so no real citation's verdict moves.
 
