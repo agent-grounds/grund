@@ -1,7 +1,7 @@
 //! The narrowing a `check <path>` report goes through once every rule has run over
 //! the resolution scope (§FS-check.1.3.6.1, §AR-resolver.3.3), shared by the
 //! single-project arm and the workspace arm so the two cannot disagree about what a
-//! path keeps (§FS-scan.projects.narrowed).
+//! path keeps.
 
 use std::path::{Path, PathBuf};
 

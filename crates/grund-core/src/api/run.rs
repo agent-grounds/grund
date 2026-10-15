@@ -276,7 +276,7 @@ pub(super) fn run_check_with_run_warnings(
 /// anchored outside it is dropped unless it names a site inside, a file the run could
 /// not read out there leaves the errors for a caution (§FS-check.1.3.6.3), a path
 /// that holds nothing to scan says so (§FS-check.2.2), and a `--full` the path made
-/// redundant says that (§FS-check.1.3.7) — §FS-scan.projects.narrowed.
+/// redundant says that (§FS-check.1.3.7).
 fn run_workspace_check(
     root_config: Config,
     ad_hoc_sentence: Option<&str>,
@@ -433,8 +433,8 @@ fn run_workspace_check(
             config_warnings.extend(config_diagnostics(&project.config, root_config.display()));
         }
     }
-    // §FS-scan.projects.narrowed: the root run's report, narrowed to the path as the
-    // single-project arm narrows it (§FS-check.1.3.6.1, §AR-resolver.3.3).
+    // §FS-check.1.3.6.1: the root run's report, narrowed to the path as the
+    // single-project arm narrows it (§AR-resolver.3.3).
     narrowing.narrow(
         &mut report,
         &root_config,
