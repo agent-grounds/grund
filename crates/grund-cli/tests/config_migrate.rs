@@ -228,12 +228,22 @@ fn unreadable_config_is_exit_two_and_untouched() {
 
 /// §FS-config-migrate.5: grund's own config migrates with both gates passing.
 /// Without `--drop-comments` only the two comment blocks above `[scan] include`
-/// and `extensions` refuse; with it the preview exits 0. Nothing is written:
-/// committing the migrated file is agent-grounds/grund#464's.
+/// and `extensions` refuse; with it the preview exits 0. Nothing is written.
+/// agent-grounds/grund#464 committed the migration, so the v1 file is frozen as
+/// it stood before it, in `tests/fixtures/config_migrate/repo/`, and the gates
+/// run on a tree holding that config and the four places its `[scan] include`
+/// names, which version 2 must find to tell a folder from a file.
 #[test]
 fn grunds_own_config_passes_both_gates() {
-    let root = repository_root();
+    let root = fixture("grunds-own", false);
+    for folder in ["docs", "crates", "tests/bindings"] {
+        fs::create_dir_all(root.join(folder)).expect("create included folder");
+    }
+    fs::write(root.join("AGENTS.md"), "").expect("write included file");
     let config = root.join("grund.toml");
+    let frozen = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures/config_migrate/repo/grund.toml");
+    fs::copy(&frozen, &config).expect("copy grund's v1 config");
     let before = fs::read(&config).unwrap();
 
     let out = grund(&["config", "migrate", "--to", "2", root.to_str().unwrap()]);

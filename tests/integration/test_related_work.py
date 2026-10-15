@@ -105,23 +105,26 @@ def _missing(slug):
     return f"REL-{slug}: no file {HOME}/REL-{slug}.md"
 
 
+def _homes(config, kind):
+    """The places of `kind` under `[schema.kinds]`, files and folders alike."""
+    row = config["schema"]["kinds"].get(kind, {})
+    return row.get("folders", []) + row.get("files", [])
+
+
 def _home(config, kind):
-    for row in config["kinds"]:
-        if row["kind"] == kind:
-            return row.get("folder") or row.get("file")
-    return None
+    homes = _homes(config, kind)
+    return homes[0] if homes else None
 
 
 def _scanned_files(config):
-    """Every file `grund check` reads under this configuration: the `[scan]`
-    roots and every walked kind home, less the excluded directory names, by
-    extension, and without what `.gitignore` hides."""
-    scan = config["scan"]
-    roots = list(scan["include"])
-    roots += [_home(config, row["kind"]) for row in config["kinds"]
-              if row.get("scan", True) and _home(config, row["kind"])]
-    excluded = set(scan["exclude"])
-    extensions = {"." + extension for extension in scan["extensions"]}
+    """Every file `grund check` reads under this configuration: every walked kind
+    home, the `code` row's places among them, less the excluded directory names,
+    by extension, and without what `.gitignore` hides."""
+    sources = config["schema"]["sources"]
+    roots = [home for kind, row in config["schema"]["kinds"].items()
+             if row.get("scan", True) for home in _homes(config, kind)]
+    excluded = {name.rstrip("/") for name in sources["exclude"]}
+    extensions = {"." + extension for extension in sources["extensions"]}
     listing = subprocess.run(
         ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
         cwd=REPO_ROOT,
@@ -193,10 +196,10 @@ class RelatedWorkTests(unittest.TestCase):
 
     def test_the_kind_is_configured_with_its_direction(self):
         config = _config()
-        rows = [row for row in config["kinds"] if row["kind"] == "REL"]
-        self.assertEqual(1, len(rows), "grund.toml declares no REL kind")
-        self.assertEqual({"kind": "REL", "folder": HOME, "title": TITLE}, rows[0])
-        self.assertEqual({"should": ["GRUND|GOAL"]}, config["citations"].get("REL"))
+        self.assertIn("REL", config["schema"]["kinds"], "grund.toml declares no REL kind")
+        self.assertEqual({"folders": [HOME]}, config["schema"]["kinds"]["REL"])
+        self.assertEqual({"title": TITLE}, config["presentation"]["kinds"].get("REL"))
+        self.assertEqual({"should": ["GRUND|GOAL"]}, config["rules"]["citations"].get("REL"))
 
     def test_the_index_names_the_chapters_entries_are_held_to(self):
         lines = _prose_lines(INDEX.read_text(encoding="utf-8"))
