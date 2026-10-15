@@ -126,6 +126,9 @@ fn snapshot(path: PathBuf) -> LspSnapshot {
 
 /// One diagnostic as `severity code root-relative-path:line message`, so `check`'s
 /// display paths and the snapshot's absolute paths compare as the same finding.
+/// The version 1 caution is left out: it is a `check` surface and never the
+/// snapshot's (§FS-check.checks.config-version-1), and this fixture's version is
+/// not what the comparison is about.
 fn diagnostics(root: &Path, report: &Report) -> Vec<String> {
     let key = |finding: &Finding| {
         let path = finding.path.as_deref().map(|path| {
@@ -154,6 +157,7 @@ fn diagnostics(root: &Path, report: &Report) -> Vec<String> {
         .errors
         .iter()
         .chain(&report.warnings)
+        .filter(|finding| finding.code != "config-version-1")
         .map(key)
         .collect();
     keys.sort();
