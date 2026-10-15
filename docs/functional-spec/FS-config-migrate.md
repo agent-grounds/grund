@@ -42,7 +42,7 @@ grund config migrate --to 2 [PATH] [--write] [--drop-comments] [--path-base proj
 
 ### 2.1 Stdout is the candidate
 
-Stdout carries exactly the bytes `--write` would write with the same flags, and nothing else ([§FS-errors.1](FS-errors.md#1-streams)). A write that succeeds prints the candidate it wrote. When there is no candidate, because something is refused or the config is already version 2, stdout is empty, and so it is for a `--write` that refuses. So `grund config migrate --to 2 > new.toml` captures only the candidate. A preview that exits `1` only because a listed comment would be lost still prints the candidate, without those comments, as `--drop-comments` would write it: the comments are what refuse, not the file.
+Stdout carries exactly the bytes `--write` would write with the same flags, and nothing else ([§FS-errors.1](FS-errors.md#1-streams)). A write that succeeds prints the candidate it wrote. When there is no candidate, because something is refused or the config is already version 2, stdout is empty, and so it is for a `--write` that refuses. So `grund config migrate --to 2 > new.toml` captures only the candidate. The candidate is a version-2 file, so it prints its tables keyed by a row name in the order a version-2 file prints in ([§FS-config.4.2.4](FS-config.md#424-the-order-show-prints-in)): the rows' order, which is the order of the version-1 `[[kinds]]` entries. A preview that exits `1` only because a listed comment would be lost still prints the candidate, without those comments, as `--drop-comments` would write it: the comments are what refuse, not the file.
 
 ### 2.2 Stderr is the report
 
