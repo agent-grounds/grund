@@ -57,8 +57,7 @@ pub(crate) fn named_section_path(path: &str) -> bool {
 /// over the path's components and never over digits or letters in an ID: what the
 /// lock enrols by ([`locked`]), what a citation's warning window selects
 /// (§FS-citations.checks.mixed-path), what makes a mixed heading a section in Markdown
-/// and a doc-comment alike (§FS-declarations.section.relative.where), and what a value root refuses
-/// (§FS-values.3.1).
+/// and a doc-comment alike, and what a value root refuses (§FS-values.3.1).
 pub(crate) fn name_under_number(path: &str) -> bool {
     let numeric = |part: &str| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit());
     let mut parts = path.split('.');

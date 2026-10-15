@@ -249,7 +249,8 @@ fn titleless_heading_gets_a_self_valid_suggestion() {
 
 /// §FS-declarations.checks.unmarked-heading.6: `show`, `list` and the slices they cut keep their current
 /// behaviour — the error names a heading, it never renumbers one or shortens
-/// the body a reader gets.
+/// the body a reader gets. The plain H1 below it ends the body, as every reader
+/// ends one since 0.19.0 (§FS-declarations.body).
 #[test]
 fn unmarked_heading_scan_does_not_shorten_show_or_list_slices() {
     let root = heading_project("read-only-slices");
@@ -268,11 +269,12 @@ fn unmarked_heading_scan_does_not_shorten_show_or_list_slices() {
 
     let shown = run(&root, &["show", "FS-show-edge", "--full"]);
     assert_eq!(shown.status.code(), Some(0), "{}", stderr(&shown));
-    assert!(stdout(&shown).contains("# Plain chapter\n\nTrailing prose."));
+    assert!(stdout(&shown).contains("## Missing coordinate\n\nMore prose.\n"));
+    assert!(!stdout(&shown).contains("# Plain chapter"));
 
     let listed = run(&root, &["list", "--size=lines"]);
     assert_eq!(listed.status.code(), Some(0), "{}", stderr(&listed));
-    assert!(stdout(&listed).contains("FS-show-edge  docs/FS-show-edge.md:1  lines=5/5"));
+    assert!(stdout(&listed).contains("FS-show-edge  docs/FS-show-edge.md:1  lines=3/3"));
 }
 
 #[test]
