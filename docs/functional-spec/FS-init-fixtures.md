@@ -26,9 +26,9 @@ wrote AGENTS.md
 wrote grund.toml
 
 next:
-  1. re-run with --scaffold to scaffold the FS home (requirements.md), docs/, and tests/ (or create them yourself)
+  1. re-run with --scaffold to scaffold the FS home (docs/functional-spec), docs/, and tests/ (or create them yourself)
   2. run `grund check` — a scaffolded tree is clean
-  3. allocate an ID:  ID=$(grund id FS "…")  then add it to requirements.md
+  3. allocate an ID:  ID=$(grund id FS "…")  then add it under docs/functional-spec
 see AGENTS.md for the full workflow.
 ```
 
@@ -86,8 +86,8 @@ grund init {repo_copy}
 Precondition: `{repo_copy}` has an `AGENTS.md` whose managed block a
 `grund.toml` change made stale — the state `grund check` reports with "run
 `grund init` to refresh" ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)) — and its effective FS home, `docs/`
-and `tests/` exist: either the file-form `requirements.md` a `grund init --scaffold`
-scaffold wrote, or a configured FS folder such as `docs/functional-spec`.
+and `tests/` exist: either the `docs/functional-spec` a `grund init --scaffold`
+scaffold wrote, or a configured FS file such as `requirements.md`.
 
 Exit `0`, stdout empty, stderr:
 
@@ -122,7 +122,7 @@ Exit `0`, stdout empty, stderr:
 ```text
 wrote AGENTS.md
 wrote grund.toml
-wrote requirements.md
+wrote docs/functional-spec/README.md
 wrote docs/requirements/README.md
 wrote docs/grund.md
 wrote docs/goals.md
@@ -136,8 +136,8 @@ wrote tests/integration/.gitkeep
 
 next:
   1. run `grund check` — a freshly scaffolded tree is clean
-  2. allocate an ID:  ID=$(grund id FS "…")  then add it to requirements.md
-     (H2: `## <ID>: <one-line statement of the behavior>`)
+  2. allocate an ID:  ID=$(grund id FS "…")  then add it under docs/functional-spec
+     (H1: `# <ID>: <one-line statement of the behavior>`)
   3. cite it as §<ID> from the docs and e2e tests that depend on it, then `grund check` again
 see AGENTS.md for the full workflow.
 ```
@@ -147,7 +147,7 @@ see AGENTS.md for the full workflow.
 Final tree includes the default-form files plus exactly these docs and tests scaffold paths:
 
 ```text
-requirements.md
+docs/functional-spec/README.md
 docs/requirements/README.md
 docs/grund.md
 docs/goals.md
@@ -163,7 +163,7 @@ tests/integration/.gitkeep
 The scaffold's `AGENTS.md` project map lists `REQ` right after `FS`, and its vocabulary line lists it in the same place ([§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements)):
 
 ```text
-- [FS](requirements.md): What: behavior, requirements, and constraints
+- [FS](docs/functional-spec): What: behavior, requirements, and constraints
 - [REQ](docs/requirements): Hard requirements: what the project must never break
 - [AR](docs/architecture): How: high-level implementation, structure, and design
 ```
@@ -172,7 +172,7 @@ The scaffold's `AGENTS.md` project map lists `REQ` right after `FS`, and its voc
 (`KIND ∈ {GRUND, GOAL, FS, REQ, AR, DF, DA, RM}`)
 ```
 
-Every scaffold-owned ID example takes the starter's slug-only format, so `docs/goals.md` teaches `# GOAL-<slug>: …` and `requirements.md` teaches `## FS-<slug>: …` ([§FS-init.2.1.3](FS-init.md#213-the-software-development-starter-files)).
+Every scaffold-owned ID example takes the starter's slug-only format, so `docs/goals.md` teaches `# GOAL-<slug>: …` and `docs/functional-spec/README.md` teaches `# FS-<slug>: …` ([§FS-init.2.1.3](FS-init.md#213-the-software-development-starter-files)). No `requirements.md` is written: the template homes `FS` in `docs/functional-spec/` ([§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements)).
 
 `grund check` and `grund init --check` both exit `0` on the scaffolded tree, unmodified, and `grund.toml` is the version-2 starter of [§FS-init-fixtures.1](FS-init-fixtures.md#1-default-form).
 

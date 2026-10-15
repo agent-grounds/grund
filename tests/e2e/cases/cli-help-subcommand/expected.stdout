@@ -61,7 +61,6 @@ Supported check finding codes:
   escaped-citation-resolves
   excluded-stub-target
   forbidden-citation
-  fs-home-moves
   full-scope-ignored
   glob-citation
   inline-citation-style

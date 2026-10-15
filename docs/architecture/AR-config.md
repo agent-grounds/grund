@@ -161,7 +161,7 @@ Three rules hold the isolation:
 2. Every default, override and historical carve-out of version 1 is applied in
    `config/v1/`, so it is attributable to v1. The records carry meanings, not
    spellings.
-3. A meaning v2 cannot spell, such as the legacy FS home or
+3. A meaning v2 cannot spell, such as
    `NestedPlaceFallsToComplement`, still has a record value, so the engine can
    represent everything a v1 file means.
 
@@ -254,8 +254,7 @@ reader and nowhere else.
 
 | Default | Record path | What v1 means |
 |---|---|---|
-| `built-in kinds` | `schema.rows` | A config with no `[[kinds]]` gets the canonical rows of [§FS-config.3.4.4](../functional-spec/FS-config.md#344-the-default-kinds), with their homes, titles and citability. A declared `[[kinds]]` table replaces them all. |
-| `legacy FS home` | `schema.rows` | A `grund.toml` that exists and declares no `[[kinds]]` gives `FS` the folder `docs/functional-spec` instead of the file `requirements.md`. A zero-config tree gets the file. That folder is the home grund 0.19.0 makes the default; until then the checker names it, through the one constant, when it warns a zero-config tree whose `FS` is in the file ([§FS-check.checks.fs-home-moves](../functional-spec/FS-check.md#checksfs-home-moves-the-built-in-fs-home-moves-in-grund-0190)). |
+| `built-in kinds` | `schema.rows` | A config with no `[[kinds]]`, like a tree with no config at all, gets the canonical rows of [§FS-config.3.4.4](../functional-spec/FS-config.md#344-the-default-kinds), with their homes, titles and citability. A declared `[[kinds]]` table replaces them all. |
 | `name-keyed index` | `schema.rows` | A declared citable folder row that does not set `index` takes the default for its name: `E2E` has no index, every other name indexes `README.md`. |
 | `fetch resolves must` | `rules.resolution` | A row with `fetch` and no `resolve` resolves at `must`. |
 | `kind grounding inherits` | `rules.grounding` | A row that sets neither grounding key takes the `[reference]` values. |

@@ -1,3 +1,2 @@
-pkg/requirements.md:3: warning: FS-001-login is in requirements.md, the FS home only by default, and grund 0.19.0 moves that default to docs/functional-spec/ — run `grund init` to write a grund.toml that keeps FS in requirements.md, or move the FS declarations into docs/functional-spec/
 pkg/requirements.md:3: warning: declared but never cited: FS-001-login
 requirements.md:3: warning: declared but never cited: FS-example

@@ -218,7 +218,10 @@ fn from_records_round_trips_the_default_and_this_repository() {
     let default = Config::default_for(PathBuf::from("/repo"));
     let rebuilt = Config::from_records(default.project(), default.run(), default.compiled());
     assert_eq!(facade(&default), facade(&rebuilt));
-    assert_eq!(default.kinds[2].file.as_deref(), Some("requirements.md"));
+    assert_eq!(
+        default.kinds[2].folder.as_deref(),
+        Some("docs/functional-spec")
+    );
     assert_eq!(default.include.as_deref().map(<[String]>::len), Some(4));
 
     let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
