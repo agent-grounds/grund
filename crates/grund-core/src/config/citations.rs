@@ -117,6 +117,21 @@ pub struct CitationRules {
     pub declared: bool,
     pub global_default: Option<CitationLevel>,
     pub per_kind: BTreeMap<String, KindCitationRules>,
+    /// The `per_kind` names in the order a v2 file wrote their tables, which
+    /// `config show` keeps for a name that is no row (§FS-config.4.2.4).
+    pub written: WrittenOrder,
+}
+
+/// The order a file wrote some keyed tables in. It is how the file was laid
+/// out, not what it means, so two orders always compare equal: a file and its
+/// `config show` output load to the same rules (§FS-config.4.2.4).
+#[derive(Clone, Debug, Default)]
+pub struct WrittenOrder(pub Vec<String>);
+
+impl PartialEq for WrittenOrder {
+    fn eq(&self, _: &Self) -> bool {
+        true
+    }
 }
 /// Parse the released namespace-aware target-entry grammar without attaching a
 /// config-file location. Chapter-rule object targets reuse this exact lexical
