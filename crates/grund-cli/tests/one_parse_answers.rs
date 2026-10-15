@@ -272,7 +272,8 @@ fn no_tree_gets_a_parse_moves_finding() {
             ("docs/use.md", "Uses \u{a7}FS-thing.\n"),
         ],
     );
-    let check = t.grund(&["check"]);
+    // The v1-only `[id] format` earns the caution, which is not this test's subject.
+    let check = t.grund(&["check", "--ignore", "config-version-1"]);
     assert_eq!(stdout(&check), "success\n");
     assert_eq!(check.status.code(), Some(0));
 }
