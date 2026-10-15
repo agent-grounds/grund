@@ -397,17 +397,22 @@ nothing, as before. Exact-line consumers migrate during the window to the
 reason after the ` — `, which is what `0.19.0` prints alone; a prefix matcher
 reads what it read before.
 
-The same repository declares no homeless kind, so `code` has no row there,
-and these are the exact lines the window prints for it. Each is followed by
-`known kinds: FS, RULE`, as before:
+The same repository declares no homeless kind, so `code` has no row there.
+Its window opened in `0.18.0` and closed in `0.19.0` (#680): each of these
+refusals printed its legacy reason in front — `unknown kind "code"`,
+``unknown kind `code` `` on `list --kind`, or `literal subject "code" does not
+match the configured ID grammar` on a bare selector — then ` — `, the reason
+below and the suffix. Each now prints [§FS-errors.3.8.1](FS-errors.md#381-the-final-templates)'s form with no home
+alone, followed by `known kinds: FS, RULE`, as before, with exit `2`
+([§DF-homeless-code-declares-no-ids](../decisions/functional/DF-homeless-code-declares-no-ids.md#df-homeless-code-declares-no-ids-code-with-no-row-is-refused-as-declaring-no-ids-alone-from-0190)):
 
 | Input | Exact reason |
 |---|---|
-| `list --kind code` | ``unknown kind `code` — kind `code` declares no IDs; this wording changes in grund 0.19.0`` |
-| `list --selector 'Each code'` | `unknown kind "code" — kind "code" declares no IDs; this wording changes in grund 0.19.0` |
-| `list --selector code` | `literal subject "code" does not match the configured ID grammar — kind "code" declares no IDs; this wording changes in grund 0.19.0` |
-| `check --rule 'Each code must have exactly one terms chapter.'` | `unknown kind "code" — kind "code" declares no IDs; this wording changes in grund 0.19.0` |
-| `check --rule 'Each FS must cite at least one code.'` | `unknown kind "code" — kind "code" declares no IDs; this wording changes in grund 0.19.0` |
+| `list --kind code` | ``kind `code` declares no IDs`` |
+| `list --selector 'Each code'` | `kind "code" declares no IDs` |
+| `list --selector code` | `kind "code" declares no IDs` |
+| `check --rule 'Each code must have exactly one terms chapter.'` | `kind "code" declares no IDs` |
+| `check --rule 'Each FS must cite at least one code.'` | `kind "code" declares no IDs` |
 
 Retiring the window is [§RM-one-grammar-flip](../roadmap.md#rm-one-grammar-flip-end-the-one-grammar-window-in-0190).
 
@@ -422,8 +427,9 @@ kind "<KIND>" declares no IDs — <home>/ is not a citable home
 section-component wildcards are not accepted in phase 1
 ```
 
-`code` with no row gets the form with no home, `kind "code" declares no IDs`,
-and ``kind `code` declares no IDs`` on `list --kind` (#680).
+`code` with no row prints the form with no home, `kind "code" declares no IDs`,
+and ``kind `code` declares no IDs`` on `list --kind`; its window has already
+closed (#680).
 
 The wildcard reason is then followed by the accepted form
 [§FS-rule-refusals.sentences.rewrite](FS-rule-refusals.md#sentencesrewrite-an-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced) builds, where it builds one; for a

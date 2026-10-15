@@ -144,13 +144,10 @@ shrinks because each row says what retires it, not because someone remembers to.
 
 G03 and G04 closed with [§REQ-one-answer.identity.kinds](REQ-one-answer.md#identitykinds-every-command-reads-one-kind-verdict), and G06, a
 fixed word in the wrong case, with [§FS-rule-refusals.selectors](../functional-spec/FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector). G09, a difference that predates
-this requirement, was found later, on `e8c40221d7`, and is added by amendment.
-
-- **G09.** In a project whose `[[kinds]]` table declares no homeless kind, a `[citations]`
-  target `code`, bare, pinned or `*/`, is refused as a kind that is not citable, while a
-  rule's subject and object, `list --kind` and `list --selector` call `code` unknown: the
-  default name has no row ([§FS-config.3.9.2](../functional-spec/FS-config.md#392-the-homeless-kind)). R on `e8c40221d7`. Ruled by [§DF-one-answer-rulings-grammar](../decisions/functional/DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary), which fixes it: the
-  legacy reason with the new one appended now, the new reason alone in 0.19.0 (#680).
+this requirement, was found later, on `e8c40221d7`, and added by amendment: `code`, the
+homeless kind's default name, refused as not citable by a `[citations]` target and as
+unknown by a rule's subject and object, `list --kind` and `list --selector`. It closed in
+0.19.0 with [§DF-homeless-code-declares-no-ids](../decisions/functional/DF-homeless-code-declares-no-ids.md#df-homeless-code-declares-no-ids-code-with-no-row-is-refused-as-declaring-no-ids-alone-from-0190) (#680). No row of identity remains open.
 
 ### differences.sections: Sections
 

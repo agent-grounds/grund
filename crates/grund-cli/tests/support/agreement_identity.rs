@@ -100,8 +100,8 @@ pub fn a_lowercase_subject_is_refused_once() -> Verdict {
     )
 }
 
-/// Row G09: the default homeless kind `code` is one verdict whether a `[citations]`
-/// target or `list --kind` names it (§REQ-one-answer.identity.kinds).
+/// Row G09, closed with #680: the default homeless kind `code` is one verdict
+/// whether a `[citations]` target or `list --kind` names it (§REQ-one-answer.identity.kinds).
 pub fn the_homeless_kind_is_one_verdict() -> Verdict {
     let files = [("docs/fs.md", "# FS-a: A\n\nBody.\n")];
     let listed = Tree::new(
@@ -113,12 +113,15 @@ pub fn the_homeless_kind_is_one_verdict() -> Verdict {
         "g09-table",
         &[&[("grund.toml", table.as_str())][..], &files].concat(),
     );
+    // Refused as not citable, in either surface's words, and not as unknown.
+    let non_citable = |error: String| {
+        (error.contains("non-citable") || error.contains("declares no IDs"))
+            && !error.contains("unknown kind")
+    };
     agree(
         "the table's `code` is non-citable / list --kind's is",
-        tabled.error(&["check"]).contains("non-citable"),
-        listed
-            .error(&["list", "--kind", "code"])
-            .contains("non-citable"),
+        non_citable(tabled.error(&["check"])),
+        non_citable(listed.error(&["list", "--kind", "code"])),
     )
 }
 

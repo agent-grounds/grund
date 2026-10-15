@@ -50,7 +50,6 @@ use std::path::{Path, PathBuf};
 const LEDGER: &[(&str, &str, &str)] = &[
     ("G01", "r1", "citation-is-its-whole-token"),
     ("R01", "r2", "narrowed-resolves-as-check"),
-    ("G09", "g09", "the-homeless-kind-is-one-verdict"),
     ("P01", "p01", "a-body-ends-where-refs-ends-it"),
     ("P02", "p02", "a-block-comment-section-is-one-section"),
     ("P03", "p03", "a-top-level-doc-heading-is-one-section"),
@@ -88,7 +87,8 @@ const LEDGER: &[(&str, &str, &str)] = &[
 /// builds, the reproduced rows of #576 first, then one per row of
 /// §REQ-one-answer.differences the command line, shell completion or the editor
 /// snapshot can show. A tree with no row holds a row that closed, U01 and U05 with
-/// #597, U04, U07 and U08 with #651 and G06 with #671, so its two answers must agree.
+/// #597, U04, U07 and U08 with #651, G06 with #671 and G09 with #680, so its two
+/// answers must agree.
 const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
     (
         Some("G01"),
@@ -109,7 +109,7 @@ const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
         identity::a_lowercase_subject_is_refused_once,
     ),
     (
-        Some("G09"),
+        None,
         "g09",
         "the-homeless-kind-is-one-verdict",
         identity::the_homeless_kind_is_one_verdict,
@@ -461,12 +461,12 @@ fn every_listed_difference_has_its_tree() {
 fn a_row_the_requirement_drops_is_refused() {
     let rows: Vec<String> = difference_rows()
         .into_iter()
-        .filter(|r| r != "G09")
+        .filter(|r| r != "R01")
         .collect();
     let wrong = listing_problems(&rows);
     assert_eq!(
         wrong,
-        vec!["G09 is no longer listed: take it out of this test".to_string()]
+        vec!["R01 is no longer listed: take it out of this test".to_string()]
     );
 }
 
