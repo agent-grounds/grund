@@ -5,9 +5,9 @@
 //! shared atomic writer (§FS-config-migrate.6). It returns the record and
 //! renders nothing.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
-use super::check::{CheckOpts, CheckOutput, check_with_run_warnings};
+use super::check::{CheckOpts, CheckOutput, check_with_projects};
 use crate::config::migrate::{
     Gate, GateResult, Located, MigrateFailure, MigrateOutcome, MigrateReport, Prepared, locate,
     member_on_v1, translate,
@@ -128,42 +128,51 @@ pub(super) fn report_gate(
     config: &str,
 ) -> Vec<String> {
     let run = || {
-        check_with_run_warnings(CheckOpts {
+        check_with_projects(CheckOpts {
             path: located.root.clone(),
             path_provided: true,
             include_suggestions: true,
             ..CheckOpts::default()
         })
     };
-    let before = lines(run(), None, config);
+    let before = lines(run(), None, config, &located.root);
     // `[output] relative_paths = false` is `--path-base=invocation` once dropped.
     let base = crate::config::report_path_base()
         .or((!v1.presentation.output.relative_paths).then_some(PathBase::Invocation));
     let after = crate::config::with_config_text(&located.file, candidate, || {
         with_report_path_base(base, run)
     });
-    let after = lines(after, Some(line_map), config);
-    let mut out: Vec<String> = before
-        .iter()
-        .filter(|line| !after.contains(line))
-        .map(|line| format!("- {line}"))
-        .collect();
-    out.extend(
-        after
-            .iter()
-            .filter(|line| !before.contains(line))
-            .map(|line| format!("+ {line}")),
-    );
+    let after = lines(after, Some(line_map), config, &located.root);
+    // Compared as multisets: a line twice in one run and once in the other differs.
+    let mut out = surplus(&before, &after, "- ");
+    out.extend(surplus(&after, &before, "+ "));
     out
 }
 
-/// One check run as comparable lines: each finding by channel, the run
-/// warnings, and the exit. A finding in the config is moved to its v1 line, and
-/// the v2 table names in a message are spelled as v1.
+/// Each line of `ours` that `theirs` holds fewer times, once per extra copy,
+/// prefixed with `mark`.
+pub(super) fn surplus(ours: &[String], theirs: &[String], mark: &str) -> Vec<String> {
+    let mut left: Vec<&String> = theirs.iter().collect();
+    ours.iter()
+        .filter(|line| match left.iter().position(|other| other == line) {
+            Some(at) => {
+                left.swap_remove(at);
+                false
+            }
+            None => true,
+        })
+        .map(|line| format!("{mark}{line}"))
+        .collect()
+}
+
+/// One check run as comparable lines: each project checked, each finding by
+/// channel, the run warnings, and the exit. A finding in the config is moved to
+/// its v1 line, and the v2 table names in a message are spelled as v1.
 fn lines(
-    (warnings, output): (Vec<Finding>, anyhow::Result<CheckOutput>),
+    (warnings, output): (Vec<Finding>, anyhow::Result<(CheckOutput, Vec<PathBuf>)>),
     line_map: Option<&[(usize, usize)]>,
     config: &str,
+    root_dir: &Path,
 ) -> Vec<String> {
     let v1_line = |map: &[(usize, usize)], at: usize| {
         map.iter()
@@ -192,7 +201,11 @@ fn lines(
     };
     let mut out: Vec<String> = warnings.iter().map(|w| finding("run-warning", w)).collect();
     match output {
-        Ok(output) => {
+        Ok((output, projects)) => {
+            out.extend(projects.iter().map(|root| {
+                let shown = format_path(&relative_from_base(root_dir, root));
+                format!("project {}", if shown.is_empty() { "." } else { &shown })
+            }));
             let report = &output.report;
             out.extend(report.errors.iter().map(|f| finding("error", f)));
             out.extend(report.warnings.iter().map(|f| finding("warning", f)));

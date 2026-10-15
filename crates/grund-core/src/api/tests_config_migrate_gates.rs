@@ -7,7 +7,7 @@
 
 use std::path::{Path, PathBuf};
 
-use super::config_migrate::{config_lines, report_gate, v1_spelling};
+use super::config_migrate::{config_lines, report_gate, surplus, v1_spelling};
 use crate::config::Project;
 use crate::config::migrate::{GateResult, Located, MigrateOutcome, Prepared, translate};
 use crate::testing::{test_root, write};
@@ -164,4 +164,30 @@ fn report_gate_moves_only_this_configs_lines_inside_a_message() {
         moved,
         "grund.toml:4: x, see sub/grund.toml:5 and grund.toml:6"
     );
+}
+
+/// §FS-config-migrate.5.2: the projects checked are compared — a candidate that
+/// checks the root as well as its member differs by that project.
+#[test]
+fn report_gate_compares_the_projects_checked() {
+    let root = opted_out_root("projects");
+    let (located, v1, candidate, map) = prepared(&root);
+    let wrong = candidate.replacen("include_root = false", "include_root = true", 1);
+    assert_ne!(wrong, candidate, "the candidate spells include_root");
+    let lines = report_gate(&located, &v1, &wrong, &map, "grund.toml");
+    assert!(
+        lines.iter().any(|line| line.starts_with("+ project ")),
+        "{lines:?}"
+    );
+}
+
+/// §FS-config-migrate.5.2: the runs are compared as multisets, so a line twice
+/// in one run and once in the other is one difference.
+#[test]
+fn report_gate_compares_the_runs_as_multisets() {
+    let line = |text: &str| text.to_string();
+    let before = [line("a"), line("a"), line("b")];
+    let after = [line("b"), line("a")];
+    assert_eq!(surplus(&before, &after, "- "), ["- a"]);
+    assert_eq!(surplus(&after, &before, "+ "), Vec::<String>::new());
 }

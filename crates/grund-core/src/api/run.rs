@@ -35,6 +35,9 @@ pub(crate) struct CheckRun {
     pub(crate) config: Config,
     pub(crate) report: CheckReport,
     pub(crate) had_scan_errors: bool,
+    /// The root of each project the run checked, in check order; the report
+    /// gate of `config migrate` compares them (§FS-config-migrate.5.2).
+    pub(crate) projects: Vec<PathBuf>,
 }
 
 /// One `grund check` run over `path`: resolve the config, scan, check, and fold in
@@ -247,6 +250,7 @@ pub(super) fn run_check_with_run_warnings(
     sort_diagnostics(&mut report.errors);
 
     let run = CheckRun {
+        projects: vec![config.root.clone()],
         config,
         report,
         had_scan_errors,
@@ -426,6 +430,10 @@ fn run_workspace_check(
         config: root_config.into_facade(),
         report,
         had_scan_errors,
+        projects: projects
+            .iter()
+            .map(|project| project.config.root.clone())
+            .collect(),
     })
 }
 

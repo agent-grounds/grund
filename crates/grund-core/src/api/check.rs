@@ -100,12 +100,21 @@ pub fn check_with_opts(opts: CheckOpts) -> Result<CheckOutput> {
 /// the engine writes no stream (§FS-distribution.3.1).
 #[doc(hidden)]
 pub fn check_with_run_warnings(opts: CheckOpts) -> (Vec<Finding>, Result<CheckOutput>) {
+    let (warnings, output) = check_with_projects(opts);
+    (warnings, output.map(|(output, _)| output))
+}
+
+/// [`check_with_run_warnings`] with the root of each project the run checked,
+/// which `config migrate`'s report gate compares (§FS-config-migrate.5.2).
+pub(super) fn check_with_projects(
+    opts: CheckOpts,
+) -> (Vec<Finding>, Result<(CheckOutput, Vec<PathBuf>)>) {
     let mut warnings = Vec::new();
     let output = check_run(opts, &mut warnings);
     (warnings, output)
 }
 
-fn check_run(opts: CheckOpts, warnings: &mut Vec<Finding>) -> Result<CheckOutput> {
+fn check_run(opts: CheckOpts, warnings: &mut Vec<Finding>) -> Result<(CheckOutput, Vec<PathBuf>)> {
     let run = run_check_with_run_warnings(
         &opts.path,
         opts.path_provided,
@@ -114,10 +123,11 @@ fn check_run(opts: CheckOpts, warnings: &mut Vec<Finding>) -> Result<CheckOutput
         opts.rule.as_deref(),
         warnings,
     )?;
-    Ok(CheckOutput {
+    let output = CheckOutput {
         output_format: run.config.output_format.clone(),
         warnings: warnings.clone(),
         report: public_report(&run.config, run.report, opts.include_suggestions),
         had_scan_errors: run.had_scan_errors,
-    })
+    };
+    Ok((output, run.projects))
 }
