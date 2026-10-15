@@ -96,3 +96,25 @@ Migration touches one config. A workspace root lists each member still on
 version 1 with the command that migrates it, and the members are migrated one at
 a time
 ([§FS-config-migrate.8](../functional-spec/FS-config-migrate.md#8-workspaces)).
+
+## Why grund tells you about version 1
+
+A `grund check`, `grund config validate` or `grund config show` on a config read
+as version 1 — one that writes `grund_config_version = 1`, or no version at all —
+says so on stderr, once per such config, where a clean `check` printed `success`:
+
+```text
+warning: grund.toml is version 1; migrate it with grund config migrate --to 2
+```
+
+In a workspace each member still on version 1 gets its own line, ending with the
+directory to pass, and a config on version 2 or a project with no config file
+gets none
+([§FS-check.checks.config-version-1](../functional-spec/FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)).
+The line is a caution and never becomes an error: the exit code does not move,
+no release is named in which version 1 stops loading, and the file keeps meaning
+what it means
+([§FS-config.5.3](../functional-spec/FS-config.md#53-a-version-1-config-is-cautioned-and-never-retired)).
+Migrating is what ends it. Until then, `grund check --ignore config-version-1`
+leaves it out and restores `success`; under `--format json` it is the stderr
+finding with code `config-version-1`.
