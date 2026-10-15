@@ -63,6 +63,24 @@ fn include(plan: &Include) -> String {
     out
 }
 
+/// `[scan] docstring_python`'s spelling: the definition `.py` maps to, which
+/// reads docstrings only when the key was on, or nothing when `.py` is not read.
+fn python_docstrings(v2: &Project) -> String {
+    let Some(model) = &v2.schema.sources.model else {
+        return ALWAYS.into();
+    };
+    let definition = model
+        .extensions
+        .iter()
+        .find(|(suffix, _)| suffix == "py")
+        .and_then(|(_, name)| model.definitions.iter().find(|def| def.name == *name));
+    match definition {
+        Some(def) if def.docstrings => format!("docstrings of definition {}", def.name),
+        Some(def) => format!("docstrings of definition {} (off)", def.name),
+        None => "nothing, [scan] extensions does not read `py`".into(),
+    }
+}
+
 /// The v2 spelling of one authored v1 key (§FS-config-migrate.mapping).
 fn spelling(section: &str, key: &str, row: &str, v2: &Project, plan: &Include) -> String {
     let notes = &v2.schema.notes;
@@ -124,7 +142,7 @@ fn spelling(section: &str, key: &str, row: &str, v2: &Project, plan: &Include) -
             definitions(v2)
         ),
         ("scan", "comment_prefixes") => format!("comment_prefixes of {}", definitions(v2)),
-        ("scan", "docstring_python") => "docstrings of definition v1_python".into(),
+        ("scan", "docstring_python") => python_docstrings(v2),
         ("scan", "exclude" | "respect_gitignore") => format!("[schema.sources] {key}"),
         ("fmt.cross_refs", "anchor_format") => "[presentation.fmt] anchors".into(),
         ("fmt.cross_refs", "enabled") => "[presentation.fmt] links".into(),

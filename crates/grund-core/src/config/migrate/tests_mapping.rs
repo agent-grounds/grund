@@ -17,6 +17,8 @@ pub(super) enum Outcome {
     Lacks(&'static str),
     /// A `written:` line names this default.
     Written(&'static str),
+    /// A `mapped:` line of the key map spells its v2 key as this.
+    Maps(&'static str),
     /// A notice says this, and the records gate passes.
     Notice(&'static str),
     /// A refusal says this.
@@ -162,13 +164,19 @@ fn missed(outcome: &Outcome, report: &Result<MigrateReport, String>) -> Option<S
         Mapped(text) => candidate.contains(text),
         Lacks(text) => !candidate.contains(text),
         Written(text) => report.written.iter().any(|line| line.starts_with(text)),
+        Maps(text) => report.mapped.iter().any(|key| key.spelling == *text),
         Notice(text) => report
             .notices
             .iter()
             .any(|notice| notice.why.contains(text)),
         Refused(_) | Invalid(_) => unreachable!("answered above"),
     };
-    (!held).then(|| format!("candidate:\n{candidate}\nwritten: {:?}", report.written))
+    (!held).then(|| {
+        format!(
+            "candidate:\n{candidate}\nwritten: {:?}\nmapped: {:?}",
+            report.written, report.mapped
+        )
+    })
 }
 
 /// §FS-config-migrate.mapping: every case translates to the outcome its row of

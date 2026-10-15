@@ -31,6 +31,7 @@ use std::path::{Path, PathBuf};
 
 use super::compiled::compile;
 use super::discovery::{config_file_in, discovery_start_dir, pending_config};
+use super::kind::KindResolution;
 use super::project::Project;
 use super::run::{Invocation, Selection};
 use super::v1::{LinePass, LineRecord};
@@ -179,10 +180,17 @@ pub(crate) fn translate(located: &Located, write: bool, drop_comments: bool) -> 
             return Ok(translated(report, text, project));
         }
     };
-    let body = loaded.v2_toml().expect("a version 2 project renders");
+    // *fetch resolves must*: the reload puts v2's default for a fetched kind
+    // back, and the candidate leaves it unwritten, as the mapping row says.
+    let mut shown = loaded.clone();
+    shown
+        .rules
+        .resolution
+        .retain(|_, resolution| *resolution != KindResolution::Must);
+    let body = shown.v2_toml().expect("a version 2 project renders");
     let carried = comments::carry(&body, &lines, &keys);
     report.comments = carried.listed;
-    report.mapped = keymap::map(&keys, &loaded, &include).0;
+    report.mapped = keymap::map(&keys, &shown, &include).0;
     report.written = keymap::written(&keys, &project, &body);
     report.code_row_note = !include.places().is_empty();
     let differences = records_gate::compare(&project, &loaded, root);
