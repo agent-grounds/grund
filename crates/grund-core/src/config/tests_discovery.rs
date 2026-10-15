@@ -14,6 +14,9 @@ use crate::writers::{InitOpts, init};
 
 const MARKER_AT: &str = "[reference]\nmarker = \"@\"\n";
 const MARKER_HASH: &str = "[reference]\nmarker = \"#\"\n";
+/// `MARKER_AT` on version 2, for a case about the config's location whose
+/// warnings a version 1 caution would add to (§FS-check.checks.config-version-1).
+const MARKER_AT_V2: &str = "grund_config_version = 2\n\n[schema]\nmarker = \"@\"\n";
 
 // §FS-config.1: the bare root-visible `grund.toml` is a config root on its
 // own — the form `grund init` now generates (§FS-init.2.4).
@@ -70,7 +73,7 @@ fn the_bare_form_wins_a_tie_and_the_loser_is_recorded() {
 #[test]
 fn redundant_pair_is_reported_as_a_warning() {
     let root = test_root("redundant_pair_is_reported_as_a_warning");
-    write(&root.join("grund.toml"), MARKER_AT);
+    write(&root.join("grund.toml"), MARKER_AT_V2);
     write(&root.join(".agents/grund.toml"), MARKER_HASH);
 
     let config = load_config(&root).expect("load tied config");
@@ -87,7 +90,7 @@ fn redundant_pair_is_reported_as_a_warning() {
 #[test]
 fn the_bare_form_alone_warns_about_nothing() {
     let root = test_root("the_bare_form_alone_warns_about_nothing");
-    write(&root.join("grund.toml"), MARKER_AT);
+    write(&root.join("grund.toml"), MARKER_AT_V2);
 
     let config = load_config(&root).expect("load single config");
 
@@ -104,7 +107,7 @@ fn the_bare_form_alone_warns_about_nothing() {
 #[test]
 fn a_config_read_from_the_agents_location_is_reported_as_deprecated() {
     let root = test_root("a_config_read_from_the_agents_location_is_reported_as_deprecated");
-    write(&root.join(".agents/grund.toml"), MARKER_AT);
+    write(&root.join(".agents/grund.toml"), MARKER_AT_V2);
 
     let config = load_config(&root).expect("load .agents config");
 
@@ -127,7 +130,7 @@ fn a_config_read_from_the_agents_location_is_reported_as_deprecated() {
 #[test]
 fn the_redundant_pair_earns_no_deprecation_line() {
     let root = test_root("the_redundant_pair_earns_no_deprecation_line");
-    write(&root.join("grund.toml"), MARKER_AT);
+    write(&root.join("grund.toml"), MARKER_AT_V2);
     write(&root.join(".agents/grund.toml"), MARKER_HASH);
 
     let config = load_config(&root).expect("load tied config");

@@ -622,6 +622,25 @@ pub(crate) fn only<'a>(run: &'a CheckRun, code: &str) -> &'a Diagnostic {
         .unwrap_or_else(|| panic!("expected a {code} finding, got {:?}", codes(run)))
 }
 
+/// Whether a finding is about the graph rather than the run: the unread-file
+/// line and the version 1 caution are stderr lines about the scan and the
+/// config (§FS-check.checks.config-version-1).
+fn is_graph_finding(diagnostic: &Diagnostic) -> bool {
+    !matches!(diagnostic.code, "io" | "config-version-1")
+}
+
+/// The codes of [`findings`], in the order the report holds them — what a
+/// case asserts on when its fixture is a version 1 config it is not about.
+pub(crate) fn graph_codes(run: &CheckRun) -> Vec<String> {
+    run.report
+        .errors
+        .iter()
+        .chain(run.report.warnings.iter())
+        .filter(|diagnostic| is_graph_finding(diagnostic))
+        .map(|diagnostic| diagnostic.code.to_string())
+        .collect()
+}
+
 /// The graph findings — everything the report prints on stdout as
 /// `path:line: message` (§FS-check.2.1).
 pub(crate) fn findings(run: &CheckRun) -> Vec<String> {
@@ -630,7 +649,7 @@ pub(crate) fn findings(run: &CheckRun) -> Vec<String> {
         .errors
         .iter()
         .chain(run.report.warnings.iter())
-        .filter(|diagnostic| diagnostic.code != "io")
+        .filter(|diagnostic| is_graph_finding(diagnostic))
         .collect::<Vec<_>>();
     // The order the report prints in (§FS-errors.4.1), so a case can read as
     // the lines a user would see.
