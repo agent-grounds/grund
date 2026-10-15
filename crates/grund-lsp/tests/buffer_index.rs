@@ -1,8 +1,8 @@
 //! Real-server regression for the index look under an unsaved index buffer: the
-//! look reads the index as saved (§DF-four-editor-checks-read-saved-text), and
-//! whether a saved line is a declaration heading is read off the record of that
-//! same saved text (§AR-scanner.2.8.5), so shifting the buffer's lines moves no
-//! missing-entry message (§FS-check.3.18.5.1).
+//! look reads the index as a save would write it (§FS-scan.text.buffer), and
+//! whether a line is a declaration heading is read off the record of that same
+//! text (§AR-scanner.2.8.5), so the buffer gives the missing-entry message a save
+//! would (§FS-check.3.18.5.1).
 
 mod support;
 
@@ -105,7 +105,7 @@ fn missing_entry_under_buffer(name: &str, saved: &str, buffer: &str) -> (Vec<Str
 }
 
 /// The mention look: the buffer's line 1 is prose and its heading moves to line
-/// 3, but the saved line 1 is still the heading, which mentions nothing.
+/// 3, where the buffer's record holds it, so the heading still mentions nothing.
 #[test]
 fn shifting_an_unsaved_index_buffer_moves_no_mention() {
     // A declaration heading declares its ID rather than mentioning another
@@ -118,11 +118,12 @@ fn shifting_an_unsaved_index_buffer_moves_no_mention() {
     assert_eq!(after, [NOT_LISTED], "shifted buffer");
 }
 
-/// The entry pass: the buffer's entry citation sits on line 1, which the saved
-/// text holds a declaration heading on, so the form read off that saved line is
-/// not an entry, as it was before the record was read (§FS-check.3.17.4).
+/// The entry pass: the buffer's entry citation sits on line 1, where the saved
+/// text holds a declaration heading. The heading is asked of the buffer's record,
+/// not the saved one, so the buffer lists FS-002-session as saving it would
+/// (§FS-check.3.17.4).
 #[test]
-fn shifting_an_unsaved_index_buffer_moves_no_entry() {
+fn an_entry_in_an_unsaved_index_buffer_lists_the_id() {
     let link = "[§FS-002-session](FS-002-session.md#fs-002-session-user-session)";
     let saved = format!(
         "# FS-000-index: Index of {link}\n\n\
@@ -131,5 +132,5 @@ fn shifting_an_unsaved_index_buffer_moves_no_entry() {
     let buffer = format!("- {link}\n{saved}");
     let (before, after) = missing_entry_under_buffer("buffer-index-entry", &saved, &buffer);
     assert_eq!(before, [NOT_LISTED], "saved");
-    assert_eq!(after, [NOT_LISTED], "shifted buffer");
+    assert!(after.is_empty(), "buffer with the entry: {after:?}");
 }

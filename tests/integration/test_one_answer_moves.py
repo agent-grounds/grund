@@ -38,7 +38,7 @@ DIFFERENCE_ROWS = {
     "identity": (),
     "sections": (),
     "stubs": (),
-    "text": ("R06a", "R06b", "R06c", "R06d"),
+    "text": (),
     "scope": (),
 }
 
@@ -118,8 +118,8 @@ class OneAnswerMoveTests(unittest.TestCase):
         # U07 and U08 were found with #597; U04, U07 and U08 closed with #651; G06
         # closed with #671; G09 closed with #680; Placement, U03a to U03d and U06 closed
         # with #650; P01–P03, P07, P10 and P12 closed with #639; P16 closed with #655; R01
-        # and R02 closed with #621.
-        self.assertEqual(4, sum(len(rows) for rows in DIFFERENCE_ROWS.values()))
+        # and R02 closed with #621; R06a-d closed in 0.19.0 with #624.
+        self.assertEqual(0, sum(len(rows) for rows in DIFFERENCE_ROWS.values()))
 
     def test_each_moved_sentence_lives_at_its_destination_only(self):
         declared = _sections(REQUIREMENT) if REQUIREMENT.is_file() else {}
