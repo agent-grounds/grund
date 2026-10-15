@@ -89,5 +89,7 @@ impl LinePass {
             raw: raw.to_string(),
             kind,
         });
+        #[cfg(test)]
+        super::tests_capture_contract::record_created();
     }
 }

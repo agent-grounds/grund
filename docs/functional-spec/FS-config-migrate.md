@@ -177,6 +177,18 @@ The header block is written as the first lines of the candidate, above `grund_co
 
 A comment inside a multi-line value, a comment standing on its own, and a comment attached to a key that is dropped, split or merged are listed ([§FS-config-migrate.2.2](FS-config-migrate.md#22-stderr-is-the-report)). The lines come from the v1 reader's own line pass, which records each key's line and its attached comments; migration does not parse the file a second time.
 
+Migration explicitly requests these owned raw-line, key, value, header and
+comment records during that same read. An ordinary version-1 config load does
+not construct or retain them. This holds for every caller of the ordinary
+reader, including discovery, workspace members, `config show`, `config validate`
+and pending config text. It serves [§GOAL-fast-feedback.1](../goals.md#1-performance-targets): commands that do not
+migrate must not pay for migration's record of the file.
+
+Choosing whether to capture does not change the lowered project, accepted
+spellings, first error, error location or rendered output. Migration alone
+keeps its tolerant reading of path-shaped exclusions ([§FS-config-migrate.3.1.4](FS-config-migrate.md#314-a-path-shaped-scan-exclude-entry));
+ordinary loads still refuse them ([§FS-config.3.5.16](FS-config.md#3516-an-exclude-entry-containing--is-refused)).
+
 ### 4.4 Listed comments, and `--drop-comments`
 
 `--write` refuses while any listed comment would be lost: exit `1`, and the file is not written. `--drop-comments` lets it go ahead, drops exactly the listed comments, and names them again after the write ([§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write)). It is the only way migration loses a comment ([§REQ-no-data-loss.4](../requirements/REQ-no-data-loss.md#4-one-migration-may-replace-the-config)).

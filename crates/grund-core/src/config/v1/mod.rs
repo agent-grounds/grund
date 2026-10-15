@@ -19,6 +19,8 @@ mod lines;
 pub(super) mod mapping;
 mod parse;
 mod scan_block;
+#[cfg(test)]
+mod tests_capture_contract;
 mod values;
 
 use anyhow::Result;
