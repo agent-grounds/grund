@@ -19,6 +19,8 @@ mod record;
 mod records_gate;
 mod refusals;
 #[cfg(test)]
+mod tests_comments;
+#[cfg(test)]
 mod tests_gates;
 #[cfg(test)]
 mod tests_mapping;

@@ -113,9 +113,11 @@ pub(super) fn carry(body: &str, lines: &[LineRecord], keys: &Keys) -> Carried {
                 _ => None,
             };
             if let Some(comment) = comment {
+                // Two v1 lines can land on one v2 line, which keeps one trailing
+                // comment: a later one is listed, never overwritten (§FS-config-migrate.4.4).
                 match target_of(record).and_then(|t| index.find(&t)) {
-                    Some(at) => trailing[at] = Some(comment),
-                    None => listed.push(ListedComment {
+                    Some(at) if trailing[at].is_none() => trailing[at] = Some(comment),
+                    _ => listed.push(ListedComment {
                         first: record.line,
                         last: record.line,
                         place: format!("inside {}", v1_key(record)),
