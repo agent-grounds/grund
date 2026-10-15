@@ -157,13 +157,8 @@ impl Watch {
                     String::from_utf8_lossy(wanted[1])
                 );
             }
-            // §FS-check.6.1.2: do not assume an exact count of native events/runs.
-            // Consume repeated previous snapshots before matching the new one.
             for (stream, target) in wanted.iter().enumerate() {
-                let old = &self.previous[stream];
-                while !old.is_empty() && self.bytes[stream].starts_with(old) && old != *target {
-                    self.bytes[stream].drain(..old.len());
-                }
+                self.drain_stale(stream, target);
             }
             if wanted
                 .iter()
@@ -181,6 +176,26 @@ impl Watch {
                 "watch report deadline: expected={expected:?}, captured={:?}",
                 self.bytes
             );
+        }
+    }
+
+    /// §FS-check.6.1.2: do not assume an exact count of native events/runs. Consume
+    /// repeated previous snapshots, and transient input errors from a run that read
+    /// the tree mid-deletion (§FS-check.6.3.1), before matching the new report.
+    fn drain_stale(&mut self, stream: usize, target: &[u8]) {
+        loop {
+            let old = &self.previous[stream];
+            let bytes = &mut self.bytes[stream];
+            if !old.is_empty() && bytes.starts_with(old) && old != target {
+                bytes.drain(..old.len());
+                continue;
+            }
+            match transient_line(bytes) {
+                Some(n) if !target.starts_with(&bytes[..n]) => {
+                    bytes.drain(..n);
+                }
+                _ => return,
+            }
         }
     }
 
@@ -225,10 +240,7 @@ impl Watch {
             self.bytes
         );
         for stream in 0..2 {
-            let old = &self.previous[stream];
-            while !old.is_empty() && self.bytes[stream].starts_with(old) {
-                self.bytes[stream].drain(..old.len());
-            }
+            self.drain_stale(stream, &[]);
             assert!(
                 self.bytes[stream].is_empty(),
                 "unexpected bytes on stream {stream}: {:?}",
@@ -244,4 +256,12 @@ impl Drop for Watch {
         let _ = self.child.wait();
         self.join_readers();
     }
+}
+
+/// The length of a leading complete `error: <path>: entity not found` line: the
+/// recoverable report of an input deleted while it was read (§FS-check.6.3.1).
+fn transient_line(bytes: &[u8]) -> Option<usize> {
+    let end = bytes.iter().position(|&b| b == b'\n')? + 1;
+    let line = &bytes[..end];
+    (line.starts_with(b"error: ") && line.ends_with(b": entity not found\n")).then_some(end)
 }
