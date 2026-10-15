@@ -99,7 +99,10 @@ CITED = (
 
 # Each adds the bytes of the requirements chapter its spec gained since (#634: 5295
 # and 4680), so the room a restatement could grow back into is what it was.
-BASELINES = {"FS-show.md": 66475, "FS-fmt.md": 93497}
+
+# FS-show.md grew by the 463 bytes of §FS-show.3.2.1's paragraph on where a wrap
+# ends, which cites the wrap test rather than restating it (grund#655).
+BASELINES = {"FS-show.md": 66938, "FS-fmt.md": 93497}
 
 
 def _flat(text):
