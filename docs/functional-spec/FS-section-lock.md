@@ -144,13 +144,11 @@ A citation that resolves to a locked address with no entry in the lock is an err
 FS-login.format.1 is cited but has no entry in .grund/sections/FS-login.lock; run grund fmt --write
 ```
 
-When the address is a mixed path, the message adds the releases, because grund before 0.18.0 skipped such a citation without a word ([§DF-number-name-sections.decision.citations](../decisions/functional/DF-number-name-sections.md#decisioncitations-a-citation-that-was-skipped-is-now-checked)):
-
-```text
-FS-x.1.goals is cited but has no entry in .grund/sections/FS-x.lock; run grund fmt --write; grund 0.17 skipped a citation of a name under a number, and 0.18.0 records it in the section lock
-```
-
-The error is immediate rather than ramped: the one command it names repairs it ([§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)). A mixed address whose heading is relative takes the same clause. The clause goes with the warning window of [§FS-citations.checks.mixed-path](FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190) ([§RM-mixed-path-citation-error](../roadmap.md#rm-mixed-path-citation-error-make-a-citation-of-a-name-under-a-number-that-resolves-to-nothing-an-error-in-0190)).
+The same immediate error and repair command apply to mixed addresses,
+including complete headings, relative headings and stub targets. From 0.19.0
+there is no versioned mixed-path clause ([§DF-mixed-path-citation-errors.decision](../decisions/functional/DF-mixed-path-citation-errors.md#decision-decision)).
+The one command repairs the missing entry ([§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations));
+enrollment and fingerprints remain [§FS-section-lock.holds.entry](FS-section-lock.md#holdsentry-one-line-per-locked-address)'s.
 
 Without an entry the address is unguarded, so the citation is not taken as checked until `fmt --write` records it. A citation that resolves to no section at all is [§FS-check.3.2](FS-check.md#32-missing-section) and never this.
 
