@@ -293,6 +293,40 @@ $ grund check
 The [values guide](docs/user-facing/values.md) covers JSON declarations, values inside
 prose specs, and bindings in code comments.
 
+## Chapter rules
+
+A convention can be written as one sentence and checked. With `rules = true` on a kind,
+each declaration's title is a rule in a small controlled English and its body says why.
+From the [rules example](examples/rules/):
+
+```markdown
+# RULE-requirements: The requirements chapter of each FS must cite at least one REQ.
+
+The requirement chapter carries the evidence, because §GOAL-rules makes conventions executable.
+```
+
+A spec that cites its requirement from another chapter fails the check:
+
+```console
+$ grund check
+…
+docs/fs/FS-demo.md:6: error: FS-demo.requirements must cite REQ (RULE-requirements)
+```
+
+A sentence that does not parse is refused rather than guessed at, offering the one that
+would where it can tell, so a reader and `grund check` never give a rule two meanings.
+Try one before you commit it:
+
+```console
+$ grund check --rule "Each FS may not cite any AR." --only-rule
+error: modality "may not" is not accepted; accepted form: Each FS must not cite any AR.
+```
+
+`grund init` repeats every valid rule under `### Chapter rules` in the agent
+instructions, so an agent reads the sentence `check` enforces. The
+[chapter rules guide](docs/user-facing/rules.md) lists every accepted sentence, the
+finding each one reports, and every refusal.
+
 ## Make citations clickable
 
 Turn a `§<ID>` in your terminal into something you click, landing at the exact line it cites:
