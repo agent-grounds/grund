@@ -305,10 +305,14 @@ From the [rules example](examples/rules/):
 The requirement chapter carries the evidence, because §GOAL-rules makes conventions executable.
 ```
 
-A spec that cites its requirement from another chapter fails the check:
+A rule can count chapters as well as citations: `RULE-security`, in the same example,
+says `FS-demo must have exactly one security chapter.` A spec with no such chapter, which
+cites its requirement from another chapter, fails both:
 
 ```console
 $ grund check
+…
+docs/fs/FS-demo.md:1: error: FS-demo has 0 security chapters; RULE-security requires exactly one; …
 …
 docs/fs/FS-demo.md:6: error: FS-demo.requirements must cite REQ (RULE-requirements)
 ```
