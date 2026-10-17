@@ -213,6 +213,18 @@ Three carve-outs share one predicate, `bare_token_in_never_rewrite_zone`, whose 
 
 The source-only skip of a marker-prefixed **qualified** `§<alias>/<ID>` inside an inline-code span or a string literal is the same path-collision caution that already rules out an *unmarked* `alias/ID` ([§AR-workspace.3.1](AR-workspace.md#31-the-rule)). That collision is a source-language hazard; in Markdown the typed marker is the author's deliberate act, so a marker-prefixed qualified citation in a `.md` file — including one wrapped in backticks — is always a citation, exactly like the unqualified form ([§FS-workspace.1](../functional-spec/FS-workspace.md#1-citation-syntax)).
 
+Both the unknown-alias fallback and workspace-aware qualified passes share the context
+decision of [§FS-citations.recognized.contexts](../functional-spec/FS-citations.md#recognizedcontexts-contexts-read-as-neither-prose-nor-code).
+For supported comment sites this decision distinguishes comment prose and nonliteral
+single quotes (apostrophes, Rust lifetimes and Haskell primes) from genuine quoted data
+and inline code, while retaining the existing bounded multi-line literal state. It uses
+the scanner's source/comment and language context; it does not require a broader host
+parser or new multi-line forms. The formatter's raw quote toggles and the bare-token
+never-rewrite test keep their separate contracts
+([§FS-fmt.2.3.1](../functional-spec/FS-fmt.md#231-string-literal-exclusion-rule),
+[§FS-citations.recognized.string-literals](../functional-spec/FS-citations.md#recognizedstring-literals-string-literals-in-source-files));
+their conservative answer must not suppress these marked qualified comment sites.
+
 #### 2.3.3 Fence state is decided first
 
 Markdown fence state is decided before this pass, by the opener and closer rules of [§FS-languages.fence](../functional-spec/FS-languages.md#fence-fences): the scanner remembers the opening character and run length, so a tilde run cannot close a backtick fence, a shorter run cannot close a longer one, and an indented code sample that merely contains three delimiters cannot hide the remainder of the file. Delimiter lines and every line while that state is open bypass declaration, section, citation, and escaped-citation detection together.
