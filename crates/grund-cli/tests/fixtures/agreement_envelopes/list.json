@@ -1,0 +1,165 @@
+{
+  "point": "§REQ-one-answer.proof.evidence",
+  "provenance": {
+    "sha": "e7e43b8d1cb46f5607e0dc7ce70932d65d36f9a5",
+    "source": "review-2/host-control-calls.json",
+    "role": "recorded real comparator inputs; not independent generic truth"
+  },
+  "surface": "list",
+  "cli": {
+    "args": [
+      "list",
+      "/fixture/repo",
+      "--format",
+      "json"
+    ],
+    "exit": 0,
+    "stdout": "{\"id\":\"AR-001-auth\",\"kind\":\"AR\",\"path\":\"docs/architecture/AR-001-auth.md\",\"line\":1,\"title\":\"The auth module\",\"stub\":false,\"defines\":null,\"refs\":0,\"duplicate\":false}\n{\"id\":\"FS-001-login\",\"kind\":\"FS\",\"path\":\"docs/functional-spec/FS-001-login.md\",\"line\":1,\"title\":\"User can log in\",\"stub\":false,\"defines\":null,\"refs\":2,\"duplicate\":false}\n{\"id\":\"FS-002-session\",\"kind\":\"FS\",\"path\":\"docs/functional-spec/FS-002-session.md\",\"line\":1,\"title\":\"A session is created on login\",\"stub\":false,\"defines\":null,\"refs\":0,\"duplicate\":false}\n",
+    "stderr": ""
+  },
+  "python": {
+    "failure": null,
+    "result": {
+      "run_cautions": [],
+      "output_format": "text",
+      "workspace": false,
+      "entries": [
+        {
+          "project": null,
+          "id": "AR-001-auth",
+          "section": null,
+          "section_separator": ".",
+          "kind": "AR",
+          "path": "docs/architecture/AR-001-auth.md",
+          "line": 1,
+          "title": "The auth module",
+          "stub": false,
+          "defines": null,
+          "refs": 0,
+          "duplicate": false,
+          "value_roots": []
+        },
+        {
+          "project": null,
+          "id": "FS-001-login",
+          "section": null,
+          "section_separator": ".",
+          "kind": "FS",
+          "path": "docs/functional-spec/FS-001-login.md",
+          "line": 1,
+          "title": "User can log in",
+          "stub": false,
+          "defines": null,
+          "refs": 2,
+          "duplicate": false,
+          "value_roots": []
+        },
+        {
+          "project": null,
+          "id": "FS-002-session",
+          "section": null,
+          "section_separator": ".",
+          "kind": "FS",
+          "path": "docs/functional-spec/FS-002-session.md",
+          "line": 1,
+          "title": "A session is created on login",
+          "stub": false,
+          "defines": null,
+          "refs": 0,
+          "duplicate": false,
+          "value_roots": []
+        }
+      ],
+      "summaries": [
+        {
+          "project": null,
+          "kind": "FS",
+          "title": "What: behavior, requirements, and constraints",
+          "home": "docs/functional-spec",
+          "count": 2
+        },
+        {
+          "project": null,
+          "kind": "AR",
+          "title": "How: high-level implementation, structure, and design",
+          "home": "docs/architecture",
+          "count": 1
+        }
+      ],
+      "scan_errors": []
+    },
+    "run_cautions": []
+  },
+  "node": {
+    "failure": null,
+    "result": {
+      "entries": [
+        {
+          "defines": null,
+          "duplicate": false,
+          "id": "AR-001-auth",
+          "kind": "AR",
+          "line": 1,
+          "path": "docs/architecture/AR-001-auth.md",
+          "project": null,
+          "refs": 0,
+          "section": null,
+          "section_separator": ".",
+          "stub": false,
+          "title": "The auth module",
+          "value_roots": []
+        },
+        {
+          "defines": null,
+          "duplicate": false,
+          "id": "FS-001-login",
+          "kind": "FS",
+          "line": 1,
+          "path": "docs/functional-spec/FS-001-login.md",
+          "project": null,
+          "refs": 2,
+          "section": null,
+          "section_separator": ".",
+          "stub": false,
+          "title": "User can log in",
+          "value_roots": []
+        },
+        {
+          "defines": null,
+          "duplicate": false,
+          "id": "FS-002-session",
+          "kind": "FS",
+          "line": 1,
+          "path": "docs/functional-spec/FS-002-session.md",
+          "project": null,
+          "refs": 0,
+          "section": null,
+          "section_separator": ".",
+          "stub": false,
+          "title": "A session is created on login",
+          "value_roots": []
+        }
+      ],
+      "output_format": "text",
+      "scan_errors": [],
+      "summaries": [
+        {
+          "count": 2,
+          "home": "docs/functional-spec",
+          "kind": "FS",
+          "project": null,
+          "title": "What: behavior, requirements, and constraints"
+        },
+        {
+          "count": 1,
+          "home": "docs/architecture",
+          "kind": "AR",
+          "project": null,
+          "title": "How: high-level implementation, structure, and design"
+        }
+      ],
+      "workspace": false
+    },
+    "run_cautions": []
+  }
+}

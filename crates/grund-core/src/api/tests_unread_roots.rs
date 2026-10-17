@@ -5,8 +5,11 @@
 
 use std::path::PathBuf;
 
+use super::report::public_lsp_report;
 use super::unread_roots::unread_root_message;
-use crate::model::{Refused, RootOrigin, RootRow};
+use crate::config::{Invocation, Selection, config_at, load_config_at};
+use crate::model::{CheckReport, Diagnostic, Refused, RootOrigin, RootRow};
+use crate::testing::{test_root, write};
 
 /// A row the root gate recorded for `written`, refused by the hidden rule and, where
 /// `extension` says so, by the extension list too.
@@ -115,5 +118,74 @@ fn a_hidden_home_on_a_non_citable_row_is_offered_scan_false() {
          Rename the file to a name that is not hidden and an extension a listed language \
          reads, or set `scan = false` on the row if it only lists a place.",
         "§FS-config.3.4.7: the version-2 rename gains the same ending"
+    );
+}
+
+/// §FS-lsp.4.1: the editor marks the warning at the `grund.toml` that holds the row,
+/// whatever directory its process runs in, as `grund check` names it from a
+/// subdirectory: the row's location is spelled from the root (§FS-errors.4).
+#[test]
+fn an_editor_marks_the_warning_at_the_config_not_under_its_working_directory() {
+    let root = test_root("unread_root_editor_config_path");
+    write(
+        &root.join("grund.toml"),
+        "[scan]\ninclude = [\"docs/.notes.md\"]\n",
+    );
+    let config = load_config_at(&root, &root).expect("load the project");
+    let warning = Diagnostic {
+        code: "unread-scan-root",
+        path: config.config_file.clone(),
+        line: Some(2),
+        column: None,
+        message: String::new(),
+        sites: Vec::new(),
+        authority: Vec::new(),
+    };
+    let report = CheckReport {
+        warnings: vec![warning],
+        ..CheckReport::default()
+    };
+    let published = public_lsp_report(&config, report);
+    assert_eq!(
+        PathBuf::from(published.warnings[0].path.as_deref().unwrap()),
+        root.join("grund.toml").canonicalize().unwrap()
+    );
+}
+
+/// A member's config is spelled from the base its workspace loads it under, so
+/// the editor joins its row's location back at that base, not at the member's
+/// own root (§FS-errors.4).
+#[test]
+fn an_editor_marks_a_members_warning_at_the_members_config() {
+    // Canonical, as a workspace load spells its members' roots: on Windows a plain
+    // root shares no prefix with a member's verbatim config path.
+    let root = test_root("unread_root_editor_member_config_path")
+        .canonicalize()
+        .unwrap();
+    let member = root.join("member");
+    write(
+        &member.join("grund.toml"),
+        "[scan]\ninclude = [\"docs/.notes.md\"]\n",
+    );
+    let invocation = Invocation::new(&member, false, Selection::Project);
+    let config = config_at(&member, &root, Some(&root), &invocation).expect("load the member");
+    assert_eq!(config.config_file, Some(PathBuf::from("member/grund.toml")));
+    let warning = Diagnostic {
+        code: "unread-scan-root",
+        path: config.config_file.clone(),
+        line: Some(2),
+        column: None,
+        message: String::new(),
+        sites: Vec::new(),
+        authority: Vec::new(),
+    };
+    let report = CheckReport {
+        warnings: vec![warning],
+        ..CheckReport::default()
+    };
+    let published = public_lsp_report(&config, report);
+    assert_eq!(
+        PathBuf::from(published.warnings[0].path.as_deref().unwrap()),
+        member.join("grund.toml").canonicalize().unwrap()
     );
 }

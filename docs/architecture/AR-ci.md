@@ -344,12 +344,13 @@ acceptance compares against is built once per run and reused by every test
 that needs it.
 
 That cache is not the cargo cache's. Its key is
-`<os>-node-target-v3-1.95.0-<Cargo.lock hash>`: the runner's OS, a version to
-bump when what it holds must be thrown away, the binding toolchain, and the lock
-file, with the same key less its hash as the restore prefix. A key of its own is
+`<os>-node-target-v3-1.95.0-<manifest and lock hash>`: the runner's OS, a version to
+bump when what it holds must be thrown away, the binding toolchain, and the
+workspace manifest with the lock file ([§AR-ci.13.4.1](AR-ci.md#1341-a-key-moves-with-the-profile)), with the same key less its
+hash as the restore prefix. A key of its own is
 what makes it save at all: an entry is never overwritten, so a save to a primary
 key that already has one saves nothing, and the cargo cache's key already hits
-whenever `Cargo.lock` has not changed, so a path added to it would never be written. It holds the release
+whenever neither the manifest nor `Cargo.lock` has changed, so a path added to it would never be written. It holds the release
 binding's and the dev builds' compiled dependencies and no incremental state;
 `v2` is the bump that came with the dev builds of [§AR-ci.3.4.1.1](AR-ci.md#3411-one-release-build-and-every-build-on-one-line), whose
 dependencies an entry saved before them does not hold and, on an exact hit,
@@ -497,8 +498,8 @@ Nothing about the check is weaker. Only where the compiler comes from has change
 CI restores the directory with a cache step of its own in every job that runs the
 Node acceptance, keyed `<os>-node-typescript-<version>`, and saves it under the
 rules of [§AR-ci.13.6](AR-ci.md#136-only-a-push-to-main-saves-a-cache). It does not ride on the node-target cache, because that
-key moves only with `Cargo.lock`: a `v3` entry hits exactly whenever the lock has
-not changed, and an exact hit never saves, so a directory added under the root
+key moves only with the manifest and `Cargo.lock`: a `v3` entry hits exactly whenever
+neither has changed, and an exact hit never saves, so a directory added under the root
 would not be cached until the next lock change, and a later TypeScript bump would
 go uncached again. A key that names the version saves exactly when the version
 changes. A node-target entry may also hold a copy of the directory, which is the
@@ -813,6 +814,16 @@ shared key would fix what every other one restores, and theirs would never be sa
 another job's entries, because reading one overwrites nothing. The Node
 target's cache of [§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build-target) is the job's that runs the Node acceptance.
 
+#### 13.4.1 A key moves with the profile
+
+A key whose job builds its cached target under the dev or test profile hashes the
+workspace `Cargo.toml` with every `Cargo.lock`, because the manifest is where that
+profile is set ([§AR-ci.15](AR-ci.md#15-dependencies-compile-optimised-in-a-dev-build)). A key hashing the lock alone would hit exactly on an
+entry compiled under the profile before the change: every run would recompile what
+the change touched, and the exact hit would never save the result, so no run would
+start warm again until the lock next moved. The benchmark cache builds the release
+profile alone and keeps the key of [§AR-ci.5](AR-ci.md#5-benchmark-job).
+
 ### 13.5 The layout test
 
 `tests/integration/test_ci_language_jobs.py` reads `ci.yml` as text, expands
@@ -853,6 +864,9 @@ registry (and the git checkouts, should `Cargo.lock` ever gain a git dependency)
 and the dependencies' compiled artifacts, and not the workspace crates' own
 artifacts, which every run rebuilds from its own sources, nor incremental state: a workflow that caches cargo sets `CARGO_INCREMENTAL: 0`,
 as the Node target's builds already do ([§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build-target)).
+The `rust` jobs' target also holds the command agreement's 1.95.0 target, nested
+under `agreement/` one per checkout, and `scripts/prune_cargo_cache.sh` prunes
+each of those the same way before the save.
 
 `tests/integration/test_ci_cache_saves.py` reads every workflow as text and holds
 it to this point, and it runs its checks against fixture workflows too, so a check
@@ -914,6 +928,22 @@ holds them to this point — `macos.yml`'s triggers and its report job's wiring,
 on a dispatch and on no other event and runs no macOS job of its own — and holds the
 report and the open-or-edit decision to [§AR-ci.14.3](AR-ci.md#143-a-failed-daily-run-opens-one-issue) offline, against canned jobs.
 
+## 15. Dependencies compile optimised in a dev build
+
+The workspace `Cargo.toml` sets `opt-level = 1` for every package that is not a
+workspace member, under `[profile.dev.package."*"]`, so the dev profile and the
+test profile that inherits it run optimised dependencies around unoptimised
+workspace crates. A gate spends most of its test time inside those dependencies,
+the regex engine, the parsers and the walker that every fixture of every suite runs
+through, and they run about twice as fast at level 1. The workspace crates stay at
+level 0, so an edit recompiles no faster or slower than before and a debugger still
+sees them as written. The price is paid once per cache key: a cold dependency
+compile takes longer, and the key moves with the profile ([§AR-ci.13.4.1](AR-ci.md#1341-a-key-moves-with-the-profile)), so a warm
+job pays nothing. It is how the first S4 tranche pays inside the `rust` jobs for the
+time its comparison adds ([§REQ-one-answer.proof.delivery.payment](../requirements/REQ-one-answer.md#proofdeliverypayment-each-tranche-pays-for-its-own-time)), with the
+agreement's two natives built in one invocation into a target those jobs cache
+([§AR-ci.13.6](AR-ci.md#136-only-a-push-to-main-saves-a-cache)).
+
 ## requirements: What CI's wall clock and its log hold to
 
 Requirements on how long the gate takes (requirements.1–4) and on what it prints (requirements.5), each carrying a **mark**, as [§FS-config.requirements](../functional-spec/FS-config.md#requirements-what-the-config-contract-holds-to) marks its own: *realized* where CI behaves this way today and a section here says so; *directional* where it binds what is written from here on rather than describing what runs today; *deferred* where a named follow-up owes it. Every pull request waits for the slowest gate, and so does every merge, which the merge queue of [§AR-ci.12](AR-ci.md#12-a-merge-queue-lands-every-pull-request) lands only after a full run on its group, so a slow gate is the loop [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) says gets routed around. A **gate** here is one job of `ci.yml` as the forge names it, and each leg of a matrix job is a gate of its own: `cargo test (ubuntu-latest)` and `cargo test (windows-latest)` are two gates. The average is the target and the maximum is the hard limit: a gate that drifts past the average is a report, and a gate past the maximum is a failure.
@@ -945,13 +975,19 @@ A suite step is the workspace `cargo test` on all three legs, which runs the e2e
 - each failure, under the failing test's name, with its full output: what it wrote to stdout and stderr, its own and its child processes', and the panic or assertion message;
 - a check-in each time another 5% of the suite has finished, so at most twenty, one line each: `<done>/<total> tests, <failed> failed, <elapsed>s elapsed, slowest: <test> <seconds>s, …`, naming up to three of the slowest tests so far, slowest first, and the last check-in reads `<total>/<total>`;
 - the slowest-ten table of [§AR-ci.3.4.2](AR-ci.md#342-per-test-durations), where the suite keeps one;
+- each line that begins `gate time: `, which says what the gate's time went on that no
+  test's own seconds separate: the cargo wrapper's one `gate time: build <seconds>s` once
+  its build has finished, so a cold dependency compile is a phase of its own, and the
+  lines a test's child process writes, as each command-agreement host writes how long it
+  took to be ready, how much of that was the toolchain install and the natives' build,
+  and how long it then served ([§REQ-one-answer.proof.delivery.payment](../requirements/REQ-one-answer.md#proofdeliverypayment-each-tranche-pays-for-its-own-time));
 - one summary as its last line: `<total> tests: <passed> passed, <failed> failed, <ignored> ignored, <elapsed>s`, where *ignored* counts libtest's ignored tests and `unittest`'s skipped ones. A red summary still adds up: before the elapsed time it adds `, <n> not run` for the tests that never reported, and `, <n> errors` for each failure no test owns — a test binary that crashed or a `harness = false` target that failed, a `unittest` class or module fixture that raised — which the check-ins count among the failures.
 
-Nothing else: no line per passing test, no `unittest` dot stream, no output a passing test or its child process wrote, no build progress. On success that is about twenty lines whatever the suite's size, and the slowest-tests figure is what attributes a gate's time per test for requirements.3. `tests/integration/test_ci_output.py` holds both kinds of suite to this on suites of its own.
+Nothing else: no line per passing test, no `unittest` dot stream, no other output a passing test or its child process wrote, no build progress. On success that is about twenty lines whatever the suite's size, and the slowest-tests figure is what attributes a gate's time per test for requirements.3. `tests/integration/test_ci_output.py` holds both kinds of suite to this on suites of its own.
 
 #### requirements.5.2: The cargo suites go through one wrapper
 
-`scripts/run_cargo_suite.py` takes `cargo test`'s arguments, runs `cargo test` with them over libtest's stable output, and prints what requirements.5.1 asks. Both `ci.yml` steps that run a cargo suite, `native watch contract` and `cargo test`, call it, and so does the `cargo-test` hook, so the hook and the workflow still spell one command ([§AR-ci.1.2](AR-ci.md#12-the-parity-test)). It needs Python's standard library and the toolchain the repository already uses and nothing else: no test runner a contributor must install. It builds the tests before it runs them, as quietly as requirements.5.4 asks, so a compile error is printed in full and a green build prints nothing.
+`scripts/run_cargo_suite.py` takes `cargo test`'s arguments, runs `cargo test` with them over libtest's stable output, and prints what requirements.5.1 asks. Both `ci.yml` steps that run a cargo suite, `native watch contract` and `cargo test`, call it, and so does the `cargo-test` hook, so the hook and the workflow still spell one command ([§AR-ci.1.2](AR-ci.md#12-the-parity-test)). It needs Python's standard library and the toolchain the repository already uses and nothing else: no test runner a contributor must install. It builds the tests before it runs them, as quietly as requirements.5.4 asks, so a compile error is printed in full and a green build prints only its `gate time: build` line.
 
 #### requirements.5.3: A hook prints its findings or one line — realized
 

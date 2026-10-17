@@ -150,6 +150,16 @@ pub struct SectionInfo {
     pub relative: bool,
 }
 
+impl SectionInfo {
+    /// Whether this heading is a marked root's, the one question every semantic
+    /// title reader asks before it drops the tag (§FS-values.2.4.2).
+    pub fn marked(&self) -> bool {
+        self.value_root
+            .as_ref()
+            .is_some_and(EmbeddedValueRoot::marked)
+    }
+}
+
 /// One citation site: an `<ID>[.<section>]` token, optionally `§`-prefixed, or
 /// a uniquely owned local section spelling promoted to the same graph edge
 /// (§AR-scanner.2.3, §AR-scanner.2.4). `has_marker` drives strict-mode

@@ -68,10 +68,13 @@ fn public_finding(
 ) -> Finding {
     let render_path = |path: &Path| {
         if absolute_paths {
+            // A relative location is a config row's, joined where the load spelled
+            // it, never at the editor's working directory (§FS-lsp.4.1).
+            let path = config.location_base().join(path);
             // Private LSP transport data, not user-facing report text: keep the
             // platform-native spelling so parsing it back into a `Path` preserves
             // Windows verbatim-prefix absolute paths (§FS-lsp.1.1).
-            absolutize_path(path).to_string_lossy().into_owned()
+            absolutize_path(&path).to_string_lossy().into_owned()
         } else {
             public_path(config, path)
         }

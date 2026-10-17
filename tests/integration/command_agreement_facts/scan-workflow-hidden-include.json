@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "case": "scan-workflow-hidden-include",
+  "inputFiles": {
+    "expected.exit": {"bytes":[49,10]},
+    "expected.stderr": {"bytes":[119,97,114,110,105,110,103,58,32,103,114,117,110,100,46,116,111,109,108,32,105,115,32,118,101,114,115,105,111,110,32,49,59,32,109,105,103,114,97,116,101,32,105,116,32,119,105,116,104,32,103,114,117,110,100,32,99,111,110,102,105,103,32,109,105,103,114,97,116,101,32,45,45,116,111,32,50,10]},
+    "expected.stdout": {"bytes":[46,103,105,116,104,117,98,47,119,111,114,107,102,108,111,119,115,47,99,105,46,121,109,108,58,50,58,32,101,114,114,111,114,58,32,117,110,107,110,111,119,110,32,114,101,102,101,114,101,110,99,101,32,70,83,45,57,57,57,45,109,105,115,115,105,110,103,10]},
+    "repo": {"directory":true},
+    "repo/.github": {"directory":true},
+    "repo/.github/workflows": {"directory":true},
+    "repo/.github/workflows/ci.yml": {"bytes":[110,97,109,101,58,32,67,73,10,35,32,69,110,102,111,114,99,101,115,32,194,167,70,83,45,48,48,49,45,98,117,105,108,100,32,97,110,100,32,194,167,70,83,45,57,57,57,45,109,105,115,115,105,110,103,46,10]},
+    "repo/docs": {"directory":true},
+    "repo/docs/functional-spec": {"directory":true},
+    "repo/docs/functional-spec/FS-001-build.md": {"bytes":[35,32,70,83,45,48,48,49,45,98,117,105,108,100,58,32,66,117,105,108,100,10,10,84,104,101,32,98,117,105,108,100,32,99,111,110,116,114,97,99,116,46,10]},
+    "repo/docs/functional-spec/README.md": {"bytes":[35,32,70,83,32,105,110,100,101,120,10,10,69,118,101,114,121,32,96,70,83,96,32,100,101,99,108,97,114,97,116,105,111,110,32,105,110,32,116,104,105,115,32,102,111,108,100,101,114,44,32,111,110,101,32,108,105,110,107,101,100,32,101,110,116,114,121,32,101,97,99,104,46,10,10,45,32,91,194,167,70,83,45,48,48,49,45,98,117,105,108,100,93,40,70,83,45,48,48,49,45,98,117,105,108,100,46,109,100,35,102,115,45,48,48,49,45,98,117,105,108,100,45,98,117,105,108,100,41,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,10,91,115,99,97,110,93,10,105,110,99,108,117,100,101,32,61,32,91,34,100,111,99,115,34,44,32,34,46,103,105,116,104,117,98,47,119,111,114,107,102,108,111,119,115,34,93,10,101,120,116,101,110,115,105,111,110,115,32,61,32,91,34,109,100,34,44,32,34,121,109,108,34,93,10]},
+    "spec.refs": {"bytes":[70,83,45,99,111,110,102,105,103,46,51,46,53,10]}
+  },
+  "facts": {
+    "point": "§FS-config.3.5",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, strict by default, default kinds, `[scan] include = [\"docs\", \".github/workflows\"]`, `extensions = [\"md\", \"yml\"]`), so the explicitly included hidden .github/workflows is walked and the YAML comment's two marked citations are read; the FS-001-build declaration and its index entry; the e2e golden's dangling finding at .github/workflows/ci.yml:2 and the config caution. Nothing is wrapped: the index entry already is, and a YAML file is never rewritten (§FS-fmt.6.1).",
+    "scanned": [".github/workflows/ci.yml","docs/functional-spec/FS-001-build.md","docs/functional-spec/README.md"],
+    "declarations": [
+      {"id":"FS-001-build","kind":"FS","file":"docs/functional-spec/FS-001-build.md","heading":"FS-001-build: Build","title":"Build","body":[2,3],"anchor":"fs-001-build-build"}
+    ],
+    "sections": [],
+    "citations": [
+      {"file":".github/workflows/ci.yml","token":"§FS-001-build","enclosing":[null,null]},
+      {"file":".github/workflows/ci.yml","token":"§FS-999-missing","enclosing":[null,null]},
+      {"file":"docs/functional-spec/README.md","token":"§FS-001-build","enclosing":[null,null]}
+    ],
+    "findings": [
+      {"severity":"error","code":"dangling","path":".github/workflows/ci.yml","line":2,"message":"unknown reference FS-999-missing","sites":[],"token":"§FS-999-missing"},
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+    ],
+    "refusals": {},
+    "fmt": {
+      "changes": [],
+      "writeChanges": [],
+      "written": {}
+    }
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}

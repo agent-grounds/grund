@@ -37,6 +37,14 @@ impl Config {
             &self.cli_base
         }
     }
+
+    /// The directory a relative location the load recorded is spelled from — a
+    /// `grund.toml` row's, which a finding about it anchors at (§FS-errors.4). The
+    /// load keeps the base it spelled them from (§FS-cli.3.4), so this reads it
+    /// back rather than deciding it a second time.
+    pub(crate) fn location_base(&self) -> &Path {
+        &self.run().location_base
+    }
 }
 
 /// Render a path the way reports show it: relative to the repo root by default,

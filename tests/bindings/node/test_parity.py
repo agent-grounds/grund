@@ -29,7 +29,8 @@ class NodeParityTests(unittest.TestCase):
         self.assertEqual("1", str(metadata["protocolVersion"]))
         package = json.loads((self.r.package / "package.json").read_text())
         self.assertEqual(package["version"], metadata["engineVersion"])
-        shutil.copyfile(REPO / "tests/bindings/node/adapter.mjs", self.r.consumer / "adapter.mjs")
+        for script in ("adapter.mjs", "adapter_codec.mjs"):
+            shutil.copyfile(REPO / "tests/bindings/node" / script, self.r.consumer / script)
         requests = [
             ("check", [str(self.r.fixture)]),
             ("check", [str(self.r.fixture), {"only": ["dangling"], "ignore": ["dangling"]}]),

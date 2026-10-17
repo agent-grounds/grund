@@ -72,8 +72,9 @@ pub(super) fn wrap_markdown_links_with_targets(
 ) -> String {
     let mut output = String::new();
     let mut cursor = 0;
+    let mut binding_end = 0;
     for citation in markdown_link_citations(line, config, findings, workspace, shorthand_targets) {
-        if citation.marker_start < cursor {
+        if citation.marker_start < cursor.max(binding_end) {
             continue;
         }
         // §FS-fmt.6.1.2: the always-linkify carve-out reaches this file for its
@@ -85,8 +86,10 @@ pub(super) fn wrap_markdown_links_with_targets(
             continue;
         }
         // §FS-values.8: wrapping the citation would destroy the sole accepted
-        // authored binding form, so a recognized value binding keeps its bytes.
+        // authored binding form, so a recognized value binding keeps its bytes,
+        // and a shorter reading of them, such as the citing grammar's, does too.
         if markdown_citation_is_value_binding(line, &citation, config, findings, workspace) {
+            binding_end = citation.token_end;
             continue;
         }
         // §FS-workspace.8.5: a qualified `§<alias>/<ID>` resolves against the

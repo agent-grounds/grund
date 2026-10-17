@@ -185,20 +185,31 @@ a run from `<dir>` sees (#621). No row of scope remains open.
 The requirement is proved by asking every surface each question on one tree, and each
 equivalence on both of its inputs, through each surface's own entrypoint, and by checking
 each answer against the point that defines it as well, because two surfaces wrong alike
-agree. `crates/grund-cli/tests/command_agreement.rs` is that comparison, seeded thin so
-that the gate it runs in does not grow unpaid: it asks the command line's surfaces
+agree. `crates/grund-cli/tests/command_agreement.rs` is that comparison. It was seeded thin
+so that the gate it runs in did not grow unpaid: it asked the command line's surfaces
 over the reproduced rows of the ledger behind this list, one tree per row of
 [§REQ-one-answer.differences](REQ-one-answer.md#differences-the-differences-known-when-this-requirement-landed) the command line can show, and the first plain project of a fixed
 set of end-to-end families, and its divergence ledger fails on a divergence it does not
 list and on a row that no longer reproduces. A row only the editor, shell completion or
 an unsaved buffer shows is deferred there by name, with the step that builds its harness.
-Until it drives the editor and the bindings itself,
-`tests/integration/lsp_cli_parity.rs` compares the editor's diagnostics with `check`'s over
-the end-to-end corpus ([§REQ-one-answer.text.parity](REQ-one-answer.md#textparity-the-editor-answers-as-the-command-line-does)) and
+
+S4 widens that seed one family at a time ([§REQ-one-answer.proof.matrix.family](REQ-one-answer.md#proofmatrixfamily-a-family-is-covered-whole-or-not-at-all)). `COVERED`
+names the end-to-end families the comparison asks completely, through every answering
+surface and variant, against facts authored from each input, and `WIDENING` names every
+other family ([§REQ-one-answer.proof.delivery.widening](REQ-one-answer.md#proofdeliverywidening-widening-names-exactly-the-families-not-covered)), so what the comparison leaves out is
+a list rather than a sample. `agreement_acceptance::s4_executes_the_covered_families_and_the_seed`
+is that sweep: it asks the seed and every case of each covered family
+([§REQ-one-answer.proof.matrix.seed](REQ-one-answer.md#proofmatrixseed-the-seed-is-asked-the-same-way)), and it refuses a case with no authored facts before it
+prepares a host.
+
+Until `WIDENING` is empty, `tests/integration/lsp_cli_parity.rs` compares the editor's
+diagnostics with `check`'s over the end-to-end corpus ([§REQ-one-answer.text.parity](REQ-one-answer.md#textparity-the-editor-answers-as-the-command-line-does)) and
 `crates/grund-cli/tests/stub_resolution_agreement.rs` the stub answers of every surface
 ([§REQ-one-answer.stubs](REQ-one-answer.md#stubs-what-a-stub-answers)), and `crates/grund-cli/tests/kind_verdict_agreement.rs` asks every
 kind-taking surface about one name on one tree ([§REQ-one-answer.identity.kinds](REQ-one-answer.md#identitykinds-every-command-reads-one-kind-verdict),
 [§REQ-one-answer.sections.named](REQ-one-answer.md#sectionsnamed-every-command-reads-a-kinds-named-sections-under-its-own-project)); a section none of the four compares is held by review.
+What the real server's tests keep once every family is covered, [§REQ-one-answer.proof.transport](REQ-one-answer.md#prooftransport-the-editor-wire-remains-a-separate-proof)
+says.
 
 Every row of every ledger behind the list carries a ruling in the sense of
 [§REQ-one-answer.differences](REQ-one-answer.md#differences-the-differences-known-when-this-requirement-landed): the migration rows of `tests/integration/citation_ledger.toml`, the
@@ -210,6 +221,151 @@ list of live steps cannot keep a step nobody waits on. `tests/integration/test_o
 refuses a row that names neither, a difference row that cites no record, and a step no row
 names, without reaching the forge: a step is live because it is listed, and the change that
 closes a step deletes its entry.
+
+### proof.matrix: The complete comparison matrix
+
+S4 completes the comparison over **every case** discovered under `tests/e2e/cases/`,
+not just the first plain project of selected families, and it gets there one whole
+family at a time ([§REQ-one-answer.proof.matrix.family](REQ-one-answer.md#proofmatrixfamily-a-family-is-covered-whole-or-not-at-all)). Each case the comparison asks
+maps to executed evidence or an explicit, justified inapplicability. Discovery includes
+`.agents`-only, nested and absent configurations, no-input-repository creation and
+refusal cases, command cwd/path/stdin context and symlink manifests. `expected.repo/`
+is a result oracle, not an additional input. Deduplication preserves all of those
+semantics and maps every original case to its execution; byte equality alone is
+insufficient. Mutating `fmt` questions use independent copies.
+
+For each applicable input, execute whole-tree, narrowed, explicit path-argument and
+editor-overlay variants. Ask each answering surface its applicable questions:
+declaration sites and kind verdicts, sections and ambiguity, citations and resolution,
+stub targets/sites, bodies and spans, scope/refusals/warnings and written anchors.
+The surfaces include CLI `check`, direct and batch `show`, `refs`, `list` and
+`list --size`, `cover` and `cover --lines`, `fmt`, the core editor snapshot and the
+actual Python and Node packages built from the same source. Host conversion checked
+against a Rust oracle does not replace either host's execution.
+
+Compare facts on their common domain: `cover` bounds its scan
+([§FS-scan.path.cover](../functional-spec/FS-scan.md#pathcover-cover-runs-one-narrowed-scan)),
+while `check` bounds its report
+([§FS-scan.path.check](../functional-spec/FS-scan.md#pathcheck-check-reads-more-than-it-reports)).
+CLI and bindings compare isolated saved edits; the editor compares the equivalent
+held edit, without adding public buffer parameters
+([§REQ-one-answer.contract](REQ-one-answer.md#contract-one-question-one-tree-one-answer)).
+Authored invocation identities normalize filesystem fields and overlay path keys,
+preserving the distinct held and saved copies when both exist. Held text, source
+ranges and section-coordinate map keys retain their authored values; moving an
+overlay to a different file is a different input.
+Record the reason and defining point for each inapplicable case/variant/question/surface
+cell, and assert its applicability accounting. An observed refusal is an answer,
+not permission to discard the case. Root-config filters, blanket skips and swallowed
+refusals cannot discharge this matrix.
+
+#### proof.matrix.family: A family is covered whole or not at all
+
+A family is the cases whose directory under `tests/e2e/cases/` starts with the same word,
+up to its first hyphen: `cover-lines-text` is a case of `cover`. The comparison covers a
+family only when it asks every case the family has when the comparison runs, under every
+applicable variant and through every answering surface of [§REQ-one-answer.proof.matrix](REQ-one-answer.md#proofmatrix-the-complete-comparison-matrix),
+each answer checked against its own authored fact ([§REQ-one-answer.proof.evidence](REQ-one-answer.md#proofevidence-execution-and-independent-truth)). The
+cases are discovered, not listed, so a case added to a covered family is in the matrix at
+once and fails until its facts are authored. A family asked only in part — on some of its
+cases, through some of the surfaces or variants, or only through the seed's sampled
+project — is not covered.
+
+#### proof.matrix.seed: The seed is asked the same way
+
+The seed stays in the comparison whatever it covers: the trees built for the rows of
+[§REQ-one-answer.differences](REQ-one-answer.md#differences-the-differences-known-when-this-requirement-landed), all closed, so each must agree; the editor-buffer trees; and
+the first plain project of each family in `SAMPLED_FAMILIES`. A sampled project is asked
+as a case of a covered family is, under every applicable variant and through every
+surface against its own authored facts, but it does not cover its family.
+
+### proof.evidence: Execution and independent truth
+
+The executable acceptance observes completed entrypoint calls and their inputs and
+results, not source strings, deleted debt labels or counts reported by the comparison
+itself. Evidence identifies the original case, materialized tree, cwd/path/config and
+symlink context, variant, question, surface and expected fact. It accounts for every
+case the comparison asks as the corpus grows, without freezing today's case count as a cap.
+
+Surface agreement is accompanied by independent, defining-point expectations:
+reviewed corpus exit/stdout/stderr/result-tree goldens and explicit question-specific
+fixture facts. A second engine call, equality of `list` and `list --size`, an absent
+golden treated as an empty answer or regenerated expectations cannot prove truth.
+Each compared question needs its own expected fact or a justified applicability
+decision; one unrelated golden cannot stand for all answers on a tree.
+Query completeness is checked before execution against the independently authored
+physical inventory, including declarations, nested sections, citations and aliases.
+Removing a physical fact and its questions together must fail the inventory check.
+The driver and receipt accounting use the same validated closure, including absent
+and refused questions; a nonempty coordinate array does not establish completeness.
+
+Keep positive controls, unlisted and stale divergence rejection and requirement-row
+accounting.
+
+#### proof.evidence.closed: A closed row is an expectation of agreement
+
+[§REQ-one-answer.differences](REQ-one-answer.md#differences-the-differences-known-when-this-requirement-landed) lists no open row, so the comparison keeps no exception for
+one: two answers that differ as a closed row once did — R01 or R02 of scope, Placement,
+U03a or U03c of stubs, R06a to R06d of text — are a divergence and fail, whatever
+condition once ruled them. A divergence the widening finds is a defect against the point
+that defines the right answer. The change that finds it fixes it, or reports it and leaves
+the family in `WIDENING`; it becomes a row only when it predates this requirement and an
+amendment names its baseline, as G09 did.
+
+### proof.transport: The editor wire remains a separate proof
+
+The widened core snapshot comparison can replace duplicated engine sweeps only once
+equivalent coverage is demonstrated. `tests/integration/lsp_cli_parity.rs` (or an
+explicitly documented transport replacement) continues to launch the real server
+and assert published diagnostics, URI/path and range/line conversion, diagnostic
+code, severity and message, both workspace-warning shapes and actual hover usage
+wording for plural, singular and zero counts. Core snapshot equality proves none of
+those wire behaviors
+([§FS-lsp.1.1.3](../functional-spec/FS-lsp.md#113-workspace-warnings-on-the-runs-warning-channel),
+[§FS-lsp.1.2.5](../functional-spec/FS-lsp.md#125-what-a-whole-id-title-counts),
+[§FS-lsp.4](../functional-spec/FS-lsp.md#4-determinism-and-parity-with-the-cli)).
+That wire proof is what is left of `lsp_cli_parity.rs` once every family is covered.
+Until then it keeps its engine sweep over the corpus; a tranche may narrow that sweep
+over a family it covers, to pay for its time, only where every wire assertion above
+still executes.
+
+### proof.delivery: Paid widening and honest closure
+
+S4 is delivered in tranches. A tranche covers whole families: it moves each from
+`WIDENING` to `COVERED` with its authored facts, and pays in the same change for the
+time it adds ([§REQ-one-answer.proof.delivery.payment](REQ-one-answer.md#proofdeliverypayment-each-tranche-pays-for-its-own-time)). Until the last family is covered,
+the description of the seed above remains the baseline, and the proof names what review
+alone still holds.
+
+#### proof.delivery.widening: `WIDENING` names exactly the families not covered
+
+`WIDENING` in `command_agreement.rs` has one row per family the comparison does not cover,
+each naming S4, the step that widens it. Every family of the corpus is in `COVERED` or in
+`WIDENING`, never in both and never in neither: a family the corpus gains is listed until
+a tranche covers it, a row whose family has no case left is taken out, and a family covered
+in part stays listed. `command_agreement.rs` fails on each of these, so what the comparison
+leaves out cannot shrink unnoticed.
+
+#### proof.delivery.payment: Each tranche pays for its own time
+
+A tranche records the time of each gate the comparison runs in — the `rust` jobs of
+`ci.yml`, on ubuntu and on windows, while it runs there — at its merge base and at its
+head: fixed SHAs, repeated comparable runner/cache/toolchain/build samples, raw CI job
+timings and URLs, and the seconds added and removed and the net delta, including native
+builds and host startup. It pays for growth within that gate: savings in another parallel
+job, one warm local run or merely staying under fifteen minutes do not establish payment
+([AR-ci.requirements.1](../architecture/AR-ci.md#requirements1-every-gate-averages-at-most-fifteen-minutes--directional)).
+Distinguish paired experimental evidence from the eight-run rolling main measurement;
+unrelated baseline drift does not expand this change's scope.
+
+#### proof.delivery.closure: S4 closes when `WIDENING` is empty
+
+S4 closes only with the tranche that covers the last family. That tranche empties
+`WIDENING`, deletes S4's entry in `tests/integration/one_answer_steps.toml` and every
+operational row that names it, keeps the offline ledger integrity checks, and replaces
+the description of the seed with the coverage executed. Until then S4 stays listed and a
+tranche is a part of it, not its end. Repointing debt does not complete it, and synthetic
+parser literals are not operational debt.
 
 ## why: Why this exists
 

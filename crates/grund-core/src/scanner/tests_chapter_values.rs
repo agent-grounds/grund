@@ -5,9 +5,10 @@
 
 use std::path::PathBuf;
 
-use crate::api::check;
+use crate::api::{check, lsp_snapshot, show};
 use crate::config::Config;
-use crate::model::{Catalog, ValueRootOrigin};
+use crate::model::{Catalog, Id, ShowRenderMode, ValueRootOrigin};
+use crate::queries::{LspSnapshotOpts, ShowFormat, ShowMode, ShowOpts, show_declaration};
 use crate::testing::{embedded_value_config, scan_tree, test_root, write};
 
 /// `AR` declarations under `docs/`, with `values` as the declared chapter and
@@ -119,6 +120,127 @@ fn a_marked_numeric_root_keeps_its_own_origin_beside_a_chapter_root() {
                 }
             ),
             ("values.aux-voltage".to_string(), ValueRootOrigin::Chapter),
+        ]
+    );
+}
+
+/// A marked root's section-map title drops the separating space and tag, as its
+/// anchor and LSP title do, while the raw heading `show` prints keeps it; a
+/// chapter root has no tag to drop (§FS-values.2.4.2).
+#[test]
+fn a_marked_roots_map_title_drops_its_tag() {
+    let (config, findings) = scan_chapter(
+        "chapter_value_marked_title",
+        Some("values"),
+        "# AR-004-value-probe: Auxiliary power\n\n\
+         ## values: Values\n\n\
+         ### values.aux-voltage: Auxiliary supply voltage\n\n\
+         #### values.aux-voltage.1: 24\n\n\
+         ## 2. Regulator <!-- grund:value -->\n\n\
+         ### 2.1. 10\n",
+    );
+    let id = Id {
+        kind: "AR".to_string(),
+        num: Some(4),
+        slug: Some("value-probe".to_string()),
+    };
+    let toc = show_declaration(
+        &config,
+        &config,
+        &findings,
+        &id,
+        None,
+        ShowRenderMode::Outline,
+        false,
+    )
+    .expect("--toc maps the declaration");
+    let titles: Vec<_> = toc
+        .sections
+        .iter()
+        .map(|section| (section.path.as_str(), section.title.as_str()))
+        .collect();
+    assert_eq!(
+        titles,
+        vec![
+            ("values", "Values"),
+            ("values.aux-voltage", "Auxiliary supply voltage"),
+            ("values.aux-voltage.1", "24"),
+            ("2", "Regulator"),
+            ("2.1", "10"),
+        ]
+    );
+    assert!(
+        toc.body.contains("## 2. Regulator <!-- grund:value -->\n"),
+        "the raw heading keeps its tag: {:?}",
+        toc.body
+    );
+}
+
+/// `show --toc` and the editor give each section one title. A chapter root's tag
+/// is no mark (§FS-values.2.4.4), so both keep it; a marked root's is dropped
+/// by both (§FS-values.2.4.2), even when the tag is all its title holds.
+#[test]
+fn toc_and_editor_title_a_tagged_chapter_root_alike() {
+    let root = test_root("chapter_value_tagged_root_titles");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\n[id]\nnamed_sections = true\n\
+         [[kinds]]\nkind = \"AR\"\nfolder = \"docs\"\nindex = false\n\
+         value_chapter = \"values\"\n[scan]\ninclude = [\"docs\"]\n",
+    );
+    write(
+        &root.join("docs/power.md"),
+        "# AR-004-probe: Power\n\n\
+         ## values: Values\n\n\
+         ### values.aux-voltage: Aux voltage <!-- grund:value -->\n\n\
+         #### values.aux-voltage.1: 24\n\n\
+         ## 1. Marked <!-- grund:value -->\n\n\
+         ### 1.1 Leaf\n\n\
+         ## 2. <!-- grund:value -->\n\n\
+         25\n",
+    );
+    let opts = ShowOpts {
+        path: root.clone(),
+        section: None,
+        mode: ShowMode::Toc,
+        format: ShowFormat::Text,
+    };
+    let toc = show("AR-004-probe", opts).expect("--toc maps the declaration");
+    let snapshot = lsp_snapshot(LspSnapshotOpts {
+        path: root,
+        path_provided: true,
+        open_documents: Default::default(),
+    })
+    .expect("the editor reads the tree");
+    let titles: Vec<_> = toc
+        .sections
+        .iter()
+        .map(|section| {
+            let editor = snapshot
+                .sections
+                .iter()
+                .find(|editor| editor.query_id == format!("AR-004-probe.{}", section.path))
+                .map(|editor| editor.text.as_str());
+            (section.path.as_str(), section.title.as_str(), editor)
+        })
+        .collect();
+    assert_eq!(
+        titles,
+        vec![
+            ("values", "Values", Some("values: Values")),
+            (
+                "values.aux-voltage",
+                "Aux voltage <!-- grund:value -->",
+                Some("values.aux-voltage: Aux voltage <!-- grund:value -->"),
+            ),
+            (
+                "values.aux-voltage.1",
+                "24",
+                Some("values.aux-voltage.1: 24")
+            ),
+            ("1", "Marked", Some("1. Marked")),
+            ("1.1", "Leaf", Some("1.1 Leaf")),
+            ("2", "", Some("2.")),
         ]
     );
 }

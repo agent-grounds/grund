@@ -4,45 +4,124 @@
 //! checked against the point that defines it as well, because two surfaces wrong
 //! alike agree.
 //!
-//! Seeded thin under §AR-ci.requirements.1. The trees are the reproduced rows of
-//! #576 (r1, r2 and r3), one tree per row of §REQ-one-answer.differences, and a
-//! fixed sample of the end-to-end corpus: the first case of each family in
-//! `SAMPLED_FAMILIES` whose fixture is a plain project. The surfaces are the
-//! command line's, and for `agreement_buffers::TREES` the editor snapshot and `show` over an
-//! edit held as a buffer, against the same edit saved (§FS-scan.text.buffer);
-//! the bindings, and the editor against the command line, are compared by
-//! `lsp_cli_parity.rs` and `stub_resolution_agreement.rs` until this test
-//! drives them too.
+//! Corpus execution belongs to `agreement_acceptance`: the seed and every case of
+//! each family `COVERED` names, under every applicable invocation variant and
+//! real CLI/editor/Python/Node entrypoint (§REQ-one-answer.proof.matrix.family).
+//! The dedicated trees here keep each closed row and positive regression control
+//! individually identifiable; each must agree (§REQ-one-answer.proof.evidence.closed).
+//! `lsp_cli_parity.rs` retains the distinct real-server wire assertions
+//! (§REQ-one-answer.proof.transport). Gate timing is measured separately at
+//! fixed source SHAs (§AR-ci.requirements.1).
 //!
 //! `LEDGER` is the divergence ledger: one row per known divergence, naming the
 //! tree and the invariant. `DEFERRED` names each row of §REQ-one-answer.differences
 //! only the editor, shell completion or an unsaved buffer shows, with the step of
-//! #576 that builds its harness, and `WIDENING` what the seed leaves out, each step
+//! #576 that builds its harness, and `WIDENING` each family not yet asked whole, each step
 //! listed live in `tests/integration/one_answer_steps.toml`. A divergence it does
 //! not list fails, and so does a row that no longer reproduces, so the ledger only
 //! shrinks. A divergence found here that §REQ-one-answer.differences does not list
 //! is added there by an amendment naming its baseline, or kept as a ledger-only row
 //! with its reason (the list rule of §REQ-one-answer); it is never kept in this file alone.
 
+#[path = "support/agreement_acceptance.rs"]
+mod agreement_acceptance;
 #[path = "support/agreement_buffers.rs"]
 mod agreement_buffers;
+#[path = "support/agreement_closed_rows.rs"]
+mod agreement_closed_rows;
+#[path = "support/agreement_compare.rs"]
+mod agreement_compare;
+#[path = "support/agreement_context.rs"]
+mod agreement_context;
+#[path = "support/agreement_context_controls.rs"]
+mod agreement_context_controls;
+#[path = "support/agreement_controls.rs"]
+mod agreement_controls;
+#[path = "support/agreement_corpus.rs"]
+mod agreement_corpus;
+#[path = "support/agreement_editor.rs"]
+mod agreement_editor;
+#[path = "support/agreement_editor_worker.rs"]
+mod agreement_editor_worker;
+#[path = "support/agreement_evidence.rs"]
+mod agreement_evidence;
+#[path = "support/agreement_expectations.rs"]
+mod agreement_expectations;
+#[path = "support/agreement_expected_bytes.rs"]
+mod agreement_expected_bytes;
+#[path = "support/agreement_facts.rs"]
+mod agreement_facts;
+#[path = "support/agreement_families.rs"]
+mod agreement_families;
+#[path = "support/agreement_host.rs"]
+mod agreement_host;
+#[path = "support/agreement_host_projection.rs"]
+mod agreement_host_projection;
 #[path = "support/agreement_identity.rs"]
 mod agreement_identity;
+#[path = "support/agreement_manifest.rs"]
+mod agreement_manifest;
+#[path = "support/agreement_materialization.rs"]
+mod agreement_materialization;
+#[path = "support/agreement_mutations.rs"]
+mod agreement_mutations;
+#[path = "support/agreement_oracles.rs"]
+mod agreement_oracles;
+#[path = "support/agreement_paths.rs"]
+mod agreement_paths;
+#[path = "support/agreement_projection_controls.rs"]
+mod agreement_projection_controls;
+#[path = "support/agreement_query_controls.rs"]
+mod agreement_query_controls;
+#[path = "support/agreement_query_inventory.rs"]
+mod agreement_query_inventory;
+#[path = "support/agreement_questions.rs"]
+mod agreement_questions;
+#[path = "support/agreement_refs_fields.rs"]
+mod agreement_refs_fields;
+#[path = "support/agreement_refusals.rs"]
+mod agreement_refusals;
+#[path = "support/agreement_render.rs"]
+mod agreement_render;
+#[path = "support/agreement_render_answers.rs"]
+mod agreement_render_answers;
+#[path = "support/agreement_render_cli.rs"]
+mod agreement_render_cli;
+#[path = "support/agreement_render_editor.rs"]
+mod agreement_render_editor;
+#[path = "support/agreement_render_inventory.rs"]
+mod agreement_render_inventory;
+#[path = "support/agreement_render_model.rs"]
+mod agreement_render_model;
+#[path = "support/agreement_render_show.rs"]
+mod agreement_render_show;
+#[path = "support/agreement_render_tree.rs"]
+mod agreement_render_tree;
 #[path = "support/agreement_sections.rs"]
 mod agreement_sections;
+#[path = "support/agreement_sites.rs"]
+mod agreement_sites;
+#[path = "support/agreement_snapshot.rs"]
+mod agreement_snapshot;
 #[path = "support/agreement_stubs.rs"]
 mod agreement_stubs;
 #[path = "support/agreement_tree.rs"]
 mod agreement_tree;
+#[path = "support/agreement_truth.rs"]
+mod agreement_truth;
+#[path = "support/agreement_truth_accounting.rs"]
+mod agreement_truth_accounting;
+#[path = "support/agreement_truth_controls.rs"]
+mod agreement_truth_controls;
 
 use agreement_buffers as buffers;
 use agreement_identity as identity;
 use agreement_sections as sections;
 use agreement_stubs as stubs;
-use agreement_tree::{Verdict, grund, json_lines, listed_steps, stdout};
+use agreement_tree::{Verdict, listed_steps};
 use std::collections::BTreeSet;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// `(row of #576's ledger or of §REQ-one-answer.differences, tree, invariant)`.
 /// G01 is a defect every surface shares, kept here alone as #576's ruling V-D04
@@ -213,85 +292,61 @@ const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
 /// command-line tree shows, and the step of #576 that gives this test its harness.
 const DEFERRED: &[(&str, &str, &str)] = &[];
 
-/// What the seed leaves out under §AR-ci.requirements.1, and the step that
-/// widens it.
-const WIDENING: &[(&str, &str)] = &[(
-    "every end-to-end tree, its narrowed, path-argument and editor-overlay variants, \
-     and `cover`, the editor snapshot and the bindings as surfaces",
-    "S4",
-)];
-
-/// The families of `tests/e2e/cases/` whose first plain project is sampled.
-const SAMPLED_FAMILIES: &[&str] = &[
-    "check",
-    "show",
-    "refs",
-    "list",
-    "fmt",
-    "stub",
-    "workspace",
-    "symlink",
-    "doccomment",
-    "scan",
-    "glob",
-    "cover",
+/// Each end-to-end family `COVERED` does not yet name, and the step that widens
+/// the comparison over it (§REQ-one-answer.proof.delivery.widening). The seed
+/// asks only a sampled project of some of them (§REQ-one-answer.proof.matrix.seed).
+const WIDENING: &[(&str, &str)] = &[
+    ("bare", "S4"),
+    ("basic", "S4"),
+    ("block", "S4"),
+    ("check", "S4"),
+    ("cli", "S4"),
+    ("complete", "S4"),
+    ("completions", "S4"),
+    ("config", "S4"),
+    ("configured", "S4"),
+    ("cross", "S4"),
+    ("declarations", "S4"),
+    ("declare", "S4"),
+    ("deterministic", "S4"),
+    ("doc", "S4"),
+    ("doccomment", "S4"),
+    ("e2e", "S4"),
+    ("external", "S4"),
+    ("fetch", "S4"),
+    ("fmt", "S4"),
+    ("glob", "S4"),
+    ("haskell", "S4"),
+    ("id", "S4"),
+    ("init", "S4"),
+    ("inline", "S4"),
+    ("integrations", "S4"),
+    ("json", "S4"),
+    ("line", "S4"),
+    ("list", "S4"),
+    ("markdown", "S4"),
+    ("marked", "S4"),
+    ("marker", "S4"),
+    ("named", "S4"),
+    ("non", "S4"),
+    ("path", "S4"),
+    ("refs", "S4"),
+    ("relative", "S4"),
+    ("remote", "S4"),
+    ("report", "S4"),
+    ("rust", "S4"),
+    ("schema", "S4"),
+    ("section", "S4"),
+    ("show", "S4"),
+    ("symlink", "S4"),
+    ("word", "S4"),
+    ("workspace", "S4"),
 ];
 
-/// Every ID `list` prints is the ID `list --size` measures, at the same
-/// `path:line` (§REQ-one-answer.identity.declarations).
-fn one_declared_set(root: &Path) -> Verdict {
-    let sites = |args: &[&str]| -> BTreeSet<(String, String, u64)> {
-        json_lines(&stdout(&grund(root, args)))
-            .iter()
-            .filter(|row| row["section"].is_null())
-            .map(|row| {
-                (
-                    row["id"].as_str().unwrap_or("").to_string(),
-                    row["path"].as_str().unwrap_or("").to_string(),
-                    row["line"].as_u64().unwrap_or(0),
-                )
-            })
-            .collect()
-    };
-    let listed = sites(&["list", "--format", "json"]);
-    let measured = sites(&["list", "--size", "--format", "json"]);
-    if listed != measured {
-        let only_list: Vec<_> = listed.difference(&measured).collect();
-        let only_size: Vec<_> = measured.difference(&listed).collect();
-        return Err(format!(
-            "list only {only_list:?}; list --size only {only_size:?}"
-        ));
-    }
-    Ok(())
-}
-
-/// The sampled end-to-end trees: the first plain project of each family.
-fn sampled_trees() -> Vec<(String, PathBuf)> {
-    let cases = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/e2e/cases");
-    let mut names: Vec<String> = fs::read_dir(&cases)
-        .expect("read e2e cases")
-        .map(|entry| {
-            entry
-                .expect("case")
-                .file_name()
-                .to_string_lossy()
-                .into_owned()
-        })
-        .collect();
-    names.sort();
-    SAMPLED_FAMILIES
-        .iter()
-        .filter_map(|family| {
-            names
-                .iter()
-                .find(|name| {
-                    name.starts_with(&format!("{family}-"))
-                        && cases.join(name).join("repo/grund.toml").is_file()
-                })
-                .map(|name| (name.clone(), cases.join(name).join("repo")))
-        })
-        .collect()
-}
+/// The end-to-end families the comparison asks whole, every case under every
+/// applicable variant and surface (§REQ-one-answer.proof.matrix.family);
+/// `WIDENING` names every other family (§REQ-one-answer.proof.delivery.widening).
+const COVERED: &[&str] = &["cover", "scan", "stub"];
 
 /// Every divergence found, as `(tree, invariant, the answers that differ)`.
 fn divergences() -> Vec<(String, &'static str, String)> {
@@ -304,11 +359,6 @@ fn divergences() -> Vec<(String, &'static str, String)> {
     for (_, tree, verdict) in buffers::TREES {
         if let Err(answers) = verdict() {
             found.push((tree.to_string(), buffers::INVARIANT, answers));
-        }
-    }
-    for (name, root) in sampled_trees() {
-        if let Err(answers) = one_declared_set(&root) {
-            found.push((name, "one-declared-set", answers));
         }
     }
     found
@@ -489,15 +539,5 @@ fn the_ledger_fails_on_a_new_divergence_and_on_a_stale_row() {
     assert_eq!(
         problems(&[], &[("X01", "t", "i")]),
         ["ledger row X01 (t / i) no longer reproduces: take it out"]
-    );
-}
-
-#[test]
-fn the_sample_names_one_tree_per_family() {
-    let sampled = sampled_trees();
-    assert_eq!(
-        sampled.len(),
-        SAMPLED_FAMILIES.len(),
-        "a family has no plain project to sample: {sampled:?}"
     );
 }

@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "case": "refs-absent-section-with-duplicate-section",
+  "inputFiles": {
+    "command.args": {"bytes":[114,101,102,115,10,70,83,45,48,48,49,45,97,108,112,104,97,46,57,57,10,123,114,101,112,111,125,10]},
+    "expected.exit": {"bytes":[48,10]},
+    "expected.stderr": {"bytes":[10]},
+    "expected.stdout": {"bytes":[100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,47,70,83,45,48,48,50,45,98,101,116,97,46,109,100,58,49,49,58,32,194,167,70,83,45,48,48,49,45,97,108,112,104,97,46,57,57,10]},
+    "repo": {"directory":true},
+    "repo/docs": {"directory":true},
+    "repo/docs/functional-spec": {"directory":true},
+    "repo/docs/functional-spec/FS-001-alpha.md": {"bytes":[35,32,70,83,45,48,48,49,45,97,108,112,104,97,58,32,65,108,112,104,97,10,10,84,104,101,32,108,101,97,100,46,10,10,35,35,32,49,46,32,70,105,114,115,116,32,99,108,97,105,109,10,10,79,110,101,46,10,10,35,35,32,49,46,32,83,101,99,111,110,100,32,99,108,97,105,109,10,10,84,119,111,46,10,10,35,35,32,50,46,32,67,108,101,97,110,32,115,101,99,116,105,111,110,10,10,67,108,101,97,110,46,10]},
+    "repo/docs/functional-spec/FS-002-beta.md": {"bytes":[35,32,70,83,45,48,48,50,45,98,101,116,97,58,32,66,101,116,97,10,10,66,101,116,97,32,99,105,116,101,115,32,194,167,70,83,45,48,48,49,45,97,108,112,104,97,46,49,32,104,101,114,101,46,10,10,67,108,101,97,110,32,99,105,116,101,115,32,194,167,70,83,45,48,48,49,45,97,108,112,104,97,46,50,32,104,101,114,101,46,10,10,66,97,114,101,32,99,105,116,101,115,32,194,167,70,83,45,48,48,49,45,97,108,112,104,97,32,104,101,114,101,46,10,10,65,98,115,101,110,116,32,99,105,116,101,115,32,194,167,70,83,45,57,57,57,45,109,105,115,115,105,110,103,46,55,32,104,101,114,101,46,10,10,77,105,115,115,105,110,103,32,115,101,99,116,105,111,110,32,99,105,116,101,115,32,194,167,70,83,45,48,48,49,45,97,108,112,104,97,46,57,57,32,104,101,114,101,46,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,10,91,114,101,102,101,114,101,110,99,101,93,10,115,116,114,105,99,116,32,61,32,102,97,108,115,101,10]},
+    "spec.refs": {"bytes":[70,83,45,114,101,102,115,46,52,10,70,83,45,114,101,102,115,46,49,10]}
+  },
+  "facts": {
+    "point": "§FS-refs.4",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, `[reference] strict = false`, default kinds and scan); FS-001-alpha, whose two `## 1.` headings both claim path 1 (§FS-declarations.checks.duplicate-section) and whose `## 2.` is clean; FS-002-beta, whose body cites §FS-001-alpha.1, §FS-001-alpha.2, §FS-001-alpha, the undeclared §FS-999-missing.7 and the missing section §FS-001-alpha.99. `show` and `refs` refuse FS-001-alpha.1 as ambiguous (§FS-show.2.2.2, §FS-refs.4) while `refs` lists the other cited coordinates, the dangling and the missing section included (§FS-refs.2); `check` reports the duplicate section once at its first heading, the dangling ID (§FS-check.3.1), the missing section (§FS-check.3.2), the absent index for both declarations (§FS-check.3.18.7) and FS-002-beta unused (§FS-check.4.1), in path, line and message order (§FS-errors.4.1). `fmt` wraps the three citations that resolve, §FS-001-alpha.1 to the first claimant's heading (§DF-duplicate-section-path.5), and leaves the dangling and the missing section bare (§FS-fmt.6.4, §FS-fmt.6.4.1).",
+    "scanned": ["docs/functional-spec/FS-001-alpha.md","docs/functional-spec/FS-002-beta.md"],
+    "declarations": [
+      {"id":"FS-001-alpha","kind":"FS","file":"docs/functional-spec/FS-001-alpha.md","heading":"FS-001-alpha: Alpha","title":"Alpha","body":[2,15],"anchor":"fs-001-alpha-alpha"},
+      {"id":"FS-002-beta","kind":"FS","file":"docs/functional-spec/FS-002-beta.md","heading":"FS-002-beta: Beta","title":"Beta","body":[2,11],"anchor":"fs-002-beta-beta"}
+    ],
+    "sections": [
+      {"of":"FS-001-alpha","path":"1","heading":"1. First claim","title":"First claim","anchor":"1-first-claim","end":8,"duplicate":true},
+      {"of":"FS-001-alpha","path":"1","heading":"1. Second claim","title":"Second claim","anchor":"1-second-claim","end":12,"duplicate":true},
+      {"of":"FS-001-alpha","path":"2","heading":"2. Clean section","title":"Clean section","anchor":"2-clean-section","end":15}
+    ],
+    "citations": [
+      {"file":"docs/functional-spec/FS-002-beta.md","token":"§FS-001-alpha.1","enclosing":["FS-002-beta",null]},
+      {"file":"docs/functional-spec/FS-002-beta.md","token":"§FS-001-alpha.2","enclosing":["FS-002-beta",null]},
+      {"file":"docs/functional-spec/FS-002-beta.md","token":"§FS-001-alpha","nth":3,"enclosing":["FS-002-beta",null]},
+      {"file":"docs/functional-spec/FS-002-beta.md","token":"§FS-999-missing.7","enclosing":["FS-002-beta",null]},
+      {"file":"docs/functional-spec/FS-002-beta.md","token":"§FS-001-alpha.99","enclosing":["FS-002-beta",null]}
+    ],
+    "findings": [
+      {"severity":"error","code":"missing-index-entry","path":"docs/functional-spec/FS-001-alpha.md","line":1,"message":"FS-001-alpha is not listed in docs/functional-spec/README.md (the index file does not exist) — became an error in grund 0.13.0","sites":[]},
+      {"severity":"error","code":"duplicate-section","path":"docs/functional-spec/FS-001-alpha.md","line":5,"message":"duplicate section FS-001-alpha.1 (also declared at docs/functional-spec/FS-001-alpha.md:9)","sites":[{"path":"docs/functional-spec/FS-001-alpha.md","line":5},{"path":"docs/functional-spec/FS-001-alpha.md","line":9}]},
+      {"severity":"error","code":"missing-index-entry","path":"docs/functional-spec/FS-002-beta.md","line":1,"message":"FS-002-beta is not listed in docs/functional-spec/README.md (the index file does not exist) — became an error in grund 0.13.0","sites":[]},
+      {"severity":"warning","code":"unused","path":"docs/functional-spec/FS-002-beta.md","line":1,"message":"declared but never cited: FS-002-beta","sites":[]},
+      {"severity":"error","code":"dangling","path":"docs/functional-spec/FS-002-beta.md","line":9,"token":"§FS-999-missing.7","message":"unknown reference FS-999-missing","sites":[]},
+      {"severity":"error","code":"missing-section","path":"docs/functional-spec/FS-002-beta.md","line":11,"token":"§FS-001-alpha.99","message":"missing section FS-001-alpha.99","sites":[]},
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+    ],
+    "refusals": {
+      "FS-001-alpha.1": {"code":"ambiguous-section","message":"ambiguous section: FS-001-alpha.1 (declared at docs/functional-spec/FS-001-alpha.md:5, docs/functional-spec/FS-001-alpha.md:9)","sites":[{"path":"docs/functional-spec/FS-001-alpha.md","line":5},{"path":"docs/functional-spec/FS-001-alpha.md","line":9}]}
+    },
+    "fmt": {
+      "changes": [{"path":"docs/functional-spec/FS-002-beta.md","line":3,"label":"markdown link"},{"path":"docs/functional-spec/FS-002-beta.md","line":5,"label":"markdown link"},{"path":"docs/functional-spec/FS-002-beta.md","line":7,"label":"markdown link"}],
+      "writeChanges": [{"path":"docs/functional-spec/FS-002-beta.md","line":3,"label":"markdown link"},{"path":"docs/functional-spec/FS-002-beta.md","line":5,"label":"markdown link"},{"path":"docs/functional-spec/FS-002-beta.md","line":7,"label":"markdown link"}],
+      "written": {"docs/functional-spec/FS-002-beta.md":{"3":"Beta cites [§FS-001-alpha.1](FS-001-alpha.md#1-first-claim) here.","5":"Clean cites [§FS-001-alpha.2](FS-001-alpha.md#2-clean-section) here.","7":"Bare cites [§FS-001-alpha](FS-001-alpha.md#fs-001-alpha-alpha) here."}}
+    }
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}

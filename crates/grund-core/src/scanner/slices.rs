@@ -5,6 +5,7 @@
 //! is no second reading of where a body ends: the record's is the one every command
 //! gives (§DF-one-parse-answers-from-0-19).
 
+use super::embedded_value_context::without_value_tag;
 use crate::grammar::{comment_envelope, expand_relative_heading, relative_heading_form};
 use crate::model::{
     Declaration, FileRecord, HeadingKind, RecordedHeading, ShowRenderMode, ShowSection,
@@ -114,6 +115,12 @@ pub(crate) fn record_slices(
                 && own(heading.line)
         })
         .collect();
+    // §FS-values.2.4.2: a marked root's title drops its tag; its raw heading keeps it.
+    let marked = |heading: &RecordedHeading, path: &str| {
+        decl.sections
+            .get(path)
+            .is_some_and(|info| info.line == heading.line && info.marked())
+    };
     for sink in sinks.iter_mut() {
         // §FS-show.3.1.2: the heading-carrying form opens on the declaration's heading line.
         if sink.include_heading {
@@ -131,7 +138,7 @@ pub(crate) fn record_slices(
                     let line = sink.heading_line(body_line(record, heading.line), heading);
                     sink.sections.push(ShowSection {
                         path: path.to_string(),
-                        title: section_title(record, heading, path),
+                        title: section_title(record, heading, path, marked(heading, path)),
                         depth: path.split('.').count() - base_depth,
                     });
                     sink.lines.push(line);
@@ -172,9 +179,22 @@ fn body_line(record: &FileRecord, lineno: usize) -> String {
 
 /// A map entry's title: the heading's rendered text, which has no closing `#` run
 /// (§FS-declarations.heading), after its path (§FS-show.2.1.2), the canonical one
-/// for a relative heading (§FS-declarations.section.relative.shown).
-fn section_title(record: &FileRecord, heading: &RecordedHeading, path: &str) -> String {
+/// for a relative heading (§FS-declarations.section.relative.shown), without the tag
+/// of a `marked` value root (§FS-values.2.4.2).
+fn section_title(
+    record: &FileRecord,
+    heading: &RecordedHeading,
+    path: &str,
+    marked: bool,
+) -> String {
     let text = record.heading_text(heading);
+    // The tag goes from the whole heading text, path included, as the editor's
+    // range drops it, so a title that is only the tag is empty on both.
+    let text = if marked {
+        without_value_tag(text)
+    } else {
+        text
+    };
     let rest = match relative_heading_form(text).filter(|_| heading.relative) {
         Some(form) => text
             .trim_start()

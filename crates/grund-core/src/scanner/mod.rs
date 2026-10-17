@@ -111,7 +111,7 @@ pub(crate) use agent_entrypoints::{
 pub(crate) use context::{file_home_kind, markdown_heading_level, section_path_is_numeric};
 pub(crate) use declaration_lines::DeclarationLines;
 pub(crate) use e2e::e2e_case_dir_name;
-pub(crate) use embedded_value_context::EMBEDDED_VALUE_MARKER;
+pub(crate) use embedded_value_context::without_value_tag;
 pub(crate) use legacy::{
     collect_local_legacy_markdown_citations, configured_catalog_ids, legacy_catalog_ids,
     match_legacy_tail, promote_legacy_candidate, resolve_id_arg, sort_citations,

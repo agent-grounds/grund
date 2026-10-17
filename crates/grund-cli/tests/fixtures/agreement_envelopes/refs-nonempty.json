@@ -1,0 +1,36 @@
+{
+  "point": "§REQ-one-answer.proof.evidence",
+  "provenance": {
+    "sha": "f09e07a4ff7c599f7989c45b2a675d704767a65f",
+    "source": "review-1/executed-calls.json",
+    "receipt": 103,
+    "role": "real nonempty refs comparator input; not an independent generic oracle"
+  },
+  "python": {
+    "failure": null,
+    "result": {
+      "file_summaries": [{"path": "docs/use.md", "project": null, "sites": 1}],
+      "file_total": 1,
+      "hits": [{
+        "column": 5,
+        "enclosing_declaration": null,
+        "enclosing_section": null,
+        "id": "FS-b",
+        "line": 1,
+        "marker": true,
+        "path": "docs/use.md",
+        "project": null,
+        "section": null,
+        "text": "§FS-b"
+      }],
+      "kind_title": null,
+      "note": null,
+      "output_format": "text",
+      "run_cautions": [],
+      "scan_errors": [],
+      "site_total": 1,
+      "workspace": false
+    },
+    "run_cautions": []
+  }
+}
