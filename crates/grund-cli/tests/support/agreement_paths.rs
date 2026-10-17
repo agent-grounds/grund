@@ -31,9 +31,15 @@ pub fn logical_text(value: &str, context: &Value) -> String {
                         .map_or_else(|| short.to_string(), |unc| format!("\\\\{unc}")),
                 );
             }
-            aliases
-                .into_iter()
-                .flat_map(|root| [root.clone(), root.replace('\\', "/")])
+            aliases.into_iter().flat_map(|root| {
+                let mut spellings = vec![root.clone(), root.replace('\\', "/")];
+                // A root written with `/` is spelled with `\` once Windows
+                // joins a site under it.
+                if cfg!(windows) {
+                    spellings.push(root.replace('/', "\\"));
+                }
+                spellings
+            })
         })
         .collect();
     roots.sort_by_key(|root| std::cmp::Reverse(root.len()));
