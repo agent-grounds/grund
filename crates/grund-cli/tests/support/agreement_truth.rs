@@ -129,8 +129,21 @@ pub fn host(
 pub fn editor(context: &Value, key: &str, response: &Value, errors: &mut Vec<String>) {
     // Structured snapshots contain physical paths; serialized hover JSON is
     // decoded by logical_value. Section-map coordinates remain coordinates.
-    let actual = paths::logical_value(response.clone(), context);
+    let mut actual = paths::logical_value(response.clone(), context);
+    written_sites(&mut actual);
     attach(context, key, "editor", actual, errors);
+}
+
+/// §FS-lsp.1.1: the editor keeps an absolute path's native spelling, so a site
+/// under the root reads `<repo>\docs\a.md` on Windows; it is compared as the
+/// `/`-separated site the authored facts spell.
+fn written_sites(value: &mut Value) {
+    match value {
+        Value::String(s) if s.starts_with("<repo>\\") => *s = s.replace('\\', "/"),
+        Value::Array(values) => values.iter_mut().for_each(written_sites),
+        Value::Object(values) => values.values_mut().for_each(written_sites),
+        _ => {}
+    }
 }
 
 pub fn expected_written(context: &Value) -> Value {
