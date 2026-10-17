@@ -26,6 +26,7 @@ points = [
   "FS-scan.scope",
 ]
 owners = [
+  "crates/grund-core/src/config/global_excludes.rs",
   "crates/grund-core/src/config/run.rs",
   "crates/grund-core/src/config/v1/defaults.rs",
   "crates/grund-core/src/grammar/language_table.rs",
