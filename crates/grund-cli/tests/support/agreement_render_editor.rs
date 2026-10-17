@@ -23,7 +23,9 @@ impl View<'_> {
             Some(s) => format!("{id}.{s}"),
             None => id.to_string(),
         };
-        let (d, s) = self.resolve(&coordinate)?;
+        // §FS-lsp.1.3: a citation jumps to its declaration's line, which a
+        // section its declaration lacks still has.
+        let (d, s) = self.resolve(&coordinate).or_else(|| self.resolve(id))?;
         let decl = &self.m.decls[d];
         Some(match s {
             Some(s) => (decl.file.clone(), self.m.sections[s].line),
@@ -36,7 +38,8 @@ impl View<'_> {
             "column":self.column(f),"line":f["line"],"message":f["message"],
             "path":self.absolute(f["path"].as_str().unwrap()),"severity":f["severity"],
             "sites":f["sites"].as_array().into_iter().flatten().map(|s|
-                json!({"path":s["path"],"line":s["line"]})).collect::<Vec<_>>()})
+                json!({"path":self.absolute(s["path"].as_str().unwrap()),"line":s["line"]}))
+                .collect::<Vec<_>>()})
     }
 
     pub fn snapshot(&self) -> Value {
@@ -66,7 +69,20 @@ impl View<'_> {
         };
         let mut declarations: Vec<_> = self.m.decls.iter().map(|d| (d, title(d))).collect();
         declarations.sort_by(|a, b| (&a.1.0, a.1.1).cmp(&(&b.1.0, b.1.1)));
-        let mut sections: Vec<_> = self.m.sections.iter().collect();
+        // §FS-declarations.checks.duplicate-section.3: a later claimant of a
+        // path is no section target, so the editor navigates to the first only.
+        let mut sections: Vec<_> = self
+            .m
+            .sections
+            .iter()
+            .enumerate()
+            .filter(|(i, s)| {
+                !self.m.sections[..*i]
+                    .iter()
+                    .any(|o| o.owner == s.owner && o.path == s.path)
+            })
+            .map(|(_, s)| s)
+            .collect();
         sections.sort_by(|a, b| (&a.file, a.line).cmp(&(&b.file, b.line)));
         let mut cites: Vec<_> = self.m.cites.iter().collect();
         cites.sort_by(|a, b| (&a.file, a.line, a.column).cmp(&(&b.file, b.line, b.column)));

@@ -247,6 +247,6 @@ impl View<'_> {
         let python = self.refs(coordinate);
         let mut node = node(&python, "refs")?;
         self.refs_summaries(&mut node, &python);
-        Ok(json!({"cli":self.cli_refs(&python),"python":python,"node":node}))
+        Ok(json!({"cli":self.cli_refs(coordinate, &python),"python":python,"node":node}))
     }
 }
