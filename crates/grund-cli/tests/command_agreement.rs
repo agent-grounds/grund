@@ -81,6 +81,22 @@ mod agreement_questions;
 mod agreement_refs_fields;
 #[path = "support/agreement_refusals.rs"]
 mod agreement_refusals;
+#[path = "support/agreement_render.rs"]
+mod agreement_render;
+#[path = "support/agreement_render_answers.rs"]
+mod agreement_render_answers;
+#[path = "support/agreement_render_cli.rs"]
+mod agreement_render_cli;
+#[path = "support/agreement_render_editor.rs"]
+mod agreement_render_editor;
+#[path = "support/agreement_render_inventory.rs"]
+mod agreement_render_inventory;
+#[path = "support/agreement_render_model.rs"]
+mod agreement_render_model;
+#[path = "support/agreement_render_show.rs"]
+mod agreement_render_show;
+#[path = "support/agreement_render_tree.rs"]
+mod agreement_render_tree;
 #[path = "support/agreement_sections.rs"]
 mod agreement_sections;
 #[path = "support/agreement_sites.rs"]
