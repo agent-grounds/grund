@@ -1,18 +1,20 @@
 //! Cross-question common facts, beyond host conversion equality
 //! (§REQ-one-answer.identity.declarations, §REQ-one-answer.sections.map,
-//! §FS-scan.path.cover). Known stub placement and section omissions keep their
-//! ruled answers; other omissions remain failures.
+//! §FS-scan.path.cover). Every closed row is an expectation of agreement, so an
+//! omission or a second site is a failure (§REQ-one-answer.proof.evidence.closed).
 
-use super::agreement_evidence as evidence;
-use super::agreement_oracles::{entries, physical, text};
+use super::agreement_oracles::{entries, text};
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
 
+/// `list` and `list --size` place each declaration at one site. Placement closed
+/// with §DF-stubs-by-home-and-at-the-target, so a stub's home against its target
+/// is a divergence like any other; the context and snapshot that once qualified
+/// that exception are no longer read.
 pub fn declarations(
-    context: &Value,
+    _context: &Value,
     answers: &BTreeMap<&str, Value>,
-    loaded: Option<&Value>,
+    _loaded: Option<&Value>,
     errors: &mut Vec<String>,
 ) {
     let lists = entries(&answers["list"], "entries");
@@ -33,128 +35,29 @@ pub fn declarations(
             .iter()
             .filter(|size| identity(size) == identity(&row))
             .collect();
-        if let Some(size) = peers
+        match peers
             .iter()
             .find(|size| row["path"] == size["path"] && row["line"] == size["line"])
         {
-            if row["duplicate"] != size["duplicate"] {
+            Some(size) if row["duplicate"] != size["duplicate"] => {
                 errors.push("list/size duplicate verdict differs".into());
             }
-            continue;
-        }
-        if let Some(size) = peers.iter().find(|size| {
-            row["defines"]
-                .as_str()
-                .zip(size["path"].as_str())
-                .is_some_and(|(defines, path)| {
-                    physical(context, defines) == physical(context, path)
-                        && healthy_unscanned(context, &row, &physical(context, path), loaded)
-                        && row["duplicate"] == size["duplicate"]
-                        && loaded.is_some_and(|loaded| {
-                            loaded["snapshot"]["stubs"]
-                                .as_array()
-                                .unwrap()
-                                .iter()
-                                .any(|stub| {
-                                    super::agreement_paths::saved_path(
-                                        context,
-                                        Path::new(stub["target_path"].as_str().unwrap()),
-                                    ) == physical(context, path)
-                                        && stub["target_line"] == size["line"]
-                                })
-                        })
-                })
-        }) {
-            // §REQ-one-answer.differences.stubs: Placement keeps the stub
-            // home until #650, while size reads the target.
-            evidence::receipt(
-                "known-difference",
-                Path::new(&text(context, "saved")),
-                json!({"list":row,"size":size}),
-                json!({"row":"Placement"}),
-            );
-        } else {
-            errors.push(format!("list/size physical site: {row} against {peers:?}"));
+            Some(_) => {}
+            None => errors.push(format!("list/size physical site: {row} against {peers:?}")),
         }
     }
 }
 
-/// §REQ-one-answer.differences.stubs: the real healthy stub and an unscanned
-/// physical target are both preconditions, never just two returned row flags.
-pub fn healthy_unscanned(
-    context: &Value,
-    row: &Value,
-    target: &Path,
-    loaded: Option<&Value>,
-) -> bool {
-    let Some(snapshot) = loaded.map(|s| &s["snapshot"]) else {
-        return false;
-    };
-    if row["stub"] != true || !target.is_file() {
-        return false;
-    }
-    let canonical = |path: &Path| path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
-    let target = canonical(target);
-    if snapshot["scanned_files"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|path| {
-            canonical(&super::agreement_paths::saved_path(
-                context,
-                Path::new(path.as_str().unwrap()),
-            )) == target
-        })
-    {
-        return false;
-    }
-    let Some(stub_path) = row["path"].as_str() else {
-        return false;
-    };
-    let stub_path = canonical(&physical(context, stub_path));
-    snapshot["stubs"].as_array().unwrap().iter().any(|stub| {
-        let stub_file =
-            super::agreement_paths::saved_path(context, Path::new(stub["path"].as_str().unwrap()));
-        let target_file = super::agreement_paths::saved_path(
-            context,
-            Path::new(stub["target_path"].as_str().unwrap()),
-        );
-        canonical(&stub_file) == stub_path
-            && canonical(&target_file) == target
-            && stub["line"] == row["line"]
-            && stub["query_id"].as_str().is_some_and(|query| {
-                query.rsplit('/').next()
-                    == row["id"].as_str().map(|id| id.rsplit('/').next().unwrap())
-            })
-            && std::fs::read_to_string(&stub_file)
-                .ok()
-                .is_some_and(|bytes| {
-                    bytes
-                        .lines()
-                        .nth(row["line"].as_u64().unwrap_or(0).saturating_sub(1) as usize)
-                        .is_some_and(|line| {
-                            line.contains("](") && line.contains(row["id"].as_str().unwrap())
-                        })
-                })
-            && std::fs::read_to_string(&target_file)
-                .ok()
-                .is_some_and(|bytes| {
-                    bytes
-                        .lines()
-                        .nth(stub["target_line"].as_u64().unwrap_or(0).saturating_sub(1) as usize)
-                        .is_some_and(|line| {
-                            line.contains(row["id"].as_str().unwrap().rsplit('/').next().unwrap())
-                        })
-                })
-    })
-}
-
+/// Every section a direct `show` returns is in the exhaustive batch and offered
+/// by the editor. U03a and U03c closed with §DF-stubs-by-home-and-at-the-target,
+/// so an outside target's section is held like any other; the context and the
+/// listing that once qualified that exception are no longer read.
 pub fn sections(
-    context: &Value,
+    _context: &Value,
     coordinate: &str,
     show: &Value,
     batch: &Value,
-    listed: &Value,
+    _listed: &Value,
     loaded: Option<&Value>,
     errors: &mut Vec<String>,
 ) {
@@ -165,16 +68,6 @@ pub fn sections(
     if !body["section"].is_null() {
         return;
     }
-    let path = body["path"].as_str().unwrap();
-    let target = physical(context, path);
-    let target = target.canonicalize().unwrap_or(target);
-    let outside_scan = entries(listed, "entries").iter().any(|entry| {
-        entry["defines"].as_str().is_some_and(|defines| {
-            let defined = physical(context, defines);
-            defined.canonicalize().unwrap_or(defined) == target
-                && healthy_unscanned(context, entry, &target, loaded)
-        })
-    });
     let batch_records = entries(batch, "records");
     let local_coordinate = coordinate.rsplit('/').next().unwrap();
     let current_local = batch_records.iter().any(|record| {
@@ -206,19 +99,9 @@ pub fn sections(
             ));
         // Exhaustive batch canonicalizes inline coordinates into id+section.
         if !explicit {
-            if outside_scan {
-                evidence::receipt(
-                    "known-difference",
-                    &target,
-                    json!({"coordinate":coordinate,"section":section_path,
-                    "outsideScan":true}),
-                    json!({"row":"U03a"}),
-                );
-            } else {
-                errors.push(format!(
-                    "batch omits {coordinate}.{section_path} direct show returns"
-                ));
-            }
+            errors.push(format!(
+                "batch omits {coordinate}.{section_path} direct show returns"
+            ));
         }
         if let Some(snapshot) = loaded {
             let offered = snapshot["snapshot"]["sections"]
@@ -233,19 +116,9 @@ pub fn sections(
                         )
                 });
             if !offered {
-                if outside_scan {
-                    evidence::receipt(
-                        "known-difference",
-                        &target,
-                        json!({"coordinate":coordinate,"section":section_path,
-                        "outsideScan":true}),
-                        json!({"row":"U03c"}),
-                    );
-                } else {
-                    errors.push(format!(
-                        "editor omits {coordinate}.{section_path} direct show returns"
-                    ));
-                }
+                errors.push(format!(
+                    "editor omits {coordinate}.{section_path} direct show returns"
+                ));
             }
         }
     }
