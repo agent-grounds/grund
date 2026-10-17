@@ -187,7 +187,10 @@ impl View<'_> {
             .iter()
             .map(|h| {
                 let mut row = Self::citation_row(h);
-                row["kind_title"] = result["kind_title"].clone();
+                // §FS-config.3.4.3: an absent effective title omits the field.
+                if !result["kind_title"].is_null() {
+                    row["kind_title"] = result["kind_title"].clone();
+                }
                 row
             })
             .collect();

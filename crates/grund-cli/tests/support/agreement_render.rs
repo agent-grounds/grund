@@ -259,16 +259,47 @@ fn base(scope: &Value, root: &str) -> String {
         .to_string()
 }
 
+/// §FS-fmt.6.2: a written file pinned as replaced lines over its saved input
+/// bytes, each line keeping its own terminator, becomes the file's whole text.
+fn patch(fmt: &mut Value, inputs: &BTreeMap<String, Vec<u8>>) -> Result<(), String> {
+    for (path, written) in fmt["written"].as_object_mut().into_iter().flatten() {
+        let Some(lines) = written.as_object() else {
+            continue;
+        };
+        let saved = inputs
+            .get(path)
+            .map(|b| String::from_utf8_lossy(b).into_owned())
+            .ok_or_else(|| format!("written patch of no input {path}"))?;
+        let mut text = String::new();
+        for (index, line) in saved.split_inclusive('\n').enumerate() {
+            match lines.get(&(index + 1).to_string()) {
+                Some(new) => {
+                    let ending = &line[line.trim_end_matches(['\r', '\n']).len()..];
+                    text.push_str(new.as_str().ok_or("a patched line is text")?);
+                    text.push_str(ending);
+                }
+                None => text.push_str(line),
+            }
+        }
+        *written = json!(text);
+    }
+    Ok(())
+}
+
 /// Expand every applicable variant of a manifest that carries compact facts.
 pub fn expand(document: &mut Value) -> Result<(), String> {
-    let Some(facts) = document.get("facts").cloned() else {
+    let Some(mut facts) = document.get("facts").cloned() else {
         return Ok(());
     };
     let inputs = input_files(document);
+    patch(&mut facts["fmt"], &inputs)?;
     for name in super::agreement_corpus::VARIANTS {
-        let compact = document["variants"][*name].clone();
+        let mut compact = document["variants"][*name].clone();
         if compact["absent"].is_string() {
             continue;
+        }
+        if compact.get("fmt").is_some() {
+            patch(&mut compact["fmt"], &inputs)?;
         }
         let (relative, overlay) = selection(document, &inputs, name);
         let variant = Variant {

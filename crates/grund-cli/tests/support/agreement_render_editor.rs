@@ -4,6 +4,7 @@
 //! (§FS-lsp.responsiveness.3). Site-less CLI-level config cautions are
 //! `check`'s alone (§FS-check.checks.config-version-1).
 
+use super::agreement_render_model::Decl;
 use super::agreement_render_tree::View;
 use serde_json::{Value, json};
 
@@ -57,8 +58,13 @@ impl View<'_> {
                 .unwrap()
                 .push(self.editor_finding(f));
         }
-        let mut declarations: Vec<_> = self.m.decls.iter().collect();
-        declarations.sort_by(|a, b| (&a.file, a.line).cmp(&(&b.file, b.line)));
+        // A stub stands in as the title of a target the walk did not read.
+        let title = |d: &Decl| match d.via.first() {
+            Some(v) if d.facts["standIn"] == true => (v.0.clone(), v.1, v.2, v.3.clone()),
+            _ => (d.file.clone(), d.line, d.column, d.text.clone()),
+        };
+        let mut declarations: Vec<_> = self.m.decls.iter().map(|d| (d, title(d))).collect();
+        declarations.sort_by(|a, b| (&a.1.0, a.1.1).cmp(&(&b.1.0, b.1.1)));
         let mut sections: Vec<_> = self.m.sections.iter().collect();
         sections.sort_by(|a, b| (&a.file, a.line).cmp(&(&b.file, b.line)));
         let mut cites: Vec<_> = self.m.cites.iter().collect();
@@ -66,7 +72,10 @@ impl View<'_> {
         let mut kind_titles = serde_json::Map::new();
         for row in self.order() {
             let coordinate = self.coordinate(row);
-            kind_titles.insert(coordinate.clone(), self.kind_title(&coordinate));
+            let title = self.kind_title(&coordinate);
+            if !title.is_null() {
+                kind_titles.insert(coordinate.clone(), title);
+            }
         }
         let scanned: Vec<_> = self.scanned().iter().map(|f| self.absolute(f)).collect();
         // §FS-lsp.responsiveness.3: the run also reads the agent entrypoint and
@@ -79,14 +88,21 @@ impl View<'_> {
             None => std::iter::once("AGENTS.md".to_string())
                 .chain(self.kinds().iter().filter_map(|k| {
                     let home = k["home"].as_str().unwrap();
-                    (!home.ends_with(".md")).then(|| format!("{home}/README.md"))
+                    let indexed = k["index"] != false && !home.ends_with(".md");
+                    indexed.then(|| format!("{home}/README.md"))
                 }))
                 .collect(),
         };
+        // A stub's target is read where its verdict reads it (§FS-declarations.stubs.target).
+        let reads = self.m.facts["editor"]["reads"]
+            .as_array()
+            .into_iter()
+            .flatten();
         let mut read: Vec<String> = self
             .scanned()
             .into_iter()
             .chain(probes)
+            .chain(reads.map(|r| r.as_str().unwrap().to_string()))
             .map(|f| self.absolute(&f))
             .collect();
         read.sort();
@@ -123,8 +139,8 @@ impl View<'_> {
                 row["target_line"] = json!(target.map(|(_, l)| l));
                 row
             }).collect::<Vec<_>>(),
-            "declarations":declarations.iter().map(|d| {
-                let mut row = self.located(&d.file, d.line, d.column, &d.text, &d.id);
+            "declarations":declarations.iter().map(|(d, (file, line, column, text))| {
+                let mut row = self.located(file, *line, *column, text, &d.id);
                 row["hover_text"] = Value::Null;
                 row
             }).collect::<Vec<_>>(),

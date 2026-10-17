@@ -65,8 +65,13 @@ impl View<'_> {
                 decl.line,
             ),
         };
-        json!({"id":decl.id,"section":section,"body":body,"sections":sections,
-            "kind_title":self.kind_title(&decl.id),"anchor":anchor,"path":decl.file,"line":line})
+        let mut object = json!({"id":decl.id,"section":section,"body":body,"sections":sections,
+            "kind_title":self.kind_title(&decl.id),"anchor":anchor,"path":decl.file,"line":line});
+        // §FS-config.3.4.3: an absent effective title omits the field.
+        if object["kind_title"].is_null() {
+            object.as_object_mut().unwrap().remove("kind_title");
+        }
+        object
     }
 
     /// Python's ShowResult, its serialized JSON normalized as the comparison does.
@@ -141,7 +146,7 @@ impl View<'_> {
         let mut seen = std::collections::BTreeSet::new();
         for row in self.order() {
             let coordinate = self.coordinate(row);
-            if !self.within(&self.m.decls[row.0].file) || !seen.insert(coordinate.clone()) {
+            if !self.declared_within(row.0) || !seen.insert(coordinate.clone()) {
                 continue;
             }
             let (id, section) = (
@@ -184,8 +189,14 @@ impl View<'_> {
                 None => files.push((c.file.clone(), 1)),
             }
         }
-        let cited = self.m.cites.iter().any(|c| c.id == id);
-        let declared = self.m.decls.iter().any(|d| d.id == id);
+        // §FS-scan.path.refs: the path's tree is what `refs` scans.
+        let cited = self
+            .m
+            .cites
+            .iter()
+            .any(|c| c.id == id && self.within(&c.file));
+        let declared =
+            (0..self.m.decls.len()).any(|d| self.m.decls[d].id == id && self.declared_within(d));
         let note = (!cited && !declared).then(|| {
             format!("{id} is neither declared nor cited \u{2014} run `grund list` to see every declared ID")
         });
