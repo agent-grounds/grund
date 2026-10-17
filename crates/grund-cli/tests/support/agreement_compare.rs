@@ -44,6 +44,9 @@ pub fn hosts(
         &node,
         errors,
     );
+    // §FS-distribution.3.2.1.1: Node's `cover` takes no `lines`, so its pinned
+    // refusal is the whole of its answer and it shares no domain with the peers.
+    let node_peer = question.surface != "cover-lines";
     if matches!(question.surface, "show" | "show-batch") {
         let node_rust = node_embedding_call(node_request(
             question.node_operation,
@@ -57,12 +60,14 @@ pub fn hosts(
         question.node_operation,
         errors,
     );
-    equal(
-        "actual host complete common envelopes",
-        super::agreement_host_projection::node_common(node.clone(), question.node_operation),
-        common_python,
-        errors,
-    );
+    if node_peer {
+        equal(
+            "actual host complete common envelopes",
+            super::agreement_host_projection::node_common(node.clone(), question.node_operation),
+            common_python,
+            errors,
+        );
+    }
     let cli_context = question.context(context, "cli");
     let projected = super::agreement_sites::output(question.surface, cli, &cli_context);
     compare_cli(
@@ -71,16 +76,18 @@ pub fn hosts(
         &super::agreement_sites::host(question.surface, python.clone(), &python_context),
         errors,
     );
-    compare_cli(
-        question,
-        &projected,
-        &super::agreement_sites::host(
-            question.surface,
-            node.clone(),
-            &question.context(context, "node"),
-        ),
-        errors,
-    );
+    if node_peer {
+        compare_cli(
+            question,
+            &projected,
+            &super::agreement_sites::host(
+                question.surface,
+                node.clone(),
+                &question.context(context, "node"),
+            ),
+            errors,
+        );
+    }
     json!({"python":python,"node":node,"request":request})
 }
 
@@ -293,13 +300,13 @@ pub fn compare_cli(question: &Question, cli: &Output, host: &Value, errors: &mut
             errors,
         ),
         "fmt" => {
-            // §FS-fmt.3.1: a complete dry run exits 0 even with changes;
-            // incomplete scans exit 2, while refused outside-root writes do not.
-            let expected_exit = if result["scan_errors"]
-                .as_array()
-                .is_some_and(|errors| !errors.is_empty())
-            {
+            // §FS-fmt.1: the dry run is `--check`, non-zero with a pending change;
+            // §FS-fmt.3.1: an incomplete scan exits 2, a refused write does not.
+            let nonempty = |key: &str| result[key].as_array().is_some_and(|v| !v.is_empty());
+            let expected_exit = if nonempty("scan_errors") {
                 2
+            } else if nonempty("changes") {
+                1
             } else {
                 0
             };
