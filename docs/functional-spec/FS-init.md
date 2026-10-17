@@ -818,7 +818,18 @@ Several things in the generated entrypoint are *substituted in* rather than fixe
 
 ##### 2.3.8.1 What the config fills in
 
-From that config the block fills in the ID shape (`<KIND>-<NNN>-<slug>`, `<KIND>-<slug>`, …, derived from `[id].format`), one worked example citation, the `[id].section_separator`, the marker and `$$`-trigger from `[reference]`, the `KIND ∈ {…}` set from `[[kinds]]` (``no `KIND` is declared yet`` where there is none, [§FS-init.2.3.4.4.2](FS-init.md#23442-no-kinds-yet)), a raw-readable link list of each kind's configured declaration home and title ([§FS-init.2.3.4.4](FS-init.md#2344-project-map)), a sentence on whether bare ID-shaped tokens count as citations (driven by `[reference].strict`), and the inline citation style sentences defined by [§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering).
+From that config the block fills in the ID shape (`<KIND>-<NNN>-<slug>`, `<KIND>-<slug>`, …, derived from `[id].format`), one worked example citation, the `[id].section_separator`, the marker and `$$`-trigger from `[reference]`, the `KIND ∈ {…}` set from `[[kinds]]` (``no `KIND` is declared yet`` where there is none, [§FS-init.2.3.4.4.2](FS-init.md#23442-no-kinds-yet)), a raw-readable link list of each kind's configured declaration home and title ([§FS-init.2.3.4.4](FS-init.md#2344-project-map)), a config-version-aware sentence on whether bare ID-shaped tokens count as citations, and the inline citation style sentences defined by [§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering).
+
+For version 1, the bare-token explanation retains its existing wording for both
+`[reference] strict = true` and `strict = false`, including the latter's advice
+to remove the compatibility override or set strict back to `true`. For version
+2, including a config produced by migration, the explanation says that bare
+ID-shaped tokens are ignored, only citations prefixed with the configured
+marker are recognized, and there is no opt-out
+([§FS-config-v2.defaults.1](FS-config-v2.md#defaults1-what-v2-fixes)). It neither
+claims that `[reference] strict` is set nor advises changing it: that setting
+does not exist in version 2
+([§FS-config-v2.reader.1](FS-config-v2.md#reader1-tables-and-keys-are-closed)).
 
 ##### 2.3.8.2 The worked example is escaped
 
