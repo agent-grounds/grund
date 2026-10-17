@@ -51,7 +51,11 @@ def checked(argv, **kwargs):
 
 
 def prepare():
-    """Build the actual mixed Python package and Node package once per suite."""
+    """Build the actual mixed Python package and Node package for one host.
+
+    Every lane's host prepares its own packages; the first one's builds compile the
+    natives, and a later one's find them fresh.
+    """
     sha = checked(['git', 'rev-parse', 'HEAD'])
     node, node_version = node_runtime()
     toolchains = checked(['rustup', 'toolchain', 'list'])

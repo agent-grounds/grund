@@ -169,7 +169,7 @@ pub fn execute(manifests: &std::collections::BTreeMap<String, Value>) -> Vec<Str
         .map(|name| name.as_str().unwrap().to_string())
         .filter(|name| manifests.contains_key(name))
         .collect();
-    // The first host built the native libraries, so a later lane's only rebuilds.
+    // The first host built the native libraries, so a later lane's host finds them fresh.
     let lanes = std::thread::available_parallelism()
         .map_or(1, std::num::NonZero::get)
         .clamp(1, 4)
