@@ -170,7 +170,18 @@ impl View<'_> {
     pub fn refs(&self, coordinate: &str) -> Value {
         let partial = json!({"hits":[],"kind_title":null,"note":null,"output_format":"text",
             "scan_errors":self.scan_errors_in(false),"workspace":false});
-        if let Some(refusal) = self.refusal(coordinate, "refs") {
+        // §FS-scan.path.refs: a duplicate is judged over the path's tree, so a
+        // claimant outside it is no second home (§FS-refs.4).
+        let refused = self.refusal(coordinate, "refs").filter(|r| {
+            let sites = r["sites"].as_array().map_or(&[][..], Vec::as_slice);
+            sites.len() < 2
+                || sites
+                    .iter()
+                    .filter(|s| self.within(s["path"].as_str().unwrap()))
+                    .count()
+                    >= 2
+        });
+        if let Some(refusal) = refused {
             // §FS-workspace.8.1.3: an unknown alias is refused before any scan.
             let (causes, partial) = if refusal["beforeScan"] == true {
                 (json!([]), Value::Null)
