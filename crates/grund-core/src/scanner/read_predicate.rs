@@ -17,18 +17,15 @@
 
 use std::path::{Component, Path, PathBuf};
 
-use ignore::{
-    Match, WalkBuilder,
-    gitignore::{GitignoreBuilder, Glob},
-};
+use ignore::{Match, WalkBuilder, gitignore::Glob};
 
 use super::exclude_globs::ExcludeGlobs;
+use super::global_excludes::GlobalExcludes;
 use super::walk::WalkDirFilter;
 use crate::config::{Frame, Schema, canonical_config_root};
 use crate::model::{ExcludingRule, format_path, is_hidden, scanned_path_key};
 use crate::sources::{
-    canonicalize_existing_prefix, path_exists, path_is_dir, path_is_entry, path_is_file,
-    path_is_symlink, read_git_metadata,
+    canonicalize_existing_prefix, is_directory, path_is_entry, path_is_symlink, read_git_metadata,
 };
 
 /// Why a run does not read a file (§AR-scanner.1.13).
@@ -263,14 +260,15 @@ fn under_root(
 /// where it is not, the same files are
 /// matched against the name in the walker's order of precedence.
 pub(super) fn ignored(path: &Path, is_dir: bool) -> bool {
-    walker_ignores(path, false).unwrap_or_else(|| ignored_by_rules(path, is_dir).is_some())
+    walker_ignores(path, false)
+        .unwrap_or_else(|| ignored_by_rules(path, is_dir, &GlobalExcludes::load()).is_some())
 }
 
 /// The ignore file and the line of it that drop `path`, for a reader that names the
 /// rule (§FS-declarations.stubs.target.3): the rule `ignored` matches,
 /// kept only where the walker, asked of an entry on disk, drops it too.
 fn ignoring_rule(path: &Path, is_dir: bool) -> Option<IgnoredBy> {
-    let rule = ignored_by_rules(path, is_dir)?;
+    let rule = ignored_by_rules(path, is_dir, &GlobalExcludes::load())?;
     // §FS-scan.scope.links.names: a directory link faces directory ignore patterns
     // when followed, just as it does in scannable_walker.
     (walker_ignores(path, true) != Some(false)).then_some(rule)
@@ -291,6 +289,10 @@ fn walker_ignores(path: &Path, follow_links: bool) -> Option<bool> {
         .hidden(false)
         .max_depth(Some(1))
         .follow_links(follow_links);
+    // §FS-scan.scope.ignore-files.global: the probe anchors the global file as the walk does.
+    if let Some(global) = GlobalExcludes::take_over(&mut builder) {
+        builder.filter_entry(move |entry| !globally_ignored(&global, entry));
+    }
     Some(
         !builder
             .build()
@@ -318,44 +320,48 @@ fn decision(found: Match<&Glob>) -> Option<Option<IgnoredBy>> {
     }
 }
 
+/// Whether a walker that leaves the global file to its filter drops `entry` for it
+/// (§FS-scan.scope.ignore-files.global): a global pattern anchored at the entry's
+/// repository top ignores it, and no file before the global one in git's precedence
+/// re-includes it. The walker has applied those files already, but an entry one of
+/// them re-includes reaches the filter looking like one nothing matched, so they are
+/// asked again here, and only for an entry the global file ignores
+/// (§GOAL-fast-feedback). The walk root is never dropped, as the walker never
+/// ignores it.
+pub(super) fn globally_ignored(global: &GlobalExcludes, entry: &ignore::DirEntry) -> bool {
+    let is_dir = entry.file_type().is_some_and(is_directory);
+    entry.depth() > 0
+        && matches!(global.matched(entry.path(), is_dir), Match::Ignore(_))
+        && ignored_by_rules(entry.path(), is_dir, global).is_some()
+}
+
 /// The walker's precedence for a name, and the rule that ignores it: `.ignore`
 /// files, deepest first; then, inside a git repository, its `.gitignore` files up to
-/// the repository root, its `info/exclude`, and the global excludes.
-fn ignored_by_rules(path: &Path, is_dir: bool) -> Option<IgnoredBy> {
+/// the repository top, its `info/exclude`, and the global excludes anchored at that
+/// same top (§FS-scan.scope.ignore-files.global).
+fn ignored_by_rules(path: &Path, is_dir: bool, global: &GlobalExcludes) -> Option<IgnoredBy> {
     let dirs: Vec<&Path> = path
         .ancestors()
         .skip(1)
-        .filter(|dir| path_is_dir(dir))
+        .take_while(|dir| !dir.as_os_str().is_empty())
         .collect();
-    let repository = dirs.iter().position(|dir| path_exists(&dir.join(".git")));
     let matched = |dir: &Path, file: PathBuf| -> Option<Option<IgnoredBy>> {
-        if !path_is_file(&file) {
-            return None;
-        }
-        let mut builder = GitignoreBuilder::new(dir);
-        if builder.add(&file).is_some() {
-            return None;
-        }
-        let matcher = builder.build().ok()?;
-        decision(matcher.matched(path, is_dir))
+        decision(global.ignore_file(dir, file)?.matched(path, is_dir))
     };
     for dir in &dirs {
         if let Some(verdict) = matched(dir, dir.join(".ignore")) {
             return verdict;
         }
     }
-    let repository = repository?;
-    for dir in &dirs[..=repository] {
+    let top = global.top(path)?;
+    for dir in dirs.iter().take_while(|dir| dir.starts_with(&top)) {
         if let Some(verdict) = matched(dir, dir.join(".gitignore")) {
             return verdict;
         }
     }
-    let top = dirs[repository];
-    if let Some(verdict) = matched(top, git_dir(top).join("info/exclude")) {
+    if let Some(verdict) = matched(&top, git_dir(&top).join("info/exclude")) {
         return verdict;
     }
-    let cwd = std::env::current_dir().unwrap_or_else(|_| top.to_path_buf());
-    let (global, _) = GitignoreBuilder::new(cwd).build_global();
     decision(global.matched(path, is_dir)).flatten()
 }
 

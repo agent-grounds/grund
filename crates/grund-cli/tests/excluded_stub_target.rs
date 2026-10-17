@@ -327,11 +327,6 @@ fn global_ignore_tree(name: &str, pattern: &str) -> (PathBuf, String) {
 /// paths, which no working directory prefixes, so the run from the top is red there
 /// until the matcher is rooted at the repository top.
 #[test]
-#[cfg_attr(
-    windows,
-    ignore = "red on Windows until #785 anchors the global excludes at the repository top; \
-              implement removes this"
-)]
 fn a_global_ignore_refuses_and_names_its_file() {
     let (root, file) = global_ignore_tree("global-ignore", "notes/gen/");
     let output = check(&root, &[]);
@@ -346,7 +341,6 @@ fn a_global_ignore_refuses_and_names_its_file() {
 /// repository top, not at the directory the run starts from, so `check` from `docs/`
 /// refuses the stub just as `check` from the top does, and as git ignores the target.
 #[test]
-#[ignore = "red until #785 anchors the global excludes at the repository top; implement removes this"]
 fn a_global_ignore_refuses_from_a_subdirectory() {
     let (root, file) = global_ignore_tree("global-ignore-subdirectory", "notes/gen/");
     let output = grund_in(&root, &root.join("docs"), &["check"]);
