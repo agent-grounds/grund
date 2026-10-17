@@ -70,8 +70,12 @@ fn public_finding(
         if absolute_paths {
             // Private LSP transport data, not user-facing report text: keep the
             // platform-native spelling so parsing it back into a `Path` preserves
-            // Windows verbatim-prefix absolute paths (§FS-lsp.1.1).
-            absolutize_path(path).to_string_lossy().into_owned()
+            // Windows verbatim-prefix absolute paths (§FS-lsp.1.1). A relative
+            // location is a config row's, joined where the load spelled it, never
+            // at the editor process's working directory (§FS-lsp.4.1).
+            absolutize_path(&config.location_base().join(path))
+                .to_string_lossy()
+                .into_owned()
         } else {
             public_path(config, path)
         }
