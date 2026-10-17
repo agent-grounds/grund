@@ -50,7 +50,7 @@ pub(crate) fn observe_config(config: &super::Config) {
 }
 
 /// Cover global-excludes discovery inputs before asking the shared pathname
-/// resolver (§FS-scan.scope.ignore-files.pathname) for the effective path
+/// resolver (§AR-scanner.1.1) for the effective path
 /// (§FS-check.6.1.1).
 pub(crate) fn observe_ignore_inputs(root: &Path) -> bool {
     if check_input_observer().is_none() {
