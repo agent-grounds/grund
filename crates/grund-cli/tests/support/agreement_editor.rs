@@ -167,8 +167,12 @@ pub fn check(context: &Value, loaded: &Value, host: &Value, errors: &mut Vec<Str
     let snapshot = &loaded["snapshot"];
     let mut editor_scope = context.clone();
     editor_scope["reportBase"] = context["scopes"]["editor"]["reportBase"].clone();
+    // §FS-lsp.1.1: the editor names a site by its file's filesystem identity and
+    // `check` by the spelling the walk kept (§FS-scan.identity.read-once), so both
+    // are compared as the file they name.
     let render_path = |path: &str, scope: &Value| {
-        saved_path(context, &physical(scope, path))
+        let path = physical(scope, path);
+        saved_path(context, &path.canonicalize().unwrap_or(path))
             .to_string_lossy()
             .replace('\\', "/")
     };

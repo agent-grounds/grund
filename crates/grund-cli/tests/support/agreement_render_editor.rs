@@ -13,8 +13,14 @@ impl View<'_> {
         format!("<repo>/{file}")
     }
 
+    /// §FS-lsp.1.1: the editor routes a site by its file's filesystem identity,
+    /// a link's target, while the files it read keep the spelling it read them by.
+    fn identity(&self, file: &str) -> String {
+        self.absolute(self.m.facts["links"][file].as_str().unwrap_or(file))
+    }
+
     fn located(&self, file: &str, line: usize, column: usize, text: &str, query: &str) -> Value {
-        json!({"column":column,"display_path":self.display(file),"line":line,"path":self.absolute(file),
+        json!({"column":column,"display_path":self.display(file),"line":line,"path":self.identity(file),
             "project":self.project_of(file),"query_id":query,"section_separator":".","text":text})
     }
 
@@ -37,9 +43,9 @@ impl View<'_> {
     fn editor_finding(&self, f: &Value) -> Value {
         json!({"authority":f.get("authority").cloned().unwrap_or(json!([])),"code":f["code"],
             "column":self.column(f),"line":f["line"],"message":f["message"],
-            "path":self.absolute(f["path"].as_str().unwrap()),"severity":f["severity"],
+            "path":self.identity(f["path"].as_str().unwrap()),"severity":f["severity"],
             "sites":f["sites"].as_array().into_iter().flatten().map(|s|
-                json!({"path":self.absolute(s["path"].as_str().unwrap()),"line":s["line"]}))
+                json!({"path":self.identity(s["path"].as_str().unwrap()),"line":s["line"]}))
                 .collect::<Vec<_>>()})
     }
 
@@ -104,7 +110,7 @@ impl View<'_> {
                 kind_titles.insert(coordinate.clone(), title);
             }
         }
-        let scanned: Vec<_> = self.scanned().iter().map(|f| self.absolute(f)).collect();
+        let scanned: Vec<_> = self.scanned().iter().map(|f| self.identity(f)).collect();
         // §FS-lsp.responsiveness.3: the run also reads the agent entrypoint and
         // each folder kind's index, present or not.
         let probes: Vec<String> = match self.m.facts["editor"]["probes"].as_array() {
@@ -150,7 +156,7 @@ impl View<'_> {
                     1,
                 )
                 .unwrap();
-                json!({"code":r["code"],"path":self.absolute(file),"line":line,"column":column,
+                json!({"code":r["code"],"path":self.identity(file),"line":line,"column":column,
                     "text":token})
             })
             .collect();
@@ -165,7 +171,7 @@ impl View<'_> {
                 };
                 let mut row = self.located(&c.file, c.line, c.column, &c.text, &query);
                 row["declaration_query_id"] = json!(id);
-                row["target_path"] = json!(target.as_ref().map(|(f, _)| self.absolute(f)));
+                row["target_path"] = json!(target.as_ref().map(|(f, _)| self.identity(f)));
                 row["target_line"] = json!(target.map(|(_, l)| l));
                 row
             }).collect::<Vec<_>>(),
