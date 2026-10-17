@@ -22,7 +22,7 @@ A `§<ID>` is a pointer to a fact, not a file path. Resolve it with `grund` and 
 
 - [GOAL](docs/goals.md): Declaration
 - [FS](docs/spec): Declaration
-- [src/app/](src/app), [src/lib/](src/lib): Declaration
+- [src/app/](src/app), [src/lib/](src/lib): Every scanned file no other row claims
 
 ### Declarations and citations
 
