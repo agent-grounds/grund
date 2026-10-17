@@ -60,7 +60,7 @@ pub(super) fn scannable_walker(
     // every entry, so its global matcher is off and the global file is asked here, first,
     // where the walker would have asked it: before the filter sees the entry.
     let global = if schema.sources.respect_gitignore {
-        GlobalExcludes::take_over(&mut builder)
+        GlobalExcludes::take_over(&mut builder)?
     } else {
         None
     };
