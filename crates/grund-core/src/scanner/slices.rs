@@ -188,6 +188,13 @@ fn section_title(
     marked: bool,
 ) -> String {
     let text = record.heading_text(heading);
+    // The tag goes from the whole heading text, path included, as the editor's
+    // range drops it, so a title that is only the tag is empty on both.
+    let text = if marked {
+        without_value_tag(text)
+    } else {
+        text
+    };
     let rest = match relative_heading_form(text).filter(|_| heading.relative) {
         Some(form) => text
             .trim_start()
@@ -195,11 +202,8 @@ fn section_title(
             .and_then(|rest| rest.strip_prefix(form.component)),
         None => text.trim_start().strip_prefix(path),
     };
-    let title = rest.unwrap_or(text).trim_start_matches(['.', ':']).trim();
-    let title = if marked {
-        without_value_tag(title)
-    } else {
-        title
-    };
-    title.to_string()
+    rest.unwrap_or(text)
+        .trim_start_matches(['.', ':'])
+        .trim()
+        .to_string()
 }
