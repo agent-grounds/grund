@@ -117,7 +117,7 @@ impl<'a> FileReading<'a> {
     }
 
     /// The resolved language suffix for bounded literal and qualified-comment
-    /// reading (§FS-config-v2.schema.sources.extensions, §FS-citations.recognized.contexts).
+    /// reading (§FS-config-v2.schema.sources.extensions, §AR-scanner.2.3.2).
     pub(crate) fn source_forms(&self) -> Option<&'a str> {
         match self.language {
             Some(language) if language.builtin => language.suffixes.first().map(String::as_str),

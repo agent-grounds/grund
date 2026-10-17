@@ -30,7 +30,7 @@ pub(super) struct CitationLine<'a> {
     pub(super) frame: Frame<'a>,
     /// The file's own hosts and grammar (§FS-config-v2.schema.sources).
     pub(super) lexical: LexicalSettings<'a>,
-    /// The resolved language for qualified comment sites (§FS-citations.recognized.contexts).
+    /// The resolved language for qualified comment sites (§AR-scanner.2.3.2).
     pub(super) source_forms: Option<&'a str>,
     pub(super) is_md: bool,
     /// Whether this line may be a heading: false inside a raw-text HTML block,
@@ -56,7 +56,7 @@ impl CitationLine<'_> {
     /// `marker_start` is suppressed — asked in the state the line begins in, so the
     /// interior of a multi-line literal is a string here too
     /// (§FS-languages.multi-line-string). All qualified passes share the comment
-    /// distinction of §FS-citations.recognized.contexts.
+    /// distinction of §AR-scanner.2.3.2.
     pub(super) fn qualified_suppressed(&self, marker_start: usize) -> bool {
         QualifiedSource {
             forms: self.source_forms,

@@ -139,7 +139,7 @@ pub(super) fn scan_file_text(
             .iter()
             .any(|target| value_kind(&target.schema));
     let has_binding_candidate = text.contains('`') && text.contains(marker);
-    // §FS-citations.recognized.contexts: reuse comment spans for qualified sites
+    // §AR-scanner.2.3.2: reuse comment spans for qualified sites
     // too, including block interiors that have no comment prefix on this line.
     let has_qualified_candidate = !marker.is_empty() && text.contains(marker) && text.contains('/');
     let value_line_contexts = ((scan_values || has_binding_candidate || has_qualified_candidate)

@@ -420,7 +420,7 @@ pub(crate) fn is_escaped(bytes: &[u8], pos: usize) -> bool {
 /// no string literals and its inline code is prose formatting, so a marked
 /// qualified citation there is always a citation. This is the raw exclusion
 /// outside supported comments; `QualifiedSource` supplies their contextual
-/// distinction (§FS-citations.recognized.contexts) to every detection pass.
+/// distinction (§AR-scanner.2.3.2) to every detection pass.
 /// Both halves are read after the line's carried literal closes
 /// (`entry`, §FS-languages.multi-line-string), so a template's closing `` ` ``
 /// opens no inline-code span.
