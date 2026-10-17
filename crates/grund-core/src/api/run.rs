@@ -392,7 +392,6 @@ fn run_workspace_check(
         // §FS-check.2.2 / §FS-check.4.5.3 / §FS-workspace.5: the single-project cautions,
         // asked per project — one member's empty scope says nothing about another's.
         // §FS-check.1.3.6.1: a narrowed run asks the path instead, below.
-        // §FS-workspace.5.3, §FS-config.3.6: the root is named from the report base.
         if report_scope.is_none() {
             report.warnings.extend(scan_scope_caution(
                 &project.config,
@@ -401,6 +400,7 @@ fn run_workspace_check(
                 true,
                 project.scan_errors.is_empty() && !project_has_findings,
                 None,
+                // §FS-workspace.5.3, §FS-config.3.6: the root is named from the report base.
                 root_config.display(),
             ));
         }

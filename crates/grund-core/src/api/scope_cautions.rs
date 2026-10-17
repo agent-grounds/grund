@@ -16,7 +16,7 @@ use crate::sources::{canonical_path, path_is_file};
 use std::path::Path;
 
 use crate::checker::{ScanScope, scope_read_any_file};
-use crate::config::{Config, Display, display_path, kind_prefixes};
+use crate::config::{Config, Display, kind_prefixes};
 use crate::grammar::id_shape;
 use crate::model::{Catalog, Diagnostic, format_path, normalize_path_lexically};
 use crate::scanner::{Unread, extension_refusal, name_refusal, pruning_pattern};
@@ -119,7 +119,7 @@ pub(super) fn empty_scan_warning(
     path_provided: bool,
     display: Display<'_>,
 ) -> Diagnostic {
-    let shown = scan_root_shown(display, path);
+    let shown = display_scope(display, path);
     // `grund`, `grund check .`, and `grund check <repo-root>` all walk `[scan] include`
     // relative to the config root — so the "looked under include" message is the
     // accurate one whenever the requested path *is* that root, not just when the
@@ -176,20 +176,6 @@ pub(super) fn empty_scan_warning(
         message,
         sites: Vec::new(),
         authority: Vec::new(),
-    }
-}
-
-/// §FS-workspace.5.3, §FS-config.3.6: the scanned root as the report names it. A
-/// path the caller typed relative is kept as typed; an absolute one — a workspace
-/// project's root, the LSP's anchor — is spelled from the report base, and the
-/// base itself reads `.`, never as an absolute path or an empty string.
-fn scan_root_shown(display: Display<'_>, path: &Path) -> String {
-    if !path.is_absolute() {
-        return format_path(path);
-    }
-    match display.path(path) {
-        shown if shown.is_empty() => ".".to_owned(),
-        shown => shown,
     }
 }
 
@@ -289,24 +275,31 @@ pub(super) fn full_scope_ignored_warning(
         message: format!(
             "--full has no effect with an explicit PATH — {} already resolves against \
              [scan] include, and the report is the path either way",
-            display_lexical_scope(config, &lexical_scope)
+            display_scope(config.display(), &lexical_scope)
         ),
         sites: Vec::new(),
         authority: Vec::new(),
     })
 }
 
-/// Render an explicit lexical scope without resolving its final symlink.
-/// Canonical ancestors only identify the report base when the OS respells it.
-fn display_lexical_scope(config: &Config, path: &Path) -> String {
-    let base = config.report_base();
-    for ancestor in path.ancestors() {
-        if canonical_path(ancestor)
-            .map(|resolved| resolved == *base)
-            .unwrap_or(false)
-        {
-            return format_path(path.strip_prefix(ancestor).unwrap_or(path));
-        }
+/// §FS-workspace.5.3, §FS-config.3.6: a scope as a report names it, never absolute.
+/// A path the caller typed relative is kept as typed. An absolute one — a typed
+/// path, a workspace project's root, the LSP's anchor — is spelled from the
+/// report base without resolving its final symlink: canonical ancestors only
+/// identify the base when the OS respells it. The base itself reads `.`.
+pub(super) fn display_scope(display: Display<'_>, path: &Path) -> String {
+    if !path.is_absolute() {
+        return format_path(path);
     }
-    display_path(config, path)
+    let base = display.base();
+    let shown = path
+        .ancestors()
+        .find(|ancestor| canonical_path(ancestor).is_ok_and(|resolved| resolved == base))
+        .map(|ancestor| format_path(path.strip_prefix(ancestor).unwrap_or(path)))
+        .unwrap_or_else(|| display.path(path));
+    if shown.is_empty() {
+        ".".to_owned()
+    } else {
+        shown
+    }
 }

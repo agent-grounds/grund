@@ -28,15 +28,6 @@ impl Config {
             None => self.relative_paths,
         }
     }
-
-    /// The directory every reported path is spelled from (§FS-cli.3.4).
-    pub(crate) fn report_base(&self) -> &Path {
-        if self.reports_from_root() {
-            &self.root
-        } else {
-            &self.cli_base
-        }
-    }
 }
 
 /// Render a path the way reports show it: relative to the repo root by default,
