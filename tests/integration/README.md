@@ -66,9 +66,12 @@ when forced until production `rules` code exists. The implementation replaces
 the sentinels with parser-only, hand-built evaluator, producer-replacement and
 incomplete-snapshot assertions, then enables them ([§AR-rules.6](../../docs/architecture/AR-rules.md#6-boundary-tests)).
 
-The command-agreement acceptance is enabled in the ordinary Cargo suite
-([§REQ-one-answer.proof.matrix](../../docs/requirements/REQ-one-answer.md#proofmatrix-the-complete-comparison-matrix)).
-Run `cargo test -p grund --test command_agreement agreement_acceptance::s4_executes_the_complete_corpus_matrix -- --exact --nocapture`;
+The command-agreement acceptance asks the seed and every case of each family
+`COVERED` names; every other family is a row of `WIDENING`
+([§REQ-one-answer.proof.matrix.family](../../docs/requirements/REQ-one-answer.md#proofmatrixfamily-a-family-is-covered-whole-or-not-at-all),
+[§REQ-one-answer.proof.delivery.widening](../../docs/requirements/REQ-one-answer.md#proofdeliverywidening-widening-names-exactly-the-families-not-covered)).
+It is ignored until tranche 1's facts are authored.
+Run `cargo test -p grund --test command_agreement agreement_acceptance::s4_executes_the_covered_families_and_the_seed -- --exact --include-ignored --nocapture`;
 set `GRUND_AGREEMENT_EVIDENCE` to a writable file to retain its full JSON receipts.
 The test prepares actual mixed Python and Node packages from this checkout once,
 using CPython, Node 22/24 and Rust 1.95.0. Scratch builds use explicit targets under
