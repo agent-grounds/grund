@@ -44,8 +44,6 @@ class MergeQueueRunTests(unittest.TestCase):
         triggers = self.text.split("\non:\n", 1)[1].split("\nenv:", 1)[0]
         self.assertRegex(triggers, r"(?m)^  merge_group:", "ci.yml does not run on merge-queue groups")
 
-    # red until #792 drops the merge_group bench exemption; implement removes this
-    @unittest.expectedFailure
     def test_the_required_checks_and_the_jobs_they_judge_run_on_every_event(self):
         # §AR-ci.13.2: a required check is an aggregate, so the jobs it needs must run here too.
         required = [job for job, body in self.jobs.items()
@@ -72,8 +70,6 @@ class MergeQueueRunTests(unittest.TestCase):
                                      .replace("}}", "").strip(),
                                      "the required checks must report on a queue group too")
 
-    # red until #792 drops the merge_group bench exemption; implement removes this
-    @unittest.expectedFailure
     def test_the_benchmark_jobs_run_on_merge_queue_groups(self):
         # §AR-ci.12: no job-level guard keeps a group out of the build, the shards or the record.
         for job in BENCH_JOBS:
@@ -82,8 +78,6 @@ class MergeQueueRunTests(unittest.TestCase):
                     self.assertTrue(holds(field(header(self.jobs[job]), "if"), event),
                                     f"the {job} job does not run on {event}")
 
-    # red until #792 drops the merge_group bench exemption; implement removes this
-    @unittest.expectedFailure
     def test_a_groups_shard_runs_the_head_once_against_the_ceilings(self):
         # §AR-ci.5.1: one run of the head, no base, no baseline, no record; its exit is the gate.
         shard = self.jobs["bench"]
@@ -101,8 +95,6 @@ class MergeQueueRunTests(unittest.TestCase):
         # §AR-ci.5.2: the job's env holds every run, the group's too, to the ceilings.
         self.assertEqual("1", job_env(header(shard)).get("GRUND_BENCH_CEILINGS"))
 
-    # red until #792 drops the merge_group bench exemption; implement removes this
-    @unittest.expectedFailure
     def test_a_group_writes_no_record(self):
         # §AR-ci.12, §AR-benchmarks.7: each step that records, merges or uploads a merged
         # record excludes a group itself, so no job-level guard is what keeps it out.
@@ -116,8 +108,6 @@ class MergeQueueRunTests(unittest.TestCase):
                 self.assertFalse(holds(step_if(step), "merge_group"),
                                  f"{job} records on a merge-queue group")
 
-    # red until #792 drops the merge_group bench exemption; implement removes this
-    @unittest.expectedFailure
     def test_every_event_measures_the_head_in_exactly_one_step(self):
         # §AR-ci.5.1, §AR-ci.12: a pull request also runs the base's baseline, which is not the
         # head; no event may pass with every step that measures the head skipped.
