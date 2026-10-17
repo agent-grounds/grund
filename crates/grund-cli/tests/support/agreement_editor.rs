@@ -172,7 +172,10 @@ pub fn check(context: &Value, loaded: &Value, host: &Value, errors: &mut Vec<Str
     // are compared as the file they name.
     let render_path = |path: &str, scope: &Value| {
         let path = physical(scope, path);
-        saved_path(context, &path.canonicalize().unwrap_or(path))
+        let path = path
+            .canonicalize()
+            .map_or(path, super::agreement_host::plain);
+        saved_path(context, &path)
             .to_string_lossy()
             .replace('\\', "/")
     };
