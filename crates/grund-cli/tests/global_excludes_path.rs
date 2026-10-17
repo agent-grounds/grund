@@ -68,12 +68,17 @@ impl Fixture {
 
     fn command(&self, program: &str) -> Command {
         let mut command = Command::new(program);
+        // Git rejects verbatim Windows paths in its config environment variables.
+        // Use the same spelling as authored excludes paths, retaining literal tildes.
         command
             .current_dir(&self.repo)
-            .env("HOME", &self.home)
-            .env("USERPROFILE", &self.home)
-            .env("XDG_CONFIG_HOME", self.dir.join("xdg"))
-            .env("GIT_CONFIG_GLOBAL", self.dir.join("xdg/git/config"))
+            .env("HOME", git_path(&self.home))
+            .env("USERPROFILE", git_path(&self.home))
+            .env("XDG_CONFIG_HOME", git_path(&self.dir.join("xdg")))
+            .env(
+                "GIT_CONFIG_GLOBAL",
+                git_path(&self.dir.join("xdg/git/config")),
+            )
             .env("GIT_CONFIG_NOSYSTEM", "1")
             .env_remove("GIT_CONFIG")
             .env_remove("GIT_CONFIG_SYSTEM")
