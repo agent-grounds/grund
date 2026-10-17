@@ -326,14 +326,27 @@ impl Model {
                 .min()
                 .unwrap_or(s.end + 1);
             let md = Self::markdown(&s.file);
-            let lead = flatten(&span(text, s.line, first - 1, strip), marker, md);
-            let full = flatten(&span(text, s.line, s.end, strip), marker, md);
-            let toc = self.toc(&lead, &children);
+            let (lead, full, toc) = match s.facts["slice"].as_str() {
+                // §FS-output-shapes.4.3: a JSON element reads as its exact slice.
+                Some(slice) => (slice.to_string(), slice.to_string(), slice.to_string()),
+                None => {
+                    let lead = flatten(&span(text, s.line, first - 1, strip), marker, md);
+                    let full = flatten(&span(text, s.line, s.end, strip), marker, md);
+                    let toc = self.toc(&lead, &children);
+                    (lead, full, toc)
+                }
+            };
             let s = &mut self.sections[index];
             (s.lead, s.full, s.toc) = (lead, full, toc);
         }
         for index in 0..self.decls.len() {
             let d = &self.decls[index];
+            // §FS-output-shapes.4.3: a JSON member reads as its exact slice in every mode.
+            if let Some(slice) = d.facts["slice"].as_str().map(String::from) {
+                let d = &mut self.decls[index];
+                (d.lead, d.full, d.toc) = (Some(slice.clone()), Some(slice.clone()), Some(slice));
+                continue;
+            }
             let Some(body) = d.facts["body"].as_array() else {
                 continue;
             };

@@ -28,10 +28,14 @@ impl View<'_> {
         }
     }
 
-    pub fn error_row(&self, refusal: &Value) -> Value {
-        json!({"severity":"error","path":null,"line":null,"code":refusal["code"],
-            "message":refusal["message"],"sites":self.sites_row(&refusal["sites"]),
-            "authority":null})
+    /// A refusal's row from Python's failure, whose sites are already reported.
+    pub fn error_row(&self, failure: &Value) -> Value {
+        let sites = match failure["sites"].as_array() {
+            Some(s) if !s.is_empty() => failure["sites"].clone(),
+            _ => Value::Null,
+        };
+        json!({"severity":"error","path":null,"line":null,"code":failure["code"],
+            "message":failure["message"],"sites":sites,"authority":null})
     }
 
     fn finding_row(&self, f: &Value) -> Value {
@@ -136,9 +140,24 @@ impl View<'_> {
         object
     }
 
+    /// A refusal the command line words for itself, such as an alias outside a
+    /// workspace (§FS-workspace.8.1.3): its own exit and stderr lines.
+    fn cli_refusal(&self, coordinate: &str, question: &str) -> Option<Value> {
+        let cli = self.refusal(coordinate, question)?.get("cli")?.clone();
+        let stderr = text(cli["stderr"].as_str().unwrap_or(""));
+        Some(fact(
+            cli["exit"].as_i64().unwrap() as i32,
+            json!([]),
+            stderr,
+        ))
+    }
+
     pub fn cli_show(&self, coordinate: &str, python: &Value) -> Value {
         if self.unread(false).is_some() {
             return self.incomplete(true, json!([]), "");
+        }
+        if let Some(cli) = self.cli_refusal(coordinate, "show") {
+            return cli;
         }
         match self.resolve(coordinate) {
             Some(row) if python["failure"].is_null() => {
@@ -176,7 +195,10 @@ impl View<'_> {
         fact(i32::from(failed), json!(rows), json!([]))
     }
 
-    pub fn cli_refs(&self, python: &Value) -> Value {
+    pub fn cli_refs(&self, coordinate: &str, python: &Value) -> Value {
+        if let Some(cli) = self.cli_refusal(coordinate, "refs") {
+            return cli;
+        }
         if !python["failure"].is_null() {
             return fact(1, json!([]), json!([self.error_row(&python["failure"])]));
         }

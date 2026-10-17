@@ -42,6 +42,11 @@ pub fn inventory(m: &Model, files: &BTreeMap<String, Vec<u8>>) -> Result<Value, 
     }
     let mut section_sites: Vec<String> = Vec::new();
     for s in &m.sections {
+        // A JSON element's component is its position, written nowhere (§FS-values.2.2.1).
+        if !s.facts["slice"].is_null() {
+            section_sites.push(String::new());
+            continue;
+        }
         let text = m.text(&s.file)?;
         let (_, _, at) = locate(
             text,
