@@ -1,6 +1,6 @@
 # Migrate: a version-1 config to version 2, previewed first
 
-This runnable walkthrough moves a version-1 `grund.toml` to version 2 with `grund config migrate --to 2` ([§FS-config-migrate](../../docs/functional-spec/FS-config-migrate.md#fs-config-migrate-grund-config-migrate---to-2-shows-the-version-2-file-that-means-what-a-version-1-config-means-and-writes-it-only-when-asked-and-only-when-it-does)). It is for a repository `grund init` set up before version 2 existed. Its config is the one `grund init` writes, trimmed to two kinds and two languages, with three comments: a header block, one above the `FS` row, and one above `[scan] include`.
+This runnable walkthrough moves a version-1 `grund.toml` to version 2 with `grund config migrate --to 2` ([§FS-config-migrate](../../docs/functional-spec/FS-config-migrate.md#fs-config-migrate-grund-config-migrate---to-2-shows-the-version-2-file-that-means-what-a-version-1-config-means-and-writes-it-only-when-asked-and-only-when-it-does)). It is for a repository `grund init` set up before version 2 existed. Its config is the one `grund init` writes, trimmed to two kinds and two languages, with four comments: a header block, one above the `FS` row, one above `[scan] include`, and one trailing `[scan] exclude`.
 
 The example pins two runs, one per step ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)). Neither writes anything.
 
@@ -23,6 +23,7 @@ refused: grund.toml:29: [scan] include names `e2e`, which does not exist, and ve
   repair: create e2e, or remove it from include; grund check under version 1 shows the effect
 comments with no single key to follow (--write refuses; --drop-comments drops exactly these):
   grund.toml:28  above [scan] include
+changed: grund.toml:30: [scan] exclude: value vocabulary translated to [schema.sources] exclude; check the carried comment
 ```
 
 Version 2 always reads named sections, and it puts a folder and a file under different keys, so it cannot carry either setting with the same meaning. Migration does not guess. Each repair is a version-1 edit: make it, run `grund check` to see its effect while the file is still version 1, and commit it. That commit is the change of meaning, made and reviewed by you.
@@ -40,18 +41,21 @@ echo $?    # 1
 
 Stdout is now the version-2 file, exactly the bytes `--write` would write ([§FS-config-migrate.2.1](../../docs/functional-spec/FS-config-migrate.md#21-stdout-is-the-candidate)); `migrate-2-repaired/expected.stdout` holds it. The header block is still at the top, and the comment above the `FS` row is above `[schema.kinds.FS]`. Every version-1 default that differs from version 2's is written out, so the file keeps its meaning after later edits.
 
-Stderr names the comment that would be lost, then maps each version-1 key to where it went and lists the defaults written out:
+Stderr names the comment that would be lost, warns about the carried comment on the translated exclusion values, then maps each version-1 key to where it went and lists the defaults written out:
 
 ```text
 grund.toml: version 1 → 2, preview, nothing written
 comments with no single key to follow (--write refuses; --drop-comments drops exactly these):
   grund.toml:28  above [scan] include
+changed: grund.toml:30: [scan] exclude: value vocabulary translated to [schema.sources] exclude; check the carried comment
 …
 compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after
 note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check does not compare that table
 ```
 
 The `compared:` line is the two checks every write must pass: the records both files lower into are equal, and `grund check` on this tree gives the same findings with either ([§FS-config-migrate.5](../../docs/functional-spec/FS-config-migrate.md#5-equivalence-two-gates)). It still exits 1, because `--write` would refuse while the listed comment would be lost.
+
+The exclusion comment is retained: the candidate contains `exclude = ["target/", "node_modules/", ".git/", "dist/", "build/", ".venv/"] # directory names`. Version 1's directory names became glob patterns. Check that the comment still explains the setting as intended; the warning identifies the translation without judging its prose ([§FS-config-migrate.4.1.1](../../docs/functional-spec/FS-config-migrate.md#411-check-carried-comments-when-the-value-vocabulary-changes)). It appears in preview and write, including with `--drop-comments`, which drops only the listed `include` comment.
 
 ## Writing it
 

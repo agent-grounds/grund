@@ -27,7 +27,7 @@ title = "What: behavior, requirements, and constraints"
 [scan]
 # What the walk reads besides the homes.
 include = ["requirements.md", "docs", "e2e", "src"]
-exclude = ["target", "node_modules", ".git", "dist", "build", ".venv"]
+exclude = ["target", "node_modules", ".git", "dist", "build", ".venv"] # directory names
 extensions = ["md", "rs"]
 comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
 

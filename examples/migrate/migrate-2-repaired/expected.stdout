@@ -16,7 +16,7 @@ heading_depth = "must"
 [schema.sources]
 languages = ["v1_markdown", "v1_c_family"]
 declarations = "any-comment"
-exclude = ["target/", "node_modules/", ".git/", "dist/", "build/", ".venv/"]
+exclude = ["target/", "node_modules/", ".git/", "dist/", "build/", ".venv/"] # directory names
 respect_gitignore = true
 
 [schema.sources.extensions]

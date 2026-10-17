@@ -168,14 +168,14 @@ pub(crate) fn translate(located: &Located, write: bool, drop_comments: bool) -> 
     let (_, notices) = keymap::map(&keys, &records, &include);
     report.notices = notices;
     if !report.refusals.is_empty() {
-        report.comments = comments::carry(&body, &lines, &keys).listed;
+        comments::carry(&body, &lines, &keys, &mut report);
         return Ok(translated(report, text, project));
     }
     let invocation = Invocation::new(root, false, Selection::Project);
     let loaded = match pending_config(&body, root, &invocation) {
         Ok(config) => config.project().clone(),
         Err(error) => {
-            report.comments = comments::carry(&body, &lines, &keys).listed;
+            comments::carry(&body, &lines, &keys, &mut report);
             report.gates = Some(GateResult::Differs {
                 gate: Gate::Records,
                 lines: vec![format!("+ the candidate does not load: {error:#}")],
@@ -191,8 +191,8 @@ pub(crate) fn translate(located: &Located, write: bool, drop_comments: bool) -> 
         .resolution
         .retain(|_, resolution| *resolution != KindResolution::Must);
     let body = shown.v2_toml().expect("a version 2 project renders");
-    let carried = comments::carry(&body, &lines, &keys);
-    report.comments = carried.listed;
+    // §FS-config-migrate.4.1.1: the rendered destinations decide which comments need review.
+    let carried = comments::carry(&body, &lines, &keys, &mut report);
     report.mapped = keymap::map(&keys, &shown, &include).0;
     report.written = keymap::written(&keys, &project, &body);
     report.code_row_note = !include.places().is_empty();
@@ -205,8 +205,8 @@ pub(crate) fn translate(located: &Located, write: bool, drop_comments: bool) -> 
             lines: differences,
         }
     });
-    let line_map = comments::line_map(&carried.text, &lines, &keys);
-    report.candidate = Some(carried.text);
+    let line_map = comments::line_map(&carried, &lines, &keys);
+    report.candidate = Some(carried);
     let value_lines = project
         .schema
         .value_rows()

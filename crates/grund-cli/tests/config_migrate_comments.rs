@@ -296,7 +296,6 @@ fn check_carried_comments(above: bool) {
 /// §FS-config-migrate.4.1.1: the two real trailing value-set comments and the
 /// other carryable translations warn; harmless renames and absent comments do not.
 #[test]
-#[ignore = "red until #783 carried comments on translated values are reported; implement removes this"]
 fn trailing_carried_comments_report_translated_vocabulary() {
     check_carried_comments(false);
 }
@@ -304,7 +303,6 @@ fn trailing_carried_comments_report_translated_vocabulary() {
 /// §FS-config-migrate.4.1.1: a leading attached comment has the same risk,
 /// regardless of its prose, the selected old value, or preview/write/drop flags.
 #[test]
-#[ignore = "red until #783 carried comments on translated values are reported; implement removes this"]
 fn leading_carried_comments_report_translated_vocabulary() {
     check_carried_comments(true);
 }
@@ -312,7 +310,6 @@ fn leading_carried_comments_report_translated_vocabulary() {
 /// §FS-config-migrate.4.1.1 and §FS-config-migrate.4.4: warning about a carried
 /// comment does not change which unrelated split-key comments refuse or drop.
 #[test]
-#[ignore = "red until #783 carried comments on translated values are reported; implement removes this"]
 fn carried_comment_warning_keeps_split_comment_drop_policy() {
     let input = config(&CASES[0], Some(false)).replace(
         "include = [\"docs\", \"requirements.md\"]",

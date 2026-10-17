@@ -5,3 +5,4 @@ refused: grund.toml:29: [scan] include names `e2e`, which does not exist, and ve
   repair: create e2e, or remove it from include; grund check under version 1 shows the effect
 comments with no single key to follow (--write refuses; --drop-comments drops exactly these):
   grund.toml:28  above [scan] include
+changed: grund.toml:30: [scan] exclude: value vocabulary translated to [schema.sources] exclude; check the carried comment
