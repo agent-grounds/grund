@@ -95,31 +95,21 @@ class RetryCase(unittest.TestCase):
 
 
 class RecoveryTests(RetryCase):
-    # Red until #781 retries the forge call; implement removes this marker.
-    @unittest.expectedFailure
     def test_a_call_that_fails_once_is_asked_again_after_one_second(self) -> None:
         self.assertListed(self._pulls(TRUNCATED, answer([PULL])), calls=2, waits=[1])
 
-    # Red until #781 retries the forge call; implement removes this marker.
-    @unittest.expectedFailure
     def test_an_answer_that_is_not_json_is_asked_again(self) -> None:
         self.assertListed(self._pulls(PARTIAL, answer([PULL])), calls=2, waits=[1])
 
-    # Red until #781 retries the forge call; implement removes this marker.
-    @unittest.expectedFailure
     def test_the_third_attempt_still_counts(self) -> None:
         self.assertListed(self._pulls(SERVER, SERVER, answer([PULL])), calls=3, waits=[1, 2])
 
-    # Red until #781 retries the forge call; implement removes this marker.
-    @unittest.expectedFailure
     def test_both_kinds_of_failure_share_one_budget(self) -> None:
         self.assertListed(self._pulls(TRUNCATED, PARTIAL, answer([PULL])), calls=3, waits=[1, 2])
 
     def test_an_answer_on_the_first_attempt_waits_for_nothing(self) -> None:
         self.assertListed(self._pulls(answer([PULL])), calls=1, waits=[])
 
-    # Red until #781 retries the forge call; implement removes this marker.
-    @unittest.expectedFailure
     def test_the_repository_call_is_asked_again_too(self) -> None:
         result = self._run(lambda: release_pull_requests._repository_url(TOP), repo=[TRUNCATED, answer(REPOSITORY)])
         self.assertEqual("https://github.com/agent-grounds/grund", result, result)
@@ -128,27 +118,19 @@ class RecoveryTests(RetryCase):
 
 
 class ExhaustionTests(RetryCase):
-    # Red until #781 retries the forge call; implement removes this marker.
-    @unittest.expectedFailure
     def test_a_call_that_keeps_failing_is_refused_with_the_third_attempt_s_diagnostic(self) -> None:
         last = (1, "", "gh: Bad Gateway (HTTP 502)\n")
         result = self._pulls(TRUNCATED, SERVER, last)
         self.assertRefused(result, "the forge did not answer for commit edb62f698bf2 (A change): gh: Bad Gateway", 3, [1, 2])
 
-    # Red until #781 retries the forge call; implement removes this marker.
-    @unittest.expectedFailure
     def test_an_answer_that_is_never_json_is_refused_after_three_attempts(self) -> None:
         result = self._pulls(PARTIAL)
         self.assertRefused(result, "the forge's answer for commit edb62f698bf2 (A change) is not JSON", 3, [1, 2])
 
-    # Red until #781 retries the forge call; implement removes this marker.
-    @unittest.expectedFailure
     def test_alternating_failures_are_refused_with_the_last_one_s_diagnostic(self) -> None:
         result = self._pulls(PARTIAL, TRUNCATED, PARTIAL)
         self.assertRefused(result, "is not JSON", 3, [1, 2])
 
-    # Red until #781 retries the forge call; implement removes this marker.
-    @unittest.expectedFailure
     def test_a_third_attempt_is_never_followed_by_a_fourth(self) -> None:
         result = self._pulls(TRUNCATED, TRUNCATED, TRUNCATED, answer([PULL]))
         self.assertRefused(result, "unexpected end of JSON input", 3, [1, 2])

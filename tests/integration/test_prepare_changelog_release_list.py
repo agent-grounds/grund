@@ -175,8 +175,6 @@ class RecoveryTests(ReleaseHistory, unittest.TestCase):
     """§FS-distribution.4.6.3.1: a forge call that fails once is asked again, and
     the release is the one an answer on the first attempt would have written."""
 
-    # Red until #781 retries the forge call; implement removes this marker.
-    @unittest.expectedFailure
     def test_prepare_gets_past_a_commit_the_forge_fails_once_for(self) -> None:
         self._history()
         self._flaky(self.glob[0], "truncated")
@@ -185,8 +183,6 @@ class RecoveryTests(ReleaseHistory, unittest.TestCase):
         self.assertEqual(ARCHIVED, self._read("docs/changelog/0.2.0.md"))
         self.assertEqual(2, self._calls(self.glob[0]))
 
-    # Red until #781 retries the forge call; implement removes this marker.
-    @unittest.expectedFailure
     def test_preview_gets_past_a_truncated_answer_and_writes_nothing(self) -> None:
         self._history()
         self._flaky(self.parser, "partial")
@@ -291,8 +287,6 @@ class RefusalTests(ReleaseHistory, unittest.TestCase):
         self._history()
         self.assertRefusedUntouched(self._script("prepare", VERSION, "--date", DATE, gh=False), "gh")
 
-    # Red until #781 retries the forge call; implement removes this marker.
-    @unittest.expectedFailure
     def test_a_forge_call_that_fails_is_refused(self) -> None:
         """§FS-distribution.4.6.3.1: refused once its three attempts have failed."""
         self._history()
@@ -300,8 +294,6 @@ class RefusalTests(ReleaseHistory, unittest.TestCase):
         self.assertRefusedUntouched(self._script("prepare", VERSION, "--date", DATE), self.glob[0][:7])
         self.assertEqual(3, self._calls(self.glob[0]))
 
-    # Red until #781 retries the forge call; implement removes this marker.
-    @unittest.expectedFailure
     def test_a_commit_the_forge_does_not_answer_for_is_refused(self) -> None:
         """§FS-distribution.4.6.3.1: the forge's 422 is a failed attempt like any other."""
         self._history()
