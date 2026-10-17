@@ -89,11 +89,13 @@ class MergeQueueRunTests(unittest.TestCase):
         self.assertEqual(1, squash(step).count("cargo bench "), "a group's shard measures twice")
         self.assertIn(HEAD_RUN, commands(step))
         for absent in ("GRUND_BENCH_BIN", "--baseline", "--save-baseline", "bench_record.py record",
-                       "GRUND_BENCH_CEILINGS", "GRUND_BENCH_TIER", "set +e", "|| true"):
+                       "GRUND_BENCH_CEILINGS", "GRUND_BENCH_TIER", "set +e", "|| true",
+                       "continue-on-error"):
             with self.subTest(absent=absent):
                 self.assertNotIn(absent, step, f"a group's shard step names `{absent}`")
         # §AR-ci.5.2: the job's env holds every run, the group's too, to the ceilings.
         self.assertEqual("1", job_env(header(shard)).get("GRUND_BENCH_CEILINGS"))
+        self.assertIsNone(field(header(shard), "continue-on-error"), "the shards swallow a failure")
 
     def test_a_group_writes_no_record(self):
         # §AR-ci.12, §AR-benchmarks.7: each step that records, merges or uploads a merged
