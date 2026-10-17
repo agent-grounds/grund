@@ -1002,12 +1002,20 @@ Each pull request is one line, `- [<title>](<url>) (PR #N)`. The title is the pu
 
 The bump reads everything it needs — the range, every commit's pull requests, and every notice it would publish — before it writes anything. It refuses, exits non-zero, names which case it met, and leaves every file byte for byte as it found it, when:
 
-- `gh` is missing, any call to the forge fails, or any commit in the range goes unanswered;
+- `gh` is missing, a call to the forge still fails after its three attempts ([§FS-distribution.4.6.3.1](FS-distribution.md#4631-a-forge-call-is-tried-three-times)), or any commit in the range goes unanswered;
 - the checkout is shallow, or the previous tag does not name the release `docs/changelog.md` keeps inline;
 - a compatibility notice it would publish is malformed ([§FS-distribution.4.6.4](FS-distribution.md#464-compatibility-notices-come-from-the-decisions)), or a pull request's URL is not this repository's ([§FS-distribution.4.6.2](FS-distribution.md#462-one-line-per-pull-request-its-title-linked));
 - the range holds no merged pull request at all.
 
 A partial list is never written: a commit the forge did not answer for may be exactly the pull request a reader needed to see.
+
+##### 4.6.3.1 A forge call is tried three times
+
+A release asks the forge one question per commit in its range, hundreds of them in a row, so a refusal on the first dropped connection would make a failed release likelier with every commit, and would say nothing about the commits themselves. Each forge call the bump makes — for the repository, and for each commit's pull requests ([§FS-distribution.4.6.1](FS-distribution.md#461-the-range-is-every-commit-since-the-previous-tag)) — is therefore tried at most three times, waiting one second after the first failed attempt and two seconds after the second; a call answered on its first attempt waits for nothing.
+
+- An attempt fails when `gh` exits non-zero, whatever it printed, or when it exits zero with output that does not parse as JSON, which is what a truncated answer looks like. Both kinds count against the one budget of three, in whatever order they come. No message is read to tell a transient failure from a lasting one: a lasting one costs three seconds and the same refusal.
+- When the third attempt fails too, the bump refuses with that attempt's own diagnostic, unchanged — `the forge did not answer for …` or `the forge's answer for … is not JSON: …` — and writes nothing ([§FS-distribution.4.6.3](FS-distribution.md#463-a-refused-release-leaves-the-tree-as-it-was)).
+- A missing `gh` is refused before any attempt. An answer that parses but is the wrong shape — not a list for a commit, no address for the repository, a pull request whose URL is not this repository's ([§FS-distribution.4.6.2](FS-distribution.md#462-one-line-per-pull-request-its-title-linked)) — is refused at once and never retried: the forge did answer, and asking again would mistake bad data for an interrupted reply.
 
 #### 4.6.4 Compatibility notices come from the decisions
 

@@ -15,6 +15,12 @@ A leading `/` and literal `{owner}/{repo}` placeholders are accepted, and so are
 `--template` are refused: the stub hands back the JSON and the caller reads it.
 A commit the table holds no answer for fails the way the forge fails for an
 unknown commit, and a commit the table marks failed fails as a server error.
+An endpoint the table marks flaky - `repo`, or a commit - first fails once per
+entry of its sequence, in order, and then answers: `truncated` exits non-zero
+the way `gh` does after a truncated response, and `partial` exits zero with the
+first bytes of a JSON answer (§FS-distribution.4.6.3.1). The count of calls per
+endpoint lives in the scratch directory, so it holds across the one process each
+call is, and on the Windows `gh.cmd` leg alike.
 Every call is logged, one JSON argument list per line.
 
 It is not named `test_*`, so `unittest discover` imports it only from the
@@ -60,14 +66,34 @@ if len(paths) != 1:
     sys.exit(f"gh stub: expected one endpoint, got {{paths!r}}")
 with open(os.environ["GH_STUB_ANSWERS"], encoding="utf-8") as table:
     answers = json.load(table)
+
+
+def flaky(key):
+    """Fail this call if `key`'s sequence still holds a failure for it."""
+    sequence = answers["flaky"].get(key, [])
+    counter = os.path.join(os.environ["GH_STUB_CALLS"], key)
+    calls = int(open(counter, encoding="utf-8").read()) if os.path.exists(counter) else 0
+    with open(counter, "w", encoding="utf-8") as count:
+        count.write(str(calls + 1))
+    if calls < len(sequence):
+        if sequence[calls] == "partial":
+            print('[{{"number": 7, "title": "Trunc')
+            sys.exit(0)
+        sys.exit("unexpected end of JSON input")
+
+
 path = paths[0].lstrip("/")
 if re.fullmatch(r"repos/[^/]+/[^/]+", path):
+    flaky("repo")
     print(json.dumps(answers["repo"]))
     sys.exit(0)
 commit = re.fullmatch(r"repos/[^/]+/[^/]+/commits/([0-9a-f]{{7,40}})/pulls", path)
 if commit is None:
     sys.exit(f"gh stub: no answer for endpoint {{path}}")
 sha = commit.group(1)
+marked = [full for full in answers["flaky"] if full.startswith(sha)]
+if marked:
+    flaky(marked[0])
 failed = [full for full in answers["fail"] if full.startswith(sha)]
 if failed:
     sys.exit(f"gh: {{answers['fail'][failed[0]]}} (HTTP 500)")
@@ -103,7 +129,7 @@ class ForgeRepository(GitFixture):
         self.repo = self.scratch / "repo"
         self._init_repository(self.repo)  # §AR-ci.10.4: prevent detached cleanup writers.
         self.day = 0
-        self.answers = {"repo": dict(REPOSITORY), "commits": {}, "fail": {}}
+        self.answers = {"repo": dict(REPOSITORY), "commits": {}, "fail": {}, "flaky": {}}
         self.base = self._land("The base", files)
         if tag is not None:
             self._git(self.repo, "tag", tag)
@@ -126,6 +152,15 @@ class ForgeRepository(GitFixture):
         for arguments in (("add", "-A"), (*identity, "commit", "-q", "--allow-empty", "-m", message)):
             subprocess.run(["git", "-C", str(self.repo), *arguments], check=True, capture_output=True, env=environment(dated))
         return self._git(self.repo, "rev-parse", "HEAD")
+
+    def _flaky(self, endpoint: str, *failures: str) -> None:
+        """Fail `endpoint` - `repo` or a commit - once per failure, `truncated` or
+        `partial`, before it answers (§FS-distribution.4.6.3.1)."""
+        self.answers["flaky"][endpoint] = list(failures)
+
+    def _calls(self, commit: str) -> int:
+        """How many times the script asked the forge about `commit`."""
+        return sum(f"/commits/{commit[:7]}" in line for line in self.log.read_text(encoding="utf-8").splitlines())
 
     def _answer(self, commit: str, *pulls: dict) -> None:
         self.answers["commits"][commit] = list(pulls)
@@ -168,6 +203,8 @@ class ForgeRepository(GitFixture):
     def _script(self, *arguments: str, gh: bool = True, cwd: Path | None = None) -> CompletedProcess:
         table, self.log = self.scratch / "answers.json", self.scratch / "gh.log"
         table.write_text(json.dumps(self.answers), encoding="utf-8")
+        calls = self.scratch / "gh-calls"
+        calls.mkdir(exist_ok=True)
         return subprocess.run(
             [sys.executable, str(SCRIPT_PATH), *arguments],
             cwd=cwd or self.repo,
@@ -180,6 +217,7 @@ class ForgeRepository(GitFixture):
                     "PYTHONUTF8": "1",
                     "GH_STUB_ANSWERS": str(table),
                     "GH_STUB_LOG": str(self.log),
+                    "GH_STUB_CALLS": str(calls),
                     "GIT_CONFIG_GLOBAL": str(self.scratch / ".gitconfig-absent"),
                     "GIT_CONFIG_NOSYSTEM": "1",
                 }
