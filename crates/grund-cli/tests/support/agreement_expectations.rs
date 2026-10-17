@@ -163,8 +163,14 @@ pub fn validate_variant(variant: &Value) -> Result<(), String> {
 }
 
 /// Missing facts are construction errors, not applicability or empty answers.
-/// Discovery happens before native builds and preserves the dynamic corpus cap.
-pub fn load(cases: &Path) -> Result<BTreeMap<String, Value>, Vec<String>> {
+/// Discovery happens before native builds and preserves the dynamic corpus cap:
+/// every case in `scope` needs its facts, and a manifest outside it is still held
+/// to its input, so a stale one cannot wait for its family's tranche
+/// (§REQ-one-answer.proof.matrix.family).
+pub fn load(
+    cases: &Path,
+    scope: &BTreeSet<String>,
+) -> Result<BTreeMap<String, Value>, Vec<String>> {
     let facts = cases
         .parent()
         .unwrap()
@@ -179,9 +185,28 @@ pub fn load(cases: &Path) -> Result<BTreeMap<String, Value>, Vec<String>> {
         .filter(|p| p.is_dir())
         .collect();
     directories.sort();
+    let names: BTreeSet<_> = directories
+        .iter()
+        .map(|case| case.file_name().unwrap().to_string_lossy().into_owned())
+        .collect();
+    for entry in fs::read_dir(&facts).unwrap() {
+        let path = entry.unwrap().path();
+        if let Some(stem) = path
+            .file_stem()
+            .filter(|_| path.extension().is_some_and(|e| e == "json"))
+        {
+            let stem = stem.to_string_lossy();
+            if !names.contains(stem.as_ref()) {
+                errors.push(format!("{stem}: a manifest for no case of the corpus"));
+            }
+        }
+    }
     for case in directories {
         let name = case.file_name().unwrap().to_string_lossy().into_owned();
         let file = facts.join(format!("{name}.json"));
+        if !scope.contains(&name) && !file.exists() {
+            continue;
+        }
         let document = fs::read(&file)
             .map_err(|e| format!("{name}: no input-authored manifest ({e})"))
             .and_then(|raw| {
@@ -214,9 +239,10 @@ pub fn load(cases: &Path) -> Result<BTreeMap<String, Value>, Vec<String>> {
             Ok(document)
         });
         match checked {
-            Ok(document) => {
+            Ok(document) if scope.contains(&name) => {
                 loaded.insert(name, document);
             }
+            Ok(_) => {}
             Err(error) => errors.push(error),
         }
     }

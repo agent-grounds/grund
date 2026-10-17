@@ -8,11 +8,15 @@ The loader and consumers are in the CLI test support modules. They follow
 [§AR-system.principle](../../../docs/architecture/README.md#principle-one-fact-one-point-one-implementation).
 
 **Construction status:** the twelve cases without input repositories have
-input-pinned applicability manifests here. The 1,511 input cases still lack
-complete generic fact manifests. The matrix rejects that gap before native
-preparation. Query consumers now require physical-fact partitions; no input-case
-partition or full answer/writer dataset is supplied by this consumer repair.
-The regression-envelope JSON
+input-pinned applicability manifests here, five of them stale against their
+pins. The comparison asks the seed's sampled first projects and every case of
+each family `COVERED` names
+([§REQ-one-answer.proof.matrix.family](../../../docs/requirements/REQ-one-answer.md#proofmatrixfamily-a-family-is-covered-whole-or-not-at-all)),
+so a manifest is required for those cases first: tranche 1 covers `cover`,
+`scan`, `stub` and `symlink`, and none of its cases has one yet. A manifest
+that exists is validated whether or not its case is asked, and the matrix
+rejects every gap before native preparation. Query consumers require
+physical-fact partitions. The regression-envelope JSON
 files in the CLI fixtures are recorded comparator inputs, not oracle manifests.
 This directory and the loader do not discharge S4.
 
