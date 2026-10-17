@@ -14,6 +14,8 @@ from agreement_fixtures import CASES, ROOT, materialize, manifest_request
 from agreement_setup import prepare
 from agreement_scope import isolated_fixtures, question_scopes
 
+STARTED = time.monotonic()
+
 
 def plain(value):
     if dataclasses.is_dataclass(value):
@@ -41,6 +43,20 @@ def python_call(api, request):
     return {'request': request, 'envelope': envelope}
 
 
+def gate_time(text):
+    """One line the cargo suite passes on from a green run (§AR-ci.requirements.5.1)."""
+    print(f'gate time: agreement host {text}', file=sys.stderr, flush=True)
+
+
+def setup_phases(commands):
+    """The preparation's compiles, which the host's start alone would not separate."""
+    phases = {'toolchain': ['rustup', 'toolchain', 'install'],
+              'natives': ['cargo', '+1.95.0', 'build']}
+    seconds = {name: sum(c['seconds'] for c in commands if c['argv'][:len(argv)] == argv)
+               for name, argv in phases.items()}
+    return ', '.join(f'{name} {value:.1f}s' for name, value in seconds.items())
+
+
 def main():
     temporary, api, stage, provenance, runtime = prepare()
     fixtures = isolated_fixtures()
@@ -49,8 +65,12 @@ def main():
     home = Path(fixtures.name)
     provenance['fixtureRoot'] = str(home)
     print(json.dumps({'ready': provenance}), flush=True)
+    phases = setup_phases(provenance['setupCommands'])
+    gate_time(f'ready {time.monotonic() - STARTED:.1f}s: {phases}')
+    served, ready = 0, time.monotonic()
     try:
         for line in sys.stdin:
+            served += 1
             request = json.loads(line)
             op = request['op']
             if op == 'discover':
@@ -98,6 +118,7 @@ def main():
             raise RuntimeError('Node host failed')
         temporary.cleanup()
         fixtures.cleanup()
+    gate_time(f'served {served} requests in {time.monotonic() - ready:.1f}s')
 
 
 if __name__ == '__main__':
