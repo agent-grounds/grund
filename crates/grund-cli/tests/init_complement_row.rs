@@ -142,7 +142,6 @@ fn map_rows(target: &Path) -> Vec<String> {
 /// agent-grounds/grund#782, the reported path: a rhei-shaped version-1 project,
 /// migrated, gets a complement row that says what it is.
 #[test]
-#[ignore = "red until #782 gives an untitled complement row its own title; implement removes this"]
 fn a_migrated_complement_row_says_it_is_the_complement() {
     let target = v1_tree("complement-row-migrated", V1_RHEI_SHAPED);
     succeeds(&["init"], &target);
@@ -204,7 +203,6 @@ fn migrating_with_code_rules_keeps_the_directions_section() {
 /// A version-2 file that writes an untitled complement with places directly gets
 /// the same title the migrated one does.
 #[test]
-#[ignore = "red until #782 gives an untitled complement row its own title; implement removes this"]
 fn an_untitled_v2_complement_row_says_it_is_the_complement() {
     let target = v2_tree("complement-row-v2", V2_UNTITLED);
     succeeds(&["init"], &target);

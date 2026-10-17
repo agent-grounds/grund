@@ -238,6 +238,10 @@ pub(crate) fn markdown_link_destination(raw: &str) -> String {
     }
 }
 
+/// The title of an untitled complement row in the Project map
+/// (§FS-init.2.3.4.4.3): rendered wording, never a config default.
+const COMPLEMENT_ROW_TITLE: &str = "Every scanned file no other row claims";
+
 /// The Project map rows (§FS-init.2.3.4.4): one per configured kind, linking
 /// its home. A **citable** kind is named by its kind name — the prefix an agent
 /// will type in a citation. A **non-citable** kind is named by its *place*: it
@@ -252,11 +256,17 @@ fn declaration_map(project: &Project) -> String {
     // citation directions still render (§FS-init.2.3.5).
     let homeless = project.schema.complement_name();
     let rows = project.schema.rows.iter().filter_map(|row| {
+        // An untitled complement row says it is the complement (§FS-init.2.3.4.4.3).
+        let untitled = if row.name == homeless {
+            COMPLEMENT_ROW_TITLE
+        } else {
+            "Declaration"
+        };
         let title = project
             .presentation
             .kinds
             .get(&row.name)
-            .map_or("Declaration", String::as_str);
+            .map_or(untitled, String::as_str);
         let places: Vec<&Place> = row
             .places
             .iter()
