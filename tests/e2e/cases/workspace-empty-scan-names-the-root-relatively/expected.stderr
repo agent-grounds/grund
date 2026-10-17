@@ -1,0 +1,2 @@
+warning: nothing recognized — grund read 1 file, and this project declares no kinds, so no heading in them is a declaration and no token a citation. Declare its first kind in grund.toml to start.
+warning: nothing to scan — no files under `.` matched grund's extensions (md, rs, c, cpp, java, kt, scala, swift, js, ts, tsx, cs, php, py, go, rb, sql, lua, hs, lhs, lisp, scm, clj, ada, adb, ads).

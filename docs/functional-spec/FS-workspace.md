@@ -584,7 +584,8 @@ Value bindings use this resolver without a parallel lookup path. An unqualified 
 Which projects a run at the workspace root loads is [§FS-scan.projects.workspace-root](FS-scan.md#projectsworkspace-root-a-run-at-the-workspace-root-loads-every-project), and a
 run narrower than the config root is [§FS-scan.projects.narrowed](FS-scan.md#projectsnarrowed-a-path-below-the-config-root-loads-what-a-run-from-it-would-see). A run inside a
 member is [§FS-workspace.5.1](FS-workspace.md#51-a-member-run); how a run that loads no workspace recognizes a qualified
-citation is [§FS-workspace.5.2](FS-workspace.md#52-recognition-in-a-run-that-loads-no-workspace).
+citation is [§FS-workspace.5.2](FS-workspace.md#52-recognition-in-a-run-that-loads-no-workspace); how a run at the workspace root names a project whose
+scan read nothing is [§FS-workspace.5.3](FS-workspace.md#53-the-empty-scan-caution-names-each-project-from-the-report-base).
 
 ### 5.1 A member run
 
@@ -618,6 +619,18 @@ same. The workspace-root run, which parses each qualified tail whose alias names
 a loaded project with that target project's grammar, is the one place that checks
 the tail itself; a tail whose alias names no loaded project has no target there
 either, and is read with this same fallback shape ([§FS-workspace.1.2.1](FS-workspace.md#121-an-unknown-alias-has-no-grammar-to-read-its-tail)).
+
+### 5.3 The empty-scan caution names each project from the report base
+
+A run at the workspace root asks [§FS-check.2.2](FS-check.md#22-empty-scan)'s question of each
+project it loads, and a project whose own scan read nothing is named by its root,
+in [§FS-check.2.2.2.2](FS-check.md#2222-an-explicit-path)'s message or its exclude-pattern form. That root is
+a `<path>` in the report like any other, so it is spelled from the report base the
+run's other paths use and is never absolute ([§FS-config.3.6](FS-config.md#36-output--report-format)): the workspace
+root reads ``no files under `.` matched``, and a member reads its root from that
+base, ``no files under `m` matched``. The message is then the same wherever the
+checkout sits on disk ([§FS-errors.4](FS-errors.md#4-determinism)), and the same as the one a
+run without `[workspace]` prints over the same root.
 
 ## 6. Nested project boundary
 
