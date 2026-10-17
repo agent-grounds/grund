@@ -189,10 +189,13 @@ pub fn check(context: &Value, loaded: &Value, host: &Value, errors: &mut Vec<Str
             "editor/check warning channel: {actual_warnings:?} against {expected_warnings:?}"
         ));
     }
+    // §FS-lsp.1.1: a diagnostic is a located finding; a site-less CLI-level config
+    // warning stays on `check` alone (§FS-check.checks.config-version-1).
     let facts = |report: &Value, scope: &Value| -> BTreeSet<_> {
         ["errors", "warnings"]
             .into_iter()
             .flat_map(|key| report[key].as_array().into_iter().flatten())
+            .filter(|f| !f["path"].is_null())
             .map(|f| {
                 (
                     f["severity"].as_str().unwrap().to_string(),
