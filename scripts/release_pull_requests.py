@@ -15,6 +15,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import NamedTuple
 
@@ -28,6 +29,8 @@ TAG_RE = re.compile(r"^v(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$")
 DEV_OPENER_RE = re.compile(r"^Open [0-9]+\.[0-9]+\.[0-9]+-dev for development$")
 # Each of these is escaped with a backslash in a title; `§` is written `&sect;` instead.
 ESCAPED = frozenset("\\`*_[]<>&")
+# Waits between three forge attempts, in seconds (§FS-distribution.4.6.3.1).
+FORGE_WAITS = (1, 2)
 
 
 class Commit(NamedTuple):
@@ -87,8 +90,8 @@ def pull_request_lines(span: Range) -> list[str]:
 
     Every commit is asked about, so a list that has answered has seen every pull
     request: merges are rebase-only, and each pull request's commits land on
-    `main`. A commit the forge does not answer for is refused rather than
-    skipped (§FS-distribution.4.6.3).
+    `main`. A commit the forge does not answer for within its three attempts
+    (§FS-distribution.4.6.3.1) is refused rather than skipped (§FS-distribution.4.6.3).
     """
     repository = _repository_url(span.top)
     position = {commit.sha: index for index, commit in enumerate(span.commits)}
@@ -143,10 +146,27 @@ def _repository_url(top: Path) -> str:
 
 
 def _forge(top: Path, endpoint: str, about: str) -> object:
-    """`gh api <endpoint>`'s JSON, read here rather than through `--jq`; any failure refuses."""
+    """`gh api <endpoint>`'s JSON, read here rather than through `--jq`. §FS-distribution.4.6.3.1
+
+    Asked at most three times, waiting 1s then 2s between failed attempts: a
+    non-zero exit and an answer that is not JSON share the one budget, and the
+    third failure refuses with its own diagnostic. A missing `gh` refuses before
+    any attempt, and parsed JSON is the caller's to judge, so a wrong shape is
+    never asked again.
+    """
     gh = shutil.which("gh")
     if gh is None:
         raise ChangelogError("gh is not on PATH; the release reads the pull requests it lists from the forge with it")
+    for wait in FORGE_WAITS:
+        try:
+            return _forge_attempt(top, gh, endpoint, about)
+        except ChangelogError:
+            time.sleep(wait)
+    return _forge_attempt(top, gh, endpoint, about)
+
+
+def _forge_attempt(top: Path, gh: str, endpoint: str, about: str) -> object:
+    """One `gh api <endpoint>` call, refused on a non-zero exit or an answer that is not JSON."""
     result = subprocess.run(
         [gh, "api", endpoint],
         cwd=top,
