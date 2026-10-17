@@ -39,13 +39,11 @@ impl Config {
     }
 
     /// The directory a relative location the load recorded is spelled from — a
-    /// `grund.toml` row's, which a finding about it anchors at (§FS-errors.4): the
-    /// CLI base under `--path-base=invocation`, else the root (§FS-cli.3.4).
+    /// `grund.toml` row's, which a finding about it anchors at (§FS-errors.4). The
+    /// load keeps the base it spelled them from (§FS-cli.3.4), so this reads it
+    /// back rather than deciding it a second time.
     pub(crate) fn location_base(&self) -> &Path {
-        match self.path_base {
-            Some(PathBase::Invocation) => &self.cli_base,
-            _ => &self.root,
-        }
+        &self.run().location_base
     }
 }
 

@@ -28,6 +28,10 @@ pub struct Run {
     pub config_file: Option<PathBuf>,
     /// The file the read one outranks (§FS-config.1.1).
     pub redundant_config_file: Option<PathBuf>,
+    /// The directory the load spelled every relative location it recorded from:
+    /// `config_file`, `redundant_config_file` and a `grund.toml` row's
+    /// (§FS-errors.4), kept so a reader joins one back where it was spelled.
+    pub(crate) location_base: PathBuf,
     pub scope: RunScope,
     pub workspace: RunWorkspace,
     /// The run's warning channel (§FS-distribution.3.1).
@@ -208,6 +212,7 @@ impl Run {
     pub(super) fn of(root: PathBuf, cli_base: PathBuf, invocation: &Invocation) -> Self {
         Self {
             cli_base,
+            location_base: root.clone(),
             root,
             config_file: None,
             redundant_config_file: None,
