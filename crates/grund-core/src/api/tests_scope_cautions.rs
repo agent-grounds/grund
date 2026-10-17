@@ -24,10 +24,10 @@ fn hidden_notes_project(name: &str, extensions: &str) -> Config {
 fn the_handed_hidden_file_branch_asks_the_read_predicate() {
     let unlisted = hidden_notes_project("hidden_file_branch_unlisted", "\"md\"");
     let hidden = unlisted.root.join(".notes.txt");
-    let message = empty_scan_warning(&unlisted, &hidden, true).message;
+    let message = empty_scan_warning(&unlisted, &hidden, true, unlisted.display()).message;
     assert!(message.contains("matched grund's extensions"), "{message}");
     let listed = hidden_notes_project("hidden_file_branch_listed", "\"md\", \"txt\"");
     let hidden = listed.root.join(".notes.txt");
-    let message = empty_scan_warning(&listed, &hidden, true).message;
+    let message = empty_scan_warning(&listed, &hidden, true, listed.display()).message;
     assert!(message.contains("is a hidden file"), "{message}");
 }

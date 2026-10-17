@@ -16,7 +16,7 @@ use crate::sources::{canonical_path, path_is_file};
 use std::path::Path;
 
 use crate::checker::{ScanScope, scope_read_any_file};
-use crate::config::{Config, display_path, kind_prefixes};
+use crate::config::{Config, Display, display_path, kind_prefixes};
 use crate::grammar::id_shape;
 use crate::model::{Catalog, Diagnostic, format_path, normalize_path_lexically};
 use crate::scanner::{Unread, extension_refusal, name_refusal, pruning_pattern};
@@ -54,6 +54,9 @@ fn nothing_recognized(findings: &Catalog) -> bool {
 /// rather than of the walk. A path-scoped run reads the whole project, so a path
 /// holding no scannable file would otherwise stop earning its caution because the
 /// wider walk read plenty — the caution is about what the caller asked about.
+///
+/// `display` is how the run's report spells a path, which in a workspace is the
+/// root's and not this project's (§FS-workspace.8.1, §FS-workspace.5.3).
 pub(super) fn scan_scope_caution(
     config: &Config,
     findings: &Catalog,
@@ -61,12 +64,13 @@ pub(super) fn scan_scope_caution(
     path_provided: bool,
     report_is_silent: bool,
     report_scope: Option<&ScanScope>,
+    display: Display<'_>,
 ) -> Option<Diagnostic> {
     if !report_is_silent {
         return None;
     }
     if !scope_read_any_file(findings, report_scope) {
-        return Some(empty_scan_warning(config, path, path_provided));
+        return Some(empty_scan_warning(config, path, path_provided, display));
     }
     // §FS-check.4.5.4: only a run over the whole project makes the claim. A narrowed
     // `grund check <dir>` is a slice the caller chose, and a slice with no
@@ -106,7 +110,16 @@ fn handed_a_hidden_file(config: &Config, path: &Path, path_provided: bool) -> bo
 /// warning — it never changes the exit code. Which of the three messages it
 /// carries is a question about *why* nothing was read, so the hidden file is
 /// asked first: it was skipped before either of the arms below could decide.
-pub(super) fn empty_scan_warning(config: &Config, path: &Path, path_provided: bool) -> Diagnostic {
+///
+/// Every arm names `path` as `display` spells it (§FS-workspace.5.3), while
+/// which arm speaks is still asked of the real path.
+pub(super) fn empty_scan_warning(
+    config: &Config,
+    path: &Path,
+    path_provided: bool,
+    display: Display<'_>,
+) -> Diagnostic {
+    let shown = scan_root_shown(display, path);
     // `grund`, `grund check .`, and `grund check <repo-root>` all walk `[scan] include`
     // relative to the config root — so the "looked under include" message is the
     // accurate one whenever the requested path *is* that root, not just when the
@@ -123,7 +136,7 @@ pub(super) fn empty_scan_warning(config: &Config, path: &Path, path_provided: bo
             "nothing to scan — `{}` is a hidden file. grund reads no file whose own name \
              begins with `.`, whatever `[scan] extensions` says. Rename it, or move what \
              needs checking into a file that is not hidden.",
-            format_path(path)
+            shown
         ),
         // §FS-check.2.2.2.1: a project with no kinds has no starter file to
         // scaffold, so the first remedy it is offered is its first kind.
@@ -146,11 +159,11 @@ pub(super) fn empty_scan_warning(config: &Config, path: &Path, path_provided: bo
             Some(pattern) => format!(
                 "nothing to scan — every file under `{}` that grund would read is excluded by \
                  the [schema.sources] exclude pattern `{pattern}`.",
-                format_path(path)
+                shown
             ),
             None => format!(
                 "nothing to scan — no files under `{}` matched grund's extensions ({}).",
-                format_path(path),
+                shown,
                 config.extensions.join(", ")
             ),
         },
@@ -163,6 +176,20 @@ pub(super) fn empty_scan_warning(config: &Config, path: &Path, path_provided: bo
         message,
         sites: Vec::new(),
         authority: Vec::new(),
+    }
+}
+
+/// §FS-workspace.5.3, §FS-config.3.6: the scanned root as the report names it. A
+/// path the caller typed relative is kept as typed; an absolute one — a workspace
+/// project's root, the LSP's anchor — is spelled from the report base, and the
+/// base itself reads `.`, never as an absolute path or an empty string.
+fn scan_root_shown(display: Display<'_>, path: &Path) -> String {
+    if !path.is_absolute() {
+        return format_path(path);
+    }
+    match display.path(path) {
+        shown if shown.is_empty() => ".".to_owned(),
+        shown => shown,
     }
 }
 

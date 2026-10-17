@@ -187,6 +187,7 @@ fn check_workspace_context(
             true,
             report_is_silent,
             report_scope,
+            context.render_config().display(),
         ));
         // §FS-check.1.3.6.3, §AR-lsp.5.1.1: after the silence flag, as in `grund check`
         // (§FS-check.2.2.3.1).
