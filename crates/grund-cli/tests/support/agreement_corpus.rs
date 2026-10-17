@@ -132,12 +132,18 @@ pub fn compare_tree(expected: &Path, actual: &Path) -> Result<(), String> {
     }
 }
 
+/// A receipt list a lane captured, and the place it takes among the cases asked:
+/// `None` for a lane's own startup, else the case's index in discovery order.
+type Captured = (Option<usize>, Vec<String>, Vec<evidence::Call>);
+
 /// Every case the acceptance asks is visited; preparation cannot return fewer
 /// cases than the independently discovered catalog it was taken from
-/// (§REQ-one-answer.proof.matrix.family).
+/// (§REQ-one-answer.proof.matrix.family). The cases run on lanes, each with its
+/// own same-source hosts and editor process, which pays for the time a tranche
+/// adds (§REQ-one-answer.proof.delivery.payment); the receipts are adopted in
+/// discovery order, as one lane would have recorded them.
 pub fn execute(manifests: &std::collections::BTreeMap<String, Value>) -> Vec<String> {
     let mut host = Host::new();
-    let mut editor_worker = super::agreement_editor_worker::Worker::new();
     evidence::receipt(
         "host-provenance",
         &repository(),
@@ -156,74 +162,144 @@ pub fn execute(manifests: &std::collections::BTreeMap<String, Value>) -> Vec<Str
         super::agreement_families::discovered(),
         "prepared corpus differs from authored discovery"
     );
-    let mut errors = Vec::new();
-    for name in discovered
+    let asked: Vec<String> = discovered
         .as_array()
         .expect("discovered cases")
         .iter()
-        .filter(|name| manifests.contains_key(name.as_str().unwrap()))
-    {
-        for variant in VARIANTS {
-            let mut context = host.request(json!({"op":"prepare","case":name,"variant":variant}));
-            let facts = &manifests[name.as_str().unwrap()]["variants"][*variant];
-            super::agreement_truth::bind(&mut context, facts);
-            let attribution = json!({"case":name,"variant":variant,"base":context["base"],
-                "saved":context["saved"],"cwd":context["cwd"],"path":context["path"]});
-            evidence::context(attribution, || {
-                let verified = super::agreement_materialization::verify(&context);
-                evidence::receipt(
-                    "materialization",
-                    Path::new(&text(&context, "base")),
-                    json!({}),
-                    context.clone(),
-                );
-                evidence::witness(verified);
-                if !context["absent"].is_null() {
-                    for surface in SURFACES {
-                        evidence::receipt(
-                            "inapplicable",
-                            Path::new(&text(&context, "base")),
-                            json!({"surface":surface,"context":context}),
-                            json!({"reason":context["absent"],"point":"§REQ-one-answer.proof.matrix"}),
-                        );
-                    }
-                    if *variant == "whole-tree"
-                        && context["links"].as_array().unwrap().is_empty()
-                        && context.get("symlinkError").is_none()
-                    {
-                        manifest(&context, &mut errors);
-                    }
-                    return;
-                }
-                // Manifest mutation has its own isolated materialization; generic
-                // questions continue on a freshly prepared copy below.
-                if *variant == "whole-tree" {
-                    manifest(&context, &mut errors);
-                }
-            });
-            if !context["absent"].is_null() {
-                continue;
-            }
-            // Recreate after a manifest that may write; no generic read sees its result.
-            let mut context = if *variant == "whole-tree" {
-                host.request(json!({"op":"prepare","case":name,"variant":variant}))
-            } else {
-                context
-            };
-            super::agreement_truth::bind(&mut context, facts);
-            super::agreement_materialization::verify(&context);
-            evidence::context(
-                json!({"case":name,"variant":variant,"base":context["base"],
-                "saved":context["saved"],"cwd":context["cwd"],"path":context["path"]}),
-                || {
-                    exercise(&mut host, &mut editor_worker, &context, &mut errors);
-                },
-            );
-        }
-        editor_worker.release();
-        host.request(json!({"op":"release","case":name}));
+        .map(|name| name.as_str().unwrap().to_string())
+        .filter(|name| manifests.contains_key(name))
+        .collect();
+    // The first host built the native libraries, so a later lane's only rebuilds.
+    let lanes = std::thread::available_parallelism()
+        .map_or(1, std::num::NonZero::get)
+        .clamp(1, 4)
+        .min(asked.len().max(1));
+    let queue = std::sync::Mutex::new(asked.iter().enumerate());
+    let mut first = Some(host);
+    let mut captured: Vec<Captured> = std::thread::scope(|scope| {
+        let lanes: Vec<_> = (0..lanes)
+            .map(|_| {
+                let (host, queue) = (first.take(), &queue);
+                scope.spawn(move || lane(host, queue, manifests))
+            })
+            .collect();
+        lanes
+            .into_iter()
+            .flat_map(|lane| {
+                lane.join()
+                    .unwrap_or_else(|panic| std::panic::resume_unwind(panic))
+            })
+            .collect()
+    });
+    captured.sort_by_key(|(index, ..)| *index);
+    let mut errors = Vec::new();
+    for (_, found, calls) in captured {
+        evidence::adopt(calls);
+        errors.extend(found);
     }
     errors
+}
+
+/// One lane: its hosts and editor, taking the next case asked until none is left.
+fn lane<'a>(
+    host: Option<Host>,
+    queue: &std::sync::Mutex<impl Iterator<Item = (usize, &'a String)>>,
+    manifests: &std::collections::BTreeMap<String, Value>,
+) -> Vec<Captured> {
+    let mut started = None;
+    let calls = evidence::capture(|| {
+        let host = host.unwrap_or_else(|| {
+            let host = Host::new();
+            evidence::receipt(
+                "host-provenance",
+                &repository(),
+                json!({}),
+                host.provenance.clone(),
+            );
+            host
+        });
+        started = Some((host, super::agreement_editor_worker::Worker::new()));
+    });
+    let (mut host, mut worker) = started.expect("lane started");
+    let mut captured = vec![(None, Vec::new(), calls)];
+    loop {
+        let next = queue.lock().unwrap().next();
+        let Some((index, name)) = next else {
+            return captured;
+        };
+        let mut errors = Vec::new();
+        let calls = evidence::capture(|| run(&mut host, &mut worker, name, manifests, &mut errors));
+        captured.push((Some(index), errors, calls));
+    }
+}
+
+/// Every variant of one case, then its materializations released.
+fn run(
+    host: &mut Host,
+    editor_worker: &mut super::agreement_editor_worker::Worker,
+    name: &str,
+    manifests: &std::collections::BTreeMap<String, Value>,
+    errors: &mut Vec<String>,
+) {
+    for variant in VARIANTS {
+        let mut context = host.request(json!({"op":"prepare","case":name,"variant":variant}));
+        let facts = &manifests[name]["variants"][*variant];
+        super::agreement_truth::bind(&mut context, facts);
+        let attribution = json!({"case":name,"variant":variant,"base":context["base"],
+            "saved":context["saved"],"cwd":context["cwd"],"path":context["path"]});
+        evidence::context(attribution, || {
+            let verified = super::agreement_materialization::verify(&context);
+            evidence::receipt(
+                "materialization",
+                Path::new(&text(&context, "base")),
+                json!({}),
+                context.clone(),
+            );
+            evidence::witness(verified);
+            if !context["absent"].is_null() {
+                for surface in SURFACES {
+                    evidence::receipt(
+                        "inapplicable",
+                        Path::new(&text(&context, "base")),
+                        json!({"surface":surface,"context":context}),
+                        json!({"reason":context["absent"],"point":"§REQ-one-answer.proof.matrix"}),
+                    );
+                }
+                if *variant == "whole-tree"
+                    && context["links"].as_array().unwrap().is_empty()
+                    && context.get("symlinkError").is_none()
+                {
+                    manifest(&context, errors);
+                }
+                return;
+            }
+            // Manifest mutation has its own isolated materialization; generic
+            // questions continue on a freshly prepared copy below.
+            if *variant == "whole-tree" {
+                manifest(&context, errors);
+            }
+        });
+        if !context["absent"].is_null() {
+            continue;
+        }
+        // Recreate after a manifest that may write; no generic read sees its result.
+        let mut context = if *variant == "whole-tree" {
+            host.request(json!({"op":"prepare","case":name,"variant":variant}))
+        } else {
+            context
+        };
+        super::agreement_truth::bind(&mut context, facts);
+        super::agreement_materialization::verify(&context);
+        evidence::context(
+            json!({"case":name,"variant":variant,"base":context["base"],
+            "saved":context["saved"],"cwd":context["cwd"],"path":context["path"]}),
+            || {
+                exercise(host, editor_worker, &context, errors);
+            },
+        );
+    }
+    editor_worker.release();
+    host.request(json!({"op":"release","case":name}));
 }
 
 fn exercise(
