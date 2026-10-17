@@ -23,7 +23,11 @@ struct Fixture {
 
 impl Fixture {
     fn new(name: &str) -> Self {
-        let dir = std::env::temp_dir().join(format!(
+        Self::new_in(name, &std::env::temp_dir())
+    }
+
+    fn new_in(name: &str, base: &Path) -> Self {
+        let dir = base.join(format!(
             "grund-788-global-path-{name}-{}",
             std::process::id()
         ));
@@ -126,6 +130,13 @@ impl Fixture {
             String::from_utf8(output.stdout).unwrap(),
             output.status.code(),
         )
+    }
+
+    fn assert_filtered(&self) {
+        assert_eq!(self.listed(), (LISTED.into(), Some(0)));
+        let checked = self.grund(&["check"]);
+        assert_eq!(checked.status.code(), Some(0), "{checked:?}");
+        assert_eq!(String::from_utf8_lossy(&checked.stdout), "success\n");
     }
 }
 
@@ -250,4 +261,132 @@ fn a_literal_tilde_global_file_still_obeys_respect_gitignore_false() {
         &CONFIG.replace("respect_gitignore = true", "respect_gitignore = false"),
     );
     assert_eq!(fixture.listed(), (BOTH.into(), Some(0)));
+}
+
+/// R1-01: a second separator must not replace the expanded home with root.
+#[test]
+fn repeated_separators_after_home_keep_the_home_prefix() {
+    let mut fixture = Fixture::new("home-separators");
+    fixture.home = fixture.dir.join("h~me");
+    write(&fixture.home.join("a~b/global.ignore"), "notes/gen/\n");
+    write(&fixture.home.join("global.ignore"), "notes/gen/\n");
+    for value in [
+        "~//global.ignore",
+        "~///global.ignore",
+        "~//a~b/global.ignore",
+    ] {
+        fixture.configure(value);
+        fixture.git_ignores();
+        fixture.assert_filtered();
+    }
+}
+
+/// The named-user branch has the same concatenation semantics. Its fixture
+/// lives under the user's issue-specific scratch so losing HOME changes the file.
+#[cfg(all(unix, not(target_os = "android")))]
+#[test]
+fn repeated_separators_after_a_named_home_keep_its_prefix() {
+    let discovery = Fixture::new("named-home-user");
+    let user = discovery.command("id").arg("-un").output().unwrap();
+    assert!(user.status.success(), "{user:?}");
+    let user = String::from_utf8(user.stdout).unwrap();
+    discovery.configure(&format!("~{}/", user.trim()));
+    let home = discovery
+        .command("git")
+        .args(["config", "--global", "--path", "--get", "core.excludesFile"])
+        .output()
+        .unwrap();
+    assert!(home.status.success(), "{home:?}");
+    let home = String::from_utf8(home.stdout).unwrap();
+    let home = Path::new(home.trim()).canonicalize().unwrap();
+    let fixture = Fixture::new_in("named-home-separators", &home.join("ag/tmp"));
+    let file = fixture.dir.join("a~b/global.ignore");
+    write(&file, "notes/gen/\n");
+    fixture.configure(&format!(
+        "~{}//{}",
+        user.trim(),
+        git_path(file.strip_prefix(home).unwrap())
+    ));
+    fixture.git_ignores();
+    fixture.assert_filtered();
+}
+
+/// R1-02: the baseline selects the first setting, even where Git uses the last.
+#[test]
+fn repeated_global_excludes_settings_keep_first_value_precedence() {
+    let fixture = Fixture::new("first-setting");
+    fixture.excludes("real.ignore");
+    let empty = fixture.dir.join("empty.ignore");
+    write(&empty, "");
+    let added = fixture
+        .command("git")
+        .args([
+            "config",
+            "--global",
+            "--add",
+            "core.excludesFile",
+            &git_path(&empty),
+        ])
+        .output()
+        .unwrap();
+    assert!(added.status.success(), "{added:?}");
+    fixture.assert_filtered();
+    // The same selection applies to HOME's config, which precedes XDG's.
+    fs::rename(
+        fixture.dir.join("xdg/git/config"),
+        fixture.home.join(".gitconfig"),
+    )
+    .unwrap();
+    fixture.configure(&git_path(&empty));
+    fixture.assert_filtered();
+}
+
+/// R1-02: an empty setting still permits the optional XDG default.
+#[test]
+fn an_empty_global_excludes_setting_keeps_default_discovery() {
+    let fixture = Fixture::new("empty-setting");
+    write(&fixture.dir.join("xdg/git/ignore"), "notes/gen/\n");
+    fixture.configure("");
+    fixture.assert_filtered();
+    fs::rename(
+        fixture.dir.join("xdg/git/config"),
+        fixture.home.join(".gitconfig"),
+    )
+    .unwrap();
+    fixture.assert_filtered();
+    // An empty HOME setting also permits the next config before the default.
+    fs::remove_file(fixture.dir.join("xdg/git/ignore")).unwrap();
+    fixture.excludes("a~b/global.ignore");
+    fixture.assert_filtered();
+}
+
+/// R1-03: unrelated malformed config previously allowed list/check to pass.
+#[test]
+fn unrelated_malformed_global_config_does_not_abort_scanning() {
+    let fixture = Fixture::new("malformed-unrelated");
+    write(
+        &fixture.home.join(".gitconfig"),
+        "[alias]\n broken = \"unterminated\n",
+    );
+    write(&fixture.repo.join("notes/gen/b.md"), "Ordinary text.\n");
+    fixture.assert_filtered();
+}
+
+/// Optional config read/parse failures permit the next config or default;
+/// neither is reported as successfully loading a configured excludes file.
+#[test]
+fn optional_global_config_failures_keep_fallback_discovery() {
+    let fixture = Fixture::new("config-fallbacks");
+    let malformed = "[alias]\n broken = \"unterminated\n";
+    write(&fixture.home.join(".gitconfig"), malformed);
+    fixture.excludes("a~b/global.ignore");
+    fixture.assert_filtered();
+    write(&fixture.dir.join("xdg/git/config"), malformed);
+    write(&fixture.dir.join("xdg/git/ignore"), "notes/gen/\n");
+    fixture.assert_filtered();
+    // A directory in place of a config exercises an optional read failure on
+    // Unix and Windows without depending on permissions or running as non-root.
+    fs::remove_file(fixture.home.join(".gitconfig")).unwrap();
+    fs::create_dir(fixture.home.join(".gitconfig")).unwrap();
+    fixture.assert_filtered();
 }
