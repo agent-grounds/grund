@@ -14,8 +14,8 @@ impl View<'_> {
     }
 
     fn located(&self, file: &str, line: usize, column: usize, text: &str, query: &str) -> Value {
-        json!({"column":column,"display_path":file,"line":line,"path":self.absolute(file),
-            "project":null,"query_id":query,"section_separator":".","text":text})
+        json!({"column":column,"display_path":self.display(file),"line":line,"path":self.absolute(file),
+            "project":self.project_of(file),"query_id":query,"section_separator":".","text":text})
     }
 
     fn target(&self, id: &str, section: &Value) -> Option<(String, usize)> {
@@ -23,6 +23,7 @@ impl View<'_> {
             Some(s) => format!("{id}.{s}"),
             None => id.to_string(),
         };
+        let id = coordinate.split('.').next().unwrap();
         // §FS-lsp.1.3: a citation jumps to its declaration's line, which a
         // section its declaration lacks still has.
         let (d, s) = self.resolve(&coordinate).or_else(|| self.resolve(id))?;
@@ -67,7 +68,10 @@ impl View<'_> {
             Some(v) if d.facts["standIn"] == true => (v.0.clone(), v.1, v.2, v.3.clone()),
             _ => (d.file.clone(), d.line, d.column, d.text.clone()),
         };
-        let mut declarations: Vec<_> = self.m.decls.iter().map(|d| (d, title(d))).collect();
+        let mut declarations: Vec<_> = (0..self.m.decls.len())
+            .map(|d| (d, title(&self.m.decls[d])))
+            .filter(|(_, (file, ..))| self.loaded(file))
+            .collect();
         declarations.sort_by(|a, b| (&a.1.0, a.1.1).cmp(&(&b.1.0, b.1.1)));
         // §FS-declarations.checks.duplicate-section.3: a later claimant of a
         // path is no section target, so the editor navigates to the first only.
@@ -82,9 +86,15 @@ impl View<'_> {
                     .any(|o| o.owner == s.owner && o.path == s.path)
             })
             .map(|(_, s)| s)
+            .filter(|s| self.loaded(&s.file))
             .collect();
         sections.sort_by(|a, b| (&a.file, a.line).cmp(&(&b.file, b.line)));
-        let mut cites: Vec<_> = self.m.cites.iter().collect();
+        let mut cites: Vec<_> = self
+            .m
+            .cites
+            .iter()
+            .filter(|c| self.loaded(&c.file))
+            .collect();
         cites.sort_by(|a, b| (&a.file, a.line, a.column).cmp(&(&b.file, b.line, b.column)));
         let mut kind_titles = serde_json::Map::new();
         for row in self.order() {
@@ -120,6 +130,7 @@ impl View<'_> {
             .into_iter()
             .chain(probes)
             .chain(reads.map(|r| r.as_str().unwrap().to_string()))
+            .filter(|f| self.loaded(f))
             .map(|f| self.absolute(&f))
             .collect();
         read.sort();
@@ -145,27 +156,29 @@ impl View<'_> {
             .collect();
         json!({"kind_titles":kind_titles,"readFiles":read,"snapshot":{
             "citations":cites.iter().map(|c| {
-                let target = self.target(&c.id, &c.section);
+                // §FS-values.7: a citation navigates by its written alias path.
+                let id = self.citation(c, true)["id"].as_str().unwrap().to_string();
+                let target = self.target(&id, &c.section);
                 let query = match c.section.as_str() {
-                    Some(s) => format!("{}.{s}", c.id),
-                    None => c.id.clone(),
+                    Some(s) => format!("{id}.{s}"),
+                    None => id.clone(),
                 };
                 let mut row = self.located(&c.file, c.line, c.column, &c.text, &query);
-                row["declaration_query_id"] = json!(c.id);
+                row["declaration_query_id"] = json!(id);
                 row["target_path"] = json!(target.as_ref().map(|(f, _)| self.absolute(f)));
                 row["target_line"] = json!(target.map(|(_, l)| l));
                 row
             }).collect::<Vec<_>>(),
             "declarations":declarations.iter().map(|(d, (file, line, column, text))| {
-                let mut row = self.located(file, *line, *column, text, &d.id);
+                let mut row = self.located(file, *line, *column, text, &self.qualified(*d));
                 row["hover_text"] = Value::Null;
                 row
             }).collect::<Vec<_>>(),
             "finding_ranges":ranges,"marker":self.marker(),"report":report,
-            "root":"<repo>","run_warnings":[],"scan_errors":self.scan_errors(),
+            "root":self.member().map_or("<repo>".into(), |m| self.absolute(m)),"run_warnings":[],"scan_errors":self.scan_errors(),
             "scanned_files":scanned,
             "sections":sections.iter().map(|s| {
-                let query = format!("{}.{}", self.m.decls[s.owner].id, s.path);
+                let query = format!("{}.{}", self.qualified(s.owner), s.path);
                 // §FS-values.2.4.2: a marked root's LSP title excludes its tag.
                 let text = match s.facts["valueRoot"].as_str() {
                     Some("marked") => s.text.strip_suffix(" <!-- grund:value -->").unwrap_or(&s.text),
@@ -176,6 +189,6 @@ impl View<'_> {
                 row
             }).collect::<Vec<_>>(),
             "stubs":self.m.facts["editor"]["stubs"].as_array().cloned().unwrap_or_default(),
-            "trigger":self.m.facts["trigger"].as_str().unwrap_or("$$"),"workspace":false}})
+            "trigger":self.m.facts["trigger"].as_str().unwrap_or("$$"),"workspace":self.workspace()}})
     }
 }

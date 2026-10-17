@@ -170,6 +170,7 @@ impl View<'_> {
                     "sections":[{"section":null,"start":1,"end":1}]})
                 })
                 .collect();
+            // §FS-scan.projects.narrowed: a file inside a member is a member run.
             json!([{"project":null,"path":self.site(file),"start":1,"end":1,"owners":owners}])
         };
         ok(json!({"run_cautions":[],"output_format":"text","records":records,"scan_errors":[]}))
