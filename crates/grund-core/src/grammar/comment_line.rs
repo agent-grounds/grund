@@ -30,7 +30,7 @@ fn citation_token_ranges(
     alias_grammars: &[AliasGrammar<'_>],
 ) -> Vec<(usize, usize)> {
     let mut ranges = Vec::new();
-    // §FS-citations.recognized.contexts: note classification reads the same
+    // §AR-scanner.2.3.2: note classification reads the same
     // qualified-comment policy as both scanner passes, not the bare-token toggle.
     let qualified = QualifiedSource {
         forms: None,
