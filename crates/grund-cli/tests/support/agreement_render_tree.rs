@@ -74,6 +74,13 @@ impl View<'_> {
             || file.starts_with(&format!("{}/", self.selected))
     }
 
+    /// §FS-scan.path.list: a declaration is at or under the path where it, or a
+    /// stub that pairs with it, is.
+    pub fn declared_within(&self, d: usize) -> bool {
+        let decl = &self.m.decls[d];
+        self.within(&decl.file) || decl.via.iter().any(|(f, ..)| self.within(f))
+    }
+
     /// A fact a variant pins for itself, else the one the whole input pins.
     pub fn fact(&self, name: &str) -> &Value {
         self.variant.get(name).unwrap_or(&self.m.facts[name])
@@ -250,7 +257,7 @@ impl View<'_> {
         let stub = decl.facts.get("stub").filter(|v| !v.is_null());
         let mut row = json!({"project":decl.project,"id":decl.id,"section":null,
             "section_separator":".","kind":decl.kind,"path":self.site(&decl.file),
-            "line":decl.line,"stub":stub.is_some(),"defines":stub.map(|v| self.site(v.as_str().unwrap())),
+            "line":decl.line,"stub":stub.is_some(),"defines":stub,
             "duplicate":decl.facts["duplicate"].as_bool().unwrap_or(false)});
         let (lead, full) = match s {
             Some(s) => {
@@ -278,7 +285,7 @@ impl View<'_> {
         let rows: Vec<_> = self
             .order()
             .into_iter()
-            .filter(|(d, s)| self.within(&self.m.decls[*d].file) && (size || s.is_none()))
+            .filter(|(d, s)| self.declared_within(*d) && (size || s.is_none()))
             .collect();
         let mut result = json!({"run_cautions":[],"output_format":"text","workspace":false,
             "entries":rows.iter().map(|(d, s)| self.entry(*d, *s, size)).collect::<Vec<_>>(),
@@ -295,7 +302,9 @@ impl View<'_> {
                             })
                             .count();
                         (count > 0).then(|| {
-                            json!({"project":null,"kind":k["kind"],"title":k["title"],
+                            // An untitled kind's summary reads "Declaration".
+                            let title = k["title"].as_str().unwrap_or("Declaration");
+                            json!({"project":null,"kind":k["kind"],"title":title,
                         "home":k["home"],"count":count})
                         })
                     })

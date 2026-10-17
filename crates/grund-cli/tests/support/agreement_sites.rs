@@ -54,10 +54,9 @@ pub fn rows(surface: &str, rows: &mut [Value], context: &Value) {
                     }
                 }
             }
-            _ => {
-                finding(row, context);
-                location(row, "defines", context);
-            }
+            // §FS-list.2: `defines` is the stub's `<target>` as written, a link
+            // read beside the stub, never a site below the report base.
+            _ => finding(row, context),
         }
     }
 }

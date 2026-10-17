@@ -20,6 +20,8 @@ pub struct Decl {
     pub lead: Option<String>,
     pub full: Option<String>,
     pub toc: Option<String>,
+    /// Each stub that pairs with this declaration: file, line, column, heading.
+    pub via: Vec<(String, usize, usize, String)>,
 }
 
 pub struct Section {
@@ -62,8 +64,9 @@ fn field<'a>(value: &'a Value, name: &str) -> Result<&'a str, String> {
         .ok_or_else(|| format!("compact fact lacks {name}: {value}"))
 }
 
-/// The 1-based line and character column of the `nth` occurrence of `token`
-/// in `text`, at or after line `from`.
+/// The 1-based line and byte column (§FS-inline-citation-style: the scanner's
+/// start column is a byte offset) of the `nth` occurrence of `token` in
+/// `text`, at or after line `from`.
 pub fn locate(
     text: &str,
     token: &str,
@@ -79,7 +82,7 @@ pub fn locate(
                 seen += 1;
                 let at = start + found;
                 if seen == nth {
-                    return Ok((index + 1, line[..at].chars().count() + 1, offset + at));
+                    return Ok((index + 1, at + 1, offset + at));
                 }
                 start = at + token.len();
             }
@@ -203,6 +206,14 @@ impl Model {
             let heading = field(d, "heading")?;
             let nth = d["nth"].as_u64().unwrap_or(1) as usize;
             let (line, column, _) = locate(text, heading, nth, 1)?;
+            // §FS-declarations.stubs.pairing.1: the stubs that point at it.
+            let mut via = Vec::new();
+            for stub in d["via"].as_array().into_iter().flatten() {
+                let file = field(stub, "file")?;
+                let heading = field(stub, "heading")?;
+                let (line, column, _) = locate(model.text(file)?, heading, 1, 1)?;
+                via.push((file.to_string(), line, column, heading.to_string()));
+            }
             model.decls.push(Decl {
                 id: field(d, "id")?.into(),
                 kind: field(d, "kind")?.into(),
@@ -215,6 +226,7 @@ impl Model {
                 lead: None,
                 full: None,
                 toc: None,
+                via,
             });
         }
         for s in facts["sections"].as_array().into_iter().flatten() {

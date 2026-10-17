@@ -161,7 +161,10 @@ impl View<'_> {
                 .m
                 .decls
                 .iter()
-                .filter(|d| d.file == file && d.line == 1)
+                // A stub's heading line is its declaration's (§FS-cover.6.2).
+                .filter(|d| {
+                    (d.file == file && d.line == 1) || d.via.iter().any(|v| v.0 == file && v.1 == 1)
+                })
                 .map(|d| {
                     json!({"declaration":d.id,"start":1,"end":1,
                     "sections":[{"section":null,"start":1,"end":1}]})
