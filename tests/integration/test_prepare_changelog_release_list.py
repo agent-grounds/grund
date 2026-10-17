@@ -3,12 +3,15 @@ previous tag itself: `prepare` asks the forge about every commit in the range
 (§FS-distribution.4.6.1), writes one escaped, linked line per merged pull request,
 newest first by git (§FS-distribution.4.6.2), adds the compatibility notices the
 decisions gained since the tag (§FS-distribution.4.6.4), rotates the former inline
-release into its archive with a counted summary (§FS-distribution.4.5), and
-otherwise refuses and leaves the tree as it was (§FS-distribution.4.6.3).
+release into its archive with a counted summary (§FS-distribution.4.5), gets
+past a forge call that fails once (§FS-distribution.4.6.3.1), and otherwise
+refuses and leaves the tree as it was (§FS-distribution.4.6.3).
 
 Each case runs the script the way the release workflows do, in a throwaway
 repository, against the stub forge of `release_forge_fixture.py`. The
-compatibility notices on their own are `test_prepare_changelog_release_notices.py`."""
+compatibility notices on their own are `test_prepare_changelog_release_notices.py`,
+and the retry policy of one forge call, with its wait faked, is
+`test_release_forge_retries.py`."""
 
 import json
 import unittest
@@ -168,6 +171,32 @@ class EndToEndTests(ReleaseHistory, unittest.TestCase):
             self.assertTrue(any(commit.startswith(sha) for sha in asked), commit)
 
 
+class RecoveryTests(ReleaseHistory, unittest.TestCase):
+    """§FS-distribution.4.6.3.1: a forge call that fails once is asked again, and
+    the release is the one an answer on the first attempt would have written."""
+
+    # Red until #781 retries the forge call; implement removes this marker.
+    @unittest.expectedFailure
+    def test_prepare_gets_past_a_commit_the_forge_fails_once_for(self) -> None:
+        self._history()
+        self._flaky(self.glob[0], "truncated")
+        self.assertSucceeded(self._script("prepare", VERSION, "--date", DATE))
+        self.assertEqual(RELEASED, self._read())
+        self.assertEqual(ARCHIVED, self._read("docs/changelog/0.2.0.md"))
+        self.assertEqual(2, self._calls(self.glob[0]))
+
+    # Red until #781 retries the forge call; implement removes this marker.
+    @unittest.expectedFailure
+    def test_preview_gets_past_a_truncated_answer_and_writes_nothing(self) -> None:
+        self._history()
+        self._flaky(self.parser, "partial")
+        preview = self._script("preview")
+        self.assertSucceeded(preview)
+        self.assertEqual(BODY.strip("\n"), preview.stdout.strip("\n"))
+        self.assertEqual("", self._git(self.repo, "status", "--porcelain", "--untracked-files=all"))
+        self.assertEqual(2, self._calls(self.parser))
+
+
 class ListTests(ReleaseHistory, unittest.TestCase):
     def _section(self) -> str:
         changelog = self._read()
@@ -262,15 +291,23 @@ class RefusalTests(ReleaseHistory, unittest.TestCase):
         self._history()
         self.assertRefusedUntouched(self._script("prepare", VERSION, "--date", DATE, gh=False), "gh")
 
+    # Red until #781 retries the forge call; implement removes this marker.
+    @unittest.expectedFailure
     def test_a_forge_call_that_fails_is_refused(self) -> None:
+        """§FS-distribution.4.6.3.1: refused once its three attempts have failed."""
         self._history()
         self.answers["fail"][self.glob[0]] = "Server Error"
         self.assertRefusedUntouched(self._script("prepare", VERSION, "--date", DATE), self.glob[0][:7])
+        self.assertEqual(3, self._calls(self.glob[0]))
 
+    # Red until #781 retries the forge call; implement removes this marker.
+    @unittest.expectedFailure
     def test_a_commit_the_forge_does_not_answer_for_is_refused(self) -> None:
+        """§FS-distribution.4.6.3.1: the forge's 422 is a failed attempt like any other."""
         self._history()
         del self.answers["commits"][self.stray]
         self.assertRefusedUntouched(self._script("prepare", VERSION, "--date", DATE), self.stray[:7])
+        self.assertEqual(3, self._calls(self.stray))
 
     def test_a_shallow_clone_is_refused(self) -> None:
         self._history()
