@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "case": "scan-unsupported-extension-ignored",
+  "inputFiles": {
+    "expected.exit": {"bytes":[48,10]},
+    "expected.stderr": {"bytes":[119,97,114,110,105,110,103,58,32,103,114,117,110,100,46,116,111,109,108,32,105,115,32,118,101,114,115,105,111,110,32,49,59,32,109,105,103,114,97,116,101,32,105,116,32,119,105,116,104,32,103,114,117,110,100,32,99,111,110,102,105,103,32,109,105,103,114,97,116,101,32,45,45,116,111,32,50,10]},
+    "expected.stdout": {"bytes":[10]},
+    "repo": {"directory":true},
+    "repo/docs": {"directory":true},
+    "repo/docs/functional-spec": {"directory":true},
+    "repo/docs/functional-spec/FS-001-alpha.md": {"bytes":[35,32,70,83,45,48,48,49,45,97,108,112,104,97,58,32,65,108,112,104,97,10,10,82,101,102,101,114,101,110,99,101,115,32,70,83,45,48,48,50,45,98,101,116,97,46,10,10]},
+    "repo/docs/functional-spec/FS-002-beta.md": {"bytes":[35,32,70,83,45,48,48,50,45,98,101,116,97,58,32,66,101,116,97,10,10,82,101,102,101,114,101,110,99,101,115,32,70,83,45,48,48,49,45,97,108,112,104,97,46,10,10]},
+    "repo/docs/functional-spec/README.md": {"bytes":[35,32,70,83,32,105,110,100,101,120,10,10,69,118,101,114,121,32,96,70,83,96,32,100,101,99,108,97,114,97,116,105,111,110,32,105,110,32,116,104,105,115,32,102,111,108,100,101,114,44,32,111,110,101,32,108,105,110,107,101,100,32,101,110,116,114,121,32,101,97,99,104,46,10,10,45,32,91,194,167,70,83,45,48,48,49,45,97,108,112,104,97,93,40,70,83,45,48,48,49,45,97,108,112,104,97,46,109,100,35,102,115,45,48,48,49,45,97,108,112,104,97,45,97,108,112,104,97,41,10,45,32,91,194,167,70,83,45,48,48,50,45,98,101,116,97,93,40,70,83,45,48,48,50,45,98,101,116,97,46,109,100,35,102,115,45,48,48,50,45,98,101,116,97,45,98,101,116,97,41,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,10,91,114,101,102,101,114,101,110,99,101,93,10,115,116,114,105,99,116,32,61,32,102,97,108,115,101,10]},
+    "repo/src": {"directory":true},
+    "repo/src/broken.txt": {"bytes":[35,32,70,83,45,48,48,49,45,97,108,112,104,97,58,32,73,103,110,111,114,101,100,32,100,117,112,108,105,99,97,116,101,10,10,77,101,110,116,105,111,110,115,32,70,83,45,57,57,57,45,109,105,115,115,105,110,103,46,10,10]},
+    "spec.refs": {"bytes":[70,83,45,48,48,49,45,99,104,101,99,107,46,49,10]}
+  },
+  "facts": {
+    "point": "§FS-scan.scope.extensions",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, `[reference] strict = false`, default kinds and scan), src/broken.txt, whose extension txt is not in the default `[scan] extensions`, so its duplicate declaration and FS-999-missing are never seen (§FS-scan.scope.extensions); the two FS declarations citing each other with bare citations, which no fmt pass wraps without `--marker` (§FS-fmt.6.5), their already-wrapped index, and the e2e golden's one config caution.",
+    "scanned": ["docs/functional-spec/FS-001-alpha.md","docs/functional-spec/FS-002-beta.md","docs/functional-spec/README.md"],
+    "declarations": [
+      {"id":"FS-001-alpha","kind":"FS","file":"docs/functional-spec/FS-001-alpha.md","heading":"FS-001-alpha: Alpha","title":"Alpha","body":[2,4],"anchor":"fs-001-alpha-alpha"},
+      {"id":"FS-002-beta","kind":"FS","file":"docs/functional-spec/FS-002-beta.md","heading":"FS-002-beta: Beta","title":"Beta","body":[2,4],"anchor":"fs-002-beta-beta"}
+    ],
+    "sections": [],
+    "citations": [
+      {"file":"docs/functional-spec/FS-001-alpha.md","token":"FS-002-beta","enclosing":["FS-001-alpha",null]},
+      {"file":"docs/functional-spec/FS-002-beta.md","token":"FS-001-alpha","enclosing":["FS-002-beta",null]},
+      {"file":"docs/functional-spec/README.md","token":"§FS-001-alpha","enclosing":[null,null]},
+      {"file":"docs/functional-spec/README.md","token":"§FS-002-beta","enclosing":[null,null]}
+    ],
+    "findings": [
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+    ],
+    "refusals": {},
+    "fmt": {
+      "changes": [],
+      "writeChanges": [],
+      "written": {}
+    }
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}
