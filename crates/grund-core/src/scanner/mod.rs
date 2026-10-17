@@ -65,6 +65,7 @@ mod embedded_values;
 mod exclude_globs;
 mod extents;
 mod file_pass;
+mod global_excludes;
 mod json;
 mod legacy;
 mod legacy_inline;

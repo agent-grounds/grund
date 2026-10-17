@@ -109,7 +109,8 @@ fn watch_directory_alias_child() {
     };
     let base = std::path::PathBuf::from(std::env::var_os("GRUND_WATCH_ALIAS_SANDBOX").unwrap());
     let f = Fixture::new();
-    // §FS-check.6.1.3: ignore reads process cwd; mutate it only in this --exact child.
+    // §FS-check.6.1.3: global patterns anchor at the repository top, the fixture, from any
+    // cwd (§FS-scan.scope.ignore-files.global); mutate cwd only in this --exact child.
     std::env::set_current_dir(&f.0).unwrap();
     fs::create_dir_all(f.0.join(".git")).unwrap();
     link(

@@ -98,7 +98,6 @@ fn success() -> (String, Option<i32>) {
 /// listed and its dangling citation is not reported: the run reads what it reads from
 /// the top, as git ignores what it ignores from the top.
 #[test]
-#[ignore = "red until #785 anchors the global excludes at the repository top; implement removes this"]
 fn an_anchored_global_pattern_is_not_read_from_a_subdirectory() {
     let dir = fixture("subdirectory");
     let root = dir.join("repo");
@@ -114,7 +113,6 @@ fn an_anchored_global_pattern_is_not_read_from_a_subdirectory() {
 
 /// From a directory outside the repository, `check <repo>` anchors there too.
 #[test]
-#[ignore = "red until #785 anchors the global excludes at the repository top; implement removes this"]
 fn an_anchored_global_pattern_is_not_read_from_outside_the_repository() {
     let dir = fixture("outside");
     let root = dir.join("repo");
@@ -127,7 +125,6 @@ fn an_anchored_global_pattern_is_not_read_from_outside_the_repository() {
 /// config root, `repo/notes/gen/` is ignored, while `notes/gen/` beside the config,
 /// in no repository, is matched by no global pattern and is read, as git reads it.
 #[test]
-#[ignore = "red until #785 anchors the global excludes at the repository top; implement removes this"]
 fn an_anchored_global_pattern_anchors_below_a_config_root_above_the_repository() {
     let dir = fixture("config-above");
     let config_root = dir.join("p");
@@ -164,7 +161,6 @@ fn an_anchored_global_pattern_anchors_below_a_config_root_above_the_repository()
 /// A repository nested in the scanned one anchors its own paths at its own top, as
 /// its git does, and the outer paths keep the outer top, from either top.
 #[test]
-#[ignore = "red until #785 anchors the global excludes at the repository top; implement removes this"]
 fn a_nested_repository_anchors_its_paths_at_its_own_top() {
     let dir = fixture("nested");
     let root = dir.join("repo");

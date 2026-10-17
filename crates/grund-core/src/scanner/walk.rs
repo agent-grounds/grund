@@ -5,7 +5,8 @@ use std::path::{Path, PathBuf};
 
 use super::e2e::{e2e_cases_folder, e2e_id_from_case_dir_name};
 use super::exclude_globs::ExcludeGlobs;
-use super::read_predicate::{Unread, directory_refusal};
+use super::global_excludes::GlobalExcludes;
+use super::read_predicate::{Unread, directory_refusal, globally_ignored};
 use super::walk_boundaries::{is_directory_symlink, owned_by_another_project};
 pub(super) use super::walk_reporting::walk_scannable_files_reporting;
 use crate::config::{Frame, Schema, canonical_config_root, root_scope_roots, unwalked_homes};
@@ -15,9 +16,10 @@ use crate::model::{
 };
 
 /// The walker one scan root is traversed with (§AR-scanner.1): the hidden-name and
-/// ignore-file rules the builder carries, and the workspace boundary, `[scan]
-/// exclude`, canonical project-root boundary, unwalked-home and E2E-case prunes
-/// [`WalkDirFilter`] carries.
+/// ignore-file rules the builder carries, the global excludes anchored at each
+/// entry's repository top (§FS-scan.scope.ignore-files.global), and the workspace
+/// boundary, `[scan] exclude`, canonical project-root boundary, unwalked-home and
+/// E2E-case prunes [`WalkDirFilter`] carries.
 ///
 /// Built apart from the reporting pass so [`walk_reads_any_file`] uses the
 /// same one. That is not a tidiness point: §FS-check.4.10 reports a tree *because*
@@ -54,6 +56,14 @@ pub(super) fn scannable_walker(
             .git_exclude(false)
             .parents(false);
     }
+    // §FS-scan.scope.ignore-files.global: no one root the builder could be handed anchors
+    // every entry, so its global matcher is off and the global file is asked here, first,
+    // where the walker would have asked it: before the filter sees the entry.
+    let global = if schema.sources.respect_gitignore {
+        GlobalExcludes::take_over(&mut builder)
+    } else {
+        None
+    };
     let filter = WalkDirFilter::new(
         schema,
         frame,
@@ -63,7 +73,12 @@ pub(super) fn scannable_walker(
         link_roots,
         looping_links,
     );
-    builder.filter_entry(move |entry| filter.keep(entry));
+    builder.filter_entry(move |entry| {
+        !global
+            .as_ref()
+            .is_some_and(|global| globally_ignored(global, entry))
+            && filter.keep(entry)
+    });
     Ok(builder.build())
 }
 
