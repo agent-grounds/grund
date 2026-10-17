@@ -77,14 +77,12 @@ fn v1(strict: bool) -> String {
 }
 
 #[test]
-#[ignore = "red until #784 renders v2 marked-only guidance; implement removes this"]
 fn citation_guidance_minimal_v2_does_not_claim_a_removed_key() {
     let target = fixture("citation_guidance_minimal_v2", V2);
     assert_v2_guidance(&target, "§");
 }
 
 #[test]
-#[ignore = "red until #784 renders v2 marked-only guidance; implement removes this"]
 fn citation_guidance_v2_uses_the_configured_marker() {
     let config = format!("{V2}\n[schema]\nmarker = \"@\"\n");
     let target = fixture("citation_guidance_v2_custom_marker", &config);
@@ -92,7 +90,6 @@ fn citation_guidance_v2_uses_the_configured_marker() {
 }
 
 #[test]
-#[ignore = "red until #784 renders v2 marked-only guidance; implement removes this"]
 fn citation_guidance_migrated_v2_uses_fixed_recognition() {
     let target = fixture("citation_guidance_migrated_v2", &v1(true));
     let migration = run_grund(
