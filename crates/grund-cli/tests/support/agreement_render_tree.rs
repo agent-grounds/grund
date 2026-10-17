@@ -7,6 +7,10 @@ use super::agreement_render_model::{Model, locate, measure};
 use serde_json::{Value, json};
 use std::cmp::Ordering;
 
+fn parent(file: &str) -> &str {
+    file.rsplit_once('/').map_or(".", |(p, _)| p)
+}
+
 /// One variant's reading of the model for one root role (`<repo>`, or
 /// `<saved>` and `<held>` under an overlay): the selected path ("." for the
 /// whole project), the report base and the `cover --lines` file, all relative
@@ -67,11 +71,74 @@ fn natural(a: &str, b: &str) -> Ordering {
     parts(a).cmp(&parts(b))
 }
 
+fn under(file: &str, dir: &str) -> bool {
+    dir == "." || file == dir || file.starts_with(&format!("{dir}/"))
+}
+
 impl View<'_> {
+    /// §FS-scan.projects.member: a member run reads its member alone, and a
+    /// path narrows what it reports (§FS-scan.path).
     pub fn within(&self, file: &str) -> bool {
-        self.selected == "."
-            || file == self.selected
-            || file.starts_with(&format!("{}/", self.selected))
+        self.loaded(file) && under(file, &self.selected)
+    }
+
+    /// §FS-scan.projects.member: the files a run loads, its member's alone in a
+    /// member run.
+    pub fn loaded(&self, file: &str) -> bool {
+        self.member().is_none_or(|member| under(file, member))
+    }
+
+    pub fn member(&self) -> Option<&str> {
+        self.variant["member"].as_str()
+    }
+
+    /// A path as the run's project root reads it: below its member in a member run.
+    pub fn display(&self, file: &str) -> String {
+        match self.member() {
+            Some(member) => file
+                .strip_prefix(&format!("{member}/"))
+                .unwrap_or(file)
+                .to_string(),
+            None => file.to_string(),
+        }
+    }
+
+    /// §FS-scan.projects.workspace-root: a run at the workspace root loads every
+    /// member; a member run loads no workspace.
+    pub fn workspace(&self) -> bool {
+        self.fact("workspace") == true
+    }
+
+    /// §FS-workspace.3: the project whose config directory holds `file`, by the
+    /// alias its `grund.toml` names, in a workspace run.
+    pub fn project_of(&self, file: &str) -> Value {
+        let aliases = self.m.facts["aliases"].as_array().into_iter().flatten();
+        let owner = aliases
+            .filter(|a| self.workspace() && under(file, parent(a["file"].as_str().unwrap())))
+            .max_by_key(|a| a["file"].as_str().unwrap().len());
+        owner.map_or(Value::Null, |a| a["project"].clone())
+    }
+
+    /// §FS-workspace.8.3.1, §FS-workspace.8.1.5: a workspace run names each
+    /// declaration by its project's alias.
+    pub fn qualified(&self, d: usize) -> String {
+        let decl = &self.m.decls[d];
+        match decl.project.as_str() {
+            Some(project) if self.workspace() => format!("{project}/{}", decl.id),
+            _ => decl.id.clone(),
+        }
+    }
+
+    /// §FS-workspace.4: the project a citation's target lies in, its alias when
+    /// written, else the citing project; and its bare ID.
+    pub fn aim<'c>(&self, c: &'c super::agreement_render_model::Cite) -> (Value, &'c str) {
+        let query = c.facts["query"]
+            .as_str()
+            .unwrap_or_else(|| c.text.trim_start_matches(self.marker()));
+        match query.split_once('/') {
+            Some((alias, _)) if self.workspace() => (json!(alias), &c.id),
+            _ => (self.project_of(&c.file), &c.id),
+        }
     }
 
     /// §FS-scan.path.list: a declaration is at or under the path where it, or a
@@ -264,14 +331,30 @@ impl View<'_> {
         )
     }
 
-    fn ref_count(&self, id: &str) -> usize {
-        self.m.cites.iter().filter(|c| c.id == id).count()
+    /// §FS-workspace.8.3.5: the citations of a declaration under its project.
+    fn ref_count(&self, d: usize) -> usize {
+        let decl = &self.m.decls[d];
+        let project = if self.workspace() {
+            decl.project.clone()
+        } else {
+            Value::Null
+        };
+        self.m
+            .cites
+            .iter()
+            .filter(|c| self.loaded(&c.file) && self.aim(c) == (project.clone(), &decl.id))
+            .count()
     }
 
     fn entry(&self, d: usize, s: Option<usize>, size: bool) -> Value {
         let decl = &self.m.decls[d];
         let stub = decl.facts.get("stub").filter(|v| !v.is_null());
-        let mut row = json!({"project":decl.project,"id":decl.id,"section":null,
+        let project = if self.workspace() {
+            decl.project.clone()
+        } else {
+            Value::Null
+        };
+        let mut row = json!({"project":project,"id":self.qualified(d),"section":null,
             "section_separator":".","kind":decl.kind,"path":self.site(&decl.file),
             "line":decl.line,"stub":stub.is_some(),"defines":stub,
             "duplicate":decl.facts["duplicate"].as_bool().unwrap_or(false)});
@@ -291,7 +374,7 @@ impl View<'_> {
                 json!({"unit":unit,"lead":lead.map(|m| m[i]),"full":full.map(|m| m[i])})).collect::<Vec<_>>());
         } else {
             row["title"] = decl.facts["title"].clone();
-            row["refs"] = json!(self.ref_count(&decl.id));
+            row["refs"] = json!(self.ref_count(d));
             row["value_roots"] = json!(self.value_roots(d));
         }
         row
@@ -311,7 +394,7 @@ impl View<'_> {
         roots
             .into_iter()
             .map(|s| {
-                json!({"id":format!("{}.{}", self.m.decls[d].id, s.path),
+                json!({"id":format!("{}.{}", self.qualified(d), s.path),
                     "valid":s.facts["valueRootValid"].as_bool().unwrap_or(true)})
             })
             .collect()
@@ -323,24 +406,34 @@ impl View<'_> {
             .into_iter()
             .filter(|(d, s)| self.declared_within(*d) && (size || s.is_none()))
             .collect();
-        let mut result = json!({"run_cautions":[],"output_format":"text","workspace":false,
+        let mut result = json!({"run_cautions":[],"output_format":"text","workspace":self.workspace(),
             "entries":rows.iter().map(|(d, s)| self.entry(*d, *s, size)).collect::<Vec<_>>(),
             "scan_errors":self.scan_errors()});
         if !size {
+            // §FS-workspace.8.3.4: one summary per project and kind in a workspace.
+            let mut projects: Vec<Value> = rows
+                .iter()
+                .map(|(d, _)| self.entry(*d, None, true)["project"].clone())
+                .collect();
+            projects.sort_by_key(Value::to_string);
+            projects.dedup();
             result["summaries"] = json!(
-                self.kinds()
+                projects
                     .iter()
-                    .filter_map(|k| {
+                    .flat_map(|project| self.kinds().into_iter().map(move |k| (project, k)))
+                    .filter_map(|(project, k)| {
                         let count = rows
                             .iter()
                             .filter(|(d, s)| {
-                                s.is_none() && self.m.decls[*d].kind == k["kind"].as_str().unwrap()
+                                s.is_none()
+                                    && self.m.decls[*d].kind == k["kind"].as_str().unwrap()
+                                    && self.entry(*d, None, true)["project"] == *project
                             })
                             .count();
                         (count > 0).then(|| {
                             // An untitled kind's summary reads "Declaration".
                             let title = k["title"].as_str().unwrap_or("Declaration");
-                            json!({"project":null,"kind":k["kind"],"title":title,
+                            json!({"project":project,"kind":k["kind"],"title":title,
                         "home":k["home"],"count":count})
                         })
                     })
@@ -350,9 +443,18 @@ impl View<'_> {
         ok(result)
     }
 
-    pub fn citation(&self, c: &super::agreement_render_model::Cite) -> Value {
-        json!({"project":c.facts.get("project").cloned().unwrap_or(Value::Null),
-            "path":self.site(&c.file),"line":c.line,"column":c.column,"id":c.id,
+    /// A citation row; `cover` names a qualified target as written
+    /// (§FS-workspace.8.6.4), `refs` leaves it to the query (§FS-workspace.8.2.4).
+    pub fn citation(&self, c: &super::agreement_render_model::Cite, written: bool) -> Value {
+        let query = c.facts["query"]
+            .as_str()
+            .unwrap_or_else(|| c.text.trim_start_matches(self.marker()));
+        let id = match query.split_once('/') {
+            Some((alias, _)) if written && self.workspace() => format!("{alias}/{}", c.id),
+            _ => c.id.clone(),
+        };
+        json!({"project":self.project_of(&c.file),
+            "path":self.site(&c.file),"line":c.line,"column":c.column,"id":id,
             "section":c.section,"marker":c.text.starts_with(self.marker()),"text":c.text,
             "enclosing_declaration":c.facts["enclosing"][0],
             "enclosing_section":c.facts["enclosing"][1]})
@@ -369,6 +471,7 @@ impl View<'_> {
             .into_iter()
             .flatten()
             .map(|f| f.as_str().unwrap().to_string())
+            .filter(|f| self.loaded(f))
             .collect();
         files.sort();
         files
@@ -385,9 +488,9 @@ impl View<'_> {
                     .cites
                     .iter()
                     .filter(|c| c.file == f)
-                    .map(|c| self.citation(c))
+                    .map(|c| self.citation(c, true))
                     .collect();
-                json!({"project":null,"path":self.site(&f),"citations":cites})
+                json!({"project":self.project_of(&f),"path":self.site(&f),"citations":cites})
             })
             .collect();
         ok(
