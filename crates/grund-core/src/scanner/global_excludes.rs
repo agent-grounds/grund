@@ -24,6 +24,11 @@ use ignore::{Match, WalkBuilder};
 
 use crate::sources::{path_exists, path_is_file};
 
+/// What marks a directory as a repository top: the set the `ignore` crate counts,
+/// so the global file anchors at the top that bounds the `.gitignore` files
+/// (§FS-scan.scope.ignore-files.global).
+const REPOSITORY_MARKERS: [&str; 2] = [".git", ".jj"];
+
 /// The global excludes file's patterns, the repository top each path is matched
 /// against them from (§FS-scan.scope.ignore-files.global), and the ignore files
 /// a global match is weighed against, each read once.
@@ -32,7 +37,7 @@ pub(super) struct GlobalExcludes {
     /// relative to its own repository top.
     patterns: Gitignore,
     /// Every directory asked about, and the top of the repository the paths in it
-    /// belong to, so a walk probes each directory for `.git` once
+    /// belong to, so a walk probes each directory for a repository marker once
     /// (§GOAL-fast-feedback).
     tops: Mutex<HashMap<PathBuf, Option<PathBuf>>>,
     /// Every `.ignore`, `.gitignore` and `info/exclude` asked about, parsed, and
@@ -84,7 +89,8 @@ impl GlobalExcludes {
     }
 
     /// The top of the repository `path` belongs to: the innermost directory above it
-    /// that holds `.git`, so a nested repository's paths anchor at its own top
+    /// that holds one of the [`REPOSITORY_MARKERS`], `.git` or a Jujutsu `.jj`, so a
+    /// nested repository's paths anchor at its own top
     /// (§FS-scan.scope.ignore-files.global). It is one of `path`'s ancestors, so it
     /// is spelled as `path` is, `\\?\` included, and always prefixes it.
     pub(super) fn top(&self, path: &Path) -> Option<PathBuf> {
@@ -100,7 +106,10 @@ impl GlobalExcludes {
                 break;
             }
             unknown.push(dir);
-            if path_exists(dir.join(".git")) {
+            if REPOSITORY_MARKERS
+                .iter()
+                .any(|marker| path_exists(dir.join(marker)))
+            {
                 top = Some(dir.to_path_buf());
                 break;
             }

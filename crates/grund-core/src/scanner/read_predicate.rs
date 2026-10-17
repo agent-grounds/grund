@@ -336,9 +336,10 @@ pub(super) fn globally_ignored(global: &GlobalExcludes, entry: &ignore::DirEntry
 }
 
 /// The walker's precedence for a name, and the rule that ignores it: `.ignore`
-/// files, deepest first; then, inside a git repository, its `.gitignore` files up to
+/// files, deepest first; then, inside a repository, its `.gitignore` files up to
 /// the repository top, its `info/exclude`, and the global excludes anchored at that
-/// same top (§FS-scan.scope.ignore-files.global).
+/// same top (§FS-scan.scope.ignore-files.global). A top that holds only `.jj` has
+/// no `info/exclude`, so none is read there and none from a repository around it.
 fn ignored_by_rules(path: &Path, is_dir: bool, global: &GlobalExcludes) -> Option<IgnoredBy> {
     let dirs: Vec<&Path> = path
         .ancestors()
