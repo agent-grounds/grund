@@ -20,8 +20,9 @@ const IGNORED: &str = "# FS-y: Y\n\nCites \u{a7}FS-gone.\n";
 
 /// A fresh fixture directory, `<temp>/grund-global-excludes-<name>-<pid>`, holding
 /// a git configuration whose global excludes file is `global.ignore` beside it, with
-/// `notes/gen/` its one line. The home directory is the fixture's too, so no
-/// `~/.gitconfig` names another excludes file.
+/// `notes/gen/` its one line. That path is written canonical, so that it carries no
+/// `~`, which the `ignore` crate would expand. The home directory is the fixture's
+/// too, so no `~/.gitconfig` names another excludes file.
 fn fixture(name: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!(
         "grund-global-excludes-{name}-{}",
@@ -31,6 +32,14 @@ fn fixture(name: &str) -> PathBuf {
     fs::create_dir_all(dir.join("home")).expect("create fixture home");
     let global = dir.join("global.ignore");
     fs::write(&global, "notes/gen/\n").expect("write global excludes");
+    let global = global.canonicalize().expect("canonicalize global excludes");
+    assert!(
+        !global.to_string_lossy().contains('~'),
+        "the global excludes path {} carries a `~`, which the `ignore` crate's tilde \
+         expansion replaces with the home directory wherever it stands, so the file \
+         would never load",
+        global.display()
+    );
     write(
         &dir,
         "xdg/git/config",
