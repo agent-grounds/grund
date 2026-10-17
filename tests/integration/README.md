@@ -70,8 +70,9 @@ The command-agreement acceptance asks the seed and every case of each family
 `COVERED` names; every other family is a row of `WIDENING`
 ([§REQ-one-answer.proof.matrix.family](../../docs/requirements/REQ-one-answer.md#proofmatrixfamily-a-family-is-covered-whole-or-not-at-all),
 [§REQ-one-answer.proof.delivery.widening](../../docs/requirements/REQ-one-answer.md#proofdeliverywidening-widening-names-exactly-the-families-not-covered)).
-It is ignored until tranche 1's facts are authored.
-Run `cargo test -p grund --test command_agreement agreement_acceptance::s4_executes_the_covered_families_and_the_seed -- --exact --include-ignored --nocapture`;
+Tranche 1 covers `cover`, `scan` and `stub`, and the acceptance runs in the
+ordinary `cargo test`.
+Run `cargo test -p grund --test command_agreement agreement_acceptance::s4_executes_the_covered_families_and_the_seed -- --exact --nocapture`;
 set `GRUND_AGREEMENT_EVIDENCE` to a writable file to retain its full JSON receipts.
 The test prepares actual mixed Python and Node packages from this checkout once,
 using CPython, Node 22/24 and Rust 1.95.0. Scratch builds use explicit targets under
