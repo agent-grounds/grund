@@ -24,8 +24,9 @@ import sys
 from pathlib import Path
 
 
-# §AR-benchmarks.7.1: 2 since a record carries the `tier` that ran it.
-RECORD_VERSION = 2
+# §AR-benchmarks.7.1: 3 since the measured process runs under the runtime pins: a version-2
+# record names a locale, timezone and thread count its counts were not taken under.
+RECORD_VERSION = 3
 # §AR-benchmarks.7.1: the fields that say what a count was measured with.
 IDENTITY_FIELDS = (
     "record_version",
