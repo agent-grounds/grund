@@ -1,4 +1,5 @@
-"""Same-source, once-per-comparison host inputs (§REQ-one-answer.proof.matrix).
+"""Same-source host inputs: natives built once per comparison, packages staged per host
+(§REQ-one-answer.proof.matrix).
 
 Builds run when the comparison runs, never during collection. No registry package
 or Rust oracle supplies a host answer. Both native libraries come from one explicit
