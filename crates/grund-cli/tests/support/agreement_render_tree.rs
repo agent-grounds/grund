@@ -292,9 +292,29 @@ impl View<'_> {
         } else {
             row["title"] = decl.facts["title"].clone();
             row["refs"] = json!(self.ref_count(&decl.id));
-            row["value_roots"] = json!([]);
+            row["value_roots"] = json!(self.value_roots(d));
         }
         row
+    }
+
+    /// §FS-list.3.2.2: a declaration's value roots of either origin, marked
+    /// (§FS-values.2.4) or chapter-declared (§FS-values.2.5), in canonical
+    /// section-path order.
+    fn value_roots(&self, d: usize) -> Vec<Value> {
+        let mut roots: Vec<_> = self
+            .m
+            .sections
+            .iter()
+            .filter(|s| s.owner == d && s.facts["valueRoot"].is_string())
+            .collect();
+        roots.sort_by(|a, b| natural(&a.path, &b.path));
+        roots
+            .into_iter()
+            .map(|s| {
+                json!({"id":format!("{}.{}", self.m.decls[d].id, s.path),
+                    "valid":s.facts["valueRootValid"].as_bool().unwrap_or(true)})
+            })
+            .collect()
     }
 
     pub fn list(&self, size: bool) -> Value {
