@@ -418,9 +418,10 @@ pub(crate) fn is_escaped(bytes: &[u8], pos: usize) -> bool {
 /// start column falls inside an inline-code span or a string literal is not a
 /// citation (the same path-collision caution as §AR-workspace.3.1). Markdown has
 /// no string literals and its inline code is prose formatting, so a marked
-/// qualified citation there is always a citation. Shared by every detection pass
-/// so the rule lives in one place; returns whether the citation at `pos` must be
-/// suppressed. Both halves are read after the line's carried literal closes
+/// qualified citation there is always a citation. This is the raw exclusion
+/// outside supported comments; `QualifiedSource` supplies their contextual
+/// distinction (§FS-citations.recognized.contexts) to every detection pass.
+/// Both halves are read after the line's carried literal closes
 /// (`entry`, §FS-languages.multi-line-string), so a template's closing `` ` ``
 /// opens no inline-code span.
 pub(crate) fn qualified_suppressed_in_source(

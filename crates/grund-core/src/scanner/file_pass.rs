@@ -139,7 +139,11 @@ pub(super) fn scan_file_text(
             .iter()
             .any(|target| value_kind(&target.schema));
     let has_binding_candidate = text.contains('`') && text.contains(marker);
-    let value_line_contexts = ((scan_values || has_binding_candidate) && !is_md)
+    // §FS-citations.recognized.contexts: reuse comment spans for qualified sites
+    // too, including block interiors that have no comment prefix on this line.
+    let has_qualified_candidate = !marker.is_empty() && text.contains(marker) && text.contains('/');
+    let value_line_contexts = ((scan_values || has_binding_candidate || has_qualified_candidate)
+        && !is_md)
         .then(|| recognized_source_value_contexts(&text, &reading));
     // §AR-scanner.2.4.2: citing-side classification feeds citation-direction and chapter
     // rules, so the caller asks for it: `check`, the LSP, `cover` and `refs` pass `true`;
@@ -427,6 +431,7 @@ pub(super) fn scan_file_text(
             schema,
             frame,
             lexical: reading.lexical,
+            source_forms: reading.source_forms(),
             is_md,
             may_be_heading: heading_position,
             value_comment: source_value_context,

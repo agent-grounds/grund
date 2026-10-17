@@ -7,8 +7,7 @@ use std::path::Path;
 use super::value_context::SourceValueLineContext;
 use crate::config::{Frame, Schema};
 use crate::grammar::{
-    DocstringContent, LexicalSettings, bare_token_in_never_rewrite_zone,
-    qualified_suppressed_in_source,
+    DocstringContent, LexicalSettings, QualifiedSource, bare_token_in_never_rewrite_zone,
 };
 use crate::model::InlineCitationSite;
 
@@ -31,6 +30,8 @@ pub(super) struct CitationLine<'a> {
     pub(super) frame: Frame<'a>,
     /// The file's own hosts and grammar (§FS-config-v2.schema.sources).
     pub(super) lexical: LexicalSettings<'a>,
+    /// The resolved language for qualified comment sites (§FS-citations.recognized.contexts).
+    pub(super) source_forms: Option<&'a str>,
     pub(super) is_md: bool,
     /// Whether this line may be a heading: false inside a raw-text HTML block,
     /// whose lines are never headings (§FS-check.1.1.5.1).
@@ -54,9 +55,19 @@ impl CitationLine<'_> {
     /// §AR-scanner.2.3.2: whether the marked qualified citation at `scan_line` offset
     /// `marker_start` is suppressed — asked in the state the line begins in, so the
     /// interior of a multi-line literal is a string here too
-    /// (§FS-languages.multi-line-string).
+    /// (§FS-languages.multi-line-string). All qualified passes share the comment
+    /// distinction of §FS-citations.recognized.contexts.
     pub(super) fn qualified_suppressed(&self, marker_start: usize) -> bool {
-        qualified_suppressed_in_source(
+        QualifiedSource {
+            forms: self.source_forms,
+            comment_prefixes: self.lexical.comment_prefixes,
+            comment_range: self
+                .docstring
+                .is_docstring()
+                .then_some((0, self.scan_line.len()))
+                .or_else(|| self.value_comment.map(|context| context.range)),
+        }
+        .suppressed(
             self.scan_line,
             self.literal_entry(),
             self.is_md,

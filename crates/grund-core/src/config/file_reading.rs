@@ -113,11 +113,16 @@ impl<'a> FileReading<'a> {
     /// names (§FS-languages.multi-line-string.forms): a v2 built-in's own, none
     /// for a definition, and a v1 file's extension's.
     pub(crate) fn literals(&self, text: &str) -> MultiLineStrings {
-        let forms = match self.language {
+        MultiLineStrings::of(self.source_forms(), text, self.lexical.docstring_python)
+    }
+
+    /// The resolved language suffix for bounded literal and qualified-comment
+    /// reading (§FS-config-v2.schema.sources.extensions, §FS-citations.recognized.contexts).
+    pub(crate) fn source_forms(&self) -> Option<&'a str> {
+        match self.language {
             Some(language) if language.builtin => language.suffixes.first().map(String::as_str),
             Some(_) => None,
             None => self.extension,
-        };
-        MultiLineStrings::of(forms, text, self.lexical.docstring_python)
+        }
     }
 }
