@@ -98,13 +98,16 @@ def materialize(home, name, variant):
         except (UnicodeError, OSError):
             continue
         readable.append(path)
-    readable.sort()
-    subdirs = sorted({p.parent.relative_to(base) for p in readable if p.parent != base})
+    # Windows compares paths case-insensitively, so each variant's file is picked
+    # in the case-sensitive order every platform shares (§REQ-one-answer.proof.matrix).
+    readable.sort(key=lambda p: p.parts)
+    subdirs = sorted({p.parent.relative_to(base) for p in readable if p.parent != base},
+                     key=lambda p: p.parts)
     all_directories = []
     for directory, dirs, _ in os.walk(base, followlinks=False):
         dirs[:] = sorted(d for d in dirs if not (Path(directory) / d).is_symlink())
         all_directories.extend(Path(directory, d).relative_to(base) for d in dirs)
-    all_directories.sort()
+    all_directories.sort(key=lambda p: p.parts)
     if not subdirs:
         subdirs = all_directories
     if variant == 'editor-overlay' and not context['absent']:
