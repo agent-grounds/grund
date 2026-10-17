@@ -51,3 +51,64 @@ fn a_second_trailing_comment_on_one_v2_line_is_listed() {
         .collect();
     assert_eq!(listed, [(5, 5, "inside [[kinds]] kind")]);
 }
+
+/// §FS-config-migrate.4.1.1: values' boolean-to-form translation carries a
+/// comment and warns before the later guidance gate refuses the migration.
+/// A false opt-in emits no form key, so its comment stays in the existing list.
+#[test]
+#[ignore = "red until #783 carried comments on translated values are reported; implement removes this"]
+fn value_form_carried_comment_reports_translated_vocabulary() {
+    for enabled in [false, true] {
+        let report = report(
+            if enabled {
+                "value-comment"
+            } else {
+                "no-value-key"
+            },
+            &format!(
+                "grund_config_version = 1\n\
+                 [id]\nnamed_sections = true\n\
+                 [[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\n\
+                 values = {enabled} # true | false\n\
+                 [scan]\ninclude = [\"docs\"]\nextensions = [\"md\"]\n"
+            ),
+        );
+        assert!(report.refusals.is_empty(), "{:?}", report.refusals);
+        let candidate = report
+            .candidate
+            .as_ref()
+            .expect("candidate before guidance gate");
+        if !enabled {
+            assert!(!candidate.contains("true | false"), "{candidate}");
+            assert_eq!(report.comments.len(), 1);
+            assert_eq!(report.comments[0].place, "inside [[kinds]] values");
+            assert!(
+                !report
+                    .notices
+                    .iter()
+                    .any(|notice| notice.why.contains("comment"))
+            );
+            continue;
+        }
+        assert!(
+            candidate.contains("form = \"value\" # true | false"),
+            "{candidate}"
+        );
+        assert!(report.comments.is_empty(), "{:?}", report.comments);
+        assert!(
+            report.notices.iter().any(|notice| {
+                let why = notice.why.to_lowercase();
+                let shown = format!("{} {}", notice.key, notice.why);
+                !notice.dropped
+                    && notice.line == 7
+                    && shown.contains("[[kinds]] values")
+                    && shown.contains("[schema.kinds.FS] form")
+                    && why.contains("comment")
+                    && (why.contains("check") || why.contains("review"))
+                    && (why.contains("translat") || why.contains("vocab"))
+            }),
+            "missing carried-comment warning for [[kinds]] values -> [schema.kinds.FS] form: {:?}",
+            report.notices
+        );
+    }
+}

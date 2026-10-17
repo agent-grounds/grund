@@ -51,7 +51,7 @@ Every other line goes to stderr, in this order. `<config>` is the config's path 
 1. The heading: `<config>: version 1 → 2, preview, nothing written` for a preview, or `<config>: version 1 → 2, --write` with `--write`.
 2. One block per refusal, in file order: `refused: <config>:<line>: <what version 2 cannot spell>`, then any indented detail lines, then `  repair: <the v1 edit>`. A refusal for a key the file omits has no line: `refused: <config>: …`. Every refusal is listed in one run.
 3. The listed comments, when there are any: `comments with no single key to follow (--write refuses; --drop-comments drops exactly these):`, then one line each, `  <config>:<first>-<last>  <where>`, or `  <config>:<line>  <where>` for one line. `<where>` is `above <v1 key>`, `inside <v1 key>` or `standing alone`.
-4. One line per notice, in file order: `dropped: <config>:<line>: <v1 key>: <why>`, or `changed: <config>:<line>: <v1 key>: <why>`.
+4. One line per notice, in file order: `dropped: <config>:<line>: <v1 key>: <why>`, or `changed: <config>:<line>: <v1 key>: <why>`. A carried comment on a translated value also gets the explanatory warning of [§FS-config-migrate.4.1.1](FS-config-migrate.md#411-check-carried-comments-when-the-value-vocabulary-changes), identifying the original config location/key and its destination and asking the reader to check the comment.
 5. Only when nothing is refused: the key map, one `mapped: <config>:<line>: <v1 key> → <v2 spelling>` per authored key in file order, where a key version 2 needs no spelling for reads `→ nothing, version 2 always means it` and an `include` entry that is already a place reads `→ nothing, <entry> is a place of [schema.kinds.<ROW>] already`, then one `written: <v2 key> = <value>: version 1's default, written out` per default written out ([§FS-config-migrate.3.3](FS-config-migrate.md#33-defaults-are-written-out)), then the gates' result ([§FS-config-migrate.5.4](FS-config-migrate.md#54-the-result-and-a-difference)) and any `note:` line.
 6. After a write, the lines of [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write). A `--write` that refuses ends with `not written: <config> is unchanged`.
 
@@ -168,6 +168,43 @@ The owner's ruling on agent-grounds/grund#461: a comment attached to a key that 
 ### 4.1 Attached comments move with a one-to-one key
 
 A key maps one-to-one when exactly one v2 key or header comes from it: `[[kinds]]` becomes `[schema.kinds.<NAME>]`, `[citations.<KIND>]` becomes `[rules.citations.<KIND>]`, `[id] format` becomes `id_format`, a row's `title` becomes `[presentation.kinds.<NAME>] title`, and `exclude` keeps its name, as does every key the mapping table moves without splitting. Its attached comment is written directly above the v2 key or header it became, and a trailing comment stays on that line. `include`, `extensions`, `comment_prefixes` and the `[scan]`, `[reference]` and `[id]` headers split or merge, so their comments are listed.
+
+#### 4.1.1 Check carried comments when the value vocabulary changes
+
+When an attached comment is carried onto a setting whose value vocabulary is
+translated, the stderr report warns that the value vocabulary changed and asks
+the reader to check the carried comment. It names the original config path,
+the v1 key's line and key, and the destination v2 key. This applies to comments
+directly above a key and to trailing comments, in preview and with `--write`,
+with or without `--drop-comments`. It does not judge the comment's prose: even
+a comment that does not list values needs the same warning.
+
+Vocabulary translation means changing the setting's accepted terms, type or
+value language, rather than merely renaming its key or changing TOML layout.
+The carryable cases are:
+
+- `[reference] inline_style`: style names become `[schema.notes.text] must`'s boolean.
+- `[id] section_heading_levels`: depth modes become `[schema] heading_depth`'s strengths.
+- `[[kinds]] resolve`: `should` becomes `[rules.resolution] <KIND>`'s `warn`.
+- `[[kinds]] rules` or `values`: a boolean becomes `[schema.kinds.<KIND>] form`'s enum,
+  when the destination and a carried comment exist.
+- `[fmt.cross_refs] enabled`: a boolean becomes `[presentation.fmt] links`'s enum.
+- `[scan] exclude`: directory names become `[schema.sources] exclude`'s escaped globs.
+- `[reference] lead_size_warning`: the inline table with a `max` and `unit`
+  becomes `[schema.leads.words] warn`'s integer word count.
+
+Classify the mapping's vocabulary, not raw byte inequality: a depth mode of
+`warn` still warrants the warning, since other modes in its old vocabulary are
+translated. Renames such as `anchor_format` to `anchors`, scalar paths wrapped
+in `files` or `folders` lists, and the config version marker do not warrant it.
+Citation defaults normalized to `may` keep their strength vocabulary and their
+existing changed notice ([§FS-config-migrate.3.2](FS-config-migrate.md#32-notices)).
+
+Warn only when a comment is actually carried to the destination. A setting
+without a carried comment needs no such warning. The warning changes neither
+candidate bytes nor successful exits, gates, refusal or drop policy: the
+comment remains carried, including with `--drop-comments`, and is not added
+to the comments with no single key to follow ([§FS-config-migrate.4.4](FS-config-migrate.md#44-listed-comments-and---drop-comments)).
 
 ### 4.2 The header block stays at the top
 
