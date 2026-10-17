@@ -130,6 +130,15 @@ pub fn sections(
     }
 }
 
+/// The ID a citation row names, without the alias cover keeps as written
+/// (§FS-workspace.8.6.4) and refs leaves to its query (§FS-workspace.8.2.4).
+fn bare(id: &Value) -> String {
+    id.as_str().map_or_else(
+        || id.to_string(),
+        |id| id.rsplit('/').next().unwrap().to_string(),
+    )
+}
+
 /// Cover bounds scans; refs may resolve beyond that domain. Hold every citation
 /// they both read, using physical sites to avoid alias/display-path differences.
 pub fn citations(context: &Value, refs: &Value, cover: &Value, errors: &mut Vec<String>) {
@@ -146,7 +155,7 @@ pub fn citations(context: &Value, refs: &Value, cover: &Value, errors: &mut Vec<
                 citation["path"].to_string(),
                 citation["line"].to_string(),
                 citation["column"].to_string(),
-                citation["id"].to_string(),
+                bare(&citation["id"]),
                 citation["section"].to_string(),
             )
         })
@@ -160,7 +169,7 @@ pub fn citations(context: &Value, refs: &Value, cover: &Value, errors: &mut Vec<
                 hit["path"].to_string(),
                 hit["line"].to_string(),
                 hit["column"].to_string(),
-                hit["id"].to_string(),
+                bare(&hit["id"]),
                 hit["section"].to_string(),
             );
             if !covered.contains(&site) {

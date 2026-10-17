@@ -12,7 +12,7 @@ pub type Row = (usize, Option<usize>);
 
 impl View<'_> {
     pub fn coordinate(&self, (d, s): Row) -> String {
-        let id = &self.m.decls[d].id;
+        let id = self.qualified(d);
         s.map_or(id.clone(), |s| format!("{id}.{}", self.m.sections[s].path))
     }
 
@@ -24,7 +24,7 @@ impl View<'_> {
     }
 
     pub fn refusal(&self, coordinate: &str, question: &str) -> Option<Value> {
-        let refusal = &self.m.facts["refusals"][coordinate];
+        let refusal = &self.fact("refusals")[coordinate];
         let applies = refusal["questions"]
             .as_array()
             .is_none_or(|q| q.iter().any(|q| q == question));
@@ -117,10 +117,13 @@ impl View<'_> {
         let (id, section) = coordinate
             .split_once('.')
             .map_or((coordinate, None), |(i, s)| (i, Some(s)));
-        if self.m.decls.iter().any(|d| d.id == id) && section.is_some() {
+        let declared = (0..self.m.decls.len()).any(|d| self.qualified(d) == id);
+        if declared && section.is_some() {
             json!({"code":"missing-section","message":format!("section not found: {coordinate}")})
         } else {
-            json!({"code":"not-found","message":format!("ID not found: {id}")})
+            // §FS-workspace.4: an alias picks the project the ID is looked up in.
+            let bare = id.split_once('/').map_or(id, |(_, bare)| bare);
+            json!({"code":"not-found","message":format!("ID not found: {bare}")})
         }
     }
 
@@ -152,8 +155,9 @@ impl View<'_> {
             if !self.declared_within(row.0) || !seen.insert(coordinate.clone()) {
                 continue;
             }
+            // §FS-workspace.8.1.5: generated IDs are spelled as the run qualifies them.
             let (id, section) = (
-                &self.m.decls[row.0].id,
+                self.qualified(row.0),
                 row.1.map(|s| &self.m.sections[s].path),
             );
             let query = json!({"id":id,"section":section});
@@ -169,7 +173,7 @@ impl View<'_> {
     /// §FS-refs.2: the citations of an ID, or of exactly one section of it.
     pub fn refs(&self, coordinate: &str) -> Value {
         let partial = json!({"hits":[],"kind_title":null,"note":null,"output_format":"text",
-            "scan_errors":self.scan_errors_in(false),"workspace":false});
+            "scan_errors":self.scan_errors_in(false),"workspace":self.workspace()});
         // §FS-scan.path.refs: a duplicate is judged over the path's tree, so a
         // claimant outside it is no second home (§FS-refs.4).
         let refused = self.refusal(coordinate, "refs").filter(|r| {
@@ -194,13 +198,20 @@ impl View<'_> {
         let (id, section) = coordinate
             .split_once('.')
             .map_or((coordinate, None), |(i, s)| (i, Some(s)));
+        // §FS-workspace.8.2: a qualified query names its project; an unqualified
+        // one the current project, which a root left out of the workspace lacks.
+        let (project, bare) = match id.split_once('/') {
+            Some((alias, bare)) => (json!(alias), bare),
+            None => (Value::Null, id),
+        };
+        let aimed =
+            |c: &&super::agreement_render_model::Cite| self.aim(c) == (project.clone(), bare);
         let hits: Vec<_> = self
             .m
             .cites
             .iter()
-            .filter(|c| {
-                c.id == id && section.is_none_or(|s| c.section == s) && self.within(&c.file)
-            })
+            .filter(aimed)
+            .filter(|c| section.is_none_or(|s| c.section == s) && self.within(&c.file))
             .collect();
         let mut files: Vec<(String, usize)> = Vec::new();
         for c in &hits {
@@ -214,18 +225,21 @@ impl View<'_> {
             .m
             .cites
             .iter()
-            .any(|c| c.id == id && self.within(&c.file));
+            .filter(aimed)
+            .any(|c| self.within(&c.file));
         let declared =
-            (0..self.m.decls.len()).any(|d| self.m.decls[d].id == id && self.declared_within(d));
-        let note = (!cited && !declared).then(|| {
-            format!("{id} is neither declared nor cited \u{2014} run `grund list` to see every declared ID")
+            (0..self.m.decls.len()).any(|d| self.qualified(d) == id && self.declared_within(d));
+        // §FS-workspace.8.2.5: the note names the project whose IDs to list.
+        let note = (!cited && !declared).then(|| match project.as_str() {
+            Some(alias) => format!("{id} is neither declared nor cited \u{2014} run `grund list --project {alias}` to see {alias}'s declared IDs"),
+            None => format!("{id} is neither declared nor cited \u{2014} run `grund list` to see every declared ID"),
         });
         ok(
-            json!({"run_cautions":[],"output_format":"text","workspace":false,
-            "hits":hits.iter().map(|c| self.citation(c)).collect::<Vec<_>>(),"note":note,
-            "scan_errors":self.scan_errors_in(false),"kind_title":self.kind_title(id),
+            json!({"run_cautions":[],"output_format":"text","workspace":self.workspace(),
+            "hits":hits.iter().map(|c| self.citation(c, false)).collect::<Vec<_>>(),"note":note,
+            "scan_errors":self.scan_errors_in(false),"kind_title":self.kind_title(bare),
             "site_total":hits.len(),"file_total":files.len(),
-            "file_summaries":files.iter().map(|(f, n)| json!({"project":null,"path":self.raw(f),"sites":n}))
+            "file_summaries":files.iter().map(|(f, n)| json!({"project":self.project_of(f),"path":self.raw(f),"sites":n}))
                 .collect::<Vec<_>>()}),
         )
     }
@@ -237,9 +251,11 @@ impl View<'_> {
             .or_else(|| self.refusal(coordinate, "show"));
         match (refusal, self.resolve(coordinate)) {
             (None, Some(row)) => {
-                let object = self.show_object(row);
+                let mut object = self.show_object(row);
+                let site = self.site(object["path"].as_str().unwrap());
+                object["path"] = json!(self.display(object["path"].as_str().unwrap()));
                 json!({"body":object["body"],"json":object.to_string(),"line":object["line"],
-                    "path":self.site(object["path"].as_str().unwrap()),
+                    "path":site,
                     "sections":object["sections"].as_array().unwrap().iter().map(|s|
                         json!({"path":s["path"],"title":s["title"],"depth":s["depth"]})).collect::<Vec<_>>()})
             }

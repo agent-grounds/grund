@@ -119,9 +119,13 @@ impl View<'_> {
         self.incomplete(true, json!(rows), "")
     }
 
+    /// §FS-cover.3.2, §FS-workspace.8.2.4: `project` leads a row in workspace
+    /// mode and is absent outside it.
     fn citation_row(c: &Value) -> Value {
         let mut row = c.clone();
-        row.as_object_mut().unwrap().remove("project");
+        if row["project"].is_null() {
+            row.as_object_mut().unwrap().remove("project");
+        }
         row
     }
 
@@ -131,8 +135,9 @@ impl View<'_> {
             .unwrap()
             .iter()
             .map(|e| {
-                json!({"path":e["path"],"citations":e["citations"].as_array().unwrap()
-                .iter().map(Self::citation_row).collect::<Vec<_>>()})
+                Self::citation_row(&json!({"project":e["project"],"path":e["path"],
+                    "citations":e["citations"].as_array().unwrap()
+                .iter().map(Self::citation_row).collect::<Vec<_>>()}))
             })
             .collect();
         self.incomplete(false, json!(rows), "")
