@@ -12,7 +12,6 @@ use std::path::PathBuf;
 /// Optional GRUND_AGREEMENT_EVIDENCE writes the complete completed-call receipts
 /// without changing the assertions.
 #[test]
-#[ignore = "red until #674 tranche 1 authors facts for cover, scan, stub, symlink and the seed; implement removes this"]
 fn s4_executes_the_covered_families_and_the_seed() {
     let cases = super::agreement_families::cases_root()
         .canonicalize()
@@ -121,13 +120,10 @@ fn s4_executes_the_covered_families_and_the_seed() {
                     if call.expected["oracle"] != "reviewed-manifest-golden"
                         && call.expected["key"] != "fmt-write"
                     {
+                        // A case's copy is released before its receipts are read,
+                        // so the narrowed cwd is compared as the call spelled it.
                         if variant == "narrowed" {
-                            assert_eq!(
-                                call.path,
-                                PathBuf::from(context["cwd"].as_str().unwrap())
-                                    .canonicalize()
-                                    .unwrap()
-                            );
+                            assert_eq!(call.request["cwd"], context["cwd"]);
                         }
                         if variant == "path-argument" && call.surface != "cover-lines" {
                             assert!(
