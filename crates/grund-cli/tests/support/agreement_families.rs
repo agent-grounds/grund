@@ -110,7 +110,6 @@ fn problems(
 }
 
 #[test]
-#[ignore = "red until #674 tranche 1 gives WIDENING one S4 row per family not covered; implement removes this"]
 fn every_family_is_covered_or_widened_never_both() {
     let families: BTreeSet<_> = discovered()
         .iter()

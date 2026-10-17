@@ -16,7 +16,7 @@
 //! `LEDGER` is the divergence ledger: one row per known divergence, naming the
 //! tree and the invariant. `DEFERRED` names each row of §REQ-one-answer.differences
 //! only the editor, shell completion or an unsaved buffer shows, with the step of
-//! #576 that builds its harness, and `WIDENING` what the seed leaves out, each step
+//! #576 that builds its harness, and `WIDENING` each family not yet asked whole, each step
 //! listed live in `tests/integration/one_answer_steps.toml`. A divergence it does
 //! not list fails, and so does a row that no longer reproduces, so the ledger only
 //! shrinks. A divergence found here that §REQ-one-answer.differences does not list
@@ -276,13 +276,55 @@ const TREES: &[(Option<&str>, &str, &str, fn() -> Verdict)] = &[
 /// command-line tree shows, and the step of #576 that gives this test its harness.
 const DEFERRED: &[(&str, &str, &str)] = &[];
 
-/// What the seed leaves out under §AR-ci.requirements.1, and the step that
-/// widens it.
-const WIDENING: &[(&str, &str)] = &[(
-    "every end-to-end tree, its narrowed, path-argument and editor-overlay variants, \
-     and `cover`, the editor snapshot and the bindings as surfaces",
-    "S4",
-)];
+/// Each end-to-end family `COVERED` does not yet name, and the step that widens
+/// the comparison over it (§REQ-one-answer.proof.delivery.widening). The seed
+/// asks only a sampled project of some of them (§REQ-one-answer.proof.matrix.seed).
+const WIDENING: &[(&str, &str)] = &[
+    ("bare", "S4"),
+    ("basic", "S4"),
+    ("block", "S4"),
+    ("check", "S4"),
+    ("cli", "S4"),
+    ("complete", "S4"),
+    ("completions", "S4"),
+    ("config", "S4"),
+    ("configured", "S4"),
+    ("cross", "S4"),
+    ("declarations", "S4"),
+    ("declare", "S4"),
+    ("deterministic", "S4"),
+    ("doc", "S4"),
+    ("doccomment", "S4"),
+    ("e2e", "S4"),
+    ("external", "S4"),
+    ("fetch", "S4"),
+    ("fmt", "S4"),
+    ("glob", "S4"),
+    ("haskell", "S4"),
+    ("id", "S4"),
+    ("init", "S4"),
+    ("inline", "S4"),
+    ("integrations", "S4"),
+    ("json", "S4"),
+    ("line", "S4"),
+    ("list", "S4"),
+    ("markdown", "S4"),
+    ("marked", "S4"),
+    ("marker", "S4"),
+    ("named", "S4"),
+    ("non", "S4"),
+    ("path", "S4"),
+    ("refs", "S4"),
+    ("relative", "S4"),
+    ("remote", "S4"),
+    ("report", "S4"),
+    ("rust", "S4"),
+    ("schema", "S4"),
+    ("section", "S4"),
+    ("show", "S4"),
+    ("word", "S4"),
+    ("workspace", "S4"),
+];
 
 /// The end-to-end families the comparison asks whole, every case under every
 /// applicable variant and surface (§REQ-one-answer.proof.matrix.family);
