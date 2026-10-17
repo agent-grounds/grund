@@ -86,41 +86,25 @@ Do not ask. A fresh setup gets `2` from `grund init`. An existing file keeps its
 
 `project_name`
 
-Pros of explicit name: stable display name for agents/tools.
-Cons: one more metadata value to maintain if repo is renamed.
-Default: the target config's existing value, otherwise the target directory name.
+Pros of explicit name: stable display name for agents/tools. Cons: one more metadata value to maintain if repo is renamed. Default: the target config's existing value, otherwise the target directory name.
 
 ### `[reference]`
 
 `marker`
 
-Default: `§`.
-Pros: visually distinct, avoids false positives.
-Cons: awkward to type without trigger/editor help.
-Alternatives: `@`, `#`, or `ref:` only if the team has strong conventions.
+Default: `§`. Pros: visually distinct, avoids false positives. Cons: awkward to type without trigger/editor help. Alternatives: `@`, `#`, or `ref:` only if the team has strong conventions.
 
 `trigger`
 
-Default: `$$`.
-Pros: easy typing path to `§`.
-Cons: may conflict with math-heavy Markdown or template languages.
-Recommend changing only if `$$` is common in the repo.
+Default: `$$`. Pros: easy typing path to `§`. Cons: may conflict with math-heavy Markdown or template languages. Recommend changing only if `$$` is common in the repo.
 
 `strict` (version 1 only)
 
-Version 2 recognizes only marked citations, with no opt-out or strict switch
-([config-derived guidance](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-init.md#2381-what-the-config-fills-in)). Do not ask about or write `[reference].strict` for version 2.
-For version 1, the default is `true`: citations are intentional and explicit.
-Use `false` only as a compatibility window for existing bare citations; it
-also admits more accidental matches. Run `grund fmt --marker` before removing
-that override or setting strict back to `true`.
+Version 2 recognizes only marked citations, with no opt-out or strict switch ([config-derived guidance](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-init.md#2381-what-the-config-fills-in)). Do not ask about or write `[reference].strict` for version 2. For version 1, the default is `true`: citations are intentional and explicit. Use `false` only as a compatibility window for existing bare citations; it also admits more accidental matches. Run `grund fmt --marker` before removing that override or setting strict back to `true`.
 
 `require_grounding`
 
-Default: `false`.
-Pros true: every scanned source file must cite or declare a grounding ID.
-Cons true: high adoption cost and noisy until coverage discipline exists.
-Recommend false initially; enable later or in CI once coverage is deliberate.
+Default: `false`. Pros true: every scanned source file must cite or declare a grounding ID. Cons true: high adoption cost and noisy until coverage discipline exists. Recommend false initially; enable later or in CI once coverage is deliberate.
 
 ### `[id]`
 
@@ -154,24 +138,15 @@ If existing IDs are detected, prefer matching them over the canonical default.
 
 `section_separator`
 
-Default: `.`.
-Pros: natural `FS-login.3.1` syntax.
-Cons: can collide with custom ID formats or slug rules.
-Change only for existing conventions, e.g. `#` or `:`.
+Default: `.`. Pros: natural `FS-login.3.1` syntax. Cons: can collide with custom ID formats or slug rules. Change only for existing conventions, e.g. `#` or `:`.
 
 `number_pattern`
 
-Default: `\d+`.
-Pros: simple numbered IDs.
-Cons: does not enforce fixed width like `001`.
-Use `\d{3}` only if the team wants strict padded numbers.
+Default: `\d+`. Pros: simple numbered IDs. Cons: does not enforce fixed width like `001`. Use `\d{3}` only if the team wants strict padded numbers.
 
 `slug_pattern`
 
-Default: `[a-z0-9][a-z0-9-]*`.
-Pros: URL-friendly, portable, predictable.
-Cons: excludes uppercase and underscores.
-Relax only to match existing IDs.
+Default: `[a-z0-9][a-z0-9-]*`. Pros: URL-friendly, portable, predictable. Cons: excludes uppercase and underscores. Relax only to match existing IDs.
 
 ### `[[kinds]]`
 
@@ -179,10 +154,7 @@ Default kinds: `GRUND`, `GOAL`, `FS`, `AR`, `DF`, `DA`, `E2E`, `RM`. The config 
 
 Ask whether to keep defaults, remove unused kinds, or add project-specific kinds. To start from none instead, `grund init --template=none` writes a version-2 file with no `[schema.kinds]` row, and each kind is then added as its own `[schema.kinds.<KIND>]` table.
 
-Pros of defaults: matches grund docs and generated scaffold.
-Cons: some repos may not need all categories.
-Pros of custom kinds: adapts to existing taxonomy.
-Cons: replacing defaults means the full list must be copied; no merge.
+Pros of defaults: matches grund docs and generated scaffold. Cons: some repos may not need all categories. Pros of custom kinds: adapts to existing taxonomy. Cons: replacing defaults means the full list must be copied; no merge.
 
 For each kind ask: `kind`, `folder`, `title`.
 
@@ -192,88 +164,53 @@ A directory that holds agent-facing content rather than declarations — skills,
 
 `include`
 
-Default: `["requirements.md", "docs", "e2e", "src"]`.
-Pros: focused, avoids scanning root clutter.
-Cons: misses specs/citations outside these dirs.
-Every configured `[[kinds]]` home is walked whether or not it is listed here, so
-this key names the *extra* roots. Base the recommendation on actual directories.
-Do not include paths that do not exist unless `--scaffold` will create them.
+Default: `["requirements.md", "docs", "e2e", "src"]`. Pros: focused, avoids scanning root clutter. Cons: misses specs/citations outside these dirs. Every configured `[[kinds]]` home is walked whether or not it is listed here, so this key names the *extra* roots. Base the recommendation on actual directories. Do not include paths that do not exist unless `--scaffold` will create them.
 
 `exclude`
 
-Default: `["target", "node_modules", ".git", "dist", "build", ".venv"]`.
-Pros: skips generated/vendor-heavy trees.
-Cons: can hide intentional generated docs if stored there.
-Usually keep defaults and add repo-specific build/cache dirs.
+Default: `["target", "node_modules", ".git", "dist", "build", ".venv"]`. Pros: skips generated/vendor-heavy trees. Cons: can hide intentional generated docs if stored there. Usually keep defaults and add repo-specific build/cache dirs.
 
 `extensions`
 
-Default includes common Markdown and source extensions.
-Pros: polyglot coverage.
-Cons: scanning more extensions costs time and may surface noise.
-Recommend only extensions found in the repo plus Markdown, unless the repo is fresh.
+Default includes common Markdown and source extensions. Pros: polyglot coverage. Cons: scanning more extensions costs time and may surface noise. Recommend only extensions found in the repo plus Markdown, unless the repo is fresh.
 
 `comment_prefixes`
 
-Default: `["//", "#", ";", "--", "*", "/*"]`.
-Pros: broad language support.
-Cons: may match prose-like comments in some languages.
-Usually keep defaults, or narrow to the detected language set for established repos.
+Default: `["//", "#", ";", "--", "*", "/*"]`. Pros: broad language support. Cons: may match prose-like comments in some languages. Usually keep defaults, or narrow to the detected language set for established repos.
 
 `docstring_python`
 
-Default: `true`.
-Pros: Python docstrings can carry inline declarations/citations.
-Cons: docstring scanning can surface intentional prose examples.
-Recommend true if Python files exist.
+Default: `true`. Pros: Python docstrings can carry inline declarations/citations. Cons: docstring scanning can surface intentional prose examples. Recommend true if Python files exist.
 
 `respect_gitignore`
 
-Default: `true`.
-Pros: avoids ignored/generated/vendor files.
-Cons: ignored files with real specs will not be scanned.
-Keep true unless the repo intentionally stores tracked specs in ignored paths.
+Default: `true`. Pros: avoids ignored/generated/vendor files. Cons: ignored files with real specs will not be scanned. Keep true unless the repo intentionally stores tracked specs in ignored paths.
 
 ### `[output]`
 
 `format`
 
-Default: `text`.
-Pros text: readable locally and in CI logs.
-Cons text: harder for tools to consume.
-Use `json` for automation dashboards or custom CI parsing.
+Default: `text`. Pros text: readable locally and in CI logs. Cons text: harder for tools to consume. Use `json` for automation dashboards or custom CI parsing.
 
 `color`
 
-Default: `auto`.
-Pros: readable terminal output without polluting non-TTY logs.
-Cons: not fully meaningful until colored output lands.
-Keep `auto`.
+Default: `auto`. Pros: readable terminal output without polluting non-TTY logs. Cons: not fully meaningful until colored output lands. Keep `auto`.
 
 `relative_paths`
 
-Default: `true`.
-Pros: deterministic, repo-root-relative reports.
-Cons: less convenient when running from a subdirectory and expecting local paths.
-Keep true for CI and shared logs.
+Default: `true`. Pros: deterministic, repo-root-relative reports. Cons: less convenient when running from a subdirectory and expecting local paths. Keep true for CI and shared logs.
 
 ### `[fmt.cross_refs]`
 
 `enabled`
 
-Default: `true`.
-Pros true: Markdown citations can become normal links for rendered docs.
-Cons true: extra churn and renderer-specific anchors.
-Recommend true unless the repo intentionally keeps citations unwrapped in Markdown; set false to opt out.
+Default: `true`. Pros true: Markdown citations can become normal links for rendered docs. Cons true: extra churn and renderer-specific anchors. Recommend true unless the repo intentionally keeps citations unwrapped in Markdown; set false to opt out.
 
 `anchor_format`
 
-Default: `github`.
-Options: `github`, `gitlab`, `mkdocs`, `pandoc`, `none`.
+Default: `github`. Options: `github`, `gitlab`, `mkdocs`, `pandoc`, `none`.
 
-Pros of matching renderer: links work in published docs.
-Cons: wrong profile creates broken anchors.
-Use `none` if only file links are desired.
+Pros of matching renderer: links work in published docs. Cons: wrong profile creates broken anchors. Use `none` if only file links are desired.
 
 ### `[citations]`
 
