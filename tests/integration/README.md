@@ -77,9 +77,10 @@ set `GRUND_AGREEMENT_EVIDENCE` to a writable file to retain its full JSON receip
 The test asks its cases on up to four lanes, and each lane holds one host: one
 Python process and the one Node process it starts, which every request of that lane
 reuses ([§FS-distribution.3.0.3](../../docs/functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)). Each host prepares actual mixed Python and Node
-packages from this checkout, using CPython, Node 22/24 and Rust 1.95.0. Scratch builds
-use explicit targets under `~/ag/tmp`; the first host's builds compile the natives, and
-a later host's find them fresh.
+packages from this checkout, using CPython, Node 22/24 and Rust 1.95.0, staged under
+`~/ag/tmp`. One 1.95.0 build compiles both natives into one target, nested in the
+workspace's cargo target under `agreement/` and keyed by the checkout; the first
+host's build compiles them, and a later host's finds them fresh.
 Corpus manifests and physical fixture bytes are read independently of engine answers;
 `expected.repo` is only a result oracle. The real-server transport sweep remains
 ([§REQ-one-answer.proof.transport](../../docs/requirements/REQ-one-answer.md#prooftransport-the-editor-wire-remains-a-separate-proof)).

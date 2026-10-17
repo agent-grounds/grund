@@ -44,14 +44,19 @@ export function build(options) {
   if (profile==='release') args.push('--release');
   if (options.testSeams) args.push('--features','grund-node/test-node-runtime');
   command('cargo',args,root);
-  const library=target.includes('windows')?'grund_node.dll':
+  install(root,out,path.join(targetDir,target,profile==='dev'?'debug':'release',library(target)),target);
+}
+export function library(target) {
+  return target.includes('windows')?'grund_node.dll':
     target.includes('apple')?'libgrund_node.dylib':'libgrund_node.so';
+}
+// The one package layout of a built cdylib: `grund.node` and the metadata beside it.
+export function install(root,out,artifact,target) {
   const manifest=fs.readFileSync(path.join(root,'Cargo.toml'),'utf8');
   const version=manifest.match(/^version\s*=\s*"([^"]+)"/m)?.[1];
   if (!version) throw Error('workspace package version missing');
   fs.mkdirSync(out,{recursive:true});
-  fs.copyFileSync(path.join(targetDir,target,profile==='dev'?'debug':'release',library),
-    path.join(out,'grund.node'));
+  fs.copyFileSync(artifact,path.join(out,'grund.node'));
   const metadata={apiSchemaVersion:1,engineVersion:version,packageVersion:version,target,napiVersion:8};
   const provenance=path.join(root,'source-metadata.json');
   if (fs.existsSync(provenance)) metadata.sourceSha=JSON.parse(fs.readFileSync(provenance,'utf8')).sourceSha;
