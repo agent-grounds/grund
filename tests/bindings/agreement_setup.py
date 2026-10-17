@@ -70,7 +70,7 @@ def prepare():
     checked(['cargo', '+1.95.0', 'build', '--quiet', '--locked', '-p', 'grund-py',
              '--features', 'extension-module', '--target-dir', target], env=environment)
     package = home / 'python/grund'
-    shutil.copytree(ROOT / 'python/grund', package)
+    shutil.copytree(ROOT / 'crates/grund-py/python/grund', package)
     library = '_native.dll' if os.name == 'nt' else (
         'lib_native.dylib' if sys.platform == 'darwin' else 'lib_native.so')
     native = package / ('_native' + sysconfig.get_config_var('EXT_SUFFIX'))
