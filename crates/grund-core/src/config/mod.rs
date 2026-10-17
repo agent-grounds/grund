@@ -53,6 +53,7 @@ mod fields;
 mod file_reading;
 mod fmt_block;
 mod frame;
+mod global_excludes;
 mod grounding;
 mod inputs;
 mod kind;
@@ -94,6 +95,7 @@ pub(crate) use project_records::ProjectRecords;
 pub use compiled::ScanDemand;
 #[allow(unused_imports)]
 pub use fields::{Field, FieldContent, Placement};
+pub(crate) use global_excludes::global_excludes_path;
 pub(crate) use inputs::{observe_config, observe_config_candidates, observe_ignore_inputs};
 pub use kind::{KindConfig, KindIndex, KindResolution};
 #[allow(unused_imports)]

@@ -16,6 +16,7 @@
 //! (§FS-config.3.5.6), since the walker filters no error entry itself.
 
 use std::path::{Component, Path, PathBuf};
+use std::sync::Arc;
 
 use ignore::{Match, WalkBuilder, gitignore::Glob};
 
@@ -120,12 +121,26 @@ pub(crate) fn excluding_rule(
     }
     let mut refusal = None;
     let globs = ExcludeGlobs::of(schema);
+    // §FS-scan.scope.ignore-files.pathname: resolve once for the whole target probe.
+    let global = schema
+        .sources
+        .respect_gitignore
+        .then(|| GlobalExcludes::load().map(Arc::new))
+        .transpose()
+        .ok()?;
     let roots = roots.iter().map(|root| scanned_path_key(root));
     for root in std::iter::once(config_root.clone()).chain(roots) {
         let Ok(relative) = file.strip_prefix(&root) else {
             continue;
         };
-        let rule = excluding_rule_under(schema, globs.as_ref(), &config_root, &root, relative)?;
+        let rule = excluding_rule_under(
+            schema,
+            globs.as_ref(),
+            &config_root,
+            &root,
+            relative,
+            global.as_ref(),
+        )?;
         refusal.get_or_insert(rule);
     }
     refusal
@@ -140,6 +155,7 @@ fn excluding_rule_under(
     config_root: &Path,
     root: &Path,
     relative: &Path,
+    global: Option<&Arc<GlobalExcludes>>,
 ) -> Option<ExcludingRule> {
     let names: Vec<_> = relative
         .components()
@@ -163,8 +179,8 @@ fn excluding_rule_under(
         {
             return Some(ExcludingRule::Exclude(entry.to_string()));
         }
-        if schema.sources.respect_gitignore
-            && let Some(ignored) = ignoring_rule(&path, is_dir)
+        if let Some(global) = global
+            && let Some(ignored) = ignoring_rule(&path, is_dir, global)
         {
             let file = ignored
                 .file
@@ -231,6 +247,13 @@ fn under_root(
         &link_roots,
         &looping_links,
     );
+    // §FS-scan.scope.ignore-files.pathname: every component asks the same resolved file.
+    let global = schema
+        .sources
+        .respect_gitignore
+        .then(|| GlobalExcludes::load().map(Arc::new))
+        .transpose()
+        .ok()?;
     let names: Vec<_> = relative
         .components()
         .filter_map(|component| match component {
@@ -246,7 +269,10 @@ fn under_root(
         if let Some(reason) = filter.refusal(&path, depth + 1, is_dir, is_link) {
             return Some(reason);
         }
-        if schema.sources.respect_gitignore && ignored(&path, is_dir) {
+        if global
+            .as_ref()
+            .is_some_and(|global| ignored_with(&path, is_dir, global))
+        {
             return Some(Unread::IgnoreFile);
         }
     }
@@ -259,25 +285,36 @@ fn under_root(
 /// also how `walk_errors.rs` asks about a link the walker could not resolve;
 /// where it is not, the same files are
 /// matched against the name in the walker's order of precedence.
+/// Both use one resolved global file (§FS-scan.scope.ignore-files.pathname).
 pub(super) fn ignored(path: &Path, is_dir: bool) -> bool {
-    walker_ignores(path, false)
-        .unwrap_or_else(|| ignored_by_rules(path, is_dir, &GlobalExcludes::load()).is_some())
+    GlobalExcludes::load()
+        .map(Arc::new)
+        .is_ok_and(|global| ignored_with(path, is_dir, &global))
+}
+
+/// The on-disk probe and rule fallback share one resolved global file
+/// (§FS-scan.scope.ignore-files.pathname). Resolution errors stop the owning
+/// scan through `scannable_walker`; these optional rule queries add no verdict.
+fn ignored_with(path: &Path, is_dir: bool, global: &Arc<GlobalExcludes>) -> bool {
+    walker_ignores(path, false, global)
+        .unwrap_or_else(|| ignored_by_rules(path, is_dir, global).is_some())
 }
 
 /// The ignore file and the line of it that drop `path`, for a reader that names the
 /// rule (§FS-declarations.stubs.target.3): the rule `ignored` matches,
 /// kept only where the walker, asked of an entry on disk, drops it too.
-fn ignoring_rule(path: &Path, is_dir: bool) -> Option<IgnoredBy> {
-    let rule = ignored_by_rules(path, is_dir, &GlobalExcludes::load())?;
+/// Both read the supplied global matcher (§FS-scan.scope.ignore-files.pathname).
+fn ignoring_rule(path: &Path, is_dir: bool, global: &Arc<GlobalExcludes>) -> Option<IgnoredBy> {
+    let rule = ignored_by_rules(path, is_dir, global)?;
     // §FS-scan.scope.links.names: a directory link faces directory ignore patterns
     // when followed, just as it does in scannable_walker.
-    (walker_ignores(path, true) != Some(false)).then_some(rule)
+    (walker_ignores(path, true, global) != Some(false)).then_some(rule)
 }
 
 /// The walker's own answer for an entry on disk, `None` where nothing is there.
 /// Stub eligibility follows links like the scan; the unresolved-link error probe
 /// instead asks about the link entry without trying to resolve it again.
-fn walker_ignores(path: &Path, follow_links: bool) -> Option<bool> {
+fn walker_ignores(path: &Path, follow_links: bool, global: &Arc<GlobalExcludes>) -> Option<bool> {
     let Some(parent) = path.parent() else {
         return Some(false);
     };
@@ -288,11 +325,11 @@ fn walker_ignores(path: &Path, follow_links: bool) -> Option<bool> {
     builder
         .hidden(false)
         .max_depth(Some(1))
-        .follow_links(follow_links);
-    // §FS-scan.scope.ignore-files.global: the probe anchors the global file as the walk does.
-    if let Some(global) = GlobalExcludes::take_over(&mut builder) {
-        builder.filter_entry(move |entry| !globally_ignored(&global, entry));
-    }
+        .follow_links(follow_links)
+        .git_global(false);
+    // §FS-scan.scope.ignore-files.pathname: no dependency fallback, even for an empty file.
+    let global = Arc::clone(global);
+    builder.filter_entry(move |entry| !globally_ignored(&global, entry));
     Some(
         !builder
             .build()

@@ -147,7 +147,6 @@ fn git_path(path: &Path) -> String {
 }
 
 #[test]
-#[ignore = "red until #788 loads the literal-tilde excludes pathname; implement removes this"]
 fn an_interior_tilde_global_excludes_file_is_applied() {
     let fixture = Fixture::new("interior");
     for relative in ["ab/global.ignore", "a~b/global.ignore"] {
@@ -179,7 +178,6 @@ fn a_leading_home_abbreviation_preserves_tildes_in_the_home_path() {
 }
 
 #[test]
-#[ignore = "red until #788 shares the resolved literal-tilde file with stub eligibility; implement removes this"]
 fn an_interior_tilde_global_excludes_file_refuses_stub_targets() {
     let fixture = Fixture::new("stub");
     let value = fixture.excludes("a~b/global.ignore");
@@ -221,7 +219,6 @@ fn an_interior_tilde_global_excludes_file_refuses_stub_targets() {
 /// midway through the name, which is not a valid Windows drive pathname.
 #[cfg(unix)]
 #[test]
-#[ignore = "red until #788 stops making HOME a hidden input to absolute excludes paths; implement removes this"]
 fn an_absolute_global_excludes_path_is_independent_of_home() {
     let mut fixture = Fixture::new("home-independent");
     let value = fixture.excludes("a~b/global.ignore");

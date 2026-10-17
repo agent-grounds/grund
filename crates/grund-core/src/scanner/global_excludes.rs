@@ -19,9 +19,11 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, PoisonError};
 
+use anyhow::Result;
 use ignore::gitignore::{Gitignore, GitignoreBuilder, Glob};
 use ignore::{Match, WalkBuilder};
 
+use crate::config::global_excludes_path;
 use crate::sources::{path_exists, path_is_file};
 
 /// What marks a directory as a repository top: the set the `ignore` crate counts,
@@ -49,27 +51,38 @@ pub(super) struct GlobalExcludes {
 
 impl GlobalExcludes {
     /// The global excludes file git's configuration names, read once; no pattern at
-    /// all where none is configured.
-    pub(super) fn load() -> Self {
-        let (patterns, _) = GitignoreBuilder::new(".").build_global();
-        Self {
-            patterns,
+    /// all where none is configured. The shared resolver preserves literal
+    /// tildes (§FS-scan.scope.ignore-files.pathname); `add` reads that pathname
+    /// directly, without the dependency's global-path expansion.
+    pub(super) fn load() -> Result<Self> {
+        let mut builder = GitignoreBuilder::new(".");
+        if let Some(path) = global_excludes_path()?
+            && path_is_file(&path)
+        {
+            // Preserve the existing policy for partial pattern/read errors;
+            // pathname resolution errors above are propagated, never retried
+            // through the dependency's global loader.
+            let _ = builder.add(path);
+        }
+        Ok(Self {
+            patterns: builder.build()?,
             tops: Mutex::default(),
             files: Mutex::default(),
-        }
+        })
     }
 
     /// The global excludes a walker leaves to its filter, with the builder's own
-    /// matcher, rooted at one directory, turned off. `None`, and the builder left as
-    /// it is, where the global file holds no pattern, so a machine without one pays
-    /// nothing per entry (§GOAL-fast-feedback).
-    pub(super) fn take_over(builder: &mut WalkBuilder) -> Option<Self> {
-        let global = Self::load();
-        if global.patterns.is_empty() {
-            return None;
-        }
+    /// matcher, rooted at one directory, turned off even for an empty or absent
+    /// file: otherwise its corrupt pathname expansion can consult a different
+    /// file (§FS-scan.scope.ignore-files.pathname). `None` where there are no
+    /// patterns, so a machine without one pays nothing per entry (§GOAL-fast-feedback).
+    pub(super) fn take_over(builder: &mut WalkBuilder) -> Result<Option<Self>> {
         builder.git_global(false);
-        Some(global)
+        let global = Self::load()?;
+        if global.patterns.is_empty() {
+            return Ok(None);
+        }
+        Ok(Some(global))
     }
 
     /// The global pattern that decides `path`, matched relative to the top of its

@@ -49,8 +49,9 @@ pub(crate) fn observe_config(config: &super::Config) {
     }
 }
 
-/// `ignore` owns global-excludes precedence. Cover its discovery inputs before
-/// asking that same reader for the effective path (§FS-check.6.1.1).
+/// Cover global-excludes discovery inputs before asking the shared pathname
+/// resolver (§FS-scan.scope.ignore-files.pathname) for the effective path
+/// (§FS-check.6.1.1).
 pub(crate) fn observe_ignore_inputs(root: &Path) -> bool {
     if check_input_observer().is_none() {
         return true;
@@ -101,7 +102,10 @@ pub(crate) fn observe_ignore_inputs(root: &Path) -> bool {
             return false;
         }
     }
-    if let Some(path) = ignore::gitignore::gitconfig_excludes_path() {
+    let Ok(path) = super::global_excludes_path() else {
+        return false;
+    };
+    if let Some(path) = path {
         if !observe_input(&path, false) {
             return false;
         }
