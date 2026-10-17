@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "case": "fmt-chapter-value-binding-check",
+  "inputFiles": {
+    "command.args": {"bytes":[102,109,116,32,123,114,101,112,111,125,32,45,45,99,114,111,115,115,45,114,101,102,115,32,45,45,99,104,101,99,107,10]},
+    "expected.exit": {"bytes":[48,10]},
+    "expected.stderr": {"bytes":[10]},
+    "expected.stdout": {"bytes":[10]},
+    "repo": {"directory":true},
+    "repo/docs": {"directory":true},
+    "repo/docs/power.md": {"bytes":[35,32,65,82,45,48,48,52,45,118,97,108,117,101,45,112,114,111,98,101,58,32,65,117,120,105,108,105,97,114,121,32,112,111,119,101,114,10,10,35,35,32,118,97,108,117,101,115,58,32,86,97,108,117,101,115,10,10,35,35,35,32,118,97,108,117,101,115,46,97,117,120,45,118,111,108,116,97,103,101,58,32,65,117,120,105,108,105,97,114,121,32,115,117,112,112,108,121,32,118,111,108,116,97,103,101,10,10,35,35,35,35,32,118,97,108,117,101,115,46,97,117,120,45,118,111,108,116,97,103,101,46,49,58,32,50,52,10,10,35,35,32,50,46,32,82,101,103,117,108,97,116,111,114,32,60,33,45,45,32,103,114,117,110,100,58,118,97,108,117,101,32,45,45,62,10,10,35,35,35,32,50,46,49,46,32,49,48,10,10,35,35,32,51,46,32,85,115,101,10,10,67,104,97,112,116,101,114,58,32,96,50,52,96,32,40,194,167,65,82,45,48,48,52,45,118,97,108,117,101,45,112,114,111,98,101,46,118,97,108,117,101,115,46,97,117,120,45,118,111,108,116,97,103,101,46,49,41,10,10,78,117,109,101,114,105,99,58,32,96,49,48,96,32,40,194,167,65,82,45,48,48,52,45,118,97,108,117,101,45,112,114,111,98,101,46,50,46,49,41,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,10,91,114,101,102,101,114,101,110,99,101,93,10,115,116,114,105,99,116,32,61,32,116,114,117,101,10,10,91,105,100,93,10,110,97,109,101,100,95,115,101,99,116,105,111,110,115,32,61,32,116,114,117,101,10,10,91,91,107,105,110,100,115,93,93,10,107,105,110,100,32,61,32,34,65,82,34,10,102,111,108,100,101,114,32,61,32,34,100,111,99,115,34,10,105,110,100,101,120,32,61,32,102,97,108,115,101,10,118,97,108,117,101,95,99,104,97,112,116,101,114,32,61,32,34,118,97,108,117,101,115,34,10,10,91,115,99,97,110,93,10,105,110,99,108,117,100,101,32,61,32,91,34,100,111,99,115,34,93,10]},
+    "spec.refs": {"bytes":[70,83,45,99,111,110,102,105,103,46,51,46,52,46,49,51,10,70,83,45,102,109,116,46,50,46,51,10,70,83,45,118,97,108,117,101,115,46,50,46,53,10,70,83,45,118,97,108,117,101,115,46,56,10]}
+  },
+  "facts": {
+    "point": "§FS-values.8",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, strict, named sections, one untitled AR kind homed at docs with `index = false` and `value_chapter = \"values\"`, `[scan] include = [\"docs\"]`); docs/power.md declaring AR-004-value-probe, whose `values` chapter holds the value declaration values.aux-voltage with its one component `24` (§FS-values.2.5), whose `## 2.` heading is a marked value root holding the component `10` (§FS-values.2.4), and so `list` names both roots, valid, in canonical path order (§FS-list.3.2.2), and the marked root's title, anchor and editor text drop the tag while its raw heading keeps it (§FS-values.2.4.2); its `## 3.` section binds `24` and `10` to those components, each a self-citation equal to its component (§FS-values.4, §FS-values.5). The declaration is cited, so the only finding is the version caution (§FS-check.2.1.1). `fmt` never rewrites a recognized binding, with `--cross-refs` or without (§FS-values.8, §FS-fmt.6.4), so nothing changes.",
+    "kinds": [
+      {"kind":"AR","title":null,"home":"docs","index":false}
+    ],
+    "scanned": ["docs/power.md"],
+    "declarations": [
+      {"id":"AR-004-value-probe","kind":"AR","file":"docs/power.md","heading":"AR-004-value-probe: Auxiliary power","title":"Auxiliary power","body":[2,17],"anchor":"ar-004-value-probe-auxiliary-power"}
+    ],
+    "sections": [
+      {"of":"AR-004-value-probe","path":"values","heading":"values: Values","title":"Values","anchor":"values-values","end":8},
+      {"of":"AR-004-value-probe","path":"values.aux-voltage","heading":"values.aux-voltage: Auxiliary supply voltage","title":"Auxiliary supply voltage","anchor":"valuesaux-voltage-auxiliary-supply-voltage","end":8,"parent":"values","valueRoot":"chapter"},
+      {"of":"AR-004-value-probe","path":"values.aux-voltage.1","heading":"values.aux-voltage.1: 24","title":"24","anchor":"valuesaux-voltage1-24","end":8,"parent":"values.aux-voltage"},
+      {"of":"AR-004-value-probe","path":"2","heading":"2. Regulator <!-- grund:value -->","title":"Regulator","anchor":"2-regulator","end":12,"valueRoot":"marked"},
+      {"of":"AR-004-value-probe","path":"2.1","heading":"2.1. 10","title":"10","anchor":"21-10","end":12,"parent":"2"},
+      {"of":"AR-004-value-probe","path":"3","heading":"3. Use","title":"Use","anchor":"3-use","end":17}
+    ],
+    "citations": [
+      {"file":"docs/power.md","token":"§AR-004-value-probe.values.aux-voltage.1","enclosing":["AR-004-value-probe","3"]},
+      {"file":"docs/power.md","token":"§AR-004-value-probe.2.1","enclosing":["AR-004-value-probe","3"]}
+    ],
+    "findings": [
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+    ],
+    "refusals": {},
+    "fmt": {
+      "changes": [],
+      "writeChanges": [],
+      "written": {}
+    },
+    "absentQuery": "AR-404-absent"
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}

@@ -166,7 +166,12 @@ impl View<'_> {
             "scanned_files":scanned,
             "sections":sections.iter().map(|s| {
                 let query = format!("{}.{}", self.m.decls[s.owner].id, s.path);
-                let mut row = self.located(&s.file, s.line, s.column, &s.text, &query);
+                // §FS-values.2.4.2: a marked root's LSP title excludes its tag.
+                let text = match s.facts["valueRoot"].as_str() {
+                    Some("marked") => s.text.strip_suffix(" <!-- grund:value -->").unwrap_or(&s.text),
+                    _ => &s.text,
+                };
+                let mut row = self.located(&s.file, s.line, s.column, text, &query);
                 row["hover_text"] = Value::Null;
                 row
             }).collect::<Vec<_>>(),
