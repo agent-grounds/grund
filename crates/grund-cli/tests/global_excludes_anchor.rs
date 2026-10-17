@@ -44,6 +44,12 @@ fn fixture(name: &str) -> PathBuf {
 /// pattern ignores, declares `FS-y` and cites an ID nothing declares.
 fn repository(root: &Path, config: Option<&str>) {
     git_init(root);
+    tree(root, config);
+}
+
+/// The files of [`repository`] under `root`, which this leaves to its caller to make
+/// a repository top.
+fn tree(root: &Path, config: Option<&str>) {
     if let Some(config) = config {
         write(root, "grund.toml", config);
     }
@@ -192,6 +198,26 @@ fn a_gitignore_re_include_outranks_the_global_file() {
         assert_eq!(
             verdict(&grund(&dir, &cwd, &["list"])),
             (listed.clone(), Some(0)),
+            "from {}",
+            cwd.display()
+        );
+    }
+    let _ = fs::remove_dir_all(dir);
+}
+
+/// A Jujutsu workspace with no `.git` is a repository top too, the one that bounds its
+/// `.gitignore` files, so the global file anchors there, from the top and from `docs/`
+/// alike.
+#[test]
+fn a_jujutsu_workspace_anchors_the_global_file_at_its_top() {
+    let dir = fixture("jj");
+    let root = dir.join("repo");
+    fs::create_dir_all(root.join(".jj")).expect("create .jj");
+    tree(&root, Some(CONFIG));
+    for cwd in [root.clone(), root.join("docs")] {
+        assert_eq!(
+            verdict(&grund(&dir, &cwd, &["list"])),
+            (LISTED.into(), Some(0)),
             "from {}",
             cwd.display()
         );

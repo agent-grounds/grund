@@ -324,8 +324,8 @@ fn global_ignore_tree(name: &str, pattern: &str) -> (PathBuf, String) {
 /// and name the absolute ignore file plus the authored pattern. The pattern is
 /// anchored, and it anchors at the repository top (§FS-scan.scope.ignore-files.global).
 /// This is the Windows case of that anchor: there the walk reads canonical `\\?\`
-/// paths, which no working directory prefixes, so the run from the top is red there
-/// until the matcher is rooted at the repository top.
+/// paths, which no working directory prefixes, and they still anchor at the
+/// repository top.
 #[test]
 fn a_global_ignore_refuses_and_names_its_file() {
     let (root, file) = global_ignore_tree("global-ignore", "notes/gen/");
