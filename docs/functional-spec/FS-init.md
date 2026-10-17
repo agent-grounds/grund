@@ -402,7 +402,7 @@ That guide, *Querying grund*, puts the query recipes in one place, each with its
 
 ##### 2.3.4.4 Project Map
 
-The block describes the configured kind homes from the effective `grund.toml` as a raw-readable Markdown link list (`- [KIND](home): Title`), so the generated instructions name and link the host repo's actual artifact layout instead of hard-coding the default layout or relying on table rendering. A kind that is a place rather than an ID space gets the row [§FS-init.2.3.4.4.1](FS-init.md#23441-rows-for-places) gives it, or none, and a config with no kind to list gets the paragraph of [§FS-init.2.3.4.4.2](FS-init.md#23442-no-kinds-yet) instead of an empty map.
+The block describes the configured kind homes from the effective `grund.toml` as a raw-readable Markdown link list (`- [KIND](home): Title`), so the generated instructions name and link the host repo's actual artifact layout instead of hard-coding the default layout or relying on table rendering. A kind that is a place rather than an ID space gets the row [§FS-init.2.3.4.4.1](FS-init.md#23441-rows-for-places) gives it, or none, and a config with no kind to list gets the paragraph of [§FS-init.2.3.4.4.2](FS-init.md#23442-no-kinds-yet) instead of an empty map. Each row's `Title` is the one [§FS-init.2.3.4.4.3](FS-init.md#23443-row-titles) gives it.
 
 The scan scope (`[scan].include` / `[scan].exclude`) is *not* surfaced here — it is configuration an agent never needs to read inline, since `grund <ID>`, `grund list`, and `grund refs` apply it transparently. Where the init target lies in a workspace, whether or not its own config declares `[workspace]`, the sibling [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members) block names the workspace projects; the Project Map itself describes the *current* project's declaration homes only and is unchanged in workspace mode.
 
@@ -410,7 +410,7 @@ The scan scope (`[scan].include` / `[scan].exclude`) is *not* surfaced here — 
 
 A **non-citable kind** ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) is named by its **place** rather than its name — `- [skills/](skills): Agent review and automation skills` — because its name is a config key an agent can never write in a citation, while the directory is something it can go and read. An unscanned kind ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)) is rendered the same way; the row is the point of configuring it. The **homeless kind** ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) — `code`, or whatever the project named it — has no place and therefore no row.
 
-In a version-2 config a kind with several places is still one row, whose link list names every place in the row's place order, files then folders, each in written order ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)) — `- [FS](docs/spec/core), [docs/spec/plugins](docs/spec/plugins): What` — and a non-citable row is named by all of its places the same way. The complement, `code`, gets a row named by its places when it lists any, and none when its extent is the config root ([§FS-config-v2.schema.places.complement](FS-config-v2.md#schemaplacescomplement-code-is-the-complement-by-name)).
+In a version-2 config a kind with several places is still one row, whose link list names every place in the row's place order, files then folders, each in written order ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)) — `- [FS](docs/spec/core), [docs/spec/plugins](docs/spec/plugins): What` — and a non-citable row is named by all of its places the same way. The complement, `code`, gets a row named by its places when it lists any, and none when its extent is the config root ([§FS-config-v2.schema.places.complement](FS-config-v2.md#schemaplacescomplement-code-is-the-complement-by-name)). Untitled, that row says it is the complement ([§FS-init.2.3.4.4.3](FS-init.md#23443-row-titles)).
 
 ###### 2.3.4.4.2 No kinds yet
 
@@ -421,6 +421,21 @@ No kinds are declared yet: `grund.toml` sets `kinds = []`. Replace it with one `
 ```
 
 A version-2 config with no row is taught `[schema.kinds.<KIND>]` and its `folders` or `files` the same way ([§FS-config-v2.defaults.1](FS-config-v2.md#defaults1-what-v2-fixes)). Two other places in the block would otherwise name an empty set, and say so instead. The citation-scheme line's kind set reads ``no `KIND` is declared yet`` rather than `KIND ∈ {}` ([§FS-init.2.3.8.1](FS-init.md#2381-what-the-config-fills-in)). Where the config declares no `[citations]`, the citation-direction paragraph ([§FS-init.2.3.4.10](FS-init.md#23410-citation-direction)) reads ``No kind is declared yet, so no citation direction applies. Once kinds exist, the config's citation rules say which kinds each may cite; see <guide> for the levels and examples.``, `<guide>` being the citation-directions guide's URL, in place of the static climbing-rule sentence that names kinds the config does not have; the grounding sentence follows it as before. All three are substituted content, so they move no block version ([§FS-init.2.3.7](FS-init.md#237-the-block-version)), and `check` compares the citation-direction paragraph against the same render it always does ([§FS-init.2.3.5.8](FS-init.md#2358-the-drift-check)).
+
+###### 2.3.4.4.3 Row titles
+
+A row's title is the one the config gives its kind — `[presentation.kinds.<KIND>] title` in a version-2 config, the `[[kinds]]` table's `title` in a version-1 one — whenever it gives one. An untitled row is titled by what it is. The complement's row ([§FS-init.2.3.4.4.1](FS-init.md#23441-rows-for-places)) reads `Every scanned file no other row claims`, because it is the one row that is not a declaration home: it declares no IDs, and holds every scanned file no other place claims ([§FS-config-v2.schema.places.complement](FS-config-v2.md#schemaplacescomplement-code-is-the-complement-by-name)). Every other untitled row reads `Declaration`:
+
+```markdown
+- [FS](docs/spec): Declaration
+- [build.gradle](build.gradle), [src/](src): Every scanned file no other row claims
+```
+
+The untitled complement row is the one `grund config migrate --to 2` gives a version-1 `[scan] include` that lists places outside every kind home, and that the migration's note announces ([§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance)), since version 1 had nowhere to keep that row's title. The migration writes no title for it; the map says what the row is without one.
+
+Both titles are wording the block renders, not defaults of the config. `grund config show` prints no title for either row, and a file `init` writes still carries no default title ([§FS-init.2.4.3](FS-init.md#243-every-written-key-differs-from-its-default)). They are substituted content, so they move no block version ([§FS-init.2.3.7](FS-init.md#237-the-block-version)); `init --check` reports a map whose untitled complement row still reads `Declaration` as stale, and `grund init` rewrites it.
+
+The citation directions keep their own subject for the complement ([§FS-init.2.3.5.2](FS-init.md#2352-the-subject-names-its-unit)): an untitled one is `(**code**)`, with no scope, whatever the map calls its row. So no section `check` compares moves ([§FS-init.2.3.7.2](FS-init.md#2372-what-check-compares)), and the migration's guidance comparison ([§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance)) renders the same section before and after.
 
 ##### 2.3.4.5 Declaration Forms
 
