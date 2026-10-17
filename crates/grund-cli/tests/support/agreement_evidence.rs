@@ -156,6 +156,16 @@ pub fn receipt(surface: &str, path: &Path, request: serde_json::Value, result: s
     });
 }
 
+/// Adopt the calls another thread captured, in the order given, into this
+/// thread's observer (§REQ-one-answer.proof.evidence).
+pub fn adopt(adopted: Vec<Call>) {
+    CALLS.with(|calls| {
+        if let Some(calls) = &mut *calls.borrow_mut() {
+            calls.extend(adopted);
+        }
+    });
+}
+
 /// Isolated per libtest thread; disabled in the ordinary agreement tests.
 pub fn capture(run: impl FnOnce()) -> Vec<Call> {
     struct Reset;
