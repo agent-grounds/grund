@@ -57,7 +57,7 @@ jobs:
           path: |
             ~/.cargo/registry
             target
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ github.job }}-
             ${{ runner.os }}-cargo-
@@ -126,7 +126,7 @@ jobs:
           path: |
             ~/.cargo/registry
             target
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
 
   python-ubuntu:
     name: python (ubuntu-latest)
@@ -162,7 +162,7 @@ jobs:
             ~/.cargo/registry
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ github.job }}-
             ${{ runner.os }}-cargo-
@@ -195,7 +195,7 @@ jobs:
             ~/.cargo/registry
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
 
   node-ubuntu:
     name: node acceptance (ubuntu-latest)
@@ -232,7 +232,7 @@ jobs:
             ~/.cargo/registry
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ github.job }}-
             ${{ runner.os }}-cargo-
@@ -245,7 +245,7 @@ jobs:
         with:
           path: |
             ~/ag/tmp/grund-node-target
-          key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-node-target-v3-1.95.0-
 
@@ -281,7 +281,7 @@ jobs:
             ~/.cargo/registry
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
 
       # §AR-ci.13.6: only a push to main saves, after the work, the key its restore missed.
       - name: Save the Node acceptance's build target
@@ -290,7 +290,7 @@ jobs:
         with:
           path: |
             ~/ag/tmp/grund-node-target
-          key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
 
       # §AR-ci.3.4.1.3, §AR-ci.13.6: only a push to main saves, the key its restore missed.
       - name: Save the Node acceptance's TypeScript compiler
@@ -330,7 +330,7 @@ jobs:
           path: |
             ~/.cargo/registry
             target
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ github.job }}-
             ${{ runner.os }}-cargo-
@@ -377,7 +377,7 @@ jobs:
           path: |
             ~/.cargo/registry
             target
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
 
   # §AR-ci.13.1: the windows-latest leg, one job per language.
   rust-windows:
@@ -406,7 +406,7 @@ jobs:
           path: |
             ~/.cargo/registry
             target
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ github.job }}-
             ${{ runner.os }}-cargo-
@@ -476,7 +476,7 @@ jobs:
           path: |
             ~/.cargo/registry
             target
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
 
   python-windows:
     name: python (windows-latest)
@@ -513,7 +513,7 @@ jobs:
             ~/.cargo/registry
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ github.job }}-
             ${{ runner.os }}-cargo-
@@ -547,7 +547,7 @@ jobs:
             ~/.cargo/registry
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
 
   node-windows:
     name: node acceptance (windows-latest)
@@ -584,7 +584,7 @@ jobs:
             ~/.cargo/registry
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ github.job }}-
             ${{ runner.os }}-cargo-
@@ -597,7 +597,7 @@ jobs:
         with:
           path: |
             ~/ag/tmp/grund-node-target
-          key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-node-target-v3-1.95.0-
 
@@ -634,7 +634,7 @@ jobs:
             ~/.cargo/registry
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
 
       # §AR-ci.13.6: only a push to main saves, after the work, the key its restore missed.
       - name: Save the Node acceptance's build target
@@ -643,7 +643,7 @@ jobs:
         with:
           path: |
             ~/ag/tmp/grund-node-target
-          key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-node-target-v3-1.95.0-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
 
       # §AR-ci.3.4.1.3, §AR-ci.13.6: only a push to main saves, the key its restore missed.
       - name: Save the Node acceptance's TypeScript compiler
