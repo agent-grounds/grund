@@ -19,3 +19,8 @@ codegen-units = 1
 # a profile absent on a fresh clone, so it cannot live here or in the dev loop;
 # a plain `cargo build --release` (and `cargo install grund`) is LTO-only and
 # behaviour-identical.
+
+# The tests spend most of their time inside dependencies, so dev and test builds
+# compile those at level 1 and the workspace crates at 0 (§AR-ci.15).
+[profile.dev.package."*"]
+opt-level = 1
