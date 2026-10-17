@@ -48,6 +48,37 @@ pub fn input_files(document: &Value) -> BTreeMap<String, Vec<u8>> {
         .collect()
 }
 
+/// Each link the case's `symlinks` manifest declares (`<link> -> <target>`), as
+/// the repository-relative path of the link and of the file its literal target
+/// names from the link's directory.
+fn symlinks(document: &Value) -> Vec<(String, String)> {
+    let bytes: Vec<u8> = document["inputFiles"]["symlinks"]["bytes"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(|b| b.as_u64().unwrap() as u8)
+        .collect();
+    let manifest = String::from_utf8_lossy(&bytes).into_owned();
+    manifest
+        .lines()
+        .filter_map(|line| {
+            let (link, target) = line.split_once(" -> ")?;
+            let mut parts: Vec<&str> = link.split('/').collect();
+            parts.pop();
+            for part in target.split('/') {
+                match part {
+                    "" | "." => {}
+                    ".." => {
+                        parts.pop()?;
+                    }
+                    other => parts.push(other),
+                }
+            }
+            Some((link.to_string(), parts.join("/")))
+        })
+        .collect()
+}
+
 /// §FS-scan.text.buffer: the held edit is the input text plus one newline.
 fn held(bytes: &[u8]) -> String {
     let text = String::from_utf8_lossy(bytes);
@@ -318,14 +349,29 @@ pub fn expand(document: &mut Value) -> Result<(), String> {
         }
         // A rewrite patches the saved bytes: under an overlay, the held edit saved.
         let mut facts = facts.clone();
+        // §FS-scan.identity.read-once: a variant that reads a file under another
+        // spelling pins the model it reads.
+        for key in ["scanned", "declarations", "sections", "citations"] {
+            if let Some(pinned) = compact.get(key) {
+                facts[key] = pinned.clone();
+            }
+        }
+        facts["links"] = json!(symlinks(document).into_iter().collect::<BTreeMap<_, _>>());
         patch(&mut facts["fmt"], &files)?;
         if compact.get("fmt").is_some() {
             patch(&mut compact["fmt"], &files)?;
         }
-        let texts = files
+        let mut texts: BTreeMap<String, String> = files
             .iter()
             .map(|(p, b)| (p.clone(), String::from_utf8_lossy(b).into_owned()))
             .collect();
+        // §FS-scan.identity.read-once: a link to an input file reads as that file
+        // under the spelling the walk keeps, which the facts name.
+        for (link, target) in symlinks(document) {
+            if let Some(text) = texts.get(&target).cloned() {
+                texts.insert(link, text);
+            }
+        }
         let model = Model::new(&facts, texts)?;
         let context = variant.context(&inputs);
         let view = |root: &'static str, scope: &str| View {
