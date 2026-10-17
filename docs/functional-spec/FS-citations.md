@@ -65,6 +65,22 @@ Two contexts are read as neither prose nor code, so nothing inside them is a cit
 
 A CommonMark raw-text HTML block ([§FS-check.1.1.5.1](FS-check.md#1151-a-raw-html-block-holds-no-heading)) is read as raw text for structure but as prose for citations. Citations inside the block stay live, unlike a fence's: the diagrams of [§FS-fmt.2.5.4](FS-fmt.md#254-the-case-this-exists-for) are written in `<pre>` precisely because a citation there still resolves, still counts as a use, and is still reported when it dangles.
 
+In supported source comments, a prose apostrophe does not open a string literal, nor does
+a Rust lifetime or Haskell identifier prime before a trailing comment. A qualified citation
+in `// Don't drop <qualified>`, after `fn f() -> &'static str { "x" } //`, or after
+`f' = 1 --` is recognized just like the same comment without the quote. This holds both
+when the alias is configured and when it is unknown: the site contributes its ordinary
+edge or finding, including `unknown project alias`, rather than disappearing. Genuine
+quoted data and inline-code spans retain the source-only qualified exclusion above,
+including the bounded carried multi-line literal spans.
+
+This qualified-comment distinction does not change the raw quote-toggle policy of
+[§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule), or its adoption for **bare**
+tokens by [§FS-citations.recognized.string-literals](FS-citations.md#recognizedstring-literals-string-literals-in-source-files).
+Those conservative rewrite and bare-token exclusions do not define whether a marked
+qualified citation in a supported comment is string data. Decided in
+[§DF-qualified-comment-quotes](../decisions/functional/DF-qualified-comment-quotes.md#df-qualified-comment-quotes-recognize-qualified-comment-citations-after-nonliteral-single-quotes).
+
 ### recognized.value-bindings: Value bindings
 
 An exact explicit value binding additionally records its authored component, but its marker-prefixed token remains one citation under every rule above. The binding grammar and its narrower recognized source-comment contexts are [§FS-values.3](FS-values.md#3-explicit-value-bindings); `[reference] strict = false` never removes the binding's marker requirement.

@@ -10,6 +10,7 @@ Read a decision when the spec tells you *what* and you need *why*. Do not read t
 
 How a citation is written, and what counts as one.
 
+- [§DF-qualified-comment-quotes](DF-qualified-comment-quotes.md#df-qualified-comment-quotes-recognize-qualified-comment-citations-after-nonliteral-single-quotes) — recognize qualified comment citations after nonliteral single quotes
 - [§DF-reference-marker](DF-reference-marker.md#df-reference-marker-use--as-the-reference-marker-with--as-the-typing-trigger) — Use § as the reference marker, with $$ as the typing trigger
 - [§DF-word-character-citation-markers](DF-word-character-citation-markers.md#df-word-character-citation-markers-recognize-accepted-word-character-markers) — recognize accepted word-character markers
 - [§DF-code-declarations-drop-hash](DF-code-declarations-drop-hash.md#df-code-declarations-drop-hash-code-resident-declarations-may-drop-the--prefix) — code-resident declarations may drop the `#` prefix
