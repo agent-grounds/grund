@@ -185,14 +185,19 @@ pub(crate) fn config_at(
     // §FS-cli.3.4: under `--path-base=invocation` every location the load records,
     // and so every config-load error, is spelled from the CLI base.
     let from_cli_base = run.path_base == Some(super::call_scope::PathBase::Invocation);
-    let report_relative = |path: &Path| match report_base {
-        _ if from_cli_base => relative_from_base(cli_base, path),
+    let spelled_from = if from_cli_base {
+        Some(cli_base)
+    } else {
+        report_base
+    };
+    let report_relative = |path: &Path| match spelled_from {
         Some(base) => relative_from_base(base, path),
         None => path
             .strip_prefix(&root)
             .map(Path::to_path_buf)
             .unwrap_or_else(|_| path.to_path_buf()),
     };
+    run.location_base = spelled_from.map_or_else(|| root.clone(), Path::to_path_buf);
     // §FS-check.4.3.2: the loser of a two-name tie is recorded, not read, so every
     // surface that reports on the config can name the file grund ignored.
     run.redundant_config_file = redundant_config_file_in(&root).map(|path| report_relative(&path));
