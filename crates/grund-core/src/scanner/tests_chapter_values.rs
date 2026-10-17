@@ -178,7 +178,7 @@ fn a_marked_roots_map_title_drops_its_tag() {
 
 /// `show --toc` and the editor give each section one title. A chapter root's tag
 /// is no mark (§FS-values.2.4.4), so both keep it; a marked root's is dropped
-/// by both (§FS-values.2.4.2).
+/// by both (§FS-values.2.4.2), even when the tag is all its title holds.
 #[test]
 fn toc_and_editor_title_a_tagged_chapter_root_alike() {
     let root = test_root("chapter_value_tagged_root_titles");
@@ -195,7 +195,9 @@ fn toc_and_editor_title_a_tagged_chapter_root_alike() {
          ### values.aux-voltage: Aux voltage <!-- grund:value -->\n\n\
          #### values.aux-voltage.1: 24\n\n\
          ## 1. Marked <!-- grund:value -->\n\n\
-         ### 1.1 Leaf\n",
+         ### 1.1 Leaf\n\n\
+         ## 2. <!-- grund:value -->\n\n\
+         25\n",
     );
     let opts = ShowOpts {
         path: root.clone(),
@@ -238,6 +240,7 @@ fn toc_and_editor_title_a_tagged_chapter_root_alike() {
             ),
             ("1", "Marked", Some("1. Marked")),
             ("1.1", "Leaf", Some("1.1 Leaf")),
+            ("2", "", Some("2.")),
         ]
     );
 }
