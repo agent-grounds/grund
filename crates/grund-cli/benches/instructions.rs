@@ -74,6 +74,10 @@ const PYTHON_VAR: &str = "GRUND_BENCH_PYTHON";
 /// where Callgrind's collection toggles on; a toggle holds for its own thread only.
 #[cfg(feature = "bench")]
 const PYTHON_ENTRIES: [&str; 2] = ["_native::call", "rayon_core::registry::ThreadBuilder::run"];
+/// §AR-benchmarks.3.1: the runtime pins the measured process reads; every other variable stays
+/// cleared, and the build-only `CARGO_INCREMENTAL` and `RUSTFLAGS` are not among them.
+#[cfg(feature = "bench")]
+const RUNTIME_PINS: [&str; 3] = ["RAYON_NUM_THREADS", "LC_ALL", "TZ"];
 /// The `scripts/bench_record.py` mode that probes one scenario.
 #[cfg(feature = "bench")]
 const PROBE: &str = "probe";
@@ -168,6 +172,7 @@ fn selected() -> Vec<String> {
 /// §AR-ci.5.2: the row's relative `soft_limits`, and its `hard_limits` ceiling only when the
 /// ceilings are switched on and the binary is the harness's own. §AR-benchmarks.1.7: a Python
 /// row counts from the extension's entry point, not from the interpreter's start.
+/// §AR-benchmarks.3.1: every row, whatever its frontend, runs under the runtime pins.
 #[cfg(feature = "bench")]
 fn limits(scenario: &Scenario) -> BinaryBenchmarkConfig {
     let mut callgrind = Callgrind::default();
@@ -182,6 +187,7 @@ fn limits(scenario: &Scenario) -> BinaryBenchmarkConfig {
         callgrind.hard_limits([(EventKind::Ir, scenario.ceiling_ir)]);
     }
     let mut config = BinaryBenchmarkConfig::default();
+    config.pass_through_envs(RUNTIME_PINS);
     config.tool(callgrind);
     config
 }

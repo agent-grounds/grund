@@ -25,8 +25,6 @@ class TheRecordCarriesItsTier(unittest.TestCase):
     def setUpClass(cls):
         cls.module = load()
 
-    # Red until #780 bumps RECORD_VERSION to 3; implement removes this marker.
-    @unittest.expectedFailure
     def test_the_format_is_version_three(self):
         # §AR-benchmarks.7.1: 3 since the measured process runs under the runtime pins.
         self.assertEqual(3, self.module.RECORD_VERSION)

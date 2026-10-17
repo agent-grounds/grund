@@ -62,8 +62,6 @@ class TheMeasuredProcessRunsUnderTheRuntimePins(unittest.TestCase):
                 with self.subTest(workflow=workflow.name, pin=pin):
                     self.assertIn(pin, env, f"the {name} job sets no {pin} to forward")
 
-    # Red until #780 forwards the runtime pins; implement removes this marker.
-    @unittest.expectedFailure
     def test_the_harness_forwards_exactly_the_runtime_pins(self):
         self.assertIsNotNone(
             self.forwarded,
