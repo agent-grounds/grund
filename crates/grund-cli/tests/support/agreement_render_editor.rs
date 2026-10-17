@@ -33,7 +33,7 @@ impl View<'_> {
 
     fn editor_finding(&self, f: &Value) -> Value {
         json!({"authority":f.get("authority").cloned().unwrap_or(json!([])),"code":f["code"],
-            "column":null,"line":f["line"],"message":f["message"],
+            "column":self.column(f),"line":f["line"],"message":f["message"],
             "path":self.absolute(f["path"].as_str().unwrap()),"severity":f["severity"],
             "sites":f["sites"].as_array().into_iter().flatten().map(|s|
                 json!({"path":s["path"],"line":s["line"]})).collect::<Vec<_>>()})
@@ -44,7 +44,8 @@ impl View<'_> {
             return json!({"failure":failure});
         }
         let mut report = json!({"errors":[],"warnings":[],"suggestions":[]});
-        for f in self.m.facts["findings"].as_array().into_iter().flatten() {
+        // §FS-scan.path.check: an explicit path narrows the published report too.
+        for f in &self.findings() {
             if f["path"].is_null() {
                 continue;
             }

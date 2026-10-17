@@ -3,7 +3,7 @@
 //! (§REQ-one-answer.proof.evidence.closed). A path argument narrows the report
 //! and the listings, never what resolves (§FS-scan.path).
 
-use super::agreement_render_model::{Model, measure};
+use super::agreement_render_model::{Model, locate, measure};
 use serde_json::{Value, json};
 use std::cmp::Ordering;
 
@@ -147,10 +147,26 @@ impl View<'_> {
         rows
     }
 
+    /// §FS-lsp.1.1: a finding about a citation starts at the citation's column,
+    /// the `nth` occurrence of its pinned `token` on the finding's line.
+    pub fn column(&self, f: &Value) -> Value {
+        let (Some(token), Some(path), Some(line)) =
+            (f["token"].as_str(), f["path"].as_str(), f["line"].as_u64())
+        else {
+            return Value::Null;
+        };
+        let nth = f["nth"].as_u64().unwrap_or(1) as usize;
+        self.m
+            .text(path)
+            .ok()
+            .and_then(|text| locate(text, token, nth, line as usize).ok())
+            .map_or(Value::Null, |(_, column, _)| json!(column))
+    }
+
     pub fn finding(&self, f: &Value) -> Value {
         json!({"severity":f["severity"],"channel":null,"code":f["code"],
             "path":f["path"].as_str().map(|p| self.site(p)),"line":f["line"],
-            "column":null,"message":f["message"],"sites":self.sites(&f["sites"]),
+            "column":self.column(f),"message":f["message"],"sites":self.sites(&f["sites"]),
             "authority":f.get("authority").cloned().unwrap_or(json!([]))})
     }
 

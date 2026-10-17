@@ -288,19 +288,16 @@ fn patch(fmt: &mut Value, inputs: &BTreeMap<String, Vec<u8>>) -> Result<(), Stri
 
 /// Expand every applicable variant of a manifest that carries compact facts.
 pub fn expand(document: &mut Value) -> Result<(), String> {
-    let Some(mut facts) = document.get("facts").cloned() else {
+    let Some(facts) = document.get("facts").cloned() else {
         return Ok(());
     };
     let inputs = input_files(document);
-    patch(&mut facts["fmt"], &inputs)?;
     for name in super::agreement_corpus::VARIANTS {
         let mut compact = document["variants"][*name].clone();
         if compact["absent"].is_string() {
             continue;
         }
-        if compact.get("fmt").is_some() {
-            patch(&mut compact["fmt"], &inputs)?;
-        }
+
         let (relative, overlay) = selection(document, &inputs, name);
         let variant = Variant {
             name,
@@ -318,6 +315,12 @@ pub fn expand(document: &mut Value) -> Result<(), String> {
                 .get(o)
                 .map_or_else(|| "Agreement buffer control.\n".into(), |b| held(b));
             files.insert(o.clone(), held.into_bytes());
+        }
+        // A rewrite patches the saved bytes: under an overlay, the held edit saved.
+        let mut facts = facts.clone();
+        patch(&mut facts["fmt"], &files)?;
+        if compact.get("fmt").is_some() {
+            patch(&mut compact["fmt"], &files)?;
         }
         let texts = files
             .iter()
