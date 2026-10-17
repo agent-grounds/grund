@@ -7,16 +7,16 @@ with exact question accounting under
 The loader and consumers are in the CLI test support modules. They follow
 [§AR-system.principle](../../../docs/architecture/README.md#principle-one-fact-one-point-one-implementation).
 
-**Construction status:** the twelve cases without input repositories have
-input-pinned applicability manifests here, five of them stale against their
-pins. The comparison asks the seed's sampled first projects and every case of
-each family `COVERED` names
-([§REQ-one-answer.proof.matrix.family](../../../docs/requirements/REQ-one-answer.md#proofmatrixfamily-a-family-is-covered-whole-or-not-at-all)),
-so a manifest is required for those cases first: tranche 1 covers `cover`,
-`scan`, `stub` and `symlink`, and none of its cases has one yet. A manifest
-that exists is validated whether or not its case is asked, and the matrix
-rejects every gap before native preparation. Query consumers require
-physical-fact partitions. The regression-envelope JSON
+**Construction status:** every case the acceptance asks has a manifest here:
+the seed's sampled first projects and every case of `cover`, `scan` and `stub`,
+the families tranche 1 covers whole
+([§REQ-one-answer.proof.matrix.family](../../../docs/requirements/REQ-one-answer.md#proofmatrixfamily-a-family-is-covered-whole-or-not-at-all)).
+`symlink` stays a row of `WIDENING`: its sampled project,
+`symlink-alias-read-once`, has facts, and its fourteen other cases do not yet.
+The twelve cases without input repositories keep input-pinned applicability
+manifests. A manifest that exists is validated whether or not its case is
+asked, and the matrix rejects every gap before native preparation. Query
+consumers require physical-fact partitions. The regression-envelope JSON
 files in the CLI fixtures are recorded comparator inputs, not oracle manifests.
 This directory and the loader do not discharge S4.
 
@@ -72,8 +72,8 @@ questions, cited coordinates and the explicit `absentQuery` control (also throug
 each alias). `coordinates` must equal that closure. The same derivation supplies
 both the driver and receipt obligations; matching deleted calls cannot certify
 a smaller supplied list. Deleting an inventoried fact leaves an invalid physical
-partition. This representation is source construction, not executed corpus proof:
-all actual input-case classifications and expected answers remain to be authored.
+partition. A manifest may author this representation through a compact `facts` block
+instead; see below.
 
 `calls` has these exact keys:
 
@@ -111,6 +111,36 @@ An inapplicable variant names one of the materializer's precise physical reasons
 in `absent`. Materialization still checks that reason against the actual input.
 Windows symlink privilege refusals are separately verified against the manifest
 and actual error code; they cannot be authored as a general skip.
+
+## Compact facts
+
+A manifest may pin its input once, as a top-level `facts` block, and leave each
+applicable variant only its `absent` and what that variant reads differently.
+The loader expands it, after holding `inputFiles` to the fixture and before
+validation, into every variant's context, physical query inventory, coordinates,
+calls and written changes for the CLI, Python, Node and the editor. The block
+carries `point` and `authoredFrom`, and then:
+
+- `scanned`: the files the walk reads, by the spelling it keeps;
+  `kinds` when the config declares its own, and `workspace` and `aliases` for
+  a workspace root.
+- `declarations`, `sections` and `citations`: each by its file and its written
+  heading or token, with the title, anchor, body range, enclosing declaration
+  and the stub, duplicate or value-root facts its point defines.
+- `findings` and `refusals`: each finding as `check` publishes it, and each
+  refused query with its code, message and the questions it refuses.
+- `fmt`: the changes a dry run lists and a write makes, and the written lines.
+- `absentQuery`, `editor` and `coverLines` where the case needs them.
+
+Lines, columns, byte offsets, bodies and measurements are read from the input
+bytes, so the authored part is what the defining points decide. A variant may
+pin `findings`, `refusals`, `scanned`, `declarations`, `sections`, `citations`,
+`fmt` or `coverLines` for itself: a member run of a workspace reads its member
+alone (`member`), and an explicit path names a linked file by the spelling it
+gives. A link the case's `symlinks` manifest declares reads as its target, and
+the editor names its sites by that target, the file's filesystem identity.
+`inputs.py <case>` refreshes a manifest's `inputFiles` from the fixture and
+reads nothing else.
 
 There is no answer-regeneration command. Do not copy engine output into these
 files, replace input provenance with another surface, or use the original

@@ -338,6 +338,7 @@ const WIDENING: &[(&str, &str)] = &[
     ("schema", "S4"),
     ("section", "S4"),
     ("show", "S4"),
+    ("symlink", "S4"),
     ("word", "S4"),
     ("workspace", "S4"),
 ];
@@ -345,7 +346,7 @@ const WIDENING: &[(&str, &str)] = &[
 /// The end-to-end families the comparison asks whole, every case under every
 /// applicable variant and surface (§REQ-one-answer.proof.matrix.family);
 /// `WIDENING` names every other family (§REQ-one-answer.proof.delivery.widening).
-const COVERED: &[&str] = &["cover", "scan", "stub", "symlink"];
+const COVERED: &[&str] = &["cover", "scan", "stub"];
 
 /// Every divergence found, as `(tree, invariant, the answers that differ)`.
 fn divergences() -> Vec<(String, &'static str, String)> {
