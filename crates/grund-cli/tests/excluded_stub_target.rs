@@ -48,12 +48,17 @@ fn write(root: &Path, relative: &str, body: &str) {
 }
 
 fn grund(root: &Path, args: &[&str]) -> Output {
+    grund_in(root, root, args)
+}
+
+/// `grund` run from `cwd`, with the git configuration of the tree at `root`.
+fn grund_in(root: &Path, cwd: &Path, args: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_grund"))
         .args(args)
         .env("GIT_CONFIG_GLOBAL", root.join("xdg/git/config"))
         .env("GIT_CONFIG_NOSYSTEM", "1")
         .env("XDG_CONFIG_HOME", root.join("xdg"))
-        .current_dir(root)
+        .current_dir(cwd)
         .output()
         .expect("run grund")
 }
@@ -301,28 +306,78 @@ fn spent_warning_ignore_leaves_the_replacement_visible() {
     assert!(String::from_utf8_lossy(&ignored.stdout).contains("\"code\":\"broken-stub\""));
 }
 
-/// §FS-declarations.stubs.target.3: global git ignores use the same matcher,
-/// and name the absolute ignore file plus the authored pattern. The pattern is
-/// unanchored because the walk roots the global matcher at the working directory,
-/// which on Windows never carries the `\\?\` spelling of the canonical paths it walks.
-#[test]
-fn a_global_ignore_refuses_and_names_its_file() {
-    let root = tree("global-ignore").canonicalize().unwrap();
+/// The tree with `pattern` as the only line of a global excludes file outside it,
+/// and that file in the report spelling, `/` on every platform (§FS-errors.4).
+fn global_ignore_tree(name: &str, pattern: &str) -> (PathBuf, String) {
+    let root = tree(name).canonicalize().unwrap();
     let global = root.with_extension("ignore");
-    fs::write(&global, "gen/\n").unwrap();
+    fs::write(&global, format!("{pattern}\n")).unwrap();
     write(
         &root,
         "xdg/git/config",
         &format!("[core]\nexcludesFile = {}\n", global.display()),
     );
+    (root, global.to_string_lossy().replace('\\', "/"))
+}
+
+/// §FS-declarations.stubs.target.3: global git ignores use the same matcher,
+/// and name the absolute ignore file plus the authored pattern. The pattern is
+/// anchored, and it anchors at the repository top (§FS-scan.scope.ignore-files.global).
+/// This is the Windows case of that anchor: there the walk reads canonical `\\?\`
+/// paths, which no working directory prefixes, so the run from the top is red there
+/// until the matcher is rooted at the repository top.
+#[test]
+#[cfg_attr(
+    windows,
+    ignore = "red on Windows until #785 anchors the global excludes at the repository top; \
+              implement removes this"
+)]
+fn a_global_ignore_refuses_and_names_its_file() {
+    let (root, file) = global_ignore_tree("global-ignore", "notes/gen/");
     let output = check(&root, &[]);
-    // §FS-errors.4: the report spells the file with `/` on every platform.
-    let file = global.to_string_lossy().replace('\\', "/");
     assert_eq!(
         String::from_utf8_lossy(&output.stdout),
-        refusal(&file, "gen/")
+        refusal(&file, "notes/gen/")
     );
     assert_eq!(output.status.code(), Some(1));
+}
+
+/// §FS-scan.scope.ignore-files.global: an anchored global pattern anchors at the
+/// repository top, not at the directory the run starts from, so `check` from `docs/`
+/// refuses the stub just as `check` from the top does, and as git ignores the target.
+#[test]
+#[ignore = "red until #785 anchors the global excludes at the repository top; implement removes this"]
+fn a_global_ignore_refuses_from_a_subdirectory() {
+    let (root, file) = global_ignore_tree("global-ignore-subdirectory", "notes/gen/");
+    let output = grund_in(&root, &root.join("docs"), &["check"]);
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        refusal(&file, "notes/gen/"),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(output.status.code(), Some(1));
+}
+
+/// §FS-scan.scope.ignore-files.global: a `.gitignore` re-include outranks the global
+/// file, from the top and from a subdirectory alike, so the stub stays readable.
+#[test]
+fn a_gitignore_re_include_outranks_a_global_ignore_for_a_stub() {
+    let (root, _) = global_ignore_tree("global-ignore-re-include", "notes/gen/");
+    write(&root, ".gitignore", "!notes/gen/\n");
+    for cwd in [root.clone(), root.join("docs")] {
+        let output = grund_in(&root, &cwd, &["check"]);
+        assert_eq!(
+            (
+                String::from_utf8_lossy(&output.stdout),
+                output.status.code()
+            ),
+            ("success\n".into(), Some(0)),
+            "from {}: {}",
+            cwd.display(),
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
 }
 
 /// §FS-declarations.stubs.target.3: first rule descending, exclude before ignore

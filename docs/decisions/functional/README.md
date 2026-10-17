@@ -127,6 +127,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-default-extensions-follow-language-table](DF-default-extensions-follow-language-table.md#df-default-extensions-follow-language-table-the-scan-extensions-default-reads-every-language-grund-classifies) — the `[scan] extensions` default reads every language grund classifies
 - [§DF-fs-home-moves-from-0-19](DF-fs-home-moves-from-0-19.md#df-fs-home-moves-from-0-19-the-built-in-fs-home-moves-back-to-docsfunctional-spec-in-0190-and-the-template-declares-req-now) — the built-in FS home moves back to docs/functional-spec/ in 0.19.0, and the template declares REQ now
 - [§DF-fs-home-lands-in-0-19](DF-fs-home-lands-in-0-19.md#df-fs-home-lands-in-0-19-the-built-in-fs-home-is-docsfunctional-spec-from-0190) — the built-in FS home is docs/functional-spec/ from 0.19.0
+- [§DF-global-excludes-anchor-at-the-repository-top](DF-global-excludes-anchor-at-the-repository-top.md#df-global-excludes-anchor-at-the-repository-top-a-global-excludes-pattern-anchors-at-the-repository-top-wherever-grund-runs-from) — a global excludes pattern anchors at the repository top, wherever grund runs from
 
 ## The command surface
 
