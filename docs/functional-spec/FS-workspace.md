@@ -582,10 +582,9 @@ Value bindings use this resolver without a parallel lookup path. An unqualified 
 ## 5. Command scope
 
 Which projects a run at the workspace root loads is [§FS-scan.projects.workspace-root](FS-scan.md#projectsworkspace-root-a-run-at-the-workspace-root-loads-every-project), and a
-run narrower than the config root is [§FS-scan.projects.narrowed](FS-scan.md#projectsnarrowed-a-path-below-the-config-root-loads-what-a-run-from-it-would-see). A run inside a
-member is [§FS-workspace.5.1](FS-workspace.md#51-a-member-run); how a run that loads no workspace recognizes a qualified
-citation is [§FS-workspace.5.2](FS-workspace.md#52-recognition-in-a-run-that-loads-no-workspace); how a run at the workspace root names a project whose
-scan read nothing is [§FS-workspace.5.3](FS-workspace.md#53-the-empty-scan-caution-names-each-project-from-the-report-base).
+run narrower than the config root is [§FS-scan.projects.narrowed](FS-scan.md#projectsnarrowed-a-path-below-the-config-root-loads-what-a-run-from-it-would-see). A member run is
+[§FS-workspace.5.1](FS-workspace.md#51-a-member-run), recognition without a workspace is [§FS-workspace.5.2](FS-workspace.md#52-recognition-in-a-run-that-loads-no-workspace), and how the empty-scan
+caution names projects is [§FS-workspace.5.3](FS-workspace.md#53-the-empty-scan-caution-names-each-project-from-the-report-base).
 
 ### 5.1 A member run
 
