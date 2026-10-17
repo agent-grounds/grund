@@ -1,7 +1,8 @@
 """§AR-ci.5, §AR-ci.5.4, §AR-ci.12, §AR-ci.13.2 — one build job hands the binaries to a
 shard matrix of the catalog's `shards` legs, a record job merges their partial records,
-`cargo test (ubuntu-latest)` needs all three, and a merge-queue group skips them. A
-scheduled workflow runs the nightly tier, and the pre-release checks call it.
+and `cargo test (ubuntu-latest)` needs all three and accepts only their success, on a
+merge-queue group as on every other event. A scheduled workflow runs the nightly tier,
+and the pre-release checks call it.
 
 Read as text, the way `test_ci_language_jobs.py` reads `ci.yml` (§AR-ci.13.5)."""
 
@@ -9,7 +10,8 @@ import json
 import re
 import unittest
 
-from test_ci_language_jobs import BENCH_ENV, BENCH_IMAGE, header, job_env, needs, with_local_actions
+from test_ci_language_jobs import (BENCH_ENV, BENCH_IMAGE, bench_guard_problems, header, holds,
+                                   job_env, needs, with_local_actions)
 from test_release_workflow import REPO_ROOT, WORKFLOWS, jobs, squash
 
 CI = WORKFLOWS / "ci.yml"
@@ -17,7 +19,6 @@ NIGHTLY = WORKFLOWS / "bench-nightly.yml"
 PRE_RELEASE = WORKFLOWS / "pre-release-checks.yml"
 CATALOG = REPO_ROOT / "crates/grund-cli/benches/scenarios.json"
 BUILD, SHARD, RECORD = "bench-build", "bench", "bench-record"
-SKIP = "github.event_name != 'merge_group'"
 
 
 def shard_count():
@@ -68,22 +69,23 @@ class TheBenchmarkJobsAreBuildShardsAndRecord(unittest.TestCase):
             for key, value in BENCH_ENV.items():
                 self.assertEqual(value, env.get(key), f"{key} differs between the jobs")
 
-    def test_a_merge_queue_group_skips_all_three(self):
+    # red until #792 drops the merge_group bench exemption; implement removes this
+    @unittest.expectedFailure
+    def test_a_merge_queue_group_runs_all_three(self):
+        # §AR-ci.12
         for name in (BUILD, SHARD, RECORD):
             with self.subTest(job=name):
                 condition = re.search(r"(?m)^    if:\s*(.+)$", header(self.job(name)))
-                self.assertIsNotNone(condition, f"{name} runs on merge-queue groups")
-                self.assertEqual(SKIP, condition.group(1).strip())
+                self.assertTrue(holds(condition and condition.group(1), "merge_group"),
+                                f"{name} does not run on merge-queue groups")
 
-    def test_the_ubuntu_check_needs_all_three_and_accepts_only_the_queues_skip(self):
-        aggregate = self.job("test-ubuntu")
-        listed = set(needs(header(aggregate)))
+    # red until #792 drops the merge_group bench exemption; implement removes this
+    @unittest.expectedFailure
+    def test_the_ubuntu_check_needs_all_three_and_accepts_only_their_success(self):
+        # §AR-ci.13.2: a failure, a cancellation or a skip of any of them fails it, on every event.
+        listed = set(needs(header(self.job("test-ubuntu"))))
         self.assertLessEqual({BUILD, SHARD, RECORD}, listed)
-        flat = " ".join(aggregate.split())
-        for name in (BUILD, SHARD, RECORD):
-            with self.subTest(job=name):
-                self.assertIn(f"needs.{name}.result == 'skipped' && "
-                              "github.event_name == 'merge_group'", flat)
+        self.assertEqual([], bench_guard_problems(CI.read_text(encoding="utf-8")))
 
 
 class TheNightlyTierRunsOnASchedule(unittest.TestCase):
