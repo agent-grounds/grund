@@ -112,33 +112,13 @@ pub fn show(
                 Err(error) => errors.push(error),
             }
         }
+        // §REQ-one-answer.proof.evidence.closed: R01 closed with
+        // §DF-path-narrows-the-report-in-0-19, so an editor answer the command
+        // line refuses is a divergence wherever its home lies.
         if logical_value(json!(cli), context) != logical_value(json!([actual.clone()]), context) {
-            let selected = PathBuf::from(text(context, "path"));
-            let outside_selection = actual["path"].as_str().is_some_and(|path| {
-                let target = saved_path(context, &physical(&editor_scope, path));
-                !target
-                    .canonicalize()
-                    .unwrap_or(target)
-                    .starts_with(selected.canonicalize().unwrap_or_else(|_| selected.clone()))
-            });
-            if cli_refused
-                && cli.is_empty()
-                && context["variant"] != "whole-tree"
-                && context["variant"] != "editor-overlay"
-                && outside_selection
-            {
-                // §REQ-one-answer.differences.scope: R01 holds only the outside home.
-                evidence::receipt(
-                    "known-difference",
-                    &selected,
-                    json!({"coordinate":coordinate,"outsideHome":actual["path"]}),
-                    json!({"row":"R01","editor":actual,"cli":cli}),
-                );
-            } else {
-                errors.push(format!(
-                    "editor hover {coordinate}: {actual} against {cli:?}"
-                ));
-            }
+            errors.push(format!(
+                "editor hover {coordinate}: {actual} against {cli:?}"
+            ));
         }
     } else if !cli_refused || !cli.is_empty() {
         errors.push(format!("editor refuses {coordinate}, CLI answers {cli:?}"));
@@ -226,38 +206,10 @@ pub fn check(context: &Value, loaded: &Value, host: &Value, errors: &mut Vec<Str
     };
     let actual = facts(&snapshot["report"], &editor_scope);
     let expected = facts(&host["result"]["selected_report"], context);
-    if actual == expected {
-        return;
-    }
-    let only_cli: Vec<_> = expected.difference(&actual).collect();
-    let only_editor: Vec<_> = actual.difference(&expected).collect();
-    let known = !only_cli.is_empty()
-        && only_editor.is_empty()
-        && context["variant"] != "whole-tree"
-        && context["variant"] != "editor-overlay"
-        && snapshot["workspace"] == true
-        && only_cli.iter().all(|f| {
-            f.1 == "unknown-project"
-                && snapshot["citations"].as_array().unwrap().iter().any(|c| {
-                    Some(render_path(c["path"].as_str().unwrap(), &editor_scope)) == f.2
-                        && c["line"].as_u64() == f.3
-                        && !c["target_path"].is_null()
-                        && c["query_id"]
-                            .as_str()
-                            .unwrap()
-                            .split_once('/')
-                            .is_some_and(|(alias, _)| f.4.contains(&format!("`{alias}`")))
-                })
-        });
-    if known {
-        // §REQ-one-answer.differences.scope: retain R02's exact alias condition.
-        evidence::receipt(
-            "known-difference",
-            Path::new(&text(context, "path")),
-            json!({"resolvedCitationSites":snapshot["citations"]}),
-            json!({"row":"R02","onlyCli":only_cli}),
-        );
-    } else {
+    // §REQ-one-answer.proof.evidence.closed: R02 closed with
+    // §DF-path-narrows-the-report-in-0-19, so an alias the editor resolves and
+    // `check` refuses is a divergence on every variant.
+    if actual != expected {
         errors.push(format!(
             "editor/check findings: {actual:?} against {expected:?}"
         ));

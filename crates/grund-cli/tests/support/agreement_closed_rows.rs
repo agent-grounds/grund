@@ -63,7 +63,6 @@ fn listed(target: &str) -> Value {
 }
 
 #[test]
-#[ignore = "red until #674 drops the Placement exception; implement removes this"]
 fn placement_a_declaration_listed_at_its_stub_is_a_divergence() {
     let (tree, loaded) = outside_target(
         "closed-placement",
@@ -109,7 +108,6 @@ fn batch(sections: &[&str]) -> Value {
 const SECTIONED: &str = "# FS-alpha: Alpha\n\n## 1. One\n\nBody.\n";
 
 #[test]
-#[ignore = "red until #674 drops the U03a exception; implement removes this"]
 fn u03a_a_batch_omitting_an_outside_targets_section_is_a_divergence() {
     let (tree, loaded) = outside_target("closed-u03a", "target.md", SECTIONED);
     let context = json!({"saved":tree.0,"base":tree.0,"reportBase":tree.0});
@@ -136,7 +134,6 @@ fn u03a_a_batch_omitting_an_outside_targets_section_is_a_divergence() {
 }
 
 #[test]
-#[ignore = "red until #674 drops the U03c exception; implement removes this"]
 fn u03c_an_editor_omitting_an_outside_targets_section_is_a_divergence() {
     let (tree, mut loaded) = outside_target("closed-u03c", "target.md", SECTIONED);
     // The editor once left the target's sections out; hand the comparator that answer.
@@ -167,7 +164,6 @@ fn u03c_an_editor_omitting_an_outside_targets_section_is_a_divergence() {
 /// R01's condition: a path argument below the declaration's home, the command
 /// line refusing, and the editor answering from outside the selection.
 #[test]
-#[ignore = "red until #674 drops the R01 exception; implement removes this"]
 fn r01_an_editor_answer_a_narrowed_show_refuses_is_a_divergence() {
     let tree = Tree::new(
         "closed-r01",
@@ -203,7 +199,6 @@ fn r01_an_editor_answer_a_narrowed_show_refuses_is_a_divergence() {
 /// R02's condition: a narrowed workspace run whose `check` refuses an alias
 /// citation as an unknown project while the editor resolves it.
 #[test]
-#[ignore = "red until #674 drops the R02 exception; implement removes this"]
 fn r02_an_alias_the_editor_resolves_and_check_refuses_is_a_divergence() {
     let tree = Tree::new("closed-r02", &[("grund.toml", CONFIG_SLUG)]);
     let context = json!({"base":tree.0,"saved":tree.0,"reportBase":tree.0,
