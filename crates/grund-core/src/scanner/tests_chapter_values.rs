@@ -7,7 +7,8 @@ use std::path::PathBuf;
 
 use crate::api::check;
 use crate::config::Config;
-use crate::model::{Catalog, ValueRootOrigin};
+use crate::model::{Catalog, Id, ShowRenderMode, ValueRootOrigin};
+use crate::queries::show_declaration;
 use crate::testing::{embedded_value_config, scan_tree, test_root, write};
 
 /// `AR` declarations under `docs/`, with `values` as the declared chapter and
@@ -120,6 +121,58 @@ fn a_marked_numeric_root_keeps_its_own_origin_beside_a_chapter_root() {
             ),
             ("values.aux-voltage".to_string(), ValueRootOrigin::Chapter),
         ]
+    );
+}
+
+/// A marked root's section-map title drops the separating space and tag, as its
+/// anchor and LSP title do, while the raw heading `show` prints keeps it; a
+/// chapter root has no tag to drop (§FS-values.2.4.2).
+#[test]
+fn a_marked_roots_map_title_drops_its_tag() {
+    let (config, findings) = scan_chapter(
+        "chapter_value_marked_title",
+        Some("values"),
+        "# AR-004-value-probe: Auxiliary power\n\n\
+         ## values: Values\n\n\
+         ### values.aux-voltage: Auxiliary supply voltage\n\n\
+         #### values.aux-voltage.1: 24\n\n\
+         ## 2. Regulator <!-- grund:value -->\n\n\
+         ### 2.1. 10\n",
+    );
+    let id = Id {
+        kind: "AR".to_string(),
+        num: Some(4),
+        slug: Some("value-probe".to_string()),
+    };
+    let toc = show_declaration(
+        &config,
+        &config,
+        &findings,
+        &id,
+        None,
+        ShowRenderMode::Outline,
+        false,
+    )
+    .expect("--toc maps the declaration");
+    let titles: Vec<_> = toc
+        .sections
+        .iter()
+        .map(|section| (section.path.as_str(), section.title.as_str()))
+        .collect();
+    assert_eq!(
+        titles,
+        vec![
+            ("values", "Values"),
+            ("values.aux-voltage", "Auxiliary supply voltage"),
+            ("values.aux-voltage.1", "24"),
+            ("2", "Regulator"),
+            ("2.1", "10"),
+        ]
+    );
+    assert!(
+        toc.body.contains("## 2. Regulator <!-- grund:value -->\n"),
+        "the raw heading keeps its tag: {:?}",
+        toc.body
     );
 }
 
