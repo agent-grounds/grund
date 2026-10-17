@@ -56,7 +56,6 @@ fn a_second_trailing_comment_on_one_v2_line_is_listed() {
 /// comment and warns before the later guidance gate refuses the migration.
 /// A false opt-in emits no form key, so its comment stays in the existing list.
 #[test]
-#[ignore = "red until #783 carried comments on translated values are reported; implement removes this"]
 fn value_form_carried_comment_reports_translated_vocabulary() {
     for enabled in [false, true] {
         let report = report(

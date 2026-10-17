@@ -1,6 +1,7 @@
 grund.toml: version 1 → 2, preview, nothing written
 comments with no single key to follow (--write refuses; --drop-comments drops exactly these):
   grund.toml:28  above [scan] include
+changed: grund.toml:30: [scan] exclude: value vocabulary translated to [schema.sources] exclude; check the carried comment
 mapped: grund.toml:4: grund_config_version → grund_config_version = 2
 mapped: grund.toml:5: project_name → project_name
 mapped: grund.toml:8: [reference] marker → [schema] marker

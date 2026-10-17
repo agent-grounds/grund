@@ -5,7 +5,7 @@
 //! reader's own line pass (§FS-config-migrate.4.3).
 
 use super::keys::Keys;
-use super::record::ListedComment;
+use super::record::{ListedComment, MigrateNotice, MigrateReport};
 use crate::config::v1::{LineKind, LineRecord};
 
 /// Where a carried comment lands in the candidate.
@@ -81,19 +81,48 @@ fn v1_key(record: &LineRecord) -> String {
     }
 }
 
-/// The candidate with the carried comments in, and the comments it lists.
-pub(super) struct Carried {
-    pub(super) text: String,
-    pub(super) listed: Vec<ListedComment>,
+/// §FS-config-migrate.4.1.1: classify the mapping's vocabulary, even when this
+/// particular value keeps its spelling. Only call for an actually carried comment.
+fn translated_comment(record: &LineRecord, keys: &Keys) -> Option<MigrateNotice> {
+    let LineKind::Key { section, key, .. } = &record.kind else {
+        return None;
+    };
+    if !matches!(
+        (section.as_str(), key.as_str()),
+        ("reference", "inline_style" | "lead_size_warning")
+            | ("id", "section_heading_levels")
+            | ("kinds", "resolve" | "rules" | "values")
+            | ("fmt.cross_refs", "enabled")
+            | ("scan", "exclude")
+    ) {
+        return None;
+    }
+    let row = keys.row_at(record.line).map(|block| block.name.as_str());
+    let Target::Key(table, key) = key_target(section, key, row)? else {
+        return None;
+    };
+    Some(MigrateNotice {
+        line: record.line,
+        dropped: false,
+        key: v1_key(record),
+        why: format!("value vocabulary translated to [{table}] {key}; check the carried comment"),
+    })
 }
 
 /// §FS-config-migrate.4: place `lines`' comments into `body`, the rendered candidate.
-pub(super) fn carry(body: &str, lines: &[LineRecord], keys: &Keys) -> Carried {
+/// Report only successful carries onto translated values (§FS-config-migrate.4.1.1).
+pub(super) fn carry(
+    body: &str,
+    lines: &[LineRecord],
+    keys: &Keys,
+    report: &mut MigrateReport,
+) -> String {
     let index = TableIndex::of(body);
     let mut above: Vec<Vec<String>> = vec![Vec::new(); index.lines.len()];
     let mut trailing: Vec<Option<String>> = vec![None; index.lines.len()];
     let mut listed = Vec::new();
     let mut header = Vec::new();
+    let mut commented = vec![false; lines.len()];
     let mut i = 0;
     while i < lines.len() {
         let record = &lines[i];
@@ -116,7 +145,10 @@ pub(super) fn carry(body: &str, lines: &[LineRecord], keys: &Keys) -> Carried {
                 // Two v1 lines can land on one v2 line, which keeps one trailing
                 // comment: a later one is listed, never overwritten (§FS-config-migrate.4.4).
                 match target_of(record).and_then(|t| index.find(&t)) {
-                    Some(at) if trailing[at].is_none() => trailing[at] = Some(comment),
+                    Some(at) if trailing[at].is_none() => {
+                        trailing[at] = Some(comment);
+                        commented[i] = true;
+                    }
                     _ => listed.push(ListedComment {
                         first: record.line,
                         last: record.line,
@@ -150,7 +182,10 @@ pub(super) fn carry(body: &str, lines: &[LineRecord], keys: &Keys) -> Carried {
             continue;
         };
         match target_of(next).and_then(|t| index.find(&t)) {
-            Some(at) => above[at].extend(run),
+            Some(at) => {
+                above[at].extend(run);
+                commented[i] = true;
+            }
             None => listed.push(ListedComment {
                 first,
                 last,
@@ -178,7 +213,16 @@ pub(super) fn carry(body: &str, lines: &[LineRecord], keys: &Keys) -> Carried {
         }
         text.push('\n');
     }
-    Carried { text, listed }
+    report.comments = listed;
+    report.notices.extend(
+        lines
+            .iter()
+            .zip(commented)
+            .filter(|(_, carried)| *carried)
+            .filter_map(|(record, _)| translated_comment(record, keys)),
+    );
+    report.notices.sort_by_key(|notice| notice.line);
+    text
 }
 
 /// The candidate's lines, each with the table it sits in.

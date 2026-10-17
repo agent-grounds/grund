@@ -24,8 +24,9 @@ Run it without `--write`. Stdout is the candidate, exactly the bytes `--write`
 would write, so `grund config migrate --to 2 > candidate.toml` keeps it to read
 ([§FS-config-migrate.2.1](../functional-spec/FS-config-migrate.md#21-stdout-is-the-candidate)).
 Stderr is the report: what was refused, the comments with nowhere to go, what
-was dropped or changed, where each version-1 key went, the defaults written
-out, and whether the two gates passed
+was dropped or changed, carried comments to check after a value-vocabulary
+translation, where each version-1 key went, the defaults written out, and
+whether the two gates passed
 ([§FS-config-migrate.2.2](../functional-spec/FS-config-migrate.md#22-stderr-is-the-report)).
 The exit is `0` when `--write` would succeed, `1` when it would refuse, and `2`
 when there is no config or the command was used wrongly
@@ -47,13 +48,24 @@ is yours to review; the migration that follows changes none.
 [`examples/migrate/migrate-2-repaired`](../../examples/migrate/migrate-2-repaired/)
 is the same repository after both repairs. Its preview prints the candidate.
 
-## 3. Read the listed comments
+## 3. Check carried comments and read the listed comments
 
 A comment above a key that maps to exactly one version-2 key moves with it, and
 the header block at the top of the file stays at the top. A comment with no
 single key to follow, such as one above `[scan] include`, which becomes several
 version-2 keys, is listed by its lines
 ([§FS-config-migrate.4](../functional-spec/FS-config-migrate.md#4-comments)).
+
+When a carried comment follows a setting whose value vocabulary changes, the
+report names its original location and destination and asks you to check it
+([§FS-config-migrate.4.1.1](../functional-spec/FS-config-migrate.md#411-check-carried-comments-when-the-value-vocabulary-changes)).
+For example, `section_heading_levels = "strict" # strict | warn | loose`
+becomes `heading_depth = "must" # strict | warn | loose`: the comment stays,
+but its listed values need updating to `must | warn | may`. The warning also
+appears for neutral prose, since migration does not judge what comments mean.
+Check these comments in the candidate, in preview or after `--write`;
+`--drop-comments` retains them and does not silence their warnings.
+
 `--write` refuses while any comment is listed. Read them; move what still
 matters into the version-1 file next to a key that maps one-to-one, or accept
 that they go. Only then add `--drop-comments`, which drops exactly the comments
