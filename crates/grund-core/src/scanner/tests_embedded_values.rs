@@ -333,6 +333,42 @@ fn formatter_preserves_qualified_embedded_binding_across_two_writes() {
     assert_formatter_and_comparison_stable(&root, &path);
 }
 
+/// §FS-values.8, §FS-workspace.4.4: a qualified binding into a member's value
+/// chapter keeps its bytes though the citing member's grammar, without named
+/// sections, reads only the ID from the same marker.
+#[test]
+fn formatter_preserves_a_qualified_chapter_binding_the_citing_grammar_reads_short() {
+    let root = test_root("embedded_fmt_qualified_chapter");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\nproject_name = \"root\"\n\n\
+             [workspace]\nmembers = [\"power\", \"shop\"]\ninclude_root = false\n",
+    );
+    write(
+        &root.join("power/grund.toml"),
+        "grund_config_version = 1\nproject_name = \"power\"\n\n[id]\nnamed_sections = true\n\n\
+             [[kinds]]\nkind = \"AR\"\nfolder = \"docs\"\nindex = false\nvalue_chapter = \"values\"\n\n\
+             [scan]\ninclude = [\"docs\"]\n",
+    );
+    write(
+        &root.join("shop/grund.toml"),
+        "grund_config_version = 1\nproject_name = \"shop\"\n\n\
+             [[kinds]]\nkind = \"AR\"\nfolder = \"docs\"\nindex = false\n\n\
+             [scan]\ninclude = [\"docs\"]\n",
+    );
+    write(
+        &root.join("power/docs/power.md"),
+        "# AR-004-value-probe: Auxiliary power\n\n## values: Values\n\n\
+             ### values.aux-voltage: Auxiliary supply voltage\n\n#### values.aux-voltage.1: 24\n",
+    );
+    let path = root.join("shop/docs/offer.md");
+    write(
+        &path,
+        "# Offer\n\nBound: `48` (§power/AR-004-value-probe.values.aux-voltage.1)\n",
+    );
+    assert_formatter_and_comparison_stable(&root, &path);
+}
+
 fn assert_formatter_and_comparison_stable(root: &Path, path: &Path) {
     let before = fs::read_to_string(path).expect("read authored binding");
     for _ in 0..2 {
