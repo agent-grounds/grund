@@ -85,6 +85,7 @@ mod multi_line_forms;
 mod multi_line_string;
 mod near_miss;
 mod never_rewrite;
+mod qualified_context;
 mod relative_heading;
 mod section_paths;
 mod settings;
@@ -147,9 +148,9 @@ pub(crate) use near_miss::{declaration_captures, near_miss_heading};
 pub(crate) use never_rewrite::{
     DocstringContent, DocstringCursor, bare_token_in_never_rewrite_zone, in_escape_position,
     is_escaped, is_inside_inline_code, is_inside_markdown_link_destination,
-    markdown_never_rewrite_context, never_rewrite_context_in, qualified_suppressed_in_source,
-    string_literal_in,
+    markdown_never_rewrite_context, never_rewrite_context_in, string_literal_in,
 };
+pub(crate) use qualified_context::QualifiedSource;
 pub(crate) use relative_heading::{
     expand_relative_heading, may_hold_relative_heading, relative_heading_form,
     relative_heading_hint, relative_to_ancestor,

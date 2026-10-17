@@ -99,7 +99,6 @@ fn assert_report(actual: &str, expected: &[String]) {
 /// §FS-citations.recognized.contexts: each qualified comment is diagnosed like
 /// the no-quote control; the marked unqualified apostrophe control stays live.
 #[test]
-#[ignore = "red until #778 recognizes qualified comments after nonliteral quotes; implement removes this"]
 fn qualified_comments_after_quotes_unknown_alias() {
     let fixture = Fixture::new("unknown-alias", false);
     fixture.reproducer();
@@ -114,7 +113,6 @@ fn qualified_comments_after_quotes_unknown_alias() {
 /// §FS-citations.recognized.contexts: configured aliases use the workspace
 /// target verdict for every recovered site, rather than silently omitting it.
 #[test]
-#[ignore = "red until #778 recognizes qualified comments after nonliteral quotes; implement removes this"]
 fn qualified_comments_after_quotes_configured_alias() {
     let fixture = Fixture::new("configured-alias", true);
     fixture.reproducer();

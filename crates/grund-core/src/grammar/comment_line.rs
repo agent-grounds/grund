@@ -1,7 +1,8 @@
 use super::compiled::QUALIFIED_CITATION_PREFIX;
 use super::id_format::parse_longest_id_prefix;
 use super::ids::parse_loose_qualified_id_prefix;
-use super::never_rewrite::{is_inside_string_literal, qualified_suppressed_in_source};
+use super::never_rewrite::is_inside_string_literal;
+use super::qualified_context::QualifiedSource;
 use super::settings::{AliasGrammar, LexicalSettings};
 use super::source_line::{PrefixForms, longest_form_at, prefix_forms};
 use crate::model::BlockForm;
@@ -29,6 +30,13 @@ fn citation_token_ranges(
     alias_grammars: &[AliasGrammar<'_>],
 ) -> Vec<(usize, usize)> {
     let mut ranges = Vec::new();
+    // §FS-citations.recognized.contexts: note classification reads the same
+    // qualified-comment policy as both scanner passes, not the bare-token toggle.
+    let qualified = QualifiedSource {
+        forms: None,
+        comment_prefixes: lexical.comment_prefixes,
+        comment_range: Some((0, line.len())),
+    };
     // §FS-check.1.1.10: note classification shares the scanner's marked-token starts.
     for (offset, caps) in lexical
         .grammar
@@ -61,10 +69,7 @@ fn citation_token_ranges(
         } else {
             token_start
         };
-        if namespace.is_some()
-            && has_marker
-            && qualified_suppressed_in_source(line, entry, false, start)
-        {
+        if namespace.is_some() && has_marker && qualified.suppressed(line, entry, false, start) {
             continue;
         }
         ranges.push((start, token_end));
@@ -75,7 +80,7 @@ fn citation_token_ranges(
     }
     for (marker_start, _) in line.match_indices(lexical.marker) {
         if ranges.iter().any(|(start, _)| *start == marker_start)
-            || is_inside_string_literal(line, entry, marker_start)
+            || qualified.suppressed(line, entry, false, marker_start)
         {
             continue;
         }
