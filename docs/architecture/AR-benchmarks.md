@@ -226,6 +226,10 @@ The millisecond budget itself is still backstopped by the cheap wall-clock guard
 - Nightly and before a release: the `nightly` tier of section 1.2.1, every row of both tiers, on `main`, against the ceilings alone ([§AR-ci.5.4](AR-ci.md#54-the-nightly-tier)).
 - Every run is written down as one run record per revision ([§AR-benchmarks.7](AR-benchmarks.md#7-the-run-record-and-its-series)): each shard writes a partial record with `bench_record.py record`, and `bench_record.py merge` folds the partials into the record. A local run, one process, writes the record directly. Two records are compared only within one series.
 
+### 3.1 The measured process runs under the runtime pins
+
+iai-callgrind clears the environment before it starts the program Callgrind measures, so a variable the job sets reaches the measured process only when the harness names it. The harness names exactly the three **runtime pins**, `RAYON_NUM_THREADS`, `LC_ALL` and `TZ`, as one list in `crates/grund-cli/benches/instructions.rs`, and hands that list to `pass_through_envs` on the configuration every row is measured with, whatever its frontend; every other variable stays cleared, so nothing else of the caller's environment reaches the count. The runtime pins are the variables the measured process reads: `RAYON_NUM_THREADS` sizes its Rayon pool, whose scheduling is part of the count, and `LC_ALL` and `TZ` are the locale and timezone it runs in. The build-only pins of [§AR-ci.5](AR-ci.md#5-benchmark-job), `CARGO_INCREMENTAL` and `RUSTFLAGS`, shape the binary before it runs and are not forwarded. So the `locale`, `timezone` and `threads` a run record names (section 7.1) are those of the process its counts come from. The native probe of [§AR-benchmarks.5.1](AR-benchmarks.md#51-a-scenario-the-base-binary-refuses) inherits the whole environment and needs no list.
+
 ## 4. Relationship to the rest of the tree
 
 - [§AR-goal-measurement.2](AR-goal-measurement.md#2-goal-meters) — this harness is the fast-feedback meter; [§GOAL-fast-feedback.1](../goals.md#1-performance-targets)'s targets are recorded per commit and, on a pull request, compared against a baseline saved from the base branch ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)); growth past the limits fails the build ([§AR-ci.5.2](AR-ci.md#52-regression-limits)).
@@ -263,13 +267,13 @@ Every run of the harness is normalized into one compact JSON **run record** by `
 
 A record holds the `commit` and the SHA-256 of the binary measured (`binary_sha256`), the `ir` count per scenario that ran, the scenarios the binary `refused` ([§AR-benchmarks.5.1](AR-benchmarks.md#51-a-scenario-the-base-binary-refuses)), and the `tier` that ran, `pr` or `nightly` (section 1.2.1). Beside them it holds its identity fields:
 
-- `record_version`, the version of this record format, 2 since the record carries `tier`;
+- `record_version`, the version of this record format, 3 since the measured process runs under the runtime pins of section 3.1: a record of version 2 names a `locale`, `timezone` and `threads` the process its counts come from did not have, so a record of version 3 never joins its series (section 7.2);
 - `environment`, `ci` or `local`;
 - `image`, the container image's digest, or `local`;
 - `rustc`, `valgrind` and `runner`, the versions of the compiler, of Valgrind and of `iai-callgrind-runner`;
 - `build_flags`, the `RUSTFLAGS`, `CARGO_INCREMENTAL` and Cargo profile the binary was built with;
-- `locale` and `timezone`, the `LC_ALL` and `TZ` of the run;
-- `threads`, the `RAYON_NUM_THREADS` of the run;
+- `locale` and `timezone`, the `LC_ALL` and `TZ` of the run, which reach the measured process (section 3.1);
+- `threads`, the `RAYON_NUM_THREADS` of the run, which sizes the measured process's Rayon pool (section 3.1);
 - `fixtures`, each fixture's `schema_version` and `digest` ([§AR-benchmarks.1.1](AR-benchmarks.md#11-generated-fixtures-never-this-repository)).
 
 A record missing an identity field is refused when it is written.
