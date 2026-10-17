@@ -88,8 +88,8 @@ docker run --rm --security-opt seccomp=unconfined -v "$PWD":/work -w /work \
 
 `cargo bench` writes no record. A run is written down as one run record by
 `python3 scripts/bench_record.py record`, run after it — the CI job does so after each
-run but a merge-queue group's, which the queue's push to `main` records, and the command
-above does so in the image
+run except a merge-queue group's, whose revision the queue's push to `main` records, and
+the command above does so in the image
 ([§AR-benchmarks.7](architecture/AR-benchmarks.md#7-the-run-record-and-its-series)):
 the count per scenario, and the identity fields the counts were taken with, which are
 the image, the compiler, Valgrind, the runner, the build flags, the locale, the
