@@ -60,8 +60,8 @@ impl GlobalExcludes {
             && path_is_file(&path)
         {
             // Preserve the existing policy for partial pattern/read errors;
-            // pathname resolution errors above are propagated, never retried
-            // through the dependency's global loader.
+            // watch-coverage errors above propagate, and an unresolved pathname
+            // is never retried through the dependency's global loader.
             let _ = builder.add(path);
         }
         Ok(Self {

@@ -7,6 +7,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
+#[path = "support/global_excludes_compatibility.rs"]
+mod compatibility;
+
 const CONFIG: &str = "grund_config_version = 2\n\n\
     [schema]\nid_format = \"{kind}-{slug}\"\n\n\
     [schema.sources]\nrespect_gitignore = true\n\n\
