@@ -32,8 +32,13 @@ done
 [ ${#specs[@]} -gt 0 ] || skip "no workspace package found"
 
 # `dev` writes target/debug and `release` target/release; `test` and `bench` share them.
-for profile in dev release; do
-  cargo clean --locked --target-dir "$target" --profile "$profile" "${specs[@]}" \
-    || skip "cargo clean --profile $profile failed"
+# The command agreement's 1.95.0 targets nest under agreement/, one per checkout
+# (tests/bindings/agreement_setup.py), and are pruned the same way.
+for dir in "$target" "$target"/agreement/*/; do
+  [ -d "$dir" ] || continue
+  for profile in dev release; do
+    cargo clean --locked --target-dir "$dir" --profile "$profile" "${specs[@]}" \
+      || skip "cargo clean --profile $profile failed in $dir"
+  done
+  rm -rf "$dir"/*/incremental
 done
-rm -rf "$target"/*/incremental

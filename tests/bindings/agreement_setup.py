@@ -1,11 +1,13 @@
 """Same-source, once-per-comparison host inputs (§REQ-one-answer.proof.matrix).
 
 Builds run when the comparison runs, never during collection. No registry package
-or Rust oracle supplies a host answer. Both native libraries use explicit scratch
-targets, and the ready receipt identifies the source and loaded package paths.
+or Rust oracle supplies a host answer. Both native libraries come from one explicit
+1.95.0 build into one target, and the ready receipt identifies the source and
+loaded package paths.
 """
 
 import hashlib
+import json
 import os
 from pathlib import Path
 import shutil
@@ -50,31 +52,50 @@ def checked(argv, **kwargs):
     return result.stdout.strip()
 
 
+# Installs the built cdylib with the Node builder's own file name, layout and metadata.
+INSTALL = ("const [, builder, root, out, debug, target] = process.argv;"
+           " const {install, library} = await import(builder);"
+           " install(root, out, (await import('node:path')).join(debug, library(target)), target);")
+
+
+def agreement_target():
+    """This checkout's 1.95.0 target, nested in the workspace's cargo target.
+
+    The `rust` jobs cache that target whole, so a warm job finds the natives'
+    dependency tree compiled (§REQ-one-answer.proof.delivery.payment). It stays one
+    target per checkout, keyed like the Node acceptance's (§AR-ci.3.4.1.2).
+    """
+    metadata = json.loads(checked(['cargo', 'metadata', '--no-deps', '--format-version', '1',
+                                   '--locked']))
+    key = hashlib.sha256(os.fsencode(ROOT.resolve())).hexdigest()[:16]
+    return Path(metadata['target_directory']) / 'agreement' / key
+
+
 def prepare():
     """Build the actual mixed Python package and Node package for one host.
 
-    Every lane's host prepares its own packages; the first one's builds compile the
-    natives, and a later one's find them fresh.
+    Every lane's host prepares its own packages; the first one's build compiles the
+    natives, and a later one's finds them fresh. One invocation builds both natives,
+    so the dependency tree and `grund-core` compile once rather than once per binding.
     """
     sha = checked(['git', 'rev-parse', 'HEAD'])
     node, node_version = node_runtime()
     toolchains = checked(['rustup', 'toolchain', 'list'])
     if not any(line.startswith('1.95.0-') for line in toolchains.splitlines()):
         checked(['rustup', 'toolchain', 'install', '1.95.0', '--profile', 'minimal'])
+    host = next(line.split(': ', 1)[1] for line in checked(['rustc', '+1.95.0', '-vV']).splitlines()
+                if line.startswith('host: '))
     scratch = Path.home() / 'ag/tmp'
     scratch.mkdir(parents=True, exist_ok=True)
     # Windows cannot delete the native module this process still has loaded.
     temporary = tempfile.TemporaryDirectory(prefix='grund-agreement-', dir=scratch,
                                             ignore_cleanup_errors=True)
     home = Path(temporary.name)
-    key = hashlib.sha256(os.fsencode(ROOT.resolve())).hexdigest()[:16]
-    target = scratch / 'grund-agreement-target' / key
-    # Reuse the existing checkout-keyed Node target; source builders remain locked.
-    sys.path.insert(0, str(ROOT / 'tests/bindings/node'))
-    from support import node_target
+    target = agreement_target()
     environment = dict(os.environ, PYO3_PYTHON=sys.executable, CARGO_INCREMENTAL='0')
     checked(['cargo', '+1.95.0', 'build', '--quiet', '--locked', '-p', 'grund-py',
-             '--features', 'extension-module', '--target-dir', target], env=environment)
+             '-p', 'grund-node', '--features', 'grund-py/extension-module',
+             '--target-dir', target], env=environment)
     package = home / 'python/grund'
     shutil.copytree(ROOT / 'crates/grund-py/python/grund', package)
     library = '_native.dll' if os.name == 'nt' else (
@@ -88,10 +109,10 @@ def prepare():
     assert Path(grund._native.__file__).resolve() == native
     stage = home / 'node'
     checked([node, ROOT / 'crates/grund-node/stage.mjs', '--out-dir', stage,
-             '--target-dir', node_target()])
-    checked([node, ROOT / 'crates/grund-node/build.mjs', '--source-root', ROOT,
-             '--out-dir', stage / 'native', '--target-dir', node_target(),
-             '--profile', 'dev'], env=environment)
+             '--target-dir', target])
+    checked([node, '--input-type=module', '-e', INSTALL,
+             (ROOT / 'crates/grund-node/build.mjs').as_uri(), ROOT, stage / 'native',
+             target / 'debug', host])
     assert checked(['git', 'rev-parse', 'HEAD']) == sha, 'source changed during host build'
     receipt = {'sourceSha': sha, 'sourceRoot': str(ROOT.resolve()), 'setupCommands': COMMANDS,
                'nodeRuntime': node, 'nodeVersion': node_version,

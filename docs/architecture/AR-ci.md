@@ -864,6 +864,9 @@ registry (and the git checkouts, should `Cargo.lock` ever gain a git dependency)
 and the dependencies' compiled artifacts, and not the workspace crates' own
 artifacts, which every run rebuilds from its own sources, nor incremental state: a workflow that caches cargo sets `CARGO_INCREMENTAL: 0`,
 as the Node target's builds already do ([§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build-target)).
+The `rust` jobs' target also holds the command agreement's 1.95.0 target, nested
+under `agreement/` one per checkout, and `scripts/prune_cargo_cache.sh` prunes
+each of those the same way before the save.
 
 `tests/integration/test_ci_cache_saves.py` reads every workflow as text and holds
 it to this point, and it runs its checks against fixture workflows too, so a check
@@ -937,7 +940,9 @@ level 0, so an edit recompiles no faster or slower than before and a debugger st
 sees them as written. The price is paid once per cache key: a cold dependency
 compile takes longer, and the key moves with the profile ([§AR-ci.13.4.1](AR-ci.md#1341-a-key-moves-with-the-profile)), so a warm
 job pays nothing. It is how the first S4 tranche pays inside the `rust` jobs for the
-time its comparison adds ([§REQ-one-answer.proof.delivery.payment](../requirements/REQ-one-answer.md#proofdeliverypayment-each-tranche-pays-for-its-own-time)).
+time its comparison adds ([§REQ-one-answer.proof.delivery.payment](../requirements/REQ-one-answer.md#proofdeliverypayment-each-tranche-pays-for-its-own-time)), with the
+agreement's two natives built in one invocation into a target those jobs cache
+([§AR-ci.13.6](AR-ci.md#136-only-a-push-to-main-saves-a-cache)).
 
 ## requirements: What CI's wall clock and its log hold to
 
