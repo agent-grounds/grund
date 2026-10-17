@@ -119,7 +119,7 @@ def incremental_problems(text):
 CHECKS = (save_problems, pairing_problems, incremental_problems)
 GUARD = "github.event_name == 'push' && github.ref == 'refs/heads/main'"
 PATH = "          path: |\n            ~/.cargo/registry\n            target\n"
-KEY = "          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}\n"
+KEY = "          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}\n"
 
 
 def fixture(combined=False, guard=GUARD, restore_guard=None, incremental=True,

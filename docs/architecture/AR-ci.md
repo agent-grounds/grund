@@ -344,12 +344,13 @@ acceptance compares against is built once per run and reused by every test
 that needs it.
 
 That cache is not the cargo cache's. Its key is
-`<os>-node-target-v3-1.95.0-<Cargo.lock hash>`: the runner's OS, a version to
-bump when what it holds must be thrown away, the binding toolchain, and the lock
-file, with the same key less its hash as the restore prefix. A key of its own is
+`<os>-node-target-v3-1.95.0-<manifest and lock hash>`: the runner's OS, a version to
+bump when what it holds must be thrown away, the binding toolchain, and the
+workspace manifest with the lock file ([§AR-ci.13.4.1](AR-ci.md#1341-a-key-moves-with-the-profile)), with the same key less its
+hash as the restore prefix. A key of its own is
 what makes it save at all: an entry is never overwritten, so a save to a primary
 key that already has one saves nothing, and the cargo cache's key already hits
-whenever `Cargo.lock` has not changed, so a path added to it would never be written. It holds the release
+whenever neither the manifest nor `Cargo.lock` has changed, so a path added to it would never be written. It holds the release
 binding's and the dev builds' compiled dependencies and no incremental state;
 `v2` is the bump that came with the dev builds of [§AR-ci.3.4.1.1](AR-ci.md#3411-one-release-build-and-every-build-on-one-line), whose
 dependencies an entry saved before them does not hold and, on an exact hit,
@@ -497,8 +498,8 @@ Nothing about the check is weaker. Only where the compiler comes from has change
 CI restores the directory with a cache step of its own in every job that runs the
 Node acceptance, keyed `<os>-node-typescript-<version>`, and saves it under the
 rules of [§AR-ci.13.6](AR-ci.md#136-only-a-push-to-main-saves-a-cache). It does not ride on the node-target cache, because that
-key moves only with `Cargo.lock`: a `v3` entry hits exactly whenever the lock has
-not changed, and an exact hit never saves, so a directory added under the root
+key moves only with the manifest and `Cargo.lock`: a `v3` entry hits exactly whenever
+neither has changed, and an exact hit never saves, so a directory added under the root
 would not be cached until the next lock change, and a later TypeScript bump would
 go uncached again. A key that names the version saves exactly when the version
 changes. A node-target entry may also hold a copy of the directory, which is the
@@ -813,6 +814,16 @@ shared key would fix what every other one restores, and theirs would never be sa
 another job's entries, because reading one overwrites nothing. The Node
 target's cache of [§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build-target) is the job's that runs the Node acceptance.
 
+#### 13.4.1 A key moves with the profile
+
+A key whose job builds its cached target under the dev or test profile hashes the
+workspace `Cargo.toml` with every `Cargo.lock`, because the manifest is where that
+profile is set ([§AR-ci.15](AR-ci.md#15-dependencies-compile-optimised-in-a-dev-build)). A key hashing the lock alone would hit exactly on an
+entry compiled under the profile before the change: every run would recompile what
+the change touched, and the exact hit would never save the result, so no run would
+start warm again until the lock next moved. The benchmark cache builds the release
+profile alone and keeps the key of [§AR-ci.5](AR-ci.md#5-benchmark-job).
+
 ### 13.5 The layout test
 
 `tests/integration/test_ci_language_jobs.py` reads `ci.yml` as text, expands
@@ -913,6 +924,20 @@ holds them to this point — `macos.yml`'s triggers and its report job's wiring,
 `macos-suites.yml`'s one suite job and its permissions, and that `ci.yml` calls it
 on a dispatch and on no other event and runs no macOS job of its own — and holds the
 report and the open-or-edit decision to [§AR-ci.14.3](AR-ci.md#143-a-failed-daily-run-opens-one-issue) offline, against canned jobs.
+
+## 15. Dependencies compile optimised in a dev build
+
+The workspace `Cargo.toml` sets `opt-level = 1` for every package that is not a
+workspace member, under `[profile.dev.package."*"]`, so the dev profile and the
+test profile that inherits it run optimised dependencies around unoptimised
+workspace crates. A gate spends most of its test time inside those dependencies,
+the regex engine, the parsers and the walker that every fixture of every suite runs
+through, and they run about twice as fast at level 1. The workspace crates stay at
+level 0, so an edit recompiles no faster or slower than before and a debugger still
+sees them as written. The price is paid once per cache key: a cold dependency
+compile takes longer, and the key moves with the profile ([§AR-ci.13.4.1](AR-ci.md#1341-a-key-moves-with-the-profile)), so a warm
+job pays nothing. It is how the first S4 tranche pays inside the `rust` jobs for the
+time its comparison adds ([§REQ-one-answer.proof.delivery.payment](../requirements/REQ-one-answer.md#proofdeliverypayment-each-tranche-pays-for-its-own-time)).
 
 ## requirements: What CI's wall clock and its log hold to
 
