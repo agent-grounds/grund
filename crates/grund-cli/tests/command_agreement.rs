@@ -4,10 +4,11 @@
 //! checked against the point that defines it as well, because two surfaces wrong
 //! alike agree.
 //!
-//! Corpus execution belongs to `agreement_acceptance`: every original case,
-//! applicable invocation variant and real CLI/editor/Python/Node entrypoint
-//! (§REQ-one-answer.proof.matrix). The dedicated trees here keep each ruled
-//! difference and positive regression control individually identifiable.
+//! Corpus execution belongs to `agreement_acceptance`: the seed and every case of
+//! each family `COVERED` names, under every applicable invocation variant and
+//! real CLI/editor/Python/Node entrypoint (§REQ-one-answer.proof.matrix.family).
+//! The dedicated trees here keep each closed row and positive regression control
+//! individually identifiable; each must agree (§REQ-one-answer.proof.evidence.closed).
 //! `lsp_cli_parity.rs` retains the distinct real-server wire assertions
 //! (§REQ-one-answer.proof.transport). Gate timing is measured separately at
 //! fixed source SHAs (§AR-ci.requirements.1).
@@ -26,6 +27,8 @@
 mod agreement_acceptance;
 #[path = "support/agreement_buffers.rs"]
 mod agreement_buffers;
+#[path = "support/agreement_closed_rows.rs"]
+mod agreement_closed_rows;
 #[path = "support/agreement_compare.rs"]
 mod agreement_compare;
 #[path = "support/agreement_context.rs"]
@@ -48,6 +51,8 @@ mod agreement_expectations;
 mod agreement_expected_bytes;
 #[path = "support/agreement_facts.rs"]
 mod agreement_facts;
+#[path = "support/agreement_families.rs"]
+mod agreement_families;
 #[path = "support/agreement_host.rs"]
 mod agreement_host;
 #[path = "support/agreement_host_projection.rs"]
@@ -278,6 +283,11 @@ const WIDENING: &[(&str, &str)] = &[(
      and `cover`, the editor snapshot and the bindings as surfaces",
     "S4",
 )];
+
+/// The end-to-end families the comparison asks whole, every case under every
+/// applicable variant and surface (§REQ-one-answer.proof.matrix.family);
+/// `WIDENING` names every other family (§REQ-one-answer.proof.delivery.widening).
+const COVERED: &[&str] = &["cover", "scan", "stub", "symlink"];
 
 /// Every divergence found, as `(tree, invariant, the answers that differ)`.
 fn divergences() -> Vec<(String, &'static str, String)> {

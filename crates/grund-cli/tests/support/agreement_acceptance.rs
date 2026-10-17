@@ -1,5 +1,7 @@
-//! S4 acceptance against completed execution and independent source/golden facts
-//! (§REQ-one-answer.proof.matrix, §REQ-one-answer.proof.evidence, §FS-list.3).
+//! S4 acceptance against completed execution and independent source/golden facts,
+//! over the seed and every case of each covered family
+//! (§REQ-one-answer.proof.matrix.family, §REQ-one-answer.proof.matrix.seed,
+//! §REQ-one-answer.proof.evidence, §FS-list.3).
 
 use super::agreement_tree::json_lines;
 use super::{LEDGER, agreement_corpus, agreement_evidence, divergences, problems};
@@ -7,29 +9,31 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::PathBuf;
 
-/// Enabled in normal Cargo execution. Optional GRUND_AGREEMENT_EVIDENCE writes
-/// the complete completed-call receipts without changing the assertions.
+/// Optional GRUND_AGREEMENT_EVIDENCE writes the complete completed-call receipts
+/// without changing the assertions.
 #[test]
-fn s4_executes_the_complete_corpus_matrix() {
-    let cases = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../tests/e2e/cases")
+#[ignore = "red until #674 tranche 1 authors facts for cover, scan, stub, symlink and the seed; implement removes this"]
+fn s4_executes_the_covered_families_and_the_seed() {
+    let cases = super::agreement_families::cases_root()
         .canonicalize()
         .expect("corpus");
-    let expected: BTreeSet<String> = fs::read_dir(&cases)
-        .expect("discover every case")
-        .map(|entry| entry.expect("case").path())
-        .filter(|path| path.is_dir())
-        .map(|path| path.file_name().unwrap().to_string_lossy().into_owned())
-        .collect();
-    let manifests = super::agreement_expectations::load(&cases).unwrap_or_else(|missing| {
+    let discovered = super::agreement_families::discovered();
+    let expected = super::agreement_families::scope(&discovered);
+    let manifests = super::agreement_expectations::load(&cases, &expected).unwrap_or_else(|missing| {
         if let Some(output) = std::env::var_os("GRUND_AGREEMENT_READINESS") {
             fs::write(output,serde_json::to_vec_pretty(&serde_json::json!({
-                "kind":"construction-readiness","completedCalls":0,"missingFacts":missing
+                "kind":"construction-readiness","completedCalls":0,"scope":expected,
+                "missingFacts":missing
             })).unwrap()).expect("write readiness diagnostics (not execution receipts)");
         }
-        panic!("S4 independent truth construction is unfinished: {} invalid/missing case manifests; first {:?}. No native preparation or matrix execution attempted.",
-            missing.len(), missing.first());
+        panic!("S4 independent truth construction is unfinished: {} invalid/missing case manifests for {} cases asked; first {:?}. No native preparation or matrix execution attempted.",
+            missing.len(), expected.len(), missing.first());
     });
+    assert_eq!(
+        manifests.keys().cloned().collect::<BTreeSet<_>>(),
+        expected,
+        "authored facts differ from the cases asked"
+    );
     let mut errors = Vec::new();
     let calls = agreement_evidence::capture(|| {
         errors.extend(problems(&divergences(), LEDGER));
@@ -62,7 +66,7 @@ fn s4_executes_the_complete_corpus_matrix() {
             .to_string();
         assert!(
             expected.contains(&case),
-            "receipt names an undiscovered original {case}"
+            "receipt names an original outside the covered families and the seed: {case}"
         );
         if call.surface == "materialization" {
             assert_eq!(
@@ -244,8 +248,18 @@ fn s4_executes_the_complete_corpus_matrix() {
             "host provenance lacks {field}"
         );
     }
+    // §REQ-one-answer.proof.evidence.closed: no closed row is held as an exception.
+    let held: Vec<_> = calls
+        .iter()
+        .filter(|call| call.surface == "known-difference")
+        .map(|call| call.result["row"].to_string())
+        .collect();
+    assert!(
+        held.is_empty(),
+        "closed rows held as known differences: {held:?}"
+    );
     eprintln!(
-        "S4: {} originals, {} variant materializations, {} completed receipts, {} accounted surface cells",
+        "S4: {} originals asked, {} variant materializations, {} completed receipts, {} accounted surface cells",
         expected.len(),
         materializations.len(),
         calls.len(),

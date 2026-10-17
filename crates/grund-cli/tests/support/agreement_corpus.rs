@@ -132,8 +132,9 @@ pub fn compare_tree(expected: &Path, actual: &Path) -> Result<(), String> {
     }
 }
 
-/// Every live corpus directory is visited; preparation cannot return fewer cases
-/// than the independently discovered acceptance catalog.
+/// Every case the acceptance asks is visited; preparation cannot return fewer
+/// cases than the independently discovered catalog it was taken from
+/// (§REQ-one-answer.proof.matrix.family).
 pub fn execute(manifests: &std::collections::BTreeMap<String, Value>) -> Vec<String> {
     let mut host = Host::new();
     let mut editor_worker = super::agreement_editor_worker::Worker::new();
@@ -152,11 +153,16 @@ pub fn execute(manifests: &std::collections::BTreeMap<String, Value>) -> Vec<Str
         .collect();
     assert_eq!(
         names,
-        manifests.keys().cloned().collect(),
+        super::agreement_families::discovered(),
         "prepared corpus differs from authored discovery"
     );
     let mut errors = Vec::new();
-    for name in discovered.as_array().expect("discovered cases") {
+    for name in discovered
+        .as_array()
+        .expect("discovered cases")
+        .iter()
+        .filter(|name| manifests.contains_key(name.as_str().unwrap()))
+    {
         for variant in VARIANTS {
             let mut context = host.request(json!({"op":"prepare","case":name,"variant":variant}));
             let facts = &manifests[name.as_str().unwrap()]["variants"][*variant];
