@@ -24,7 +24,7 @@ pub fn repository() -> PathBuf {
 /// `\\?\D:\...`, which Node's module loader refuses as a script path, so the host
 /// that stages and loads the Node package is started at the drive-letter spelling
 /// (§REQ-one-answer.proof.matrix).
-fn plain(path: PathBuf) -> PathBuf {
+pub fn plain(path: PathBuf) -> PathBuf {
     match path.to_str().and_then(|p| p.strip_prefix(r"\\?\")) {
         Some(rest) if !rest.starts_with(r"UNC\") => PathBuf::from(rest),
         _ => path,
