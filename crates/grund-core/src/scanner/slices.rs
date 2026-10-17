@@ -5,6 +5,7 @@
 //! is no second reading of where a body ends: the record's is the one every command
 //! gives (§DF-one-parse-answers-from-0-19).
 
+use super::embedded_value_context::EMBEDDED_VALUE_MARKER;
 use crate::grammar::{comment_envelope, expand_relative_heading, relative_heading_form};
 use crate::model::{
     Declaration, FileRecord, HeadingKind, RecordedHeading, ShowRenderMode, ShowSection,
@@ -114,6 +115,16 @@ pub(crate) fn record_slices(
                 && own(heading.line)
         })
         .collect();
+    // §FS-values.2.4.2: a marked root's title drops its tag; its raw heading keeps it.
+    let marked = |heading: &RecordedHeading, path: &str| {
+        decl.sections.get(path).is_some_and(|info| {
+            info.line == heading.line
+                && info
+                    .value_root
+                    .as_ref()
+                    .is_some_and(|root| root.marker_column().is_some())
+        })
+    };
     for sink in sinks.iter_mut() {
         // §FS-show.3.1.2: the heading-carrying form opens on the declaration's heading line.
         if sink.include_heading {
@@ -131,7 +142,7 @@ pub(crate) fn record_slices(
                     let line = sink.heading_line(body_line(record, heading.line), heading);
                     sink.sections.push(ShowSection {
                         path: path.to_string(),
-                        title: section_title(record, heading, path),
+                        title: section_title(record, heading, path, marked(heading, path)),
                         depth: path.split('.').count() - base_depth,
                     });
                     sink.lines.push(line);
@@ -172,8 +183,14 @@ fn body_line(record: &FileRecord, lineno: usize) -> String {
 
 /// A map entry's title: the heading's rendered text, which has no closing `#` run
 /// (§FS-declarations.heading), after its path (§FS-show.2.1.2), the canonical one
-/// for a relative heading (§FS-declarations.section.relative.shown).
-fn section_title(record: &FileRecord, heading: &RecordedHeading, path: &str) -> String {
+/// for a relative heading (§FS-declarations.section.relative.shown), without the tag
+/// of a `marked` value root (§FS-values.2.4.2).
+fn section_title(
+    record: &FileRecord,
+    heading: &RecordedHeading,
+    path: &str,
+    marked: bool,
+) -> String {
     let text = record.heading_text(heading);
     let rest = match relative_heading_form(text).filter(|_| heading.relative) {
         Some(form) => text
@@ -182,8 +199,9 @@ fn section_title(record: &FileRecord, heading: &RecordedHeading, path: &str) -> 
             .and_then(|rest| rest.strip_prefix(form.component)),
         None => text.trim_start().strip_prefix(path),
     };
-    rest.unwrap_or(text)
-        .trim_start_matches(['.', ':'])
-        .trim()
-        .to_string()
+    let title = rest.unwrap_or(text).trim_start_matches(['.', ':']).trim();
+    match title.strip_suffix(EMBEDDED_VALUE_MARKER) {
+        Some(semantic) if marked => semantic.trim_end().to_string(),
+        _ => title.to_string(),
+    }
 }
