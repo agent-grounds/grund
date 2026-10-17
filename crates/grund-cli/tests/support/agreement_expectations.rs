@@ -212,7 +212,7 @@ pub fn load(
             .and_then(|raw| {
                 serde_json::from_slice::<Value>(&raw).map_err(|e| format!("{name}: {e}"))
             });
-        let checked = document.and_then(|document| {
+        let checked = document.and_then(|mut document| {
             if document["version"] != 1 || document["case"] != name {
                 return Err(format!("{name}: wrong manifest version/case"));
             }
@@ -221,6 +221,8 @@ pub fn load(
                     "{name}: authored inputs differ from fixture bytes/manifests/symlinks"
                 ));
             }
+            // Compact facts expand once the inputs they read are held to the fixture.
+            super::agreement_render::expand(&mut document).map_err(|e| format!("{name}: {e}"))?;
             let variants = document["variants"]
                 .as_object()
                 .ok_or_else(|| format!("{name}: missing variants"))?;
