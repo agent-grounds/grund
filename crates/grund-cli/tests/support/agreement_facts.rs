@@ -70,6 +70,12 @@ pub fn sections(
     }
     let batch_records = entries(batch, "records");
     let local_coordinate = coordinate.rsplit('/').next().unwrap();
+    // §FS-scan.path: a path narrows the batch, never what `show` resolves, so
+    // a declaration the batch does not hold is outside its scope (§FS-show.1.9).
+    let held = batch_records.iter().any(|record| {
+        (record["query"]["id"] == coordinate || record["query"]["id"] == local_coordinate)
+            && record["query"]["section"].is_null()
+    });
     let current_local = batch_records.iter().any(|record| {
         record["query"]["id"] == local_coordinate
             && record["query"]["section"].is_null()
@@ -98,7 +104,7 @@ pub fn sections(
                 json!(section_path).to_string(),
             ));
         // Exhaustive batch canonicalizes inline coordinates into id+section.
-        if !explicit {
+        if held && !explicit {
             errors.push(format!(
                 "batch omits {coordinate}.{section_path} direct show returns"
             ));

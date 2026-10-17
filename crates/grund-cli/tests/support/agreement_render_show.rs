@@ -34,7 +34,10 @@ impl View<'_> {
     /// The `show --toc --format json` object, sites relative as written.
     pub fn show_object(&self, (d, s): Row) -> Value {
         let decl = &self.m.decls[d];
+        // §FS-values.6.2: every read mode of a JSON value collapses to its slice.
+        let sliced = decl.facts["slice"].is_string();
         let children: Vec<usize> = (0..self.m.sections.len())
+            .filter(|_| !sliced)
             .filter(|&o| match s {
                 Some(s) => self.m.descends(o, s),
                 None => self.m.sections[o].owner == d,
@@ -114,8 +117,8 @@ impl View<'_> {
         let (id, section) = coordinate
             .split_once('.')
             .map_or((coordinate, None), |(i, s)| (i, Some(s)));
-        if self.m.decls.iter().any(|d| d.id == id) {
-            json!({"code":"missing-section","message":format!("section not found: {}", section.unwrap())})
+        if self.m.decls.iter().any(|d| d.id == id) && section.is_some() {
+            json!({"code":"missing-section","message":format!("section not found: {coordinate}")})
         } else {
             json!({"code":"not-found","message":format!("ID not found: {id}")})
         }
@@ -168,7 +171,13 @@ impl View<'_> {
         let partial = json!({"hits":[],"kind_title":null,"note":null,"output_format":"text",
             "scan_errors":self.scan_errors_in(false),"workspace":false});
         if let Some(refusal) = self.refusal(coordinate, "refs") {
-            return json!({"failure":self.failure(&refusal, json!(["refs scan context"]), partial),
+            // §FS-workspace.8.1.3: an unknown alias is refused before any scan.
+            let (causes, partial) = if refusal["beforeScan"] == true {
+                (json!([]), Value::Null)
+            } else {
+                (json!(["refs scan context"]), partial)
+            };
+            return json!({"failure":self.failure(&refusal, causes, partial),
                 "result":null,"run_cautions":[]});
         }
         let (id, section) = coordinate
