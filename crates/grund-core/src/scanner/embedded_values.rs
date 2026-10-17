@@ -166,10 +166,7 @@ pub(super) fn validate_embedded_value_roots(
             let root_level = root_info.heading_level;
             // §FS-values.2.4.3: a chapter root has no marker to locate a
             // root-level failure at, so it falls back to the root heading.
-            let marked = root_info
-                .value_root
-                .as_ref()
-                .is_some_and(|root| root.marker_column().is_some());
+            let marked = root_info.marked();
             let root_marker_column = root_info
                 .value_root
                 .as_ref()

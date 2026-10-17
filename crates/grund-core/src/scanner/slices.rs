@@ -5,7 +5,7 @@
 //! is no second reading of where a body ends: the record's is the one every command
 //! gives (§DF-one-parse-answers-from-0-19).
 
-use super::embedded_value_context::EMBEDDED_VALUE_MARKER;
+use super::embedded_value_context::without_value_tag;
 use crate::grammar::{comment_envelope, expand_relative_heading, relative_heading_form};
 use crate::model::{
     Declaration, FileRecord, HeadingKind, RecordedHeading, ShowRenderMode, ShowSection,
@@ -117,13 +117,9 @@ pub(crate) fn record_slices(
         .collect();
     // §FS-values.2.4.2: a marked root's title drops its tag; its raw heading keeps it.
     let marked = |heading: &RecordedHeading, path: &str| {
-        decl.sections.get(path).is_some_and(|info| {
-            info.line == heading.line
-                && info
-                    .value_root
-                    .as_ref()
-                    .is_some_and(|root| root.marker_column().is_some())
-        })
+        decl.sections
+            .get(path)
+            .is_some_and(|info| info.line == heading.line && info.marked())
     };
     for sink in sinks.iter_mut() {
         // §FS-show.3.1.2: the heading-carrying form opens on the declaration's heading line.
@@ -200,8 +196,10 @@ fn section_title(
         None => text.trim_start().strip_prefix(path),
     };
     let title = rest.unwrap_or(text).trim_start_matches(['.', ':']).trim();
-    match title.strip_suffix(EMBEDDED_VALUE_MARKER) {
-        Some(semantic) if marked => semantic.trim_end().to_string(),
-        _ => title.to_string(),
-    }
+    let title = if marked {
+        without_value_tag(title)
+    } else {
+        title
+    };
+    title.to_string()
 }
