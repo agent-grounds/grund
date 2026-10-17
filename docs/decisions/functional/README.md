@@ -175,4 +175,6 @@ The rulings the one-answer work is built from, one record per step family, each 
 - [§DF-unread-scan-root](DF-unread-scan-root.md#df-unread-scan-root-a-configured-file-root-whose-extension-is-unlisted-is-named-not-read) — a configured file root whose extension is unlisted is named, not read
 - [§DF-unread-hidden-root](DF-unread-hidden-root.md#df-unread-hidden-root-a-configured-file-root-with-a-hidden-name-is-named-not-read) — a configured file root with a hidden name is named, not read
 
+- [§DF-global-excludes-literal-tilde](DF-global-excludes-literal-tilde.md#df-global-excludes-literal-tilde-preserve-literal-tildes-in-the-global-excludes-pathname) — preserve literal tildes in the global excludes pathname
+
 This index is navigational — citations should target the decision ID directly, never this file.
