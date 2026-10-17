@@ -59,7 +59,9 @@ def prepare():
         checked(['rustup', 'toolchain', 'install', '1.95.0', '--profile', 'minimal'])
     scratch = Path.home() / 'ag/tmp'
     scratch.mkdir(parents=True, exist_ok=True)
-    temporary = tempfile.TemporaryDirectory(prefix='grund-agreement-', dir=scratch)
+    # Windows cannot delete the native module this process still has loaded.
+    temporary = tempfile.TemporaryDirectory(prefix='grund-agreement-', dir=scratch,
+                                            ignore_cleanup_errors=True)
     home = Path(temporary.name)
     key = hashlib.sha256(os.fsencode(ROOT.resolve())).hexdigest()[:16]
     target = scratch / 'grund-agreement-target' / key
