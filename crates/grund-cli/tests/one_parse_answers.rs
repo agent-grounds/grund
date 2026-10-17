@@ -5,6 +5,9 @@
 //! headings that ride it, and the `parse-moves` code that goes with it
 //! (§FS-declarations.checks.parse-moves). Each test asserts the record's answer, so each
 //! failed while 0.18.0's compatibility reading answered instead.
+#[path = "support/agreement_evidence.rs"]
+#[allow(dead_code)]
+mod agreement_evidence;
 #[path = "support/agreement_tree.rs"]
 #[allow(dead_code)]
 mod agreement_tree;
