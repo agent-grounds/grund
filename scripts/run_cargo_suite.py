@@ -51,6 +51,8 @@ SLOW = re.compile(r'^test .+ has been running for over \d+ seconds$')
 RESULT = re.compile(r'^test result: ')
 TALLY = re.compile(r'(\d+) (passed|failed|ignored)\b')
 CRASHED = re.compile(r'^error: test failed, to rerun pass ')
+# §AR-ci.requirements.5.1: what a gate's time went on that no test's own seconds show.
+GATE_TIME = re.compile(r'gate time: .*')
 
 
 def split(argv):
@@ -80,7 +82,11 @@ def plain(line):
 
 
 def build(cargo):
-    """§AR-ci.requirements.5.4: build quietly; a failure prints in full, a warning stays."""
+    """§AR-ci.requirements.5.4: build quietly; a failure prints in full, a warning stays.
+
+    A green build ends with one `gate time: build` line, its compile as a phase of its own.
+    """
+    started = time.perf_counter()
     result = subprocess.run(['cargo', 'test', '--no-run', '--quiet', *cargo],
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     text = result.stdout.decode('utf-8', errors='replace')
@@ -90,6 +96,7 @@ def build(cargo):
         for line in text.splitlines():
             if plain(line).strip() and not CARGO_STATUS.match(plain(line)):
                 print(line)
+        print(f'gate time: build {time.perf_counter() - started:.1f}s')
     sys.stdout.flush()
     return result.returncode
 
@@ -252,7 +259,10 @@ def run(cargo, libtest, binaries, progress):
             binary.failed |= outcome == 'failed'
             binary.counted[outcome] += 1
             progress.finished(name, binary.seconds(name, now), outcome)
-        if rest.strip():
+        timed = GATE_TIME.search(plain(rest))
+        if timed:
+            print(timed.group(0), flush=True)
+        elif rest.strip():
             binary.stray.append(line if rest == text else rest)
     close()
     status = process.wait()

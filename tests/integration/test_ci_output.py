@@ -88,7 +88,7 @@ class SuiteShape:
 class CargoSuiteOutputTests(SuiteShape, unittest.TestCase):
     """§AR-ci.requirements.5.2: `scripts/run_cargo_suite.py` on a crate of its own."""
 
-    def crate(self, failing=False, broken=False, chatty=False, crashing=False):
+    def crate(self, failing=False, broken=False, chatty=False, crashing=False, timed=False):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         root = Path(temp.name)
@@ -122,6 +122,13 @@ class CargoSuiteOutputTests(SuiteShape, unittest.TestCase):
                 "        std::io::stdout().flush().unwrap();\n    }\n"
                 for n, text in enumerate((r'b"NOISE-PARTIAL"', r'b"\x1b[?1049l"',
                                           r'b"NOISE-LINE\n"')))
+        if timed:
+            # What the command agreement's hosts write past libtest's capture, beside noise.
+            tests += ("    #[test]\n    fn writes_its_gate_time() {\n"
+                      "        use std::io::Write;\n"
+                      "        std::io::stderr().write_all(b\"NOISE-TIMED\\n\").unwrap();\n"
+                      "        std::io::stderr().write_all(b\"gate time: fixture phase 1.5s\\n\")"
+                      ".unwrap();\n    }\n")
         if crashing:
             (root / "tests").mkdir()
             (root / "tests" / "crash.rs").write_text(
@@ -170,6 +177,19 @@ class CargoSuiteOutputTests(SuiteShape, unittest.TestCase):
                 self.assertEqual(0, result.returncode, "\n".join(lines))
                 self.assert_quiet(lines)
                 self.assert_shape(lines, PASSING + 4, failed=0)
+
+    def test_a_green_suite_passes_on_its_gate_time_lines_and_nothing_else(self):
+        # The build is a phase of its own, and a line a test's child wrote to say where the
+        # gate's time went survives a green run when nothing else it wrote does.
+        result = self.run_suite(self.crate(timed=True))
+        lines = lines_of(result)
+        output = "\n".join(lines)
+        self.assertEqual(0, result.returncode, output)
+        self.assert_quiet(lines)
+        self.assert_shape(lines, PASSING + 2, failed=0)
+        timed = [line for line in lines if line.startswith("gate time: ")]
+        self.assertRegex(timed[0], r"^gate time: build \d+\.\ds$", output)
+        self.assertEqual(["gate time: fixture phase 1.5s"], timed[1:], output)
 
     def test_a_crashed_binary_is_an_error_the_summary_counts(self):
         result = self.run_suite(self.crate(crashing=True), "--no-fail-fast")

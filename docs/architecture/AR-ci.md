@@ -975,13 +975,19 @@ A suite step is the workspace `cargo test` on all three legs, which runs the e2e
 - each failure, under the failing test's name, with its full output: what it wrote to stdout and stderr, its own and its child processes', and the panic or assertion message;
 - a check-in each time another 5% of the suite has finished, so at most twenty, one line each: `<done>/<total> tests, <failed> failed, <elapsed>s elapsed, slowest: <test> <seconds>s, …`, naming up to three of the slowest tests so far, slowest first, and the last check-in reads `<total>/<total>`;
 - the slowest-ten table of [§AR-ci.3.4.2](AR-ci.md#342-per-test-durations), where the suite keeps one;
+- each line that begins `gate time: `, which says what the gate's time went on that no
+  test's own seconds separate: the cargo wrapper's one `gate time: build <seconds>s` once
+  its build has finished, so a cold dependency compile is a phase of its own, and the
+  lines a test's child process writes, as each command-agreement host writes how long it
+  took to be ready, how much of that was the toolchain install and the natives' build,
+  and how long it then served ([§REQ-one-answer.proof.delivery.payment](../requirements/REQ-one-answer.md#proofdeliverypayment-each-tranche-pays-for-its-own-time));
 - one summary as its last line: `<total> tests: <passed> passed, <failed> failed, <ignored> ignored, <elapsed>s`, where *ignored* counts libtest's ignored tests and `unittest`'s skipped ones. A red summary still adds up: before the elapsed time it adds `, <n> not run` for the tests that never reported, and `, <n> errors` for each failure no test owns — a test binary that crashed or a `harness = false` target that failed, a `unittest` class or module fixture that raised — which the check-ins count among the failures.
 
-Nothing else: no line per passing test, no `unittest` dot stream, no output a passing test or its child process wrote, no build progress. On success that is about twenty lines whatever the suite's size, and the slowest-tests figure is what attributes a gate's time per test for requirements.3. `tests/integration/test_ci_output.py` holds both kinds of suite to this on suites of its own.
+Nothing else: no line per passing test, no `unittest` dot stream, no other output a passing test or its child process wrote, no build progress. On success that is about twenty lines whatever the suite's size, and the slowest-tests figure is what attributes a gate's time per test for requirements.3. `tests/integration/test_ci_output.py` holds both kinds of suite to this on suites of its own.
 
 #### requirements.5.2: The cargo suites go through one wrapper
 
-`scripts/run_cargo_suite.py` takes `cargo test`'s arguments, runs `cargo test` with them over libtest's stable output, and prints what requirements.5.1 asks. Both `ci.yml` steps that run a cargo suite, `native watch contract` and `cargo test`, call it, and so does the `cargo-test` hook, so the hook and the workflow still spell one command ([§AR-ci.1.2](AR-ci.md#12-the-parity-test)). It needs Python's standard library and the toolchain the repository already uses and nothing else: no test runner a contributor must install. It builds the tests before it runs them, as quietly as requirements.5.4 asks, so a compile error is printed in full and a green build prints nothing.
+`scripts/run_cargo_suite.py` takes `cargo test`'s arguments, runs `cargo test` with them over libtest's stable output, and prints what requirements.5.1 asks. Both `ci.yml` steps that run a cargo suite, `native watch contract` and `cargo test`, call it, and so does the `cargo-test` hook, so the hook and the workflow still spell one command ([§AR-ci.1.2](AR-ci.md#12-the-parity-test)). It needs Python's standard library and the toolchain the repository already uses and nothing else: no test runner a contributor must install. It builds the tests before it runs them, as quietly as requirements.5.4 asks, so a compile error is printed in full and a green build prints only its `gate time: build` line.
 
 #### requirements.5.3: A hook prints its findings or one line — realized
 
