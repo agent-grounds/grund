@@ -20,10 +20,21 @@ pub fn repository() -> PathBuf {
         .expect("repository")
 }
 
+/// The repository spelled as a plain path: `canonicalize` gives Windows' verbatim
+/// `\\?\D:\...`, which Node's module loader refuses as a script path, so the host
+/// that stages and loads the Node package is started at the drive-letter spelling
+/// (§REQ-one-answer.proof.matrix).
+fn plain(path: PathBuf) -> PathBuf {
+    match path.to_str().and_then(|p| p.strip_prefix(r"\\?\")) {
+        Some(rest) if !rest.starts_with(r"UNC\") => PathBuf::from(rest),
+        _ => path,
+    }
+}
+
 impl Host {
     pub fn new() -> Self {
         let start = std::time::Instant::now();
-        let root = repository();
+        let root = plain(repository());
         let mut child = Command::new(std::env::var_os("PYTHON").unwrap_or_else(|| "python".into()))
             .arg(root.join("tests/bindings/agreement_host.py"))
             .current_dir(&root)
