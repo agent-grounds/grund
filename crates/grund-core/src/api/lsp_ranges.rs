@@ -15,7 +15,7 @@ use crate::model::{
     paired_declarations,
 };
 use crate::resolver::{WorkspaceContext, WorkspaceProject};
-use crate::scanner::EMBEDDED_VALUE_MARKER;
+use crate::scanner::without_value_tag;
 use crate::sources::canonicalize_existing_prefix;
 
 pub(super) fn lsp_query_id(
@@ -105,12 +105,11 @@ pub(super) fn section_range_parts(
         _ => section.to_string(),
     };
     let (column, mut text) = heading_span_parts(files, &decl.file, info.line, &needle);
-    if info.value_root.is_some()
-        && let Some(marker) = text.rfind(&format!(" {EMBEDDED_VALUE_MARKER}"))
-    {
-        // The marker is authored raw source but not part of the section's
-        // semantic title or editor selection (§FS-values.2.4.2, §FS-lsp.1.3).
-        text.truncate(marker);
+    if info.marked() {
+        // A marked root's tag is authored raw source but not part of its semantic
+        // title or editor selection (§FS-values.2.4.2, §FS-lsp.1.3); a chapter
+        // root's same bytes are no mark, so they stay its text (§FS-values.2.4.4).
+        text.truncate(without_value_tag(&text).len());
     }
     (column, text)
 }

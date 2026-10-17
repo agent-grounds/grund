@@ -221,10 +221,7 @@ fn resolve_relative_sections(
             };
             let column = marker.as_ref().and_then(|site| site.column);
             let value_root = section_value_root(schema, &decl.id.kind, &canonical, column);
-            if value_root
-                .as_ref()
-                .is_some_and(|root| root.marker_column().is_some())
-            {
+            if value_root.as_ref().is_some_and(EmbeddedValueRoot::marked) {
                 marker = None;
             }
             let info = SectionInfo {

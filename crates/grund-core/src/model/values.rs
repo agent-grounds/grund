@@ -66,6 +66,14 @@ impl EmbeddedValueRoot {
             ValueRootOrigin::Chapter => None,
         }
     }
+
+    /// Whether the heading's own tag made this root (§FS-values.2.4): the one
+    /// root whose semantic title drops the tag (§FS-values.2.4.2). A chapter
+    /// root carries no tag, so the same bytes on its named heading grant
+    /// nothing and stay its text (§FS-values.2.4.4).
+    pub fn marked(&self) -> bool {
+        self.marker_column().is_some()
+    }
 }
 
 /// Whether a binding path's final segment can name an immediate component: a
