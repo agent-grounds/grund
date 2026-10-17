@@ -11,6 +11,7 @@ The benchmark jobs' pinned environment (§AR-ci.5) and their one-harness compari
 (§AR-ci.5.1, §AR-benchmarks.5) are read the same way: a build job, a shard matrix and a
 record job."""
 
+import itertools
 import re
 import unittest
 
@@ -48,6 +49,8 @@ BENCH_IMAGE = re.compile(r"(?m)^\s+(?:container|image):\s*rust:[\w.-]+-bookworm@
 SNAPSHOT = re.compile(r"https://snapshot\.debian\.org/archive/debian/\d{8}T\d{6}Z\b")
 BENCH_ENV = {"LC_ALL": "C.UTF-8", "TZ": "UTC", "RAYON_NUM_THREADS": "4",
              "CARGO_INCREMENTAL": "0", "RUSTFLAGS": ""}
+# §AR-ci.12, §AR-ci.11: the events `ci.yml` runs on.
+EVENTS = ("pull_request", "push", "workflow_dispatch", "merge_group")
 
 
 def with_local_actions(text):
@@ -99,12 +102,43 @@ def commands(step):
     return []
 
 
+def step_if(step):
+    found = re.search(r"(?m)^\s*(?:- )?if:\s*(.+)$", step)
+    return found.group(1) if found else None
+
+
+def holds(condition, event, results=None):
+    """Whether an `if:` holds on `event` when the needs ended with `results` (§AR-ci.12). It
+    reads `github.event_name`, `github.ref` and `needs.<job>.result` against a literal,
+    `contains(needs.*.result, …)`, `always()`, `!`, `&&`, `||` and parentheses, and no more."""
+    # `ci.yml` runs a push on main alone; every other event runs on a ref of its own (§AR-ci.11).
+    values = {"github.event_name": event,
+              "github.ref": "refs/heads/main" if event == "push" else f"refs/{event}"}
+    def compare(found):
+        value = (results or {})[found[2]] if found[2] else values[found[1]]
+        return f" {(value == found[4]) == (found[3] == '==')} "
+    text = re.sub(r"(github\.event_name|github\.ref|needs\.([\w-]+)\.result)\s*(==|!=)\s*'([^']*)'",
+                  compare, (condition or "always()").replace("${{", "").replace("}}", ""))
+    text = re.sub(r"contains\(needs\.\*\.result,\s*'(\w+)'\)",
+                  lambda found: f" {found[1] in (results or {}).values()} ", text)
+    text = text.replace("always()", " True ").replace("&&", " and ").replace("||", " or ")
+    text = text.replace("!", " not ")
+    if re.sub(r"\b(?:True|False|and|or|not)\b|[()\s]", "", text):
+        raise ValueError(f"cannot read `if: {condition}`")
+    return eval(text, {"__builtins__": {}})  # only booleans, `and`, `or`, `not` and parentheses
+
+
+def aggregate_fails(job_steps, event, results):
+    """Whether a required check's failing step runs on `event` when its needs ended so."""
+    return any(holds(step_if(step), event, results)
+               for step in job_steps if "exit 1" in commands(step))
+
+
 def step_runs_on(step, system):
     """False only for a step whose `if:` compares `matrix.os` against another system."""
-    condition = re.search(r"(?m)^\s*(?:- )?if:\s*(.+)$", step)
-    if not condition:
+    text = step_if(step)
+    if not text:
         return True
-    text = condition.group(1)
     equal = re.search(r"matrix\.os\s*==\s*'([^']+)'", text)
     unequal = re.search(r"matrix\.os\s*!=\s*'([^']+)'", text)
     if equal:
@@ -223,20 +257,19 @@ def guard_problems(text):
 
 
 def bench_guard_problems(text):
-    """§AR-ci.13.2: the Ubuntu aggregate accepts the bench job's skip in a merge-queue group only."""
+    """§AR-ci.13.2: on every event the Ubuntu aggregate accepts a bench job's success alone."""
     found = instances(text)
     benches = {i["job"] for i in bench_jobs(found)}
     problems = []
     for aggregate in (i for i in found if i["aggregate"] and i["system"] == "ubuntu-latest"):
-        flat = squash(aggregate["text"])
         for job in sorted(benches & set(aggregate["needs"])):
-            if "contains(needs.*.result, 'skipped')" in flat:
-                problems.append(f"{aggregate['name']!r} fails on any skipped need, so every "
-                                f"merge-queue group, where {job!r} is skipped, fails")
-            elif not re.search(rf"needs\.{re.escape(job)}\.result == 'skipped' && "
-                               r"github\.event_name == 'merge_group'", flat):
-                problems.append(f"{aggregate['name']!r} does not limit accepting {job!r}'s skip "
-                                "to a merge-queue group")
+            for event, result in itertools.product(
+                    EVENTS, ("success", "failure", "cancelled", "skipped")):
+                results = dict(dict.fromkeys(aggregate["needs"], "success"), **{job: result})
+                if aggregate_fails(aggregate["steps"], event, results) != (result != "success"):
+                    verdict = "fails" if result == "success" else "passes"
+                    problems.append(f"{aggregate['name']!r} {verdict} on {event} when {job!r} "
+                                    f"ends {result}")
     return problems
 
 
@@ -462,16 +495,18 @@ def leg(job_id, system, *runs_, extra=""):
     return f"  {job_id}:\n    runs-on: {system}\n{extra}    steps:\n{lines}"
 
 
-def aggregate(system, needed, guard=True, condition="always()", bench=()):
+def aggregate(system, needed, guard=True, condition="always()", skipped_in_queue=()):
     check = ("      - if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, "
              "'cancelled') || contains(needs.*.result, 'skipped') }}\n        run: exit 1\n"
              if guard else "      - run: echo done\n")
-    if guard and bench:
+    if guard and skipped_in_queue:
+        # The exception §AR-ci.13.2 no longer makes: a bench job's skip accepted in the queue.
         others = " || ".join(f"needs.{need}.result != 'success'" for need in needed)
         skips = " || ".join(f"!(needs.{job}.result == 'success' || needs.{job}.result == "
-                            "'skipped' && github.event_name == 'merge_group')" for job in bench)
+                            "'skipped' && github.event_name == 'merge_group')"
+                            for job in skipped_in_queue)
         check = f"      - if: ${{{{ {others} || {skips} }}}}\n        run: exit 1\n"
-        needed = needed + list(bench)
+        needed = needed + list(skipped_in_queue)
     cond = f"    if: {condition}\n" if condition else ""
     return (f"  test-{system.split('-')[0]}:\n    name: cargo test ({system})\n    runs-on: ubuntu-latest\n"
             f"    needs: [{', '.join(needed)}]\n{cond}    steps:\n{check}")
@@ -484,7 +519,7 @@ def cache(key):
 
 def fixture(cache_key="${{ runner.os }}-cargo-${{ github.job }}", node_rust_merged=False,
             guard=True, condition="always()", needs_pre_commit=True, needs_bench=True,
-            bench_skip_anywhere=False):
+            bench_skip_in_queue=False):
     """A workflow laid out as §AR-ci.13 asks, with one knob per way it can go wrong."""
     rust = list(RUST_CHECKS.values())[:3] + [SUITES["rust"]]
     selfcheck = '      - run: |\n          python - "check", ".", "--format", "json", "--full"\n'
@@ -503,11 +538,11 @@ def fixture(cache_key="${{ runner.os }}-cargo-${{ github.job }}", node_rust_merg
     text += leg(BENCH_SHARD, "ubuntu-latest", BENCH, extra=f"    needs: [{BENCH_BUILD}]\n")
     text += leg(BENCH_RECORD, "ubuntu-latest", "python3 scripts/bench_record.py merge",
                 extra=f"    needs: [{BENCH_SHARD}]\n")
-    if bench_skip_anywhere:
-        text += aggregate("ubuntu-latest", ubuntu + bench, guard, condition)
+    judged = bench if needs_bench else bench[:1] + bench[2:]
+    if bench_skip_in_queue:
+        text += aggregate("ubuntu-latest", ubuntu, guard, condition, skipped_in_queue=judged)
     else:
-        text += aggregate("ubuntu-latest", ubuntu, guard, condition,
-                          bench if needs_bench else bench[:1] + bench[2:])
+        text += aggregate("ubuntu-latest", ubuntu + judged, guard, condition)
     text += aggregate("windows-latest", ["rust-windows", "python-windows", "node-windows"], guard, condition)
     return text
 
@@ -527,8 +562,10 @@ class LanguageJobsTests(unittest.TestCase):
         # §AR-ci.13.2
         self.assertEqual([], guard_problems(self.text))
 
-    def test_the_ubuntu_check_accepts_the_bench_skip_only_in_the_queue(self):
-        # §AR-ci.13.2, §AR-ci.5.2
+    # red until #792 drops the merge_group bench exemption; implement removes this
+    @unittest.expectedFailure
+    def test_the_ubuntu_check_accepts_only_the_bench_jobs_success(self):
+        # §AR-ci.13.2, §AR-ci.12, §AR-ci.5.2
         self.assertEqual([], bench_guard_problems(self.text))
 
     def test_each_suite_runs_once_in_a_job_of_its_own(self):
@@ -614,8 +651,13 @@ class LanguageJobsCheckTests(unittest.TestCase):
     def test_an_unjudged_bench_job_is_caught(self):
         self.assertTrue(required_check_problems(fixture(needs_bench=False)))
 
-    def test_a_bench_skip_refused_in_the_queue_is_caught(self):
-        self.assertTrue(bench_guard_problems(fixture(bench_skip_anywhere=True)))
+    def test_a_bench_skip_accepted_in_the_queue_is_caught(self):
+        # §AR-ci.13.2: the exception the Ubuntu check made before #792.
+        self.assertTrue(bench_guard_problems(fixture(bench_skip_in_queue=True)))
+
+    def test_a_condition_it_cannot_read_is_refused(self):
+        with self.assertRaises(ValueError):
+            holds("steps.cargo.outputs.cache-hit != 'true'", "push")
 
     def test_an_aggregate_over_matrix_jobs_is_caught(self):
         text = ("jobs:\n  rust:\n    runs-on: ${{ matrix.os }}\n    strategy:\n      matrix:\n"
