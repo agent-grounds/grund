@@ -28,6 +28,16 @@ impl Config {
             None => self.relative_paths,
         }
     }
+
+    /// The directory a relative location the load recorded is spelled from — a
+    /// `grund.toml` row's, which a finding about it anchors at (§FS-errors.4): the
+    /// CLI base under `--path-base=invocation`, else the root (§FS-cli.3.4).
+    pub(crate) fn location_base(&self) -> &Path {
+        match self.path_base {
+            Some(PathBase::Invocation) => &self.cli_base,
+            _ => &self.root,
+        }
+    }
 }
 
 /// Render a path the way reports show it: relative to the repo root by default,
