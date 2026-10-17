@@ -2,8 +2,10 @@
 //! (§FS-scan.scope.ignore-files.pathname).
 
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Result, anyhow};
+use regex::bytes::Regex;
 
 use crate::sources::{observe_input, read_bytes};
 
@@ -11,8 +13,9 @@ use crate::sources::{observe_input, read_bytes};
 /// then XDG's optional `git/ignore`. Parse Git's grammar and interpolate only a
 /// leading home abbreviation, once, rather than `ignore`'s replacement of every
 /// tilde (§FS-scan.scope.ignore-files.pathname). No subprocess or canonicalization
-/// participates. Optional config read/parse failures permit further discovery;
-/// failure to resolve a selected pathname does not select a different file.
+/// participates. Optional config failures permit further discovery when no
+/// setting is recoverable; an unresolved selected pathname means no global file,
+/// without selecting a different file (§FS-scan.scope.ignore-files.pathname).
 pub(crate) fn global_excludes_path() -> Result<Option<PathBuf>> {
     // HOME is Git's home override on Windows too; std supplies the platform
     // fallback when it is absent, as it does for the previous loader.
@@ -38,29 +41,40 @@ pub(crate) fn global_excludes_path() -> Result<Option<PathBuf>> {
             // including unreadable files, not just absent ones.
             Err(_) => continue,
         };
-        let Ok(config) = gix_config::File::from_bytes_no_includes(
-            &bytes,
-            gix_config::file::Metadata::from(gix_config::Source::User),
-            Default::default(),
-        ) else {
-            // An unrelated malformed config must not turn optional ignore
-            // discovery into a fatal acceptance policy.
-            continue;
-        };
-        // Preserve the previous first-value selection and empty-value fallback,
-        // even though Git itself gives the last setting precedence.
-        if let Some(value) = config
+        if let Some(path) = configured_path(&bytes) {
+            // An unresolvable optional path is not an observer refusal and
+            // must not select another config, default or literal lookalike.
+            return Ok(interpolate_path(path, home.as_deref()).ok());
+        }
+    }
+    Ok(xdg.map(|xdg| xdg.join("git/ignore")))
+}
+
+/// Keep first-setting selection and empty-value fallthrough. Only when Git's
+/// parser rejects the whole file, recover the simple assignment the old loader
+/// accepted despite unrelated syntax errors (§FS-scan.scope.ignore-files.pathname).
+/// The recovery grammar is deliberately the old loader's, without its tilde
+/// replacement; valid configs still get Git's quoting and normalization.
+fn configured_path(bytes: &[u8]) -> Option<gix_config::Path> {
+    if let Ok(config) = gix_config::File::from_bytes_no_includes(
+        bytes,
+        gix_config::file::Metadata::from(gix_config::Source::User),
+        Default::default(),
+    ) {
+        return config
             .strings("core.excludesFile")
             .into_iter()
             .flatten()
             .find(|value| !value.is_empty())
-        {
-            return interpolate_path(gix_config::Path::from(value), home.as_deref())
-                .map(Some)
-                .with_context(|| format!("resolve core.excludesFile in {}", file.display()));
-        }
+            .map(gix_config::Path::from);
     }
-    Ok(xdg.map(|xdg| xdg.join("git/ignore")))
+    static ASSIGNMENT: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(r#"(?im-u)^\s*excludesfile\s*=\s*"?\s*(\S+?)\s*"?\s*$"#)
+            .expect("valid legacy excludes assignment pattern")
+    });
+    let captures = ASSIGNMENT.captures(bytes)?;
+    let value = std::str::from_utf8(captures.get(1)?.as_bytes()).ok()?;
+    Some(gix_config::Path::from(value))
 }
 
 /// Interpolate the home abbreviation alone, then concatenate its suffix as Git
