@@ -39,9 +39,7 @@ pub(super) fn record_section_heading(
     let section_path = sec.to_string();
     let marker_column = embedded_marker.map(|start| scan.column_offset + start + 1);
     let value_root = section_value_root(schema, &decl.id.kind, sec, marker_column);
-    let mut embedded_marker_attached = value_root
-        .as_ref()
-        .is_some_and(|root| root.marker_column().is_some());
+    let mut embedded_marker_attached = value_root.as_ref().is_some_and(EmbeddedValueRoot::marked);
     // §FS-rules.5.1.1: a source heading is titled from its own `#` run up to any
     // closing `*/`, so the comment around it never joins the label.
     // Markdown and docstring lines stay as is.
