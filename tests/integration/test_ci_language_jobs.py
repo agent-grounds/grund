@@ -562,8 +562,6 @@ class LanguageJobsTests(unittest.TestCase):
         # §AR-ci.13.2
         self.assertEqual([], guard_problems(self.text))
 
-    # red until #792 drops the merge_group bench exemption; implement removes this
-    @unittest.expectedFailure
     def test_the_ubuntu_check_accepts_only_the_bench_jobs_success(self):
         # §AR-ci.13.2, §AR-ci.12, §AR-ci.5.2
         self.assertEqual([], bench_guard_problems(self.text))

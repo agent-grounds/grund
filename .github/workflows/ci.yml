@@ -668,7 +668,7 @@ jobs:
     if: always()
     steps:
       - name: every job it needs succeeded
-        if: ${{ needs.rust-ubuntu.result != 'success' || needs.python-ubuntu.result != 'success' || needs.node-ubuntu.result != 'success' || needs.pre-commit.result != 'success' || !(needs.bench-build.result == 'success' || needs.bench-build.result == 'skipped' && github.event_name == 'merge_group') || !(needs.bench.result == 'success' || needs.bench.result == 'skipped' && github.event_name == 'merge_group') || !(needs.bench-record.result == 'success' || needs.bench-record.result == 'skipped' && github.event_name == 'merge_group') }}
+        if: ${{ needs.rust-ubuntu.result != 'success' || needs.python-ubuntu.result != 'success' || needs.node-ubuntu.result != 'success' || needs.pre-commit.result != 'success' || needs.bench-build.result != 'success' || needs.bench.result != 'success' || needs.bench-record.result != 'success' }}
         run: exit 1
 
   test-windows:
@@ -719,8 +719,8 @@ jobs:
   # (§AR-benchmarks.1.2.2), and a record job that merges them (§AR-benchmarks.7.1.1).
   bench-build:
     name: cargo bench (build)
-    # §AR-ci.12: a queue group neither compares nor records; its push to main records.
-    if: github.event_name != 'merge_group'
+    # §AR-ci.12: a queue group builds its head alone, as a push does, for its shards to hold
+    # to the ceilings; the push the queue makes to main records.
     runs-on: ubuntu-latest
     # §AR-ci.5: the count's every input is pinned here and in the shards, and only there. The
     # digest is release.yml's RUST_TOOLCHAIN and its C library; BENCH_IMAGE and every cache
@@ -785,7 +785,6 @@ jobs:
   bench:
     name: cargo bench (shard ${{ matrix.shard }})
     needs: [bench-build]
-    if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     strategy:
       # Every shard reports, so one regression does not hide another's.
@@ -846,7 +845,7 @@ jobs:
       # §AR-benchmarks.7.3: a push to main runs the same binary again and holds the bound.
       # A failure on an unchanged binary is a flaky test: file it (`bug`, `flaky-test`).
       - name: cargo bench
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         run: |
           cargo bench -p grund --features bench --locked --quiet --bench instructions -- --save-summary=json
           python3 scripts/bench_record.py record --environment ci --tier pr --out "$RECORDS/first-${{ matrix.shard }}.json"
@@ -854,6 +853,11 @@ jobs:
           cargo bench -p grund --features bench --locked --quiet --bench instructions -- --save-summary=json
           python3 scripts/bench_record.py record --environment ci --tier pr --out "$RECORDS/second-${{ matrix.shard }}.json"
           python3 scripts/bench_record.py jitter "$RECORDS/first-${{ matrix.shard }}.json" "$RECORDS/second-${{ matrix.shard }}.json" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # §AR-ci.5.1, §AR-ci.12: a merge-queue group runs its head once, held to the ceilings
+      # alone; it measures no base, compares nothing and records nothing.
+      - if: github.event_name == 'merge_group'
+        run: cargo bench -p grund --features bench --locked --quiet --bench instructions -- --save-summary=json
 
       # §AR-ci.5: the harness measured the build job's binary; a shard that rebuilt it fails.
       - uses: ./.github/actions/bench-built
@@ -869,7 +873,6 @@ jobs:
   bench-record:
     name: cargo bench (record)
     needs: [bench]
-    if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -880,17 +883,18 @@ jobs:
           path: shards
 
       # §AR-benchmarks.7.1.1: one record per revision, merged from every shard's partial; a
-      # merge that refuses fails the job.
+      # merge that refuses fails the job. A queue group merges and uploads none (§AR-ci.12).
       - name: Merge the shards' records and compare
+        if: github.event_name != 'merge_group'
         shell: bash
         run: |
-          merge() { python3 scripts/bench_record.py merge --out "records/$1.json" shards/*/bench-records/"$1"-*.json; }
-          mkdir -p records
+          merge() { mkdir -p records && python3 scripts/bench_record.py merge --out "records/$1.json" shards/*/bench-records/"$1"-*.json; }
           if [ "${{ github.event_name }}" != pull_request ]; then merge first; exit; fi
           merge base && merge head
           python3 scripts/bench_record.py compare records/base.json records/head.json | tee -a "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/upload-artifact@v4
+      - if: github.event_name != 'merge_group'
+        uses: actions/upload-artifact@v4
         with:
           name: iai-callgrind-summaries
           path: records/*.json

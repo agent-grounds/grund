@@ -36,7 +36,10 @@ Instruction-regression limits are enforced: growth in `Ir` past 5% on the genera
 10k-file fixture, or past 12.5% on any other benchmark, fails the bench job and the
 `cargo test (ubuntu-latest)` required check, and so does a count over its scenario's
 absolute `Ir` ceiling in the catalog `crates/grund-cli/benches/scenarios.json`
-([§AR-ci.5.2](architecture/AR-ci.md#52-regression-limits)).
+([§AR-ci.5.2](architecture/AR-ci.md#52-regression-limits)). A merge-queue group builds
+only its head, runs the `pr` tier once on every shard held to those ceilings alone, and
+records nothing, because the push the queue makes to `main` records
+([§AR-ci.12](architecture/AR-ci.md#12-a-merge-queue-lands-every-pull-request)).
 
 Callgrind instruction count is a repeatable workload-cost proxy for a given binary
 and input, not elapsed time or a universal latency guarantee
@@ -85,7 +88,8 @@ docker run --rm --security-opt seccomp=unconfined -v "$PWD":/work -w /work \
 
 `cargo bench` writes no record. A run is written down as one run record by
 `python3 scripts/bench_record.py record`, run after it — the CI job does so after each
-run, and the command above does so in the image
+run but a merge-queue group's, which the queue's push to `main` records, and the command
+above does so in the image
 ([§AR-benchmarks.7](architecture/AR-benchmarks.md#7-the-run-record-and-its-series)):
 the count per scenario, and the identity fields the counts were taken with, which are
 the image, the compiler, Valgrind, the runner, the build flags, the locale, the

@@ -69,8 +69,6 @@ class TheBenchmarkJobsAreBuildShardsAndRecord(unittest.TestCase):
             for key, value in BENCH_ENV.items():
                 self.assertEqual(value, env.get(key), f"{key} differs between the jobs")
 
-    # red until #792 drops the merge_group bench exemption; implement removes this
-    @unittest.expectedFailure
     def test_a_merge_queue_group_runs_all_three(self):
         # §AR-ci.12
         for name in (BUILD, SHARD, RECORD):
@@ -79,8 +77,6 @@ class TheBenchmarkJobsAreBuildShardsAndRecord(unittest.TestCase):
                 self.assertTrue(holds(condition and condition.group(1), "merge_group"),
                                 f"{name} does not run on merge-queue groups")
 
-    # red until #792 drops the merge_group bench exemption; implement removes this
-    @unittest.expectedFailure
     def test_the_ubuntu_check_needs_all_three_and_accepts_only_their_success(self):
         # §AR-ci.13.2: a failure, a cancellation or a skip of any of them fails it, on every event.
         listed = set(needs(header(self.job("test-ubuntu"))))
