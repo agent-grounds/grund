@@ -106,14 +106,14 @@ Pros: easy typing path to `§`.
 Cons: may conflict with math-heavy Markdown or template languages.
 Recommend changing only if `$$` is common in the repo.
 
-`strict`
+`strict` (version 1 only)
 
-Default: `false`.
-Pros false: easier adoption; bare `FS-001-login` references work.
-Cons false: more accidental matches.
-Pros true: citations are intentional and explicit.
-Cons true: migration requires adding markers everywhere.
-Recommend false for new/easy adoption, true for mature repos.
+Version 2 recognizes only marked citations, with no opt-out or strict switch
+(§FS-init.2.3.8.1). Do not ask about or write `[reference].strict` for version 2.
+For version 1, the default is `true`: citations are intentional and explicit.
+Use `false` only as a compatibility window for existing bare citations; it
+also admits more accidental matches. Run `grund fmt --marker` before removing
+that override or setting strict back to `true`.
 
 `require_grounding`
 
@@ -372,7 +372,7 @@ target and use `|` for alternatives.
 | Setting | Recommendation from repo evidence |
 | --- | --- |
 | `--template` and `--scaffold` | With little or no `docs/` or `tests/` structure, use `grund init --scaffold`: the default `--template=software-development` lays canonical kinds and starter files. With meaningful docs or tests, omit `--scaffold` and add only missing grund files. For an existing taxonomy, use `grund init --template=none`, add the repo's `[schema.kinds.<KIND>]` tables to `grund.toml`, then run `grund init` again. `--template=none --scaffold` is refused because `none` has no starter files. |
-| `[reference].strict` | Recommend the default `strict = true` for first adoption, especially with noisy ID-like tokens or deliberate citation hygiene. Use `strict = false` only for existing bare citations that need a compatibility window before `grund fmt --marker`. |
+| `[reference].strict` (version 1 only) | Version 2 has fixed marked-only recognition and no strict switch (§FS-init.2.3.8.1). For version 1, recommend the default `strict = true` for first adoption, especially with noisy ID-like tokens or deliberate citation hygiene. Use `strict = false` only for existing bare citations that need a compatibility window before `grund fmt --marker`. |
 | `[reference].require_grounding` | Recommend `false` initially; `true` only with broad spec-to-code citation coverage or an explicit request for strict co-change discipline. |
 | `[id].format` | Use `{kind}-{number}-{slug}` for fresh repos or stable IDs with readable names; `{kind}-{number}` for existing ADR/RFC-style numbered IDs; `{kind}-{slug}` for title/slug-based docs where numeric allocation would feel artificial. |
 | `[[kinds]]` | Start from defaults. Add custom kinds for existing categories such as `ADR`, `RFC`, `REQ`, `API`, `SEC`, or `OPS`; remove defaults only when they would clearly confuse the project. |

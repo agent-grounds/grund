@@ -79,7 +79,12 @@ fn agents_template_substitutions(
     } else {
         format!("`KIND ∈ {{{}}}`", citable.join(", "))
     };
-    let bare_note = if project.schema.citation.strict {
+    // §FS-init.2.3.8.1: v2 fixes marked-only recognition; only v1 has a strict switch.
+    let bare_note = if project.version == 2 {
+        format!(
+            "Bare ID-shaped tokens are ignored — config version 2 recognizes only `{marker}`-prefixed citations, with no opt-out."
+        )
+    } else if project.schema.citation.strict {
         format!(
             "Bare ID-shaped tokens are ignored — `[reference] strict = true` is set in `grund.toml`, so only `{marker}`-prefixed citations are checked."
         )
