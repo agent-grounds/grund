@@ -48,6 +48,8 @@
       "flags": {
         "--descendants": {"scenarios": ["refs_descendants"]},
         "--format": {"scenarios": ["refs_json", "refs_citations_json"]},
+        "--from": {"waiver": "Resolves the source as show does and keeps the edges of the scan the refs row already counts that its own body holds, one comparison each, and reads nothing more."},
+        "--glob": {"waiver": "Keeps the edges of the scan the refs row already counts whose cited coordinate a pattern matches; the matcher walks each coordinate once, in time bounded by the pattern's length and the coordinate's, and reads nothing more."},
         "--path-base": {"waiver": "Rewrites the printed paths, after the scan the refs row already counts."},
         "--section": {"scenarios": ["refs_section", "refs_section_named"]},
         "--summary": {"scenarios": ["refs_citations", "refs_summary"]},
@@ -58,6 +60,7 @@
       "scenarios": ["cover"],
       "flags": {
         "--format": {"scenarios": ["cover_json", "cover_json_canonical"]},
+        "--glob": {"waiver": "Keeps the citations of the scan the cover row already counts whose cited coordinate a pattern matches; the matcher walks each coordinate once, in time bounded by the pattern's length and the coordinate's, and reads nothing more."},
         "--lines": {"scenarios": ["cover_lines", "cover_lines_ranges"]},
         "--path-base": {"waiver": "Rewrites the printed paths, after the scan the cover row already counts."}
       }

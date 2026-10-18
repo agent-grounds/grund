@@ -5,11 +5,15 @@
 /// adds no classification of its own, so it is resolved here before rendering
 /// exactly as `--section` and `--summary` are (§FS-refs.4). `--total` is the
 /// third rung of the same fold and is resolved the same way (§FS-refs.3.4).
+/// `--glob` and `--from` put the line in a mode of its own, whose every positional
+/// is the path (§FS-refs.1.1), and ID mode reads every other line as before.
 fn command_refs(args: &[String]) -> ExitCode {
     if args.is_empty() {
         eprintln!("error: refs requires an ID");
         return ExitCode::from(2);
     }
+    let site_mode = refs_site_mode_requested(args);
+    let mut site_line = RefsSiteLine::default();
     let mut id_arg = None;
     let mut path = PathBuf::from(".");
     let mut path_provided = false;
@@ -34,6 +38,37 @@ fn command_refs(args: &[String]) -> ExitCode {
                 }
                 section_override = Some(args[idx].clone());
             }
+            // §FS-coordinate-globs.errors.flags: repeatable, its value next or after `=`.
+            "--glob" => {
+                idx += 1;
+                let Some(pattern) = args.get(idx) else {
+                    eprintln!("error: --glob requires a value");
+                    return ExitCode::from(2);
+                };
+                site_line.globs.push(pattern.clone());
+            }
+            other if other.starts_with("--glob=") => {
+                site_line.globs.push(other.trim_start_matches("--glob=").to_string());
+            }
+            // §FS-refs.1.2: a missing or empty value is refused where it is read.
+            "--from" => {
+                idx += 1;
+                match args.get(idx) {
+                    Some(source) if !source.is_empty() => site_line.sources.push(source.clone()),
+                    _ => {
+                        eprintln!("error: --from requires a value");
+                        return ExitCode::from(2);
+                    }
+                }
+            }
+            other if other.starts_with("--from=") => {
+                let source = other.trim_start_matches("--from=");
+                if source.is_empty() {
+                    eprintln!("error: --from requires a value");
+                    return ExitCode::from(2);
+                }
+                site_line.sources.push(source.to_string());
+            }
             other if other.starts_with("--format=") => {
                 format_override = Some(other.trim_start_matches("--format=").to_string());
             }
@@ -49,6 +84,7 @@ fn command_refs(args: &[String]) -> ExitCode {
                 eprintln!("error: unknown flag `{other}`");
                 return ExitCode::from(2);
             }
+            other if site_mode => site_line.paths.push(other.to_string()),
             other if id_arg.is_none() => id_arg = Some(other.to_string()),
             other => {
                 if path_provided {
@@ -60,6 +96,14 @@ fn command_refs(args: &[String]) -> ExitCode {
             }
         }
         idx += 1;
+    }
+    if site_mode {
+        site_line.section = section_override;
+        site_line.descendants = descendants;
+        site_line.summary = summary;
+        site_line.total = total;
+        site_line.format = format_override;
+        return command_refs_sites(site_line);
     }
     let Some(id_arg) = id_arg else {
         eprintln!("error: refs requires an ID");
@@ -122,7 +166,7 @@ fn command_refs(args: &[String]) -> ExitCode {
         eprintln!("note: {note}");
     }
     if total {
-        render_refs_total(&output.hits, &format);
+        render_refs_total(&output.hits, &format, usage_clause);
     } else if summary {
         render_refs_summary(&output.hits, output.workspace, &format);
     } else if format == "json" {
@@ -164,18 +208,19 @@ fn print_refs_query_failure_hint(failure: &RefsQueryFailure) {
 }
 
 /// The citation set's size instead of its members (§FS-refs.3.4): the hover's
-/// own clause in text, `not cited` at zero included, and exactly one object
-/// under `--format json` at every count — with no `project` member even in a
+/// own clause in text, `not cited` at zero included — or, under `--from`, the
+/// source's own (§FS-refs.from.records) — and exactly one object under
+/// `--format json` at every count, with no `project` member even in a
 /// workspace, whose paths are already root-relative and distinct
 /// (§FS-workspace.8.2).
-fn render_refs_total(hits: &[RefHit], format: &str) {
+fn render_refs_total(hits: &[RefHit], format: &str, clause: fn(grund_core::LspUsage) -> String) {
     // §FS-lsp.1.2.5: the engine's fold and the engine's wording, never a second
     // tally or a second phrasing kept beside them.
     let usage = usage_over_paths(hits.iter().map(|hit| hit.path.as_str()));
     if format == "json" {
         println!("{{\"sites\":{},\"files\":{}}}", usage.sites, usage.files);
     } else {
-        println!("{}", usage_clause(usage));
+        println!("{}", clause(usage));
     }
 }
 

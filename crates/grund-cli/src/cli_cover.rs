@@ -1,7 +1,8 @@
 /// `grund cover [PATH] [--format text|json]`: the citation graph grouped by
 /// scanned file, for finding what is under- or un-cited (§FS-cover). With
 /// `--lines`, which declaration and section own those lines of one file instead
-/// (§FS-cover.6).
+/// (§FS-cover.6). With `--glob`, each file keeps only the citations the patterns
+/// select, and every file its row (§FS-cover.globs).
 ///
 /// Why `--format` is validated before the scan: a bad value is a usage error the
 /// caller can fix without touching the repository, while the scan itself can fail
@@ -11,9 +12,22 @@ fn command_cover(args: &[String]) -> ExitCode {
     let mut path_provided = false;
     let mut format_override: Option<String> = None;
     let mut lines: Vec<String> = Vec::new();
+    let mut globs: Vec<String> = Vec::new();
     let mut idx = 0;
     while idx < args.len() {
         match args[idx].as_str() {
+            // §FS-coordinate-globs.errors.flags: repeatable, its value next or after `=`.
+            "--glob" => {
+                idx += 1;
+                let Some(pattern) = args.get(idx) else {
+                    eprintln!("error: --glob requires a value");
+                    return ExitCode::from(2);
+                };
+                globs.push(pattern.clone());
+            }
+            other if other.starts_with("--glob=") => {
+                globs.push(other.trim_start_matches("--glob=").to_string());
+            }
             // §FS-cover.6.1: repeatable, each value kept as written so a refusal
             // can echo it (§FS-cover.6.4).
             other if other.starts_with("--lines=") => {
@@ -59,6 +73,16 @@ fn command_cover(args: &[String]) -> ExitCode {
     if let Err(code) = run_format("cover", format_override.as_deref()) {
         return code;
     }
+    // §FS-cover.6.4: `--lines` prints no grouping for a glob to filter, before the path is read.
+    if !lines.is_empty() && !globs.is_empty() {
+        eprintln!("error: --glob cannot be combined with --lines");
+        return ExitCode::from(2);
+    }
+    // §FS-coordinate-globs.errors.shape: what the grammar alone refuses, before discovery.
+    if let Err(error) = check_coordinate_globs(&globs) {
+        eprintln!("error: {error:#}");
+        return ExitCode::from(2);
+    }
     if !lines.is_empty() {
         let mut opts = CoverLinesOpts::default();
         opts.path = path;
@@ -75,7 +99,7 @@ fn command_cover(args: &[String]) -> ExitCode {
     // One load, whichever view is rendered: `cover` and `cover_text` build the
     // same index (§FS-workspace.8.6.2), and calling both walked every project in
     // the workspace twice.
-    let output = match cover(opts) {
+    let (output, note) = match cover_with_globs(opts, &globs).1 {
         Ok(output) => output,
         Err(err) => {
             eprintln!("error: {err:#}");
@@ -87,6 +111,7 @@ fn command_cover(args: &[String]) -> ExitCode {
         Ok(format) => format,
         Err(code) => return code,
     };
+    render_glob_notes(note.as_deref());
     if format == "json" {
         render_cover_json(&output.entries);
     } else {

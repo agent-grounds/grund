@@ -74,15 +74,17 @@ pub use batch::{
 };
 pub use editor_completion::{CitationCompletion, LspCompletionContext};
 pub use editor_hover::{
-    LspUsage, citation_under_title, lsp_hover_with_kind_title, lsp_title_hover_body, usage_clause,
-    usage_over_paths,
+    LspUsage, citation_under_title, cites_clause, lsp_hover_with_kind_title, lsp_title_hover_body,
+    usage_clause, usage_over_paths,
 };
 pub use editor_on_type::{DeclaredId, LineEdit, can_replace_trigger_at, on_type_line_edits};
 pub use editor_snapshot::{
     LspCitation, LspDeclaration, LspFindingRange, LspShowContext, LspSnapshot, LspSnapshotOpts,
     LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub,
 };
-pub use glob_scope::{check_coordinate_globs, reads_as_coordinate_glob};
+pub use glob_scope::{
+    check_coordinate_globs, glob_beside_section, reads_as_coordinate, reads_as_coordinate_glob,
+};
 pub use show_query::{ShowFormat, ShowMode, ShowOpts, ShowQueryError};
 pub use sizes::{
     ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput, list_sizes,

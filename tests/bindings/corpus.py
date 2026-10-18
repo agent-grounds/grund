@@ -79,28 +79,6 @@ READ_CASES = (
     ("list-glob-refused-star-run-ends-the-pattern", "list_ids", (), {"globs": ("FS-**",)}),
     ("workspace-list-glob-every-project-own-separator", "list_ids", (),
      {"globs": ("*/FS-*.1",)}),
-)
-
-# Reads whose root is one file of the fixture rather than the fixture itself
-# (§FS-cover.6.1): (fixture, path under it, operation, positional operands,
-# keyword options).
-FILE_READ_CASES = (
-    ("cover-lines-json", "docs/functional-spec/FS-001-alpha.md", "cover", (),
-     {"lines": ("17", "1-14", "20-31", "33-49")}),
-    ("cover-lines-source-json", "src/lib.rs", "cover", (), {"lines": ("1-10", "8")}),
-    ("cover-lines-past-eof", "docs/functional-spec/FS-001-alpha.md", "cover", (),
-     {"lines": ("45-50",)}),
-    ("cover-lines-outside-scan", "notes.txt", "cover", (), {"lines": ("1",)}),
-)
-
-# The reads with `globs` (§FS-coordinate-globs.bindings.options), which
-# python/test_coordinate_globs.py also runs on their own.
-GLOB_READ_CASES = tuple(case for case in READ_CASES if "globs" in case[3])
-
-# Citation-site reads (§FS-coordinate-globs.bindings.options), apart from READ_CASES until
-# #810 gives `refs` `globs` and `from_` and `cover` `globs`: python/test_citation_sites.py
-# runs them red, and the implementation folds them into READ_CASES.
-CITATION_SITE_CASES = (
     ("refs-glob-point-and-subtree", "refs", (None,), {"globs": ("FS-login{,.**}",)}),
     ("refs-glob-union-once-json", "refs", (None,),
      {"globs": ("FS-login.1{,.**}", "FS-login.1.*")}),
@@ -119,6 +97,27 @@ CITATION_SITE_CASES = (
     ("cover-glob-note", "cover", (), {"globs": ("POLICY-*",)}),
     ("workspace-cover-glob-every-project-json", "cover", (), {"globs": ("*/**",)}),
 )
+
+# Reads whose root is one file of the fixture rather than the fixture itself
+# (§FS-cover.6.1): (fixture, path under it, operation, positional operands,
+# keyword options).
+FILE_READ_CASES = (
+    ("cover-lines-json", "docs/functional-spec/FS-001-alpha.md", "cover", (),
+     {"lines": ("17", "1-14", "20-31", "33-49")}),
+    ("cover-lines-source-json", "src/lib.rs", "cover", (), {"lines": ("1-10", "8")}),
+    ("cover-lines-past-eof", "docs/functional-spec/FS-001-alpha.md", "cover", (),
+     {"lines": ("45-50",)}),
+    ("cover-lines-outside-scan", "notes.txt", "cover", (), {"lines": ("1",)}),
+)
+
+# The reads with `globs` (§FS-coordinate-globs.bindings.options), which
+# python/test_coordinate_globs.py also runs on their own.
+GLOB_READ_CASES = tuple(case for case in READ_CASES if "globs" in case[3])
+
+# The citation-site reads (§FS-coordinate-globs.bindings.options), which
+# python/test_citation_sites.py also runs on their own.
+CITATION_SITE_CASES = tuple(case for case in READ_CASES if case[1] in ("refs", "cover")
+                            and ("globs" in case[3] or "from_" in case[3]))
 
 MUTATIONS = (
     ("fmt-shorthand-write", "fmt", (), {"write": False}),

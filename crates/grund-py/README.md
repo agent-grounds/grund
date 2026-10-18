@@ -13,9 +13,10 @@ See the [Python API guide](https://github.com/agent-grounds/grund/blob/main/docs
 for runnable examples and signatures. Calls are synchronous, silent and return
 immutable typed results. Completed checks return normally even with errors;
 operational refusals carry structured exceptions.
-`list_ids`, `list_sizes` and `show_batch` take keyword-only `globs=()`, the
-coordinate patterns `grund list --glob` takes, and their results carry a nullable
-`note` ([§FS-coordinate-globs.bindings](../../docs/functional-spec/FS-coordinate-globs.md#bindings-node-and-python)).
+`list_ids`, `list_sizes`, `show_batch`, `refs` and `cover` take keyword-only
+`globs=()`, the coordinate patterns `grund list --glob` takes, and their results carry
+a nullable `note`; `refs` also takes `from_=None`, the source `grund refs --from` reads,
+with no ID ([§FS-coordinate-globs.bindings](../../docs/functional-spec/FS-coordinate-globs.md#bindings-node-and-python)).
 
 ## Source and ABI handoff
 

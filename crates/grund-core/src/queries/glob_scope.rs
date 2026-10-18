@@ -2,16 +2,18 @@
 //! discovered, then checked against the loaded projects and compiled once per project
 //! they read (§FS-coordinate-globs.scope), with the note for each pattern no kind in
 //! scope can start (§FS-coordinate-globs.errors.note). `list`, `list --size` and the
-//! generated batch all select through it, so one pattern selects one set on each.
+//! generated batch all select through it, so one pattern selects one set on each, and
+//! `refs --glob` and `cover --glob` select the citation sites whose cited coordinate it
+//! matches (§FS-coordinate-globs.matching.citations).
 
 use anyhow::Result;
 
 use crate::config::{Config, DEFAULT_MARKER, DEFAULT_SECTION_SEPARATOR};
 use crate::grammar::{
     CoordinateGlob, GlobMatcher, GlobOperator, GlobQualifier, GlobRefusal, GlobStage,
-    literal_after_kind_placeholder,
+    literal_after_kind_placeholder, render_id,
 };
-use crate::model::OperationDiagnostic;
+use crate::model::{Citation, OperationDiagnostic};
 use crate::resolver::WorkspaceContext;
 
 /// A refused pattern as the query failure every surface reports
@@ -51,6 +53,34 @@ pub fn check_coordinate_globs(patterns: &[String]) -> Result<()> {
 #[doc(hidden)]
 pub fn reads_as_coordinate_glob(text: &str) -> bool {
     text.chars().any(|ch| GlobOperator::of(ch).is_some()) && LAUNCH.accepts(text)
+}
+
+/// Whether a scan path `refs --glob` or `refs --from` could not find reads as an ID
+/// typed where the path goes: it holds no operator and is a valid pattern, read as the
+/// launch stage reads one, since no config was read for it (§FS-refs.1.3).
+#[doc(hidden)]
+pub fn reads_as_coordinate(text: &str) -> bool {
+    !text.chars().any(|ch| GlobOperator::of(ch).is_some()) && LAUNCH.accepts(text)
+}
+
+/// The pattern a `refs` refusal of `--section` or `--descendants` beside one `--glob`
+/// offers (§FS-refs.1.2, §FS-errors.2.5): `pattern` with `.<section>` appended, every
+/// operator and escape in the section escaped, or with `{,.**}` for no section; `None`
+/// where the launch stage would refuse the result.
+#[doc(hidden)]
+pub fn glob_beside_section(pattern: &str, section: Option<&str>) -> Option<String> {
+    let suffix = match section {
+        Some(section) => section.chars().fold(String::from("."), |mut text, ch| {
+            if ch == '\\' || GlobOperator::of(ch).is_some() {
+                text.push('\\');
+            }
+            text.push(ch);
+            text
+        }),
+        None => "{,.**}".to_string(),
+    };
+    let offer = format!("{pattern}{suffix}");
+    LAUNCH.accepts(&offer).then_some(offer)
 }
 
 /// The patterns a run was given, each compiled for every project it reads.
@@ -101,6 +131,27 @@ impl<'g> GlobSelection<'g> {
             .any(|matcher| matcher.matches(id, section))
     }
 
+    /// Whether any pattern selects what one citation in the project at `citing` cites:
+    /// its coordinate in the project it targets, the loaded project its alias names or
+    /// else the one it sits in, spelled under that project's grammar, declared or not
+    /// (§FS-coordinate-globs.matching.citations, §FS-coordinate-globs.scope.targets). An
+    /// alias that names no loaded project leaves the citation matched by no pattern.
+    pub(crate) fn selects_citation(
+        &self,
+        context: &WorkspaceContext,
+        citing: usize,
+        citation: &Citation,
+    ) -> bool {
+        let target = match citation.namespace.as_deref() {
+            None => Some(citing),
+            Some(alias) => loaded_alias(context, alias),
+        };
+        target.is_some_and(|target| {
+            let id = render_id(&context.projects[target].config.grammar, &citation.id);
+            self.selects(target, &id, citation.section.as_deref())
+        })
+    }
+
     /// Each note's text after `note: `, one per line (§FS-coordinate-globs.bindings.note).
     pub(crate) fn note(&self) -> Option<String> {
         (!self.notes.is_empty()).then(|| self.notes.join("\n"))
@@ -117,13 +168,18 @@ fn projects_read(
     match glob.qualifier() {
         GlobQualifier::Current => Ok(context.current.into_iter().collect()),
         GlobQualifier::Every => Ok((0..context.projects.len()).collect()),
-        GlobQualifier::Alias(alias) => context
-            .projects
-            .iter()
-            .position(|project| context.workspace_loaded && &project.alias == alias)
+        GlobQualifier::Alias(alias) => loaded_alias(context, alias)
             .map(|index| vec![index])
             .ok_or_else(|| glob.unknown_alias(alias, &context.aliases())),
     }
+}
+
+/// The index of the loaded project an alias names; outside a workspace, none does.
+fn loaded_alias(context: &WorkspaceContext, alias: &str) -> Option<usize> {
+    context
+        .projects
+        .iter()
+        .position(|project| context.workspace_loaded && project.alias == alias)
 }
 
 /// The ID head a kind's IDs begin with — the kind and the literal its format writes

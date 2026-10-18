@@ -53,10 +53,10 @@ relative to that captured cwd. Output paths and byte columns follow core rules.
 | `scan(root)` | required explicit root; owned snapshot arrays, including declarations, citations, structures and value facts |
 | `show(id, options?)` | root, section, mode=lead/brief/toc/full, format=text/md/json; body, coordinates, sections, exact core JSON and manifest |
 | `showBatch(queries, options?)` | root, mode, globs; null discovers all coordinates, kept where `globs` match, [] returns before discovery; ordered success/failure records and note |
-| `refs(id, options?)` | root, section, descendants; hits, summaries, totals, note and scanErrors |
+| `refs(id, options?)` | root, section, descendants, globs, from; a null ID with globs or from; hits, summaries, totals, note and scanErrors |
 | `list(options?)` | root, kinds, projects, unused, selector, globs; entries, summaries and note |
 | `listSizes(options?)` | list options, units (lines/words/bytes), positive top; ordered nullable measurements and note |
-| `cover(options?)` | root; files including empty files and full citing-side coordinates |
+| `cover(options?)` | root, globs; files including empty files and full citing-side coordinates, and note |
 | `fmt(options?)` | root, write=false, marker=false, crossRefs=false; changes, scanErrors, refusedWrites |
 | `proposeId(kind, title, options?)` | root, width=3; proposed ID and authoring hints, no writes |
 | `init(target?, options?)` | name, description, docs, force, dryRun, check, noVcs, agents; events, errors, notes, next, pendingChanges |
@@ -72,6 +72,10 @@ relative to that captured cwd. Output paths and byte columns follow core rules.
 `note` is the CLI's `note:` text, or null where it printed none. Explicit batch
 queries with globs reject `input`/`conflicting-options`, and a refused pattern rejects
 `query`/`invalid-coordinate-glob` with its column ([§FS-coordinate-globs.bindings](../functional-spec/FS-coordinate-globs.md#bindings-node-and-python)).
+`refs(null, {globs})` and `refs(null, {from})` ask what `grund refs --glob` and `--from`
+ask; an ID, `section` or `descendants` beside either, or both together, reject
+`input`/`conflicting-options`, and a null ID with neither rejects `input`/`invalid-argument`.
+`cover({globs})` keeps every file entry and only the citations a pattern selects.
 
 Agents for init are canonical/claude/gemini/pi/copilot/cursor/windsurf/zed;
 null means automatic selection and an empty array is invalid. Integration

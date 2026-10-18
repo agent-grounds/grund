@@ -67,7 +67,6 @@ fn cover_citations() -> Vec<serde_json::Value> {
 /// §FS-refs.globs and §FS-coordinate-globs.matching.citations: a pattern selects the sites whose
 /// cited coordinate it matches, declared or not, each once, in ID mode's order and shapes.
 #[test]
-#[ignore = "red until #810 ships refs --glob, refs --from and cover --glob; implement removes this"]
 fn refs_glob_lists_who_cites_a_set() {
     run_cases(
         "refs_glob_lists_who_cites_a_set",
@@ -91,7 +90,6 @@ fn refs_glob_lists_who_cites_a_set() {
 /// §FS-refs.globs.unresolved: nothing a pattern matches is refused, so an empty set exits `0`,
 /// and a pattern no kind can start prints its note (§FS-coordinate-globs.errors.note).
 #[test]
-#[ignore = "red until #810 ships refs --glob, refs --from and cover --glob; implement removes this"]
 fn a_glob_that_matches_nothing_exits_0() {
     run_cases(
         "a_glob_that_matches_nothing_exits_0",
@@ -106,7 +104,6 @@ fn a_glob_that_matches_nothing_exits_0() {
 /// §FS-refs.1.2: every refusal of the new modes is one `error:` line and exit `2` before
 /// discovery, with a pasteable glob only where pasting it back passes (§FS-errors.2.5).
 #[test]
-#[ignore = "red until #810 ships refs --glob, refs --from and cover --glob; implement removes this"]
 fn refs_mode_refusals_are_pinned() {
     run_cases(
         "refs_mode_refusals_are_pinned",
@@ -135,7 +132,6 @@ fn refs_mode_refusals_are_pinned() {
 
 /// §FS-refs.1.3: a missing path that parses as an ID gets one hint naming the glob to use.
 #[test]
-#[ignore = "red until #810 ships refs --glob, refs --from and cover --glob; implement removes this"]
 fn an_id_typed_as_the_path_gets_a_hint() {
     run_cases(
         "an_id_typed_as_the_path_gets_a_hint",
@@ -151,7 +147,6 @@ fn an_id_typed_as_the_path_gets_a_hint() {
 /// §FS-refs.from.owned and §FS-refs.from.stubs: a source owns its lead, its proper ancestors and
 /// itself, a rejected heading's sites lie in the lead, and a doc-comment lead stops at the code.
 #[test]
-#[ignore = "red until #810 ships refs --glob, refs --from and cover --glob; implement removes this"]
 fn refs_from_lists_what_one_point_cites() {
     run_cases(
         "refs_from_lists_what_one_point_cites",
@@ -172,7 +167,6 @@ fn refs_from_lists_what_one_point_cites() {
 /// §FS-refs.from.records: `--from --total` reads `cites at …` and `cites nothing`, and keeps
 /// ID mode's JSON object.
 #[test]
-#[ignore = "red until #810 ships refs --glob, refs --from and cover --glob; implement removes this"]
 fn refs_from_counts_in_its_own_sentence() {
     run_cases(
         "refs_from_counts_in_its_own_sentence",
@@ -187,7 +181,6 @@ fn refs_from_counts_in_its_own_sentence() {
 
 /// §FS-refs.4: a source that does not resolve fails as `grund <coordinate>` fails, exit `1`.
 #[test]
-#[ignore = "red until #810 ships refs --glob, refs --from and cover --glob; implement removes this"]
 fn a_from_source_fails_as_show_fails() {
     run_cases(
         "a_from_source_fails_as_show_fails",
@@ -206,7 +199,6 @@ fn a_from_source_fails_as_show_fails() {
 /// §FS-coordinate-globs.scope.targets and §FS-workspace.8.2: a citation matches by the project it
 /// targets, and its record still names the project it sits in.
 #[test]
-#[ignore = "red until #810 ships refs --glob, refs --from and cover --glob; implement removes this"]
 fn workspace_citations_match_the_project_they_target() {
     run_cases(
         "workspace_citations_match_the_project_they_target",
@@ -227,7 +219,6 @@ fn workspace_citations_match_the_project_they_target() {
 /// §FS-cover.globs and §FS-cover.6.4: `cover --glob` keeps every file's record and only the
 /// citations the patterns match, and refuses `--lines` before it reads the path.
 #[test]
-#[ignore = "red until #810 ships refs --glob, refs --from and cover --glob; implement removes this"]
 fn cover_glob_keeps_every_file() {
     run_cases(
         "cover_glob_keeps_every_file",
@@ -247,7 +238,6 @@ fn cover_glob_keeps_every_file() {
 /// §FS-examples.2, §FS-refs.globs and §FS-refs.from: the walkthrough asks who cites two points
 /// of the checklist and what one of them cites.
 #[test]
-#[ignore = "red until #810 ships refs --glob, refs --from and cover --glob; implement removes this"]
 fn review_checklist_example_asks_who_cites_and_what_is_cited() {
     let runs = ["4-citers", "5-cites"];
     run_in(
@@ -261,7 +251,6 @@ fn review_checklist_example_asks_who_cites_and_what_is_cited() {
 /// §FS-refs.globs.descendants: on this tree each ID-mode spelling and its glob list the same
 /// sites in every text mode, and the glob's JSON is ID mode's without `kind_title` (§FS-refs.3.2).
 #[test]
-#[ignore = "red until #810 ships refs --glob, refs --from and cover --glob; implement removes this"]
 fn own_tree_glob_lists_what_id_mode_lists() {
     for (query, pattern) in [
         (&["FS-refs"][..], "FS-refs{,.**}"),
@@ -299,7 +288,6 @@ fn own_tree_glob_lists_what_id_mode_lists() {
 /// §FS-refs.globs.descendants: `--glob 'X'` is only the citations of `X` with no section, which
 /// `cover` counts on this tree, and fewer than `refs X` lists.
 #[test]
-#[ignore = "red until #810 ships refs --glob, refs --from and cover --glob; implement removes this"]
 fn own_tree_bare_glob_selects_only_the_bare_citations() {
     let expected: Vec<_> = cover_citations()
         .into_iter()
@@ -318,7 +306,6 @@ fn own_tree_bare_glob_selects_only_the_bare_citations() {
 /// §FS-refs.from.owned: `--from FS-refs.3.2.1` lists exactly the sites `cover` gives `FS-refs`
 /// under no section, `3`, `3.2` or `3.2.1`, in `cover`'s records (§FS-refs.from.records).
 #[test]
-#[ignore = "red until #810 ships refs --glob, refs --from and cover --glob; implement removes this"]
 fn own_tree_from_lists_the_sites_of_its_lead_ancestors_and_self() {
     let owned = [None, Some("3"), Some("3.2"), Some("3.2.1")];
     let expected: Vec<_> = cover_citations()
@@ -348,7 +335,6 @@ fn own_tree_from_lists_the_sites_of_its_lead_ancestors_and_self() {
 /// §FS-cover.globs and §AR-resolver.3.2: with `--glob` every file `cover` lists keeps its record,
 /// holding exactly the citations of that file the pattern matches.
 #[test]
-#[ignore = "red until #810 ships refs --glob, refs --from and cover --glob; implement removes this"]
 fn own_tree_cover_glob_keeps_every_record() {
     let all = rows(&grund(&["cover", "--format", "json"]));
     let filtered = rows(&grund(&[

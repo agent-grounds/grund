@@ -45,10 +45,10 @@ The full inventory implements
 | `scan(root)` | `ScanResult`: catalog, citations, scanned files, scan errors, cautions |
 | `show(id, *, section=None, mode="lead", format="text")` | `ShowResult`: body, logical path, line, nullable rendered JSON, sections, cautions |
 | `show_batch(queries=None, *, mode="lead", globs=())` | `BatchResult`: ordered records with query, nullable result/failure, note, cautions |
-| `refs(id, *, section=None, descendants=False)` | `RefsResult`: hits, scan errors, note, kind title, file summaries, site/file totals, cautions |
+| `refs(id=None, *, section=None, descendants=False, globs=(), from_=None)` | `RefsResult`: hits, scan errors, note, kind title, file summaries, site/file totals, cautions |
 | `list_ids(*, kinds=(), projects=(), unused=False, selector=None, globs=())` | `ListResult`: entries, kind summaries, scan errors, note, cautions |
 | `list_sizes(*, kinds=(), projects=(), unused=False, selector=None, globs=(), units=("lines","words","bytes"), top=None)` | `SizesResult`: ordered lead/full measurements, scan errors, note, cautions |
-| `cover(*, text=False, lines=())` | `CoverResult` or `CoverTextResult`: file-grouped coverage, scan errors, cautions; with non-empty `lines`, `CoverLinesResult`: one ownership record per range, scan errors, cautions |
+| `cover(*, text=False, lines=(), globs=())` | `CoverResult` or `CoverTextResult`: file-grouped coverage, scan errors, note, cautions; with non-empty `lines`, `CoverLinesResult`: one ownership record per range, scan errors, cautions |
 | `fmt(*, write=False, marker=False, cross_refs=False)` | `FmtResult`: changes, scan errors, refused writes, cautions |
 | `propose_id(kind, title, *, width=3)` | `IdProposal`: ID, kind, nullable number/home hints, slug, cautions |
 | `init(target=None, *, name=None, description=None, docs=False, force=False, write=False, check=False, no_vcs=False, agents=None)` | `InitResult`: events, errors, notes, nullable next guidance, pending-change status, cautions |
@@ -69,7 +69,12 @@ the engine's batch read; each unsuccessful query retains a Failure in its record
 
 `globs` takes the coordinate patterns `grund list --glob` takes, and selects as repeated
 flags do: `show_batch(globs=...)` generates the batch `queries=None` would and keeps
-what a pattern matches, and explicit queries with globs raise ValueError. `note` is
+what a pattern matches, and explicit queries with globs raise ValueError. `refs(globs=...)`
+lists the sites whose cited coordinate a pattern matches and `refs(from_=...)` the sites
+in that coordinate's own body, as `grund refs --glob` and `--from` do; either replaces
+the ID, an ID, `section` or `descendants` beside one raises ValueError, and no ID, no
+globs and no source raises TypeError. `cover(globs=...)` keeps every file entry and
+only the citations a pattern selects, and raises ValueError beside `lines`. `note` is
 the CLI's `note:` text, or None where it printed none; a refused pattern raises a
 `query` failure with code `invalid-coordinate-glob` and its column
 ([§FS-coordinate-globs.bindings](../functional-spec/FS-coordinate-globs.md#bindings-node-and-python)).

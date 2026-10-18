@@ -43,6 +43,8 @@ pub fn node_request(operation: &str, args: Vec<Value>, cwd: &Path) -> EmbeddingR
         ("dryRun", "dry_run"),
         ("noVcs", "no_vcs"),
         ("conversationTarget", "conversation_target"),
+        // §FS-coordinate-globs.bindings.options: Node's `from` is the wire's `from_`.
+        ("from", "from_"),
     ] {
         if let Some(v) = options.as_object_mut().and_then(|o| o.remove(host)) {
             options[wire] = v;

@@ -66,6 +66,8 @@ pub(super) fn run(r: &EmbeddingRequest, query: Query) -> Result<Value, Value> {
     {
         return Ok(json!({"records": [], "run_cautions": []}));
     }
+    // §FS-coordinate-globs.errors.shape: a broken `grund.toml` hides no refused pattern.
+    embedding_queries::refuse_before_discovery(r)?;
     let tree = !matches!(
         r.operation.as_str(),
         "integrations" | "agent_setup_instructions"

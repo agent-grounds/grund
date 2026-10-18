@@ -18,8 +18,8 @@ use crate::config::display_path;
 use crate::grammar::{path_at_or_under, render_id};
 use crate::model::{Citation, sort_path_key};
 use crate::queries::declaration_ambiguity_refusal;
-use crate::resolver::{WorkspaceProject, load_classifying_workspace_context};
-use crate::scanner::{api_scan_error, resolve_id_arg};
+use crate::resolver::{WorkspaceContext, WorkspaceProject, load_classifying_workspace_context};
+use crate::scanner::{ApiScanError, api_scan_error, resolve_id_arg};
 use crate::workspace::split_qualified_id_arg;
 
 /// Whether one citation's own section coordinate is inside the requested
@@ -30,6 +30,34 @@ fn section_in_scope(cited: Option<&str>, requested: &str, descendants: bool) -> 
     match cited {
         Some(cited) if descendants => path_at_or_under(cited, requested, "."),
         cited => cited == Some(requested),
+    }
+}
+
+/// Every loaded project's scan errors, in project order, spelled against the run's
+/// base (§FS-workspace.8.7): what every `refs` mode reports beside its hits.
+pub(super) fn refs_scan_errors(context: &WorkspaceContext) -> Vec<ApiScanError> {
+    context
+        .projects
+        .iter()
+        .flat_map(|project| {
+            project.scan_errors.iter().map(|(file, message)| {
+                api_scan_error(context.render_config().frame(), file, message)
+            })
+        })
+        .collect()
+}
+
+/// A citing file as a hit spells it: from the workspace root in a workspace, else
+/// from its own project's root (§FS-workspace.8.2).
+pub(super) fn hit_path(
+    context: &WorkspaceContext,
+    project: &WorkspaceProject,
+    path: &Path,
+) -> String {
+    if context.workspace_loaded {
+        display_path(context.render_config(), path)
+    } else {
+        display_path(&project.config, path)
     }
 }
 
@@ -86,15 +114,7 @@ pub(super) fn refs_impl_with_details(
     };
     let target_alias = target_project.alias.as_str();
     let render_config = &target_project.config;
-    let scan_errors = context
-        .projects
-        .iter()
-        .flat_map(|project| {
-            project.scan_errors.iter().map(|(file, message)| {
-                api_scan_error(context.render_config().frame(), file, message)
-            })
-        })
-        .collect::<Vec<_>>();
+    let scan_errors = refs_scan_errors(&context);
     // §FS-refs.4: the `[id] format` hint is for an argument that does not match
     // it; an ambiguous shorthand did match and lists its candidates instead.
     let (id, inline_section) = match resolve_id_arg(
@@ -198,18 +218,11 @@ pub(super) fn refs_impl_with_details(
                 b.citation.column,
             ))
     });
-    let render_path = |project: &WorkspaceProject, path: &Path| -> String {
-        if context.workspace_loaded {
-            display_path(context.render_config(), path)
-        } else {
-            display_path(&project.config, path)
-        }
-    };
     let public_hits = hits
         .iter()
         .map(|hit| RefHit {
             project: context.workspace_loaded.then(|| hit.project.alias.clone()),
-            path: render_path(hit.project, &hit.citation.file),
+            path: hit_path(&context, hit.project, &hit.citation.file),
             line: hit.citation.line,
             column: hit.citation.column,
             id: render_id(&render_config.grammar, &hit.citation.id),

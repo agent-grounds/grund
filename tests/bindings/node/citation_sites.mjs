@@ -1,7 +1,5 @@
 // §FS-coordinate-globs.bindings — `refs` takes `globs` or `from` with a null ID, `cover` takes
 // `globs` and keeps every entry, `note` carries the CLI's note, and selectors conflict.
-// Red until #810: test_node_binding.py runs this under expectedFailure, which the
-// implementation removes.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';

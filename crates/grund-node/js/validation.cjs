@@ -8,12 +8,12 @@ const schemas = {
     only:'strings', ignore:'strings', onlyRule:'boolean' },
   show: { ...roots, section:'nullable', mode:['lead','brief','toc','full'], format:['text','md','json'] },
   showBatch: { ...roots, mode:['lead','brief','toc','full'], globs:'strings' },
-  refs: { ...roots, section:'nullable', descendants:'boolean' },
+  refs: { ...roots, section:'nullable', descendants:'boolean', globs:'strings', from:'nullable' },
   list: { ...roots, kinds:'strings', projects:'strings', unused:'boolean', selector:'nullable',
     globs:'strings' },
   listSizes: { ...roots, kinds:'strings', projects:'strings', unused:'boolean', selector:'nullable',
     globs:'strings', units:['array','lines','words','bytes'], top:'positiveNullable' },
-  cover: roots, fmt: { ...roots, write:'boolean', marker:'boolean', crossRefs:'boolean' },
+  cover: { ...roots, globs:'strings' }, fmt: { ...roots, write:'boolean', marker:'boolean', crossRefs:'boolean' },
   proposeId: { ...roots, width:'integer' },
   init: { name:'nullable', description:'nullable', docs:'boolean', force:'boolean', dryRun:'boolean',
     check:'boolean', noVcs:'boolean', agents:['arrayNullable','canonical','claude','gemini',
@@ -105,7 +105,7 @@ exports.request = function request(op,args) {
           return {id:string(op,q.id),section:q.section==null?null:string(op,q.section)};
         })];
       }
-    } else operands=args.slice(0,n).map(v=>string(op,v));
+    } else operands=args.slice(0,n).map(v=>op==='refs'&&v===null?null:string(op,v));
     opts=options(op,args[n]);
   } else {
     if (args.length>1) bad(op,'too many operands');
@@ -115,6 +115,15 @@ exports.request = function request(op,args) {
   // §FS-coordinate-globs.bindings.options: globs generate the batch an explicit list names.
   if (op==='showBatch' && operands[0]!==null && opts.globs?.length)
     bad(op,'explicit queries cannot be combined with globs','conflicting-options');
+  // §FS-coordinate-globs.bindings.options: `globs` or `from` select the sites, with a null ID.
+  if (op==='refs') {
+    const selector=opts.globs?.length ? (opts.from!=null ? null : 'globs') : (opts.from!=null ? 'from' : '');
+    if (selector===null) bad(op,'globs cannot be combined with from','conflicting-options');
+    if (selector==='' && operands[0]===null) bad(op,'refs requires an ID, globs or from');
+    if (selector) for (const [given,name] of [[operands[0]!==null,'id'],[opts.section!=null,'section'],
+      [opts.descendants===true,'descendants']])
+      if (given) bad(op,`${name} cannot be combined with ${selector}`,'conflicting-options');
+  }
   if (op==='integrations') {
     if ((!opts.write && (opts.conversation!=null || opts.conversationTarget!=null || opts.agent!=null)) ||
         (opts.agent!=null && opts.conversationTarget==null) ||
@@ -126,7 +135,7 @@ exports.request = function request(op,args) {
   if (Object.hasOwn(opts,'root')) {root=opts.root;explicit=true;delete opts.root;}
   root=path.resolve(cwd,root??'.');
   const names={requireGrounding:'require_grounding',onlyRule:'only_rule',crossRefs:'cross_refs',
-    dryRun:'dry_run',noVcs:'no_vcs',conversationTarget:'conversation_target'};
+    dryRun:'dry_run',noVcs:'no_vcs',conversationTarget:'conversation_target',from:'from_'};
   opts=Object.fromEntries(Object.entries(opts).map(([k,v])=>[names[k]??k,v]));
   return {operation:op,root,explicit,args:operands,options:opts};
 };
