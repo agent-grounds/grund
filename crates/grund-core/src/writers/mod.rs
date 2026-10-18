@@ -131,11 +131,12 @@ pub(crate) use fmt_tree::{FmtRunOpts, auto_cross_refs_for_scope, fmt_tree};
 pub(crate) use fmt_workspace::fmt_workspace_projects;
 pub(crate) use id::{format_id, slugify_title};
 
-// `grund integrations` as one operation (§FS-distribution.3.1.3): the closed
-// vocabularies it is spelled in, the options, the answer and the refusal. The
-// CLI renders the answer (§FS-integrations.1.3, §AR-bindings.3), so what it reads
-// here crosses a crate boundary and is public. The names it once assembled the
-// command from are `integrations_retiring`'s, forwarding to the originals below.
+// `grund integrations` as one operation (§FS-distribution.3.1.3): its closed
+// vocabularies, options, answer and refusal, public because the CLI renders the
+// answer (§FS-integrations.1.3, §AR-bindings.3).
+
+// The names the command was once assembled from are `integrations_retiring`'s,
+// forwarding to the originals below.
 pub use integrations_agents::{ConversationRendering, ConversationTarget, IntegrationAgent};
 pub use integrations_api::integrations;
 pub use integrations_clients::{InstallKind, IntegrationClient};

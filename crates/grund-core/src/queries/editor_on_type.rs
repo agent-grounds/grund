@@ -19,9 +19,10 @@ use crate::workspace::resolve_workspace_config;
 /// The LSP live on-type transform (§FS-lsp.1.4) — the keystroke-time counterpart
 /// to `grund fmt`'s bulk passes (§FS-fmt.2.1, §FS-fmt.2.4).
 ///
-/// Split out of the api's contract file, which §AR-core-module-layout.2 keeps as
-/// the published embedding surface: the public items here are part of it,
-/// but the rule deciding *which* keystroke produces *which* edit is a behavior
+/// Split out of the api's contract file (§AR-core-module-layout.2). The public
+/// items here are the editor's seams, `#[doc(hidden)]` at the crate root and no
+/// part of what 1.0 freezes (§FS-distribution.3.1.2), and the rule deciding
+/// *which* keystroke produces *which* edit is a behavior
 /// with its own invariant — the trigger converts eagerly and the shorthand
 /// expands only at a token boundary — and that invariant is what a reader comes
 /// here for.

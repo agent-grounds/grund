@@ -14,6 +14,7 @@ command's own `--help` page links the guide and example that cover it
 | [The `grund.toml` reference](configuration.md), with its [JSON Schema](../../schemas/grund.schema.json) | [`examples/places`](../../examples/places/) |
 | [Migrating a config to version 2](migrating.md) | [`examples/migrate`](../../examples/migrate/) |
 | [Python API](python-api.md) | [`examples/python-api`](../../examples/python-api/) |
+| [Rust API](rust-api.md) | [`examples/rust-api`](../../examples/rust-api/) |
 | [Citation directions](citation-directions.md) | — |
 | [Seeing a repository's schema](schema.md) | [`examples/schema`](../../examples/schema/) |
 | [Clickable citations](clickable-citations.md) | — |
