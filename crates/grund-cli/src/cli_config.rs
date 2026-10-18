@@ -1,14 +1,3 @@
-/// The `warning: ` line each key grund did not act on earns (§FS-config.4.2).
-/// The engine answers which keys those are and prints none of them
-/// (§FS-distribution.3.1); this is the terminal's rendering of that answer, the
-/// frontend's like every other byte (§AR-bindings.3).
-#[allow(deprecated)] // §AR-config.5: the façade until this reads `Project`.
-fn print_config_warnings(config: &Config) {
-    for warning in config_warnings(config) {
-        eprintln!("warning: {warning}");
-    }
-}
-
 fn command_config(args: &[String]) -> ExitCode {
     let Some(action) = args.first().map(|arg| arg.as_str()) else {
         eprintln!("error: expected `config validate` or `config show`");
@@ -48,7 +37,7 @@ fn command_config(args: &[String]) -> ExitCode {
                 // loads every member's config (§FS-config.4.1.1), so it resolves a
                 // block's member boundary and carries what that settled.
                 render_run_warnings(&config_run_warnings(&config));
-                print_config_warnings(&config);
+                print_config_warnings(config_warnings(&config));
                 ExitCode::SUCCESS
             }
             Err(err) => {
@@ -56,30 +45,42 @@ fn command_config(args: &[String]) -> ExitCode {
                 ExitCode::FAILURE
             }
         },
-        "show" => match effective_config(&path) {
-            Ok(config) => {
-                // Before the TOML, so "why is this key not taking effect" is
-                // answered next to the effective value (§FS-config.4.2).
-                print_config_warnings(&config);
-                // §FS-config.4.2: a v2 config prints in v2 spelling, which the
-                // engine writes from the `Project`; a v1 config keeps its bytes.
-                match effective_project(&path).map(|project| project.v2_toml()) {
-                    Ok(Some(toml)) => print!("{toml}"),
-                    _ => print_effective_config(&config),
-                }
-                ExitCode::SUCCESS
-            }
-            Err(err) => {
-                eprintln!("error: {err:#}");
-                ExitCode::from(2)
-            }
-        },
+        "show" => command_config_show(&path),
         _ => unreachable!(),
     }
 }
 
-#[allow(deprecated)] // §AR-config.5: the façade until this reads `Project`.
-fn print_effective_config(config: &Config) {
+/// The `warning: ` line each key grund did not act on earns (§FS-config.4.2).
+/// The engine answers which keys those are and prints none of them
+/// (§FS-distribution.3.1); this is the terminal's rendering of that answer, the
+/// frontend's like every other byte (§AR-bindings.3).
+fn print_config_warnings(warnings: Vec<String>) {
+    for warning in warnings {
+        eprintln!("warning: {warning}");
+    }
+}
+
+/// `grund config show` (§FS-config.4.2). The effective configuration is read and
+/// printed in this one function, so its record is never named: the root alias
+/// that named it was removed in 0.19.0 (§FS-distribution.3.1), and the record
+/// itself is hidden until this reads `Project` (§AR-config.5).
+fn command_config_show(path: &Path) -> ExitCode {
+    let config = match effective_config(path) {
+        Ok(config) => config,
+        Err(err) => {
+            eprintln!("error: {err:#}");
+            return ExitCode::from(2);
+        }
+    };
+    // Before the TOML, so "why is this key not taking effect" is answered next
+    // to the effective value (§FS-config.4.2).
+    print_config_warnings(config_warnings(&config));
+    // §FS-config.4.2: a v2 config prints in v2 spelling, which the engine writes
+    // from the `Project`; a v1 config keeps its bytes.
+    if let Ok(Some(toml)) = effective_project(path).map(|project| project.v2_toml()) {
+        print!("{toml}");
+        return ExitCode::SUCCESS;
+    }
     // §FS-config.4.2
     println!("grund_config_version = 1");
     if let Some(name) = &config.project_name {
@@ -279,42 +280,39 @@ fn print_effective_config(config: &Config) {
         );
         println!("include_root = {}", config.workspace_include_root);
     }
+    // §FS-config.4.2: the effective `[citations]` section. Per-kind tables print
+    // in sorted order for deterministic output (§FS-errors.4).
     if config.citations.declared {
-        print_citation_rules(&config.citations);
-    }
-}
-
-/// Print the effective `[citations]` section for `grund config show`
-/// (§FS-config.4.2). Per-kind tables print in sorted order for deterministic
-/// output (§FS-errors.4).
-#[allow(deprecated)] // §AR-config.5: the façade until this reads `Project`.
-fn print_citation_rules(citations: &CitationRules) {
-    println!();
-    println!("[citations]");
-    if let Some(default) = citations.global_default {
-        println!("default = \"{}\"", citation_level_str(default));
-    }
-    for (kind, rules) in &citations.per_kind {
+        let citations = &config.citations;
         println!();
-        println!("[citations.{kind}]");
-        if let Some(default) = rules.default {
+        println!("[citations]");
+        if let Some(default) = citations.global_default {
             println!("default = \"{}\"", citation_level_str(default));
         }
-        let lists: [(&str, &[CitationDisjunction]); 5] = [
-            ("must", &rules.must),
-            ("should", &rules.should),
-            ("may", &rules.may),
-            ("should-not", &rules.should_not),
-            ("must-not", &rules.must_not),
-        ];
-        for (key, disjunctions) in lists {
-            if disjunctions.is_empty() {
-                continue;
+        for (kind, rules) in &citations.per_kind {
+            println!();
+            println!("[citations.{kind}]");
+            if let Some(default) = rules.default {
+                println!("default = \"{}\"", citation_level_str(default));
             }
-            let entries: Vec<String> = disjunctions.iter().map(render_citation_disjunction).collect();
-            println!("{key} = {}", format_toml_string_list(&entries));
+            let lists: [(&str, &[CitationDisjunction]); 5] = [
+                ("must", &rules.must),
+                ("should", &rules.should),
+                ("may", &rules.may),
+                ("should-not", &rules.should_not),
+                ("must-not", &rules.must_not),
+            ];
+            for (key, disjunctions) in lists {
+                if disjunctions.is_empty() {
+                    continue;
+                }
+                let entries: Vec<String> = disjunctions.iter().map(render_citation_disjunction).collect();
+                println!("{key} = {}", format_toml_string_list(&entries));
+            }
         }
+
     }
+    ExitCode::SUCCESS
 }
 
 fn render_citation_disjunction(disjunction: &CitationDisjunction) -> String {

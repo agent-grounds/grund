@@ -17,10 +17,4 @@ cargo install grund
 Use `grund-core` directly when embedding the engine in Rust code. The public API
 is still pre-1.0 and may change between minor releases.
 
-`KindConfig` now exposes `format`, `resolve`, and `fetch`. This is additive for
-field access but source-incompatible for downstream exhaustive struct literals;
-embedders constructing the public struct must initialize the three new fields.
-The executable integration still runs only through an explicit
-`fetch_snapshot` call ([§FS-fetch](../../docs/functional-spec/FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)).
-
 Project home: <https://github.com/agent-grounds/grund>

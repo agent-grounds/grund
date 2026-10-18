@@ -81,12 +81,6 @@ pub use sources::{
     CheckInput, CheckInputObserver, canonical_snapshot_path, with_check_input_observer,
 };
 
-/// The scan's shared facts under the name they had before the glossary's word
-/// (§FS-terms.terms.1): an alias of [`Catalog`], kept on the deprecation path of
-/// §REQ-backwards-compatibility.2 and removed in `0.19.0` (§FS-distribution.3.1).
-#[deprecated(since = "0.17.0", note = "renamed to `Catalog`; removed in 0.19.0")]
-pub type Findings = Catalog;
-
 // §AR-system.2.1 grammar: the compiled ID grammar, the one lexical fact an
 // embedder names (§FS-config.3.2), and the version a managed integrations block
 // is written and read at (§FS-integrations.4.2).
@@ -122,30 +116,12 @@ pub use config::{
     SchemaNode, SchemaSlot, SchemaView, Strength,
 };
 
-/// The validated configuration façade, built from [`Project`], [`Run`] and
-/// [`Compiled`] (§AR-config.5): kept on the deprecation path of
-/// §REQ-backwards-compatibility.2 and removed in `0.19.0` (§AR-config.1).
-#[deprecated(
-    since = "0.17.0",
-    note = "read `Project` from `effective_project`; removed in 0.19.0"
-)]
-pub type Config = config::Config;
-
-/// One `[[kinds]]` row in its version-1 shape, which a [`Project`] holds as
-/// rows (§AR-config.1.3); removed in `0.19.0` (§REQ-backwards-compatibility.2).
-#[deprecated(
-    since = "0.17.0",
-    note = "read `Project::schema` rows; removed in 0.19.0"
-)]
-pub type KindConfig = config::KindConfig;
-
-/// The `[citations]` rules under the name they had before the records
-/// (§AR-config.1.4); removed in `0.19.0` (§REQ-backwards-compatibility.2).
-#[deprecated(
-    since = "0.17.0",
-    note = "read `Project::rules.citations`; removed in 0.19.0"
-)]
-pub type CitationRules = config::CitationRules;
+// §FS-distribution.3.1, §REQ-backwards-compatibility.2: the four root aliases
+// noticed in 0.17.0, each gone on the release its note named.
+// `Findings` was removed in 0.19.0; read `Catalog`, the record it named.
+// `Config` was removed in 0.19.0; `effective_project` returns the `Project` it was built from.
+// `KindConfig` was removed in 0.19.0; a `Project` holds the kinds as `schema` rows.
+// `CitationRules` was removed in 0.19.0; a `Project` holds them as `rules.citations`.
 
 // §AR-system.2.5 scanner: the published form of what the walk raises
 // (§FS-check.2.4).
