@@ -1,0 +1,1 @@
+show --batch --glob 'FS-cover' --glob 'FS-c{over,heck}' {repo} --format json

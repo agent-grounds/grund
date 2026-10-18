@@ -1,0 +1,3 @@
+FS-config.requirements.1    docs/fs/FS-config.md:13  A key has one meaning
+FS-config.requirements.2    docs/fs/FS-config.md:15  A default is overridable
+FS-config.requirements.2.1  docs/fs/FS-config.md:17  Even the separator

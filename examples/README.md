@@ -31,6 +31,7 @@ summarizes when to reach for each.
 | Folder                                                       | Use-case                                                 |
 |--------------------------------------------------------------|----------------------------------------------------------|
 | [`quickstart/`](quickstart/) | Declare a login requirement with a named section, cite it from code, retrieve it, then break and repair the citation ([§FS-examples.2](../docs/functional-spec/FS-examples.md#2-canonical-use-cases)) |
+| [`review-checklist/`](review-checklist/) | Reviewing a checklist with coordinate globs: count its points, read their bodies in one scan, then name the points a changed line range touched ([§FS-coordinate-globs](../docs/functional-spec/FS-coordinate-globs.md#fs-coordinate-globs-a-coordinate-glob-selects-catalog-coordinates-by-pattern)) |
 | [`init-template-none/`](init-template-none/) | Setting up a repository that declares its own kinds with `grund init --template=none` ([§FS-init.1.6.2](../docs/functional-spec/FS-init.md#162-none)) |
 | [`workspace/`](workspace/)                                   | Cross-project citation in a monorepo ([§FS-workspace](../docs/functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace)) |
 | [`workspace-mixed-versions/`](workspace-mixed-versions/) | A version-2 root with a version-1 member: one caution, naming the member to migrate ([§FS-check.checks.config-version-1](../docs/functional-spec/FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)) |

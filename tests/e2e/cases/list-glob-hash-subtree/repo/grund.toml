@@ -1,0 +1,16 @@
+grund_config_version = 1
+
+[reference]
+strict = true
+
+[id]
+format = "{kind}.{number}.{slug}"
+section_separator = "#"
+
+[[kinds]]
+kind = "RFC"
+folder = "docs"
+index = false
+
+[scan]
+include = ["docs"]

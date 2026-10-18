@@ -1,0 +1,4 @@
+root/FS-root        docs/FS-root.md:1  Root
+root/FS-root.1      docs/FS-root.md:9  One
+root/FS-root.1.1    docs/FS-root.md:13  Child
+root/FS-root.terms  docs/FS-root.md:5  Terms

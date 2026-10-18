@@ -1,0 +1,1 @@
+list --glob 'FS-c{heck,over}' --glob 'FS-config.terms' --glob 'FS-cover' {repo}

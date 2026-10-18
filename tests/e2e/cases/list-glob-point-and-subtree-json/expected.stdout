@@ -1,0 +1,4 @@
+{"id":"FS-config","section":"requirements","kind":"FS","path":"docs/fs/FS-config.md","line":9,"title":"Requirements","stub":false,"defines":null,"refs":0,"duplicate":false}
+{"id":"FS-config","section":"requirements.1","kind":"FS","path":"docs/fs/FS-config.md","line":13,"title":"A key has one meaning","stub":false,"defines":null,"refs":0,"duplicate":false}
+{"id":"FS-config","section":"requirements.2","kind":"FS","path":"docs/fs/FS-config.md","line":15,"title":"A default is overridable","stub":false,"defines":null,"refs":0,"duplicate":false}
+{"id":"FS-config","section":"requirements.2.1","kind":"FS","path":"docs/fs/FS-config.md","line":17,"title":"Even the separator","stub":false,"defines":null,"refs":0,"duplicate":false}

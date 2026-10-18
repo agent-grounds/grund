@@ -184,6 +184,8 @@ Fields:
 
 `list --size --format=json` emits per-coordinate rows instead ([§FS-output-shapes.5.2](FS-output-shapes.md#52-list---size---formatjson)).
 
+`list --total --format=json` emits exactly one object instead, at every count, `0` included: `{"count":12}`. `count` is the number of rows the same filters list; no other field appears on it ([§FS-list.total](FS-list.md#total---total-a-count-rung)).
+
 ### 5.1 `refs --format=json`
 
 `refs --format=json` emits one citation object per line: `path`, `line`,
@@ -284,6 +286,11 @@ For each case above, [§FS-output-shapes.7.1](FS-output-shapes.md#71-the-matrix)
 | `refs --total` text, cited | one `cited at <n> site(s) across <m> file(s)` line | empty | `0` |
 | `refs --total` text, uncited | one `not cited` line | empty, or the [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations) `note:` for an ID neither declared nor cited | `0` |
 | `refs --total --format=json`, any count | exactly one `{"sites":<n>,"files":<m>}` object | as the text rows | `0` |
+| `list --total` text, any count | the bare count and a newline | empty | `0` |
+| `list --total --format=json`, any count | exactly one `{"count":<n>}` object | empty | `0` |
+| `list --total`, nothing selected | `0`, or `{"count":0}` in JSON | empty | `0` |
+| refused coordinate glob ([§FS-coordinate-globs.errors.shape](FS-coordinate-globs.md#errorsshape-one-refusal-line)) | empty | one raw `error: invalid coordinate glob …` line | `2` |
+| valid glob no kind in scope can start, `list` or `show --batch` | empty | one `note:` line per such pattern ([§FS-coordinate-globs.errors.note](FS-coordinate-globs.md#errorsnote-a-pattern-no-kind-can-start-gets-a-note)) | `0` |
 | `cover --lines`, a scanned file, text or JSON | one block or object per range | empty | `0` |
 | `cover --lines`, a file outside the scan | empty | empty | `0` |
 | `cover --lines` usage error ([§FS-cover.6.4](FS-cover.md#64-errors)) | empty | one raw `error:` line | `2` |
@@ -296,4 +303,4 @@ For each case above, [§FS-output-shapes.7.1](FS-output-shapes.md#71-the-matrix)
 | semantic value finding, JSON | finding NDJSON with declaration `sites` | empty | `1` |
 | home JSON that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete | partial findings if any | incomplete-scan finding | `2` |
 
-The three `--total` rows are the whole difference the flag makes to this table: the `refs` resolver-rejection rows above and the incomplete-scan row apply to a `--total` invocation unchanged, because it renders the same scan result rather than running a different query ([§FS-refs.3.4](FS-refs.md#34---total)).
+The three `refs --total` rows are the whole difference that flag makes to this table: the `refs` resolver-rejection rows above and the incomplete-scan row apply to a `--total` invocation unchanged, because it renders the same scan result rather than running a different query ([§FS-refs.3.4](FS-refs.md#34---total)).

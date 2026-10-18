@@ -1,0 +1,1 @@
+list --glob 'FS-login.requirements{,.**}' --total {repo}

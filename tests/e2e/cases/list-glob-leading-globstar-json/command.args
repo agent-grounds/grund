@@ -1,0 +1,1 @@
+list --glob '**.terms' {repo} --format json

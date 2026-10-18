@@ -1,0 +1,2 @@
+{"query":{"id":"FS-root","section":"1"},"ok":true,"result":{"id":"FS-root","section":"1","body":"## 1. One\n\nRoot one.\n","anchor":"1-one","path":"docs/FS-root.md","line":9},"error":null}
+{"query":{"id":"api/FS-api","section":"1"},"ok":true,"result":{"id":"FS-api","section":"1","body":"## 1. One\n\nApi one.\n","anchor":"1-one","path":"api/docs/FS-api.md","line":9},"error":null}

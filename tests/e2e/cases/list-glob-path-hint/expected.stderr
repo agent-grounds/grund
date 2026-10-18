@@ -1,0 +1,2 @@
+error: path does not exist: FS-*
+hint: `list` reads `FS-*` as a scan path; for a coordinate pattern, use `grund list --glob 'FS-*'`

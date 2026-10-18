@@ -1,0 +1,1 @@
+error: invalid coordinate glob "FS-[a-z" at column 4: "[" is never closed

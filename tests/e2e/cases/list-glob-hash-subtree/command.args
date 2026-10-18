@@ -1,0 +1,1 @@
+list --glob 'RFC.*#3{,.**}' {repo}
