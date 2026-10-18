@@ -99,7 +99,7 @@ Existing Rust entry points and CLI rendering/defaults stay compatible
 - `grund_core::init(opts: InitOpts) -> Result<InitOutput>`
 - `grund_core::complete_ids(opts: CompleteIdsOpts) -> Result<Vec<String>>`
 - `grund_core::integrations(opts: IntegrationsOpts) -> Result<IntegrationsOutput, IntegrationsError>` ([§FS-distribution.3.1.3](../functional-spec/FS-distribution.md#313-integrations-is-the-one-integrations-entry-point))
-- `grund_core::effective_project(path) -> Result<Project>`, and `grund_core::effective_config(path)` / `grund_core::validate_config(path)` beside it, all three `#[doc(hidden)]` seams outside the 1.0 promise ([§AR-bindings.2.1](#21-the-crate-root-is-the-10-promise-and-the-frontends-seams))
+- `grund_core::effective_project(path) -> Result<Project>`, and `grund_core::effective_config(path)` / `grund_core::validate_config(path)` beside it, all three `#[doc(hidden)]` seams outside the 1.0 promise ([§AR-bindings.2.1](AR-bindings.md#21-the-crate-root-is-the-10-promise-and-the-frontends-seams))
 - The `Catalog`, `Declaration`, `Citation`, `Report` data types, and the configuration records `Project`, `Run` and `Compiled` ([§AR-config.1](AR-config.md#1-the-records)), the three records `#[doc(hidden)]` like the readers above.
 - Not `Findings`, `Config`, `KindConfig` or `CitationRules`: deprecated since `0.17.0`, they were removed in `0.19.0`. `Catalog` replaces `Findings`, and the `Config` façade [§AR-config.5](AR-config.md#5-the-config-façade-and-the-list-that-only-shrinks) builds from the records is what `effective_config` still returns, unnamed at the root.
 
