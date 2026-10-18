@@ -101,9 +101,7 @@ pub use compiled::Grammar;
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
-pub(crate) use anchors::{
-    anchor_slug, section_anchor_text, section_display_name, section_row_title,
-};
+pub(crate) use anchors::{anchor_slug, section_anchor_text, section_display_name};
 pub(crate) use comment_block::{
     CommentBlockKind, DocCommentRule, block_declares_id, block_is_doc_comment, comment_blocks,
     declaration_id_on_source_line, first_content_line, is_bare_block_line,

@@ -12,8 +12,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 use crate::config::{Config, KindConfig, display_path};
-use crate::grammar::{render_id, section_row_title};
-use crate::model::{Declaration, Finding, Id, format_path, paired_declarations, sort_path_key};
+use crate::grammar::render_id;
+use crate::model::{
+    Declaration, FileRecords, Finding, Id, format_path, paired_declarations, sort_path_key,
+};
 use crate::queries::{
     GlobSelection, ListCitationCounts, check_list_scope, read_globs, reported_scope, reports,
     require_unique_literal,
@@ -21,7 +23,7 @@ use crate::queries::{
 use crate::resolver::{WorkspaceProject, load_reported_workspace_context};
 
 use super::report::context_run_warnings;
-use crate::scanner::api_scan_error;
+use crate::scanner::{api_scan_error, section_row_title};
 
 pub use super::list_output::{ListEntry, ListOutput, ListSummary, ListValueRoot};
 
@@ -113,6 +115,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
         project_index: usize,
         project_alias: &'a str,
         project_config: &'a Config,
+        files: &'a FileRecords,
         id: &'a Id,
         home: &'a Declaration,
         duplicate: bool,
@@ -160,6 +163,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                     project_index,
                     project_alias: project.alias.as_str(),
                     project_config: &project.config,
+                    files: &project.findings.files,
                     id,
                     home,
                     duplicate,
@@ -278,8 +282,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                 let mut row = base();
                 row.section = Some(section.clone());
                 row.line = info.line;
-                let title = section_row_title(&info.title, section, info.relative);
-                row.title = Some(title.into_owned());
+                row.title = Some(section_row_title(entry.files, entry.home, section, info));
                 row.stub = false;
                 row.defines = None;
                 row.refs = 0;

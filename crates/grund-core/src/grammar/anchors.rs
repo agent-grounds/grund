@@ -133,23 +133,6 @@ pub(crate) fn section_anchor_text(line: &str, section: &str) -> String {
     .to_string()
 }
 
-/// A listed section's title (§FS-coordinate-globs.matching.catalog): the display name; for a
-/// numbered path the heading text after its number, which `section_anchor_text` stores
-/// in front of it with the dots dropped, so `## 1.1 Child` lists as `Child`.
-pub(crate) fn section_row_title<'a>(title: &'a str, section: &str, relative: bool) -> Cow<'a, str> {
-    let display = section_display_name(title, section, relative);
-    if named_section_path(section) {
-        return display;
-    }
-    let number = section.replace('.', "");
-    match display.strip_prefix(number.as_str()) {
-        Some(rest) if rest.is_empty() || rest.starts_with(' ') => {
-            Cow::Owned(rest.trim_start().to_string())
-        }
-        _ => display,
-    }
-}
-
 /// The human-facing title of one accepted chapter, without its named-section
 /// coordinate (§FS-rules.3.1, §FS-rules.5.1). `SectionInfo::title` retains the
 /// complete rendered heading for anchor fidelity; rule facts and selector rows
