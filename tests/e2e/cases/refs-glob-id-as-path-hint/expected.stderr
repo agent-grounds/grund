@@ -1,0 +1,2 @@
+error: path does not exist: FS-login
+hint: with `--glob`, `refs` reads `FS-login` as a scan path; to add its citations, use `--glob 'FS-login{,.**}'`

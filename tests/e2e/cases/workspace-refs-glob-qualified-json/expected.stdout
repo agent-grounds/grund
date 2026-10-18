@@ -1,0 +1,4 @@
+{"project":"citer","path":"citer/docs/FS-audit.md","line":3,"column":24,"id":"target/FS-login","section":"1","marker":true,"text":"§target/FS-login.1","enclosing_declaration":"FS-audit","enclosing_section":null}
+{"project":"citer","path":"citer/src/user.rs","line":1,"column":5,"id":"target/FS-login","section":null,"marker":true,"text":"§target/FS-login","enclosing_declaration":null,"enclosing_section":null}
+{"project":"root","path":"src/user.rs","line":1,"column":5,"id":"target/FS-login","section":"1","marker":true,"text":"§target/FS-login.1","enclosing_declaration":null,"enclosing_section":null}
+{"project":"target","path":"target/src/user.rs","line":1,"column":5,"id":"FS-login","section":"1","marker":true,"text":"§FS-login.1","enclosing_declaration":null,"enclosing_section":null}

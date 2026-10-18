@@ -1,0 +1,3 @@
+{"path":"docs/fs/FS-login.md","line":3,"column":24,"id":"FS-audit","section":null,"marker":true,"text":"§FS-audit","enclosing_declaration":"FS-login","enclosing_section":null}
+{"path":"docs/fs/FS-login.md","line":3,"column":39,"id":"FS-ledger","section":null,"marker":true,"text":"§FS-ledger","enclosing_declaration":"FS-login","enclosing_section":null}
+{"path":"docs/fs/FS-login.md","line":7,"column":23,"id":"FS-audit","section":"entries","marker":true,"text":"§FS-audit.entries","enclosing_declaration":"FS-login","enclosing_section":"1"}

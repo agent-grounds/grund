@@ -66,7 +66,7 @@ The ID resolves against that project read as [§FS-scan.path.check](FS-scan.md#p
 
 ### path.refs: `refs` scans the path's tree
 
-For `refs`, `<path>` is the directory or file whose tree is scanned, default `.`, discovered as by every other subcommand ([§FS-config.1](FS-config.md#1-file-location-and-discovery)).
+For `refs`, in each of its modes ([§FS-refs.1.1](FS-refs.md#11-three-modes-one-path)), `<path>` is the directory or file whose tree is scanned, default `.`, discovered as by every other subcommand ([§FS-config.1](FS-config.md#1-file-location-and-discovery)). A `--from` source resolves against the project the path discovers, as `show`'s ID does ([§FS-scan.path.show](FS-scan.md#pathshow-show-resolves-the-id-against-the-project-the-path-discovers)), and the sites it lists are those of the tree the path scans.
 
 ### path.id: `id` numbers from the project the path discovers
 

@@ -1,0 +1,1 @@
+refs --glob 'target/FS-login{,.**}' {repo} --format json

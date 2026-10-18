@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "case": "cover-glob-missing-value",
+  "inputFiles": {
+    "command.args": {"bytes":[99,111,118,101,114,32,110,111,119,104,101,114,101,32,45,45,103,108,111,98,10]},
+    "expected.exit": {"bytes":[50,10]},
+    "expected.stderr": {"bytes":[101,114,114,111,114,58,32,45,45,103,108,111,98,32,114,101,113,117,105,114,101,115,32,97,32,118,97,108,117,101,10]},
+    "expected.stdout": {"bytes":[10]},
+    "spec.refs": {"bytes":[70,83,45,99,111,111,114,100,105,110,97,116,101,45,103,108,111,98,115,46,101,114,114,111,114,115,46,102,108,97,103,115,10]}
+  },
+  "variants": {
+    "whole-tree": {"absent":"no input repository: command grammar/process case","point":"§REQ-one-answer.proof.matrix","authoredFrom":"The original has no repo directory; only its exact authored command/goldens are applicable."},
+    "narrowed": {"absent":"no input repository: command grammar/process case","point":"§REQ-one-answer.proof.matrix","authoredFrom":"The original has no repo directory; only its exact authored command/goldens are applicable."},
+    "path-argument": {"absent":"no input repository: command grammar/process case","point":"§REQ-one-answer.proof.matrix","authoredFrom":"The original has no repo directory; only its exact authored command/goldens are applicable."},
+    "editor-overlay": {"absent":"no input repository: command grammar/process case","point":"§REQ-one-answer.proof.matrix","authoredFrom":"The original has no repo directory; only its exact authored command/goldens are applicable."}
+  }
+}

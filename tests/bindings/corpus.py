@@ -97,6 +97,29 @@ FILE_READ_CASES = (
 # python/test_coordinate_globs.py also runs on their own.
 GLOB_READ_CASES = tuple(case for case in READ_CASES if "globs" in case[3])
 
+# Citation-site reads (§FS-coordinate-globs.bindings.options), apart from READ_CASES until
+# #810 gives `refs` `globs` and `from_` and `cover` `globs`: python/test_citation_sites.py
+# runs them red, and the implementation folds them into READ_CASES.
+CITATION_SITE_CASES = (
+    ("refs-glob-point-and-subtree", "refs", (None,), {"globs": ("FS-login{,.**}",)}),
+    ("refs-glob-union-once-json", "refs", (None,),
+     {"globs": ("FS-login.1{,.**}", "FS-login.1.*")}),
+    ("refs-glob-dangling", "refs", (None,), {"globs": ("FS-ghost{,.**}", "FS-login.9")}),
+    ("refs-glob-note", "refs", (None,), {"globs": ("POLICY-*",)}),
+    ("refs-glob-refused-before-discovery", "refs", (None,), {"globs": ("FS-{a,b",)}),
+    ("workspace-refs-glob-qualified-json", "refs", (None,),
+     {"globs": ("target/FS-login{,.**}",)}),
+    ("refs-from-lead-ancestors-and-self", "refs", (None,), {"from_": "FS-login.1.1"}),
+    ("refs-from-local-numeric", "refs", (None,), {"from_": "FS-ledger"}),
+    ("refs-from-not-found-json", "refs", (None,), {"from_": "FS-nope"}),
+    ("refs-from-ambiguous-json", "refs", (None,), {"from_": "FS-convoy"}),
+    ("workspace-refs-from-keeps-the-alias-json", "refs", (None,), {"from_": "citer/FS-audit"}),
+    ("cover-glob-json", "cover", (), {"globs": ("FS-ledger.*",)}),
+    ("cover-glob-keeps-every-file", "cover", (), {"text": True, "globs": ("FS-audit{,.**}",)}),
+    ("cover-glob-note", "cover", (), {"globs": ("POLICY-*",)}),
+    ("workspace-cover-glob-every-project-json", "cover", (), {"globs": ("*/**",)}),
+)
+
 MUTATIONS = (
     ("fmt-shorthand-write", "fmt", (), {"write": False}),
     ("fmt-shorthand-write", "fmt", (), {"write": True}),

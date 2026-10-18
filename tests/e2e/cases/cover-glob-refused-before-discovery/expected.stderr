@@ -1,0 +1,1 @@
+error: invalid coordinate glob "FS-{a,b" at column 4: "{" is never closed
