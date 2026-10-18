@@ -622,7 +622,7 @@ The harness body is gated behind the `bench` Cargo feature, so the regular build
 
 ### 5.5 The store keeps a push's record
 
-`bench-store.yml`, a workflow under `.github/workflows/`, keeps the record of each push to `main` on the `benchmark-data` branch ([§AR-benchmarks.7.5](AR-benchmarks.md#75-a-push-to-main-keeps-its-record)). It is a workflow of its own, never a job of `ci.yml`, and it runs on `workflow_run` of the workflow named `CI`, once that run has `completed`. `workflows: [CI]` matches `ci.yml` by its `name:`, so `ci.yml` stays named `CI`. It has one job, which calls `bench_store.py` under `scripts/`.
+`.github/workflows/bench-store.yml` keeps the record of each push to `main` on the `benchmark-data` branch ([§AR-benchmarks.7.5](AR-benchmarks.md#75-a-push-to-main-keeps-its-record)). It is a workflow of its own, never a job of `ci.yml`, and it runs on `workflow_run` of the workflow named `CI`, once that run has `completed`. `workflows: [CI]` matches `ci.yml` by its `name:`, so `ci.yml` stays named `CI`. It has one job, which calls `scripts/bench_store.py`.
 
 A store runs after CI's verdict and outside it. A failed store is a red run of its own workflow: CI's run, its verdict and both required checks ([§AR-ci.13.2](AR-ci.md#132-the-required-check-is-an-aggregate)) are untouched. So is the duration tracker of [§AR-ci.requirements.3](AR-ci.md#requirements3-the-average-is-measured-and-drift-is-reported--realized), which reads only `ci.yml`'s runs; a store is no gate in the sense of [§AR-ci.requirements](AR-ci.md#requirements-what-cis-wall-clock-and-its-log-hold-to). The record is still in its artifact for 90 days, and re-running the failed store keeps it. No workflow but `bench-store.yml` names the branch or runs `bench_store.py`, and no hook does, so no job behind a required check and no local gate reads the store ([§REQ-runs-offline](../requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service)).
 
@@ -655,6 +655,8 @@ So a stored record stays readable for good at the commit that added it: no one c
 #### 5.5.5 A record can be stored by hand
 
 `python3 scripts/bench_store.py --record <first.json> --commit <sha>`, run in a checkout whose `origin` is this repository, stores a downloaded record of that commit exactly as the workflow does, and needs no workflow context. So a record whose store failed, or one from before the store existed, can be kept before its artifact expires. No dispatch backfills the store.
+
+The series key is checked by the `bench_record.py` beside the script ([§AR-benchmarks.7.2](AR-benchmarks.md#72-the-series-key)): it hashes the values the record holds under the names that checkout's `IDENTITY_FIELDS` lists. So a checkout stores any record written under the same names, and a record written under other names is stored from a checkout that has them, such as a `git worktree` of the record's own commit, the way the workflow checks that commit out (section 5.5.1). A record of version 1 predates the `tier` field and was the `pr` tier's, as `bench_record.py merge` reads it, so it is stored as `pr/<commit>.json`.
 
 ## 6. PGO stays out of development CI
 

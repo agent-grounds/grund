@@ -116,7 +116,6 @@ class TheStoreScript(unittest.TestCase):
         self.assertNotEqual(0, result.returncode, result.stdout + result.stderr)
         self.assertEqual(root, self.tip())
 
-    @unittest.expectedFailure  # red until #696 adds bench_store.py; implement removes this marker
     def test_by_hand_it_adds_exactly_its_record_on_top_of_the_tip(self):
         root, record = self.start_branch(), self.record()
         head = self.git(self.work, "rev-parse", "HEAD")
@@ -132,7 +131,6 @@ class TheStoreScript(unittest.TestCase):
             ("rev-parse", "--symbolic-full-name", "HEAD"), ("rev-parse", "HEAD"), ("status", "--porcelain"))]
         self.assertEqual(["refs/heads/main", head, ""], checkout)
 
-    @unittest.expectedFailure  # red until #696 adds bench_store.py; implement removes this marker
     def test_the_first_record_of_a_commit_stands(self):
         self.start_branch()
         first = self.record()
@@ -144,7 +142,6 @@ class TheStoreScript(unittest.TestCase):
             self.assertEqual(tip, self.tip())
         self.assertEqual(first.read_text(encoding="utf-8"), self.stored(f"pr/{self.commit}.json"))
 
-    @unittest.expectedFailure  # red until #696 adds bench_store.py; implement removes this marker
     def test_without_the_branch_it_fails_and_creates_nothing(self):
         refs = self.git(self.remote, "for-each-ref")
         result = self.store(self.record())
@@ -152,13 +149,11 @@ class TheStoreScript(unittest.TestCase):
         self.assertIn(BRANCH, result.stdout + result.stderr)
         self.assertEqual(refs, self.git(self.remote, "for-each-ref"))
 
-    @unittest.expectedFailure  # red until #696 adds bench_store.py; implement removes this marker
     def test_a_record_of_another_commit_or_series_is_refused(self):
         root = self.start_branch()
         self.assertUntouched(root, self.store(self.record(commit="f" * 40)))
         self.assertUntouched(root, self.store(self.record(series="0" * 64)))
 
-    @unittest.expectedFailure  # red until #696 adds bench_store.py; implement removes this marker
     def test_no_record_passes_only_when_the_record_job_did_not_succeed(self):
         root, missing = self.start_branch(), self.root / "download" / "first.json"
         for conclusion in ("failure", "cancelled", "skipped"):
@@ -170,7 +165,6 @@ class TheStoreScript(unittest.TestCase):
             self.assertUntouched(root, self.store(missing, *lost))
 
     @unittest.skipIf(os.name == "nt", "the racing git is a POSIX script; the store runs on Linux")
-    @unittest.expectedFailure  # red until #696 adds bench_store.py; implement removes this marker
     def test_a_store_that_loses_a_race_adds_its_record_on_the_new_tip(self):
         root, record = self.start_branch(), self.record()
         result = self.store(record, race="once")
@@ -186,7 +180,6 @@ class TheStoreScript(unittest.TestCase):
         self.assertEqual(root, history[2])
 
     @unittest.skipIf(os.name == "nt", "the racing git is a POSIX script; the store runs on Linux")
-    @unittest.expectedFailure  # red until #696 adds bench_store.py; implement removes this marker
     def test_a_store_that_keeps_losing_fails_after_a_bounded_number_of_pushes(self):
         self.start_branch()
         result = self.store(self.record(), race="always")

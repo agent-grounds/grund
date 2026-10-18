@@ -1,0 +1,50 @@
+# §AR-ci.5.5: once CI has completed on a push to main, add that push's merged run record to
+# the benchmark-data branch for good (§AR-benchmarks.7.5). A failed store is a red run of this
+# workflow alone: no required check, gate or hook reads the branch (§REQ-runs-offline).
+
+# No concurrency group: a group holds one waiting run, so a third push would cancel the
+# second push's store. Racing stores retry in bench_store.py instead (§AR-ci.5.5.3).
+name: Benchmark store
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  store:
+    # §AR-ci.5.5.1: a push to main in this repository alone, whatever CI concluded.
+    if: >-
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      # §AR-ci.5.5.1: the commit the record measured, so its own bench_record.py reads it.
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      # §AR-ci.5.5.2: the record job's conclusion says whether a missing record is a loss, so
+      # a missing artifact leaves the verdict to bench_store.py.
+      - name: Store the record
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          COMMIT: ${{ github.event.workflow_run.head_sha }}
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+        run: |
+          conclusion=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/jobs" --paginate \
+            --jq '.jobs[] | select(.name == "cargo bench (record)") | .conclusion')
+          gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name iai-callgrind-summaries \
+            --dir record || true
+          python3 scripts/bench_store.py --record record/first.json --commit "$COMMIT" \
+            --bench-record-conclusion "$conclusion"
