@@ -175,7 +175,6 @@ pub(super) const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-inline-citation-style.6.2", reason: "explicit non-goal" },
     Exception { id: "FS-inline-citation-style.6.3", reason: "explicit non-goal" },
     Exception { id: "FS-inline-citation-style.6.4", reason: "explicit non-goal" },
-    Exception { id: "FS-integrations.1.3", reason: "which side assembles the bytes; nothing a user sees turns on it" },
     Exception { id: "FS-integrations.2.2", reason: "what golden coverage can and cannot pin" },
     Exception { id: "FS-integrations.3.5", reason: "integration guidance" },
     Exception { id: "FS-integrations.4.3.6", reason: "rationale for warning where the repository config refuses" },
