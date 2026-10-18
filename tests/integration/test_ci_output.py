@@ -4,9 +4,11 @@ Each suite is run on a suite of its own in a temporary directory: the cargo wrap
 §AR-ci.requirements.5.2 on a small crate, and `run_python_gate.run_tests` on a small
 `unittest` tree. Both must print the shape §AR-ci.requirements.5.1 names — failures in
 full, a check-in each 5%, one summary as the last line — and nothing a passing test
-wrote. `ci.yml` and the hooks are read as text, as the parity test reads them, to hold
-that the CI steps and the `cargo-test` hook go through the wrapper and that every build
-and install is quiet (§AR-ci.requirements.5.4).
+wrote but the lines the point keeps: the cargo wrapper's `gate time:` lines, and the
+`node build:` lines of §AR-ci.3.4.1.1, which the Python gate shows once each. `ci.yml`
+and the hooks are read as text, as the parity test reads them, to hold that the CI
+steps and the `cargo-test` hook go through the wrapper and that every build and install
+is quiet (§AR-ci.requirements.5.4).
 """
 
 import os
@@ -35,6 +37,11 @@ CARGO_PROGRESS = re.compile(r"^\s*(Compiling|Finished|Running|Doc-tests|Download
 DOTS = re.compile(r"^[.sxuEF]+$")
 GREEN_BUDGET = 30  # the ticket's "about twenty lines per suite", with slack
 PASSING = 40
+TABLE_ROW = re.compile(r"^\s*\d+\.\d+s \S+$")  # a row of §AR-ci.3.4.2's slowest-ten table
+# The build lines of §AR-ci.3.4.1.1 the `building` tree writes: in-process, from a child
+# process, from a skipped test, and from the last module's teardown.
+BUILDS = ("node build: dev /in-process 5.0s", "node build: release /child 49.2s",
+          "node build: dev /skipped 1.0s", "node build: dev /teardown 2.0s")
 
 PYTHON_CHILD = """
 import os, sys
@@ -210,7 +217,7 @@ class CargoSuiteOutputTests(SuiteShape, unittest.TestCase):
 class PythonGateOutputTests(SuiteShape, unittest.TestCase):
     """§AR-ci.requirements.5.1: `run_python_gate.run_tests` on a tree of its own."""
 
-    def tree(self, failing=False):
+    def tree(self, failing=False, building=False):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         root = Path(temp.name)
@@ -238,6 +245,28 @@ class PythonGateOutputTests(SuiteShape, unittest.TestCase):
                         print("FAIL-STDOUT-MARK")
                         self.fail("FAIL-ASSERT-MARK")
                 """), encoding="utf-8")
+        if building:
+            # Sorts after test_noise.py, so its teardown runs after the last test.
+            (root / "test_writes_build_lines.py").write_text(textwrap.dedent("""
+                import subprocess, sys, unittest
+                def tearDownModule():
+                    print("NOISE-TEARDOWN")
+                    sys.stderr.write("node build: dev /teardown 2.0s\\n")
+                class Builds(unittest.TestCase):
+                    def test_writes_a_build_line(self):
+                        print("NOISE-BUILD-OUT")
+                        sys.stderr.write("node build: dev /in-process 5.0s\\n")
+                        print("NOISE-BUILD-ERR", file=sys.stderr)
+                    def test_child_process_writes_a_build_line(self):
+                        line = "node build: release /child 49.2s"
+                        subprocess.run([sys.executable, "-c",
+                                        "import sys; print('NOISE-BUILD-CHILD'); "
+                                        "sys.stderr.write(sys.argv[1] + '\\\\n')", line],
+                                       check=True)
+                    def test_skips_after_a_build_line(self):
+                        sys.stderr.write("node build: dev /skipped 1.0s\\n")
+                        self.skipTest("on purpose")
+                """), encoding="utf-8")
         return root
 
     def run_gate(self, start):
@@ -250,8 +279,22 @@ class PythonGateOutputTests(SuiteShape, unittest.TestCase):
         lines = lines_of(result)
         self.assertEqual(0, result.returncode, "\n".join(lines))
         # The slowest-ten table of §AR-ci.3.4.2 stays: eleven lines the budget allows for.
-        self.assert_quiet([line for line in lines if not re.match(r"^\s*\d+\.\d+s \S+$", line)])
+        self.assert_quiet([line for line in lines if not TABLE_ROW.match(line)])
         self.assert_shape(lines, PASSING + 1, failed=0, ignored=1)  # a skip counts as ignored
+
+    # red until #776 passes a green test's build lines on; implement removes this
+    @unittest.expectedFailure
+    def test_a_green_gate_shows_each_build_line_its_tests_wrote_and_nothing_else(self):
+        # §AR-ci.requirements.5.1 keeps the build lines of §AR-ci.3.4.1.1 a green test wrote.
+        result = self.run_gate(self.tree(building=True))
+        lines = lines_of(result)
+        output = "\n".join(lines)
+        self.assertEqual(0, result.returncode, output)
+        for build in BUILDS:
+            self.assertEqual(1, lines.count(build),
+                             f"a green gate shows {build!r} once, on a line of its own:\n{output}")
+        self.assert_quiet([line for line in lines if not TABLE_ROW.match(line)])
+        self.assert_shape(lines, PASSING + 4, failed=0, ignored=2)
 
     def test_a_red_gate_prints_the_failure_in_full_and_fails(self):
         result = self.run_gate(self.tree(failing=True))
