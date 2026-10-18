@@ -41,7 +41,7 @@ while not (control / 'release').exists():
 assert witness.read_text() == slot, 'another invocation overwrote my copy'
 witness.unlink()
 result = subprocess.run([grund, 'check', str(repo)])
-(repo / 'finished.txt').write_text('finished\n')
+(repo / 'finished.txt').write_bytes(b'finished\n')
 if len(sys.argv) > 6:
     print('relative copy: ' + os.path.relpath(repo, root))
     print('absolute copy: ' + str(repo))
