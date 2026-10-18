@@ -9,7 +9,9 @@ the CLI oracle are asked for in a child whose `checked` only records the command
 it is handed; the other build sites are read from their source, where each one
 names its `--target-dir`. The wrapper and the helper are asked, with the variable
 unset, where they put the shared target; a CI cache step with a key of its own must
-restore it, because a key another step shares hits exactly and never saves.
+restore it, because a key another step shares hits exactly and never saves. A copy of
+the acceptance wrapper runs under the gate beside a stand-in `run.py`, as CI's
+`node acceptance` step runs the real one, so its build lines are seen on a green log.
 """
 
 import ast
@@ -94,6 +96,23 @@ class Done:
 wrapper.subprocess.run = lambda *args, **options: Done()
 tests = unittest.defaultTestLoader.loadTestsFromModule(wrapper)
 sys.exit(not unittest.TextTestRunner().run(tests).wasSuccessful())
+"""
+
+# CI's `node acceptance` step: the gate over the acceptance alone (§AR-ci.3.4.3).
+GATE = """
+import os, sys
+sys.dont_write_bytecode = True
+sys.path.insert(0, sys.argv[1])
+import run_python_gate
+sys.exit(run_python_gate.run_tests(sys.argv[2], dict(os.environ), "only-node-acceptance"))
+"""
+
+# Stands in for tests/bindings/node/run.py beside a copy of the wrapper, which runs it.
+RUN = """
+import sys
+print("noise out")
+sys.stderr.write("Compiling grund\\nnode build: dev /t 5.0s\\n"
+                 "test_x ... node build: release /t 49.2s\\ntest_x ... ok\\n")
 """
 
 DEFAULTS = """
@@ -294,6 +313,28 @@ class NodeSharedTargetTests(unittest.TestCase):
         self.assertEqual(["node build: dev /t 5.0s", "node build: release /t 49.2s"],
                          [line for line in output.splitlines() if line.startswith("node build:")],
                          f"the wrapper hides the build lines on success; output was {output!r}")
+        for noise in ("Compiling grund", "test_x ... ok", "noise out"):
+            self.assertNotIn(noise, output)
+
+    # red until #776 passes a green test's build lines on; implement removes this
+    @unittest.expectedFailure
+    def test_a_green_acceptance_under_the_gate_shows_its_build_lines_and_nothing_else(self):
+        # The build lines §AR-ci.requirements.5.1 keeps, under the gate: the wrapper,
+        # copied verbatim, runs the stand-in `run.py` its own `REPO` finds beside it.
+        tests = self.temp / "repo" / "tests" / "integration"
+        harness = self.temp / "repo" / "tests" / "bindings" / "node"
+        for directory in (tests, harness):
+            directory.mkdir(parents=True)
+        wrapper = "test_node_binding_acceptance.py"
+        (tests / wrapper).write_bytes((REPO / "tests" / "integration" / wrapper).read_bytes())
+        (harness / "run.py").write_text(RUN, encoding="utf-8")
+        result = child(GATE, REPO / "scripts", tests, cwd=self.temp)
+        output = result.stdout + result.stderr
+        self.assertEqual(0, result.returncode, output)
+        self.assertRegex(output, r"(?m)^1 tests: 1 passed, 0 failed, 0 ignored, ")
+        self.assertEqual(["node build: dev /t 5.0s", "node build: release /t 49.2s"],
+                         [line for line in output.splitlines() if line.startswith("node build:")],
+                         f"the gate hides a green acceptance's build lines; output was {output!r}")
         for noise in ("Compiling grund", "test_x ... ok", "noise out"):
             self.assertNotIn(noise, output)
 

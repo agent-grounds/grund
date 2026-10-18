@@ -414,15 +414,21 @@ form `node build: <profile> <target-dir> <seconds>s`. It is one line per build
 and none for anything else the harness runs. The gate reaches the acceptance
 through `tests/integration/test_node_binding_acceptance.py`, which captures its
 output to show only on failure; it passes these lines, and nothing else, on to
-its own standard error on every run, so they reach the job log of a green leg.
+its own standard error on every run. The gate captures that too, and prints
+the lines that begin `node build: ` as [§AR-ci.requirements.5.1](AR-ci.md#requirements51-a-suite-prints-its-failures-its-check-ins-and-one-summary) has a suite
+step print them, so they reach the job log of a green leg.
 
 `tests/integration/test_node_shared_target.py` holds this too: across the
 support module's source package and every other build site, exactly one build
 of the binding resolves to the release profile, and it is the documented native
 builder's; a build the harness runs prints its one line naming its profile,
 target and seconds; the wrapper shows those lines, and only those, on a green
-run; and the CI cache key has moved past the `v2` this point bumped, to the
-`v3` of [§AR-ci.3.4.1.2](AR-ci.md#3412-one-target-per-source-checkout).
+run, and so does the gate when it runs the wrapper as CI's `node acceptance`
+step does; and the CI cache key has moved past the `v2` this point bumped, to the
+`v3` of [§AR-ci.3.4.1.2](AR-ci.md#3412-one-target-per-source-checkout). `tests/integration/test_ci_output.py` holds the
+gate's half on a suite of its own: each build line that a passing test, its
+child process, a skipped test or a module teardown writes appears once in the
+green output, and nothing else they write does.
 
 ##### 3.4.1.2 One target per source checkout
 
@@ -984,9 +990,14 @@ A suite step is the workspace `cargo test` on all three legs, which runs the e2e
   lines a test's child process writes, as each command-agreement host writes how long it
   took to be ready, how much of that was the toolchain install and the natives' build,
   and how long it then served ([§REQ-one-answer.proof.delivery.payment](../requirements/REQ-one-answer.md#proofdeliverypayment-each-tranche-pays-for-its-own-time));
+- each line that begins `node build: `, a build line of
+  [§AR-ci.3.4.1.1](AR-ci.md#3411-one-release-build-and-every-build-on-one-line), one per build. Only the Python gate has these lines:
+  when a passing or skipped test, its fixtures or its child processes write one, the gate
+  prints it once, as a line of its own, and one that a class or module teardown writes
+  after the last test is printed when the run ends;
 - one summary as its last line: `<total> tests: <passed> passed, <failed> failed, <ignored> ignored, <elapsed>s`, where *ignored* counts libtest's ignored tests and `unittest`'s skipped ones. A red summary still adds up: before the elapsed time it adds `, <n> not run` for the tests that never reported, and `, <n> errors` for each failure no test owns — a test binary that crashed or a `harness = false` target that failed, a `unittest` class or module fixture that raised — which the check-ins count among the failures.
 
-Nothing else: no line per passing test, no `unittest` dot stream, no other output a passing test or its child process wrote, no build progress. On success that is about twenty lines whatever the suite's size, and the slowest-tests figure is what attributes a gate's time per test for requirements.3. `tests/integration/test_ci_output.py` holds both kinds of suite to this on suites of its own.
+Nothing else: no line per passing test, no `unittest` dot stream, no other output a passing test or its child process wrote, no build progress. On success that is about twenty lines whatever the suite's size, plus its `gate time: ` and `node build: ` lines, and the slowest-tests figure is what attributes a gate's time per test for requirements.3. `tests/integration/test_ci_output.py` holds both kinds of suite to this on suites of its own, the `gate time: ` and `node build: ` lines included.
 
 #### requirements.5.2: The cargo suites go through one wrapper
 
