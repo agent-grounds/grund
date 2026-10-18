@@ -18,7 +18,6 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[2]
-RED = "red until #805 supplies Darwin extension linker setup; implement removes this"
 NATIVE_PREPARATION = '''
 import sys
 import tempfile
@@ -52,7 +51,6 @@ def checked(argv, **kwargs):
 
 
 class PythonExtensionBuildTests(unittest.TestCase):
-    @unittest.skipUnless('--run-red' in sys.argv, RED)
     def test_build_script_emits_darwin_cdylib_link_args(self):
         # A tiny executable uses the production build script verbatim. Its get()
         # needs resolve-config (normally unified through pyo3); the ABI matches
@@ -102,7 +100,6 @@ extension-module = []
                                      f'{target}: extension setup must target the cdylib; '
                                      f'build script stdout={output!r}')
 
-    @unittest.skipUnless('--run-red' in sys.argv, RED)
     @unittest.skipUnless(sys.platform == 'darwin', 'native Darwin build/import requires macOS')
     def test_macos_same_source_preparation_builds_and_imports(self):
         # Port the triage probe without copying its build command or adding flags.
@@ -114,8 +111,4 @@ extension-module = []
 
 
 if __name__ == '__main__':
-    # Explicit execution of the red contract while ordinary collection skips it.
-    # Implement removes these two skip decorators, RED and this opt-in block.
-    if '--run-red' in sys.argv:
-        sys.argv.remove('--run-red')
     unittest.main()
