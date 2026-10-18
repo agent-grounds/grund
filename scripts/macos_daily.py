@@ -16,7 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from ci_duration import gh, issue_action, put_on_issue  # noqa: E402  (the open-or-edit rule lives beside this script)
+from ci_duration import gh, put_on_issue  # noqa: E402  (the open-or-edit rule lives beside this script)
 
 MARKER = "<!-- macos-daily-failure -->"
 TITLE = "The daily macOS suites fail on main"
