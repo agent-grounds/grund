@@ -8,7 +8,7 @@ fn print_show_help() {
         "Usage:  grund [show] <ID>[.<section>] [PATH] [--section S] [--brief|--toc|--full] [--format text|md|json] [--path PATH]"
     );
     println!(
-        "        grund show --batch [--all] [PATH] --format=json [--brief|--toc|--full] [--path PATH]"
+        "        grund show --batch [--all | --glob PATTERN...] [PATH] --format=json [--brief|--toc|--full] [--path PATH]"
     );
     println!();
     println!("Modes form an ordered ladder (each adds to the previous):");
@@ -28,6 +28,10 @@ fn print_show_help() {
         "  --batch                 read ordered {{\"id\":…,\"section\":…}} NDJSON queries from stdin"
     );
     println!("  --all                   with --batch, query every declaration and section");
+    // §FS-show.1.9: the generated batch, kept where a pattern matches; no stdin.
+    println!(
+        "  --glob PATTERN          with --batch, query the coordinates a pattern matches; repeatable"
+    );
     print_run_flag_help("grund FS-login docs/", false);
     println!();
     println!(
@@ -46,8 +50,13 @@ fn print_show_help() {
         "  printf '%s\\n' '{{\"id\":\"FS-login\"}}' | grund show --batch --format=json"
     );
     println!("  grund show --batch --all --format=json # every coordinate, one scan");
+    println!("  grund show --batch --glob 'FS-login{{,.**}}' --toc --format json # one ID and its sections");
     println!();
     println!(
         "ID not found? `grund list` shows every declared ID; `grund id <KIND> \"…\"` proposes a new one."
+    );
+    print_guide_links(
+        &["https://github.com/agent-grounds/grund/blob/main/docs/user-facing/querying.md"],
+        &["https://github.com/agent-grounds/grund/tree/main/examples/review-checklist"],
     );
 }

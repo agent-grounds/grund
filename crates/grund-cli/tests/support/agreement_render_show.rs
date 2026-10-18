@@ -167,7 +167,7 @@ impl View<'_> {
                 None => json!({"query":query,"result":self.show_result(row),"failure":null}),
             });
         }
-        ok(json!({"run_cautions":[],"records":records}))
+        ok(json!({"run_cautions":[],"records":records,"note":null}))
     }
 
     /// §FS-refs.2: the citations of an ID, or of exactly one section of it.

@@ -164,14 +164,17 @@ pub use checker::{CHECK_FINDING_CODES, CheckFindingSelection};
 // editor's snapshot, hover and on-type edits, the show options and their typed
 // refusal, the batch show, and the size catalog (§FS-show, §FS-list, §FS-lsp).
 pub use queries::{
-    BatchShowFailure, BatchShowQuery, BatchShowRecord, CitationCompletion, DeclaredId, LineEdit,
-    ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput, LspCitation,
-    LspCompletionContext, LspDeclaration, LspFindingRange, LspShowContext, LspSnapshot,
-    LspSnapshotOpts, LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub, LspUsage,
-    ShowFormat, ShowMode, ShowOpts, ShowQueryError, can_replace_trigger_at, citation_under_title,
-    list_sizes, list_sizes_with_run_warnings, lsp_hover_with_kind_title, lsp_title_hover_body,
-    on_type_line_edits, show_batch_with_scope, usage_clause, usage_over_paths,
+    BatchShowFailure, BatchShowQuery, BatchShowRecord, BatchShowRun, CitationCompletion,
+    DeclaredId, LineEdit, ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput,
+    LspCitation, LspCompletionContext, LspDeclaration, LspFindingRange, LspShowContext,
+    LspSnapshot, LspSnapshotOpts, LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub,
+    LspUsage, ShowFormat, ShowMode, ShowOpts, ShowQueryError, can_replace_trigger_at,
+    citation_under_title, list_sizes, list_sizes_with_run_warnings, lsp_hover_with_kind_title,
+    lsp_title_hover_body, on_type_line_edits, show_batch_with_globs, show_batch_with_scope,
+    usage_clause, usage_over_paths,
 };
+// §FS-coordinate-globs.errors: the launch refusal and the PATH hint a frontend asks for.
+pub use queries::{check_coordinate_globs, reads_as_coordinate_glob};
 
 // §AR-system.2.11 templates: the setup skill a command prints byte-for-byte and
 // the newline canonicalization every template is read through (§FS-init.5.3,

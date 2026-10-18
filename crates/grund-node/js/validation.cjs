@@ -7,11 +7,12 @@ const schemas = {
   check: { requireGrounding:'boolean', suggestions:'boolean', full:'boolean', rule:'nullable',
     only:'strings', ignore:'strings', onlyRule:'boolean' },
   show: { ...roots, section:'nullable', mode:['lead','brief','toc','full'], format:['text','md','json'] },
-  showBatch: { ...roots, mode:['lead','brief','toc','full'] },
+  showBatch: { ...roots, mode:['lead','brief','toc','full'], globs:'strings' },
   refs: { ...roots, section:'nullable', descendants:'boolean' },
-  list: { ...roots, kinds:'strings', projects:'strings', unused:'boolean', selector:'nullable' },
+  list: { ...roots, kinds:'strings', projects:'strings', unused:'boolean', selector:'nullable',
+    globs:'strings' },
   listSizes: { ...roots, kinds:'strings', projects:'strings', unused:'boolean', selector:'nullable',
-    units:['array','lines','words','bytes'], top:'positiveNullable' },
+    globs:'strings', units:['array','lines','words','bytes'], top:'positiveNullable' },
   cover: roots, fmt: { ...roots, write:'boolean', marker:'boolean', crossRefs:'boolean' },
   proposeId: { ...roots, width:'integer' },
   init: { name:'nullable', description:'nullable', docs:'boolean', force:'boolean', dryRun:'boolean',
@@ -111,6 +112,9 @@ exports.request = function request(op,args) {
     opts=options(op,args[0]);
   }
   if (opts.onlyRule && !opts.rule) bad(op,'onlyRule requires rule','conflicting-options');
+  // §FS-coordinate-globs.bindings.options: globs generate the batch an explicit list names.
+  if (op==='showBatch' && operands[0]!==null && opts.globs?.length)
+    bad(op,'explicit queries cannot be combined with globs','conflicting-options');
   if (op==='integrations') {
     if ((!opts.write && (opts.conversation!=null || opts.conversationTarget!=null || opts.agent!=null)) ||
         (opts.agent!=null && opts.conversationTarget==null) ||

@@ -7,6 +7,28 @@ use crate::config::display_path;
 use crate::*;
 use serde_json::{Value, json};
 
+/// A batch's explicit queries, or `None` for the generated batch
+/// (§FS-distribution.3.2.1).
+pub(super) fn batch_queries(r: &EmbeddingRequest) -> Option<Vec<BatchShowQuery>> {
+    r.args
+        .first()
+        .filter(|v| !v.is_null())
+        .and_then(Value::as_array)
+        .map(|queries| {
+            queries
+                .iter()
+                .map(|q| BatchShowQuery {
+                    id: q
+                        .as_str()
+                        .or_else(|| q["id"].as_str())
+                        .unwrap_or_default()
+                        .to_owned(),
+                    section: q["section"].as_str().map(str::to_owned),
+                })
+                .collect()
+        })
+}
+
 pub(super) fn show_opts(r: &EmbeddingRequest) -> ShowOpts {
     ShowOpts {
         path: r.root.clone(),
@@ -75,28 +97,14 @@ pub(super) fn query(r: &EmbeddingRequest) -> Result<Value, Value> {
             Ok(data)
         }
         "show_batch" => {
-            let queries = r
-                .args
-                .first()
-                .filter(|v| !v.is_null())
-                .and_then(Value::as_array)
-                .map(|queries| {
-                    queries
-                        .iter()
-                        .map(|q| BatchShowQuery {
-                            id: q
-                                .as_str()
-                                .or_else(|| q["id"].as_str())
-                                .unwrap_or_default()
-                                .to_owned(),
-                            section: q["section"].as_str().map(str::to_owned),
-                        })
-                        .collect()
-                });
-            let (cautions, result) =
-                crate::queries::show_batch_data(queries, show_opts(r), r.explicit);
-            let records = result
-                .map_err(|e| error_data(e, &cautions))?
+            let (cautions, result) = crate::queries::show_batch_data(
+                batch_queries(r),
+                &r.strings("globs"),
+                show_opts(r),
+                r.explicit,
+            );
+            let (records, note) = result.map_err(|e| error_data(e, &cautions))?;
+            let records = records
                 .into_iter()
                 .map(|record| {
                     let (result, refusal) = match record.result {
@@ -111,7 +119,7 @@ pub(super) fn query(r: &EmbeddingRequest) -> Result<Value, Value> {
                     "result":result,"failure":refusal})
                 })
                 .collect::<Vec<_>>();
-            Ok(json!({"records":records,"run_cautions":cautions.data()}))
+            Ok(json!({"records":records,"note":note,"run_cautions":cautions.data()}))
         }
         "refs" => refs_data(r),
         "list_ids" => {
@@ -122,12 +130,14 @@ pub(super) fn query(r: &EmbeddingRequest) -> Result<Value, Value> {
                 project_filter: r.strings("projects").into_iter().collect(),
                 unused_only: r.flag("unused"),
                 selector: r.string("selector"),
+                globs: r.strings("globs"),
             });
             let out = result.map_err(|e| error_data(e, &cautions))?;
             Ok(
                 json!({"output_format":out.output_format,"workspace":out.workspace,
                 "entries":out.entries.data(),"summaries":out.summaries.data(),
-                "scan_errors":out.scan_errors.data(),"run_cautions":cautions.data()}),
+                "scan_errors":out.scan_errors.data(),"note":out.note,
+                "run_cautions":cautions.data()}),
             )
         }
         "list_sizes" => {
@@ -138,6 +148,7 @@ pub(super) fn query(r: &EmbeddingRequest) -> Result<Value, Value> {
                 project_filter: r.strings("projects").into_iter().collect(),
                 unused_only: r.flag("unused"),
                 selector: r.string("selector"),
+                globs: r.strings("globs"),
                 top: r.options["top"].as_u64().map(|n| n as usize),
                 ..Default::default()
             };
@@ -152,7 +163,8 @@ pub(super) fn query(r: &EmbeddingRequest) -> Result<Value, Value> {
             let out = result.map_err(|e| error_data(e, &cautions))?;
             Ok(
                 json!({"output_format":out.output_format,"workspace":out.workspace,
-                "entries":out.entries.data(),"scan_errors":out.scan_errors.data(),"run_cautions":out.warnings.data()}),
+                "entries":out.entries.data(),"scan_errors":out.scan_errors.data(),
+                "note":out.note,"run_cautions":out.warnings.data()}),
             )
         }
         // §FS-cover.6: non-empty `lines` asks for line ownership instead.

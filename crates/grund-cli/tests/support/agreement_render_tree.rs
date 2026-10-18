@@ -406,9 +406,10 @@ impl View<'_> {
             .into_iter()
             .filter(|(d, s)| self.declared_within(*d) && (size || s.is_none()))
             .collect();
+        // §FS-coordinate-globs.bindings.note: a run without globs prints no note.
         let mut result = json!({"run_cautions":[],"output_format":"text","workspace":self.workspace(),
             "entries":rows.iter().map(|(d, s)| self.entry(*d, *s, size)).collect::<Vec<_>>(),
-            "scan_errors":self.scan_errors()});
+            "scan_errors":self.scan_errors(),"note":null});
         if !size {
             // §FS-workspace.8.3.4: one summary per project and kind in a workspace.
             let mut projects: Vec<Value> = rows

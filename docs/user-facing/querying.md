@@ -10,7 +10,33 @@ only puts the recipes side by side ([§FS-init.2.3.4.3.1](../functional-spec/FS-
 
 Every example below was run in the `grund` repository itself.
 
-## Select units: `list --selector`, `list --kind`
+## Select units: `list --glob`, `list --selector`, `list --kind`
+
+`grund list --glob` takes a coordinate pattern and prints one row per declaration
+or section it matches, sections at any depth included ([§FS-coordinate-globs](../functional-spec/FS-coordinate-globs.md#fs-coordinate-globs-a-coordinate-glob-selects-catalog-coordinates-by-pattern)). `*` matches
+inside one component, `**` any number of whole components, and `{a,b}` each of its
+alternatives; the flag repeats, and its patterns union:
+
+```console
+$ grund list --glob 'FS-config.requirements.*'
+FS-config.requirements.1  docs/functional-spec/FS-config.md:96  Every default is overridable where it has a meaning — directional
+FS-config.requirements.2  docs/functional-spec/FS-config.md:100  Zero config works — realized
+…
+FS-config.requirements.8  docs/functional-spec/FS-config.md:124  A project's meaning is self-contained — realized
+$ grund list --glob 'FS-c{heck,over}.1'
+FS-check.1  docs/functional-spec/FS-check.md:46  Inputs
+FS-cover.1  docs/functional-spec/FS-cover.md:12  Inputs
+```
+
+A pattern is always the `--glob` flag's value: typed as the positional, it stays a scan
+path, and the failure says so
+([§FS-coordinate-globs.errors.hint](../functional-spec/FS-coordinate-globs.md#errorshint-a-glob-typed-as-path-gets-a-hint)):
+
+```console
+$ grund list 'FS-config.*'
+error: path does not exist: FS-config.*
+hint: `list` reads `FS-config.*` as a scan path; for a coordinate pattern, use `grund list --glob 'FS-config.*'`
+```
 
 `grund list --selector` takes a rule subject — a sentence such as `The
 requirements chapter of each FS`, or the dotted form `FS.requirements` — and
@@ -49,24 +75,51 @@ lists the same `terms` chapters that `grund api/API-a.terms` shows. A kind
 configured with `citable = false` is refused as a kind that declares no IDs,
 naming its home, rather than as an unknown kind.
 
-To reach `requirements.1`, select the named chapter and expand it with
-`grund show --batch --toc --format json`, as the next section does.
+To reach `requirements.1`, match it with a glob, `--glob 'FS-*.requirements.*'`, or
+expand the named chapter, as the section after next does. Every filter intersects
+the others, so `--selector` and `--glob` together list what both select
+([§FS-coordinate-globs.scope.filters](../functional-spec/FS-coordinate-globs.md#scopefilters-filters-intersect-and-never-widen)).
 
-## Expand a unit's subtree: `show --batch --toc --format json`
+## Count them: `list --total`
 
-The `{id, section}` pair of a `list` row is exactly one query of
-`grund show --batch`, which reads such queries as NDJSON on stdin
-([§FS-show.1.8](../functional-spec/FS-show.md#18---batch-an-explicit-query-stream)). With `--toc` each answer carries the unit's section map
-([§FS-show.2.1.2](../functional-spec/FS-show.md#212-section-map---toc)), so selecting chapters and expanding their subpoints is two
-commands:
+`--total` prints the number of rows the same filters would list, and nothing else: a
+bare number in text, `{"count":N}` in JSON, and `0` for an empty selection
+([§FS-list.total](../functional-spec/FS-list.md#total---total-a-count-rung)). It is the cheap rung before any body is read:
 
 ```console
-$ grund list --selector "The requirements chapter of each FS" --format json \
-    | jq -c '{id,section}' \
-    | grund show --batch --toc --format json \
+$ grund list --glob 'FS-config.requirements.*' --total
+8
+$ grund list --glob 'FS-*.terms' --total --format json
+{"count":40}
+```
+
+A pattern no configured kind can start still exits `0` with its empty result, and
+stderr gets a note naming the kind it most likely meant
+([§FS-coordinate-globs.errors.note](../functional-spec/FS-coordinate-globs.md#errorsnote-a-pattern-no-kind-can-start-gets-a-note)):
+
+```console
+$ grund list --glob 'fs-config.*' --total
+note: no configured kind in scope starts with "fs-config"; did you mean "FS-config.*"?
+0
+```
+
+## Expand a unit's subtree: `show --batch --glob`
+
+`grund show --batch --glob` generates the queries `--all` would and keeps the ones a
+pattern matches, in one scan and with no stdin ([§FS-show.1.9](../functional-spec/FS-show.md#19---batch---all-every-coordinate-in-scope)). With `--toc` each
+answer carries the unit's section map ([§FS-show.2.1.2](../functional-spec/FS-show.md#212-section-map---toc)), so expanding a chapter's
+subpoints is one command:
+
+```console
+$ grund show --batch --glob 'FS-config.requirements' --toc --format json \
     | jq -c '{query, sections: [.result.sections[] | {path,title,depth}]}'
 {"query":{"id":"FS-config","section":"requirements"},"sections":[{"path":"requirements.1","title":"Every default is overridable where it has a meaning — directional","depth":1},{"path":"requirements.2","title":"Zero config works — realized","depth":1},…,{"path":"requirements.8","title":"A project's meaning is self-contained — realized","depth":1}]}
 ```
+
+`<ID>{,.**}` is a point and its whole subtree, so `--glob 'FS-config.requirements{,.**}'`
+answers the chapter and each of its points, one envelope each. The explicit form,
+`grund show --batch --toc --format json`, reads `{"id", "section"}` queries as NDJSON on
+stdin instead ([§FS-show.1.8](../functional-spec/FS-show.md#18---batch-an-explicit-query-stream)), for a set no pattern names.
 
 Each output line answers one query, in input order:
 
@@ -102,17 +155,68 @@ $ echo '{"id":"FS-show","section":"1.8"}' | grund show --batch --brief --format 
 ```
 
 `grund show --batch --full --format json` reads the same queries and returns
-every subsection's text in `body`. To read every declaration and section in
-scope without writing the queries, pass `--all`: it reads no stdin and
-generates one query per coordinate, in one scan ([§FS-show.1.9](../functional-spec/FS-show.md#19---batch---all-every-coordinate-in-scope)):
+every subsection's text in `body`. `--glob` reads the bodies a pattern selects, and to
+read every declaration and section in scope without writing the queries, pass
+`--all`: both read no stdin and generate one query per coordinate, in one scan
+([§FS-show.1.9](../functional-spec/FS-show.md#19---batch---all-every-coordinate-in-scope)):
 
 ```console
 $ grund show --batch --all --brief --format json | head -1 | cut -c1-120
 {"query":{"id":"AR-benchmarks","section":null},"ok":true,"result":{"id":"AR-benchmarks","section":null,"body":"# AR-benc
 ```
 
-Prefer a selector-fed batch to `--all` filtered with `jq`: it reads only the
-units you asked for.
+Prefer `--glob` to `--all` filtered with `jq`: it prints only the units you asked for.
+
+## Review a checklist: count, read, then map the diff
+
+A checklist is a set of points, and a review reads it in three rungs
+([§FS-coordinate-globs](../functional-spec/FS-coordinate-globs.md#fs-coordinate-globs-a-coordinate-glob-selects-catalog-coordinates-by-pattern)): count the points, read their bodies in one scan, then name the points a
+changed line range belongs to with `grund cover FILE --lines N-M`
+([§FS-cover.6](../functional-spec/FS-cover.md#6-line-ownership)):
+
+```console
+$ grund list --glob 'FS-config.requirements.*' --total
+8
+$ grund show --batch --glob 'FS-config.requirements.*' --brief --format json | head -1 | cut -c1-120
+{"query":{"id":"FS-config","section":"requirements.1"},"ok":true,"result":{"id":"FS-config","section":"requirements.1","bod
+$ grund cover docs/functional-spec/FS-config.md --lines 96-101
+docs/functional-spec/FS-config.md:96-101
+  96-99  FS-config.requirements.1
+  100-101  FS-config.requirements.2
+```
+
+The [review-checklist example](../../examples/review-checklist/) runs the same three steps on a small tree.
+
+## The pattern grammar
+
+A pattern is `[<qualifier>/]<body>` ([§FS-coordinate-globs.grammar](../functional-spec/FS-coordinate-globs.md#grammar-grammar)). Its first component, the ID
+atom, matches the whole ID, and each later component one section path component;
+matching is anchored and case-sensitive. The operators are:
+
+- `*` — any run of characters inside one component, the empty run included;
+- `?` — exactly one character;
+- `[…]`, `[!…]`, `[^…]` — one character that is, or is not, a member of the class;
+- `**` — written as a whole component, zero or more whole components (one or more at
+  the end), so `X.*` is the children of `X`, `X.**` everything beneath it, and
+  `X{,.**}` the point and its subtree;
+- `{a,b}` — each comma-separated alternative, which may be empty and may cross `.`;
+- `\` — the next character, literally; escape a `.` inside an ID.
+
+In a workspace, an unqualified pattern reads the current project, `*/` every project,
+and `<alias>/` that member, each split with its own section separator
+([§FS-coordinate-globs.scope](../functional-spec/FS-coordinate-globs.md#scope-scope)). A refused pattern is one line, its column, and the pattern to
+paste back, and the run exits `2`:
+
+```console
+$ grund list --glob 'FS-**'
+error: invalid coordinate glob "FS-**" at column 4: "**" must be a whole component; accepted globs: "FS-*" or "FS-*{,.**}"
+```
+
+The grammar reads like the gitignore dialect of `exclude`, and departs from it
+deliberately ([§FS-coordinate-globs.grammar.departures](../functional-spec/FS-coordinate-globs.md#grammardepartures-where-it-departs-from-the-exclude-dialect)): `x**` is refused, braces
+do not nest, `{,…}` keeps its empty alternative, a pattern is always anchored at the ID
+with no basename matching, there is no `!` negation and no `#` comment, and components
+are separated by `.`, with `/` only ending a qualifier.
 
 ## Link a citation from one read
 
@@ -202,4 +306,4 @@ $ grund cover docs/functional-spec/FS-show.md --format json \
 
 Reach for `cover` when the question is about the whole graph — which specs a
 diff's files touch, which units cite which. When the question is about named
-units, select them and expand them with the two commands above.
+units, select them with a glob and expand them with `show --batch --glob` above.

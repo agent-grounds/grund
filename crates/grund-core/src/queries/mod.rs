@@ -51,11 +51,13 @@
 
 mod ambiguity;
 mod batch;
+mod batch_generation;
 mod citation_counts;
 mod editor_completion;
 mod editor_hover;
 mod editor_on_type;
 mod editor_snapshot;
+mod glob_scope;
 mod list_scope;
 mod report_scope;
 mod selector_refusal;
@@ -66,7 +68,10 @@ mod show_query;
 mod size_output;
 mod sizes;
 
-pub use batch::{BatchShowFailure, BatchShowQuery, BatchShowRecord, show_batch_with_scope};
+pub use batch::{
+    BatchShowFailure, BatchShowQuery, BatchShowRecord, BatchShowRun, show_batch_with_globs,
+    show_batch_with_scope,
+};
 pub use editor_completion::{CitationCompletion, LspCompletionContext};
 pub use editor_hover::{
     LspUsage, citation_under_title, lsp_hover_with_kind_title, lsp_title_hover_body, usage_clause,
@@ -77,6 +82,7 @@ pub use editor_snapshot::{
     LspCitation, LspDeclaration, LspFindingRange, LspShowContext, LspSnapshot, LspSnapshotOpts,
     LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub,
 };
+pub use glob_scope::{check_coordinate_globs, reads_as_coordinate_glob};
 pub use show_query::{ShowFormat, ShowMode, ShowOpts, ShowQueryError};
 pub use sizes::{
     ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput, list_sizes,
@@ -88,6 +94,7 @@ pub use sizes::{
 // directory that can name any of it.
 pub(crate) use ambiguity::declaration_ambiguity_refusal;
 pub(crate) use citation_counts::ListCitationCounts;
+pub(crate) use glob_scope::{GlobSelection, read_globs};
 pub(crate) use list_scope::check_list_scope;
 pub(crate) use report_scope::{reported_scope, reports};
 pub(crate) use selector_refusal::require_unique_literal;

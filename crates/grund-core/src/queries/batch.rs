@@ -1,13 +1,12 @@
 use anyhow::{Result, anyhow};
-use std::collections::BTreeSet;
-use std::path::Path;
 
-use super::report_scope::{reported_scope, reports};
+use super::batch_generation::exhaustive_batch_queries;
+use super::glob_scope::{GlobSelection, read_globs};
 use super::show::{render_show_output_json, show_declaration_with_home};
 use super::show_query::{ShowFormat, ShowOpts, ShowQueryError};
 use crate::config::{display_path, run_warning_findings};
-use crate::grammar::{flatten_cross_ref_links, render_id};
-use crate::model::{Finding, FindingSite, ShowOutput, paired_declarations};
+use crate::grammar::flatten_cross_ref_links;
+use crate::model::{Finding, FindingSite, ShowOutput};
 use crate::resolver::{
     WorkspaceContext, load_reported_workspace_context, with_member_id_candidates,
 };
@@ -42,6 +41,15 @@ pub struct BatchShowRecord {
     pub result: std::result::Result<String, BatchShowFailure>,
 }
 
+/// A batch's records and the notes of the globs that generated it
+/// (§FS-coordinate-globs.errors.note).
+#[doc(hidden)]
+#[derive(Clone, Debug)]
+pub struct BatchShowRun {
+    pub records: Vec<BatchShowRecord>,
+    pub note: Option<String>,
+}
+
 /// Rich batch records preserve all query diagnostics and ShowOutput fields
 /// without changing the existing JSON batch API (§FS-distribution.3.1).
 pub(crate) struct BatchDataRecord {
@@ -54,16 +62,19 @@ pub(crate) struct BatchDataRecord {
 /// retained rather than projected to CLI JSON (§FS-distribution.3.3.2).
 pub(crate) fn show_batch_data(
     queries: Option<Vec<BatchShowQuery>>,
+    globs: &[String],
     mut opts: ShowOpts,
     path_provided: bool,
-) -> (Vec<Finding>, Result<Vec<BatchDataRecord>>) {
+) -> (Vec<Finding>, Result<(Vec<BatchDataRecord>, Option<String>)>) {
     let mut cautions = Vec::new();
     let result = (|| {
+        let globs = batch_globs(queries.as_ref(), globs)?;
         if queries.as_ref().is_some_and(Vec::is_empty) {
-            return Ok(Vec::new());
+            return Ok((Vec::new(), None));
         }
         let context = load_reported_workspace_context(&opts.path, path_provided)?;
         cautions = run_warning_findings(context.render_config(), context.run_warnings.clone());
+        let selection = selection(&context, &globs)?;
         if let Some((file, message)) = context.projects.iter().find_map(|p| p.scan_errors.first()) {
             let mut diagnostic =
                 crate::model::OperationDiagnostic::new("filesystem", "io", message);
@@ -72,10 +83,13 @@ pub(crate) fn show_batch_data(
         }
         let queries = match queries {
             Some(queries) => queries,
-            None => exhaustive_batch_queries(&context, &opts.path, path_provided)?,
+            None => {
+                exhaustive_batch_queries(&context, &opts.path, path_provided, selection.as_ref())?
+            }
         };
+        let note = selection.and_then(|selection| selection.note());
         opts.format = ShowFormat::Json;
-        queries
+        let records: Result<Vec<_>> = queries
             .into_iter()
             .map(|query| {
                 let mut metadata = serde_json::Value::Null;
@@ -112,9 +126,37 @@ pub(crate) fn show_batch_data(
                     Err(error) => Err(error),
                 }
             })
-            .collect()
+            .collect();
+        Ok((records?, note))
     })();
     (cautions, result)
+}
+
+/// The batch's globs read before discovery; explicit queries take none
+/// (§FS-coordinate-globs.bindings.options).
+fn batch_globs(
+    queries: Option<&Vec<BatchShowQuery>>,
+    globs: &[String],
+) -> Result<Vec<crate::grammar::CoordinateGlob>> {
+    if queries.is_some() && !globs.is_empty() {
+        return Err(crate::model::OperationDiagnostic::new(
+            "input",
+            "conflicting-options",
+            "explicit queries cannot be combined with globs",
+        )
+        .into());
+    }
+    read_globs(globs)
+}
+
+fn selection<'g>(
+    context: &WorkspaceContext,
+    globs: &'g [crate::grammar::CoordinateGlob],
+) -> Result<Option<GlobSelection<'g>>> {
+    match globs.is_empty() {
+        true => Ok(None),
+        false => GlobSelection::new(context, globs).map(Some),
+    }
 }
 
 /// Run an explicit query list (`Some`) or exhaustive discovery (`None`) against
@@ -126,19 +168,37 @@ pub fn show_batch_with_scope(
     opts: ShowOpts,
     path_provided: bool,
 ) -> (Vec<Finding>, Result<Vec<BatchShowRecord>>) {
+    let (run_warnings, run) = show_batch_with_globs(queries, &[], opts, path_provided);
+    (run_warnings, run.map(|run| run.records))
+}
+
+/// [`show_batch_with_scope`] with coordinate globs filtering the generated batch
+/// (§FS-show.1.9): `queries` is `None` whenever `globs` is not empty.
+#[doc(hidden)]
+pub fn show_batch_with_globs(
+    queries: Option<Vec<BatchShowQuery>>,
+    globs: &[String],
+    opts: ShowOpts,
+    path_provided: bool,
+) -> (Vec<Finding>, Result<BatchShowRun>) {
     let mut run_warnings = Vec::new();
-    let records = show_batch_run(queries, opts, path_provided, &mut run_warnings);
-    (run_warnings, records)
+    let run = show_batch_run(queries, globs, opts, path_provided, &mut run_warnings);
+    (run_warnings, run)
 }
 
 fn show_batch_run(
     queries: Option<Vec<BatchShowQuery>>,
+    globs: &[String],
     mut opts: ShowOpts,
     path_provided: bool,
     run_warnings: &mut Vec<Finding>,
-) -> Result<Vec<BatchShowRecord>> {
+) -> Result<BatchShowRun> {
+    let globs = batch_globs(queries.as_ref(), globs)?;
     if queries.as_ref().is_some_and(Vec::is_empty) {
-        return Ok(Vec::new());
+        return Ok(BatchShowRun {
+            records: Vec::new(),
+            note: None,
+        });
     }
 
     // §AR-resolver.3.1: this is the batch's only loader entry. Exhaustive
@@ -149,6 +209,7 @@ fn show_batch_run(
     // warnings come back beside the records, because the batch refuses after the
     // workspace pass has already settled them.
     *run_warnings = run_warning_findings(context.render_config(), context.run_warnings.clone());
+    let selection = selection(&context, &globs)?;
     if let Some((file, message)) = context
         .projects
         .iter()
@@ -162,11 +223,12 @@ fn show_batch_run(
     }
     let queries = match queries {
         Some(queries) => queries,
-        None => exhaustive_batch_queries(&context, &opts.path, path_provided)?,
+        None => exhaustive_batch_queries(&context, &opts.path, path_provided, selection.as_ref())?,
     };
+    let note = selection.and_then(|selection| selection.note());
     opts.format = ShowFormat::Json;
 
-    queries
+    let records = queries
         .into_iter()
         .map(|query| {
             let query_opts = ShowOpts {
@@ -182,7 +244,8 @@ fn show_batch_run(
             };
             Ok(BatchShowRecord { query, result })
         })
-        .collect()
+        .collect::<Result<_>>()?;
+    Ok(BatchShowRun { records, note })
 }
 
 /// Resolve one batch coordinate through the shared context and the same lower
@@ -265,66 +328,6 @@ fn show_batch_query_with_metadata(
         &output,
     ));
     Ok(output)
-}
-
-/// Generate stable coordinates from the declarations and sections already in
-/// the loaded context (§FS-show.2.6.2). BTree sets collapse duplicate claimants;
-/// the final bytewise sort is over the public qualified spelling. A path narrower
-/// than its config root bounds which declarations generate coordinates, as it
-/// bounds the entries `list` prints, and every query still resolves against the
-/// whole project (§FS-show.2.6.2, §AR-resolver.3.3).
-fn exhaustive_batch_queries(
-    context: &WorkspaceContext,
-    path: &Path,
-    path_provided: bool,
-) -> Result<Vec<BatchShowQuery>> {
-    let scope = reported_scope(context, path, path_provided)?;
-    let mut queries = Vec::new();
-    for (project_index, project) in context.projects.iter().enumerate() {
-        for (id, declarations) in &project.findings.declarations {
-            let records = paired_declarations(declarations)
-                .records()
-                .filter(|record| reports(scope.as_ref(), declarations, record))
-                .collect::<Vec<_>>();
-            if records.is_empty() {
-                continue;
-            }
-            let local_id = render_id(&project.config.grammar, id);
-            let qualified_id = if context.current == Some(project_index) {
-                local_id
-            } else {
-                format!("{}/{}", project.alias, local_id)
-            };
-            queries.push(BatchShowQuery {
-                id: qualified_id.clone(),
-                section: None,
-            });
-            // §FS-declarations.stubs.target.5: a paired declaration's sections are its
-            // target's, scanned or not.
-            let sections: BTreeSet<&str> = records
-                .into_iter()
-                .flat_map(|declaration| {
-                    declaration.sections.keys().map(String::as_str).chain(
-                        declaration
-                            .duplicate_sections
-                            .iter()
-                            .map(|(path, _)| path.as_str()),
-                    )
-                })
-                .collect();
-            queries.extend(sections.into_iter().map(|section| BatchShowQuery {
-                id: qualified_id.clone(),
-                section: Some(section.to_string()),
-            }));
-        }
-    }
-    queries.sort_by(|left, right| {
-        left.id
-            .as_bytes()
-            .cmp(right.id.as_bytes())
-            .then_with(|| left.section.as_deref().cmp(&right.section.as_deref()))
-    });
-    Ok(queries)
 }
 
 /// Convert only coordinate-level refusals into envelopes. An unexpected body

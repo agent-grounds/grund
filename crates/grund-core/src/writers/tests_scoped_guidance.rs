@@ -99,7 +99,7 @@ fn an_orphans_files_lose_their_block_each_on_its_own_account() {
 
 /// §FS-init.2.3.5.11, §FS-init.2.3.5.10: a chapter rule renders in the scoped
 /// block of the kind it is about, not in the root block, and the run's blocks
-/// carry v26.
+/// carry v30.
 #[test]
 fn a_chapter_rule_renders_in_its_subject_kinds_scoped_block() {
     let root = test_root("scoped_chapter_rule");
@@ -123,7 +123,7 @@ fn a_chapter_rule_renders_in_its_subject_kinds_scoped_block() {
     .expect("init");
     let scoped = fs::read_to_string(root.join("docs/fs/AGENTS.md")).expect("scoped file");
     assert!(
-        scoped.starts_with("<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (v26)\n")
+        scoped.starts_with("<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (v30)\n")
     );
     assert!(scoped.contains("### Chapter rules\n"), "{scoped}");
     assert!(
@@ -131,7 +131,7 @@ fn a_chapter_rule_renders_in_its_subject_kinds_scoped_block() {
         "{scoped}"
     );
     let agents = fs::read_to_string(root.join("AGENTS.md")).expect("root file");
-    assert!(agents.contains("## Grounding with grund (v26)"), "{agents}");
+    assert!(agents.contains("## Grounding with grund (v30)"), "{agents}");
     assert!(!agents.contains("### Chapter rules"), "{agents}");
     assert!(agents.contains("- `docs/fs/AGENTS.md`: FS\n"), "{agents}");
 

@@ -15,6 +15,8 @@ pub struct ListSizeOpts {
     pub unused_only: bool,
     /// Optional declaration/chapter selector (§FS-rules.8).
     pub selector: Option<String>,
+    /// Coordinate globs, unioned; empty selects every row (§FS-coordinate-globs.matching.union).
+    pub globs: Vec<String>,
     pub units: Vec<PointSizeUnit>,
     pub top: Option<usize>,
 }
@@ -28,6 +30,7 @@ impl Default for ListSizeOpts {
             project_filter: BTreeSet::new(),
             unused_only: false,
             selector: None,
+            globs: Vec::new(),
             units: vec![
                 PointSizeUnit::Lines,
                 PointSizeUnit::Words,
@@ -73,6 +76,9 @@ pub struct ListSizeOutput {
     pub workspace: bool,
     pub entries: Vec<ListSizeEntry>,
     pub scan_errors: Vec<ApiScanError>,
+    /// The coordinate globs' notes, as [`ListOutput::note`](crate::ListOutput::note)
+    /// carries them (§FS-coordinate-globs.errors.note).
+    pub note: Option<String>,
     /// The run's warning channel (§FS-distribution.3.1): the three `[workspace]`
     /// cautions of §FS-check.3.29.15, §FS-check.4.10.11 and
     /// §FS-workspace.6.1.7. A frontend renders each as one CLI-level `warning:`

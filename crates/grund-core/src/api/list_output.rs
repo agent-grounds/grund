@@ -44,6 +44,9 @@ pub struct ListOutput {
     pub entries: Vec<ListEntry>,
     pub summaries: Vec<ListSummary>,
     pub scan_errors: Vec<ApiScanError>,
+    /// The notes of the coordinate globs no kind in scope can start, one per line,
+    /// each without its `note: ` (§FS-coordinate-globs.errors.note).
+    pub note: Option<String>,
     /// Run warnings stay separate from catalog findings (§FS-distribution.3.1).
     pub warnings: Vec<Finding>,
 }

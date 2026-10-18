@@ -34,7 +34,6 @@ fn glob_bullet(agents: &str) -> Option<&str> {
 /// counts with `--total`, reads with `show --batch --glob`, names `**` and `{a,b}`, and links
 /// the guide absolutely, with no `jq` left in the block.
 #[test]
-#[ignore = "red until #503 teaches coordinate globs; implement removes this"]
 fn init_block_teaches_the_glob_recipe() {
     let agents = init_agents(&workdir("init_block_teaches_the_glob_recipe"));
     assert!(
@@ -64,7 +63,6 @@ fn init_block_teaches_the_glob_recipe() {
 
 /// A `{kind}{number}` project's IDs have no `-` after the kind, so it is taught `<KIND>*`.
 #[test]
-#[ignore = "red until #503 teaches coordinate globs; implement removes this"]
 fn init_block_builds_the_pattern_from_the_format() {
     let target = workdir("init_block_builds_the_pattern_from_the_format");
     fs::create_dir_all(target.join("docs/fs")).expect("create docs/fs");
@@ -86,7 +84,6 @@ fn init_block_builds_the_pattern_from_the_format() {
 /// The guide carries the glob recipes and the review, and both skill copies teach the glob
 /// recipe in place of the pipe.
 #[test]
-#[ignore = "red until #503 teaches coordinate globs; implement removes this"]
 fn querying_guide_and_skill_teach_the_glob_recipe() {
     let root = manifest_dir();
     let guide = fs::read_to_string(root.join("docs/user-facing/querying.md"))

@@ -155,6 +155,7 @@ class BatchRecord:
 @dataclass(frozen=True)
 class BatchResult(Cautioned):
     records: tuple[BatchRecord, ...]
+    note: str | None
 
 
 @dataclass(frozen=True)
@@ -230,6 +231,7 @@ class ListResult(Cautioned):
     entries: tuple[ListEntry, ...]
     summaries: tuple[ListSummary, ...]
     scan_errors: tuple[ScanError, ...]
+    note: str | None
 
 
 @dataclass(frozen=True)
@@ -260,6 +262,7 @@ class SizesResult(Cautioned):
     workspace: bool
     entries: tuple[SizeEntry, ...]
     scan_errors: tuple[ScanError, ...]
+    note: str | None
 
 
 @dataclass(frozen=True)

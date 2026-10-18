@@ -38,10 +38,10 @@ export type ShowMode = 'lead' | 'brief' | 'toc' | 'full';
 export type ShowOptions = RootOptions & { readonly section?: string | null;
   readonly mode?: ShowMode; readonly format?: 'text' | 'md' | 'json' };
 export type ShowQuery = { readonly id: string; readonly section?: string | null };
-export type BatchOptions = RootOptions & { readonly mode?: ShowMode };
+export type BatchOptions = RootOptions & { readonly mode?: ShowMode; readonly globs?: readonly string[] };
 export type RefsOptions = RootOptions & { readonly section?: string | null; readonly descendants?: boolean };
 export type ListOptions = RootOptions & { readonly kinds?: readonly string[]; readonly projects?: readonly string[];
-  readonly unused?: boolean; readonly selector?: string | null };
+  readonly unused?: boolean; readonly selector?: string | null; readonly globs?: readonly string[] };
 export type SizeUnit = 'lines' | 'words' | 'bytes';
 export type SizeOptions = ListOptions & { readonly units?: readonly SizeUnit[]; readonly top?: number | null };
 export type FmtOptions = RootOptions & { readonly write?: boolean; readonly marker?: boolean; readonly crossRefs?: boolean };
@@ -68,7 +68,8 @@ export type ShowData = { readonly id: string; readonly section: string | null; r
 export type ShowResult = ShowData & Cautions;
 export type BatchResult = Cautions & { readonly records: readonly (
   { readonly query: ShowQuery; readonly ok: true; readonly result: ShowData } |
-  { readonly query: ShowQuery; readonly ok: false; readonly failure: Failure })[] };
+  { readonly query: ShowQuery; readonly ok: false; readonly failure: Failure })[];
+  readonly note: string | null };
 export type RefHit = { readonly project: string | null; readonly path: string; readonly line: number;
   readonly column: number; readonly id: string; readonly section: string | null; readonly marker: boolean;
   readonly text: string; readonly enclosingDeclaration: string | null; readonly enclosingSection: string | null };
@@ -85,11 +86,12 @@ export type ListEntry = { readonly project: string | null; readonly id: string; 
 export type ListSummary = { readonly project: string | null; readonly kind: string; readonly title: string;
   readonly home: string; readonly count: number };
 export type ListResult = Cautions & { readonly outputFormat: string; readonly workspace: boolean;
-  readonly entries: readonly ListEntry[]; readonly summaries: readonly ListSummary[]; readonly scanErrors: readonly ScanError[] };
+  readonly entries: readonly ListEntry[]; readonly summaries: readonly ListSummary[]; readonly scanErrors: readonly ScanError[];
+  readonly note: string | null };
 export type SizeEntry = Omit<ListEntry, 'title' | 'refs' | 'valueRoots'> & {
   readonly measurements: readonly { readonly unit: SizeUnit; readonly lead: number | null; readonly full: number | null }[] };
 export type SizeResult = Cautions & { readonly outputFormat: string; readonly workspace: boolean;
-  readonly entries: readonly SizeEntry[]; readonly scanErrors: readonly ScanError[] };
+  readonly entries: readonly SizeEntry[]; readonly scanErrors: readonly ScanError[]; readonly note: string | null };
 export type CoverResult = Cautions & { readonly outputFormat: string; readonly scanErrors: readonly ScanError[];
   readonly entries: readonly { readonly project: string | null; readonly path: string; readonly citations: readonly RefHit[] }[] };
 export type FmtData = { readonly changes: readonly { readonly path: string; readonly line: number; readonly label: string }[];

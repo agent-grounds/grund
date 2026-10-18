@@ -193,10 +193,10 @@ pub(crate) fn check_agent_block_path(
 }
 
 /// Whether a supported block is newer than the version the config selects. A
-/// v25 or v26 block where v23 or v24 is selected is not: it is stale, not
+/// v29 or v30 block where v27 or v28 is selected is not: it is stale, not
 /// unsupported (§FS-init.2.3.7.1).
 fn newer_than_selected(version: u32, expected_version: u32) -> bool {
-    let scoped_where_unscoped = version >= 25 && expected_version <= 24;
+    let scoped_where_unscoped = version >= 29 && expected_version <= 28;
     !scoped_where_unscoped && version > expected_version
 }
 

@@ -1,6 +1,5 @@
 // §FS-coordinate-globs.bindings — `globs` selects as repeated --glob flags do, `note` carries
-// the CLI's note, and a refused pattern is a query failure. Red until #503:
-// test_node_binding.py runs this under expectedFailure, which the implementation removes.
+// the CLI's note, and a refused pattern is a query failure.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';

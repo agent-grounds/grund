@@ -14,7 +14,7 @@ fn looks_like_subcommand_typo(arg: &str) -> bool {
 }
 
 /// The `show` flags that take a value as the next word (§FS-cli.4.1).
-const SHOW_VALUE_FLAGS: &[&str] = &["--section", "--path", "--format"];
+const SHOW_VALUE_FLAGS: &[&str] = &["--section", "--path", "--format", "--glob"];
 
 /// Recognize the opt-in without treating another option's value as a flag
 /// (§FS-show.1.8).
@@ -47,11 +47,24 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
     let mut mode_flag: Option<&'static str> = None;
     let mut section_override = None;
     let mut format = "text".to_string();
+    let mut globs = Vec::new();
     let mut idx = 0;
     while idx < args.len() {
         match args[idx].as_str() {
             "--batch" => {}
             "--all" => all = true,
+            // §FS-coordinate-globs.errors.flags: repeatable, its value next or after `=`.
+            "--glob" => {
+                idx += 1;
+                let Some(pattern) = args.get(idx) else {
+                    eprintln!("error: --glob requires a value");
+                    return ExitCode::from(2);
+                };
+                globs.push(pattern.clone());
+            }
+            other if other.starts_with("--glob=") => {
+                globs.push(other.trim_start_matches("--glob=").to_string());
+            }
             "--brief" => {
                 if let Some(previous) = mode_flag {
                     eprintln!("error: {previous} and --brief cannot be used together");
@@ -138,9 +151,18 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
         eprintln!("error: --all requires --batch");
         return ExitCode::from(2);
     }
+    if !globs.is_empty() && !batch {
+        eprintln!("error: --glob requires --batch");
+        return ExitCode::from(2);
+    }
     if batch {
         if default_invocation {
             eprintln!("error: --batch is available only with explicit `show`");
+            return ExitCode::from(2);
+        }
+        // §FS-show.1.9: every pattern is read before anything else is decided.
+        if let Err(error) = check_coordinate_globs(&globs) {
+            eprintln!("error: {error:#}");
             return ExitCode::from(2);
         }
         if format != "json" {
@@ -155,7 +177,7 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
             path = PathBuf::from(positional_path);
             path_provided = true;
         }
-        return command_show_batch(path, path_provided, mode, all);
+        return command_show_batch(path, path_provided, mode, all, &globs);
     }
     let Some(id_arg) = id_arg else {
         eprintln!("error: show requires an ID");

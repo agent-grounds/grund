@@ -12,10 +12,11 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 use crate::config::{Config, KindConfig, display_path};
-use crate::grammar::{render_id, section_display_name};
+use crate::grammar::{render_id, section_row_title};
 use crate::model::{Declaration, Finding, Id, format_path, paired_declarations, sort_path_key};
 use crate::queries::{
-    ListCitationCounts, check_list_scope, reported_scope, reports, require_unique_literal,
+    GlobSelection, ListCitationCounts, check_list_scope, read_globs, reported_scope, reports,
+    require_unique_literal,
 };
 use crate::resolver::{WorkspaceProject, load_reported_workspace_context};
 
@@ -33,6 +34,9 @@ pub struct ListOpts {
     pub unused_only: bool,
     /// Optional declaration/chapter selector (§FS-rules.8).
     pub selector: Option<String>,
+    /// Coordinate globs, unioned; empty lists declarations as before
+    /// (§FS-coordinate-globs.matching.union).
+    pub globs: Vec<String>,
 }
 
 impl Default for ListOpts {
@@ -44,6 +48,7 @@ impl Default for ListOpts {
             project_filter: BTreeSet::new(),
             unused_only: false,
             selector: None,
+            globs: Vec::new(),
         }
     }
 }
@@ -85,6 +90,8 @@ pub fn list_with_run_warnings(opts: ListOpts) -> (Vec<Finding>, Result<ListOutpu
 }
 
 fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutput> {
+    // §FS-coordinate-globs.errors.shape: what the grammar alone refuses, before discovery.
+    let globs = read_globs(&opts.globs)?;
     // §AR-resolver.3.3: resolved against the whole owning project, and the path
     // bounds only which entries print.
     let context = load_reported_workspace_context(&opts.path, opts.path_provided)?;
@@ -96,9 +103,14 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
         &opts.kind_filter,
         opts.selector.as_deref(),
     )?;
+    let globs = match globs.is_empty() {
+        true => None,
+        false => Some(GlobSelection::new(&context, &globs)?),
+    };
     let reported = reported_scope(&context, &opts.path, opts.path_provided)?;
 
     struct Entry<'a> {
+        project_index: usize,
         project_alias: &'a str,
         project_config: &'a Config,
         id: &'a Id,
@@ -110,7 +122,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
     let counts = ListCitationCounts::new(&context);
     let mut entries: Vec<Entry<'_>> = Vec::new();
     let mut scan_errors = Vec::new();
-    for project in &context.projects {
+    for (project_index, project) in context.projects.iter().enumerate() {
         if !opts.project_filter.is_empty() && !opts.project_filter.contains(&project.alias) {
             continue;
         }
@@ -145,6 +157,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                 .filter(|home| reports(reported.as_ref(), decls, home))
             {
                 entries.push(Entry {
+                    project_index,
                     project_alias: project.alias.as_str(),
                     project_config: &project.config,
                     id,
@@ -251,33 +264,54 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                     .collect(),
             };
             let label = render_id(&entry.project_config.grammar, entry.id);
-            match &selector {
-                None => vec![base()],
-                // §FS-rules.8: the one subject matcher (§AR-rules.2) says what a row is.
-                Some(subject) if subject.selects(&entry.id.kind, &label, None) => {
-                    vec![base()]
-                }
-                // A chapter subject names one whole path, so each declaration
-                // contributes at most the one chapter at it (§FS-rules.8).
-                Some(subject) => subject
-                    .chapter_path(&entry.id.kind, &label)
-                    .and_then(|path| entry.home.sections.get_key_value(path))
-                    .map(|(section, info)| {
-                        let mut row = base();
-                        row.section = Some(section.clone());
-                        row.line = info.line;
-                        let title = section_display_name(&info.title, section, info.relative);
-                        row.title = Some(title.into_owned());
-                        row.stub = false;
-                        row.defines = None;
-                        row.refs = 0;
-                        row.duplicate = false;
-                        row.value_roots.clear();
-                        row
-                    })
-                    .into_iter()
-                    .collect(),
-            }
+            // §FS-rules.8: the one subject matcher (§AR-rules.2) says what a row is, and a
+            // chapter subject names one whole path, so each declaration contributes the
+            // declaration or at most the one chapter at it.
+            let declaration_selected = selector
+                .as_ref()
+                .is_none_or(|subject| subject.selects(&entry.id.kind, &label, None));
+            let chapter = selector
+                .as_ref()
+                .filter(|_| !declaration_selected)
+                .and_then(|subject| subject.chapter_path(&entry.id.kind, &label));
+            let section_row = |(section, info): (&String, &crate::model::SectionInfo)| {
+                let mut row = base();
+                row.section = Some(section.clone());
+                row.line = info.line;
+                let title = section_row_title(&info.title, section, info.relative);
+                row.title = Some(title.into_owned());
+                row.stub = false;
+                row.defines = None;
+                row.refs = 0;
+                row.duplicate = false;
+                row.value_roots.clear();
+                row
+            };
+            let Some(globs) = &globs else {
+                return match chapter {
+                    None if declaration_selected => vec![base()],
+                    chapter => chapter
+                        .and_then(|path| entry.home.sections.get_key_value(path))
+                        .map(section_row)
+                        .into_iter()
+                        .collect(),
+                };
+            };
+            // §FS-coordinate-globs.scope.filters: the glob intersects the selector, and a
+            // declaration's rows are the declaration, then its sections in path order.
+            let glob_selects =
+                |section: Option<&str>| globs.selects(entry.project_index, &label, section);
+            let declaration = (declaration_selected && glob_selects(None)).then(base);
+            let sections = entry
+                .home
+                .sections
+                .iter()
+                .filter(|(section, _)| {
+                    (selector.is_none() || chapter == Some(section.as_str()))
+                        && glob_selects(Some(section))
+                })
+                .map(section_row);
+            declaration.into_iter().chain(sections).collect()
         })
         .collect::<Vec<_>>();
 
@@ -349,6 +383,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
         entries: public_entries,
         summaries,
         scan_errors,
+        note: globs.and_then(|globs| globs.note()),
         warnings: run_warnings.clone(),
     })
 }

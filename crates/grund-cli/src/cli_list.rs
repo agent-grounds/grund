@@ -1,5 +1,5 @@
-/// `grund list [PATH] [--kind K,...] [--unused] [--summary]
-/// [--size[=lines,words,bytes]] [--top N] [--format text|json]`:
+/// `grund list [PATH] [--selector S] [--glob PATTERN]... [--kind K,...] [--unused]
+/// [--summary | --total] [--size[=lines,words,bytes]] [--top N] [--format text|json]`:
 /// the ID catalog — every declared ID with its `path:line` and title
 /// (§FS-list). The complement of `grund refs`.
 fn command_list(args: &[String]) -> ExitCode {
@@ -14,11 +14,27 @@ fn command_list(args: &[String]) -> ExitCode {
     let mut top_seen = false;
     let mut format_override: Option<String> = None;
     let mut selector = None;
+    let mut globs = Vec::new();
+    let mut total = false;
     let mut idx = 0;
     while idx < args.len() {
         match args[idx].as_str() {
             "--unused" => unused_only = true,
             "--summary" => summary = true,
+            // §FS-list.total: repeating it is harmless.
+            "--total" => total = true,
+            // §FS-coordinate-globs.errors.flags: repeatable, its value next or after `=`.
+            "--glob" => {
+                idx += 1;
+                let Some(pattern) = args.get(idx) else {
+                    eprintln!("error: --glob requires a value");
+                    return ExitCode::from(2);
+                };
+                globs.push(pattern.clone());
+            }
+            other if other.starts_with("--glob=") => {
+                globs.push(other.trim_start_matches("--glob=").to_string());
+            }
             "--selector" => {
                 if selector.is_some() {
                     eprintln!("error: --selector may only appear once");
@@ -156,6 +172,17 @@ fn command_list(args: &[String]) -> ExitCode {
     if let Err(code) = run_format("list", format_override.as_deref()) {
         return code;
     }
+    // §FS-list.total: a count beside a fold or a measurement is refused first, in this order.
+    for (combined, flag) in [
+        (summary, "--summary"),
+        (size_units.is_some(), "--size"),
+        (top_seen, "--top"),
+    ] {
+        if total && combined {
+            eprintln!("error: --total cannot be combined with {flag}");
+            return ExitCode::from(2);
+        }
+    }
     // §FS-list.1.7: size-selector combinations are launch errors decided before
     // config discovery or scanning.
     if size_units.is_some() && summary {
@@ -173,22 +200,21 @@ fn command_list(args: &[String]) -> ExitCode {
 
     if let Some(units) = size_units {
         let output = match list_sizes(ListSizeOpts {
-            path,
+            path: path.clone(),
             path_provided,
             kind_filter,
             project_filter,
             unused_only,
             selector,
+            globs,
             units,
             top,
         }) {
             Ok(output) => output,
-            Err(err) => {
-                eprintln!("error: {err:#}");
-                return ExitCode::from(2);
-            }
+            Err(err) => return list_refused(&err, &path, path_provided),
         };
         render_run_warnings(&output.warnings);
+        render_glob_notes(output.note.as_deref());
         let format = match command_output_format("list", &output.output_format, format_override) {
             Ok(format) => format,
             Err(code) => return code,
@@ -207,27 +233,34 @@ fn command_list(args: &[String]) -> ExitCode {
     // back beside the catalog, so a refused `--project` or `--kind` still prints
     // the cautions the workspace pass settled before it (§FS-distribution.3.1).
     let (run_warnings, listed) = list_with_run_warnings(ListOpts {
-        path,
+        path: path.clone(),
         path_provided,
         kind_filter,
         project_filter,
         unused_only,
         selector,
+        globs,
     });
     render_run_warnings(&run_warnings);
     let output = match listed {
         Ok(output) => output,
-        Err(err) => {
-            eprintln!("error: {err:#}");
-            return ExitCode::from(2);
-        }
+        Err(err) => return list_refused(&err, &path, path_provided),
     };
+    render_glob_notes(output.note.as_deref());
     let format = match command_output_format("list", &output.output_format, format_override) {
         Ok(format) => format,
         Err(code) => return code,
     };
 
-    if summary {
+    if total {
+        // §FS-list.total: the count of the rows the same filters list, zero included.
+        let count = output.entries.len();
+        if format == "json" {
+            println!("{}", serde_json::json!({ "count": count }));
+        } else {
+            println!("{count}");
+        }
+    } else if summary {
         render_list_summary(&output.summaries, output.workspace, &format);
     } else if format == "json" {
         for entry in &output.entries {
@@ -238,4 +271,29 @@ fn command_list(args: &[String]) -> ExitCode {
     }
 
     exit_after_scan_errors(&output.scan_errors)
+}
+
+/// A refused `list`: its error line, and the hint for a scan path that was more
+/// likely a coordinate glob (§FS-coordinate-globs.errors.hint).
+fn list_refused(err: &impl std::fmt::Display, path: &Path, path_provided: bool) -> ExitCode {
+    let message = format!("{err:#}");
+    eprintln!("error: {message}");
+    let typed = path.to_string_lossy();
+    if path_provided
+        && message.starts_with("path does not exist:")
+        && reads_as_coordinate_glob(&typed)
+    {
+        eprintln!(
+            "hint: `list` reads `{typed}` as a scan path; for a coordinate pattern, use `grund list --glob '{typed}'`"
+        );
+    }
+    ExitCode::from(2)
+}
+
+/// One `note:` line per coordinate glob no kind in scope can start
+/// (§FS-coordinate-globs.errors.note).
+fn render_glob_notes(note: Option<&str>) {
+    for line in note.into_iter().flat_map(str::lines) {
+        eprintln!("note: {line}");
+    }
 }
