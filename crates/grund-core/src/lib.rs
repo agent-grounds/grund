@@ -63,15 +63,17 @@ mod api;
 pub(crate) mod testing;
 
 // The crate's public surface, listed rather than globbed
-// (§AR-core-module-layout.1.2): every name below is reachable as
-// `grund_core::<name>`. A component's own items are private to it; what crosses
-// a boundary is what its `mod.rs` re-exports `pub(crate)`, and what an embedder
-// reaches is this list (§AR-system.4, §AR-bindings.2).
+// (§AR-core-module-layout.1.2): every name below is reachable as `grund_core::<name>`.
+
+// A component's own items are private to it; what crosses a boundary is what
+// its `mod.rs` re-exports `pub(crate)`, and what an embedder reaches is this
+// list (§AR-system.4, §AR-bindings.2).
 
 // §FS-distribution.3.1.2: each component's names come in two groups. The plain
-// `pub use` is the 1.0 promise: the entry points and every type their
-// signatures reach. The `#[doc(hidden)]` one is the seams a frontend reads,
-// which link and work but are no part of it (§DISC-grund-core-public-surface.6.3).
+// `pub use` is the 1.0 promise: the entry points and every type they reach.
+
+// The `#[doc(hidden)]` group is the seams a frontend reads, which link and work
+// but are no part of it (§DISC-grund-core-public-surface.6.3).
 
 // §AR-system.2.2 model: the records every component passes along — the catalog
 // a walk produces, the published report, and the value bindings (§FS-values.2).
@@ -98,10 +100,9 @@ pub use sources::{
 #[doc(hidden)]
 pub use grammar::Grammar;
 
-// §AR-system.2.3 config: the measurement unit a promised size answer is in, and
-// the concern records a `grund.toml` lowers to — the project, the run's facts,
-// and what is compiled from the project once (§AR-config.1). Those still move
-// (§FS-schema.13), so they are seams.
+// §AR-system.2.3 config: the measurement unit a promised size answer is in, and,
+// hidden, the concern records a `grund.toml` lowers to (§AR-config.1), which
+// still move (§FS-schema.13).
 pub use config::PointSizeUnit;
 #[doc(hidden)]
 pub use config::{
@@ -132,6 +133,7 @@ pub use config::migrate::{
 
 // §FS-distribution.3.1, §REQ-backwards-compatibility.2: the four root aliases
 // noticed in 0.17.0, each gone on the release its note named.
+
 // `Findings` was removed in 0.19.0; read `Catalog`, the record it named.
 // `Config` was removed in 0.19.0; `effective_project` returns the `Project` it was built from.
 // `KindConfig` was removed in 0.19.0; a `Project` holds the kinds as `schema` rows.
@@ -153,8 +155,7 @@ pub use checker::{CHECK_FINDING_CODES, CheckFindingSelection};
 
 // §AR-system.2.7 queries: the answers read straight from `Catalog` — the show
 // options and their typed refusal and the size catalog (§FS-show, §FS-list) —
-// and, hidden, the editor's snapshot, hover and on-type edits and the batch
-// show (§FS-lsp).
+// and, hidden, the editor's snapshot, hover, on-type edits and batch show (§FS-lsp).
 #[doc(hidden)]
 pub use queries::{
     BatchShowFailure, BatchShowQuery, BatchShowRecord, BatchShowRun, CitationCompletion,
@@ -189,9 +190,8 @@ pub use writers::{
 };
 
 // §AR-system.2.8 writers, `grund integrations` as one operation
-// (§FS-distribution.3.1.3): its options, its answer and its refusal, spelled in
-// the closed vocabularies. The command that renders it is the CLI's
-// (§FS-integrations.1.3, §AR-bindings.3).
+// (§FS-distribution.3.1.3): its options, answer and refusal, in the closed
+// vocabularies. The CLI renders it (§FS-integrations.1.3, §AR-bindings.3).
 pub use writers::{
     ConversationRendering, ConversationTarget, InstallKind, IntegrationAgent, IntegrationArtifact,
     IntegrationClient, IntegrationClientStatus, IntegrationEvent, IntegrationManualStep,
@@ -214,9 +214,10 @@ pub use writers::integrations_retiring::{
 
 // §AR-system.2.9 api: the embedding surface itself — one data-returning
 // function per question, with the option and output records around it
-// (§AR-bindings.2, §FS-distribution.3) — and, hidden, the host packages'
-// carriers, the editor's snapshot, the configuration readers and the CLI's
-// `*_with_run_warnings` twins.
+// (§AR-bindings.2, §FS-distribution.3).
+
+// Hidden: the host packages' carriers, the editor's snapshot, the configuration
+// readers and the CLI's `*_with_run_warnings` twins.
 #[doc(hidden)]
 pub use api::{
     ApiFailure, ApiFailureSite, ApiOutcome, ApiPartialOutput, EmbeddingRequest, ReferenceStyle,

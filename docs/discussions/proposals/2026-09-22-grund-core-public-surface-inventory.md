@@ -2,7 +2,7 @@
 
 The evidence [§DISC-grund-core-public-surface](2026-09-22-grund-core-public-surface.md#disc-grund-core-public-surface-what-grund-cores-public-root-surface-is-and-what-it-should-be) argues from. It classifies nothing on its own authority: the counting convention is [§DISC-grund-core-public-surface.3](2026-09-22-grund-core-public-surface.md#3-what-counts-as-a-public-root-name), the columns are [§DISC-grund-core-public-surface.4](2026-09-22-grund-core-public-surface.md#4-what-every-inventory-row-carries), and `tests/integration/test_public_surface_inventory.py` holds the first column equal to the crate root's export list ([§DISC-grund-core-public-surface.5](2026-09-22-grund-core-public-surface.md#5-what-is-checked)).
 
-The original 182-name audit uses the baseline [§DISC-grund-core-public-surface.2](2026-09-22-grund-core-public-surface.md#2-the-audited-baseline) records — `7283e23bb0`, workspace `0.14.2-dev`, `v0.14.1-26-g7283e23bb0`. Four additive completion exports were read at `abba38146e` and seven additive Python-binding exports at `fa57931b17`, both workspace `0.16.2-dev`, three hidden, data-only watch seams of [§AR-bindings.3](../../architecture/AR-bindings.md#3-cratesgrund-cli-the-cli-binary) extend it, and eight additive `cover --lines` exports of [§FS-cover.6](../../functional-spec/FS-cover.md#6-line-ownership) were read at `1f129faef7`, and two hidden run-flag seams of [§FS-cli.3.4](../../functional-spec/FS-cli.md#34---path-base--where-report-paths-are-spelled-from) carry the `--path-base` a frontend parses, and eight additive Node-binding exports of [§FS-distribution.3.2](../../functional-spec/FS-distribution.md#32-node-grund-cli-npm-package) were read at `92bd7ff28d`; the concern records `Catalog`, `Project`, `Run` and `Compiled` of [§AR-config.1](../../architecture/AR-config.md#1-the-records), with `effective_project`, followed, and `Config`, `KindConfig` and `CitationRules` became the deprecated aliases that ramp removed in 0.19.0 with `Findings` (see [Removed names](#removed-names)), the hidden schema view of [§AR-config.6.3](../../architecture/AR-config.md#63-the-schema-view-is-lowered-from-a-project-on-demand), `schema_view` and the twelve record types `grund schema` prints from, followed, and `show_from_snapshot` with its `LspShowContext` took the place of `show_with_overlays` when the editor's citation hover began answering from its snapshot ([§FS-lsp.responsiveness.3](../../functional-spec/FS-lsp.md#responsiveness3-a-citation-hover-reads-nothing-the-snapshot-did-not)), and the hidden `grund config migrate` seam of [§FS-config-migrate](../../functional-spec/FS-config-migrate.md#fs-config-migrate-grund-config-migrate---to-2-shows-the-version-2-file-that-means-what-a-version-1-config-means-and-writes-it-only-when-asked-and-only-when-it-does), `config_migrate` with its `MigrateOpts` and the ten record types its report is built from, was read at `17e31c4b4a`, and the four hidden seams a frontend reads coordinate globs through followed: `check_coordinate_globs` and `reads_as_coordinate_glob` for the launch refusal and the PATH hint of [§FS-coordinate-globs.errors](../../functional-spec/FS-coordinate-globs.md#errors-refusals-notes-and-hints), and `show_batch_with_globs` with its `BatchShowRun` for [§FS-show.1.9](../../functional-spec/FS-show.md#19---batch---all-every-coordinate-in-scope), which took `show_batch_with_scope`'s place in the CLI; the existing rows retain their original evidence. The two writer-fault exports exist only with `test-binding-writes`; `visible` describes their definitions when that feature is enabled. **245 rows, one per public root name**, including feature-gated exports. The counts below include every addition; the Python and Node frontends now supply consumer evidence alongside CLI and LSP.
+The original 182-name audit uses the baseline [§DISC-grund-core-public-surface.2](2026-09-22-grund-core-public-surface.md#2-the-audited-baseline) records — `7283e23bb0`, workspace `0.14.2-dev`, `v0.14.1-26-g7283e23bb0`. Four additive completion exports were read at `abba38146e` and seven additive Python-binding exports at `fa57931b17`, both workspace `0.16.2-dev`, three hidden, data-only watch seams of [§AR-bindings.3](../../architecture/AR-bindings.md#3-cratesgrund-cli-the-cli-binary) extend it, and eight additive `cover --lines` exports of [§FS-cover.6](../../functional-spec/FS-cover.md#6-line-ownership) were read at `1f129faef7`, and two hidden run-flag seams of [§FS-cli.3.4](../../functional-spec/FS-cli.md#34---path-base--where-report-paths-are-spelled-from) carry the `--path-base` a frontend parses, and eight additive Node-binding exports of [§FS-distribution.3.2](../../functional-spec/FS-distribution.md#32-node-grund-cli-npm-package) were read at `92bd7ff28d`; the concern records `Catalog`, `Project`, `Run` and `Compiled` of [§AR-config.1](../../architecture/AR-config.md#1-the-records), with `effective_project`, followed, and `Config`, `KindConfig` and `CitationRules` became the deprecated aliases that ramp removed in 0.19.0 with `Findings` (see [Removed names](#removed-names)), the hidden schema view of [§AR-config.6.3](../../architecture/AR-config.md#63-the-schema-view-is-lowered-from-a-project-on-demand), `schema_view` and the twelve record types `grund schema` prints from, followed, and `show_from_snapshot` with its `LspShowContext` took the place of `show_with_overlays` when the editor's citation hover began answering from its snapshot ([§FS-lsp.responsiveness.3](../../functional-spec/FS-lsp.md#responsiveness3-a-citation-hover-reads-nothing-the-snapshot-did-not)), and the hidden `grund config migrate` seam of [§FS-config-migrate](../../functional-spec/FS-config-migrate.md#fs-config-migrate-grund-config-migrate---to-2-shows-the-version-2-file-that-means-what-a-version-1-config-means-and-writes-it-only-when-asked-and-only-when-it-does), `config_migrate` with its `MigrateOpts` and the ten record types its report is built from, was read at `17e31c4b4a`, and the four hidden seams a frontend reads coordinate globs through followed: `check_coordinate_globs` and `reads_as_coordinate_glob` for the launch refusal and the PATH hint of [§FS-coordinate-globs.errors](../../functional-spec/FS-coordinate-globs.md#errors-refusals-notes-and-hints), and `show_batch_with_globs` with its `BatchShowRun` for [§FS-show.1.9](../../functional-spec/FS-show.md#19---batch---all-every-coordinate-in-scope), which took `show_batch_with_scope`'s place in the CLI; the existing rows retain their original evidence. The two writer-fault exports exist only with `test-binding-writes`. The transition of [§FS-distribution.3.1.3](../../functional-spec/FS-distribution.md#313-integrations-is-the-one-integrations-entry-point) added fourteen names — `integrations`, its eleven records, and root names for `RelativeHint` and `RelativeSectionParent`, which `Catalog` already reached — read at the commit that added them, and refreshed the consumer evidence of the thirty integrations names it gave notice to. **259 rows, one per public root name**, including feature-gated exports. The counts below include every addition; the Python and Node frontends now supply consumer evidence alongside CLI and LSP.
 
 ## How a cell reads
 
@@ -10,7 +10,7 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 **Owner** — the component whose `mod.rs` the item crosses on its way to the root ([§AR-system.4](../../architecture/README.md#4-dependency-direction)).
 
-**Rustdoc** — `visible`, or `#[doc(hidden)]` read from the attribute at the definition. Nothing more: hiding is discoverability, and a hidden symbol still links.
+**Rustdoc** — `visible`, `visible, #[deprecated]`, or `#[doc(hidden)]` read from the `#[doc(hidden)] pub use` group in `crates/grund-core/src/lib.rs` that exports the name. Nothing more: hiding is discoverability, and a hidden symbol still links.
 
 **Spec** — how [§FS-distribution.3.1](../../functional-spec/FS-distribution.md#31-rust-grund-core-crate) reaches the name. `named`: its text or its example writes the symbol. `related API`: a Rustdoc-visible function of the `api` component, which [§AR-system.2.9](../../architecture/README.md#29-api) makes the embedding surface and which that point's "and related APIs" reaches. `data type of X`: it appears in the signature of a `named` or `related API` entry point, transitively — one such path is named, not all of them. `no`: outside that closure, so the specification supports embedding it nowhere.
 
@@ -18,277 +18,290 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 **Structural** — for a name no frontend spells: the chain from something one does call, so `via check_with_run_warnings → CheckOutput` means the CLI receives the type without naming it. `—` where the consumer column already answers. `none found` in both columns means no repository consumer of either kind was found.
 
-**Disposition** — the target [§DISC-grund-core-public-surface.6](2026-09-22-grund-core-public-surface.md#6-what-this-discussion-still-has-to-settle) argues for. `keep` changes nothing. `keep, hidden` is an existing `#[doc(hidden)]` seam left as it is. `keep, name in the spec` is a documented data-returning entry point the specification does not yet reach — the gap is the specification's, not the surface's. `hide` proposes `#[doc(hidden)]`, with the frontend that reads it named beside it wherever this inventory found one, which retires no symbol. `facade, then retire` is one of the 34 integrations items a coarse entry point would replace, and it is the only removal this discussion proposes, so it is the only one whose [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) notice release this discussion can still schedule. `retire with the ramp` is a name a release ramp already written into the tree removes, so this inventory records the removal rather than proposing one — the disposition is the ramp's and the argument for it is [§FS-refs.4](../../functional-spec/FS-refs.md#4-exit-codes)'s, not [§DISC-grund-core-public-surface.6](2026-09-22-grund-core-public-surface.md#6-what-this-discussion-still-has-to-settle)'s.
+**Disposition** — what the name is in `0.19.0`, by the rule [§FS-distribution.3.1.2](../../functional-spec/FS-distribution.md#312-what-10-freezes) states. `frozen at 1.0` is an entry point that point lists, or a type their signatures reach, transitively; the Spec column names one path that reaches it. `hidden` is `#[doc(hidden)]` and outside the promise: it still links and still works, and the Consumers column names the frontend that reads it, or says it has no reader outside grund-core. `is removed in 0.21.0` is one of the thirty integrations names `integrations` answers for, deprecated since `0.19.0` with a one-line note naming that release ([§FS-distribution.3.1.3](../../functional-spec/FS-distribution.md#313-integrations-is-the-one-integrations-entry-point), [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)).
 
 ## What the columns add up to
 
 | Reading | Count |
 | --- | --- |
-| Public root names | 245 |
-| Rustdoc-visible | 198 |
-| `#[doc(hidden)]` | 47 |
-| Named, a related API, or a data type of one | 122 |
-| Outside that closure | 123 |
-| Named by a frontend or its tests | 149 |
-| Reached structurally only | 46 |
-| No repository consumer of either kind | 50 |
-| Disposition keep | 135 |
-| Disposition keep, hidden | 47 |
-| Disposition keep, name in the spec | 18 |
-| Disposition hide | 11 |
-| Disposition facade, then retire | 34 |
+| Public root names | 259 |
+| Rustdoc-visible | 112 |
+| Visible and deprecated | 30 |
+| `#[doc(hidden)]` | 117 |
+| Named, a related API, or a data type of one | 140 |
+| Outside that closure | 119 |
+| Named by a frontend or its tests | 133 |
+| Reached structurally only | 43 |
+| No repository consumer of either kind | 83 |
+| Disposition frozen at 1.0 | 112 |
+| Disposition hidden | 117 |
+| Disposition is removed in 0.21.0 | 30 |
 
-The two count columns do not line up, and they are not meant to: 45 names have no repository consumer while 92 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
+The two count columns do not line up, and they are not meant to: 83 names have no repository consumer while 119 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
 
 ## The inventory
 
 | Name | Owner | Rustdoc | Spec | Consumers | Structural | Disposition |
 | --- | --- | --- | --- | --- | --- | --- |
-| `AbsentOptionalNamespace` | config | visible | data type of `validate_config` | none found | via Config → AbsentOptionalNamespace `grund-cli/src/lib.rs:13` | keep |
-| `agent_override_table` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `AGENT_SETUP_INSTRUCTIONS` | templates | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | hide |
-| `ApiFailure` | api | visible | no | none found | via ApiOutcome → ApiFailure `grund-node/src/lib.rs:165` | keep |
-| `ApiFailureSite` | api | visible | no | none found | via ApiOutcome → ApiFailure → ApiFailureSite `grund-node/src/lib.rs:165` | keep |
-| `ApiOutcome` | api | visible | no | grund-node `grund-node/src/lib.rs:165` | — | keep |
-| `ApiPartialOutput` | api | visible | no | none found | via ApiOutcome → ApiFailure → ApiPartialOutput `grund-node/src/lib.rs:165` | keep |
-| `ApiScanError` | scanner | visible | data type of `refs` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `BadgeRung` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/tests_schema.rs:8` | — | keep, hidden |
-| `BatchShowFailure` | queries | `#[doc(hidden)]` | no | none found | via show_batch_with_globs → BatchShowRun → BatchShowRecord → BatchShowFailure `grund-cli/src/cli_show_batch.rs:104` | keep, hidden |
-| `BatchShowQuery` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
-| `BatchShowRecord` | queries | `#[doc(hidden)]` | no | none found | via show_batch_with_globs → BatchShowRun → BatchShowRecord `grund-cli/src/cli_show_batch.rs:85` | keep, hidden |
-| `BatchShowRun` | queries | `#[doc(hidden)]` | no | none found | via show_batch_with_globs → BatchShowRun `grund-cli/src/cli_show_batch.rs:70` | keep, hidden |
-| `binding_write_fault` | writers | visible | no | grund-node test seams `grund-node/src/test_runtime.rs:142` | — | keep |
-| `BindingWriteFaultGuard` | writers | visible | no | grund-node test seams `grund-node/src/test_runtime.rs:135` | — | keep |
-| `block_outcome_verb` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `BlockOutcome` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `can_replace_trigger_at` | queries | visible | no | none found | none found | hide |
-| `canonical_snapshot_path` | model | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
-| `canonical_template_text` | templates | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | hide |
-| `Catalog` | model | visible | named | none found | none found | keep |
-| `check` | api | visible | named | grund-lsp tests `grund-lsp/tests/chapter_values.rs:40` | — | keep |
-| `check_coordinate_globs` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:23` | — | keep, hidden |
-| `CHECK_FINDING_CODES` | checker | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:27` | — | keep, hidden |
-| `check_with_opts` | api | visible | related API | none found | none found | keep |
-| `check_with_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
-| `CheckFindingSelection` | checker | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:27` | — | keep, hidden |
-| `CheckInput` | model | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli_watch_inputs.rs:10` | — | keep, hidden |
-| `CheckInputObserver` | model | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli_watch.rs:78` | — | keep, hidden |
-| `CheckOpts` | api | visible | data type of `check_with_opts` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `CheckOutput` | api | visible | data type of `check_with_opts` | none found | via check_with_run_warnings → CheckOutput `grund-cli/src/cli_check.rs:111` | keep |
-| `Citation` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `citation_under_title` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
-| `CitationCompletion` | queries | visible | data type of `lsp_snapshot_with_completion` | none found | via lsp_snapshot_with_completion → LspSnapshotWithCompletion → LspCompletionContext::complete → CitationCompletion `grund-lsp/src/completion.rs:26` | keep |
-| `CitationDisjunction` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `CitationLevel` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `CitationTarget` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `Compiled` | config | visible | no | none found | none found | keep |
-| `complete_ids` | api | visible | related API | none found | none found | keep |
-| `complete_ids_with_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
-| `CompleteIdsOpts` | api | visible | data type of `complete_ids` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `config_migrate` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:42` | — | keep, hidden |
-| `config_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
-| `config_warnings` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `ConfigLocation` | config | visible | data type of `validate_config` | none found | via Config → ConfigLocation `grund-cli/src/lib.rs:13` | keep |
-| `ConversationRendering` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `ConversationTarget` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `cover` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `cover_lines` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `cover_lines_with_run_warnings` | api | visible | related API | none found | none found | keep |
-| `cover_text` | api | visible | related API | none found | none found | keep |
-| `cover_text_with_run_warnings` | api | visible | related API | none found | none found | keep |
-| `cover_with_run_warnings` | api | visible | related API | none found | none found | keep |
-| `CoverCitation` | api | visible | data type of `cover` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `CoverEntry` | api | visible | data type of `cover` | grund-cli `grund-cli/src/cli_cover.rs:106` | — | keep |
-| `CoverLineOwner` | api | visible | data type of `cover_lines` | none found | via cover_lines → CoverLinesOutput → CoverLines → CoverLineOwner `grund-cli/src/cli_cover.rs:193` | keep |
-| `CoverLines` | api | visible | data type of `cover_lines` | grund-cli `grund-cli/src/cli_cover.rs:193` | — | keep |
-| `CoverLineSection` | api | visible | data type of `cover_lines` | none found | via cover_lines → CoverLinesOutput → CoverLines → CoverLineOwner → CoverLineSection `grund-cli/src/cli_cover.rs:193` | keep |
-| `CoverLinesOpts` | api | visible | data type of `cover_lines` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `CoverLinesOutput` | api | visible | data type of `cover_lines` | none found | via cover_lines → CoverLinesOutput `grund-cli/src/cli_cover.rs:168` | keep |
-| `CoverOpts` | api | visible | data type of `cover` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `CoverOutput` | api | visible | data type of `cover` | none found | via cover → CoverOutput `grund-cli/src/cli_cover.rs:56` | keep |
-| `CoverTextCitation` | api | visible | data type of `cover_text` | none found | none found | keep |
-| `CoverTextEntry` | api | visible | data type of `cover_text` | none found | none found | keep |
-| `CoverTextOutput` | api | visible | data type of `cover_text` | none found | none found | keep |
-| `Declaration` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `DeclarationSource` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `DeclaredId` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
-| `detect_clients` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `DocCommentBlock` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `E2eCase` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `E2eSpecRef` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `EdgeTarget` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | keep, hidden |
-| `effective_config` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/integrations.rs:103` | — | keep |
-| `effective_project` | api | visible | related API | none found | none found | keep |
-| `EmbeddedValueRoot` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `embedding_call` | api | visible | related API | grund-py `grund-py/src/lib.rs:3`; oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | keep |
-| `EmbeddingRequest` | api | visible | data type of `embedding_call` | grund-py `grund-py/src/lib.rs:3`; grund-node `grund-node/src/lib.rs:7`; oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | keep |
-| `expand_target` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `Extent` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | keep, hidden |
-| `fetch_snapshot` | writers | visible | no | none found | none found | keep, name in the spec |
-| `fetch_snapshot_with_run_warnings` | writers | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
-| `FetchFailure` | writers | visible | no | none found | via fetch_snapshot_with_run_warnings → FetchFailure `grund-cli/src/cli_fetch.rs:8` | keep, name in the spec |
-| `FetchFailureKind` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, name in the spec |
-| `FieldContent` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | keep, hidden |
-| `FileHeading` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `FileStructure` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `Finding` | model | visible | data type of `refs` | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
-| `FindingSite` | model | visible | data type of `refs` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `FmtChange` | api | visible | data type of `format_references` | none found | via format_references → FmtOutput → FmtChange `grund-cli/src/cli_fmt.rs:35` | keep |
-| `FmtOpts` | api | visible | data type of `format_references` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `FmtOutput` | api | visible | data type of `format_references` | none found | via format_references → FmtOutput `grund-cli/src/cli_fmt.rs:35` | keep |
-| `FmtScanAbort` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `format_references` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `format_references_with_run_warnings` | api | visible | related API | none found | none found | keep |
-| `Gate` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:41` | — | keep, hidden |
-| `GateResult` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:41` | — | keep, hidden |
-| `GLOBAL_AGENT_INSTRUCTION_TARGETS` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `GlobalAgentTarget` | writers | visible | no | none found | via GLOBAL_AGENT_INSTRUCTION_TARGETS → GlobalAgentTarget `grund-cli/src/lib.rs:32` | facade, then retire |
-| `Grammar` | grammar | visible | data type of `validate_config` | none found | via Config → Grammar `grund-cli/src/lib.rs:13` | keep |
-| `GRUND_OPEN_RESOLVER` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `Id` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `IdOpts` | api | visible | data type of `propose_id` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `IdProposal` | api | visible | data type of `propose_id` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `IdProposalOutcome` | api | visible | data type of `propose_id` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `init` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, name in the spec |
-| `InitAgentEntrypointSelection` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, name in the spec |
-| `InitError` | writers | visible | no | none found | via init → InitError `grund-cli/src/cli_init.rs:64` | keep, name in the spec |
-| `InitEvent` | writers | visible | no | none found | via InitOutput → InitEvent `grund-cli/src/lib.rs:13` | keep, name in the spec |
-| `InitFsHome` | writers | visible | no | none found | via InitNext → InitFsHome `grund-cli/src/lib.rs:13` | keep, name in the spec |
-| `InitNext` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, name in the spec |
-| `InitOpts` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, name in the spec |
-| `InitOutput` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, name in the spec |
-| `InlineCitationSite` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `install_agent_guidance_block` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `install_managed_block` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `install_reference_key` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `InstallKind` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `integration_is_current` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `IntegrationClient` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `INTEGRATIONS_BLOCK_VERSION` | grammar | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `InvalidValueSite` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `Junction` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/tests_schema.rs:8` | — | keep, hidden |
-| `KindCitationRules` | config | visible | data type of `validate_config` | none found | via CitationRules → KindCitationRules `grund-cli/src/lib.rs:13` | keep |
-| `KindIndex` | config | visible | data type of `validate_config` | none found | via Config → KindConfig → KindIndex `grund-cli/src/lib.rs:13` | keep |
-| `KindResolution` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/cli_config.rs:204` | — | keep |
-| `known_agent` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `known_agents_list` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `known_clients_line` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `LeadSizeWarning` | config | visible | data type of `validate_config` | none found | via Config → LeadSizeWarning `grund-cli/src/lib.rs:13` | keep |
-| `LineEdit` | queries | visible | no | none found | via on_type_line_edits → LineEdit `grund-lsp/src/lib.rs:1329` | hide |
-| `LinkSupport` | writers | visible | no | none found | via GLOBAL_AGENT_INSTRUCTION_TARGETS → GlobalAgentTarget → LinkSupport `grund-cli/src/lib.rs:32` | facade, then retire |
-| `list` | api | visible | related API | none found | none found | keep |
-| `list_sizes` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, name in the spec |
-| `list_sizes_with_run_warnings` | queries | visible | no | none found | none found | keep, name in the spec |
-| `list_with_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
-| `ListedComment` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:41` | — | keep, hidden |
-| `ListEntry` | api | visible | data type of `list` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `ListOpts` | api | visible | data type of `list` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `ListOutput` | api | visible | data type of `list` | none found | via list_with_run_warnings → ListOutput `grund-cli/src/cli_list.rs:204` | keep |
-| `ListSizeEntry` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, name in the spec |
-| `ListSizeMeasurement` | queries | visible | no | none found | via ListSizeEntry → ListSizeMeasurement `grund-cli/src/lib.rs:13` | keep, name in the spec |
-| `ListSizeOpts` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, name in the spec |
-| `ListSizeOutput` | queries | visible | no | none found | via list_sizes → ListSizeOutput `grund-cli/src/cli_list.rs:170` | keep, name in the spec |
-| `ListSummary` | api | visible | data type of `list` | grund-cli `grund-cli/src/cli_list.rs:238` | — | keep |
-| `ListValueRoot` | api | visible | data type of `list` | none found | via ListEntry → ListValueRoot `grund-cli/src/lib.rs:13` | keep |
-| `lsp_hover_with_kind_title` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
-| `lsp_snapshot` | api | visible | related API | none found | none found | keep |
-| `lsp_snapshot_with_completion` | api | visible | related API | grund-lsp `grund-lsp/src/lib.rs:8` | — | keep |
-| `lsp_snapshot_with_metadata` | api | visible | related API | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
-| `lsp_title_hover_body` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
-| `LspCitation` | queries | visible | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
-| `LspCompletionContext` | queries | visible | data type of `lsp_snapshot_with_completion` | grund-lsp `grund-lsp/src/workspace.rs:19` | — | keep |
-| `LspDeclaration` | queries | visible | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
-| `LspFindingRange` | queries | visible | data type of `lsp_snapshot` | none found | via LspSnapshot → LspFindingRange `grund-lsp/src/lib.rs:4` | keep |
-| `LspShowContext` | queries | visible | data type of `lsp_snapshot_with_completion` | grund-lsp `grund-lsp/src/workspace.rs:23` | — | keep |
-| `LspSnapshot` | queries | visible | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
-| `LspSnapshotOpts` | queries | visible | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
-| `LspSnapshotWithCompletion` | queries | visible | data type of `lsp_snapshot_with_completion` | grund-lsp `grund-lsp/src/workspace.rs:63` | — | keep |
-| `LspSnapshotWithMetadata` | queries | visible | data type of `lsp_snapshot_with_metadata` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
-| `LspStub` | queries | visible | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
-| `LspUsage` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | via usage_over_paths → LspUsage `grund-cli/src/cli_refs.rs:150` | keep |
-| `MappedKey` | config | `#[doc(hidden)]` | no | none found | via config_migrate → MigrateOutcome → MigrateReport → MappedKey `grund-cli/src/cli_config_migrate.rs:113` | keep, hidden |
-| `merge_outcomes` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `MigrateFailure` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:41` | — | keep, hidden |
-| `MigrateNotice` | config | `#[doc(hidden)]` | no | none found | via config_migrate → MigrateOutcome → MigrateReport → MigrateNotice `grund-cli/src/cli_config_migrate.rs:108` | keep, hidden |
-| `MigrateOpts` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:41` | — | keep, hidden |
-| `MigrateOutcome` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:41` | — | keep, hidden |
-| `MigrateRefusal` | config | `#[doc(hidden)]` | no | none found | via config_migrate → MigrateOutcome → MigrateReport → MigrateRefusal `grund-cli/src/cli_config_migrate.rs:89` | keep, hidden |
-| `MigrateReport` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:41` | — | keep, hidden |
-| `names_member_id_candidate` | resolver | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | hide |
-| `NamespaceMatch` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `NearMissHeading` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `needs_wezterm_wiring` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `node_embedding_call` | api | visible | related API | grund-node `grund-node/src/lib.rs:7`; oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | keep |
-| `node_request` | api | visible | related API | oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | keep |
-| `NodeClass` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | keep, hidden |
-| `on_type_line_edits` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
-| `OperationDiagnostic` | model | visible | no | none found | none found | keep, name in the spec |
-| `parse_cover_line_range` | api | visible | related API | none found | none found | keep |
-| `PathBase` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli.rs:58` | — | keep, hidden |
-| `Placement` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | keep, hidden |
-| `PointSizeUnit` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `Project` | config | visible | named | none found | none found | keep |
-| `propose_id` | api | visible | related API | none found | none found | keep |
-| `propose_id_with_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
-| `read_optional_text` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `reads_as_coordinate_glob` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:27` | — | keep, hidden |
-| `reference_style` | api | visible | related API | none found | none found | keep |
-| `ReferenceStyle` | api | visible | data type of `reference_style` | none found | none found | keep |
-| `RefHit` | api | visible | data type of `refs` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `refs` | api | visible | related API | none found | none found | keep |
-| `refs_outcome` | api | visible | related API | none found | none found | keep |
-| `refs_with_metadata` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `RefsOpts` | api | visible | data type of `refs` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `RefsOutcome` | api | visible | data type of `refs_outcome` | none found | via refs_with_metadata → RefsWithMetadata → RefsOutcome `grund-cli/src/cli_refs.rs:58` | keep |
-| `RefsOutput` | api | visible | data type of `refs` | none found | via refs_with_metadata → RefsWithMetadata → RefsOutcome → RefsOutput `grund-cli/src/cli_refs.rs:58` | keep |
-| `RefsQueryFailure` | api | visible | data type of `refs_outcome` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `RefsQueryFailureKind` | api | visible | data type of `refs_outcome` | none found | via RefsQueryFailure → RefsQueryFailureKind `grund-cli/src/lib.rs:13` | keep |
-| `RefsWithMetadata` | api | visible | data type of `refs_with_metadata` | none found | via refs_with_metadata → RefsWithMetadata `grund-cli/src/cli_refs.rs:58` | keep |
-| `RefusalAnchor` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:42` | — | keep, hidden |
-| `render_finding_sites_json` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `Report` | model | visible | named | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `RESOLVER_TARGET` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `Run` | config | visible | no | none found | none found | keep |
-| `scan` | api | visible | named | none found | none found | keep |
-| `scan_user_config` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `schema_view` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:36` | — | keep, hidden |
-| `SchemaEdge` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | keep, hidden |
-| `SchemaNode` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | keep, hidden |
-| `SchemaSlot` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | keep, hidden |
-| `SchemaView` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | keep, hidden |
-| `SectionHeadingOutsideDeclaration` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `SectionInfo` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `ShorthandPolicy` | config | visible | data type of `validate_config` | none found | via Config → ShorthandPolicy `grund-cli/src/lib.rs:13` | keep |
-| `show` | api | visible | named | none found | none found | keep |
-| `show_batch_with_globs` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:28` | — | keep, hidden |
-| `show_batch_with_scope` | queries | `#[doc(hidden)]` | no | none found | none found | keep, hidden |
-| `show_from_snapshot` | api | visible | related API | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
-| `show_with_scope` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
-| `ShowFormat` | queries | visible | data type of `ShowOpts` | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
-| `ShowMode` | queries | visible | data type of `ShowOpts` | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
-| `ShowOpts` | queries | visible | named | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
-| `ShowOutput` | model | visible | data type of `show` | none found | via show_with_scope → ShowOutput `grund-cli/src/cli_show.rs:166` | keep |
-| `ShowQueryError` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `ShowSection` | model | visible | data type of `show` | none found | via show_with_scope → ShowOutput → ShowSection `grund-cli/src/cli_show.rs:166` | keep |
-| `Strength` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/tests_schema.rs:8` | — | keep, hidden |
-| `UnmarkedHeading` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `usage_clause` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | via lsp_title_hover_body → usage_clause `grund-lsp/src/lib.rs:4` | keep |
-| `usage_over_paths` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | via title_usage → usage_over_paths `grund-lsp/src/lib.rs:4` | keep |
-| `USER_CONFIG_TARGET` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `user_grund_config_path` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `UserConfigScan` | writers | visible | no | none found | via scan_user_config → UserConfigScan `grund-cli/src/cli_integrations_write.rs:230` | facade, then retire |
-| `validate_config` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `ValueBinding` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `ValueComponent` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `ValueComponentKind` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `ValueRootOrigin` | model | visible | data type of `Catalog` | none found | none found | keep |
-| `VSCODE_EXTENSION_JS` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `vscode_integration_is_current` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `VSCODE_PACKAGE_JSON` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `WEZTERM_APPLY_CALL` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `with_check_input_observer` | model | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli_watch.rs:117` | — | keep, hidden |
-| `with_report_path_base` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli.rs:74` | — | keep, hidden |
-| `write_resolver_script` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
+| `AbsentOptionalNamespace` | config | `#[doc(hidden)]` | data type of `validate_config` | none found | via Config → AbsentOptionalNamespace `grund-cli/src/lib.rs:13` | hidden |
+| `agent_override_table` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `AGENT_SETUP_INSTRUCTIONS` | templates | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `ApiFailure` | api | `#[doc(hidden)]` | no | none found | via ApiOutcome → ApiFailure `grund-node/src/lib.rs:165` | hidden |
+| `ApiFailureSite` | api | `#[doc(hidden)]` | no | none found | via ApiOutcome → ApiFailure → ApiFailureSite `grund-node/src/lib.rs:165` | hidden |
+| `ApiOutcome` | api | `#[doc(hidden)]` | no | grund-node `grund-node/src/lib.rs:165` | — | hidden |
+| `ApiPartialOutput` | api | `#[doc(hidden)]` | no | none found | via ApiOutcome → ApiFailure → ApiPartialOutput `grund-node/src/lib.rs:165` | hidden |
+| `ApiScanError` | scanner | visible | data type of `refs` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `BadgeRung` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/tests_schema.rs:8` | — | hidden |
+| `BatchShowFailure` | queries | `#[doc(hidden)]` | no | none found | via show_batch_with_globs → BatchShowRun → BatchShowRecord → BatchShowFailure `grund-cli/src/cli_show_batch.rs:104` | hidden |
+| `BatchShowQuery` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `BatchShowRecord` | queries | `#[doc(hidden)]` | no | none found | via show_batch_with_globs → BatchShowRun → BatchShowRecord `grund-cli/src/cli_show_batch.rs:85` | hidden |
+| `BatchShowRun` | queries | `#[doc(hidden)]` | no | none found | via show_batch_with_globs → BatchShowRun `grund-cli/src/cli_show_batch.rs:70` | hidden |
+| `binding_write_fault` | writers | `#[doc(hidden)]` | no | grund-node test seams `grund-node/src/test_runtime.rs:142` | — | hidden |
+| `BindingWriteFaultGuard` | writers | `#[doc(hidden)]` | no | grund-node test seams `grund-node/src/test_runtime.rs:135` | — | hidden |
+| `block_outcome_verb` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `BlockOutcome` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `can_replace_trigger_at` | queries | `#[doc(hidden)]` | no | no reader outside grund-core | — | hidden |
+| `canonical_snapshot_path` | model | `#[doc(hidden)]` | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hidden |
+| `canonical_template_text` | templates | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `Catalog` | model | visible | named | none found | none found | frozen at 1.0 |
+| `check` | api | visible | named | grund-lsp tests `grund-lsp/tests/chapter_values.rs:40` | — | frozen at 1.0 |
+| `check_coordinate_globs` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:23` | — | hidden |
+| `CHECK_FINDING_CODES` | checker | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:27` | — | hidden |
+| `check_with_opts` | api | visible | related API | none found | none found | frozen at 1.0 |
+| `check_with_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `CheckFindingSelection` | checker | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:27` | — | hidden |
+| `CheckInput` | model | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli_watch_inputs.rs:10` | — | hidden |
+| `CheckInputObserver` | model | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli_watch.rs:78` | — | hidden |
+| `CheckOpts` | api | visible | data type of `check_with_opts` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `CheckOutput` | api | visible | data type of `check_with_opts` | none found | via check_with_run_warnings → CheckOutput `grund-cli/src/cli_check.rs:111` | frozen at 1.0 |
+| `Citation` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `citation_under_title` | queries | `#[doc(hidden)]` | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hidden |
+| `CitationCompletion` | queries | `#[doc(hidden)]` | data type of `lsp_snapshot_with_completion` | none found | via lsp_snapshot_with_completion → LspSnapshotWithCompletion → LspCompletionContext::complete → CitationCompletion `grund-lsp/src/completion.rs:26` | hidden |
+| `CitationDisjunction` | config | `#[doc(hidden)]` | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `CitationLevel` | config | `#[doc(hidden)]` | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `CitationTarget` | config | `#[doc(hidden)]` | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `Compiled` | config | `#[doc(hidden)]` | no | none found | none found | hidden |
+| `complete_ids` | api | visible | related API | none found | none found | frozen at 1.0 |
+| `complete_ids_with_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `CompleteIdsOpts` | api | visible | data type of `complete_ids` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `config_migrate` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:42` | — | hidden |
+| `config_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `config_warnings` | api | `#[doc(hidden)]` | related API | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `ConfigLocation` | config | `#[doc(hidden)]` | data type of `validate_config` | none found | via Config → ConfigLocation `grund-cli/src/lib.rs:13` | hidden |
+| `ConversationRendering` | writers | visible | data type of `integrations` | grund-cli `grund-cli/src/lib.rs:45` | — | frozen at 1.0 |
+| `ConversationTarget` | writers | visible | data type of `integrations` | grund-cli `grund-cli/src/lib.rs:45` | — | frozen at 1.0 |
+| `cover` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `cover_lines` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `cover_lines_with_run_warnings` | api | `#[doc(hidden)]` | related API | no reader outside grund-core | — | hidden |
+| `cover_text` | api | visible | related API | none found | none found | frozen at 1.0 |
+| `cover_text_with_run_warnings` | api | `#[doc(hidden)]` | related API | no reader outside grund-core | — | hidden |
+| `cover_with_run_warnings` | api | `#[doc(hidden)]` | related API | no reader outside grund-core | — | hidden |
+| `CoverCitation` | api | visible | data type of `cover` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `CoverEntry` | api | visible | data type of `cover` | grund-cli `grund-cli/src/cli_cover.rs:106` | — | frozen at 1.0 |
+| `CoverLineOwner` | api | visible | data type of `cover_lines` | none found | via cover_lines → CoverLinesOutput → CoverLines → CoverLineOwner `grund-cli/src/cli_cover.rs:193` | frozen at 1.0 |
+| `CoverLines` | api | visible | data type of `cover_lines` | grund-cli `grund-cli/src/cli_cover.rs:193` | — | frozen at 1.0 |
+| `CoverLineSection` | api | visible | data type of `cover_lines` | none found | via cover_lines → CoverLinesOutput → CoverLines → CoverLineOwner → CoverLineSection `grund-cli/src/cli_cover.rs:193` | frozen at 1.0 |
+| `CoverLinesOpts` | api | visible | data type of `cover_lines` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `CoverLinesOutput` | api | visible | data type of `cover_lines` | none found | via cover_lines → CoverLinesOutput `grund-cli/src/cli_cover.rs:168` | frozen at 1.0 |
+| `CoverOpts` | api | visible | data type of `cover` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `CoverOutput` | api | visible | data type of `cover` | none found | via cover → CoverOutput `grund-cli/src/cli_cover.rs:56` | frozen at 1.0 |
+| `CoverTextCitation` | api | visible | data type of `cover_text` | none found | none found | frozen at 1.0 |
+| `CoverTextEntry` | api | visible | data type of `cover_text` | none found | none found | frozen at 1.0 |
+| `CoverTextOutput` | api | visible | data type of `cover_text` | none found | none found | frozen at 1.0 |
+| `Declaration` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `DeclarationSource` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `DeclaredId` | queries | `#[doc(hidden)]` | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hidden |
+| `detect_clients` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `DocCommentBlock` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `E2eCase` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `E2eSpecRef` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `EdgeTarget` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | hidden |
+| `effective_config` | api | `#[doc(hidden)]` | related API | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/integrations.rs:103` | — | hidden |
+| `effective_project` | api | `#[doc(hidden)]` | related API | none found | none found | hidden |
+| `EmbeddedValueRoot` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `embedding_call` | api | `#[doc(hidden)]` | related API | grund-py `grund-py/src/lib.rs:3`; oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | hidden |
+| `EmbeddingRequest` | api | `#[doc(hidden)]` | data type of `embedding_call` | grund-py `grund-py/src/lib.rs:3`; grund-node `grund-node/src/lib.rs:7`; oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | hidden |
+| `expand_target` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `Extent` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | hidden |
+| `fetch_snapshot` | writers | visible | no | none found | none found | frozen at 1.0 |
+| `fetch_snapshot_with_run_warnings` | writers | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `FetchFailure` | writers | visible | no | none found | via fetch_snapshot_with_run_warnings → FetchFailure `grund-cli/src/cli_fetch.rs:8` | frozen at 1.0 |
+| `FetchFailureKind` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `FieldContent` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | hidden |
+| `FileHeading` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `FileStructure` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `Finding` | model | visible | data type of `refs` | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/lib.rs:4` | — | frozen at 1.0 |
+| `FindingSite` | model | visible | data type of `refs` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `FmtChange` | api | visible | data type of `format_references` | none found | via format_references → FmtOutput → FmtChange `grund-cli/src/cli_fmt.rs:35` | frozen at 1.0 |
+| `FmtOpts` | api | visible | data type of `format_references` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `FmtOutput` | api | visible | data type of `format_references` | none found | via format_references → FmtOutput `grund-cli/src/cli_fmt.rs:35` | frozen at 1.0 |
+| `FmtScanAbort` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `format_references` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `format_references_with_run_warnings` | api | `#[doc(hidden)]` | related API | no reader outside grund-core | — | hidden |
+| `Gate` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:41` | — | hidden |
+| `GateResult` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:41` | — | hidden |
+| `GLOBAL_AGENT_INSTRUCTION_TARGETS` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `GlobalAgentTarget` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `Grammar` | grammar | `#[doc(hidden)]` | data type of `validate_config` | none found | via Config → Grammar `grund-cli/src/lib.rs:13` | hidden |
+| `GRUND_OPEN_RESOLVER` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `Id` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `IdOpts` | api | visible | data type of `propose_id` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `IdProposal` | api | visible | data type of `propose_id` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `IdProposalOutcome` | api | visible | data type of `propose_id` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `init` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `InitAgentEntrypointSelection` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `InitError` | writers | visible | no | none found | via init → InitError `grund-cli/src/cli_init.rs:64` | frozen at 1.0 |
+| `InitEvent` | writers | visible | no | none found | via InitOutput → InitEvent `grund-cli/src/lib.rs:13` | frozen at 1.0 |
+| `InitFsHome` | writers | visible | no | none found | via InitNext → InitFsHome `grund-cli/src/lib.rs:13` | frozen at 1.0 |
+| `InitNext` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `InitOpts` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `InitOutput` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `InlineCitationSite` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `install_agent_guidance_block` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `install_managed_block` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `install_reference_key` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `InstallKind` | writers | visible | data type of `integrations` | none found | via integrations → IntegrationClientStatus → InstallKind `grund-cli/src/cli_integrations.rs:211` | frozen at 1.0 |
+| `integration_is_current` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `IntegrationAgent` | writers | visible | data type of `integrations` | grund-cli `grund-cli/src/lib.rs:45` | — | frozen at 1.0 |
+| `IntegrationArtifact` | writers | visible | data type of `integrations` | grund-cli `grund-cli/src/lib.rs:45` | — | frozen at 1.0 |
+| `IntegrationClient` | writers | visible | data type of `integrations` | grund-cli `grund-cli/src/lib.rs:45` | — | frozen at 1.0 |
+| `IntegrationClientStatus` | writers | visible | data type of `integrations` | grund-cli `grund-cli/src/lib.rs:45` | — | frozen at 1.0 |
+| `IntegrationEvent` | writers | visible | data type of `integrations` | grund-cli `grund-cli/src/lib.rs:45` | — | frozen at 1.0 |
+| `IntegrationManualStep` | writers | visible | data type of `integrations` | none found | via integrations → IntegrationsOutput → IntegrationManualStep `grund-cli/src/cli_integrations.rs:211` | frozen at 1.0 |
+| `IntegrationNote` | writers | visible | data type of `integrations` | grund-cli `grund-cli/src/lib.rs:45` | — | frozen at 1.0 |
+| `IntegrationOutcome` | writers | visible | data type of `integrations` | none found | via integrations → IntegrationsOutput → IntegrationEvent → IntegrationOutcome `grund-cli/src/cli_integrations.rs:211` | frozen at 1.0 |
+| `integrations` | writers | visible | named | grund-cli `grund-cli/src/lib.rs:45` | — | frozen at 1.0 |
+| `INTEGRATIONS_BLOCK_VERSION` | grammar | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `IntegrationsError` | writers | visible | data type of `integrations` | grund-cli `grund-cli/src/lib.rs:45` | — | frozen at 1.0 |
+| `IntegrationsFailure` | writers | visible | data type of `integrations` | grund-cli `grund-cli/src/lib.rs:45` | — | frozen at 1.0 |
+| `IntegrationsOpts` | writers | visible | data type of `integrations` | grund-cli `grund-cli/src/lib.rs:45` | — | frozen at 1.0 |
+| `IntegrationsOutput` | writers | visible | data type of `integrations` | grund-cli `grund-cli/src/lib.rs:45` | — | frozen at 1.0 |
+| `InvalidValueSite` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `Junction` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/tests_schema.rs:8` | — | hidden |
+| `KindCitationRules` | config | `#[doc(hidden)]` | data type of `validate_config` | none found | via CitationRules → KindCitationRules `grund-cli/src/lib.rs:13` | hidden |
+| `KindIndex` | config | `#[doc(hidden)]` | data type of `validate_config` | none found | via Config → KindConfig → KindIndex `grund-cli/src/lib.rs:13` | hidden |
+| `KindResolution` | config | `#[doc(hidden)]` | data type of `validate_config` | grund-cli `grund-cli/src/cli_config.rs:204` | — | hidden |
+| `known_agent` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `known_agents_list` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `known_clients_line` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `LeadSizeWarning` | config | `#[doc(hidden)]` | data type of `validate_config` | none found | via Config → LeadSizeWarning `grund-cli/src/lib.rs:13` | hidden |
+| `LineEdit` | queries | `#[doc(hidden)]` | no | none found | via on_type_line_edits → LineEdit `grund-lsp/src/lib.rs:1329` | hidden |
+| `LinkSupport` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `list` | api | visible | related API | none found | none found | frozen at 1.0 |
+| `list_sizes` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `list_sizes_with_run_warnings` | queries | `#[doc(hidden)]` | no | no reader outside grund-core | — | hidden |
+| `list_with_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `ListedComment` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:41` | — | hidden |
+| `ListEntry` | api | visible | data type of `list` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `ListOpts` | api | visible | data type of `list` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `ListOutput` | api | visible | data type of `list` | none found | via list_with_run_warnings → ListOutput `grund-cli/src/cli_list.rs:204` | frozen at 1.0 |
+| `ListSizeEntry` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `ListSizeMeasurement` | queries | visible | no | none found | via ListSizeEntry → ListSizeMeasurement `grund-cli/src/lib.rs:13` | frozen at 1.0 |
+| `ListSizeOpts` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `ListSizeOutput` | queries | visible | no | none found | via list_sizes → ListSizeOutput `grund-cli/src/cli_list.rs:170` | frozen at 1.0 |
+| `ListSummary` | api | visible | data type of `list` | grund-cli `grund-cli/src/cli_list.rs:238` | — | frozen at 1.0 |
+| `ListValueRoot` | api | visible | data type of `list` | none found | via ListEntry → ListValueRoot `grund-cli/src/lib.rs:13` | frozen at 1.0 |
+| `lsp_hover_with_kind_title` | queries | `#[doc(hidden)]` | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hidden |
+| `lsp_snapshot` | api | `#[doc(hidden)]` | related API | none found | none found | hidden |
+| `lsp_snapshot_with_completion` | api | `#[doc(hidden)]` | related API | grund-lsp `grund-lsp/src/lib.rs:8` | — | hidden |
+| `lsp_snapshot_with_metadata` | api | `#[doc(hidden)]` | related API | no reader outside grund-core | — | hidden |
+| `lsp_title_hover_body` | queries | `#[doc(hidden)]` | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hidden |
+| `LspCitation` | queries | `#[doc(hidden)]` | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | hidden |
+| `LspCompletionContext` | queries | `#[doc(hidden)]` | data type of `lsp_snapshot_with_completion` | grund-lsp `grund-lsp/src/workspace.rs:19` | — | hidden |
+| `LspDeclaration` | queries | `#[doc(hidden)]` | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | hidden |
+| `LspFindingRange` | queries | `#[doc(hidden)]` | data type of `lsp_snapshot` | none found | via LspSnapshot → LspFindingRange `grund-lsp/src/lib.rs:4` | hidden |
+| `LspShowContext` | queries | `#[doc(hidden)]` | data type of `lsp_snapshot_with_completion` | grund-lsp `grund-lsp/src/workspace.rs:23` | — | hidden |
+| `LspSnapshot` | queries | `#[doc(hidden)]` | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | hidden |
+| `LspSnapshotOpts` | queries | `#[doc(hidden)]` | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | hidden |
+| `LspSnapshotWithCompletion` | queries | `#[doc(hidden)]` | data type of `lsp_snapshot_with_completion` | grund-lsp `grund-lsp/src/workspace.rs:63` | — | hidden |
+| `LspSnapshotWithMetadata` | queries | `#[doc(hidden)]` | data type of `lsp_snapshot_with_metadata` | grund-lsp `grund-lsp/src/lib.rs:4` | — | hidden |
+| `LspStub` | queries | `#[doc(hidden)]` | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | hidden |
+| `LspUsage` | queries | `#[doc(hidden)]` | no | grund-lsp `grund-lsp/src/lib.rs:4` | via usage_over_paths → LspUsage `grund-cli/src/cli_refs.rs:150` | hidden |
+| `MappedKey` | config | `#[doc(hidden)]` | no | none found | via config_migrate → MigrateOutcome → MigrateReport → MappedKey `grund-cli/src/cli_config_migrate.rs:113` | hidden |
+| `merge_outcomes` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `MigrateFailure` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:41` | — | hidden |
+| `MigrateNotice` | config | `#[doc(hidden)]` | no | none found | via config_migrate → MigrateOutcome → MigrateReport → MigrateNotice `grund-cli/src/cli_config_migrate.rs:108` | hidden |
+| `MigrateOpts` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:41` | — | hidden |
+| `MigrateOutcome` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:41` | — | hidden |
+| `MigrateRefusal` | config | `#[doc(hidden)]` | no | none found | via config_migrate → MigrateOutcome → MigrateReport → MigrateRefusal `grund-cli/src/cli_config_migrate.rs:89` | hidden |
+| `MigrateReport` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:41` | — | hidden |
+| `names_member_id_candidate` | resolver | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `NamespaceMatch` | config | `#[doc(hidden)]` | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `NearMissHeading` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `needs_wezterm_wiring` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `node_embedding_call` | api | `#[doc(hidden)]` | related API | grund-node `grund-node/src/lib.rs:7`; oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | hidden |
+| `node_request` | api | `#[doc(hidden)]` | related API | oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | hidden |
+| `NodeClass` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | hidden |
+| `on_type_line_edits` | queries | `#[doc(hidden)]` | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hidden |
+| `OperationDiagnostic` | model | `#[doc(hidden)]` | no | none found | none found | hidden |
+| `parse_cover_line_range` | api | `#[doc(hidden)]` | related API | no reader outside grund-core | — | hidden |
+| `PathBase` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli.rs:58` | — | hidden |
+| `Placement` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | hidden |
+| `PointSizeUnit` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `Project` | config | `#[doc(hidden)]` | named | none found | none found | hidden |
+| `propose_id` | api | visible | related API | none found | none found | frozen at 1.0 |
+| `propose_id_with_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `read_optional_text` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `reads_as_coordinate_glob` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:27` | — | hidden |
+| `reference_style` | api | `#[doc(hidden)]` | related API | none found | none found | hidden |
+| `ReferenceStyle` | api | `#[doc(hidden)]` | data type of `reference_style` | none found | none found | hidden |
+| `RefHit` | api | visible | data type of `refs` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `refs` | api | visible | related API | none found | none found | frozen at 1.0 |
+| `refs_outcome` | api | visible | related API | none found | none found | frozen at 1.0 |
+| `refs_with_metadata` | api | `#[doc(hidden)]` | related API | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `RefsOpts` | api | visible | data type of `refs` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `RefsOutcome` | api | visible | data type of `refs_outcome` | none found | via refs_with_metadata → RefsWithMetadata → RefsOutcome `grund-cli/src/cli_refs.rs:58` | frozen at 1.0 |
+| `RefsOutput` | api | visible | data type of `refs` | none found | via refs_with_metadata → RefsWithMetadata → RefsOutcome → RefsOutput `grund-cli/src/cli_refs.rs:58` | frozen at 1.0 |
+| `RefsQueryFailure` | api | visible | data type of `refs_outcome` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `RefsQueryFailureKind` | api | visible | data type of `refs_outcome` | none found | via RefsQueryFailure → RefsQueryFailureKind `grund-cli/src/lib.rs:13` | frozen at 1.0 |
+| `RefsWithMetadata` | api | `#[doc(hidden)]` | data type of `refs_with_metadata` | none found | via refs_with_metadata → RefsWithMetadata `grund-cli/src/cli_refs.rs:58` | hidden |
+| `RefusalAnchor` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:42` | — | hidden |
+| `RelativeHint` | model | visible | data type of `scan` | none found | none found | frozen at 1.0 |
+| `RelativeSectionParent` | model | visible | data type of `scan` | none found | none found | frozen at 1.0 |
+| `render_finding_sites_json` | api | `#[doc(hidden)]` | related API | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `Report` | model | visible | named | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `RESOLVER_TARGET` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `Run` | config | `#[doc(hidden)]` | no | none found | none found | hidden |
+| `scan` | api | visible | named | none found | none found | frozen at 1.0 |
+| `scan_user_config` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `schema_view` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:36` | — | hidden |
+| `SchemaEdge` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | hidden |
+| `SchemaNode` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | hidden |
+| `SchemaSlot` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | hidden |
+| `SchemaView` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | hidden |
+| `SectionHeadingOutsideDeclaration` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `SectionInfo` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `ShorthandPolicy` | config | `#[doc(hidden)]` | data type of `validate_config` | none found | via Config → ShorthandPolicy `grund-cli/src/lib.rs:13` | hidden |
+| `show` | api | visible | named | none found | none found | frozen at 1.0 |
+| `show_batch_with_globs` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:28` | — | hidden |
+| `show_batch_with_scope` | queries | `#[doc(hidden)]` | no | none found | none found | hidden |
+| `show_from_snapshot` | api | `#[doc(hidden)]` | related API | grund-lsp `grund-lsp/src/lib.rs:4` | — | hidden |
+| `show_with_scope` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `ShowFormat` | queries | visible | data type of `ShowOpts` | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/lib.rs:4` | — | frozen at 1.0 |
+| `ShowMode` | queries | visible | data type of `ShowOpts` | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/lib.rs:4` | — | frozen at 1.0 |
+| `ShowOpts` | queries | visible | named | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/lib.rs:4` | — | frozen at 1.0 |
+| `ShowOutput` | model | visible | data type of `show` | none found | via show_with_scope → ShowOutput `grund-cli/src/cli_show.rs:166` | frozen at 1.0 |
+| `ShowQueryError` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
+| `ShowSection` | model | visible | data type of `show` | none found | via show_with_scope → ShowOutput → ShowSection `grund-cli/src/cli_show.rs:166` | frozen at 1.0 |
+| `Strength` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/tests_schema.rs:8` | — | hidden |
+| `UnmarkedHeading` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `usage_clause` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | via lsp_title_hover_body → usage_clause `grund-lsp/src/lib.rs:4` | hidden |
+| `usage_over_paths` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | via title_usage → usage_over_paths `grund-lsp/src/lib.rs:4` | hidden |
+| `USER_CONFIG_TARGET` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `user_grund_config_path` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `UserConfigScan` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `validate_config` | api | `#[doc(hidden)]` | related API | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `ValueBinding` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `ValueComponent` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `ValueComponentKind` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `ValueRootOrigin` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `VSCODE_EXTENSION_JS` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `vscode_integration_is_current` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `VSCODE_PACKAGE_JSON` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `WEZTERM_APPLY_CALL` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `with_check_input_observer` | model | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli_watch.rs:117` | — | hidden |
+| `with_report_path_base` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli.rs:74` | — | hidden |
+| `write_resolver_script` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
 
 ## Removed names
 

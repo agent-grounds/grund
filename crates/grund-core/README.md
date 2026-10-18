@@ -3,9 +3,10 @@
 `grund-core` is the shared Rust engine behind [`grund`](https://crates.io/crates/grund).
 It contains the scanner, resolver, checker, formatter, config loader, and
 structured APIs for the CLI surfaces (`check`, `show`, `refs`, `list`, `cover`,
-`fmt`, `fetch`, `id`, `init`, dynamic completions, and config inspection). The published
-CLI owns argument parsing, text/JSON rendering, and exit-code mapping;
-`grund-core` returns data for embedders and frontends. This package role follows
+`fmt`, `fetch`, `id`, `init`, `integrations`, dynamic completions, and config
+inspection). The published CLI owns argument parsing, text/JSON rendering, and
+exit-code mapping; `grund-core` returns data for embedders and frontends. This
+package role follows
 [§FS-distribution.1](../../docs/functional-spec/FS-distribution.md#1-targets).
 
 Most users should install the CLI crate instead:
@@ -14,7 +15,37 @@ Most users should install the CLI crate instead:
 cargo install grund
 ```
 
-Use `grund-core` directly when embedding the engine in Rust code. The public API
-is still pre-1.0 and may change between minor releases.
+## What 1.0 promises
+
+Use `grund-core` directly when embedding the engine in Rust code. `1.0` freezes
+exactly the names its documentation shows: the entry points `check`,
+`check_with_opts`, `scan`, `show`, `list`, `list_sizes`, `refs`, `refs_outcome`,
+`cover`, `cover_text`, `cover_lines`, `format_references`, `propose_id`,
+`complete_ids`, `init`, `fetch_snapshot` and `integrations`, the typed refusals
+`ShowQueryError` and `FmtScanAbort`, and every type their signatures reach
+([§FS-distribution.3.1.2](../../docs/functional-spec/FS-distribution.md#312-what-10-freezes)).
+
+A root name the documentation does not show is `#[doc(hidden)]`: a seam one of
+grund's own frontends reads. It still links and still works, but it is outside
+the promise and may change in any minor release.
+
+Build an option record from `Default` and assign its fields, and read output
+records and refusals rather than building them:
+
+```rust
+let mut opts = grund_core::CheckOpts::default();
+opts.path = "docs".into();
+let output = grund_core::check_with_opts(opts)?;
+```
+
+Before `1.0`, `0.21.0` marks the promised records and enums
+`#[non_exhaustive]`, so a struct literal or a `match` with no wildcard arm stops
+compiling then. The 30 integrations names deprecated in `0.19.0` are removed in
+the same release; `integrations` answers what each of them did.
+
+The [Rust API guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/rust-api.md)
+has examples and the migration tables, and
+[`examples/rust-api`](https://github.com/agent-grounds/grund/tree/main/examples/rust-api)
+is a runnable embedder.
 
 Project home: <https://github.com/agent-grounds/grund>
