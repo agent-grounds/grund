@@ -39,18 +39,13 @@ use grund_core::{
     RefusalAnchor, config_migrate,
 };
 
-// §FS-integrations.1.3: what `grund integrations` is assembled from. The engine
-// answers with data — the client set, the detection, the agent surfaces and the
-// managed writes — and this crate prints every byte of it (§AR-bindings.3).
+// §FS-integrations.1.3: `grund integrations` is one engine operation
+// (§FS-distribution.3.1.3), whose answer this crate prints every byte of
+// (§AR-bindings.3).
 use grund_core::{
-    BlockOutcome, ConversationRendering, ConversationTarget, GLOBAL_AGENT_INSTRUCTION_TARGETS,
-    GRUND_OPEN_RESOLVER, INTEGRATIONS_BLOCK_VERSION, InstallKind, IntegrationClient,
-    RESOLVER_TARGET, USER_CONFIG_TARGET, VSCODE_EXTENSION_JS, VSCODE_PACKAGE_JSON,
-    WEZTERM_APPLY_CALL, agent_override_table, block_outcome_verb, detect_clients, expand_target,
-    install_agent_guidance_block, install_managed_block, install_reference_key,
-    integration_is_current, known_agent, known_agents_list, known_clients_line, merge_outcomes,
-    needs_wezterm_wiring, read_optional_text, scan_user_config, user_grund_config_path,
-    vscode_integration_is_current, write_resolver_script,
+    ConversationRendering, ConversationTarget, IntegrationAgent, IntegrationArtifact,
+    IntegrationClient, IntegrationClientStatus, IntegrationEvent, IntegrationNote,
+    IntegrationsError, IntegrationsFailure, IntegrationsOpts, IntegrationsOutput, integrations,
 };
 
 const SUBCOMMANDS: &[&str] = &[

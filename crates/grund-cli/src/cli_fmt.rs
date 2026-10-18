@@ -32,13 +32,13 @@ fn command_fmt(args: &[String]) -> ExitCode {
         eprintln!("error: --check and --write cannot be used together");
         return ExitCode::from(2);
     }
-    let output = match format_references(FmtOpts {
-        path,
-        path_provided,
-        write,
-        add_marker: marker,
-        cross_refs,
-    }) {
+    let mut opts = FmtOpts::default();
+    opts.path = path;
+    opts.path_provided = path_provided;
+    opts.write = write;
+    opts.add_marker = marker;
+    opts.cross_refs = cross_refs;
+    let output = match format_references(opts) {
         Ok(output) => output,
         Err(err) => {
             if let Some(abort) = err.downcast_ref::<FmtScanAbort>() {

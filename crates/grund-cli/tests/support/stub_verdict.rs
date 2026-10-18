@@ -487,13 +487,12 @@ pub fn assert_rows_agree(rows: &[Row]) {
         let saved = Repo::new(row, true);
         // §FS-declarations.stubs.target.5: shell section completion reads the
         // paired record. Editor section enumeration is checked in lsp_column.
-        let sections = complete_ids(CompleteIdsOpts {
-            path: saved.0.clone(),
-            path_provided: true,
-            prefix: "FS-a.".to_string(),
-            sections: true,
-        })
-        .expect("section completion");
+        let mut opts = CompleteIdsOpts::default();
+        opts.path = saved.0.clone();
+        opts.path_provided = true;
+        opts.prefix = "FS-a.".to_string();
+        opts.sections = true;
+        let sections = complete_ids(opts).expect("section completion");
         out.expect(
             row,
             "completion sections",

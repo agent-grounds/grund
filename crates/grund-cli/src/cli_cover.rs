@@ -60,19 +60,18 @@ fn command_cover(args: &[String]) -> ExitCode {
         return code;
     }
     if !lines.is_empty() {
+        let mut opts = CoverLinesOpts::default();
+        opts.path = path;
+        opts.path_provided = path_provided;
+        opts.lines = lines;
         return command_cover_lines(
-            CoverLinesOpts {
-                path,
-                path_provided,
-                lines,
-            },
+            opts,
             format_override,
         );
     }
-    let opts = CoverOpts {
-        path,
-        path_provided,
-    };
+    let mut opts = CoverOpts::default();
+    opts.path = path;
+    opts.path_provided = path_provided;
     // One load, whichever view is rendered: `cover` and `cover_text` build the
     // same index (§FS-workspace.8.6.2), and calling both walked every project in
     // the workspace twice.

@@ -87,18 +87,18 @@ fn command_init(args: &[String]) -> ExitCode {
     if docs_spelled {
         eprintln!("{DOCS_FLAG_DEPRECATION}");
     }
-    let output = match init(InitOpts {
-        target: path.unwrap_or_else(|| PathBuf::from(".")),
-        name,
-        description,
-        template,
-        docs,
-        force,
-        dry_run,
-        check,
-        no_vcs,
-        agent_selection,
-    }) {
+    let mut opts = InitOpts::default();
+    opts.target = path.unwrap_or_else(|| PathBuf::from("."));
+    opts.name = name;
+    opts.description = description;
+    opts.template = template;
+    opts.docs = docs;
+    opts.force = force;
+    opts.dry_run = dry_run;
+    opts.check = check;
+    opts.no_vcs = no_vcs;
+    opts.agent_selection = agent_selection;
+    let output = match init(opts) {
         Ok(output) => output,
         // §FS-init.4.2: `2` wins over `1` — a run that could not be performed
         // produced no report to gate on.

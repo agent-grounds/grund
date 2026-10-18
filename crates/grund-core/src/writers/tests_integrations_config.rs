@@ -1,9 +1,10 @@
 //! Test module: agent overrides, conversation targets, and user config (§FS-integrations)
 
-use super::integrations_agents::LinkSupport;
-use super::integrations_detect::value_names_codium;
-use super::integrations_user_config::{conversation_preference, install_conversation_preference};
-use super::*;
+use super::integrations_agents::*;
+use super::integrations_clients::*;
+use super::integrations_detect::*;
+use super::integrations_install::*;
+use super::integrations_user_config::*;
 use crate::grammar::INTEGRATIONS_BLOCK_VERSION;
 use crate::testing::{test_root, write};
 

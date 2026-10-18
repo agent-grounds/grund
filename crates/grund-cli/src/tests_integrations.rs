@@ -1,8 +1,8 @@
 /// Test module: the `grund integrations` command — its argv, its descriptors and
 /// the form its `--write` reports (§FS-integrations). The cases moved here with
 /// the command when it left the engine for the frontend that owns its rendering
-/// (§AR-bindings.3, §DA-engine-renders-nothing); what the engine still answers —
-/// the client set, the splices, the detection probe — is pinned beside it, in
+/// (§AR-bindings.3, §DA-engine-renders-nothing); what the engine answers — the
+/// client set, the splices, the detection probe — is pinned beside it, in
 /// `crates/grund-core/src/writers/tests_integrations*.rs`.
 #[cfg(test)]
 mod tests_integrations {
@@ -14,21 +14,21 @@ mod tests_integrations {
     /// to say *why*, so a caller can tell "not installed" from "not knowable".
     #[test]
     fn iterm2_is_a_manual_client_that_never_claims_installed() {
-        assert!(matches!(
-            IntegrationClient::Iterm2.install_kind(),
-            InstallKind::Manual
-        ));
-        assert!(!integration_is_current(IntegrationClient::Iterm2));
-        let descriptor = client_descriptor_json(IntegrationClient::Iterm2);
+        let mut opts = IntegrationsOpts::default();
+        opts.client = Some(IntegrationClient::Iterm2);
+        let out = integrations(opts).expect("describe iterm2");
+        let status = named_status(&out, IntegrationClient::Iterm2);
+        assert_eq!(status.install_kind, grund_core::InstallKind::Manual);
+        assert!(!status.installed);
+        let descriptor = client_descriptor_json(&out);
         assert!(descriptor.contains("\"install_kind\":\"manual\""));
         // It still uses the shared resolver, so it counts as a terminal client
         // and its printed artifact carries grund-open.
-        assert!(IntegrationClient::Iterm2.is_terminal());
+        let artifact = out.artifact.expect("iterm2 artifact");
+        assert!(artifact.resolver.is_some());
         // The rule it prints must carry the same matcher the other clients use,
         // or a citation clickable in kitty would be inert in iTerm2.
-        let snippet = IntegrationClient::Iterm2
-            .snippet()
-            .expect("iterm2 artifact");
+        let snippet = artifact.snippet.expect("iterm2 snippet");
         assert!(snippet.contains("[A-Z][A-Z0-9]*-[a-z0-9][a-z0-9-]*"));
         assert!(snippet.contains("grund-open \\0"));
     }
@@ -51,9 +51,9 @@ mod tests_integrations {
             .map(str::to_string)
             .collect::<Vec<_>>();
         let invocation = parse_integrations_args(&args).expect("parse preference-only write");
-        assert!(invocation.client.is_none());
-        assert!(invocation.write);
-        assert_eq!(invocation.conversation, Some(ConversationRendering::Link));
+        assert!(invocation.opts.client.is_none());
+        assert!(invocation.opts.write);
+        assert_eq!(invocation.opts.conversation, Some(ConversationRendering::Link));
     }
 
     // §FS-integrations.1.2: `--conversation-target` alone is also a complete
@@ -66,11 +66,11 @@ mod tests_integrations {
             .map(str::to_string)
             .collect::<Vec<_>>();
         let invocation = parse_integrations_args(&args).expect("parse target-only write");
-        assert!(invocation.client.is_none());
-        assert!(invocation.write);
-        assert_eq!(invocation.conversation, None);
+        assert!(invocation.opts.client.is_none());
+        assert!(invocation.opts.write);
+        assert_eq!(invocation.opts.conversation, None);
         assert_eq!(
-            invocation.conversation_target,
+            invocation.opts.conversation_target,
             Some(ConversationTarget::Vscodium)
         );
 
@@ -81,6 +81,7 @@ mod tests_integrations {
         assert_eq!(
             parse_integrations_args(&joined)
                 .expect("parse joined form")
+                .opts
                 .conversation_target,
             Some(ConversationTarget::Web)
         );
@@ -102,38 +103,38 @@ mod tests_integrations {
     // downgrade, and an unread key look identical from the outside.
     #[test]
     fn effective_form_describes_override_and_gate() {
-        let plain = EffectiveForm {
+        let plain = IntegrationNote::Guidance {
             rendering: ConversationRendering::Plain,
             target: ConversationTarget::Path,
             requested: ConversationTarget::Vscodium,
             overridden: false,
         };
-        assert_eq!(plain.describe(), "plain");
+        assert_eq!(describe_guidance(&plain), "plain");
 
-        let taken = EffectiveForm {
+        let taken = IntegrationNote::Guidance {
             rendering: ConversationRendering::Link,
             target: ConversationTarget::Vscodium,
             requested: ConversationTarget::Vscodium,
             overridden: false,
         };
-        assert_eq!(taken.describe(), "link \u{2192} vscodium");
+        assert_eq!(describe_guidance(&taken), "link \u{2192} vscodium");
 
-        let overridden = EffectiveForm {
+        let overridden = IntegrationNote::Guidance {
             rendering: ConversationRendering::Link,
             target: ConversationTarget::Web,
             requested: ConversationTarget::Web,
             overridden: true,
         };
-        assert_eq!(overridden.describe(), "link \u{2192} web; agent override");
+        assert_eq!(describe_guidance(&overridden), "link \u{2192} web; agent override");
 
-        let gated = EffectiveForm {
+        let gated = IntegrationNote::Guidance {
             rendering: ConversationRendering::Link,
             target: ConversationTarget::Path,
             requested: ConversationTarget::Vscodium,
             overridden: false,
         };
         assert_eq!(
-            gated.describe(),
+            describe_guidance(&gated),
             "link \u{2192} path; vscodium unverified here"
         );
     }
@@ -153,9 +154,9 @@ mod tests_integrations {
         .map(str::to_string)
         .collect::<Vec<_>>();
         let invocation = parse_integrations_args(&ok).expect("parse scoped write");
-        assert_eq!(invocation.agent, Some("codex"));
+        assert_eq!(invocation.opts.agent, Some(IntegrationAgent::Codex));
         assert_eq!(
-            invocation.conversation_target,
+            invocation.opts.conversation_target,
             Some(ConversationTarget::Web)
         );
 
@@ -181,7 +182,12 @@ mod tests_integrations {
     /// "not knowable" rather than "not installed" (§FS-integrations.3.4.2).
     #[test]
     fn integrations_detection_json_reports_installed_state() {
-        let json = detection_plan_json(&[IntegrationClient::Wezterm]);
+        let mut out = integrations(IntegrationsOpts::default()).expect("detect");
+        out.detected = vec![IntegrationClient::Wezterm];
+        for status in &mut out.clients {
+            status.detected = status.client == IntegrationClient::Wezterm;
+        }
+        let json = detection_plan_json(&out);
         assert!(json.contains("\"client\":\"wezterm\",\"detected\":true,\"installed\":"));
         assert!(json.contains("\"client\":\"kitty\",\"detected\":false,\"installed\":"));
         assert!(json.contains("\"install_kind\":\"block\""));

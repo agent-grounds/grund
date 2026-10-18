@@ -136,16 +136,11 @@ fn hover(
 /// `root` as it is on disk, through the transport's own two decorations —
 /// citation links and the kind line (§FS-lsp.1.2.1, §FS-lsp.1.2.8).
 fn cli_answer(server: &Server, root: &Path, id: &str) -> String {
-    let output = show(
-        id,
-        ShowOpts {
-            path: root.to_path_buf(),
-            section: None,
-            mode: ShowMode::Toc,
-            format: ShowFormat::Markdown,
-        },
-    )
-    .unwrap_or_else(|err| panic!("grund {id} --toc: {err:#}"));
+    let mut opts = ShowOpts::default();
+    opts.path = root.to_path_buf();
+    opts.mode = ShowMode::Toc;
+    opts.format = ShowFormat::Markdown;
+    let output = show(id, opts).unwrap_or_else(|err| panic!("grund {id} --toc: {err:#}"));
     let project = server
         .projects
         .iter()

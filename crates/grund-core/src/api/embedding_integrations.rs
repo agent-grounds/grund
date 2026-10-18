@@ -1,15 +1,19 @@
 //! Node integration records over core install policy (§FS-distribution.3.2.2.2).
-use crate::*;
+use crate::writers::{
+    ConversationRendering, GRUND_OPEN_RESOLVER, InstallKind, IntegrationClient, RESOLVER_TARGET,
+    VSCODE_EXTENSION_JS, VSCODE_PACKAGE_JSON, read_optional_text, scan_user_config,
+    user_grund_config_path,
+};
 use serde_json::{Value, json};
 
 pub(super) fn project(out: &mut Value, client: Option<&str>, write: bool) {
     let descriptor = |v: &Value| {
         let client = IntegrationClient::from_name(v["client"].as_str().unwrap_or("")).unwrap();
-        json!({"client":v["client"],"kind":if client.is_terminal(){"terminal"}else{"editor"},
+        json!({"client":v["client"],"kind":if client.is_terminal_client(){"terminal"}else{"editor"},
             "detected":v["detected"],
-            "installed":if client.install_kind()==InstallKind::Manual {Value::Null}else{v["installed"].clone()},
-            "install_kind":v["install_kind"],"config_target":client.config_target(),
-            "resolver_target":if client.is_terminal(){Some(RESOLVER_TARGET)}else{None}})
+            "installed":if client.kind()==InstallKind::Manual {Value::Null}else{v["installed"].clone()},
+            "install_kind":v["install_kind"],"config_target":client.target_hint(),
+            "resolver_target":if client.is_terminal_client(){Some(RESOLVER_TARGET)}else{None}})
     };
     let cautions = out["run_cautions"].clone();
     if write {
@@ -51,13 +55,13 @@ pub(super) fn project(out: &mut Value, client: Option<&str>, write: bool) {
         let artifact = &out["artifact"];
         let mut artifacts = Vec::new();
         if let Some(content) = artifact["snippet"].as_str() {
-            artifacts.push(json!({"path":if c.install_kind()==InstallKind::Manual {None}else{Some(c.config_target())},"content":content}));
+            artifacts.push(json!({"path":if c.kind()==InstallKind::Manual {None}else{Some(c.target_hint())},"content":content}));
         }
-        if c.is_terminal() {
+        if c.is_terminal_client() {
             artifacts.push(json!({"path":RESOLVER_TARGET,"content":GRUND_OPEN_RESOLVER}));
         } else {
-            artifacts.push(json!({"path":format!("{}/package.json",c.config_target()),"content":VSCODE_PACKAGE_JSON}));
-            artifacts.push(json!({"path":format!("{}/extension.js",c.config_target()),"content":VSCODE_EXTENSION_JS}));
+            artifacts.push(json!({"path":format!("{}/package.json",c.target_hint()),"content":VSCODE_PACKAGE_JSON}));
+            artifacts.push(json!({"path":format!("{}/extension.js",c.target_hint()),"content":VSCODE_EXTENSION_JS}));
         }
         *out = json!({"mode":"artifact","client":descriptor(record),"artifacts":artifacts,
             "manual_steps":out["manual_steps"],"run_cautions":cautions});

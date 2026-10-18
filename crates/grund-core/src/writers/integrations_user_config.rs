@@ -22,7 +22,7 @@ use crate::config::strip_comment;
 
 /// The user-level Grund configuration `--write` records the preference in
 /// (§FS-integrations.4.3). `~/.config` resolves through `XDG_CONFIG_HOME`.
-pub const USER_CONFIG_TARGET: &str = "~/.config/grund/config.toml";
+pub(crate) const USER_CONFIG_TARGET: &str = "~/.config/grund/config.toml";
 
 /// The user-level setting spelled exactly as the repository key for the same
 /// concept (§FS-config.3.1.3): one name, two scopes.
@@ -37,7 +37,7 @@ const CONVERSATION_TARGET_KEY_PATH: &str = "reference.conversation_target";
 /// warning that names them.
 const USER_CONFIG_KEY_PATHS: &str = "`reference.conversation`, `reference.conversation_target`, and `reference.agents.<agent>.conversation_target`";
 
-pub fn read_optional_text(path: &Path) -> Result<String, (PathBuf, String)> {
+pub(crate) fn read_optional_text(path: &Path) -> Result<String, (PathBuf, String)> {
     match fs::read_to_string(path) {
         Ok(text) => Ok(text),
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(String::new()),
@@ -45,7 +45,7 @@ pub fn read_optional_text(path: &Path) -> Result<String, (PathBuf, String)> {
     }
 }
 
-pub fn user_grund_config_path() -> Option<PathBuf> {
+pub(crate) fn user_grund_config_path() -> Option<PathBuf> {
     expand_target(USER_CONFIG_TARGET)
 }
 
@@ -129,7 +129,7 @@ pub struct UserConfigScan {
 /// terminal integration, and an unparseable value is not more of a reason than
 /// an unread key: both mean grund has no preference from this file, which is
 /// exactly the state of a machine that never wrote one.
-pub fn scan_user_config(text: &str) -> UserConfigScan {
+pub(crate) fn scan_user_config(text: &str) -> UserConfigScan {
     let mut section = String::new();
     let mut preference = None;
     let mut target = None;
@@ -188,7 +188,7 @@ pub fn scan_user_config(text: &str) -> UserConfigScan {
                     ));
                     continue;
                 }
-                let accepted = ConversationTarget::accepted_list();
+                let accepted = ConversationTarget::accepted_names();
                 let Some(unquoted) = unquote_toml_string(value) else {
                     problems.push((
                         idx + 1,
@@ -238,7 +238,7 @@ pub fn scan_user_config(text: &str) -> UserConfigScan {
                     ));
                     continue;
                 }
-                let accepted = ConversationTarget::accepted_list();
+                let accepted = ConversationTarget::accepted_names();
                 match unquote_toml_string(value).and_then(ConversationTarget::from_name) {
                     Some(parsed) => agent_targets.push((known.to_string(), parsed)),
                     None => problems.push((
@@ -304,7 +304,7 @@ pub(crate) fn install_conversation_preference(
 /// Why an already-recorded value is left alone: rewriting an identical value
 /// would report `updated` for a no-op and drop whatever comment the user wrote
 /// beside it.
-pub fn install_reference_key(
+pub(crate) fn install_reference_key(
     existing: &str,
     table: &str,
     bare_key: &str,

@@ -199,17 +199,17 @@ fn command_list(args: &[String]) -> ExitCode {
     }
 
     if let Some(units) = size_units {
-        let output = match list_sizes(ListSizeOpts {
-            path: path.clone(),
-            path_provided,
-            kind_filter,
-            project_filter,
-            unused_only,
-            selector,
-            globs,
-            units,
-            top,
-        }) {
+        let mut opts = ListSizeOpts::default();
+        opts.path = path.clone();
+        opts.path_provided = path_provided;
+        opts.kind_filter = kind_filter;
+        opts.project_filter = project_filter;
+        opts.unused_only = unused_only;
+        opts.selector = selector;
+        opts.globs = globs;
+        opts.units = units;
+        opts.top = top;
+        let output = match list_sizes(opts) {
             Ok(output) => output,
             Err(err) => return list_refused(&err, &path, path_provided),
         };
@@ -232,15 +232,15 @@ fn command_list(args: &[String]) -> ExitCode {
     // §FS-check.4.10.7, §FS-workspace.6.1.7: the run's warnings come
     // back beside the catalog, so a refused `--project` or `--kind` still prints
     // the cautions the workspace pass settled before it (§FS-distribution.3.1).
-    let (run_warnings, listed) = list_with_run_warnings(ListOpts {
-        path: path.clone(),
-        path_provided,
-        kind_filter,
-        project_filter,
-        unused_only,
-        selector,
-        globs,
-    });
+    let mut opts = ListOpts::default();
+    opts.path = path.clone();
+    opts.path_provided = path_provided;
+    opts.kind_filter = kind_filter;
+    opts.project_filter = project_filter;
+    opts.unused_only = unused_only;
+    opts.selector = selector;
+    opts.globs = globs;
+    let (run_warnings, listed) = list_with_run_warnings(opts);
     render_run_warnings(&run_warnings);
     let output = match listed {
         Ok(output) => output,

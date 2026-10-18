@@ -192,14 +192,14 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
     // walks like every other command, and a refused query still owes the reader
     // the cautions the workspace pass settled before it (§FS-distribution.3.1).
     let section_flag = section_override.clone();
+    let mut opts = ShowOpts::default();
+    opts.path = path.clone();
+    opts.section = section_override;
+    opts.mode = mode;
+    opts.format = show_format;
     let (run_warnings, result) = show_with_scope(
         &id_arg,
-        ShowOpts {
-            path: path.clone(),
-            section: section_override,
-            mode,
-            format: show_format,
-        },
+        opts,
         path_provided,
     );
     render_run_warnings(&run_warnings);

@@ -38,7 +38,7 @@ fn valid_option(name: &str, value: &str) -> bool {
         "client" => grund_core::IntegrationClient::from_name(value).is_some(),
         "conversation" => grund_core::ConversationRendering::from_name(value).is_some(),
         "conversation_target" => grund_core::ConversationTarget::from_name(value).is_some(),
-        "agent" => grund_core::known_agent(value).is_some(),
+        "agent" => grund_core::IntegrationAgent::from_name(value).is_some(),
         _ => false,
     }
 }

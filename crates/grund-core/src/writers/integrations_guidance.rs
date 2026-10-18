@@ -1,34 +1,50 @@
 //! User preferences, agent gates and managed ownership (§FS-distribution.3.3.6).
 
-use super::integrations_api::{event, located, save, tuple_error};
-use super::*;
-use anyhow::Result;
-use serde_json::{Value, json};
-use std::path::PathBuf;
+use super::integrations_agents::{
+    ConversationRendering, GLOBAL_AGENT_INSTRUCTION_TARGETS, agent_override_table,
+};
+use super::integrations_api::{Fault, event, expand, outcome, save};
+use super::integrations_install::{BlockOutcome, install_agent_guidance_block, merge_outcomes};
+use super::integrations_output::{
+    IntegrationEvent, IntegrationNote, IntegrationOutcome, IntegrationsOpts,
+};
+use super::integrations_user_config::{
+    USER_CONFIG_TARGET, UserConfigScan, install_reference_key, read_optional_text,
+    scan_user_config, user_grund_config_path,
+};
+use crate::model::{Finding, format_path};
+use std::path::{Path, PathBuf};
 
 pub(super) struct Guidance {
     path: PathBuf,
     text: String,
     scan: UserConfigScan,
-    pub(super) cautions: Vec<Value>,
+    pub(super) cautions: Vec<Finding>,
 }
 
-pub(super) fn load() -> Result<Guidance> {
+/// Read the user configuration once, warning about every line grund did not
+/// act on: only failing to reach the file is a failure (§FS-integrations.4.3.5).
+pub(super) fn load() -> Result<Guidance, Fault> {
     let path = user_grund_config_path().ok_or_else(|| {
-        located(
-            std::path::Path::new(USER_CONFIG_TARGET),
-            "cannot resolve user configuration directory".into(),
+        Fault::at(
+            Path::new(USER_CONFIG_TARGET),
+            "cannot resolve user configuration directory",
         )
     })?;
-    let text = read_optional_text(&path).map_err(tuple_error)?;
+    let text = read_optional_text(&path)?;
     let scan = scan_user_config(&text);
     let cautions = scan
         .problems
         .iter()
-        .map(|(line, message)| {
-            json!({"severity":"warning","channel":null,
-        "code":"user-config","path":crate::model::format_path(&path),"line":line,"column":null,
-        "message":message,"sites":[],"authority":[]})
+        .map(|(line, message)| Finding {
+            severity: "warning",
+            code: "user-config",
+            path: Some(format_path(&path)),
+            line: Some(*line),
+            column: None,
+            message: message.clone(),
+            sites: Vec::new(),
+            authority: Vec::new(),
         })
         .collect();
     Ok(Guidance {
@@ -39,22 +55,27 @@ pub(super) fn load() -> Result<Guidance> {
     })
 }
 
+/// Persist the conversation preference and synchronize it into every agent's
+/// global instructions (§FS-integrations.4.3.8). An override moves the request,
+/// never the gate's verdict (§FS-integrations.4.4.1).
 pub(super) fn install(
     g: Guidance,
-    requested: Option<ConversationRendering>,
-    requested_target: Option<ConversationTarget>,
-    scoped_agent: Option<&str>,
-    events: &mut Vec<Value>,
-) -> Result<()> {
+    opts: &IntegrationsOpts,
+    events: &mut Vec<IntegrationEvent>,
+) -> Result<(), Fault> {
     let Guidance {
         path,
         text,
         mut scan,
         ..
     } = g;
-    let effective = requested
+    let requested_target = opts.conversation_target;
+    let scoped_agent = opts.agent.map(|agent| agent.name());
+    let effective = opts
+        .conversation
         .or(scan.preference)
         .unwrap_or(ConversationRendering::Plain);
+    // A scoped write leaves the base exactly as it was (§FS-integrations.4.4.2).
     let machine_target = if scoped_agent.is_some() {
         scan.target.unwrap_or_default()
     } else {
@@ -74,7 +95,7 @@ pub(super) fn install(
         machine_target.name(),
         scan.target == Some(machine_target),
     );
-    let mut outcome = merge_outcomes(first, second);
+    let mut spliced = merge_outcomes(first, second);
     if let (Some(agent), Some(target)) = (scoped_agent, requested_target) {
         let previous = scan
             .agent_targets
@@ -89,7 +110,7 @@ pub(super) fn install(
             previous == Some(target),
         );
         updated = text;
-        outcome = merge_outcomes(outcome, result);
+        spliced = merge_outcomes(spliced, result);
         if let Some(entry) = scan
             .agent_targets
             .iter_mut()
@@ -101,17 +122,13 @@ pub(super) fn install(
         }
     }
     // §FS-integrations.4.3.8: plan every instruction splice before writing any guidance.
-    let mut plans = vec![(path, Some((updated, outcome)), None)];
+    let mut plans = vec![(path, Some((updated, spliced)), None)];
     for target in GLOBAL_AGENT_INSTRUCTION_TARGETS {
-        let path = expand_target(target.file).ok_or_else(|| {
-            located(
-                std::path::Path::new(target.file),
-                "cannot resolve home directory".into(),
-            )
-        })?;
-        let in_use = expand_target(target.home).is_some_and(|p| p.is_dir()) || path.is_file();
+        let path = expand(target.file)?;
+        let in_use = expand(target.home).is_ok_and(|p| p.is_dir()) || path.is_file();
         if !in_use {
-            plans.push((path, None, Some(format!("no {}", target.home))));
+            let note = IntegrationNote::AgentHomeMissing { home: target.home };
+            plans.push((path, None, Some(note)));
             continue;
         }
         let overridden = scan
@@ -121,36 +138,30 @@ pub(super) fn install(
             .map(|(_, value)| *value);
         let requested = overridden.unwrap_or(machine_target);
         let gated = target.link_support.resolve(requested);
-        let existing = read_optional_text(&path).map_err(tuple_error)?;
-        let (updated, outcome) = install_agent_guidance_block(&existing, effective, gated)
-            .map_err(|e| located(&path, e))?;
-        let note = if effective == ConversationRendering::Plain {
-            "plain".to_owned()
-        } else {
-            format!(
-                "link → {}{}",
-                gated.name(),
-                if gated != requested {
-                    "; unverified here"
-                } else if overridden.is_some() {
-                    "; agent override"
-                } else {
-                    ""
-                }
-            )
+        let existing = read_optional_text(&path)?;
+        let (updated, spliced) = install_agent_guidance_block(&existing, effective, gated)
+            .map_err(|message| Fault::at(&path, message))?;
+        let note = IntegrationNote::Guidance {
+            rendering: effective,
+            target: gated,
+            requested,
+            overridden: overridden.is_some(),
         };
-        plans.push((path, Some((updated, outcome)), Some(note)));
+        plans.push((path, Some((updated, spliced)), Some(note)));
     }
     for (path, write, note) in plans {
-        let verb = if let Some((updated, outcome)) = write {
-            if outcome != BlockOutcome::Unchanged {
+        let happened = if let Some((updated, spliced)) = write {
+            if spliced != BlockOutcome::Unchanged {
                 save(&path, &updated)?;
             }
-            block_outcome_verb(outcome)
+            outcome(spliced)
         } else {
-            "skipped"
+            IntegrationOutcome::Skipped
         };
-        events.push(event(&path, verb, note));
+        events.push(IntegrationEvent {
+            note,
+            ..event(path, happened)
+        });
     }
     Ok(())
 }

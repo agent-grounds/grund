@@ -70,13 +70,13 @@ fn command_refs(args: &[String]) -> ExitCode {
     if let Err(code) = run_format("refs", format_override.as_deref()) {
         return code;
     }
-    let metadata = match refs_with_metadata(RefsOpts {
-        path,
-        path_provided,
-        id: id_arg,
-        section: section_override,
-        descendants,
-    }) {
+    let mut opts = RefsOpts::default();
+    opts.path = path;
+    opts.path_provided = path_provided;
+    opts.id = id_arg;
+    opts.section = section_override;
+    opts.descendants = descendants;
+    let metadata = match refs_with_metadata(opts) {
         Ok(output) => output,
         Err(err) => {
             // §FS-refs.4: recorded ambiguities refuse before every successful

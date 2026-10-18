@@ -18,8 +18,10 @@
 //! the plan one run makes, the block splice, what this run renders the block
 //! from, the workspace-members walk-up, the notes, and what the `<path>`
 //! argument is), and the `integrations_*` files are the clickable-citation
-//! artifacts (the closed client set, detection, the agent instruction surfaces,
-//! the installs and their byte-current probes, and the user configuration).
+//! artifacts (the one `integrations` operation, its records and the hosts' JSON
+//! projection of them, the closed client set, detection, the agent instruction
+//! surfaces, the installs and their byte-current probes, the user configuration,
+//! and the names retiring since the operation replaced them).
 //!
 //! No process counterpart remains in the engine (§AR-system.2.9.1).
 //! `tests/integration/test_engine_boundary.py` measures that no file under this
@@ -27,7 +29,7 @@
 //! command's argv, bytes and exit codes are
 //! `crates/grund-cli/src/cli_integrations*.rs`, the frontend that owns rendering
 //! (§FS-integrations.1.3, §AR-bindings.3), and what it reads of this component is
-//! the `pub` block below (§DA-engine-renders-nothing).
+//! the answer of `integrations` (§FS-distribution.3.1.3, §DA-engine-renders-nothing).
 //!
 //! What the component does **not** hold any more. Four lexical items went down
 //! into `grammar/` (§AR-system.2.1), because a component below was reading each
@@ -104,9 +106,12 @@ mod init_workspace_members;
 mod integrations_agents;
 mod integrations_api;
 mod integrations_clients;
+mod integrations_data;
 mod integrations_detect;
 mod integrations_guidance;
 mod integrations_install;
+mod integrations_output;
+pub(crate) mod integrations_retiring;
 mod integrations_user_config;
 mod migrate_guidance;
 mod scoped_files;
@@ -126,30 +131,25 @@ pub(crate) use fmt_tree::{FmtRunOpts, auto_cross_refs_for_scope, fmt_tree};
 pub(crate) use fmt_workspace::fmt_workspace_projects;
 pub(crate) use id::{format_id, slugify_title};
 
-// What `grund integrations` is assembled from: the closed client set with each
-// client's artifact, what the environment detects, the agent instruction
-// surfaces, the splices a `--write` carries out, and the user configuration.
-
-// The command's argv, its bytes and its exit codes are the CLI's
-// (§FS-integrations.1.3, §AR-bindings.3), so what it reads here crosses a crate
-// boundary and is public; each name returns data (§FS-distribution.3.1).
-pub use integrations_agents::{
-    ConversationRendering, ConversationTarget, GLOBAL_AGENT_INSTRUCTION_TARGETS, GlobalAgentTarget,
-    LinkSupport, agent_override_table, known_agent, known_agents_list,
+// `grund integrations` as one operation (§FS-distribution.3.1.3): the closed
+// vocabularies it is spelled in, the options, the answer and the refusal. The
+// CLI renders the answer (§FS-integrations.1.3, §AR-bindings.3), so what it reads
+// here crosses a crate boundary and is public. The names it once assembled the
+// command from are `integrations_retiring`'s, forwarding to the originals below.
+pub use integrations_agents::{ConversationRendering, ConversationTarget, IntegrationAgent};
+pub use integrations_api::integrations;
+pub use integrations_clients::{InstallKind, IntegrationClient};
+pub use integrations_output::{
+    IntegrationArtifact, IntegrationClientStatus, IntegrationEvent, IntegrationManualStep,
+    IntegrationNote, IntegrationOutcome, IntegrationsError, IntegrationsFailure, IntegrationsOpts,
+    IntegrationsOutput,
 };
-pub use integrations_clients::{
-    GRUND_OPEN_RESOLVER, InstallKind, IntegrationClient, RESOLVER_TARGET, VSCODE_EXTENSION_JS,
-    VSCODE_PACKAGE_JSON, expand_target, known_clients_line,
+// What the Node projection reads of the originals (§FS-distribution.3.2.2.2).
+pub(crate) use integrations_clients::{
+    GRUND_OPEN_RESOLVER, RESOLVER_TARGET, VSCODE_EXTENSION_JS, VSCODE_PACKAGE_JSON,
 };
-pub use integrations_detect::detect_clients;
-pub use integrations_install::{
-    BlockOutcome, WEZTERM_APPLY_CALL, block_outcome_verb, install_agent_guidance_block,
-    install_managed_block, integration_is_current, merge_outcomes, needs_wezterm_wiring,
-    vscode_integration_is_current, write_resolver_script,
-};
-pub use integrations_user_config::{
-    USER_CONFIG_TARGET, UserConfigScan, install_reference_key, read_optional_text,
-    scan_user_config, user_grund_config_path,
+pub(crate) use integrations_user_config::{
+    read_optional_text, scan_user_config, user_grund_config_path,
 };
 
 // What another component's tests read (§AR-core-module-layout.1.3): the rewrite
@@ -170,6 +170,8 @@ pub(crate) use init_guidance::docs_scaffold;
 pub(crate) use init_render::render_agents_append_block_at;
 #[cfg(test)]
 pub(crate) use integrations_clients::{ITERM2_SNIPPET, KITTY_SNIPPET, WEZTERM_SNIPPET};
+#[cfg(test)]
+pub(crate) use integrations_install::{BlockOutcome, install_agent_guidance_block};
 pub(crate) use migrate_guidance::{RootGuidance, root_guidance};
 
 // The cases that pin this component, one module per behaviour area
@@ -201,8 +203,8 @@ mod tests_scoped_guidance;
 #[cfg(test)]
 mod tests_workspace_members;
 
-// §FS-distribution.3.1: additive managed-install orchestration.
-pub(crate) use integrations_api::integrations_data;
+// §FS-distribution.3.3.6: the hosts' JSON projection of `integrations`.
+pub(crate) use integrations_data::integrations_data;
 
 // §FS-distribution.3.1: preserve init's source error beside its partial output.
 pub(crate) use init::init_with_diagnostics;

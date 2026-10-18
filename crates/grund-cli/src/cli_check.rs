@@ -119,14 +119,13 @@ fn command_check(args: &[String]) -> ExitCode {
         eprintln!("error: --only-rule requires --rule");
         return ExitCode::from(2);
     }
-    let opts = CheckOpts {
-        path,
-        path_provided,
-        require_grounding,
-        include_suggestions,
-        full,
-        rule,
-    };
+    let mut opts = CheckOpts::default();
+    opts.path = path;
+    opts.path_provided = path_provided;
+    opts.require_grounding = require_grounding;
+    opts.include_suggestions = include_suggestions;
+    opts.full = full;
+    opts.rule = rule;
     if watch {
         return command_check_watch(opts, selection, format_override);
     }
