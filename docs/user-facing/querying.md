@@ -178,7 +178,7 @@ changed line range belongs to with `grund cover FILE --lines N-M`
 $ grund list --glob 'FS-config.requirements.*' --total
 8
 $ grund show --batch --glob 'FS-config.requirements.*' --brief --format json | head -1 | cut -c1-120
-{"query":{"id":"FS-config","section":"requirements.1"},"ok":true,"result":{"id":"FS-config","section":"requirements.1","bod
+{"query":{"id":"FS-config","section":"requirements.1"},"ok":true,"result":{"id":"FS-config","section":"requirements.1","
 $ grund cover docs/functional-spec/FS-config.md --lines 96-101
 docs/functional-spec/FS-config.md:96-101
   96-99  FS-config.requirements.1
