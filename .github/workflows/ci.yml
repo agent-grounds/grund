@@ -154,6 +154,7 @@ jobs:
         run: rustup toolchain install 1.95.0 --profile minimal
 
       # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      # §AR-ci.3.4.4: a new key can save oracle dependencies missing from old exact hits.
       - name: Restore cargo registry and target
         id: cargo
         uses: actions/cache/restore@v5
@@ -162,7 +163,7 @@ jobs:
             ~/.cargo/registry
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-oracle-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ github.job }}-
             ${{ runner.os }}-cargo-
@@ -195,7 +196,7 @@ jobs:
             ~/.cargo/registry
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-oracle-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
 
   node-ubuntu:
     name: node acceptance (ubuntu-latest)
@@ -224,6 +225,7 @@ jobs:
         run: rustup toolchain install 1.95.0 --profile minimal
 
       # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      # §AR-ci.3.4.4: a new key can save oracle dependencies missing from old exact hits.
       - name: Restore cargo registry and target
         id: cargo
         uses: actions/cache/restore@v5
@@ -232,7 +234,7 @@ jobs:
             ~/.cargo/registry
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-oracle-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ github.job }}-
             ${{ runner.os }}-cargo-
@@ -281,7 +283,7 @@ jobs:
             ~/.cargo/registry
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-oracle-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
 
       # §AR-ci.13.6: only a push to main saves, after the work, the key its restore missed.
       - name: Save the Node acceptance's build target
@@ -488,6 +490,7 @@ jobs:
         run: rustup toolchain install 1.95.0 --profile minimal
 
       # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      # §AR-ci.3.4.4: a new key can save oracle dependencies missing from old exact hits.
       - name: Restore cargo registry and target
         id: cargo
         uses: actions/cache/restore@v5
@@ -496,7 +499,7 @@ jobs:
             ~/.cargo/registry
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-oracle-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ github.job }}-
             ${{ runner.os }}-cargo-
@@ -530,7 +533,7 @@ jobs:
             ~/.cargo/registry
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-oracle-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
 
   node-windows:
     name: node acceptance (windows-latest)
@@ -559,6 +562,7 @@ jobs:
         run: rustup toolchain install 1.95.0 --profile minimal
 
       # §AR-ci.13.4: the key names its job, so no job's save is lost to another's exact hit.
+      # §AR-ci.3.4.4: a new key can save oracle dependencies missing from old exact hits.
       - name: Restore cargo registry and target
         id: cargo
         uses: actions/cache/restore@v5
@@ -567,7 +571,7 @@ jobs:
             ~/.cargo/registry
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-oracle-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ github.job }}-
             ${{ runner.os }}-cargo-
@@ -617,7 +621,7 @@ jobs:
             ~/.cargo/registry
             target
             ~/ag/tmp/grund-cochange-release-0.16.1
-          key: ${{ runner.os }}-cargo-${{ github.job }}-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ github.job }}-oracle-v1-${{ hashFiles('Cargo.toml', '**/Cargo.lock') }}
 
       # §AR-ci.13.6: only a push to main saves, after the work, the key its restore missed.
       - name: Save the Node acceptance's build target
