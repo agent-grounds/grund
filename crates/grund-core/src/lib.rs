@@ -171,6 +171,7 @@ pub use queries::{
     ShowOpts, ShowQueryError, list_sizes,
 };
 // §FS-coordinate-globs.errors: the launch refusal and the PATH hint a frontend asks for.
+#[doc(hidden)]
 pub use queries::{check_coordinate_globs, reads_as_coordinate_glob};
 
 // §AR-system.2.11 templates: the setup skill a command prints byte-for-byte and
