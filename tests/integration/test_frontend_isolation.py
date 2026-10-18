@@ -15,6 +15,9 @@ ENGINE = "grund-core"
 FRONTENDS = {"grund", "grund-lsp", "grund-py", "grund-node"}
 LSP_TRANSPORT = {"lsp-server", "lsp-types"}
 NODE_RUNTIME = {"napi", "napi-sys", "napi-derive", "nodejs"}
+# Members that are not frontends and that nothing depends on: the integration
+# tests, and the embedder example of §FS-distribution.3.1.3.
+LEAVES = {"grund-integration-tests", "grund-rust-api-example"}
 
 
 class Graph:
@@ -79,7 +82,7 @@ class FrontendIsolationTests(unittest.TestCase):
         )
 
     def test_every_frontend_depends_directly_on_the_engine_and_on_no_other_member(self):
-        members = set(self.graph.member_id) - {ENGINE, "grund-integration-tests"}
+        members = set(self.graph.member_id) - {ENGINE} - LEAVES
         self.assertEqual(FRONTENDS, members, "a new frontend crate joins the isolation contract")
         for frontend in sorted(members):
             with self.subTest(frontend=frontend):
@@ -92,8 +95,8 @@ class FrontendIsolationTests(unittest.TestCase):
 
     def test_the_integration_tests_are_not_a_dependency_of_anything(self):
         for member in self.graph.member_id:
-            if member != "grund-integration-tests":
-                self.assertNotIn("grund-integration-tests", self.graph.closure(member))
+            for leaf in LEAVES - {member}:
+                self.assertNotIn(leaf, self.graph.closure(member))
 
     def test_the_node_frontend_is_a_resolved_napi_engine_adapter(self):
         self.assertIn("grund-node", self.graph.member_id,

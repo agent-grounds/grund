@@ -45,20 +45,58 @@ ENTRY_POINTS = (
     "init",
 )
 
-# §AR-config.1 and §DA-config-concern-records.4: the records ship at the root
-# beside the names they replace, and each replaced name is a deprecated alias
-# whose note names the release that removes it (§DISC-core-concerns.9.9).
+# §AR-config.1, §DA-config-concern-records.4: the records ship at the root. The
+# aliases they replaced were removed in 0.19.0 (§FS-distribution.3.1), each
+# leaving one `lib.rs` line that says so in the release guard's landed tense.
 CONCERN_RECORDS = ("Catalog", "Project", "Run", "Compiled", "effective_project")
-DEPRECATED_ALIASES = ("Findings", "Config", "KindConfig", "CitationRules")
-NOTICE, REMOVAL = "0.17.0", "0.19.0"
-# The disposition §DISC-grund-core-public-surface.4 gives a name a ramp already
-# written into the tree removes.
-RAMP = "retire with the ramp"
-# A root `pub type` alias and the attributes stacked above it.
-# An attribute may span lines, the way rustfmt wraps a long one.
-ALIAS = re.compile(r"((?:^#\[[^\]]*\]\s*)*)^pub\s+type\s+([A-Za-z_][A-Za-z0-9_]*)\b", re.MULTILINE)
-DEPRECATED = re.compile(
-    r'#\[deprecated\(\s*since\s*=\s*"([^"]*)"\s*,\s*note\s*=\s*"([^"]*)"\s*,?\s*\)\]'
+REMOVED_ALIASES = ("Findings", "Config", "KindConfig", "CitationRules")
+REMOVED_LINE = "was removed in 0.19.0"
+
+# §FS-distribution.3.1.2: every row is promised, hidden, or on its way out.
+FROZEN, HIDDEN, LEAVING = "frozen at 1.0", "hidden", "is removed in 0.21.0"
+DISPOSITIONS = (FROZEN, HIDDEN, LEAVING)
+FROZEN_COUNT, HIDDEN_COUNT = 112, 113
+# §FS-distribution.3.1.3: the 30 root names the CLI assembled `--write` from,
+# and the 9 methods of the kept vocabularies, deprecated in 0.19.0.
+LEAVING_NAMES = frozenset((
+    "agent_override_table", "block_outcome_verb", "BlockOutcome", "detect_clients",
+    "expand_target", "GLOBAL_AGENT_INSTRUCTION_TARGETS", "GlobalAgentTarget",
+    "GRUND_OPEN_RESOLVER", "install_agent_guidance_block", "install_managed_block",
+    "install_reference_key", "integration_is_current", "INTEGRATIONS_BLOCK_VERSION",
+    "known_agent", "known_agents_list", "known_clients_line", "LinkSupport",
+    "merge_outcomes", "needs_wezterm_wiring", "read_optional_text", "RESOLVER_TARGET",
+    "scan_user_config", "USER_CONFIG_TARGET", "user_grund_config_path", "UserConfigScan",
+    "VSCODE_EXTENSION_JS", "vscode_integration_is_current", "VSCODE_PACKAGE_JSON",
+    "WEZTERM_APPLY_CALL", "write_resolver_script",
+))
+LEAVING_METHODS = (
+    ("IntegrationClient", "is_terminal"), ("IntegrationClient", "install_kind"),
+    ("IntegrationClient", "snippet"), ("IntegrationClient", "config_target"),
+    ("IntegrationClient", "install_command"), ("IntegrationClient", "comment_prefix"),
+    ("IntegrationClient", "prepends_block"), ("IntegrationClient", "fresh_config_scaffold"),
+    ("ConversationTarget", "accepted_list"),
+)
+# §DISC-grund-core-public-surface.6.3: a hidden row names its real reader, and
+# nothing outside grund-core reads these.
+NO_OUTSIDE_READER = (
+    "can_replace_trigger_at", "cover_with_run_warnings", "cover_text_with_run_warnings",
+    "cover_lines_with_run_warnings", "format_references_with_run_warnings",
+    "list_sizes_with_run_warnings", "parse_cover_line_range", "lsp_snapshot_with_metadata",
+)
+NO_OUTSIDE_READER_TEXT = "no reader outside grund-core"
+CORE_SRC = REPO_ROOT / "crates" / "grund-core" / "src"
+# A `pub use` tree or root item and the attributes stacked above it; comment
+# lines are blanked by `_source`, so they never separate the two.
+ATTRIBUTED_USE = re.compile(r"((?:^[ \t]*#\[[^\]]*\]\s*)*)^[ \t]*pub use\s+([^;]+);", re.MULTILINE)
+ATTRIBUTED_ITEM = re.compile(
+    r"((?:^[ \t]*#\[(?:[^\[\]]|\[[^\]]*\])*\]\s*)*)^[ \t]*pub\s+(?:const\s+fn|fn|struct|enum|type|const|static)"
+    r"\s+([A-Za-z_][A-Za-z0-9_]*)",
+    re.MULTILINE,
+)
+ROOT_ATTRIBUTED_ITEM = re.compile(ATTRIBUTED_ITEM.pattern.replace("^[ \\t]*", "^"), re.MULTILINE)
+# A deprecation whose note is one source line, so the release guard reads it.
+ONE_LINE_DEPRECATION = re.compile(
+    r'#\[deprecated\(\s*since\s*=\s*"0\.19\.0"\s*,\s*note\s*=\s*"([^"\n]*)"\s*,?\s*\)\]'
 )
 # An inventory row's first and last cells: the name and its disposition.
 DISPOSITION = re.compile(r"^\|\s*`([A-Za-z_][A-Za-z0-9_]*)`\s*\|.*\|\s*([^|]+?)\s*\|\s*$", re.MULTILINE)
@@ -132,14 +170,47 @@ def inventory_names():
     return ROW.findall(INVENTORY.read_text(encoding="utf-8"))
 
 
-def deprecated_aliases():
-    """`name -> (since, note)` for every deprecated root `pub type` alias."""
+def hidden_root_names():
+    """The root names `lib.rs` itself puts under `#[doc(hidden)]`: a hidden
+    `pub use` tree or a hidden root item (§FS-distribution.3.1.2)."""
+    source = _source()
+    hidden = set()
+    for attributes, tree in ATTRIBUTED_USE.findall(source):
+        if "#[doc(hidden)]" in attributes:
+            hidden.update(_exported_names(tree))
+    for attributes, name in ROOT_ATTRIBUTED_ITEM.findall(source):
+        if "#[doc(hidden)]" in attributes:
+            hidden.add(name)
+    return hidden
+
+
+def one_line_deprecations():
+    """`name -> note` for every item in grund-core deprecated in 0.19.0 with a
+    note on one source line, and `Type::method -> note` for methods."""
     found = {}
-    for attributes, name in ALIAS.findall(_source()):
-        match = DEPRECATED.search(attributes)
-        if match:
-            found[name] = match.groups()
+    for path in sorted(CORE_SRC.rglob("*.rs")):
+        lines = path.read_text(encoding="utf-8").splitlines()
+        text = "\n".join("" if line.lstrip().startswith("//") else line for line in lines)
+        for attributes, name in ATTRIBUTED_ITEM.findall(text):
+            match = ONE_LINE_DEPRECATION.search(attributes)
+            if match:
+                found[name] = match.group(1)
+        for impl_name, body in re.findall(r"^impl\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{(.*?)^\}", text, re.MULTILINE | re.DOTALL):
+            for attributes, name in ATTRIBUTED_ITEM.findall(body):
+                match = ONE_LINE_DEPRECATION.search(attributes)
+                if match:
+                    found[f"{impl_name}::{name}"] = match.group(1)
     return found
+
+
+def inventory_rows():
+    """`name -> the row's whole line`, for reading a cell's wording."""
+    if not INVENTORY.is_file():
+        return {}
+    return {
+        match.group(1): match.group(0)
+        for match in re.finditer(r"^\|\s*`([A-Za-z_][A-Za-z0-9_]*)`\s*\|.*$", INVENTORY.read_text(encoding="utf-8"), re.MULTILINE)
+    }
 
 
 def inventory_dispositions():
@@ -204,33 +275,70 @@ class PublicSurfaceInventoryTests(unittest.TestCase):
 
 
 class ConcernRecordSurfaceTests(unittest.TestCase):
-    """§AR-config.1: the records are public, and the names they replace take the
-    deprecation path of §REQ-backwards-compatibility.2 rather than vanishing."""
+    """§AR-config.1: the records are root names, and the aliases they replaced
+    are gone from the root, as their 0.17.0 notes said (§FS-distribution.3.1)."""
 
     def test_the_concern_records_are_root_names(self):
         missing = [name for name in CONCERN_RECORDS if name not in set(public_root_names())]
         self.assertEqual([], missing)
 
-    def test_each_replaced_name_is_a_deprecated_alias_naming_its_removal(self):
-        aliases = deprecated_aliases()
-        wrong = []
-        for name in DEPRECATED_ALIASES:
-            if name not in aliases:
-                wrong.append(f"{name}: no #[deprecated] `pub type` at the crate root")
-                continue
-            since, note = aliases[name]
-            if since != NOTICE or REMOVAL not in note:
-                wrong.append(f"{name}: since {since!r}, note {note!r}")
-        self.assertEqual([], wrong)
-
-    def test_the_inventory_retires_the_replaced_names_with_the_ramp(self):
-        dispositions = inventory_dispositions()
-        wrong = [
-            f"{name}: {dispositions.get(name, '(no row)')}"
-            for name in DEPRECATED_ALIASES
-            if dispositions.get(name) != RAMP
+    def test_the_removed_aliases_are_absent_and_each_leaves_its_removal_line(self):
+        roots = set(public_root_names())
+        present = [name for name in REMOVED_ALIASES if name in roots]
+        self.assertEqual([], present, "aliases noticed for removal in 0.19.0 are still root names")
+        lines = LIB_RS.read_text(encoding="utf-8").splitlines()
+        unmarked = [
+            name
+            for name in REMOVED_ALIASES
+            if not any(f"`{name}`" in line and REMOVED_LINE in line for line in lines)
         ]
-        self.assertEqual([], wrong)
+        self.assertEqual(
+            [], unmarked, f"aliases with no `{REMOVED_LINE}` line naming them in {LIB_RS.name}"
+        )
+
+
+class OneDotZeroPromiseTests(unittest.TestCase):
+    """§FS-distribution.3.1.2: every root name is promised, hidden, or noticed
+    for removal in 0.21.0, and `lib.rs` says which of the first two it is."""
+
+    def test_every_row_has_one_of_the_three_dispositions(self):
+        wrong = {
+            name: disposition
+            for name, disposition in inventory_dispositions().items()
+            if disposition not in DISPOSITIONS
+        }
+        self.assertEqual("", _sample(f"{n}: {d}" for n, d in wrong.items()))
+
+    def test_the_frozen_rows_are_the_112_names_the_promise_reaches(self):
+        frozen = [n for n, d in inventory_dispositions().items() if d == FROZEN]
+        self.assertEqual(FROZEN_COUNT, len(frozen))
+
+    def test_hidden_rows_are_hidden_in_lib_rs_and_frozen_rows_are_not(self):
+        dispositions = inventory_dispositions()
+        hidden = hidden_root_names()
+        hidden_rows = {n for n, d in dispositions.items() if d == HIDDEN}
+        self.assertEqual(HIDDEN_COUNT, len(hidden_rows), "the inventory's `hidden` rows")
+        visible = hidden_rows - hidden
+        self.assertEqual("", _sample(visible), "`hidden` rows lib.rs does not put under #[doc(hidden)]")
+        frozen_hidden = {n for n, d in dispositions.items() if d == FROZEN} & hidden
+        self.assertEqual("", _sample(frozen_hidden), "`frozen at 1.0` rows lib.rs hides")
+
+    def test_the_leaving_rows_are_the_30_integrations_names(self):
+        leaving = {n for n, d in inventory_dispositions().items() if d == LEAVING}
+        self.assertEqual("", _sample(leaving ^ LEAVING_NAMES), "rows differing from the 30")
+
+    def test_every_leaving_name_and_method_carries_a_one_line_note_naming_0_21_0(self):
+        notes = one_line_deprecations()
+        wanted = sorted(LEAVING_NAMES) + [f"{owner}::{method}" for owner, method in LEAVING_METHODS]
+        wrong = [name for name in wanted if LEAVING not in notes.get(name, "")]
+        self.assertEqual(
+            "", _sample(wrong), f'no one-line #[deprecated(since = "0.19.0")] note with `{LEAVING}`'
+        )
+
+    def test_the_hidden_rows_nothing_outside_core_reads_say_so(self):
+        rows = inventory_rows()
+        wrong = [name for name in NO_OUTSIDE_READER if NO_OUTSIDE_READER_TEXT not in rows.get(name, "")]
+        self.assertEqual([], wrong, f"rows that do not say `{NO_OUTSIDE_READER_TEXT}`")
 
 
 if __name__ == "__main__":

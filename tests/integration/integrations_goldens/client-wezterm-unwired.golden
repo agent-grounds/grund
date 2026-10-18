@@ -1,0 +1,575 @@
+$ grund integrations wezterm --write
+exit: 0
+--- stdout
+--- stderr
+appended <sandbox>/xdg/wezterm/wezterm.lua
+note: <sandbox>/xdg/wezterm/wezterm.lua does not call `grund_apply_hyperlink_rule(config)` on the config it returns, so WezTerm reads the block and registers nothing; add that line where you build your config
+wrote <sandbox>/home/.local/bin/grund-open
+appended <sandbox>/xdg/grund/config.toml
+skipped <sandbox>/home/.codex/AGENTS.md (no ~/.codex)
+skipped <sandbox>/home/.claude/CLAUDE.md (no ~/.claude)
+skipped <sandbox>/home/.gemini/GEMINI.md (no ~/.gemini)
+skipped <sandbox>/home/.copilot/copilot-instructions.md (no ~/.copilot)
+skipped <sandbox>/xdg/zed/AGENTS.md (no ~/.config/zed)
+skipped <sandbox>/home/.pi/agent/AGENTS.md (no ~/.pi)
+=== tree
+--- dir home/
+--- dir home/.local/
+--- dir home/.local/bin/
+--- file home/.local/bin/grund-open (executable)
+#!/bin/sh
+# grund-open — resolve a §<ID> citation to its cited line and open it.
+#
+# Installed by `grund integrations <client> --write`. A terminal integration
+# hands this script the clicked token; the script resolves it with `grund` and
+# opens the declaration in the user's editor. The editor is GRUND_OPEN_CMD when
+# set, else EDITOR, else a platform default — the user's editor choice lives
+# here, never in shared repository text. GRUND_OPEN_CMD is an argv-style command
+# prefix; use a wrapper executable for custom placement.
+#
+# With --peek it prints the declaration through a pager instead, for clients that
+# can put it in an overlay, popup, or split pane. Both modes share one resolution
+# path so a peek and a click can never disagree about where a citation points.
+#
+# Usage: grund-open [--peek] <§ID | ID>[.<section>] | <path>:<line>[:<col>]
+set -eu
+
+peek=
+if [ "${1:-}" = "--peek" ]; then
+    peek=1
+    shift
+fi
+
+token=${1:-}
+[ -n "$token" ] || { echo "grund-open: no citation given" >&2; exit 2; }
+
+# A *location* beside a citation — the `link` conversation form prints `§<ID>
+# path:line` — is openable too. The shapes are mechanically distinct: an ID's
+# section suffix is dotted, never coloned, so a token whose final dot-extension
+# segment ends in `:<line>[:<col>]` is a location. Detected before marker
+# stripping, which would mangle a path; the lighter clean below drops swept-in
+# punctuation while preserving `/ . ~`.
+loc=$(printf '%s' "$token" | sed 's/^[^A-Za-z0-9_.~/]*//')
+loc_path=$(printf '%s' "$loc" | sed -n 's/^\(.*\.[A-Za-z0-9][A-Za-z0-9]*\):\([0-9][0-9]*\)\(:[0-9][0-9]*\)\{0,1\}$/\1/p')
+loc_line=$(printf '%s' "$loc" | sed -n 's/^\(.*\.[A-Za-z0-9][A-Za-z0-9]*\):\([0-9][0-9]*\)\(:[0-9][0-9]*\)\{0,1\}$/\2/p')
+
+id=''
+root=''
+path=''
+lineno=''
+if [ -n "$loc_path" ]; then
+    # The printed path is config-root-relative while the click may arrive with
+    # the shell anywhere in the tree, so climb ancestors, nearest first, until
+    # the relative path exists. No `grund` and no config is consulted: a
+    # location click works in any repository, grund-using or not.
+    case $loc_path in
+        /*) if [ -f "$loc_path" ]; then path=$loc_path; fi ;;
+        *)
+            dir=$PWD
+            while :; do
+                if [ -f "$dir/$loc_path" ]; then
+                    path=$dir/$loc_path
+                    break
+                fi
+                [ "$dir" = "/" ] && break
+                dir=$(dirname "$dir")
+            done
+            ;;
+    esac
+    [ -n "$path" ] || { echo "grund-open: no file '$loc_path' at or above $PWD" >&2; exit 1; }
+    lineno=$loc_line
+fi
+
+if [ -z "$path" ]; then
+# Strip the citation marker without hardcoding one: `[reference] marker` is
+# per-repo, so drop any leading run of non-alphanumeric characters instead of a
+# literal §. This keeps a workspace-qualified `<alias>/<ID>` intact (the alias
+# starts alphanumeric) and tolerates stray punctuation the terminal's match
+# swept in, e.g. `(§FS-x`. The section suffix is deliberately kept: `grund`
+# resolves `<ID>.<section>` to that section's own line.
+id=$(printf '%s' "$token" | sed 's/^[^A-Za-z0-9]*//')
+[ -n "$id" ] || { echo "grund-open: empty id in '$token'" >&2; exit 2; }
+
+# Find the root and resolve in one climb. The terminal hands us a token, never a
+# directory, so the click may arrive with the shell anywhere in the tree. Try
+# every ancestor holding a config under either discovery name — a repository on
+# the bare root `grund.toml` `grund init` generates is as much a config root as
+# one on `.agents/`, and probing only the latter would leave every default-form
+# repository unclickable. Which name is found does not matter here: both name
+# the same config root, and `grund` itself re-runs the same discovery from that
+# directory. Nearest first — nearest alone is not enough: from inside a
+# workspace member the member's config resolves its own bare IDs, but a
+# workspace-qualified `<alias>/<ID>` only resolves from the workspace root above
+# it, so on failure the climb continues upward instead of giving up.
+#
+# `grund <ID>[.<section>] --format json` emits one object whose `path` is
+# relative to the root it ran in and whose `line` is the cited section's line,
+# not merely the declaration's.
+json=''
+seen_config=''
+dir=$PWD
+while :; do
+    if [ -f "$dir/grund.toml" ] || [ -f "$dir/.agents/grund.toml" ]; then
+        seen_config=1
+        if json=$(cd "$dir" && grund "$id" --format json 2>/dev/null) && [ -n "$json" ]; then
+            root=$dir
+            break
+        fi
+        json=''
+    fi
+    [ "$dir" = "/" ] && break
+    dir=$(dirname "$dir")
+done
+[ -n "$seen_config" ] || {
+    echo "grund-open: no grund.toml (root or .agents/) at or above $PWD" >&2
+    exit 1
+}
+[ -n "$root" ] || { echo "grund-open: unknown id '$id'" >&2; exit 1; }
+
+# Anchor both extractions to the end of the object: `body` carries arbitrary
+# declaration prose that may itself contain `"path":` or `"line":`, and an
+# unanchored match would happily read that instead of the real field. A
+# directory-backed E2E declaration answers with the manifest shape instead — no
+# `body` and no `"line"` — so its fallback anchors on the grund-controlled
+# prefix, and the case *directory* is what opens.
+path=$(printf '%s\n' "$json" | sed -n 's/.*"path":"\([^"]*\)","line":[0-9]*}$/\1/p')
+lineno=$(printf '%s\n' "$json" | sed -n 's/.*,"line":\([0-9]*\)}$/\1/p')
+if [ -z "$path" ]; then
+    path=$(printf '%s\n' "$json" | sed -n 's/^{"id":"[^"]*","kind":"E2E","path":"\([^"]*\)".*/\1/p')
+    lineno=''
+fi
+[ -n "$path" ] || { echo "grund-open: could not resolve path for '$id'" >&2; exit 1; }
+lineno=${lineno:-1}
+
+# Hand the editor an absolute path. `grund` never emits one — reports stay
+# deterministic; composing it here is what makes the click work from a
+# subdirectory. An E2E case resolves to its directory, where a `:line` suffix
+# would garble the argument, so the target drops it.
+path="$root/$path"
+fi
+
+if [ -d "$path" ]; then
+    target=$path
+else
+    target="$path:$lineno"
+fi
+
+if [ -n "$peek" ]; then
+    # Print, don't open. The caller has already put us somewhere disposable — a
+    # kitty overlay, a tmux popup, a wezterm split — and every one of those
+    # closes when this process exits, so the output goes through a pager to stay
+    # readable until dismissed. The location header is what makes the peek
+    # actionable: it is the same `path:line` a click would open.
+    {
+        printf '%s\n\n' "$target"
+        if [ -n "$id" ]; then
+            (cd "$root" && grund "$id") 2>/dev/null || printf 'could not render %s\n' "$id"
+        else
+            # A location has no declaration to render; page the file from the
+            # cited line — the header above names the exact path:line.
+            tail -n "+$lineno" "$path"
+        fi
+    } | {
+        if [ -n "${PAGER:-}" ]; then
+            # shellcheck disable=SC2086
+            exec $PAGER
+        elif command -v less >/dev/null 2>&1; then
+            exec less -R
+        else
+            cat
+            printf '\n[enter to close] '
+            read -r _dismiss || true
+        fi
+    }
+    exit 0
+fi
+
+if [ -n "${GRUND_OPEN_CMD:-}" ]; then
+    # Never interpolate the repository-controlled path into shell source. The
+    # command itself is user-controlled and may carry simple flags; it receives
+    # one path:line argument. More complex layouts belong in a wrapper script.
+    # shellcheck disable=SC2086
+    set -f
+    set -- $GRUND_OPEN_CMD
+    set +f
+    [ "$#" -gt 0 ] || { echo "grund-open: GRUND_OPEN_CMD contains no command" >&2; exit 2; }
+    exec "$@" "$target"
+elif [ -n "${EDITOR:-}" ]; then
+    # EDITOR may carry flags (e.g. "code -w" or "emacsclient -t"), so word-split
+    # it, then pass the line in the syntax the editor understands: only the
+    # vi/emacs family take "+LINE FILE"; VS Code / Sublime want "--goto
+    # FILE:LINE"; helix/micro take "FILE:LINE". Unknown editors just open FILE,
+    # and a directory target always opens bare.
+    # shellcheck disable=SC2086
+    set -- $EDITOR
+    if [ -d "$path" ]; then
+        exec "$@" "$path"
+    fi
+    case $(basename "$1") in
+        code|code-insiders|codium|vscodium|cursor|subl|sublime_text)
+            exec "$@" --goto "$path:$lineno" ;;
+        vi|vim|nvim|nano|emacs|emacsclient|kak)
+            exec "$@" "+$lineno" "$path" ;;
+        hx|micro)
+            exec "$@" "$path:$lineno" ;;
+        *)
+            exec "$@" "$path" ;;
+    esac
+else
+    # No editor named at all — often a click relayed from a GUI process whose
+    # environment never saw the user's shell profile. Fall back to the VS Code
+    # family, which is discoverable by binary name and takes --goto.
+    for fallback in code codium code-insiders; do
+        if command -v "$fallback" >/dev/null 2>&1; then
+            if [ -d "$path" ]; then
+                exec "$fallback" "$path"
+            fi
+            exec "$fallback" --goto "$path:$lineno"
+        fi
+    done
+    echo "grund-open: set GRUND_OPEN_CMD or EDITOR to open $target" >&2
+    exit 1
+fi
+
+--- end
+--- dir xdg/
+--- dir xdg/grund/
+--- file xdg/grund/config.toml
+[reference]
+conversation_target = "file"
+conversation = "plain"
+
+--- end
+--- dir xdg/wezterm/
+--- file xdg/wezterm/wezterm.lua
+-- >>> grund integrations (v1) >>>
+-- grund citation integration for WezTerm.
+-- Makes a §<ID> citation in the terminal Ctrl/Cmd-clickable: the click resolves
+-- the citation with `grund` and opens the declaration in your editor via the
+-- installed `grund-open` resolver. The location an agent prints beside a
+-- citation — plain `path:line` text — is clickable the same way, opening the
+-- editor at that line.
+--
+-- WezTerm applies hyperlink rules only from the config object you return, so add
+-- one line where you build your config:
+--
+--     local config = wezterm.config_builder()
+--     -- ... your settings ...
+--     grund_apply_hyperlink_rule(config)   -- defined below
+--     return config
+--
+-- (The open-uri handler below is global and needs no wiring.)
+--
+-- Gestures, once that line is in place:
+--
+--     ctrl-click              open the citation under the mouse
+--     ctrl+shift-click        peek at it in a split pane
+--     ctrl+shift+g            label every citation on screen, then open one
+--     ctrl+shift+i            the same, but peek
+--
+-- The two keyboard gestures exist because the mouse is the fragile path: a
+-- full-screen program that has captured the mouse can swallow a click, and
+-- there is nothing to click at all when your hands are on the keyboard.
+--
+-- One more requirement, and it is not WezTerm's fault: your shell must report
+-- its directory with OSC 7, or WezTerm has no idea where the clicked pane is
+-- and the citation cannot be resolved. Most shells do not do this by default —
+-- the usual emitter, vte.sh, skips every terminal that is not VTE. For bash:
+--
+--     __osc7() { printf '\033]7;file://%s%s\033\\' "${HOSTNAME:-localhost}" "$PWD"; }
+--     PROMPT_COMMAND="__osc7${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
+--
+-- and for zsh, the same printf in a `precmd` function. Without it, a click says
+-- so in a toast rather than doing nothing.
+local wezterm = require 'wezterm'
+
+-- The citation shape, written once and shared by the hyperlink rule and the
+-- keyboard selection below, so a click and a keypress can never disagree about
+-- what counts as a citation. Every group is non-capturing: the whole citation
+-- has to stay the $0 match, and WezTerm's quick-select hands back the first
+-- capture group when one exists.
+--
+-- The leading [^\w\s]{1,3} matches the citation marker without naming it:
+-- `[reference] marker` is per-repo while this file is user-global and installed
+-- once, so hardcoding § would leave every repo with a custom marker silently
+-- unclickable. grund-open strips whatever punctuation this sweeps in.
+grund_citation_pattern =
+  '[^\\w\\s]{1,3}(?:[a-z][a-z0-9-]*/)?[A-Z][A-Z0-9]*-[a-z0-9][a-z0-9-]*(?:\\.[0-9]+)*'
+
+-- The *location* beside a citation: the `link` conversation form prints `§<ID>
+-- path:line`, and WezTerm's default rules match URLs only, so the location half
+-- would be inert text. A final path segment with a dot-extension and a :line
+-- (optionally :col) suffix is a location; grund-open tells the two shapes apart
+-- itself — an ID's section suffix is dotted, never coloned — so both rules
+-- share one handler.
+grund_location_pattern =
+  '(?:[A-Za-z0-9_.~-]+/)*[A-Za-z0-9_.~-]+\\.[A-Za-z0-9]+:[0-9]+(?::[0-9]+)?'
+
+-- Append grund's rules to config.hyperlink_rules, seeding WezTerm's
+-- defaults first when the config carries none of its own.
+function grund_apply_hyperlink_rule(config)
+  config.hyperlink_rules = config.hyperlink_rules or wezterm.default_hyperlink_rules()
+  -- Location before citation: rules are applied in order, and the citation
+  -- matcher false-positives on ID-shaped path segments. Registered first, the
+  -- location rule claims the whole `path:line` as one correct link before that
+  -- fragment can form inside it.
+  table.insert(config.hyperlink_rules, {
+    regex = grund_location_pattern,
+    format = 'grund:$0',
+  })
+  table.insert(config.hyperlink_rules, {
+    regex = grund_citation_pattern,
+    format = 'grund:$0',
+  })
+  -- Adding the bindings here rather than in the scaffold means an existing
+  -- config that already calls this function gets them without re-wiring.
+  -- WezTerm's own defaults still apply to anything not listed here.
+  --
+  -- Each gesture is registered twice: once for a plain shell, and once with
+  -- mouse_reporting = true — WezTerm ignores user mouse bindings while the
+  -- foreground program has captured the mouse, and the very programs that
+  -- print citations (Claude Code, other agent TUIs, editors) are mouse-
+  -- capturing full-screen apps.
+  config.mouse_bindings = config.mouse_bindings or {}
+  table.insert(config.mouse_bindings, grund_open_mouse_binding(false))
+  table.insert(config.mouse_bindings, grund_open_mouse_binding(true))
+  table.insert(config.mouse_bindings, grund_peek_mouse_binding(false))
+  table.insert(config.mouse_bindings, grund_peek_mouse_binding(true))
+
+  -- The keyboard path. ctrl+shift+p would mirror kitty's peek key, but WezTerm
+  -- binds it to the command palette, so peek takes `i` for inspect; `g` is free
+  -- and matches kitty's open key.
+  config.keys = config.keys or {}
+  table.insert(config.keys, { key = 'g', mods = 'CTRL|SHIFT', action = grund_quick_select(false) })
+  table.insert(config.keys, { key = 'i', mods = 'CTRL|SHIFT', action = grund_quick_select(true) })
+end
+
+-- Label every citation on screen and act on the one you pick. This is the same
+-- resolver in the same two modes as the mouse gestures, reached without a mouse:
+-- a full-screen program that has captured the mouse can swallow a click, and
+-- keyboard work should not have to reach for the pointer to read a citation.
+--
+-- Passing an `action` suppresses quick-select's normal copy, so the clipboard is
+-- left alone; the picked text arrives as the pane's selection.
+function grund_quick_select(peek)
+  return wezterm.action.QuickSelectArgs {
+    label = peek and 'peek citation or location' or 'open citation or location',
+    patterns = { grund_location_pattern, grund_citation_pattern },
+    action = wezterm.action_callback(function(window, pane)
+      local citation = window:get_selection_text_for_pane(pane)
+      if citation and citation ~= '' then
+        grund_resolve(window, pane, peek, citation)
+      end
+    end),
+  }
+end
+
+-- Ctrl-click opens the declaration in your editor; Ctrl-Shift-click peeks at it
+-- in a split pane instead. WezTerm has no hover event and no link tooltip
+-- (wezterm/wezterm#4, open since 2018), so peek is the read-without-leaving
+-- path here.
+--
+-- Ctrl-click duplicates a WezTerm default on purpose: the default variant is
+-- inert inside a mouse-capturing TUI, and registering our own pair keeps the
+-- open gesture and the peek gesture governed by the same table.
+function grund_open_mouse_binding(mouse_reporting)
+  return {
+    event = { Up = { streak = 1, button = 'Left' } },
+    mods = 'CTRL',
+    mouse_reporting = mouse_reporting,
+    action = wezterm.action.OpenLinkAtMouseCursor,
+  }
+end
+
+-- Lua cannot ask which link is under the mouse — only the built-in
+-- OpenLinkAtMouseCursor knows that, and all it exposes is the resulting URI via
+-- open-uri. window:current_event() does not carry modifiers either. So the
+-- binding records the intent and delegates; the handler below reads it back.
+-- This is safe because both run in one synchronous event, not across ticks.
+grund_peek_requested = false
+
+function grund_peek_mouse_binding(mouse_reporting)
+  return {
+    event = { Up = { streak = 1, button = 'Left' } },
+    mods = 'CTRL|SHIFT',
+    mouse_reporting = mouse_reporting,
+    action = wezterm.action_callback(function(window, pane)
+      grund_peek_requested = true
+      window:perform_action(wezterm.action.OpenLinkAtMouseCursor, pane)
+      -- Cleared here too: a Ctrl-Shift-click on non-link text never reaches
+      -- open-uri, and a stale flag would turn the next plain click into a peek.
+      grund_peek_requested = false
+    end),
+  }
+end
+
+-- grund-open finds the repository by walking up from its working directory, and
+-- the WezTerm GUI process's own cwd is wherever the desktop launched it — so
+-- every spawn below must run in the *clicked pane's* directory instead.
+--
+-- There is no single way to ask WezTerm for it. Newer builds answer
+-- `get_current_working_directory` with a Url object; older ones spell it
+-- `get_current_working_dir` and answer with a "file://host/path" string. Both
+-- are empty unless the shell emits OSC 7, which no shell does by default here:
+-- the usual emitter, the distributions' vte.sh, returns early for any terminal
+-- that is not VTE. And calling a method the running build does not export is a
+-- Lua *error*, not a nil — it aborts this handler before anything is spawned,
+-- which looks exactly like a broken install.
+--
+-- So each lookup is guarded and tried in turn, falling back to the foreground
+-- process's own cwd, which needs no cooperation from the shell. That fallback is
+-- skipped under Flatpak: there the pane's program is spawned on the *host*
+-- through flatpak-spawn, so the process WezTerm can see is the sandbox-side
+-- helper, and its cwd is a real directory that is simply not the shell's — a
+-- wrong answer, which is worse than none. OSC 7 crosses that boundary; nothing
+-- else does.
+function grund_pane_cwd(pane)
+  if not pane then
+    return nil
+  end
+
+  local function path_of(cwd)
+    if not cwd then
+      return nil
+    end
+    if type(cwd) == 'string' then
+      local path = cwd:gsub('^file://[^/]*', '')
+      if path ~= '' then
+        return path
+      end
+      return nil
+    end
+    -- A Url object; older builds hand back something without a file_path.
+    local ok, file_path = pcall(function()
+      return cwd.file_path
+    end)
+    if ok and file_path ~= '' then
+      return file_path
+    end
+    return nil
+  end
+
+  -- Indexing an absent field can itself raise, so even the lookup is guarded.
+  local function method(name)
+    local ok, fn = pcall(function()
+      return pane[name]
+    end)
+    if ok and type(fn) == 'function' then
+      return fn
+    end
+    return nil
+  end
+
+  for _, name in ipairs { 'get_current_working_directory', 'get_current_working_dir' } do
+    local getter = method(name)
+    if getter then
+      local ok, cwd = pcall(getter, pane)
+      local path = ok and path_of(cwd) or nil
+      if path then
+        return path
+      end
+    end
+  end
+
+  if not os.getenv 'FLATPAK_ID' then
+    local process_info = method 'get_foreground_process_info'
+    if process_info then
+      local ok, info = pcall(process_info, pane)
+      if ok and info and info.cwd and info.cwd ~= '' then
+        return info.cwd
+      end
+    end
+  end
+
+  return nil
+end
+
+-- Build the argv that runs the resolver. It goes through `sh` so the pane's
+-- directory and the citation travel as arguments — never spliced into shell
+-- source — and so ~/.local/bin (where --write installs grund-open) and
+-- ~/.cargo/bin (where `cargo install grund` lands) are on PATH even when
+-- WezTerm was launched from a desktop entry whose environment has neither.
+--
+-- A Flatpak-packaged WezTerm adds one more indirection: the sandbox's PATH is
+-- /app/bin:/usr/bin, so neither grund-open nor grund exists inside it. Its
+-- session-bus talk permission includes org.freedesktop.Flatpak, so the spawn
+-- is handed back to the host through flatpak-spawn --host instead.
+--
+-- But only when *we* are the one spawning, from inside the sandbox. A pane
+-- command is spawned by WezTerm itself, and the Flatpak build already sends
+-- those to the host — it is how your shell gets started, via
+-- `flatpak-spawn --host --watch-bus --directory=...`. Wrapping such an argv a
+-- second time runs flatpak-spawn on the host, where it has no portal to talk
+-- to: it exits 127 with no output, the split pane closes before anything is
+-- drawn, and a peek reads as a flicker. Hence from_sandbox.
+function grund_resolver_argv(cwd, peek, citation, from_sandbox)
+  local resolver = peek and 'grund-open --peek' or 'grund-open'
+  local argv = {
+    'sh',
+    '-c',
+    'PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"; cd "$1" && exec ' .. resolver .. ' "$2"',
+    'grund-open',
+    cwd or '.',
+    citation,
+  }
+  if from_sandbox and os.getenv 'FLATPAK_ID' then
+    local wrapped = { 'flatpak-spawn', '--host' }
+    for _, arg in ipairs(argv) do
+      wrapped[#wrapped + 1] = arg
+    end
+    return wrapped
+  end
+  return argv
+end
+
+-- Hand one citation to grund-open, in whichever mode was asked for. Every
+-- gesture — click, ctrl+shift-click, and both keyboard pickers — ends here, so
+-- there is exactly one place where a citation becomes a resolver invocation and
+-- the paths cannot drift apart.
+function grund_resolve(window, pane, peek, citation)
+  local cwd = grund_pane_cwd(pane)
+  -- Say so rather than resolving from an arbitrary directory and failing into a
+  -- stderr nobody reads: with no cwd the climb starts wherever this process
+  -- happens to stand, and the gesture does nothing for no stated reason.
+  if not cwd then
+    local why = 'grund: this pane reports no working directory, so '
+      .. citation
+      .. ' cannot be resolved. Have your shell emit OSC 7 (WezTerm shell integration).'
+    wezterm.log_error(why)
+    pcall(function()
+      window:toast_notification('grund', why, nil, 6000)
+    end)
+  end
+  if peek then
+    -- WezTerm spawns this one, the same way it spawns your shell.
+    window:perform_action(
+      wezterm.action.SplitPane {
+        direction = 'Right',
+        size = { Percent = 45 },
+        command = { args = grund_resolver_argv(cwd, true, citation, false) },
+      },
+      pane
+    )
+  else
+    -- This one we spawn ourselves, from wherever WezTerm is running.
+    wezterm.background_child_process(grund_resolver_argv(cwd, false, citation, true))
+  end
+end
+
+-- Resolve a grund: URI, which is what a click arrives as.
+wezterm.on('open-uri', function(window, pane, uri)
+  local citation = uri:match '^grund:(.+)$'
+  if citation then
+    local peek = grund_peek_requested
+    grund_peek_requested = false
+    grund_resolve(window, pane, peek, citation)
+    return false -- handled; don't let WezTerm open it as a normal URL
+  end
+end)
+-- <<< grund integrations (v1) <<<
+
+local wezterm = require 'wezterm'
+local config = wezterm.config_builder()
+return config
+
+--- end

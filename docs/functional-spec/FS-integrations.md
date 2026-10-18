@@ -57,6 +57,27 @@ grund integrations [<client>] [--write] [--conversation plain|link] [--conversat
 
 The argument parsing above and every byte below belong to the CLI, like every other subcommand's ([§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed)): the engine answers with data — which clients the environment detects ([§FS-integrations.2](FS-integrations.md#2-detection)), each client's artifact ([§FS-integrations.3](FS-integrations.md#3-per-client-artifacts)), and what a `--write` would change or has changed ([§FS-integrations.4](FS-integrations.md#4-managed-writes---write)) — and renders none of it, so the text form and the JSON plan of [§FS-integrations.5](FS-integrations.md#5-json-format) are one frontend's two spellings of one answer ([§FS-distribution.3.1](FS-distribution.md#31-rust-grund-core-crate)). Nothing a user sees turns on this: the bytes, the frozen client set, the idempotence of `--write` and the exit codes of [§FS-integrations.6](FS-integrations.md#6-determinism-and-exit-codes) are the command's, wherever they are assembled.
 
+The CLI's text and its `--format json` plan both render the engine's `integrations` answer of [§FS-integrations.1.3.1](FS-integrations.md#131-the-engines-answer), and so do the Python and Node `integrations` operations ([§FS-distribution.3.3.6](FS-distribution.md#336-explicit-mutation-opt-ins)): nothing a `--write` changes is planned, spliced or written outside it, so the CLI keeps only its argument parsing, its messages and the command line it prints.
+
+#### 1.3.1 The engine's answer
+
+`integrations(IntegrationsOpts)` is the one engine operation behind every form of the command ([§FS-distribution.3.1.3](FS-distribution.md#313-integrations-is-the-one-integrations-entry-point)). `IntegrationsOpts` is built from `Default` and carries `client: Option<IntegrationClient>`, `write: bool`, `conversation: Option<ConversationRendering>`, `conversation_target: Option<ConversationTarget>` and `agent: Option<IntegrationAgent>`, the command's arguments in their closed vocabularies. It refuses a combination [§FS-integrations.6.2](FS-integrations.md#62-exit-codes) refuses before it reads anything, reads the preference file before any client artifact is written, and plans every guidance target before it writes the first of them, so a run fails at the point and with the partial writes of [§FS-integrations.4.3.14](FS-integrations.md#4314-delimiters-and-failures).
+
+#### 1.3.2 The output
+
+`IntegrationsOutput` holds only facts, never a line of output:
+
+- `detected`, the clients the environment shows ([§FS-integrations.2](FS-integrations.md#2-detection));
+- `clients`, one `IntegrationClientStatus` per client: its client, its `InstallKind`, whether it is detected, whether its artifacts are installed and current, and its config target. It carries no install command: `grund integrations <client> --write` is the CLI's own argv, which the CLI builds from the client's `name` and which the JSON projection keeps under its `install` key;
+- `artifact`, an `IntegrationArtifact` for a named client: its snippet, and the resolver, `package.json` and `extension.js` as content with the resolver's target ([§FS-integrations.3](FS-integrations.md#3-per-client-artifacts));
+- `events`, one `IntegrationEvent` per target a `--write` touched, in the order it touched them: its path, an `IntegrationOutcome` (`Wrote`, `Appended`, `Updated`, `Unchanged` or `Skipped`, whose `name` gives the verbs of [§FS-integrations.4.1.6](FS-integrations.md#416-outcome-verbs), `exists` for `Unchanged`), and an optional `IntegrationNote`: the WezTerm config's missing apply call ([§FS-integrations.4.1.3](FS-integrations.md#413-the-unwired-config-note)), the guidance form an agent's block was written in with its requested target and whether an agent override chose it ([§FS-integrations.4.4.4](FS-integrations.md#444-both-layers-in-the-report)), or the agent home whose absence skipped it ([§FS-integrations.4.3.9](FS-integrations.md#439-only-agents-in-use));
+- `manual_steps`, one `IntegrationManualStep` per client the user must set up by hand, naming the client and its snippet ([§FS-integrations.3.4.2](FS-integrations.md#342---write-on-a-manual-client));
+- `warnings`, the user configuration's cautions as `Finding`s with path and line ([§FS-integrations.4.3.5](FS-integrations.md#435-nothing-in-the-file-is-an-error)).
+
+#### 1.3.3 The refusal
+
+`IntegrationsError` implements `std::error::Error` and carries the events written before it, so a run that fails partway still says what it changed, and one `IntegrationsFailure`: the option combination it refused, or the path and the filesystem's message ([§FS-integrations.6.2](FS-integrations.md#62-exit-codes)). The CLI renders it as its `error:` line and exit `2`, after the lines for what was written.
+
 ### 1.4 Unknown client
 
 An unknown client is a CLI-level error: `error: unknown integration client \`<client>\`` plus `known clients: codium, iterm2, kitty, tmux, vscode, wezterm` on stderr, empty stdout, exit `2`. The client set is closed and frozen the same way the subcommand surface is ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)), so adding a client is a deliberate, changelog-gated change.

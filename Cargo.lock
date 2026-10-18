@@ -718,6 +718,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "grund-rust-api-example"
+version = "0.18.1-dev"
+dependencies = [
+ "grund-core",
+]
+
+[[package]]
 name = "hash32"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

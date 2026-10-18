@@ -1,0 +1,15 @@
+# An embedder of grund-core outside the crate, so it sees only what an embedder
+# sees: the runnable example of the `integrations` entry point
+# (FS-distribution.3.1.3), and the test that its answer installs what
+# `grund integrations <client> --write` installs.
+[package]
+name = "grund-rust-api-example"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+description = "A grund-core embedder: install a rendering-layer integration through `integrations`."
+
+[dependencies]
+grund-core = { path = "../../crates/grund-core" }

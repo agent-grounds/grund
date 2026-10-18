@@ -1,0 +1,76 @@
+$ grund integrations --write --conversation link --conversation-target file
+exit: 0
+--- stdout
+--- stderr
+appended <sandbox>/xdg/grund/config.toml
+appended <sandbox>/home/.codex/AGENTS.md (link → path; file unverified here)
+appended <sandbox>/home/.claude/CLAUDE.md (link → file)
+appended <sandbox>/home/.gemini/GEMINI.md (link → path; file unverified here)
+appended <sandbox>/home/.copilot/copilot-instructions.md (link → path; file unverified here)
+appended <sandbox>/xdg/zed/AGENTS.md (link → path; file unverified here)
+appended <sandbox>/home/.pi/agent/AGENTS.md (link → file)
+=== tree
+--- dir home/
+--- dir home/.claude/
+--- file home/.claude/CLAUDE.md
+<!-- >>> grund integrations citation rendering (v4) >>> -->
+## Grund citation rendering
+
+In repositories with a `grund.toml` (at the root or under `.agents/`): in local conversations render each citation as a Markdown link whose visible text is the citation itself and whose target is `file://<absolute path>#L<line>` for the declaration; fall back to the bare citation when unsure. Elsewhere, ignore this.
+<!-- <<< grund integrations citation rendering (v4) <<< -->
+
+--- end
+--- dir home/.codex/
+--- file home/.codex/AGENTS.md
+<!-- >>> grund integrations citation rendering (v4) >>> -->
+## Grund citation rendering
+
+In repositories with a `grund.toml` (at the root or under `.agents/`): follow each citation with its declaration location as plain `path:line` text in local conversations; fall back to the bare citation when unsure. Elsewhere, ignore this.
+<!-- <<< grund integrations citation rendering (v4) <<< -->
+
+--- end
+--- dir home/.copilot/
+--- file home/.copilot/copilot-instructions.md
+<!-- >>> grund integrations citation rendering (v4) >>> -->
+## Grund citation rendering
+
+In repositories with a `grund.toml` (at the root or under `.agents/`): follow each citation with its declaration location as plain `path:line` text in local conversations; fall back to the bare citation when unsure. Elsewhere, ignore this.
+<!-- <<< grund integrations citation rendering (v4) <<< -->
+
+--- end
+--- dir home/.gemini/
+--- file home/.gemini/GEMINI.md
+<!-- >>> grund integrations citation rendering (v4) >>> -->
+## Grund citation rendering
+
+In repositories with a `grund.toml` (at the root or under `.agents/`): follow each citation with its declaration location as plain `path:line` text in local conversations; fall back to the bare citation when unsure. Elsewhere, ignore this.
+<!-- <<< grund integrations citation rendering (v4) <<< -->
+
+--- end
+--- dir home/.pi/
+--- dir home/.pi/agent/
+--- file home/.pi/agent/AGENTS.md
+<!-- >>> grund integrations citation rendering (v4) >>> -->
+## Grund citation rendering
+
+In repositories with a `grund.toml` (at the root or under `.agents/`): in local conversations render each citation as a Markdown link whose visible text is the citation itself and whose target is `file://<absolute path>#L<line>` for the declaration; fall back to the bare citation when unsure. Elsewhere, ignore this.
+<!-- <<< grund integrations citation rendering (v4) <<< -->
+
+--- end
+--- dir xdg/
+--- dir xdg/grund/
+--- file xdg/grund/config.toml
+[reference]
+conversation_target = "file"
+conversation = "link"
+
+--- end
+--- dir xdg/zed/
+--- file xdg/zed/AGENTS.md
+<!-- >>> grund integrations citation rendering (v4) >>> -->
+## Grund citation rendering
+
+In repositories with a `grund.toml` (at the root or under `.agents/`): follow each citation with its declaration location as plain `path:line` text in local conversations; fall back to the bare citation when unsure. Elsewhere, ignore this.
+<!-- <<< grund integrations citation rendering (v4) <<< -->
+
+--- end

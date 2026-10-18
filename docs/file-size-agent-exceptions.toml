@@ -225,10 +225,10 @@ path = "docs/functional-spec/FS-distribution.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 848, unit = "lines" }
+max_accepted = { value = 855, unit = "lines" }
 until = "the release-process chapter has a dedicated specification and its published 4.* addresses retain forwarding points"
 reason = """
-The release-process chapter (4) is a separate subject from package and binding behavior, but its published 4.* addresses are cited by workflows, guards and tests. The missing boundary is a release-process specification with retained forwarding points for those addresses. This specification-only transition extends the existing release guard at 4.2.2 and 4.2.5 and defines its shared floor before implementation; extracting the entire publication contract here would expand the approved transition. Defer that extraction while keeping all published addresses in place. Main reached 848 non-blank lines before issue #503 touched it. #503 adds a `globs` option and a nullable `note` to the existing binding rows of §FS-distribution.3.2.1, §FS-distribution.3.2.2.2 and §FS-distribution.3.3.5 by rewriting those lines in place, and states the binding contract itself in §FS-coordinate-globs.bindings, so the file adds no line; the ceiling moves to that measured 848 and permits no growth.
+The release-process chapter (4) is a separate subject from package and binding behavior, but its published 4.* addresses are cited by workflows, guards and tests. The missing boundary is a release-process specification with retained forwarding points for those addresses. This specification-only transition extends the existing release guard at 4.2.2 and 4.2.5 and defines its shared floor before implementation; extracting the entire publication contract here would expand the approved transition. Defer that extraction while keeping all published addresses in place. Main reached 848 non-blank lines before issue #503 touched it, and #503 rewrote the binding rows of §FS-distribution.3.2.1, §FS-distribution.3.2.2.2 and §FS-distribution.3.3.5 in place, so it added no line. At 848, agent-grounds/grund#466 named the Rust 1.0 promise; that change moves the Python adapter paragraphs from 3.1 to 3.3 and specifies the facade's records in FS-integrations, keeping 3.1.2 and 3.1.3 to the promise and the entry point that the 1.0 audit (#467) reads here, and the ceiling rises 848 -> 855 to accept the measured size.
 """
 [[exceptions]]
 path = "docs/architecture/AR-ci.md"
