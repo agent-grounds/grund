@@ -40,10 +40,13 @@ pub fn check_coordinate_globs(patterns: &[String]) -> Result<()> {
 }
 
 /// Whether a scan path a frontend could not find was more likely a coordinate glob:
-/// it holds an operator and is a valid pattern (§FS-coordinate-globs.errors.hint).
+/// it holds an operator and is a valid pattern (§FS-coordinate-globs.errors.hint). No
+/// config was read for a path that does not exist, so it is read under the default
+/// separator, `.` (§FS-config.3.2.2).
 #[doc(hidden)]
 pub fn reads_as_coordinate_glob(text: &str) -> bool {
-    text.chars().any(|ch| GlobOperator::of(ch).is_some()) && CoordinateGlob::parse(text).is_ok()
+    text.chars().any(|ch| GlobOperator::of(ch).is_some())
+        && CoordinateGlob::parse(text).is_ok_and(|glob| glob.check_separator(".").is_ok())
 }
 
 /// The patterns a run was given, each compiled for every project it reads.

@@ -10,6 +10,7 @@ use std::fmt;
 
 use super::coordinate_glob_tokens::Tokenizer;
 use super::glob_candidate::GlobOperator;
+use super::id_rules::section_separator_slash_error;
 
 /// Which loaded projects a pattern reads (§FS-coordinate-globs.scope).
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -173,12 +174,15 @@ impl CoordinateGlob {
     }
 
     /// Whether the body holds a character a project could take as its outer
-    /// separator — an unescaped literal outside a class that is not alphanumeric,
-    /// `-` or `_` — so a `.`-separated reading of it may not be the project's.
+    /// separator, so a `.`-separated reading of it may not be the project's: an
+    /// unescaped literal outside a class that the loader admits in a
+    /// `section_separator`. Before it knows the format and the patterns, the loader
+    /// refuses only `/` there (§FS-config.3.2.2): `_`, `-` and a letter each load
+    /// under some config.
     fn may_split_elsewhere(&self) -> bool {
         self.tokens.iter().any(|spanned| {
             matches!(spanned.token, Token::Literal { ch, escaped: false }
-                if !(ch.is_alphanumeric() || ch == '-' || ch == '_'))
+                if section_separator_slash_error(ch.encode_utf8(&mut [0; 4])).is_none())
         })
     }
 
