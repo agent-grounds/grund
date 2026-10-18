@@ -282,8 +282,6 @@ class PythonGateOutputTests(SuiteShape, unittest.TestCase):
         self.assert_quiet([line for line in lines if not TABLE_ROW.match(line)])
         self.assert_shape(lines, PASSING + 1, failed=0, ignored=1)  # a skip counts as ignored
 
-    # red until #776 passes a green test's build lines on; implement removes this
-    @unittest.expectedFailure
     def test_a_green_gate_shows_each_build_line_its_tests_wrote_and_nothing_else(self):
         # §AR-ci.requirements.5.1 keeps the build lines of §AR-ci.3.4.1.1 a green test wrote.
         result = self.run_gate(self.tree(building=True))
