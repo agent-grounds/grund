@@ -150,8 +150,6 @@ class FailureIssueKindTests(RecordingGh, unittest.TestCase):
         return self.run_against_forge(SCRIPT_PATH, answers, GITHUB_RUN_ID="202",
                                       GITHUB_REPOSITORY="agent-grounds/grund", GITHUB_SHA="a" * 40)
 
-    # Red until #814 gives the issue its kind label; the change that does removes this marker.
-    @unittest.expectedFailure
     def test_the_failure_issue_is_opened_with_the_kind_label_bug(self):
         calls = self.report([{"number": 3, "body": "<!-- ci-duration-drift -->\nslow"}])
         creates = calls_of(calls, "issue", "create")
@@ -160,8 +158,6 @@ class FailureIssueKindTests(RecordingGh, unittest.TestCase):
         self.assertIn("bug", labels(creates[0], "--label", "-l"),
                       f"the macOS failure issue is opened without its kind label: {creates[0]}")
 
-    # Red until #814 gives the issue its kind label; the change that does removes this marker.
-    @unittest.expectedFailure
     def test_an_edit_of_the_failure_issue_adds_the_kind_label_bug_again(self):
         calls = self.report([{"number": 3, "body": "<!-- ci-duration-drift -->\nslow"},
                              {"number": 9, "body": f"{MARKER}\nold"}])

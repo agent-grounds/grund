@@ -248,8 +248,6 @@ class DriftIssueKindTests(RecordingGh, unittest.TestCase):
         return self.run_against_forge(SCRIPT_PATH, answers, str(config),
                                       GITHUB_REPOSITORY="agent-grounds/grund")
 
-    # Red until #814 gives the issue its kind label; the change that does removes this marker.
-    @unittest.expectedFailure
     def test_the_drift_issue_is_opened_with_the_kind_label_tokens(self) -> None:
         calls = self.drift([{"number": 12, "body": "unrelated"}])
         creates = calls_of(calls, "issue", "create")
@@ -258,8 +256,6 @@ class DriftIssueKindTests(RecordingGh, unittest.TestCase):
         self.assertIn("tokens", labels(creates[0], "--label", "-l"),
                       f"the drift issue is opened without its kind label: {creates[0]}")
 
-    # Red until #814 gives the issue its kind label; the change that does removes this marker.
-    @unittest.expectedFailure
     def test_an_edit_of_the_drift_issue_adds_the_kind_label_tokens_again(self) -> None:
         calls = self.drift([{"number": 12, "body": "unrelated"}, {"number": 31, "body": f"{MARKER}\nold"}])
         edits = calls_of(calls, "issue", "edit")
