@@ -1,0 +1,67 @@
+$ grund integrations kitty --write
+exit: 2
+--- stdout
+--- stderr
+appended <sandbox>/xdg/kitty/kitty.conf
+error: <sandbox>/home/.local/bin: File exists (os error 17)
+=== tree
+--- dir home/
+--- dir home/.claude/
+--- dir home/.codex/
+--- dir home/.copilot/
+--- dir home/.gemini/
+--- dir home/.local/
+--- file home/.local/bin
+not a directory
+
+--- end
+--- dir home/.pi/
+--- dir xdg/
+--- dir xdg/kitty/
+--- file xdg/kitty/kitty.conf
+# >>> grund integrations (v1) >>>
+# grund citation integration for kitty.
+# kitty does not make arbitrary text clickable, so this binds keys that run the
+# "hints" kitten over the visible screen, match §<ID> citations, and hand the one
+# you pick to the installed `grund-open` resolver.
+# Paste into kitty.conf, or let `grund integrations kitty --write` manage it.
+#
+# Press ctrl+shift+p, then g to *go* to a citation, or i to *inspect* it.
+# ctrl+shift+p is kitty's own hints prefix — p>f for a path, p>l for a line,
+# p>y for a hyperlink — and a citation is one more thing to pick off the screen,
+# so grund joins that family instead of taking a key of its own. It has to: a
+# plain `map ctrl+shift+p` is a terminal binding on a prefix, which discards
+# every sequence mapped under it, and ctrl+shift+g is show_last_command_output.
+# g and i are the letters the WezTerm integration uses for the same two gestures.
+#
+# Every group is non-capturing: kitty's hints kitten passes the first capture
+# group when one is present, so a capturing group here would hand grund-open a
+# fragment — the `.<section>`, or the alias — instead of the whole citation.
+#
+# The regex is two alternatives sharing one resolver. The first is the
+# *location* an agent prints beside a citation — `path:line[:col]` with a
+# dot-extension — listed first so the whole path is one pick rather than an
+# ID-shaped fragment inside it. The second is the citation:
+# its leading `[^\w\s]{1,3}` matches the marker without naming it, because
+# `[reference] marker` is per-repo while this file is user-global and installed
+# once — hardcoding § would leave every repo with a custom marker silently
+# unclickable. grund-open strips whatever punctuation this sweeps in and tells
+# the two shapes apart itself (an ID's section suffix is dotted, never coloned).
+#
+# Both gestures spawn the resolver through `sh` with ~/.local/bin and
+# ~/.cargo/bin — the homes of `grund-open` and `grund` — prepended to PATH: a
+# kitty started from a desktop launcher never sourced your shell profile, and
+# without them the citation is inert with the reason in a log nobody opens.
+# kitty supplies the clicked window's directory to both spawns itself, so the
+# resolver needs no `cd` to climb from wherever your shell is.
+map ctrl+shift+p>g kitten hints --type regex --regex '(?:[A-Za-z0-9_.~-]+/)*[A-Za-z0-9_.~-]+\.[A-Za-z0-9]+:[0-9]+(?::[0-9]+)?|[^\w\s]{1,3}(?:[a-z][a-z0-9-]*/)?[A-Z][A-Z0-9]*-[a-z0-9][a-z0-9-]*(?:\.[0-9]+)*' --program 'sh -c "PATH=\"$HOME/.local/bin:$HOME/.cargo/bin:$PATH\"; exec grund-open \"$1\"" grund-open'
+
+# ctrl+shift+p then i *peeks* instead: the declaration — or, for a location,
+# the file from that line — opens in an overlay window over this one, and
+# closes when you quit the pager. kitty has no hover, so this is the
+# read-without-leaving path.
+map ctrl+shift+p>i kitten hints --type regex --regex '(?:[A-Za-z0-9_.~-]+/)*[A-Za-z0-9_.~-]+\.[A-Za-z0-9]+:[0-9]+(?::[0-9]+)?|[^\w\s]{1,3}(?:[a-z][a-z0-9-]*/)?[A-Z][A-Z0-9]*-[a-z0-9][a-z0-9-]*(?:\.[0-9]+)*' --program 'launch --type=overlay sh -c "PATH=\"$HOME/.local/bin:$HOME/.cargo/bin:$PATH\"; exec grund-open --peek \"$1\"" grund-open'
+# <<< grund integrations (v1) <<<
+
+--- end
+--- dir xdg/zed/

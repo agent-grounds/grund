@@ -11,6 +11,10 @@
 #[path = "binaries.rs"]
 mod binaries;
 
+// §FS-integrations.1.3: the `--write` bytes, pinned beside the sandbox they share.
+#[path = "integrations_write_goldens.rs"]
+mod write_goldens;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;

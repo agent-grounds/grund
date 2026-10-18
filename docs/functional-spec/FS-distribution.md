@@ -264,33 +264,28 @@ workspace root/member modes, Unicode and formatter/init refusal fixtures. Fixtur
 
 ### 3.1 Rust (`grund-core` crate)
 
-The Python frontend may require additive warning-preserving, structured-failure,
-workspace-path-preflight and managed-integration adapters. They belong in core and
-preserve supported Rust entry points and existing CLI defaults, verdicts and bytes.
-Classification originates where the failure occurs; frontends do not parse Display
-messages for diagnostic fields. The public Python schema does not freeze the internal
-Config or Findings layout. Carry “Adapt Python marshalling to #466/#453/#454” when
-Python precedes that transition: replace internal adapters and rerun parity while
-preserving the approved Python schema.
-
 ```rust
 let report = grund_core::check(&path)?;
 let body = grund_core::show("FS-check", ShowOpts::default())?;
 ```
 
-`Report` and the underlying `Catalog` are exposed as plain data structures so callers can iterate, filter, or render their own output. The effective configuration is exposed the same way, as a `Project` whose `schema`, `rules` and `presentation` hold one concern each ([§FS-config.concerns](FS-config.md#concerns-every-key-belongs-to-exactly-one-concern)). The former root names `Findings`, `Config`, `KindConfig` and `CitationRules` stay as deprecated aliases from `0.17.0` and are removed in `0.19.0` ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)). Every function on this surface returns data and writes to no stream, which is what lets one answer be rendered by a terminal, an editor and an embedder alike — the report's warning channel included, so a caution settled before any report exists still reaches a caller as a warning rather than as a line on its stderr ([§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread), [§FS-workspace.6.1.7.6](FS-workspace.md#6176-how-the-undecidable-claim-warning-travels)). Process callers use the `grund` CLI package; embedders call the data-returning `check`, `show`, `scan`, and related APIs ([§FS-distribution.3.1.1](FS-distribution.md#311-main_entry-is-absent-from-the-embedding-api)).
-
-Additive `ApiOutcome<T>` and source-classified `ApiFailure` carriers retain
-earlier run cautions on both success and failure. Typed batch records, schema
-config values and integration-install orchestration reuse current engine
-loaders, queries and write policies. All supported Rust signatures and existing
-Display/CLI bytes remain unchanged. Classification occurs at the producing
-source, never by parsing rendered messages; unexpected recoverable failures
-retain an operation class and cause chain. No Node dependency enters the core.
+`Report` and the underlying `Catalog` are exposed as plain data structures so callers can iterate, filter, or render their own output. The effective configuration is reachable through `effective_project`, as a `Project` whose `schema`, `rules` and `presentation` hold one concern each ([§FS-config.concerns](FS-config.md#concerns-every-key-belongs-to-exactly-one-concern)), but `Project` is `#[doc(hidden)]` and outside the promise of [§FS-distribution.3.1.2](FS-distribution.md#312-what-10-freezes), because its records still move ([§FS-schema.13](FS-schema.md#13-what-is-absent)). The former root names `Findings`, `Config`, `KindConfig` and `CitationRules` were deprecated aliases from `0.17.0` and were removed in `0.19.0` ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)): `Catalog` replaces `Findings`, and the configuration aliases have no promised replacement. Every function on this surface returns data and writes to no stream, which is what lets one answer be rendered by a terminal, an editor and an embedder alike — the report's warning channel included, so a caution settled before any report exists still reaches a caller as a warning rather than as a line on its stderr ([§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread), [§FS-workspace.6.1.7.6](FS-workspace.md#6176-how-the-undecidable-claim-warning-travels)). Process callers use the `grund` CLI package; embedders call the data-returning entry points [§FS-distribution.3.1.2](FS-distribution.md#312-what-10-freezes) names ([§FS-distribution.3.1.1](FS-distribution.md#311-main_entry-is-absent-from-the-embedding-api)).
 
 #### 3.1.1 `main_entry()` is absent from the embedding API
 
 `grund_core::main_entry()` is not exported in 0.15.0 or later. It was a process entry point — it parsed argv, printed, and returned an exit code — kept for `grund-core = "0.4"` consumers until 0.14.0 shipped a deprecation note naming its removal in 0.15.0, the sequence [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) requires. A former caller uses `check`, `show`, `scan`, or another data-returning engine API when embedding grund, and invokes the `grund` CLI package when it needs a process entry point. Removing the engine adapter changes none of the shipped CLI's commands, flags, rendered bytes, or exit decisions, and changes no LSP behavior.
+
+#### 3.1.2 What 1.0 freezes
+
+`grund-core` 1.0 freezes exactly the root names this point reaches: the entry points `check`, `check_with_opts`, `scan`, `show`, `list`, `list_sizes`, `refs`, `refs_outcome`, `cover`, `cover_text`, `cover_lines`, `format_references`, `propose_id`, `complete_ids`, `init`, `fetch_snapshot` and `integrations` ([§FS-distribution.3.1.3](FS-distribution.md#313-integrations-is-the-one-integrations-entry-point)), the typed refusals `ShowQueryError` and `FmtScanAbort`, and every root type their signatures reach, transitively. That is 112 names, and the rows whose disposition is `frozen at 1.0` in the [public-surface inventory](../discussions/proposals/2026-09-22-grund-core-public-surface-inventory.md) are the full list. An entry point with no typed refusal returns `anyhow::Result`.
+
+Every other root name is `#[doc(hidden)]` and outside the promise, and so are the `test-*` Cargo features and what they export. Hiding retires nothing and changes no type: a hidden name still links and still works. Frozen means what Cargo reads into a `1.0.0`: a `1.x` release may add a name, a field or a variant and may deprecate a name, and only `2.0` removes or retypes one ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)).
+
+An option record is built from `Default` with its fields assigned; an output record or a refusal is read, never built. That is what lets `1.x` add a field or a variant, so the crate documentation says that building a promised record with a struct literal, or matching a promised enum without a wildcard arm, becomes an error in `0.21.0`, the release that marks them `#[non_exhaustive]`.
+
+#### 3.1.3 `integrations` is the one integrations entry point
+
+`integrations(opts: IntegrationsOpts) -> Result<IntegrationsOutput, IntegrationsError>` answers what `grund integrations` answers, as data; its options, output and refusal are [§FS-integrations.1.3.1](FS-integrations.md#131-the-engines-answer)'s. The closed vocabularies it is spelled in keep exactly these methods: `IntegrationClient` keeps `ALL`, `name` and `from_name`; `InstallKind` keeps `name`; `ConversationRendering` keeps `name` and `from_name`; `ConversationTarget` keeps `name` and `from_name`, and its `ALL` becomes public, which is an addition; and the new `IntegrationAgent`, the six agents of [§FS-integrations.4.3.8](FS-integrations.md#438-the-global-instruction-files), has `ALL`, `name` and `from_name`. The 30 root names the CLI assembled `--write` from before `0.19.0`, and the 9 other methods of those vocabularies, are deprecated in `0.19.0` with a note saying each is removed in `0.21.0` ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)).
 
 ### 3.2 Node (`grund-cli` npm package)
 
@@ -758,6 +753,24 @@ Packaging consumes the binding's stable-ABI choice ([§FS-distribution.3.3.7](FS
 `cp310-abi3` wheel per registry row carries the extension and the `grund` executable, is
 proved on CPython 3.10 through 3.14 ([§FS-distribution-candidate.1.2](FS-distribution-candidate.md#12-every-registry-row-proves-every-runtime-it-promises)), and an sdist that
 builds both is the explicit fallback ([§FS-distribution-candidate.4.2](FS-distribution-candidate.md#42-python-builds-from-the-sdist-only-when-asked)).
+
+The Python frontend may require additive warning-preserving, structured-failure,
+workspace-path-preflight and managed-integration adapters. They belong in core and
+preserve supported Rust entry points and existing CLI defaults, verdicts and bytes.
+Classification originates where the failure occurs; frontends do not parse Display
+messages for diagnostic fields. The public Python schema does not freeze the hidden
+Rust records it is built from. Carry “Adapt Python marshalling to #466/#453/#454” when
+Python precedes that transition: replace internal adapters and rerun parity while
+preserving the approved Python schema.
+
+The additive `ApiOutcome<T>` and source-classified `ApiFailure` carriers, which
+are `#[doc(hidden)]` and outside [§FS-distribution.3.1.2](FS-distribution.md#312-what-10-freezes), retain
+earlier run cautions on both success and failure. Typed batch records, schema
+config values and integration-install orchestration reuse current engine
+loaders, queries and write policies. All supported Rust signatures and existing
+Display/CLI bytes remain unchanged. Classification occurs at the producing
+source, never by parsing rendered messages; unexpected recoverable failures
+retain an operation class and cause chain. No Node dependency enters the core.
 
 The following is the required local contract; registry availability remains pending.
 

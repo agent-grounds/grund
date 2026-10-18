@@ -377,5 +377,56 @@ class ThisRepositoryTests(unittest.TestCase):
         self.assertEqual(ramps.release_window(self.claims), ("0.19.0", "0.19.0"))
 
 
+
+class IntegrationsTransitionRampTests(unittest.TestCase):
+    """§FS-distribution.3.1.2 and §FS-distribution.3.1.3 — the lines the
+    integrations transition writes, read by the guard and judged on their own:
+    the whole tree's verdict for 0.19.0 belongs to every other ramp it carries."""
+
+    LIB_RS = "crates/grund-core/src/lib.rs"
+    ALIASES = ("Findings", "Config", "KindConfig", "CitationRules")
+    LEAVING = 30 + 9  # the root names and the methods noticed in 0.19.0
+
+    @classmethod
+    def setUpClass(cls):
+        cls.claims = ramps.scan_tree(REPO_ROOT)
+        cls.lib_lines = (REPO_ROOT / cls.LIB_RS).read_text(encoding="utf-8").splitlines()
+
+    def _claims(self, clause, release, direction, path_prefix):
+        return [
+            claim
+            for claim in self.claims
+            if claim.clause == clause and claim.release == release
+            and claim.direction == direction and claim.path.startswith(path_prefix)
+        ]
+
+    def test_every_integrations_notice_is_read_as_pending_removal_in_0_21_0(self):
+        notices = self._claims("is removed in", "0.21.0", ramps.PENDING, "crates/grund-core/src/")
+        self.assertEqual(self.LEAVING, len(notices), "one `is removed in 0.21.0` per name and method")
+        self.assertEqual([], ramps.report(notices, "0.20.0"), "the notices allow 0.20.x")
+        self.assertTrue(ramps.report(notices, "0.21.0"), "the notices refuse 0.21.0 until removal")
+
+    def test_each_removed_alias_leaves_one_line_read_as_landed_in_0_19_0(self):
+        removed = self._claims("was removed in", "0.19.0", ramps.LANDED, self.LIB_RS)
+        named = sorted(
+            alias
+            for alias in self.ALIASES
+            for claim in removed
+            if f"`{alias}`" in self.lib_lines[claim.line - 1]
+        )
+        self.assertEqual(sorted(self.ALIASES), named, "one `was removed in 0.19.0` line per alias")
+        self.assertTrue(ramps.report(removed, "0.18.1"), "the removal lines refuse a 0.18.x patch")
+        self.assertEqual([], ramps.report(removed, "0.19.0"), "the removal lines allow 0.19.0")
+
+    def test_the_crate_level_literal_notice_is_read_as_pending_in_0_21_0(self):
+        notice = [
+            claim
+            for claim in self._claims("becomes an error in", "0.21.0", ramps.PENDING, self.LIB_RS)
+            if self.lib_lines[claim.line - 1].lstrip().startswith("//!")
+        ]
+        self.assertEqual(1, len(notice), "one crate-level `becomes an error in 0.21.0` line")
+        self.assertEqual([], ramps.report(notice, "0.20.0"))
+        self.assertTrue(ramps.report(notice, "0.21.0"))
+
 if __name__ == "__main__":
     unittest.main()
