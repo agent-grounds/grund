@@ -204,13 +204,20 @@ fn citation_marker_is_refused() {
     assert!(glob("FS-*").check_marker("§").is_ok());
 }
 
-/// §FS-coordinate-globs.errors.shape: of several refusals in one pattern the leftmost is
-/// reported, so the first refused pattern's line names the first thing to fix in it.
+/// §FS-coordinate-globs.errors.shape: a pattern is refused in two stages, what the grammar
+/// alone decides before discovery and its components once the separator is known, and the
+/// first stage that refuses it is reported; within a stage, the leftmost refusal is.
 #[test]
 fn first_refused_pattern_wins() {
     assert_eq!(refused("FS-**.a..b").column, 4);
     assert_eq!(refused("a..b.**x").column, 3);
     assert_eq!(refused("group/*/FS-{a").column, 7);
+    // The unclosed brace is the grammar's, so it is reported before the `**` left of it.
+    let refusal = refused("FS-**.{a,b");
+    assert_eq!(
+        (refusal.column, refusal.reason.as_str()),
+        (7, "\"{\" is never closed")
+    );
     // A refusal under any alternative refuses the whole pattern.
     assert_eq!(refused("FS-x{.a,..b}").reason, "empty component");
 }

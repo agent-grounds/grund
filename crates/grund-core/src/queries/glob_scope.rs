@@ -57,22 +57,30 @@ pub(crate) struct GlobSelection<'g> {
 }
 
 impl<'g> GlobSelection<'g> {
-    /// Check each pattern in command-line order against the loaded projects — its
-    /// marker, its qualifier, then the separator of every project it reads — and
+    /// Check each pattern in command-line order against the loaded projects, leftmost
+    /// refusal first — its qualifier at column 1, its marker where the body starts,
+    /// then its components under the separator of every project it reads — and
     /// compile it for each (§FS-coordinate-globs.errors.shape).
     pub(crate) fn new(context: &WorkspaceContext, globs: &'g [CoordinateGlob]) -> Result<Self> {
         let mut matchers: Vec<Vec<GlobMatcher<'g>>> =
             context.projects.iter().map(|_| Vec::new()).collect();
         let mut notes = Vec::new();
         for glob in globs {
-            glob.check_marker(&context.render_config().marker)
-                .map_err(refusal_error)?;
             let scope = projects_read(context, glob).map_err(refusal_error)?;
-            for &index in &scope {
-                let config = &context.projects[index].config;
-                glob.check_marker(&config.marker).map_err(refusal_error)?;
-                glob.check_separator(&config.section_separator)
-                    .map_err(refusal_error)?;
+            let configs: Vec<_> = scope
+                .iter()
+                .map(|&index| &context.projects[index].config)
+                .collect();
+            let markers = configs.iter().map(|config| &config.marker);
+            for marker in std::iter::once(&context.render_config().marker).chain(markers) {
+                glob.check_marker(marker).map_err(refusal_error)?;
+            }
+            let leftmost = configs
+                .iter()
+                .filter_map(|config| glob.check_separator(&config.section_separator).err())
+                .min_by_key(|refusal| refusal.column);
+            if let Some(refusal) = leftmost {
+                return Err(refusal_error(refusal));
             }
             for &index in &scope {
                 let separator = &context.projects[index].config.section_separator;
