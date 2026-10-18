@@ -571,6 +571,32 @@ the one timed discovery, so a selection is cut where the tests are found.
 `tests/integration/test_python_gate_selection.py` holds it to this without
 running the Node acceptance itself.
 
+#### 3.4.4 The CI oracle reuses restored dependencies
+
+`scripts/prepare_binding_oracle.py` builds into this checkout's Cargo target:
+`CARGO_TARGET_DIR` when supplied, otherwise `target` under the checkout. The
+existing cargo cache restores and prunes it ([§AR-ci.13.6](AR-ci.md#136-only-a-push-to-main-saves-a-cache)); no extra cache is needed.
+If old exact hits lack the pinned dependencies, bump this cache's key namespace
+so immutable entries cannot prevent saving them. Always build with Cargo 1.95.0
+and `--locked`, setting `GRUND_BINDINGS_SOURCE_SHA` from this checkout's `HEAD`,
+including a pull request's merge checkout. Cargo's toolchain, feature, profile
+and compiler-flag fingerprints decide dependency compatibility; a mismatch
+rebuilds, never reuses incompatible artifacts. Targets remain private to each
+checkout ([§AR-ci.3.4.1.2](AR-ci.md#3412-one-target-per-source-checkout)).
+
+A cold target builds normally. After restoring compatible dependencies with
+workspace artifacts removed, preparation rebuilds the oracle without recompiling
+those dependencies. A later source commit rebuilds the workspace example and
+reports the new SHA and source behavior; a previously built executable never
+substitutes for that build ([§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)). Preparation failure still
+fails the gate ([§AR-ci.3.4](AR-ci.md#34-the-python-gates-inputs)). Cache event permissions, pruning and budget remain
+those of [§AR-ci.13.6](AR-ci.md#136-only-a-push-to-main-saves-a-cache), and the oracle is not an extra binding release build.
+
+`tests/integration/test_ci_avoidable_work.py` exercises the preparation script
+with real Cargo on a small workspace: cold, dependency-only restored, and
+changed-source builds. A dependency build-script receipt detects recompilation,
+and executing the exported oracle checks its SHA and source behavior.
+
 ## 4. Performance smoke guard
 
 CI carries a cheap floor on [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) that does not depend on any benchmarking toolchain: the `grund check . --full` self-check step runs the already-built binary under a generous wall-clock `timeout` — long enough never to flake on a loaded runner, short enough to fail the build on a catastrophic regression such as an accidental quadratic walk or a second read pass over every file. It is not the budget itself (the budget is tens of milliseconds; the ceiling is tens of seconds) — it is the difference between "we'd notice eventually" and "the build is red on the commit that did it". The precise per-commit meter is the [§AR-ci.5](AR-ci.md#5-benchmark-job) benchmark job, and this timeout stays as its catastrophic backstop.
@@ -776,6 +802,23 @@ or sleeping until a detached writer finishes does not meet this contract. A
 regression forces a real maintenance threshold and checks both the returned-command
 boundary and strict removal; reading configuration alone is not evidence that the
 tree has no outliving writer.
+
+### 10.5 Version-history fixtures copy only version inputs
+
+The offline version tests of [§FS-distribution-candidate.6.2](../functional-spec/FS-distribution-candidate.md#62-one-version-across-every-package) copy the complete
+version-input closure, rather than a crate's implementation: the workspace
+`Cargo.toml`, `Cargo.lock`, every present workspace member's `Cargo.toml`, and
+the Python version manifest at `crates/grund-py/pyproject.toml`. The member list
+comes from the workspace manifest and includes members outside `crates/`.
+No source, asset, test corpus or native payload is copied or committed merely
+to read or rewrite versions. The copied inputs retain their original bytes.
+
+This changes fixture preparation alone. The tests still exercise disagreements,
+all version rewrites, committed-ref versus dirty-worktree reads, and historical
+layouts with the Python manifest at the root or absent. Fixture Git lifetime
+remains [§AR-ci.10.4](AR-ci.md#104-git-descendants-stay-inside-the-fixture-lifetime). `tests/integration/test_ci_avoidable_work.py` checks the
+copied bytes, the complete input set and the actual copy operations; the
+existing version tests keep every behavioral assertion.
 
 ## 11. A release candidate is dispatched the same CI
 
@@ -1001,6 +1044,28 @@ Requirements on how long the gate takes (requirements.1–4) and on what it prin
 ### requirements.1: Every gate averages at most fifteen minutes — directional
 
 Each gate's mean duration over the tracking window of [§AR-ci.requirements.3](AR-ci.md#requirements3-the-average-is-measured-and-drift-is-reported--realized) is at most the threshold [§AR-ci.requirements.4](AR-ci.md#requirements4-the-threshold-and-the-window-are-configuration--realized) configures, fifteen minutes unless it says otherwise. Directional: when this was written the three test legs averaged about 43, 42 and 25 minutes, so it binds every change from here on not to add to a gate's time without paying for it elsewhere, and it becomes realized once every gate is under it. Serves [§GOAL-fast-feedback.3](../goals.md#3-measurable).
+
+#### requirements.1.verification: A cost correction measures comparable full gates
+
+A correction to reported gate drift records at least two successful samples
+per gate and per side, at one fixed base SHA and one fixed candidate SHA, on
+the affected operating system. The suites, toolchains and cache conditions
+must be comparable and recorded; skipped or missing proof is not a saving.
+Record full job elapsed time, every setup, restore, build, test and save
+contribution, run and job URLs, and machine-readable raw timing evidence.
+Explain seconds removed and added by mechanism. Each affected candidate gate's
+mean must meet [§AR-ci.requirements.1](AR-ci.md#requirements1-every-gate-averages-at-most-fifteen-minutes--directional) with useful margin; obtain more samples
+when variance makes the minimum inconclusive. Agreement tranche costs also
+remain subject to [§REQ-one-answer.proof.delivery.payment](../requirements/REQ-one-answer.md#proofdeliverypayment-each-tranche-pays-for-its-own-time).
+
+Branch-local mechanism tests and paired candidate measurements establish the
+correction before merge. The rolling successful-main-push measurement of
+[§AR-ci.requirements.3](AR-ci.md#requirements3-the-average-is-measured-and-drift-is-reported--realized) remains the operational follow-up: changing a branch
+cannot change past main durations, and old samples must neither be replaced
+with fabricated passes nor treated as a branch-local regression test. The
+configured threshold and window ([§AR-ci.requirements.4](AR-ci.md#requirements4-the-threshold-and-the-window-are-configuration--realized)), suite placement and
+proof coverage ([§AR-ci.13.1](AR-ci.md#131-one-job-per-language), [§AR-ci.13.3](AR-ci.md#133-every-hook-runs-once)), and deferred timeout decision
+([§AR-ci.requirements.2](AR-ci.md#requirements2-no-run-of-a-gate-passes-twenty-minutes--deferred)) remain unchanged by this verification protocol.
 
 ### requirements.2: No run of a gate passes twenty minutes — deferred
 
