@@ -15,10 +15,10 @@ docs/requirements/REQ-no-wrong-citation.md: 1 (line 7)
 
 A section's children break when it moves, so before a move, rename or delete ask the same question of the whole subtree: `grund refs FS-check.3.2 --descendants --summary` folds that section *and every section beneath it* into the same one-line-per-file shape, which is the blast radius of the change rather than of the coordinate. Swap `--summary` for `--total` and the same subtree folds one rung further, to the pair `cited at <n> sites across <m> files` — the size of the move, without the rows ([§FS-refs.3.4](../functional-spec/FS-refs.md#34---total)).
 
-Before reviewing a diff, group the citation graph by file so you can join changed files to the specs they touch:
+Before reviewing a diff, group the citation graph by file so you can join changed files to the specs they touch. Name the changed file and a pattern, and `cover` keeps only the citations the pattern matches ([§FS-cover.globs](../functional-spec/FS-cover.md#globs---glob-keeps-the-citations-a-pattern-matches)):
 
 ```bash
-$ grund cover --format json | jq -c 'select(.path == "crates/grund-core/src/checker/references.rs") | .citations |= map(select(.id == "FS-check" and .section == "3.2"))'
+$ grund cover crates/grund-core/src/checker/references.rs --glob 'FS-check.3.2' --format json
 {"path":"crates/grund-core/src/checker/references.rs","citations":[{"path":"crates/grund-core/src/checker/references.rs","line":2,"column":23,"id":"FS-check","section":"3.2","marker":true,"text":"§FS-check.3.2","enclosing_declaration":null,"enclosing_section":null},{"path":"crates/grund-core/src/checker/references.rs","line":255,"column":12,"id":"FS-check","section":"3.2","marker":true,"text":"§FS-check.3.2","enclosing_declaration":null,"enclosing_section":null}]}
 ```
 

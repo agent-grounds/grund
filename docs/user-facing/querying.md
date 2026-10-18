@@ -185,7 +185,9 @@ docs/functional-spec/FS-config.md:96-101
   100-101  FS-config.requirements.2
 ```
 
-The [review-checklist example](../../examples/review-checklist/) runs the same three steps on a small tree.
+The [review-checklist example](../../examples/review-checklist/) runs these three steps on a small tree,
+then two more from [the next sections](#who-cites-a-set-and-what-a-point-cites-refs---glob-refs---from):
+who cites the points, and what one of them cites.
 
 ## The pattern grammar
 
@@ -282,6 +284,71 @@ for setup, configuration, I/O, or incomplete-scan failure
 [Reviewing code](reviewing.md) walks through using these before a move,
 rename or delete.
 
+## Who cites a set, and what a point cites: `refs --glob`, `refs --from`
+
+`grund refs --glob <pattern>` asks ID mode's question of every coordinate a pattern
+matches ([§FS-refs.globs](../functional-spec/FS-refs.md#globs---glob-lists-who-cites-a-set)). Repeated, the patterns union and each site is listed once, and a
+site whose cited point is no longer declared is listed too, so a glob finds what a rename
+left dangling:
+
+```console
+$ grund refs --glob 'FS-show.1.{8,9}' --summary | head -2
+crates/grund-cli/src/cli_help_show.rs: 1 (line 31)
+crates/grund-cli/src/cli_show.rs: 2 (lines 20, 163)
+```
+
+A pattern's bare ID is not ID mode's. `--glob 'FS-refs'` selects only the bare citations
+of `FS-refs`, unlike `grund refs FS-refs`, which is `--glob 'FS-refs{,.**}'`: the point
+and every section beneath it ([§FS-refs.globs.descendants](../functional-spec/FS-refs.md#globsdescendants-one-id-asked-both-ways-gives-one-answer)):
+
+```console
+$ grund refs --glob 'FS-refs' --total
+cited at 26 sites across 21 files
+$ grund refs FS-refs --total
+cited at 356 sites across 99 files
+$ grund refs --glob 'FS-refs{,.**}' --total
+cited at 356 sites across 99 files
+```
+
+`grund refs --from <coordinate>` turns the question round: it lists the sites in that
+coordinate's own body, what it cites ([§FS-refs.from](../functional-spec/FS-refs.md#from---from-lists-what-one-point-cites)). A section inherits what its
+declaration's lead cites and what each ancestor cites above its first child, but never
+what a sibling or a descendant cites, so `--from FS-show.1.8` lists `FS-show`'s lead and
+`1`'s opening as well as `1.8` itself ([§FS-refs.from.owned](../functional-spec/FS-refs.md#fromowned-a-point-owns-its-lead-its-ancestors-and-itself)). The source is
+resolved as `grund FS-show.1.8` resolves it, and one that query refuses is refused with its
+bytes:
+
+```console
+$ grund refs --from FS-show.1.8 | head -3
+docs/functional-spec/FS-show.md:7: §GOAL-friendliness-first
+docs/functional-spec/FS-show.md:8: §GOAL-token-economy
+docs/functional-spec/FS-show.md:9: §GOAL-fast-feedback.1
+$ grund refs --from FS-show.1.8 --total
+cites at 13 sites across 1 file
+```
+
+`--summary`, `--total` and `--format` fold and print both modes as they do ID mode's, and
+a JSON record carries no `kind_title`, since no one queried target names it
+([§FS-refs.3.2](../functional-spec/FS-refs.md#32---format-json)). Under either flag every positional is the scan path, so an ID
+typed there is read as a path, and the error says how to ask for it
+([§FS-refs.1.3](../functional-spec/FS-refs.md#13-an-id-typed-as-the-path-gets-a-hint)):
+
+```console
+$ grund refs FS-refs --glob 'FS-refs.from'
+error: path does not exist: FS-refs
+hint: with `--glob`, `refs` reads `FS-refs` as a scan path; to add its citations, use `--glob 'FS-refs{,.**}'`
+```
+
+`--section` and `--descendants` belong to ID mode. Beside one `--glob` the refusal offers
+the pattern that asks for them, and `--glob` beside `--from`, a second `--from` or a second
+path is refused outright, all before any config is read
+([§FS-refs.1.2](../functional-spec/FS-refs.md#12-refusals)):
+
+```console
+$ grund refs --glob 'FS-refs.from' --descendants
+error: --descendants cannot be combined with --glob; accepted glob: "FS-refs.from{,.**}"
+```
+
 ## The whole citation graph: `cover --format json`
 
 `grund cover --format json` emits one record per scanned file, holding every
@@ -302,6 +369,17 @@ $ grund cover docs/functional-spec/FS-show.md --format json \
     | jq -c '.citations[] | select(.enclosing_section != null) | {line,id,section,enclosing_declaration,enclosing_section}' \
     | head -1
 {"line":13,"id":"FS-terms","section":"terms.1","enclosing_declaration":"FS-show","enclosing_section":"terms"}
+```
+
+`cover --glob <pattern>` keeps, in each file's record, only the citations whose
+cited coordinate a pattern matches, and keeps every scanned file's record, so a file
+that cites none of them still reads `(no citations)`, or `"citations":[]` in JSON
+([§FS-cover.globs](../functional-spec/FS-cover.md#globs---glob-keeps-the-citations-a-pattern-matches)):
+
+```console
+$ grund cover crates/grund-cli/src/ --glob 'FS-refs.from{,.**}' | head -2
+crates/grund-cli/src/cli.rs:
+  (no citations)
 ```
 
 Reach for `cover` when the question is about the whole graph — which specs a
