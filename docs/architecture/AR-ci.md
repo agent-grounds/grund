@@ -961,10 +961,11 @@ When the scheduled run's suite job fails, a report job of `macos.yml` after it, 
 `issues: write`, runs `scripts/macos_daily.py`. It reads the run's jobs from the
 forge and writes one report naming the commit, the run and each failed step, and
 puts it on one open issue by the rule of [§AR-ci.requirements.3](AR-ci.md#requirements3-the-average-is-measured-and-drift-is-reported--realized), with its own
-marker line, `<!-- macos-daily-failure -->`: it opens the issue when no open
-issue's body begins with the marker, and edits the one that does instead of opening
-a second. The one implementation of that rule is `scripts/ci_duration.py`'s, which
-this script calls with its own marker. A green run writes nothing, so closing the
+marker line, `<!-- macos-daily-failure -->`, and its own kind label, `bug`, because
+a suite is red on `main`: it opens the issue when no open issue's body begins with
+the marker, and edits the one that does instead of opening a second. The one
+implementation of that rule is `scripts/ci_duration.py`'s, which this script calls
+with its own marker and its own label. A green run writes nothing, so closing the
 issue is a person's call, and a dispatched run reports nothing, because whoever
 dispatched it is watching it.
 
@@ -974,7 +975,8 @@ dispatched it is watching it.
 holds them to this point — `macos.yml`'s triggers and its report job's wiring,
 `macos-suites.yml`'s one suite job and its permissions, and that `ci.yml` calls it
 on a dispatch and on no other event and runs no macOS job of its own — and holds the
-report and the open-or-edit decision to [§AR-ci.14.3](AR-ci.md#143-a-failed-daily-run-opens-one-issue) offline, against canned jobs.
+report, the open-or-edit decision and the issue's label to [§AR-ci.14.3](AR-ci.md#143-a-failed-daily-run-opens-one-issue) offline, against
+canned jobs and a `gh` that records each call.
 
 ## 15. Dependencies compile optimised in a dev build
 
@@ -1006,7 +1008,7 @@ Every job of `ci.yml` carries `timeout-minutes: 20`, so a run past it fails like
 
 ### requirements.3: The average is measured, and drift is reported — realized
 
-The average is measured, not assumed. `scripts/ci_duration.py` reads the last *window* successful runs of `ci.yml` triggered by a push to `main`, newest first, and averages each gate's duration — a job's `completed_at` less its `started_at` — over the runs it appears in; a skipped job is not a sample. It averages each step of each gate the same way, which is where the time went. When any gate's average exceeds the threshold, it writes one report naming each such gate, its average, the window, and that gate's slowest steps, and puts it on one open issue: it opens the issue when no open issue's body begins with the marker line `<!-- ci-duration-drift -->`, and edits the body of the one that does instead of opening a second; an issue that only quotes the marker further down is not the drift issue. A query that returns no run measures nothing, so the tracker says so and exits 1 rather than reporting every gate under the threshold. A run in which every gate is under the threshold writes nothing; closing the issue is a person's call. The workflow `.github/workflows/ci-duration.yml` runs it on a schedule and on `workflow_dispatch`, never on a push or a pull request, with `actions: read` and `issues: write`. It stays out of the pre-commit hook list and out of `grund check`: it reads the forge, which [§REQ-runs-offline](../requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service) keeps out of any verdict and [§AR-ci.1](AR-ci.md#1-pre-commit-is-the-source-of-truth)'s parity keeps out of the local gate. Its averaging, its report and its open-or-edit decision are functions of the forge's JSON, so `tests/integration/test_ci_duration.py` holds them to this offline, against canned runs. This is requirements.1's meter in the sense of [§AR-goal-measurement](AR-goal-measurement.md#ar-goal-measurement-goal-and-requirement-meters-live-outside-goals).
+The average is measured, not assumed. `scripts/ci_duration.py` reads the last *window* successful runs of `ci.yml` triggered by a push to `main`, newest first, and averages each gate's duration — a job's `completed_at` less its `started_at` — over the runs it appears in; a skipped job is not a sample. It averages each step of each gate the same way, which is where the time went. When any gate's average exceeds the threshold, it writes one report naming each such gate, its average, the window, and that gate's slowest steps, and puts it on one open issue: it opens the issue when no open issue's body begins with the marker line `<!-- ci-duration-drift -->`, and edits the body of the one that does instead of opening a second; an issue that only quotes the marker further down is not the drift issue. The issue carries its kind, as every issue here does: the tracker opens it with the label `tokens`, because a gate over the threshold is CI spending wall clock it should not, and adds that label again with each edit, so a drift issue opened without it carries it after the next report, and its other labels stay as they are. A query that returns no run measures nothing, so the tracker says so and exits 1 rather than reporting every gate under the threshold. A run in which every gate is under the threshold writes nothing; closing the issue is a person's call. The workflow `.github/workflows/ci-duration.yml` runs it on a schedule and on `workflow_dispatch`, never on a push or a pull request, with `actions: read` and `issues: write`. It stays out of the pre-commit hook list and out of `grund check`: it reads the forge, which [§REQ-runs-offline](../requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service) keeps out of any verdict and [§AR-ci.1](AR-ci.md#1-pre-commit-is-the-source-of-truth)'s parity keeps out of the local gate. Its averaging, its report and its open-or-edit decision are functions of the forge's JSON, so `tests/integration/test_ci_duration.py` holds them to this offline, against canned runs, and runs the tracker against a `gh` that records each call, which holds the label on the issue it opens and on the one it edits. This is requirements.1's meter in the sense of [§AR-goal-measurement](AR-goal-measurement.md#ar-goal-measurement-goal-and-requirement-meters-live-outside-goals).
 
 ### requirements.4: The threshold and the window are configuration — realized
 
