@@ -10,7 +10,8 @@ import subprocess
 from pathlib import Path
 
 source_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
-target = (Path.home() / "ag/tmp/grund-bindings-ci-oracle").resolve()
+# §AR-ci.3.4.4: reuse restored dependencies; Cargo rebuilds the oracle from this HEAD.
+target = Path(os.environ.get("CARGO_TARGET_DIR", "target")).expanduser().resolve()
 build_env = dict(os.environ, GRUND_BINDINGS_SOURCE_SHA=source_sha)
 subprocess.run([
     "cargo", "+1.95.0", "build", "--quiet", "--locked", "-p", "grund-core",

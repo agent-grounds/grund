@@ -395,13 +395,15 @@ class VersionTests(unittest.TestCase):
     read and written by one tool."""
 
     def copy(self):
+        """§AR-ci.10.5: copy byte-exact version inputs, including non-crates members."""
         temp = scratch("grund-versions-")
         self.addCleanup(temp.cleanup)
         root = Path(temp.name)
-        tracked = subprocess.run(["git", "ls-files", "Cargo.toml", "Cargo.lock", "crates"],
-                                 cwd=REPO, capture_output=True, text=True,
-                                 check=True).stdout.splitlines()
-        for name in tracked:
+        manifest = tomllib.loads((REPO / "Cargo.toml").read_text(encoding="utf-8"))
+        inputs = {"Cargo.toml", "Cargo.lock", PYPROJECT}
+        inputs.update(f"{member}/Cargo.toml" for member in manifest["workspace"]["members"]
+                      if (REPO / member / "Cargo.toml").is_file())
+        for name in sorted(inputs):
             (root / name).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(REPO / name, root / name)
         return root

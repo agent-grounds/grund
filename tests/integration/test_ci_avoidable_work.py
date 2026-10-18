@@ -1,8 +1,6 @@
 """Real preparation receipts pin §AR-ci.3.4.4 and §AR-ci.10.5 for #809.
 
-Only the new red tests are temporarily skipped in ordinary discovery. Run them
-with GRUND_809_RUN_RED=1; implementation removes their skip decorators. Cargo
-builds a tiny offline workspace, not Grund's dependency tree, and Git still
+Cargo builds a tiny offline workspace, not Grund's dependency tree, and Git still
 supplies real commits. No elapsed-time threshold stands in for avoided work.
 """
 
@@ -22,8 +20,6 @@ import test_distribution_candidate as version_tests
 
 REPO = Path(__file__).resolve().parents[2]
 PREPARE = REPO / "scripts/prepare_binding_oracle.py"
-RUN_RED = os.environ.get("GRUND_809_RUN_RED") == "1"
-RED = "red until #809 reuses oracle dependencies and narrows version fixtures; implement removes this"
 
 
 class AvoidableWorkTests(unittest.TestCase):
@@ -108,7 +104,6 @@ fn main() {
         self.assertEqual(behavior, metadata["behavior"], "a stale executable was exported")
         return oracle.parents[2]
 
-    @unittest.skipUnless(RUN_RED, RED)
     def test_oracle_cold_restored_changed_source_and_incompatible_flags(self):
         """§AR-ci.3.4.4: a cache miss works; a compatible restore avoids dependency work."""
         # Also cover the target override used by local gates, with the same
@@ -152,7 +147,6 @@ fn main() {
                                  "compatible restored dependencies were rebuilt; only the "
                                  "cold and incompatible-flag builds may compile them")
 
-    @unittest.skipUnless(RUN_RED, RED)
     def test_version_fixture_copies_complete_inputs_without_crate_payloads(self):
         """§AR-ci.10.5: byte-complete version inputs, with no unrelated copy operations."""
         helper = version_tests.VersionTests("test_set_version_writes_every_source")
