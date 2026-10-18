@@ -12,6 +12,10 @@ mod case_paths;
 // Invocation ownership and shared output normalization (§FS-examples.5.6.1).
 include!("case_copy.rs");
 
+#[cfg(test)]
+#[path = "case_copy_tests.rs"]
+mod copy_output_tests;
+
 // The citable half of the canonical kind set (§FS-config.3.4). The two default
 // test kinds are non-citable, so no `spec.refs` entry can name one.
 const CANONICAL_KINDS: &[&str] = &["GRUND", "GOAL", "FS", "AR", "DF", "DA", "RM"];
