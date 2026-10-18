@@ -7,6 +7,9 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Output;
 
+#[path = "case_paths.rs"]
+mod case_paths;
+
 pub fn text(context: &Value, field: &str) -> String {
     context[field]
         .as_str()
@@ -21,7 +24,10 @@ pub fn normalize(value: &str, context: &Value) -> String {
         .is_some_and(|s| s.contains("{repo_copy}"))
         || context["manifests"]["command.cwd"] == "{repo_copy}\n"
     {
-        format!("target/e2e-work/{name}/repo")
+        // §FS-examples.5.6.2: use the shared runner's stable logical spelling.
+        case_paths::logical_copy(&name)
+            .to_string_lossy()
+            .replace('\\', "/")
     } else {
         format!("tests/e2e/cases/{name}/repo")
     };

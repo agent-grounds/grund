@@ -121,7 +121,6 @@ impl Drop for Release<'_> {
 /// §FS-examples.5.6.2: a subsequent path-output run preserves the logical copy
 /// prefix in relative and absolute output while leaving unrelated paths alone.
 #[test]
-#[ignore = "red until #797 invocation-owned copies; implement removes this"]
 fn overlapping_mutable_cases_keep_their_own_copy() {
     // Refresh selection is process-wide. Run the probe with comparison selected
     // without changing the environment of other libtest threads.
