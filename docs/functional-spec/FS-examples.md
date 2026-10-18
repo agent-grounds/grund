@@ -185,3 +185,36 @@ with neither an `expected.exit` nor such a subdirectory is not a runnable
 example, as before. `examples/migrate/` is the first: its two runs are the
 preview that refuses and the preview after the repairs it names
 ([§FS-config-migrate.3.1](FS-config-migrate.md#31-a-refusal-names-a-v1-repair)).
+
+### 5.6 Mutable fixtures belong to one invocation
+
+The shared runner gives each invocation of a mutable case or example its own
+repository copy. Two invocations of the same case may overlap; neither may
+remove, overwrite, create links in, or inspect the other's copy. A case name
+identifies a logical fixture, not ownership of a mutable directory.
+
+#### 5.6.1 One owner lasts through every use of the copy
+
+One invocation owner supplies the actual copy directory to argument expansion
+(whole `{repo_copy}` and `/suffix` forms), `command.cwd`, execution, final-tree
+comparison and golden refresh. It keeps that directory alive from preparation
+through output and tree handling and any intentional post-run inspection. A
+post-run reader must retain that owner or inspect while it is alive, rather than
+reconstruct a directory from the case name. Releasing the owner cleans up only
+its invocation's scratch directory, including on failure or unwind; repeated
+runs must not accumulate abandoned copies.
+
+Manifest validation still precedes copying or spawning. Read-only fixtures,
+the determinism pass's skip of mutable cases, and explicit unsupported-symlink
+skips keep their existing behavior. Retrying link creation, accepting an existing
+link, or locking preparation alone does not establish ownership during use.
+
+#### 5.6.2 Runtime uniqueness preserves logical output paths
+
+Unique runtime directory components must not change authored exit, stdout,
+stderr or final-tree goldens. At the shared output seam, both comparison and
+refresh normalize the exact invocation-owned copy prefix to the existing
+logical `target/e2e-work/<case name>/repo` path, including its absolute form
+where the output uses an absolute path. Other text and paths remain significant:
+normalization must not erase an unrelated path or hide a substantive mismatch.
+Examples and ordinary e2e cases use this same normalization.
