@@ -1,5 +1,6 @@
 //! Delegation for the complete read/query inventory (§FS-distribution.3.3.5).
 
+use super::cover::cover_text_with_globs;
 use super::embedding::EmbeddingRequest;
 use super::embedding_data::Data;
 use super::embedding_failure::{error_data, failure};
@@ -81,6 +82,31 @@ pub(super) fn scan_data(r: &EmbeddingRequest) -> Result<Value, Value> {
         "scanned_files": findings.scanned_files.iter().map(|p|display_path(&config,p)).collect::<Vec<_>>(),
         "scan_errors":errors.iter().map(|(p,m)|json!({"path":display_path(&config,p),"message":m})).collect::<Vec<_>>(),
         "run_cautions":config_run_warnings(&config).data()}))
+}
+
+/// What a query refuses before config discovery: options that conflict (§FS-refs.1.2,
+/// §FS-cover.6.4), then a pattern the grammar alone refuses
+/// (§FS-coordinate-globs.errors.shape), in the order the CLI answers them.
+pub(super) fn refuse_before_discovery(r: &EmbeddingRequest) -> Result<(), Value> {
+    match r.operation.as_str() {
+        "refs" => drop(super::embedding_refs::refs_sites(r)?),
+        "cover" if !r.strings("lines").is_empty() => cover_lines_conflict(r)?,
+        _ => {}
+    }
+    crate::queries::read_globs(&r.strings("globs"))
+        .map(drop)
+        .map_err(|e| error_data(e, &[]))
+}
+
+/// §FS-cover.6.4: `lines` prints no grouping for `globs` to filter.
+fn cover_lines_conflict(r: &EmbeddingRequest) -> Result<(), Value> {
+    match r.strings("globs").is_empty() {
+        true => Ok(()),
+        false => {
+            let message = "globs cannot be combined with lines".to_string();
+            Err(failure("input", "conflicting-options", message, &[]))
+        }
+    }
 }
 
 pub(super) fn query(r: &EmbeddingRequest) -> Result<Value, Value> {
@@ -184,17 +210,19 @@ pub(super) fn query(r: &EmbeddingRequest) -> Result<Value, Value> {
                 path: r.root.clone(),
                 path_provided: r.explicit,
             };
+            // §FS-cover.globs: every entry stays, holding the citations `globs` select.
+            let globs = r.strings("globs");
             if r.flag("text") {
-                let (cautions, result) = cover_text_with_run_warnings(opts);
-                let out = result.map_err(|e| error_data(e, &cautions))?;
+                let (cautions, result) = cover_text_with_globs(opts, &globs);
+                let (out, note) = result.map_err(|e| error_data(e, &cautions))?;
                 Ok(
-                    json!({"output_format":out.output_format,"entries":out.entries.data(),"scan_errors":out.scan_errors.data(),"run_cautions":out.warnings.data()}),
+                    json!({"output_format":out.output_format,"entries":out.entries.data(),"scan_errors":out.scan_errors.data(),"note":note,"run_cautions":out.warnings.data()}),
                 )
             } else {
-                let (cautions, result) = cover_with_run_warnings(opts);
-                let out = result.map_err(|e| error_data(e, &cautions))?;
+                let (cautions, result) = cover_with_globs(opts, &globs);
+                let (out, note) = result.map_err(|e| error_data(e, &cautions))?;
                 Ok(
-                    json!({"output_format":out.output_format,"entries":out.entries.data(),"scan_errors":out.scan_errors.data(),"run_cautions":out.warnings.data()}),
+                    json!({"output_format":out.output_format,"entries":out.entries.data(),"scan_errors":out.scan_errors.data(),"note":note,"run_cautions":out.warnings.data()}),
                 )
             }
         }
@@ -240,6 +268,10 @@ pub(super) fn query(r: &EmbeddingRequest) -> Result<Value, Value> {
 }
 
 fn refs_data(r: &EmbeddingRequest) -> Result<Value, Value> {
+    // §FS-coordinate-globs.bindings.options: `globs` or `from_` select the sites instead.
+    if let Some(sites) = super::embedding_refs::refs_sites(r)? {
+        return super::embedding_refs::refs_sites_data(r, sites);
+    }
     let mut details = json!({});
     let mut cautions = Vec::new();
     let meta = super::refs_query::refs_impl_with_details(
@@ -264,16 +296,5 @@ fn refs_data(r: &EmbeddingRequest) -> Result<Value, Value> {
         }
         return Err(f);
     }
-    let mut files = std::collections::BTreeMap::<(Option<String>, String), usize>::new();
-    for hit in &out.hits {
-        *files
-            .entry((hit.project.clone(), hit.path.clone()))
-            .or_default() += 1;
-    }
-    Ok(
-        json!({"output_format":out.output_format,"workspace":out.workspace,"hits":out.hits.data(),
-        "note":out.note,"scan_errors":out.scan_errors.data(),"run_cautions":out.warnings.data(),
-        "kind_title":meta.kind_title,"site_total":out.hits.len(),"file_total":files.len(),
-        "file_summaries":files.into_iter().map(|((project,path),sites)|json!({"project":project,"path":path,"sites":sites})).collect::<Vec<_>>() }),
-    )
+    Ok(super::embedding_refs::refs_result(&out, meta.kind_title))
 }

@@ -162,7 +162,7 @@ pub use queries::{
     DeclaredId, LineEdit, LspCitation, LspCompletionContext, LspDeclaration, LspFindingRange,
     LspShowContext, LspSnapshot, LspSnapshotOpts, LspSnapshotWithCompletion,
     LspSnapshotWithMetadata, LspStub, LspUsage, can_replace_trigger_at, citation_under_title,
-    list_sizes_with_run_warnings, lsp_hover_with_kind_title, lsp_title_hover_body,
+    cites_clause, list_sizes_with_run_warnings, lsp_hover_with_kind_title, lsp_title_hover_body,
     on_type_line_edits, show_batch_with_globs, show_batch_with_scope, usage_clause,
     usage_over_paths,
 };
@@ -170,9 +170,12 @@ pub use queries::{
     ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput, ShowFormat, ShowMode,
     ShowOpts, ShowQueryError, list_sizes,
 };
-// §FS-coordinate-globs.errors: the launch refusal and the PATH hint a frontend asks for.
+// §FS-coordinate-globs.errors, §FS-refs.1.2, §FS-refs.1.3: the launch refusal, the
+// pattern a refusal offers and the PATH hints a frontend asks for.
 #[doc(hidden)]
-pub use queries::{check_coordinate_globs, reads_as_coordinate_glob};
+pub use queries::{
+    check_coordinate_globs, glob_beside_section, reads_as_coordinate, reads_as_coordinate_glob,
+};
 
 // §AR-system.2.11 templates: the setup skill a command prints byte-for-byte and
 // the newline canonicalization every template is read through (§FS-init.5.3,
@@ -222,13 +225,15 @@ pub use writers::integrations_retiring::{
 #[doc(hidden)]
 pub use api::{
     ApiFailure, ApiFailureSite, ApiOutcome, ApiPartialOutput, EmbeddingRequest, ReferenceStyle,
-    RefsWithMetadata, check_with_run_warnings, complete_ids_with_run_warnings, config_run_warnings,
-    config_warnings, cover_lines_with_run_warnings, cover_text_with_run_warnings,
+    RefsSites, RefsSitesOpts, RefsWithMetadata, check_with_run_warnings,
+    complete_ids_with_run_warnings, config_run_warnings, config_warnings,
+    cover_lines_with_run_warnings, cover_text_with_run_warnings, cover_with_globs,
     cover_with_run_warnings, effective_config, effective_project, embedding_call,
     format_references_with_run_warnings, list_with_run_warnings, lsp_snapshot,
     lsp_snapshot_with_completion, lsp_snapshot_with_metadata, node_embedding_call, node_request,
-    parse_cover_line_range, propose_id_with_run_warnings, reference_style, refs_with_metadata,
-    render_finding_sites_json, show_from_snapshot, show_with_scope, validate_config,
+    parse_cover_line_range, propose_id_with_run_warnings, reference_style,
+    refs_sites_with_run_warnings, refs_with_metadata, render_finding_sites_json,
+    show_from_snapshot, show_with_scope, validate_config,
 };
 pub use api::{
     CheckOpts, CheckOutput, CompleteIdsOpts, CoverCitation, CoverEntry, CoverLineOwner,

@@ -26,8 +26,9 @@ The package exports readonly TypeScript records and strict option declarations.
 CommonJS uses `const { check } = require('grund-cli')` and shares the ESM
 `GrundError` class. Results carry `runCautions` separately from report findings.
 Checks containing errors resolve; invocation failures reject `GrundError`.
-`list`, `listSizes` and `showBatch` take `globs`, the coordinate patterns
-`grund list --glob` takes, and their results carry a nullable `note`
+`list`, `listSizes`, `showBatch`, `refs` and `cover` take `globs`, the coordinate
+patterns `grund list --glob` takes, and their results carry a nullable `note`; `refs`
+also takes `from`, the source `grund refs --from` reads, with a null ID
 ([§FS-coordinate-globs.bindings](../../docs/functional-spec/FS-coordinate-globs.md#bindings-node-and-python)).
 
 ## Local build and installation

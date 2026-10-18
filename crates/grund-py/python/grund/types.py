@@ -290,6 +290,7 @@ class CoverResult(Cautioned):
     output_format: str
     entries: tuple[CoverEntry, ...]
     scan_errors: tuple[ScanError, ...]
+    note: str | None
 
 
 @dataclass(frozen=True)
@@ -297,6 +298,7 @@ class CoverTextResult(Cautioned):
     output_format: str
     entries: tuple[CoverTextEntry, ...]
     scan_errors: tuple[ScanError, ...]
+    note: str | None
 
 
 @dataclass(frozen=True)

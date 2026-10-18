@@ -14,13 +14,13 @@ use anyhow::{Result, anyhow};
 
 use crate::config::display_path;
 use crate::grammar::flatten_cross_ref_links;
-use crate::model::{Finding, ShowOutput};
+use crate::model::{Declaration, Finding, Id, ShowOutput, ShowRenderMode};
 use crate::queries::{
     LspShowContext, ShowFormat, ShowMode, ShowOpts, render_show_output_json,
     show_declaration_with_home,
 };
 use crate::resolver::{
-    WorkspaceContext, load_reported_workspace_context, with_member_id_candidates,
+    WorkspaceContext, WorkspaceProject, load_reported_workspace_context, with_member_id_candidates,
 };
 
 use super::report::context_run_warnings;
@@ -123,74 +123,17 @@ fn show_answer(
     format: ShowFormat,
     metadata: &mut serde_json::Value,
 ) -> Result<ShowOutput> {
-    let (alias, raw_id) = split_qualified_id_arg(id_arg)?;
-    let project = match alias.as_deref() {
-        Some(name) => context
-            .project_by_alias(name)
-            .ok_or_else(|| {
-                if !context.workspace_loaded {
-                    anyhow!(crate::model::OperationDiagnostic::new("query", "unknown-project", format!(
-                        "unknown project alias `{name}`\nnote: workspace aliases are defined in the root grund.toml under [workspace]"
-                    )))
-                } else {
-                    anyhow!(crate::model::OperationDiagnostic::new("query", "unknown-project", format!(
-                        "unknown project alias `{name}`\nknown aliases: {}",
-                        context.aliases().join(", ")
-                    )))
-                }
-            })?,
-        None => context.current_project().ok_or_else(|| {
-            let known = context.aliases().join(", ");
-            if known.is_empty() {
-                anyhow!(crate::model::OperationDiagnostic::new("query", "query-failed", format!("unqualified ID requires a project alias when include_root = false")))
-            } else {
-                anyhow!(crate::model::OperationDiagnostic::new("query", "query-failed", format!(
-                    "unqualified ID requires a project alias when include_root = false\nknown aliases: {known}"
-                )))
-            }
-        })?,
-    };
-    // §FS-workspace.8.7.3: rendered against the run's config, not the target
-    // project's — the same spelling `check` uses for the same tree.
-    if let Some((file, message)) = project.scan_errors.first() {
-        // §FS-distribution.3.3.2: scan failures are located filesystem outcomes.
-        let path = display_path(context.render_config(), file);
-        let mut failure = crate::model::OperationDiagnostic::new(
-            "filesystem",
-            "io",
-            format!("{path}: {message}"),
-        );
-        failure.path = Some(path);
-        failure.details = serde_json::json!({"scan_errors": project.scan_errors.iter()
-            .map(|(path,message)| serde_json::json!({"path": display_path(context.render_config(),path),"message":message}))
-            .collect::<Vec<_>>()});
-        return Err(failure.into());
-    }
+    let source = ShowSource::resolve(context, id_arg, opts_section)?;
+    let ShowSource {
+        project,
+        id,
+        section,
+        ..
+    } = &source;
     let config = &project.config;
-    let (id, inline_section) =
-        resolve_id_arg(raw_id, config.schema(), config.frame(), &project.findings)
-            .map_err(|error| anyhow::Error::new(error.diagnostic()))?;
-    if opts_section.is_some() && inline_section.is_some() {
-        return Err(anyhow!(crate::model::OperationDiagnostic::new(
-            "query",
-            "query-failed",
-            format!("--section cannot be combined with an inline section")
-        )));
-    }
-    let section = opts_section.or(inline_section);
-    *metadata = crate::queries::show_metadata(config, &project.findings, &id, section.as_deref());
-    let (mut output, home) = show_declaration_with_home(
-        config,
-        context.render_config(),
-        &project.findings,
-        &id,
-        section.as_deref(),
-        mode.render_mode(),
-        format == ShowFormat::Markdown,
-    )
-    // §FS-workspace.8.1.1: a miss names the projects that do declare the ID,
-    // read off the context this run already loaded.
-    .map_err(|err| with_member_id_candidates(err, context, alias.as_deref(), raw_id))?;
+    *metadata = crate::queries::show_metadata(config, &project.findings, id, section.as_deref());
+    let (mut output, home) =
+        source.read(context, mode.render_mode(), format == ShowFormat::Markdown)?;
     if format != ShowFormat::Markdown {
         // §FS-show.3.2.1, §FS-show.3.2.2: flatten ordinary prose while preserving
         // authored wrappers in Markdown fences, Markdown by the file's language.
@@ -202,8 +145,8 @@ fn show_answer(
             config,
             &project.findings.files,
             context.render_config(),
-            &home,
-            &id,
+            home,
+            id,
             section.as_deref(),
             mode.render_mode(),
             &output,
@@ -212,4 +155,112 @@ fn show_answer(
     }
     metadata["path"] = serde_json::json!(display_path(context.render_config(), &output.path));
     Ok(output)
+}
+
+/// The coordinate a `grund <ID>` argument names, resolved and not yet read
+/// (§FS-show.2): `refs --from` resolves its source through the same steps, so a
+/// source `show` would refuse is refused with the same bytes (§FS-refs.from).
+pub(super) struct ShowSource<'c, 'a> {
+    pub(super) project: &'c WorkspaceProject,
+    pub(super) id: Id,
+    pub(super) section: Option<String>,
+    alias: Option<String>,
+    raw_id: &'a str,
+}
+
+impl<'c, 'a> ShowSource<'c, 'a> {
+    /// The project the argument's alias names, or the current one; its scan's
+    /// first error; the ID under that project's grammar; and the section, inline or
+    /// passed beside it but not both — refused in that order.
+    pub(super) fn resolve(
+        context: &'c WorkspaceContext,
+        id_arg: &'a str,
+        opts_section: Option<String>,
+    ) -> Result<Self> {
+        let (alias, raw_id) = split_qualified_id_arg(id_arg)?;
+        let project = match alias.as_deref() {
+            Some(name) => context
+                .project_by_alias(name)
+                .ok_or_else(|| {
+                    if !context.workspace_loaded {
+                        anyhow!(crate::model::OperationDiagnostic::new("query", "unknown-project", format!(
+                            "unknown project alias `{name}`\nnote: workspace aliases are defined in the root grund.toml under [workspace]"
+                        )))
+                    } else {
+                        anyhow!(crate::model::OperationDiagnostic::new("query", "unknown-project", format!(
+                            "unknown project alias `{name}`\nknown aliases: {}",
+                            context.aliases().join(", ")
+                        )))
+                    }
+                })?,
+            None => context.current_project().ok_or_else(|| {
+                let known = context.aliases().join(", ");
+                if known.is_empty() {
+                    anyhow!(crate::model::OperationDiagnostic::new("query", "query-failed", format!("unqualified ID requires a project alias when include_root = false")))
+                } else {
+                    anyhow!(crate::model::OperationDiagnostic::new("query", "query-failed", format!(
+                        "unqualified ID requires a project alias when include_root = false\nknown aliases: {known}"
+                    )))
+                }
+            })?,
+        };
+        // §FS-workspace.8.7.3: rendered against the run's config, not the target
+        // project's — the same spelling `check` uses for the same tree.
+        if let Some((file, message)) = project.scan_errors.first() {
+            // §FS-distribution.3.3.2: scan failures are located filesystem outcomes.
+            let path = display_path(context.render_config(), file);
+            let mut failure = crate::model::OperationDiagnostic::new(
+                "filesystem",
+                "io",
+                format!("{path}: {message}"),
+            );
+            failure.path = Some(path);
+            failure.details = serde_json::json!({"scan_errors": project.scan_errors.iter()
+                .map(|(path,message)| serde_json::json!({"path": display_path(context.render_config(),path),"message":message}))
+                .collect::<Vec<_>>()});
+            return Err(failure.into());
+        }
+        let config = &project.config;
+        let (id, inline_section) =
+            resolve_id_arg(raw_id, config.schema(), config.frame(), &project.findings)
+                .map_err(|error| anyhow::Error::new(error.diagnostic()))?;
+        if opts_section.is_some() && inline_section.is_some() {
+            return Err(anyhow!(crate::model::OperationDiagnostic::new(
+                "query",
+                "query-failed",
+                format!("--section cannot be combined with an inline section")
+            )));
+        }
+        Ok(Self {
+            project,
+            id,
+            section: opts_section.or(inline_section),
+            alias,
+            raw_id,
+        })
+    }
+
+    /// The body in `mode` and the record it is read out of, a stub's paired
+    /// declaration rather than the stub (§FS-show.2.3.7), or the refusal the
+    /// coordinate earns: not found, ambiguous, a broken stub, or a section the
+    /// record lacks or holds twice.
+    pub(super) fn read(
+        &self,
+        context: &'c WorkspaceContext,
+        mode: ShowRenderMode,
+        include_heading: bool,
+    ) -> Result<(ShowOutput, &'c Declaration)> {
+        show_declaration_with_home(
+            &self.project.config,
+            context.render_config(),
+            &self.project.findings,
+            &self.id,
+            self.section.as_deref(),
+            mode,
+            include_heading,
+        )
+        // §FS-workspace.8.1.1: a miss names the projects that do declare the ID,
+        // read off the context this run already loaded.
+        .map_err(|err| with_member_id_candidates(err, context, self.alias.as_deref(), self.raw_id))
+    }
 }

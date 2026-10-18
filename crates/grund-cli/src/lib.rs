@@ -16,13 +16,15 @@ use grund_core::{
     FetchFailureKind, Finding, FindingSite, FmtOpts, FmtScanAbort, IdOpts, IdProposal,
     IdProposalOutcome, InitAgentEntrypointSelection, InitNext, InitOpts, InitOutput, ListEntry,
     ListOpts, ListSizeEntry, ListSizeOpts, NamespaceMatch, PathBase, PointSizeUnit, RefHit,
-    RefsOpts, RefsOutput, RefsQueryFailure, Report, ShowFormat, ShowMode, ShowOpts, ShowQueryError,
-    canonical_template_text, check_coordinate_globs, check_with_run_warnings,
-    complete_ids_with_run_warnings, config_run_warnings, config_warnings, cover, cover_lines,
-    effective_config, effective_project, fetch_snapshot_with_run_warnings, format_references, init,
-    list_sizes, list_with_run_warnings, names_member_id_candidate, propose_id_with_run_warnings,
-    reads_as_coordinate_glob, refs_with_metadata, render_finding_sites_json, show_batch_with_globs,
-    show_with_scope, usage_clause, usage_over_paths, validate_config, with_report_path_base,
+    RefsOpts, RefsOutput, RefsQueryFailure, RefsSites, RefsSitesOpts, Report, ShowFormat, ShowMode,
+    ShowOpts, ShowQueryError, canonical_template_text, check_coordinate_globs,
+    check_with_run_warnings, cites_clause, complete_ids_with_run_warnings, config_run_warnings,
+    config_warnings, cover_lines, cover_with_globs, effective_config, effective_project,
+    fetch_snapshot_with_run_warnings, format_references, glob_beside_section, init, list_sizes,
+    list_with_run_warnings, names_member_id_candidate, propose_id_with_run_warnings,
+    reads_as_coordinate, reads_as_coordinate_glob, refs_sites_with_run_warnings,
+    refs_with_metadata, render_finding_sites_json, show_batch_with_globs, show_with_scope,
+    usage_clause, usage_over_paths, validate_config, with_report_path_base,
 };
 use grund_core::{CHECK_FINDING_CODES, CheckFindingSelection};
 
@@ -117,6 +119,7 @@ include!("cli_show_batch.rs");
 include!("cli_list.rs");
 include!("cli_list_render.rs");
 include!("cli_refs.rs");
+include!("cli_refs_sites.rs");
 include!("cli_cover.rs");
 include!("cli_fmt.rs");
 include!("cli_fetch.rs");

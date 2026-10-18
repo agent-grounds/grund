@@ -1,7 +1,8 @@
 //! The published `cover` contract and the index behind it (§AR-system.2.9):
 //! every citation in the run grouped by the file it sits in, across every
 //! project the loader returned, with no output format chosen and no exit code
-//! mapped (§FS-cover, §FS-workspace.8.6, §AR-bindings.2).
+//! mapped (§FS-cover, §FS-workspace.8.6, §AR-bindings.2). Under coordinate globs
+//! each file keeps its row and only the citations they select (§FS-cover.globs).
 
 use anyhow::Result;
 use std::collections::BTreeMap;
@@ -10,6 +11,7 @@ use std::path::PathBuf;
 use crate::config::{Config, display_path};
 use crate::grammar::render_id;
 use crate::model::{Citation, Finding, sort_path_key};
+use crate::queries::{GlobSelection, read_globs};
 use crate::resolver::{WorkspaceContext, load_narrowable_workspace_context};
 use crate::scanner::{ApiScanError, api_scan_error};
 
@@ -145,15 +147,8 @@ struct CoverCitationRow<'a> {
 }
 
 impl CoverCitationRow<'_> {
-    /// The canonical spelling of the token the file wrote: alias-qualified only
-    /// when the citation itself was, never qualified on the file's behalf
-    /// (§FS-workspace.8.6.4).
     fn rendered_id(&self) -> String {
-        let id = render_id(&self.target_config.grammar, &self.citation.id);
-        match &self.citation.namespace {
-            Some(alias) => format!("{alias}/{id}"),
-            None => id,
-        }
+        cited_id(self.target_config, self.citation)
     }
 
     /// The citing site's enclosing declaration, bare and rendered under the
@@ -166,12 +161,45 @@ impl CoverCitationRow<'_> {
     }
 }
 
+/// The config a citation's ID renders under: the **target** project's, matching
+/// `refs` (§FS-workspace.8.2.4), or the citing project's where the alias names no
+/// loaded project (§FS-workspace.8.1).
+pub(super) fn target_config<'a>(
+    context: &'a WorkspaceContext,
+    citing: &'a Config,
+    citation: &Citation,
+) -> &'a Config {
+    citation
+        .namespace
+        .as_deref()
+        .and_then(|alias| context.project_by_alias(alias))
+        .map(|target| -> &Config { &target.config })
+        .unwrap_or(citing)
+}
+
+/// The canonical spelling of the token the file wrote: alias-qualified only
+/// when the citation itself was, never qualified on the file's behalf
+/// (§FS-workspace.8.6.4). `refs --glob` and `refs --from` spell a record's `id`
+/// so too (§FS-refs.3.2).
+pub(super) fn cited_id(target_config: &Config, citation: &Citation) -> String {
+    let id = render_id(&target_config.grammar, &citation.id);
+    match &citation.namespace {
+        Some(alias) => format!("{alias}/{id}"),
+        None => id,
+    }
+}
+
 /// Group every scanned file in the run — every project the loader returned —
 /// with every citation in it, qualified or not (§FS-workspace.8.6,
 /// §DF-cover-workspace-scope). No consumer-end filter: `cover` is keyed by
 /// file, so a dropped row and a file with nothing to say print the same, which
-/// is the silent skip §REQ-no-missed-citation.1 forbids.
-fn cover_rows(context: &WorkspaceContext) -> Vec<CoverRow<'_>> {
+/// is the silent skip §REQ-no-missed-citation.1 forbids. Coordinate globs drop
+/// citations, never a row: a file whose citations they all pass over keeps its
+/// row, empty (§FS-cover.globs, §AR-resolver.3.2).
+fn cover_rows<'a>(
+    context: &'a WorkspaceContext,
+    globs: Option<&GlobSelection>,
+) -> Vec<CoverRow<'a>> {
     // A file lives in exactly one project (§FS-workspace.6), so the index needs
     // no merge across projects; keying by absolute path is enough to keep the
     // per-file grouping and the owning alias in step.
@@ -181,21 +209,17 @@ fn cover_rows(context: &WorkspaceContext) -> Vec<CoverRow<'_>> {
             by_file.entry(file).or_insert_with(|| (index, Vec::new()));
         }
         for citation in &project.findings.citations {
-            let target_config = citation
-                .namespace
-                .as_deref()
-                .and_then(|alias| context.project_by_alias(alias))
-                .map(|target| &target.config)
-                .unwrap_or(&project.config);
-            by_file
+            let row = by_file
                 .entry(&citation.file)
-                .or_insert_with(|| (index, Vec::new()))
-                .1
-                .push(CoverCitationRow {
-                    citation,
-                    target_config,
-                    citing_config: &project.config,
-                });
+                .or_insert_with(|| (index, Vec::new()));
+            if globs.is_some_and(|globs| !globs.selects_citation(context, index, citation)) {
+                continue;
+            }
+            row.1.push(CoverCitationRow {
+                citation,
+                target_config: target_config(context, &project.config, citation),
+                citing_config: &project.config,
+            });
         }
     }
 
@@ -273,15 +297,46 @@ pub fn cover(opts: CoverOpts) -> Result<CoverOutput> {
 
 /// Additive cautions survive a later refusal (§FS-distribution.3.1).
 pub fn cover_with_run_warnings(opts: CoverOpts) -> (Vec<Finding>, Result<CoverOutput>) {
+    let (cautions, result) = cover_with_globs(opts, &[]);
+    (cautions, result.map(|(output, _)| output))
+}
+
+/// [`cover_with_run_warnings`] keeping, in each file's row, only the citations the
+/// coordinate globs select, with the patterns' note beside the output
+/// (§FS-cover.globs, §FS-coordinate-globs.errors.note). No globs select every
+/// citation, as `cover` does.
+#[doc(hidden)]
+pub fn cover_with_globs(
+    opts: CoverOpts,
+    globs: &[String],
+) -> (Vec<Finding>, Result<(CoverOutput, Option<String>)>) {
     let mut cautions = Vec::new();
-    let result = cover_run(opts, &mut cautions);
+    let result = cover_run(opts, globs, &mut cautions);
     (cautions, result)
 }
 
-fn cover_run(opts: CoverOpts, cautions: &mut Vec<Finding>) -> Result<CoverOutput> {
+/// The run's glob selection, read before discovery and checked against the loaded
+/// projects after it (§FS-coordinate-globs.errors.shape); `None` without globs.
+fn cover_globs<'g>(
+    context: &WorkspaceContext,
+    globs: &'g [crate::grammar::CoordinateGlob],
+) -> Result<Option<GlobSelection<'g>>> {
+    match globs.is_empty() {
+        true => Ok(None),
+        false => GlobSelection::new(context, globs).map(Some),
+    }
+}
+
+fn cover_run(
+    opts: CoverOpts,
+    globs: &[String],
+    cautions: &mut Vec<Finding>,
+) -> Result<(CoverOutput, Option<String>)> {
+    let globs = read_globs(globs)?;
     let context = cover_context(&opts)?;
     *cautions = context_run_warnings(&context);
-    let entries = cover_rows(&context)
+    let selection = cover_globs(&context, &globs)?;
+    let entries = cover_rows(&context, selection.as_ref())
         .into_iter()
         .map(|row| CoverEntry {
             project: row.alias.map(str::to_string),
@@ -308,12 +363,13 @@ fn cover_run(opts: CoverOpts, cautions: &mut Vec<Finding>) -> Result<CoverOutput
             path: row.path,
         })
         .collect();
-    Ok(CoverOutput {
+    let output = CoverOutput {
         output_format: context.render_config().output_format.clone(),
         entries,
         scan_errors: cover_scan_errors(&context),
         warnings: context_run_warnings(&context),
-    })
+    };
+    Ok((output, selection.and_then(|selection| selection.note())))
 }
 
 /// Programmatic text-oriented `cover`: return only the citation fields needed
@@ -327,15 +383,31 @@ pub fn cover_text(opts: CoverOpts) -> Result<CoverTextOutput> {
 
 /// Additive cautions survive a later refusal (§FS-distribution.3.1).
 pub fn cover_text_with_run_warnings(opts: CoverOpts) -> (Vec<Finding>, Result<CoverTextOutput>) {
+    let (cautions, result) = cover_text_with_globs(opts, &[]);
+    (cautions, result.map(|(output, _)| output))
+}
+
+/// [`cover_text_with_run_warnings`] under coordinate globs, as [`cover_with_globs`]
+/// selects them (§FS-cover.globs).
+pub(super) fn cover_text_with_globs(
+    opts: CoverOpts,
+    globs: &[String],
+) -> (Vec<Finding>, Result<(CoverTextOutput, Option<String>)>) {
     let mut cautions = Vec::new();
-    let result = cover_text_run(opts, &mut cautions);
+    let result = cover_text_run(opts, globs, &mut cautions);
     (cautions, result)
 }
 
-fn cover_text_run(opts: CoverOpts, cautions: &mut Vec<Finding>) -> Result<CoverTextOutput> {
+fn cover_text_run(
+    opts: CoverOpts,
+    globs: &[String],
+    cautions: &mut Vec<Finding>,
+) -> Result<(CoverTextOutput, Option<String>)> {
+    let globs = read_globs(globs)?;
     let context = cover_context(&opts)?;
     *cautions = context_run_warnings(&context);
-    let entries = cover_rows(&context)
+    let selection = cover_globs(&context, &globs)?;
+    let entries = cover_rows(&context, selection.as_ref())
         .into_iter()
         .map(|row| CoverTextEntry {
             path: row.path,
@@ -350,10 +422,11 @@ fn cover_text_run(opts: CoverOpts, cautions: &mut Vec<Finding>) -> Result<CoverT
                 .collect(),
         })
         .collect();
-    Ok(CoverTextOutput {
+    let output = CoverTextOutput {
         output_format: context.render_config().output_format.clone(),
         entries,
         scan_errors: cover_scan_errors(&context),
         warnings: context_run_warnings(&context),
-    })
+    };
+    Ok((output, selection.and_then(|selection| selection.note())))
 }

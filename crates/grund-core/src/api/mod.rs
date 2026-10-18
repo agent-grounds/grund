@@ -8,7 +8,8 @@
 //! (§AR-core-module-layout.1.1). The submodules are one per surface — `check`,
 //! `show`, `complete_ids`, `id`, `config`, `cover`, `fmt`, `refs`, `list` and the
 //! editor snapshot — beside the private adapters that fill them: the report
-//! conversion in `report.rs`, the `refs` walk in `refs_query.rs`, the run in
+//! conversion in `report.rs`, the `refs` walks in `refs_query.rs` and
+//! `refs_sites.rs`, the run in
 //! `run.rs` with the warnings it folds in, the snapshot's spans in
 //! `lsp_ranges.rs` and its report in `lsp_report.rs`. That is the boundary §AR-core-module-layout.2 names and the
 //! size register was holding a ceiling for: the contract is what a caller reads,
@@ -64,6 +65,7 @@ mod lsp_snapshot;
 mod path_report;
 mod refs;
 mod refs_query;
+mod refs_sites;
 mod report;
 mod run;
 mod scope_cautions;
@@ -79,7 +81,8 @@ pub use config::{
 pub use config_migrate::{MigrateOpts, config_migrate};
 pub use cover::{
     CoverCitation, CoverEntry, CoverOpts, CoverOutput, CoverTextCitation, CoverTextEntry,
-    CoverTextOutput, cover, cover_text, cover_text_with_run_warnings, cover_with_run_warnings,
+    CoverTextOutput, cover, cover_text, cover_text_with_run_warnings, cover_with_globs,
+    cover_with_run_warnings,
 };
 pub use cover_lines::{
     CoverLineOwner, CoverLineSection, CoverLines, CoverLinesOpts, CoverLinesOutput, cover_lines,
@@ -99,6 +102,7 @@ pub use refs::{
     RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure, RefsQueryFailureKind,
     RefsWithMetadata, refs, refs_outcome, refs_with_metadata,
 };
+pub use refs_sites::{RefsSites, RefsSitesOpts, refs_sites_with_run_warnings};
 pub use report::render_finding_sites_json;
 pub use show::{show, show_from_snapshot, show_with_scope};
 

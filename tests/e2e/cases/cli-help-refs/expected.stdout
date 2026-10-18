@@ -3,15 +3,29 @@ see who depends on a declaration before you change it.
 
 Usage:  grund refs <ID>[.<section>] [PATH] [--section S] [--descendants]
                    [--summary] [--total] [--format text|json]
+        grund refs --glob PATTERN [--glob …] [PATH] [--summary] [--total] [--format text|json]
+        grund refs --from COORDINATE [PATH] [--summary] [--total] [--format text|json]
 
 PATH defaults to `.`. With a `.<section>` (or --section), only citations of that
 exact section are listed; --descendants widens that to the section and every
 section beneath it. An ID with no citations prints nothing and exits 0, or the
 line `not cited` under --total.
 
+--glob lists every site whose cited coordinate a pattern matches, dangling ones
+included; repeated, the patterns union and each site is listed once. A bare
+`--glob 'FS-login'` selects only the bare citations of FS-login, where
+`grund refs FS-login` is `--glob 'FS-login{,.**}'`. --from asks the other way,
+what one coordinate cites: the sites written in its lead, its ancestors and
+itself, never in a descendant, or the line `cites nothing` under --total.
+Under either, every positional is PATH.
+
 Options:
   --section S          list only citations of that section path   e.g. grund refs FS-login --section 3
   --descendants        also list citations of sections beneath it e.g. grund refs FS-login.3 --descendants
+  --glob PATTERN       sites citing what it matches; repeatable   e.g. grund refs --glob 'FS-login.**'
+                       not with --from, --section or --descendants.
+  --from COORDINATE    what that coordinate's own body cites      e.g. grund refs --from FS-login.3
+                       given once; not with --glob, --section or --descendants.
   --summary            group citations by citing file             e.g. grund refs FS-login --summary
   --total              the set's size instead of its members      e.g. grund refs FS-login --total
   --format text|json   text (default) prints `path:line: <citation>`; json emits NDJSON.
@@ -25,7 +39,8 @@ Options:
 The citation list is the result, so it goes to stdout (text and json alike) —
 `grund refs <ID> | …` works like `grund list`. Only the typo `note:` goes to stderr.
 
-Exit:  0 scan succeeded (with or without hits) · 1 ID rejected after context · 2 run/scan error.
+Exit:  0 scan succeeded (with or without hits) · 1 ID or --from source rejected after context
+       · 2 run/scan error, or a refused --glob.
 
 Examples:
   grund refs FS-login             # every citation of FS-login
@@ -33,3 +48,5 @@ Examples:
   grund refs FS-login --total     # how many sites, in how many files
   grund refs FS-login.3           # only citations of section 3
   grund refs FS-login --format json # one NDJSON record per citation site
+  grund refs --glob 'FS-login.{lockout,reset}' # who cites either section
+  grund refs --from FS-login.3    # what FS-login.3 cites, and where

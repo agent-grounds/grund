@@ -143,10 +143,30 @@ def show_batch(queries: Sequence[str | ShowQuery] | None = None, *,
     return _call("show_batch", BatchResult, root, operands, mode=mode, globs=globs)
 
 
-def refs(id: str, *, section: str | None = None, descendants: bool = False,
+def refs(id: str | None = None, *, section: str | None = None, descendants: bool = False,
+         globs: Sequence[str] = (), from_: str | None = None,
          root: PathInput | None = None) -> RefsResult:
-    """Read citation sites, file summaries and totals."""
-    _str(id, "id")
+    """Read citation sites, file summaries and totals: those citing ``id``, those whose
+    cited coordinate one of ``globs`` matches, or those in the body of ``from_``. One
+    selector is required, and ``section`` and ``descendants`` go only with ``id``
+    (§FS-coordinate-globs.bindings.options)."""
+    _str(id, "id", optional=True)
+    _str(section, "section", optional=True)
+    if type(descendants) is not bool:
+        raise TypeError("descendants must be bool")
+    globs = _strings(globs, "globs")
+    _str(from_, "from_", optional=True)
+    selectors = [name for name, given in (("id", id is not None), ("globs", bool(globs)),
+                                          ("from_", from_ is not None)) if given]
+    if not selectors:
+        raise TypeError("refs requires an id, globs or from_")
+    if len(selectors) > 1:
+        raise ValueError(f"{selectors[0]} cannot be combined with {selectors[1]}")
+    if id is None:
+        for name, given in (("section", section is not None), ("descendants", descendants)):
+            if given:
+                raise ValueError(f"{name} cannot be combined with {selectors[0]}")
+        return _call("refs", RefsResult, root, (None,), globs=globs, from_=from_)
     return _call("refs", RefsResult, root, (id,), section=section, descendants=descendants)
 
 
@@ -177,9 +197,11 @@ def list_sizes(*, kinds: Sequence[str] = (), projects: Sequence[str] = (),
                  globs=_strings(globs, "globs"), units=units, top=top)
 
 
-def cover(*, text: bool = False, lines: Sequence[str] = (),
+def cover(*, text: bool = False, lines: Sequence[str] = (), globs: Sequence[str] = (),
           root: PathInput | None = None) -> CoverResult | CoverTextResult | CoverLinesResult:
-    """Read file-grouped coverage, with an optional text-oriented record.
+    """Read file-grouped coverage, with an optional text-oriented record. Non-empty
+    ``globs`` keep only the citations whose cited coordinate one matches, and every
+    file entry (§FS-cover.globs).
 
     Non-empty ``lines`` - each ``"N"`` or ``"N-M"``, as ``--lines`` takes it - asks
     which declaration and section own those lines of the file ``root`` names
@@ -187,11 +209,15 @@ def cover(*, text: bool = False, lines: Sequence[str] = (),
     if type(text) is not bool:
         raise TypeError("text must be bool")
     lines = _strings(lines, "lines")
+    globs = _strings(globs, "globs")
     if lines and text:
         raise ValueError("lines and text cannot be combined")
+    if lines and globs:
+        raise ValueError("globs cannot be combined with lines")
     if lines:
         return _call("cover", CoverLinesResult, root, lines=lines)
-    return _call("cover", CoverTextResult if text else CoverResult, root, text=text)
+    return _call("cover", CoverTextResult if text else CoverResult, root, text=text,
+                 globs=globs)
 
 
 def fmt(*, write: bool = False, marker: bool = False, cross_refs: bool = False,

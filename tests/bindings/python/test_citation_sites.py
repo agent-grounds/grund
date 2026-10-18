@@ -1,10 +1,6 @@
 """Citation-site queries on the Python binding: `refs` with `globs` or `from_` and `cover`
 with `globs` (§FS-coordinate-globs.bindings.options, §FS-coordinate-globs.bindings.note,
-§FS-coordinate-globs.bindings.refusals).
-
-Every test here is red until #810 gives the binding these options, so each carries
-`@unittest.expectedFailure`; the implementation removes the markers. Each calls the binding
-before the oracle, so today's failure is the binding's own refusal of the new call.
+§FS-coordinate-globs.bindings.refusals). Each calls the binding before the oracle.
 """
 
 import inspect
@@ -41,7 +37,6 @@ class CitationSiteTests(unittest.TestCase):
     def setUpClass(cls):
         cls.g = binding()
 
-    @unittest.expectedFailure
     def test_the_new_options_are_keyword_only_and_the_id_optional(self):
         refs = inspect.signature(self.g.refs).parameters
         self.assertIsNone(refs["id"].default)
@@ -52,7 +47,6 @@ class CitationSiteTests(unittest.TestCase):
         cover = inspect.signature(self.g.cover).parameters["globs"]
         self.assertEqual(((), inspect.Parameter.KEYWORD_ONLY), (cover.default, cover.kind))
 
-    @unittest.expectedFailure
     def test_citation_site_reads_match_the_core_data_and_bytes(self):
         for case, operation, args, options in CITATION_SITE_CASES:
             with self.subTest(case=case, operation=operation), temporary() as temp:
@@ -62,7 +56,6 @@ class CitationSiteTests(unittest.TestCase):
                 self.assertEqual(expected, actual, "complete field/order/null parity")
                 self.assertEqual(wire, canonical(actual), "canonical bytes")
 
-    @unittest.expectedFailure
     def test_hits_are_the_cli_records(self):
         for case, options in (
             ("refs-glob-union-once-json", {"globs": ("FS-login.1{,.**}", "FS-login.1.*")}),
@@ -80,7 +73,6 @@ class CitationSiteTests(unittest.TestCase):
         self.assertEqual(golden_rows(case), [{"sites": result.site_total,
                                               "files": result.file_total}])
 
-    @unittest.expectedFailure
     def test_cover_keeps_every_entry(self):
         case = "cover-glob-json"
         with temporary() as temp:
@@ -99,7 +91,6 @@ class CitationSiteTests(unittest.TestCase):
             for entry in result.entries)
         self.assertEqual(golden(case), rendered)
 
-    @unittest.expectedFailure
     def test_notes_are_the_cli_note_text(self):
         note = golden("refs-glob-note", "stderr").removeprefix("note: ").removesuffix("\n")
         self.assertEqual(golden("cover-glob-note", "stderr"), f"note: {note}\n")
@@ -110,7 +101,6 @@ class CitationSiteTests(unittest.TestCase):
             self.assertIsNone(self.g.cover(root=root).note)
             self.assertIsNone(self.g.refs(root=root, from_="FS-login").note)
 
-    @unittest.expectedFailure
     def test_a_refused_glob_or_source_is_a_query_failure(self):
         case = "refs-glob-refused-before-discovery"
         message = golden(case, "stderr").removeprefix("error: ").removesuffix("\n")
@@ -133,7 +123,6 @@ class CitationSiteTests(unittest.TestCase):
                 self.assertEqual(("query", refusal["code"], refusal["message"]),
                                  (failure["kind"], failure["code"], failure["message"]))
 
-    @unittest.expectedFailure
     def test_selectors_conflict_and_one_is_required(self):
         with temporary() as temp:
             root = fixture(temp, "refs-from-json")

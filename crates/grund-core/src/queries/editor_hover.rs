@@ -144,11 +144,26 @@ fn markdown_code_span(text: &str) -> String {
 /// (§FS-refs.3.4): the wording lives here once, so a terminal and an editor
 /// render one sentence rather than two that drift (§FS-lsp.1.2.5).
 pub fn usage_clause(usage: LspUsage) -> String {
-    if usage.sites == 0 {
-        return "not cited".to_string();
+    match usage.sites {
+        0 => "not cited".to_string(),
+        _ => counted("cited", usage),
     }
+}
+
+/// `cites at <n> site(s) across <m> file(s)`, or `cites nothing` at zero: what
+/// `grund refs --from --total` prints, the source's sentence rather than a target's,
+/// inflected as [`usage_clause`] is (§FS-refs.from.records).
+#[doc(hidden)]
+pub fn cites_clause(usage: LspUsage) -> String {
+    match usage.sites {
+        0 => "cites nothing".to_string(),
+        _ => counted("cites", usage),
+    }
+}
+
+fn counted(verb: &str, usage: LspUsage) -> String {
     format!(
-        "cited at {} site{} across {} file{}",
+        "{verb} at {} site{} across {} file{}",
         usage.sites,
         plural_s(usage.sites),
         usage.files,
