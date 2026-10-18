@@ -114,6 +114,7 @@ fn refs_mode_refusals_are_pinned() {
             "refs-glob-missing-value",
             "refs-glob-with-from",
             "refs-glob-with-section-offers-a-glob",
+            "refs-glob-with-section-and-descendants-offers-a-glob",
             "refs-glob-with-descendants-offers-a-glob",
             "refs-glob-with-section-escapes-the-offer",
             "refs-glob-with-section-two-globs-no-offer",

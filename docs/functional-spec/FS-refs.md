@@ -56,11 +56,12 @@ Each of these is a usage error: one `error:` line on stderr, nothing on stdout, 
 | `refs --glob 'FS-*' --from FS-login` | `error: --glob cannot be combined with --from` |
 | `refs --glob 'FS-login' --section 3` | `error: --section cannot be combined with --glob; accepted glob: "FS-login.3"` |
 | `refs --glob 'FS-login' --descendants` | `error: --descendants cannot be combined with --glob; accepted glob: "FS-login{,.**}"` |
+| `refs --glob 'FS-login' --section 3 --descendants` | `error: --section cannot be combined with --glob; accepted glob: "FS-login.3{,.**}"` |
 | `refs --from FS-login --section 3` | `error: --section cannot be combined with --from` |
 | `refs --from FS-login --descendants` | `error: --descendants cannot be combined with --from` |
 | `refs --glob 'FS-*' docs src`, `refs --from FS-login docs src` | `error: refs takes at most one path argument` |
 
-The accepted glob is [§FS-errors.2.5](FS-errors.md#25-refused-input)'s rewrite, offered only beside exactly one `--glob`: the pattern as typed with `.<s>`, or `{,.**}`, appended, where `<s>` is the section with every operator in it escaped, and only when the result passes every check the grammar makes before discovery ([§FS-coordinate-globs.errors.shape](FS-coordinate-globs.md#errorsshape-one-refusal-line)). Otherwise, and beside `--from`, whose source a glob cannot replace, the line ends after the flag's name. `--glob` with no value is [§FS-coordinate-globs.errors.flags](FS-coordinate-globs.md#errorsflags-flag-errors). In ID mode every refusal keeps its bytes: `error: refs requires an ID` and `error: refs takes an ID and at most one path argument`.
+The accepted glob is [§FS-errors.2.5](FS-errors.md#25-refused-input)'s rewrite, offered only beside exactly one `--glob`: the pattern as typed with `.<s>` appended for `--section`, then `{,.**}` for `--descendants`, so both flags together offer `.<s>{,.**}` and the line names `--section`; `<s>` is the section with every operator in it escaped, and the glob is offered only when the result passes every check the grammar makes before discovery ([§FS-coordinate-globs.errors.shape](FS-coordinate-globs.md#errorsshape-one-refusal-line)). Otherwise, and beside `--from`, whose source a glob cannot replace, the line ends after the flag's name. `--glob` with no value is [§FS-coordinate-globs.errors.flags](FS-coordinate-globs.md#errorsflags-flag-errors). In ID mode every refusal keeps its bytes: `error: refs requires an ID` and `error: refs takes an ID and at most one path argument`.
 
 ### 1.3 An ID typed as the path gets a hint
 

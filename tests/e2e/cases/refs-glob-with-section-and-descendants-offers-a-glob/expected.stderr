@@ -1,0 +1,1 @@
+error: --section cannot be combined with --glob; accepted glob: "FS-login.1{,.**}"
