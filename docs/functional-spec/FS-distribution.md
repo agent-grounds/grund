@@ -883,6 +883,19 @@ publication belong to #471. Accurate signatures/type information and runnable
 check/iteration/show examples belong in user documentation and example indexes.
 Local support is described independently of unpublished PyPI availability.
 
+##### 3.3.7.1 Raw Cargo extension builds
+
+On supported desktop platforms, enabling `grund-py/extension-module` in a raw
+Cargo build must produce a Python extension that the supported interpreter can
+import, including when Python and Node natives are built together from one
+checkout for command agreement ([§REQ-one-answer.proof.matrix](../requirements/REQ-one-answer.md#proofmatrix-the-complete-comparison-matrix)).
+The build must supply the platform's extension-module linker setup itself;
+macOS must resolve Python symbols through the importing interpreter without
+requiring maturin to inject linker arguments. This setup applies to the extension
+cdylib without imposing extension-only linking on ordinary workspace executables
+or tests. The interpreter and ABI boundary remains the one in
+[§FS-distribution.3.3.7](FS-distribution.md#337-local-source-and-typing-handoff).
+
 ## release-floor: One shared minimum publishable release
 
 The tree records one explicit minimum publishable release in the single-line
