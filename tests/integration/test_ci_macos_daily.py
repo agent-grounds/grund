@@ -4,7 +4,8 @@ opens or edits one issue.
 
 Read as text, the way `test_ci_language_jobs.py` reads `ci.yml`: the CI Python has no
 YAML parser. The report and its open-or-edit decision are functions of the forge's
-JSON, so they are held offline, against canned jobs (§AR-ci.14.4)."""
+JSON, so they are held offline, against canned jobs, and the kind label the issue
+carries is read from the `gh` calls `main` makes against a recording `gh` (§AR-ci.14.4)."""
 
 import importlib.util
 import re
@@ -12,6 +13,7 @@ import sys
 import unittest
 from pathlib import Path
 
+from test_ci_duration import RecordingGh, calls_of, labels
 from test_ci_language_jobs import CI, instances, leg_commands, runs
 from test_release_workflow import WORKFLOWS, jobs, squash
 
@@ -135,6 +137,39 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(action(issues[:1], MARKER), ("open", None))
         self.assertEqual(action([{"number": 4, "body": f"It quotes {MARKER} here."}], MARKER),
                          ("open", None))
+
+
+class FailureIssueKindTests(RecordingGh, unittest.TestCase):
+    """§AR-ci.14.3: the macOS failure issue carries its kind, `bug`, whether `main`
+    opens it or edits it."""
+
+    def report(self, issues):
+        jobs_ = [failed_job("suites (macos-latest)", ("cargo test", "failure")),
+                 {"name": "report the failure", "conclusion": None, "steps": []}]
+        answers = {"api": {"actions/runs/202/jobs": {"jobs": jobs_}}, "issues": issues}
+        return self.run_against_forge(SCRIPT_PATH, answers, GITHUB_RUN_ID="202",
+                                      GITHUB_REPOSITORY="agent-grounds/grund", GITHUB_SHA="a" * 40)
+
+    # Red until #814 gives the issue its kind label; the change that does removes this marker.
+    @unittest.expectedFailure
+    def test_the_failure_issue_is_opened_with_the_kind_label_bug(self):
+        calls = self.report([{"number": 3, "body": "<!-- ci-duration-drift -->\nslow"}])
+        creates = calls_of(calls, "issue", "create")
+        self.assertEqual(len(creates), 1, calls)
+        self.assertEqual(calls_of(calls, "issue", "edit"), [])
+        self.assertIn("bug", labels(creates[0], "--label", "-l"),
+                      f"the macOS failure issue is opened without its kind label: {creates[0]}")
+
+    # Red until #814 gives the issue its kind label; the change that does removes this marker.
+    @unittest.expectedFailure
+    def test_an_edit_of_the_failure_issue_adds_the_kind_label_bug_again(self):
+        calls = self.report([{"number": 3, "body": "<!-- ci-duration-drift -->\nslow"},
+                             {"number": 9, "body": f"{MARKER}\nold"}])
+        edits = calls_of(calls, "issue", "edit")
+        self.assertEqual([argv[:3] for argv in edits], [["issue", "edit", "9"]], calls)
+        self.assertEqual(calls_of(calls, "issue", "create"), [])
+        self.assertIn("bug", labels(edits[0], "--add-label"),
+                      f"the macOS failure issue is edited without adding its kind label: {edits[0]}")
 
 
 if __name__ == "__main__":
