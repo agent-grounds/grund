@@ -1,0 +1,1 @@
+error: grund.toml:7: unknown config section `reference` (a v1 table; in v2: [schema], [schema.notes.*], [schema.leads.words], [rules.citations.grounding], [presentation])

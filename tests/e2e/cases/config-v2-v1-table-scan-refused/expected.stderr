@@ -1,0 +1,1 @@
+error: grund.toml:7: unknown config section `scan` (a v1 table; in v2: [schema.sources], [schema.sources.extensions], [schema.sources.definitions.*], [schema.kinds.code])
