@@ -71,43 +71,78 @@ fn case_command_cwd(case: &Path) -> String {
     }
 }
 
-fn command_cwd(manifest_dir: &Path, case: &Path, name: &str) -> PathBuf {
-    match case_command_cwd(case).as_str() {
-        "" => manifest_dir.to_path_buf(),
-        "{repo}" => case.join("repo"),
-        "{repo_copy}" => manifest_dir.join("target/e2e-work").join(name).join("repo"),
-        other => panic!("{name}: command.cwd must be {{repo}} or {{repo_copy}}, got {other:?}"),
+/// The same owner supplies argv, cwd and every later reader (§FS-examples.5.6.1).
+struct CaseExecution {
+    copy: Option<CaseCopy>,
+    args: Vec<String>,
+    cwd: PathBuf,
+}
+
+impl CaseExecution {
+    fn copied_repo(&self, name: &str) -> &Path {
+        self.copy.as_ref().map(|copy| copy.repo.as_path()).unwrap_or_else(|| {
+            panic!("{name}: expected.repo requires command.args or command.cwd to use {{repo_copy}}")
+        })
+    }
+
+    /// Normalize before the comparison/refresh split (§FS-examples.5.6.2).
+    fn normalize(&self, text: &str) -> String {
+        self.copy
+            .as_ref()
+            .map_or_else(|| text.to_string(), |copy| copy.normalize(text))
     }
 }
 
-/// Validate before copying, then expand shared argv placeholders (§FS-examples.5.4).
-fn command_args(manifest_dir: &Path, case: &Path, name: &str) -> Vec<String> {
+/// Validate all command manifests before allocating or copying, and retain the
+/// owner even if copying or link creation unwinds (§FS-examples.5.6.1).
+fn prepare_case(manifest_dir: &Path, case: &Path, name: &str) -> CaseExecution {
+    let command = case_command(case);
+    let external = external_words(case);
+    let is_external = external.is_some();
+    let words = external.unwrap_or_else(|| split_command(name, &command));
+    let cwd = case_command_cwd(case);
+    assert!(
+        matches!(cwd.as_str(), "" | "{repo}" | "{repo_copy}"),
+        "{name}: command.cwd must be {{repo}} or {{repo_copy}}, got {cwd:?}"
+    );
+    // Reading this manifest validates it before the fixture is copied, too.
+    let _ = case_symlinks(case);
+    let copy = (command.contains("{repo_copy}") || cwd == "{repo_copy}")
+        .then(|| CaseCopy::new(manifest_dir, name));
+    if let Some(copy) = &copy {
+        copy_dir(&case.join("repo"), &copy.repo);
+        create_case_symlinks(case, &copy.repo, name);
+    }
+    let args = command_args(manifest_dir, case, words, is_external, copy.as_ref());
+    let cwd = match cwd.as_str() {
+        "{repo}" => case.join("repo"),
+        "{repo_copy}" => copy.as_ref().expect("copy selected by cwd").repo.clone(),
+        _ => manifest_dir.to_path_buf(),
+    };
+    CaseExecution { copy, args, cwd }
+}
+
+/// Expand whole and suffix arguments from the invocation's copy (§FS-examples.5.6.1).
+fn command_args(
+    manifest_dir: &Path,
+    case: &Path,
+    words: Vec<String>,
+    is_external: bool,
+    copy: Option<&CaseCopy>,
+) -> Vec<String> {
     let repo = case.join("repo");
     let repo_arg = repo
         .strip_prefix(manifest_dir)
         .unwrap_or(&repo)
         .to_string_lossy()
         .into_owned();
-    let repo_copy = manifest_dir.join("target/e2e-work").join(name).join("repo");
-    let repo_copy_arg = repo_copy
-        .strip_prefix(manifest_dir)
-        .unwrap_or(&repo_copy)
-        .to_string_lossy()
-        .into_owned();
-    let command = case_command(case);
-    // Split before the copy: a refused line spends no fixture (§FS-examples.5.3).
-    let external = external_words(case);
-    let is_external = external.is_some();
-    let words = external.unwrap_or_else(|| split_command(name, &command));
-    if command.contains("{repo_copy}") || case_command_cwd(case) == "{repo_copy}" {
-        if let Some(parent) = repo_copy.parent() {
-            let _ = fs::remove_dir_all(parent);
-            fs::create_dir_all(parent)
-                .unwrap_or_else(|err| panic!("{name}: create {}: {err}", parent.display()));
-        }
-        copy_dir(&repo, &repo_copy);
-        create_case_symlinks(case, &repo_copy, name);
-    }
+    let repo_copy_arg = copy.map(|copy| {
+        copy.repo
+            .strip_prefix(manifest_dir)
+            .unwrap_or(&copy.repo)
+            .to_string_lossy()
+            .into_owned()
+    });
 
     words
         .into_iter()
@@ -121,14 +156,14 @@ fn command_args(manifest_dir: &Path, case: &Path, name: &str) -> Vec<String> {
                     .to_string_lossy()
                     .into_owned()
             } else if let Some(suffix) = arg.strip_prefix("{repo_copy}/") {
-                PathBuf::from(&repo_copy_arg)
+                PathBuf::from(repo_copy_arg.as_ref().expect("copy selected by argv"))
                     .join(suffix)
                     .to_string_lossy()
                     .into_owned()
             } else if arg == "{repo}" {
                 repo_arg.clone()
             } else if arg == "{repo_copy}" {
-                repo_copy_arg.clone()
+                repo_copy_arg.clone().expect("copy selected by argv")
             } else {
                 arg.to_string()
             }

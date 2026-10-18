@@ -22,8 +22,9 @@ pub struct GoldenChange {
 /// refresh branch returned before the final-tree surface was reached at all, so
 /// a stale `expected.repo` golden survived a green refresh and failed the very
 /// next compare pass (§AR-workspace.9.1.5).
+/// §FS-examples.5.6.1: refresh borrows the same owner as comparison.
 fn refresh_case(
-    manifest_dir: &Path,
+    execution: &CaseExecution,
     case: &Path,
     name: &str,
     exit: i32,
@@ -44,7 +45,7 @@ fn refresh_case(
             });
         }
     }
-    let tree = refresh_expected_repo(manifest_dir, case, name, &mut changes);
+    let tree = refresh_expected_repo(execution, case, name, &mut changes);
     CaseOutcome::Refreshed {
         case: name.to_string(),
         tree,
@@ -60,8 +61,9 @@ fn refresh_case(
 ///
 /// Returns whether the case carries a tree at all, which is what the accounting
 /// counts. A case with no `expected.repo` pins nothing here and gains no golden.
+/// §FS-examples.5.6.1: never reconstruct another invocation's final tree.
 fn refresh_expected_repo(
-    manifest_dir: &Path,
+    execution: &CaseExecution,
     case: &Path,
     name: &str,
     changes: &mut Vec<GoldenChange>,
@@ -70,7 +72,7 @@ fn refresh_expected_repo(
     if !expected.exists() {
         return false;
     }
-    let actual = manifest_dir.join("target/e2e-work").join(name).join("repo");
+    let actual = execution.copied_repo(name);
     // The same fixture-authoring precondition the compare path asserts: a case
     // that cannot produce a tree is not a case whose golden gets deleted.
     assert!(

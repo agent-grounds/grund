@@ -6,6 +6,12 @@ use std::path::{Component, Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 use std::sync::OnceLock;
 
+#[path = "case_paths.rs"]
+mod case_paths;
+
+// Invocation ownership and shared output normalization (§FS-examples.5.6.1).
+include!("case_copy.rs");
+
 // The citable half of the canonical kind set (§FS-config.3.4). The two default
 // test kinds are non-citable, so no `spec.refs` entry can name one.
 const CANONICAL_KINDS: &[&str] = &["GRUND", "GOAL", "FS", "AR", "DF", "DA", "RM"];
@@ -140,10 +146,9 @@ pub fn assert_case_is_deterministic(manifest_dir: &Path, case: &Path) -> CaseOut
     if is_mutating_case(case) {
         return CaseOutcome::NotApplicable;
     }
-    let args = command_args(manifest_dir, case, name);
-    let cwd = command_cwd(manifest_dir, case, name);
-    let first = run_grund(case, &cwd, &args, name);
-    let second = run_grund(case, &cwd, &args, name);
+    let execution = prepare_case(manifest_dir, case, name);
+    let first = run_grund(case, &execution.cwd, &execution.args, name);
+    let second = run_grund(case, &execution.cwd, &execution.args, name);
     let mut mismatches = Vec::new();
     if first.status.code() != second.status.code() {
         mismatches.push(format!(
@@ -203,6 +208,18 @@ fn case_requires_unix_shell(case: &Path) -> bool {
 /// a different tree's output. The skip is returned, so the pass counts and names it
 /// instead of exiting 0.
 pub fn run_case(manifest_dir: &Path, case: &Path, kind: CaseKind) -> CaseOutcome {
+    run_case_inspecting(manifest_dir, case, kind, |_| {})
+}
+
+/// Inspect this invocation's mutable tree after output/tree handling and before
+/// its owner is released (§FS-examples.5.6.1). Skipped and read-only cases have
+/// no copy to inspect. An inspector panic also releases the copy.
+pub fn run_case_inspecting(
+    manifest_dir: &Path,
+    case: &Path,
+    kind: CaseKind,
+    inspect: impl FnOnce(&Path),
+) -> CaseOutcome {
     let name = case_name(case);
     if kind.requires_spec_refs() {
         assert_spec_refs(case, name);
@@ -218,7 +235,7 @@ pub fn run_case(manifest_dir: &Path, case: &Path, kind: CaseKind) -> CaseOutcome
     // tree's output (§FS-workspace.6.1.4).
     if !case_symlinks(case).is_empty() {
         // Links are created in the copy, and only the `{repo_copy}` branch of
-        // `command_args` copies the fixture — so a manifest case written against
+        // preparation copies the fixture — so a manifest case written against
         // `{repo}` created no links at all and was green anyway, testing the
         // committed tree while claiming to test a symlinked one.
         assert!(
@@ -234,21 +251,37 @@ pub fn run_case(manifest_dir: &Path, case: &Path, kind: CaseKind) -> CaseOutcome
         }
     }
 
-    let args = command_args(manifest_dir, case, name);
-    let cwd = command_cwd(manifest_dir, case, name);
-    let output = run_grund(case, &cwd, &args, name);
+    let execution = prepare_case(manifest_dir, case, name);
+    let outcome = run_prepared_case(manifest_dir, case, name, &execution);
+    if let Some(copy) = &execution.copy {
+        inspect(&copy.repo);
+    }
+    outcome
+}
+
+/// All output and final-tree readers borrow the live owner (§FS-examples.5.6.1).
+fn run_prepared_case(
+    manifest_dir: &Path,
+    case: &Path,
+    name: &str,
+    execution: &CaseExecution,
+) -> CaseOutcome {
+    let output = run_grund(case, &execution.cwd, &execution.args, name);
     let actual_exit = output.status.code().unwrap_or(-1);
     let actual_stdout = String::from_utf8(output.stdout)
         .unwrap_or_else(|err| panic!("{name}: stdout was not UTF-8: {err}"));
     let actual_stderr = String::from_utf8(output.stderr)
         .unwrap_or_else(|err| panic!("{name}: stderr was not UTF-8: {err}"));
+    // One normalization feeds comparison and refresh (§FS-examples.5.6.2).
+    let actual_stdout = execution.normalize(&actual_stdout);
+    let actual_stderr = execution.normalize(&actual_stderr);
 
     // Refresh writes every surface and compares none; compare compares every
     // surface and writes none. The final tree joins that split rather than
     // getting a third behaviour of its own (§AR-workspace.9.1.5).
     if should_update_expected(manifest_dir) {
         return refresh_case(
-            manifest_dir,
+            execution,
             case,
             name,
             actual_exit,
@@ -264,7 +297,7 @@ pub fn run_case(manifest_dir: &Path, case: &Path, kind: CaseKind) -> CaseOutcome
         .unwrap_or_else(|err| panic!("{name}: parse expected.exit: {err}"));
     let expected_stdout = read_expected_output(case.join("expected.stdout"));
     let expected_stderr = read_expected_output(case.join("expected.stderr"));
-    assert_expected_errors_are_concise(case, name, &args, &expected_stderr);
+    assert_expected_errors_are_concise(case, name, &execution.args, &expected_stderr);
 
     // Every surface is compared, in this fixed order, before deciding: a
     // mismatch is pushed rather than panicked, so it cannot hide a later one
@@ -291,7 +324,7 @@ pub fn run_case(manifest_dir: &Path, case: &Path, kind: CaseKind) -> CaseOutcome
             &actual_stderr,
         ));
     }
-    assert_expected_repo(case, manifest_dir, name, &mut mismatches);
+    assert_expected_repo(case, execution, name, &mut mismatches);
 
     if mismatches.is_empty() {
         CaseOutcome::Ran

@@ -109,12 +109,18 @@ pub fn assert_every_case_passed(label: &str, outcomes: &[CaseOutcome]) {
 /// manifest's own `{repo_copy}` requirement in [`run_case`]); the file list and
 /// the per-file bytes are golden comparisons, so a difference is pushed onto
 /// `mismatches` — as one `final repo mismatch` entry — instead of panicking.
-fn assert_expected_repo(case: &Path, manifest_dir: &Path, name: &str, mismatches: &mut Vec<String>) {
+/// §FS-examples.5.6.1: compare the tree belonging to the live invocation owner.
+fn assert_expected_repo(
+    case: &Path,
+    execution: &CaseExecution,
+    name: &str,
+    mismatches: &mut Vec<String>,
+) {
     let expected = case.join("expected.repo");
     if !expected.exists() {
         return;
     }
-    let actual = manifest_dir.join("target/e2e-work").join(name).join("repo");
+    let actual = execution.copied_repo(name);
     assert!(
         actual.exists(),
         "{name}: expected.repo requires command.args or command.cwd to use {{repo_copy}}"

@@ -1,11 +1,11 @@
 // The `command.args` contract of the case runner, pinned in a file of its own
 // (§AR-core-module-layout.3). Included into the same module, so the tests reach
-// `command_args` itself.
+// command preparation itself.
 
 /// How a manifest's `command.args` becomes an argv, or is refused
 /// (§FS-examples.5.3).
 ///
-/// Every test drives `command_args` — the one reader both e2e cases and
+/// Every test drives `prepare_case` — the one reader both e2e cases and
 /// examples go through (§FS-examples.5) — over a scratch case holding nothing
 /// but the line, rather than the tokenizer behind it: the contract is the argv
 /// a case author gets, or the message the runner refuses the line with, and the
@@ -14,7 +14,7 @@
 /// caught here so its message can be read.
 #[cfg(test)]
 mod command_args_tests {
-    use super::command_args;
+    use super::prepare_case;
     use std::fs;
     use std::panic::{self, AssertUnwindSafe};
     use std::path::PathBuf;
@@ -49,7 +49,7 @@ mod command_args_tests {
         fs::write(case.join("command.args"), line).expect("write command.args");
         let manifest_dir = manifest_dir();
         let built = panic::catch_unwind(AssertUnwindSafe(|| {
-            command_args(&manifest_dir, &case, name)
+            prepare_case(&manifest_dir, &case, name).args
         }));
         let _ = fs::remove_dir_all(&case);
         built.map_err(|payload| {

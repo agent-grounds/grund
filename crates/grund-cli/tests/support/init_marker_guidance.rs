@@ -4,21 +4,23 @@
 use std::fs;
 use std::path::PathBuf;
 
-use super::case_runner::{CaseKind, assert_every_case_passed, run_case};
+use super::case_runner::{CaseKind, assert_every_case_passed, run_case_inspecting};
 
+// §FS-examples.5.6.1: read the generated config while its invocation owner lives.
 fn assert_fresh_comments(case: &str, comments: usize) {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let outcome = run_case(
+    let mut config = None;
+    let outcome = run_case_inspecting(
         &root,
         &root.join("tests/e2e/cases").join(case),
         CaseKind::E2e,
+        |repo| {
+            config = Some(
+                fs::read_to_string(repo.join("grund.toml")).expect("read freshly generated config"),
+            );
+        },
     );
-    let config = fs::read_to_string(
-        root.join("target/e2e-work")
-            .join(case)
-            .join("repo/grund.toml"),
-    )
-    .expect("read freshly generated config");
+    let config = config.expect("inspect this invocation's generated config");
     assert_eq!(
         config.lines().next(),
         Some(
