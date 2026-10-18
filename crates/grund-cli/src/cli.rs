@@ -175,11 +175,13 @@ fn exit_after_scan_errors(scan_errors: &[ApiScanError]) -> ExitCode {
 
 /// The wildcard arm of a command's `match` on a promised enum, which is
 /// `#[non_exhaustive]` because grund-core may add a variant in a release this
-/// binary was not built against (§FS-distribution.3.1.2, §AR-bindings.2.1). The
-/// command has nothing of such a variant to render, so it refuses it like any
+/// binary was not built against (§FS-distribution.3.1.2), when nothing core gave
+/// is left to render without the variant (§AR-bindings.2.1). An arm with
+/// something left renders that instead: an unnamed note's bare event line, or an
+/// unnamed refusal's own message. Here the command refuses the variant like any
 /// operational failure, exit 2, rather than guessing or panicking. Today's
-/// variants never get here: each file that calls this names every one, which
-/// `tests/integration/test_frontend_wildcard_arms.py` holds.
+/// variants never get here: the `match` that holds the arm names every one in
+/// its patterns, which `tests/integration/test_frontend_wildcard_arms.py` holds.
 fn unnamed_variant<T>() -> ExitCode {
     let name = std::any::type_name::<T>().rsplit("::").next().unwrap_or("value");
     eprintln!("error: grund-core answered with a {name} this grund does not name");

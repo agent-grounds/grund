@@ -180,7 +180,11 @@ fn parse_integrations_args(args: &[String]) -> Result<IntegrationsInvocation, Ex
     Ok(IntegrationsInvocation { opts, json })
 }
 
-/// A refused combination in the CLI's flag names (§FS-integrations.6.2).
+/// Why a run was refused, in the CLI's words: a refused combination in its flag
+/// names (§FS-integrations.6.2), a target that could not be read or written as
+/// its path and the filesystem's message, and a refusal this release does not
+/// name in core's own words, which the caller reports as an operational failure
+/// (§AR-bindings.2.1).
 fn refusal_message(refusal: &IntegrationsFailure) -> String {
     match refusal {
         IntegrationsFailure::AgentWithoutWrite => "--agent requires --write".into(),
@@ -196,7 +200,10 @@ fn refusal_message(refusal: &IntegrationsFailure) -> String {
         IntegrationsFailure::WriteWithoutSubject => {
             "integrations --write requires a client or --conversation".into()
         }
-        other => other.to_string(),
+        IntegrationsFailure::Filesystem { path, message } => {
+            format!("{}: {message}", path.display())
+        }
+        unnamed => unnamed.to_string(),
     }
 }
 

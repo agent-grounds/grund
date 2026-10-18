@@ -49,22 +49,34 @@ fn resolver_failed(failure: &IntegrationsFailure) -> bool {
 
 fn report_integration_events(events: &[IntegrationEvent]) {
     for event in events {
-        let (verb, path) = (event.outcome.name(), event.path.display());
-        match &event.note {
-            None => eprintln!("{verb} {path}"),
-            // Reported rather than silent (§FS-integrations.4.1.3): the install
-            // is otherwise indistinguishable from one that works.
-            Some(IntegrationNote::UnwiredWezterm { apply_call }) => {
-                eprintln!("{verb} {path}");
-                eprintln!(
-                    "note: {path} does not call `{apply_call}config)` on the config it returns, so WezTerm reads the block and registers nothing; add that line where you build your config"
-                );
-            }
-            Some(IntegrationNote::AgentHomeMissing { home }) => {
-                eprintln!("{verb} {path} (no {home})")
-            }
-            Some(note) => eprintln!("{verb} {path} ({})", describe_guidance(note)),
-        }
+        eprint!("{}", event_lines(event.outcome.name(), &event.path, event.note.as_ref()));
+    }
+}
+
+/// One event's lines on stderr: `<verb> <path>`, with what its note adds
+/// (§FS-integrations.1.3.2). A note this release does not name annotates a write
+/// that already happened, so its event prints the bare line, as a note-less one
+/// does (§AR-bindings.2.1).
+fn event_lines(verb: &str, path: &Path, note: Option<&IntegrationNote>) -> String {
+    let path = path.display();
+    match note {
+        // Reported rather than silent (§FS-integrations.4.1.3): the install
+        // is otherwise indistinguishable from one that works.
+        Some(IntegrationNote::UnwiredWezterm { apply_call }) => format!(
+            "{verb} {path}\nnote: {path} does not call `{apply_call}config)` on the config it returns, so WezTerm reads the block and registers nothing; add that line where you build your config\n"
+        ),
+        Some(IntegrationNote::AgentHomeMissing { home }) => format!("{verb} {path} (no {home})\n"),
+        Some(IntegrationNote::Guidance {
+            rendering,
+            target,
+            requested,
+            overridden,
+        }) => format!(
+            "{verb} {path} ({})\n",
+            describe_guidance(*rendering, *target, *requested, *overridden)
+        ),
+        // A note this release does not name (§AR-bindings.2.1): the write happened.
+        None | Some(_) => format!("{verb} {path}\n"),
     }
 }
 
@@ -72,23 +84,19 @@ fn report_integration_events(events: &[IntegrationEvent]) {
 /// for when it is not (§FS-integrations.4.4.4). Reported per target, because
 /// unreported an override, a gate downgrade, and an unread key are
 /// indistinguishable from the outside.
-fn describe_guidance(note: &IntegrationNote) -> String {
-    let IntegrationNote::Guidance {
-        rendering,
-        target,
-        requested,
-        overridden,
-    } = note
-    else {
-        return String::new();
-    };
-    if *rendering == ConversationRendering::Plain {
+fn describe_guidance(
+    rendering: ConversationRendering,
+    target: ConversationTarget,
+    requested: ConversationTarget,
+    overridden: bool,
+) -> String {
+    if rendering == ConversationRendering::Plain {
         return ConversationRendering::Plain.name().to_string();
     }
     let mut described = format!("{} \u{2192} {}", rendering.name(), target.name());
     if target != requested {
         described.push_str(&format!("; {} unverified here", requested.name()));
-    } else if *overridden {
+    } else if overridden {
         described.push_str("; agent override");
     }
     described
@@ -110,19 +118,21 @@ fn report_integrations_failure(
     } else {
         report_integrations_write(&error.output);
     }
-    match &error.failure {
-        IntegrationsFailure::Filesystem { path, .. }
-            if client.is_some_and(|client| {
-                named_status(&error.output, client).config_target == path.as_os_str()
-            }) =>
-        {
-            let name = client.map_or("", IntegrationClient::name);
-            eprintln!("error: cannot resolve home directory for {name}");
-        }
-        IntegrationsFailure::Filesystem { path, message } => {
-            eprintln!("error: {}: {message}", path.display());
-        }
-        refusal => eprintln!("error: {}", refusal_message(refusal)),
+    match unresolved_home(error, client) {
+        Some(client) => eprintln!("error: cannot resolve home directory for {}", client.name()),
+        None => eprintln!("error: {}", refusal_message(&error.failure)),
     }
     ExitCode::from(2)
+}
+
+/// The named client, when the run stopped because its `~`-rooted target has no
+/// home directory to resolve it (§FS-integrations.4.3.14).
+fn unresolved_home(
+    error: &IntegrationsError,
+    client: Option<IntegrationClient>,
+) -> Option<IntegrationClient> {
+    let IntegrationsFailure::Filesystem { path, .. } = &error.failure else {
+        return None;
+    };
+    client.filter(|client| named_status(&error.output, *client).config_target == path.as_os_str())
 }

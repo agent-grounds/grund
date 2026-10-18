@@ -14,16 +14,22 @@ fn command_fetch(args: &[String]) -> ExitCode {
     render_run_warnings(&run_warnings);
     match result {
         Ok(()) => ExitCode::SUCCESS,
-        Err(err) => match err.kind {
-            FetchFailureKind::Query => {
-                eprintln!("{}", err.message);
-                ExitCode::FAILURE
-            }
-            FetchFailureKind::Operational => {
-                eprintln!("error: {}", err.message);
-                ExitCode::from(2)
-            }
-            _ => unnamed_variant::<FetchFailureKind>(),
-        },
+        Err(err) => {
+            let (line, code) = fetch_failure_report(err.kind, &err.message);
+            eprintln!("{line}");
+            ExitCode::from(code)
+        }
+    }
+}
+
+/// How a failed fetch is reported (§FS-fetch.7): a query failure is core's
+/// message alone, exit 1, and an operational one `error: <message>`, exit 2.
+/// Core words every failure, so a kind this release does not name is reported
+/// as an operational one (§AR-bindings.2.1).
+fn fetch_failure_report(kind: FetchFailureKind, message: &str) -> (String, u8) {
+    match kind {
+        FetchFailureKind::Query => (message.to_owned(), 1),
+        FetchFailureKind::Operational => (format!("error: {message}"), 2),
+        _ => (format!("error: {message}"), 2),
     }
 }
