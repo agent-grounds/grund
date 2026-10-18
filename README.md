@@ -364,8 +364,10 @@ Type `§` or `$$` and it completes the declared IDs; see
 The [setup guide](docs/user-facing/lsp.md) has the complete import and
 verification flow plus snippets for VSCode, Vim/Neovim, Emacs, Helix, Zed, and
 Sublime Text. Put reusable client config in your editor's **user (global)
-settings**, not a per-repo file, so `grund-lsp` works in every project rather
-than only repos that ship an editor config.
+settings**, so the configuration is available across projects rather than only
+in repos that ship an editor config. In VSCode / VSCodium, user settings do not
+grant Workspace Trust; see the [guide's trust prerequisite](docs/user-facing/lsp.md#vscode--vscodium)
+for the affected clients.
 
 <p align="center">
   <picture>
