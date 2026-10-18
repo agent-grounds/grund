@@ -38,10 +38,22 @@ opts.path = "docs".into();
 let output = grund_core::check_with_opts(opts)?;
 ```
 
-Before `1.0`, `0.21.0` marks the promised records and enums
-`#[non_exhaustive]`, so a struct literal or a `match` with no wildcard arm stops
-compiling then. The 30 integrations names deprecated in `0.19.0` are removed in
-the same release; `integrations` answers what each of them did.
+Since `0.21.0` the promised records and enums are `#[non_exhaustive]`, so a
+struct literal of one does not compile, and a `match` on a promised enum ends in
+a wildcard arm:
+
+```rust
+fn label(mode: grund_core::ShowMode) -> &'static str {
+    match mode {
+        grund_core::ShowMode::Toc => "toc",
+        grund_core::ShowMode::Full => "full",
+        _ => "another mode",
+    }
+}
+```
+
+The 30 integrations names deprecated in `0.19.0` were removed in the same
+release; `integrations` answers what each of them did.
 
 The [Rust API guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/rust-api.md)
 has examples and the migration tables, and

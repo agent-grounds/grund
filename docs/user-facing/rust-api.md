@@ -7,7 +7,7 @@ data and prints nothing ([§FS-distribution.3.1](../functional-spec/FS-distribut
 
 ```toml
 [dependencies]
-grund-core = "0.19"
+grund-core = "0.21"
 ```
 
 [`examples/rust-api`](../../examples/rust-api/) is a runnable embedder. It
@@ -58,10 +58,30 @@ for finding in &output.report.errors {
 }
 ```
 
-That is what lets `1.x` add a field. In `0.21.0` the promised records and enums
-become `#[non_exhaustive]`, so building one with a struct literal, or matching
-one without a wildcard arm, stops compiling then. Code written as above is
-unaffected.
+That is what lets `1.x` add a field or a variant. Every promised record and
+enum is `#[non_exhaustive]`, so outside the crate a struct literal of one does
+not compile, and neither does a `match` on a promised enum without a wildcard
+arm. Code written as above compiles.
+
+## Match a promised enum with a wildcard arm
+
+End a `match` on a promised enum in a `_` arm, for the variant a later release
+adds. Name every variant you render, and decide what the arm does for one you
+have not seen:
+
+```rust
+use grund_core::IntegrationOutcome;
+
+fn changed(outcome: IntegrationOutcome) -> bool {
+    match outcome {
+        IntegrationOutcome::Wrote | IntegrationOutcome::Appended | IntegrationOutcome::Updated => true,
+        IntegrationOutcome::Unchanged | IntegrationOutcome::Skipped => false,
+        _ => true,
+    }
+}
+```
+
+A struct pattern on a promised record ends in `..` for the same reason.
 
 ## Examples
 
@@ -146,15 +166,26 @@ These four root aliases were deprecated in `0.17.0`.
 | `KindConfig` | the `schema` rows of a `Project` |
 | `CitationRules` | `rules.citations` of a `Project` |
 
-### Deprecated in 0.19.0, removed in 0.21.0
+### Non-exhaustive records and enums in 0.21.0
+
+The crate documentation gave notice of this from `0.19.0`.
+
+| What stopped compiling | Write instead |
+|---|---|
+| A struct literal of an option record, `ShowOpts { mode: ShowMode::Toc, ..Default::default() }` | `let mut opts = ShowOpts::default(); opts.mode = ShowMode::Toc;` |
+| A struct literal of an output record or a refusal | Read the one an entry point returns |
+| A `match` on a promised enum that names every variant | Add a `_` arm |
+| A struct pattern on a promised record without `..` | End the pattern in `..` |
+
+### Removed in 0.21.0
 
 `grund integrations` used to be assembled from 34 root names. Four of them stay,
 because `integrations` is spelled in them: `IntegrationClient`, `InstallKind`,
 `ConversationRendering` and `ConversationTarget`. The other 30, and nine methods
-of the kept types, warn now and are removed in `0.21.0`. Each one is answered by
-a field of `integrations`.
+of the kept types, were deprecated in `0.19.0` and removed in `0.21.0`. Each one
+is answered by a field of `integrations`.
 
-| Deprecated | Read instead |
+| Removed | Read instead |
 |---|---|
 | `detect_clients` | `IntegrationsOutput::detected` |
 | `integration_is_current`, `vscode_integration_is_current` | `IntegrationClientStatus::installed` |
