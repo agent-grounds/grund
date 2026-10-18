@@ -79,6 +79,7 @@ fn glob_rows_select_catalog_coordinates() {
             "list-glob-named-class",
             "list-glob-numbered-class",
             "list-glob-mixed-section",
+            "list-glob-relative-numbered-title",
             "list-glob-numbered-then-named",
             "list-glob-middle-globstar",
             "list-glob-leading-globstar-json",

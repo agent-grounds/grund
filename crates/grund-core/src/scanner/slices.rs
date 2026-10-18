@@ -6,9 +6,13 @@
 //! gives (§DF-one-parse-answers-from-0-19).
 
 use super::embedded_value_context::without_value_tag;
-use crate::grammar::{comment_envelope, expand_relative_heading, relative_heading_form};
+use crate::grammar::{
+    comment_envelope, expand_relative_heading, reduce_heading_text, relative_heading_form,
+    section_display_name,
+};
 use crate::model::{
-    Declaration, FileRecord, HeadingKind, RecordedHeading, ShowRenderMode, ShowSection,
+    Declaration, FileRecord, FileRecords, HeadingKind, RecordedHeading, SectionInfo,
+    ShowRenderMode, ShowSection, named_section_path,
 };
 
 /// One view a slice fills (§FS-show.2.1): the lead (`Default`), the whole body
@@ -174,6 +178,33 @@ fn body_line(record: &FileRecord, lineno: usize) -> String {
     match record.block_at(lineno) {
         Some(block) => comment_envelope(scanned, &block.form).to_string(),
         None => scanned.to_string(),
+    }
+}
+
+/// A listed section's title (§FS-rules.8, §FS-coordinate-globs.matching.catalog). A named
+/// path is a chapter, titled as the rule unit a selector row shares it with
+/// (`section_display_name`). A numbered path is titled by the one rule its `--toc` entry is,
+/// `section_title`, over the heading the record holds at its line, reduced as list text is
+/// (`reduce_heading_text`), so `### .1. Child` under `## 2. Parent` lists as `Child`.
+pub(crate) fn section_row_title(
+    files: &FileRecords,
+    decl: &Declaration,
+    path: &str,
+    info: &SectionInfo,
+) -> String {
+    let display = || section_display_name(&info.title, path, info.relative).into_owned();
+    if named_section_path(path) {
+        return display();
+    }
+    let Some(record) = files.get(&decl.file) else {
+        return display();
+    };
+    match record
+        .heading_at(info.line)
+        .filter(|heading| heading.path.as_deref() == Some(path))
+    {
+        Some(heading) => reduce_heading_text(&section_title(record, heading, path, info.marked())),
+        None => display(),
     }
 }
 
