@@ -54,8 +54,9 @@ for (const [name, options] of [
   const name = 'refs-glob-refused-before-discovery';
   const message = (await golden(name, 'stderr')).replace(/^error: /, '').replace(/\n$/, '');
   const root = repo(name);
-  for (const pending of [api.refs(null, { root, globs: ['FS-{a,b'] }),
-    api.cover({ root, globs: ['FS-{a,b'] })])
+  // Thunks, so each call starts under its own handler and no rejection waits unhandled.
+  for (const pending of [() => api.refs(null, { root, globs: ['FS-{a,b'] }),
+    () => api.cover({ root, globs: ['FS-{a,b'] })])
     await assert.rejects(pending, error => {
       const f = error.failure;
       assert.deepEqual([f.kind, f.code, f.message, f.column],
