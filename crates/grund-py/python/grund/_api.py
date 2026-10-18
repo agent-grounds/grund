@@ -117,9 +117,14 @@ def show(id: str, *, section: str | None = None, mode: str = "lead",
 
 
 def show_batch(queries: Sequence[str | ShowQuery] | None = None, *,
-               mode: str = "lead", root: PathInput | None = None) -> BatchResult:
-    """None discovers all coordinates; empty input avoids config loading."""
+               mode: str = "lead", globs: Sequence[str] = (),
+               root: PathInput | None = None) -> BatchResult:
+    """None discovers all coordinates, kept where ``globs`` match; empty input avoids
+    config loading. Explicit queries with globs conflict (§FS-coordinate-globs.bindings.options)."""
     _mode(mode)
+    globs = _strings(globs, "globs")
+    if queries is not None and globs:
+        raise ValueError("explicit queries cannot be combined with globs")
     if queries is not None:
         if isinstance(queries, (str, bytes)) or not isinstance(queries, Sequence):
             raise TypeError("queries must be a sequence of strings or ShowQuery")
@@ -135,7 +140,7 @@ def show_batch(queries: Sequence[str | ShowQuery] | None = None, *,
         operands = (converted,)
     else:
         operands = ()
-    return _call("show_batch", BatchResult, root, operands, mode=mode)
+    return _call("show_batch", BatchResult, root, operands, mode=mode, globs=globs)
 
 
 def refs(id: str, *, section: str | None = None, descendants: bool = False,
@@ -146,15 +151,16 @@ def refs(id: str, *, section: str | None = None, descendants: bool = False,
 
 
 def list_ids(*, kinds: Sequence[str] = (), projects: Sequence[str] = (),
-             unused: bool = False, selector: str | None = None,
+             unused: bool = False, selector: str | None = None, globs: Sequence[str] = (),
              root: PathInput | None = None) -> ListResult:
     """Read the declaration/chapter catalog and kind summaries."""
     return _call("list_ids", ListResult, root, kinds=_strings(kinds, "kinds"),
-                 projects=_strings(projects, "projects"), unused=unused, selector=selector)
+                 projects=_strings(projects, "projects"), unused=unused, selector=selector,
+                 globs=_strings(globs, "globs"))
 
 
 def list_sizes(*, kinds: Sequence[str] = (), projects: Sequence[str] = (),
-               unused: bool = False, selector: str | None = None,
+               unused: bool = False, selector: str | None = None, globs: Sequence[str] = (),
                units: Sequence[str] = ("lines", "words", "bytes"),
                top: int | None = None, root: PathInput | None = None) -> SizesResult:
     """Read lead/full measurements, preserving requested unit order."""
@@ -168,7 +174,7 @@ def list_sizes(*, kinds: Sequence[str] = (), projects: Sequence[str] = (),
             raise ValueError("top must be positive")
     return _call("list_sizes", SizesResult, root, kinds=_strings(kinds, "kinds"),
                  projects=_strings(projects, "projects"), unused=unused, selector=selector,
-                 units=units, top=top)
+                 globs=_strings(globs, "globs"), units=units, top=top)
 
 
 def cover(*, text: bool = False, lines: Sequence[str] = (),

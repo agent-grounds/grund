@@ -2,6 +2,7 @@ use anyhow::{Result, anyhow};
 use std::collections::BTreeMap;
 
 use super::citation_counts::ListCitationCounts;
+use super::glob_scope::{GlobSelection, read_globs};
 use super::list_scope::check_list_scope;
 use super::report_scope::{reported_scope, reports};
 use super::selector_refusal::require_unique_literal;
@@ -39,6 +40,8 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
     if matches!(opts.top, Some(0)) {
         return Err(anyhow!("top must be positive"));
     }
+    // §FS-coordinate-globs.errors.shape: what the grammar alone refuses, before discovery.
+    let globs = read_globs(&opts.globs)?;
     // §AR-resolver.3.3: the same rows as `list`, with the project's answers.
     let context = load_reported_workspace_context(&opts.path, opts.path_provided)?;
     *cautions = run_warning_findings(context.render_config(), context.run_warnings.clone());
@@ -49,9 +52,14 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
         &opts.kind_filter,
         opts.selector.as_deref(),
     )?;
+    let globs = match globs.is_empty() {
+        true => None,
+        false => Some(GlobSelection::new(&context, &globs)?),
+    };
     let reported = reported_scope(&context, &opts.path, opts.path_provided)?;
 
     struct Pending<'a> {
+        project_index: usize,
         project_alias: &'a str,
         project_config: &'a Config,
         files: &'a FileRecords,
@@ -65,7 +73,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
     let counts = ListCitationCounts::new(&context);
     let mut pending = Vec::new();
     let mut scan_errors = Vec::new();
-    for project in &context.projects {
+    for (project_index, project) in context.projects.iter().enumerate() {
         if !opts.project_filter.is_empty() && !opts.project_filter.contains(&project.alias) {
             continue;
         }
@@ -96,6 +104,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
                     continue;
                 }
                 pending.push(Pending {
+                    project_index,
                     project_alias: &project.alias,
                     project_config: &project.config,
                     files: &project.findings.files,
@@ -118,6 +127,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
                     let duplicate_section = duplicate_declaration || sites.len() > 1;
                     for info in sites {
                         pending.push(Pending {
+                            project_index,
                             project_alias: &project.alias,
                             project_config: &project.config,
                             files: &project.findings.files,
@@ -169,6 +179,17 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
             require_unique_literal(&literal, pending.iter().filter(|row| selected(row)).count())?;
         }
         pending.retain(selected);
+    }
+    // §FS-coordinate-globs.scope.filters: the glob intersects, as `list` reads it.
+    if let Some(globs) = &globs {
+        pending.retain(|row| {
+            let label = render_id(&row.project_config.grammar, row.id);
+            globs.selects(
+                row.project_index,
+                &label,
+                row.section.map(|(section, _)| section),
+            )
+        });
     }
 
     let render_config = context.render_config();
@@ -242,6 +263,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
         workspace: context.workspace_loaded,
         entries,
         scan_errors,
+        note: globs.and_then(|globs| globs.note()),
         warnings: run_warning_findings(render_config, context.run_warnings.clone()),
     })
 }

@@ -44,10 +44,10 @@ The full inventory implements
 | `check(root=None, *, require_grounding=False, suggestions=False, full=False, rule=None, only=(), ignore=(), only_rule=False)` | `CheckResult`: reports, scan-error status, output format, cautions |
 | `scan(root)` | `ScanResult`: catalog, citations, scanned files, scan errors, cautions |
 | `show(id, *, section=None, mode="lead", format="text")` | `ShowResult`: body, logical path, line, nullable rendered JSON, sections, cautions |
-| `show_batch(queries=None, *, mode="lead")` | `BatchResult`: ordered records with query, nullable result/failure, cautions |
+| `show_batch(queries=None, *, mode="lead", globs=())` | `BatchResult`: ordered records with query, nullable result/failure, note, cautions |
 | `refs(id, *, section=None, descendants=False)` | `RefsResult`: hits, scan errors, note, kind title, file summaries, site/file totals, cautions |
-| `list_ids(*, kinds=(), projects=(), unused=False, selector=None)` | `ListResult`: entries, kind summaries, scan errors, cautions |
-| `list_sizes(*, kinds=(), projects=(), unused=False, selector=None, units=("lines","words","bytes"), top=None)` | `SizesResult`: ordered lead/full measurements, scan errors, cautions |
+| `list_ids(*, kinds=(), projects=(), unused=False, selector=None, globs=())` | `ListResult`: entries, kind summaries, scan errors, note, cautions |
+| `list_sizes(*, kinds=(), projects=(), unused=False, selector=None, globs=(), units=("lines","words","bytes"), top=None)` | `SizesResult`: ordered lead/full measurements, scan errors, note, cautions |
 | `cover(*, text=False, lines=())` | `CoverResult` or `CoverTextResult`: file-grouped coverage, scan errors, cautions; with non-empty `lines`, `CoverLinesResult`: one ownership record per range, scan errors, cautions |
 | `fmt(*, write=False, marker=False, cross_refs=False)` | `FmtResult`: changes, scan errors, refused writes, cautions |
 | `propose_id(kind, title, *, width=3)` | `IdProposal`: ID, kind, nullable number/home hints, slug, cautions |
@@ -66,6 +66,13 @@ Batch queries accept strings or ShowQuery records; None discovers every
 coordinate, while an empty sequence succeeds without loading config.
 Batch success records contain the complete ShowResult, with JSON supplied by
 the engine's batch read; each unsuccessful query retains a Failure in its record.
+
+`globs` takes the coordinate patterns `grund list --glob` takes, and selects as repeated
+flags do: `show_batch(globs=...)` generates the batch `queries=None` would and keeps
+what a pattern matches, and explicit queries with globs raise ValueError. `note` is
+the CLI's `note:` text, or None where it printed none; a refused pattern raises a
+`query` failure with code `invalid-coordinate-glob` and its column
+([§FS-coordinate-globs.bindings](../functional-spec/FS-coordinate-globs.md#bindings-node-and-python)).
 
 `cover(lines=...)` takes strings, each `"N"` or `"N-M"` exactly as `grund cover
 --lines` takes it, so a refusal names the range as written; `root` names the one

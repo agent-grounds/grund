@@ -535,13 +535,14 @@ citations
 
 ## Querying the Structure
 
-Once the tree checks clean, read its structure with grund's queries rather than by parsing heading lines: `grund list --selector` takes a rule subject as a query, and its `{id, section}` rows are the input `grund show --batch` expands. Each answer's `.result.sections[]` lists the unit's subpoints as `path`, `title` and `depth`:
+Once the tree checks clean, read its structure with grund's queries rather than by parsing heading lines: `grund list --glob` takes a coordinate pattern — `*` inside one component, `**` any number of whole components, `{a,b}` each alternative — and `--total` counts what it selects, while `grund show --batch --glob` reads the same coordinates in one scan. Each answer's `.result.sections[]` lists the unit's subpoints as `path`, `title` and `depth`:
 
 ```bash
-grund list --selector "The requirements chapter of each FS" --format json | jq -c '{id,section}' | grund show --batch --toc --format json
+grund list --glob '<KIND>-*.<chapter>' --total
+grund show --batch --glob '<KIND>-*.<chapter>' --toc --format json
 ```
 
-The [Querying grund guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/querying.md) has the rest: bodies in bulk with `show --batch --brief|--full` or `--all`, `refs --descendants`, and the whole citation graph from `cover --format json`.
+The [Querying grund guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/querying.md) has the rest: a point and its subtree with `<ID>{,.**}`, bodies in bulk with `show --batch --brief|--full`, `--glob` or `--all`, units by rule subject with `list --selector`, `refs --descendants`, a checklist review that ends with `cover FILE --lines N-M`, and the whole citation graph from `cover --format json`.
 
 ## Editor Setup
 

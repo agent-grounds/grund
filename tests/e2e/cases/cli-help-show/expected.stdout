@@ -2,7 +2,7 @@ grund show — print a coordinate's lead, so an agent pulls a single fact into
 context without loading the whole document. `show` is the default command.
 
 Usage:  grund [show] <ID>[.<section>] [PATH] [--section S] [--brief|--toc|--full] [--format text|md|json] [--path PATH]
-        grund show --batch [--all] [PATH] --format=json [--brief|--toc|--full] [--path PATH]
+        grund show --batch [--all | --glob PATTERN...] [PATH] --format=json [--brief|--toc|--full] [--path PATH]
 
 Modes form an ordered ladder (each adds to the previous):
   --brief                heading + first paragraph    e.g. grund --brief FS-login
@@ -17,6 +17,7 @@ Other options:
                          e.g. grund FS-login --path docs/
   --batch                 read ordered {"id":…,"section":…} NDJSON queries from stdin
   --all                   with --batch, query every declaration and section
+  --glob PATTERN          with --batch, query the coordinates a pattern matches; repeatable
   --path-base project|invocation
                        project (default) spells report paths from the config root;
                        invocation: relative to the path you passed, or the current directory if you passed none.
@@ -33,5 +34,9 @@ Examples:
   grund FS-login --full            # the whole declaration body
   printf '%s\n' '{"id":"FS-login"}' | grund show --batch --format=json
   grund show --batch --all --format=json # every coordinate, one scan
+  grund show --batch --glob 'FS-login{,.**}' --toc --format json # one ID and its sections
 
 ID not found? `grund list` shows every declared ID; `grund id <KIND> "…"` proposes a new one.
+
+Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/querying.md
+Example:  https://github.com/agent-grounds/grund/tree/main/examples/review-checklist

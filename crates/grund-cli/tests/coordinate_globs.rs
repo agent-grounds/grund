@@ -66,7 +66,6 @@ fn row(line: &str) -> serde_json::Value {
 
 /// §FS-coordinate-globs.grammar and §FS-coordinate-globs.matching: which rows a pattern selects, in list order.
 #[test]
-#[ignore = "red until #503 lands coordinate globs; implement removes this"]
 fn glob_rows_select_catalog_coordinates() {
     run_cases(
         "glob_rows_select_catalog_coordinates",
@@ -94,7 +93,6 @@ fn glob_rows_select_catalog_coordinates() {
 
 /// §FS-coordinate-globs.scope.filters: path, `--kind`, `--unused`, `--selector`, `--summary` and `--size` read the glob's selection.
 #[test]
-#[ignore = "red until #503 lands coordinate globs; implement removes this"]
 fn glob_filters_intersect_and_never_widen() {
     run_cases(
         "glob_filters_intersect_and_never_widen",
@@ -111,7 +109,6 @@ fn glob_filters_intersect_and_never_widen() {
 
 /// §FS-list.total: the bare count, its JSON shape, and the launch errors.
 #[test]
-#[ignore = "red until #503 lands coordinate globs; implement removes this"]
 fn total_counts_the_rows_list_prints() {
     run_cases(
         "total_counts_the_rows_list_prints",
@@ -132,7 +129,6 @@ fn total_counts_the_rows_list_prints() {
 
 /// §FS-coordinate-globs.errors.reasons, §FS-coordinate-globs.errors.marker and §FS-coordinate-globs.errors.flags.
 #[test]
-#[ignore = "red until #503 lands coordinate globs; implement removes this"]
 fn refused_globs_print_one_line_and_exit_2() {
     run_cases(
         "refused_globs_print_one_line_and_exit_2",
@@ -161,7 +157,6 @@ fn refused_globs_print_one_line_and_exit_2() {
 
 /// §FS-coordinate-globs.errors.note and §FS-coordinate-globs.errors.hint.
 #[test]
-#[ignore = "red until #503 lands coordinate globs; implement removes this"]
 fn notes_and_the_path_hint_leave_stdout_alone() {
     run_cases(
         "notes_and_the_path_hint_leave_stdout_alone",
@@ -178,7 +173,6 @@ fn notes_and_the_path_hint_leave_stdout_alone() {
 
 /// §FS-coordinate-globs.matching.anchored, §FS-coordinate-globs.grammar.components and §FS-coordinate-globs.workspace.escapes.
 #[test]
-#[ignore = "red until #503 lands coordinate globs; implement removes this"]
 fn code_points_escapes_and_the_hash_separator() {
     run_cases(
         "code_points_escapes_and_the_hash_separator",
@@ -196,7 +190,6 @@ fn code_points_escapes_and_the_hash_separator() {
 
 /// §FS-show.1.9 and §FS-show.2.6.2: `show --batch --glob` reads the bodies `--all` would, filtered.
 #[test]
-#[ignore = "red until #503 lands coordinate globs; implement removes this"]
 fn batch_glob_filters_the_generated_batch() {
     run_cases(
         "batch_glob_filters_the_generated_batch",
@@ -215,7 +208,6 @@ fn batch_glob_filters_the_generated_batch() {
 
 /// §FS-coordinate-globs.scope and §FS-coordinate-globs.workspace.
 #[test]
-#[ignore = "red until #503 lands coordinate globs; implement removes this"]
 fn workspace_globs_split_per_project() {
     run_cases(
         "workspace_globs_split_per_project",
@@ -236,7 +228,6 @@ fn workspace_globs_split_per_project() {
 
 /// §FS-citations.recognized.globs: `<§>FS-gate{.1,.2}` is a pattern, not a citation of `FS-gate`.
 #[test]
-#[ignore = "red until #503 lands coordinate globs; implement removes this"]
 fn a_brace_before_the_separator_opens_a_glob_citation() {
     run_cases(
         "a_brace_before_the_separator_opens_a_glob_citation",
@@ -262,7 +253,6 @@ fn the_path_hint_needs_a_valid_pattern() {
 
 /// §FS-examples.2: the review-checklist walkthrough counts its checklist and reads its bodies.
 #[test]
-#[ignore = "red until #503 lands coordinate globs; implement removes this"]
 fn review_checklist_example_counts_and_reads_the_checklist() {
     let runs = ["1-count", "2-bodies"];
     run_in(
@@ -288,7 +278,6 @@ fn review_checklist_example_names_the_owners_of_a_change() {
 /// §FS-rules.8: `--glob 'FS-*.terms'` selects exactly what `--selector FS.terms` does on this
 /// tree, so every output mode prints the same bytes for both.
 #[test]
-#[ignore = "red until #503 lands coordinate globs; implement removes this"]
 fn own_tree_glob_lists_what_the_selector_lists() {
     for mode in [
         &[][..],
@@ -309,7 +298,6 @@ fn own_tree_glob_lists_what_the_selector_lists() {
 /// §FS-show.1.9: the batch a glob generates is the one the selector's rows would feed
 /// `show --batch` in generation order, so the `jq` pipe of §FS-init.2.3.4.3.1 has a one-flag form.
 #[test]
-#[ignore = "red until #503 lands coordinate globs; implement removes this"]
 fn own_tree_glob_batch_reads_what_the_selector_pipe_reads() {
     let rows = grund(&["list", "--selector", "FS.terms", "--format", "json"]);
     let mut queries: Vec<(String, String)> = rows
@@ -337,7 +325,6 @@ fn own_tree_glob_batch_reads_what_the_selector_pipe_reads() {
 /// §FS-list.total: `FS-config.requirements{,.**}` counts the chapter and every heading beneath
 /// it, counted here from the file's own headings.
 #[test]
-#[ignore = "red until #503 lands coordinate globs; implement removes this"]
 fn own_tree_total_counts_a_chapter_and_its_points() {
     let text = fs::read_to_string(root().join("docs/functional-spec/FS-config.md"))
         .expect("read FS-config.md");
@@ -370,7 +357,6 @@ fn own_tree_total_counts_a_chapter_and_its_points() {
 /// §FS-coordinate-globs.grammar.components: an ID atom is matched against the whole ID, so
 /// `FS-c*` lists the FS declarations whose ID starts `FS-c` and none of their sections.
 #[test]
-#[ignore = "red until #503 lands coordinate globs; implement removes this"]
 fn own_tree_id_glob_lists_the_declarations_with_its_prefix() {
     let expected: String = grund(&["list", "--kind", "FS", "--format", "json"])
         .lines()
@@ -386,7 +372,6 @@ fn own_tree_id_glob_lists_the_declarations_with_its_prefix() {
 
 /// §FS-list.total: the count is the number of rows the same filters list, compared with `wc -l`.
 #[test]
-#[ignore = "red until #503 lands coordinate globs; implement removes this"]
 fn own_tree_total_is_the_row_count() {
     let rows = grund(&["list"]).lines().count();
     assert_eq!(grund(&["list", "--total"]), format!("{rows}\n"));
@@ -400,7 +385,6 @@ fn own_tree_total_is_the_row_count() {
 /// §FS-coordinate-globs.matching.bounded: 24 two-way groups stand for 2^24 alternatives, and
 /// the pattern is still answered in seconds, as an empty result.
 #[test]
-#[ignore = "red until #503 lands coordinate globs; implement removes this"]
 fn a_brace_product_is_matched_without_expanding_it() {
     let pattern = format!("FS-{}*", "{a,b}".repeat(24));
     let repo = root().join("tests/e2e/cases/list-glob-children/repo");

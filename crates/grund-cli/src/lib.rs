@@ -20,12 +20,13 @@ use grund_core::{
     IdOpts, IdProposal, IdProposalOutcome, InitAgentEntrypointSelection, InitNext, InitOpts,
     InitOutput, ListEntry, ListOpts, ListSizeEntry, ListSizeOpts, NamespaceMatch, PathBase,
     PointSizeUnit, RefHit, RefsOpts, RefsOutput, RefsQueryFailure, Report, ShowFormat, ShowMode,
-    ShowOpts, ShowQueryError, canonical_template_text, check_with_run_warnings,
-    complete_ids_with_run_warnings, config_run_warnings, config_warnings, cover, cover_lines,
-    effective_config, effective_project, fetch_snapshot_with_run_warnings, format_references, init,
-    list_sizes, list_with_run_warnings, names_member_id_candidate, propose_id_with_run_warnings,
-    refs_with_metadata, render_finding_sites_json, show_batch_with_scope, show_with_scope,
-    usage_clause, usage_over_paths, validate_config, with_report_path_base,
+    ShowOpts, ShowQueryError, canonical_template_text, check_coordinate_globs,
+    check_with_run_warnings, complete_ids_with_run_warnings, config_run_warnings, config_warnings,
+    cover, cover_lines, effective_config, effective_project, fetch_snapshot_with_run_warnings,
+    format_references, init, list_sizes, list_with_run_warnings, names_member_id_candidate,
+    propose_id_with_run_warnings, reads_as_coordinate_glob, refs_with_metadata,
+    render_finding_sites_json, show_batch_with_globs, show_with_scope, usage_clause,
+    usage_over_paths, validate_config, with_report_path_base,
 };
 use grund_core::{CHECK_FINDING_CODES, CheckFindingSelection};
 
@@ -104,6 +105,7 @@ macro_rules! watch_inject_failure {
 }
 
 include!("cli_help.rs");
+include!("cli_help_list.rs");
 include!("cli_help_check.rs");
 include!("cli_help_show.rs");
 include!("cli_help_fmt.rs");

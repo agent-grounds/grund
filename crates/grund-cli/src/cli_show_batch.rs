@@ -48,8 +48,15 @@ fn concise_batch_input_error(message: &str) -> String {
 
 /// Emit fixed ordered batch envelopes and map their aggregate verdict without
 /// moving any per-query failure to stderr (§FS-output-shapes.4.1, §FS-cli.5).
-fn command_show_batch(path: PathBuf, path_provided: bool, mode: ShowMode, all: bool) -> ExitCode {
-    let queries = if all {
+fn command_show_batch(
+    path: PathBuf,
+    path_provided: bool,
+    mode: ShowMode,
+    all: bool,
+    globs: &[String],
+) -> ExitCode {
+    // §FS-show.1.9: a glob generates the batch `--all` would, so it reads no stdin.
+    let queries = if all || !globs.is_empty() {
         None
     } else {
         match read_batch_queries() {
@@ -60,8 +67,9 @@ fn command_show_batch(path: PathBuf, path_provided: bool, mode: ShowMode, all: b
             }
         }
     };
-    let (run_warnings, batch) = show_batch_with_scope(
+    let (run_warnings, batch) = show_batch_with_globs(
         queries,
+        globs,
         ShowOpts {
             path,
             section: None,
@@ -72,7 +80,10 @@ fn command_show_batch(path: PathBuf, path_provided: bool, mode: ShowMode, all: b
     );
     render_run_warnings(&run_warnings);
     let records = match batch {
-        Ok(records) => records,
+        Ok(run) => {
+            render_glob_notes(run.note.as_deref());
+            run.records
+        }
         Err(error) => {
             eprintln!("error: {error:#}");
             return ExitCode::from(2);

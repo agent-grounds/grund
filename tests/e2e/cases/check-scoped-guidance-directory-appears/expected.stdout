@@ -1,2 +1,2 @@
-AGENTS.md:3: error: repo maintenance: outdated grund init block v23 — run `grund init` to update to v25 (does not affect citation validity)
-docs/spec/AGENTS.md:1: error: repo maintenance: missing grund init block v25 — run `grund init` to install it (does not affect citation validity)
+AGENTS.md:3: error: repo maintenance: outdated grund init block v27 — run `grund init` to update to v29 (does not affect citation validity)
+docs/spec/AGENTS.md:1: error: repo maintenance: missing grund init block v29 — run `grund init` to install it (does not affect citation validity)

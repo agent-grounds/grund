@@ -52,10 +52,10 @@ relative to that captured cwd. Output paths and byte columns follow core rules.
 | `check(root?, options?)` | requireGrounding, suggestions, full, rule, only, ignore, onlyRule; complete report, selectedReport, outputFormat, hadScanErrors |
 | `scan(root)` | required explicit root; owned snapshot arrays, including declarations, citations, structures and value facts |
 | `show(id, options?)` | root, section, mode=lead/brief/toc/full, format=text/md/json; body, coordinates, sections, exact core JSON and manifest |
-| `showBatch(queries, options?)` | root, mode; null discovers all coordinates, [] returns before discovery; ordered success/failure records |
+| `showBatch(queries, options?)` | root, mode, globs; null discovers all coordinates, kept where `globs` match, [] returns before discovery; ordered success/failure records and note |
 | `refs(id, options?)` | root, section, descendants; hits, summaries, totals, note and scanErrors |
-| `list(options?)` | root, kinds, projects, unused, selector; entries and summaries |
-| `listSizes(options?)` | list options, units (lines/words/bytes), positive top; ordered nullable measurements |
+| `list(options?)` | root, kinds, projects, unused, selector, globs; entries, summaries and note |
+| `listSizes(options?)` | list options, units (lines/words/bytes), positive top; ordered nullable measurements and note |
 | `cover(options?)` | root; files including empty files and full citing-side coordinates |
 | `fmt(options?)` | root, write=false, marker=false, crossRefs=false; changes, scanErrors, refusedWrites |
 | `proposeId(kind, title, options?)` | root, width=3; proposed ID and authoring hints, no writes |
@@ -67,6 +67,11 @@ relative to that captured cwd. Output paths and byte columns follow core rules.
 | `integrations(options?)` | client, write, conversation, conversationTarget, agent; detection/artifact/install discriminated records |
 | `referenceStyle(path)` | required document path; member-specific marker and trigger |
 | `agentSetupInstructions()` | canonical setup instructions returned as data |
+
+`globs` takes the coordinate patterns `--glob` takes and selects as repeated flags do;
+`note` is the CLI's `note:` text, or null where it printed none. Explicit batch
+queries with globs reject `input`/`conflicting-options`, and a refused pattern rejects
+`query`/`invalid-coordinate-glob` with its column ([§FS-coordinate-globs.bindings](../functional-spec/FS-coordinate-globs.md#bindings-node-and-python)).
 
 Agents for init are canonical/claude/gemini/pi/copilot/cursor/windsurf/zed;
 null means automatic selection and an empty array is invalid. Integration

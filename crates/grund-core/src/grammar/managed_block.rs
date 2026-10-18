@@ -112,7 +112,9 @@ pub(crate) static AGENTS_SECTION_BOUNDARY: Lazy<Regex> =
 /// v23 to v26 (§FS-init.2.3.4.5, §FS-init.2.3.7.1): each pair four higher, the
 /// declaration forms teaching the relative and `number.name` forms for a source
 /// doc-comment declaration body as well as a Markdown one.
-pub(crate) const AGENTS_BLOCK_VERSION: u32 = 26;
+/// v27 to v30 (§FS-init.2.3.4.3.1, §FS-init.2.3.7.1): each pair four higher again, the
+/// cheap-read ladder teaching coordinate globs in place of the `jq` pipe.
+pub(crate) const AGENTS_BLOCK_VERSION: u32 = 30;
 
 /// The byte span and `vN` version of the managed block inside an `AGENTS.md`
 /// (§FS-init.2.3) — what both `grund init`'s update and `grund check`'s validation

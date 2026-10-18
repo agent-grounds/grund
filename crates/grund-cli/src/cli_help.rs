@@ -70,76 +70,7 @@ fn print_subcommand_help(cmd: &str) {
         "check" => print_check_help(),
         "show" => print_show_help(),
         "fetch" => print_fetch_help(),
-        "list" => {
-            println!("grund list — the ID catalog: every declared ID in the repo, with where it's");
-            println!(
-                "declared and its one-line title. The complement of `grund refs` (which lists"
-            );
-            println!(
-                "the citations of one ID) — `list` is the index of what you can read with `grund <ID>`."
-            );
-            println!();
-            println!(
-                "Usage:  grund list [PATH] [--kind KIND[,KIND]...] [--selector SUBJECT] [--unused] [--summary]"
-            );
-            println!(
-                "                   [--size[=lines,words,bytes]] [--top N] [--format text|json]"
-            );
-            println!();
-            println!(
-                "Output is one line per declared ID, `<ID>  <path>:<line>  <title>`, sorted by ID."
-            );
-            println!(
-                "Stub-and-inline pairs collapse to one line; a duplicate-declared ID gets a line per home."
-            );
-            println!(
-                "Size mode adds every citable section and reports selected lead/full measurement pairs."
-            );
-            println!();
-            println!("Options:");
-            println!(
-                "  --kind KIND[,KIND]  only selected kinds; repeatable       e.g. grund list --kind FS,AR"
-            );
-            println!(
-                "  --selector SUBJECT  only one declaration/chapter selector, e.g. FS.requirements"
-            );
-            println!(
-                "  --unused            only declarations nothing cites yet (skips E2E unless E2E is selected)"
-            );
-            println!(
-                "  --summary           one row per kind with count and home  e.g. grund list --summary"
-            );
-            println!(
-                "  --size[=lines,words,bytes]  coordinate lead/full sizes; bare selects all three units"
-            );
-            println!(
-                "  --top N             largest N leads by the first selected unit; requires --size"
-            );
-            println!(
-                "  --format text|json   text (default) is the table on stdout; json emits NDJSON (adds `refs` count)."
-            );
-            print_run_flag_help("grund list docs/", true);
-            println!();
-            println!(
-                "Exit:  0 scan succeeded (an empty catalog prints nothing) · 2 unreadable tree, or an unknown --kind."
-            );
-            println!();
-            println!("Examples:");
-            println!("  grund list                      # the whole catalog");
-            println!("  grund list --kind FS,AR docs/   # specs and architecture IDs under docs/");
-            println!("  grund list --summary            # counts by kind");
-            println!("  grund list --selector FS.requirements # every FS requirements chapter");
-            println!("  grund list --size=words --top 10 # largest coordinate leads");
-            println!(
-                "  grund list --unused             # uncited declarations (specs, decisions, …) — E2E cases excluded"
-            );
-            println!("  grund list --unused --kind E2E  # uncited e2e cases only, for inventory");
-            println!("  grund list --kind FS --format json # one NDJSON record per ID, with its refs count");
-            print_guide_links(
-                &["https://github.com/agent-grounds/grund/blob/main/docs/user-facing/coordinate-sizes.md"],
-                &[],
-            );
-        }
+        "list" => print_list_help(),
         "refs" => {
             // §FS-terms.terms.2: a coordinate's citation sites.
             println!(

@@ -5,8 +5,7 @@
 use super::embedding::EmbeddingRequest;
 use super::embedding_data::Data;
 use super::embedding_failure::error_data;
-use super::embedding_queries::show_opts;
-use crate::BatchShowQuery;
+use super::embedding_queries::{batch_queries, show_opts};
 use serde_json::{Value, json};
 
 /// Node's read/query delegate: show and batch add metadata, the rest is shared.
@@ -28,27 +27,14 @@ fn show(r: &EmbeddingRequest) -> Result<Value, Value> {
 }
 
 fn show_batch(r: &EmbeddingRequest) -> Result<Value, Value> {
-    let queries = r
-        .args
-        .first()
-        .filter(|v| !v.is_null())
-        .and_then(Value::as_array)
-        .map(|queries| {
-            queries
-                .iter()
-                .map(|q| BatchShowQuery {
-                    id: q
-                        .as_str()
-                        .or_else(|| q["id"].as_str())
-                        .unwrap_or_default()
-                        .to_owned(),
-                    section: q["section"].as_str().map(str::to_owned),
-                })
-                .collect()
-        });
-    let (cautions, result) = crate::queries::show_batch_data(queries, show_opts(r), r.explicit);
-    let records = result
-        .map_err(|e| error_data(e, &cautions))?
+    let (cautions, result) = crate::queries::show_batch_data(
+        batch_queries(r),
+        &r.strings("globs"),
+        show_opts(r),
+        r.explicit,
+    );
+    let (records, note) = result.map_err(|e| error_data(e, &cautions))?;
+    let records = records
         .into_iter()
         .map(|record| {
             let (result, refusal) = match record.result {
@@ -64,7 +50,7 @@ fn show_batch(r: &EmbeddingRequest) -> Result<Value, Value> {
             "result":result,"failure":refusal})
         })
         .collect::<Vec<_>>();
-    Ok(json!({"records":records,"run_cautions":cautions.data()}))
+    Ok(json!({"records":records,"note":note,"run_cautions":cautions.data()}))
 }
 
 fn extend(data: &mut Value, metadata: Value) {

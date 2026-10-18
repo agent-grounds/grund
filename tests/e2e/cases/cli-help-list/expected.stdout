@@ -2,8 +2,8 @@ grund list — the ID catalog: every declared ID in the repo, with where it's
 declared and its one-line title. The complement of `grund refs` (which lists
 the citations of one ID) — `list` is the index of what you can read with `grund <ID>`.
 
-Usage:  grund list [PATH] [--kind KIND[,KIND]...] [--selector SUBJECT] [--unused] [--summary]
-                   [--size[=lines,words,bytes]] [--top N] [--format text|json]
+Usage:  grund list [PATH] [--kind KIND[,KIND]...] [--selector SUBJECT] [--glob PATTERN]... [--unused]
+                   [--summary | --total] [--size[=lines,words,bytes]] [--top N] [--format text|json]
 
 Output is one line per declared ID, `<ID>  <path>:<line>  <title>`, sorted by ID.
 Stub-and-inline pairs collapse to one line; a duplicate-declared ID gets a line per home.
@@ -12,8 +12,10 @@ Size mode adds every citable section and reports selected lead/full measurement 
 Options:
   --kind KIND[,KIND]  only selected kinds; repeatable       e.g. grund list --kind FS,AR
   --selector SUBJECT  only one declaration/chapter selector, e.g. FS.requirements
+  --glob PATTERN      only coordinates the pattern matches; repeatable  e.g. --glob 'FS-login.**'
   --unused            only declarations nothing cites yet (skips E2E unless E2E is selected)
   --summary           one row per kind with count and home  e.g. grund list --summary
+  --total             only the count of the rows             e.g. grund list --glob 'FS-*' --total
   --size[=lines,words,bytes]  coordinate lead/full sizes; bare selects all three units
   --top N             largest N leads by the first selected unit; requires --size
   --format text|json   text (default) is the table on stdout; json emits NDJSON (adds `refs` count).
@@ -24,16 +26,19 @@ Options:
                        --path-base=invocation replaces a committed `[output] relative_paths = false`.
                        --format json replaces a committed `[output] format = "json"`; a flag outranks its key.
 
-Exit:  0 scan succeeded (an empty catalog prints nothing) · 2 unreadable tree, or an unknown --kind.
+Exit:  0 scan succeeded (an empty catalog prints nothing) · 2 unreadable tree, an unknown --kind, or a refused --glob.
 
 Examples:
   grund list                      # the whole catalog
   grund list --kind FS,AR docs/   # specs and architecture IDs under docs/
   grund list --summary            # counts by kind
   grund list --selector FS.requirements # every FS requirements chapter
+  grund list --glob 'FS-login.**' --total # how many sections FS-login holds
   grund list --size=words --top 10 # largest coordinate leads
   grund list --unused             # uncited declarations (specs, decisions, …) — E2E cases excluded
   grund list --unused --kind E2E  # uncited e2e cases only, for inventory
   grund list --kind FS --format json # one NDJSON record per ID, with its refs count
 
 Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/coordinate-sizes.md
+Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/querying.md
+Example:  https://github.com/agent-grounds/grund/tree/main/examples/review-checklist

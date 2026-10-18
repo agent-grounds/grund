@@ -11,6 +11,56 @@ use std::ops::Range;
 use super::compiled::{Grammar, QUALIFIED_CITATION_PREFIX};
 use super::id_format::literal_after_kind_placeholder;
 
+/// The glob operators, one table read by the citation guard here and by the
+/// coordinate-glob reader (§FS-citations.recognized.globs, §FS-coordinate-globs.grammar),
+/// so a token the guard calls a pattern is one `--glob` reads as one.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum GlobOperator {
+    /// `*`, any run of characters.
+    Star,
+    /// `?`, exactly one character.
+    Question,
+    /// `[`, a class, closed by `]`.
+    Class,
+    /// `{`, a group of alternatives, closed by `}`.
+    Group,
+}
+
+impl GlobOperator {
+    pub(crate) const ALL: [Self; 4] = [Self::Star, Self::Question, Self::Class, Self::Group];
+
+    /// The character that writes the operator.
+    pub(crate) const fn opener(self) -> char {
+        match self {
+            Self::Star => '*',
+            Self::Question => '?',
+            Self::Class => '[',
+            Self::Group => '{',
+        }
+    }
+
+    /// The character that closes a bracketing operator; a wildcard has none.
+    pub(crate) const fn closer(self) -> Option<char> {
+        match self {
+            Self::Class => Some(']'),
+            Self::Group => Some('}'),
+            Self::Star | Self::Question => None,
+        }
+    }
+
+    /// The operator `ch` opens, if it opens one.
+    pub(crate) fn of(ch: char) -> Option<Self> {
+        Self::ALL
+            .into_iter()
+            .find(|operator| operator.opener() == ch)
+    }
+
+    /// Whether `ch` is a wildcard, an operator that needs no closer.
+    pub(crate) fn is_wildcard(ch: char) -> bool {
+        Self::of(ch).is_some_and(|operator| operator.closer().is_none())
+    }
+}
+
 /// How a candidate that starts where a citation could start is read.
 #[derive(Debug, Eq, PartialEq)]
 pub(crate) enum CandidateReading {
@@ -132,10 +182,10 @@ fn candidate_extent(rest: &str, separator: &str) -> Option<(usize, usize)> {
             at += separator.len();
             continue;
         }
-        let end = match ch {
-            '*' | '?' => {
+        let end = match GlobOperator::of(ch) {
+            Some(operator) if operator.closer().is_none() => {
                 let run = rest[at..]
-                    .find(|ch: char| ch != '*' && ch != '?')
+                    .find(|ch: char| !GlobOperator::is_wildcard(ch))
                     .unwrap_or(rest.len() - at);
                 let after_component = rest[..at]
                     .chars()
@@ -146,8 +196,8 @@ fn candidate_extent(rest: &str, separator: &str) -> Option<(usize, usize)> {
                 }
                 at + run
             }
-            '[' | '{' if opens_group(&rest[at..]) => {
-                let close = if ch == '[' { ']' } else { '}' };
+            Some(operator) if opens_group(&rest[at..], separator) => {
+                let close = operator.closer().expect("a group operator has a closer");
                 rest[at..]
                     .find(|c: char| c == close || c.is_whitespace())
                     .filter(|offset| rest[at + offset..].starts_with(close))
@@ -170,14 +220,20 @@ fn is_address_char(ch: char) -> bool {
 }
 
 /// A `[` class opens on an address character or `!`, never `[^`; a `{`
-/// alternation on an address character or `,`.
-fn opens_group(text: &str) -> bool {
+/// alternation on an address character, `,`, or the section separator
+/// (§FS-citations.recognized.globs).
+fn opens_group(text: &str, separator: &str) -> bool {
     let mut chars = text.chars();
-    let open = chars.next();
-    let next = chars.next();
-    match (open, next) {
-        (Some('['), Some(next)) => is_address_char(next) || next == '!',
-        (Some('{'), Some(next)) => is_address_char(next) || next == ',',
+    let open = chars.next().and_then(GlobOperator::of);
+    let after = chars.as_str();
+    let Some(next) = after.chars().next() else {
+        return false;
+    };
+    match open {
+        Some(GlobOperator::Class) => is_address_char(next) || next == '!',
+        Some(GlobOperator::Group) => {
+            is_address_char(next) || next == ',' || after.starts_with(separator)
+        }
         _ => false,
     }
 }
@@ -188,8 +244,8 @@ fn leads_on(after: &str, separator: &str) -> bool {
     let opens = |text: &str| {
         text.chars()
             .next()
-            .is_some_and(|ch| is_address_char(ch) || ch == '*' || ch == '?')
-            || opens_group(text)
+            .is_some_and(|ch| is_address_char(ch) || GlobOperator::is_wildcard(ch))
+            || opens_group(text, separator)
     };
     opens(after) || after.strip_prefix(separator).is_some_and(opens)
 }

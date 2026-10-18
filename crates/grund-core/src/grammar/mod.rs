@@ -69,6 +69,10 @@ mod anchors;
 mod comment_block;
 mod comment_line;
 mod compiled;
+mod coordinate_glob;
+mod coordinate_glob_match;
+mod coordinate_glob_read;
+mod coordinate_glob_tokens;
 mod fence;
 mod fmt_cross_refs;
 mod fmt_suppress;
@@ -97,7 +101,9 @@ pub use compiled::Grammar;
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
-pub(crate) use anchors::{anchor_slug, section_anchor_text, section_display_name};
+pub(crate) use anchors::{
+    anchor_slug, section_anchor_text, section_display_name, section_row_title,
+};
 pub(crate) use comment_block::{
     CommentBlockKind, DocCommentRule, block_declares_id, block_is_doc_comment, comment_blocks,
     declaration_id_on_source_line, first_content_line, is_bare_block_line,
@@ -109,10 +115,12 @@ pub(crate) use compiled::{
 pub(crate) use language_table::{DocProfile, classified_extensions, extension_rule};
 // The bare fence reader serves the record's doc-comment headings and the template
 // tests, which look for a fenced example rather than for a heading (§FS-check.1.1.5).
+pub(crate) use coordinate_glob::{CoordinateGlob, GlobQualifier, GlobRefusal};
+pub(crate) use coordinate_glob_match::GlobMatcher;
 pub(crate) use fence::{MarkdownFence, markdown_fence_delimiter};
 pub(crate) use fmt_cross_refs::{cross_ref_wrap, flatten_cross_ref_links};
 pub(crate) use fmt_suppress::{FMT_DIRECTIVE, FmtDirectives, FmtExcluded};
-pub(crate) use glob_candidate::{CandidateReading, read_loose_candidate};
+pub(crate) use glob_candidate::{CandidateReading, GlobOperator, read_loose_candidate};
 pub(crate) use heading_text::{atx_heading_text, reduce_heading_text, without_closing_sequence};
 pub(crate) use id_format::{
     id_shape, id_token_end_at, literal_after_kind_placeholder, parse_longest_id_prefix,
@@ -185,6 +193,8 @@ mod tests_block_comment_state;
 mod tests_comment_block;
 #[cfg(test)]
 mod tests_comment_block_position;
+#[cfg(test)]
+mod tests_coordinate_glob;
 #[cfg(test)]
 mod tests_declaration_line;
 #[cfg(test)]

@@ -21,6 +21,7 @@
         "--all": {"scenarios": ["show_batch_all", "show_batch_all_large_10k"]},
         "--batch": {"scenarios": ["show_batch", "show_batch_all", "show_batch_toc", "show_batch_all_large_10k"]},
         "--format": {"scenarios": ["show_json", "show_batch", "show_batch_all", "show_md", "show_text", "show_full_json", "show_batch_toc", "show_batch_all_large_10k"]},
+        "--glob": {"waiver": "Keeps the part of the batch show_batch_all already generates and counts that a pattern matches; the matcher walks each coordinate once, in time bounded by the pattern's length and the coordinate's, and reads nothing more."},
         "--path": {"waiver": "Picks the tree to resolve in; the show rows already resolve in a whole fixture tree."},
         "--path-base": {"waiver": "Rewrites the printed paths, after the resolution the show rows already count."},
         "--section": {"scenarios": ["show_section", "show_section_child", "show_values"]},
@@ -31,12 +32,14 @@
       "scenarios": ["list"],
       "flags": {
         "--format": {"scenarios": ["list_json", "list_unused_json", "list_json_citations", "list_json_large_10k", "list_workspace_json"]},
+        "--glob": {"waiver": "Keeps the rows of the scan the list row already counts that a pattern matches; the matcher walks each coordinate once, in time bounded by the pattern's length and the coordinate's, and reads nothing more."},
         "--kind": {"scenarios": ["list_kind", "list_rules", "list_external_facts"]},
         "--path-base": {"waiver": "Rewrites the printed paths, after the scan the list row already counts."},
         "--selector": {"scenarios": ["list_selector"]},
         "--size": {"scenarios": ["list_size", "list_size_top", "list_size_large_10k", "list_size_named_sections"]},
         "--summary": {"scenarios": ["list_summary"]},
         "--top": {"scenarios": ["list_size_top"]},
+        "--total": {"waiver": "Prints how many rows the list rows already build and count, in place of printing them."},
         "--unused": {"scenarios": ["list_unused", "list_unused_json"]}
       }
     },

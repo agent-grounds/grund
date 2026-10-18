@@ -118,6 +118,7 @@ points = [
 owners = [
   "crates/grund-core/src/config/citations.rs",
   "crates/grund-core/src/config/kinds.rs",
+  "crates/grund-core/src/grammar/glob_candidate.rs",
   "crates/grund-core/src/grammar/qualified_context.rs",
   "crates/grund-core/src/grammar/section_paths.rs",
   "crates/grund-core/src/grammar/settings.rs",
