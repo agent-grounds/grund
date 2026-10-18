@@ -136,9 +136,14 @@ gh run download <run-id> --name iai-callgrind-summaries --dir record
 python3 scripts/bench_store.py --record record/first.json --commit <commit>
 ```
 
-Run it in a checkout whose `origin` is this repository. That checkout's `bench_record.py`
-checks the record's series key, so a record written under other identity fields than the
-checkout's is stored from a checkout of its own commit, made with `git worktree add`.
+An artifact from before the shards, of record version 1 (the runs of 2026-10-13 and
+2026-10-14), holds the record at `record/bench-records/first.json`, so pass
+`--record record/bench-records/first.json` for one of those. Run it in a checkout whose
+`origin` is this repository. That checkout's `bench_record.py` checks the record's series
+key, so a record written under other identity fields than the checkout's is stored from a
+checkout of its own commit, made with `git worktree add`. The store takes only a `ci`
+record of the `pr` tier, the kind CI writes for a push, so it refuses a local record, such
+as `target/bench-record.json` above, and a nightly one.
 
 ## Tiers and Shards
 

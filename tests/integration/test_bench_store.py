@@ -1,8 +1,9 @@
 """§AR-ci.5.5.3, §AR-ci.5.5.2, §AR-ci.5.5.5, §AR-benchmarks.7.5 — `scripts/bench_store.py`
 keeps a push's run record on the `benchmark-data` branch as `pr/<commit>.json`. It only ever
 adds that one file on top of the branch's tip, lets a commit's first record stand, never
-creates the branch, and retries a push a race refused a bounded number of times, without
-force. A missing record passes only when the record job did not succeed.
+creates the branch, refuses a record CI's record job of a push could not have written, and
+retries a push a race refused a bounded number of times, without force. A missing record
+passes only when the record job failed, was cancelled or was skipped.
 
 It runs by hand on a downloaded record and its commit, so this module runs it the way a
 person does: in a checkout whose `origin` is a bare repository the module makes, with no
@@ -71,9 +72,10 @@ class TheStoreScript(unittest.TestCase):
         self.git(self.remote, "update-ref", f"refs/heads/{BRANCH}", root)
         return root
 
-    def record(self, name="first.json", commit=None, ir=1000, series=None):
+    def record(self, name="first.json", commit=None, ir=1000, series=None, tier="pr", **identity):
         record = self.recorder.build_record(commit=commit or self.commit, binary_sha256="e" * 64,
-                                            identity=IDENTITY, ir={"check_large_10k": ir}, refused=[])
+                                            identity=dict(IDENTITY, **identity),
+                                            ir={"check_large_10k": ir}, refused=[], tier=tier)
         if series:
             record["series"] = series
         path = self.root / "download" / name
@@ -153,6 +155,18 @@ class TheStoreScript(unittest.TestCase):
         root = self.start_branch()
         self.assertUntouched(root, self.store(self.record(commit="f" * 40)))
         self.assertUntouched(root, self.store(self.record(series="0" * 64)))
+        # §AR-ci.5.5.3: a local or a nightly record, each with its own valid series key, never
+        # takes the place of CI's record of the commit, and CI's record still stores after it.
+        local = self.record("local.json", environment="local", image="local")
+        nightly = self.record("nightly.json", tier="nightly")
+        for other, field in ((local, "environment"), (nightly, "tier")):
+            result = self.store(other)
+            self.assertUntouched(root, result)
+            self.assertIn(field, result.stderr)
+        ci = self.record()
+        result = self.store(ci)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(ci.read_text(encoding="utf-8"), self.stored(f"pr/{self.commit}.json"))
 
     def test_no_record_passes_only_when_the_record_job_did_not_succeed(self):
         root, missing = self.start_branch(), self.root / "download" / "first.json"

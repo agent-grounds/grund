@@ -14,7 +14,8 @@ workflow runs it from a checkout of the record's commit (§AR-ci.5.5.1), and a p
 checkout whose identity fields are the ones the record was written under.
 
 Exits 0 when the record is stored, was already stored, or does not exist because the record
-job did not succeed (§AR-ci.5.5.2); 1 naming what refused it, with nothing stored."""
+job failed, was cancelled or was skipped (§AR-ci.5.5.2); 1 naming what refused it, with
+nothing stored."""
 
 from __future__ import annotations
 
@@ -32,8 +33,11 @@ import bench_record  # noqa: E402
 
 REMOTE, BRANCH = "origin", "benchmark-data"
 # §AR-ci.5.5.2: the conclusions of a record job that wrote no record. After any other,
-# `success` and a conclusion the forge did not report among them, a missing record is lost.
+# `success`, `timed_out` and a conclusion the forge did not report among them, a missing
+# record is lost.
 NO_RECORD = ("failure", "cancelled", "skipped")
+# §AR-benchmarks.7.5: the only record the store keeps, a push's, as CI's record job wrote it.
+ENVIRONMENT, TIER = "ci", "pr"
 # §AR-ci.5.5.3: the pushes a store makes before a race it keeps losing fails it, and the
 # pause before each push after the first.
 PUSHES, PAUSE_SECONDS = 5, 1.0
@@ -56,8 +60,9 @@ def git(*arguments: str, stdin: bytes | None = None, env: dict | None = None,
 
 def stored_path(record: object, commit: str) -> str:
     """§AR-benchmarks.7.5: where the record of `commit` is stored, once §AR-ci.5.5.3's
-    refusals have passed it: its `commit` is the one given, and its `series` is the key of
-    its own identity fields (§AR-benchmarks.7.2)."""
+    refusals have passed it: its `commit` is the one given, its `series` is the key of its
+    own identity fields (§AR-benchmarks.7.2), and it is a `ci` record of the `pr` tier, the
+    one kind CI's record job writes for a push."""
     if not isinstance(record, dict):
         raise Refused("the record is not a JSON object")
     if record.get("commit") != commit:
@@ -65,9 +70,13 @@ def stored_path(record: object, commit: str) -> str:
     if record.get("series") != bench_record.series_key(record):
         raise Refused(f"the record's series {record.get('series')!r} is not the key of its "
                       "identity fields")
+    if record.get("environment") != ENVIRONMENT:
+        raise Refused(f"the record's environment is {record.get('environment')!r}, not "
+                      f"`{ENVIRONMENT}`: CI's record job wrote no such record")
     tier = bench_record.tier_of(record)
-    if tier not in bench_record.TIERS:
-        raise Refused(f"the record's tier {tier!r} is not one of {', '.join(bench_record.TIERS)}")
+    if tier != TIER:
+        raise Refused(f"the record's tier is {tier!r}, not `{TIER}`: CI's record job of a push "
+                      "wrote no such record")
     return f"{tier}/{commit}.json"
 
 
