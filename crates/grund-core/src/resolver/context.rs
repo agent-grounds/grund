@@ -21,7 +21,7 @@ use super::legacy_promotion::promote_qualified_legacy_citations;
 use super::shorthand::resolve_qualified_shorthand_citations;
 use super::unread_block::settled_run_warnings;
 use crate::config::{Invocation, ProjectRecords, Selection};
-use crate::model::{Catalog, Diagnostic};
+use crate::model::{Catalog, Citation, Diagnostic};
 use crate::scanner::{ScanError, scan_tree_with_workspace};
 use crate::sources::record_test_workspace_load;
 use crate::workspace::{
@@ -99,6 +99,25 @@ impl WorkspaceContext {
 
     pub(crate) fn project_by_alias(&self, alias: &str) -> Option<&WorkspaceProject> {
         self.projects.iter().find(|project| project.alias == alias)
+    }
+
+    /// The index of the loaded project an alias names; `None` outside a workspace,
+    /// where no alias names a project (§FS-workspace.8.1).
+    pub(crate) fn loaded_alias(&self, alias: &str) -> Option<usize> {
+        self.projects
+            .iter()
+            .position(|project| self.workspace_loaded && project.alias == alias)
+    }
+
+    /// The index of the project a citation in the project at `citing` targets: the
+    /// loaded project its alias names, or else the one it sits in; `None` for an alias
+    /// that names no loaded project (§FS-coordinate-globs.scope.targets,
+    /// §FS-workspace.8.2.4). `refs` in both modes and `cover` all read it.
+    pub(crate) fn citation_target(&self, citing: usize, citation: &Citation) -> Option<usize> {
+        match citation.namespace.as_deref() {
+            None => Some(citing),
+            Some(alias) => self.loaded_alias(alias),
+        }
     }
 
     /// Every known alias in the workspace, in `projects` order. An empty list
