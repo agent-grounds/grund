@@ -230,3 +230,23 @@ until = "the release-process chapter has a dedicated specification and its publi
 reason = """
 The release-process chapter (4) is a separate subject from package and binding behavior, but its published 4.* addresses are cited by workflows, guards and tests. The missing boundary is a release-process specification with retained forwarding points for those addresses. This specification-only transition extends the existing release guard at 4.2.2 and 4.2.5 and defines its shared floor before implementation; extracting the entire publication contract here would expand the approved transition. Defer that extraction while keeping all published addresses in place. Main reached 848 non-blank lines before issue #503 touched it. #503 adds a `globs` option and a nullable `note` to the existing binding rows of §FS-distribution.3.2.1, §FS-distribution.3.2.2.2 and §FS-distribution.3.3.5 by rewriting those lines in place, and states the binding contract itself in §FS-coordinate-globs.bindings, so the file adds no line; the ceiling moves to that measured 848 and permits no growth.
 """
+[[exceptions]]
+path = "docs/architecture/AR-ci.md"
+match = "exact"
+rules = ["docs"]
+kind = "deferred"
+max_accepted = { value = 809, unit = "lines" }
+until = "§AR-ci.5 and §AR-ci.3.4 leave for declarations of their own with their existing section citations migrated"
+reason = """
+Over the soft budget at 790 non-blank lines before issue #696 touched it, and promoted by the count of soft edits, so any staged edit is refused. Missing boundary: §AR-ci.5, the benchmark jobs, is a subject of its own with its own sub-structure (5.1 to 5.5, and the store's five children #696 adds), and it is the part #696 grows, by 19 lines to 809. Giving it a declaration of its own is a mapped migration of 171 citing sites across 37 files, which is outside #696. It alone would not bring the file under budget: §AR-ci.5 is 46 non-blank lines, and the bulk is §AR-ci.3.4, the Python gate's inputs, at 245, and §AR-ci.3.1, citations and links, at 199. So the entry retires once §AR-ci.5 and §AR-ci.3.4 have left. The ceiling accepts exactly the measured 809 non-blank lines and permits no growth.
+"""
+[[exceptions]]
+path = "scripts/bench_record.py"
+match = "exact"
+rules = ["scripts"]
+kind = "deferred"
+max_accepted = { value = 323, unit = "lines" }
+until = "the run's readers leave for a sibling module, leaving the record format and its modes here"
+reason = """
+Over the soft budget at 318 lines before issue #696 touched it; #696 adds tier_of, the one reading of a record's tier that merge and scripts/bench_store.py share (§AR-benchmarks.7.1), which takes it to 323 and its fifth soft edit, so any staged edit is refused. Missing boundary: the file holds two things. One is the record format, what §AR-benchmarks.7 defines: build_record, tier_of, series_key, merge, compare and jitter, which bench_store.py imports. The other is the run's readers, what the record mode reads off the harness and the machine: summary_ir over iai-callgrind's summary files, fixture_identities, the tool and runner versions, sha256_file, environment_identity and git_head, with probe (§AR-benchmarks.5.1) beside them. Moving the readers to a sibling module changes the commands ci.yml and bench-nightly.yml run and what test_bench_record.py loads, which is outside #696. The ceiling accepts exactly the measured 323 lines and permits no growth.
+"""
