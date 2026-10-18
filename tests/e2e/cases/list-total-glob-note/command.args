@@ -1,0 +1,1 @@
+list --glob 'POLICY-*' --total {repo}

@@ -91,6 +91,12 @@ accepts, are:
 | `ID.NAME[.NAME…]` | the one local named chapter with that exact coordinate |
 | `KIND.NAME[.NAME…]` | selector only: means `The NAME chapter of each KIND`, and a rule sentence refuses it |
 
+`KIND.NAME` selects by configured kind and `list --glob 'KIND-*.NAME'` by rendered ID
+text ([§FS-coordinate-globs](FS-coordinate-globs.md#fs-coordinate-globs-a-coordinate-glob-selects-catalog-coordinates-by-pattern)), so the two list the same rows wherever the kind's IDs render
+as `KIND-…`, and part on an off-grammar spelling such as `FS-old`, which only the glob
+reaches, and under a format whose `{kind}` is followed directly by a placeholder, where the
+glob that lists them is `KIND*.NAME`.
+
 In chapter subjects, `NAME` selects the section handle, not its display name.
 For `## goal: Goal and hypothesis`, `The goal chapter of each BENCH` selects
 the `goal` coordinate even though its display name is `Goal and hypothesis`.
@@ -1019,6 +1025,12 @@ exact literals are exit-2 invocation errors, and the first three are answered
 with a selector to paste rather than a rule sentence ([§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)). A valid selector with no matches
 prints nothing and exits 0. `--selector` is a flag; the positional remains the
 scan path.
+
+`grund list --glob <pattern>` is a second unit source beside `--selector`
+([§FS-coordinate-globs](FS-coordinate-globs.md#fs-coordinate-globs-a-coordinate-glob-selects-catalog-coordinates-by-pattern)): it composes with the same selectors, in the same modes, by
+intersection, and prints the same rows, a section row in a chapter row's shape whether its
+path is numbered, named or mixed. With `--selector` beside it, the two intersect. No rule
+subject admits a glob, and no rule admission changes.
 
 ### 8.1 A refused selector is answered with a selector
 

@@ -1,0 +1,2 @@
+error: invalid coordinate glob "charlie/FS-*" at column 1: unknown project alias "charlie"
+known aliases: root, api

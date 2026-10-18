@@ -1,0 +1,3 @@
+docs/functional-spec/FS-login.md:9-13
+  9-10  FS-login.requirements.lockout
+  11-13  FS-login.requirements.reset

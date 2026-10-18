@@ -52,7 +52,7 @@ The two are never mixed: `grund check 2>/dev/null` shows you the findings and on
 
 - `error:` lines — a launch-time failure or an I/O failure that means the run could not do its job ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)), always with a non-zero exit;
 - `warning:` lines about the run itself, not its content — e.g. an empty scan ([§FS-check.2.2](FS-check.md#22-empty-scan)) — exit unchanged;
-- `note:` / `hint:` recovery breadcrumbs ([§FS-refs.2](FS-refs.md#2-behaviour), [§FS-show.3.4](FS-show.md#34-what-a-failed-query-prints));
+- `note:` / `hint:` recovery breadcrumbs ([§FS-refs.2](FS-refs.md#2-behaviour), [§FS-show.3.4](FS-show.md#34-what-a-failed-query-prints)), a coordinate glob's empty-scope `note:` and its PATH `hint:` among them ([§FS-coordinate-globs.errors.note](FS-coordinate-globs.md#errorsnote-a-pattern-no-kind-can-start-gets-a-note), [§FS-coordinate-globs.errors.hint](FS-coordinate-globs.md#errorshint-a-glob-typed-as-path-gets-a-hint));
 - the bare message a *failed query* prints when it has no result to put on stdout ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure) — an ID query on a missing ID);
 - `grund init`'s file-by-file transcript ([§FS-errors.6](FS-errors.md#6-the-grund-init-transcript) — `init`'s real output is the scaffold on disk; the transcript is progress), and `grund integrations --write`'s transcript in the same shape ([§FS-errors.6](FS-errors.md#6-the-grund-init-transcript)).
 
@@ -173,11 +173,11 @@ One trailing newline follows the line. The line is on **stdout** because it is t
 
 When a command refuses an input the user typed because it is not in the
 grammar — a rule sentence given to `check --rule`, a selector given to
-`list --selector` — the refusal names what failed and, where it can, gives the
-input that is accepted when it is pasted back:
+`list --selector`, a coordinate glob given to `--glob` — the refusal names what
+failed and, where it can, gives the input that is accepted when it is pasted back:
 
 ```
-error: <reason>; accepted <form|selector>: <input>
+error: <reason>; accepted <form|selector|glob>: <input>
 error: <reason>
 ```
 
@@ -186,7 +186,9 @@ error: <reason>
 - `<reason>` names the production that failed, and does not change with what
   follows it. After `; ` stands exactly one label and what it labels: a rule
   sentence after `accepted form:`, several quoted after `accepted forms:`, a
-  selector after `accepted selector:`. A label that ends in
+  selector after `accepted selector:`, a double-quoted glob after `accepted glob:`,
+  and several joined with `or` after `accepted globs:` ([§FS-coordinate-globs.errors.shape](FS-coordinate-globs.md#errorsshape-one-refusal-line)).
+  A label that ends in
   `after enabling it:` says the input is accepted only once the configuration
   enables what the reason names.
 - Where nothing can be offered, the reason stands alone. Where what could not

@@ -23,13 +23,13 @@ Whatever `check` reports about a declaration, `list` still shows it: a duplicate
 
 ### requirements.one-selection: Every filter narrows every mode alike — realized, directional for the next filter
 
-The filters make one selection and every output mode reads it: `--kind`, `--project`, `--unused` and `--selector` narrow the per-declaration rows, the `--summary` counts and the `--size` rows alike, compose with one another by intersection, and apply before `--top` keeps its largest rows ([§FS-list.1.2](FS-list.md#12---project), [§FS-list.1.4](FS-list.md#14---summary), [§FS-list.3.3.1](FS-list.md#331-narrowed-summaries), [§FS-list.3.4.5](FS-list.md#345-order-and---top), [§FS-rules.8](FS-rules.md#8-command-surfaces)). A refusal reads it too: the `known kinds:` line is built from the same selection in every mode ([§FS-list.1.2](FS-list.md#12---project)). This binds a filter added from here on: it narrows that one selection, and so reaches every mode at once, rather than being a predicate one mode applies and another forgets. Serves [§GOAL-token-economy.1](../goals.md#1-what-this-requires), whose ladder needs a slice to name one set at every rung.
+The filters make one selection and every output mode reads it: `--kind`, `--project`, `--unused`, `--selector` and `--glob` narrow the per-declaration rows, the `--summary` counts, the `--total` count and the `--size` rows alike, compose with one another by intersection, and apply before `--top` keeps its largest rows ([§FS-list.1.2](FS-list.md#12---project), [§FS-list.1.4](FS-list.md#14---summary), [§FS-list.3.3.1](FS-list.md#331-narrowed-summaries), [§FS-list.3.4.5](FS-list.md#345-order-and---top), [§FS-rules.8](FS-rules.md#8-command-surfaces)). A refusal reads it too: the `known kinds:` line is built from the same selection in every mode ([§FS-list.1.2](FS-list.md#12---project)). This binds a filter added from here on: it narrows that one selection, and so reaches every mode at once, rather than being a predicate one mode applies and another forgets. Serves [§GOAL-token-economy.1](../goals.md#1-what-this-requires), whose ladder needs a slice to name one set at every rung.
 
 ## 1. Inputs
 
 ```
-grund list [<path>] [--selector <selector>] [--kind <KIND>[,<KIND>…]]… [--project <alias>[,<alias>...]] [--unused] [--summary]
-           [--size[=<unit>[,<unit>…]]] [--top <N>] [--format text|json]
+grund list [<path>] [--selector <selector>] [--glob <pattern>]… [--kind <KIND>[,<KIND>…]]… [--project <alias>[,<alias>...]] [--unused]
+           [--summary | --total] [--size[=<unit>[,<unit>…]]] [--top <N>] [--format text|json]
 ```
 
 Which entries `<path>` reports, and what they resolve against, is [§FS-scan.path.list](FS-scan.md#pathlist-list-reports-the-paths-entries-and-resolves-against-the-project). `--format text|json` picks the output shape ([§FS-list.3](FS-list.md#3-outputs)), `text` by default.
@@ -43,6 +43,14 @@ named-chapter units matched by a phase-1 rule subject, and is always a flag so
 the existing positional remains the scan path. Its composition, text/JSON
 rows, empty-success result, and exit-2 refusals are
 [§FS-rules.8](FS-rules.md#8-command-surfaces)'s.
+
+`--glob <pattern>` is a second unit source beside the selector: repeatable, its patterns
+union, and it selects the catalog coordinates they match, sections at any depth included
+([§FS-coordinate-globs](FS-coordinate-globs.md#fs-coordinate-globs-a-coordinate-glob-selects-catalog-coordinates-by-pattern)). It composes with every other filter and mode exactly as `--selector`
+does, by intersection, with the same rows in the same order, and both together intersect
+([§FS-coordinate-globs.scope.filters](FS-coordinate-globs.md#scopefilters-filters-intersect-and-never-widen)). It is always a flag: a pattern typed as the positional
+stays a scan path, and its failure gains a hint ([§FS-coordinate-globs.errors.hint](FS-coordinate-globs.md#errorshint-a-glob-typed-as-path-gets-a-hint)). `--total`
+prints the count of the rows the same filters list instead of the rows ([§FS-list.total](FS-list.md#total---total-a-count-rung)).
 
 ### 1.1 `--kind`
 
@@ -254,10 +262,24 @@ A healthy stub collapses onto its inline home even where the home's file lies ou
 
 Measuring a home does not bring its file into the scan. `check`'s opt-in lead warning measures leads by this mode but still judges only sites in the configured scan scope ([§FS-declarations.checks.oversized-lead.4](FS-declarations.md#checksoversized-lead4-which-sites-it-judges)), so a home outside `[scan] include` draws no size warning.
 
+## total: `--total`, a count rung
+
+`--total` prints one count in place of the rows: the number of rows `list` would print under
+the same path, `--selector`, `--glob`, `--kind`, `--project` and `--unused`, with or without a
+pattern. Text is the bare number and a newline, JSON is `{"count":<n>}` and a newline
+([§FS-output-shapes.5](FS-output-shapes.md#5-list---formatjson)), and an empty selection prints `0`, so a caller compares it with `wc -l` of
+the rows. It is the cheap rung before the bodies: count a checklist, then read it
+([§GOAL-token-economy.1](../goals.md#1-what-this-requires)). It is not `refs --total`'s sentence ([§FS-refs.3.4](FS-refs.md#34---total)): that is the hover's
+words for a site and file pair, and a listing has neither. A count beside a fold or a
+measurement asks two questions, so `--total` with `--summary`, `--size` or `--top` is a launch
+error, decided before config discovery and before the size-selector errors, in that order:
+`--total cannot be combined with --summary`, `--total cannot be combined with --size`,
+`--total cannot be combined with --top` ([§FS-list.1.7](FS-list.md#17-size-selector-errors), [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)). Repeating it is harmless.
+
 ## 4. Exit codes
 
 - `0` — the scan succeeded; the listed catalog (possibly empty) is the result.
-- `2` — scan / I/O error ([§FS-check.2](FS-check.md#2-outputs) partial-scan semantics apply: an incomplete scan exits `2` and the catalog may be short), an unknown `--kind` (any value in a comma-separated or repeated `--kind`), an invalid size selector or combination ([§FS-list.1.7](FS-list.md#17-size-selector-errors)), an unsupported `--format`, or any other CLI-level error ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)).
+- `2` — scan / I/O error ([§FS-check.2](FS-check.md#2-outputs) partial-scan semantics apply: an incomplete scan exits `2` and the catalog may be short), an unknown `--kind` (any value in a comma-separated or repeated `--kind`), an invalid size selector or combination ([§FS-list.1.7](FS-list.md#17-size-selector-errors)), a refused coordinate glob ([§FS-coordinate-globs.errors](FS-coordinate-globs.md#errors-refusals-notes-and-hints)), an unsupported `--format`, or any other CLI-level error ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)).
 
 There is no `1`: `list` is a query that always returns *its* answer (a possibly-empty catalog), never "found something other than one body" — unlike `show`, it has no single-result expectation to violate.
 

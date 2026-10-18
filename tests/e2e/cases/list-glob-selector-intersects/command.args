@@ -1,0 +1,1 @@
+list --selector FS.terms --glob 'FS-cov*.*' {repo}

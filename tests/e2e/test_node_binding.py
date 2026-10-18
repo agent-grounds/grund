@@ -49,6 +49,11 @@ class NodeConsumerTests(unittest.TestCase):
     def test_core_owned_mutations_and_refusals(self):
         self.assertEqual("", self.rehearsal.run("mutations.mjs"))
 
+    # §FS-coordinate-globs.bindings: red until #503; the implementation removes the marker.
+    @unittest.expectedFailure
+    def test_coordinate_globs_note_and_refusal(self):
+        self.assertEqual("", self.rehearsal.run("globs.mjs"))
+
     @unittest.skipIf(REQUIRES_UNIX_SHELL, REQUIRES_UNIX_SHELL_SKIP)
     def test_explicit_fetch_writes_the_core_snapshot(self):
         self.assertEqual("", self.rehearsal.run("fetch.mjs"))

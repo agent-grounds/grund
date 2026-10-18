@@ -41,6 +41,9 @@ Every maintained example must map to at least one canonical `grund` use-case. Th
 - resolving a citation with `grund <ID>`;
 - finding a declaration's blast radius with `grund refs`;
 - grouping citations by file with `grund cover`;
+- reviewing a checklist: counting its points with `grund list --glob --total`,
+  reading their bodies with `grund show --batch --glob`, and naming the points a
+  changed line range belongs to with `grund cover FILE --lines`;
 - normalizing citations with `grund fmt`;
 - validating a clean or broken tree with `grund check`;
 - validating cross-project citations in a workspace;
@@ -54,6 +57,10 @@ The examples also include an optional first-class-values repository, specified i
 They include the chapter-rules repository at `examples/rules/`, whose runnable
 goldens and documentation coverage are normative in
 [§FS-rules.10](FS-rules.md#10-documentation-and-executable-examples).
+
+They include the review-checklist walkthrough at `examples/review-checklist/`, a
+multi-run example ([§FS-examples.5.5](FS-examples.md#55-an-example-may-pin-several-runs)) whose runs `1-count`, `2-bodies` and `3-owners`
+are the review recipe of [§FS-coordinate-globs](FS-coordinate-globs.md#fs-coordinate-globs-a-coordinate-glob-selects-catalog-coordinates-by-pattern), one step each.
 
 They include the opt-in Git co-change workflow at `examples/cochange/`, specified
 by [§FS-cochange-recipe.examples](FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance), with commit-msg/CI evidence and visible waivers.

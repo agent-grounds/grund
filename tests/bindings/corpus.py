@@ -82,6 +82,23 @@ FILE_READ_CASES = (
     ("cover-lines-outside-scan", "notes.txt", "cover", (), {"lines": ("1",)}),
 )
 
+# Reads with `globs` (§FS-coordinate-globs.bindings.options), kept apart from READ_CASES while
+# the binding lacks the option: python/test_coordinate_globs.py runs them as red until #503,
+# and the implementation folds them into READ_CASES.
+GLOB_READ_CASES = (
+    ("list-glob-point-and-subtree-json", "list_ids", (),
+     {"globs": ("FS-config.requirements{,.**}",)}),
+    ("list-glob-union", "list_ids", (),
+     {"globs": ("FS-c{heck,over}", "FS-config.terms", "FS-cover")}),
+    ("list-glob-unused-filter", "list_ids", (), {"unused": True, "globs": ("FS-*{,.*}",)}),
+    ("list-glob-size", "list_sizes", (), {"globs": ("FS-*.terms",), "units": ("lines",)}),
+    ("show-batch-glob-json", "show_batch", (), {"globs": ("FS-config.requirements{,.**}",)}),
+    ("list-glob-note-suggests-the-kind", "list_ids", (), {"globs": ("fs-*",)}),
+    ("list-glob-refused-star-run-ends-the-pattern", "list_ids", (), {"globs": ("FS-**",)}),
+    ("workspace-list-glob-every-project-own-separator", "list_ids", (),
+     {"globs": ("*/FS-*.1",)}),
+)
+
 MUTATIONS = (
     ("fmt-shorthand-write", "fmt", (), {"write": False}),
     ("fmt-shorthand-write", "fmt", (), {"write": True}),

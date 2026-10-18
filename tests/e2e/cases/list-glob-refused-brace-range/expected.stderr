@@ -1,0 +1,1 @@
+error: invalid coordinate glob "FS-{1..3}" at column 4: braces take no range; list each alternative

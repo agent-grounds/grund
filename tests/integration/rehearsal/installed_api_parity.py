@@ -28,7 +28,7 @@ import test_parity as node_parity  # noqa: E402
 # §AR-bindings.6: Python's acceptance modules sit beside the shared oracle they import.
 BINDINGS = REPO / "tests" / "bindings"
 PYTHON_ACCEPTANCE = BINDINGS / "python"
-ACCEPTANCE = ("test_api", "test_parity", "test_regressions")
+ACCEPTANCE = ("test_api", "test_parity", "test_regressions", "test_coordinate_globs")
 
 
 class PythonApiTests(unittest.TestCase):

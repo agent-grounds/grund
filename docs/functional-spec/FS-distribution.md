@@ -341,10 +341,10 @@ calls that load a tree; the table names additional operation-specific cases.
 | `check(root?: string, options?: CheckOptions): Promise<CheckResult>` | requireGrounding=false, suggestions=false, full=false, rule=null, only=[], ignore=[], onlyRule=false | `check_with_run_warnings`, `CheckFindingSelection`; typed `check_outcome` | complete report, selectedReport, outputFormat, hadScanErrors, runCautions; findings and partial file I/O resolve; failed setup rejects. Selection validated before discovery; ignore wins, rule-produced codes carry invalid-rule, safety io always survives, onlyRule requires rule. |
 | `scan(root: string): Promise<ScanResult>` | Explicit path; no checker flags | `scan`/strict scan, additive `scan_outcome` over the same pipeline with warning and normalized snapshot carriers | declarations/citations/scan facts available as arrays, not a live iterator; strict scan failures reject with available partial facts and cautions. No parallel JS scan. |
 | `show(id: string, options?: ShowOptions): Promise<ShowResult>` | section=null, mode=lead, format=text; modes lead/brief/toc/full, formats text/md/json | `show_with_scope`, typed query errors, additive `show_outcome` | body/path/line/sections/json plus cautions. Query refusal rejects query with sites or candidate IDs; setup rejects config/io. Inline section plus section option is a query failure, not a JS parser reinterpretation. |
-| `showBatch(queries: readonly (string \| ShowQuery)[] \| null, options?: BatchOptions): Promise<BatchResult>` | null means all coordinates; [] is empty without config loading; mode=lead | `show_batch_with_scope`'s single-context machinery; additive `show_batch_data_outcome` before the existing JSON rendering | ordered `{query,ok:true,result}` or `{query,ok:false,failure}` records, plus cautions. Validate entire input before discovery. Per-query failures continue; setup failure rejects once. No stdin/NDJSON input API. |
+| `showBatch(queries: readonly (string \| ShowQuery)[] \| null, options?: BatchOptions): Promise<BatchResult>` | null means all coordinates; [] is empty without config loading; mode=lead, globs=[] (null with globs generates and filters; explicit queries with globs reject `input`) | `show_batch_with_scope`'s single-context machinery; additive `show_batch_data_outcome` before the existing JSON rendering | ordered `{query,ok:true,result}` or `{query,ok:false,failure}` records, plus note and cautions. Validate entire input before discovery. Per-query failures continue; setup failure rejects once. No stdin/NDJSON input API. |
 | `refs(id: string, options?: RefsOptions): Promise<RefsResult>` | section=null, descendants=false | `refs_with_metadata`/`refs_outcome`, typed `refs_metadata_outcome` | hits, workspace, outputFormat, note, scanErrors, kindTitle, derived summaries/totals, cautions. Valid undeclared target retains hits/note; invalid ID/ambiguity rejects query with available context. No imposed show-not-found rule. |
-| `list(options?: ListOptions): Promise<ListResult>` | kinds=[], projects=[], unused=false, selector=null | `list_with_run_warnings`, typed `list_outcome` | entries/summaries/workspace/outputFormat/scanErrors/cautions. Unknown/non-citable kinds, unknown project, project filter without workspace, invalid/unresolved selector reject; not empty success. |
-| `listSizes(options?: SizeOptions): Promise<SizeResult>` | list options plus units=[lines,words,bytes], top=null; units nonempty, unique, caller ordered; top positive | `list_sizes`, typed warning-preserving `list_sizes_outcome` | entries with ordered unit/nullable lead/full measurements, workspace/outputFormat/scanErrors/cautions. Filters precede top; first unit ranks; existing stable tie-break; broken stub measures remain null. |
+| `list(options?: ListOptions): Promise<ListResult>` | kinds=[], projects=[], unused=false, selector=null, globs=[] | `list_with_run_warnings`, typed `list_outcome` | entries/summaries/workspace/outputFormat/scanErrors/note/cautions. Unknown/non-citable kinds, unknown project, project filter without workspace, invalid/unresolved selector, refused glob ([§FS-coordinate-globs.bindings](FS-coordinate-globs.md#bindings-node-and-python)) reject; not empty success. |
+| `listSizes(options?: SizeOptions): Promise<SizeResult>` | list options (globs included) plus units=[lines,words,bytes], top=null; units nonempty, unique, caller ordered; top positive | `list_sizes`, typed warning-preserving `list_sizes_outcome` | entries with ordered unit/nullable lead/full measurements, workspace/outputFormat/scanErrors/note/cautions. Filters precede top; first unit ranks; existing stable tie-break; broken stub measures remain null. |
 | `cover(options?: RootOptions): Promise<CoverResult>` | none | `cover`, typed `cover_outcome` | entries including empty files, all citation/site/project/enclosing coordinates, outputFormat, scanErrors/cautions. `cover_text` is a rendering-oriented lower-detail projection, not an additional public operation; complete cover data can supply it. |
 | `fmt(options?: FmtOptions): Promise<FmtResult>` | write=false, marker=false, crossRefs=false | `format_references`, `FmtScanAbort`, typed `format_outcome` | changes/path/line/label, scanErrors, refusedWrites, cautions. Core completed partial runs resolve with diagnostics; fatal preflight or later write errors reject with partial output. Config-enabled cross refs still runs when crossRefs=false. Preview is default; no added check flag/exit decision. |
 | `proposeId(kind: string, title: string, options?: IdOptions): Promise<IdResult>` | width=3, nonnegative safe integer | `propose_id_with_run_warnings`, typed `propose_id_outcome` | id/kind/number/slug/folder/file/e2eCaseDir/fileHoldsSingleDeclaration/cautions. Unknown/non-citable kind rejects operation with known kinds; empty slug or collision rejects query. No writes or implicit declaration creation. |
@@ -478,19 +478,19 @@ not permission to return a string in place of typed data.
   JSON source/E2E/value bodies preserve core semantics rather than treating all
   output as prose. All four slice modes and all three single-show formats exist.
 - BatchResult: `records: {query:{id,section:string|null},ok:true,result:ShowData}
-  | {query,ok:false,failure:Failure}[]`. ShowData has ShowResult's fields except
+  | {query,ok:false,failure:Failure}[]`, `note:string|null`. ShowData has ShowResult's fields except
   cautions, mode is invocation-wide, canonical per-query JSON is preserved.
 - RefsData: `outputFormat`, `workspace`, `kindTitle:string|null`, `note:string|null`,
   `hits`, `scanErrors`, `summaries:{project:string|null,path,count,lines:number[]}[]`,
   `totals:{sites,files}`. Every RefHit has project/path/line/column/id/
   section/marker/text/enclosingDeclaration/enclosingSection; nullable coordinates
   stay null. Summary lines retain the CLI's duplicate-line policy and ordering.
-- ListResult: `outputFormat`, `workspace`, `entries`, `summaries`, `scanErrors`.
+- ListResult: `outputFormat`, `workspace`, `entries`, `summaries`, `scanErrors`, `note:string|null`.
   Entry: project/id/section/sectionSeparator/kind/path/line/title/stub/defines/
   refs/duplicate/valueRoots:{id,valid}[]. Summary: project/kind/title/home/count.
   project/section/title/defines nullable; output wire omits keys only where the
   existing CLI shape does. Keep kind titles and authored project/kind order.
-- SizeResult: outputFormat/workspace/scanErrors/entries. Size entry:
+- SizeResult: outputFormat/workspace/scanErrors/note:string|null/entries. Size entry:
   project/id/section/sectionSeparator/kind/path/line/stub/defines/duplicate/
   measurements:{unit:'lines'|'words'|'bytes',lead:number|null,full:number|null}[].
 - CoverResult: outputFormat/scanErrors/entries:{project,path,citations:RefHit[]}[];
@@ -821,10 +821,10 @@ instructions have no root. Defaults below are normative, not merely examples.
 | `check(root=None, *, require_grounding=False, suggestions=False, full=False, rule=None, only=(), ignore=(), only_rule=False)` | Complete and selected report, warning-preserving check |
 | `scan(root)` | Raw scanner snapshot |
 | `show(id, *, section=None, mode="lead", format="text")` | Scoped show result |
-| `show_batch(queries=None, *, mode="lead")` | None means all; ordered strings/ShowQuery records |
+| `show_batch(queries=None, *, mode="lead", globs=())` | None means all, filtered by any `globs`; ordered strings/ShowQuery records |
 | `refs(id, *, section=None, descendants=False)` | Warning-preserving metadata/totals |
-| `list_ids(*, kinds=(), projects=(), unused=False, selector=None)` | Entries and summaries |
-| `list_sizes(*, kinds=(), projects=(), unused=False, selector=None, units=("lines","words","bytes"), top=None)` | Lead/full sizes |
+| `list_ids(*, kinds=(), projects=(), unused=False, selector=None, globs=())` | Entries and summaries |
+| `list_sizes(*, kinds=(), projects=(), unused=False, selector=None, globs=(), units=("lines","words","bytes"), top=None)` | Lead/full sizes |
 | `cover(*, text=False, lines=())` | Structured or text coverage data; non-empty `lines` — strings `"N"` or `"N-M"`, each as `--lines` takes it, with `root` naming the file and `text` false — gives line ownership ([§FS-cover.6](FS-cover.md#6-line-ownership)) |
 | `fmt(*, write=False, marker=False, cross_refs=False)` | Format preview or managed writes |
 | `propose_id(kind, title, *, width=3)` | Warning-preserving ID proposal |

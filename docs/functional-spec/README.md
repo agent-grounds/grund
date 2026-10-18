@@ -9,6 +9,7 @@ The subcommands a user runs on the command line.
 - [§FS-check](FS-check.md#fs-check-grund-validates-every-citation-in-a-repo) — grund validates every citation in a repo
 - [§FS-show](FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id) — grund reads a single declaration body by ID
 - [§FS-list](FS-list.md#fs-list-grund-lists-every-declared-id) — grund lists every declared ID
+- [§FS-coordinate-globs](FS-coordinate-globs.md#fs-coordinate-globs-a-coordinate-glob-selects-catalog-coordinates-by-pattern) — a coordinate glob selects catalog coordinates by pattern
 - [§FS-refs](FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id) — grund lists every citation of an ID
 - [§FS-cover](FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file) — grund groups citations by scanned file
 - [§FS-cochange-recipe](FS-cochange-recipe.md#fs-cochange-recipe-an-opt-in-git-recipe-reports-related-declaration-and-test-edits) — an opt-in Git recipe reports related declaration and test edits

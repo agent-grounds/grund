@@ -1,0 +1,1 @@
+list --glob 'group/alpha/FS-*' {repo}

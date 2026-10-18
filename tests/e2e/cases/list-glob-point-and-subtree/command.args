@@ -1,0 +1,1 @@
+list --glob 'FS-config.requirements{,.**}' {repo}
