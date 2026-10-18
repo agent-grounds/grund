@@ -65,6 +65,12 @@ def build_record(*, commit: str, binary_sha256: str, identity: dict, ir: dict,
     return record
 
 
+def tier_of(record: dict) -> str:
+    """§AR-benchmarks.7.1: the tier that ran a record. A record of version 1 predates the
+    field, and the `pr` tier was then the only one."""
+    return record.get("tier", "pr")
+
+
 def series_key(record: dict) -> str:
     """§AR-benchmarks.7.2: the SHA-256 of the identity fields and of nothing else."""
     identity = {name: record.get(name) for name in IDENTITY_FIELDS}
@@ -145,7 +151,7 @@ def merge(partials: list) -> tuple:
     record = build_record(commit=first["commit"], binary_sha256=first["binary_sha256"],
                           identity=dict({name: first[name] for name in IDENTITY_FIELDS},
                                         fixtures=dict(sorted(fixtures.items()))),
-                          ir=ir, refused=refused, tier=first.get("tier", "pr"))
+                          ir=ir, refused=refused, tier=tier_of(first))
     return record, []
 
 

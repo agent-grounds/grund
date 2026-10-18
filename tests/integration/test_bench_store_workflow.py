@@ -297,32 +297,25 @@ class TheStoreWorkflow(unittest.TestCase):
         self.assertTrue(STORE.is_file(), f"no {STORE.relative_to(REPO_ROOT)}: §AR-ci.5.5 has no store")
         self.assertEqual([], check(STORE.read_text(encoding="utf-8"), *extra))
 
-    @unittest.expectedFailure  # red until #696 adds bench-store.yml; implement removes this marker
     def test_it_runs_once_ci_has_completed(self):
         self.check(trigger_problems)
 
-    @unittest.expectedFailure  # red until #696 adds bench-store.yml; implement removes this marker
     def test_its_job_admits_only_a_push_to_main_in_this_repository(self):
         self.check(guard_problems)
         self.assertIn(GUARD, squash(STORE.read_text(encoding="utf-8")))
 
-    @unittest.expectedFailure  # red until #696 adds bench-store.yml; implement removes this marker
     def test_it_checks_out_the_commit_the_record_measured(self):
         self.check(checkout_problems)
 
-    @unittest.expectedFailure  # red until #696 adds bench-store.yml; implement removes this marker
     def test_only_its_job_can_write_and_only_contents(self):
         self.check(permission_problems)
 
-    @unittest.expectedFailure  # red until #696 adds bench-store.yml; implement removes this marker
     def test_the_event_reaches_the_script_through_env_alone(self):
         self.check(input_problems)
 
-    @unittest.expectedFailure  # red until #696 adds bench-store.yml; implement removes this marker
     def test_nothing_in_it_pushes_forces_or_creates_a_ref(self):
         self.check(rewrite_problems)
 
-    @unittest.expectedFailure  # red until #696 adds bench-store.yml; implement removes this marker
     def test_it_finds_the_record_by_the_names_ci_writes_it_by(self):
         self.check(name_problems, CI.read_text(encoding="utf-8"))
 

@@ -105,6 +105,41 @@ The run in the image above records `local` too: the host's processor can still m
 count the image does not pin and the series key does not name, so a count taken this
 way is checked against CI's rather than joining its series.
 
+A push to `main` keeps its record for good. Once CI has completed on the push, the store
+adds the record CI merged, byte for byte, to the `benchmark-data` branch as
+`pr/<commit>.json`, so a commit's record is found from its sha alone
+([§AR-benchmarks.7.5](architecture/AR-benchmarks.md#75-a-push-to-main-keeps-its-record)).
+Every other record, a pull request's, a release candidate's or a nightly run's, lasts only
+as long as its artifact, 90 days at most. To read two and compare them:
+
+```sh
+git fetch origin benchmark-data
+git show origin/benchmark-data:pr/<commit>.json > older.json
+git show origin/benchmark-data:pr/<later-commit>.json > later.json
+python3 scripts/bench_record.py compare older.json later.json
+```
+
+A stored record is compared only within its series, as every record is, so `compare`
+refuses two records a pin moved between. Records are added and never edited: a commit's
+first record stands, and the branch refuses deletion and rewritten history
+([§AR-ci.5.5.4](architecture/AR-ci.md#554-a-person-makes-the-branch-and-its-protection)).
+A record whose commit later left `main`, because `main` was rewritten, stays: it is still a
+true measurement of that commit's binary, and
+`git merge-base --is-ancestor <commit> origin/main` says whether its commit is still on
+`main`. Nothing reads the store to decide anything, so every check gives the same verdict
+whether the branch is reachable or not. A record the store missed, or one from before the
+store existed, can be stored by hand from its artifact before that expires
+([§AR-ci.5.5.5](architecture/AR-ci.md#555-a-record-can-be-stored-by-hand)):
+
+```sh
+gh run download <run-id> --name iai-callgrind-summaries --dir record
+python3 scripts/bench_store.py --record record/first.json --commit <commit>
+```
+
+Run it in a checkout whose `origin` is this repository. That checkout's `bench_record.py`
+checks the record's series key, so a record written under other identity fields than the
+checkout's is stored from a checkout of its own commit, made with `git worktree add`.
+
 ## Tiers and Shards
 
 The catalog has two tiers ([§AR-benchmarks.1.2.1](architecture/AR-benchmarks.md#121-two-tiers)).
