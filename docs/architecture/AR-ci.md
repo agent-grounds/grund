@@ -428,7 +428,8 @@ step does; and the CI cache key has moved past the `v2` this point bumped, to th
 `v3` of [§AR-ci.3.4.1.2](AR-ci.md#3412-one-target-per-source-checkout). `tests/integration/test_ci_output.py` holds the
 gate's half on a suite of its own: each build line that a passing test, its
 child process, a skipped test or a module teardown writes appears once in the
-green output, and nothing else they write does.
+green output, as does a `gate time: ` line a child process writes, and nothing
+else they write does.
 
 ##### 3.4.1.2 One target per source checkout
 
