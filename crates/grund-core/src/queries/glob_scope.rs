@@ -148,14 +148,12 @@ impl<'g> GlobSelection<'g> {
         citing: usize,
         citation: &Citation,
     ) -> bool {
-        let target = match citation.namespace.as_deref() {
-            None => Some(citing),
-            Some(alias) => loaded_alias(context, alias),
-        };
-        target.is_some_and(|target| {
-            let id = render_id(&context.projects[target].config.grammar, &citation.id);
-            self.selects(target, &id, citation.section.as_deref())
-        })
+        context
+            .citation_target(citing, citation)
+            .is_some_and(|target| {
+                let id = render_id(&context.projects[target].config.grammar, &citation.id);
+                self.selects(target, &id, citation.section.as_deref())
+            })
     }
 
     /// Each note's text after `note: `, one per line (§FS-coordinate-globs.bindings.note).
@@ -174,18 +172,11 @@ fn projects_read(
     match glob.qualifier() {
         GlobQualifier::Current => Ok(context.current.into_iter().collect()),
         GlobQualifier::Every => Ok((0..context.projects.len()).collect()),
-        GlobQualifier::Alias(alias) => loaded_alias(context, alias)
+        GlobQualifier::Alias(alias) => context
+            .loaded_alias(alias)
             .map(|index| vec![index])
             .ok_or_else(|| glob.unknown_alias(alias, &context.aliases())),
     }
-}
-
-/// The index of the loaded project an alias names; outside a workspace, none does.
-fn loaded_alias(context: &WorkspaceContext, alias: &str) -> Option<usize> {
-    context
-        .projects
-        .iter()
-        .position(|project| context.workspace_loaded && project.alias == alias)
 }
 
 /// The ID head a kind's IDs begin with — the kind and the literal its format writes

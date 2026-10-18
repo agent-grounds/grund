@@ -161,20 +161,16 @@ impl CoverCitationRow<'_> {
     }
 }
 
-/// The config a citation's ID renders under: the **target** project's, matching
-/// `refs` (§FS-workspace.8.2.4), or the citing project's where the alias names no
-/// loaded project (§FS-workspace.8.1).
+/// The config a citation in the project at `citing` renders its ID under: the
+/// **target** project's, matching `refs` (§FS-workspace.8.2.4), or the citing
+/// project's where the alias names no loaded project (§FS-workspace.8.1).
 pub(super) fn target_config<'a>(
     context: &'a WorkspaceContext,
-    citing: &'a Config,
+    citing: usize,
     citation: &Citation,
 ) -> &'a Config {
-    citation
-        .namespace
-        .as_deref()
-        .and_then(|alias| context.project_by_alias(alias))
-        .map(|target| -> &Config { &target.config })
-        .unwrap_or(citing)
+    let target = context.citation_target(citing, citation).unwrap_or(citing);
+    &context.projects[target].config
 }
 
 /// The canonical spelling of the token the file wrote: alias-qualified only
@@ -217,7 +213,7 @@ fn cover_rows<'a>(
             }
             row.1.push(CoverCitationRow {
                 citation,
-                target_config: target_config(context, &project.config, citation),
+                target_config: target_config(context, index, citation),
                 citing_config: &project.config,
             });
         }

@@ -182,17 +182,14 @@ pub(super) fn refs_impl_with_details(
         citation: &'a Citation,
     }
     let mut hits = Vec::new();
-    for project in &context.projects {
-        let is_target = project.alias == target_alias;
+    let target = context
+        .projects
+        .iter()
+        .position(|project| std::ptr::eq(project, target_project));
+    for (index, project) in context.projects.iter().enumerate() {
         // §FS-refs.2: the set holds what a stub's target lends, resolved.
         for citation in project.findings.edges() {
-            let local_match = citation.namespace.is_none() && is_target;
-            let qualified_match = citation
-                .namespace
-                .as_deref()
-                .map(|ns| ns == target_alias)
-                .unwrap_or(false);
-            if !(local_match || qualified_match) || citation.id != id {
+            if context.citation_target(index, citation) != target || citation.id != id {
                 continue;
             }
             // §FS-refs.2: `--descendants` widens the exact coordinate to its

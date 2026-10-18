@@ -98,7 +98,7 @@ fn refs_sites_run(opts: RefsSitesOpts, cautions: &mut Vec<Finding>) -> Result<Re
                 line: citation.line,
                 column: citation.column,
                 // §FS-refs.3.2: as `cover` spells it, the alias it was written with kept.
-                id: cited_id(target_config(&context, &project.config, citation), citation),
+                id: cited_id(target_config(&context, site.project, citation), citation),
                 section: citation.section.clone(),
                 marker: citation.has_marker,
                 text: citation.text.clone(),
