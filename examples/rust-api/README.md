@@ -21,6 +21,11 @@ appended /home/you/.config/grund/config.toml
 appended /home/you/.claude/CLAUDE.md
 ```
 
+An event that carries a note gets a `note:` line on stderr. `IntegrationNote`
+is `#[non_exhaustive]`, like every promised enum, so `describe` in
+`src/main.rs` ends its `match` in a wildcard arm for a note a later `grund-core`
+adds; without that arm the example does not compile.
+
 The CLI and this example read the same answer, so they write the same files with
 the same bytes; `tests/same_install_as_the_cli.rs` runs both in sandboxed homes
 and compares them. Build an option record from `Default` and assign its fields,
