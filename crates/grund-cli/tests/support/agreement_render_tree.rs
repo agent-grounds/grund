@@ -494,9 +494,10 @@ impl View<'_> {
                 json!({"project":self.project_of(&f),"path":self.site(&f),"citations":cites})
             })
             .collect();
+        // §FS-cover.globs: a run without globs prints no note.
         ok(
             json!({"run_cautions":[],"output_format":"text","entries":entries,
-            "scan_errors":self.scan_errors_in(false)}),
+            "scan_errors":self.scan_errors_in(false),"note":null}),
         )
     }
 }
