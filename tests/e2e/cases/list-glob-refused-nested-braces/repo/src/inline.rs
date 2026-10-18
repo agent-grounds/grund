@@ -1,6 +1,6 @@
 /// FS-inline: Inline home
 ///
-/// Inline lead, citing §FS-config.
+/// Inline lead, citing §FS-convoy.
 ///
 /// ## 1. Detail
 ///

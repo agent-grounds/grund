@@ -1,1 +1,1 @@
-list --glob 'FS-c{heck,over}' --glob 'FS-config.terms' --glob 'FS-cover' {repo}
+list --glob 'FS-c{hart,ovey}' --glob 'FS-convoy.terms' --glob 'FS-covey' {repo}

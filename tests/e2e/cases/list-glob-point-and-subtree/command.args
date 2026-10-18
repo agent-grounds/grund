@@ -1,1 +1,1 @@
-list --glob 'FS-config.requirements{,.**}' {repo}
+list --glob 'FS-convoy.requirements{,.**}' {repo}

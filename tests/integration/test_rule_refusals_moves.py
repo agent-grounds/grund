@@ -160,7 +160,7 @@ class RuleRefusalsMoveTests(unittest.TestCase):
         errors = _headings(ERRORS)
         self.assertIn("2.5", errors, "FS-errors.2.5 is not declared")
         shape = _body(errors, "2.5")
-        self.assertIn("error: <reason>; accepted <form|selector>: <input>", shape)
+        self.assertIn("error: <reason>; accepted <form|selector|glob>: <input>", shape)
         for chapter in ("sentences", "selectors"):
             self.assertTrue(_cites(shape, f"FS-rule-refusals.{chapter}"),
                             f"FS-errors.2.5 does not name FS-rule-refusals.{chapter}")

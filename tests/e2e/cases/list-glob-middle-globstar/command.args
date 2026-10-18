@@ -1,1 +1,1 @@
-list --glob 'FS-config.**.1' {repo}
+list --glob 'FS-convoy.**.1' {repo}

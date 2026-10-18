@@ -19,7 +19,8 @@ alias).
 
 - **coordinate glob** — A pattern over catalog coordinates: an optional project qualifier,
   then components joined by separators, each matched against one component of a coordinate.
-- **component** — The ID atom or one section path component, of a pattern or of a coordinate.
+- **component (narrowed)** — [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations). In this spec, within a coordinate or a pattern,
+  the ID atom or one section path component; elsewhere the shared definition applies.
 - **ID atom** — A pattern's first component. It is matched against the whole rendered ID, never
   against a part of it.
 - **alternative** — One of the patterns a brace group stands for; a pattern without a group is

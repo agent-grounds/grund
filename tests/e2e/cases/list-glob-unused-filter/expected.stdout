@@ -1,4 +1,4 @@
-FS-check               docs/fs/FS-check.md:1  Check
-FS-check.requirements  docs/fs/FS-check.md:5  Requirements
+FS-chart               docs/fs/FS-chart.md:1  Check
+FS-chart.requirements  docs/fs/FS-chart.md:5  Requirements
 FS-inline              src/inline.rs:1  Inline home
 FS-inline.1            src/inline.rs:5  Detail

@@ -102,7 +102,11 @@ CITED = (
 
 # FS-show.md grew by the 463 bytes of §FS-show.3.2.1's paragraph on where a wrap
 # ends, which cites the wrap test rather than restating it (grund#655).
-BASELINES = {"FS-show.md": 66938, "FS-fmt.md": 93497}
+
+# FS-show.md grew by the 1006 bytes of `show --batch --glob`: §FS-show.1.9's paragraph
+# and §FS-show.2.6.2's sentence on filtering the generation, which cite
+# §FS-coordinate-globs.errors and §FS-show.2.6.3 rather than restating them (grund#503).
+BASELINES = {"FS-show.md": 67944, "FS-fmt.md": 93497}
 
 
 def _flat(text):

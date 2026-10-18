@@ -147,10 +147,8 @@ existing equivalence and mutual exclusion.
 `--batch --glob <pattern>`, repeatable, is a second generated form: it reads no stdin and
 generates the queries `--all` would, kept where a pattern matches
 ([§FS-coordinate-globs](FS-coordinate-globs.md#fs-coordinate-globs-a-coordinate-glob-selects-catalog-coordinates-by-pattern), [§FS-show.2.6.2](FS-show.md#262-exhaustive-generation)). `--all` beside it is redundant and accepted,
-stdin is ignored as it is with `--all`, and `--glob` requires `--batch`. Every pattern is
-validated before anything is printed, so a refused pattern leaves stdout empty and exits `2`
-([§FS-coordinate-globs.errors](FS-coordinate-globs.md#errors-refusals-notes-and-hints)), and a pattern no kind in scope can start gets the same
-`note:` as on `list`.
+stdin is ignored as it is with `--all`, and `--glob` requires `--batch`. A pattern is refused
+and noted as on `list` ([§FS-coordinate-globs.errors.shape](FS-coordinate-globs.md#errorsshape-one-refusal-line), [§FS-coordinate-globs.errors.note](FS-coordinate-globs.md#errorsnote-a-pattern-no-kind-can-start-gets-a-note)).
 
 ## 2. Behavior
 
@@ -430,9 +428,8 @@ unqualified; IDs in every other loaded project use that project's stable alias.
 When a workspace excludes its root and therefore has no current project, every
 generated ID is qualified. Duplicate declarations or section claimants generate
 one coordinate and let normal resolution report its ambiguity. The glob form filters this
-same generation, keeping its order, so a duplicated coordinate a pattern matches is one
-failing envelope and the run exits `1` after printing every envelope
-([§FS-show.2.6.3](FS-show.md#263-query-failures-and-run-level-failures)); a pattern's scope decides which projects' coordinates it can keep
+same generation, keeping its order and its failed envelopes ([§FS-show.2.6.3](FS-show.md#263-query-failures-and-run-level-failures)); a pattern's
+scope decides which projects' coordinates it can keep
 ([§FS-coordinate-globs.scope](FS-coordinate-globs.md#scope-scope)).
 
 #### 2.6.3 Query failures and run-level failures

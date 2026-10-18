@@ -1,1 +1,1 @@
-show --batch --glob 'fs-*' {repo}
+show --batch --glob 'fs-*' {repo} --format json
