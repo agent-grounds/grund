@@ -143,8 +143,15 @@ error: invalid coordinate glob "<pattern>" at column <N>: <reason>; accepted glo
 `<N>` is the one-based byte column in the pattern as typed. A refusal the grammar alone decides
 is made before config discovery; one that needs the separator, the marker or the loaded
 aliases is made once the config is read and before anything is printed. A refusal under any
-project in scope refuses the pattern, and of several refused patterns the first on the command
-line is reported. An accepted glob is the pattern as typed with only the failed part
+project in scope refuses the pattern. Of several refused patterns, the first the grammar alone
+refuses is reported, before discovery, so a broken `grund.toml` never hides it
+([§FS-cli.requirements.before-load](FS-cli.md#requirementsbefore-load-a-usage-mistake-is-answered-before-the-tree-is-read--realized-directional-for-the-next-flag)); when the grammar refuses none, the first on the
+command line refused once the config is read is reported. One pattern is read in the same
+order: `FS-**.{a,b` is refused at column 7, for its unclosed brace, though its `**` at column 4
+would be refused once the config is read. Within either stage the leftmost refusal is
+reported, except that a bracket is refused as a whole, for never closing or for a range, only
+when nothing inside it is, and components are checked only once every bracket and escape
+reads. An accepted glob is the pattern as typed with only the failed part
 rewritten, parsed again before it is offered, as [§FS-rule-refusals.requirements.typed](FS-rule-refusals.md#requirementstyped-an-offer-is-built-from-what-was-typed-and-what-is-configured-and-nothing-else--realized) has
 it for selectors.
 

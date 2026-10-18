@@ -149,6 +149,8 @@ fn refused_globs_print_one_line_and_exit_2() {
             "list-glob-refused-qualifier-operator",
             "list-glob-refused-citation-marker",
             "list-glob-refused-first-pattern-wins",
+            "list-glob-refused-grammar-stage-first",
+            "workspace-list-glob-refused-alias-before-marker",
             "list-glob-refused-before-discovery",
             "list-glob-missing-value",
             "show-glob-requires-batch",
