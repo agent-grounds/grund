@@ -97,6 +97,7 @@ macro_rules! watch_inject_failure {
 
 include!("cli_help.rs");
 include!("cli_help_list.rs");
+include!("cli_help_refs.rs");
 include!("cli_help_check.rs");
 include!("cli_help_show.rs");
 include!("cli_help_fmt.rs");
