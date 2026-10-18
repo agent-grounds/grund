@@ -160,7 +160,8 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
             eprintln!("error: --batch is available only with explicit `show`");
             return ExitCode::from(2);
         }
-        // §FS-show.1.9: every pattern is read before anything else is decided.
+        // §FS-show.1.9, §FS-coordinate-globs.errors.shape: the grammar's refusals, before the
+        // other launch checks; a refusal that needs the config waits for it.
         if let Err(error) = check_coordinate_globs(&globs) {
             eprintln!("error: {error:#}");
             return ExitCode::from(2);

@@ -58,6 +58,9 @@ pub(crate) struct BatchDataRecord {
     pub(crate) metadata: serde_json::Value,
 }
 
+/// A batch's records, and the note its globs earned (§FS-coordinate-globs.bindings.note).
+pub(crate) type BatchData = (Vec<BatchDataRecord>, Option<String>);
+
 /// The same shared context and query implementation, with source-typed failures
 /// retained rather than projected to CLI JSON (§FS-distribution.3.3.2).
 pub(crate) fn show_batch_data(
@@ -65,7 +68,7 @@ pub(crate) fn show_batch_data(
     globs: &[String],
     mut opts: ShowOpts,
     path_provided: bool,
-) -> (Vec<Finding>, Result<(Vec<BatchDataRecord>, Option<String>)>) {
+) -> (Vec<Finding>, Result<BatchData>) {
     let mut cautions = Vec::new();
     let result = (|| {
         let globs = batch_globs(queries.as_ref(), globs)?;
