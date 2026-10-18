@@ -206,6 +206,14 @@ Carry “Adapt Python marshalling to #466/#453/#454” without changing the appr
 Python schema. #469 supplies the later Node adapter; neither coordination is a
 prerequisite for this local frontend.
 
+### 6.1 Native extension build setup
+
+`crates/grund-py/build.rs` owns the platform linker setup for raw Cargo extension
+builds ([§FS-distribution.3.3.7.1](../functional-spec/FS-distribution.md#3371-raw-cargo-extension-builds)), beside its existing interpreter/ABI checks. Use
+PyO3's supported extension-module link-argument mechanism, scoped to the cdylib,
+so maturin and the same-source command-agreement host need no separate copies
+of Darwin flags. Ordinary workspace builds retain their executable/test linking.
+
 ## 7. Why this shape
 
 - **One source of truth for behavior.** Bug fixes and new rules land in `grund-core` and reach all three ecosystems on the next release.
