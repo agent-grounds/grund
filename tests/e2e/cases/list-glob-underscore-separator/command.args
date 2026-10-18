@@ -1,0 +1,1 @@
+list --glob '**_1' {repo}

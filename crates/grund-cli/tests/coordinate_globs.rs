@@ -172,7 +172,7 @@ fn notes_and_the_path_hint_leave_stdout_alone() {
     );
 }
 
-/// §FS-coordinate-globs.matching.anchored, §FS-coordinate-globs.grammar.components and §FS-coordinate-globs.workspace.escapes.
+/// §FS-coordinate-globs.matching.anchored, §FS-coordinate-globs.grammar.components and §FS-coordinate-globs.workspace.escapes; a check the separator decides waits for it (§FS-coordinate-globs.errors.shape).
 #[test]
 fn code_points_escapes_and_the_hash_separator() {
     run_cases(
@@ -185,6 +185,7 @@ fn code_points_escapes_and_the_hash_separator() {
             "list-glob-hash-separator",
             "list-glob-hash-escaped-dots",
             "list-glob-hash-subtree",
+            "list-glob-underscore-separator",
         ],
     );
 }

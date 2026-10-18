@@ -5,8 +5,12 @@
 
 use super::*;
 
+/// The refusal a `.`-separated project makes: the reading before any config, then its
+/// component checks, which wait for the separator (§FS-coordinate-globs.errors.shape).
 fn refused(pattern: &str) -> GlobRefusal {
-    CoordinateGlob::parse(pattern).expect_err("the pattern is refused")
+    CoordinateGlob::parse(pattern)
+        .and_then(|glob| glob.check_separator("."))
+        .expect_err("the pattern is refused")
 }
 
 fn line(pattern: &str) -> String {
@@ -209,6 +213,24 @@ fn first_refused_pattern_wins() {
     assert_eq!(refused("group/*/FS-{a").column, 7);
     // A refusal under any alternative refuses the whole pattern.
     assert_eq!(refused("FS-x{.a,..b}").reason, "empty component");
+}
+
+/// §FS-coordinate-globs.errors.shape: a component check waits for the config, because the
+/// loader takes any literal but `/` as a separator under some config (§FS-config.3.2.2), and
+/// a pattern refused under `.` can be valid under it. A pattern with no literal reads the
+/// same under every separator, and the grammar's own refusals never wait.
+#[test]
+fn separator_checks_wait_for_the_config() {
+    for (pattern, separator) in [("**_1", "_"), ("**-1", "-"), ("**X1", "X"), ("FS-**", "-")] {
+        let read = glob(pattern);
+        assert!(
+            read.check_separator(separator).is_ok(),
+            "{pattern} under {separator}"
+        );
+        assert!(read.check_separator(".").is_err(), "{pattern} under .");
+    }
+    assert!(CoordinateGlob::parse("**..*").is_err());
+    assert!(CoordinateGlob::parse("FS-{a,b").is_err());
 }
 
 /// §FS-coordinate-globs.matching.anchored: `?` and a class each match one code point.
