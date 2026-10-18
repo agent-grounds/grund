@@ -118,6 +118,10 @@ A `grund.toml` that stops loading — a half-typed table header, say — shows u
 
 Install a generic LSP client extension and configure it to launch `grund-lsp` for Markdown plus the source file types in your `[scan] extensions`. Use one that is available on your editor's marketplace: VSCodium installs from Open VSX, where "Simple LSP Client" (`wdomitrz.simple-lsp-client`) is published — the older `zsol.vscode-glspc` is only on the Microsoft Marketplace and cannot be installed in VSCodium.
 
+**Check Workspace Trust first.** Under default Workspace Trust handling, VS Code and VSCodium disable Simple LSP Client 0.1.22 and `zsol.vscode-glspc` 0.2.1 in untrusted folders because those versions do not declare untrusted-workspace support. Look for **Restricted Mode** in the status bar: with the client disabled, there is no hover or diagnostics from grund, and no `grund-lsp` process because the server does not start ([§FS-lsp.2.3](../functional-spec/FS-lsp.md#23-editor-configuration-one-time-per-editor)).
+
+For a folder you trust, run **Workspaces: Manage Workspace Trust** in the Command Palette and trust the folder to enable the client. If you also trust its parent directory, you can optionally trust that parent; this covers its descendant folders, including sibling branch checkouts beneath that parent. See the [official Workspace Trust guide](https://code.visualstudio.com/docs/editing/workspaces/workspace-trust).
+
 With "Simple LSP Client", add this to your settings (workspace `.vscode/settings.json` or user settings):
 
 ```json
@@ -140,7 +144,7 @@ With "Simple LSP Client", add this to your settings (workspace `.vscode/settings
 
 The `cmd` is the path to the installed binary; `${userHome}/.cargo/bin/grund-lsp` is where `cargo install` places it. If `grund-lsp` is already on the editor's `PATH`, `["grund-lsp"]` works too. The `filetypes` are VS Code language IDs and must match the languages you scan. To get the live `$$` → `§` transform, also enable `"editor.formatOnType": true` for those languages.
 
-**Prefer user (global) settings over a per-repo `.vscode/settings.json`.** Put the `simpleLspClient.servers` block above in your user settings once and `grund-lsp` runs in every project you open. A per-repo `.vscode/settings.json` only wires the server for that one repo — open any repo without it and VSCode silently falls back to its built-in Markdown behavior: Ctrl-click underlines a single hyphen-delimited word instead of the whole `§<ID>` token, and find-references misses the `grund` citation sites. Use a workspace `.vscode/settings.json` only for a deliberate per-project override.
+**Prefer user (global) settings over a per-repo `.vscode/settings.json`.** Put the `simpleLspClient.servers` block above in your user settings once to make the server configuration available in every project you open. User settings do not grant workspace trust; the named clients still need a trusted folder to activate under default handling. A per-repo `.vscode/settings.json` only wires the server for that one repo — without user settings, opening another repo without that file leaves VSCode using its built-in Markdown behavior: Ctrl-click underlines a single hyphen-delimited word instead of the whole `§<ID>` token, and find-references misses the `grund` citation sites. Use a workspace `.vscode/settings.json` only for a deliberate per-project override.
 
 A first-party VSCode extension is intentionally not shipped ([§FS-non-goals](../functional-spec/FS-non-goals.md#fs-non-goals-what-grund-will-deliberately-not-do)).
 

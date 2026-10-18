@@ -14,7 +14,6 @@ fn explains(paragraphs: &[String], groups: &[&[&str]]) -> bool {
 /// §FS-lsp.2.3: the named clients' activation prerequisite, symptoms and remedy
 /// must be discoverable where the user configures the VSCode / VSCodium client.
 #[test]
-#[ignore = "red until #635 documents Workspace Trust in the LSP guide; implement removes this"]
 fn vscode_setup_explains_workspace_trust() {
     let guide = std::fs::read_to_string(
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/user-facing/lsp.md"),
