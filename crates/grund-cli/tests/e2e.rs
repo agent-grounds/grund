@@ -18,6 +18,9 @@ mod configured_star_slug;
 #[path = "support/stub_extension_diagnostic.rs"]
 mod stub_extension_diagnostic;
 
+#[path = "support/case_isolation.rs"]
+mod case_isolation;
+
 #[path = "support/init_marker_guidance.rs"]
 mod init_marker_guidance;
 
