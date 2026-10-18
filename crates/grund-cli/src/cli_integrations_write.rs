@@ -37,6 +37,16 @@ fn report_integrations_write(out: &IntegrationsOutput) {
 /// The resolver's path below the home directory, which names its event.
 const RESOLVER_HOME_SUFFIX: &str = ".local/bin/grund-open";
 
+/// Whether a run stopped writing the resolver: at the script, or at the
+/// directory that holds it.
+fn resolver_failed(failure: &IntegrationsFailure) -> bool {
+    let IntegrationsFailure::Filesystem { path, .. } = failure else {
+        return false;
+    };
+    let resolver = Path::new(RESOLVER_HOME_SUFFIX);
+    path.ends_with(resolver) || resolver.parent().is_some_and(|dir| path.ends_with(dir))
+}
+
 fn report_integration_events(events: &[IntegrationEvent]) {
     for event in events {
         let (verb, path) = (event.outcome.name(), event.path.display());
@@ -86,12 +96,20 @@ fn describe_guidance(note: &IntegrationNote) -> String {
 
 /// A run that stopped (§FS-integrations.4.3.14): what it wrote before it, then
 /// the target and why, exit `2`. A client whose home cannot be resolved is named
-/// by the client rather than by its `~`-rooted target.
+/// by the client rather than by its `~`-rooted target, and a manual client's
+/// step is not printed when the resolver it depends on is what failed
+/// (§FS-integrations.3.4.2).
 fn report_integrations_failure(
     error: &IntegrationsError,
     client: Option<IntegrationClient>,
 ) -> ExitCode {
-    report_integrations_write(&error.output);
+    if resolver_failed(&error.failure) {
+        let mut output = error.output.clone();
+        output.manual_steps.clear();
+        report_integrations_write(&output);
+    } else {
+        report_integrations_write(&error.output);
+    }
     match &error.failure {
         IntegrationsFailure::Filesystem { path, .. }
             if client.is_some_and(|client| {
