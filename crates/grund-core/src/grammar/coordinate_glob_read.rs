@@ -14,7 +14,7 @@
 
 use std::collections::BTreeMap;
 
-use super::coordinate_glob::{CoordinateGlob, GlobRefusal, Spanned, Token, offered};
+use super::coordinate_glob::{CoordinateGlob, GlobRefusal, GlobStage, Spanned, Token, offered};
 
 /// How a walk reads the pattern's dots.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -158,12 +158,13 @@ enum Problem {
 impl CoordinateGlob {
     /// The component checks under `separator` (§FS-coordinate-globs.grammar.globstar,
     /// §FS-coordinate-globs.errors.reasons): no alternative may hold an empty component or
-    /// a star run that is not a whole `**`. Of several, the leftmost is reported.
-    pub(crate) fn check_separator(&self, separator: &str) -> Result<(), GlobRefusal> {
-        self.check_components(separator, true)
-    }
-
-    pub(super) fn check_components(&self, separator: &str, offer: bool) -> Result<(), GlobRefusal> {
+    /// a star run that is not a whole `**`. Of several, the leftmost is reported, with
+    /// each rewrite `offer` accepts.
+    pub(super) fn check_components(
+        &self,
+        separator: &str,
+        offer: Option<GlobStage<'_>>,
+    ) -> Result<(), GlobRefusal> {
         let read = Read::new(self, separator);
         let problem = walk_components(&read, self.text.len());
         let Some(problem) = problem else {
@@ -199,12 +200,7 @@ impl CoordinateGlob {
                 (span(run).start, STAR_REASON, rewrites)
             }
         };
-        let accepted = if offer {
-            offered(rewrites, Some(separator))
-        } else {
-            Vec::new()
-        };
-        Err(self.refusal(at, reason, accepted))
+        Err(self.refusal(at, reason, offered(offer, rewrites)))
     }
 
     /// The ID atom's literal text before its first operator, a `{` included, as the

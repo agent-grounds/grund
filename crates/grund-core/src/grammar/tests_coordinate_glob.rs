@@ -4,13 +4,22 @@
 //! fixture tree per boundary would hide which rule a case is about.
 
 use super::*;
+use crate::config::{DEFAULT_MARKER, DEFAULT_SECTION_SEPARATOR};
+
+/// The launch stage, and the stage of a project with the built-in marker and separator.
+const LAUNCH: GlobStage<'static> = GlobStage::new(&[DEFAULT_MARKER], &[DEFAULT_SECTION_SEPARATOR]);
 
 /// The refusal a `.`-separated project makes: the reading before any config, then its
-/// component checks, which wait for the separator (§FS-coordinate-globs.errors.shape).
+/// stage's checks, which wait for the config (§FS-coordinate-globs.errors.shape).
 fn refused(pattern: &str) -> GlobRefusal {
-    CoordinateGlob::parse(pattern)
-        .and_then(|glob| glob.check_separator("."))
+    CoordinateGlob::parse(pattern, LAUNCH)
+        .and_then(|glob| glob.check(LAUNCH))
         .expect_err("the pattern is refused")
+}
+
+/// The checks of a project with this outer separator and the built-in marker.
+fn check_under(glob: &CoordinateGlob, separator: &str) -> Result<(), GlobRefusal> {
+    glob.check(GlobStage::new(&[DEFAULT_MARKER], &[separator]))
 }
 
 fn line(pattern: &str) -> String {
@@ -18,7 +27,7 @@ fn line(pattern: &str) -> String {
 }
 
 fn glob(pattern: &str) -> CoordinateGlob {
-    CoordinateGlob::parse(pattern).unwrap_or_else(|refusal| panic!("{refusal}"))
+    CoordinateGlob::parse(pattern, LAUNCH).unwrap_or_else(|refusal| panic!("{refusal}"))
 }
 
 fn matches(pattern: &str, separator: &str, id: &str, section: Option<&str>) -> bool {
@@ -193,15 +202,12 @@ fn qualifier_is_one_alias_or_star() {
 #[test]
 fn citation_marker_is_refused() {
     // `\u{a7}` is the marker, spelled so this file cites nothing.
-    let refusal = glob("\u{a7}FS-*")
-        .check_marker("§")
-        .expect_err("a marked pattern");
     assert_eq!(
-        refusal.to_string(),
+        line("\u{a7}FS-*"),
         "invalid coordinate glob \"\u{a7}FS-*\" at column 1: coordinate globs do not take a \
          citation marker; accepted glob: \"FS-*\""
     );
-    assert!(glob("FS-*").check_marker("§").is_ok());
+    assert!(glob("FS-*").check(LAUNCH).is_ok());
 }
 
 /// §FS-coordinate-globs.errors.shape: a pattern is refused in two stages, what the grammar
@@ -231,13 +237,112 @@ fn separator_checks_wait_for_the_config() {
     for (pattern, separator) in [("**_1", "_"), ("**-1", "-"), ("**X1", "X"), ("FS-**", "-")] {
         let read = glob(pattern);
         assert!(
-            read.check_separator(separator).is_ok(),
+            check_under(&read, separator).is_ok(),
             "{pattern} under {separator}"
         );
-        assert!(read.check_separator(".").is_err(), "{pattern} under .");
+        assert!(check_under(&read, ".").is_err(), "{pattern} under .");
     }
-    assert!(CoordinateGlob::parse("**..*").is_err());
-    assert!(CoordinateGlob::parse("FS-{a,b").is_err());
+    assert!(CoordinateGlob::parse("**..*", LAUNCH).is_err());
+    assert!(CoordinateGlob::parse("FS-{a,b", LAUNCH).is_err());
+}
+
+/// §FS-coordinate-globs.errors.shape, §FS-rule-refusals.requirements.typed: every glob a
+/// refusal offers is accepted when it is pasted back, read through the same stages as the
+/// pattern it mends — one refused at launch as the `.`-separated reading with the built-in
+/// marker, one refused once the config is read under that stage's markers and separators.
+#[test]
+fn every_offer_is_accepted_when_pasted_back() {
+    let marked = |rest: &str| format!("{DEFAULT_MARKER}{rest}");
+    let mut patterns: Vec<String> = [
+        // The rows of §FS-coordinate-globs.errors.reasons, and the empty pattern.
+        "FS-**",
+        "FS-**.terms",
+        "FS-config.***",
+        "FS-config..requirements",
+        "FS-config.",
+        "FS-{a,{b,c}}",
+        "FS-{a,b",
+        "FS-[a-z",
+        "FS-{1..3}",
+        "FS-[z-a]*",
+        "FS-a\\",
+        "group/*/FS-*",
+        "charlie/FS-*",
+        "",
+        // Offers whose rewrite is refused for another reason.
+        "group/*/FS-**",
+        "FS-[z-a]**",
+        "FS-[z-a]*.",
+        "*/@FS-**",
+        "@FS-[z-a]*",
+        "**_.1",
+        "FS-x.{1..3,4}",
+    ]
+    .map(String::from)
+    .into();
+    patterns.extend(["FS-*", "FS-**", "FS-[z-a]*", "FS-x..y"].map(marked));
+    let stages = [
+        LAUNCH,
+        GlobStage::new(&[DEFAULT_MARKER], &["#"]),
+        GlobStage::new(&[DEFAULT_MARKER], &["_"]),
+        GlobStage::new(&[DEFAULT_MARKER, "@"], &[".", "-"]),
+    ];
+    let mut offers = 0;
+    for pattern in &patterns {
+        for stage in stages {
+            let (refusal, pasted_under) = match CoordinateGlob::parse(pattern, LAUNCH) {
+                Err(refusal) => (refusal, LAUNCH),
+                Ok(read) => match read.check(stage) {
+                    Err(refusal) => (refusal, stage),
+                    Ok(()) => continue,
+                },
+            };
+            for offer in &refusal.accepted {
+                let pasted =
+                    CoordinateGlob::parse(offer, LAUNCH).and_then(|glob| glob.check(pasted_under));
+                assert!(
+                    pasted.is_ok(),
+                    "{pattern:?} under {stage:?} offers {offer:?}, which is refused: {}",
+                    pasted.unwrap_err()
+                );
+                offers += 1;
+            }
+        }
+    }
+    assert!(offers >= 50, "only {offers} offers were pasted back");
+    // An offer its stage refuses is not made; the pinned ones stand.
+    for pattern in [marked("FS-**"), "group/*/FS-**".into(), "FS-[z-a]**".into()] {
+        assert!(refused(&pattern).accepted.is_empty(), "{pattern}");
+    }
+    assert!(refused(&marked("FS-[z-a]*")).accepted.is_empty());
+    assert_eq!(refused("group/*/FS-*").accepted, ["*/FS-*"]);
+    assert_eq!(refused(&marked("FS-*")).accepted, ["FS-*"]);
+    assert_eq!(refused("FS-[z-a]*").accepted, ["FS-[a-z]*"]);
+    assert_eq!(refused("FS-**").accepted, ["FS-*", "FS-*{,.**}"]);
+}
+
+/// §FS-coordinate-globs.errors.shape: once the config is read, the leftmost refusal under
+/// any project the pattern reads is reported, its markers before its components.
+#[test]
+fn config_stage_reports_the_leftmost_refusal() {
+    // Under `.` the `**x` at column 9 is refused; under `_` the empty component at 6.
+    let read = glob("FS-a_.b.**x");
+    for separators in [[".", "_"], ["_", "."]] {
+        let refusal = read
+            .check(GlobStage::new(&[DEFAULT_MARKER], &separators))
+            .expect_err("refused under both");
+        assert_eq!(
+            (refusal.column, refusal.reason.as_str()),
+            (6, "empty component")
+        );
+    }
+    let refusal = glob("@FS-**")
+        .check(GlobStage::new(&[DEFAULT_MARKER, "@"], &["."]))
+        .expect_err("a marked pattern");
+    assert_eq!(
+        (refusal.column, refusal.reason.as_str()),
+        (1, "coordinate globs do not take a citation marker")
+    );
 }
 
 /// §FS-coordinate-globs.matching.anchored: `?` and a class each match one code point.
@@ -310,8 +415,8 @@ fn hash_separator_splits_and_escaped_dots_stay_in_the_id() {
     // Each alternative is split on its own.
     assert!(matches("RFC.042.draft{#3,.x}", "#", id, Some("3")));
     // A pattern refused under `.` can be valid where `#` ends the atom.
-    assert!(glob("RFC..x#3").check_separator("#").is_ok());
-    assert!(glob("RFC..x#3").check_separator(".").is_err());
+    assert!(check_under(&glob("RFC..x#3"), "#").is_ok());
+    assert!(check_under(&glob("RFC..x#3"), ".").is_err());
     assert_eq!(glob("RFC.042#3").literal_prefix("#"), "RFC.042");
     assert_eq!(glob("RFC.042#3").literal_prefix("."), "RFC");
 }
