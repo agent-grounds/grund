@@ -20,6 +20,7 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
+# §AR-ci.3.4.1.1: what a build line starts with; run_python_gate.py holds the same marker.
 BUILD_LINE = "node build: "
 
 
@@ -39,7 +40,8 @@ class NodeAcceptanceWorkflowTests(unittest.TestCase):
             [sys.executable, "tests/bindings/node/run.py"], cwd=REPO,
             capture_output=True, text=True,
         )
-        # §AR-ci.3.4.1.1: the capture would hide them, so they reach the gate's job log here.
+        # §AR-ci.3.4.1.1: the capture above hides them, so they go to the gate, which shows a
+        # green test's build lines (§AR-ci.requirements.5.1).
         sys.stderr.write(build_lines(result.stderr))
         sys.stderr.flush()
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)

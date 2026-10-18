@@ -316,8 +316,6 @@ class NodeSharedTargetTests(unittest.TestCase):
         for noise in ("Compiling grund", "test_x ... ok", "noise out"):
             self.assertNotIn(noise, output)
 
-    # red until #776 passes a green test's build lines on; implement removes this
-    @unittest.expectedFailure
     def test_a_green_acceptance_under_the_gate_shows_its_build_lines_and_nothing_else(self):
         # The build lines §AR-ci.requirements.5.1 keeps, under the gate: the wrapper,
         # copied verbatim, runs the stand-in `run.py` its own `REPO` finds beside it.
