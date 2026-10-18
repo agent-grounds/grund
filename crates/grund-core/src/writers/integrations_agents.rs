@@ -58,7 +58,7 @@ pub struct GlobalAgentTarget {
 /// The file-backed global instruction surfaces for every agent grund supports
 /// end-to-end (§FS-integrations.4.3.8). Keep this superset aligned with the
 /// repository entrypoints in §FS-init.2.1.
-pub const GLOBAL_AGENT_INSTRUCTION_TARGETS: [GlobalAgentTarget; 6] = [
+pub(crate) const GLOBAL_AGENT_INSTRUCTION_TARGETS: [GlobalAgentTarget; 6] = [
     GlobalAgentTarget {
         agent: "codex",
         file: "~/.codex/AGENTS.md",
@@ -100,12 +100,12 @@ pub const GLOBAL_AGENT_INSTRUCTION_TARGETS: [GlobalAgentTarget; 6] = [
 /// The table one agent's overrides live under (§FS-integrations.4.4). The
 /// partial is merged over the machine-wide keys, so only the names above are
 /// accepted inside it.
-pub fn agent_override_table(agent: &str) -> String {
+pub(crate) fn agent_override_table(agent: &str) -> String {
     format!("reference.agents.{agent}")
 }
 
 /// `codex | claude | …` for the errors that list the accepted set.
-pub fn known_agents_list() -> String {
+pub(crate) fn known_agents_list() -> String {
     GLOBAL_AGENT_INSTRUCTION_TARGETS
         .iter()
         .map(|target| target.agent)
@@ -114,11 +114,54 @@ pub fn known_agents_list() -> String {
 }
 
 /// The canonical spelling of a known agent name, or `None` (§FS-integrations.4.4.2).
-pub fn known_agent(name: &str) -> Option<&'static str> {
+pub(crate) fn known_agent(name: &str) -> Option<&'static str> {
     GLOBAL_AGENT_INSTRUCTION_TARGETS
         .iter()
         .map(|target| target.agent)
         .find(|known| *known == name)
+}
+
+/// The agents with a file-backed global instruction surface, one per
+/// instruction target below and in its order: the closed set `--agent` accepts
+/// and an override is written for (§FS-integrations.4.3.8,
+/// §FS-distribution.3.1.3).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum IntegrationAgent {
+    Codex,
+    Claude,
+    Gemini,
+    Copilot,
+    Zed,
+    Pi,
+}
+
+impl IntegrationAgent {
+    /// Every agent, in the order the instruction targets are synchronized.
+    pub const ALL: [IntegrationAgent; 6] = [
+        IntegrationAgent::Codex,
+        IntegrationAgent::Claude,
+        IntegrationAgent::Gemini,
+        IntegrationAgent::Copilot,
+        IntegrationAgent::Zed,
+        IntegrationAgent::Pi,
+    ];
+
+    /// The key `[reference.agents.<agent>]` is written under, and the value
+    /// `--agent` accepts (§FS-integrations.4.4).
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Codex => "codex",
+            Self::Claude => "claude",
+            Self::Gemini => "gemini",
+            Self::Copilot => "copilot",
+            Self::Zed => "zed",
+            Self::Pi => "pi",
+        }
+    }
+
+    pub fn from_name(name: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|agent| agent.name() == name)
+    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -192,8 +235,9 @@ pub enum ConversationTarget {
 }
 
 impl ConversationTarget {
-    /// Accepted values, in the order the error message lists them.
-    pub(crate) const ALL: [ConversationTarget; 6] = [
+    /// Accepted values, in the order the error message lists them
+    /// (§FS-distribution.3.1.3).
+    pub const ALL: [ConversationTarget; 6] = [
         ConversationTarget::File,
         ConversationTarget::Path,
         ConversationTarget::Web,
@@ -218,7 +262,7 @@ impl ConversationTarget {
     }
 
     /// `file | path | web | …` for the error that lists the accepted set.
-    pub fn accepted_list() -> String {
+    pub(crate) fn accepted_names() -> String {
         Self::ALL
             .iter()
             .map(|target| target.name())

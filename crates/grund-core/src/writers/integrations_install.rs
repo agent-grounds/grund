@@ -30,7 +30,7 @@ pub enum BlockOutcome {
     Unchanged,
 }
 
-pub fn block_outcome_verb(outcome: BlockOutcome) -> &'static str {
+pub(crate) fn block_outcome_verb(outcome: BlockOutcome) -> &'static str {
     match outcome {
         BlockOutcome::Appended => "appended",
         BlockOutcome::Updated => "updated",
@@ -40,7 +40,7 @@ pub fn block_outcome_verb(outcome: BlockOutcome) -> &'static str {
 
 /// One file, two managed keys: `exists` only when neither line moved, and an
 /// append anywhere makes the whole write an append (§FS-integrations.6.1).
-pub fn merge_outcomes(first: BlockOutcome, second: BlockOutcome) -> BlockOutcome {
+pub(crate) fn merge_outcomes(first: BlockOutcome, second: BlockOutcome) -> BlockOutcome {
     match (first, second) {
         (BlockOutcome::Unchanged, other) | (other, BlockOutcome::Unchanged) => other,
         (BlockOutcome::Appended, _) | (_, BlockOutcome::Appended) => BlockOutcome::Appended,
@@ -53,7 +53,7 @@ pub fn merge_outcomes(first: BlockOutcome, second: BlockOutcome) -> BlockOutcome
 /// when a block is present, else append after a blank-line separator. Everything
 /// outside the block is preserved. Returns the new text and what changed. A block
 /// whose version is newer than this binary understands is an error.
-pub fn install_managed_block(
+pub(crate) fn install_managed_block(
     comment: &str,
     prepend: bool,
     existing: &str,
@@ -94,7 +94,7 @@ pub fn install_managed_block(
     }
 }
 
-pub fn install_agent_guidance_block(
+pub(crate) fn install_agent_guidance_block(
     existing: &str,
     preference: ConversationRendering,
     target: ConversationTarget,
@@ -131,7 +131,7 @@ pub fn install_agent_guidance_block(
 
 /// The call a WezTerm config must make on the object it returns for the managed
 /// block to do anything (§FS-integrations.4.1.2).
-pub const WEZTERM_APPLY_CALL: &str = "grund_apply_hyperlink_rule(";
+pub(crate) const WEZTERM_APPLY_CALL: &str = "grund_apply_hyperlink_rule(";
 
 /// Whether this write leaves the user one manual step short of a working
 /// integration (§FS-integrations.4.1.3). WezTerm applies hyperlink rules only from
@@ -143,11 +143,11 @@ pub const WEZTERM_APPLY_CALL: &str = "grund_apply_hyperlink_rule(";
 /// defines the helper and names it in its own comments, so a whole-file test
 /// would match on every config and report nothing. A file grund scaffolded from
 /// scratch calls the helper below the block and is therefore already wired.
-pub fn needs_wezterm_wiring(client: IntegrationClient, text: &str) -> bool {
+pub(crate) fn needs_wezterm_wiring(client: IntegrationClient, text: &str) -> bool {
     if client != IntegrationClient::Wezterm {
         return false;
     }
-    let outside = match find_managed_block(client.comment_prefix(), text) {
+    let outside = match find_managed_block(client.comment(), text) {
         Ok(Some(span)) => format!("{}{}", &text[..span.start], &text[span.stop..]),
         // No block, or a block this binary cannot read: the caller has already
         // failed on the latter, and the former cannot be wired either way.
@@ -158,7 +158,7 @@ pub fn needs_wezterm_wiring(client: IntegrationClient, text: &str) -> bool {
 
 /// Install `grund-open` to `~/.local/bin` when absent or out of date. Returns the
 /// path when written, `None` when already current.
-pub fn write_resolver_script() -> Result<Option<PathBuf>, (PathBuf, String)> {
+pub(crate) fn write_resolver_script() -> Result<Option<PathBuf>, (PathBuf, String)> {
     let Some(path) = expand_target(RESOLVER_TARGET) else {
         return Err((
             PathBuf::from(RESOLVER_TARGET),
@@ -213,12 +213,12 @@ fn is_executable(path: &Path) -> bool {
 
 /// Whether every grund-owned artifact for a client is present and byte-current
 /// (§FS-integrations.5). Only the client's fixed target paths are read.
-pub fn integration_is_current(client: IntegrationClient) -> bool {
-    match client.install_kind() {
+pub(crate) fn integration_is_current(client: IntegrationClient) -> bool {
+    match client.kind() {
         InstallKind::Block => {
-            terminal_integration_is_current(client, client.snippet().unwrap_or(""))
+            terminal_integration_is_current(client, client.artifact_snippet().unwrap_or(""))
         }
-        InstallKind::Vscode => expand_target(client.config_target())
+        InstallKind::Vscode => expand_target(client.target_hint())
             .is_some_and(|dir| vscode_integration_is_current(&dir)),
         // Applied by hand in a binary plist we never read: grund cannot know,
         // and guessing "installed" would be worse than reporting nothing.
@@ -227,17 +227,16 @@ pub fn integration_is_current(client: IntegrationClient) -> bool {
 }
 
 fn terminal_integration_is_current(client: IntegrationClient, snippet: &str) -> bool {
-    let Some(config_path) = expand_target(client.config_target()) else {
+    let Some(config_path) = expand_target(client.target_hint()) else {
         return false;
     };
     let Ok(existing) = fs::read_to_string(config_path) else {
         return false;
     };
-    let Ok(Some(span)) = find_managed_block(client.comment_prefix(), &existing) else {
+    let Ok(Some(span)) = find_managed_block(client.comment(), &existing) else {
         return false;
     };
-    let (begin, end) =
-        integrations_block_markers(client.comment_prefix(), INTEGRATIONS_BLOCK_VERSION);
+    let (begin, end) = integrations_block_markers(client.comment(), INTEGRATIONS_BLOCK_VERSION);
     let expected = format!("{begin}\n{}\n{end}\n", snippet.trim_end_matches('\n'));
     if span.version != INTEGRATIONS_BLOCK_VERSION || existing[span.start..span.stop] != expected {
         return false;
@@ -249,7 +248,7 @@ fn terminal_integration_is_current(client: IntegrationClient, snippet: &str) -> 
         && is_executable(&resolver_path)
 }
 
-pub fn vscode_integration_is_current(dir: &Path) -> bool {
+pub(crate) fn vscode_integration_is_current(dir: &Path) -> bool {
     fs::read_to_string(dir.join(".grund-version"))
         .is_ok_and(|text| text == INTEGRATIONS_BLOCK_VERSION.to_string())
         && fs::read_to_string(dir.join("package.json"))

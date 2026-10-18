@@ -1,208 +1,233 @@
-//! Data-returning managed integration orchestration (§FS-distribution.3.1,
-//! §FS-distribution.3.3.6), using the existing owned-block splices and probes.
+//! `integrations`, the one engine operation behind every form of
+//! `grund integrations` (§FS-integrations.1.3.1, §FS-distribution.3.1.3): it
+//! refuses, detects, describes and, under `write`, installs, using the
+//! owned-block splices and probes beside it, and answers with the records of
+//! `integrations_output.rs`. No output stream, process argument or cwd mutation
+//! is involved (§FS-distribution.3.3.4).
 
-use super::*;
-use crate::model::{OperationDiagnostic, format_path};
-use anyhow::Result;
-use serde_json::{Value, json};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
-pub(super) fn located(path: &Path, message: String) -> OperationDiagnostic {
-    let mut e = OperationDiagnostic::new("filesystem", "io", message);
-    e.path = Some(format_path(path));
-    e
-}
-pub(super) fn tuple_error((path, message): (PathBuf, String)) -> anyhow::Error {
-    located(&path, message).into()
+use super::integrations_clients::{
+    GRUND_OPEN_RESOLVER, InstallKind, IntegrationClient, RESOLVER_TARGET, VSCODE_EXTENSION_JS,
+    VSCODE_PACKAGE_JSON, expand_target,
+};
+use super::integrations_detect::detect_clients;
+use super::integrations_guidance;
+use super::integrations_install::{
+    BlockOutcome, WEZTERM_APPLY_CALL, install_managed_block, integration_is_current,
+    needs_wezterm_wiring, vscode_integration_is_current, write_resolver_script,
+};
+use super::integrations_output::{
+    IntegrationArtifact, IntegrationClientStatus, IntegrationEvent, IntegrationManualStep,
+    IntegrationNote, IntegrationOutcome, IntegrationsError, IntegrationsFailure, IntegrationsOpts,
+    IntegrationsOutput,
+};
+use super::integrations_user_config::read_optional_text;
+
+/// What stopped a write: the target, the message a report names it with, and
+/// the filesystem's own error where there is one (§FS-integrations.4.3.14).
+pub(super) struct Fault {
+    pub(super) path: PathBuf,
+    pub(super) message: String,
+    pub(super) source: Option<std::io::Error>,
 }
 
-pub(super) fn save(path: &Path, text: &str) -> Result<()> {
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(|e| {
-            let diagnostic = located(parent, e.to_string());
-            anyhow::Error::new(e).context(diagnostic)
-        })?;
+impl Fault {
+    pub(super) fn at(path: &Path, message: impl Into<String>) -> Self {
+        Self {
+            path: path.to_path_buf(),
+            message: message.into(),
+            source: None,
+        }
     }
-    fs::write(path, text).map_err(|e| {
-        let diagnostic = located(path, e.to_string());
-        anyhow::Error::new(e).context(diagnostic)
-    })?;
-    Ok(())
+
+    fn io(path: &Path, error: std::io::Error) -> Self {
+        Self {
+            path: path.to_path_buf(),
+            message: error.to_string(),
+            source: Some(error),
+        }
+    }
+
+    fn into_error(self, output: IntegrationsOutput, began: bool) -> IntegrationsError {
+        IntegrationsError {
+            output,
+            failure: IntegrationsFailure::Filesystem {
+                path: self.path,
+                message: self.message,
+            },
+            source: self.source.map(Arc::new),
+            began,
+        }
+    }
 }
 
-pub(super) fn event(path: &Path, verb: &str, note: Option<String>) -> Value {
-    json!({"path":format_path(path),"verb":verb,"note":note})
+impl From<(PathBuf, String)> for Fault {
+    fn from((path, message): (PathBuf, String)) -> Self {
+        Self {
+            path,
+            message,
+            source: None,
+        }
+    }
 }
 
-/// Both inspection and installation are engine operations. No output stream,
-/// process arguments, or cwd mutation is involved (§FS-distribution.3.3.4).
-pub(crate) fn integrations_data(
-    client: &str,
-    write: bool,
-    conversation: Option<&str>,
-    target: Option<&str>,
-    agent: Option<&str>,
-) -> Result<Value> {
-    let client = if client.is_empty() {
-        None
-    } else {
-        Some(IntegrationClient::from_name(client).ok_or_else(|| {
-            OperationDiagnostic::new("operation", "invalid-client", "unknown integration client")
-        })?)
-    };
-    let conversation = conversation
-        .map(|s| {
-            ConversationRendering::from_name(s).ok_or_else(|| {
-                OperationDiagnostic::new(
-                    "operation",
-                    "invalid-preference",
-                    "unknown conversation preference",
-                )
-            })
-        })
-        .transpose()?;
-    let target = target
-        .map(|s| {
-            ConversationTarget::from_name(s).ok_or_else(|| {
-                OperationDiagnostic::new(
-                    "operation",
-                    "invalid-preference",
-                    "unknown conversation target",
-                )
-            })
-        })
-        .transpose()?;
-    let agent = agent
-        .map(|s| {
-            known_agent(s).ok_or_else(|| {
-                OperationDiagnostic::new("operation", "invalid-agent", "unknown agent")
-            })
-        })
-        .transpose()?;
-    if (!write && (conversation.is_some() || target.is_some() || agent.is_some()))
-        || (agent.is_some() && target.is_none())
-        || (write && client.is_none() && conversation.is_none() && target.is_none())
-    {
-        return Err(OperationDiagnostic::new(
-            "operation",
-            "invalid-preference",
-            "invalid integration preference combination",
-        )
-        .into());
+/// The `~`-rooted target as a path, or the fault that names it unresolved.
+pub(super) fn expand(target: &'static str) -> Result<PathBuf, Fault> {
+    expand_target(target)
+        .ok_or_else(|| Fault::at(Path::new(target), "cannot resolve home directory"))
+}
+
+pub(super) fn save(path: &Path, text: &str) -> Result<(), Fault> {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|error| Fault::io(parent, error))?;
+    }
+    fs::write(path, text).map_err(|error| Fault::io(path, error))
+}
+
+pub(super) fn outcome(outcome: BlockOutcome) -> IntegrationOutcome {
+    match outcome {
+        BlockOutcome::Appended => IntegrationOutcome::Appended,
+        BlockOutcome::Updated => IntegrationOutcome::Updated,
+        BlockOutcome::Unchanged => IntegrationOutcome::Unchanged,
+    }
+}
+
+pub(super) fn event(path: PathBuf, outcome: IntegrationOutcome) -> IntegrationEvent {
+    IntegrationEvent {
+        path,
+        outcome,
+        note: None,
+    }
+}
+
+/// Answer `grund integrations` as data (§FS-integrations.1.3.1): refuse a
+/// combination §FS-integrations.6.2 refuses before reading anything, read the
+/// user configuration before any client artifact is written, and plan every
+/// guidance target before writing the first, so a run fails at the point and
+/// with the partial writes of §FS-integrations.4.3.14.
+pub fn integrations(opts: IntegrationsOpts) -> Result<IntegrationsOutput, IntegrationsError> {
+    if let Some(failure) = opts.refusal() {
+        return Err(IntegrationsError::refused(failure));
     }
     let detected = detect_clients();
-    let clients = IntegrationClient::ALL
-        .iter()
-        .map(|c| {
-            json!({"client":c.name(),
-        "detected":detected.contains(c),"installed":integration_is_current(*c),
-        "install_kind":c.install_kind().name(),"install":c.install_command(),
-        "config_target":c.config_target()})
-        })
-        .collect::<Vec<_>>();
-    let artifact = client.map(|c| {
-        json!({"client":c.name(),"snippet":c.snippet(),
-        "resolver":if c.is_terminal(){Some(GRUND_OPEN_RESOLVER)}else{None},
-        "package_json":if c.is_terminal(){None}else{Some(VSCODE_PACKAGE_JSON)},
-        "extension_js":if c.is_terminal(){None}else{Some(VSCODE_EXTENSION_JS)}})
-    });
-    let mut events = Vec::new();
-    let mut manual_steps = Vec::new();
-    let mut cautions = Vec::new();
-    if write {
-        // §FS-integrations.4.3.7: read user configuration before any artifact write.
-        let guidance = super::integrations_guidance::load()?;
-        cautions = guidance.cautions.clone();
-        let result: Result<()> = (|| {
-            if let Some(client) = client {
-                install(client, &mut events, &mut manual_steps)?;
-            }
-            super::integrations_guidance::install(
-                guidance,
-                conversation,
-                target,
-                agent,
-                &mut events,
-            )?;
-            Ok(())
-        })();
-        if let Err(error) = result {
-            let context = crate::model::OperationContext {
-                message: error.to_string(),
-                cautions: json!(cautions),
-                partial_output: json!({"events":events, "manual_steps":manual_steps}),
-            };
-            return Err(error.context(context));
-        }
+    let mut out = IntegrationsOutput {
+        clients: IntegrationClient::ALL
+            .iter()
+            .map(|&client| IntegrationClientStatus {
+                client,
+                install_kind: client.kind(),
+                detected: detected.contains(&client),
+                installed: integration_is_current(client),
+                config_target: client.target_hint(),
+            })
+            .collect(),
+        detected,
+        artifact: opts.client.map(artifact),
+        ..IntegrationsOutput::default()
+    };
+    if !opts.write {
+        return Ok(out);
     }
-    Ok(
-        json!({"detected":detected.iter().map(|c|c.name()).collect::<Vec<_>>(),"clients":clients,
-        "artifact":artifact,"events":events,"manual_steps":manual_steps,"run_cautions":cautions}),
-    )
+    // §FS-integrations.4.3.7: read user configuration before any artifact write.
+    let guidance = match integrations_guidance::load() {
+        Ok(guidance) => guidance,
+        Err(fault) => return Err(fault.into_error(out, false)),
+    };
+    out.warnings = guidance.cautions.clone();
+    let written = match opts.client {
+        Some(client) => install(client, &mut out),
+        None => Ok(()),
+    }
+    .and_then(|()| integrations_guidance::install(guidance, &opts, &mut out.events));
+    match written {
+        Ok(()) => Ok(out),
+        Err(fault) => Err(fault.into_error(out, true)),
+    }
 }
 
-fn install(
-    client: IntegrationClient,
-    events: &mut Vec<Value>,
-    manual_steps: &mut Vec<String>,
-) -> Result<()> {
-    match client.install_kind() {
-        InstallKind::Manual => manual_steps.push(client.snippet().unwrap_or("").to_owned()),
+fn artifact(client: IntegrationClient) -> IntegrationArtifact {
+    let terminal = client.is_terminal_client();
+    IntegrationArtifact {
+        client,
+        snippet: client.artifact_snippet(),
+        resolver: terminal.then_some(GRUND_OPEN_RESOLVER),
+        resolver_target: terminal.then_some(RESOLVER_TARGET),
+        package_json: (!terminal).then_some(VSCODE_PACKAGE_JSON),
+        extension_js: (!terminal).then_some(VSCODE_EXTENSION_JS),
+    }
+}
+
+/// The client half of a `write` (§FS-integrations.4.1, §FS-integrations.4.2,
+/// §FS-integrations.3.4.2): its config or extension, then the resolver a
+/// terminal client needs, then the step a manual client leaves to the user.
+fn install(client: IntegrationClient, out: &mut IntegrationsOutput) -> Result<(), Fault> {
+    match client.kind() {
+        InstallKind::Manual => {}
         InstallKind::Block => {
-            let path = expand_target(client.config_target()).ok_or_else(|| {
-                located(
-                    Path::new(client.config_target()),
-                    "cannot resolve home directory".into(),
-                )
-            })?;
-            let existing = read_optional_text(&path).map_err(tuple_error)?;
+            let path = expand(client.target_hint())?;
+            let existing = read_optional_text(&path)?;
             let fresh = existing.is_empty();
-            let (mut updated, outcome) = install_managed_block(
-                client.comment_prefix(),
-                client.prepends_block(),
+            let (mut updated, spliced) = install_managed_block(
+                client.comment(),
+                client.prepends(),
                 &existing,
-                client.snippet().unwrap_or(""),
+                client.artifact_snippet().unwrap_or(""),
             )
-            .map_err(|e| located(&path, e))?;
-            if fresh && let Some(scaffold) = client.fresh_config_scaffold() {
+            .map_err(|message| Fault::at(&path, message))?;
+            // A file created from scratch gets the client's starter config
+            // below the block, so the install is usable without hand-editing.
+            if fresh && let Some(scaffold) = client.scaffold() {
                 updated.push_str(scaffold);
             }
-            if outcome != BlockOutcome::Unchanged {
+            if spliced != BlockOutcome::Unchanged {
                 save(&path, &updated)?;
             }
-            let note = needs_wezterm_wiring(client, &updated)
-                .then(|| format!("add {WEZTERM_APPLY_CALL}config) where you build your config"));
-            events.push(event(&path, block_outcome_verb(outcome), note));
+            // §FS-integrations.4.1.3: reported rather than silent.
+            let note =
+                needs_wezterm_wiring(client, &updated).then_some(IntegrationNote::UnwiredWezterm {
+                    apply_call: WEZTERM_APPLY_CALL,
+                });
+            out.events.push(IntegrationEvent {
+                path,
+                outcome: outcome(spliced),
+                note,
+            });
         }
         InstallKind::Vscode => {
-            let dir = expand_target(client.config_target()).ok_or_else(|| {
-                located(
-                    Path::new(client.config_target()),
-                    "cannot resolve home directory".into(),
-                )
-            })?;
-            let exists = dir.join(".grund-version").is_file();
+            let dir = expand(client.target_hint())?;
             if vscode_integration_is_current(&dir) {
-                events.push(event(&dir, "exists", None));
+                out.events.push(event(dir, IntegrationOutcome::Unchanged));
                 return Ok(());
             }
+            let existed = dir.join(".grund-version").is_file();
+            let version = crate::grammar::INTEGRATIONS_BLOCK_VERSION.to_string();
             for (name, body) in [
-                ("package.json", VSCODE_PACKAGE_JSON.to_owned()),
-                ("extension.js", VSCODE_EXTENSION_JS.to_owned()),
-                (
-                    ".grund-version",
-                    crate::grammar::INTEGRATIONS_BLOCK_VERSION.to_string(),
-                ),
+                ("package.json", VSCODE_PACKAGE_JSON),
+                ("extension.js", VSCODE_EXTENSION_JS),
+                (".grund-version", version.as_str()),
             ] {
-                save(&dir.join(name), &body)?;
+                save(&dir.join(name), body)?;
             }
-            events.push(event(&dir, if exists { "updated" } else { "wrote" }, None));
+            let written = if existed {
+                IntegrationOutcome::Updated
+            } else {
+                IntegrationOutcome::Wrote
+            };
+            out.events.push(event(dir, written));
             return Ok(());
         }
     }
-    if let Some(path) = write_resolver_script().map_err(tuple_error)? {
-        events.push(event(&path, "wrote", None));
+    if let Some(path) = write_resolver_script()? {
+        out.events.push(event(path, IntegrationOutcome::Wrote));
+    }
+    if client.kind() == InstallKind::Manual {
+        out.manual_steps.push(IntegrationManualStep {
+            client,
+            snippet: client.artifact_snippet().unwrap_or(""),
+        });
     }
     Ok(())
 }

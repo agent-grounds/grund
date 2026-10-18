@@ -2,8 +2,10 @@
 
 #[cfg(unix)]
 use super::init_notes::shadowed_claude_entrypoint_note;
-use super::integrations_agents::LinkSupport;
-use super::integrations_user_config::{conversation_preference, conversation_target_preference};
+use super::integrations_agents::*;
+use super::integrations_clients::*;
+use super::integrations_install::*;
+use super::integrations_user_config::*;
 use super::*;
 use crate::grammar::find_managed_block;
 #[cfg(unix)]
@@ -211,18 +213,18 @@ fn resolver_peek_prints_the_declaration_without_opening_an_editor() {
 /// — so the two clients must never share a target.
 #[test]
 fn codium_installs_into_its_own_extensions_root() {
-    let vscode = IntegrationClient::Vscode.config_target();
-    let codium = IntegrationClient::Codium.config_target();
+    let vscode = IntegrationClient::Vscode.target_hint();
+    let codium = IntegrationClient::Codium.target_hint();
     assert_ne!(vscode, codium);
     assert!(codium.starts_with("~/.vscode-oss/"), "got {codium}");
     assert!(vscode.starts_with("~/.vscode/"), "got {vscode}");
     // Same install machinery, same artifact — only the destination differs.
     assert!(matches!(
-        IntegrationClient::Codium.install_kind(),
+        IntegrationClient::Codium.kind(),
         InstallKind::Vscode
     ));
-    assert!(!IntegrationClient::Codium.is_terminal());
-    assert!(IntegrationClient::Codium.snippet().is_none());
+    assert!(!IntegrationClient::Codium.is_terminal_client());
+    assert!(IntegrationClient::Codium.artifact_snippet().is_none());
 }
 
 /// §FS-integrations.4.1.1: the markers are comments *in the host file's
@@ -232,9 +234,9 @@ fn codium_installs_into_its_own_extensions_root() {
 /// else in the file does.
 #[test]
 fn integrations_block_markers_match_the_host_language() {
-    assert_eq!(IntegrationClient::Kitty.comment_prefix(), "#");
-    assert_eq!(IntegrationClient::Tmux.comment_prefix(), "#");
-    assert_eq!(IntegrationClient::Wezterm.comment_prefix(), "--");
+    assert_eq!(IntegrationClient::Kitty.comment(), "#");
+    assert_eq!(IntegrationClient::Tmux.comment(), "#");
+    assert_eq!(IntegrationClient::Wezterm.comment(), "--");
 
     let (lua, _) = install_managed_block("--", true, "", "SNIPPET").expect("install into lua");
     for line in lua.lines() {
@@ -262,15 +264,15 @@ fn integrations_block_lookup_is_dialect_scoped() {
 #[test]
 fn wezterm_fresh_install_is_a_working_config() {
     let scaffold = IntegrationClient::Wezterm
-        .fresh_config_scaffold()
+        .scaffold()
         .expect("wezterm ships a starter config");
     assert!(scaffold.contains("grund_apply_hyperlink_rule(config)"));
     assert!(scaffold.trim_end().ends_with("return config"));
     // The helper the scaffold calls is defined by the block above it.
     assert!(WEZTERM_SNIPPET.contains("function grund_apply_hyperlink_rule(config)"));
     // Clients whose config is not a program get no scaffold.
-    assert!(IntegrationClient::Kitty.fresh_config_scaffold().is_none());
-    assert!(IntegrationClient::Tmux.fresh_config_scaffold().is_none());
+    assert!(IntegrationClient::Kitty.scaffold().is_none());
+    assert!(IntegrationClient::Tmux.scaffold().is_none());
 }
 
 // §FS-integrations.4.1.3: the wiring step is reported, and the test is the
@@ -294,7 +296,7 @@ fn wezterm_wiring_note_reads_only_outside_the_block() {
     let mut fresh = block_only.0.clone();
     fresh.push_str(
         IntegrationClient::Wezterm
-            .fresh_config_scaffold()
+            .scaffold()
             .expect("wezterm ships a starter config"),
     );
     assert!(!needs_wezterm_wiring(IntegrationClient::Wezterm, &fresh));

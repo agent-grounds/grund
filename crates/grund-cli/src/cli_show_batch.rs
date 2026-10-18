@@ -67,17 +67,11 @@ fn command_show_batch(
             }
         }
     };
-    let (run_warnings, batch) = show_batch_with_globs(
-        queries,
-        globs,
-        ShowOpts {
-            path,
-            section: None,
-            mode,
-            format: ShowFormat::Json,
-        },
-        path_provided,
-    );
+    let mut opts = ShowOpts::default();
+    opts.path = path;
+    opts.mode = mode;
+    opts.format = ShowFormat::Json;
+    let (run_warnings, batch) = show_batch_with_globs(queries, globs, opts, path_provided);
     render_run_warnings(&run_warnings);
     let records = match batch {
         Ok(run) => {
@@ -102,9 +96,9 @@ fn command_show_batch(
             json_escape(&record.query.id)
         );
         match record.result {
-            Ok(result) => println!(
-                "{{\"query\":{query},\"ok\":true,\"result\":{result},\"error\":null}}"
-            ),
+            Ok(result) => {
+                println!("{{\"query\":{query},\"ok\":true,\"result\":{result},\"error\":null}}")
+            }
             Err(error) => {
                 failed = true;
                 // §FS-output-shapes.4.1: `error` is the unchanged finding object

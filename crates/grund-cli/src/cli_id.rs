@@ -62,15 +62,11 @@ fn command_id(args: &[String]) -> ExitCode {
         .get(2)
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from("."));
-    let (run_warnings, proposed) = propose_id_with_run_warnings(
-        kind,
-        title,
-        IdOpts {
-            path,
-            path_provided,
-            width,
-        },
-    );
+    let mut opts = IdOpts::default();
+    opts.path = path;
+    opts.path_provided = path_provided;
+    opts.width = width;
+    let (run_warnings, proposed) = propose_id_with_run_warnings(kind, title, opts);
     render_run_warnings(&run_warnings);
     let outcome = match proposed {
         Ok(outcome) => outcome,

@@ -22,7 +22,7 @@ use std::path::PathBuf;
 /// json` — including the manifest shape a directory-backed case answers with
 /// (§FS-show.2.4.2) — and makes the path absolute, which grund's own reports
 /// never do (§FS-errors.4).
-pub const GRUND_OPEN_RESOLVER: &str = include_str!("../../assets/integrations/grund-open");
+pub(crate) const GRUND_OPEN_RESOLVER: &str = include_str!("../../assets/integrations/grund-open");
 
 /// iTerm2 keeps its settings in a binary plist, so this one is printed for the
 /// user to apply by hand rather than spliced; `--write` still installs the
@@ -51,7 +51,8 @@ pub(crate) const KITTY_SNIPPET: &str = include_str!("../../assets/integrations/k
 /// declaration in a popup over the session (§FS-integrations.3.3.2).
 const TMUX_SNIPPET: &str = include_str!("../../assets/integrations/tmux.conf");
 
-pub const VSCODE_PACKAGE_JSON: &str = include_str!("../../assets/integrations/vscode/package.json");
+pub(crate) const VSCODE_PACKAGE_JSON: &str =
+    include_str!("../../assets/integrations/vscode/package.json");
 
 /// VS Code is the one client that can show a declaration on *hover* rather than
 /// on click (§FS-integrations.3.3.1), and one `--brief` resolution serves both
@@ -63,16 +64,17 @@ pub const VSCODE_PACKAGE_JSON: &str = include_str!("../../assets/integrations/vs
 /// resolution, follow the citation-token rules every client shares: no hardcoded
 /// marker, and the `.<section>` suffix preserved so a subsection click lands on
 /// that section rather than the declaration heading (§FS-integrations.3.1.4).
-pub const VSCODE_EXTENSION_JS: &str = include_str!("../../assets/integrations/vscode/extension.js");
+pub(crate) const VSCODE_EXTENSION_JS: &str =
+    include_str!("../../assets/integrations/vscode/extension.js");
 
 /// Where `--write` installs the `grund-open` resolver for terminal clients; a
 /// single source so the descriptor plan and the writer cannot drift.
-pub const RESOLVER_TARGET: &str = "~/.local/bin/grund-open";
+pub(crate) const RESOLVER_TARGET: &str = "~/.local/bin/grund-open";
 
 /// The rendering-layer clients grund ships an integration for. The set is closed
 /// and frozen (§FS-integrations.1.4); the ordering here is the frozen output order
 /// used by detection and every listing.
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum IntegrationClient {
     Codium,
     Iterm2,
@@ -83,7 +85,7 @@ pub enum IntegrationClient {
 }
 
 /// How `--write` applies a client's integration (§FS-integrations.4).
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum InstallKind {
     /// A marked block spliced into the client's text config.
     Block,
@@ -135,11 +137,11 @@ impl IntegrationClient {
             .find(|client| client.name() == name)
     }
 
-    pub fn is_terminal(self) -> bool {
+    pub(crate) fn is_terminal_client(self) -> bool {
         !matches!(self, IntegrationClient::Vscode | IntegrationClient::Codium)
     }
 
-    pub fn install_kind(self) -> InstallKind {
+    pub(crate) fn kind(self) -> InstallKind {
         match self {
             IntegrationClient::Iterm2 => InstallKind::Manual,
             IntegrationClient::Vscode | IntegrationClient::Codium => InstallKind::Vscode,
@@ -150,7 +152,7 @@ impl IntegrationClient {
     }
 
     /// The terminal config snippet for a terminal client; `None` for vscode.
-    pub fn snippet(self) -> Option<&'static str> {
+    pub(crate) fn artifact_snippet(self) -> Option<&'static str> {
         match self {
             IntegrationClient::Codium => None,
             IntegrationClient::Iterm2 => Some(ITERM2_SNIPPET),
@@ -163,7 +165,7 @@ impl IntegrationClient {
 
     /// A `~`-rooted hint at where `--write` installs the config, printed verbatim
     /// so it stays byte-stable across machines (§FS-integrations.6).
-    pub fn config_target(self) -> &'static str {
+    pub(crate) fn target_hint(self) -> &'static str {
         match self {
             // Not a path: iTerm2's rules live in a binary plist, so this names
             // the place a human applies them (§FS-integrations.3.4).
@@ -179,7 +181,7 @@ impl IntegrationClient {
         }
     }
 
-    pub fn install_command(self) -> String {
+    pub(crate) fn cli_install_command(self) -> String {
         format!("grund integrations {} --write", self.name())
     }
 
@@ -189,7 +191,7 @@ impl IntegrationClient {
     /// while `wezterm.lua` is Lua, where `#` is the length operator and a `#`
     /// marker is a syntax error that costs the user their whole config
     /// (§FS-integrations.4.1.1).
-    pub fn comment_prefix(self) -> &'static str {
+    pub(crate) fn comment(self) -> &'static str {
         match self {
             IntegrationClient::Iterm2 | IntegrationClient::Kitty | IntegrationClient::Tmux => "#",
             IntegrationClient::Codium => "//",
@@ -205,7 +207,7 @@ impl IntegrationClient {
     /// its definitions are unreachable and the helper the user is told to call
     /// is nil. Placing it first also matches how one reads Lua — definitions
     /// above use (§FS-integrations.4.1).
-    pub fn prepends_block(self) -> bool {
+    pub(crate) fn prepends(self) -> bool {
         matches!(self, IntegrationClient::Wezterm)
     }
 
@@ -213,7 +215,7 @@ impl IntegrationClient {
     /// from scratch, so a fresh install is a *working* config rather than one
     /// the user must finish by hand. Unmanaged: later writes rewrite only the
     /// block and leave this alone (§FS-integrations.4.1.2).
-    pub fn fresh_config_scaffold(self) -> Option<&'static str> {
+    pub(crate) fn scaffold(self) -> Option<&'static str> {
         match self {
             // WezTerm applies hyperlink rules only from the config object the
             // file returns, so the block above defines the helper and this calls
@@ -233,7 +235,7 @@ impl IntegrationClient {
     }
 }
 
-pub fn known_clients_line() -> String {
+pub(crate) fn known_clients_line() -> String {
     format!(
         "known clients: {}",
         IntegrationClient::ALL
@@ -254,7 +256,7 @@ pub fn known_clients_line() -> String {
 /// from `$XDG_CONFIG_HOME` when set, so writing to a hardcoded `~/.config`
 /// there lands where the tool never looks, and the failure is silent in exactly
 /// the way §FS-integrations.3.2.4 refuses to accept for VSCodium.
-pub fn expand_target(target: &str) -> Option<PathBuf> {
+pub(crate) fn expand_target(target: &str) -> Option<PathBuf> {
     if let Some(rest) = target.strip_prefix("~/.config/") {
         return Some(user_config_base()?.join(rest));
     }

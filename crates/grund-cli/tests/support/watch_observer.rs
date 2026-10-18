@@ -60,10 +60,9 @@ impl Fixture {
         fs::write(path, body).unwrap();
     }
     pub fn opts(&self) -> CheckOpts {
-        CheckOpts {
-            path: self.0.clone(),
-            ..Default::default()
-        }
+        let mut opts = CheckOpts::default();
+        opts.path = self.0.clone();
+        opts
     }
     pub fn ordinary(&self) -> Snapshot {
         watch_test::one_shot(self.opts(), &CheckFindingSelection::default(), None)
