@@ -161,11 +161,15 @@ fn artifact(client: IntegrationClient) -> IntegrationArtifact {
 }
 
 /// The client half of a `write` (§FS-integrations.4.1, §FS-integrations.4.2,
-/// §FS-integrations.3.4.2): its config or extension, then the resolver a
-/// terminal client needs, then the step a manual client leaves to the user.
+/// §FS-integrations.3.4.2): the step a manual client leaves to the user, which
+/// a run reaches before anything it can fail on, or its config or extension;
+/// then the resolver a terminal client needs.
 fn install(client: IntegrationClient, out: &mut IntegrationsOutput) -> Result<(), Fault> {
     match client.kind() {
-        InstallKind::Manual => {}
+        InstallKind::Manual => out.manual_steps.push(IntegrationManualStep {
+            client,
+            snippet: client.artifact_snippet().unwrap_or(""),
+        }),
         InstallKind::Block => {
             let path = expand(client.target_hint())?;
             let existing = read_optional_text(&path)?;
@@ -222,12 +226,6 @@ fn install(client: IntegrationClient, out: &mut IntegrationsOutput) -> Result<()
     }
     if let Some(path) = write_resolver_script()? {
         out.events.push(event(path, IntegrationOutcome::Wrote));
-    }
-    if client.kind() == InstallKind::Manual {
-        out.manual_steps.push(IntegrationManualStep {
-            client,
-            snippet: client.artifact_snippet().unwrap_or(""),
-        });
     }
     Ok(())
 }

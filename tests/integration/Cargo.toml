@@ -74,3 +74,7 @@ path = "repository_maintenance.rs"
 [[test]]
 name = "lsp_guide"
 path = "lsp_guide.rs"
+
+[[test]]
+name = "integrations_answer"
+path = "integrations_answer.rs"

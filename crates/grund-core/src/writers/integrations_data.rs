@@ -5,7 +5,7 @@
 
 use super::integrations_agents::{ConversationRendering, ConversationTarget, IntegrationAgent};
 use super::integrations_api::integrations;
-use super::integrations_clients::{InstallKind, IntegrationClient};
+use super::integrations_clients::IntegrationClient;
 use super::integrations_output::{
     IntegrationEvent, IntegrationNote, IntegrationsError, IntegrationsFailure, IntegrationsOpts,
     IntegrationsOutput,
@@ -65,7 +65,7 @@ pub(crate) fn integrations_data(
     )?;
     match integrations(opts) {
         Ok(out) => Ok(output(&out)),
-        Err(error) => Err(failure(error, opts.client)),
+        Err(error) => Err(failure(error)),
     }
 }
 
@@ -76,7 +76,7 @@ fn output(out: &IntegrationsOutput) -> Value {
         .map(|status| {
             json!({"client":status.client.name(),"detected":status.detected,
             "installed":status.installed,"install_kind":status.install_kind.name(),
-            "install":format!("grund integrations {} --write", status.client.name()),
+            "install":status.client.cli_install_command(),
             "config_target":status.config_target})
         })
         .collect::<Vec<_>>();
@@ -84,14 +84,13 @@ fn output(out: &IntegrationsOutput) -> Value {
         json!({"client":a.client.name(),"snippet":a.snippet,"resolver":a.resolver,
         "package_json":a.package_json,"extension_js":a.extension_js})
     });
-    let manual_steps = out
-        .manual_steps
-        .iter()
-        .map(|step| step.snippet)
-        .collect::<Vec<_>>();
     json!({"detected":out.detected.iter().map(|c| c.name()).collect::<Vec<_>>(),
     "clients":clients,"artifact":artifact,"events":events(&out.events),
-    "manual_steps":manual_steps,"run_cautions":cautions(&out.warnings)})
+    "manual_steps":manual_steps(out),"run_cautions":cautions(&out.warnings)})
+}
+
+fn manual_steps(out: &IntegrationsOutput) -> Vec<&'static str> {
+    out.manual_steps.iter().map(|step| step.snippet).collect()
 }
 
 fn events(events: &[IntegrationEvent]) -> Vec<Value> {
@@ -143,7 +142,7 @@ fn cautions(warnings: &[Finding]) -> Vec<Value> {
 /// The refusal as the bindings' structured failure: a refused combination is
 /// one `invalid-preference`, a filesystem failure is located on its target with
 /// the IO error beneath, and a run that had begun carries its partial output.
-fn failure(error: IntegrationsError, client: Option<IntegrationClient>) -> anyhow::Error {
+fn failure(error: IntegrationsError) -> anyhow::Error {
     let IntegrationsError {
         output,
         failure,
@@ -167,16 +166,11 @@ fn failure(error: IntegrationsError, client: Option<IntegrationClient>) -> anyho
     if !began {
         return error;
     }
-    // A manual client's step is reached before anything a run can fail on.
-    let manual_steps = client
-        .filter(|c| c.kind() == InstallKind::Manual)
-        .map(|c| c.artifact_snippet().unwrap_or(""))
-        .into_iter()
-        .collect::<Vec<_>>();
     let context = OperationContext {
         message: error.to_string(),
         cautions: json!(cautions(&output.warnings)),
-        partial_output: json!({"events":events(&output.events), "manual_steps":manual_steps}),
+        partial_output: json!({"events":events(&output.events),
+        "manual_steps":manual_steps(&output)}),
     };
     error.context(context)
 }
