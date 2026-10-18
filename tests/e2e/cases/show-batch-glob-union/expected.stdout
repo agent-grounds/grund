@@ -1,2 +1,2 @@
-{"query":{"id":"FS-check","section":null},"ok":true,"result":{"id":"FS-check","section":null,"body":"Check lead, citing §AR-store.\n","anchor":"fs-check-check","path":"docs/fs/FS-check.md","line":1},"error":null}
-{"query":{"id":"FS-cover","section":null},"ok":true,"result":{"id":"FS-cover","section":null,"body":"Cover lead.\n","anchor":"fs-cover-cover","path":"docs/fs/FS-cover.md","line":1},"error":null}
+{"query":{"id":"FS-chart","section":null},"ok":true,"result":{"id":"FS-chart","section":null,"body":"Check lead, citing §AR-store.\n","anchor":"fs-chart-check","path":"docs/fs/FS-chart.md","line":1},"error":null}
+{"query":{"id":"FS-covey","section":null},"ok":true,"result":{"id":"FS-covey","section":null,"body":"Cover lead.\n","anchor":"fs-covey-cover","path":"docs/fs/FS-covey.md","line":1},"error":null}

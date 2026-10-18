@@ -1,1 +1,1 @@
-list --glob 'FS-config.1.**.goals' {repo}
+list --glob 'FS-convoy.1.**.goals' {repo}

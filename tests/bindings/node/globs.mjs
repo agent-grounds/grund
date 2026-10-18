@@ -13,7 +13,7 @@ const pick = (row, fields) => Object.fromEntries(fields.map(field => [field, row
 {
   const name = 'list-glob-point-and-subtree-json';
   const fields = ['id', 'section', 'kind', 'path', 'line', 'title'];
-  const result = await api.list({ root: repo(name), globs: ['FS-config.requirements{,.**}'] });
+  const result = await api.list({ root: repo(name), globs: ['FS-convoy.requirements{,.**}'] });
   assert.deepEqual(result.entries.map(entry => pick(entry, fields)),
     jsonRows(await golden(name, 'stdout')).map(row => pick(row, fields)));
   assert.equal(result.note, null);
@@ -27,7 +27,7 @@ const pick = (row, fields) => Object.fromEntries(fields.map(field => [field, row
 }
 {
   const name = 'show-batch-glob-json';
-  const result = await api.showBatch(null, { root: repo(name), globs: ['FS-config.requirements{,.**}'] });
+  const result = await api.showBatch(null, { root: repo(name), globs: ['FS-convoy.requirements{,.**}'] });
   assert.deepEqual(result.records.map(record => [record.query.id, record.query.section ?? null]),
     jsonRows(await golden(name, 'stdout')).map(row => [row.query.id, row.query.section]));
 }
@@ -51,7 +51,7 @@ const pick = (row, fields) => Object.fromEntries(fields.map(field => [field, row
       ['query', 'invalid-coordinate-glob', message, 4]);
     return true;
   });
-  await assert.rejects(api.showBatch(['FS-config'], { root, globs: ['FS-*'] }), error => {
+  await assert.rejects(api.showBatch(['FS-convoy'], { root, globs: ['FS-*'] }), error => {
     assert.deepEqual([error.failure.kind, error.failure.code], ['input', 'conflicting-options']);
     return true;
   });

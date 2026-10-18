@@ -1,1 +1,1 @@
-show --batch --glob 'FS-config.requirements{,.**}' {repo} --format json
+show --batch --glob 'FS-convoy.requirements{,.**}' {repo} --format json

@@ -43,7 +43,7 @@ class CoordinateGlobTests(unittest.TestCase):
         rows = [json.loads(line) for line in golden(case).splitlines()]
         with temporary() as temp:
             result = self.g.list_ids(root=fixture(temp, case),
-                                     globs=("FS-config.requirements{,.**}",))
+                                     globs=("FS-convoy.requirements{,.**}",))
         self.assertEqual([{f: row[f] for f in fields} for row in rows],
                          [{f: getattr(entry, f) for f in fields} for entry in result.entries])
         self.assertIsNone(result.note)
@@ -51,7 +51,7 @@ class CoordinateGlobTests(unittest.TestCase):
         queries = [json.loads(line)["query"] for line in golden(case).splitlines()]
         with temporary() as temp:
             result = self.g.show_batch(root=fixture(temp, case),
-                                       globs=("FS-config.requirements{,.**}",))
+                                       globs=("FS-convoy.requirements{,.**}",))
         self.assertEqual([(q["id"], q["section"]) for q in queries],
                          [(r.query.id, r.query.section) for r in result.records])
 
@@ -77,7 +77,7 @@ class CoordinateGlobTests(unittest.TestCase):
             self.assertEqual(("query", "invalid-coordinate-glob", message, 4),
                              (failure.kind, failure.code, failure.message, failure.column))
             with self.assertRaises(ValueError):
-                self.g.show_batch(("FS-config",), root=root, globs=("FS-*",))
+                self.g.show_batch(("FS-convoy",), root=root, globs=("FS-*",))
 
 
 if __name__ == "__main__":

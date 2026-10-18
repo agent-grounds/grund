@@ -1,1 +1,1 @@
-show --batch --glob 'FS-cover' --glob 'FS-c{over,heck}' {repo} --format json
+show --batch --glob 'FS-covey' --glob 'FS-c{ovey,hart}' {repo} --format json
