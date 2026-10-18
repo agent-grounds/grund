@@ -77,7 +77,7 @@ A kind's shape is one record, and the checks, `grund schema` ([§FS-schema.4.1](
 | `content` | `prose` or `values` | `prose` |
 | `one_of` | a non-empty list of display names | none |
 
-Fields are listed, rendered and reported in the order their headers are written ([§FS-config-v2.reader.4](FS-config-v2.md#reader4-order-and-location-are-kept)). Header order is not placement: only `position` and `after` place a field. An unknown key is ``unknown key `<key>` in [schema.kinds.<KIND>.fields.<name>]`` ([§FS-config-v2.reader.1](FS-config-v2.md#reader1-tables-and-keys-are-closed)). A value outside its set is refused at its line in the reader's shape, ``unknown [schema.kinds.FS.fields.terms] presence `maybe` (expected must, warn, should, or may)``, and the same for `position` (`expected first or last`) and `content` (`expected prose or values`).
+Fields are listed, rendered and reported in the order their headers are written ([§FS-config-v2.reader.4](FS-config-v2.md#reader4-order-and-location-are-kept)). Header order is not placement: only `position` and `after` place a field. An unknown key is ``unknown key `<key>` in [schema.kinds.<KIND>.fields.<name>] (expected title, presence, position, after, content, or one_of)``, which names the keys above in their order ([§FS-config-v2.reader.1.keys](FS-config-v2.md#reader1keys-an-unknown-key-names-the-keys-its-table-admits)). A value outside its set is refused at its line in the reader's shape, ``unknown [schema.kinds.FS.fields.terms] presence `maybe` (expected must, warn, should, or may)``, and the same for `position` (`expected first or last`) and `content` (`expected prose or values`).
 
 ### declare.closed: `closed` is a strength on the row
 

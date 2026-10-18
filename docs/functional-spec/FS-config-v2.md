@@ -53,9 +53,36 @@ The format is published whole and executed in part ([§FS-config-v2.rollout](FS-
 
 ### reader.1: Tables and keys are closed
 
-The v2 reader admits exactly the tables and keys this file names, at the scope each is named at. An unknown table is ``unknown config section `<table>` ``. An unknown key is ``unknown key `<key>` in [<table>]``. A key written at a table that does not admit it is refused the same way. A key repeated inside one table is ``duplicate key `<key>` in [<table>] (first written at line <n>)``. Every refusal is located at the offending line, per [§FS-config.4.3](FS-config.md#43-invalid-config-behavior).
+The v2 reader admits exactly the tables and keys this file names, at the scope each is named at. An unknown table is ``unknown config section `<table>` ``. An unknown key is ``unknown key `<key>` in [<table>]``, or ``unknown key `<key>` at the top level`` in the envelope. A key written at a table that does not admit it is refused the same way. A key repeated inside one table is ``duplicate key `<key>` in [<table>] (first written at line <n>)``. Every refusal is located at the offending line, per [§FS-config.4.3](FS-config.md#43-invalid-config-behavior). An unknown key and a v1 table then say what to write instead, appended after that text, which stays whole ([§FS-errors.3](FS-errors.md#3-message-text)): an unknown key names the keys its table admits ([§FS-config-v2.reader.1.keys](FS-config-v2.md#reader1keys-an-unknown-key-names-the-keys-its-table-admits)), and a v1 table names the v2 tables its settings are written in ([§FS-config-v2.reader.1.v1-tables](FS-config-v2.md#reader1v1-tables-a-v1-table-names-the-v2-tables-its-settings-are-written-in)). What is appended admits nothing, and the v1 reader, whose unknown section is the same text, appends none ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)).
 
 v1's spellings are not v2 keys. `[reference]`, `[id]`, `[[kinds]]`, `[scan]`, `[output]`, `[citations]` and `[fmt.cross_refs]` are unknown sections in v2, and so are `strict`, `named_sections`, `include`, and every other discarded alias ([§DISC-core-concerns.7.4](../discussions/proposals/2026-09-30-core-concerns.md#74-what-the-format-leaves-out)). v2 reads no `include`: the scan is the union of the rows' places and the complement's extent ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)). Report preferences are run flags ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)), so `[output]` has no v2 spelling either.
+
+#### reader.1.keys: An unknown key names the keys its table admits
+
+An unknown key's refusal appends, after one space, the keys its table admits in the reader's `(expected …)` shape, in the order the point that specifies the table lists them: ``unknown key `max` in [schema.leads.words] (expected must, warn, should, or may)``. Two keys are joined by `or`, and three or more by commas with `, or` before the last, as the reader's other `(expected …)` lists are. The key is still refused at its line, and the list is the table's admitted keys and nothing else, so every key it names is one that table reads.
+
+- **The envelope** names its two keys in [§FS-config.concerns](FS-config.md#concerns-every-key-belongs-to-exactly-one-concern)' order: ``unknown key `<key>` at the top level (expected grund_config_version or project_name)``.
+- **A ladder**, `[rules.citations.grounding]` or `[rules.citations.<PLACE>.grounding]`, names the positive strengths in [§FS-config-v2.rules.strengths](FS-config-v2.md#rulesstrengths-one-strength-vocabulary-two-severities)' order. `[rules.citations]` names its one key, `default` ([§FS-config-v2.rules.citations.default](FS-config-v2.md#rulescitationsdefault-a-default-may-forbid-never-oblige)), and `[workspace]` names `members`, `optional_members` and `include_root`, in [§FS-config.3.8](FS-config.md#38-workspace--sub-project-members)'s order.
+- **A table that holds only tables**, `[schema.notes]`, `[schema.leads]`, `[schema.kinds]`, `[schema.kinds.<NAME>.fields]`, `[schema.sources.definitions]`, `[rules]` or `[presentation.kinds]` written as a header of its own ([§FS-config-v2.reader.2](FS-config-v2.md#reader2-every-row-and-field-is-written-under-its-own-header)), appends `(it holds only tables)`.
+- **A table whose keys are names** says what a key names: `[schema.sources.extensions]` appends `(expected a suffix)` ([§FS-config-v2.schema.sources.extensions](FS-config-v2.md#schemasourcesextensions-schemasourcesextensions-maps-a-suffix-to-a-language)), and `[rules.resolution]` appends `(expected a kind name)` ([§FS-config-v2.rules.resolution](FS-config-v2.md#rulesresolution-rulesresolution)). A key either table reads as a name keeps that table's own refusals.
+- **A v1 key at a v2 table** is an unknown key like any other. It names the table's v2 keys, not the v1 key's own v2 spelling, which is [§FS-config-migrate.mapping](FS-config-migrate.md#mapping-every-version-1-key-and-default)'s: ``unknown key `folder` in [schema.kinds.FS] (expected files, folders, citable, scan, index, id_format, fetch, form, or closed)``.
+
+#### reader.1.v1-tables: A v1 table names the v2 tables its settings are written in
+
+A v1 table is refused at its header, before any key under it is read, and the refusal stays at that line ([§FS-config-v2.reader.4](FS-config-v2.md#reader4-order-and-location-are-kept)). So it names one set rather than one key's home: every v2 table that [§FS-config-migrate.mapping](FS-config-migrate.md#mapping-every-version-1-key-and-default) writes a key of that v1 table into. It appends `(a v1 table; in v2: <tables>)`, the tables joined by commas in this order:
+
+| v1 header | What its refusal appends |
+|---|---|
+| `[reference]` | `(a v1 table; in v2: [schema], [schema.notes.*], [schema.leads.words], [rules.citations.grounding], [presentation])` |
+| `[id]` | `(a v1 table; in v2: [schema])` |
+| `[scan]` | `(a v1 table; in v2: [schema.sources], [schema.sources.extensions], [schema.sources.definitions.*], [schema.kinds.code])` |
+| `[citations]` | `(a v1 table; in v2: [rules.citations])` |
+| `[citations.<KIND>]` | `(a v1 table; in v2: [rules.citations.<KIND>])`, with the header's own `<KIND>` |
+| `[fmt]`, `[fmt.cross_refs]` | `(a v1 table; in v2: [presentation.fmt])` |
+| `[output]` | `(a v1 table; in v2: run flags, such as --format and --path-base)` |
+| `[[kinds]]` | `(a v1 table; in v2: [schema.kinds.<NAME>])`, after the `(v2 writes no arrays of tables)` every array of tables carries |
+
+`[schema.notes.*]` and `[schema.sources.definitions.*]` stand for the tables under them. `[output]` names no table because v2 has none for it: its keys are run flags ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)). `[[kinds]]` names the row each entry becomes ([§FS-config-v2.reader.2](FS-config-v2.md#reader2-every-row-and-field-is-written-under-its-own-header)) and leaves a row's `title`, `resolve` and grounding to [§FS-config-migrate.mapping](FS-config-migrate.md#mapping-every-version-1-key-and-default), which one concise line has no room for. A key v2 spells nowhere, such as `[reference] strict` or `[id] named_sections`, adds no table. Every other unknown table, such as `[schema.leads.lines]`, `[project]` or another array of tables, keeps the refusal of [§FS-config-v2.reader.1](FS-config-v2.md#reader1-tables-and-keys-are-closed) with nothing appended: it is not a v1 spelling, so there is no home to name.
 
 ### reader.2: Every row and field is written under its own header
 

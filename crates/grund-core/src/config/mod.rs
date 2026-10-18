@@ -203,6 +203,8 @@ mod tests_v2_places;
 #[cfg(test)]
 mod tests_v2_reader;
 #[cfg(test)]
+mod tests_v2_refusal_hints;
+#[cfg(test)]
 mod tests_v2_sources;
 #[cfg(test)]
 mod tests_validation;

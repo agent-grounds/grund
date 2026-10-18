@@ -1,1 +1,1 @@
-error: ../grund.toml:4: unknown key `folder` in [schema.kinds.FS]
+error: ../grund.toml:4: unknown key `folder` in [schema.kinds.FS] (expected files, folders, citable, scan, index, id_format, fetch, form, or closed)
