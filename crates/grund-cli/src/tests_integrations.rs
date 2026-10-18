@@ -103,39 +103,38 @@ mod tests_integrations {
     // downgrade, and an unread key look identical from the outside.
     #[test]
     fn effective_form_describes_override_and_gate() {
-        let plain = IntegrationNote::Guidance {
+        use ConversationRendering::{Link, Plain};
+        use ConversationTarget::{Path, Vscodium, Web};
+        assert_eq!(describe_guidance(Plain, Path, Vscodium, false), "plain");
+        assert_eq!(describe_guidance(Link, Vscodium, Vscodium, false), "link \u{2192} vscodium");
+        assert_eq!(
+            describe_guidance(Link, Web, Web, true),
+            "link \u{2192} web; agent override"
+        );
+        assert_eq!(
+            describe_guidance(Link, Path, Vscodium, false),
+            "link \u{2192} path; vscodium unverified here"
+        );
+    }
+
+    // §AR-bindings.2.1: an event whose note this release does not name takes the
+    // note-less arm, so it prints the bare line rather than `<verb> <path> ()`.
+    #[test]
+    fn an_event_without_a_named_note_prints_the_bare_line() {
+        let path = std::path::Path::new("/home/you/.claude/CLAUDE.md");
+        assert_eq!(
+            event_lines("appended", path, None),
+            "appended /home/you/.claude/CLAUDE.md\n"
+        );
+        let guidance = IntegrationNote::Guidance {
             rendering: ConversationRendering::Plain,
             target: ConversationTarget::Path,
-            requested: ConversationTarget::Vscodium,
-            overridden: false,
-        };
-        assert_eq!(describe_guidance(&plain), "plain");
-
-        let taken = IntegrationNote::Guidance {
-            rendering: ConversationRendering::Link,
-            target: ConversationTarget::Vscodium,
-            requested: ConversationTarget::Vscodium,
-            overridden: false,
-        };
-        assert_eq!(describe_guidance(&taken), "link \u{2192} vscodium");
-
-        let overridden = IntegrationNote::Guidance {
-            rendering: ConversationRendering::Link,
-            target: ConversationTarget::Web,
-            requested: ConversationTarget::Web,
-            overridden: true,
-        };
-        assert_eq!(describe_guidance(&overridden), "link \u{2192} web; agent override");
-
-        let gated = IntegrationNote::Guidance {
-            rendering: ConversationRendering::Link,
-            target: ConversationTarget::Path,
-            requested: ConversationTarget::Vscodium,
+            requested: ConversationTarget::Path,
             overridden: false,
         };
         assert_eq!(
-            describe_guidance(&gated),
-            "link \u{2192} path; vscodium unverified here"
+            event_lines("appended", path, Some(&guidance)),
+            "appended /home/you/.claude/CLAUDE.md (plain)\n"
         );
     }
 
