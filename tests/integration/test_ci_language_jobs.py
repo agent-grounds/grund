@@ -29,7 +29,7 @@ SUITES = {
     "python": f"{GATE} --without-node-acceptance",
     "node": f"{GATE} --only-node-acceptance",
 }
-# The rest of the Rust job (§AR-ci.13.1); the self-check is the Python heredoc of §AR-ci.4.
+# The rest of the Rust job (§AR-ci.13.1); §AR-ci.4's self-check is inline or extracted.
 RUST_CHECKS = {
     "fmt": "cargo fmt --all -- --check",
     "native watch contract": ("python scripts/run_cargo_suite.py -p grund --features test-watch"
@@ -180,10 +180,20 @@ def leg_commands(system):
     return wanted
 
 
-def runs(instance, command):
+def command_count(instance, command):
     if command.startswith('"'):
-        return command in instance["text"]
-    return command in instance["commands"]
+        count = instance["text"].count(command)
+        helper = "python scripts/check_ci_self.py"
+        if helper in instance["commands"]:
+            source = (CI.parents[2] / "scripts/check_ci_self.py").read_text(encoding="utf-8")
+            if command in source and "timeout=30" in source:
+                count += instance["commands"].count(helper)
+        return count
+    return instance["commands"].count(command)
+
+
+def runs(instance, command):
+    return command_count(instance, command) > 0
 
 
 def leg_jobs(found, system):
@@ -289,10 +299,7 @@ def split_problems(text):
     for system in SYSTEMS:
         on = [i for i in found if i["system"] == system]
         for key, command in leg_commands(system).items():
-            if command.startswith('"'):
-                count = sum(i["text"].count(command) for i in on)
-            else:
-                count = sum(i["commands"].count(command) for i in on)
+            count = sum(command_count(i, command) for i in on)
             if count != 1:
                 problems.append(f"{system} runs {key} {count} times, not once")
         rust = [i for i in on if runs(i, SUITES["rust"])]
