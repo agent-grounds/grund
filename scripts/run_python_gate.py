@@ -7,8 +7,9 @@ the exact released crate, and build the oracle from HEAD, without silently
 skipping tests. GRUND_NODE_TARGET names the root of the Node acceptance's build targets
 (§AR-ci.3.4.1). The run prints only its failures, a check-in each 5% and its slowest
 tests before one summary (§AR-ci.requirements.5.1, §AR-ci.3.4.2); of what a green test
-wrote it keeps only the Node acceptance's `node build:` lines (§AR-ci.3.4.1.1), which
-that point lists. Its own builds are quiet (§AR-ci.requirements.5.4).
+wrote it keeps only the lines that point lists, the Node acceptance's `node build:` lines
+(§AR-ci.3.4.1.1) and the `gate time:` lines. Its own builds are quiet
+(§AR-ci.requirements.5.4).
 `--without-node-acceptance` or `--only-node-acceptance` runs one side of the Node
 acceptance; no argument runs everything (§AR-ci.3.4.3).
 """
@@ -33,8 +34,9 @@ DISCOVER = ('import sys; sys.path.append(sys.argv.pop(1)); selection = sys.argv.
 NODE_ACCEPTANCE = 'test_node_binding_acceptance'
 SELECTIONS = ('without-node-acceptance', 'only-node-acceptance')
 USAGE = 'usage: run_python_gate.py [--without-node-acceptance | --only-node-acceptance]'
-# §AR-ci.3.4.1.1: what a build line starts with; the acceptance wrapper holds the same marker.
-BUILD_LINE = 'node build: '
+# §AR-ci.requirements.5.1: what each line a green test keeps begins with, a build line of
+# §AR-ci.3.4.1.1, whose marker the acceptance wrapper holds too, or a gate-time line.
+KEPT_LINES = ('node build: ', 'gate time: ')
 
 
 def parse_selection(argv):
@@ -97,7 +99,7 @@ class Capture:
     §AR-ci.requirements.5.1: file descriptors 1 and 2 point at one temporary file for the
     whole run, so a child process that inherits them writes there too; on Windows the
     process's standard handles follow, because a child inherits those instead. What is
-    printed of it, a failing test's whole output or a green one's build lines, is
+    printed of it, a failing test's whole output or the lines a green one keeps, is
     `TimedResult`'s call.
     """
 
@@ -152,14 +154,14 @@ class Capture:
 
 
 class TimedResult(unittest.TestResult):
-    """Times each test, fixtures included (§AR-ci.3.4.2), and prints only what failed.
+    """Times each test, fixtures included (§AR-ci.3.4.2), and prints what failed or is kept.
 
     §AR-ci.requirements.5.1: what a test and its fixtures wrote is printed under its
-    name when it fails and dropped when it passes or is skipped, all but the build
-    lines (§AR-ci.3.4.1.1) that point keeps, which are printed once each, as lines of
-    their own. A green run's leftover, what a teardown wrote after the last test,
-    keeps its build lines the same way. A check-in each 5% and the summary go through
-    `suite_progress`, as the cargo wrapper's do.
+    name when it fails and dropped when it passes or is skipped, all but the lines that
+    point keeps, the build lines of §AR-ci.3.4.1.1 and the `gate time:` lines, which are
+    printed once each, as lines of their own. A green run's leftover, what a teardown
+    wrote after the last test, keeps them the same way. A check-in each 5% and the
+    summary go through `suite_progress`, as the cargo wrapper's do.
     """
 
     def __init__(self, stream, total):
@@ -201,8 +203,8 @@ class TimedResult(unittest.TestResult):
             self.report(test.id(), output, self.counts)
             outcome = 'failed'
         else:
-            # §AR-ci.requirements.5.1: a pass, a skip or an expected failure shows its build lines.
-            self.show_builds(output)
+            # §AR-ci.requirements.5.1: a pass, a skip or an expected failure shows what it keeps.
+            self.show_kept(output)
             outcome = 'ignored' if len(self.skipped) != self.skips else 'passed'
         self.progress.finished(test.id(), seconds, outcome)
 
@@ -225,14 +227,13 @@ class TimedResult(unittest.TestResult):
             self.stream.write('unexpected success\n')
         self.stream.flush()
 
-    def show_builds(self, output):
-        """Print the build lines of a green test's `output`, which §AR-ci.requirements.5.1
-        keeps: each line that starts with §AR-ci.3.4.1.1's marker, ended with a plain
-        newline, so a Windows child's CRLF comes out neither doubled nor with a stray
-        carriage return."""
-        builds = ''.join(line + '\n' for line in output.splitlines() if line.startswith(BUILD_LINE))
-        if builds:
-            self.stream.write(builds)
+    def show_kept(self, output):
+        """Print the lines of a green test's `output` that §AR-ci.requirements.5.1 keeps:
+        each line that begins with one of `KEPT_LINES`, ended with a plain newline, so a
+        Windows child's CRLF comes out neither doubled nor with a stray carriage return."""
+        kept = ''.join(line + '\n' for line in output.splitlines() if line.startswith(KEPT_LINES))
+        if kept:
+            self.stream.write(kept)
             self.stream.flush()
 
     def stopTestRun(self):
@@ -242,7 +243,7 @@ class TimedResult(unittest.TestResult):
         leftover = self.capture.take()
         self.capture.stop()
         if self.wasSuccessful():
-            self.show_builds(leftover)
+            self.show_kept(leftover)
         elif leftover.strip():
             self.stream.write(leftover)
         super().stopTestRun()
@@ -285,8 +286,8 @@ class SelectingLoader(unittest.TestLoader):
 
 
 class QuietRunner:
-    """A `unittest` runner whose output is §AR-ci.requirements.5.1's, the build lines it
-    keeps included, and nothing else."""
+    """A `unittest` runner whose output is §AR-ci.requirements.5.1's, the lines it keeps
+    of a green test included, and nothing else."""
 
     def __init__(self, stream):
         self.stream = stream

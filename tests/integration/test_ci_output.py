@@ -4,8 +4,8 @@ Each suite is run on a suite of its own in a temporary directory: the cargo wrap
 §AR-ci.requirements.5.2 on a small crate, and `run_python_gate.run_tests` on a small
 `unittest` tree. Both must print the shape §AR-ci.requirements.5.1 names — failures in
 full, a check-in each 5%, one summary as the last line — and nothing a passing test
-wrote but the lines the point keeps: the cargo wrapper's `gate time:` lines, and the
-`node build:` lines of §AR-ci.3.4.1.1, which the Python gate shows once each. `ci.yml`
+wrote but the lines the point keeps: the `gate time:` lines, and the `node build:` lines
+of §AR-ci.3.4.1.1 that only the Python gate has, which it shows once each. `ci.yml`
 and the hooks are read as text, as the parity test reads them, to hold that the CI
 steps and the `cargo-test` hook go through the wrapper and that every build and install
 is quiet (§AR-ci.requirements.5.4).
@@ -38,10 +38,12 @@ DOTS = re.compile(r"^[.sxuEF]+$")
 GREEN_BUDGET = 30  # the ticket's "about twenty lines per suite", with slack
 PASSING = 40
 TABLE_ROW = re.compile(r"^\s*\d+\.\d+s \S+$")  # a row of §AR-ci.3.4.2's slowest-ten table
-# The build lines of §AR-ci.3.4.1.1 the `building` tree writes: in-process, from a child
-# process, from a skipped test, and from the last module's teardown.
-BUILDS = ("node build: dev /in-process 5.0s", "node build: release /child 49.2s",
-          "node build: dev /skipped 1.0s", "node build: dev /teardown 2.0s")
+# The lines §AR-ci.requirements.5.1 keeps that the `building` tree writes: the build lines
+# of §AR-ci.3.4.1.1 in-process, from a child process, from a skipped test and from the
+# last module's teardown, and a `gate time:` line from a child process.
+KEPT = ("node build: dev /in-process 5.0s", "node build: release /child 49.2s",
+        "node build: dev /skipped 1.0s", "node build: dev /teardown 2.0s",
+        "gate time: fixture phase 1.5s")
 
 PYTHON_CHILD = """
 import os, sys
@@ -263,6 +265,12 @@ class PythonGateOutputTests(SuiteShape, unittest.TestCase):
                                         "import sys; print('NOISE-BUILD-CHILD'); "
                                         "sys.stderr.write(sys.argv[1] + '\\\\n')", line],
                                        check=True)
+                    def test_child_process_writes_a_gate_time_line(self):
+                        line = "gate time: fixture phase 1.5s"
+                        subprocess.run([sys.executable, "-c",
+                                        "import sys; print('NOISE-TIMED-OUT'); "
+                                        "sys.stderr.write('NOISE-TIMED-ERR\\\\n' + sys.argv[1] "
+                                        "+ '\\\\nNOISE-TIMED-END\\\\n')", line], check=True)
                     def test_skips_after_a_build_line(self):
                         sys.stderr.write("node build: dev /skipped 1.0s\\n")
                         self.skipTest("on purpose")
@@ -282,17 +290,18 @@ class PythonGateOutputTests(SuiteShape, unittest.TestCase):
         self.assert_quiet([line for line in lines if not TABLE_ROW.match(line)])
         self.assert_shape(lines, PASSING + 1, failed=0, ignored=1)  # a skip counts as ignored
 
-    def test_a_green_gate_shows_each_build_line_its_tests_wrote_and_nothing_else(self):
-        # §AR-ci.requirements.5.1 keeps the build lines of §AR-ci.3.4.1.1 a green test wrote.
+    def test_a_green_gate_shows_each_build_and_gate_time_line_once_and_nothing_else(self):
+        # §AR-ci.requirements.5.1 keeps a green test's build lines of §AR-ci.3.4.1.1 and its
+        # `gate time:` lines.
         result = self.run_gate(self.tree(building=True))
         lines = lines_of(result)
         output = "\n".join(lines)
         self.assertEqual(0, result.returncode, output)
-        for build in BUILDS:
-            self.assertEqual(1, lines.count(build),
-                             f"a green gate shows {build!r} once, on a line of its own:\n{output}")
+        for kept in KEPT:
+            self.assertEqual(1, lines.count(kept),
+                             f"a green gate shows {kept!r} once, on a line of its own:\n{output}")
         self.assert_quiet([line for line in lines if not TABLE_ROW.match(line)])
-        self.assert_shape(lines, PASSING + 4, failed=0, ignored=2)
+        self.assert_shape(lines, PASSING + 5, failed=0, ignored=2)
 
     def test_a_red_gate_prints_the_failure_in_full_and_fails(self):
         result = self.run_gate(self.tree(failing=True))
