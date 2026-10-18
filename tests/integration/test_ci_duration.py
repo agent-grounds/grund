@@ -4,16 +4,18 @@ drift issue opened or edited, carrying the kind label `tokens` either way, which
 `main` shows against a recording `gh`. §AR-ci.requirements.4 — threshold and window
 are read from `.github/ci-duration.json`, never from a literal in the script."""
 
+import contextlib
 import importlib.util
+import io
 import json
+import os
 import re
+import shutil
 import subprocess
-import sys
 import tempfile
 import unittest
 from pathlib import Path
-
-from changelog_gate_fixture import environment
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT_PATH = ROOT / "scripts" / "ci_duration.py"
@@ -64,61 +66,57 @@ RUNS = [
 ]
 
 
-# The fake forge: logs each call's argv as one JSON line and answers from the case's table.
-GH_STUB = r'''
-import json, os, sys
+# What `ci_duration.gh` finds on `PATH` while a case runs, and runs as the recorder.
+GH = "gh (recorded)"
 
-args = sys.argv[1:]
-if "--body-file" in args:
-    sys.stdin.read()
-with open(os.environ["GH_STUB_LOG"], "a", encoding="utf-8") as log:
-    log.write(json.dumps(args) + "\n")
-with open(os.environ["GH_STUB_ANSWERS"], encoding="utf-8") as table:
-    answers = json.load(table)
-if args[:1] == ["api"]:
-    for fragment, answer in answers["api"].items():
-        if fragment in args[1]:
-            print(json.dumps(answer))
-            sys.exit(0)
-elif args[:2] == ["issue", "list"]:
-    print(json.dumps(answers["issues"]))
-    sys.exit(0)
-elif args[:2] == ["issue", "create"]:
-    print("https://github.com/agent-grounds/grund/issues/9999")
-    sys.exit(0)
-elif args[:2] == ["issue", "edit"]:
-    sys.exit(0)
-sys.exit(f"gh stub: no answer for {args!r}")
-'''
+
+def forge_answer(answers: dict, args: list):
+    """The fake forge's stdout for the `gh` call `args`, from the case's table, or None
+    when the table has no answer for it."""
+    if args[:1] == ["api"]:
+        for fragment, answer in answers["api"].items():
+            if fragment in args[1]:
+                return json.dumps(answer)
+    elif args[:2] == ["issue", "list"]:
+        return json.dumps(answers["issues"])
+    elif args[:2] == ["issue", "create"]:
+        return "https://github.com/agent-grounds/grund/issues/9999\n"
+    elif args[:2] == ["issue", "edit"]:
+        return ""
+    return None
 
 
 class RecordingGh:
-    """A report script's `main`, run with a stub `gh` first and alone on `PATH`, so it
-    reaches no network and the case reads the argv of every `gh` call it made. Looking
-    `gh` up on `PATH` holds wherever the script imports it from. Mixed into a
-    `unittest.TestCase`."""
+    """A report script's own `main`, run in-process against a `gh` that records each call:
+    `which` finds `GH`, and `subprocess.run` hands its argv to the recorder rather than to
+    a process. So `main` reaches no network, the case reads the argv of every `gh` call
+    it made, and no shell re-reads an argument on the way, as cmd.exe split a `gh.cmd`
+    stub's API query at each `&`. Recording under `ci_duration.gh` holds wherever the
+    script imports it from. Mixed into a `unittest.TestCase`."""
 
-    def run_against_forge(self, script: Path, answers: dict, *arguments: str, **variables: str) -> list:
-        scratch = tempfile.TemporaryDirectory()
-        self.addCleanup(scratch.cleanup)
-        root = Path(scratch.name)
-        directory = root / "bin"
-        directory.mkdir()
-        stub = directory / "gh"
-        stub.write_text(f"#!{sys.executable}\n{GH_STUB}", encoding="utf-8")
-        stub.chmod(0o755)
-        if sys.platform == "win32":
-            # `which` finds a .cmd through PATHEXT; a shebang means nothing here.
-            (directory / "gh.cmd").write_text(f'@"{sys.executable}" "{stub}" %*\r\n', encoding="utf-8")
-        table, log = root / "answers.json", root / "gh.log"
-        table.write_text(json.dumps(answers), encoding="utf-8")
-        result = subprocess.run(
-            [sys.executable, str(script), *arguments], stdin=subprocess.DEVNULL,
-            capture_output=True, encoding="utf-8", errors="replace",
-            env=environment({"PATH": str(directory), "PYTHONUTF8": "1", "PYTHONDONTWRITEBYTECODE": "1",
-                             "GH_STUB_ANSWERS": str(table), "GH_STUB_LOG": str(log), **variables}))
-        self.assertEqual(result.returncode, 0, f"{script.name} failed against the stub gh:\n{result.stderr}")
-        return [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
+    def run_against_forge(self, main, answers: dict, **variables: str) -> list:
+        calls, which, run = [], shutil.which, subprocess.run
+
+        def find(name, *rest, **options):
+            return GH if name == "gh" else which(name, *rest, **options)
+
+        def forge(argv, *rest, **options):
+            if argv[0] != GH:
+                return run(argv, *rest, **options)
+            calls.append(list(argv[1:]))
+            stdout = forge_answer(answers, calls[-1])
+            if stdout is None:
+                return subprocess.CompletedProcess(argv, 1, "", f"recording gh: no answer for {calls[-1]!r}")
+            return subprocess.CompletedProcess(argv, 0, stdout, "")
+
+        with mock.patch("shutil.which", find), mock.patch("subprocess.run", forge), \
+                mock.patch.dict(os.environ, variables), contextlib.redirect_stdout(io.StringIO()):
+            try:
+                code = main()
+            except SystemExit as stop:
+                code = stop.code
+        self.assertEqual(code, 0, f"main failed against the recording gh: {code}")
+        return calls
 
 
 def labels(argv: list, *flags: str) -> list:
@@ -237,6 +235,10 @@ class DriftIssueKindTests(RecordingGh, unittest.TestCase):
     """§AR-ci.requirements.3: the drift issue carries its kind, `tokens`, whether `main`
     opens it or edits it."""
 
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.tracker = load_tracker()
+
     def drift(self, issues: list) -> list:
         scratch = tempfile.TemporaryDirectory()
         self.addCleanup(scratch.cleanup)
@@ -245,8 +247,8 @@ class DriftIssueKindTests(RecordingGh, unittest.TestCase):
         answers = {"api": {"actions/workflows/ci.yml/runs": {"workflow_runs": [{"id": 101}]},
                            "actions/runs/101/jobs": {"jobs": [ubuntu(20, 2)]}},
                    "issues": issues}
-        return self.run_against_forge(SCRIPT_PATH, answers, str(config),
-                                      GITHUB_REPOSITORY="agent-grounds/grund")
+        return self.run_against_forge(lambda: self.tracker.main(["ci_duration.py", str(config)]),
+                                      answers, GITHUB_REPOSITORY="agent-grounds/grund")
 
     def test_the_drift_issue_is_opened_with_the_kind_label_tokens(self) -> None:
         calls = self.drift([{"number": 12, "body": "unrelated"}])

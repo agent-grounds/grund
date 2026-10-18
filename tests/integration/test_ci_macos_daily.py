@@ -13,7 +13,7 @@ import sys
 import unittest
 from pathlib import Path
 
-from test_ci_duration import RecordingGh, calls_of, labels
+from test_ci_duration import RecordingGh, calls_of, labels, load_tracker
 from test_ci_language_jobs import CI, instances, leg_commands, runs
 from test_release_workflow import WORKFLOWS, jobs, squash
 
@@ -111,6 +111,7 @@ class ReportTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.report = load_report()
+        cls.tracker = load_tracker()
 
     def test_the_report_names_the_commit_the_run_and_each_failed_step(self):
         jobs_ = [failed_job("suites (macos-latest)", ("cargo build", "success"),
@@ -130,7 +131,8 @@ class ReportTests(unittest.TestCase):
         self.assertIn("no failed job", body)
 
     def test_an_open_failure_issue_is_edited_and_none_opens_one(self):
-        action = self.report.issue_action
+        # The report writes through `ci_duration.put_on_issue`, so this is its decision.
+        action = self.tracker.issue_action
         issues = [{"number": 3, "body": "<!-- ci-duration-drift -->\nslow"},
                   {"number": 9, "body": f"{MARKER}\nold"}]
         self.assertEqual(action(issues, MARKER), ("update", 9))
@@ -143,11 +145,15 @@ class FailureIssueKindTests(RecordingGh, unittest.TestCase):
     """§AR-ci.14.3: the macOS failure issue carries its kind, `bug`, whether `main`
     opens it or edits it."""
 
+    @classmethod
+    def setUpClass(cls):
+        cls.daily = load_report()
+
     def report(self, issues):
         jobs_ = [failed_job("suites (macos-latest)", ("cargo test", "failure")),
                  {"name": "report the failure", "conclusion": None, "steps": []}]
         answers = {"api": {"actions/runs/202/jobs": {"jobs": jobs_}}, "issues": issues}
-        return self.run_against_forge(SCRIPT_PATH, answers, GITHUB_RUN_ID="202",
+        return self.run_against_forge(self.daily.main, answers, GITHUB_RUN_ID="202",
                                       GITHUB_REPOSITORY="agent-grounds/grund", GITHUB_SHA="a" * 40)
 
     def test_the_failure_issue_is_opened_with_the_kind_label_bug(self):
