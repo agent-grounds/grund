@@ -105,7 +105,8 @@ fn command_refs_sites(line: RefsSiteLine) -> ExitCode {
 
 /// The first row of §FS-refs.1.2's table a site-mode line falls under, after its
 /// `--format`: the flags that cannot stand together, then a second path. Beside one
-/// `--glob`, `--section` and `--descendants` offer the pattern that asks for them.
+/// `--glob`, `--section` and `--descendants`, alone or together, offer the pattern that
+/// asks for them.
 fn refs_site_refusal(line: &RefsSiteLine) -> Option<String> {
     if line.sources.len() > 1 {
         return Some("--from may only appear once".to_string());
@@ -124,7 +125,7 @@ fn refs_site_refusal(line: &RefsSiteLine) -> Option<String> {
             return Some(format!("{flag} cannot be combined with --from"));
         }
         let offer = match line.globs.as_slice() {
-            [pattern] => glob_beside_section(pattern, line.section.as_deref()),
+            [pattern] => glob_beside_section(pattern, line.section.as_deref(), line.descendants),
             _ => None,
         };
         return Some(match offer {

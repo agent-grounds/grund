@@ -65,21 +65,27 @@ pub fn reads_as_coordinate(text: &str) -> bool {
 
 /// The pattern a `refs` refusal of `--section` or `--descendants` beside one `--glob`
 /// offers (§FS-refs.1.2, §FS-errors.2.5): `pattern` with `.<section>` appended, every
-/// operator and escape in the section escaped, or with `{,.**}` for no section; `None`
-/// where the launch stage would refuse the result.
+/// operator and escape in the section escaped, then `{,.**}` when `descendants` is
+/// asked; `None` where the launch stage would refuse the result.
 #[doc(hidden)]
-pub fn glob_beside_section(pattern: &str, section: Option<&str>) -> Option<String> {
-    let suffix = match section {
-        Some(section) => section.chars().fold(String::from("."), |mut text, ch| {
+pub fn glob_beside_section(
+    pattern: &str,
+    section: Option<&str>,
+    descendants: bool,
+) -> Option<String> {
+    let mut offer = pattern.to_string();
+    if let Some(section) = section {
+        offer.push('.');
+        for ch in section.chars() {
             if ch == '\\' || GlobOperator::of(ch).is_some() {
-                text.push('\\');
+                offer.push('\\');
             }
-            text.push(ch);
-            text
-        }),
-        None => "{,.**}".to_string(),
-    };
-    let offer = format!("{pattern}{suffix}");
+            offer.push(ch);
+        }
+    }
+    if descendants {
+        offer.push_str("{,.**}");
+    }
     LAUNCH.accepts(&offer).then_some(offer)
 }
 
