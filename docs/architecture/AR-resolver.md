@@ -122,7 +122,7 @@ no new ones ([§FS-workspace.8.5](../functional-spec/FS-workspace.md#85-grund-fm
 No command re-implements the resolver, the citation regex, or the alias
 derivation.
 A `<path>` argument therefore means two different things, and [§AR-resolver.3.3](AR-resolver.md#33-two-scopes-and-which-narrowness-a-narrow-scope-keeps) is which.
-The one-invocation batch loader and the unfiltered `cover` are [§AR-resolver.3.1](AR-resolver.md#31-grund-show---batch-loads-once) and [§AR-resolver.3.2](AR-resolver.md#32-grund-cover-filters-nothing).
+The one-invocation batch loader and the `cover` that drops no file are [§AR-resolver.3.1](AR-resolver.md#31-grund-show---batch-loads-once) and [§AR-resolver.3.2](AR-resolver.md#32-grund-cover-drops-no-file).
 
 ### 3.1 `grund show --batch` loads once
 
@@ -138,14 +138,17 @@ for many explicit queries and one for exhaustive discovery; in a build without
 the feature those tests are ignored, naming it, rather than run against a log
 nobody wrote ([§AR-ci.3.3](AR-ci.md#33-test-only-observers)).
 
-### 3.2 `grund cover` filters nothing
+### 3.2 `grund cover` drops no file
 
-`grund cover` applies **no** filter: it is keyed by file, so every project
-the loader returned contributes its scanned files and every citation in
-them, qualified or not ([§FS-workspace.8.6](../functional-spec/FS-workspace.md#86-grund-cover), [§DF-cover-workspace-scope](../decisions/functional/DF-cover-workspace-scope.md#df-cover-workspace-scope-cover-indexes-the-whole-run-and-counts-cross-project-citations)). That
-is the one command where dropping a row is indistinguishable from a file
-having nothing to say, so it is the one command whose consumer-end filter
-was a silent skip rather than a scope choice. A file belongs to exactly one
+`grund cover` drops **no** file record: it is keyed by file, so every project
+the loader returned contributes its scanned files ([§FS-workspace.8.6](../functional-spec/FS-workspace.md#86-grund-cover),
+[§DF-cover-workspace-scope](../decisions/functional/DF-cover-workspace-scope.md#df-cover-workspace-scope-cover-indexes-the-whole-run-and-counts-cross-project-citations)). Without `--glob` each record holds every citation in
+its file, qualified or not; with it, the one selection `refs --glob` reads
+selects among the nested citations and keeps every record, an emptied one
+included ([§FS-cover.globs](../functional-spec/FS-cover.md#globs---glob-keeps-the-citations-a-pattern-matches), [§DF-citation-site-queries](../decisions/functional/DF-citation-site-queries.md#df-citation-site-queries-a-coordinate-glob-selects-citation-sites-and---from-reads-what-a-point-cites)). That is the one command
+where dropping a row is indistinguishable from a file having nothing to say,
+so it is the one command whose consumer-end filter was a silent skip rather
+than a scope choice, and the one whose filter stops at the citations. A file belongs to exactly one
 project by the boundary rule ([§AR-workspace.6](AR-workspace.md#6-the-workspace-boundary)),
 so the per-file index needs no merge step and the alias attached to each entry
 is unambiguous.

@@ -59,8 +59,8 @@ goldens and documentation coverage are normative in
 [§FS-rules.10](FS-rules.md#10-documentation-and-executable-examples).
 
 They include the review-checklist walkthrough at `examples/review-checklist/`, a
-multi-run example ([§FS-examples.5.5](FS-examples.md#55-an-example-may-pin-several-runs)) whose runs `1-count`, `2-bodies` and `3-owners`
-are the review recipe of [§FS-coordinate-globs](FS-coordinate-globs.md#fs-coordinate-globs-a-coordinate-glob-selects-catalog-coordinates-by-pattern), one step each.
+multi-run example ([§FS-examples.5.5](FS-examples.md#55-an-example-may-pin-several-runs)) whose runs `1-count`, `2-bodies`, `3-owners`, `4-citers` and `5-cites`
+are the review recipe of [§FS-coordinate-globs](FS-coordinate-globs.md#fs-coordinate-globs-a-coordinate-glob-selects-catalog-coordinates-by-pattern), [§FS-refs.globs](FS-refs.md#globs---glob-lists-who-cites-a-set) and [§FS-refs.from](FS-refs.md#from---from-lists-what-one-point-cites), one step each.
 
 They include the opt-in Git co-change workflow at `examples/cochange/`, specified
 by [§FS-cochange-recipe.examples](FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance), with commit-msg/CI evidence and visible waivers.

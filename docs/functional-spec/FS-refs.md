@@ -1,6 +1,6 @@
 # FS-refs: grund lists every citation of an ID
 
-The `refs` subcommand answers the reverse of `grund <ID>`: not "what does this ID say?" but "who points at it?". An agent about to change a declaration — or delete one — needs to know what leans on it; `grund refs FS-check` is that lookup, scheme-aware in the ways a `grep` cannot be, with a compact `--summary` for a quick blast-radius read. Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible), [§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file), and the agent-grounding loop in [§GRUND-grund](../grund.md#grund-grund-agents-stay-grounded-in-the-spec) (an agent verifying a change reads the cited bodies *and* the citations that reach them).
+The `refs` subcommand answers the reverse of `grund <ID>`: not "what does this ID say?" but "who points at it?". An agent about to change a declaration — or delete one — needs to know what leans on it; `grund refs FS-check` is that lookup, scheme-aware in the ways a `grep` cannot be, with a compact `--summary` for a quick blast-radius read. Two more modes ask it of more than one ID: `--glob` lists every site that cites a coordinate a pattern matches ([§FS-refs.globs](FS-refs.md#globs---glob-lists-who-cites-a-set)), and `--from` turns the question round and lists what one point cites ([§FS-refs.from](FS-refs.md#from---from-lists-what-one-point-cites)). Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible), [§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file), and the agent-grounding loop in [§GRUND-grund](../grund.md#grund-grund-agents-stay-grounded-in-the-spec) (an agent verifying a change reads the cited bodies *and* the citations that reach them).
 
 ## terms: Terms
 
@@ -15,7 +15,7 @@ Two requirements on `refs` as a whole, each carrying a mark as [§FS-config.requ
 
 ### requirements.one-set: Every flag answers from one citation set — realized, directional for the next flag
 
-The invocation fixes one set — every recognised citation of the ID, narrowed by `--section` or the dotted form and widened by `--descendants` ([§FS-refs.1](FS-refs.md#1-inputs), [§FS-refs.2](FS-refs.md#2-behaviour)) — and each output flag folds over that set rather than over one of its own: `--summary` to a row per file, `--total` to one row ([§FS-refs.3.3](FS-refs.md#33---summary), [§FS-refs.3.4](FS-refs.md#34---total)). None adds a refusal or an exit status: each inherits the operand's result ([§FS-refs.4](FS-refs.md#4-exit-codes)). So no combination needs a rule of its own, and `--section <s> --descendants --total` is a count a reader can hold against the editor's ([§FS-lsp.1.2.6](FS-lsp.md#126-what-a-section-heading-counts)). This binds a flag added from here on: it narrows or widens that set, or folds over it, and inherits the operand's result. Serves [§GOAL-token-economy.1](../goals.md#1-what-this-requires).
+The invocation fixes one set — every recognised citation of the ID, narrowed by `--section` or the dotted form and widened by `--descendants` ([§FS-refs.1](FS-refs.md#1-inputs), [§FS-refs.2](FS-refs.md#2-behaviour)); every site whose cited coordinate a `--glob` matches ([§FS-refs.globs](FS-refs.md#globs---glob-lists-who-cites-a-set)); or every site the `--from` source owns ([§FS-refs.from](FS-refs.md#from---from-lists-what-one-point-cites)) — and each output flag folds over that set rather than over one of its own: `--summary` to a row per file, `--total` to one row ([§FS-refs.3.3](FS-refs.md#33---summary), [§FS-refs.3.4](FS-refs.md#34---total)). None adds a refusal or an exit status: each inherits the result of the operand that fixed the set ([§FS-refs.4](FS-refs.md#4-exit-codes)). So no combination needs a rule of its own, and `--section <s> --descendants --total` is a count a reader can hold against the editor's ([§FS-lsp.1.2.6](FS-lsp.md#126-what-a-section-heading-counts)). This binds a flag added from here on: it narrows or widens that set, or folds over it, and inherits the operand's result. Serves [§GOAL-token-economy.1](../goals.md#1-what-this-requires).
 
 ### requirements.unresolved: A citation is listed whether or not it resolves — realized
 
@@ -25,10 +25,14 @@ Whether a site reaches anything is `check`'s question, never a reason to drop it
 
 ```
 grund refs <ID> [<path>] [--section <s>] [--descendants] [--summary] [--total] [--format text|json]
+grund refs --glob <pattern> [--glob …] [<path>] [--summary] [--total] [--format text|json]
+grund refs --from <coordinate> [<path>] [--summary] [--total] [--format text|json]
 ```
 
 - `<ID>` — the ID to look up, without the marker. It may carry an inline section in the configured `[id] section_separator` (`FS-check.3.1`, or `FS-plan.goals.performance` when named sections are enabled), or pass it as `--section 3.1` / `--section goals.performance`. Parsing uses the named kind's effective format and the selected project's shared catalog ([§FS-config.3.2](FS-config.md#32-id--id-grammar)): an exact off-grammar declaration is a valid read query and keeps its raw spelling, while an off-grammar argument with no exact declaration keeps the ordinary invalid-ID hint. The number-only shorthand is accepted where the effective format has one — `grund refs FS-042` lists the citations of `FS-042-user-login`, including those written in the shorthand ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)) — and shorthand, duplicate, and section ambiguities are rejected with their candidates rather than resolved to a guess.
-- `<path>` — what it scans is [§FS-scan.path.refs](FS-scan.md#pathrefs-refs-scans-the-paths-tree).
+- `<path>` — what it scans is [§FS-scan.path.refs](FS-scan.md#pathrefs-refs-scans-the-paths-tree), in every mode.
+- `--glob <pattern>` — list every site whose cited coordinate the pattern matches, instead of one ID's ([§FS-refs.globs](FS-refs.md#globs---glob-lists-who-cites-a-set)). Repeatable, and the patterns union ([§FS-coordinate-globs.matching.union](FS-coordinate-globs.md#matchingunion-repeated-globs-union)).
+- `--from <coordinate>` — list the sites the coordinate's own body holds, instead of the ones that cite it ([§FS-refs.from](FS-refs.md#from---from-lists-what-one-point-cites)). Given once, spelled as for `grund <coordinate>`, and its value is the next argument or follows `=`.
 - `--section <s>` — list only citations of exactly that numeric or named section path; without it, every citation of `<ID>` is listed, bare-ID ones included. Mutually exclusive with the dotted inline form. The filter reads the scanner's shared citation record, so it cannot disagree with `check`, `show`, completion, or the LSP about a named coordinate.
 - `--descendants` — widen the section filter from the exact coordinate to that coordinate **and every section beneath it** ([§FS-refs.2](FS-refs.md#2-behaviour)), whichever way the section was spelled: it widens `--section` and the dotted inline form alike, and says nothing about which of the two may be written. It is the CLI spelling of the set a declaration-side section title already returns in an editor ([§FS-lsp.1.3.1](FS-lsp.md#131-citations-from-declarations)), so the two transports ask one question. A query that carries no section has nothing to widen, and there the flag changes nothing ([§FS-refs.4](FS-refs.md#4-exit-codes)).
 - `--summary` — one line per citing **file** instead of one per site ([§FS-refs.3.3](FS-refs.md#33---summary)).
@@ -36,6 +40,42 @@ grund refs <ID> [<path>] [--section <s>] [--descendants] [--summary] [--total] [
 - `--format text|json` — output shape ([§FS-refs.3](FS-refs.md#3-outputs)). Default `text`.
 
 `refs` is a query, like `show` — non-interactive, no prompts ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)).
+
+### 1.1 Three modes, one path
+
+`--glob` and `--from` each select a mode of their own; without either, `refs` is in ID mode and reads every command line as it did before they existed, to the byte and the exit status. The positionals are collected before they are read. ID mode takes `<ID>`, then at most one `<path>`. Under `--glob` or `--from` every positional is the path, default `.`, so `grund refs FS-login --glob 'FS-audit.**'` scans a path named `FS-login` and filters on no ID ([§FS-refs.1.3](FS-refs.md#13-an-id-typed-as-the-path-gets-a-hint)). `--section` and `--descendants` belong to ID mode; `--summary`, `--total` and `--format` fold and render every mode alike.
+
+### 1.2 Refusals
+
+Each of these is a usage error: one `error:` line on stderr, nothing on stdout, exit `2`, before config discovery, so a broken `grund.toml` hides none of them ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location), [§FS-cli.requirements.before-load](FS-cli.md#requirementsbefore-load-a-usage-mistake-is-answered-before-the-tree-is-read--realized-directional-for-the-next-flag)). A missing value is reported where the command line reads it, as every flag's is. Once the whole line is read, a bad `--format` is answered first ([§FS-cli.3.5](FS-cli.md#35-a-bad-run-flag-is-answered-before-the-load)), then the first row of this table that applies, and only then a pattern's own refusal ([§FS-coordinate-globs.errors.shape](FS-coordinate-globs.md#errorsshape-one-refusal-line)).
+
+| Command line | Refusal |
+|---|---|
+| `refs --from` or `refs --from=` | `error: --from requires a value` |
+| `refs --from FS-login --from FS-audit` | `error: --from may only appear once` |
+| `refs --glob 'FS-*' --from FS-login` | `error: --glob cannot be combined with --from` |
+| `refs --glob 'FS-login' --section 3` | `error: --section cannot be combined with --glob; accepted glob: "FS-login.3"` |
+| `refs --glob 'FS-login' --descendants` | `error: --descendants cannot be combined with --glob; accepted glob: "FS-login{,.**}"` |
+| `refs --from FS-login --section 3` | `error: --section cannot be combined with --from` |
+| `refs --from FS-login --descendants` | `error: --descendants cannot be combined with --from` |
+| `refs --glob 'FS-*' docs src`, `refs --from FS-login docs src` | `error: refs takes at most one path argument` |
+
+The accepted glob is [§FS-errors.2.5](FS-errors.md#25-refused-input)'s rewrite, offered only beside exactly one `--glob`: the pattern as typed with `.<s>`, or `{,.**}`, appended, where `<s>` is the section with every operator in it escaped, and only when the result passes every check the grammar makes before discovery ([§FS-coordinate-globs.errors.shape](FS-coordinate-globs.md#errorsshape-one-refusal-line)). Otherwise, and beside `--from`, whose source a glob cannot replace, the line ends after the flag's name. `--glob` with no value is [§FS-coordinate-globs.errors.flags](FS-coordinate-globs.md#errorsflags-flag-errors). In ID mode every refusal keeps its bytes: `error: refs requires an ID` and `error: refs takes an ID and at most one path argument`.
+
+### 1.3 An ID typed as the path gets a hint
+
+Under `--glob` or `--from` a positional is the path. When it names no path, holds none of `*`, `?`, `[` or `{`, and is a valid pattern ([§FS-coordinate-globs.grammar](FS-coordinate-globs.md#grammar-grammar)), the missing-path error gains one hint line:
+
+```text
+$ grund refs FS-login --glob 'FS-audit.**'
+error: path does not exist: FS-login
+hint: with `--glob`, `refs` reads `FS-login` as a scan path; to add its citations, use `--glob 'FS-login{,.**}'`
+$ grund refs FS-login --from FS-audit
+error: path does not exist: FS-login
+hint: with `--from`, `refs` reads `FS-login` as a scan path; to list its citations, use `grund refs FS-login`
+```
+
+No config is read for a path that does not exist, so whether the positional reads as an ID is the grammar's answer alone, with the `.` separator and the default marker, as [§FS-coordinate-globs.errors.hint](FS-coordinate-globs.md#errorshint-a-glob-typed-as-path-gets-a-hint) decides for `list`. A positional with an operator, or one that is no valid pattern, gets no hint; a path that exists is scanned; and ID mode's missing path keeps its bytes.
 
 ## 2. Behaviour
 
@@ -74,6 +114,47 @@ A citation inside a recognized value binding, local or alias-qualified, is an or
 
 The undeclared-ID rule of [§FS-refs.2](FS-refs.md#2-behaviour) includes a missing fetch-backed snapshot: `refs` reports its citation sites without executing the configured integration. Once fetched, the result set is unchanged; only the target now resolves.
 
+## globs: `--glob` lists who cites a set
+
+`grund refs --glob <pattern>` lists every site whose cited coordinate a pattern matches, as [§FS-coordinate-globs.matching.citations](FS-coordinate-globs.md#matchingcitations-on-refs-and-cover-a-glob-selects-citation-sites) matches it, from the set ID mode lists from ([§FS-refs.2](FS-refs.md#2-behaviour)), in the same `(path, line, column)` order and the same shapes ([§FS-refs.3](FS-refs.md#3-outputs)). Repeated, the patterns union, and each site is listed once:
+
+```text
+$ grund refs --glob 'FS-login.requirements.{lockout,reset}'
+src/login.py:5: §FS-login.requirements.lockout
+src/login.py:11: §FS-login.requirements.reset
+```
+
+### globs.descendants: One ID asked both ways gives one answer
+
+For an ID `X` the run resolves, written with its operators escaped and qualified as the run needs it, `refs X` and `refs X --descendants` list exactly the sites of `--glob 'X{,.**}'`; `refs X.S --descendants` those of `--glob 'X.S{,.**}'`; and `refs X.S` those of `--glob 'X.S'`. A pattern's bare ID is not ID mode's bare ID: `--glob 'X'` selects only the citations of `X` that carry no section, and `--glob 'X.**'` only those that carry one.
+
+### globs.unresolved: A pattern resolves no target
+
+A pattern names no one target, so nothing it matches is resolved or refused: a coordinate that is undeclared, dangling, or claimed by two homes is listed as matched, and the mode has no exit `1` of its own ([§FS-refs.4](FS-refs.md#4-exit-codes)). A refused pattern exits `2` ([§FS-coordinate-globs.errors.shape](FS-coordinate-globs.md#errorsshape-one-refusal-line)), a pattern no kind in scope can start prints its note on stderr and changes nothing else ([§FS-coordinate-globs.errors.note](FS-coordinate-globs.md#errorsnote-a-pattern-no-kind-can-start-gets-a-note)), and [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations)'s note is ID mode's and is never printed here. An empty set prints nothing and exits `0`, and under `--total` reads `not cited` as ID mode's does ([§FS-refs.3.4](FS-refs.md#34---total)).
+
+## from: `--from` lists what one point cites
+
+`grund refs --from <coordinate>` lists the citation sites in the source coordinate's own body: what it cites, where ID mode lists what cites it. The source is resolved as `grund <coordinate> <path>` resolves it ([§FS-show.2](FS-show.md#2-behavior)), in the same project and with the same shorthand, stub and qualifier rules, and a source that query would refuse is refused with its bytes ([§FS-refs.4](FS-refs.md#4-exit-codes)). Each site appears once, sorted by `(path, line, column)`, in the shapes of [§FS-refs.3](FS-refs.md#3-outputs).
+
+### from.owned: A point owns its lead, its ancestors and itself
+
+A site is the source's when the scan gives it to the source's declaration in that declaration's home — its `enclosing_declaration` and `enclosing_section` ([§FS-cover.3.2](FS-cover.md#32---format-json)), by the ownership rules of [§FS-cover.6.2](FS-cover.md#62-ownership-rules) — under no section, under a proper ancestor of the source's section, or under that section itself. So `--from FS-login.requirements.lockout` lists the sites of `FS-login`'s lead, of `requirements` above its first child, and of `requirements.lockout`, and never those of a sibling or a descendant; `--from FS-login` lists its lead's alone. Ancestry is by whole path components, numbered, named and mixed alike ([§FS-config.3.3.4](FS-config.md#334-the-outer-section-separator)). The lead is every site the scan gives the declaration under no section, a site under a rejected or duplicate heading included, and a source declaration's lead is its comment or docstring block, never the code below it.
+
+### from.stubs: A stub reads its paired declaration
+
+A stub's source is the declaration it pairs with, so `--from` reads the sites of the inline home. Where that home lies outside `[scan] include`, its sites are the citations it lends, each once it resolves ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)), at their lines in the target, as [§FS-refs.2](FS-refs.md#2-behaviour) lists them.
+
+### from.records: What a record and a total say
+
+A record's `id` and `section` name what the site cites, rendered as `cover` renders them, the alias it was written with kept ([§FS-cover.2.1](FS-cover.md#21-a-cross-project-citation-counts)); a citation whose alias names no loaded project is listed all the same. Under `--total` the sentence is the source's, not a target's:
+
+```text
+$ grund refs --from FS-login.requirements.lockout --total
+cites at 2 sites across 1 file
+```
+
+inflected as [§FS-refs.3.4](FS-refs.md#34---total) inflects `cited at`, and `cites nothing` for an empty set. JSON keeps `{"sites":<n>,"files":<m>}`.
+
 ## 3. Outputs
 
 ### 3.1 `--format text` (default)
@@ -108,6 +189,10 @@ it, while a configured empty string is retained. A workspace record's existing
 `project` still names the citing project, whereas `kind_title` belongs to the
 selected target project, even when the queried ID is undeclared but valid.
 All existing fields retain their values and their order relative to one another.
+Under `--glob` and `--from` a record names no one queried target: its `id` keeps
+the alias the citation was written with, as `cover` renders it
+([§FS-cover.3.2](FS-cover.md#32---format-json)), and it carries no `kind_title`. ID mode's records keep the
+bytes above.
 
 #### 3.2.1 Why `kind_title` stays last
 
@@ -144,7 +229,7 @@ $ grund refs FS-refs --total
 cited at 140 sites across 50 files
 ```
 
-The clause is the one [§FS-lsp.1.2.4](FS-lsp.md#124-the-title-hovers-text) fixes for a declaration-side title hover, word for word and inflected the same way — `across` at every count, `site` and `file` taking an `s` at every count except one — because the two transports render one fact and a reader who has met it in an editor should not have to recognise a second phrasing in a terminal ([§FS-lsp.1.2.5](FS-lsp.md#125-what-a-whole-id-title-counts), [§FS-lsp.4](FS-lsp.md#4-determinism-and-parity-with-the-cli)). An empty set reads `not cited`, for the reason the hover reads it: `cited at 0 sites across 0 files` is a sentence pretending to be a count.
+The clause is the one [§FS-lsp.1.2.4](FS-lsp.md#124-the-title-hovers-text) fixes for a declaration-side title hover, word for word and inflected the same way — `across` at every count, `site` and `file` taking an `s` at every count except one — because the two transports render one fact and a reader who has met it in an editor should not have to recognise a second phrasing in a terminal ([§FS-lsp.1.2.5](FS-lsp.md#125-what-a-whole-id-title-counts), [§FS-lsp.4](FS-lsp.md#4-determinism-and-parity-with-the-cli)). An empty set reads `not cited`, for the reason the hover reads it: `cited at 0 sites across 0 files` is a sentence pretending to be a count. `--glob` keeps this sentence, and `--from`, whose set is what a point cites, reads its own ([§FS-refs.from.records](FS-refs.md#fromrecords-what-a-record-and-a-total-say)).
 
 `--total` is the third rung of the fold `--summary` is the second of — one row per site ([§FS-refs.3.1](FS-refs.md#31---format-text-default)), one row per citing file ([§FS-refs.3.3](FS-refs.md#33---summary)), one row — and it folds over whatever set [§FS-refs.3.1](FS-refs.md#31---format-text-default) lists for the invocation rather than over a set of its own. So it composes with `--section` and the dotted inline form and widens with `--descendants`, needing no rule of its own for either: `grund refs <ID> --section <s> --descendants --total` is the terminal spelling of the count a section heading's hover shows ([§FS-lsp.1.2.6](FS-lsp.md#126-what-a-section-heading-counts)). It is a scoped query over that set and not a presentation mode, which is what [§FS-cli.6](FS-cli.md#6-what-is-deliberately-absent) requires of anything added to this surface — it changes which question is answered, not how the answer is printed.
 
@@ -200,6 +285,16 @@ compatibility form retired in grund 0.16.0. `--summary`, `--section`,
 `--descendants` and `--total` do not introduce another classification: after
 context and grammar selection they inherit the same operand result. This
 boundary is the decision in [§DF-refs-resolver-rejection](../decisions/functional/DF-refs-resolver-rejection.md#df-refs-resolver-rejection-an-id-rejected-by-a-selected-grammar-is-a-failed-query).
+
+The flag-selected modes add two rules of their own. Under `--glob` nothing is
+resolved, so there is no exit `1`: a refused pattern exits `2` and an empty set
+exits `0` ([§FS-refs.globs.unresolved](FS-refs.md#globsunresolved-a-pattern-resolves-no-target)). Under `--from` the source is the query
+`grund <coordinate>` makes, refused as it refuses: stdout stays empty and the
+run exits `1`, with show's text — `ID not found: <coordinate>` or `section not
+found: <coordinate>` and its `hint:`, `invalid ID`, or an ambiguity with its
+candidates — or, under JSON, show's one failed-query object on stderr, with code
+`not-found`, `missing-section`, `invalid-id`, `ambiguous` or `ambiguous-section`
+([§FS-show.3](FS-show.md#3-outputs), [§FS-errors.5](FS-errors.md#5-json-format)). `--summary` and `--total` inherit both.
 
 `--descendants` adds no case of its own to the list above. On a query that
 carries no section there is nothing to widen, so it is a silent no-op — stdout,

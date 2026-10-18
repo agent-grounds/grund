@@ -2,14 +2,16 @@
 
 A coordinate glob names many points at once — `FS-config.requirements.**`, every point beneath
 a chapter; `FS-*.terms`, every top-level Terms chapter — so a reviewer can count a checklist,
-read every body of it in one scan, and map changed lines back to its points without a `jq` pipe
-or a list of IDs typed by hand. `grund list --glob` selects the rows ([§FS-list.1](FS-list.md#1-inputs)),
+read every body of it in one scan, find who cites it, and map changed lines back to its points
+without a `jq` pipe or a list of IDs typed by hand. `grund list --glob` selects the rows ([§FS-list.1](FS-list.md#1-inputs)),
 `grund list --total` counts them ([§FS-list.total](FS-list.md#total---total-a-count-rung)), `grund show --batch --glob` reads their
-bodies ([§FS-show.1.9](FS-show.md#19---batch---all-every-coordinate-in-scope)), and the Node and Python bindings take the same patterns as `globs`
-([§FS-coordinate-globs.bindings](FS-coordinate-globs.md#bindings-node-and-python)). The owner step of that review is the shipped
-`grund cover FILE --lines N-M` ([§FS-cover.6](FS-cover.md#6-line-ownership)). Serves [§GOAL-token-economy.1](../goals.md#1-what-this-requires), whose ladder
-needs one set named at every rung, and [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible). The rulings behind it are
-[§DF-coordinate-globs](../decisions/functional/DF-coordinate-globs.md#df-coordinate-globs-coordinates-are-selected-by-a-glob-of-their-own-and-a-brace-before-a-separator-opens-a-pattern).
+bodies ([§FS-show.1.9](FS-show.md#19---batch---all-every-coordinate-in-scope)), `grund refs --glob` lists the sites that cite them ([§FS-refs.globs](FS-refs.md#globs---glob-lists-who-cites-a-set)), `grund cover
+--glob` keeps only those sites in its per-file view ([§FS-cover.globs](FS-cover.md#globs---glob-keeps-the-citations-a-pattern-matches)), and the Node and Python
+bindings take the same patterns as `globs` ([§FS-coordinate-globs.bindings](FS-coordinate-globs.md#bindings-node-and-python)). The owner step of
+that review is `grund cover FILE --lines N-M` ([§FS-cover.6](FS-cover.md#6-line-ownership)), and what one point cites is
+`grund refs --from` ([§FS-refs.from](FS-refs.md#from---from-lists-what-one-point-cites)). Serves [§GOAL-token-economy.1](../goals.md#1-what-this-requires), whose ladder needs one set named
+at every rung, and [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible). The rulings behind it are [§DF-coordinate-globs](../decisions/functional/DF-coordinate-globs.md#df-coordinate-globs-coordinates-are-selected-by-a-glob-of-their-own-and-a-brace-before-a-separator-opens-a-pattern) and,
+for the citation sites, [§DF-citation-site-queries](../decisions/functional/DF-citation-site-queries.md#df-citation-site-queries-a-coordinate-glob-selects-citation-sites-and---from-reads-what-a-point-cites).
 
 ## terms: Terms
 
@@ -17,8 +19,11 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 [§FS-terms.terms.2](FS-terms.md#terms2-citations) (citation, marker), and [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scope, workspace, member,
 alias).
 
-- **coordinate glob** — A pattern over catalog coordinates: an optional project qualifier,
-  then components joined by separators, each matched against one component of a coordinate.
+- **coordinate glob** — A pattern over coordinates, the catalog's on `list` and `show` and the
+  cited ones on `refs` and `cover`: an optional project qualifier, then components joined by
+  separators, each matched against one component of a coordinate.
+- **cited coordinate** — The coordinate a citation site names: its record's `id` and `section`,
+  declared or not, in the project it targets ([§FS-coordinate-globs.matching.citations](FS-coordinate-globs.md#matchingcitations-on-refs-and-cover-a-glob-selects-citation-sites)).
 - **component (narrowed)** — [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations). In this spec, within a coordinate or a pattern,
   the ID atom or one section path component; elsewhere the shared definition applies.
 - **ID atom** — A pattern's first component. It is matched against the whole rendered ID, never
@@ -89,11 +94,26 @@ reference, and in a coordinate glob a negated class.
 
 ### matching.catalog: A glob selects catalog coordinates
 
-A glob selects from the catalog `list` prints and `show` resolves: every declaration and
-every recorded numbered, named or mixed section of it, `1.goals` included
-([§FS-config.3.3.1](FS-config.md#331-named-components), [§REQ-one-answer.sections.map](../requirements/REQ-one-answer.md#sectionsmap-every-surface-reads-one-section-map)). It selects no citation, and never an ID that is
-cited but not declared. A healthy stub and its inline home are one coordinate, at the home
-([§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical)).
+On `list` and `show` a glob selects from the catalog `list` prints and `show` resolves: every
+declaration and every recorded numbered, named or mixed section of it, `1.goals` included
+([§FS-config.3.3.1](FS-config.md#331-named-components), [§REQ-one-answer.sections.map](../requirements/REQ-one-answer.md#sectionsmap-every-surface-reads-one-section-map)). There it selects no citation, and never an ID that is
+cited but not declared; on `refs` and `cover` it selects citation sites instead
+([§FS-coordinate-globs.matching.citations](FS-coordinate-globs.md#matchingcitations-on-refs-and-cover-a-glob-selects-citation-sites)). A healthy stub and its inline home are one coordinate, at
+the home ([§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical)).
+
+### matching.citations: On refs and cover, a glob selects citation sites
+
+On `refs` and `cover` a glob selects the citation sites whose cited coordinate it matches,
+from the sites the command already lists: ID mode's set on `refs` ([§FS-refs.2](FS-refs.md#2-behaviour)), strict
+markers, the string carve-out and stub-lent citations included, and on `cover` every citation
+of a scanned file ([§FS-cover.2](FS-cover.md#2-behaviour)). The cited coordinate is the `id` and `section` the
+site's record carries ([§FS-cover.3.2](FS-cover.md#32---format-json)), so a site matches whether or not the coordinate is
+declared: a dangling ID or section matches as written, an owned declaration-local numeric
+citation under the full ID and section it resolves to ([§FS-check.1.1.8](FS-check.md#118-declaration-local-numeric-section-candidates)), and a shorthand
+citation under the ID it resolves to ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)). A citation of a bare ID has no section
+component, so `X` matches it and `X.**` does not. A site is selected once however many
+patterns or alternatives match it, and two citations on one line are two sites, told apart by
+their columns.
 
 ### matching.anchored: Anchored, case-sensitive, by code point
 
@@ -103,8 +123,8 @@ same pattern gives the same rows on every machine ([§REQ-deterministic-output.1
 
 ### matching.union: Repeated globs union
 
-Repeated `--glob` flags, like the alternatives of one group, union: a coordinate any of them
-matches is selected, once. A pattern that matches nothing is not an error.
+Repeated `--glob` flags, like the alternatives of one group, union: a coordinate or a site any
+of them matches is selected, once. A pattern that matches nothing is not an error.
 
 ### matching.bounded: Matching is bounded
 
@@ -126,6 +146,17 @@ they do with `--selector` ([§FS-list.requirements.one-selection](FS-list.md#req
 an unqualified glob under `--project api` lists nothing when the current project is not `api`.
 `--unused` and `--kind` are judged on the owning declaration, so a section row stays exactly
 when its declaration would ([§FS-list.3.4.5](FS-list.md#345-order-and---top)).
+
+### scope.targets: On a citation, the qualifier names the project it targets
+
+A citation's cited coordinate belongs to the project the citation targets: the loaded project
+its alias names, or, with no alias, the project it sits in ([§FS-workspace.8.2](FS-workspace.md#82-grund-refs)). An unqualified
+pattern, `alias/` and `*/` are judged against that target, never against the citing project,
+so `api/FS-login` selects every site that cites `api`'s `FS-login`, wherever the site sits.
+A citation whose alias names no loaded project targets none and matches no pattern, `*/` and
+`**` included, but stays where nothing filters it: in `cover` without `--glob` and in `refs
+--from`. The record's `project` still names the citing project
+([§FS-workspace.8.6](FS-workspace.md#86-grund-cover)).
 
 ## errors: Refusals, notes and hints
 
@@ -224,27 +255,41 @@ path that exists is read as today.
 
 ### errors.flags: Flag errors
 
-`--glob` takes its value as the next argument or after `=`. Without one it is
-`error: --glob requires a value`, and on `show` without `--batch` it is
+`--glob` takes its value as the next argument or after `=`, on every surface that takes it.
+Without one it is `error: --glob requires a value`, and on `show` without `--batch` it is
 `error: --glob requires --batch`. Both are launch errors with exit `2`
-([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)).
+([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)); what `--glob` cannot be combined with on `refs` and `cover` is [§FS-refs.1.2](FS-refs.md#12-refusals)
+and [§FS-cover.6.4](FS-cover.md#64-errors).
 
 ## bindings: Node and Python
 
 ### bindings.options: The `globs` option
 
-Node's `list`, `listSizes` and `showBatch` take `globs: string[]`, and Python's `list_ids`,
-`list_sizes` and `show_batch` take `globs=()`, empty by default, which selects as
-repeated `--glob` flags do ([§FS-distribution.3.2.1](FS-distribution.md#321-operations-options-and-refusals), [§FS-distribution.3.3.5](FS-distribution.md#335-complete-initial-inventory)). A null batch
-query list with globs generates and filters as `--batch --glob` does; explicit queries with
-globs are conflicting options, refused as `input` with code `conflicting-options` in Node and
-with `ValueError` in Python. There is no `total` option: a host counts `entries`.
+Node's `list`, `listSizes`, `showBatch`, `refs` and `cover` take `globs: string[]`, and
+Python's `list_ids`, `list_sizes`, `show_batch`, `refs` and `cover` take `globs=()`, empty by
+default, which selects as repeated `--glob` flags do ([§FS-distribution.3.2.1](FS-distribution.md#321-operations-options-and-refusals),
+[§FS-distribution.3.3.5](FS-distribution.md#335-complete-initial-inventory)). A null batch query list with globs generates and filters as `--batch
+--glob` does; explicit queries with globs are conflicting options, refused as `input` with code
+`conflicting-options` in Node and with `ValueError` in Python. There is no `total` option: a
+host counts `entries` or `hits`.
+
+`refs` also takes the source of [§FS-refs.from](FS-refs.md#from---from-lists-what-one-point-cites): `from: string` in Node and `from_=None` in
+Python, PEP 8's spelling of a name that is a keyword. Its ID operand becomes optional, `null`
+in Node and `None` in Python, so `refs(null, {globs: ["FS-login.**"]})` and
+`refs(from_="FS-login.3")` ask what `--glob` and `--from` ask. An ID beside `globs` or a
+source, `globs` beside a source, and `section` or a true `descendants` beside either are
+conflicting options, refused as above, as Python's `cover` refuses `globs` beside `lines`;
+Python's `cover(text=True, globs=…)` filters the text view. A `refs` with no ID, no `globs` and
+no source is refused as a null ID is today: `invalid-argument` in Node, `TypeError` in Python.
+Empty `globs` select no mode, so `refs(id, globs=())` is ID mode.
 
 ### bindings.note: The `note` field
 
-ListResult, SizeResult and BatchResult carry `note: string | null`
+ListResult, SizeResult, BatchResult and CoverResult carry `note: string | null`
 ([§FS-distribution.3.2.2.2](FS-distribution.md#3222-result-fields)): the text of the notes of [§FS-coordinate-globs.errors.note](FS-coordinate-globs.md#errorsnote-a-pattern-no-kind-can-start-gets-a-note)
-after `note: `, one per line, or `null` where the run printed none.
+after `note: `, one per line, or `null` where the run printed none. RefsResult keeps the
+`note` it has: ID mode's note of [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations), the glob notes under `globs`, and `null` under a
+source. Under `globs` or a source its `kindTitle` (`kind_title`) is `null` ([§FS-refs.3.2](FS-refs.md#32---format-json)).
 
 ### bindings.refusals: A refused glob is a query failure
 

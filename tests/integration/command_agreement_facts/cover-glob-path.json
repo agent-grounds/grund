@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "case": "cover-glob-path",
+  "inputFiles": {
+    "command.args": {"bytes":[99,111,118,101,114,32,115,114,99,32,45,45,103,108,111,98,32,39,70,83,45,108,111,103,105,110,46,49,46,42,39,10]},
+    "command.cwd": {"bytes":[123,114,101,112,111,125,10]},
+    "expected.exit": {"bytes":[48,10]},
+    "expected.stderr": {"bytes":[10]},
+    "expected.stdout": {"bytes":[115,114,99,47,97,112,112,46,114,115,58,10,32,32,49,58,52,32,194,167,70,83,45,108,111,103,105,110,46,49,46,49,10]},
+    "repo": {"directory":true},
+    "repo/docs": {"directory":true},
+    "repo/docs/fs": {"directory":true},
+    "repo/docs/fs/FS-audit.md": {"bytes":[35,32,70,83,45,97,117,100,105,116,58,32,65,117,100,105,116,10,10,65,117,100,105,116,32,108,101,97,100,46,10,10,35,35,32,101,110,116,114,105,101,115,58,32,69,110,116,114,105,101,115,10,10,69,110,116,114,105,101,115,32,108,105,115,116,32,119,104,97,116,32,119,97,115,32,100,111,110,101,46,10]},
+    "repo/docs/fs/FS-ledger.md": {"bytes":[35,32,70,83,45,108,101,100,103,101,114,58,32,76,101,100,103,101,114,10,10,76,101,100,103,101,114,32,108,101,97,100,44,32,107,101,112,116,32,119,105,116,104,32,194,167,70,83,45,97,117,100,105,116,46,10,10,35,35,32,49,46,32,82,111,119,115,10,10,82,111,119,115,32,102,111,108,108,111,119,32,194,167,70,83,45,97,117,100,105,116,46,101,110,116,114,105,101,115,46,10,10,35,35,32,50,46,32,84,111,116,97,108,115,10,10,79,110,101,32,116,111,116,97,108,32,112,101,114,32,100,97,121,46,10]},
+    "repo/docs/fs/FS-login.md": {"bytes":[35,32,70,83,45,108,111,103,105,110,58,32,76,111,103,105,110,10,10,76,111,103,105,110,32,108,101,97,100,44,32,114,101,108,121,105,110,103,32,111,110,32,194,167,70,83,45,97,117,100,105,116,46,10,10,35,35,32,49,46,32,83,101,115,115,105,111,110,115,10,10,83,101,115,115,105,111,110,115,32,99,105,116,101,32,194,167,70,83,45,108,101,100,103,101,114,46,50,32,97,110,100,32,194,167,70,83,45,97,117,100,105,116,46,101,110,116,114,105,101,115,46,10,10,35,35,35,32,49,46,49,32,69,120,112,105,114,121,10,10,69,120,112,105,114,121,32,99,105,116,101,115,32,194,167,70,83,45,108,101,100,103,101,114,46,49,46,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,10,91,114,101,102,101,114,101,110,99,101,93,10,115,116,114,105,99,116,32,61,32,116,114,117,101,10,10,91,105,100,93,10,102,111,114,109,97,116,32,61,32,34,123,107,105,110,100,125,45,123,115,108,117,103,125,34,10,110,97,109,101,100,95,115,101,99,116,105,111,110,115,32,61,32,116,114,117,101,10,10,91,91,107,105,110,100,115,93,93,10,107,105,110,100,32,61,32,34,70,83,34,10,102,111,108,100,101,114,32,61,32,34,100,111,99,115,47,102,115,34,10,105,110,100,101,120,32,61,32,102,97,108,115,101,10,116,105,116,108,101,32,61,32,34,70,117,110,99,116,105,111,110,97,108,32,115,112,101,99,34,10,10,91,115,99,97,110,93,10,105,110,99,108,117,100,101,32,61,32,91,34,100,111,99,115,34,44,32,34,115,114,99,34,93,10]},
+    "repo/src": {"directory":true},
+    "repo/src/app.rs": {"bytes":[47,47,32,194,167,70,83,45,108,111,103,105,110,46,49,46,49,10,112,117,98,32,102,110,32,101,120,112,105,114,121,40,41,32,123,125,10,10,47,47,32,194,167,70,83,45,97,117,100,105,116,10,112,117,98,32,102,110,32,97,117,100,105,116,40,41,32,123,125,10]},
+    "spec.refs": {"bytes":[70,83,45,99,111,118,101,114,46,103,108,111,98,115,10,70,83,45,99,111,118,101,114,46,49,10]}
+  },
+  "facts": {
+    "point": "§FS-cover.globs",
+    "authoredFrom": "Read from the case's input bytes: grund.toml (version 1, strict, `[id] format = \"{kind}-{slug}\"` with named sections, one FS kind titled \"Functional spec\" in the docs/fs folder with no index, `[scan] include = [\"docs\", \"src\"]`); docs/fs/FS-audit.md declares FS-audit and its named section entries, and cites nothing; docs/fs/FS-ledger.md declares FS-ledger with sections 1 and 2 and cites §FS-audit in its lead and §FS-audit.entries under 1; docs/fs/FS-login.md declares FS-login with section 1 and its child 1.1, and cites §FS-audit in its lead, §FS-ledger.2 and §FS-audit.entries under 1 and §FS-ledger.1 under 1.1; src/app.rs carries two one-line notes, §FS-login.1.1 and §FS-audit, each outside any declaration (§FS-cover.3.2). Every citation is marked and resolves, so the one finding is the version-1 warning, and `fmt` has nothing to wrap (§FS-fmt.6.5).",
+    "kinds": [
+      {"kind":"FS","title":"Functional spec","home":"docs/fs","index":false}
+    ],
+    "scanned": ["docs/fs/FS-audit.md","docs/fs/FS-ledger.md","docs/fs/FS-login.md","src/app.rs"],
+    "declarations": [
+      {"id":"FS-audit","kind":"FS","file":"docs/fs/FS-audit.md","heading":"FS-audit: Audit","title":"Audit","body":[2,7],"anchor":"fs-audit-audit"},
+      {"id":"FS-ledger","kind":"FS","file":"docs/fs/FS-ledger.md","heading":"FS-ledger: Ledger","title":"Ledger","body":[2,11],"anchor":"fs-ledger-ledger"},
+      {"id":"FS-login","kind":"FS","file":"docs/fs/FS-login.md","heading":"FS-login: Login","title":"Login","body":[2,11],"anchor":"fs-login-login"}
+    ],
+    "sections": [
+      {"of":"FS-audit","path":"entries","heading":"entries: Entries","title":"Entries","anchor":"entries-entries","end":7},
+      {"of":"FS-ledger","path":"1","heading":"1. Rows","title":"Rows","anchor":"1-rows","end":8},
+      {"of":"FS-ledger","path":"2","heading":"2. Totals","title":"Totals","anchor":"2-totals","end":11},
+      {"of":"FS-login","path":"1","heading":"1. Sessions","title":"Sessions","anchor":"1-sessions","end":11},
+      {"of":"FS-login","path":"1.1","heading":"1.1 Expiry","title":"Expiry","anchor":"11-expiry","end":11,"parent":"1"}
+    ],
+    "citations": [
+      {"file":"docs/fs/FS-ledger.md","token":"§FS-audit","enclosing":["FS-ledger",null]},
+      {"file":"docs/fs/FS-ledger.md","token":"§FS-audit.entries","enclosing":["FS-ledger","1"]},
+      {"file":"docs/fs/FS-login.md","token":"§FS-audit","enclosing":["FS-login",null]},
+      {"file":"docs/fs/FS-login.md","token":"§FS-ledger.2","enclosing":["FS-login","1"]},
+      {"file":"docs/fs/FS-login.md","token":"§FS-audit.entries","enclosing":["FS-login","1"]},
+      {"file":"docs/fs/FS-login.md","token":"§FS-ledger.1","enclosing":["FS-login","1.1"]},
+      {"file":"src/app.rs","token":"§FS-login.1.1","enclosing":[null,null]},
+      {"file":"src/app.rs","token":"§FS-audit","enclosing":[null,null]}
+    ],
+    "findings": [
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+    ],
+    "refusals": {},
+    "fmt": {
+      "changes": [{"path":"docs/fs/FS-ledger.md","line":3,"label":"markdown link"},{"path":"docs/fs/FS-ledger.md","line":7,"label":"markdown link"},{"path":"docs/fs/FS-login.md","line":3,"label":"markdown link"},{"path":"docs/fs/FS-login.md","line":7,"label":"markdown link"},{"path":"docs/fs/FS-login.md","line":11,"label":"markdown link"}],
+      "writeChanges": [{"path":"docs/fs/FS-ledger.md","line":3,"label":"markdown link"},{"path":"docs/fs/FS-ledger.md","line":7,"label":"markdown link"},{"path":"docs/fs/FS-login.md","line":3,"label":"markdown link"},{"path":"docs/fs/FS-login.md","line":7,"label":"markdown link"},{"path":"docs/fs/FS-login.md","line":11,"label":"markdown link"}],
+      "written": {"docs/fs/FS-ledger.md":{"3":"Ledger lead, kept with [§FS-audit](FS-audit.md#fs-audit-audit).","7":"Rows follow [§FS-audit.entries](FS-audit.md#entries-entries)."},"docs/fs/FS-login.md":{"3":"Login lead, relying on [§FS-audit](FS-audit.md#fs-audit-audit).","7":"Sessions cite [§FS-ledger.2](FS-ledger.md#2-totals) and [§FS-audit.entries](FS-audit.md#entries-entries).","11":"Expiry cites [§FS-ledger.1](FS-ledger.md#1-rows)."}}
+    }
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}

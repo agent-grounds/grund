@@ -12,11 +12,12 @@ binding, snapshot).
 ## 1. Inputs
 
 ```
-grund cover [<path>] [--format text|json]
+grund cover [<path>] [--glob <pattern> …] [--format text|json]
 grund cover <file> --lines <N>|<N>-<M> [--lines …] [--format text|json]
 ```
 
 - `<path>` — directory or file whose tree is scanned. Defaults to `.`. Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). It bounds the **scan**, exactly as it does for `grund check`, and that is what decides the scope: every project at a workspace root, that member alone inside a member, that subtree alone below a config root ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover)).
+- `--glob <pattern>` — keep only the citations whose cited coordinate a pattern matches, and every file record still ([§FS-cover.globs](FS-cover.md#globs---glob-keeps-the-citations-a-pattern-matches)). Repeatable; it cannot be combined with `--lines` ([§FS-cover.6.4](FS-cover.md#64-errors)).
 - `--lines <N>|<N>-<M>` — answer line ownership for that range of `<file>` instead of grouping citations ([§FS-cover.6.1](FS-cover.md#61-input)). Repeatable.
 - `--format text|json` — output shape ([§FS-cover.3](FS-cover.md#3-outputs)). Default `text`. An unsupported value is answered before anything is loaded ([§FS-cover.1.1](FS-cover.md#11-an-unsupported---format-is-answered-before-the-load)).
 
@@ -32,7 +33,7 @@ A `--format` value outside `text|json` is a usage error the caller can fix witho
 
 An owned declaration-local numeric citation ([§FS-check.1.1.8](FS-check.md#118-declaration-local-numeric-section-candidates)) is one ordinary resolved citation in this grouping: it carries the owner's full ID and exact section while its `text` remains the authored local spelling. It therefore also counts for unused-declaration, grounding, and citation-direction questions that consume the same graph. Ownerless and unsupported local candidates contribute no guessed edge.
 
-Output is grouped by scanned file, sorted by path. Within a file, citations are sorted by `(line, column)`. Files with no recognised citations are still included, so a caller can distinguish "the file was scanned and cites nothing" from "the file was outside the scan scope." A citation object is the same shape `grund refs --format=json` emits ([§FS-cover.3.2](FS-cover.md#32---format-json)): path, line, column, rendered ID, optional section, marker boolean, and the verbatim token text.
+Output is grouped by scanned file, sorted by path. Within a file, citations are sorted by `(line, column)`, and without `--glob` every recognised citation is listed; with it, this complete set is what the patterns filter ([§FS-cover.globs](FS-cover.md#globs---glob-keeps-the-citations-a-pattern-matches)). Files with no recognised citations are still included, so a caller can distinguish "the file was scanned and cites nothing" from "the file was outside the scan scope." A citation object is the same shape `grund refs --format=json` emits ([§FS-cover.3.2](FS-cover.md#32---format-json)): path, line, column, rendered ID, optional section, marker boolean, and the verbatim token text.
 
 Which citations count is [§FS-cover.2.1](FS-cover.md#21-a-cross-project-citation-counts) for a cross-project one, [§FS-cover.2.2](FS-cover.md#22-a-value-bindings-citation) for a value binding's, [§FS-cover.2.3](FS-cover.md#23-a-citation-whose-fetched-snapshot-is-missing) for one whose fetched snapshot is missing, and [§FS-cover.2.4](FS-cover.md#24-a-declaration-backed-exact-citation) for a declaration-backed exact one.
 
@@ -55,6 +56,19 @@ is covered. `cover` remains offline and never invokes the integration.
 A declaration-backed exact marked citation retained through [§FS-config.3.2](FS-config.md#32-id--id-grammar) is
 counted at its written site and rendered with its exact ID. `cover`
 consumes the shared scanner result and adds no fallback grammar of its own.
+
+## globs: `--glob` keeps the citations a pattern matches
+
+`grund cover [<path>] --glob <pattern>` keeps, in each file record, only the citations whose cited coordinate a pattern matches, as [§FS-coordinate-globs.matching.citations](FS-coordinate-globs.md#matchingcitations-on-refs-and-cover-a-glob-selects-citation-sites) matches it, judged against the project each citation targets ([§FS-coordinate-globs.scope.targets](FS-coordinate-globs.md#scopetargets-on-a-citation-the-qualifier-names-the-project-it-targets)). Repeated, the patterns union. Every scanned file keeps its record, in the same order and shape ([§FS-cover.3](FS-cover.md#3-outputs)): one left with no citation reads `(no citations)` in text and `"citations":[]` in JSON, so a filtered run still tells a scanned file from an unscanned one, and a pattern that matches nothing prints every record empty and exits `0`.
+
+```text
+$ grund cover src/ --glob 'FS-login.requirements.{lockout,reset}'
+src/login.py:
+  5:11 §FS-login.requirements.lockout
+  11:7 §FS-login.requirements.reset
+```
+
+It composes with `<path>` and `--format`. A refused pattern exits `2` before anything is printed, and the note of a pattern no kind in scope can start goes to stderr ([§FS-coordinate-globs.errors](FS-coordinate-globs.md#errors-refusals-notes-and-hints)).
 
 ## 3. Outputs
 
@@ -94,12 +108,12 @@ In workspace mode both the per-file object and each nested citation object gain 
 
 ## 4. Exit codes
 
-- `0` — scan succeeded; the emitted file records are the result.
+- `0` — scan succeeded; the emitted file records are the result, a `--glob` that matched nothing included.
 - `2` — the run could not read the tree it was asked about, in either of two ways:
   - **A config the run needs does not load** — including a `[workspace]` block whose members cannot be expanded (a duplicate or invalid alias, a missing member, a block with nothing in scope). `cover` spans the whole workspace ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover)), so it fails on such a tree exactly where `grund list` does.
   - **A scan / I/O error in any project the run loaded** ([§FS-check.2](FS-check.md#2-outputs) partial-scan semantics apply: records found before or after the unreadable file may print, but the result is not trustworthy as complete). A member's unreadable file fails the run at the workspace root, because the grouping the run just printed is incomplete for the tree it claimed ([§FS-workspace.8.7](FS-workspace.md#87-output-and-exit-codes)).
 
-With `--lines`, a third way to exit `2` is a usage error in the request itself, answered before any output ([§FS-cover.6.4](FS-cover.md#64-errors)).
+With `--lines` or `--glob`, a third way to exit `2` is a usage error in the request itself, `--glob` beside `--lines` included, or a refused pattern, answered before any output ([§FS-cover.6.4](FS-cover.md#64-errors), [§FS-coordinate-globs.errors.shape](FS-coordinate-globs.md#errorsshape-one-refusal-line)).
 
 There is no `1`: `cover` is a query over the current tree and has no finding class of its own.
 
@@ -167,6 +181,7 @@ Each of these is a usage error: one `error:` line on stderr, nothing on stdout, 
 - `--lines` with no `<path>`: `error: --lines needs a file path`.
 - `--lines` with a directory: ``error: --lines needs a file path, and `<path>` is a directory``.
 - `--lines` with no value: `error: --lines requires a value`.
+- `--lines` beside `--glob`, which filters the grouping `--lines` does not print: `error: --glob cannot be combined with --lines`, before the path is read.
 - A range that is not `<N>` or `<N>-<M>` in decimal digits: ``error: --lines takes <N> or <N>-<M>, got `<range>` ``.
 - A `0` in a range: ``error: --lines `<range>`: lines are numbered from 1``.
 - An end before its start: ``error: --lines `<range>` ends before it starts``.

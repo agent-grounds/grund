@@ -205,6 +205,12 @@ enclosing unit to name, as a run total has none either
 
 With `--total` it emits exactly one object instead, at every count: `{"sites":140,"files":50}`. `sites` is the number of citation sites in the set the invocation listed, `files` the number of distinct files they live in; neither `project`, nor `kind_title`, nor the enclosing pair appears on it ([§FS-refs.3.4](FS-refs.md#34---total)).
 
+Under `--glob` and `--from` the citation object keeps these fields in this order and drops only `kind_title`, since no one target was queried, and `id` keeps the alias the citation was written with, as `cover` writes it; the summary and total objects are unchanged ([§FS-refs.3.2](FS-refs.md#32---format-json)):
+
+```json
+{"path":"src/login.py","line":5,"column":11,"id":"FS-login","section":"requirements.lockout","marker":true,"text":"§FS-login.requirements.lockout","enclosing_declaration":null,"enclosing_section":null}
+```
+
 ### 5.2 `list --size --format=json`
 
 `list --size --format=json` emits one object per declaration and citable section site, in the size-row order defined by [§FS-list.3.4](FS-list.md#34---size--per-coordinate-lead-and-full-body-measurements):
@@ -290,7 +296,14 @@ For each case above, [§FS-output-shapes.7.1](FS-output-shapes.md#71-the-matrix)
 | `list --total --format=json`, any count | exactly one `{"count":<n>}` object | empty | `0` |
 | `list --total`, nothing selected | `0`, or `{"count":0}` in JSON | empty | `0` |
 | refused coordinate glob ([§FS-coordinate-globs.errors.shape](FS-coordinate-globs.md#errorsshape-one-refusal-line)) | empty | one raw `error: invalid coordinate glob …` line | `2` |
-| valid glob no kind in scope can start, `list` or `show --batch` | empty | one `note:` line per such pattern ([§FS-coordinate-globs.errors.note](FS-coordinate-globs.md#errorsnote-a-pattern-no-kind-can-start-gets-a-note)) | `0` |
+| valid glob no kind in scope can start, on any `--glob` surface | that surface's ordinary result | one `note:` line per such pattern ([§FS-coordinate-globs.errors.note](FS-coordinate-globs.md#errorsnote-a-pattern-no-kind-can-start-gets-a-note)) | `0` |
+| `refs --glob` or `refs --from`, any count, text or JSON | the sites, a `--summary` row per file, or the one `--total` line or object | empty, or the glob notes under `--glob` | `0` |
+| `refs --from --total` text | one `cites at <n> site(s) across <m> file(s)` line, or `cites nothing` | empty | `0` |
+| `refs --from` source that fails as a query, text | empty | show's failure text and its `hint:` ([§FS-refs.4](FS-refs.md#4-exit-codes)) | `1` |
+| `refs --from` source that fails as a query, JSON | empty | one `not-found`, `missing-section`, `invalid-id`, `ambiguous` or `ambiguous-section` finding object | `1` |
+| `cover --glob`, any count, matching nothing included | every scanned file's record, each with only the matched citations | empty, or the glob notes | `0` |
+| `refs` or `cover` flag combination refused ([§FS-refs.1.2](FS-refs.md#12-refusals), [§FS-cover.6.4](FS-cover.md#64-errors)) | empty | one raw `error:` line | `2` |
+| `refs --glob` or `--from` with a missing path that reads as an ID ([§FS-refs.1.3](FS-refs.md#13-an-id-typed-as-the-path-gets-a-hint)) | empty | the `error: path does not exist:` line and one `hint:` line | `2` |
 | `cover --lines`, a scanned file, text or JSON | one block or object per range | empty | `0` |
 | `cover --lines`, a file outside the scan | empty | empty | `0` |
 | `cover --lines` usage error ([§FS-cover.6.4](FS-cover.md#64-errors)) | empty | one raw `error:` line | `2` |
