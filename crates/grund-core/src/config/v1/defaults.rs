@@ -19,7 +19,11 @@ use crate::config::rows::{Extent, Form, Kind, Nesting, Origin, Place, Row};
 use crate::grammar::classified_extensions;
 
 const DEFAULT_ID_FORMAT: &str = "{kind}-{number}-{slug}";
-const DEFAULT_SECTION_SEPARATOR: &str = ".";
+/// The outer separator of a tree with no config at all (§FS-config.3).
+pub(crate) const DEFAULT_SECTION_SEPARATOR: &str = ".";
+/// Its citation marker. A coordinate glob is read under both before any config
+/// is discovered (§FS-coordinate-globs.errors.shape).
+pub(crate) const DEFAULT_MARKER: &str = "§";
 const DEFAULT_NUMBER_PATTERN: &str = r"\d+";
 const DEFAULT_SLUG_PATTERN: &str = r"[a-z0-9][a-z0-9-]*";
 /// The `[scan]` defaults (§FS-config.3.5): what a repo with no `include` walks,
@@ -65,7 +69,7 @@ pub(in crate::config) fn default_project() -> Project {
         },
         schema: Schema {
             citation: CitationSyntax {
-                marker: "§".to_string(),
+                marker: DEFAULT_MARKER.to_string(),
                 // §AR-config.3.2 `strict`.
                 strict: true,
                 shorthand: ShorthandPolicy::Canonical,

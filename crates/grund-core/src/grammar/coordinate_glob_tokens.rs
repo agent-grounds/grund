@@ -2,7 +2,7 @@
 //! the citation guard reads (§FS-coordinate-globs.grammar.operators), refusing at the
 //! first bracket or escape the grammar cannot close (§FS-coordinate-globs.errors.reasons).
 
-use super::coordinate_glob::{GlobRefusal, Spanned, Token, offered, refusal};
+use super::coordinate_glob::{GlobRefusal, GlobStage, Spanned, Token, offered, refusal};
 use super::glob_candidate::GlobOperator;
 
 /// The body's reader: one pass, refusing at the first bracket or escape the
@@ -11,13 +11,14 @@ pub(super) struct Tokenizer<'t> {
     text: &'t str,
     chars: Vec<(usize, char)>,
     at: usize,
-    offer: bool,
+    /// The stage an accepted glob must pass, or `None` to offer nothing.
+    offer: Option<GlobStage<'t>>,
     tokens: Vec<Spanned>,
     group: Option<usize>,
 }
 
 impl<'t> Tokenizer<'t> {
-    pub(super) fn new(text: &'t str, body: usize, offer: bool) -> Self {
+    pub(super) fn new(text: &'t str, body: usize, offer: Option<GlobStage<'t>>) -> Self {
         let chars = text[body..]
             .char_indices()
             .map(|(at, ch)| (body + at, ch))
@@ -185,9 +186,8 @@ impl<'t> Tokenizer<'t> {
                     &self.text[..low_at],
                     &self.text[end..]
                 );
-                let rewrites = self.offer.then_some(rewrite);
                 let reason = format!("the range \"{}\" runs backwards", &self.text[low_at..end]);
-                return Err(self.refuse(low_at, &reason, offered(rewrites, None)));
+                return Err(self.refuse(low_at, &reason, offered(self.offer, [rewrite])));
             }
             members.push((low, high));
         }

@@ -151,6 +151,10 @@ fn refused_globs_print_one_line_and_exit_2() {
             "list-glob-refused-first-pattern-wins",
             "list-glob-refused-grammar-stage-first",
             "workspace-list-glob-refused-alias-before-marker",
+            "list-glob-refused-marker-offer-reparsed",
+            "list-glob-refused-qualifier-offer-reparsed",
+            "list-glob-refused-range-offer-reparsed",
+            "list-glob-refused-marked-range-offer-reparsed",
             "list-glob-refused-before-discovery",
             "list-glob-missing-value",
             "show-glob-requires-batch",
@@ -243,7 +247,8 @@ fn a_brace_before_the_separator_opens_a_glob_citation() {
 }
 
 /// §FS-coordinate-globs.errors.hint: a missing path without an operator, or one that is no
-/// valid pattern, keeps today's error alone.
+/// valid pattern, keeps today's error alone; with no config read, a marked one is no valid
+/// pattern (§FS-coordinate-globs.errors.shape).
 #[test]
 fn the_path_hint_needs_a_valid_pattern() {
     run_cases(
@@ -251,6 +256,7 @@ fn the_path_hint_needs_a_valid_pattern() {
         &[
             "list-glob-path-no-hint-without-operator",
             "list-glob-path-no-hint-invalid-pattern",
+            "list-glob-path-no-hint-marked-pattern",
         ],
     );
 }

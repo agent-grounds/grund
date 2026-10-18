@@ -113,7 +113,7 @@ pub(crate) use compiled::{
 pub(crate) use language_table::{DocProfile, classified_extensions, extension_rule};
 // The bare fence reader serves the record's doc-comment headings and the template
 // tests, which look for a fenced example rather than for a heading (§FS-check.1.1.5).
-pub(crate) use coordinate_glob::{CoordinateGlob, GlobQualifier, GlobRefusal};
+pub(crate) use coordinate_glob::{CoordinateGlob, GlobQualifier, GlobRefusal, GlobStage};
 pub(crate) use coordinate_glob_match::GlobMatcher;
 pub(crate) use fence::{MarkdownFence, markdown_fence_delimiter};
 pub(crate) use fmt_cross_refs::{cross_ref_wrap, flatten_cross_ref_links};

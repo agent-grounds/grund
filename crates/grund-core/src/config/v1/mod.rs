@@ -32,6 +32,7 @@ use kind_table::ParsedKind;
 pub(crate) use lines::{LineKind, LinePass, LineRecord};
 
 pub(super) use defaults::default_project;
+pub(crate) use defaults::{DEFAULT_MARKER, DEFAULT_SECTION_SEPARATOR};
 pub(crate) use kind_defaults::default_kind_folder;
 pub(super) use kind_values::{ValueLines, rule_kind_refusal, validate_kind_value_keys};
 pub(super) use values::{bail_config, parse_bool, parse_string, parse_usize};

@@ -151,9 +151,11 @@ order: `FS-**.{a,b` is refused at column 7, for its unclosed brace, though its `
 would be refused once the config is read. Within either stage the leftmost refusal is
 reported, except that a bracket is refused as a whole, for never closing or for a range, only
 when nothing inside it is, and components are checked only once every bracket and escape
-reads. An accepted glob is the pattern as typed with only the failed part
-rewritten, parsed again before it is offered, as [§FS-rule-refusals.requirements.typed](FS-rule-refusals.md#requirementstyped-an-offer-is-built-from-what-was-typed-and-what-is-configured-and-nothing-else--realized) has
-it for selectors.
+reads. An accepted glob is the pattern as typed with only the failed part rewritten, parsed
+again through every check of the stage that refused it before it is offered, as
+[§FS-rule-refusals.requirements.typed](FS-rule-refusals.md#requirementstyped-an-offer-is-built-from-what-was-typed-and-what-is-configured-and-nothing-else--realized) has it for selectors. An offer made before discovery,
+where no separator is known yet, is parsed again as the `.`-separated reading with the
+default marker.
 
 ### errors.reasons: Every refusal, its column and its rewrite
 

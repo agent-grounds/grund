@@ -6,9 +6,9 @@
 
 use anyhow::Result;
 
-use crate::config::Config;
+use crate::config::{Config, DEFAULT_MARKER, DEFAULT_SECTION_SEPARATOR};
 use crate::grammar::{
-    CoordinateGlob, GlobMatcher, GlobOperator, GlobQualifier, GlobRefusal,
+    CoordinateGlob, GlobMatcher, GlobOperator, GlobQualifier, GlobRefusal, GlobStage,
     literal_after_kind_placeholder,
 };
 use crate::model::OperationDiagnostic;
@@ -23,12 +23,17 @@ fn refusal_error(refusal: GlobRefusal) -> anyhow::Error {
     diagnostic.into()
 }
 
+/// The launch stage: no config is read before discovery, so what a refusal there offers
+/// is read as the `.`-separated reading of a project with the built-in marker
+/// (§FS-coordinate-globs.errors.shape, §FS-config.3).
+const LAUNCH: GlobStage<'static> = GlobStage::new(&[DEFAULT_MARKER], &[DEFAULT_SECTION_SEPARATOR]);
+
 /// Read every pattern, refusing the first the grammar alone refuses, in command-line
 /// order (§FS-coordinate-globs.errors.shape).
 pub(crate) fn read_globs(patterns: &[String]) -> Result<Vec<CoordinateGlob>> {
     patterns
         .iter()
-        .map(|pattern| CoordinateGlob::parse(pattern).map_err(refusal_error))
+        .map(|pattern| CoordinateGlob::parse(pattern, LAUNCH).map_err(refusal_error))
         .collect()
 }
 
@@ -41,12 +46,11 @@ pub fn check_coordinate_globs(patterns: &[String]) -> Result<()> {
 
 /// Whether a scan path a frontend could not find was more likely a coordinate glob:
 /// it holds an operator and is a valid pattern (§FS-coordinate-globs.errors.hint). No
-/// config was read for a path that does not exist, so it is read under the default
-/// separator, `.` (§FS-config.3.2.2).
+/// config was read for a path that does not exist, so it is read as the launch stage
+/// reads an offer, under the built-in separator and marker (§FS-config.3.2.2).
 #[doc(hidden)]
 pub fn reads_as_coordinate_glob(text: &str) -> bool {
-    text.chars().any(|ch| GlobOperator::of(ch).is_some())
-        && CoordinateGlob::parse(text).is_ok_and(|glob| glob.check_separator(".").is_ok())
+    text.chars().any(|ch| GlobOperator::of(ch).is_some()) && LAUNCH.accepts(text)
 }
 
 /// The patterns a run was given, each compiled for every project it reads.
@@ -58,9 +62,9 @@ pub(crate) struct GlobSelection<'g> {
 
 impl<'g> GlobSelection<'g> {
     /// Check each pattern in command-line order against the loaded projects, leftmost
-    /// refusal first — its qualifier at column 1, its marker where the body starts,
-    /// then its components under the separator of every project it reads — and
-    /// compile it for each (§FS-coordinate-globs.errors.shape).
+    /// refusal first — its qualifier at column 1, then the stage of the projects it
+    /// reads, their markers and separators, which an offer passes too — and compile it
+    /// for each (§FS-coordinate-globs.errors.shape).
     pub(crate) fn new(context: &WorkspaceContext, globs: &'g [CoordinateGlob]) -> Result<Self> {
         let mut matchers: Vec<Vec<GlobMatcher<'g>>> =
             context.projects.iter().map(|_| Vec::new()).collect();
@@ -71,17 +75,16 @@ impl<'g> GlobSelection<'g> {
                 .iter()
                 .map(|&index| &context.projects[index].config)
                 .collect();
-            let markers = configs.iter().map(|config| &config.marker);
-            for marker in std::iter::once(&context.render_config().marker).chain(markers) {
-                glob.check_marker(marker).map_err(refusal_error)?;
-            }
-            let leftmost = configs
+            let markers: Vec<&str> = std::iter::once(&context.render_config().marker)
+                .chain(configs.iter().map(|config| &config.marker))
+                .map(String::as_str)
+                .collect();
+            let separators: Vec<&str> = configs
                 .iter()
-                .filter_map(|config| glob.check_separator(&config.section_separator).err())
-                .min_by_key(|refusal| refusal.column);
-            if let Some(refusal) = leftmost {
-                return Err(refusal_error(refusal));
-            }
+                .map(|config| config.section_separator.as_str())
+                .collect();
+            glob.check(GlobStage::new(&markers, &separators))
+                .map_err(refusal_error)?;
             for &index in &scope {
                 let separator = &context.projects[index].config.section_separator;
                 matchers[index].push(glob.matcher(separator));

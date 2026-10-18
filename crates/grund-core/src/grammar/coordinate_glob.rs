@@ -88,6 +88,33 @@ pub(super) struct Spanned {
     pub(super) end: usize,
 }
 
+/// What a pattern is checked under at one stage (§FS-coordinate-globs.errors.shape): the
+/// markers it may not open with and the outer separators its components are split by. An
+/// accepted glob a refusal offers passes its stage's checks before it is offered, so
+/// pasting it back is not refused (§FS-rule-refusals.requirements.typed). Before discovery
+/// the stage is the built-in marker and `.`; once the config is read, it is the projects
+/// a pattern reads.
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct GlobStage<'s> {
+    markers: &'s [&'s str],
+    separators: &'s [&'s str],
+}
+
+impl<'s> GlobStage<'s> {
+    pub(crate) const fn new(markers: &'s [&'s str], separators: &'s [&'s str]) -> Self {
+        Self {
+            markers,
+            separators,
+        }
+    }
+
+    /// Whether `text` passes every check up to this stage: the grammar's, then this
+    /// stage's markers and separators.
+    pub(crate) fn accepts(self, text: &str) -> bool {
+        CoordinateGlob::launch(text, None).is_ok_and(|glob| glob.check_at(self, None).is_ok())
+    }
+}
+
 /// A pattern the grammar accepts (§FS-coordinate-globs.grammar).
 #[derive(Clone, Debug)]
 pub(crate) struct CoordinateGlob {
@@ -102,12 +129,14 @@ impl CoordinateGlob {
     /// Read `text`, making every refusal decided before any config is read
     /// (§FS-coordinate-globs.errors.shape): the qualifier, the brackets and
     /// escapes, and — for a pattern that no outer separator but `.` could split
-    /// differently — the components as a `.`-separated project reads them.
-    pub(crate) fn parse(text: &str) -> Result<Self, GlobRefusal> {
-        Self::launch(text, true)
+    /// differently — the components as a `.`-separated project reads them. Each
+    /// accepted glob it offers is one the launch `stage` accepts.
+    pub(crate) fn parse(text: &str, stage: GlobStage<'_>) -> Result<Self, GlobRefusal> {
+        Self::launch(text, Some(stage))
     }
 
-    pub(super) fn launch(text: &str, offer: bool) -> Result<Self, GlobRefusal> {
+    /// `offer` is the stage an accepted glob must pass, or `None` to offer nothing.
+    fn launch(text: &str, offer: Option<GlobStage<'_>>) -> Result<Self, GlobRefusal> {
         let glob = Self::read(text, offer)?;
         if !glob.may_split_elsewhere() {
             glob.check_components(".", offer)?;
@@ -115,7 +144,7 @@ impl CoordinateGlob {
         Ok(glob)
     }
 
-    fn read(text: &str, offer: bool) -> Result<Self, GlobRefusal> {
+    fn read(text: &str, offer: Option<GlobStage<'_>>) -> Result<Self, GlobRefusal> {
         let body = last_unescaped_slash(text).map_or(0, |slash| slash + 1);
         let qualifier = match body {
             0 => GlobQualifier::Current,
@@ -134,9 +163,33 @@ impl CoordinateGlob {
         &self.qualifier
     }
 
+    /// The checks made once the config is read, under the markers and separators of
+    /// the projects the pattern reads (§FS-coordinate-globs.errors.shape): every
+    /// marker, refused where the body starts, then the components under each
+    /// separator, of which the leftmost refusal is reported.
+    pub(crate) fn check(&self, stage: GlobStage<'_>) -> Result<(), GlobRefusal> {
+        self.check_at(stage, Some(stage))
+    }
+
+    fn check_at(
+        &self,
+        stage: GlobStage<'_>,
+        offer: Option<GlobStage<'_>>,
+    ) -> Result<(), GlobRefusal> {
+        for marker in stage.markers {
+            self.check_marker(marker, offer)?;
+        }
+        let leftmost = stage
+            .separators
+            .iter()
+            .filter_map(|separator| self.check_components(separator, offer).err())
+            .min_by_key(|refusal| refusal.column);
+        leftmost.map_or(Ok(()), Err)
+    }
+
     /// Refuse a pattern that opens with the citation marker
     /// (§FS-coordinate-globs.errors.marker).
-    pub(crate) fn check_marker(&self, marker: &str) -> Result<(), GlobRefusal> {
+    fn check_marker(&self, marker: &str, offer: Option<GlobStage<'_>>) -> Result<(), GlobRefusal> {
         let body = &self.text[self.body..];
         let Some(rest) = body.strip_prefix(marker).filter(|_| !marker.is_empty()) else {
             return Ok(());
@@ -145,7 +198,7 @@ impl CoordinateGlob {
         Err(self.refusal(
             self.body,
             "coordinate globs do not take a citation marker",
-            offered([rewrite], None),
+            offered(offer, [rewrite]),
         ))
     }
 
@@ -191,20 +244,19 @@ impl CoordinateGlob {
     }
 }
 
-/// Keep only the rewrites that parse again, under `separator` when one is named
-/// (§FS-coordinate-globs.errors.shape).
+/// What a refusal offers: each rewrite the stage it is made at accepts, or nothing
+/// where no offer is made (§FS-coordinate-globs.errors.shape). Every refusal offers
+/// through here.
 pub(super) fn offered(
+    offer: Option<GlobStage<'_>>,
     rewrites: impl IntoIterator<Item = String>,
-    separator: Option<&str>,
 ) -> Vec<String> {
-    rewrites
-        .into_iter()
-        .filter(|rewrite| {
-            CoordinateGlob::launch(rewrite, false).is_ok_and(|glob| {
-                separator.is_none_or(|separator| glob.check_components(separator, false).is_ok())
-            })
-        })
-        .collect()
+    offer.map_or_else(Vec::new, |stage| {
+        rewrites
+            .into_iter()
+            .filter(|rewrite| stage.accepts(rewrite))
+            .collect()
+    })
 }
 
 pub(super) fn refusal(text: &str, at: usize, reason: &str, accepted: Vec<String>) -> GlobRefusal {
@@ -232,7 +284,11 @@ fn last_unescaped_slash(text: &str) -> Option<usize> {
 }
 
 /// `*` or one exact alias, unescaped (§FS-coordinate-globs.grammar.components).
-fn read_qualifier(text: &str, slash: usize, offer: bool) -> Result<GlobQualifier, GlobRefusal> {
+fn read_qualifier(
+    text: &str,
+    slash: usize,
+    offer: Option<GlobStage<'_>>,
+) -> Result<GlobQualifier, GlobRefusal> {
     let raw = &text[..slash];
     if raw == "*" {
         return Ok(GlobQualifier::Every);
@@ -243,12 +299,11 @@ fn read_qualifier(text: &str, slash: usize, offer: bool) -> Result<GlobQualifier
         if ch == '\\' {
             alias.extend(chars.next().map(|(_, next)| next));
         } else if GlobOperator::of(ch).is_some() {
-            let rewrites = offer.then(|| format!("*/{}", &text[slash + 1..]));
             return Err(refusal(
                 text,
                 at,
                 "a project qualifier is one alias or \"*\"",
-                offered(rewrites, None),
+                offered(offer, [format!("*/{}", &text[slash + 1..])]),
             ));
         } else {
             alias.push(ch);
