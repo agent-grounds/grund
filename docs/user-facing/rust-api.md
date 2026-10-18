@@ -24,19 +24,21 @@ installs a terminal integration and checks that it wrote the same bytes as
   `format_references`, `propose_id`, `complete_ids`, `init`, `fetch_snapshot`
   and `integrations`.
 - **The typed refusals.** `ShowQueryError` and `FmtScanAbort`, which an error
-  from `show` or `format_references` downcasts to. Every other entry point
-  returns `anyhow::Result`.
+  from `show` or `format_references` downcasts to, and `InitError`,
+  `FetchFailure` and `IntegrationsError`, which `init`, `fetch_snapshot` and
+  `integrations` return. An entry point with no typed refusal returns
+  `anyhow::Result`.
 - **Every type those signatures reach,** transitively. That makes 112 names.
 
 A `1.x` release may add a name, a field or a variant, and may deprecate a name.
 Only `2.0` removes or retypes one.
 
 **Hidden names.** Every other root name is `#[doc(hidden)]`. It is a seam that
-one of grund's own frontends reads: the configuration records (`Project`, `Run`,
-`effective_config`), the editor's snapshot API, or the host packages' carriers.
-A hidden name still links and still works, but it is outside the promise, and a
-minor release may change it. The `test-*` Cargo features are outside the
-promise too.
+one of grund's own frontends reads: the configuration records and readers
+(`Project`, `Run`, `effective_config`), the editor's snapshot API, or the host
+packages' carriers. A hidden name still links and still works, but it is
+outside the promise, and a minor release may change it. The `test-*` Cargo
+features are outside the promise too.
 
 ## Build options from `Default`
 
@@ -78,8 +80,8 @@ Walk a tree once and read what it declares:
 
 ```rust
 let catalog = grund_core::scan(std::path::Path::new("."))?;
-for id in catalog.declarations.keys() {
-    println!("{id}");
+for declaration in catalog.declarations.values().flatten() {
+    println!("{}:{}", declaration.file.display(), declaration.line);
 }
 ```
 
