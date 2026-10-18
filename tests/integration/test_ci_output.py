@@ -355,7 +355,8 @@ class CiStepsGoThroughTheQuietFormsTests(unittest.TestCase):
         shell = re.findall(r"^\s*(?:run:\s*)?((?:python -m )?(?:cargo|pip) (?:build|run|install|bench)\b.*)$",
                            text, re.M)
         listed = re.findall(r"\[\s*(\"cargo\",[^\]]*?\"(?:build|run)\"[^\]]*)",
-                            text + ORACLE.read_text(encoding="utf-8"), re.S)
+                            text + ORACLE.read_text(encoding="utf-8")
+                            + (REPO / "scripts/check_ci_self.py").read_text(encoding="utf-8"), re.S)
         self.assertGreaterEqual(len(shell), 4, shell)
         self.assertGreaterEqual(len(listed), 3, listed)
         for command in shell:

@@ -1042,6 +1042,11 @@ Nothing else: no line per passing test, no `unittest` dot stream, no other outpu
 
 `scripts/run_cargo_suite.py` takes `cargo test`'s arguments, runs `cargo test` with them over libtest's stable output, and prints what requirements.5.1 asks. Both `ci.yml` steps that run a cargo suite, `native watch contract` and `cargo test`, call it, and so does the `cargo-test` hook, so the hook and the workflow still spell one command ([§AR-ci.1.2](AR-ci.md#12-the-parity-test)). It needs Python's standard library and the toolchain the repository already uses and nothing else: no test runner a contributor must install. It builds the tests before it runs them, as quietly as requirements.5.4 asks, so a compile error is printed in full and a green build prints only its `gate time: build` line.
 
+The focused Windows ownership verification of [§FS-examples.5.6.1](../functional-spec/FS-examples.md#561-one-owner-lasts-through-every-use-of-the-copy) runs the exact
+regression directly through cargo/libtest with `--nocapture`. Its raw output and
+tested commit remain in the job log so an internal unsupported-symlink skip
+cannot be mistaken for executed ownership assertions.
+
 #### requirements.5.3: A hook prints its findings or one line — realized
 
 A pre-commit hook prints its findings when it fails and one line when it passes. Realized: `pre-commit` captures each hook's output, prints it when the hook fails, and prints one `Passed` line otherwise.

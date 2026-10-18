@@ -209,6 +209,12 @@ the determinism pass's skip of mutable cases, and explicit unsupported-symlink
 skips keep their existing behavior. Retrying link creation, accepting an existing
 link, or locking preparation alone does not establish ownership during use.
 
+Native-platform ownership evidence must show that the coordinated regression
+actually executed its overlap and logical-path assertions. A successful
+unsupported-symlink skip is not ownership evidence. Windows CI retains a focused,
+unfiltered invocation of this regression so its executed-test count and explicit
+unsupported-symlink notice can be checked at the tested commit.
+
 #### 5.6.2 Runtime uniqueness preserves logical output paths
 
 Unique runtime directory components must not change authored exit, stdout,
