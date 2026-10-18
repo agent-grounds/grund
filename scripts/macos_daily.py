@@ -3,8 +3,8 @@ naming the commit, the run and each failed step.
 
     macos_daily.py
         reads this run's jobs from the forge (`GITHUB_RUN_ID`), writes the report and
-        opens the macOS failure issue, or edits the open one, by the rule of
-        §AR-ci.requirements.3, which `ci_duration.issue_action` implements
+        opens the macOS failure issue, or edits the open one, labelled `bug` either way,
+        by the rule of §AR-ci.requirements.3, which `ci_duration.put_on_issue` implements
 
 Everything but `main` is a function of the forge's JSON, so it is tested offline.
 Exits 0 when done, 1 naming the variable or `gh` call that failed."""
@@ -16,11 +16,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from ci_duration import gh, issue_action  # noqa: E402  (the open-or-edit rule lives beside this script)
+from ci_duration import gh, issue_action, put_on_issue  # noqa: E402  (the open-or-edit rule lives beside this script)
 
 MARKER = "<!-- macos-daily-failure -->"
 TITLE = "The daily macOS suites fail on main"
 WORKFLOW = "macos.yml"
+KIND = "bug"  # §AR-ci.14.3: a suite is red on `main`
 
 
 def failed_steps(jobs: list) -> list:
@@ -60,13 +61,8 @@ def main() -> int:
     server = os.environ.get("GITHUB_SERVER_URL", "https://github.com")
     jobs = json.loads(gh("api", f"repos/{repo}/actions/runs/{run_id}/jobs?per_page=100"))["jobs"]
     body = failure_report(jobs, repo, os.environ["GITHUB_SHA"], f"{server}/{repo}/actions/runs/{run_id}")
-    issues = json.loads(gh("issue", "list", "--state", "open", "--limit", "1000", "--json", "number,body"))
-    action, number = issue_action(issues, MARKER)
-    if action == "update":
-        gh("issue", "edit", str(number), "--title", TITLE, "--body-file", "-", stdin=body)
-        print(f"edited macOS failure issue #{number}")
-    else:
-        print(gh("issue", "create", "--title", TITLE, "--body-file", "-", stdin=body).strip())
+    action, issue = put_on_issue(MARKER, TITLE, body, KIND)
+    print(f"edited macOS failure issue #{issue}" if action == "update" else issue)
     return 0
 
 

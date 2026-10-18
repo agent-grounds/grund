@@ -4,7 +4,8 @@ and one drift issue when a gate's average is over the threshold (§AR-ci.require
     ci_duration.py [<config>]
         reads the threshold and the window from <config>, `.github/ci-duration.json`
         by default (§AR-ci.requirements.4), averages each gate over the last
-        window successful pushes to `main`, and opens or edits the drift issue
+        window successful pushes to `main`, and opens or edits the drift issue,
+        which carries the kind label `tokens` either way
 
 Everything but `main` is a function of the forge's JSON, so it is tested offline.
 Exits 0 when done, 1 naming the file, key or `gh` call that failed."""
@@ -22,6 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = ROOT / ".github" / "ci-duration.json"
 WORKFLOW = "ci.yml"
 MARKER = "<!-- ci-duration-drift -->"
+KIND = "tokens"  # §AR-ci.requirements.3: a gate over the threshold is CI spending wall clock
 # How many of a gate's slowest steps the report names.
 STEPS_SHOWN = 5
 
@@ -163,6 +165,22 @@ def gh(*arguments: str, stdin: str | None = None) -> str:
     return result.stdout
 
 
+def put_on_issue(marker: str, title: str, body: str, kind: str):
+    """Put a report on one open issue by the rule of §AR-ci.requirements.3: edit the issue
+    `issue_action` finds under `marker`, or open one when it finds none, and give it the
+    kind label `kind` either way. An edit adds the label, so an issue opened without it
+    carries it from then on and keeps the labels a person put on it. Both reports write
+    through here, each with its own marker and kind (§AR-ci.14.3).
+
+    Returns `("update", number)` for the issue it edited, `("open", url)` for the one it opened."""
+    issues = json.loads(gh("issue", "list", "--state", "open", "--limit", "1000", "--json", "number,body"))
+    action, number = issue_action(issues, marker)
+    if action == "update":
+        gh("issue", "edit", str(number), "--title", title, "--body-file", "-", "--add-label", kind, stdin=body)
+        return ("update", number)
+    return ("open", gh("issue", "create", "--title", title, "--body-file", "-", "--label", kind, stdin=body).strip())
+
+
 def main(argv: list) -> int:
     try:
         config = load_config(argv[1] if len(argv) > 1 else DEFAULT_CONFIG)
@@ -184,14 +202,9 @@ def main(argv: list) -> int:
     if body is None:
         print(f"every gate averages at most {config.threshold_minutes:g} minutes; nothing written")
         return 0
-    issues = json.loads(gh("issue", "list", "--state", "open", "--limit", "1000", "--json", "number,body"))
-    action, number = issue_action(issues)
     title = f"CI gates average over {config.threshold_minutes:g} minutes on main"
-    if action == "update":
-        gh("issue", "edit", str(number), "--title", title, "--body-file", "-", stdin=body)
-        print(f"edited drift issue #{number}")
-    else:
-        print(gh("issue", "create", "--title", title, "--body-file", "-", stdin=body).strip())
+    action, issue = put_on_issue(MARKER, title, body, KIND)
+    print(f"edited drift issue #{issue}" if action == "update" else issue)
     return 0
 
 
