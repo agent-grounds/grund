@@ -156,9 +156,7 @@ fn note(context: &WorkspaceContext, glob: &CoordinateGlob, scope: &[usize]) -> O
     for &index in scope {
         let config = &context.projects[index].config;
         for kind in config.kinds.iter().filter(|kind| kind.citable) {
-            let Some(head) = kind_head(config, &kind.kind, kind.format.as_deref()) else {
-                return None;
-            };
+            let head = kind_head(config, &kind.kind, kind.format.as_deref())?;
             if overlaps(&head, false) {
                 return None;
             }
