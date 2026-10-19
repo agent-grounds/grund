@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use super::path_report::unread_resolution_source_cautions;
-use super::scope_cautions::scan_scope_caution;
+use super::scope_cautions::{scan_scope_caution, workspace_path_caution};
 use super::unread_roots::unread_root_warnings;
 use crate::checker::{
     CheckWorkspace, ScanScope, check_chapter_rules, check_project, path_report_scope,
@@ -31,17 +31,16 @@ use crate::writers::expected;
 /// is what the caller narrows the report to once every rule has run. `None`, and
 /// an unchanged walk, for a root anchor.
 ///
-/// Only the single-project arm: a config that still declares `[workspace]` here is
-/// a non-member folder of the workspace root, which loads every project at its own
-/// root and is not narrowed by the anchor at all (`load_resolved_workspace_context`).
+/// A config that still declares `[workspace]` here is the root's, anchored at a
+/// folder below it and outside every member. That run loads every project at its own
+/// root (`load_resolved_workspace_context`), so its walk needs no widening, and the
+/// anchor bounds only its report, over the root's frame, as `run_workspace_check`
+/// bounds `grund check <path>`'s.
 pub(super) fn editor_report_scope(
     config: &Config,
     path: &Path,
     path_provided: bool,
 ) -> Result<Option<ScanScope>> {
-    if !config.run().scope.resolution_wide {
-        return Ok(None);
-    }
     path_report_scope(config.schema(), config.frame(), path, path_provided)
 }
 
@@ -69,10 +68,13 @@ pub(super) fn editor_report(
 /// walk (`load_resolved_workspace_context`). §FS-check.2.2: the caution for that
 /// same block rides beside it.
 ///
-/// §AR-lsp.5.1.1: `report_scope` is `Some` only on the single-project arm
-/// (`widen_for_path_anchor`), where each step `run_check_with_run_warnings` takes after
-/// its rules is taken here in its order: the narrowing, then the scope caution asked
-/// of the anchor, then the files the wider walk could not read outside it.
+/// §AR-lsp.5.1.1: `report_scope` is `Some` for an anchor below its config root. On
+/// the single-project arm (`widen_for_path_anchor`) each step `run_check_with_run_warnings`
+/// takes after its rules is taken here in its order: the narrowing, then the scope
+/// caution asked of the anchor, then the files the wider walk could not read outside
+/// it. Below a workspace root and outside every member each project is narrowed the
+/// same way, and the scope caution is asked once, of the whole report, before those
+/// files, as `run_workspace_check` asks it.
 fn check_workspace_context(
     context: &WorkspaceContext,
     anchor: &Path,
@@ -101,6 +103,10 @@ fn check_workspace_context(
             .map(|project| (project.alias.as_str(), project.config.rules())),
     );
     let mut report = CheckReport::default();
+    // §FS-check.1.3.6.1: a workspace anchor below its root asks the scope caution once,
+    // after the loop, and holds the unread files back for after it (§FS-check.2.2.3.1).
+    let narrowed_workspace = context.workspace_loaded && report_scope.is_some();
+    let mut unread_outside_report_scope = Vec::new();
     let rules_complete = context
         .projects
         .iter()
@@ -188,6 +194,10 @@ fn check_workspace_context(
             project_report.errors.is_empty() && project_report.warnings.is_empty();
         report.errors.append(&mut project_report.errors);
         report.warnings.append(&mut project_report.warnings);
+        if narrowed_workspace {
+            unread_outside_report_scope.extend(unread_outside);
+            continue;
+        }
         // §FS-lsp.4.1: `grund check`'s decision from its own function (§FS-check.2.2,
         // §FS-check.4.5), asked of the anchor and its report scope (§AR-lsp.5.1.1).
         let path = match report_scope {
@@ -231,14 +241,33 @@ fn check_workspace_context(
         report.errors.extend(unlisted);
     }
     // §FS-check.4.9, §FS-check.2.2: the announcements and the caution — see this
-    // function's docs.
-    report
-        .warnings
-        .extend(absent_optional_member_warnings(context.render_config()));
+    // function's docs. An announcement is located, so the anchor narrows it as `grund
+    // check <path>` does (§FS-check.1.3.6.1).
+    let mut announcements = absent_optional_member_warnings(context.render_config());
+    retain_diagnostics_in_report_scope(
+        &mut announcements,
+        context.render_config().frame(),
+        report_scope,
+    );
+    report.warnings.extend(announcements);
     report.warnings.extend(absent_only_workspace_caution(
         context.render_config(),
         context.projects.is_empty(),
     ));
+    if narrowed_workspace {
+        let report_is_silent = report.errors.is_empty() && report.warnings.is_empty();
+        report.warnings.extend(workspace_path_caution(
+            context.render_config(),
+            context.projects.iter().map(|project| &project.findings),
+            anchor,
+            true,
+            report_is_silent,
+            report_scope,
+        ));
+        report.warnings.extend(unread_resolution_source_cautions(
+            unread_outside_report_scope,
+        ));
+    }
     sort_diagnostics(&mut report.errors);
     sort_diagnostics(&mut report.warnings);
     report

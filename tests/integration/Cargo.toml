@@ -68,6 +68,10 @@ name = "lsp_snapshot_path_scope"
 path = "lsp_snapshot_path_scope.rs"
 
 [[test]]
+name = "lsp_snapshot_outside_member"
+path = "lsp_snapshot_outside_member.rs"
+
+[[test]]
 name = "repository_maintenance"
 path = "repository_maintenance.rs"
 

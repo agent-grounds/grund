@@ -79,6 +79,26 @@ pub(super) fn scan_scope_caution(
         .then(|| nothing_recognized_warning(config, findings.scanned_files.len()))
 }
 
+/// §FS-check.2.2, §FS-check.1.3.6.1: the scope caution of a workspace run narrowed to
+/// a path below its root, asked once of the path rather than per project, since one
+/// member reading nothing under it says nothing about another. `grund check`'s
+/// workspace arm and the editor's (§AR-lsp.5.1.1) both ask it here, with `root` the
+/// workspace root's config and `report_is_silent` the narrowed report's answer.
+pub(super) fn workspace_path_caution<'a>(
+    root: &Config,
+    catalogs: impl IntoIterator<Item = &'a Catalog>,
+    path: &Path,
+    path_provided: bool,
+    report_is_silent: bool,
+    report_scope: Option<&ScanScope>,
+) -> Option<Diagnostic> {
+    let read_any = catalogs
+        .into_iter()
+        .any(|findings| scope_read_any_file(findings, report_scope));
+    (report_scope.is_some() && report_is_silent && !read_any)
+        .then(|| empty_scan_warning(root, path, path_provided, root.display()))
+}
+
 /// Whether the path `check` was handed is a **file** that the hidden-name rule
 /// alone kept out of the walk (§FS-check.2.2.2): the caller really handed a path,
 /// its own name begins with `.`, and its extension is one `[scan] extensions`
