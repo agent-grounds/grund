@@ -157,8 +157,11 @@ fn equivalent_numeric_chapter_rules_merge_authority_and_keep_distinct_subjects()
                 &format!("{}{rules_config}", repo.read("grund.toml")),
             );
             // Reverse source order to pin bytewise authority order (§FS-rules.6).
-            let rules = "# RULE-b: ADR-0001.terms must cite at least one ADR.\n\nReason.\n\n\
-                         # RULE-a: ADR-001.terms must cite at least one ADR.\n\nReason.\n";
+            // One literal per rule: a continuation line opening `# RULE-` would declare it here.
+            let rules = concat!(
+                "# RULE-b: ADR-0001.terms must cite at least one ADR.\n\nReason.\n\n",
+                "# RULE-a: ADR-001.terms must cite at least one ADR.\n\nReason.\n",
+            );
             let args = [
                 "check",
                 "--only",
@@ -175,9 +178,11 @@ fn equivalent_numeric_chapter_rules_merge_authority_and_keep_distinct_subjects()
                     );
                 }
                 let controls = if distinct {
-                    "\n# RULE-number: ADR-002.terms must cite at least one ADR.\n\nReason.\n\n\
-                     # RULE-detail: ADR-001.terms.detail must cite at least one ADR.\n\nReason.\n\n\
-                     # RULE-other: ADR-001.other.terms must cite at least one ADR.\n\nReason.\n"
+                    concat!(
+                        "\n# RULE-number: ADR-002.terms must cite at least one ADR.\n\nReason.\n\n",
+                        "# RULE-detail: ADR-001.terms.detail must cite at least one ADR.\n\nReason.\n\n",
+                        "# RULE-other: ADR-001.other.terms must cite at least one ADR.\n\nReason.\n",
+                    )
                 } else {
                     ""
                 };
