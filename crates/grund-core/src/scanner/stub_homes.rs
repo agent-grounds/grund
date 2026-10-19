@@ -15,8 +15,8 @@ use super::tree::scan_unwalked_file;
 use crate::config::{Frame, Run, Schema};
 use crate::grammar::{Grammar, resolve_shorthands};
 use crate::model::{
-    Catalog, Citation, Declaration, ExcludingRule, FileRecord, Id, StubResolution,
-    paired_declarations, scanned_path_key, section_resolves,
+    Catalog, Citation, ConflictBlock, Declaration, ExcludingRule, FileRecord, Id,
+    StubResolution, paired_declarations, scanned_path_key, section_resolves,
 };
 use crate::sources::{paths_same_location, physical_path_key};
 use crate::workspace::WorkspaceCitationTarget;
@@ -30,7 +30,8 @@ use crate::workspace::WorkspaceCitationTarget;
 /// at a target the walk from `roots` would not read, for an `exclude` entry or an
 /// ignore file, is refused before reading or pairing (§FS-declarations.stubs.target.3).
 /// Once every verdict is in, an eligible target lends the declaration its citations
-/// (§FS-declarations.stubs.target.5).
+/// (§FS-declarations.stubs.target.5), and a target a stub pairs with gives its conflict
+/// blocks, as a scanned file does (§FS-declarations.body.conflict.where).
 pub(super) fn resolve_stubs(
     schema: &Schema,
     frame: Frame<'_>,
@@ -53,6 +54,7 @@ pub(super) fn resolve_stubs(
     }
     // §AR-scanner.2.8: a target read here is sliced from its record like any scanned file.
     findings.files.extend(targets.files);
+    findings.conflict_blocks.extend(targets.blocks);
     lend_citations(frame.grammar(), findings, targets.lendable);
 }
 
@@ -176,6 +178,9 @@ fn resolve_stub(
         };
         // §FS-declarations.stubs.target.5: the records' citations, once per target.
         targets.lend(&resolved, id);
+        if !walked.is_empty() {
+            targets.give_blocks(&resolved);
+        }
     }
     walked.sort_by_key(|decl| decl.line);
     Some(if walked.is_empty() {
@@ -190,7 +195,8 @@ fn resolve_stub(
 /// A target that cannot be read is remembered as such; one that can keeps its file
 /// record (§AR-scanner.2.8), which is how `show` reads a stub's target, and the
 /// citations its pass assigns to a declaration, which it lends once per target and
-/// ID (§FS-declarations.stubs.target.5).
+/// ID (§FS-declarations.stubs.target.5), and the conflict blocks its pass records,
+/// given once per target a stub pairs with (§FS-declarations.body.conflict.where).
 struct UnwalkedTargets<'a> {
     schema: &'a Schema,
     frame: Frame<'a>,
@@ -202,13 +208,16 @@ struct UnwalkedTargets<'a> {
     excluded: BTreeMap<PathBuf, Option<ExcludingRule>>,
     files: BTreeMap<PathBuf, Arc<FileRecord>>,
     lendable: Vec<Citation>,
+    blocks: Vec<ConflictBlock>,
 }
 
-/// One target's pass: its declarations, and its citations by the declaration that
-/// encloses each.
+/// One target's pass: its declarations, its citations by the declaration that
+/// encloses each, and the conflict blocks it recorded with their owners
+/// (§AR-scanner.2.9).
 struct TargetRead {
     declarations: BTreeMap<Id, Vec<Declaration>>,
     citations: BTreeMap<Id, Vec<Citation>>,
+    conflict_blocks: Vec<ConflictBlock>,
 }
 
 impl<'a> UnwalkedTargets<'a> {
@@ -227,6 +236,7 @@ impl<'a> UnwalkedTargets<'a> {
             excluded: BTreeMap::new(),
             files: BTreeMap::new(),
             lendable: Vec::new(),
+            blocks: Vec::new(),
         }
     }
 
@@ -272,6 +282,15 @@ impl<'a> UnwalkedTargets<'a> {
             self.lendable.extend(citations);
         }
     }
+
+    /// Give the conflict blocks `path`'s pass recorded to the catalog, the first time a
+    /// stub pairs with it and never again, so a target two stubs name reports each block
+    /// once, at its own lines (§FS-declarations.body.conflict.where).
+    fn give_blocks(&mut self, path: &Path) {
+        if let Some(Some(read)) = self.read.get_mut(&physical_path_key(path)) {
+            self.blocks.append(&mut read.conflict_blocks);
+        }
+    }
 }
 
 /// One pass over a target the walk did not reach, its file record kept in `files`.
@@ -300,5 +319,6 @@ fn read_target(
     Some(TargetRead {
         declarations: findings.declarations,
         citations: by_owner,
+        conflict_blocks: findings.conflict_blocks,
     })
 }

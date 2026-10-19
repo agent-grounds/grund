@@ -325,11 +325,14 @@ command gives this answer (D13 of [§DF-one-answer-rulings-stubs](../decisions/f
 A target outside `[scan] include` gives the stub what every command resolves through: its
 declarations of the ID, counted as [§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned) counts them; their
 sections, so a citation into one reads as it would were the target scanned
-([§FS-check.3.2.1](FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not)); and every section path one of those declarations claims twice, which
+([§FS-check.3.2.1](FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not)); every section path one of those declarations claims twice, which
 `check` reports as `duplicate-section` ([§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path)) at the
 target's headings, `<path>:<line>` exactly as the same tree with the target scanned reports
 them, whether or not anything cites the section
-([§DF-stub-target-section-declared-twice](../decisions/functional/DF-stub-target-section-declared-twice.md#df-stub-target-section-declared-twice-a-section-a-stubs-target-declares-twice-is-reported-where-it-is-written-scanned-or-not)). A section the target does not declare is reported
+([§DF-stub-target-section-declared-twice](../decisions/functional/DF-stub-target-section-declared-twice.md#df-stub-target-section-declared-twice-a-section-a-stubs-target-declares-twice-is-reported-where-it-is-written-scanned-or-not)); and every conflict block in the target, which `check` reports
+as `conflict-marker` ([§FS-declarations.checks.conflict-marker](FS-declarations.md#checksconflict-marker-unresolved-merge-conflict)) at the target's lines,
+with the owners the target's own pass gives it, as the same tree with the target scanned
+reports it, and on which `fmt` writes nothing ([§FS-fmt.7.4](FS-fmt.md#74-no-write-without-a-complete-model)). A section the target does not declare is reported
 as before, in the same words — `missing section <ID>.<path>` for a numeric path — and under
 the same `missing-section` code. A broken stub ([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)) pairs
 with nothing and gains no section: it keeps its broken-stub finding, and a citation of one of
@@ -494,7 +497,7 @@ Blocks are read off a file's raw lines, top to bottom ([§FS-declarations.body.c
 - **Every line of a Markdown file that declares an ID**: its preamble, its fences, and the lines after a heading that closed every body. Whether the file declares an ID is read off its raw lines, fences ignored: a line that would declare an ID by [§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares) were no fence open makes the file one that declares. A conflict can open a fence it never closes, and the file's one declaration below it would then read as fenced text; deciding on the fence-aware reading would leave that file's markers unread.
 - **In a source file, the raw lines of each declaration's body** ([§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends)), in a docstring or a `/** */` comment as much as in a line-style run, and a block that opens on the line right after a declaration's line-style run ends ([§FS-languages.comment-block.close](FS-languages.md#comment-blockclose-find-the-close-boundary)), through its last line. A marker line is not a comment line, so a conflict inside a `///` or `#` run cuts the run at its opening marker and the body ends one line above the block. Counting the block there is what keeps `fmt --write`, which runs before any compiler, usually in a pre-commit hook, from fingerprinting the cut-short body into the section lock.
 
-A marker line anywhere else is not looked at: in code outside those places the compiler or interpreter of that file refuses it, and a Markdown file that declares no ID, or a file the scan does not read, is no declaration's text.
+A marker line anywhere else is not looked at: in code outside those places the compiler or interpreter of that file refuses it, and a Markdown file that declares no ID, or a file the scan does not read, is no declaration's text. A target a stub pairs with outside `[scan] include` is read all the same, and is looked at as if it were scanned: it is the paired declaration's text, which `show` prints and the section lock fingerprints, so its blocks are reported at its own lines ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)).
 
 #### body.conflict.owners: Which declarations a block names
 
