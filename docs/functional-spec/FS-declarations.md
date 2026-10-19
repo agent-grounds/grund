@@ -245,6 +245,41 @@ declarations it points at is not counted beside them as one more
 
 Each stub's verdict is reached once per scan, and it is one of five: the target is missing; the target is a file the scan does not read ([§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)); the target, read as the scan reads it on the text a save would write ([§FS-declarations.stubs.target.1](FS-declarations.md#stubstarget1-the-target-is-read-as-a-save-would-write-it), [§FS-declarations.stubs.target.2](FS-declarations.md#stubstarget2-a-heading-inside-a-fence-of-the-target-declares-nothing)), does not declare the ID; it declares the ID, on one line or more, and the stub points at each of those declarations ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)); or the target is the file the stub sits in, which declares the ID on another line, and the stub points at none of those declarations but is one of its own beside them, so the ID is a duplicate ([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)). The first three are a broken stub ([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)); a stub linked to its own file that declares the ID nowhere else is the third. The ID's declarations are counted from those verdicts, once its stubs are paired.
 
+#### stubs.verdict.repair: A missing target beside another declaration explains the repair
+
+When a stub's recorded verdict is missing and the ID has other independent declaration
+homes, diagnostics connect those facts. This is guidance from the declarations and verdicts
+already found by the scan, never an inference that a file moved or a second filesystem search
+([§FS-declarations.stubs.verdict](FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)).
+
+`check` retains both the duplicate finding and the missing-target `broken-stub` finding,
+with each complete existing message as a contiguous prefix. The missing-target message
+appends the available real declaration sites. With exactly one real home, it says that the
+ID is declared there and tells the reader to point the stub link there. A real home is a
+declaration that is not itself a stub, including a target represented by healthy stubs
+([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned));
+other broken stubs are never repair destinations. Several real homes are named in deterministic
+`path:line` order without selecting one or telling the reader to point the stub at one.
+With no real home, the ordinary missing-target message remains.
+
+ID queries, including bare IDs, `--toc`, section IDs, and `refs`, retain exit `1` and their
+complete `ambiguous ID: <ID> (declared at <sites>)` prefix. They append an explanation
+identifying each missing-target broken stub and its missing link target, followed by the
+same available homes and safe repair guidance as `check`. The original declaration-site list
+and its order are unchanged, even when a real home sorts before the stub. A broken stub
+remains its own declaration: guidance neither pairs it nor makes an ambiguous query succeed.
+
+Text and JSON carry the same message. Query `sites` remains exactly the original ordered
+declaration-site list ([§FS-errors.5.2.1](FS-errors.md#521-sites-on-an-ambiguity-refusal)).
+The missing-target `check` finding stays located at the stub; when its message names other
+declaration sites it uses the existing multi-site finding shape, containing the stub and
+those real sites in report order ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)).
+The missing link spelling is not a declaration site. With no real home its `sites` remains
+`null`. Duplicate sites, codes, severities, channels, exits, and all field names and types
+remain unchanged. Only a recorded missing-target verdict gets this guidance: healthy,
+excluded, unread, and read-but-lacking-ID targets keep their own explanations and remedies
+([§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)).
+
 ### stubs.shape: What a stub looks like
 
 A stub is a heading whose title is one link, `<ID>: [<text>](<path>)`, at any heading level,
