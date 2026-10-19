@@ -10,6 +10,7 @@ pub const CHECK_FINDING_CODES: &[&str] = &[
     "chapter-cardinality",
     "citation-cardinality",
     "config-version-1",
+    "conflict-marker",
     "dangling",
     "declaration-near-miss",
     "deprecated-config-location",

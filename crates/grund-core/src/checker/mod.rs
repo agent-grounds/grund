@@ -41,6 +41,7 @@ mod agents;
 mod chapter_rules;
 mod citation_prohibitions;
 mod citations;
+mod conflict_marker;
 mod conform;
 mod direction_findings;
 mod fields;

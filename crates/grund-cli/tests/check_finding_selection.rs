@@ -281,6 +281,7 @@ fn issue_49_check_help_exposes_the_sorted_public_code_catalog() {
         "chapter-cardinality",
         "citation-cardinality",
         "config-version-1",
+        "conflict-marker",
         "dangling",
         "declaration-near-miss",
         "deprecated-config-location",
