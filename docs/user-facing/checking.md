@@ -74,8 +74,11 @@ docs/use.md:5: error: section not found: FS-login.1.goals; write <§> before it 
 The finding goes to stdout and makes the check exit `1`; JSON reports
 `missing-section` with severity `error`. Repair the heading or citation, or
 escape an illustrative shape with `<§>`. When the section resolves but its
-lock entry is missing, run `grund fmt --write` and commit the lock
-([§FS-section-lock.checks.unrecorded-section-citation](../functional-spec/FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold)).
+lock entry is missing
+([§FS-section-lock.checks.unrecorded-section-citation](../functional-spec/FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold)),
+run `grund fmt --write` with no path, so it covers the whole project, and commit
+the lock: `fmt` given a file or a directory below the root writes no lock
+([§FS-section-lock.checks.remedy](../functional-spec/FS-section-lock.md#checksremedy-the-run-that-writes-the-lock)).
 
 A passing text check prints `success` and exits 0. Findings go to stdout as
 `<path>:<line>: error: <message>`, `warning:`, or opt-in `suggestion:` lines:

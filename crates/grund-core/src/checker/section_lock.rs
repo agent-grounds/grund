@@ -10,6 +10,11 @@ use crate::config::{Frame, Schema};
 use crate::model::{CheckReport, Diagnostic};
 use crate::resolver::{EntryVerdict, WorkspaceCheckTarget, judge_section_locks};
 
+/// §FS-section-lock.checks.remedy: the run that writes a lock, named with its scope,
+/// because `fmt` narrowed to a file or a directory below the root writes none.
+const REMEDY: &str = "run grund fmt --write at the project or workspace root; fmt on a file or a \
+                      subdirectory writes no lock";
+
 /// §FS-section-lock.checks: a lock line grund cannot read, a cited locked
 /// address the lock does not hold, and a cited section whose recorded text now
 /// sits at another address. None fires in a tree with no lock file and no
@@ -32,9 +37,10 @@ pub(super) fn check_section_locks<'a>(
                 "invalid-section-lock",
                 judgement.path.clone(),
                 *line,
-                "section lock line is not <coordinate> <fingerprint>; run grund fmt --write \
-                 to rebuild the file"
-                    .to_string(),
+                format!(
+                    "section lock line is not <coordinate> <fingerprint>; to rebuild the file, \
+                     {REMEDY}"
+                ),
             ));
         }
         // §FS-section-lock.checks.unrecorded-section-citation: at each citation's site.
@@ -45,7 +51,7 @@ pub(super) fn check_section_locks<'a>(
                     citation.file.clone(),
                     citation.line,
                     format!(
-                        "{} is cited but has no entry in {lock}; run grund fmt --write",
+                        "{} is cited but has no entry in {lock}; {REMEDY}",
                         coordinate(section)
                     ),
                 ));
