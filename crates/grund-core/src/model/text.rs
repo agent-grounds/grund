@@ -56,11 +56,12 @@ pub(crate) fn plural(value: usize) -> &'static str {
     if value == 1 { "" } else { "s" }
 }
 
-/// The repair §FS-check.3.12 appends to every `forbidden-citation` error, so the
+/// The repair §FS-check.3.12 appends at ordinary `forbidden-citation` sites, so the
 /// finding says what to do about the offence and not only that it happened. A
 /// rule sentence reuses these bytes with `(<RULE-ID>)` in place of the
-/// `(citation direction)` authority tail and nothing else changed
-/// (§FS-rules.7.5). Lives here rather than beside either message: the
+/// `(citation direction)` authority tail (§FS-rules.7.5). The checker's shared
+/// finalization replaces this suffix for required marked index entries
+/// (§FS-check.3.12.2). Lives here rather than beside either message: the
 /// citation-direction pass is the checker's and the rule sentence is the rules',
 /// and the rules sit below the checker, so the spelling goes all the way down
 /// (§AR-system.4).

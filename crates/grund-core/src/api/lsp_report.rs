@@ -14,7 +14,7 @@ use super::scope_cautions::scan_scope_caution;
 use super::unread_roots::unread_root_warnings;
 use crate::checker::{
     CheckWorkspace, ScanScope, check_chapter_rules, check_project, path_report_scope,
-    retain_diagnostics_in_report_scope, sort_diagnostics,
+    repair_index_citations, retain_diagnostics_in_report_scope, sort_diagnostics,
 };
 use crate::config::Config;
 use crate::model::{CheckReport, Diagnostic};
@@ -107,9 +107,18 @@ fn check_workspace_context(
         .all(|project| project.scan_errors.is_empty());
     for project in &context.projects {
         let config = project.config.clone();
+        let no_workspace = BTreeMap::new();
+        let expected = expected(
+            &project.findings,
+            &config,
+            if context.workspace_loaded {
+                &workspace
+            } else {
+                &no_workspace
+            },
+        );
         let mut project_report = if context.workspace_loaded {
             // §AR-checker.1.3: presentation's bytes, rendered before the checker runs.
-            let expected = expected(&project.findings, &config, &workspace);
             // §FS-workspace.8.1: paths inside a message are spelled from the
             // render root, like the anchors beside them.
             let frame = config
@@ -125,8 +134,6 @@ fn check_workspace_context(
                 &check_workspace,
             )
         } else {
-            let no_workspace = BTreeMap::new();
-            let expected = expected(&project.findings, &config, &no_workspace);
             check_project(
                 config.rules(),
                 config.schema(),
@@ -146,6 +153,15 @@ fn check_workspace_context(
             context
                 .workspace_loaded
                 .then_some((project.alias.as_str(), &workspace)),
+            &mut project_report,
+        );
+        // §FS-check.3.12.2: the editor uses the same repair as both CLI scopes.
+        repair_index_citations(
+            &project.findings,
+            config.rules(),
+            config.schema(),
+            &expected,
+            config.frame(),
             &mut project_report,
         );
         // §FS-lsp.4.1: `grund check`'s warning from its own function

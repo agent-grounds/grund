@@ -37,6 +37,18 @@ kind with an empty rule; make that setting when the directory is a place rather
 than an ID namespace. This is the no-unit trap described by
 [the non-citable-kinds decision](https://github.com/agent-grounds/grund/blob/main/docs/decisions/functional/DF-non-citable-kinds.md#25-obligations-get-a-per-file-unit-and-grounding-follows-the-home).
 
+A kind's own marked index entry is still subject to citation directions. Keep
+the entry when repairing a prohibition: replacing it with a plain link fails
+the index rule. For a v2 kind or global negative default, add the target kind
+to the citing kind's `may` list while preserving existing permissions. For
+example, in `[rules.citations.REQ]`, extend `may = ["GOAL"]` to
+`may = ["GOAL", "REQ"]`. An explicit prohibition instead requires changing
+the matching `must-not` or `warn-not` list; an independent rule sentence
+requires changing the named rule. Adding `may` does not override either.
+The finding names the applicable repair; ordinary citations keep their
+plain-link advice, and suggestions keep their existing wording
+([§FS-check.3.12.2](../functional-spec/FS-check.md#3122-repair-advice-preserves-a-required-index-entry)).
+
 The config and the generated section below are the same example. The TOML is
 shown beside the Markdown it renders:
 

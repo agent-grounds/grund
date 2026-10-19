@@ -18,8 +18,9 @@ use super::unread_roots::unread_root_warnings;
 use crate::checker::{
     CheckWorkspace, check_chapter_rules, check_project, configured_scope, out_of_scope_references,
     out_of_scope_section_headings, parse_ad_hoc, parse_ad_hoc_with_workspace, path_report_scope,
-    retain_diagnostics_in_report_scope, retain_findings_in_scope, scope_read_any_file,
-    sort_diagnostics, workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
+    repair_index_citations, retain_diagnostics_in_report_scope, retain_findings_in_scope,
+    scope_read_any_file, sort_diagnostics, workspace_out_of_scope_references,
+    workspace_out_of_scope_section_headings,
 };
 use crate::config::{Config, Invocation, ProjectRecords, Selection};
 use crate::model::{CheckReport, Diagnostic, Finding};
@@ -190,6 +191,15 @@ pub(super) fn run_check_with_run_warnings(
         resolution_was_complete,
         ad_hoc,
         None,
+        &mut report,
+    );
+    // §FS-check.3.12.2: both direction producers share entry-preserving advice.
+    repair_index_citations(
+        &findings,
+        config.rules(),
+        config.schema(),
+        &expected,
+        config.frame(),
         &mut report,
     );
     // §FS-scan.checks.unread-scan-root: before the narrowing, which drops it where the
@@ -370,6 +380,15 @@ fn run_workspace_check(
             rules_complete,
             ad_hoc.clone(),
             Some((&project.alias, &workspace)),
+            &mut project_report,
+        );
+        // §FS-check.3.12.2: repair in this project's config vocabulary before merging.
+        repair_index_citations(
+            &project.findings,
+            project.config.rules(),
+            project.config.schema(),
+            &expected,
+            frame,
             &mut project_report,
         );
         // §FS-scan.checks.unread-scan-root.scope: each project in its own `grund.toml`.

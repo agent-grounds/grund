@@ -184,19 +184,16 @@ fn default_repair(rules: &str, exit: i32, severity: &str) {
 }
 
 #[test]
-#[ignore = "red until #842 gives kind defaults an accepted index repair; implement removes this"]
 fn kind_default_index_repair_names_the_may_edit() {
     default_repair(&kind_default("must-not"), 1, "error");
 }
 
 #[test]
-#[ignore = "red until #842 gives warning defaults an accepted index repair; implement removes this"]
 fn warning_default_index_repair_keeps_its_channel() {
     default_repair(&kind_default("warn-not"), 0, "warning");
 }
 
 #[test]
-#[ignore = "red until #842 gives global defaults an accepted index repair; implement removes this"]
 fn global_default_index_repair_names_the_kind_override() {
     default_repair(
         "[rules.citations]\ndefault = \"must-not\"\n[rules.citations.REQ]\nmay = [\"GOAL\"]",
@@ -206,7 +203,6 @@ fn global_default_index_repair_names_the_kind_override() {
 }
 
 #[test]
-#[ignore = "red until #842 names the explicit prohibition instead of a plain link; implement removes this"]
 fn explicit_prohibition_index_repair_names_the_actual_list() {
     let repo = Repo::new("[rules.citations.REQ]\nmust-not = [\"REQ\"]");
     let rows = repo.check(1, false);
@@ -223,7 +219,6 @@ fn explicit_prohibition_index_repair_names_the_actual_list() {
 }
 
 #[test]
-#[ignore = "red until #842 fixes the independent rule producer's index advice; implement removes this"]
 fn rule_sentence_index_repair_names_its_authority() {
     let repo = Repo::new(concat!(
         "[rules.citations.REQ]\nmay = [\"GOAL\", \"REQ\"]\n",

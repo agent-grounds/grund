@@ -1,0 +1,80 @@
+//! Applicable repairs for required marked index entries (§FS-check.3.12.2).
+//! Both direction producers finish here, after rule deduplication, so repair
+//! selection changes only message text and never a verdict or its authority.
+
+use std::collections::BTreeMap;
+
+use super::citation_prohibitions::citation_site_level;
+use super::index::marked_index_entries;
+use crate::config::{Frame, Rules, Schema};
+use crate::model::{CITATION_DIRECTION_REPAIR, Catalog, CheckReport, Expected};
+
+/// §FS-check.3.12.2: replace only the ordinary repair suffix at actual entry
+/// sites, for both configuration and independent rule-sentence findings.
+/// Call after both passes, before narrowing or merging project reports; a
+/// suggestion has no repair and is left byte-for-byte unchanged.
+pub(crate) fn repair_index_citations(
+    findings: &Catalog,
+    rules: &Rules,
+    schema: &Schema,
+    expected: &Expected,
+    frame: Frame<'_>,
+    report: &mut CheckReport,
+) {
+    if !report
+        .errors
+        .iter()
+        .chain(&report.warnings)
+        .any(|finding| finding.code == "forbidden-citation")
+    {
+        return;
+    }
+    let entries = marked_index_entries(findings, schema, frame, &expected.index_targets)
+        .into_iter()
+        .map(|cite| ((cite.file.as_path(), cite.line, cite.column), cite))
+        .collect::<BTreeMap<_, _>>();
+    for finding in report.errors.iter_mut().chain(&mut report.warnings) {
+        if finding.code != "forbidden-citation" {
+            continue;
+        }
+        let (Some(path), Some(line), Some(column)) =
+            (finding.path.as_deref(), finding.line, finding.column)
+        else {
+            continue;
+        };
+        let Some(cite) = entries.get(&(path, line, column)) else {
+            continue;
+        };
+        let Some(prefix) = finding.message.strip_suffix(CITATION_DIRECTION_REPAIR) else {
+            continue;
+        };
+        let repair = if !finding.authority.is_empty() {
+            format!(
+                "change the prohibition in rule {}",
+                finding.authority.join(", ")
+            )
+        } else {
+            let Some((level, matched)) = citation_site_level(rules, cite) else {
+                continue;
+            };
+            let table = if frame.version == 2 {
+                "rules.citations"
+            } else {
+                "citations"
+            };
+            let table = format!("[{table}.{}]", cite.source_kind);
+            if matched.is_empty() {
+                format!(
+                    "add {} to the may list in {table}, preserving existing permissions",
+                    cite.id.kind
+                )
+            } else {
+                format!(
+                    "change the matching {} prohibition in {table}",
+                    level.as_str()
+                )
+            }
+        };
+        finding.message = format!("{prefix} — retain the marked index entry and {repair}");
+    }
+}

@@ -15,7 +15,8 @@ use crate::model::{CITATION_DIRECTION_REPAIR, Catalog, Citation, Diagnostic};
 /// §AR-checker.2.10 / §FS-check.3.12: a citation site whose citing kind prohibits
 /// its target is a `forbidden-citation` error (`must-not`) or a
 /// `discouraged-citation` suggestion (`should-not`). The error carries
-/// §FS-check.3.12's repair suffix; the suggestion does not (§FS-check.2.3). A
+/// §FS-check.3.12's ordinary repair suffix, finalized for required index entries
+/// by §FS-check.3.12.2; the suggestion has none (§FS-check.2.3). A
 /// citation a stub's target lends is a site of its kind at its line in the target,
 /// judged as the scanned tree judges it (§FS-check.3.12, §FS-rules.7.11). A citation
 /// of a name under a number is an ordinary site (§FS-rules.7.12).
@@ -99,8 +100,10 @@ fn prohibition_diagnostic(
 /// The direction level a citation site resolves to (§FS-config.3.9.4): the
 /// explicit list it matches under its citing kind's rules, with the entries of
 /// that list it matches, else the per-kind `default`, else the global
-/// `default`, else `may`; a default level has no entry behind it.
-fn citation_site_level<'r>(
+/// `default`, else `may`; a default level has no entry behind it. The shared
+/// repair selection reads this same resolution to name the applicable list
+/// rather than reimplement precedence (§FS-check.3.12.2).
+pub(super) fn citation_site_level<'r>(
     rules: &'r Rules,
     cite: &Citation,
 ) -> Option<(CitationLevel, Vec<&'r CitationDisjunction>)> {
