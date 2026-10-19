@@ -126,6 +126,7 @@ owners = [
   "crates/grund-core/src/rules/sentence/conjunction.rs",
   "crates/grund-core/src/rules/sentence/count.rs",
   "crates/grund-core/src/rules/sentence/forms.rs",
+  "crates/grund-core/src/rules/sentence/literal.rs",
   "crates/grund-core/src/rules/sentence/predicate.rs",
   "crates/grund-core/src/rules/sentence/recovery.rs",
   "crates/grund-core/src/rules/sentence/selectors.rs",
