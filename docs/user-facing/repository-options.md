@@ -38,6 +38,15 @@ alias like `payments/FS-refunds` resolving to a neighboring repo — are not yet
 supported.
 See [§FS-workspace](../functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace).
 
+A check from a member directory, or `grund check <member>`, checks that member
+locally and still rejects cross-project citations. When the refused alias names
+the verified enclosing workspace's root project, the finding explains the
+membership, gives the root's location from your current directory, and tells
+you to run `grund check` there ([§FS-workspace.5.1.1](../functional-spec/FS-workspace.md#511-verified-enclosing-workspace-guidance)). Follow that location to
+validate the cross-project target; the root check can still report a missing
+declaration or section. A genuinely unknown alias needs correcting rather than
+being treated as the root project's name.
+
 An independently checked project's canonical root also bounds directory
 symlinks: outward directory targets are not scanned, including from inside a
 workspace member, while in-root directory links, file links, and intentional

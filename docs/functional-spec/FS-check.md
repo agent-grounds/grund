@@ -588,6 +588,9 @@ Moved to [§FS-declarations.checks.misplaced-declaration](FS-declarations.md#che
 
 An alias-qualified citation whose alias path is unknown is reported at the citation site in every run, with or without a `[workspace]` ([§FS-workspace.1](FS-workspace.md#1-citation-syntax)); in a workspace run, so is one whose target declaration or target section is missing. The alias resolution rules live in [§FS-workspace.4](FS-workspace.md#4-resolution).
 
+A member-local finding's verified enclosing-workspace explanation and root-check
+remedy are defined by [§FS-workspace.5.1.1](FS-workspace.md#511-verified-enclosing-workspace-guidance).
+
 An unknown alias path names the projects it could have meant, so the fix is in the finding rather than in the config: the outermost workspace root searches every project in scope ([§FS-check.3.8.2](FS-check.md#382-candidates-at-the-outermost-root)); a run narrowed to a subtree searches only for a strict extension of its scope ([§FS-check.3.8.1](FS-check.md#381-a-strict-extension-of-the-narrowed-scope-is-safe-to-hint)) and otherwise names the subtree it covers ([§FS-check.3.8.3](FS-check.md#383-a-narrowed-run-offers-no-candidate)), in the wording [§FS-check.3.8.4](FS-check.md#384-the-scope-only-message-across-three-releases) stages. The citation remains unresolved and the run still fails.
 
 #### 3.8.1 A strict extension of the narrowed scope is safe to hint

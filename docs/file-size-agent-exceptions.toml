@@ -132,12 +132,14 @@ path = "docs/functional-spec/FS-workspace.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 1149, unit = "lines" }
+max_accepted = { value = 1180, unit = "lines" }
 until = "workspace concerns move into independently declared child specs with stable replacements for existing FS-workspace section citations"
 reason = """
 This file is the single normative contract for workspace configuration, resolution, command scope, nested boundaries, and alias IDs. The issue-232 one-line correction belongs in §FS-workspace.5 so its existing citations remain stable. Missing boundary: independently declared child specifications for those concerns, plus a migration for the section citations that currently target this declaration.
 
 Issue 474 changes only the link to the renamed roadmap heading in this file, without adding prose or increasing its size. The former 900-line ceiling was already exceeded; the ceiling is reconciled to the measured 1149 non-blank lines, with the same split boundary and no growth allowance.
+
+Issue 823 adds the member diagnostic point under the existing §FS-workspace.5.1, as its supervising contract requires. The independent workspace child specifications and citation migration named above still do not exist. The ceiling is reconciled to the current 1180 non-blank lines, without headroom for further growth.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-check.md"
@@ -240,4 +242,14 @@ max_accepted = { value = 323, unit = "lines" }
 until = "the run's readers leave for a sibling module, leaving the record format and its modes here"
 reason = """
 Over the soft budget at 318 lines before issue #696 touched it; #696 adds tier_of, the one reading of a record's tier that merge and scripts/bench_store.py share (§AR-benchmarks.7.1), which takes it to 323 and its fifth soft edit, so any staged edit is refused. Missing boundary: the file holds two things. One is the record format, what §AR-benchmarks.7 defines: build_record, tier_of, series_key, merge, compare and jitter, which bench_store.py imports. The other is the run's readers, what the record mode reads off the harness and the machine: summary_ir over iai-callgrind's summary files, fixture_identities, the tool and runner versions, sha256_file, environment_identity and git_head, with probe (§AR-benchmarks.5.1) beside them. Moving the readers to a sibling module changes the commands ci.yml and bench-nightly.yml run and what test_bench_record.py loads, which is outside #696. The ceiling accepts exactly the measured 323 lines and permits no growth.
+"""
+[[exceptions]]
+path = "docs/functional-spec/FS-check.md"
+match = "exact"
+rules = ["large-file-default"]
+kind = "deferred"
+max_accepted = { value = 263592, unit = "bytes" }
+until = "the finding catalog moves into independently declared child specifications and existing FS-check section citations are migrated"
+reason = """
+The check specification still combines recognition, reporting, its finding catalog and watch behavior in one declaration. Issue #823 adds only a cross-reference to the defining member diagnostic point in FS-workspace.5.1.1. Missing boundary: independent finding specifications with a stable mapping for current FS-check section citations; moving that catalog is outside this specification-only diagnostic change. This byte ceiling accepts only the current measured file size, separately from the existing line-budget exception.
 """

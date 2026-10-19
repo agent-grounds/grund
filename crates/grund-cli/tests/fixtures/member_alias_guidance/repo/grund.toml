@@ -1,0 +1,11 @@
+grund_config_version = 2
+project_name = "shop"
+
+[workspace]
+members = ["packages/billing"]
+
+[schema]
+id_format = "{kind}-{number}-{slug}"
+
+[schema.kinds.FS]
+files = ["requirements.md"]
