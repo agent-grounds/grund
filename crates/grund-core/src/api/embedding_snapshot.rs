@@ -33,8 +33,9 @@ fn snapshot(c: &Config, f: &Catalog) -> Value {
         v["path"] = json!(p);
         v
     };
+    // §FS-config.3.2.8: each declaration owns its spelling, not the grouping key.
     let mut declarations = f.declarations.iter().flat_map(|(i,ds)|ds.iter().map(|d|
-        json!({"id":id(i),"kind":i.kind,"number":i.num,"slug":i.slug,
+        json!({"id":id(&d.id),"kind":i.kind,"number":i.num,"slug":i.slug,
             "path":path(&d.file),"line":d.line,"heading_level":d.heading_level,"title":d.title,
             "sections":d.sections.iter().map(|(p,s)|section(p,s)).collect::<Vec<_>>(),
             "duplicate_sections":d.duplicate_sections.iter().map(|(p,s)|section(p,s)).collect::<Vec<_>>(),

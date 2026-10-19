@@ -17,7 +17,9 @@ use crate::grammar::{
     parse_id_arg, parse_id_arg_with_shorthand, render_id, shorthand_candidates, shorthand_names,
 };
 use crate::model::sort_path_key;
-use crate::model::{Catalog, Citation, Declaration, Id, LegacyCitationCandidate};
+use crate::model::{
+    Catalog, Citation, Declaration, Id, LegacyCitationCandidate, paired_declarations,
+};
 
 /// Resolve a query through the canonical grammar first, then combine exact
 /// catalog compatibility with number shorthand (§FS-config.3.2.6, §FS-show.1).
@@ -55,8 +57,19 @@ pub(crate) fn id_arg_targets(
     frame: Frame<'_>,
     findings: &Catalog,
 ) -> std::result::Result<Vec<(Id, Option<String>)>, IdArgError> {
-    if let Ok(parsed) = parse_id_arg(raw, frame.grammar()) {
-        return Ok(vec![parsed]);
+    if let Ok((id, section)) = parse_id_arg(raw, frame.grammar()) {
+        // §FS-config.3.2.8: a successful query reports its declaration's spelling,
+        // including the real target when an equivalent spelling names a stub.
+        let id = findings
+            .declarations
+            .get(&id)
+            .and_then(|decls| {
+                paired_declarations(decls)
+                    .sole()
+                    .map(|home| home.record.id.clone())
+            })
+            .unwrap_or(id);
+        return Ok(vec![(id, section)]);
     }
     let legacy_catalog = legacy_catalog_ids(&findings.declarations);
     let legacy = match_legacy_tail(raw, schema, frame, &legacy_catalog);

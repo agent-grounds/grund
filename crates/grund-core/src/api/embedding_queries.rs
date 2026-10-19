@@ -56,8 +56,9 @@ pub(super) fn scan_data(r: &EmbeddingRequest) -> Result<Value, Value> {
     let (findings, errors) =
         crate::scanner::scan_tree(config.schema(), config.frame(), Some(&r.root), true)
             .map_err(|e| error_data(e, &config_run_warnings(&config)))?;
-    let catalog = findings.declarations.iter().flat_map(|(id, decls)| {
-        decls.iter().map(|d| json!({"id": crate::grammar::render_id(&config.grammar, id),
+    // §FS-config.3.2.8: a declaration's spelling can differ from its numeric map key.
+    let catalog = findings.declarations.values().flat_map(|decls| {
+        decls.iter().map(|d| json!({"id": crate::grammar::render_id(&config.grammar, &d.id),
             "path": display_path(&config, &d.file), "line": d.line,
             "heading_level": d.heading_level, "title": d.title, "stub": d.is_stub,
             "defines": d.defined_in.as_ref().map(|p| crate::model::format_path(p)),

@@ -311,6 +311,9 @@ fn rendered_anchor(heading: &str, presentation: &Presentation) -> String {
 /// what a renderer slugifies for the declaration's own anchor. The title is reduced
 /// to its rendered form (`reduce_heading_text`), matching `section_anchor_text`
 /// (§DF-declaration-anchor, §DF-github-anchor-fidelity).
+/// The record is the target declaration's, including through a stub; its numeric
+/// source spelling supplies the ID, never the querying citation's digits
+/// (§FS-fmt.6.2.2, §FS-config.3.2.8).
 fn declaration_heading_text(decl: &Declaration, grammar: &Grammar) -> String {
     let id = render_id(grammar, &decl.id);
     match &decl.title {

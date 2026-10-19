@@ -422,21 +422,13 @@ impl Grammar {
     }
 
     /// Parse one already-delimited full ID using the exact grammar configured
-    /// for its kind (§FS-config.3.2).
+    /// for its kind, retaining authored numeric digits (§FS-config.3.2.8).
     pub(crate) fn parse_token(&self, token: &str) -> Option<Id> {
         self.kind_parsers.iter().find_map(|(kind, parser)| {
             let caps = parser.captures(token)?;
-            let num = caps
-                .name("num")
-                .map(|value| value.as_str().parse())
-                .transpose()
-                .ok()?;
+            let number = caps.name("num").map(|value| value.as_str());
             let slug = caps.name("slug").map(|value| value.as_str().to_string());
-            Some(Id {
-                kind: kind.clone(),
-                num,
-                slug,
-            })
+            Id::parsed(kind.clone(), number, slug)
         })
     }
 

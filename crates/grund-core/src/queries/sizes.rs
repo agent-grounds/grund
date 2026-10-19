@@ -108,7 +108,8 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
                     project_alias: &project.alias,
                     project_config: &project.config,
                     files: &project.findings.files,
-                    id,
+                    // §FS-config.3.2.8: each measured declaration keeps its own digits.
+                    id: &declaration.id,
                     declaration,
                     section: None,
                     duplicate: duplicate_declaration,
@@ -131,7 +132,8 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
                             project_alias: &project.alias,
                             project_config: &project.config,
                             files: &project.findings.files,
-                            id,
+                            // §FS-config.3.2.8: section rows name their owning home.
+                            id: &declaration.id,
                             declaration,
                             section: Some((section, info)),
                             duplicate: duplicate_section,
