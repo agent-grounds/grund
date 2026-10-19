@@ -1,4 +1,4 @@
-//! Same-file advice preserves OwnFile pairing (§FS-declarations.stubs.verdict.repair).
+//! Same-file advice preserves OwnFile pairing (§FS-declarations.stubs.repair).
 
 use super::support::*;
 use serde_json::Value;

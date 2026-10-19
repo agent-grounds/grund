@@ -1,4 +1,4 @@
-//! Missing-target repair guidance and its boundaries (§FS-declarations.stubs.verdict.repair).
+//! Missing-target repair guidance and its boundaries (§FS-declarations.stubs.repair).
 //! These black-box tests invoke the built CLI on the issue #820 fixture.
 
 #[path = "missing_stub_repair/support.rs"]

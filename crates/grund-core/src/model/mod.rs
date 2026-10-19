@@ -79,7 +79,7 @@ pub(crate) use file_record::{
     RecordedHeading,
 };
 pub(crate) use headings::UnmarkedHeadingCandidate;
-// §FS-declarations.stubs.verdict.repair: checker and queries share the guidance.
+// §AR-system.2.2: checker and queries share the guidance.
 pub(crate) use missing_stub_repair::MissingStubRepair;
 pub(crate) use paths::{
     configured_home_path_key, format_path, is_hidden, normalize_path_lexically, relative_from_base,

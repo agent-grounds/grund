@@ -36,7 +36,7 @@ pub(crate) fn declaration_ambiguity_refusal(
 /// A valid stub/inline pair is one home; multiple independent homes refuse with
 /// all sites in show's deterministic order (§FS-show.2.2.1, §FS-refs.4).
 /// Missing-target guidance shares the checker's derivation and located suffix
-/// (§FS-declarations.stubs.verdict.repair).
+/// (§AR-system.2.2).
 pub(super) fn ambiguous_id_refusal(
     config: &Config,
     path_config: &Config,
