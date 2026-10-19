@@ -45,7 +45,7 @@ An error whose only named remedy the tool refuses to perform is one a repository
 
 ## 1. Inputs
 
-- Optional path argument; defaults to the current directory. May be a directory or a single file (`grund check crates/grund-core/src/scanner/file_pass.rs` scopes the scan to one file but still discovers the `grund.toml` by walking up — [§FS-config.1](FS-config.md#1-file-location-and-discovery)).
+- Optional path argument, a directory or a single file, which narrows the report; with none, the run covers the project discovered from the current directory ([§FS-scan.path.none](FS-scan.md#pathnone-a-run-with-no-path-covers-the-project-discovery-finds)).
 - The scanned tree may contain markdown (`.md`) and source files (Rust, Go, Java, TS, Python, etc.).
 - Optional `grund.toml` configuring the run per [§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable) ([§FS-config](FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up)).
 - Optional `[workspace]` config; when present and `check` is run at the workspace root, `check` validates alias-qualified cross-project citations per [§FS-workspace](FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace).
