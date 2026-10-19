@@ -165,6 +165,8 @@ fn propose_id_run(
     let id = Id {
         kind: kind.to_string(),
         num: number,
+        // §FS-config.3.2.8: allocation chooses width independently of source digits.
+        number_spelling: None,
         slug: if kind_format.contains("{slug}") {
             Some(slug.clone())
         } else {

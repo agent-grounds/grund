@@ -124,17 +124,14 @@ fn links(version: u8, per_kind: bool) {
 macro_rules! regressions {
     ($reports:ident, $diagnostics:ident, $links:ident, $version:literal, $per_kind:literal) => {
         #[test]
-        #[ignore = "red until #819 retains numeric source spelling; implement removes this"]
         fn $reports() {
             reports($version, $per_kind);
         }
         #[test]
-        #[ignore = "red until #819 retains diagnostic source spelling; implement removes this"]
         fn $diagnostics() {
             diagnostics($version, $per_kind);
         }
         #[test]
-        #[ignore = "red until #819 derives anchors from target headings; implement removes this"]
         fn $links() {
             links($version, $per_kind);
         }
@@ -172,7 +169,6 @@ regressions!(
 
 /// §FS-config.3.2.8: no single report width can recover a mixed-width tree.
 #[test]
-#[ignore = "red until #819 retains each declaration's source digits; implement removes this"]
 fn mixed_width_declarations_are_not_reconstructed_at_any_fixed_width() {
     let mut failures = Vec::new();
     for version in [1, 2] {

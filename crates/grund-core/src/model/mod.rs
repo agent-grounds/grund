@@ -36,6 +36,7 @@ mod expected;
 mod failure;
 mod file_record;
 mod headings;
+mod id;
 mod line_owners;
 mod paths;
 mod patterns;

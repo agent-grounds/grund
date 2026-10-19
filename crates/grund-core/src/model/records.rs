@@ -15,41 +15,7 @@ use super::values::{
     DeclarationSource, EmbeddedValueRoot, InvalidValueSite, ValueBinding, ValueComponent,
 };
 
-/// A parsed ID: its kind plus whichever of `{number}` / `{slug}` the configured
-/// `[id] format` carries (§FS-config.3.2).
-///
-/// `Id` is rendered for output via `render_id` / `format_id`, which honour the
-/// repo's `[id] format` and `--width` (§FS-config.3.2). There is deliberately no
-/// `Display` impl — a bare `{}` would have to guess the format and would be wrong
-/// on any repo that configured a non-default one.
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
-pub struct Id {
-    pub kind: String,
-    pub num: Option<u32>,
-    pub slug: Option<String>,
-}
-
-const LEGACY_ID_SENTINEL: char = '\0';
-
-impl Id {
-    /// Preserve an off-grammar declaration's exact spelling without widening
-    /// the configured authoring grammar (§FS-config.3.2.5). The spelling lives in
-    /// the otherwise grammar-owned slug slot behind an impossible sentinel, so
-    /// existing `Id` construction and kind-based graph rules stay unchanged.
-    pub(crate) fn legacy(kind: String, spelling: &str) -> Self {
-        Self {
-            kind,
-            num: None,
-            slug: Some(format!("{LEGACY_ID_SENTINEL}{spelling}")),
-        }
-    }
-
-    pub(crate) fn legacy_spelling(&self) -> Option<&str> {
-        self.slug
-            .as_deref()
-            .and_then(|slug| slug.strip_prefix(LEGACY_ID_SENTINEL))
-    }
-}
+pub use super::id::Id;
 
 /// One declaration site discovered by the scanner: a `# <ID>: …` heading in a
 /// Markdown file or an inline declaration in a code doc-comment

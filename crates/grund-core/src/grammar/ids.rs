@@ -31,7 +31,8 @@ use super::glob_candidate::{CandidateReading, CitationTokens};
 use crate::model::Id;
 
 /// Pull an `Id` out of a `Grammar` regex match — the `kind` / `num` / `slug`
-/// capture groups the `[id] format` defined (§FS-config.3.2, §AR-scanner.2.1).
+/// capture groups the `[id] format` defined, retaining source digits
+/// (§FS-config.3.2.8, §AR-scanner.2.1).
 pub(crate) fn parse_id(caps: &regex::Captures, grammar: &Grammar) -> Option<Id> {
     if let Some(token) = caps.name("id") {
         return grammar.parse_token(token.as_str());
@@ -39,12 +40,9 @@ pub(crate) fn parse_id(caps: &regex::Captures, grammar: &Grammar) -> Option<Id> 
     // Shorthand patterns retain direct component captures because the missing
     // slug is itself the signal carried into shorthand resolution.
     let kind = caps.name("kind")?.as_str().to_string();
-    let num = match caps.name("num") {
-        Some(m) => Some(m.as_str().parse().ok()?),
-        None => None,
-    };
+    let number = caps.name("num").map(|m| m.as_str());
     let slug = caps.name("slug").map(|m| m.as_str().to_string());
-    Some(Id { kind, num, slug })
+    Id::parsed(kind, number, slug)
 }
 
 /// Parse a CLI `<ID>[.<section>]` argument (the form ID queries and `grund refs` take,
@@ -157,7 +155,9 @@ impl Grammar {
 /// access to the citing or target project's `[id] format` at this point.
 /// A workspace-root run uses `parse_longest_id_prefix` with the target's
 /// grammar (`scan_workspace_qualified_pass`) and is not affected by this
-/// fallback's assumptions.
+/// fallback's assumptions. Numeric captures retain their digits
+/// (§FS-config.3.2.8); an overflowing loose component keeps the existing
+/// numberless fallback reading.
 pub(crate) fn parse_loose_qualified_id_prefix(raw: &str) -> Option<(Id, Option<String>, usize)> {
     let end = loose_token_end(raw);
     let token = raw.get(..end)?;
@@ -171,9 +171,9 @@ pub(crate) fn parse_loose_qualified_id_prefix(raw: &str) -> Option<(Id, Option<S
     {
         return None;
     }
-    let (num, slug) = match rest.split_once(['-', '_']) {
+    let (number, slug) = match rest.split_once(['-', '_']) {
         Some((maybe_num, slug)) if maybe_num.chars().all(|ch| ch.is_ascii_digit()) => {
-            (maybe_num.parse::<u32>().ok(), slug)
+            (maybe_num.parse::<u32>().ok().map(|_| maybe_num), slug)
         }
         _ => (None, rest),
     };
@@ -181,11 +181,7 @@ pub(crate) fn parse_loose_qualified_id_prefix(raw: &str) -> Option<(Id, Option<S
         return None;
     }
     Some((
-        Id {
-            kind: kind.to_string(),
-            num,
-            slug: Some(slug.to_string()),
-        },
+        Id::parsed(kind.to_string(), number, Some(slug.to_string()))?,
         section.map(str::to_string),
         end,
     ))
@@ -235,6 +231,7 @@ pub(crate) fn parse_qualified_id_prefix(raw: &str) -> Option<(Id, Option<String>
             kind: id_text.to_string(),
             num: None,
             slug: None,
+            number_spelling: None,
         },
         section.map(str::to_string),
         end,
@@ -292,7 +289,7 @@ pub(crate) fn split_alias_path(token: &str) -> (Option<&str>, &str) {
 }
 
 /// Render an existing `Id` for a report, listing, or message, preserving the
-/// provider spelling policy of a per-kind override (§FS-config.3.2).
+/// authored numeric digits under the effective grammar (§FS-config.3.2.8).
 pub(crate) fn render_id(grammar: &Grammar, id: &Id) -> String {
     grammar.render(id, 3)
 }

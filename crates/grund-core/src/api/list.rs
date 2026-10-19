@@ -164,7 +164,8 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                     project_alias: project.alias.as_str(),
                     project_config: &project.config,
                     files: &project.findings.files,
-                    id,
+                    // §FS-config.3.2.8: report the selected home, including a stub's target.
+                    id: &home.id,
                     home,
                     duplicate,
                     refs,
