@@ -6,6 +6,7 @@ use std::path::Path;
 
 use super::conflict_blocks::{blocks, marker_of};
 use crate::grammar::render_id;
+use crate::model::format_path;
 use crate::resolver::{
     WorkspaceContext, load_classifying_workspace_context, load_workspace_context,
 };
@@ -44,7 +45,7 @@ fn recorded(root: &Path) -> Vec<String> {
                 let owners = owners.join(" ");
                 format!(
                     "{}:{}-{} [{owners}]",
-                    file.display(),
+                    format_path(file),
                     block.first,
                     block.last
                 )
