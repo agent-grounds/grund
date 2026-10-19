@@ -9,7 +9,7 @@ typed by hand.
 The fixture is the same in every run: a version-2 `grund.toml` with one row, the `FS` kind in
 `docs/functional-spec/`, [`FS-login`](1-count/repo/docs/functional-spec/FS-login.md), whose
 `requirements` chapter holds three named points, the `FS-audit` log it cites, and the code in
-`src/login.py` that cites `FS-login`. The example pins five runs, one per step
+`src/login.py` that cites `FS-login`. The example pins six runs across five steps
 ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)). None writes anything.
 
 ## Step 1: count the checklist
@@ -86,6 +86,21 @@ docs/functional-spec/FS-login.md:9: §FS-audit.entries
 `--from` lists what the point's own body cites, with what its declaration's lead and the
 chapters above it cite on its behalf ([§FS-refs.from](../../docs/functional-spec/FS-refs.md#from---from-lists-what-one-point-cites)). The audit point's citation on line 17 is a
 sibling's, so it is not listed.
+
+To count only the point's outgoing sites inside `src/`, narrow the path:
+
+```bash
+grund refs --from FS-login.requirements.lockout examples/review-checklist/5-cites-src/repo/src --total
+```
+
+```text
+cites nothing
+```
+
+This run exits `0` with empty stderr. The source still resolves in `docs/`, but
+its owned sites are outside `src/`; dropping `--total` prints nothing
+([§FS-scan.path.refs](../../docs/functional-spec/FS-scan.md#pathrefs-refs-scans-the-paths-tree)).
+The code's citations of the source are inbound sites, listed by step 4.
 
 ## Trade-offs
 
