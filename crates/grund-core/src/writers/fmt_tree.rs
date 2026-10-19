@@ -3,18 +3,17 @@
 //! per-line rewriting remains in `fmt_rewrite.rs`.
 
 use anyhow::Result;
-use std::fs;
-use std::ops::Range;
 use std::path::{Path, PathBuf};
 
 use super::fmt_complete_findings::{CompleteFindings, CompleteScan};
+use super::fmt_plan::{PlannedFile, TreePlan, WalkRead, partial_io_error};
 use super::fmt_rewrite::{FmtLineOpts, rewrite_file};
-use super::fmt_section_lock::{LockChange, section_lock_changes};
+use super::fmt_section_lock::{lock_targets, section_lock_changes};
 use super::fmt_settle::settle_headings;
 use crate::checker::{KindIndexEntries, KindIndexFiles};
 use crate::config::{Config, display_path, fmt_excluded};
 use crate::grammar::FMT_DIRECTIVE;
-use crate::model::{Catalog, SECTION_LOCK_DIR};
+use crate::model::Catalog;
 use crate::resolver::{SettledHeadings, ShorthandTargets, WorkspaceContext, index_link_targets};
 use crate::scanner::{
     ApiScanError, api_scan_error, may_give_locked_heading, walk_scannable_files,
@@ -133,19 +132,40 @@ pub(crate) struct FmtRunOpts<'a> {
 /// walk has worked out earlier files. Planning every write first puts each such
 /// refusal, and any a later pass adds, before the first write by construction,
 /// where a guard at each call site is the shape §FS-fmt.7.4.1 records failing.
+/// The lock pass then judges the tree the plan leaves, not the one the walk
+/// read (§FS-section-lock.write.same-run).
 pub(crate) fn fmt_tree(
     config: &Config,
     scope: Option<&Path>,
     explicit_scope: bool,
     opts: &FmtRunOpts<'_>,
 ) -> Result<FmtTreeOutcome> {
+    let plan = plan_tree(config, scope, explicit_scope, opts)?;
+    // §FS-section-lock.write.rules: a run over the whole project brings the locks along.
+    let locks = match plan.judged(config, opts.render)? {
+        // One project's walk leaves every other project as it was loaded.
+        Some(judged) => section_lock_changes(&judged, &lock_targets(opts.workspace, &[])),
+        None => Vec::new(),
+    };
+    plan.write(config, opts.render, locks, opts.write)
+}
+
+/// The walk of [`fmt_tree`], up to the first write (§FS-fmt.7.4.3): every file's
+/// rewrite worked out, in either mode, and nothing written. A workspace run
+/// plans every project this way before it judges any project's locks
+/// (§FS-section-lock.write.same-run).
+pub(super) fn plan_tree<'a>(
+    config: &Config,
+    scope: Option<&Path>,
+    explicit_scope: bool,
+    opts: &FmtRunOpts<'a>,
+) -> Result<TreePlan<'a>> {
     let mut changes = Vec::new();
     let mut refused_writes = Vec::new();
     let mut planned: Vec<PlannedFile> = Vec::new();
     let mut relative_seen = false;
     let add_marker = opts.add_marker;
     let cross_refs = opts.cross_refs;
-    let write = opts.write;
     let workspace = opts.workspace;
     let precomputed_findings = opts.precomputed_findings.map(CompleteFindings::findings);
     // §FS-fmt.6.3: the link pass needs the whole project's declarations, because
@@ -182,8 +202,7 @@ pub(crate) fn fmt_tree(
     // — an index in the walk forced the link pass, so they are there by then.
     let mut index_entries: Option<KindIndexEntries> = None;
     // Holds the scan the shorthand pass triggers, so the borrow in `findings`
-    // outlives the file that asked for it.
-    #[allow(unused_assignments)]
+    // outlives the file that asked for it, and the plan keeps it for the locks.
     let mut shorthand_findings: Option<CompleteScan> = None;
     // §FS-fmt.2.4.5: built once for the whole walk, not once per line — see
     // `ShorthandTargets`. Rebuilt at most once, when the deferred scan lands.
@@ -239,9 +258,6 @@ pub(crate) fn fmt_tree(
         // §FS-config-v2.schema.sources: each file is read as its language is.
         let reading = config.reading(&path);
         let is_md = reading.markdown;
-        let markdown = |target: &Path| config.reading(target).markdown;
-        relative_seen = relative_seen
-            || is_md && may_give_locked_heading(config.frame(), &path, &original, &markdown);
         // §FS-fmt.2.5.1: an excluded file keeps its bytes, so the ordinary pass
         // is off here — every rewrite with it (§FS-fmt.2.5).
         let file_excluded = excluded.contains(&path);
@@ -317,11 +333,20 @@ pub(crate) fn fmt_tree(
                 &mut changes,
             );
         }
-        if write && rewritten.changed {
+        // §FS-fmt.7.3: kept in either mode, so a dry run judges the tree `--write` leaves.
+        let text = rewritten.changed.then(|| {
             let mut text = rewritten.lines.join("\n");
             if original.ends_with('\n') {
                 text.push('\n');
             }
+            text
+        });
+        // §FS-section-lock.write.same-run: asked of the text the run leaves.
+        let markdown = |target: &Path| config.reading(target).markdown;
+        let left = text.as_deref().unwrap_or(&original);
+        relative_seen = relative_seen
+            || is_md && may_give_locked_heading(config.frame(), &path, left, &markdown);
+        if let Some(text) = text {
             // §FS-fmt.7.4.3: planned here, written once every refusal is behind the run.
             planned.push(PlannedFile {
                 path,
@@ -330,123 +355,20 @@ pub(crate) fn fmt_tree(
             });
         }
     }
-    // §FS-section-lock.write.rules: a run over the whole project brings the locks along.
-    let locks = section_lock_changes(
-        config,
-        opts.render,
-        walked.root_scope,
-        findings,
+    let read = match (precomputed_findings, owned_findings.or(shorthand_findings)) {
+        (Some(given), _) => WalkRead::Given(given),
+        (None, Some(scan)) => WalkRead::Scanned(scan),
+        (None, None) => WalkRead::Unread,
+    };
+    Ok(TreePlan {
+        outcome: FmtTreeOutcome {
+            changes,
+            scan_errors,
+            refused_writes,
+        },
+        planned,
         relative_seen,
-        workspace,
-    )?;
-    // §FS-fmt.7.4.3: the walk and the lock pass have both returned, so no refusal
-    // is left to meet; the files go to disk in walk order, and the locks after them.
-    for file in &planned {
-        let written = |error| {
-            partial_io_error(
-                opts.render,
-                &file.path,
-                "write",
-                error,
-                &changes[..file.changes.start],
-                &scan_errors,
-                &refused_writes,
-            )
-        };
-        // §FS-distribution.3.2.2.1: a failed write still reports the files written before it.
-        fs::write(&file.path, &file.text).map_err(written)?;
-        #[cfg(feature = "test-binding-writes")]
-        if let Err(error) = super::binding_write_fault::after_write() {
-            return Err(partial_io_error(
-                opts.render,
-                &file.path,
-                "write",
-                error,
-                &changes[..file.changes.end],
-                &scan_errors,
-                &refused_writes,
-            ));
-        }
-    }
-    for lock in locks {
-        if write && let Err(error) = write_lock(config, &lock) {
-            return Err(partial_io_error(
-                opts.render,
-                &lock.path,
-                "write",
-                error,
-                &changes,
-                &scan_errors,
-                &refused_writes,
-            ));
-        }
-        changes.extend(
-            lock.rows
-                .into_iter()
-                .map(|(line, row)| (lock.path.clone(), line, row)),
-        );
-    }
-    Ok(FmtTreeOutcome {
-        changes,
-        scan_errors,
-        refused_writes,
+        root_scope: walked.root_scope,
+        read,
     })
-}
-
-/// One file's rewrite as the walk planned it (§FS-fmt.7.4.3): its new text, and
-/// the range of the run's changes it accounts for, so a write that fails can
-/// report exactly the files written before it.
-struct PlannedFile {
-    path: PathBuf,
-    text: String,
-    changes: Range<usize>,
-}
-
-/// Bring a lock file to `lock.text` (§FS-section-lock.file.shard): one with no
-/// entry is deleted, and with it each directory under `.grund/sections/` it
-/// leaves empty, that one included.
-fn write_lock(config: &Config, lock: &LockChange) -> std::io::Result<()> {
-    if !lock.text.is_empty() {
-        if let Some(dir) = lock.path.parent() {
-            fs::create_dir_all(dir)?;
-        }
-        return fs::write(&lock.path, &lock.text);
-    }
-    if lock.exists {
-        fs::remove_file(&lock.path)?;
-    }
-    let sections = config.root.join(SECTION_LOCK_DIR);
-    let under = |dir: &&Path| dir.starts_with(&sections);
-    for dir in lock.path.ancestors().skip(1).take_while(under) {
-        let sources = config.frame().sources();
-        if !sources
-            .read_dir(dir)
-            .is_ok_and(|mut entries| entries.next().is_none())
-        {
-            break;
-        }
-        fs::remove_dir(dir)?;
-    }
-    Ok(())
-}
-
-fn partial_io_error(
-    render: &Config,
-    path: &Path,
-    verb: &str,
-    error: std::io::Error,
-    changes: &[(PathBuf, usize, String)],
-    scan_errors: &[ApiScanError],
-    refused_writes: &[String],
-) -> anyhow::Error {
-    let mut diagnostic = crate::model::OperationDiagnostic::filesystem(
-        path,
-        &error,
-        format!("{verb} {}", path.display()),
-    );
-    diagnostic.partial_output = serde_json::json!({"changes":changes.iter().map(|(path,line,label)|
-            serde_json::json!({"path":display_path(render,path),"line":line,"label":label})).collect::<Vec<_>>(),
-            "scan_errors":scan_errors.iter().map(|e|serde_json::json!({"path":e.path,"message":e.message})).collect::<Vec<_>>(),
-            "refused_writes":refused_writes});
-    anyhow::Error::new(error).context(diagnostic)
 }

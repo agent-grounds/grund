@@ -10,9 +10,10 @@
 //! reads is re-exported below, and everything else is the component's own
 //! (§AR-core-module-layout.1.1). Each file keeps the name of the writer it belongs
 //! to rather than dropping a prefix, because this component holds five: the
-//! `fmt_*` files are the formatter — the rewrite walk, the link pass, the
-//! value-binding protection, the workspace pass, the completeness proof and the
-//! one refusal it carries out — `id.rs` is the ID proposal, the `fetch*` pair is
+//! `fmt_*` files are the formatter — the rewrite walk, the plan it leaves and
+//! writes, the link pass, the lock pass, the value-binding protection, the
+//! workspace pass, the completeness proof and the one refusal it carries out —
+//! `id.rs` is the ID proposal, the `fetch*` pair is
 //! the snapshot, `atomic_install.rs` the atomic replace it shares with
 //! `config migrate` (§AR-config.8.3), the `init_*` files are the scaffold (the run and its report,
 //! the plan one run makes, the block splice, what this run renders the block
@@ -81,6 +82,7 @@ mod fmt_complete_findings;
 mod fmt_error;
 mod fmt_links;
 mod fmt_local_sections;
+mod fmt_plan;
 mod fmt_rewrite;
 mod fmt_section_lock;
 mod fmt_settle;

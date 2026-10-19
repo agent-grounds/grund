@@ -84,6 +84,7 @@ relative to `crates/grund-core/src/`.
 | Existing owner | Split destination | Subject owned by the destination |
 | --- | --- | --- |
 | `writers/fmt_rewrite.rs` | `writers/fmt_tree.rs` | `FmtRunOpts`, `FmtTreeOutcome`, `fmt_tree`, tree and scope orchestration, and automatic cross-reference enabling ([§FS-fmt.6.6](../functional-spec/FS-fmt.md#66-why-generated-configs-enable-cross-references)); per-file and per-line rewriting stays in `fmt_rewrite.rs`. |
+| `writers/fmt_tree.rs` | `writers/fmt_plan.rs` | `TreePlan`: one walk's rewrites with nothing written, the tree its lock pass judges ([§FS-section-lock.write.same-run](../functional-spec/FS-section-lock.md#writesame-run-an-entry-records-the-tree-as-the-same-run-leaves-it)), and the writes once the run's last refusal is behind it ([§FS-fmt.7.4.3](../functional-spec/FS-fmt.md#743-nothing-is-written-before-the-last-refusal)); the walk stays in `fmt_tree.rs`, and the workspace pass plans every project before it judges any project's locks. |
 | `checker/references.rs` | `checker/reference_scope.rs` | `ScanScope`, configured-scope narrowing, out-of-scope passes, and diagnostic tagging; citation resolution, alias hints, and their diagnostics stay in `references.rs`. |
 | `api/tests_embedding.rs` | `api/tests_init_guidance.rs` | The three init-next and scaffold cases; the remaining embedding, list, check, and config cases stay in `tests_embedding.rs`. |
 | `writers/tests_integrations.rs` | None | The already-compliant owner and its 18 cases stay intact and remain part of acceptance. |
