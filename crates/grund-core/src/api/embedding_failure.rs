@@ -1,7 +1,7 @@
 //! Lossless failure envelopes for hosts (§FS-distribution.3.3.2).
 
 use super::embedding_data::Data;
-use crate::{Finding, OperationDiagnostic, RefsOutput, ShowQueryError};
+use crate::{Finding, FindingSite, OperationDiagnostic, RefsOutput, ShowQueryError};
 use serde_json::{Value, json};
 
 pub(super) fn failure(kind: &str, code: &str, message: String, cautions: &[Finding]) -> Value {
@@ -47,6 +47,27 @@ pub(super) fn error_data(error: anyhow::Error, cautions: &[Finding]) -> Value {
         result["code"] = json!("io");
         result["partial_output"] = json!({"changes":[],"scan_errors":abort.scan_errors.data(),
             "refused_writes":[]});
+    }
+    // §FS-distribution.3.3.2: a conflict block is an operation refusal located at the
+    // first block, one site per block, carrying every block's finding in `details`.
+    if let Some(abort) = error.downcast_ref::<crate::FmtConflictAbort>() {
+        let first = abort.conflicts.first();
+        result["code"] = json!("conflict-marker");
+        result["path"] = json!(first.and_then(|conflict| conflict.path.as_deref()));
+        result["line"] = json!(first.and_then(|conflict| conflict.line));
+        let sites: Vec<FindingSite> = abort
+            .conflicts
+            .iter()
+            .filter_map(|conflict| {
+                Some(FindingSite {
+                    path: conflict.path.clone()?,
+                    line: conflict.line?,
+                })
+            })
+            .collect();
+        result["sites"] = sites.data();
+        result["partial_output"] = json!({"changes":[],"scan_errors":[],"refused_writes":[]});
+        result["details"]["conflicts"] = abort.conflicts.data();
     }
     if let Some(refs) = error.downcast_ref::<RefsOutput>() {
         result["run_cautions"] = refs.warnings.data();

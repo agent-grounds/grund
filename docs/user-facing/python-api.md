@@ -106,6 +106,12 @@ once. Unknown ID kinds raise OperationError and rejected ID proposals raise
 QueryError. Wrong Python types raise TypeError; invalid options raise ValueError
 ([§FS-distribution.3.3.2](../functional-spec/FS-distribution.md#332-operational-failures-and-invalid-arguments)).
 
+An `fmt` refused for a merge conflict left in a declaration raises
+OperationError with code `conflict-marker`. Its `.failure` is located at the
+first block, with one site per block and every block's finding in
+`details["conflicts"]`, and `partial_output["changes"]` is empty because nothing
+was written ([§FS-declarations.checks.conflict-marker](../functional-spec/FS-declarations.md#checksconflict-marker-unresolved-merge-conflict)).
+
 Paths accept str or os.PathLike[str]. Omitted root snapshots cwd; explicit files
 and directories retain explicit engine scope. Bytes raise TypeError, surrogate
 paths raise PathEncodingError (a ValueError), and NUL raises ValueError before

@@ -50,6 +50,16 @@ fn command_fmt(args: &[String]) -> ExitCode {
                         error.path, error.message
                     );
                 }
+            } else if let Some(abort) = err.downcast_ref::<FmtConflictAbort>() {
+                // §FS-fmt.3.4: a block's line carries its first line and its finding's message.
+                for conflict in &abort.conflicts {
+                    let path = conflict.path.as_deref().unwrap_or_default();
+                    let line = conflict.line.unwrap_or_default();
+                    eprintln!(
+                        "error: nothing was rewritten: {path}:{line}: {}",
+                        conflict.message
+                    );
+                }
             } else {
                 eprintln!("error: {err:#}");
             }

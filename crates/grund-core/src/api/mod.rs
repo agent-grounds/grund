@@ -139,6 +139,8 @@ mod tests_enclosing_unit;
 #[cfg(test)]
 mod tests_external_facts;
 #[cfg(all(test, unix))]
+mod tests_fmt_conflicts;
+#[cfg(all(test, unix))]
 mod tests_fmt_errors;
 #[cfg(all(test, unix))]
 mod tests_fmt_workspace;
