@@ -26,6 +26,7 @@ use super::project::{Project, Rules, Schema};
 use super::record::{AbsentOptionalNamespace, Config};
 use super::run::Run;
 use super::run_warnings::RunWarning;
+use crate::sources::Buffers;
 
 /// The records a façade was built from (§AR-config.1). Private, so no
 /// component reads past the façade into them except through the accessors.
@@ -269,6 +270,15 @@ impl Config {
         project.workspace.members.clear();
         project.workspace.optional_members.clear();
         self.with_project(project)
+    }
+
+    /// This façade under a run whose readers see `buffers` in front of the disk
+    /// (§AR-system.2.13): how `fmt`'s lock pass reads the tree as its walk
+    /// leaves it, before a byte of it is written (§FS-section-lock.write.same-run).
+    pub(crate) fn with_buffers(&self, buffers: Buffers) -> Self {
+        let mut run = self.run().clone();
+        run.buffers = buffers;
+        Self::from_records(self.project(), &run, self.compiled())
     }
 
     /// The façade over `project` with this run and this compiled grammar, which

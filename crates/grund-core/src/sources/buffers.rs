@@ -53,6 +53,23 @@ impl Buffers {
         }
     }
 
+    /// These buffers with `texts` in front of them, each the file at its path:
+    /// the tree as a `fmt` walk leaves it, which its lock pass judges
+    /// (§FS-section-lock.write.same-run). What a recording run keeps stays
+    /// shared, since a text in front of the disk is never what it read there.
+    pub(crate) fn in_front(&self, texts: impl IntoIterator<Item = (PathBuf, String)>) -> Self {
+        let mut open = BTreeMap::clone(&self.open);
+        open.extend(
+            texts
+                .into_iter()
+                .map(|(path, text)| (canonicalize_existing_prefix(&path), Arc::from(text))),
+        );
+        Self {
+            open: Arc::new(open),
+            record: self.record.clone(),
+        }
+    }
+
     /// These buffers, keeping every path the run reads and every file text it
     /// reads from disk, under the path it was read by: the snapshot a hover
     /// answers from without reading the file again (§FS-lsp.responsiveness.3),
