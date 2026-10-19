@@ -120,7 +120,6 @@ fn refs_from_path_resolution_controls() {
 /// §FS-refs.from: resolving the project source must not leak its out-of-path
 /// owned sites; §FS-refs.from.records fixes the empty total's exact bytes.
 #[test]
-#[ignore = "red until #857 resolves the source in the owning project; implement removes this"]
 fn refs_from_path_bare_source_outside_tree() {
     let fixture = Fixture::new();
     let mut failures = Vec::new();
@@ -144,7 +143,6 @@ fn refs_from_path_bare_source_outside_tree() {
 
 /// §FS-refs.from: a valid section source uses the same project resolution.
 #[test]
-#[ignore = "red until #857 resolves the source in the owning project; implement removes this"]
 fn refs_from_path_section_source_outside_tree() {
     let fixture = Fixture::new();
     let failures = [("", "src"), ("src", "."), ("docs/sub", ".")]
@@ -175,7 +173,6 @@ fn copy_tree(source: &Path, target: &Path) {
 /// §FS-refs.from.stubs and §FS-scan.path.refs: reuse the unscanned-target
 /// fixture to distinguish the stub's home, the site's file, and target homes.
 #[test]
-#[ignore = "red until #857 bounds owned stub sites by the path; implement removes this"]
 fn refs_from_path_stub_outside_tree_with_inline_sites_inside() {
     let fixture = Fixture::new();
     let existing = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

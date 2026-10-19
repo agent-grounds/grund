@@ -327,6 +327,18 @@ $ grund refs --from FS-show.1.8 --total
 cites at 13 sites across 1 file
 ```
 
+A path bounds the citation sites listed, while the source still resolves against
+the project the path discovers
+([§FS-scan.path.refs](../functional-spec/FS-scan.md#pathrefs-refs-scans-the-paths-tree)).
+Since this source owns sites only in its declaration in `docs/`, selecting `src/`
+prints nothing and succeeds; `--total` reports `cites nothing`:
+
+```console
+$ grund refs --from FS-show.1.8 src
+$ grund refs --from FS-show.1.8 src --total
+cites nothing
+```
+
 `--summary`, `--total` and `--format` fold and print both modes as they do ID mode's, and
 a JSON record carries no `kind_title`, since no one queried target names it
 ([§FS-refs.3.2](../functional-spec/FS-refs.md#32---format-json)). Under either flag every positional is the scan path, so an ID
