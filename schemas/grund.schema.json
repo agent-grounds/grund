@@ -1846,6 +1846,7 @@
     "v2CitationRule": {
       "type": "object",
       "description": "What a citing kind (or place) must, warn, should, may, should not, warn not and must not cite.",
+      "x-grund-note": "For a negative default that forbids a kind's own marked index entry, see\n[index-entry repair advice](citation-directions.md) for the `may` edit and how\nexplicit prohibitions and independent rule sentences differ\n([§FS-check.3.12.2](../functional-spec/FS-check.md#3122-repair-advice-preserves-a-required-index-entry)).",
       "x-grund-spec": {
         "id": "FS-config-v2.rules.citations",
         "href": "docs/functional-spec/FS-config-v2.md#rulescitations-rulescitations"
