@@ -110,7 +110,11 @@ CITED = (
 # FS-show.md grew 449 bytes in §FS-show.3.2.1 and FS-fmt.md 959 in §FS-fmt.6.4, each on a
 # citation in a link its author wrote, citing §FS-citations.wrap.enclosing rather than
 # restating it (grund#825).
-BASELINES = {"FS-show.md": 68393, "FS-fmt.md": 94456}
+
+# FS-fmt.md grew by the 3881 bytes of fmt's own refusal of a conflict block, in §FS-fmt.3
+# and §FS-fmt.7.4 and the new §FS-fmt.7.4.3, citing §FS-declarations.checks.conflict-marker
+# for the block and its message rather than restating them (grund#837).
+BASELINES = {"FS-show.md": 68393, "FS-fmt.md": 98337}
 
 
 def _flat(text):
