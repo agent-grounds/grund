@@ -4,8 +4,6 @@
 //! citation is wrapped fresh. The reading has one owner in the grammar; these
 //! cases pin it through the pass that writes, line by line.
 
-use std::path::{Path, PathBuf};
-
 use super::wrap_markdown_links;
 use crate::config::{Config, load_config};
 use crate::model::Catalog;
@@ -16,7 +14,7 @@ const CANON: &str = "specs/FS-001-login.md#fs-001-login-a-user-logs-in";
 
 /// A project whose `FS` kind keeps `FS-001-login` under `docs/specs`, loaded and
 /// scanned: what the pass resolves a citation against.
-fn project(name: &str) -> (PathBuf, Config, Catalog) {
+fn project(name: &str) -> (Config, Catalog) {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -30,13 +28,17 @@ fn project(name: &str) -> (PathBuf, Config, Catalog) {
     );
     let config = load_config(&root).expect("load config");
     let findings = scan_findings(&config, &root);
-    (root, config, findings)
+    (config, findings)
 }
 
-fn wrapped(root: &Path, config: &Config, findings: &Catalog, line: &str) -> String {
+/// The pass over `line` in `docs/notes.md`, spelled under `config.root` as the
+/// walk spells every file it hands the pass. `load_config` canonicalizes the root,
+/// so on Windows the raw fixture path shares no prefix with it, and a file never
+/// written cannot be canonicalized back under it.
+fn wrapped(config: &Config, findings: &Catalog, line: &str) -> String {
     wrap_markdown_links(
         line,
-        &root.join("docs/notes.md"),
+        &config.root.join("docs/notes.md"),
         config,
         findings,
         None,
@@ -49,12 +51,12 @@ fn wrapped(root: &Path, config: &Config, findings: &Catalog, line: &str) -> Stri
 /// of that link (§FS-citations.wrap.enclosing), and the bare one is wrapped.
 #[test]
 fn a_wrap_is_rederived_an_authored_label_is_left_and_a_bare_citation_is_wrapped() {
-    let (root, config, findings) =
+    let (config, findings) =
         project("a_wrap_is_rederived_an_authored_label_is_left_and_a_bare_citation_is_wrapped");
     let line = "A [§FS-001-login](stale.md) wrap, [the §FS-001-login spec](specs/FS-001-login.md) \
                 link, and §FS-001-login bare.";
     assert_eq!(
-        wrapped(&root, &config, &findings, line),
+        wrapped(&config, &findings, line),
         format!(
             "A [§FS-001-login]({CANON}) wrap, [the §FS-001-login spec](specs/FS-001-login.md) \
              link, and [§FS-001-login]({CANON}) bare."
@@ -68,7 +70,7 @@ fn a_wrap_is_rederived_an_authored_label_is_left_and_a_bare_citation_is_wrapped(
 /// text.
 #[test]
 fn every_enclosing_shape_keeps_its_bytes() {
-    let (root, config, findings) = project("every_enclosing_shape_keeps_its_bytes");
+    let (config, findings) = project("every_enclosing_shape_keeps_its_bytes");
     for line in [
         r"See [§FS-001-login: logs in \] for good](specs/FS-001-login.md).",
         "See [§FS-001-login: logs in [draft]](specs/FS-001-login.md).",
@@ -78,11 +80,7 @@ fn every_enclosing_shape_keeps_its_bytes() {
         "See [the §FS-001-login spec]().",
         "See [§FS-001-login, that is §FS-001-login](specs/FS-001-login.md).",
     ] {
-        assert_eq!(
-            wrapped(&root, &config, &findings, line),
-            line,
-            "`{line}` encloses"
-        );
+        assert_eq!(wrapped(&config, &findings, line), line, "`{line}` encloses");
     }
 }
 
@@ -90,10 +88,9 @@ fn every_enclosing_shape_keeps_its_bytes() {
 /// position, so the same citation outside the author's link is still wrapped.
 #[test]
 fn the_same_citation_outside_the_link_is_still_wrapped() {
-    let (root, config, findings) = project("the_same_citation_outside_the_link_is_still_wrapped");
+    let (config, findings) = project("the_same_citation_outside_the_link_is_still_wrapped");
     assert_eq!(
         wrapped(
-            &root,
             &config,
             &findings,
             "See [the §FS-001-login spec](specs/FS-001-login.md), and §FS-001-login itself."
@@ -109,7 +106,7 @@ fn the_same_citation_outside_the_link_is_still_wrapped() {
 /// a code span, a destination that never closes.
 #[test]
 fn what_encloses_nothing_is_wrapped_fresh() {
-    let (root, config, findings) = project("what_encloses_nothing_is_wrapped_fresh");
+    let (config, findings) = project("what_encloses_nothing_is_wrapped_fresh");
     for (line, expected) in [
         (
             r"See \[the §FS-001-login spec](specs/FS-001-login.md).",
@@ -124,11 +121,7 @@ fn what_encloses_nothing_is_wrapped_fresh() {
             format!("See [the [§FS-001-login]({CANON}) spec](specs/FS-001-login.md"),
         ),
     ] {
-        assert_eq!(
-            wrapped(&root, &config, &findings, line),
-            expected,
-            "`{line}`"
-        );
+        assert_eq!(wrapped(&config, &findings, line), expected, "`{line}`");
     }
 }
 
@@ -136,10 +129,9 @@ fn what_encloses_nothing_is_wrapped_fresh() {
 /// so a citation in its alt text is wrapped as it always was.
 #[test]
 fn a_citation_in_an_image_description_is_wrapped() {
-    let (root, config, findings) = project("a_citation_in_an_image_description_is_wrapped");
+    let (config, findings) = project("a_citation_in_an_image_description_is_wrapped");
     assert_eq!(
         wrapped(
-            &root,
             &config,
             &findings,
             "See ![a diagram of §FS-001-login](diagram.png)."
@@ -153,16 +145,15 @@ fn a_citation_in_an_image_description_is_wrapped() {
 /// nothing more is nested and nothing is unwrapped.
 #[test]
 fn an_already_nested_line_rederives_only_its_inner_wrap() {
-    let (root, config, findings) = project("an_already_nested_line_rederives_only_its_inner_wrap");
+    let (config, findings) = project("an_already_nested_line_rederives_only_its_inner_wrap");
     let canonical = format!("See [the [§FS-001-login]({CANON}) spec](specs/FS-001-login.md).");
     assert_eq!(
-        wrapped(&root, &config, &findings, &canonical),
+        wrapped(&config, &findings, &canonical),
         canonical,
         "a fixed point"
     );
     assert_eq!(
         wrapped(
-            &root,
             &config,
             &findings,
             "See [the [§FS-001-login](specs/old.md#gone) spec](specs/FS-001-login.md)."
@@ -178,7 +169,7 @@ fn an_already_nested_line_rederives_only_its_inner_wrap() {
 /// they were before, and the pass wraps the citation in each.
 #[test]
 fn what_the_scope_leaves_out_is_read_as_before() {
-    let (root, config, findings) = project("what_the_scope_leaves_out_is_read_as_before");
+    let (config, findings) = project("what_the_scope_leaves_out_is_read_as_before");
     let wrap = format!("[§FS-001-login]({CANON})");
     for (line, expected) in [
         (
@@ -202,10 +193,6 @@ fn what_the_scope_leaves_out_is_read_as_before() {
             format!("See [the {wrap}"),
         ),
     ] {
-        assert_eq!(
-            wrapped(&root, &config, &findings, &line),
-            expected,
-            "`{line}`"
-        );
+        assert_eq!(wrapped(&config, &findings, &line), expected, "`{line}`");
     }
 }
