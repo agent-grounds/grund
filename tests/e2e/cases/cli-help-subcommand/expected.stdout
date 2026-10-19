@@ -50,6 +50,7 @@ Supported check finding codes:
   chapter-cardinality
   citation-cardinality
   config-version-1
+  conflict-marker
   dangling
   declaration-near-miss
   deprecated-config-location

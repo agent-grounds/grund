@@ -20,6 +20,7 @@ use super::citations::{
     claim_citation_tokens, scan_escaped_citations, scan_legacy_citation_candidates,
     scan_local_section_candidates, scan_shorthand_citations,
 };
+use super::conflict_blocks::MarkerLines;
 use super::context::{
     assign_declaration_bodies, in_some_home, inline_citation_sites, markdown_heading_level,
     resolve_citation_owners, retain_in_body_sections,
@@ -156,10 +157,14 @@ pub(super) fn scan_file_text(
     let mut total_lines = 0usize;
     // §FS-values.3.1.1.1: a literal that closed the line before, held for one line.
     let mut split = None;
+    // §AR-scanner.2.9: conflict marker lines, read off every raw line.
+    let mut markers = MarkerLines::default();
 
     for (idx, line) in text.lines().enumerate() {
         let lineno = idx + 1;
         total_lines = lineno;
+        // §FS-declarations.body.conflict.markers: before the fence skip, which would hide it.
+        markers.read(lineno, line);
         let block = if is_md {
             markdown_blocks.line(line)
         } else {
@@ -589,9 +594,13 @@ pub(super) fn scan_file_text(
         || due.embedded_roots
         || due.declared_chapters
         || has_local_section_candidates
+        // §AR-scanner.2.9: a block's owners are read off the body spans.
+        || markers.any()
     {
         assign_declaration_bodies(findings, &record);
     }
+    // §FS-declarations.body.conflict.where, §FS-declarations.body.conflict.owners.
+    markers.record(path, &record, grammar, findings);
     if due.text_sections {
         retain_in_body_sections(findings);
     }

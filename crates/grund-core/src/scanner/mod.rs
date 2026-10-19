@@ -56,6 +56,7 @@ mod agent_entrypoints;
 mod chapter_values;
 mod citation_line;
 mod citations;
+mod conflict_blocks;
 mod context;
 mod declaration_line;
 mod declaration_lines;
@@ -136,6 +137,8 @@ pub(crate) use walk_reporting::{
 mod tests_chapter_values;
 #[cfg(test)]
 mod tests_config_scan;
+#[cfg(test)]
+mod tests_conflict_blocks;
 #[cfg(test)]
 mod tests_context_homes;
 #[cfg(test)]

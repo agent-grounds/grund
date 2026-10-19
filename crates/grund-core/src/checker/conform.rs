@@ -2,6 +2,7 @@
 //! declaration and heading is judged against its own kind's shape and nothing
 //! else, so the half is handed the schema and no `Rules` (§AR-config.5).
 
+use super::conflict_marker::check_conflict_blocks;
 use super::fields::check_fields;
 use super::glob_citations::check_glob_citations;
 use super::homes::KindHomeIndex;
@@ -16,8 +17,8 @@ use crate::model::{
     paired_declarations, sort_path_key,
 };
 
-/// §AR-checker.1.1: duplicate, misplaced-declaration, broken-stub and
-/// declaration-near-miss (§FS-declarations.checks), the section family, inline
+/// §AR-checker.1.1: duplicate, misplaced-declaration, broken-stub,
+/// declaration-near-miss and conflict-marker (§FS-declarations.checks), the section family, inline
 /// citation style, the opt-in lead budget and the field family (§FS-fields.checks),
 /// each pass in the order the single
 /// driver ran it. Unsorted: the merge sorts (§AR-checker.1.4).
@@ -41,6 +42,8 @@ pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> C
     // §FS-declarations.checks.declaration-near-miss: headings that open like a declaration and
     // parse as none.
     check_declaration_near_misses(catalog, &mut report);
+    // §FS-declarations.checks.conflict-marker: each block the file pass recorded.
+    check_conflict_blocks(catalog, frame, &mut report);
     // §FS-check.checks.glob-citation: patterns written where a citation belongs.
     check_glob_citations(catalog, schema, &mut report);
     // §FS-fields.checks: each declaration against its kind's fields and `closed`.

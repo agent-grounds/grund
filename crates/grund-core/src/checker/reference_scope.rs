@@ -286,6 +286,10 @@ pub(crate) fn retain_findings_in_scope(
     findings
         .near_miss_headings
         .retain(|heading| scope.contains(&heading.file));
+    // §FS-declarations.checks.conflict-marker: a block is reported in the configured scope.
+    findings
+        .conflict_blocks
+        .retain(|block| scope.contains(&block.file));
     findings.scanned_files.retain(|file| scope.contains(file));
     // The shorthand resolutions §AR-scanner.2.6.6 performed against the whole walk
     // are deliberately left standing: a site whose declaration the retains above
