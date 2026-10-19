@@ -245,6 +245,7 @@
             "id": "FS-config.3.2",
             "href": "docs/functional-spec/FS-config.md#32-id--id-grammar"
           },
+          "x-grund-note": "Numeric IDs keep their written digits in reports. With `format = \"{kind}-{number}\"`, a heading `# ADR-0001: Use Postgres` is listed as `ADR-0001`, and a citation of it links to `#adr-0001-use-postgres`. `ADR-1` resolves to that same declaration; its spelling does not change the heading's anchor. This applies to the default grammar and per-kind overrides in both config versions ([§FS-config.3.2.8](../functional-spec/FS-config.md#328-numeric-spelling-survives-reading-and-reporting)). `grund id ADR \"Use Redis\"` still allocates with a minimum of three digits (`ADR-002` when the highest number is 1); pass `--width 4` to mint `ADR-0002`. Existing padding does not set allocation width ([§FS-id.1.2](../functional-spec/FS-id.md#12-number-width)).",
           "properties": {
             "format": {
               "type": "string",

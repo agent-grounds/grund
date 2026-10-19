@@ -147,6 +147,10 @@ def render_table(schema, header, node, out, seen):
             out.append(f"| `{key}` | {type_of(value)} | {default_of(value)} | "
                        f"{cell(value.get('description', ''))}{cite(value)} |")
         out.append("")
+        # `x-grund-note`: what the table's keys mean together, after the keys.
+        note = node.get("x-grund-note") or body.get("x-grund-note")
+        if note:
+            out.append(note + "\n")
     for key, value in body.get("properties", {}).items():
         child = resolve(schema, value)
         if is_table(child):
