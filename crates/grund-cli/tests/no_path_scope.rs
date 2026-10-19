@@ -1,9 +1,9 @@
-//! §FS-scan.path.none: a run given no `<path>` covers the project discovery finds
-//! from the current directory, never that directory alone, and only an explicit
-//! path narrows it. So from a subdirectory `grund <command>` is the run given the
-//! config root's directory, and `grund <command> .` is a narrowed run. The fixture
-//! is grund#854's: a section-locked citation in `src/`, and in `docs/` a citation
-//! of an ID nothing declares.
+//! §FS-scan.path.none: in a project with a config, a run given no `<path>` covers
+//! the project discovery finds, however far below its root the run starts, and only
+//! an explicit path narrows it. So from a subdirectory `grund <command>` is the run
+//! given the config root's directory, and `grund <command> .` is a narrowed run. The
+//! fixture is grund#854's: a section-locked citation in `src/`, and in `docs/` a
+//! citation of an ID nothing declares.
 //!
 //! The help pages say the same in one line (§FS-cli.2.3.2); that test is the red
 //! half of the contract until the pages change.
