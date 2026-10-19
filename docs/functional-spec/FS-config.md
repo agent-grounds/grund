@@ -368,25 +368,9 @@ the forms those authoring surfaces create.
 
 #### 3.2.8 Numeric spelling survives reading and reporting
 
-For an ID accepted by the effective grammar, the authored digits of `{number}`
-are its source spelling. Reading and reporting preserve that spelling, including
-leading zeroes, under both the repository default and a per-kind override
-([§FS-config.3.4.10.1](FS-config.md#34101-format)); the version-2 spellings of those
-settings have the same behavior ([§FS-config-v2.schema.1](FS-config-v2.md#schema1-schema)).
-With `{kind}-{number}`, declarations `ADR-0001` and `ADR-0002` therefore appear
-with those IDs in text reports and machine-readable ID strings. A diagnostic
-for an unresolved citation `ADR-0007` names `ADR-0007`, and a suggestion of the
-first declaration names `ADR-0001`. Visible citation text retains its own
-spelling; it does not rename the target declaration.
+For an ID accepted by the effective grammar, the authored digits of `{number}` are its source spelling. Reading and reporting preserve that spelling, including leading zeroes, under both the repository default and a per-kind override ([§FS-config.3.4.10.1](FS-config.md#34101-format)); the version-2 spellings of those settings have the same behavior ([§FS-config-v2.schema.1](FS-config-v2.md#schema1-schema)). With `{kind}-{number}`, declarations `ADR-0001` and `ADR-0002` therefore appear with those IDs in text reports and machine-readable ID strings. A diagnostic for an unresolved citation `ADR-0007` names `ADR-0007`, and a suggestion of the first declaration names `ADR-0001`. Visible citation text retains its own spelling; it does not rename the target declaration. The target declaration's source spelling is part of the heading text a generated link anchors on ([§FS-fmt.6.2.2](FS-fmt.md#622-the-anchor-slugifies-the-headings-rendered-text)), independently of an equivalent citation's spelling: `# ADR-0001: Use Postgres` and `# ADR-0002: Use Redis` yield `#adr-0001-use-postgres` and `#adr-0002-use-redis`, even when cited as `ADR-1` or `ADR-002`. A section headed `## 1. Why` still yields `#1-why`.
 
-Spelling is distinct from numeric identity: `ADR-1`, `ADR-001` and `ADR-0001`
-still select the same kind and number, and declaring two of them is a duplicate
-under the existing collision rules ([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)).
-Numeric fields remain numbers. Lookup and collisions use numeric identity;
-ordering and next-number derivation retain their existing rules. Allocation alone chooses a minimum
-width ([§FS-id.1.2](FS-id.md#12-number-width)); reading a four-digit declaration
-does not change the default or explicit allocation width, nor repad existing
-headings, filenames or citations ([§DF-id-number-width.4](../decisions/functional/DF-id-number-width.md#4-what-happens-at-the-rollover)).
+Spelling is distinct from numeric identity: `ADR-1`, `ADR-001` and `ADR-0001` still select the same kind and number, and declaring two of them is a duplicate under the existing collision rules ([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)). Numeric fields remain numbers. Lookup and collisions use numeric identity; ordering and next-number derivation retain their existing rules. Allocation alone chooses a minimum width ([§FS-id.1.2](FS-id.md#12-number-width)); reading a four-digit declaration does not change the default or explicit allocation width, nor repad existing headings, filenames or citations ([§DF-id-number-width.4](../decisions/functional/DF-id-number-width.md#4-what-happens-at-the-rollover)).
 
 ### 3.3 Section paths — arbitrary nesting depth
 
@@ -756,16 +740,7 @@ remains 1 ([§FS-config.5](FS-config.md#5-schema-versioning)).
 
 ##### 3.4.10.1 `format`
 
-`format` uses exactly the template placeholders and the repository's
-`number_pattern` and `slug_pattern` validation from [§FS-config.3.2](FS-config.md#32-id--id-grammar). It is
-[§FS-config.3.2](FS-config.md#32-id--id-grammar)'s `format` written at the kind scope, and resolves like any setting
-admitted at two scopes ([§FS-config.principle.rungs](FS-config.md#principlerungs-the-committed-scopes-are-a-relation-not-a-closed-list)): it overrides only this kind, and
-`[id].format` remains the default for every other kind. It is valid
-without `resolve` or `fetch`, but invalid on a non-citable kind.
-
-Numeric spelling follows [§FS-config.3.2.8](FS-config.md#328-numeric-spelling-survives-reading-and-reporting),
-just as it does under the repository default; this override sets a grammar,
-not a report width.
+`format` uses exactly the template placeholders and the repository's `number_pattern` and `slug_pattern` validation from [§FS-config.3.2](FS-config.md#32-id--id-grammar). It is [§FS-config.3.2](FS-config.md#32-id--id-grammar)'s `format` written at the kind scope, and resolves like any setting admitted at two scopes ([§FS-config.principle.rungs](FS-config.md#principlerungs-the-committed-scopes-are-a-relation-not-a-closed-list)): it overrides only this kind, and `[id].format` remains the default for every other kind. It is valid without `resolve` or `fetch`, but invalid on a non-citable kind. Numeric spelling follows [§FS-config.3.2.8](FS-config.md#328-numeric-spelling-survives-reading-and-reporting), just as it does under the repository default; this override sets a grammar, not a report width.
 
 ##### 3.4.10.2 `fetch` and `resolve`
 
