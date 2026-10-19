@@ -14,6 +14,9 @@ The suppressed scope is [§FS-fmt.terms](FS-fmt.md#terms-terms)'s.
   would change what the file means. Which spans they are is [§FS-citations.zones](FS-citations.md#zones-where-citation-text-is-never-rewritten).
 - **wrap** — A citation written as a Markdown link whose text is the citation: the form
   `grund fmt --cross-refs` writes and keeps current.
+- **enclosing link** — A Markdown inline link its author wrote whose text holds a citation and
+  more besides, `[the §<ID> record](…)`: the author's, never a wrap. Which links enclose is
+  [§FS-citations.wrap.enclosing](FS-citations.md#wrapenclosing-a-citation-inside-a-link-its-author-wrote-is-left-to-the-author).
 
 ## requirements: What every reading of a citation holds to
 
@@ -236,19 +239,57 @@ A shorthand inside inline code ([§FS-citations.zones.inline-code](FS-citations.
 
 ## wrap: The wrap
 
-A wrap is the form `grund fmt --cross-refs` writes ([§FS-fmt.6.2](FS-fmt.md#62-form)). Two questions about one are answered here once: what shape `check` asks of a kind's index entry, and how `fmt` tells a citation it already wrapped from one it has not.
+A wrap is the form `grund fmt --cross-refs` writes ([§FS-fmt.6.2](FS-fmt.md#62-form)). Three questions about one are answered here once: what shape `check` asks of a kind's index entry, how `fmt` tells a citation it already wrapped from one it has not, and how both tell a wrap from a citation inside a link its author wrote.
+
+So every citation on a Markdown line is read one of three ways: a **wrap** ([§FS-citations.wrap.recognized](FS-citations.md#wraprecognized-an-existing-wrap-is-recognized-by-its-brackets)), a citation inside an **enclosing link** ([§FS-citations.wrap.enclosing](FS-citations.md#wrapenclosing-a-citation-inside-a-link-its-author-wrote-is-left-to-the-author)), or **unwrapped**. One reading serves every caller: `fmt`'s link pass, `check`'s kind-index entry form and its external enrollment, and `show`'s flatten each ask it rather than writing their own, so none of them can take a link the others leave to its author ([§REQ-one-answer.contract](../requirements/REQ-one-answer.md#contract-one-question-one-tree-one-answer)).
 
 ### wrap.shape: The shape, never the target
 
 `check` requires the **shape** — the citation wrapped as `[§<ID>…](<target>)` — and never the target. A wrap's URL is re-derived on every `grund fmt --cross-refs` pass ([§FS-fmt.6.3](FS-fmt.md#63-idempotency-and-re-derive)), so a heading rename that rots an anchor is a one-line `fmt` diff rather than a second finding here, and re-deriving it in `check` would put the anchor algorithm in a second command for no new coverage.
 
+The shape is a link a reader can follow from the index to the declaration, and two shapes are one: the wrap, and a citation inside an enclosing link whose destination is not empty, such as `- [§<ID>: Use Postgres for all data](use-postgres.md)` ([§FS-citations.wrap.enclosing](FS-citations.md#wrapenclosing-a-citation-inside-a-link-its-author-wrote-is-left-to-the-author)). Either is an ordinary entry, and neither has its target checked. What `fmt` owns is narrower than what `check` credits: only the wrap is `fmt`'s to write and re-derive, and only the canonical wrap enrolls an external source declaration ([§FS-check.3.18.3](FS-check.md#3183-an-external-source-declaration-enrolls-by-its-canonical-link)).
+
 ### wrap.recognized: An existing wrap is recognized by its brackets
 
-A citation is already wrapped when its immediately-preceding character is `[` and its immediately-following text is `](…)` closed by the `)` that balances its `(`. The one test decides both the re-derive of [§FS-fmt.6.3](FS-fmt.md#63-idempotency-and-re-derive) and the no-double-wrap rule; a citation that fails it is wrapped fresh. One function holds the test, and `fmt`, `show`'s flatten ([§FS-show.3.2.1](FS-show.md#321-the-wrap-shape-it-collapses)) and `check`'s kind-index entry form ([§FS-check.3.17.4](FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)) each call it rather than writing it again.
+A citation is already wrapped when its immediately-preceding character is `[` and its immediately-following text is `](…)` closed by the `)` that balances its `(`. The one test decides both the re-derive of [§FS-fmt.6.3](FS-fmt.md#63-idempotency-and-re-derive) and the no-double-wrap rule; a citation that fails it is wrapped fresh, unless it stands inside an enclosing link, which leaves it as written ([§FS-citations.wrap.enclosing](FS-citations.md#wrapenclosing-a-citation-inside-a-link-its-author-wrote-is-left-to-the-author)). One function holds the test, beside the enclosing-link reading, and `fmt`, `show`'s flatten ([§FS-show.3.2.1](FS-show.md#321-the-wrap-shape-it-collapses)) and `check`'s kind-index entry form ([§FS-check.3.17.4](FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)) each call it rather than writing it again.
 
 So a wrap's whole destination is re-derived: `[§<ID>](old(1).md)` keeps no `.md)`. And a `[§<ID>](` whose destination never closes is no wrap, whether or not a later `)` stands on its line: `[§<ID>](stale and an aside (keep me) end.` is wrapped fresh, the `](`, the later `)` and the text before it kept, exactly as `[§<ID>](stale and more` is.
 
 Both answers are grund 0.19.0's, which ended the first-`)` reading; decided in [§DF-fmt-and-editor-answers-from-0-19](../decisions/functional/DF-fmt-and-editor-answers-from-0-19.md#df-fmt-and-editor-answers-from-0-19-fmts-link-wrapper-and-the-editors-title-span-change-in-0190-after-a-release-that-announces-them).
+
+### wrap.enclosing: A citation inside a link its author wrote is left to the author
+
+A citation stands inside an **enclosing link** when it is in the text of a Markdown inline link whose text holds more than the citation: `[the §<ID> record](adr/use-postgres.md)`, or an index row `- [§<ID>: Use Postgres for all data](use-postgres.md)`. Its author wrote that link, its words and its destination, so it is theirs and not a wrap `fmt` keeps:
+
+- **`fmt` leaves the link as written.** The link pass neither wraps the citation nor re-derives the destination, in every run that reaches it: the default pass and the forced `--cross-refs`, the dry run and `--write`, and the kind-index carve-out under `enabled = false` or in a suppressed scope, which this outranks ([§FS-fmt.6.4](FS-fmt.md#64-what-is-never-wrapped)). A wrap written there would be a link inside a link, which CommonMark does not allow: the inner one wins and the rest of the author's link renders as text. Only the link is protected, never the citation in it: a trigger, `--marker` and a shorthand expansion rewrite its token as they would anywhere ([§FS-fmt.2](FS-fmt.md#2-behavior)), and the citation is recognized, resolved and checked like any other, so a dangling citation or a missing section in the text gets its usual finding ([§REQ-no-missed-citation](../requirements/REQ-no-missed-citation.md#req-no-missed-citation-every-citation-the-run-reads-is-checked)).
+- **`check` takes it as a kind-index entry** where its destination is not empty, as it takes a wrap ([§FS-citations.wrap.shape](FS-citations.md#wrapshape-the-shape-never-the-target)), and never compares that destination with the one `fmt` would derive. Each citation in the text counts for its own ID, so `[§<A> and §<B>](both.md)` is an entry for both. An enclosing link whose destination is empty, `[the §<ID> record]()`, goes nowhere: it is no entry, and the ID falls to [§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index). Neither form enrolls an external source declaration, which only the canonical wrap does ([§FS-check.3.18.3](FS-check.md#3183-an-external-source-declaration-enrolls-by-its-canonical-link)).
+- **`show` prints it as written**, because only a wrap collapses ([§FS-show.3.2.1](FS-show.md#321-the-wrap-shape-it-collapses)).
+
+Decided in [§DF-fmt-preserves-authored-link-labels](../decisions/functional/DF-fmt-preserves-authored-link-labels.md#df-fmt-preserves-authored-link-labels-fmt-leaves-a-citation-in-a-link-its-author-wrote-and-check-takes-that-link-as-the-index-entry).
+
+#### wrap.enclosing.shape: Which links enclose
+
+An enclosing link is read on one line, with the extents every other reading of the line uses:
+
+- its text opens at a `[` that is not backslash-escaped, not inside an inline code span ([§FS-citations.zones.inline-code](FS-citations.md#zonesinline-code-an-inline-code-span-closes-on-a-run-of-its-own-length)), and not an image's ([§FS-citations.wrap.enclosing.images](FS-citations.md#wrapenclosingimages-an-image-is-not-a-link));
+- it closes at the `]` that balances that `[`: an unescaped `[` inside opens one more level and an unescaped `]` closes one, so `[the [draft] §<ID> record](…)` encloses, and a bracket that is escaped or inside an inline code span counts for neither;
+- the `]` is followed at once by `(`, and the destination runs to the `)` that balances it, a backslash-escaped parenthesis counting for neither, by the one extent of [§FS-citations.zones.link-destination](FS-citations.md#zoneslink-destination-a-link-destination-is-the-url). A destination that never closes on its line makes no link, so a citation before it is unwrapped and is wrapped fresh, as a `[§<ID>](` that never closes is ([§FS-citations.wrap.recognized](FS-citations.md#wraprecognized-an-existing-wrap-is-recognized-by-its-brackets)).
+
+Only a citation in the text is enclosed. A citation in the destination is in a never-rewrite zone already, one in an inline code span is code, and one after the `)` is outside the link. Surrounding words, punctuation, balanced brackets and other citations in the text are all allowed, and a line may hold the same citation inside an enclosing link and outside one: each occurrence is read by its own position, so the one outside is wrapped and the one inside is left.
+
+#### wrap.enclosing.wrap-wins: A wrap inside a longer text is a wrap
+
+A citation whose own brackets pass the test of [§FS-citations.wrap.recognized](FS-citations.md#wraprecognized-an-existing-wrap-is-recognized-by-its-brackets) is a wrap, whatever brackets stand around it. That decides the line an older `fmt` already nested, `- [[§<ID>](use-postgres.md#…): Use Postgres for all data](use-postgres.md)`, the way CommonMark reads it: the inner `[§<ID>](…)` is the link, a wrap `fmt` keeps re-deriving and `check` takes as the entry, and the outer brackets and `(use-postgres.md)` are text, not an enclosing link. Nothing is nested further and nothing is unwrapped, so such a line is a fixed point under `fmt --write` and `fmt --check`, and `show` collapses only the inner wrap. Taking the outer brackets back out is a hand edit, and the release note of [§DF-fmt-preserves-authored-link-labels](../decisions/functional/DF-fmt-preserves-authored-link-labels.md#df-fmt-preserves-authored-link-labels-fmt-leaves-a-citation-in-a-link-its-author-wrote-and-check-takes-that-link-as-the-index-entry) says how to find the lines.
+
+#### wrap.enclosing.images: An image is not a link
+
+`![a diagram of §<ID>](diagram.png)` is an image, and the brackets of an image never enclose: a `[` that follows an unescaped `!` opens an image description, not a link's text. A citation whose only brackets are an image's is read exactly as it was before this point: `fmt` wraps it as it wraps any unwrapped citation, and `check` reads it as a bare citation and never as an entry. So the credit this point gives an enclosing link never reaches an image.
+
+One image is read as before for another reason. A citation that is an image's whole description, `![§<ID>](diagram.png)`, passes the bracket test of [§FS-citations.wrap.recognized](FS-citations.md#wraprecognized-an-existing-wrap-is-recognized-by-its-brackets) and is read as a wrap, as it has been since that test was written: `fmt` re-derives its destination and `check` takes it as an entry. Reading it otherwise would turn a passing `check` into a failing one, which this point has no licence for, so it is owed to the later change [§FS-citations.wrap.enclosing.scope](FS-citations.md#wrapenclosingscope-only-a-same-line-inline-link-for-now) names.
+
+#### wrap.enclosing.scope: Only a same-line inline link, for now
+
+Only an inline link written on one line is recognized as enclosing. The text of a reference link, `[the §<ID> rationale][pg]`, a collapsed reference `[…][]`, the label of a definition line `[label]: url`, an autolink, the content of a raw HTML `<a>` element, and link text that runs onto another line are not, and a citation in any of them is read as it was before this point. Neither is the citation-only image of [§FS-citations.wrap.enclosing.images](FS-citations.md#wrapenclosingimages-an-image-is-not-a-link), and the editor's hover reads its own bracket test rather than this one. Each of these is owed to a later change, which will extend this point rather than add a second reading beside it.
 
 ## citing-kind: Which kind a citation site counts as
 

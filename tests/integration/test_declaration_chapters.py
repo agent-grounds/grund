@@ -106,7 +106,11 @@ CITED = (
 # FS-show.md grew by the 1006 bytes of `show --batch --glob`: §FS-show.1.9's paragraph
 # and §FS-show.2.6.2's sentence on filtering the generation, which cite
 # §FS-coordinate-globs.errors and §FS-show.2.6.3 rather than restating them (grund#503).
-BASELINES = {"FS-show.md": 67944, "FS-fmt.md": 93497}
+
+# FS-show.md grew 449 bytes in §FS-show.3.2.1 and FS-fmt.md 959 in §FS-fmt.6.4, each on a
+# citation in a link its author wrote, citing §FS-citations.wrap.enclosing rather than
+# restating it (grund#825).
+BASELINES = {"FS-show.md": 68393, "FS-fmt.md": 94456}
 
 
 def _flat(text):

@@ -1,0 +1,2 @@
+docs/adr/README.md:2: error: unknown reference ADR-use-redis
+docs/adr/README.md:3: error: missing section ADR-use-postgres.9

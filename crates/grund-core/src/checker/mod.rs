@@ -141,6 +141,8 @@ mod tests_judge_expected;
 #[cfg(test)]
 mod tests_kind_index;
 #[cfg(test)]
+mod tests_kind_index_authored_labels;
+#[cfg(test)]
 mod tests_kind_index_enrollment;
 #[cfg(test)]
 mod tests_kind_index_entry_form;

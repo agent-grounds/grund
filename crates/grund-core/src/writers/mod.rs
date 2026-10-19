@@ -182,6 +182,8 @@ mod tests_agent_entrypoints;
 #[cfg(test)]
 mod tests_atomic_install;
 #[cfg(test)]
+mod tests_fmt_enclosing_links;
+#[cfg(test)]
 mod tests_fmt_rewrite;
 #[cfg(test)]
 mod tests_id;
