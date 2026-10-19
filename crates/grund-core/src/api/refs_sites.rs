@@ -15,7 +15,7 @@ use super::show::ShowSource;
 use crate::checker::ScanScope;
 use crate::grammar::{path_at_or_under, render_catalog_id};
 use crate::model::{Citation, Declaration, Finding, Id, ShowRenderMode, sort_path_key};
-use crate::queries::{GlobSelection, read_globs, reported_scope};
+use crate::queries::{GlobSelection, read_globs, reported_scope, reports_site};
 use crate::resolver::{
     WorkspaceContext, load_classifying_workspace_context, load_reported_workspace_context,
 };
@@ -71,6 +71,7 @@ fn refs_sites_run(opts: RefsSitesOpts, cautions: &mut Vec<Finding>) -> Result<Re
     // §AR-scanner.2.4.2: the classifying load, which gives each site its enclosing unit.
     let context = load_classifying_workspace_context(&opts.path, opts.path_provided)?;
     *cautions = context_run_warnings(&context);
+    let scope = reported_scope(&context, &opts.path, opts.path_provided)?;
     let (mut sites, note) = match &opts.sites {
         RefsSites::Globs(_) => {
             let selection = GlobSelection::new(&context, &globs)?;
@@ -78,7 +79,6 @@ fn refs_sites_run(opts: RefsSitesOpts, cautions: &mut Vec<Finding>) -> Result<Re
         }
         RefsSites::From(source) => {
             // §AR-resolver.3.3: reuse `show`'s resolution scope, keeping the scanned edges.
-            let scope = reported_scope(&context, &opts.path, opts.path_provided)?;
             let source_context = scope
                 .as_ref()
                 .map(|_| load_reported_workspace_context(&opts.path, opts.path_provided))
@@ -94,6 +94,11 @@ fn refs_sites_run(opts: RefsSitesOpts, cautions: &mut Vec<Finding>) -> Result<Re
             )
         }
     };
+    // §AR-resolver.3.3: each mode lists the report scope's sites (§FS-refs.1.1).
+    sites.retain(|site| {
+        let declarations = &context.projects[site.project].findings.declarations;
+        reports_site(scope.as_ref(), declarations, site.citation)
+    });
     // §FS-refs.globs: in `(path, line, column)` order, each site once however many
     // patterns select it or catalogs hold it.
     let key = |site: &Site| {

@@ -17,7 +17,7 @@ use super::report::context_run_warnings;
 use crate::config::display_path;
 use crate::grammar::{path_at_or_under, render_catalog_id, render_citation_id, render_input_id};
 use crate::model::{Citation, sort_path_key};
-use crate::queries::declaration_ambiguity_refusal;
+use crate::queries::{declaration_ambiguity_refusal, reported_scope, reports_site};
 use crate::resolver::{WorkspaceContext, WorkspaceProject, load_classifying_workspace_context};
 use crate::scanner::{ApiScanError, api_scan_error, resolve_id_arg};
 use crate::workspace::split_qualified_id_arg;
@@ -186,10 +186,15 @@ pub(super) fn refs_impl_with_details(
         .projects
         .iter()
         .position(|project| std::ptr::eq(project, target_project));
+    // §AR-resolver.3.3: the report scope's sites, in a workspace as in one project.
+    let scope = reported_scope(&context, &opts.path, opts.path_provided)?;
     for (index, project) in context.projects.iter().enumerate() {
         // §FS-refs.2: the set holds what a stub's target lends, resolved.
         for citation in project.findings.edges() {
             if context.citation_target(index, citation) != target || citation.id != id {
+                continue;
+            }
+            if !reports_site(scope.as_ref(), &project.findings.declarations, citation) {
                 continue;
             }
             // §FS-refs.2: `--descendants` widens the exact coordinate to its
