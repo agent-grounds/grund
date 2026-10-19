@@ -256,14 +256,22 @@ already found by the scan, never an inference that a file moved or a second file
 with each complete existing message as a contiguous prefix. The duplicate finding appends
 an explanation identifying each missing-target broken stub by `path:line` and its missing
 authored target, followed by the available real declaration sites. With exactly one real
-home, it says that the ID is declared there and tells the reader to point the stub link
-there. A real home is a declaration that is not itself a stub, including a target
+home, it says that the ID is declared there. It tells the reader to point a missing stub's
+link there only when that home is in a different file from that stub. A home in the stub's
+own file remains a declaration fact, but the guidance explains that linking to the same
+file will not pair the stub, under the existing own-file verdict
+([§FS-declarations.stubs.verdict](FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)).
+When several missing stubs share the ID, each instruction must apply only to stubs in a
+different file from the home; no blanket instruction may include a same-file stub.
+A real home is a declaration that is not itself a stub, including a target
 represented by healthy stubs
 ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned));
 other broken stubs are never repair destinations. Several real homes are named in deterministic
 `path:line` order without selecting one or telling the reader to point the stub at one.
 The missing-target finding appends a site-free connection: it states that the ID has one
-real declaration home and the safe action, or several real homes without selecting one,
+real declaration home and the safe action for this stub, or explains that the sole home is
+in this stub's own file and linking to the same file will not pair it, or states that there
+are several real homes without selecting one,
 and identifies the duplicate declaration finding as the source of their locations. It
 names no additional candidate path or line. The missing authored target is the existing
 missing-target fact, not a declaration site. With no real home, the ordinary missing-target

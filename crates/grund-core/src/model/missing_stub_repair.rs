@@ -30,6 +30,12 @@ impl<'a> MissingStubRepair<'a> {
         Self { missing, homes }
     }
 
+    /// Compare the recorded declaration files as the scanner's OwnFile branch
+    /// does, without reading a target (§FS-declarations.stubs.verdict.repair).
+    fn sole_home_is_own_file(&self, stub: &Declaration) -> bool {
+        matches!(self.homes.as_slice(), [home] if home.file == stub.file)
+    }
+
     /// Append the same located facts to duplicate and query messages, leaving
     /// their original sites untouched (§FS-declarations.stubs.verdict.repair).
     pub(crate) fn located_suffix(
@@ -56,9 +62,30 @@ impl<'a> MissingStubRepair<'a> {
             .collect::<Vec<_>>();
         match homes.as_slice() {
             [] => {}
-            [home] => suffix.push_str(&format!(
-                "; {id} is declared at {home}; point the stub link there"
-            )),
+            [home] => {
+                suffix.push_str(&format!("; {id} is declared at {home}"));
+                if self
+                    .missing
+                    .iter()
+                    .any(|(stub, _)| self.sole_home_is_own_file(stub))
+                {
+                    for (stub, _) in &self.missing {
+                        let site = format!("{}:{}", display_path(&stub.file), stub.line);
+                        if self.sole_home_is_own_file(stub) {
+                            suffix.push_str(&format!(
+                                "; stub {site} shares the real home's file; \
+                                 linking to the same file will not pair it"
+                            ));
+                        } else {
+                            suffix.push_str(&format!(
+                                "; point the stub link at {site} to that real home"
+                            ));
+                        }
+                    }
+                } else {
+                    suffix.push_str("; point the stub link there");
+                }
+            }
             _ => suffix.push_str(&format!(
                 "; {id} has several real declaration homes: {}",
                 homes.join(", ")
@@ -69,10 +96,15 @@ impl<'a> MissingStubRepair<'a> {
 
     /// Connect a missing-target finding to its companion without naming another
     /// site or assuming selection retained it (§FS-declarations.stubs.verdict.repair).
-    pub(crate) fn site_free_suffix(&self, id: &str) -> String {
+    pub(crate) fn site_free_suffix(&self, id: &str, stub: &Declaration) -> String {
         match self.homes.len() {
             _ if self.missing.is_empty() => String::new(),
             0 => String::new(),
+            1 if self.sole_home_is_own_file(stub) => format!(
+                "; {id} has one real declaration home in this stub's own file; \
+                 linking to the same file will not pair it \
+                 (see the duplicate declaration finding for its location)"
+            ),
             1 => format!(
                 "; {id} has one real declaration home; point the stub link there \
                  (see the duplicate declaration finding for its location)"
