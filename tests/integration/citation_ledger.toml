@@ -80,18 +80,22 @@ owners = [
   "crates/grund-core/src/grammar/heading_text.rs",
   "crates/grund-core/src/grammar/never_rewrite.rs",
   "crates/grund-core/src/grammar/relative_heading.rs",
+  "crates/grund-core/src/model/conflict_block.rs",
   "crates/grund-core/src/model/file_record.rs",
+  "crates/grund-core/src/model/records.rs",
   "crates/grund-core/src/resolver/anchor_numbering.rs",
   "crates/grund-core/src/resolver/body.rs",
   "crates/grund-core/src/resolver/body_lines.rs",
   "crates/grund-core/src/resolver/link_targets.rs",
   "crates/grund-core/src/resolver/settled_headings.rs",
+  "crates/grund-core/src/scanner/conflict_blocks.rs",
   "crates/grund-core/src/scanner/context.rs",
   "crates/grund-core/src/scanner/extents.rs",
   "crates/grund-core/src/scanner/file_pass.rs",
   "crates/grund-core/src/scanner/record.rs",
   "crates/grund-core/src/scanner/relative_sections.rs",
   "crates/grund-core/src/scanner/slices.rs",
+  "crates/grund-core/src/scanner/stub_homes.rs",
 ]
 
 [[family]]

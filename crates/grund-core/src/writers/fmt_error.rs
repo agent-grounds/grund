@@ -37,7 +37,7 @@ impl std::fmt::Display for FmtScanAbort {
 impl std::error::Error for FmtScanAbort {}
 
 /// A whole-declaration-set rewrite refused because the project holds a conflict
-/// block (§FS-fmt.7.4, §FS-declarations.body.conflict): `conflicts` is each
+/// block (§FS-fmt.7.4, §AR-scanner.2.9): `conflicts` is each
 /// block's `conflict-marker` finding, the one `check` reports
 /// (§FS-declarations.checks.conflict-marker), in root-then-members order in a
 /// workspace, files then lines within a project (§FS-fmt.3.3). Its own type
