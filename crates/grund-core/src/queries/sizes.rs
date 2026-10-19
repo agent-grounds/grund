@@ -7,7 +7,7 @@ use super::list_scope::check_list_scope;
 use super::report_scope::{reported_scope, reports};
 use super::selector_refusal::require_unique_literal;
 use crate::config::{Config, display_path, measure_point_text, run_warning_findings};
-use crate::grammar::render_id;
+use crate::grammar::render_declaration_id;
 use crate::model::{
     Declaration, FileRecords, Finding, Id, SectionInfo, format_path, paired_declarations,
     sort_path_key,
@@ -170,7 +170,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
         // §FS-rules.8: the one subject matcher (§AR-rules.2) says which rows a
         // selector keeps, read as `list` reads it, and a literal counts the same.
         let selected = |row: &Pending<'_>| {
-            let label = render_id(&row.project_config.grammar, row.id);
+            let label = render_declaration_id(&row.project_config.grammar, row.declaration);
             subject.selects(
                 &row.id.kind,
                 &label,
@@ -185,7 +185,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
     // §FS-coordinate-globs.scope.filters: the glob intersects, as `list` reads it.
     if let Some(globs) = &globs {
         pending.retain(|row| {
-            let label = render_id(&row.project_config.grammar, row.id);
+            let label = render_declaration_id(&row.project_config.grammar, row.declaration);
             globs.selects(
                 row.project_index,
                 &label,
@@ -219,7 +219,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
                     .map(|(_, full)| measure_point_text(full, *unit)),
             })
             .collect();
-        let rendered = render_id(&row.project_config.grammar, row.id);
+        let rendered = render_declaration_id(&row.project_config.grammar, row.declaration);
         entries.push(ListSizeEntry {
             project: context
                 .workspace_loaded

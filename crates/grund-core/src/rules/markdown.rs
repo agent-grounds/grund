@@ -3,7 +3,7 @@
 
 use super::RuleAnchor;
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
-use crate::grammar::{Grammar, render_id, section_display_name, unnamed_component};
+use crate::grammar::{Grammar, render_catalog_id, section_display_name, unnamed_component};
 use crate::model::{Catalog, Id, paired_declarations, section_resolves};
 use std::collections::BTreeMap;
 
@@ -74,7 +74,7 @@ pub(crate) fn adapt_workspace(
     for (alias, findings, project) in projects {
         let local = *alias == selected;
         for (id, homes) in &findings.declarations {
-            let bare_label = render_id(project.grammar, id);
+            let bare_label = render_catalog_id(project.grammar, &findings.declarations, id);
             let label = if local {
                 bare_label.clone()
             } else {

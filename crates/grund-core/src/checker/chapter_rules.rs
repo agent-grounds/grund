@@ -3,7 +3,7 @@
 //! the rules component; this module only sequences and merges their results.
 
 use crate::config::{Form, Frame, KindScope, KindTable, Rules, Schema};
-use crate::grammar::render_id;
+use crate::grammar::render_catalog_id;
 use crate::model::{Catalog, CheckReport, Declaration, Diagnostic, paired_declarations};
 use crate::resolver::WorkspaceCheckTarget;
 use crate::rules::RuleAnchor;
@@ -85,7 +85,7 @@ fn rule_declarations<'a>(
         .iter()
         .filter(|(id, _)| rule_kinds.contains(id.kind.as_str()))
         .flat_map(|(id, declarations)| {
-            let origin = render_id(frame.grammar(), id);
+            let origin = render_catalog_id(frame.grammar(), &findings.declarations, id);
             paired_declarations(declarations)
                 .iter()
                 .map(|paired| RuleDeclaration {

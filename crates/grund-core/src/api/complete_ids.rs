@@ -10,7 +10,7 @@ use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 use crate::config::Config;
-use crate::grammar::{render_id, split_alias_path};
+use crate::grammar::{render_catalog_id, split_alias_path};
 use crate::model::{Catalog, Finding, paired_declarations};
 use crate::resolver::load_workspace_context;
 
@@ -125,7 +125,7 @@ fn add_complete_id_candidates(
 ) {
     let qualifier = alias.map(|alias| format!("{alias}/")).unwrap_or_default();
     for (id, decls) in &findings.declarations {
-        let rendered = render_id(&config.grammar, id);
+        let rendered = render_catalog_id(&config.grammar, &findings.declarations, id);
         if include_sections {
             // §FS-declarations.stubs.target.5: a paired declaration's sections are its
             // target's, scanned or not.

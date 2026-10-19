@@ -20,7 +20,7 @@ use anyhow::Result;
 use super::body::slice_site;
 use super::e2e_body::show_e2e_case;
 use crate::config::{Frame, Schema};
-use crate::grammar::flatten_cross_ref_links;
+use crate::grammar::{flatten_cross_ref_links, render_declaration_id};
 use crate::model::{Declaration, DeclarationSource, FileRecords, Id, SectionInfo, ShowRenderMode};
 use crate::scanner::SliceSink;
 
@@ -58,9 +58,27 @@ pub(crate) fn point_body_pair(
         return Ok(Some((body.clone(), body)));
     }
     if let Some(case) = &declaration.e2e_case {
-        let lead =
-            show_e2e_case(schema, frame, None, id, case, None, ShowRenderMode::Default)?.body;
-        let full = show_e2e_case(schema, frame, None, id, case, None, ShowRenderMode::Full)?.body;
+        let spelling = render_declaration_id(frame.grammar(), declaration);
+        let lead = show_e2e_case(
+            schema,
+            frame,
+            None,
+            &spelling,
+            case,
+            None,
+            ShowRenderMode::Default,
+        )?
+        .body;
+        let full = show_e2e_case(
+            schema,
+            frame,
+            None,
+            &spelling,
+            case,
+            None,
+            ShowRenderMode::Full,
+        )?
+        .body;
         return Ok(Some((lead, full)));
     }
 

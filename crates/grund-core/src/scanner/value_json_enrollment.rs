@@ -52,6 +52,7 @@ pub(super) fn enroll_json_member(
     let key_column = json_line_column(text, member.key.span.start).1;
     let member_slice = text[member.span.start..member.span.end].to_string();
     let mut declaration = Declaration {
+        authored_id: Some(member.key.decoded.clone()),
         id: id.clone(),
         file: path.to_path_buf(),
         line: member_line,

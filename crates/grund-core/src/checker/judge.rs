@@ -16,7 +16,7 @@ use super::references::{ReferenceTier, check_citation_resolution};
 use super::section_lock::check_section_locks;
 use super::values::check_values;
 use crate::config::{Frame, KindResolution, Rules, Schema};
-use crate::grammar::{render_id, render_qualified_id};
+use crate::grammar::{render_catalog_id, render_citation_id};
 use crate::model::{Catalog, CheckReport, Diagnostic, Expected, Id, paired_declarations};
 use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
 
@@ -111,7 +111,8 @@ pub(crate) fn judge(
                     "escaped citation {} resolves to a declaration; write {}{} for a live citation, or leave it escaped if it is only an illustration",
                     esc.text.trim(),
                     schema.citation.marker,
-                    render_qualified_id(frame.grammar(), esc.namespace.as_deref(), &esc.id)
+                    super::support::qualify(esc.namespace.as_deref(), &render_citation_id(
+                        frame.grammar(), &findings.declarations, esc, &schema.citation.marker))
                 ),
                 sites: Vec::new(),
                 authority: Vec::new(),
@@ -218,7 +219,7 @@ fn check_unused(
                 column: None,
                 message: format!(
                     "declared but never cited: {}",
-                    render_id(frame.grammar(), id)
+                    render_catalog_id(frame.grammar(), &findings.declarations, id)
                 ),
                 sites: Vec::new(),
                 authority: Vec::new(),

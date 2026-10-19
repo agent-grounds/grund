@@ -72,7 +72,6 @@ pub(super) fn scan_fallback_qualified_citations(
 /// A tail kept whole as one ID: no grammar splits it, so it names no declaration.
 fn opaque_id(tail: &str) -> Id {
     Id {
-        number_spelling: None,
         kind: tail.to_string(),
         num: None,
         slug: None,

@@ -6,7 +6,9 @@ use std::path::{Path, PathBuf};
 
 use super::editor_on_type::{docstring_content_at, line_is_rewritable};
 use crate::config::{Config, fmt_excluded};
-use crate::grammar::{in_escape_position, never_rewrite_context_in, parse_id_arg, render_id};
+use crate::grammar::{
+    in_escape_position, never_rewrite_context_in, parse_id_arg, render_declaration_id,
+};
 use crate::model::{format_path, paired_declarations, relative_from_base};
 use crate::resolver::WorkspaceContext;
 use crate::sources::canonical_snapshot_path;
@@ -85,7 +87,7 @@ impl LspCompletionContext {
                     if home.is_stub {
                         continue;
                     }
-                    let spelling = render_id(&config.grammar, id);
+                    let spelling = render_declaration_id(&config.grammar, paired.record);
                     // §FS-lsp.1.6.2: a displayed spelling must resolve through the
                     // existing parser, including its retained legacy grammar.
                     if id.legacy_spelling() != Some(spelling.as_str())

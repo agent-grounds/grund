@@ -19,7 +19,7 @@ use super::lsp_ranges::{
 use super::lsp_report::{editor_report, editor_report_scope, editor_run_warnings};
 use super::report::{public_lsp_report, public_lsp_run_warnings};
 use crate::config::{Invocation, ProjectRecords, Selection, display_path};
-use crate::grammar::{expand_relative_heading, render_id};
+use crate::grammar::{expand_relative_heading, render_catalog_id, render_citation_id};
 use crate::model::{Declaration, paired_declarations, sort_path_key};
 use crate::queries::{
     LspCitation, LspCompletionContext, LspDeclaration, LspFindingRange, LspShowContext,
@@ -167,7 +167,8 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                 }),
         );
         for (id, decls) in &project.findings.declarations {
-            let rendered = render_id(&project.config.grammar, id);
+            let rendered =
+                render_catalog_id(&project.config.grammar, &project.findings.declarations, id);
             let query_id = lsp_query_id(&context, project, &rendered, None);
             // §FS-config.3.4.3: metadata follows the declaration's owning project.
             // §AR-scanner.4.6: the ID's declarations once its stubs are paired.
@@ -274,7 +275,14 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                 None => Some(project),
             };
             let rendered_id = target_project
-                .map(|target| render_id(&target.config.grammar, &citation.id))
+                .map(|target| {
+                    render_citation_id(
+                        &target.config.grammar,
+                        &target.findings.declarations,
+                        citation,
+                        &project.config.marker,
+                    )
+                })
                 .unwrap_or_else(|| {
                     citation
                         .text

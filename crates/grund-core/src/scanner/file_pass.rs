@@ -227,6 +227,7 @@ pub(super) fn scan_file_text(
                 HeadingKind::Declaration,
             ));
             current = Some(Declaration {
+                authored_id: Some(caps.name("id").unwrap().as_str().to_string()),
                 id,
                 file: path.to_path_buf(),
                 line: lineno,
@@ -312,6 +313,7 @@ pub(super) fn scan_file_text(
             // token as an ordinary catalog declaration, with exact spelling and all
             // body/section state from this same file pass.
             current = Some(Declaration {
+                authored_id: Some(text.to_string()),
                 id: Id::legacy(kind.to_string(), text),
                 file: path.to_path_buf(),
                 line: lineno,

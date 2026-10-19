@@ -58,7 +58,7 @@ pub(super) fn scan_data(r: &EmbeddingRequest) -> Result<Value, Value> {
             .map_err(|e| error_data(e, &config_run_warnings(&config)))?;
     // §FS-config.3.2.8: a declaration's spelling can differ from its numeric map key.
     let catalog = findings.declarations.values().flat_map(|decls| {
-        decls.iter().map(|d| json!({"id": crate::grammar::render_id(&config.grammar, &d.id),
+        decls.iter().map(|d| json!({"id": crate::grammar::render_declaration_id(&config.grammar, d),
             "path": display_path(&config, &d.file), "line": d.line,
             "heading_level": d.heading_level, "title": d.title, "stub": d.is_stub,
             "defines": d.defined_in.as_ref().map(|p| crate::model::format_path(p)),
@@ -70,13 +70,13 @@ pub(super) fn scan_data(r: &EmbeddingRequest) -> Result<Value, Value> {
                 "title":s.title, "line":s.line, "heading_level":s.heading_level})).collect::<Vec<_>>() }))
     }).collect::<Vec<_>>();
     let citations = findings.citations.iter().map(|c| json!({
-        "project": c.namespace, "id": crate::grammar::render_id(&config.grammar,&c.id),
+        "project": c.namespace, "id": crate::grammar::render_citation_id(&config.grammar,&findings.declarations,c,&config.marker),
         "section": c.section, "path": display_path(&config,&c.file),
         "line": c.line, "column": c.column, "marker": c.has_marker, "text": c.text,
         "shorthand": c.shorthand, "local_section": c.local_section,
         "shorthand_rewritable": c.shorthand_rewritable, "numeric_run": c.numeric_run,
         "source_kind": c.source_kind,
-        "enclosing_declaration": c.enclosing_declaration.as_ref().map(|id|crate::grammar::render_id(&config.grammar,id)),
+        "enclosing_declaration": c.enclosing_declaration.as_ref().map(|id|crate::grammar::render_catalog_id(&config.grammar,&findings.declarations,id)),
         "enclosing_section": c.enclosing_section,
     })).collect::<Vec<_>>();
     Ok(json!({"catalog":catalog, "citations":citations,

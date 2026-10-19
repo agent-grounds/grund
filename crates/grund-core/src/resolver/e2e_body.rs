@@ -14,8 +14,7 @@
 use anyhow::{Result, anyhow};
 
 use crate::config::{Frame, Schema};
-use crate::grammar::render_id;
-use crate::model::{E2eCase, Id, ShowOutput, ShowRenderMode, format_path, json_escape};
+use crate::model::{E2eCase, ShowOutput, ShowRenderMode, format_path, json_escape};
 
 /// Render an e2e case as an ID-query body: the invocation, expected exit, and
 /// fixture list (or just the invocation with `--brief`), plus the JSON shape — the
@@ -29,7 +28,7 @@ pub(crate) fn show_e2e_case(
     schema: &Schema,
     frame: Frame<'_>,
     kind_title: Option<&str>,
-    id: &Id,
+    id: &str,
     case: &E2eCase,
     section: Option<&str>,
     mode: ShowRenderMode,
@@ -37,7 +36,7 @@ pub(crate) fn show_e2e_case(
     if let Some(section) = section {
         return Err(anyhow!(
             "section not found: {}{}{}",
-            render_id(frame.grammar(), id),
+            id,
             schema.ids.section_separator,
             section
         ));
@@ -82,7 +81,7 @@ pub(crate) fn show_e2e_case(
     // `fixtures` and before the optional closing `kind_title`.
     let json = format!(
         "{{\"id\":\"{}\",\"kind\":\"E2E\",\"path\":\"{}\",\"args\":[{}],\"expected_exit\":{},\"fixtures\":[{}],\"anchor\":null{}}}",
-        json_escape(&render_id(frame.grammar(), id)),
+        json_escape(id),
         // The frame's display is the report root's: an `<alias>/E2E-x` shown from a
         // workspace root must report the same root-relative path as every other kind
         // (§FS-workspace.8.1.2) — this baked JSON bypasses render_show_output_json.

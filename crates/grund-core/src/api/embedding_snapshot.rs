@@ -3,7 +3,9 @@ use super::embedding::EmbeddingRequest;
 use super::embedding_data::Data;
 use super::embedding_failure::{error_data, failure};
 use crate::config::{Config, display_path};
-use crate::grammar::render_id;
+use crate::grammar::{
+    BindingSpellings, render_catalog_id, render_citation_id, render_declaration_id,
+};
 use crate::*;
 use serde_json::{Value, json};
 
@@ -26,7 +28,8 @@ pub(super) fn scan(r: &EmbeddingRequest) -> Result<Value, Value> {
 }
 
 fn snapshot(c: &Config, f: &Catalog) -> Value {
-    let id = |i: &Id| render_id(&c.grammar, i);
+    let spellings = BindingSpellings::new(f);
+    let id = |i: &Id| render_catalog_id(&c.grammar, &f.declarations, i);
     let path = |p: &std::path::Path| display_path(c, p);
     let section = |p: &str, s: &SectionInfo| {
         let mut v = s.data();
@@ -35,7 +38,7 @@ fn snapshot(c: &Config, f: &Catalog) -> Value {
     };
     // §FS-config.3.2.8: each declaration owns its spelling, not the grouping key.
     let mut declarations = f.declarations.iter().flat_map(|(i,ds)|ds.iter().map(|d|
-        json!({"id":id(&d.id),"kind":i.kind,"number":i.num,"slug":i.slug,
+        json!({"id":render_declaration_id(&c.grammar,d),"kind":i.kind,"number":i.num,"slug":i.slug,
             "path":path(&d.file),"line":d.line,"heading_level":d.heading_level,"title":d.title,
             "sections":d.sections.iter().map(|(p,s)|section(p,s)).collect::<Vec<_>>(),
             "duplicate_sections":d.duplicate_sections.iter().map(|(p,s)|section(p,s)).collect::<Vec<_>>(),
@@ -51,7 +54,7 @@ fn snapshot(c: &Config, f: &Catalog) -> Value {
             .then(a["line"].as_u64().cmp(&b["line"].as_u64()))
     });
     let citation = |v: &Citation| {
-        json!({"namespace":v.namespace,"id":id(&v.id),
+        json!({"namespace":v.namespace,"id":render_citation_id(&c.grammar,&f.declarations,v,&c.marker),
         "section":v.section,"path":path(&v.file),"line":v.line,"column":v.column,
         "marker":v.has_marker,"shorthand":v.shorthand,"local_section":v.local_section,
         "shorthand_rewritable":v.shorthand_rewritable,"numeric_run":v.numeric_run,
@@ -74,7 +77,7 @@ fn snapshot(c: &Config, f: &Catalog) -> Value {
             "doc_comments":s.doc_comments.iter().map(|d|json!({"start":d.start,"end":d.end,"indented":d.indented})).collect::<Vec<_>>(),
             "total_lines":s.total_lines})).collect::<Vec<_>>(),
         "value_bindings":f.value_bindings.iter().map(|v|json!({"namespace":v.namespace,
-            "id":id(&v.id),"section":v.section,"authored":v.authored.data(),"path":path(&v.file),
+            "id":spellings.render(&c.grammar,&f.declarations,v,&c.marker),"section":v.section,"authored":v.authored.data(),"path":path(&v.file),
             "line":v.line,"column":v.column})).collect::<Vec<_>>(),
         "invalid_value_declarations":f.invalid_value_declarations.iter().map(invalid).collect::<Vec<_>>(),
         "invalid_value_bindings":f.invalid_value_bindings.iter().map(invalid).collect::<Vec<_>>(),

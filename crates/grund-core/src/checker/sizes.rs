@@ -1,5 +1,5 @@
 use crate::config::{Frame, LeadSizeWarning, PointSizeUnit, Schema, Strength, measure_point_text};
-use crate::grammar::render_id;
+use crate::grammar::render_declaration_id;
 use crate::model::{
     Catalog, CheckReport, Declaration, Diagnostic, Id, SectionInfo, paired_declarations,
 };
@@ -98,10 +98,10 @@ pub(super) fn lead_budgets(schema: &Schema) -> Vec<(Strength, LeadSizeWarning)> 
 pub(super) fn site_coordinate(
     schema: &Schema,
     frame: Frame<'_>,
-    id: &Id,
+    declaration: &Declaration,
     section: Option<&str>,
 ) -> String {
-    let mut coordinate = render_id(frame.grammar(), id);
+    let mut coordinate = render_declaration_id(frame.grammar(), declaration);
     if let Some(section) = section {
         coordinate.push_str(&schema.ids.section_separator);
         coordinate.push_str(section);
@@ -139,7 +139,12 @@ fn check_oversized_lead_site(
     }) else {
         return;
     };
-    let coordinate = site_coordinate(schema, frame, id, section.map(|(section, _)| section));
+    let coordinate = site_coordinate(
+        schema,
+        frame,
+        declaration,
+        section.map(|(section, _)| section),
+    );
     let channel = match strength {
         Strength::Must => &mut report.errors,
         Strength::Warn => &mut report.warnings,

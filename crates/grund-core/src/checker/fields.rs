@@ -9,7 +9,7 @@ use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 use crate::config::{Field, FieldContent, Frame, Kind, Placement, Schema, Strength};
-use crate::grammar::{render_id, section_display_name};
+use crate::grammar::{render_declaration_id, section_display_name};
 use crate::model::{Catalog, CheckReport, Declaration, Diagnostic};
 
 /// The channel a strength names (§FS-config-v2.rules.strengths); `None` is unchecked.
@@ -77,12 +77,11 @@ fn for_each_finding<'a>(
         if kind.fields.is_empty() && kind.closed == Strength::May {
             continue;
         }
-        let rendered = render_id(frame.grammar(), id);
         let separator = schema.ids.section_separator.as_str();
         for declaration in declarations.iter().filter(|decl| !decl.is_stub) {
             let shape = Shape {
                 kind: &id.kind,
-                id: rendered.clone(),
+                id: render_declaration_id(frame.grammar(), declaration),
                 separator,
                 declaration,
                 direct: direct_sections(declaration),

@@ -12,7 +12,7 @@
 use anyhow::anyhow;
 
 use super::context::{WorkspaceContext, WorkspaceProject};
-use crate::grammar::render_id;
+use crate::grammar::render_catalog_id;
 use crate::scanner::resolve_id_arg;
 
 /// A list of candidates as one clause: `a`, `a or b`, `a, b or c`. A string
@@ -155,7 +155,7 @@ fn qualified_declared_id(project: &WorkspaceProject, raw_id: &str) -> Option<Str
         format!(
             "{}/{}",
             project.alias,
-            render_id(&project.config.grammar, &id)
+            render_catalog_id(&project.config.grammar, &project.findings.declarations, &id)
         )
     })
 }

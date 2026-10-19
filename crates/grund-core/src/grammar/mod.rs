@@ -130,8 +130,9 @@ pub(crate) use id_rules::{
 };
 pub(crate) use ids::{
     MarkdownLineCitation, parse_id, parse_id_arg, parse_qualified_id_prefix, render_id,
-    render_qualified_id, split_alias_path,
+    split_alias_path,
 };
+mod spelling;
 pub(crate) use inline_note_layout::{
     BlockCitations, CITATION_RUN_SEPARATOR, LayoutChannel, block_has_inline_note_memoized,
     inline_layout_violations, inline_note_layout_sentence, inline_note_verdicts, layout_channel,
@@ -144,6 +145,9 @@ pub(crate) use managed_block::{
 };
 pub(crate) use markdown_blocks::{MarkdownBlocks, MarkdownLine, markdown_line_kinds};
 pub(crate) use multi_line_string::MultiLineStrings;
+pub(crate) use spelling::{
+    BindingSpellings, render_catalog_id, render_citation_id, render_declaration_id, render_input_id,
+};
 // The version a managed integrations block is written and read at: the command
 // that installs one stamps it, and that command is the CLI's
 // (§FS-integrations.4.2, §AR-bindings.3).

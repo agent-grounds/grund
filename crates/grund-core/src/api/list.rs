@@ -12,7 +12,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 use crate::config::{Config, KindConfig, display_path};
-use crate::grammar::render_id;
+use crate::grammar::render_declaration_id;
 use crate::model::{
     Declaration, FileRecords, Finding, Id, format_path, paired_declarations, sort_path_key,
 };
@@ -199,7 +199,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
         let exact_matches = entries
             .iter()
             .map(|entry| {
-                let label = render_id(&entry.project_config.grammar, entry.id);
+                let label = render_declaration_id(&entry.project_config.grammar, entry.home);
                 let kind = &entry.id.kind;
                 usize::from(subject.selects(kind, &label, None))
                     + subject.chapter_path(kind, &label).map_or(0, |path| {
@@ -221,10 +221,10 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
             format!(
                 "{}/{}",
                 entry.project_alias,
-                render_id(&entry.project_config.grammar, entry.id)
+                render_declaration_id(&entry.project_config.grammar, entry.home)
             )
         } else {
-            render_id(&entry.project_config.grammar, entry.id)
+            render_declaration_id(&entry.project_config.grammar, entry.home)
         }
     };
     let render_config = context.render_config();
@@ -268,7 +268,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                     })
                     .collect(),
             };
-            let label = render_id(&entry.project_config.grammar, entry.id);
+            let label = render_declaration_id(&entry.project_config.grammar, entry.home);
             // §FS-rules.8: the one subject matcher (§AR-rules.2) says what a row is, and a
             // chapter subject names one whole path, so each declaration contributes the
             // declaration or at most the one chapter at it.

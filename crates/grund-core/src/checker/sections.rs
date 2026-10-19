@@ -20,7 +20,7 @@ use std::collections::BTreeMap;
 use super::reference_scope::ScanScope;
 use super::support::{heading_marks, section_depth};
 use crate::config::{Frame, Schema};
-use crate::grammar::render_id;
+use crate::grammar::render_catalog_id;
 use crate::model::{
     Catalog, CheckReport, Diagnostic, LANDED_CLAUSE, SectionHeadingOutsideDeclaration, Site,
     named_section_path, paired_declarations,
@@ -63,7 +63,7 @@ pub(super) fn check_section_headings(
     // §FS-declarations.checks.unmarked-heading.5 / §AR-checker.2.20: scanner-owned Markdown
     // candidates are errors since 0.16.0, independent of the marked-section heading-level mode.
     report.errors.extend(findings.unmarked_headings.iter().map(|heading| {
-        let rendered_owner = render_id(frame.grammar(), &heading.owner);
+        let rendered_owner = render_catalog_id(frame.grammar(), &findings.declarations, &heading.owner);
         let separator = if named_section_path(&heading.suggested_path) {
             ":"
         } else {
@@ -106,7 +106,8 @@ pub(super) fn check_section_headings(
     report
         .errors
         .extend(findings.relative_section_parents.iter().map(|heading| {
-            let rendered_owner = render_id(frame.grammar(), &heading.owner);
+            let rendered_owner =
+                render_catalog_id(frame.grammar(), &findings.declarations, &heading.owner);
             Diagnostic {
                 code: "relative-section-parent",
                 path: Some(heading.file.clone()),
@@ -157,7 +158,7 @@ pub(super) fn check_section_headings(
                             column: None,
                             message: format!(
                                 "section {}{}{} heading level mismatch: expected {} (level {}), found {} (level {})",
-                                render_id(frame.grammar(), id),
+                                render_catalog_id(frame.grammar(), &findings.declarations, id),
                                 schema.ids.section_separator,
                                 section_path,
                                 heading_marks(expected_level),
@@ -186,10 +187,10 @@ pub(super) fn check_section_headings(
                             column: None,
                             message: format!(
                                 "orphan section {}{}{}: missing prefix {}{}{}",
-                                render_id(frame.grammar(), id),
+                                render_catalog_id(frame.grammar(), &findings.declarations, id),
                                 schema.ids.section_separator,
                                 path,
-                                render_id(frame.grammar(), id),
+                                render_catalog_id(frame.grammar(), &findings.declarations, id),
                                 schema.ids.section_separator,
                                 prefix
                             ),
@@ -238,7 +239,7 @@ pub(super) fn check_section_headings(
                     column: None,
                     message: format!(
                         "duplicate section {}{}{} (also declared at {others})",
-                        render_id(frame.grammar(), id),
+                        render_catalog_id(frame.grammar(), &findings.declarations, id),
                         schema.ids.section_separator,
                         path
                     ),

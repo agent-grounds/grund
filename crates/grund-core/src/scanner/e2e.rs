@@ -114,6 +114,7 @@ pub(super) fn scan_e2e_cases(
             .entry(id.clone())
             .or_default()
             .push(Declaration {
+                authored_id: e2e_source_id(&schema.ids.format, name),
                 id,
                 file: dir.clone(),
                 line: 1,
@@ -144,14 +145,20 @@ pub(super) fn e2e_id_from_case_dir_name(
     grammar: &Grammar,
     name: &str,
 ) -> Option<Id> {
-    let after_kind_literal = literal_after_kind_placeholder(id_format)?;
-    let raw = format!("E2E{after_kind_literal}{name}");
+    let raw = e2e_source_id(id_format, name)?;
     let (id, section) = parse_id_arg(&raw, grammar).ok()?;
     if section.is_none() && id.kind == "E2E" {
         Some(id)
     } else {
         None
     }
+}
+
+/// Keep the case-directory spelling beside its numeric identity
+/// (§FS-config.3.2.8, §AR-scanner.6.1).
+fn e2e_source_id(id_format: &str, name: &str) -> Option<String> {
+    let separator = literal_after_kind_placeholder(id_format)?;
+    Some(format!("E2E{separator}{name}"))
 }
 
 /// Inverse of `e2e_id_from_case_dir_name`: strip the `E2E` prefix off a rendered ID

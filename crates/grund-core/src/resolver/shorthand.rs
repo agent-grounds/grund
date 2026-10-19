@@ -24,10 +24,10 @@ use super::context::{WorkspaceContext, WorkspaceProject};
 use crate::config::{Compiled, Frame, Schema, ShorthandPolicy};
 use crate::grammar::{
     CandidateReading, DocstringContent, ParsedId, QUALIFIED_CITATION_PREFIX, ShorthandIndex,
-    never_rewrite_context_in, parse_id, parse_id_arg, parse_id_arg_with_shorthand, render_id,
-    shorthand_names,
+    never_rewrite_context_in, parse_id, parse_id_arg, parse_id_arg_with_shorthand,
+    render_catalog_id, shorthand_names,
 };
-use crate::model::{Catalog, Citation, Id};
+use crate::model::{Catalog, Citation, Declaration, Id};
 
 /// Everything one `grund fmt` walk needs to expand a shorthand: this project's
 /// declaration index, plus one per workspace alias for the qualified form
@@ -38,6 +38,7 @@ use crate::model::{Catalog, Citation, Id};
 /// is quadratic on exactly the tree this rewrite exists to clean up
 /// (§GOAL-fast-feedback).
 pub(crate) struct ShorthandTargets<'a> {
+    local_declarations: Option<&'a BTreeMap<Id, Vec<Declaration>>>,
     /// `None` until the walk has a declaration set — §FS-fmt.2.4.5 defers that scan
     /// until a shorthand is actually met, so a repo without one never pays for it.
     pub(crate) local: Option<ShorthandIndex<'a>>,
@@ -48,6 +49,7 @@ pub(crate) struct ShorthandTargets<'a> {
 /// schema and grammar the canonical ID renders under (a workspace may mix
 /// `[id] format`s).
 pub(crate) struct ShorthandAliasTarget<'a> {
+    declarations: &'a BTreeMap<Id, Vec<Declaration>>,
     pub(crate) schema: &'a Schema,
     pub(crate) compiled: &'a Compiled,
     pub(crate) index: ShorthandIndex<'a>,
@@ -60,6 +62,7 @@ impl<'a> ShorthandTargets<'a> {
         workspace: Option<&'a WorkspaceContext>,
     ) -> Self {
         Self {
+            local_declarations: findings.map(|found| &found.declarations),
             local: findings
                 .map(|found| ShorthandIndex::build(frame.grammar(), found.declarations.keys())),
             by_alias: workspace
@@ -71,6 +74,7 @@ impl<'a> ShorthandTargets<'a> {
                             (
                                 project.alias.as_str(),
                                 ShorthandAliasTarget {
+                                    declarations: &project.findings.declarations,
                                     schema: project.config.schema(),
                                     compiled: project.config.compiled(),
                                     index: ShorthandIndex::build(
@@ -300,7 +304,11 @@ pub(crate) fn expand_shorthand_citations_with_origins(
         }
         // The ID renders under the *target* project's `[id] format`, which is what
         // makes the rewrite correct in a mixed-format workspace.
-        output.push_str(&render_id(target_grammar, unique));
+        let declarations = target
+            .map(|target| target.declarations)
+            .or(targets.local_declarations)
+            .expect("an indexed target has declarations");
+        output.push_str(&render_catalog_id(target_grammar, declarations, unique));
         if let Some(section) = caps.name("sec") {
             // The target's separator, matching the form §FS-check.3.13 names —
             // the section belongs to the target's ID, not the citing project's.

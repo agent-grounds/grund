@@ -7,7 +7,7 @@ use anyhow::{Result, bail};
 use std::path::PathBuf;
 
 use crate::config::display_path;
-use crate::grammar::render_id;
+use crate::grammar::render_catalog_id;
 use crate::model::{Finding, RangeOwnership};
 use crate::resolver::load_narrowable_workspace_context;
 use crate::scanner::ApiScanError;
@@ -174,7 +174,11 @@ fn cover_lines_run(opts: CoverLinesOpts, cautions: &mut Vec<Finding>) -> Result<
                     .owners
                     .iter()
                     .map(|run| CoverLineOwner {
-                        declaration: render_id(&project.config.grammar, &run.declaration),
+                        declaration: render_catalog_id(
+                            &project.config.grammar,
+                            &project.findings.declarations,
+                            &run.declaration,
+                        ),
                         start: run.start,
                         end: run.end,
                         sections: run

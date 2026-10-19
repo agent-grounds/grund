@@ -9,8 +9,8 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use crate::config::{Config, display_path};
-use crate::grammar::render_id;
-use crate::model::{Citation, Finding, sort_path_key};
+use crate::grammar::{render_catalog_id, render_citation_id};
+use crate::model::{Catalog, Citation, Finding, sort_path_key};
 use crate::queries::{GlobSelection, read_globs};
 use crate::resolver::{WorkspaceContext, load_narrowable_workspace_context};
 use crate::scanner::{ApiScanError, api_scan_error};
@@ -134,6 +134,8 @@ struct CoverRow<'a> {
 
 struct CoverCitationRow<'a> {
     citation: &'a Citation,
+    target_catalog: &'a Catalog,
+    citing_catalog: &'a Catalog,
     /// The config the ID renders under: the **target** project's, matching
     /// `refs` (§FS-workspace.8.2.4). Falls back to the citing project's config
     /// when the alias names no loaded project — `cover` reports the graph and
@@ -148,16 +150,24 @@ struct CoverCitationRow<'a> {
 
 impl CoverCitationRow<'_> {
     fn rendered_id(&self) -> String {
-        cited_id(self.target_config, self.citation)
+        cited_id(
+            self.target_config,
+            self.target_catalog,
+            self.citation,
+            &self.citing_config.marker,
+        )
     }
 
     /// The citing site's enclosing declaration, bare and rendered under the
     /// citing project's grammar (§FS-cover.3.2, §FS-workspace.8.6).
     fn rendered_enclosing_declaration(&self) -> Option<String> {
-        self.citation
-            .enclosing_declaration
-            .as_ref()
-            .map(|id| render_id(&self.citing_config.grammar, id))
+        self.citation.enclosing_declaration.as_ref().map(|id| {
+            render_catalog_id(
+                &self.citing_config.grammar,
+                &self.citing_catalog.declarations,
+                id,
+            )
+        })
     }
 }
 
@@ -177,8 +187,18 @@ pub(super) fn target_config<'a>(
 /// when the citation itself was, never qualified on the file's behalf
 /// (§FS-workspace.8.6.4). `refs --glob` and `refs --from` spell a record's `id`
 /// so too (§FS-refs.3.2).
-pub(super) fn cited_id(target_config: &Config, citation: &Citation) -> String {
-    let id = render_id(&target_config.grammar, &citation.id);
+pub(super) fn cited_id(
+    target_config: &Config,
+    catalog: &Catalog,
+    citation: &Citation,
+    marker: &str,
+) -> String {
+    let id = render_citation_id(
+        &target_config.grammar,
+        &catalog.declarations,
+        citation,
+        marker,
+    );
     match &citation.namespace {
         Some(alias) => format!("{alias}/{id}"),
         None => id,
@@ -213,6 +233,10 @@ fn cover_rows<'a>(
             }
             row.1.push(CoverCitationRow {
                 citation,
+                target_catalog: &context.projects
+                    [context.citation_target(index, citation).unwrap_or(index)]
+                .findings,
+                citing_catalog: &project.findings,
                 target_config: target_config(context, index, citation),
                 citing_config: &project.config,
             });

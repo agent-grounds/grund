@@ -12,7 +12,7 @@ use super::citation_target::WorkspaceCheckTarget;
 use super::point_body::point_body_pair;
 use super::relative_fingerprint::relative_nested_headings;
 use crate::config::{Frame, Schema};
-use crate::grammar::render_id;
+use crate::grammar::{parse_id_arg, render_catalog_id, render_id};
 use crate::model::{
     Catalog, Citation, Declaration, Id, LockEntry, LockLines, locked, paired_declarations,
     read_lock_lines, section_lock_path,
@@ -179,14 +179,7 @@ pub(crate) fn judge_section_locks<'a>(
     if cited.is_empty() && findings.section_locks.is_empty() {
         return Vec::new();
     }
-    let rendered = |alias: Option<&str>, id: &Id| {
-        let target = target_of(alias).expect("a cited project is loaded");
-        render_id(target.frame.grammar(), id)
-    };
-    let mut ids: BTreeMap<(Option<&'a str>, String), Option<&'a Id>> = cited
-        .keys()
-        .map(|&(alias, id)| ((alias, rendered(alias, id)), Some(id)))
-        .collect();
+    let mut ids: BTreeMap<(Option<&'a str>, String), Option<&'a Id>> = BTreeMap::new();
     let mut texts = BTreeMap::new();
     for lock in &findings.section_locks {
         let alias = lock.alias.as_deref();
@@ -195,12 +188,35 @@ pub(crate) fn judge_section_locks<'a>(
         };
         texts.insert((alias, lock.id.as_str()), lock.text.as_str());
         ids.entry((alias, lock.id.clone())).or_insert_with(|| {
+            // §FS-section-lock.write.never-a-move: an older renderer's numeric
+            // spelling still owns its history (§FS-config.3.2.8).
+            if let Ok((id, None)) = parse_id_arg(&lock.id, target.frame.grammar()) {
+                return target
+                    .catalog
+                    .declarations
+                    .get_key_value(&id)
+                    .map(|(id, _)| id);
+            }
             target
                 .catalog
                 .declarations
                 .keys()
                 .find(|id| render_id(target.frame.grammar(), id) == lock.id)
         });
+    }
+    let recorded: BTreeSet<_> = ids
+        .iter()
+        .filter_map(|((alias, _), id)| id.map(|id| (*alias, id)))
+        .collect();
+    for &(alias, id) in cited.keys() {
+        // Keep every existing equivalent shard, including its spelling and
+        // fingerprints; only an identity with no shard receives a new baseline.
+        if recorded.contains(&(alias, id)) {
+            continue;
+        }
+        let target = target_of(alias).expect("a cited project is loaded");
+        let rendered = render_catalog_id(target.frame.grammar(), &target.catalog.declarations, id);
+        ids.insert((alias, rendered), Some(id));
     }
     let mut judgements = Vec::new();
     for ((alias, rendered), id) in ids {
@@ -212,7 +228,7 @@ pub(crate) fn judge_section_locks<'a>(
             read_lock_lines(text, &rendered, &separator)
         });
         let cited = id
-            .and_then(|id| cited.remove(&(alias, id)))
+            .and_then(|id| cited.get(&(alias, id)).cloned())
             .unwrap_or_default();
         let fingerprints = decl.map_or_else(Vec::new, |decl| {
             fingerprints(target, id.expect("a paired ID"), decl)

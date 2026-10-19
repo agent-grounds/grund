@@ -14,7 +14,8 @@ use super::legacy_inline::reconcile_promoted_inline_site;
 use crate::config::{Frame, Schema};
 use crate::grammar::{
     IdArgError, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, markdown_never_rewrite_context,
-    parse_id_arg, parse_id_arg_with_shorthand, render_id, shorthand_candidates, shorthand_names,
+    parse_id_arg, parse_id_arg_with_shorthand, render_catalog_id, shorthand_candidates,
+    shorthand_names,
 };
 use crate::model::sort_path_key;
 use crate::model::{
@@ -36,7 +37,7 @@ pub(crate) fn resolve_id_arg(
             // §FS-distribution.3.3.2: candidates are resolver data, not parsed prose.
             let candidates = many
                 .iter()
-                .map(|(id, _)| render_id(frame.grammar(), id))
+                .map(|(id, _)| render_catalog_id(frame.grammar(), &findings.declarations, id))
                 .collect::<Vec<_>>();
             let mut diagnostic = crate::model::OperationDiagnostic::new(
                 "query",

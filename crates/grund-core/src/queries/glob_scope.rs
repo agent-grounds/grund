@@ -11,7 +11,7 @@ use anyhow::Result;
 use crate::config::{Config, DEFAULT_MARKER, DEFAULT_SECTION_SEPARATOR};
 use crate::grammar::{
     CoordinateGlob, GlobMatcher, GlobOperator, GlobQualifier, GlobRefusal, GlobStage,
-    literal_after_kind_placeholder, render_id,
+    literal_after_kind_placeholder, render_citation_id,
 };
 use crate::model::{Citation, OperationDiagnostic};
 use crate::resolver::WorkspaceContext;
@@ -151,7 +151,12 @@ impl<'g> GlobSelection<'g> {
         context
             .citation_target(citing, citation)
             .is_some_and(|target| {
-                let id = render_id(&context.projects[target].config.grammar, &citation.id);
+                let id = render_citation_id(
+                    &context.projects[target].config.grammar,
+                    &context.projects[target].findings.declarations,
+                    citation,
+                    &context.projects[citing].config.marker,
+                );
                 self.selects(target, &id, citation.section.as_deref())
             })
     }
