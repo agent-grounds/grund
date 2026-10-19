@@ -1,5 +1,5 @@
 //! Numeric subject identity stays independent of authored report spelling
-//! (§FS-config.3.2.8, §FS-rules.2, §FS-rules.8).
+//! (§FS-config.3.2.8, §FS-rules.2, §FS-rules.6, §FS-rules.8).
 
 #[path = "support/numeric_spelling.rs"]
 #[allow(dead_code)]
@@ -134,6 +134,79 @@ fn equivalent_numeric_chapter_rules_keep_success_and_missing_citation_verdicts()
                                 .contains("ADR-0001.terms")
                         );
                     }
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn equivalent_numeric_chapter_rules_merge_authority_and_keep_distinct_subjects() {
+    for version in [1, 2] {
+        for per_kind in [false, true] {
+            let repo = fixture(version, per_kind, false);
+            let rules_config = if version == 1 {
+                "\n[[kinds]]\nkind = \"RULE\"\nfolder = \"docs/rules\"\nindex = false\n\
+                 format = \"{kind}-{slug}\"\nrules = true\n"
+            } else {
+                "\n[schema.kinds.RULE]\nfolders = [\"docs/rules\"]\nindex = false\n\
+                 id_format = \"{kind}-{slug}\"\nform = \"rule\"\n"
+            };
+            repo.write(
+                "grund.toml",
+                &format!("{}{rules_config}", repo.read("grund.toml")),
+            );
+            // Reverse source order to pin bytewise authority order (§FS-rules.6).
+            let rules = "# RULE-b: ADR-0001.terms must cite at least one ADR.\n\nReason.\n\n\
+                         # RULE-a: ADR-001.terms must cite at least one ADR.\n\nReason.\n";
+            let args = [
+                "check",
+                "--only",
+                "invalid-rule",
+                "--only",
+                "missing-citation",
+                "--format=json",
+            ];
+            for distinct in [false, true] {
+                if distinct {
+                    repo.write(
+                        "docs/adr/ADR-0002.md",
+                        "# ADR-0002: Another decision\n\n## terms: Terms\n\nNo citations.\n",
+                    );
+                }
+                let controls = if distinct {
+                    "\n# RULE-number: ADR-002.terms must cite at least one ADR.\n\nReason.\n\n\
+                     # RULE-detail: ADR-001.terms.detail must cite at least one ADR.\n\nReason.\n\n\
+                     # RULE-other: ADR-001.other.terms must cite at least one ADR.\n\nReason.\n"
+                } else {
+                    ""
+                };
+                repo.write("docs/rules/rules.md", &format!("{rules}{controls}"));
+                let rows = repo.json(&args, 1);
+                assert_eq!(rows.len(), if distinct { 4 } else { 1 }, "{rows:?}");
+                let mut expected = vec![("ADR-0001", "terms", 5, vec!["RULE-a", "RULE-b"])];
+                if distinct {
+                    expected.extend([
+                        ("ADR-0002", "terms", 3, vec!["RULE-number"]),
+                        ("ADR-0001", "terms.detail", 9, vec!["RULE-detail"]),
+                        ("ADR-0001", "other.terms", 15, vec!["RULE-other"]),
+                    ]);
+                }
+                for (id, chapter, line, authority) in expected {
+                    let path = format!("docs/adr/{id}.md");
+                    let at_chapter = rows
+                        .iter()
+                        .filter(|row| row["path"] == path && row["line"] == line)
+                        .collect::<Vec<_>>();
+                    assert_eq!(at_chapter.len(), 1, "{rows:?}");
+                    let row = at_chapter[0];
+                    assert_eq!(row["code"], "missing-citation");
+                    assert_eq!(row["severity"], "error");
+                    assert_eq!(row["authority"], serde_json::json!(authority));
+                    assert_eq!(
+                        row["message"],
+                        format!("{id}.{chapter} must cite ADR ({})", authority.join(", "))
+                    );
                 }
             }
         }
