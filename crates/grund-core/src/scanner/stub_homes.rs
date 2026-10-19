@@ -15,8 +15,8 @@ use super::tree::scan_unwalked_file;
 use crate::config::{Frame, Run, Schema};
 use crate::grammar::{Grammar, resolve_shorthands};
 use crate::model::{
-    Catalog, Citation, ConflictBlock, Declaration, ExcludingRule, FileRecord, Id,
-    StubResolution, paired_declarations, scanned_path_key, section_resolves,
+    Catalog, Citation, ConflictBlock, Declaration, ExcludingRule, FileRecord, Id, StubResolution,
+    paired_declarations, scanned_path_key, section_resolves,
 };
 use crate::sources::{paths_same_location, physical_path_key};
 use crate::workspace::WorkspaceCitationTarget;
