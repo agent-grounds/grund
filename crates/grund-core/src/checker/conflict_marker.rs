@@ -5,8 +5,10 @@
 //! constructors of `fmt` refuse with (§FS-fmt.7.4), so the two name one block alike.
 
 use crate::config::Frame;
-use crate::grammar::{Grammar, render_id};
-use crate::model::{Catalog, CheckReport, ConflictBlock, Diagnostic, Site};
+use std::collections::BTreeMap;
+
+use crate::grammar::{Grammar, render_catalog_id};
+use crate::model::{Catalog, CheckReport, ConflictBlock, Declaration, Diagnostic, Id, Site};
 
 /// §FS-declarations.checks.conflict-marker: one error per recorded block, an error
 /// from the release that adds it with no warning first (§DF-conflicted-declaration).
@@ -15,19 +17,24 @@ pub(super) fn check_conflict_blocks(catalog: &Catalog, frame: Frame<'_>, report:
         catalog
             .conflict_blocks
             .iter()
-            .map(|block| conflict_marker_finding(block, frame.grammar())),
+            .map(|block| conflict_marker_finding(block, frame.grammar(), &catalog.declarations)),
     );
 }
 
 /// The `conflict-marker` finding for one block, located at its first line, with
 /// its first and last lines as `sites`, one site for a block of one line. Each
-/// owner is spelled with `grammar`, the project's own spelling, as a `duplicate`
-/// finding spells its ID (§FS-declarations.checks.conflict-marker).
-pub(crate) fn conflict_marker_finding(block: &ConflictBlock, grammar: &Grammar) -> Diagnostic {
+/// owner is spelled from `declarations`, the catalog that holds it, with its
+/// authored digits, as a `duplicate` finding spells its ID
+/// (§FS-declarations.checks.conflict-marker, §FS-config.3.2.8).
+pub(crate) fn conflict_marker_finding(
+    block: &ConflictBlock,
+    grammar: &Grammar,
+    declarations: &BTreeMap<Id, Vec<Declaration>>,
+) -> Diagnostic {
     let owners: Vec<String> = block
         .owners
         .iter()
-        .map(|id| render_id(grammar, id))
+        .map(|id| render_catalog_id(grammar, declarations, id))
         .collect();
     let named = match owners.as_slice() {
         [] => "outside any declaration".to_string(),

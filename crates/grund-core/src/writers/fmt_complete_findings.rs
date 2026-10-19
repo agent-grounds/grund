@@ -162,7 +162,7 @@ fn conflict_abort(
     let mut conflicts: Vec<Diagnostic> = findings
         .conflict_blocks
         .iter()
-        .map(|block| conflict_marker_finding(block, grammar))
+        .map(|block| conflict_marker_finding(block, grammar, &findings.declarations))
         .collect();
     sort_diagnostics(&mut conflicts);
     let render_path = |path: &std::path::Path| display_path(render, path);
