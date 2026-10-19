@@ -40,7 +40,6 @@ fn assert_entry(run: &CheckRun, why: &str) {
 /// so `check` may not name `fmt` (§FS-check.3.17.4), and it is a link a reader can
 /// follow, so the ID is not missing either.
 #[test]
-#[ignore = "red until #825 takes a citation in an enclosing link as the entry; implement removes this"]
 fn an_authored_label_is_an_entry() {
     let run = checked_index(
         "an_authored_label_is_an_entry",
@@ -53,7 +52,6 @@ fn an_authored_label_is_an_entry() {
 /// is an entry, a citation in an enclosing link is an entry, and a bare citation
 /// is the one `unlinked-index-entry` reports, at its own line.
 #[test]
-#[ignore = "red until #825 takes a citation in an enclosing link as the entry; implement removes this"]
 fn a_wrap_and_an_authored_label_are_entries_and_a_bare_citation_is_not_a_link() {
     let root = kind_index_repo(
         "a_wrap_and_an_authored_label_are_entries_and_a_bare_citation_is_not_a_link",
@@ -95,7 +93,6 @@ fn a_wrap_and_an_authored_label_are_entries_and_a_bare_citation_is_not_a_link() 
 /// §FS-citations.wrap.enclosing: each citation in the text counts for its own ID,
 /// and a citation repeated in one text is one entry, not two findings.
 #[test]
-#[ignore = "red until #825 takes a citation in an enclosing link as the entry; implement removes this"]
 fn each_citation_in_one_label_counts_for_its_own_id() {
     let root = kind_index_repo("each_citation_in_one_label_counts_for_its_own_id");
     write(
@@ -116,7 +113,6 @@ fn each_citation_in_one_label_counts_for_its_own_id() {
 /// token is a citation, and a link its author wrote around it with a title is an
 /// entry, as a hand-written `[FS-x](…)` already is.
 #[test]
-#[ignore = "red until #825 takes a citation in an enclosing link as the entry; implement removes this"]
 fn off_strict_an_unmarked_citation_in_an_authored_label_is_an_entry() {
     let root =
         kind_index_repo_loose("off_strict_an_unmarked_citation_in_an_authored_label_is_an_entry");
@@ -136,7 +132,6 @@ fn off_strict_an_unmarked_citation_in_an_authored_label_is_an_entry() {
 /// `]` and balanced brackets in the text, a code span in it, an escaped `)` and
 /// balanced parentheses in the destination — is the entry.
 #[test]
-#[ignore = "red until #825 takes a citation in an enclosing link as the entry; implement removes this"]
 fn every_enclosing_shape_is_an_entry() {
     let rows = [
         (
@@ -178,7 +173,6 @@ fn every_enclosing_shape_is_an_entry() {
 /// §FS-check.3.18 in the bytes that finding has shipped in — and never to
 /// §FS-check.3.17, whose command now leaves the link alone.
 #[test]
-#[ignore = "red until #825 reads an empty-destination enclosing link as no entry; implement removes this"]
 fn an_empty_destination_is_no_entry() {
     let run = checked_index(
         "an_empty_destination_is_no_entry",

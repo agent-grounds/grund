@@ -48,7 +48,6 @@ fn wrapped(root: &Path, config: &Config, findings: &Catalog, line: &str) -> Stri
 /// re-derived (§FS-fmt.6.3.1), the citation in the author's link keeps every byte
 /// of that link (§FS-citations.wrap.enclosing), and the bare one is wrapped.
 #[test]
-#[ignore = "red until #825 leaves a citation in an enclosing link as written; implement removes this"]
 fn a_wrap_is_rederived_an_authored_label_is_left_and_a_bare_citation_is_wrapped() {
     let (root, config, findings) =
         project("a_wrap_is_rederived_an_authored_label_is_left_and_a_bare_citation_is_wrapped");
@@ -68,7 +67,6 @@ fn a_wrap_is_rederived_an_authored_label_is_left_and_a_bare_citation_is_wrapped(
 /// balanced parenthesis and an empty destination, and a citation repeated in one
 /// text.
 #[test]
-#[ignore = "red until #825 leaves a citation in an enclosing link as written; implement removes this"]
 fn every_enclosing_shape_keeps_its_bytes() {
     let (root, config, findings) = project("every_enclosing_shape_keeps_its_bytes");
     for line in [
@@ -91,7 +89,6 @@ fn every_enclosing_shape_keeps_its_bytes() {
 /// §FS-citations.wrap.enclosing.shape: each occurrence is read by its own
 /// position, so the same citation outside the author's link is still wrapped.
 #[test]
-#[ignore = "red until #825 leaves a citation in an enclosing link as written; implement removes this"]
 fn the_same_citation_outside_the_link_is_still_wrapped() {
     let (root, config, findings) = project("the_same_citation_outside_the_link_is_still_wrapped");
     assert_eq!(

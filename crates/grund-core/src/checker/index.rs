@@ -14,8 +14,8 @@ use super::index_entries::KindIndexEntries;
 use super::index_mention::index_mentions;
 use crate::config::{Frame, Owners, Schema};
 use crate::grammar::{
-    cross_ref_wrap, is_inside_inline_code, markdown_line_kinds, markdown_never_rewrite_context,
-    render_id,
+    CitationLink, citation_link, is_inside_inline_code, markdown_line_kinds,
+    markdown_never_rewrite_context, render_id,
 };
 use crate::model::{
     Catalog, CheckReport, Citation, Declaration, Diagnostic, HeadingKind, Id, paired_declarations,
@@ -78,8 +78,11 @@ pub(super) fn kind_index_targets<'a>(
 /// (§FS-check.3.18.5, §FS-check.3.17.1, §DF-index-entry-form.2.1).
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum IndexCitationForm {
-    /// Wrapped as `[§<ID>…](<target>)` — the form `grund fmt --cross-refs`
-    /// writes in a kind's index (§FS-fmt.6.1.1), which is what the entry has to be.
+    /// A link a reader can follow, which is what the entry has to be
+    /// (§FS-citations.wrap.shape): wrapped as `[§<ID>…](<target>)`, the form
+    /// `grund fmt --cross-refs` writes in a kind's index (§FS-fmt.6.1.1), or in the
+    /// text of a link its author wrote whose destination is not empty
+    /// (§FS-citations.wrap.enclosing).
     Link,
     /// A recognized citation of the ID, unwrapped, **and one the
     /// cross-reference pass would wrap on its next `--write`**. §FS-check.3.17.4's
@@ -99,13 +102,15 @@ enum IndexCitationForm {
 /// questions. `Link` asks whether the entry *is* the link a reader can follow,
 /// and any wrap satisfies that — including a hand-written one around an
 /// unmarked token, which `fmt` would leave alone but which is a correct entry
-/// as it stands. `Bare` asks whether `grund fmt --write` would turn this
-/// occurrence into that link, and only an occurrence the cross-reference pass
-/// actually reaches may answer yes: marker-prefixed (§FS-fmt.6.5) and outside
-/// §FS-fmt.2.3's never-rewrite zones. Anything else is `Ignored` — §FS-check.3.17.4
-/// names `grund fmt --write` as its fix, and an error whose named fix the tool
-/// declines to perform is an error a repository can never clear
-/// (§DF-index-entry-form.2.3), the same trap `shorthand_rewritable` keeps
+/// as it stands — and so does a link its author wrote around the citation and
+/// more text, wherever it goes. `Bare` asks whether `grund fmt --write` would
+/// turn this occurrence into that link, and only an occurrence the
+/// cross-reference pass actually reaches may answer yes: marker-prefixed
+/// (§FS-fmt.6.5), outside §FS-fmt.2.3's never-rewrite zones, and outside an
+/// enclosing link (§FS-check.3.17.4). Anything else is `Ignored` —
+/// §FS-check.3.17.4 names `grund fmt --write` as its fix, and an error whose
+/// named fix the tool declines to perform is an error a repository can never
+/// clear (§DF-index-entry-form.2.3), the same trap `shorthand_rewritable` keeps
 /// §FS-check.3.13.1 out of.
 ///
 /// `line` is Markdown: §FS-config.3.4 requires `index` to name a `.md` file and
@@ -126,15 +131,25 @@ fn index_citation_form(line: &str, text: &str, marker: &str) -> IndexCitationFor
         // marker, which is multi-byte under the default `§`, and slicing one byte
         // into it would panic (§REQ-never-crashes).
         cursor = end;
-        // §FS-check.3.17.4: the formatter's own bracket test, with a destination
-        // closed by its balancing `)` and holding something before it.
-        let wrapped =
-            cross_ref_wrap(line, start, end).is_some_and(|wrap| wrap.close > wrap.url_start);
-        if wrapped {
-            if is_inside_inline_code(line, start - 1) {
+        match citation_link(line, start, end) {
+            // §FS-check.3.17.4: the formatter's own bracket test, with a destination
+            // closed by its balancing `)` and holding something before it.
+            CitationLink::Wrap(wrap) if wrap.close > wrap.url_start => {
+                if is_inside_inline_code(line, start - 1) {
+                    continue;
+                }
+                return IndexCitationForm::Link;
+            }
+            // §FS-check.3.18.5: the author's link is the entry where it goes somewhere,
+            // its destination never compared. `fmt` leaves it either way, so one that
+            // goes nowhere is no entry and the ID falls to §FS-check.3.18.
+            CitationLink::Enclosing { url_start, close } => {
+                if close > url_start {
+                    return IndexCitationForm::Link;
+                }
                 continue;
             }
-            return IndexCitationForm::Link;
+            CitationLink::Wrap(_) | CitationLink::Unwrapped => {}
         }
         // §FS-fmt.6.5: `--cross-refs` wraps marker-prefixed citations only, and
         // without `--marker` a bare token stays bare — so a bare token is not an

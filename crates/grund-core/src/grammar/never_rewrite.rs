@@ -314,17 +314,25 @@ pub(crate) fn is_inside_inline_code(line: &str, pos: usize) -> bool {
             i += 1;
             continue;
         }
-        let open = i;
-        while i < bytes.len() && bytes[i] == b'`' {
-            i += 1;
-        }
-        match closing_run_end(bytes, i, i - open) {
+        match inline_code_span_end(bytes, i) {
             Some(end) if pos < end => return true,
             Some(end) => i = end,
             None => return true,
         }
     }
     false
+}
+
+/// Where the inline-code span opened by the unescaped backtick run at `open`
+/// ends, just past its closing run, or `None` when it never closes and the rest
+/// of the line is code (§FS-fmt.2.3.5). The one extent `is_inside_inline_code` and
+/// the enclosing-link reading (§FS-citations.wrap.enclosing.shape) both read.
+pub(crate) fn inline_code_span_end(bytes: &[u8], open: usize) -> Option<usize> {
+    let mut i = open;
+    while i < bytes.len() && bytes[i] == b'`' {
+        i += 1;
+    }
+    closing_run_end(bytes, i, i - open)
 }
 
 /// The end of the first run of exactly `len` backticks at or after `from`, the

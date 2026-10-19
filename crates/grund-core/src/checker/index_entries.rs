@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use super::index::{KindIndexTarget, declarations_under_folder, kind_index_targets};
 use crate::config::{Frame, Owners, Schema};
-use crate::grammar::{cross_ref_wrap, markdown_never_rewrite_context};
+use crate::grammar::{CitationLink, citation_link, markdown_never_rewrite_context};
 use crate::model::{
     Catalog, Citation, Declaration, Id, paired_declarations, scanned_decl_relative_path,
     scanned_path_key,
@@ -276,16 +276,19 @@ fn external_inline_home<'a>(
 /// cannot lend it structural meaning (§DF-index-entry-form.2.7).
 fn link_target_at_citation<'a>(line: &'a str, citation: &Citation) -> Option<&'a str> {
     let start = citation.column.checked_sub(1)?;
-    let open = start.checked_sub(1)?;
-    if line.as_bytes().get(open) != Some(&b'[') || markdown_never_rewrite_context(line, open) {
-        return None;
-    }
     let end = start.checked_add(citation.text.len())?;
     if line.get(start..end)? != citation.text {
         return None;
     }
     // §FS-citations.wrap.recognized: the formatter's own bracket test, to the
-    // balancing `)` it re-derives up to, with something before it.
-    let wrap = cross_ref_wrap(line, start, end)?;
+    // balancing `)` it re-derives up to, with something before it. A citation in
+    // a link its author wrote is an entry but never enrolls (§FS-check.3.18.3).
+    let CitationLink::Wrap(wrap) = citation_link(line, start, end) else {
+        return None;
+    };
+    // §FS-fmt.2.3: a wrap whose `[` sits in a zone `fmt` never writes in is not one.
+    if markdown_never_rewrite_context(line, start - 1) {
+        return None;
+    }
     (wrap.close > wrap.url_start).then(|| &line[wrap.url_start..wrap.close])
 }
