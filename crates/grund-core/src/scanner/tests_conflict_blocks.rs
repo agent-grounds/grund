@@ -112,9 +112,10 @@ fn marker_lines_cut_blocks_as_the_definition_says() {
 }
 
 /// §FS-declarations.body.conflict.where and .owners: in a Markdown file that
-/// declares, every block counts, a fenced one too, and each names the
-/// declarations it overlaps, each ID once, in the order they open; one after a
-/// heading that closed every body names none.
+/// declares, every block counts, a fenced one and one inside an HTML comment too
+/// (§FS-declarations.body.conflict.markers), and each names the declarations it
+/// overlaps, each ID once, in the order they open; one after a heading that
+/// closed every body names none.
 #[test]
 fn a_declaring_markdown_file_records_every_block_with_its_owners() {
     let abc = concat!(
@@ -143,13 +144,34 @@ fn a_declaring_markdown_file_records_every_block_with_its_owners() {
         "b\n",
         ">>>>>>> other\n"
     );
+    let login = concat!(
+        "# FS-login: Login\n",
+        "\n",
+        "Lead.\n",
+        "\n",
+        "<!--\n",
+        "<<<<<<< HEAD\n",
+        "a\n",
+        "=======\n",
+        "b\n",
+        ">>>>>>> other\n",
+        "-->\n",
+    );
     let root = project(
         "a_declaring_markdown_file_records_every_block_with_its_owners",
-        &[("docs/abc.md", abc), ("docs/plain.md", plain)],
+        &[
+            ("docs/abc.md", abc),
+            ("docs/plain.md", plain),
+            ("docs/login.md", login),
+        ],
     );
     assert_eq!(
         recorded(&root),
-        vec!["docs/abc.md:11-15 []", "docs/abc.md:2-6 [FS-a FS-b FS-c]"]
+        vec![
+            "docs/abc.md:11-15 []",
+            "docs/abc.md:2-6 [FS-a FS-b FS-c]",
+            "docs/login.md:6-10 [FS-login]",
+        ]
     );
 }
 
@@ -176,7 +198,8 @@ fn a_fence_the_conflict_left_open_does_not_hide_the_file_declaring() {
 }
 
 /// §FS-declarations.body.conflict.where: in a source file a block counts inside a
-/// body and right after the line-style run it cut, and nowhere else in the code.
+/// body, a docstring's or a `/** */` comment's as much as a line-style run's, and
+/// right after the line-style run it cut, and nowhere else in the code.
 #[test]
 fn a_source_file_records_blocks_in_and_right_after_a_body_only() {
     let lib = concat!(
@@ -208,12 +231,32 @@ fn a_source_file_records_blocks_in_and_right_after_a_body_only() {
         ">>>>>>> other\n",
         "\"\"\"\n",
     );
+    let java = concat!(
+        "/**\n",
+        " * FS-parse-java: Parse\n",
+        " *\n",
+        "<<<<<<< HEAD\n",
+        " * Trims first.\n",
+        "=======\n",
+        " * Splits first.\n",
+        ">>>>>>> other\n",
+        " */\n",
+        "public class Parse {}\n",
+    );
     let root = project(
         "a_source_file_records_blocks_in_and_right_after_a_body_only",
-        &[("src/lib.rs", lib), ("src/render.py", render)],
+        &[
+            ("src/lib.rs", lib),
+            ("src/render.py", render),
+            ("src/Parse.java", java),
+        ],
     );
     assert_eq!(
         recorded(&root),
-        vec!["src/lib.rs:4-8 [FS-parse]", "src/render.py:3-7 [FS-render]"]
+        vec![
+            "src/Parse.java:4-8 [FS-parse-java]",
+            "src/lib.rs:4-8 [FS-parse]",
+            "src/render.py:3-7 [FS-render]",
+        ]
     );
 }
