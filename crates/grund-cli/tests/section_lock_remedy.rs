@@ -1,7 +1,8 @@
 //! §FS-section-lock.checks.remedy: the two lock errors `check` clears with
 //! `fmt --write` name the run that writes a lock, scope and all, because the
-//! same command given a file or a subdirectory leaves every lock alone
-//! (§FS-section-lock.write.rules). The fixture is grund#850's: a mixed address
+//! same command given a file leaves every lock alone (§FS-section-lock.write.rules),
+//! and a member's own run leaves its entries for a sibling alone
+//! (§FS-section-lock.file.members). The fixture is grund#850's: a mixed address
 //! cited from a source file, and no `.grund/` yet.
 
 use std::fs;
@@ -10,8 +11,8 @@ use std::process::{Command, Output};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// §FS-section-lock.checks.remedy: the remedy, worded once.
-const REMEDY: &str = "run grund fmt --write at the project or workspace root; \
-                      fmt on a file or a subdirectory writes no lock";
+const REMEDY: &str = "run grund fmt --write with no path at the workspace root, \
+                      or at the project root outside a workspace";
 const LOCK: &str = ".grund/sections/AR-001-lock.lock";
 const CONFIG: &str = "grund_config_version = 2\nproject_name = \"lock-remedy\"\n\n\
                       [schema]\nid_format = \"{kind}-{number}-{slug}\"\n\n\
@@ -183,6 +184,101 @@ fn a_member_lock_names_the_same_run_and_the_workspace_root_writes_it() {
     );
     // The fixture's version 1 configs earn warnings, so a clean run prints no `success`.
     repo.run("", &["check"], 0);
+}
+
+/// §FS-section-lock.file.members: a member's entry for a citation into a sibling is
+/// written by the workspace root's run alone, so §FS-section-lock.checks.remedy names
+/// that root: the member's own run, from inside it or given its root, writes its own
+/// lock and leaves that entry missing.
+#[test]
+fn a_member_lock_of_a_sibling_citation_is_written_only_at_the_workspace_root() {
+    let repo = Repo::empty("lock-remedy-sibling");
+    let case = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/e2e/cases/check-section-lock-member-unrecorded/repo");
+    let declaration = "packages/api/docs/functional-spec/FS-login.md";
+    repo.write(
+        declaration,
+        &fs::read_to_string(case.join(declaration)).unwrap(),
+    );
+    // Version 2 configs, so a clean run prints `success`; sources, so `fmt` adds no link.
+    repo.write(
+        "grund.toml",
+        "grund_config_version = 2\nproject_name = \"root\"\n\n\
+         [workspace]\nmembers = [\"packages/api\", \"packages/web\"]\n",
+    );
+    repo.write(
+        "packages/api/grund.toml",
+        "grund_config_version = 2\nproject_name = \"api\"\n\n\
+         [schema.kinds.FS]\nfolders = [\"docs/functional-spec\"]\nindex = false\n",
+    );
+    repo.write(
+        "packages/web/grund.toml",
+        "grund_config_version = 2\nproject_name = \"web\"\n",
+    );
+    repo.write(
+        "src/lib.rs",
+        "// \u{a7}api/FS-login.format.1\npub fn f() {}\n",
+    );
+    repo.write(
+        "packages/api/src/lib.rs",
+        "// \u{a7}FS-login.format.2\npub fn f() {}\n",
+    );
+    repo.write(
+        "packages/web/src/lib.rs",
+        "// \u{a7}api/FS-login.format.1\npub fn f() {}\n",
+    );
+    let (root, member, sibling) = (
+        ".grund/sections/api/FS-login.lock",
+        "packages/api/.grund/sections/FS-login.lock",
+        "packages/web/.grund/sections/api/FS-login.lock",
+    );
+    let report = |locks: &[(&str, &str, &str)]| -> String {
+        locks
+            .iter()
+            .map(|(site, coordinate, lock)| {
+                format!(
+                    "{site}:1: error: {coordinate} is cited but has no entry in {lock}; \
+                     {REMEDY}\n"
+                )
+            })
+            .collect()
+    };
+    let web = ("packages/web/src/lib.rs", "api/FS-login.format.1", sibling);
+    let at_root = ("src/lib.rs", "api/FS-login.format.1", root);
+    assert_eq!(
+        repo.run("", &["check"], 1),
+        report(&[
+            ("packages/api/src/lib.rs", "FS-login.format.2", member),
+            web,
+            at_root,
+        ])
+    );
+    // The member's own run, given its root or from inside it, writes nothing for the sibling.
+    let members: [(&str, &[&str]); 2] = [
+        ("", &["fmt", "packages/web", "--write"]),
+        ("packages/web", &["fmt", "--write"]),
+    ];
+    for (cwd, args) in members {
+        assert_eq!(
+            repo.run(cwd, args, 0),
+            "rewrote 0 lines\n",
+            "{args:?} in {cwd:?}"
+        );
+        assert!(!repo.has(sibling), "{args:?} in {cwd:?} wrote {sibling}");
+    }
+    // A member run writes the member's own lock, and still not the sibling entry.
+    assert_eq!(
+        repo.run("", &["fmt", "packages/api", "--write"], 0),
+        "rewrote 1 line:\n  .grund/sections/FS-login.lock (1)\n"
+    );
+    assert!(repo.has(member) && !repo.has(sibling));
+    assert_eq!(repo.run("", &["check"], 1), report(&[web, at_root]));
+    // The run the remedy names writes every entry left.
+    assert_eq!(
+        repo.run("", &["fmt", "--write"], 0),
+        format!("rewrote 2 lines:\n  {root} (1)\n  {sibling} (1)\n")
+    );
+    assert_eq!(repo.run("", &["check"], 0), "success\n");
 }
 
 fn copy_tree(from: &Path, to: &Path) {

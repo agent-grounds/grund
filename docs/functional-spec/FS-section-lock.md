@@ -151,7 +151,7 @@ The three fixes are the move undone, [§FS-section-lock.move.citations](FS-secti
 A citation that resolves to a locked address with no entry in the lock is an error at the citation's site:
 
 ```text
-FS-login.format.1 is cited but has no entry in .grund/sections/FS-login.lock; run grund fmt --write at the project or workspace root; fmt on a file or a subdirectory writes no lock
+FS-login.format.1 is cited but has no entry in .grund/sections/FS-login.lock; run grund fmt --write with no path at the workspace root, or at the project root outside a workspace
 ```
 
 The same immediate error and repair command apply to mixed addresses,
@@ -167,7 +167,7 @@ Without an entry the address is unguarded, so the citation is not taken as check
 A line of a lock file that is not an entry, as [§FS-section-lock.holds.entry](FS-section-lock.md#holdsentry-one-line-per-locked-address) defines one, is an error at that line:
 
 ```text
-section lock line is not <coordinate> <fingerprint>; to rebuild the file, run grund fmt --write at the project or workspace root; fmt on a file or a subdirectory writes no lock
+section lock line is not <coordinate> <fingerprint>; to rebuild the file, run grund fmt --write with no path at the workspace root, or at the project root outside a workspace
 ```
 
 The entries `check` can read are still judged. `fmt --write` rebuilds the file ([§FS-section-lock.write.rebuild](FS-section-lock.md#writerebuild-a-lock-grund-cannot-read-is-rebuilt)).
@@ -177,9 +177,11 @@ The entries `check` can read are still judged. `fmt --write` rebuilds the file (
 The two errors a `fmt --write` clears, [§FS-section-lock.checks.unrecorded-section-citation](FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold) and [§FS-section-lock.checks.invalid-section-lock](FS-section-lock.md#checksinvalid-section-lock-a-lock-line-grund-cannot-read), end in one remedy, worded once:
 
 ```text
-run grund fmt --write at the project or workspace root; fmt on a file or a subdirectory writes no lock
+run grund fmt --write with no path at the workspace root, or at the project root outside a workspace
 ```
 
-It names the scope beside the command because only a run whose scope is a project's config root or the workspace root writes a lock ([§FS-section-lock.write.rules](FS-section-lock.md#writerules-add-refresh-drop)). `grund fmt --write` with no path, from anywhere in the project, is that run, and so is one given the root as its path ([§FS-fmt.7.1](FS-fmt.md#71-scope-equivalence)). Given a file, or a directory below the root, the same command exits `0`, reports `rewrote 0 lines` ([§FS-fmt.3.7](FS-fmt.md#37-the---write-report)) and leaves the lock as it was: a remedy that named the command alone would read as satisfied by a run that wrote nothing. The remedy holds for a member's lock as well: a run at the workspace root writes the locks of every project it loads, and a run at a member's config root writes the member's own ([§FS-section-lock.file.members](FS-section-lock.md#filemembers-citations-into-another-project)).
+It says where to run the command, and with no path, because only a run whose scope is a project's config root or the workspace root writes a lock ([§FS-section-lock.write.rules](FS-section-lock.md#writerules-add-refresh-drop)). Outside a workspace, `grund fmt --write` with no path, from anywhere in the project, is that run, and so is one given the root as its path ([§FS-fmt.7.1](FS-fmt.md#71-scope-equivalence)). Given a file, or a directory that is no project's config root, the same command exits `0`, reports `rewrote 0 lines` ([§FS-fmt.3.7](FS-fmt.md#37-the---write-report)) and leaves every lock as it was: a remedy that named the command alone would read as satisfied by a run that wrote nothing.
+
+In a workspace it names the workspace root, because that run writes the locks of every project it loads ([§FS-scan.projects.workspace-root](FS-scan.md#projectsworkspace-root-a-run-at-the-workspace-root-loads-every-project)). A member run ([§FS-scan.projects.member](FS-scan.md#projectsmember-a-member-run-loads-the-member)), with no path from inside the member or given the member's config root, writes the member's entries for citations of its own declarations, but none of its `.grund/sections/<alias>/` entries for a citation into a sibling, which only the workspace root's run writes ([§FS-section-lock.file.members](FS-section-lock.md#filemembers-citations-into-another-project)). A remedy that named the member's root would send such a citation to a run that reports `rewrote 0 lines`, so the one remedy names the run that writes every entry.
 
 The narrowed run itself says nothing about the lock it left alone. Telling that an entry is pending takes the whole declaration set ([§FS-section-lock.write.report](FS-section-lock.md#writereport-what-fmt-reports)), which a narrowed run need not read, so the scope is named where the missing entry is found.
