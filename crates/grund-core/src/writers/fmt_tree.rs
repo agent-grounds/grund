@@ -4,6 +4,7 @@
 
 use anyhow::Result;
 use std::fs;
+use std::ops::Range;
 use std::path::{Path, PathBuf};
 
 use super::fmt_complete_findings::{CompleteFindings, CompleteScan};
@@ -125,6 +126,13 @@ pub(crate) struct FmtRunOpts<'a> {
 /// rewrite for it: a dry run predicts what `--write` does, and a pending rewrite
 /// `--write` will never perform is one no edit can clear, so `fmt --check` would
 /// exit `1` on this tree forever and a gate built on it could never pass.
+///
+/// Why nothing is written until the walk and the lock pass have both returned
+/// (§FS-fmt.7.4.3): the scan a cross-reference, a shorthand or the lock pass
+/// needs is taken where the run first needs it, so a refusal can come after the
+/// walk has worked out earlier files. Planning every write first puts each such
+/// refusal, and any a later pass adds, before the first write by construction,
+/// where a guard at each call site is the shape §FS-fmt.7.4.1 records failing.
 pub(crate) fn fmt_tree(
     config: &Config,
     scope: Option<&Path>,
@@ -133,6 +141,7 @@ pub(crate) fn fmt_tree(
 ) -> Result<FmtTreeOutcome> {
     let mut changes = Vec::new();
     let mut refused_writes = Vec::new();
+    let mut planned: Vec<PlannedFile> = Vec::new();
     let mut relative_seen = false;
     let add_marker = opts.add_marker;
     let cross_refs = opts.cross_refs;
@@ -213,7 +222,8 @@ pub(crate) fn fmt_tree(
             refused_writes.push(display_path(opts.render, &path));
             continue;
         }
-        // §FS-distribution.3.2.2.1: a later read failure retains earlier owned writes.
+        // §FS-fmt.7.4.3: nothing is written yet, so a file the walk cannot read
+        // ends the run with no change to report, in either mode.
         // §AR-system.2.13: the read goes through the run's sources; only the writes are ours.
         let original = config.frame().sources().text(&path).map_err(|error| {
             partial_io_error(
@@ -221,7 +231,7 @@ pub(crate) fn fmt_tree(
                 &path,
                 "read",
                 error,
-                &changes,
+                &[],
                 &scan_errors,
                 &refused_writes,
             )
@@ -308,35 +318,16 @@ pub(crate) fn fmt_tree(
             );
         }
         if write && rewritten.changed {
-            let mut output = rewritten.lines.join("\n");
+            let mut text = rewritten.lines.join("\n");
             if original.ends_with('\n') {
-                output.push('\n');
+                text.push('\n');
             }
-            // §FS-distribution.3.2.2.1: preserve completed changes on later I/O failure.
-            if let Err(error) = fs::write(&path, output) {
-                changes.truncate(file_changes_start);
-                return Err(partial_io_error(
-                    opts.render,
-                    &path,
-                    "write",
-                    error,
-                    &changes,
-                    &scan_errors,
-                    &refused_writes,
-                ));
-            }
-            #[cfg(feature = "test-binding-writes")]
-            if let Err(error) = super::binding_write_fault::after_write() {
-                return Err(partial_io_error(
-                    opts.render,
-                    &path,
-                    "write",
-                    error,
-                    &changes,
-                    &scan_errors,
-                    &refused_writes,
-                ));
-            }
+            // §FS-fmt.7.4.3: planned here, written once every refusal is behind the run.
+            planned.push(PlannedFile {
+                path,
+                text,
+                changes: file_changes_start..changes.len(),
+            });
         }
     }
     // §FS-section-lock.write.rules: a run over the whole project brings the locks along.
@@ -348,6 +339,35 @@ pub(crate) fn fmt_tree(
         relative_seen,
         workspace,
     )?;
+    // §FS-fmt.7.4.3: the walk and the lock pass have both returned, so no refusal
+    // is left to meet; the files go to disk in walk order, and the locks after them.
+    for file in &planned {
+        let written = |error| {
+            partial_io_error(
+                opts.render,
+                &file.path,
+                "write",
+                error,
+                &changes[..file.changes.start],
+                &scan_errors,
+                &refused_writes,
+            )
+        };
+        // §FS-distribution.3.2.2.1: a failed write still reports the files written before it.
+        fs::write(&file.path, &file.text).map_err(written)?;
+        #[cfg(feature = "test-binding-writes")]
+        if let Err(error) = super::binding_write_fault::after_write() {
+            return Err(partial_io_error(
+                opts.render,
+                &file.path,
+                "write",
+                error,
+                &changes[..file.changes.end],
+                &scan_errors,
+                &refused_writes,
+            ));
+        }
+    }
     for lock in locks {
         if write && let Err(error) = write_lock(config, &lock) {
             return Err(partial_io_error(
@@ -371,6 +391,15 @@ pub(crate) fn fmt_tree(
         scan_errors,
         refused_writes,
     })
+}
+
+/// One file's rewrite as the walk planned it (§FS-fmt.7.4.3): its new text, and
+/// the range of the run's changes it accounts for, so a write that fails can
+/// report exactly the files written before it.
+struct PlannedFile {
+    path: PathBuf,
+    text: String,
+    changes: Range<usize>,
 }
 
 /// Bring a lock file to `lock.text` (§FS-section-lock.file.shard): one with no
