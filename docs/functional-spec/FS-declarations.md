@@ -736,7 +736,7 @@ The token stops at a backtick, so an inline-code mention is not a near miss. The
 
 #### checks.declaration-near-miss.4: Facts, not a guessed rename
 
-The message names the token as written and the effective template, states that lookup remains compatible, and offers the two real migration choices: rename the declaration and its citations, or change the effective format. It does **not** propose a corrected ID; assembling one from component patterns would guess what the author meant.
+The message names the token as written and the effective template, states that lookup remains compatible, and offers the two real migration choices: rename the declaration and its citations, or change the effective format. The template's key location follows the loaded-version and kind-override vocabulary of [§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects). It does **not** propose a corrected ID; assembling one from component patterns would guess what the author meant.
 
 #### checks.declaration-near-miss.5: A warning before 0.16.0, an error in it
 
