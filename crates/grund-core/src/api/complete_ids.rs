@@ -9,9 +9,11 @@ use anyhow::Result;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
+use crate::checker::ScanScope;
 use crate::config::Config;
 use crate::grammar::{render_catalog_id, split_alias_path};
 use crate::model::{Catalog, Finding, paired_declarations};
+use crate::queries::{reported_scope, reports};
 use crate::resolver::load_workspace_context;
 
 use super::report::context_run_warnings;
@@ -61,6 +63,7 @@ fn complete_ids_run(opts: CompleteIdsOpts, run_warnings: &mut Vec<Finding>) -> R
     // §FS-completions.2.1: a narrower path bounds the candidates as `list <path>` does.
     let context = load_workspace_context(&opts.path, opts.path_provided)?;
     *run_warnings = context_run_warnings(&context);
+    let scope = reported_scope(&context, &opts.path, opts.path_provided)?;
     let current_config = context
         .current_project()
         .map(|project| &project.config)
@@ -89,6 +92,7 @@ fn complete_ids_run(opts: CompleteIdsOpts, run_warnings: &mut Vec<Finding>) -> R
                 Some(alias_prefix),
                 &project.config,
                 &project.findings,
+                scope.as_ref(),
                 complete_sections,
             );
         }
@@ -101,6 +105,7 @@ fn complete_ids_run(opts: CompleteIdsOpts, run_warnings: &mut Vec<Finding>) -> R
                 None,
                 current_config,
                 &current_project.findings,
+                scope.as_ref(),
                 complete_sections,
             );
         }
@@ -116,20 +121,31 @@ fn complete_ids_run(opts: CompleteIdsOpts, run_warnings: &mut Vec<Finding>) -> R
         .collect())
 }
 
+/// The candidates one project offers: its IDs, or their sections, of the records the
+/// path reports, as `list <path>` prints them (§FS-completions.2.1, §AR-resolver.3.3).
 fn add_complete_id_candidates(
     candidates: &mut BTreeSet<String>,
     alias: Option<&str>,
     config: &Config,
     findings: &Catalog,
+    scope: Option<&ScanScope>,
     include_sections: bool,
 ) {
     let qualifier = alias.map(|alias| format!("{alias}/")).unwrap_or_default();
     for (id, decls) in &findings.declarations {
+        let paired = paired_declarations(decls);
+        let mut records = paired
+            .records()
+            .filter(|record| reports(scope, decls, record))
+            .peekable();
+        if records.peek().is_none() {
+            continue;
+        }
         let rendered = render_catalog_id(&config.grammar, &findings.declarations, id);
         if include_sections {
             // §FS-declarations.stubs.target.5: a paired declaration's sections are its
             // target's, scanned or not.
-            for decl in paired_declarations(decls).records() {
+            for decl in records {
                 for section in decl.sections.keys() {
                     candidates.insert(format!(
                         "{}{}{}{}",

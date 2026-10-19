@@ -184,7 +184,6 @@ fn outside_every_member_no_path_is_the_workspace_and_a_member_narrows_to_dot() {
 /// `--summary` (§FS-list.3.3: an empty summary prints nothing) included, and so does
 /// `list tools/sub` from the root. Today each prints the whole workspace catalog.
 #[test]
-#[ignore = "red until #858 bounds a workspace run's list by its path; implement removes this"]
 fn list_below_the_root_outside_every_member_prints_nothing_where_no_member_is() {
     let ws = Workspace::issue("list");
     let mut mismatches = Vec::new();
@@ -207,7 +206,6 @@ fn list_below_the_root_outside_every_member_prints_nothing_where_no_member_is() 
 /// `list <path>` prints, and `--glob` filters that set (§FS-show.2.6.2), so from
 /// `tools/sub/` both generate nothing. Today they read every body in the workspace.
 #[test]
-#[ignore = "red until #858 bounds a workspace run's --batch by its path; implement removes this"]
 fn show_batch_below_the_root_outside_every_member_generates_nothing_where_no_member_is() {
     let ws = Workspace::issue("show");
     let mut mismatches = Vec::new();
@@ -241,7 +239,6 @@ fn show_batch_below_the_root_outside_every_member_generates_nothing_where_no_mem
 /// §FS-refs.2.1's note. `--from` pins only that its sites are bounded, since how it
 /// resolves a source declared outside the path is grund#857's.
 #[test]
-#[ignore = "red until #858 bounds a workspace run's refs by its path; implement removes this"]
 fn refs_below_the_root_outside_every_member_lists_no_site_outside_the_path() {
     let ws = Workspace::issue("refs");
     let mut mismatches = Vec::new();
@@ -279,7 +276,6 @@ fn refs_below_the_root_outside_every_member_lists_no_site_outside_the_path() {
 /// the entries `list <path>` prints, so from `tools/sub/` an alias-path prefix completes
 /// no member's IDs or sections. Today it offers the member's whole catalog.
 #[test]
-#[ignore = "red until #858 bounds a workspace run's completion by its path; implement removes this"]
 fn complete_ids_below_the_root_outside_every_member_offers_no_member_entry() {
     let ws = Workspace::issue("complete");
     let mut mismatches = Vec::new();
@@ -314,7 +310,6 @@ fn complete_ids_below_the_root_outside_every_member_offers_no_member_entry() {
 /// `refs --glob` and `complete ids` are bounded the same way (§FS-scan.path.show,
 /// §FS-scan.path.refs, §FS-completions.2.1). Today each prints `web`'s entries too.
 #[test]
-#[ignore = "red until #858 bounds a workspace run's report by its path; implement removes this"]
 fn a_path_outside_every_member_reports_the_entries_of_the_members_under_it() {
     let ws = Workspace::nested("positive");
     let mut mismatches = Vec::new();

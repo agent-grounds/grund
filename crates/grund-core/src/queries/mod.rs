@@ -98,7 +98,7 @@ pub(crate) use ambiguity::declaration_ambiguity_refusal;
 pub(crate) use citation_counts::ListCitationCounts;
 pub(crate) use glob_scope::{GlobSelection, read_globs};
 pub(crate) use list_scope::check_list_scope;
-pub(crate) use report_scope::{reported_scope, reports};
+pub(crate) use report_scope::{reported_scope, reports, reports_site};
 pub(crate) use selector_refusal::require_unique_literal;
 pub(crate) use show::{render_show_output_json, show_declaration_with_home};
 
