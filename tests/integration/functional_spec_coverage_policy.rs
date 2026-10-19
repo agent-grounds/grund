@@ -283,7 +283,6 @@ pub(super) const TEMPORARY_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-fetch.remote.from", reason: "specified ahead of its release; the Remotes piece of remote projects proves it" },
     Exception { id: "FS-fetch.remote.install", reason: "specified ahead of its release; the Remotes piece of remote projects proves it" },
     Exception { id: "FS-fetch.remote.selector", reason: "specified ahead of its release; the Remotes piece of remote projects proves it" },
-    Exception { id: "FS-fmt.2.1", reason: "the broad formatter input matrix needs a proof audit" },
     Exception { id: "FS-init.2.3.3", reason: "generated citation-form proof needs a precise mapping audit" },
     Exception { id: "FS-inline-citation-style.3.2", reason: "the multi-case note boundary needs a proof audit" },
     Exception { id: "FS-inline-citation-style.4.3", reason: "the formatter boundary needs a proof audit" },
