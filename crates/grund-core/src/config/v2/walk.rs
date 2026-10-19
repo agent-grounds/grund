@@ -149,6 +149,7 @@ impl<'a> Reader<'a> {
         Ok(())
     }
 
+    /// Reached only for a key `table.keys()` admits, so no arm's `Ok(false)` is a second gate.
     fn read_key(&mut self, table: &mut Table, key: &str, value: &str, line: usize) -> Result<bool> {
         match table {
             Table::Root => self.envelope_key(key, value, line),
