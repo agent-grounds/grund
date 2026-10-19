@@ -119,7 +119,7 @@ The page of each command whose `<path>` narrows what it scans or reports, `check
 With no PATH, the run covers the whole project or workspace discovered from the current directory; a PATH narrows it.
 ```
 
-None of the five says PATH defaults to `.`: from a subdirectory, the run given `.` is a narrowed run and not the one given no path. A page whose path only chooses the project that answers, as `config`'s and `schema`'s do, keeps the default it states, and so does `show`'s `--path` entry, which names the project one coordinate resolves in.
+None of the five says PATH defaults to `.`: from a subdirectory, the run given `.` is a narrowed run and not the one given no path. A page whose path only chooses the project that answers, as `config`'s and `schema`'s do, keeps the default it states. `show`'s path does both ([§FS-scan.path.show](FS-scan.md#pathshow-show-resolves-the-id-against-the-project-the-path-discovers)), so its `--path` entry gives each form its own and names no `.` default: one coordinate answers alike with `.` and with no path, and `--batch --all` and `--glob`, which the path narrows, query with none the whole project or workspace discovered from the current directory.
 
 ## 3. Cross-subcommand flags
 
@@ -136,7 +136,7 @@ None of the five says PATH defaults to `.`: from a subdirectory, the run given `
   | `init`, `fetch`, `completions`, `agent-setup-instructions` | rejected | — | rejected |
 
   A rejected flag is a CLI-level error of the command's own flag rules — `unknown flag`, or `agent-setup-instructions takes no arguments` — as today, per [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location). `fmt` and `config` gain no JSON surface here: designing one is their own spec's business ([§FS-errors.5](FS-errors.md#5-json-format)). The inert `[output] color` key gets no run-flag counterpart and there is no `--color`.
-- A path argument, when a subcommand takes one, is resolved the same way everywhere: config discovery walks up from it, or from the current directory when none is given ([§FS-config.1](FS-config.md#1-file-location-and-discovery)). A run given none covers the project that discovery finds, not the current directory alone ([§FS-scan.path.none](FS-scan.md#pathnone-a-run-with-no-path-covers-the-project-discovery-finds)). Every path-taking subcommand accepts at most one ([§FS-cli.3.2](FS-cli.md#32-at-most-one-path)).
+- A path argument, when a subcommand other than `init` takes one, is resolved the same way everywhere: config discovery walks up from it, or from the current directory when none is given ([§FS-config.1](FS-config.md#1-file-location-and-discovery)). A run given none covers the project that discovery finds, not the current directory alone ([§FS-scan.path.none](FS-scan.md#pathnone-a-run-with-no-path-covers-the-project-discovery-finds)). `init`'s path is the directory it writes in, `.` when none is given ([§FS-init.1](FS-init.md#1-inputs)). Every path-taking subcommand accepts at most one ([§FS-cli.3.2](FS-cli.md#32-at-most-one-path)).
 - `--only <code>`, `--ignore <code>`, and the boolean `--only-rule` are `check`-only finding-query flags ([§FS-check.1](FS-check.md#1-inputs)); other subcommands reject them. The `check` help page documents them ([§FS-cli.3.3](FS-cli.md#33-the-check-selector-help)).
 
 ### 3.1 The `--format json` streams

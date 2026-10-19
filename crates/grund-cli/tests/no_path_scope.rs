@@ -204,18 +204,25 @@ fn from_a_subdirectory_no_path_is_the_project_and_dot_narrows() {
     assert!(mismatches.is_empty(), "{}", mismatches.join("\n"));
 }
 
+/// The `--help` page of `command`.
+fn help_page(command: &str) -> String {
+    let output = Command::new(env!("CARGO_BIN_EXE_grund"))
+        .args([command, "--help"])
+        .output()
+        .expect("spawn grund");
+    assert_eq!(output.status.code(), Some(0), "grund {command} --help");
+    String::from_utf8_lossy(&output.stdout).into_owned()
+}
+
 /// §FS-cli.2.3.2: each page whose path narrows says, in the one line, what a run
-/// with no path covers, and none of them says PATH defaults to `.`.
+/// with no path covers, and none of them says PATH defaults to `.`. `show`'s path
+/// narrows only its generated batches, so its `--path` entry says what those cover
+/// with no path, and the page names no `.` default.
 #[test]
 fn each_narrowing_help_page_says_what_a_run_with_no_path_covers() {
     let mut failures = Vec::new();
     for command in ["check", "fmt", "cover", "list", "refs"] {
-        let output = Command::new(env!("CARGO_BIN_EXE_grund"))
-            .args([command, "--help"])
-            .output()
-            .expect("spawn grund");
-        assert_eq!(output.status.code(), Some(0), "grund {command} --help");
-        let page = String::from_utf8_lossy(&output.stdout);
+        let page = help_page(command);
         if !page.lines().any(|line| line == NO_PATH_LINE) {
             failures.push(format!("grund {command} --help: no line {NO_PATH_LINE:?}"));
         }
@@ -224,6 +231,28 @@ fn each_narrowing_help_page_says_what_a_run_with_no_path_covers() {
             .filter(|line| line.contains("PATH defaults to `.`"))
         {
             failures.push(format!("grund {command} --help: still says {line:?}"));
+        }
+    }
+    let page = help_page("show");
+    for line in page.lines().filter(|line| line.contains("default `.`")) {
+        failures.push(format!("grund show --help: still says {line:?}"));
+    }
+    let entry = page
+        .lines()
+        .skip_while(|line| !line.starts_with("  --path PATH"))
+        .take_while(|line| !line.contains("e.g."))
+        .flat_map(str::split_whitespace)
+        .collect::<Vec<_>>()
+        .join(" ");
+    for says in [
+        "--batch --all",
+        "--glob",
+        "with no PATH cover the whole project or workspace discovered from the current directory",
+    ] {
+        if !entry.contains(says) {
+            failures.push(format!(
+                "grund show --help: --path entry {entry:?} lacks {says:?}"
+            ));
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));

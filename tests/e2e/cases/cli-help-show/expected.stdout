@@ -13,7 +13,10 @@ Modes form an ordered ladder (each adds to the previous):
 Other options:
   --section S            show only that section path  e.g. grund FS-login --section 3.1
   --format text|md|json  text (default) is the body; md keeps the heading; json wraps it
-  --path PATH            repo or subtree to resolve the ID in (default `.`)
+  --path PATH            repo or subtree to resolve the ID in (no PATH answers as `.`);
+                         narrows --batch --all and --glob, whose queries with no PATH
+                         cover the whole project or workspace discovered from the
+                         current directory
                          e.g. grund FS-login --path docs/
   --batch                 read ordered {"id":…,"section":…} NDJSON queries from stdin
   --all                   with --batch, query every declaration and section

@@ -7,10 +7,11 @@ Usage:  grund refs <ID>[.<section>] [PATH] [--section S] [--descendants]
         grund refs --from COORDINATE [PATH] [--summary] [--total] [--format text|json]
 
 With no PATH, the run covers the whole project or workspace discovered from the current directory; a PATH narrows it.
-With a `.<section>` (or --section), only citations of that
-exact section are listed; --descendants widens that to the section and every
-section beneath it. An ID with no citations prints nothing and exits 0, or the
-line `not cited` under --total.
+
+With a `.<section>` (or --section), only citations of that exact section are
+listed; --descendants widens that to the section and every section beneath it.
+An ID with no citations prints nothing and exits 0, or the line `not cited`
+under --total.
 
 --glob lists every site whose cited coordinate a pattern matches, dangling ones
 included; repeated, the patterns union and each site is listed once. A bare

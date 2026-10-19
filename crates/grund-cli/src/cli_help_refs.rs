@@ -16,10 +16,11 @@ fn print_refs_help() {
     );
     println!();
     print_no_path_scope_help();
-    println!("With a `.<section>` (or --section), only citations of that");
-    println!("exact section are listed; --descendants widens that to the section and every");
-    println!("section beneath it. An ID with no citations prints nothing and exits 0, or the");
-    println!("line `not cited` under --total.");
+    println!();
+    println!("With a `.<section>` (or --section), only citations of that exact section are");
+    println!("listed; --descendants widens that to the section and every section beneath it.");
+    println!("An ID with no citations prints nothing and exits 0, or the line `not cited`");
+    println!("under --total.");
     println!();
     // §FS-refs.1.1: the modes, and every positional the path under either.
     println!("--glob lists every site whose cited coordinate a pattern matches, dangling ones");
@@ -86,8 +87,9 @@ fn print_cover_help() {
     println!("        grund cover FILE --lines N|N-M [--lines …] [--format text|json]");
     println!();
     print_no_path_scope_help();
-    println!("The command runs the same scan as `check` and `refs`,");
-    println!("then prints one file record with the citations found in that file.");
+    println!();
+    println!("The command runs the same scan as `check` and `refs`, then prints one file");
+    println!("record with the citations found in that file.");
     println!("With --glob a record keeps only the citations whose cited coordinate a pattern");
     println!("matches, and every scanned file keeps its record: `(no citations)` in text.");
     println!("With --lines it prints instead, for each range of FILE, the declaration");
