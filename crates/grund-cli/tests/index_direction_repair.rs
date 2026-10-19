@@ -322,6 +322,11 @@ fn nested_alias_rule_index_repair_preserves_warning_and_compatibility_clause() {
     for path in ["grund.toml", "docs"] {
         fs::rename(repo.0.join(path), repo.0.join("group/api").join(path)).unwrap();
     }
+    repo.replace(
+        "group/api/grund.toml",
+        "project_name = \"issue-842\"",
+        "project_name = \"api\"",
+    );
     let base = "grund_config_version = 2\n[schema.sources]\nlanguages = [\"markdown\"]\n";
     repo.write(
         "grund.toml",
