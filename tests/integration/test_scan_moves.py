@@ -138,9 +138,10 @@ CITED = ("REQ-one-answer.differences.scope", "FS-workspace.6.2")
 # Non-blank lines on main at 1640b6c47c; every file the move touches ends below it.
 # FS-check's adds #634's 10-line chapter, §FS-check.3.17.4's wrap-test line (grund#655)
 # and #756's 9 lines of checks.config-version-1: a restatement still has one line to regrow.
-# FS-workspace's adds #823's 21 non-blank lines of §FS-workspace.5.1.1;
+
+# FS-workspace's adds #823's 20 non-blank lines of §FS-workspace.5.1.1;
 # the original scan-move shrink margin remains unchanged.
-BASELINES = {"FS-config.md": 765, "FS-workspace.md": 1184, "FS-check.md": 939}
+BASELINES = {"FS-config.md": 765, "FS-workspace.md": 1183, "FS-check.md": 939}
 
 
 def _flat(text):
