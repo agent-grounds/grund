@@ -265,6 +265,7 @@ fn check_uses_scanned_symlink_path_for_kind_home() {
     findings.declarations.insert(
         id.clone(),
         vec![Declaration {
+            authored_id: None,
             id,
             file: root.join("docs/functional-spec/link.md"),
             line: 1,

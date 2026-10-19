@@ -10,7 +10,7 @@ use super::near_miss::check_declaration_near_misses;
 use super::sections::check_section_headings;
 use super::sizes::check_oversized_leads;
 use crate::config::{Frame, Schema};
-use crate::grammar::render_id;
+use crate::grammar::render_catalog_id;
 use crate::model::{
     Catalog, CheckReport, Diagnostic, ExcludingRule, Site, StubResolution, format_path,
     paired_declarations, sort_path_key,
@@ -87,7 +87,7 @@ fn check_duplicates(findings: &Catalog, frame: Frame<'_>, report: &mut CheckRepo
                 column: None,
                 message: format!(
                     "duplicate declaration of {}{suffix}",
-                    render_id(frame.grammar(), id)
+                    render_catalog_id(frame.grammar(), &findings.declarations, id)
                 ),
                 sites,
                 authority: Vec::new(),
@@ -119,7 +119,7 @@ fn check_misplaced(
                     column: None,
                     message: format!(
                         "{} must be declared in {} (single-file kind)",
-                        render_id(frame.grammar(), id),
+                        render_catalog_id(frame.grammar(), &findings.declarations, id),
                         expected.label()
                     ),
                     sites: Vec::new(),
@@ -138,7 +138,7 @@ fn check_misplaced(
                 let message = if home.citable {
                     format!(
                         "{} declares kind {} inside {} home {}",
-                        render_id(frame.grammar(), id),
+                        render_catalog_id(frame.grammar(), &findings.declarations, id),
                         id.kind,
                         home.kind,
                         home.path
@@ -146,7 +146,7 @@ fn check_misplaced(
                 } else {
                     format!(
                         "{} must not be declared in {} (not a citable home)",
-                        render_id(frame.grammar(), id),
+                        render_catalog_id(frame.grammar(), &findings.declarations, id),
                         home.place()
                     )
                 };
@@ -186,7 +186,7 @@ fn check_broken_stubs(findings: &Catalog, frame: Frame<'_>, report: &mut CheckRe
                 StubResolution::Excluded(rule) => excluded_target_message(target, rule),
                 StubResolution::NotRead | StubResolution::LacksId => format!(
                     "stub link target lacks {}: {}",
-                    render_id(frame.grammar(), id),
+                    render_catalog_id(frame.grammar(), &findings.declarations, id),
                     format_path(target)
                 ),
                 StubResolution::OwnFile | StubResolution::Declares(_) => continue,

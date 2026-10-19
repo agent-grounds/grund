@@ -21,7 +21,7 @@ use super::anchor_numbering::numbered_anchor;
 use super::settled_headings::SettledHeadings;
 use crate::config::{Frame, Presentation, Schema};
 use crate::grammar::{
-    Grammar, anchor_slug, reduce_heading_text, render_id, without_closing_sequence,
+    Grammar, anchor_slug, reduce_heading_text, render_declaration_id, without_closing_sequence,
 };
 use crate::model::{
     Catalog, Declaration, FileRecord, FileRecords, Id, SectionInfo, paired_declarations,
@@ -315,7 +315,7 @@ fn rendered_anchor(heading: &str, presentation: &Presentation) -> String {
 /// source spelling supplies the ID, never the querying citation's digits
 /// (§FS-fmt.6.2.2, §FS-config.3.2.8).
 fn declaration_heading_text(decl: &Declaration, grammar: &Grammar) -> String {
-    let id = render_id(grammar, &decl.id);
+    let id = render_declaration_id(grammar, decl);
     match &decl.title {
         Some(title) => format!("{id}: {}", reduce_heading_text(title)),
         None => id,

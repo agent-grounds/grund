@@ -22,13 +22,14 @@ pub(super) fn root_binding_finding(
     frame: Frame<'_>,
     declaration: &Declaration,
     path: Option<&str>,
+    spelling: &str,
 ) -> Option<Diagnostic> {
     let run = root_components(declaration, path)?;
     let site = |line| Site {
         path: declaration.file.clone(),
         line,
     };
-    let root = rendered_value_path(schema, frame, binding, path);
+    let root = rendered_value_path(schema, binding, spelling, path);
     if let Some((index, (_, line, _))) = run
         .iter()
         .enumerate()
@@ -64,7 +65,7 @@ pub(super) fn root_binding_finding(
     let (coordinate, line, component) = &run[index];
     Some(value_mismatch(
         binding,
-        &rendered_value_path(schema, frame, binding, Some(coordinate)),
+        &rendered_value_path(schema, binding, spelling, Some(coordinate)),
         &parts[index],
         component,
         site(*line),

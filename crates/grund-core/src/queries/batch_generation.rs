@@ -9,7 +9,7 @@ use std::path::Path;
 use super::batch::BatchShowQuery;
 use super::glob_scope::GlobSelection;
 use super::report_scope::{reported_scope, reports};
-use crate::grammar::render_id;
+use crate::grammar::render_catalog_id;
 use crate::model::paired_declarations;
 use crate::resolver::WorkspaceContext;
 
@@ -40,7 +40,8 @@ pub(super) fn exhaustive_batch_queries(
             if records.is_empty() {
                 continue;
             }
-            let local_id = render_id(&project.config.grammar, id);
+            let local_id =
+                render_catalog_id(&project.config.grammar, &project.findings.declarations, id);
             let qualified_id = if context.current == Some(project_index) {
                 local_id.clone()
             } else {

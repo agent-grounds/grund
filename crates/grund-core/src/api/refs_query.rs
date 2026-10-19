@@ -15,7 +15,7 @@ use std::path::Path;
 use super::refs::{RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure, RefsWithMetadata};
 use super::report::context_run_warnings;
 use crate::config::display_path;
-use crate::grammar::{path_at_or_under, render_id};
+use crate::grammar::{path_at_or_under, render_catalog_id, render_citation_id, render_id};
 use crate::model::{Citation, sort_path_key};
 use crate::queries::declaration_ambiguity_refusal;
 use crate::resolver::{WorkspaceContext, WorkspaceProject, load_classifying_workspace_context};
@@ -222,18 +222,25 @@ pub(super) fn refs_impl_with_details(
             path: hit_path(&context, hit.project, &hit.citation.file),
             line: hit.citation.line,
             column: hit.citation.column,
-            id: render_id(&render_config.grammar, &hit.citation.id),
+            id: render_citation_id(
+                &render_config.grammar,
+                &target_project.findings.declarations,
+                hit.citation,
+                &hit.project.config.marker,
+            ),
             section: hit.citation.section.clone(),
             marker: hit.citation.has_marker,
             text: hit.citation.text.clone(),
             // §FS-refs.3.2: the citing site's own unit, after `text` and before
             // `kind_title`. §FS-workspace.8.2.4: bare, under the **citing**
             // project's grammar — `id` above renders under the target's.
-            enclosing_declaration: hit
-                .citation
-                .enclosing_declaration
-                .as_ref()
-                .map(|id| render_id(&hit.project.config.grammar, id)),
+            enclosing_declaration: hit.citation.enclosing_declaration.as_ref().map(|id| {
+                render_catalog_id(
+                    &hit.project.config.grammar,
+                    &hit.project.findings.declarations,
+                    id,
+                )
+            }),
             enclosing_section: hit.citation.enclosing_section.clone(),
         })
         .collect::<Vec<_>>();

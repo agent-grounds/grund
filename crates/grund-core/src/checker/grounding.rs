@@ -314,7 +314,7 @@ pub(super) fn file_obligation_units<'a>(
                         .filter(|cite| start <= cite.line && cite.line <= end)
                         .collect();
                     (!inside.is_empty()).then(|| ObligationUnit {
-                        id: None,
+                        declaration: None,
                         place: place.clone(),
                         path: file.to_path_buf(),
                         line: start,

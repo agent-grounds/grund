@@ -13,8 +13,9 @@
 use std::collections::BTreeMap;
 
 use super::references::ReferenceTier;
+use super::support::qualify;
 use crate::config::{Schema, ShorthandPolicy};
-use crate::grammar::{ShorthandIndex, render_id, render_qualified_id};
+use crate::grammar::{ShorthandIndex, render_catalog_id};
 use crate::model::{CheckReport, Citation, Diagnostic, Id};
 use crate::resolver::WorkspaceCheckTarget;
 
@@ -65,7 +66,14 @@ fn shorthand_diagnostic(
             let canonical = format!(
                 "{}{}{}",
                 schema.citation.marker,
-                render_qualified_id(&target.compiled.grammar, cite.namespace.as_deref(), unique),
+                qualify(
+                    cite.namespace.as_deref(),
+                    &render_catalog_id(
+                        &target.compiled.grammar,
+                        &target.catalog.declarations,
+                        unique
+                    )
+                ),
                 section
             );
             // §FS-check.3.15.1: the same site, a different verdict — `fmt` will not
@@ -100,7 +108,11 @@ fn shorthand_diagnostic(
         many => format!(
             "shorthand citation {written} is ambiguous: {}",
             many.iter()
-                .map(|id| render_id(&target.compiled.grammar, id))
+                .map(|id| render_catalog_id(
+                    &target.compiled.grammar,
+                    &target.catalog.declarations,
+                    id
+                ))
                 .collect::<Vec<_>>()
                 .join(", ")
         ),

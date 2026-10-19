@@ -1,5 +1,7 @@
 use crate::config::{Frame, Schema};
-use crate::grammar::{is_inside_inline_code, render_id, render_qualified_id};
+#[cfg(test)]
+use crate::grammar::render_id;
+use crate::grammar::{is_inside_inline_code, render_catalog_id};
 use crate::model::{Catalog, Citation, Diagnostic, Id, sort_path_key};
 
 /// §FS-check.3.1: the dangling message. A near same-kind ID is a likely typo; a
@@ -7,6 +9,7 @@ use crate::model::{Catalog, Citation, Diagnostic, Id, sort_path_key};
 /// applies — and both when a dangling citation in backticks also has a near
 /// match. Outside inline code the escape hint is withheld so a prose typo is
 /// nudged toward the near ID, not toward escaping.
+#[cfg(test)]
 pub(crate) fn dangling_message(
     schema: &Schema,
     frame: Frame<'_>,
@@ -15,8 +18,30 @@ pub(crate) fn dangling_message(
     missing: &Id,
     in_inline_code: bool,
 ) -> String {
-    let unknown = render_qualified_id(frame.grammar(), namespace, missing);
-    let near = nearest_declared_id(frame, namespace, findings, missing);
+    dangling_message_spelled(
+        schema,
+        frame,
+        namespace,
+        findings,
+        missing,
+        in_inline_code,
+        &render_id(frame.grammar(), missing),
+    )
+}
+
+/// The source citation supplies the spelling of an unresolved number
+/// (§FS-config.3.2.8); identity still selects same-kind suggestions.
+pub(super) fn dangling_message_spelled(
+    schema: &Schema,
+    frame: Frame<'_>,
+    namespace: Option<&str>,
+    findings: &Catalog,
+    missing: &Id,
+    in_inline_code: bool,
+    spelling: &str,
+) -> String {
+    let unknown = qualify(namespace, spelling);
+    let near = nearest_declared_id(frame, namespace, findings, missing, spelling);
     let escape = in_inline_code.then(|| format!("<{}>{unknown}", schema.citation.marker));
     match (near, escape) {
         (Some(near), Some(escape)) => format!(
@@ -42,14 +67,15 @@ pub(super) fn missing_snapshot_message(
     in_inline_code: bool,
     home: &str,
     must: bool,
+    spelling: &str,
 ) -> String {
-    let rendered = render_qualified_id(frame.grammar(), namespace, missing);
+    let rendered = qualify(namespace, spelling);
     let base = if must {
         format!("unknown reference {rendered}; no snapshot in {home}")
     } else {
         format!("no snapshot for {rendered} in {home}")
     };
-    let near = nearest_declared_id(frame, namespace, findings, missing);
+    let near = nearest_declared_id(frame, namespace, findings, missing, spelling);
     let escape = in_inline_code.then(|| format!("<{}>{rendered}", schema.citation.marker));
     match (near, escape) {
         (Some(near), Some(escape)) => {
@@ -99,15 +125,15 @@ fn nearest_declared_id(
     namespace: Option<&str>,
     findings: &Catalog,
     missing: &Id,
+    missing_text: &str,
 ) -> Option<String> {
-    let missing_text = render_id(frame.grammar(), missing);
     let mut best: Option<(usize, String)> = None;
     for candidate in findings.declarations.keys() {
         if candidate.kind != missing.kind {
             continue;
         }
-        let candidate_text = render_id(frame.grammar(), candidate);
-        let distance = edit_distance(&missing_text, &candidate_text);
+        let candidate_text = render_catalog_id(frame.grammar(), &findings.declarations, candidate);
+        let distance = edit_distance(missing_text, &candidate_text);
         if !close_enough_for_hint(
             distance,
             missing_text.chars().count(),
@@ -115,7 +141,7 @@ fn nearest_declared_id(
         ) {
             continue;
         }
-        let rendered = render_qualified_id(frame.grammar(), namespace, candidate);
+        let rendered = qualify(namespace, &candidate_text);
         match &best {
             Some((best_distance, best_rendered))
                 if distance > *best_distance
@@ -124,6 +150,14 @@ fn nearest_declared_id(
         }
     }
     best.map(|(_, rendered)| rendered)
+}
+
+/// Namespace qualification does not change authored digits (§FS-config.3.2.8).
+pub(super) fn qualify(namespace: Option<&str>, spelling: &str) -> String {
+    namespace.map_or_else(
+        || spelling.to_string(),
+        |alias| format!("{alias}/{spelling}"),
+    )
 }
 
 pub(super) fn close_enough_for_hint(distance: usize, left_len: usize, right_len: usize) -> bool {

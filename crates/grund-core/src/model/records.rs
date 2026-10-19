@@ -25,6 +25,9 @@ pub use super::id::Id;
 #[derive(Debug, Clone)]
 pub struct Declaration {
     pub id: Id,
+    /// Source spelling is presentation, separate from the public identity
+    /// record (§FS-config.3.2.8). Absent for synthetic declarations.
+    pub(crate) authored_id: Option<String>,
     pub file: PathBuf,
     pub line: usize,
     pub heading_level: usize,

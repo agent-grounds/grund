@@ -64,6 +64,12 @@ An entry that already matches is left alone, so a second run writes nothing. A s
 
 `fmt` never refreshes an entry whose recorded fingerprint now sits at another address of the declaration, because that is text that moved, and recording the new text at the old address would turn the report of [§FS-section-lock.checks.section-address-changed](FS-section-lock.md#checkssection-address-changed-a-cited-sections-text-sits-at-another-address) into silence. The one exception is a move already acknowledged by a pointer ([§FS-section-lock.move.pointer](FS-section-lock.md#movepointer-leave-a-pointer)), whose pointer text it records.
 
+An existing lock whose ID uses an equivalent numeric spelling still records the
+same declaration and coordinates ([§FS-config.3.2.8](FS-config.md#328-numeric-spelling-survives-reading-and-reporting)).
+An equivalent spelling alone changes neither the lock's spelling nor its recorded
+fingerprints; a report-spelling correction never establishes a fresh baseline for
+its addresses.
+
 ### write.report: What `fmt` reports
 
 The dry run, `fmt --check`, lists one row per entry `--write` would add, refresh or drop, in the [§FS-fmt.3.5](FS-fmt.md#35-the-dry-run-report) shape, ordered by path, then line, then the row's text:

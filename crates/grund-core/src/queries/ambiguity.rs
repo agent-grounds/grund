@@ -6,7 +6,7 @@
 
 use super::show_query::ShowQueryError;
 use crate::config::{Config, display_path};
-use crate::grammar::render_id;
+use crate::grammar::render_declaration_id;
 use crate::model::{
     Catalog, Declaration, FindingSite, Id, PairedDeclarations, paired_declarations,
 };
@@ -38,7 +38,7 @@ pub(super) fn ambiguous_id_refusal(
     config: &Config,
     path_config: &Config,
     paired: &PairedDeclarations<'_>,
-    id: &Id,
+    _id: &Id,
 ) -> Option<ShowQueryError> {
     if paired.len() <= 1 {
         return None;
@@ -59,7 +59,10 @@ pub(super) fn ambiguous_id_refusal(
     sites.sort_by(|a, b| a.0.cmp(&b.0));
     let message = format!(
         "ambiguous ID: {} (declared at {})",
-        render_id(&config.grammar, id),
+        render_declaration_id(
+            &config.grammar,
+            paired.records().next().expect("multiple records")
+        ),
         sites
             .iter()
             .map(|(rendered, ..)| rendered.as_str())
@@ -87,7 +90,7 @@ pub(super) fn ambiguous_section_refusal(
     config: &Config,
     path_config: &Config,
     body_decl: &Declaration,
-    id: &Id,
+    _id: &Id,
     section: &str,
 ) -> Option<ShowQueryError> {
     let mut lines: Vec<usize> = body_decl
@@ -110,7 +113,7 @@ pub(super) fn ambiguous_section_refusal(
         .join(", ");
     let message = format!(
         "ambiguous section: {}{}{} (declared at {sites_text})",
-        render_id(&config.grammar, id),
+        render_declaration_id(&config.grammar, body_decl),
         config.section_separator,
         section
     );

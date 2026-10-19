@@ -4,7 +4,7 @@
 use std::path::Path;
 
 use crate::config::Config;
-use crate::grammar::render_id;
+use crate::grammar::render_catalog_id;
 use crate::model::{Catalog, Citation, section_resolves};
 
 /// Expand only scanner-proven, uniquely owned local section edges whose cited
@@ -61,7 +61,11 @@ pub(super) fn expand_local_section_citations(
         if expandable(cite, findings) {
             let written_start = output.len();
             output.push_str(&config.marker);
-            output.push_str(&render_id(&config.grammar, &cite.id));
+            output.push_str(&render_catalog_id(
+                &config.grammar,
+                &findings.declarations,
+                &cite.id,
+            ));
             output.push_str(&config.section_separator);
             output.push_str(cite.section.as_deref().unwrap_or_default());
             expansions.push((

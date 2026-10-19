@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use super::value_mismatch::{rendered_value_path, value_mismatch};
 use super::value_roots::root_binding_finding;
 use crate::config::{Frame, Schema, kind_uses_values, kind_value_chapter};
-use crate::grammar::render_id;
+use crate::grammar::{BindingSpellings, render_catalog_id};
 use crate::model::{
     Catalog, CheckReport, Declaration, Diagnostic, EmbeddedValueRoot, Id, Site, ValueBinding,
     paired_declarations, value_binding_section_ends_in_coordinate, value_components_equal,
@@ -40,7 +40,7 @@ pub(super) fn check_values(
             message: match &site.id {
                 Some(id) => format!(
                     "invalid value declaration for {}: {}",
-                    render_id(frame.grammar(), id),
+                    render_catalog_id(frame.grammar(), &findings.declarations, id),
                     site.message
                 ),
                 None => format!("invalid value declaration: {}", site.message),
@@ -76,6 +76,7 @@ pub(super) fn check_values(
             authority: Vec::new(),
         });
     }
+    let spellings = BindingSpellings::new(findings);
     for binding in &findings.value_bindings {
         let target = match binding.namespace.as_deref() {
             Some(alias) => workspace.get(alias).copied(),
@@ -84,6 +85,12 @@ pub(super) fn check_values(
         let Some(target) = target else { continue };
         // The target spells the coordinate; the report spells the paths (§FS-workspace.8.1).
         let target_frame = target.frame().displayed_by(frame.display);
+        let spelling = spellings.render(
+            target_frame.grammar(),
+            &target.catalog.declarations,
+            binding,
+            &schema.citation.marker,
+        );
         match binding_aim(target.catalog, target.schema, binding) {
             BindingAim::Component {
                 declaration,
@@ -100,7 +107,7 @@ pub(super) fn check_values(
                 }
                 report.errors.push(value_mismatch(
                     binding,
-                    &rendered_value_path(target.schema, target_frame, binding, Some(section)),
+                    &rendered_value_path(target.schema, binding, &spelling, Some(section)),
                     &binding.authored,
                     declared,
                     Site {
@@ -116,6 +123,7 @@ pub(super) fn check_values(
                 target_frame,
                 declaration,
                 path,
+                &spelling,
             )),
             BindingAim::Refused => report.errors.push(invalid_binding_diagnostic(binding)),
             BindingAim::Inert => {}

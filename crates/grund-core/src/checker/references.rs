@@ -13,11 +13,11 @@
 use super::reference_scope::ScanScope;
 use super::shorthand::{ShorthandIndexes, report_shorthand_citation};
 use super::support::{
-    citation_in_markdown_inline_code, close_enough_for_hint, dangling_message, edit_distance,
-    missing_snapshot_message,
+    citation_in_markdown_inline_code, close_enough_for_hint, dangling_message_spelled,
+    edit_distance, missing_snapshot_message, qualify,
 };
 use crate::config::{Frame, KindResolution, Origin, Schema};
-use crate::grammar::render_qualified_id;
+use crate::grammar::{render_catalog_id, render_citation_id};
 use crate::model::{Catalog, CheckReport, Diagnostic, section_resolves};
 use crate::resolver::{WorkspaceCheckTarget, join_alternatives, target_for_citation};
 use crate::workspace::{member_root_guidance, namespace_is_unverified};
@@ -99,7 +99,7 @@ pub(super) fn check_citation_resolution(
         }
         let written = cite.text.trim();
         let section = cite.section.as_deref().unwrap_or_default();
-        let owner = render_qualified_id(frame.grammar(), None, &cite.id);
+        let owner = render_catalog_id(frame.grammar(), &findings.declarations, &cite.id);
         // §FS-check.3.24.3: where `missing section` fires beside this site, its full
         // citation would only trade one error for the other; name the absence and the
         // escape instead.
@@ -242,6 +242,12 @@ pub(super) fn check_citation_resolution(
             // §FS-config-v2.schema.sources: Markdown is the citing file's language's.
             let markdown = frame.compiled.reading(schema, &cite.file).markdown;
             let in_inline_code = citation_in_markdown_inline_code(findings, frame, cite, markdown);
+            let spelling = render_citation_id(
+                target.frame().grammar(),
+                &target.catalog.declarations,
+                cite,
+                &schema.citation.marker,
+            );
             let (code, message, warning) = if let Some(row) = snapshot_row {
                 // §FS-check.3.14.1: out-of-scope citations stay fixed dangling errors;
                 // a target kind's in-scope `should` must not demote this opt-in tier.
@@ -263,6 +269,7 @@ pub(super) fn check_citation_resolution(
                     in_inline_code,
                     &home,
                     !should_warn,
+                    &spelling,
                 );
                 (
                     if should_warn {
@@ -276,13 +283,14 @@ pub(super) fn check_citation_resolution(
             } else {
                 (
                     "dangling",
-                    dangling_message(
+                    dangling_message_spelled(
                         target.schema,
                         target.frame(),
                         cite.namespace.as_deref(),
                         target.catalog,
                         &cite.id,
                         in_inline_code,
+                        &spelling,
                     ),
                     false,
                 )
@@ -312,10 +320,14 @@ pub(super) fn check_citation_resolution(
             if !section_resolves(target.catalog, &cite.id, sec) {
                 let coordinate = format!(
                     "{}{}{}",
-                    render_qualified_id(
-                        &target.compiled.grammar,
+                    qualify(
                         cite.namespace.as_deref(),
-                        &cite.id
+                        &render_citation_id(
+                            &target.compiled.grammar,
+                            &target.catalog.declarations,
+                            cite,
+                            &schema.citation.marker
+                        )
                     ),
                     target.schema.ids.section_separator,
                     sec

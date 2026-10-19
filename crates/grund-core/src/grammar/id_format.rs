@@ -117,8 +117,8 @@ pub(super) fn id_pattern(
 }
 
 impl Grammar {
-    /// Render an existing `Id` with its authored digits (§FS-config.3.2.8),
-    /// using `width` only for a synthetic number. A component that is `None` while its
+    /// Render an identity without source context (§FS-config.3.2.8).
+    /// A component that is `None` while its
     /// placeholder is in the format — the shorthand `Id` a shorthand citation
     /// carries before it resolves — is dropped with its separator by
     /// `elements_without`, so a partial ID prints as `FS-042` rather than
@@ -134,25 +134,24 @@ impl Grammar {
         if let Some(spelling) = id.legacy_spelling() {
             return spelling.to_string();
         }
-        // §FS-config.3.2.8: source digits win over any synthetic report width.
         let width = if self.overridden_kinds.contains(&id.kind) {
             0
         } else {
             width
         };
-        self.render_with_width(id, width, id.number_spelling.as_deref())
+        self.render_with_width(id, width)
     }
 
     /// Render a newly allocated ID with the caller's explicit minimum width
     /// even when its kind overrides the repository format (§FS-id.1.2,
     /// §FS-id.2.1).
     pub(crate) fn render_allocation(&self, id: &Id, width: usize) -> String {
-        self.render_with_width(id, width, None)
+        self.render_with_width(id, width)
     }
 
     /// One template renderer for source spelling and allocation width
     /// (§FS-config.3.2.8, §FS-id.1.2).
-    fn render_with_width(&self, id: &Id, width: usize, number_spelling: Option<&str>) -> String {
+    fn render_with_width(&self, id: &Id, width: usize) -> String {
         let configured = self.kind_elements.get(&id.kind).unwrap_or(&self.elements);
         // Reduce only when a placeholder the format *carries* has no value — the
         // shorthand `Id` and nothing else — so the common path borrows the parsed
@@ -178,10 +177,7 @@ impl Grammar {
                 IdElement::Kind => rendered.push_str(&id.kind),
                 IdElement::Number => {
                     if let Some(number) = id.num {
-                        match number_spelling {
-                            Some(spelling) => rendered.push_str(spelling),
-                            None => rendered.push_str(&format!("{number:0width$}")),
-                        }
+                        rendered.push_str(&format!("{number:0width$}"));
                     }
                 }
                 IdElement::Slug => {

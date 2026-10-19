@@ -1,7 +1,7 @@
 //! An `Id` and text, in both directions (§FS-config.3.2): the two `Grammar`
 //! operations that read one out of a match the compiled grammar produced or out
 //! of a CLI argument, the one parser that has no grammar to consult at all, the
-//! two renderers that print one back, and the record of one citation token found
+//! identity renderer, and the record of one citation token found
 //! on a Markdown line. The first two sat in the model's record file while the
 //! crate was flat, calling `Grammar::parse_token` and the `id_input_re` from
 //! there; they are grammar operations over model's types, which is the direction
@@ -15,11 +15,10 @@
 //!
 //! The last three came down out of the writers when §AR-system.2.8 became a
 //! module. `render_id` is one line over `Grammar::render` that the scanner, the
-//! checker, the workspace, the queries and this component all read, and
-//! `render_qualified_id` is the same line with an alias in front of it
-//! (§FS-workspace.1) — it sat on the model's record and was the last reason that
-//! file read `Config`; both take the compiled grammar itself now, so neither
-//! names one either (§AR-system.4). `MarkdownLineCitation` is where one marked citation
+//! checker, the workspace, the queries and this component all read. Source
+//! report rendering lives in `spelling.rs`, where the declaration or citation
+//! supplies its authored digits (§FS-config.3.2.8), and neither renderer needs
+//! `Config` (§AR-system.4). `MarkdownLineCitation` is where one marked citation
 //! starts and ends on a line, plus what it parsed to: a lexical fact the
 //! formatter's link pass, its shorthand pass and the scanner's off-grammar pass
 //! each record and only the link pass reads (§AR-system.2.1).
@@ -31,8 +30,8 @@ use super::glob_candidate::{CandidateReading, CitationTokens};
 use crate::model::Id;
 
 /// Pull an `Id` out of a `Grammar` regex match — the `kind` / `num` / `slug`
-/// capture groups the `[id] format` defined, retaining source digits
-/// (§FS-config.3.2.8, §AR-scanner.2.1).
+/// capture groups the `[id] format` defined. Source records retain spelling
+/// separately (§FS-config.3.2.8, §AR-scanner.2.1).
 pub(crate) fn parse_id(caps: &regex::Captures, grammar: &Grammar) -> Option<Id> {
     if let Some(token) = caps.name("id") {
         return grammar.parse_token(token.as_str());
@@ -231,7 +230,6 @@ pub(crate) fn parse_qualified_id_prefix(raw: &str) -> Option<(Id, Option<String>
             kind: id_text.to_string(),
             num: None,
             slug: None,
-            number_spelling: None,
         },
         section.map(str::to_string),
         end,
@@ -288,17 +286,8 @@ pub(crate) fn split_alias_path(token: &str) -> (Option<&str>, &str) {
     }
 }
 
-/// Render an existing `Id` for a report, listing, or message, preserving the
-/// authored numeric digits under the effective grammar (§FS-config.3.2.8).
+/// Render an identity without a source record. Reports with source context use
+/// `spelling.rs` to preserve authored numeric digits (§FS-config.3.2.8).
 pub(crate) fn render_id(grammar: &Grammar, id: &Id) -> String {
     grammar.render(id, 3)
-}
-
-/// The same spelling with the project alias a qualified citation writes in front
-/// of it (§FS-workspace.1), and the bare one when there is no alias.
-pub(crate) fn render_qualified_id(grammar: &Grammar, namespace: Option<&str>, id: &Id) -> String {
-    match namespace {
-        Some(namespace) => format!("{}/{}", namespace, render_id(grammar, id)),
-        None => render_id(grammar, id),
-    }
 }

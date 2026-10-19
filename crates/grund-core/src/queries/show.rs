@@ -1,6 +1,6 @@
 use super::ambiguity::{ambiguous_id_refusal, ambiguous_section_refusal};
 use crate::config::{Config, display_path};
-use crate::grammar::render_id;
+use crate::grammar::{render_catalog_id, render_declaration_id};
 use crate::model::{
     Catalog, Declaration, DeclarationSource, FileRecords, Id, SectionInfo, ShowOutput,
     ShowRenderMode, StubResolution, format_path, json_escape, paired_declarations,
@@ -62,7 +62,10 @@ pub(crate) fn show_declaration_with_home<'a>(
         anyhow!(crate::model::OperationDiagnostic::new(
             "query",
             "not-found",
-            format!("ID not found: {}", render_id(&config.grammar, id))
+            format!(
+                "ID not found: {}",
+                render_catalog_id(&config.grammar, &findings.declarations, id)
+            )
         ))
     };
     let decls = findings.declarations.get(id).ok_or_else(not_found)?;
@@ -84,14 +87,23 @@ pub(crate) fn show_declaration_with_home<'a>(
             .find(|kind| kind.kind == id.kind)
             .and_then(|kind| kind.title.as_deref());
         let frame = config.frame().displayed_by(path_config.display());
-        let output = show_e2e_case(config.schema(), frame, title, id, case, section, mode)?;
+        let spelling = render_declaration_id(&config.grammar, record);
+        let output = show_e2e_case(
+            config.schema(),
+            frame,
+            title,
+            &spelling,
+            case,
+            section,
+            mode,
+        )?;
         return Ok((output, record));
     }
     if let (Some(verdict), Some(target)) = (&record.stub_resolution, &record.defined_in)
         && verdict.is_broken()
     {
         // §FS-show.2.3.4: the first line for a missing target, the second for the rest.
-        let rendered = render_id(&config.grammar, id);
+        let rendered = render_declaration_id(&config.grammar, record);
         let reason = match verdict {
             StubResolution::Missing => "which does not exist".to_string(),
             _ => format!("which contains no inline declaration of {rendered}"),
@@ -120,7 +132,7 @@ pub(crate) fn show_declaration_with_home<'a>(
             "missing-section",
             format!(
                 "section not found: {}{}{}",
-                render_id(&config.grammar, id),
+                render_catalog_id(&config.grammar, &findings.declarations, id),
                 config.section_separator,
                 section
             )
@@ -145,7 +157,7 @@ pub(crate) fn show_declaration_with_home<'a>(
 /// or outline (§FS-values.6.2, §FS-show.2).
 fn show_json_value(
     config: &Config,
-    id: &Id,
+    _id: &Id,
     decl: &Declaration,
     section: Option<&str>,
 ) -> Result<ShowOutput> {
@@ -157,7 +169,7 @@ fn show_json_value(
                     "missing-section",
                     format!(
                         "section not found: {}{}{}",
-                        render_id(&config.grammar, id),
+                        render_declaration_id(&config.grammar, decl),
                         config.section_separator,
                         section
                     )
@@ -169,7 +181,7 @@ fn show_json_value(
                     "missing-section",
                     format!(
                         "section not found: {}{}{}",
-                        render_id(&config.grammar, id),
+                        render_declaration_id(&config.grammar, decl),
                         config.section_separator,
                         section
                     )
@@ -255,7 +267,7 @@ pub(crate) fn render_show_output_json(
     ));
     format!(
         "{{\"id\":\"{}\",\"section\":{},\"body\":\"{}\"{},\"path\":\"{}\",\"line\":{}}}",
-        json_escape(&render_id(&config.grammar, id)),
+        json_escape(&render_declaration_id(&config.grammar, home)),
         match section {
             Some(section) => format!("\"{}\"", json_escape(section)),
             None => "null".to_string(),

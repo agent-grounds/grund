@@ -12,7 +12,7 @@ use super::refs::{RefHit, RefsOutput};
 use super::refs_query::{hit_path, refs_scan_errors};
 use super::report::context_run_warnings;
 use super::show::ShowSource;
-use crate::grammar::{path_at_or_under, render_id};
+use crate::grammar::{path_at_or_under, render_catalog_id};
 use crate::model::{Citation, Declaration, Finding, Id, ShowRenderMode, sort_path_key};
 use crate::queries::{GlobSelection, read_globs};
 use crate::resolver::{WorkspaceContext, load_classifying_workspace_context};
@@ -98,14 +98,21 @@ fn refs_sites_run(opts: RefsSitesOpts, cautions: &mut Vec<Finding>) -> Result<Re
                 line: citation.line,
                 column: citation.column,
                 // §FS-refs.3.2: as `cover` spells it, the alias it was written with kept.
-                id: cited_id(target_config(&context, site.project, citation), citation),
+                id: cited_id(
+                    target_config(&context, site.project, citation),
+                    &context.projects[context
+                        .citation_target(site.project, citation)
+                        .unwrap_or(site.project)]
+                    .findings,
+                    citation,
+                    &project.config.marker,
+                ),
                 section: citation.section.clone(),
                 marker: citation.has_marker,
                 text: citation.text.clone(),
-                enclosing_declaration: citation
-                    .enclosing_declaration
-                    .as_ref()
-                    .map(|id| render_id(&project.config.grammar, id)),
+                enclosing_declaration: citation.enclosing_declaration.as_ref().map(|id| {
+                    render_catalog_id(&project.config.grammar, &project.findings.declarations, id)
+                }),
                 enclosing_section: citation.enclosing_section.clone(),
             }
         })

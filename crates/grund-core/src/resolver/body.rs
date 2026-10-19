@@ -17,7 +17,7 @@
 use anyhow::{Result, anyhow};
 
 use crate::config::{Frame, Schema};
-use crate::grammar::render_id;
+use crate::grammar::render_declaration_id;
 use crate::model::{Declaration, FileRecords, Id, ShowOutput, ShowRenderMode};
 use crate::scanner::{SliceMiss, SliceSink, record_slices};
 
@@ -94,7 +94,7 @@ pub(crate) fn extract_declaration_body(
 #[allow(clippy::too_many_arguments)]
 pub(super) fn slice_site(
     files: &FileRecords,
-    id: &Id,
+    _id: &Id,
     declaration: &Declaration,
     section: Option<&str>,
     claimant: Option<usize>,
@@ -107,12 +107,13 @@ pub(super) fn slice_site(
         .ok_or_else(|| anyhow!("read {}: not scanned", declaration.file.display()))?;
     match record_slices(record, declaration, section, claimant, &mut sinks) {
         Ok(line) => Ok((line, sinks)),
-        Err(SliceMiss::Declaration) => {
-            Err(anyhow!("ID not found: {}", render_id(frame.grammar(), id)))
-        }
+        Err(SliceMiss::Declaration) => Err(anyhow!(
+            "ID not found: {}",
+            render_declaration_id(frame.grammar(), declaration)
+        )),
         Err(SliceMiss::Section) => Err(anyhow!(
             "section not found: {}{}{}",
-            render_id(frame.grammar(), id),
+            render_declaration_id(frame.grammar(), declaration),
             schema.ids.section_separator,
             section.unwrap_or("")
         )),

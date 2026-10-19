@@ -2,8 +2,7 @@
 //! text, and the kind clause a mixed-kind pair appends (§FS-values.5.2,
 //! §FS-values.5.2.1, §FS-values.5.2.2).
 
-use crate::config::{Display, Frame, Schema};
-use crate::grammar::render_qualified_id;
+use crate::config::{Display, Schema};
 use crate::model::{Diagnostic, Site, ValueBinding, ValueComponent, ValueComponentKind};
 
 /// A root or one coordinate as a finding names it: the qualified ID, then the
@@ -11,11 +10,11 @@ use crate::model::{Diagnostic, Site, ValueBinding, ValueComponent, ValueComponen
 /// §FS-values.5.2).
 pub(super) fn rendered_value_path(
     schema: &Schema,
-    frame: Frame<'_>,
     binding: &ValueBinding,
+    spelling: &str,
     path: Option<&str>,
 ) -> String {
-    let id = render_qualified_id(frame.grammar(), binding.namespace.as_deref(), &binding.id);
+    let id = super::support::qualify(binding.namespace.as_deref(), spelling);
     match path {
         Some(path) => format!("{id}{}{path}", schema.ids.section_separator),
         None => id,

@@ -9,15 +9,15 @@ use std::path::{Path, PathBuf};
 use super::citations::{citation_matches_target, e2e_spec_ref_matches_target};
 use super::grounding::file_obligation_units;
 use crate::config::{CitationTarget, Owners, Rules, Schema};
-use crate::grammar::{Grammar, render_id};
-use crate::model::{Catalog, Citation, E2eSpecRef, Id, paired_declarations};
+use crate::grammar::{Grammar, render_declaration_id};
+use crate::model::{Catalog, Citation, Declaration, E2eSpecRef, Id, paired_declarations};
 
 /// One thing an obligation is evaluated against (§AR-checker.2.9): a declaration
 /// body, a `code` source file, or an `E2E` case — together with the citations
 /// that count toward it, the `path:line` a finding anchors at, and the subject
 /// `id` (a declaration) or `None` (a `code` source file).
 pub(super) struct ObligationUnit<'a> {
-    pub(super) id: Option<&'a Id>,
+    pub(super) declaration: Option<&'a Declaration>,
     /// The place a non-citable kind's unit is named by (§FS-check.3.11.2) — its
     /// home, since the unit is a file in it and the kind has no ID to print.
     pub(super) place: Option<String>,
@@ -39,8 +39,8 @@ impl ObligationUnit<'_> {
     }
 
     pub(super) fn subject(&self, grammar: &Grammar) -> String {
-        match (self.id, &self.place) {
-            (Some(id), _) => render_id(grammar, id),
+        match (self.declaration, &self.place) {
+            (Some(declaration), _) => render_declaration_id(grammar, declaration),
             (None, Some(place)) => place.clone(),
             (None, None) => "source file".to_string(),
         }
@@ -135,7 +135,7 @@ pub(super) fn obligation_units<'a>(
                     .unwrap_or_default();
                 let e2e_spec_refs = case.spec_refs.iter().collect();
                 units.push(ObligationUnit {
-                    id: Some(id),
+                    declaration: Some(decl),
                     place: None,
                     path: decl.file.clone(),
                     line: decl.line,
@@ -145,7 +145,7 @@ pub(super) fn obligation_units<'a>(
             } else {
                 let citations = by_decl.get(id).cloned().unwrap_or_default();
                 units.push(ObligationUnit {
-                    id: Some(id),
+                    declaration: Some(decl),
                     place: None,
                     path: decl.file.clone(),
                     line: decl.line,
@@ -159,7 +159,7 @@ pub(super) fn obligation_units<'a>(
         for paired in paired_declarations(decls).iter() {
             if paired.stand_in.is_stub && !std::ptr::eq(paired.record, paired.stand_in) {
                 units.push(ObligationUnit {
-                    id: Some(id),
+                    declaration: Some(paired.record),
                     place: None,
                     path: paired.record.file.clone(),
                     line: paired.record.line,

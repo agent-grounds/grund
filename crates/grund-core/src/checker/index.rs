@@ -15,7 +15,7 @@ use super::index_mention::index_mentions;
 use crate::config::{Frame, Owners, Schema};
 use crate::grammar::{
     CitationLink, citation_link, is_inside_inline_code, markdown_line_kinds,
-    markdown_never_rewrite_context, render_id,
+    markdown_never_rewrite_context, render_catalog_id,
 };
 use crate::model::{
     Catalog, CheckReport, Citation, Declaration, Diagnostic, HeadingKind, Id, paired_declarations,
@@ -445,7 +445,7 @@ pub(super) fn check_kind_indexes(
                         message: format!(
                             "index entry {}{} is not a link; unchecked in grund {INDEX_RULE_PRIOR_RELEASE}, an error in {INDEX_RULE_RELEASE} — run `grund fmt --write`",
                             schema.citation.marker,
-                            render_id(frame.grammar(), id)
+                            render_catalog_id(frame.grammar(), &findings.declarations, id)
                         ),
                         sites: Vec::new(),
                     authority: Vec::new(),});
@@ -458,7 +458,7 @@ pub(super) fn check_kind_indexes(
                     // §FS-check.3.18.5.1: "is not listed", said about a line the
                     // reader is looking at, is a diagnosis the reader argues with.
                     // Both forms keep §FS-distribution.4.2.3's past-tense release.
-                    let rendered = render_id(frame.grammar(), id);
+                    let rendered = render_catalog_id(frame.grammar(), &findings.declarations, id);
                     let message = if mentioned.contains(id) {
                         // §FS-check.3.18.5: the form named follows `[reference]
                         // strict`, so it is true of the index it is said about.
