@@ -9,7 +9,6 @@ use std::fs;
 use support::*;
 
 #[test]
-#[ignore = "red until #820 connects missing-target diagnostics to the repair; implement removes this"]
 fn missing_stub_check_text_connects_the_repair() {
     let repo = Repo::new();
     let output = repo.run(&["check"], 1);
@@ -30,7 +29,6 @@ fn missing_stub_check_text_connects_the_repair() {
 }
 
 #[test]
-#[ignore = "red until #820 connects missing-target diagnostics to the repair; implement removes this"]
 fn missing_stub_check_json_keeps_located_finding_contract() {
     let repo = Repo::new();
     let text = repo.run(&["check"], 1);
@@ -62,7 +60,6 @@ fn missing_stub_check_json_keeps_located_finding_contract() {
 }
 
 #[test]
-#[ignore = "red until #820 connects missing-target diagnostics to the repair; implement removes this"]
 fn missing_stub_all_text_queries_explain_the_ambiguity() {
     let repo = Repo::new();
     let mut gaps = Vec::new();
@@ -96,7 +93,6 @@ fn missing_stub_all_text_queries_explain_the_ambiguity() {
 }
 
 #[test]
-#[ignore = "red until #820 connects missing-target diagnostics to the repair; implement removes this"]
 fn missing_stub_query_json_preserves_original_sites_and_prefix() {
     let repo = Repo::new();
     // A second lexical order prevents a repair helper from assuming the first site is a stub.
@@ -126,7 +122,6 @@ fn missing_stub_query_json_preserves_original_sites_and_prefix() {
 }
 
 #[test]
-#[ignore = "red until #820 connects missing-target diagnostics to the repair; implement removes this"]
 fn missing_stub_several_real_homes_are_facts_without_a_chosen_repair() {
     let repo = Repo::new();
     repo.write("src/other/cache.rs", DECLARATION);
@@ -192,7 +187,6 @@ fn missing_stub_several_real_homes_are_facts_without_a_chosen_repair() {
 }
 
 #[test]
-#[ignore = "red until #820 connects missing-target diagnostics to the repair; implement removes this"]
 fn missing_stub_another_broken_stub_is_not_a_repair_destination() {
     let repo = Repo::new();
     repo.write(
@@ -241,7 +235,6 @@ fn missing_stub_another_broken_stub_is_not_a_repair_destination() {
 }
 
 #[test]
-#[ignore = "red until #820 connects missing-target diagnostics to the repair; implement removes this"]
 fn missing_stub_a_healthy_stub_can_represent_the_only_real_home() {
     let repo = Repo::new();
     fs::remove_file(repo.0.join(REAL)).unwrap();
@@ -321,7 +314,6 @@ fn missing_stub_check_selection_preserves_original_structured_contract() {
 }
 
 #[test]
-#[ignore = "red until #820 connects missing-target diagnostics to the repair; implement removes this"]
 fn missing_stub_filtered_duplicate_explains_repair_with_real_home_first() {
     let repo = Repo::new();
     repo.reverse_sites();
@@ -337,7 +329,6 @@ fn missing_stub_filtered_duplicate_explains_repair_with_real_home_first() {
 }
 
 #[test]
-#[ignore = "red until #820 connects missing-target diagnostics to the repair; implement removes this"]
 fn missing_stub_filtered_broken_stub_connects_companion_with_real_home_first() {
     let repo = Repo::new();
     repo.reverse_sites();

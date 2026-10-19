@@ -143,6 +143,29 @@ Only that canonical link enrolls a declaration that lives in source. A link you 
 
 A stub is a heading whose title is one link, `# AR-event-bus: [bus](../../src/bus.rs)`, at any heading level ([§FS-declarations.stubs.shape](../functional-spec/FS-declarations.md#stubsshape-what-a-stub-looks-like)). It is a stub only in a Markdown file of some kind's home, wherever the checkout sits; a heading of that shape anywhere else is a declaration titled with a link. Before grund 0.19.0 any Markdown file with a directory named `docs` on its path held stubs, and 0.18.0 warned as `stub-shape` at every heading the two readings tell apart ([§FS-declarations.checks.stub-shape](../functional-spec/FS-declarations.md#checksstub-shape-stub-shape-read-differently-from-grund-0190)). `grund list` shows a stubbed declaration at its target, with the target's title. The target need not be scanned: one outside `[scan] include` still gives the stub its declaration, its sections, its citations and its chapters, so rules, `refs` and `unused` read it as if it were scanned, and a section it declares twice is reported where it is written; nothing else about the target file is judged ([§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)). The target must declare the ID itself: a stub there declares nothing, so a chain of stubs is broken ([§FS-declarations.stubs.target.4](../functional-spec/FS-declarations.md#stubstarget4-a-stub-in-the-target-declares-nothing)).
 
+If `src/bus.rs` moves to `src/events/bus.rs`, update the stub in
+`docs/architecture/AR-event-bus.md` from:
+
+```markdown
+# AR-event-bus: [bus](../../src/bus.rs)
+```
+
+to:
+
+```markdown
+# AR-event-bus: [bus](../../src/events/bus.rs)
+```
+
+While the old target is missing, `check` still reports both `duplicate` and
+`broken-stub`. The duplicate finding identifies the broken stub, its old link,
+and the surviving declaration at `src/events/bus.rs:1` (if declared on line 1),
+then says to point the stub link there. The broken-stub finding gives the same
+action and refers to the duplicate declaration finding for the location; that
+reference remains when `--only broken-stub` hides the companion. Ambiguous ID
+queries also explain the located repair. If several real homes exist, the
+guidance lists them without choosing one
+([§FS-declarations.stubs.verdict.repair](../functional-spec/FS-declarations.md#stubsverdictrepair-a-missing-target-beside-another-declaration-explains-the-repair)).
+
 **Where a body, a section and a comment block end.** In Markdown a declaration's body runs to the next heading as high as its own or higher, whether or not that heading declares an ID. In source it is the comment block the declaration line opens, which ends where the comment does, or early at the next declaration line ([§FS-declarations.body](../functional-spec/FS-declarations.md#body-where-a-declarations-body-ends), [§FS-languages.comment-block](../functional-spec/FS-languages.md#comment-block-the-comment-block)). A section runs from its heading down to the next heading as deep or shallower, numbered or plain ([§FS-declarations.section](../functional-spec/FS-declarations.md#section-what-a-section-is)). Inside a doc-comment the depth counts from the declaration, as it does in Markdown: under `/// AR-event-bus:` above, `/// ## 1. Topology` is section 1, and `/// # 1. Topology` is a heading as high as the declaration, so it is no section ([§FS-show.2.3.3](../functional-spec/FS-show.md#233-section-selection-inside-a-doc-comment)). In a `/** … */` block, write every line behind ` * `, a heading's too — ` * ## 1. Topology`. A line without it is read as written, so its first `#` is no comment marker ([§FS-languages.comment-wrapper.headings](../functional-spec/FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line)).
 
 Every command reads these rules from one parse of each file since grund 0.19.0 ([§DF-one-parse-answers-from-0-19](../decisions/functional/DF-one-parse-answers-from-0-19.md#df-one-parse-answers-from-0-19-one-parses-other-answers-ship-in-0190-after-a-release-that-announces-them-and-warns-where-a-verdict-moves)). grund 0.18.0 still gave 0.17's answer where they moved one and warned `parse-moves` at each line where that moved a `check` verdict; the warning went with the old answers.
