@@ -1,1 +1,1 @@
-docs/use.md:4: error: FS-login.format.2 is cited but has no entry in .grund/sections/FS-login.lock; run grund fmt --write at the project or workspace root; fmt on a file or a subdirectory writes no lock
+docs/use.md:4: error: FS-login.format.2 is cited but has no entry in .grund/sections/FS-login.lock; run grund fmt --write with no path at the workspace root, or at the project root outside a workspace

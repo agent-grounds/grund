@@ -11,9 +11,10 @@ use crate::model::{CheckReport, Diagnostic};
 use crate::resolver::{EntryVerdict, WorkspaceCheckTarget, judge_section_locks};
 
 /// §FS-section-lock.checks.remedy: the run that writes a lock, named with its scope,
-/// because `fmt` narrowed to a file or a directory below the root writes none.
-const REMEDY: &str = "run grund fmt --write at the project or workspace root; fmt on a file or a \
-                      subdirectory writes no lock";
+/// because `fmt` given a file writes none, and a member's own run writes none of its
+/// entries for a sibling, which only the workspace root's run writes.
+const REMEDY: &str = "run grund fmt --write with no path at the workspace root, or at the project \
+                      root outside a workspace";
 
 /// §FS-section-lock.checks: a lock line grund cannot read, a cited locked
 /// address the lock does not hold, and a cited section whose recorded text now
