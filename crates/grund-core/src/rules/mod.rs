@@ -43,6 +43,8 @@ mod tests_named_off_subjects;
 #[cfg(test)]
 mod tests_nested_alias_targets;
 #[cfg(test)]
+mod tests_per_target_once;
+#[cfg(test)]
 mod tests_refusal_forms;
 #[cfg(test)]
 mod tests_section_ramp;

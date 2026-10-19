@@ -91,6 +91,7 @@ offers no rewrite, `check --rule` prints the reason alone and then the line
 | `Each FS must cite a GOAL.` | `quantifier "a" is ambiguous; accepted forms: "Each FS must cite at least one GOAL." or "Each FS must cite exactly one GOAL."` |
 | `Each FS must cite at least 1 GOAL.` | `numeric "at least 1" is not canonical; accepted form: Each FS must cite at least one GOAL.` |
 | `Each FS must cite exactly 1 GOAL.` | `numeric "exactly 1" is not canonical; accepted form: Each FS must cite exactly one GOAL.` |
+| `FS-login.requirements must cite each AR at most 1 times.` | `numeric "at most 1 times" is not canonical; accepted form: FS-login.requirements must cite each AR at most once.` |
 | `Each FS must cite at least one GOAL and must not cite any AR.` | `conjunctions are not accepted; accepted forms: "Each FS must cite at least one GOAL." and "Each FS must not cite any AR."` |
 | `Each FS must cite at least one GOAL` | `rule must end with "."; accepted form: Each FS must cite at least one GOAL.` |
 | `each FS must cite at least one GOAL.` | `fixed word "Each" is case-sensitive; accepted form: Each FS must cite at least one GOAL.` |
@@ -441,7 +442,7 @@ is anything else, nothing follows the reason. A configured rule declaration's
 | lowercase `each` | `Each` | — |
 | no terminal `.` | appends `.` | — |
 | numeric `at least 1`, `exactly 1` | `at least one`, `exactly one` | — |
-| numeric `at least 1 times`, `exactly 1 times` | `at least once`, `exactly once` | — |
+| numeric `at least 1 times`, `at most 1 times`, `exactly 1 times` | `at least once`, `at most once`, `exactly once` | — |
 | a per-target count without `times` | the count typed after the bound, then `times` | that count is not a numeral |
 | a count with leading zeros | the count without them | the count is zero, is not a numeral, or is above the largest supported count |
 | a count above the largest supported count ([§FS-rule-refusals.sentences.count-range](FS-rule-refusals.md#sentencescount-range-a-count-above-the-largest-supported-count-is-refused-for-its-range)) | — | always |
@@ -465,6 +466,14 @@ appends guidance keeps it where no form is offered: `count is not accepted`
 keeps its list of the canonical counts, and the [§FS-rule-refusals.sentences.whitespace](FS-rule-refusals.md#sentenceswhitespace-presence-name-whitespace-refusal) refusal keeps
 `NAME forbids whitespace anywhere.`.
 
+The per-target upper-one refusal is immediate, with no alias or warning
+window ([§DF-per-target-once-ceiling](../decisions/functional/DF-per-target-once-ceiling.md#df-per-target-once-ceiling-spell-a-per-target-ceiling-of-one-as-at-most-once)). The missing-`times` and leading-zero
+rows still name their own failed production, but their forms are reparsed
+([§FS-rule-refusals.sentences.rewrite.reparsed](FS-rule-refusals.md#sentencesrewritereparsed-a-form-is-parsed-before-it-is-offered)): `at most 1`, `at most 1 time`
+and `at most 01 times` each end up offering `at most once`, preserving the
+typed subject, object kind and modality. This does not change chapter,
+ordinary outbound or inbound upper-one counts ([§FS-rules.3](FS-rules.md#3-the-five-sentence-families)).
+
 #### sentences.rewrite.fs-only: Exact rows where `FS` is the only kind
 
 In the repository of [§FS-rule-refusals.selectors](FS-rule-refusals.md#selectors-a-refused-selector-is-answered-with-a-selector)'s first table, whose one kind is `FS`, with
@@ -483,6 +492,7 @@ configured rule declaration's finding carries the same text after
 | `Each FS must cite at least 1 FS.` | `numeric "at least 1" is not canonical; accepted form: Each FS must cite at least one FS.` | none |
 | `Each FS should be cited by exactly 1 FS.` | `numeric "exactly 1" is not canonical; accepted form: Each FS should be cited by exactly one FS.` | none |
 | `FS-login.requirements must cite each FS at least 1 times.` | `numeric "at least 1 times" is not canonical; accepted form: FS-login.requirements must cite each FS at least once.` | none |
+| `FS-login.requirements should cite each FS at most 1 times.` | `numeric "at most 1 times" is not canonical; accepted form: FS-login.requirements should cite each FS at most once.` | none |
 | `FS-login must cite each FS exactly 2.` | `per-target counts must end in "times"; accepted form: FS-login must cite each FS exactly 2 times.` | none |
 | `Each FS must cite exactly 02 FS.` | `count must be a canonical positive base-10 integer; accepted form: Each FS must cite exactly 2 FS.` | none |
 | `Each FS must cite a FS.` | `quantifier "a" is ambiguous; accepted forms: "Each FS must cite at least one FS." or "Each FS must cite exactly one FS."` | none |
@@ -584,12 +594,18 @@ as one table so it does not depend on how one phrase of another point is read:
 | 3. conjunction | clauses joined by `and` ([§FS-rule-refusals.sentences.conjunction](FS-rule-refusals.md#sentencesconjunction-any-clauses-joined-by-and-are-refused-as-a-conjunction)) | `Each FS may not cite any FS and must cite at least one FS.` | `conjunctions are not accepted` |
 | 4. modality | no accepted modality, `may not` included | `Each POLICY may not cite any FS.` | `modality "may not" is not accepted` |
 | 5. the rest of the subject | an unknown or non-citable kind, named sections off, the section grammar, a numbered chapter, the ID grammar, a chapter named after a modal word ([§FS-rule-refusals.sentences.modal-chapter](FS-rule-refusals.md#sentencesmodal-chapter-a-chapter-named-after-a-modal-word-is-refused-for-that-name)) | `Each POLICY must cite no FS.` | `unknown kind "POLICY"` |
-| 6. the predicate | the verb, quantifier, count and object kind, and a chapter subject that would have chapters | `Each FS must cite no FS.` | `"cite no" is not accepted` |
+| 6. the predicate | the verb, quantifier, count (including per-target numeric `at most 1 times`) and object kind, and a chapter subject that would have chapters | `Each FS must cite no FS.` | `"cite no" is not accepted` |
 
 The examples are read in a repository whose one kind is `FS`, with named
 sections on. Two sentences the table of [§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals) gives whole,
 `Each FS must cite no AR.` and `Each FS must cite a GOAL.`, are refused for that
 row before stage 1; both end in `.`, so no sentence can tell.
+
+Per-target numeric upper-one is a predicate-stage refusal. Missing terminal
+periods, fixed-word and phase-1 subject refusals, conjunctions, modalities and
+subject validation still win before it. Repairing their offered forms may also
+repair the count ([§FS-rule-refusals.sentences.rewrite.reparsed](FS-rule-refusals.md#sentencesrewritereparsed-a-form-is-parsed-before-it-is-offered)), without
+changing which reason opens the refusal.
 
 Stage 2 reads its rows from the sentence's start. A path subject is `Each
 file in`, refused whatever follows; `Each docs/fs/` names a kind, refused in
