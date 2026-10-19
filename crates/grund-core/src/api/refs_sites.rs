@@ -77,7 +77,7 @@ fn refs_sites_run(opts: RefsSitesOpts, cautions: &mut Vec<Finding>) -> Result<Re
             (glob_sites(&context, &selection), selection.note())
         }
         RefsSites::From(source) => {
-            // §FS-scan.path.refs: resolve as `show` does, but keep the scanned edges.
+            // §AR-resolver.3.3: reuse `show`'s resolution scope, keeping the scanned edges.
             let scope = reported_scope(&context, &opts.path, opts.path_provided)?;
             let source_context = scope
                 .as_ref()
@@ -171,7 +171,7 @@ fn glob_sites<'c>(context: &'c WorkspaceContext, selection: &GlobSelection) -> V
 /// resolves it in `source_context` (§FS-refs.from), then the edges the selected
 /// scan gives to what it owns (§FS-refs.from.owned), lent ones included
 /// (§FS-refs.from.stubs). The site's file must lie within the path's scope,
-/// even when a stub outside that path lends it (§FS-scan.path.refs).
+/// even when a stub outside that path lends it (§FS-refs.from).
 fn from_sites<'c>(
     context: &'c WorkspaceContext,
     source_context: &WorkspaceContext,
