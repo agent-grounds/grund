@@ -48,6 +48,7 @@ The rendered view of a citation — `[§ID](path#anchor)` — and who owns it.
 - [§DF-fmt-suppression](DF-fmt-suppression.md#df-fmt-suppression-fmt-suppression-is-per-file-and-per-region-and-the-index-carve-out-outranks-both) — fmt suppression is per file and per region, and the index carve-out outranks both
 - [§DF-fmt-never-writes-into-a-link-destination](DF-fmt-never-writes-into-a-link-destination.md#df-fmt-never-writes-into-a-link-destination-fmt-never-writes-into-a-link-destination-it-does-not-maintain) — `fmt` never writes into a link destination it does not maintain
 - [§DF-fmt-and-editor-answers-from-0-19](DF-fmt-and-editor-answers-from-0-19.md#df-fmt-and-editor-answers-from-0-19-fmts-link-wrapper-and-the-editors-title-span-change-in-0190-after-a-release-that-announces-them) — `fmt`'s link wrapper and the editor's title span change in 0.19.0, after a release that announces them
+- [§DF-fmt-preserves-authored-link-labels](DF-fmt-preserves-authored-link-labels.md#df-fmt-preserves-authored-link-labels-fmt-leaves-a-citation-in-a-link-its-author-wrote-and-check-takes-that-link-as-the-index-entry) — `fmt` leaves a citation in a link its author wrote, and `check` takes that link as the index entry
 
 ## The index a folder kind keeps
 

@@ -1,0 +1,1 @@
+- [[§ADR-use-postgres](use-postgres.md#adr-use-postgres-use-postgres-for-all-data): Use Postgres for all data](use-postgres.md)

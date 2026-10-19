@@ -1,0 +1,1 @@
+See ![a diagram of §ADR-use-postgres](diagram.png).

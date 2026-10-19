@@ -1,0 +1,1 @@
+- [§ADR-use-postgres: Use Postgres for all data](use-postgres.md)
