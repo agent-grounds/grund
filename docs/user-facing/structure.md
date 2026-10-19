@@ -139,6 +139,8 @@ pub struct EventBus { /* … */ }
 ```
 `grund AR-event-bus` reads the source declaration directly, strips the `///` markers, and prints the Rustdoc prose. The same goes for Javadoc, JSDoc, Python docstrings, Go doc blocks, KDoc, Doxygen — every comment form enumerated in `grund`'s scanner spec. A block comment declares with or without the ` * ` gutter, behind `/*`, `/**` or `/*!`, the one-line `/** AR-event-bus: Event bus */` included, once its `*/` is found ([§FS-declarations.line.block-comment](../functional-spec/FS-declarations.md#lineblock-comment-a-line-inside-a-block-comment)). A one-line Markdown stub remains supported when a separate pointer file is useful.
 
+Only that canonical link enrolls a declaration that lives in source. A link you wrote around the ID and a title is an entry for a declaration in the kind's folder, but it enrolls nothing, and the index's citation of a source declaration through it is an ordinary citation ([§FS-check.3.18.3](../functional-spec/FS-check.md#3183-an-external-source-declaration-enrolls-by-its-canonical-link)).
+
 A stub is a heading whose title is one link, `# AR-event-bus: [bus](../../src/bus.rs)`, at any heading level ([§FS-declarations.stubs.shape](../functional-spec/FS-declarations.md#stubsshape-what-a-stub-looks-like)). It is a stub only in a Markdown file of some kind's home, wherever the checkout sits; a heading of that shape anywhere else is a declaration titled with a link. Before grund 0.19.0 any Markdown file with a directory named `docs` on its path held stubs, and 0.18.0 warned as `stub-shape` at every heading the two readings tell apart ([§FS-declarations.checks.stub-shape](../functional-spec/FS-declarations.md#checksstub-shape-stub-shape-read-differently-from-grund-0190)). `grund list` shows a stubbed declaration at its target, with the target's title. The target need not be scanned: one outside `[scan] include` still gives the stub its declaration, its sections, its citations and its chapters, so rules, `refs` and `unused` read it as if it were scanned, and a section it declares twice is reported where it is written; nothing else about the target file is judged ([§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)). The target must declare the ID itself: a stub there declares nothing, so a chain of stubs is broken ([§FS-declarations.stubs.target.4](../functional-spec/FS-declarations.md#stubstarget4-a-stub-in-the-target-declares-nothing)).
 
 **Where a body, a section and a comment block end.** In Markdown a declaration's body runs to the next heading as high as its own or higher, whether or not that heading declares an ID. In source it is the comment block the declaration line opens, which ends where the comment does, or early at the next declaration line ([§FS-declarations.body](../functional-spec/FS-declarations.md#body-where-a-declarations-body-ends), [§FS-languages.comment-block](../functional-spec/FS-languages.md#comment-block-the-comment-block)). A section runs from its heading down to the next heading as deep or shallower, numbered or plain ([§FS-declarations.section](../functional-spec/FS-declarations.md#section-what-a-section-is)). Inside a doc-comment the depth counts from the declaration, as it does in Markdown: under `/// AR-event-bus:` above, `/// ## 1. Topology` is section 1, and `/// # 1. Topology` is a heading as high as the declaration, so it is no section ([§FS-show.2.3.3](../functional-spec/FS-show.md#233-section-selection-inside-a-doc-comment)). In a `/** … */` block, write every line behind ` * `, a heading's too — ` * ## 1. Topology`. A line without it is read as written, so its first `#` is no comment marker ([§FS-languages.comment-wrapper.headings](../functional-spec/FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line)).
@@ -224,7 +226,7 @@ writes, and `grund check` holds it to the rule after.
 | ID grammar | `[id] format` and its patterns, optionally per kind ([§FS-config.3.2](../functional-spec/FS-config.md#32-id--id-grammar)) | the address space: one spelling per node | a format mismatch, as an error |
 | Sections | numbered `## 1. …` or named `## terms: Terms` headings ([§FS-declarations.section](../functional-spec/FS-declarations.md#section-what-a-section-is)) | child coordinates `<ID>.<path>`, and their `contains` rows | `section-heading-level`, `duplicate-section`, `section-outside-declaration`, `orphan-section`, `unmarked-heading` |
 | Inline declarations and stubs | a declaration line in a doc-comment, or a stub heading whose title is one link | a node whose body lives in source | `broken-stub`, `stub-shape` |
-| Kind index | a folder kind's `README.md` ([§FS-check.3.18](../functional-spec/FS-check.md#318-declaration-missing-from-its-kinds-index)) | every node of the kind is listed there, as a link | `missing-index-entry`, `unlinked-index-entry` |
+| Kind index | a folder kind's `README.md` ([§FS-check.3.18](../functional-spec/FS-check.md#318-declaration-missing-from-its-kinds-index)) | every node of the kind is listed there, as a link: the one `fmt` writes, or one you wrote whose text holds the citation ([§FS-check.3.18.5](../functional-spec/FS-check.md#3185-what-an-entry-is)) | `missing-index-entry`, `unlinked-index-entry` |
 | Fields *(config v2)* | `fields` on a kind ([guide](fields.md), [§FS-fields](../functional-spec/FS-fields.md#fs-fields-a-v2-kind-states-the-shape-of-its-declarations-and-check-holds-every-declaration-to-it)) | which chapters each node carries, in what order, with what values | `missing-field`, `mistitled-field`, `misplaced-field`, `invalid-field-value`, `undeclared-chapter` |
 | Values | a numbered component in an opted-in kind ([guide](values.md), [§FS-values](../functional-spec/FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)) | one node is the source of a value, and every use is compared with it | `invalid-value-declaration`, `invalid-value-binding`, `value-mismatch` |
 | Lead size *(opt-in)* | `[reference] lead_size_warning` ([guide](coordinate-sizes.md)) | what a default `grund <ID>` read costs | `oversized-lead` |
@@ -271,6 +273,23 @@ catalog lists every finding code, its severity, and the setting that turns it on
   ```markdown
   [§FS-login.3](../functional-spec/FS-login.md#3-session-timeout)
   ```
+
+  That link, whose text is the citation alone, is `fmt`'s to write and keep
+  current. A link you wrote around a citation and more text is yours, and `fmt`
+  leaves it byte for byte, in a kind's index as anywhere: it does not wrap the
+  citation inside it, which would put a link inside your link, and it does not
+  touch your destination ([§FS-citations.wrap.enclosing](../functional-spec/FS-citations.md#wrapenclosing-a-citation-inside-a-link-its-author-wrote-is-left-to-the-author)). The citation
+  in it is still resolved and checked like any other.
+
+  ```markdown
+  See [the §FS-login.3 timeout rule](../functional-spec/FS-login.md).
+  ```
+
+  Only an inline link written on one line counts for now, and an image's
+  description never does ([§FS-citations.wrap.enclosing.scope](../functional-spec/FS-citations.md#wrapenclosingscope-only-a-same-line-inline-link-for-now)). A
+  line an older `grund` already nested, `[[§…](…): title](…)`, keeps its inner
+  link and is left as it stands: search for `[[§` to find one, and take the
+  outer brackets out by hand ([§DF-fmt-preserves-authored-link-labels](../decisions/functional/DF-fmt-preserves-authored-link-labels.md#df-fmt-preserves-authored-link-labels-fmt-leaves-a-citation-in-a-link-its-author-wrote-and-check-takes-that-link-as-the-index-entry)).
 
 - **Typing and expanding.** `$$` becomes `§`, and a persisted number-only
   shorthand is expanded to the full ID.
