@@ -1,4 +1,4 @@
-.grund/sections/FS-login.lock:1: error: section lock line is not <coordinate> <fingerprint>; run grund fmt --write to rebuild the file
-.grund/sections/FS-login.lock:3: error: section lock line is not <coordinate> <fingerprint>; run grund fmt --write to rebuild the file
-.grund/sections/FS-login.lock:5: error: section lock line is not <coordinate> <fingerprint>; run grund fmt --write to rebuild the file
+.grund/sections/FS-login.lock:1: error: section lock line is not <coordinate> <fingerprint>; to rebuild the file, run grund fmt --write at the project or workspace root; fmt on a file or a subdirectory writes no lock
+.grund/sections/FS-login.lock:3: error: section lock line is not <coordinate> <fingerprint>; to rebuild the file, run grund fmt --write at the project or workspace root; fmt on a file or a subdirectory writes no lock
+.grund/sections/FS-login.lock:5: error: section lock line is not <coordinate> <fingerprint>; to rebuild the file, run grund fmt --write at the project or workspace root; fmt on a file or a subdirectory writes no lock
 docs/functional-spec/FS-login.md:7: error: unresolved merge conflict in FS-login, lines 7–11: resolve it by hand

@@ -12,7 +12,7 @@ echo $?    # 1: FS-login.format.2 is cited but not in the lock
 stdout carries the one error below; stderr carries only the caution that the config is on version 1 ([§FS-check.checks.config-version-1](../../docs/functional-spec/FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)):
 
 ```text
-docs/use.md:4: error: FS-login.format.2 is cited but has no entry in .grund/sections/FS-login.lock; run grund fmt --write
+docs/use.md:4: error: FS-login.format.2 is cited but has no entry in .grund/sections/FS-login.lock; run grund fmt --write at the project or workspace root; fmt on a file or a subdirectory writes no lock
 ```
 
 `docs/use.md` cites `FS-login.format.1` and `FS-login.format.2`. The lock holds one line per cited address with a fingerprint of the section's text, and here it records only `FS-login.format.1`, so `check` reports the `unrecorded-section-citation` error at the citation it cannot vouch for.

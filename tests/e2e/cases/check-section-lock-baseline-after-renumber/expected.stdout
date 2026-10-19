@@ -1,1 +1,1 @@
-docs/use.md:3: error: FS-x.1.1 is cited but has no entry in .grund/sections/FS-x.lock; run grund fmt --write
+docs/use.md:3: error: FS-x.1.1 is cited but has no entry in .grund/sections/FS-x.lock; run grund fmt --write at the project or workspace root; fmt on a file or a subdirectory writes no lock
