@@ -52,13 +52,17 @@ Such an entry's coordinate is the one the citation names, `<ID>` and its path as
 
 ### write.rules: Add, refresh, drop
 
-Only `grund fmt --write` writes lock files, and only when its scope is a project's config root or the workspace root; `fmt` narrowed to a file or directory leaves every lock alone, and neither `check`, the editor, nor any other command writes one. A run brings each lock file to what the tree needs:
+Only `grund fmt --write` writes lock files, and only when its scope is a project's config root or the workspace root; `fmt` narrowed to a file or directory leaves every lock alone, and neither `check`, the editor, nor any other command writes one. A run brings each lock file to what the tree it leaves needs ([§FS-section-lock.write.same-run](FS-section-lock.md#writesame-run-an-entry-records-the-tree-as-the-same-run-leaves-it)):
 
 - **add** an entry for each locked address that has none;
 - **refresh** an entry whose section was edited in place — its recorded fingerprint is found at no address of the declaration, so its text changed where it stands — to the section's current fingerprint;
 - **drop** an entry whose address nothing cites any more, or whose address is no longer a locked address.
 
 An entry that already matches is left alone, so a second run writes nothing. A stale entry is never a `check` finding: it is something `fmt --write` drops. A conflict block in a declaration body ([§FS-declarations.body.conflict](FS-declarations.md#bodyconflict-a-body-still-in-the-middle-of-a-merge)) refuses the pass, and the run writes no lock and no other file ([§FS-fmt.3.2](FS-fmt.md#32-a-run-that-needs-the-whole-declaration-set-rewrites-nothing)), because neither side of a conflict is a text an entry may record.
+
+### write.same-run: An entry records the tree as the same run leaves it
+
+A run that rewrites files and brings the locks along judges every entry against the tree as it leaves it, not as it read it. A citation the run writes — a trigger it marks ([§FS-fmt.2.1](FS-fmt.md#21-trigger-to-marker)), a shorthand or a declaration-local token it expands ([§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)) — is a citation when the lock is judged, so the locked address it names is added in that run. A locked section whose text the run rewrites is fingerprinted as rewritten, so its entry is refreshed to that text, or left alone where it already records it. An entry for a citation into another project is judged the same way against that project's text as the same workspace-root run leaves it ([§FS-section-lock.file.members](FS-section-lock.md#filemembers-citations-into-another-project)). The dry run lists exactly those rows ([§FS-fmt.7.3](FS-fmt.md#73-preview-equivalence)). Otherwise the next run adds or refreshes the entry again, and `fmt --check` fails straight after a `--write`, on a lock file the change's author never touched ([§FS-fmt.requirements.fixed-point](FS-fmt.md#requirementsfixed-point-a-tree-fmt-has-written-is-a-fixed-point--realized)).
 
 ### write.never-a-move: `fmt` never approves a move
 

@@ -114,7 +114,11 @@ CITED = (
 # FS-fmt.md grew by the 3881 bytes of fmt's own refusal of a conflict block, in §FS-fmt.3
 # and §FS-fmt.7.4 and the new §FS-fmt.7.4.3, citing §FS-declarations.checks.conflict-marker
 # for the block and its message rather than restating them (grund#837).
-BASELINES = {"FS-show.md": 68393, "FS-fmt.md": 98337}
+
+# FS-fmt.md grew by the 223 bytes of the lock pass's place in the list of
+# §FS-fmt.requirements.fixed-point, citing §FS-section-lock.write.same-run for which tree
+# the pass judges rather than restating it (grund#847).
+BASELINES = {"FS-show.md": 68393, "FS-fmt.md": 98560}
 
 
 def _flat(text):
