@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use super::fmt_error::FmtScanAbort;
+use super::fmt_error::{FmtConflictAbort, FmtScanAbort};
 use super::fmt_settle::settle_project_headings;
 use super::fmt_tree::{FmtRunOpts, FmtTreeOutcome, auto_cross_refs_for_scope, fmt_tree};
 use crate::config::Config;
@@ -13,6 +13,9 @@ use crate::resolver::{SettledHeadings, WorkspaceContext};
 /// before any earlier project can be changed. If any project refuses, scan
 /// errors from both strict and ordinary project walks become one strict abort
 /// in the root-then-members order established by `WorkspaceContext`
+/// (§FS-fmt.3.3). A conflict block refuses the same way, every project's blocks
+/// in that order, and an unreadable path anywhere in the run wins over it,
+/// because a scan that could not read a path cannot say what the path holds
 /// (§FS-fmt.3.3).
 pub(crate) fn fmt_workspace_projects(
     context: &WorkspaceContext,
@@ -28,6 +31,7 @@ pub(crate) fn fmt_workspace_projects(
     };
     let mut preflight_scan_errors = Vec::new();
     let mut strict_abort = false;
+    let mut conflicts = Vec::new();
     // §FS-fmt.6.3.3: a qualified link names a heading in another project as this
     // run leaves it, so every project's headings are settled before any is walked.
     let mut settled = SettledHeadings::default();
@@ -67,6 +71,8 @@ pub(crate) fn fmt_workspace_projects(
                 if let Some(abort) = error.downcast_ref::<FmtScanAbort>() {
                     strict_abort = true;
                     preflight_scan_errors.extend(abort.scan_errors.iter().cloned());
+                } else if let Some(abort) = error.downcast_ref::<FmtConflictAbort>() {
+                    conflicts.extend(abort.conflicts.iter().cloned());
                 } else {
                     // §FS-distribution.3.2.2.1: retain prior projects in a late writer failure;
                     // the preflight wrote none of theirs (§FS-fmt.7.4.3).
@@ -97,11 +103,14 @@ pub(crate) fn fmt_workspace_projects(
         }
     }
 
-    if strict_abort {
+    if strict_abort || !conflicts.is_empty() && !preflight_scan_errors.is_empty() {
         return Err(FmtScanAbort {
             scan_errors: preflight_scan_errors,
         }
         .into());
+    }
+    if !conflicts.is_empty() {
+        return Err(FmtConflictAbort { conflicts }.into());
     }
     Ok(outcome)
 }

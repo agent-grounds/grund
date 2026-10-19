@@ -117,7 +117,7 @@ mod migrate_guidance;
 mod scoped_files;
 
 pub use fetch::{FetchFailure, FetchFailureKind, fetch_snapshot, fetch_snapshot_with_run_warnings};
-pub use fmt_error::FmtScanAbort;
+pub use fmt_error::{FmtConflictAbort, FmtScanAbort};
 pub use init::{InitError, InitEvent, InitOpts, InitOutput, init};
 pub use init_guidance::{InitFsHome, InitNext};
 pub use init_plan::InitAgentEntrypointSelection;
@@ -181,6 +181,8 @@ pub(crate) use migrate_guidance::{RootGuidance, root_guidance};
 mod tests_agent_entrypoints;
 #[cfg(test)]
 mod tests_atomic_install;
+#[cfg(test)]
+mod tests_fmt_conflicts;
 #[cfg(test)]
 mod tests_fmt_enclosing_links;
 #[cfg(test)]

@@ -23,7 +23,7 @@ pub(super) fn check_conflict_blocks(catalog: &Catalog, frame: Frame<'_>, report:
 /// its first and last lines as `sites`, one site for a block of one line. Each
 /// owner is spelled with `grammar`, the project's own spelling, as a `duplicate`
 /// finding spells its ID (§FS-declarations.checks.conflict-marker).
-pub(super) fn conflict_marker_finding(block: &ConflictBlock, grammar: &Grammar) -> Diagnostic {
+pub(crate) fn conflict_marker_finding(block: &ConflictBlock, grammar: &Grammar) -> Diagnostic {
     let owners: Vec<String> = block
         .owners
         .iter()

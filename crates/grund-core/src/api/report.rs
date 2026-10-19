@@ -13,7 +13,7 @@
 use std::path::Path;
 
 use super::lsp_ranges::absolutize_path;
-use crate::config::{Config, display_path, run_warning_findings};
+use crate::config::{Config, display_path, published_finding, run_warning_findings};
 use crate::model::{CheckReport, Diagnostic, Finding, FindingSite, Report, json_escape};
 use crate::resolver::WorkspaceContext;
 
@@ -79,25 +79,7 @@ fn public_finding(
             public_path(config, path)
         }
     };
-    Finding {
-        severity,
-        code: diagnostic.code,
-        path: diagnostic.path.map(|path| render_path(&path)),
-        line: diagnostic.line,
-        column: diagnostic.column,
-        message: diagnostic.message,
-        sites: diagnostic
-            .sites
-            .into_iter()
-            .map(|site| FindingSite {
-                path: render_path(&site.path),
-                line: site.line,
-            })
-            .collect(),
-        // §FS-errors.5.1: the authority is already the bytewise-sorted set the
-        // engine joined its message tail from, so publishing it needs no config.
-        authority: diagnostic.authority,
-    }
+    published_finding(severity, diagnostic, render_path)
 }
 
 /// The run's warning channel, published (§FS-distribution.3.1): every

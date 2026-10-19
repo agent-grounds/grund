@@ -23,12 +23,13 @@ installs a terminal integration and checks that it wrote the same bytes as
   `list_sizes`, `refs`, `refs_outcome`, `cover`, `cover_text`, `cover_lines`,
   `format_references`, `propose_id`, `complete_ids`, `init`, `fetch_snapshot`
   and `integrations`.
-- **The typed refusals.** `ShowQueryError` and `FmtScanAbort`, which an error
-  from `show` or `format_references` downcasts to, and `InitError`,
+- **The typed refusals.** `ShowQueryError`, `FmtScanAbort` and
+  `FmtConflictAbort`, which an error from `show` or `format_references`
+  downcasts to, and `InitError`,
   `FetchFailure` and `IntegrationsError`, which `init`, `fetch_snapshot` and
   `integrations` return. An entry point with no typed refusal returns
   `anyhow::Result`.
-- **Every type those signatures reach,** transitively. That makes 112 names.
+- **Every type those signatures reach,** transitively. That makes 113 names.
 
 A `1.x` release may add a name, a field or a variant, and may deprecate a name.
 Only `2.0` removes or retypes one.
@@ -108,6 +109,29 @@ Without `write`, the same call only describes: `detected`, one status per
 client, and the named client's `artifact`. A refusal is an `IntegrationsError`.
 Its `failure` says why, and its `output` keeps what the run wrote before it
 stopped ([§FS-integrations.1.3.3](../functional-spec/FS-integrations.md#133-the-refusal)).
+
+A `format_references` run that needs the whole declaration set and finds a merge
+conflict left in a declaration writes nothing, and its error downcasts to
+`FmtConflictAbort`. Its `conflicts` are the blocks' `conflict-marker` findings,
+the ones `check` reports, so a caller can print them as `grund fmt` does
+([§FS-fmt.7.4](../functional-spec/FS-fmt.md#74-no-write-without-a-complete-model)):
+
+```rust
+use grund_core::{FmtConflictAbort, FmtOpts, format_references};
+
+let mut opts = FmtOpts::default();
+opts.path = ".".into();
+opts.write = true;
+if let Err(err) = format_references(opts) {
+    if let Some(abort) = err.downcast_ref::<FmtConflictAbort>() {
+        for conflict in &abort.conflicts {
+            let path = conflict.path.as_deref().unwrap_or_default();
+            let line = conflict.line.unwrap_or_default();
+            eprintln!("error: nothing was rewritten: {path}:{line}: {}", conflict.message);
+        }
+    }
+}
+```
 
 ## Migrating
 

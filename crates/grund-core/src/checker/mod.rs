@@ -84,6 +84,7 @@ pub(crate) use crate::testing::{check_findings, check_with_workspace};
 pub(crate) use agents::section_in_block;
 #[cfg(test)]
 pub(crate) use chapter_rules::markdown_project;
+pub(crate) use conflict_marker::conflict_marker_finding;
 pub(crate) use index::KindIndexFiles;
 pub(crate) use index_entries::KindIndexEntries;
 pub(crate) use judge::CheckWorkspace;

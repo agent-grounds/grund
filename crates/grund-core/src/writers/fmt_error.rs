@@ -1,8 +1,10 @@
-//! The one refusal `fmt` carries out of the engine as a value (§FS-fmt.3.2): the
-//! whole-declaration-set rewrite that found unreadable paths and wrote nothing.
-//! It is a `pub` error type of the embedding surface, so `grund-cli` matches on
-//! it and adds its own `error:` prefix (§AR-core-module-layout.2).
+//! The two refusals `fmt` carries out of the engine as values: the
+//! whole-declaration-set rewrite that found unreadable paths (§FS-fmt.3.2), and
+//! the one that found a conflict block (§FS-fmt.7.4), each having written
+//! nothing. They are `pub` error types of the embedding surface, so `grund-cli`
+//! matches on them and adds its own `error:` prefix (§AR-core-module-layout.2).
 
+use crate::model::Finding;
 use crate::scanner::ApiScanError;
 
 /// A whole-declaration-set rewrite refused because its completed scan found
@@ -33,3 +35,38 @@ impl std::fmt::Display for FmtScanAbort {
 }
 
 impl std::error::Error for FmtScanAbort {}
+
+/// A whole-declaration-set rewrite refused because the project holds a conflict
+/// block (§FS-fmt.7.4, §FS-declarations.body.conflict): `conflicts` is each
+/// block's `conflict-marker` finding, the one `check` reports
+/// (§FS-declarations.checks.conflict-marker), in root-then-members order in a
+/// workspace, files then lines within a project (§FS-fmt.3.3). Its own type
+/// beside [`FmtScanAbort`], which stays as it is, because a block is a finding
+/// with a line and sites where an unreadable path is not.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FmtConflictAbort {
+    pub conflicts: Vec<Finding>,
+}
+
+impl std::fmt::Display for FmtConflictAbort {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.conflicts.is_empty() {
+            return f.write_str("nothing was rewritten");
+        }
+        for (index, conflict) in self.conflicts.iter().enumerate() {
+            if index > 0 {
+                f.write_str("\n")?;
+            }
+            let path = conflict.path.as_deref().unwrap_or_default();
+            let line = conflict.line.unwrap_or_default();
+            write!(
+                f,
+                "nothing was rewritten: {path}:{line}: {}",
+                conflict.message
+            )?;
+        }
+        Ok(())
+    }
+}
+
+impl std::error::Error for FmtConflictAbort {}

@@ -104,7 +104,12 @@ try {
 Kinds are input/query/config/io/operation/load/worker/native/busy. Failures
 retain nullable path/line/column, multi-site diagnostics, authority, causes,
 details and available partial output. Branch on kind and documented codes,
-not localized messages. Values/configuration keys remain schema spelling;
+not localized messages. An `fmt` refused for a merge conflict left in a
+declaration rejects with kind `operation` and code `conflict-marker`, located
+at the first block, one site per block, every block's finding in
+`details.conflicts` and `partial.result.changes` empty, because nothing was
+written ([§FS-declarations.checks.conflict-marker](../functional-spec/FS-declarations.md#checksconflict-marker-unresolved-merge-conflict)).
+Values/configuration keys remain schema spelling;
 source value numbers remain exact strings. Numeric overflow rejects rather
 than truncating ([§FS-distribution.3.2.2.1](../functional-spec/FS-distribution.md#3221-common-records)).
 

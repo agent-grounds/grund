@@ -39,6 +39,15 @@ docs/requirements/REQ-no-wrong-citation.md:7: error: missing section FS-check.3.
 7. Declared-but-uncited IDs are flagged. *(unused — warning, not error; a configured `E2E` kind's cases are exempt)*
 8. *(opt-in)* With `require_grounding = true`: every source file — or every file of one configured place, down to every `##` section or doc-comment block of it — carries at least one citation. *(ungrounded source file)*
 9. *(workspace)* Alias-qualified citations resolve across configured sub-projects. *(cross-project references — see [§FS-workspace](../functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace))*
+10. No declaration is left in the middle of a merge. *(conflict markers)* Each block of the lines git writes around a conflict, `<<<<<<<`, `|||||||`, `=======` and `>>>>>>>` at column 0, is one error at its first line, naming every declaration it overlaps ([§FS-declarations.checks.conflict-marker](../functional-spec/FS-declarations.md#checksconflict-marker-unresolved-merge-conflict)).
+
+A conflict block counts anywhere in a Markdown file that declares an ID, inside a fence too, and in a source file inside a declaration's doc-comment, including the lines right after a `///` or `#` run the conflict cut short ([§FS-declarations.body.conflict.where](../functional-spec/FS-declarations.md#bodyconflictwhere-where-blocks-are-looked-for)):
+
+```text
+docs/login.md:7: error: unresolved merge conflict in FS-login, lines 7–11: resolve it by hand
+```
+
+Resolve it by hand: grund cannot tell which side is the declaration's text, so the message names neither. While a block remains, `grund fmt` rewrites nothing, because it would otherwise fingerprint one side into the section lock; `--ignore conflict-marker` hides the finding and does not change that ([§FS-fmt.7.4](../functional-spec/FS-fmt.md#74-no-write-without-a-complete-model)). A `>>>>>>> ` line is also how Markdown would spell a quote seven levels deep, and outside a conflict it reads as a lone closer, so write such a quote `> > > > > > >`. To show a marker line as text, in a fence for example, indent it by one space: ` <<<<<<< HEAD` is not a marker line.
 
 Text inside a source file's string literal is data, so a qualified citation there is not a cross-project citation and `grund fmt` never rewrites it; a marked unqualified citation there is still checked. A literal that spans lines — a Rust raw string, a Java text block, a JavaScript template, a shell heredoc and the other forms in [§FS-languages.multi-line-string.forms](../functional-spec/FS-languages.md#multi-line-stringforms-the-recognized-forms) — counts as a string on every line it spans. The forms grund does not carry, such as Ruby heredocs and shell's ordinary quoted strings, are listed in [§FS-languages.multi-line-string.unrecognized](../functional-spec/FS-languages.md#multi-line-stringunrecognized-the-forms-that-are-not-carried); on their later lines a qualified citation is still read as one.
 

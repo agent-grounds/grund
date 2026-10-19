@@ -98,7 +98,6 @@ fn a_read_failure_partway_through_the_walk_rewrites_nothing() {
 /// at the block's first line, carries every block's finding and writes nothing
 /// (§FS-declarations.checks.conflict-marker, §FS-fmt.7.4).
 #[test]
-#[ignore = "red until #837 refuses fmt on a conflict block; implement removes this"]
 fn a_conflict_block_refuses_fmt_across_the_public_api() {
     let root = test_root("a_conflict_block_refuses_fmt_across_the_public_api");
     write(

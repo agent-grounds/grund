@@ -15,7 +15,7 @@ use std::path::Path;
 
 use super::call_scope::PathBase;
 use super::record::Config;
-use crate::model::{Diagnostic, Finding};
+use crate::model::{Diagnostic, Finding, FindingSite};
 
 impl Config {
     /// Whether this run spells report paths from the config root: the run's
@@ -44,6 +44,37 @@ impl Config {
 /// outside that base uses bounded `..`).
 pub(crate) fn display_path(config: &Config, path: &Path) -> String {
     config.display().path(path)
+}
+
+/// A `Diagnostic` in the published shape (§FS-distribution.3.1), its anchor and
+/// every site spelled by `render_path`. `check`'s report passes the run's path
+/// spelling, or an absolute one for an editor (§FS-lsp.1.1), and `fmt`'s
+/// `conflict-marker` refusal passes the run's config (§FS-fmt.7.4): one
+/// conversion, so the refusal publishes a block as the finding does.
+pub(crate) fn published_finding(
+    severity: &'static str,
+    diagnostic: Diagnostic,
+    render_path: impl Fn(&Path) -> String,
+) -> Finding {
+    Finding {
+        severity,
+        code: diagnostic.code,
+        path: diagnostic.path.map(|path| render_path(&path)),
+        line: diagnostic.line,
+        column: diagnostic.column,
+        message: diagnostic.message,
+        sites: diagnostic
+            .sites
+            .into_iter()
+            .map(|site| FindingSite {
+                path: render_path(&site.path),
+                line: site.line,
+            })
+            .collect(),
+        // §FS-errors.5.1: the authority is already the bytewise-sorted set the
+        // engine joined its message tail from, so publishing it needs no config.
+        authority: diagnostic.authority,
+    }
 }
 
 /// The run's `[workspace]` warnings in the published shape (§FS-distribution.3.1):

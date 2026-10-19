@@ -1,8 +1,9 @@
 use anyhow::Result;
 
-use super::fmt_error::FmtScanAbort;
-use crate::config::Config;
-use crate::model::Catalog;
+use super::fmt_error::{FmtConflictAbort, FmtScanAbort};
+use crate::checker::{conflict_marker_finding, sort_diagnostics};
+use crate::config::{Config, display_path, published_finding};
+use crate::model::{Catalog, Diagnostic};
 use crate::resolver::WorkspaceProject;
 use crate::scanner::{ApiScanError, api_scan_error, scan_tree};
 
@@ -27,16 +28,22 @@ use crate::scanner::{ApiScanError, api_scan_error, scan_tree};
 /// constructors below are the only ways a proof comes into being:
 ///
 /// - `CompleteScan::of_tree_or_abort` — scan the whole project and refuse the
-///   run when the scan met an error;
+///   run when the scan met an error or recorded a conflict block;
 /// - `WorkspaceProject::complete_findings` — reuse a scan already made, after
-///   checking the same field a fresh scan would have refused on.
+///   checking the same fields a fresh scan would have refused on.
+///
+/// A conflict block makes a set as unfit to resolve against as an unreadable
+/// path does: the declaration it sits in is two texts under one address, and the
+/// section lock would fingerprint one of them (§FS-fmt.7.4). So both
+/// constructors refuse on a block too, from the record the scan keeps
+/// (§AR-scanner.2.9) and never from `check`'s report, which `--ignore` can thin.
 ///
 /// Neither takes an error list from its caller. A constructor that did could be
 /// satisfied with an empty one, which is the bypass again with more ceremony.
 mod complete_findings {
     use super::{
         ApiScanError, Catalog, Config, FmtScanAbort, Result, WorkspaceProject, api_scan_error,
-        scan_tree,
+        conflict_abort, scan_tree,
     };
     // Everything above is imported by the file this module sits in; the module
     // is nested inside it so the field below is private to the two constructors
@@ -81,6 +88,10 @@ mod complete_findings {
                 }
                 .into());
             }
+            // §FS-fmt.7.4: an unreadable path is named first; a block refuses next.
+            if let Some(abort) = conflict_abort(&findings, config, render) {
+                return Err(abort.into());
+            }
             Ok(Self { findings })
         }
 
@@ -118,12 +129,47 @@ mod complete_findings {
         /// It lives here, beside the field it proves, because this is the only
         /// code that reads both halves of the pair: no call site is trusted to
         /// remember to check.
+        ///
+        /// A set holding a conflict block is no proof either (§FS-fmt.7.4). The
+        /// caller then falls back to `CompleteScan::of_tree_or_abort`, where a
+        /// run that needs the set builds its refusal, so the refusal is made in
+        /// one place, as an unreadable path's is.
         pub(crate) fn complete_findings(&self) -> Option<CompleteFindings<'_>> {
-            self.scan_errors.is_empty().then_some(CompleteFindings {
-                findings: &self.findings,
-            })
+            (self.scan_errors.is_empty() && self.findings.conflict_blocks.is_empty()).then_some(
+                CompleteFindings {
+                    findings: &self.findings,
+                },
+            )
         }
     }
 }
 
 pub(super) use complete_findings::{CompleteFindings, CompleteScan};
+
+/// The refusal a conflict block earns (§FS-fmt.7.4): each block's
+/// `conflict-marker` finding, from the one function `check` reports it with
+/// (§AR-scanner.2.9), its owners spelled by the project that holds them and its
+/// paths by the run's config, files then lines (§FS-fmt.3.3).
+fn conflict_abort(
+    findings: &Catalog,
+    config: &Config,
+    render: &Config,
+) -> Option<FmtConflictAbort> {
+    if findings.conflict_blocks.is_empty() {
+        return None;
+    }
+    let grammar = config.frame().grammar();
+    let mut conflicts: Vec<Diagnostic> = findings
+        .conflict_blocks
+        .iter()
+        .map(|block| conflict_marker_finding(block, grammar))
+        .collect();
+    sort_diagnostics(&mut conflicts);
+    let render_path = |path: &std::path::Path| display_path(render, path);
+    Some(FmtConflictAbort {
+        conflicts: conflicts
+            .into_iter()
+            .map(|conflict| published_finding("error", conflict, render_path))
+            .collect(),
+    })
+}
