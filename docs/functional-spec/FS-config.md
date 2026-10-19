@@ -366,6 +366,28 @@ the forms those authoring surfaces create.
 
 `named_sections` is an absent-by-default Boolean gate for explicit section names. When absent or `false`, section scanning, citation recognition, queries, formatting, completion, LSP behavior, and operational output remain the numeric-only behavior of earlier configurations. When `true`, a named component has the fixed, configuration-independent grammar `[a-z][a-z0-9-]*`; it is not derived from `slug_pattern` or from the displayed heading title. `grund init` writes the teaching default `named_sections = false` ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)). Unknown values are invalid config. A relative heading whose one component is a name needs the gate as a complete-path heading carrying that name does, and one whose component is a number needs nothing ([§FS-declarations.section.relative.form](FS-declarations.md#sectionrelativeform-the-form)).
 
+#### 3.2.8 Numeric spelling survives reading and reporting
+
+For an ID accepted by the effective grammar, the authored digits of `{number}`
+are its source spelling. Reading and reporting preserve that spelling, including
+leading zeroes, under both the repository default and a per-kind override
+([§FS-config.3.4.10.1](FS-config.md#34101-format)); the version-2 spellings of those
+settings have the same behavior ([§FS-config-v2.schema.1](FS-config-v2.md#schema1-schema)).
+With `{kind}-{number}`, declarations `ADR-0001` and `ADR-0002` therefore appear
+with those IDs in text reports and machine-readable ID strings. A diagnostic
+for an unresolved citation `ADR-0007` names `ADR-0007`, and a suggestion of the
+first declaration names `ADR-0001`. Visible citation text retains its own
+spelling; it does not rename the target declaration.
+
+Spelling is distinct from numeric identity: `ADR-1`, `ADR-001` and `ADR-0001`
+still select the same kind and number, and declaring two of them is a duplicate
+under the existing collision rules ([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)).
+Numeric fields remain numbers. Lookup and collisions use numeric identity;
+ordering and next-number derivation retain their existing rules. Allocation alone chooses a minimum
+width ([§FS-id.1.2](FS-id.md#12-number-width)); reading a four-digit declaration
+does not change the default or explicit allocation width, nor repad existing
+headings, filenames or citations ([§DF-id-number-width.4](../decisions/functional/DF-id-number-width.md#4-what-happens-at-the-rollover)).
+
 ### 3.3 Section paths — arbitrary nesting depth
 
 Section coordinates are **dotted paths of arbitrary depth**. There is no maximum nesting depth. Purely numeric paths retain their existing heading form and behavior:
@@ -740,6 +762,10 @@ remains 1 ([§FS-config.5](FS-config.md#5-schema-versioning)).
 admitted at two scopes ([§FS-config.principle.rungs](FS-config.md#principlerungs-the-committed-scopes-are-a-relation-not-a-closed-list)): it overrides only this kind, and
 `[id].format` remains the default for every other kind. It is valid
 without `resolve` or `fetch`, but invalid on a non-citable kind.
+
+Numeric spelling follows [§FS-config.3.2.8](FS-config.md#328-numeric-spelling-survives-reading-and-reporting),
+just as it does under the repository default; this override sets a grammar,
+not a report width.
 
 ##### 3.4.10.2 `fetch` and `resolve`
 

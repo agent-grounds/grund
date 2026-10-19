@@ -384,6 +384,12 @@ A stub stands for the declaration its target holds ([§FS-declarations.stubs.pai
 
 The anchor is the heading's **rendered text** ([§FS-declarations.heading.rendered-text](FS-declarations.md#headingrendered-text-a-headings-rendered-text)) slugified per the configured renderer profile ([§FS-fmt.6.7.1](FS-fmt.md#671-anchor_format-names-a-renderer-profile)) — for the default `github` profile, `### 6.2 Form` produces `#62-form`, and `## RM-read: grund <ID>` slugifies as `## RM-read: grund `. The full strategy and profile list is decided in [§DF-md-link-anchor-strategy](../decisions/functional/DF-md-link-anchor-strategy.md#df-md-link-anchor-strategy-heading-text-slugs-re-derived-on-every-fmt-pass).
 
+The target declaration's source spelling ([§FS-config.3.2.8](FS-config.md#328-numeric-spelling-survives-reading-and-reporting))
+is part of that heading text, independently of an equivalent citation's
+spelling: `# ADR-0001: Use Postgres` and `# ADR-0002: Use Redis` yield
+`#adr-0001-use-postgres` and `#adr-0002-use-redis`, even when cited as `ADR-1`
+or `ADR-002`. A section headed `## 1. Why` still yields `#1-why`.
+
 #### 6.2.3 The `github` profile reproduces `github-slugger`
 
 The `github` (and `gitlab`) profile reproduces `github-slugger` byte-for-byte: disallowed characters are deleted in place and each remaining space becomes one `-`, with no run-collapsing and no trailing-`-` trim — `## A — B` → `#a--b`, `` ## 6. Watch mode (`--watch`) `` → `#6-watch-mode---watch` ([§DF-github-anchor-fidelity](../decisions/functional/DF-github-anchor-fidelity.md#df-github-anchor-fidelity-the-github-anchor-profile-reproduces-github-slugger-exactly)). A repeated slug in one file is numbered `-1`, `-2` ([§DF-repeated-heading-anchor.decision](../decisions/functional/DF-repeated-heading-anchor.md#decision-decision)).
