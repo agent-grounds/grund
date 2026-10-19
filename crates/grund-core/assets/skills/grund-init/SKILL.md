@@ -264,7 +264,7 @@ the matching `must-not` or `warn-not` list; an independent rule sentence
 requires changing the named rule. Adding `may` does not override either.
 The finding names the applicable repair; ordinary citations keep their
 plain-link advice, and suggestions keep their existing wording
-([§FS-check.3.12.2](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#3122-repair-advice-preserves-a-required-index-entry)).
+([the index-entry repair specification](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#3122-repair-advice-preserves-a-required-index-entry)).
 
 The config and the generated section below are the same example. The TOML is
 shown beside the Markdown it renders:
