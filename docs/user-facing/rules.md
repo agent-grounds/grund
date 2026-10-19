@@ -134,6 +134,7 @@ The complete accepted sentence forms, with representative findings, are:
 - `FS-login.requirements must cite exactly one REQ.` → `citation-cardinality`.
 - `AR-overview.system-overview must cite each AR at least once.` → one `citation-cardinality` per missed AR.
 - `AR-overview.system-overview must cite each AR at least 2 times.` → one `citation-cardinality` per short-counted AR.
+- `AR-overview.system-overview must cite each AR at most once.` → one `citation-cardinality` per repeated AR.
 - `AR-overview.system-overview should cite each AR at most 2 times.` → suggestion `citation-cardinality`.
 - `AR-overview.system-overview must cite each AR exactly once.` → one `citation-cardinality` per off-count AR.
 - `AR-overview.system-overview should cite each AR exactly 2 times.` → suggestion `citation-cardinality`.
@@ -145,13 +146,23 @@ The complete accepted sentence forms, with representative findings, are:
 - `FS-login.requirements should not cite any AR or GOAL.` → one site-anchored `discouraged-citation` suggestion per citation.
 <!-- END chapter-rules-accepted -->
 
-Counts are positive decimal integers. Spell one as `one` where shown; numeric
-counts other than one use plural `chapters` or `times`. Object kinds may be local
+Counts are positive decimal integers. Spell one as `one` where shown, and as
+`once` for every per-target bound; numeric counts above one use plural
+`chapters` or `times`. Chapter, outbound and inbound ceilings keep numeric one:
+`at most 1 requirements chapter`, `cite at most 1 AR`, `be cited by at most 1 AR`.
+Object kinds may be local
 (`REQ`), pinned to a workspace member (`api/REQ`), or any member (`*/REQ`), and
 `or` forms one normalized target set. A member nested inside another pins
 itself with its whole alias path (`group/api/REQ` in member `group/api`), which
 judges exactly like the bare kind. A namespaced object kind needs the workspace
 in scope: a run without one says so at the rule's heading and still writes the block.
+
+Per-target `at most once` allows zero or one physical citation to each target;
+two sites citing the same target produce `citation-cardinality`, with
+`requires at most 1` in the finding ([per-target counts](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#33-per-target-coverage)).
+Replace an existing per-target `at most 1 times` with `at most once`, then rerun
+`grund init` to refresh rendered guidance. The numeric spelling is refused and
+stops init before it writes ([migration decision](https://github.com/agent-grounds/grund/blob/main/docs/decisions/functional/DF-per-target-once-ceiling.md#compatibility-use-the-pre-10-allowance-not-a-verdict-correction)).
 
 <!-- BEGIN chapter-rules-refused -->
 Common refusals are intentional. A sentence is refused for the first stage it fails, and no later stage is read: the final `.`, the fixed word and the phase-1 subject, a conjunction, the modality, the rest of the subject, then the predicate. A configured kind that declares no IDs is refused as that, naming its home, rather than as an unknown kind. Until 0.19.0 the old reason stays in front of the new one, as in `unknown kind "e2e" — kind "e2e" declares no IDs — tests/e2e/ is not a citable home; this wording changes in grund 0.19.0`. Each names what failed and offers your sentence with only the refused part replaced, which is accepted when you paste it back; where grund cannot know what belongs in its place, it offers nothing, and `grund check --rule` lists the known kinds when what is missing is a kind:
@@ -161,6 +172,7 @@ Common refusals are intentional. A sentence is refused for the first stage it fa
 - `Each FS must cite a GOAL.` → `quantifier "a" is ambiguous; accepted forms: "Each FS must cite at least one GOAL." or "Each FS must cite exactly one GOAL."`
 - `Each FS must cite at least 1 GOAL.` → `numeric "at least 1" is not canonical; accepted form: Each FS must cite at least one GOAL.`
 - `Each FS must cite exactly 1 GOAL.` → `numeric "exactly 1" is not canonical; accepted form: Each FS must cite exactly one GOAL.`
+- `AR-overview.system-overview must cite each AR at most 1 times.` → `numeric "at most 1 times" is not canonical; accepted form: AR-overview.system-overview must cite each AR at most once.`
 - `Each FS must cite at least one GOAL and must not cite any AR.` → `conjunctions are not accepted; accepted forms: "Each FS must cite at least one GOAL." and "Each FS must not cite any AR."`
 - `Each FS must have exactly one  chapter.` → `chapter name must be a non-empty NAME with no surrounding whitespace; NAME forbids whitespace anywhere.`
 - `Each FS must cite at least one GOAL` → `rule must end with "."; accepted form: Each FS must cite at least one GOAL.`

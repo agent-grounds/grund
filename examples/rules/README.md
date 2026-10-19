@@ -42,6 +42,13 @@ authority such as `RULE-a, RULE-b`. A malformed configured declaration produces
 an **invalid-rule** finding; a malformed `check --rule` sentence is refused
 before scanning.
 
+`RULE-overview-ceiling` says `AR-overview.system-overview must cite each AR at most once.`
+The overview cites itself once and `AR-one-more` zero times, which both pass;
+its two physical citations to `AR-one` violate the ceiling. The finding keeps
+`requires at most 1`. `RULE-invalid-ceiling` demonstrates the refused numeric
+spelling: replace per-target `at most 1 times` with `at most once`, then rerun
+`grund init` to update guidance. An invalid numeric title stops init before writes.
+
 See the [chapter-rules guide](../../docs/user-facing/rules.md) for every accepted
 sentence, every common refusal and any rewrite offered, and the finding
 produced by each family.
@@ -65,6 +72,7 @@ The requirements chapter of each FS should cite at most 2 REQ.
 FS-demo.requirements must cite exactly one REQ.
 AR-overview.system-overview must cite each AR at least once.
 AR-overview.system-overview must cite each AR at least 2 times.
+AR-overview.system-overview must cite each AR at most once.
 AR-overview.system-overview should cite each AR at most 2 times.
 AR-overview.system-overview must cite each AR exactly once.
 AR-overview.system-overview should cite each AR exactly 2 times.
@@ -96,6 +104,10 @@ and any accepted rewrite grund reports. Some refusals offer no rewrite
 - `Each FS must cite a GOAL.` → `Each FS must cite at least one GOAL.` or `Each FS must cite exactly one GOAL.`
 - `Each FS must cite at least 1 GOAL.` → spell one as the word: `Each FS must cite at least one GOAL.`
 - `Each FS must cite exactly 1 GOAL.` → spell one as the word: `Each FS must cite exactly one GOAL.`
+- `AR-overview.system-overview must cite each AR at most 1 times.` → `numeric "at most 1 times" is not canonical; accepted form: AR-overview.system-overview must cite each AR at most once.`
+- `AR-overview.system-overview must cite each AR at most 1.` → `per-target counts must end in "times"; accepted form: AR-overview.system-overview must cite each AR at most once.`
+- `AR-overview.system-overview should cite each AR at most 1 time.` → `per-target counts must end in "times"; accepted form: AR-overview.system-overview should cite each AR at most once.`
+- `AR-overview.system-overview must cite each AR at most 01 times.` → `count must be a canonical positive base-10 integer; accepted form: AR-overview.system-overview must cite each AR at most once.`
 - `Each FS must cite at least one GOAL and must not cite any AR.` → split it into `Each FS must cite at least one GOAL.` and `Each FS must not cite any AR.`
 - `Each FS must cite at least one GOAL` → add the terminal `.`.
 - `each FS must cite at least one GOAL.` → `Each FS must cite at least one GOAL.`

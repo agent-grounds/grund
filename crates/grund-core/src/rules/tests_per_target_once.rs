@@ -48,7 +48,6 @@ fn parse(title: &str) -> Result<ParsedRule, String> {
 
 /// §FS-rules.3.3: the new word spelling needs no evaluator representation.
 #[test]
-#[ignore = "red until #835 normalizes per-target at most once; implement removes this"]
 fn per_target_once_normalizes_without_a_minimum_and_with_maximum_one() {
     for (modality, level) in [
         ("must", RuleLevel::Required),
@@ -88,7 +87,6 @@ fn per_target_once_normalizes_without_a_minimum_and_with_maximum_one() {
 /// §FS-rule-refusals.sentences.rewrite.reparsed: exact FS-only row and
 /// typed subject/modality preservation over every subject spelling and repair.
 #[test]
-#[ignore = "red until #835 rewrites per-target numeric upper-one to once; implement removes this"]
 fn per_target_once_numeric_rewrites_preserve_typed_subjects_and_reparse() {
     let mut wrong = Vec::new();
     for subject in [
