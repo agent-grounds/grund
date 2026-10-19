@@ -2,7 +2,7 @@
 
 This runnable walkthrough moves a version-1 `grund.toml` to version 2 with `grund config migrate --to 2` ([§FS-config-migrate](../../docs/functional-spec/FS-config-migrate.md#fs-config-migrate-grund-config-migrate---to-2-shows-the-version-2-file-that-means-what-a-version-1-config-means-and-writes-it-only-when-asked-and-only-when-it-does)). It is for a repository `grund init` set up before version 2 existed. Its config is the one `grund init` writes, trimmed to two kinds and two languages, with four comments: a header block, one above the `FS` row, one above `[scan] include`, and one trailing `[scan] exclude`.
 
-The example pins two runs, one per step ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)). Neither writes anything.
+The example pins three runs, one per step ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)). The first two preview; the third writes only the config in a disposable copy.
 
 ## Step 1: the preview refuses, and names the repairs
 
@@ -57,15 +57,28 @@ The `compared:` line is the two checks every write must pass: the records both f
 
 The exclusion comment is retained: the candidate contains `exclude = ["target/", "node_modules/", ".git/", "dist/", "build/", ".venv/"] # directory names`. Version 1's directory names became glob patterns. Check that the comment still explains the setting as intended; the warning identifies the translation without judging its prose ([§FS-config-migrate.4.1.1](../../docs/functional-spec/FS-config-migrate.md#411-check-carried-comments-when-the-value-vocabulary-changes)). It appears in preview and write, including with `--drop-comments`, which drops only the listed `include` comment.
 
-## Writing it
+## Step 3: write, then refresh managed instructions
 
-Read the listed comment, then write:
+`migrate-3-write/repo/` starts with the repaired version-1 repository. Read the listed comment, then write:
 
 ```bash
-grund config migrate --to 2 --write --drop-comments
+grund config migrate --to 2 --write --drop-comments examples/migrate/migrate-3-write/repo
+echo $?    # 0
 ```
 
 The write is atomic, writes no other file, and says how to get version 1 back: from version control, or by previewing again ([§FS-config-migrate.6](../../docs/functional-spec/FS-config-migrate.md#6-the-write)). Without `--drop-comments` it refuses, and the file stays as it is. Run it a second time and it reports that the config is already version 2.
+
+The successful-write report ends with:
+
+```text
+wrote grund.toml: version 1 (35 lines) replaced by version 2
+dropped the comments at grund.toml:28 (version 1 lines)
+to get version 1 back: it is in version control, e.g. git restore grund.toml
+to see this candidate again: restore version 1 and run grund config migrate --to 2
+note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them
+```
+
+Run `grund init` in the migrated project to refresh managed instructions that may still describe version 1 ([§FS-config-migrate.6.5](../../docs/functional-spec/FS-config-migrate.md#65-what-it-says-after-the-write)). The reminder appears even though this fixture has no `AGENTS.md`; migration does not create one. `migrate-3-write/expected.repo/` records the complete final tree: only `grund.toml` changes, and it equals `expected.stdout`. The harness uses a disposable copy for the write and checks that tree; the follow-up `grund init` is a separate action.
 
 ## Trade-offs
 

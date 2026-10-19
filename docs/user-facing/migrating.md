@@ -99,8 +99,18 @@ Add `--write` (and `--drop-comments` if the preview listed comments). The file i
 replaced atomically, keeps its permissions, and nothing else is written; if the
 file changed since it was read, nothing is written and the run says so
 ([§FS-config-migrate.6](../functional-spec/FS-config-migrate.md#6-the-write)). The
-report ends with how to get version 1 back, from version control. A second run
-says the config is already version 2.
+report explains how to get version 1 back, from version control, then ends with:
+
+```text
+note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them
+```
+
+Run `grund init` in the migrated project to refresh its managed instructions;
+migration leaves them unchanged
+([§FS-config-migrate.6.5](../functional-spec/FS-config-migrate.md#65-what-it-says-after-the-write)).
+The qualified reminder appears after every successful write, even when no
+`AGENTS.md` exists. Previews, refused or failed writes, and already-version-2
+runs omit it. A second migration run says the config is already version 2.
 
 ## Workspaces
 
