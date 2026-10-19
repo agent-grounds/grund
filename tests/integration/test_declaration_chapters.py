@@ -118,6 +118,9 @@ CITED = (
 # FS-fmt.md grew by the 223 bytes of the lock pass's place in the list of
 # §FS-fmt.requirements.fixed-point, citing §FS-section-lock.write.same-run for which tree
 # the pass judges rather than restating it (grund#847).
+
+# FS-fmt.md grew by 162 bytes in §FS-fmt.1 and §FS-fmt.3.2, citing §FS-scan.path.none for
+# what a run with no path covers rather than restating it (grund#854).
 BASELINES = {"FS-show.md": 68393, "FS-fmt.md": 98722}
 
 

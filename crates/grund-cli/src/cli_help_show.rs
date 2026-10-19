@@ -22,7 +22,11 @@ fn print_show_help() {
     println!(
         "  --format text|md|json  text (default) is the body; md keeps the heading; json wraps it"
     );
-    println!("  --path PATH            repo or subtree to resolve the ID in (default `.`)");
+    // §FS-cli.2.3.2: a default per form, as PATH narrows a generated batch but not one ID.
+    println!("  --path PATH            repo or subtree to resolve the ID in (no PATH answers as `.`);");
+    println!("                         narrows --batch --all and --glob, whose queries with no PATH");
+    println!("                         cover the whole project or workspace discovered from the");
+    println!("                         current directory");
     println!("                         e.g. grund FS-login --path docs/");
     println!(
         "  --batch                 read ordered {{\"id\":…,\"section\":…}} NDJSON queries from stdin"
