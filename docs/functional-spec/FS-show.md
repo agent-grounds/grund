@@ -517,9 +517,11 @@ A failed query (`1`) prints the bare result line and, where the next step is obv
 
 #### 3.5.1 An ID the grammar rejects
 
-A `<ID>` argument that does not match its kind's effective format ([§FS-config.3.2](FS-config.md#32-id--id-grammar)), once the scan has found no exact off-grammar declaration of that spelling, fails with `invalid ID \`<arg>\``, followed by `hint: this repo's [id] format is \`<format>\` (run \`grund config show\`); \`grund list\` shows the IDs that exist` — naming the kind's effective format instead where a `[[kinds]] format` ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)) governs it; this is the common surprise in a repo whose format differs from the `{kind}-{slug}` `grund` itself uses.
+Without an exact off-grammar declaration, a grammar-rejected argument fails with `invalid ID \`<arg>\`` and a hint ending `(run \`grund config show\`); \`grund list\` shows the IDs that exist`.
 
-This includes a coordinate whose section component the effective grammar rejects, such as `FS-widget.1.nope` when only numbered sections are enabled. Both bare and explicit `show` retain the format/list hint; a non-path operand receives no filesystem-check breadcrumb ([§FS-show.3.5.2](FS-show.md#352-the-filesystem-path-migration-breadcrumb)). A parsed but absent numeric section still receives the `--toc` hint of [§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure).
+Name the effective template and loaded key: v1 `[id] format` or override `[[kinds]] format` ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)); v2 `[schema] id_format` or override `[schema.kinds.<KIND>] id_format` ([§FS-config-v2.schema.1](FS-config-v2.md#schema1-schema)). Use the override's value; use the global template only without a kind or override. This covers bare/show/refs and core API hints, including qualified refusals. Preserve resolution, API records, codes/severity, streams, JSON and exit status; structured formats stay templates.
+
+Grammar-rejected sections count (`FS-widget.1.nope` with numbered-only sections). Bare and explicit `show` keep the format/list hint; non-path operands get no check breadcrumb ([§FS-show.3.5.2](FS-show.md#352-the-filesystem-path-migration-breadcrumb)). Parsed but absent numeric sections keep `--toc`.
 
 #### 3.5.2 The filesystem-path migration breadcrumb
 

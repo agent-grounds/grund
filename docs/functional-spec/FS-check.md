@@ -221,15 +221,13 @@ The cost is that a path-scoped run walks what the whole-project run walks. That 
 
 #### 1.3.7 A path the flag cannot widen earns a caution, not a refusal
 
-When `--full` is passed with an explicit path that is not the config root, the run emits one CLI-level `warning:` ([§FS-check.2.1.1](FS-check.md#211-cli-level-messages)) on **stderr** and reports the same findings, on the same streams, with the same exit code as the run without the flag:
+With `--full` and an explicit non-root path, emit one CLI-level `warning:` on **stderr**, retaining the unflagged findings, streams and exit code. V1 says:
 
 ```
 warning: --full has no effect with an explicit PATH — sim already resolves against [scan] include, and the report is the path either way
 ```
 
-The flag has nothing to cancel because of the two-scope rule of [§FS-check.1.3.6.1](FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution), and not because a path bypasses `include`: the path already resolves against `include`, so cancelling it subtracts nothing from what the run reads, and the report is the path with the flag or without it.
-
-Silently accepting the flag is the failure this mode exists to end in miniature: the caller asked for the wider search and got the ordinary run, with no signal. Rejecting it would be worse — the run is a valid one, and a script that passes `--full` uniformly would start failing on the invocation where it happens to be redundant. It is a warning like any other: the exit code is untouched, it stands in place of the `success` line on an otherwise clean run ([§FS-check.2.1](FS-check.md#21-report-format)), and under `--format json` it is one finding object on stderr, so a clean run's **stdout** stays empty either way.
+For v2, describe the configured resolution scope ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)), without calling it `[scan] include`. The two-scope rule ([§FS-check.1.3.6.1](FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution)) already resolves project-wide. Warn; neither ignore the flag nor refuse the run. Replace `success` on a clean run; JSON emits one stderr finding, leaving stdout empty ([§FS-check.2.1](FS-check.md#21-report-format)).
 
 #### 1.3.8 Workspaces widen per project
 
@@ -345,7 +343,11 @@ The message follows what the run was given: the repo root with `[scan] include` 
 
 ##### 2.2.2.1 The repo root
 
-When the scope is the repo root (no path argument, or `grund check .`) and `[scan] include` is set, the message names the `include` list and points at `grund.toml` / `grund init --scaffold`, since the usual cause is a project whose sources live outside the default `docs/`, `e2e/`, `src/`. A config that declares no kinds ([§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)) has no starter file to scaffold, so its message names declaring a first kind in that place instead: after `found no files.` it reads ``This project declares no kinds yet: replace `kinds = []` in `grund.toml` with a `[[kinds]]` table for its first kind, point `[scan] include` at your sources, or pass a path explicitly (`grund check <dir>`).``
+At repo root (no path, or `grund check .`), v1 names `[scan] include` and its list, with `grund.toml` / `grund init --scaffold` advice. With no kinds ([§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)), no scaffold is possible; after `found no files.` append:
+
+``This project declares no kinds yet: replace `kinds = []` in `grund.toml` with a `[[kinds]]` table for its first kind, point `[scan] include` at your sources, or pass a path explicitly (`grund check <dir>`).``
+
+Any v2 repair instead names its places ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)) or source exclusions ([§FS-config-v2.schema.sources.exclude](FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list)), never `[scan] include` or `[[kinds]]`. If recommending a first kind, name `[schema.kinds.<NAME>]`.
 
 ##### 2.2.2.2 An explicit path
 
@@ -773,7 +775,7 @@ A finding here carries `out-of-scope-` followed by the code its in-scope equival
 
 #### 3.14.6 The scope leads the message
 
-`outside [scan] include: ` comes first, before the rule's own text, because it is the fact that changes what to do: out there the usual fix is to widen the key, not to edit the citation, and a rule's own fix-it hint — `did you mean …?`, `or write <§>… if this is an illustration` — is likelier to be the wrong advice and would otherwise be read first. Naming the key is the whole remedy the message carries; it does not also spell out "widen `[scan] include`", because every out-of-scope finding would repeat the same sentence and [§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full) states the remedy once.
+Lead with `outside [scan] include: ` under v1. Under v2, name the configured scope or places ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)), never `[scan] include`. Outside scope, widening scope is usually the remedy; a rule's own hint may be misleading, so the scope comes first. Do not repeat a widening instruction on every finding ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)). Codes and verdicts are unchanged.
 
 #### 3.14.7 A wider scan can fail wider
 
@@ -1299,13 +1301,17 @@ The usual causes are a tree nobody has declared in yet and a docs tree whose hea
 
 #### 4.5.2 The message
 
-The line names how many files were read, the shape a declaration heading and a citation take under the configured format, and the configured kinds. A project that declares no kinds has none to name and recognizes nothing by construction ([§FS-citations.recognized.no-kinds](FS-citations.md#recognizedno-kinds-with-no-kind-no-token-is-a-citation)), so its line says that instead: ``nothing recognized — grund read 3 files, and this project declares no kinds, so no heading in them is a declaration and no token a citation. Declare its first kind in grund.toml to start.`` Otherwise it reads:
+Name the file count, global declaration/citation shapes and configured kinds. Labels follow [§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects): `[id] format` under v1, `[schema] id_format` under v2. Kind overrides may differ. With no kinds ([§FS-citations.recognized.no-kinds](FS-citations.md#recognizedno-kinds-with-no-kind-no-token-is-a-citation)), say:
+
+``nothing recognized — grund read 3 files, and this project declares no kinds, so no heading in them is a declaration and no token a citation. Declare its first kind in grund.toml to start.``
+
+Otherwise the v1 text is:
 
 ```
 warning: nothing recognized — grund read 3 files and found no declaration and no citation in them. A declaration heading reads `# <KIND>-<NNN>-<slug>: <title>` and a citation `<marker><KIND>-<NNN>-<slug>`, under [id] format = "{kind}-{number}-{slug}" with <KIND> one of {AR, FS}. Either nothing is declared yet, or the headings are written to a different shape than that.
 ```
 
-The shapes are rendered from the `[id] format` template, the same substitution [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints) makes for the managed entrypoint block, and the citation shape carries the configured marker ([§FS-config.3.1](FS-config.md#31-reference--citation-form)). The closing sentence offers both readings of the fact, because the run cannot tell them apart without judging a line: a tree written to another format and a `grund init` scaffold nobody has declared in yet produce the identical report, and naming only the first would send a fresh adopter looking for a bug in a config that is fine. No example ID is built from `[id] number_pattern` and `[id] slug_pattern` and no corrected ID is proposed for any heading: `check` reports facts about the tree and the config ([§FS-check.3](FS-check.md#3-errors-detected) vs [§FS-check.4](FS-check.md#4-warnings)), and an ID assembled from those patterns would be a guess at what they accept.
+Render shapes from the global template using [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)'s substitution and configured marker. Keep both explanations: an unused scaffold and another grammar look identical here. Never assemble an example ID from number/slug patterns or guess a corrected ID.
 
 #### 4.5.3 Asked per project
 
@@ -1399,13 +1405,13 @@ Four shapes are deliberately not this finding, and each is a correct configurati
 
 #### 4.10.5 The message
 
-The message carries the config line the reader should open, the tree that is unread, what that costs, and the two remedies:
+Name the config line to open, unread tree, cost and two remedies. The v1 example is:
 
 ```
 warning: group/grund.toml:17: no project scans `docs`, so its citations are never checked. Set include_root = true, or point another project's [scan] include at it.
 ```
 
-The breadcrumb is the block's own `include_root` line — the key that decided is the line to open — falling back to its `[workspace]` line if the key is absent, which the default `true` makes unreachable. It renders against the root this run was launched at, like every finding about a block above or below it ([§FS-errors.3](FS-errors.md#3-message-text)). The unread tree is named by its path **under the block root**, that spelling normalized rather than the spelling itself, exactly as [§FS-check.3.30.1](FS-check.md#3301-the-message) names a covered root, and never by the resolved path, for [§FS-check.3.30.1](FS-check.md#3301-the-message)'s reason.
+A v2 block names scope or v2 places ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)), never prescribing `[scan] include` for a project whose version may differ. Anchor at the block's `include_root` line, falling back to `[workspace]` if absent (unreachable with the default `true`). Render the location from this run's root ([§FS-errors.3](FS-errors.md#3-message-text)), and the unread tree as a normalized path under the block root, never a resolved path ([§FS-check.3.30.1](FS-check.md#3301-the-message)).
 
 #### 4.10.6 One root, not every root
 
