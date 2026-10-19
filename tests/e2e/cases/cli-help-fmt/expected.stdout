@@ -3,6 +3,8 @@ optionally upgrade bare ID tokens, and optionally emit Markdown cross-reference 
 
 Usage:  grund fmt [PATH] [--check | --write] [--marker] [--cross-refs]
 
+With no PATH, the run covers the whole project or workspace discovered from the current directory; a PATH narrows it.
+
 Options:
   --check        report pending rewrites, exit 1 if any exist         e.g. grund fmt --check
   --write        apply the changes in place                           e.g. grund fmt --write

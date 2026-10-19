@@ -6,7 +6,8 @@ Usage:  grund refs <ID>[.<section>] [PATH] [--section S] [--descendants]
         grund refs --glob PATTERN [--glob …] [PATH] [--summary] [--total] [--format text|json]
         grund refs --from COORDINATE [PATH] [--summary] [--total] [--format text|json]
 
-PATH defaults to `.`. With a `.<section>` (or --section), only citations of that
+With no PATH, the run covers the whole project or workspace discovered from the current directory; a PATH narrows it.
+With a `.<section>` (or --section), only citations of that
 exact section are listed; --descendants widens that to the section and every
 section beneath it. An ID with no citations prints nothing and exits 0, or the
 line `not cited` under --total.

@@ -15,7 +15,8 @@ fn print_refs_help() {
         "        grund refs --from COORDINATE [PATH] [--summary] [--total] [--format text|json]"
     );
     println!();
-    println!("PATH defaults to `.`. With a `.<section>` (or --section), only citations of that");
+    print_no_path_scope_help();
+    println!("With a `.<section>` (or --section), only citations of that");
     println!("exact section are listed; --descendants widens that to the section and every");
     println!("section beneath it. An ID with no citations prints nothing and exits 0, or the");
     println!("line `not cited` under --total.");
@@ -84,7 +85,8 @@ fn print_cover_help() {
     println!("Usage:  grund cover [PATH] [--glob PATTERN]... [--format text|json]");
     println!("        grund cover FILE --lines N|N-M [--lines …] [--format text|json]");
     println!();
-    println!("PATH defaults to `.`. The command runs the same scan as `check` and `refs`,");
+    print_no_path_scope_help();
+    println!("The command runs the same scan as `check` and `refs`,");
     println!("then prints one file record with the citations found in that file.");
     println!("With --glob a record keeps only the citations whose cited coordinate a pattern");
     println!("matches, and every scanned file keeps its record: `(no citations)` in text.");

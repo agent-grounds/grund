@@ -5,6 +5,8 @@ the citations of one ID) — `list` is the index of what you can read with `grun
 Usage:  grund list [PATH] [--kind KIND[,KIND]...] [--selector SUBJECT] [--glob PATTERN]... [--unused]
                    [--summary | --total] [--size[=lines,words,bytes]] [--top N] [--format text|json]
 
+With no PATH, the run covers the whole project or workspace discovered from the current directory; a PATH narrows it.
+
 Output is one line per declared ID, `<ID>  <path>:<line>  <title>`, sorted by ID.
 Stub-and-inline pairs collapse to one line; a duplicate-declared ID gets a line per home.
 Size mode adds every citable section and reports selected lead/full measurement pairs.

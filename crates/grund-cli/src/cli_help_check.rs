@@ -7,8 +7,9 @@ fn print_check_help() {
         "Usage:  grund check [PATH] [--watch] [--rule SENTENCE] [--full] [--require-grounding] [--suggestions] [--only CODE] [--ignore CODE] [--only-rule] [--format text|json]"
     );
     println!();
+    print_no_path_scope_help();
     println!(
-        "PATH defaults to `.`; config is discovered by walking up from it — the root `grund.toml` is the home, `.agents/grund.toml` a deprecated fallback."
+        "Config is discovered by walking up from PATH, or from the current directory with none — the root `grund.toml` is the home, `.agents/grund.toml` a deprecated fallback."
     );
     println!(
         "With no config, grund scans `docs/`, `e2e/`, and `src/`; set `[scan] include` to widen it."
