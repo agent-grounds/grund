@@ -192,7 +192,10 @@ fn check_broken_stubs(
                 format!(
                     "stub link target missing: {}{}",
                     format_path(target),
-                    repair.site_free_suffix(&render_catalog_id(frame.grammar(), &findings.declarations, id))
+                    repair.site_free_suffix(
+                        &render_catalog_id(frame.grammar(), &findings.declarations, id),
+                        decl,
+                    )
                 )
             }
             StubResolution::UnlistedExtension(extension) => format!(

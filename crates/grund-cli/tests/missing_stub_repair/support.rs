@@ -13,6 +13,7 @@ pub(super) const DECLARATION: &str = "/// AR-cache: Cache\n///\n/// ## 1. Evicti
     /// Least recently used.\npub struct Cache;\n";
 pub(super) const STUB: &str = "docs/architecture/AR-cache.md";
 pub(super) const REAL: &str = "src/store/cache.rs";
+pub(super) const SAME_FILE: &str = "docs/architecture/cache.md";
 pub(super) const MISSING: &str = "stub link target missing: src/cache.rs";
 pub(super) const DUPLICATE: &str =
     "duplicate declaration of AR-cache (also declared at src/store/cache.rs:1)";
@@ -54,6 +55,19 @@ impl Repo {
         self.write("asrc/cache.rs", DECLARATION);
     }
 
+    pub(super) fn same_file_home(&self, target: &str) {
+        fs::remove_file(self.0.join(STUB)).unwrap();
+        fs::remove_file(self.0.join(REAL)).unwrap();
+        self.write_same_file_home(target);
+    }
+
+    pub(super) fn write_same_file_home(&self, target: &str) {
+        self.write(
+            SAME_FILE,
+            &format!("# AR-cache: [cache]({target})\n\n# AR-cache: Cache\n\nCache body.\n"),
+        );
+    }
+
     pub(super) fn run(&self, args: &[&str], exit: i32) -> Output {
         let output = Command::new(env!("CARGO_BIN_EXE_grund"))
             .args(args)
@@ -85,10 +99,14 @@ pub(super) fn records(bytes: &[u8]) -> Vec<Value> {
 }
 
 pub(super) fn sites(paths: &[&str]) -> Value {
+    sites_at(&paths.iter().map(|path| (*path, 1)).collect::<Vec<_>>())
+}
+
+pub(super) fn sites_at(sites: &[(&str, usize)]) -> Value {
     json!(
-        paths
+        sites
             .iter()
-            .map(|path| json!({"path": path, "line": 1}))
+            .map(|(path, line)| json!({"path": path, "line": line}))
             .collect::<Vec<_>>()
     )
 }

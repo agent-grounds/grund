@@ -4,6 +4,9 @@
 #[path = "missing_stub_repair/support.rs"]
 mod support;
 
+#[path = "missing_stub_repair/own_file.rs"]
+mod own_file;
+
 use serde_json::Value;
 use std::fs;
 use support::*;

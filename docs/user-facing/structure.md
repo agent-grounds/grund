@@ -163,7 +163,9 @@ then says to point the stub link there. The broken-stub finding gives the same
 action and refers to the duplicate declaration finding for the location; that
 reference remains when `--only broken-stub` hides the companion. Ambiguous ID
 queries also explain the located repair. If several real homes exist, the
-guidance lists them without choosing one
+guidance lists them without choosing one.
+If the sole real declaration is in a missing stub's own file, the guidance instead
+explains that linking to that same file will not pair the stub: it remains a duplicate
 ([§FS-declarations.stubs.verdict.repair](../functional-spec/FS-declarations.md#stubsverdictrepair-a-missing-target-beside-another-declaration-explains-the-repair)).
 
 **Where a body, a section and a comment block end.** In Markdown a declaration's body runs to the next heading as high as its own or higher, whether or not that heading declares an ID. In source it is the comment block the declaration line opens, which ends where the comment does, or early at the next declaration line ([§FS-declarations.body](../functional-spec/FS-declarations.md#body-where-a-declarations-body-ends), [§FS-languages.comment-block](../functional-spec/FS-languages.md#comment-block-the-comment-block)). A section runs from its heading down to the next heading as deep or shallower, numbered or plain ([§FS-declarations.section](../functional-spec/FS-declarations.md#section-what-a-section-is)). Inside a doc-comment the depth counts from the declaration, as it does in Markdown: under `/// AR-event-bus:` above, `/// ## 1. Topology` is section 1, and `/// # 1. Topology` is a heading as high as the declaration, so it is no section ([§FS-show.2.3.3](../functional-spec/FS-show.md#233-section-selection-inside-a-doc-comment)). In a `/** … */` block, write every line behind ` * `, a heading's too — ` * ## 1. Topology`. A line without it is read as written, so its first `#` is no comment marker ([§FS-languages.comment-wrapper.headings](../functional-spec/FS-languages.md#comment-wrapperheadings-the-wrapper-of-a-heading-line)).
