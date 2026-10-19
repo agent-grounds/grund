@@ -73,9 +73,8 @@ pub(super) fn ambiguous_id_refusal(
             .join(", ")
     );
     message.push_str(
-        &MissingStubRepair::new(paired).located_suffix(&rendered_id, |path| {
-            display_path(path_config, path)
-        }),
+        &MissingStubRepair::new(paired)
+            .located_suffix(&rendered_id, |path| display_path(path_config, path)),
     );
     // §FS-errors.5.2.1: JSON carries the same sites, without parsing prose.
     Some(ShowQueryError {
