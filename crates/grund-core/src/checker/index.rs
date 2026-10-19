@@ -131,39 +131,103 @@ fn index_citation_form(line: &str, text: &str, marker: &str) -> IndexCitationFor
         // marker, which is multi-byte under the default `§`, and slicing one byte
         // into it would panic (§REQ-never-crashes).
         cursor = end;
-        match citation_link(line, start, end) {
-            // §FS-check.3.17.4: the formatter's own bracket test, with a destination
-            // closed by its balancing `)` and holding something before it.
-            CitationLink::Wrap(wrap) if wrap.close > wrap.url_start => {
-                if is_inside_inline_code(line, start - 1) {
-                    continue;
-                }
-                return IndexCitationForm::Link;
-            }
-            // §FS-check.3.18.5: the author's link is the entry where it goes somewhere,
-            // its destination never compared. `fmt` leaves it either way, so one that
-            // goes nowhere is no entry and the ID falls to §FS-check.3.18.
-            CitationLink::Enclosing { url_start, close } => {
-                if close > url_start {
-                    return IndexCitationForm::Link;
-                }
-                continue;
-            }
-            CitationLink::Wrap(_) | CitationLink::Unwrapped => {}
+        match index_citation_form_at(line, start, end, marker) {
+            IndexCitationForm::Link => return IndexCitationForm::Link,
+            IndexCitationForm::Bare => form = IndexCitationForm::Bare,
+            IndexCitationForm::Ignored => {}
         }
-        // §FS-fmt.6.5: `--cross-refs` wraps marker-prefixed citations only, and
-        // without `--marker` a bare token stays bare — so a bare token is not an
-        // entry `fmt` can repair.
-        let marked = text.starts_with(marker) || line[..start].ends_with(marker);
-        // §FS-fmt.2.3, through the one predicate the scanner and the rewrite
-        // already share: an inline-code illustration and a Markdown link
-        // destination are zones `fmt` never writes in.
-        if !marked || markdown_never_rewrite_context(line, start) {
-            continue;
-        }
-        form = IndexCitationForm::Bare;
     }
     form
+}
+
+/// The same entry-form judgment for one exact occurrence (§FS-check.3.18.5),
+/// also used by §FS-check.3.12.2's repair so another link on the line cannot
+/// turn an ordinary citation into a required marked entry.
+fn index_citation_form_at(line: &str, start: usize, end: usize, marker: &str) -> IndexCitationForm {
+    match citation_link(line, start, end) {
+        // §FS-check.3.17.4: the formatter's own bracket test, with a destination
+        // closed by its balancing `)` and holding something before it.
+        CitationLink::Wrap(wrap) if wrap.close > wrap.url_start => {
+            if is_inside_inline_code(line, start - 1) {
+                return IndexCitationForm::Ignored;
+            }
+            return IndexCitationForm::Link;
+        }
+        // §FS-check.3.18.5: the author's link is the entry where it goes somewhere,
+        // its destination never compared. `fmt` leaves it either way, so one that
+        // goes nowhere is no entry and the ID falls to §FS-check.3.18.
+        CitationLink::Enclosing { url_start, close } => {
+            if close > url_start {
+                return IndexCitationForm::Link;
+            }
+            return IndexCitationForm::Ignored;
+        }
+        CitationLink::Wrap(_) | CitationLink::Unwrapped => {}
+    }
+    // §FS-fmt.6.5: `--cross-refs` wraps marker-prefixed citations only, and
+    // without `--marker` a bare token stays bare — so a bare token is not an
+    // entry `fmt` can repair.
+    let marked = line[start..end].starts_with(marker) || line[..start].ends_with(marker);
+    // §FS-fmt.2.3, through the one predicate the scanner and the rewrite
+    // already share: an inline-code illustration and a Markdown link
+    // destination are zones `fmt` never writes in.
+    if !marked || markdown_never_rewrite_context(line, start) {
+        return IndexCitationForm::Ignored;
+    }
+    IndexCitationForm::Bare
+}
+
+/// §FS-check.3.12.2: actual marked links owed by an index, rather than every
+/// citation on that page. Membership is §AR-checker.2.16's shared derivation;
+/// unlike unused accounting, a linked section can satisfy the entry rule too.
+/// Form is read from the scan's file records, without another text read.
+pub(super) fn marked_index_entries<'a>(
+    findings: &'a Catalog,
+    schema: &Schema,
+    frame: Frame<'_>,
+    index_targets: &BTreeMap<(PathBuf, Id), String>,
+) -> Vec<&'a Citation> {
+    let entries = KindIndexEntries::new(findings, schema, frame, index_targets);
+    let mut lines_by_file = BTreeMap::new();
+    findings
+        .edges()
+        .filter(|cite| {
+            if !cite.has_marker
+                || cite.namespace.is_some()
+                || !(entries.is_index_entry(cite)
+                    || cite.section.is_some()
+                        && entries
+                            .entries_in(&cite.file)
+                            .is_some_and(|ids| ids.contains(&cite.id)))
+            {
+                return false;
+            }
+            let Some(record) = findings.files.get(&cite.file) else {
+                return false;
+            };
+            if record
+                .heading_at(cite.line)
+                .is_some_and(|heading| heading.kind == HeadingKind::Declaration)
+            {
+                return false;
+            }
+            let lines = lines_by_file
+                .entry(&cite.file)
+                .or_insert_with(|| record.text().lines().collect::<Vec<_>>());
+            let Some(line) = lines.get(cite.line.saturating_sub(1)) else {
+                return false;
+            };
+            let Some(start) = cite.column.checked_sub(1) else {
+                return false;
+            };
+            let Some(end) = start.checked_add(cite.text.len()) else {
+                return false;
+            };
+            line.get(start..end) == Some(cite.text.as_str())
+                && index_citation_form_at(line, start, end, &schema.citation.marker)
+                    == IndexCitationForm::Link
+        })
+        .collect()
 }
 
 /// What an index says about one ID: whether any citation of it is a full link,

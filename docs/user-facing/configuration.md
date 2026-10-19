@@ -352,6 +352,11 @@ What a citing kind (or place) must, warn, should, may, should not, warn not and 
 | `warn-not` | array of strings | `[]` | Kinds this one must not cite; a citation is a warning. [§FS-config-v2.rules.citations](../functional-spec/FS-config-v2.md#rulescitations-rulescitations) |
 | `must-not` | array of strings | `[]` | Kinds this one must not cite; a citation is an error. [§FS-config-v2.rules.citations](../functional-spec/FS-config-v2.md#rulescitations-rulescitations) |
 
+For a negative default that forbids a kind's own marked index entry, see
+[index-entry repair advice](citation-directions.md) for the `may` edit and how
+explicit prohibitions and independent rule sentences differ
+([§FS-check.3.12.2](../functional-spec/FS-check.md#3122-repair-advice-preserves-a-required-index-entry)).
+
 ### `[rules.citations.<KIND>.grounding]`
 
 The same keys as `[rules.citations.grounding]`.

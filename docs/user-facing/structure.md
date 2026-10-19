@@ -232,6 +232,11 @@ writes, and `grund check` holds it to the rule after.
 | Values | a numbered component in an opted-in kind ([guide](values.md), [§FS-values](../functional-spec/FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)) | one node is the source of a value, and every use is compared with it | `invalid-value-declaration`, `invalid-value-binding`, `value-mismatch` |
 | Lead size *(opt-in)* | `[reference] lead_size_warning` ([guide](coordinate-sizes.md)) | what a default `grund <ID>` read costs | `oversized-lead` |
 
+A marked kind-index entry also follows citation directions. If it is forbidden,
+keep the entry and use the finding's rule repair rather than removing the
+marker ([§FS-check.3.12.2](../functional-spec/FS-check.md#3122-repair-advice-preserves-a-required-index-entry),
+[guide](citation-directions.md)).
+
 ### Link rules: which citations must exist
 
 | Rule | You write | What it means in the graph | `grund check` reports |
