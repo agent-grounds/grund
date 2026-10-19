@@ -253,31 +253,43 @@ already found by the scan, never an inference that a file moved or a second file
 ([§FS-declarations.stubs.verdict](FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)).
 
 `check` retains both the duplicate finding and the missing-target `broken-stub` finding,
-with each complete existing message as a contiguous prefix. The missing-target message
-appends the available real declaration sites. With exactly one real home, it says that the
-ID is declared there and tells the reader to point the stub link there. A real home is a
-declaration that is not itself a stub, including a target represented by healthy stubs
+with each complete existing message as a contiguous prefix. The duplicate finding appends
+an explanation identifying each missing-target broken stub by `path:line` and its missing
+authored target, followed by the available real declaration sites. With exactly one real
+home, it says that the ID is declared there and tells the reader to point the stub link
+there. A real home is a declaration that is not itself a stub, including a target
+represented by healthy stubs
 ([§FS-declarations.stubs.pairing.1](FS-declarations.md#stubspairing1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned));
 other broken stubs are never repair destinations. Several real homes are named in deterministic
 `path:line` order without selecting one or telling the reader to point the stub at one.
-With no real home, the ordinary missing-target message remains.
+The missing-target finding appends a site-free connection: it states that the ID has one
+real declaration home and the safe action, or several real homes without selecting one,
+and identifies the duplicate declaration finding as the source of their locations. It
+names no additional candidate path or line. The missing authored target is the existing
+missing-target fact, not a declaration site. With no real home, the ordinary missing-target
+check message remains.
+
+Each finding's message, location and sites are independent of check selection:
+`--only duplicate` explains the located repair itself; `--only broken-stub` identifies the companion
+duplicate declaration finding without assuming it is visible or saying it is above or below.
 
 ID queries, including bare IDs, `--toc`, section IDs, and `refs`, retain exit `1` and their
 complete `ambiguous ID: <ID> (declared at <sites>)` prefix. They append an explanation
 identifying each missing-target broken stub and its missing link target, followed by the
-same available homes and safe repair guidance as `check`. The original declaration-site list
-and its order are unchanged, even when a real home sorts before the stub. A broken stub
+same located explanation and safe repair guidance as the duplicate finding. The original
+declaration-site list and its order are unchanged, even when a real home sorts before the stub. A broken stub
 remains its own declaration: guidance neither pairs it nor makes an ambiguous query succeed.
 
-Text and JSON carry the same message. Query `sites` remains exactly the original ordered
-declaration-site list ([§FS-errors.5.2.1](FS-errors.md#521-sites-on-an-ambiguity-refusal)).
-The missing-target `check` finding stays located at the stub; when its message names other
-declaration sites it uses the existing multi-site finding shape, containing the stub and
-those real sites in report order ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)).
-The missing link spelling is not a declaration site. With no real home its `sites` remains
-`null`. Duplicate sites, codes, severities, channels, exits, and all field names and types
-remain unchanged. Only a recorded missing-target verdict gets this guidance: healthy,
-excluded, unread, and read-but-lacking-ID targets keep their own explanations and remedies
+Text and JSON carry the same message. Duplicate and query `sites` remain exactly their
+original ordered declaration-site lists, without annotations or extra entries
+([§FS-errors.5.2.1](FS-errors.md#521-sites-on-an-ambiguity-refusal)). The duplicate finding
+stays at its original first site, even when a real home sorts before the broken stub
+([§FS-errors.4.1](FS-errors.md#41-ordering)). The missing-target finding stays located at
+the faulty stub and retains `sites:null` ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)).
+Query path and line remain null. Codes, severities, channels, exits, authority, finding
+counts, and all field names and types remain unchanged. Only a recorded missing-target
+verdict gets this guidance: healthy, excluded, unread, and read-but-lacking-ID targets keep
+their own explanations and remedies
 ([§FS-declarations.stubs.target.3](FS-declarations.md#stubstarget3-a-target-the-scan-does-not-read-declares-nothing)).
 
 ### stubs.shape: What a stub looks like

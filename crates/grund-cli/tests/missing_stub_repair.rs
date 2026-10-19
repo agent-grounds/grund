@@ -1,125 +1,12 @@
 //! Missing-target repair guidance and its boundaries (§FS-declarations.stubs.verdict.repair).
 //! These black-box tests invoke the built CLI on the issue #820 fixture.
 
-use serde_json::{Value, json};
+#[path = "missing_stub_repair/support.rs"]
+mod support;
+
+use serde_json::Value;
 use std::fs;
-use std::path::PathBuf;
-use std::process::{Command, Output};
-use std::sync::atomic::{AtomicUsize, Ordering};
-
-const CONFIG: &str = "grund_config_version = 2\nproject_name = \"demo\"\n\
-    [schema.kinds.AR]\nfolders = [\"docs/architecture\", \"zdocs\"]\nindex = false\n\
-    [schema.kinds.code]\nfolders = [\"src\", \"asrc\"]\ncitable = false\n";
-const DECLARATION: &str = "/// AR-cache: Cache\n///\n/// ## 1. Eviction\n///\n\
-    /// Least recently used.\npub struct Cache;\n";
-const STUB: &str = "docs/architecture/AR-cache.md";
-const REAL: &str = "src/store/cache.rs";
-const MISSING: &str = "stub link target missing: src/cache.rs";
-const QUERY_PREFIX: &str =
-    "ambiguous ID: AR-cache (declared at docs/architecture/AR-cache.md:1, src/store/cache.rs:1)";
-static NEXT: AtomicUsize = AtomicUsize::new(0);
-
-struct Repo(PathBuf);
-
-impl Repo {
-    fn new() -> Self {
-        let root = std::env::temp_dir().join(format!(
-            "grund-820-repair-{}-{}",
-            std::process::id(),
-            NEXT.fetch_add(1, Ordering::Relaxed)
-        ));
-        fs::create_dir(&root).expect("create isolated fixture");
-        let repo = Self(root.canonicalize().unwrap());
-        repo.write("grund.toml", CONFIG);
-        repo.write(STUB, "# AR-cache: [src/cache.rs](src/cache.rs)\n");
-        repo.write(REAL, DECLARATION);
-        repo.write("src/main.rs", "// Uses \u{a7}AR-cache\nfn main() {}\n");
-        repo
-    }
-
-    fn write(&self, path: &str, body: &str) {
-        let path = self.0.join(path);
-        fs::create_dir_all(path.parent().unwrap()).unwrap();
-        fs::write(path, body).unwrap();
-    }
-
-    fn run(&self, args: &[&str], exit: i32) -> Output {
-        let output = Command::new(env!("CARGO_BIN_EXE_grund"))
-            .args(args)
-            .current_dir(&self.0)
-            .env("GIT_CONFIG_GLOBAL", self.0.join("no-global-config"))
-            .env("GIT_CONFIG_NOSYSTEM", "1")
-            .output()
-            .expect("run this checkout's CLI");
-        assert_eq!(output.status.code(), Some(exit), "{args:?}: {output:?}");
-        output
-    }
-}
-
-impl Drop for Repo {
-    fn drop(&mut self) {
-        fs::remove_dir_all(&self.0).unwrap();
-    }
-}
-
-fn utf8(bytes: &[u8]) -> &str {
-    std::str::from_utf8(bytes).unwrap()
-}
-
-fn records(bytes: &[u8]) -> Vec<Value> {
-    utf8(bytes)
-        .lines()
-        .map(|line| serde_json::from_str(line).expect("finding JSON"))
-        .collect()
-}
-
-fn sites(paths: &[&str]) -> Value {
-    json!(
-        paths
-            .iter()
-            .map(|path| json!({"path": path, "line": 1}))
-            .collect::<Vec<_>>()
-    )
-}
-
-fn shape(finding: &Value) {
-    let mut keys = finding
-        .as_object()
-        .unwrap()
-        .keys()
-        .map(String::as_str)
-        .collect::<Vec<_>>();
-    keys.sort_unstable();
-    assert_eq!(
-        keys,
-        [
-            "authority",
-            "code",
-            "line",
-            "message",
-            "path",
-            "severity",
-            "sites"
-        ]
-    );
-    assert_eq!(finding["severity"], "error");
-    assert_eq!(finding["authority"], Value::Null);
-}
-
-fn unique_repair(message: &str, real: &str) {
-    assert!(
-        message.contains(real),
-        "missing real declaration {real}: {message}"
-    );
-    assert!(
-        message.contains("AR-cache is declared at"),
-        "missing relationship: {message}"
-    );
-    assert!(
-        message.contains("point the stub"),
-        "missing repair instruction: {message}"
-    );
-}
+use support::*;
 
 #[test]
 #[ignore = "red until #820 connects missing-target diagnostics to the repair; implement removes this"]
@@ -133,7 +20,13 @@ fn missing_stub_check_text_connects_the_repair() {
     assert!(lines[1].starts_with(
         "docs/architecture/AR-cache.md:1: error: stub link target missing: src/cache.rs"
     ));
-    unique_repair(lines[1], REAL);
+    located_repair(
+        lines[0],
+        &format!("{STUB}:1: error: {DUPLICATE}"),
+        STUB,
+        REAL,
+    );
+    site_free_connection(lines[1], &format!("{STUB}:1: error: {MISSING}"), &[REAL]);
 }
 
 #[test]
@@ -157,11 +50,15 @@ fn missing_stub_check_json_keeps_located_finding_contract() {
     assert_eq!(findings[0]["code"], "duplicate");
     assert_eq!(findings[0]["sites"], sites(&[STUB, REAL]));
     assert_eq!(findings[1]["code"], "broken-stub");
+    assert_eq!(findings[1]["sites"], Value::Null);
     let message = findings[1]["message"].as_str().unwrap();
-    assert!(message.starts_with(MISSING));
-    unique_repair(message, REAL);
-    // §FS-errors.5.1: actual sites named by this multi-site message, never the absent target.
-    assert_eq!(findings[1]["sites"], sites(&[STUB, REAL]));
+    site_free_connection(message, MISSING, &[REAL]);
+    located_repair(
+        findings[0]["message"].as_str().unwrap(),
+        DUPLICATE,
+        STUB,
+        REAL,
+    );
 }
 
 #[test]
@@ -203,13 +100,7 @@ fn missing_stub_all_text_queries_explain_the_ambiguity() {
 fn missing_stub_query_json_preserves_original_sites_and_prefix() {
     let repo = Repo::new();
     // A second lexical order prevents a repair helper from assuming the first site is a stub.
-    fs::remove_file(repo.0.join(STUB)).unwrap();
-    fs::remove_file(repo.0.join(REAL)).unwrap();
-    repo.write(
-        "zdocs/cache.md",
-        "# AR-cache: [src/cache.rs](src/cache.rs)\n",
-    );
-    repo.write("asrc/cache.rs", DECLARATION);
+    repo.reverse_sites();
     let prefix = "ambiguous ID: AR-cache (declared at asrc/cache.rs:1, zdocs/cache.md:1)";
     for args in [vec!["AR-cache.1"], vec!["refs", "AR-cache"]] {
         let text = repo.run(&args, 1);
@@ -230,17 +121,7 @@ fn missing_stub_query_json_preserves_original_sites_and_prefix() {
         );
         let message = finding["message"].as_str().unwrap();
         assert_eq!(utf8(&text.stderr), format!("{message}\n"));
-        assert!(message.starts_with(prefix), "{message}");
-        let suffix = &message[prefix.len()..];
-        assert!(
-            suffix.contains("broken stub"),
-            "missing broken-stub explanation: {message}"
-        );
-        assert!(
-            suffix.contains("zdocs/cache.md") && suffix.contains("src/cache.rs"),
-            "{message}"
-        );
-        unique_repair(suffix, "asrc/cache.rs");
+        located_repair(message, prefix, "zdocs/cache.md", "asrc/cache.rs");
     }
 }
 
@@ -255,17 +136,38 @@ fn missing_stub_several_real_homes_are_facts_without_a_chosen_repair() {
         .iter()
         .find(|f| f["code"] == "broken-stub")
         .unwrap();
-    let message = broken["message"].as_str().unwrap();
-    assert!(message.starts_with(MISSING));
+    assert_eq!(broken["sites"], Value::Null);
+    site_free_connection(
+        broken["message"].as_str().unwrap(),
+        MISSING,
+        &["src/other/cache.rs", REAL],
+    );
+    let duplicate = findings.iter().find(|f| f["code"] == "duplicate").unwrap();
+    assert_eq!(
+        duplicate["sites"],
+        sites(&[STUB, "src/other/cache.rs", REAL])
+    );
+    let prefix = "duplicate declaration of AR-cache (also declared at src/other/cache.rs:1, src/store/cache.rs:1)";
+    let message = duplicate["message"]
+        .as_str()
+        .unwrap()
+        .strip_prefix(prefix)
+        .expect("complete duplicate prefix");
+    assert!(
+        message.contains("src/other/cache.rs:1") && message.contains("src/store/cache.rs:1"),
+        "missing available homes: {message}"
+    );
+    assert!(message.find("src/other/cache.rs:1") < message.find("src/store/cache.rs:1"));
+    assert!(
+        message.contains("broken stub")
+            && message.contains(STUB)
+            && message.contains("src/cache.rs"),
+        "{message}"
+    );
     assert!(
         !message.contains("point the stub"),
         "must not choose: {message}"
     );
-    assert!(
-        message.contains("src/other/cache.rs") && message.contains(REAL),
-        "missing available homes: {message}"
-    );
-    assert_eq!(broken["sites"], sites(&[STUB, "src/other/cache.rs", REAL]));
     let query = repo.run(&["refs", "AR-cache", "--format=json"], 1);
     let query = records(&query.stderr);
     assert_eq!(
@@ -273,7 +175,7 @@ fn missing_stub_several_real_homes_are_facts_without_a_chosen_repair() {
         sites(&[STUB, "src/other/cache.rs", REAL])
     );
     let message = query[0]["message"].as_str().unwrap();
-    assert!(message.starts_with("ambiguous ID: AR-cache (declared at docs/architecture/AR-cache.md:1, src/other/cache.rs:1, src/store/cache.rs:1)"));
+    let message = message.strip_prefix("ambiguous ID: AR-cache (declared at docs/architecture/AR-cache.md:1, src/other/cache.rs:1, src/store/cache.rs:1)").expect("complete query prefix");
     assert!(
         message.contains("broken stub") && message.contains("src/cache.rs"),
         "{message}"
@@ -282,6 +184,11 @@ fn missing_stub_several_real_homes_are_facts_without_a_chosen_repair() {
         !message.contains("point the stub"),
         "must not choose: {message}"
     );
+    assert!(
+        message.contains("src/other/cache.rs:1") && message.contains("src/store/cache.rs:1"),
+        "missing available homes: {message}"
+    );
+    assert!(message.find("src/other/cache.rs:1") < message.find("src/store/cache.rs:1"));
 }
 
 #[test]
@@ -301,16 +208,35 @@ fn missing_stub_another_broken_stub_is_not_a_repair_destination() {
     assert_eq!(broken.len(), 2);
     for finding in broken {
         let message = finding["message"].as_str().unwrap();
-        unique_repair(message, REAL);
-        assert!(
-            !message.contains("second.md"),
-            "a broken stub is not a candidate: {message}"
+        assert_eq!(finding["sites"], Value::Null);
+        let target = if finding["path"] == STUB {
+            "src/cache.rs"
+        } else {
+            "src/also-missing.rs"
+        };
+        site_free_connection(
+            message,
+            &format!("stub link target missing: {target}"),
+            &[REAL],
         );
+        assert!(!message.contains("second.md"), "{message}");
     }
     let duplicate = findings.iter().find(|f| f["code"] == "duplicate").unwrap();
     assert_eq!(
         duplicate["sites"],
         sites(&[STUB, "docs/architecture/second.md", REAL])
+    );
+    let suffix = duplicate["message"].as_str().unwrap().strip_prefix("duplicate declaration of AR-cache (also declared at docs/architecture/second.md:1, src/store/cache.rs:1)").unwrap();
+    unique_repair(suffix, "src/store/cache.rs:1");
+    assert!(
+        suffix.contains("src/also-missing.rs")
+            && suffix.contains("docs/architecture/second.md:1")
+            && suffix.contains(STUB),
+        "{suffix}"
+    );
+    assert!(
+        !suffix.contains("AR-cache is declared at docs/architecture/second.md"),
+        "{suffix}"
     );
 }
 
@@ -333,8 +259,96 @@ fn missing_stub_a_healthy_stub_can_represent_the_only_real_home() {
         .iter()
         .find(|f| f["code"] == "broken-stub")
         .unwrap();
-    unique_repair(broken["message"].as_str().unwrap(), "unwalked/cache.rs");
-    assert_eq!(broken["sites"], sites(&[STUB, "unwalked/cache.rs"]));
+    assert_eq!(broken["sites"], Value::Null);
+    site_free_connection(
+        broken["message"].as_str().unwrap(),
+        MISSING,
+        &["unwalked/cache.rs"],
+    );
+    located_repair(
+        duplicate["message"].as_str().unwrap(),
+        "duplicate declaration of AR-cache (also declared at unwalked/cache.rs:1)",
+        STUB,
+        "unwalked/cache.rs",
+    );
+}
+
+#[test]
+fn missing_stub_check_selection_preserves_original_structured_contract() {
+    for reversed in [false, true] {
+        let repo = Repo::new();
+        let (stub, primary, other) = if reversed {
+            repo.reverse_sites();
+            ("zdocs/cache.md", "asrc/cache.rs", "zdocs/cache.md")
+        } else {
+            (STUB, STUB, REAL)
+        };
+        let all = repo.run(&["check", "--format=json"], 1);
+        assert!(all.stderr.is_empty());
+        let findings = records(&all.stdout);
+        assert_eq!(findings.len(), 2);
+        assert_eq!(findings[0]["code"], "duplicate");
+        assert_eq!(findings[1]["code"], "broken-stub");
+        for (code, path, expected_sites, prefix) in [
+            (
+                "duplicate",
+                primary,
+                sites(&[primary, other]),
+                format!("duplicate declaration of AR-cache (also declared at {other}:1)"),
+            ),
+            ("broken-stub", stub, Value::Null, MISSING.to_owned()),
+        ] {
+            let finding = findings.iter().find(|f| f["code"] == code).unwrap();
+            shape(finding);
+            assert_eq!(finding["path"], path);
+            assert_eq!(finding["line"], 1);
+            assert_eq!(finding["sites"], expected_sites);
+            assert!(finding["message"].as_str().unwrap().starts_with(&prefix));
+            let selected = repo.run(&["check", "--only", code, "--format=json"], 1);
+            assert!(selected.stderr.is_empty());
+            assert_eq!(records(&selected.stdout), vec![finding.clone()]);
+            let text = repo.run(&["check", "--only", code], 1);
+            assert!(text.stderr.is_empty());
+            assert_eq!(
+                utf8(&text.stdout),
+                format!(
+                    "{path}:1: error: {}\n",
+                    finding["message"].as_str().unwrap()
+                )
+            );
+        }
+    }
+}
+
+#[test]
+#[ignore = "red until #820 connects missing-target diagnostics to the repair; implement removes this"]
+fn missing_stub_filtered_duplicate_explains_repair_with_real_home_first() {
+    let repo = Repo::new();
+    repo.reverse_sites();
+    let output = repo.run(&["check", "--only", "duplicate", "--format=json"], 1);
+    let findings = records(&output.stdout);
+    assert_eq!(findings.len(), 1);
+    located_repair(
+        findings[0]["message"].as_str().unwrap(),
+        "duplicate declaration of AR-cache (also declared at zdocs/cache.md:1)",
+        "zdocs/cache.md",
+        "asrc/cache.rs",
+    );
+}
+
+#[test]
+#[ignore = "red until #820 connects missing-target diagnostics to the repair; implement removes this"]
+fn missing_stub_filtered_broken_stub_connects_companion_with_real_home_first() {
+    let repo = Repo::new();
+    repo.reverse_sites();
+    let output = repo.run(&["check", "--only", "broken-stub", "--format=json"], 1);
+    let findings = records(&output.stdout);
+    assert_eq!(findings.len(), 1);
+    site_free_connection(
+        findings[0]["message"].as_str().unwrap(),
+        MISSING,
+        &["asrc/cache.rs"],
+    );
 }
 
 #[test]
@@ -400,6 +414,13 @@ fn missing_stub_guidance_does_not_leak_to_other_verdicts() {
         repo.write(target, contents);
         let output = repo.run(&["check", "--format=json"], 1);
         let findings = records(&output.stdout);
+        for finding in &findings {
+            let message = finding["message"].as_str().unwrap();
+            assert!(
+                !message.contains("point the stub") && !message.contains("broken stub"),
+                "{finding}"
+            );
+        }
         let broken = findings.iter().find(|f| f["code"] == "broken-stub");
         if let Some(expected) = expected {
             let finding = broken.expect("non-missing broken verdict");
