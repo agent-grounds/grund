@@ -370,9 +370,15 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// recorded in the index file say which members it names. The index file itself
 /// is re-read (§AR-checker.placement), because wrapper form and an external
 /// enrollment's exact destination are facts about the line, not the citation
-/// record. Ordinary in-folder entries still require only the wrapper shape; only
-/// external enrollment compares the destination to the one `fmt` derives
-/// (§AR-system.2.10, §DF-index-entry-form.2.7), and that destination arrives as
+/// record. Which form a citation's brackets give it is the grammar's one reading
+/// (§FS-citations.wrap), the one `fmt`'s link pass asks, so `check` never calls a
+/// link "not a link" where `fmt` leaves it. An ordinary in-folder entry is either
+/// form of §FS-check.3.18.5, and neither has its destination compared: the wrap
+/// `fmt` writes, or a citation in the text of an enclosing link its author wrote
+/// whose destination is not empty (§FS-citations.wrap.enclosing). Only external
+/// enrollment is narrower: it takes the canonical wrap alone, never an enclosing
+/// link (§FS-check.3.18.3), and compares its destination to the one `fmt` derives
+/// (§AR-system.2.10, §DF-index-entry-form.2.7). That destination arrives as
 /// `Expected`'s index target for the (index file, ID) pair (§AR-checker.1.3):
 /// the anchor profile is presentation's, and this pass only looks it up.
 ///

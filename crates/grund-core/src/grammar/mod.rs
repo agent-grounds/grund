@@ -40,7 +40,9 @@
 //! `fmt_cross_refs.rs` is the `--cross-refs` wrapper read backwards
 //! (§DF-show-cross-ref-flattening) with the label predicate that decides
 //! whether a `[…](…)` label is a citation at all, which the scanner had parked
-//! in `legacy.rs` for it and which is private now that both are one file; `fmt_suppress.rs` is the two scopes §FS-fmt.2.5 takes
+//! in `legacy.rs` for it and which is private now that both are one file, and
+//! the one reading of a citation's brackets every caller asks
+//! (§FS-citations.wrap); `fmt_suppress.rs` is the two scopes §FS-fmt.2.5 takes
 //! out of a rewrite's reach. Recognizing a wrapper and recognizing a directive
 //! are both lexical, and while they sat above, the editor's on-type rule and
 //! three readers of a flattened body reached sideways or upward for them
@@ -116,7 +118,7 @@ pub(crate) use language_table::{DocProfile, classified_extensions, extension_rul
 pub(crate) use coordinate_glob::{CoordinateGlob, GlobQualifier, GlobRefusal, GlobStage};
 pub(crate) use coordinate_glob_match::GlobMatcher;
 pub(crate) use fence::{MarkdownFence, markdown_fence_delimiter};
-pub(crate) use fmt_cross_refs::{cross_ref_wrap, flatten_cross_ref_links};
+pub(crate) use fmt_cross_refs::{CitationLink, citation_link, flatten_cross_ref_links};
 pub(crate) use fmt_suppress::{FMT_DIRECTIVE, FmtDirectives, FmtExcluded};
 pub(crate) use glob_candidate::{CandidateReading, GlobOperator, read_loose_candidate};
 pub(crate) use heading_text::{atx_heading_text, reduce_heading_text, without_closing_sequence};

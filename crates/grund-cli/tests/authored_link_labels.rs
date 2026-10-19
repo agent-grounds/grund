@@ -2,8 +2,7 @@
 //! left with its link by `fmt` and taken as the index entry by `check`, in every
 //! configuration that reaches it: version 1 and version 2, the index carve-out
 //! under `enabled = false` and in a suppressed scope (§FS-fmt.6.4), and the forced
-//! `--cross-refs`. The e2e cases of grund#825 sit in `tests/e2e/cases-red-825/`
-//! until the fix lands and moves them into `tests/e2e/cases/`.
+//! `--cross-refs`.
 //!
 //! These run the real binary, because the defect is a write: `check`, then
 //! `fmt --write`, then both again, on the bytes a user would hold.
@@ -118,11 +117,10 @@ fn assert_round_trip_leaves(dir: &Path, files: &[(&str, &str)]) {
 /// `fmt --write` writes nothing, `fmt --check` is clean, and a dangling or
 /// missing-section citation in a label keeps its usual finding.
 #[test]
-#[ignore = "red until #825 leaves a citation in an enclosing link as written and takes it as the entry; implement removes this"]
 fn authored_link_label_cases() {
     run_cases(
         "authored_link_label_cases",
-        "tests/e2e/cases-red-825",
+        "tests/e2e/cases",
         &[
             "check-index-authored-link-label-is-an-entry",
             "fmt-check-authored-link-label-left-as-written",
@@ -153,7 +151,6 @@ fn authored_link_label_guard_cases() {
 
 /// §FS-citations.wrap.enclosing: the same round trip on a version 1 config.
 #[test]
-#[ignore = "red until #825 leaves a citation in an enclosing link as written and takes it as the entry; implement removes this"]
 fn a_v1_round_trip_leaves_authored_labels() {
     let notes = "See [the §ADR-001-postgres record](adr/ADR-001-postgres.md).\n";
     let index =
@@ -178,7 +175,6 @@ fn a_v1_round_trip_leaves_authored_labels() {
 /// §FS-fmt.6.4 over §FS-fmt.6.1.1: under `enabled = false` the index carve-out
 /// still wraps a bare entry, and leaves the author's link as written.
 #[test]
-#[ignore = "red until #825 lets the enclosing link outrank the index carve-out; implement removes this"]
 fn the_disabled_carve_out_wraps_a_bare_entry_and_leaves_an_authored_label() {
     let dir = tree(
         "the_disabled_carve_out_wraps_a_bare_entry_and_leaves_an_authored_label",
@@ -210,7 +206,6 @@ fn the_disabled_carve_out_wraps_a_bare_entry_and_leaves_an_authored_label() {
 /// file and the `grund:fmt off` region alike, the carve-out still wraps a bare
 /// entry and leaves the author's link as written.
 #[test]
-#[ignore = "red until #825 lets the enclosing link outrank the index carve-out; implement removes this"]
 fn a_suppressed_index_wraps_a_bare_entry_and_leaves_an_authored_label() {
     let bare = "- §ADR-use-redis: Use Redis for the cache\n";
     let wrapped = "- [§ADR-use-redis](use-redis.md#adr-use-redis-use-redis-for-the-cache): \
@@ -248,7 +243,6 @@ fn a_suppressed_index_wraps_a_bare_entry_and_leaves_an_authored_label() {
 /// §FS-citations.wrap.enclosing: the forced `--cross-refs` leaves the author's
 /// link as the default pass does.
 #[test]
-#[ignore = "red until #825 leaves a citation in an enclosing link as written; implement removes this"]
 fn the_forced_cross_refs_pass_leaves_an_authored_label() {
     let notes = "See [the §ADR-001-postgres record](adr/ADR-001-postgres.md).\n";
     let dir = tree(
@@ -276,7 +270,6 @@ fn the_forced_cross_refs_pass_leaves_an_authored_label() {
 /// so off strict mode `--marker` still marks the citation inside the author's link,
 /// and the link pass then leaves that link alone.
 #[test]
-#[ignore = "red until #825 leaves a citation in an enclosing link as written; implement removes this"]
 fn the_marker_pass_still_marks_a_citation_in_an_authored_label() {
     let dir = tree(
         "the_marker_pass_still_marks_a_citation_in_an_authored_label",
@@ -305,7 +298,6 @@ fn the_marker_pass_still_marks_a_citation_in_an_authored_label() {
 /// §FS-check.3.18.3: a link the author aimed at a source declaration's home never
 /// enrolls it, so `fmt --write` does not turn it into one that does.
 #[test]
-#[ignore = "red until #825 leaves a citation in an enclosing link as written; implement removes this"]
 fn an_authored_label_to_a_source_home_does_not_enroll_it() {
     let index = format!("{LABEL}- [§ADR-inline: the inline record](../../src/lib.rs)\n");
     let dir = tree(
@@ -339,7 +331,6 @@ fn an_authored_label_to_a_source_home_does_not_enroll_it() {
 /// destination is left by `fmt` and is no entry, so the ID is missing from the index,
 /// in the bytes that finding has shipped in.
 #[test]
-#[ignore = "red until #825 reads an empty-destination enclosing link as no entry; implement removes this"]
 fn an_empty_destination_label_is_a_missing_entry() {
     let index = "- [§ADR-use-postgres: Use Postgres for all data]()\n";
     let dir = tree(

@@ -1,7 +1,9 @@
 //! The cross-reference wrapper read backwards (§FS-fmt.6.2,
 //! §DF-show-cross-ref-flattening): whether a `[…](…)` label on a line is a
 //! citation the formatter could have wrapped, and the flattening that undoes
-//! exactly the wrap `writers/fmt_links.rs` writes.
+//! exactly the wrap `writers/fmt_links.rs` writes. Beside the wrap test sits the
+//! reading every caller asks of a citation's brackets, whether it is a wrap, in a
+//! link its author wrote, or unwrapped (§FS-citations.wrap).
 //!
 //! Lexical, and here rather than beside the wrapper it inverts because
 //! recognizing the shape is all either side does: the wrap is a `[` immediately
@@ -22,7 +24,9 @@
 
 use super::compiled::{Grammar, QUALIFIED_CITATION_PREFIX};
 use super::markdown_blocks::MarkdownBlocks;
-use super::never_rewrite::{is_inside_inline_code, link_destination_close};
+use super::never_rewrite::{
+    inline_code_span_end, is_escaped, is_inside_inline_code, link_destination_close,
+};
 use super::settings::LexicalSettings;
 use super::shorthand::parse_id_arg_with_shorthand;
 
@@ -56,10 +60,10 @@ pub(crate) struct CrossRefWrap {
 /// The one bracket test of §FS-citations.wrap.recognized: the citation spanning
 /// `start..end` is wrapped when the byte before it is `[`, the text after it
 /// begins `](`, and that destination closes on the line. A `[§<ID>](` that never
-/// closes is no wrap, whatever later `)` stands on the line. `fmt`, `show`'s
-/// flatten and `check`'s kind-index entry form all ask it here, so none of them
-/// can recognize a wrap the others do not.
-pub(crate) fn cross_ref_wrap(line: &str, start: usize, end: usize) -> Option<CrossRefWrap> {
+/// closes is no wrap, whatever later `)` stands on the line. Asked first by
+/// `citation_link`, the reading every caller asks, so none of them can recognize
+/// a wrap the others do not.
+pub(super) fn cross_ref_wrap(line: &str, start: usize, end: usize) -> Option<CrossRefWrap> {
     if start == 0 || line.as_bytes().get(start - 1) != Some(&b'[') {
         return None;
     }
@@ -69,6 +73,116 @@ pub(crate) fn cross_ref_wrap(line: &str, start: usize, end: usize) -> Option<Cro
     let url_start = end + 2;
     let close = link_destination_close(line.as_bytes(), url_start)?;
     Some(CrossRefWrap { url_start, close })
+}
+
+/// How one citation on a Markdown line sits among the brackets around it: the
+/// three readings of §FS-citations.wrap.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum CitationLink {
+    /// A wrap `fmt` keeps re-deriving (§FS-citations.wrap.recognized).
+    Wrap(CrossRefWrap),
+    /// In the text of an enclosing link its author wrote, whose destination opens
+    /// at `url_start` and ends at `close`, the `)` that balances its `(`; the two
+    /// are equal where it is empty (§FS-citations.wrap.enclosing).
+    Enclosing { url_start: usize, close: usize },
+    /// Neither, so the link pass wraps it fresh wherever a zone does not forbid it.
+    Unwrapped,
+}
+
+/// The three-way reading of §FS-citations.wrap for the citation spanning
+/// `start..end`, the one `fmt`'s link pass, `check`'s kind-index entry form and
+/// its external enrollment, and `show`'s flatten all ask, so none of them can
+/// take a link the others leave to its author. The wrap test runs first: a
+/// citation whose own brackets make a wrap is one, whatever brackets stand around
+/// it (§FS-citations.wrap.enclosing.wrap-wins).
+pub(crate) fn citation_link(line: &str, start: usize, end: usize) -> CitationLink {
+    if let Some(wrap) = cross_ref_wrap(line, start, end) {
+        return CitationLink::Wrap(wrap);
+    }
+    match enclosing_link(line.as_bytes(), start, end) {
+        Some((url_start, close)) => CitationLink::Enclosing { url_start, close },
+        None => CitationLink::Unwrapped,
+    }
+}
+
+/// §FS-citations.wrap.enclosing.shape: the destination `(url_start, close)` of the
+/// innermost link whose text holds `start..end`, read on the one line. A bracket
+/// that is backslash-escaped or inside an inline-code span counts for nothing, and
+/// every destination is passed over whole, by the one extent of
+/// §FS-citations.zones.link-destination. A citation in a code span or in a
+/// destination is in no link's text, and a destination that never closes makes no
+/// link and leaves the rest of the line a destination.
+fn enclosing_link(bytes: &[u8], start: usize, end: usize) -> Option<(usize, usize)> {
+    if start > end || end > bytes.len() {
+        return None;
+    }
+    // The openers still open where the citation starts, innermost last, each
+    // `true` when it opens an image's description.
+    let mut openers: Vec<bool> = Vec::new();
+    let mut i = 0;
+    while i < start {
+        match bytes[i] {
+            b'`' if !is_escaped(bytes, i) => {
+                let span_end = inline_code_span_end(bytes, i)?;
+                if span_end > start {
+                    return None;
+                }
+                i = span_end;
+                continue;
+            }
+            b'[' if !is_escaped(bytes, i) => openers.push(opens_image(bytes, i)),
+            b']' if !is_escaped(bytes, i) => {
+                openers.pop();
+                if bytes.get(i + 1) == Some(&b'(') {
+                    let close = link_destination_close(bytes, i + 2)?;
+                    if close > start {
+                        return None;
+                    }
+                    i = close + 1;
+                    continue;
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    // Walk on to the `]` that closes each opener, innermost first: the first that
+    // is a link's, `](` and a destination that closes, encloses the citation.
+    let mut nested = 0usize;
+    let mut i = end;
+    while i < bytes.len() && !openers.is_empty() {
+        match bytes[i] {
+            b'`' if !is_escaped(bytes, i) => {
+                i = inline_code_span_end(bytes, i)?;
+                continue;
+            }
+            b'[' if !is_escaped(bytes, i) => nested += 1,
+            b']' if !is_escaped(bytes, i) => {
+                let destination = match bytes.get(i + 1) {
+                    Some(b'(') => Some(link_destination_close(bytes, i + 2)?),
+                    _ => None,
+                };
+                if nested > 0 {
+                    nested -= 1;
+                } else if let (Some(close), Some(false)) = (destination, openers.pop()) {
+                    return Some((i + 2, close));
+                }
+                if let Some(close) = destination {
+                    i = close + 1;
+                    continue;
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    None
+}
+
+/// §FS-citations.wrap.enclosing.images: a `[` right after an unescaped `!` opens
+/// an image's description, which balances like any bracket and never encloses.
+fn opens_image(bytes: &[u8], open: usize) -> bool {
+    open > 0 && bytes[open - 1] == b'!' && !is_escaped(bytes, open - 1)
 }
 
 /// Flatten `grund fmt --cross-refs` link wrappers before an ID query
@@ -142,9 +256,11 @@ fn flatten_cross_ref_links_line(line: &str, settings: LexicalSettings<'_>) -> St
         if is_inside_inline_code(line, bracket_pos) {
             continue;
         }
-        // §FS-show.3.2.1: the bracket test `fmt` asks, collapsed whole to the
-        // balancing `)`; a wrap that never closes is printed as written.
-        let Some(CrossRefWrap { close, .. }) = cross_ref_wrap(line, marker_start, cite_end) else {
+        // §FS-show.3.2.1: the reading `fmt` asks, and only a wrap collapses, whole
+        // to the balancing `)`; a wrap that never closes is printed as written.
+        let CitationLink::Wrap(CrossRefWrap { close, .. }) =
+            citation_link(line, marker_start, cite_end)
+        else {
             continue;
         };
         if bracket_pos < cursor {
