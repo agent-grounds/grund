@@ -86,6 +86,16 @@ The ID grammar: the shape of every declared ID and section path. [§FS-config.3.
 | `named_sections` | boolean | `false` | Enable named section components, such as `## goals:`, matching `[a-z][a-z0-9-]*`: a name at any depth, under a name or a number. [§FS-config.3.2.7](../functional-spec/FS-config.md#327-named_sections--the-gate-for-explicit-section-names) |
 | `section_heading_levels` | `"strict"` \| `"warn"` \| `"loose"` | `"strict"` | How a heading whose depth does not match its section path is reported: an error, a warning, or not at all. [§FS-config.3.3.2](../functional-spec/FS-config.md#332-section_heading_levels--heading-depth-against-path-depth) |
 
+Numeric IDs keep their written digits in reports. With `format = "{kind}-{number}"`,
+a heading `# ADR-0001: Use Postgres` is listed as `ADR-0001`, and a citation of
+it links to `#adr-0001-use-postgres`. `ADR-1` resolves to that same declaration;
+its spelling does not change the heading's anchor. This applies to the default
+grammar and per-kind overrides in both config versions
+([§FS-config.3.2.8](../functional-spec/FS-config.md#328-numeric-spelling-survives-reading-and-reporting)).
+`grund id ADR "Use Redis"` still allocates with a minimum of three digits
+(`ADR-002` when the highest number is 1); pass `--width 4` to mint `ADR-0002`.
+Existing padding does not set allocation width ([§FS-id.1.2](../functional-spec/FS-id.md#12-number-width)).
+
 ### `[[kinds]]`
 
 One row per kind: where its declarations live and how they are read. `kinds = []` declares no kinds; leaving the key out keeps the built-in ones. [§FS-config.3.4](../functional-spec/FS-config.md#34-kinds--recognized-kinds)
