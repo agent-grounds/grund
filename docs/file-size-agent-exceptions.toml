@@ -249,8 +249,10 @@ path = "docs/functional-spec/FS-check.md"
 match = "exact"
 rules = ["large-file-default"]
 kind = "deferred"
-max_accepted = { value = 263592, unit = "bytes" }
+max_accepted = { value = 267799, unit = "bytes" }
 until = "the finding catalog moves into independently declared child specifications and existing FS-check section citations are migrated"
 reason = """
 The check specification still combines recognition, reporting, its finding catalog and watch behavior in one declaration. Issue #823 adds only a cross-reference to the defining member diagnostic point in FS-workspace.5.1.1. Missing boundary: independent finding specifications with a stable mapping for current FS-check section citations; moving that catalog is outside this specification-only diagnostic change. This byte ceiling accepts only the current measured file size, separately from the existing line-budget exception.
+
+Issue #842 extends the existing forbidden-citation point with index-specific repair advice and its authority boundaries. Moving the finding catalog and migrating stable section citations remains outside this specification/test step. The ceiling is reconciled to the measured 267799 bytes, with no growth allowance.
 """

@@ -775,12 +775,11 @@ chapter subject whose declaration has no such chapter reports
 
 ### 7.5 Prohibition and recommendation reuse
 
-A hard prohibition reuses the existing site-anchored `forbidden-citation`
-wording of [§FS-check.3.12](FS-check.md#312-forbidden-citation), with
-`(<RULE-ID>)` in place of `(citation direction)`. A negative recommendation
-likewise reuses `discouraged-citation`, and an ordinary positive citation
-recommendation reuses `suggested-citation`. Existing config-only bytes never
-change.
+A hard prohibition reuses [§FS-check.3.12](FS-check.md#312-forbidden-citation)'s
+site-anchored `forbidden-citation`, with `(<RULE-ID>)` for `(citation direction)`
+and index-entry repairs governed by [§FS-check.3.12.2](FS-check.md#3122-repair-advice-preserves-a-required-index-entry).
+Negative recommendations reuse `discouraged-citation`; ordinary positive ones,
+`suggested-citation`. Ordinary config-only bytes stay unchanged.
 
 ### 7.6 Selection, JSON, ordering, and exits
 
