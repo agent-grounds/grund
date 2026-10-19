@@ -35,6 +35,7 @@ mod declared;
 mod expand;
 mod findings;
 mod id_arg;
+mod member_guidance;
 mod members;
 mod optional_members;
 mod preflight;
@@ -53,6 +54,7 @@ pub(crate) use findings::{
     block_relative_root, uncovered_block_scope_roots, unread_block_diagnostic,
 };
 pub(crate) use id_arg::split_qualified_id_arg;
+pub(crate) use member_guidance::member_root_guidance;
 pub(crate) use members::AncestorWorkspaces;
 pub(crate) use optional_members::{
     absent_only_workspace_caution, absent_optional_member_warnings, namespace_is_unverified,

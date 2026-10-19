@@ -124,7 +124,6 @@ fn member_text(fixture: &Fixture, cwd: &Path, args: &[&str], location: &str) {
 }
 
 #[test]
-#[ignore = "red until #823 adds verified member workspace guidance; implement removes this"]
 fn configured_member_cwd_explains_enclosing_workspace() {
     let fixture = Fixture::new();
     assert_root_success(&fixture);
@@ -132,7 +131,6 @@ fn configured_member_cwd_explains_enclosing_workspace() {
 }
 
 #[test]
-#[ignore = "red until #823 adds verified member workspace guidance; implement removes this"]
 fn explicit_member_paths_offer_a_root_location_from_the_invocation() {
     let fixture = Fixture::new();
     assert_root_success(&fixture);
@@ -167,7 +165,6 @@ fn explicit_member_paths_offer_a_root_location_from_the_invocation() {
 }
 
 #[test]
-#[ignore = "red until #823 adds verified member workspace guidance; implement removes this"]
 fn configless_member_discovery_offers_the_same_root_remedy() {
     let fixture = Fixture::new();
     fs::remove_file(fixture.member().join("grund.toml")).unwrap();
@@ -190,7 +187,6 @@ fn configless_member_discovery_offers_the_same_root_remedy() {
 }
 
 #[test]
-#[ignore = "red until #823 adds verified member workspace guidance; implement removes this"]
 fn root_remedy_validates_a_target_without_promising_it_resolves() {
     let fixture = Fixture::new();
     fixture.set_citation("shop/FS-001-missing");

@@ -20,7 +20,8 @@ use crate::config::{Frame, KindResolution, Origin, Schema};
 use crate::grammar::render_qualified_id;
 use crate::model::{Catalog, CheckReport, Diagnostic, section_resolves};
 use crate::resolver::{WorkspaceCheckTarget, join_alternatives, target_for_citation};
-use crate::workspace::namespace_is_unverified;
+use crate::workspace::{member_root_guidance, namespace_is_unverified};
+use std::cell::OnceCell;
 use std::collections::BTreeMap;
 
 /// Which of a `--full` run's two scopes a citation site is being judged on
@@ -165,6 +166,9 @@ pub(super) fn check_citation_resolution(
         });
     }
     let mut shorthand_indexes = ShorthandIndexes::default();
+    // §FS-workspace.5.1.1: diagnostic-only, discovered once and only when a
+    // member-local refusal needs it; loaded-workspace scope/candidate hints stay intact.
+    let member_guidance = OnceCell::new();
     for cite in &findings.citations {
         if let Some(scope) = outside
             && scope.contains(&cite.file)
@@ -188,11 +192,22 @@ pub(super) fn check_citation_resolution(
                 path: Some(cite.file.clone()),
                 line: Some(cite.line),
                 column: Some(cite.column),
-                message: unknown_project_message(
-                    namespace,
-                    workspace.keys().map(String::as_str),
-                    &frame.run.workspace.scope_path,
-                ),
+                message: member_guidance
+                    .get_or_init(|| {
+                        workspace
+                            .is_empty()
+                            .then(|| member_root_guidance(frame.run))
+                            .flatten()
+                    })
+                    .as_ref()
+                    .and_then(|guidance| guidance.message(namespace))
+                    .unwrap_or_else(|| {
+                        unknown_project_message(
+                            namespace,
+                            workspace.keys().map(String::as_str),
+                            &frame.run.workspace.scope_path,
+                        )
+                    }),
                 sites: Vec::new(),
                 authority: Vec::new(),
             });
