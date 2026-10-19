@@ -5,8 +5,11 @@
 //! records gate (§FS-config-migrate.5.1) with the spelling in the candidate, a
 //! *notice* is reported, a *refused* key names its repair.
 
+use std::collections::BTreeMap;
+
 use super::{GateResult, Located, MigrateReport, Prepared, translate};
 use crate::config::v1::mapping::{DEFAULTS, KEYS};
+use crate::config::v2::{V1_TABLES, v1_homes};
 use crate::testing::{test_root, write};
 
 /// What a case expects of the translation.
@@ -221,6 +224,78 @@ fn every_mapping_case_names_a_row() {
             || SPEC_ONLY.contains(&case.row);
         assert!(known, "case for unknown row {:?}", case.row);
     }
+}
+
+/// The v2 tables a `mapped:` spelling names: each `[…]` it writes, and the two
+/// that `[scan]`'s keys name in words (`keymap.rs` `spelling`), the extensions
+/// beside `[schema.sources] languages` and a definition by its name.
+fn tables_in(spelling: &str) -> Vec<String> {
+    let mut tables: Vec<String> = spelling
+        .split('[')
+        .skip(1)
+        .filter_map(|rest| rest.split_once(']'))
+        .map(|(table, _)| format!("[{table}]"))
+        .collect();
+    if spelling.contains("[schema.sources] languages and extensions") {
+        tables.push("[schema.sources.extensions]".into());
+    }
+    if spelling.contains("definition ") || spelling.contains("definitions ") {
+        tables.push("[schema.sources.definitions.*]".into());
+    }
+    tables
+}
+
+/// Whether the hint's `home` names `table`: `*` and a `<NAME>` stand for any one name.
+fn names(home: &str, table: &str) -> bool {
+    let home: Vec<&str> = home.trim_matches(['[', ']']).split('.').collect();
+    let table: Vec<&str> = table.trim_matches(['[', ']']).split('.').collect();
+    home.len() == table.len()
+        && home
+            .iter()
+            .zip(&table)
+            .all(|(home, table)| home == table || *home == "*" || home.starts_with('<'))
+}
+
+/// §FS-config-v2.reader.1.v1-tables: every v2 table the v2 reader's refusal of a
+/// v1 table names is one §FS-config-migrate.mapping writes a key of that table
+/// into, read off the `mapped:` lines of every case. `[output]` names run flags
+/// instead, and no key of it is mapped into any table.
+#[test]
+fn every_table_a_v1_refusal_names_is_one_its_keys_are_mapped_into() {
+    let mut written: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for (index, case) in cases().enumerate() {
+        let Ok(report) = translate_case(index, case) else {
+            continue;
+        };
+        for mapped in &report.mapped {
+            if let Some((header, _)) = mapped.key.split_once("] ") {
+                let tables = written.entry(format!("{header}]")).or_default();
+                tables.extend(tables_in(&mapped.spelling));
+            }
+        }
+    }
+    let mut failures = Vec::new();
+    for (row, _) in V1_TABLES {
+        let header = row.replace("<KIND>", "FS");
+        let tables = written.get(&header).map_or(&[][..], Vec::as_slice);
+        let Some(homes) = v1_homes(&header) else {
+            failures.push(format!("{header} is a row of the map, and names nothing"));
+            continue;
+        };
+        for home in homes {
+            let held = if home.starts_with('[') {
+                tables.iter().any(|table| names(&home, table))
+            } else {
+                tables.is_empty()
+            };
+            if !held {
+                failures.push(format!(
+                    "{header} names {home}; its keys map into {tables:?}"
+                ));
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
 #[test]

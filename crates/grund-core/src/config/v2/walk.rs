@@ -119,7 +119,8 @@ impl<'a> Reader<'a> {
     }
 
     /// §FS-config-v2.reader.1: one key, refused when repeated or when its
-    /// table does not admit it.
+    /// table does not admit it, which is when the table's keys do not list it
+    /// and the refusal names the ones they do (§FS-config-v2.reader.1.keys).
     fn entry(&mut self, key: &str, value: &str, line: usize) -> Result<()> {
         let at = tables::label(&self.header);
         if let Some(first) = self.keys.get(key) {
@@ -130,6 +131,7 @@ impl<'a> Reader<'a> {
         }
         self.keys.insert(key.to_string(), line);
         let mut table = std::mem::replace(&mut self.table, Table::Root);
+        let keys = table.keys();
         // §FS-config-v2.schema.sources.extensions: a suffix key may be quoted, so a
         // malformed one reaches the suffix check rather than the bare-key one.
         let quoted = key.len() >= 2 && key.starts_with('"') && key.ends_with('"');
@@ -137,11 +139,12 @@ impl<'a> Reader<'a> {
             let key = parse_string(self.path, line, key)?;
             self.read_key(&mut table, &key, value, line)?
         } else {
-            bare(key) && self.read_key(&mut table, key, value, line)?
+            bare(key) && keys.admit(key) && self.read_key(&mut table, key, value, line)?
         };
         self.table = table;
         if !admitted {
-            return self.fail(line, format!("unknown key `{key}` {at}"));
+            let hint = keys.hint();
+            return self.fail(line, format!("unknown key `{key}` {at}{hint}"));
         }
         Ok(())
     }
@@ -262,9 +265,11 @@ fn array_value(value: &str) -> String {
 fn header_name(reader: &Reader, line: usize, text: &str) -> Result<String> {
     if let Some(inner) = text.strip_prefix("[[") {
         let inner = inner.trim_end_matches(']').trim();
+        // §FS-config-v2.reader.1.v1-tables: `[[kinds]]` names the row it becomes.
+        let hint = tables::v1_hint(&format!("[[{inner}]]"));
         return reader.fail(
             line,
-            format!("unknown config section `[[{inner}]]` (v2 writes no arrays of tables)"),
+            format!("unknown config section `[[{inner}]]` (v2 writes no arrays of tables){hint}"),
         );
     }
     let Some(inner) = text

@@ -199,7 +199,6 @@ fn key_cases() -> Vec<KeyCase> {
 /// §FS-config-v2.reader.1.keys: an unknown key's refusal keeps its text and
 /// appends the keys its table admits, in the order the table's point lists them.
 #[test]
-#[ignore = "red until #818 appends the admitted keys to an unknown key; implement removes this"]
 fn v2_an_unknown_key_names_the_keys_its_table_admits() {
     for case in key_cases() {
         refused_exactly(case.name, &case.toml, case.offending, case.message);
@@ -209,7 +208,6 @@ fn v2_an_unknown_key_names_the_keys_its_table_admits() {
 /// §FS-config-v2.reader.1.keys: a parent written as a header of its own admits
 /// no keys and says it holds only tables.
 #[test]
-#[ignore = "red until #818 appends the admitted keys to an unknown key; implement removes this"]
 fn v2_an_unknown_key_in_a_parent_says_it_holds_only_tables() {
     for parent in [
         "schema.notes",
@@ -244,7 +242,6 @@ fn hinted_keys(name: &str, err: &str) -> Vec<String> {
 /// nothing else, so each key it names is one the table reads: written there, it
 /// may be refused for its value, never as an unknown key.
 #[test]
-#[ignore = "red until #818 appends the admitted keys to an unknown key; implement removes this"]
 fn v2_every_key_a_hint_names_is_one_its_table_reads() {
     for case in key_cases() {
         if matches!(case.name, "hint_resolution" | "hint_extensions") {
@@ -270,7 +267,6 @@ fn v2_every_key_a_hint_names_is_one_its_table_reads() {
 /// §FS-config-v2.reader.1.v1-tables: a v1 table is refused at its header and
 /// names, as one set, the v2 tables its settings are written in.
 #[test]
-#[ignore = "red until #818 names a v1 table's v2 tables at its header; implement removes this"]
 fn v2_a_v1_table_names_the_v2_tables_its_settings_are_written_in() {
     let homes = [
         (
