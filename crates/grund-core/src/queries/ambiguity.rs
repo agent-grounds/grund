@@ -8,7 +8,8 @@ use super::show_query::ShowQueryError;
 use crate::config::{Config, display_path};
 use crate::grammar::render_declaration_id;
 use crate::model::{
-    Catalog, Declaration, FindingSite, Id, PairedDeclarations, paired_declarations,
+    Catalog, Declaration, FindingSite, Id, MissingStubRepair, PairedDeclarations,
+    paired_declarations,
 };
 
 /// Refuse only independent homes or the requested section's recorded collision
@@ -34,6 +35,8 @@ pub(crate) fn declaration_ambiguity_refusal(
 
 /// A valid stub/inline pair is one home; multiple independent homes refuse with
 /// all sites in show's deterministic order (§FS-show.2.2.1, §FS-refs.4).
+/// Missing-target guidance shares the checker's derivation and located suffix
+/// (§FS-declarations.stubs.verdict.repair).
 pub(super) fn ambiguous_id_refusal(
     config: &Config,
     path_config: &Config,
@@ -57,17 +60,22 @@ pub(super) fn ambiguous_id_refusal(
         })
         .collect();
     sites.sort_by(|a, b| a.0.cmp(&b.0));
-    let message = format!(
-        "ambiguous ID: {} (declared at {})",
-        render_declaration_id(
-            &config.grammar,
-            paired.records().next().expect("multiple records")
-        ),
+    let rendered_id = render_declaration_id(
+        &config.grammar,
+        paired.records().next().expect("multiple records"),
+    );
+    let mut message = format!(
+        "ambiguous ID: {rendered_id} (declared at {})",
         sites
             .iter()
             .map(|(rendered, ..)| rendered.as_str())
             .collect::<Vec<_>>()
             .join(", ")
+    );
+    message.push_str(
+        &MissingStubRepair::new(paired).located_suffix(&rendered_id, |path| {
+            display_path(path_config, path)
+        }),
     );
     // §FS-errors.5.2.1: JSON carries the same sites, without parsing prose.
     Some(ShowQueryError {

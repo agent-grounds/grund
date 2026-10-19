@@ -13,18 +13,18 @@ use super::sizes::check_oversized_leads;
 use crate::config::{Frame, Schema};
 use crate::grammar::render_catalog_id;
 use crate::model::{
-    Catalog, CheckReport, Diagnostic, ExcludingRule, Site, StubResolution, format_path,
-    paired_declarations, sort_path_key,
+    Catalog, CheckReport, Declaration, Diagnostic, ExcludingRule, Id, MissingStubRepair, Site,
+    StubResolution, format_path, paired_declarations, sort_path_key,
 };
 
 /// §AR-checker.1.1: duplicate, misplaced-declaration, broken-stub,
 /// declaration-near-miss and conflict-marker (§FS-declarations.checks), the section family, inline
 /// citation style, the opt-in lead budget and the field family (§FS-fields.checks),
-/// each pass in the order the single
-/// driver ran it. Unsorted: the merge sorts (§AR-checker.1.4).
+/// with shared duplicate/broken-stub guidance (§FS-declarations.stubs.verdict.repair).
+/// Unsorted: the merge sorts (§AR-checker.1.4).
 pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> CheckReport {
     let mut report = CheckReport::default();
-    check_duplicates(catalog, frame, &mut report);
+    check_declaration_homes(catalog, frame, &mut report);
     check_misplaced(catalog, schema, frame, &mut report);
     // §FS-declarations.checks.section-heading-level / §FS-declarations.checks.duplicate-section:
     // the depth a declaration's own section headings write, and whether two claim one path. One
@@ -38,7 +38,6 @@ pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> C
     // project judges only the already-scoped scanner sites, including duplicate
     // claimants, through the shared show slicer. Warnings never affect exit.
     check_oversized_leads(catalog, schema, frame, &mut report);
-    check_broken_stubs(catalog, frame, &mut report);
     // §FS-declarations.checks.declaration-near-miss: headings that open like a declaration and
     // parse as none.
     check_declaration_near_misses(catalog, &mut report);
@@ -53,12 +52,14 @@ pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> C
 
 /// §FS-declarations.checks.duplicate: an ID with more than one non-stub home is a duplicate.
 /// Its declarations are counted once its stubs are paired by their verdicts
-/// (§AR-scanner.4.6).
-fn check_duplicates(findings: &Catalog, frame: Frame<'_>, report: &mut CheckReport) {
+/// (§AR-scanner.4.6). Both findings share one missing-target repair derivation
+/// per ID (§FS-declarations.stubs.verdict.repair).
+fn check_declaration_homes(findings: &Catalog, frame: Frame<'_>, report: &mut CheckReport) {
     for (id, decls) in &findings.declarations {
         // §FS-declarations.stubs.pairing.3: a stub's home is named at its target, at
         // each line there that declares the ID (§FS-declarations.stubs.pairing.1).
         let paired = paired_declarations(decls);
+        let repair = MissingStubRepair::new(&paired);
         if paired.len() > 1 {
             let mut sites: Vec<Site> = paired
                 .iter()
@@ -83,19 +84,20 @@ fn check_duplicates(findings: &Catalog, frame: Frame<'_>, report: &mut CheckRepo
             } else {
                 format!(" (also declared at {})", others.join(", "))
             };
+            let rendered_id = render_catalog_id(frame.grammar(), &findings.declarations, id);
+            let mut message = format!("duplicate declaration of {rendered_id}{suffix}");
+            message.push_str(&repair.located_suffix(&rendered_id, |path| frame.display_path(path)));
             report.errors.push(Diagnostic {
                 code: "duplicate",
                 path: Some(primary.path),
                 line: Some(primary.line),
                 column: None,
-                message: format!(
-                    "duplicate declaration of {}{suffix}",
-                    render_catalog_id(frame.grammar(), &findings.declarations, id)
-                ),
+                message,
                 sites,
                 authority: Vec::new(),
             });
         }
+        check_broken_stubs(findings, id, decls, &repair, frame, report);
     }
 }
 
@@ -171,39 +173,50 @@ fn check_misplaced(
 /// (§AR-scanner.4.6), its target missing, not read, or not declaring
 /// the ID (§AR-checker.2.5). Extension and exclusion refusals explain why the target
 /// is not scanned rather than claiming it lacks the ID (§FS-declarations.stubs.target.3).
-fn check_broken_stubs(findings: &Catalog, frame: Frame<'_>, report: &mut CheckReport) {
-    for (id, decls) in &findings.declarations {
-        for decl in decls {
-            let (Some(verdict), Some(target)) = (&decl.stub_resolution, &decl.defined_in) else {
-                continue;
-            };
-            let message = match verdict {
-                StubResolution::Missing => {
-                    format!("stub link target missing: {}", format_path(target))
-                }
-                StubResolution::UnlistedExtension(extension) => format!(
-                    "stub link target {} is not scanned: extension {} is not in [scan] extensions",
+/// Missing-target messages connect to the duplicate without adding sites
+/// (§FS-declarations.stubs.verdict.repair).
+fn check_broken_stubs(
+    findings: &Catalog,
+    id: &Id,
+    decls: &[Declaration],
+    repair: &MissingStubRepair<'_>,
+    frame: Frame<'_>,
+    report: &mut CheckReport,
+) {
+    for decl in decls {
+        let (Some(verdict), Some(target)) = (&decl.stub_resolution, &decl.defined_in) else {
+            continue;
+        };
+        let message = match verdict {
+            StubResolution::Missing => {
+                format!(
+                    "stub link target missing: {}{}",
                     format_path(target),
-                    extension
-                ),
-                StubResolution::Excluded(rule) => excluded_target_message(target, rule),
-                StubResolution::NotRead | StubResolution::LacksId => format!(
-                    "stub link target lacks {}: {}",
-                    render_catalog_id(frame.grammar(), &findings.declarations, id),
-                    format_path(target)
-                ),
-                StubResolution::OwnFile | StubResolution::Declares(_) => continue,
-            };
-            report.errors.push(Diagnostic {
-                code: "broken-stub",
-                path: Some(decl.file.clone()),
-                line: Some(decl.line),
-                column: None,
-                message,
-                sites: Vec::new(),
-                authority: Vec::new(),
-            });
-        }
+                    repair.site_free_suffix(&render_catalog_id(frame.grammar(), &findings.declarations, id))
+                )
+            }
+            StubResolution::UnlistedExtension(extension) => format!(
+                "stub link target {} is not scanned: extension {} is not in [scan] extensions",
+                format_path(target),
+                extension
+            ),
+            StubResolution::Excluded(rule) => excluded_target_message(target, rule),
+            StubResolution::NotRead | StubResolution::LacksId => format!(
+                "stub link target lacks {}: {}",
+                render_catalog_id(frame.grammar(), &findings.declarations, id),
+                format_path(target)
+            ),
+            StubResolution::OwnFile | StubResolution::Declares(_) => continue,
+        };
+        report.errors.push(Diagnostic {
+            code: "broken-stub",
+            path: Some(decl.file.clone()),
+            line: Some(decl.line),
+            column: None,
+            message,
+            sites: Vec::new(),
+            authority: Vec::new(),
+        });
     }
 }
 
