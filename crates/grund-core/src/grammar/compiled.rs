@@ -432,6 +432,16 @@ impl Grammar {
         })
     }
 
+    /// The numeric component's byte range, under the token's effective grammar.
+    /// Selectors compare its value without treating source padding as identity
+    /// (§FS-config.3.2.8).
+    pub(crate) fn number_span(&self, token: &str) -> Option<std::ops::Range<usize>> {
+        self.kind_parsers.iter().find_map(|(_, parser)| {
+            let caps = parser.captures(token)?;
+            Some(caps.name("num")?.range())
+        })
+    }
+
     pub(super) fn shorthands(&self) -> impl Iterator<Item = &ShorthandGrammar> {
         self.shorthand.iter().chain(self.override_shorthands.iter())
     }

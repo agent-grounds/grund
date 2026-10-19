@@ -276,12 +276,22 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
             };
             let rendered_id = target_project
                 .map(|target| {
-                    render_citation_id(
-                        &target.config.grammar,
-                        &target.findings.declarations,
-                        citation,
-                        &project.config.marker,
-                    )
+                    // §FS-config.3.2.8 / §FS-lsp.1.2.5: editor joins use the
+                    // selected declaration; text and ranges keep source digits.
+                    if target.findings.declarations.contains_key(&citation.id) {
+                        render_catalog_id(
+                            &target.config.grammar,
+                            &target.findings.declarations,
+                            &citation.id,
+                        )
+                    } else {
+                        render_citation_id(
+                            &target.config.grammar,
+                            &target.findings.declarations,
+                            citation,
+                            &project.config.marker,
+                        )
+                    }
                 })
                 .unwrap_or_else(|| {
                     citation

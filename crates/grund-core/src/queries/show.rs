@@ -1,6 +1,6 @@
 use super::ambiguity::{ambiguous_id_refusal, ambiguous_section_refusal};
 use crate::config::{Config, display_path};
-use crate::grammar::{render_catalog_id, render_declaration_id};
+use crate::grammar::{render_catalog_id, render_declaration_id, render_input_id};
 use crate::model::{
     Catalog, Declaration, DeclarationSource, FileRecords, Id, SectionInfo, ShowOutput,
     ShowRenderMode, StubResolution, format_path, json_escape, paired_declarations,
@@ -27,6 +27,7 @@ pub(crate) fn show_declaration(
         path_config,
         findings,
         id,
+        None,
         section,
         mode,
         include_heading,
@@ -49,23 +50,27 @@ pub(crate) fn show_declaration(
 /// Which record that is, and whether the ID is refused instead, is the one
 /// pairing of its declarations by the verdict the scan recorded on each stub
 /// (§AR-scanner.4.6): nothing here reads a stub's target.
+/// `input` carries the parsed argument for a missing-ID report, shared by
+/// single and batch reads (§FS-config.3.2.8).
 pub(crate) fn show_declaration_with_home<'a>(
     config: &Config,
     path_config: &Config,
     findings: &'a Catalog,
     id: &Id,
+    input: Option<&str>,
     section: Option<&str>,
     mode: ShowRenderMode,
     include_heading: bool,
 ) -> Result<(ShowOutput, &'a Declaration)> {
     let not_found = || {
+        let spelling = input.map_or_else(
+            || render_catalog_id(&config.grammar, &findings.declarations, id),
+            |raw| render_input_id(&config.grammar, raw, id),
+        );
         anyhow!(crate::model::OperationDiagnostic::new(
             "query",
             "not-found",
-            format!(
-                "ID not found: {}",
-                render_catalog_id(&config.grammar, &findings.declarations, id)
-            )
+            format!("ID not found: {spelling}"),
         ))
     };
     let decls = findings.declarations.get(id).ok_or_else(not_found)?;
