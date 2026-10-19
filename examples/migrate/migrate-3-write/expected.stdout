@@ -1,0 +1,76 @@
+# Configuration for the example project.
+# grund init wrote it; this walkthrough trimmed it to what it needs.
+
+grund_config_version = 2
+project_name = "example"
+
+[schema]
+marker = "§"
+shorthand = "canonical"
+id_format = "{kind}-{slug}"
+slug_pattern = "[a-z][a-z0-9-]*"
+number_pattern = "\\d+"
+section_separator = "."
+heading_depth = "must"
+
+[schema.sources]
+languages = ["v1_markdown", "v1_c_family"]
+declarations = "any-comment"
+exclude = ["target/", "node_modules/", ".git/", "dist/", "build/", ".venv/"] # directory names
+respect_gitignore = true
+
+[schema.sources.extensions]
+md = "v1_markdown"
+rs = "v1_c_family"
+
+[schema.sources.definitions.v1_markdown]
+class = "document"
+comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
+doc_comments = "none"
+docstrings = "off"
+
+[schema.sources.definitions.v1_c_family]
+class = "source"
+comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
+doc_comments = "c-family"
+docstrings = "off"
+
+[schema.notes.lines]
+must = 3
+may = 1
+
+[schema.notes.columns]
+must = 100
+
+[schema.notes.text]
+must = true
+
+[schema.kinds.GOAL]
+files = ["docs/goals.md"]
+
+# The specification is one file at the root.
+[schema.kinds.FS]
+files = ["requirements.md"]
+
+[schema.kinds.code]
+folders = ["docs", "src"]
+
+[rules.citations]
+
+[rules.citations.FS]
+must = ["GOAL"]
+
+[presentation]
+trigger = "$$"
+rules = "root"
+
+[presentation.kinds.GOAL]
+title = "Where: project direction and outcomes"
+
+[presentation.kinds.FS]
+title = "What: behavior, requirements, and constraints"
+
+[presentation.fmt]
+anchors = "github"
+links = "index"
+exclude = []

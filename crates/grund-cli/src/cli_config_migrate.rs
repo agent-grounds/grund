@@ -165,6 +165,10 @@ fn render_migrate_report(report: &MigrateReport) {
         eprintln!(
             "to see this candidate again: restore version 1 and run grund config migrate --to 2"
         );
+        // §FS-config-migrate.6.5: successful writes leave managed instructions to refresh.
+        eprintln!(
+            "note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them"
+        );
     } else if report.write {
         eprintln!("not written: {config} is unchanged");
     }

@@ -20,3 +20,4 @@ wrote grund.toml: version 1 (16 lines) replaced by version 2
 dropped the comments at grund.toml:14 (version 1 lines)
 to get version 1 back: it is in version control, e.g. git restore grund.toml
 to see this candidate again: restore version 1 and run grund config migrate --to 2
+note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them

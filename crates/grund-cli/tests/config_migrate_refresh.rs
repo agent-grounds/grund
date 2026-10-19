@@ -138,7 +138,6 @@ fn assert_successful_write(fixture: &Fixture) {
 /// §FS-config-migrate.6.5: existing v1 instructions survive unchanged, so the
 /// successful write explicitly tells the user to refresh them with `grund init`.
 #[test]
-#[ignore = "red until #831 emits the after-write refresh reminder; implement removes this"]
 fn existing_v1_managed_block_gets_refresh_reminder() {
     let fixture = Fixture::new("existing-block");
     fs::write(
@@ -158,7 +157,6 @@ fn existing_v1_managed_block_gets_refresh_reminder() {
 /// §FS-config-migrate.6.5: the qualified reminder is also emitted without an
 /// AGENTS.md; it must not claim to have inspected a file or create one.
 #[test]
-#[ignore = "red until #831 emits the qualified reminder without AGENTS.md; implement removes this"]
 fn absent_managed_block_gets_qualified_refresh_reminder() {
     let fixture = Fixture::new("absent-block");
     assert!(!fixture.0.join("AGENTS.md").exists());
