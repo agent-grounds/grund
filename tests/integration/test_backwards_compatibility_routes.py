@@ -272,6 +272,7 @@ class RequirementRouteTests(unittest.TestCase):
 
 class DecisionRouteTests(unittest.TestCase):
     def test_every_correction_decision_proves_all_five_gates(self):
+        """Explain every refusal without truncating its reasons (§FS-distribution.4.6.4.2)."""
         catalog = _requirement_catalog()
         release_entries = _release_entries()
         for path in sorted(DECISIONS.rglob("*.md")):
@@ -279,9 +280,16 @@ class DecisionRouteTests(unittest.TestCase):
             if CORRECTION_ROUTE not in text:
                 continue
             with self.subTest(path=path.relative_to(REPO_ROOT)):
-                self.assertEqual(
-                    [], _correction_route_errors(text, release_entries, catalog)
-                )
+                errors = _correction_route_errors(text, release_entries, catalog)
+                if errors:
+                    self.fail(
+                        f"{CORRECTION_ROUTE!r} is a live citation, so this decision is "
+                        "audited as invoking the correction route.\n"
+                        "To discuss or reject the route without invoking it, write "
+                        "<§>REQ-backwards-compatibility.5, or cite "
+                        "§REQ-backwards-compatibility and name section 5 in prose.\n"
+                        + "\n".join(f"- {error}" for error in errors)
+                    )
 
     def test_unproved_synthetic_correction_is_rejected(self):
         synthetic = """# DF-synthetic: invalid correction
