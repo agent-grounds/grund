@@ -3,7 +3,7 @@
 
 use crate::sources::canonical_path;
 use anyhow::Result;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use super::references::{ReferenceTier, check_citation_resolution};
@@ -11,8 +11,8 @@ use super::sections::retain_heading_findings_in_scope;
 use crate::config::{Frame, Nesting, Schema, unwalked_home_roots};
 use crate::grammar::Grammar;
 use crate::model::{
-    Catalog, CheckReport, DeclarationSource, Diagnostic, scanned_decl_relative_path,
-    scanned_path_key, sort_path_key,
+    Catalog, CheckReport, DeclarationSource, Diagnostic, paired_declarations,
+    scanned_decl_relative_path, scanned_path_key, sort_path_key,
 };
 use crate::resolver::{WorkspaceCheckTarget, WorkspaceProject};
 use crate::scanner::{
@@ -286,14 +286,29 @@ pub(crate) fn retain_findings_in_scope(
     findings
         .near_miss_headings
         .retain(|heading| scope.contains(&heading.file));
-    // §FS-declarations.checks.conflict-marker: a block is reported in the configured scope.
+    // §FS-declarations.checks.conflict-marker: a block is reported in the configured scope,
+    // and in a target a stub there pairs with, as is its duplicate-section
+    // (§FS-declarations.stubs.target.5).
+    let paired = paired_files(findings);
     findings
         .conflict_blocks
-        .retain(|block| scope.contains(&block.file));
+        .retain(|block| scope.contains(&block.file) || paired.contains(&block.file));
     findings.scanned_files.retain(|file| scope.contains(file));
     // The shorthand resolutions §AR-scanner.2.6.6 performed against the whole walk
     // are deliberately left standing: a site whose declaration the retains above
     // just dropped is re-judged in `report_shorthand_citation` (§FS-check.3.13).
+}
+
+/// The files of the records the remaining declarations pair with: a stub's target is
+/// read on the stub's behalf wherever it lies (§FS-declarations.stubs.target.5).
+fn paired_files(findings: &Catalog) -> BTreeSet<PathBuf> {
+    let mut files = BTreeSet::new();
+    for decls in findings.declarations.values() {
+        for paired in paired_declarations(decls).iter() {
+            files.insert(paired.record.file.clone());
+        }
+    }
+    files
 }
 
 /// §FS-check.3.14.3: the out-of-scope tier — the reference-resolution family run

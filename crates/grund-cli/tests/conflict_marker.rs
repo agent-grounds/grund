@@ -38,7 +38,9 @@ fn a_refused_fmt_writes_nothing() {
 }
 
 /// §FS-declarations.body.conflict: what a block is, where it is looked for and
-/// whom it names, as `check` reports it.
+/// whom it names, as `check` reports it, in a stub's target outside the include
+/// too, with `--full` as without it (§FS-declarations.body.conflict.where,
+/// §FS-check.1.3.4).
 #[test]
 fn a_conflict_block_is_a_check_error() {
     run(
@@ -54,13 +56,16 @@ fn a_conflict_block_is_a_check_error() {
             "check-conflict-marker-lookalikes",
             "check-conflict-marker-unclosed-fence",
             "check-conflict-marker-lock-and-body",
+            "check-conflict-marker-stub-target",
+            "check-conflict-marker-stub-target-full",
         ],
     );
 }
 
 /// §FS-fmt.7.4, §FS-fmt.3.4: a run that needs the whole declaration set refuses
 /// on a block, in both modes and both cross-reference settings, root first in a
-/// workspace, and with a lock in conflict beside it (§FS-section-lock.write.rebuild).
+/// workspace, with a lock in conflict beside it (§FS-section-lock.write.rebuild), and
+/// in a stub's target outside the include (§FS-declarations.body.conflict.where).
 #[test]
 fn a_conflict_block_refuses_fmt() {
     run(
@@ -71,6 +76,7 @@ fn a_conflict_block_refuses_fmt() {
             "fmt-conflict-marker-check-refused",
             "fmt-conflict-marker-workspace",
             "fmt-conflict-marker-lock-and-body",
+            "fmt-conflict-marker-stub-target-write",
         ],
     );
 }
