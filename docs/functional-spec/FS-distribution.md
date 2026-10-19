@@ -1053,6 +1053,27 @@ The bump publishes, under `### Compatibility notices` after the list, the bullet
 
 The bump is not the first to read a notice's shape. The repository's Python gate, which runs at every commit and on every pull request, reads every decision record's `release-note` section in the working tree with the bump's own reading, and fails when one is not a single well-formed bullet, naming each such decision and its record's file in the one run rather than stopping at the first. It reads every section, not only those the next bump would publish, because the shape above is every section's. So a notice the bump would refuse fails on the pull request that writes it, while its author can still fix it, rather than at the next release, where only the person cutting it could. This asks no change for a notice — a decision that writes none is not read — so it gates no change on the changelog ([§FS-distribution.4.6](FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)); it holds only a section a change chose to write.
 
+##### 4.6.4.2 A correction-audit refusal explains its citation trigger
+
+The repository's correction-route meter audits every decision whose text contains
+the live citation `§REQ-backwards-compatibility.5`, including a sentence that
+discusses or rejects that route. Selection does not interpret that sentence's
+intent. The five conditions remain those of
+[§REQ-backwards-compatibility.5](../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids).
+
+Whenever that audit refuses a selected decision, the contributor-visible failure
+must explain that the live section-5 citation put the decision under the
+correction-route audit. It must retain the placement or proof reasons and name
+both ways to discuss or reject the route without invoking it: write
+`<§>REQ-backwards-compatibility.5`, using the existing
+[§FS-citations.recognized.escapes](FS-citations.md#recognizedescapes-an-id-in-an-escape-position)
+convention, or cite `§REQ-backwards-compatibility` and name section 5 in prose.
+The guidance must remain visible in the actual test failure, including when the
+rejecting sentence is already in a numbered section and the refusal lists
+multiple missing proofs. These alternatives leave the decision outside this
+audit; a live rejecting citation still fails without the required proof, an
+unproved correction still fails, and a valid correction still passes.
+
 ### 4.7 The changelog is the source of release notes
 
 `release.yml` treats the changelog as the source of GitHub release notes. Before creating or updating a GitHub release, it extracts the requested `vX.Y.Z` section from `docs/changelog.md` at the selected release ref and passes that body to `gh release create` or `gh release edit`; if the section is missing or empty, the release fails before artifacts are published to the GitHub release.
