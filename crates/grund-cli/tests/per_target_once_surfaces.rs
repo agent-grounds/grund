@@ -135,11 +135,8 @@ fn per_target_once_editor_invalid_rule_agrees_with_cli() {
     assert_eq!(row["line"], 1);
     assert_eq!(diagnostic.line, Some(1));
     assert_eq!(row["path"], "docs/rules/once.md");
+    // §FS-lsp.1.1: editor transport paths use the platform-native spelling.
     assert!(
-        diagnostic
-            .path
-            .as_ref()
-            .unwrap()
-            .ends_with("docs/rules/once.md")
+        std::path::Path::new(diagnostic.path.as_ref().unwrap()).ends_with("docs/rules/once.md")
     );
 }
