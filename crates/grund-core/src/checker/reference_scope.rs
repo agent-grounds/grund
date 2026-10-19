@@ -381,6 +381,12 @@ pub(crate) fn workspace_out_of_scope_references(
     diagnostics
 }
 
+/// §FS-check.3.14.6: retain the v1 entry point used by existing unit fixtures.
+#[cfg(test)]
+pub(crate) fn tag_out_of_scope(diagnostic: Diagnostic) -> Diagnostic {
+    tag_out_of_scope_for_version(diagnostic, 1)
+}
+
 /// §FS-check.3.14.6: the tier's own code and loaded-vocabulary message shape.
 ///
 /// The code is the in-scope one under an `out-of-scope-` prefix, so a
@@ -406,10 +412,4 @@ fn tag_out_of_scope_for_version(mut diagnostic: Diagnostic, version: u32) -> Dia
     let scope = source_scope_name(version);
     diagnostic.message = format!("outside {scope}: {}", diagnostic.message);
     diagnostic
-}
-
-/// §FS-check.3.14.6: retain the v1 entry point used by existing unit fixtures.
-#[cfg(test)]
-pub(crate) fn tag_out_of_scope(diagnostic: Diagnostic) -> Diagnostic {
-    tag_out_of_scope_for_version(diagnostic, 1)
 }

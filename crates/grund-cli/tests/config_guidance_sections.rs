@@ -119,17 +119,18 @@ impl Fixture {
         )
     }
 
-    fn assert_refusal(&self, raw: &str, template: &str, overridden: bool) {
+    fn assert_refusal(&self, raw: &str, template: &str, overridden: bool, bare_suffix: &str) {
         let operand = self.operand(raw);
         let message = format!("invalid ID `{raw}`");
         let hint = self.hint(template, overridden);
         for prefix in [vec![], vec!["show"], vec!["refs"]] {
+            let suffix = if prefix.is_empty() { bare_suffix } else { "" };
             let mut args = prefix;
             args.push(&operand);
             let output = self.run(&args);
             assert_eq!(output.status.code(), Some(1), "{}", stderr(&output));
             assert!(output.stdout.is_empty());
-            assert_eq!(stderr(&output), format!("{message}\n{hint}\n"));
+            assert_eq!(stderr(&output), format!("{message}\n{hint}\n{suffix}"));
             args.extend(["--format", "json"]);
             let output = self.run(&args);
             assert_eq!(output.status.code(), Some(1), "{}", stderr(&output));
@@ -193,7 +194,7 @@ fn literal_and_nonleading_kind_sections_keep_effective_guidance() {
                         assert_eq!(String::from_utf8_lossy(&output.stdout), "Body.\n");
                     }
                 }
-                fixture.assert_refusal(&format!("{id}.bad!"), template, true);
+                fixture.assert_refusal(&format!("{id}.bad!"), template, true, "");
             }
         }
     }
@@ -203,7 +204,13 @@ fn literal_and_nonleading_kind_sections_keep_effective_guidance() {
 fn configured_section_separator_selects_the_same_kind() {
     for version in [1, 2] {
         let fixture = Fixture::new(version, "x{kind}_{number}", "::", false);
-        fixture.assert_refusal("xADR_1::bad!", "x{kind}_{number}", true);
+        // §FS-cli.1.2: only the bare adapter adds this subcommand-help hint.
+        fixture.assert_refusal(
+            "xADR_1::bad!",
+            "x{kind}_{number}",
+            true,
+            "hint: run `grund --help` for the list of subcommands\n",
+        );
     }
 }
 
@@ -211,7 +218,7 @@ fn configured_section_separator_selects_the_same_kind() {
 fn ambiguous_or_unidentified_kinds_keep_global_advice() {
     for version in [1, 2] {
         let fixture = Fixture::new(version, "x{kind}_{number}", ".", false);
-        fixture.assert_refusal("nonsense.bad!", GLOBAL, false);
+        fixture.assert_refusal("nonsense.bad!", GLOBAL, false, "");
         let path = fixture.target.join("grund.toml");
         let mut config = fs::read_to_string(&path).unwrap();
         config.push_str(if version == 2 {
@@ -226,7 +233,7 @@ fn ambiguous_or_unidentified_kinds_keep_global_advice() {
         fs::create_dir_all(fixture.target.join("notes")).unwrap();
         let loaded = fixture.run(&["config", "show"]);
         assert_eq!(loaded.status.code(), Some(0), "{}", stderr(&loaded));
-        fixture.assert_refusal("xADR_1.bad!", GLOBAL, false);
-        fixture.assert_refusal("NOTE-example.bad!", GLOBAL, false);
+        fixture.assert_refusal("xADR_1.bad!", GLOBAL, false, "");
+        fixture.assert_refusal("NOTE-example.bad!", GLOBAL, false, "");
     }
 }

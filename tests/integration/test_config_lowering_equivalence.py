@@ -12,6 +12,13 @@ megabytes. stderr is held verbatim, because it is where a config error's text an
 its `path:line` anchor live, which is the seam a move of validation is most
 likely to break (§FS-config.4.3).
 
+Issue #817's wording-only exception changes only the final repair clause of
+validate[2] for the two v2 records
+tests/e2e/cases/workspace-include-root-false-unread-check/repo and
+tests/e2e/cases/workspace-include-root-false-unread-check/repo/group, as
+§FS-check.4.10.5 requires. All other captured bytes, statuses and digests remain
+the #453 reference.
+
 The captures are not regenerated to make this test pass. `--capture` exists to
 take them, once, from a binary whose behaviour is the reference.
 """
