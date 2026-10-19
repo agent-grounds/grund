@@ -1,10 +1,14 @@
 //! The tables a v2 header may open (§FS-config-v2.reader.1): each admitted
 //! header names one `Table`, a clause the format defines and this grund does not
 //! execute is a rollout refusal at its header (§FS-config-v2.rollout), and
-//! everything else, v1's sections included, is an unknown section.
+//! everything else, v1's sections included, is an unknown section. Each table's
+//! keys are listed here once, for the gate and for the refusal that names them
+//! (§FS-config-v2.reader.1.keys), and so is where each v1 table's settings went
+//! (§FS-config-v2.reader.1.v1-tables).
 
 use crate::config::citations::CitationLevel;
 use crate::config::project::{Rung, Strength};
+use crate::model::format_list;
 
 /// What the keys under one header are read as.
 pub(super) enum Table {
@@ -58,9 +62,10 @@ pub(super) struct Written {
     pub(super) line: usize,
 }
 
-/// Every strength key a v2 table can hold, positive and prohibitive
-/// (§FS-config-v2.rules.strengths).
-const STRENGTH_KEYS: [&str; 7] = [
+/// `[rules.citations.<KIND>]`'s keys (§FS-config-v2.rules.citations): every
+/// strength, positive and then prohibitive, and the kind's `default`. The
+/// strength keys are its first seven, so they are spelled once.
+const CITATION_KIND_KEYS: &[&str] = &[
     "must",
     "warn",
     "should",
@@ -68,7 +73,162 @@ const STRENGTH_KEYS: [&str; 7] = [
     "must-not",
     "warn-not",
     "should-not",
+    "default",
 ];
+
+/// Every strength key a v2 table can hold, positive and prohibitive
+/// (§FS-config-v2.rules.strengths).
+const STRENGTH_KEYS: &[&str] = CITATION_KIND_KEYS.split_at(7).0;
+
+/// The positive strengths, which are a measure's and a ladder's keys.
+const POSITIVE_STRENGTH_KEYS: &[&str] = STRENGTH_KEYS.split_at(4).0;
+
+/// §FS-config-v2.reader.1.keys: the keys a table admits. The gate admits a key
+/// by it and an unknown key's refusal names it, so no key the refusal leaves
+/// out is read; `tests_keys.rs` holds that every key it names is.
+#[derive(Clone, Copy)]
+pub(super) enum Keys {
+    /// These keys, in the order the table's own point lists them.
+    Closed(&'static [&'static str]),
+    /// None: a parent that holds only tables (§FS-config-v2.reader.2).
+    OnlyTables,
+    /// Any bare key, read as the name this says, which the table judges itself.
+    Names(&'static str),
+}
+
+impl Keys {
+    /// Whether the gate hands `key` to the table's reader.
+    pub(super) fn admit(self, key: &str) -> bool {
+        match self {
+            Keys::Closed(keys) => keys.contains(&key),
+            Keys::OnlyTables => false,
+            Keys::Names(_) => true,
+        }
+    }
+
+    /// What an unknown key's refusal appends after its text.
+    pub(super) fn hint(self) -> String {
+        match self {
+            Keys::Closed(keys) => format!(" (expected {})", format_list(keys, "or")),
+            Keys::OnlyTables => " (it holds only tables)".to_string(),
+            Keys::Names(what) => format!(" (expected {what})"),
+        }
+    }
+}
+
+impl Table {
+    /// §FS-config-v2.reader.1.keys: the keys this table admits, each list once.
+    pub(super) fn keys(&self) -> Keys {
+        match self {
+            Table::Root => Keys::Closed(&["grund_config_version", "project_name"]),
+            Table::Parent => Keys::OnlyTables,
+            Table::Schema => Keys::Closed(&[
+                "marker",
+                "shorthand",
+                "id_format",
+                "slug_pattern",
+                "number_pattern",
+                "section_separator",
+                "heading_depth",
+            ]),
+            Table::Sources => {
+                Keys::Closed(&["languages", "declarations", "exclude", "respect_gitignore"])
+            }
+            Table::Extensions => Keys::Names("a suffix"),
+            Table::Definition(_) => {
+                Keys::Closed(&["class", "comment_prefixes", "doc_comments", "docstrings"])
+            }
+            Table::Measure(..) | Table::Layout(_) | Table::Ladder(..) => {
+                Keys::Closed(POSITIVE_STRENGTH_KEYS)
+            }
+            Table::Text => Keys::Closed(&["must"]),
+            Table::Row(_) => Keys::Closed(&[
+                "files",
+                "folders",
+                "citable",
+                "scan",
+                "index",
+                "id_format",
+                "fetch",
+                "form",
+                "closed",
+            ]),
+            Table::Field(_) => Keys::Closed(&[
+                "title", "presence", "position", "after", "content", "one_of",
+            ]),
+            Table::Citations => Keys::Closed(&["default"]),
+            Table::CitationKind(..) => Keys::Closed(CITATION_KIND_KEYS),
+            Table::Resolution => Keys::Names("a kind name"),
+            Table::Presentation => {
+                Keys::Closed(&["description", "trigger", "conversation", "rules"])
+            }
+            Table::PresentationKind(_) => Keys::Closed(&["title"]),
+            Table::PresentationFmt => Keys::Closed(&["anchors", "links", "exclude"]),
+            Table::Workspace => Keys::Closed(&["members", "optional_members", "include_root"]),
+        }
+    }
+}
+
+/// §FS-config-v2.reader.1.v1-tables: each v1 table, as v1 writes its header, and
+/// the v2 tables its settings are written in, in the order its refusal names
+/// them. `<KIND>` stands for the header's own kind.
+pub(in crate::config) const V1_TABLES: &[(&str, &[&str])] = &[
+    (
+        "[reference]",
+        &[
+            "[schema]",
+            "[schema.notes.*]",
+            "[schema.leads.words]",
+            "[rules.citations.grounding]",
+            "[presentation]",
+        ],
+    ),
+    ("[id]", &["[schema]"]),
+    (
+        "[scan]",
+        &[
+            "[schema.sources]",
+            "[schema.sources.extensions]",
+            "[schema.sources.definitions.*]",
+            "[schema.kinds.code]",
+        ],
+    ),
+    ("[citations]", &["[rules.citations]"]),
+    ("[citations.<KIND>]", &["[rules.citations.<KIND>]"]),
+    ("[fmt]", &["[presentation.fmt]"]),
+    ("[fmt.cross_refs]", &["[presentation.fmt]"]),
+    ("[output]", &["run flags, such as --format and --path-base"]),
+    ("[[kinds]]", &["[schema.kinds.<NAME>]"]),
+];
+
+/// §FS-config-v2.reader.1.v1-tables: where the settings of the v1 table `header`
+/// (`[scan]`, `[citations.FS]`, `[[kinds]]`) are written in v2, or `None` for a
+/// header that is no v1 table.
+pub(in crate::config) fn v1_homes(header: &str) -> Option<Vec<String>> {
+    let kind = header
+        .strip_prefix("[citations.")
+        .and_then(|rest| rest.strip_suffix(']'))
+        .filter(|kind| !kind.is_empty() && !kind.contains('.'));
+    let row = if kind.is_some() {
+        "[citations.<KIND>]"
+    } else {
+        header
+    };
+    let (_, homes) = V1_TABLES.iter().find(|(v1, _)| *v1 == row)?;
+    let homes = homes.iter().map(|home| match kind {
+        Some(kind) => home.replace("<KIND>", kind),
+        None => home.to_string(),
+    });
+    Some(homes.collect())
+}
+
+/// §FS-config-v2.reader.1.v1-tables: what the refusal of the table `header`
+/// appends, which is nothing for a table that is no v1 spelling.
+pub(super) fn v1_hint(header: &str) -> String {
+    v1_homes(header).map_or_else(String::new, |homes| {
+        format!(" (a v1 table; in v2: {})", homes.join(", "))
+    })
+}
 
 /// What a header opens, or why it is refused.
 pub(super) enum Opened {
@@ -127,7 +287,11 @@ pub(super) fn open(name: &str) -> Opened {
         ["presentation", "kinds", kind] => Table::PresentationKind(kind.to_string()),
         ["presentation", "fmt"] => Table::PresentationFmt,
         ["workspace"] => Table::Workspace,
-        _ => return Opened::Refused(format!("unknown config section `{name}`")),
+        _ => {
+            // §FS-config-v2.reader.1.v1-tables: a v1 table names where it went.
+            let hint = v1_hint(&format!("[{name}]"));
+            return Opened::Refused(format!("unknown config section `{name}`{hint}"));
+        }
     };
     Opened::Table(table)
 }

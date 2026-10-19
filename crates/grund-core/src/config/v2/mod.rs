@@ -6,7 +6,8 @@
 //!
 //! `walk.rs` is the line walk and the bookkeeping every table shares — explicit
 //! headers, duplicate keys, the strength-key collision; `tables.rs` names the
-//! table a header opens; `schema.rs`, `measures.rs`, `rules.rs` and
+//! table a header opens, the keys each admits, and where a v1 table's settings
+//! went; `schema.rs`, `measures.rs`, `rules.rs` and
 //! `presentation.rs` read the keys of each concern, `fields.rs` a kind's
 //! fields (§FS-fields) and `sources.rs` the source model, which `sources_model.rs`
 //! lowers and renders; `finish.rs` judges what
@@ -25,7 +26,12 @@ mod schema;
 mod sources;
 mod sources_model;
 mod tables;
+#[cfg(test)]
+mod tests_keys;
 mod walk;
+
+#[cfg(test)]
+pub(super) use tables::{V1_TABLES, v1_homes};
 
 use anyhow::Result;
 use std::path::Path;
