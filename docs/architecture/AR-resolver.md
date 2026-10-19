@@ -162,15 +162,20 @@ cannot come to mean two things.
 
 ### 3.3 Two scopes, and which narrowness a narrow scope keeps
 
-For `refs` a `<path>` selects a **project** and bounds no walk. For `check`, `show`, `list` and `id` it is
-the **report scope** — the set of files a finding or an entry may be about — while the **resolution scope**
-they read stays the enclosing project's ordinary scope, `[scan] include` plus every walked kind home, union
-the path ([§FS-scan.path](../functional-spec/FS-scan.md#path-what-a-path-argument-means), [§FS-scan.path.check](../functional-spec/FS-scan.md#pathcheck-check-reads-more-than-it-reports)). The four load through the one `Check` selection: the queries
+For `check`, `show`, `list` and `id` a `<path>` is the **report scope** — the set of files a finding or an
+entry may be about — while the **resolution scope** they read stays the enclosing project's ordinary scope,
+`[scan] include` plus every walked kind home, union the path ([§FS-scan.path](../functional-spec/FS-scan.md#path-what-a-path-argument-means), [§FS-scan.path.check](../functional-spec/FS-scan.md#pathcheck-check-reads-more-than-it-reports)). The four load through the one `Check` selection: the queries
 through `load_reported_workspace_context`, which prints only the entries the report scope holds, and
 `check`, which walks the resolution scope, runs every rule over the whole of it, and drops the diagnostics
 anchored outside the report scope. Below a workspace root and outside every member, `check <dir>` is the
 workspace run the root makes, its report narrowed by the same filter
 ([§FS-scan.projects.narrowed](../functional-spec/FS-scan.md#projectsnarrowed-a-path-below-the-config-root-loads-what-a-run-from-it-would-see)).
+
+`refs`, in every mode, and ID completion load through the `Project` selection instead, so their walk is
+the path in one project, and each project whole in a workspace run. What they print is bounded by the same
+report scope, through `reported_scope`, as `list`'s entries are: a site or a candidate the path does not hold
+is dropped, unless a stub under the path stands for it ([§FS-scan.path.refs](../functional-spec/FS-scan.md#pathrefs-refs-scans-the-paths-tree), [§FS-completions.2.1](../functional-spec/FS-completions.md#21-arguments-and-candidate-modes),
+[§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)).
 
 So "a scope narrower than the root has to stay narrow" is a statement about which **projects** a walk covers
 and which **files** are reported. It is not a statement about which declarations resolution reads: widening

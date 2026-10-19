@@ -1,9 +1,11 @@
 //! §FS-scan.path: the files a narrowed `list`, `show --batch --all`, `refs` or ID
 //! completion reports entries or sites from (§FS-scan.path.show,
-//! §FS-scan.path.refs, §FS-completions.2.1). The run already resolved against the
-//! whole owning project, so the path only bounds which declarations and sites
-//! print, by the predicate `check <path>` filters its report with
-//! (§FS-scan.path.check, §AR-system.principle).
+//! §FS-scan.path.refs, §FS-completions.2.1). The run has resolved by then: `list`
+//! and `show` against the whole owning project, `refs` and completion against what
+//! their walk read, the path in one project and each project whole in a workspace
+//! (§AR-resolver.3.3). So the path only bounds which declarations and sites print,
+//! by the predicate `check <path>` filters its report with (§FS-scan.path.check,
+//! §AR-system.principle).
 
 use anyhow::Result;
 use std::collections::BTreeMap;
