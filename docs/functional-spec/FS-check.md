@@ -649,11 +649,7 @@ docs/architecture/AR-router.md:1: AR-router must cite FS or GOAL (citation direc
 
 The body extent and the citing-side classification come from the scanner ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)); the obligation pass is [AR-checker.2.9](../../crates/grund-core/src/checker/report.rs). The homeless kind ([§FS-check.3.11.1](FS-check.md#3111-the-homeless-kind)) and a non-citable kind ([§FS-check.3.11.2](FS-check.md#3112-a-non-citable-kind)) are asked per file instead, at the row's `grounding_level` ([§FS-check.3.11.3](FS-check.md#3113-the-unit-follows-grounding_level)); every failing unit is reported ([§FS-check.3.11.4](FS-check.md#3114-every-failing-unit-is-reported)), a file with no citation is no unit ([§FS-check.3.11.5](FS-check.md#3115-a-file-with-no-citation-is-no-unit)), and an `E2E` case has its own unit ([§FS-check.3.11.6](FS-check.md#3116-an-e2e-case)). The parallel `should` obligation is not an error; it is a suggestion ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)). A declaration a stub pairs with is the unit wherever its target is: an outside target lends it its citations ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)), so the obligation is met by what the target cites, a unit only that target supplies keeps the obligation from applying to nothing ([§FS-check.2.2.1.1](FS-check.md#2211-when-it-fires)), and the finding of one that cites nothing is an error at the declaration's line in the target ([§FS-declarations.stubs.pairing.4](FS-declarations.md#stubspairing4-every-surface-shows-a-paired-declaration-at-its-target), [§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)).
 
-The ordinary rule sentence `<subject> must cite at least one <target-set>.`
-reuses this code only when its actual count is zero. Rule-to-rule and the narrow
-config-to-rule bridge deduplicate as
-[§FS-rules.6](FS-rules.md#6-semantic-deduplication) specifies; when config
-participates, this section's existing message stays byte-for-byte unchanged.
+The ordinary rule sentence `<subject> must cite at least one <target-set>.` reuses this code only when its actual count is zero. Rule-to-rule and the narrow config-to-rule bridge deduplicate as [§FS-rules.6](FS-rules.md#6-semantic-deduplication) specifies; when config participates, this section's existing message stays byte-for-byte unchanged.
 
 Under v2 the obligation is written as `must`, `warn` or `should` ([§FS-config-v2.rules.citations](FS-config-v2.md#rulescitations-rulescitations)). `must` is this error; `warn` is the same finding, code and message on the warning channel, exit `0`; `should` is the suggestion of [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in). v1's `[citations]` keeps exactly the channels above.
 
@@ -697,9 +693,9 @@ docs/functional-spec/FS-login.md:42: FS must not cite AR (citation direction) �
 The prohibition pass is [AR-checker.2.10](../../crates/grund-core/src/checker/report.rs); how it reads the citing and the cited kind is [§FS-check.3.12.1](FS-check.md#3121-how-the-two-kinds-are-read). The parallel `should-not` prohibition is not an error; it is a suggestion ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)). The sanctioned way to keep a discouraged downward pointer is a plain Markdown link, which is not a citation under `strict = true` and so is exempt from this rule. A citation a stub's target outside `[scan] include` lends the stubbed declaration ([§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)) is a citation site of its kind, reported at its line in the target as an error, as with the target scanned ([§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)).
 
 A rule sentence `<subject> must not cite any <target-set>.` reuses this code and
-the exact citation-site anchor. Its message replaces only the fixed `(citation
-direction)` authority tail with `(<RULE-ID>)`; a config-derived duplicate keeps
-this section's bytes unchanged ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)).
+the exact citation-site anchor. Outside the index-entry repair below, its message
+replaces only `(citation direction)` with `(<RULE-ID>)`; a config-derived
+duplicate keeps this section's bytes unchanged ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)).
 
 Under v2 the prohibition is written as `must-not`, `warn-not` or `should-not` ([§FS-config-v2.rules.citations](FS-config-v2.md#rulescitations-rulescitations)). `must-not` is this error; `warn-not` is the same finding, code and message on the warning channel, exit `0`; `should-not` is the suggestion of [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in).
 
@@ -707,6 +703,14 @@ Under v2 the prohibition is written as `must-not`, `warn-not` or `should-not` ([
 #### 3.12.1 How the two kinds are read
 
 The citing kind is the one [§FS-citations.citing-kind](FS-citations.md#citing-kind-which-kind-a-citation-site-counts-as) gives the site, named by kind for a citable kind, by **home** for a non-citable one the way [§FS-check.3.11.2](FS-check.md#3112-a-non-citable-kind) names it (`skills/ must not cite AR`), and by name for the homeless kind, which has no home to name it by ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)). The cited kind and alias come from the citation token, matched against the rule's alias grammar ([§FS-config.3.9.3](FS-config.md#393-alias-matching)).
+
+#### 3.12.2 Repair advice preserves a required index entry
+
+For a kind's own index entry ([§FS-check.3.18.5](FS-check.md#3185-what-an-entry-is)), a `forbidden-citation` finding keeps its code, severity, citation site, authority and structured fields, but replaces the plain-link repair with advice to retain the marked entry and change the applicable citation rule. The unused-count exemption ([§FS-check.4.1.2](FS-check.md#412-an-index-entry-does-not-count)) changes no direction verdict. Merely being in an index file does not make another citation an entry; ordinary sites keep this section's existing advice.
+
+When a kind or global negative default supplies the prohibition, name the citing kind's configuration table and advise adding the target kind to its `may` list without removing existing permissions ([§FS-config-v2.rules.citations.default](FS-config-v2.md#rulescitationsdefault-a-default-may-forbid-never-oblige)). For v2 REQ with `default = "must-not"` and `may = ["GOAL"]`, name `[rules.citations.REQ]` and adding REQ to `may`: the accepted edit is `may = ["GOAL", "REQ"]`. It clears the direction error while the marked entry still satisfies the index rule; a markerless link remains an index error. This repair also applies to `warn-not`, on its existing warning channel; `should-not` retains its suggestion without a repair suffix.
+
+For an explicit prohibition, identify the matching prohibition list and table to change instead; for an independent rule sentence, identify that rule as the authority to change. Do not claim that adding `may` overrides either. Both diagnostic producers obey this point, including a rule sentence whose citation site is an index entry. No configuration precedence or index-entry requirement changes.
 
 ### 3.13 Number-only shorthand citation
 
