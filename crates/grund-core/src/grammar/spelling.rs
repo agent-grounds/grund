@@ -24,7 +24,7 @@ pub(crate) fn render_catalog_id(
 }
 
 /// A particular report row or heading uses that record's own source spelling
-/// (§FS-config.3.2.8, §FS-fmt.6.2.2).
+/// (§FS-config.3.2.8); the heading's anchor rule is cited where it is derived.
 pub(crate) fn render_declaration_id(grammar: &Grammar, declaration: &Declaration) -> String {
     declaration
         .authored_id
