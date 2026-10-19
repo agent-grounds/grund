@@ -442,6 +442,22 @@ impl Grammar {
         })
     }
 
+    /// §FS-show.3.5.1: recognize the configured ID before even a rejected section
+    /// for advice only. Multiple matching kind grammars must not select an override.
+    pub(crate) fn kind_for_guidance(&self, operand: &str) -> Option<&str> {
+        let token = operand
+            .split_once(self.source.section_separator.as_str())
+            .map_or(operand, |(id, _)| id);
+        let mut kinds = self
+            .kind_parsers
+            .iter()
+            .filter(|(_, parser)| parser.is_match(token));
+        if let Some((kind, _)) = kinds.next() {
+            return kinds.next().is_none().then_some(kind.as_str());
+        }
+        self.legacy_kind_and_format(operand).map(|(kind, _)| kind)
+    }
+
     pub(super) fn shorthands(&self) -> impl Iterator<Item = &ShorthandGrammar> {
         self.shorthand.iter().chain(self.override_shorthands.iter())
     }
