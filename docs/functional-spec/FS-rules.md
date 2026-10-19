@@ -185,7 +185,9 @@ on a 64-bit platform); a larger `N` is refused for its range
 other than one takes `chapters`. A lower bound and an exact count spell one as
 the word `one` and refuse the numeral, so `at least 1` and `exactly 1` are not
 sentences; an upper bound spells it as the numeral, so `at most 1` is the only
-spelling of a ceiling of one. The only accepted families are the following.
+spelling of a ceiling of one except for per-target coverage, whose count noun
+is `times` and whose ceiling of one is `at most once`
+([§FS-rules.3.3](FS-rules.md#33-per-target-coverage)). The only accepted families are the following.
 
 ### 3.1 Chapter presence
 
@@ -237,10 +239,18 @@ zero reuses `missing-citation`; every other count failure uses
 ```text
 <subject> must|should cite each <KIND> at least once.
 <subject> must|should cite each <KIND> at least N times.
+<subject> must|should cite each <KIND> at most once.
 <subject> must|should cite each <KIND> at most N times.
 <subject> must|should cite each <KIND> exactly once.
 <subject> must|should cite each <KIND> exactly N times.
 ```
+
+In this family, all three bounds spell one as `once`; numeric `N times` is
+accepted only above one. `at most once` normalizes to no minimum and maximum
+one: zero or one physical citation to a target passes, and two to that same
+target produce `citation-cardinality`. Counting remains by physical site,
+not by distinct target. The finding keeps `requires at most 1`.
+The compatibility decision is [§DF-per-target-once-ceiling](../decisions/functional/DF-per-target-once-ceiling.md#df-per-target-once-ceiling-spell-a-per-target-ceiling-of-one-as-at-most-once).
 
 For every declaration matched by the object kind selector, the rule separately
 counts physical citation sites from the subject unit to that declaration. It
