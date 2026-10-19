@@ -2,7 +2,8 @@ grund check — validate every ID citation across the repo.
 
 Usage:  grund check [PATH] [--watch] [--rule SENTENCE] [--full] [--require-grounding] [--suggestions] [--only CODE] [--ignore CODE] [--only-rule] [--format text|json]
 
-PATH defaults to `.`; config is discovered by walking up from it — the root `grund.toml` is the home, `.agents/grund.toml` a deprecated fallback.
+With no PATH, the run covers the whole project or workspace discovered from the current directory; a PATH narrows it.
+Config is discovered by walking up from PATH, or from the current directory with none — the root `grund.toml` is the home, `.agents/grund.toml` a deprecated fallback.
 With no config, grund scans `docs/`, `e2e/`, and `src/`; set `[scan] include` to widen it.
 Pointing grund at an explicit PATH reports exactly that file or directory; citations still resolve against the whole project.
 Path validation is explicit; `grund PATH` is parsed as an ID query.

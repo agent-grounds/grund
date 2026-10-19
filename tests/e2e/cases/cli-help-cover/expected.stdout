@@ -3,7 +3,8 @@ grund cover — group the citation graph by scanned file.
 Usage:  grund cover [PATH] [--glob PATTERN]... [--format text|json]
         grund cover FILE --lines N|N-M [--lines …] [--format text|json]
 
-PATH defaults to `.`. The command runs the same scan as `check` and `refs`,
+With no PATH, the run covers the whole project or workspace discovered from the current directory; a PATH narrows it.
+The command runs the same scan as `check` and `refs`,
 then prints one file record with the citations found in that file.
 With --glob a record keeps only the citations whose cited coordinate a pattern
 matches, and every scanned file keeps its record: `(no citations)` in text.

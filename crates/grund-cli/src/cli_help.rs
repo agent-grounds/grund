@@ -40,6 +40,15 @@ fn print_guide_links(guides: &[&str], examples: &[&str]) {
     }
 }
 
+/// §FS-cli.2.3.2: the one line, worded once, that each page whose PATH narrows the run
+/// (`check`, `fmt`, `cover`, `list`, `refs`) prints below its usage: what a run given no
+/// path covers, in place of a default of `.` that is false below the root.
+fn print_no_path_scope_help() {
+    println!(
+        "With no PATH, the run covers the whole project or workspace discovered from the current directory; a PATH narrows it."
+    );
+}
+
 /// §FS-cli.3.4: the run-flag lines of every command that takes `--path-base`, naming
 /// the flag that replaces each `[output]` key; the commands that honour
 /// `[output] format` also name `--format json` as its replacement (§FS-cli.3).

@@ -12,6 +12,8 @@ fn print_list_help() {
         "                   [--summary | --total] [--size[=lines,words,bytes]] [--top N] [--format text|json]"
     );
     println!();
+    print_no_path_scope_help();
+    println!();
     println!("Output is one line per declared ID, `<ID>  <path>:<line>  <title>`, sorted by ID.");
     println!(
         "Stub-and-inline pairs collapse to one line; a duplicate-declared ID gets a line per home."

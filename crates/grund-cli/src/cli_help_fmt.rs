@@ -10,6 +10,8 @@ fn print_fmt_help() {
     println!();
     println!("Usage:  grund fmt [PATH] [--check | --write] [--marker] [--cross-refs]");
     println!();
+    print_no_path_scope_help();
+    println!();
     println!("Options:");
     println!(
         "  --check        report pending rewrites, exit 1 if any exist         e.g. grund fmt --check"
