@@ -1,0 +1,3 @@
+# The shorthand in docs/z.md defers the declaration-set scan, which refuses on this
+# link after the walk has met the `$$` in docs/a.md: nothing may be written (FS-fmt.7.4.3).
+docs/broken.md -> missing.md

@@ -1,0 +1,2 @@
+docs/abc.md:2: error: unresolved merge conflict in FS-a, FS-b and FS-c, lines 2–6: resolve it by hand
+docs/abc.md:10: error: unresolved merge conflict outside any declaration, lines 10–14: resolve it by hand

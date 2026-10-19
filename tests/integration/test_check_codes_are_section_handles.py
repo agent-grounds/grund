@@ -51,6 +51,7 @@ MIGRATED = {
     ),
     "FS-declarations": (
         "broken-stub",
+        "conflict-marker",
         "declaration-near-miss",
         "duplicate",
         "duplicate-section",

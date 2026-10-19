@@ -547,6 +547,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `chapter-cardinality` | error | — | `rules = true` on a kind | [§FS-check.3.26](FS-check.md#326-chapter-cardinality) |
 | `citation-cardinality` | error | — | `rules = true` on a kind | [§FS-check.3.27](FS-check.md#327-citation-cardinality) |
 | `config-version-1` | warning | — | a config file read as version 1 | [§FS-check.checks.config-version-1](FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1) |
+| `conflict-marker` | error | — | — | [§FS-declarations.checks.conflict-marker](FS-declarations.md#checksconflict-marker-unresolved-merge-conflict) |
 | `dangling` | error | — | — | [§FS-check.3.1](FS-check.md#31-dangling-citation) |
 | `declaration-near-miss` | error | — | — | [§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss) |
 | `deprecated-config-location` | warning | — | — | [§FS-check.4.11](FS-check.md#411-config-read-from-the-deprecated-agents-location) |

@@ -1,0 +1,3 @@
+# The root cannot read docs/gone.md and the member holds a conflict: the unreadable
+# path wins, so the conflict goes unnamed until the next run (FS-fmt.3.3).
+docs/gone.md -> gone-target.md

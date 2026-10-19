@@ -1,0 +1,2 @@
+error: nothing was rewritten: docs/FS-001-alpha.md:3: unresolved merge conflict in FS-001-alpha, lines 3–7: resolve it by hand
+error: nothing was rewritten: packages/sub/docs/FS-002-beta.md:3: unresolved merge conflict in FS-002-beta, lines 3–7: resolve it by hand

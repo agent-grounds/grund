@@ -1,4 +1,4 @@
-"""Fetch sources and filesystem roots (§FS-distribution.3.3.2, §FS-distribution.3.3.3)."""
+"""Fetch sources, filesystem roots and fmt refusals (§FS-distribution.3.3.2, §FS-distribution.3.3.3)."""
 
 import errno
 import os
@@ -120,3 +120,36 @@ class RegressionTests(unittest.TestCase):
                         self.assertEqual(wire, canonical(actual), "canonical root bytes")
             finally:
                 os.chdir(cwd)
+
+    def test_conflict_block_refuses_fmt_as_operation_error(self):
+        # §FS-declarations.checks.conflict-marker: the block is data, and nothing is written.
+        with temporary() as temp:
+            root = fixture(temp, "fmt-conflict-marker-write-refused")
+            before = tree_bytes(root)
+            with self.assertRaises(self.module.OperationError) as caught:
+                self.module.fmt(root=root, write=True)
+            failure = caught.exception.failure
+            self.assertEqual("operation", failure.kind)
+            self.assertEqual("conflict-marker", failure.code)
+            self.assertEqual("docs/login.md", failure.path)
+            self.assertEqual(7, failure.line)
+            self.assertEqual([7], [site.line for site in failure.sites])
+            self.assertEqual(0, len(failure.partial_output["changes"]))
+            self.assertEqual(1, len(failure.details["conflicts"]))
+            self.assertEqual(before, tree_bytes(root), "a refused fmt writes nothing")
+
+    def test_read_failure_partway_through_fmt_lists_no_change(self):
+        # §FS-fmt.7.4.3: with cross-references off, the walk meets the unreadable file late.
+        with temporary() as temp:
+            root = Path(temp) / "repo"
+            (root / "docs").mkdir(parents=True)
+            (root / "grund.toml").write_text(
+                'grund_config_version = 1\n\n[scan]\ninclude = ["docs"]\n\n'
+                "[fmt.cross_refs]\nenabled = false\n")
+            (root / "docs/a.md").write_text("# FS-001-alpha: Alpha\n\nCites $$FS-001-alpha.\n")
+            (root / "docs/z.md").write_bytes(b"# FS-002-beta: Beta\n\nbad \xff bytes\n")
+            before = tree_bytes(root)
+            with self.assertRaises(self.module.GrundError) as caught:
+                self.module.fmt(root=root, write=True)
+            self.assertEqual(0, len(caught.exception.failure.partial_output["changes"]))
+            self.assertEqual(before, tree_bytes(root), "nothing is written before the refusal")

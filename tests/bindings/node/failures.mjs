@@ -110,6 +110,28 @@ await assert.rejects(api.fmt({ root: partial, write: true, crossRefs: true }), e
   assert.deepEqual(error.failure.partial.result.changes, []);
   return true;
 });
+// §FS-declarations.checks.conflict-marker: a conflict block refuses fmt as data, tree untouched.
+const conflicted = await mkdtemp(root + '-conflict-');
+await mkdir(conflicted + '/docs');
+await writeFile(conflicted + '/grund.toml',
+  'grund_config_version = 2\nproject_name = "demo"\n\n[schema]\nmarker = "§"\n\n[schema.kinds.FS]\n');
+const login = '# FS-login: Login\n\n## format: Format\n\n### .1: Username\n\n'
+  + '<<<<<<< HEAD\nA username is 2 to 32 characters.\n=======\n'
+  + 'A username is 3 to 64 characters.\n>>>>>>> other\n';
+await writeFile(conflicted + '/docs/login.md', login);
+await writeFile(conflicted + '/docs/use.md', '# Use\n\nSee also $$FS-login.\n');
+await assert.rejects(api.fmt({ root: conflicted, write: true }), error => {
+  const f = error.failure;
+  assert.equal(f.kind, 'operation');
+  assert.equal(f.code, 'conflict-marker');
+  assert.equal(f.path, 'docs/login.md');
+  assert.equal(f.line, 7);
+  assert.deepEqual(f.sites.map(site => site.line), [7]);
+  assert.deepEqual(f.partial.result.changes, []);
+  assert.equal(f.details.conflicts.length, 1);
+  return true;
+});
+assert.equal(await readFile(conflicted + '/docs/use.md', 'utf8'), '# Use\n\nSee also $$FS-login.\n');
 // §FS-distribution.3.2.2.2: a real completed integration write precedes resolver refusal.
 // Rehearsal supplies a fresh isolated HOME/XDG tree for this subprocess.
 await mkdir(process.env.HOME + '/.local', { recursive: true });
