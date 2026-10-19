@@ -13,14 +13,13 @@ use std::path::{Path, PathBuf};
 use super::config_findings::config_diagnostics;
 use super::path_report::PathReport;
 use super::report::public_run_warnings;
-use super::scope_cautions::{empty_scan_warning, scan_scope_caution};
+use super::scope_cautions::{scan_scope_caution, workspace_path_caution};
 use super::unread_roots::unread_root_warnings;
 use crate::checker::{
     CheckWorkspace, check_chapter_rules, check_project, configured_scope, out_of_scope_references,
     out_of_scope_section_headings, parse_ad_hoc, parse_ad_hoc_with_workspace, path_report_scope,
     repair_index_citations, retain_diagnostics_in_report_scope, retain_findings_in_scope,
-    scope_read_any_file, sort_diagnostics, workspace_out_of_scope_references,
-    workspace_out_of_scope_section_headings,
+    sort_diagnostics, workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
 };
 use crate::config::{Config, Invocation, ProjectRecords, Selection};
 use crate::model::{CheckReport, Diagnostic, Finding};
@@ -463,17 +462,14 @@ fn run_workspace_check(
         unread_outside_report_scope,
         // §FS-check.2.2: asked of the path, which no project's walk read a file under.
         |report_is_silent| {
-            let read_any = projects
-                .iter()
-                .any(|project| scope_read_any_file(&project.findings, report_scope));
-            (report_scope.is_some() && report_is_silent && !read_any).then(|| {
-                empty_scan_warning(
-                    &root_config,
-                    narrowing.path,
-                    narrowing.path_provided,
-                    root_config.display(),
-                )
-            })
+            workspace_path_caution(
+                &root_config,
+                projects.iter().map(|project| &project.findings),
+                narrowing.path,
+                narrowing.path_provided,
+                report_is_silent,
+                report_scope,
+            )
         },
         config_warnings,
     );
