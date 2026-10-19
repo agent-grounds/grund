@@ -102,12 +102,10 @@ impl RefsQueryFailure {
         }
     }
 
-    pub(crate) fn into_refs_error(self) -> anyhow::Error {
-        if let Some(format) = self.format_hint {
-            anyhow!(
-                "{}\nhint: this repo's [id] format is `{format}` (run `grund config show`); `grund list` shows the IDs that exist",
-                self.message
-            )
+    /// §FS-show.3.5.1: prose comes from the selected project's guidance.
+    pub(crate) fn into_refs_error(self, hint: Option<String>) -> anyhow::Error {
+        if let Some(hint) = hint {
+            anyhow!("{}\n{hint}", self.message)
         } else {
             anyhow!(self.message)
         }
@@ -165,9 +163,10 @@ pub fn refs_outcome(opts: RefsOpts) -> Result<RefsOutcome> {
 /// without selecting text/summary/JSON rendering (§AR-bindings.2). This keeps
 /// the established API: resolver and setup failures are returned as `Err`.
 pub fn refs(opts: RefsOpts) -> Result<RefsOutput> {
-    let outcome = refs_outcome(opts)?;
+    let (metadata, hint) = refs_with_metadata_and_hint(opts)?;
+    let outcome = metadata.outcome;
     match outcome.query_failure {
-        Some(failure) => Err(failure.into_refs_error()),
+        Some(failure) => Err(failure.into_refs_error(hint)),
         None => Ok(outcome.output),
     }
 }
@@ -187,4 +186,18 @@ pub struct RefsWithMetadata {
 /// scan metadata in `Err` (§FS-refs.4, §FS-errors.5.2.1).
 pub fn refs_with_metadata(opts: RefsOpts) -> Result<RefsWithMetadata> {
     refs_impl(opts)
+}
+
+/// §FS-show.3.5.1: frontend prose from the same context as the typed refusal,
+/// without adding presentation fields to public result records or scanning again.
+#[doc(hidden)]
+pub fn refs_with_metadata_and_hint(opts: RefsOpts) -> Result<(RefsWithMetadata, Option<String>)> {
+    let mut hint = None;
+    let metadata = super::refs_query::refs_impl_with_details(
+        opts,
+        &mut serde_json::json!({}),
+        &mut Vec::new(),
+        &mut hint,
+    )?;
+    Ok((metadata, hint))
 }

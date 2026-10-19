@@ -23,8 +23,8 @@ use grund_core::{
     fetch_snapshot_with_run_warnings, format_references, glob_beside_section, init, list_sizes,
     list_with_run_warnings, names_member_id_candidate, propose_id_with_run_warnings,
     reads_as_coordinate, reads_as_coordinate_glob, refs_sites_with_run_warnings,
-    refs_with_metadata, render_finding_sites_json, show_batch_with_globs, show_with_scope,
-    usage_clause, usage_over_paths, validate_config, with_report_path_base,
+    render_finding_sites_json, show_batch_with_globs, show_with_scope, usage_clause,
+    usage_over_paths, validate_config, with_report_path_base,
 };
 use grund_core::{CHECK_FINDING_CODES, CheckFindingSelection};
 

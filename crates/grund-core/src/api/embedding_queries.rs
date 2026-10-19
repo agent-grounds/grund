@@ -285,6 +285,7 @@ fn refs_data(r: &EmbeddingRequest) -> Result<Value, Value> {
         },
         &mut details,
         &mut cautions,
+        &mut None,
     )
     .map_err(|e| error_data(e, &cautions))?;
     let out = meta.outcome.output;

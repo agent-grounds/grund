@@ -16,7 +16,7 @@ use crate::sources::{canonical_path, path_is_file};
 use std::path::Path;
 
 use crate::checker::{ScanScope, scope_read_any_file};
-use crate::config::{Config, Display, kind_prefixes};
+use crate::config::{Config, Display, format_guidance, kind_prefixes, source_scope_name};
 use crate::grammar::id_shape;
 use crate::model::{Catalog, Diagnostic, format_path, normalize_path_lexically};
 use crate::scanner::{Unread, extension_refusal, name_refusal, pruning_pattern};
@@ -225,7 +225,9 @@ fn quoted_list(dirs: &[String]) -> String {
 /// yet produce the identical fact, and naming only the first would send a fresh
 /// adopter to look for a bug in a config that is fine.
 fn nothing_recognized_warning(config: &Config, scanned_files: usize) -> Diagnostic {
-    let shape = id_shape(&config.id_format);
+    // §FS-check.4.5.2: no selected kind, so describe the loaded global grammar.
+    let guidance = format_guidance(config.schema(), config.frame(), None);
+    let shape = id_shape(guidance.template);
     let files = if scanned_files == 1 { "file" } else { "files" };
     let kinds = kind_prefixes(&config.kinds);
     // §FS-check.4.5.2: with no kind, no token is a citation; say so, not `{}`.
@@ -239,11 +241,12 @@ fn nothing_recognized_warning(config: &Config, scanned_files: usize) -> Diagnost
         format!(
             "nothing recognized — grund read {scanned_files} {files} and found no declaration \
              and no citation in them. A declaration heading reads `# {shape}: <title>` and a \
-             citation `{marker}{shape}`, under [id] format = \"{format}\" with <KIND> one of \
+             citation `{marker}{shape}`, under {key} = \"{format}\" with <KIND> one of \
              {{{kinds}}}. Either nothing is declared yet, or the headings are written to a \
              different shape than that.",
             marker = config.marker,
-            format = config.id_format,
+            key = guidance.key,
+            format = guidance.template,
             kinds = kinds.join(", "),
         )
     };
@@ -261,7 +264,7 @@ fn nothing_recognized_warning(config: &Config, scanned_files: usize) -> Diagnost
 /// §FS-check.1.3.7: the caution a `--full` run earns when the caller also typed a
 /// path that is not the config root. The flag has nothing left to cancel because
 /// of the two-scope rule of §FS-check.1.3.6.1 — the path already resolves against
-/// `[scan] include`, so cancelling the key subtracts nothing from what the run
+/// the configured scope, so widening it subtracts nothing from what the run
 /// reads, and the report is the path with the flag or without it. A warning rather
 /// than a rejection:
 /// the invocation is valid, and a script that passes `--full` uniformly must not
@@ -294,8 +297,9 @@ pub(super) fn full_scope_ignored_warning(
         column: None,
         message: format!(
             "--full has no effect with an explicit PATH — {} already resolves against \
-             [scan] include, and the report is the path either way",
-            display_scope(config.display(), &lexical_scope)
+             {}, and the report is the path either way",
+            display_scope(config.display(), &lexical_scope),
+            source_scope_name(config.frame().version)
         ),
         sites: Vec::new(),
         authority: Vec::new(),

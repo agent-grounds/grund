@@ -51,8 +51,9 @@ The runnable [`examples/places/`](../../examples/places/) shows all three
    └────────────────────────────────────────── citation marker
 ```
 
-Three schemes are supported. `[id].format` selects the repository default; an
-explicit `[[kinds]].format` may give one kind a different stable scheme, so
+Three schemes are supported. In version 2, `[schema] id_format` selects the
+repository default and `[schema.kinds.<KIND>] id_format` can override one kind.
+Version 1 uses `[id] format` and `[[kinds]] format` respectively, so
 configured per-kind mixing is supported
 ([§FS-config.3.2](../functional-spec/FS-config.md#32-id--id-grammar)). Each
 scheme has a runnable tiny repo under [`examples/`](../../examples/), maintained as a
