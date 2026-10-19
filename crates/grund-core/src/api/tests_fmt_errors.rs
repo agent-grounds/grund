@@ -60,7 +60,6 @@ fn public_fmt_api_preserves_every_strict_scan_error() {
 /// the walk cannot read is met after it has planned the first file's `$$`; the run
 /// still writes nothing and its partial output lists no change.
 #[test]
-#[ignore = "red until #837 plans every write before making one; implement removes this"]
 fn a_read_failure_partway_through_the_walk_rewrites_nothing() {
     let root = test_root("a_read_failure_partway_through_the_walk_rewrites_nothing");
     write(

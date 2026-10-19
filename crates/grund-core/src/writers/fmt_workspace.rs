@@ -68,8 +68,11 @@ pub(crate) fn fmt_workspace_projects(
                     strict_abort = true;
                     preflight_scan_errors.extend(abort.scan_errors.iter().cloned());
                 } else {
-                    // §FS-distribution.3.2.2.1: retain prior projects in a late writer failure.
-                    if let Some(diagnostic) = error.downcast_mut::<crate::OperationDiagnostic>() {
+                    // §FS-distribution.3.2.2.1: retain prior projects in a late writer failure;
+                    // the preflight wrote none of theirs (§FS-fmt.7.4.3).
+                    if perform_writes
+                        && let Some(diagnostic) = error.downcast_mut::<crate::OperationDiagnostic>()
+                    {
                         let partial = &mut diagnostic.partial_output;
                         if partial.is_object() {
                             let preceding = serde_json::json!({
