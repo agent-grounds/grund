@@ -104,6 +104,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-rule-refusal-reasons](DF-rule-refusal-reasons.md#df-rule-refusal-reasons-a-chapter-path-is-refused-for-the-component-that-failed-corrected-in-place) — a chapter path is refused for the component that failed, corrected in place
 - [§DF-rule-refusal-rewrites](DF-rule-refusal-rewrites.md#df-rule-refusal-rewrites-a-refused-rules-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced-in-place) — a refused rule's accepted form is the typed sentence with the failed part replaced, in place
 - [§DF-stub-target-fenced-heading](DF-stub-target-fenced-heading.md#df-stub-target-fenced-heading-a-heading-inside-a-fence-of-a-stubs-target-does-not-declare-its-id) — a heading inside a fence of a stub's target does not declare its ID
+- [§DF-conflicted-declaration](DF-conflicted-declaration.md#df-conflicted-declaration-a-declaration-that-still-holds-an-unresolved-merge-conflict-fails-check-and-stops-fmt-from-writing) — a declaration that still holds an unresolved merge conflict fails `check` and stops `fmt` from writing
 
 ## Config, discovery, and workspaces
 

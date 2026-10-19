@@ -58,7 +58,7 @@ Only `grund fmt --write` writes lock files, and only when its scope is a project
 - **refresh** an entry whose section was edited in place — its recorded fingerprint is found at no address of the declaration, so its text changed where it stands — to the section's current fingerprint;
 - **drop** an entry whose address nothing cites any more, or whose address is no longer a locked address.
 
-An entry that already matches is left alone, so a second run writes nothing. A stale entry is never a `check` finding: it is something `fmt --write` drops.
+An entry that already matches is left alone, so a second run writes nothing. A stale entry is never a `check` finding: it is something `fmt --write` drops. A conflict block in a declaration body ([§FS-declarations.body.conflict](FS-declarations.md#bodyconflict-a-body-still-in-the-middle-of-a-merge)) refuses the pass, and the run writes no lock and no other file ([§FS-fmt.3.2](FS-fmt.md#32-a-run-that-needs-the-whole-declaration-set-rewrites-nothing)), because neither side of a conflict is a text an entry may record.
 
 ### write.never-a-move: `fmt` never approves a move
 
@@ -84,7 +84,7 @@ An add is reported at the line the entry will occupy after the write, a refresh 
 
 ### write.rebuild: A lock grund cannot read is rebuilt
 
-A lock line that is not `<coordinate> <fingerprint>` — a hand edit, or the conflict markers of a merge — is a `check` error ([§FS-section-lock.checks.invalid-section-lock](FS-section-lock.md#checksinvalid-section-lock-a-lock-line-grund-cannot-read)), and `fmt --check` lists it as `section lock: rebuild` at its line. `fmt --write` rebuilds the file: it keeps every entry it can read, from either side of a conflict, takes for a coordinate entered twice the entry whose fingerprint the section holds now, or else the first, and then adds, refreshes and drops as above. Two changes that each cite a new section of one declaration therefore merge with one `fmt --write`.
+A lock line that is not `<coordinate> <fingerprint>` — a hand edit, or the conflict markers of a merge — is a `check` error ([§FS-section-lock.checks.invalid-section-lock](FS-section-lock.md#checksinvalid-section-lock-a-lock-line-grund-cannot-read)), and `fmt --check` lists it as `section lock: rebuild` at its line. `fmt --write` rebuilds the file: it keeps every entry it can read, from either side of a conflict, takes for a coordinate entered twice the entry whose fingerprint the section holds now, or else the first, and then adds, refreshes and drops as above. Two changes that each cite a new section of one declaration therefore merge with one `fmt --write`. A merge that also left a conflict block in a declaration body is refused until that body is resolved ([§FS-declarations.checks.conflict-marker](FS-declarations.md#checksconflict-marker-unresolved-merge-conflict)), and the lock is then rebuilt as above.
 
 ## move: Moving a cited section on purpose
 

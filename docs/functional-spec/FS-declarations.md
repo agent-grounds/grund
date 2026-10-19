@@ -11,11 +11,12 @@ and which declarations a stub stands for is [§FS-declarations.stubs](FS-declara
 What a heading is and what its rendered text reads, where a body ends, what a section and
 the section map are, and what cuts a lead are [§FS-declarations.heading](FS-declarations.md#heading-what-a-heading-is), [§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends),
 [§FS-declarations.section](FS-declarations.md#section-what-a-section-is) and [§FS-declarations.lead](FS-declarations.md#lead-what-cuts-a-lead).
-The checks below are that sentence enforced, save two, which hold what an address is worth
+The checks below are that sentence enforced, save three, which hold what an address is worth
 once it resolves: that the declaration is in the form its ID grammar gives it
-([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)), and that its lead, and every citable section
+([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)), that its lead, and every citable section
 lead in its body, stays inside the size its project budgets where that project asks for
-one ([§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)). Serves [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) and
+one ([§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)), and that the text it addresses is not still in the
+middle of a merge ([§FS-declarations.checks.conflict-marker](FS-declarations.md#checksconflict-marker-unresolved-merge-conflict)). Serves [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) and
 [§GOAL-token-economy.1](../goals.md#1-what-this-requires).
 
 ## terms: Terms
@@ -24,6 +25,9 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 lead, index, catalog), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker, citation, citation site), [§FS-terms.terms.3](FS-terms.md#terms3-source-forms)
 (source declaration, stub, doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, workspace, member),
 [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity, caution), and [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (rule).
+
+- **marker line** — A line git writes around each side of a conflict it could not merge: column 0, exactly seven `<`, `|`, `=` or `>`, then a space or the end of the line ([§FS-declarations.body.conflict.markers](FS-declarations.md#bodyconflictmarkers-a-marker-line)).
+- **conflict block** — The marker lines of one unresolved conflict, from its opening `<<<<<<<` to its closing `>>>>>>>`, with every line between them ([§FS-declarations.body.conflict.block](FS-declarations.md#bodyconflictblock-a-conflict-block)).
 
 ## requirements: What every declaration holds to
 
@@ -466,6 +470,36 @@ declaration, owns the coordinate: a same-or-higher Markdown heading, the end of 
 source doc-comment or docstring, the next declaration in a shared comment block, and a
 stub's single declaration line each end ownership.
 
+### body.conflict: A body still in the middle of a merge
+
+A declaration whose body holds a conflict block is not one text but two, and nothing in the tree says which of them is the declaration's: every citation of it, and every fingerprint the section lock takes of it ([§FS-section-lock.holds.fingerprint](FS-section-lock.md#holdsfingerprint-the-fingerprint)), would read one address as both ([§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution)). This is the one definition of such a block: which lines are markers ([§FS-declarations.body.conflict.markers](FS-declarations.md#bodyconflictmarkers-a-marker-line)), how they make blocks ([§FS-declarations.body.conflict.block](FS-declarations.md#bodyconflictblock-a-conflict-block)), where blocks are looked for ([§FS-declarations.body.conflict.where](FS-declarations.md#bodyconflictwhere-where-blocks-are-looked-for)), and which declarations a block names ([§FS-declarations.body.conflict.owners](FS-declarations.md#bodyconflictowners-which-declarations-a-block-names)). `check` reports each block ([§FS-declarations.checks.conflict-marker](FS-declarations.md#checksconflict-marker-unresolved-merge-conflict)), and `fmt` writes nothing while one exists ([§FS-fmt.7.4](FS-fmt.md#74-no-write-without-a-complete-model)). A block changes no recognition: every other command reads the file as it did, and `show` still prints the bytes it reads ([§FS-show.requirements.authored-bytes](FS-show.md#requirementsauthored-bytes-a-slice-is-the-authors-bytes-selected-and-never-rewritten--realized)). Decided in [§DF-conflicted-declaration](../decisions/functional/DF-conflicted-declaration.md#df-conflicted-declaration-a-declaration-that-still-holds-an-unresolved-merge-conflict-fails-check-and-stops-fmt-from-writing).
+
+#### body.conflict.markers: A marker line
+
+A marker line starts at column 0 with exactly seven of one character, `<`, `|`, `=` or `>`, followed by a space or by the end of the line; a CR before the LF is the end of the line. So `<<<<<<< HEAD`, `=======` and `>>>>>>> other` are marker lines, and `<<<<<<<< HEAD` (eight), `<<<<<<<HEAD` (no space) and ` <<<<<<< HEAD` (indented) are not. These are the lines git writes around a conflict, `|||||||` being the base marker of its `diff3` and `zdiff3` styles. The test is on the raw line, so a marker line inside a fence, an HTML comment, a docstring or a block comment is one all the same.
+
+#### body.conflict.block: A conflict block
+
+A conflict block opens at a `<<<<<<<` line and closes at the next `>>>>>>>` line, and it is those two lines with every line between them. A `|||||||` or `=======` line is a marker only inside an open block, so a setext underline of seven `=` or a table row of seven `|` outside one is text. A `<<<<<<<` inside an open block opens no second one: the block still closes at the next `>>>>>>>`. Two blocks are not well formed and are blocks all the same:
+
+- a `>>>>>>>` with no block open is a block of that one line, which is what deleting one side of a conflict with its opening marker, and keeping the closing one, leaves behind;
+- a `<<<<<<<` that no `>>>>>>>` closes is a block that ends at its last marker line.
+
+A `>>>>>>> ` line is also a seven-level blockquote in Markdown. Outside an open block it is a lone closer, so a quote that deep is written `> > > > > > >`.
+
+#### body.conflict.where: Where blocks are looked for
+
+Blocks are read off a file's raw lines, top to bottom ([§FS-declarations.body.conflict.block](FS-declarations.md#bodyconflictblock-a-conflict-block)), and looked for in two places:
+
+- **Every line of a Markdown file that declares an ID**: its preamble, its fences, and the lines after a heading that closed every body. Whether the file declares an ID is read off its raw lines, fences ignored: a line that would declare an ID by [§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares) were no fence open makes the file one that declares. A conflict can open a fence it never closes, and the file's one declaration below it would then read as fenced text; deciding on the fence-aware reading would leave that file's markers unread.
+- **In a source file, the raw lines of each declaration's body** ([§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends)), in a docstring or a `/** */` comment as much as in a line-style run, and a block that opens on the line right after a declaration's line-style run ends ([§FS-languages.comment-block.close](FS-languages.md#comment-blockclose-find-the-close-boundary)), through its last line. A marker line is not a comment line, so a conflict inside a `///` or `#` run cuts the run at its opening marker and the body ends one line above the block. Counting the block there is what keeps `fmt --write`, which runs before any compiler, usually in a pre-commit hook, from fingerprinting the cut-short body into the section lock.
+
+A marker line anywhere else is not looked at: in code outside those places the compiler or interpreter of that file refuses it, and a Markdown file that declares no ID, or a file the scan does not read, is no declaration's text.
+
+#### body.conflict.owners: Which declarations a block names
+
+A block names every declaration whose declaration line or body its lines overlap, each ID once, in the order its first such declaration opens, and a block counted after a cut line-style run names the declaration whose run it cut. A block that overlaps no body names none: one after a heading that closed the body, in a Markdown file's preamble, or above a declaration a fence the conflict left open hides. A block that holds declaration lines names the declaration above it and each one inside it, so a merge that wrote `# FS-b: B` on one side and `# FS-c: C` on the other, below `# FS-a: A`, names all three. Owners are read from the body spans every other command reads ([§FS-declarations.body](FS-declarations.md#body-where-a-declarations-body-ends)), so `check`'s finding and `fmt`'s refusal name the same declarations.
+
 ## section: What a section is
 
 A section is a citable heading inside a declaration's body: a numbered heading, or a named
@@ -898,6 +932,18 @@ The absent key activates no measurement or finding and leaves the existing text 
 #### checks.oversized-lead.4: Which sites it judges
 
 An explicit-path check judges only declaration and section sites scanned at that path. `--full` adds its existing out-of-scope citation findings but does not extend this repository policy beyond declarations in the configured scan scope. In a workspace, each member's effective key governs only that member's sites; a member without the key remains silent even when another member opts in.
+
+### checks.conflict-marker: Unresolved merge conflict
+
+Each conflict block found where [§FS-declarations.body.conflict.where](FS-declarations.md#bodyconflictwhere-where-blocks-are-looked-for) looks is one error with code `conflict-marker`, located at the block's first line:
+
+```text
+unresolved merge conflict in <owners>, lines <first>–<last>: resolve it by hand
+```
+
+`<owners>` is the IDs the block names ([§FS-declarations.body.conflict.owners](FS-declarations.md#bodyconflictowners-which-declarations-a-block-names)), joined by `, ` and a final ` and `, and the phrase reads `outside any declaration` when it names none. Each ID is spelled as its own project spells it, as a `duplicate` finding spells it, in a workspace-root run too. `<first>` and `<last>` are the block's first and last lines, joined by an en dash, and a block of one line reads `line <first>`. A merge that left two versions of `FS-login`'s `### .1: Username` reads `docs/login.md:7: error: unresolved merge conflict in FS-login, lines 7–11: resolve it by hand`. In JSON, `sites` holds the block's first and last lines, in that order, and its one line for a block of one line. Text, LSP and `--only`/`--ignore` treatment are those of every located error ([§FS-check.2.1](FS-check.md#21-report-format)).
+
+The message names no side and no command, because none can choose one: which text is the declaration's is the author's call ([§FS-declarations.requirements.actionable](FS-declarations.md#requirementsactionable-a-finding-is-located-at-the-fault-and-no-command-makes-the-fix--realized-directional-for-the-next-check)). A block that holds declaration lines or headings still raises what they raise, such as `duplicate`, `declaration-near-miss` or `duplicate-section`, beside this finding, which names their cause. `--ignore conflict-marker` hides the finding and unlocks nothing, because `fmt` reads the block from the model and not from `check`'s report ([§FS-fmt.7.4](FS-fmt.md#74-no-write-without-a-complete-model)). It is an error from the release that adds it, with no warning first ([§DF-conflicted-declaration](../decisions/functional/DF-conflicted-declaration.md#df-conflicted-declaration-a-declaration-that-still-holds-an-unresolved-merge-conflict-fails-check-and-stops-fmt-from-writing)).
 
 ### checks.parse-moves: A verdict that moves in 0.19.0
 
