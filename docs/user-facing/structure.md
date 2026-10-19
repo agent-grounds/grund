@@ -158,7 +158,9 @@ With named sections on, a name may also follow a number in a Markdown declaratio
 From grund 0.19.0, a marked citation of that address fails the check if its
 section or declaration is absent, just like any other broken reference. The
 0.18.0 warning window has ended ([§FS-citations.checks.mixed-path](../functional-spec/FS-citations.md#checksmixed-path-a-citation-of-a-name-under-a-number-is-checked-and-warns-until-0190)).
-After adding a resolving citation, run `grund fmt --write` and commit the lock;
+After adding a resolving citation, run `grund fmt --write` with no path, so it
+covers the whole project, and commit the lock
+([§FS-section-lock.checks.remedy](../functional-spec/FS-section-lock.md#checksremedy-the-run-that-writes-the-lock));
 an unrecorded mixed address still produces an immediate
 `unrecorded-section-citation` error ([§FS-section-lock.checks.unrecorded-section-citation](../functional-spec/FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold)).
 
