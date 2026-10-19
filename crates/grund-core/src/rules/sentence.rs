@@ -3,6 +3,7 @@
 mod conjunction;
 mod count;
 mod forms;
+mod literal;
 mod predicate;
 mod recovery;
 mod selectors;
@@ -13,6 +14,7 @@ mod targets;
 use super::RuleAnchor;
 use crate::config::{KindEntry, KindTable, Quote};
 use crate::grammar::Grammar;
+use literal::DeclarationSelector;
 use stages::read;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -23,13 +25,13 @@ pub(super) use subjects::lower_case_each;
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub(crate) enum RuleSubject {
     Kind(String),
-    ExactDeclaration(String),
+    ExactDeclaration(DeclarationSelector),
     ChapterOfKind {
         kind: String,
         name: String,
     },
     ExactChapter {
-        declaration: String,
+        declaration: DeclarationSelector,
         path: String,
         separator: String,
     },
@@ -41,11 +43,13 @@ impl RuleSubject {
     /// declaration itself (`section` is `None`) or its chapter at `section`.
     /// `list`, `list --size` and literal resolution all ask it, so a subject
     /// selects one set of units wherever it is read.
+    /// Numeric components compare by value while report labels keep their
+    /// authored digits (§FS-config.3.2.8).
     pub(crate) fn selects(&self, kind: &str, declaration: &str, section: Option<&str>) -> bool {
         match section {
             None => match self {
                 Self::Kind(wanted) => wanted == kind,
-                Self::ExactDeclaration(wanted) => wanted == declaration,
+                Self::ExactDeclaration(wanted) => wanted.matches(declaration),
                 _ => false,
             },
             Some(section) => self.chapter_path(kind, declaration) == Some(section),
@@ -56,7 +60,7 @@ impl RuleSubject {
     /// one unit (§FS-rules.4, §FS-rules.8); `None` for a quantified subject.
     pub(crate) fn literal(&self) -> Option<String> {
         match self {
-            Self::ExactDeclaration(literal) => Some(literal.clone()),
+            Self::ExactDeclaration(literal) => Some(literal.to_string()),
             Self::ExactChapter {
                 declaration,
                 path,
@@ -78,7 +82,7 @@ impl RuleSubject {
                 declaration: wanted,
                 path,
                 ..
-            } if wanted == declaration => Some(path),
+            } if wanted.matches(declaration) => Some(path),
             _ => None,
         }
     }

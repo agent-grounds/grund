@@ -311,6 +311,7 @@ fn show_batch_query_with_metadata(
         context.render_config(),
         &project.findings,
         &id,
+        Some(raw_id),
         section.as_deref(),
         opts.mode.render_mode(),
         false,

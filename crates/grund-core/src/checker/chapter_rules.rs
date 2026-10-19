@@ -420,7 +420,7 @@ fn subject_kind(subject: &RuleSubject, schema: &Schema) -> Option<String> {
             return (!kind.contains('/')).then(|| kind.clone());
         }
         RuleSubject::ExactDeclaration(declaration)
-        | RuleSubject::ExactChapter { declaration, .. } => declaration,
+        | RuleSubject::ExactChapter { declaration, .. } => declaration.to_string(),
     };
     if named.contains('/') {
         return None;

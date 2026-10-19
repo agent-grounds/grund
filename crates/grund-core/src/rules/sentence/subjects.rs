@@ -12,6 +12,7 @@
 //! what a suggestion recovers because only `recovery.rs` builds it.
 
 use super::forms::{Form, Refusal, refuse};
+use super::literal::DeclarationSelector;
 use super::recovery::{Recovered, Suggestion, as_if_enabled, recover};
 use super::{RuleLevel, RulePolarity, RuleSubject, RuleVocabulary};
 use crate::grammar::{named_section_component, parse_id_arg, render_input_id, unnamed_component};
@@ -300,9 +301,11 @@ pub(super) fn parse_subject(
     for (index, grammar) in vocab.id_grammars.iter().enumerate() {
         if let Ok((id, section)) = parse_id_arg(text, grammar) {
             known_subject(&id.kind, vocab).map_err(literal)?;
+            let declaration =
+                DeclarationSelector::parsed(render_input_id(grammar, text, &id), grammar);
             return Ok(match section {
                 Some(path) => RuleSubject::ExactChapter {
-                    declaration: render_input_id(grammar, text, &id),
+                    declaration,
                     path,
                     separator: vocab
                         .section_separators
@@ -310,7 +313,7 @@ pub(super) fn parse_subject(
                         .cloned()
                         .unwrap_or_else(|| ".".into()),
                 },
-                None => RuleSubject::ExactDeclaration(text.into()),
+                None => RuleSubject::ExactDeclaration(declaration),
             });
         }
     }

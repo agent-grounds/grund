@@ -3,6 +3,8 @@
 //! set names, using shared snapshot indexes (§AR-rules.3.1, §FS-rules.5.3).
 //! Nothing here decides a finding — the families in `engine.rs` do — so one
 //! join is read the same way by every one of them.
+//! Numeric literal matches retain identity independently of report padding
+//! (§FS-config.3.2.8).
 
 use super::super::facts::{NodeKey, RuleFacts};
 use super::super::{RuleSubject, RuleTargets};
@@ -24,9 +26,10 @@ pub(super) fn select_subjects(
             .collect(),
         RuleSubject::ExactDeclaration(wanted) => index
             .labels
-            .get(wanted.as_str())
-            .into_iter()
-            .flatten()
+            .range(wanted.prefix()..)
+            .take_while(|(label, _)| label.starts_with(wanted.prefix()))
+            .filter(|(label, _)| wanted.matches(label))
+            .flat_map(|(_, nodes)| nodes)
             .map(|node| (*node).clone())
             .collect(),
         // §AR-rules.2, §FS-rules.5.2: `chapter_handle` joins the whole path, and
@@ -52,7 +55,7 @@ pub(super) fn select_subjects(
                     facts
                         .nodes
                         .get(owner)
-                        .is_some_and(|meta| &meta.label == declaration)
+                        .is_some_and(|meta| declaration.matches(&meta.label))
                 })
             })
             .map(|node| (*node).clone())

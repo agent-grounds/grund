@@ -43,7 +43,12 @@ pub(crate) fn render_citation_id(
     if citation.local_section || citation.shorthand {
         return render_catalog_id(grammar, declarations, &citation.id);
     }
-    let raw = citation.text.strip_prefix(marker).unwrap_or(&citation.text);
+    let raw = citation
+        .text
+        .strip_prefix('<')
+        .and_then(|raw| raw.strip_prefix(marker)?.strip_prefix('>'))
+        .or_else(|| citation.text.strip_prefix(marker))
+        .unwrap_or(&citation.text);
     let raw = citation
         .namespace
         .as_ref()

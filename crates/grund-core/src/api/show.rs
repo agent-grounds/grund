@@ -255,6 +255,7 @@ impl<'c, 'a> ShowSource<'c, 'a> {
             context.render_config(),
             &self.project.findings,
             &self.id,
+            Some(self.raw_id),
             self.section.as_deref(),
             mode,
             include_heading,

@@ -245,7 +245,7 @@ fn predicate(reading: &mut Reading<'_>) -> Result<(), Refusal> {
         // declaration, or `Each KIND`.
         let declaration = match subject {
             RuleSubject::ChapterOfKind { kind, .. } => Some(format!("Each {kind}")),
-            RuleSubject::ExactChapter { declaration, .. } => Some(declaration.clone()),
+            RuleSubject::ExactChapter { declaration, .. } => Some(declaration.to_string()),
             RuleSubject::Kind(_) | RuleSubject::ExactDeclaration(_) => None,
         };
         if let Some(declaration) = declaration {

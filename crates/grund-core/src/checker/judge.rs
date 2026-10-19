@@ -16,9 +16,9 @@ use super::references::{ReferenceTier, check_citation_resolution};
 use super::section_lock::check_section_locks;
 use super::values::check_values;
 use crate::config::{Frame, KindResolution, Rules, Schema};
-use crate::grammar::{render_catalog_id, render_citation_id};
+use crate::grammar::render_catalog_id;
 use crate::model::{Catalog, CheckReport, Diagnostic, Expected, Id, paired_declarations};
-use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
+use crate::resolver::{WorkspaceCheckTarget, target_for_citation};
 
 /// The workspace a project is judged in (§FS-workspace.4): every loaded
 /// project as a citation resolves against it, and each one's rules by alias.
@@ -101,7 +101,10 @@ pub(crate) fn judge(
     // resolves to a real declaration is likely a live citation someone bracketed
     // by mistake — the escape silently makes it inert.
     for esc in &findings.escaped_citations {
-        if citation_resolves(esc, findings, schema, frame, targets) {
+        // §FS-config.3.2.8: the suggested live form names the selected declaration.
+        if let Some(target) = target_for_citation(esc, findings, schema, frame, targets)
+            && target.catalog.declarations.contains_key(&esc.id)
+        {
             report.suggestions.push(Diagnostic {
                 code: "escaped-citation-resolves",
                 path: Some(esc.file.clone()),
@@ -111,8 +114,8 @@ pub(crate) fn judge(
                     "escaped citation {} resolves to a declaration; write {}{} for a live citation, or leave it escaped if it is only an illustration",
                     esc.text.trim(),
                     schema.citation.marker,
-                    super::support::qualify(esc.namespace.as_deref(), &render_citation_id(
-                        frame.grammar(), &findings.declarations, esc, &schema.citation.marker))
+                    super::support::qualify(esc.namespace.as_deref(), &render_catalog_id(
+                        target.frame().grammar(), &target.catalog.declarations, &esc.id))
                 ),
                 sites: Vec::new(),
                 authority: Vec::new(),

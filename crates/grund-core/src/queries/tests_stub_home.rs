@@ -72,6 +72,7 @@ fn unscanned_stub_target_reads_the_overlay_by_its_id() {
             &config,
             &findings,
             &second(),
+            None,
             section,
             ShowRenderMode::Default,
             false,

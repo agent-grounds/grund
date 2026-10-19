@@ -15,7 +15,7 @@ use std::path::Path;
 use super::refs::{RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure, RefsWithMetadata};
 use super::report::context_run_warnings;
 use crate::config::display_path;
-use crate::grammar::{path_at_or_under, render_catalog_id, render_citation_id, render_id};
+use crate::grammar::{path_at_or_under, render_catalog_id, render_citation_id, render_input_id};
 use crate::model::{Citation, sort_path_key};
 use crate::queries::declaration_ambiguity_refusal;
 use crate::resolver::{WorkspaceContext, WorkspaceProject, load_classifying_workspace_context};
@@ -246,18 +246,19 @@ pub(super) fn refs_impl_with_details(
         .collect::<Vec<_>>();
     let note = if public_hits.is_empty() && !target_project.findings.declarations.contains_key(&id)
     {
+        // §FS-config.3.2.8: a missing query reports its own authored digits.
         if context.workspace_loaded && alias.is_some() {
             Some(format!(
                 "{}/{} is neither declared nor cited — run `grund list --project {}` to see {}'s declared IDs",
                 target_alias,
-                render_id(&render_config.grammar, &id),
+                render_input_id(&render_config.grammar, raw_id, &id),
                 target_alias,
                 target_alias
             ))
         } else {
             Some(format!(
                 "{} is neither declared nor cited — run `grund list` to see every declared ID",
-                render_id(&render_config.grammar, &id)
+                render_input_id(&render_config.grammar, raw_id, &id)
             ))
         }
     } else {
