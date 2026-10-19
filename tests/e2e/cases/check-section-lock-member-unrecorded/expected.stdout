@@ -1,2 +1,2 @@
-docs/use.md:3: error: api/FS-login.format.1 is cited but has no entry in .grund/sections/api/FS-login.lock; run grund fmt --write
-packages/api/docs/notes.md:3: error: FS-login.format.2 is cited but has no entry in packages/api/.grund/sections/FS-login.lock; run grund fmt --write
+docs/use.md:3: error: api/FS-login.format.1 is cited but has no entry in .grund/sections/api/FS-login.lock; run grund fmt --write at the project or workspace root; fmt on a file or a subdirectory writes no lock
+packages/api/docs/notes.md:3: error: FS-login.format.2 is cited but has no entry in packages/api/.grund/sections/FS-login.lock; run grund fmt --write at the project or workspace root; fmt on a file or a subdirectory writes no lock
