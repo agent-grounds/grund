@@ -278,7 +278,7 @@ fn render_show_error(
 ) -> ExitCode {
     if default_invocation && message.starts_with("unknown project alias") && Path::new(id_arg).exists() {
         eprintln!("invalid ID `{id_arg}`");
-        print_id_format_hint(path);
+        print_id_format_hint(path, id_arg);
         eprintln!("hint: run `grund check {id_arg}` to validate a path");
         return ExitCode::FAILURE;
     }
@@ -295,7 +295,7 @@ fn render_show_error(
     }
     eprintln!("{message}");
     if message.starts_with("invalid ID") {
-        print_id_format_hint(path);
+        print_id_format_hint(path, id_arg);
         if default_invocation && looks_like_subcommand_typo(id_arg) {
             eprintln!("hint: run `grund --help` for the list of subcommands");
         }
@@ -334,12 +334,10 @@ fn print_bare_query_json(code: &'static str, message: &str, sites: &[FindingSite
     );
 }
 
-fn print_id_format_hint(path: &Path) {
-    if let Ok(config) = effective_config(path) {
-        eprintln!(
-            "hint: this repo's [id] format is `{}` (run `grund config show`); `grund list` shows the IDs that exist",
-            config.id_format
-        );
+/// §FS-show.3.5.1: the core selects the loaded key and effective kind template.
+fn print_id_format_hint(path: &Path, operand: &str) {
+    if let Ok(hint) = grund_core::query_format_hint(path, operand) {
+        eprintln!("{hint}");
     }
 }
 

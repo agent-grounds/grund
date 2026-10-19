@@ -215,7 +215,6 @@ fn query(version: u8, kind_override: bool, surface: &str) {
 macro_rules! red_query {
     ($name:ident, $version:expr, $override:expr, $surface:expr) => {
         #[test]
-        #[ignore = "red until #817 loaded-version and effective-kind hints; implement removes this"]
         fn $name() {
             query($version, $override, $surface);
         }
@@ -258,19 +257,16 @@ fn kind_override_resolution_controls() {
 }
 
 #[test]
-#[ignore = "red until #817 v2 global near-miss key; implement removes this"]
 fn v2_global_near_miss() {
     near_miss(2, false);
 }
 
 #[test]
-#[ignore = "red until #817 v2 override near-miss key; implement removes this"]
 fn v2_override_near_miss() {
     near_miss(2, true);
 }
 
 #[test]
-#[ignore = "red until #817 v1 override near-miss key; implement removes this"]
 fn v1_override_near_miss() {
     near_miss(1, true);
 }
@@ -290,7 +286,6 @@ fn nothing_recognized(version: u8) {
 }
 
 #[test]
-#[ignore = "red until #817 v2 nothing-recognized key; implement removes this"]
 fn v2_global_nothing_recognized() {
     nothing_recognized(2);
 }
@@ -318,7 +313,6 @@ fn v2_excluded_root_scope() {
 
 /// §FS-check.1.3.7: the caution's scope label must describe a v2 project.
 #[test]
-#[ignore = "red until #817 v2 explicit full-scope caution; implement removes this"]
 fn v2_explicit_full_scope_caution() {
     let fixture = Fixture::new(2, false);
     fixture.write("# ADR-choice: Choice\n\n§ADR-choice\n");
@@ -338,7 +332,6 @@ fn v2_explicit_full_scope_caution() {
 
 /// §FS-check.3.14.6: the tier label is also live source-scope guidance.
 #[test]
-#[ignore = "red until #817 v2 outside-scope label; implement removes this"]
 fn v2_full_outside_scope_label() {
     let fixture = Fixture::new(2, false);
     fixture.write("# ADR-choice: Choice\n\n§ADR-choice\n");
@@ -366,7 +359,6 @@ fn v2_full_outside_scope_label() {
 
 /// §FS-check.4.10.5: another project may use either supported scope model.
 #[test]
-#[ignore = "red until #817 v2 unread workspace repair; implement removes this"]
 fn v2_unread_workspace_repair() {
     let fixture = Fixture::new(2, false);
     fixture.write("# ADR-choice: Choice\n");
@@ -392,7 +384,6 @@ fn v2_unread_workspace_repair() {
 }
 
 #[test]
-#[ignore = "red until #817 check help explains both scope versions; implement removes this"]
 fn check_help_scope_vocabulary() {
     // Help is static, including in a directory with an invalid config.
     let fixture = Fixture::new(2, false);

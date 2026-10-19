@@ -14,7 +14,7 @@ use std::path::Path;
 
 use super::refs::{RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure, RefsWithMetadata};
 use super::report::context_run_warnings;
-use crate::config::display_path;
+use crate::config::{display_path, format_guidance};
 use crate::grammar::{path_at_or_under, render_catalog_id, render_citation_id, render_input_id};
 use crate::model::{Citation, sort_path_key};
 use crate::queries::declaration_ambiguity_refusal;
@@ -64,7 +64,7 @@ pub(super) fn hit_path(
 /// Resolve and refuse recorded target ambiguities before filtering any citations
 /// (§FS-refs.4), retaining absent-target queries (§FS-refs.1).
 pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsWithMetadata> {
-    refs_impl_with_details(opts, &mut serde_json::json!({}), &mut Vec::new())
+    refs_impl_with_details(opts, &mut serde_json::json!({}), &mut Vec::new(), &mut None)
 }
 
 /// Additive source diagnostics without changing RefsOutput (§FS-distribution.3.1).
@@ -72,6 +72,7 @@ pub(super) fn refs_impl_with_details(
     opts: RefsOpts,
     details: &mut serde_json::Value,
     cautions: &mut Vec<crate::Finding>,
+    hint: &mut Option<String>,
 ) -> Result<RefsWithMetadata> {
     // §AR-scanner.2.4.2: the classifying loader, not the plain one — `refs`
     // publishes each hit's enclosing declaration and section (§FS-refs.3.2), and
@@ -84,8 +85,8 @@ pub(super) fn refs_impl_with_details(
         .unwrap_or_else(|| context.render_config());
     let (alias, raw_id) = split_qualified_id_arg(&opts.id).map_err(|err| {
         anyhow!(
-            "{err:#}\nhint: this repo's [id] format is `{}` (run `grund config show`); `grund list` shows the IDs that exist",
-            current_config.id_format
+            "{err:#}\n{}",
+            format_guidance(current_config.schema(), current_config.frame(), None).hint()
         )
     })?;
     let target_project = match alias.as_deref() {
@@ -115,7 +116,7 @@ pub(super) fn refs_impl_with_details(
     let target_alias = target_project.alias.as_str();
     let render_config = &target_project.config;
     let scan_errors = refs_scan_errors(&context);
-    // §FS-refs.4: the `[id] format` hint is for an argument that does not match
+    // §FS-show.3.5.1: the format hint is for an argument that does not match
     // it; an ambiguous shorthand did match and lists its candidates instead.
     let (id, inline_section) = match resolve_id_arg(
         raw_id,
@@ -125,6 +126,10 @@ pub(super) fn refs_impl_with_details(
     ) {
         Ok(resolved) => resolved,
         Err(error) => {
+            // §FS-show.3.5.1: carry prose separately; structured formats stay templates.
+            let guidance =
+                format_guidance(render_config.schema(), render_config.frame(), Some(raw_id));
+            *hint = error.wants_format_hint().then(|| guidance.hint());
             // §FS-distribution.3.3.2: retain original resolver data.
             *details = error.diagnostic().details;
             return Ok(RefsWithMetadata {

@@ -40,7 +40,7 @@ pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> C
     check_oversized_leads(catalog, schema, frame, &mut report);
     // §FS-declarations.checks.declaration-near-miss: headings that open like a declaration and
     // parse as none.
-    check_declaration_near_misses(catalog, &mut report);
+    check_declaration_near_misses(catalog, schema, frame, &mut report);
     // §FS-declarations.checks.conflict-marker: each block the file pass recorded.
     check_conflict_blocks(catalog, frame, &mut report);
     // §FS-check.checks.glob-citation: patterns written where a citation belongs.

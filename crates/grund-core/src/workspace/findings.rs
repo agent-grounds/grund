@@ -187,10 +187,16 @@ pub(crate) fn uncovered_block_scope_roots(config: &Config) -> Vec<PathBuf> {
 /// beside an error in three cases of the corpus, so it keeps to the cap
 /// (§DF-unread-opted-out-block.2.4).
 /// It names no release: there is none.
-pub(crate) fn unread_block_warning(root: &str) -> String {
+pub(crate) fn unread_block_warning(root: &str, version: u32) -> String {
+    // §FS-check.4.10.5: another project may use either supported source model.
+    let repair = if version == 2 {
+        "configure another project's source scope to read it"
+    } else {
+        "point another project's [scan] include at it"
+    };
     format!(
         "no project scans `{root}`, so its citations are never checked. \
-         Set include_root = true, or point another project's [scan] include at it."
+         Set include_root = true, or {repair}."
     )
 }
 
@@ -210,7 +216,7 @@ pub(crate) fn unread_block_diagnostic(config: &Config, root: &str) -> Diagnostic
             .as_ref()
             .or(config.workspace_section_source.as_ref()),
         &config.root,
-        unread_block_warning(root),
+        unread_block_warning(root, config.frame().version),
     )
 }
 

@@ -1,5 +1,6 @@
 /// The complete `grund check --help` discovery surface: all inputs, selected
 /// report semantics, the public code catalog, and recovery examples (§FS-cli.3.3).
+/// Scope advice stays independent of config discovery (§FS-cli.2.3).
 fn print_check_help() {
     println!("grund check — validate every ID citation across the repo.");
     println!();
@@ -12,7 +13,7 @@ fn print_check_help() {
         "Config is discovered by walking up from PATH, or from the current directory with none — the root `grund.toml` is the home, `.agents/grund.toml` a deprecated fallback."
     );
     println!(
-        "With no config, grund scans `docs/`, `e2e/`, and `src/`; set `[scan] include` to widen it."
+        "With no config, grund scans `docs/`, `e2e/`, and `src/`; configure source scope to widen it."
     );
     println!(
         "Pointing grund at an explicit PATH reports exactly that file or directory; citations still resolve against the whole project."
@@ -34,7 +35,7 @@ fn print_check_help() {
     // §FS-declarations.checks.section-outside-declaration.3: this is the one non-reference hard
     // finding the widened scan carries with its ordinary code and message.
     println!(
-        "  --full               also walk past [scan] include and report unresolved references or section headings outside declaration bodies there."
+        "  --full               also walk past configured scope and report unresolved references or section headings outside declaration bodies there; source exclusions still apply."
     );
     println!(
         "  --require-grounding  also require every source file to cite a declared ID ([reference] require_grounding; a [[kinds]] row that sets it false stays exempt)."
@@ -95,7 +96,7 @@ fn print_check_help() {
     println!("  grund check              # check the whole repo");
     println!("  grund check --watch      # live terminal feedback; Ctrl-C to stop");
     println!("  grund check docs/        # check one subtree");
-    println!("  grund check --full       # plus unresolved references and outside sections beyond include");
+    println!("  grund check --full       # plus unresolved references and outside sections beyond configured scope");
     println!(
         "  grund check --rule \"Each FS should have exactly one requirements chapter.\" --suggestions"
     );

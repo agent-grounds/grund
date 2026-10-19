@@ -120,7 +120,8 @@ fn command_refs(args: &[String]) -> ExitCode {
     opts.id = id_arg;
     opts.section = section_override;
     opts.descendants = descendants;
-    let metadata = match refs_with_metadata(opts) {
+    // §FS-show.3.5.1: prose travels beside the unchanged public result records.
+    let (metadata, hint) = match grund_core::refs_with_metadata_and_hint(opts) {
         Ok(output) => output,
         Err(err) => {
             // §FS-refs.4: recorded ambiguities refuse before every successful
@@ -160,7 +161,7 @@ fn command_refs(args: &[String]) -> ExitCode {
         if !output.scan_errors.is_empty() {
             return exit_after_scan_errors(&output.scan_errors);
         }
-        return render_refs_query_failure(failure, &format);
+        return render_refs_query_failure(failure, &format, hint.as_deref());
     }
     if let Some(note) = &output.note {
         eprintln!("note: {note}");
@@ -189,22 +190,17 @@ fn command_refs(args: &[String]) -> ExitCode {
 /// same operand, exit `1` (§FS-refs.4, §FS-errors.5.2). The format and
 /// summary/section/total flags are already resolved, so no renderer can
 /// reclassify the operand.
-fn render_refs_query_failure(failure: &RefsQueryFailure, format: &str) -> ExitCode {
+fn render_refs_query_failure(failure: &RefsQueryFailure, format: &str, hint: Option<&str>) -> ExitCode {
     if format == "json" {
         print_bare_query_json(failure.kind.code(), &failure.message, &[]);
     } else {
         eprintln!("{}", failure.message);
-        print_refs_query_failure_hint(failure);
+        // §FS-show.3.5.1: the core's selected-project guidance owns this sentence.
+        if let Some(hint) = hint {
+            eprintln!("{hint}");
+        }
     }
     ExitCode::from(1)
-}
-
-fn print_refs_query_failure_hint(failure: &RefsQueryFailure) {
-    if let Some(format) = &failure.format_hint {
-        eprintln!(
-            "hint: this repo's [id] format is `{format}` (run `grund config show`); `grund list` shows the IDs that exist"
-        );
-    }
 }
 
 /// The citation set's size instead of its members (§FS-refs.3.4): the hover's

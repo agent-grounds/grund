@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use super::references::{ReferenceTier, check_citation_resolution};
 use super::sections::retain_heading_findings_in_scope;
-use crate::config::{Frame, Nesting, Schema, unwalked_home_roots};
+use crate::config::{Frame, Nesting, Schema, source_scope_name, unwalked_home_roots};
 use crate::grammar::Grammar;
 use crate::model::{
     Catalog, CheckReport, DeclarationSource, Diagnostic, paired_declarations,
@@ -337,7 +337,10 @@ pub(crate) fn out_of_scope_references(
         Some(scope),
         &mut tier,
     );
-    tier.errors.into_iter().map(tag_out_of_scope).collect()
+    tier.errors
+        .into_iter()
+        .map(|diagnostic| tag_out_of_scope_for_version(diagnostic, frame.version))
+        .collect()
 }
 
 /// §FS-check.1.3.8: the out-of-scope tier for a workspace run — one pass per
@@ -378,7 +381,7 @@ pub(crate) fn workspace_out_of_scope_references(
     diagnostics
 }
 
-/// §FS-check.3.14: the tier's own code and message shape.
+/// §FS-check.3.14.6: the tier's own code and loaded-vocabulary message shape.
 ///
 /// The code is the in-scope one under an `out-of-scope-` prefix, so a
 /// `--format=json` consumer filters the tier by prefix and the rule by exact
@@ -389,7 +392,7 @@ pub(crate) fn workspace_out_of_scope_references(
 /// usually to widen `[scan] include`, so a rule's own fix-it hint ("did you
 /// mean …?") is the fact most likely to be wrong and least deserving of being
 /// read first.
-pub(crate) fn tag_out_of_scope(mut diagnostic: Diagnostic) -> Diagnostic {
+fn tag_out_of_scope_for_version(mut diagnostic: Diagnostic, version: u32) -> Diagnostic {
     diagnostic.code = match diagnostic.code {
         "dangling" => "out-of-scope-dangling",
         "missing-section" => "out-of-scope-missing-section",
@@ -400,6 +403,13 @@ pub(crate) fn tag_out_of_scope(mut diagnostic: Diagnostic) -> Diagnostic {
         // else would be a new rule joining the family without a tier code.
         other => other,
     };
-    diagnostic.message = format!("outside [scan] include: {}", diagnostic.message);
+    let scope = source_scope_name(version);
+    diagnostic.message = format!("outside {scope}: {}", diagnostic.message);
     diagnostic
+}
+
+/// §FS-check.3.14.6: retain the v1 entry point used by existing unit fixtures.
+#[cfg(test)]
+pub(crate) fn tag_out_of_scope(diagnostic: Diagnostic) -> Diagnostic {
+    tag_out_of_scope_for_version(diagnostic, 1)
 }
