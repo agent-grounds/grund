@@ -46,6 +46,20 @@ pub(super) const CASES: &[Case] = &[
         fs_with!("grounding_level = 2\n"),
         &[Invalid("nothing turns grounding on for it")],
     ),
+    // A row whose grounding is the project's takes the project ladder.
+    case(
+        "[[kinds]] grounding_level",
+        concat!(
+            "[reference]\nrequire_grounding = true\ngrounding_level = 2\n",
+            "[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\n",
+            "require_grounding = true\ngrounding_level = 2\n",
+        ),
+        &[
+            Maps("[rules.citations.grounding], which the row takes"),
+            Mapped("[rules.citations.grounding]\nmust = \"h2\"\n"),
+            Lacks("[rules.citations.FS.grounding]"),
+        ],
+    ),
     case(
         "[[kinds]] index",
         fs_with!("index = false\n"),

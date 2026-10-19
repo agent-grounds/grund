@@ -261,19 +261,17 @@ fn names(home: &str, table: &str) -> bool {
             .all(|(home, table)| home == table || *home == "*" || home.starts_with('<'))
 }
 
-/// §FS-config-v2.reader.1.v1-tables: the tables of a row's `title`, `resolve` and
-/// grounding, which the refusal of `[[kinds]]` leaves to §FS-config-migrate.mapping.
-const LEFT_BY_KINDS: &[&str] = &[
-    "[presentation.kinds.<NAME>]",
-    "[rules.resolution]",
-    "[rules.citations.<NAME>.grounding]",
-];
+/// §FS-config-v2.reader.1.v1-tables: the settings of a row that the refusal of
+/// `[[kinds]]` leaves to §FS-config-migrate.mapping, its `title`, `resolve` and
+/// grounding, by the v1 keys that spell them.
+const KEYS_LEFT_BY_KINDS: &[&str] = &["title", "resolve", "grounding_level", "require_grounding"];
 
 /// §FS-config-v2.reader.1.v1-tables, both ways round, read off the `mapped:` lines
 /// of every case: the v2 reader's refusal of a v1 table names every v2 table
 /// §FS-config-migrate.mapping writes a key of that table into, and only those.
 /// `[output]` names run flags instead, and no key of it is mapped into any table;
-/// `[[kinds]]` leaves `LEFT_BY_KINDS` to the mapping.
+/// `[[kinds]]` leaves the keys `KEYS_LEFT_BY_KINDS` to the mapping, whichever table
+/// each is written into.
 #[test]
 fn a_v1_refusal_names_exactly_the_tables_its_keys_are_mapped_into() {
     let mut written: BTreeMap<String, BTreeSet<(String, String)>> = BTreeMap::new();
@@ -317,17 +315,22 @@ fn a_v1_refusal_names_exactly_the_tables_its_keys_are_mapped_into() {
     }
     for (header, tables) in &written {
         // `[workspace]` is a v2 table too, so no refusal names its homes.
+        if header == "[workspace]" {
+            continue;
+        }
         let Some(homes) = v1_homes(header) else {
+            failures.push(format!("{header} is mapped, and its refusal names nothing"));
             continue;
         };
-        let left = if header == "[[kinds]]" {
-            LEFT_BY_KINDS
-        } else {
-            &[]
-        };
         for (table, key) in tables {
-            let mut named = homes.iter().map(String::as_str).chain(left.iter().copied());
-            if !named.any(|home| home.starts_with('[') && names(home, table)) {
+            let name = key.split_once("] ").map_or("", |(_, name)| name);
+            if header == "[[kinds]]" && KEYS_LEFT_BY_KINDS.contains(&name) {
+                continue;
+            }
+            if !homes
+                .iter()
+                .any(|home| home.starts_with('[') && names(home, table))
+            {
                 failures.push(format!(
                     "{key} is mapped into {table}; the refusal of {header} names {homes:?}"
                 ));
