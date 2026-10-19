@@ -326,6 +326,10 @@ $ grund check --rule "Each FS may not cite any AR." --only-rule
 error: modality "may not" is not accepted; accepted form: Each FS must not cite any AR.
 ```
 
+The same example's `RULE-overview-ceiling` uses `cite each AR at most once`:
+zero or one citation to a target passes; two physical sites to the same target fail.
+Per-target `at most 1 times` is refused with an `at most once` rewrite.
+
 `grund init` repeats every valid rule under `### Chapter rules` in the agent
 instructions, so an agent reads the sentence `check` enforces. The
 [chapter rules guide](docs/user-facing/rules.md) lists every accepted sentence, the

@@ -69,8 +69,8 @@ pub(super) fn count_prefix(text: &str) -> Result<(Cardinality, &str, CountSpelli
             };
             let n = positive(raw)
                 .map_err(|refusal| refusal.within(|n| format!("{prefix}{n} {object}")))?;
-            // §FS-rules.3: a floor and an exact count spell one as the word
-            // `one`; only a ceiling spells it as the numeral.
+            // §FS-rules.3: outside per-target counts, a floor and an exact count
+            // spell one as `one`; only a ceiling spells it as the numeral.
             let (card, spelling) = match prefix {
                 "at least " if n == 1 => {
                     return Err(refuse(
@@ -115,6 +115,60 @@ pub(super) fn count_prefix(text: &str) -> Result<(Cardinality, &str, CountSpelli
         "count is not accepted; the canonical counts are \"at least one\", \"at least N\", \"at most N\", \"exactly one\" and \"exactly N\" for a base-10 N",
         Form::None { kind: false },
     ))
+}
+
+/// Per-target coverage (§FS-rules.3.3): every bound spells one as `once` and
+/// larger counts as `N times`. Return `None` where there is no per-target bound,
+/// leaving the predicate to read an outbound count instead. Refusal forms keep
+/// the typed kind and bound (§FS-rule-refusals.sentences.rewrite.by-refusal).
+pub(super) fn per_target(rest: &str) -> Option<Result<(&str, Cardinality), Refusal>> {
+    let (kind, bound, raw) = [" at least ", " at most ", " exactly "]
+        .into_iter()
+        .find_map(|bound| {
+            let (kind, raw) = rest.split_once(bound)?;
+            Some((kind, bound, raw))
+        })?;
+    Some((|| {
+        let n = if raw == "once" {
+            1
+        } else {
+            let Some(number) = raw.strip_suffix(" times") else {
+                // §FS-rule-refusals.sentences.rewrite.by-refusal: reparsing repairs
+                // the noun, leading zeros and numeric one in successive passes.
+                let count = raw.split(' ').next().unwrap_or_default();
+                let form = if numeral(count) {
+                    Form::One(format!("{kind}{bound}{count} times"))
+                } else {
+                    Form::None { kind: false }
+                };
+                return Err(refuse("per-target counts must end in \"times\"", form));
+            };
+            let n = positive(number)
+                .map_err(|refusal| refusal.within(|n| format!("{kind}{bound}{n} times")))?;
+            if n == 1 {
+                return Err(refuse(
+                    format!("numeric \"{}1 times\" is not canonical", bound.trim_start()),
+                    Form::One(format!("{kind}{bound}once")),
+                ));
+            }
+            n
+        };
+        let card = match bound {
+            " at least " => Cardinality {
+                minimum: Some(n),
+                maximum: None,
+            },
+            " at most " => Cardinality {
+                minimum: None,
+                maximum: Some(n),
+            },
+            _ => Cardinality {
+                minimum: Some(n),
+                maximum: Some(n),
+            },
+        };
+        Ok((kind, card))
+    })())
 }
 
 /// Whether `raw` is written in base-10 digits alone.

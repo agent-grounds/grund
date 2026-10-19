@@ -14,7 +14,6 @@ const REASON: &str = "numeric \"at most 1 times\" is not canonical; accepted for
 /// §FS-init.2.3.5.10, §FS-rules.9.1: render the authored sentence exactly,
 /// then check the same tree for agents-init drift and compare init's bytes.
 #[test]
-#[ignore = "red until #835 accepts once in init; implement removes this"]
 fn per_target_once_init_renders_the_exact_title_without_drift() {
     let repo = Repo::new(1);
     repo.rule(TITLE);
@@ -51,7 +50,6 @@ fn per_target_once_init_renders_the_exact_title_without_drift() {
 /// §FS-rules.4, §FS-rules.7.1: invalid numeric one stops init before any
 /// write, both with existing guidance/companions and on a fresh tree.
 #[test]
-#[ignore = "red until #835 refuses numeric upper-one before init writes; implement removes this"]
 fn per_target_once_numeric_rule_refuses_init_before_writes() {
     let mut wrong = Vec::new();
     for existing in [false, true] {
@@ -102,7 +100,6 @@ fn per_target_once_numeric_rule_refuses_init_before_writes() {
 /// §REQ-one-answer.text.parity, §FS-rules.7.1: an editor invalid-rule has
 /// the exact CLI reason and rule-heading location, even for a should rule.
 #[test]
-#[ignore = "red until #835 exposes numeric upper-one as editor invalid-rule; implement removes this"]
 fn per_target_once_editor_invalid_rule_agrees_with_cli() {
     let repo = Repo::new(0);
     let title = NUMERIC.replace(" must ", " should ");

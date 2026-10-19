@@ -56,6 +56,13 @@ fn fs_only_sentences() -> Vec<(&'static str, Answer)> {
             "FS-login.requirements must cite each FS at least 1 times.",
             Form,
         ),
+        (
+            "FS-login.requirements should cite each FS at most 1 times.",
+            Form,
+        ),
+        ("FS-login must cite each FS at most 1.", Form),
+        ("FS-login must cite each FS at most 1 time.", Form),
+        ("FS-login must cite each FS at most 01 times.", Form),
         ("FS-login must cite each FS exactly 2.", Form),
         ("Each FS must cite exactly 02 FS.", Form),
         ("Each FS must cite at least 0 FS.", NoForm),

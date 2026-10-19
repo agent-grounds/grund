@@ -83,6 +83,11 @@ fn fs_only_rows() -> Vec<(&'static str, &'static str, &'static str)> {
             "",
         ),
         (
+            "FS-login.requirements should cite each FS at most 1 times.",
+            "numeric \"at most 1 times\" is not canonical; accepted form: FS-login.requirements should cite each FS at most once.",
+            "",
+        ),
+        (
             "FS-login must cite each FS exactly 2.",
             "per-target counts must end in \"times\"; accepted form: FS-login must cite each FS exactly 2 times.",
             "",

@@ -201,14 +201,13 @@ upper_count!(
 );
 upper_count!(
     per_target_at_most_mixed_is_error,
-    "Each FS must cite each GOAL at most 1 times.",
+    "Each FS must cite each GOAL at most once.",
     "citation-cardinality"
 );
 
 /// §FS-rules.3.3: the new spelling retains mixed-path physical-site enforcement.
-/// The existing numeric-spelling case stays active until implementation migrates it.
+/// The upper-count case above uses the same canonical spelling and enforcement assertion.
 #[test]
-#[ignore = "red until #835 accepts at most once for mixed-path sites; implement removes this"]
 fn per_target_once_mixed_sites_keep_the_ordinary_enforcement_assertion() {
     let repo = Repo::prepared("", "See \u{a7}GOAL-g.\n\nAgain \u{a7}GOAL-g.1.goals.");
     ordinary_error(

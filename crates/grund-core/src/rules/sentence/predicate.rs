@@ -3,7 +3,7 @@
 //! The subject and modality are the caller's, so a form here keeps them as
 //! typed by never seeing them.
 
-use super::count::{CountSpelling, count_prefix, numeral, positive};
+use super::count::{CountSpelling, count_prefix, per_target};
 use super::forms::{Form, Refusal, refuse};
 use super::targets::kind_targets;
 use super::{Cardinality, RulePolarity, RuleRelation, RuleTargets, RuleVocabulary, TargetMode};
@@ -161,72 +161,4 @@ fn plural(spelling: CountSpelling) -> bool {
         // §FS-rules.3.1: a numeric floor is never one, so it is always plural.
         CountSpelling::AtLeast | CountSpelling::Exactly => true,
     }
-}
-
-/// Per-target coverage (§FS-rules.3.3): the object kind and the count, or
-/// `None` where `rest` spells no per-target count and is read as an outbound
-/// count instead.
-fn per_target(rest: &str) -> Option<Result<(&str, Cardinality), Refusal>> {
-    if let Some(kind) = rest.strip_suffix(" at least once") {
-        return Some(Ok((kind, Cardinality::AT_LEAST_ONE)));
-    }
-    if let Some(kind) = rest.strip_suffix(" exactly once") {
-        let once = Cardinality {
-            minimum: Some(1),
-            maximum: Some(1),
-        };
-        return Some(Ok((kind, once)));
-    }
-    let (kind, bound, raw) = [" at least ", " at most ", " exactly "]
-        .into_iter()
-        .find_map(|bound| {
-            let (kind, raw) = rest.split_once(bound)?;
-            Some((kind, bound, raw))
-        })?;
-    Some(times(kind, bound, raw).map(|card| (kind, card)))
-}
-
-/// A per-target count after its bound, which must end in `times`.
-fn times(kind: &str, bound: &str, raw: &str) -> Result<Cardinality, Refusal> {
-    let Some(number) = raw.strip_suffix(" times") else {
-        // §FS-rule-refusals.sentences.rewrite.by-refusal: the count typed after the bound, where it
-        // is a numeral.
-        let count = raw.split(' ').next().unwrap_or_default();
-        let form = if numeral(count) {
-            Form::One(format!("{kind}{bound}{count} times"))
-        } else {
-            Form::None { kind: false }
-        };
-        return Err(refuse("per-target counts must end in \"times\"", form));
-    };
-    let n = positive(number)
-        .map_err(|refusal| refusal.within(|n| format!("{kind}{bound}{n} times")))?;
-    // §FS-rules.3: a floor and an exact count of one are spelled `once`, so the
-    // numeral is refused for both.
-    Ok(match bound {
-        " at least " if n == 1 => {
-            return Err(refuse(
-                "numeric \"at least 1 times\" is not canonical",
-                Form::One(format!("{kind} at least once")),
-            ));
-        }
-        " exactly " if n == 1 => {
-            return Err(refuse(
-                "numeric \"exactly 1 times\" is not canonical",
-                Form::One(format!("{kind} exactly once")),
-            ));
-        }
-        " at least " => Cardinality {
-            minimum: Some(n),
-            maximum: None,
-        },
-        " at most " => Cardinality {
-            minimum: None,
-            maximum: Some(n),
-        },
-        _ => Cardinality {
-            minimum: Some(n),
-            maximum: Some(n),
-        },
-    })
 }

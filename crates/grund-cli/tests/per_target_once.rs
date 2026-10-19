@@ -19,7 +19,6 @@ fn refusal(modality: &str, count: &str, reason: &str) -> String {
 /// two sites to the SAME target fail; must errors and opt-in should suggestions
 /// keep their exact output, exits, locations and authority on both surfaces.
 #[test]
-#[ignore = "red until #835 accepts per-target at most once; implement removes this"]
 fn per_target_once_accepted_word_judges_physical_sites_on_both_surfaces() {
     let mut wrong = Vec::new();
     for configured in [false, true] {
@@ -118,7 +117,6 @@ fn per_target_once_accepted_word_judges_physical_sites_on_both_surfaces() {
 /// a configured invalid-rule is an error even for should, located at its title.
 /// §FS-rule-refusals.sentences.rewrite.by-refusal preserves the typed modality.
 #[test]
-#[ignore = "red until #835 refuses per-target numeric upper-one; implement removes this"]
 fn per_target_once_numeric_refusal_has_exact_channels_exits_and_locations() {
     let mut wrong = Vec::new();
     for modality in ["must", "should"] {
@@ -203,7 +201,6 @@ fn per_target_once_numeric_refusal_has_exact_channels_exits_and_locations() {
 /// §FS-rule-refusals.sentences.rewrite.reparsed: malformed numeric one reaches
 /// once after all repair passes, and the exact form works when pasted back.
 #[test]
-#[ignore = "red until #835 recovers numeric upper-one to once; implement removes this"]
 fn per_target_once_recovery_offers_typed_reparsable_forms() {
     let repo = Repo::new(0);
     let mut wrong = Vec::new();
@@ -249,7 +246,6 @@ fn per_target_once_recovery_offers_typed_reparsable_forms() {
 /// §FS-rules.7.6: --only-rule suppresses configured enforcement while
 /// --suggestions controls valid recommendations, independently of that switch.
 #[test]
-#[ignore = "red until #835 accepts once for configured and trial rules; implement removes this"]
 fn per_target_once_only_rule_keeps_suggestion_selection_and_skips_configured_rules() {
     let repo = Repo::new(2);
     repo.rule(&sentence("must", "at most once"));
