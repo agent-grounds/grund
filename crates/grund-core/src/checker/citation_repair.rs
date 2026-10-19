@@ -9,8 +9,8 @@ use super::index::marked_index_entries;
 use crate::config::{Frame, Rules, Schema};
 use crate::model::{CITATION_DIRECTION_REPAIR, Catalog, CheckReport, Expected};
 
-/// §FS-check.3.12.2: replace only the ordinary repair suffix at actual entry
-/// sites, for both configuration and independent rule-sentence findings.
+/// §FS-check.3.12.2: replace only the ordinary repair at actual entry sites,
+/// retaining any trailing compatibility clause for either direction producer.
 /// Call after both passes, before narrowing or merging project reports; a
 /// suggestion has no repair and is left byte-for-byte unchanged.
 pub(crate) fn repair_index_citations(
@@ -45,7 +45,7 @@ pub(crate) fn repair_index_citations(
         let Some(cite) = entries.get(&(path, line, column)) else {
             continue;
         };
-        let Some(prefix) = finding.message.strip_suffix(CITATION_DIRECTION_REPAIR) else {
+        let Some((prefix, trailing)) = finding.message.split_once(CITATION_DIRECTION_REPAIR) else {
             continue;
         };
         let repair = if !finding.authority.is_empty() {
@@ -75,6 +75,7 @@ pub(crate) fn repair_index_citations(
                 )
             }
         };
-        finding.message = format!("{prefix} — retain the marked index entry and {repair}");
+        finding.message =
+            format!("{prefix} — retain the marked index entry and {repair}{trailing}");
     }
 }

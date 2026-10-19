@@ -248,9 +248,8 @@ fn evaluate_one(
             for subject in subjects {
                 for (site, _, target) in index.citations_in(&subject) {
                     if citation_matches_targets(target, &targets, index) {
-                        // §FS-rules.7.5: the hard prohibition reuses
-                        // §FS-check.3.12's wording and ordinary repair, with
-                        // `(<RULE-ID>)` for the tail; the recommendation not.
+                        // §FS-rules.7.5: hard prohibitions reuse §FS-check.3.12's ordinary
+                        // repair with `(<RULE-ID>)` authority; recommendations omit it.
                         // §FS-check.3.12.2 finalizes required index-entry repairs.
                         let (code, repair) = if rule.level == RuleLevel::Required {
                             ("forbidden-citation", CITATION_DIRECTION_REPAIR)
