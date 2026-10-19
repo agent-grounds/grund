@@ -5,7 +5,7 @@
 //! records gate (§FS-config-migrate.5.1) with the spelling in the candidate, a
 //! *notice* is reported, a *refused* key names its repair.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::{GateResult, Located, MigrateReport, Prepared, translate};
 use crate::config::v1::mapping::{DEFAULTS, KEYS};
@@ -226,15 +226,20 @@ fn every_mapping_case_names_a_row() {
     }
 }
 
-/// The v2 tables a `mapped:` spelling names: each `[…]` it writes, and the two
-/// that `[scan]`'s keys name in words (`keymap.rs` `spelling`), the extensions
-/// beside `[schema.sources] languages` and a definition by its name.
+/// The v2 tables a `mapped:` spelling writes its key into: the `[…]` it begins
+/// with, and the two that `[scan]`'s keys name in words (`keymap.rs` `spelling`),
+/// the extensions beside `[schema.sources] languages` and a definition by its
+/// name. A spelling that begins `nothing` writes none, and a `[…]` later in its
+/// prose (`<entry> is a place of [schema.kinds.<row>] already`) is no table it writes.
 fn tables_in(spelling: &str) -> Vec<String> {
+    if spelling.starts_with("nothing") {
+        return Vec::new();
+    }
     let mut tables: Vec<String> = spelling
-        .split('[')
-        .skip(1)
-        .filter_map(|rest| rest.split_once(']'))
+        .strip_prefix('[')
+        .and_then(|rest| rest.split_once(']'))
         .map(|(table, _)| format!("[{table}]"))
+        .into_iter()
         .collect();
     if spelling.contains("[schema.sources] languages and extensions") {
         tables.push("[schema.sources.extensions]".into());
@@ -256,13 +261,22 @@ fn names(home: &str, table: &str) -> bool {
             .all(|(home, table)| home == table || *home == "*" || home.starts_with('<'))
 }
 
-/// §FS-config-v2.reader.1.v1-tables: every v2 table the v2 reader's refusal of a
-/// v1 table names is one §FS-config-migrate.mapping writes a key of that table
-/// into, read off the `mapped:` lines of every case. `[output]` names run flags
-/// instead, and no key of it is mapped into any table.
+/// §FS-config-v2.reader.1.v1-tables: the tables of a row's `title`, `resolve` and
+/// grounding, which the refusal of `[[kinds]]` leaves to §FS-config-migrate.mapping.
+const LEFT_BY_KINDS: &[&str] = &[
+    "[presentation.kinds.<NAME>]",
+    "[rules.resolution]",
+    "[rules.citations.<NAME>.grounding]",
+];
+
+/// §FS-config-v2.reader.1.v1-tables, both ways round, read off the `mapped:` lines
+/// of every case: the v2 reader's refusal of a v1 table names every v2 table
+/// §FS-config-migrate.mapping writes a key of that table into, and only those.
+/// `[output]` names run flags instead, and no key of it is mapped into any table;
+/// `[[kinds]]` leaves `LEFT_BY_KINDS` to the mapping.
 #[test]
-fn every_table_a_v1_refusal_names_is_one_its_keys_are_mapped_into() {
-    let mut written: BTreeMap<String, Vec<String>> = BTreeMap::new();
+fn a_v1_refusal_names_exactly_the_tables_its_keys_are_mapped_into() {
+    let mut written: BTreeMap<String, BTreeSet<(String, String)>> = BTreeMap::new();
     for (index, case) in cases().enumerate() {
         let Ok(report) = translate_case(index, case) else {
             continue;
@@ -270,14 +284,20 @@ fn every_table_a_v1_refusal_names_is_one_its_keys_are_mapped_into() {
         for mapped in &report.mapped {
             if let Some((header, _)) = mapped.key.split_once("] ") {
                 let tables = written.entry(format!("{header}]")).or_default();
-                tables.extend(tables_in(&mapped.spelling));
+                let into = tables_in(&mapped.spelling).into_iter();
+                tables.extend(into.map(|table| (table, mapped.key.clone())));
             }
         }
     }
     let mut failures = Vec::new();
     for (row, _) in V1_TABLES {
         let header = row.replace("<KIND>", "FS");
-        let tables = written.get(&header).map_or(&[][..], Vec::as_slice);
+        let tables: Vec<&String> = written
+            .get(&header)
+            .into_iter()
+            .flatten()
+            .map(|(t, _)| t)
+            .collect();
         let Some(homes) = v1_homes(&header) else {
             failures.push(format!("{header} is a row of the map, and names nothing"));
             continue;
@@ -291,6 +311,25 @@ fn every_table_a_v1_refusal_names_is_one_its_keys_are_mapped_into() {
             if !held {
                 failures.push(format!(
                     "{header} names {home}; its keys map into {tables:?}"
+                ));
+            }
+        }
+    }
+    for (header, tables) in &written {
+        // `[workspace]` is a v2 table too, so no refusal names its homes.
+        let Some(homes) = v1_homes(header) else {
+            continue;
+        };
+        let left = if header == "[[kinds]]" {
+            LEFT_BY_KINDS
+        } else {
+            &[]
+        };
+        for (table, key) in tables {
+            let mut named = homes.iter().map(String::as_str).chain(left.iter().copied());
+            if !named.any(|home| home.starts_with('[') && names(home, table)) {
+                failures.push(format!(
+                    "{key} is mapped into {table}; the refusal of {header} names {homes:?}"
                 ));
             }
         }
