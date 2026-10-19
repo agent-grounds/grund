@@ -157,7 +157,7 @@ fn off_grammar_kind_override_owns_its_near_miss_shape_and_message() {
     assert_eq!(
         near_misses[0].message,
         "`TICKET-old` resolves for compatibility but does not match \
-             [id] format = \"{kind}_{number}\" — rename it or change the \
+             [[kinds]] format = \"{kind}_{number}\" — rename it or change the \
              effective format; this became an error in grund 0.16.0"
     );
 }

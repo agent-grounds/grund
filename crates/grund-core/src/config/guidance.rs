@@ -35,15 +35,7 @@ pub(crate) fn format_guidance<'a>(
     frame: Frame<'_>,
     operand: Option<&str>,
 ) -> FormatGuidance<'a> {
-    let parsed = operand.and_then(|text| frame.grammar().parse_token(text));
-    let name = parsed.as_ref().map(|id| id.kind.as_str()).or_else(|| {
-        operand.and_then(|text| {
-            frame
-                .grammar()
-                .legacy_kind_and_format(text)
-                .map(|(kind, _)| kind)
-        })
-    });
+    let name = operand.and_then(|text| frame.grammar().kind_for_guidance(text));
     let overridden = name.and_then(|name| {
         schema.kinds().find_map(|(kind, settings)| {
             (kind == name)
