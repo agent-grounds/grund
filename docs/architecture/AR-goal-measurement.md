@@ -88,6 +88,23 @@ goldens remain a separate authoritative projection.
 | [§REQ-remote-equivalence](../requirements/REQ-remote-equivalence.md#req-remote-equivalence-a-fetched-remote-answers-every-operation-as-a-local-project-does) | Not yet metered: the requirement is specified ahead of its build. The no-remotes e2e case pins that a repository declaring no remote reads nothing new ([§FS-remote-projects.declaration.none](../functional-spec/FS-remote-projects.md#declarationnone-a-repository-with-no-remotes-reads-nothing-new)); the two comparisons of [§REQ-remote-equivalence.4](../requirements/REQ-remote-equivalence.md#4-the-proof-is-two-comparisons-over-an-audited-inventory), over the operation inventory, arrive with the Mount and Remotes pieces of [§DF-remote-projects](../decisions/functional/DF-remote-projects.md#df-remote-projects-a-remote-project-is-a-workspace-member-whose-bytes-were-fetched-mounted-as-its-own-root). |
 | [§REQ-one-answer](../requirements/REQ-one-answer.md#req-one-answer-every-command-gives-the-same-answer-about-one-tree) | Partly metered. `crates/grund-cli/tests/stub_resolution_agreement.rs` compares the stub answers of [§REQ-one-answer.stubs](../requirements/REQ-one-answer.md#stubs-what-a-stub-answers), and `tests/integration/lsp_cli_parity.rs` compares the editor's diagnostics with `check`'s ([§REQ-one-answer.text.parity](../requirements/REQ-one-answer.md#textparity-the-editor-answers-as-the-command-line-does)); the comparison of [§REQ-one-answer.proof](../requirements/REQ-one-answer.md#proof-proved-by-comparison) over every surface and every tree is not built yet. |
 
+### 3.1 Writing a decision that mentions the correction route
+
+The correction-route meter selects a decision by the literal live citation
+`§REQ-backwards-compatibility.5` anywhere in its text. Saying the route is not
+used does not opt the decision out, and moving that sentence into a numbered
+section only moves the refusal from placement to missing proofs. Its refusal
+explains that trigger and the available mention forms under
+[§FS-distribution.4.6.4.2](../functional-spec/FS-distribution.md#4642-a-correction-audit-refusal-explains-its-citation-trigger).
+
+To discuss or reject the route without claiming it, write
+`<§>REQ-backwards-compatibility.5`, or cite `§REQ-backwards-compatibility` and
+say "section 5" in prose. The escape is the existing inert mention of
+[§FS-citations.recognized.escapes](../functional-spec/FS-citations.md#recognizedescapes-an-id-in-an-escape-position).
+A decision that claims the route instead supplies its numbered proof section
+and release record; all five conditions remain the requirement's, as metered
+above.
+
 ## 4. Backwards compatibility is not metered across releases
 
 The central promise of [§REQ-backwards-compatibility](../requirements/REQ-backwards-compatibility.md#req-backwards-compatibility-an-upgrade-never-changes-a-verdict-quietly) is not measured across releases: no gate runs a released and a candidate binary over the same repositories, so a checker change with current-version goldens updated can pass without a [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations), or [§REQ-backwards-compatibility.5](../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids) record. Measuring that gap requires a release-to-candidate differential corpus gate in test and release tooling.
