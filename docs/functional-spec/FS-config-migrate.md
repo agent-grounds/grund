@@ -313,9 +313,12 @@ wrote grund.toml: version 1 (24 lines) replaced by version 2
 dropped the comments at grund.toml:6-7 and grund.toml:12 (version 1 lines)
 to get version 1 back: it is in version control, e.g. git restore grund.toml
 to see this candidate again: restore version 1 and run grund config migrate --to 2
+note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them
 ```
 
 The `dropped the comments` line appears only when `--drop-comments` dropped any, and names every range in file order, joined by `, ` and a final ` and `.
+
+The final `note:` line appears on stderr after every successful version-1-to-version-2 write, including when no `AGENTS.md` exists. It is a qualified reminder about existing managed instructions, not a claim that a file was inspected or found stale. Run `grund init` in the migrated project to refresh those instructions; migration itself still writes only the config ([§FS-config-migrate.6.4](FS-config-migrate.md#64-a-symbolic-link-and-nothing-else-written)). The reminder is absent from previews, refused or failed writes, and already-version-2 runs. It changes neither stdout nor exits and does not replace the distinct Project map note ([§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance)).
 
 ### 6.6 A second run is a no-op
 
