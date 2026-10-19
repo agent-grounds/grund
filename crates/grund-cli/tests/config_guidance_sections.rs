@@ -203,7 +203,7 @@ fn literal_and_nonleading_kind_sections_keep_effective_guidance() {
 fn configured_section_separator_selects_the_same_kind() {
     for version in [1, 2] {
         let fixture = Fixture::new(version, "x{kind}_{number}", "::", false);
-        fixture.assert_refusal("xADR_1::bad.1", "x{kind}_{number}", true);
+        fixture.assert_refusal("xADR_1::bad!", "x{kind}_{number}", true);
     }
 }
 
