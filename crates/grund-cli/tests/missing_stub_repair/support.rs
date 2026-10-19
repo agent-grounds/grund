@@ -1,4 +1,4 @@
-//! Fixture and assertions for §FS-declarations.stubs.verdict.repair.
+//! Fixture and assertions for §FS-declarations.stubs.repair.
 
 use serde_json::{Value, json};
 use std::fs;

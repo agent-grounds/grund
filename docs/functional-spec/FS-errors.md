@@ -156,7 +156,7 @@ How ambiguity and hint lines read is [§FS-errors.2.3.1](FS-errors.md#231-ambigu
 Ambiguity messages list every site in lexicographic `path:line` order ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)), except an ambiguous number-only shorthand's, which lists its candidate IDs in ID order ([§FS-show.2.2.1.1](FS-show.md#2211-an-ambiguous-shorthand-names-its-candidates)). A `hint:` line may follow on stderr where the next step is obvious ([§FS-errors.1.2](FS-errors.md#12-what-stderr-carries)).
 
 A missing-target stub beside another home appends repair guidance after the complete
-ambiguity prefix, as [§FS-declarations.stubs.verdict.repair](FS-declarations.md#stubsverdictrepair-a-missing-target-beside-another-declaration-explains-the-repair) defines.
+ambiguity prefix, as [§FS-declarations.stubs.repair](FS-declarations.md#stubsrepair-a-missing-target-beside-another-declaration-explains-the-repair) defines.
 The appended explanation does not add, repeat, annotate, or reorder entries in JSON `sites`;
 that array continues to represent the original ambiguity list.
 

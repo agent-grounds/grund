@@ -1,20 +1,20 @@
 //! Shared missing-target repair guidance from recorded independent homes
-//! (§FS-declarations.stubs.verdict.repair). No target is read or paired here.
+//! (§FS-declarations.stubs.repair). No target is read or paired here.
 
 use std::path::Path;
 
 use super::{Declaration, PairedDeclarations, StubResolution, format_path};
 
 /// The missing stubs and real homes of one ID, derived once for both located
-/// and site-free explanations (§FS-declarations.stubs.verdict.repair).
+/// and site-free explanations (§FS-declarations.stubs.repair).
 pub(crate) struct MissingStubRepair<'a> {
     missing: Vec<(&'a Declaration, &'a Path)>,
     homes: Vec<&'a Declaration>,
 }
 
 impl<'a> MissingStubRepair<'a> {
-    /// Read the scanner's verdicts and existing pairing, including real targets
-    /// represented by healthy stubs (§FS-declarations.stubs.verdict.repair).
+    /// Read the scanner's verdicts (§AR-scanner.4.6) and existing pairing, including
+    /// real targets represented by healthy stubs (§FS-declarations.stubs.repair).
     pub(crate) fn new(paired: &PairedDeclarations<'a>) -> Self {
         let mut missing = Vec::new();
         let mut homes = Vec::new();
@@ -31,13 +31,13 @@ impl<'a> MissingStubRepair<'a> {
     }
 
     /// Compare the recorded declaration files as the scanner's OwnFile branch
-    /// does, without reading a target (§FS-declarations.stubs.verdict.repair).
+    /// does, without reading a target (§FS-declarations.stubs.repair).
     fn sole_home_is_own_file(&self, stub: &Declaration) -> bool {
         matches!(self.homes.as_slice(), [home] if home.file == stub.file)
     }
 
     /// Append the same located facts to duplicate and query messages, leaving
-    /// their original sites untouched (§FS-declarations.stubs.verdict.repair).
+    /// their original sites untouched (§FS-declarations.stubs.repair).
     pub(crate) fn located_suffix(
         &self,
         id: &str,
@@ -95,7 +95,7 @@ impl<'a> MissingStubRepair<'a> {
     }
 
     /// Connect a missing-target finding to its companion without naming another
-    /// site or assuming selection retained it (§FS-declarations.stubs.verdict.repair).
+    /// site or assuming selection retained it (§FS-declarations.stubs.repair).
     pub(crate) fn site_free_suffix(&self, id: &str, stub: &Declaration) -> String {
         match self.homes.len() {
             _ if self.missing.is_empty() => String::new(),

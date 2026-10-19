@@ -133,7 +133,11 @@ Consumes text. Produces the lexical facts every other component shares: the ID g
 
 ### 2.2 model
 
-Consumes nothing. Produces the data every component passes along: `Catalog`, `Declaration`, `Citation`, `Report`, and the value records ([§FS-values.2](../functional-spec/FS-values.md#2-value-declarations)). Knows nothing else; it is types and tiny helpers. Module: `crates/grund-core/src/model/`.
+Produces the data every component passes along: `Catalog`, `Declaration`, `Citation`, `Report`, and the value records ([§FS-values.2](../functional-spec/FS-values.md#2-value-declarations)). It is types and shared helpers.
+`MissingStubRepair` owns the missing-target repair guidance derivation and both its located
+and site-free renderers ([§FS-declarations.stubs.repair](../functional-spec/FS-declarations.md#stubsrepair-a-missing-target-beside-another-declaration-explains-the-repair)). It consumes paired declaration records and the
+scanner-recorded verdicts ([§AR-scanner.4.6](AR-scanner.md#46-a-stubs-home-is-recorded-once-after-the-walk)) and is read by checker and queries. It reads no
+target and changes no verdict or pairing. Module: `crates/grund-core/src/model/`.
 
 ### 2.3 config
 

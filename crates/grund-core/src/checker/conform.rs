@@ -20,7 +20,7 @@ use crate::model::{
 /// §AR-checker.1.1: duplicate, misplaced-declaration, broken-stub,
 /// declaration-near-miss and conflict-marker (§FS-declarations.checks), the section family, inline
 /// citation style, the opt-in lead budget and the field family (§FS-fields.checks),
-/// with shared duplicate/broken-stub guidance (§FS-declarations.stubs.verdict.repair).
+/// with shared duplicate/broken-stub guidance (§AR-system.2.2).
 /// Unsorted: the merge sorts (§AR-checker.1.4).
 pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> CheckReport {
     let mut report = CheckReport::default();
@@ -53,7 +53,7 @@ pub(crate) fn conform(schema: &Schema, catalog: &Catalog, frame: Frame<'_>) -> C
 /// §FS-declarations.checks.duplicate: an ID with more than one non-stub home is a duplicate.
 /// Its declarations are counted once its stubs are paired by their verdicts
 /// (§AR-scanner.4.6). Both findings share one missing-target repair derivation
-/// per ID (§FS-declarations.stubs.verdict.repair).
+/// per ID (§AR-system.2.2).
 fn check_declaration_homes(findings: &Catalog, frame: Frame<'_>, report: &mut CheckReport) {
     for (id, decls) in &findings.declarations {
         // §FS-declarations.stubs.pairing.3: a stub's home is named at its target, at
@@ -174,7 +174,7 @@ fn check_misplaced(
 /// the ID (§AR-checker.2.5). Extension and exclusion refusals explain why the target
 /// is not scanned rather than claiming it lacks the ID (§FS-declarations.stubs.target.3).
 /// Missing-target messages connect to the duplicate without adding sites
-/// (§FS-declarations.stubs.verdict.repair).
+/// (§AR-system.2.2).
 fn check_broken_stubs(
     findings: &Catalog,
     id: &Id,
