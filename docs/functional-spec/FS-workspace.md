@@ -600,6 +600,30 @@ A relaxed standalone mode (downgrade `unknown project alias` from error to
 warning on a member-only run) is deferred follow-up; see
 [§DF-subproject-namespaces](../decisions/functional/DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos) [§DF-subproject-namespaces.3.6](../decisions/functional/DF-subproject-namespaces.md#36-standalone-members-fail-loud-not-silent).
 
+#### 5.1.1 Verified enclosing-workspace guidance
+
+When a member-local check refuses a qualified citation whose alias names the
+enclosing workspace's root project, its `unknown project alias <path>` finding
+must explain that the alias names that root project and that the checked project
+is a member of that workspace. It must identify the workspace root with a path
+usable from the invocation directory and explicitly direct the reader to run
+`grund check` there. The location is relative to that directory, so the same
+guidance works for a member CWD, `check .`, and an explicit member path from
+elsewhere. This applies both to a member with its own config and to one using
+the canonical defaults through workspace discovery.
+
+The explanation requires verified membership in the enclosing workspace and
+the root project's actual alias. An enclosing directory alone is insufficient:
+a standalone project, an unlisted nested project, and a genuinely unknown alias
+must not receive this explanation or be presented as that root project. This
+point does not prescribe sibling-alias guidance.
+
+The finding remains an error at the citation site, with the same code, report
+object fields, and failing exit status. Discovering the enclosing configuration
+for this explanation does not load its declarations or resolve the citation.
+The root command validates cross-project citations; the hint does not promise
+that the written target declaration or section exists or that a root run passes.
+
 ### 5.2 Recognition in a run that loads no workspace
 
 The scanner of any run that loads no workspace recognizes the `<§>alias/` prefix

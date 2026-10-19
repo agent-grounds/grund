@@ -55,6 +55,21 @@ Then drop a dangling cross-project citation into any file (e.g. change
 `unknown reference api/FS-missing` at the citation site, with the same
 `path:line:` shape it uses for single-project checks.
 
+To see the member-local refusal, keep the original fixture and run:
+
+```bash
+(cd examples/workspace/repo/packages/api && grund check)
+echo $?    # 1: the member cannot resolve the root-qualified citation
+(cd examples/workspace/repo && grund check)
+echo $?    # 0: the workspace validates the original cross-project citations
+```
+
+The member's `unknown project alias root` finding identifies `root` as the
+enclosing workspace's root project, explains the member relationship, and gives
+`../..` as the location to run `grund check` from that invocation directory
+([§FS-workspace.5.1.1](../../docs/functional-spec/FS-workspace.md#511-verified-enclosing-workspace-guidance)). The hint requires verified membership and alias identity;
+it does not promise that a modified target exists when checked from the root.
+
 The neighboring-repo form `<§>payments/FS-refunds` resolving to another
 repository is **not** implemented yet — see [[§FS-workspace.7](../../docs/functional-spec/FS-workspace.md#7-neighboring-repos)]
 (../../docs/functional-spec/FS-workspace.md#7-neighboring-repos).

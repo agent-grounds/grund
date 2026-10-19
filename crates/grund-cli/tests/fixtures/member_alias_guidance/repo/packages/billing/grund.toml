@@ -1,0 +1,8 @@
+grund_config_version = 2
+project_name = "billing"
+
+[schema]
+id_format = "{kind}-{number}-{slug}"
+
+[schema.kinds.FS]
+files = ["requirements.md"]

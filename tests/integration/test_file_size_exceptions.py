@@ -79,14 +79,14 @@ class FileSizeExceptionTests(unittest.TestCase):
                     f"fissile_exceptions_version = 2 removed — delete the line",
                 )
 
-    def test_one_entry_per_path_per_registry(self):
-        """What identifies an entry is its registry and what it accepts, so two
-        entries accepting one path at one severity are two rationales for one
-        fact — and fissile reports the overlap as a schema error."""
+    def test_one_entry_per_path_and_unit_per_registry(self):
+        """A file can exceed both its line and byte budgets, which need
+        separate ceilings. Keep one rationale per path and measurement unit
+        at each severity; independent units do not overlap in fissile."""
         for registry, entries in ((HARD_REGISTRY, self.hard), (SOFT_REGISTRY, self.soft)):
-            paths = [entry["path"] for entry in entries]
+            paths = [(entry["path"], entry["max_accepted"]["unit"]) for entry in entries]
             self.assertCountEqual(
-                paths, set(paths), f"{registry.name} accepts a path twice"
+                paths, set(paths), f"{registry.name} accepts a path twice for the same unit"
             )
 
     def test_kind_agrees_with_until(self):

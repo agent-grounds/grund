@@ -486,6 +486,13 @@ project boundary.
 5. Run `grund check` from the workspace root to validate the whole workspace and
    its qualified citations.
 
+A member-local `unknown project alias` finding still fails. When its alias
+names the verified enclosing workspace's root project, follow the root location
+and `grund check` remedy in the finding to validate the cross-project citation.
+Do not rename that alias merely because a member cannot resolve it. The root
+check may still find a missing target; an unknown alias without this verified
+relationship is not evidence of a workspace root alias.
+
 See [workspace configuration and command scope](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-workspace.md)
 for membership, alias derivation, and nested workspaces.
 
