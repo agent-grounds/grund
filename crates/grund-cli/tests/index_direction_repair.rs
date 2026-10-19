@@ -310,3 +310,88 @@ fn suggestion_default_keeps_its_existing_index_message() {
         "REQ should not cite REQ (citation direction)"
     );
 }
+
+/// §FS-check.3.12.2: rule advice preserves entries and a trailing release clause.
+#[test]
+fn nested_alias_rule_index_repair_preserves_warning_and_compatibility_clause() {
+    let repo = Repo::new(concat!(
+        "[rules.citations.REQ]\nmay = [\"GOAL\", \"REQ\"]\n",
+        "[schema.kinds.RULE]\nfolders = [\"docs/rules\"]\nindex = false\nform = \"rule\""
+    ));
+    fs::create_dir_all(repo.0.join("group/api")).unwrap();
+    for path in ["grund.toml", "docs"] {
+        fs::rename(repo.0.join(path), repo.0.join("group/api").join(path)).unwrap();
+    }
+    let base = "grund_config_version = 2\n[schema.sources]\nlanguages = [\"markdown\"]\n";
+    repo.write(
+        "grund.toml",
+        &format!("{base}[workspace]\nmembers = [\"group\"]\n"),
+    );
+    repo.write(
+        "group/grund.toml",
+        &format!("{base}[workspace]\nmembers = [\"api\"]\n"),
+    );
+    let index_path = format!("group/api/{INDEX}");
+    let marked = "# REQ-index: Requirements\n\n- [\u{a7}REQ-safe](REQ-safe.md)\n- [\u{a7}REQ-index](README.md)\n";
+    let rule_path = "group/api/docs/rules/r.md";
+    repo.write(&index_path, marked);
+    repo.write(
+        rule_path,
+        "# RULE-index: Each REQ must not cite any group/api/REQ.\n\nIndependent prohibition.\n",
+    );
+    let rows = repo.check(0, false);
+    assert!(
+        rows.iter().all(|row| row["severity"] != "error"),
+        "{rows:#?}"
+    );
+    let forbidden = rows
+        .iter()
+        .filter(|row| row["code"] == "forbidden-citation")
+        .collect::<Vec<_>>();
+    assert_eq!(forbidden.len(), 2, "{rows:#?}");
+    // §FS-rules.7.9: the existing nested-alias warning clause stays verbatim.
+    let clause = "; a target pinned at the rule's own nested alias path now matches, and this warning becomes an error in grund 0.19.0";
+    for line in [3, 4] {
+        let row = forbidden
+            .iter()
+            .find(|row| row["line"] == line)
+            .unwrap_or_else(|| panic!("missing entry at line {line}: {rows:#?}"));
+        assert_eq!(row["path"], index_path);
+        assert_eq!(row["severity"], "warning");
+        assert_eq!(row["authority"], serde_json::json!(["RULE-index"]));
+        assert_eq!(row["sites"], Value::Null);
+        assert_eq!(
+            row["message"],
+            format!(
+                "REQ must not cite group/api/REQ (RULE-index) — retain the marked index entry and change the prohibition in rule RULE-index{clause}"
+            )
+        );
+    }
+    repo.write(&index_path, &marked.replace('\u{a7}', ""));
+    let markerless = repo.check(1, false);
+    let errors = markerless
+        .iter()
+        .filter(|row| row["severity"] == "error")
+        .collect::<Vec<_>>();
+    assert_eq!(errors.len(), 2, "{markerless:#?}");
+    for path in [
+        index_path.as_str(),
+        "group/api/docs/requirements/REQ-safe.md",
+    ] {
+        assert!(
+            errors
+                .iter()
+                .any(|row| row["code"] == "missing-index-entry" && row["path"] == path),
+            "{markerless:#?}"
+        );
+    }
+    repo.write(&index_path, marked);
+    fs::remove_file(repo.0.join(rule_path)).unwrap();
+    let repaired = repo.check(0, false);
+    assert!(repaired.iter().all(|row| row["severity"] != "error"));
+    assert!(
+        !repaired
+            .iter()
+            .any(|row| row["code"] == "forbidden-citation")
+    );
+}
