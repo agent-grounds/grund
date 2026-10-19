@@ -37,7 +37,7 @@ The rewrite classes are enumerated rather than open-ended: the passes a fence st
 grund fmt [<path>] [--check] [--marker] [--cross-refs] [--write]
 ```
 
-- `<path>` — directory or file. Defaults to the current directory.
+- `<path>` — directory or file the run is narrowed to; with none, the project the current directory discovers ([§FS-scan.path.none](FS-scan.md#pathnone-a-run-with-no-path-covers-the-project-discovery-finds)).
 - `--check` — explicit form of the default behavior: report exactly what `--write` would change, across all four rewrite classes (including cross-references when `[fmt.cross_refs] enabled = true` and the scope contains Markdown); exit non-zero if any change would be made; do not write. Provided as a flag for CI clarity.
 - `--marker` — also rewrite bare citations (`FS-check`) to marker-prefixed (`§FS-check`). Off by default to preserve existing repos that have not opted in.
 - `--cross-refs` — in `.md` files only, also wrap each marker-prefixed citation in a clickable Markdown link to the declaration body ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)). This forces the cross-reference pass for one invocation; generated configs enable it, so every `fmt` scope containing Markdown runs it by default in both dry-run and write mode unless the repo opts out ([§FS-fmt.6.6](FS-fmt.md#66-why-generated-configs-enable-cross-references)). Implements [§DF-md-link-emission](../decisions/functional/DF-md-link-emission.md#df-md-link-emission-grund-fmt-may-emit-clickable-markdown-links-alongside--prefixed-citations).
@@ -282,7 +282,7 @@ The other case is a run that needs the **whole declaration set** before it can r
 
 It is not the exception it reads as: every `fmt` mode turns the cross-reference pass on by itself wherever the scope holds Markdown and `[fmt.cross_refs] enabled` is set, which generated configs and the built-in default both do ([§FS-fmt.6.6](FS-fmt.md#66-why-generated-configs-enable-cross-references)) — so this is the **ordinary** path in both dry-run and write mode, while the partial-scan path of [§FS-fmt.3.1](FS-fmt.md#31-an-unreadable-path-is-named-and-a-partial-run-still-rewrites) is what a source-only scope or an explicit opt-out leaves. A run that needs no declaration set reads none, so it does not see a conflict block either: a source-only path, or a version-1 project with cross-references off and no lock or shorthand in play, makes its `$$` and `--marker` rewrites as before, and `check` still fails the tree.
 
-This fatal-up-front check binds to the **scope**, not to how a caller reached it: `grund fmt --write` with no `<path>` and `grund fmt --write .` name the same scope ([§FS-fmt.1](FS-fmt.md#1-inputs)) and must refuse alike, as must their dry-run counterparts. A run that already holds a scan of that scope may skip re-scanning only after confirming that scan met no error ([§FS-fmt.7.1](FS-fmt.md#71-scope-equivalence)).
+This fatal-up-front check binds to the **scope**, not to how a caller reached it: `grund fmt --write` with no `<path>` and `grund fmt --write .` at the config root name the same scope ([§FS-fmt.1](FS-fmt.md#1-inputs)) and must refuse alike, as must their dry-run counterparts. A run that already holds a scan of that scope may skip re-scanning only after confirming that scan met no error ([§FS-fmt.7.1](FS-fmt.md#71-scope-equivalence)).
 
 ### 3.3 A refused run still names every unreadable path
 

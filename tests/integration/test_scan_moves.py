@@ -95,11 +95,11 @@ MOVES = (
      ("is the set of files the run reads so that citations resolve and citation edges count",
       "because a path may lie outside `include` and must still be read")),
     ("FS-list.md", "1", "path.list",
-     ("is the directory or file whose entries are reported, `.` by default",)),
+     ("is the directory or file whose entries are reported",)),
     ("FS-show.md", "1.4", "path.show",
      ("chooses the project the ID resolves in",)),
     ("FS-refs.md", "1", "path.refs",
-     ("directory or file whose tree is scanned, default `.`",)),
+     ("directory or file whose tree is scanned",)),
     ("FS-id.md", "1", "path.id",
      ("is the directory whose project is numbered",)),
 )

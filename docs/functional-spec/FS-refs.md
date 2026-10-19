@@ -43,7 +43,7 @@ grund refs --from <coordinate> [<path>] [--summary] [--total] [--format text|jso
 
 ### 1.1 Three modes, one path
 
-`--glob` and `--from` each select a mode of their own; without either, `refs` is in ID mode and reads every command line as it did before they existed, to the byte and the exit status. The positionals are collected before they are read. ID mode takes `<ID>`, then at most one `<path>`. Under `--glob` or `--from` every positional is the path, default `.`, so `grund refs FS-login --glob 'FS-audit.**'` scans a path named `FS-login` and filters on no ID ([§FS-refs.1.3](FS-refs.md#13-an-id-typed-as-the-path-gets-a-hint)). `--section` and `--descendants` belong to ID mode; `--summary`, `--total` and `--format` fold and render every mode alike.
+`--glob` and `--from` each select a mode of their own; without either, `refs` is in ID mode and reads every command line as it did before they existed, to the byte and the exit status. The positionals are collected before they are read. ID mode takes `<ID>`, then at most one `<path>`. Under `--glob` or `--from` every positional is the path, and with none the run covers the project ([§FS-scan.path.none](FS-scan.md#pathnone-a-run-with-no-path-covers-the-project-discovery-finds)), so `grund refs FS-login --glob 'FS-audit.**'` scans a path named `FS-login` and filters on no ID ([§FS-refs.1.3](FS-refs.md#13-an-id-typed-as-the-path-gets-a-hint)). `--section` and `--descendants` belong to ID mode; `--summary`, `--total` and `--format` fold and render every mode alike.
 
 ### 1.2 Refusals
 

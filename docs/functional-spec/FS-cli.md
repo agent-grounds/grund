@@ -111,6 +111,16 @@ Where a user guide or a runnable example covers the command, its page ends with 
 
 A flag's one-line example is a command line that runs the page's subcommand — `grund <subcommand> …`, or for `show`, the default command, `grund …` as well — and passes that flag, spelled `--flag`, `--flag VALUE` or `--flag=VALUE`. It is written on the flag's own option entry after `e.g.`, or as one line of the page's examples block (a block whose heading ends in `examples:`). A bare value is not an example: `e.g. FS.requirements` or `e.g. --section 3.1` says what the flag takes, not how the command is run. The rule holds every flag the page names, whether in its usage lines or as an option entry, including the run flags every page shares ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)): a page that names a flag gives it an example.
 
+#### 2.3.2 A page whose path narrows says what a run without one covers
+
+The page of each command whose `<path>` narrows what it scans or reports, `check`, `fmt`, `cover`, `list` and `refs`, says what a run given no path covers ([§FS-scan.path.none](FS-scan.md#pathnone-a-run-with-no-path-covers-the-project-discovery-finds)) in one line below its usage, worded once for all five:
+
+```text
+With no PATH, the run covers the whole project or workspace discovered from the current directory; a PATH narrows it.
+```
+
+None of the five says PATH defaults to `.`: from a subdirectory, the run given `.` is a narrowed run and not the one given no path. A page whose path only chooses the project that answers, as `config`'s and `schema`'s do, keeps the default it states, and so does `show`'s `--path` entry, which names the project one coordinate resolves in.
+
 ## 3. Cross-subcommand flags
 
 - `--format text|json` — accepted by the subcommands with a machine-readable result or finding surface ([§FS-errors.5](FS-errors.md#5-json-format) lists them, [§FS-integrations.5](FS-integrations.md#5-json-format)). `text` is the default; `json` opts into the stable machine shapes, on the streams of [§FS-cli.3.1](FS-cli.md#31-the---format-json-streams). It is not a global flag: the operational commands [§FS-errors.5](FS-errors.md#5-json-format) lists, whose output is human text or generated files, reject `--format`.
@@ -126,7 +136,7 @@ A flag's one-line example is a command line that runs the page's subcommand — 
   | `init`, `fetch`, `completions`, `agent-setup-instructions` | rejected | — | rejected |
 
   A rejected flag is a CLI-level error of the command's own flag rules — `unknown flag`, or `agent-setup-instructions takes no arguments` — as today, per [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location). `fmt` and `config` gain no JSON surface here: designing one is their own spec's business ([§FS-errors.5](FS-errors.md#5-json-format)). The inert `[output] color` key gets no run-flag counterpart and there is no `--color`.
-- A path argument, when a subcommand takes one, defaults to `.` and is resolved the same way everywhere (config discovery walks up from it — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). Every path-taking subcommand accepts at most one ([§FS-cli.3.2](FS-cli.md#32-at-most-one-path)).
+- A path argument, when a subcommand takes one, is resolved the same way everywhere: config discovery walks up from it, or from the current directory when none is given ([§FS-config.1](FS-config.md#1-file-location-and-discovery)). A run given none covers the project that discovery finds, not the current directory alone ([§FS-scan.path.none](FS-scan.md#pathnone-a-run-with-no-path-covers-the-project-discovery-finds)). Every path-taking subcommand accepts at most one ([§FS-cli.3.2](FS-cli.md#32-at-most-one-path)).
 - `--only <code>`, `--ignore <code>`, and the boolean `--only-rule` are `check`-only finding-query flags ([§FS-check.1](FS-check.md#1-inputs)); other subcommands reject them. The `check` help page documents them ([§FS-cli.3.3](FS-cli.md#33-the-check-selector-help)).
 
 ### 3.1 The `--format json` streams
