@@ -232,11 +232,12 @@ pub(super) fn record_glob_citation(
 /// `<§>[alias/]ID[.section]` is deliberately *not* a live citation — the `<` and
 /// `>` around the marker mean `§` is not immediately followed by an ID, so no
 /// detection pass matches it (§AR-workspace.3.1). We record the shape anyway,
-/// into a check-inert list, so the checker can flag one whose ID resolves to a
-/// real declaration (§FS-check.4.2): an escape of a *real* ID is a likely
-/// bracketed live citation, not an intended illustration. IDs are parsed with
-/// the citing project's grammar; a cross-namespace target with an exotic grammar
-/// may be missed, which only ever costs a suggestion, never a false error.
+/// into a check-inert list, so the checker can flag one whose coordinate — the ID
+/// and any section it writes — resolves (§FS-check.2.3.1.3): an escape of a
+/// *real* one is a likely bracketed live citation, not an intended illustration.
+/// IDs are parsed with the citing project's grammar; a cross-namespace target
+/// with an exotic grammar may be missed, which only ever costs a suggestion,
+/// never a false error.
 pub(super) fn scan_escaped_citations(line: &CitationLine<'_>, findings: &mut Catalog) {
     if line.schema.citation.marker.is_empty() {
         return;

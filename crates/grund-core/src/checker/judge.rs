@@ -18,7 +18,7 @@ use super::values::check_values;
 use crate::config::{Frame, KindResolution, Rules, Schema};
 use crate::grammar::render_catalog_id;
 use crate::model::{Catalog, CheckReport, Diagnostic, Expected, Id, paired_declarations};
-use crate::resolver::{WorkspaceCheckTarget, target_for_citation};
+use crate::resolver::{WorkspaceCheckTarget, resolved_coordinate_target};
 
 /// The workspace a project is judged in (§FS-workspace.4): every loaded
 /// project as a citation resolves against it, and each one's rules by alias.
@@ -97,30 +97,40 @@ pub(crate) fn judge(
     // §FS-section-lock.checks: the lock against the tree, in `section_lock.rs`.
     check_section_locks(findings, schema, frame, targets, &mut report);
 
-    // §FS-check.2.3.1 / §AR-checker.2.11: a `<§>`-escaped illustration whose ID
-    // resolves to a real declaration is likely a live citation someone bracketed
-    // by mistake — the escape silently makes it inert.
+    // §FS-check.2.3.1 / §AR-checker.2.11: a `<§>`-escaped illustration whose coordinate
+    // resolves is likely a live citation bracketed by mistake; its live form keeps the
+    // section, in the separator of the project that reads it (§FS-check.2.3.1.3).
     for esc in &findings.escaped_citations {
         // §FS-config.3.2.8: the suggested live form names the selected declaration.
-        if let Some(target) = target_for_citation(esc, findings, schema, frame, targets)
-            && target.catalog.declarations.contains_key(&esc.id)
-        {
-            report.suggestions.push(Diagnostic {
-                code: "escaped-citation-resolves",
-                path: Some(esc.file.clone()),
-                line: Some(esc.line),
-                column: Some(esc.column),
-                message: format!(
-                    "escaped citation {} resolves to a declaration; write {}{} for a live citation, or leave it escaped if it is only an illustration",
-                    esc.text.trim(),
-                    schema.citation.marker,
-                    super::support::qualify(esc.namespace.as_deref(), &render_catalog_id(
-                        target.frame().grammar(), &target.catalog.declarations, &esc.id))
-                ),
-                sites: Vec::new(),
-                authority: Vec::new(),
-            });
-        }
+        let Some(target) = resolved_coordinate_target(esc, findings, schema, frame, targets) else {
+            continue;
+        };
+        let section = esc
+            .section
+            .as_deref()
+            .map(|section| format!("{}{section}", target.schema.ids.section_separator))
+            .unwrap_or_default();
+        report.suggestions.push(Diagnostic {
+            code: "escaped-citation-resolves",
+            path: Some(esc.file.clone()),
+            line: Some(esc.line),
+            column: Some(esc.column),
+            message: format!(
+                "escaped citation {} resolves to a declaration; write {}{}{section} for a live citation, or leave it escaped if it is only an illustration",
+                esc.text.trim(),
+                schema.citation.marker,
+                super::support::qualify(
+                    esc.namespace.as_deref(),
+                    &render_catalog_id(
+                        target.frame().grammar(),
+                        &target.catalog.declarations,
+                        &esc.id
+                    )
+                )
+            ),
+            sites: Vec::new(),
+            authority: Vec::new(),
+        });
     }
 
     // §FS-check.3.18 / §FS-check.3.17: a kind's index must list every declaration
