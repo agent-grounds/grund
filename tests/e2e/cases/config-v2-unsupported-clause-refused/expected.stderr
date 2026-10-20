@@ -1,1 +1,1 @@
-error: grund.toml:8: `[presentation.fmt] anchors` is part of the v2 format but not supported by this grund yet; value "gitlab" is not supported; this grund executes only anchors = "github"
+error: grund.toml:8: `[presentation.fmt] anchors` is part of the v2 format but not supported by this grund yet; unsupported value "gitlab"; executes only anchors = "github"
