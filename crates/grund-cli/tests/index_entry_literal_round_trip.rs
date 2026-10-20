@@ -123,21 +123,18 @@ const LISTS_LOGIN: &str =
     "# Specs\n\n- [§FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in)\n";
 
 #[test]
-#[ignore = "red until #822 prints the entry on the not-listed finding; implement removes this"]
 fn the_printed_entry_repairs_the_index_under_strict_mode() {
     let dir = build_fixture("strict", true, Some(LISTS_LOGIN));
     assert_printed_entries_repair(&dir, "strict = true", 1);
 }
 
 #[test]
-#[ignore = "red until #822 prints the entry on the not-listed finding; implement removes this"]
 fn the_printed_entry_repairs_the_index_off_strict_mode() {
     let dir = build_fixture("loose", false, Some(LISTS_LOGIN));
     assert_printed_entries_repair(&dir, "strict = false", 1);
 }
 
 #[test]
-#[ignore = "red until #822 prints the entry on the not-listed finding; implement removes this"]
 fn the_printed_entries_are_the_missing_index_file() {
     let dir = build_fixture("no_index", true, None);
     assert_printed_entries_repair(&dir, "no index file", 2);

@@ -523,26 +523,25 @@ pub(super) fn check_kind_indexes(
                     // reader is looking at, is a diagnosis the reader argues with.
                     // Both forms keep §FS-distribution.4.2.3's past-tense release.
                     let rendered = render_catalog_id(frame.grammar(), &findings.declarations, id);
+                    let form = entry_form(schema);
                     let message = if mentioned.contains(id) {
-                        // §FS-check.3.18.5: the form named follows `[reference]
-                        // strict`, so it is true of the index it is said about.
-                        let form = if schema.citation.strict {
-                            format!(
-                                "an entry is a `{}`-marked Markdown link to the declaration",
-                                schema.citation.marker
-                            )
-                        } else {
-                            format!(
-                                "an entry is a Markdown link to the declaration whose text is the ID, with or without the `{}` marker",
-                                schema.citation.marker
-                            )
-                        };
                         format!(
                             "{rendered} appears in {index_display} but not as an entry: {form} — became an error in grund 0.13.0"
                         )
                     } else {
+                        // §FS-check.3.18.5.2: the form, then the entry `fmt` would
+                        // write here, or the form alone where `fmt` derives no link.
+                        let entry = index_targets
+                            .get(&(target.index_file.clone(), id.clone()))
+                            .map(|link| {
+                                format!(
+                                    "; write `[{}{rendered}]({link})` in {index_display}",
+                                    schema.citation.marker
+                                )
+                            })
+                            .unwrap_or_default();
                         format!(
-                            "{rendered} is not listed in {index_display}{absent} — became an error in grund 0.13.0"
+                            "{rendered} is not listed in {index_display}{absent}: {form}{entry} — became an error in grund 0.13.0"
                         )
                     };
                     report.errors.push(Diagnostic {
@@ -557,6 +556,20 @@ pub(super) fn check_kind_indexes(
                 }
             }
         }
+    }
+}
+
+/// The form an index entry takes, the one clause both wordings of
+/// `missing-index-entry` name (§FS-check.3.18.5, §FS-check.3.18.5.2). It follows
+/// `[reference] strict`, so it is true of the index it is said about.
+fn entry_form(schema: &Schema) -> String {
+    let marker = &schema.citation.marker;
+    if schema.citation.strict {
+        format!("an entry is a `{marker}`-marked Markdown link to the declaration")
+    } else {
+        format!(
+            "an entry is a Markdown link to the declaration whose text is the ID, with or without the `{marker}` marker"
+        )
     }
 }
 

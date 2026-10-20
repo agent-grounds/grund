@@ -1,1 +1,1 @@
-apps/api/docs/functional-spec/FS-001-session.md:1: error: FS-001-session is not listed in apps/api/docs/functional-spec/README.md (the index file does not exist) — became an error in grund 0.13.0
+apps/api/docs/functional-spec/FS-001-session.md:1: error: FS-001-session is not listed in apps/api/docs/functional-spec/README.md (the index file does not exist): an entry is a `§`-marked Markdown link to the declaration; write `[§FS-001-session](FS-001-session.md#fs-001-session-api-session)` in apps/api/docs/functional-spec/README.md — became an error in grund 0.13.0
