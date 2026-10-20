@@ -72,6 +72,11 @@ fn render_first_kind_block(entrypoint: Option<&str>) -> String {
     )
 }
 
+/// The check step of both `next:` forms: a fresh scaffold checks with the expected
+/// "nothing recognized" warning, not a clean verdict (§FS-init.2.2.2).
+const CHECK_STEP: &str = "run `grund check` — on a fresh scaffold it warns \"nothing recognized\" \
+     until the first declaration; this is expected (exit 0), no repair needed";
+
 /// The trailing `next:` guidance block (§FS-init.2.2.2). Suppressed by the caller
 /// when every reported path was `exists `, or on a refresh of a complete setup
 /// (§FS-init.2.2.2.1) — when the repo is already current there is no next step
@@ -84,7 +89,7 @@ fn render_next_block_for_home(
 ) -> String {
     let mut output = "\nnext:\n".to_string();
     if docs {
-        output.push_str("  1. run `grund check` — a freshly scaffolded tree is clean\n");
+        output.push_str(&format!("  1. {CHECK_STEP}\n"));
         match fs_home {
             InitFsHome::File {
                 path,
@@ -119,7 +124,7 @@ fn render_next_block_for_home(
             output.push_str(" — until then `grund check` has nothing to scan");
         }
         output.push('\n');
-        output.push_str("  2. run `grund check` — a scaffolded tree is clean\n");
+        output.push_str(&format!("  2. {CHECK_STEP}\n"));
         match fs_home {
             InitFsHome::File { path, .. } => output.push_str(&format!(
                 "  3. allocate an ID:  ID=$(grund id FS \"…\")  then add it to {path}\n"
