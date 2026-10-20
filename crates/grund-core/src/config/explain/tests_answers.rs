@@ -165,3 +165,12 @@ fn the_version_is_read_and_nothing_else() {
     );
     assert!(version_of("this is not toml\n", file).is_err());
 }
+
+/// §FS-errors.4: the path a call was given comes back spelled with `/`, so the
+/// `Next:` line that repeats it is one string on every OS.
+#[test]
+fn the_path_asked_about_is_spelled_with_forward_slashes() {
+    let asked = Path::new(r"examples\config-explain\repo");
+    let explained = explain(asked, &ExplainAsk::Index).unwrap();
+    assert_eq!(explained.path, "examples/config-explain/repo");
+}
