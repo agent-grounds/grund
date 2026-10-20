@@ -209,7 +209,6 @@ pub(super) const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-init.2.3.4.6", reason: "covered by the byte-exact generated init block" },
     Exception { id: "FS-init.2.3.4.7", reason: "covered by the byte-exact generated init block" },
     Exception { id: "FS-init.2.3.4.8", reason: "covered by the byte-exact generated init block" },
-    Exception { id: "FS-init.2.3.4.9", reason: "covered by the byte-exact generated init block" },
     Exception { id: "FS-init.2.3.4.11", reason: "covered by the byte-exact generated init block" },
     Exception { id: "FS-init.2.3.4.12", reason: "covered by the byte-exact generated init block" },
     Exception { id: "FS-init.2.3.4.13", reason: "covered by the byte-exact generated init block" },
