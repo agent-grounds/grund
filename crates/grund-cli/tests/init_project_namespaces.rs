@@ -272,24 +272,25 @@ fn project_namespaces_rule_migration_keeps_unmanaged_content() {
     migration(true);
 }
 
-/// §FS-init.5.3, §FS-init.5.4: CLI output is the shared skill and teaches the split.
+/// §FS-init.5.3, §FS-init.5.4: the `members` section the CLI prints is the shared
+/// skill's `references/members.md`, and it teaches the split.
 #[test]
 fn project_namespaces_cli_setup_instructions_teach_member_split() {
-    let output = run_grund(&["agent-setup-instructions"], manifest_dir());
+    let output = run_grund(
+        &["agent-setup-instructions", "--section", "members"],
+        manifest_dir(),
+    );
     assert!(output.status.success());
     assert!(output.stderr.is_empty());
     let text = String::from_utf8(output.stdout).unwrap();
-    assert_eq!(
-        text,
-        fs::read_to_string(manifest_dir().join("skills/grund-init/SKILL.md")).unwrap()
-    );
-    assert_eq!(
-        text,
-        fs::read_to_string(
-            manifest_dir().join("crates/grund-core/assets/skills/grund-init/SKILL.md")
-        )
-        .unwrap()
-    );
+    for skill in ["skills", "crates/grund-core/assets/skills"] {
+        let members = format!("{skill}/grund-init/references/members.md");
+        assert_eq!(
+            text,
+            fs::read_to_string(manifest_dir().join(&members)).unwrap(),
+            "{members}"
+        );
+    }
     assert!(
         text.contains("independently checked"),
         "setup guidance omits when to split off a member"

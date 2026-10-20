@@ -23,7 +23,7 @@ fn print_help() {
     println!("  schema        Kinds, places, shapes and citation rules at a glance.   grund schema");
     println!("  integrations  Print/install clickable-citation integrations.          grund integrations wezterm");
     println!("  completions   Print shell completion scripts.                         grund completions bash");
-    println!("  agent-setup-instructions  Print the setup guide for AI agents.");
+    println!("  agent-setup-instructions  Guided setup for agents; --section NAME for more. Fresh: grund init -h");
     println!();
     println!("Guides and examples:  https://github.com/agent-grounds/grund/tree/main/docs/user-facing");
 }
@@ -292,24 +292,40 @@ fn print_subcommand_help(cmd: &str) {
                 &[],
             );
         }
+        // §FS-init.5, §FS-cli.2.3.1: the section names are read from the one table.
         "agent-setup-instructions" => {
             println!(
                 "grund agent-setup-instructions — print the guided setup instructions for AI agents."
             );
             println!();
-            println!("Usage:  grund agent-setup-instructions");
+            println!("Usage:  grund agent-setup-instructions [--section NAME | --full]");
+            println!();
+            println!("With no flag it prints the core: the fresh-repository path, the contents, and");
+            println!("the adoption workflow. A fresh repository needs only that, or `grund init -h`.");
+            println!("The rest of the guide is ten reference sections, each printed on request.");
+            println!();
+            println!("Options:");
+            println!("  --section NAME  print one reference section");
+            println!("                  e.g. grund agent-setup-instructions --section rules");
+            println!("  --full          print the core, then every section: the whole guide at once");
+            println!("                  e.g. grund agent-setup-instructions --full | less");
+            println!();
+            let names: Vec<&str> = AGENT_SETUP_SECTIONS.iter().map(|(name, _)| *name).collect();
+            println!("Sections, in --full order:");
+            println!("  {}", names.join(", "));
+            println!();
+            println!("The text is the Markdown shipped as `skills/grund-init/`: `SKILL.md` is the core");
+            println!("and `references/<name>.md` each section. It is embedded in the binary so installed");
+            println!("agents can discover the setup workflow without access to the source tree.");
             println!();
             println!(
-                "The output is the same Markdown source shipped as `skills/grund-init/SKILL.md`,"
+                "Exit:  0 instructions printed · 2 unknown section, unknown flag, or a positional argument."
             );
-            println!("embedded in the binary so installed agents can discover the setup workflow");
-            println!("without access to the source tree.");
-            println!();
-            println!("Exit:  0 instructions printed · 2 unexpected arguments.");
             println!();
             println!("Examples:");
-            println!("  grund agent-setup-instructions          # print the setup guide");
-            println!("  grund agent-setup-instructions | less   # read it a page at a time");
+            println!("  grund agent-setup-instructions                  # the core: fresh path, contents, workflow");
+            println!("  grund agent-setup-instructions --section rules  # one reference section");
+            println!("  grund agent-setup-instructions --full | less    # the whole guide, a page at a time");
         }
         _ => print_help(),
     }

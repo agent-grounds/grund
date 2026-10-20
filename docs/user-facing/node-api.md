@@ -66,7 +66,7 @@ relative to that captured cwd. Output paths and byte columns follow core rules.
 | `fetch(id, options?)` | root; explicit configured fetch execution, requested id returned |
 | `integrations(options?)` | client, write, conversation, conversationTarget, agent; detection/artifact/install discriminated records |
 | `referenceStyle(path)` | required document path; member-specific marker and trigger |
-| `agentSetupInstructions()` | canonical setup instructions returned as data |
+| `agentSetupInstructions()` | the whole setup guide returned as data: the text `grund agent-setup-instructions --full` prints |
 
 `globs` takes the coordinate patterns `--glob` takes and selects as repeated flags do;
 `note` is the CLI's `note:` text, or null where it printed none. Explicit batch

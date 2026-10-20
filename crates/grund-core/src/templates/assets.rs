@@ -100,21 +100,92 @@ pub(crate) const DA_README_TEMPLATE: &str =
     include_str!("../../assets/templates/software-development/decisions-architectural-README.md");
 pub(crate) const GITKEEP_TEMPLATE: &str =
     include_str!("../../assets/templates/software-development/gitkeep.md");
-/// The setup skill, printed byte-for-byte by `grund agent-setup-instructions`
-/// into whatever repository the agent is standing in (§FS-init.5.3). That is why
-/// `skills/` is an unwalked home (§FS-config.3.4.7.1) and why nothing in the file
-/// cites an ID of this repository: it would name a document the reader does not
-/// have (§REQ-shipped-surfaces.1), so its links are the public URLs of the pages
-/// they used to cite. What it teaches is grounded here instead — the config
-/// walkthrough ends on the full-tree scope that reports what `[scan] include`
-/// left out (§FS-check.1.3), its `[citations]` section is the canonical
-/// citation-directions page verbatim (§FS-config.3.9, kept in sync by the
-/// asset-sync check), and its setup step covers the clickable integrations
-/// (§FS-integrations), the global agent instruction files `--write`
-/// synchronizes (§FS-integrations.4.3.8), and the committable repository opinion
-/// with its per-agent gate (§DF-repo-conversation-opinion,
-/// §DF-conversation-link-target.2.4).
+/// The core of the setup skill, its `SKILL.md`: what `grund agent-setup-instructions`
+/// prints with no flag (§FS-init.5.5). It opens with the fresh-repository path and the
+/// contents, then the adoption workflow (§FS-init.5.1), and its validation step ends on
+/// the full-tree scope (§FS-check.1.3).
+///
+/// Every file of the skill is printed byte-for-byte into whatever repository the agent
+/// is standing in (§FS-init.5.3). That is why `skills/` is an unwalked home
+/// (§FS-config.3.4.7.1) and why nothing in the skill cites an ID of this repository: it
+/// would name a document the reader does not have (§REQ-shipped-surfaces.1), so its
+/// links are the public URLs of the pages they used to cite. What it teaches is
+/// grounded here instead, on the core and on each of [`AGENT_SETUP_SECTIONS`].
 pub const AGENT_SETUP_INSTRUCTIONS: &str = include_str!("../../assets/skills/grund-init/SKILL.md");
+
+/// One reference section of the setup skill: its name, and the text of
+/// `references/<name>.md`, so the name and the file cannot disagree.
+macro_rules! setup_section {
+    ($name:literal) => {
+        (
+            $name,
+            include_str!(concat!(
+                "../../assets/skills/grund-init/references/",
+                $name,
+                ".md"
+            )),
+        )
+    };
+}
+
+/// The setup skill's reference sections, the closed set in Contents order
+/// (§FS-init.5.5). This table is the one list of their names: the command's `-h`
+/// page, its `known sections:` refusal and `--full` all read it (§AR-system.principle).
+pub const AGENT_SETUP_SECTIONS: [(&str, &str); 10] = [
+    // How to recommend each setting, then the config questions but `[citations]`.
+    setup_section!("config"),
+    // The canonical citation-directions page verbatim (§FS-config.3.9), held to it by
+    // the asset-sync check.
+    setup_section!("citations"),
+    // Ends on the full-tree scope that reports what `[scan] include` left out
+    // (§FS-check.1.3).
+    setup_section!("languages"),
+    setup_section!("members"),         // §FS-init.5.4
+    setup_section!("scoped-guidance"), // §FS-init.2.3.5.11
+    setup_section!("schema"),          // §FS-schema.14
+    setup_section!("queries"),         // §FS-init.2.3.4.3.1
+    setup_section!("editor"),          // §FS-lsp.2.3
+    // The clickable integrations (§FS-integrations), the instruction files `--write`
+    // synchronizes (§FS-integrations.4.3.8), and the committable opinion with its
+    // per-agent gate (§DF-repo-conversation-opinion, §DF-conversation-link-target.2.4).
+    setup_section!("integrations"),
+    // The chapter-rules writing section of the rules guide verbatim (§FS-rules.10).
+    setup_section!("rules"),
+];
+
+/// Which part of the setup skill a caller asks for (§FS-init.5).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum SetupPart<'a> {
+    /// The core, [`AGENT_SETUP_INSTRUCTIONS`]: the command with no flag.
+    Core,
+    /// One reference section by name: `--section NAME`.
+    Section(&'a str),
+    /// The core, then every section in table order: `--full`.
+    Full,
+}
+
+/// The text of one part of the setup skill, each file read through
+/// [`canonical_template_text`], so `--full` is built from the same text each file
+/// prints (§FS-init.5.3). `Full` joins the core and the sections with one newline
+/// between consecutive files (§FS-init.5.5). `None` exactly when a `Section` names
+/// no section, which the caller refuses with the table's names (§FS-init.5).
+pub fn setup_instructions(part: SetupPart<'_>) -> Option<String> {
+    match part {
+        SetupPart::Core => Some(canonical_template_text(AGENT_SETUP_INSTRUCTIONS)),
+        SetupPart::Section(name) => AGENT_SETUP_SECTIONS
+            .iter()
+            .find(|(section, _)| *section == name)
+            .map(|(_, text)| canonical_template_text(text)),
+        SetupPart::Full => {
+            let mut text = canonical_template_text(AGENT_SETUP_INSTRUCTIONS);
+            for (_, section) in AGENT_SETUP_SECTIONS {
+                text.push('\n');
+                text.push_str(&canonical_template_text(section));
+            }
+            Some(text)
+        }
+    }
+}
 
 pub fn canonical_template_text(template: &str) -> String {
     template.replace("\r\n", "\n").replace('\r', "\n")

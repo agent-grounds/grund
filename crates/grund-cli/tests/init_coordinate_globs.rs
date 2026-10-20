@@ -81,8 +81,8 @@ fn init_block_builds_the_pattern_from_the_format() {
     );
 }
 
-/// The guide carries the glob recipes and the review, and both skill copies teach the glob
-/// recipe in place of the pipe.
+/// The guide carries the glob recipes and the review, and both skill copies' `queries`
+/// section teaches the glob recipe in place of the pipe.
 #[test]
 fn querying_guide_and_skill_teach_the_glob_recipe() {
     let root = manifest_dir();
@@ -102,8 +102,8 @@ fn querying_guide_and_skill_teach_the_glob_recipe() {
         );
     }
     for skill in [
-        "skills/grund-init/SKILL.md",
-        "crates/grund-core/assets/skills/grund-init/SKILL.md",
+        "skills/grund-init/references/queries.md",
+        "crates/grund-core/assets/skills/grund-init/references/queries.md",
     ] {
         let text = fs::read_to_string(root.join(skill)).expect(skill);
         assert!(

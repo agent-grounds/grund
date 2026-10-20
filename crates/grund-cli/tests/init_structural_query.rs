@@ -45,8 +45,8 @@ fn init_block_links_the_query_guide_absolutely() {
     );
 }
 
-/// The guide holds every recipe the spec names, and both skill copies teach the
-/// subtree expansion and link the guide (§FS-init.2.3.4.3.1). The explicit stdin form
+/// The guide holds every recipe the spec names, and both skill copies' `queries`
+/// section teaches the subtree expansion and links the guide (§FS-init.2.3.4.3.1). The explicit stdin form
 /// stays in the guide; the skill teaches it through `--glob`.
 #[test]
 fn querying_guide_and_skill_hold_the_query_recipes() {
@@ -73,8 +73,8 @@ fn querying_guide_and_skill_hold_the_query_recipes() {
         );
     }
     for skill in [
-        "skills/grund-init/SKILL.md",
-        "crates/grund-core/assets/skills/grund-init/SKILL.md",
+        "skills/grund-init/references/queries.md",
+        "crates/grund-core/assets/skills/grund-init/references/queries.md",
     ] {
         let text = fs::read_to_string(root.join(skill)).expect(skill);
         assert!(

@@ -265,10 +265,9 @@ hard_message = "split-doc-hard"
 # session's context, a `SKILL.md` when the skill loads. Length here is charged to every one of those reads, which is
 # exactly the cost §GOAL-token-economy is about, so these keep the soft 250 the
 # whole markdown tree used to carry. The hard ceiling is raised from that rule's
-# 400 to 500: `skills/grund-init/SKILL.md` measures 387 lines and cannot be split
-# — a shipped artifact whose bytes a test asserts (§FS-init.5) — so 400 stood 13
-# lines from blocking a file nobody is allowed to shorten, and the tier with no
-# override is the wrong one to park a shipped artifact against.
+# 400 to 500, the shared policy's number (§AR-ci.9.5). The setup skill is no
+# exception: it is a core and one file per reference section (§FS-init.5.5), each
+# under the soft budget, so a section that grows splits like any entrypoint.
 [[rules]]
 id = "entrypoints"
 include = ["CLAUDE.md", "AGENTS.md", "skills/**/*.md"]

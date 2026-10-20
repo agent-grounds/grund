@@ -57,7 +57,7 @@ The full inventory implements
 | `integrations(client=None, *, write=False, conversation=None, conversation_target=None, agent=None)` | `IntegrationsResult`: detection, client descriptors, nullable artifact, events, manual steps, cautions |
 | `complete_ids(prefix="", *, sections=False)` | `CompletionResult`: candidates, cautions |
 | `reference_style()` | `ReferenceStyle`: marker, typing trigger, cautions |
-| `agent_setup_instructions()` | `SetupInstructions`: canonical text, cautions |
+| `agent_setup_instructions()` | `SetupInstructions`: the whole setup guide, the text `grund agent-setup-instructions --full` prints; cautions |
 
 Results are frozen dataclasses, collections are tuples, and optional fields are
 present as None. Effective config, failure details and partial opaque payloads

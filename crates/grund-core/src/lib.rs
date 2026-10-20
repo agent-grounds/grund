@@ -180,11 +180,14 @@ pub use queries::{
     check_coordinate_globs, glob_beside_section, reads_as_coordinate, reads_as_coordinate_glob,
 };
 
-// §AR-system.2.11 templates: the setup skill a command prints byte-for-byte and
-// the newline canonicalization every template is read through (§FS-init.5.3,
-// §FS-init.2.1).
+// §AR-system.2.11 templates: the setup skill a command prints byte-for-byte, its
+// core and each reference section (§FS-init.5.3, §FS-init.5.5), and the newline
+// canonicalization every template is read through (§FS-init.2.1).
 #[doc(hidden)]
-pub use templates::{AGENT_SETUP_INSTRUCTIONS, canonical_template_text};
+pub use templates::{
+    AGENT_SETUP_INSTRUCTIONS, AGENT_SETUP_SECTIONS, SetupPart, canonical_template_text,
+    setup_instructions,
+};
 
 // §AR-system.2.8 writers: the init scaffold with its events and refusals, the
 // external fact snapshot, and the formatter's scan abort (§FS-init, §FS-fetch,

@@ -11,20 +11,20 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use grund_core::{
-    AGENT_SETUP_INSTRUCTIONS, ApiScanError, BatchShowQuery, CheckOpts, CitationDisjunction,
+    AGENT_SETUP_SECTIONS, ApiScanError, BatchShowQuery, CheckOpts, CitationDisjunction,
     CitationLevel, CitationTarget, CompleteIdsOpts, CoverCitation, CoverLinesOpts, CoverOpts,
     FetchFailureKind, Finding, FindingSite, FmtConflictAbort, FmtOpts, FmtScanAbort, IdOpts,
     IdProposal, IdProposalOutcome, InitAgentEntrypointSelection, InitNext, InitOpts, InitOutput,
     ListEntry, ListOpts, ListSizeEntry, ListSizeOpts, NamespaceMatch, PathBase, PointSizeUnit,
-    RefHit, RefsOpts, RefsOutput, RefsQueryFailure, RefsSites, RefsSitesOpts, Report, ShowFormat,
-    ShowMode, ShowOpts, ShowQueryError, canonical_template_text, check_coordinate_globs,
+    RefHit, RefsOpts, RefsOutput, RefsQueryFailure, RefsSites, RefsSitesOpts, Report, SetupPart,
+    ShowFormat, ShowMode, ShowOpts, ShowQueryError, check_coordinate_globs,
     check_with_run_warnings, cites_clause, complete_ids_with_run_warnings, config_run_warnings,
     config_warnings, cover_lines, cover_with_globs, effective_config, effective_project,
     fetch_snapshot_with_run_warnings, format_references, glob_beside_section, init, list_sizes,
     list_with_run_warnings, names_member_id_candidate, propose_id_with_run_warnings,
     reads_as_coordinate, reads_as_coordinate_glob, refs_sites_with_run_warnings,
-    render_finding_sites_json, show_batch_with_globs, show_with_scope, usage_clause,
-    usage_over_paths, validate_config, with_report_path_base,
+    render_finding_sites_json, setup_instructions, show_batch_with_globs, show_with_scope,
+    usage_clause, usage_over_paths, validate_config, with_report_path_base,
 };
 use grund_core::{CHECK_FINDING_CODES, CheckFindingSelection};
 
