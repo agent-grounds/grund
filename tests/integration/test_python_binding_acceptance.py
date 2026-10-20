@@ -31,15 +31,15 @@ class PythonAcceptanceWorkflowTests(unittest.TestCase):
             environment = Path(temp) / "venv"
             subprocess.run([sys.executable, "-m", "venv", str(environment)], check=True)
             python = interpreter(environment)
-            # §AR-bindings.6.2: one install per run, built at the dev profile - the same
-            # source as a release, without its LTO, which costs the gate about a minute.
+            # §AR-bindings.6.2: every build of the run, this install and run.py's own, is at
+            # the dev profile - the same source as a release, without its LTO.
             build = dict(os.environ, MATURIN_PEP517_ARGS="--profile dev")
             install = subprocess.run([str(python), "-m", "pip", "install", "--quiet",
                                       str(SOURCE)], cwd=REPO, env=build,
                                      capture_output=True, text=True)
             self.assertEqual(0, install.returncode, install.stdout + install.stderr)
             # §FS-distribution.3.0.3: the corpus writes and pipes UTF-8, on Windows too.
-            env = dict(os.environ, PYTHONUTF8="1")
+            env = dict(build, PYTHONUTF8="1")
             result = subprocess.run([str(python), str(ACCEPTANCE)], cwd=REPO, env=env,
                                     capture_output=True, text=True, encoding="utf-8",
                                     errors="replace")

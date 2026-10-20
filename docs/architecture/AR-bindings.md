@@ -227,7 +227,10 @@ and merge group, and the local `python-test` hook runs it too.
 
 The module installs this checkout's `crates/grund-py` from its source directory into a
 virtual environment of its own under the wrapper's scratch, outside the checkout, once
-per run, and runs `run.py` with that environment's interpreter. The installed package is
+per run, and runs `run.py` with that environment's interpreter. Every build of the run,
+that install and the clean-checkout and sdist installs `run.py` makes itself, is at the
+dev profile: the same source as a release without its LTO, because what the suite proves
+is what the package returns and that it installs, not how it was optimized. The installed package is
 the one `binding()` admits: a local-source install of this checkout, never a registry
 package or whatever the gate's own interpreter has installed. The Rust side is the gate's
 `GRUND_BINDINGS_ORACLE` ([§AR-ci.3.4](AR-ci.md#34-the-python-gates-inputs)), which the shared oracle side in
