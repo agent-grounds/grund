@@ -95,7 +95,7 @@
 {"project":"tests/e2e/cases/check-index-link-destination-is-not-an-entry/repo","show":[0,"02e4fa4d560db61f",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/check-index-mention-in-table-is-not-an-entry/repo","show":[0,"b29d2eb18928c4f7",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/check-index-missing-entry-json/repo","show":[0,"ee15f52c40007a35",""],"validate":[0,"e3b0c44298fc1c14",""]}
-{"project":"tests/e2e/cases/check-index-missing-entry/repo","show":[0,"ee15f52c40007a35",""],"validate":[0,"e3b0c44298fc1c14",""]}
+{"project":"tests/e2e/cases/check-index-missing-entry/repo","show":[0,"02e4fa4d560db61f",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/check-index-missing-file/repo","show":[0,"ee15f52c40007a35",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/check-index-named-file/repo","show":[0,"9b15eca9821fb6e5",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/check-index-recursive-subtree/repo","show":[0,"ee15f52c40007a35",""],"validate":[0,"e3b0c44298fc1c14",""]}
