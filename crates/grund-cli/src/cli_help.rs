@@ -19,7 +19,7 @@ fn print_help() {
     println!();
     println!("Set up:");
     println!("  init          Scaffold agent instructions + grund.toml.               grund init --scaffold");
-    println!("  config        Validate or show the effective grund.toml.              grund config show");
+    println!("  config        Validate or show grund.toml; explain a key or a code.   grund config show");
     println!("  schema        Kinds, places, shapes and citation rules at a glance.   grund schema");
     println!("  integrations  Print/install clickable-citation integrations.          grund integrations wezterm");
     println!("  completions   Print shell completion scripts.                         grund completions bash");

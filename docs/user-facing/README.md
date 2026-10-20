@@ -13,6 +13,7 @@ command's own `--help` page links the guide and example that cover it
 | [Checking a repository](checking.md) | — |
 | [The `grund.toml` reference](configuration.md), with its [JSON Schema](../../schemas/grund.schema.json) | [`examples/places`](../../examples/places/) |
 | [Migrating a config to version 2](migrating.md) | [`examples/migrate`](../../examples/migrate/) |
+| [Asking the binary what a key or a check code means](explain.md) | [`examples/config-explain`](../../examples/config-explain/) |
 | [Python API](python-api.md) | [`examples/python-api`](../../examples/python-api/) |
 | [Rust API](rust-api.md) | [`examples/rust-api`](../../examples/rust-api/) |
 | [Citation directions](citation-directions.md) | — |

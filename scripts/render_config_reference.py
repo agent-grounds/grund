@@ -42,6 +42,8 @@ takes the default shown. `grund config validate` checks a file against these key
 file's own version; for version 2 its tables keyed by a kind follow the order the
 file writes its `[schema.kinds]` rows
 ([§FS-config.4.2.4](../functional-spec/FS-config.md#424-the-order-show-prints-in)).
+`grund config explain '[TABLE] key'` gives one key's entry from the grund you run,
+in your file's version, with no page needed ([config explain](explain.md)).
 
 ## Editor support
 

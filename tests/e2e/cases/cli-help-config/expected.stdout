@@ -41,3 +41,6 @@ Examples:
   grund config show docs/         # the config that governs docs/
   grund config explain oversized-lead   # what a check code means, its severity and what turns it on
   grund config migrate --to 2     # the version-2 file, previewed; nothing written
+
+Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/explain.md
+Example:  https://github.com/agent-grounds/grund/tree/main/examples/config-explain
