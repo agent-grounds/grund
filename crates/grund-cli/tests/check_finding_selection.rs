@@ -220,11 +220,13 @@ fn issue_49_warnings_and_enabled_suggestions_are_selectable_but_do_not_fail() {
         suggestion,
         "",
     );
+    // §FS-check.1.4.1: without `--suggestions` the check is off, and says so.
     assert_run(
         &run(&suggestion_root, &["--only=escaped-citation-resolves"]),
         0,
-        "success\n",
         "",
+        "warning: --only escaped-citation-resolves judged nothing — \
+         the check is off until --suggestions is passed\n",
     );
 }
 
