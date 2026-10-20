@@ -126,7 +126,7 @@ def is_table(node):
 
 
 def render_table(schema, header, node, out, seen):
-    """Emit one TOML table's keys, then every table nested under it."""
+    """Emit one TOML table's keys and notes, then every table nested under it."""
     node = resolve(schema, node)
     array = node.get("type") == "array"
     body = resolve(schema, node["items"]) if array else node
