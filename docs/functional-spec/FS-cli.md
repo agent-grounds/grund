@@ -105,6 +105,10 @@ The whole page fits one screen ([§GOAL-friendliness-first.1](../goals.md#1-hard
   agent-setup-instructions  Guided setup for agents; --section NAME for more. Fresh: grund init -h
 ```
 
+The `fmt` row names both link and section-lock maintenance, so a reader can discover
+more than marker conversion within that same budget. The full workflow belongs on
+its own page ([§FS-cli.2.3.2](FS-cli.md#232-fmt-teaches-declaration-maintenance)).
+
 ### 2.3 A subcommand's help page
 
 Static help describes configuration scope truthfully across supported versions, without discovering a configuration just to render help. In particular, `check` help preserves the no-config default directories, and either uses version-neutral scope terms or explicitly labels v1's `[scan] include` and v2's places ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)). Its `--full` description widens past configured scope as [§FS-config-v2.schema.places.boundaries.7](FS-config-v2.md#schemaplacesboundaries7---full-widens-past-the-places) specifies; it does not suggest bypassing source exclusions ([§FS-config-v2.schema.sources.exclude](FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list)). An unqualified instruction to set `[scan] include` is not v2 repair advice.
@@ -126,6 +130,24 @@ With no PATH, the run covers the whole project or workspace discovered from the 
 ```
 
 None of the five says PATH defaults to `.`: from below the config root, the run given `.` is a narrowed run and not the one given no path. A page whose path only chooses the project that answers, as `config`'s and `schema`'s do, keeps the default it states. `show`'s path does both ([§FS-scan.path.show](FS-scan.md#pathshow-show-resolves-the-id-against-the-project-the-path-discovers)), so its `--path` entry gives each form its own and names no `.` default: one coordinate answers alike with `.` and with no path, and `--batch --all` and `--glob`, which the path narrows, query with none the whole project or workspace discovered from the current directory.
+
+#### 2.3.3 `fmt` teaches declaration maintenance
+
+The `fmt` page explains that, after the author renames a declaration or moves its
+file and updates affected authored citation IDs, `grund fmt --write` re-derives
+generated Markdown link destinations and anchors when the link pass applies
+([§FS-fmt.6.3](FS-fmt.md#63-idempotency-and-re-derive)). It names section-lock
+maintenance and says to run from the project's config root or workspace root for
+eligible lock updates ([§FS-section-lock.write.rules](FS-section-lock.md#writerules-add-refresh-drop)).
+Its examples include a root-scoped `grund fmt --write` invocation whose explanation
+connects it to this rename or move workflow.
+
+This teaching preserves the boundaries: `fmt` does not rename authored citation
+IDs or repair arbitrary URLs, a file move alone leaves an ID-keyed lock's name
+alone ([§FS-section-lock.file.shard](FS-section-lock.md#fileshard-one-file-per-cited-declaration)),
+and `fmt` never silently approves a protected section move
+([§FS-section-lock.write.never-a-move](FS-section-lock.md#writenever-a-move-fmt-never-approves-a-move)).
+The preview/write contract remains [§FS-fmt.3](FS-fmt.md#3-outputs)'s.
 
 ## 3. Cross-subcommand flags
 
