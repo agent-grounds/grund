@@ -127,7 +127,7 @@ collision and the other failed ID queries, so it takes the bare shape of
 
 #### 2.2.3 Who uses it
 
-Used by [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location) (unknown subcommand / bad flag), [§FS-id.6](FS-id.md#6-exit-codes) (unknown kind, unknown `--format`, scan / I/O error), [§FS-config.4.3](FS-config.md#43-invalid-config-behavior) (config validation), [§FS-check.2.1.1](FS-check.md#211-cli-level-messages) (a malformed config or a per-file read failure mid-scan), [§FS-check.2.2](FS-check.md#22-empty-scan) (the empty-scan `warning:`), [§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing) (the empty citation-obligation `warning:`), and any subcommand reporting a launch-time failure.
+Used by [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location) (unknown subcommand / bad flag), [§FS-id.6](FS-id.md#6-exit-codes) (unknown kind, unknown `--format`, scan / I/O error), [§FS-config.4.3](FS-config.md#43-invalid-config-behavior) (config validation), [§FS-check.2.1.1](FS-check.md#211-cli-level-messages) (a malformed config or a per-file read failure mid-scan), [§FS-check.2.2](FS-check.md#22-empty-scan) (the empty-scan `warning:`), [§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing) (the empty citation-obligation `warning:`, a table's or a rule's), [§FS-check.1.4.1](FS-check.md#141-a-selected-check-the-run-leaves-off-says-so) (the selected-check-off `warning:`), and any subcommand reporting a launch-time failure.
 
 #### 2.2.4 Under `--format=json`
 
@@ -516,7 +516,7 @@ A *launch-time* CLI-level message ([§FS-errors.2.2](FS-errors.md#22-cli-level-m
 
 #### 5.2.3 Run-level findings in `check`'s report
 
-A run-level finding in `grund check`'s report — about the run, not a finding about the graph, such as the empty-scan `warning:` ([§FS-check.2.2](FS-check.md#22-empty-scan)), the nothing-recognized `warning:` ([§FS-check.4.5](FS-check.md#45-nothing-recognized)), or a per-file read failure collected mid-scan (a `line`-less finding) — is likewise on stderr in both forms; under JSON a run-level warning carries `path`, `line`, `sites`, and `authority` all `null`, any location being in its message text ([§FS-check.4.5](FS-check.md#45-nothing-recognized)). A run-level finding is about the run rather than about a unit, so no rule authored it and `--only-rule` cannot retain it. A scoped run therefore drops it along with everything else no rule authored, exactly as the code axis drops it — `--ignore empty-scan` by name, `--only <any other code>` by omission — and only a mid-scan failure's `io` finding is beyond either axis ([§FS-check.2.1.2](FS-check.md#212-selection-filters-the-complete-report)). Say the consequence plainly, because this is where a scoped trial can still mislead: an author who scopes a sentence over a tree that scanned nothing gets `success` at exit `0`, and the warning that would have said *nothing was scanned, so the sentence never got a chance* is gone with the rest. The `success` there means what it always means — the selected report is empty, not that the repository has no findings ([§FS-check.2.1.3](FS-check.md#213-the-success-line)). The exit code is unmoved either way, these being warnings.
+A run-level finding in `grund check`'s report — about the run, not a finding about the graph, such as the empty-scan `warning:` ([§FS-check.2.2](FS-check.md#22-empty-scan)), the nothing-recognized `warning:` ([§FS-check.4.5](FS-check.md#45-nothing-recognized)), or a per-file read failure collected mid-scan (a `line`-less finding) — is likewise on stderr in both forms; under JSON a run-level warning carries `path`, `line`, `sites`, and `authority` all `null`, any location being in its message text ([§FS-check.4.5](FS-check.md#45-nothing-recognized)). Two are the exceptions. A rule's line saying it applies to nothing is a diagnostic its rule produced, so it carries that rule's `authority` and a run scoped to the trial sentence keeps the sentence's line ([§FS-check.2.2.1.4](FS-check.md#2214-a-rules-obligation)); and the selected-check-off line is about the selection itself, so it passes both axes ([§FS-check.1.4.1](FS-check.md#141-a-selected-check-the-run-leaves-off-says-so)). Any other run-level finding is about the run rather than about a unit, so no rule authored it and `--only-rule` cannot retain it. A scoped run therefore drops it along with everything else no rule authored, exactly as the code axis drops it — `--ignore empty-scan` by name, `--only <any other code>` by omission — and only a mid-scan failure's `io` finding is beyond either axis ([§FS-check.2.1.2](FS-check.md#212-selection-filters-the-complete-report)). Say the consequence plainly, because this is where a scoped trial can still mislead: an author who scopes a sentence over a tree that scanned nothing gets `success` at exit `0`, and the warning that would have said *nothing was scanned, so the sentence never got a chance* is gone with the rest. The `success` there means what it always means — the selected report is empty, not that the repository has no findings ([§FS-check.2.1.3](FS-check.md#213-the-success-line)). The exit code is unmoved either way, these being warnings.
 
 ### 5.3 `show --batch`
 
@@ -549,34 +549,34 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 |---|---|---|---|---|
 | `agents-init` | error | — | — | [§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block) |
 | `broken-stub` | error | — | — | [§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub) |
-| `chapter-cardinality` | error | — | `rules = true` on a kind | [§FS-check.3.26](FS-check.md#326-chapter-cardinality) |
-| `citation-cardinality` | error | — | `rules = true` on a kind | [§FS-check.3.27](FS-check.md#327-citation-cardinality) |
+| `chapter-cardinality` | error | — | `rules = true` on a kind, `form = "rule"` under v2, or `--rule` | [§FS-check.3.26](FS-check.md#326-chapter-cardinality) |
+| `citation-cardinality` | error | — | `rules = true` on a kind, `form = "rule"` under v2, or `--rule` | [§FS-check.3.27](FS-check.md#327-citation-cardinality) |
 | `config-version-1` | warning | — | a config file read as version 1 | [§FS-check.checks.config-version-1](FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1) |
 | `conflict-marker` | error | — | — | [§FS-declarations.checks.conflict-marker](FS-declarations.md#checksconflict-marker-unresolved-merge-conflict) |
 | `dangling` | error | — | — | [§FS-check.3.1](FS-check.md#31-dangling-citation) |
 | `declaration-near-miss` | error | — | — | [§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss) |
 | `deprecated-config-location` | warning | — | — | [§FS-check.4.11](FS-check.md#411-config-read-from-the-deprecated-agents-location) |
-| `discouraged-citation` | none — suggestion | — | `--suggestions`, on a `should-not` entry | [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) |
+| `discouraged-citation` | none — suggestion | — | `--suggestions`, on a `should-not` entry or rule | [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) |
 | `duplicate` | error | — | — | [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) |
 | `duplicate-section` | error | — | — | [§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path) |
-| `empty-citation-obligation` | warning | — | a `must` or `should` entry | [§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing) |
+| `empty-citation-obligation` | warning | — | a `must` or `should` entry or rule | [§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing) |
 | `empty-scan` | warning | — | — | [§FS-check.2.2](FS-check.md#22-empty-scan) |
 | `escaped-citation-resolves` | none — suggestion | — | `--suggestions` | [§FS-check.2.3.1](FS-check.md#231-escaped-citation-resolves) |
 | `excluded-stub-target` | none — spent, never fires | — | — | [§FS-declarations.checks.excluded-stub-target](FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-broken-from-grund-0190) |
-| `forbidden-citation` | error | — | a `must-not` entry | [§FS-check.3.12](FS-check.md#312-forbidden-citation) |
+| `forbidden-citation` | error | — | a `must-not` entry or rule | [§FS-check.3.12](FS-check.md#312-forbidden-citation) |
 | `full-scope-ignored` | warning | — | `--full` with an explicit path | [§FS-check.1.3.7](FS-check.md#137-a-path-the-flag-cannot-widen-earns-a-caution-not-a-refusal) |
 | `glob-citation` | warning | error in `0.19.0` | — | [§FS-check.checks.glob-citation](FS-check.md#checksglob-citation-glob-citation) |
-| `inline-citation-style` | error; warning for the two opt-in forms | — | `[reference] inline_style`; `warn_on_suggested`; `inline_note_layout_check` | [§FS-check.3.10](FS-check.md#310-inline-citation-style-violation) |
+| `inline-citation-style` | error; warning for the two opt-in forms | — | `[reference] inline_style`; `warn_on_suggested`; `inline_note_layout_check`; `[schema.notes]` under v2 | [§FS-check.3.10](FS-check.md#310-inline-citation-style-violation) |
 | `invalid-field-value` | by strength: the field's `presence` | — | `one_of` on a v2 field | [§FS-fields.checks.invalid-field-value](FS-fields.md#checksinvalid-field-value-invalid-field-value) |
-| `invalid-rule` | error | — | `rules = true` on a kind | [§FS-check.3.25](FS-check.md#325-invalid-rule) |
-| `invalid-value-binding` | error | — | `values = true` on a kind | [§FS-check.3.21](FS-check.md#321-invalid-value-binding) |
-| `invalid-value-declaration` | error | — | `values = true` on a kind | [§FS-check.3.20](FS-check.md#320-invalid-value-declaration) |
+| `invalid-rule` | error | — | `rules = true` on a kind, `form = "rule"` under v2, or `--rule` | [§FS-check.3.25](FS-check.md#325-invalid-rule) |
+| `invalid-value-binding` | error | — | `values = true` on a kind; `form = "value"` under v2 | [§FS-check.3.21](FS-check.md#321-invalid-value-binding) |
+| `invalid-value-declaration` | error | — | `values = true` on a kind; `form = "value"` under v2 | [§FS-check.3.20](FS-check.md#320-invalid-value-declaration) |
 | `invalid-section-lock` | error | — | a `.grund/sections/` lock file | [§FS-section-lock.checks.invalid-section-lock](FS-section-lock.md#checksinvalid-section-lock-a-lock-line-grund-cannot-read) |
 | `io` | error | — | — | [§FS-check.2.4](FS-check.md#24-an-incomplete-run) |
 | `local-section-citation` | error | — | — | [§FS-check.3.24](FS-check.md#324-declaration-local-section-citation) |
 | `misplaced-declaration` | error | — | a configured kind home | [§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home) |
 | `misplaced-field` | by strength: the field's `presence` | — | `position` or `after` on a v2 field | [§FS-fields.checks.misplaced-field](FS-fields.md#checksmisplaced-field-misplaced-field) |
-| `missing-citation` | error | — | a `must` entry | [§FS-check.3.11](FS-check.md#311-missing-required-citation) |
+| `missing-citation` | error | — | a `must` entry or rule | [§FS-check.3.11](FS-check.md#311-missing-required-citation) |
 | `missing-field` | by strength: the field's `presence` | — | a v2 field | [§FS-fields.checks.missing-field](FS-fields.md#checksmissing-field-missing-field) |
 | `missing-index-entry` | error | — | — | [§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index) |
 | `missing-section` | error | — | — | [§FS-check.3.2](FS-check.md#32-missing-section) |
@@ -584,13 +584,13 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `mistitled-field` | by strength: the field's `presence` | — | `title` on a v2 field | [§FS-fields.checks.mistitled-field](FS-fields.md#checksmistitled-field-mistitled-field) |
 | `nothing-recognized` | warning | — | — | [§FS-check.4.5](FS-check.md#45-nothing-recognized) |
 | `optional-member-absent` | warning | — | `optional = true` on a member | [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent) |
-| `orphan-section` | error | — | `[id] named_sections` | [§FS-declarations.checks.orphan-section](FS-declarations.md#checksorphan-section-orphan-name-bearing-section-path) |
+| `orphan-section` | error | — | `[id] named_sections`; always under v2 | [§FS-declarations.checks.orphan-section](FS-declarations.md#checksorphan-section-orphan-name-bearing-section-path) |
 | `out-of-scope-dangling` | error | — | `--full` | [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) |
 | `out-of-scope-local-section-citation` | error | — | `--full` | [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) |
 | `out-of-scope-missing-section` | error | — | `--full` | [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) |
 | `out-of-scope-shorthand-citation` | error | — | `--full` | [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) |
 | `out-of-scope-unknown-project` | error | — | `--full` | [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) |
-| `oversized-lead` | warning | — | `[reference] lead_size_warning` | [§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in) |
+| `oversized-lead` | warning | — | `[reference] lead_size_warning`; `[schema.leads.words]` under v2 | [§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in) |
 | `redundant-config` | warning | — | — | [§FS-check.4.3](FS-check.md#43-redundant-config-pair) |
 | `relative-section-parent` | error | — | — | [§FS-declarations.checks.relative-section-parent](FS-declarations.md#checksrelative-section-parent-a-relative-heading-without-its-parent) |
 | `remote-missing` | error | — | a `[workspace.remotes]` table | [§FS-remote-projects.checks.remote-missing](FS-remote-projects.md#checksremote-missing-a-declared-remote-has-no-pinned-projection) |
@@ -598,24 +598,25 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `remote-orphan` | warning | — | a `[workspace.remotes]` table | [§FS-remote-projects.checks.remote-orphan](FS-remote-projects.md#checksremote-orphan-state-no-declaration-names) |
 | `remote-stale` | error | — | a `[workspace.remotes]` table | [§FS-remote-projects.checks.remote-stale](FS-remote-projects.md#checksremote-stale-the-lock-disagrees-with-the-declaration) |
 | `section-address-changed` | error | — | a citation of a relative heading's address | [§FS-section-lock.checks.section-address-changed](FS-section-lock.md#checkssection-address-changed-a-cited-sections-text-sits-at-another-address) |
-| `section-heading-level` | error or warning, by the mode | — | `[id] section_heading_levels` | [§FS-declarations.checks.section-heading-level](FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch) |
+| `section-heading-level` | error or warning, by the mode | — | `[id] section_heading_levels`; `[schema] heading_depth` under v2 | [§FS-declarations.checks.section-heading-level](FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch) |
 | `section-outside-declaration` | error | — | — | [§FS-declarations.checks.section-outside-declaration](FS-declarations.md#checkssection-outside-declaration-section-outside-a-declaration) |
+| `selected-check-off` | warning | — | an `--only` code no project of the run arms | [§FS-check.1.4.1](FS-check.md#141-a-selected-check-the-run-leaves-off-says-so) |
 | `shorthand-citation` | error | — | — | [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) |
 | `shorthand-numeric-run` | error | — | — | [§FS-check.3.15](FS-check.md#315-shorthand-citation-in-a-numeric-run) |
 | `stub-shape` | none — spent, never fires | — | — | [§FS-declarations.checks.stub-shape](FS-declarations.md#checksstub-shape-stub-shape-read-differently-from-grund-0190) |
-| `suggested-citation` | none — suggestion | — | `--suggestions`, on a `should` entry | [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) |
-| `uncited-unit` | error | — | `rules = true` on a kind | [§FS-check.3.28](FS-check.md#328-uncited-unit) |
+| `suggested-citation` | none — suggestion | — | `--suggestions`, on a `should` entry or rule | [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) |
+| `uncited-unit` | error | — | `rules = true` on a kind, `form = "rule"` under v2, or `--rule` | [§FS-check.3.28](FS-check.md#328-uncited-unit) |
 | `unread-scan-root` | warning | — | a `file` home or file `include` entry not read for its name | [§FS-scan.checks.unread-scan-root](FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read) |
 | `unrecorded-section-citation` | error | — | a citation of a relative heading's address | [§FS-section-lock.checks.unrecorded-section-citation](FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold) |
 | `undeclared-chapter` | by strength: the kind's `closed` | — | `closed` on a v2 kind | [§FS-fields.checks.undeclared-chapter](FS-fields.md#checksundeclared-chapter-undeclared-chapter) |
-| `ungrounded` | error | — | `require_grounding` | [§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in) |
+| `ungrounded` | error | — | `require_grounding`; a `must` rung of `[rules.citations.grounding]` under v2, or `--require-grounding` | [§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in) |
 | `unknown-project` | error | — | — | [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) |
 | `unlinked-index-entry` | error | — | — | [§FS-check.3.17](FS-check.md#317-index-entry-is-not-a-link) |
 | `unlisted-workspace-block` | error | — | — | [§FS-check.3.29](FS-check.md#329-unlisted-workspace-block) |
 | `unmarked-heading` | error | — | — | [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) |
-| `unreached-declaration` | error | — | `rules = true` on a kind | [§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration) |
+| `unreached-declaration` | error | — | `rules = true` on a kind, `form = "rule"` under v2, or `--rule` | [§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration) |
 | `unused` | warning | — | — | [§FS-check.4.1](FS-check.md#41-unused-declaration) |
-| `value-mismatch` | error | — | `values = true` on a kind | [§FS-check.3.22](FS-check.md#322-value-mismatch) |
+| `value-mismatch` | error | — | `values = true` on a kind; `form = "value"` under v2 | [§FS-check.3.22](FS-check.md#322-value-mismatch) |
 
 The four `remote-*` rows are specified ahead of the release that introduces them
 ([§FS-remote-projects](FS-remote-projects.md#fs-remote-projects-a-project-cites-another-repositorys-declarations-from-a-committed-pinned-projection)); until it ships, a config declaring `[workspace.remotes]` is refused

@@ -1,0 +1,1 @@
+{"severity":"warning","path":null,"line":null,"code":"selected-check-off","message":"--only oversized-lead judged nothing — the check is off until [schema.leads.words] warn = <N> is set","sites":null,"authority":null}

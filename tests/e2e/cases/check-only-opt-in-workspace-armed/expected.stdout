@@ -1,0 +1,1 @@
+a/docs/fs/FS-login.md:1: warning: a/FS-login lead is 137 words, over the configured maximum of 60; move detail into citable child sections, or promote a child section to its own ID after running grund refs a/FS-login --summary
