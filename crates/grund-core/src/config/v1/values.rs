@@ -29,6 +29,13 @@ pub(crate) fn strip_comment(line: &str) -> &str {
     line
 }
 
+/// Whether `line`, its comment stripped and trimmed, is a table header,
+/// `[name]` or `[[name]]`: the one line shape the reader reads that is not
+/// `key = value`.
+pub(crate) fn is_header(line: &str) -> bool {
+    line.starts_with('[') && line.ends_with(']')
+}
+
 /// Fail config parsing with a `path:line: message` error — the located-finding
 /// shape applied to a malformed `grund.toml` (§FS-config.4.3, §FS-errors.2.1).
 pub(in crate::config) fn bail_config<T>(path: &Path, line: usize, message: String) -> Result<T> {

@@ -145,7 +145,8 @@ fn a_code_is_answered_in_both_versions_and_listed_where_reported() {
 }
 
 /// §FS-config-explain.2: the version is read and nothing else; a version this
-/// grund does not read is the refusal every command gives.
+/// grund does not read, and text that is not TOML, are the refusal every
+/// command gives.
 #[test]
 fn the_version_is_read_and_nothing_else() {
     let file = Path::new("grund.toml");
@@ -158,12 +159,35 @@ fn the_version_is_read_and_nothing_else() {
         1
     );
     assert_eq!(version_of("grund_config_version = 1\n", file).unwrap(), 1);
-    let refused = version_of("grund_config_version = 3\n", file).unwrap_err();
-    assert!(
-        format!("{refused:#}").contains("unsupported config version `3`"),
-        "{refused:#}"
-    );
-    assert!(version_of("this is not toml\n", file).is_err());
+    // A value spread over lines is refused at its key, before the first table.
+    let spread = "grund_config_version = 1\nkinds = [\n]\n[reference]\nnope = 1\n";
+    assert_eq!(version_of(spread, file).unwrap(), 1);
+    let refusal = |text| format!("{:#}", version_of(text, file).unwrap_err());
+    for (text, refused) in [
+        (
+            "grund_config_version = 3\n",
+            "unsupported config version `3`",
+        ),
+        (
+            "grund_config_version = \"2\"\n",
+            "unsupported config version `\"2\"`",
+        ),
+        (
+            "kinds = [\n]\ngrund_config_version = 7\n",
+            "grund.toml:1: `kinds` takes only",
+        ),
+        ("this is not toml\n", "grund.toml:1: expected `key = value`"),
+        (
+            "[reference]\nthis is not toml\n",
+            "grund.toml:2: expected `key = value`",
+        ),
+    ] {
+        assert!(
+            refusal(text).contains(refused),
+            "{text:?}: {}",
+            refusal(text)
+        );
+    }
 }
 
 /// §FS-errors.4: the path a call was given comes back spelled with `/`, so the
