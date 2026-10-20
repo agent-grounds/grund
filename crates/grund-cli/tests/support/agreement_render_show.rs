@@ -10,6 +10,33 @@ use serde_json::{Value, json};
 /// The coordinate a model row answers: `(declaration, section)`.
 pub type Row = (usize, Option<usize>);
 
+/// §FS-refs.2.1: bind the note's exact supplied path from invocation facts.
+/// Backtick-delimited paths remain literal text in the existing comparator.
+pub fn bind_refs_path(facts: &mut Value, context: &Value) {
+    if context["explicit"] != true {
+        return;
+    }
+    let logical = facts["context"]["path"].as_str().unwrap();
+    let supplied = context["path"].as_str().unwrap();
+    let from = format!("in scan path `{logical}`");
+    let to = format!("in scan path `{supplied}`");
+    let Some(calls) = facts.get_mut("calls").and_then(Value::as_object_mut) else {
+        return;
+    };
+    for (key, call) in calls {
+        if !key.starts_with("refs:") {
+            continue;
+        }
+        for pointer in ["/cli/stderr", "/python/result/note", "/node/result/note"] {
+            if let Some(value) = call.pointer_mut(pointer)
+                && let Some(note) = value.as_str()
+            {
+                *value = json!(note.replace(&from, &to));
+            }
+        }
+    }
+}
+
 impl View<'_> {
     pub fn coordinate(&self, (d, s): Row) -> String {
         let id = self.qualified(d);
@@ -229,10 +256,12 @@ impl View<'_> {
             .any(|c| self.within(&c.file));
         let declared =
             (0..self.m.decls.len()).any(|d| self.qualified(d) == id && self.declared_within(d));
-        // §FS-workspace.8.2.5: the note names the project whose IDs to list.
-        let note = (!cited && !declared).then(|| match project.as_str() {
-            Some(alias) => format!("{id} is neither declared nor cited \u{2014} run `grund list --project {alias}` to see {alias}'s declared IDs"),
-            None => format!("{id} is neither declared nor cited \u{2014} run `grund list` to see every declared ID"),
+        // §FS-refs.2.1: explicit paths qualify the note and its project-list advice.
+        let note = (!cited && !declared).then(|| match (project.as_str(), self.explicit_path) {
+            (Some(alias), Some(path)) => format!("{id} is neither declared nor cited in scan path `{path}` \u{2014} run `grund list --project {alias}` to see {alias}'s declared IDs, including outside this scan"),
+            (None, Some(path)) => format!("{id} is neither declared nor cited in scan path `{path}` \u{2014} run `grund list` to see project declarations, including outside this scan"),
+            (Some(alias), None) => format!("{id} is neither declared nor cited \u{2014} run `grund list --project {alias}` to see {alias}'s declared IDs"),
+            (None, None) => format!("{id} is neither declared nor cited \u{2014} run `grund list` to see every declared ID"),
         });
         ok(
             json!({"run_cautions":[],"output_format":"text","workspace":self.workspace(),

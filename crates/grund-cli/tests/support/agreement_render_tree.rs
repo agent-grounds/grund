@@ -21,6 +21,7 @@ pub struct View<'a> {
     pub selected: String,
     pub base: String,
     pub lines: Option<String>,
+    pub explicit_path: Option<&'a str>,
     pub variant: Value,
 }
 
