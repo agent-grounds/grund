@@ -47,6 +47,9 @@ pub struct Explained {
     /// The file the version was read from, spelled from its config root, or
     /// `None` where discovery found no file.
     pub file: Option<String>,
+    /// The path the call asked about, spelled as every report spells a path
+    /// (§FS-errors.4), for the `Next:` line that repeats it.
+    pub path: String,
     /// Each answering version and what it says, in the order it is printed.
     pub answers: Vec<(u32, ExplainAnswer)>,
 }
@@ -144,6 +147,7 @@ pub(crate) fn explain(path: &Path, ask: &ExplainAsk) -> Result<Explained> {
         let answers = vec![(2, answer(2, ask)), (1, answer(1, ask))];
         return Ok(Explained {
             file: None,
+            path: format_path(path),
             answers,
         });
     };
@@ -152,6 +156,7 @@ pub(crate) fn explain(path: &Path, ask: &ExplainAsk) -> Result<Explained> {
     let version = version_of(&text, &report)?;
     Ok(Explained {
         file: Some(format_path(&report)),
+        path: format_path(path),
         answers: vec![(version, answer(version, ask))],
     })
 }

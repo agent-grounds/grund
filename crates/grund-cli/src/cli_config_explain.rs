@@ -19,7 +19,9 @@ fn command_config_explain(args: &[String]) -> ExitCode {
             return ExitCode::from(2);
         }
     };
-    let next = |target: &str| explain_call(target, path.as_deref());
+    // §FS-errors.4: the path is repeated as core spells it, with `/` on every OS.
+    let given = path.is_some().then_some(explained.path.as_str());
+    let next = |target: &str| explain_call(target, given);
     if explained.found_nothing() {
         for (version, answer) in &explained.answers {
             if let ExplainAnswer::Unknown(unknown) = answer {
@@ -100,7 +102,7 @@ fn explain_usage(args: &[String]) -> Result<(ExplainAsk, Option<PathBuf>), Strin
 
 /// The call that asks for `target`, quoted for a shell where it holds a space or
 /// a bracket, with the path this call was given.
-fn explain_call(target: &str, path: Option<&Path>) -> String {
+fn explain_call(target: &str, path: Option<&str>) -> String {
     let quoted = |word: &str| {
         if word.contains([' ', '[', ']', '<', '>', '*']) {
             format!("'{word}'")
@@ -109,7 +111,7 @@ fn explain_call(target: &str, path: Option<&Path>) -> String {
         }
     };
     match path {
-        Some(path) => format!("grund config explain {} {}", quoted(target), quoted(&path.display().to_string())),
+        Some(path) => format!("grund config explain {} {}", quoted(target), quoted(path)),
         None => format!("grund config explain {}", quoted(target)),
     }
 }
