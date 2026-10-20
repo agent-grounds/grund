@@ -44,7 +44,7 @@ const CODE_SWITCHES: &[(&str, Enablement)] = &[
     ("misplaced-field", Switches(&[Switch::FieldPlacement])),
     ("missing-citation", Switches(&[Switch::MustDirection])),
     ("missing-field", Switches(&[Switch::Field])),
-    ("missing-snapshot", Switches(&[Switch::Fetch])),
+    ("missing-snapshot", Switches(&[Switch::SnapshotWarning])),
     ("mistitled-field", Switches(&[Switch::FieldTitle])),
     (
         "optional-member-absent",
@@ -177,9 +177,9 @@ const SWITCH_ADVICE: &[(Switch, Option<&str>, Option<&str>)] = &[
         Some("[workspace] optional_members is set"),
     ),
     (
-        Switch::Fetch,
-        Some("fetch is set on a [[kinds]] row"),
-        Some("fetch is set on a [schema.kinds] table"),
+        Switch::SnapshotWarning,
+        Some("resolve = \"should\" is set on a fetched [[kinds]] row"),
+        Some("[rules.resolution] <KIND> = \"warn\" is set for a fetched kind"),
     ),
     (
         Switch::KindHome,

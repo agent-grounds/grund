@@ -1,0 +1,1 @@
+{"severity":"warning","path":null,"line":null,"code":"selected-check-off","message":"--only missing-snapshot judged nothing — the check is off until [rules.resolution] <KIND> = \"warn\" is set for a fetched kind","sites":null,"authority":null}

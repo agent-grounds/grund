@@ -1,0 +1,1 @@
+{"severity":"warning","path":null,"line":null,"code":"selected-check-off","message":"--only missing-snapshot judged nothing — the check is off until resolve = \"should\" is set on a fetched [[kinds]] row","sites":null,"authority":null}

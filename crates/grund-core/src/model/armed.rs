@@ -49,8 +49,9 @@ pub enum Switch {
     Grounding,
     /// `[workspace] optional_members`, in any block the run expands.
     OptionalMember,
-    /// `fetch` on a kind.
-    Fetch,
+    /// A fetched kind whose resolution is `should`, v2's `warn`: `fetch` alone
+    /// resolves `must`, which selects the `dangling` error instead.
+    SnapshotWarning,
     /// A configured kind home.
     KindHome,
 }
