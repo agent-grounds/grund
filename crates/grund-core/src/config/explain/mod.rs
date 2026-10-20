@@ -278,11 +278,7 @@ fn table(version: u32, tables: &[(String, Vec<String>)], at: usize) -> ExplainTa
 fn key(version: u32, (header, keys): &(String, Vec<String>), name: &str) -> ExplainKey {
     let schema = schema::embedded();
     let node = schema::key_node(schema, version, header, name);
-    let members = keys.iter().filter(|member| {
-        member
-            .strip_prefix(name)
-            .is_some_and(|rest| rest.starts_with('.'))
-    });
+    let members = keys.iter().filter(|member| is_member_of(member, name));
     ExplainKey {
         table: header.clone(),
         key: name.to_string(),
@@ -292,6 +288,14 @@ fn key(version: u32, (header, keys): &(String, Vec<String>), name: &str) -> Expl
         meaning: node.and_then(schema::meaning).unwrap_or_default(),
         members: members.cloned().collect(),
     }
+}
+
+/// Whether `member`, one of a table's keys, is an inline member of its key
+/// `key`, which the vocabulary spells `key.member` (§FS-config-explain.3).
+fn is_member_of(member: &str, key: &str) -> bool {
+    member
+        .strip_prefix(key)
+        .is_some_and(|rest| rest.starts_with('.'))
 }
 
 /// §FS-config-explain.4: `found`'s row, read for `version`, and the tables
