@@ -42,7 +42,7 @@ fn unread_root_warning() -> Finding {
         "unread-workspace-block",
         17,
         "grund.toml:17: no project scans `docs`, so its citations are never checked. \
-         Set include_root = true, or point another project's [scan] include at it.",
+         Set include_root = true, or configure another project's source scope to read it.",
     )
 }
 

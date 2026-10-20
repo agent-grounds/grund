@@ -16,8 +16,12 @@ Issue #817's wording-only exception changes only the final repair clause of
 validate[2] for the two v2 records
 tests/e2e/cases/workspace-include-root-false-unread-check/repo and
 tests/e2e/cases/workspace-include-root-false-unread-check/repo/group, as
-§FS-check.4.10.5 requires. All other captured bytes, statuses and digests remain
-the #453 reference.
+§FS-check.4.10.5 requires. The owner-authorized #817 follow-up applies the same
+version-neutral clause to the 25 v1 records at capture lines 933, 1010-1011,
+1013-1014, 1021, 1025, 1027-1028, 1030-1031, 1033-1034, 1051, 1053-1054,
+1187-1188, 1190-1191, 1196, 1200, 1204, 1208 and 1212. Only those unread-workspace
+repair clauses in validate[2] change; all other captured bytes, statuses and
+digests remain the #453 reference.
 
 The captures are not regenerated to make this test pass. `--capture` exists to
 take them, once, from a binary whose behaviour is the reference.
