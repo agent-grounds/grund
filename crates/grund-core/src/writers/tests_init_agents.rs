@@ -301,9 +301,11 @@ fn agents_update_keeps_current_block_in_middle_position() {
 fn agents_update_handles_crlf_line_endings() {
     // §FS-init.2.3.2: a CRLF-encoded AGENTS.md whose managed block is stale
     // (same version, different body) must still be detected and rewritten,
-    // with the surrounding CRLF preserved verbatim.
+    // with the surrounding CRLF preserved verbatim. §FS-init.2.3.9.2: the
+    // labelled heading opens a block only inside the delimiters.
     let existing = format!(
-        "# Existing agents\r\n\r\n{}\r\n\r\nstale body line\r\n\r\n# Local notes\r\n",
+        "# Existing agents\r\n\r\n<!-- BEGIN GRUND MANAGED BLOCK -->\r\n{}\r\n\r\n\
+         stale body line\r\n<!-- END GRUND MANAGED BLOCK -->\r\n\r\n# Local notes\r\n",
         current_marker()
     );
     let (updated, result) = update_agents_text(&existing, &current_block(), "AGENTS.md")
