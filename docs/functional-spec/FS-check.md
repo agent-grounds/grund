@@ -343,11 +343,7 @@ The message follows what the run was given: the repo root with `[scan] include` 
 
 ##### 2.2.2.1 The repo root
 
-At repo root (no path, or `grund check .`), v1 names `[scan] include` and its list, with `grund.toml` / `grund init --scaffold` advice. With no kinds ([§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)), no scaffold is possible; after `found no files.` append:
-
-``This project declares no kinds yet: replace `kinds = []` in `grund.toml` with a `[[kinds]]` table for its first kind, point `[scan] include` at your sources, or pass a path explicitly (`grund check <dir>`).``
-
-Any v2 repair instead names its places ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)) or source exclusions ([§FS-config-v2.schema.sources.exclude](FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list)), never `[scan] include` or `[[kinds]]`. If recommending a first kind, name `[schema.kinds.<NAME>]`.
+At repo root (no path, or `grund check .`), v1 names `[scan] include` and its list, with `grund.toml` / `grund init --scaffold` advice. With no kinds ([§FS-config.3.4.4.5](FS-config.md#3445-kinds---declares-no-kinds)), no scaffold is possible; after `found no files.` append: ``This project declares no kinds yet: replace `kinds = []` in `grund.toml` with a `[[kinds]]` table for its first kind, point `[scan] include` at your sources, or pass a path explicitly (`grund check <dir>`).`` Any v2 repair instead names its places ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)) or source exclusions ([§FS-config-v2.schema.sources.exclude](FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list)), never `[scan] include` or `[[kinds]]`. If recommending a first kind, name `[schema.kinds.<NAME>]`.
 
 ##### 2.2.2.2 An explicit path
 
@@ -1301,9 +1297,7 @@ The usual causes are a tree nobody has declared in yet and a docs tree whose hea
 
 #### 4.5.2 The message
 
-Name the file count, global declaration/citation shapes and configured kinds. Labels follow [§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects): `[id] format` under v1, `[schema] id_format` under v2. Kind overrides may differ. With no kinds ([§FS-citations.recognized.no-kinds](FS-citations.md#recognizedno-kinds-with-no-kind-no-token-is-a-citation)), say:
-
-``nothing recognized — grund read 3 files, and this project declares no kinds, so no heading in them is a declaration and no token a citation. Declare its first kind in grund.toml to start.``
+Name the file count, global declaration/citation shapes and configured kinds. Labels follow [§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects): `[id] format` under v1, `[schema] id_format` under v2. Kind overrides may differ. With no kinds ([§FS-citations.recognized.no-kinds](FS-citations.md#recognizedno-kinds-with-no-kind-no-token-is-a-citation)), say: ``nothing recognized — grund read 3 files, and this project declares no kinds, so no heading in them is a declaration and no token a citation. Declare its first kind in grund.toml to start.``
 
 Otherwise the v1 text is:
 
@@ -1405,13 +1399,13 @@ Four shapes are deliberately not this finding, and each is a correct configurati
 
 #### 4.10.5 The message
 
-Name the config line to open, unread tree, cost and two remedies. The v1 example is:
+Name the config line to open, unread tree, cost and two remedies. Use the same source-scope remedy for both config versions: the other project's version may differ.
 
 ```
-warning: group/grund.toml:17: no project scans `docs`, so its citations are never checked. Set include_root = true, or point another project's [scan] include at it.
+warning: group/grund.toml:17: no project scans `docs`, so its citations are never checked. Set include_root = true, or configure another project's source scope to read it.
 ```
 
-A v2 block names scope or v2 places ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)), never prescribing `[scan] include` for a project whose version may differ. Anchor at the block's `include_root` line, falling back to `[workspace]` if absent (unreachable with the default `true`). Render the location from this run's root ([§FS-errors.3](FS-errors.md#3-message-text)), and the unread tree as a normalized path under the block root, never a resolved path ([§FS-check.3.30.1](FS-check.md#3301-the-message)).
+Never prescribe `[scan] include` for another project. Anchor at the block's `include_root` line, falling back to `[workspace]` if absent (unreachable with the default `true`). Render the location from this run's root ([§FS-errors.3](FS-errors.md#3-message-text)), and the unread tree as a normalized path under the block root, never a resolved path ([§FS-check.3.30.1](FS-check.md#3301-the-message)).
 
 #### 4.10.6 One root, not every root
 
