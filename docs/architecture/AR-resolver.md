@@ -176,6 +176,8 @@ the path in one project, and each project whole in a workspace run. What they pr
 report scope, through `reported_scope`, as `list`'s entries are: a site or a candidate the path does not hold
 is dropped, unless a stub under the path stands for it ([§FS-scan.path.refs](../functional-spec/FS-scan.md#pathrefs-refs-scans-the-paths-tree), [§FS-completions.2.1](../functional-spec/FS-completions.md#21-arguments-and-candidate-modes),
 [§FS-declarations.stubs.target.5](../functional-spec/FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged)).
+`refs --from` keeps fewer: it resolves its source as `show` does, through `load_reported_workspace_context`,
+and drops every site whose file the path does not hold, lent or not ([§FS-refs.from](../functional-spec/FS-refs.md#from---from-lists-what-one-point-cites)).
 
 So "a scope narrower than the root has to stay narrow" is a statement about which **projects** a walk covers
 and which **files** are reported. It is not a statement about which declarations resolution reads: widening
