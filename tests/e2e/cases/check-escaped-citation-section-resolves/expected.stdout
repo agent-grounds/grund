@@ -1,0 +1,3 @@
+docs/guide.md:5: suggestion: escaped citation <§>api/FS-x.2 resolves to a declaration; write §api/FS-x.2 for a live citation, or leave it escaped if it is only an illustration
+orders/returns.py:3: suggestion: escaped citation <§>FS-orders.3.5 resolves to a declaration; write §FS-orders.3.5 for a live citation, or leave it escaped if it is only an illustration
+orders/returns.py:7: suggestion: escaped citation <§>FS-orders resolves to a declaration; write §FS-orders for a live citation, or leave it escaped if it is only an illustration
