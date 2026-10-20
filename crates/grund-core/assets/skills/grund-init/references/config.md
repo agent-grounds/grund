@@ -12,7 +12,7 @@
 
 ## Config Questions
 
-Ask these in order.
+Ask these in order. The last of them, `[citations]`, is not here: `grund agent-setup-instructions --section citations` prints it.
 
 ### Top-level
 

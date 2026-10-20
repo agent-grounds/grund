@@ -82,3 +82,40 @@ fn contents_names_the_table_in_order() {
     let table: Vec<&str> = AGENT_SETUP_SECTIONS.iter().map(|(name, _)| *name).collect();
     assert_eq!(named, table);
 }
+
+/// §FS-init.5.1: Contents opens by naming the core's own `##` sections, in order,
+/// so a section moved out under §FS-init.5.5's budget cannot stay listed as core.
+#[test]
+fn contents_names_the_cores_own_sections_in_order() {
+    let mut headings: Vec<&str> = Vec::new();
+    let mut fence: Option<&str> = None;
+    for line in AGENT_SETUP_INSTRUCTIONS.lines() {
+        let trimmed = line.trim();
+        let marker = trimmed.len() - trimmed.trim_start_matches(['`', '~']).len();
+        if marker >= 3 {
+            match fence {
+                None => fence = Some(&trimmed[..marker]),
+                Some(open) if trimmed == open => fence = None,
+                Some(_) => {}
+            }
+        } else if fence.is_none()
+            && let Some(title) = line.strip_prefix("## ")
+        {
+            headings.push(title.trim());
+        }
+    }
+    let list = match headings.split_last() {
+        Some((last, [])) => last.to_string(),
+        Some((last, rest)) => format!("{} and {last}", rest.join(", ")),
+        None => panic!("the core has no `##` heading"),
+    };
+    let contents = AGENT_SETUP_INSTRUCTIONS
+        .split_once("\n## Contents\n")
+        .expect("the core has a Contents section")
+        .1;
+    let sentence = format!("This core holds {list}.");
+    assert!(
+        contents.trim_start().starts_with(&sentence),
+        "Contents does not open with `{sentence}`"
+    );
+}
