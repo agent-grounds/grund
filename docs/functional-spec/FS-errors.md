@@ -559,7 +559,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `discouraged-citation` | none — suggestion | — | `--suggestions`, on a `should-not` entry or rule | [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) |
 | `duplicate` | error | — | — | [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) |
 | `duplicate-section` | error | — | — | [§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path) |
-| `empty-citation-obligation` | warning | — | a `must` or `should` entry or rule | [§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing) |
+| `empty-citation-obligation` | warning | — | a `must` or `should` entry or rule on a scanned kind with a `folder` home, `folders` under v2 | [§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing) |
 | `empty-scan` | warning | — | — | [§FS-check.2.2](FS-check.md#22-empty-scan) |
 | `escaped-citation-resolves` | none — suggestion | — | `--suggestions` | [§FS-check.2.3.1](FS-check.md#231-escaped-citation-resolves) |
 | `excluded-stub-target` | none — spent, never fires | — | — | [§FS-declarations.checks.excluded-stub-target](FS-declarations.md#checksexcluded-stub-target-stub-to-a-target-the-walk-excludes-broken-from-grund-0190) |
@@ -609,7 +609,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `unread-scan-root` | warning | — | a `file` home or file `include` entry not read for its name | [§FS-scan.checks.unread-scan-root](FS-scan.md#checksunread-scan-root-a-configured-file-root-is-not-read) |
 | `unrecorded-section-citation` | error | — | a citation of a relative heading's address | [§FS-section-lock.checks.unrecorded-section-citation](FS-section-lock.md#checksunrecorded-section-citation-a-locked-address-the-lock-does-not-hold) |
 | `undeclared-chapter` | by strength: the kind's `closed` | — | `closed` on a v2 kind | [§FS-fields.checks.undeclared-chapter](FS-fields.md#checksundeclared-chapter-undeclared-chapter) |
-| `ungrounded` | error | — | `require_grounding`; a `must` rung of `[rules.citations.grounding]` under v2, or `--require-grounding` | [§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in) |
+| `ungrounded` | error | — | `require_grounding` on a kind, or in `[reference]` or `--require-grounding` for a kind whose row does not set it `false`; under v2 a `must` rung of the kind's own ladder, or of `[rules.citations.grounding]` or `--require-grounding` for a kind with none | [§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in) |
 | `unknown-project` | error | — | — | [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) |
 | `unlinked-index-entry` | error | — | — | [§FS-check.3.17](FS-check.md#317-index-entry-is-not-a-link) |
 | `unlisted-workspace-block` | error | — | — | [§FS-check.3.29](FS-check.md#329-unlisted-workspace-block) |
