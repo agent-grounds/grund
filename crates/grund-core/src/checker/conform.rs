@@ -10,11 +10,11 @@ use super::inline_style::check_inline_citation_style;
 use super::near_miss::check_declaration_near_misses;
 use super::sections::check_section_headings;
 use super::sizes::check_oversized_leads;
-use crate::config::{Frame, Schema};
+use crate::config::{Extent, Frame, Schema};
 use crate::grammar::render_catalog_id;
 use crate::model::{
     Catalog, CheckReport, Declaration, Diagnostic, ExcludingRule, Id, MissingStubRepair, Site,
-    StubResolution, format_path, paired_declarations, sort_path_key,
+    StubResolution, Switch, format_path, paired_declarations, sort_path_key,
 };
 
 /// §AR-checker.1.1: duplicate, misplaced-declaration, broken-stub,
@@ -111,6 +111,13 @@ fn check_misplaced(
     report: &mut CheckReport,
 ) {
     let kind_homes = KindHomeIndex::new(schema, frame);
+    // §FS-check.1.4.1: a home is what a declaration can be misplaced against.
+    if schema
+        .places()
+        .any(|(_, place)| place.extent != Extent::Complement)
+    {
+        report.armed.arm(Switch::KindHome);
+    }
     for (id, decls) in &findings.declarations {
         for decl in decls {
             if let Some(expected) = kind_homes.single_file_for_kind(&id.kind)

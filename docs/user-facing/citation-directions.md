@@ -32,6 +32,10 @@ per-declaration unit fires. If a `must` or `should` obligation is configured,
 the kind's folder is walked, and at least one non-entry file is successfully
 scanned, `grund check` emits the non-fatal run-level
 `empty-citation-obligation` warning ([the check specification says exactly when](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#221-citation-direction-obligation-applies-to-nothing)).
+A `must` or `should` rule whose subject is that kind earns the same warning,
+named by the rule rather than the table, and without the `citable = false`
+question, because a rule's subject is always a citable kind
+([a rule's obligation](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#2214-a-rules-obligation)).
 A directory without declarations is usually `citable = false`, not a citable
 kind with an empty rule; make that setting when the directory is a place rather
 than an ID namespace. This is the no-unit trap described by

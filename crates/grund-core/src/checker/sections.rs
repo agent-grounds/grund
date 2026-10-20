@@ -23,7 +23,7 @@ use crate::config::{Frame, Schema};
 use crate::grammar::render_catalog_id;
 use crate::model::{
     Catalog, CheckReport, Diagnostic, LANDED_CLAUSE, SectionHeadingOutsideDeclaration, Site,
-    named_section_path, paired_declarations,
+    Switch, named_section_path, paired_declarations,
 };
 use crate::resolver::WorkspaceProject;
 use crate::scanner::section_path_is_numeric;
@@ -137,6 +137,7 @@ pub(super) fn check_section_headings(
         schema.ids.section_heading_levels.as_str(),
         "strict" | "warn" | "suggest"
     ) {
+        report.armed.arm(Switch::HeadingDepth);
         let target = match schema.ids.section_heading_levels.as_str() {
             "strict" => &mut report.errors,
             "warn" => &mut report.warnings,
@@ -176,6 +177,7 @@ pub(super) fn check_section_headings(
     // §FS-declarations.checks.orphan-section / §AR-checker.2.17: every name-bearing path is
     // addressable only when each proper prefix exists in the same scanner-recorded map.
     if schema.ids.named_sections {
+        report.armed.arm(Switch::NamedSections);
         for (id, decls) in &findings.declarations {
             for decl in decls {
                 for (path, info) in &decl.sections {

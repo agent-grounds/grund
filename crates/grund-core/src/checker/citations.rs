@@ -16,7 +16,8 @@ use crate::config::{
     CitationDisjunction, CitationLevel, CitationTarget, Frame, KindCitationRules, NamespaceMatch,
     Owners, Place, Row, Rules, Schema, citations_table, render_citation_target, row_grounding,
 };
-use crate::model::{Catalog, CheckReport, Citation, Diagnostic, E2eSpecRef, Id};
+use crate::model::{Catalog, CheckReport, Citation, Diagnostic, E2eSpecRef, Id, Switch};
+use crate::rules::engine::one_rules_authority;
 use crate::scanner::file_home_kind;
 use crate::sources::paths_same_location;
 
@@ -67,6 +68,10 @@ pub(super) trait DirectionSink {
         entries: &[&CitationDisjunction],
         diagnostic: Diagnostic,
     );
+
+    /// Record that a direction pass found a switch set (§FS-check.1.4.1). Only
+    /// the report keeps the record; the pairing has no use for it.
+    fn arm(&mut self, _switch: Switch) {}
 }
 
 impl DirectionSink for CheckReport {
@@ -83,6 +88,10 @@ impl DirectionSink for CheckReport {
             DirectionChannel::Warnings => self.warnings.push(diagnostic),
             DirectionChannel::Suggestions => self.suggestions.push(diagnostic),
         }
+    }
+
+    fn arm(&mut self, switch: Switch) {
+        self.armed.arm(switch);
     }
 }
 
@@ -155,6 +164,14 @@ pub(super) fn check_citation_obligations(
         {
             continue;
         }
+        // §FS-check.1.4.1: past this gate the obligation checks are on, each level's own.
+        report.arm(Switch::Obligation);
+        if !kind_rules.must.is_empty() || !kind_rules.warn.is_empty() {
+            report.arm(Switch::MustDirection);
+        }
+        if !kind_rules.should.is_empty() {
+            report.arm(Switch::ShouldDirection);
+        }
         let units = obligation_units(
             citing_kind,
             rules,
@@ -173,7 +190,7 @@ pub(super) fn check_citation_obligations(
                 frame,
                 findings,
                 citing_kind,
-                kind_rules,
+                Obligor::Table(kind_rules),
             )
         {
             report.push(
@@ -226,18 +243,26 @@ pub(super) fn check_citation_obligations(
     }
 }
 
+/// Who holds a kind to an obligation (§FS-check.2.2.1): its `[citations]` table,
+/// or a `must` / `should` rule by its origin (§FS-check.2.2.1.4).
+pub(super) enum Obligor<'a> {
+    Table(&'a KindCitationRules),
+    Rule(&'a str),
+}
+
 /// §FS-check.2.2.1.1: identify the one run-level warning for a walked folder whose
 /// explicit obligation has real scanned content but no ordinary obligation unit.
 /// The warning is derived from the same normalized home classifier the scanner
 /// uses for citation-source attribution, so explicit paths and symlink spellings
-/// stay inside the same home boundary.
-fn empty_citation_obligation_warning(
+/// stay inside the same home boundary. The table and a rule ask it alike, so the
+/// two never disagree about whether a folder is empty (§FS-check.2.2.1.4).
+pub(super) fn empty_citation_obligation_warning(
     rules: &Rules,
     schema: &Schema,
     frame: Frame<'_>,
     findings: &Catalog,
     citing_kind: &str,
-    kind_rules: &KindCitationRules,
+    obligor: Obligor<'_>,
 ) -> Option<Diagnostic> {
     let row = schema
         .rows
@@ -258,6 +283,27 @@ fn empty_citation_obligation_warning(
         return None;
     }
 
+    let place = folders.join(", ");
+    let kind_rules = match obligor {
+        Obligor::Table(kind_rules) => kind_rules,
+        // §FS-check.2.2.1.2: a rule's subject is citable, so only the declaration
+        // form reaches it, named by the rule and ending at the fact.
+        Obligor::Rule(origin) => {
+            row.kind.as_ref()?;
+            return Some(Diagnostic {
+                code: "empty-citation-obligation",
+                path: None,
+                line: None,
+                column: None,
+                message: format!(
+                    "{origin} applies to nothing — {place} declares no {citing_kind} ID"
+                ),
+                sites: Vec::new(),
+                // §FS-check.2.2.1.4: the rule's own line, kept by `--only-rule` for `--rule`.
+                authority: one_rules_authority(origin),
+            });
+        }
+    };
     let level = if !kind_rules.must.is_empty() {
         "must"
     } else if !kind_rules.warn.is_empty() {
@@ -265,7 +311,6 @@ fn empty_citation_obligation_warning(
     } else {
         "should"
     };
-    let place = folders.join(", ");
     // §FS-config-v2.rules.citations: v2 names the table, and the row key, its own way.
     let v2 = frame.version == 2;
     let table = citations_table(frame.version);

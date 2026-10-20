@@ -126,19 +126,9 @@ fn check_data(r: &EmbeddingRequest) -> Result<Value, Value> {
         full: r.flag("full"),
         rule: r.string("rule"),
     });
-    let output = output.map_err(|e| error_data(e, &cautions))?;
-    let select = |values: &[Finding]| {
-        values
-            .iter()
-            .filter(|f| selection.retains(f.code, &f.authority))
-            .cloned()
-            .collect::<Vec<_>>()
-    };
-    let selected = Report {
-        errors: select(&output.report.errors),
-        warnings: select(&output.report.warnings),
-        suggestions: select(&output.report.suggestions),
-    };
+    let (output, armed) = output.map_err(|e| error_data(e, &cautions))?;
+    // §FS-check.1.4.1: the CLI's one selection, off lines included.
+    let selected = selection.select(&output.report, &armed);
     Ok(
         json!({"report": output.report.data(), "selected_report": selected.data(),
         "had_scan_errors": output.had_scan_errors, "output_format": output.output_format,

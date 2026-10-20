@@ -1,7 +1,7 @@
 use crate::config::{Frame, LeadSizeWarning, PointSizeUnit, Schema, Strength, measure_point_text};
 use crate::grammar::render_declaration_id;
 use crate::model::{
-    Catalog, CheckReport, Declaration, Diagnostic, Id, SectionInfo, paired_declarations,
+    Catalog, CheckReport, Declaration, Diagnostic, Id, SectionInfo, Switch, paired_declarations,
 };
 use crate::resolver::point_body_pair;
 
@@ -22,6 +22,8 @@ pub(super) fn check_oversized_leads(
     if budgets.is_empty() {
         return;
     }
+    // §FS-check.1.4.1: past the opt-in gate, the measure is on.
+    report.armed.arm(Switch::LeadWords);
     let budgets = budgets.as_slice();
     for (id, declarations) in &findings.declarations {
         // §FS-declarations.checks.oversized-lead.4: the scanned sites, so a stub that

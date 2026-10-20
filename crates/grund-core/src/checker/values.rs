@@ -5,8 +5,9 @@ use super::value_roots::root_binding_finding;
 use crate::config::{Frame, Schema, kind_uses_values, kind_value_chapter};
 use crate::grammar::{BindingSpellings, render_catalog_id};
 use crate::model::{
-    Catalog, CheckReport, Declaration, Diagnostic, EmbeddedValueRoot, Id, Site, ValueBinding,
-    paired_declarations, value_binding_section_ends_in_coordinate, value_components_equal,
+    Catalog, CheckReport, Declaration, Diagnostic, EmbeddedValueRoot, Id, Site, Switch,
+    ValueBinding, paired_declarations, value_binding_section_ends_in_coordinate,
+    value_components_equal,
 };
 use crate::resolver::WorkspaceCheckTarget;
 
@@ -23,6 +24,10 @@ pub(super) fn check_values(
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
     report: &mut CheckReport,
 ) {
+    // §FS-check.1.4.1: the value family has something to judge only in a value kind.
+    if schema.value_rows().next().is_some() {
+        report.armed.arm(Switch::Values);
+    }
     for site in &findings.invalid_value_declarations {
         if site.id.as_ref().is_some_and(|id| {
             findings

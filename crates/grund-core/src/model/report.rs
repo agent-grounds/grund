@@ -9,6 +9,8 @@
 
 use std::path::PathBuf;
 
+use super::armed::Armed;
+
 /// A secondary location attached to a diagnostic — e.g. the other declaration in a
 /// duplicate pair, or the citation that pointed at a missing section (§FS-errors.2.1).
 #[derive(Clone)]
@@ -53,11 +55,15 @@ pub(crate) struct Diagnostic {
 /// `should` / `should-not` citation-direction findings, withheld from the
 /// default run and surfaced only under `--suggestions`. It never affects the
 /// exit code.
+///
+/// `armed` is not a channel: it is what the run's gates turned on, which only
+/// the CLI's selection reads (§FS-check.1.4.1).
 #[derive(Default)]
 pub(crate) struct CheckReport {
     pub(crate) errors: Vec<Diagnostic>,
     pub(crate) warnings: Vec<Diagnostic>,
     pub(crate) suggestions: Vec<Diagnostic>,
+    pub(crate) armed: Armed,
 }
 
 /// A secondary location attached to a published [`Finding`] (§FS-errors.2.1,

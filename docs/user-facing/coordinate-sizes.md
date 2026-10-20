@@ -49,6 +49,10 @@ The key accepts a non-negative `max` and one of `lines`, `words`, or `bytes`.
 It is absent by default. A lead strictly over the maximum produces the fixed
 `oversized-lead` warning; equality passes and warnings do not change the exit
 status ([§FS-declarations.checks.oversized-lead](../functional-spec/FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)).
+Without the key the check is off, so `grund check --only oversized-lead` says
+`--only oversized-lead judged nothing` and names the key, rather than printing a
+`success` that judged no lead
+([§FS-check.1.4.1](../functional-spec/FS-check.md#141-a-selected-check-the-run-leaves-off-says-so)).
 
 The remedy is structural, not deletion: move detailed prose into citable child
 sections, which keeps the parent coordinate stable, or promote a child section

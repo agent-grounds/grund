@@ -70,8 +70,12 @@ fn print_check_help() {
     println!("suggestions by exact code; operational failures remain visible and exit 2. Exit 0 means");
     println!("the selected report has no errors, not that the unselected repository is clean.");
     // §FS-check.1.4, §FS-rules.7.6: a narrowed run carries the rules it skipped.
-    println!("Selecting a code a rule produces also selects invalid-rule, so a rule that could not");
-    println!("run is never a pass unless --ignore invalid-rule removes its error.");
+    println!("Selecting a code a rule produces also selects invalid-rule and empty-citation-obligation,");
+    println!("so a rule that could not run, or an obligation with nothing to judge, is never a pass");
+    println!("unless --ignore removes its line.");
+    // §FS-check.1.4.1: a selected check the run leaves off says so in place of `success`.
+    println!("A selected code the run leaves off earns one selected-check-off warning naming what");
+    println!("turns it on; only --ignore selected-check-off removes it, and the exit is unchanged.");
     println!();
     // §FS-cli.3.3, §FS-rules.8: a trial sentence emits the codes the declared
     // rules emit, so only the authority axis answers what it found — and its

@@ -30,6 +30,7 @@
 //! component when §AR-system.2.13 became one: each asks the disk, and only
 //! sources does (§AR-system.5).
 
+mod armed;
 mod conflict_block;
 mod e2e;
 mod excluded_stub_targets;
@@ -50,6 +51,7 @@ mod text;
 mod unread_roots;
 mod values;
 
+pub use armed::{Armed, Switch};
 pub use e2e::{E2eCase, E2eSpecRef};
 pub use expected::{Expected, ExpectedEntrypoint, ExpectedSection, ScopedExpectation};
 pub(crate) use failure::OperationContext;

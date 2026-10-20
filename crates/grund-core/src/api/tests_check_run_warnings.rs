@@ -185,7 +185,7 @@ fn unread_root_success_returns_the_same_warning_on_both_channels() {
     let root = unread_root("check-warning-unread-root-success", false);
 
     let (warnings, result) = check_with_run_warnings(opts(root));
-    let output = result.expect("check the valid workspace");
+    let (output, _) = result.expect("check the valid workspace");
 
     assert_eq!(warnings, vec![unread_root_warning()]);
     assert_eq!(warnings, output.warnings);

@@ -84,6 +84,10 @@ Bindings reuse current warning-preserving scoped APIs, selection and batch queri
 size/coverage/config/completion APIs, snapshot materialization and managed writers.
 Additive failure carriers classify errors at source without parsing Display text;
 core owns non-Unicode workspace preflight and integration-install orchestration.
+One selection, `CheckFindingSelection::select`, narrows a check for the CLI and
+both bindings, and appends the `selected-check-off` lines from the switches the
+hidden `check_with_run_warnings` path says the run armed
+([§FS-check.1.4.1](../functional-spec/FS-check.md#141-a-selected-check-the-run-leaves-off-says-so)).
 Existing Rust entry points and CLI rendering/defaults stay compatible
 ([§FS-distribution.3.1](../functional-spec/FS-distribution.md#31-rust-grund-core-crate)). Historical signatures below are not a frozen Python schema.
 

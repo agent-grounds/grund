@@ -325,6 +325,7 @@ fn issue_49_check_help_exposes_the_sorted_public_code_catalog() {
         "section-address-changed",
         "section-heading-level",
         "section-outside-declaration",
+        "selected-check-off",
         "shorthand-citation",
         "shorthand-numeric-run",
         "stub-shape",
