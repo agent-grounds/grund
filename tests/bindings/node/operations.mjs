@@ -77,8 +77,10 @@ assert.ok(undeclared.hits.length > 0);
 assert.equal(undeclared.note, null);
 const uncited = await invoke('refs', ['FS-998-unused', { root }]);
 assert.deepEqual(uncited.hits, []);
+// §FS-refs.2.1: an explicit root scopes the note and its project-list advice.
 assert.equal(uncited.note,
-  'FS-998-unused is neither declared nor cited — run `grund list` to see every declared ID');
+  'FS-998-unused is neither declared nor cited in scan path `' + root +
+  '` — run `grund list` to see project declarations, including outside this scan');
 const list = await invoke('list', [{ root }]);
 assert.ok(list.entries.some(e => e.id === id));
 assert.ok(Array.isArray(list.summaries));

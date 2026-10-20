@@ -384,6 +384,10 @@ pub fn expand(document: &mut Value) -> Result<(), String> {
             },
             base: base(&context["scopes"][scope], root),
             lines: variant.lines(&inputs),
+            explicit_path: context["explicit"]
+                .as_bool()
+                .unwrap()
+                .then(|| context["path"].as_str().unwrap()),
             variant: compact.clone(),
         };
         let (host, editor) = (view("<repo>", "python"), view("<repo>", "editor"));

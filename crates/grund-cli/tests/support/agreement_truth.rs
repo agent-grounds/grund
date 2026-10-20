@@ -43,7 +43,9 @@ pub fn bind(context: &mut Value, facts: &Value) {
         facts["context"],
         "variant invocation/configuration/held-edit facts differ"
     );
-    context["truth"] = facts.clone();
+    let mut bound = facts.clone();
+    super::agreement_render_show::bind_refs_path(&mut bound, context);
+    context["truth"] = bound;
 }
 
 pub fn key(question: &Question) -> String {
