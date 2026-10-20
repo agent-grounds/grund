@@ -8,7 +8,7 @@
 //! path-shaped `[scan] exclude` entry is read rather than refused, so it can be
 //! diagnosed (§FS-config-migrate.3.1.4).
 
-use super::values::strip_comment;
+use super::values::{is_header, strip_comment};
 
 /// What one line of a v1 file is (§FS-config-migrate.terms).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -77,7 +77,7 @@ impl LinePass {
             } else {
                 LineKind::Comment
             }
-        } else if trimmed.starts_with('[') && trimmed.ends_with(']') {
+        } else if is_header(trimmed) {
             LineKind::Header {
                 name: trimmed.trim_matches(['[', ']']).to_string(),
                 array: trimmed.starts_with("[[") && trimmed.ends_with("]]"),

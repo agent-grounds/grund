@@ -45,18 +45,25 @@ use super::v1::strip_comment;
 /// omitted version, an explicit `1`, and every other value stay with v1, which
 /// refuses a version it does not know.
 pub(crate) fn selects(text: &str) -> bool {
+    version(text) == Some("2")
+}
+
+/// §FS-config.5: the `grund_config_version` `text` writes, as it is written —
+/// the first top-level key of that name, before any header — or `None` where
+/// the top level names no version. Every reader is chosen by this one reading.
+pub(crate) fn version(text: &str) -> Option<&str> {
     for raw in text.lines() {
         let line = strip_comment(raw).trim();
         if line.starts_with('[') {
-            return false;
+            return None;
         }
         if let Some((key, value)) = line.split_once('=')
             && key.trim() == "grund_config_version"
         {
-            return value.trim() == "2";
+            return Some(value.trim());
         }
     }
-    false
+    None
 }
 
 /// §FS-config-v2.reader: lower a v2 file's `text` into a `Project`, refusing

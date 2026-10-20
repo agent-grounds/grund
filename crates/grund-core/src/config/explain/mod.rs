@@ -19,11 +19,11 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::discovery::{config_file_in, discovery_start_dir};
-use super::v1::{read_sections, strip_comment};
+use super::v1::{is_header, read_sections, strip_comment};
 use super::v2;
 use super::vocabulary::admitted;
 use crate::model::catalog::{self, CodeEnabled, CodeSeverity};
-use crate::model::{Code, format_path};
+use crate::model::{Code, OperationDiagnostic, format_path};
 use target::Resolved;
 
 /// What one call asks (§FS-config-explain.1).
@@ -173,27 +173,38 @@ fn discover(path: &Path) -> Option<(PathBuf, PathBuf)> {
     })
 }
 
-/// §FS-config.5: the version every command reads `text` as. Version 1 needs
-/// no line before the first table that is not `key = value` and no version
-/// but `1`; a file it cannot read a version from gets the refusal every
-/// command gives it, which is the v1 reader's (§FS-config-explain.2).
+/// §FS-config.5: the version every command reads `text` as, read the way they
+/// read it. Only a file whose version cannot be read gets the refusal every
+/// command gives it, which is the v1 reader's: a file that names a version this
+/// grund does not read, or one the reader stops in at a line that is not TOML.
+/// A file whose tables or keys the reader refuses still reads as version 1
+/// (§FS-config-explain.2).
 fn version_of(text: &str, report: &Path) -> Result<u32> {
-    if v2::selects(text) {
+    let version = v2::version(text);
+    if version == Some("2") {
         return Ok(2);
     }
-    let readable = text
-        .lines()
-        .map(|raw| strip_comment(raw).trim())
-        .take_while(|line| !line.starts_with('['))
-        .filter(|line| !line.is_empty())
-        .all(|line| match line.split_once('=') {
-            Some((key, value)) => key.trim() != "grund_config_version" || value.trim() == "1",
-            None => false,
-        });
-    if !readable {
-        read_sections(text, report)?;
+    match read_sections(text, report) {
+        Err(refusal)
+            if version.is_some_and(|version| version != "1")
+                || refused_outside_toml(text, &refusal) =>
+        {
+            Err(refusal)
+        }
+        _ => Ok(1),
     }
-    Ok(1)
+}
+
+/// Whether the v1 reader's `refusal` is at a line that is neither a table
+/// header nor `key = value`, the two shapes it reads a line in. A value spread
+/// over lines is refused at its first line, which holds the `=`.
+fn refused_outside_toml(text: &str, refusal: &anyhow::Error) -> bool {
+    let at = refusal
+        .downcast_ref::<OperationDiagnostic>()
+        .and_then(|refusal| refusal.line);
+    let line = at.and_then(|at| text.lines().nth(at.checked_sub(1)?));
+    line.map(|raw| strip_comment(raw).trim())
+        .is_some_and(|line| !is_header(line) && !line.contains('='))
 }
 
 /// What `version` says to `ask`.

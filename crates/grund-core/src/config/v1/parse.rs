@@ -21,7 +21,7 @@ use super::lines::LinePass;
 use super::mapping::admits;
 use super::scan_block::parse_scan_exclude;
 use super::values::{
-    bail_config, parse_bool, parse_string, parse_string_list, parse_usize, strip_comment,
+    bail_config, is_header, parse_bool, parse_string, parse_string_list, parse_usize, strip_comment,
 };
 use crate::config::fmt_block::validate_fmt_exclude;
 use crate::config::point_sizes::parse_lead_size_warning;
@@ -64,7 +64,7 @@ pub(super) fn parse_config_file(
         if line.is_empty() {
             continue;
         }
-        if line.starts_with('[') && line.ends_with(']') {
+        if is_header(line) {
             let is_array_table = line.starts_with("[[") && line.ends_with("]]");
             section = line.trim_matches(['[', ']']).to_string();
             match section.as_str() {
