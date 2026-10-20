@@ -94,7 +94,7 @@ fn scoping_is_a_boolean_the_cli_can_read_back() {
     });
 }
 
-/// The eight codes a rule finding can carry, written out rather than read from
+/// The nine codes a rule finding can carry, written out rather than read from
 /// the selector, so these units pin the set itself (§FS-rules.7.6).
 const RULE_PRODUCED_CODES: &[&str] = &[
     "chapter-cardinality",
@@ -105,6 +105,7 @@ const RULE_PRODUCED_CODES: &[&str] = &[
     "forbidden-citation",
     "discouraged-citation",
     "suggested-citation",
+    "empty-citation-obligation",
 ];
 
 /// §FS-check.1.4, §FS-rules.7.6: selecting any rule-produced code also selects

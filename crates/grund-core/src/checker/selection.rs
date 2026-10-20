@@ -77,10 +77,11 @@ pub const CHECK_FINDING_CODES: &[&str] = &[
     "value-mismatch",
 ];
 
-/// The eight rule-produced codes: a selection naming any of them also selects
+/// The nine rule-produced codes: a selection naming any of them also selects
 /// `invalid-rule`, because a skipped rule is a check the run did not evaluate
 /// (§FS-rules.7.6), and `empty-citation-obligation`, because an obligation with
-/// no unit is one that judged nothing (§FS-check.1.4).
+/// no unit is one that judged nothing (§FS-check.1.4). The ninth is that line
+/// itself, which a `must` or `should` rule writes (§FS-check.2.2.1.4).
 const RULE_PRODUCED_CODES: &[&str] = &[
     "chapter-cardinality",
     "citation-cardinality",
@@ -90,6 +91,7 @@ const RULE_PRODUCED_CODES: &[&str] = &[
     "forbidden-citation",
     "discouraged-citation",
     "suggested-citation",
+    "empty-citation-obligation",
 ];
 
 /// The origin a `check --rule` trial sentence carries, and so the authority
