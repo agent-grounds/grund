@@ -107,27 +107,13 @@ class BoundaryTests(unittest.TestCase):
 
     @unittest.skipUnless(os.name == "posix", "POSIX signal delivery test")
     def test_pending_interrupt_is_delivered_when_operation_returns(self):
+        # §AR-bindings.6.2.1: a native FIFO read and signal acknowledgment, not a delay.
+        from interrupt_acceptance import run_child
         with temporary() as temp:
-            root = workload(temp)
-            # Sender is a separate process, so GIL behavior cannot prevent delivery.
-            code = '''import grund, os, signal, subprocess, sys, time
-sender = subprocess.Popen([sys.executable, '-c',
-    'import os,signal,time; time.sleep(.1); os.kill(int(__import__("sys").argv[1]), signal.SIGINT)', str(os.getpid())])
-started = time.monotonic()
-try:
-    grund.check(sys.argv[1])
-except KeyboardInterrupt:
-    assert time.monotonic() - started >= .1
-    assert grund.check(sys.argv[2]).report is not None
-else:
-    raise AssertionError('pending interrupt was swallowed')
-finally:
-    sender.wait()
-'''
+            root = fixture(temp)
             with temporary() as other:
                 small = fixture(other)
-                result = subprocess.run([sys.executable, "-c", code, str(root), str(small)],
-                                        capture_output=True, text=True, timeout=120)
+                result = run_child(root, small)
                 self.assertEqual(0, result.returncode, result.stderr)
                 self.assertEqual("", result.stdout)
                 self.assertEqual("", result.stderr)
