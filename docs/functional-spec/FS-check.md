@@ -387,15 +387,28 @@ Under v2, `should` and `should-not` are the strengths that reach this channel, w
 
 #### 2.3.1 Escaped citation resolves
 
-A citation whose marker is bracketed — the schematic `<§>alias/ID` shape — is deliberately inert: the `§` is not immediately followed by the ID, so no pass treats it as a citation ([§FS-workspace.1](FS-workspace.md#1-citation-syntax)). That is how a citation's *shape* is written in prose without `grund check` resolving it. It also makes an escape of an ID that *does* exist ambiguous: usually a deliberate illustration, but also exactly what a live citation looks like once the marker is bracketed by accident, a slip that raises no dangling error ([§FS-check.3.1](FS-check.md#31-dangling-citation)) and navigates nowhere. So when an escaped citation's ID resolves to a real declaration, grund emits an `escaped-citation-resolves` suggestion at the escape site, naming the live `§`-form to switch to. It never replaces `success` or changes the exit code ([§FS-check.2.3.1.1](FS-check.md#2311-never-a-warning-or-error)), and it reads both escape forms ([§FS-check.2.3.1.2](FS-check.md#2312-both-escape-forms)).
+A citation whose marker is bracketed — the schematic `<§>alias/ID` shape — is deliberately inert: the `§` is not immediately followed by the ID, so no pass treats it as a citation ([§FS-workspace.1](FS-workspace.md#1-citation-syntax)). That is how a citation's *shape* is written in prose without `grund check` resolving it. It also makes an escape of an ID that *does* exist ambiguous: usually a deliberate illustration, but also exactly what a live citation looks like once the marker is bracketed by accident, a slip that raises no dangling error ([§FS-check.3.1](FS-check.md#31-dangling-citation)) and navigates nowhere. So when an escaped citation's coordinate ([§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates)) resolves — its ID to a real declaration and, when the escape writes a section, that section within it — grund emits an `escaped-citation-resolves` suggestion at the escape site, naming the live `§`-form of that same coordinate to switch to ([§FS-check.2.3.1.3](FS-check.md#2313-a-section-must-resolve-and-is-kept)). It never replaces `success` or changes the exit code ([§FS-check.2.3.1.1](FS-check.md#2311-never-a-warning-or-error)), and it reads both escape forms ([§FS-check.2.3.1.2](FS-check.md#2312-both-escape-forms)).
 
 ##### 2.3.1.1 Never a warning or error
 
-It is a suggestion, never a warning or error: illustrating a real ID is legitimate, so it must never replace `success` ([§FS-check.2.1.3](FS-check.md#213-the-success-line)) or change the exit code. It is the mirror of the [§FS-check.3.1](FS-check.md#31-dangling-citation) dangling check — that flags a live citation whose ID does not resolve; this flags an escaped one whose ID does.
+It is a suggestion, never a warning or error: illustrating a real ID is legitimate, so it must never replace `success` ([§FS-check.2.1.3](FS-check.md#213-the-success-line)) or change the exit code. It is the mirror of the [§FS-check.3.1](FS-check.md#31-dangling-citation) dangling and [§FS-check.3.2](FS-check.md#32-missing-section) missing-section checks — those flag a live citation whose coordinate does not resolve; this flags an escaped one whose coordinate does.
 
 ##### 2.3.1.2 Both escape forms
 
 Unqualified `<§>ID` and qualified `<§>alias/ID` escapes are both covered. The ID is parsed with the citing project's grammar, so a cross-project target under an unusual grammar may be skipped, which only ever withholds a suggestion.
+
+##### 2.3.1.3 A section must resolve, and is kept
+
+An escape that writes a section — `<§>FS-orders.3.5`, `<§>api/FS-x.2` — illustrates that section, not its declaration, so the declaration existing is not enough. The suggestion fires only when the section exists as well, found by the same lookup as the missing-section check ([§FS-check.3.2](FS-check.md#32-missing-section)), so a stub's sections are its target's ([§FS-check.3.2.1](FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not)). The live form it names keeps the section, because naming the declaration alone would widen a citation of one section into a citation of the whole declaration. The section follows the section separator of the project the coordinate names, because that project's grammar reads a live citation's `ID[.section]` ([§FS-workspace.1.2](FS-workspace.md#12-whose-grammar-reads-the-id)): for an unqualified escape it is the citing project's own, and for a qualified one the target's. So the live form written in the escape's place reads back as the coordinate the escape named; written with the citing project's separator where a member's differs, it would read back as the whole declaration. With `FS-orders` declaring a section 3.5, a member `api` whose `FS-x` declares a section 2, and under `section_separator = ":"` a `FS-042-login` declaring a section 2:
+
+```text
+<§>FS-orders.3.5    ... write §FS-orders.3.5 for a live citation ...
+<§>api/FS-x.2       ... write §api/FS-x.2 for a live citation ...           (api's separator is `.`)
+<§>api/FS-x.2       ... write §api/FS-x:2 for a live citation ...           (api's separator is `:`)
+<§>FS-042-login:2   ... write §FS-042-login:2 for a live citation ...
+```
+
+An escape of a section that does not exist — `<§>FS-orders.9.9` where `FS-orders` has no section 9.9 — gets no suggestion. Its live form would be a missing-section error, so it is the same made-up case as an escape of an ID nothing declares, and like that one it stays quiet; naming the declaration instead would recommend the widening the paragraph above forbids. An escape that writes no section is judged and named by its ID alone. The message's wording is the same for every escape, with or without a section; only the coordinate it names differs.
 
 #### 2.3.2 Selecting and printing suggestions
 

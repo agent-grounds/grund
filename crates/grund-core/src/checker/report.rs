@@ -272,11 +272,13 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// The scanner records every `<§>`-escaped illustration (§AR-scanner.2.5) into
 /// `findings.escaped_citations`, a list inert to every rule above. This pass is
 /// its only reader: for each escape it runs the same resolver as the dangling
-/// check (§AR-checker.2.3) and, when the ID resolves to a real declaration, emits an
-/// `escaped-citation-resolves` suggestion — the mirror of dangling, which fires
-/// when a *live* citation does not resolve. It is a suggestion, never a warning
-/// or error, so it is withheld unless `--suggestions` is passed and never moves
-/// the exit code; illustrating a real ID is legitimate.
+/// check (§AR-checker.2.3) and, when the escaped coordinate resolves — the ID to a
+/// real declaration and any section the escape writes by the missing-section
+/// lookup (§FS-check.2.3.1.3) — emits an `escaped-citation-resolves` suggestion
+/// naming that coordinate, section kept. It is the mirror of dangling and of a
+/// missing section, which fire when a *live* citation does not resolve. It is a
+/// suggestion, never a warning or error, so it is withheld unless `--suggestions`
+/// is passed and never moves the exit code; illustrating a real ID is legitimate.
 ///
 /// ### 2.12 Number-only shorthand citations (§FS-check.3.13, §DF-number-only-citation-shorthand)
 ///

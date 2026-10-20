@@ -1,0 +1,18 @@
+grund_config_version = 1
+project_name = "acme"
+
+[reference]
+marker = "§"
+strict = true
+
+[id]
+format = "{kind}-{number}-{slug}"
+section_separator = ":"
+
+[[kinds]]
+kind = "FS"
+file = "requirements.md"
+title = "What the product does"
+
+[scan]
+include = ["notes"]
