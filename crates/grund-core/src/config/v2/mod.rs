@@ -30,6 +30,7 @@ mod tables;
 mod tests_keys;
 mod walk;
 
+pub(super) use tables::admitted;
 #[cfg(test)]
 pub(super) use tables::{V1_TABLES, v1_homes};
 

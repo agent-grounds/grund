@@ -13,9 +13,9 @@ mod kind_defaults;
 mod kind_rows;
 mod kind_table;
 mod kind_values;
-// Read by the unit tests that hold the reader to it (§AR-config.3.3).
 mod lines;
-#[cfg(test)]
+// Read by the unit tests that hold the reader to it (§AR-config.3.3), and by
+// `config explain`'s scaffold, which enumerates version 1 from it (§AR-config.9.1).
 pub(super) mod mapping;
 mod parse;
 mod scan_block;

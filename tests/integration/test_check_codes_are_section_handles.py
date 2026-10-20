@@ -211,6 +211,13 @@ class CheckCodeSectionTests(unittest.TestCase):
                     problems.append(f"{code}: now selectable, strike it off SPECIFIED_AHEAD")
         self.assertEqual([], problems)
 
+    def test_the_rows_marked_planned_are_the_codes_specified_ahead(self):
+        # §FS-errors.5.5.1: a row ahead of its release says so in a cell, and
+        # `grund config explain` answers no code whose row does.
+        rows = _catalog_rows()
+        planned = {code for code, cells in rows.items() if any(c.startswith("planned — ") for c in cells)}
+        self.assertEqual(_specified_ahead(), planned)
+
     def test_every_selectable_code_is_migrated_or_listed(self):
         accounted = set(NOT_YET_MIGRATED)
         for codes in MIGRATED.values():

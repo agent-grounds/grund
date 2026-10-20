@@ -106,6 +106,7 @@ pub(in crate::config) const KEYS: &[(&str, &str)] = &[
 
 /// §AR-config.3.2: one row per implicit default, each applied by the v1 reader
 /// in `defaults.rs` or `kind_table.rs` and nowhere else.
+#[cfg(test)]
 pub(in crate::config) const DEFAULTS: &[(&str, &str)] = &[
     ("built-in kinds", "schema.rows"),
     ("name-keyed index", "schema.rows"),

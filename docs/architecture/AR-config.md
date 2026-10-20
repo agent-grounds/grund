@@ -286,6 +286,11 @@ kinds that file declares.
    that the named field changed and no other field did. For every default row
    it lowers an empty file, and a file with no `[[kinds]]`, and asserts the
    value the row describes.
+5. `KEYS` is also the v1 reader's outer-key gate: a key outside it is refused
+   with the reader's `unknown config key` text, after the specific refusals
+   that run first and keep their words, so the table and what the reader
+   admits cannot differ, and `grund config explain` enumerates version 1 from
+   it (section 9, [§FS-config-explain.3](../functional-spec/FS-config-explain.md#3-a-keys-answer)).
 
 ## 4. Validation runs once, after lowering
 
@@ -496,3 +501,43 @@ call, unchanged in behaviour for `fetch`, which maps each failure into its own
 refusal. It gains the concurrent-edit check migration needs: the bytes the run
 read are passed in and read again just before the rename ([§FS-config-migrate.6.2](../functional-spec/FS-config-migrate.md#62-atomic),
 [§FS-config-migrate.6.3](../functional-spec/FS-config-migrate.md#63-a-concurrent-edit)).
+
+## 9. The answer reads the gates
+
+`grund config explain` ([§FS-config-explain](../functional-spec/FS-config-explain.md#fs-config-explain-grund-config-explain-answers-from-the-installed-binary-and-in-the-version-the-projects-config-is-read-as-what-any-key-accepts-and-means-and-what-any-check-code-means-and-what-turns-it-on)) lives in an `explain`
+module under `crates/grund-core/src/config/`. Like migration it renders nothing:
+it returns one typed answer, and `grund-cli` renders it in
+`cli_config_explain.rs`, reached through the api entry `config show` uses.
+
+### 9.1 What it reads
+
+- **The version, and nothing else of the file.** The selection `config show`
+  already makes ([§FS-config.5](../functional-spec/FS-config.md#5-schema-versioning)), with no reader lowering the file, so
+  a file a reader refuses is still answered in its version
+  ([§FS-config-explain.2](../functional-spec/FS-config-explain.md#2-which-version-answers)).
+- **The gates.** Version 2's closed key list per table and the list of
+  version-1 tables its refusal names; version 1's `KEYS` (section 3.3) and the
+  inline members of `lead_size_warning`, admitted from one list in
+  `config/point_sizes.rs` that the answer reads too. The answer enumerates from
+  these and never from the schema, so it names exactly what a reader admits
+  ([§FS-config-explain.3](../functional-spec/FS-config-explain.md#3-a-keys-answer)).
+- **Two assets** in an `explain/` directory beside grund-core's other assets, each rendered by a
+  script and compared byte for byte by a test that renders it again:
+  `check-codes.json`, the code catalog's rows ([§FS-errors.5.5.1](../functional-spec/FS-errors.md#551-how-a-row-is-read)), and
+  `grund.schema.json`, the published schema with its specification metadata
+  removed, which words each key ([§FS-config-explain.3.1](../functional-spec/FS-config-explain.md#31-values-in-words)).
+
+The code handles sit in model, rendered from the same rows: one typed handle
+per code and the sorted list of them, which the selector vocabulary,
+`check --help` and the Python binding read, and from which alone a finding is
+built ([§AR-system.2.2](README.md#22-model)). The line `check` prints for a selected check
+that was off reads its switch spellings from the same rendered rows
+([§FS-check.1.4.1](../functional-spec/FS-check.md#141-a-selected-check-the-run-leaves-off-says-so)).
+
+### 9.2 Why it is in config
+
+Only config reads a version (section 2), and every answer is in one. The gates
+are config's own, and reaching `KEYS` or the version-1 table list from above
+config would break the v1 reader's isolation that section 2 keeps. So the
+answer is assembled where those lists live, and the frontend only renders it,
+as it renders `config show` and migration ([§AR-system.4](README.md#4-dependency-direction)).

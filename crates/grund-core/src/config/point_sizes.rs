@@ -62,6 +62,10 @@ pub struct LeadSizeWarning {
     pub unit: PointSizeUnit,
 }
 
+/// §FS-config-explain.1.1: the members of `[reference] lead_size_warning`, as
+/// `config explain` answers them; the parser below admits the same two.
+pub(in crate::config) const LEAD_SIZE_MEMBERS: &[&str] = &["max", "unit"];
+
 /// Parse the one inline table in grund's line-oriented config surface
 /// (§FS-config.3.1.2). Keeping this parser specific makes duplicate, missing, and
 /// extra fields loud without silently widening the rest of the TOML subset.

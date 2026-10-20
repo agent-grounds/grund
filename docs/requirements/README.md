@@ -13,6 +13,7 @@ What `grund` must never break — the hard invariants a release is blocked on �
 - [§REQ-runs-offline](REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service) — verification never depends on an external service
 - [§REQ-remote-equivalence](REQ-remote-equivalence.md#req-remote-equivalence-a-fetched-remote-answers-every-operation-as-a-local-project-does) — a fetched remote answers every operation as a local project does
 - [§REQ-one-answer](REQ-one-answer.md#req-one-answer-every-command-gives-the-same-answer-about-one-tree) — every command gives the same answer about one tree
+- [§REQ-discoverable-offline](REQ-discoverable-offline.md#req-discoverable-offline-the-installed-grund-answers-for-every-setting-and-every-check-code) — the installed grund answers for every setting and every check code
 
 ## This repository
 

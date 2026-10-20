@@ -155,7 +155,7 @@ A second positional — `grund check a b`, `grund <ID> a b`, `grund refs ID a b`
 
 ### 3.3 The `check` selector help
 
-The `check` help page documents both `--flag value` and `--flag=value`, repetition and composition, the fact that operational failures remain visible with exit `2`, selected-report exit semantics, one `--ignore agents-init` example, and the complete supported-code catalog in sorted order. The catalog is the discovery path for callers that know a message but not its code.
+The `check` help page documents both `--flag value` and `--flag=value`, repetition and composition, the fact that operational failures remain visible with exit `2`, selected-report exit semantics, one `--ignore agents-init` example, and the complete supported-code catalog in sorted order. The catalog is the discovery path for callers that know a message but not its code. One line beside it says that `grund config explain CODE` says what a code means, its severity and what turns it on ([§FS-config-explain.4](FS-config-explain.md#4-a-codes-answer)).
 
 It documents the third selector on the same footing: that `--only-rule` narrows the report to what the `--rule` sentence authored rather than by code, that the axes intersect, that it refuses with `error: --only-rule requires --rule` when no trial sentence was given, and that a `should`-level sentence also needs `--suggestions` to be seen ([§FS-rules.8](FS-rules.md#8-command-surfaces)). A selector reachable only from the specification is not discoverable at a terminal, which is where a sentence gets tried.
 

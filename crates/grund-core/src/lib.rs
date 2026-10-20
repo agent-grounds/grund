@@ -128,6 +128,9 @@ pub use config::{
 // §FS-config-migrate: `grund config migrate --to 2` and the one record it returns.
 #[doc(hidden)]
 pub use api::{MigrateOpts, config_migrate};
+// §FS-config-explain: the tables, keys and codes `grund config explain` answers for.
+#[doc(hidden)]
+pub use api::explain_vocabulary;
 #[doc(hidden)]
 pub use config::migrate::{
     Gate, GateResult, ListedComment, MappedKey, MigrateFailure, MigrateNotice, MigrateOutcome,

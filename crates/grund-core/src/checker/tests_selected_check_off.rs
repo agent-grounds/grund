@@ -223,25 +223,31 @@ const ALWAYS_ARMED: &[&str] = &[
     "unrecorded-section-citation",
 ];
 
-/// The §FS-errors.5.5 catalog rows, as `(code, severity, enabled by)`.
+/// The §FS-errors.5.5 catalog rows, as `(code, severity, enabled by)`, each
+/// cell found by its column's header.
 fn catalog() -> Vec<(String, String, String)> {
     let page =
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/functional-spec/FS-errors.md");
     let text = std::fs::read_to_string(page).expect("read the catalog");
     let start = text.find("### 5.5 ").expect("the catalog heading");
-    text[start..]
+    let cells = |line: &str| -> Vec<String> {
+        let line = line.trim().trim_matches('|');
+        line.split('|')
+            .map(|cell| cell.trim().to_string())
+            .collect()
+    };
+    let mut lines = text[start..]
         .lines()
-        .skip(1)
-        .take_while(|line| !line.starts_with('#'))
+        .skip_while(|line| !line.starts_with("| Code |"));
+    let header = cells(lines.next().expect("the catalog's header row"));
+    let column = |name: &str| header.iter().position(|cell| cell == name).expect(name);
+    let (severity, enabled) = (column("Severity"), column("Enabled by"));
+    lines
+        .take_while(|line| line.starts_with('|'))
         .filter_map(|line| {
-            let cells: Vec<&str> = line
-                .trim()
-                .trim_matches('|')
-                .split('|')
-                .map(str::trim)
-                .collect();
-            let code = cells.first()?.strip_prefix('`')?.strip_suffix('`')?;
-            Some((code.to_string(), cells[1].to_string(), cells[3].to_string()))
+            let row = cells(line);
+            let code = row[0].strip_prefix('`')?.strip_suffix('`')?.to_string();
+            Some((code, row[severity].clone(), row[enabled].clone()))
         })
         .collect()
 }

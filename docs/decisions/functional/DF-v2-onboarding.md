@@ -18,7 +18,7 @@ The starter is written fresh rather than produced by migrating the old one, whic
 
 ### 2.2 `config show` is the teaching surface
 
-What the old file taught — every setting, at its value — `grund config show` prints for any config, in the file's own version, in a fixed order, and what it prints loads back to the same meaning ([§FS-config.4.2](../../functional-spec/FS-config.md#42-grund-config-show-path)). A version-1 file shows as version 1 with version-1 defaults, never reinterpreted as version 2 ([§FS-config.4.2.5](../../functional-spec/FS-config.md#425-a-v1-display-never-takes-a-v2-default)). The file's one comment points there.
+What the old file taught — every setting, at its value — `grund config show` prints for any config, in the file's own version, in a fixed order, and what it prints loads back to the same meaning ([§FS-config.4.2](../../functional-spec/FS-config.md#42-grund-config-show-path)). A version-1 file shows as version 1 with version-1 defaults, never reinterpreted as version 2 ([§FS-config.4.2.5](../../functional-spec/FS-config.md#425-a-v1-display-never-takes-a-v2-default)). The file's one comment points there. What a key means and accepts is `grund config explain`'s, which narrows this to the configuration in effect ([§DF-config-explain.2.2](DF-config-explain.md#22-it-narrows-config-show-is-the-teaching-surface)).
 
 ## 3. Consequences
 
