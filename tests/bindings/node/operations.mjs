@@ -35,6 +35,20 @@ for (const finding of [...check.report.errors, ...check.report.warnings,
 const selected = await invoke('check', [root, { only: ['dangling'], ignore: ['dangling'] }]);
 assert.ok(selected.report.errors.some(f => f.code === 'dangling'));
 assert.equal(selected.selectedReport.errors.length, 0);
+// §FS-check.1.4.1, §FS-check.2.2.1.4: the selected view says what judged nothing.
+const caseRepo = name => process.env.GRUND_TEST_REPO + '/tests/e2e/cases/' + name + '/repo';
+const off = await invoke('check', [caseRepo('check-only-opt-in-off'), { only: ['oversized-lead'] }]);
+const offLines = off.selectedReport.warnings.filter(f => f.code === 'selected-check-off');
+assert.equal(offLines.length, 1);
+assert.deepEqual([offLines[0].path, offLines[0].line], [null, null]);
+assert.ok(!off.report.warnings.some(f => f.code === 'selected-check-off'));
+const trial = await invoke('check', [caseRepo('check-rule-applies-to-nothing-only-rule'),
+  { rule: 'Each e2e must cite at least one FS.', onlyRule: true }]);
+assert.equal(trial.selectedReport.warnings.length, 1);
+const [empty] = trial.selectedReport.warnings;
+assert.equal(empty.code, 'empty-citation-obligation');
+assert.equal(empty.message, '--rule applies to nothing — tests/e2e/ declares no e2e ID');
+assert.deepEqual(empty.authority, ['--rule']);
 const id = 'FS-001-alpha';
 // §FS-distribution.3.2.2.2: brief and Markdown retain this fixture's heading.
 const lead = 'References FS-002-beta and FS-999-missing.\n';

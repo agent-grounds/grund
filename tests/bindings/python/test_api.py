@@ -274,6 +274,24 @@ class ApiTests(unittest.TestCase):
             self.assertTrue(all(f in tuple(result.report) for f in authored))
             self.assertTrue(all(tuple(sorted(f.authority)) == f.authority for f in authored))
 
+    # §FS-check.1.4.1, §FS-check.2.2.1.4: the selected view says what judged nothing.
+    def test_selected_view_says_when_the_selection_judged_nothing(self):
+        with temporary() as temp:
+            result = self.g.check(fixture(temp, "check-only-opt-in-off"), only=("oversized-lead",))
+            off = [f for f in result.selected_report.warnings if f.code == "selected-check-off"]
+            self.assertEqual(1, len(off))
+            self.assertEqual((None, None), (off[0].path, off[0].line))
+            self.assertFalse(any(f.code == "selected-check-off" for f in result.report))
+        with temporary() as temp:
+            root = fixture(temp, "check-rule-applies-to-nothing-only-rule")
+            result = self.g.check(root, rule="Each e2e must cite at least one FS.",
+                                  only_rule=True)
+            [empty] = result.selected_report.warnings
+            self.assertEqual("empty-citation-obligation", empty.code)
+            self.assertEqual("--rule applies to nothing — tests/e2e/ declares no e2e ID",
+                             empty.message)
+            self.assertEqual(("--rule",), empty.authority)
+
     def test_safety_io_findings_survive_selectors(self):
         import os
         if os.name != "posix":
