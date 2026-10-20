@@ -382,7 +382,7 @@ pub(crate) fn check_chapter_rules(
         parsed_rules.push(rule);
     }
     let unread = report.errors.len() > errors_before;
-    arm_rule_directions(&parsed_rules, unread, &mut report.armed);
+    arm_rule_directions(&parsed_rules, schema, unread, &mut report.armed);
     report.warnings.extend(empty_rule_obligations(
         findings,
         rules,

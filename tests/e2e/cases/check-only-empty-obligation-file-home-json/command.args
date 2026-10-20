@@ -1,0 +1,1 @@
+check --only empty-citation-obligation --format json {repo}

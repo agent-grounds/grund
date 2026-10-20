@@ -98,19 +98,17 @@ pub(crate) fn homeless_row_grounding(schema: &Schema, rules: &Rules, run: &Run) 
     }
 }
 
-/// Whether any place is grounded at all (§FS-check.3.6): the records' reading of
-/// `Config::grounding_enabled`. A v2 ladder rung below `must` grounds too
-/// (§FS-config-v2.rules.grounding).
+/// Whether any place is grounded at all (§FS-check.3.6), the checker's early out
+/// and the gate that arms `ungrounded` (§FS-check.1.4.1): a row, or the homeless
+/// kind, whose effective pair requires grounding, so a default that every row sets
+/// `false` grounds nothing (§FS-config.3.4.8.3). A v2 ladder rung below `must`
+/// grounds too (§FS-config-v2.rules.grounding). `Config::grounding_enabled` asks
+/// the looser question of whether anything sets the key at all.
 pub(crate) fn any_place_grounded(schema: &Schema, rules: &Rules, run: &Run) -> bool {
-    requires_grounding_by_default(rules, run)
-        || schema.rows.iter().any(|row| {
-            rules
-                .grounding
-                .kinds
-                .get(&row.name)
-                .and_then(|row| row.require)
-                == Some(true)
-        })
+    schema
+        .rows
+        .iter()
+        .any(|row| row_grounding(rules, run, &row.name).0)
         || homeless_row_grounding(schema, rules, run).0
         || soft_rungs_written(&rules.grounding)
 }
@@ -178,9 +176,10 @@ impl Config {
         )
     }
 
-    /// Whether any place is grounded at all — the early out that keeps the whole
-    /// pass off a tree that asked for none (§FS-check.3.6). A v2 ladder rung
-    /// below `must` grounds too (§FS-config-v2.rules.grounding).
+    /// Whether anything turns grounding on — the key, the flag, a row or a v2 ladder
+    /// rung below `must` (§FS-config-v2.rules.grounding) — which is when a
+    /// `[reference] grounding_level` loads back (§FS-config.3.4.8). The checker's
+    /// early out, [`any_place_grounded`], also asks that a place still inherits it.
     pub fn grounding_enabled(&self) -> bool {
         self.require_grounding
             || self
