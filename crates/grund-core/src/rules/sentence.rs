@@ -4,6 +4,7 @@ mod conjunction;
 mod count;
 mod forms;
 mod literal;
+mod places;
 mod predicate;
 mod recovery;
 mod selectors;
@@ -12,11 +13,13 @@ mod subjects;
 mod targets;
 
 use super::RuleAnchor;
-use crate::config::{KindEntry, KindTable, Quote};
+use crate::config::{KindTable, Quote};
 use crate::grammar::Grammar;
 use literal::DeclarationSelector;
 use stages::read;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
+
+pub(crate) use places::SubjectKinds;
 
 pub(crate) use selectors::parse_selector;
 #[cfg(test)]
@@ -155,7 +158,7 @@ pub(crate) struct RuleVocabulary {
     pub(crate) named_kinds: BTreeSet<String>,
     /// Configured kinds that declare no IDs, each with the entry it is refused
     /// by (§FS-errors.2.5.1); the bare object kinds share the subjects' scope.
-    pub(crate) non_citable: BTreeMap<String, KindEntry>,
+    pub(crate) non_citable: SubjectKinds,
     /// Effective lexical grammars for the catalogs this vocabulary can select.
     /// The sentence front end sees syntax, never scan facts (§AR-rules.1).
     pub(crate) id_grammars: Vec<Grammar>,
@@ -174,7 +177,7 @@ impl RuleVocabulary {
     /// citable here, until the window closes; the reason alone for `code` with
     /// no row (§FS-errors.3.8.1).
     pub(crate) fn kind_refusal(&self, legacy: String, kind: &str) -> String {
-        match self.non_citable.get(kind) {
+        match self.non_citable.entries.get(kind) {
             Some(entry) => entry.refusal(&legacy, Quote::Double),
             None => legacy,
         }
@@ -215,14 +218,20 @@ pub(crate) fn parse_rule(
     vocabulary: &RuleVocabulary,
 ) -> Result<(ParsedRule, Option<String>), RuleParseError> {
     read(title, origin, anchor, vocabulary).map_err(|refusal| {
-        refusal.offer(vocabulary, |form, vocabulary| {
+        let mut error = refusal.offer(vocabulary, |form, vocabulary| {
             let anchor = RuleAnchor {
                 path: String::new(),
                 line: 0,
                 column: None,
             };
             read(form, String::new(), anchor, vocabulary).err()
-        })
+        });
+        // §FS-rule-refusals.sentences.rewrite.no-form.place: supplement only the
+        // original place refusal, after all earlier stages and shared reasons.
+        if let Some(guidance) = vocabulary.non_citable.guidance(title, vocabulary) {
+            error.message.push_str(&guidance);
+        }
+        error
     })
 }
 

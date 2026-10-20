@@ -53,6 +53,43 @@ See the [chapter-rules guide](../../docs/user-facing/rules.md) for every accepte
 sentence, every common refusal and any rewrite offered, and the finding
 produced by each family.
 
+## Configured place obligations
+
+The fixture configures a scanned non-citable `e2e` row at `tests/e2e/`.
+Both subject spellings remain refused, with supplementary configuration
+guidance ([§FS-rule-refusals.sentences.rewrite.no-form.place](../../docs/functional-spec/FS-rule-refusals.md#sentencesrewriteno-formplace-a-refused-place-subject-names-its-citation-configuration)):
+
+```bash
+cd examples/rules/repo
+grund check --rule 'Each e2e must cite at least one FS.' --only-rule
+grund check --rule 'Each file in tests/e2e/ must cite at least one FS.' --only-rule
+# Both exit 2. Their existing reasons end with:
+# ; for configured place "e2e", express this obligation in grund.toml: [citations.e2e] with must = ["FS"]
+```
+
+This fixture uses version 1. In version 2, the hint instead names
+`[rules.citations.e2e]`. The suggested obligation is already configured here:
+
+```toml
+[citations.e2e]
+must = ["FS"]
+```
+
+To see its enforcement independently of the chapter-rule findings, run from
+the same directory:
+
+```bash
+grund check tests/e2e/
+# tests/e2e/missing-fs.md:1: error: tests/e2e/ must cite FS (citation direction)
+# Exit 1: the file cites AR-one but lacks FS evidence.
+```
+
+Adding a citation to `FS-good` in that file satisfies this direction rule.
+Files with no citations remain exempt; use the separate grounding setting
+to require evidence in every file ([§FS-config.3.9.2.4](../../docs/functional-spec/FS-config.md#3924-obligations-apply-per-source-file)).
+The hint names the supported configuration route and offers no accepted
+sentence rewrite. The unrelated `vendor/` refusal below still has no hint.
+
 ## Complete sentence inventory
 
 These are the accepted spellings exercised by the parser contract; substitute

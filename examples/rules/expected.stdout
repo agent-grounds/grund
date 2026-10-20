@@ -18,5 +18,6 @@ docs/rules/RULE-invalid.md:1: error: RULE-invalid is not a valid rule: modality 
 docs/rules/RULE-every-chapter.md:1: warning: declared but never cited: RULE-every-chapter
 docs/rules/RULE-every-subject.md:1: warning: declared but never cited: RULE-every-subject
 docs/rules/RULE-every-target.md:1: warning: declared but never cited: RULE-every-target
+tests/e2e/missing-fs.md:1: error: tests/e2e/ must cite FS (citation direction)
 docs/fs/FS-demo.md:1: suggestion: FS-demo should cite GOAL (RULE-positive, RULE-positive-copy)
 docs/fs/FS-demo.md:8: suggestion: FS should not cite AR (RULE-negative)
