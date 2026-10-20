@@ -93,3 +93,14 @@ pub fn reference_style(path: &Path) -> Result<ReferenceStyle> {
         trigger: config.trigger,
     })
 }
+
+/// The tables and keys the reader of configuration `version` admits, `[header]`
+/// or `""` for the top level, and the codes `check` can report: what `grund
+/// config explain` answers for (§FS-config-explain.3, §FS-config-explain.4).
+/// Scaffold over today's lists until the command lands, read by the coverage
+/// test that holds every one of them answered (§REQ-discoverable-offline.3).
+#[doc(hidden)]
+pub fn explain_vocabulary(version: u32) -> (Vec<(String, Vec<String>)>, Vec<&'static str>) {
+    let codes = crate::checker::CHECK_FINDING_CODES.to_vec();
+    (crate::config::admitted(version), codes)
+}

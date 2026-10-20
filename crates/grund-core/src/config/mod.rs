@@ -77,6 +77,7 @@ mod sources;
 mod v1;
 mod v2;
 mod validate;
+mod vocabulary;
 mod workspace_block;
 
 pub(crate) use crate::sources::{
@@ -158,6 +159,7 @@ pub(crate) use v1::{
     strip_comment,
 };
 pub(crate) use validate::citations_table;
+pub(crate) use vocabulary::admitted;
 pub(crate) use workspace_block::{
     INVALID_ALIAS_PATH_EXPECTED, both_member_lists_message, has_dot_path_component,
     invalid_alias_path_segment, invalid_project_alias_message, is_valid_project_alias,

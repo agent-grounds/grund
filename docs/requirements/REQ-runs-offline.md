@@ -7,7 +7,7 @@ can change, disappear, rate-limit, or require credentials. This preserves
 
 ## 1. Read and verification paths execute nothing
 
-Scanning, `check`, ID queries, `refs`, `list`, `cover`, `config show` and `validate`,
+Scanning, `check`, ID queries, `refs`, `list`, `cover`, `config show`, `explain` and `validate`,
 `fmt`, shell completion and its dynamic helper, and every LSP request perform no network
 I/O and execute no repository-configured process. This remains true for a kind that
 configures a fetcher and for a missing snapshot. Those paths read only the tree and

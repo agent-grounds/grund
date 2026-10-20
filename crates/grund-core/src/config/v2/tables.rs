@@ -230,6 +230,66 @@ pub(super) fn v1_hint(header: &str) -> String {
     })
 }
 
+/// §FS-config-explain.3: every header the v2 reader opens, a name it reads
+/// spelled as its placeholder, each with the placeholder its bare keys stand
+/// for. Scaffold until `config explain` lands: the answer is to enumerate from
+/// one list the reader itself walks, and `open` stays the gate.
+const EXPLAINED: &[(&str, Option<&str>)] = &[
+    ("schema", None),
+    ("schema.sources", None),
+    ("schema.sources.extensions", Some("<suffix>")),
+    ("schema.sources.definitions", None),
+    ("schema.sources.definitions.<name>", None),
+    ("schema.notes", None),
+    ("schema.notes.lines", None),
+    ("schema.notes.columns", None),
+    ("schema.notes.text", None),
+    ("schema.notes.layout", None),
+    ("schema.leads", None),
+    ("schema.leads.words", None),
+    ("schema.kinds", None),
+    ("schema.kinds.<NAME>", None),
+    ("schema.kinds.<NAME>.fields", None),
+    ("schema.kinds.<NAME>.fields.<field>", None),
+    ("rules", None),
+    ("rules.citations", None),
+    ("rules.citations.grounding", None),
+    ("rules.citations.<KIND>", None),
+    ("rules.citations.<KIND>.grounding", None),
+    ("rules.resolution", Some("<KIND>")),
+    ("presentation", None),
+    ("presentation.kinds", None),
+    ("presentation.kinds.<NAME>", None),
+    ("presentation.fmt", None),
+    ("workspace", None),
+];
+
+/// §FS-config-explain.3: each table the v2 reader admits, `[header]` or `""`
+/// for the top level, with the keys its gate admits.
+pub(in crate::config) fn admitted() -> Vec<(String, Vec<String>)> {
+    let mut tables = vec![(String::new(), keys_of(&Table::Root, None))];
+    for (header, placeholder) in EXPLAINED {
+        let table = match open(header) {
+            Opened::Table(table) => table,
+            Opened::Row(_) => Table::Row(0),
+            Opened::Field(..) => Table::Field(0),
+            Opened::Definition(_) => Table::Definition(0),
+            Opened::Refused(why) => unreachable!("[{header}] is refused: {why}"),
+        };
+        tables.push((format!("[{header}]"), keys_of(&table, *placeholder)));
+    }
+    tables
+}
+
+/// The keys `table`'s gate admits, a table of names answering as `placeholder`.
+fn keys_of(table: &Table, placeholder: Option<&str>) -> Vec<String> {
+    match table.keys() {
+        Keys::Closed(keys) => keys.iter().map(|key| key.to_string()).collect(),
+        Keys::OnlyTables => Vec::new(),
+        Keys::Names(_) => placeholder.into_iter().map(str::to_string).collect(),
+    }
+}
+
 /// What a header opens, or why it is refused.
 pub(super) enum Opened {
     Table(Table),
