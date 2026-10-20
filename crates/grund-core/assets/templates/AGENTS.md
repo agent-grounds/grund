@@ -1,5 +1,5 @@
 <!-- BEGIN GRUND MANAGED BLOCK -->
-## Grounding with grund (v27)
+{BLOCK_HEADING}
 
 This project uses [`grund`](https://github.com/agent-grounds/grund): every spec, goal, decision, and end-to-end test has a stable ID `{ID_SHAPE_SEC}` ({KINDS_SET}), cited with the marker `{MARKER}` — e.g. `{CITE_EXAMPLE}`, where the ID is a shape illustration rather than a real one in this repo, which is what the `<{MARKER}>` escape says. Type `{TRIGGER}` in a grund-aware editor and it becomes `{MARKER}`. {BARE_TOKEN_NOTE}
 

@@ -128,7 +128,6 @@ fn assert_labelled(file: &str, n: u32, what: &str) {
 /// `grund -V` reports the CLI release on its own, and the refusal the agent misread
 /// is byte for byte what it was — the label is the whole fix.
 #[test]
-#[ignore = "red until #827 labels the block heading; implement removes this"]
 fn reported_repository_gets_a_labelled_heading_beside_an_unchanged_refusal() {
     let target = reported_tree("block_label_reported_repository");
     fs::write(target.join("AGENTS.md"), "# demo — agent instructions\n").expect("AGENTS.md");
@@ -193,7 +192,6 @@ fn assert_selection(name: &str, target: &Path, n: u32, scoped: &[&str]) {
 }
 
 #[test]
-#[ignore = "red until #827 labels the block heading; implement removes this"]
 fn each_selected_pair_is_labelled_and_four_higher() {
     let base = reported_tree("block_label_base");
     assert_selection("base", &base, 31, &[]);
@@ -249,7 +247,6 @@ fn unlabelled_block_tree(name: &str) -> (PathBuf, String, String) {
 
 /// An unlabelled block is read, reported outdated, relabelled in place, and current after.
 #[test]
-#[ignore = "red until #827 labels the block heading; implement removes this"]
 fn an_unlabelled_block_is_relabelled_in_place_once() {
     let (target, before, after) = unlabelled_block_tree("block_label_migrates_in_place");
     let check = run_grund(&["check", "."], &target);
@@ -278,7 +275,6 @@ fn an_unlabelled_block_is_relabelled_in_place_once() {
 /// A labelled block is a block: the current one is `exists`, a hand-edited older one
 /// is outdated and re-rendered, never malformed.
 #[test]
-#[ignore = "red until #827 labels the block heading; implement removes this"]
 fn a_labelled_block_inside_the_delimiters_is_read() {
     let target = reported_tree("block_label_is_read");
     let file = format!("# Title\n\n{BEGIN}\n## Grounding with grund (block v30)\n\nold\n{END}\n");
@@ -293,7 +289,6 @@ fn a_labelled_block_inside_the_delimiters_is_read() {
 
 /// A newer revision is refused in the new spelling as in the old, with nothing written.
 #[test]
-#[ignore = "red until #827 labels the block heading; implement removes this"]
 fn a_newer_labelled_block_is_refused_without_writes() {
     let target = reported_tree("block_label_newer_refused");
     let file = format!("# Title\n\n{BEGIN}\n## Grounding with grund (block v99)\n\nnew\n{END}\n");
@@ -312,7 +307,6 @@ fn a_newer_labelled_block_is_refused_without_writes() {
 /// Outside the delimiters the labelled heading opens no legacy block (§FS-init.2.3.9.2):
 /// the file has no block, so `init` appends one and keeps the text as it was.
 #[test]
-#[ignore = "red until #827 labels the block heading; implement removes this"]
 fn a_labelled_heading_without_delimiters_opens_no_legacy_block() {
     let target = reported_tree("block_label_no_legacy");
     let file = "# Title\n\n## Grounding with grund (block v3)\n\nmine\n";

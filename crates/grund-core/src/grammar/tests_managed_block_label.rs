@@ -22,7 +22,6 @@ fn found(text: &str) -> (usize, usize, u32) {
 }
 
 #[test]
-#[ignore = "red until #827 reads the labelled heading; implement removes this"]
 fn both_spellings_inside_the_delimiters_carry_the_same_version_and_span() {
     for eol in ["\n", "\r\n"] {
         let old = delimited("## Grounding with grund (v30)", eol);

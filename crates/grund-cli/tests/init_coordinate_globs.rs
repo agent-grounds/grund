@@ -1,5 +1,5 @@
 //! The managed block, the query guide and the `grund-init` skill teach coordinate globs in place
-//! of the `jq` pipe (§FS-init.2.3.4.3.1), and the block that does is v27 (§FS-init.2.3.7.1).
+//! of the `jq` pipe (§FS-init.2.3.4.3.1), and every block from v27 does (§FS-init.2.3.7.1).
 
 use std::fs;
 
@@ -37,8 +37,8 @@ fn glob_bullet(agents: &str) -> Option<&str> {
 fn init_block_teaches_the_glob_recipe() {
     let agents = init_agents(&workdir("init_block_teaches_the_glob_recipe"));
     assert!(
-        agents.contains("## Grounding with grund (v27)"),
-        "teaching globs is block v27"
+        agents.contains("## Grounding with grund (block v31)"),
+        "the current base block, v31, teaches globs"
     );
     let bullet = glob_bullet(&agents).expect("a bullet teaching `grund list --glob`");
     for needle in [

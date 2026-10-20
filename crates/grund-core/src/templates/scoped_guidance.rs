@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 use std::path::{Component, Path};
 
 use crate::config::{Extent, Project, Row, Run, SchemaView};
+use crate::grammar::agents_block_heading;
 
 use super::citation_directions::{
     bullet_row_order, root_citation_directions, row_has_bullet, row_has_grounding_clause,
@@ -130,8 +131,10 @@ impl Layout {
         chapter_rules: Option<&str>,
     ) -> String {
         let sections = self.scoped_sections(project, run, dir, chapter_rules);
+        // §FS-init.2.3.9.3: the same labelled version heading as the root block.
         let mut block = format!(
-            "<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (v{version})\n\nThese rules cover the files under `{dir}/`; the rest of this project's grund guidance is in the root `AGENTS.md`.\n"
+            "<!-- BEGIN GRUND MANAGED BLOCK -->\n{}\n\nThese rules cover the files under `{dir}/`; the rest of this project's grund guidance is in the root `AGENTS.md`.\n",
+            agents_block_heading(version)
         );
         for (_, bytes) in sections {
             if let Some(bytes) = bytes {

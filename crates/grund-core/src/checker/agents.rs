@@ -1,6 +1,7 @@
 use crate::config::Frame;
 use crate::grammar::{
-    AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup, find_agents_block,
+    AGENTS_BLOCK_BASE_VERSION, AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup,
+    find_agents_block,
 };
 use crate::model::{CheckReport, Diagnostic, Expected, ExpectedEntrypoint, ScopedExpectation};
 use crate::sources::Sources;
@@ -193,10 +194,11 @@ pub(crate) fn check_agent_block_path(
 }
 
 /// Whether a supported block is newer than the version the config selects. A
-/// v29 or v30 block where v27 or v28 is selected is not: it is stale, not
+/// v33 or v34 block where v31 or v32 is selected is not: it is stale, not
 /// unsupported (§FS-init.2.3.7.1).
 fn newer_than_selected(version: u32, expected_version: u32) -> bool {
-    let scoped_where_unscoped = version >= 29 && expected_version <= 28;
+    let scoped = AGENTS_BLOCK_BASE_VERSION + 2;
+    let scoped_where_unscoped = version >= scoped && expected_version < scoped;
     !scoped_where_unscoped && version > expected_version
 }
 
