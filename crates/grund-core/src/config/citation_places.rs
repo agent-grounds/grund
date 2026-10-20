@@ -1,13 +1,13 @@
-//! Configured citation routes for refused place subjects
-//! (§FS-rule-refusals.sentences.rewrite.no-form.place).
+//! A view of normalized rows and their configured citation tables
+//! (§AR-config.1.3, §FS-config-v2.rules.citations).
 
 use super::project::Schema;
 use super::rows::Extent;
 use super::validate::citations_table;
 
-/// A scanned non-citable row's explicit places and active-version citation
-/// table (§FS-rule-refusals.sentences.rewrite.no-form.place). This is config
-/// data, independent of whether a citation obligation has already been written.
+/// A scanned non-citable row's explicit places (§AR-config.1.3) and active-version
+/// citation table (§FS-config-v2.rules.citations, §FS-config.3.9), independent of
+/// whether a citation obligation has already been written.
 #[derive(Clone, Debug)]
 pub(crate) struct CitationPlace {
     pub(crate) name: String,
@@ -16,8 +16,9 @@ pub(crate) struct CitationPlace {
     pub(crate) table: String,
 }
 
-/// Derive the eligible places once from normalized rows, retaining each
-/// scanned file/folder separately (§FS-rule-refusals.sentences.rewrite.no-form.place).
+/// Project each normalized row's scanned file/folder places (§AR-config.1.3,
+/// §FS-config-v2.schema.places.boundaries.6), reading the active-version table
+/// spelling from the config validator (§FS-config-v2.rules.citations, §FS-config.3.9).
 pub(crate) fn citation_places(schema: &Schema, version: u32) -> Vec<CitationPlace> {
     let table = citations_table(version);
     schema

@@ -1,0 +1,18 @@
+grund_config_version = 2
+project_name = "place-obligations"
+
+[schema]
+id_format = "{kind}-{slug}"
+
+[schema.kinds.AR]
+files = ["architecture.md"]
+
+[schema.kinds.FS]
+files = ["requirements.md"]
+
+[schema.kinds.e2e]
+folders = ["tests/e2e"]
+citable = false
+
+[rules.citations.e2e]
+must = ["FS"]

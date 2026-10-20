@@ -113,8 +113,8 @@ pub(crate) fn vocabulary(schema: &Schema, frame: Frame<'_>) -> RuleVocabulary {
         kinds,
         named_sections: table.named_sections(scope),
         named_kinds: BTreeSet::new(),
-        // §FS-rule-refusals.sentences.rewrite.no-form.place: both rule surfaces
-        // carry the same local place routes beside their shared kind reasons.
+        // §AR-rules.1, §AR-config.1.5: wire both rule surfaces to the same
+        // project-local vocabulary and configured place routes.
         non_citable: crate::rules::sentence::SubjectKinds::for_rules(
             table.non_citable_entries(scope),
             schema,

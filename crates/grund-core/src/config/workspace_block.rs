@@ -63,11 +63,9 @@ fn validate_workspace_member(path: &Path, line: usize, member: &str) -> Result<(
             )
         })
         || member.contains('\\')
+        || has_dot_path_component(member)
         || member.split('/').enumerate().any(|(index, part)| {
-            part.is_empty()
-                || part == "."
-                || part == ".."
-                || (index == 0 && looks_like_windows_drive_prefix(part))
+            part.is_empty() || (index == 0 && looks_like_windows_drive_prefix(part))
         })
         || member.matches('*').count() > 1
         || (member.contains('*') && !member.ends_with("/*"))
@@ -78,6 +76,13 @@ fn validate_workspace_member(path: &Path, line: usize, member: &str) -> Result<(
         ));
     }
     Ok(())
+}
+
+/// Whether a raw slash-separated path contains a literal `.` or `..` component
+/// (§FS-workspace.2.3). Preserve interior dots that `Path::components` may discard;
+/// callers retain their other path policies.
+pub(crate) fn has_dot_path_component(path: &str) -> bool {
+    path.split('/').any(|part| part == "." || part == "..")
 }
 
 fn looks_like_windows_drive_prefix(part: &str) -> bool {

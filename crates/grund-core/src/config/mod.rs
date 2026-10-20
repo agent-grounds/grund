@@ -158,8 +158,9 @@ pub(crate) use v1::{
 };
 pub(crate) use validate::citations_table;
 pub(crate) use workspace_block::{
-    INVALID_ALIAS_PATH_EXPECTED, both_member_lists_message, invalid_alias_path_segment,
-    invalid_project_alias_message, is_valid_project_alias, optional_member_alias_segment,
+    INVALID_ALIAS_PATH_EXPECTED, both_member_lists_message, has_dot_path_component,
+    invalid_alias_path_segment, invalid_project_alias_message, is_valid_project_alias,
+    optional_member_alias_segment,
 };
 
 // What only the crate's own test modules read (§AR-core-module-layout.1.3): the

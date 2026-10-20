@@ -4,7 +4,9 @@
 use std::collections::BTreeMap;
 
 use super::RuleVocabulary;
-use crate::config::{CitationPlace, KindEntry, Schema, citation_places, escape_toml_basic};
+use crate::config::{
+    CitationPlace, KindEntry, Schema, citation_places, escape_toml_basic, has_dot_path_component,
+};
 
 /// Non-citable subject kinds and their optional place routes. Selectors keep
 /// only the kind entries; rules add their project's routes once
@@ -54,7 +56,7 @@ impl SubjectKinds {
         }
         let mut matches = self.places.iter().filter(|place| {
             if let Some(path) = subject.strip_prefix("Each file in ") {
-                if path.split('/').any(|part| part == "." || part == "..")
+                if has_dot_path_component(path)
                     || path.starts_with('/')
                     || path.contains(['*', '?', '[', ']'])
                 {
