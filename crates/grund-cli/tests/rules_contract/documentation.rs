@@ -239,7 +239,7 @@ fn guide_marked_rows_execute_against_the_released_parser() {
         assert_eq!(text(&output.stderr), format!("error: {reason}\n{after}"));
         refused_count += 1;
     }
-    assert_eq!(refused_count, 17, "refused guide-row inventory drifted");
+    assert_eq!(refused_count, 20, "refused guide-row inventory drifted");
 }
 
 /// The guide may not teach the emptiness rule in words the specification does
