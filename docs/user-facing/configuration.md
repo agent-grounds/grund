@@ -405,7 +405,7 @@ characters in the value are escaped so the message stays on one line.
 [§FS-config-v2.rollout.fmt-values](../functional-spec/FS-config-v2.md#rolloutfmt-values-a-recognized-formatting-key-names-the-value-it-cannot-execute)
 
 ```text
-error: grund.toml:5: `[presentation.fmt] links` is part of the v2 format but not supported by this grund yet; value "off" is not supported; this grund executes only links = "index"
+error: grund.toml:5: `[presentation.fmt] links` is part of the v2 format but not supported by this grund yet; unsupported value "off"; executes only links = "index"
 ```
 
 ### `[workspace]`

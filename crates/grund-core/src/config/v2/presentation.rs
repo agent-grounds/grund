@@ -88,8 +88,8 @@ pub(super) fn fmt_key(r: &mut Reader, key: &str, value: &str, line: usize) -> Re
                 return r.fail(
                     line,
                     format!(
-                        "{refusal}; value {supplied:?} is not supported; \
-                         this grund executes only {key} = {executed:?}"
+                        "{refusal}; unsupported value {supplied:?}; \
+                         executes only {key} = {executed:?}"
                     ),
                 );
             }
