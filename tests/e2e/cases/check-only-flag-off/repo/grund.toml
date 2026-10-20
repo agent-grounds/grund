@@ -1,0 +1,12 @@
+grund_config_version = 2
+project_name = "example"
+[schema.sources]
+languages = ["markdown"]
+[schema.kinds.REQ]
+folders = ["docs/req"]
+index = false
+[schema.kinds.FS]
+folders = ["docs/fs"]
+index = false
+[rules.citations.FS]
+should = ["REQ"]

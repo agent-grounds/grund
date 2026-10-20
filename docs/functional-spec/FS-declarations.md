@@ -784,7 +784,8 @@ titled with a link anywhere else, and nothing warns about either.
 
 - **Code:** `stub-shape` stays in the catalog of codes, so `--only stub-shape` and
   `--ignore stub-shape` are still accepted ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)) and select nothing; neither
-  `check` nor the editor ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)) reports it.
+  `check` nor the editor ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)) reports it, and `--only stub-shape`
+  says the check is spent with the off line of [§FS-check.1.4.1](FS-check.md#141-a-selected-check-the-run-leaves-off-says-so).
 - **Release:** the route was [§DF-stubs-by-home-and-at-the-target](../decisions/functional/DF-stubs-by-home-and-at-the-target.md#df-stubs-by-home-and-at-the-target-a-rule-declared-through-a-stub-applies-now-and-a-stub-is-read-by-its-home-and-shown-at-its-target-from-0190). This address, heading text
   included, is kept only so citations written during the window still resolve.
 
@@ -798,7 +799,8 @@ emits `excluded-stub-target`.
 The code remains accepted by `--only` and `--ignore` ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)) and selects
 no findings. An old `--ignore excluded-stub-target` leaves the replacement error
 visible; an old `--only excluded-stub-target` selects no replacement error and
-keeps normal selected-report exit semantics. Select `broken-stub` for the replacement.
+keeps normal selected-report exit semantics, and says the check is spent with the
+off line of [§FS-check.1.4.1](FS-check.md#141-a-selected-check-the-run-leaves-off-says-so), which names `broken-stub`, the replacement to select.
 JSON field shapes stay unchanged. This heading and coordinate remain for old citations.
 The release route and compatibility notice are [§DF-stub-target-exclusions.release-note](../decisions/functional/DF-stub-target-exclusions.md#release-note-release-note).
 
@@ -985,7 +987,7 @@ A warning-only run exits `0` and replaces the text `success` line; JSON uses the
 
 #### checks.oversized-lead.3: Only the key activates it
 
-The absent key activates no measurement or finding and leaves the existing text and JSON check output byte-identical. `--only oversized-lead` and `--ignore oversized-lead` select the finding after the complete check and never activate it.
+The absent key activates no measurement or finding, and a run that does not select the code leaves the existing text and JSON check output byte-identical. `--only oversized-lead` and `--ignore oversized-lead` select the finding after the complete check and never activate it; `--only oversized-lead` without the key prints the off line of [§FS-check.1.4.1](FS-check.md#141-a-selected-check-the-run-leaves-off-says-so), naming the key, in place of `success`.
 
 #### checks.oversized-lead.4: Which sites it judges
 

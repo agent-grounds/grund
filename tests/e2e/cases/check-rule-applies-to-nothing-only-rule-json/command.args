@@ -1,0 +1,1 @@
+check --rule "Each e2e must cite at least one FS." --only-rule --format json {repo}

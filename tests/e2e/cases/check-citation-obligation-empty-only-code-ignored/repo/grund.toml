@@ -1,0 +1,12 @@
+grund_config_version = 2
+project_name = "example"
+[schema.sources]
+languages = ["markdown"]
+[schema.kinds.FS]
+folders = ["docs/fs"]
+index = false
+[schema.kinds.e2e]
+folders = ["tests/e2e"]
+index = false
+[rules.citations.e2e]
+must = ["FS"]

@@ -1,0 +1,1 @@
+check --rule "Each e2e must not cite any FS." --only-rule {repo}

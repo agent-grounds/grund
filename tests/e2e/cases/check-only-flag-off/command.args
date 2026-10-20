@@ -1,0 +1,1 @@
+check --only out-of-scope-dangling --only suggested-citation {repo}

@@ -1,0 +1,1 @@
+{"severity":"warning","path":null,"line":null,"code":"empty-citation-obligation","message":"--rule applies to nothing — tests/e2e/ declares no e2e ID","sites":null,"authority":["--rule"]}
