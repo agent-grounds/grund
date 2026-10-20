@@ -72,25 +72,21 @@ fn refusal(name: &str, key: &str, authored: &str, quoted_value: &str, executed: 
 }
 
 #[test]
-#[ignore = "red until #826 appends rejected value and executed assignment; implement removes this"]
 fn links_off_names_value_and_executed_assignment() {
     refusal("links-off", "links", "\"off\"", "\"off\"", "index");
 }
 
 #[test]
-#[ignore = "red until #826 appends rejected value and executed assignment; implement removes this"]
 fn anchors_none_names_value_and_executed_assignment() {
     refusal("anchors-none", "anchors", "\"none\"", "\"none\"", "github");
 }
 
 #[test]
-#[ignore = "red until #826 appends rejected value and executed assignment; implement removes this"]
 fn links_all_names_value_and_executed_assignment() {
     refusal("links-all", "links", "\"all\"", "\"all\"", "index");
 }
 
 #[test]
-#[ignore = "red until #826 appends rejected value and executed assignment; implement removes this"]
 fn anchors_gitlab_names_value_and_executed_assignment() {
     refusal(
         "anchors-gitlab",
@@ -102,14 +98,12 @@ fn anchors_gitlab_names_value_and_executed_assignment() {
 }
 
 #[test]
-#[ignore = "red until #826 quotes and escapes rejected values on one line; implement removes this"]
 fn links_escaped_value_stays_on_one_line() {
     let quoted = r#""quo\"te\\path\nnext\r\t""#;
     refusal("links-escaped", "links", quoted, quoted, "index");
 }
 
 #[test]
-#[ignore = "red until #826 quotes and escapes rejected values on one line; implement removes this"]
 fn anchors_escaped_value_stays_on_one_line() {
     let quoted = r#""quo\"te\\path\nnext\r\t""#;
     refusal("anchors-escaped", "anchors", quoted, quoted, "github");
