@@ -65,7 +65,6 @@ fn assert_check_advice(report: &str, step: usize, warning: &str) {
 /// §FS-init.2.2.2, §FS-init-fixtures.2: scaffold advice agrees with the actual
 /// successful check's expected warning (§FS-check.4.5), before grounding begins.
 #[test]
-#[ignore = "red until #870 corrects scaffold check advice; implement removes this"]
 fn scaffold_check_advice_explains_the_expected_warning() {
     let target = fresh_git_repo("scaffold_check_advice_explains_the_expected_warning");
     let init = run_grund(
@@ -81,7 +80,6 @@ fn scaffold_check_advice_explains_the_expected_warning() {
 /// §FS-init.2.2.2, §FS-init-fixtures.1: non-scaffold advice predicts the same
 /// expected warning when its re-run instruction is followed on a fresh tree.
 #[test]
-#[ignore = "red until #870 corrects non-scaffold check advice; implement removes this"]
 fn non_scaffold_check_advice_explains_the_expected_warning() {
     let target = fresh_git_repo("non_scaffold_check_advice_explains_the_expected_warning");
     let init = run_grund(&["init", "--name", "demo", "--agents-md"], &target);

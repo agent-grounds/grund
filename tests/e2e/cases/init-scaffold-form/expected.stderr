@@ -13,7 +13,7 @@ wrote tests/e2e/README.md
 wrote tests/integration/.gitkeep
 
 next:
-  1. run `grund check` — a freshly scaffolded tree is clean
+  1. run `grund check` — on a fresh scaffold it warns "nothing recognized" until the first declaration; this is expected (exit 0), no repair needed
   2. allocate an ID:  ID=$(grund id FS "…")  then add it under docs/functional-spec
      (H1: `# <ID>: <one-line statement of the behavior>`)
   3. cite it as §<ID> from the docs and e2e tests that depend on it, then `grund check` again
