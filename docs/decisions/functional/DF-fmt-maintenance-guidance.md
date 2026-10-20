@@ -23,8 +23,8 @@ current pairs advanced together ([§FS-init.2.3.7.1](../../functional-spec/FS-in
 
 ## release-note: Release note
 
-The managed agent block now teaches `grund fmt --write` after authored declaration
-renames or file moves. Its versions advance from v31/v32 to v35/v36 and from
-v33/v34 to v37/v38. Existing blocks are reported outdated by `grund check` and
-`grund init --check`; run `grund init` to refresh them, preserving unmanaged text.
-Formatter link, lock, and preview/write behavior is unchanged.
+- The managed agent block now teaches `grund fmt --write` after authored declaration
+  renames or file moves. Its versions advance from v31/v32 to v35/v36 and from
+  v33/v34 to v37/v38. Existing blocks are reported outdated by `grund check` and
+  `grund init --check`; run `grund init` to refresh them, preserving unmanaged text.
+  Formatter link, lock, and preview/write behavior is unchanged.

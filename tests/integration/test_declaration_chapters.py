@@ -97,6 +97,9 @@ CITED = (
 # It grew again by the 217-byte clause of §FS-fmt.2.5.2.2: a directive inside a
 # multi-line string literal is data (grund#702).
 
+# Its lead grew by 404 LF bytes teaching existing link and eligible-lock maintenance
+# via §FS-fmt.6.3 and §FS-section-lock.write.rules (grund#824).
+
 # Each adds the bytes of the requirements chapter its spec gained since (#634: 5295
 # and 4680), so the room a restatement could grow back into is what it was.
 
@@ -121,7 +124,7 @@ CITED = (
 
 # FS-fmt.md grew by 162 bytes in §FS-fmt.1 and §FS-fmt.3.2, citing §FS-scan.path.none for
 # what a run with no path covers rather than restating it (grund#854).
-BASELINES = {"FS-show.md": 68393, "FS-fmt.md": 98722}
+BASELINES = {"FS-show.md": 68393, "FS-fmt.md": 99126}
 
 
 def _flat(text):
