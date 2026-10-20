@@ -102,6 +102,9 @@ offers no rewrite, `check --rule` prints the reason alone and then the line
 | `FS-login.2 must cite at least one REQ.` | `numbered chapter subjects can detach when headings move; accepted form: FS-login must cite at least one REQ.` |
 | `FS-login.requirements must cite at least one REQ.` with named sections off | `named chapter subjects require [id] named_sections = true; accepted form after enabling it: FS-login.requirements must cite at least one REQ.` |
 | `Each POLICY must cite at least one GOAL.` | `unknown kind "POLICY"`, and no rewrite |
+| `Every AR must cite at least one FS.` | `quantifier "every" is not accepted; accepted form: Each AR must cite at least one FS.` |
+| `The design chapter of every AR must cite at least one FS.` | `quantifier "every" is not accepted; accepted form: The design chapter of each AR must cite at least one FS.` |
+| `AR-trace.design must cite every FS exactly once.` | `quantifier "every" is not accepted; accepted form: AR-trace.design must cite each FS exactly once.` |
 
 `FS-missing must cite at least one GOAL.` is syntactically valid and therefore
 is not a pre-scan refusal. After scanning it produces the exact resolution
@@ -112,6 +115,40 @@ declaration or a kind the sentence never typed. The decision to replace those
 rewrites in place, and every other fixed rewrite with one built from the
 typed sentence, is
 [§DF-rule-refusal-rewrites](../decisions/functional/DF-rule-refusal-rewrites.md#df-rule-refusal-rewrites-a-refused-rules-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced-in-place).
+
+### sentences.every: Unsupported every is refused as a quantifier, with an each repair
+
+`Every KIND`, `The NAME chapter of every KIND`, and `cite every KIND COUNT`
+remain outside the closed grammar of [§FS-rules.2](FS-rules.md#2-subject-selectors)
+and [§FS-rules.3.3](FS-rules.md#33-per-target-coverage). On both rule surfaces,
+`check --rule` and a configured declaration's `invalid-rule` finding, their
+reason is `quantifier "every" is not accepted`, rather than a count or literal
+subject failure. The first two are subject refusals at stage 5; the last is a
+predicate refusal at stage 6 ([§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails)).
+
+The repair replaces only that quantifier token: `Every` becomes `Each`, and
+`every` becomes `each`. It keeps the typed subject, complete chapter path,
+modality, valid count and object kind, including configured non-default kinds.
+The whole sentence is offered only after the ordinary reparse accepts it
+([§FS-rule-refusals.sentences.rewrite.reparsed](FS-rule-refusals.md#sentencesrewritereparsed-a-form-is-parsed-before-it-is-offered)); further refused productions
+are repaired by that same contract, and missing pieces are never guessed.
+In particular an unknown kind leaves no form and earns `known kinds:` on the
+ad-hoc surface. Earlier stages retain their reasons, so a missing period,
+conjunction or refused modality takes precedence over this subject refusal,
+and a refused subject takes precedence over `cite every`.
+
+On `list --selector`, the two subject spellings get the same quantifier reason
+and the corresponding complete selector with `Each` or `each`, reparsed under
+the same configuration before it is offered. This refusal adds no breadcrumb.
+Where no configured kind can be recovered, no selector is offered and
+`known kinds:` follows. Existing named-sections guidance still governs a repair
+that needs named sections; this quantifier reason cannot label an offer as
+accepted after enabling them.
+
+Only these quantifier positions are covered. A genuine chapter name `every`,
+a component such as `every.detail`, and an ID such as `SYS-every` remain intact,
+including inside a repair of a different token. No synonym, case normalization,
+new accepted sentence or selector, exit change, or evaluation change follows.
 
 ### sentences.whitespace: Presence-name whitespace refusal
 
@@ -440,6 +477,7 @@ is anything else, nothing follows the reason. A configured rule declaration's
 | modality `may not` | `must not` | — |
 | `cite no` | `<modality> not cite any` | — |
 | lowercase `each` | `Each` | — |
+| unsupported `Every` or `every` ([§FS-rule-refusals.sentences.every](FS-rule-refusals.md#sentencesevery-unsupported-every-is-refused-as-a-quantifier-with-an-each-repair)) | only the quantifier token, with `Each` or `each` in the same position | the ordinary reparse cannot build an accepted form; `known kinds:` follows only where a kind could not be supplied |
 | no terminal `.` | appends `.` | — |
 | numeric `at least 1`, `exactly 1` | `at least one`, `exactly one` | — |
 | numeric `at least 1 times`, `at most 1 times`, `exactly 1 times` | `at least once`, `at most once`, `exactly once` | — |
@@ -593,8 +631,8 @@ as one table so it does not depend on how one phrase of another point is read:
 | 2. fixed word and phase-1 subject | `each` for `Each`, and the deliberate phase-1 absences of [§FS-rules.12](FS-rules.md#12-deliberate-phase-1-absences): a path subject (`Each file in`), `Each */KIND`, `Each chapter of each KIND`, and a section-component wildcard in the first clause's subject, in any spelling | `FS-x.* must cite at least one FS and must not cite any FS.` | `section-component wildcards are not accepted in phase 1` |
 | 3. conjunction | clauses joined by `and` ([§FS-rule-refusals.sentences.conjunction](FS-rule-refusals.md#sentencesconjunction-any-clauses-joined-by-and-are-refused-as-a-conjunction)) | `Each FS may not cite any FS and must cite at least one FS.` | `conjunctions are not accepted` |
 | 4. modality | no accepted modality, `may not` included | `Each POLICY may not cite any FS.` | `modality "may not" is not accepted` |
-| 5. the rest of the subject | an unknown or non-citable kind, named sections off, the section grammar, a numbered chapter, the ID grammar, a chapter named after a modal word ([§FS-rule-refusals.sentences.modal-chapter](FS-rule-refusals.md#sentencesmodal-chapter-a-chapter-named-after-a-modal-word-is-refused-for-that-name)) | `Each POLICY must cite no FS.` | `unknown kind "POLICY"` |
-| 6. the predicate | the verb, quantifier, count (including per-target numeric `at most 1 times`) and object kind, and a chapter subject that would have chapters | `Each FS must cite no FS.` | `"cite no" is not accepted` |
+| 5. the rest of the subject | unsupported `Every KIND` or `The NAME chapter of every KIND`, an unknown or non-citable kind, named sections off, the section grammar, a numbered chapter, the ID grammar, a chapter named after a modal word ([§FS-rule-refusals.sentences.modal-chapter](FS-rule-refusals.md#sentencesmodal-chapter-a-chapter-named-after-a-modal-word-is-refused-for-that-name)) | `Each POLICY must cite no FS.` | `unknown kind "POLICY"` |
+| 6. the predicate | the verb, quantifier (including `cite every`), count (including per-target numeric `at most 1 times`) and object kind, and a chapter subject that would have chapters | `Each FS must cite no FS.` | `"cite no" is not accepted` |
 
 The examples are read in a repository whose one kind is `FS`, with named
 sections on. Two sentences the table of [§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals) gives whole,
@@ -636,7 +674,7 @@ reader can paste back into `--selector`.
 
 The reason is the one [§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals) gives for the same subject wherever that
 reason is true, so a rule and a selector never disagree about what failed.
-Four refusals name the true failure in place of a grammar or vocabulary
+Five refusals name the true failure in place of a grammar or vocabulary
 mismatch. A numbered component reached through `KIND.NAME` or
 `The NAME chapter of each KIND` gets the numbered reason the ID spelling gets.
 A wildcard component reached the same way gets the wildcard reason.
@@ -645,6 +683,8 @@ kind. `Each */KIND` gets the namespace reason the rule sentence gets, not an
 unknown kind. An empty component, left by a doubled or trailing separator, is
 not a number in any spelling, so it gets the section-grammar reason and no
 breadcrumb ([§FS-rule-refusals.sentences.chapter-path](FS-rule-refusals.md#sentenceschapter-path-a-chapter-path-is-refused-for-the-component-that-failed)).
+`Every KIND` and `The NAME chapter of every KIND` get the unsupported-quantifier
+reason and token-only repair of [§FS-rule-refusals.sentences.every](FS-rule-refusals.md#sentencesevery-unsupported-every-is-refused-as-a-quantifier-with-an-each-repair), rather than a literal-ID mismatch.
 
 A fixed word in the wrong case, as in `each FS`, keeps the reason the selector
 has always printed and adds the rule's. The literal-subject reason stays a
@@ -732,6 +772,8 @@ refusals. A line marked *hint* is the breadcrumb above.
 | `Each chapter of each FS` | `chapter-quantified subjects are not accepted in phase 1; accepted selector: Each FS` | hint |
 | `*/FS` | `subject namespaces must be local in phase 1; accepted selector: FS` | none |
 | `Each */FS` | `subject namespaces must be local in phase 1; accepted selector: Each FS` | none |
+| `Every FS` | `quantifier "every" is not accepted; accepted selector: Each FS` | none |
+| `The requirements chapter of every FS` | `quantifier "every" is not accepted; accepted selector: The requirements chapter of each FS` | none |
 | `FS.Requirements` | `named chapter subject "FS.Requirements" does not match the configured section grammar; accepted selector: FS` | none |
 | `Each POLICY` | `unknown kind "POLICY"` | `known kinds: FS` |
 | `POLICY.requirements` | `literal subject "POLICY.requirements" does not match the configured ID grammar` | `known kinds: FS` |

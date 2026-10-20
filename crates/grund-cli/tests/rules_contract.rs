@@ -12,6 +12,8 @@ mod conjunctions;
 mod count_range;
 #[path = "rules_contract/documentation.rs"]
 mod documentation;
+#[path = "rules_contract/every_quantifier.rs"]
+mod every_quantifier;
 #[path = "rules_contract/modal_chapter.rs"]
 mod modal_chapter;
 #[path = "rules_contract/paste_back.rs"]
