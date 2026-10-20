@@ -423,3 +423,40 @@ fn validate_config_at_a_workspace_root_fails_on_a_broken_member() {
         "the error must carry the member's own diagnosis: {message}"
     );
 }
+
+/// §FS-distribution.3.0.2: an empty batch succeeds without loading the broken
+/// config beside it, and its result has the `note` a non-empty batch has, in
+/// the Python and the Node envelope alike.
+#[test]
+fn empty_show_batch_is_a_complete_result_without_configuration() {
+    use serde_json::{Value, json};
+    let root = test_root("empty_show_batch_is_a_complete_result_without_configuration");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = \"broken\"\n",
+    );
+    let python = embedding_call(EmbeddingRequest {
+        operation: "show_batch".into(),
+        root: root.clone(),
+        explicit: true,
+        args: vec![json!([])],
+        options: json!({}),
+    });
+    assert_eq!(python["failure"], Value::Null, "{python}");
+    assert_eq!(
+        python["result"],
+        json!({"records": [], "note": null, "run_cautions": []})
+    );
+    let request = node_request(
+        "showBatch",
+        vec![json!([]), json!({"root": root.to_string_lossy()})],
+        &root,
+    );
+    let node = node_embedding_call(request);
+    assert_eq!(node["failure"], Value::Null, "{node}");
+    assert_eq!(
+        node["result"],
+        json!({"records": [], "note": null}),
+        "{node}"
+    );
+}
