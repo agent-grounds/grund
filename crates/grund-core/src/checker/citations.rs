@@ -14,7 +14,7 @@ use super::obligation_units::{
 };
 use crate::config::{
     CitationDisjunction, CitationLevel, CitationTarget, Frame, KindCitationRules, NamespaceMatch,
-    Owners, Place, Row, Rules, Schema, render_citation_target, row_grounding,
+    Owners, Place, Row, Rules, Schema, citations_table, render_citation_target, row_grounding,
 };
 use crate::model::{Catalog, CheckReport, Citation, Diagnostic, E2eSpecRef, Id};
 use crate::scanner::file_home_kind;
@@ -268,7 +268,7 @@ fn empty_citation_obligation_warning(
     let place = folders.join(", ");
     // §FS-config-v2.rules.citations: v2 names the table, and the row key, its own way.
     let v2 = frame.version == 2;
-    let table = if v2 { "rules.citations" } else { "citations" };
+    let table = citations_table(frame.version);
     let message = if row.kind.is_some() {
         format!(
             "[{table}.{citing_kind}] {level} applies to nothing — {place} declares no {citing_kind} ID; did you mean `citable = false`?"

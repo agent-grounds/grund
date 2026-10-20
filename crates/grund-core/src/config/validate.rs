@@ -76,7 +76,7 @@ pub(super) fn lists(path: &Path, project: &Project) -> Result<Vec<String>> {
     if !project.rules.citations.declared {
         return Ok(Vec::new());
     }
-    let table = citations_table(project);
+    let table = citations_table(project.version);
     // §AR-config.1.5: a bare target and the citing side are judged in
     // this project's own scope, from its one reading of its kinds.
     let local = KindTable::standalone(&project.schema);
@@ -114,7 +114,7 @@ pub(super) fn pinned_citation_target_warnings(
     }
     pinned_target_warnings(
         path,
-        citations_table(project),
+        citations_table(project.version),
         &project.rules.citations,
         kinds,
     )
@@ -125,8 +125,8 @@ pub(super) fn pinned_citation_target_warnings(
 
 /// How a config spells its `[citations]` table in a message
 /// (§FS-config-v2.rules.citations): each version names the rules its own way.
-pub(crate) fn citations_table(project: &Project) -> &'static str {
-    if project.version == 2 {
+pub(crate) fn citations_table(version: u32) -> &'static str {
+    if version == 2 {
         "rules.citations"
     } else {
         "citations"

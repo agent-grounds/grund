@@ -171,7 +171,6 @@ fn guidance_contract(version: u8, subject: &str) {
 macro_rules! guidance_test {
     ($name:ident, $version:literal, $subject:literal) => {
         #[test]
-        #[ignore = "red until #828 place-subject refusals name the citation config; implement removes this"]
         fn $name() {
             guidance_contract($version, $subject);
             if $subject.ends_with('/') {
@@ -298,7 +297,6 @@ fn place_hint_preserves_other_surfaces_and_refusal_precedence() {
 /// §FS-rule-refusals.sentences.rewrite.no-form.place: rule declarations use
 /// the same refusal guidance without CLI-only known-kinds lines.
 #[test]
-#[ignore = "red until #828 invalid-rule reasons carry place config guidance; implement removes this"]
 fn rule_declarations_carry_place_guidance_in_both_versions() {
     let mut missing = Vec::new();
     for version in [1, 2] {
@@ -337,7 +335,6 @@ fn rule_declarations_carry_place_guidance_in_both_versions() {
 /// §FS-rule-refusals.sentences.rewrite.no-form.place: use the actual row
 /// and target, including a configured file rather than only a folder.
 #[test]
-#[ignore = "red until #828 file-place refusals name the actual row and target; implement removes this"]
 fn configured_file_place_guidance_uses_actual_row_and_target() {
     let mut missing = Vec::new();
     for version in [1, 2] {

@@ -43,6 +43,7 @@
 //! (§AR-config.3).
 
 mod call_scope;
+mod citation_places;
 mod citations;
 mod compiled;
 mod discovery;
@@ -81,6 +82,7 @@ mod workspace_block;
 pub(crate) use crate::sources::{
     check_input_observer, input_read_to_string, observe_input, with_check_input_observer,
 };
+pub(crate) use citation_places::{CitationPlace, citation_places};
 pub use citations::{
     CitationDisjunction, CitationLevel, CitationRules, CitationTarget, KindCitationRules,
     NamespaceMatch,
@@ -154,6 +156,7 @@ pub(crate) use v1::{
     DEFAULT_MARKER, DEFAULT_SECTION_SEPARATOR, default_kind_folder, parse_string_list,
     strip_comment,
 };
+pub(crate) use validate::citations_table;
 pub(crate) use workspace_block::{
     INVALID_ALIAS_PATH_EXPECTED, both_member_lists_message, invalid_alias_path_segment,
     invalid_project_alias_message, is_valid_project_alias, optional_member_alias_segment,

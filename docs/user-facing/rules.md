@@ -196,6 +196,22 @@ offers a selector for the two subject forms. A chapter actually named `every`,
 a nested `every.detail` path, and an ID such as `FS-every` remain valid.
 See [the quantifier refusal](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentencesevery-unsupported-every-is-refused-as-a-quantifier-with-an-each-repair).
 
+For a configured, scanned non-citable place `e2e` at `tests/e2e/`, both
+`Each e2e must cite at least one FS.` and
+`Each file in tests/e2e/ must cite at least one FS.` remain refused. Follow
+the supplementary hint to express this obligation in `grund.toml`:
+
+```toml
+[rules.citations.e2e]
+must = ["FS"]
+```
+
+Use `[citations.e2e]` in a version-1 config. This is configuration guidance;
+it offers no accepted sentence rewrite. See the [place-subject guidance](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentencesrewriteno-formplace-a-refused-place-subject-names-its-citation-configuration)
+for the exact matching boundary, and the [runnable example](https://github.com/agent-grounds/grund/tree/main/examples/rules)
+for the refusal and its citation-direction finding. Files with no citations
+remain exempt; require grounding separately if they must cite anything.
+
 Try a sentence without adding a declaration:
 
 ```bash

@@ -33,11 +33,19 @@ folder = "docs/rules"
 index = false
 rules = true
 
+[[kinds]]
+kind = "e2e"
+folder = "tests/e2e"
+citable = false
+
 [citations.RULE]
 must = ["GOAL"]
 
 [citations.FS]
 must = ["GOAL"]
 
+[citations.e2e]
+must = ["FS"]
+
 [scan]
-include = ["docs"]
+include = ["docs", "tests"]

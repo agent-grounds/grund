@@ -113,7 +113,13 @@ pub(crate) fn vocabulary(schema: &Schema, frame: Frame<'_>) -> RuleVocabulary {
         kinds,
         named_sections: table.named_sections(scope),
         named_kinds: BTreeSet::new(),
-        non_citable: table.non_citable_entries(scope),
+        // §FS-rule-refusals.sentences.rewrite.no-form.place: both rule surfaces
+        // carry the same local place routes beside their shared kind reasons.
+        non_citable: crate::rules::sentence::SubjectKinds::for_rules(
+            table.non_citable_entries(scope),
+            schema,
+            frame.version,
+        ),
         objects: table,
         id_grammars: vec![frame.grammar().clone()],
         section_separators: vec![schema.ids.section_separator.clone()],

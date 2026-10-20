@@ -71,7 +71,7 @@ pub(crate) fn check_list_scope(
             .into_iter()
             .map(str::to_string)
             .collect(),
-        non_citable: table.non_citable_entries(scope),
+        non_citable: table.non_citable_entries(scope).into(),
         id_grammars: selected_projects()
             .map(|project| project.config.grammar.clone())
             .collect(),
