@@ -104,7 +104,9 @@ warning whose exit did not change:
 2. *Accepted proof.* This record. The [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) deprecation path does not fit, because there is no old form to carry beside a new one: the missing line is the change. The [§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) mechanical migration has no command to run, because the remedy is the author's, among the ones the line names.
 3. *Named release.* The release note below names the change and the opt-outs.
 4. *Actionable findings.* Each line names the switch that turns the check on,
-   the replacement of a spent code, or the folder that holds no unit.
+   the replacement of a spent code, or the folder that holds no unit, and the
+   `invalid-rule` row that replaces `success` in the one exit that moves names
+   the rule to repair and why it could not run.
 5. *No new licence.* The route is not a licence for anything else: nothing is
    tightened or newly prohibited, and the one exit that moves is that of a run
    the unnarrowed check over the same tree already fails, as under
