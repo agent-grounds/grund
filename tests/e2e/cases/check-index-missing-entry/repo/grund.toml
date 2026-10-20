@@ -6,3 +6,6 @@ folder = "docs/functional-spec"
 
 [scan]
 include = ["docs"]
+
+[reference]
+strict = false
