@@ -39,7 +39,8 @@ that guidance even if a missing member or duplicate alias prevents its Workspace
 members list from rendering
 ([§FS-init.2.3.4.16](../functional-spec/FS-init.md#23416-project-boundaries)).
 For when and how to split off an independently checked app, package, service or
-subproject, run `grund agent-setup-instructions` and read “Splitting off a member”
+subproject, run `grund agent-setup-instructions --section members`, which prints
+“Splitting off a member”
 ([§FS-init.5.4](../functional-spec/FS-init.md#54-splitting-off-a-member)).
 
 ## `--scaffold`: a fresh repository
