@@ -1,14 +1,23 @@
 grund config — inspect the effective `grund.toml` discovered from a path.
 
 Usage:  grund config <show | validate> [PATH]
+        grund config explain [TARGET] [PATH] [--path PATH] [--codes | --all]
         grund config migrate --to 2 [PATH] [--write] [--drop-comments]
 
   show       print the effective config as TOML in the file's own version (defaults filled in for keys you didn't set).
   validate   parse the discovered config and report the first error; exit 0 if it's well-formed.
+  explain    say what a table, a key or a check code is, in the version the file is read as; with no target, list
+             the tables. It reads the file's version and nothing else, so a config other commands refuse is answered.
   migrate    print the version-2 file that means what this version-1 config means, and report where each key went;
              writes nothing unless --write is given.
 
 Options:
+  --codes              explain: every check code the version can report, one line each.
+                       e.g. grund config explain --codes
+  --all                explain: every table with its keys, then every check code.
+                       e.g. grund config explain --all
+  --path PATH          explain: the path to discover the config from, so the first positional stays the target.
+                       e.g. grund config explain oversized-lead --path docs/
   --to 2               migrate: the version to migrate to; required, and 2 is the only one.
                        e.g. grund config migrate --to 2
   --write              migrate: replace the config with the candidate, once both comparisons pass.
@@ -24,10 +33,11 @@ Options:
 PATH defaults to `.`; config is discovered by walking up from it — the root `grund.toml` is the home, `.agents/grund.toml` a deprecated fallback.
 There is no `--config <file>` override: it is discovered, not pointed at.
 
-Exit:  0 well-formed / printed / migrated · 1 `validate` found an error, or `migrate` refused · 2 no subcommand, or the config couldn't be read.
+Exit:  0 well-formed / printed / answered / migrated · 1 `validate` found an error, `explain` knows no such target, or `migrate` refused · 2 no subcommand, or the config couldn't be read.
 
 Examples:
   grund config show               # the effective config, defaults filled in
   grund config validate           # exit 1 if the discovered config has an error
   grund config show docs/         # the config that governs docs/
+  grund config explain oversized-lead   # what a check code means, its severity and what turns it on
   grund config migrate --to 2     # the version-2 file, previewed; nothing written

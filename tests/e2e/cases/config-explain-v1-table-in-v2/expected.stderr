@@ -1,0 +1,2 @@
+version 2 has no table `[scan]`: it is a version 1 table
+hint: version 2 writes its settings in [schema.sources], [schema.sources.extensions], [schema.sources.definitions.*], [schema.kinds.code]

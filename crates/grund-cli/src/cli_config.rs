@@ -6,12 +6,15 @@ fn command_config(args: &[String]) -> ExitCode {
     if action == "migrate" {
         return command_config_migrate(&args[1..]);
     }
+    if action == "explain" {
+        return command_config_explain(&args[1..]);
+    }
     if !matches!(action, "validate" | "show") {
         if action.starts_with('-') {
             eprintln!("error: unknown flag `{action}`");
         } else {
             eprintln!("error: unknown config command `{action}`");
-            eprintln!("expected: config validate, config show, config migrate");
+            eprintln!("expected: config validate, config show, config explain, config migrate");
         }
         return ExitCode::from(2);
     }

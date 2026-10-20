@@ -1,0 +1,22 @@
+No grund.toml here. grund init writes version 2; until a file exists, check reads version 1's defaults.
+
+Version 2:
+
+oversized-lead
+A declaration's lead is longer than the configured word limit.
+
+Severity: by strength: [schema.leads.words]. A strength gives: must an error, warn a warning, should a suggestion, may not checked.
+On: when [schema.leads.words] warn = <N> is set (a setting)
+    a must or should limit turns it on too, at that strength
+
+Next: grund config explain '[schema.leads.words]' /
+
+Version 1:
+
+oversized-lead
+A declaration's lead is longer than the configured word limit.
+
+Severity: warning, fixed.
+On: when [reference] lead_size_warning = { max = <N>, unit = "words" } is set (a setting)
+
+Next: grund config explain '[reference]' /

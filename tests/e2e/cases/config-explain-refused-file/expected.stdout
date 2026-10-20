@@ -1,0 +1,5 @@
+grund.toml is read as version 2.
+
+[schema.sources] exclude
+Values: array of strings
+Gitignore-style patterns, resolved against the config root, for paths the scan never reads. A stub whose target a pattern matches is broken, and the pattern is named as the reason its target is not read. Unlike version 1 there are no built-in names.

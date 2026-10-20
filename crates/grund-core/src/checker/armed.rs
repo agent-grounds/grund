@@ -7,7 +7,7 @@
 
 use std::collections::BTreeSet;
 
-use crate::model::catalog::{self, By, Severity};
+use crate::model::catalog::{self, ClauseBy, CodeSeverity};
 use crate::model::{Armed, Code, Switch};
 
 /// Where each switch is spelled: a row of the catalog and the position of its
@@ -69,7 +69,7 @@ impl ArmedChecks {
     pub(super) fn off_advice(&self, code: &str) -> Option<String> {
         let code = Code::named(code)?;
         let read = *self.versions.first()?;
-        if let Severity::Spent(spent) = &catalog::row(code).side(read).severity {
+        if let CodeSeverity::Spent(spent) = &catalog::row(code).side(read).severity {
             return Some(format!("the check is {spent}"));
         }
         let lacking: Vec<Option<&str>> = switches(code)
@@ -102,7 +102,7 @@ fn clause(code: Code, index: usize) -> Option<[Option<&'static str>; 2]> {
     let mut switched = false;
     let spelled = [2, 1].map(|version| {
         let clause = row.side(version).enabled.clauses().get(index)?;
-        switched |= clause.by != By::Condition;
+        switched |= clause.by != ClauseBy::Condition;
         Some(clause.text.as_str())
     });
     switched.then_some(spelled)
@@ -150,7 +150,7 @@ fn spelling(switch: Switch, versions: &BTreeSet<u32>) -> Option<&'static str> {
 pub(super) fn advised_codes() -> impl Iterator<Item = (Code, Vec<Switch>)> {
     Code::ALL.iter().filter_map(|code| {
         let switches = switches(*code);
-        let spent = matches!(catalog::row(*code).v2.severity, Severity::Spent(_));
+        let spent = matches!(catalog::row(*code).v2.severity, CodeSeverity::Spent(_));
         (spent || !switches.is_empty()).then_some((*code, switches))
     })
 }

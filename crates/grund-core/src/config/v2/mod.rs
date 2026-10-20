@@ -30,9 +30,9 @@ mod tables;
 mod tests_keys;
 mod walk;
 
-pub(super) use tables::admitted;
 #[cfg(test)]
-pub(super) use tables::{V1_TABLES, v1_homes};
+pub(super) use tables::V1_TABLES;
+pub(super) use tables::{admitted, v1_homes};
 
 use anyhow::Result;
 use std::path::Path;

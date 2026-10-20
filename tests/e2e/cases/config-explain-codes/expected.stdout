@@ -1,0 +1,69 @@
+grund.toml is read as version 2.
+
+agents-init: An agent entrypoint such as AGENTS.md lacks the grund init block it needs, or carries one this grund does not accept.
+broken-stub: A stub's link does not lead to a declaration of its ID.
+chapter-cardinality: A declaration has more or fewer chapters of a name than a rule's have sentence allows.
+citation-cardinality: A declaration cites a target more or fewer times than a rule allows.
+conflict-marker: A scanned file holds an unresolved merge-conflict block.
+dangling: A citation names an ID that no declaration declares.
+declaration-near-miss: A heading opens like a declaration, but its ID does not match its kind's ID format.
+deprecated-config-location: The config was read from .agents/grund.toml, a location that still works but is deprecated.
+discouraged-citation: A citation goes to a target that a should-not entry or rule discourages.
+duplicate: The same ID is declared more than once.
+duplicate-section: Two section headings in one declaration claim the same section path.
+empty-citation-obligation: A must or should citation obligation applies to a kind that has no unit for it to judge.
+empty-scan: The scan read no files at all, which usually means its scope is misconfigured.
+escaped-citation-resolves: An escaped citation names an ID or section that exists, so it may be a live citation escaped by mistake.
+excluded-stub-target: A stub led to a file the scan excludes; that case is now reported as a broken stub.
+forbidden-citation: A citation goes to a target that a must-not entry or rule forbids.
+full-scope-ignored: --full was given an explicit path, which it cannot widen, so it changed nothing.
+glob-citation: A marked citation is written as a pattern rather than as one ID.
+inline-citation-style: A citation's inline note in a code comment breaks the configured note style: too many lines, too wide, the wrong layout, or prose where only the citation is allowed.
+invalid-field-value: A field's value is not one of the values its kind admits for it.
+invalid-rule: A rule declaration cannot be read: its title, rationale, vocabulary or subject is invalid.
+invalid-section-lock: A line of a .grund/sections/ lock file is not an entry grund can read.
+invalid-value-binding: A value binding breaks the binding grammar or aims at something it cannot bind.
+invalid-value-declaration: A declaration of a kind that holds values is not a valid value.
+io: A file or directory could not be read, so the run's view of the tree is incomplete.
+local-section-citation: A marker followed by a bare section number is not a citation grund can resolve; write the full ID.
+misplaced-declaration: A declaration sits outside the home its kind is configured to live in.
+misplaced-field: A field does not stand where its kind places it.
+missing-citation: A declaration lacks a citation that a must entry or rule requires.
+missing-field: A declaration lacks a field its kind declares.
+missing-index-entry: A declaration in a kind's folder is not listed in that folder's index.
+missing-section: A citation names a section its declaration does not have.
+missing-snapshot: A citation targets a fetched kind whose declarations have not been fetched yet.
+mistitled-field: A field's heading is titled differently from the title its kind gives it.
+nothing-recognized: The scan read files but recognized no declaration and no citation in them.
+optional-member-absent: A workspace member listed as optional is not in this checkout, so it was not read.
+orphan-section: A named section path is used before every shorter prefix of it is recorded in the same declaration.
+out-of-scope-dangling: Under --full, a file outside the default scope cites an ID that no declaration declares.
+out-of-scope-local-section-citation: Under --full, a file outside the default scope writes a marker followed by a bare section number.
+out-of-scope-missing-section: Under --full, a file outside the default scope cites a section its declaration does not have.
+out-of-scope-shorthand-citation: Under --full, a file outside the default scope writes a number-only shorthand that matches no declaration or several.
+out-of-scope-unknown-project: Under --full, a file outside the default scope cites through a project alias the workspace does not know.
+oversized-lead: A declaration's lead is longer than the configured word limit.
+redundant-config: A directory holds both grund.toml and .agents/grund.toml, and only the first is read.
+relative-section-parent: A relative section heading has no parent section one level up for its path to extend.
+section-address-changed: A cited section's text has moved to another address, and the cited address now holds something else.
+section-heading-level: A section heading's Markdown depth does not match the depth of its section path.
+section-outside-declaration: A section heading sits outside every declaration's body.
+selected-check-off: A check that --only selected was off for the whole run, so it judged nothing.
+shorthand-citation: A number-only shorthand citation is written where the full ID is required, or matches no declaration or several.
+shorthand-numeric-run: A number-only shorthand citation is glued to another number, so grund fmt will not expand it.
+stub-shape: A heading whose title is one link was read as a stub by one test and as a declaration by another; that can no longer happen.
+suggested-citation: A declaration lacks a citation that a should entry or rule suggests.
+uncited-unit: A declaration or chapter is cited more or fewer times than a rule's be cited by sentence allows.
+undeclared-chapter: A declaration of a closed kind has a chapter that none of the kind's fields declares.
+ungrounded: A unit in a place that must be grounded neither cites nor declares an ID.
+unknown-project: A citation names a project alias that is not known, or a declaration or section that project does not have.
+unlinked-index-entry: An index entry cites a declaration bare rather than as a Markdown link.
+unlisted-workspace-block: A directory declares [workspace], but no enclosing workspace lists it among its members.
+unmarked-heading: A heading inside a declaration's body is neither a declaration nor a recognized section heading.
+unreached-declaration: A declaration lacks the chapter a chapter-scoped citation rule over its kind needs in order to reach it.
+unread-scan-root: A file the config names as a scan root is not read, because its name is hidden or its extension is not scanned.
+unrecorded-section-citation: A citation names a locked section address that has no entry in the section lock.
+unused: A declared ID is never cited.
+value-mismatch: A value binding's written value differs from the value its target declares.
+
+Next: grund config explain agents-init

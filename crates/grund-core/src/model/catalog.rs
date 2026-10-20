@@ -3,10 +3,6 @@
 //! grammar of §FS-errors.5.5.1 when `scripts/render_check_codes.py` rendered it.
 //! `grund config explain` prints it (§FS-config-explain.4) and the off line of
 //! §FS-check.1.4.1 is built from it, so the two read one copy (§AR-config.9.1).
-#![expect(
-    dead_code,
-    reason = "the off line reads the switches; `grund config explain` reads the rest"
-)]
 
 use once_cell::sync::Lazy;
 use serde::Deserialize;
@@ -33,14 +29,14 @@ pub(crate) struct Row {
 /// What a row says for a config file read as one version.
 #[derive(Debug, Deserialize)]
 pub(crate) struct Side {
-    pub(crate) severity: Severity,
-    pub(crate) enabled: Enabled,
+    pub(crate) severity: CodeSeverity,
+    pub(crate) enabled: CodeEnabled,
 }
 
 /// A *Severity* cell's side, read (§FS-errors.5.5.1).
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
 #[serde(tag = "kind", content = "text", rename_all = "lowercase")]
-pub(crate) enum Severity {
+pub enum CodeSeverity {
     /// `error` or `warning`, whatever is configured.
     Fixed(String),
     /// `none — suggestion`, shown only with `--suggestions`.
@@ -56,9 +52,9 @@ pub(crate) enum Severity {
 }
 
 /// An *Enabled by* cell's side, read (§FS-errors.5.5.1).
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
 #[serde(tag = "kind", rename_all = "lowercase")]
-pub(crate) enum Enabled {
+pub enum CodeEnabled {
     /// `—`: on in every run.
     Always,
     /// `not in version N`.
@@ -66,23 +62,23 @@ pub(crate) enum Enabled {
     /// Clauses every one of which the check needs, and the remark after the
     /// last one's `; `.
     Clauses {
-        clauses: Vec<Clause>,
+        clauses: Vec<CodeClause>,
         remark: Option<String>,
     },
 }
 
 /// One clause of an *Enabled by* cell and what it is turned on by.
-#[derive(Debug, Deserialize)]
-pub(crate) struct Clause {
-    pub(crate) text: String,
-    pub(crate) by: By,
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
+pub struct CodeClause {
+    pub text: String,
+    pub by: ClauseBy,
 }
 
 /// §FS-errors.5.5.1: a clause that says `is set` is a setting's, `is passed` a
 /// flag's, both either's, and neither a condition of the tree.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
-pub(crate) enum By {
+pub enum ClauseBy {
     Setting,
     Flag,
     Either,
@@ -96,12 +92,12 @@ impl Row {
     }
 }
 
-impl Enabled {
+impl CodeEnabled {
     /// The clauses of this side, none where it is always on or absent.
-    pub(crate) fn clauses(&self) -> &[Clause] {
+    pub(crate) fn clauses(&self) -> &[CodeClause] {
         match self {
-            Enabled::Clauses { clauses, .. } => clauses,
-            Enabled::Always | Enabled::Absent { .. } => &[],
+            CodeEnabled::Clauses { clauses, .. } => clauses,
+            CodeEnabled::Always | CodeEnabled::Absent { .. } => &[],
         }
     }
 }
@@ -120,6 +116,7 @@ pub(crate) fn row(code: Code) -> &'static Row {
 }
 
 /// The embedded catalog's rows, in code order.
+#[cfg(test)]
 pub(crate) fn rows() -> &'static [Row] {
     &ROWS
 }

@@ -1,2 +1,2 @@
 error: unknown config command `bogus`
-expected: config validate, config show, config migrate
+expected: config validate, config show, config explain, config migrate

@@ -1,0 +1,6 @@
+grund_config_version = 2
+project_name = "explain"
+
+# A version-1 table: every command but explain refuses this file.
+[scan]
+include = ["docs"]

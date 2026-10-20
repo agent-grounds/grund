@@ -41,6 +41,13 @@ use grund_core::{
     RefusalAnchor, config_migrate,
 };
 
+// §FS-config-explain: the one answer `grund config explain` returns, which this
+// crate prints (§AR-config.9).
+use grund_core::{
+    ClauseBy, CodeEnabled, CodeSeverity, ExplainAnswer, ExplainAsk, ExplainCode, ExplainKey,
+    ExplainTable, ExplainUnknown, config_explain,
+};
+
 // §FS-integrations.1.3: `grund integrations` is one engine operation
 // (§FS-distribution.3.1.3), whose answer this crate prints every byte of
 // (§AR-bindings.3).
@@ -126,6 +133,7 @@ include!("cli_fetch.rs");
 include!("cli_id.rs");
 include!("cli_init.rs");
 include!("cli_config.rs");
+include!("cli_config_explain.rs");
 include!("cli_config_migrate.rs");
 include!("cli_schema.rs");
 include!("cli_schema_table.rs");
