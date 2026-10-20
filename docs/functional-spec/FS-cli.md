@@ -107,7 +107,7 @@ The whole page fits one screen ([§GOAL-friendliness-first.1](../goals.md#1-hard
 
 The `fmt` row names both link and section-lock maintenance, so a reader can discover
 more than marker conversion within that same budget. The full workflow belongs on
-its own page ([§FS-cli.2.3.2](FS-cli.md#232-fmt-teaches-declaration-maintenance)).
+its own page ([§FS-cli.2.3.3](FS-cli.md#233-fmt-teaches-declaration-maintenance)).
 
 ### 2.3 A subcommand's help page
 
