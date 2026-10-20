@@ -364,8 +364,9 @@ held to what the command prints:
   a fenced `mermaid` block; the table is the example's `expected.stdout`, so the
   README cannot drift from the command ([§FS-examples.5](FS-examples.md#5-e2e-reuse-without-duplication)). `examples/README.md` and the
   README's schema-and-links sentence link it.
-- **The shipped skill** `skills/grund-init/SKILL.md`, byte-identical to its embedded
-  copy ([§FS-init.5.3](FS-init.md#53-one-body-two-surfaces)), tells an agent to run `grund schema` to see what a repository
+- **The shipped skill** `skills/grund-init/`, byte-identical to its embedded
+  copy ([§FS-init.5.3](FS-init.md#53-one-directory-two-surfaces)), tells an agent in its `schema` section
+  ([§FS-init.5.5](FS-init.md#55-the-core-and-its-sections)) to run `grund schema` to see what a repository
   is held to before it writes declarations or citations, gives a short example of
   the table, and says that `grund config show` is for the effective TOML.
 - **The user guide** `docs/user-facing/schema.md`: what each format shows, the

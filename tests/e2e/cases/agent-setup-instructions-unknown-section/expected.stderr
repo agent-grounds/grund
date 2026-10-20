@@ -1,0 +1,2 @@
+error: unknown setup section `rule`
+known sections: config, citations, languages, members, scoped-guidance, schema, queries, editor, integrations, rules

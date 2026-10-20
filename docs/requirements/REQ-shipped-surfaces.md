@@ -9,7 +9,7 @@ An ID declared in this tree may not appear in anything that leaves it. Where a s
 The surfaces this covers are every byte a user receives without cloning this repository:
 
 - the scaffold `grund init` writes ([§FS-init.2.1](../functional-spec/FS-init.md#21-files-written-updated-or-left-in-place)) and the entrypoint it generates ([§FS-init.2.3](../functional-spec/FS-init.md#23-generated-agent-entrypoints));
-- the setup skill `grund agent-setup-instructions` prints byte-for-byte ([§FS-init.5](../functional-spec/FS-init.md#5-agent-setup-instructions)), and the canonical pages copied into it;
+- every file of the setup skill `grund agent-setup-instructions` prints byte-for-byte, its core and each of its reference sections ([§FS-init.5](../functional-spec/FS-init.md#5-agent-setup-instructions), [§FS-init.5.3](../functional-spec/FS-init.md#53-one-directory-two-surfaces)), and the canonical pages copied into them;
 - the integration payloads `grund integrations --write` installs into a user's dotfiles ([§FS-integrations.4](../functional-spec/FS-integrations.md#4-managed-writes---write)), which are idempotent and therefore permanent;
 - every string the frontends print — help text, reports, and diagnostics alike.
 

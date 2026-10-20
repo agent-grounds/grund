@@ -1104,8 +1104,10 @@ does not select, and the declaration a chapter-scoped citation rule reports
 rather than passes over.
 
 The guide has a marked `### Chapter rules` writing section. Both repository and
-binary-embedded copies of `skills/grund-init/SKILL.md` contain a marked byte-
-identical copy of that section and remain wholly byte-identical to one another.
+binary-embedded copies of the setup skill carry a marked byte-identical copy of
+that section in `references/rules.md`, the skill's `rules` section
+([§FS-init.5.5](FS-init.md#55-the-core-and-its-sections)), and the two skill directories remain wholly byte-identical
+to one another, file for file ([§FS-init.5.3](FS-init.md#53-one-directory-two-surfaces)).
 The section includes every accepted family, every row of the [§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals) table
 and the [§FS-rule-refusals.sentences.whitespace](FS-rule-refusals.md#sentenceswhitespace-presence-name-whitespace-refusal) refusal, each with its exact rewrite or, where it offers
 none, the `known kinds:` line `check --rule` prints after the reason
@@ -1136,8 +1138,9 @@ Five independent pins prevent drift:
 2. A marked-row extraction test submits every accepted/refused guide row to the
    released parser and asserts acceptance or exact refusal, rewrite,
    `known kinds:` line, code, and channel.
-3. Asset-sync tests compare guide section to repository skill and whole
-   repository skill to the embedded copy.
+3. Asset-sync tests compare guide section to the repository skill's
+   `references/rules.md` and the whole repository skill directory to the
+   embedded copy.
 4. The managed block's existing re-render byte comparison checks generated
    guidance.
 5. A quoted-message test runs the exact chapter subject over a declaration

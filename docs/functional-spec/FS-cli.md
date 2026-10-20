@@ -99,7 +99,11 @@ Help is never an error: it goes to stdout, exit `0`, so `grund --help | …` wor
 
 There is no options block. A flag's place is on each command's own page ([§FS-cli.2.3](FS-cli.md#23-a-subcommands-help-page)), and a flag written before the subcommand is answered by the error of [§FS-cli.4.1](FS-cli.md#41-a-flag-placed-before-the-subcommand), which names where it goes.
 
-The whole page fits one screen ([§GOAL-friendliness-first.1](../goals.md#1-hard-requirements)), which this spec sets at ≤ 24 lines of at most 100 columns, so each description is a single terse line: the `show` row still gestures at *why* the command exists ("Print a coordinate's lead for agent context (default)."), and `fetch` says that it materializes one configured external snapshot, with the full rationale on each command's own help page.
+The whole page fits one screen ([§GOAL-friendliness-first.1](../goals.md#1-hard-requirements)), which this spec sets at ≤ 24 lines of at most 100 columns, so each description is a single terse line: the `show` row still gestures at *why* the command exists ("Print a coordinate's lead for agent context (default)."), and `fetch` says that it materializes one configured external snapshot, with the full rationale on each command's own help page. The `agent-setup-instructions` row says that the default is the guided setup, that `--section NAME` prints more, and that a fresh setup needs only `grund init -h` ([§FS-init.5](FS-init.md#5-agent-setup-instructions)):
+
+```text
+  agent-setup-instructions  Guided setup for agents; --section NAME for more. Fresh: grund init -h
+```
 
 ### 2.3 A subcommand's help page
 
@@ -137,7 +141,7 @@ None of the five says PATH defaults to `.`: from below the config root, the run 
   | `schema` | its own `table\|mermaid\|dot` ([§FS-schema.1](FS-schema.md#1-the-command)); `text` and `json` are refused | no | yes: it renders config-load errors |
   | `init`, `fetch`, `completions`, `agent-setup-instructions` | rejected | — | rejected |
 
-  A rejected flag is a CLI-level error of the command's own flag rules — `unknown flag`, or `agent-setup-instructions takes no arguments` — as today, per [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location). `fmt` and `config` gain no JSON surface here: designing one is their own spec's business ([§FS-errors.5](FS-errors.md#5-json-format)). The inert `[output] color` key gets no run-flag counterpart and there is no `--color`.
+  A rejected flag is a CLI-level error of the command's own flag rules, `unknown flag`, per [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location). `fmt` and `config` gain no JSON surface here: designing one is their own spec's business ([§FS-errors.5](FS-errors.md#5-json-format)). The inert `[output] color` key gets no run-flag counterpart and there is no `--color`.
 - A path argument, when a subcommand other than `init` takes one, is resolved the same way everywhere: config discovery walks up from it, or from the current directory when none is given ([§FS-config.1](FS-config.md#1-file-location-and-discovery)). A run given none covers the project that discovery finds ([§FS-scan.path.none](FS-scan.md#pathnone-a-run-with-no-path-covers-the-project-discovery-finds)). `init`'s path is the directory it writes in, `.` when none is given ([§FS-init.1](FS-init.md#1-inputs)). Every path-taking subcommand accepts at most one ([§FS-cli.3.2](FS-cli.md#32-at-most-one-path)).
 - `--only <code>`, `--ignore <code>`, and the boolean `--only-rule` are `check`-only finding-query flags ([§FS-check.1](FS-check.md#1-inputs)); other subcommands reject them. The `check` help page documents them ([§FS-cli.3.3](FS-cli.md#33-the-check-selector-help)).
 

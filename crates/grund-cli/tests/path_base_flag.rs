@@ -391,6 +391,8 @@ fn path_base_placement_and_rejection() {
         &["init", "--path-base=invocation"][..],
         &["fetch", "--path-base=invocation", "FS-a"][..],
         &["completions", "bash", "--path-base=invocation"][..],
+        // §FS-cli.3: the setup guide accepts `--section` and `--full` only (§FS-init.5).
+        &["agent-setup-instructions", "--path-base=invocation"][..],
     ] {
         assert_eq!(
             run(args, &root),
@@ -402,17 +404,6 @@ fn path_base_placement_and_rejection() {
             "grund {args:?}"
         );
     }
-    assert_eq!(
-        run(
-            &["agent-setup-instructions", "--path-base=invocation"],
-            &root
-        ),
-        (
-            Some(2),
-            String::new(),
-            "error: agent-setup-instructions takes no arguments\n".to_string(),
-        )
-    );
 }
 
 /// §FS-cli.3.4: every command that takes the flag documents it, defines
