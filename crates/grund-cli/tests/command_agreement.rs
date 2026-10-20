@@ -296,6 +296,7 @@ const DEFERRED: &[(&str, &str, &str)] = &[];
 /// the comparison over it (§REQ-one-answer.proof.delivery.widening). The seed
 /// asks only a sampled project of some of them (§REQ-one-answer.proof.matrix.seed).
 const WIDENING: &[(&str, &str)] = &[
+    ("agent", "S4"),
     ("bare", "S4"),
     ("basic", "S4"),
     ("block", "S4"),
