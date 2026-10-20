@@ -1538,6 +1538,7 @@
             "fmt": {
               "type": "object",
               "description": "What `grund fmt` writes and leaves alone.",
+              "x-grund-note": "For another string value of `anchors` or `links`, the refusal names the supplied\nvalue and the only assignment this binary executes. For example, `links = \"off\"`\non line 5 produces the following diagnostic. Quotes, backslashes and control\ncharacters in the value are escaped so the message stays on one line.\n[§FS-config-v2.rollout.fmt-values](../functional-spec/FS-config-v2.md#rolloutfmt-values-a-recognized-formatting-key-names-the-value-it-cannot-execute)\n\n```text\nerror: grund.toml:5: `[presentation.fmt] links` is part of the v2 format but not supported by this grund yet; unsupported value \"off\"; executes only links = \"index\"\n```",
               "x-grund-spec": {
                 "id": "FS-config-v2.presentation",
                 "href": "docs/functional-spec/FS-config-v2.md#presentation-the-presentation-concern"
