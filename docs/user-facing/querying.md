@@ -281,6 +281,20 @@ shorthand was ambiguous; route that status to ID repair, and reserve exit `2`
 for setup, configuration, I/O, or incomplete-scan failure
 ([§FS-refs.4](../functional-spec/FS-refs.md#4-exit-codes)).
 
+An explicit path limits the scan ([§FS-scan.path.refs](../functional-spec/FS-scan.md#pathrefs-refs-scans-the-paths-tree)). Suppose `FS-api-audit` is declared in `docs/` and cited nowhere. From the project root:
+
+```console
+$ grund refs FS-api-audit src --total
+not cited
+note: FS-api-audit is neither declared nor cited in scan path `src` — run `grund list` to see project declarations, including outside this scan
+```
+
+Here `not cited` is stdout and the note is stderr. The note describes only the
+selected scan; `grund list` can still list the declaration in `docs/`.
+From `src/`, `grund refs FS-api-audit .` names `.` in that same note.
+With no path, `grund refs FS-api-audit` is silent
+([§FS-refs.2.1](../functional-spec/FS-refs.md#21-an-id-with-no-citations)).
+
 [Reviewing code](reviewing.md) walks through using these before a move,
 rename or delete.
 

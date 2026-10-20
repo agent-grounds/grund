@@ -105,7 +105,18 @@ Output is sorted by `(path, line, column)` ([§FS-errors.4](FS-errors.md#4-deter
 
 ### 2.1 An ID with no citations
 
-An ID with zero citations produces empty output and exit `0` — or, under `--total`, the single line `not cited` and exit `0` ([§FS-refs.3.4](FS-refs.md#34---total)): an as-yet-uncited declaration is normal, and `check` already warns about it ([§FS-check.4.1](FS-check.md#41-unused-declaration)). If the ID is *also* declared nowhere in the scanned tree, the likeliest cause is a typo, so `refs` prints one `note:` line to **stderr** — `note: <ID> is neither declared nor cited — run \`grund list\` to see every declared ID` — and still exits `0`. The note is a hint, not part of the result: it never joins stdout, which stays empty, or carries only `--total`'s own one-line answer, so machine consumers that read only stdout never see it. It mirrors the `ID not found` hint the ID query gives for the same mistake ([§FS-show.3](FS-show.md#3-outputs)) without that query's exit `1`. A resolver rejection is different: once the selected project's grammar rejects the operand there is no citation-list result, and from 0.16.0 that failed query exits `1` ([§FS-refs.4](FS-refs.md#4-exit-codes)).
+An ID with zero citations produces empty output and exit `0` — or, under `--total`, the single line `not cited` and exit `0` ([§FS-refs.3.4](FS-refs.md#34---total)): an as-yet-uncited declaration is normal, and `check` already warns about it ([§FS-check.4.1](FS-check.md#41-unused-declaration)). If the ID is *also* declared nowhere in the scanned tree, `refs` prints one `note:` line to **stderr** and still exits `0`. The scanned tree is the one [§FS-scan.path.refs](FS-scan.md#pathrefs-refs-scans-the-paths-tree) defines; the note does not test declaration existence outside it.
+
+Without an explicit path, the typo hint remains `note: <ID> is neither declared nor cited — run \`grund list\` to see every declared ID`. For an alias-qualified workspace query it remains `note: <alias>/<ID> is neither declared nor cited — run \`grund list --project <alias>\` to see <alias>'s declared IDs`.
+
+With an explicit directory or file path, the note names the path exactly as supplied, including `.` relative to the current directory, and distinguishes the scan from the project declarations the advice lists:
+
+```text
+note: <ID> is neither declared nor cited in scan path `<path>` — run `grund list` to see project declarations, including outside this scan
+note: <alias>/<ID> is neither declared nor cited in scan path `<path>` — run `grund list --project <alias>` to see <alias>'s declared IDs, including outside this scan
+```
+
+Thus an uncited ID declared in `docs/` can earn this scoped note when the path is `src` or a file in it; it earns no note without a path. A genuinely absent ID still earns the hint, scoped when a path is supplied. The note is a hint, not part of the result: it never joins stdout, in text or JSON, which stays empty, or carries only `--total`'s own answer, so machine consumers that read only stdout never see it. It mirrors the `ID not found` hint the ID query gives for a typo ([§FS-show.3](FS-show.md#3-outputs)) without that query's exit `1`. A resolver rejection is different: once the selected project's grammar rejects the operand there is no citation-list result, and from 0.16.0 that failed query exits `1` ([§FS-refs.4](FS-refs.md#4-exit-codes)).
 
 ### 2.2 Value bindings
 
