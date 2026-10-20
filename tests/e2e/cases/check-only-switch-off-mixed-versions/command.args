@@ -1,0 +1,1 @@
+check --only missing-field --only oversized-lead --only out-of-scope-dangling {repo}

@@ -276,6 +276,8 @@ pub(crate) fn expand_workspace_tree_with_report_base(
     // named by the whole alias path the run spells them with — this block's under
     // the run's own path, each nested block's under that block's.
     let mut absent_optional = qualify_absent_optional(expanded.absent, &self_path);
+    // §FS-check.1.4.1: whether any block of the walk lists an optional member at all.
+    let mut lists_optional = !root_config.workspace_optional_members.is_empty();
     if root_config.workspace_include_root {
         let alias = if self_path.is_empty() {
             derive_alias(root_config, None, RootMode::Root).map_err(|err| {
@@ -321,6 +323,7 @@ pub(crate) fn expand_workspace_tree_with_report_base(
         &mut visited,
         &mut entries,
         &mut absent_optional,
+        &mut lists_optional,
     )?;
     // §FS-workspace.2.2.10: read from the config text — see this function's docs.
     if entries.is_empty() && root_config.workspace_optional_members.is_empty() {
@@ -365,6 +368,7 @@ pub(crate) fn expand_workspace_tree_with_report_base(
     // §FS-check.4.9: the root config is what the report is rendered from, so it is
     // where the announcement is read back off (`run_workspace_check`).
     root_config.set_workspace_absent_optional(absent_optional);
+    root_config.set_workspace_lists_optional(lists_optional);
     // §FS-check.4.10.7: the blocks that opted out, posed now that `project_roots`
     // exists — see this function's docs. The walk that answers one is the
     // resolver's, so the channel carries the block (§AR-resolver.placement).
@@ -415,6 +419,7 @@ fn collect_workspace_members(
     visited: &mut Vec<PathBuf>,
     entries: &mut Vec<WorkspaceProjectEntry>,
     absent_optional: &mut Vec<AbsentOptionalNamespace>,
+    lists_optional: &mut bool,
 ) -> Result<Vec<Config>> {
     let mut unread = Vec::new();
     for member in members {
@@ -511,6 +516,7 @@ fn collect_workspace_members(
             &mut nested_siblings,
         )?;
         absent_optional.extend(qualify_absent_optional(nested.absent, &qualified));
+        *lists_optional |= !member_config.workspace_optional_members.is_empty();
         let before = entries.len();
         if member_config.workspace_include_root {
             entries.push(WorkspaceProjectEntry {
@@ -528,6 +534,7 @@ fn collect_workspace_members(
             visited,
             entries,
             absent_optional,
+            lists_optional,
         )?;
         unread.extend(nested_unread);
         // §FS-workspace.2.2.10: the same reading one block down — a nested block whose

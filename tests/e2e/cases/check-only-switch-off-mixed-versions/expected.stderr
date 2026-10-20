@@ -1,0 +1,3 @@
+warning: --only missing-field judged nothing — the run's projects read config versions 1 and 2, which do not turn it on alike; migrate the version-1 ones with grund config migrate --to 2
+warning: --only out-of-scope-dangling judged nothing — the check is off until --full is passed
+warning: --only oversized-lead judged nothing — the run's projects read config versions 1 and 2, which do not turn it on alike; migrate the version-1 ones with grund config migrate --to 2

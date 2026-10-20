@@ -183,6 +183,32 @@ fn version_one_and_spent_codes_have_their_own_advice() {
     );
 }
 
+/// §FS-check.1.4.1: a workspace whose projects read both versions names a
+/// switch only where both spell it alike, a flag here, and otherwise the
+/// migration of its version-1 projects, whether version 1 spells the switch
+/// another way or cannot hold it at all.
+#[test]
+fn a_workspace_of_both_versions_names_only_a_shared_spelling() {
+    let mut read = Armed::default();
+    read.read(1);
+    read.read(2);
+    let mixed = ArmedChecks::new(read, 2);
+    let only = selection(
+        &["oversized-lead", "missing-field", "out-of-scope-dangling"],
+        &[],
+    );
+    let migrate = "the run's projects read config versions 1 and 2, which do not turn it on alike; migrate the version-1 ones with grund config migrate --to 2";
+    assert_eq!(
+        messages(&only.select(&Report::default(), &mixed)),
+        [
+            format!("--only missing-field judged nothing — {migrate}"),
+            "--only out-of-scope-dangling judged nothing — the check is off until --full is passed"
+                .to_string(),
+            format!("--only oversized-lead judged nothing — {migrate}"),
+        ]
+    );
+}
+
 /// Codes the catalog enables by the very thing they judge: a run with nothing
 /// for them did pass, so they are always armed and have no row (§FS-check.1.4.1).
 /// `inline-citation-style` is on by default, and the code of the line itself

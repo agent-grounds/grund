@@ -29,7 +29,7 @@ pub enum Switch {
     Suggestions,
     /// `--full`.
     Full,
-    /// A value kind.
+    /// Value authority: a kind's values slot, or a value tag the scan found.
     Values,
     /// A v2 field a declaration can miss.
     Field,
@@ -47,7 +47,7 @@ pub enum Switch {
     HeadingDepth,
     /// A grounded place, by config or `--require-grounding`.
     Grounding,
-    /// `[workspace] optional_members`.
+    /// `[workspace] optional_members`, in any block the run expands.
     OptionalMember,
     /// `fetch` on a kind.
     Fetch,
@@ -55,21 +55,35 @@ pub enum Switch {
     KindHome,
 }
 
-/// The switches one run armed, in a workspace the union of every project's
+/// The switches one run armed, in a workspace the union of every project's,
+/// and the config versions its projects read, which the advice is spelled in
 /// (§FS-check.1.4.1).
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct Armed(BTreeSet<Switch>);
+pub struct Armed {
+    switches: BTreeSet<Switch>,
+    versions: BTreeSet<u32>,
+}
 
 impl Armed {
     pub(crate) fn arm(&mut self, switch: Switch) {
-        self.0.insert(switch);
+        self.switches.insert(switch);
+    }
+
+    /// Record the config version a checked project read.
+    pub(crate) fn read(&mut self, version: u32) {
+        self.versions.insert(version);
     }
 
     pub(crate) fn absorb(&mut self, other: &mut Armed) {
-        self.0.append(&mut other.0);
+        self.switches.append(&mut other.switches);
+        self.versions.append(&mut other.versions);
     }
 
     pub fn contains(&self, switch: Switch) -> bool {
-        self.0.contains(&switch)
+        self.switches.contains(&switch)
+    }
+
+    pub(crate) fn versions(&self) -> &BTreeSet<u32> {
+        &self.versions
     }
 }

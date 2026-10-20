@@ -69,6 +69,9 @@ pub struct RunWorkspace {
     pub project_roots: Vec<PathBuf>,
     pub scope_path: String,
     pub absent_optional: Vec<AbsentOptionalNamespace>,
+    /// Whether any `[workspace]` block expansion walked lists an optional member,
+    /// present or absent, which arms the absence check (§FS-check.1.4.1).
+    pub(crate) lists_optional: bool,
     /// The run's kind table, built once where the workspace is expanded
     /// (§AR-config.1.5); `None` in a run that expanded none, whose
     /// table is its one project's.

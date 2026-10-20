@@ -519,7 +519,10 @@ pub(crate) fn check_project(
 ) -> CheckReport {
     let conformed = conform(schema, catalog, frame);
     let judged = judge(rules, schema, catalog, expected, frame, workspace);
-    merge(conformed, judged)
+    let mut report = merge(conformed, judged);
+    // §FS-check.1.4.1: the advice is spelled in the versions the run's projects read.
+    report.armed.read(frame.version);
+    report
 }
 
 /// §AR-checker.1.4: per channel, `conform`'s findings then `judge`'s, then the one

@@ -405,6 +405,18 @@ pub(crate) fn kind_uses_values(schema: &Schema, kind: &str) -> bool {
     })
 }
 
+/// Whether any `[[kinds]]` row holds values at all, whole declarations or a
+/// declared chapter: the slot the two lookups around this one read, asked of
+/// every kind, which is what turns the value checks on by config
+/// (§FS-check.1.4.1, §FS-values.1).
+pub(crate) fn any_kind_holds_values(schema: &Schema) -> bool {
+    schema.kinds().any(|(_, configured)| {
+        configured
+            .slots()
+            .any(|slot| slot.content == Content::Values)
+    })
+}
+
 /// The chapter a `[[kinds]]` row declared its values under, if any
 /// (§FS-config.3.4.13, §FS-values.2.5). The same row lookup as
 /// `kind_uses_values` above, and the only thing that turns a named section into

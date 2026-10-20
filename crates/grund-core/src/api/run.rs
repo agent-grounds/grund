@@ -26,7 +26,7 @@ use crate::model::{CheckReport, Diagnostic, Finding, Switch};
 use crate::resolver::{WorkspaceCheckTarget, load_workspace_projects, settled_run_warnings};
 use crate::scanner::scan_tree;
 use crate::workspace::{
-    absent_only_workspace_caution, absent_optional_member_warnings, open,
+    absent_only_workspace_caution, absent_optional_member_warnings, arm_optional_members, open,
     unlisted_workspace_block_errors,
 };
 use crate::writers::expected;
@@ -438,10 +438,7 @@ fn run_workspace_check(
     report
         .warnings
         .extend(absent_optional_member_warnings(&root_config));
-    // §FS-check.1.4.1: an absence is announced only of a member declared optional.
-    if !root_config.workspace_optional_members.is_empty() {
-        report.armed.arm(Switch::OptionalMember);
-    }
+    arm_optional_members(&root_config, &mut report.armed);
     if full {
         report.armed.arm(Switch::Full);
     }
