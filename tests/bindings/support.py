@@ -55,8 +55,9 @@ def canonical(value):
 
 
 def rust_call(operation, root, args=(), options=None, home=None):
-    oracle = REPO / "target/debug/grund-binding-oracle"
-    if os.name == "nt":
+    # §AR-bindings.6.2: the gate's same-source oracle when it hands one, else the checkout's.
+    oracle = Path(os.environ.get("GRUND_BINDINGS_ORACLE") or REPO / "target/debug/grund-binding-oracle")
+    if os.name == "nt" and not os.environ.get("GRUND_BINDINGS_ORACLE"):
         oracle = oracle.with_suffix(".exe")
     if not oracle.is_file():
         raise AssertionError("missing core-only test driver target/debug/grund-binding-oracle; "

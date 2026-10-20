@@ -193,6 +193,7 @@ check, parse or reproduce managed-write behavior. No dependency on CLI/LSP/Node 
 allowed. `tests/bindings/python/` compares complete data and canonical bytes against the
 shared oracle in `tests/bindings/`, separately
 from the frozen CLI wire projection ([§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)).
+The Python gate runs that acceptance on every push and pull request ([§AR-bindings.6.2](AR-bindings.md#62-the-python-acceptance-runs-in-the-gate)).
 
 Local build readiness does not claim published wheels. #471 owns cibuildwheel
 release assembly and CLI payload placement; the binding adds no console entrypoint.
@@ -213,6 +214,31 @@ builds ([§FS-distribution.3.3.7.1](../functional-spec/FS-distribution.md#3371-r
 PyO3's supported extension-module link-argument mechanism, scoped to the cdylib,
 so maturin and the same-source command-agreement host need no separate copies
 of Darwin flags. Ordinary workspace builds retain their executable/test linking.
+
+### 6.2 The Python acceptance runs in the gate
+
+The Python binding's acceptance, `tests/bindings/python/run.py`, is a test of the Python
+gate ([§AR-ci.3.4](AR-ci.md#34-the-python-gates-inputs)), as the Node acceptance is ([§AR-bindings.5](AR-bindings.md#5-grund-node-the-napi-rs-binding)): the module
+`tests/integration/test_python_binding_acceptance.py` runs it, so a change that moves
+what the binding returns fails its own pull request rather than the next person who runs
+the suite by hand. The module is on the `--without-node-acceptance` side of [§AR-ci.3.4.3](AR-ci.md#343-selecting-the-node-acceptance),
+so both Python jobs of [§AR-ci.13.1](AR-ci.md#131-one-job-per-language), Linux and Windows, run it on every push, pull request
+and merge group, and the local `python-test` hook runs it too.
+
+The module installs this checkout's `crates/grund-py` from its source directory into a
+virtual environment of its own under the wrapper's scratch, outside the checkout, once
+per run, and runs `run.py` with that environment's interpreter. The installed package is
+the one `binding()` admits: a local-source install of this checkout, never a registry
+package or whatever the gate's own interpreter has installed. The Rust side is the gate's
+`GRUND_BINDINGS_ORACLE` ([§AR-ci.3.4](AR-ci.md#34-the-python-gates-inputs)), which the shared oracle side in
+`tests/bindings/support.py` reads when it is set, so the Python and the Node adapters are
+compared against one same-source build; a run on its own still falls back to
+`target/debug/grund-binding-oracle`.
+
+What [§AR-ci.3.4](AR-ci.md#34-the-python-gates-inputs) asks of an input it asks of this install: a build or install that fails
+fails the test, with its output, and never skips it. The test passes only when every
+module `run.py` discovers passes, and on failure it prints `run.py`'s whole output, so
+the failing acceptance test is named in the gate's own log.
 
 ## 7. Why this shape
 
