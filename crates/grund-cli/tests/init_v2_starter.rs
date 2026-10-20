@@ -5,6 +5,7 @@
 
 use std::fs;
 use std::path::Path;
+use std::process::Command;
 
 #[path = "support/init_fixture.rs"]
 mod init_fixture;
@@ -12,6 +13,91 @@ mod init_fixture;
 use init_fixture::{manifest_dir, run_grund, workdir};
 
 const TEMPLATES: [&str; 2] = ["software-development", "none"];
+
+const FRESH_SCAFFOLD_CHECK_ADVICE: &str = "run `grund check` — on a fresh scaffold it warns \"nothing recognized\" until the first declaration; this is expected (exit 0), no repair needed";
+
+/// A real, empty git repository, so the commands follow the fresh-setup path.
+fn fresh_git_repo(case: &str) -> std::path::PathBuf {
+    let target = workdir(case);
+    let git = Command::new("git")
+        .args(["init", "-q"])
+        .current_dir(&target)
+        .output()
+        .expect("git init");
+    assert!(git.status.success(), "git init: {git:?}");
+    target
+}
+
+/// Observe the actual warning before judging the advice that predicted it.
+fn fresh_scaffold_warning(target: &Path) -> String {
+    let check = run_grund(&["check"], target);
+    let stdout = String::from_utf8_lossy(&check.stdout);
+    let stderr = String::from_utf8_lossy(&check.stderr);
+    assert_eq!(
+        check.status.code(),
+        Some(0),
+        "grund check: {stdout}{stderr}"
+    );
+    assert!(stdout.is_empty(), "grund check stdout: {stdout}");
+    assert!(
+        stderr.starts_with("warning: nothing recognized — grund read ")
+            && stderr.contains("found no declaration and no citation"),
+        "fresh scaffold must trigger the existing warning: {stderr}"
+    );
+    stderr.into_owned()
+}
+
+fn assert_check_advice(report: &str, step: usize, warning: &str) {
+    let expected = format!("  {step}. {FRESH_SCAFFOLD_CHECK_ADVICE}\n");
+    assert!(
+        report.contains(&expected),
+        "init's step {step} must explain the expected fresh-scaffold warning\n\
+         expected: {expected}\
+         init stderr:\n{report}\
+         grund check (exit 0) stderr:\n{warning}"
+    );
+    assert!(
+        !report.contains("scaffolded tree is clean"),
+        "init advice must not promise a clean verdict: {report}"
+    );
+}
+
+/// §FS-init.2.2.2, §FS-init-fixtures.2: scaffold advice agrees with the actual
+/// successful check's expected warning (§FS-check.4.5), before grounding begins.
+#[test]
+#[ignore = "red until #870 corrects scaffold check advice; implement removes this"]
+fn scaffold_check_advice_explains_the_expected_warning() {
+    let target = fresh_git_repo("scaffold_check_advice_explains_the_expected_warning");
+    let init = run_grund(
+        &["init", "--scaffold", "--name", "demo", "--agents-md"],
+        &target,
+    );
+    assert_eq!(init.status.code(), Some(0), "init: {init:?}");
+    assert!(init.stdout.is_empty(), "init: {init:?}");
+    let warning = fresh_scaffold_warning(&target);
+    assert_check_advice(&String::from_utf8_lossy(&init.stderr), 1, &warning);
+}
+
+/// §FS-init.2.2.2, §FS-init-fixtures.1: non-scaffold advice predicts the same
+/// expected warning when its re-run instruction is followed on a fresh tree.
+#[test]
+#[ignore = "red until #870 corrects non-scaffold check advice; implement removes this"]
+fn non_scaffold_check_advice_explains_the_expected_warning() {
+    let target = fresh_git_repo("non_scaffold_check_advice_explains_the_expected_warning");
+    let init = run_grund(&["init", "--name", "demo", "--agents-md"], &target);
+    assert_eq!(init.status.code(), Some(0), "init: {init:?}");
+    assert!(init.stdout.is_empty(), "init: {init:?}");
+    let report = String::from_utf8_lossy(&init.stderr);
+    assert!(
+        report
+            .contains("  1. re-run with --scaffold to scaffold the FS home (docs/functional-spec)"),
+        "init: {report}"
+    );
+    let scaffold = run_grund(&["init", "--scaffold"], &target);
+    assert_eq!(scaffold.status.code(), Some(0), "scaffold: {scaffold:?}");
+    let warning = fresh_scaffold_warning(&target);
+    assert_check_advice(&report, 2, &warning);
+}
 
 fn init(target: &Path, flags: &[&str]) -> (bool, String) {
     let mut args = vec!["init", target.to_str().unwrap(), "--name", "demo"];
