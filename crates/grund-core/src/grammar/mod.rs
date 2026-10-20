@@ -139,9 +139,10 @@ pub(crate) use inline_note_layout::{
     layout_pass_enabled, line_says_something,
 };
 pub(crate) use managed_block::{
-    AGENT_GUIDANCE_BLOCK_VERSION, AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlock,
-    AgentsBlockLookup, agent_guidance_markers, find_agent_guidance_block, find_agents_block,
-    find_managed_block, integrations_block_markers,
+    AGENT_GUIDANCE_BLOCK_VERSION, AGENTS_BLOCK_BASE_VERSION, AGENTS_BLOCK_END,
+    AGENTS_BLOCK_VERSION, AgentsBlock, AgentsBlockLookup, agent_guidance_markers,
+    agents_block_heading, find_agent_guidance_block, find_agents_block, find_managed_block,
+    integrations_block_markers,
 };
 pub(crate) use markdown_blocks::{MarkdownBlocks, MarkdownLine, markdown_line_kinds};
 pub(crate) use multi_line_string::MultiLineStrings;

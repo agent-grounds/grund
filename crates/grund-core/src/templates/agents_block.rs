@@ -15,7 +15,10 @@ use super::assets::{AGENTS_PROJECT_NAMESPACES_TEMPLATE, AGENTS_TEMPLATE, canonic
 use super::citation_directions::citation_directions_section;
 use super::clickable_citations::{ConversationSurface, clickable_citations_section};
 use crate::config::{Compiled, Place, Project, Run, kind_prefixes};
-use crate::grammar::{id_shape, inline_note_layout_sentence, literal_after_kind_placeholder};
+use crate::grammar::{
+    AGENTS_BLOCK_BASE_VERSION, agents_block_heading, id_shape, inline_note_layout_sentence,
+    literal_after_kind_placeholder,
+};
 use crate::model::plural;
 
 /// Workspace discovery and member-list expansion are independent (§FS-init.2.3.4.16).
@@ -101,6 +104,11 @@ fn agents_template_substitutions(
         literal_after_kind_placeholder(&ids.format).unwrap_or("")
     );
     vec![
+        // §FS-init.2.3.9.3: the base revision; `Guidance` moves it to the run's.
+        (
+            "{BLOCK_HEADING}",
+            agents_block_heading(AGENTS_BLOCK_BASE_VERSION),
+        ),
         ("{NAME}", name.to_string()),
         ("{GLOB_PATTERN}", glob_pattern),
         ("{ID_SHAPE_SEC}", format!("{id_shape}[{sep}<section>]")),

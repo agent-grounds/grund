@@ -12,7 +12,7 @@
 //! are three spellings of the same protocol, and the differences are real.
 //! §FS-init's block is bounded by fixed HTML-comment delimiters matched by the
 //! regexes at the top of this file, carries its version in a `## Grounding
-//! with grund (vN)` heading *inside* the block rather than in a delimiter,
+//! with grund (block vN)` heading *inside* the block rather than in a delimiter,
 //! still recognizes the pre-v4 heading-bounded form, and reports a broken
 //! delimiter with the byte offset a diagnostic is line-anchored from
 //! ([`AgentsBlockLookup::Malformed`]). §FS-integrations' two blocks put the
@@ -34,18 +34,33 @@ use regex::{Match, Regex};
 /// The explicit managed-block delimiters (§FS-init.2.3.9,
 /// §DF-managed-block-delimiters): standard `BEGIN`/`END` HTML-comment lines
 /// bound the managed region from block v4 on. Legacy v3-and-earlier blocks have
-/// no delimiters and are found by `AGENTS_BLOCK_H2` alone.
+/// no delimiters and are found by their unlabelled heading alone.
 pub(crate) static AGENTS_BLOCK_BEGIN: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"(?m)^<!-- BEGIN GRUND MANAGED BLOCK -->[ \t]*\r?$").unwrap());
 pub(crate) static AGENTS_BLOCK_END: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"(?m)^<!-- END GRUND MANAGED BLOCK -->[ \t]*\r?$").unwrap());
-/// The managed block's version marker: an H2 heading carrying the block
-/// version. Inside a delimited block it names the schema version; for a legacy
-/// block it is also the begin marker, and the block runs until the next H1/H2
-/// or EOF (§FS-init.2.3.1).
-pub(crate) static AGENTS_BLOCK_H2: Lazy<Regex> = Lazy::new(|| {
+/// The managed block's version heading between the delimiters, in either
+/// spelling (§FS-init.2.3.9.3): `(block vN)` as `init` writes it, or the unlabelled
+/// `(vN)` of blocks up to v30. Both carry the same version.
+static AGENTS_BLOCK_VERSION_HEADING: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(
+        r"(?m)^##[ \t]+Grounding with grund[ \t]+\((?:block[ \t]+)?v(?P<version>\d+)\)[ \t]*\r?$",
+    )
+    .unwrap()
+});
+/// The legacy block's begin marker: the unlabelled H2 heading alone, which opens
+/// a block running until the next H1/H2 or EOF (§FS-init.2.3.1). A labelled
+/// heading outside the delimiters opens nothing (§FS-init.2.3.9.2).
+static AGENTS_BLOCK_H2: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"(?m)^##[ \t]+Grounding with grund[ \t]+\(v(?P<version>\d+)\)[ \t]*\r?$").unwrap()
 });
+
+/// The version heading every block `init` renders opens with — root, standalone
+/// companion and scoped alike (§FS-init.2.3.9.3): the number is labelled as the
+/// block's revision, never a grund release (§FS-init.2.3.7).
+pub(crate) fn agents_block_heading(version: u32) -> String {
+    format!("## Grounding with grund (block v{version})")
+}
 /// The next H1 or H2 heading after a position — the implicit end of a legacy
 /// managed section. A legacy block ends at this line's start, or at EOF if no
 /// such line follows.
@@ -114,7 +129,13 @@ pub(crate) static AGENTS_SECTION_BOUNDARY: Lazy<Regex> =
 /// doc-comment declaration body as well as a Markdown one.
 /// v27 to v30 (§FS-init.2.3.4.3.1, §FS-init.2.3.7.1): each pair four higher again, the
 /// cheap-read ladder teaching coordinate globs in place of the `jq` pipe.
-pub(crate) const AGENTS_BLOCK_VERSION: u32 = 30;
+/// v31 to v34 (§FS-init.2.3.9.3, §FS-init.2.3.7.1): each pair four higher again, the
+/// version heading labelled `(block vN)`.
+pub(crate) const AGENTS_BLOCK_VERSION: u32 = AGENTS_BLOCK_BASE_VERSION + 3;
+
+/// The revision the base config selects (§FS-init.2.3.7.1): a rule kind adds one,
+/// and a scoped file or a declaration shape adds two, up to [`AGENTS_BLOCK_VERSION`].
+pub(crate) const AGENTS_BLOCK_BASE_VERSION: u32 = 31;
 
 /// The byte span and `vN` version of the managed block inside an `AGENTS.md`
 /// (§FS-init.2.3) — what both `grund init`'s update and `grund check`'s validation
@@ -182,7 +203,8 @@ pub(crate) fn find_agents_block(text: &str) -> AgentsBlockLookup {
         };
     }
     let region = &text[begin.start()..end.end()];
-    let Some(version) = AGENTS_BLOCK_H2
+    // §FS-init.2.3.9.3: either spelling of the version heading, the same version.
+    let Some(version) = AGENTS_BLOCK_VERSION_HEADING
         .captures(region)
         .and_then(|caps| caps.name("version")?.as_str().parse::<u32>().ok())
     else {

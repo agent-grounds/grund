@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 
 use super::expected::{block_version, chapter_rules_section};
 use crate::config::Config;
+use crate::grammar::{AGENTS_BLOCK_BASE_VERSION, agents_block_heading};
 use crate::model::{Catalog, ExpectedEntrypoint, ExpectedSection, ScopedExpectation};
 use crate::sources::path_is_dir;
 use crate::templates::{
@@ -145,9 +146,10 @@ impl<'a> Guidance<'a> {
     /// entrypoint under the config root the chapter-rule links are relative to.
     pub(crate) fn finish_root_block(&self, mut block: String, path: &Path) -> String {
         let (project, run) = (self.config.project(), self.config.run());
+        // §FS-init.2.3.9.3: the template renders the base revision's heading.
         block = block.replacen(
-            "Grounding with grund (v27)",
-            &format!("Grounding with grund (v{})", self.version),
+            &agents_block_heading(AGENTS_BLOCK_BASE_VERSION),
+            &agents_block_heading(self.version),
             1,
         );
         if self.layout.is_scoped() {

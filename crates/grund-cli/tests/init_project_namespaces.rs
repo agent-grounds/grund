@@ -195,7 +195,7 @@ fn project_namespaces_standalone_preview_does_not_restore_guidance() {
 }
 
 fn version(text: &str) -> u32 {
-    let prefix = "## Grounding with grund (v";
+    let prefix = "## Grounding with grund (block v";
     let line = text.lines().find(|line| line.starts_with(prefix)).unwrap();
     line.strip_prefix(prefix)
         .unwrap()
@@ -218,7 +218,7 @@ fn migration(rules: bool) {
     let generated = fs::read_to_string(&path).unwrap();
     let prior = if rules { 18 } else { 17 };
     let old = generated.replace(
-        &format!("(v{})", version(&generated)),
+        &format!("(block v{})", version(&generated)),
         &format!("(v{prior})"),
     );
     let old = if old.contains("### Project namespaces") {
