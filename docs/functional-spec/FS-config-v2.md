@@ -453,6 +453,12 @@ The format is published whole, and this binary executes part of it. A clause the
 
 The published example of [§DISC-core-concerns.7.1](../discussions/proposals/2026-09-30-core-concerns.md#71-the-canonical-example) parses once each owner has landed, and every refusal above is pinned by a test that turns into an executed case on that day.
 
+### rollout.fmt-values: A recognized formatting key names the value it cannot execute
+
+For an unsupported string value of `[presentation.fmt] anchors` or `links`, the refusal keeps `` `[presentation.fmt] <key>` is part of the v2 format but not supported by this grund yet `` verbatim as a contiguous prefix and appends guidance identifying the supplied value as unsupported and the only assignment this binary executes: `anchors = "github"` or `links = "index"`, respectively. The supplied value is double-quoted, with quotes, backslashes and control characters escaped so the diagnostic stays on one line. The suffix's prose is not fixed; the prefix is ([§FS-errors.3](FS-errors.md#3-message-text), [§FS-errors.requirements.prefix-windows](FS-errors.md#requirementsprefix-windows-a-wording-change-keeps-the-old-message-whole-until-its-window-closes--realized-directional-for-the-next-change)).
+
+The refusal remains at the authored key's line and exits 1. Invalid string syntax and non-string values retain their parse/type errors, rather than becoming unsupported-value refusals. This guidance does not change any other rollout refusal, accepted value, omitted default, effective `config show` setting, or formatting behavior.
+
 ## mapping: What the records keep apart
 
 Both readers lower into the same records, so the records hold every state either one can mean. A v1 state that v2 does not spell keeps its meaning. Migration is [§FS-config-migrate](FS-config-migrate.md#fs-config-migrate-grund-config-migrate---to-2-shows-the-version-2-file-that-means-what-a-version-1-config-means-and-writes-it-only-when-asked-and-only-when-it-does), and it refuses each row below whose v2 spelling is `none`. This table is what a migration audits against, and tests on the records hold it, not a comparison of one tree's reports.
