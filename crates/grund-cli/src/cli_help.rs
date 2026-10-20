@@ -319,7 +319,7 @@ fn print_subcommand_help(cmd: &str) {
             println!("agents can discover the setup workflow without access to the source tree.");
             println!();
             println!(
-                "Exit:  0 instructions printed · 2 unknown section, unknown flag, or a positional argument."
+                "Exit:  0 instructions printed · 2 unknown section, unknown flag, or other CLI error."
             );
             println!();
             println!("Examples:");

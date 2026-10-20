@@ -19,7 +19,7 @@ The text is the Markdown shipped as `skills/grund-init/`: `SKILL.md` is the core
 and `references/<name>.md` each section. It is embedded in the binary so installed
 agents can discover the setup workflow without access to the source tree.
 
-Exit:  0 instructions printed · 2 unknown section, unknown flag, or a positional argument.
+Exit:  0 instructions printed · 2 unknown section, unknown flag, or other CLI error.
 
 Examples:
   grund agent-setup-instructions                  # the core: fresh path, contents, workflow
