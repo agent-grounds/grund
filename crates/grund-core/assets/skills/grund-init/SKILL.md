@@ -21,7 +21,7 @@ Success is all three exiting `0`. On a fresh scaffold the last one also warns `n
 
 ## Contents
 
-This core holds Fresh repository, Contents, Workflow, Repo Analysis First, Asking Style, Init Questions, Existing Specs Adoption and Validation. The rest of the guide is ten reference sections, each printed on request by `grund agent-setup-instructions --section <name>`; where this skill is installed as a directory, the same text is `references/<name>.md`.
+This core holds Fresh repository, Contents, Workflow, Repo Analysis First, Asking Style, Init Questions, Existing Specs Adoption, Validation and Maintaining Declarations. The rest of the guide is ten reference sections, each printed on request by `grund agent-setup-instructions --section <name>`; where this skill is installed as a directory, the same text is `references/<name>.md`.
 
 - `grund agent-setup-instructions --section config` (`references/config.md`): how to recommend each setting, then the config questions.
 - `grund agent-setup-instructions --section citations` (`references/citations.md`): the citation-directions question, version 1's `[citations]` and version 2's `[rules.citations]`, and its reference.
@@ -134,4 +134,3 @@ expect fmt to replace authored IDs, repair arbitrary URLs, or silently approve a
 protected section move; fix citations or leave a pointer at the old address first.
 Use the [maintenance guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/structure.md#maintaining-declarations)
 and its [copy-based rename example](https://github.com/agent-grounds/grund/blob/main/examples/relative-sections-lock/README.md).
-
