@@ -38,10 +38,10 @@ fn print_check_help() {
         "  --full               also walk past configured scope and report unresolved references or section headings outside declaration bodies there; source exclusions still apply."
     );
     println!(
-        "  --require-grounding  also require every source file to cite a declared ID ([reference] require_grounding; a [[kinds]] row that sets it false stays exempt)."
+        "  --require-grounding  also require every source file to cite a declared ID (v1 [reference] require_grounding, v2 [rules.citations.grounding] must; a kind that sets it false stays exempt)."
     );
     println!(
-        "  --suggestions        also surface should/should-not citation-direction findings ([citations])."
+        "  --suggestions        also surface should/should-not citation-direction findings (v1 [citations], v2 [rules.citations])."
     );
     println!(
         "  --rule <sentence>    add one controlled-English chapter/citation rule to configured rules."

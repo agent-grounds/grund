@@ -15,8 +15,8 @@ Options:
   --format text|json   text (default) prints `success` or `path:line: <channel>: message`,
                        grouped errors, warnings, then enabled suggestions; json emits NDJSON.
   --full               also walk past configured scope and report unresolved references or section headings outside declaration bodies there; source exclusions still apply.
-  --require-grounding  also require every source file to cite a declared ID ([reference] require_grounding; a [[kinds]] row that sets it false stays exempt).
-  --suggestions        also surface should/should-not citation-direction findings ([citations]).
+  --require-grounding  also require every source file to cite a declared ID (v1 [reference] require_grounding, v2 [rules.citations.grounding] must; a kind that sets it false stays exempt).
+  --suggestions        also surface should/should-not citation-direction findings (v1 [citations], v2 [rules.citations]).
   --rule <sentence>    add one controlled-English chapter/citation rule to configured rules.
   --only <code>        retain one exact finding code; repeat for a union (`--only=<code>` also works).
   --ignore <code>      remove one exact finding code; repeat for a union; ignore wins over only (`--ignore=<code>` also works).
@@ -25,8 +25,8 @@ Options:
                        project (default) spells report paths from the config root;
                        invocation: relative to the path you passed, or the current directory if you passed none.
                        e.g. grund check docs/ --path-base=invocation
-                       --path-base=invocation replaces a committed `[output] relative_paths = false`.
-                       --format json replaces a committed `[output] format = "json"`; a flag outranks its key.
+                       --path-base=invocation replaces a version-1 `[output] relative_paths = false`.
+                       --format json replaces a version-1 `[output] format = "json"`; a flag outranks its key.
 
 Findings go to stdout (the linter convention) — `grund check | …` and `grund check
 --format json | jq` need no redirect. Only run-level `error:` / `warning:` lines

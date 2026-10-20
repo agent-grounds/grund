@@ -25,7 +25,7 @@ Other options:
                        project (default) spells report paths from the config root;
                        invocation: relative to the path you passed, or the current directory if you passed none.
                        e.g. grund FS-login docs/ --path-base=invocation
-                       --path-base=invocation replaces a committed `[output] relative_paths = false`.
+                       --path-base=invocation replaces a version-1 `[output] relative_paths = false`.
 
 Exit:  0 printed · 1 ID not found / ambiguous / broken stub / unknown section · 2 unknown project alias, or CLI error.
 Batch: 0 all queries succeeded · 1 any query failed · 2 invocation, input, or scan error.

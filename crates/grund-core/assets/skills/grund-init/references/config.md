@@ -2,17 +2,17 @@
 
 | Setting | Recommendation from repo evidence |
 | --- | --- |
-| `--template` and `--scaffold` | With little or no `docs/` or `tests/` structure, use `grund init --scaffold`: the default `--template=software-development` lays canonical kinds and starter files. With meaningful docs or tests, omit `--scaffold` and add only missing grund files. For an existing taxonomy, use `grund init --template=none`, add the repo's `[schema.kinds.<KIND>]` tables to `grund.toml`, then run `grund init` again. `--template=none --scaffold` is refused because `none` has no starter files. |
+| `--template` and `--scaffold` | With little or no `docs/` or `tests/` structure, use `grund init --scaffold`: the default `--template=software-development` lays canonical kinds and starter files. With meaningful docs or tests, omit `--scaffold` and add only missing grund files. For an existing taxonomy, use `grund init --template=none`, add the repo's version-2 `[schema.kinds.<KIND>]` tables to `grund.toml`, then run `grund init` again. `--template=none --scaffold` is refused because `none` has no starter files. |
 | `[reference].strict` (version 1 only) | Version 2 has fixed marked-only recognition and no strict switch ([config-derived guidance](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-init.md#2381-what-the-config-fills-in)). For version 1, recommend the default `strict = true` for first adoption, especially with noisy ID-like tokens or deliberate citation hygiene. Use `strict = false` only for existing bare citations that need a compatibility window before `grund fmt --marker`. |
-| `[reference].require_grounding` | Recommend `false` initially; `true` only with broad spec-to-code citation coverage or an explicit request for strict co-change discipline. |
+| `[rules.citations.grounding] must` (v2); `[reference].require_grounding` (v1) | Recommend leaving it off initially (no v2 `must` rung, v1 `false`); turn it on (v2 `must = "file"`, v1 `true`) only with broad spec-to-code citation coverage or an explicit request for strict co-change discipline. |
 | `[schema] id_format` (v2); `[id] format` (v1) | Use `{kind}-{number}-{slug}` for fresh repos or stable IDs with readable names; `{kind}-{number}` for existing ADR/RFC-style numbered IDs; `{kind}-{slug}` for title/slug-based docs where numeric allocation would feel artificial. A kind override uses `[schema.kinds.<KIND>] id_format` in v2, `[[kinds]] format` in v1. |
-| `[[kinds]]` | Start from defaults. Add custom kinds for existing categories such as `ADR`, `RFC`, `REQ`, `API`, `SEC`, or `OPS`; remove defaults only when they would clearly confuse the project. |
+| `[schema.kinds.<KIND>]` (v2); `[[kinds]]` (v1) | Start from defaults. Add custom kinds for existing categories such as `ADR`, `RFC`, `REQ`, `API`, `SEC`, or `OPS`; remove defaults only when they would clearly confuse the project. |
 | Source scope | In v2, configure actual places with `[schema.kinds.<KIND>] folders`/`files`; the `code` complement covers unplaced files, and `[schema.sources] exclude` prunes generated paths. In v1, `[scan] include` lists actual directories, such as `["docs", "e2e", "src", "crates", "tests"]` for a Rust workspace. |
-| `[fmt.cross_refs].anchor_format` | Use `github` for GitHub or no evident renderer; `gitlab` for GitLab; `mkdocs` when `mkdocs.yml` exists; `pandoc` with evident Pandoc config/build scripts; `none` for file-only links without section anchors. |
+| `[fmt.cross_refs].anchor_format` (v1; v2 writes only `github` anchors) | Use `github` for GitHub or no evident renderer; `gitlab` for GitLab; `mkdocs` when `mkdocs.yml` exists; `pandoc` with evident Pandoc config/build scripts; `none` for file-only links without section anchors. |
 
 ## Config Questions
 
-Ask these in order. The last of them, `[citations]`, is not here: `grund agent-setup-instructions --section citations` prints it.
+Ask these in order. The last of them, the citation directions (version 1's `[citations]`, version 2's `[rules.citations]`), is not here: `grund agent-setup-instructions --section citations` prints it.
 
 ### Top-level
 
@@ -36,7 +36,7 @@ Default: `$$`. Pros: easy typing path to `§`. Cons: may conflict with math-heav
 
 `strict` (version 1 only)
 
-Version 2 recognizes only marked citations, with no opt-out or strict switch ([config-derived guidance](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-init.md#2381-what-the-config-fills-in)). Do not ask about or write `[reference].strict` for version 2. For version 1, the default is `true`: citations are intentional and explicit. Use `false` only as a compatibility window for existing bare citations; it also admits more accidental matches. Run `grund fmt --marker` before removing that override or setting strict back to `true`.
+Version 2 recognizes only marked citations, with no opt-out or strict switch ([config-derived guidance](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-init.md#2381-what-the-config-fills-in)). With `grund_config_version = 2` there is no `[reference].strict`: do not ask about it or write it. For version 1, the default is `true`: citations are intentional and explicit. Use `false` only as a compatibility window for existing bare citations; it also admits more accidental matches. Run `grund fmt --marker` before removing that override or setting strict back to `true`.
 
 `require_grounding`
 
@@ -86,7 +86,7 @@ Default: `[a-z0-9][a-z0-9-]*`. Pros: URL-friendly, portable, predictable. Cons: 
 
 ### `[[kinds]]`
 
-Default kinds: `GRUND`, `GOAL`, `FS`, `AR`, `DF`, `DA`, `E2E`, `RM`. The config `grund init` writes also declares `REQ`, hard requirements the project must never break, in `docs/requirements/`. `REQ` has no built-in default, so a config that leaves `[[kinds]]` out has none. `FS` lives in `docs/functional-spec/`, one declaration per file, with no `grund.toml` and in the config `grund init` writes alike: `grund init --scaffold` writes `docs/functional-spec/README.md`, the `FS` index, and no `requirements.md`. Before grund 0.19.0 a repository with no `grund.toml` homed `FS` in `requirements.md` ([the decision](https://github.com/agent-grounds/grund/blob/main/docs/decisions/functional/DF-fs-home-lands-in-0-19.md)); to keep `FS` there, run `grund init` and write `files = ["requirements.md"]` on its `FS` row.
+Default kinds: `GRUND`, `GOAL`, `FS`, `AR`, `DF`, `DA`, `E2E`, `RM`. The config `grund init` writes also declares `REQ`, hard requirements the project must never break, in `docs/requirements/`. `REQ` has no built-in default, so a version-1 config that leaves `[[kinds]]` out has none. `FS` lives in `docs/functional-spec/`, one declaration per file, with no `grund.toml` and in the config `grund init` writes alike: `grund init --scaffold` writes `docs/functional-spec/README.md`, the `FS` index, and no `requirements.md`. Before grund 0.19.0 a repository with no `grund.toml` homed `FS` in `requirements.md` ([the decision](https://github.com/agent-grounds/grund/blob/main/docs/decisions/functional/DF-fs-home-lands-in-0-19.md)); to keep `FS` there, run `grund init` and write `files = ["requirements.md"]` on its `FS` row.
 
 Ask whether to keep defaults, remove unused kinds, or add project-specific kinds. To start from none instead, `grund init --template=none` writes a version-2 file with no `[schema.kinds]` row, and each kind is then added as its own `[schema.kinds.<KIND>]` table.
 
@@ -100,7 +100,7 @@ A directory that holds agent-facing content rather than declarations — skills,
 
 `include`
 
-Default: `["requirements.md", "docs", "e2e", "src"]`. Pros: focused, avoids scanning root clutter. Cons: misses specs/citations outside these dirs. Every configured `[[kinds]]` home is walked whether or not it is listed here, so this key names the *extra* roots. Base the recommendation on actual directories. Do not include paths that do not exist unless `--scaffold` will create them.
+Default: `["requirements.md", "docs", "e2e", "src"]`. Pros: focused, avoids scanning root clutter. Cons: misses specs/citations outside these dirs. Every configured version-1 `[[kinds]]` home is walked whether or not it is listed here, so this key names the *extra* roots. Base the recommendation on actual directories. Do not include paths that do not exist unless `--scaffold` will create them.
 
 `exclude`
 
