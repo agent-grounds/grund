@@ -47,6 +47,8 @@ mod citation_places;
 mod citations;
 mod compiled;
 mod discovery;
+// §AR-config.9: `grund config explain`'s answer, assembled from the gates.
+pub(crate) mod explain;
 mod facade;
 #[cfg(test)]
 mod facade_sync;

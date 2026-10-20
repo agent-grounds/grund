@@ -132,14 +132,21 @@ pub use config::{
 // §FS-config-migrate: `grund config migrate --to 2` and the one record it returns.
 #[doc(hidden)]
 pub use api::{MigrateOpts, config_migrate};
-// §FS-config-explain: the tables, keys and codes `grund config explain` answers for.
+// §FS-config-explain: `grund config explain`, the answer it returns, and the
+// tables, keys and codes it answers for.
 #[doc(hidden)]
-pub use api::explain_vocabulary;
+pub use api::{config_explain, explain_vocabulary};
+#[doc(hidden)]
+pub use config::explain::{
+    ExplainAnswer, ExplainAsk, ExplainCode, ExplainKey, ExplainTable, ExplainUnknown, Explained,
+};
 #[doc(hidden)]
 pub use config::migrate::{
     Gate, GateResult, ListedComment, MappedKey, MigrateFailure, MigrateNotice, MigrateOutcome,
     MigrateRefusal, MigrateReport, RefusalAnchor,
 };
+#[doc(hidden)]
+pub use model::{ClauseBy, CodeClause, CodeEnabled, CodeSeverity};
 
 // §FS-distribution.3.1, §REQ-backwards-compatibility.2: the four root aliases
 // noticed in 0.17.0, each gone on the release its note named.

@@ -9,6 +9,7 @@ use std::path::Path;
 
 use super::config_findings::config_diagnostics;
 use super::report::public_run_warnings;
+use crate::config::explain::{ExplainAsk, Explained};
 use crate::config::{Config, Invocation, Project, SchemaView, Selection};
 use crate::model::Finding;
 use crate::resolver::settled_run_warnings;
@@ -94,11 +95,21 @@ pub fn reference_style(path: &Path) -> Result<ReferenceStyle> {
     })
 }
 
+/// `grund config explain` (§FS-config-explain): what a table, a key or a check
+/// code is, in the version the config discovered from `path` is read as, or in
+/// both with no config, version 2 first (§FS-config-explain.2). It reads that
+/// file's version and nothing else, and runs nothing the repository configures
+/// (§FS-config-explain.6); the answer is data, which a frontend renders.
+#[doc(hidden)]
+pub fn config_explain(path: &Path, ask: &ExplainAsk) -> Result<Explained> {
+    crate::config::explain::explain(path, ask)
+}
+
 /// The tables and keys the reader of configuration `version` admits, `[header]`
 /// or `""` for the top level, and the codes `check` can report: what `grund
-/// config explain` answers for (§FS-config-explain.3, §FS-config-explain.4).
-/// Scaffold over today's lists until the command lands, read by the coverage
-/// test that holds every one of them answered (§REQ-discoverable-offline.3).
+/// config explain` answers for (§FS-config-explain.3, §FS-config-explain.4),
+/// read by the coverage test that holds every one of them answered
+/// (§REQ-discoverable-offline.3).
 #[doc(hidden)]
 pub fn explain_vocabulary(version: u32) -> (Vec<(String, Vec<String>)>, Vec<&'static str>) {
     let codes = crate::model::Code::ALL

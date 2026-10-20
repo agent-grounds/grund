@@ -166,7 +166,6 @@ fn report(failures: &[String]) {
 /// A table's answer names its keys (§FS-config-explain.1.2), and the version
 /// is the file's, or both with no file (§FS-config-explain.2).
 #[test]
-#[ignore = "red until #832 config explain lands; implement removes this"]
 fn every_table_key_and_code_is_answered_in_each_version() {
     let schema: Value = serde_json::from_str(&repo_file("schemas/grund.schema.json")).unwrap();
     let rows = catalog();
@@ -227,7 +226,6 @@ fn every_table_key_and_code_is_answered_in_each_version() {
 /// planned code and a misspelt one are a query that found nothing, exit 1,
 /// naming how to list the codes.
 #[test]
-#[ignore = "red until #832 config explain lands; implement removes this"]
 fn a_planned_or_misspelt_code_is_a_query_failure() {
     let planned: Vec<String> = catalog()
         .into_iter()

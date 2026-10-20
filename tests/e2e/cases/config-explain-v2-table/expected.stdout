@@ -1,0 +1,11 @@
+grund.toml is read as version 2.
+
+[schema.leads.words]
+How many words a declaration's lead may take, by strength.
+
+  must (integer): Words past which a declaration's lead is an error.
+  warn (integer): Words past which a declaration's lead is a warning.
+  should (integer): Words past which a declaration's lead is a suggestion.
+  may (integer): A word guideline that is not checked.
+
+Next: grund config explain '[schema.leads.words] must'

@@ -1,0 +1,9 @@
+grund.toml is read as version 1.
+
+oversized-lead
+A declaration's lead is longer than the configured word limit.
+
+Severity: warning, fixed.
+On: when [reference] lead_size_warning = { max = <N>, unit = "words" } is set (a setting)
+
+Next: grund config explain '[reference]'

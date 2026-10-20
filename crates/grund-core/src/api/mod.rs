@@ -76,8 +76,8 @@ mod unread_roots;
 pub use check::{CheckOpts, CheckOutput, check, check_with_opts, check_with_run_warnings, scan};
 pub use complete_ids::{CompleteIdsOpts, complete_ids, complete_ids_with_run_warnings};
 pub use config::{
-    ReferenceStyle, config_run_warnings, config_warnings, effective_config, effective_project,
-    explain_vocabulary, reference_style, schema_view, validate_config,
+    ReferenceStyle, config_explain, config_run_warnings, config_warnings, effective_config,
+    effective_project, explain_vocabulary, reference_style, schema_view, validate_config,
 };
 pub use config_migrate::{MigrateOpts, config_migrate};
 pub use cover::{

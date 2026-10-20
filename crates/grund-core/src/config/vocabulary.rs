@@ -1,7 +1,7 @@
 //! §FS-config-explain.3: the tables and keys each version's reader admits, as
-//! `grund config explain` enumerates them. Scaffold until the command lands: it
-//! reads the v2 gates through `v2::admitted` and v1's lowering table, and
-//! changes nothing either reader does.
+//! `grund config explain` enumerates them: the v2 gates through `v2::admitted`,
+//! and v1's lowering table, which the v1 parser admits its keys from
+//! (§AR-config.3.3 item 5).
 
 use super::point_sizes::LEAD_SIZE_MEMBERS;
 use super::v1::mapping::KEYS;

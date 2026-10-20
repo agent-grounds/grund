@@ -91,6 +91,8 @@ fn print_check_help() {
     for code in Code::ALL {
         println!("  {}", code.as_str());
     }
+    // §FS-cli.3.3: where to ask what a code means.
+    println!("grund config explain CODE says what a code means, its severity and what turns it on.");
     println!();
     println!(
         "Exit:  0 clean · 1 dangling / duplicate / unknown-section / ungrounded findings · 2 unreadable tree or CLI error."

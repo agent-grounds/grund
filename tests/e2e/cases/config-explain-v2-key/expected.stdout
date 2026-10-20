@@ -1,0 +1,5 @@
+grund.toml is read as version 2.
+
+[schema.leads.words] warn
+Values: integer
+Words past which a declaration's lead is a warning.

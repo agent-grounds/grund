@@ -55,6 +55,7 @@ mod unread_roots;
 mod values;
 
 pub use armed::{Armed, Switch};
+pub use catalog::{ClauseBy, CodeClause, CodeEnabled, CodeSeverity};
 pub use codes::Code;
 pub use e2e::{E2eCase, E2eSpecRef};
 pub use expected::{Expected, ExpectedEntrypoint, ExpectedSection, ScopedExpectation};
