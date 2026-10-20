@@ -1,0 +1,33 @@
+grund.toml is read as version 2.
+
+Top-level keys: grund_config_version, project_name
+[schema]  What exists: the citation marker, the ID grammar, the sources, the note and lead measures, and the kinds.
+[schema.sources]  The sources a version-2 project is read from.
+[schema.sources.extensions]  Maps a file suffix, written without its dot, to an admitted language; an entry overrides the epoch's own assignment of that suffix.
+[schema.sources.definitions]  Languages of your own, which `languages` may then admit and `[schema.sources.extensions]` may map a suffix to.
+[schema.sources.definitions.<name>]  One defined language.
+[schema.notes]  Measures on inline citation notes.
+[schema.notes.lines]  How many lines an inline note may take, by strength.
+[schema.notes.columns]  How many columns an inline note may take, by strength.
+[schema.notes.text]  Whether an inline note may carry text beside its citation.
+[schema.notes.layout]  Where the citation sits inside a note; write one strength only.
+[schema.leads]  Measures on declaration leads.
+[schema.leads.words]  How many words a declaration's lead may take, by strength.
+[schema.kinds]  The kinds, one `[schema.kinds.<NAME>]` table each.
+[schema.kinds.<NAME>]  One row: its places, its form, and its fields. A row may list several places; a file listed in `files` belongs to its row, otherwise the deepest folder holding it decides, and a file in no place belongs to `code`. The row named `code` is the complement: it declares no IDs, and listing places on it narrows the scan to every place written.
+[schema.kinds.<NAME>.fields]  The kind's chapters as fields, by name.
+[schema.kinds.<NAME>.fields.<field>]  One field: a chapter of the kind, its presence, position and content.
+[rules]  How nodes relate: citation rules, grounding and snapshot resolution.
+[rules.citations]  Citation direction rules: one `[rules.citations.<KIND>]` table per citing kind.
+[rules.citations.grounding]  The grounding ladder: the unit, by strength, that must carry a citation.
+[rules.citations.<KIND>]  What a citing kind (or place) must, warn, should, may, should not, warn not and must not cite.
+[rules.citations.<KIND>.grounding]  The grounding ladder: the unit, by strength, that must carry a citation.
+[rules.resolution]  How strongly a fetched kind's missing snapshot is reported: `<KIND> = "must"` or `"warn"`.
+[presentation]  The bytes grund writes: the trigger, the conversation opinion, kind titles and `grund fmt`.
+[presentation.kinds]  Display titles, one `[presentation.kinds.<NAME>]` table per kind.
+[presentation.kinds.<NAME>]  One kind's display title.
+[presentation.fmt]  What `grund fmt` writes and leaves alone.
+[workspace]  The sub-projects a workspace root checks, each in its own namespace.
+65 check codes: grund config explain --codes
+
+Next: grund config explain '[schema]' examples/config-explain/explain-1-index/repo

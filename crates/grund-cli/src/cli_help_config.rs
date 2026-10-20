@@ -67,4 +67,8 @@ fn print_config_help() {
         "  grund config explain oversized-lead   # what a check code means, its severity and what turns it on"
     );
     println!("  grund config migrate --to 2     # the version-2 file, previewed; nothing written");
+    print_guide_links(
+        &["https://github.com/agent-grounds/grund/blob/main/docs/user-facing/explain.md"],
+        &["https://github.com/agent-grounds/grund/tree/main/examples/config-explain"],
+    );
 }

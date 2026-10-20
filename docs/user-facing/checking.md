@@ -54,6 +54,9 @@ Text inside a source file's string literal is data, so a qualified citation ther
 That is the core. Every rule, including citation directions, chapter rules, fields and
 values, with what it means underneath and the finding code it reports, is in
 [Schema and links](structure.md#schema-and-links-the-rules-a-repository-is-held-to).
+To ask what one finding code means, how severe it is and what turns it on, run
+`grund config explain <code>`: it answers from the grund you run, in your
+config's version ([config explain](explain.md)).
 
 `grund check` reads the configured source scope: version 1 uses `[scan] include`; version 2 uses configured places, including the `code` complement, with `[schema.sources] exclude` pruning files ([sources guide](sources.md)). Citations outside that scope are invisible to the ordinary run. `grund check --full` ([§FS-check.1.3](../functional-spec/FS-check.md#13-the-full-tree-scope---full)) widens the walk past configured scope, including places with `scan = false`, and reports unresolved references and section headings outside declaration bodies there. Source exclusions still apply. The wider walk does not apply the ordinary convention rules outside scope; it is additive, so it can only turn a green run red.
 

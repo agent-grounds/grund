@@ -1,0 +1,8 @@
+grund_config_version = 2
+project_name = "explain"
+
+[schema.kinds.FS]
+folders = ["docs/fs"]
+
+[schema.leads.words]
+warn = 120
