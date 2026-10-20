@@ -140,6 +140,8 @@ grund agent-setup-instructions   # a guided setup for your agent
 
 Your agent inspects the repository, recommends settings for the specs you have,
 confirms each one with you, then writes `grund.toml`, runs `grund init` and validates.
+The command prints the core of the guide; the agent fetches each further section
+it needs with `--section`.
 To set up by hand instead, see [setup](docs/user-facing/setup.md).
 
 Then:
