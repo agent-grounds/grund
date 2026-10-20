@@ -19,15 +19,15 @@ use std::path::{Path, PathBuf};
 
 use super::anchor_numbering::numbered_anchor;
 use super::settled_headings::SettledHeadings;
-use crate::config::{Frame, Presentation, Schema};
+use crate::config::{Frame, Owners, Presentation, Schema};
 use crate::grammar::{
     Grammar, anchor_slug, reduce_heading_text, render_declaration_id, without_closing_sequence,
 };
 use crate::model::{
-    Catalog, Declaration, FileRecord, FileRecords, Id, SectionInfo, paired_declarations,
-    scanned_path_key,
+    Catalog, Declaration, FileRecord, FileRecords, Id, SectionInfo, configured_home_path_key,
+    paired_declarations, scanned_decl_relative_path, scanned_path_key,
 };
-use crate::sources::canonical_path;
+use crate::sources::{canonical_path, physical_path_key};
 
 /// Compute the link URL for a citation: a repo-relative path to the declaration's
 /// home file — following an inline-spec stub to its real source file — plus a
@@ -64,18 +64,20 @@ pub(crate) fn markdown_link_target(
     )
 }
 
-/// The canonical bare-ID link from each index file to every declaration of its
-/// kind, keyed by (index file, ID): what `Expected` hands the kind-index pass so
+/// The canonical bare-ID link from each index file to the declarations it can
+/// name, keyed by (index file, ID): what `Expected` hands the kind-index pass so
 /// it compares a page against `fmt`'s destination, and names the entry a
 /// not-listed declaration owes, without the checker reading the anchor profile
 /// (§AR-checker.1.3, §AR-checker.2.16, §FS-check.3.18.3, §FS-check.3.18.5.2).
 /// An index is a citable folder row's Markdown `index`, and an ID is looked up
 /// under the first row of its own kind that keeps that file, as the kind-index
-/// pass looks it up. Every declaration of the kind rather than only the ones the
-/// index cites, because the ID the index lacks is the one whose entry the
-/// finding prints; an ID `fmt` would not link (§FS-fmt.6.4.2) has no entry.
-/// `settled` is the heading lines a `fmt` run leaves (§FS-fmt.6.3.3), empty for
-/// every other caller.
+/// pass looks it up. Two sets of IDs, and no more: every ID the index cites,
+/// which external enrollment compares, and every declaration of the kind under
+/// a folder that index lists, the only ones the finding can call not listed
+/// there. Linking every declaration of the kind from every index instead costs
+/// folders × declarations under a per-folder layout (§GOAL-fast-feedback). An
+/// ID `fmt` would not link (§FS-fmt.6.4.2) has no entry. `settled` is the
+/// heading lines a `fmt` run leaves (§FS-fmt.6.3.3), empty for every other caller.
 pub(crate) fn index_link_targets(
     presentation: &Presentation,
     schema: &Schema,
@@ -84,38 +86,95 @@ pub(crate) fn index_link_targets(
     settled: &SettledHeadings,
 ) -> BTreeMap<(PathBuf, Id), String> {
     let mut indexes: BTreeMap<PathBuf, Vec<(&str, PathBuf)>> = BTreeMap::new();
+    // Each folder with an index, keyed as a declaration's relative path is read.
+    let mut folders: BTreeMap<PathBuf, Vec<(&str, &str, PathBuf)>> = BTreeMap::new();
     // §FS-config-v2.schema.places.ownership: one index in each folder of the row.
-    for (row, index) in schema.rows.iter().flat_map(|row| {
+    for (row, folder, index) in schema.rows.iter().flat_map(|row| {
         row.index_paths()
             .into_iter()
-            .map(move |(_, index)| (row, index))
+            .map(move |(folder, index)| (row, folder, index))
     }) {
         if index.extension().and_then(|ext| ext.to_str()) != Some("md") {
             continue;
         }
+        let key = scanned_path_key(&index);
+        folders
+            .entry(configured_home_path_key(folder))
+            .or_default()
+            .push((folder, row.name.as_str(), key.clone()));
         indexes
-            .entry(scanned_path_key(&index))
+            .entry(key)
             .or_default()
             .push((row.name.as_str(), frame.root().join(&index)));
     }
     let mut targets = BTreeMap::new();
-    for rows in indexes.values() {
-        for (position, (kind, index_file)) in rows.iter().enumerate() {
-            if rows[..position].iter().any(|(earlier, _)| earlier == kind) {
+    if indexes.is_empty() {
+        return targets;
+    }
+    let mut link = |index_file: &PathBuf, id: &Id| {
+        let key = (index_file.clone(), id.clone());
+        if targets.contains_key(&key) {
+            return;
+        }
+        if let Some(target) = markdown_link_target_with_root(
+            index_file,
+            id,
+            None,
+            presentation,
+            frame,
+            findings,
+            None,
+            settled,
+        ) {
+            targets.insert(key, target);
+        }
+    };
+    // The IDs each index cites with the marker: what enrollment compares.
+    let configured_root = scanned_path_key(frame.root());
+    let physical_root = physical_path_key(frame.root());
+    for citation in &findings.citations {
+        if citation.namespace.is_some()
+            || citation.section.is_some()
+            || !citation.has_marker
+            || citation.shorthand
+            || !findings.declarations.contains_key(&citation.id)
+        {
+            continue;
+        }
+        let Some(relative) =
+            scanned_decl_relative_path(&citation.file, &configured_root, &physical_root)
+        else {
+            continue;
+        };
+        if let Some((_, index_file)) = indexes
+            .get(relative.as_ref())
+            .and_then(|rows| rows.iter().find(|(kind, _)| *kind == citation.id.kind))
+        {
+            link(index_file, &citation.id);
+        }
+    }
+    // §FS-check.3.18.5.2: the declarations under the index's folders, by the
+    // membership test the kind-index pass owes entries by (§FS-check.3.18.2),
+    // asked only of the folders above each declaration.
+    let owners = Owners::new(schema, frame);
+    for (id, decls) in &findings.declarations {
+        for decl in decls {
+            let Some(relative) = owners.relative(&decl.file) else {
                 continue;
-            }
-            for id in findings.declarations.keys().filter(|id| id.kind == *kind) {
-                if let Some(target) = markdown_link_target_with_root(
-                    index_file,
-                    id,
-                    None,
-                    presentation,
-                    frame,
-                    findings,
-                    None,
-                    settled,
-                ) {
-                    targets.insert((index_file.clone(), id.clone()), target);
+            };
+            for (folder, kind, key) in relative
+                .ancestors()
+                .filter_map(|ancestor| folders.get(ancestor))
+                .flatten()
+            {
+                if *kind != id.kind || !schema.folder_owns(folder, &relative) {
+                    continue;
+                }
+                if let Some((_, index_file)) = indexes
+                    .get(key)
+                    .and_then(|rows| rows.iter().find(|(row, _)| row == kind))
+                {
+                    link(index_file, id);
                 }
             }
         }
