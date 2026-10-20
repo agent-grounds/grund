@@ -15,8 +15,9 @@ use crate::rules::sentence::{ParsedRule, RuleLevel, RulePolarity, RuleRelation, 
 /// §FS-check.1.4.1: what each rule turns on beside the rule checks — the obligation
 /// a `must` or `should` rule holds its subject to, and the direction a citation
 /// rule reports at its level. A rule the run could not read may have been any of
-/// them, and its `invalid-rule` row, which the selection carries, says why it
-/// judged nothing, so it arms them all.
+/// them, and its `invalid-rule` row says why it judged nothing, so it arms them
+/// all: every code these switches turn on is a rule-produced code, which the
+/// selection carries that row with (§FS-rules.7.6).
 pub(super) fn arm_rule_directions(parsed_rules: &[ParsedRule], unread: bool, armed: &mut Armed) {
     if unread {
         for switch in [
