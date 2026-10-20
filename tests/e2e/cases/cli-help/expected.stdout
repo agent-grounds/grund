@@ -9,7 +9,7 @@ Query the catalog:
 
 Check and author:
   check         Scan a repo or subtree and report findings.             grund check .
-  fmt           Rewrite `$$` to `§`; --marker cites bare IDs.           grund fmt --check
+  fmt           Normalize citations; maintain links and section locks.  grund fmt --check
   id            Next conflict-free ID for a new declaration.            grund id FS "user login"
   fetch         Materialize one configured external snapshot.           grund fetch TICKET-1234
 

@@ -1,4 +1,4 @@
-/// The `grund fmt --help` page (§FS-cli.2.3, §FS-fmt): the rewrite modes, their report,
+/// The `grund fmt --help` page (§FS-cli.2.3.3, §FS-fmt): the rewrite modes, their report,
 /// the exit codes, and examples of each mode.
 fn print_fmt_help() {
     println!(
@@ -7,6 +7,15 @@ fn print_fmt_help() {
     println!(
         "optionally upgrade bare ID tokens, and optionally emit Markdown cross-reference links."
     );
+    println!();
+    println!("After a declaration rename or file move, first edit the declaration and affected");
+    println!("authored citation IDs. When cross-reference emission applies, fmt re-derives generated");
+    println!("Markdown link destinations and anchors; it does not repair arbitrary URLs or rename IDs.");
+    println!();
+    println!("Run --write from the config/project root or workspace root to update eligible section locks.");
+    println!("Locks are keyed by declaration ID: a file move alone does not rename a lock file.");
+    println!("fmt never silently approves a protected section move; fix citations or leave a pointer first.");
+    println!("Then run grund check and grund fmt --check, and commit the generated lock changes.");
     println!();
     println!("Usage:  grund fmt [PATH] [--check | --write] [--marker] [--cross-refs]");
     println!();
@@ -47,6 +56,6 @@ fn print_fmt_help() {
     println!("Examples:");
     println!("  grund fmt                       # preview every rewrite --write would apply");
     println!("  grund fmt --check               # the same preview as a gate: exit 1 if pending");
-    println!("  grund fmt --write               # rewrite `$$` to `§` in place");
+    println!("  grund fmt --write               # after an authored rename/move, maintain links and locks from the root");
     println!("  grund fmt --write --marker      # also mark bare ID tokens");
 }

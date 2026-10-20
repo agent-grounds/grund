@@ -212,6 +212,29 @@ A citation into another workspace member, of `FS-login.format.1` in the member `
 
 The lock has one gap. A section moved and edited in the same change matches no recorded fingerprint, so the lock reads it as an edit in place. `check` passes, and the only trace is the refreshed line in the lock diff ([§FS-section-lock.limits.edit-and-move](../functional-spec/FS-section-lock.md#limitsedit-and-move-a-section-moved-and-edited-in-one-change)). Where an address must never move, write its complete path: complete-path headings need no lock, unless the path puts a name under a number. The runnable [`examples/relative-sections/`](../../examples/relative-sections/) prints the full path each relative heading resolves to, and [`examples/relative-sections-lock/`](../../examples/relative-sections-lock/) shows the lock catching an unrecorded citation.
 
+## Maintaining declarations
+
+Before renaming or moving a declaration, run `grund refs <ID>` to find affected
+citations. Edit the declaration and affected authored citation IDs yourself, then
+run these commands from the config/project root or workspace root
+([§FS-init.2.3.4.9](../functional-spec/FS-init.md#2349-declaration-blast-radius)):
+
+```bash
+grund fmt --write    # after the authored rename or move
+grund check
+grund fmt --check
+```
+
+When cross-reference emission applies, fmt re-derives generated Markdown link
+destinations and anchors ([§FS-fmt.6.3](../functional-spec/FS-fmt.md#63-idempotency-and-re-derive)).
+The root-scoped write also updates eligible section locks; commit those changes
+with the declaration and citations. Locks are keyed by declaration ID, so moving
+only the file leaves its lock name alone. Do not hand-edit locks: fmt does not
+silently approve a protected section move. Fix the citations or leave a pointer
+at the old address first ([§FS-section-lock.write](../functional-spec/FS-section-lock.md#write-who-writes-the-lock)).
+fmt does not replace authored IDs or repair arbitrary URLs. Try the rename on a
+copy with [`examples/relative-sections-lock/`](../../examples/relative-sections-lock/).
+
 ## Schema and links: the rules a repository is held to
 
 `grund` reads a repository as a graph. Every scan turns the tree into one
@@ -328,7 +351,8 @@ catalog lists every finding code, its severity, and the setting that turns it on
 - **Typing and expanding.** `$$` becomes `§`, and a persisted number-only
   shorthand is expanded to the full ID.
 - **Following an edge backwards.** `grund refs <ID>` lists every citation of an
-  ID. Run it before renaming or moving a declaration.
+  ID. Run it before renaming or moving a declaration, then follow the
+  [post-rename maintenance workflow](#maintaining-declarations).
 - **In the editor and the terminal.** The language server jumps from a citation
   to its declaration, shows the section map on hover, lists references, and
   turns citations into document links ([LSP guide](lsp.md), [§FS-lsp](../functional-spec/FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)).

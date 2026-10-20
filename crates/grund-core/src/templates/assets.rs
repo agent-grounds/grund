@@ -14,6 +14,7 @@
 use crate::config::{Project, escape_toml_basic};
 use crate::grammar::id_shape;
 
+/// §FS-init.2.3.4.3, §FS-init.2.3.4.9: the shared read and rename-maintenance guidance.
 pub(super) const AGENTS_TEMPLATE: &str = include_str!("../../assets/templates/AGENTS.md");
 /// Workspace-only project-boundary guidance (§FS-init.2.3.4.16).
 pub(super) const AGENTS_PROJECT_NAMESPACES_TEMPLATE: &str =

@@ -1,6 +1,15 @@
 grund fmt — normalize citation syntax: rewrite the `$$` trigger to the `§` marker,
 optionally upgrade bare ID tokens, and optionally emit Markdown cross-reference links.
 
+After a declaration rename or file move, first edit the declaration and affected
+authored citation IDs. When cross-reference emission applies, fmt re-derives generated
+Markdown link destinations and anchors; it does not repair arbitrary URLs or rename IDs.
+
+Run --write from the config/project root or workspace root to update eligible section locks.
+Locks are keyed by declaration ID: a file move alone does not rename a lock file.
+fmt never silently approves a protected section move; fix citations or leave a pointer first.
+Then run grund check and grund fmt --check, and commit the generated lock changes.
+
 Usage:  grund fmt [PATH] [--check | --write] [--marker] [--cross-refs]
 
 With no PATH, the run covers the whole project or workspace discovered from the current directory; a PATH narrows it.
@@ -26,5 +35,5 @@ Exit:  0 nothing to do, or --write succeeded · 1 changes pending (dry run / --c
 Examples:
   grund fmt                       # preview every rewrite --write would apply
   grund fmt --check               # the same preview as a gate: exit 1 if pending
-  grund fmt --write               # rewrite `$$` to `§` in place
+  grund fmt --write               # after an authored rename/move, maintain links and locks from the root
   grund fmt --write --marker      # also mark bare ID tokens
