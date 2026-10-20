@@ -1,1 +1,1 @@
-note: beta/FS-doesnotexist is neither declared nor cited — run `grund list --project beta` to see beta's declared IDs
+note: beta/FS-doesnotexist is neither declared nor cited in scan path `tests/e2e/cases/workspace-refs-undeclared/repo` — run `grund list --project beta` to see beta's declared IDs, including outside this scan
