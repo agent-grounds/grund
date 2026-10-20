@@ -9,7 +9,7 @@
 //! subject, so what can be recovered is decided once. Where named sections are
 //! off, both surfaces ask their own parser again with them on.
 
-use super::subjects::{Spelling, SubjectRefusal, parse_subject, validate_named_path};
+use super::subjects::{Spelling, SubjectFault, SubjectRefusal, parse_subject, validate_named_path};
 use super::{RuleSubject, RuleVocabulary};
 use crate::grammar::{Grammar, named_section_component, split_alias_path};
 
@@ -87,6 +87,24 @@ pub(super) fn recover(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> 
 pub(super) struct Suggestion {
     pub(super) text: String,
     pub(super) after_enabling: bool,
+}
+
+/// Replace only the unsupported subject quantifier (§FS-rule-refusals.sentences.every).
+/// Callers reparse the result before offering it, preserving unknown kinds and
+/// complete paths for the ordinary recovery stages rather than guessing here.
+pub(super) fn repair_every(refusal: &SubjectRefusal) -> Option<String> {
+    if refusal.fault != SubjectFault::Every {
+        return None;
+    }
+    match refusal.spelling {
+        Spelling::Each => Some(format!("Each {}", refusal.head)),
+        Spelling::ChapterOfEach => Some(format!(
+            "The {} chapter of each {}",
+            refusal.path.as_deref()?,
+            refusal.head
+        )),
+        _ => None,
+    }
 }
 
 /// §FS-rule-refusals.selectors and §FS-rule-refusals.sentences.named-sections: a subject refused for needing named

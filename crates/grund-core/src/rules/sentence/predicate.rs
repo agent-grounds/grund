@@ -5,6 +5,7 @@
 
 use super::count::{CountSpelling, count_prefix, per_target};
 use super::forms::{Form, Refusal, refuse};
+use super::subjects::EVERY_IS_UNSUPPORTED;
 use super::targets::kind_targets;
 use super::{Cardinality, RulePolarity, RuleRelation, RuleTargets, RuleVocabulary, TargetMode};
 
@@ -14,6 +15,13 @@ pub(super) fn parse_predicate(
     vocab: &RuleVocabulary,
     unverifiable: &mut Option<String>,
 ) -> Result<(RuleRelation, RuleTargets, Cardinality), Refusal> {
+    // §FS-rule-refusals.sentences.every: keep the kind and count for the ordinary reparse.
+    if let Some(rest) = text.strip_prefix("cite every ") {
+        return Err(refuse(
+            EVERY_IS_UNSUPPORTED,
+            Form::One(format!("cite each {rest}")),
+        ));
+    }
     if polarity == RulePolarity::Prohibiting {
         let Some(rest) = text.strip_prefix("cite any ") else {
             return Err(refuse(

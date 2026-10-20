@@ -61,7 +61,6 @@ fn accepted_each_controls_pass_in_the_same_fixture() {
 }
 
 #[test]
-#[ignore = "red until #833 diagnoses every and reparses each offers; implement removes this"]
 fn check_rule_names_every_and_pastes_the_complete_each_offer() {
     let mut wrong = Vec::new();
     for (sentence, repaired) in rows() {
@@ -83,7 +82,6 @@ fn check_rule_names_every_and_pastes_the_complete_each_offer() {
 }
 
 #[test]
-#[ignore = "red until #833 gives configured rules the same every repair; implement removes this"]
 fn configured_rules_name_every_and_match_the_ad_hoc_repair() {
     let root = std::env::temp_dir().join(format!(
         "grund-833-configured-{}-{}",
@@ -137,7 +135,6 @@ fn configured_rules_name_every_and_match_the_ad_hoc_repair() {
 }
 
 #[test]
-#[ignore = "red until #833 gives selectors the every reason and each repair; implement removes this"]
 fn selectors_name_every_and_paste_selector_offers() {
     let mut wrong = Vec::new();
     for (selector, repaired) in [
@@ -183,7 +180,6 @@ fn selectors_name_every_and_paste_selector_offers() {
 }
 
 #[test]
-#[ignore = "red until #833 repairs every through existing refusal stages; implement removes this"]
 fn every_repair_respects_stage_precedence_and_reparse_limits() {
     let mut wrong = Vec::new();
     for (sentence, reason, offer, kinds) in [

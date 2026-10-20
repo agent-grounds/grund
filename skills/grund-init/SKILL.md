@@ -704,6 +704,9 @@ Common refusals are intentional. A sentence is refused for the first stage it fa
 - `Each FS must have exactly one  chapter.` → `chapter name must be a non-empty NAME with no surrounding whitespace; NAME forbids whitespace anywhere.`
 - `Each FS must cite at least one GOAL` → `rule must end with "."; accepted form: Each FS must cite at least one GOAL.`
 - `each FS must cite at least one GOAL.` → `fixed word "Each" is case-sensitive; accepted form: Each FS must cite at least one GOAL.`
+- `Every FS must cite at least one GOAL.` → `quantifier "every" is not accepted; accepted form: Each FS must cite at least one GOAL.`
+- `The requirements chapter of every FS must cite at least one REQ.` → `quantifier "every" is not accepted; accepted form: The requirements chapter of each FS must cite at least one REQ.`
+- `AR-overview.system-overview must cite every AR exactly once.` → `quantifier "every" is not accepted; accepted form: AR-overview.system-overview must cite each AR exactly once.`
 - `Each file in vendor/ must cite at least one FS.` → `path subjects are not accepted in phase 1`, then `known kinds: GOAL, REQ, FS, AR, RULE`
 - `Each */FS must cite at least one GOAL.` → `subject namespaces must be local in phase 1; accepted form: Each FS must cite at least one GOAL.`
 - `FS-login.* must cite at least one REQ.` → `section-component wildcards are not accepted in phase 1; accepted form: FS-login must cite at least one REQ.`
@@ -712,6 +715,13 @@ Common refusals are intentional. A sentence is refused for the first stage it fa
 - With named sections off, `FS-login.requirements must cite at least one REQ.` → `named chapter subjects require [id] named_sections = true; accepted form after enabling it: FS-login.requirements must cite at least one REQ.`
 - `Each POLICY must cite at least one GOAL.` → `unknown kind "POLICY"`, then `known kinds: GOAL, REQ, FS, AR, RULE`
 <!-- END chapter-rules-refused -->
+
+Use `Each` for a declaration subject and `each` after `chapter of` or `cite`.
+The unsupported quantifier `every` stays refused; grund offers the `each`
+spelling after reparsing it, preserving the other typed parts. `list --selector`
+offers a selector for the two subject forms. A chapter actually named `every`,
+a nested `every.detail` path, and an ID such as `FS-every` remain valid.
+See [the quantifier refusal](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentencesevery-unsupported-every-is-refused-as-a-quantifier-with-an-each-repair).
 
 Try a sentence without adding a declaration:
 
