@@ -110,17 +110,41 @@ fn example_path_subject_entry_teaches_the_cli_refusal_without_a_rewrite() {
     );
 }
 
+/// Every file of one skill directory, `SKILL.md` then `references/` in name order.
+fn skill_files(dir: &std::path::Path) -> Vec<(String, Vec<u8>)> {
+    let mut paths = vec![dir.join("SKILL.md")];
+    let mut references: Vec<_> = fs::read_dir(dir.join("references"))
+        .expect("the skill's references")
+        .map(|entry| entry.unwrap().path())
+        .collect();
+    references.sort();
+    paths.extend(references);
+    paths
+        .into_iter()
+        .map(|path| {
+            let name = path.strip_prefix(dir).unwrap().display().to_string();
+            (name, fs::read(&path).expect("skill file"))
+        })
+        .collect()
+}
+
+/// The chapter-rules copy is the skill's `rules` section, and the two skill directories
+/// are byte-identical file for file (§FS-rules.10, §FS-init.5.3).
 #[test]
 fn guide_writing_section_and_both_skill_copies_are_byte_identical() {
     let root = repo_root();
     let guide = fs::read(root.join("docs/user-facing/rules.md")).expect("rules guide");
-    let repo_skill = fs::read(root.join("skills/grund-init/SKILL.md")).expect("repository skill");
-    let embedded = fs::read(root.join("crates/grund-core/assets/skills/grund-init/SKILL.md"))
-        .expect("embedded skill");
-    assert_eq!(repo_skill, embedded, "whole skill copies drifted");
+    let repo_skill = root.join("skills/grund-init");
+    let embedded = root.join("crates/grund-core/assets/skills/grund-init");
+    assert_eq!(
+        skill_files(&repo_skill),
+        skill_files(&embedded),
+        "whole skill copies drifted"
+    );
+    let rules = fs::read(repo_skill.join("references/rules.md")).expect("the rules section");
     let begin = b"<!-- BEGIN chapter-rules -->\n";
     let end = b"<!-- END chapter-rules -->";
-    assert_eq!(marked(&guide, begin, end), marked(&repo_skill, begin, end));
+    assert_eq!(marked(&guide, begin, end), marked(&rules, begin, end));
 }
 
 #[test]

@@ -1161,7 +1161,7 @@ The reference sections are a closed set of ten. Each is printed by `--section <n
 
 | section | what it holds |
 |---|---|
-| `config` | the config questions, except `[citations]` |
+| `config` | how to recommend each setting, then the config questions, except `[citations]` |
 | `citations` | the `[citations]` question and the marked citation-directions copy ([§FS-init.5.3](FS-init.md#53-one-directory-two-surfaces)) |
 | `languages` | the language and repository-shape examples, with version-2 sources and the move from version 1 |
 | `members` | the member-splitting recipe ([§FS-init.5.4](FS-init.md#54-splitting-off-a-member)) |

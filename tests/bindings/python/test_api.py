@@ -291,6 +291,12 @@ class ApiTests(unittest.TestCase):
             with self.assertRaises(dataclasses.FrozenInstanceError):
                 query.id = "changed"
 
+    def test_setup_instructions_are_the_whole_guide(self):
+        # §FS-distribution.3.3.5: the text `--full` prints, the core through the last section.
+        text = self.g.agent_setup_instructions().text
+        self.assertIn("## Fresh repository", text)
+        self.assertIn("<!-- END chapter-rules -->", text)
+
     def test_cautions_survive_success_and_failure(self):
         with temporary() as temp:
             result = self.g.check(fixture(temp, "workspace-include-root-false-unread-json"))

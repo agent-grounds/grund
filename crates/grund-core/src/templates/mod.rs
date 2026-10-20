@@ -35,7 +35,10 @@ mod citation_directions;
 mod clickable_citations;
 mod scoped_guidance;
 
-pub use assets::{AGENT_SETUP_INSTRUCTIONS, canonical_template_text};
+pub use assets::{
+    AGENT_SETUP_INSTRUCTIONS, AGENT_SETUP_SECTIONS, SetupPart, canonical_template_text,
+    setup_instructions,
+};
 
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
@@ -69,3 +72,5 @@ mod tests_citation_directions;
 mod tests_clickable_citations;
 #[cfg(test)]
 mod tests_scoped_guidance;
+#[cfg(test)]
+mod tests_setup_instructions;

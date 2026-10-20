@@ -1,8 +1,9 @@
 """§FS-init.5.3 — what the binary embeds is what the tree shows: the `grund-init`
-skill under `skills/` is byte-identical to its copy under
-`crates/grund-core/assets/`, in both directions, so neither can drift from the
-other unnoticed. The scaffold templates have one copy only, the embedded one
-(§FS-init.2.3.7), so there is no second tree to keep in step."""
+skill under `skills/`, its core and every reference file, is byte-identical to
+its copy under `crates/grund-core/assets/`, file for file in both directions, so
+neither can drift from the other unnoticed. The scaffold templates have one copy
+only, the embedded one (§FS-init.2.3.7), so there is no second tree to keep in
+step."""
 
 import unittest
 from pathlib import Path
@@ -14,17 +15,35 @@ ASSETS = REPO_ROOT / "crates" / "grund-core" / "assets"
 
 class AssetSyncTests(unittest.TestCase):
     def test_grund_init_skill_matches_embedded_asset(self):
-        repo_skill = REPO_ROOT / "skills" / "grund-init" / "SKILL.md"
-        embedded_skill = ASSETS / "skills" / "grund-init" / "SKILL.md"
+        repo_skill = REPO_ROOT / "skills" / "grund-init"
+        embedded_skill = ASSETS / "skills" / "grund-init"
+
+        def files(root):
+            return {
+                path.relative_to(root).as_posix(): path.read_bytes()
+                for path in sorted(root.rglob("*"))
+                if path.is_file()
+            }
+
+        repo_files = files(repo_skill)
+        embedded_files = files(embedded_skill)
+        self.assertIn("SKILL.md", repo_files)
         self.assertEqual(
-            repo_skill.read_bytes(),
-            embedded_skill.read_bytes(),
-            "skills/grund-init/SKILL.md must stay byte-identical to the embedded asset",
+            sorted(repo_files),
+            sorted(embedded_files),
+            "skills/grund-init/ and the embedded asset must hold the same files",
         )
+        for name, data in repo_files.items():
+            self.assertEqual(
+                data,
+                embedded_files[name],
+                f"skills/grund-init/{name} must stay byte-identical to the embedded asset",
+            )
 
     def test_skill_citation_directions_match_canonical_page(self):
         canonical = REPO_ROOT / "docs" / "user-facing" / "citation-directions.md"
-        skill = (REPO_ROOT / "skills" / "grund-init" / "SKILL.md").read_bytes()
+        # §FS-init.5.5: the page sits in the skill's `citations` reference section.
+        skill = (REPO_ROOT / "skills" / "grund-init" / "references" / "citations.md").read_bytes()
         begin = b"<!-- BEGIN citation-directions -->\n"
         end = b"<!-- END citation-directions -->"
         self.assertEqual(skill.count(begin), 1)

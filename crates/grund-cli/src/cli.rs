@@ -1,9 +1,52 @@
+/// `grund agent-setup-instructions [--section NAME | --full]` (§FS-init.5): the core of
+/// the setup skill, one reference section, or the whole guide (§FS-init.5.5). It reads
+/// no tree, so every refusal is a CLI-level error (§FS-cli.4), and a `--section` name
+/// the table does not hold is refused with the table's names in order.
 fn command_agent_setup_instructions(args: &[String]) -> ExitCode {
-    if !args.is_empty() {
-        eprintln!("error: agent-setup-instructions takes no arguments");
-        return ExitCode::from(2);
+    let mut section: Option<&str> = None;
+    let mut full = false;
+    let mut words = args.iter();
+    while let Some(arg) = words.next() {
+        match arg.as_str() {
+            "--full" => full = true,
+            "--section" => {
+                let Some(name) = words.next() else {
+                    eprintln!("error: --section requires a value");
+                    return ExitCode::from(2);
+                };
+                section = Some(name);
+            }
+            other if other.starts_with("--section=") => {
+                section = Some(&other["--section=".len()..]);
+            }
+            // §FS-cli.3: `--format` and `--path-base` are unknown flags here too.
+            other if other.starts_with('-') => {
+                eprintln!("error: unknown flag `{other}`");
+                return ExitCode::from(2);
+            }
+            _ => {
+                eprintln!("error: agent-setup-instructions takes no positional arguments");
+                return ExitCode::from(2);
+            }
+        }
     }
-    print!("{}", canonical_template_text(AGENT_SETUP_INSTRUCTIONS));
+    let part = match (section, full) {
+        (Some(_), true) => {
+            eprintln!("error: --section and --full cannot be used together");
+            return ExitCode::from(2);
+        }
+        (Some(name), false) => SetupPart::Section(name),
+        (None, true) => SetupPart::Full,
+        (None, false) => SetupPart::Core,
+    };
+    let Some(text) = setup_instructions(part) else {
+        // Only a `--section` name can miss, so `section` holds the name refused.
+        let known: Vec<&str> = AGENT_SETUP_SECTIONS.iter().map(|(name, _)| *name).collect();
+        eprintln!("error: unknown setup section `{}`", section.unwrap_or_default());
+        eprintln!("known sections: {}", known.join(", "));
+        return ExitCode::from(2);
+    };
+    print!("{text}");
     ExitCode::SUCCESS
 }
 

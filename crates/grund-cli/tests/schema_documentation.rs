@@ -88,8 +88,8 @@ fn example_is_linked_from_the_examples_index_and_the_readme() {
 #[test]
 fn both_skill_copies_teach_grund_schema_beside_config_show() {
     for skill in [
-        "skills/grund-init/SKILL.md",
-        "crates/grund-core/assets/skills/grund-init/SKILL.md",
+        "skills/grund-init/references/schema.md",
+        "crates/grund-core/assets/skills/grund-init/references/schema.md",
     ] {
         let text = read(skill);
         assert!(

@@ -105,7 +105,9 @@ for (const name of ['effectiveConfig', 'validateConfig']) {
 }
 assert.deepEqual(Object.keys(await invoke('referenceStyle', [root + '/docs/functional-spec/FS-001-alpha.md']))
   .sort(), ['marker', 'runCautions', 'trigger']);
-assert.ok((await invoke('agentSetupInstructions', [])).instructions.length > 0);
+// §FS-distribution.3.2.1: the whole guide `--full` prints, the core through the last section.
+const setup = (await invoke('agentSetupInstructions', [])).instructions;
+assert.ok(setup.includes('## Fresh repository') && setup.includes('<!-- END chapter-rules -->'));
 // Init, explicit fetch and install successes use copied fixtures in mutations/fetch.mjs.
 const integrations = await invoke('integrations', []);
 assert.equal(integrations.mode, 'detection');

@@ -1,19 +1,17 @@
 //! Complete setup advice on both skill surfaces (§FS-init.5.4).
 
-use crate::templates::AGENT_SETUP_INSTRUCTIONS;
+use crate::templates::{AGENT_SETUP_INSTRUCTIONS, SetupPart, setup_instructions};
 
-/// §FS-init.5.4: the recipe is together in the setup guide, rather than scattered tokens.
+/// §FS-init.5.4: the recipe is together in the setup guide's `members` section, rather
+/// than scattered tokens, and the core's validation advice points to it.
 #[test]
 fn project_namespaces_setup_instructions_teach_complete_member_split() {
-    let text = AGENT_SETUP_INSTRUCTIONS;
-    let heading = text
-        .lines()
-        .find(|line| line.starts_with('#') && line.ends_with("Splitting off a member"))
-        .expect("setup instructions lack the complete 'Splitting off a member' recipe");
-    let start = text.find(heading).unwrap();
-    let recipe = &text[start..];
-    let end = recipe.find("\n## ").unwrap_or(recipe.len());
-    let recipe = &recipe[..end];
+    let recipe = setup_instructions(SetupPart::Section("members"))
+        .expect("setup instructions lack the `members` section");
+    assert!(
+        recipe.starts_with("## Splitting off a member\n"),
+        "the `members` section is the complete 'Splitting off a member' recipe"
+    );
     for phrase in [
         "independently checked",
         "app",
@@ -44,8 +42,7 @@ fn project_namespaces_setup_instructions_teach_complete_member_split() {
         "exclude ordinary modules"
     );
     assert!(
-        text[..start].contains("[Splitting off a member]")
-            || text[end + start..].contains("[Splitting off a member]"),
-        "validation advice must point back to the member-splitting recipe"
+        AGENT_SETUP_INSTRUCTIONS.contains("`grund agent-setup-instructions --section members`"),
+        "validation advice must point to the member-splitting recipe by its invocation"
     );
 }

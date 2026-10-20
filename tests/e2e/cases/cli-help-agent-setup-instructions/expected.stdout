@@ -1,13 +1,27 @@
 grund agent-setup-instructions — print the guided setup instructions for AI agents.
 
-Usage:  grund agent-setup-instructions
+Usage:  grund agent-setup-instructions [--section NAME | --full]
 
-The output is the same Markdown source shipped as `skills/grund-init/SKILL.md`,
-embedded in the binary so installed agents can discover the setup workflow
-without access to the source tree.
+With no flag it prints the core: the fresh-repository path, the contents, and
+the adoption workflow. A fresh repository needs only that, or `grund init -h`.
+The rest of the guide is ten reference sections, each printed on request.
 
-Exit:  0 instructions printed · 2 unexpected arguments.
+Options:
+  --section NAME  print one reference section
+                  e.g. grund agent-setup-instructions --section rules
+  --full          print the core, then every section: the whole guide at once
+                  e.g. grund agent-setup-instructions --full | less
+
+Sections, in --full order:
+  config, citations, languages, members, scoped-guidance, schema, queries, editor, integrations, rules
+
+The text is the Markdown shipped as `skills/grund-init/`: `SKILL.md` is the core
+and `references/<name>.md` each section. It is embedded in the binary so installed
+agents can discover the setup workflow without access to the source tree.
+
+Exit:  0 instructions printed · 2 unknown section, unknown flag, or a positional argument.
 
 Examples:
-  grund agent-setup-instructions          # print the setup guide
-  grund agent-setup-instructions | less   # read it a page at a time
+  grund agent-setup-instructions                  # the core: fresh path, contents, workflow
+  grund agent-setup-instructions --section rules  # one reference section
+  grund agent-setup-instructions --full | less    # the whole guide, a page at a time

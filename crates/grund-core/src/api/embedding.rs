@@ -91,9 +91,11 @@ pub(super) fn run(r: &EmbeddingRequest, query: Query) -> Result<Value, Value> {
         | "complete_ids" => query(r),
         "effective_config" | "validate_config" | "reference_style" => embedding_config::config(r),
         "fmt" | "init" | "fetch" | "integrations" => embedding_writers::write(r),
-        "agent_setup_instructions" => Ok(
-            json!({"text": canonical_template_text(AGENT_SETUP_INSTRUCTIONS), "run_cautions": []}),
-        ),
+        // §FS-distribution.3.2.1, §FS-distribution.3.3.5: both bindings return the whole
+        // guide, the text `--full` prints; `Full` names no section, so it is never `None`.
+        "agent_setup_instructions" => {
+            Ok(json!({"text": setup_instructions(SetupPart::Full), "run_cautions": []}))
+        }
         _ => Err(failure(
             "operation",
             "unsupported-operation",

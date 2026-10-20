@@ -9,7 +9,8 @@ use super::*;
 use crate::checker::check_findings;
 use crate::config::{Config, load_config};
 use crate::templates::{
-    AGENT_SETUP_INSTRUCTIONS, Template, canonical_template_text, render_grund_toml,
+    AGENT_SETUP_INSTRUCTIONS, AGENT_SETUP_SECTIONS, Template, canonical_template_text,
+    render_grund_toml,
 };
 use crate::testing::{current_block, current_marker, scan_tree, test_root, write};
 
@@ -17,24 +18,42 @@ use crate::testing::{current_block, current_marker, scan_tree, test_root, write}
 mod member_split_recipe;
 
 /// §FS-init.5.3: the distributable skill and the binary-embedded copy the CLI
-/// prints must be byte-identical, and a release that edits one surface
-/// without the other is invalid. Nothing enforced that, so an edit to the
+/// prints must be byte-identical, file for file, and a release that edits one
+/// surface without the other is invalid. Nothing enforced that, so an edit to the
 /// repository copy alone shipped stale setup instructions to every agent
 /// reaching grund through `agent-setup-instructions` rather than the repo.
 #[test]
 fn agent_setup_instructions_match_the_distributable_skill() {
-    let distributable =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/grund-init/SKILL.md");
+    let distributable = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/grund-init");
     // Absent when the tests run from a packaged crate rather than the
     // workspace; in the repository — where the invariant can be violated —
     // it is always present.
-    let Ok(text) = std::fs::read_to_string(&distributable) else {
+    let Ok(text) = std::fs::read_to_string(distributable.join("SKILL.md")) else {
         return;
     };
     assert_eq!(
         text, AGENT_SETUP_INSTRUCTIONS,
-        "skills/grund-init/SKILL.md and crates/grund-core/assets/skills/grund-init/SKILL.md must be byte-identical (§FS-init.5.3)"
+        "skills/grund-init/SKILL.md differs from the embedded core (§FS-init.5.3)"
     );
+    let mut files: Vec<String> = std::fs::read_dir(distributable.join("references"))
+        .expect("skills/grund-init/references")
+        .map(|entry| entry.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    files.sort();
+    let mut embedded: Vec<String> = AGENT_SETUP_SECTIONS
+        .iter()
+        .map(|(name, _)| format!("{name}.md"))
+        .collect();
+    embedded.sort();
+    assert_eq!(files, embedded, "no file of the skill is left unembedded");
+    for (name, text) in AGENT_SETUP_SECTIONS {
+        let path = distributable.join(format!("references/{name}.md"));
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            text,
+            "skills/grund-init/references/{name}.md differs from the embedded copy (§FS-init.5.3)"
+        );
+    }
 }
 
 /// §FS-init.5.1: what the instructions *say*, as against the byte-identity of
