@@ -1,1 +1,1 @@
-refs FS-missing {repo} --format json
+refs FS-missing . --format json
