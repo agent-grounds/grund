@@ -230,6 +230,29 @@ class ConfigSchemaTests(unittest.TestCase):
                          "docs/user-facing/configuration.md is stale: run "
                          "python scripts/render_config_reference.py")
 
+    def test_the_embedded_schema_is_the_published_one_without_its_spec_metadata(self):
+        """§AR-config.9.1: the copy `grund config explain` words each key from."""
+        embedded = render_config_reference.PROJECTION.read_text(encoding="utf-8")
+        self.assertEqual(embedded, render_config_reference.projection(),
+                         "crates/grund-core/assets/explain/grund.schema.json is stale: run "
+                         "python scripts/render_config_reference.py")
+        for metadata in render_config_reference.SPEC_METADATA:
+            self.assertNotIn(f'"{metadata}"', embedded)
+
+    def test_a_description_citing_a_spec_id_or_linking_is_refused_not_cut(self):
+        """§FS-config-explain.3: the description is printed as the schema writes it,
+        so one the binary could not print whole stops the render."""
+        project = render_config_reference.project
+        for description in ("Skipped ([§FS-config.3](../functional-spec/FS-config.md)).",
+                            "See §FS-config.3.", "See [the guide](sources.md)."):
+            node = {"properties": {"exclude": {"description": description}}}
+            with self.assertRaisesRegex(render_config_reference.SpecInDescription,
+                                        "#/properties/exclude"):
+                project(node)
+        spelled = {"description": "Its alias in `§alias/<ID>` citations.",
+                   "x-grund-spec": {"id": "FS-config.3"}}
+        self.assertEqual(project(spelled), {"description": spelled["description"]})
+
     def test_every_key_the_schema_names_is_one_the_reader_accepts(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

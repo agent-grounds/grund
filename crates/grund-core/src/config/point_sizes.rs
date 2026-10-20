@@ -63,7 +63,7 @@ pub struct LeadSizeWarning {
 }
 
 /// §FS-config-explain.1.1: the members of `[reference] lead_size_warning`, as
-/// `config explain` answers them; the parser below admits the same two.
+/// `config explain` answers them and as the parser below admits them.
 pub(in crate::config) const LEAD_SIZE_MEMBERS: &[&str] = &["max", "unit"];
 
 /// Parse the one inline table in grund's line-oriented config surface
@@ -91,6 +91,17 @@ pub(super) fn parse_lead_size_warning(
         let key = key.trim();
         let raw = raw.trim();
         match key {
+            "" => {
+                return bail_config(path, line, "invalid lead_size_warning field".to_string());
+            }
+            // §AR-config.9.1: the members `config explain` answers are the gate.
+            other if !LEAD_SIZE_MEMBERS.contains(&other) => {
+                return bail_config(
+                    path,
+                    line,
+                    format!("unknown lead_size_warning field `{other}`"),
+                );
+            }
             "max" => {
                 if max.is_some() {
                     return bail_config(
@@ -133,16 +144,7 @@ pub(super) fn parse_lead_size_warning(
                     );
                 }
             }
-            "" => {
-                return bail_config(path, line, "invalid lead_size_warning field".to_string());
-            }
-            other => {
-                return bail_config(
-                    path,
-                    line,
-                    format!("unknown lead_size_warning field `{other}`"),
-                );
-            }
+            _ => unreachable!("LEAD_SIZE_MEMBERS is `max` and `unit`"),
         }
     }
     let Some(max) = max else {
