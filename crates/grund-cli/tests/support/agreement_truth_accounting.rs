@@ -29,7 +29,15 @@ pub fn observe(
     } else {
         producer == "cli" && !matches!(call.surface.as_str(), "python" | "node" | "editor")
     });
-    let definition = &manifests[case]["variants"][variant]["calls"][key];
+    let mut facts = manifests[case]["variants"][variant].clone();
+    // §FS-refs.2.1: validate literal note paths with the execution truth's binding.
+    super::agreement_render_show::bind_refs_path(
+        &mut facts,
+        call.context
+            .as_ref()
+            .expect("verified invocation attribution"),
+    );
+    let definition = &facts["calls"][key];
     assert_eq!(
         call.expected["facts"], definition[producer],
         "receipt must use loaded authored facts"
