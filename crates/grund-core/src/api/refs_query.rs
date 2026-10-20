@@ -257,20 +257,38 @@ pub(super) fn refs_impl_with_details(
     let note = if public_hits.is_empty() && !target_project.findings.declarations.contains_key(&id)
     {
         // §FS-config.3.2.8: a missing query reports its own authored digits.
-        if context.workspace_loaded && alias.is_some() {
-            Some(format!(
-                "{}/{} is neither declared nor cited — run `grund list --project {}` to see {}'s declared IDs",
-                target_alias,
-                render_input_id(&render_config.grammar, raw_id, &id),
-                target_alias,
-                target_alias
-            ))
+        let rendered_id = render_input_id(&render_config.grammar, raw_id, &id);
+        // §FS-refs.2.1: explicit paths qualify both the denial and the list advice.
+        let (scan_scope, outside_scan) = if opts.path_provided {
+            (
+                format!(" in scan path `{}`", opts.path.display()),
+                ", including outside this scan",
+            )
         } else {
-            Some(format!(
-                "{} is neither declared nor cited — run `grund list` to see every declared ID",
-                render_input_id(&render_config.grammar, raw_id, &id)
-            ))
-        }
+            (String::new(), "")
+        };
+        let (query_id, list_command, declarations) = if context.workspace_loaded && alias.is_some()
+        {
+            (
+                format!("{target_alias}/{rendered_id}"),
+                format!("grund list --project {target_alias}"),
+                format!("{target_alias}'s declared IDs"),
+            )
+        } else {
+            let declarations = if opts.path_provided {
+                "project declarations"
+            } else {
+                "every declared ID"
+            };
+            (
+                rendered_id,
+                "grund list".to_string(),
+                declarations.to_string(),
+            )
+        };
+        Some(format!(
+            "{query_id} is neither declared nor cited{scan_scope} — run `{list_command}` to see {declarations}{outside_scan}"
+        ))
     } else {
         None
     };

@@ -163,21 +163,18 @@ fn assert_scoped_notes(v2: bool, workspace: bool) {
 /// §FS-refs.2.1: path-qualified wording for the reported v1 directory case,
 /// a file path, totals, and text/JSON stream separation.
 #[test]
-#[ignore = "red until #862 qualifies the scan-path note; implement removes this"]
 fn refs_note_scope_single_project() {
     assert_scoped_notes(false, false);
 }
 
 /// §FS-refs.2.1: the alias-qualified branch keeps project-specific list advice.
 #[test]
-#[ignore = "red until #862 qualifies the scan-path note; implement removes this"]
 fn refs_note_scope_workspace_qualified() {
     assert_scoped_notes(false, true);
 }
 
 /// §FS-refs.2.1: the diagnostic wording is independent of configuration version.
 #[test]
-#[ignore = "red until #862 qualifies the scan-path note; implement removes this"]
 fn refs_note_scope_v2() {
     assert_scoped_notes(true, false);
 }
