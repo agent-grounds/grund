@@ -179,7 +179,10 @@ so after citing a relative section run `grund fmt --write` with no path at the w
 root, or at the project root outside a workspace, and commit the section lock it writes,
 `.grund/sections/FS-login.lock`; `check` then says where a cited text went. See
 [section headings](docs/user-facing/structure.md#section-headings) and
-[`examples/relative-sections/`](examples/relative-sections/).
+[`examples/relative-sections/`](examples/relative-sections/). For declaration renames,
+follow the [maintenance workflow](docs/user-facing/structure.md#maintaining-declarations)
+and try the copy-based exercise in
+[`examples/relative-sections-lock/`](examples/relative-sections-lock/).
 
 A declaration can also live in code: a doc-comment that opens with the ID declares it,
 and a link from the kind's index enrolls it with no stub file. Grund's own `AR-checker` is declared only on the

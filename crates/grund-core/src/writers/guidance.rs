@@ -144,6 +144,7 @@ impl<'a> Guidance<'a> {
     /// the declaration shapes, chapter rules and pointer before `### Clickable
     /// citations` (§FS-init.2.3.5.12.2, §FS-init.2.3.5.13). `path` is the
     /// entrypoint under the config root the chapter-rule links are relative to.
+    /// §FS-init.2.3.7.1: select the version paired with this config's rendered guidance.
     pub(crate) fn finish_root_block(&self, mut block: String, path: &Path) -> String {
         let (project, run) = (self.config.project(), self.config.run());
         // §FS-init.2.3.9.3: the template renders the base revision's heading.

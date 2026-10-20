@@ -120,3 +120,18 @@ If custom config affects `AGENTS.md`, ensure `grund.toml` exists before `grund i
 
 If a project needs its own grammar or independent check, follow
 Splitting off a member (`grund agent-setup-instructions --section members`), then validate from the workspace root.
+
+## Maintaining Declarations
+
+Before a declaration rename or file move, run `grund refs <ID>` to find affected
+citations. Edit the declaration and affected authored citation IDs, then run
+`grund fmt --write` from the config/project root or workspace root. When
+cross-reference emission applies, fmt re-derives generated Markdown link
+destinations and anchors; the root-scoped write also updates eligible section
+locks. Run `grund check` and `grund fmt --check`, and commit the lock changes.
+Keep ID-keyed lock names unchanged for file-only moves. Do not hand-edit locks or
+expect fmt to replace authored IDs, repair arbitrary URLs, or silently approve a
+protected section move; fix citations or leave a pointer at the old address first.
+Use the [maintenance guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/structure.md#maintaining-declarations)
+and its [copy-based rename example](https://github.com/agent-grounds/grund/blob/main/examples/relative-sections-lock/README.md).
+

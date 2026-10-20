@@ -95,7 +95,6 @@ fn require(surface: &str, text: &str, concepts: &[(&str, bool)]) {
 
 /// §FS-cli.2.2: both maintenance effects are discoverable within one screen.
 #[test]
-#[ignore = "red until #824 top-level fmt help names links and section locks; implement removes this"]
 fn top_level_fmt_summary_names_link_and_section_lock_maintenance() {
     let page = grund(Path::new(env!("CARGO_MANIFEST_DIR")), &["--help"]);
     assert!(
@@ -123,7 +122,6 @@ fn top_level_fmt_summary_names_link_and_section_lock_maintenance() {
 
 /// §FS-cli.2.3.3: the full page teaches the remedy and a practical invocation.
 #[test]
-#[ignore = "red until #824 fmt help teaches root-scoped rename maintenance; implement removes this"]
 fn fmt_help_teaches_root_scoped_post_rename_maintenance() {
     let page = grund(Path::new(env!("CARGO_MANIFEST_DIR")), &["fmt", "--help"]);
     let text = page.to_lowercase();
@@ -152,7 +150,6 @@ fn fmt_help_teaches_root_scoped_post_rename_maintenance() {
 /// §FS-init.2.3.4.9, §FS-init.2.3.4.3: inspect actual init output, keeping
 /// the remedy near rename guidance rather than counting an unrelated --write.
 #[test]
-#[ignore = "red until #824 generated refs guidance teaches the rename workflow; implement removes this"]
 fn generated_guidance_connects_refs_to_rename_maintenance_and_verification() {
     let fixture = Fixture::new();
     grund(&fixture.0, &["init", "--no-vcs", "--agents-md"]);

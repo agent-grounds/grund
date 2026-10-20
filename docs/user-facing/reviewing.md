@@ -15,6 +15,13 @@ docs/requirements/REQ-no-wrong-citation.md: 1 (line 7)
 
 A section's children break when it moves, so before a move, rename or delete ask the same question of the whole subtree: `grund refs FS-check.3.2 --descendants --summary` folds that section *and every section beneath it* into the same one-line-per-file shape, which is the blast radius of the change rather than of the coordinate. Swap `--summary` for `--total` and the same subtree folds one rung further, to the pair `cited at <n> sites across <m> files` — the size of the move, without the rows ([§FS-refs.3.4](../functional-spec/FS-refs.md#34---total)).
 
+After an authored declaration rename or file move, use the
+[maintenance workflow](structure.md#maintaining-declarations): edit affected
+authored citation IDs, run `grund fmt --write` from the config/project or workspace
+root, then verify with `grund check` and `grund fmt --check`. Review and commit
+the generated link and eligible section-lock changes with the authored edits
+([§FS-init.2.3.4.9](../functional-spec/FS-init.md#2349-declaration-blast-radius)).
+
 Before reviewing a diff, group the citation graph by file so you can join changed files to the specs they touch. Name the changed file and a pattern, and `cover` keeps only the citations the pattern matches ([§FS-cover.globs](../functional-spec/FS-cover.md#globs---glob-keeps-the-citations-a-pattern-matches)):
 
 ```bash

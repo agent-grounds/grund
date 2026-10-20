@@ -13,7 +13,7 @@ fn print_help() {
     println!();
     println!("Check and author:");
     println!("  check         Scan a repo or subtree and report findings.             grund check .");
-    println!("  fmt           Rewrite `$$` to `§`; --marker cites bare IDs.           grund fmt --check");
+    println!("  fmt           Normalize citations; maintain links and section locks.  grund fmt --check");
     println!("  id            Next conflict-free ID for a new declaration.            grund id FS \"user login\"");
     println!("  fetch         Materialize one configured external snapshot.           grund fetch TICKET-1234");
     println!();
