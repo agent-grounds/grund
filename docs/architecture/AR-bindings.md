@@ -247,6 +247,39 @@ fails the test, with its output, and never skips it. The test passes only when e
 module `run.py` discovers passes, and on failure it prints `run.py`'s whole output, so
 the failing acceptance test is named in the gate's own log.
 
+#### 6.2.1 Pending-interrupt acceptance evidence
+
+The POSIX acceptance in `tests/bindings/python/test_boundary.py` proves
+[§FS-distribution.3.3.4](../functional-spec/FS-distribution.md#334-silent-synchronous-calls),
+then checks an independent root under
+[§FS-distribution.3.3.3](../functional-spec/FS-distribution.md#333-per-call-scope-and-path-encoding).
+Its isolated child explicitly installs `signal.default_int_handler` for SIGINT
+and unblocks SIGINT. Regression runs exercise inherited SIG_IGN and, where
+`pthread_sigmask` is available, a blocked SIGINT mask, without changing the test
+runner's lasting signal state or directing SIGINT at it.
+
+Bounded synchronization establishes that SIGINT became pending during the real
+native operation before checking its return. Interpreter startup, elapsed time,
+a larger workload, or a sender merely being launched do not establish this fact.
+KeyboardInterrupt must come from that operation's return: fixture setup, signal
+setup, synchronization, cleanup, and later Python work cannot satisfy the check.
+Ordinary completion and retrying until one attempt succeeds cannot satisfy it
+either. The independent follow-up call remains part of the evidence.
+
+If delivery cannot be established, fail within a bound with `interrupt evidence
+unavailable` and the failed synchronization stage, rather than claim a swallowed
+interrupt or pass without evidence. A held-sender regression exercises this
+negative control against the live acceptance harness; it must confirm that the
+helper was held before interpreting the result. Positive scheduling evidence
+also confirms delivery during native work. Protocol changes must adapt the
+control, rather than pass because an old source-text pattern stopped matching.
+Keep setup/transport failures distinct from a library delivery failure.
+
+Bound every wait and reap helpers, close descriptors, and remove fixtures on
+success and failure. Preserve POSIX acceptance coverage; a Linux-only validation
+instrument or a blanket skip cannot replace it. These are private test mechanics,
+not a public testing API or a change to the Rust return boundary.
+
 ## 7. Why this shape
 
 - **One source of truth for behavior.** Bug fixes and new rules land in `grund-core` and reach all three ecosystems on the next release.
