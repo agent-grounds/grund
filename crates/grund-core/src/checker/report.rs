@@ -74,7 +74,10 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// - Output: a `CheckReport` containing three channel partitions: `errors`,
 ///   `warnings`, and opt-in `suggestions`. Each partition is deterministic; the
 ///   CLI renderer groups text by channel while preserving JSON's global order
-///   (§FS-errors.4.1, §FS-non-goals.9) for §GOAL-friendliness-first.
+///   (§FS-errors.4.1, §FS-non-goals.9) for §GOAL-friendliness-first. Beside
+///   the channels it carries the switches its gates armed, which is not a
+///   finding and never reaches the published report: the CLI's selection reads
+///   it to say a selected check was off (§FS-check.1.4.1).
 ///
 /// ### 1.1 `conform`: the node-local half
 ///
@@ -522,11 +525,14 @@ pub(crate) fn check_project(
 /// §AR-checker.1.4: per channel, `conform`'s findings then `judge`'s, then the one
 /// stable sort the single driver ran. A tie across the halves would make the
 /// order depend on which half ran first, so none may exist (§REQ-deterministic-output).
-fn merge(conformed: CheckReport, judged: CheckReport) -> CheckReport {
+fn merge(mut conformed: CheckReport, mut judged: CheckReport) -> CheckReport {
+    // §FS-check.1.4.1: a switch either half's gates armed is armed.
+    conformed.armed.absorb(&mut judged.armed);
     CheckReport {
         errors: merge_channel(conformed.errors, judged.errors),
         warnings: merge_channel(conformed.warnings, judged.warnings),
         suggestions: merge_channel(conformed.suggestions, judged.suggestions),
+        armed: conformed.armed,
     }
 }
 

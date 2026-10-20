@@ -38,6 +38,7 @@
 //! reads it downward (§AR-system.4).
 
 mod agents;
+mod armed;
 mod chapter_rules;
 mod citation_prohibitions;
 mod citation_repair;
@@ -59,6 +60,7 @@ mod obligation_units;
 mod reference_scope;
 mod references;
 mod report;
+mod rule_obligations;
 mod section_lock;
 mod sections;
 mod selection;
@@ -69,6 +71,7 @@ mod value_mismatch;
 mod value_roots;
 mod values;
 
+pub use armed::ArmedChecks;
 pub use selection::{CHECK_FINDING_CODES, CheckFindingSelection};
 
 // What the other components read, each by this module's path (§AR-system.4):
@@ -119,6 +122,8 @@ pub(crate) use support::diagnostic_cmp;
 #[cfg(test)]
 mod tests_alias_hints;
 #[cfg(test)]
+mod tests_armed_switches;
+#[cfg(test)]
 mod tests_broken_stub_fences;
 #[cfg(test)]
 mod tests_check_full;
@@ -164,6 +169,8 @@ mod tests_nothing_recognized;
 mod tests_post_scan_readers;
 #[cfg(test)]
 mod tests_relative_section_titles;
+#[cfg(test)]
+mod tests_selected_check_off;
 #[cfg(test)]
 mod tests_shorthand;
 #[cfg(test)]

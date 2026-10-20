@@ -334,8 +334,16 @@ $ echo $?
 ```
 
 `--ignore invalid-rule` still removes those rows, for a run that means to ask
-about the valid rules alone.
-[§FS-check.1.4](../functional-spec/FS-check.md#14-selecting-findings-with---only-and---ignore) [§FS-rules.7.6](../functional-spec/FS-rules.md#76-selection-json-ordering-and-exits)
+about the valid rules alone. The same selection carries a rule that applies to
+nothing: a `must` or `should` sentence whose subject kind has a walked folder
+that declares no ID says so, with the rule's authority, so `--only-rule` keeps it
+for the trial sentence and the narrowed run prints no bare `success`:
+
+```console
+$ grund check --rule "Each e2e must cite at least one FS." --only-rule
+warning: --rule applies to nothing — tests/e2e/ declares no e2e ID
+```
+[§FS-check.1.4](../functional-spec/FS-check.md#14-selecting-findings-with---only-and---ignore) [§FS-rules.7.6](../functional-spec/FS-rules.md#76-selection-json-ordering-and-exits) [§FS-check.2.2.1.4](../functional-spec/FS-check.md#2214-a-rules-obligation)
 
 Under `--format json` every finding record carries the same authority as its
 last field — `null` where no rule authored it, `["--rule"]` for the trial

@@ -1,6 +1,9 @@
 use anyhow::{Result, anyhow};
 use std::collections::BTreeSet;
 
+use super::armed::ArmedChecks;
+use crate::model::{Finding, Report};
+
 /// The exact public code vocabulary accepted by `grund check --only` and
 /// `--ignore`, kept sorted for deterministic help output (§FS-errors.5.5).
 #[doc(hidden)]
@@ -55,6 +58,7 @@ pub const CHECK_FINDING_CODES: &[&str] = &[
     "section-address-changed",
     "section-heading-level",
     "section-outside-declaration",
+    "selected-check-off",
     "shorthand-citation",
     "shorthand-numeric-run",
     "stub-shape",
@@ -75,7 +79,8 @@ pub const CHECK_FINDING_CODES: &[&str] = &[
 
 /// The eight rule-produced codes: a selection naming any of them also selects
 /// `invalid-rule`, because a skipped rule is a check the run did not evaluate
-/// (§FS-rules.7.6).
+/// (§FS-rules.7.6), and `empty-citation-obligation`, because an obligation with
+/// no unit is one that judged nothing (§FS-check.1.4).
 const RULE_PRODUCED_CODES: &[&str] = &[
     "chapter-cardinality",
     "citation-cardinality",
@@ -91,10 +96,18 @@ const RULE_PRODUCED_CODES: &[&str] = &[
 /// `--only-rule` asks for (§FS-rules.8, §AR-rules.2).
 const TRIAL_RULE_ORIGIN: &str = "--rule";
 
+/// The code of the line a selected check the run left off earns (§FS-check.1.4.1).
+const SELECTED_CHECK_OFF: &str = "selected-check-off";
+
+/// What a selection carries beside a rule-produced code (§FS-check.1.4).
+const CARRIED_WITH_RULE_CODES: &[&str] = &["invalid-rule", "empty-citation-obligation"];
+
 /// Repeatable exact-code selection for the two CLI check adapters, plus the
 /// rule-authority axis `--only-rule` adds beside it (§FS-check.1.4). The
 /// structured Rust API deliberately does not carry this presentation query, so
 /// API and LSP callers continue to receive the complete report (§FS-check.1.4).
+/// [`Self::select`] is the one narrowing the CLI and both bindings read
+/// (§AR-bindings.2), and the place a selected check the run left off is said.
 #[doc(hidden)]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct CheckFindingSelection {
@@ -143,18 +156,65 @@ impl CheckFindingSelection {
     /// unselectable with it, and is a warning (§FS-check.2.1.2).
     pub fn retains(&self, code: &str, authority: &[String]) -> bool {
         code == "io"
+            // §FS-check.1.4.1: about the selection itself, so both axes pass it.
+            || code == SELECTED_CHECK_OFF && !self.ignore.contains(code)
             || self.code_axis_retains(code)
                 && self.authority_axis_retains(authority)
                 && !self.ignore.contains(code)
     }
 
+    /// The selected report of a complete check, for the CLI and the bindings
+    /// alike: every finding both axes retain, in its order, then one
+    /// `selected-check-off` warning per selected code the run left off, in code
+    /// order (§FS-check.2.1.2, §FS-check.1.4.1).
+    pub fn select(&self, report: &Report, armed: &ArmedChecks) -> Report {
+        let retained = |findings: &[Finding]| {
+            findings
+                .iter()
+                .filter(|finding| self.retains(finding.code, &finding.authority))
+                .cloned()
+                .collect::<Vec<_>>()
+        };
+        let mut selected = Report {
+            errors: retained(&report.errors),
+            warnings: retained(&report.warnings),
+            suggestions: retained(&report.suggestions),
+        };
+        selected.warnings.extend(self.off_lines(armed));
+        selected
+    }
+
+    /// §FS-check.1.4.1: `--only <code> judged nothing — <advice>` for each code
+    /// `--only` names and `--ignore` does not that no project of the run armed.
+    /// The set is ordered, so the lines come in code order.
+    fn off_lines<'a>(&'a self, armed: &'a ArmedChecks) -> impl Iterator<Item = Finding> + 'a {
+        self.only
+            .iter()
+            .filter(|_| !self.ignore.contains(SELECTED_CHECK_OFF))
+            .filter(|code| !self.ignore.contains(*code))
+            .filter_map(|code| {
+                let advice = armed.off_advice(code)?;
+                Some(Finding {
+                    severity: "warning",
+                    code: SELECTED_CHECK_OFF,
+                    path: None,
+                    line: None,
+                    column: None,
+                    message: format!("--only {code} judged nothing — {advice}"),
+                    sites: Vec::new(),
+                    authority: Vec::new(),
+                })
+            })
+    }
+
     /// §FS-check.1.4: the code axis passes what `--only` names, and passes
-    /// every `invalid-rule` row as well once it names a rule-produced code, so
-    /// a narrowed run never reads a skipped rule as a pass (§FS-rules.7.6).
+    /// every `invalid-rule` and `empty-citation-obligation` row as well once it
+    /// names a rule-produced code, so a narrowed run never reads a skipped rule
+    /// or an obligation with nothing to judge as a pass (§FS-rules.7.6).
     fn code_axis_retains(&self, code: &str) -> bool {
         self.only.is_empty()
             || self.only.contains(code)
-            || code == "invalid-rule"
+            || CARRIED_WITH_RULE_CODES.contains(&code)
                 && RULE_PRODUCED_CODES
                     .iter()
                     .any(|produced| self.only.contains(*produced))

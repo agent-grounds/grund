@@ -137,7 +137,19 @@ rule authority instead — only what a `--rule` trial sentence authored, which i
 what lets you try a sentence out for the cost of its own findings
 ([§FS-check.1](../functional-spec/FS-check.md#1-inputs), [§FS-rules.8](../functional-spec/FS-rules.md#8-command-surfaces)).
 A check narrowed to a code rules produce still says when a rule behind it was
-skipped as invalid ([§FS-rules.7.6](../functional-spec/FS-rules.md#76-selection-json-ordering-and-exits)).
+skipped as invalid ([§FS-rules.7.6](../functional-spec/FS-rules.md#76-selection-json-ordering-and-exits)),
+or when one applies to nothing ([§FS-check.2.2.1.4](../functional-spec/FS-check.md#2214-a-rules-obligation)).
+A selected code whose check this run leaves off judges nothing, so instead of a
+bare `success` the run says so and names what turns it on, spelled in the config
+version it read:
+
+```text
+warning: --only oversized-lead judged nothing — the check is off until [schema.leads.words] warn = <N> is set
+```
+
+The line is the `selected-check-off` warning: it withholds `success`, never
+moves the exit code, and only `--ignore selected-check-off` removes it
+([§FS-check.1.4.1](../functional-spec/FS-check.md#141-a-selected-check-the-run-leaves-off-says-so)).
 Selection happens only after the complete scan, and operational failures remain
 visible; selected `success` describes only that view, not an all-findings
 repository verdict ([§FS-check.2](../functional-spec/FS-check.md#2-outputs)).

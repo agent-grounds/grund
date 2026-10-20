@@ -102,6 +102,7 @@ NOT_YET_MIGRATED = (
     "out-of-scope-shorthand-citation",
     "out-of-scope-unknown-project",
     "redundant-config",
+    "selected-check-off",
     "shorthand-citation",
     "shorthand-numeric-run",
     "suggested-citation",

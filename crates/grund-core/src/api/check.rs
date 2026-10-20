@@ -13,7 +13,8 @@ use std::path::{Path, PathBuf};
 
 use super::report::public_report;
 use super::run::run_check_with_run_warnings;
-use crate::model::{Catalog, Finding, Report};
+use crate::checker::ArmedChecks;
+use crate::model::{Catalog, Finding, Report, Switch};
 use crate::scanner::scan_tree_strict;
 use crate::workspace::resolve_workspace_config;
 
@@ -92,30 +93,38 @@ pub fn check(path: &Path) -> Result<Report> {
 /// Programmatic `check` with the same scope and grounding options as the CLI,
 /// returning data instead of printing a report or mapping a process exit.
 pub fn check_with_opts(opts: CheckOpts) -> Result<CheckOutput> {
-    check_with_run_warnings(opts).1
+    check_with_run_warnings(opts).1.map(|(output, _)| output)
 }
 
 /// [`check_with_opts`] with the run-root warnings preserved beside a later
-/// refusal (§FS-check.4.10.8). Frontends render the returned data;
-/// the engine writes no stream (§FS-distribution.3.1).
+/// refusal (§FS-check.4.10.8), and with what the run armed, which only a
+/// frontend's `--only` reads (§FS-check.1.4.1): it is never a field of the
+/// public [`CheckOutput`]. Frontends render the returned data; the engine
+/// writes no stream (§FS-distribution.3.1).
 #[doc(hidden)]
-pub fn check_with_run_warnings(opts: CheckOpts) -> (Vec<Finding>, Result<CheckOutput>) {
-    let (warnings, output) = check_with_projects(opts);
-    (warnings, output.map(|(output, _)| output))
+pub fn check_with_run_warnings(
+    opts: CheckOpts,
+) -> (Vec<Finding>, Result<(CheckOutput, ArmedChecks)>) {
+    let mut warnings = Vec::new();
+    let output = check_run(opts, &mut warnings).map(|(output, armed, _)| (output, armed));
+    (warnings, output)
 }
 
-/// [`check_with_run_warnings`] with the root of each project the run checked,
+/// [`check_with_opts`] with the root of each project the run checked,
 /// which `config migrate`'s report gate compares (§FS-config-migrate.5.2).
 pub(super) fn check_with_projects(
     opts: CheckOpts,
 ) -> (Vec<Finding>, Result<(CheckOutput, Vec<PathBuf>)>) {
     let mut warnings = Vec::new();
-    let output = check_run(opts, &mut warnings);
+    let output = check_run(opts, &mut warnings).map(|(output, _, projects)| (output, projects));
     (warnings, output)
 }
 
-fn check_run(opts: CheckOpts, warnings: &mut Vec<Finding>) -> Result<(CheckOutput, Vec<PathBuf>)> {
-    let run = run_check_with_run_warnings(
+fn check_run(
+    opts: CheckOpts,
+    warnings: &mut Vec<Finding>,
+) -> Result<(CheckOutput, ArmedChecks, Vec<PathBuf>)> {
+    let mut run = run_check_with_run_warnings(
         &opts.path,
         opts.path_provided,
         opts.require_grounding,
@@ -123,11 +132,17 @@ fn check_run(opts: CheckOpts, warnings: &mut Vec<Finding>) -> Result<(CheckOutpu
         opts.rule.as_deref(),
         warnings,
     )?;
+    let mut armed = std::mem::take(&mut run.report.armed);
+    // §FS-check.1.4.1: the suggestions channel's gate is the flag, decided here.
+    if opts.include_suggestions {
+        armed.arm(Switch::Suggestions);
+    }
+    let armed = ArmedChecks::new(armed, run.config.frame().version);
     let output = CheckOutput {
         output_format: run.config.output_format.clone(),
         warnings: warnings.clone(),
         report: public_report(&run.config, run.report, opts.include_suggestions),
         had_scan_errors: run.had_scan_errors,
     };
-    Ok((output, run.projects))
+    Ok((output, armed, run.projects))
 }

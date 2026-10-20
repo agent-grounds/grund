@@ -4,7 +4,7 @@
 
 use crate::config::{Form, Frame, KindScope, KindTable, Rules, Schema};
 use crate::grammar::render_catalog_id;
-use crate::model::{Catalog, CheckReport, Declaration, Diagnostic, paired_declarations};
+use crate::model::{Catalog, CheckReport, Declaration, Diagnostic, Switch, paired_declarations};
 use crate::resolver::WorkspaceCheckTarget;
 use crate::rules::RuleAnchor;
 use crate::rules::engine::{
@@ -16,6 +16,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::direction_findings::directions;
 use super::fields::pair_fields_with_rules;
+use super::rule_obligations::{arm_rule_directions, empty_rule_obligations};
 use super::support::sort_diagnostics;
 
 /// What the rules adapter reads of one project's records: the façade stays out of
@@ -329,6 +330,8 @@ pub(crate) fn check_chapter_rules(
     if rule_kinds.is_empty() && ad_hoc.is_none() {
         return;
     }
+    // §FS-check.1.4.1: a rule kind or a `--rule` turns the rule checks on.
+    report.armed.arm(Switch::Rules);
     let mut vocab = vocabulary(schema, frame);
     if let Some((_, projects)) = workspace {
         add_workspace_targets(&mut vocab, projects);
@@ -348,6 +351,7 @@ pub(crate) fn check_chapter_rules(
         None => adapt_markdown(findings, markdown_project(frame.name, &local), complete),
     };
     let mut parsed_rules = Vec::new();
+    let errors_before = report.errors.len();
     for rule in rule_declarations(findings, schema, frame) {
         let parsed = rule
             .record
@@ -377,6 +381,15 @@ pub(crate) fn check_chapter_rules(
     if let Some(rule) = ad_hoc {
         parsed_rules.push(rule);
     }
+    let unread = report.errors.len() > errors_before;
+    arm_rule_directions(&parsed_rules, unread, &mut report.armed);
+    report.warnings.extend(empty_rule_obligations(
+        findings,
+        rules,
+        schema,
+        frame,
+        &parsed_rules,
+    ));
     let precedence = directions(findings, rules, schema, frame, &parsed_rules);
     // §FS-rules.7: one channel per level, so the absence arrives among the
     // errors its level already fills and every caller's own sort orders it.

@@ -35,8 +35,11 @@ Findings go to stdout (the linter convention) — `grund check | …` and `grund
 Selection happens after the complete check. It filters errors, warnings, and enabled
 suggestions by exact code; operational failures remain visible and exit 2. Exit 0 means
 the selected report has no errors, not that the unselected repository is clean.
-Selecting a code a rule produces also selects invalid-rule, so a rule that could not
-run is never a pass unless --ignore invalid-rule removes its error.
+Selecting a code a rule produces also selects invalid-rule and empty-citation-obligation,
+so a rule that could not run, or an obligation with nothing to judge, is never a pass
+unless --ignore removes its line.
+A selected code the run leaves off earns one selected-check-off warning naming what
+turns it on; only --ignore selected-check-off removes it, and the exit is unchanged.
 
 --only-rule narrows that same report by rule authority instead of by code: only what
 the --rule sentence authored, whether it authored a finding alone or jointly with a
@@ -95,6 +98,7 @@ Supported check finding codes:
   section-address-changed
   section-heading-level
   section-outside-declaration
+  selected-check-off
   shorthand-citation
   shorthand-numeric-run
   stub-shape

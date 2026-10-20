@@ -15,9 +15,9 @@ use super::index_entries::KindIndexEntries;
 use super::references::{ReferenceTier, check_citation_resolution};
 use super::section_lock::check_section_locks;
 use super::values::check_values;
-use crate::config::{Frame, KindResolution, Rules, Schema};
+use crate::config::{Frame, KindResolution, Origin, Rules, Schema};
 use crate::grammar::render_catalog_id;
-use crate::model::{Catalog, CheckReport, Diagnostic, Expected, Id, paired_declarations};
+use crate::model::{Catalog, CheckReport, Diagnostic, Expected, Id, Switch, paired_declarations};
 use crate::resolver::{WorkspaceCheckTarget, resolved_coordinate_target};
 
 /// The workspace a project is judged in (§FS-workspace.4): every loaded
@@ -81,6 +81,13 @@ pub(crate) fn judge(
         };
         rules.resolution.get(kind).copied()
     };
+    // §FS-check.1.4.1: only a fetched kind's citation can be a missing snapshot.
+    if schema
+        .kinds()
+        .any(|(_, kind)| matches!(kind.origin, Origin::External { .. }))
+    {
+        report.armed.arm(Switch::Fetch);
+    }
     check_citation_resolution(
         findings,
         schema,
@@ -185,6 +192,7 @@ pub(crate) fn judge(
     report
         .suggestions
         .extend(units.suggestions.into_iter().filter(unit));
+    report.armed.absorb(&mut units.armed);
     report
 }
 

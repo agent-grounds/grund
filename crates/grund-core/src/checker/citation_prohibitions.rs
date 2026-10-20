@@ -10,7 +10,7 @@ use crate::config::{
     CitationDisjunction, CitationLevel, CitationTarget, Frame, NamespaceMatch, Owners, Rules,
     Schema, render_citation_target,
 };
-use crate::model::{CITATION_DIRECTION_REPAIR, Catalog, Citation, Diagnostic};
+use crate::model::{CITATION_DIRECTION_REPAIR, Catalog, Citation, Diagnostic, Switch};
 
 /// §AR-checker.2.10 / §FS-check.3.12: a citation site whose citing kind prohibits
 /// its target is a `forbidden-citation` error (`must-not`) or a
@@ -27,6 +27,7 @@ pub(super) fn check_citation_prohibitions(
     frame: Frame<'_>,
     report: &mut impl DirectionSink,
 ) {
+    arm_prohibitions(rules, report);
     let owners = Owners::new(schema, frame);
     for cite in findings.edges() {
         let Some((level, entries)) = citation_site_level(rules, cite) else {
@@ -62,6 +63,31 @@ pub(super) fn check_citation_prohibitions(
             _ => continue,
         };
         report.push(channel, &cite.source_kind, level, &entries, diagnostic);
+    }
+}
+
+/// §FS-check.1.4.1: every level a site could resolve to below, a listed entry's
+/// or a default's, and so every prohibition the pass can report.
+fn arm_prohibitions(rules: &Rules, report: &mut impl DirectionSink) {
+    let citations = &rules.citations;
+    let levels = citations
+        .per_kind
+        .values()
+        .flat_map(|kind_rules| {
+            kind_rules
+                .lists()
+                .into_iter()
+                .filter(|(_, entries)| !entries.is_empty())
+                .map(|(level, _)| level)
+                .chain(kind_rules.default)
+        })
+        .chain(citations.global_default);
+    for level in levels {
+        match level {
+            CitationLevel::MustNot | CitationLevel::WarnNot => report.arm(Switch::MustNotDirection),
+            CitationLevel::ShouldNot => report.arm(Switch::ShouldNotDirection),
+            _ => {}
+        }
     }
 }
 

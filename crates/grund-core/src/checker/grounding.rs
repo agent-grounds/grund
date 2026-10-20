@@ -19,7 +19,7 @@ use crate::config::{
     DEFAULT_GROUNDING_LEVEL, Frame, Owners, Rules, Schema, Strength, any_place_grounded,
     grounding_level_for_kind, homeless_row_grounding, row_grounding, soft_grounding_rungs,
 };
-use crate::model::{Catalog, CheckReport, Citation, Diagnostic, FileStructure};
+use crate::model::{Catalog, CheckReport, Citation, Diagnostic, FileStructure, Switch};
 use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
 use crate::workspace::namespace_is_unverified;
 
@@ -66,6 +66,8 @@ pub(super) fn check_grounding(
     if !any_place_grounded(schema, rules, frame.run) {
         return;
     }
+    // §FS-check.1.4.1: config or `--require-grounding` grounded a place.
+    report.armed.arm(Switch::Grounding);
     // Two linear passes — citations, then declarations — so the per-unit test
     // below is a lookup in a small per-file list, never a re-scan
     // (§GOAL-fast-feedback).

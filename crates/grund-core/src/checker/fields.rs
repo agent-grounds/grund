@@ -10,7 +10,7 @@ use std::path::PathBuf;
 
 use crate::config::{Field, FieldContent, Frame, Kind, Placement, Schema, Strength};
 use crate::grammar::{render_declaration_id, section_display_name};
-use crate::model::{Catalog, CheckReport, Declaration, Diagnostic};
+use crate::model::{Armed, Catalog, CheckReport, Declaration, Diagnostic, Switch};
 
 /// The channel a strength names (§FS-config-v2.rules.strengths); `None` is unchecked.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -51,6 +51,7 @@ pub(super) fn check_fields(
     frame: Frame<'_>,
     report: &mut CheckReport,
 ) {
+    arm_fields(schema, &mut report.armed);
     for_each_finding(catalog, schema, frame, |_, finding| {
         let channel = match finding.channel {
             Channel::Error => &mut report.errors,
@@ -59,6 +60,31 @@ pub(super) fn check_fields(
         };
         channel.push(finding.diagnostic);
     });
+}
+
+/// §FS-check.1.4.1: the parts of a kind's shape that turn each field check on, as
+/// the gate below reads them: a field a declaration can miss, its `one_of`, its
+/// place, its title, and a kind that is `closed` at all.
+fn arm_fields(schema: &Schema, armed: &mut Armed) {
+    for (_, kind) in schema.kinds() {
+        for field in &kind.fields {
+            if field.presence != Strength::May {
+                armed.arm(Switch::Field);
+            }
+            if matches!(field.content, FieldContent::OneOf(_)) {
+                armed.arm(Switch::FieldOneOf);
+            }
+            if field.placement.is_some() {
+                armed.arm(Switch::FieldPlacement);
+            }
+            if field.title.is_some() {
+                armed.arm(Switch::FieldTitle);
+            }
+        }
+        if kind.closed != Strength::May {
+            armed.arm(Switch::ClosedKind);
+        }
+    }
 }
 
 /// Every field finding of every declaration, handed to `visit` with the

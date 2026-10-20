@@ -22,7 +22,7 @@ use crate::checker::{
     sort_diagnostics, workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
 };
 use crate::config::{Config, Invocation, ProjectRecords, Selection};
-use crate::model::{CheckReport, Diagnostic, Finding};
+use crate::model::{CheckReport, Diagnostic, Finding, Switch};
 use crate::resolver::{WorkspaceCheckTarget, load_workspace_projects, settled_run_warnings};
 use crate::scanner::scan_tree;
 use crate::workspace::{
@@ -250,6 +250,10 @@ pub(super) fn run_check_with_run_warnings(
     // that caution — the tier says where the citations are, the config was not told.
     report.errors.extend(out_of_scope);
     sort_diagnostics(&mut report.errors);
+    // §FS-check.1.4.1: the flag is the gate of the tier and of its caution.
+    if full {
+        report.armed.arm(Switch::Full);
+    }
 
     let run = CheckRun {
         projects: vec![config.root.clone()],
@@ -399,6 +403,8 @@ fn run_workspace_check(
         report.errors.append(&mut project_report.errors);
         report.warnings.append(&mut project_report.warnings);
         report.suggestions.append(&mut project_report.suggestions);
+        // §FS-check.1.4.1: a check any project armed is armed in the run.
+        report.armed.absorb(&mut project_report.armed);
         // §FS-check.1.3.6.3: as the single-project arm partitions them.
         let (inside, outside): (Vec<_>, Vec<_>) = project
             .scan_errors
@@ -432,6 +438,13 @@ fn run_workspace_check(
     report
         .warnings
         .extend(absent_optional_member_warnings(&root_config));
+    // §FS-check.1.4.1: an absence is announced only of a member declared optional.
+    if !root_config.workspace_optional_members.is_empty() {
+        report.armed.arm(Switch::OptionalMember);
+    }
+    if full {
+        report.armed.arm(Switch::Full);
+    }
     // §FS-check.3.29.11: per project — the candidates are what *that* walk reached, and
     // the absorbing namespace is its own. Rendered against the workspace root like
     // every other message here (§FS-workspace.8.1).

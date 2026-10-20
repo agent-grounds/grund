@@ -166,7 +166,7 @@ fn prepare_check_run(
             .stderr
             .extend_from_slice(format!("warning: {}\n", warning.message).as_bytes());
     }
-    let mut output = match output {
+    let (output, armed) = match output {
         Ok(output) => output,
         Err(err) => {
             prepared
@@ -183,28 +183,17 @@ fn prepare_check_run(
             .extend_from_slice(format!("error: unsupported check format `{format}`\n").as_bytes());
         return prepared;
     }
-    // §FS-check.2.1.2: the complete API report exists before the CLI applies its
-    // presentation query; retained diagnostics then use ordinary rendering.
-    output
-        .report
-        .errors
-        .retain(|finding| selection.retains(finding.code, &finding.authority));
-    output
-        .report
-        .warnings
-        .retain(|finding| selection.retains(finding.code, &finding.authority));
-    output
-        .report
-        .suggestions
-        .retain(|finding| selection.retains(finding.code, &finding.authority));
+    // §FS-check.2.1.2: the full report exists before the CLI's query narrows it;
+    // a selected check the run left off is one more warning (§FS-check.1.4.1).
+    let report = selection.select(&output.report, &armed);
     if format == "json" {
-        render_check_json(&output.report, &mut prepared);
+        render_check_json(&report, &mut prepared);
     } else {
-        render_check_text(&output.report, run_warnings.len(), &mut prepared);
+        render_check_text(&report, run_warnings.len(), &mut prepared);
     }
     prepared.status = if output.had_scan_errors {
         2
-    } else if output.report.errors.is_empty() {
+    } else if report.errors.is_empty() {
         0
     } else {
         1
