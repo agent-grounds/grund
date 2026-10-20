@@ -816,10 +816,10 @@ protection changes no CLI behavior and promises no arbitrary Rust panic recovery
 
 #### 3.3.4 Silent synchronous calls
 
-Calls read no process argv, print to neither stdout nor stderr, never exit Python
-and never change global cwd. Synchronous Rust work releases the GIL. Independent
-read calls may overlap; callers serialize writers to the same files. Pending Python
-interrupts are checked on return, so Rust work may complete before KeyboardInterrupt.
+Calls read no process argv, print nothing, never exit Python or change global cwd.
+Synchronous Rust work releases the GIL. Independent reads may overlap; callers serialize
+writers to the same files. Pending Python interrupts are checked on return; Rust may finish
+before KeyboardInterrupt. An interrupt arriving after the call is not evidence of loss.
 No async API, mid-call cancellation or additional rollback is promised.
 
 #### 3.3.5 Complete initial inventory
