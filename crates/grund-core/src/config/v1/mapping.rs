@@ -104,6 +104,23 @@ pub(in crate::config) const KEYS: &[(&str, &str)] = &[
     ("[fmt] exclude", "presentation.fmt.exclude"),
 ];
 
+/// §AR-config.3.3 item 5: whether `KEYS` names `key` in `section`, the section
+/// as the reader holds it (`""` at the top level, `reference`, `kinds`,
+/// `citations.FS`), so the reader admits exactly the keys `config explain`
+/// enumerates from this table.
+pub(super) fn admits(section: &str, key: &str) -> bool {
+    // §FS-config.3.9: every `[citations.<KIND>]` table admits the same keys.
+    let section = if section.starts_with("citations.") {
+        "citations.<KIND>"
+    } else {
+        section
+    };
+    KEYS.iter().any(|(name, _)| match name.split_once("] ") {
+        Some((header, admitted)) => header.trim_matches(['[', ']']) == section && admitted == key,
+        None => section.is_empty() && *name == key,
+    })
+}
+
 /// §AR-config.3.2: one row per implicit default, each applied by the v1 reader
 /// in `defaults.rs` or `kind_table.rs` and nowhere else.
 #[cfg(test)]

@@ -230,46 +230,84 @@ pub(super) fn v1_hint(header: &str) -> String {
     })
 }
 
-/// §FS-config-explain.3: every header the v2 reader opens, a name it reads
-/// spelled as its placeholder, each with the placeholder its bare keys stand
-/// for. Scaffold until `config explain` lands: the answer is to enumerate from
-/// one list the reader itself walks, and `open` stays the gate.
-const EXPLAINED: &[(&str, Option<&str>)] = &[
-    ("schema", None),
-    ("schema.sources", None),
-    ("schema.sources.extensions", Some("<suffix>")),
-    ("schema.sources.definitions", None),
-    ("schema.sources.definitions.<name>", None),
-    ("schema.notes", None),
-    ("schema.notes.lines", None),
-    ("schema.notes.columns", None),
-    ("schema.notes.text", None),
-    ("schema.notes.layout", None),
-    ("schema.leads", None),
-    ("schema.leads.words", None),
-    ("schema.kinds", None),
-    ("schema.kinds.<NAME>", None),
-    ("schema.kinds.<NAME>.fields", None),
-    ("schema.kinds.<NAME>.fields.<field>", None),
-    ("rules", None),
-    ("rules.citations", None),
-    ("rules.citations.grounding", None),
-    ("rules.citations.<KIND>", None),
-    ("rules.citations.<KIND>.grounding", None),
-    ("rules.resolution", Some("<KIND>")),
-    ("presentation", None),
-    ("presentation.kinds", None),
-    ("presentation.kinds.<NAME>", None),
-    ("presentation.fmt", None),
-    ("workspace", None),
+/// One header: its path, where a `<…>` segment matches any one name; for a table
+/// of names, the placeholder its bare keys stand for; and what it opens from the
+/// names its `<…>` segments matched.
+type Header = (&'static str, Option<&'static str>, fn(&[&str]) -> Opened);
+
+/// §FS-config-v2.reader.1: every header the v2 reader opens, in the order `open`
+/// tries them. `admitted` walks the same list, so `config explain` names exactly
+/// the tables the reader opens (§FS-config-explain.3).
+const HEADERS: &[Header] = &[
+    ("schema", None, |_| Opened::Table(Table::Schema)),
+    ("schema.sources", None, |_| Opened::Table(Table::Sources)),
+    ("schema.sources.extensions", Some("<suffix>"), |_| {
+        Opened::Table(Table::Extensions)
+    }),
+    ("schema.sources.definitions", None, |_| {
+        Opened::Table(Table::Parent)
+    }),
+    ("schema.sources.definitions.<name>", None, |names| {
+        Opened::Definition(names[0].to_string())
+    }),
+    ("schema.notes", None, |_| Opened::Table(Table::Parent)),
+    ("schema.notes.lines", None, |_| {
+        Opened::Table(Table::Measure(Measure::Lines, Vec::new()))
+    }),
+    ("schema.notes.columns", None, |_| {
+        Opened::Table(Table::Measure(Measure::Columns, Vec::new()))
+    }),
+    ("schema.notes.text", None, |_| Opened::Table(Table::Text)),
+    ("schema.notes.layout", None, |_| {
+        Opened::Table(Table::Layout(None))
+    }),
+    ("schema.leads", None, |_| Opened::Table(Table::Parent)),
+    ("schema.leads.words", None, |_| {
+        Opened::Table(Table::Measure(Measure::Words, Vec::new()))
+    }),
+    ("schema.kinds", None, |_| Opened::Table(Table::Parent)),
+    ("schema.kinds.<NAME>", None, |names| {
+        Opened::Row(names[0].to_string())
+    }),
+    // §FS-config-v2.schema.fields, §FS-fields.declare.field.
+    ("schema.kinds.<NAME>.fields", None, |_| {
+        Opened::Table(Table::Parent)
+    }),
+    ("schema.kinds.<NAME>.fields.<field>", None, |names| {
+        Opened::Field(names[0].to_string(), names[1].to_string())
+    }),
+    ("rules", None, |_| Opened::Table(Table::Parent)),
+    ("rules.citations", None, |_| Opened::Table(Table::Citations)),
+    ("rules.citations.grounding", None, |_| {
+        Opened::Table(Table::Ladder(None, Vec::new()))
+    }),
+    ("rules.citations.<KIND>", None, |names| {
+        Opened::Table(Table::CitationKind(names[0].to_string(), Vec::new()))
+    }),
+    ("rules.citations.<KIND>.grounding", None, |names| {
+        Opened::Table(Table::Ladder(Some(names[0].to_string()), Vec::new()))
+    }),
+    ("rules.resolution", Some("<KIND>"), |_| {
+        Opened::Table(Table::Resolution)
+    }),
+    ("presentation", None, |_| Opened::Table(Table::Presentation)),
+    ("presentation.kinds", None, |_| Opened::Table(Table::Parent)),
+    ("presentation.kinds.<NAME>", None, |names| {
+        Opened::Table(Table::PresentationKind(names[0].to_string()))
+    }),
+    ("presentation.fmt", None, |_| {
+        Opened::Table(Table::PresentationFmt)
+    }),
+    ("workspace", None, |_| Opened::Table(Table::Workspace)),
 ];
 
 /// §FS-config-explain.3: each table the v2 reader admits, `[header]` or `""`
 /// for the top level, with the keys its gate admits.
 pub(in crate::config) fn admitted() -> Vec<(String, Vec<String>)> {
     let mut tables = vec![(String::new(), keys_of(&Table::Root, None))];
-    for (header, placeholder) in EXPLAINED {
-        let table = match open(header) {
+    for (header, placeholder, opens) in HEADERS {
+        let names: Vec<&str> = header.split('.').filter(|s| s.starts_with('<')).collect();
+        let table = match opens(&names) {
             Opened::Table(table) => table,
             Opened::Row(_) => Table::Row(0),
             Opened::Field(..) => Table::Field(0),
@@ -314,46 +352,32 @@ pub(super) fn open(name: &str) -> Opened {
             "`{last}` is a strength key in [{parent}], not a table"
         ));
     }
-    let table = match segments.as_slice() {
-        ["schema"] => Table::Schema,
-        ["schema", "sources"] => Table::Sources,
-        ["schema", "sources", "extensions"] => Table::Extensions,
-        ["schema", "sources", "definitions", language] => {
-            return Opened::Definition(language.to_string());
+    for (header, _, opens) in HEADERS {
+        if let Some(names) = matched(header, &segments) {
+            return opens(&names);
         }
-        ["schema", "notes" | "leads" | "kinds"]
-        | ["schema", "sources", "definitions"]
-        | ["rules"]
-        | ["presentation", "kinds"] => Table::Parent,
-        ["schema", "notes", "lines"] => Table::Measure(Measure::Lines, Vec::new()),
-        ["schema", "notes", "columns"] => Table::Measure(Measure::Columns, Vec::new()),
-        ["schema", "notes", "text"] => Table::Text,
-        ["schema", "notes", "layout"] => Table::Layout(None),
-        ["schema", "leads", "words"] => Table::Measure(Measure::Words, Vec::new()),
-        ["schema", "kinds", row] => return Opened::Row(row.to_string()),
-        // §FS-config-v2.schema.fields, §FS-fields.declare.field.
-        ["schema", "kinds", _, "fields"] => Table::Parent,
-        ["schema", "kinds", row, "fields", field] => {
-            return Opened::Field(row.to_string(), field.to_string());
+    }
+    // §FS-config-v2.reader.1.v1-tables: a v1 table names where it went.
+    let hint = v1_hint(&format!("[{name}]"));
+    Opened::Refused(format!("unknown config section `{name}`{hint}"))
+}
+
+/// The names `segments` gives the `<…>` segments of `header`, or `None` where
+/// they spell another header.
+fn matched<'a>(header: &str, segments: &[&'a str]) -> Option<Vec<&'a str>> {
+    let pattern: Vec<&str> = header.split('.').collect();
+    if pattern.len() != segments.len() {
+        return None;
+    }
+    let mut names = Vec::new();
+    for (want, got) in pattern.iter().zip(segments) {
+        if want.starts_with('<') {
+            names.push(*got);
+        } else if want != got {
+            return None;
         }
-        ["rules", "citations"] => Table::Citations,
-        ["rules", "citations", "grounding"] => Table::Ladder(None, Vec::new()),
-        ["rules", "citations", kind] => Table::CitationKind(kind.to_string(), Vec::new()),
-        ["rules", "citations", place, "grounding"] => {
-            Table::Ladder(Some(place.to_string()), Vec::new())
-        }
-        ["rules", "resolution"] => Table::Resolution,
-        ["presentation"] => Table::Presentation,
-        ["presentation", "kinds", kind] => Table::PresentationKind(kind.to_string()),
-        ["presentation", "fmt"] => Table::PresentationFmt,
-        ["workspace"] => Table::Workspace,
-        _ => {
-            // §FS-config-v2.reader.1.v1-tables: a v1 table names where it went.
-            let hint = v1_hint(&format!("[{name}]"));
-            return Opened::Refused(format!("unknown config section `{name}`{hint}"));
-        }
-    };
-    Opened::Table(table)
+    }
+    Some(names)
 }
 
 /// Whether the table `name` is one whose keys are strengths: a measure, a

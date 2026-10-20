@@ -14,13 +14,16 @@ mod kind_rows;
 mod kind_table;
 mod kind_values;
 mod lines;
-// Read by the unit tests that hold the reader to it (§AR-config.3.3), and by
-// `config explain`'s scaffold, which enumerates version 1 from it (§AR-config.9.1).
+// The reader's outer-key gate and the unit tests that hold the reader to it
+// (§AR-config.3.3), and what `config explain` enumerates version 1 from
+// (§AR-config.9.1).
 pub(super) mod mapping;
 mod parse;
 mod scan_block;
 #[cfg(test)]
 mod tests_capture_contract;
+#[cfg(test)]
+mod tests_key_gate;
 mod values;
 
 use anyhow::Result;

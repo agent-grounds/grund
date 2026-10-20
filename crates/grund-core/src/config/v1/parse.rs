@@ -18,6 +18,7 @@ use super::citations::parse_citation_entry;
 use super::grounding::{check_grounding_level, parse_kind_grounding_key};
 use super::kind_table::{ParsedKind, parse_empty_kinds, parse_kinds_key, refuse_kinds_after_empty};
 use super::lines::LinePass;
+use super::mapping::admits;
 use super::scan_block::parse_scan_exclude;
 use super::values::{
     bail_config, parse_bool, parse_string, parse_string_list, parse_usize, strip_comment,
@@ -121,6 +122,12 @@ pub(super) fn parse_config_file(
         };
         let key = key.trim();
         let value = value.trim();
+        // §AR-config.3.3 item 5: `KEYS` is the outer-key gate, behind the refusals
+        // the arms below word themselves: `[[kinds]] prefix` and the citation tables'.
+        let own_words = section == "kinds" && key == "prefix" || section.starts_with("citations");
+        if !own_words && !admits(&section, key) {
+            bail_config(path, line_no, format!("unknown config key `{key}`"))?;
+        }
         match (section.as_str(), key) {
             ("", "grund_config_version") => {
                 if value != "1" {

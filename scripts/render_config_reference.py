@@ -3,19 +3,29 @@
 
 The schema in `schemas/grund.schema.json` is the one place the keys are written
 down for people and editors; `docs/user-facing/configuration.md` is rendered
-from it, so the two cannot drift. Edit the schema, then run this script:
+from it, so the two cannot drift. So is the copy `grund config explain` words
+each key from, which is the schema with its specification metadata removed
+(§AR-config.9.1). Edit the schema, then run this script:
 
-    python scripts/render_config_reference.py          # rewrite the page
-    python scripts/render_config_reference.py --check  # exit 1 if it is stale
+    python scripts/render_config_reference.py          # rewrite the page and the copy
+    python scripts/render_config_reference.py --check  # exit 1 if either is stale
 """
 
 import json
+import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = ROOT / "schemas" / "grund.schema.json"
 PAGE = ROOT / "docs" / "user-facing" / "configuration.md"
+PROJECTION = ROOT / "crates" / "grund-core" / "assets" / "explain" / "grund.schema.json"
+
+# What points into the specification, which an installed binary cannot open
+# (§FS-config-explain.3): the keys that carry it, and a description that cites
+# an ID or links anywhere. `§alias/<ID>` spells a citation and cites nothing.
+SPEC_METADATA = ("x-grund-spec", "x-grund-note")
+NAMES_A_SPEC = re.compile(r"§[A-Z]|\]\(")
 SCHEMA_URL = "https://raw.githubusercontent.com/agent-grounds/grund/main/schemas/grund.schema.json"
 
 INTRO = f"""<!-- Rendered from schemas/grund.schema.json by scripts/render_config_reference.py: edit the schema, then run the script. -->
@@ -196,15 +206,46 @@ def render():
     return "\n".join(out).rstrip("\n") + "\n"
 
 
+class SpecInDescription(ValueError):
+    """A description the installed binary would print naming what it cannot open."""
+
+
+def project(node, path="#"):
+    """§FS-config-explain.3: `node` without its specification metadata, refusing a
+    description that names a spec ID or holds a link rather than cutting it."""
+    if isinstance(node, list):
+        return [project(item, f"{path}/{index}") for index, item in enumerate(node)]
+    if not isinstance(node, dict):
+        return node
+    description = node.get("description")
+    if isinstance(description, str) and NAMES_A_SPEC.search(description):
+        raise SpecInDescription(f"{path}: the description names a spec ID or holds a link; "
+                                f"say it in words, the binary prints it: {description!r}")
+    return {key: project(value, f"{path}/{key}") for key, value in node.items()
+            if key not in SPEC_METADATA}
+
+
+def projection():
+    schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
+    return json.dumps(project(schema), indent=2, ensure_ascii=False) + "\n"
+
+
 def main(argv):
-    page = render()
+    try:
+        rendered = {PAGE: render(), PROJECTION: projection()}
+    except SpecInDescription as refusal:
+        print(f"{SCHEMA.relative_to(ROOT)}: {refusal}", file=sys.stderr)
+        return 1
     if "--check" in argv:
-        if PAGE.read_text(encoding="utf-8") != page:
-            print(f"{PAGE.relative_to(ROOT)} is stale: run python scripts/render_config_reference.py",
+        stale = [path for path, text in rendered.items()
+                 if not path.exists() or path.read_text(encoding="utf-8") != text]
+        for path in stale:
+            print(f"{path.relative_to(ROOT)} is stale: run python scripts/render_config_reference.py",
                   file=sys.stderr)
-            return 1
-        return 0
-    PAGE.write_text(page, encoding="utf-8")
+        return 1 if stale else 0
+    for path, text in rendered.items():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
     return 0
 
 

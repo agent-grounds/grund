@@ -1,0 +1,1371 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/agent-grounds/grund/main/schemas/grund.schema.json",
+  "title": "grund.toml",
+  "description": "The configuration of a grund project. `grund config validate` is the authority; this schema serves editors.",
+  "if": {
+    "properties": {
+      "grund_config_version": {
+        "const": 2
+      }
+    },
+    "required": [
+      "grund_config_version"
+    ]
+  },
+  "then": {
+    "$ref": "#/definitions/v2"
+  },
+  "else": {
+    "$ref": "#/definitions/v1"
+  },
+  "definitions": {
+    "v1": {
+      "type": "object",
+      "description": "Version 1, the default.",
+      "properties": {
+        "grund_config_version": {
+          "type": "integer",
+          "enum": [
+            1
+          ],
+          "description": "The config format version. Omitted means 1.",
+          "default": 1
+        },
+        "project_name": {
+          "type": "string",
+          "description": "The project's name; in a workspace, also its alias in `§alias/<ID>` citations."
+        },
+        "project_description": {
+          "type": "string",
+          "description": "One-line description shown next to the project in generated workspace member lists."
+        },
+        "reference": {
+          "type": "object",
+          "description": "How a citation is written, and the project-wide grounding and inline-note defaults.",
+          "properties": {
+            "marker": {
+              "type": "string",
+              "description": "The character(s) that mark a citation.",
+              "default": "§"
+            },
+            "trigger": {
+              "type": "string",
+              "description": "The typed sequence the editor and `grund fmt` turn into the marker.",
+              "default": "$$"
+            },
+            "strict": {
+              "type": "boolean",
+              "description": "`true` reads only marked citations; `false` reads bare IDs too.",
+              "default": true
+            },
+            "shorthand": {
+              "type": "string",
+              "enum": [
+                "canonical",
+                "accepted"
+              ],
+              "description": "Whether number-only citations are written out in full (`canonical`) or kept as written (`accepted`).",
+              "default": "canonical"
+            },
+            "require_grounding": {
+              "type": "boolean",
+              "description": "Whether every scanned source file must cite a declared ID; the default for every `[[kinds]]` row.",
+              "default": false
+            },
+            "grounding_level": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 6,
+              "description": "The unit that must carry a citation: `1` the whole file, `N` every `H<N>` section too; the default for every `[[kinds]]` row.",
+              "default": 1
+            },
+            "conversation": {
+              "type": "string",
+              "enum": [
+                "link"
+              ],
+              "description": "The repository's opinion on how agents render citations in conversation: `link`, or absent for none."
+            },
+            "lead_size_warning": {
+              "type": "object",
+              "properties": {
+                "max": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "The largest lead that does not warn, counted in `unit`s."
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "lines",
+                    "words",
+                    "bytes"
+                  ],
+                  "description": "What `max` counts in a lead: its lines, its words or its bytes."
+                }
+              },
+              "required": [
+                "max",
+                "unit"
+              ],
+              "additionalProperties": false,
+              "x-grund-inline": true,
+              "description": "Opt in to a warning when a declaration's lead outgrows `max` `unit`s (`lines`, `words` or `bytes`)."
+            },
+            "inline_style": {
+              "type": "string",
+              "enum": [
+                "citation-with-note",
+                "citation-only"
+              ],
+              "description": "Whether an inline citation may carry a note beside it.",
+              "default": "citation-with-note"
+            },
+            "inline_note_suggested_lines": {
+              "type": "integer",
+              "description": "Lines past which an inline note is a suggestion (a warning with `warn_on_suggested`).",
+              "default": 1
+            },
+            "inline_note_max_lines": {
+              "type": "integer",
+              "description": "The most lines an inline note may take; more is an error.",
+              "default": 3
+            },
+            "inline_note_max_columns": {
+              "type": "integer",
+              "description": "The most columns an inline note may take; more is an error.",
+              "default": 100
+            },
+            "inline_note_layout": {
+              "type": "string",
+              "enum": [
+                "any",
+                "citation-first-colon"
+              ],
+              "description": "Where the citation sits inside an inline note.",
+              "default": "any"
+            },
+            "inline_note_layout_check": {
+              "type": "string",
+              "enum": [
+                "off",
+                "warn",
+                "error"
+              ],
+              "description": "How a note that breaks `inline_note_layout` is reported.",
+              "default": "off"
+            },
+            "warn_on_suggested": {
+              "type": "boolean",
+              "description": "Report notes past `inline_note_suggested_lines` as warnings rather than suggestions.",
+              "default": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "id": {
+          "type": "object",
+          "description": "The ID grammar: the shape of every declared ID and section path.",
+          "properties": {
+            "format": {
+              "type": "string",
+              "description": "The ID template: `{kind}` plus `{number}`, `{slug}` or both; everything else is literal.",
+              "default": "{kind}-{number}-{slug}"
+            },
+            "section_separator": {
+              "type": "string",
+              "description": "The separator between an ID and its section path.",
+              "default": "."
+            },
+            "number_pattern": {
+              "type": "string",
+              "description": "Regex for `{number}`.",
+              "default": "\\d+"
+            },
+            "slug_pattern": {
+              "type": "string",
+              "description": "Regex for `{slug}`.",
+              "default": "[a-z0-9][a-z0-9-]*"
+            },
+            "named_sections": {
+              "type": "boolean",
+              "description": "Enable named section components, such as `## goals:`, matching `[a-z][a-z0-9-]*`: a name at any depth, under a name or a number.",
+              "default": false
+            },
+            "section_heading_levels": {
+              "type": "string",
+              "enum": [
+                "strict",
+                "warn",
+                "loose"
+              ],
+              "description": "How a heading whose depth does not match its section path is reported: an error, a warning, or not at all.",
+              "default": "strict"
+            }
+          },
+          "additionalProperties": false
+        },
+        "kinds": {
+          "type": "array",
+          "description": "One row per kind: where its declarations live and how they are read. `kinds = []` declares no kinds; leaving the key out keeps the built-in ones.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "description": "The kind's name: the ID prefix of a citable kind, its `[citations.<kind>]` key and its `--kind` selector."
+              },
+              "prefix": {
+                "not": {},
+                "deprecated": true,
+                "description": "Removed in grund 0.13.0 and refused: rename it to `kind`."
+              },
+              "folder": {
+                "type": "string",
+                "description": "A folder home: each declaration is the H1 of its own file under this directory."
+              },
+              "file": {
+                "type": "string",
+                "description": "A single-file home: every declaration is a heading in this document. It is read only if its extension is in `[scan] extensions`, or, on a `values = true` row, as its JSON home by the value pass; otherwise `grund check` warns at this line."
+              },
+              "title": {
+                "type": "string",
+                "description": "The kind's title in the Project map, `grund list --summary` and editor hovers."
+              },
+              "citable": {
+                "type": "boolean",
+                "description": "`false` makes this a place: it cites, but declares no IDs.",
+                "default": true
+              },
+              "index": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "const": false
+                  }
+                ],
+                "description": "The folder's index file, which must list every declaration; `false` opts out.",
+                "x-grund-default": "README.md (folder kinds; `false` for a kind named E2E)",
+                "examples": [
+                  "INDEX.md",
+                  false
+                ]
+              },
+              "scan": {
+                "type": "boolean",
+                "description": "`false` lists the kind in the Project map without walking it.",
+                "default": true
+              },
+              "require_grounding": {
+                "type": "boolean",
+                "description": "This kind's grounding requirement; it wins over `[reference]` and over `--require-grounding`.",
+                "x-grund-default": "inherits `[reference] require_grounding`"
+              },
+              "grounding_level": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 6,
+                "description": "This kind's grounding unit, overriding `[reference] grounding_level`.",
+                "x-grund-default": "inherits `[reference] grounding_level`"
+              },
+              "values": {
+                "type": "boolean",
+                "description": "Make every declaration of this kind a first-class value.",
+                "default": false
+              },
+              "value_chapter": {
+                "type": "string",
+                "description": "The chapter whose named children are values, in every declaration of this kind."
+              },
+              "rules": {
+                "type": "boolean",
+                "description": "Make every declaration title of this kind an executable rule sentence.",
+                "default": false
+              },
+              "format": {
+                "type": "string",
+                "description": "This kind's ID template, overriding `[id] format`.",
+                "x-grund-default": "inherits `[id] format`",
+                "examples": [
+                  "{kind}-{number}"
+                ]
+              },
+              "resolve": {
+                "type": "string",
+                "enum": [
+                  "must",
+                  "should"
+                ],
+                "description": "How a missing external snapshot is reported: `must` as a dangling citation, `should` as a warning.",
+                "x-grund-default": "must when fetch is set, else absent"
+              },
+              "fetch": {
+                "type": "string",
+                "description": "The executable `grund fetch` runs to save a missing external snapshot."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "scan": {
+          "type": "object",
+          "description": "What the scan walks and reads.",
+          "properties": {
+            "include": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Directories and files to scan, from the config root; every kind's home is scanned as well. A file named here is read only if its extension is in `extensions`; when it is not, `grund check` warns at this line.",
+              "default": [
+                "requirements.md",
+                "docs",
+                "e2e",
+                "src"
+              ]
+            },
+            "exclude": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Directory names skipped at any depth; a stub whose target sits under one is broken, because a target the scan does not read declares nothing.",
+              "default": [
+                "target",
+                "node_modules",
+                ".git",
+                "dist",
+                "build",
+                ".venv"
+              ]
+            },
+            "extensions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "The file extensions the scan reads. The default is `md` plus every extension grund's built-in language table names, so a language grund learns is read without a config change.",
+              "default": [
+                "md",
+                "rs",
+                "go",
+                "java",
+                "kt",
+                "ts",
+                "tsx",
+                "js",
+                "py",
+                "c",
+                "cpp",
+                "swift",
+                "scala",
+                "rb",
+                "php",
+                "cs",
+                "lisp",
+                "scm",
+                "clj",
+                "sql",
+                "hs",
+                "lhs",
+                "lua",
+                "ada",
+                "adb",
+                "ads",
+                "h",
+                "cc",
+                "cxx",
+                "hpp",
+                "hh",
+                "hxx",
+                "m",
+                "mm",
+                "kts",
+                "jsx",
+                "mjs",
+                "cjs",
+                "dart",
+                "r",
+                "R",
+                "sh",
+                "bash",
+                "zsh",
+                "cl",
+                "el",
+                "ss",
+                "rkt",
+                "cljs",
+                "cljc"
+              ]
+            },
+            "comment_prefixes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "The comment markers a citation or declaration in source code may follow.",
+              "default": [
+                "//",
+                "#",
+                ";",
+                "--",
+                "*",
+                "/*"
+              ]
+            },
+            "docstring_python": {
+              "type": "boolean",
+              "description": "Read Python docstrings as well as `#` comments.",
+              "default": true
+            },
+            "respect_gitignore": {
+              "type": "boolean",
+              "description": "Skip what `.gitignore` and other ignore files exclude, stub targets included: a stub whose target they exclude is broken, because a target the scan does not read declares nothing.",
+              "default": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "output": {
+          "type": "object",
+          "description": "How reports are printed.",
+          "properties": {
+            "format": {
+              "type": "string",
+              "enum": [
+                "text",
+                "json"
+              ],
+              "description": "The default report format, as `--format`.",
+              "default": "text"
+            },
+            "color": {
+              "type": "string",
+              "enum": [
+                "auto",
+                "always",
+                "never"
+              ],
+              "description": "Reserved: accepted and kept, with no effect yet."
+            },
+            "relative_paths": {
+              "type": "boolean",
+              "description": "Report paths relative to the config root (`true`) or to where the command ran, as `--path-base`.",
+              "default": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "fmt": {
+          "type": "object",
+          "description": "What `grund fmt` leaves alone.",
+          "properties": {
+            "exclude": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Files `grund fmt` never rewrites: gitignore-style globs from the config root.",
+              "default": []
+            },
+            "cross_refs": {
+              "type": "object",
+              "description": "Whether `grund fmt` wraps citations in Markdown links, and the anchor style it writes.",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "`false` stops `grund fmt` from wrapping citations in Markdown links.",
+                  "default": true
+                },
+                "anchor_format": {
+                  "type": "string",
+                  "enum": [
+                    "github",
+                    "gitlab",
+                    "mkdocs",
+                    "pandoc",
+                    "none"
+                  ],
+                  "description": "The heading-anchor style of the links `grund fmt` writes.",
+                  "default": "github"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "workspace": {
+          "type": "object",
+          "description": "The sub-projects a workspace root checks, each in its own namespace.",
+          "properties": {
+            "members": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Member directories, or a directory ending in `/*` for all its children, each checked as its own project.",
+              "default": []
+            },
+            "optional_members": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Members that may be absent, such as an uninitialized submodule.",
+              "default": []
+            },
+            "include_root": {
+              "type": "boolean",
+              "description": "Whether the root is checked as a project too.",
+              "default": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "citations": {
+          "type": "object",
+          "description": "Citation direction rules: one `[citations.<KIND>]` table per citing kind.",
+          "properties": {
+            "default": {
+              "type": "string",
+              "enum": [
+                "must",
+                "should",
+                "may",
+                "should-not",
+                "must-not"
+              ],
+              "description": "What any kind may cite when no rule names the target; absent means `may`."
+            }
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/v1CitationRule"
+          },
+          "x-grund-key": "<KIND>"
+        }
+      },
+      "additionalProperties": false
+    },
+    "v1CitationRule": {
+      "type": "object",
+      "description": "What a citing kind (or place) must, should, may, should not and must not cite.",
+      "properties": {
+        "default": {
+          "type": "string",
+          "enum": [
+            "must",
+            "should",
+            "may",
+            "should-not",
+            "must-not"
+          ],
+          "description": "What this kind may cite when no list names the target, overriding `[citations] default`."
+        },
+        "must": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds each declaration (or file, for a place) must cite; a miss is an error.",
+          "default": []
+        },
+        "should": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds it should cite; a miss is a suggestion.",
+          "default": []
+        },
+        "may": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds it may cite, even under a stricter default.",
+          "default": []
+        },
+        "should-not": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds it should not cite; a citation is a suggestion.",
+          "default": []
+        },
+        "must-not": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds it must not cite; a citation is an error.",
+          "default": []
+        }
+      },
+      "additionalProperties": false
+    },
+    "v2": {
+      "type": "object",
+      "description": "Version 2: keys grouped by concern — `[schema]` for what exists, `[rules]` for how it relates, `[presentation]` for what grund writes. Every constraint takes one strength: `must` is an error, `warn` a warning, `should` a suggestion shown by `grund check --suggestions`, and `may` is not checked.",
+      "properties": {
+        "grund_config_version": {
+          "type": "integer",
+          "enum": [
+            2
+          ],
+          "description": "The config format version: 2 selects the version-2 reader."
+        },
+        "project_name": {
+          "type": "string",
+          "description": "The project's name; in a workspace, also its alias in `§alias/<ID>` citations."
+        },
+        "schema": {
+          "type": "object",
+          "description": "What exists: the citation marker, the ID grammar, the sources, the note and lead measures, and the kinds.",
+          "properties": {
+            "marker": {
+              "type": "string",
+              "description": "The character(s) that mark a citation, as v1 `[reference] marker`.",
+              "default": "§"
+            },
+            "shorthand": {
+              "type": "string",
+              "enum": [
+                "canonical",
+                "accepted"
+              ],
+              "description": "Whether number-only citations are written out in full (`canonical`) or kept as written (`accepted`).",
+              "default": "canonical"
+            },
+            "id_format": {
+              "type": "string",
+              "description": "The ID template, as v1 `[id] format`.",
+              "default": "{kind}-{slug}"
+            },
+            "slug_pattern": {
+              "type": "string",
+              "description": "Regex for `{slug}`; the default starts with a letter.",
+              "default": "[a-z][a-z0-9-]*"
+            },
+            "number_pattern": {
+              "type": "string",
+              "description": "Regex for `{number}`.",
+              "default": "\\d+"
+            },
+            "section_separator": {
+              "type": "string",
+              "description": "The separator between an ID and its section path.",
+              "default": "."
+            },
+            "heading_depth": {
+              "type": "string",
+              "enum": [
+                "must",
+                "warn",
+                "should",
+                "may"
+              ],
+              "description": "How strongly a heading whose depth does not match its section path is reported.",
+              "default": "must"
+            },
+            "sources": {
+              "type": "object",
+              "description": "The sources a version-2 project is read from.",
+              "properties": {
+                "languages": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*$"
+                  },
+                  "uniqueItems": true,
+                  "description": "The languages a version-2 project reads: built-in names from the v2 epoch, or names defined under `[schema.sources.definitions]`. Omitted, the epoch's default set; `[]` reads nothing.",
+                  "x-grund-default": "the epoch's default languages"
+                },
+                "declarations": {
+                  "type": "string",
+                  "enum": [
+                    "doc-comments",
+                    "any-comment"
+                  ],
+                  "default": "doc-comments",
+                  "description": "Which comment blocks of a source file may declare an ID: only those the language's doc profile calls documentation, or every comment as in version 1. Citations are read in every comment either way."
+                },
+                "exclude": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "default": [],
+                  "description": "Gitignore-style patterns, resolved against the config root, for paths the scan never reads. A stub whose target a pattern matches is broken, and the pattern is named as the reason its target is not read. Unlike version 1 there are no built-in names."
+                },
+                "respect_gitignore": {
+                  "type": "boolean",
+                  "description": "Skip what `.gitignore` and other ignore files exclude, stub targets included: a stub whose target they exclude is broken, because a target the scan does not read declares nothing.",
+                  "default": true
+                },
+                "extensions": {
+                  "type": "object",
+                  "x-grund-key": "<suffix>",
+                  "description": "Maps a file suffix, written without its dot, to an admitted language; an entry overrides the epoch's own assignment of that suffix.",
+                  "propertyNames": {
+                    "pattern": "^[^./\\\\*?\\[\\]{}!]+$"
+                  },
+                  "additionalProperties": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*$",
+                    "description": "The admitted language files with this suffix are read as.",
+                    "examples": [
+                      "markdown"
+                    ]
+                  }
+                },
+                "definitions": {
+                  "type": "object",
+                  "x-grund-key": "<name>",
+                  "description": "Languages of your own, which `languages` may then admit and `[schema.sources.extensions]` may map a suffix to.",
+                  "propertyNames": {
+                    "pattern": "^[a-z][a-z0-9_]*$"
+                  },
+                  "additionalProperties": {
+                    "type": "object",
+                    "description": "One defined language.",
+                    "properties": {
+                      "class": {
+                        "type": "string",
+                        "enum": [
+                          "document",
+                          "data",
+                          "source"
+                        ],
+                        "description": "The reader: Markdown, the JSON value-file reader, or the source reader through the comment hosts. Required.",
+                        "x-grund-default": "required"
+                      },
+                      "comment_prefixes": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "uniqueItems": true,
+                        "default": [],
+                        "description": "The literal prefixes a comment is read behind, longest first."
+                      },
+                      "doc_comments": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "c-family",
+                          "python",
+                          "go",
+                          "ruby",
+                          "shell",
+                          "sql",
+                          "ldoc",
+                          "haddock",
+                          "roxygen",
+                          "lisp"
+                        ],
+                        "default": "none",
+                        "description": "The frozen doc profile that says which comments are documentation; `none` lets every comment declare."
+                      },
+                      "docstrings": {
+                        "type": "string",
+                        "enum": [
+                          "off",
+                          "python"
+                        ],
+                        "default": "off",
+                        "description": "Whether triple-quoted Python docstrings are read as comments."
+                      }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                      "class"
+                    ]
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            "notes": {
+              "type": "object",
+              "description": "Measures on inline citation notes.",
+              "properties": {
+                "lines": {
+                  "type": "object",
+                  "description": "How many lines an inline note may take, by strength.",
+                  "properties": {
+                    "must": {
+                      "type": "integer",
+                      "description": "The most lines an inline note may take; more is an error.",
+                      "default": 3
+                    },
+                    "warn": {
+                      "type": "integer",
+                      "description": "Lines past which an inline note is a warning."
+                    },
+                    "should": {
+                      "type": "integer",
+                      "description": "Lines past which an inline note is a suggestion."
+                    },
+                    "may": {
+                      "type": "integer",
+                      "description": "A line guideline that is not checked."
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "columns": {
+                  "type": "object",
+                  "description": "How many columns an inline note may take, by strength.",
+                  "properties": {
+                    "must": {
+                      "type": "integer",
+                      "description": "The most columns an inline note may take; more is an error.",
+                      "default": 100
+                    },
+                    "warn": {
+                      "type": "integer",
+                      "description": "Columns past which an inline note is a warning."
+                    },
+                    "should": {
+                      "type": "integer",
+                      "description": "Columns past which an inline note is a suggestion."
+                    },
+                    "may": {
+                      "type": "integer",
+                      "description": "A column guideline that is not checked."
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "text": {
+                  "type": "object",
+                  "description": "Whether an inline note may carry text beside its citation.",
+                  "properties": {
+                    "must": {
+                      "type": "boolean",
+                      "description": "`true` lets an inline note carry text beside its citation; `false` allows the citation alone.",
+                      "default": true
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "layout": {
+                  "type": "object",
+                  "description": "Where the citation sits inside a note; write one strength only.",
+                  "properties": {
+                    "must": {
+                      "type": "string",
+                      "enum": [
+                        "any",
+                        "citation-first-colon"
+                      ],
+                      "description": "The required layout; a deviation is an error."
+                    },
+                    "warn": {
+                      "type": "string",
+                      "enum": [
+                        "any",
+                        "citation-first-colon"
+                      ],
+                      "description": "The required layout; a deviation is a warning."
+                    },
+                    "should": {
+                      "type": "string",
+                      "enum": [
+                        "any",
+                        "citation-first-colon"
+                      ],
+                      "description": "The required layout; a deviation is a suggestion."
+                    },
+                    "may": {
+                      "type": "string",
+                      "enum": [
+                        "any",
+                        "citation-first-colon"
+                      ],
+                      "description": "The layout, unchecked."
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "leads": {
+              "type": "object",
+              "description": "Measures on declaration leads.",
+              "properties": {
+                "words": {
+                  "type": "object",
+                  "description": "How many words a declaration's lead may take, by strength.",
+                  "properties": {
+                    "must": {
+                      "type": "integer",
+                      "description": "Words past which a declaration's lead is an error."
+                    },
+                    "warn": {
+                      "type": "integer",
+                      "description": "Words past which a declaration's lead is a warning."
+                    },
+                    "should": {
+                      "type": "integer",
+                      "description": "Words past which a declaration's lead is a suggestion."
+                    },
+                    "may": {
+                      "type": "integer",
+                      "description": "A word guideline that is not checked."
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "kinds": {
+              "type": "object",
+              "description": "The kinds, one `[schema.kinds.<NAME>]` table each.",
+              "additionalProperties": {
+                "$ref": "#/definitions/v2Kind"
+              },
+              "x-grund-key": "<NAME>"
+            }
+          },
+          "additionalProperties": false
+        },
+        "rules": {
+          "type": "object",
+          "description": "How nodes relate: citation rules, grounding and snapshot resolution.",
+          "properties": {
+            "citations": {
+              "type": "object",
+              "description": "Citation direction rules: one `[rules.citations.<KIND>]` table per citing kind.",
+              "properties": {
+                "default": {
+                  "type": "string",
+                  "enum": [
+                    "may",
+                    "should-not",
+                    "warn-not",
+                    "must-not"
+                  ],
+                  "description": "What a citing kind may cite when its rule does not name the target: `may`, or a prohibition at some strength.",
+                  "x-grund-default": "may (effective; stored absent)"
+                },
+                "grounding": {
+                  "$ref": "#/definitions/v2Grounding"
+                }
+              },
+              "additionalProperties": {
+                "$ref": "#/definitions/v2CitationRule"
+              },
+              "x-grund-key": "<KIND>"
+            },
+            "resolution": {
+              "type": "object",
+              "description": "How strongly a fetched kind's missing snapshot is reported: `<KIND> = \"must\"` or `\"warn\"`.",
+              "additionalProperties": {
+                "type": "string",
+                "enum": [
+                  "must",
+                  "warn"
+                ],
+                "description": "The strength of a missing snapshot for this fetched kind."
+              },
+              "x-grund-key": "<KIND>"
+            }
+          },
+          "additionalProperties": false
+        },
+        "presentation": {
+          "type": "object",
+          "description": "The bytes grund writes: the trigger, the conversation opinion, kind titles and `grund fmt`.",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "A one-line description shown beside the project in generated workspace member lists."
+            },
+            "trigger": {
+              "type": "string",
+              "description": "The typed sequence the editor and `grund fmt` turn into the marker.",
+              "default": "$$"
+            },
+            "conversation": {
+              "type": "string",
+              "enum": [
+                "link"
+              ],
+              "description": "The repository's opinion on how agents render citations in conversation: `link`, or absent for none."
+            },
+            "rules": {
+              "type": "string",
+              "enum": [
+                "home",
+                "root"
+              ],
+              "default": "home",
+              "description": "Where each row's agent guidance is written: `home`, the `AGENTS.md` of the deepest directory holding the row's places; `root`, the root entrypoint, as a version-1 config renders it."
+            },
+            "kinds": {
+              "type": "object",
+              "description": "Display titles, one `[presentation.kinds.<NAME>]` table per kind.",
+              "additionalProperties": {
+                "type": "object",
+                "description": "One kind's display title.",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "The kind's title in the Project map, `grund list --summary` and editor hovers."
+                  }
+                },
+                "additionalProperties": false
+              },
+              "x-grund-key": "<NAME>"
+            },
+            "fmt": {
+              "type": "object",
+              "description": "What `grund fmt` writes and leaves alone.",
+              "properties": {
+                "anchors": {
+                  "type": "string",
+                  "enum": [
+                    "github"
+                  ],
+                  "description": "The heading-anchor style `grund fmt` writes in citation links; `github` is the only one today.",
+                  "default": "github"
+                },
+                "links": {
+                  "type": "string",
+                  "enum": [
+                    "index"
+                  ],
+                  "description": "Where `grund fmt` points citation links; `index` is the only target today.",
+                  "default": "index"
+                },
+                "exclude": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Files `grund fmt` never rewrites: gitignore-style globs, as v1 `[fmt] exclude`.",
+                  "default": []
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "workspace": {
+          "type": "object",
+          "description": "The sub-projects a workspace root checks, each in its own namespace.",
+          "properties": {
+            "members": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Member directories, or globs of them, each checked as its own project.",
+              "default": []
+            },
+            "optional_members": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Members that may be absent, such as an uninitialized submodule.",
+              "default": []
+            },
+            "include_root": {
+              "type": "boolean",
+              "description": "Whether the root is checked as a project too.",
+              "default": true
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "grund_config_version"
+      ],
+      "additionalProperties": false
+    },
+    "v2Kind": {
+      "type": "object",
+      "description": "One row: its places, its form, and its fields. A row may list several places; a file listed in `files` belongs to its row, otherwise the deepest folder holding it decides, and a file in no place belongs to `code`. The row named `code` is the complement: it declares no IDs, and listing places on it narrows the scan to every place written.",
+      "properties": {
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Files from the config root, in written order. A listed file belongs to this row even inside another row's folder. On a citable row with no folders, every declaration is a heading in one of these documents. A place is normalized (`./a/` is `a`), must stay inside the config root, and belongs to one row.",
+          "default": []
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Folders from the config root, in written order. Each declaration is the H1 of its own file under one of them; a file in nested folders belongs to the deepest. A place is normalized, must stay inside the config root and outside every workspace member, belongs to one row, and a folder may not link out of the project root.",
+          "default": []
+        },
+        "citable": {
+          "type": "boolean",
+          "description": "`false` makes this a place: it cites, but declares no IDs. A non-citable row must list a place unless it is `code`, which is non-citable by name; `citable = true` on `code` is refused.",
+          "default": true
+        },
+        "scan": {
+          "type": "boolean",
+          "description": "`false` lists the kind in the Project map without walking any of its places; a scanned place nested under it is still walked. Refused on `code`: narrow its places or use `[schema.sources] exclude`.",
+          "default": true
+        },
+        "index": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "const": false
+            }
+          ],
+          "description": "The index file each folder keeps, which must list every declaration that folder owns; `false` opts out.",
+          "x-grund-default": "README.md (no E2E special case in v2)",
+          "examples": [
+            "INDEX.md",
+            false
+          ]
+        },
+        "id_format": {
+          "type": "string",
+          "description": "This kind's ID template, overriding `[schema] id_format`.",
+          "x-grund-default": "inherits `[schema] id_format`",
+          "examples": [
+            "{kind}-{number}"
+          ]
+        },
+        "fetch": {
+          "type": "string",
+          "description": "The executable `grund fetch` runs to save a missing external snapshot."
+        },
+        "form": {
+          "type": "string",
+          "enum": [
+            "prose",
+            "value",
+            "rule"
+          ],
+          "description": "What a declaration is: ordinary `prose`, a first-class `value`, or an executable `rule`.",
+          "default": "prose"
+        },
+        "closed": {
+          "type": "string",
+          "enum": [
+            "must",
+            "warn",
+            "should",
+            "may"
+          ],
+          "description": "How strongly a chapter that is neither a declared field nor a numbered section is reported.",
+          "default": "may"
+        },
+        "fields": {
+          "type": "object",
+          "description": "The kind's chapters as fields, by name.",
+          "additionalProperties": {
+            "$ref": "#/definitions/v2Field"
+          },
+          "x-grund-key": "<field>"
+        }
+      },
+      "additionalProperties": false
+    },
+    "v2Field": {
+      "type": "object",
+      "description": "One field: a chapter of the kind, its presence, position and content.",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The heading title the chapter must carry, exactly."
+        },
+        "presence": {
+          "type": "string",
+          "enum": [
+            "must",
+            "warn",
+            "should",
+            "may"
+          ],
+          "description": "How strongly a missing chapter is reported.",
+          "default": "may"
+        },
+        "position": {
+          "type": "string",
+          "enum": [
+            "first",
+            "last"
+          ],
+          "description": "Pin the chapter first or last among the declaration's sections."
+        },
+        "after": {
+          "type": "string",
+          "description": "Name of another field of the same kind this one comes directly after."
+        },
+        "content": {
+          "type": "string",
+          "enum": [
+            "prose",
+            "values"
+          ],
+          "description": "`values` makes this chapter the kind's value chapter.",
+          "default": "prose"
+        },
+        "one_of": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The values a scalar chapter's title may take."
+        }
+      },
+      "additionalProperties": false
+    },
+    "v2CitationRule": {
+      "type": "object",
+      "description": "What a citing kind (or place) must, warn, should, may, should not, warn not and must not cite.",
+      "properties": {
+        "default": {
+          "type": "string",
+          "enum": [
+            "may",
+            "should-not",
+            "warn-not",
+            "must-not"
+          ],
+          "description": "What this kind may cite when no list names the target: `may`, or a prohibition at some strength."
+        },
+        "must": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds this one must cite; a miss is an error.",
+          "default": []
+        },
+        "warn": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds this one must cite; a miss is a warning.",
+          "default": []
+        },
+        "should": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds this one should cite; a miss is a suggestion.",
+          "default": []
+        },
+        "may": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds this one may cite.",
+          "default": []
+        },
+        "should-not": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds this one should not cite; a citation is a suggestion.",
+          "default": []
+        },
+        "warn-not": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds this one must not cite; a citation is a warning.",
+          "default": []
+        },
+        "must-not": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kinds this one must not cite; a citation is an error.",
+          "default": []
+        },
+        "grounding": {
+          "$ref": "#/definitions/v2Grounding"
+        }
+      },
+      "additionalProperties": false
+    },
+    "v2Grounding": {
+      "type": "object",
+      "description": "The grounding ladder: the unit, by strength, that must carry a citation.",
+      "properties": {
+        "must": {
+          "type": "string",
+          "enum": [
+            "file",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6"
+          ],
+          "description": "The unit (`file`, or every `h2`–`h6` section) that must carry a citation; a miss is an error."
+        },
+        "warn": {
+          "type": "string",
+          "enum": [
+            "file",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6"
+          ],
+          "description": "The unit that must carry a citation; a miss is a warning."
+        },
+        "should": {
+          "type": "string",
+          "enum": [
+            "file",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6"
+          ],
+          "description": "The unit that should carry a citation; a miss is a suggestion."
+        },
+        "may": {
+          "type": "string",
+          "enum": [
+            "file",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6"
+          ],
+          "description": "A grounding unit that is not checked."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
