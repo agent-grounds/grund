@@ -14,7 +14,8 @@
 //! component above it (§AR-system.4). The derivation of an anchor *from* heading
 //! text is the lexical half and is `grammar/anchors.rs`.
 
-use std::collections::BTreeMap;
+use std::collections::btree_map::Entry;
+use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
 
 use super::anchor_numbering::numbered_anchor;
@@ -78,46 +79,58 @@ pub(crate) fn markdown_link_target(
 /// folders × declarations under a per-folder layout (§GOAL-fast-feedback). An
 /// ID `fmt` would not link (§FS-fmt.6.4.2) has no entry. `settled` is the
 /// heading lines a `fmt` run leaves (§FS-fmt.6.3.3), empty for every other caller.
-pub(crate) fn index_link_targets(
+pub(crate) fn index_link_targets<'c>(
     presentation: &Presentation,
     schema: &Schema,
     frame: Frame<'_>,
-    findings: &Catalog,
+    findings: &'c Catalog,
     settled: &SettledHeadings,
 ) -> BTreeMap<(PathBuf, Id), String> {
-    let mut indexes: BTreeMap<PathBuf, Vec<(&str, PathBuf)>> = BTreeMap::new();
-    // Each folder with an index, keyed as a declaration's relative path is read.
-    let mut folders: BTreeMap<PathBuf, Vec<(&str, &str, PathBuf)>> = BTreeMap::new();
     // §FS-config-v2.schema.places.ownership: one index in each folder of the row.
-    for (row, folder, index) in schema.rows.iter().flat_map(|row| {
-        row.index_paths()
-            .into_iter()
-            .map(move |(folder, index)| (row, folder, index))
-    }) {
-        if index.extension().and_then(|ext| ext.to_str()) != Some("md") {
-            continue;
-        }
-        let key = scanned_path_key(&index);
+    let places: Vec<(&str, &str, PathBuf, PathBuf)> = schema
+        .rows
+        .iter()
+        .flat_map(|row| {
+            row.index_paths()
+                .into_iter()
+                .map(move |(folder, index)| (row, folder, index))
+        })
+        .filter(|(_, _, index)| index.extension().and_then(|ext| ext.to_str()) == Some("md"))
+        .map(|(row, folder, index)| {
+            let file = frame.root().join(&index);
+            (row.name.as_str(), folder, scanned_path_key(&index), file)
+        })
+        .collect();
+    if places.is_empty() {
+        return BTreeMap::new();
+    }
+    // Each index file by its place in path order, so a link is keyed by a number
+    // until the end rather than by a path compared component by component.
+    let mut files: Vec<&PathBuf> = places.iter().map(|(.., file)| file).collect();
+    files.sort();
+    files.dedup();
+    let slot = |file: &PathBuf| {
+        files
+            .binary_search(&file)
+            .expect("every index file has a slot")
+    };
+    let mut indexes: BTreeMap<&Path, Vec<(&str, usize)>> = BTreeMap::new();
+    // Each folder with an index, keyed as a declaration's relative path is read.
+    let mut folders: HashMap<PathBuf, Vec<(&str, &str, usize)>> = HashMap::new();
+    for (kind, folder, key, file) in &places {
+        indexes.entry(key).or_default().push((kind, slot(file)));
         folders
             .entry(configured_home_path_key(folder))
             .or_default()
-            .push((folder, row.name.as_str(), key.clone()));
-        indexes
-            .entry(key)
-            .or_default()
-            .push((row.name.as_str(), frame.root().join(&index)));
+            .push((folder, kind, slot(file)));
     }
-    let mut targets = BTreeMap::new();
-    if indexes.is_empty() {
-        return targets;
-    }
-    let mut link = |index_file: &PathBuf, id: &Id| {
-        let key = (index_file.clone(), id.clone());
-        if targets.contains_key(&key) {
+    let mut found: BTreeMap<(usize, &Id), String> = BTreeMap::new();
+    let mut link = |file: usize, id: &'c Id| {
+        let Entry::Vacant(entry) = found.entry((file, id)) else {
             return;
-        }
+        };
         if let Some(target) = markdown_link_target_with_root(
-            index_file,
+            files[file],
             id,
             None,
             presentation,
@@ -126,7 +139,7 @@ pub(crate) fn index_link_targets(
             None,
             settled,
         ) {
-            targets.insert(key, target);
+            entry.insert(target);
         }
     };
     // The IDs each index cites with the marker: what enrollment compares.
@@ -146,11 +159,11 @@ pub(crate) fn index_link_targets(
         else {
             continue;
         };
-        if let Some((_, index_file)) = indexes
+        if let Some((_, file)) = indexes
             .get(relative.as_ref())
             .and_then(|rows| rows.iter().find(|(kind, _)| *kind == citation.id.kind))
         {
-            link(index_file, &citation.id);
+            link(*file, &citation.id);
         }
     }
     // §FS-check.3.18.5.2: the declarations under the index's folders, by the
@@ -162,24 +175,21 @@ pub(crate) fn index_link_targets(
             let Some(relative) = owners.relative(&decl.file) else {
                 continue;
             };
-            for (folder, kind, key) in relative
+            for (folder, kind, file) in relative
                 .ancestors()
                 .filter_map(|ancestor| folders.get(ancestor))
                 .flatten()
             {
-                if *kind != id.kind || !schema.folder_owns(folder, &relative) {
-                    continue;
-                }
-                if let Some((_, index_file)) = indexes
-                    .get(key)
-                    .and_then(|rows| rows.iter().find(|(row, _)| row == kind))
-                {
-                    link(index_file, id);
+                if *kind == id.kind && schema.folder_owns(folder, &relative) {
+                    link(*file, id);
                 }
             }
         }
     }
-    targets
+    found
+        .into_iter()
+        .map(|((file, id), target)| ((files[file].clone(), id.clone()), target))
+        .collect()
 }
 
 /// §FS-workspace.8.5: same as `markdown_link_target`, but with an explicit
