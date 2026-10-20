@@ -64,7 +64,7 @@ pub(super) fn run(r: &EmbeddingRequest, query: Query) -> Result<Value, Value> {
             .and_then(Value::as_array)
             .is_some_and(Vec::is_empty)
     {
-        return Ok(json!({"records": [], "run_cautions": []}));
+        return Ok(embedding_queries::batch_result(Vec::new(), None, json!([])));
     }
     // §FS-coordinate-globs.errors.shape: a broken `grund.toml` hides no refused pattern.
     embedding_queries::refuse_before_discovery(r)?;

@@ -5,7 +5,7 @@
 use super::embedding::EmbeddingRequest;
 use super::embedding_data::Data;
 use super::embedding_failure::error_data;
-use super::embedding_queries::{batch_queries, show_opts};
+use super::embedding_queries::{batch_queries, batch_result, show_opts};
 use serde_json::{Value, json};
 
 /// Node's read/query delegate: show and batch add metadata, the rest is shared.
@@ -50,7 +50,7 @@ fn show_batch(r: &EmbeddingRequest) -> Result<Value, Value> {
             "result":result,"failure":refusal})
         })
         .collect::<Vec<_>>();
-    Ok(json!({"records":records,"note":note,"run_cautions":cautions.data()}))
+    Ok(batch_result(records, note, cautions.data()))
 }
 
 fn extend(data: &mut Value, metadata: Value) {

@@ -30,6 +30,12 @@ pub(super) fn batch_queries(r: &EmbeddingRequest) -> Option<Vec<BatchShowQuery>>
         })
 }
 
+/// The one `show_batch` result shape, which the empty batch, Python's and Node's
+/// projections all build, so none of them leaves a field out (§FS-distribution.3.0.2).
+pub(super) fn batch_result(records: Vec<Value>, note: Option<String>, cautions: Value) -> Value {
+    json!({"records": records, "note": note, "run_cautions": cautions})
+}
+
 pub(super) fn show_opts(r: &EmbeddingRequest) -> ShowOpts {
     ShowOpts {
         path: r.root.clone(),
@@ -146,7 +152,7 @@ pub(super) fn query(r: &EmbeddingRequest) -> Result<Value, Value> {
                     "result":result,"failure":refusal})
                 })
                 .collect::<Vec<_>>();
-            Ok(json!({"records":records,"note":note,"run_cautions":cautions.data()}))
+            Ok(batch_result(records, note, cautions.data()))
         }
         "refs" => refs_data(r),
         "list_ids" => {
