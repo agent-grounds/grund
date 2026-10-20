@@ -26,7 +26,7 @@ fn print_fmt_help() {
         "  --cross-refs   wrap citations as Markdown links to targets          e.g. grund fmt --write --cross-refs"
     );
     println!(
-        "                 runs by default in both modes for Markdown scopes; set [fmt.cross_refs].enabled = false to opt out"
+        "                 runs by default in both modes for Markdown scopes; in version 1, set [fmt.cross_refs].enabled = false to opt out"
     );
     print_run_flag_help("grund fmt docs/", false);
     println!();

@@ -30,7 +30,6 @@ SKILL_COPIES = (
 # Each template and the flags that lay everything it writes; `none` has no
 # starter files, so `--scaffold` is refused there.
 TEMPLATES = (("software-development", ("--scaffold",)), ("none", ()))
-RED = "red until #832 config explain lands; implement removes this"
 
 # A table as a config writes it, then optionally a key or an inline member:
 # `[schema.leads.words]`, `[[kinds]] fetch`, `[[kinds]].fetch`, `[schema.kinds.FS]`.
@@ -360,7 +359,6 @@ class GuidanceExtraction(unittest.TestCase):
             self.assertTrue(markdown_spellings(config.read_text(encoding="utf-8"), config))
 
 
-@unittest.skip(RED)
 class GuidanceVersions(unittest.TestCase):
     """§REQ-discoverable-offline.1, judged by the binary."""
 

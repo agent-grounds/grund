@@ -1,10 +1,10 @@
 ## Language And Repo Shape Examples
 
-Use these examples to turn repo evidence into recommended `[scan]` settings. Include only directories that exist, unless `--scaffold` will create them.
+Use these examples to turn repo evidence into recommended `[scan]` settings for a version-1 file; a version-2 file writes the same evidence as `[schema.sources]`, after the examples. Include only directories that exist, unless `--scaffold` will create them.
 
 ### Rust
 
-Evidence: `Cargo.toml`, `Cargo.lock`, `crates/`, `src/**/*.rs`.
+Evidence: `Cargo.toml`, `Cargo.lock`, `crates/`, `src/**/*.rs`. For a version-1 file:
 
 ```toml
 [scan]
@@ -19,9 +19,10 @@ Cons: may miss generated docs outside `docs/`.
 
 ### TypeScript / JavaScript
 
-Evidence: `package.json`, `pnpm-workspace.yaml`, `tsconfig.json`, `src/`, `apps/`, `packages/`.
+Evidence: `package.json`, `pnpm-workspace.yaml`, `tsconfig.json`, `src/`, `apps/`, `packages/`. For a version-1 file:
 
 ```toml
+[scan]
 include = ["docs", "e2e", "src", "apps", "packages", "tests"]
 extensions = ["md", "ts", "tsx", "js", "jsx"]
 exclude = ["node_modules", "dist", "build", "coverage", ".next", ".turbo", ".git"]
@@ -33,9 +34,10 @@ Cons: broad monorepos may need narrower package selection.
 
 ### Python
 
-Evidence: `pyproject.toml`, `setup.py`, `requirements.txt`, `src/`, package dirs, `tests/`.
+Evidence: `pyproject.toml`, `setup.py`, `requirements.txt`, `src/`, package dirs, `tests/`. For a version-1 file:
 
 ```toml
+[scan]
 include = ["docs", "e2e", "src", "tests"]
 extensions = ["md", "py"]
 exclude = [".venv", "__pycache__", ".pytest_cache", ".mypy_cache", "build", "dist", ".git"]
@@ -48,9 +50,10 @@ Cons: docstring scanning can surface intentional prose examples.
 
 ### Go
 
-Evidence: `go.mod`, `cmd/`, `internal/`, `pkg/`, `*.go`.
+Evidence: `go.mod`, `cmd/`, `internal/`, `pkg/`, `*.go`. For a version-1 file:
 
 ```toml
+[scan]
 include = ["docs", "e2e", "cmd", "internal", "pkg", "tests"]
 extensions = ["md", "go"]
 exclude = ["vendor", "dist", "build", ".git"]
@@ -62,9 +65,10 @@ Cons: single-package repos may only need `["docs", "src"]` or `["docs", "."]` if
 
 ### Java / Kotlin / Gradle
 
-Evidence: `pom.xml`, `build.gradle`, `settings.gradle`, `src/main`, `src/test`.
+Evidence: `pom.xml`, `build.gradle`, `settings.gradle`, `src/main`, `src/test`. For a version-1 file:
 
 ```toml
+[scan]
 include = ["docs", "e2e", "src"]
 extensions = ["md", "java", "kt"]
 exclude = ["target", "build", ".gradle", ".git"]
@@ -76,9 +80,10 @@ Cons: multi-module builds may need module directories added explicitly.
 
 ### C / C++
 
-Evidence: `CMakeLists.txt`, `Makefile`, `src/`, `include/`, `lib/`, `tests/`.
+Evidence: `CMakeLists.txt`, `Makefile`, `src/`, `include/`, `lib/`, `tests/`. For a version-1 file:
 
 ```toml
+[scan]
 include = ["docs", "e2e", "src", "include", "lib", "tests"]
 extensions = ["md", "c", "cpp", "h", "hpp"]
 exclude = ["build", "dist", "out", ".git"]
@@ -90,9 +95,10 @@ Cons: vendored headers should be excluded if present.
 
 ### C# / .NET
 
-Evidence: `*.csproj`, `*.sln`, `src/`, `test/`, `tests/`.
+Evidence: `*.csproj`, `*.sln`, `src/`, `test/`, `tests/`. For a version-1 file:
 
 ```toml
+[scan]
 include = ["docs", "e2e", "src", "test", "tests"]
 extensions = ["md", "cs"]
 exclude = ["bin", "obj", "TestResults", ".git"]
@@ -107,9 +113,10 @@ the [supplementary init examples](https://github.com/agent-grounds/grund/blob/ma
 
 ### Polyglot Monorepo
 
-Evidence: multiple manifests and top-level `apps/`, `packages/`, `services/`, `libs/`, `tools/`.
+Evidence: multiple manifests and top-level `apps/`, `packages/`, `services/`, `libs/`, `tools/`. For a version-1 file:
 
 ```toml
+[scan]
 include = ["docs", "e2e", "apps", "packages", "services", "libs", "tools", "tests"]
 extensions = ["md", "rs", "go", "java", "kt", "ts", "tsx", "js", "py", "c", "cpp", "cs", "rb", "php"]
 exclude = ["target", "node_modules", ".git", "dist", "build", ".venv", "coverage", ".next", ".turbo"]

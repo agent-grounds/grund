@@ -3,9 +3,10 @@
 <!-- BEGIN citation-directions -->
 # Citation directions
 
-`[citations]` describes which kinds of documents cite which other kinds. The
-five levels use two rule classes and two enforcement surfaces, as specified by
-[the `[citations]` section of grund's config spec](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config.md#39-citations--citation-direction-rules):
+`[citations]` in version 1, `[rules.citations]` in version 2, describes which
+kinds of documents cite which other kinds. The five levels use two rule
+classes and two enforcement surfaces, as specified by
+[the version-1 `[citations]` section of grund's config spec](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config.md#39-citations--citation-direction-rules):
 
 | Level | Rule class | Checked per | Surface |
 | --- | --- | --- | --- |
@@ -28,7 +29,7 @@ The citing side may be any configured kind, including a non-citable kind, or
 the homeless `code` kind. The cited side must be citable, because a citation
 needs an ID to point at. A non-citable kind may cite and is labelled by its
 home, such as `skills/`; the homeless kind covers any file outside a configured
-kind home and renders last. In a workspace a target may name another project. A bare `KIND` is judged against the local project's kinds when the config loads. `alias/KIND` is judged against the kinds of the project that `alias` names, and `*/KIND` against the kinds of every loaded project, both when the workspace is expanded. So `[citations.FS] must = ["api/API"]` at a workspace root loads once member `api` configures `API`, and it is enforced exactly as the rule `Each FS must cite at least one api/API.` is. A pinned or `*/` target the workspace cannot accept is never matched. Until grund 0.19.0 it prints one `warning:` line, and from 0.19.0 that line is an error. This covers an unknown or non-citable kind in that project, and an alias the workspace does not load. A run with no workspace, such as a member's own run, cannot judge a target pinned to another project at all, and its warning says to check from the workspace root.
+kind home and renders last. In a workspace a target may name another project. A bare `KIND` is judged against the local project's kinds when the config loads. `alias/KIND` is judged against the kinds of the project that `alias` names, and `*/KIND` against the kinds of every loaded project, both when the workspace is expanded. So `[citations.FS] must = ["api/API"]` at a version-1 workspace root (`[rules.citations.FS]` in version 2) loads once member `api` configures `API`, and it is enforced exactly as the rule `Each FS must cite at least one api/API.` is. A pinned or `*/` target the workspace cannot accept is never matched. Until grund 0.19.0 it prints one `warning:` line, and from 0.19.0 that line is an error. This covers an unknown or non-citable kind in that project, and an alias the workspace does not load. A run with no workspace, such as a member's own run, cannot judge a target pinned to another project at all, and its warning says to check from the workspace root.
 
 An obligation on a citable kind that declares no IDs has no unit: no
 per-declaration unit fires. If a `must` or `should` obligation is configured,
@@ -48,7 +49,7 @@ A kind's own marked index entry is still subject to citation directions. Keep
 the entry when repairing a prohibition: replacing it with a plain link fails
 the index rule. For a v2 kind or global negative default, add the target kind
 to the citing kind's `may` list while preserving existing permissions. For
-example, in `[rules.citations.REQ]`, extend `may = ["GOAL"]` to
+example, in version 2's `[rules.citations.REQ]`, extend `may = ["GOAL"]` to
 `may = ["GOAL", "REQ"]`. An explicit prohibition instead requires changing
 the matching `must-not` or `warn-not` list; an independent rule sentence
 requires changing the named rule. Adding `may` does not override either.
@@ -56,8 +57,8 @@ The finding names the applicable repair; ordinary citations keep their
 plain-link advice, and suggestions keep their existing wording
 ([the index-entry repair specification](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#3122-repair-advice-preserves-a-required-index-entry)).
 
-The config and the generated section below are the same example. The TOML is
-shown beside the Markdown it renders:
+The config and the generated section below are the same example. The TOML, a
+version-1 config, is shown beside the Markdown it renders:
 
 ```toml
 [citations]
@@ -98,7 +99,7 @@ Pros: one complete explanation teaches the grammar before a user edits rules,
 and the checked copy keeps repository and installed setup surfaces aligned.
 
 Cons: the explanation adds setup text for repositories that never enable
-`[citations]`.
+version 1's `[citations]` or version 2's `[rules.citations]`.
 
 Recommend starting with the canonical climbing ruleset from the template
 comment at `should`, then promoting each kind's rule to `must` or `must-not`

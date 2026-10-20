@@ -4,7 +4,7 @@ fn print_fetch_help() {
     println!("grund fetch — materialize one configured external fact snapshot.");
     println!("\nUsage:  grund fetch <ID>\n");
     println!(
-        "The selected kind's [[kinds]].fetch executable receives the local ID and returns one declaration, validated before an atomic write."
+        "The selected kind's fetch executable (v2 [schema.kinds.<NAME>] fetch, v1 [[kinds]].fetch) receives the local ID and returns one declaration, validated before an atomic write."
     );
     println!(
         "No check, query, formatter, completion, or LSP operation runs the integration implicitly."

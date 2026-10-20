@@ -2,7 +2,7 @@ grund id — emit the next conflict-free ID for a new declaration of a kind.
 
 Usage:  grund id <KIND> "<title>" [PATH] [--width N] [--explain] [--format text|json]
 
-KIND is one of the configured citable `[[kinds]]` — defaults GRUND, GOAL, FS, AR, DF, DA, RM;
+KIND is one of the configured citable kinds (v2 `[schema.kinds.<NAME>]`, v1 `[[kinds]]`) — defaults GRUND, GOAL, FS, AR, DF, DA, RM;
 `grund config show` lists this repo's. The title is slugified deterministically; the number
 is `max(existing) + 1` (holes are never filled).
 
@@ -14,7 +14,7 @@ Options:
                        project (default) spells report paths from the config root;
                        invocation: relative to the path you passed, or the current directory if you passed none.
                        e.g. grund id FS "x" docs/ --explain --path-base=invocation
-                       --path-base=invocation replaces a committed `[output] relative_paths = false`.
+                       --path-base=invocation replaces a version-1 `[output] relative_paths = false`.
 
 Exit:  0 ID emitted · 1 empty slug / collision · 2 unknown kind, scan, or CLI error.
 

@@ -35,8 +35,8 @@ Options:
                        project (default) spells report paths from the config root;
                        invocation: relative to the path you passed, or the current directory if you passed none.
                        e.g. grund refs FS-login src/ --path-base=invocation
-                       --path-base=invocation replaces a committed `[output] relative_paths = false`.
-                       --format json replaces a committed `[output] format = "json"`; a flag outranks its key.
+                       --path-base=invocation replaces a version-1 `[output] relative_paths = false`.
+                       --format json replaces a version-1 `[output] format = "json"`; a flag outranks its key.
 
 The citation list is the result, so it goes to stdout (text and json alike) —
 `grund refs <ID> | …` works like `grund list`. Only the typo `note:` goes to stderr.

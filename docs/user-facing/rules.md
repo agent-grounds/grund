@@ -74,9 +74,10 @@ Subjects select local units only:
 
 Named chapter subjects select handles: `The goal chapter of each FS` reaches `## goal: Goal and hypothesis` by `goal` ([chapter subjects](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#2-subject-selectors)). Presence rules compare direct chapter display names case-insensitively: `Each FS must have exactly one goal chapter.` counts zero for that heading and one for `## goal: Goal` ([presence matching](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#31-chapter-presence)). The finding appends the expected display name and observed pairs such as `"goal: Goal and hypothesis"`, or `none` ([comparison context](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#721-display-name-comparison-context)). Presence `NAME` must be one non-empty token: `Goal and hypothesis` is refused with `NAME forbids whitespace anywhere.` appended to the existing guidance; authored display titles may still contain spaces ([whitespace refusal](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rules.md#351-presence-name-whitespace-refusal)).
 
-Named-chapter subjects require `[id] named_sections = true`. Phase 1 has no
-paths, files, folders, wildcards, subject namespaces, numbered-chapter subjects,
-exceptions, definitions, derived terms, settings, or source-code symbols.
+Named-chapter subjects require `[id] named_sections = true` in version 1;
+version 2 always reads named sections. Phase 1 has no paths, files, folders,
+wildcards, subject namespaces, numbered-chapter subjects, exceptions,
+definitions, derived terms, settings, or source-code symbols.
 
 <!-- BEGIN chapter-rules-emptiness -->
 A quantified chapter subject selects only the chapters that exist, and a
@@ -199,7 +200,8 @@ See [the quantifier refusal](https://github.com/agent-grounds/grund/blob/main/do
 For a configured, scanned non-citable place `e2e` at `tests/e2e/`, both
 `Each e2e must cite at least one FS.` and
 `Each file in tests/e2e/ must cite at least one FS.` remain refused. Follow
-the supplementary hint to express this obligation in `grund.toml`:
+the supplementary hint to express this obligation in a version-2 `grund.toml`
+(`[citations.e2e]` in version 1):
 
 ```toml
 [rules.citations.e2e]
@@ -232,8 +234,9 @@ an `invalid-rule` finding with exit 1.
 
 Findings sort bytewise by path, line, then message. Two identical declarations
 collapse semantically and name sorted authorities, for example
-`(RULE-a, RULE-b)`. If an existing `[citations]` entry says the same bare-kind
-rule, the existing config finding wins byte-for-byte and no rule tail is added.
+`(RULE-a, RULE-b)`. If an existing `[citations]` (version 1) or `[rules.citations]`
+(version 2) entry says the same bare-kind rule, the existing config finding
+wins byte-for-byte and no rule tail is added.
 <!-- END chapter-rules -->
 
 In a version-2 config, a rule's bullet is written where its subject kind's

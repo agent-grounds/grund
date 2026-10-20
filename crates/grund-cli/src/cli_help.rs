@@ -62,11 +62,11 @@ fn print_run_flag_help(invocation: &str, honours_format: bool) {
     );
     println!("                       e.g. {invocation} --path-base=invocation");
     println!(
-        "                       --path-base=invocation replaces a committed `[output] relative_paths = false`."
+        "                       --path-base=invocation replaces a version-1 `[output] relative_paths = false`."
     );
     if honours_format {
         println!(
-            "                       --format json replaces a committed `[output] format = \"json\"`; a flag outranks its key."
+            "                       --format json replaces a version-1 `[output] format = \"json\"`; a flag outranks its key."
         );
     }
 }
@@ -91,7 +91,7 @@ fn print_subcommand_help(cmd: &str) {
             );
             println!();
             println!(
-                "KIND is one of the configured citable `[[kinds]]` — defaults GRUND, GOAL, FS, AR, DF, DA, RM;"
+                "KIND is one of the configured citable kinds (v2 `[schema.kinds.<NAME>]`, v1 `[[kinds]]`) — defaults GRUND, GOAL, FS, AR, DF, DA, RM;"
             );
             println!(
                 "`grund config show` lists this repo's. The title is slugified deterministically; the number"
