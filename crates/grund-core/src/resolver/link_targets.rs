@@ -25,9 +25,9 @@ use crate::grammar::{
 };
 use crate::model::{
     Catalog, Declaration, FileRecord, FileRecords, Id, SectionInfo, paired_declarations,
-    scanned_decl_relative_path, scanned_path_key,
+    scanned_path_key,
 };
-use crate::sources::{canonical_path, physical_path_key};
+use crate::sources::canonical_path;
 
 /// Compute the link URL for a citation: a repo-relative path to the declaration's
 /// home file — following an inline-spec stub to its real source file — plus a
@@ -64,14 +64,18 @@ pub(crate) fn markdown_link_target(
     )
 }
 
-/// The canonical bare-ID link of every citation an index file records, keyed by
-/// (index file, ID): what `Expected` hands the kind-index pass so external
-/// enrollment compares a page against `fmt`'s destination without the checker
-/// reading the anchor profile (§AR-checker.1.3, §AR-checker.2.16,
-/// §FS-check.3.18.3). An index is a citable folder row's Markdown `index`, and
-/// a citation is looked up under the first row of its own kind that keeps that
-/// file, as the kind-index pass looks it up. `settled` is the heading lines a
-/// `fmt` run leaves (§FS-fmt.6.3.3), empty for every other caller.
+/// The canonical bare-ID link from each index file to every declaration of its
+/// kind, keyed by (index file, ID): what `Expected` hands the kind-index pass so
+/// it compares a page against `fmt`'s destination, and names the entry a
+/// not-listed declaration owes, without the checker reading the anchor profile
+/// (§AR-checker.1.3, §AR-checker.2.16, §FS-check.3.18.3, §FS-check.3.18.5.2).
+/// An index is a citable folder row's Markdown `index`, and an ID is looked up
+/// under the first row of its own kind that keeps that file, as the kind-index
+/// pass looks it up. Every declaration of the kind rather than only the ones the
+/// index cites, because the ID the index lacks is the one whose entry the
+/// finding prints; an ID `fmt` would not link (§FS-fmt.6.4.2) has no entry.
+/// `settled` is the heading lines a `fmt` run leaves (§FS-fmt.6.3.3), empty for
+/// every other caller.
 pub(crate) fn index_link_targets(
     presentation: &Presentation,
     schema: &Schema,
@@ -95,46 +99,25 @@ pub(crate) fn index_link_targets(
             .push((row.name.as_str(), frame.root().join(&index)));
     }
     let mut targets = BTreeMap::new();
-    if indexes.is_empty() {
-        return targets;
-    }
-    let configured_root = scanned_path_key(frame.root());
-    let physical_root = physical_path_key(frame.root());
-    for citation in &findings.citations {
-        if citation.namespace.is_some()
-            || citation.section.is_some()
-            || !citation.has_marker
-            || citation.shorthand
-            || !findings.declarations.contains_key(&citation.id)
-        {
-            continue;
-        }
-        let Some(relative) =
-            scanned_decl_relative_path(&citation.file, &configured_root, &physical_root)
-        else {
-            continue;
-        };
-        let Some((_, index_file)) = indexes
-            .get(relative.as_ref())
-            .and_then(|rows| rows.iter().find(|(kind, _)| *kind == citation.id.kind))
-        else {
-            continue;
-        };
-        let key = (index_file.clone(), citation.id.clone());
-        if targets.contains_key(&key) {
-            continue;
-        }
-        if let Some(target) = markdown_link_target_with_root(
-            index_file,
-            &citation.id,
-            None,
-            presentation,
-            frame,
-            findings,
-            None,
-            settled,
-        ) {
-            targets.insert(key, target);
+    for rows in indexes.values() {
+        for (position, (kind, index_file)) in rows.iter().enumerate() {
+            if rows[..position].iter().any(|(earlier, _)| earlier == kind) {
+                continue;
+            }
+            for id in findings.declarations.keys().filter(|id| id.kind == *kind) {
+                if let Some(target) = markdown_link_target_with_root(
+                    index_file,
+                    id,
+                    None,
+                    presentation,
+                    frame,
+                    findings,
+                    None,
+                    settled,
+                ) {
+                    targets.insert((index_file.clone(), id.clone()), target);
+                }
+            }
         }
     }
     targets

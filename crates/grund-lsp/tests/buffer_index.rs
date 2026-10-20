@@ -40,8 +40,10 @@ fn messages(diagnostics: &[Value]) -> Vec<&str> {
         .collect()
 }
 
-const NOT_LISTED: &str =
-    "FS-002-session is not listed in docs/fs/README.md — became an error in grund 0.13.0";
+const NOT_LISTED: &str = "FS-002-session is not listed in docs/fs/README.md: an entry is a \
+     `§`-marked Markdown link to the declaration; write \
+     `[§FS-002-session](FS-002-session.md#fs-002-session-user-session)` in docs/fs/README.md \
+     — became an error in grund 0.13.0";
 
 /// The missing-entry messages on FS-002-session with the index `saved` on disk,
 /// then with the index open in a buffer holding `buffer`.

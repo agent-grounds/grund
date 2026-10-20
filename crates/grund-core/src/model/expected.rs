@@ -11,7 +11,7 @@ use super::records::Id;
 
 /// §AR-checker.1.3: the managed-block version this config asks for, every
 /// agent entrypoint in the order the check compares them, the canonical link
-/// target of each index-file citation external enrollment inspects, and the
+/// from each index to each declaration of its kind, and the
 /// scoped guidance files no row lists.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Expected {
@@ -22,8 +22,9 @@ pub struct Expected {
     /// The companion probe's io error, kept as data so the check reports it
     /// where it reported it before (§FS-check.3.5).
     pub entrypoint_probe_error: Option<(PathBuf, String)>,
-    /// `fmt`'s bare-ID link destination keyed by (index file, ID)
-    /// (§FS-check.3.18.3, §DF-index-entry-form.2.7).
+    /// `fmt`'s bare-ID link destination keyed by (index file, ID), for every
+    /// declaration of the index's kind (§FS-check.3.18.3, §FS-check.3.18.5.2,
+    /// §DF-index-entry-form.2.7).
     pub index_targets: BTreeMap<(PathBuf, Id), String>,
     /// The scoped `AGENTS.md` files and their companions that no row's `files`
     /// lists: guidance about a directory's units, never a unit of it
