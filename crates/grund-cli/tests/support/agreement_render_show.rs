@@ -10,14 +10,20 @@ use serde_json::{Value, json};
 /// The coordinate a model row answers: `(declaration, section)`.
 pub type Row = (usize, Option<usize>);
 
-/// §FS-refs.2.1: bind the note's exact supplied path from invocation facts.
+/// §FS-refs.2.1: bind the note's exact supplied path from verified invocation
+/// attribution, with explicitness retained in the authored context.
 /// Backtick-delimited paths remain literal text in the existing comparator.
 pub fn bind_refs_path(facts: &mut Value, context: &Value) {
-    if context["explicit"] != true {
+    if facts["context"]["explicit"] != true {
         return;
     }
     let logical = facts["context"]["path"].as_str().unwrap();
     let supplied = context["path"].as_str().unwrap();
+    assert_eq!(
+        super::agreement_context::path(supplied, context),
+        logical,
+        "note path must retain authored invocation identity"
+    );
     let from = format!("in scan path `{logical}`");
     let to = format!("in scan path `{supplied}`");
     let Some(calls) = facts.get_mut("calls").and_then(Value::as_object_mut) else {
