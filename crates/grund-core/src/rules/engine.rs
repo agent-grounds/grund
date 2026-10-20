@@ -13,7 +13,7 @@ use super::facts::{Completeness, NodeKey, RuleFacts, SiteKey};
 use super::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
 };
-use crate::model::{CITATION_DIRECTION_REPAIR, Diagnostic};
+use crate::model::{CITATION_DIRECTION_REPAIR, Code, Diagnostic};
 use std::collections::{BTreeMap, BTreeSet};
 
 use authority::Authority;
@@ -235,7 +235,7 @@ fn evaluate_one(
                         out,
                         facts,
                         &subject,
-                        "chapter-cardinality",
+                        Code::CHAPTER_CARDINALITY,
                         message,
                         authority,
                     );
@@ -252,9 +252,9 @@ fn evaluate_one(
                         // repair with `(<RULE-ID>)` authority; recommendations omit it.
                         // §FS-check.3.12.2 finalizes required index-entry repairs.
                         let (code, repair) = if rule.level == RuleLevel::Required {
-                            ("forbidden-citation", CITATION_DIRECTION_REPAIR)
+                            (Code::FORBIDDEN_CITATION, CITATION_DIRECTION_REPAIR)
                         } else {
-                            ("discouraged-citation", "")
+                            (Code::DISCOURAGED_CITATION, "")
                         };
                         // §FS-rules.7.9: a required site newly matched warns.
                         let windows = Windows::at(
@@ -318,7 +318,14 @@ fn evaluate_one(
                             rule.cardinality.wording()
                         ),
                     );
-                    push_node(sink, facts, &subject, "uncited-unit", message, authority);
+                    push_node(
+                        sink,
+                        facts,
+                        &subject,
+                        Code::UNCITED_UNIT,
+                        message,
+                        authority,
+                    );
                 }
             }
         }
@@ -329,7 +336,7 @@ fn push_node(
     out: &mut Vec<Diagnostic>,
     facts: &RuleFacts,
     node: &NodeKey,
-    code: &'static str,
+    code: Code,
     message: String,
     authority: &Authority,
 ) {
@@ -350,7 +357,7 @@ fn push_site(
     out: &mut Vec<Diagnostic>,
     facts: &RuleFacts,
     site: &SiteKey,
-    code: &'static str,
+    code: Code,
     message: String,
     authority: &Authority,
 ) {

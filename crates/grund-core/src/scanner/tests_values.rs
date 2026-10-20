@@ -74,7 +74,7 @@ fn source_bindings_follow_complete_comment_spans() {
     let dereference_errors = check_run(&dereference, false).report.errors;
     let dereference_messages = dereference_errors
         .iter()
-        .map(|error| format!("{}: {}", error.code, error.message))
+        .map(|error| format!("{}: {}", error.code.as_str(), error.message))
         .collect::<Vec<_>>();
     assert!(
         dereference_errors.is_empty(),
@@ -224,7 +224,14 @@ fn a_binding_split_by_a_line_break_is_refused_at_its_literal() {
             .report
             .errors
             .iter()
-            .map(|error| (error.code, error.line, error.column, error.message.clone()))
+            .map(|error| {
+                (
+                    error.code.as_str(),
+                    error.line,
+                    error.column,
+                    error.message.clone(),
+                )
+            })
             .collect::<Vec<_>>();
         assert_eq!(
             refused,

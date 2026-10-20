@@ -211,7 +211,7 @@ fn lines(
     };
     // §FS-config-migrate.5.2: the v1 run's own caution is what migrating ends, not a
     // difference the candidate makes, so neither run carries it.
-    let compared = |f: &&Finding| f.code != CONFIG_VERSION_1;
+    let compared = |f: &&Finding| f.code != CONFIG_VERSION_1.as_str();
     let mut out: Vec<String> = warnings
         .iter()
         .filter(compared)

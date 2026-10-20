@@ -21,7 +21,7 @@ use std::path::{Path, PathBuf};
 use super::members::{WorkspaceMember, canonical_workspace_path};
 use super::scope::{config_location_message, workspace_members_error};
 use crate::config::{Config, ConfigLocation, config_file_in, root_scope_roots};
-use crate::model::{Diagnostic, LANDED_CLAUSE, format_path, relative_from_base};
+use crate::model::{Code, Diagnostic, LANDED_CLAUSE, format_path, relative_from_base};
 use anyhow::Result;
 
 /// §FS-workspace.2.1.1: each of the block's own walk roots that a member root
@@ -115,14 +115,6 @@ pub(crate) fn block_relative_root<'a>(config: &Config, root: &'a Path) -> &'a Pa
     root.strip_prefix(&config.root).unwrap_or(root)
 }
 
-/// The engine's own handle on the two `[workspace]` cautions this rule set
-/// produces. Neither ever renders as one of `check`'s JSON objects — each keeps
-/// its text on every surface (§FS-check.4.10.9, §FS-workspace.6.1.7) — so neither
-/// enters the §FS-errors.5.5 selector vocabulary, and these are what an editor
-/// tags a published diagnostic with and what a test selects one by.
-pub(crate) const UNREAD_WORKSPACE_BLOCK: &str = "unread-workspace-block";
-pub(crate) const UNDECIDABLE_WORKSPACE_CLAIM: &str = "undecidable-workspace-claim";
-
 /// The sentence §FS-check.3.30.1 carries, built apart from the error that
 /// carries it so a test can read it: what was swallowed by what, what that costs
 /// the project, the two ways out, and the release the warning it once was became
@@ -205,7 +197,7 @@ pub(crate) fn unread_block_warning(root: &str) -> String {
 /// (§FS-lsp.1.1.3).
 pub(crate) fn unread_block_diagnostic(config: &Config, root: &str) -> Diagnostic {
     config_location_diagnostic(
-        UNREAD_WORKSPACE_BLOCK,
+        Code::UNREAD_WORKSPACE_BLOCK,
         config
             .workspace_include_root_source
             .as_ref()
@@ -243,7 +235,7 @@ pub(crate) fn undecidable_ancestor_claim_diagnostic(
     reason: &str,
 ) -> Diagnostic {
     Diagnostic {
-        code: UNDECIDABLE_WORKSPACE_CLAIM,
+        code: Code::UNDECIDABLE_WORKSPACE_CLAIM,
         path: Some(config_path.to_path_buf()),
         line: None,
         column: None,
@@ -261,7 +253,7 @@ pub(crate) fn undecidable_ancestor_claim_diagnostic(
 /// same place spelled absolutely, so an editor opens the file this run read
 /// rather than re-deriving one from the text (§AR-bindings.2).
 fn config_location_diagnostic(
-    code: &'static str,
+    code: Code,
     source: Option<&ConfigLocation>,
     block_root: &Path,
     message: String,

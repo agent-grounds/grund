@@ -31,6 +31,9 @@
 //! sources does (§AR-system.5).
 
 mod armed;
+// §AR-config.9.1: the rendered catalog's rows, which checker and config read.
+pub(crate) mod catalog;
+mod codes;
 mod conflict_block;
 mod e2e;
 mod excluded_stub_targets;
@@ -52,6 +55,7 @@ mod unread_roots;
 mod values;
 
 pub use armed::{Armed, Switch};
+pub use codes::Code;
 pub use e2e::{E2eCase, E2eSpecRef};
 pub use expected::{Expected, ExpectedEntrypoint, ExpectedSection, ScopedExpectation};
 pub(crate) use failure::OperationContext;

@@ -87,6 +87,10 @@ pub use model::{
 // The host packages' refusal record (§FS-distribution.3.3).
 #[doc(hidden)]
 pub use model::OperationDiagnostic;
+// The check code handles rendered from the §FS-errors.5.5 catalog, whose sorted
+// list is the selector vocabulary `grund check --help` and the bindings print.
+#[doc(hidden)]
+pub use model::Code;
 
 // §AR-system.2.13 sources: the one reader of the disk, whose input observer an
 // embedder scopes to a check (§AR-bindings.3) and whose snapshot path an
@@ -158,7 +162,7 @@ pub use resolver::names_member_id_candidate;
 // `--only` and `--ignore` into (§FS-check.1.4), and the record of what the run
 // armed that it reads to say a selected check was off (§FS-check.1.4.1).
 #[doc(hidden)]
-pub use checker::{ArmedChecks, CHECK_FINDING_CODES, CheckFindingSelection};
+pub use checker::{ArmedChecks, CheckFindingSelection};
 
 // §AR-system.2.7 queries: the answers read straight from `Catalog` — the show
 // options and their typed refusal and the size catalog (§FS-show, §FS-list) —

@@ -17,7 +17,7 @@ use std::path::Path;
 
 use crate::config::{Frame, Schema, Strength, Threshold};
 use crate::grammar::{CITATION_RUN_SEPARATOR, LayoutChannel, layout_channel};
-use crate::model::{Catalog, CheckReport, Citation, Diagnostic, InlineCitationSite, plural};
+use crate::model::{Catalog, CheckReport, Citation, Code, Diagnostic, InlineCitationSite, plural};
 
 /// The citation tokens of one inline citation site, for the message a budget
 /// finding names (§FS-inline-citation-style.4.1.2, §FS-inline-citation-style.4.2): each citation's `text`
@@ -103,7 +103,7 @@ pub(super) fn check_inline_citation_style(
             "citation-only" => {
                 if site.has_note {
                     report.errors.push(Diagnostic {
-                        code: "inline-citation-style",
+                        code: Code::INLINE_CITATION_STYLE,
                         path: Some(cite.file.clone()),
                         line: Some(site.first_line),
                         column: None,
@@ -117,7 +117,7 @@ pub(super) fn check_inline_citation_style(
                 let lines = site.last_line - site.first_line + 1;
                 if lines > schema.notes.max_lines {
                     report.errors.push(Diagnostic {
-                        code: "inline-citation-style",
+                        code: Code::INLINE_CITATION_STYLE,
                         path: Some(cite.file.clone()),
                         line: Some(site.first_line),
                         column: None,
@@ -135,7 +135,7 @@ pub(super) fn check_inline_citation_style(
                 let columns_over_cap = site.max_columns > schema.notes.max_columns;
                 if columns_over_cap {
                     report.errors.push(Diagnostic {
-                        code: "inline-citation-style",
+                        code: Code::INLINE_CITATION_STYLE,
                         path: Some(cite.file.clone()),
                         line: Some(site.first_line),
                         column: None,
@@ -156,7 +156,7 @@ pub(super) fn check_inline_citation_style(
                     && let Some((channel, limit)) = soft_limit_crossed(&soft_lines, lines)
                 {
                     channel_of(report, channel).push(Diagnostic {
-                        code: "inline-citation-style",
+                        code: Code::INLINE_CITATION_STYLE,
                         path: Some(cite.file.clone()),
                         line: Some(site.first_line),
                         column: None,
@@ -177,7 +177,7 @@ pub(super) fn check_inline_citation_style(
                         soft_limit_crossed(&soft_columns, site.max_columns)
                 {
                     channel_of(report, channel).push(Diagnostic {
-                        code: "inline-citation-style",
+                        code: Code::INLINE_CITATION_STYLE,
                         path: Some(cite.file.clone()),
                         line: Some(site.first_line),
                         column: None,
@@ -252,7 +252,7 @@ fn report_layout_deviations(
     };
     for line in &site.layout_violations {
         channel.push(Diagnostic {
-            code: "inline-citation-style",
+            code: Code::INLINE_CITATION_STYLE,
             path: Some(cite.file.clone()),
             line: Some(*line),
             column: None,

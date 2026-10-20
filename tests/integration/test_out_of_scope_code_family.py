@@ -1,6 +1,6 @@
 """§AR-goal-measurement.1 — the `out-of-scope-` family of §FS-check.3.14 is
-written down in three places that must agree: the match of `tag_out_of_scope`
-that mints the codes, the sentence of §FS-check.3.14.5 that enumerates them, and
+written down in three places that must agree: the match of `Code::out_of_scope`
+that mints the codes, rendered with the handles from the catalog (§AR-config.9.1), the sentence of §FS-check.3.14.5 that enumerates them, and
 the rows of the §FS-errors.5.5 catalog that document them. This spans the
 implementation and two specification pages, which is why it is an integration
 test rather than a unit one.
@@ -19,13 +19,13 @@ from test_check_codes_are_section_handles import _catalog_rows
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-REFERENCE_SCOPE = REPO_ROOT / "crates" / "grund-core" / "src" / "checker" / "reference_scope.rs"
+HANDLES = REPO_ROOT / "crates" / "grund-core" / "src" / "model" / "codes.rs"
 CHECK_PAGE = REPO_ROOT / "docs" / "functional-spec" / "FS-check.md"
 
 PREFIX = "out-of-scope-"
-# `"dangling" => "out-of-scope-dangling",` — the minted code, not the one matched.
-MATCH_ARM = re.compile(r'=>\s*"(' + PREFIX + r'[a-z][a-z0-9-]*)"')
-TAG_FN = "pub(crate) fn tag_out_of_scope("
+# `"dangling" => Some(Code::OUT_OF_SCOPE_DANGLING),` — the minted code, not the one matched.
+MATCH_ARM = re.compile(r"=>\s*Some\(Code::(OUT_OF_SCOPE_[A-Z0-9_]+)\)")
+TAG_FN = "pub fn out_of_scope("
 COMPOUND_CODE_HEADING = re.compile(r"^#### 3\.14\.5 ")
 HEADING = re.compile(r"^#{1,6}\s")
 # A backticked code in the prose. The bare prefix `out-of-scope-` names the
@@ -34,10 +34,10 @@ PROSE_CODE = re.compile(r"`(" + PREFIX + r"[a-z][a-z0-9-]*)`")
 
 
 def _minted_codes():
-    """Every tier code the `tag_out_of_scope` match mints."""
-    source = REFERENCE_SCOPE.read_text(encoding="utf-8")
+    """Every tier code the `Code::out_of_scope` match mints."""
+    source = HANDLES.read_text(encoding="utf-8")
     start = source.index(TAG_FN)
-    return set(MATCH_ARM.findall(source[start:]))
+    return {name.lower().replace("_", "-") for name in MATCH_ARM.findall(source[start:])}
 
 
 def _prose_codes():
@@ -64,14 +64,14 @@ class OutOfScopeCodeFamilyTests(unittest.TestCase):
         self.assertEqual(
             _minted_codes(),
             _prose_codes(),
-            "§FS-check.3.14.5's sentence and tag_out_of_scope's match arms disagree",
+            "§FS-check.3.14.5's sentence and Code::out_of_scope's match arms disagree",
         )
 
     def test_the_catalog_has_a_row_for_every_code_the_match_mints(self):
         self.assertEqual(
             _minted_codes(),
             _catalog_codes(),
-            "the §FS-errors.5.5 catalog and tag_out_of_scope's match arms disagree",
+            "the §FS-errors.5.5 catalog and Code::out_of_scope's match arms disagree",
         )
 
     def test_the_catalog_and_the_prose_name_the_same_codes(self):
@@ -85,7 +85,7 @@ class OutOfScopeCodeFamilyTests(unittest.TestCase):
         """A parser that silently found nothing would make the three comparisons
         above agree on the empty set."""
         for name, codes in (
-            ("tag_out_of_scope", _minted_codes()),
+            ("Code::out_of_scope", _minted_codes()),
             ("FS-check.3.14.5", _prose_codes()),
             ("the FS-errors.5.5 catalog", _catalog_codes()),
         ):

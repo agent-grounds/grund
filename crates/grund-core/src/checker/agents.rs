@@ -3,7 +3,9 @@ use crate::grammar::{
     AGENTS_BLOCK_BASE_VERSION, AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup,
     find_agents_block,
 };
-use crate::model::{CheckReport, Diagnostic, Expected, ExpectedEntrypoint, ScopedExpectation};
+use crate::model::{
+    CheckReport, Code, Diagnostic, Expected, ExpectedEntrypoint, ScopedExpectation,
+};
 use crate::sources::Sources;
 use std::path::Path;
 
@@ -39,7 +41,7 @@ pub(super) fn check_agents_block_version(
     }
     if let Some((path, message)) = &expected.entrypoint_probe_error {
         report.errors.push(Diagnostic {
-            code: "io",
+            code: Code::IO,
             path: Some(path.clone()),
             line: Some(1),
             column: None,
@@ -86,7 +88,7 @@ pub(crate) fn check_agent_block_path(
             .and_then(|name| name.to_str())
             .unwrap_or("agent entrypoint");
         report.errors.push(Diagnostic {
-            code: "io",
+            code: Code::IO,
             path: Some(path.to_path_buf()),
             line: Some(1),
             column: None,
@@ -102,7 +104,7 @@ pub(crate) fn check_agent_block_path(
             // the offending line and never rewritten — `grund init` refuses
             // them too.
             report.errors.push(Diagnostic {
-                code: "agents-init",
+                code: Code::AGENTS_INIT,
                 path: Some(path.to_path_buf()),
                 line: Some(line_for_byte_index(&text, at)),
                 column: None,
@@ -127,7 +129,7 @@ pub(crate) fn check_agent_block_path(
         }
         if block.version < expected_version {
             report.errors.push(Diagnostic {
-                code: "agents-init",
+                code: Code::AGENTS_INIT,
                 path: Some(path.to_path_buf()),
                 line: Some(line),
                 column: None,
@@ -142,7 +144,7 @@ pub(crate) fn check_agent_block_path(
             || newer_than_selected(block.version, expected_version)
         {
             report.errors.push(Diagnostic {
-                code: "agents-init",
+                code: Code::AGENTS_INIT,
                 path: Some(path.to_path_buf()),
                 line: Some(line),
                 column: None,
@@ -205,7 +207,7 @@ fn newer_than_selected(version: u32, expected_version: u32) -> bool {
 /// §FS-check.3.5.3: a block that should be there and is not.
 fn missing_block(path: &Path, expected_version: u32) -> Diagnostic {
     Diagnostic {
-        code: "agents-init",
+        code: Code::AGENTS_INIT,
         path: Some(path.to_path_buf()),
         line: Some(1),
         column: None,
@@ -220,7 +222,7 @@ fn missing_block(path: &Path, expected_version: u32) -> Diagnostic {
 /// §FS-check.3.5.3: a block whose `noun` differs from the render.
 fn stale_block(path: &Path, line: usize, noun: &str) -> Diagnostic {
     Diagnostic {
-        code: "agents-init",
+        code: Code::AGENTS_INIT,
         path: Some(path.to_path_buf()),
         line: Some(line),
         column: None,

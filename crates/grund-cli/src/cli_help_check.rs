@@ -88,8 +88,8 @@ fn print_check_help() {
     println!("run prints `success`.");
     println!();
     println!("Supported check finding codes:");
-    for code in CHECK_FINDING_CODES {
-        println!("  {code}");
+    for code in Code::ALL {
+        println!("  {}", code.as_str());
     }
     println!();
     println!(

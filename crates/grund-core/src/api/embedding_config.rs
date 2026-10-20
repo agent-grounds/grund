@@ -34,7 +34,7 @@ fn cautions(config: &Config) -> Vec<Finding> {
     cautions.extend(
         super::config_findings::config_diagnostics(config, config.display()).map(|d| Finding {
             severity: "warning",
-            code: d.code,
+            code: d.code.as_str(),
             path: d.path.map(|p| crate::config::display_path(config, &p)),
             line: d.line,
             column: d.column,

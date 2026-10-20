@@ -4,7 +4,9 @@
 
 use crate::config::{Form, Frame, KindScope, KindTable, Rules, Schema};
 use crate::grammar::render_catalog_id;
-use crate::model::{Catalog, CheckReport, Declaration, Diagnostic, Switch, paired_declarations};
+use crate::model::{
+    Catalog, CheckReport, Code, Declaration, Diagnostic, Switch, paired_declarations,
+};
 use crate::resolver::WorkspaceCheckTarget;
 use crate::rules::RuleAnchor;
 use crate::rules::engine::{
@@ -421,7 +423,7 @@ pub(crate) fn rule_has_rationale(declaration: &Declaration) -> bool {
 /// scoped report instead of letting it read as `success`.
 fn invalid_rule(origin: &str, path: &str, line: usize, message: &str) -> Diagnostic {
     Diagnostic {
-        code: "invalid-rule",
+        code: Code::INVALID_RULE,
         path: Some(path.into()),
         line: Some(line),
         column: None,

@@ -391,7 +391,7 @@ fn a_run_that_did_not_scan_the_index_does_not_judge_it() {
         .errors
         .iter()
         .chain(run.report.warnings.iter())
-        .map(|diagnostic| diagnostic.code)
+        .map(|diagnostic| diagnostic.code.as_str())
         .collect();
     assert!(
         !codes.contains(&"missing-index-entry"),

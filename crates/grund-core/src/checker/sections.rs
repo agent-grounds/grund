@@ -22,7 +22,7 @@ use super::support::{heading_marks, section_depth};
 use crate::config::{Frame, Schema};
 use crate::grammar::render_catalog_id;
 use crate::model::{
-    Catalog, CheckReport, Diagnostic, LANDED_CLAUSE, SectionHeadingOutsideDeclaration, Site,
+    Catalog, CheckReport, Code, Diagnostic, LANDED_CLAUSE, SectionHeadingOutsideDeclaration, Site,
     Switch, named_section_path, paired_declarations,
 };
 use crate::resolver::WorkspaceProject;
@@ -89,7 +89,7 @@ pub(super) fn check_section_headings(
             )
         });
         Diagnostic {
-            code: "unmarked-heading",
+            code: Code::UNMARKED_HEADING,
             path: Some(heading.file.clone()),
             line: Some(heading.line),
             column: None,
@@ -109,7 +109,7 @@ pub(super) fn check_section_headings(
             let rendered_owner =
                 render_catalog_id(frame.grammar(), &findings.declarations, &heading.owner);
             Diagnostic {
-                code: "relative-section-parent",
+                code: Code::RELATIVE_SECTION_PARENT,
                 path: Some(heading.file.clone()),
                 line: Some(heading.line),
                 column: None,
@@ -153,7 +153,7 @@ pub(super) fn check_section_headings(
                     let expected_level = decl.heading_level + section_depth(section_path);
                     if section.heading_level != expected_level {
                         target.push(Diagnostic {
-                            code: "section-heading-level",
+                            code: Code::SECTION_HEADING_LEVEL,
                             path: Some(decl.file.clone()),
                             line: Some(section.line),
                             column: None,
@@ -183,7 +183,7 @@ pub(super) fn check_section_headings(
                 for (path, info) in &decl.sections {
                     if let Some(prefix) = decl.missing_section_prefix(path) {
                         report.errors.push(Diagnostic {
-                            code: "orphan-section",
+                            code: Code::ORPHAN_SECTION,
                             path: Some(decl.file.clone()),
                             line: Some(info.line),
                             column: None,
@@ -235,7 +235,7 @@ pub(super) fn check_section_headings(
                     .collect::<Vec<_>>()
                     .join(", ");
                 report.errors.push(Diagnostic {
-                    code: "duplicate-section",
+                    code: Code::DUPLICATE_SECTION,
                     path: Some(decl.file.clone()),
                     line: Some(lines[0]),
                     column: None,
@@ -257,7 +257,7 @@ fn section_outside_declaration_diagnostic(
     heading: &SectionHeadingOutsideDeclaration,
 ) -> Diagnostic {
     Diagnostic {
-        code: "section-outside-declaration",
+        code: Code::SECTION_OUTSIDE_DECLARATION,
         path: Some(heading.file.clone()),
         line: Some(heading.line),
         column: None,

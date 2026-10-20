@@ -3,7 +3,7 @@
 //! §FS-values.5.2.1, §FS-values.5.2.2).
 
 use crate::config::{Display, Schema};
-use crate::model::{Diagnostic, Site, ValueBinding, ValueComponent, ValueComponentKind};
+use crate::model::{Code, Diagnostic, Site, ValueBinding, ValueComponent, ValueComponentKind};
 
 /// A root or one coordinate as a finding names it: the qualified ID, then the
 /// separator and the section path when there is one (§FS-values.3.1.2,
@@ -58,7 +58,7 @@ pub(super) fn value_mismatch_text(
 ) -> Diagnostic {
     let declared_site = format!("{}:{}", display.path(&site.path), site.line);
     Diagnostic {
-        code: "value-mismatch",
+        code: Code::VALUE_MISMATCH,
         path: Some(binding.file.clone()),
         line: Some(binding.line),
         column: Some(binding.column),

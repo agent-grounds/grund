@@ -8,7 +8,7 @@ use super::super::{RuleLevel, RulePolarity, RuleRelation, RuleSubject};
 use super::authority::Authority;
 use super::index::FactIndex;
 use super::{SemanticRule, label, push_node};
-use crate::model::{Diagnostic, LANDED_CLAUSE};
+use crate::model::{Code, Diagnostic, LANDED_CLAUSE};
 
 /// §FS-rules.checks.unreached-declaration: one finding per semantic rule group
 /// per unreached declaration, located at the declaration's title line because
@@ -56,7 +56,7 @@ pub(super) fn report_unreached(
             out,
             facts,
             &declaration,
-            "unreached-declaration",
+            Code::UNREACHED_DECLARATION,
             message,
             authority,
         );

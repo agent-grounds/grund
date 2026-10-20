@@ -9,7 +9,7 @@
 //! which would be an opinion about what the author meant (§FS-non-goals.3).
 
 use crate::config::{Frame, Schema, format_guidance};
-use crate::model::{Catalog, CheckReport, Diagnostic, LANDED_CLAUSE};
+use crate::model::{Catalog, CheckReport, Code, Diagnostic, LANDED_CLAUSE};
 
 /// §FS-declarations.checks.declaration-near-miss: one error per heading that came close, since
 /// `0.16.0` (§FS-declarations.checks.declaration-near-miss.5). The severity never changes catalog
@@ -27,7 +27,7 @@ pub(super) fn check_declaration_near_misses(
             .near_miss_headings
             .iter()
             .map(|heading| Diagnostic {
-                code: "declaration-near-miss",
+                code: Code::DECLARATION_NEAR_MISS,
                 path: Some(heading.file.clone()),
                 line: Some(heading.line),
                 column: None,

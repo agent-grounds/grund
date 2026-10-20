@@ -18,8 +18,8 @@ use crate::grammar::{
     markdown_never_rewrite_context, render_catalog_id,
 };
 use crate::model::{
-    Catalog, CheckReport, Citation, Declaration, Diagnostic, HeadingKind, Id, paired_declarations,
-    scanned_decl_relative_path, scanned_path_key, section_resolves,
+    Catalog, CheckReport, Citation, Code, Declaration, Diagnostic, HeadingKind, Id,
+    paired_declarations, scanned_decl_relative_path, scanned_path_key, section_resolves,
 };
 use crate::sources::{path_is_dir, physical_path_key};
 
@@ -499,7 +499,7 @@ pub(super) fn check_kind_indexes(
                 Some(state) if !state.linked => {
                     let (line, column) = state.first_bare.unwrap_or((1, 1));
                     report.errors.push(Diagnostic {
-                        code: "unlinked-index-entry",
+                        code: Code::UNLINKED_INDEX_ENTRY,
                         path: Some(target.index_file.clone()),
                         line: Some(line),
                         column: Some(column),
@@ -546,7 +546,7 @@ pub(super) fn check_kind_indexes(
                         )
                     };
                     report.errors.push(Diagnostic {
-                        code: "missing-index-entry",
+                        code: Code::MISSING_INDEX_ENTRY,
                         path: Some(decl.file.clone()),
                         line: Some(decl.line),
                         column: None,

@@ -11,7 +11,7 @@ use super::sections::retain_heading_findings_in_scope;
 use crate::config::{Frame, Nesting, Schema, source_scope_name, unwalked_home_roots};
 use crate::grammar::Grammar;
 use crate::model::{
-    Catalog, CheckReport, DeclarationSource, Diagnostic, paired_declarations,
+    Catalog, CheckReport, Code, DeclarationSource, Diagnostic, paired_declarations,
     scanned_decl_relative_path, scanned_path_key, sort_path_key,
 };
 use crate::resolver::{WorkspaceCheckTarget, WorkspaceProject};
@@ -187,15 +187,11 @@ pub(crate) fn retain_diagnostics_in_report_scope(
                 // §FS-check.1.3.6.2: the anchor may be the site the caller did not type.
                 || diagnostic.sites.iter().any(|site| scope.contains(&site.path))
                 // §FS-rules.9.1.1: a stale block, chapter rules included, reaches a narrowed run.
-                || (diagnostic.code == AGENTS_INIT_CODE
+                || (diagnostic.code == Code::AGENTS_INIT
                     && entrypoints.iter().any(|entrypoint| entrypoint == path))
         }
     });
 }
-
-/// The §FS-check.3.5 probe's one code (`checker/agents.rs`), which is what the
-/// report filter exempts rather than the files the probe looks at.
-const AGENTS_INIT_CODE: &str = "agents-init";
 
 /// §FS-check.1.3.6.1: whether the walk read any file the report scope owns — what
 /// the §FS-check.2.2 empty-scan caution asks, since the cautions are computed
@@ -399,16 +395,9 @@ pub(crate) fn tag_out_of_scope(diagnostic: Diagnostic) -> Diagnostic {
 /// mean …?") is the fact most likely to be wrong and least deserving of being
 /// read first.
 fn tag_out_of_scope_for_version(mut diagnostic: Diagnostic, version: u32) -> Diagnostic {
-    diagnostic.code = match diagnostic.code {
-        "dangling" => "out-of-scope-dangling",
-        "missing-section" => "out-of-scope-missing-section",
-        "local-section-citation" => "out-of-scope-local-section-citation",
-        "unknown-project" => "out-of-scope-unknown-project",
-        "shorthand-citation" => "out-of-scope-shorthand-citation",
-        // `check_citation_resolution` emits exactly the five families above; anything
-        // else would be a new rule joining the family without a tier code.
-        other => other,
-    };
+    // `check_citation_resolution` emits exactly the five families the catalog pairs;
+    // anything else would be a new rule joining the family without a tier code.
+    diagnostic.code = diagnostic.code.out_of_scope().unwrap_or(diagnostic.code);
     let scope = source_scope_name(version);
     diagnostic.message = format!("outside {scope}: {}", diagnostic.message);
     diagnostic

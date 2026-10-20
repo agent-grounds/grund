@@ -1,7 +1,7 @@
 //! Test module: what a narrowed `check` says when what it selected judged
 //! nothing (§FS-check.1.4.1, §FS-check.1.4) — the selector's carry of
-//! `empty-citation-obligation`, its off lines, and the one advice table held to
-//! the §FS-errors.5.5 catalog it restates.
+//! `empty-citation-obligation`, its off lines, and the switches held to the
+//! clauses of the §FS-errors.5.5 catalog that spell them.
 //!
 //! The behaviour is pinned black-box by the `check-only-*` and
 //! `check-rule-applies-to-nothing-*` e2e cases; these are the seams under them.
@@ -9,9 +9,11 @@
 use std::collections::BTreeSet;
 use std::path::Path;
 
-use super::armed::{ArmedChecks, advised, table_codes};
-use super::selection::{CHECK_FINDING_CODES, CheckFindingSelection};
-use crate::model::{Armed, Finding, Report, Switch};
+use super::armed::{
+    ArmedChecks, advised, advised_codes, switch_clause, switch_of, switching_clauses,
+};
+use super::selection::CheckFindingSelection;
+use crate::model::{Armed, Code, Finding, Report, Switch};
 
 fn finding(code: &'static str, authority: &[&str]) -> Finding {
     Finding {
@@ -252,12 +254,12 @@ fn catalog() -> Vec<(String, String, String)> {
         .collect()
 }
 
-/// §FS-check.1.4.1: the advice table restates the catalog column — every
-/// selectable code whose *Enabled by* cell is a switch, or that is spent, has a
-/// row, and no other code does.
+/// §FS-check.1.4.1: the off line advises exactly the codes the catalog's own
+/// page says a key or flag turns on, or that are spent — read from the
+/// markdown, so the rendered rows and the reading of them agree with it.
 #[test]
-fn the_advice_table_covers_exactly_the_switched_catalog_codes() {
-    let selectable: BTreeSet<&str> = CHECK_FINDING_CODES.iter().copied().collect();
+fn the_advice_covers_exactly_the_switched_catalog_codes() {
+    let selectable: BTreeSet<&str> = Code::ALL.iter().map(|code| code.as_str()).collect();
     let expected: BTreeSet<String> = catalog()
         .into_iter()
         .filter(|(code, severity, enabled)| {
@@ -267,24 +269,73 @@ fn the_advice_table_covers_exactly_the_switched_catalog_codes() {
         })
         .map(|(code, ..)| code)
         .collect();
-    let table: BTreeSet<String> = table_codes().map(|(code, _)| code.to_string()).collect();
-    assert_eq!(table, expected);
+    let advised: BTreeSet<String> = advised_codes()
+        .map(|(code, _)| code.as_str().to_string())
+        .collect();
+    assert_eq!(advised, expected);
 }
 
-/// §FS-check.1.4.1: every switch the table names is spelled under both config
+/// §FS-errors.5.5.1: one clause is one switch spelled in each version, so every
+/// clause a key or flag turns on is exactly one switch, and every switch names
+/// such a clause.
+#[test]
+fn every_switching_clause_is_exactly_one_switch() {
+    for (code, index) in switching_clauses() {
+        assert_eq!(
+            switch_of(code, index).len(),
+            1,
+            "clause {index} of `{}`",
+            code.as_str()
+        );
+    }
+    for switch in SWITCHES {
+        let (code, index) = switch_clause(*switch).expect("every switch names its clause");
+        assert_eq!(switch_of(code, index), [*switch], "{switch:?}");
+    }
+}
+
+/// Every switch a gate records (§FS-check.1.4.1).
+const SWITCHES: &[Switch] = &[
+    Switch::LeadWords,
+    Switch::Rules,
+    Switch::MustDirection,
+    Switch::MustNotDirection,
+    Switch::Obligation,
+    Switch::ShouldDirection,
+    Switch::ShouldNotDirection,
+    Switch::Suggestions,
+    Switch::Full,
+    Switch::Values,
+    Switch::Field,
+    Switch::FieldOneOf,
+    Switch::FieldPlacement,
+    Switch::FieldTitle,
+    Switch::ClosedKind,
+    Switch::NamedSections,
+    Switch::HeadingDepth,
+    Switch::Grounding,
+    Switch::OptionalMember,
+    Switch::SnapshotWarning,
+    Switch::KindHome,
+];
+
+/// §FS-check.1.4.1: every switch the catalog names is spelled under both config
 /// versions, except the field switches a version-1 file cannot hold, which name
 /// the migration, and named sections, which version 2 never turns off.
 #[test]
 fn every_switch_is_spelled_in_both_config_versions() {
     let mut v1_absent = BTreeSet::new();
     let mut v2_absent = BTreeSet::new();
-    for switch in table_codes().filter_map(|(_, switches)| switches).flatten() {
-        let (v1, v2) = advised(*switch);
+    for switch in advised_codes()
+        .flat_map(|(_, switches)| switches)
+        .collect::<BTreeSet<_>>()
+    {
+        let (v1, v2) = advised(switch);
         if v1.is_none() {
-            v1_absent.insert(*switch);
+            v1_absent.insert(switch);
         }
         if v2.is_none() {
-            v2_absent.insert(*switch);
+            v2_absent.insert(switch);
         }
         for spelled in [v1, v2].into_iter().flatten() {
             assert!(

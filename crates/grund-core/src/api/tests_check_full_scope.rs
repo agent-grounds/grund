@@ -34,7 +34,7 @@ fn full_scope_leaves_the_in_scope_report_unchanged() {
             full.report
                 .errors
                 .iter()
-                .filter(|diagnostic| !diagnostic.code.starts_with("out-of-scope-"))
+                .filter(|diagnostic| !diagnostic.code.as_str().starts_with("out-of-scope-"))
         ),
         located_diagnostics(&scoped.config, &scoped.report.errors),
         "§DF-check-full-scope.2.4: --full is purely additive — the wider walk never makes an in-scope citation resolve"
@@ -90,7 +90,7 @@ fn an_explicit_path_argument_is_not_widened_by_full() {
         full.report
             .errors
             .iter()
-            .all(|diagnostic| !diagnostic.code.starts_with("out-of-scope-")),
+            .all(|diagnostic| !diagnostic.code.as_str().starts_with("out-of-scope-")),
         "§FS-check.1.3.6: an explicit scope has no out-of-scope tier — the finding set shrinks and gains no tier (§FS-check.1.3.6.1)"
     );
 }

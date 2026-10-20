@@ -114,7 +114,7 @@ fn full_scope_keeps_the_plain_runs_spelling_of_a_linked_file() {
             full.report
                 .errors
                 .iter()
-                .filter(|diagnostic| !diagnostic.code.starts_with("out-of-scope-")),
+                .filter(|diagnostic| !diagnostic.code.as_str().starts_with("out-of-scope-")),
         ),
         located_diagnostics(&scoped.config, scoped.report.errors.iter()),
         "§FS-check.1.3.2: --full stays purely additive — same in-scope lines, same spelling of the file two roots reach"

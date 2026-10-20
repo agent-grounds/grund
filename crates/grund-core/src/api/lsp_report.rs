@@ -17,7 +17,7 @@ use crate::checker::{
     repair_index_citations, retain_diagnostics_in_report_scope, sort_diagnostics,
 };
 use crate::config::Config;
-use crate::model::{CheckReport, Diagnostic};
+use crate::model::{CheckReport, Code, Diagnostic};
 use crate::resolver::{WorkspaceCheckTarget, WorkspaceContext};
 use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, unlisted_workspace_block_errors,
@@ -286,7 +286,7 @@ pub(super) fn editor_run_warnings(context: &WorkspaceContext) -> Vec<Diagnostic>
     context
         .run_warnings
         .iter()
-        .filter(|warning| warning.code != "unlisted-workspace-block")
+        .filter(|warning| warning.code != Code::UNLISTED_WORKSPACE_BLOCK)
         .cloned()
         .collect()
 }
@@ -297,7 +297,7 @@ fn append_lsp_scan_errors(
 ) {
     for (file, message) in scan_errors {
         report.errors.push(Diagnostic {
-            code: "io",
+            code: Code::IO,
             path: Some(file),
             line: None,
             column: None,

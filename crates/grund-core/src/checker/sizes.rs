@@ -1,7 +1,8 @@
 use crate::config::{Frame, LeadSizeWarning, PointSizeUnit, Schema, Strength, measure_point_text};
 use crate::grammar::render_declaration_id;
 use crate::model::{
-    Catalog, CheckReport, Declaration, Diagnostic, Id, SectionInfo, Switch, paired_declarations,
+    Catalog, CheckReport, Code, Declaration, Diagnostic, Id, SectionInfo, Switch,
+    paired_declarations,
 };
 use crate::resolver::point_body_pair;
 
@@ -153,7 +154,7 @@ fn check_oversized_lead_site(
         Strength::Should | Strength::May => &mut report.suggestions,
     };
     channel.push(Diagnostic {
-        code: "oversized-lead",
+        code: Code::OVERSIZED_LEAD,
         path: Some(declaration.file.clone()),
         line: Some(
             section

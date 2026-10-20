@@ -22,7 +22,7 @@ use crate::checker::{
     sort_diagnostics, workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
 };
 use crate::config::{Config, Invocation, ProjectRecords, Selection};
-use crate::model::{CheckReport, Diagnostic, Finding, Switch};
+use crate::model::{CheckReport, Code, Diagnostic, Finding, Switch};
 use crate::resolver::{WorkspaceCheckTarget, load_workspace_projects, settled_run_warnings};
 use crate::scanner::scan_tree;
 use crate::workspace::{
@@ -509,7 +509,7 @@ fn append_scan_errors(
         // `error: <path>: <reason>` finding (§FS-check.2.4): the walk continued,
         // the findings below are real, but the view of the tree was incomplete.
         report.errors.push(Diagnostic {
-            code: "io",
+            code: Code::IO,
             path: Some(file),
             line: None,
             column: None,

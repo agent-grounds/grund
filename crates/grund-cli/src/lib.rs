@@ -26,7 +26,7 @@ use grund_core::{
     render_finding_sites_json, setup_instructions, show_batch_with_globs, show_with_scope,
     usage_clause, usage_over_paths, validate_config, with_report_path_base,
 };
-use grund_core::{CHECK_FINDING_CODES, CheckFindingSelection};
+use grund_core::{CheckFindingSelection, Code};
 
 // §AR-config.6.3: the schema view the engine lowers and `grund schema` prints
 // (§FS-schema, §DA-engine-renders-nothing).

@@ -1,0 +1,1974 @@
+[
+ {
+  "code": "agents-init",
+  "meaning": "An agent entrypoint such as AGENTS.md lacks the grund init block it needs, or carries one this grund does not accept.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "broken-stub",
+  "meaning": "A stub's link does not lead to a declaration of its ID.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "chapter-cardinality",
+  "meaning": "A declaration has more or fewer chapters of a name than a rule's have sentence allows.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "setting",
+    "text": "error, or a suggestion for a should or should not rule"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "form = \"rule\" is set on a [schema.kinds] table or --rule is passed",
+      "by": "either"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "setting",
+    "text": "error, or a suggestion for a should or should not rule"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "rules = true is set on a [[kinds]] row or --rule is passed",
+      "by": "either"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "citation-cardinality",
+  "meaning": "A declaration cites a target more or fewer times than a rule allows.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "setting",
+    "text": "error, or a suggestion for a should or should not rule"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "form = \"rule\" is set on a [schema.kinds] table or --rule is passed",
+      "by": "either"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "setting",
+    "text": "error, or a suggestion for a should or should not rule"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "rules = true is set on a [[kinds]] row or --rule is passed",
+      "by": "either"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "config-version-1",
+  "meaning": "A config file is read as version 1; the warning names the command that migrates it.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "absent",
+    "text": "not in version 2"
+   },
+   "enabled": {
+    "kind": "absent",
+    "text": "not in version 2"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a config file is read as version 1",
+      "by": "condition"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "conflict-marker",
+  "meaning": "A scanned file holds an unresolved merge-conflict block.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "dangling",
+  "meaning": "A citation names an ID that no declaration declares.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "declaration-near-miss",
+  "meaning": "A heading opens like a declaration, but its ID does not match its kind's ID format.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "deprecated-config-location",
+  "meaning": "The config was read from .agents/grund.toml, a location that still works but is deprecated.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "discouraged-citation",
+  "meaning": "A citation goes to a target that a should-not entry or rule discourages.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "suggestion",
+    "text": "suggestion"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--suggestions is passed",
+      "by": "flag"
+     },
+     {
+      "text": "[rules.citations.<kind>] should-not or a should not rule is set",
+      "by": "setting"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "suggestion",
+    "text": "suggestion"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--suggestions is passed",
+      "by": "flag"
+     },
+     {
+      "text": "[citations.<kind>] should-not or a should not rule is set",
+      "by": "setting"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "duplicate",
+  "meaning": "The same ID is declared more than once.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "duplicate-section",
+  "meaning": "Two section headings in one declaration claim the same section path.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "empty-citation-obligation",
+  "meaning": "A must or should citation obligation applies to a kind that has no unit for it to judge.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[rules.citations.<kind>] must or should, or a must or should rule, is set for a scanned kind with a folder home",
+      "by": "setting"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[citations.<kind>] must or should, or a must or should rule, is set for a scanned kind with a folder home",
+      "by": "setting"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "empty-scan",
+  "meaning": "The scan read no files at all, which usually means its scope is misconfigured.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "escaped-citation-resolves",
+  "meaning": "An escaped citation names an ID or section that exists, so it may be a live citation escaped by mistake.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "suggestion",
+    "text": "suggestion"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--suggestions is passed",
+      "by": "flag"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "suggestion",
+    "text": "suggestion"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--suggestions is passed",
+      "by": "flag"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "excluded-stub-target",
+  "meaning": "A stub led to a file the scan excludes; that case is now reported as a broken stub.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "spent",
+    "text": "spent from grund 0.19.0; select broken-stub instead"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "spent",
+    "text": "spent from grund 0.19.0; select broken-stub instead"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "forbidden-citation",
+  "meaning": "A citation goes to a target that a must-not entry or rule forbids.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "strength",
+    "text": "must-not an error, warn-not a warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[rules.citations.<kind>] must-not or a must not rule is set",
+      "by": "setting"
+     }
+    ],
+    "remark": "a warn-not entry turns it on too, as a warning"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[citations.<kind>] must-not or a must not rule is set",
+      "by": "setting"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "full-scope-ignored",
+  "meaning": "--full was given an explicit path, which it cannot widen, so it changed nothing.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--full is passed",
+      "by": "flag"
+     }
+    ],
+    "remark": "with an explicit path"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--full is passed",
+      "by": "flag"
+     }
+    ],
+    "remark": "with an explicit path"
+   }
+  }
+ },
+ {
+  "code": "glob-citation",
+  "meaning": "A marked citation is written as a pattern rather than as one ID.",
+  "ramp": "error in 0.19.0",
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "inline-citation-style",
+  "meaning": "A citation's inline note in a code comment breaks the configured note style: too many lines, too wide, the wrong layout, or prose where only the citation is allowed.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "strength",
+    "text": "the [schema.notes.lines], [schema.notes.columns], [schema.notes.layout] or [schema.notes.text] key it breaks"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "setting",
+    "text": "error; a warning for an overrun of [reference] inline_note_suggested_lines under warn_on_suggested = true, or for a layout deviation under inline_note_layout_check = \"warn\""
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "invalid-field-value",
+  "meaning": "A field's value is not one of the values its kind admits for it.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "strength",
+    "text": "the field's presence"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[schema.kinds.<kind>.fields.<field>] one_of is set",
+      "by": "setting"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "enabled": {
+    "kind": "absent",
+    "text": "not in version 1"
+   }
+  }
+ },
+ {
+  "code": "invalid-rule",
+  "meaning": "A rule declaration cannot be read: its title, rationale, vocabulary or subject is invalid.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "form = \"rule\" is set on a [schema.kinds] table or --rule is passed",
+      "by": "either"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "rules = true is set on a [[kinds]] row or --rule is passed",
+      "by": "either"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "invalid-section-lock",
+  "meaning": "A line of a .grund/sections/ lock file is not an entry grund can read.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a .grund/sections/ lock file exists",
+      "by": "condition"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a .grund/sections/ lock file exists",
+      "by": "condition"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "invalid-value-binding",
+  "meaning": "A value binding breaks the binding grammar or aims at something it cannot bind.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "form = \"value\" is set on a [schema.kinds] table or content = \"values\" on one of its fields",
+      "by": "setting"
+     }
+    ],
+    "remark": "a value tag the scan finds turns it on too"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "values = true or value_chapter is set on a [[kinds]] row",
+      "by": "setting"
+     }
+    ],
+    "remark": "a value tag the scan finds turns it on too"
+   }
+  }
+ },
+ {
+  "code": "invalid-value-declaration",
+  "meaning": "A declaration of a kind that holds values is not a valid value.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "form = \"value\" is set on a [schema.kinds] table or content = \"values\" on one of its fields",
+      "by": "setting"
+     }
+    ],
+    "remark": "a value tag the scan finds turns it on too"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "values = true or value_chapter is set on a [[kinds]] row",
+      "by": "setting"
+     }
+    ],
+    "remark": "a value tag the scan finds turns it on too"
+   }
+  }
+ },
+ {
+  "code": "io",
+  "meaning": "A file or directory could not be read, so the run's view of the tree is incomplete.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "local-section-citation",
+  "meaning": "A marker followed by a bare section number is not a citation grund can resolve; write the full ID.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "misplaced-declaration",
+  "meaning": "A declaration sits outside the home its kind is configured to live in.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "folders or files is set on a [schema.kinds] table",
+      "by": "setting"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "folder or file is set on a [[kinds]] row",
+      "by": "setting"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "misplaced-field",
+  "meaning": "A field does not stand where its kind places it.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "strength",
+    "text": "the field's presence"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[schema.kinds.<kind>.fields.<field>] position or after is set",
+      "by": "setting"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "enabled": {
+    "kind": "absent",
+    "text": "not in version 1"
+   }
+  }
+ },
+ {
+  "code": "missing-citation",
+  "meaning": "A declaration lacks a citation that a must entry or rule requires.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "strength",
+    "text": "must an error, warn a warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[rules.citations.<kind>] must or a must rule is set",
+      "by": "setting"
+     }
+    ],
+    "remark": "a warn entry turns it on too, as a warning"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[citations.<kind>] must or a must rule is set",
+      "by": "setting"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "missing-field",
+  "meaning": "A declaration lacks a field its kind declares.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "strength",
+    "text": "the field's presence"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[schema.kinds.<kind>.fields.<field>] presence = \"must\" is set",
+      "by": "setting"
+     }
+    ],
+    "remark": "a warn or should presence turns it on too, at that strength"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "enabled": {
+    "kind": "absent",
+    "text": "not in version 1"
+   }
+  }
+ },
+ {
+  "code": "missing-index-entry",
+  "meaning": "A declaration in a kind's folder is not listed in that folder's index.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "missing-section",
+  "meaning": "A citation names a section its declaration does not have.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "missing-snapshot",
+  "meaning": "A citation targets a fetched kind whose declarations have not been fetched yet.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[rules.resolution] <KIND> = \"warn\" is set for a fetched kind",
+      "by": "setting"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "resolve = \"should\" is set on a fetched [[kinds]] row",
+      "by": "setting"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "mistitled-field",
+  "meaning": "A field's heading is titled differently from the title its kind gives it.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "strength",
+    "text": "the field's presence"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[schema.kinds.<kind>.fields.<field>] title is set",
+      "by": "setting"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "enabled": {
+    "kind": "absent",
+    "text": "not in version 1"
+   }
+  }
+ },
+ {
+  "code": "nothing-recognized",
+  "meaning": "The scan read files but recognized no declaration and no citation in them.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "optional-member-absent",
+  "meaning": "A workspace member listed as optional is not in this checkout, so it was not read.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[workspace] optional_members is set",
+      "by": "setting"
+     }
+    ],
+    "remark": "in any [workspace] block the run expands, a nested one included"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[workspace] optional_members is set",
+      "by": "setting"
+     }
+    ],
+    "remark": "in any [workspace] block the run expands, a nested one included"
+   }
+  }
+ },
+ {
+  "code": "orphan-section",
+  "meaning": "A named section path is used before every shorter prefix of it is recorded in the same declaration.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[id] named_sections = true is set",
+      "by": "setting"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "out-of-scope-dangling",
+  "meaning": "Under --full, a file outside the default scope cites an ID that no declaration declares.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--full is passed",
+      "by": "flag"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--full is passed",
+      "by": "flag"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "out-of-scope-local-section-citation",
+  "meaning": "Under --full, a file outside the default scope writes a marker followed by a bare section number.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--full is passed",
+      "by": "flag"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--full is passed",
+      "by": "flag"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "out-of-scope-missing-section",
+  "meaning": "Under --full, a file outside the default scope cites a section its declaration does not have.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--full is passed",
+      "by": "flag"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--full is passed",
+      "by": "flag"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "out-of-scope-shorthand-citation",
+  "meaning": "Under --full, a file outside the default scope writes a number-only shorthand that matches no declaration or several.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--full is passed",
+      "by": "flag"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--full is passed",
+      "by": "flag"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "out-of-scope-unknown-project",
+  "meaning": "Under --full, a file outside the default scope cites through a project alias the workspace does not know.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--full is passed",
+      "by": "flag"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--full is passed",
+      "by": "flag"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "oversized-lead",
+  "meaning": "A declaration's lead is longer than the configured word limit.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "strength",
+    "text": "[schema.leads.words]"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[schema.leads.words] warn = <N> is set",
+      "by": "setting"
+     }
+    ],
+    "remark": "a must or should limit turns it on too, at that strength"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[reference] lead_size_warning = { max = <N>, unit = \"words\" } is set",
+      "by": "setting"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "redundant-config",
+  "meaning": "A directory holds both grund.toml and .agents/grund.toml, and only the first is read.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "relative-section-parent",
+  "meaning": "A relative section heading has no parent section one level up for its path to extend.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "section-address-changed",
+  "meaning": "A cited section's text has moved to another address, and the cited address now holds something else.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a citation names a relative heading's address",
+      "by": "condition"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a citation names a relative heading's address",
+      "by": "condition"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "section-heading-level",
+  "meaning": "A section heading's Markdown depth does not match the depth of its section path.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "strength",
+    "text": "[schema] heading_depth"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[schema] heading_depth = \"must\" is set",
+      "by": "setting"
+     }
+    ],
+    "remark": "it is the default, and warn or should turns it on too, at that strength"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "setting",
+    "text": "error, or a warning under [id] section_heading_levels = \"warn\""
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[id] section_heading_levels = \"strict\" is set",
+      "by": "setting"
+     }
+    ],
+    "remark": "it is the default, and \"warn\" turns it on too"
+   }
+  }
+ },
+ {
+  "code": "section-outside-declaration",
+  "meaning": "A section heading sits outside every declaration's body.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "selected-check-off",
+  "meaning": "A check that --only selected was off for the whole run, so it judged nothing.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a code --only selects is armed by no project of the run",
+      "by": "condition"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a code --only selects is armed by no project of the run",
+      "by": "condition"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "shorthand-citation",
+  "meaning": "A number-only shorthand citation is written where the full ID is required, or matches no declaration or several.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "shorthand-numeric-run",
+  "meaning": "A number-only shorthand citation is glued to another number, so grund fmt will not expand it.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "stub-shape",
+  "meaning": "A heading whose title is one link was read as a stub by one test and as a declaration by another; that can no longer happen.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "spent",
+    "text": "spent from grund 0.19.0 and never fires"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "spent",
+    "text": "spent from grund 0.19.0 and never fires"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "suggested-citation",
+  "meaning": "A declaration lacks a citation that a should entry or rule suggests.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "suggestion",
+    "text": "suggestion"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--suggestions is passed",
+      "by": "flag"
+     },
+     {
+      "text": "[rules.citations.<kind>] should or a should rule is set",
+      "by": "setting"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "suggestion",
+    "text": "suggestion"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "--suggestions is passed",
+      "by": "flag"
+     },
+     {
+      "text": "[citations.<kind>] should or a should rule is set",
+      "by": "setting"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "uncited-unit",
+  "meaning": "A declaration or chapter is cited more or fewer times than a rule's be cited by sentence allows.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "setting",
+    "text": "error, or a suggestion for a should or should not rule"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "form = \"rule\" is set on a [schema.kinds] table or --rule is passed",
+      "by": "either"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "setting",
+    "text": "error, or a suggestion for a should or should not rule"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "rules = true is set on a [[kinds]] row or --rule is passed",
+      "by": "either"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "undeclared-chapter",
+  "meaning": "A declaration of a closed kind has a chapter that none of the kind's fields declares.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "strength",
+    "text": "the kind's closed"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "[schema.kinds.<kind>] closed = \"must\" is set",
+      "by": "setting"
+     }
+    ],
+    "remark": "a warn or should closed turns it on too, at that strength"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "absent",
+    "text": "not in version 1"
+   },
+   "enabled": {
+    "kind": "absent",
+    "text": "not in version 1"
+   }
+  }
+ },
+ {
+  "code": "ungrounded",
+  "meaning": "A unit in a place that must be grounded neither cites nor declares an ID.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "strength",
+    "text": "the rung of the grounding ladder it falls short of"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a must rung is set in [rules.citations.<kind>.grounding], or in [rules.citations.grounding] or by --require-grounding for a kind with no ladder of its own",
+      "by": "setting"
+     }
+    ],
+    "remark": "a warn or should rung turns it on too, at that strength"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "require_grounding = true is set on a [[kinds]] row, or in [reference] or by --require-grounding for a kind whose row does not set it false",
+      "by": "setting"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "unknown-project",
+  "meaning": "A citation names a project alias that is not known, or a declaration or section that project does not have.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "unlinked-index-entry",
+  "meaning": "An index entry cites a declaration bare rather than as a Markdown link.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "unlisted-workspace-block",
+  "meaning": "A directory declares [workspace], but no enclosing workspace lists it among its members.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "unmarked-heading",
+  "meaning": "A heading inside a declaration's body is neither a declaration nor a recognized section heading.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "unreached-declaration",
+  "meaning": "A declaration lacks the chapter a chapter-scoped citation rule over its kind needs in order to reach it.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "setting",
+    "text": "error, or a suggestion for a should or should not rule"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "form = \"rule\" is set on a [schema.kinds] table or --rule is passed",
+      "by": "either"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "setting",
+    "text": "error, or a suggestion for a should or should not rule"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "rules = true is set on a [[kinds]] row or --rule is passed",
+      "by": "either"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "unread-scan-root",
+  "meaning": "A file the config names as a scan root is not read, because its name is hidden or its extension is not scanned.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a files entry of a [schema.kinds] table names a file that is not read for its name",
+      "by": "condition"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a [[kinds]] file home or a [scan] include entry names a file that is not read for its name",
+      "by": "condition"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "unrecorded-section-citation",
+  "meaning": "A citation names a locked section address that has no entry in the section lock.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a citation names a relative heading's address",
+      "by": "condition"
+     }
+    ]
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "a citation names a relative heading's address",
+      "by": "condition"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "code": "unused",
+  "meaning": "A declared ID is never cited.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "warning"
+   },
+   "enabled": {
+    "kind": "always"
+   }
+  }
+ },
+ {
+  "code": "value-mismatch",
+  "meaning": "A value binding's written value differs from the value its target declares.",
+  "ramp": null,
+  "2": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "form = \"value\" is set on a [schema.kinds] table or content = \"values\" on one of its fields",
+      "by": "setting"
+     }
+    ],
+    "remark": "a value tag the scan finds turns it on too"
+   }
+  },
+  "1": {
+   "severity": {
+    "kind": "fixed",
+    "text": "error"
+   },
+   "enabled": {
+    "kind": "clauses",
+    "clauses": [
+     {
+      "text": "values = true or value_chapter is set on a [[kinds]] row",
+      "by": "setting"
+     }
+    ],
+    "remark": "a value tag the scan finds turns it on too"
+   }
+  }
+ }
+]

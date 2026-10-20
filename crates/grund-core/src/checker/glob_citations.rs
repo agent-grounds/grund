@@ -4,7 +4,7 @@
 //! the pattern leaves in a run.
 
 use crate::config::Schema;
-use crate::model::{Catalog, CheckReport, Diagnostic};
+use crate::model::{Catalog, CheckReport, Code, Diagnostic};
 
 /// §FS-check.checks.glob-citation.1: a warning until grund 0.19.0. The clause
 /// is the pending half of the release guard's vocabulary (§FS-distribution.4.2.3).
@@ -17,7 +17,7 @@ pub(super) fn check_glob_citations(findings: &Catalog, schema: &Schema, report: 
     report
         .warnings
         .extend(findings.glob_citations.iter().map(|pattern| Diagnostic {
-            code: "glob-citation",
+            code: Code::GLOB_CITATION,
             path: Some(pattern.file.clone()),
             line: Some(pattern.line),
             column: Some(pattern.column),

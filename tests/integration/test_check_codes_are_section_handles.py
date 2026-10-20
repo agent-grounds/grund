@@ -22,8 +22,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 FUNCTIONAL_SPEC = REPO_ROOT / "docs" / "functional-spec"
 CATALOG_PAGE = FUNCTIONAL_SPEC / "FS-errors.md"
 CATALOG_HEADING = re.compile(r"^### 5\.5 ")
-SELECTION = REPO_ROOT / "crates" / "grund-core" / "src" / "checker" / "selection.rs"
-SELECTION_CODES = re.compile(r'^\s{4}"([a-z][a-z0-9-]*)",$', re.M)
+# §AR-config.9.1: the selector vocabulary is the handles rendered from the catalog.
+HANDLES = REPO_ROOT / "crates" / "grund-core" / "src" / "model" / "codes.rs"
+HANDLE_CODES = re.compile(r'^\s+(?:pub const [A-Z0-9_]+: Code =\s+)?Code\("([a-z][a-z0-9-]*)"\);$', re.M)
 CHECK_SECTION = re.compile(r"^###\s+checks\.([a-z][a-z0-9-]*):")
 HEADING = re.compile(r"^#{1,6}\s")
 CODE_CELL = re.compile(r"^`?([a-z][a-z0-9-]*)`?$")
@@ -125,8 +126,8 @@ SPECIFIED_AHEAD = {
 
 
 def _selectable_codes():
-    """The public selector vocabulary, read from the shipped constant."""
-    return set(SELECTION_CODES.findall(SELECTION.read_text(encoding="utf-8")))
+    """The public selector vocabulary, read from the rendered handles."""
+    return set(HANDLE_CODES.findall(HANDLES.read_text(encoding="utf-8")))
 
 
 def _specified_ahead():

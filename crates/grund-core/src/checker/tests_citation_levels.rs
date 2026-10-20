@@ -57,7 +57,7 @@ must-not = ["AR"]"#,
             .iter()
             .map(|diagnostic| {
                 (
-                    diagnostic.code,
+                    diagnostic.code.as_str(),
                     diagnostic.path.clone(),
                     diagnostic.line,
                     diagnostic.message.clone(),
@@ -107,7 +107,7 @@ must-not = ["AR"]"#,
             .chain(&report.warnings)
             .all(|diagnostic| {
                 !matches!(
-                    diagnostic.code,
+                    diagnostic.code.as_str(),
                     "suggested-citation" | "discouraged-citation"
                 )
             })

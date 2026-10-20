@@ -8,7 +8,7 @@ use crate::config::Frame;
 use std::collections::BTreeMap;
 
 use crate::grammar::{Grammar, render_catalog_id};
-use crate::model::{Catalog, CheckReport, ConflictBlock, Declaration, Diagnostic, Id, Site};
+use crate::model::{Catalog, CheckReport, Code, ConflictBlock, Declaration, Diagnostic, Id, Site};
 
 /// §FS-declarations.checks.conflict-marker: one error per recorded block, an error
 /// from the release that adds it with no warning first (§DF-conflicted-declaration).
@@ -48,7 +48,7 @@ pub(crate) fn conflict_marker_finding(
         (lines, vec![block.first, block.last])
     };
     Diagnostic {
-        code: "conflict-marker",
+        code: Code::CONFLICT_MARKER,
         path: Some(block.file.clone()),
         line: Some(block.first),
         column: None,

@@ -10,7 +10,7 @@ use crate::config::{
     CitationDisjunction, CitationLevel, CitationTarget, Frame, NamespaceMatch, Owners, Rules,
     Schema, render_citation_target,
 };
-use crate::model::{CITATION_DIRECTION_REPAIR, Catalog, Citation, Diagnostic, Switch};
+use crate::model::{CITATION_DIRECTION_REPAIR, Catalog, Citation, Code, Diagnostic, Switch};
 
 /// §AR-checker.2.10 / §FS-check.3.12: a citation site whose citing kind prohibits
 /// its target is a `forbidden-citation` error (`must-not`) or a
@@ -37,7 +37,7 @@ pub(super) fn check_citation_prohibitions(
             CitationLevel::MustNot => (
                 DirectionChannel::Errors,
                 prohibition_diagnostic(
-                    "forbidden-citation",
+                    Code::FORBIDDEN_CITATION,
                     &owners,
                     cite,
                     "must not",
@@ -49,7 +49,7 @@ pub(super) fn check_citation_prohibitions(
             CitationLevel::WarnNot => (
                 DirectionChannel::Warnings,
                 prohibition_diagnostic(
-                    "forbidden-citation",
+                    Code::FORBIDDEN_CITATION,
                     &owners,
                     cite,
                     "must not",
@@ -58,7 +58,7 @@ pub(super) fn check_citation_prohibitions(
             ),
             CitationLevel::ShouldNot => (
                 DirectionChannel::Suggestions,
-                prohibition_diagnostic("discouraged-citation", &owners, cite, "should not", ""),
+                prohibition_diagnostic(Code::DISCOURAGED_CITATION, &owners, cite, "should not", ""),
             ),
             _ => continue,
         };
@@ -92,7 +92,7 @@ fn arm_prohibitions(rules: &Rules, report: &mut impl DirectionSink) {
 }
 
 fn prohibition_diagnostic(
-    code: &'static str,
+    code: Code,
     owners: &Owners<'_>,
     cite: &Citation,
     verb: &str,

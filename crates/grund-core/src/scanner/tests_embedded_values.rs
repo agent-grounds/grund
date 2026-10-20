@@ -153,7 +153,7 @@ fn assert_single_mismatch(root: &Path, path: &Path, name: &str) {
         .iter()
         .filter(|error| {
             matches!(
-                error.code,
+                error.code.as_str(),
                 "invalid-value-declaration" | "invalid-value-binding" | "value-mismatch"
             )
         })

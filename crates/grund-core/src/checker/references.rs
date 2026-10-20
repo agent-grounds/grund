@@ -19,7 +19,7 @@ use super::support::{
 };
 use crate::config::{Frame, Schema};
 use crate::grammar::{render_catalog_id, render_citation_id};
-use crate::model::{Catalog, CheckReport, Diagnostic, section_resolves};
+use crate::model::{Catalog, CheckReport, Code, Diagnostic, section_resolves};
 use crate::resolver::{WorkspaceCheckTarget, join_alternatives, target_for_citation};
 use crate::workspace::{member_root_guidance, namespace_is_unverified};
 use std::cell::OnceCell;
@@ -129,7 +129,7 @@ pub(super) fn check_citation_resolution(
             ""
         };
         report.errors.push(Diagnostic {
-            code: "local-section-citation",
+            code: Code::LOCAL_SECTION_CITATION,
             path: Some(cite.file.clone()),
             line: Some(cite.line),
             column: Some(cite.column),
@@ -157,7 +157,7 @@ pub(super) fn check_citation_resolution(
         // because there is no owner to expand them against.
         message.push_str(&local_section_release_attribution());
         report.errors.push(Diagnostic {
-            code: "local-section-citation",
+            code: Code::LOCAL_SECTION_CITATION,
             path: Some(candidate.file.clone()),
             line: Some(candidate.line),
             column: Some(candidate.column),
@@ -189,7 +189,7 @@ pub(super) fn check_citation_resolution(
                 continue;
             }
             report.errors.push(Diagnostic {
-                code: "unknown-project",
+                code: Code::UNKNOWN_PROJECT,
                 path: Some(cite.file.clone()),
                 line: Some(cite.line),
                 column: Some(cite.column),
@@ -271,16 +271,16 @@ pub(super) fn check_citation_resolution(
                 );
                 (
                     if should_warn {
-                        "missing-snapshot"
+                        Code::MISSING_SNAPSHOT
                     } else {
-                        "dangling"
+                        Code::DANGLING
                     },
                     message,
                     should_warn,
                 )
             } else {
                 (
-                    "dangling",
+                    Code::DANGLING,
                     dangling_message_spelled(
                         target.schema,
                         target.frame(),
@@ -343,7 +343,7 @@ pub(super) fn check_citation_resolution(
                 };
                 // §FS-citations.checks.mixed-path: all missing sections use ordinary errors.
                 report.errors.push(Diagnostic {
-                    code: "missing-section",
+                    code: Code::MISSING_SECTION,
                     path: Some(cite.file.clone()),
                     line: Some(cite.line),
                     column: Some(cite.column),
