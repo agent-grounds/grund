@@ -77,13 +77,21 @@ pub(super) fn kind_key(
 
 /// `[presentation.fmt]`: `exclude` is v1's `[fmt] exclude`; `anchors = "github"`
 /// and `links = "index"` are the formatter's existing effect, and any other
-/// value is #459's.
+/// value is refused with quoted value guidance (§FS-config-v2.rollout.fmt-values).
 pub(super) fn fmt_key(r: &mut Reader, key: &str, value: &str, line: usize) -> Result<bool> {
     match key {
         "anchors" | "links" => {
             let executed = if key == "anchors" { "github" } else { "index" };
-            if parse_string(r.path, line, value)? != executed {
-                return r.fail(line, not_yet(&format!("[presentation.fmt] {key}")));
+            let supplied = parse_string(r.path, line, value)?;
+            if supplied != executed {
+                let refusal = not_yet(&format!("[presentation.fmt] {key}"));
+                return r.fail(
+                    line,
+                    format!(
+                        "{refusal}; value {supplied:?} is not supported; \
+                         this grund executes only {key} = {executed:?}"
+                    ),
+                );
             }
         }
         "exclude" => {

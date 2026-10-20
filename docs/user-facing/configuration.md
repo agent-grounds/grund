@@ -398,6 +398,16 @@ What `grund fmt` writes and leaves alone. [§FS-config-v2.presentation](../funct
 | `links` | `"index"` | `"index"` | Where `grund fmt` points citation links; `index` is the only target today. [§FS-config-v2.presentation](../functional-spec/FS-config-v2.md#presentation-the-presentation-concern) |
 | `exclude` | array of strings | `[]` | Files `grund fmt` never rewrites: gitignore-style globs, as v1 `[fmt] exclude`. [§FS-config-v2.presentation](../functional-spec/FS-config-v2.md#presentation-the-presentation-concern) |
 
+For another string value of `anchors` or `links`, the refusal names the supplied
+value and the only assignment this binary executes. For example, `links = "off"`
+on line 5 produces the following diagnostic. Quotes, backslashes and control
+characters in the value are escaped so the message stays on one line.
+[§FS-config-v2.rollout.fmt-values](../functional-spec/FS-config-v2.md#rolloutfmt-values-a-recognized-formatting-key-names-the-value-it-cannot-execute)
+
+```text
+error: grund.toml:5: `[presentation.fmt] links` is part of the v2 format but not supported by this grund yet; value "off" is not supported; this grund executes only links = "index"
+```
+
 ### `[workspace]`
 
 The sub-projects a workspace root checks, each in its own namespace. [§FS-config.3.8](../functional-spec/FS-config.md#38-workspace--sub-project-members)
