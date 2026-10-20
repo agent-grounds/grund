@@ -740,7 +740,7 @@ from grund import check, show
 
 repo = "tests/e2e/cases/json-report/repo"
 result = check(repo)
-for finding in result.report:
+for finding in result.report.errors:
     print(finding.code, finding.line)  # dangling 3
 assert "FS-999-missing" in show("FS-001-alpha", root=repo, mode="brief").body
 ```

@@ -60,7 +60,7 @@ def rust_call(operation, root, args=(), options=None, home=None):
     if os.name == "nt" and not os.environ.get("GRUND_BINDINGS_ORACLE"):
         oracle = oracle.with_suffix(".exe")
     if not oracle.is_file():
-        raise AssertionError("missing core-only test driver target/debug/grund-binding-oracle; "
+        raise AssertionError(f"missing core-only test driver {oracle}; "
                              "implement the tests/bindings/README.md protocol")
     request = {"operation": operation, "root": str(root), "args": list(args),
                "options": options or {}, "home": str(home) if home else None}
