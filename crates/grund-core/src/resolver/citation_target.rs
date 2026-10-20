@@ -18,7 +18,7 @@
 use std::collections::BTreeMap;
 
 use crate::config::{Compiled, Display, Frame, Run, Schema};
-use crate::model::{Catalog, Citation};
+use crate::model::{Catalog, Citation, section_resolves};
 
 /// One project a citation can resolve against, as a rule needs it: the catalog
 /// the ID is looked up in and the schema and grammar that spell it, because a
@@ -93,4 +93,26 @@ pub(crate) fn citation_resolves(
     target_for_citation(cite, local, local_schema, local_frame, workspace)
         .map(|target| target.catalog.declarations.contains_key(&cite.id))
         .unwrap_or(false)
+}
+
+/// The target a citation's whole coordinate resolves in, or `None` when it does
+/// not: the ID declared there and, when the citation writes a section, that
+/// section found by the one missing-section lookup, so a stub's sections are its
+/// target's (§FS-check.2.3.1.3, §FS-check.3.2.1). The target comes back because
+/// the coordinate is named with its section separator (§FS-workspace.1.2).
+/// [`citation_resolves`] stays the ID-only question grounding asks.
+pub(crate) fn resolved_coordinate_target<'a>(
+    cite: &Citation,
+    local: &'a Catalog,
+    local_schema: &'a Schema,
+    local_frame: Frame<'a>,
+    workspace: &'a BTreeMap<String, WorkspaceCheckTarget<'a>>,
+) -> Option<WorkspaceCheckTarget<'a>> {
+    target_for_citation(cite, local, local_schema, local_frame, workspace).filter(|target| {
+        target.catalog.declarations.contains_key(&cite.id)
+            && cite
+                .section
+                .as_deref()
+                .is_none_or(|section| section_resolves(target.catalog, &cite.id, section))
+    })
 }
