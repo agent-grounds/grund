@@ -14,13 +14,13 @@
 /// nothing (§FS-config.1.1). `line`-less, so it prints as a CLI-level `warning:`
 /// on stderr: it says which file the run read, not what is wrong at a site.
 use crate::config::{Config, Display, config_file_under, home_form_of};
-use crate::model::{Diagnostic, format_path};
+use crate::model::{Code, Diagnostic, format_path};
 
 fn redundant_config_warning(config: &Config) -> Option<Diagnostic> {
     let ignored = config.redundant_config_file.as_ref()?;
     let winner = config.config_file.as_ref()?;
     Some(Diagnostic {
-        code: "redundant-config",
+        code: Code::REDUNDANT_CONFIG,
         path: None,
         line: None,
         column: None,
@@ -48,7 +48,7 @@ fn deprecated_config_location_warning(config: &Config) -> Option<Diagnostic> {
     let found = config.config_file.as_ref()?;
     let home = home_form_of(found)?;
     Some(Diagnostic {
-        code: "deprecated-config-location",
+        code: Code::DEPRECATED_CONFIG_LOCATION,
         path: None,
         line: None,
         column: None,
@@ -64,7 +64,7 @@ fn deprecated_config_location_warning(config: &Config) -> Option<Diagnostic> {
 
 /// §FS-check.checks.config-version-1: the caution's code, which the migrate report
 /// gate drops from both runs it compares (§FS-config-migrate.5.2).
-pub(super) const CONFIG_VERSION_1: &str = "config-version-1";
+pub(super) const CONFIG_VERSION_1: Code = Code::CONFIG_VERSION_1;
 
 /// §FS-check.checks.config-version-1: the one sentence that tells a reader the
 /// config at `file` is on version 1 and names the command that migrates it,

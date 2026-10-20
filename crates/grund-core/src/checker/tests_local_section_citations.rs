@@ -37,7 +37,7 @@ fn local_section_findings_are_actionable_and_missing_is_independent() {
     let mut actual = report
         .errors
         .iter()
-        .map(|finding| (finding.code, finding.message.as_str()))
+        .map(|finding| (finding.code.as_str(), finding.message.as_str()))
         .collect::<Vec<_>>();
     actual.sort_unstable_by_key(|(_, message)| *message);
     let mut expected = vec![
@@ -220,7 +220,7 @@ fn the_out_of_scope_tier_withholds_the_command_but_keeps_the_attribution() {
         .report
         .errors
         .iter()
-        .filter(|error| error.code.ends_with("local-section-citation"))
+        .filter(|error| error.code.as_str().ends_with("local-section-citation"))
         .collect::<Vec<_>>();
     assert_eq!(
         located_diagnostics(&full.config, local),
@@ -489,7 +489,7 @@ fn an_out_of_scope_absent_site_keeps_the_scope_first_and_answers_with_the_escape
         .report
         .errors
         .iter()
-        .filter(|error| error.code.ends_with("local-section-citation"))
+        .filter(|error| error.code.as_str().ends_with("local-section-citation"))
         .collect::<Vec<_>>();
     assert_eq!(
         located_diagnostics(&full.config, local),

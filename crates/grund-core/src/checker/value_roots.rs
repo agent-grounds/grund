@@ -5,7 +5,7 @@
 use super::value_mismatch::{rendered_value_path, value_mismatch, value_mismatch_text};
 use crate::config::{Display, Frame, Schema};
 use crate::model::{
-    Declaration, Diagnostic, Site, ValueBinding, ValueComponent, first_unequal_component,
+    Code, Declaration, Diagnostic, Site, ValueBinding, ValueComponent, first_unequal_component,
     joined_value_components, root_literal_parts,
 };
 
@@ -108,7 +108,7 @@ fn space_refusal(
 ) -> Diagnostic {
     let declared_site = format!("{}:{}", display.path(&site.path), site.line);
     Diagnostic {
-        code: "invalid-value-binding",
+        code: Code::INVALID_VALUE_BINDING,
         path: Some(binding.file.clone()),
         line: Some(binding.line),
         column: Some(binding.column),

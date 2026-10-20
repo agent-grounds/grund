@@ -7,7 +7,7 @@
 use std::collections::BTreeMap;
 
 use crate::config::{Frame, Schema};
-use crate::model::{CheckReport, Diagnostic};
+use crate::model::{CheckReport, Code, Diagnostic};
 use crate::resolver::{EntryVerdict, WorkspaceCheckTarget, judge_section_locks};
 
 /// §FS-section-lock.checks.remedy: the run that writes a lock, named with its scope,
@@ -35,7 +35,7 @@ pub(super) fn check_section_locks<'a>(
         // §FS-section-lock.checks.invalid-section-lock
         for line in &judgement.lines.invalid {
             report.errors.push(located(
-                "invalid-section-lock",
+                Code::INVALID_SECTION_LOCK,
                 judgement.path.clone(),
                 *line,
                 format!(
@@ -48,7 +48,7 @@ pub(super) fn check_section_locks<'a>(
         for (section, citations, _) in &judgement.unrecorded {
             for citation in citations {
                 report.errors.push(located(
-                    "unrecorded-section-citation",
+                    Code::UNRECORDED_SECTION_CITATION,
                     citation.file.clone(),
                     citation.line,
                     format!(
@@ -70,7 +70,7 @@ pub(super) fn check_section_locks<'a>(
             };
             let (at, to) = (coordinate(&entry.section), coordinate(to));
             report.errors.push(located(
-                "section-address-changed",
+                Code::SECTION_ADDRESS_CHANGED,
                 decl.file.clone(),
                 info.line,
                 format!(
@@ -83,12 +83,7 @@ pub(super) fn check_section_locks<'a>(
     }
 }
 
-fn located(
-    code: &'static str,
-    path: std::path::PathBuf,
-    line: usize,
-    message: String,
-) -> Diagnostic {
+fn located(code: Code, path: std::path::PathBuf, line: usize, message: String) -> Diagnostic {
     Diagnostic {
         code,
         path: Some(path),

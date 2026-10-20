@@ -2,80 +2,7 @@ use anyhow::{Result, anyhow};
 use std::collections::BTreeSet;
 
 use super::armed::ArmedChecks;
-use crate::model::{Finding, Report};
-
-/// The exact public code vocabulary accepted by `grund check --only` and
-/// `--ignore`, kept sorted for deterministic help output (§FS-errors.5.5).
-#[doc(hidden)]
-pub const CHECK_FINDING_CODES: &[&str] = &[
-    "agents-init",
-    "broken-stub",
-    "chapter-cardinality",
-    "citation-cardinality",
-    "config-version-1",
-    "conflict-marker",
-    "dangling",
-    "declaration-near-miss",
-    "deprecated-config-location",
-    "discouraged-citation",
-    "duplicate",
-    "duplicate-section",
-    "empty-citation-obligation",
-    "empty-scan",
-    "escaped-citation-resolves",
-    // §FS-declarations.checks.excluded-stub-target: spent, accepted without selecting broken-stub.
-    "excluded-stub-target",
-    "forbidden-citation",
-    "full-scope-ignored",
-    "glob-citation",
-    "inline-citation-style",
-    "invalid-field-value",
-    "invalid-rule",
-    "invalid-section-lock",
-    "invalid-value-binding",
-    "invalid-value-declaration",
-    "io",
-    "local-section-citation",
-    "misplaced-declaration",
-    "misplaced-field",
-    "missing-citation",
-    "missing-field",
-    "missing-index-entry",
-    "missing-section",
-    "missing-snapshot",
-    "mistitled-field",
-    "nothing-recognized",
-    "optional-member-absent",
-    "orphan-section",
-    "out-of-scope-dangling",
-    "out-of-scope-local-section-citation",
-    "out-of-scope-missing-section",
-    "out-of-scope-shorthand-citation",
-    "out-of-scope-unknown-project",
-    "oversized-lead",
-    "redundant-config",
-    "relative-section-parent",
-    "section-address-changed",
-    "section-heading-level",
-    "section-outside-declaration",
-    "selected-check-off",
-    "shorthand-citation",
-    "shorthand-numeric-run",
-    "stub-shape",
-    "suggested-citation",
-    "uncited-unit",
-    "undeclared-chapter",
-    "ungrounded",
-    "unknown-project",
-    "unlinked-index-entry",
-    "unlisted-workspace-block",
-    "unmarked-heading",
-    "unreached-declaration",
-    "unread-scan-root",
-    "unrecorded-section-citation",
-    "unused",
-    "value-mismatch",
-];
+use crate::model::{Code, Finding, Report};
 
 /// The nine rule-produced codes: a selection naming any of them also selects
 /// `invalid-rule`, because a skipped rule is a check the run did not evaluate
@@ -99,7 +26,7 @@ const RULE_PRODUCED_CODES: &[&str] = &[
 const TRIAL_RULE_ORIGIN: &str = "--rule";
 
 /// The code of the line a selected check the run left off earns (§FS-check.1.4.1).
-const SELECTED_CHECK_OFF: &str = "selected-check-off";
+const SELECTED_CHECK_OFF: &str = Code::SELECTED_CHECK_OFF.as_str();
 
 /// What a selection carries beside a rule-produced code (§FS-check.1.4).
 const CARRIED_WITH_RULE_CODES: &[&str] = &["invalid-rule", "empty-citation-obligation"];
@@ -245,7 +172,8 @@ fn validate_check_finding_code(flag: &str, value: &str) -> Result<()> {
             "invalid finding code \"{value}\" (expected lowercase kebab-case)"
         ));
     }
-    if CHECK_FINDING_CODES.binary_search(&value).is_err() {
+    // §FS-errors.5.5: the vocabulary is the catalog's handles, sorted.
+    if Code::named(value).is_none() {
         return Err(anyhow!(
             "unknown check finding code \"{value}\"; run `grund check --help` for supported codes"
         ));

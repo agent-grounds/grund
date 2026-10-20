@@ -13,8 +13,8 @@ use super::sizes::check_oversized_leads;
 use crate::config::{Extent, Frame, Schema};
 use crate::grammar::render_catalog_id;
 use crate::model::{
-    Catalog, CheckReport, Declaration, Diagnostic, ExcludingRule, Id, MissingStubRepair, Site,
-    StubResolution, Switch, format_path, paired_declarations, sort_path_key,
+    Catalog, CheckReport, Code, Declaration, Diagnostic, ExcludingRule, Id, MissingStubRepair,
+    Site, StubResolution, Switch, format_path, paired_declarations, sort_path_key,
 };
 
 /// §AR-checker.1.1: duplicate, misplaced-declaration, broken-stub,
@@ -88,7 +88,7 @@ fn check_declaration_homes(findings: &Catalog, frame: Frame<'_>, report: &mut Ch
             let mut message = format!("duplicate declaration of {rendered_id}{suffix}");
             message.push_str(&repair.located_suffix(&rendered_id, |path| frame.display_path(path)));
             report.errors.push(Diagnostic {
-                code: "duplicate",
+                code: Code::DUPLICATE,
                 path: Some(primary.path),
                 line: Some(primary.line),
                 column: None,
@@ -125,7 +125,7 @@ fn check_misplaced(
                 && !expected.holds(&decl.file)
             {
                 report.errors.push(Diagnostic {
-                    code: "misplaced-declaration",
+                    code: Code::MISPLACED_DECLARATION,
                     path: Some(decl.file.clone()),
                     line: Some(decl.line),
                     column: None,
@@ -163,7 +163,7 @@ fn check_misplaced(
                     )
                 };
                 report.errors.push(Diagnostic {
-                    code: "misplaced-declaration",
+                    code: Code::MISPLACED_DECLARATION,
                     path: Some(decl.file.clone()),
                     line: Some(decl.line),
                     column: None,
@@ -219,7 +219,7 @@ fn check_broken_stubs(
             StubResolution::OwnFile | StubResolution::Declares(_) => continue,
         };
         report.errors.push(Diagnostic {
-            code: "broken-stub",
+            code: Code::BROKEN_STUB,
             path: Some(decl.file.clone()),
             line: Some(decl.line),
             column: None,

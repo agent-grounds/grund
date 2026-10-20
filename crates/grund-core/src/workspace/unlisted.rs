@@ -26,7 +26,7 @@ use super::members::{AncestorWorkspaces, canonical_workspace_path};
 use super::scope::{RootMode, derive_alias};
 use crate::config::display_path;
 use crate::config::{Config, config_file_in, strip_comment};
-use crate::model::Diagnostic;
+use crate::model::{Code, Diagnostic};
 use crate::model::{format_path, relative_from_base};
 
 /// Where a finding of this rule states the block's `[workspace]` line
@@ -144,7 +144,7 @@ fn block_diagnostics(
         }
         let located = placement == Placement::Located;
         diagnostics.push(Diagnostic {
-            code: "unlisted-workspace-block",
+            code: Code::UNLISTED_WORKSPACE_BLOCK,
             // §FS-check.3.29.7: the located form carries the block's `[workspace]`
             // line in these two fields, and the in-text form carries it in the
             // message instead — the one difference between the two channels.

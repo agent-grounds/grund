@@ -16,7 +16,7 @@ use super::references::ReferenceTier;
 use super::support::qualify;
 use crate::config::{Schema, ShorthandPolicy};
 use crate::grammar::{ShorthandIndex, render_catalog_id};
-use crate::model::{CheckReport, Citation, Diagnostic, Id};
+use crate::model::{CheckReport, Citation, Code, Diagnostic, Id};
 use crate::resolver::WorkspaceCheckTarget;
 
 /// §FS-check.3.13.3 / §AR-checker.2.12: the one finding a number-only shorthand
@@ -81,7 +81,7 @@ fn shorthand_diagnostic(
             // advise the edit that corrupts the line. Both exits; the author picks.
             if cite.numeric_run {
                 return Some(Diagnostic {
-                    code: "shorthand-numeric-run",
+                    code: Code::SHORTHAND_NUMERIC_RUN,
                     path: Some(cite.file.clone()),
                     line: Some(cite.line),
                     column: Some(cite.column),
@@ -118,7 +118,7 @@ fn shorthand_diagnostic(
         ),
     };
     Some(Diagnostic {
-        code: "shorthand-citation",
+        code: Code::SHORTHAND_CITATION,
         path: Some(cite.file.clone()),
         line: Some(cite.line),
         column: Some(cite.column),

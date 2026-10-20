@@ -5,7 +5,7 @@ use super::value_roots::root_binding_finding;
 use crate::config::{Frame, Schema, any_kind_holds_values, kind_uses_values, kind_value_chapter};
 use crate::grammar::{BindingSpellings, render_catalog_id};
 use crate::model::{
-    Catalog, CheckReport, Declaration, Diagnostic, EmbeddedValueRoot, Id, Site, Switch,
+    Catalog, CheckReport, Code, Declaration, Diagnostic, EmbeddedValueRoot, Id, Site, Switch,
     ValueBinding, paired_declarations, value_binding_section_ends_in_coordinate,
     value_components_equal,
 };
@@ -37,7 +37,7 @@ pub(super) fn check_values(
             continue;
         }
         report.errors.push(Diagnostic {
-            code: "invalid-value-declaration",
+            code: Code::INVALID_VALUE_DECLARATION,
             path: Some(site.file.clone()),
             line: Some(site.line),
             column: site.column,
@@ -71,7 +71,7 @@ pub(super) fn check_values(
             continue;
         }
         report.errors.push(Diagnostic {
-            code: "invalid-value-binding",
+            code: Code::INVALID_VALUE_BINDING,
             path: Some(site.file.clone()),
             line: Some(site.line),
             column: site.column,
@@ -422,7 +422,7 @@ fn declarations_as_scanned<'a>(findings: &'a Catalog, id: &Id) -> Vec<&'a Declar
 
 fn invalid_binding_diagnostic(binding: &ValueBinding) -> Diagnostic {
     Diagnostic {
-        code: "invalid-value-binding",
+        code: Code::INVALID_VALUE_BINDING,
         path: Some(binding.file.clone()),
         line: Some(binding.line),
         column: Some(binding.column),

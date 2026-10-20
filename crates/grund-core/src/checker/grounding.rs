@@ -19,7 +19,7 @@ use crate::config::{
     DEFAULT_GROUNDING_LEVEL, Frame, Owners, Rules, Schema, Strength, any_place_grounded,
     grounding_level_for_kind, homeless_row_grounding, row_grounding, soft_grounding_rungs,
 };
-use crate::model::{Catalog, CheckReport, Citation, Diagnostic, FileStructure, Switch};
+use crate::model::{Catalog, CheckReport, Citation, Code, Diagnostic, FileStructure, Switch};
 use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
 use crate::workspace::namespace_is_unverified;
 
@@ -146,7 +146,7 @@ pub(super) fn check_grounding(
                     _ => &mut report.suggestions,
                 };
                 target.push(Diagnostic {
-                    code: "ungrounded",
+                    code: Code::UNGROUNDED,
                     path: Some(file.clone()),
                     line: Some(unit.start),
                     column: None,

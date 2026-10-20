@@ -10,7 +10,7 @@ use std::path::PathBuf;
 
 use crate::config::{Field, FieldContent, Frame, Kind, Placement, Schema, Strength};
 use crate::grammar::{render_declaration_id, section_display_name};
-use crate::model::{Armed, Catalog, CheckReport, Declaration, Diagnostic, Switch};
+use crate::model::{Armed, Catalog, CheckReport, Code, Declaration, Diagnostic, Switch};
 
 /// The channel a strength names (§FS-config-v2.rules.strengths); `None` is unchecked.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -169,7 +169,7 @@ impl<'a> Shape<'a> {
         &self,
         field: Option<&'a Field>,
         channel: Channel,
-        code: &'static str,
+        code: Code,
         line: usize,
         message: String,
     ) -> FieldFinding<'a> {
@@ -198,7 +198,7 @@ impl<'a> Shape<'a> {
             self.id, field.name, self.kind
         );
         let line = self.declaration.line;
-        out.push(self.finding(Some(field), channel, "missing-field", line, message));
+        out.push(self.finding(Some(field), channel, Code::MISSING_FIELD, line, message));
     }
 
     /// §FS-fields.checks.mistitled-field, §FS-fields.checks.invalid-field-value:
@@ -216,7 +216,7 @@ impl<'a> Shape<'a> {
                 "{section} is titled \"{display}\"; kind {} titles it \"{title}\"",
                 self.kind
             );
-            out.push(self.finding(Some(field), channel, "mistitled-field", line, message));
+            out.push(self.finding(Some(field), channel, Code::MISTITLED_FIELD, line, message));
         }
         if let FieldContent::OneOf(values) = &field.content
             && !values.iter().any(|value| value == display)
@@ -226,7 +226,13 @@ impl<'a> Shape<'a> {
                 self.kind,
                 values.join(", ")
             );
-            out.push(self.finding(Some(field), channel, "invalid-field-value", line, message));
+            out.push(self.finding(
+                Some(field),
+                channel,
+                Code::INVALID_FIELD_VALUE,
+                line,
+                message,
+            ));
         }
     }
 
@@ -277,7 +283,7 @@ impl<'a> Shape<'a> {
                     out.push(self.finding(
                         Some(field),
                         shape_channel(field),
-                        "misplaced-field",
+                        Code::MISPLACED_FIELD,
                         line,
                         message,
                     ));
@@ -314,7 +320,7 @@ impl<'a> Shape<'a> {
                     names.join(", ")
                 }
             );
-            out.push(self.finding(None, channel, "undeclared-chapter", *line, message));
+            out.push(self.finding(None, channel, Code::UNDECLARED_CHAPTER, *line, message));
         }
     }
 }
@@ -336,7 +342,10 @@ pub(crate) fn pair_fields_with_rules(
         let Some(field) = finding.field else {
             return;
         };
-        if matches!(finding.diagnostic.code, "missing-field" | "mistitled-field") {
+        if matches!(
+            finding.diagnostic.code,
+            Code::MISSING_FIELD | Code::MISTITLED_FIELD
+        ) {
             claims.insert((
                 finding.channel,
                 declaration.file.clone(),
@@ -370,7 +379,7 @@ pub(crate) fn pair_fields_with_rules(
 /// The chapter name a `chapter-cardinality` finding counted zero of, read off
 /// the message §FS-rules.7.2.1 fixes: `<ID> has 0 <NAME> chapters; …`.
 fn absent_chapter(diagnostic: &Diagnostic) -> Option<&str> {
-    if diagnostic.code != "chapter-cardinality" {
+    if diagnostic.code != Code::CHAPTER_CARDINALITY {
         return None;
     }
     let (_, rest) = diagnostic.message.split_once(" has 0 ")?;

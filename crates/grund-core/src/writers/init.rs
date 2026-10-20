@@ -511,7 +511,7 @@ fn init_run(
 fn init_finding(config: &Config, diagnostic: Diagnostic) -> Finding {
     Finding {
         severity: "error",
-        code: diagnostic.code,
+        code: diagnostic.code.as_str(),
         path: diagnostic.path.map(|path| display_path(config, &path)),
         line: diagnostic.line,
         column: diagnostic.column,

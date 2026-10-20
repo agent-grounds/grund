@@ -26,7 +26,7 @@ use super::scope::{config_location_error, duplicate_alias_sites};
 use crate::config::{
     AbsentOptionalNamespace, Config, Run, both_member_lists_message, optional_member_alias_segment,
 };
-use crate::model::{Armed, Diagnostic, Switch};
+use crate::model::{Armed, Code, Diagnostic, Switch};
 use crate::sources::path_is_dir;
 
 pub(super) fn workspace_optional_members_error(config: &Config, message: String) -> anyhow::Error {
@@ -246,7 +246,7 @@ pub(crate) fn absent_optional_member_warnings(config: &Config) -> Vec<Diagnostic
         .workspace_absent_optional
         .iter()
         .map(|absent| Diagnostic {
-            code: "optional-member-absent",
+            code: Code::OPTIONAL_MEMBER_ABSENT,
             path: Some(absent.source.path.clone()),
             line: Some(absent.source.line),
             column: None,
@@ -294,7 +294,7 @@ pub(crate) fn absent_only_workspace_caution(
     no_projects: bool,
 ) -> Option<Diagnostic> {
     (no_projects && !config.workspace_absent_optional.is_empty()).then(|| Diagnostic {
-        code: "empty-scan",
+        code: Code::EMPTY_SCAN,
         path: None,
         line: None,
         column: None,

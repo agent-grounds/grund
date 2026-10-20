@@ -9,7 +9,7 @@
 
 use super::reference_scope::tag_out_of_scope;
 use super::references::{nearest_project_aliases, unknown_project_message};
-use crate::model::Diagnostic;
+use crate::model::{Code, Diagnostic};
 use crate::resolver::join_alternatives;
 
 /// The scope-only message §FS-check.3.8.4 fixes, since `0.16.0`.
@@ -117,7 +117,7 @@ fn proper_prefix_hint_preserves_scope_decorations() {
         final_scope_only_message("group", "left")
     );
     let diagnostic = Diagnostic {
-        code: "unknown-project",
+        code: Code::UNKNOWN_PROJECT,
         path: None,
         line: None,
         column: None,

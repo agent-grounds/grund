@@ -32,9 +32,7 @@ fn call(
 #[pyfunction]
 fn valid_option(name: &str, value: &str) -> bool {
     match name {
-        "code" => grund_core::CHECK_FINDING_CODES
-            .binary_search(&value)
-            .is_ok(),
+        "code" => grund_core::Code::named(value).is_some(),
         "client" => grund_core::IntegrationClient::from_name(value).is_some(),
         "conversation" => grund_core::ConversationRendering::from_name(value).is_some(),
         "conversation_target" => grund_core::ConversationTarget::from_name(value).is_some(),

@@ -73,7 +73,7 @@ mod value_roots;
 mod values;
 
 pub use armed::ArmedChecks;
-pub use selection::{CHECK_FINDING_CODES, CheckFindingSelection};
+pub use selection::CheckFindingSelection;
 
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the

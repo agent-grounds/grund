@@ -18,7 +18,7 @@ use super::snapshots::arm_missing_snapshot;
 use super::values::check_values;
 use crate::config::{Frame, KindResolution, Rules, Schema};
 use crate::grammar::render_catalog_id;
-use crate::model::{Catalog, CheckReport, Diagnostic, Expected, Id, paired_declarations};
+use crate::model::{Catalog, CheckReport, Code, Diagnostic, Expected, Id, paired_declarations};
 use crate::resolver::{WorkspaceCheckTarget, resolved_coordinate_target};
 
 /// The workspace a project is judged in (§FS-workspace.4): every loaded
@@ -114,7 +114,7 @@ pub(crate) fn judge(
             .map(|section| format!("{}{section}", target.schema.ids.section_separator))
             .unwrap_or_default();
         report.suggestions.push(Diagnostic {
-            code: "escaped-citation-resolves",
+            code: Code::ESCAPED_CITATION_RESOLVES,
             path: Some(esc.file.clone()),
             line: Some(esc.line),
             column: Some(esc.column),
@@ -230,7 +230,7 @@ fn check_unused(
             && let Some(decl) = paired_declarations(decls).iter().next().map(|p| p.record)
         {
             report.warnings.push(Diagnostic {
-                code: "unused",
+                code: Code::UNUSED,
                 path: Some(decl.file.clone()),
                 line: Some(decl.line),
                 column: None,

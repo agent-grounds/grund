@@ -40,11 +40,11 @@ fn block_close_bytes_are_wrapper_syntax_only_in_block_comments() {
         .into_iter()
         .filter(|error| {
             matches!(
-                error.code,
+                error.code.as_str(),
                 "invalid-value-declaration" | "invalid-value-binding" | "value-mismatch"
             )
         })
-        .map(|error| error.code)
+        .map(|error| error.code.as_str())
         .collect::<Vec<_>>();
     assert_eq!(value_codes, vec!["value-mismatch"]);
 

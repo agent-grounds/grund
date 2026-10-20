@@ -439,7 +439,7 @@ fn escaped_citation_that_resolves_is_suggested_not_errored() {
         !report
             .errors
             .iter()
-            .any(|d| matches!(d.code, "dangling" | "unknown-project")),
+            .any(|d| matches!(d.code.as_str(), "dangling" | "unknown-project")),
         "an escaped citation never raises a dangling or unknown-project error"
     );
     let escaped: Vec<_> = report

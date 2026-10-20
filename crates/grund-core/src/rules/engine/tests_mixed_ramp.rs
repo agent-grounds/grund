@@ -4,7 +4,7 @@
 
 use super::super::{Cardinality, RuleLevel};
 use super::ramp::{Marks, Windows, route};
-use crate::model::Diagnostic;
+use crate::model::{Code, Diagnostic};
 
 const MATCH: &str = "; a target pinned at the rule's own nested alias path now matches, and this warning becomes an error in grund 0.19.0";
 const AT_MOST_ONE: Cardinality = Cardinality {
@@ -22,7 +22,7 @@ fn windows(sites: &[Marks]) -> Windows {
 
 fn finding(message: String) -> Diagnostic {
     Diagnostic {
-        code: "forbidden-citation",
+        code: Code::FORBIDDEN_CITATION,
         path: Some("docs/use.md".into()),
         line: Some(3),
         column: None,

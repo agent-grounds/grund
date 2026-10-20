@@ -58,7 +58,7 @@ pub(crate) fn published_finding(
 ) -> Finding {
     Finding {
         severity,
-        code: diagnostic.code,
+        code: diagnostic.code.as_str(),
         path: diagnostic.path.map(|path| render_path(&path)),
         line: diagnostic.line,
         column: diagnostic.column,
@@ -91,7 +91,7 @@ pub(crate) fn run_warning_findings(config: &Config, warnings: Vec<Diagnostic>) -
         .into_iter()
         .map(|warning| Finding {
             severity: "warning",
-            code: warning.code,
+            code: warning.code.as_str(),
             path: warning.path.map(|path| display_path(config, &path)),
             line: warning.line,
             column: None,

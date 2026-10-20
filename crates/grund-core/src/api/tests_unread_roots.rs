@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use super::report::public_lsp_report;
 use super::unread_roots::unread_root_message;
 use crate::config::{Invocation, Selection, config_at, load_config_at};
-use crate::model::{CheckReport, Diagnostic, Refused, RootOrigin, RootRow};
+use crate::model::{CheckReport, Code, Diagnostic, Refused, RootOrigin, RootRow};
 use crate::testing::{test_root, write};
 
 /// A row the root gate recorded for `written`, refused by the hidden rule and, where
@@ -133,7 +133,7 @@ fn an_editor_marks_the_warning_at_the_config_not_under_its_working_directory() {
     );
     let config = load_config_at(&root, &root).expect("load the project");
     let warning = Diagnostic {
-        code: "unread-scan-root",
+        code: Code::UNREAD_SCAN_ROOT,
         path: config.config_file.clone(),
         line: Some(2),
         column: None,
@@ -171,7 +171,7 @@ fn an_editor_marks_a_members_warning_at_the_members_config() {
     let config = config_at(&member, &root, Some(&root), &invocation).expect("load the member");
     assert_eq!(config.config_file, Some(PathBuf::from("member/grund.toml")));
     let warning = Diagnostic {
-        code: "unread-scan-root",
+        code: Code::UNREAD_SCAN_ROOT,
         path: config.config_file.clone(),
         line: Some(2),
         column: None,

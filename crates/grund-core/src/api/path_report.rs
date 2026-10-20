@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use super::scope_cautions::full_scope_ignored_warning;
 use crate::checker::{ScanScope, retain_diagnostics_in_report_scope};
 use crate::config::Config;
-use crate::model::{CheckReport, Diagnostic};
+use crate::model::{CheckReport, Code, Diagnostic};
 
 /// What the caller typed that the report answers to: the path, whether it was typed
 /// at all, `--full`, and the report scope the path names (`None` over the root).
@@ -74,7 +74,7 @@ pub(super) fn unread_resolution_source_cautions(
     unread
         .into_iter()
         .map(|(file, message)| Diagnostic {
-            code: "io",
+            code: Code::IO,
             path: Some(file),
             line: None,
             column: None,

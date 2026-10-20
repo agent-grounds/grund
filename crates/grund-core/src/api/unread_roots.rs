@@ -7,7 +7,7 @@
 use std::path::Path;
 
 use crate::config::Config;
-use crate::model::{Catalog, Diagnostic, RootOrigin, RootRow};
+use crate::model::{Catalog, Code, Diagnostic, RootOrigin, RootRow};
 
 /// One located warning per unread root, at the line of the key that named it
 /// (§FS-scan.checks.unread-scan-root.location). A warning, so the exit code stays
@@ -20,7 +20,7 @@ pub(super) fn unread_root_warnings(config: &Config, findings: &Catalog) -> Vec<D
         .unread_roots
         .iter()
         .map(|row| Diagnostic {
-            code: "unread-scan-root",
+            code: Code::UNREAD_SCAN_ROOT,
             path: Some(row.config.clone()),
             line: Some(row.line),
             column: None,

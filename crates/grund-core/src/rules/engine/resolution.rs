@@ -11,7 +11,7 @@ use super::super::{ParsedRule, RuleSubject};
 use super::authority::one_rules_authority;
 use super::index::FactIndex;
 use super::selectors::select_subjects;
-use crate::model::Diagnostic;
+use crate::model::{Code, Diagnostic};
 
 /// Post-scan literal resolution belongs with selector semantics, not sentence
 /// recognition (§FS-rules.4, §AR-rules.4).
@@ -52,7 +52,7 @@ pub(super) fn unresolved_subject_diagnostic_indexed(
     // §FS-rules.4: the literal a subject spelled, as `list --selector` names it.
     let literal = rule.subject.literal()?;
     Some(Diagnostic {
-        code: "invalid-rule",
+        code: Code::INVALID_RULE,
         path: (!rule.anchor.path.is_empty()).then(|| rule.anchor.path.clone().into()),
         line: Some(if rule.origin == "--rule" {
             1

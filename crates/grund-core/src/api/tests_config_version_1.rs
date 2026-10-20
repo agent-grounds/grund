@@ -83,7 +83,7 @@ fn an_agents_config_names_the_project_root_after_the_location_warning() {
     );
     let config = load_config(&root).expect("the config loads");
     let found: Vec<_> = config_diagnostics(&config, config.display())
-        .map(|d| (d.code, d.message))
+        .map(|d| (d.code.as_str(), d.message))
         .collect();
     assert_eq!(found.len(), 2);
     assert_eq!(found[0].0, "deprecated-config-location");

@@ -499,7 +499,7 @@ pub(crate) fn error_codes(report: &CheckReport) -> Vec<String> {
     report
         .errors
         .iter()
-        .map(|error| format!("{}@{}", error.code, error.line.unwrap_or(0)))
+        .map(|error| format!("{}@{}", error.code.as_str(), error.line.unwrap_or(0)))
         .collect()
 }
 
@@ -602,7 +602,7 @@ pub(crate) fn codes(run: &CheckRun) -> Vec<String> {
         .errors
         .iter()
         .chain(run.report.warnings.iter())
-        .map(|diagnostic| diagnostic.code.to_string())
+        .map(|diagnostic| diagnostic.code.as_str().to_string())
         .collect()
 }
 
@@ -622,7 +622,7 @@ pub(crate) fn only<'a>(run: &'a CheckRun, code: &str) -> &'a Diagnostic {
 /// line and the version 1 caution are stderr lines about the scan and the
 /// config (§FS-check.checks.config-version-1).
 fn is_graph_finding(diagnostic: &Diagnostic) -> bool {
-    !matches!(diagnostic.code, "io" | "config-version-1")
+    !matches!(diagnostic.code.as_str(), "io" | "config-version-1")
 }
 
 /// The codes of [`findings`], in the order the report holds them — what a
@@ -633,7 +633,7 @@ pub(crate) fn graph_codes(run: &CheckRun) -> Vec<String> {
         .iter()
         .chain(run.report.warnings.iter())
         .filter(|diagnostic| is_graph_finding(diagnostic))
-        .map(|diagnostic| diagnostic.code.to_string())
+        .map(|diagnostic| diagnostic.code.as_str().to_string())
         .collect()
 }
 

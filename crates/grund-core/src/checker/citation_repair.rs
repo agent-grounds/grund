@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 use super::citation_prohibitions::citation_site_level;
 use super::index::marked_index_entries;
 use crate::config::{Frame, Rules, Schema};
-use crate::model::{CITATION_DIRECTION_REPAIR, Catalog, CheckReport, Expected};
+use crate::model::{CITATION_DIRECTION_REPAIR, Catalog, CheckReport, Code, Expected};
 
 /// §FS-check.3.12.2: replace only the ordinary repair at actual entry sites,
 /// retaining any trailing compatibility clause for either direction producer.
@@ -25,7 +25,7 @@ pub(crate) fn repair_index_citations(
         .errors
         .iter()
         .chain(&report.warnings)
-        .any(|finding| finding.code == "forbidden-citation")
+        .any(|finding| finding.code == Code::FORBIDDEN_CITATION)
     {
         return;
     }
@@ -34,7 +34,7 @@ pub(crate) fn repair_index_citations(
         .map(|cite| ((cite.file.as_path(), cite.line, cite.column), cite))
         .collect::<BTreeMap<_, _>>();
     for finding in report.errors.iter_mut().chain(&mut report.warnings) {
-        if finding.code != "forbidden-citation" {
+        if finding.code != Code::FORBIDDEN_CITATION {
             continue;
         }
         let (Some(path), Some(line), Some(column)) =

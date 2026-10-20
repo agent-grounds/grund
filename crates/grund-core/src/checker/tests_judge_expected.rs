@@ -24,7 +24,7 @@ type Line = (&'static str, Option<PathBuf>, Option<usize>, String);
 fn lines<'a>(diagnostics: impl IntoIterator<Item = &'a Diagnostic>) -> Vec<Line> {
     diagnostics
         .into_iter()
-        .map(|d| (d.code, d.path.clone(), d.line, d.message.clone()))
+        .map(|d| (d.code.as_str(), d.path.clone(), d.line, d.message.clone()))
         .collect()
 }
 

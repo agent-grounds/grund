@@ -9,7 +9,7 @@ use super::index::FactIndex;
 use super::ramp::{Marks, Windows, nodes_matched_before, route};
 use super::selectors::{citation_matches_targets, label, target_nodes, target_wording};
 use super::{SemanticRule, push_node};
-use crate::model::Diagnostic;
+use crate::model::{Code, Diagnostic};
 use std::collections::BTreeMap;
 
 /// Count the unit's physical rows once (§FS-rules.5.1, §FS-rules.5.3), then
@@ -60,7 +60,7 @@ pub(super) fn evaluate_cites(
                         sink,
                         facts,
                         subject,
-                        "citation-cardinality",
+                        Code::CITATION_CARDINALITY,
                         message,
                         authority,
                     );
@@ -80,12 +80,12 @@ pub(super) fn evaluate_cites(
                 let ordinary = rule.cardinality == Cardinality::AT_LEAST_ONE && count == 0;
                 let code = if ordinary {
                     if rule.level == RuleLevel::Required {
-                        "missing-citation"
+                        Code::MISSING_CITATION
                     } else {
-                        "suggested-citation"
+                        Code::SUGGESTED_CITATION
                     }
                 } else {
-                    "citation-cardinality"
+                    Code::CITATION_CARDINALITY
                 };
                 let message = if ordinary {
                     format!(

@@ -16,7 +16,7 @@ use crate::config::{
     CitationDisjunction, CitationLevel, CitationTarget, Frame, KindCitationRules, NamespaceMatch,
     Owners, Place, Row, Rules, Schema, citations_table, render_citation_target, row_grounding,
 };
-use crate::model::{Catalog, CheckReport, Citation, Diagnostic, E2eSpecRef, Id, Switch};
+use crate::model::{Catalog, CheckReport, Citation, Code, Diagnostic, E2eSpecRef, Id, Switch};
 use crate::rules::engine::one_rules_authority;
 use crate::scanner::file_home_kind;
 use crate::sources::paths_same_location;
@@ -208,7 +208,7 @@ pub(super) fn check_citation_obligations(
             for entry in &kind_rules.must {
                 if !entry.targets.iter().any(|t| unit.satisfies(t)) {
                     let diagnostic =
-                        obligation_diagnostic("missing-citation", frame, &unit, entry, "must");
+                        obligation_diagnostic(Code::MISSING_CITATION, frame, &unit, entry, "must");
                     report.push(
                         DirectionChannel::Errors,
                         citing_kind,
@@ -227,7 +227,7 @@ pub(super) fn check_citation_obligations(
                         citing_kind,
                         CitationLevel::Warn,
                         &[entry],
-                        obligation_diagnostic("missing-citation", frame, &unit, entry, "must"),
+                        obligation_diagnostic(Code::MISSING_CITATION, frame, &unit, entry, "must"),
                     );
                 }
             }
@@ -238,7 +238,13 @@ pub(super) fn check_citation_obligations(
                         citing_kind,
                         CitationLevel::Should,
                         &[entry],
-                        obligation_diagnostic("suggested-citation", frame, &unit, entry, "should"),
+                        obligation_diagnostic(
+                            Code::SUGGESTED_CITATION,
+                            frame,
+                            &unit,
+                            entry,
+                            "should",
+                        ),
                     );
                 }
             }
@@ -302,7 +308,7 @@ pub(super) fn empty_citation_obligation_warning(
         // form reaches it, named by the rule and ending at the fact.
         Obligor::Rule(origin) => {
             return Some(Diagnostic {
-                code: "empty-citation-obligation",
+                code: Code::EMPTY_CITATION_OBLIGATION,
                 path: None,
                 line: None,
                 column: None,
@@ -347,7 +353,7 @@ pub(super) fn empty_citation_obligation_warning(
         )
     };
     Some(Diagnostic {
-        code: "empty-citation-obligation",
+        code: Code::EMPTY_CITATION_OBLIGATION,
         path: None,
         line: None,
         column: None,
@@ -378,7 +384,7 @@ fn kind_entry_file(file: &Path, frame: Frame<'_>, row: &Row) -> bool {
 }
 
 fn obligation_diagnostic(
-    code: &'static str,
+    code: Code,
     frame: Frame<'_>,
     unit: &ObligationUnit<'_>,
     entry: &CitationDisjunction,

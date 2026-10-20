@@ -63,7 +63,7 @@ fn errors(root: &Path) -> Vec<String> {
         .report
         .errors
         .into_iter()
-        .map(|error| format!("{}: {}", error.code, error.message))
+        .map(|error| format!("{}: {}", error.code.as_str(), error.message))
         .collect()
 }
 

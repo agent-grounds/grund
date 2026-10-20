@@ -149,7 +149,7 @@ fn stub_resolution_prefers_markdown_relative_target() {
         !report
             .errors
             .iter()
-            .any(|error| matches!(error.code, "broken-stub" | "duplicate")),
+            .any(|error| matches!(error.code.as_str(), "broken-stub" | "duplicate")),
         "markdown-relative inline-spec stub should not be broken or duplicate: {:?}",
         report
             .errors

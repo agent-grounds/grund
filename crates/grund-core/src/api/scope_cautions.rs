@@ -18,7 +18,7 @@ use std::path::Path;
 use crate::checker::{ScanScope, scope_read_any_file};
 use crate::config::{Config, Display, format_guidance, kind_prefixes, source_scope_name};
 use crate::grammar::id_shape;
-use crate::model::{Catalog, Diagnostic, format_path, normalize_path_lexically};
+use crate::model::{Catalog, Code, Diagnostic, format_path, normalize_path_lexically};
 use crate::scanner::{Unread, extension_refusal, name_refusal, pruning_pattern};
 use crate::workspace::scope_is_config_root;
 
@@ -189,7 +189,7 @@ pub(super) fn empty_scan_warning(
         },
     };
     Diagnostic {
-        code: "empty-scan",
+        code: Code::EMPTY_SCAN,
         path: None,
         line: None,
         column: None,
@@ -251,7 +251,7 @@ fn nothing_recognized_warning(config: &Config, scanned_files: usize) -> Diagnost
         )
     };
     Diagnostic {
-        code: "nothing-recognized",
+        code: Code::NOTHING_RECOGNIZED,
         path: None,
         line: None,
         column: None,
@@ -291,7 +291,7 @@ pub(super) fn full_scope_ignored_warning(
             .unwrap_or_else(|_| normalize_path_lexically(path))
     };
     Some(Diagnostic {
-        code: "full-scope-ignored",
+        code: Code::FULL_SCOPE_IGNORED,
         path: None,
         line: None,
         column: None,

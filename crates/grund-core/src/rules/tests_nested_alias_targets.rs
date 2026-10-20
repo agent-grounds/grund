@@ -138,7 +138,10 @@ fn at_most(maximum: usize) -> Cardinality {
 }
 
 fn codes(diagnostics: &[Diagnostic]) -> Vec<(&str, Option<usize>)> {
-    diagnostics.iter().map(|d| (d.code, d.line)).collect()
+    diagnostics
+        .iter()
+        .map(|d| (d.code.as_str(), d.line))
+        .collect()
 }
 
 #[test]
@@ -218,7 +221,10 @@ fn bare_kinds_any_member_and_other_member_pins_judge_as_before() {
     ] {
         let (errors, warnings) = evaluate(&[bans(&[target])], &[], &facts());
         assert!(warnings.is_empty(), "{target}: {:?}", codes(&warnings));
-        let found: Vec<_> = errors.iter().map(|d| (d.code, d.line.unwrap())).collect();
+        let found: Vec<_> = errors
+            .iter()
+            .map(|d| (d.code.as_str(), d.line.unwrap()))
+            .collect();
         let expected: Vec<_> = lines.iter().map(|&l| ("forbidden-citation", l)).collect();
         assert_eq!(found, expected, "{target}");
     }

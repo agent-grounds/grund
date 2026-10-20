@@ -10,6 +10,7 @@
 use std::path::PathBuf;
 
 use super::armed::Armed;
+use super::codes::Code;
 
 /// A secondary location attached to a diagnostic — e.g. the other declaration in a
 /// duplicate pair, or the citation that pointed at a missing section (§FS-errors.2.1).
@@ -39,13 +40,27 @@ pub(crate) const LANDED_CLAUSE: &str = "; this became an error in grund 0.16.0";
 /// said it (§FS-rules.6).
 #[derive(Clone)]
 pub(crate) struct Diagnostic {
-    pub(crate) code: &'static str,
+    pub(crate) code: Code,
     pub(crate) path: Option<PathBuf>,
     pub(crate) line: Option<usize>,
     pub(crate) column: Option<usize>,
     pub(crate) message: String,
     pub(crate) sites: Vec<Site>,
     pub(crate) authority: Vec<String>,
+}
+
+/// The run's own cautions that travel as diagnostics without being check
+/// findings. None renders as one of `check`'s JSON objects — each keeps its text
+/// on every surface — so none has a §FS-errors.5.5 row or enters the selector
+/// vocabulary, and these are what an editor tags a published diagnostic with and
+/// what a test selects one by.
+impl Code {
+    /// §FS-check.4.10.9: a `[workspace]` block whose own files no scan read.
+    pub(crate) const UNREAD_WORKSPACE_BLOCK: Code = Code("unread-workspace-block");
+    /// §FS-workspace.6.1.7: an ancestor's claim on a block that could not be read.
+    pub(crate) const UNDECIDABLE_WORKSPACE_CLAIM: Code = Code("undecidable-workspace-claim");
+    /// §FS-config.3.9.5.2: a `[citations]` target the run loads without accepting it.
+    pub(crate) const UNACCEPTED_CITATION_TARGET: Code = Code("unaccepted-citation-target");
 }
 
 /// The outcome of `check`: errors and warnings, kept apart so the exit code keys

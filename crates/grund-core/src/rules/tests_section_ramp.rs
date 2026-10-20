@@ -99,7 +99,10 @@ fn at_most(maximum: usize, mode: TargetMode) -> ParsedRule {
 }
 
 fn codes(diagnostics: &[Diagnostic]) -> Vec<(&str, Option<usize>)> {
-    diagnostics.iter().map(|d| (d.code, d.line)).collect()
+    diagnostics
+        .iter()
+        .map(|d| (d.code.as_str(), d.line))
+        .collect()
 }
 
 #[test]
