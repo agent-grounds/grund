@@ -123,6 +123,25 @@ fn an_unknown_target_says_why_in_its_version() {
     }
 }
 
+/// §FS-config-explain.5: a key its table does not admit names the keys written
+/// under the header, which an inline member, answered as a target, is not.
+#[test]
+fn an_unknown_key_names_the_written_keys_and_no_member() {
+    match unknown_of(ask(1, "[reference] nope")) {
+        ExplainUnknown::Key { admitted, .. } => {
+            assert!(
+                admitted.contains(&"lead_size_warning".into()),
+                "{admitted:?}"
+            );
+            assert!(
+                !admitted.contains(&"lead_size_warning.max".into()),
+                "{admitted:?}"
+            );
+        }
+        other => panic!("{other:?}"),
+    }
+}
+
 /// §FS-config-explain.4: a code a version never turns on is still answered there.
 #[test]
 fn a_code_is_answered_in_both_versions_and_listed_where_reported() {

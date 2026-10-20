@@ -1,7 +1,7 @@
 //! §FS-config-explain.1.1: what a target names in one version, read against
 //! the tables and keys that version's reader admits, and the code catalog.
 
-use super::ExplainUnknown;
+use super::{ExplainUnknown, is_member_of};
 use crate::config::v2::v1_homes;
 use crate::config::vocabulary::admitted;
 use crate::model::Code;
@@ -47,9 +47,16 @@ pub(super) fn resolve<'a>(
         None => Resolved::Unknown(ExplainUnknown::Key {
             table: tables[at].0.clone(),
             key: key.to_string(),
-            admitted: tables[at].1.clone(),
+            admitted: written_keys(&tables[at].1),
         }),
     }
+}
+
+/// §FS-config-explain.5: the keys a table's reader admits under its header, as
+/// its refusal names them: an inline member is asked about, never written there.
+fn written_keys(keys: &[String]) -> Vec<String> {
+    let written = |key: &&String| !keys.iter().any(|outer| is_member_of(key, outer));
+    keys.iter().filter(written).cloned().collect()
 }
 
 /// A bracketed target's header and its key, `""` for the table itself: the key
