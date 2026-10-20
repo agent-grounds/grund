@@ -396,6 +396,9 @@ The block teaches the configured citation scheme: IDs have the configured shape,
 
 The block teaches the cheap grounding ladder: use `grund <ID>` as the first read for a bare citation, `grund <ID> --brief` when the heading and first paragraph are enough, `grund <ID> --toc` when section navigation is needed, `grund <ID>.<section>` for section citations, `grund <ID> --full` only when a narrower read is insufficient, `grund list --kind FS,AR` for scoped discovery, and `grund refs <ID> --summary` before a full citation listing. Beside that ladder it teaches `grund list --size=words --top 10` as the sweep to run when a specification feels heavy, so the agent can move detail into citable child sections before paying for an oversized lead.
 
+Beside the `refs` rung, it teaches the before-and-after declaration maintenance
+workflow of [§FS-init.2.3.4.9](FS-init.md#2349-declaration-blast-radius).
+
 ###### 2.3.4.3.1 Structural queries
 
 Beside the ladder, which reads one coordinate at a time, the block teaches how to read structure across many in one bullet, with no pipe to leave the session for: `grund list --glob '<pattern>' --total` counts the coordinates a pattern selects ([§FS-list.total](FS-list.md#total---total-a-count-rung)), and `grund show --batch --glob '<pattern>' --toc --format json` reads each one's section map in the same scan ([§FS-show.1.9](FS-show.md#19---batch---all-every-coordinate-in-scope), [§FS-show.2.1.2](FS-show.md#212-section-map---toc)), from `.result.sections[]`. The bullet names `*`, `**` and `{a,b}` ([§FS-coordinate-globs.grammar](FS-coordinate-globs.md#grammar-grammar)), and links the user-facing query guide by its absolute URL, `https://github.com/agent-grounds/grund/blob/main/docs/user-facing/querying.md`, because the block lands in repositories that have no `docs/user-facing/` of their own ([§REQ-shipped-surfaces](../requirements/REQ-shipped-surfaces.md#req-shipped-surfaces-what-grund-ships-or-prints-resolves-where-it-lands)).
@@ -464,6 +467,18 @@ The rules tell agents to refresh the cited declaration with `grund <ID>` before 
 ##### 2.3.4.9 Declaration Blast Radius
 
 The rules tell agents to run `grund refs <ID> --summary` before changing, moving, or renaming a declaration, and to use the full `grund refs <ID>` output when exact citation sites are needed.
+
+The generated guidance connects that discovery to the author's next actions:
+edit the declaration and affected authored citation IDs, then run `grund fmt --write`
+from the project's config root or workspace root to re-derive generated Markdown
+link destinations and anchors when link emission applies
+([§FS-fmt.6.3](FS-fmt.md#63-idempotency-and-re-derive)) and maintain eligible section locks
+([§FS-section-lock.write.rules](FS-section-lock.md#writerules-add-refresh-drop)).
+It directs the reader to verify with `grund check` and `grund fmt --check` and commit
+the resulting lock changes. The workflow does not ask the reader to hand-edit locks
+or imply that `fmt` replaces authored IDs, repairs arbitrary URLs, renames an
+ID-keyed lock on a file move alone ([§FS-section-lock.file.shard](FS-section-lock.md#fileshard-one-file-per-cited-declaration)),
+or approves a protected section move ([§FS-section-lock.write.never-a-move](FS-section-lock.md#writenever-a-move-fmt-never-approves-a-move)).
 
 ##### 2.3.4.10 Citation Direction
 
@@ -772,6 +787,16 @@ Adding the fixed sentence bumped the managed-block version to **v4**; adding the
 The canonical text for a given block version `vN` is embedded in the `grund` binary; its one copy in the source tree is `crates/grund-core/assets/templates/AGENTS.md`, which the binary embeds. The `vN` in the block's version heading ([§FS-init.2.3.9](FS-init.md#239-delimiters)) is what versions it under [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations), so changing the block's fixed canonical text is itself a block-version bump, carried by that mechanism, not a silent rewrite. What `vN` versions is that fixed text, not the lines substituted in ([§FS-init.2.3.8](FS-init.md#238-substituted-content)): the inline citation style sentences among them ([§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering)) move no version, because they are rendered, not live ([§FS-inline-citation-style.5.6](FS-inline-citation-style.md#56-no-managed-block-version)). `vN` is the revision of the block's text and nothing else: it is not a grund release, the two numbers move independently, and a grund release is read from `grund -V` alone. The heading says so by labelling it `block vN` ([§FS-init.2.3.9.3](FS-init.md#2393-the-headings-two-spellings)).
 
 ##### 2.3.7.1 The current version
+
+Teaching the declaration-maintenance workflow ([§FS-init.2.3.4.9](FS-init.md#2349-declaration-blast-radius))
+changes the fixed canonical text and advances both current pairs: v31/v32 becomes
+**v35/v36** and v33/v34 becomes **v37/v38**. The maximum supported version becomes
+v38; each config keeps its pair selection, four higher. An earlier block is
+outdated and one `grund init` re-renders it, preserving unmanaged content. The
+decision's release note names these pairs and the remedy
+([§DF-fmt-maintenance-guidance.release-note](../decisions/functional/DF-fmt-maintenance-guidance.md#release-note-release-note),
+[§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)).
+The rest of this section records the preceding bumps.
 
 Labelling the version heading `block vN` ([§FS-init.2.3.9.3](FS-init.md#2393-the-headings-two-spellings)) changes the block's fixed
 text, so both current pairs advance again: v27/v28 becomes **v31/v32** and v29/v30 becomes

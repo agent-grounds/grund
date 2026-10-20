@@ -155,6 +155,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 
 ## Agent-facing surfaces
 
+- [§DF-fmt-maintenance-guidance](DF-fmt-maintenance-guidance.md#df-fmt-maintenance-guidance-teach-the-existing-post-rename-formatter-maintenance) — teach the existing post-rename formatter maintenance
 - [§DF-project-namespaces-in-workspaces](DF-project-namespaces-in-workspaces.md#df-project-namespaces-in-workspaces-teach-project-boundaries-in-workspace-blocks-and-member-splitting-in-setup-instructions) — teach project boundaries in workspace blocks and member splitting in setup instructions
 - [§DF-scoped-guidance](DF-scoped-guidance.md#df-scoped-guidance-a-version-2-rows-guidance-is-written-above-its-places-with-a-root-pointer-for-agents-that-do-not-load-nested-files) — a version-2 row's guidance is written above its places, with a root pointer for agents that do not load nested files
 - [§DF-managed-block-delimiters](DF-managed-block-delimiters.md#df-managed-block-delimiters-standard-beginend-delimiters-for-the-managed-agent-instructions-block) — standard BEGIN/END delimiters for the managed agent-instructions block
