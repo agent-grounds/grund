@@ -350,7 +350,7 @@ calls that load a tree; the table names additional operation-specific cases.
 | `fetch(id: string, options?: RootOptions): Promise<FetchResult>` | Explicit fetch is the write authorization; no invented preview flag | `fetch_snapshot_with_run_warnings`, additive typed `fetch_outcome` before string flattening | id/cautions; typed query/config/io/operation failures; captures integration outputs as core does. Only this operation executes configured integration; no implicit fetching. |
 | `integrations(options?: IntegrationOptions): Promise<IntegrationResult>` | client=null, write=false, conversation=null, conversationTarget=null, agent=null; client set codium/iterm2/kitty/tmux/vscode/wezterm; conversation plain/link; target file/path/web/vscode/vscodium/cursor | Existing IntegrationClient/detection/artifact/managed writers; additive shared `integrations_outcome` orchestration | detected clients/descriptors/artifact data or events/notes/preferences/manualSteps, cautions; user-global operation, no root. Preserve validation, user-config-before-write, active-agent gates and owned paths. Only explicit write mutates. No fabricated CLI JSON-install mode. |
 | `referenceStyle(path: string): Promise<StyleResult>` | explicit document path | `reference_style`, typed `reference_style_outcome` | marker/trigger/cautions; member configuration wins exactly as core. |
-| `agentSetupInstructions(): Promise<SetupResult>` | none | `AGENT_SETUP_INSTRUCTIONS` through `canonical_template_text` | instructions, empty cautions; existing packaged workflow returned as data, never printed. |
+| `agentSetupInstructions(): Promise<SetupResult>` | none | the whole setup guide through `canonical_template_text`: the text `grund agent-setup-instructions --full` prints ([§FS-init.5.5](FS-init.md#55-the-core-and-its-sections)) | instructions, empty cautions; existing packaged workflow returned as data, never printed. No section argument: the caller chooses what of the guide reaches a model. |
 
 `summaries` and `totals` in refs are transport projections over existing hits,
 with byte-sorted paths and site counts; no new graph query or resolution rule.
@@ -846,7 +846,7 @@ instructions have no root. Defaults below are normative, not merely examples.
 | `fetch(id, *, write=False)` | Materialized snapshot; explicit write required |
 | `integrations(client=None, *, write=False, conversation=None, conversation_target=None, agent=None)` | Detection/artifacts or managed install |
 | `complete_ids(prefix="", *, sections=False)` / `reference_style()` | Completion/style data |
-| `agent_setup_instructions()` | Canonical setup payload |
+| `agent_setup_instructions()` | Canonical setup payload: the whole guide, the text `grund agent-setup-instructions --full` prints ([§FS-init.5.5](FS-init.md#55-the-core-and-its-sections)) |
 
 Modes are lead/brief/toc/full; formats text/md/json. Filters/selectors are string
 sequences. Units are lines/words/bytes; top is positive, width non-negative.

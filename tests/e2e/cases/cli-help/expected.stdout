@@ -19,6 +19,6 @@ Set up:
   schema        Kinds, places, shapes and citation rules at a glance.   grund schema
   integrations  Print/install clickable-citation integrations.          grund integrations wezterm
   completions   Print shell completion scripts.                         grund completions bash
-  agent-setup-instructions  Print the setup guide for AI agents.
+  agent-setup-instructions  Guided setup for agents; --section NAME for more. Fresh: grund init -h
 
 Guides and examples:  https://github.com/agent-grounds/grund/tree/main/docs/user-facing
