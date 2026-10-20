@@ -6,16 +6,14 @@ operation/fixture matrix in `corpus.py`. Each binding's own side is a directory
 of its own, as its source is one directory under `crates/`
 ([§AR-bindings.1](../../docs/architecture/AR-bindings.md#1-target-workspace-layout)): Python's in [`python/`](python/), Node's in [`node/`](node/).
 
-Run Python's from the checkout after installing it with
-`python -m pip install crates/grund-py`:
+The Python gate runs Python's on every push and pull request, through
+`tests/integration/test_python_binding_acceptance.py`
+([§AR-bindings.6.2](../../docs/architecture/AR-bindings.md#62-the-python-acceptance-runs-in-the-gate)), as it runs Node's. To run it by hand from the checkout,
+install it with `python -m pip install crates/grund-py` first:
 
 ```sh
 python tests/bindings/python/run.py
 ```
-
-Before implementation this entrypoint fails with ModuleNotFoundError. No deeper
-assertion is claimed to have executed behind that failure. The existing integration
-gate stays independent; it proves baseline behavior, not Python availability.
 
 The implementer supplies a core-only test driver at
 `target/debug/grund-binding-oracle` (with `.exe` on Windows). It reads one JSON
@@ -23,6 +21,7 @@ request from stdin with `operation`, native `root`, positional `args`, keyword
 `options`, and optional isolated `home`. It uses supported core data-returning APIs
 and the approved additive adapters. It must not call a CLI or a Python converter.
 Build it with an explicit checkout target directory before running acceptance.
+`GRUND_BINDINGS_ORACLE`, when set, names another build of it, as the Python gate's.
 
 It returns one JSON response with `data` (the complete public envelope) and
 `canonical` (base64 of independently encoded canonical UTF-8 bytes). For checks

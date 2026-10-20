@@ -149,6 +149,13 @@ class ApiTests(unittest.TestCase):
             self.assertEqual((), failure.sites)
             self.assertTrue(failure.details, "number-only ambiguity retains structured candidates")
 
+    def test_empty_batch_is_a_complete_result_without_configuration(self):
+        # §FS-distribution.3.0.2: an empty batch succeeds without loading configuration.
+        with temporary() as temp:
+            root = fixture(temp, "check-invalid-config-json")
+            self.assertEqual(self.g.BatchResult(records=(), note=None, run_cautions=()),
+                             self.g.show_batch((), root=root))
+
     def test_config_filesystem_and_operation_failures_have_payloads(self):
         with temporary() as temp:
             root = fixture(temp, "check-invalid-config-json")
