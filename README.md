@@ -81,7 +81,10 @@ finding it reports is listed in
 ## Agent instructions
 
 `init` also writes the structure into your agent's instructions, a managed block in
-`AGENTS.md` that `grund init --check` keeps current. For example, grund's own
+`AGENTS.md` that `grund init --check` keeps current. The number in its heading is the
+block's revision, not a grund release
+([the setup guide](docs/user-facing/init.md#the-blocks-revision-is-not-grunds-release)
+says how the two differ). For example, grund's own
 [`AGENTS.md`](AGENTS.md) tells an agent how to read a citation:
 
 > A `§<ID>` is a pointer to a fact, not a file path. Resolve it with `grund` and climb only as far as needed:
