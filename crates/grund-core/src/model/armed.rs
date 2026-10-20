@@ -19,7 +19,8 @@ pub enum Switch {
     MustDirection,
     /// A `must-not` or `warn-not` entry, or a `must not` rule.
     MustNotDirection,
-    /// A `must` or `should` obligation, an entry's or a rule's.
+    /// A `must` or `should` obligation, an entry's or a rule's, on a scanned kind
+    /// with a folder home: no other kind's obligation can apply to nothing.
     Obligation,
     /// A `should` entry or rule.
     ShouldDirection,
@@ -45,7 +46,8 @@ pub enum Switch {
     NamedSections,
     /// A heading-depth mode that checks.
     HeadingDepth,
-    /// A grounded place, by config or `--require-grounding`.
+    /// A place grounding reaches: its row's own word, else the default that
+    /// `[reference]` or `--require-grounding` sets, or a softer v2 rung.
     Grounding,
     /// `[workspace] optional_members`, in any block the run expands.
     OptionalMember,

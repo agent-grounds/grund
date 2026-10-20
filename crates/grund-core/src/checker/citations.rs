@@ -164,8 +164,11 @@ pub(super) fn check_citation_obligations(
         {
             continue;
         }
-        // §FS-check.1.4.1: past this gate the obligation checks are on, each level's own.
-        report.arm(Switch::Obligation);
+        // §FS-check.1.4.1: past this gate the obligation checks are on, each level's own,
+        // and the empty one where its kind can have no unit.
+        if can_apply_to_nothing(schema, citing_kind, false).is_some() {
+            report.arm(Switch::Obligation);
+        }
         if !kind_rules.must.is_empty() || !kind_rules.warn.is_empty() {
             report.arm(Switch::MustDirection);
         }
@@ -250,6 +253,24 @@ pub(super) enum Obligor<'a> {
     Rule(&'a str),
 }
 
+/// §FS-check.2.2.1.1 condition 2: the row an obligation on `citing_kind` can find
+/// with no unit, a scanned kind with a `folder` home, citable where a rule holds it
+/// (§FS-check.2.2.1.2). The warning below and the switch that arms it both ask it
+/// (§FS-check.1.4.1), so the two cannot disagree.
+pub(super) fn can_apply_to_nothing<'a>(
+    schema: &'a Schema,
+    citing_kind: &str,
+    by_rule: bool,
+) -> Option<&'a Row> {
+    let row = schema
+        .rows
+        .iter()
+        .find(|row| row.name == citing_kind && !row.is_complement())?;
+    let scanned = row.places.first().is_none_or(|place| place.scanned);
+    let citable = !by_rule || row.kind.is_some();
+    (row.folders().next().is_some() && scanned && citable).then_some(row)
+}
+
 /// §FS-check.2.2.1.1: identify the one run-level warning for a walked folder whose
 /// explicit obligation has real scanned content but no ordinary obligation unit.
 /// The warning is derived from the same normalized home classifier the scanner
@@ -264,32 +285,22 @@ pub(super) fn empty_citation_obligation_warning(
     citing_kind: &str,
     obligor: Obligor<'_>,
 ) -> Option<Diagnostic> {
-    let row = schema
-        .rows
-        .iter()
-        .find(|row| row.name == citing_kind && !row.is_complement())?;
-    // §FS-config-v2.schema.places: every folder of the row, named together.
-    let folders: Vec<String> = row.folders().map(|folder| format!("{folder}/")).collect();
-    if folders.is_empty() {
-        return None;
-    }
-    let scanned = row.places.first().is_none_or(|place| place.scanned);
-    if !scanned
-        || !findings.scanned_files.iter().any(|file| {
-            file_home_kind(file, schema, frame).as_deref() == Some(citing_kind)
-                && !kind_entry_file(file, frame, row)
-        })
-    {
+    let row = can_apply_to_nothing(schema, citing_kind, matches!(obligor, Obligor::Rule(_)))?;
+    if !findings.scanned_files.iter().any(|file| {
+        file_home_kind(file, schema, frame).as_deref() == Some(citing_kind)
+            && !kind_entry_file(file, frame, row)
+    }) {
         return None;
     }
 
+    // §FS-config-v2.schema.places: every folder of the row, named together.
+    let folders: Vec<String> = row.folders().map(|folder| format!("{folder}/")).collect();
     let place = folders.join(", ");
     let kind_rules = match obligor {
         Obligor::Table(kind_rules) => kind_rules,
         // §FS-check.2.2.1.2: a rule's subject is citable, so only the declaration
         // form reaches it, named by the rule and ending at the fact.
         Obligor::Rule(origin) => {
-            row.kind.as_ref()?;
             return Some(Diagnostic {
                 code: "empty-citation-obligation",
                 path: None,

@@ -6,19 +6,24 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::citations::{Obligor, empty_citation_obligation_warning};
+use super::citations::{Obligor, can_apply_to_nothing, empty_citation_obligation_warning};
 use super::obligation_units::obligation_units;
 use crate::config::{Frame, Owners, Rules, Schema};
 use crate::model::{Armed, Catalog, Diagnostic, Switch};
 use crate::rules::sentence::{ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject};
 
 /// §FS-check.1.4.1: what each rule turns on beside the rule checks — the obligation
-/// a `must` or `should` rule holds its subject to, and the direction a citation
-/// rule reports at its level. A rule the run could not read may have been any of
-/// them, and its `invalid-rule` row says why it judged nothing, so it arms them
-/// all: every code these switches turn on is a rule-produced code, which the
-/// selection carries that row with (§FS-rules.7.6).
-pub(super) fn arm_rule_directions(parsed_rules: &[ParsedRule], unread: bool, armed: &mut Armed) {
+/// a `must` or `should` rule holds its subject to, where that subject can have no
+/// unit, and the direction a citation rule reports at its level. A rule the run
+/// could not read may have been any of them, and its `invalid-rule` row says why
+/// it judged nothing, so it arms them all: every code these switches turn on is a
+/// rule-produced code, which the selection carries that row with (§FS-rules.7.6).
+pub(super) fn arm_rule_directions(
+    parsed_rules: &[ParsedRule],
+    schema: &Schema,
+    unread: bool,
+    armed: &mut Armed,
+) {
     if unread {
         for switch in [
             Switch::Obligation,
@@ -34,7 +39,11 @@ pub(super) fn arm_rule_directions(parsed_rules: &[ParsedRule], unread: bool, arm
         let cites = rule.relation != RuleRelation::HaveChapter;
         match (rule.polarity, rule.level) {
             (RulePolarity::Positive, level) => {
-                armed.arm(Switch::Obligation);
+                if obligation_subject(rule)
+                    .is_some_and(|kind| can_apply_to_nothing(schema, kind, true).is_some())
+                {
+                    armed.arm(Switch::Obligation);
+                }
                 if cites {
                     armed.arm(match level {
                         RuleLevel::Required => Switch::MustDirection,
@@ -66,21 +75,30 @@ pub(super) fn empty_rule_obligations(
     let mut seen = BTreeSet::new();
     parsed_rules
         .iter()
-        .filter(|rule| rule.polarity == RulePolarity::Positive)
         .filter_map(|rule| {
-            let kind = match &rule.subject {
-                RuleSubject::Kind(kind) | RuleSubject::ChapterOfKind { kind, .. } => kind,
-                RuleSubject::ExactDeclaration(_) | RuleSubject::ExactChapter { .. } => {
-                    return None;
-                }
-            };
-            // A kind of another project is that project's to ask.
-            if kind.contains('/') || !seen.insert((rule.origin.as_str(), kind.as_str())) {
+            let kind = obligation_subject(rule)?;
+            if !seen.insert((rule.origin.as_str(), kind)) {
                 return None;
             }
             empty_rule_obligation_warning(rules, schema, frame, findings, kind, &rule.origin)
         })
         .collect()
+}
+
+/// The kind a `must` or `should` rule holds to an obligation in this project, which
+/// the line above and the switch that arms it ask alike: none for a prohibition or
+/// an exact subject, and none for a kind of another project, which is that
+/// project's to ask.
+fn obligation_subject(rule: &ParsedRule) -> Option<&str> {
+    if rule.polarity != RulePolarity::Positive {
+        return None;
+    }
+    match &rule.subject {
+        RuleSubject::Kind(kind) | RuleSubject::ChapterOfKind { kind, .. } => {
+            (!kind.contains('/')).then_some(kind.as_str())
+        }
+        RuleSubject::ExactDeclaration(_) | RuleSubject::ExactChapter { .. } => None,
+    }
 }
 
 /// §FS-check.2.2.1.4: a `must` or `should` rule about `citing_kind` earns the

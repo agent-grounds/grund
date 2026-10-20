@@ -28,7 +28,10 @@ pub(super) fn v2(name: &str, extra: &str, tail: &str) -> PathBuf {
     root
 }
 
-fn run(root: PathBuf, flags: impl FnOnce(&mut CheckOpts)) -> (Vec<Finding>, ArmedChecks) {
+pub(super) fn run(
+    root: PathBuf,
+    flags: impl FnOnce(&mut CheckOpts),
+) -> (Vec<Finding>, ArmedChecks) {
     let mut opts = CheckOpts {
         path: root,
         path_provided: true,
@@ -226,7 +229,7 @@ fn an_optional_member_arms_its_absence() {
 /// The rule twin of the e2e `check-rule-applies-to-nothing-declared` project:
 /// a `RULE-e2e` whose subject kind is homed by `e2e_home`, holding `files`
 /// (§FS-check.2.2.1.4).
-fn rule_project(name: &str, e2e_home: &str, files: &[(&str, &str)]) -> PathBuf {
+pub(super) fn rule_project(name: &str, e2e_home: &str, files: &[(&str, &str)]) -> PathBuf {
     let rule = format!(
         "[schema.kinds.e2e]\n{e2e_home}\n\
          [schema.kinds.RULE]\nfolders = [\"docs/rules\"]\nindex = false\nform = \"rule\"\n"
@@ -242,7 +245,7 @@ fn rule_project(name: &str, e2e_home: &str, files: &[(&str, &str)]) -> PathBuf {
     root
 }
 
-const FOLDER: &str = "folders = [\"tests/e2e\"]\nindex = false";
+pub(super) const FOLDER: &str = "folders = [\"tests/e2e\"]\nindex = false";
 
 fn applies_to_nothing(warnings: &[Finding]) -> Vec<&str> {
     warnings

@@ -99,8 +99,12 @@ const SWITCH_ADVICE: &[(Switch, Option<&str>, Option<&str>)] = &[
     ),
     (
         Switch::Obligation,
-        Some("[citations.<kind>] must or should, or a must or should rule, is set"),
-        Some("[rules.citations.<kind>] must or should, or a must or should rule, is set"),
+        Some(
+            "[citations.<kind>] must or should, or a must or should rule, is set for a scanned kind with a folder home",
+        ),
+        Some(
+            "[rules.citations.<kind>] must or should, or a must or should rule, is set for a scanned kind with a folder home",
+        ),
     ),
     (
         Switch::ShouldDirection,
@@ -168,8 +172,12 @@ const SWITCH_ADVICE: &[(Switch, Option<&str>, Option<&str>)] = &[
     ),
     (
         Switch::Grounding,
-        Some("[reference] require_grounding = true is set or --require-grounding is passed"),
-        Some("a must rung of [rules.citations.grounding] is set or --require-grounding is passed"),
+        Some(
+            "require_grounding = true is set on a [[kinds]] row, or in [reference] or by --require-grounding for a kind whose row does not set it false",
+        ),
+        Some(
+            "a must rung is set in [rules.citations.<kind>.grounding], or in [rules.citations.grounding] or by --require-grounding for a kind with no ladder of its own",
+        ),
     ),
     (
         Switch::OptionalMember,

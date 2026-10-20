@@ -3,12 +3,14 @@
 //! as by a value kind, and by a value tag the scan found with no switch at all,
 //! and `optional-member-absent` by a nested block's list as by the root's — and
 //! one whose cell needs two things only by both, as `missing-snapshot` needs a
-//! fetched kind and its `should` resolution. Each source is pinned off and on,
-//! as `tests_armed_switches` pins the rest.
+//! fetched kind and its `should` resolution, `empty-citation-obligation` an
+//! obligation and a folder home, and `ungrounded` a default and a place it
+//! reaches. Each source is pinned off and on, as `tests_armed_switches` pins the
+//! rest.
 
 use std::path::{Path, PathBuf};
 
-use super::tests_armed_switches::{armed, pinned, v2};
+use super::tests_armed_switches::{FOLDER, armed, pinned, rule_project, run, v2};
 use crate::model::Switch;
 use crate::testing::{test_root, write};
 
@@ -116,6 +118,114 @@ fn only_a_fetched_kind_that_warns_arms_missing_snapshot() {
     for off in [armed(v1("armed_snapshot_v1_none", "")), v1_alone] {
         pinned(Switch::SnapshotWarning, code, off, v1_on.clone());
     }
+}
+
+/// §FS-check.1.4.1, §FS-check.2.2.1.1: an obligation arms `empty-citation-obligation`
+/// only on a scanned kind with a folder home, the only kind it warns about, so an
+/// entry's or a rule's on a file home, and an entry's on the homeless kind, leave
+/// it off. The advice names the folder home, in the version the project reads.
+#[test]
+fn only_an_obligation_that_can_apply_to_nothing_arms_its_line() {
+    let code = "empty-citation-obligation";
+    let e2e = |name: &str, home: &str| {
+        let tail =
+            format!("[schema.kinds.e2e]\n{home}\n\n[rules.citations.e2e]\nmust = [\"FS\"]\n");
+        armed(v2(name, "", &tail))
+    };
+    let on = e2e("armed_obligation_folder", FOLDER);
+    let file = e2e("armed_obligation_file", "files = [\"tests/e2e/login.md\"]");
+    assert_eq!(
+        file.off_advice(code).as_deref(),
+        Some(
+            "the check is off until [rules.citations.<kind>] must or should, or a must or should rule, is set for a scanned kind with a folder home"
+        )
+    );
+    let homeless = "[rules.citations.code]\nmust = [\"FS\"]\n";
+    let homeless = armed(v2("armed_obligation_homeless", "", homeless));
+    for off in [file, homeless] {
+        pinned(Switch::Obligation, code, off, on.clone());
+    }
+    let goal =
+        "\n[[kinds]]\nkind = \"GOAL\"\nfile = \"goals.md\"\n\n[citations.GOAL]\nmust = [\"AR\"]\n";
+    let v1_file = armed(v1("armed_obligation_v1_file", goal));
+    assert_eq!(
+        v1_file.off_advice(code).as_deref(),
+        Some(
+            "the check is off until [citations.<kind>] must or should, or a must or should rule, is set for a scanned kind with a folder home"
+        )
+    );
+    let v1_folder = armed(v1(
+        "armed_obligation_v1_folder",
+        "\n[citations.AR]\nmust = [\"AR\"]\n",
+    ));
+    pinned(Switch::Obligation, code, v1_file, v1_folder);
+
+    let rule_file = rule_project(
+        "armed_rule_file_home",
+        "files = [\"tests/e2e/login.md\"]",
+        &[],
+    );
+    let rule_folder = rule_project("armed_rule_folder_home", FOLDER, &[]);
+    pinned(
+        Switch::Obligation,
+        code,
+        armed(rule_file),
+        armed(rule_folder),
+    );
+}
+
+/// A version-1 project whose `[reference]` and `code` row set `require_grounding`
+/// to `default` and `code`, and whose `AR` row sets it `false`.
+fn grounding(name: &str, default: bool, code: bool) -> PathBuf {
+    let root = test_root(name);
+    write(
+        &root.join("grund.toml"),
+        &format!(
+            "grund_config_version = 1\n\n[reference]\nstrict = true\nrequire_grounding = {default}\n\n\
+             [id]\nformat = \"{{kind}}-{{slug}}\"\n\n\
+             [[kinds]]\nkind = \"AR\"\nfolder = \"docs\"\nindex = false\nrequire_grounding = false\n\n\
+             [[kinds]]\nkind = \"code\"\ncitable = false\nrequire_grounding = {code}\n"
+        ),
+    );
+    write(&root.join("docs/AR-a.md"), "# AR-a: A\n\nText.\n");
+    root
+}
+
+/// §FS-check.1.4.1, §FS-config.3.4.8.3: `ungrounded` is armed by a place grounding
+/// reaches, and a row's own `false` wins over the default, so a default that every
+/// row refuses, the key's or the flag's, leaves it off. The advice says so in either
+/// version.
+#[test]
+fn a_grounding_default_every_row_refuses_arms_nothing() {
+    let code = "ungrounded";
+    let on = armed(grounding("armed_grounding_reaches", true, true));
+    let key = armed(grounding("armed_grounding_key_refused", true, false));
+    assert_eq!(
+        key.off_advice(code).as_deref(),
+        Some(
+            "the check is off until require_grounding = true is set on a [[kinds]] row, or in [reference] or by --require-grounding for a kind whose row does not set it false"
+        )
+    );
+    let flag = grounding("armed_grounding_flag_refused", false, false);
+    let flag = run(flag, |opts| opts.require_grounding = true).1;
+    for off in [key, flag] {
+        pinned(Switch::Grounding, code, off, on.clone());
+    }
+
+    let refused = "[rules.citations.grounding]\nmust = \"file\"\n\n\
+                   [rules.citations.FS.grounding]\nmay = \"file\"\n\n\
+                   [rules.citations.REQ.grounding]\nmay = \"file\"\n\n\
+                   [rules.citations.code.grounding]\nmay = \"file\"\n";
+    let v2_off = armed(v2("armed_grounding_v2_refused", "", refused));
+    assert_eq!(
+        v2_off.off_advice(code).as_deref(),
+        Some(
+            "the check is off until a must rung is set in [rules.citations.<kind>.grounding], or in [rules.citations.grounding] or by --require-grounding for a kind with no ladder of its own"
+        )
+    );
+    let reaches = "[rules.citations.grounding]\nmust = \"file\"\n";
+    let v2_on = armed(v2("armed_grounding_v2_reaches", "", reaches));
+    pinned(Switch::Grounding, code, v2_off, v2_on);
 }
 
 /// A version-2 project with one `FS` declaration at `root`.
