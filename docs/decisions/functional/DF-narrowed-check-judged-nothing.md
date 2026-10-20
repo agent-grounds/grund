@@ -49,7 +49,11 @@ every `invalid-rule` row
 ([§FS-check.1.4](../../functional-spec/FS-check.md#14-selecting-findings-with---only-and---ignore)).
 It is the same code, not a new one, because it is the same fact about the same
 folder, and a second code would let `--ignore empty-citation-obligation` silence
-only half of it.
+only half of it. Since rules now produce it, it joins the rule-produced codes of
+[§FS-rules.7.6](../../functional-spec/FS-rules.md#76-selection-json-ordering-and-exits), so
+`--only empty-citation-obligation` keeps every `invalid-rule` row as well: the
+rule that could not run may be the one that would have said its subject was
+empty.
 
 ### 2.2 A selected check that is off says so
 
@@ -71,13 +75,19 @@ correction.
 
 ## 3. Consequences
 
-- Bytes change in three places, and no exit code changes anywhere. An `--only`
+- Bytes change in three places, and one exit code moves. An `--only`
   of a code whose switch is off prints the off line on stderr in place of
   `success`, and gains a JSON warning object on stderr. A run narrowed to a code
   rules produce, over a tree with an empty obligation, now shows the table's
   line. A run with a `must` or `should` rule over a folder kind that holds files
   but no units gains the rule's line on stderr and loses `success`; that is the
   one change a run without `--only` or `--rule` can see.
+- One verdict moves from `0` to `1`. `--only empty-citation-obligation` over a
+  tree holding an invalid rule printed `success`; it now keeps the
+  `invalid-rule` error the unnarrowed run already prints. That is the move
+  [§DF-narrowed-check-keeps-invalid-rule](DF-narrowed-check-keeps-invalid-rule.md#df-narrowed-check-keeps-invalid-rule-a-check-narrowed-to-a-rules-code-keeps-the-error-that-says-the-rule-could-not-run)
+  made for the other codes rules produce, for its reason: the full run over the
+  same tree already exits `1`. `--ignore invalid-rule` restores the old view.
 - A script that greps a narrowed run for `success`, or treats any stderr line as
   a failure, notices; so does a CI step that used `--only <code>` as a no-op.
 - [§REQ-deterministic-output](../../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes)
@@ -96,7 +106,9 @@ warning whose exit did not change:
 4. *Actionable findings.* Each line names the switch that turns the check on,
    the replacement of a spent code, or the folder that holds no unit.
 5. *No new licence.* The route is not a licence for anything else: nothing is
-   tightened or newly prohibited, and the exit code of every run stays where it was.
+   tightened or newly prohibited, and the one exit that moves is that of a run
+   the unnarrowed check over the same tree already fails, as under
+   [§DF-narrowed-check-keeps-invalid-rule](DF-narrowed-check-keeps-invalid-rule.md#df-narrowed-check-keeps-invalid-rule-a-check-narrowed-to-a-rules-code-keeps-the-error-that-says-the-rule-could-not-run).
 
 **The weak point.** For the empty rule subject the prohibition is plain: no
 section said a rule over an empty kind may pass silently, so "a skip that no
@@ -120,4 +132,4 @@ beside `success`, and a note names the release in which it takes its place.
 
 ## release-note: Release note
 
-- [§FS-check.1.4.1](../../functional-spec/FS-check.md#141-a-selected-check-the-run-leaves-off-says-so), [§FS-check.2.2.1.4](../../functional-spec/FS-check.md#2214-a-rules-obligation), [§DF-narrowed-check-judged-nothing](DF-narrowed-check-judged-nothing.md#df-narrowed-check-judged-nothing-a-narrowed-check-says-when-what-it-selected-judged-nothing), [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids): **a narrowed `check` says when what it selected judged nothing, exit unchanged.** `--only <code>` of a check the run leaves off prints `warning: --only <code> judged nothing — …`, naming the switch that turns it on, in place of `success`, with the new code `selected-check-off`. A `must` or `should` rule, declared or `--rule`, whose subject kind holds files but no unit prints `warning: <rule> applies to nothing — …` under `empty-citation-obligation`, and a run narrowed to a code rules produce now keeps every `empty-citation-obligation` row. **Who this breaks:** a script that greps a narrowed run for `success` or treats a stderr line as failure, and a CI step that used `--only <code>` as a no-op; with `--format json` stderr gains a warning object. **The opt-outs:** `--ignore selected-check-off` and `--ignore empty-citation-obligation`. The verdict moves by the correction route of [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), because the old `success` broke [§REQ-no-missed-citation.1](../../requirements/REQ-no-missed-citation.md#1-no-silent-skips) and [§REQ-no-missed-citation.2](../../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded); every finding that replaces it is about the run rather than a file location, and names the fix: the switch to set, the code to select, or the folder that holds no unit. Closes [issue #829](https://github.com/agent-grounds/grund/issues/829).
+- [§FS-check.1.4.1](../../functional-spec/FS-check.md#141-a-selected-check-the-run-leaves-off-says-so), [§FS-check.2.2.1.4](../../functional-spec/FS-check.md#2214-a-rules-obligation), [§DF-narrowed-check-judged-nothing](DF-narrowed-check-judged-nothing.md#df-narrowed-check-judged-nothing-a-narrowed-check-says-when-what-it-selected-judged-nothing), [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids): **a narrowed `check` says when what it selected judged nothing.** `--only <code>` of a check the run leaves off prints `warning: --only <code> judged nothing — …`, naming the switch that turns it on, in place of `success`, with the new code `selected-check-off`. A `must` or `should` rule, declared or `--rule`, whose subject kind holds files but no unit prints `warning: <rule> applies to nothing — …` under `empty-citation-obligation`, and a run narrowed to a code rules produce now keeps every `empty-citation-obligation` row. **Who this breaks:** a script that greps a narrowed run for `success` or treats a stderr line as failure, and a CI step that used `--only <code>` as a no-op; with `--format json` stderr gains a warning object. **One exit moves:** `empty-citation-obligation` joins the rule-produced codes, so `--only empty-citation-obligation` keeps every `invalid-rule` row, and over a tree holding an invalid rule it exits `1` with the error the unnarrowed `grund check` already prints, where it printed `success`. **The opt-outs:** `--ignore selected-check-off`, `--ignore empty-citation-obligation`, and `--ignore invalid-rule`. The verdict moves by the correction route of [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), because the old `success` broke [§REQ-no-missed-citation.1](../../requirements/REQ-no-missed-citation.md#1-no-silent-skips) and [§REQ-no-missed-citation.2](../../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded); every finding that replaces it is about the run rather than a file location, or is the `invalid-rule` row the unnarrowed run already prints, and names the fix: the switch to set, the code to select, the folder that holds no unit, or the rule to repair. Closes [issue #829](https://github.com/agent-grounds/grund/issues/829).
