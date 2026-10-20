@@ -8,7 +8,8 @@
 //! sections are off, it asks the same parser again with them on, for the
 //! suggestion alone.
 
-use super::recovery::{Recovered, as_if_enabled, recover};
+use super::forms::{Form, refuse, settle};
+use super::recovery::{Recovered, as_if_enabled, recover, repair_every};
 use super::subjects::{
     Spelling, SubjectFault, SubjectRefusal, parse_subject, refused, split_modality,
     validate_named_path,
@@ -113,6 +114,15 @@ fn select(text: &str, vocabulary: &RuleVocabulary) -> Result<RuleSubject, Subjec
 
 /// Render a refused subject as a selector refusal (§FS-rule-refusals.selectors).
 fn answer(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> SelectorRefusal {
+    // §FS-rule-refusals.sentences.every: reparse the token-only repair on this same surface.
+    if let Some(text) = repair_every(refusal) {
+        return SelectorRefusal {
+            reason: refusal.reason(vocabulary),
+            suggestion: settle_every(text, vocabulary),
+            after_enabling: false,
+            hint: false,
+        };
+    }
     // §FS-rule-refusals.selectors: a numbered or wildcard component is named as what failed.
     let fault = refusal.fault.failed();
     if fault == SubjectFault::NamedSectionsOff {
@@ -130,6 +140,23 @@ fn answer(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> SelectorRefu
         suggestion: recover(refusal, vocabulary).map(|recovered| recovered.selector()),
         after_enabling: false,
     }
+}
+
+/// Bound selector repairs with the ordinary reparse machinery
+/// (§FS-rule-refusals.sentences.every). The quantifier reason cannot offer an
+/// enabled-only selector; other subject faults keep their existing recovery.
+fn settle_every(text: String, vocabulary: &RuleVocabulary) -> Option<String> {
+    settle(text, false, |text, _| {
+        let next = select(text, vocabulary).err()?;
+        let suggestion = repair_every(&next).or_else(|| {
+            let offered = answer(&next, vocabulary);
+            offered.suggestion.filter(|_| !offered.after_enabling)
+        });
+        let form = suggestion.map_or(Form::None { kind: false }, Form::One);
+        Some(refuse(next.reason(vocabulary), form))
+    })
+    .ok()
+    .map(|(text, _)| text)
 }
 
 /// §FS-rule-refusals.selectors: a selector refused for needing named sections keeps that

@@ -111,6 +111,9 @@ and any accepted rewrite grund reports. Some refusals offer no rewrite
 - `Each FS must cite at least one GOAL and must not cite any AR.` → split it into `Each FS must cite at least one GOAL.` and `Each FS must not cite any AR.`
 - `Each FS must cite at least one GOAL` → add the terminal `.`.
 - `each FS must cite at least one GOAL.` → `Each FS must cite at least one GOAL.`
+- `Every FS must cite at least one GOAL.` → `quantifier "every" is not accepted; accepted form: Each FS must cite at least one GOAL.`
+- `The requirements chapter of every FS must cite at least one REQ.` → `quantifier "every" is not accepted; accepted form: The requirements chapter of each FS must cite at least one REQ.`
+- `AR-overview.system-overview must cite every AR exactly once.` → `quantifier "every" is not accepted; accepted form: AR-overview.system-overview must cite each AR exactly once.`
 - `Each file in vendor/ must cite at least one FS.` → `path subjects are not accepted in phase 1`,
   then `known kinds: GOAL, REQ, FS, AR, RULE`; no rewrite is offered.
 - `Each */FS must cite at least one GOAL.` → `Each FS must cite at least one GOAL.`
@@ -119,3 +122,11 @@ and any accepted rewrite grund reports. Some refusals offer no rewrite
 - `FS-demo.2 must cite at least one REQ.` → `FS-demo.requirements must cite at least one REQ.`
 - With named sections disabled, enable them before writing `FS-demo.requirements must cite at least one REQ.`
 - `Each POLICY must cite at least one GOAL.` → use a configured kind, as in `Each FS must cite at least one GOAL.`
+
+The three `RULE-every-*` declarations exercise these unsupported quantifiers
+in the runnable repository; their `invalid-rule` findings and complete `each`
+offers are pinned in `expected.stdout`
+([§FS-rule-refusals.sentences.every](../../docs/functional-spec/FS-rule-refusals.md#sentencesevery-unsupported-every-is-refused-as-a-quantifier-with-an-each-repair)).
+`list --selector 'Every FS'` likewise refuses the quantifier and offers
+`Each FS`. The spelling of a chapter named `every` or an ID such as `FS-every`
+is unaffected.

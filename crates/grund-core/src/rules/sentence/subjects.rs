@@ -13,7 +13,7 @@
 
 use super::forms::{Form, Refusal, refuse};
 use super::literal::DeclarationSelector;
-use super::recovery::{Recovered, Suggestion, as_if_enabled, recover};
+use super::recovery::{Recovered, Suggestion, as_if_enabled, recover, repair_every};
 use super::{RuleLevel, RulePolarity, RuleSubject, RuleVocabulary};
 use crate::grammar::{named_section_component, parse_id_arg, render_input_id, unnamed_component};
 
@@ -21,6 +21,9 @@ use crate::grammar::{named_section_component, parse_id_arg, render_input_id, unn
 /// refused for: the rule's own (§FS-rule-refusals.sentences), which a
 /// selector appends to its literal-subject reason (§FS-rule-refusals.selectors).
 pub(super) const EACH_IS_CASE_SENSITIVE: &str = "fixed word \"Each\" is case-sensitive";
+
+/// The shared quantifier reason (§FS-rule-refusals.sentences.every).
+pub(super) const EVERY_IS_UNSUPPORTED: &str = "quantifier \"every\" is not accepted";
 
 /// What follows a lower-case `each `, where `text` opens with one: the one
 /// test both surfaces read the wrong case with (§FS-rule-refusals.selectors).
@@ -31,6 +34,8 @@ pub(in crate::rules) fn lower_case_each(text: &str) -> Option<&str> {
 /// Which production of a subject failed (§FS-rule-refusals.sentences).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) enum SubjectFault {
+    /// An unsupported quantifier (§FS-rule-refusals.sentences.every).
+    Every,
     UnknownKind(String),
     NamedSectionsOff,
     Namespace,
@@ -95,6 +100,7 @@ impl SubjectFault {
     /// The released reason a refusal opens with (§FS-rule-refusals.sentences).
     pub(super) fn reason(&self, text: &str) -> String {
         match self {
+            Self::Every => EVERY_IS_UNSUPPORTED.into(),
             Self::UnknownKind(kind) => format!("unknown kind \"{kind}\""),
             Self::NamedSectionsOff => {
                 "named chapter subjects require [id] named_sections = true".into()
@@ -173,6 +179,10 @@ impl SubjectRefusal {
     /// no configured kind is recovered there is no form, and what is missing is
     /// a kind.
     pub(super) fn rule_refusal(&self, vocabulary: &RuleVocabulary) -> Refusal {
+        // §FS-rule-refusals.sentences.every: replace only the quantifier; the offer is reparsed.
+        if let Some(text) = repair_every(self) {
+            return refuse(self.reason(vocabulary), Form::One(text));
+        }
         let suggested = if self.fault == SubjectFault::NamedSectionsOff {
             as_if_enabled(
                 &self.text,
@@ -248,6 +258,29 @@ pub(super) fn parse_subject(
     text: &str,
     vocab: &RuleVocabulary,
 ) -> Result<RuleSubject, SubjectRefusal> {
+    // §FS-rule-refusals.sentences.every: both surfaces refuse these before literal-ID parsing.
+    if let Some(kind) = text.strip_prefix("Every ") {
+        return Err(refused(
+            SubjectFault::Every,
+            Spelling::Each,
+            text,
+            kind,
+            None,
+            "",
+        ));
+    }
+    if let Some(rest) = text.strip_prefix("The ")
+        && let Some((name, kind)) = rest.split_once(" chapter of every ")
+    {
+        return Err(refused(
+            SubjectFault::Every,
+            Spelling::ChapterOfEach,
+            text,
+            kind,
+            Some(name),
+            "",
+        ));
+    }
     if let Some(kind) = text.strip_prefix("Each ") {
         let each = |fault, head| refused(fault, Spelling::Each, text, head, None, "");
         // §FS-rule-refusals.selectors: refused for its quantifier; `parse_rule` refuses it first.
