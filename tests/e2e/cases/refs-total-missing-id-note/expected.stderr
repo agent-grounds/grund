@@ -1,1 +1,1 @@
-note: FS-002-nope is neither declared nor cited in scan path `tests/e2e/cases/refs-total-missing-id-note/repo` — run `grund list` to see project declarations, including outside this scan
+note: FS-002-nope is neither declared nor cited in scan path `.` — run `grund list` to see project declarations, including outside this scan
