@@ -693,7 +693,7 @@ With `[presentation] rules = "root"`, and in every version-1 config, every row's
 
 ###### 2.3.5.12.1 What a scoped block holds, in order
 
-A scoped block is bounded by the delimiters and the version heading of [§FS-init.2.3.9](FS-init.md#239-delimiters), at the same `vN` as the root block of the same run. A blank line follows the heading, then one line naming the scope, `` These rules cover the files under `<dir>/`; the rest of this project's grund guidance is in the root `AGENTS.md`. ``, then each of these sections that has content, in this order and separated by a blank line:
+A scoped block is bounded by the delimiters and the version heading of [§FS-init.2.3.9](FS-init.md#239-delimiters), at the same `block vN` as the root block of the same run. A blank line follows the heading, then one line naming the scope, `` These rules cover the files under `<dir>/`; the rest of this project's grund guidance is in the root `AGENTS.md`. ``, then each of these sections that has content, in this order and separated by a blank line:
 
 1. `### Citation directions`: the legend followed by the destination's grounding sentence ([§FS-init.2.3.5.7](FS-init.md#2357-the-grounding-sentence)) as one paragraph, a blank line, the bullets of the rows that land there in the order of [§FS-init.2.3.5.1](FS-init.md#2351-layout), and the closing line for the global default ([§FS-init.2.3.5.6](FS-init.md#2356-the-closing-line)). It renders when a bullet or a grounding clause lands there.
 2. `### Declaration shapes` ([§FS-init.2.3.5.12.2](FS-init.md#235122-declaration-shapes)), when a kind that lands there has fields.
@@ -769,9 +769,17 @@ Adding the fixed sentence bumped the managed-block version to **v4**; adding the
 
 #### 2.3.7 The block version
 
-The canonical text for a given block version `vN` is embedded in the `grund` binary; its one copy in the source tree is `crates/grund-core/assets/templates/AGENTS.md`, which the binary embeds. The `vN` in the delimiter lines ([§FS-init.2.3.9](FS-init.md#239-delimiters)) is what versions it under [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations), so changing the block's fixed canonical text is itself a block-version bump, carried by that mechanism, not a silent rewrite. What `vN` versions is that fixed text, not the lines substituted in ([§FS-init.2.3.8](FS-init.md#238-substituted-content)): the inline citation style sentences among them ([§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering)) move no version, because they are rendered, not live ([§FS-inline-citation-style.5.6](FS-inline-citation-style.md#56-no-managed-block-version)).
+The canonical text for a given block version `vN` is embedded in the `grund` binary; its one copy in the source tree is `crates/grund-core/assets/templates/AGENTS.md`, which the binary embeds. The `vN` in the block's version heading ([§FS-init.2.3.9](FS-init.md#239-delimiters)) is what versions it under [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations), so changing the block's fixed canonical text is itself a block-version bump, carried by that mechanism, not a silent rewrite. What `vN` versions is that fixed text, not the lines substituted in ([§FS-init.2.3.8](FS-init.md#238-substituted-content)): the inline citation style sentences among them ([§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering)) move no version, because they are rendered, not live ([§FS-inline-citation-style.5.6](FS-inline-citation-style.md#56-no-managed-block-version)). `vN` is the revision of the block's text and nothing else: it is not a grund release, the two numbers move independently, and a grund release is read from `grund -V` alone. The heading says so by labelling it `block vN` ([§FS-init.2.3.9.3](FS-init.md#2393-the-headings-two-spellings)).
 
 ##### 2.3.7.1 The current version
+
+Labelling the version heading `block vN` ([§FS-init.2.3.9.3](FS-init.md#2393-the-headings-two-spellings)) changes the block's fixed
+text, so both current pairs advance again: v27/v28 becomes **v31/v32** and v29/v30 becomes
+**v33/v34**, the maximum supported version becomes v34, and each config keeps the pair it
+selected, four higher. Every earlier block is outdated and one `grund init` re-renders it;
+the release note of [§DF-managed-block-revision-label](../decisions/functional/DF-managed-block-revision-label.md#df-managed-block-revision-label-the-managed-block-heading-labels-its-number-as-the-blocks-revision) names the pairs, that remedy, and what the new spelling breaks
+([§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)). The rest of this section describes the pairs as they were
+before that bump.
 
 Teaching coordinate globs in place of the `jq` pipe ([§FS-init.2.3.4.3.1](FS-init.md#23431-structural-queries)) advances both
 current pairs again: v23/v24 becomes **v27/v28** and v25/v26 becomes **v29/v30**, so the
@@ -868,16 +876,16 @@ The generator–checker symmetry of [§FS-init.2.3](FS-init.md#23-generated-agen
 
 #### 2.3.9 Delimiters
 
-The managed block is bounded by explicit standard `BEGIN` / `END` HTML-comment delimiters, with an H2 heading just inside the opening delimiter carrying the schema version:
+The managed block is bounded by explicit standard `BEGIN` / `END` HTML-comment delimiters, with an H2 heading just inside the opening delimiter carrying the block version, labelled as one:
 
 ```markdown
 <!-- BEGIN GRUND MANAGED BLOCK -->
-## Grounding with grund (vN)
+## Grounding with grund (block vN)
 …
 <!-- END GRUND MANAGED BLOCK -->
 ```
 
-The integer after `v` is the managed-block version. The `<!-- BEGIN GRUND MANAGED BLOCK -->` line is the block's begin delimiter and `<!-- END GRUND MANAGED BLOCK -->` is its end delimiter; both delimiter lines belong to the managed region, so everything between them — delimiters included — is `init`'s to rewrite and nothing outside them is.
+The integer after `block v` is the managed-block version ([§FS-init.2.3.7](FS-init.md#237-the-block-version)): the revision of the block's text, never a grund release. This heading is the block's **version heading**. The `<!-- BEGIN GRUND MANAGED BLOCK -->` line is the block's begin delimiter and `<!-- END GRUND MANAGED BLOCK -->` is its end delimiter; both delimiter lines belong to the managed region, so everything between them — delimiters included — is `init`'s to rewrite and nothing outside them is.
 
 ##### 2.3.9.1 Why the conventional shape
 
@@ -885,7 +893,11 @@ The delimiters are deliberately the conventional managed-region shape rather tha
 
 ##### 2.3.9.2 Legacy blocks
 
-Blocks at v3 and earlier predate the delimiters (**legacy blocks**): there the H2 heading itself is the begin delimiter and the block runs until the next H1 or H2 heading, or end of file. Both `init` and `check` continue to recognize the legacy form; on its next write `init` migrates a recognized legacy block to the delimited form in place (reported `updated `), preserving the block's position and every byte outside the block.
+Blocks at v3 and earlier predate the delimiters (**legacy blocks**): there the H2 heading itself is the begin delimiter and the block runs until the next H1 or H2 heading, or end of file. Both `init` and `check` continue to recognize the legacy form; on its next write `init` migrates a recognized legacy block to the delimited form in place (reported `updated `), preserving the block's position and every byte outside the block. Only the unlabelled spelling opens a legacy block: no block without delimiters was ever written with `block vN`, so a `## Grounding with grund (block vN)` heading outside the delimiters opens nothing, and the file has no block ([§FS-init.2.3.10](FS-init.md#2310-writing-the-block)).
+
+##### 2.3.9.3 The heading's two spellings
+
+`init` writes the version heading as `## Grounding with grund (block vN)` in every block it renders: the root block, a standalone companion's and a scoped file's ([§FS-init.2.3.5.12.1](FS-init.md#235121-what-a-scoped-block-holds-in-order)). Blocks up to v30 spell it `## Grounding with grund (vN)`. Between the delimiters both spellings are the version heading and carry the same version, so `init` and `check` read a block in either spelling wherever this specification names the version heading: its version is compared, reported outdated, or refused as newer the same way ([§FS-init.2.3.10](FS-init.md#2310-writing-the-block), [§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)). The spelling is part of the fixed text a version renders, so `init`'s re-render writes the labelled one in place of the other. The delimiters do not change: a reader that finds the block by them keeps finding it.
 
 #### 2.3.10 Writing the block
 
@@ -893,15 +905,15 @@ A fresh `AGENTS.md` consists of the block preceded by a one-line scaffolding H1 
 
 ##### 2.3.10.1 Re-rendering an existing block
 
-If the file already contains any supported block version, including the current one, `init` re-renders the block from the current effective `grund.toml`, compares it to the bytes of the managed region on disk ([§FS-init.2.3.9](FS-init.md#239-delimiters), delimited or legacy), and — when they differ — replaces only those bytes, leaving all content before and after the block untouched (reported `updated `, [§FS-init.2.3.1](FS-init.md#231-position-invariants)). Same-version template and config changes therefore propagate on the next `grund init` without requiring `--force`. When the re-render is byte-identical to what is on disk, `init` writes nothing and reports the file with `exists ` ([§FS-init.2.2](FS-init.md#22-stdout--stderr)) — re-running `grund init` on an already-current repo is a no-op on every file.
+If the file already contains any supported block version, including the current one, in either spelling of its version heading ([§FS-init.2.3.9.3](FS-init.md#2393-the-headings-two-spellings)), `init` re-renders the block from the current effective `grund.toml`, compares it to the bytes of the managed region on disk ([§FS-init.2.3.9](FS-init.md#239-delimiters), delimited or legacy), and — when they differ — replaces only those bytes, leaving all content before and after the block untouched (reported `updated `, [§FS-init.2.3.1](FS-init.md#231-position-invariants)). Same-version template and config changes therefore propagate on the next `grund init` without requiring `--force`. When the re-render is byte-identical to what is on disk, `init` writes nothing and reports the file with `exists ` ([§FS-init.2.2](FS-init.md#22-stdout--stderr)) — re-running `grund init` on an already-current repo is a no-op on every file. A block whose heading is the unlabelled spelling is therefore `updated ` once, to the labelled one, and `exists ` after that.
 
 ##### 2.3.10.2 A newer block version
 
-If an agent entrypoint contains a newer block version than the running binary supports, `init` exits 2 and writes nothing: neither that file nor any other entrypoint, `grund.toml`, nor the starter files `--scaffold` lays are touched, because the version is read before the first write ([§FS-init.1.2.6](FS-init.md#126-entrypoint-blocks-are-read-before-any-is-written)).
+If an agent entrypoint contains a newer block version than the running binary supports, in either spelling (`(block v99)` as `(v99)`), `init` exits 2 and writes nothing: neither that file nor any other entrypoint, `grund.toml`, nor the starter files `--scaffold` lays are touched, because the version is read before the first write ([§FS-init.1.2.6](FS-init.md#126-entrypoint-blocks-are-read-before-any-is-written)).
 
 #### 2.3.11 Malformed delimiters
 
-A file whose delimiters are present but broken is **malformed**: a `BEGIN` delimiter with no `END` after it, an `END` with no `BEGIN` before it, more than one `BEGIN`, or a delimited region that contains no `## Grounding with grund (vN)` version heading. `init` refuses to touch a malformed file — it exits 2 with a message naming the file and the specific defect, and rewrites nothing, in that file or any other the run planned ([§FS-init.1.2.6](FS-init.md#126-entrypoint-blocks-are-read-before-any-is-written)) — because any splice against broken delimiters risks eating user content; `grund check` reports the same defect as an error ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)). Fixing the delimiter pair by hand (or deleting the remnants of the block) and re-running `grund init` is the recovery path.
+A file whose delimiters are present but broken is **malformed**: a `BEGIN` delimiter with no `END` after it, an `END` with no `BEGIN` before it, more than one `BEGIN`, or a delimited region that contains no version heading in either spelling ([§FS-init.2.3.9.3](FS-init.md#2393-the-headings-two-spellings)). `init` refuses to touch a malformed file — it exits 2 with a message naming the file and the specific defect, and rewrites nothing, in that file or any other the run planned ([§FS-init.1.2.6](FS-init.md#126-entrypoint-blocks-are-read-before-any-is-written)) — because any splice against broken delimiters risks eating user content; `grund check` reports the same defect as an error ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)). Fixing the delimiter pair by hand (or deleting the remnants of the block) and re-running `grund init` is the recovery path.
 
 #### 2.3.12 Supported agents and their entrypoints
 
@@ -1068,7 +1080,7 @@ The `--force` semantics behind the config and "refuse to clobber" guarantees are
 
 ### 3.2 User-authored content in agent entrypoints is preserved
 
-Unless `--force` replaces the canonical `AGENTS.md` whole ([§FS-init.3.4](FS-init.md#34-with---force)), only the delimiter-bounded managed `## Grounding with grund (vN)` block is touched. Everything before and after the block is byte-for-byte preserved, including the block's position within the file ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints), [§FS-init.2.3.1](FS-init.md#231-position-invariants)). The delimiter is the ownership boundary [§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own) is written around.
+Unless `--force` replaces the canonical `AGENTS.md` whole ([§FS-init.3.4](FS-init.md#34-with---force)), only the delimiter-bounded managed block, headed by its version heading ([§FS-init.2.3.9](FS-init.md#239-delimiters)), is touched. Everything before and after the block is byte-for-byte preserved, including the block's position within the file ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints), [§FS-init.2.3.1](FS-init.md#231-position-invariants)). The delimiter is the ownership boundary [§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own) is written around.
 
 The same holds for every scoped entrypoint and its standalone companions ([§FS-init.2.3.5.14](FS-init.md#23514-writing-scoped-files)). Removing an orphaned block is the one deletion `init` makes, and it deletes the file only when the managed block was the whole file, byte for byte; any other byte in the file keeps it, with the block cut out and nothing else changed ([§FS-init.2.3.5.14.2](FS-init.md#235142-orphans-are-removed)). A companion symlink `init` mirrored goes with the file it points at.
 

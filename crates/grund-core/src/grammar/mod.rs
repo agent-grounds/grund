@@ -214,6 +214,8 @@ mod tests_inline_note_layout;
 #[cfg(test)]
 mod tests_line_prefix_forms;
 #[cfg(test)]
+mod tests_managed_block_label;
+#[cfg(test)]
 mod tests_markdown_blocks;
 #[cfg(test)]
 mod tests_multi_line_string;
