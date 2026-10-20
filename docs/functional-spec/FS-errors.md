@@ -580,7 +580,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `missing-field` | by strength: the field's `presence` | — | a v2 field | [§FS-fields.checks.missing-field](FS-fields.md#checksmissing-field-missing-field) |
 | `missing-index-entry` | error | — | — | [§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index) |
 | `missing-section` | error | — | — | [§FS-check.3.2](FS-check.md#32-missing-section) |
-| `missing-snapshot` | warning | — | `fetch` on a kind | [§FS-check.4.12](FS-check.md#412-missing-snapshot) |
+| `missing-snapshot` | warning | — | `fetch` with `resolve = "should"` on a kind; `fetch` with `[rules.resolution] <KIND> = "warn"` under v2 | [§FS-check.4.12](FS-check.md#412-missing-snapshot) |
 | `mistitled-field` | by strength: the field's `presence` | — | `title` on a v2 field | [§FS-fields.checks.mistitled-field](FS-fields.md#checksmistitled-field-mistitled-field) |
 | `nothing-recognized` | warning | — | — | [§FS-check.4.5](FS-check.md#45-nothing-recognized) |
 | `optional-member-absent` | warning | — | `[workspace] optional_members`, in any block | [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent) |
