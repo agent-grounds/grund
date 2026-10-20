@@ -12,11 +12,12 @@
 
 use super::reference_scope::ScanScope;
 use super::shorthand::{ShorthandIndexes, report_shorthand_citation};
+use super::snapshots::{Resolve, fetches, snapshot_warns};
 use super::support::{
     citation_in_markdown_inline_code, close_enough_for_hint, dangling_message_spelled,
     edit_distance, missing_snapshot_message, qualify,
 };
-use crate::config::{Frame, KindResolution, Origin, Schema};
+use crate::config::{Frame, Schema};
 use crate::grammar::{render_catalog_id, render_citation_id};
 use crate::model::{Catalog, CheckReport, Diagnostic, section_resolves};
 use crate::resolver::{WorkspaceCheckTarget, join_alternatives, target_for_citation};
@@ -85,7 +86,7 @@ pub(super) fn check_citation_resolution(
     schema: &Schema,
     frame: Frame<'_>,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
-    resolve: &dyn Fn(Option<&str>, &str) -> Option<KindResolution>,
+    resolve: &Resolve<'_>,
     tier: ReferenceTier,
     outside: Option<&ScanScope>,
     report: &mut CheckReport,
@@ -232,13 +233,11 @@ pub(super) fn check_citation_resolution(
         // nowhere in its target namespace is dangling, mixed too (§FS-citations.checks.mixed-path).
         if !target.catalog.declarations.contains_key(&cite.id) {
             // §FS-check.3.1.3: a fetch-enabled target kind keeps snapshots.
-            let snapshot_row = target.schema.rows.iter().find(|row| {
-                row.name == cite.id.kind
-                    && row
-                        .kind
-                        .as_ref()
-                        .is_some_and(|kind| matches!(kind.origin, Origin::External { .. }))
-            });
+            let snapshot_row = target
+                .schema
+                .rows
+                .iter()
+                .find(|row| row.name == cite.id.kind && fetches(row));
             // §FS-config-v2.schema.sources: Markdown is the citing file's language's.
             let markdown = frame.compiled.reading(schema, &cite.file).markdown;
             let in_inline_code = citation_in_markdown_inline_code(findings, frame, cite, markdown);
@@ -252,8 +251,7 @@ pub(super) fn check_citation_resolution(
                 // §FS-check.3.14.1: out-of-scope citations stay fixed dangling errors;
                 // a target kind's in-scope `should` must not demote this opt-in tier.
                 let should_warn = tier == ReferenceTier::Configured
-                    && resolve(cite.namespace.as_deref(), &row.name)
-                        == Some(KindResolution::Should);
+                    && snapshot_warns(resolve, cite.namespace.as_deref(), &row.name);
                 // First place on purpose: a fetched row has one (§FS-config-v2.schema.places).
                 let home = row
                     .file()

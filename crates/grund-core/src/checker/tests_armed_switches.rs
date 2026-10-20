@@ -186,18 +186,6 @@ fn a_value_kind_arms_the_value_codes() {
 }
 
 #[test]
-fn a_fetched_kind_arms_missing_snapshot() {
-    let fetched = "[schema.kinds.TICKET]\nfiles = [\"docs/tickets.md\"]\n\
-                   id_format = \"{kind}-{number}\"\nfetch = \"scripts/fetch-ticket\"\n";
-    pinned(
-        Switch::Fetch,
-        "missing-snapshot",
-        armed(v2("armed_fetch_off", "", "")),
-        armed(v2("armed_fetch_on", "", fetched)),
-    );
-}
-
-#[test]
 fn a_kind_home_arms_misplaced_declaration() {
     let root = test_root("armed_home_off");
     write(

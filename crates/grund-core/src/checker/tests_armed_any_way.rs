@@ -1,8 +1,10 @@
 //! Test module: a code its catalog cell turns on more than one way is armed by
 //! any of them (§FS-check.1.4.1) — the value codes by a declared value chapter
 //! as by a value kind, and by a value tag the scan found with no switch at all,
-//! and `optional-member-absent` by a nested block's list as by the root's.
-//! Each source is pinned off and on, as `tests_armed_switches` pins the rest.
+//! and `optional-member-absent` by a nested block's list as by the root's — and
+//! one whose cell needs two things only by both, as `missing-snapshot` needs a
+//! fetched kind and its `should` resolution. Each source is pinned off and on,
+//! as `tests_armed_switches` pins the rest.
 
 use std::path::{Path, PathBuf};
 
@@ -68,6 +70,52 @@ fn a_value_tag_arms_the_value_codes_with_no_switch() {
         armed(misplaced).off_advice("invalid-value-declaration"),
         None
     );
+}
+
+/// A fetched `TICKET` kind, the table a version-2 project adds beside its `FS`.
+const TICKET_V2: &str = "[schema.kinds.TICKET]\nfiles = [\"docs/tickets.md\"]\n\
+                         id_format = \"{kind}-{number}\"\nfetch = \"scripts/fetch-ticket\"\n";
+
+/// The same kind as a version-1 row, `resolve` its last line.
+fn ticket_v1(resolve: &str) -> String {
+    format!(
+        "\n[[kinds]]\nkind = \"TICKET\"\nfile = \"docs/tickets.md\"\n\
+         format = \"{{kind}}-{{number}}\"\nfetch = \"scripts/fetch-ticket\"\n{resolve}"
+    )
+}
+
+/// §FS-check.1.4.1, §FS-config.3.4.10.3: `missing-snapshot` is armed by a fetched
+/// kind whose resolution is `should` (v2's `warn`), and by neither part alone:
+/// `fetch` without it resolves `must`, which selects the `dangling` error. The
+/// advice names the resolution, in the version the project reads.
+#[test]
+fn only_a_fetched_kind_that_warns_arms_missing_snapshot() {
+    let code = "missing-snapshot";
+    let warn = format!("{TICKET_V2}\n[rules.resolution]\nTICKET = \"warn\"\n");
+    let v2_on = armed(v2("armed_snapshot_v2_warn", "", &warn));
+    let v2_alone = armed(v2("armed_snapshot_v2_alone", "", TICKET_V2));
+    assert_eq!(
+        v2_alone.off_advice(code).as_deref(),
+        Some(
+            "the check is off until [rules.resolution] <KIND> = \"warn\" is set for a fetched kind"
+        )
+    );
+    for off in [armed(v2("armed_snapshot_v2_none", "", "")), v2_alone] {
+        pinned(Switch::SnapshotWarning, code, off, v2_on.clone());
+    }
+
+    let v1_on = armed(v1(
+        "armed_snapshot_v1_should",
+        &ticket_v1("resolve = \"should\"\n"),
+    ));
+    let v1_alone = armed(v1("armed_snapshot_v1_alone", &ticket_v1("")));
+    assert_eq!(
+        v1_alone.off_advice(code).as_deref(),
+        Some("the check is off until resolve = \"should\" is set on a fetched [[kinds]] row")
+    );
+    for off in [armed(v1("armed_snapshot_v1_none", "")), v1_alone] {
+        pinned(Switch::SnapshotWarning, code, off, v1_on.clone());
+    }
 }
 
 /// A version-2 project with one `FS` declaration at `root`.
