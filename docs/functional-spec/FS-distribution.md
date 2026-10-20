@@ -333,7 +333,7 @@ calls that load a tree; the table names additional operation-specific cases.
 
 | Public Promise signature | Options/defaults beyond root | Reused core; minimum additive seam | Result and refusal behavior |
 | --- | --- | --- | --- |
-| `check(root?: string, options?: CheckOptions): Promise<CheckResult>` | requireGrounding=false, suggestions=false, full=false, rule=null, only=[], ignore=[], onlyRule=false | `check_with_run_warnings`, `CheckFindingSelection`; typed `check_outcome` | complete report, selectedReport, outputFormat, hadScanErrors, runCautions; findings and partial file I/O resolve; failed setup rejects. Selection validated before discovery; ignore wins, rule-produced codes carry invalid-rule, safety io always survives, onlyRule requires rule. |
+| `check(root?: string, options?: CheckOptions): Promise<CheckResult>` | requireGrounding=false, suggestions=false, full=false, rule=null, only=[], ignore=[], onlyRule=false | `check_with_run_warnings`, `CheckFindingSelection`; typed `check_outcome` | complete report, selectedReport, outputFormat, hadScanErrors, runCautions; findings and partial file I/O resolve; failed setup rejects. Selection validated before discovery; ignore wins, rule-produced codes carry invalid-rule and every empty-citation-obligation row, safety io always survives, onlyRule requires rule. selectedReport also holds one selected-check-off warning per `only` code the run left off, which the complete report does not ([§FS-check.1.4.1](FS-check.md#141-a-selected-check-the-run-leaves-off-says-so)). |
 | `scan(root: string): Promise<ScanResult>` | Explicit path; no checker flags | `scan`/strict scan, additive `scan_outcome` over the same pipeline with warning and normalized snapshot carriers | declarations/citations/scan facts available as arrays, not a live iterator; strict scan failures reject with available partial facts and cautions. No parallel JS scan. |
 | `show(id: string, options?: ShowOptions): Promise<ShowResult>` | section=null, mode=lead, format=text; modes lead/brief/toc/full, formats text/md/json | `show_with_scope`, typed query errors, additive `show_outcome` | body/path/line/sections/json plus cautions. Query refusal rejects query with sites or candidate IDs; setup rejects config/io. Inline section plus section option is a query failure, not a JS parser reinterpretation. |
 | `showBatch(queries: readonly (string \| ShowQuery)[] \| null, options?: BatchOptions): Promise<BatchResult>` | null means all coordinates; [] is empty without config loading; mode=lead, globs=[] (null with globs generates and filters; explicit queries with globs reject `input`) | `show_batch_with_scope`'s single-context machinery; additive `show_batch_data_outcome` before the existing JSON rendering | ordered `{query,ok:true,result}` or `{query,ok:false,failure}` records, plus note and cautions. Validate entire input before discovery. Per-query failures continue; setup failure rejects once. No stdin/NDJSON input API. |
@@ -850,8 +850,11 @@ instructions have no root. Defaults below are normative, not merely examples.
 
 Modes are lead/brief/toc/full; formats text/md/json. Filters/selectors are string
 sequences. Units are lines/words/bytes; top is positive, width non-negative.
-Selectors filter only selected_report; ignore wins, rule selection requires rule,
-and safety io findings remain. Kind overrides, workspace aliases, exclusions and
+Selectors narrow only selected_report; ignore wins, rule-produced codes carry
+invalid-rule and every empty-citation-obligation row, rule selection requires rule,
+and safety io findings remain. selected_report also holds one selected-check-off
+warning per `only` code the run left off, which report does not
+([§FS-check.1.4.1](FS-check.md#141-a-selected-check-the-run-leaves-off-says-so)). Kind overrides, workspace aliases, exclusions and
 scope remain engine decisions. Config-enabled cross-reference formatting applies
 even when cross_refs=False. No unimplemented inventory entry counts as support.
 

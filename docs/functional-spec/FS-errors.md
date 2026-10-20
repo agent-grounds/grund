@@ -569,8 +569,8 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `inline-citation-style` | error; warning for the two opt-in forms | — | `[reference] inline_style`; `warn_on_suggested`; `inline_note_layout_check`; `[schema.notes]` under v2 | [§FS-check.3.10](FS-check.md#310-inline-citation-style-violation) |
 | `invalid-field-value` | by strength: the field's `presence` | — | `one_of` on a v2 field | [§FS-fields.checks.invalid-field-value](FS-fields.md#checksinvalid-field-value-invalid-field-value) |
 | `invalid-rule` | error | — | `rules = true` on a kind, `form = "rule"` under v2, or `--rule` | [§FS-check.3.25](FS-check.md#325-invalid-rule) |
-| `invalid-value-binding` | error | — | `values = true` on a kind; `form = "value"` under v2 | [§FS-check.3.21](FS-check.md#321-invalid-value-binding) |
-| `invalid-value-declaration` | error | — | `values = true` on a kind; `form = "value"` under v2 | [§FS-check.3.20](FS-check.md#320-invalid-value-declaration) |
+| `invalid-value-binding` | error | — | `values = true` or `value_chapter` on a kind, or a value tag; `form = "value"` or a field's `content = "values"` under v2 | [§FS-check.3.21](FS-check.md#321-invalid-value-binding) |
+| `invalid-value-declaration` | error | — | `values = true` or `value_chapter` on a kind, or a value tag; `form = "value"` or a field's `content = "values"` under v2 | [§FS-check.3.20](FS-check.md#320-invalid-value-declaration) |
 | `invalid-section-lock` | error | — | a `.grund/sections/` lock file | [§FS-section-lock.checks.invalid-section-lock](FS-section-lock.md#checksinvalid-section-lock-a-lock-line-grund-cannot-read) |
 | `io` | error | — | — | [§FS-check.2.4](FS-check.md#24-an-incomplete-run) |
 | `local-section-citation` | error | — | — | [§FS-check.3.24](FS-check.md#324-declaration-local-section-citation) |
@@ -583,7 +583,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `missing-snapshot` | warning | — | `fetch` on a kind | [§FS-check.4.12](FS-check.md#412-missing-snapshot) |
 | `mistitled-field` | by strength: the field's `presence` | — | `title` on a v2 field | [§FS-fields.checks.mistitled-field](FS-fields.md#checksmistitled-field-mistitled-field) |
 | `nothing-recognized` | warning | — | — | [§FS-check.4.5](FS-check.md#45-nothing-recognized) |
-| `optional-member-absent` | warning | — | `optional = true` on a member | [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent) |
+| `optional-member-absent` | warning | — | `[workspace] optional_members`, in any block | [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent) |
 | `orphan-section` | error | — | `[id] named_sections`; always under v2 | [§FS-declarations.checks.orphan-section](FS-declarations.md#checksorphan-section-orphan-name-bearing-section-path) |
 | `out-of-scope-dangling` | error | — | `--full` | [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) |
 | `out-of-scope-local-section-citation` | error | — | `--full` | [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) |
@@ -616,7 +616,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `unmarked-heading` | error | — | — | [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) |
 | `unreached-declaration` | error | — | `rules = true` on a kind, `form = "rule"` under v2, or `--rule` | [§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration) |
 | `unused` | warning | — | — | [§FS-check.4.1](FS-check.md#41-unused-declaration) |
-| `value-mismatch` | error | — | `values = true` on a kind; `form = "value"` under v2 | [§FS-check.3.22](FS-check.md#322-value-mismatch) |
+| `value-mismatch` | error | — | `values = true` or `value_chapter` on a kind, or a value tag; `form = "value"` or a field's `content = "values"` under v2 | [§FS-check.3.22](FS-check.md#322-value-mismatch) |
 
 The four `remote-*` rows are specified ahead of the release that introduces them
 ([§FS-remote-projects](FS-remote-projects.md#fs-remote-projects-a-project-cites-another-repositorys-declarations-from-a-committed-pinned-projection)); until it ships, a config declaring `[workspace.remotes]` is refused
