@@ -1,0 +1,25 @@
+grund_config_version = 2
+
+[schema]
+id_format = "{kind}-{slug}"
+
+[schema.kinds.SYS]
+folders = ["docs/sys"]
+index = false
+
+[schema.kinds.AR]
+folders = ["docs/ar"]
+index = false
+
+[schema.kinds.FS]
+folders = ["docs/fs"]
+index = false
+
+[schema.kinds.TRACE]
+folders = ["docs/trace"]
+index = false
+
+[schema.kinds.RULE]
+folders = ["docs/rules"]
+index = false
+form = "rule"
