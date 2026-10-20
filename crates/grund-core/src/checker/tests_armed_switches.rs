@@ -13,7 +13,7 @@ use super::ArmedChecks;
 
 /// A version-2 project with an `FS` and a `REQ` kind, `extra` added to the `FS`
 /// table and `tail` after both.
-fn v2(name: &str, extra: &str, tail: &str) -> PathBuf {
+pub(super) fn v2(name: &str, extra: &str, tail: &str) -> PathBuf {
     let root = test_root(name);
     write(
         &root.join("grund.toml"),
@@ -40,13 +40,13 @@ fn run(root: PathBuf, flags: impl FnOnce(&mut CheckOpts)) -> (Vec<Finding>, Arme
     (output.report.warnings, armed)
 }
 
-fn armed(root: PathBuf) -> ArmedChecks {
+pub(super) fn armed(root: PathBuf) -> ArmedChecks {
     run(root, |_| {}).1
 }
 
 /// Asserts `switch` is off in `off` and on in `on`, and that `code`, which
 /// needs only it, is advised in the first and not the second.
-fn pinned(switch: Switch, code: &str, off: ArmedChecks, on: ArmedChecks) {
+pub(super) fn pinned(switch: Switch, code: &str, off: ArmedChecks, on: ArmedChecks) {
     assert!(!off.armed.contains(switch), "{switch:?} armed with it off");
     assert!(off.off_advice(code).is_some(), "{code} not advised off");
     assert!(on.armed.contains(switch), "{switch:?} not armed with it on");

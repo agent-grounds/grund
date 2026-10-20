@@ -4,6 +4,8 @@
 //! code vocabulary in `selection.rs`, which reads it to say a selected check was
 //! off, and no command lists it.
 
+use std::collections::BTreeSet;
+
 use crate::model::{Armed, Switch};
 
 /// What turns a code on: the switches its catalog cell names, all of which it
@@ -120,10 +122,13 @@ const SWITCH_ADVICE: &[(Switch, Option<&str>, Option<&str>)] = &[
         Some("--full is passed"),
         Some("--full is passed"),
     ),
+    // A value tag needs no switch, so only the two a config can hold are named.
     (
         Switch::Values,
-        Some("values = true is set on a [[kinds]] row"),
-        Some("form = \"value\" is set on a [schema.kinds] table"),
+        Some("values = true or value_chapter is set on a [[kinds]] row"),
+        Some(
+            "form = \"value\" is set on a [schema.kinds] table or content = \"values\" on one of its fields",
+        ),
     ),
     (
         Switch::Field,
@@ -186,18 +191,28 @@ const SWITCH_ADVICE: &[(Switch, Option<&str>, Option<&str>)] = &[
 const MIGRATE: &str =
     "a version-1 config cannot turn the check on; migrate it with grund config migrate --to 2";
 
-/// What one run armed, and the config version its advice is spelled in: the
+/// The migration a workspace whose projects read both versions names in place of
+/// a key one of them cannot carry (§FS-check.1.4.1).
+const MIGRATE_MIXED: &str = "the run's projects read config versions 1 and 2, which do not turn it on alike; migrate the version-1 ones with grund config migrate --to 2";
+
+/// What one run armed, and the config versions its advice is spelled in: the
 /// record the hidden check path hands the CLI's selection (§FS-check.1.4.1).
 #[doc(hidden)]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ArmedChecks {
     pub(crate) armed: Armed,
-    pub(crate) version: u32,
+    pub(crate) versions: BTreeSet<u32>,
 }
 
 impl ArmedChecks {
+    /// `version` is the run's own, which spells the advice where the run checked
+    /// no project to read one from.
     pub(crate) fn new(armed: Armed, version: u32) -> Self {
-        Self { armed, version }
+        let mut versions = armed.versions().clone();
+        if versions.is_empty() {
+            versions.insert(version);
+        }
+        Self { armed, versions }
     }
 
     /// §FS-check.1.4.1: why `--only <code>` judged nothing, or `None` when the
@@ -218,25 +233,37 @@ impl ArmedChecks {
         let lacking: Vec<Option<&str>> = switches
             .iter()
             .filter(|switch| !self.armed.contains(**switch))
-            .map(|switch| spelling(*switch, self.version))
+            .map(|switch| spelling(*switch, &self.versions))
             .collect();
         if lacking.is_empty() {
             return None;
         }
-        // A switch this version cannot hold is answered by the migration alone.
+        // A switch a version read cannot hold, or two versions spell apart, is
+        // answered by the migration alone.
         let Some(parts) = lacking.into_iter().collect::<Option<Vec<_>>>() else {
-            return Some(MIGRATE.into());
+            let migrate = if self.versions.len() > 1 {
+                MIGRATE_MIXED
+            } else {
+                MIGRATE
+            };
+            return Some(migrate.into());
         };
         Some(format!("the check is off until {}", parts.join(" and ")))
     }
 }
 
-fn spelling(switch: Switch, version: u32) -> Option<&'static str> {
+/// The one spelling of `switch` every version in `versions` shares, or `None`
+/// where one of them cannot hold it or two spell it apart (§FS-check.1.4.1).
+fn spelling(switch: Switch, versions: &BTreeSet<u32>) -> Option<&'static str> {
     let (_, v1, v2) = SWITCH_ADVICE
         .iter()
         .find(|(row, ..)| *row == switch)
         .expect("every switch has an advice row");
-    if version >= 2 { *v2 } else { *v1 }
+    let mut spelled = versions
+        .iter()
+        .map(|version| if *version >= 2 { *v2 } else { *v1 });
+    let first = spelled.next().flatten()?;
+    spelled.all(|other| other == Some(first)).then_some(first)
 }
 
 #[cfg(test)]
@@ -254,5 +281,8 @@ pub(super) fn table_codes() -> impl Iterator<Item = (&'static str, Option<&'stat
 
 #[cfg(test)]
 pub(super) fn advised(switch: Switch) -> (Option<&'static str>, Option<&'static str>) {
-    (spelling(switch, 1), spelling(switch, 2))
+    (
+        spelling(switch, &BTreeSet::from([1])),
+        spelling(switch, &BTreeSet::from([2])),
+    )
 }

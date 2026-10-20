@@ -122,6 +122,8 @@ pub(crate) use support::diagnostic_cmp;
 #[cfg(test)]
 mod tests_alias_hints;
 #[cfg(test)]
+mod tests_armed_any_way;
+#[cfg(test)]
 mod tests_armed_switches;
 #[cfg(test)]
 mod tests_broken_stub_fences;

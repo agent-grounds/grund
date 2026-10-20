@@ -26,7 +26,7 @@ use super::scope::{config_location_error, duplicate_alias_sites};
 use crate::config::{
     AbsentOptionalNamespace, Config, Run, both_member_lists_message, optional_member_alias_segment,
 };
-use crate::model::Diagnostic;
+use crate::model::{Armed, Diagnostic, Switch};
 use crate::sources::path_is_dir;
 
 pub(super) fn workspace_optional_members_error(config: &Config, message: String) -> anyhow::Error {
@@ -255,6 +255,15 @@ pub(crate) fn absent_optional_member_warnings(config: &Config) -> Vec<Diagnostic
             authority: Vec::new(),
         })
         .collect()
+}
+
+/// §FS-check.1.4.1: the absence check is on wherever a block the run expanded
+/// lists an optional member, a nested one included, whether or not any is
+/// absent: [`absent_optional_member_warnings`] announces that set's absent part.
+pub(crate) fn arm_optional_members(config: &Config, armed: &mut Armed) {
+    if config.workspace_lists_optional() {
+        armed.arm(Switch::OptionalMember);
+    }
 }
 
 /// The sentence [`absent_optional_member_warnings`] carries, built apart from the

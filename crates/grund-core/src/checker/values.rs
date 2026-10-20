@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use super::value_mismatch::{rendered_value_path, value_mismatch};
 use super::value_roots::root_binding_finding;
-use crate::config::{Frame, Schema, kind_uses_values, kind_value_chapter};
+use crate::config::{Frame, Schema, any_kind_holds_values, kind_uses_values, kind_value_chapter};
 use crate::grammar::{BindingSpellings, render_catalog_id};
 use crate::model::{
     Catalog, CheckReport, Declaration, Diagnostic, EmbeddedValueRoot, Id, Site, Switch,
@@ -24,8 +24,7 @@ pub(super) fn check_values(
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
     report: &mut CheckReport,
 ) {
-    // §FS-check.1.4.1: the value family has something to judge only in a value kind.
-    if schema.value_rows().next().is_some() {
+    if value_authority(findings, schema) {
         report.armed.arm(Switch::Values);
     }
     for site in &findings.invalid_value_declarations {
@@ -134,6 +133,23 @@ pub(super) fn check_values(
             BindingAim::Inert => {}
         }
     }
+}
+
+/// §FS-check.1.4.1: the family is on wherever value authority is (§FS-values) — a
+/// kind's values slot, whole declarations or a declared chapter, or a value tag
+/// the scan found, which needs no switch (§FS-values.2.4), a misplaced one
+/// included (§FS-values.2.4.4). A project with none has nothing a binding can
+/// agree with, so `--only` of a value code there judged nothing.
+fn value_authority(findings: &Catalog, schema: &Schema) -> bool {
+    any_kind_holds_values(schema)
+        || !findings.invalid_value_declarations.is_empty()
+        || findings.declarations.values().flatten().any(|declaration| {
+            declaration.value_valid.is_some()
+                || declaration
+                    .sections
+                    .values()
+                    .any(|info| info.value_root.is_some())
+        })
 }
 
 /// What a recognized binding's cited path names once it resolves

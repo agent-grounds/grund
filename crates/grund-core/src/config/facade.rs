@@ -231,6 +231,18 @@ impl Config {
         self.workspace_absent_optional = self.records.run.workspace.absent_optional.clone();
     }
 
+    /// Whether any block expansion walked lists an optional member
+    /// (§FS-check.1.4.1). Not a façade field, like the kind table below.
+    pub(crate) fn set_workspace_lists_optional(&mut self, lists: bool) {
+        self.records.run.workspace.lists_optional = lists;
+    }
+
+    /// What [`Self::set_workspace_lists_optional`] recorded; `false` in a run
+    /// that expanded no workspace.
+    pub(crate) fn workspace_lists_optional(&self) -> bool {
+        self.records.run.workspace.lists_optional
+    }
+
     /// The run's kind table, which expansion built (§AR-config.1.5,
     /// §AR-config.1.5). Not a façade field: nothing but the setter
     /// writes it, so the records hold it alone.
