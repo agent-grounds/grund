@@ -43,6 +43,20 @@ subproject, run `grund agent-setup-instructions --section members`, which prints
 “Splitting off a member”
 ([§FS-init.5.4](../functional-spec/FS-init.md#54-splitting-off-a-member)).
 
+### The block's revision is not grund's release
+
+The managed block opens with a heading such as `## Grounding with grund (block v31)`.
+That number is the revision of the block's text, not a grund release: `grund -V`
+prints the release you are running
+([§FS-init.2.3.9.3](../functional-spec/FS-init.md#2393-the-headings-two-spellings)). A
+config selects one of four current revisions: v31, v32 once a kind declares rules,
+and v33 or v34 when its guidance lands in a scoped `AGENTS.md` or a declaration
+shape renders ([§FS-init.2.3.7.1](../functional-spec/FS-init.md#2371-the-current-version)).
+`grund check` reports an older block as outdated, and one `grund init` re-renders
+it. Blocks up to v30 spell the heading `(vN)`; both spellings are read, and
+`init` writes the labelled one in their place. A grund older than the block reports
+it as malformed, so upgrade grund first rather than editing the block by hand.
+
 ## `--scaffold`: a fresh repository
 
 ```bash
