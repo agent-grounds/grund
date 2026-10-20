@@ -86,7 +86,8 @@ class ApiTests(unittest.TestCase):
                 finding.code = "hidden"
         with temporary() as temp:
             clean = self.g.check(fixture(temp, "clean"))
-            self.assertEqual((), tuple(clean.report))
+            # §FS-check.checks.config-version-1: the v1 fixture's one caution is all it reports.
+            self.assertEqual(["config-version-1"], [f.code for f in clean.report])
             self.assertEqual((), clean.run_cautions)
 
     def test_effective_config_mapping_is_read_only(self):
@@ -309,7 +310,8 @@ class ApiTests(unittest.TestCase):
             result = self.g.check(fixture(temp, "workspace-include-root-false-unread-json"))
             self.assertTrue(result.run_cautions)
             self.assertEqual((), result.report.errors)
-            self.assertEqual((), result.report.warnings)
+            # §FS-check.checks.config-version-1: each v1 file read warns, and nothing else does.
+            self.assertEqual({"config-version-1"}, {f.code for f in result.report.warnings})
         with temporary() as temp:
             root = fixture(temp, "workspace-nested-include-root-false-list-project")
             with self.assertRaises(self.g.GrundError) as error:

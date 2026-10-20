@@ -54,7 +54,7 @@ class BuildTests(unittest.TestCase):
                        GRUND_ACCEPTANCE_SOURCE=str(crate))
             run([python, "-m", "pip", "install", str(crate)], source, env)
             smoke = ('import grund; r=grund.check("tests/e2e/cases/json-report/repo"); '
-                     'assert [(f.code,f.line) for f in r.report]==[("dangling",3)]; '
+                     'assert [(f.code,f.line) for f in r.report.errors]==[("dangling",3)]; '
                      'assert "FS-999-missing" in grund.show("FS-001-alpha", '
                      'root="tests/e2e/cases/json-report/repo", mode="brief").body; '
                      'import grund._native; from importlib.metadata import distribution; '

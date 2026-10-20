@@ -24,8 +24,6 @@ def interpreter(environment):
     return Path(environment) / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
 
 
-@unittest.skip("red until #872 updates run.py's stale config-version-1 expectations and "
-               "#871 adds BatchResult.note to the empty batch; implement removes this")
 class PythonAcceptanceWorkflowTests(unittest.TestCase):
     def test_python_acceptance_is_in_the_complete_local_gate(self):
         SCRATCH.mkdir(parents=True, exist_ok=True)
@@ -33,8 +31,12 @@ class PythonAcceptanceWorkflowTests(unittest.TestCase):
             environment = Path(temp) / "venv"
             subprocess.run([sys.executable, "-m", "venv", str(environment)], check=True)
             python = interpreter(environment)
+            # §AR-bindings.6.2: one install per run, built at the dev profile - the same
+            # source as a release, without its LTO, which costs the gate about a minute.
+            build = dict(os.environ, MATURIN_PEP517_ARGS="--profile dev")
             install = subprocess.run([str(python), "-m", "pip", "install", "--quiet",
-                                      str(SOURCE)], cwd=REPO, capture_output=True, text=True)
+                                      str(SOURCE)], cwd=REPO, env=build,
+                                     capture_output=True, text=True)
             self.assertEqual(0, install.returncode, install.stdout + install.stderr)
             # §FS-distribution.3.0.3: the corpus writes and pipes UTF-8, on Windows too.
             env = dict(os.environ, PYTHONUTF8="1")
