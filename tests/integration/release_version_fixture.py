@@ -77,6 +77,23 @@ def inventory(root, staged=False):
             for path in paths}
 
 
+def bump_versions(helper, root=REPO):
+    """§FS-distribution.4.5: the release and dev versions a helper writes over root.
+
+    Derived from the tree's workspace version, as the workflows derive theirs
+    from the last tag, so every phase changes the inputs on main and on each
+    candidate tree (#895): a literal equal to the tree's version writes nothing.
+    """
+    manifest = tomllib.loads((root / "Cargo.toml").read_text(encoding="utf-8"))
+    core = manifest["workspace"]["package"]["version"].split("-", 1)[0]
+    major, minor, patch = (int(part) for part in core.split("."))
+    if helper == "release-minor":
+        return f"{major}.{minor + 1}.0", f"{major}.{minor + 1}.1-dev"
+    if helper == "auto-bump":
+        return f"{major}.{minor}.{patch + 1}", f"{major}.{minor}.{patch + 2}-dev"
+    raise ValueError(f"unknown release helper {helper}")
+
+
 def set_version(root, version):
     return run(root, sys.executable, "scripts/distribution/candidate.py",
                "set-version", version)
