@@ -22,6 +22,9 @@ FACT = "tests/integration/command_agreement_facts/cli-version.json"
 LEDGER = "docs/discussions/proposals/2026-09-30-core-concerns.md"
 LEDGER_TEST = ("test_core_concerns_ledger.CoreConcernsLedgerTest."
                "test_every_ledger_row_removes_after_its_notice_and_after_what_shipped")
+# Resolve PATH before CreateProcess can select System32's WSL bash stub.
+# The Windows lane needs Git Bash, as do the other shell integration helpers.
+BASH = shutil.which("bash") or "bash"
 
 
 def run(root, *args, **kwargs):
@@ -106,7 +109,7 @@ def execute_phase(test, root, commands, version):
     for line in commands:
         line = line.replace("${{ steps.versions.outputs.next }}", "${TEST_VERSION}")
         line = line.replace("$dev", "${TEST_VERSION}")
-        result = run(root, "bash", "-euc", line,
+        result = run(root, BASH, "-euc", line,
                      env={**os.environ, "TEST_VERSION": version})
         test.assertEqual(0, result.returncode, f"{line}: {result.stdout}{result.stderr}")
 
