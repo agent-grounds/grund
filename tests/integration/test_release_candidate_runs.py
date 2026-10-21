@@ -24,6 +24,9 @@ RUNS = "Dry-run the release and run CI on both candidates"
 DEV = "Commit and push the dev candidate"
 PUBLISH = "Publish release commit and dispatch release"
 ADVANCE = "Advance main to the next dev version"
+# The one implementation of the advance both helpers call (§AR-system.principle).
+ADVANCE_SCRIPT = REPO_ROOT / "scripts" / "advance_dev.sh"
+ADVANCE_CALL = 'bash scripts/advance_dev.sh "$released" "$dev" "$branch" "$sha"'
 
 
 def helper_steps(name):
@@ -83,7 +86,9 @@ class CandidateWorkflowTests(unittest.TestCase):
                 runs = step_index(found, RUNS)
                 pushed, bodies = {}, {}
                 for index, step in enumerate(found):
-                    for target in re.findall(r"git push origin ([^\s;]+)", step):
+                    # A step that calls the advance pushes what the script pushes.
+                    text = step + ADVANCE_SCRIPT.read_text(encoding="utf-8") if ADVANCE_CALL in step else step
+                    for target in re.findall(r"git push origin ([^\s;]+)", text):
                         bare = target.strip('"')
                         if bare == "main" or bare.endswith((":main", ":refs/heads/main")):
                             self.assertGreater(index, runs, f"{name} pushes to main before CI ran")
@@ -93,6 +98,16 @@ class CandidateWorkflowTests(unittest.TestCase):
                 for step, output in expected.items():
                     self.assertEqual(['"${sha}:refs/heads/main"'], pushed[step], f"{name}: {step!r}")
                     self.assertIn(f'sha="${{{{ {output} }}}}"', bodies[step])
+
+    def test_both_helpers_advance_main_through_the_one_script(self):
+        """§FS-distribution.4.4.1: the retrying advance has one implementation, not a copy each."""
+        for name in HELPERS:
+            with self.subTest(workflow=name):
+                found = helper_steps(name)
+                index = step_index(found, ADVANCE)
+                self.assertNotEqual(-1, index, f"{name} has no step named {ADVANCE!r}")
+                self.assertIn(ADVANCE_CALL, found[index])
+                self.assertNotIn("git push", found[index], f"{name} pushes beside the advance script")
 
     def test_a_quiet_scheduled_run_builds_no_dev_candidate(self):
         """§FS-distribution.4.1: nothing is opened before a release."""

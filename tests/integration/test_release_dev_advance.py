@@ -118,7 +118,6 @@ class DevAdvanceTests(unittest.TestCase):
         count = int(pushes.read_text(encoding="utf-8")) if pushes.exists() else 0
         return result, self.git(origin, "rev-parse", "main"), count
 
-    @unittest.expectedFailure  # red until #915 retries an unmoved main; implement removes this
     def test_a_transient_rejection_onto_an_unmoved_main_is_retried(self):
         for workflow in HELPERS:
             with self.subTest(workflow=workflow):
@@ -143,7 +142,6 @@ class DevAdvanceTests(unittest.TestCase):
                 self.assertIn(MOVED, result.stderr)
                 self.assertEqual(moved, tip, "the advance moved a main that had moved")
 
-    @unittest.expectedFailure  # red until #915 names git's error for an unmoved main; implement removes this
     def test_a_push_that_keeps_failing_onto_an_unmoved_main_names_gits_error(self):
         for workflow in HELPERS:
             with self.subTest(workflow=workflow):

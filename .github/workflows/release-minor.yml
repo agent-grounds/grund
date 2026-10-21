@@ -214,11 +214,5 @@ jobs:
           dev="${{ steps.dev_candidate.outputs.dev }}"
           branch="${{ steps.dev_candidate.outputs.branch }}"
           sha="${{ steps.dev_candidate.outputs.sha }}"
-          # §FS-distribution.4.4.1: the commit CI passed, not one rebuilt here.
-          if ! git push origin "${sha}:refs/heads/main"; then
-            echo "error: main moved past the v${released} release commit before ${dev} could follow it" >&2
-            echo "       $branch holds the tested advance; open ${dev} from the new main tip by hand" >&2
-            exit 1
-          fi
-          git push origin --delete "$branch" || true
-          echo "main now opens ${dev}; release.yml was dispatched for v${released}."
+          # §FS-distribution.4.4.1: the commit CI passed, retried onto an unmoved main.
+          bash scripts/advance_dev.sh "$released" "$dev" "$branch" "$sha"
