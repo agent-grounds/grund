@@ -28,20 +28,20 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 | Reading | Count |
 | --- | --- |
-| Public root names | 286 |
+| Public root names | 287 |
 | Rustdoc-visible | 113 |
 | Visible and deprecated | 30 |
-| `#[doc(hidden)]` | 143 |
+| `#[doc(hidden)]` | 144 |
 | Named, a related API, or a data type of one | 140 |
-| Outside that closure | 146 |
+| Outside that closure | 147 |
 | Named by a frontend or its tests | 155 |
 | Reached structurally only | 46 |
 | No repository consumer of either kind | 85 |
 | Disposition frozen at 1.0 | 113 |
-| Disposition hidden | 143 |
+| Disposition hidden | 144 |
 | Disposition is removed in 0.21.0 | 30 |
 
-The two count columns do not line up, and they are not meant to: 85 names have no repository consumer while 146 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
+The two count columns do not line up, and they are not meant to: 85 names have no repository consumer while 147 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
 
 ## The inventory
 
