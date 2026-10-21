@@ -10,6 +10,25 @@ use grund_core::LspSnapshotOpts;
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
 
+/// §REQ-one-answer.proof.evidence.closed: reject new disagreements and stale
+/// ledger rows, in both directions, without changing any row's ruling.
+pub fn problems(found: &[(String, &str, String)], ledger: &[(&str, &str, &str)]) -> Vec<String> {
+    let mut wrong = Vec::new();
+    for (tree, invariant, answers) in found {
+        if !ledger.iter().any(|(_, t, i)| t == tree && i == invariant) {
+            wrong.push(format!("{tree} / {invariant}: {answers}"));
+        }
+    }
+    for (row, tree, invariant) in ledger {
+        if !found.iter().any(|(t, i, _)| t == tree && i == invariant) {
+            wrong.push(format!(
+                "ledger row {row} ({tree} / {invariant}) no longer reproduces: take it out"
+            ));
+        }
+    }
+    wrong
+}
+
 /// One kind, `FS`, anywhere under `docs/`, and only `docs/` scanned.
 const DOCS: &str = "[id]\nformat = \"{kind}-{slug}\"\n[[kinds]]\nkind = \"FS\"\n\
     folder = \"docs\"\nindex = false\n[scan]\ninclude = [\"docs\"]\n";

@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "case": "basic-markdown-missing-section",
+  "inputFiles": {
+    "expected.exit": {"bytes":[49,10]},
+    "expected.stderr": {"bytes":[119,97,114,110,105,110,103,58,32,103,114,117,110,100,46,116,111,109,108,32,105,115,32,118,101,114,115,105,111,110,32,49,59,32,109,105,103,114,97,116,101,32,105,116,32,119,105,116,104,32,103,114,117,110,100,32,99,111,110,102,105,103,32,109,105,103,114,97,116,101,32,45,45,116,111,32,50,10]},
+    "expected.stdout": {"bytes":[100,111,99,115,47,102,117,110,99,116,105,111,110,97,108,45,115,112,101,99,47,70,83,45,48,48,50,45,115,101,115,115,105,111,110,46,109,100,58,51,58,32,101,114,114,111,114,58,32,109,105,115,115,105,110,103,32,115,101,99,116,105,111,110,32,70,83,45,48,48,49,45,108,111,103,105,110,46,57,10]},
+    "repo": {"directory":true},
+    "repo/docs": {"directory":true},
+    "repo/docs/functional-spec": {"directory":true},
+    "repo/docs/functional-spec/FS-001-login.md": {"bytes":[35,32,70,83,45,48,48,49,45,108,111,103,105,110,58,32,85,115,101,114,32,108,111,103,105,110,10,10,67,114,101,97,116,101,115,32,97,32,115,101,115,115,105,111,110,32,100,101,115,99,114,105,98,101,100,32,98,121,32,70,83,45,48,48,50,45,115,101,115,115,105,111,110,46,10,10,35,35,32,49,46,32,73,110,112,117,116,115,10,10,85,115,101,114,110,97,109,101,32,97,110,100,32,112,97,115,115,119,111,114,100,46,10,10]},
+    "repo/docs/functional-spec/FS-002-session.md": {"bytes":[35,32,70,83,45,48,48,50,45,115,101,115,115,105,111,110,58,32,85,115,101,114,32,115,101,115,115,105,111,110,10,10,67,114,101,97,116,101,100,32,97,102,116,101,114,32,70,83,45,48,48,49,45,108,111,103,105,110,46,57,32,115,117,99,99,101,101,100,115,46,10,10,35,35,32,49,46,32,76,105,102,101,99,121,99,108,101,10,10,84,104,101,32,115,101,115,115,105,111,110,32,114,101,109,97,105,110,115,32,97,99,116,105,118,101,32,117,110,116,105,108,32,108,111,103,111,117,116,46,10,10]},
+    "repo/docs/functional-spec/README.md": {"bytes":[35,32,70,83,32,105,110,100,101,120,10,10,69,118,101,114,121,32,96,70,83,96,32,100,101,99,108,97,114,97,116,105,111,110,32,105,110,32,116,104,105,115,32,102,111,108,100,101,114,44,32,111,110,101,32,108,105,110,107,101,100,32,101,110,116,114,121,32,101,97,99,104,46,10,10,45,32,91,194,167,70,83,45,48,48,49,45,108,111,103,105,110,93,40,70,83,45,48,48,49,45,108,111,103,105,110,46,109,100,35,102,115,45,48,48,49,45,108,111,103,105,110,45,117,115,101,114,45,108,111,103,105,110,41,10,45,32,91,194,167,70,83,45,48,48,50,45,115,101,115,115,105,111,110,93,40,70,83,45,48,48,50,45,115,101,115,115,105,111,110,46,109,100,35,102,115,45,48,48,50,45,115,101,115,115,105,111,110,45,117,115,101,114,45,115,101,115,115,105,111,110,41,10]},
+    "repo/grund.toml": {"bytes":[103,114,117,110,100,95,99,111,110,102,105,103,95,118,101,114,115,105,111,110,32,61,32,49,10,10,91,114,101,102,101,114,101,110,99,101,93,10,115,116,114,105,99,116,32,61,32,102,97,108,115,101,10]},
+    "spec.refs": {"bytes":[70,83,45,48,48,49,45,99,104,101,99,107,46,51,46,50,10]}
+  },
+  "facts": {
+    "point": "§REQ-one-answer.proof.matrix.family",
+    "authoredFrom": "Read independently from this case's version-1 config (`strict = false`, default kinds), Markdown headings, prose and index bytes. Login line 3 cites the existing session. Session line 3 cites login section 9, absent from its one-section map (§FS-check.3.2); refs still lists that citation (§FS-refs.2), while show refuses it (§FS-show.2.2). Each section ends at the next same-level heading or EOF; declaration bodies exclude the H1 and end at EOF (§FS-show.2.1.2, §FS-list.3.4.1). Titles and heading anchors are pinned here (§FS-fmt.6.2). The FS index has both authored linked entries, neither declaration is unused, there are no aliases or deeper sections. Unmarked prose tokens are citations in this compatibility mode (§FS-citations.recognized). Fmt does not add markers without --marker (§FS-fmt.2.2); the cross-reference writer touches only marked citations (§FS-fmt.6.1), whose existing index destinations are already correct (the ambiguous login link remains authored). Thus both formatter passes and all writers preserve every byte, including the overlay newline. FS-404 is the absent control.",
+    "scanned": ["docs/functional-spec/FS-001-login.md","docs/functional-spec/FS-002-session.md","docs/functional-spec/README.md"],
+    "declarations": [
+      {"id":"FS-001-login","kind":"FS","file":"docs/functional-spec/FS-001-login.md","heading":"FS-001-login: User login","title":"User login","body":[2,8],"anchor":"fs-001-login-user-login"},
+      {"id":"FS-002-session","kind":"FS","file":"docs/functional-spec/FS-002-session.md","heading":"FS-002-session: User session","title":"User session","body":[2,8],"anchor":"fs-002-session-user-session"}
+    ],
+    "sections": [
+      {"of":"FS-001-login","file":"docs/functional-spec/FS-001-login.md","path":"1","heading":"1. Inputs","title":"Inputs","anchor":"1-inputs","end":8},
+      {"of":"FS-002-session","file":"docs/functional-spec/FS-002-session.md","path":"1","heading":"1. Lifecycle","title":"Lifecycle","anchor":"1-lifecycle","end":8}
+    ],
+    "citations": [
+      {"file":"docs/functional-spec/FS-001-login.md","token":"FS-002-session","enclosing":["FS-001-login",null]},
+      {"file":"docs/functional-spec/FS-002-session.md","token":"FS-001-login.9","enclosing":["FS-002-session",null]},
+      {"file":"docs/functional-spec/README.md","token":"§FS-001-login","enclosing":[null,null]},
+      {"file":"docs/functional-spec/README.md","token":"§FS-002-session","enclosing":[null,null]}
+    ],
+    "findings": [
+      {"severity":"error","code":"missing-section","path":"docs/functional-spec/FS-002-session.md","line":3,"message":"missing section FS-001-login.9","sites":[],"token":"FS-001-login.9"},
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+    ],
+    "refusals": {},
+    "fmt": {
+      "changes": [],
+      "writeChanges": [],
+      "written": {}
+    }
+  },
+  "variants": {
+    "whole-tree": {"absent":null},
+    "narrowed": {"absent":null},
+    "path-argument": {"absent":null},
+    "editor-overlay": {"absent":null}
+  }
+}

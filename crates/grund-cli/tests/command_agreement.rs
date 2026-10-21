@@ -117,6 +117,7 @@ mod agreement_truth_accounting;
 mod agreement_truth_controls;
 
 use agreement_buffers as buffers;
+use agreement_closed_rows::problems;
 use agreement_identity as identity;
 use agreement_sections as sections;
 use agreement_stubs as stubs;
@@ -300,7 +301,6 @@ const DEFERRED: &[(&str, &str, &str)] = &[];
 const WIDENING: &[(&str, &str)] = &[
     ("agent", "S4"),
     ("bare", "S4"),
-    ("basic", "S4"),
     ("block", "S4"),
     ("check", "S4"),
     ("cli", "S4"),
@@ -350,7 +350,7 @@ const WIDENING: &[(&str, &str)] = &[
 /// The end-to-end families the comparison asks whole, every case under every
 /// applicable variant and surface (§REQ-one-answer.proof.matrix.family);
 /// `WIDENING` names every other family (§REQ-one-answer.proof.delivery.widening).
-const COVERED: &[&str] = &["cover", "scan", "stub"];
+const COVERED: &[&str] = &["basic", "cover", "scan", "stub"];
 
 /// Every divergence found, as `(tree, invariant, the answers that differ)`.
 fn divergences() -> Vec<(String, &'static str, String)> {
@@ -366,24 +366,6 @@ fn divergences() -> Vec<(String, &'static str, String)> {
         }
     }
     found
-}
-
-/// What is wrong with `ledger` against what was `found`, both ways round.
-fn problems(found: &[(String, &str, String)], ledger: &[(&str, &str, &str)]) -> Vec<String> {
-    let mut wrong = Vec::new();
-    for (tree, invariant, answers) in found {
-        if !ledger.iter().any(|(_, t, i)| t == tree && i == invariant) {
-            wrong.push(format!("{tree} / {invariant}: {answers}"));
-        }
-    }
-    for (row, tree, invariant) in ledger {
-        if !found.iter().any(|(t, i, _)| t == tree && i == invariant) {
-            wrong.push(format!(
-                "ledger row {row} ({tree} / {invariant}) no longer reproduces: take it out"
-            ));
-        }
-    }
-    wrong
 }
 
 #[test]
