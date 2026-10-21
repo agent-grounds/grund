@@ -265,6 +265,7 @@ pub(crate) fn expand_workspace_tree_with_report_base(
         entries
             .iter_mut()
             .map(|entry| (entry.alias.as_str(), &mut entry.config)),
+        true,
     )?;
     Ok(entries)
 }

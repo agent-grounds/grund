@@ -23,6 +23,7 @@ use crate::config::{Config, Invocation, Schema, install_kind_table};
 /// (§FS-rules.4.1.1).
 pub(crate) fn declared_member_schemas(config: &Config) -> Vec<(String, Schema)> {
     declared_projects(config)
+        .0
         .into_iter()
         .map(|entry| (entry.alias, entry.config.schema().clone()))
         .collect()
@@ -47,27 +48,36 @@ pub(crate) fn open_narrowable(invocation: &Invocation) -> Result<Config> {
 /// §AR-config.1.5: a narrowed run of a config that declares
 /// `[workspace]` loads no member's files and still reads the kinds its declared
 /// workspace configures, so it judges the pinned and `*/` `[citations]`
-/// targets a full run judges, with the same one call. Nothing else of the
-/// declared read reaches the run: a rule object here stays §FS-rules.4.1's.
+/// targets a full run judges, with the same one call — unless the declared
+/// read fell back, whose table is no ground for a refusal (§FS-config.3.9.5.2).
+/// Nothing else of the declared read reaches the run: a rule object here stays
+/// §FS-rules.4.1's.
 fn install_declared_kind_table(config: &mut Config) -> Result<()> {
-    let mut projects = declared_projects(config);
+    let (mut projects, whole) = declared_projects(config);
     install_kind_table(
         config,
         projects
             .iter_mut()
             .map(|entry| (entry.alias.as_str(), &mut entry.config)),
+        whole,
     )
 }
 
 /// Each project the workspace `config` declares, best-effort as
-/// [`declared_member_schemas`] says; empty where it declares no `[workspace]`.
-fn declared_projects(config: &Config) -> Vec<WorkspaceProjectEntry> {
+/// [`declared_member_schemas`] says, and whether that is all of them — `false`
+/// where the expansion failed and only the config's own namespace was
+/// recovered; empty and whole where it declares no `[workspace]`.
+fn declared_projects(config: &Config) -> (Vec<WorkspaceProjectEntry>, bool) {
     if !config.workspace_declared {
-        return Vec::new();
+        return (Vec::new(), true);
     }
     let mut root_config = config.clone();
-    expand_workspace_projects(&mut root_config, &config.root).unwrap_or_else(|_| {
-        let mut alone = config.without_members();
-        expand_workspace_projects(&mut alone, &config.root).unwrap_or_default()
-    })
+    match expand_workspace_projects(&mut root_config, &config.root) {
+        Ok(entries) => (entries, true),
+        Err(_) => {
+            let mut alone = config.without_members();
+            let entries = expand_workspace_projects(&mut alone, &config.root).unwrap_or_default();
+            (entries, false)
+        }
+    }
 }
