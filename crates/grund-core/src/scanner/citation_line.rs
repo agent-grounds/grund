@@ -23,8 +23,8 @@ pub(super) struct CitationLine<'a> {
     /// (§FS-fmt.2.3.1.1) — the view every never-rewrite question is asked through,
     /// so a docstring line is judged on the text `fmt` reads there too.
     pub(super) docstring: DocstringContent<'a>,
-    /// Where a Markdown line sits in its file's links, which the zones of
-    /// §FS-citations.zones.authored-markup are read in.
+    /// Where a Markdown line sits in its file's links, which the never-rewrite
+    /// zones of §FS-fmt.2.3 are read in.
     pub(super) links: LineLinks<'a>,
     pub(super) column_offset: usize,
     pub(super) lineno: usize,

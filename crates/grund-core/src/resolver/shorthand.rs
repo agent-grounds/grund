@@ -254,9 +254,9 @@ pub(crate) fn expand_shorthand_citations_with_origins(
         if target_grammar.shorthand_sits_in_numeric_run(marker, tail, match_end) {
             continue;
         }
-        // §FS-fmt.2.3: the zones every rewrite honours, a reference key included
-        // (§FS-citations.zones.authored-markup), asked of a docstring's content on a
-        // docstring line as the scanner asks it (§FS-fmt.2.3.1.1).
+        // §FS-fmt.2.3: the zones every rewrite honours, a reference key included,
+        // asked of a docstring's content on a docstring line as the scanner asks it
+        // (§FS-fmt.2.3.1.1).
         if never_rewrite_context_in(docstring, links, line, is_md, marker_start) {
             continue;
         }

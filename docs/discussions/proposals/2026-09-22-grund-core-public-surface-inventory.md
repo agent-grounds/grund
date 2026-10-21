@@ -28,20 +28,20 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 | Reading | Count |
 | --- | --- |
-| Public root names | 285 |
+| Public root names | 286 |
 | Rustdoc-visible | 113 |
 | Visible and deprecated | 30 |
-| `#[doc(hidden)]` | 142 |
+| `#[doc(hidden)]` | 143 |
 | Named, a related API, or a data type of one | 140 |
-| Outside that closure | 145 |
-| Named by a frontend or its tests | 154 |
+| Outside that closure | 146 |
+| Named by a frontend or its tests | 155 |
 | Reached structurally only | 46 |
 | No repository consumer of either kind | 85 |
 | Disposition frozen at 1.0 | 113 |
-| Disposition hidden | 142 |
+| Disposition hidden | 143 |
 | Disposition is removed in 0.21.0 | 30 |
 
-The two count columns do not line up, and they are not meant to: 85 names have no repository consumer while 145 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
+The two count columns do not line up, and they are not meant to: 85 names have no repository consumer while 146 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
 
 ## The inventory
 
@@ -210,6 +210,7 @@ The two count columns do not line up, and they are not meant to: 85 names have n
 | `LeadSizeWarning` | config | `#[doc(hidden)]` | data type of `validate_config` | none found | via Config → LeadSizeWarning `grund-cli/src/lib.rs:13` | hidden |
 | `LineEdit` | queries | `#[doc(hidden)]` | no | none found | via on_type_line_edits → LineEdit `grund-lsp/src/lib.rs:1329` | hidden |
 | `LinkSupport` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `link_hover_citations` | queries | `#[doc(hidden)]` | no | grund-lsp `grund-lsp/src/lib.rs:7` | — | hidden |
 | `list` | api | visible | related API | none found | none found | frozen at 1.0 |
 | `list_sizes` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
 | `list_sizes_with_run_warnings` | queries | `#[doc(hidden)]` | no | no reader outside grund-core | — | hidden |

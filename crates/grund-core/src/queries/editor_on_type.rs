@@ -55,7 +55,7 @@ pub fn can_replace_trigger_at(
 /// (§FS-languages.multi-line-string), so it reads an interior line of one as
 /// code. `on_type_line_edits`, which is handed the document, passes the real view
 /// and agrees with `grund fmt`, and so does the line's place in the document's links
-/// (`links`), which a reference key spanning lines is read in (§FS-citations.zones).
+/// (`links`), which a reference key spanning lines is read in (§FS-lsp.1.4).
 fn can_replace_trigger_with_config(
     config: &Config,
     docstring: DocstringContent<'_>,
@@ -74,8 +74,8 @@ fn can_replace_trigger_with_config(
         return false;
     }
     // §FS-config-v2.schema.sources: the file is read as `grund fmt` reads it.
-    // §FS-lsp.1.4: every zone of §FS-citations.zones the bulk pass refuses, a
-    // reference key and an HTML tag included.
+    // §FS-lsp.1.4: every zone the bulk pass refuses (§FS-fmt.2.3), a reference key
+    // and an HTML tag included.
     if config.reading(path).markdown {
         !never_rewrite_context_in(docstring, links, line, true, trigger_start)
     } else {

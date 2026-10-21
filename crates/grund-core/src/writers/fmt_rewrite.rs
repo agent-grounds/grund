@@ -340,8 +340,8 @@ pub(crate) fn fmt_line(
 
 /// Rewrite each `$$<ID>` trigger to `§<ID>` — but only where `$$` is immediately
 /// followed by a real ID-shaped token, and never inside a string literal in source
-/// code, a Markdown inline code span, a link destination or another zone of
-/// §FS-citations.zones (§FS-fmt.2.1, §FS-fmt.2.3.1, §DF-reference-marker).
+/// code, a Markdown inline code span, a link destination or another never-rewrite
+/// zone (§FS-fmt.2.1, §FS-fmt.2.3, §FS-fmt.2.3.1, §DF-reference-marker).
 struct TriggerReplacement {
     line: String,
     /// Byte offsets in `line` where §FS-fmt.2.1 produced a marker. Keeping
@@ -385,8 +385,8 @@ fn replace_trigger(
 
 /// Prefix `§` onto bare ID-shaped tokens that lack it — the `--marker` upgrade
 /// (§FS-fmt.2.2) — skipping tokens already marked, Markdown inline-code examples,
-/// Markdown link destinations and the other zones of §FS-citations.zones, and
-/// source-code string literals (§FS-fmt.2.3).
+/// Markdown link destinations and the other never-rewrite zones, and source-code
+/// string literals (§FS-fmt.2.3).
 pub(super) fn add_markers(
     line: &str,
     docstring: DocstringContent<'_>,

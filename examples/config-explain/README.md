@@ -20,7 +20,7 @@ Top-level keys: grund_config_version, project_name
 [schema]  What exists: the citation marker, the ID grammar, the sources, the note and lead measures, and the kinds.
 …
 [workspace]  The sub-projects a workspace root checks, each in its own namespace.
-65 check codes: grund config explain --codes
+66 check codes: grund config explain --codes
 
 Next: grund config explain '[schema]' examples/config-explain/explain-1-index/repo
 ```
