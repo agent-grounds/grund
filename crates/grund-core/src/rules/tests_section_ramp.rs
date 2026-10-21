@@ -108,8 +108,7 @@ fn codes(diagnostics: &[Diagnostic]) -> Vec<(&str, Option<usize>)> {
 #[test]
 fn a_count_only_the_numbered_section_site_breaks_is_an_error() {
     for mode in [TargetMode::Aggregate, TargetMode::PerTarget] {
-        let (errors, warnings) = evaluate(&[at_most(1, mode)], &[], &facts());
-        assert!(warnings.is_empty(), "{mode:?}: {:?}", codes(&warnings));
+        let errors = evaluate(&[at_most(1, mode)], &[], &facts());
         assert_eq!(codes(&errors), [("citation-cardinality", Some(1))]);
         assert!(
             !errors[0].message.contains(CLAUSE),
@@ -122,8 +121,7 @@ fn a_count_only_the_numbered_section_site_breaks_is_an_error() {
 #[test]
 fn a_count_broken_without_the_numbered_section_site_stays_an_error() {
     for mode in [TargetMode::Aggregate, TargetMode::PerTarget] {
-        let (errors, warnings) = evaluate(&[at_most(0, mode)], &[], &facts());
-        assert!(warnings.is_empty(), "{mode:?}: {:?}", codes(&warnings));
+        let errors = evaluate(&[at_most(0, mode)], &[], &facts());
         assert_eq!(codes(&errors), [("citation-cardinality", Some(1))]);
         assert!(!errors[0].message.contains(CLAUSE));
     }
@@ -140,8 +138,7 @@ fn an_inbound_count_only_the_numbered_section_site_breaks_is_an_error() {
         },
         ..at_most(1, TargetMode::Aggregate)
     };
-    let (errors, warnings) = evaluate(&[inbound], &[], &facts());
-    assert!(warnings.is_empty(), "{:?}", codes(&warnings));
+    let errors = evaluate(&[inbound], &[], &facts());
     assert_eq!(codes(&errors), [("uncited-unit", Some(20))]);
     assert!(!errors[0].message.contains(CLAUSE));
 }
@@ -153,8 +150,7 @@ fn a_prohibition_is_an_error_at_the_numbered_section_site_too() {
         cardinality: Cardinality::NONE,
         ..at_most(0, TargetMode::Aggregate)
     };
-    let (errors, warnings) = evaluate(std::slice::from_ref(&ban), &[], &facts());
-    assert!(warnings.is_empty(), "{:?}", codes(&warnings));
+    let errors = evaluate(std::slice::from_ref(&ban), &[], &facts());
     assert_eq!(
         codes(&errors),
         [

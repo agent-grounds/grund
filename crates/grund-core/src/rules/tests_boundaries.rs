@@ -169,7 +169,7 @@ fn sentence_front_end_returns_complete_parsed_rule_without_facts_or_diagnostics(
 /// hand-built facts, with no sentence text, Markdown or scanner record.
 #[test]
 fn logic_engine_evaluates_hand_built_rule_and_facts_without_parser_or_scanner() {
-    let diagnostics = evaluate(&[rule()], &[], &facts(Completeness::Complete)).0;
+    let diagnostics = evaluate(&[rule()], &[], &facts(Completeness::Complete));
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].code, "missing-citation");
     assert_eq!(diagnostics[0].line, Some(2));
@@ -182,13 +182,13 @@ fn logic_engine_evaluates_hand_built_rule_and_facts_without_parser_or_scanner() 
 fn logic_engine_owns_precedence_and_existing_report_channels() {
     let hard = rule();
     let snapshot = facts(Completeness::Complete);
-    let mut config = evaluate(std::slice::from_ref(&hard), &[], &snapshot).0;
+    let mut config = evaluate(std::slice::from_ref(&hard), &[], &snapshot);
     config[0].authority.clear();
     let reporting: Direction = (hard.clone(), config);
-    let suppressed = evaluate(std::slice::from_ref(&hard), &[reporting], &snapshot).0;
+    let suppressed = evaluate(std::slice::from_ref(&hard), &[reporting], &snapshot);
     assert!(suppressed.is_empty());
     let passing: Direction = (hard.clone(), Vec::new());
-    let kept = evaluate(std::slice::from_ref(&hard), &[passing], &snapshot).0;
+    let kept = evaluate(std::slice::from_ref(&hard), &[passing], &snapshot);
     assert_eq!(kept.len(), 1);
     assert_eq!(kept[0].authority, vec!["RULE-fs".to_string()]);
 
@@ -243,12 +243,10 @@ fn markdown_adapter_and_second_producer_drive_the_same_engine_result() {
         sites: BTreeMap::new(),
     };
     let left = evaluate(&[rule()], &[], &markdown)
-        .0
         .into_iter()
         .map(|d| (d.code, d.message))
         .collect::<Vec<_>>();
     let right = evaluate(&[rule()], &[], &second)
-        .0
         .into_iter()
         .map(|d| (d.code, d.message))
         .collect::<Vec<_>>();
@@ -260,16 +258,10 @@ fn markdown_adapter_and_second_producer_drive_the_same_engine_result() {
 #[test]
 fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
     assert_eq!(
-        evaluate(&[rule()], &[], &facts(Completeness::Complete))
-            .0
-            .len(),
+        evaluate(&[rule()], &[], &facts(Completeness::Complete)).len(),
         1
     );
-    assert!(
-        evaluate(&[rule()], &[], &facts(Completeness::Incomplete))
-            .0
-            .is_empty()
-    );
+    assert!(evaluate(&[rule()], &[], &facts(Completeness::Incomplete)).is_empty());
 
     let fs = NodeKey("partial-fs".into());
     let ar = NodeKey("partial-ar".into());
@@ -330,7 +322,7 @@ fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
         cardinality: Cardinality::NONE,
         ..rule()
     };
-    let diagnostics = evaluate(&[rule(), exact_count, prohibition], &[], &partial).0;
+    let diagnostics = evaluate(&[rule(), exact_count, prohibition], &[], &partial);
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].code, "forbidden-citation");
 
@@ -344,7 +336,7 @@ fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
         },
         ..rule()
     };
-    let withheld = evaluate(std::slice::from_ref(&chapter_scoped), &[], &partial).0;
+    let withheld = evaluate(std::slice::from_ref(&chapter_scoped), &[], &partial);
     assert!(withheld.is_empty());
 
     // The same facts, declared complete: the silence above is the snapshot's
@@ -352,7 +344,7 @@ fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
     // promotion put it on (§FS-rules.7).
     let mut complete = partial;
     complete.header.completeness = Completeness::Complete;
-    let reported = evaluate(&[chapter_scoped], &[], &complete).0;
+    let reported = evaluate(&[chapter_scoped], &[], &complete);
     assert_eq!(reported.len(), 1);
     assert_eq!(reported[0].code, "unreached-declaration");
 }
@@ -387,7 +379,7 @@ fn zero_citations_under_a_floor_above_one_is_a_cardinality_finding() {
         },
         ..rule()
     };
-    let diagnostics = evaluate(&[floor], &[], &facts(Completeness::Complete)).0;
+    let diagnostics = evaluate(&[floor], &[], &facts(Completeness::Complete));
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].code, "citation-cardinality");
     assert_eq!(

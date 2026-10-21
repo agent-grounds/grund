@@ -136,12 +136,12 @@ fn aggregate_counts_physical_sites_in_nested_units_once_each() {
             subject,
             ..rule(TargetMode::Aggregate, 2)
         };
-        assert!(evaluate(&[two.clone()], &[], &facts()).0.is_empty());
+        assert!(evaluate(&[two.clone()], &[], &facts()).is_empty());
         let one = ParsedRule {
             cardinality: rule(TargetMode::Aggregate, 1).cardinality,
             ..two
         };
-        let diagnostics = evaluate(&[one], &[], &facts()).0;
+        let diagnostics = evaluate(&[one], &[], &facts());
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(diagnostics[0].code, "citation-cardinality");
         assert!(diagnostics[0].message.contains("cites REQ 2 times"));
@@ -152,7 +152,7 @@ fn aggregate_counts_physical_sites_in_nested_units_once_each() {
 /// uncited target remains in the universe, in stable target-key order.
 #[test]
 fn per_target_counts_owners_and_keeps_zero_citation_targets() {
-    let diagnostics = evaluate(&[rule(TargetMode::PerTarget, 1)], &[], &facts()).0;
+    let diagnostics = evaluate(&[rule(TargetMode::PerTarget, 1)], &[], &facts());
     let messages: Vec<_> = diagnostics.iter().map(|d| d.message.as_str()).collect();
     assert_eq!(
         messages,
@@ -182,7 +182,7 @@ fn presence_uses_direct_children_and_display_names() {
         targets: RuleTargets::Chapter("Terms".into()),
         ..rule(TargetMode::Aggregate, 1)
     };
-    assert!(evaluate(&[presence], &[], &facts()).0.is_empty());
+    assert!(evaluate(&[presence], &[], &facts()).is_empty());
     let nested = ParsedRule {
         subject: RuleSubject::ChapterOfKind {
             kind: "FS".into(),
@@ -190,7 +190,7 @@ fn presence_uses_direct_children_and_display_names() {
         },
         ..rule(TargetMode::Aggregate, 1)
     };
-    let diagnostics = evaluate(&[nested], &[], &facts()).0;
+    let diagnostics = evaluate(&[nested], &[], &facts());
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].code, "unreached-declaration");
     assert_eq!(diagnostics[0].line, Some(1));
@@ -213,12 +213,12 @@ fn inbound_recovers_source_kind_without_promoting_target() {
         },
         ..rule(TargetMode::Aggregate, 2)
     };
-    assert!(evaluate(&[inbound.clone()], &[], &facts()).0.is_empty());
+    assert!(evaluate(&[inbound.clone()], &[], &facts()).is_empty());
     let owner = ParsedRule {
         subject: RuleSubject::ExactDeclaration("REQ-a".into()),
         ..inbound
     };
-    let diagnostics = evaluate(&[owner], &[], &facts()).0;
+    let diagnostics = evaluate(&[owner], &[], &facts());
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].code, "uncited-unit");
     assert_eq!(diagnostics[0].line, Some(10));
@@ -249,7 +249,7 @@ fn incomplete_snapshots_keep_prohibition_sites_and_levels() {
             ..prohibition.clone()
         };
         let diagnostics = if level == RuleLevel::Required {
-            evaluate(&[positive, ban], &[], &partial).0
+            evaluate(&[positive, ban], &[], &partial)
         } else {
             evaluate_suggestions(&[positive, ban], &[], &partial)
         };
@@ -293,12 +293,8 @@ fn empty_universes_are_not_inferred_from_citations() {
     empty_targets.cites.clear();
     empty_targets.site_in.clear();
     empty_targets.sites.clear();
-    assert!(
-        evaluate(&[rule(TargetMode::PerTarget, 1)], &[], &empty_targets)
-            .0
-            .is_empty()
-    );
-    let diagnostics = evaluate(&[rule(TargetMode::Aggregate, 1)], &[], &empty_targets).0;
+    assert!(evaluate(&[rule(TargetMode::PerTarget, 1)], &[], &empty_targets).is_empty());
+    let diagnostics = evaluate(&[rule(TargetMode::Aggregate, 1)], &[], &empty_targets);
     assert_eq!(diagnostics.len(), 1);
     assert!(diagnostics[0].message.contains("cites REQ 0 times"));
 
@@ -317,5 +313,5 @@ fn empty_universes_are_not_inferred_from_citations() {
         },
         ..rule(TargetMode::Aggregate, 1)
     };
-    assert!(evaluate(&[chapter], &[], &empty_subjects).0.is_empty());
+    assert!(evaluate(&[chapter], &[], &empty_subjects).is_empty());
 }

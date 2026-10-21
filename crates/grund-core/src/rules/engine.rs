@@ -4,7 +4,6 @@ mod authority;
 mod cites;
 mod index;
 mod precedence;
-mod ramp;
 mod resolution;
 mod selectors;
 mod unreached;
@@ -21,7 +20,6 @@ pub(crate) use authority::one_rules_authority;
 use cites::evaluate_cites;
 use index::FactIndex;
 pub(crate) use precedence::{Direction, citation_precedence, direction_rule};
-use ramp::{Marks, Windows, matched_before, nodes_matched_before, route};
 pub(crate) use resolution::unresolved_subject_diagnostic;
 use resolution::unresolved_subject_diagnostic_indexed;
 use selectors::{
@@ -32,18 +30,6 @@ use unreached::report_unreached;
 
 #[cfg(test)]
 mod tests_mixed_ramp;
-
-/// One level of evaluation: the channel a rule finding has always had at that
-/// level, and the ramp's warnings beside it.
-///
-/// A finding that a target newly matched at the rule's own nested alias
-/// (§FS-rules.7.9) alone produces is carried on the warnings channel rather than
-/// the errors channel, for the length of its ramp and no longer. Mixed sites are
-/// ordinary (§FS-rules.7.12). It is a pair rather than a type so that the engine/checker
-/// crossing stays `Diagnostic` and nothing else (§AR-rules.5): when those ramps
-/// close at `0.19.0` the second half goes away and the return collapses back to
-/// one `Vec`.
-type LevelFindings = (Vec<Diagnostic>, Vec<Diagnostic>);
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 struct SemanticRule {
@@ -61,7 +47,7 @@ pub(crate) fn evaluate(
     rules: &[ParsedRule],
     precedence: &[Direction],
     facts: &RuleFacts,
-) -> LevelFindings {
+) -> Vec<Diagnostic> {
     evaluate_level(rules, precedence, facts, RuleLevel::Required, true)
 }
 
@@ -73,8 +59,7 @@ pub(crate) fn evaluate_suggestions(
     precedence: &[Direction],
     facts: &RuleFacts,
 ) -> Vec<Diagnostic> {
-    // §FS-rules.7.9: the recommended level owes no ramp, so its field stays empty.
-    evaluate_level(rules, precedence, facts, RuleLevel::Recommended, false).0
+    evaluate_level(rules, precedence, facts, RuleLevel::Recommended, false)
 }
 
 /// Share one immutable fact index across this level's semantic groups and
@@ -85,12 +70,11 @@ fn evaluate_level(
     facts: &RuleFacts,
     level: RuleLevel,
     include_invalid: bool,
-) -> LevelFindings {
+) -> Vec<Diagnostic> {
     let index = FactIndex::new(facts);
     let mut groups: BTreeMap<SemanticRule, BTreeSet<String>> = BTreeMap::new();
     let precedence = reported_by_direction(precedence);
     let mut out = Vec::new();
-    let mut ramp = Vec::new();
     for rule in rules {
         if let Some(diagnostic) = unresolved_subject_diagnostic_indexed(rule, facts, &index) {
             if include_invalid {
@@ -109,22 +93,20 @@ fn evaluate_level(
     for (rule, origins) in groups {
         let authority = Authority::new(origins);
         let Some(reported) = precedence.get(&rule) else {
-            evaluate_one(&rule, &authority, facts, &index, &mut out, &mut ramp);
+            evaluate_one(&rule, &authority, facts, &index, &mut out);
             continue;
         };
         // §FS-rules.6: a duplicate of a direction is evaluated all the same, and
         // loses only the findings the direction reported itself, unit by unit.
-        let (mut own, mut own_ramp) = (Vec::new(), Vec::new());
-        evaluate_one(&rule, &authority, facts, &index, &mut own, &mut own_ramp);
-        let unreported = |finding: &Diagnostic| {
+        let mut own = Vec::new();
+        evaluate_one(&rule, &authority, facts, &index, &mut own);
+        out.extend(own.into_iter().filter(|finding| {
             !reported
                 .iter()
                 .any(|direction| same_place(direction, finding))
-        };
-        out.extend(own.into_iter().filter(unreported));
-        ramp.extend(own_ramp.into_iter().filter(unreported));
+        }));
     }
-    (out, ramp)
+    out
 }
 
 /// Whether two findings are reported alike, as config-to-rule deduplication
@@ -179,7 +161,6 @@ fn evaluate_one(
     facts: &RuleFacts,
     index: &FactIndex<'_>,
     out: &mut Vec<Diagnostic>,
-    ramp: &mut Vec<Diagnostic>,
 ) {
     let subjects = select_subjects(&rule.subject, facts, index);
     // §FS-rules.4: every positive cardinality conclusion is closed-world, and
@@ -244,7 +225,6 @@ fn evaluate_one(
         }
         RuleRelation::Cite if rule.polarity == RulePolarity::Prohibiting => {
             let targets = target_nodes(&rule.targets, facts, index);
-            let before = nodes_matched_before(&rule.targets, facts, index);
             for subject in subjects {
                 for (site, _, target) in index.citations_in(&subject) {
                     if citation_matches_targets(target, &targets, index) {
@@ -256,76 +236,50 @@ fn evaluate_one(
                         } else {
                             (Code::DISCOURAGED_CITATION, "")
                         };
-                        // §FS-rules.7.9: a required site newly matched warns.
-                        let windows = Windows::at(
-                            rule.level,
-                            Marks {
-                                matched: !citation_matches_targets(target, &before, index),
+                        // §FS-rules.7.9: a site a nested-alias pin matches is ordinary.
+                        let message = format!(
+                            "{} {} not cite {} ({authority}){repair}",
+                            index
+                                .declaration_kind(&subject)
+                                .map(str::to_owned)
+                                .unwrap_or_else(|| label(facts, &subject)),
+                            if rule.level == RuleLevel::Required {
+                                "must"
+                            } else {
+                                "should"
                             },
+                            target_wording(&rule.targets)
                         );
-                        let (sink, message) = route(
-                            windows,
-                            out,
-                            ramp,
-                            format!(
-                                "{} {} not cite {} ({authority}){repair}",
-                                index
-                                    .declaration_kind(&subject)
-                                    .map(str::to_owned)
-                                    .unwrap_or_else(|| label(facts, &subject)),
-                                if rule.level == RuleLevel::Required {
-                                    "must"
-                                } else {
-                                    "should"
-                                },
-                                target_wording(&rule.targets)
-                            ),
-                        );
-                        push_site(sink, facts, site, code, message, authority);
+                        push_site(out, facts, site, code, message, authority);
                     }
                 }
             }
         }
         RuleRelation::Cite => {
-            evaluate_cites(rule, authority, facts, index, &subjects, out, ramp);
+            evaluate_cites(rule, authority, facts, index, &subjects, out);
         }
         RuleRelation::BeCitedBy => {
             for subject in subjects {
                 // §FS-rules.3.4: a numbered section of the subject's own body
-                // reaches it here, an ordinary site since §FS-rules.7.8 landed.
-                // §FS-rules.7.9: a citing kind only the corrected match takes ramps too.
-                let sites = index
+                // reaches it here, an ordinary site since §FS-rules.7.8 landed, and a
+                // citing kind a nested-alias pin matches counts since §FS-rules.7.9 did.
+                let count = index
                     .citations_to(&subject)
                     .iter()
-                    .filter_map(|(_, from, _)| {
-                        let kind = index.declaration_kind(from)?;
-                        target_kind_matches(&rule.targets, kind, facts).then(|| Marks {
-                            matched: !matched_before(&rule.targets, kind, facts),
-                        })
+                    .filter(|(_, from, _)| {
+                        index
+                            .declaration_kind(from)
+                            .is_some_and(|kind| target_kind_matches(&rule.targets, kind, facts))
                     })
-                    .collect::<Vec<_>>();
-                let count = sites.len();
+                    .count();
                 if !rule.cardinality.contains(count) {
-                    let windows = Windows::of_count(rule.level, rule.cardinality, sites);
-                    let (sink, message) = route(
-                        windows,
-                        out,
-                        ramp,
-                        format!(
-                            "{} is cited by {} {count} times; {authority} requires {}",
-                            label(facts, &subject),
-                            target_wording(&rule.targets),
-                            rule.cardinality.wording()
-                        ),
+                    let message = format!(
+                        "{} is cited by {} {count} times; {authority} requires {}",
+                        label(facts, &subject),
+                        target_wording(&rule.targets),
+                        rule.cardinality.wording()
                     );
-                    push_node(
-                        sink,
-                        facts,
-                        &subject,
-                        Code::UNCITED_UNIT,
-                        message,
-                        authority,
-                    );
+                    push_node(out, facts, &subject, Code::UNCITED_UNIT, message, authority);
                 }
             }
         }

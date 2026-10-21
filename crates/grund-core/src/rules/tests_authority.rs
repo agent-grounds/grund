@@ -70,7 +70,7 @@ fn rule(origin: &str) -> ParsedRule {
 /// §FS-rules.7.6: one rule's evaluation names that rule and nothing else.
 #[test]
 fn one_rules_finding_carries_that_rules_origin() {
-    let diagnostics = evaluate(&[rule("RULE-goalref")], &[], &facts()).0;
+    let diagnostics = evaluate(&[rule("RULE-goalref")], &[], &facts());
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].authority, vec!["RULE-goalref".to_string()]);
 }
@@ -85,8 +85,7 @@ fn a_collapsed_groups_authority_is_every_origin_in_bytewise_order() {
         &[rule("RULE-second"), rule("--rule"), rule("RULE-first")],
         &[],
         &facts(),
-    )
-    .0;
+    );
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(
         diagnostics[0].authority,
@@ -102,7 +101,7 @@ fn a_collapsed_groups_authority_is_every_origin_in_bytewise_order() {
 /// the words a reader sees name exactly what a script would read.
 #[test]
 fn the_message_tail_is_the_authority_joined() {
-    let diagnostics = evaluate(&[rule("RULE-second"), rule("--rule")], &[], &facts()).0;
+    let diagnostics = evaluate(&[rule("RULE-second"), rule("--rule")], &[], &facts());
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(
         diagnostics[0].message,
@@ -140,9 +139,9 @@ fn an_unresolved_subject_diagnostic_carries_its_one_rules_origin() {
 #[test]
 fn a_suppressed_group_leaves_no_authority_behind() {
     let declared = rule("RULE-goalref");
-    let mut config = evaluate(std::slice::from_ref(&declared), &[], &facts()).0;
+    let mut config = evaluate(std::slice::from_ref(&declared), &[], &facts());
     config[0].authority.clear();
     let direction: Direction = (declared.clone(), config);
-    let suppressed = evaluate(std::slice::from_ref(&declared), &[direction], &facts()).0;
+    let suppressed = evaluate(std::slice::from_ref(&declared), &[direction], &facts());
     assert!(suppressed.is_empty());
 }
