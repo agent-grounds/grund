@@ -88,9 +88,9 @@ writes none for a citation into a sibling
 In a kind's index, an entry is a link that goes somewhere: the one `fmt`
 writes, an inline link whose text holds the citation, or a reference whose key a
 definition matches. A citation that is an image's whole description,
-`- ![§ADR-use-redis](cache.png)`, is no link to the declaration; the release
-that carries this change still takes it as the entry and warns where it is all
-the index holds for the ID, and the next minor release stops taking it
+`- ![§ADR-use-redis](cache.png)`, is no link to the declaration. grund still
+takes it as the entry for one more minor release, warning where it is all the
+index holds for the ID, and stops taking it in the release the warning names
 ([§FS-citations.checks.image-index-entry](../functional-spec/FS-citations.md#checksimage-index-entry-a-citation-only-image-is-an-index-entry-for-one-more-release)):
 
 ```text

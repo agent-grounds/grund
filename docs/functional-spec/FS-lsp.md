@@ -216,7 +216,7 @@ The server therefore hands the core the document, not just the edited line, so t
 
 #### 1.4.4 Where the trigger conversion refuses
 
-The trigger conversion, which replaces only the two characters just typed and leaves the ID token byte-identical, stays eager in a fenced code block, on a declaration heading, and inside a suppressed scope. It refuses only where the marker may not be typed at all: an ordinary string literal in a source file — a Python docstring's content is not one, which is what [§FS-lsp.1.4.3](FS-lsp.md#143-where-the-expansion-refuses) decides — and, in Markdown, an inline code span or a link destination.
+The trigger conversion, which replaces only the two characters just typed and leaves the ID token byte-identical, stays eager in a fenced code block, on a declaration heading, and inside a suppressed scope. It refuses only where the marker may not be typed at all: an ordinary string literal in a source file — a Python docstring's content is not one, which is what [§FS-lsp.1.4.3](FS-lsp.md#143-where-the-expansion-refuses) decides — and, in Markdown, every zone [§FS-citations.zones](FS-citations.md#zones-where-citation-text-is-never-rewritten) names.
 
 #### 1.4.5 A shorthand already in the document
 
