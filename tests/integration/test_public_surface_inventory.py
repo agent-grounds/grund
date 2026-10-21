@@ -55,7 +55,7 @@ REMOVED_LINE = "was removed in 0.19.0"
 # §FS-distribution.3.1.2: every row is promised, hidden, or on its way out.
 FROZEN, HIDDEN, LEAVING = "frozen at 1.0", "hidden", "is removed in 0.21.0"
 DISPOSITIONS = (FROZEN, HIDDEN, LEAVING)
-FROZEN_COUNT, HIDDEN_COUNT = 113, 148
+FROZEN_COUNT, HIDDEN_COUNT = 113, 150
 # §FS-distribution.3.1.3: the 30 root names the CLI assembled `--write` from,
 # and the 9 methods of the kept vocabularies, deprecated in 0.19.0.
 LEAVING_NAMES = frozenset((
