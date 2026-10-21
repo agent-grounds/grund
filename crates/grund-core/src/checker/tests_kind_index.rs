@@ -462,8 +462,13 @@ fn run_unused_ids(root: &Path) -> Vec<String> {
         .map(|diagnostic| {
             diagnostic
                 .message
-                .rsplit_once(": ")
-                .map(|(_, id)| id.to_string())
+                .strip_prefix("declared but never cited: ")
+                .map(|tail| {
+                    tail.split(" (its index entry at ")
+                        .next()
+                        .unwrap()
+                        .to_string()
+                })
                 .unwrap_or_default()
         })
         .collect()

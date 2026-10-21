@@ -226,7 +226,8 @@ The [structure guide](docs/user-facing/structure.md) has the rest of the syntax,
 runnable example of each scheme. A link you write around a citation, in any form
 Markdown has, stays yours: `grund fmt` leaves it as written and `grund check` still
 checks the citation in it, as
-[`examples/authored-citations/`](examples/authored-citations/) shows.
+[`examples/authored-citations/`](examples/authored-citations/) shows. It also
+explains why an index-only declaration warns while `refs` still lists its entry.
 
 ## Workspaces
 

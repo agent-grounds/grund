@@ -56,13 +56,13 @@ fn command_refs_sites(line: RefsSiteLine) -> ExitCode {
         Some(source) => RefsSites::From(source.clone()),
         None => RefsSites::Globs(line.globs.clone()),
     };
-    let (warnings, result) = refs_sites_with_run_warnings(RefsSitesOpts {
+    let (warnings, result) = grund_core::refs_sites_with_text_annotations(RefsSitesOpts {
         path: path.clone(),
         path_provided,
         sites,
     });
     render_run_warnings(&warnings);
-    let output = match result {
+    let (output, index_entries) = match result {
         Ok(output) => output,
         Err(err) => {
             // §FS-errors.5.2: the typed sites of an ambiguous source, as `show` reads them.
@@ -89,16 +89,14 @@ fn command_refs_sites(line: RefsSiteLine) -> ExitCode {
         let clause = if source.is_some() { cites_clause } else { usage_clause };
         render_refs_total(&output.hits, &format, clause);
     } else if line.summary {
-        render_refs_summary(&output.hits, output.workspace, &format);
+        render_refs_summary(&output.hits, output.workspace, &format, &index_entries);
     } else if format == "json" {
         // §FS-refs.3.2: a record names no one queried target, so it carries no kind title.
         for hit in &output.hits {
             println!("{}", render_ref_hit_json(hit, output.workspace, None));
         }
     } else {
-        for hit in &output.hits {
-            println!("{}:{}: {}", hit.path, hit.line, hit.text);
-        }
+        render_refs_text(&output.hits, &index_entries);
     }
     exit_after_scan_errors(&output.scan_errors)
 }

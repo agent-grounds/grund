@@ -1,2 +1,2 @@
 docs/functional-spec/FS-session.md:3: error: unknown project alias root
-docs/functional-spec/FS-session.md:1: warning: declared but never cited: FS-session
+docs/functional-spec/FS-session.md:1: warning: declared but never cited: FS-session (its index entry at docs/functional-spec/README.md:5 does not count as a use)

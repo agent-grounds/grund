@@ -123,7 +123,6 @@ fn accounting_controls(repo: &Repo) -> String {
 /// §FS-check.4.1.2: explain the same exclusion in text and JSON messages;
 /// a true non-use keeps its old warning and an outside-index use still counts.
 #[test]
-#[ignore = "red until #909 explains excluded index entries; implement removes this"]
 fn index_only_warning_locates_the_discounted_site() {
     let repo = triage_repo("warning");
     let check = accounting_controls(&repo);
@@ -156,7 +155,6 @@ fn index_only_warning_locates_the_discounted_site() {
 /// §FS-refs.3.1.1: both index-only and genuinely used IDs label index sites,
 /// retaining every row and leaving ordinary rows byte-identical.
 #[test]
-#[ignore = "red until #909 labels excluded refs sites; implement removes this"]
 fn refs_labels_index_entries_beside_real_uses() {
     let repo = triage_repo("sites");
     accounting_controls(&repo);
@@ -174,7 +172,6 @@ fn refs_labels_index_entries_beside_real_uses() {
 
 /// §FS-refs.3.3.1: keep summary rows/counts/line lists and append excluded lines.
 #[test]
-#[ignore = "red until #909 labels excluded refs summaries; implement removes this"]
 fn summary_labels_index_entries_without_changing_the_fold() {
     let repo = triage_repo("summary");
     accounting_controls(&repo);
@@ -194,7 +191,6 @@ fn summary_labels_index_entries_without_changing_the_fold() {
 
 /// §FS-check.4.1.2: multiple discounted sites are deterministic and informative.
 #[test]
-#[ignore = "red until #909 locates multiple excluded entries; implement removes this"]
 fn warning_accounts_for_multiple_index_sites() {
     let repo = triage_repo("multiple");
     let path = repo.0.join(INDEX);
@@ -226,7 +222,6 @@ fn warning_accounts_for_multiple_index_sites() {
 /// §FS-check.4.1.2 / §FS-errors.3.1: paths within the explanation use the
 /// same output base as the declaration path, including invocation-relative output.
 #[test]
-#[ignore = "red until #909 renders excluded paths against the report base; implement removes this"]
 fn warning_uses_the_invocation_report_base() {
     let repo = triage_repo("invocation");
     let check = repo.run(&[
@@ -247,7 +242,6 @@ fn warning_uses_the_invocation_report_base() {
 /// §FS-refs.3.1.1 / §FS-refs.3.3.1 / §FS-check.4.1.2.1: bindings and
 /// sections on an index page are uses, including a sectionless root binding.
 #[test]
-#[ignore = "red until #909 distinguishes index entries from bindings; implement removes this"]
 fn mixed_index_summary_preserves_section_and_root_binding_uses() {
     let repo = Repo::new("bindings");
     repo.write(
@@ -283,7 +277,6 @@ fn mixed_index_summary_preserves_section_and_root_binding_uses() {
 /// §FS-check.4.1.2 / §FS-refs.3.1.1 / §FS-refs.3.3.1: canonical external
 /// enrollment is excluded, while a bare mention on the very same line is use.
 #[test]
-#[ignore = "red until #909 labels only the exact external enrollment; implement removes this"]
 fn external_enrollment_summary_distinguishes_sites_on_the_same_line() {
     let repo = Repo::new("external");
     repo.write("grund.toml", CONFIG);
@@ -318,7 +311,6 @@ fn external_enrollment_summary_distinguishes_sites_on_the_same_line() {
 /// §FS-refs.3.1.1 / §FS-refs.3.3.1: site-mode has a separate text loop;
 /// both glob and outgoing queries must obey the same annotation contract.
 #[test]
-#[ignore = "red until #909 labels site-mode refs; implement removes this"]
 fn glob_and_from_render_the_same_index_annotations() {
     let repo = triage_repo("modes");
     let mut index = fs::read_to_string(repo.0.join(INDEX)).unwrap();

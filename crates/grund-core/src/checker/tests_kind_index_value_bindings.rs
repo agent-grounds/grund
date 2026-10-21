@@ -57,8 +57,17 @@ fn unused_ids(root: &Path) -> Vec<String> {
         .warnings
         .iter()
         .filter(|diagnostic| diagnostic.code == "unused")
-        .filter_map(|diagnostic| diagnostic.message.rsplit_once(": "))
-        .map(|(_, id)| id.to_string())
+        .filter_map(|diagnostic| {
+            diagnostic
+                .message
+                .strip_prefix("declared but never cited: ")
+        })
+        .map(|tail| {
+            tail.split(" (its index entry at ")
+                .next()
+                .unwrap()
+                .to_string()
+        })
         .collect()
 }
 

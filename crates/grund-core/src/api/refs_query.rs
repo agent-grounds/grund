@@ -10,6 +10,7 @@
 /// grammar, and return either citation data or the typed resolver rejection
 /// (§AR-bindings.2, §FS-refs.2, §FS-refs.4).
 use anyhow::{Result, anyhow};
+use std::collections::BTreeSet;
 use std::path::Path;
 
 use super::refs::{RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure, RefsWithMetadata};
@@ -73,6 +74,17 @@ pub(super) fn refs_impl_with_details(
     details: &mut serde_json::Value,
     cautions: &mut Vec<crate::Finding>,
     hint: &mut Option<String>,
+) -> Result<RefsWithMetadata> {
+    refs_impl_with_annotations(opts, details, cautions, hint, None)
+}
+
+/// §FS-refs.3.1.1: frontend annotations from this scan, outside result records.
+pub(super) fn refs_impl_with_annotations(
+    opts: RefsOpts,
+    details: &mut serde_json::Value,
+    cautions: &mut Vec<crate::Finding>,
+    hint: &mut Option<String>,
+    index_entries: Option<&mut BTreeSet<(String, usize, usize)>>,
 ) -> Result<RefsWithMetadata> {
     // §AR-scanner.2.4.2: the classifying loader, not the plain one — `refs`
     // publishes each hit's enclosing declaration and section (§FS-refs.3.2), and
@@ -298,6 +310,9 @@ pub(super) fn refs_impl_with_details(
         .iter()
         .find(|kind| kind.kind == id.kind)
         .and_then(|kind| kind.title.clone());
+    if let Some(entries) = index_entries {
+        *entries = super::refs_annotations::index_entry_sites(&context);
+    }
     Ok(RefsWithMetadata {
         kind_title,
         outcome: RefsOutcome {

@@ -121,7 +121,7 @@ fn command_refs(args: &[String]) -> ExitCode {
     opts.section = section_override;
     opts.descendants = descendants;
     // §FS-show.3.5.1: prose travels beside the unchanged public result records.
-    let (metadata, hint) = match grund_core::refs_with_metadata_and_hint(opts) {
+    let (metadata, hint, index_entries) = match grund_core::refs_with_text_annotations(opts) {
         Ok(output) => output,
         Err(err) => {
             // §FS-refs.4: recorded ambiguities refuse before every successful
@@ -169,7 +169,7 @@ fn command_refs(args: &[String]) -> ExitCode {
     if total {
         render_refs_total(&output.hits, &format, usage_clause);
     } else if summary {
-        render_refs_summary(&output.hits, output.workspace, &format);
+        render_refs_summary(&output.hits, output.workspace, &format, &index_entries);
     } else if format == "json" {
         for hit in &output.hits {
             println!(
@@ -178,9 +178,7 @@ fn command_refs(args: &[String]) -> ExitCode {
             );
         }
     } else {
-        for hit in &output.hits {
-            println!("{}:{}: {}", hit.path, hit.line, hit.text);
-        }
+        render_refs_text(&output.hits, &index_entries);
     }
 
     exit_after_scan_errors(&output.scan_errors)
@@ -220,7 +218,18 @@ fn render_refs_total(hits: &[RefHit], format: &str, clause: fn(grund_core::LspUs
     }
 }
 
-fn render_refs_summary(hits: &[RefHit], workspace: bool, format: &str) {
+/// §FS-refs.3.3.1: append excluded sites to the complete existing summary row.
+fn render_refs_summary(
+    hits: &[RefHit],
+    workspace: bool,
+    format: &str,
+    index_entries: &BTreeSet<(String, usize, usize)>,
+) {
+    let annotations = if format == "json" {
+        BTreeMap::new()
+    } else {
+        refs_summary_annotations(hits, index_entries)
+    };
     let mut by_file: BTreeMap<String, (Option<String>, usize, BTreeSet<usize>)> = BTreeMap::new();
     for hit in hits {
         let entry = by_file
@@ -259,7 +268,8 @@ fn render_refs_summary(hits: &[RefHit], workspace: bool, format: &str) {
                 .map(|line| line.to_string())
                 .collect::<Vec<_>>()
                 .join(", ");
-            println!("{path}: {count} ({label} {lines_text})");
+            let annotation = annotations.get(path.as_str()).map_or("", String::as_str);
+            println!("{path}: {count} ({label} {lines_text}){annotation}");
         }
     }
 }

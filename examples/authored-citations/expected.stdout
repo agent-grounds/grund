@@ -1,1 +1,2 @@
 docs/adr/README.md:4: warning: index entry §ADR-use-redis is an image, not a link; write `[§ADR-use-redis](use-redis.md#adr-use-redis-use-redis-for-the-cache)` in docs/adr/README.md — this warning becomes an error in grund 0.20.0
+docs/adr/consider-memory.md:1: warning: declared but never cited: ADR-consider-memory (its index entry at docs/adr/README.md:5 does not count as a use)

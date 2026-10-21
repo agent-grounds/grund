@@ -108,9 +108,13 @@ pub use grammar::Grammar;
 // hidden, the concern records a `grund.toml` lowers to (§AR-config.1), which
 // still move (§FS-schema.13).
 pub use config::PointSizeUnit;
-// §FS-show.3.5.1: frontend-only guidance, outside the embedding result records.
+// §FS-show.3.5.1 / §FS-refs.3.1.1: frontend-only prose and annotations,
+// outside the embedding result records.
 #[doc(hidden)]
-pub use api::{query_format_hint, refs_with_metadata_and_hint};
+pub use api::{
+    query_format_hint, refs_sites_with_text_annotations, refs_with_metadata_and_hint,
+    refs_with_text_annotations,
+};
 #[doc(hidden)]
 pub use config::{
     AbsentOptionalNamespace, CitationDisjunction, CitationLevel, CitationTarget, Compiled,

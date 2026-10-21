@@ -6,6 +6,7 @@
 //! keeps out of the contract.
 
 use anyhow::{Result, anyhow};
+use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 use super::refs_query::refs_impl;
@@ -200,4 +201,26 @@ pub fn refs_with_metadata_and_hint(opts: RefsOpts) -> Result<(RefsWithMetadata, 
         &mut hint,
     )?;
     Ok((metadata, hint))
+}
+
+/// §FS-refs.3.1.1 / §FS-refs.3.3.1: frontend-only excluded sites alongside the
+/// unchanged records and resolver hint, derived from the same loaded context.
+#[doc(hidden)]
+pub fn refs_with_text_annotations(
+    opts: RefsOpts,
+) -> Result<(
+    RefsWithMetadata,
+    Option<String>,
+    BTreeSet<(String, usize, usize)>,
+)> {
+    let mut hint = None;
+    let mut entries = BTreeSet::new();
+    let metadata = super::refs_query::refs_impl_with_annotations(
+        opts,
+        &mut serde_json::json!({}),
+        &mut Vec::new(),
+        &mut hint,
+        Some(&mut entries),
+    )?;
+    Ok((metadata, hint, entries))
 }
