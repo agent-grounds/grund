@@ -124,7 +124,10 @@ CITED = (
 
 # FS-fmt.md grew by 162 bytes in §FS-fmt.1 and §FS-fmt.3.2, citing §FS-scan.path.none for
 # what a run with no path covers rather than restating it (grund#854).
-BASELINES = {"FS-show.md": 68393, "FS-fmt.md": 99126}
+
+# FS-show.md grew 118 bytes in §FS-show.3.2.1 and FS-fmt.md 345 in §FS-fmt.6.4, citing
+# §FS-citations.wrap.enclosing.scope and .images rather than restating them (grund#839).
+BASELINES = {"FS-show.md": 68511, "FS-fmt.md": 99471}
 
 
 def _flat(text):

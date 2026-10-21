@@ -343,7 +343,7 @@ catalog lists every finding code, its severity, and the setting that turns it on
   ```
 
   Only an inline link written on one line counts for now, and an image's
-  description never does ([§FS-citations.wrap.enclosing.scope](../functional-spec/FS-citations.md#wrapenclosingscope-only-a-same-line-inline-link-for-now)). A
+  description never does ([§FS-citations.wrap.enclosing.scope](../functional-spec/FS-citations.md#wrapenclosingscope-every-form-a-link-is-written-in)). A
   line an older `grund` already nested, `[[§…](…): title](…)`, keeps its inner
   link and is left as it stands: search for `[[§` to find one, and take the
   outer brackets out by hand ([§DF-fmt-preserves-authored-link-labels](../decisions/functional/DF-fmt-preserves-authored-link-labels.md#df-fmt-preserves-authored-link-labels-fmt-leaves-a-citation-in-a-link-its-author-wrote-and-check-takes-that-link-as-the-index-entry)).

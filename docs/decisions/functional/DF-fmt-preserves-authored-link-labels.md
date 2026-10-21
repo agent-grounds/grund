@@ -91,7 +91,7 @@ still reads it as bare, and an image is never an index entry.
 
 Reference links, collapsed `[…][]` and definition labels, autolinks, raw HTML `<a>`, link text
 that spans lines, the citation-only image, and the editor's hover are read as before
-([§FS-citations.wrap.enclosing.scope](../../functional-spec/FS-citations.md#wrapenclosingscope-only-a-same-line-inline-link-for-now)). Each is a separate reading with its own verdicts, and a
+([§FS-citations.wrap.enclosing.scope](../../functional-spec/FS-citations.md#wrapenclosingscope-every-form-a-link-is-written-in)). Each is a separate reading with its own verdicts, and a
 later change owes them.
 
 ## 3. Rejected alternative: report the row as a missing entry
@@ -150,7 +150,7 @@ on its own.
    The [§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) mechanical migration has no command to point at: the move is from fail to pass, so there is nothing for the user to run, and no command could tell which bytes of an already-nested line were the author's.
 3. *Named release.* The release note below names the verdict move and the lines it reaches.
 4. *Actionable findings.* No finding replaces the old verdict: `fmt --check` passes where it failed, and there is nothing to act on.
-5. *No new licence.* This is not a licence for anything else: it reaches only a citation inside a same-line inline link its author wrote. Unwrapping the lines an older `fmt` nested, and the readings [§FS-citations.wrap.enclosing.scope](../../functional-spec/FS-citations.md#wrapenclosingscope-only-a-same-line-inline-link-for-now) leaves to a later change, each owe their own route.
+5. *No new licence.* This is not a licence for anything else: it reaches only a citation inside a same-line inline link its author wrote. Unwrapping the lines an older `fmt` nested, and the readings [§FS-citations.wrap.enclosing.scope](../../functional-spec/FS-citations.md#wrapenclosingscope-every-form-a-link-is-written-in) leaves to a later change, each owe their own route.
 
 ### 6.2 The `check` half
 

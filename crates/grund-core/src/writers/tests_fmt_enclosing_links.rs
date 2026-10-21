@@ -163,36 +163,37 @@ fn an_already_nested_line_rederives_only_its_inner_wrap() {
     );
 }
 
-/// §FS-citations.wrap.enclosing.scope: only a same-line inline link encloses for
-/// now, so the text of a reference link, a collapsed reference, a definition
-/// label, a raw HTML `<a>` and link text that runs onto the next line are read as
-/// they were before, and the pass wraps the citation in each.
+/// §FS-citations.wrap.enclosing.scope: every form a link is written in encloses, so
+/// the pass leaves the text of a reference link, a collapsed reference whether or
+/// not a definition matches it, a definition label, an autolink and a raw HTML `<a>`
+/// as written (§FS-citations.zones.authored-markup, §FS-citations.zones.link-destination),
+/// and the citation-only image with its destination (§FS-citations.wrap.enclosing.images).
+/// A `[` that nothing closes before its paragraph ends opens no link, so the bare
+/// citation after it is still wrapped (§FS-citations.wrap.enclosing.shape).
 #[test]
-fn what_the_scope_leaves_out_is_read_as_before() {
-    let (config, findings) = project("what_the_scope_leaves_out_is_read_as_before");
-    let wrap = format!("[§FS-001-login]({CANON})");
-    for (line, expected) in [
-        (
-            "See [the §FS-001-login rationale][pg].".to_string(),
-            format!("See [the {wrap} rationale][pg]."),
-        ),
-        (
-            "See [the §FS-001-login spec][].".to_string(),
-            format!("See [the {wrap} spec][]."),
-        ),
-        (
-            "[§FS-001-login]: specs/FS-001-login.md".to_string(),
-            format!("[{wrap}]: specs/FS-001-login.md"),
-        ),
-        (
-            r#"See <a href="specs/FS-001-login.md">the §FS-001-login spec</a>."#.to_string(),
-            format!(r#"See <a href="specs/FS-001-login.md">the {wrap} spec</a>."#),
-        ),
-        (
-            "See [the §FS-001-login".to_string(),
-            format!("See [the {wrap}"),
-        ),
+#[ignore = "red until #839 reads every link form as enclosing; implement removes this"]
+fn every_link_form_the_scope_lists_keeps_its_bytes() {
+    let (config, findings) = project("every_link_form_the_scope_lists_keeps_its_bytes");
+    for line in [
+        "See [the §FS-001-login rationale][pg].",
+        "See [§FS-001-login][pg].",
+        "See [the §FS-001-login spec][].",
+        "[§FS-001-login]: specs/FS-001-login.md",
+        "[the §FS-001-login spec]: specs/FS-001-login.md \"the §FS-001-login spec\"",
+        "See <https://example.com/§FS-001-login>.",
+        r#"See <a href="specs/FS-001-login.md">the §FS-001-login spec</a>."#,
+        r#"See <a title="§FS-001-login" href="specs/FS-001-login.md">it</a>."#,
+        "See ![§FS-001-login](diagram.png).",
     ] {
-        assert_eq!(wrapped(&config, &findings, &line), expected, "`{line}`");
+        assert_eq!(
+            wrapped(&config, &findings, line),
+            line,
+            "`{line}` keeps its bytes"
+        );
     }
+    assert_eq!(
+        wrapped(&config, &findings, "See [the §FS-001-login"),
+        format!("See [the [§FS-001-login]({CANON})"),
+        "an opener nothing closes encloses nothing"
+    );
 }

@@ -252,3 +252,77 @@ fn hover_on_dangling_citation_defers_to_diagnostic() {
     wait_for_exit(&mut child);
     let _ = fs::remove_dir_all(root);
 }
+
+/// §FS-lsp.1.2.1: the hover's linkification asks the one reading of
+/// §FS-citations.wrap, so a citation in a link its author wrote, in any form
+/// §FS-citations.wrap.enclosing.scope lists, and a citation-only image are left as
+/// written, and only the bare citation becomes a link. Today the hover's own
+/// preceding-bracket test nests a link into every one of them.
+#[test]
+#[ignore = "red until #839 linkifies the hover through the shared reading; implement removes this"]
+fn citation_hover_leaves_authored_markup_as_written() {
+    let root = test_root("hover-authored-markup");
+    fs::write(
+        root.join("grund.toml"),
+        "grund_config_version = 2\nproject_name = \"records\"\n\n\
+         [schema.sources]\nlanguages = [\"markdown\"]\n\n\
+         [schema.kinds.ADR]\nfolders = [\"docs/adr\"]\n",
+    )
+    .expect("write config");
+    fs::create_dir_all(root.join("docs/adr")).expect("create records");
+    fs::write(
+        root.join("docs/adr/use-postgres.md"),
+        "# ADR-use-postgres: Use Postgres for all data\n\nWe use Postgres.\n",
+    )
+    .expect("write postgres");
+    let authored = [
+        "We follow [the §ADR-use-postgres record](use-postgres.md).",
+        "See [the §ADR-use-postgres rationale][pg].",
+        "See [the §ADR-use-postgres record][].",
+        "See <https://example.com/§ADR-use-postgres>.",
+        "<a href=\"use-postgres.md\">the §ADR-use-postgres anchor</a>",
+        "![§ADR-use-postgres](cache.png)",
+        "[pg]: use-postgres.md",
+        "[the §ADR-use-postgres record]: use-postgres.md",
+    ];
+    let body = authored.join("\n\n");
+    fs::write(
+        root.join("docs/adr/use-redis.md"),
+        format!("# ADR-use-redis: Use Redis for the cache\n\nBare §ADR-use-postgres.\n\n{body}\n"),
+    )
+    .expect("write redis");
+    let notes = root.join("docs/notes.md");
+    fs::write(&notes, "See §ADR-use-redis.\n").expect("write notes");
+    let (mut child, mut stdin, receiver) = start_server(&root);
+
+    let hover = hover_result(
+        &mut stdin,
+        &receiver,
+        &mut child,
+        2,
+        &file_uri(&notes),
+        0,
+        6,
+    );
+    let shown = hover_body(&hover);
+    for line in authored {
+        assert!(shown.contains(line), "`{line}` is left as written: {shown}");
+    }
+    assert!(
+        shown.contains("Bare [§ADR-use-postgres](file://"),
+        "the bare citation is still linked: {shown}"
+    );
+
+    send_message(
+        &mut stdin,
+        json!({"jsonrpc": "2.0", "id": 3, "method": "shutdown", "params": null}),
+    );
+    recv_response_or_panic(&receiver, &mut child, 3);
+    send_message(
+        &mut stdin,
+        json!({"jsonrpc": "2.0", "method": "exit", "params": null}),
+    );
+    drop(stdin);
+    wait_for_exit(&mut child);
+    let _ = fs::remove_dir_all(root);
+}
