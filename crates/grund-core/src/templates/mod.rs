@@ -69,6 +69,8 @@ pub(crate) use agents_block::render_project_namespaces_section;
 #[cfg(test)]
 mod tests_citation_directions;
 #[cfg(test)]
+mod tests_citation_grounding;
+#[cfg(test)]
 mod tests_clickable_citations;
 #[cfg(test)]
 mod tests_scoped_guidance;

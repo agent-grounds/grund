@@ -1,0 +1,15 @@
+grund_config_version = 2
+project_name = "demo"
+
+[schema.kinds.FS]
+files = ["requirements.md"]
+
+[schema.kinds.e2e]
+folders = ["tests/e2e"]
+citable = false
+
+[rules.citations.e2e]
+must = ["FS"]
+
+[rules.citations.e2e.grounding]
+must = "file"
