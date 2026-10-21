@@ -82,7 +82,7 @@ def ledger_rows():
                  for row in family.get("migration", [])]
     rows += [("primitive_allowlist.toml", row["file"],
               [row[key] for key in ("step", "ruling") if key in row])
-             for row in tomllib.loads(ALLOWLIST.read_text(encoding="utf-8"))["allow"]]
+             for row in tomllib.loads(ALLOWLIST.read_text(encoding="utf-8")).get("allow", [])]
     agreement = AGREEMENT.read_text(encoding="utf-8")
     rows += [("command_agreement.rs DEFERRED", fields[0], fields[1:2])
              for fields in rust_tuples(agreement, "DEFERRED")]
