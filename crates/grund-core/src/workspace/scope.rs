@@ -18,6 +18,7 @@ use crate::config::display_path;
 use crate::config::{
     Config, ConfigLocation, Invocation, RunWarning, Selection, config_at, config_file_in,
     discover_config, discovery_start_dir, invalid_project_alias_message, is_valid_project_alias,
+    reject_unaccepted_citation_targets,
 };
 use crate::model::format_path;
 
@@ -35,12 +36,22 @@ pub(crate) use crate::config::scope_is_config_root;
 /// `list`, `cover`, `show`, `id`, and completions; the boundary is what stops a
 /// root-scope scan from absorbing member declarations into the parent namespace.
 /// A `Discovery` selection stops after discovery (§FS-config.1).
+///
+/// It is also where a run learns it holds no workspace, so it is where such a
+/// run judges its pinned and `*/` `[citations]` targets, against its own kinds;
+/// a run that holds one has them judged where its workspace is expanded
+/// (§FS-config.3.9.5.2, [`crate::config::install_kind_table`]).
 pub(crate) fn open(invocation: &Invocation) -> Result<Config> {
     let mut config = discover_config(invocation)?;
+    if invocation.selection != Selection::Discovery {
+        config = config_for_member_scope(config, invocation)?;
+    }
+    if !config.workspace_declared {
+        reject_unaccepted_citation_targets(&config, &config.kind_table())?;
+    }
     if invocation.selection == Selection::Discovery {
         return Ok(config);
     }
-    config = config_for_member_scope(config, invocation)?;
     apply_workspace_boundary(&mut config)?;
     Ok(config)
 }

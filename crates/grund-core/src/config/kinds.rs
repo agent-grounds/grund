@@ -8,20 +8,16 @@
 //! holds the table of its one project ([`KindTable::standalone`]).
 //!
 //! The refusal a configured but non-citable kind earns is rendered here too,
-//! once, in the quoting each surface already uses (§FS-errors.2.5.1), and so is
-//! the wording window that carries the moved reasons to `0.19.0`
-//! (§FS-errors.3.8, §FS-config.3.9.5.2).
+//! once, in the quoting each surface already uses (§FS-errors.2.5.1), alone
+//! since the one-grammar window closed (§FS-errors.3.8.1).
 
+use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
 use super::project::Schema;
 use super::record::{CODE_SOURCE_KIND, Config};
-use super::validate::pinned_citation_target_warnings;
-
-/// The release the one-grammar window ends in (§RM-one-grammar-flip): the
-/// appended reasons stand alone and the pinned-target warnings become errors.
-pub(crate) const ONE_GRAMMAR_FLIP: &str = "0.19.0";
+use super::validate::reject_unaccepted_citation_targets;
 
 /// How a surface quotes a kind name (§FS-errors.2.5.1): a backtick on `list
 /// --kind`, `grund id` and in config, a double quote on a selector and a rule.
@@ -48,32 +44,18 @@ pub(crate) struct KindEntry {
     pub(crate) citable: bool,
     /// `<folder>/` or the file, `None` for a kind with no place (§FS-check.3.11).
     pub(crate) home: Option<String>,
-    /// `code` where the config writes no complement of its own
-    /// (§FS-config.3.9.2): a kind with no row, whose window has closed.
-    pub(crate) rowless: bool,
 }
 
 impl KindEntry {
     /// §FS-errors.2.5.1: why this configured kind is refused where a citable
-    /// one is wanted, in `quote`'s spelling.
+    /// one is wanted, in `quote`'s spelling: the whole refusal on every surface
+    /// since the one-grammar window closed (§FS-errors.3.8.1,
+    /// §DF-one-grammar-lands-in-0-19).
     pub(crate) fn non_citable_reason(&self, quote: Quote) -> String {
         let kind = quote.wrap(&self.name);
         match &self.home {
             Some(home) => format!("kind {kind} declares no IDs — {home} is not a citable home"),
             None => format!("kind {kind} declares no IDs"),
-        }
-    }
-
-    /// The one refusal of this kind where a surface printed `legacy` before
-    /// the reason moved: §FS-errors.2.5.1's reason through the window of
-    /// §FS-errors.3.8, and alone for `code` with no row, whose window closed
-    /// in `0.19.0` (§FS-errors.3.8.1, §DF-homeless-code-declares-no-ids).
-    pub(crate) fn refusal(&self, legacy: &str, quote: Quote) -> String {
-        let reason = self.non_citable_reason(quote);
-        if self.rowless {
-            reason
-        } else {
-            one_grammar_window(legacy, &reason)
         }
     }
 }
@@ -108,7 +90,6 @@ impl KindProject {
                     citable: row.kind.is_some(),
                     // §FS-config-v2.schema.places: every place, and none for the complement.
                     home: row.place_labels().filter(|_| !row.is_complement()),
-                    rowless: false,
                 })
                 .collect(),
             named_sections: schema.ids.named_sections,
@@ -117,7 +98,6 @@ impl KindProject {
                     name: CODE_SOURCE_KIND.to_string(),
                     citable: false,
                     home: None,
-                    rowless: true,
                 }
             }),
         }
@@ -215,7 +195,6 @@ impl KindTable {
                         name: name.clone(),
                         citable: true,
                         home: None,
-                        rowless: false,
                     })
                     .collect(),
                 named_sections: false,
@@ -311,7 +290,7 @@ impl KindTable {
     /// §FS-errors.3.8.1: `legacy`, the refusal a surface gives a name `scope`
     /// does not configure, or, where the name is the complement `code` that has
     /// no row, §FS-errors.2.5.1's reason in `quote`'s spelling in its place
-    /// (§FS-list.1.1, [`KindEntry::refusal`]).
+    /// (§FS-list.1.1, [`KindEntry::non_citable_reason`]).
     pub(crate) fn unknown_or_complement(
         &self,
         scope: KindScope<'_>,
@@ -320,7 +299,7 @@ impl KindTable {
         quote: Quote,
     ) -> String {
         match self.config_verdict(scope, name) {
-            KindVerdict::NonCitable(entry) => entry.refusal(&legacy, quote),
+            KindVerdict::NonCitable(entry) => entry.non_citable_reason(quote),
             _ => legacy,
         }
     }
@@ -359,7 +338,7 @@ impl KindTable {
     }
 
     /// The same kinds by name, each with the entry a selector and a rule
-    /// refuse it by (§FS-errors.2.5.1, [`KindEntry::refusal`]).
+    /// refuse it by (§FS-errors.2.5.1, [`KindEntry::non_citable_reason`]).
     pub(crate) fn non_citable_entries(&self, scope: KindScope<'_>) -> BTreeMap<String, KindEntry> {
         self.non_citable(scope)
             .into_iter()
@@ -386,29 +365,29 @@ impl KindTable {
 
 /// §AR-config.1.5: the one call a run that reads a workspace makes. Builds the
 /// table from `projects`, each by alias, judges every project's pinned and `*/`
-/// `[citations]` targets against it once (§FS-config.3.9.5.2), puts their
-/// warnings on `root`'s run channel, and has `root` and every project hold it.
-/// Expansion makes it for a full run, and a narrowed `cover` run makes it over
-/// the workspace its config declares (§FS-scan.projects.kinds).
+/// `[citations]` targets against it once, in load order, and has `root` and
+/// every project hold it. The first target the run cannot accept fails the load
+/// (§FS-config.3.9.5.2, §DF-one-grammar-lands-in-0-19). Expansion makes it for a
+/// full run, and a narrowed `cover` run makes it over the workspace its config
+/// declares (§FS-scan.projects.kinds).
 pub(crate) fn install_kind_table<'a>(
     root: &mut Config,
     projects: impl IntoIterator<Item = (&'a str, &'a mut Config)>,
-) {
+) -> Result<()> {
     let mut projects = projects.into_iter().collect::<Vec<_>>();
     let table = Arc::new(KindTable::build(
         projects
             .iter()
             .map(|(alias, config)| (*alias, config.schema())),
     ));
-    let warnings = projects
-        .iter()
-        .flat_map(|(_, config)| pinned_citation_target_warnings(config, &table))
-        .collect::<Vec<_>>();
-    root.extend_run_warnings(warnings);
+    for (_, config) in &projects {
+        reject_unaccepted_citation_targets(config, &table)?;
+    }
     for (_, config) in &mut projects {
         config.set_kind_table(Arc::clone(&table));
     }
     root.set_kind_table(table);
+    Ok(())
 }
 
 /// The `known kinds:` line that ends an unknown `--kind` (§FS-list.1.1), a
@@ -428,18 +407,6 @@ pub(crate) fn known_kinds_line<'a>(citable: impl IntoIterator<Item = &'a str>) -
         return "known kinds: none — declare one in grund.toml first".to_string();
     }
     format!("known kinds: {}", known.join(", "))
-}
-
-/// §FS-errors.3.8: a legacy reason kept as a verbatim prefix, then the reason
-/// it is moving to, until [`ONE_GRAMMAR_FLIP`].
-pub(crate) fn one_grammar_window(legacy: &str, moving_to: &str) -> String {
-    format!("{legacy} — {moving_to}; this wording changes in grund {ONE_GRAMMAR_FLIP}")
-}
-
-/// §FS-config.3.9.5.2: a load warning that becomes an error in
-/// [`ONE_GRAMMAR_FLIP`].
-pub(crate) fn one_grammar_warning(message: &str) -> String {
-    format!("{message}; this becomes an error in grund {ONE_GRAMMAR_FLIP}")
 }
 
 /// §FS-errors.3.7.1: why a target or object naming other projects cannot be

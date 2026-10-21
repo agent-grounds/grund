@@ -59,8 +59,6 @@ impl Code {
     pub(crate) const UNREAD_WORKSPACE_BLOCK: Code = Code("unread-workspace-block");
     /// §FS-workspace.6.1.7: an ancestor's claim on a block that could not be read.
     pub(crate) const UNDECIDABLE_WORKSPACE_CLAIM: Code = Code("undecidable-workspace-claim");
-    /// §FS-config.3.9.5.2: a `[citations]` target the run loads without accepting it.
-    pub(crate) const UNACCEPTED_CITATION_TARGET: Code = Code("unaccepted-citation-target");
 }
 
 /// The outcome of `check`: errors and warnings, kept apart so the exit code keys

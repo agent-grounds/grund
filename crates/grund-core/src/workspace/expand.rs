@@ -256,6 +256,27 @@ pub(crate) fn expand_workspace_tree_with_report_base(
     root_config: &mut Config,
     report_base: &Path,
 ) -> Result<Vec<WorkspaceProjectEntry>> {
+    let mut entries = expand_workspace_projects(root_config, report_base)?;
+    // §AR-config.1.5: the run's one reading of every project's kinds, made here
+    // because this is the first point that holds them all, and the pinned
+    // `[citations]` targets judged against it once (§AR-workspace.5.2,
+    // §FS-config.3.9.5.2): the first one the run cannot accept fails the load.
+    install_kind_table(
+        root_config,
+        entries
+            .iter_mut()
+            .map(|entry| (entry.alias.as_str(), &mut entry.config)),
+    )?;
+    Ok(entries)
+}
+
+/// [`expand_workspace_tree_with_report_base`] short of the kind table: every
+/// project of the tree, loaded and stamped, for the declared read, which makes
+/// the one call over them itself (§AR-config.1.5, `declared.rs`).
+pub(super) fn expand_workspace_projects(
+    root_config: &mut Config,
+    report_base: &Path,
+) -> Result<Vec<WorkspaceProjectEntry>> {
     let expanded = expand_workspace_member_list(root_config)?;
     let members = expanded.members;
     // §FS-check.3.29: no warning here. Every route in asks this block first —
@@ -356,15 +377,6 @@ pub(crate) fn expand_workspace_tree_with_report_base(
             .set_workspace_absent_optional(absent_optional.clone());
     }
     root_config.set_workspace_project_roots(project_roots);
-    // §AR-config.1.5: the run's one reading of every project's kinds,
-    // made here because this is the first point that holds them all, and the
-    // pinned `[citations]` targets judged against it once (§AR-workspace.5.2).
-    install_kind_table(
-        root_config,
-        entries
-            .iter_mut()
-            .map(|entry| (entry.alias.as_str(), &mut entry.config)),
-    );
     // §FS-check.4.9: the root config is what the report is rendered from, so it is
     // where the announcement is read back off (`run_workspace_check`).
     root_config.set_workspace_absent_optional(absent_optional);

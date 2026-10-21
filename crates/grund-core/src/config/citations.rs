@@ -16,7 +16,7 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 use super::kind::KindConfig;
-use super::kinds::{KindScope, KindTable, KindVerdict, one_grammar_warning, unverifiable_reason};
+use super::kinds::{KindScope, KindTable, KindVerdict, unverifiable_reason};
 use super::workspace_block::{INVALID_ALIAS_PATH_EXPECTED, invalid_alias_path_segment};
 use crate::model::format_path;
 
@@ -238,7 +238,7 @@ pub(super) fn validate_citation_rules(
                 for target in &disjunction.targets {
                     // §FS-config.3.9.5.2: a pinned or `*/` target names other
                     // projects' kinds, which this config does not hold, so it is
-                    // judged by `pinned_target_warnings` and never here.
+                    // judged by `unaccepted_pinned_target` and never here.
                     let why = match target.namespace {
                         NamespaceMatch::Local => match local.config_verdict(scope, &target.kind) {
                             KindVerdict::Citable => None,
@@ -283,20 +283,21 @@ pub(super) fn validate_citation_rules(
     Ok(())
 }
 
-/// §FS-config.3.9.5.2: judge every pinned and `*/` target of `citations`
-/// against the kinds of the projects its qualifier names, as `kinds` reads
-/// them, and return one load warning per target the run cannot accept, naming
-/// [`super::kinds::ONE_GRAMMAR_FLIP`]. A run whose table holds no workspace
-/// cannot judge another project at all, and says so in §FS-errors.3.7.1's
-/// wording. `path` is the config's report path and `table` its spelling of the
-/// section, as [`validate_citation_rules`] names them.
-pub(crate) fn pinned_target_warnings(
+/// §FS-config.3.9.5.2: judge the pinned and `*/` targets of `citations`
+/// against the kinds of the projects each qualifier names, as `kinds` reads
+/// them, and return the load error of the first one the run cannot accept,
+/// in the order they are judged: the citing tables by kind, each table's
+/// levels as [`KindCitationRules::lists`] gives them, and each level's targets
+/// as written. A run whose table holds no workspace cannot judge another
+/// project at all, and says so in §FS-errors.3.7.1's wording. `path` is the
+/// config's report path and `table` its spelling of the section, as
+/// [`validate_citation_rules`] names them (§DF-one-grammar-lands-in-0-19).
+pub(crate) fn unaccepted_pinned_target(
     path: &Path,
     table: &str,
     citations: &CitationRules,
     kinds: &KindTable,
-) -> Vec<String> {
-    let mut warnings = Vec::new();
+) -> Option<String> {
     for (citing, rules) in &citations.per_kind {
         for (level, disjunctions) in rules.lists() {
             for target in disjunctions.iter().flat_map(|d| &d.targets) {
@@ -327,15 +328,15 @@ pub(crate) fn pinned_target_warnings(
                         unverifiable_reason(alias, kind)
                     ),
                 };
-                warnings.push(one_grammar_warning(&format!(
-                    "{}: [{table}.{citing}] {} names {why}",
+                return Some(format!(
+                    "{}: [{table}.{citing}] {} names {why}; this became an error in grund 0.19.0",
                     format_path(path),
                     level.as_str()
-                )));
+                ));
             }
         }
     }
-    warnings
+    None
 }
 
 /// Whether two rule-target namespace matchers can match the same citation
