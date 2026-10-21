@@ -84,7 +84,7 @@ fn remove_queries(variant: &mut Value, coordinates: &[&str]) {
 }
 
 #[test]
-fn declaration_section_alias_subsets_fail_even_with_all_their_calls_deleted() {
+pub(super) fn declaration_section_alias_subsets_fail_even_with_all_their_calls_deleted() {
     let good = variant();
     assert!(expectations::validate_variant(&good).is_ok());
     for coordinates in [
@@ -137,7 +137,7 @@ fn declaration_section_alias_subsets_fail_even_with_all_their_calls_deleted() {
 }
 
 #[test]
-fn physical_bytes_and_membership_reject_deleting_or_rewriting_the_inventory_input() {
+pub(super) fn physical_bytes_and_membership_reject_deleting_or_rewriting_the_inventory_input() {
     let good = variant();
     let mut original = json!({});
     for (path, file) in good["queryInventory"]["files"].as_object().unwrap() {

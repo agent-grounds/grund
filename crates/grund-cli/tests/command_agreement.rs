@@ -25,6 +25,8 @@
 
 #[path = "support/agreement_acceptance.rs"]
 mod agreement_acceptance;
+#[path = "support/agreement_basic.rs"]
+mod agreement_basic;
 #[path = "support/agreement_buffers.rs"]
 mod agreement_buffers;
 #[path = "support/agreement_closed_rows.rs"]

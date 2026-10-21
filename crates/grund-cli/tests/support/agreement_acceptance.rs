@@ -12,7 +12,14 @@ use std::path::PathBuf;
 /// Optional GRUND_AGREEMENT_EVIDENCE writes the complete completed-call receipts
 /// without changing the assertions.
 #[test]
-fn s4_executes_the_covered_families_and_the_seed() {
+pub(super) fn s4_executes_the_covered_families_and_the_seed() {
+    // Both the tranche acceptance and this test require the same completed run.
+    // A poisoned run remains a failure for either caller.
+    static RUN: std::sync::Once = std::sync::Once::new();
+    RUN.call_once(assert_completed_matrix);
+}
+
+fn assert_completed_matrix() {
     let cases = super::agreement_families::cases_root()
         .canonicalize()
         .expect("corpus");
