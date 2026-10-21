@@ -271,6 +271,11 @@ once and fails until its facts are authored. A family asked only in part — on 
 cases, through some of the surfaces or variants, or only through the seed's sampled
 project — is not covered.
 
+The `basic` tranche uses that same boundary: its acceptance discovers every `basic-`
+case, validates its facts before native setup, and requires it in the ordinary
+completed-call acceptance's scope. The acceptance rejects a newly discovered member
+without facts; naming today's members or moving the family's debt row is insufficient.
+
 #### proof.matrix.seed: The seed is asked the same way
 
 The seed stays in the comparison whatever it covers: the trees built for the rows of
@@ -298,6 +303,11 @@ physical inventory, including declarations, nested sections, citations and alias
 Removing a physical fact and its questions together must fail the inventory check.
 The driver and receipt accounting use the same validated closure, including absent
 and refused questions; a nonempty coordinate array does not establish completeness.
+
+Producer-specific metadata is part of its authored answer before any common-domain
+projection. Replacing a redundant engine-peer comparison requires the complete
+independent envelope, including metadata and refusals, with controls that reject
+altered metadata even when the peers' projected answers still agree.
 
 Keep positive controls, unlisted and stale divergence rejection and requirement-row
 accounting.
