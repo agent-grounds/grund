@@ -20,7 +20,7 @@ Ship `grund integrations` as a subcommand. It is the counterpart to `grund compl
 
 ### 2.2 Printing is the default; writing is opt-in
 
-The command prints by default and only touches disk under `--write`, as managed marked blocks ([§FS-integrations.4](../../functional-spec/FS-integrations.md#4-managed-writes---write)). This keeps the same safety contract as `init`: re-runs are idempotent, upgrades are diffs, removal is clean. An agent can therefore propose the change, show the diff from `--format json` detection, and write only on confirmation ([§FS-init.5](../../functional-spec/FS-init.md#5-agent-setup-instructions)) — the command is safe to hand to automation because its default is inert.
+The command prints by default and only touches disk under `--write`, as managed marked blocks ([§FS-integrations.4](../../functional-spec/FS-integrations.md#4-managed-writes---write)). This keeps the same safety contract as `init`: re-runs are idempotent, upgrades are diffs, removal is clean. An agent can therefore propose the change, show the diff from `--format json` detection, and write only on confirmation ([§FS-init.5](../../functional-spec/FS-init.md#5-the-guide)) — the command is safe to hand to automation because its default is inert.
 
 ### 2.3 The client set stays closed
 

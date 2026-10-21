@@ -1,0 +1,29 @@
+grund guide — how to set up and use grund, one section at a time.
+
+Usage:  grund guide [SECTION | --full]
+
+With no argument it prints the front page: the three commands a fresh repository
+runs, then every section with its size and what it holds. A fresh repository
+needs only that; adopting grund in any other one reads `setup` next.
+
+Arguments:
+  SECTION  print one section, e.g. grund guide setup
+
+Options:
+  --full   print every section, `setup` first: the whole guide at once
+           e.g. grund guide --full | less
+
+Sections, in --full order:
+  setup, config, citations, languages, members, scoped-guidance, schema, queries, editor, integrations, rules
+
+The text is the Markdown shipped as `skills/grund-init/`: `SKILL.md` is the
+`setup` section and `references/<name>.md` each other one. It is embedded in the
+binary so installed agents can discover the setup workflow without the source tree.
+
+Exit:  0 printed · 2 unknown section, unknown flag, or other CLI error.
+
+Examples:
+  grund guide                # the front page: fresh path, then every section
+  grund guide setup          # adopting grund in a repository that is not fresh
+  grund guide rules          # one reference section
+  grund guide --full | less  # the whole guide, a page at a time

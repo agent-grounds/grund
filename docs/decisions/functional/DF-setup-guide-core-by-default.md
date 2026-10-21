@@ -1,6 +1,7 @@
 # DF-setup-guide-core-by-default: grund agent-setup-instructions prints a core that opens with the fresh path, and prints each reference section on request
 
 **Date:** 2026-10-20
+**Amended by:** [§DF-guide-command](DF-guide-command.md#df-guide-command-grund-agent-setup-instructions-becomes-grund-guide-whose-bare-run-prints-a-front-page-and-whose-sections-are-named-positionally) — the command became `grund guide` before this shipped: its bare run prints a front page, the core is the section `setup`, and a section is named positionally, so [§DF-setup-guide-core-by-default.3](DF-setup-guide-core-by-default.md#3-rejected-alternatives)'s first and third rejected alternatives were taken after all. The split, the core's budget, `--full` and the bindings stand as decided here, and the release note moved to that record, which ships both.
 
 ## status: Accepted
 
@@ -15,7 +16,7 @@ The output satisfied the specification as written: the command took no arguments
 The skill becomes an Agent Skills directory, `skills/grund-init/`, and the command maps onto it one file per call ([§FS-init.5.3](../../functional-spec/FS-init.md#53-one-directory-two-surfaces)):
 
 - With no flag it prints the core, `SKILL.md`, which is at most 16,000 bytes ([§FS-init.5.5](../../functional-spec/FS-init.md#55-the-core-and-its-sections)).
-- `--section NAME` prints `references/NAME.md`, one of a closed set of ten sections, and an unknown name is refused with the list of known ones ([§FS-init.5](../../functional-spec/FS-init.md#5-agent-setup-instructions)).
+- `--section NAME` prints `references/NAME.md`, one of a closed set of ten sections, and an unknown name is refused with the list of known ones ([§FS-init.5](../../functional-spec/FS-init.md#5-the-guide)).
 - `--full` prints the core and then every section.
 
 The core opens with *Fresh repository*: the three commands a fresh repository runs, in order, and what success looks like. *Contents* follows, naming every section and how to print it, and then the adoption *Workflow* in its existing order ([§FS-init.5.1](../../functional-spec/FS-init.md#51-what-the-instructions-tell-the-agent)). Each reference section is one of the old guide's `##` sections moved whole, except `config` and the marked copies. `config` holds two of them, *Recommendation Heuristics* and then *Config Questions* without `[citations]`. The two marked copies become sections of their own, so neither copy is in the default output.
@@ -36,7 +37,7 @@ Python `agent_setup_instructions()` and Node `agentSetupInstructions()` keep the
 
 ## 3. Rejected alternatives
 
-- **Link the reference pages instead of embedding them.** An agent that has only the installed binary could not follow the links, and the command exists for exactly that agent ([§FS-init.5](../../functional-spec/FS-init.md#5-agent-setup-instructions)).
+- **Link the reference pages instead of embedding them.** An agent that has only the installed binary could not follow the links, and the command exists for exactly that agent ([§FS-init.5](../../functional-spec/FS-init.md#5-the-guide)).
 - **A positional topic, `grund agent-setup-instructions rules`.** grund already spells "one part of a document" as `--section` on `show`, and a second spelling is one more thing to learn. A positional is refused with a message of its own, so a caller who guessed this form is told it is not one.
 - **Move the adoption workflow into a section too.** The default would then fit in about 3 KB, but the command's main audience is the agent adopting a repository that already has specs, the reader the README sends here, and it would need two calls to start.
 - **Reword the help and keep the output.** It moves no contract and fixes nothing: the output stays at 58 KB.
@@ -49,8 +50,4 @@ The default output changes, and no verdict moves. No tree passes or fails differ
 - **A rejected flag reads `unknown flag`.** A caller that matched `agent-setup-instructions takes no arguments` on stderr sees ``unknown flag `<flag>` `` for a flag, or `takes no positional arguments` for a positional, with the same exit `2` ([§FS-cli.3](../../functional-spec/FS-cli.md#3-cross-subcommand-flags)).
 - **`--section` and `--full` now succeed.** They were exit-`2` errors, and a refusal that becomes an answer moves no verdict.
 
-No release note is required for a change that moves no verdict ([§FS-distribution.4.6.4](../../functional-spec/FS-distribution.md#464-compatibility-notices-come-from-the-decisions)). This record carries one all the same, so the changed default is announced in the release rather than discovered.
-
-## release-note: Release note
-
-- [§DF-setup-guide-core-by-default](DF-setup-guide-core-by-default.md#df-setup-guide-core-by-default-grund-agent-setup-instructions-prints-a-core-that-opens-with-the-fresh-path-and-prints-each-reference-section-on-request), [§FS-init.5](../../functional-spec/FS-init.md#5-agent-setup-instructions), [§FS-init.5.5](../../functional-spec/FS-init.md#55-the-core-and-its-sections): **`grund agent-setup-instructions` prints a core of at most 16,000 bytes, and each reference section on request.** The core opens with the three commands a fresh repository runs, then a table of contents, then the adoption workflow. `--section NAME` prints one of ten reference sections (`config`, `citations`, `languages`, `members`, `scoped-guidance`, `schema`, `queries`, `editor`, `integrations`, `rules`), and `--full` prints the whole guide in one response, in a new order. **Who this affects:** a caller that read the whole guide from the default output gets the core, and passes `--full` for the rest. A caller that matched `takes no arguments` on stderr sees `unknown flag` for a flag or `takes no positional arguments` for a positional, still with exit `2`. No verdict moves.
+No release note is required for a change that moves no verdict ([§FS-distribution.4.6.4](../../functional-spec/FS-distribution.md#464-compatibility-notices-come-from-the-decisions)). The changed default is announced in the release all the same, rather than discovered, by the note of [§DF-guide-command](DF-guide-command.md#df-guide-command-grund-agent-setup-instructions-becomes-grund-guide-whose-bare-run-prints-a-front-page-and-whose-sections-are-named-positionally), which ships with this record.

@@ -12,7 +12,7 @@ rather than adding another slogan block or copying the detailed comparison.
 The loop's cards link into a runnable example before a reader needs to learn the
 whole schema. Setup distinguishes adopting existing specs
 from scaffolding new ones, offers adoption to an agent through
-`grund agent-setup-instructions`, and links the reference of every `grund.toml` key
+`grund guide setup`, and links the reference of every `grund.toml` key
 with the JSON Schema that editors read ([§FS-config.4](../functional-spec/FS-config.md#4-validation-and-inspection)).
 
 ### 1.1 The loop

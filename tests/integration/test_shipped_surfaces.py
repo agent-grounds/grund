@@ -5,8 +5,7 @@ is the catalog of *declared* IDs rather than the ID shape, so the illustrative
 IDs the scaffold and the skill teach (`FS-login`, `FS-014-user-login`) pass by
 construction; an ID inside a public `blob/main` URL passes too, because that is
 the address §REQ-shipped-surfaces.1 asks a shipped sentence to carry. Covers
-what `grund init` writes (§FS-init.2.1), what `grund agent-setup-instructions`
-prints (§FS-init.5), and what `grund integrations --write` installs
+what `grund init` writes (§FS-init.2.1), what `grund guide` prints (§FS-init.5), and what `grund integrations --write` installs
 (§FS-integrations.4)."""
 
 import json

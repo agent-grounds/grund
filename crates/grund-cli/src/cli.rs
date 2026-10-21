@@ -1,53 +1,90 @@
-/// `grund agent-setup-instructions [--section NAME | --full]` (§FS-init.5): the core of
-/// the setup skill, one reference section, or the whole guide (§FS-init.5.5). It reads
-/// no tree, so every refusal is a CLI-level error (§FS-cli.4), and a `--section` name
-/// the table does not hold is refused with the table's names in order.
-fn command_agent_setup_instructions(args: &[String]) -> ExitCode {
+/// `grund guide [SECTION | --full]` (§FS-init.5): the front page, one section of the
+/// setup skill, or the whole guide (§FS-init.5.5, §FS-init.5.6). It reads no tree, so
+/// every refusal is a CLI-level error (§FS-cli.4), and a section name the guide does
+/// not hold is refused with every name in `--full` order.
+fn command_guide(args: &[String]) -> ExitCode {
     let mut section: Option<&str> = None;
     let mut full = false;
-    let mut words = args.iter();
-    while let Some(arg) = words.next() {
+    for arg in args {
         match arg.as_str() {
             "--full" => full = true,
-            "--section" => {
-                let Some(name) = words.next() else {
-                    eprintln!("error: --section requires a value");
-                    return ExitCode::from(2);
-                };
-                section = Some(name);
-            }
-            other if other.starts_with("--section=") => {
-                section = Some(&other["--section=".len()..]);
-            }
             // §FS-cli.3: `--format` and `--path-base` are unknown flags here too.
             other if other.starts_with('-') => {
                 eprintln!("error: unknown flag `{other}`");
                 return ExitCode::from(2);
             }
+            name if section.is_none() => section = Some(name),
             _ => {
-                eprintln!("error: agent-setup-instructions takes no positional arguments");
+                eprintln!("error: guide takes at most one section");
                 return ExitCode::from(2);
             }
         }
     }
     let part = match (section, full) {
         (Some(_), true) => {
-            eprintln!("error: --section and --full cannot be used together");
+            eprintln!("error: a section and --full cannot be used together");
             return ExitCode::from(2);
         }
         (Some(name), false) => SetupPart::Section(name),
         (None, true) => SetupPart::Full,
-        (None, false) => SetupPart::Core,
+        (None, false) => {
+            print!("{}", guide_front_page());
+            return ExitCode::SUCCESS;
+        }
     };
     let Some(text) = setup_instructions(part) else {
-        // Only a `--section` name can miss, so `section` holds the name refused.
-        let known: Vec<&str> = AGENT_SETUP_SECTIONS.iter().map(|(name, _)| *name).collect();
-        eprintln!("error: unknown setup section `{}`", section.unwrap_or_default());
+        // Only a section name can miss, so `section` holds the name refused.
+        let known: Vec<&str> = guide_sections().iter().map(|section| section.name).collect();
+        eprintln!("error: unknown guide section `{}`", section.unwrap_or_default());
         eprintln!("known sections: {}", known.join(", "));
         return ExitCode::from(2);
     };
     print!("{text}");
     ExitCode::SUCCESS
+}
+
+/// §FS-init.5.6: what bare `grund guide` prints — the core's fresh path, then every
+/// section with its size and summary, so a fresh repository needs no second call and
+/// an adoption knows which one to make.
+fn guide_front_page() -> String {
+    let sections = guide_sections();
+    let whole = setup_instructions(SetupPart::Full).map_or(0, |text| text.len());
+    let width = sections.iter().map(|section| section.name.len()).max().unwrap_or(0);
+    let mut page = format!("# grund guide\n\n{}## Sections\n\n", setup_fresh_path());
+    page.push_str(&format!(
+        "`grund guide <section>` prints one section, and `grund guide --full` prints every section, {} in all.\n\n```text\n",
+        kilobytes(whole)
+    ));
+    for section in &sections {
+        page.push_str(&format!(
+            "{:width$}  {:>5}  {}\n",
+            section.name,
+            kilobytes(section.bytes),
+            section.summary
+        ));
+    }
+    page.push_str("```\n");
+    page
+}
+
+/// §FS-init.5.6: a printed size as the front page writes it, in kilobytes of 1,000
+/// bytes, rounded to the nearest whole and never below 1.
+fn kilobytes(bytes: usize) -> String {
+    format!("{} KB", (bytes.saturating_add(500) / 1000).max(1))
+}
+
+/// §FS-init.5.7: the warning every use of `guide`'s deprecated name prints first.
+const AGENT_SETUP_INSTRUCTIONS_DEPRECATION: &str = "warning: agent-setup-instructions is deprecated and is removed in grund 0.20.0; use grund guide setup, which prints the same text";
+
+/// `grund agent-setup-instructions`, `guide`'s deprecated name (§FS-init.5.7): the
+/// core after one warning, taking no argument, as it took none in 0.18.0.
+fn command_agent_setup_instructions(args: &[String]) -> ExitCode {
+    eprintln!("{AGENT_SETUP_INSTRUCTIONS_DEPRECATION}");
+    if !args.is_empty() {
+        eprintln!("error: agent-setup-instructions takes no arguments");
+        return ExitCode::from(2);
+    }
+    command_guide(&[SETUP_CORE_SECTION.to_string()])
 }
 
 /// The report format a run prints: the `--format` flag, else the v1
@@ -225,6 +262,12 @@ pub fn main_entry() -> ExitCode {
                 print_subcommand_help(cmd);
                 ExitCode::SUCCESS
             }
+            // §FS-init.5.7: the deprecated name's page is `guide`'s, after its warning.
+            Some("agent-setup-instructions") => {
+                eprintln!("{AGENT_SETUP_INSTRUCTIONS_DEPRECATION}");
+                print_subcommand_help("guide");
+                ExitCode::SUCCESS
+            }
             Some(other) => {
                 eprintln!("error: unknown command: {other}");
                 eprintln!("known commands: {}", SUBCOMMANDS.join(", "));
@@ -238,6 +281,10 @@ pub fn main_entry() -> ExitCode {
     if args.iter().any(|arg| arg == "--help" || arg == "-h") {
         match first {
             Some(cmd) if SUBCOMMANDS.contains(&cmd) => print_subcommand_help(cmd),
+            Some("agent-setup-instructions") => {
+                eprintln!("{AGENT_SETUP_INSTRUCTIONS_DEPRECATION}");
+                print_subcommand_help("guide");
+            }
             None | Some("--help" | "-h") => print_help(),
             Some(other) if other.starts_with('-') => print_help(),
             Some(other) => {
@@ -272,6 +319,7 @@ pub fn main_entry() -> ExitCode {
         Some("config") => with_path_base(&args[1..], command_config),
         // §FS-schema.1.1: a subcommand, so it wins over the default ID query.
         Some("schema") => with_path_base(&args[1..], command_schema),
+        Some("guide") => command_guide(&args[1..]),
         Some("agent-setup-instructions") => command_agent_setup_instructions(&args[1..]),
         Some("completions") => command_completions(&args[1..]),
         Some("integrations") => with_path_base(&args[1..], command_integrations),

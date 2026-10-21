@@ -1,0 +1,2 @@
+error: unknown guide section `rule`
+known sections: setup, config, citations, languages, members, scoped-guidance, schema, queries, editor, integrations, rules

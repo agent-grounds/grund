@@ -4,7 +4,7 @@ A wrong verdict can be re-run; destroyed content cannot. `grund` writes only wha
 
 ## 1. The query surface never writes
 
-`check`, ID queries, `refs`, `list`, `cover`, `config show` / `validate`, `config migrate` without `--write`, `completions`, `agent-setup-instructions`, LSP requests, and `integrations` without `--write` open files read-only. No caches, no lock files, no PID files, no "fixed it for you" rewrites — their only output is the streams ([§FS-errors.1](../functional-spec/FS-errors.md#1-streams)).
+`check`, ID queries, `refs`, `list`, `cover`, `config show` / `validate`, `config migrate` without `--write`, `completions`, `guide`, LSP requests, and `integrations` without `--write` open files read-only. No caches, no lock files, no PID files, no "fixed it for you" rewrites — their only output is the streams ([§FS-errors.1](../functional-spec/FS-errors.md#1-streams)).
 
 ## 2. Writers touch only what they own
 

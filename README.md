@@ -138,7 +138,7 @@ grund check
 **Already have specs?** Hand the setup to your agent:
 
 ```bash
-grund agent-setup-instructions   # a guided setup for your agent
+grund guide setup   # the adoption guide, for your agent
 ```
 
 Your agent inspects the repository, recommends settings for the specs you have,

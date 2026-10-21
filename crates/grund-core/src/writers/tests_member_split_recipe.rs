@@ -42,7 +42,7 @@ fn project_namespaces_setup_instructions_teach_complete_member_split() {
         "exclude ordinary modules"
     );
     assert!(
-        AGENT_SETUP_INSTRUCTIONS.contains("`grund agent-setup-instructions --section members`"),
+        AGENT_SETUP_INSTRUCTIONS.contains("`grund guide members`"),
         "validation advice must point to the member-splitting recipe by its invocation"
     );
 }

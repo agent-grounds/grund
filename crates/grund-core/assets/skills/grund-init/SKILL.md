@@ -17,36 +17,36 @@ grund init --check
 grund check
 ```
 
-Success is all three exiting `0`. On a fresh scaffold the last one also warns `nothing recognized` until the first declaration exists: that is expected, and nothing to fix. A fresh repository takes every default after that one confirmation, so that is the whole setup. Any repository that is not fresh is an adoption: follow the Workflow below, whose per-option interview is for adoption.
+Success is all three exiting `0`. On a fresh scaffold the last one also warns `nothing recognized` until the first declaration exists: that is expected, and nothing to fix. A fresh repository takes every default after that one confirmation, so that is the whole setup. Any repository that is not fresh is an adoption, and its per-option interview is the workflow `grund guide setup` prints.
 
 ## Contents
 
-This core holds Fresh repository, Contents, Workflow, Repo Analysis First, Asking Style, Init Questions, Existing Specs Adoption, Validation and Maintaining Declarations. The rest of the guide is ten reference sections, each printed on request by `grund agent-setup-instructions --section <name>`; where this skill is installed as a directory, the same text is `references/<name>.md`.
+This core, the section `setup`, holds Fresh repository, Contents, Workflow, Repo Analysis First, Asking Style, Init Questions, Existing Specs Adoption, Validation and Maintaining Declarations. The rest of the guide is ten reference sections, each printed on request by `grund guide <name>`; where this skill is installed as a directory, the same text is `references/<name>.md`.
 
-- `grund agent-setup-instructions --section config` (`references/config.md`): how to recommend each setting, then the config questions.
-- `grund agent-setup-instructions --section citations` (`references/citations.md`): the citation-directions question, version 1's `[citations]` and version 2's `[rules.citations]`, and its reference.
-- `grund agent-setup-instructions --section languages` (`references/languages.md`): language and repo-shape examples, version-2 sources, and moving from version 1.
-- `grund agent-setup-instructions --section members` (`references/members.md`): splitting off a member.
-- `grund agent-setup-instructions --section scoped-guidance` (`references/scoped-guidance.md`): where a version-2 config writes each row's guidance.
-- `grund agent-setup-instructions --section schema` (`references/schema.md`): seeing the schema with `grund schema`.
-- `grund agent-setup-instructions --section queries` (`references/queries.md`): querying the structure.
-- `grund agent-setup-instructions --section editor` (`references/editor.md`): wiring an editor to `grund-lsp`.
-- `grund agent-setup-instructions --section integrations` (`references/integrations.md`): clickable-citation integrations.
-- `grund agent-setup-instructions --section rules` (`references/rules.md`): writing chapter rules.
+- `grund guide config` (`references/config.md`): how to recommend each setting, then the config questions.
+- `grund guide citations` (`references/citations.md`): the citation-directions question, version 1's `[citations]` and version 2's `[rules.citations]`, and its reference.
+- `grund guide languages` (`references/languages.md`): language and repo-shape examples, version-2 sources, and moving from version 1.
+- `grund guide members` (`references/members.md`): splitting off a member.
+- `grund guide scoped-guidance` (`references/scoped-guidance.md`): where a version-2 config writes each row's guidance.
+- `grund guide schema` (`references/schema.md`): seeing the schema with `grund schema`.
+- `grund guide queries` (`references/queries.md`): querying the structure.
+- `grund guide editor` (`references/editor.md`): wiring an editor to `grund-lsp`.
+- `grund guide integrations` (`references/integrations.md`): clickable-citation integrations.
+- `grund guide rules` (`references/rules.md`): writing chapter rules.
 
-`grund agent-setup-instructions --full` prints this core and then every section, in this order.
+`grund guide --full` prints this core and then every section, in this order.
 
 ## Workflow
 
 1. Inspect the target repo before asking questions. Find existing specs, artifact types, roadmaps, changelogs, decisions, plans, tests, and agent instruction files before recommending anything.
 2. Present a short "detected repo shape" summary and recommended setup.
 3. If existing specs or spec-like artifacts are present, show the canonical `grund` artifact types beside the detected project-specific sections/tags/document classes, then ask which artifact model to adopt before writing config or refactoring docs.
-4. Fetch the config questions before asking them. They are not in this core: run `grund agent-setup-instructions --section config`, which holds how to recommend each setting and every question but the citation directions (version 1's `[citations]`, version 2's `[rules.citations]`), and `grund agent-setup-instructions --section citations`, which holds that one (`references/config.md` and `references/citations.md` where this skill is installed as a directory). Then ask each remaining setup/config question they hold. For every question, include the recommended value, repo evidence, pros, cons, and when to choose something else.
+4. Fetch the config questions before asking them. They are not in this core: run `grund guide config`, which holds how to recommend each setting and every question but the citation directions (version 1's `[citations]`, version 2's `[rules.citations]`), and `grund guide citations`, which holds that one (`references/config.md` and `references/citations.md` where this skill is installed as a directory). Then ask each remaining setup/config question they hold. For every question, include the recommended value, repo evidence, pros, cons, and when to choose something else.
 5. Write `grund.toml` from the analysis before running `grund init`, so generated guidance reflects the repository's actual grammar, marker, strict mode, kinds, artifact folders, and scan scope. On a fresh setup with no `grund.toml`, `grund init` writes the version-2 starter itself: a short file holding only what differs from a default — the project name, each kind's row and places, and each kind's title. Run it first, then add only the settings the user chose to change. `grund config show` prints every effective setting, defaults included, in the file's own version; show it to the user rather than writing defaults out, and copy a line from it into `grund.toml` to change that setting. `grund config explain` says what any key or check code means in that same version; ask it, not a page that may describe the other version or another release. For the existing-structure model, `grund init --template=none` lays a version-2 `grund.toml` that declares no kinds: add one `[schema.kinds.<KIND>]` table per kind of the repo's own, with the `folders` or `files` its declarations live in, then run `grund init` again so the entrypoints teach them.
 6. Run `grund init [path] [--name NAME] [--force]`, adding `--scaffold` only when the repo is fresh or the user selected a canonical-layout migration that needs the template's starter files. Omit `--name` to reuse a target config's `project_name`, falling back to the target directory name when the config has none; pass it only to override that generated identity for this run. Preview the run with `--dry-run` if the user wants to inspect what will change before committing, and offer `--check` — the same preview, writing nothing and exiting `1` when a file is still pending — as the pre-commit or CI gate that catches a managed block whose text drifted while its version heading stayed current. `init` refuses a target that no `.git`, `.hg`, `.jj`, or `.svn` marker covers, in it or any ancestor: for a directory not yet under version control, either run the VCS's own init first or pass `--no-vcs`. It also refuses the home directory and the machine-global agent instruction files (`~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, and the rest of that set) with no flag at all — those say the path is wrong, not that an option is missing, so re-point the run rather than trying to force it.
 7. Run `grund config validate [path]` and `grund check [path]`.
 8. Summarize generated files, validation results, existing specs/artifacts found, and any follow-up cleanup.
-9. Optionally offer to wire the user's editor to the `grund-lsp` server (see Editor Setup: `grund agent-setup-instructions --section editor`). Editor configuration is the user's one-time work, not something `grund init` writes — so only offer it, and prefer editor **user** settings over a per-repo config to make the configuration available across projects. User settings do not grant Workspace Trust; Editor Setup (`--section editor`) gives the VSCode / VSCodium prerequisite.
+9. Optionally offer to wire the user's editor to the `grund-lsp` server (see Editor Setup: `grund guide editor`). Editor configuration is the user's one-time work, not something `grund init` writes — so only offer it, and prefer editor **user** settings over a per-repo config to make the configuration available across projects. User settings do not grant Workspace Trust; Editor Setup (`grund guide editor`) gives the VSCode / VSCodium prerequisite.
 
 ## Repo Analysis First
 
@@ -119,7 +119,7 @@ The last line checks beyond configured source scope: `grund check .` uses the or
 If custom config affects `AGENTS.md`, ensure `grund.toml` exists before `grund init` so the generated managed block reflects the selected ID grammar, marker, strict mode, kinds, and existing artifact layout.
 
 If a project needs its own grammar or independent check, follow
-Splitting off a member (`grund agent-setup-instructions --section members`), then validate from the workspace root.
+Splitting off a member (`grund guide members`), then validate from the workspace root.
 
 ## Maintaining Declarations
 

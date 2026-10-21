@@ -1,5 +1,5 @@
-//! `grund agent-setup-instructions` prints the core of the setup skill by default
-//! and each reference section on request (§FS-init.5, §FS-init.5.5). Every
+//! `grund guide` prints a front page by default, and the core of the setup skill or
+//! any reference section by name (§FS-init.5, §FS-init.5.5, §FS-init.5.6). Every
 //! assertion reads the skill files from the repository rather than a copy of
 //! them, so editing the guide never means refreshing a third copy here.
 
@@ -21,7 +21,7 @@ const SECTIONS: [&str; 10] = [
     "rules",
 ];
 
-/// The budget on the default output (§FS-init.5.5).
+/// The budget on the core, the section `setup` (§FS-init.5.5).
 const CORE_BUDGET: usize = 16_000;
 
 /// Every `##` to `####` heading line of the single-file guide at 9d78aaaf38, before
@@ -93,7 +93,7 @@ fn section(name: &str) -> String {
 /// Run the command and require the success shape of §FS-init.5: exit `0`, empty
 /// stderr, the text on stdout.
 fn print(args: &[&str]) -> String {
-    let mut argv = vec!["agent-setup-instructions"];
+    let mut argv = vec!["guide"];
     argv.extend_from_slice(args);
     let output = Command::new(env!("CARGO_BIN_EXE_grund"))
         .args(&argv)
@@ -163,25 +163,24 @@ fn fenced_commands<'a>(lines: &[&'a str]) -> Vec<&'a str> {
     commands
 }
 
-/// §FS-init.5.5, §FS-init.5.3: with no flag the command prints `SKILL.md` byte for
-/// byte, and that core stays within its budget.
+/// §FS-init.5.5, §FS-init.5.3: `setup` prints `SKILL.md` byte for byte, and that
+/// core stays within its budget.
 #[test]
-fn default_output_is_the_core_within_its_budget() {
-    let printed = print(&[]);
-    assert_eq!(printed, core(), "the default output is not SKILL.md");
+fn setup_is_the_core_within_its_budget() {
+    let printed = print(&["setup"]);
+    assert_eq!(printed, core(), "`grund guide setup` is not SKILL.md");
     assert!(
         printed.len() <= CORE_BUDGET,
-        "the default output is {} bytes, over the {CORE_BUDGET}-byte budget",
+        "the core is {} bytes, over the {CORE_BUDGET}-byte budget",
         printed.len()
     );
 }
 
-/// §FS-init.5.1: the default output's first three `##` sections are Fresh
-/// repository, Contents and Workflow, and the fresh path names its three commands
-/// in order.
+/// §FS-init.5.1: the core's first three `##` sections are Fresh repository,
+/// Contents and Workflow, and the fresh path names its three commands in order.
 #[test]
 fn core_opens_with_fresh_repository_then_contents_then_workflow() {
-    let printed = print(&[]);
+    let printed = print(&["setup"]);
     let sections = h2_sections(&printed);
     let opening: Vec<&str> = sections
         .iter()
@@ -208,45 +207,45 @@ fn core_opens_with_fresh_repository_then_contents_then_workflow() {
 /// sections, where the config questions live, before it asks them.
 #[test]
 fn workflow_fetches_the_config_and_citations_sections() {
-    let printed = print(&[]);
+    let printed = print(&["setup"]);
     let sections = h2_sections(&printed);
     let workflow = h2_body(&sections, "Workflow").join("\n");
     for name in ["config", "citations"] {
         assert!(
-            workflow.contains(&format!("--section {name}")),
-            "Workflow does not fetch `--section {name}` before asking the config questions"
+            workflow.contains(&format!("`grund guide {name}`")),
+            "Workflow does not fetch `grund guide {name}` before asking the config questions"
         );
     }
 }
 
 /// §FS-init.5.1, §FS-init.5.5: Contents names every reference section by its
-/// `--section` invocation, in the closed order.
+/// `grund guide <name>` invocation, in the closed order.
 #[test]
 fn contents_names_every_section_in_order() {
-    let printed = print(&[]);
+    let printed = print(&["setup"]);
     let sections = h2_sections(&printed);
     let contents = h2_body(&sections, "Contents").join("\n");
     let mut named: Vec<String> = Vec::new();
-    for occurrence in contents.split("--section ").skip(1) {
+    for occurrence in contents.split("`grund guide ").skip(1) {
         let name: String = occurrence
             .chars()
             .take_while(|c| c.is_ascii_lowercase() || *c == '-')
             .collect();
-        if !name.is_empty() && !named.contains(&name) {
+        if !name.is_empty() && !name.starts_with('-') && !named.contains(&name) {
             named.push(name);
         }
     }
     assert_eq!(named, SECTIONS, "Contents names the sections out of order");
 }
 
-/// §FS-init.5.3: `--section NAME` prints `references/NAME.md` byte for byte.
+/// §FS-init.5.3: `grund guide NAME` prints `references/NAME.md` byte for byte.
 #[test]
 fn each_section_prints_its_reference_file() {
     for name in SECTIONS {
         assert_eq!(
-            print(&["--section", name]),
+            print(&[name]),
             section(name),
-            "--section {name} is not references/{name}.md"
+            "`grund guide {name}` is not references/{name}.md"
         );
     }
 }
@@ -348,10 +347,7 @@ fn each_marked_copy_is_only_in_its_own_section() {
 
 /// A fresh directory under the system temp root, holding nothing but `git init`.
 fn empty_repository() -> PathBuf {
-    let dir = std::env::temp_dir().join(format!(
-        "grund-agent-setup-fresh-path-{}",
-        std::process::id()
-    ));
+    let dir = std::env::temp_dir().join(format!("grund-guide-fresh-path-{}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).expect("create the empty repository");
     let status = Command::new("git")
@@ -380,8 +376,8 @@ fn run_printed(line: &str, cwd: &Path) -> Output {
         .expect("spawn grund")
 }
 
-/// §FS-init.5.1: the three commands of Fresh repository, as printed, run in order on
-/// an empty repository; each exits `0`, and `grund check` warns that nothing is
+/// §FS-init.5.1, §FS-init.5.6: the three commands of Fresh repository, as the front
+/// page prints them, run in order on an empty repository; each exits `0`, and `grund check` warns that nothing is
 /// recognized until the first declaration exists (§FS-check.4.5).
 #[test]
 fn fresh_path_runs_as_printed_on_an_empty_repository() {
@@ -412,4 +408,117 @@ fn fresh_path_runs_as_printed_on_an_empty_repository() {
         }
     }
     let _ = fs::remove_dir_all(&repo);
+}
+
+/// The core's `## Fresh repository` section, from its heading up to the next `##`
+/// heading, read from the skill file rather than from the command.
+fn fresh_section_of_the_core() -> String {
+    let core = core();
+    let start = core
+        .find("\n## Fresh repository\n")
+        .expect("the core has a Fresh repository section")
+        + 1;
+    let end = core[start..]
+        .find("\n## ")
+        .map_or(core.len(), |at| start + at + 1);
+    core[start..end].to_string()
+}
+
+/// A size as §FS-init.5.6 writes it: kilobytes of 1,000 bytes, rounded to the
+/// nearest whole and never below 1.
+fn kilobytes(bytes: usize) -> String {
+    format!("{} KB", ((bytes + 500) / 1000).max(1))
+}
+
+/// The phrase a reference section's Contents line ends with, without the period.
+fn contents_summary(name: &str) -> String {
+    let entry = format!("- `grund guide {name}` (`references/{name}.md`): ");
+    core()
+        .lines()
+        .find_map(|line| line.strip_prefix(entry.as_str()))
+        .unwrap_or_else(|| panic!("Contents has no line for {name}"))
+        .trim_end_matches('.')
+        .to_string()
+}
+
+/// §FS-init.5.6: the front page is the title, the core's Fresh repository section
+/// byte for byte, then the Sections heading.
+#[test]
+fn front_page_opens_with_the_cores_fresh_path() {
+    let printed = print(&[]);
+    let opening = format!(
+        "# grund guide\n\n{}## Sections\n\n",
+        fresh_section_of_the_core()
+    );
+    assert!(
+        printed.starts_with(&opening),
+        "the front page does not open with the title and the core's fresh path:\n{printed}"
+    );
+}
+
+/// §FS-init.5.6, §FS-init.5.5: the front page lists every section in `--full`
+/// order with the size it prints and its summary, a reference section's being the
+/// phrase its Contents line ends with, and names the size of the whole guide.
+#[test]
+fn front_page_lists_every_section_with_its_size_and_summary() {
+    let printed = print(&[]);
+    let full = print(&["--full"]);
+    assert!(
+        printed.contains(&format!(
+            "`grund guide --full` prints every section, {} in all.",
+            kilobytes(full.len())
+        )),
+        "the front page does not give the whole guide's size:\n{printed}"
+    );
+    let fence = printed
+        .split("```text\n")
+        .nth(1)
+        .and_then(|rest| rest.split("```\n").next())
+        .expect("the front page lists the sections in a text fence");
+    let rows: Vec<Vec<&str>> = fence
+        .lines()
+        .map(|line| line.splitn(2, "  ").map(str::trim).collect())
+        .collect();
+    let names: Vec<&str> = rows.iter().map(|row| row[0]).collect();
+    let mut expected_names = vec!["setup"];
+    expected_names.extend(SECTIONS);
+    assert_eq!(
+        names, expected_names,
+        "the front page lists the sections out of order"
+    );
+    for (line, name) in fence.lines().zip(&expected_names) {
+        let text = if *name == "setup" {
+            core()
+        } else {
+            section(name)
+        };
+        let rest = line[name.len()..].trim_start();
+        let (size, summary) = rest
+            .split_once("  ")
+            .unwrap_or_else(|| panic!("no size and summary for {name}: {line:?}"));
+        assert_eq!(size.trim(), kilobytes(text.len()), "the size of {name}");
+        if *name == "setup" {
+            assert!(!summary.is_empty(), "setup has no summary");
+        } else {
+            assert_eq!(summary, contents_summary(name), "the summary of {name}");
+        }
+    }
+}
+
+/// §FS-init.5.7: the deprecated name prints the core after its one warning, which
+/// names the replacement and the release that removes it.
+#[test]
+fn deprecated_name_prints_the_core_after_one_warning() {
+    let output = Command::new(env!("CARGO_BIN_EXE_grund"))
+        .arg("agent-setup-instructions")
+        .current_dir(manifest_dir())
+        .output()
+        .expect("spawn grund");
+    assert_eq!(output.status.code(), Some(0));
+    assert_eq!(String::from_utf8_lossy(&output.stdout), core());
+    assert_eq!(
+        String::from_utf8_lossy(&output.stderr),
+        "warning: agent-setup-instructions is deprecated and is removed in grund 0.20.0; \
+         use grund guide setup, which prints the same text\n"
+    );
 }

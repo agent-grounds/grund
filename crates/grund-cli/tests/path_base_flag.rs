@@ -391,8 +391,8 @@ fn path_base_placement_and_rejection() {
         &["init", "--path-base=invocation"][..],
         &["fetch", "--path-base=invocation", "FS-a"][..],
         &["completions", "bash", "--path-base=invocation"][..],
-        // §FS-cli.3: the setup guide accepts `--section` and `--full` only (§FS-init.5).
-        &["agent-setup-instructions", "--path-base=invocation"][..],
+        // §FS-cli.3: the guide accepts a section name and `--full` only (§FS-init.5).
+        &["guide", "--path-base=invocation"][..],
     ] {
         assert_eq!(
             run(args, &root),

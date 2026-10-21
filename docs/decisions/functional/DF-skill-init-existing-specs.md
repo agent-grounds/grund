@@ -6,7 +6,7 @@
 
 ## 1. Context
 
-`grund init` and the `grund-init` skill have different jobs. The CLI is deliberately non-interactive: it writes or refreshes the managed agent block and creates `grund.toml` only when absent ([§DF-config-file-location.2.3](DF-config-file-location.md#23-grund-init-writes-the-bare-grundtoml)), while preserving existing entrypoints, user-authored content, and existing config ([§FS-init.2.3](../../functional-spec/FS-init.md#23-generated-agent-entrypoints), [§FS-init.2.4](../../functional-spec/FS-init.md#24-generated-grundtoml), [§FS-init.3](../../functional-spec/FS-init.md#3-non-intrusive-guarantees)). The skill is the interactive adoption wrapper: it inspects the repo, recommends configuration with evidence, writes config before invoking `grund init`, and validates the result ([§FS-init.5](../../functional-spec/FS-init.md#5-agent-setup-instructions)).
+`grund init` and the `grund-init` skill have different jobs. The CLI is deliberately non-interactive: it writes or refreshes the managed agent block and creates `grund.toml` only when absent ([§DF-config-file-location.2.3](DF-config-file-location.md#23-grund-init-writes-the-bare-grundtoml)), while preserving existing entrypoints, user-authored content, and existing config ([§FS-init.2.3](../../functional-spec/FS-init.md#23-generated-agent-entrypoints), [§FS-init.2.4](../../functional-spec/FS-init.md#24-generated-grundtoml), [§FS-init.3](../../functional-spec/FS-init.md#3-non-intrusive-guarantees)). The skill is the interactive adoption wrapper: it inspects the repo, recommends configuration with evidence, writes config before invoking `grund init`, and validates the result ([§FS-init.5](../../functional-spec/FS-init.md#5-the-guide)).
 
 The ambiguous case is a repo where the user says "set up grund" but the project already has specs, requirements, ADRs, RFCs, plans, or test scenarios. The skill should not treat that repo like a fresh tree. Existing specs are project-owned artifacts; replacing them with canonical scaffold folders would violate the non-intrusive shape of `init` and the configurable-layout goal ([§GOAL-configurable](../../goals.md#goal-configurable-every-default-is-overridable)).
 
@@ -55,6 +55,6 @@ Classify the target before choosing `--scaffold` or a template:
 
 ## 6. Consequences
 
-- [§FS-init.5](../../functional-spec/FS-init.md#5-agent-setup-instructions) carries the behavior contract for the printed and packaged `grund-init` instructions.
+- [§FS-init.5](../../functional-spec/FS-init.md#5-the-guide) carries the behavior contract for the printed and packaged `grund-init` instructions.
 - `skills/grund-init/SKILL.md` carries the operational decision table because agents need it at setup time without reading this decision first.
 - The first setup pass stays conservative: preserve the user's existing spec system, map it into `grund` config, and make the agent entrypoint teach the resulting layout. `--scaffold` is correct for an empty repo and usually wrong for a repo that already has specs ([§DF-init-templates](DF-init-templates.md#df-init-templates-grund-init-lays-a-named-template-and---scaffold-replaces---docs)).
