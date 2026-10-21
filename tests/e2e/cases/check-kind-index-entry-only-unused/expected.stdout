@@ -1,1 +1,1 @@
-docs/competition/COMP-zz-a.md:1: warning: declared but never cited: COMP-zz-a
+docs/competition/COMP-zz-a.md:1: warning: declared but never cited: COMP-zz-a (its index entry at docs/competition/README.md:3 does not count as a use)

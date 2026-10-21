@@ -22,9 +22,9 @@ use grund_core::{
     config_warnings, cover_lines, cover_with_globs, effective_config, effective_project,
     fetch_snapshot_with_run_warnings, format_references, glob_beside_section, guide_sections, init,
     list_sizes, list_with_run_warnings, names_member_id_candidate, propose_id_with_run_warnings,
-    reads_as_coordinate, reads_as_coordinate_glob, refs_sites_with_run_warnings,
-    render_finding_sites_json, setup_fresh_path, setup_instructions, show_batch_with_globs,
-    show_with_scope, usage_clause, usage_over_paths, validate_config, with_report_path_base,
+    reads_as_coordinate, reads_as_coordinate_glob, render_finding_sites_json, setup_fresh_path,
+    setup_instructions, show_batch_with_globs, show_with_scope, usage_clause, usage_over_paths,
+    validate_config, with_report_path_base,
 };
 use grund_core::{CheckFindingSelection, Code};
 
@@ -126,6 +126,7 @@ include!("cli_show_batch.rs");
 include!("cli_list.rs");
 include!("cli_list_render.rs");
 include!("cli_refs.rs");
+include!("cli_refs_annotations.rs");
 include!("cli_refs_sites.rs");
 include!("cli_cover.rs");
 include!("cli_fmt.rs");

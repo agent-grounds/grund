@@ -65,6 +65,7 @@ mod lsp_report;
 mod lsp_snapshot;
 mod path_report;
 mod refs;
+mod refs_annotations;
 mod refs_query;
 mod refs_sites;
 mod report;
@@ -103,8 +104,11 @@ pub use lsp_snapshot::{lsp_snapshot, lsp_snapshot_with_completion, lsp_snapshot_
 pub use refs::{
     RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure, RefsQueryFailureKind,
     RefsWithMetadata, refs, refs_outcome, refs_with_metadata, refs_with_metadata_and_hint,
+    refs_with_text_annotations,
 };
-pub use refs_sites::{RefsSites, RefsSitesOpts, refs_sites_with_run_warnings};
+pub use refs_sites::{
+    RefsSites, RefsSitesOpts, refs_sites_with_run_warnings, refs_sites_with_text_annotations,
+};
 pub use report::render_finding_sites_json;
 pub use show::{show, show_from_snapshot, show_with_scope};
 

@@ -79,7 +79,8 @@ impl<'a> ListCitationCounts<'a> {
 }
 
 /// `source`'s own kind-index entries, the citations `--unused` discounts
-/// (§FS-list.1.3, §DF-index-not-an-inbound-citation).
+/// (§FS-list.1.3) and text refs labels (§FS-refs.3.1.1), using check's defining
+/// classifier (§FS-check.4.1.2).
 pub(crate) fn kind_index_entries(source: &WorkspaceProject) -> KindIndexEntries {
     // §AR-checker.2.16: the enrollment destination, as `Expected` carries it.
     let index_targets = index_link_targets(

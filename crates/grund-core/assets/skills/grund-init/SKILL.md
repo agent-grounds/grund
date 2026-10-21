@@ -118,6 +118,14 @@ The last line checks beyond configured source scope: `grund check .` uses the or
 
 If custom config affects `AGENTS.md`, ensure `grund.toml` exists before `grund init` so the generated managed block reflects the selected ID grammar, marker, strict mode, kinds, and existing artifact layout.
 
+Read an unused warning's index-entry location alongside `grund refs <ID>` and
+`grund refs <ID> --summary`: refs retains the citation and labels it as an index
+entry, while check excludes it from use. In mixed summaries, read the annotated
+lines (and columns) as the excluded sites only. Keep a useful unused declaration
+or cite an actual dependency; do not invent a dependency just to silence the
+warning. See the [checking guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/checking.md#when-only-an-index-cites-a-declaration)
+and the [runnable example](https://github.com/agent-grounds/grund/blob/main/examples/authored-citations/README.md#when-only-the-index-cites-a-record).
+
 If a project needs its own grammar or independent check, follow
 Splitting off a member (`grund guide members`), then validate from the workspace root.
 

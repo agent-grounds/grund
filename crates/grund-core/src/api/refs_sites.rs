@@ -5,6 +5,7 @@
 //! spell a record's `id` as `cover` does, with no target's kind title (§FS-refs.3.2).
 
 use anyhow::Result;
+use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 use super::cover::{cited_id, target_config};
@@ -52,7 +53,23 @@ pub struct RefsSitesOpts {
 #[doc(hidden)]
 pub fn refs_sites_with_run_warnings(opts: RefsSitesOpts) -> (Vec<Finding>, Result<RefsOutput>) {
     let mut cautions = Vec::new();
-    let result = refs_sites_run(opts, &mut cautions);
+    let result = refs_sites_run(opts, &mut cautions, None);
+    (cautions, result)
+}
+
+/// §FS-refs.3.1.1 / §FS-refs.3.3.1: the CLI's text-only classification, beside
+/// the unchanged site-mode records and run warnings, without a second scan.
+#[doc(hidden)]
+pub fn refs_sites_with_text_annotations(
+    opts: RefsSitesOpts,
+) -> (
+    Vec<Finding>,
+    Result<(RefsOutput, BTreeSet<(String, usize, usize)>)>,
+) {
+    let mut cautions = Vec::new();
+    let mut entries = BTreeSet::new();
+    let result =
+        refs_sites_run(opts, &mut cautions, Some(&mut entries)).map(|output| (output, entries));
     (cautions, result)
 }
 
@@ -62,7 +79,11 @@ struct Site<'c> {
     citation: &'c Citation,
 }
 
-fn refs_sites_run(opts: RefsSitesOpts, cautions: &mut Vec<Finding>) -> Result<RefsOutput> {
+fn refs_sites_run(
+    opts: RefsSitesOpts,
+    cautions: &mut Vec<Finding>,
+    index_entries: Option<&mut BTreeSet<(String, usize, usize)>>,
+) -> Result<RefsOutput> {
     // §FS-coordinate-globs.errors.shape: what the grammar alone refuses, before discovery.
     let globs = match &opts.sites {
         RefsSites::Globs(patterns) => read_globs(patterns)?,
@@ -141,6 +162,9 @@ fn refs_sites_run(opts: RefsSitesOpts, cautions: &mut Vec<Finding>) -> Result<Re
             }
         })
         .collect();
+    if let Some(entries) = index_entries {
+        *entries = super::refs_annotations::index_entry_sites(&context);
+    }
     Ok(RefsOutput {
         output_format: context.render_config().output_format.clone(),
         workspace: context.workspace_loaded,

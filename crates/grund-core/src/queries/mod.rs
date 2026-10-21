@@ -95,7 +95,7 @@ pub use sizes::{
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
 pub(crate) use ambiguity::declaration_ambiguity_refusal;
-pub(crate) use citation_counts::ListCitationCounts;
+pub(crate) use citation_counts::{ListCitationCounts, kind_index_entries};
 pub(crate) use glob_scope::{GlobSelection, read_globs};
 pub(crate) use list_scope::check_list_scope;
 pub(crate) use report_scope::{reported_scope, reports, reports_site};

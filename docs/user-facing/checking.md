@@ -12,6 +12,33 @@ Use `broken-stub` for the replacement ([§FS-declarations.checks.excluded-stub-t
 declaration, and exits non-zero when one dangles or breaks a rule the repository
 declared ([§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-citation-in-a-repo)). Run it in pre-commit and in CI.
 
+## When only an index cites a declaration
+
+A kind's index lists declarations for navigation. Its entry is a citation that
+`refs` lists, but it does not establish use, so `check` still warns
+([§FS-check.4.1.2](../functional-spec/FS-check.md#412-an-index-entry-does-not-count)).
+The warning locates the discounted entry; text refs labels it, including within
+a file summary ([§FS-refs.3.1.1](../functional-spec/FS-refs.md#311-label-the-excluded-index-sites),
+[§FS-refs.3.3.1](../functional-spec/FS-refs.md#331-identify-the-excluded-sites-within-a-summary)).
+
+For example, from the [authored-citations mini-repository](../../examples/authored-citations/README.md):
+
+```text
+$ grund check examples/authored-citations/repo --only unused
+docs/adr/consider-memory.md:1: warning: declared but never cited: ADR-consider-memory (its index entry at docs/adr/README.md:5 does not count as a use)
+$ grund refs ADR-consider-memory examples/authored-citations/repo
+docs/adr/README.md:5: §ADR-consider-memory (index entry)
+$ grund refs ADR-consider-memory examples/authored-citations/repo --summary
+docs/adr/README.md: 1 (line 5) (index entries at line 5)
+```
+
+These commands agree: the entry exists, and the declaration has no genuine use
+yet. Decide whether the declaration is still useful, or connect it to the
+behavior that actually depends on it. Add a citation when that dependency exists;
+an unused warning alone is no reason to invent one. Ordinary use rows stay
+unannotated; when a summary mixes entry and use sites, its annotation identifies
+only the excluded lines (and columns when they share a line).
+
 ## What it enforces
 
 Renumber the heading `### 3.2 Missing section` in [`FS-check.md`](../functional-spec/FS-check.md) to `3.99` and `grund check` flags every site that leaned on it — code, tests, decision docs and the README alike, in one resolver:

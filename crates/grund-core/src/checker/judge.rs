@@ -18,7 +18,9 @@ use super::snapshots::arm_missing_snapshot;
 use super::values::check_values;
 use crate::config::{Frame, KindResolution, Rules, Schema};
 use crate::grammar::render_catalog_id;
-use crate::model::{Catalog, CheckReport, Code, Diagnostic, Expected, Id, paired_declarations};
+use crate::model::{
+    Catalog, CheckReport, Code, Diagnostic, Expected, Id, paired_declarations, sort_path_key,
+};
 use crate::resolver::{WorkspaceCheckTarget, resolved_coordinate_target};
 
 /// The workspace a project is judged in (§FS-workspace.4): every loaded
@@ -206,11 +208,16 @@ fn check_unused(
     targets: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
     report: &mut CheckReport,
 ) {
-    let mut cited: BTreeSet<&Id> = findings
-        .edges()
-        .filter(|cite| cite.namespace.is_none() && !index_entries.is_index_entry(cite))
-        .map(|c| &c.id)
-        .collect();
+    // §FS-check.4.1.2: retain the discounted sites for the warning's explanation.
+    let mut excluded: BTreeMap<&Id, Vec<_>> = BTreeMap::new();
+    let mut cited = BTreeSet::new();
+    for citation in findings.edges().filter(|cite| cite.namespace.is_none()) {
+        if index_entries.is_index_entry(citation) {
+            excluded.entry(&citation.id).or_default().push(citation);
+        } else {
+            cited.insert(&citation.id);
+        }
+    }
     if let Some(alias) = frame.alias {
         for target in targets.values() {
             cited.extend(
@@ -234,10 +241,31 @@ fn check_unused(
                 path: Some(decl.file.clone()),
                 line: Some(decl.line),
                 column: None,
-                message: format!(
-                    "declared but never cited: {}",
-                    render_catalog_id(frame.grammar(), &findings.declarations, id)
-                ),
+                message: {
+                    let mut message = format!(
+                        "declared but never cited: {}",
+                        render_catalog_id(frame.grammar(), &findings.declarations, id)
+                    );
+                    // §FS-check.4.1.2 / §FS-errors.3.1: bounded, deterministic sites,
+                    // spelled against the same report base as the finding's anchor.
+                    if let Some(sites) = excluded.get_mut(id) {
+                        sites.sort_by_key(|cite| {
+                            (sort_path_key(&cite.file), cite.line, cite.column)
+                        });
+                        let first = sites[0];
+                        let more = if sites.len() > 1 {
+                            format!(" and {} more", sites.len() - 1)
+                        } else {
+                            String::new()
+                        };
+                        message.push_str(&format!(
+                            " (its index entry at {}:{}{more} does not count as a use)",
+                            frame.display_path(&first.file),
+                            first.line
+                        ));
+                    }
+                    message
+                },
                 sites: Vec::new(),
                 authority: Vec::new(),
             });
