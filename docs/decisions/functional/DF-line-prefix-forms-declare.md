@@ -73,7 +73,8 @@ cites and declares nothing would fail a tree that passed. That is a new policy r
 existing code rather than a false verdict corrected, so it takes the deprecation path of
 [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path): through 0.18.x an ungrounded Lisp doc-comment is a
 `warning:` whose message ends `this warning becomes an error in grund 0.19.0`, and from
-0.19.0 it is the error every other ungrounded doc-comment is.
+0.19.0 it is the error every other ungrounded doc-comment is. The path completed in grund
+0.19.0, under [§DF-lisp-doc-grounding-lands-in-0-19](DF-lisp-doc-grounding-lands-in-0-19.md#df-lisp-doc-grounding-lands-in-0-19-an-ungrounded-lisp-doc-comment-is-the-ordinary-error-from-0190).
 
 ## 3. Rejected alternatives
 

@@ -1,2 +1,2 @@
 src/main.rs:3: error: ungrounded doc-comment: no § citation to a declared ID
-src/router.lisp:3: warning: ungrounded doc-comment: no § citation to a declared ID; this warning becomes an error in grund 0.19.0
+src/router.lisp:3: error: ungrounded doc-comment: no § citation to a declared ID
