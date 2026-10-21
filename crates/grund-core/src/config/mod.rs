@@ -144,7 +144,7 @@ pub(crate) use grounding::{
 pub(crate) use kind::escape_toml_basic;
 pub(crate) use kinds::{
     KindEntry, KindScope, KindTable, KindVerdict, Quote, install_kind_table, known_kinds_line,
-    one_grammar_window, unverifiable_reason,
+    unverifiable_reason,
 };
 pub(crate) use point_sizes::measure_point_text;
 pub(crate) use record::{
@@ -160,7 +160,7 @@ pub(crate) use v1::{
     DEFAULT_MARKER, DEFAULT_SECTION_SEPARATOR, default_kind_folder, parse_string_list,
     strip_comment,
 };
-pub(crate) use validate::citations_table;
+pub(crate) use validate::{citations_table, reject_unaccepted_citation_targets};
 pub(crate) use vocabulary::admitted;
 pub(crate) use workspace_block::{
     INVALID_ALIAS_PATH_EXPECTED, both_member_lists_message, has_dot_path_component,

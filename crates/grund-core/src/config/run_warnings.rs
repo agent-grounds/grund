@@ -20,7 +20,7 @@ use std::path::PathBuf;
 
 use super::project_records::ProjectRecords;
 use super::record::Config;
-use crate::model::{Code, Diagnostic};
+use crate::model::Diagnostic;
 
 /// One warning the run has earned, settled or still to be answered.
 #[derive(Clone)]
@@ -45,21 +45,6 @@ pub(crate) enum RunWarning {
 }
 
 impl RunWarning {
-    /// §FS-config.3.9.5.2: a `[citations]` target the run loads and cannot
-    /// accept. The message already names the config, as every config message
-    /// does, so the warning carries no anchor of its own.
-    pub(crate) fn citation_target(message: String) -> Self {
-        Self::Settled(Diagnostic {
-            code: Code::UNACCEPTED_CITATION_TARGET,
-            path: None,
-            line: None,
-            column: None,
-            message,
-            sites: Vec::new(),
-            authority: Vec::new(),
-        })
-    }
-
     /// §FS-check.4.10: the block to ask, or `None` when this one is not the
     /// finding's subject at all — cheap enough to run at every boundary
     /// population, because it reads two config fields and touches no disk.

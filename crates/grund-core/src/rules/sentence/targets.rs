@@ -51,8 +51,8 @@ fn known_target(
             unverifiable.get_or_insert(unverifiable_reason(alias, kind));
             return Ok(render_citation_target(&parsed));
         }
-        // §FS-errors.3.8: a kind its scope configures without IDs says so.
-        KindVerdict::NonCitable(entry) => entry.refusal(&legacy, Quote::Double),
+        // §FS-errors.3.8.1: a kind its scope configures without IDs says so alone.
+        KindVerdict::NonCitable(entry) => entry.non_citable_reason(Quote::Double),
         // §FS-errors.2.5.1: `code` with no row is refused as not citable too.
         KindVerdict::Unknown => {
             vocab

@@ -127,16 +127,15 @@ impl SubjectFault {
 
 impl SubjectRefusal {
     /// The reason this refusal opens with on both surfaces: the released one
-    /// for the component that failed, and, where what it named as a kind is
-    /// configured but declares no IDs, §FS-errors.2.5.1's appended through the
-    /// window of §FS-errors.3.8, or alone for `code` with no row
+    /// for the component that failed, or, where what it named as a kind is
+    /// configured but declares no IDs, §FS-errors.2.5.1's alone in its place
     /// (§FS-errors.3.8.1).
     pub(super) fn reason(&self, vocabulary: &RuleVocabulary) -> String {
         let fault = self.fault.failed();
         let legacy = fault.reason(&self.text);
         let reason = match &fault {
             SubjectFault::UnknownKind(kind) => vocabulary.kind_refusal(legacy, kind),
-            // §FS-errors.3.8: a selector spelled `KIND` or `KIND.NAME`.
+            // §FS-errors.3.8.1: a selector spelled `KIND` or `KIND.NAME`.
             SubjectFault::IdGrammar if self.spelling == Spelling::Literal => {
                 let reason = vocabulary.kind_refusal(legacy, &self.head);
                 // §FS-rule-refusals.selectors: `each FS` adds the rule's reason; nothing moves.

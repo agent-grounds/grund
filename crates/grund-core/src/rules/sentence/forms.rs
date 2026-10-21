@@ -11,7 +11,6 @@
 
 use super::recovery::enabled;
 use super::{RuleParseError, RuleVocabulary};
-use crate::config::one_grammar_window;
 use crate::model::format_list;
 
 /// What a refusing production offers in place of the text it read.
@@ -36,9 +35,6 @@ pub(super) struct Refusal {
     enabling: bool,
     /// Guidance that ends the message, form or not (§FS-rule-refusals.sentences.whitespace).
     trailer: Option<&'static str>,
-    /// The reason this refusal is moving to, appended through the window of
-    /// §FS-errors.3.8 after everything the legacy refusal printed.
-    moving_to: Option<String>,
 }
 
 pub(super) fn refuse(reason: impl Into<String>, form: Form) -> Refusal {
@@ -47,7 +43,6 @@ pub(super) fn refuse(reason: impl Into<String>, form: Form) -> Refusal {
         form,
         enabling: false,
         trailer: None,
-        moving_to: None,
     }
 }
 
@@ -77,13 +72,6 @@ impl Refusal {
         self
     }
 
-    /// The same refusal, its complete message kept as the legacy prefix of
-    /// `reason` until the window of §FS-errors.3.8 closes.
-    pub(super) fn moving_to(mut self, reason: String) -> Self {
-        self.moving_to = Some(reason);
-        self
-    }
-
     /// The same refusal, ending in `trailer` whether it offers a form or not.
     pub(super) fn trailing(mut self, trailer: &'static str) -> Self {
         self.trailer = Some(trailer);
@@ -98,20 +86,6 @@ impl Refusal {
         vocabulary: &RuleVocabulary,
         read: impl Fn(&str, &RuleVocabulary) -> Option<Refusal>,
     ) -> RuleParseError {
-        let moving_to = self.moving_to.clone();
-        let mut error = self.offer_legacy(vocabulary, read);
-        if let Some(reason) = moving_to {
-            error.message = one_grammar_window(&error.message, &reason);
-        }
-        error
-    }
-
-    /// [`Self::offer`] without the window: the refusal as it was printed before.
-    fn offer_legacy(
-        self,
-        vocabulary: &RuleVocabulary,
-        read: impl Fn(&str, &RuleVocabulary) -> Option<Refusal>,
-    ) -> RuleParseError {
         let sections_on = enabled(vocabulary);
         let mut reread = |form: &str, enabled: bool| match (enabled, &sections_on) {
             (true, Some(sections_on)) => read(form, sections_on),
@@ -122,7 +96,6 @@ impl Refusal {
             form,
             enabling,
             trailer,
-            ..
         } = self;
         let offered = match form {
             Form::One(form) => {

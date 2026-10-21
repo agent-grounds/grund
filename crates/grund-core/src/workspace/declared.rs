@@ -6,7 +6,7 @@
 
 use anyhow::Result;
 
-use super::expand::{WorkspaceProjectEntry, expand_workspace_tree};
+use super::expand::{WorkspaceProjectEntry, expand_workspace_projects};
 use super::scope::open;
 use crate::config::{Config, Invocation, Schema, install_kind_table};
 
@@ -32,13 +32,14 @@ pub(crate) fn declared_member_schemas(config: &Config) -> Vec<(String, Schema)> 
 /// `cover --lines` (§FS-scan.path.cover). This is the one
 /// place a narrowed scan of a config that declares `[workspace]` is set up, so
 /// each of them judges the pinned and `*/` `[citations]` targets its whole run
-/// judges and puts the same warnings on the run's channel
-/// (§AR-config.1.5, §REQ-one-answer.scope.narrowed). A scope that is
-/// the config root is the whole run, and its expansion builds the table.
+/// judges and fails the load on the same first one
+/// (§AR-config.1.5, §REQ-one-answer.scope.narrowed, §FS-config.3.9.5.2). A
+/// scope that is the config root is the whole run, and its expansion builds
+/// the table.
 pub(crate) fn open_narrowable(invocation: &Invocation) -> Result<Config> {
     let mut config = open(invocation)?;
     if config.workspace_declared && !invocation.names_root(&config.root) {
-        install_declared_kind_table(&mut config);
+        install_declared_kind_table(&mut config)?;
     }
     Ok(config)
 }
@@ -48,14 +49,14 @@ pub(crate) fn open_narrowable(invocation: &Invocation) -> Result<Config> {
 /// workspace configures, so it judges the pinned and `*/` `[citations]`
 /// targets a full run judges, with the same one call. Nothing else of the
 /// declared read reaches the run: a rule object here stays §FS-rules.4.1's.
-fn install_declared_kind_table(config: &mut Config) {
+fn install_declared_kind_table(config: &mut Config) -> Result<()> {
     let mut projects = declared_projects(config);
     install_kind_table(
         config,
         projects
             .iter_mut()
             .map(|entry| (entry.alias.as_str(), &mut entry.config)),
-    );
+    )
 }
 
 /// Each project the workspace `config` declares, best-effort as
@@ -65,8 +66,8 @@ fn declared_projects(config: &Config) -> Vec<WorkspaceProjectEntry> {
         return Vec::new();
     }
     let mut root_config = config.clone();
-    expand_workspace_tree(&mut root_config).unwrap_or_else(|_| {
+    expand_workspace_projects(&mut root_config, &config.root).unwrap_or_else(|_| {
         let mut alone = config.without_members();
-        expand_workspace_tree(&mut alone).unwrap_or_default()
+        expand_workspace_projects(&mut alone, &config.root).unwrap_or_default()
     })
 }

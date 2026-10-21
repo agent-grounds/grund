@@ -12,7 +12,6 @@ use super::compiled::{Compiled, compile};
 use super::project::Project;
 use super::record::Config;
 use super::run::{Invocation, Run};
-use super::run_warnings::RunWarning;
 use super::{v1, v2, validate};
 use crate::model::{format_path, relative_from_base};
 
@@ -309,12 +308,8 @@ fn config_from_text(
     validate::kinds(report_path, &project)?;
     let compiled = compile(&project)
         .with_context(|| format!("{}: invalid [id] grammar", format_path(report_path)))?;
-    let warnings = validate::lists(report_path, &project)?;
-    let mut config = settled(&project, &compiled, run, invocation);
-    // §FS-config.3.9.5.2: what a run that holds no workspace cannot judge loads,
-    // and says so on the run's warning channel.
-    config.extend_run_warnings(warnings.into_iter().map(RunWarning::citation_target));
-    Ok(config)
+    validate::lists(report_path, &project)?;
+    Ok(settled(&project, &compiled, run, invocation))
 }
 
 /// Discovery from `start` as a read-only command makes it: the loader the unit

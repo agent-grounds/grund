@@ -13,15 +13,15 @@
 use anyhow::{Result, anyhow};
 use std::path::Path;
 
-use super::citations::{pinned_target_warnings, validate_citation_rules};
+use super::citations::{unaccepted_pinned_target, validate_citation_rules};
+use super::discovery::config_file_in;
 use super::kind::KindConfig;
 use super::kinds::KindTable;
 use super::project::{KindGrounding, Project};
 use super::record::Config;
-use super::run_warnings::RunWarning;
 use super::v1::bail_config;
 use super::workspace_block::validate_workspace_lists;
-use crate::model::format_path;
+use crate::model::{OperationDiagnostic, format_path};
 
 /// §AR-config.4: the `[reference]` meanings, which read no `[[kinds]]` row:
 /// the marker `strict` requires and the inline-note budget. `path` is the report
@@ -63,64 +63,56 @@ pub(super) fn kinds(path: &Path, project: &Project) -> Result<()> {
 }
 
 /// §AR-config.4: the member lists and the `[citations]` rules against the final
-/// kind set, judged after the grammar compiles, as v1 always judged them. The
-/// `Ok` is the load warnings a pinned or `*/` target earns in a config that
-/// declares no `[workspace]`, so no run of it holds one (§FS-config.3.9.5.2); a
-/// config that declares one has them judged where its workspace is expanded.
-pub(super) fn lists(path: &Path, project: &Project) -> Result<Vec<String>> {
+/// kind set, judged after the grammar compiles, as v1 always judged them. A
+/// pinned or `*/` target is not judged here: it names other projects' kinds,
+/// which the run judges once it knows whether it holds a workspace
+/// ([`reject_unaccepted_citation_targets`], §FS-config.3.9.5.2).
+pub(super) fn lists(path: &Path, project: &Project) -> Result<()> {
     // §AR-workspace.5.2: post-parse invariants run on every load, not gated on which
     // section appeared. Free-form `project_name` is slug-checked later
     // (§AR-workspace.5.3); both member lists are shape-checked in `workspace_block.rs`.
     validate_workspace_lists(&project.workspace)?;
     // §FS-config.3.9.5: validate `[citations]` against the final kind set.
     if !project.rules.citations.declared {
-        return Ok(Vec::new());
+        return Ok(());
     }
-    let table = citations_table(project.version);
     // §AR-config.1.5: a bare target and the citing side are judged in
     // this project's own scope, from its one reading of its kinds.
-    let local = KindTable::standalone(&project.schema);
     validate_citation_rules(
         path,
-        table,
+        citations_table(project.version),
         &project.kind_configs(),
         &project.rules.citations,
-        &local,
-    )?;
-    if project.workspace.declared {
-        return Ok(Vec::new());
-    }
-    Ok(pinned_target_warnings(
-        path,
-        table,
-        &project.rules.citations,
-        &local,
-    ))
+        &KindTable::standalone(&project.schema),
+    )
 }
 
-/// §FS-config.3.9.5.2: the load warnings `config`'s pinned and `*/` targets
-/// earn against the kind table built over its workspace — the half of
-/// [`lists`] a config that declares `[workspace]` defers to that point.
-pub(super) fn pinned_citation_target_warnings(
-    config: &Config,
-    kinds: &KindTable,
-) -> Vec<RunWarning> {
+/// §FS-config.3.9.5.2: refuse the load on the first pinned or `*/` target of
+/// `config`'s `[citations]` that `kinds` cannot accept, as a config load error
+/// that names the file, as every load error does (§FS-lsp.2.2.4.1,
+/// §DF-one-grammar-lands-in-0-19). `kinds` is the table built over the run's
+/// workspace ([`super::install_kind_table`]), or the config's own where the run
+/// holds none, which no other project's target can pass.
+pub(crate) fn reject_unaccepted_citation_targets(config: &Config, kinds: &KindTable) -> Result<()> {
     let project = config.project();
     let Some(path) = config.run().config_file.as_deref() else {
-        return Vec::new();
+        return Ok(());
     };
     if !project.rules.citations.declared {
-        return Vec::new();
+        return Ok(());
     }
-    pinned_target_warnings(
+    let Some(message) = unaccepted_pinned_target(
         path,
         citations_table(project.version),
         &project.rules.citations,
         kinds,
-    )
-    .into_iter()
-    .map(RunWarning::citation_target)
-    .collect()
+    ) else {
+        return Ok(());
+    };
+    let mut failure = OperationDiagnostic::new("config", "config", message);
+    failure.path = Some(format_path(path));
+    failure.file = config_file_in(&config.root);
+    Err(failure.into())
 }
 
 /// How a config spells its `[citations]` table in a message
