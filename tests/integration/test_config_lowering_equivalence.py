@@ -23,6 +23,13 @@ version-neutral clause to the 25 v1 records at capture lines 933, 1010-1011,
 repair clauses in validate[2] change; all other captured bytes, statuses and
 digests remain the #453 reference.
 
+Issue #881 ends the one-grammar window (§RM-one-grammar-flip), after which the
+canonical config of §DF-directions-render.3 no longer loads: it pinned `api/AR`
+in a project with no `[workspace]`. The fixture changed rather than the reader,
+gaining a `[workspace]` whose member `api` configures `AR`, so the three records
+of that config, at capture lines 34, 549 and 550, hold its show digest and an
+empty validate stderr. Those bytes are the same before and after the flip.
+
 The captures are not regenerated to make this test pass. `--capture` exists to
 take them, once, from a binary whose behaviour is the reference.
 """

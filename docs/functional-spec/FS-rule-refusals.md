@@ -505,7 +505,7 @@ otherwise malformed sentence. It cannot stand in for those predicates.
 Both subject forms remain refused with exit `2` on `check --rule`. Their
 existing reasons remain intact as prefixes: the path-subject reason stays
 `path subjects are not accepted in phase 1`, and a named place retains the
-shared non-citable-kind reason and its wording window ([§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)).
+shared non-citable-kind reason ([§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)).
 The `known kinds:` line still follows on that command. Refusal precedence
 ([§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails)) is unchanged: guidance supplements a
 place/path-subject refusal, never an earlier refusal. Rule declarations carry
@@ -704,9 +704,9 @@ fragment of a sentence as a kind.
 
 Stage 2's wildcard row is the one place this order differs from what a
 sentence was refused with before it was written down: a wildcard subject
-joined by `and` was refused as a conjunction. That reason moves through the
-window of [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration), which keeps the conjunction refusal as a prefix until
-`0.19.0`.
+joined by `and` was refused as a conjunction. That reason moved through the
+window of [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration), which kept the conjunction refusal as a prefix until
+`0.19.0`; since then the wildcard reason stands alone.
 
 ## selectors: A refused selector is answered with a selector
 
@@ -764,8 +764,8 @@ so these refusals add no breadcrumb.
 Where no configured kind can be recovered, nothing is guessed. The reason
 stands alone, and a second line lists the configured citable kinds exactly as
 an unknown `--kind` does ([§FS-list.1.1](FS-list.md#11---kind)). A kind that is configured but not citable is not a
-kind that cannot be recovered: its reason is [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)'s, reached
-through the window of [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration), and the line after it is the same
+kind that cannot be recovered: its reason is [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)'s, alone since
+the window of [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration) closed, and the line after it is the same
 `known kinds:` line.
 
 Which kinds a selector accepts, and whether `KIND.NAME` needs named sections,

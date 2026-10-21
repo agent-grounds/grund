@@ -161,11 +161,11 @@ fn reported_repository_gets_a_labelled_heading_beside_an_unchanged_refusal() {
     assert_eq!(text(&refused.stdout), "");
     assert_eq!(
         text(&refused.stderr),
-        "error: unknown kind \"e2e\" — kind \"e2e\" declares no IDs — tests/e2e/ is not a \
-         citable home; this wording changes in grund 0.19.0; for configured place \"e2e\", \
-         express this obligation in grund.toml: [rules.citations.e2e] with must = [\"FS\"]\n\
+        "error: kind \"e2e\" declares no IDs — tests/e2e/ is not a citable home; for \
+         configured place \"e2e\", express this obligation in grund.toml: \
+         [rules.citations.e2e] with must = [\"FS\"]\n\
          known kinds: FS\n",
-        "the refusal's bytes are not this ticket's to change"
+        "the refusal's bytes are §FS-errors.3.8.1's since the one-grammar window closed"
     );
 }
 

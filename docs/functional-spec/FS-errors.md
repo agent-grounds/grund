@@ -229,10 +229,10 @@ finding carries the reason alone after `is not a valid rule: `
 ([§FS-errors.2.5](FS-errors.md#25-refused-input)). A `[citations]` target keeps the wording [§FS-config.3.9.5](FS-config.md#395-validation)
 documents for it, *a non-citable target kind*.
 
-`list --kind` and `grund id` print the first form today ([§FS-list.1.1](FS-list.md#11---kind),
+`list --kind` and `grund id` print the first form ([§FS-list.1.1](FS-list.md#11---kind),
 [§FS-id.1.1](FS-id.md#11-unknown-and-non-citable-kinds)). The selector and rule surfaces reach the second through the
-window of [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration): until `0.19.0` they keep the reason they printed
-before and append this one.
+window of [§FS-errors.3.8](FS-errors.md#38-the-one-grammar-wording-migration): until `0.19.0` they kept the reason they printed
+before and appended this one, and since `0.19.0` they print it alone.
 
 The homeless kind under its default name, `code`, in a project whose
 `[[kinds]]` declares no homeless kind ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)), has no row, yet it
@@ -364,8 +364,8 @@ no workspace is in scope here, so no namespace can be searched for <KIND> — ch
 
 ### 3.8 The one-grammar wording migration
 
-Two refusals change the reason they print, and both are bytes a consumer may
-match, so they take the warning release of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)
+Two refusals changed the reason they print, and both are bytes a consumer may
+match, so they took the warning release of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)
 rather than changing outright ([§DF-one-answer-rulings-grammar](../decisions/functional/DF-one-answer-rulings-grammar.md#df-one-answer-rulings-grammar-one-grammar-keeps-the-documented-refusal-bytes-and-order-and-one-kind-universe-keeps-each-commands-vocabulary), D10):
 
 - A configured kind that is not citable, named on `list --selector`,
@@ -382,27 +382,33 @@ rather than changing outright ([§DF-one-answer-rulings-grammar](../decisions/fu
   with `and` was refused as a conjunction. Under the order of
   [§FS-rule-refusals.sentences.order](FS-rule-refusals.md#sentencesorder-a-sentence-is-refused-for-the-first-stage-it-fails) the wildcard is refused first.
 
-Until `0.19.0` each complete legacy reason, accepted forms included, stays a
-verbatim contiguous prefix, followed by ` — `, the reason it is moving to, and
-the suffix `; this wording changes in grund 0.19.0`. Whatever followed the
-legacy reason on the next line — `known kinds:`, a `hint:` — still follows it.
-The exit code, the `invalid-rule` code and its severity, and what is refused do
-not move; only the reason's text does. In a repository whose kinds are `FS`,
-`RULE` and the non-citable `e2e` homed at `tests/e2e/`, with named sections on,
-these are the exact lines the window prints:
+Its window opened in `0.18.0` and closed in `0.19.0` (#881): until then each
+complete legacy reason, accepted forms included, stayed a verbatim contiguous
+prefix — `unknown kind "e2e"`, `literal subject "e2e.terms" does not match the
+configured ID grammar`, or the conjunction refusal with its accepted forms —
+followed by ` — `, the reason it was moving to, and the suffix `; this wording
+changes in grund 0.19.0`. In `0.19.0` the prefix and the suffix went, and each
+refusal prints [§FS-errors.3.8.1](FS-errors.md#381-the-final-templates)'s reason alone ([§DF-one-grammar-lands-in-0-19](../decisions/functional/DF-one-grammar-lands-in-0-19.md#df-one-grammar-lands-in-0-19-the-one-grammar-window-closes-in-0190-and-a-pinned-target-the-run-cannot-accept-fails-the-load)).
+Whatever followed the legacy reason on the next line — `known kinds:`, a
+`hint:` — still follows the reason. The exit code, the `invalid-rule` code and
+its severity, and what is refused did not move; only the reason's text did. In
+a repository whose kinds are `FS`, `RULE` and the non-citable `e2e` homed at
+`tests/e2e/`, with named sections on, these are the exact lines:
 
 | Input | Exact reason |
 |---|---|
-| `list --selector e2e.terms` | `literal subject "e2e.terms" does not match the configured ID grammar — kind "e2e" declares no IDs — tests/e2e/ is not a citable home; this wording changes in grund 0.19.0` |
-| `list --selector 'Each e2e'` | `unknown kind "e2e" — kind "e2e" declares no IDs — tests/e2e/ is not a citable home; this wording changes in grund 0.19.0` |
-| `check --rule 'Each e2e must have exactly one terms chapter.'` | `unknown kind "e2e" — kind "e2e" declares no IDs — tests/e2e/ is not a citable home; this wording changes in grund 0.19.0` |
-| `check --rule 'Each FS must cite at least one e2e.'` | `unknown kind "e2e" — kind "e2e" declares no IDs — tests/e2e/ is not a citable home; this wording changes in grund 0.19.0` |
-| `check --rule 'FS-x.* must cite at least one FS and must not cite any FS.'` | `conjunctions are not accepted; accepted forms: "FS-x must cite at least one FS." and "FS-x must not cite any FS." — section-component wildcards are not accepted in phase 1; this wording changes in grund 0.19.0` |
+| `list --selector e2e.terms` | `kind "e2e" declares no IDs — tests/e2e/ is not a citable home` |
+| `list --selector 'Each e2e'` | `kind "e2e" declares no IDs — tests/e2e/ is not a citable home` |
+| `check --rule 'Each e2e must have exactly one terms chapter.'` | `kind "e2e" declares no IDs — tests/e2e/ is not a citable home` |
+| `check --rule 'Each FS must cite at least one e2e.'` | `kind "e2e" declares no IDs — tests/e2e/ is not a citable home` |
+| `check --rule 'FS-x.* must cite at least one FS and must not cite any FS.'` | `section-component wildcards are not accepted in phase 1` |
 
-The first four are each followed by `known kinds: FS, RULE`, and the fifth by
-nothing, as before. Exact-line consumers migrate during the window to the
-reason after the ` — `, which is what `0.19.0` prints alone; a prefix matcher
-reads what it read before.
+The first four are each followed by `known kinds: FS, RULE`, as before. The
+fifth is followed by nothing: once its subject is rebuilt the sentence is still
+a conjunction, so no accepted form is offered ([§FS-errors.3.8.1](FS-errors.md#381-the-final-templates)). Exact-line
+consumers were asked to migrate during the window to the reason after the
+` — `, which is what `0.19.0` prints; a matcher of the legacy prefix no longer
+finds it.
 
 The same repository declares no homeless kind, so `code` has no row there.
 Its window opened in `0.18.0` and closed in `0.19.0` (#680): each of these
@@ -421,11 +427,11 @@ alone, followed by `known kinds: FS, RULE`, as before, with exit `2`
 | `check --rule 'Each code must have exactly one terms chapter.'` | `kind "code" declares no IDs` |
 | `check --rule 'Each FS must cite at least one code.'` | `kind "code" declares no IDs` |
 
-Retiring the window is [§RM-one-grammar-flip](../roadmap.md#rm-one-grammar-flip-end-the-one-grammar-window-in-0190).
+Retiring the window was [§RM-one-grammar-flip](../roadmap.md#rm-one-grammar-flip-end-the-one-grammar-window-in-0190).
 
 #### 3.8.1 The final templates
 
-From `0.19.0` the legacy prefix and the suffix go, and the reasons are exactly
+Since `0.19.0`, with the legacy prefix and the suffix gone, the reasons are exactly
 [§FS-errors.2.5.1](FS-errors.md#251-a-kind-that-declares-no-ids)'s double-quoted form and the wildcard reason of
 [§FS-rule-refusals.sentences](FS-rule-refusals.md#sentences-strict-refusals):
 

@@ -83,3 +83,8 @@ should-not = ["*/AR"]               # any namespace: prose
 
 [citations.code]
 should = ["FS|AR"]
+
+# The member `api` configures `AR`, so the pinned `api/AR` above is a target
+# the workspace accepts rather than one no run can judge (§FS-config.3.9.5.2).
+[workspace]
+members = ["api"]
