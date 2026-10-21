@@ -205,3 +205,86 @@ fn relative_nested_and_qualified_queries_are_pinned_by_authored_source_facts() {
     wrong["absentQuery"] = json!("FS-alpha");
     assert!(queries::closure(&wrong).is_err());
 }
+
+/// §FS-refs.1, §FS-refs.2.1: base and other-section citations are not hits for
+/// the requested section; a matching hit or an in-scan declaration silences
+/// the typo note. All inputs and answers here are authored without a producer.
+#[test]
+fn section_filtered_refs_note_uses_requested_hits_and_scan_local_declarations() {
+    use super::{agreement_render_model::Model, agreement_render_tree::View};
+    use std::collections::BTreeMap;
+
+    let base = format!("{}FS-session", '§');
+    let section = format!("{}FS-session.1", '§');
+    let sibling = format!("{}FS-session.2", '§');
+    let files = BTreeMap::from([
+        ("docs/base.md".into(), format!("See {base}.\n")),
+        ("docs/section.md".into(), format!("See {section}.\n")),
+        ("docs/sibling.md".into(), format!("See {sibling}.\n")),
+        (
+            "docs/session.md".into(),
+            "# FS-session: Session\n## 1: First\n## 2: Second\n".into(),
+        ),
+    ]);
+    let facts = json!({"declarations":[{"id":"FS-session","kind":"FS",
+        "file":"docs/session.md","heading":"# FS-session: Session","body":[2,3]}],
+        "sections":[
+            {"of":"FS-session","path":"1","heading":"## 1: First","end":2},
+            {"of":"FS-session","path":"2","heading":"## 2: Second","end":3}],
+        "citations":[
+            {"file":"docs/base.md","token":base},
+            {"file":"docs/section.md","token":section},
+            {"file":"docs/sibling.md","token":sibling}]});
+    let model = Model::new(&facts, files).unwrap();
+    for (selected, query, token, requested_section, warn) in [
+        ("docs/base.md", "FS-session.1", None, Value::Null, true),
+        ("docs/sibling.md", "FS-session.1", None, Value::Null, true),
+        (
+            "docs/section.md",
+            "FS-session.1",
+            Some(&section),
+            json!("1"),
+            false,
+        ),
+        ("docs/session.md", "FS-session.1", None, Value::Null, false),
+        (
+            "docs/base.md",
+            "FS-session",
+            Some(&base),
+            Value::Null,
+            false,
+        ),
+    ] {
+        let supplied = format!("./{selected}");
+        let view = View {
+            m: &model,
+            root: "<repo>",
+            selected: selected.into(),
+            base: String::new(),
+            lines: None,
+            explicit_path: Some(&supplied),
+            variant: json!({}),
+        };
+        let hits = token.map_or_else(Vec::new, |token| {
+            vec![json!({
+            "project":null,"path":format!("<repo>/{selected}"),"line":1,"column":5,
+            "id":"FS-session","section":requested_section,"marker":true,"text":token,
+            "enclosing_declaration":null,"enclosing_section":null})]
+        });
+        let summaries = if hits.is_empty() {
+            json!([])
+        } else {
+            json!([{"project":null,"path":selected,"sites":1}])
+        };
+        let note = warn.then(|| format!("FS-session is neither declared nor cited in scan path `{supplied}` — run `grund list` to see project declarations, including outside this scan"));
+        assert_eq!(
+            view.refs(query),
+            json!({"failure":null,"run_cautions":[],"result":{
+            "run_cautions":[],"output_format":"text","workspace":false,
+            "hits":hits,"note":note,"scan_errors":[],"kind_title":"What: behavior, requirements, and constraints",
+            "site_total":hits.len(),"file_total":summaries.as_array().unwrap().len(),
+            "file_summaries":summaries}}),
+            "{selected}: {query}"
+        );
+    }
+}

@@ -253,17 +253,11 @@ impl View<'_> {
                 None => files.push((c.file.clone(), 1)),
             }
         }
-        // §FS-scan.path.refs: the path's tree is what `refs` scans.
-        let cited = self
-            .m
-            .cites
-            .iter()
-            .filter(aimed)
-            .any(|c| self.within(&c.file));
         let declared =
             (0..self.m.decls.len()).any(|d| self.qualified(d) == id && self.declared_within(d));
-        // §FS-refs.2.1: explicit paths qualify the note and its project-list advice.
-        let note = (!cited && !declared).then(|| match (project.as_str(), self.explicit_path) {
+        // §FS-refs.2.1: the no-hit note uses the requested citation set;
+        // explicit paths qualify it and its project-list advice (§FS-refs.1).
+        let note = (hits.is_empty() && !declared).then(|| match (project.as_str(), self.explicit_path) {
             (Some(alias), Some(path)) => format!("{id} is neither declared nor cited in scan path `{path}` \u{2014} run `grund list --project {alias}` to see {alias}'s declared IDs, including outside this scan"),
             (None, Some(path)) => format!("{id} is neither declared nor cited in scan path `{path}` \u{2014} run `grund list` to see project declarations, including outside this scan"),
             (Some(alias), None) => format!("{id} is neither declared nor cited \u{2014} run `grund list --project {alias}` to see {alias}'s declared IDs"),
