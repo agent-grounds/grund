@@ -4,12 +4,38 @@ How a maintainer builds, rehearses and checks the npm and PyPI candidate of one
 commit, and what has to be true before anyone may publish it. The contract is
 [§FS-distribution-candidate](../functional-spec/FS-distribution-candidate.md#fs-distribution-candidate-one-candidate-is-assembled-rehearsed-and-verified-before-any-registry-sees-it); this page is the order of operations.
 
-**Nothing here publishes.** The npm and PyPI packages are assembled and
-rehearsed, never uploaded: the publisher workflow is disabled, and the accounts
+**The cross-registry commands here never upload packages.** The npm and PyPI
+packages are assembled and rehearsed, never uploaded: the publisher workflow is disabled, and the accounts
 it would publish with do not exist yet. The Cargo crates and the GitHub release
 are published by `release.yml` as before, and nothing in this lane reaches it
 ([§FS-distribution-candidate.8.7](../functional-spec/FS-distribution-candidate.md#87-the-cargo-release-cannot-reach-the-publisher)). For what a user can install today, see
 [Installation](installation.md).
+
+## Prepare a Cargo/GitHub release
+
+The owner can deliberately prepare the first stable release
+([§FS-distribution.4.4.2](../functional-spec/FS-distribution.md#442-deliberately-select-the-first-stable-release-from-the-dispatch-main-tip)):
+
+```bash
+gh workflow run release-minor.yml --ref main \
+  -f version=1.0.0 -f expected_main_sha=FULL_DISPATCH_MAIN_SHA
+```
+
+Replace `FULL_DISPATCH_MAIN_SHA` with the full 40-hex main tip at dispatch,
+which must match the dispatch SHA, checkout HEAD and fetched `origin/main`.
+It is not #467's freeze candidate; comparing it with that evidence remains
+the owner's responsibility. Omitting both inputs selects `next-minor`;
+an optional `expected_main_sha` on that choice is checked too.
+
+First-stable selection refuses another ref, missing or mismatched SHA,
+disagreeing source versions, sources outside `0.x`, missing or unreachable
+latest stable `0.x` history, an empty commit range, or any existing stable
+tag at or above `1.0.0`. Unsupported versions also refuse; prerelease tags
+do not count as stable history. The existing release guard still enforces
+the shared floor and pending retirement promises. Both choices run exact-tip
+CI, both candidates' CI and a non-publishing dry run before advancing main
+and starting Cargo/GitHub publication. Dispatch remains the owner's release
+authorization; merging this helper capability performs no release.
 
 ## The candidate
 

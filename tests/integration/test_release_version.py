@@ -1,17 +1,10 @@
-"""§FS-distribution.4.4.2: the manual selector, its default and every refusal.
+"""§FS-distribution.4.4.2: the manual selector, its default and every refusal."""
 
-Temporary specification skips: implement removes the class decorators and os
-import. GRUND_804_RED=1 runs the real assertions before the selector exists.
-"""
-
-import os
 import unittest
 
 from release_selection_fixture import SelectionRepository
 
 
-@unittest.skipUnless(os.environ.get("GRUND_804_RED") == "1",
-                     "red until #804 adds the release selector; implement removes this")
 class ReleaseVersionTests(SelectionRepository, unittest.TestCase):
     def test_omitted_inputs_keep_the_next_minor_default(self):
         before = self._snapshot()
