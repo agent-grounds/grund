@@ -78,7 +78,7 @@ grund does to a repository's text: what is marked is checked, and the rest is le
 - Gerwin Klein, June Andronick, Kevin Elphinstone, Toby Murray, Thomas Sewell, Rafal
   Kolanski and Gernot Heiser, *Comprehensive Formal Verification of an OS Microkernel*,
   ACM Transactions on Computer Systems 32(1), 2014, DOI 10.1145/2560537
-  ([abstract](https://trustworthy.systems/publications/nictaabstracts/Klein_AEMSKH_14.abstract)),
+  ([PDF](https://sel4.systems/Research/pdfs/comprehensive-formal-verification-os-microkernel.pdf)),
   give the machine-checked verification of seL4: the functional correctness of its C
   implementation, a proof that its binary implements the C semantics, and proofs of
   access-control enforcement and information-flow noninterference, "backed by
