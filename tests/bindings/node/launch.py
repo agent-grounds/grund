@@ -8,10 +8,14 @@ import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
+_AUTOMATIC_TIMEOUT = object()
 
 
-def command(argv, cwd=REPO, env=None, timeout=900):
+def command(argv, cwd=REPO, env=None, timeout=_AUTOMATIC_TIMEOUT):
+    """Apply the build deadline unless the caller supplies one (§AR-ci.3.4.1.1)."""
     args = [str(arg) for arg in argv]
+    if timeout is _AUTOMATIC_TIMEOUT:
+        timeout = 1800 if build_profile(args) == "release" else 900
     if os.name == "nt" and args[0] == "npm":
         # npm.cmd cannot be passed to CreateProcess; invoke its JS entry directly.
         search_path = (env if env is not None else os.environ).get("PATH")
