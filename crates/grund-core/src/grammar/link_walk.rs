@@ -15,8 +15,9 @@ use super::never_rewrite::{inline_code_span_end, is_escaped, link_destination_cl
 /// A `[` still open: its document-wide `id`, where it stands on the line being
 /// walked (`None` when an earlier line of the paragraph opened it), whether it
 /// opens an image's description, and whether it may open a definition's label:
-/// at the start of its line behind at most three spaces or the line's container
-/// prefixes, and not a footnote's `[^` (§FS-citations.wrap.enclosing.shape).
+/// on a line a definition may start on, at its start behind at most three spaces
+/// or the line's container prefixes, and not a footnote's `[^`
+/// (§FS-citations.wrap.enclosing.shape).
 #[derive(Clone, Copy, Debug)]
 pub(super) struct Open {
     pub(super) id: Option<usize>,
@@ -36,8 +37,9 @@ pub(super) enum After {
     Unclosed,
     /// `[` and a key closed on the line, `start..end`; empty for `[]`.
     Key { start: usize, end: usize },
-    /// `:` after a label that opens its line; the destination starts at
-    /// `dest_start` and runs, its title with it, to the end of the line.
+    /// `:` after a label that opens its line, and a destination and at most a
+    /// title on the line; the destination starts at `dest_start` and runs, its
+    /// title with it, to the end of the line.
     Definition { dest_start: usize },
     /// Anything else: a shortcut reference or plain brackets.
     Other,
@@ -82,9 +84,10 @@ impl WalkState {
 }
 
 /// Walk one line from `state`, reporting to `sink` and leaving in `state` what
-/// is still open at its end. Brackets balance and code spans and destinations
-/// are passed over whole, as §FS-citations.wrap.enclosing.shape reads them.
-pub(super) fn walk_line(line: &str, state: &mut WalkState, sink: &mut impl Sink) {
+/// is still open at its end; `defines` where a definition may start on the line.
+/// Brackets balance and code spans and destinations are passed over whole, as
+/// §FS-citations.wrap.enclosing.shape reads them.
+pub(super) fn walk_line(line: &str, defines: bool, state: &mut WalkState, sink: &mut impl Sink) {
     let bytes = line.as_bytes();
     let mut anchor_from = state.anchor.then_some(0);
     let mut i = 0;
@@ -131,7 +134,8 @@ pub(super) fn walk_line(line: &str, state: &mut WalkState, sink: &mut impl Sink)
             }
             b'[' => {
                 let image = i > 0 && bytes[i - 1] == b'!' && !is_escaped(bytes, i - 1);
-                let may_define = !image
+                let may_define = defines
+                    && !image
                     && behind_container_prefixes(&bytes[..i])
                     && bytes.get(i + 1) != Some(&b'^');
                 state.stack.push(Open {
@@ -193,7 +197,11 @@ fn after_close(bytes: &[u8], close: usize, open: Option<Open>) -> After {
             {
                 dest_start += 1;
             }
-            After::Definition { dest_start }
+            if definition_tail(bytes, dest_start) {
+                After::Definition { dest_start }
+            } else {
+                After::Other
+            }
         }
         _ => After::Other,
     }
@@ -233,6 +241,60 @@ fn behind_container_prefixes(prefix: &[u8]) -> bool {
             _ => return false,
         }
     }
+}
+
+/// §FS-citations.wrap.enclosing.shape: whether the bytes from `start` to the end
+/// of the line are a definition's destination and at most a title after it, set
+/// off by whitespace and closed on the line. Anything else leaves the line prose,
+/// and so does a destination the line does not hold.
+fn definition_tail(bytes: &[u8], start: usize) -> bool {
+    let Some(end) = definition_destination_end(bytes, start) else {
+        return false;
+    };
+    let rest = &bytes[end..];
+    let title = rest.trim_ascii_start();
+    if title.is_empty() {
+        return true;
+    }
+    let close = match title[0] {
+        b'"' => b'"',
+        b'\'' => b'\'',
+        b'(' => b')',
+        _ => return false,
+    };
+    if title.len() == rest.len() {
+        return false;
+    }
+    let at = end + rest.len() - title.len();
+    (at + 1..bytes.len())
+        .filter(|&j| !is_escaped(bytes, j))
+        .find(|&j| bytes[j] == close || (close == b')' && bytes[j] == b'('))
+        .is_some_and(|j| bytes[j] == close && bytes[j + 1..].trim_ascii().is_empty())
+}
+
+/// Past a definition's destination opened at `start`: `<…>` closed on the line
+/// with no `<` inside, or a run with no whitespace whose parentheses balance.
+fn definition_destination_end(bytes: &[u8], start: usize) -> Option<usize> {
+    if bytes.get(start) == Some(&b'<') {
+        return (start + 1..bytes.len())
+            .filter(|&j| !is_escaped(bytes, j))
+            .find(|&j| matches!(bytes[j], b'<' | b'>'))
+            .filter(|&j| bytes[j] == b'>')
+            .map(|j| j + 1);
+    }
+    let mut depth = 0usize;
+    let mut j = start;
+    while j < bytes.len() && !bytes[j].is_ascii_whitespace() {
+        if !is_escaped(bytes, j) {
+            match bytes[j] {
+                b'(' => depth += 1,
+                b')' => depth = depth.checked_sub(1)?,
+                _ => {}
+            }
+        }
+        j += 1;
+    }
+    (j > start && depth == 0).then_some(j)
 }
 
 /// The unescaped `]` that closes a key opened just before `from`, on the line.

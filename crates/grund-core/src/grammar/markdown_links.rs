@@ -24,6 +24,7 @@ use super::fmt_cross_refs::CrossRefWrap;
 use super::line_scan::LineScan;
 use super::link_walk::{After, Open, Sink, WalkState, walk_line};
 use super::markdown_blocks::MarkdownBlocks;
+use super::markdown_paragraphs::{Paragraphs, blockquote_markers};
 
 /// What one `[` turned out to open, settled over its whole paragraph
 /// (§FS-citations.wrap.enclosing.shape).
@@ -55,6 +56,8 @@ struct DocReading {
     first: Vec<usize>,
     /// The state a line begins in, kept only where something is still open.
     carry: HashMap<usize, WalkState>,
+    /// Whether a definition may start on each line (§FS-citations.wrap.enclosing.shape).
+    defines: Vec<bool>,
     /// Each definition's key (§FS-citations.wrap.enclosing.shape), and whether its
     /// destination is not empty; the first definition of a key wins.
     definitions: HashMap<String, bool>,
@@ -72,25 +75,33 @@ impl DocReading {
             line: 0,
             opens: Vec::new(),
             ticked: Vec::new(),
+            defined: false,
             reading: &mut reading,
         };
         let mut blocks = MarkdownBlocks::default();
+        let mut paragraphs = Paragraphs::default();
         let mut state = WalkState::default();
         for (index, line) in lines.iter().enumerate() {
             builder.line = index;
             builder.reading.first.push(builder.reading.shapes.len());
-            let fenced = blocks.line(line).in_fence();
-            if fenced || opens_paragraph(line) {
+            if blocks.line(line).in_fence() {
+                paragraphs.fenced();
                 builder.finish(&mut state);
-            }
-            if fenced {
+                builder.reading.defines.push(false);
                 continue;
             }
+            let paragraph = paragraphs.line(line);
+            if paragraph.opens {
+                builder.finish(&mut state);
+            }
+            builder.reading.defines.push(paragraph.may_define);
             state = state.carried();
             if !state.stack.is_empty() || state.anchor {
                 builder.reading.carry.insert(index, state.clone());
             }
-            walk_line(line, &mut state, &mut builder);
+            builder.defined = false;
+            walk_line(line, paragraph.may_define, &mut state, &mut builder);
+            paragraphs.defined(builder.defined || state.stack.iter().any(|open| open.may_define));
         }
         builder.finish(&mut state);
         reading.first.push(reading.shapes.len());
@@ -118,48 +129,13 @@ impl DocReading {
         {
             return sink.scan;
         }
-        walk_line(line, &mut state, &mut sink);
+        let may_define = self.defines.get(index).copied().unwrap_or(false);
+        walk_line(line, may_define, &mut state, &mut sink);
         for open in state.stack {
             sink.place(open, line.len(), None);
         }
         sink.scan
     }
-}
-
-/// §FS-citations.wrap.enclosing.shape: whether `line` opens a paragraph of its
-/// own, ending the one before — a blank line, an ATX heading, a list item, a
-/// block quote or a thematic break. A fence is the caller's.
-fn opens_paragraph(line: &str) -> bool {
-    let trimmed = line.trim_start();
-    if trimmed.is_empty() || trimmed.starts_with('>') {
-        return true;
-    }
-    let hashes = trimmed.bytes().take_while(|b| *b == b'#').count();
-    if (1..=6).contains(&hashes)
-        && trimmed[hashes..]
-            .chars()
-            .next()
-            .is_none_or(char::is_whitespace)
-    {
-        return true;
-    }
-    let bullet = trimmed.as_bytes()[0];
-    if matches!(bullet, b'-' | b'*' | b'+') {
-        let rest = &trimmed[1..];
-        let rule = trimmed.bytes().filter(|b| *b == bullet).count() >= 3
-            && trimmed
-                .bytes()
-                .all(|b| b == bullet || b == b' ' || b == b'\t');
-        return rule || rest.is_empty() || rest.starts_with([' ', '\t']);
-    }
-    let digits = trimmed.bytes().take_while(u8::is_ascii_digit).count();
-    if (1..=9).contains(&digits) {
-        let rest = &trimmed[digits..];
-        if let Some(after) = rest.strip_prefix(['.', ')']) {
-            return after.is_empty() || after.starts_with([' ', '\t']);
-        }
-    }
-    trimmed.len() >= 3 && trimmed.bytes().all(|b| b == b'_' || b == b' ')
 }
 
 /// §FS-citations.wrap.enclosing.shape: a key read as CommonMark reads one, case
@@ -188,6 +164,8 @@ struct Builder<'b, 'd> {
     /// Where each `[` stands, by id.
     opens: Vec<(usize, usize)>,
     ticked: Vec<bool>,
+    /// A definition closed on the current line.
+    defined: bool,
     reading: &'b mut DocReading,
 }
 
@@ -205,7 +183,10 @@ impl Builder<'_, '_> {
         state.anchor = false;
     }
 
-    /// The text of `[` `id` up to the `]` at `close` on the current line.
+    /// The text of `[` `id` up to the `]` at `close` on the current line. A
+    /// later line's `>` markers are its quote's, not the text's, so a key spelled
+    /// across quoted lines is the key its definition spells on one
+    /// (§FS-citations.wrap.enclosing.shape).
     fn text(&self, id: usize, close: usize) -> String {
         let (line, at) = self.opens[id];
         if line == self.line {
@@ -214,10 +195,12 @@ impl Builder<'_, '_> {
         let mut text = self.lines[line][at + 1..].to_string();
         for middle in &self.lines[line + 1..self.line] {
             text.push('\n');
-            text.push_str(middle);
+            text.push_str(blockquote_markers(middle).1);
         }
+        let last = self.lines[self.line];
+        let from = (last.len() - blockquote_markers(last).1.len()).min(close);
         text.push('\n');
-        text.push_str(&self.lines[self.line][..close]);
+        text.push_str(&last[from..close]);
         text
     }
 }
@@ -249,6 +232,7 @@ impl Sink for Builder<'_, '_> {
                 collapsed: false,
             },
             After::Definition { dest_start } => {
+                self.defined = true;
                 let present = destination_present(self.lines[self.line], dest_start);
                 self.reading
                     .definitions

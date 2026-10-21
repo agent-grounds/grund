@@ -12,6 +12,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
+#[path = "authored_markup/paragraphs.rs"]
+mod paragraphs;
+
 fn manifest_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
@@ -168,8 +171,19 @@ const AUTHORED: &[(&str, &str)] = &[
 /// gains a wrap, and the image loses `cache.png`.
 #[test]
 fn every_authored_form_keeps_its_bytes() {
+    let failures = forms_rewritten(AUTHORED);
+    assert!(
+        failures.is_empty(),
+        "authored markup rewritten:\n{}",
+        failures.join("\n")
+    );
+}
+
+/// Each of `forms`, as the whole of `docs/notes.md`, that the fullest run
+/// rewrites or `fmt --check` then lists.
+fn forms_rewritten(forms: &[(&str, &str)]) -> Vec<String> {
     let mut failures = Vec::new();
-    for (name, notes) in AUTHORED {
+    for (name, notes) in forms {
         let dir = project(&format!("form-{name}"), notes, &full_index());
         let write = grund(&["fmt", "--write", "--marker", "--cross-refs"], &dir);
         let after = read(&dir, "docs/notes.md");
@@ -182,11 +196,7 @@ fn every_authored_form_keeps_its_bytes() {
             failures.push(format!("{name}: fmt --check listed {:?}", stdout(&check)));
         }
     }
-    assert!(
-        failures.is_empty(),
-        "authored markup rewritten:\n{}",
-        failures.join("\n")
-    );
+    failures
 }
 
 /// §FS-citations.wrap.enclosing.shape: each occurrence is read by its own position,
@@ -379,9 +389,9 @@ fn a_link_inside_an_index_rows_text_stays_an_entry() {
 }
 
 /// §FS-citations.wrap.enclosing, §FS-check.3.18: a protected form that goes
-/// nowhere — a reference no definition matches, a definition's label, in a list
-/// item too, an autolink, an HTML anchor, a label a lone backtick leaves unclosed — is left by `fmt` and is
-/// no entry, so the ID is reported missing, at the declaration, in the bytes that
+/// nowhere — a reference no definition matches, a definition's label, which starts
+/// its paragraph, in a list item too, an autolink, an HTML anchor, a label a lone
+/// backtick leaves unclosed — is left by `fmt` and is no entry, so the ID is reported missing, at the declaration, in the bytes that
 /// finding has shipped in, and never as "is not a link".
 #[test]
 fn index_rows_that_go_nowhere_are_missing_entries() {
@@ -396,7 +406,7 @@ fn index_rows_that_go_nowhere_are_missing_entries() {
         ),
         (
             "definition-label",
-            "[the §ADR-use-redis record]: use-redis.md\n",
+            "\n[the §ADR-use-redis record]: use-redis.md\n",
         ),
         (
             "list-item-definition-label",

@@ -10,6 +10,7 @@ use super::value_binding_attempts::{
     AttemptedValueTarget, attempted_value_target, split_value_binding_site,
 };
 use super::value_context::{binding_span_is_inside, value_binding_context};
+use crate::grammar::blockquote_markers;
 use crate::model::Catalog;
 use crate::workspace::WorkspaceCitationTarget;
 
@@ -112,7 +113,7 @@ fn closing_backtick(line: &CitationLine<'_>, context: (usize, usize)) -> Option<
 fn text_run<'a>(line: &CitationLine<'a>, context: (usize, usize)) -> Option<(TextRun, &'a str)> {
     let content = line.scan_line.get(context.0..context.1)?;
     if line.is_md {
-        let (quote_depth, text) = blockquote(content);
+        let (quote_depth, text) = blockquote_markers(content);
         return Some((TextRun::Markdown { quote_depth }, text));
     }
     if line.docstring.is_docstring() {
@@ -126,17 +127,6 @@ fn text_run<'a>(line: &CitationLine<'a>, context: (usize, usize)) -> Option<(Tex
         },
         text,
     ))
-}
-
-/// A Markdown line's blockquote depth and its text after the `>` markers.
-fn blockquote(line: &str) -> (usize, &str) {
-    let mut depth = 0;
-    let mut text = line;
-    while let Some(after) = text.trim_start_matches([' ', '\t']).strip_prefix('>') {
-        depth += 1;
-        text = after.strip_prefix(' ').unwrap_or(after);
-    }
-    (depth, text)
 }
 
 /// What a next line's citation aims at, when its first text is `(` immediately
