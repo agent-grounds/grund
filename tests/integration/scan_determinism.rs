@@ -11,8 +11,11 @@ mod binaries;
 #[path = "corpus.rs"]
 mod corpus;
 
+use std::io::Write;
 use std::path::Path;
 use std::process::Command;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::time::Instant;
 
 const THREADS: &[&str] = &["1", "8"];
 const REPO_COMMANDS: &[&[&str]] = &[
@@ -80,23 +83,68 @@ fn differences(grund: &Path, cwd: &Path, args: &[&str]) -> Option<String> {
         })
 }
 
+fn workers() -> usize {
+    std::thread::available_parallelism().map_or(1, |n| n.get())
+}
+
+/// `work` over every item on every CPU libtest may use, results in item order
+/// (§REQ-one-answer.proof.delivery.payment): a fixture's one-thread run and its
+/// eight-thread rerun stay one pair on one worker, only different fixtures overlap, and
+/// every comparison and message is the serial sweep's (§REQ-deterministic-output.1).
+fn in_order<T: Sync, R: Send>(items: &[T], work: impl Fn(&T) -> R + Sync) -> Vec<R> {
+    let next = AtomicUsize::new(0);
+    let mut results: Vec<Option<R>> = items.iter().map(|_| None).collect();
+    std::thread::scope(|scope| {
+        let handles: Vec<_> = (0..workers().clamp(1, items.len().max(1)))
+            .map(|_| {
+                scope.spawn(|| {
+                    let mut done = Vec::new();
+                    loop {
+                        let index = next.fetch_add(1, Ordering::Relaxed);
+                        let Some(item) = items.get(index) else {
+                            return done;
+                        };
+                        done.push((index, work(item)));
+                    }
+                })
+            })
+            .collect();
+        for handle in handles {
+            match handle.join() {
+                Ok(done) => {
+                    for (index, result) in done {
+                        results[index] = Some(result);
+                    }
+                }
+                Err(panic) => std::panic::resume_unwind(panic),
+            }
+        }
+    });
+    results
+        .into_iter()
+        .map(|result| result.expect("every item ran"))
+        .collect()
+}
+
 #[test]
 fn every_report_is_byte_identical_at_one_thread_and_at_eight() {
+    let started = Instant::now();
     let repo = binaries::repo_root();
     let grund = binaries::grund();
-    let mut problems = Vec::new();
-    for args in REPO_COMMANDS {
-        problems.extend(differences(&grund, &repo, args));
-    }
+    let mut problems: Vec<String> =
+        in_order(REPO_COMMANDS, |args| differences(&grund, &repo, args))
+            .into_iter()
+            .flatten()
+            .collect();
     let selection = corpus::plain_check_cases(&repo);
-    let mut compared = 0;
-    for case in &selection.cases {
+    let per_case = in_order(&selection.cases, |case| {
         let baseline = run(
             &grund,
             &case.root,
             &["check", ".", "--format", "json"],
             THREADS[0],
         );
+        let mut found = Vec::new();
         for threads in &THREADS[1..] {
             let other = run(
                 &grund,
@@ -105,18 +153,28 @@ fn every_report_is_byte_identical_at_one_thread_and_at_eight() {
                 threads,
             );
             if other != baseline {
-                problems.push(format!(
+                found.push(format!(
                     "{}: check differs at {} and {threads} threads",
                     case.name, THREADS[0]
                 ));
             }
         }
-        compared += 1;
-    }
+        found
+    });
+    let compared = per_case.len();
+    problems.extend(per_case.into_iter().flatten());
     eprintln!(
         "scan determinism: {} repository command(s) and {compared} fixture(s) compared at {} thread counts",
         REPO_COMMANDS.len(),
         THREADS.len()
+    );
+    // §AR-ci.requirements.5.1: past libtest's capture, the seconds this sweep still costs.
+    let _ = writeln!(
+        std::io::stderr(),
+        "gate time: scan determinism {} repository command(s) and {compared} fixture(s) on {} worker(s) in {:.1}s",
+        REPO_COMMANDS.len(),
+        workers(),
+        started.elapsed().as_secs_f64()
     );
     assert!(problems.is_empty(), "{}", problems.join("\n"));
     assert!(compared >= MIN_CASES, "only {compared} fixtures compared");
