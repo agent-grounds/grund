@@ -27,6 +27,10 @@ mod init_marker_guidance;
 #[path = "support/mixed_path_contract.rs"]
 mod mixed_path_contract;
 
+// §FS-check.4.1.2 / §FS-refs.3.1.1 / §FS-refs.3.3.1: issue #909.
+#[path = "support/index_use_explanations.rs"]
+mod index_use_explanations;
+
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases, discover_examples,
