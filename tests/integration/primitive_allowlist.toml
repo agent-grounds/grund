@@ -17,13 +17,6 @@
 # `exempt` holds the three hits of the `split on /` pattern that split something
 # other than a coordinate, each with its reason. The test refuses a fourth.
 
-# The selectors.rs row moved here with the old first-`/` split, which the
-# §FS-rules.7.9 ramp keeps to tell a newly matched site; it goes with the ramp.
-[[allow]]
-file = "rules/engine/ramp.rs"
-primitives = ["split on /"]
-ruling = "DF-nested-alias-rule-targets"
-
 [[exempt]]
 file = "checker/references.rs"
 primitives = ["split on /"]

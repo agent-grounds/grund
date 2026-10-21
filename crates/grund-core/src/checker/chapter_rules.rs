@@ -395,7 +395,7 @@ pub(crate) fn check_chapter_rules(
     let precedence = directions(findings, rules, schema, frame, &parsed_rules);
     // §FS-rules.7: one channel per level, so the absence arrives among the
     // errors its level already fills and every caller's own sort orders it.
-    // §FS-rules.7.10 / §FS-rules.7.9: a stub-declared rule and a nested-alias pin report there too.
+    // §FS-rules.7.10: a rule declared through a stub reports on the ordinary channels.
     report
         .errors
         .extend(evaluate(&parsed_rules, &precedence, &facts));
