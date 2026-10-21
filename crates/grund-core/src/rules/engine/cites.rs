@@ -1,12 +1,11 @@
-//! The `cites` relation's count over one subject (§FS-rules.5.1–5.3), with the
-//! ramp window a count only newly matched sites break (§FS-rules.7.9). Mixed
-//! sites are ordinary (§FS-rules.7.12).
+//! The `cites` relation's count over one subject (§FS-rules.5.1–5.3). Sites a
+//! target pinned at the rule's own nested alias matches count as any other since
+//! §FS-rules.7.9's window closed, and mixed sites are ordinary (§FS-rules.7.12).
 
 use super::super::facts::{NodeKey, RuleFacts};
 use super::super::{Cardinality, RuleLevel, RuleTargets, TargetMode};
 use super::authority::Authority;
 use super::index::FactIndex;
-use super::ramp::{Marks, Windows, nodes_matched_before, route};
 use super::selectors::{citation_matches_targets, label, target_nodes, target_wording};
 use super::{SemanticRule, push_node};
 use crate::model::{Code, Diagnostic};
@@ -21,13 +20,11 @@ pub(super) fn evaluate_cites(
     index: &FactIndex<'_>,
     subjects: &[NodeKey],
     out: &mut Vec<Diagnostic>,
-    ramp: &mut Vec<Diagnostic>,
 ) {
     let RuleTargets::Kinds { mode, .. } = &rule.targets else {
         return;
     };
     let targets = target_nodes(&rule.targets, facts, index);
-    let before = nodes_matched_before(&rule.targets, facts, index);
     for subject in subjects {
         if *mode == TargetMode::PerTarget {
             // Each owner's sites, mixed ones as ordinary ones (§FS-rules.7.12).
@@ -40,24 +37,14 @@ pub(super) fn evaluate_cites(
             for target in &targets {
                 let count = counts.get(target).copied().unwrap_or_default();
                 if !rule.cardinality.contains(count) {
-                    let windows = if before.contains(target) {
-                        Windows::default()
-                    } else {
-                        Windows::of_new_target(rule.level)
-                    };
-                    let (sink, message) = route(
-                        windows,
-                        out,
-                        ramp,
-                        format!(
-                            "{} cites {} {count} times; {authority} requires {}",
-                            label(facts, subject),
-                            label(facts, target),
-                            rule.cardinality.times_wording()
-                        ),
+                    let message = format!(
+                        "{} cites {} {count} times; {authority} requires {}",
+                        label(facts, subject),
+                        label(facts, target),
+                        rule.cardinality.times_wording()
                     );
                     push_node(
-                        sink,
+                        out,
                         facts,
                         subject,
                         Code::CITATION_CARDINALITY,
@@ -67,15 +54,11 @@ pub(super) fn evaluate_cites(
                 }
             }
         } else {
-            let sites = index
+            let count = index
                 .citations_in(subject)
                 .iter()
                 .filter(|(_, _, target)| citation_matches_targets(target, &targets, index))
-                .map(|(_, _, target)| Marks {
-                    matched: !citation_matches_targets(target, &before, index),
-                })
-                .collect::<Vec<_>>();
-            let count = sites.len();
+                .count();
             if !rule.cardinality.contains(count) {
                 let ordinary = rule.cardinality == Cardinality::AT_LEAST_ONE && count == 0;
                 let code = if ordinary {
@@ -106,10 +89,7 @@ pub(super) fn evaluate_cites(
                         rule.cardinality.wording()
                     )
                 };
-                // §FS-rules.7.9: a count the newly matched sites alone break warns.
-                let windows = Windows::of_count(rule.level, rule.cardinality, sites);
-                let (sink, message) = route(windows, out, ramp, message);
-                push_node(sink, facts, subject, code, message, authority);
+                push_node(out, facts, subject, code, message, authority);
             }
         }
     }

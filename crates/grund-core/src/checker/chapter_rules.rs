@@ -395,13 +395,13 @@ pub(crate) fn check_chapter_rules(
     let precedence = directions(findings, rules, schema, frame, &parsed_rules);
     // §FS-rules.7: one channel per level, so the absence arrives among the
     // errors its level already fills and every caller's own sort orders it.
-    // §FS-rules.7.10: a rule declared through a stub reports on the ordinary channels.
-    let (errors, ramp_warnings) = evaluate(&parsed_rules, &precedence, &facts);
-    report.errors.extend(errors);
-    // §FS-rules.7.9 / §FS-errors.4.1: the single-project `grund-core` arm is the one
-    // caller that does not sort warnings downstream, and the sort is idempotent over
-    // the already-ordered channel every caller hands in, so it needs no guard.
-    report.warnings.extend(ramp_warnings);
+    // §FS-rules.7.10 / §FS-rules.7.9: a stub-declared rule and a nested-alias pin report there too.
+    report
+        .errors
+        .extend(evaluate(&parsed_rules, &precedence, &facts));
+    // §FS-check.2.2.1.4 / §FS-errors.4.1: the single-project `grund-core` arm is the
+    // one caller that does not sort warnings downstream, so the obligation lines above
+    // are ordered here; the sort is idempotent over every other caller's channel.
     sort_diagnostics(&mut report.warnings);
     report
         .suggestions

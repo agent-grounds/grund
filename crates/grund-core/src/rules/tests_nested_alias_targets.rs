@@ -15,20 +15,10 @@ use super::{
 use crate::model::Diagnostic;
 use std::collections::BTreeMap;
 
-/// The required level's findings, whichever shape `evaluate` returns: the pair
-/// of errors and warnings, whose warnings must be empty, or the one list it
-/// collapses to once no required finding can warn (§FS-rules.7.9).
+/// The required level's findings: the one list `evaluate` collapsed to once no
+/// required finding can warn (§FS-rules.7.9).
 pub(super) trait Required {
     fn required(self) -> Vec<Diagnostic>;
-}
-
-impl Required for (Vec<Diagnostic>, Vec<Diagnostic>) {
-    fn required(self) -> Vec<Diagnostic> {
-        let (errors, warnings) = self;
-        let warned: Vec<_> = warnings.iter().map(|d| (d.line, &d.message)).collect();
-        assert!(warned.is_empty(), "a required finding warned: {warned:#?}");
-        errors
-    }
 }
 
 impl Required for Vec<Diagnostic> {
