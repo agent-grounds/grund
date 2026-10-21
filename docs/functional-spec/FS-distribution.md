@@ -726,6 +726,11 @@ part of the documented checked workflow, not only a developer's manual command;
 ordinary CLI/LSP builds still require no Node. `fissile check --staged` is required
 before final completion. Local readiness is measured independently of registry availability.
 
+The native source-build proof runs with the bounded, profile-aware harness
+deadlines and supplemental mechanism checks defined in the
+[Node acceptance architecture](../architecture/AR-ci.md#3411-one-release-build-and-every-build-on-one-line), preserving
+the real release/LTO build and the development consumer proofs.
+
 The documented checked workflow runs `python tests/bindings/node/run.py` as
 well as `pre-commit run --all-files` and `fissile check --staged`. The binding
 suite requires Node/npm, the pinned Rust toolchain, linker/SDK and dependency
