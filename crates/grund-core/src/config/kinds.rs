@@ -370,10 +370,13 @@ impl KindTable {
 /// every project hold it. The first target the run cannot accept fails the load
 /// (§FS-config.3.9.5.2, §DF-one-grammar-lands-in-0-19). Expansion makes it for a
 /// full run, and a narrowed `cover` run makes it over the workspace its config
-/// declares (§FS-scan.projects.kinds).
+/// declares (§FS-scan.projects.kinds). `whole` says `projects` is every project
+/// of the workspace: a reading that lost one it could not load is held but never
+/// judged, since what that project configures is no ground for a refusal.
 pub(crate) fn install_kind_table<'a>(
     root: &mut Config,
     projects: impl IntoIterator<Item = (&'a str, &'a mut Config)>,
+    whole: bool,
 ) -> Result<()> {
     let mut projects = projects.into_iter().collect::<Vec<_>>();
     let table = Arc::new(KindTable::build(
@@ -381,8 +384,10 @@ pub(crate) fn install_kind_table<'a>(
             .iter()
             .map(|(alias, config)| (*alias, config.schema())),
     ));
-    for (_, config) in &projects {
-        reject_unaccepted_citation_targets(config, &table)?;
+    if whole {
+        for (_, config) in &projects {
+            reject_unaccepted_citation_targets(config, &table)?;
+        }
     }
     for (_, config) in &mut projects {
         config.set_kind_table(Arc::clone(&table));
