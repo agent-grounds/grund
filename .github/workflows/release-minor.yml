@@ -1,14 +1,30 @@
 # Manual minor releases implement §FS-distribution.4.4.
 name: Release minor
 
-# Manual minor release helper: from the latest vX.Y.Z tag, bump to vX.(Y+1).0
-# and build the next -dev version over it on candidate branches, push both to
+# §FS-distribution.4.4.2: default to the next minor from the latest stable tag,
+# or let the owner explicitly select 1.0.0 with expected_main_sha identifying
+# the dispatch main tip (not #467's freeze candidate).
+
+# Both choices build the release and next -dev version on candidate branches, push both to
 # main once CI and a release dry run pass on them, and dispatch release.yml to
 # publish crates + binaries. release.yml remains the publishing workflow; this
 # file only prepares the version bump.
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to prepare through the shared release checks'
+        type: choice
+        required: true
+        default: next-minor
+        options:
+          - next-minor
+          - '1.0.0'
+      expected_main_sha:
+        description: 'Full dispatch main tip SHA, not the freeze candidate; required for 1.0.0'
+        type: string
+        required: false
 
 permissions:
   contents: write
@@ -34,33 +50,21 @@ jobs:
       - name: Resolve current and next versions
         id: versions
         shell: bash
+        env:
+          SELECTED_VERSION: ${{ inputs.version }}
+          EXPECTED_MAIN_SHA: ${{ inputs.expected_main_sha }}
+          DISPATCH_REF: ${{ github.ref }}
+          DISPATCH_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          tag="$(git tag --list 'v*.*.*' --sort=-v:refname | head -n1)"
-          if [ -z "$tag" ]; then
-            echo "error: no v*.*.* tag exists; bootstrap the first release manually" >&2
-            exit 1
+          git fetch origin main --tags
+          args=(--ref "$DISPATCH_REF" --dispatch-sha "$DISPATCH_SHA"
+                --version "$SELECTED_VERSION")
+          if [ -n "$EXPECTED_MAIN_SHA" ]; then
+            args+=(--expected-main-sha "$EXPECTED_MAIN_SHA")
           fi
-          current="${tag#v}"
-          IFS=. read -r major minor patch <<< "$current"
-          next="${major}.$((minor + 1)).0"
-          echo "current=$current"  >> "$GITHUB_OUTPUT"
-          echo "next=$next"        >> "$GITHUB_OUTPUT"
-          echo "current_tag=$tag"  >> "$GITHUB_OUTPUT"
-          echo "next_tag=v$next"   >> "$GITHUB_OUTPUT"
-          echo "Latest tag: $tag; proposed minor release: v$next"
-
-      - name: Gate - commits since last tag
-        shell: bash
-        run: |
-          set -euo pipefail
-          tag="${{ steps.versions.outputs.current_tag }}"
-          count="$(git rev-list --count "$tag"..HEAD)"
-          if [ "$count" -eq 0 ]; then
-            echo "error: no commits since $tag; refusing to create an empty minor release" >&2
-            exit 1
-          fi
-          echo "$count commits since $tag."
+          outputs="$(python3 scripts/release_version.py "${args[@]}")"
+          printf '%s\n' "$outputs" >> "$GITHUB_OUTPUT"
 
       - name: Gate - CI on current main tip is green
         shell: bash
@@ -85,7 +89,7 @@ jobs:
           fi
           echo "CI on $sha is green."
 
-      # §FS-distribution.4.2.6: refuse a minor release the tree's own messages
+      # §FS-distribution.4.2.6: refuse a selected release the tree's own messages
       # contradict - a ramp still promising this release, or one already landed
       # for a later one. Fails before a candidate branch is pushed.
       - name: Gate - the tree can be released as this version

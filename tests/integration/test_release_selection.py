@@ -3,12 +3,9 @@
 The real selector feeds the existing guard, version writer and forge-backed
 changelog preparation in a tagged synthetic history. Workflow assertions pin
 the dispatch interface and connect it to the existing candidate safety tests.
-GRUND_804_RED=1 enables specification tests before implementation; implement
-removes both temporary decorators and the os import.
 """
 
 import json
-import os
 import unittest
 
 from release_selection_fixture import GUARD, VERSION_FIXTURE, SelectionRepository
@@ -16,8 +13,6 @@ from test_release_candidate_runs import helper_steps
 from test_release_workflow import WORKFLOWS, squash, step_index
 
 
-@unittest.skipUnless(os.environ.get("GRUND_804_RED") == "1",
-                     "red until #804 wires first-stable preparation; implement removes this")
 class ReleaseSelectionAcceptanceTests(SelectionRepository, unittest.TestCase):
     def test_deliberate_first_stable_prepares_complete_release_and_dev_candidates(self):
         # Fail for the reported missing route, before attempting a missing script.
@@ -58,8 +53,6 @@ class ReleaseSelectionAcceptanceTests(SelectionRepository, unittest.TestCase):
                       "crates/grund-core/src/pending.rs")
 
 
-@unittest.skipUnless(os.environ.get("GRUND_804_RED") == "1",
-                     "red until #804 adds the helper inputs; implement removes this")
 class ManualSelectionWorkflowTests(unittest.TestCase):
     def test_choices_and_sha_feed_one_selector_before_guard_and_writes(self):
         text = (WORKFLOWS / "release-minor.yml").read_text(encoding="utf-8")
