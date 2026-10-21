@@ -951,6 +951,14 @@ The release path asks directly: the release guard, `scripts/check_release_ramps.
 | `will exit <status> ... in <release>` | a scalar exit-status change has not been made yet | must be **below** that release |
 | `wording changes in <release>` | the message wording has not changed yet | must be **below** that release |
 
+Before constructing a candidate, the same preflight also reads the deprecation
+ledger at [§DISC-core-concerns.9.9](../discussions/proposals/2026-09-30-core-concerns.md#99-the-deprecation-ledger) and rejects a `planned` notice whose notice
+release is at or below the requested release. This applies the ledger's existing
+consistency rule to the release about to be recorded as shipped. A future
+`planned` notice and a `shipped` notice do not themselves refuse that release;
+the message bounds and shared release floor still apply. The ledger remains
+the source of notice dates and statuses, rather than a second deadline table.
+
 #### 4.2.3 The vocabulary is closed
 
 The vocabulary is closed on purpose: it is the wording the warnings and errors already use, so a ramp written in it is seen and a ramp written outside it names no release the release guard can read. It asks the general question rather than naming any one ramp, so a ramp that lands later is covered the day its message is written. `is removed in <release>` is the pending half of `was removed in <release>` — the clause a deprecation names its removal release with, where the two named-error clauses name a verdict's — and it is written in that spelling rather than "will be removed in" so the pending and landed halves of one removal read as the same claim in two tenses.
@@ -992,7 +1000,17 @@ So each helper builds both commits before it pushes either: the release commit o
 In both helpers, "the version bump" includes:
 
 - the Cargo manifests and the lockfile, and `pyproject.toml`'s PEP 440 spelling of the same version, all written by `scripts/distribution/candidate.py set-version`; the npm packages take theirs from those at assembly, so no committed npm file carries one ([§FS-distribution-candidate.6.2](FS-distribution-candidate.md#62-one-version-across-every-package));
-- any checked fixture whose expected output embeds `grund --version`;
+- any checked fixture whose expected output embeds `grund --version`, including
+  `tests/e2e/cases/cli-version/expected.stdout` and its corresponding authored
+  `inputFiles` bytes in
+  `tests/integration/command_agreement_facts/cli-version.json`. The same
+  `candidate.py set-version` invocation owns both version-dependent writes, for
+  release and development versions alike; repeating it leaves them consistent.
+  It preserves unrelated fixture inputs, fact inputs and independent expected
+  answers ([§REQ-one-answer.proof.evidence](../requirements/REQ-one-answer.md#proofevidence-execution-and-independent-truth)), rather than rebuilding an inventory
+  from observed files or execution. Both helpers stage the complete version
+  update in each release and development candidate commit, so a later commit
+  cannot conceal an incomplete release commit;
 - every **ramp constant** whose window is stated as a version in message text — a deprecation deadline is a promise about a release, and a bump is the only moment it can come due ([§DF-index-compatibility-ramp.2.3](../decisions/functional/DF-index-compatibility-ramp.md#23-both-findings-name-their-versions-and-a-test-keeps-the-names-honest) states the rule). Both ramps that rule was written for have since landed; the live ones are the absorbed-scan warning, the narrowed-alias scope suffix, and the `agents-init` compatibility tail, and the absorbed-scan ramp has a unit test that fails the bump which reaches its deadline rather than letting it pass silently ([§FS-distribution.4.2.1](FS-distribution.md#421-a-test-can-hold-only-the-pending-half));
 - the deterministic changelog rotation performed by `scripts/prepare_changelog_release.py prepare`: the section [§FS-distribution.4.6](FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag) builds — the list of pull requests and, after it, its compatibility notices — becomes the new inline release section, written where the former inline latest release stood; the former is archived under `docs/changelog/<version>.md`, and the older-release section gains its archive link, `- [<version>](changelog/<version>.md) — <date>: N pull requests, M compatibility notices.`, where M counts the archived section's bullets under `### Compatibility notices` and N every other bullet it holds, so a release archived in the earlier Keep-a-Changelog shape counts every bullet as a pull request; a count of one is written in the singular. `scripts/prepare_changelog_release.py preview` prints the body `prepare` would write under the new release heading, and writes nothing.
 
