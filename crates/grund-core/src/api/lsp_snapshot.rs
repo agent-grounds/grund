@@ -139,7 +139,7 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                 }),
         );
         // §FS-check.checks.glob-citation / §FS-lsp.1.1: a pattern is no citation, so
-        // its warning keeps the candidate's own span, marker included.
+        // its error keeps the candidate's own span, marker included.
         let marker = &project.config.schema().citation.marker;
         finding_ranges.extend(project.findings.glob_citations.iter().map(|pattern| {
             LspFindingRange {
