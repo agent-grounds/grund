@@ -1,87 +1,92 @@
-//! §FS-rules.7.12: mixed sites are ordinary when computing the window that remains.
-//! These assertions pin eligibility as well as the clause, so merely stripping
-//! the mixed clause after routing is insufficient.
+//! §FS-rules.7.12: a mixed site is an ordinary site, and with the nested-alias
+//! window closed in 0.19.0 (§FS-rules.7.9) no window is left to relieve a count
+//! that mixed, plain and pin-matched sites break together: each such count is the
+//! code's ordinary error, through a pinned target as through the bare kind.
 
-use super::super::{Cardinality, RuleLevel};
-use super::ramp::{Marks, Windows, route};
-use crate::model::{Code, Diagnostic};
-
-const MATCH: &str = "; a target pinned at the rule's own nested alias path now matches, and this warning becomes an error in grund 0.19.0";
-const AT_MOST_ONE: Cardinality = Cardinality {
-    minimum: None,
-    maximum: Some(1),
+use super::super::facts::{NodeKey, RuleFacts, SiteKey, SiteMeta};
+use super::super::tests_nested_alias_targets::{
+    Required, assert_ordinary, at_most, cites, cites_each, codes, facts,
 };
-const PLAIN: Marks = Marks { matched: false };
-// §FS-rules.7.12: a mixed site now carries exactly the ordinary site's marks.
-const MIXED: Marks = PLAIN;
-const MATCHED: Marks = Marks { matched: true };
+use super::super::{ParsedRule, RuleAnchor, RuleLevel};
+use super::{evaluate, evaluate_suggestions};
 
-fn windows(sites: &[Marks]) -> Windows {
-    Windows::of_count(RuleLevel::Required, AT_MOST_ONE, sites.iter().copied())
+/// [`facts`] with `API-a` citing its own `AR-b` once more at line 5, through
+/// the mixed path `<§>AR-b.goals.1`, a name under a number.
+fn facts_with_mixed_site() -> RuleFacts {
+    let mut facts = facts();
+    let site = SiteKey("mixed".into());
+    facts
+        .cites
+        .push((site.clone(), NodeKey("api".into()), NodeKey("ar".into())));
+    facts.site_in.push((site.clone(), NodeKey("api".into())));
+    facts.sites.insert(
+        site,
+        SiteMeta {
+            label: "AR-b.goals.1".into(),
+            anchor: RuleAnchor {
+                path: "docs/api.md".into(),
+                line: 5,
+                column: Some(3),
+            },
+        },
+    );
+    facts
 }
 
-fn finding(message: String) -> Diagnostic {
-    Diagnostic {
-        code: Code::FORBIDDEN_CITATION,
-        path: Some("docs/use.md".into()),
-        line: Some(3),
-        column: None,
-        message,
-        sites: Vec::new(),
-        authority: vec!["RULE-r".to_string()],
+/// Every mode of `Each API must cite at most 1 <target>`.
+fn at_most_one(target: &str) -> [ParsedRule; 2] {
+    [
+        cites(&[target], at_most(1)),
+        cites_each(&[target], at_most(1)),
+    ]
+}
+
+#[test]
+fn a_count_a_mixed_and_a_pinned_site_break_is_an_ordinary_error() {
+    for rule in at_most_one("group/api/AR") {
+        let mode = rule.targets.clone();
+        let errors = evaluate(&[rule], &[], &facts_with_mixed_site()).required();
+        assert_eq!(
+            codes(&errors),
+            [("citation-cardinality", Some(1))],
+            "{mode:?}"
+        );
+        assert_ordinary(&errors);
     }
 }
 
 #[test]
-fn a_count_only_the_mixed_site_breaks_is_an_ordinary_error() {
-    let flags = windows(&[PLAIN, MIXED]);
-    assert_eq!(flags, Windows::default());
-    let (mut errors, mut warnings) = (Vec::new(), Vec::new());
-    let (sink, message) = route(flags, &mut errors, &mut warnings, "ordinary message".into());
-    sink.push(finding(message));
-    assert!(warnings.is_empty());
-    assert_eq!(errors[0].message, "ordinary message");
+fn a_count_a_mixed_site_breaks_through_the_bare_kind_is_an_ordinary_error() {
+    for rule in at_most_one("AR") {
+        let mode = rule.targets.clone();
+        let errors = evaluate(&[rule], &[], &facts_with_mixed_site()).required();
+        assert_eq!(
+            codes(&errors),
+            [("citation-cardinality", Some(1))],
+            "{mode:?}"
+        );
+        assert_ordinary(&errors);
+    }
 }
 
 #[test]
-fn a_count_that_fails_without_mixed_sites_stays_an_error() {
-    assert_eq!(windows(&[PLAIN, PLAIN, MIXED]), Windows::default());
+fn a_bound_the_mixed_and_pinned_sites_keep_within_passes() {
+    let errors = evaluate(
+        &[cites(&["group/api/AR"], at_most(2))],
+        &[],
+        &facts_with_mixed_site(),
+    )
+    .required();
+    assert!(errors.is_empty(), "{:?}", codes(&errors));
 }
 
 #[test]
-fn a_recommended_count_owes_no_ramp() {
-    assert_eq!(
-        Windows::of_count(RuleLevel::Recommended, AT_MOST_ONE, [PLAIN, MIXED]),
-        Windows::default()
-    );
-}
-
-#[test]
-fn removing_mixed_sites_cannot_make_a_matched_count_eligible() {
-    // Even without the matched site, the two ordinary sites exceed the bound.
-    assert_eq!(windows(&[PLAIN, MATCHED, MIXED]), Windows::default());
-}
-
-#[test]
-fn an_independently_matched_mixed_site_keeps_only_alias_relief() {
-    // A matched site that is also mixed: the mixed mark adds nothing.
-    let flags = windows(&[PLAIN, MATCHED]);
-    assert_eq!(flags, Windows { matched: true });
-    let (mut errors, mut warnings) = (Vec::new(), Vec::new());
-    let (sink, message) = route(flags, &mut errors, &mut warnings, "ordinary message".into());
-    sink.push(finding(message));
-    assert!(errors.is_empty());
-    assert_eq!(warnings[0].message, format!("ordinary message{MATCH}"));
-}
-
-#[test]
-fn mixed_ordinary_sites_do_not_erase_the_remaining_relief() {
-    // The matched sites alone repair this count; the mixed site counts as ordinary.
-    let flags = windows(&[MIXED, MATCHED, MATCHED]);
-    assert_eq!(flags, Windows { matched: true });
-    let (mut errors, mut warnings) = (Vec::new(), Vec::new());
-    let (sink, message) = route(flags, &mut errors, &mut warnings, "ordinary message".into());
-    sink.push(finding(message));
-    assert!(errors.is_empty());
-    assert_eq!(warnings[0].message, format!("ordinary message{MATCH}"));
+fn a_recommended_count_is_an_ordinary_suggestion() {
+    let recommended = ParsedRule {
+        level: RuleLevel::Recommended,
+        ..cites(&["group/api/AR"], at_most(1))
+    };
+    let suggestions = evaluate_suggestions(&[recommended], &[], &facts_with_mixed_site());
+    assert_eq!(codes(&suggestions).len(), 1, "{:?}", codes(&suggestions));
+    assert_ordinary(&suggestions);
 }

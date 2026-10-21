@@ -311,9 +311,10 @@ fn suggestion_default_keeps_its_existing_index_message() {
     );
 }
 
-/// §FS-check.3.12.2: rule advice preserves entries and a trailing release clause.
+/// §FS-check.3.12.2: rule advice preserves entries, on a target pinned at the rule's own nested
+/// alias path too, which is the ordinary error since `0.19.0` (§FS-rules.7.9).
 #[test]
-fn nested_alias_rule_index_repair_preserves_warning_and_compatibility_clause() {
+fn nested_alias_rule_index_repair_preserves_entries_as_an_error() {
     let repo = Repo::new(concat!(
         "[rules.citations.REQ]\nmay = [\"GOAL\", \"REQ\"]\n",
         "[schema.kinds.RULE]\nfolders = [\"docs/rules\"]\nindex = false\nform = \"rule\""
@@ -344,32 +345,25 @@ fn nested_alias_rule_index_repair_preserves_warning_and_compatibility_clause() {
         rule_path,
         "# RULE-index: Each REQ must not cite any group/api/REQ.\n\nIndependent prohibition.\n",
     );
-    let rows = repo.check(0, false);
-    assert!(
-        rows.iter().all(|row| row["severity"] != "error"),
-        "{rows:#?}"
-    );
-    let forbidden = rows
+    let rows = repo.check(1, false);
+    let errors = rows
         .iter()
-        .filter(|row| row["code"] == "forbidden-citation")
+        .filter(|row| row["severity"] == "error")
         .collect::<Vec<_>>();
-    assert_eq!(forbidden.len(), 2, "{rows:#?}");
-    // §FS-rules.7.9: the existing nested-alias warning clause stays verbatim.
-    let clause = "; a target pinned at the rule's own nested alias path now matches, and this warning becomes an error in grund 0.19.0";
+    assert_eq!(errors.len(), 2, "{rows:#?}");
+    // §FS-rules.7.9: the nested-alias window closed in 0.19.0, so no clause follows the advice.
     for line in [3, 4] {
-        let row = forbidden
+        let row = errors
             .iter()
             .find(|row| row["line"] == line)
             .unwrap_or_else(|| panic!("missing entry at line {line}: {rows:#?}"));
+        assert_eq!(row["code"], "forbidden-citation");
         assert_eq!(row["path"], index_path);
-        assert_eq!(row["severity"], "warning");
         assert_eq!(row["authority"], serde_json::json!(["RULE-index"]));
         assert_eq!(row["sites"], Value::Null);
         assert_eq!(
             row["message"],
-            format!(
-                "REQ must not cite group/api/REQ (RULE-index) — retain the marked index entry and change the prohibition in rule RULE-index{clause}"
-            )
+            "REQ must not cite group/api/REQ (RULE-index) — retain the marked index entry and change the prohibition in rule RULE-index"
         );
     }
     repo.write(&index_path, &marked.replace('\u{a7}', ""));

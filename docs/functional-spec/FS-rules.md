@@ -675,9 +675,9 @@ error from 0.16.0 ([§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is
 alone produces are errors from 0.18.0 ([§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)); the findings of a rule declared through a stub whose target the scan does not read, and those only
 the citations and chapters such a target lends produce, and those only a citation of a
 name under a number raises, are errors from 0.19.0 ([§FS-rules.7.10](FS-rules.md#710-a-rule-declared-through-a-stub-warns-until-0190), [§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190),
-[§FS-rules.7.12](FS-rules.md#712-a-finding-only-a-citation-of-a-name-under-a-number-raises-warns-until-0190)); the only rule findings that are warnings now are those a target
-pinned at the rule's own nested alias path alone produces, until 0.19.0
-([§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190)).
+[§FS-rules.7.12](FS-rules.md#712-a-finding-only-a-citation-of-a-name-under-a-number-raises-warns-until-0190)), and so are those a target pinned at the rule's own nested alias
+path alone produces ([§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190)), so no `must` or `must not` rule finding is a
+warning.
 
 ### 7.1 Invalid rule
 
@@ -853,61 +853,29 @@ its message byte for byte the one a finding of that code without such a site
 prints, with no clause after it: the code was an error throughout and only these
 findings warned, so no finding is left to tell apart and the landed change has no
 line of its own for the release guard to read, as with
-[§FS-distribution.4.2.4](FS-distribution.md#424-the-scalar-clause-is-the-refs-warnings)'s scalar clause. A finding that also needs a change
-whose window is still open warns under that window alone
-([§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190)). What counts is specified at
+[§FS-distribution.4.2.4](FS-distribution.md#424-the-scalar-clause-is-the-refs-warnings)'s scalar clause. What counts is specified at
 [§FS-rules.5.1](FS-rules.md#51-facts-and-identity), and the decision and its completed route are
 [§DF-section-citation-counts-in-rules](../decisions/functional/DF-section-citation-counts-in-rules.md#df-section-citation-counts-in-rules-a-resolved-citation-to-a-numbered-section-counts-in-chapter-rules). This address, heading text included, is
 kept only so citations written during the window still resolve.
 
 ### 7.9 A target pinned at its own nested alias warns until 0.19.0
 
-A required-level finding that exists only because a target pinned at the
-rule's own member by a nested alias path now matches that member's declarations
-([§FS-rules.2](FS-rules.md#2-subject-selectors)) is carried on the warnings channel rather than the errors channel,
-for one release window. Before this release such a target matched nothing in
-its own member, because the pin was split at its first `/` rather than its
-last ([§FS-config.3.9.3](FS-config.md#393-alias-matching)). The window covers every finding the corrected match can
-newly produce, outbound or inbound: a prohibition's `forbidden-citation` at a
-site the pinned target now matches; the `citation-cardinality` or
-`uncited-unit` of an `at most N` or `exactly N` count that the same count
-without those sites satisfies; and every per-target `citation-cardinality`
-([§FS-rules.3.3](FS-rules.md#33-per-target-coverage)) for a target only the corrected match brings into the universe —
-an `each … at least N` miss as much as an `exactly N` or `at most N` bound —
-because before the correction that target was not in the universe and the rule
-had nothing to fail on. A count that fails without them is still an error. The
-verdicts that newly pass — an `at least N` count that those sites now satisfy —
-land in the release that ships the change, and only the ones that newly fail
-are ramped.
+The window this heading names is spent: it opened in grund 0.18.0 and closed in grund 0.19.0,
+where every required-level finding that exists only because a target pinned at the rule's own
+member by a nested alias path now matches that member's declarations ([§FS-rules.2](FS-rules.md#2-subject-selectors)) became an
+error on the ordinary `must` channel. Such a finding is now the same code's ordinary error, its
+message the one the warning carried with `; a target pinned at the rule's own nested alias path
+now matches, and this warning becomes an error in grund 0.19.0` gone and no clause in its place,
+and it moves the exit status as any error does ([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)):
 
-The warning is the error's message unchanged, followed by `; a target pinned at
-the rule's own nested alias path now matches, and this warning becomes an error
-in grund 0.19.0`, the pending clause of [§FS-distribution.4.2.3](FS-distribution.md#423-the-vocabulary-is-closed)'s closed
-vocabulary, so the release guard reads the promise out of the shipped text. It
-carries the code it will carry as an error, so `--only` and `--ignore` select it
-now as they will then, and it leaves the exit status where the rest of the run
-put it. The catalog rows of these codes keep `error` and no ramp
-([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)), because the code's severity does not move: only the
-findings this subsection names warn. At the recommended level such a finding is
-an ordinary suggestion and owes no ramp, because a suggestion never moves the
-exit status at any release. The window opens in 0.18.0, the first release to
-carry this correction, so its error is due no earlier than 0.19.0
-([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)).
+```text
+group/api/docs/api/API-a.md:3: error: API must not cite group/api/AR (RULE-y) — re-point the citation or downgrade it to a plain Markdown link
+```
 
-A newly counted section citation is an ordinary counted site from 0.18.0
-([§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)), so it never puts a finding in this window. A finding is in
-this window only when the corrected match is needed for it: a count is ramped
-when dropping the sites only the corrected match brings lets it hold, with every
-numbered-section site counted as any other, and a prohibition when its site is
-one only the corrected match brings. A finding that needs the corrected match,
-alone or together with a numbered-section site, warns and carries this clause
-alone. A finding that a numbered-section site produces without the corrected
-match is an error, as [§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180) says, whether or not the corrected match
-would produce it too.
-
-At `0.19.0` these findings become errors on the ordinary `must` channel, and
-this subsection becomes a pointer as [§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160) did. The decision and its
-compatibility route are [§DF-nested-alias-rule-targets](../decisions/functional/DF-nested-alias-rule-targets.md#df-nested-alias-rule-targets-a-rule-target-pinned-at-its-own-nested-alias-matches-like-the-bare-kind).
+What a pinned target matches is specified at [§FS-config.3.9.3](FS-config.md#393-alias-matching), and the decision and its completed
+route are [§DF-nested-alias-rule-targets](../decisions/functional/DF-nested-alias-rule-targets.md#df-nested-alias-rule-targets-a-rule-target-pinned-at-its-own-nested-alias-matches-like-the-bare-kind) and [§DF-nested-alias-targets-land-in-0-19](../decisions/functional/DF-nested-alias-targets-land-in-0-19.md#df-nested-alias-targets-land-in-0-19-a-finding-a-target-pinned-at-its-own-nested-alias-alone-produces-is-an-error-from-0190). This
+address, heading text included, is kept only so citations written during the window still
+resolve.
 
 ### 7.10 A rule declared through a stub warns until 0.19.0
 
@@ -946,8 +914,7 @@ src/x.rs:1: error: FS-x has 2 Terms chapters; --rule requires at most 1; expecte
 
 The same holds for the `[citations]` findings the lent citations produce ([§FS-check.3.11](FS-check.md#311-missing-required-citation),
 [§FS-check.3.12](FS-check.md#312-forbidden-citation)). What a target lends is specified at [§FS-declarations.stubs.target.5](FS-declarations.md#stubstarget5-what-a-target-outside-the-include-gives-and-what-stays-unjudged), and the
-decision and its completed route are [§DF-stub-target-citations-and-chapters](../decisions/functional/DF-stub-target-citations-and-chapters.md#df-stub-target-citations-and-chapters-a-stubs-target-lends-the-stubbed-declaration-its-citations-and-chapters-and-what-that-newly-raises-warns-until-0190). A finding that also
-needs a change whose window is still open warns under that window alone ([§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190)).
+decision and its completed route are [§DF-stub-target-citations-and-chapters](../decisions/functional/DF-stub-target-citations-and-chapters.md#df-stub-target-citations-and-chapters-a-stubs-target-lends-the-stubbed-declaration-its-citations-and-chapters-and-what-that-newly-raises-warns-until-0190).
 This address, heading text included, is kept only so citations written during
 the window still resolve.
 
@@ -961,12 +928,9 @@ exit behavior ([§FS-rules.7.5](FS-rules.md#75-prohibition-and-recommendation-re
 also applies to configured citation directions ([§FS-check.3.11](FS-check.md#311-missing-required-citation),
 [§FS-check.3.12](FS-check.md#312-forbidden-citation)).
 
-Only mixed-path relief ends. An independently qualifying nested-alias window
-([§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190)) still applies, carrying only its own clause; the stubbed-rule and
-lent-target windows ([§FS-rules.7.10](FS-rules.md#710-a-rule-declared-through-a-stub-warns-until-0190), [§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)) close in the same
-release. Mixed sites are ordinary sites when deciding that window's count
-eligibility: dropping mixed sites grants no relief, including when dropping the
-nested-alias sites alone does not repair a count. Recommended findings remain opt-in
+Only mixed-path relief ends. The nested-alias window ([§FS-rules.7.9](FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190)), the
+stubbed-rule and lent-target windows ([§FS-rules.7.10](FS-rules.md#710-a-rule-declared-through-a-stub-warns-until-0190), [§FS-rules.7.11](FS-rules.md#711-a-citation-or-chapter-read-through-a-stub-warns-until-0190)) close in the same
+release, so no window is left for a mixed site to fall into. Recommended findings remain opt-in
 suggestions ([§FS-rules.7.5](FS-rules.md#75-prohibition-and-recommendation-reuse)), and explicit `warn` and `warn-not` strengths retain
 their warning behavior ([§FS-config-v2.rules.strengths](FS-config-v2.md#rulesstrengths-one-strength-vocabulary-two-severities)).
 

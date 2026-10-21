@@ -1,12 +1,10 @@
 //! A target pinned at the rule's own nested member by its whole alias path
 //! matches what the bare kind matches (§FS-rules.2, §FS-config.3.9.3), in both
-//! relations; a required finding only that corrected match produces warns and
-//! names its error release, one the rule produces without it stays an error
-//! (§FS-rules.7.9), and names only the windows its finding needs; a per-target
-//! finding for a target only the pin brings in is newly failing (§FS-rules.7.9).
-//! A numbered-section site counts as any other from 0.18.0 (§FS-rules.7.8): a
-//! finding that needs it and not the pin is an error, and one that needs the pin
-//! carries this window's clause alone.
+//! relations. Every required finding that match produces is the code's ordinary
+//! error since the window that warned closed in 0.19.0 (§FS-rules.7.9): a
+//! prohibition, an inbound ceiling, a count and a per-target finding alike, with
+//! no clause after the message. A numbered-section site counts as any other from
+//! 0.18.0 (§FS-rules.7.8), so neither closed window's clause is left to print.
 
 use super::engine::{evaluate, evaluate_suggestions};
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
@@ -17,7 +15,27 @@ use super::{
 use crate::model::Diagnostic;
 use std::collections::BTreeMap;
 
-const CLAUSE: &str = "; a target pinned at the rule's own nested alias path now matches, and this warning becomes an error in grund 0.19.0";
+/// The required level's findings, whichever shape `evaluate` returns: the pair
+/// of errors and warnings, whose warnings must be empty, or the one list it
+/// collapses to once no required finding can warn (§FS-rules.7.9).
+pub(super) trait Required {
+    fn required(self) -> Vec<Diagnostic>;
+}
+
+impl Required for (Vec<Diagnostic>, Vec<Diagnostic>) {
+    fn required(self) -> Vec<Diagnostic> {
+        let (errors, warnings) = self;
+        let warned: Vec<_> = warnings.iter().map(|d| (d.line, &d.message)).collect();
+        assert!(warned.is_empty(), "a required finding warned: {warned:#?}");
+        errors
+    }
+}
+
+impl Required for Vec<Diagnostic> {
+    fn required(self) -> Vec<Diagnostic> {
+        self
+    }
+}
 
 fn anchor(line: usize) -> RuleAnchor {
     RuleAnchor {
@@ -30,7 +48,7 @@ fn anchor(line: usize) -> RuleAnchor {
 /// The facts of member `group/api` (§FS-workspace.6.1): `API-a` cites its own
 /// `AR-b` at line 3 and sibling member `group/web`'s `AR-c` at line 4. Local
 /// kinds are bare and foreign ones carry the alias path, as the adapter writes them.
-fn facts() -> RuleFacts {
+pub(super) fn facts() -> RuleFacts {
     let node = |key: &str, label: &str, line| {
         (
             NodeKey(key.into()),
@@ -92,7 +110,7 @@ fn facts() -> RuleFacts {
 }
 
 /// `Each API must cite …` over `targets`, with the given count.
-fn cites(targets: &[&str], cardinality: Cardinality) -> ParsedRule {
+pub(super) fn cites(targets: &[&str], cardinality: Cardinality) -> ParsedRule {
     ParsedRule {
         origin: "RULE-x".into(),
         anchor: anchor(40),
@@ -130,86 +148,90 @@ const AT_LEAST_ONE: Cardinality = Cardinality {
     maximum: None,
 };
 
-fn at_most(maximum: usize) -> Cardinality {
+pub(super) fn at_most(maximum: usize) -> Cardinality {
     Cardinality {
         minimum: None,
         maximum: Some(maximum),
     }
 }
 
-fn codes(diagnostics: &[Diagnostic]) -> Vec<(&str, Option<usize>)> {
+pub(super) fn codes(diagnostics: &[Diagnostic]) -> Vec<(&str, Option<usize>)> {
     diagnostics
         .iter()
         .map(|d| (d.code.as_str(), d.line))
         .collect()
 }
 
+/// The closing clauses the nested-alias window (§FS-rules.7.9) and the
+/// counted-section window (§FS-rules.7.8) appended; neither is printed now.
+const CLOSED_CLAUSES: [&str; 3] = [
+    "; a target pinned at the rule's own nested alias path now matches",
+    "; a citation to a numbered section now counts",
+    "grund 0.",
+];
+
+/// Asserts that every finding is printed in its code's ordinary wording.
+pub(super) fn assert_ordinary(diagnostics: &[Diagnostic]) {
+    for diagnostic in diagnostics {
+        let message = &diagnostic.message;
+        for clause in CLOSED_CLAUSES {
+            assert!(!message.contains(clause), "{clause:?} in {message}");
+        }
+    }
+}
+
 #[test]
 fn an_own_nested_alias_pin_satisfies_a_cite_rule_like_the_bare_kind() {
     for target in ["AR", "group/api/AR"] {
-        let (errors, warnings) = evaluate(&[cites(&[target], AT_LEAST_ONE)], &[], &facts());
+        let errors = evaluate(&[cites(&[target], AT_LEAST_ONE)], &[], &facts()).required();
         assert!(errors.is_empty(), "{target}: {:?}", codes(&errors));
-        assert!(warnings.is_empty(), "{target}: {:?}", codes(&warnings));
     }
 }
 
 #[test]
 fn an_own_nested_alias_pin_satisfies_an_inbound_rule_like_the_bare_kind() {
     for target in ["API", "group/api/API"] {
-        let (errors, warnings) = evaluate(&[cited_by(&[target], AT_LEAST_ONE)], &[], &facts());
+        let errors = evaluate(&[cited_by(&[target], AT_LEAST_ONE)], &[], &facts()).required();
         assert!(errors.is_empty(), "{target}: {:?}", codes(&errors));
-        assert!(warnings.is_empty(), "{target}: {:?}", codes(&warnings));
     }
 }
 
 #[test]
-fn a_prohibition_only_the_own_nested_alias_pin_reaches_warns() {
-    let (errors, warnings) = evaluate(&[bans(&["group/api/AR"])], &[], &facts());
-    assert!(errors.is_empty(), "{:?}", codes(&errors));
-    assert_eq!(codes(&warnings), [("forbidden-citation", Some(3))]);
-    assert!(
-        warnings[0].message.ends_with(CLAUSE),
-        "{}",
-        warnings[0].message
+fn a_prohibition_only_the_own_nested_alias_pin_reaches_is_an_error() {
+    let errors = evaluate(&[bans(&["group/api/AR"])], &[], &facts()).required();
+    assert_eq!(codes(&errors), [("forbidden-citation", Some(3))]);
+    assert_eq!(
+        errors[0].message,
+        "API must not cite group/api/AR (RULE-x) — re-point the citation or downgrade it to a plain Markdown link"
     );
 }
 
 #[test]
-fn an_inbound_ceiling_only_the_own_nested_alias_pin_breaks_warns() {
-    let (errors, warnings) = evaluate(&[cited_by(&["group/api/API"], at_most(0))], &[], &facts());
-    assert!(errors.is_empty(), "{:?}", codes(&errors));
-    assert_eq!(codes(&warnings), [("uncited-unit", Some(20))]);
-    assert!(
-        warnings[0].message.ends_with(CLAUSE),
-        "{}",
-        warnings[0].message
-    );
+fn an_inbound_ceiling_only_the_own_nested_alias_pin_breaks_is_an_error() {
+    let errors = evaluate(&[cited_by(&["group/api/API"], at_most(0))], &[], &facts()).required();
+    assert_eq!(codes(&errors), [("uncited-unit", Some(20))]);
+    assert_ordinary(&errors);
 }
 
 #[test]
-fn a_count_only_the_corrected_match_breaks_warns_and_one_broken_without_it_errs() {
+fn a_count_the_corrected_match_breaks_is_an_error_with_or_without_it() {
     let targets = ["group/api/AR", "group/web/AR"];
-    let (errors, warnings) = evaluate(&[cites(&targets, at_most(1))], &[], &facts());
-    assert!(errors.is_empty(), "{:?}", codes(&errors));
-    assert_eq!(codes(&warnings), [("citation-cardinality", Some(1))]);
-    assert!(
-        warnings[0].message.ends_with(CLAUSE),
-        "{}",
-        warnings[0].message
-    );
-
-    let (errors, warnings) = evaluate(&[cites(&targets, at_most(0))], &[], &facts());
-    assert!(warnings.is_empty(), "{:?}", codes(&warnings));
-    assert_eq!(codes(&errors), [("citation-cardinality", Some(1))]);
-    assert!(!errors[0].message.contains(CLAUSE));
+    for maximum in [1, 0] {
+        let errors = evaluate(&[cites(&targets, at_most(maximum))], &[], &facts()).required();
+        assert_eq!(
+            codes(&errors),
+            [("citation-cardinality", Some(1))],
+            "at most {maximum}"
+        );
+        assert_ordinary(&errors);
+    }
 }
 
 #[test]
 fn a_site_the_bare_kind_already_matched_stays_an_error() {
-    let (errors, warnings) = evaluate(&[bans(&["AR", "group/api/AR"])], &[], &facts());
-    assert!(warnings.is_empty(), "{:?}", codes(&warnings));
+    let errors = evaluate(&[bans(&["AR", "group/api/AR"])], &[], &facts()).required();
     assert_eq!(codes(&errors), [("forbidden-citation", Some(3))]);
-    assert!(!errors[0].message.contains(CLAUSE));
+    assert_ordinary(&errors);
 }
 
 #[test]
@@ -219,8 +241,7 @@ fn bare_kinds_any_member_and_other_member_pins_judge_as_before() {
         ("*/AR", vec![3, 4]),
         ("group/web/AR", vec![4]),
     ] {
-        let (errors, warnings) = evaluate(&[bans(&[target])], &[], &facts());
-        assert!(warnings.is_empty(), "{target}: {:?}", codes(&warnings));
+        let errors = evaluate(&[bans(&[target])], &[], &facts()).required();
         let found: Vec<_> = errors
             .iter()
             .map(|d| (d.code.as_str(), d.line.unwrap()))
@@ -238,14 +259,11 @@ fn a_recommended_prohibition_through_the_pin_is_an_ordinary_suggestion() {
     };
     let suggestions = evaluate_suggestions(&[recommended], &[], &facts());
     assert_eq!(codes(&suggestions), [("discouraged-citation", Some(3))]);
-    assert!(!suggestions[0].message.contains(CLAUSE));
+    assert_ordinary(&suggestions);
 }
 
-/// The clause the closed counted-section window's warnings ended with (§FS-rules.7.8).
-const RAMP_CLAUSE: &str = "; a citation to a numbered section now counts";
-
 /// `Each API must cite each …` over `targets`, with the given count.
-fn cites_each(targets: &[&str], cardinality: Cardinality) -> ParsedRule {
+pub(super) fn cites_each(targets: &[&str], cardinality: Cardinality) -> ParsedRule {
     let rule = cites(targets, cardinality);
     ParsedRule {
         targets: RuleTargets::Kinds {
@@ -292,53 +310,47 @@ fn facts_with_section_site() -> RuleFacts {
 }
 
 #[test]
-fn a_per_target_miss_only_the_own_nested_alias_pin_brings_in_warns() {
-    let (errors, warnings) = evaluate(
-        &[cites_each(&["group/api/AR"], AT_LEAST_ONE)],
-        &[],
-        &facts_with_uncited_own_target(),
-    );
-    assert!(errors.is_empty(), "{:?}", codes(&errors));
-    assert_eq!(codes(&warnings), [("citation-cardinality", Some(1))]);
-    let message = &warnings[0].message;
-    assert!(message.contains("API-a cites AR-c 0 times"), "{message}");
-    assert!(message.ends_with(CLAUSE) && !message.contains(RAMP_CLAUSE));
-
-    let (errors, warnings) = evaluate(
-        &[cites_each(&["AR"], AT_LEAST_ONE)],
-        &[],
-        &facts_with_uncited_own_target(),
-    );
-    assert!(warnings.is_empty(), "{:?}", codes(&warnings));
-    assert_eq!(codes(&errors), [("citation-cardinality", Some(1))]);
-    assert!(!errors[0].message.contains(CLAUSE));
+fn a_per_target_miss_is_an_error_through_the_pin_and_the_bare_kind() {
+    for target in ["group/api/AR", "AR"] {
+        let errors = evaluate(
+            &[cites_each(&[target], AT_LEAST_ONE)],
+            &[],
+            &facts_with_uncited_own_target(),
+        )
+        .required();
+        assert_eq!(
+            codes(&errors),
+            [("citation-cardinality", Some(1))],
+            "{target}"
+        );
+        let message = &errors[0].message;
+        assert!(message.contains("API-a cites AR-c 0 times"), "{message}");
+        assert_ordinary(&errors);
+    }
 }
 
 #[test]
-fn a_per_target_bound_names_only_the_window_its_finding_needs() {
+fn a_per_target_bound_is_an_error_through_the_pin_and_the_bare_kind() {
     let exactly_once = Cardinality {
         minimum: Some(1),
         maximum: Some(1),
     };
-    let (errors, warnings) = evaluate(
-        &[cites_each(&["group/api/AR"], exactly_once)],
-        &[],
-        &facts_with_section_site(),
-    );
-    assert!(errors.is_empty(), "{:?}", codes(&errors));
-    assert_eq!(codes(&warnings), [("citation-cardinality", Some(1))]);
-    let message = &warnings[0].message;
-    assert!(message.contains("API-a cites AR-b 3 times"), "{message}");
-    assert!(message.ends_with(CLAUSE) && !message.contains(RAMP_CLAUSE));
-
-    let (errors, warnings) = evaluate(
-        &[cites_each(&["AR"], exactly_once)],
-        &[],
-        &facts_with_section_site(),
-    );
-    assert!(warnings.is_empty(), "{:?}", codes(&warnings));
-    assert_eq!(codes(&errors), [("citation-cardinality", Some(1))]);
-    assert!(!errors[0].message.contains(RAMP_CLAUSE));
+    for target in ["group/api/AR", "AR"] {
+        let errors = evaluate(
+            &[cites_each(&[target], exactly_once)],
+            &[],
+            &facts_with_section_site(),
+        )
+        .required();
+        assert_eq!(
+            codes(&errors),
+            [("citation-cardinality", Some(1))],
+            "{target}"
+        );
+        let message = &errors[0].message;
+        assert!(message.contains("API-a cites AR-b 3 times"), "{message}");
+        assert_ordinary(&errors);
+    }
 }
 
 /// Every mode of `Each API must cite at most 2 …` over `targets`.
@@ -347,31 +359,17 @@ fn at_most_two(targets: &[&str]) -> [ParsedRule; 2] {
 }
 
 #[test]
-fn a_bound_the_pin_and_the_section_site_break_names_only_the_match_window() {
-    for rule in at_most_two(&["group/api/AR"]) {
-        let mode = rule.targets.clone();
-        let (errors, warnings) = evaluate(&[rule], &[], &facts_with_section_site());
-        assert!(errors.is_empty(), "{mode:?}: {:?}", codes(&errors));
-        assert_eq!(codes(&warnings), [("citation-cardinality", Some(1))]);
-        let message = &warnings[0].message;
-        assert!(
-            message.ends_with(CLAUSE) && !message.contains(RAMP_CLAUSE),
-            "{mode:?}: {message}"
-        );
-    }
-}
-
-#[test]
-fn a_bound_only_the_section_site_breaks_through_the_bare_kind_is_an_error() {
-    for rule in at_most_two(&["AR"]) {
-        let mode = rule.targets.clone();
-        let (errors, warnings) = evaluate(&[rule], &[], &facts_with_section_site());
-        assert!(warnings.is_empty(), "{mode:?}: {:?}", codes(&warnings));
-        assert_eq!(codes(&errors), [("citation-cardinality", Some(1))]);
-        let message = &errors[0].message;
-        assert!(
-            !message.contains(RAMP_CLAUSE) && !message.contains(CLAUSE),
-            "{mode:?}: {message}"
-        );
+fn a_bound_the_section_site_breaks_is_an_error_through_the_pin_and_the_bare_kind() {
+    for target in ["group/api/AR", "AR"] {
+        for rule in at_most_two(&[target]) {
+            let mode = rule.targets.clone();
+            let errors = evaluate(&[rule], &[], &facts_with_section_site()).required();
+            assert_eq!(
+                codes(&errors),
+                [("citation-cardinality", Some(1))],
+                "{mode:?}"
+            );
+            assert_ordinary(&errors);
+        }
     }
 }
