@@ -439,7 +439,7 @@ Without this the two layers are indistinguishable from a typo: a machine that se
 
 ### 5.2 Streams and the setup workflow
 
-The stream split follows the rest of the surface ([§FS-errors.1](FS-errors.md#1-streams)): the plan is stdout, any CLI-level `error:` is stderr. This is the machine surface `grund agent-setup-instructions` points an agent at ([§FS-init.5](FS-init.md#5-agent-setup-instructions)): detect, show the diff, write only on user confirmation.
+The stream split follows the rest of the surface ([§FS-errors.1](FS-errors.md#1-streams)): the plan is stdout, any CLI-level `error:` is stderr. This is the machine surface `grund guide` points an agent at ([§FS-init.5](FS-init.md#5-the-guide)): detect, show the diff, write only on user confirmation.
 
 ## 6. Determinism and exit codes
 

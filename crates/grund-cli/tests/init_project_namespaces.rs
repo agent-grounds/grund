@@ -276,10 +276,7 @@ fn project_namespaces_rule_migration_keeps_unmanaged_content() {
 /// skill's `references/members.md`, and it teaches the split.
 #[test]
 fn project_namespaces_cli_setup_instructions_teach_member_split() {
-    let output = run_grund(
-        &["agent-setup-instructions", "--section", "members"],
-        manifest_dir(),
-    );
+    let output = run_grund(&["guide", "members"], manifest_dir());
     assert!(output.status.success());
     assert!(output.stderr.is_empty());
     let text = String::from_utf8(output.stdout).unwrap();

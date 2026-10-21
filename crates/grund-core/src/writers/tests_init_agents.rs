@@ -21,7 +21,7 @@ mod member_split_recipe;
 /// prints must be byte-identical, file for file, and a release that edits one
 /// surface without the other is invalid. Nothing enforced that, so an edit to the
 /// repository copy alone shipped stale setup instructions to every agent
-/// reaching grund through `agent-setup-instructions` rather than the repo.
+/// reaching grund through `grund guide` rather than the repo.
 #[test]
 fn agent_setup_instructions_match_the_distributable_skill() {
     let distributable = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../skills/grund-init");

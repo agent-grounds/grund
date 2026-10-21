@@ -8,6 +8,8 @@ The two hidden frontend bridges `query_format_hint` and `refs_with_metadata_and_
 
 The three hidden setup-guide exports `AGENT_SETUP_SECTIONS`, `SetupPart` and `setup_instructions`, added for [§FS-init.5.5](../../functional-spec/FS-init.md#55-the-core-and-its-sections), were read on the `fix/issue-830` branch above `9d78aaaf38`. The CLI reads the setup guide through them since, so `AGENT_SETUP_INSTRUCTIONS` and `canonical_template_text` have no reader outside grund-core.
 
+The four hidden guide exports `GuideSection`, `SETUP_CORE_SECTION`, `guide_sections` and `setup_fresh_path`, added for [§FS-init.5.6](../../functional-spec/FS-init.md#56-the-front-page), were read on the `fix/issue-893` branch above `22f89f353e`. `grund guide` reads the section names through `guide_sections` since, so `AGENT_SETUP_SECTIONS` has no reader outside grund-core.
+
 ## How a cell reads
 
 Paths are relative to `crates/`, and an evidence location is one site, not every site: the import or call that establishes the consumer, so a reader can start somewhere rather than grep.
@@ -28,20 +30,20 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 | Reading | Count |
 | --- | --- |
-| Public root names | 287 |
+| Public root names | 291 |
 | Rustdoc-visible | 113 |
 | Visible and deprecated | 30 |
-| `#[doc(hidden)]` | 144 |
+| `#[doc(hidden)]` | 148 |
 | Named, a related API, or a data type of one | 140 |
-| Outside that closure | 147 |
-| Named by a frontend or its tests | 155 |
-| Reached structurally only | 46 |
-| No repository consumer of either kind | 85 |
+| Outside that closure | 151 |
+| Named by a frontend or its tests | 157 |
+| Reached structurally only | 47 |
+| No repository consumer of either kind | 86 |
 | Disposition frozen at 1.0 | 113 |
-| Disposition hidden | 144 |
+| Disposition hidden | 148 |
 | Disposition is removed in 0.21.0 | 30 |
 
-The two count columns do not line up, and they are not meant to: 85 names have no repository consumer while 147 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
+The two count columns do not line up, and they are not meant to: 86 names have no repository consumer while 151 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
 
 ## The inventory
 
@@ -50,7 +52,7 @@ The two count columns do not line up, and they are not meant to: 85 names have n
 | `AbsentOptionalNamespace` | config | `#[doc(hidden)]` | data type of `validate_config` | none found | via Config → AbsentOptionalNamespace `grund-cli/src/lib.rs:13` | hidden |
 | `agent_override_table` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
 | `AGENT_SETUP_INSTRUCTIONS` | templates | `#[doc(hidden)]` | no | no reader outside grund-core | — | hidden |
-| `AGENT_SETUP_SECTIONS` | templates | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `AGENT_SETUP_SECTIONS` | templates | `#[doc(hidden)]` | no | no reader outside grund-core | — | hidden |
 | `ApiFailure` | api | `#[doc(hidden)]` | no | none found | via ApiOutcome → ApiFailure `grund-node/src/lib.rs:165` | hidden |
 | `ApiFailureSite` | api | `#[doc(hidden)]` | no | none found | via ApiOutcome → ApiFailure → ApiFailureSite `grund-node/src/lib.rs:165` | hidden |
 | `ApiOutcome` | api | `#[doc(hidden)]` | no | grund-node `grund-node/src/lib.rs:165` | — | hidden |
@@ -167,6 +169,8 @@ The two count columns do not line up, and they are not meant to: 85 names have n
 | `GlobalAgentTarget` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
 | `Grammar` | grammar | `#[doc(hidden)]` | data type of `validate_config` | none found | via Config → Grammar `grund-cli/src/lib.rs:13` | hidden |
 | `GRUND_OPEN_RESOLVER` | writers | visible, `#[deprecated]` | no | none found | none found | is removed in 0.21.0 |
+| `guide_sections` | templates | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `GuideSection` | templates | `#[doc(hidden)]` | no | none found | via guide_sections → GuideSection `grund-cli/src/lib.rs:13` | hidden |
 | `Id` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
 | `IdOpts` | api | visible | data type of `propose_id` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
 | `IdProposal` | api | visible | data type of `propose_id` | grund-cli `grund-cli/src/lib.rs:13` | — | frozen at 1.0 |
@@ -301,6 +305,8 @@ The two count columns do not line up, and they are not meant to: 85 names have n
 | `SchemaView` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:35` | — | hidden |
 | `SectionHeadingOutsideDeclaration` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
 | `SectionInfo` | model | visible | data type of `Catalog` | none found | none found | frozen at 1.0 |
+| `SETUP_CORE_SECTION` | templates | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
+| `setup_fresh_path` | templates | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
 | `setup_instructions` | templates | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
 | `SetupPart` | templates | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | hidden |
 | `ShorthandPolicy` | config | `#[doc(hidden)]` | data type of `validate_config` | none found | via Config → ShorthandPolicy `grund-cli/src/lib.rs:13` | hidden |

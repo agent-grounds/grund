@@ -101,10 +101,10 @@ pub(crate) const DA_README_TEMPLATE: &str =
     include_str!("../../assets/templates/software-development/decisions-architectural-README.md");
 pub(crate) const GITKEEP_TEMPLATE: &str =
     include_str!("../../assets/templates/software-development/gitkeep.md");
-/// The core of the setup skill, its `SKILL.md`: what `grund agent-setup-instructions`
-/// prints with no flag (§FS-init.5.5). It opens with the fresh-repository path and the
-/// contents, then the adoption workflow (§FS-init.5.1), and its validation step ends on
-/// the full-tree scope (§FS-check.1.3).
+/// The core of the setup skill, its `SKILL.md`: what `grund guide setup` prints
+/// (§FS-init.5.5). It opens with the fresh-repository path and the contents, then the
+/// adoption workflow (§FS-init.5.1), and its validation step ends on the full-tree
+/// scope (§FS-check.1.3).
 ///
 /// Every file of the skill is printed byte-for-byte into whatever repository the agent
 /// is standing in (§FS-init.5.3). That is why `skills/` is an unwalked home
@@ -129,9 +129,17 @@ macro_rules! setup_section {
     };
 }
 
+/// The name the core is printed by, the first of the guide's sections (§FS-init.5.5).
+pub const SETUP_CORE_SECTION: &str = "setup";
+
+/// What the front page says the core holds (§FS-init.5.5, §FS-init.5.6). A reference
+/// section's summary is its Contents line instead, so it is written only there.
+const SETUP_CORE_SUMMARY: &str = "the core: adopting grund in a repository that is not fresh, its workflow, questions and validation";
+
 /// The setup skill's reference sections, the closed set in Contents order
-/// (§FS-init.5.5). This table is the one list of their names: the command's `-h`
-/// page, its `known sections:` refusal and `--full` all read it (§AR-system.principle).
+/// (§FS-init.5.5). This table and [`SETUP_CORE_SECTION`] are the one list of the
+/// guide's section names: the front page, the command's `-h` page, its
+/// `known sections:` refusal and `--full` all read it (§AR-system.principle).
 pub const AGENT_SETUP_SECTIONS: [(&str, &str); 10] = [
     // How to recommend each setting, then the config questions but `[citations]`.
     setup_section!("config"),
@@ -157,11 +165,10 @@ pub const AGENT_SETUP_SECTIONS: [(&str, &str); 10] = [
 /// Which part of the setup skill a caller asks for (§FS-init.5).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum SetupPart<'a> {
-    /// The core, [`AGENT_SETUP_INSTRUCTIONS`]: the command with no flag.
-    Core,
-    /// One reference section by name: `--section NAME`.
+    /// One section by name: [`SETUP_CORE_SECTION`] is the core, any other name a
+    /// reference section. `grund guide NAME`.
     Section(&'a str),
-    /// The core, then every section in table order: `--full`.
+    /// The core, then every reference section in table order: `--full`.
     Full,
 }
 
@@ -169,10 +176,12 @@ pub enum SetupPart<'a> {
 /// [`canonical_template_text`], so `--full` is built from the same text each file
 /// prints (§FS-init.5.3). `Full` joins the core and the sections with one newline
 /// between consecutive files (§FS-init.5.5). `None` exactly when a `Section` names
-/// no section, which the caller refuses with the table's names (§FS-init.5).
+/// no section, which the caller refuses with the guide's names (§FS-init.5).
 pub fn setup_instructions(part: SetupPart<'_>) -> Option<String> {
     match part {
-        SetupPart::Core => Some(canonical_template_text(AGENT_SETUP_INSTRUCTIONS)),
+        SetupPart::Section(SETUP_CORE_SECTION) => {
+            Some(canonical_template_text(AGENT_SETUP_INSTRUCTIONS))
+        }
         SetupPart::Section(name) => AGENT_SETUP_SECTIONS
             .iter()
             .find(|(section, _)| *section == name)
@@ -186,6 +195,53 @@ pub fn setup_instructions(part: SetupPart<'_>) -> Option<String> {
             Some(text)
         }
     }
+}
+
+/// One line of the guide's front page: a section's name, what it holds, and the
+/// bytes it prints (§FS-init.5.6).
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GuideSection {
+    pub name: &'static str,
+    pub summary: &'static str,
+    pub bytes: usize,
+}
+
+/// Every section of the guide in `--full` order, the core first (§FS-init.5.5). A
+/// reference section's summary is the phrase its Contents line ends with, without
+/// the closing period, and empty if the core has no such line (§FS-init.5.6).
+pub fn guide_sections() -> Vec<GuideSection> {
+    let core = GuideSection {
+        name: SETUP_CORE_SECTION,
+        summary: SETUP_CORE_SUMMARY,
+        bytes: canonical_template_text(AGENT_SETUP_INSTRUCTIONS).len(),
+    };
+    let references = AGENT_SETUP_SECTIONS.iter().map(|(name, text)| {
+        let entry = format!("- `grund guide {name}` (`references/{name}.md`): ");
+        let summary = AGENT_SETUP_INSTRUCTIONS
+            .lines()
+            .find_map(|line| line.strip_prefix(entry.as_str()))
+            .map_or("", |phrase| phrase.trim_end().trim_end_matches('.'));
+        GuideSection {
+            name,
+            summary,
+            bytes: canonical_template_text(text).len(),
+        }
+    });
+    std::iter::once(core).chain(references).collect()
+}
+
+/// The core's *Fresh repository* section, from its heading up to the core's next
+/// `##` heading, which the front page prints byte for byte (§FS-init.5.6). Empty if
+/// the core has no such section.
+pub fn setup_fresh_path() -> String {
+    let core = canonical_template_text(AGENT_SETUP_INSTRUCTIONS);
+    let Some(start) = core.find("\n## Fresh repository\n").map(|at| at + 1) else {
+        return String::new();
+    };
+    let end = core[start + 1..]
+        .find("\n## ")
+        .map_or(core.len(), |at| start + 1 + at + 1);
+    core[start..end].to_string()
 }
 
 pub fn canonical_template_text(template: &str) -> String {

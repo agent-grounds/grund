@@ -36,8 +36,8 @@ mod clickable_citations;
 mod scoped_guidance;
 
 pub use assets::{
-    AGENT_SETUP_INSTRUCTIONS, AGENT_SETUP_SECTIONS, SetupPart, canonical_template_text,
-    setup_instructions,
+    AGENT_SETUP_INSTRUCTIONS, AGENT_SETUP_SECTIONS, GuideSection, SETUP_CORE_SECTION, SetupPart,
+    canonical_template_text, guide_sections, setup_fresh_path, setup_instructions,
 };
 
 // What the other components read, each by this module's path (§AR-system.4):

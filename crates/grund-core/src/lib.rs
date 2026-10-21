@@ -196,12 +196,12 @@ pub use queries::{
 };
 
 // §AR-system.2.11 templates: the setup skill a command prints byte-for-byte, its
-// core and each reference section (§FS-init.5.3, §FS-init.5.5), and the newline
-// canonicalization every template is read through (§FS-init.2.1).
+// sections and their front page (§FS-init.5.3, §FS-init.5.5, §FS-init.5.6), and the
+// newline canonicalization every template is read through (§FS-init.2.1).
 #[doc(hidden)]
 pub use templates::{
-    AGENT_SETUP_INSTRUCTIONS, AGENT_SETUP_SECTIONS, SetupPart, canonical_template_text,
-    setup_instructions,
+    AGENT_SETUP_INSTRUCTIONS, AGENT_SETUP_SECTIONS, GuideSection, SETUP_CORE_SECTION, SetupPart,
+    canonical_template_text, guide_sections, setup_fresh_path, setup_instructions,
 };
 
 // §AR-system.2.8 writers: the init scaffold with its events and refusals, the

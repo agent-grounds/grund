@@ -229,7 +229,7 @@ folders = ["docs/related-work"]
 # A place, not an ID namespace (FS-config.3.4.1): `skills/` holds agent-facing
 # instructions, not specification, so its files declare nothing and its home is
 # named by its path everywhere it is shown. Listed, not walked (FS-config.3.4.7),
-# for the same reason `templates` below is: `grund agent-setup-instructions`
+# for the same reason `templates` below is: `grund guide`
 # prints `grund-init/SKILL.md` and its `references/` byte-for-byte into a foreign
 # repository (FS-init.5),
 # so a citation here would ship as a dangling reference to a declaration that

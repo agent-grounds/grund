@@ -117,7 +117,7 @@ fn completion_summary(command: &str) -> Option<&'static str> {
         "init" => "scaffold AGENTS.md and config",
         "config" => "inspect the effective config",
         "schema" => "print the kinds, places, shapes and citation rules",
-        "agent-setup-instructions" => "print the guided setup instructions for AI agents",
+        "guide" => "print how to set up and use grund, one section at a time",
         "completions" => "print shell completion script",
         "integrations" => "print or install clickable-citation integrations",
         _ => return None,
