@@ -413,6 +413,29 @@ names a profile for the native builder only, so it holds as written. A build
 that only refuses before Cargo runs, or reaches a probe that stands in for it,
 compiles nothing and is not counted.
 
+The Node acceptance launcher gives a release build a finite wall-clock deadline
+of 1800 seconds automatically; development builds and commands that build nothing
+keep 900 seconds. An explicit caller-supplied timeout takes precedence. Both
+`checked()` and direct `command()` calls use the same policy, derived from the
+launcher's existing build-profile classification: direct `build.mjs` and
+`npm run build:source` default to release, their `--profile dev` selects dev,
+and Cargo builds default to dev unless `--release` is present. Continuing output
+does not reset the deadline. This is a test-harness allowance, adding at most
+900 seconds to the permitted release wait, with no extra build, retry or wait
+on a successful command and no claim of faster compilation. It leaves the
+directional gate-cost goal of [§AR-ci.requirements.1](AR-ci.md#requirements1-every-gate-averages-at-most-fifteen-minutes--directional)
+and the deferred job ceiling of [§AR-ci.requirements.2](AR-ci.md#requirements2-no-run-of-a-gate-passes-twenty-minutes--deferred) unchanged.
+
+`tests/integration/test_node_build_deadlines.py` exercises the documented native
+builder test through its real `checked()` and `command()` path, substituting only
+scratch and a controlled subprocess transport with scaled time. A progressing
+child that completes after the old deadline but before the release deadline
+must produce the artifact that test checks; a child exceeding the release
+deadline must be terminated despite its output. Focused checks cover the build
+profiles, both launcher entry points, the shorter budgets and explicit overrides.
+These cheap mechanism checks supplement the one real release/LTO build; their
+stand-in artifact is not a native addon or evidence of Windows compiler progress.
+
 So that CI can attribute the acceptance's time without the captured output of
 cargo, every build the acceptance runs prints one line to its standard error
 as it finishes: the profile, the target directory and the wall seconds, in the
