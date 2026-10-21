@@ -68,6 +68,7 @@ Supported check finding codes:
   forbidden-citation
   full-scope-ignored
   glob-citation
+  image-index-entry
   inline-citation-style
   invalid-field-value
   invalid-rule

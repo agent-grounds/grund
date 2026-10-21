@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use grund_core::{
     DeclaredId, Finding, LspCitation, LspDeclaration, LspSnapshot, LspSnapshotOpts,
     LspSnapshotWithMetadata, LspStub, LspUsage, ShowFormat, ShowMode, canonical_snapshot_path,
-    citation_under_title, effective_config, lsp_hover_with_kind_title,
+    citation_under_title, effective_config, link_hover_citations, lsp_hover_with_kind_title,
     lsp_snapshot_with_completion, lsp_title_hover_body, on_type_line_edits, show_from_snapshot,
 };
 use lsp_server::{Connection, Message, Notification, Request, Response};
@@ -1375,35 +1375,8 @@ fn linkify_hover_body(body: &str, citations: &[LspCitation]) -> String {
             links.push((citation.text.clone(), uri));
         }
     }
-    links.sort_by(|a, b| b.0.len().cmp(&a.0.len()).then_with(|| a.0.cmp(&b.0)));
-    links.dedup_by(|a, b| a.0 == b.0);
-    let mut out = body.to_string();
-    for (token, uri) in links {
-        out = replace_unlinked_token(&out, &token, &uri);
-    }
-    out
-}
-
-fn replace_unlinked_token(body: &str, token: &str, uri: &str) -> String {
-    let mut out = String::with_capacity(body.len());
-    let mut rest = body;
-    while let Some(idx) = rest.find(token) {
-        let before = &rest[..idx];
-        out.push_str(before);
-        let prev = before.chars().last().or_else(|| out.chars().last());
-        if prev == Some('[') {
-            out.push_str(token);
-        } else {
-            out.push('[');
-            out.push_str(token);
-            out.push_str("](");
-            out.push_str(uri);
-            out.push(')');
-        }
-        rest = &rest[idx + token.len()..];
-    }
-    out.push_str(rest);
-    out
+    // §FS-lsp.1.2.1: the core's reading of §FS-citations.wrap decides what is bare.
+    link_hover_citations(body, &links)
 }
 
 /// The on-type edits for one line, in the order the client applies them.

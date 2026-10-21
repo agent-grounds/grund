@@ -7,7 +7,8 @@ use std::path::{Path, PathBuf};
 use super::editor_on_type::{docstring_content_at, line_is_rewritable};
 use crate::config::{Config, fmt_excluded};
 use crate::grammar::{
-    in_escape_position, never_rewrite_context_in, parse_id_arg, render_declaration_id,
+    MarkdownLinks, in_escape_position, never_rewrite_context_in, parse_id_arg,
+    render_declaration_id,
 };
 use crate::model::{format_path, paired_declarations, relative_from_base};
 use crate::resolver::WorkspaceContext;
@@ -193,8 +194,9 @@ impl LspCompletionContext {
             return Vec::new();
         };
         let docstring = docstring_content_at(&owner.config, path, text, line_index);
+        let links = MarkdownLinks::new(text);
         if in_escape_position(line, token.start, &owner.config.marker)
-            || never_rewrite_context_in(docstring, line, is_md, token.start)
+            || never_rewrite_context_in(docstring, links.line(line_index), line, is_md, token.start)
         {
             return Vec::new();
         }

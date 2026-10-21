@@ -2,7 +2,10 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use super::editor_snapshot::{LspCitation, LspSnapshot};
-use crate::grammar::{path_at_or_under, split_alias_path};
+use crate::grammar::{
+    CitationLink, MarkdownBlocks, MarkdownLinks, citation_link, markdown_never_rewrite_context,
+    path_at_or_under, split_alias_path,
+};
 
 /// How much of the tree leans on one declaration-side title: citation sites and
 /// the distinct files those sites live in (§FS-lsp.1.2.5).
@@ -134,6 +137,60 @@ fn markdown_code_span(text: &str) -> String {
         ""
     };
     format!("{fence}{pad}{text}{pad}{fence}")
+}
+
+/// Link every bare citation in a hover's Markdown `body` to its declaration
+/// (§FS-lsp.1.2.1): each `(token, uri)` in `targets` becomes `[token](uri)` where
+/// the one reading of §FS-citations.wrap finds it unwrapped, so a wrap, a link its
+/// author wrote in any form of §FS-citations.wrap.enclosing.scope, a citation-only
+/// image, a zone of §FS-citations.zones and a fence are left as written, as `fmt`
+/// leaves them. The longest token claims an occurrence first, and a claimed
+/// occurrence is never linked again.
+pub fn link_hover_citations(body: &str, targets: &[(String, String)]) -> String {
+    let mut targets: Vec<&(String, String)> = targets.iter().collect();
+    targets.sort_by(|a, b| b.0.len().cmp(&a.0.len()).then_with(|| a.0.cmp(&b.0)));
+    targets.dedup_by(|a, b| a.0 == b.0);
+    let links = MarkdownLinks::new(body);
+    let mut blocks = MarkdownBlocks::default();
+    let mut out = String::with_capacity(body.len());
+    for (index, raw) in body.split_inclusive('\n').enumerate() {
+        let line = raw.strip_suffix('\n').unwrap_or(raw);
+        let line = line.strip_suffix('\r').unwrap_or(line);
+        if blocks.line(line).in_fence() {
+            out.push_str(raw);
+            continue;
+        }
+        let line_links = links.line(index);
+        let mut claimed: Vec<(usize, usize, &str)> = Vec::new();
+        for (token, uri) in &targets {
+            if token.is_empty() {
+                continue;
+            }
+            for (start, _) in line.match_indices(token.as_str()) {
+                let end = start + token.len();
+                if claimed.iter().any(|(s, e, _)| start < *e && *s < end)
+                    || citation_link(line_links, line, start, end) != CitationLink::Unwrapped
+                    || markdown_never_rewrite_context(line_links, line, start)
+                {
+                    continue;
+                }
+                claimed.push((start, end, uri));
+            }
+        }
+        claimed.sort_unstable_by_key(|(start, ..)| *start);
+        let mut cursor = 0;
+        for (start, end, uri) in claimed {
+            out.push_str(&line[cursor..start]);
+            out.push('[');
+            out.push_str(&line[start..end]);
+            out.push_str("](");
+            out.push_str(uri);
+            out.push(')');
+            cursor = end;
+        }
+        out.push_str(&raw[cursor..]);
+    }
+    out
 }
 
 /// `cited at <n> site(s) across <m> file(s)`, or `not cited` at zero

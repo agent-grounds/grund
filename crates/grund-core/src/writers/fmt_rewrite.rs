@@ -23,9 +23,9 @@ use super::fmt_local_sections::expand_local_section_citations;
 use super::fmt_suppressed::suppressed_line;
 use crate::config::{Config, FileReading};
 use crate::grammar::{
-    DocstringContent, DocstringCursor, FmtDirectives, MarkdownBlocks, MarkdownLine,
-    id_token_end_at, in_escape_position, is_inside_inline_code,
-    is_inside_markdown_link_destination, string_literal_in,
+    DocstringContent, DocstringCursor, FmtDirectives, LineLinks, MarkdownBlocks, MarkdownLine,
+    MarkdownLinks, id_token_end_at, in_escape_position, never_rewrite_context_in,
+    string_literal_in,
 };
 use crate::model::{Catalog, Id};
 use crate::resolver::{
@@ -72,6 +72,9 @@ pub(super) fn rewrite_file(
     let mut docstrings = DocstringCursor::new(is_py, reading.lexical.docstring_python, &literals);
     // §FS-config-v2.schema.sources.declarations.gate: the lines the scan declares on.
     let declarations = DeclarationLines::of(original, reading);
+    // §FS-citations.wrap: the file every pass reads a reference or a multi-line link
+    // in, read only when a citation asks.
+    let links = MarkdownLinks::new(if is_md { original } else { "" });
     for (idx, line) in original.lines().enumerate() {
         let block = if is_md {
             markdown_blocks.line(line)
@@ -112,6 +115,7 @@ pub(super) fn rewrite_file(
         let suppressed = opts.excluded || !directives.rewriting();
         let (new_line, label) = fmt_line_at(
             line,
+            links.line(idx),
             entry,
             path,
             idx + 1,
@@ -191,6 +195,7 @@ pub(crate) struct FmtLineOpts<'a> {
 #[allow(clippy::too_many_arguments)]
 fn fmt_line_at(
     line: &str,
+    links: LineLinks<'_>,
     docstrings: DocstringCursor<'_>,
     path: &Path,
     lineno: usize,
@@ -201,15 +206,16 @@ fn fmt_line_at(
     saw_shorthand_candidate: &mut bool,
 ) -> (String, String) {
     if suppressed {
-        return suppressed_line(line, path, config, is_md, opts);
+        return suppressed_line(line, links, path, config, is_md, opts);
     }
-    let triggered = replace_trigger(line, docstrings.peek(line), config, is_md);
+    let triggered = replace_trigger(line, docstrings.peek(line), links, config, is_md);
     let trigger_changed = triggered.line != line;
     let mut trigger_marker_starts = triggered.marker_starts;
     let marked = if opts.add_marker {
         add_markers(
             &triggered.line,
             docstrings.peek(&triggered.line),
+            links,
             config,
             is_md,
             &mut trigger_marker_starts,
@@ -237,6 +243,7 @@ fn fmt_line_at(
     let expansion = expand_shorthand_citations_with_origins(
         &marked,
         docstrings.peek(&marked),
+        links,
         config.schema(),
         config.frame(),
         is_md,
@@ -257,6 +264,7 @@ fn fmt_line_at(
     {
         let wrapped = wrap_markdown_links_with_targets(
             &final_line,
+            links,
             path,
             config,
             findings,
@@ -318,6 +326,7 @@ pub(crate) fn fmt_line(
 ) -> (String, String) {
     fmt_line_at(
         line,
+        LineLinks::default(),
         docstrings,
         path,
         0,
@@ -331,8 +340,8 @@ pub(crate) fn fmt_line(
 
 /// Rewrite each `$$<ID>` trigger to `§<ID>` — but only where `$$` is immediately
 /// followed by a real ID-shaped token, and never inside a string literal in source
-/// code or Markdown link destinations (§FS-fmt.2.1, §FS-fmt.2.3.1,
-/// §DF-reference-marker).
+/// code, a Markdown inline code span, a link destination or another zone of
+/// §FS-citations.zones (§FS-fmt.2.1, §FS-fmt.2.3.1, §DF-reference-marker).
 struct TriggerReplacement {
     line: String,
     /// Byte offsets in `line` where §FS-fmt.2.1 produced a marker. Keeping
@@ -344,6 +353,7 @@ struct TriggerReplacement {
 fn replace_trigger(
     line: &str,
     docstring: DocstringContent<'_>,
+    links: LineLinks<'_>,
     config: &Config,
     is_md: bool,
 ) -> TriggerReplacement {
@@ -355,8 +365,7 @@ fn replace_trigger(
         let after = start + config.trigger.len();
         if id_token_end_at(line, after, &config.grammar).is_some()
             && (is_md || !string_literal_in(docstring, line, start))
-            && (!is_md || !is_inside_inline_code(line, start))
-            && (!is_md || !is_inside_markdown_link_destination(line, start))
+            && (!is_md || !never_rewrite_context_in(docstring, links, line, true, start))
         {
             output.push_str(&line[cursor..start]);
             marker_starts.push(output.len());
@@ -376,10 +385,12 @@ fn replace_trigger(
 
 /// Prefix `§` onto bare ID-shaped tokens that lack it — the `--marker` upgrade
 /// (§FS-fmt.2.2) — skipping tokens already marked, Markdown inline-code examples,
-/// Markdown link destinations, and source-code string literals (§FS-fmt.2.3).
+/// Markdown link destinations and the other zones of §FS-citations.zones, and
+/// source-code string literals (§FS-fmt.2.3).
 pub(super) fn add_markers(
     line: &str,
     docstring: DocstringContent<'_>,
+    links: LineLinks<'_>,
     config: &Config,
     is_md: bool,
     trigger_marker_starts: &mut [usize],
@@ -418,10 +429,7 @@ pub(super) fn add_markers(
         {
             continue;
         }
-        if is_md && is_inside_inline_code(line, found.start) {
-            continue;
-        }
-        if is_md && is_inside_markdown_link_destination(line, found.start) {
+        if is_md && never_rewrite_context_in(docstring, links, line, true, found.start) {
             continue;
         }
         if !is_md && string_literal_in(docstring, line, found.start) {

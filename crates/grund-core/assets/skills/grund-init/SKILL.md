@@ -132,5 +132,13 @@ locks. Run `grund check` and `grund fmt --check`, and commit the lock changes.
 Keep ID-keyed lock names unchanged for file-only moves. Do not hand-edit locks or
 expect fmt to replace authored IDs, repair arbitrary URLs, or silently approve a
 protected section move; fix citations or leave a pointer at the old address first.
+A link the author wrote around a citation is theirs in every Markdown form: an
+inline link, one whose text runs onto the next line, a reference with its key, a
+definition, an autolink and an HTML `<a>`. fmt leaves it and does not follow a
+move for it, so repair such a destination by hand; the citation inside is still
+checked. A citation-only image in a kind's index, `![§<ID>](x.png)`, warns
+`image-index-entry` with the link to write beside it
+([authored links](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/structure.md#linking-what-grund-does),
+[example](https://github.com/agent-grounds/grund/blob/main/examples/authored-citations/README.md)).
 Use the [maintenance guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/structure.md#maintaining-declarations)
 and its [copy-based rename example](https://github.com/agent-grounds/grund/blob/main/examples/relative-sections-lock/README.md).

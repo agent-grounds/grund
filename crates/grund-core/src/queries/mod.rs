@@ -74,8 +74,8 @@ pub use batch::{
 };
 pub use editor_completion::{CitationCompletion, LspCompletionContext};
 pub use editor_hover::{
-    LspUsage, citation_under_title, cites_clause, lsp_hover_with_kind_title, lsp_title_hover_body,
-    usage_clause, usage_over_paths,
+    LspUsage, citation_under_title, cites_clause, link_hover_citations, lsp_hover_with_kind_title,
+    lsp_title_hover_body, usage_clause, usage_over_paths,
 };
 pub use editor_on_type::{DeclaredId, LineEdit, can_replace_trigger_at, on_type_line_edits};
 pub use editor_snapshot::{
@@ -116,6 +116,8 @@ mod tests_editor_completion_overlap;
 mod tests_editor_completion_workspace;
 #[cfg(test)]
 mod tests_editor_multi_line_string;
+#[cfg(test)]
+mod tests_editor_on_type_zones;
 #[cfg(test)]
 mod tests_lsp_hover;
 #[cfg(test)]

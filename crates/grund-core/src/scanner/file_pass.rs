@@ -45,8 +45,9 @@ use super::value_context::recognized_source_value_contexts;
 use super::values::scan_value_bindings;
 use crate::config::{Frame, Schema};
 use crate::grammar::{
-    DocstringContent, MarkdownBlocks, MarkdownLine, PythonDocstringScanState, atx_heading_text,
-    declaration_captures, near_miss_heading, parse_id, section_path, source_scan_line,
+    DocstringContent, MarkdownBlocks, MarkdownLine, MarkdownLinks, PythonDocstringScanState,
+    atx_heading_text, declaration_captures, near_miss_heading, parse_id, section_path,
+    source_scan_line,
 };
 use crate::model::{
     Catalog, Citation, Declaration, DeclarationSource, FileRecord, FileText, HeadingKind, Id,
@@ -118,6 +119,9 @@ pub(super) fn scan_file_text(
     let text = shared.as_str();
     // §FS-languages.multi-line-string: what each line begins inside, read off the whole file.
     let literals = reading.literals(text);
+    // §FS-citations.wrap: the links a Markdown line's zones are read in, read only
+    // when a citation's rewrite is asked of them.
+    let links = MarkdownLinks::new(if is_md { text } else { "" });
     // §AR-scanner.2.8.1: the comment blocks, walked once, are what the inline-note sites read.
     let (inline_sites, inline_block_lines) = if is_md {
         Default::default()
@@ -432,6 +436,7 @@ pub(super) fn scan_file_text(
             scan_line,
             raw_line: line,
             docstring: DocstringContent::of(&scan, line, literals.entry(idx)),
+            links: links.line(idx),
             column_offset: scan.column_offset,
             lineno,
             path,

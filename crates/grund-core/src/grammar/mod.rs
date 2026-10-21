@@ -85,8 +85,11 @@ mod id_rules;
 mod ids;
 mod inline_note_layout;
 mod language_table;
+mod line_scan;
+mod link_walk;
 mod managed_block;
 mod markdown_blocks;
+mod markdown_links;
 mod multi_line_forms;
 mod multi_line_string;
 mod near_miss;
@@ -132,6 +135,7 @@ pub(crate) use ids::{
     MarkdownLineCitation, parse_id, parse_id_arg, parse_qualified_id_prefix, render_id,
     split_alias_path,
 };
+pub(crate) use markdown_links::{LineLinks, MarkdownLinks};
 mod spelling;
 pub(crate) use inline_note_layout::{
     BlockCitations, CITATION_RUN_SEPARATOR, LayoutChannel, block_has_inline_note_memoized,
@@ -158,10 +162,12 @@ pub use managed_block::INTEGRATIONS_BLOCK_VERSION;
 #[cfg(test)]
 pub(crate) use near_miss::declaration_id_on_line;
 pub(crate) use near_miss::{declaration_captures, near_miss_heading};
+#[cfg(test)]
+pub(crate) use never_rewrite::is_inside_markdown_link_destination;
 pub(crate) use never_rewrite::{
     DocstringContent, DocstringCursor, bare_token_in_never_rewrite_zone, in_escape_position,
-    is_escaped, is_inside_inline_code, is_inside_markdown_link_destination,
-    markdown_never_rewrite_context, never_rewrite_context_in, string_literal_in,
+    is_escaped, is_inside_inline_code, markdown_never_rewrite_context, never_rewrite_context_in,
+    string_literal_in,
 };
 pub(crate) use qualified_context::QualifiedSource;
 pub(crate) use relative_heading::{

@@ -259,7 +259,6 @@ fn hover_on_dangling_citation_defers_to_diagnostic() {
 /// written, and only the bare citation becomes a link. Today the hover's own
 /// preceding-bracket test nests a link into every one of them.
 #[test]
-#[ignore = "red until #839 linkifies the hover through the shared reading; implement removes this"]
 fn citation_hover_leaves_authored_markup_as_written() {
     let root = test_root("hover-authored-markup");
     fs::write(

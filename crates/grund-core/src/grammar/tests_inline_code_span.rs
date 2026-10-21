@@ -28,7 +28,7 @@ fn a_single_backtick_inside_a_double_backtick_span_does_not_close_it() {
             "the citation after the span is prose: {line}"
         );
         assert!(
-            !markdown_never_rewrite_context(line, link),
+            !markdown_never_rewrite_context(LineLinks::default(), line, link),
             "check and fmt read the same prose: {line}"
         );
         let inner = line.rfind(" ` ").expect("the inner backtick") + 1;
@@ -46,7 +46,11 @@ fn a_citation_inside_a_double_backtick_span_before_its_inner_backtick_is_code() 
     let line = "Inside `` [@GOAL-a](goals.md#goal-a-stale) ` `` stays.";
     let link = at(line, "[@GOAL-a]");
     assert!(is_inside_inline_code(line, link));
-    assert!(markdown_never_rewrite_context(line, link));
+    assert!(markdown_never_rewrite_context(
+        LineLinks::default(),
+        line,
+        link
+    ));
     assert!(!is_inside_inline_code(line, at(line, "stays")));
 }
 

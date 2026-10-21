@@ -7,7 +7,9 @@ use std::path::{Path, PathBuf};
 
 use super::index::{KindIndexTarget, declarations_under_folder, kind_index_targets};
 use crate::config::{Frame, Owners, Schema};
-use crate::grammar::{CitationLink, citation_link, markdown_never_rewrite_context};
+use crate::grammar::{
+    CitationLink, LineLinks, MarkdownLinks, citation_link, markdown_never_rewrite_context,
+};
 use crate::model::{
     Catalog, Citation, Declaration, Id, paired_declarations, scanned_decl_relative_path,
     scanned_path_key,
@@ -175,17 +177,19 @@ fn enroll_external_inline_declarations(
             .or_default()
             .push(target);
     }
-    let lines_by_index: BTreeMap<&Path, Vec<String>> = targets
+    let text_by_index: BTreeMap<&Path, String> = targets
         .iter()
         .filter_map(|target| {
             // §FS-check.6.1.1: cover this effective input before its shared read,
             // as a save would write it (§AR-system.2.13).
             let text = sources.text(&target.index_file).ok()?;
-            Some((
-                target.index_key.as_path(),
-                text.lines().map(str::to_string).collect(),
-            ))
+            Some((target.index_key.as_path(), text.to_string()))
         })
+        .collect();
+    // §FS-citations.wrap: each index is the document its references are read in.
+    let lines_by_index: BTreeMap<&Path, (Vec<&str>, MarkdownLinks<'_>)> = text_by_index
+        .iter()
+        .map(|(key, text)| (*key, (text.lines().collect(), MarkdownLinks::new(text))))
         .collect();
     let mut sites: BTreeMap<PathBuf, BTreeSet<(usize, usize)>> = BTreeMap::new();
 
@@ -218,13 +222,15 @@ fn enroll_external_inline_declarations(
         if external_inline_home(decls, target.folder, owners, &markdown).is_none() {
             continue;
         }
-        let Some(line) = lines_by_index
-            .get(target.index_key.as_path())
-            .and_then(|lines| lines.get(citation.line.saturating_sub(1)))
-        else {
+        let Some((lines, links)) = lines_by_index.get(target.index_key.as_path()) else {
             continue;
         };
-        let Some(written_target) = link_target_at_citation(line, citation) else {
+        let index = citation.line.saturating_sub(1);
+        let Some(line) = lines.get(index) else {
+            continue;
+        };
+        let Some(written_target) = link_target_at_citation(line, links.line(index), citation)
+        else {
             continue;
         };
         // §AR-checker.2.16: the destination is `Expected`'s; this pass only looks it up.
@@ -274,20 +280,26 @@ fn external_inline_home<'a>(
 /// citation site. Unlike `index_citation_form`, enrollment must inspect this
 /// exact occurrence: another linked occurrence of the same text on the line
 /// cannot lend it structural meaning (§DF-index-entry-form.2.7).
-fn link_target_at_citation<'a>(line: &'a str, citation: &Citation) -> Option<&'a str> {
+fn link_target_at_citation<'a>(
+    line: &'a str,
+    links: LineLinks<'_>,
+    citation: &Citation,
+) -> Option<&'a str> {
     let start = citation.column.checked_sub(1)?;
     let end = start.checked_add(citation.text.len())?;
     if line.get(start..end)? != citation.text {
         return None;
     }
-    // §FS-citations.wrap.recognized: the formatter's own bracket test, to the
-    // balancing `)` it re-derives up to, with something before it. A citation in
-    // a link its author wrote is an entry but never enrolls (§FS-check.3.18.3).
-    let CitationLink::Wrap(wrap) = citation_link(line, start, end) else {
+    // §FS-citations.wrap.recognized: a wrap enrolls; an authored link never does
+    // (§FS-check.3.18.3), and a citation-only image does for one more release
+    // (§FS-citations.checks.image-index-entry).
+    let (CitationLink::Wrap(wrap) | CitationLink::Image(wrap)) =
+        citation_link(links, line, start, end)
+    else {
         return None;
     };
     // §FS-fmt.2.3: a wrap whose `[` sits in a zone `fmt` never writes in is not one.
-    if markdown_never_rewrite_context(line, start - 1) {
+    if markdown_never_rewrite_context(links, line, start - 1) {
         return None;
     }
     (wrap.close > wrap.url_start).then(|| &line[wrap.url_start..wrap.close])

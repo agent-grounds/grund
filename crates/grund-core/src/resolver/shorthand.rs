@@ -23,8 +23,8 @@ use std::collections::BTreeMap;
 use super::context::{WorkspaceContext, WorkspaceProject};
 use crate::config::{Compiled, Frame, Schema, ShorthandPolicy};
 use crate::grammar::{
-    CandidateReading, DocstringContent, ParsedId, QUALIFIED_CITATION_PREFIX, ShorthandIndex,
-    never_rewrite_context_in, parse_id, parse_id_arg, parse_id_arg_with_shorthand,
+    CandidateReading, DocstringContent, LineLinks, ParsedId, QUALIFIED_CITATION_PREFIX,
+    ShorthandIndex, never_rewrite_context_in, parse_id, parse_id_arg, parse_id_arg_with_shorthand,
     render_catalog_id, shorthand_names,
 };
 use crate::model::{Catalog, Citation, Declaration, Id};
@@ -140,6 +140,7 @@ pub(crate) fn expand_shorthand_citations(
     let expanded = expand_shorthand_citations_with_origins(
         line,
         docstring,
+        LineLinks::default(),
         schema,
         frame,
         is_md,
@@ -165,6 +166,7 @@ pub(crate) fn expand_shorthand_citations(
 pub(crate) fn expand_shorthand_citations_with_origins(
     line: &str,
     docstring: DocstringContent<'_>,
+    links: LineLinks<'_>,
     schema: &Schema,
     frame: Frame<'_>,
     is_md: bool,
@@ -252,10 +254,10 @@ pub(crate) fn expand_shorthand_citations_with_origins(
         if target_grammar.shorthand_sits_in_numeric_run(marker, tail, match_end) {
             continue;
         }
-        // §FS-fmt.2.3: the same exclusions the other rewrites honour — inline code,
-        // a link destination, a runtime string — asked of the docstring's content on
-        // a docstring line, exactly as the scanner asks it (§FS-fmt.2.3.1.1).
-        if never_rewrite_context_in(docstring, line, is_md, marker_start) {
+        // §FS-fmt.2.3: the zones every rewrite honours, a reference key included
+        // (§FS-citations.zones.authored-markup), asked of a docstring's content on a
+        // docstring line as the scanner asks it (§FS-fmt.2.3.1.1).
+        if never_rewrite_context_in(docstring, links, line, is_md, marker_start) {
             continue;
         }
         let Some(id) = parse_id(&caps, target_grammar) else {

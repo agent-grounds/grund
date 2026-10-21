@@ -13,9 +13,9 @@ use std::collections::BTreeMap;
 use super::legacy_inline::reconcile_promoted_inline_site;
 use crate::config::{Frame, Schema};
 use crate::grammar::{
-    IdArgError, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, markdown_never_rewrite_context,
-    parse_id_arg, parse_id_arg_with_shorthand, render_catalog_id, shorthand_candidates,
-    shorthand_names,
+    IdArgError, LineLinks, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX,
+    markdown_never_rewrite_context, parse_id_arg, parse_id_arg_with_shorthand, render_catalog_id,
+    shorthand_candidates, shorthand_names,
 };
 use crate::model::sort_path_key;
 use crate::model::{
@@ -341,6 +341,7 @@ pub(crate) fn sort_citations(citations: &mut [Citation]) {
 /// declaration-backed boundary as scanner promotion, never a relaxed parser.
 pub(crate) fn collect_local_legacy_markdown_citations(
     line: &str,
+    links: LineLinks<'_>,
     schema: &Schema,
     frame: Frame<'_>,
     findings: &Catalog,
@@ -349,7 +350,7 @@ pub(crate) fn collect_local_legacy_markdown_citations(
     let catalog = legacy_catalog_ids(&findings.declarations);
     for (marker_start, _) in line.match_indices(&schema.citation.marker) {
         // §FS-fmt.6.4: the wrap pass's never-rewrite zones, destinations included.
-        if markdown_never_rewrite_context(line, marker_start) {
+        if markdown_never_rewrite_context(links, line, marker_start) {
             continue;
         }
         let token_start = marker_start + schema.citation.marker.len();

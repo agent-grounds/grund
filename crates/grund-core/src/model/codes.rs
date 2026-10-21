@@ -50,6 +50,8 @@ impl Code {
     pub const FULL_SCOPE_IGNORED: Code = Code("full-scope-ignored");
     /// §FS-check.checks.glob-citation
     pub const GLOB_CITATION: Code = Code("glob-citation");
+    /// §FS-citations.checks.image-index-entry
+    pub const IMAGE_INDEX_ENTRY: Code = Code("image-index-entry");
     /// §FS-check.3.10
     pub const INLINE_CITATION_STYLE: Code = Code("inline-citation-style");
     /// §FS-fields.checks.invalid-field-value
@@ -167,6 +169,7 @@ impl Code {
         Code::FORBIDDEN_CITATION,
         Code::FULL_SCOPE_IGNORED,
         Code::GLOB_CITATION,
+        Code::IMAGE_INDEX_ENTRY,
         Code::INLINE_CITATION_STYLE,
         Code::INVALID_FIELD_VALUE,
         Code::INVALID_RULE,

@@ -6,11 +6,18 @@ use std::path::PathBuf;
 
 use super::fmt_rewrite::add_markers;
 use crate::config::Config;
-use crate::grammar::DocstringContent;
+use crate::grammar::{DocstringContent, LineLinks};
 
 fn marked(line: &str, is_md: bool) -> String {
     let config = Config::default_for(PathBuf::from("."));
-    add_markers(line, DocstringContent::default(), &config, is_md, &mut [])
+    add_markers(
+        line,
+        DocstringContent::default(),
+        LineLinks::default(),
+        &config,
+        is_md,
+        &mut [],
+    )
 }
 
 /// §FS-fmt.2.3: in Markdown prose the pass promotes the bare citation and leaves

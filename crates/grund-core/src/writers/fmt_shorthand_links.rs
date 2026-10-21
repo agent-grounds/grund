@@ -5,8 +5,8 @@
 
 use crate::config::{Config, ShorthandPolicy};
 use crate::grammar::{
-    CandidateReading, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, ShorthandIndex,
-    is_inside_inline_code, is_inside_markdown_link_destination, parse_id,
+    CandidateReading, LineLinks, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, ShorthandIndex,
+    markdown_never_rewrite_context, parse_id,
 };
 use crate::model::Id;
 
@@ -15,6 +15,7 @@ use crate::model::Id;
 /// Its visible short span is retained while its canonical `Id` selects the link.
 pub(super) fn collect_local_accepted_shorthand_links(
     line: &str,
+    links: LineLinks<'_>,
     config: &Config,
     index: Option<&ShorthandIndex<'_>>,
     out: &mut Vec<MarkdownLineCitation>,
@@ -23,9 +24,8 @@ pub(super) fn collect_local_accepted_shorthand_links(
         return;
     }
     for (marker_start, _) in line.match_indices(&config.marker) {
-        if is_inside_inline_code(line, marker_start)
-            || is_inside_markdown_link_destination(line, marker_start)
-        {
+        // §FS-fmt.6.4: the never-rewrite zones every other collector reads.
+        if markdown_never_rewrite_context(links, line, marker_start) {
             continue;
         }
         let token_start = marker_start + config.marker.len();
