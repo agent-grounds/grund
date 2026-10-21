@@ -98,6 +98,15 @@ pub(crate) fn homeless_row_grounding(schema: &Schema, rules: &Rules, run: &Run) 
     }
 }
 
+/// Whether any grounding rung, at any strength, reaches the files of the row
+/// named `kind` (§FS-init.2.3.5.2.2): its effective `must` pair, or a v2 rung
+/// below `must` that governs it (§FS-config-v2.rules.grounding). A row for which
+/// this is false grounds nothing, so a file there that cites nothing is never
+/// judged (§FS-check.3.11).
+pub(crate) fn row_grounds_at_any_strength(rules: &Rules, run: &Run, kind: &str) -> bool {
+    row_grounding(rules, run, kind).0 || !soft_grounding_rungs(rules, kind).is_empty()
+}
+
 /// Whether any place is grounded at all (§FS-check.3.6), the checker's early out
 /// and the gate that arms `ungrounded` (§FS-check.1.4.1): a row, or the homeless
 /// kind, whose effective pair requires grounding, so a default that every row sets

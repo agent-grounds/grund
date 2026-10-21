@@ -116,10 +116,10 @@ fn the_agents_init_messages_are_the_five_final_templates() {
         agents_init_messages(),
         vec![
             "repo maintenance: malformed grund managed block: missing `<!-- END GRUND MANAGED BLOCK -->` (does not affect citation validity)",
-            "repo maintenance: outdated grund init block v3 — run `grund init` to update to v35 (does not affect citation validity)",
-            "repo maintenance: unsupported grund init block v999 — this grund supports v35 (does not affect citation validity)",
+            "repo maintenance: outdated grund init block v3 — run `grund init` to update to v39 (does not affect citation validity)",
+            "repo maintenance: unsupported grund init block v999 — this grund supports v39 (does not affect citation validity)",
             "repo maintenance: stale grund init block: clickable citations differ from grund.toml — run `grund init` to refresh (does not affect citation validity)",
-            "repo maintenance: missing grund init block v35 — run `grund init` to install it (does not affect citation validity)",
+            "repo maintenance: missing grund init block v39 — run `grund init` to install it (does not affect citation validity)",
         ]
     );
 }

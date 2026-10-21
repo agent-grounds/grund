@@ -1,2 +1,2 @@
-AGENTS.md:3: error: repo maintenance: outdated grund init block v35 — run `grund init` to update to v37 (does not affect citation validity)
-docs/spec/AGENTS.md:1: error: repo maintenance: missing grund init block v37 — run `grund init` to install it (does not affect citation validity)
+AGENTS.md:3: error: repo maintenance: outdated grund init block v39 — run `grund init` to update to v41 (does not affect citation validity)
+docs/spec/AGENTS.md:1: error: repo maintenance: missing grund init block v41 — run `grund init` to install it (does not affect citation validity)

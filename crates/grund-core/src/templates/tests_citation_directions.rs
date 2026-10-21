@@ -81,13 +81,14 @@ should = ["FS"]
         "{section}"
     );
     assert!(
-        section.contains("- Each file in **skills/** must cite FS."),
+        section.contains("- Each file in **skills/** that cites anything must cite FS."),
         "{section}"
     );
     // A single-file home is one file, so "each file in" would promise a
-    // directory that is not there.
+    // directory that is not there. Neither row grounds, so both subjects are
+    // narrowed (§FS-init.2.3.5.2.2).
     assert!(
-        section.contains("- The file **docs/runbook.md** must cite FS."),
+        section.contains("- The file **docs/runbook.md**, if it cites anything, must cite FS."),
         "{section}"
     );
     assert!(

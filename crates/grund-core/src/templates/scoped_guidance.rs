@@ -10,9 +10,9 @@ use crate::config::{Extent, Project, Row, Run, SchemaView};
 use crate::grammar::agents_block_heading;
 
 use super::citation_directions::{
-    bullet_row_order, root_citation_directions, row_has_bullet, row_has_grounding_clause,
-    scoped_citation_directions,
+    bullet_row_order, root_citation_directions, row_has_bullet, scoped_citation_directions,
 };
+use super::citation_grounding::row_has_grounding_clause;
 
 /// The root destination: the root entrypoint's own block (§FS-init.2.3.5.11.1).
 const ROOT: &str = "";

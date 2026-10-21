@@ -1,7 +1,9 @@
 use crate::config::{
     CitationDisjunction, CitationLevel, CitationTarget, KindCitationRules, NamespaceMatch, Project,
-    Row, Run,
+    Row, Run, row_grounds_at_any_strength,
 };
+
+use super::citation_grounding::citation_grounding_sentence;
 
 /// The public citation-directions page the scaffold config and the no-`[citations]`
 /// fallback sentence hand a reader instead of an ID of this repository
@@ -42,8 +44,8 @@ pub(crate) fn citation_directions_section(project: &Project, run: &Run) -> Strin
 /// rows `here` says land at the root. When no `[citations]` section is
 /// declared, the static climbing-rule sentence stands in, so a config that
 /// predates the feature keeps a stable block (§FS-init.2.3.4.10); the grounding
-/// sentence renders under either, because it is generated from `[reference]
-/// require_grounding` and not from the direction rules (§FS-check.3.6).
+/// sentence renders under either, because it is generated from each row's
+/// effective grounding and not from the direction rules (§FS-check.3.6).
 pub(crate) fn root_citation_directions(
     project: &Project,
     run: &Run,
@@ -71,7 +73,7 @@ pub(crate) fn root_citation_directions(
     }
     lines.push(join_sentences(CITATION_LEVEL_LEGEND, grounding.as_deref()));
     lines.push(String::new());
-    lines.extend(citation_bullets(project, here));
+    lines.extend(citation_bullets(project, run, here));
     // Load-bearing (§FS-init.2.3.5.6): silence is open only when the global default
     // leaves it open, and a per-kind default never reaches it — that one is
     // folded into its own bullet, which is *listed above*.
@@ -91,7 +93,7 @@ pub(crate) fn scoped_citation_directions(
     here: &dyn Fn(&str) -> bool,
 ) -> Option<String> {
     let grounding = citation_grounding_sentence(project, run, here);
-    let bullets = citation_bullets(project, here);
+    let bullets = citation_bullets(project, run, here);
     if grounding.is_none() && bullets.is_empty() {
         return None;
     }
@@ -139,7 +141,7 @@ pub(crate) fn row_has_bullet(project: &Project, row: &str) -> bool {
 }
 
 /// The bullets of the rows `here` admits, in [`bullet_row_order`].
-fn citation_bullets(project: &Project, here: &dyn Fn(&str) -> bool) -> Vec<String> {
+fn citation_bullets(project: &Project, run: &Run, here: &dyn Fn(&str) -> bool) -> Vec<String> {
     if !project.rules.citations.declared {
         return Vec::new();
     }
@@ -150,10 +152,11 @@ fn citation_bullets(project: &Project, here: &dyn Fn(&str) -> bool) -> Vec<Strin
         .filter_map(|kind| {
             let rules = project.rules.citations.per_kind.get(kind)?;
             let clauses = citation_direction_clauses(project, rules)?;
-            Some(format!(
-                "- {} {clauses}.",
-                citation_direction_subject(project, kind, homeless)
-            ))
+            let (subject, uncited) = citation_direction_subject(project, run, kind, homeless);
+            Some(match uncited {
+                Some(uncited) => format!("- {subject} {clauses}. {uncited}"),
+                None => format!("- {subject} {clauses}."),
+            })
         })
         .collect()
 }
@@ -166,73 +169,9 @@ fn join_sentences(first: &str, second: Option<&str>) -> String {
     }
 }
 
-/// The grounding sentence (§FS-init.2.3.5.7), generated from `[reference]
-/// require_grounding` and the configured non-citable homes. It claims only what
-/// §FS-check.3.6 enforces, and it distinguishes *cite* from *declare*: a source
-/// file grounds by citing a declared ID **or** by declaring one inline, while a
-/// file in a non-citable home can only cite, because a declaration there is
-/// misplaced (§FS-declarations.checks.misplaced-declaration.3). An unwalked home
-/// (§FS-config.3.4.7.4) is left out — nothing in it is scanned, so the rule never
-/// reaches it. Per-row grounding levels (§FS-config.3.4.8) are not this sentence's.
-/// It reads the effective value, the project's OR the run's `--require-grounding`
-/// (§FS-check.3.6), so the drift `check --require-grounding` reports is unchanged.
-fn citation_grounding_sentence(
-    project: &Project,
-    run: &Run,
-    here: &dyn Fn(&str) -> bool,
-) -> Option<String> {
-    if !grounding_on(project, run) {
-        return None;
-    }
-    let base = "Every source file must cite a declared ID or declare one inline";
-    let homeless = project.schema.complement_name();
-    // §FS-config-v2.schema.places: every place of each such row; §FS-init.2.3.5.7.1:
-    // under scoped guidance only the rows that land here.
-    let homes = project
-        .schema
-        .rows
-        .iter()
-        .filter(|row| row_has_home_clause(row, homeless) && here(&row.name))
-        .filter_map(Row::place_labels)
-        .collect::<Vec<_>>();
-    let homes = (!homes.is_empty()).then(|| join_english_list(&homes, "and"));
-    match (here(homeless), homes) {
-        (true, None) => Some(format!("{base}.")),
-        (true, Some(homes)) => Some(format!("{base}; every file under {homes} must cite one.")),
-        (false, Some(homes)) => Some(format!("Every file under {homes} must cite one.")),
-        (false, None) => None,
-    }
-}
-
-/// Whether the grounding sentence renders at all (§FS-init.2.3.5.7).
-fn grounding_on(project: &Project, run: &Run) -> bool {
-    project.rules.grounding.require || run.scope.require_grounding
-}
-
-/// Whether `row` is a scanned non-citable home, which the grounding sentence
-/// names (§FS-init.2.3.5.7.1); an unwalked home is left out.
-fn row_has_home_clause(row: &Row, homeless: &str) -> bool {
-    row.kind.is_none()
-        && row.places.first().is_none_or(|place| place.scanned)
-        && row.name != homeless
-        && row.place_labels().is_some()
-}
-
-/// Whether `row` carries a clause of the grounding sentence: the complement's
-/// source-file clause, or a scanned non-citable home's (§FS-init.2.3.5.7.1).
-pub(crate) fn row_has_grounding_clause(project: &Project, run: &Run, row: &str) -> bool {
-    let homeless = project.schema.complement_name();
-    grounding_on(project, run)
-        && (row == homeless
-            || project
-                .schema
-                .rows
-                .iter()
-                .any(|candidate| candidate.name == row && row_has_home_clause(candidate, homeless)))
-}
-
 /// What one bullet's rules are checked *per* (§FS-init.2.3.5.2) — the unit the
-/// ticket's first defect was that no bullet stated.
+/// ticket's first defect was that no bullet stated — and, for a non-citable home
+/// whose row grounds nothing, the sentence that follows the bullet.
 ///
 /// A citable kind's unit is the top-level declaration (§FS-check.3.11). A
 /// non-citable kind's is every scanned file in its home, so the bullet names the
@@ -243,9 +182,17 @@ pub(crate) fn row_has_grounding_clause(project: &Project, run: &Run, row: &str) 
 /// cites something (§FS-config.3.9.2.4) — because the obligation constrains what a
 /// file cites and never whether it cites at all; a util that cites nothing is
 /// not a unit. In a non-citable home the opposite holds — a skill without a spec
-/// is the defect — so nothing narrows that subject, and `require_grounding`
-/// closes the hole.
-fn citation_direction_subject(project: &Project, kind: &str, homeless: &str) -> String {
+/// is the defect — so the subject is unnarrowed exactly when the row's grounding
+/// reaches its files and `grund check` judges that defect. Where the row grounds
+/// nothing, a file there that cites nothing is no unit either (§FS-check.3.11), so
+/// the subject is narrowed as the homeless kind's is and the second sentence says
+/// so and names the setting that makes it a finding (§FS-init.2.3.5.2.2).
+fn citation_direction_subject(
+    project: &Project,
+    run: &Run,
+    kind: &str,
+    homeless: &str,
+) -> (String, Option<String>) {
     let kinds = project.kind_configs();
     if kind == homeless {
         let scope = kinds
@@ -253,8 +200,11 @@ fn citation_direction_subject(project: &Project, kind: &str, homeless: &str) -> 
             .find(|configured| configured.kind == kind)
             .and_then(|configured| configured.title.as_deref())
             .map_or_else(String::new, |title| format!(": {title}"));
-        return format!(
-            "Each source file outside the Project map (**{kind}**{scope}) that cites anything"
+        return (
+            format!(
+                "Each source file outside the Project map (**{kind}**{scope}) that cites anything"
+            ),
+            None,
         );
     }
     let configured = project
@@ -264,14 +214,44 @@ fn citation_direction_subject(project: &Project, kind: &str, homeless: &str) -> 
         .find(|row| row.name == kind && row.kind.is_none());
     // §FS-config-v2.schema.places: a row with several places names every one.
     let places = configured.and_then(Row::place_labels).unwrap_or_default();
-    match configured {
-        Some(row) if row.folders().next().is_some() => format!("Each file in **{places}**"),
-        // A single-file non-citable home is one file, so "each file in" would
-        // promise a directory that is not there.
-        Some(row) if row.files().nth(1).is_some() => format!("Each of the files **{places}**"),
-        Some(_) => format!("The file **{places}**"),
-        None => format!("Each **{kind}** declaration"),
+    let Some(row) = configured else {
+        return (format!("Each **{kind}** declaration"), None);
+    };
+    let grounds = row_grounds_at_any_strength(&project.rules, run, kind);
+    // A single-file non-citable home is one file, so "each file in" would
+    // promise a directory that is not there.
+    let (subject, narrowed, uncited) = if row.folders().next().is_some() {
+        (
+            format!("Each file in **{places}**"),
+            " that cites anything",
+            "A file there that cites nothing is not checked",
+        )
+    } else if row.files().nth(1).is_some() {
+        (
+            format!("Each of the files **{places}**"),
+            " that cites anything",
+            "One that cites nothing is not checked",
+        )
+    } else {
+        (
+            format!("The file **{places}**"),
+            ", if it cites anything,",
+            "If it cites nothing, it is not checked",
+        )
+    };
+    if grounds {
+        return (subject, None);
     }
+    // §FS-init.2.3.5.2.2: the one setting that closes the hole, in the live version.
+    let setting = if project.version >= 2 {
+        format!("`[rules.citations.{kind}.grounding] must = \"file\"`")
+    } else {
+        "`require_grounding = true` on its `[[kinds]]` row".to_string()
+    };
+    (
+        format!("{subject}{narrowed}"),
+        Some(format!("{uncited}; {setting} makes it a finding.")),
+    )
 }
 
 /// The verb-phrase clauses for one citing kind's rules, joined by "; " in the
@@ -457,7 +437,7 @@ fn citation_target_phrase(target: &CitationTarget) -> String {
 
 /// An English list: `A`, `A or B`, `A, B, or C` — the Oxford comma from three
 /// items on, so a three-way rule cannot be read as a two-way one (§FS-init.2.3.5.4).
-fn join_english_list(items: &[String], conjunction: &str) -> String {
+pub(super) fn join_english_list(items: &[String], conjunction: &str) -> String {
     match items {
         [] => String::new(),
         [only] => only.clone(),

@@ -133,11 +133,14 @@ pub(crate) static AGENTS_SECTION_BOUNDARY: Lazy<Regex> =
 /// version heading labelled `(block vN)`.
 /// v35 to v38 (§FS-init.2.3.4.9, §FS-init.2.3.7.1): each pair four higher again,
 /// teaching root-scoped formatter maintenance after authored renames and moves.
+/// v39 to v42 (§FS-init.2.3.5.2.2, §FS-init.2.3.7.1): each pair four higher again,
+/// a non-citable home whose row grounds nothing narrowing its bullet, and the
+/// grounding sentence reading each row's effective grounding.
 pub(crate) const AGENTS_BLOCK_VERSION: u32 = AGENTS_BLOCK_BASE_VERSION + 3;
 
 /// The revision the base config selects (§FS-init.2.3.7.1): a rule kind adds one,
 /// and a scoped file or a declaration shape adds two, up to [`AGENTS_BLOCK_VERSION`].
-pub(crate) const AGENTS_BLOCK_BASE_VERSION: u32 = 35;
+pub(crate) const AGENTS_BLOCK_BASE_VERSION: u32 = 39;
 
 /// The byte span and `vN` version of the managed block inside an `AGENTS.md`
 /// (§FS-init.2.3) — what both `grund init`'s update and `grund check`'s validation

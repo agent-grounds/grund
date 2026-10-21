@@ -16,11 +16,12 @@
 //!
 //! The module boundary is what §AR-system.4 asks for: an item another component
 //! reads is re-exported below, and everything else is the component's own
-//! (§AR-core-module-layout.1.1). Four files, out of the writers' former
+//! (§AR-core-module-layout.1.1). Five files, out of the writers' former
 //! `init_templates.rs` and `init_citation_directions.rs`: the embedded payload
 //! and its newline canonicalization, the block substitutions, the
-//! `### Citation directions` renderer, and the `### Clickable citations`
-//! renderer with the entrypoint surface it varies by (§FS-init.2.3.4.17).
+//! `### Citation directions` renderer and its grounding sentence, and the
+//! `### Clickable citations` renderer with the entrypoint surface it varies by
+//! (§FS-init.2.3.4.17).
 //!
 //! What it does **not** hold is anything a run decides. Which entrypoint files
 //! a repository has is a probe over the tree and is
@@ -32,6 +33,7 @@
 mod agents_block;
 mod assets;
 mod citation_directions;
+mod citation_grounding;
 mod clickable_citations;
 mod scoped_guidance;
 

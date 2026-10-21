@@ -139,7 +139,7 @@ pub(crate) use file_reading::FileReading;
 pub(crate) use fmt_block::fmt_excluded;
 pub(crate) use grounding::{
     any_place_grounded, grounding_level_for_kind, homeless_row_grounding, row_grounding,
-    soft_grounding_rungs,
+    row_grounds_at_any_strength, soft_grounding_rungs,
 };
 pub(crate) use kind::escape_toml_basic;
 pub(crate) use kinds::{

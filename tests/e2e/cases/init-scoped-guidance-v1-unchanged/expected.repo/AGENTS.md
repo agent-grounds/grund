@@ -1,7 +1,7 @@
 # v1 — agent instructions
 
 <!-- BEGIN GRUND MANAGED BLOCK -->
-## Grounding with grund (block v35)
+## Grounding with grund (block v39)
 
 This project uses [`grund`](https://github.com/agent-grounds/grund): every spec, goal, decision, and end-to-end test has a stable ID `<KIND>-<NNN>-<slug>[.<section>]` (`KIND ∈ {GOAL, FS}`), cited with the marker `§` — e.g. `<§>FS-042-user-login.3.1`, where the ID is a shape illustration rather than a real one in this repo, which is what the `<§>` escape says. Type `$$` in a grund-aware editor and it becomes `§`. Bare ID-shaped tokens are ignored — `[reference] strict = true` is set in `grund.toml`, so only `§`-prefixed citations are checked.
 
@@ -42,7 +42,7 @@ Declarations are heading lines `# <ID>: …` in markdown. In a code doc-comment 
 `must`/`never` are `grund check` errors; `should`/`avoid` are suggestions (`grund check --suggestions`).
 
 - Each **FS** declaration must cite GOAL.
-- Each file in **tests/e2e/** must cite FS.
+- Each file in **tests/e2e/** that cites anything must cite FS. A file there that cites nothing is not checked; `require_grounding = true` on its `[[kinds]]` row makes it a finding.
 Anything not listed above is allowed.
 
 ### Clickable citations

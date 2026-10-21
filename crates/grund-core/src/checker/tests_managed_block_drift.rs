@@ -38,8 +38,8 @@ fn citation_directions_drift_is_reported() {
 
     // Tamper the rendered directions → drift finding.
     let stale = fresh.replace(
-        "**tests/e2e/** must cite FS",
-        "**tests/e2e/** should cite GOAL",
+        "**tests/e2e/** that cites anything must cite FS",
+        "**tests/e2e/** that cites anything should cite GOAL",
     );
     write(&root.join("AGENTS.md"), &format!("# demo\n\n{stale}"));
     let report = check_findings(&findings, &config);
@@ -178,8 +178,8 @@ fn citation_directions_drift_compares_managed_block_only() {
     let fresh =
         render_agents_append_block_at("demo", &config, &root, true, ConversationSurface::Plain);
     let stale = fresh.replace(
-        "**tests/e2e/** must cite FS",
-        "**tests/e2e/** should cite GOAL",
+        "**tests/e2e/** that cites anything must cite FS",
+        "**tests/e2e/** that cites anything should cite GOAL",
     );
     let expected = citation_directions_section(config.project(), config.run());
     write(
@@ -306,12 +306,12 @@ fn agents_init_messages_cover_all_five_final_templates() {
         (
             "outdated",
             "## Grounding with grund (v3)\n\nlegacy body\n",
-            "repo maintenance: outdated grund init block v3 — run `grund init` to update to v35 (does not affect citation validity)",
+            "repo maintenance: outdated grund init block v3 — run `grund init` to update to v39 (does not affect citation validity)",
         ),
         (
             "unsupported",
             "## Grounding with grund (v99)\n\nfuture body\n",
-            "repo maintenance: unsupported grund init block v99 — this grund supports v35 (does not affect citation validity)",
+            "repo maintenance: unsupported grund init block v99 — this grund supports v39 (does not affect citation validity)",
         ),
         (
             "stale",
@@ -321,7 +321,7 @@ fn agents_init_messages_cover_all_five_final_templates() {
         (
             "missing",
             "# Project instructions\n",
-            "repo maintenance: missing grund init block v35 — run `grund init` to install it (does not affect citation validity)",
+            "repo maintenance: missing grund init block v39 — run `grund init` to install it (does not affect citation validity)",
         ),
     ];
 

@@ -196,8 +196,8 @@ fn the_generated_block_names_a_non_citable_kind_by_place() {
         "map row by place: {block}"
     );
     assert!(
-        block.contains("- Each file in **skills/** must cite FS."),
-        "directions row by place, with the unit it is checked per: {block}"
+        block.contains("- Each file in **skills/** that cites anything must cite FS."),
+        "directions row by place, with the unit it is checked per (§FS-init.2.3.5.2.2): {block}"
     );
     assert!(
         block.contains("KIND ∈ {FS, AR}"),
