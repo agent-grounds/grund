@@ -22,36 +22,30 @@ decorators off.
 
 import re
 import subprocess
+import sys
 import unittest
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from deprecation_ledger import (
+    LEDGER_HEADER, ledger_rows, planned_notice_due, section, version,
+)
+
+
 DISCUSSION = (
     REPO_ROOT / "docs" / "discussions" / "proposals" / "2026-09-30-core-concerns.md"
 )
 CHANGELOG = REPO_ROOT / "docs" / "changelog.md"
 
-HEADING = re.compile(r"^(#{2,3}) (\d+(?:\.\d+)?)[. ]", re.MULTILINE)
 ITEM = re.compile(r"^(\d+)\. ", re.MULTILINE)
 OWNED = re.compile(r"Open — owner #\d+|Settled by")
-VERSION = re.compile(r"`?v?(\d+)\.(\d+)\.(\d+)`?")
-LEDGER_HEADER = ("surface", "notice", "removal", "status")
 STATUSES = ("planned", "shipped")
 TAG = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
 RELEASED = re.compile(
     r"^(?:## \d+\. |- )\[(\d+)\.(\d+)\.(\d+)\]", re.MULTILINE
 )
-
-
-def section(text, number):
-    """The body of section `number`, up to the next heading of any depth."""
-    for match in HEADING.finditer(text):
-        if match.group(2) == number:
-            rest = text[match.end():]
-            following = HEADING.search(rest)
-            return rest[: following.start()] if following else rest
-    return None
 
 
 def items(body):
@@ -62,29 +56,6 @@ def items(body):
         end = starts[index + 1].start() if index + 1 < len(starts) else len(body)
         found.append((match.group(1), body[match.start():end]))
     return found
-
-
-def version(cell):
-    match = VERSION.fullmatch(cell.strip())
-    return tuple(int(part) for part in match.groups()) if match else None
-
-
-def ledger_rows(body):
-    """The rows of the table whose header is Surface | Notice | Removal | Status."""
-    rows, inside = [], False
-    for line in body.splitlines():
-        if not line.startswith("|"):
-            if inside:
-                break
-            continue
-        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
-        if not inside:
-            inside = tuple(cell.lower() for cell in cells) == LEDGER_HEADER
-            continue
-        if all(set(cell) <= set("-: ") for cell in cells):
-            continue
-        rows.append(cells)
-    return rows
 
 
 def row_problems(cells, last_shipped):
@@ -102,7 +73,7 @@ def row_problems(cells, last_shipped):
         )
     if status not in STATUSES:
         problems.append(f"{surface}: status {status!r} is not one of {STATUSES}")
-    elif notice is not None and notice <= last_shipped and status != "shipped":
+    elif planned_notice_due(notice, status, last_shipped):
         problems.append(
             f"{surface}: notice {notice_cell} is at or below the last shipped release "
             f"{'.'.join(map(str, last_shipped))} but the row is not marked shipped"

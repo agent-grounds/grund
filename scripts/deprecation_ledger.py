@@ -1,8 +1,8 @@
 """Read the existing ledger for release preflight. §FS-distribution.4.2.2
 
 §DISC-core-concerns.9.9 defines the table and the due-notice consistency rule.
-The section, table and version interpretation follows the existing ledger
-validator; removal deadlines remain that validator's responsibility.
+Release preflight and the candidate-CI validator share this interpretation
+(§AR-system.principle); removal deadlines remain that validator's responsibility.
 """
 
 import re
@@ -48,6 +48,11 @@ def version(cell):
     return tuple(int(part) for part in match.groups()) if match else None
 
 
+def planned_notice_due(notice, status, release):
+    """§DISC-core-concerns.9.9: a parsed notice is due at or below the release."""
+    return status == "planned" and notice is not None and notice <= release
+
+
 def notice_problems(root, release):
     """§FS-distribution.4.2.2: refuse only planned notices due by this release."""
     path = root / LEDGER_PATH
@@ -62,7 +67,7 @@ def notice_problems(root, release):
         if len(cells) != len(LEDGER_HEADER) or version(cells[1]) is None:
             raise ValueError(f"{LEDGER_PATH}: invalid ledger row: {cells}")
         surface, notice, _, status = cells
-        if status == "planned" and version(notice) <= version(release):
+        if planned_notice_due(version(notice), status, version(release)):
             problems.append(
                 f"error: {LEDGER_PATH}: {surface}: notice {notice} is still planned "
                 f"at or below requested release {release}; land the notice and mark it shipped"
