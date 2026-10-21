@@ -143,8 +143,8 @@ fn markdown_code_span(text: &str) -> String {
 /// (§FS-lsp.1.2.1): each `(token, uri)` in `targets` becomes `[token](uri)` where
 /// the one reading of §FS-citations.wrap finds it unwrapped, so a wrap, a link its
 /// author wrote in any form of §FS-citations.wrap.enclosing.scope, a citation-only
-/// image, a zone of §FS-citations.zones and a fence are left as written, as `fmt`
-/// leaves them. The longest token claims an occurrence first, and a claimed
+/// image, a never-rewrite zone of §FS-fmt.2.3 and a fence are left as written, as
+/// `fmt` leaves them. The longest token claims an occurrence first, and a claimed
 /// occurrence is never linked again.
 pub fn link_hover_citations(body: &str, targets: &[(String, String)]) -> String {
     let mut targets: Vec<&(String, String)> = targets.iter().collect();

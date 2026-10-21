@@ -297,6 +297,7 @@ fn issue_49_check_help_exposes_the_sorted_public_code_catalog() {
         "forbidden-citation",
         "full-scope-ignored",
         "glob-citation",
+        "image-index-entry",
         "inline-citation-style",
         "invalid-field-value",
         "invalid-rule",

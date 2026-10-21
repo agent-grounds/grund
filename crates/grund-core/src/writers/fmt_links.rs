@@ -214,8 +214,8 @@ fn markdown_link_citations(
             continue;
         }
         // §FS-fmt.6.4: inline code and every destination the line holds, read
-        // with the one extent every other pass reads, and the zones of
-        // §FS-citations.zones.authored-markup.
+        // with the one extent every other pass reads, and the reference keys and
+        // tags of §FS-fmt.2.3.
         if markdown_never_rewrite_context(links, line, marker_start) {
             continue;
         }
