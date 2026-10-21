@@ -7,8 +7,9 @@ change was made in. Both halves are claims about a version, and a release that
 disagrees with one publishes a message the binary it ships in is not.
 
 Given the version about to be cut, this reads the release each message names out
-of the tree's own message text and the shared minimum publishable release
-(§FS-distribution.release-floor), and exits 1 when either disagrees.
+of the tree's own message text, the shared minimum publishable release
+(§FS-distribution.release-floor), and the deprecation ledger's notice statuses.
+It exits 1 when any of these disagrees.
 """
 
 from __future__ import annotations
@@ -18,6 +19,9 @@ import re
 import sys
 from pathlib import Path
 from typing import Iterable, NamedTuple, Sequence
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from deprecation_ledger import notice_problems
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -196,10 +200,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     # §FS-distribution.release-floor: manifest rewrites cannot lower the tree's floor.
     try:
         shared_floor = read_release_floor(args.root)
+        # §FS-distribution.4.2.2: candidate CI's due-notice refusal runs before construction.
+        ledger_problems = notice_problems(args.root, args.release)
     except (OSError, ValueError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
     lines = report(scan_tree(args.root), args.release, shared_floor)
+    lines.extend(ledger_problems)
     if lines:
         print("\n".join(lines), file=sys.stderr)
         return 1
