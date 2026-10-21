@@ -257,7 +257,7 @@ path = "docs/functional-spec/FS-check.md"
 match = "exact"
 rules = ["large-file-default"]
 kind = "deferred"
-max_accepted = { value = 275698, unit = "bytes" }
+max_accepted = { value = 281327, unit = "bytes" }
 until = "the finding catalog moves into independently declared child specifications and existing FS-check section citations are migrated"
 reason = """
 The check specification still combines recognition, reporting, its finding catalog and watch behavior in one declaration. Issue #823 adds only a cross-reference to the defining member diagnostic point in FS-workspace.5.1.1. Missing boundary: independent finding specifications with a stable mapping for current FS-check section citations; moving that catalog is outside this specification-only diagnostic change. This byte ceiling accepts only the current measured file size, separately from the existing line-budget exception.
@@ -265,4 +265,6 @@ The check specification still combines recognition, reporting, its finding catal
 Issue #842 extends the existing forbidden-citation point with index-specific repair advice and its authority boundaries. Moving the finding catalog and migrating stable section citations remains outside this specification/test step. The ceiling is reconciled to the measured 267799 bytes, with no growth allowance.
 
 Issue #829 has a narrowed check say when what it selected judged nothing: the selected-check-off line and the switches that arm it, inside the existing selection point §FS-check.1.4.1, and a rule's empty obligation beside the table's at §FS-check.2.2.1.4. Main had already reached 268844 bytes past the 267799 ceiling, and #829 takes the file to 274764. Moving the finding catalog into child specifications still retires this debt, and that migration is outside a diagnostic change. Review round 2 of #829 adds one sentence to §FS-check.1.4.1: a cell that needs two things, such as missing-snapshot's fetch and should resolution, is armed only where both hold, and its fix round names the two other cells of that shape, empty-citation-obligation's folder home and the place ungrounded reaches. The ceiling accepts the measured 275698 bytes, with no growth allowance.
+
+Issue #909 specifies the explanatory append at §FS-check.4.1.2. The file already measured 280149 bytes on arrival; this point takes it to 281327. The missing boundary and retirement condition above remain: a mapped migration of the finding catalog into independent declarations, preserving old section addresses as pointers while callers migrate. That cross-family specification refactor is outside this explanation-only contract. The byte ceiling is reconciled to the current measured 281327 bytes, with no growth allowance.
 """

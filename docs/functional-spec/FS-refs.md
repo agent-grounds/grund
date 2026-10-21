@@ -183,6 +183,12 @@ docs/functional-spec/FS-show.md:11: §FS-check.1
 
 `<message>` is the citation token exactly as it appears in the source — marker-prefixed or bare, with its section suffix — so the reader sees the form on disk. Exit `0` whenever the scan succeeds and the operand is not refused, regardless of how many citations were found; a refused operand exits `1` ([§FS-refs.4](FS-refs.md#4-exit-codes)).
 
+#### 3.1.1 Label the excluded index sites
+
+Append an `index entry` annotation to each text citation row whose exact site is excluded from use by [§FS-check.4.1.2](FS-check.md#412-an-index-entry-does-not-count). Preserve the complete existing `<path>:<line>: <token>` row as a contiguous prefix, with one row per site in the existing order. Label excluded sites even when the ID also has ordinary uses. A section citation, a recognized value binding (including a whole-root binding), or an ordinary citation beside an external canonical enrollment is labeled only if that exact site is excluded under that rule; the index filename alone cannot decide it.
+
+This rendering applies wherever text `refs` lists these sites, including `--glob` and `--from`; it changes neither the selected citation set nor JSON records, public record fields, flags, defaults, counts or exit codes. Together with [§FS-check.4.1.2](FS-check.md#412-an-index-entry-does-not-count), it explains why an index-only ID can be both listed here and reported unused.
+
 ### 3.2 `--format json`
 
 NDJSON on stdout — one object per citation, in the record shape of [§FS-output-shapes.5.1](FS-output-shapes.md#51-refs---formatjson), which carries the verbatim token and the optional target-kind metadata. These examples select a kind without an effective title:
@@ -233,6 +239,12 @@ docs/functional-spec/FS-show.md: 3 (lines 11, 142, 200)
 ```
 
 The shape is `<path>: <count> (lines <l1>, <l2>, …)`. The count is the number of sites from exactly the citation set [§FS-refs.3.1](FS-refs.md#31---format-text-default) lists, so `--summary` honours `[reference] strict`, the string-literal carve-out, and doc-comment citations the same way; the line list is the sorted, de-duplicated set of source lines holding them, so two citations on line 10 read `path: 2 (line 10)`. `grund refs <ID> --summary | wc -l` is then the number of files that lean on `<ID>`, while the line list still points an editor at every line with a site. With `--section`, the aggregate is over that section's citations only; with `--descendants` ([§FS-refs.1](FS-refs.md#1-inputs)) it is over the subtree, because `--summary` folds over whatever set [§FS-refs.3.1](FS-refs.md#31---format-text-default) lists rather than over a set of its own. A file carrying citations of three different sections beneath the requested one is therefore **one** line, with the count of all its sites and one de-duplicated line list — there is no grouping by section and no per-section breakdown. No citations prints nothing, with exit `0` and the [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations) `note:` unaffected. With `--format json`: NDJSON, one object per file, `{"path":<path>,"count":<n>,"lines":[<unique l1>,<unique l2>,…]}`, in the same order; without `--summary` it is the per-citation form of [§FS-refs.3.2](FS-refs.md#32---format-json). Summary objects omit `kind_title`, including for a titled target kind. Exit codes ([§FS-refs.4](FS-refs.md#4-exit-codes)) are unchanged — `--summary` renders the same scan result, not a different query.
+
+#### 3.3.1 Identify the excluded sites within a summary
+
+A text summary row containing excluded index sites appends an `index entry` annotation identifying their source lines. Preserve the entire existing `<path>: <count> (lines <l1>, <l2>, …)` prefix (including singular `line`), its count and sorted line list, and keep one row per file. Identify excluded lines in sorted order; if an excluded site and an ordinary use share a line, distinguish the excluded site by column as well. A mixed file's annotation must not imply that its ordinary uses are excluded. Rows without excluded sites stay unchanged.
+
+The exclusion is exactly [§FS-check.4.1.2](FS-check.md#412-an-index-entry-does-not-count)'s, as for individual rows ([§FS-refs.3.1.1](FS-refs.md#311-label-the-excluded-index-sites)). The annotation applies to summaries in every text `refs` mode. JSON summary objects retain their fields and values without display annotations; totals and citation membership are unchanged.
 
 ### 3.4 `--total`
 
