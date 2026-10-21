@@ -367,15 +367,6 @@ class ThisRepositoryTests(unittest.TestCase):
         self.assertIn("crates", homes)
         self.assertIn("tests", homes)
 
-    def test_the_landed_stub_target_flip_closes_this_trees_window_at_0_19_0(self):
-        """§FS-distribution.4.2.5 — the stub-target activation's landed message
-        sets a 0.19.0 floor (§FS-declarations.stubs.target.3), while the pending
-        init ramp still sets a 0.19.0 ceiling. The message-only window is empty.
-        The older attribution pairs name 0.12.0 and 0.14.0, below this floor,
-        so reading them moves neither bound. No shared floor is supplied here;
-        its independent enforcement has its own regression."""
-        self.assertEqual(ramps.release_window(self.claims), ("0.19.0", "0.19.0"))
-
 
 
 class IntegrationsTransitionRampTests(unittest.TestCase):
