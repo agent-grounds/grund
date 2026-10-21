@@ -54,6 +54,20 @@ def canonical(value):
     return (encode(value) + "\n").encode()
 
 
+def checked(argv, cwd=REPO, env=None, input=None):
+    """Run one step with its output captured, failing with that output (§AR-bindings.6.2.2).
+
+    A non-zero exit raises an AssertionError whose own text carries the command, its exit
+    status, its stdout and its stderr, so a failed step is diagnosable from the job log.
+    """
+    args = [str(arg) for arg in argv]
+    result = subprocess.run(args, cwd=cwd, env=env, input=input, capture_output=True, text=True)
+    if result.returncode:
+        raise AssertionError(f"command failed ({result.returncode}): {' '.join(args)}\n"
+                             f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}")
+    return result
+
+
 def rust_call(operation, root, args=(), options=None, home=None):
     # §AR-bindings.6.2: the gate's same-source oracle when it hands one, else the checkout's.
     oracle = Path(os.environ.get("GRUND_BINDINGS_ORACLE") or REPO / "target/debug/grund-binding-oracle")
@@ -64,8 +78,7 @@ def rust_call(operation, root, args=(), options=None, home=None):
                              "implement the tests/bindings/README.md protocol")
     request = {"operation": operation, "root": str(root), "args": list(args),
                "options": options or {}, "home": str(home) if home else None}
-    run = subprocess.run([str(oracle)], input=json.dumps(request), text=True,
-                         capture_output=True, check=True, cwd=REPO)
+    run = checked([oracle], input=json.dumps(request))
     if run.stderr:
         raise AssertionError(f"oracle wrote stderr: {run.stderr}")
     response = json.loads(run.stdout)
