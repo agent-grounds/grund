@@ -257,10 +257,9 @@ pub(crate) fn expand_workspace_tree_with_report_base(
     report_base: &Path,
 ) -> Result<Vec<WorkspaceProjectEntry>> {
     let mut entries = expand_workspace_projects(root_config, report_base)?;
-    // §AR-config.1.5: the run's one reading of every project's kinds, made here
-    // because this is the first point that holds them all, and the pinned
-    // `[citations]` targets judged against it once (§AR-workspace.5.2,
-    // §FS-config.3.9.5.2): the first one the run cannot accept fails the load.
+    // §AR-config.1.5: the run's one reading of every project's kinds, made here as the
+    // first point that holds them all, and the pinned `[citations]` targets judged
+    // against it once (§AR-workspace.5.2, §FS-config.3.9.5.2).
     install_kind_table(
         root_config,
         entries

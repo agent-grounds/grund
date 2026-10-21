@@ -288,9 +288,10 @@ impl KindTable {
     }
 
     /// §FS-errors.3.8.1: `legacy`, the refusal a surface gives a name `scope`
-    /// does not configure, or, where the name is the complement `code` that has
-    /// no row, §FS-errors.2.5.1's reason in `quote`'s spelling in its place
-    /// (§FS-list.1.1, [`KindEntry::non_citable_reason`]).
+    /// does not configure, or, where `scope` configures the name without IDs —
+    /// the complement `code` with no row included — §FS-errors.2.5.1's reason in
+    /// `quote`'s spelling in its place (§FS-list.1.1,
+    /// [`KindEntry::non_citable_reason`]).
     pub(crate) fn unknown_or_complement(
         &self,
         scope: KindScope<'_>,

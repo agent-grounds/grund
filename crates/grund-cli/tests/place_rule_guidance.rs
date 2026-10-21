@@ -271,7 +271,7 @@ fn place_hint_preserves_other_surfaces_and_refusal_precedence() {
         for (args, prefix) in [
             (
                 vec!["list", "--selector", "e2e"],
-                "error: literal subject \"e2e\" does not match the configured ID grammar",
+                "error: kind \"e2e\" declares no IDs — tests/e2e/ is not a citable home",
             ),
             (
                 vec![
@@ -280,7 +280,7 @@ fn place_hint_preserves_other_surfaces_and_refusal_precedence() {
                     "Each FS must cite at least one e2e.",
                     "--only-rule",
                 ],
-                "error: unknown kind \"e2e\"",
+                "error: kind \"e2e\" declares no IDs — tests/e2e/ is not a citable home",
             ),
         ] {
             let output = repo.run(&args);
