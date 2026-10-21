@@ -118,7 +118,7 @@ def run(mode, evidence):
             raise ValueError(mode)
         suite = unittest.TestSuite([test_boundary.BoundaryTests(
             "test_pending_interrupt_is_delivered_when_operation_returns")])
-        with patch.object(test_boundary.subprocess, "Popen",
+        with patch.object(subprocess, "Popen",
                           instrument if mode in ("held", "scheduled") else original_popen):
             result = unittest.TextTestRunner(verbosity=2).run(suite)
         return int(not result.wasSuccessful())
