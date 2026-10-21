@@ -178,10 +178,11 @@ class CitationsMoveTests(unittest.TestCase):
                 self.assertIn(_flat(fragment), _flat(declared.get(chapter, "")),
                               f"FS-citations.{chapter} does not hold the moved sentence")
 
-    def test_the_rewrite_exemption_names_exactly_three_zones(self):
+    def test_the_rewrite_exemption_names_exactly_four_zones(self):
+        # The fourth, a reference key or an HTML tag, joined by name (grund#839).
         body = self.citations().get("rewrite-exemption", "")
         flat = _flat(body)
-        for zone in ("inline code", "link destination", "string literal", "three"):
+        for zone in ("inline code", "link destination", "reference key", "string literal", "four"):
             self.assertIn(zone, flat, f"the exemption does not name {zone}")
         self.assertIn(_flat("A suppressed scope and an external file-symlink target are not among them"), flat)
         self.assertIsNone(_cites(body, "zones"), "the exemption cites the whole zones chapter")

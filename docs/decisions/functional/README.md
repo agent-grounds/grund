@@ -50,6 +50,7 @@ The rendered view of a citation — `[§ID](path#anchor)` — and who owns it.
 - [§DF-fmt-never-writes-into-a-link-destination](DF-fmt-never-writes-into-a-link-destination.md#df-fmt-never-writes-into-a-link-destination-fmt-never-writes-into-a-link-destination-it-does-not-maintain) — `fmt` never writes into a link destination it does not maintain
 - [§DF-fmt-and-editor-answers-from-0-19](DF-fmt-and-editor-answers-from-0-19.md#df-fmt-and-editor-answers-from-0-19-fmts-link-wrapper-and-the-editors-title-span-change-in-0190-after-a-release-that-announces-them) — `fmt`'s link wrapper and the editor's title span change in 0.19.0, after a release that announces them
 - [§DF-fmt-preserves-authored-link-labels](DF-fmt-preserves-authored-link-labels.md#df-fmt-preserves-authored-link-labels-fmt-leaves-a-citation-in-a-link-its-author-wrote-and-check-takes-that-link-as-the-index-entry) — `fmt` leaves a citation in a link its author wrote, and `check` takes that link as the index entry
+- [§DF-fmt-preserves-authored-markup](DF-fmt-preserves-authored-markup.md#df-fmt-preserves-authored-markup-fmt-leaves-a-citation-in-every-link-form-its-author-wrote-and-in-an-image-and-check-credits-only-the-ones-that-go-somewhere) — `fmt` leaves a citation in every link form its author wrote, and in an image, and `check` credits only the ones that go somewhere
 
 ## The index a folder kind keeps
 

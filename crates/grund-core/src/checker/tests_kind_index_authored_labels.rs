@@ -230,16 +230,39 @@ fn an_image_is_never_an_entry() {
     assert!(has(&run, "unlinked-index-entry"), "{:?}", findings(&run));
 }
 
-/// §FS-citations.wrap.enclosing.images: a citation that is an image's whole
-/// description passes the wrap test and is still read as a wrap, an entry, until
-/// the later change §FS-citations.wrap.enclosing.scope names.
+/// §FS-citations.checks.image-index-entry: a citation that is an image's whole
+/// description is no link to the declaration (§FS-citations.wrap.enclosing.images),
+/// but for one release it keeps the credit it had, and `check` warns where that
+/// credit is all the index holds for the ID, naming the link to write beside it.
 #[test]
-fn a_citation_only_image_is_still_read_as_a_wrap() {
+#[ignore = "red until #839 warns on a citation-only image entry; implement removes this"]
+fn a_citation_only_image_keeps_its_credit_for_one_release_and_warns() {
     let run = checked_index(
-        "a_citation_only_image_is_still_read_as_a_wrap",
+        "a_citation_only_image_keeps_its_credit_for_one_release_and_warns",
         "# Specs\n\n- ![§FS-001-login](diagram.png)\n",
     );
-    assert_entry(&run, "the citation-only image is read as a wrap, as before");
+    assert_entry(
+        &run,
+        "the citation-only image keeps its credit for one release",
+    );
+    assert!(
+        has(&run, "image-index-entry"),
+        "the image is the ID's only entry, so the retirement is announced: {:?}",
+        findings(&run)
+    );
+}
+
+/// §FS-citations.checks.image-index-entry: an image beside another entry for the
+/// same ID draws no warning, because retiring its credit changes nothing there.
+#[test]
+fn a_citation_only_image_beside_an_entry_draws_no_warning() {
+    let run = checked_index(
+        "a_citation_only_image_beside_an_entry_draws_no_warning",
+        "# Specs\n\n- ![§FS-001-login](diagram.png)\n\
+         - [§FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in): A user logs in\n",
+    );
+    assert_entry(&run, "the wrap is the entry");
+    assert!(!has(&run, "image-index-entry"), "{:?}", findings(&run));
 }
 
 /// §FS-citations.wrap.enclosing.wrap-wins: on a line an older `fmt` nested, the
