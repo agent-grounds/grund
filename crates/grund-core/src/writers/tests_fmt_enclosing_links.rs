@@ -171,7 +171,6 @@ fn an_already_nested_line_rederives_only_its_inner_wrap() {
 /// A `[` that nothing closes before its paragraph ends opens no link, so the bare
 /// citation after it is still wrapped (§FS-citations.wrap.enclosing.shape).
 #[test]
-#[ignore = "red until #839 reads every link form as enclosing; implement removes this"]
 fn every_link_form_the_scope_lists_keeps_its_bytes() {
     let (config, findings) = project("every_link_form_the_scope_lists_keeps_its_bytes");
     for line in [

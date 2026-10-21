@@ -85,12 +85,23 @@ and ID. They use your document's member config. A complete loaded alias plus
 project ([§FS-lsp.1.6.2](../functional-spec/FS-lsp.md#162-candidates-resolution-and-ordering)).
 
 Completion follows the formatter's protected contexts: no choices in inline
-code, link destinations, fences, declaration headings, source strings (a
+code, link destinations, reference keys, raw HTML tags, fences, declaration
+headings, source strings (a
 string that spans lines included),
 `grund:fmt off` regions, excluded or unscanned files, or outward file symlinks.
 Source comments and Python docstrings are eligible. A nonempty typing trigger
 works even with an empty marker; bare IDs never start completion
 ([§FS-lsp.1.6.1](../functional-spec/FS-lsp.md#161-eligibility-exclusions-and-triggering)).
+
+Live `$$` to `§` formatting writes nothing where `grund fmt` writes nothing,
+and that includes a reference key: in `[the $$FS-lsp record][]` above
+`[the $$FS-lsp record]: fs-lsp.md`, both spellings are one key, so neither is
+converted, while the visible text of `[the $$FS-lsp rationale][pg]` is
+([§FS-lsp.1.4](../functional-spec/FS-lsp.md#14-live-trigger-transform), [§FS-citations.zones.authored-markup](../functional-spec/FS-citations.md#zonesauthored-markup-a-reference-key-and-an-html-tag-keep-their-bytes)).
+Hover links a bare citation in the previewed body and leaves every link its
+author wrote, a reference, an autolink, an HTML anchor and a citation-only
+image as they are, as `grund fmt` leaves them
+([§FS-lsp.1.2.1](../functional-spec/FS-lsp.md#121-citation-preview)).
 
 The server advertises the final character of each initially loaded project's
 marker and trigger, including multi-character introducers. Continued typing may

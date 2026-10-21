@@ -235,7 +235,6 @@ fn an_image_is_never_an_entry() {
 /// but for one release it keeps the credit it had, and `check` warns where that
 /// credit is all the index holds for the ID, naming the link to write beside it.
 #[test]
-#[ignore = "red until #839 warns on a citation-only image entry; implement removes this"]
 fn a_citation_only_image_keeps_its_credit_for_one_release_and_warns() {
     let run = checked_index(
         "a_citation_only_image_keeps_its_credit_for_one_release_and_warns",

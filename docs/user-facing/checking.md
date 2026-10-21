@@ -85,6 +85,21 @@ directory that is no project's root, writes no lock, and a member's own run
 writes none for a citation into a sibling
 ([§FS-section-lock.checks.remedy](../functional-spec/FS-section-lock.md#checksremedy-the-run-that-writes-the-lock)).
 
+In a kind's index, an entry is a link that goes somewhere: the one `fmt`
+writes, an inline link whose text holds the citation, or a reference whose key a
+definition matches. A citation that is an image's whole description,
+`- ![§ADR-use-redis](cache.png)`, is no link to the declaration; grund 0.19.0
+still takes it as the entry and warns where it is all the index holds for the
+ID, and grund 0.20.0 stops taking it
+([§FS-citations.checks.image-index-entry](../functional-spec/FS-citations.md#checksimage-index-entry-a-citation-only-image-is-an-index-entry-for-one-more-release)):
+
+```text
+docs/adr/README.md:2: warning: index entry §ADR-use-redis is an image, not a link; write `[§ADR-use-redis](use-redis.md#adr-use-redis-use-redis-for-the-cache)` in docs/adr/README.md — this warning becomes an error in grund 0.20.0
+```
+
+The warning does not change the exit code. Write the named line beside the
+image; whether the index keeps the image as well is yours to choose.
+
 A passing text check prints `success` and exits 0. Findings go to stdout as
 `<path>:<line>: error: <message>`, `warning:`, or opt-in `suggestion:` lines:
 errors come first, then warnings and suggestions, while the location remains the

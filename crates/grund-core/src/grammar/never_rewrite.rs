@@ -1,3 +1,4 @@
+use super::markdown_links::LineLinks;
 use super::multi_line_string::MultiLineStrings;
 use super::source_line::{PythonDocstringScanState, SourceScanLine, source_scan_line};
 
@@ -19,9 +20,19 @@ use super::source_line::{PythonDocstringScanState, SourceScanLine, source_scan_l
 /// asked through its line view, `never_rewrite_context_in`, because whether a
 /// column is inside a string depends on the lines above it
 /// (§FS-languages.multi-line-string).
-pub(crate) fn markdown_never_rewrite_context(line: &str, marker_start: usize) -> bool {
+///
+/// `links` places the line in its document, which the zones of
+/// §FS-citations.zones.authored-markup and the destinations of
+/// §FS-citations.zones.link-destination other than the inline one are read in: a
+/// reference key, a raw HTML tag, an autolink, and a definition's destination.
+pub(crate) fn markdown_never_rewrite_context(
+    links: LineLinks<'_>,
+    line: &str,
+    marker_start: usize,
+) -> bool {
     is_inside_inline_code(line, marker_start)
         || is_inside_markdown_link_destination(line, marker_start)
+        || links.scan(line).in_zone(marker_start)
 }
 
 /// Where a Python docstring's **content** and any assigned-data span sit on one
@@ -110,8 +121,12 @@ impl<'a> DocstringContent<'a> {
 /// describes, at the raw-line offset `marker_start` (§FS-fmt.2.3.1.1). Every surface
 /// that asks "may `fmt` rewrite here?" goes through this, so all three reach one
 /// verdict per site.
+///
+/// `links` places a Markdown line in its document (§FS-citations.zones); a source
+/// line ignores it.
 pub(crate) fn never_rewrite_context_in(
     docstring: DocstringContent<'_>,
+    links: LineLinks<'_>,
     line: &str,
     is_md: bool,
     marker_start: usize,
@@ -121,7 +136,7 @@ pub(crate) fn never_rewrite_context_in(
     }
     let (text, entry, pos) = docstring.view(line, marker_start);
     if is_md {
-        markdown_never_rewrite_context(text, pos)
+        markdown_never_rewrite_context(links, text, pos)
     } else {
         is_inside_string_literal(text, entry, pos)
     }

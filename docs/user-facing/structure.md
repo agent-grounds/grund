@@ -278,7 +278,7 @@ writes, and `grund check` holds it to the rule after.
 | Sections | numbered `## 1. …` or named `## terms: Terms` headings ([§FS-declarations.section](../functional-spec/FS-declarations.md#section-what-a-section-is)) | child coordinates `<ID>.<path>`, and their `contains` rows | `section-heading-level`, `duplicate-section`, `section-outside-declaration`, `orphan-section`, `unmarked-heading` |
 | Inline declarations and stubs | a declaration line in a doc-comment, or a stub heading whose title is one link | a node whose body lives in source | `broken-stub`, `stub-shape` |
 | Declaration bodies | a body with no merge conflict left in it ([§FS-declarations.body.conflict](../functional-spec/FS-declarations.md#bodyconflict-a-body-still-in-the-middle-of-a-merge)) | each node has one text, so a citation and a section-lock fingerprint each read one | `conflict-marker` |
-| Kind index | a folder kind's `README.md` ([§FS-check.3.18](../functional-spec/FS-check.md#318-declaration-missing-from-its-kinds-index)) | every node of the kind is listed there, as a link: the one `fmt` writes, or one you wrote whose text holds the citation ([§FS-check.3.18.5](../functional-spec/FS-check.md#3185-what-an-entry-is)) | `missing-index-entry`, `unlinked-index-entry` |
+| Kind index | a folder kind's `README.md` ([§FS-check.3.18](../functional-spec/FS-check.md#318-declaration-missing-from-its-kinds-index)) | every node of the kind is listed there, as a link: the one `fmt` writes, or one you wrote whose text holds the citation ([§FS-check.3.18.5](../functional-spec/FS-check.md#3185-what-an-entry-is)) | `missing-index-entry`, `unlinked-index-entry`, `image-index-entry` |
 | Fields *(config v2)* | `fields` on a kind ([guide](fields.md), [§FS-fields](../functional-spec/FS-fields.md#fs-fields-a-v2-kind-states-the-shape-of-its-declarations-and-check-holds-every-declaration-to-it)) | which chapters each node carries, in what order, with what values | `missing-field`, `mistitled-field`, `misplaced-field`, `invalid-field-value`, `undeclared-chapter` |
 | Values | a numbered component in an opted-in kind ([guide](values.md), [§FS-values](../functional-spec/FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)) | one node is the source of a value, and every use is compared with it | `invalid-value-declaration`, `invalid-value-binding`, `value-mismatch` |
 | Lead size *(opt-in)* | `[reference] lead_size_warning` ([guide](coordinate-sizes.md)) | what a default `grund <ID>` read costs | `oversized-lead` |
@@ -342,11 +342,19 @@ catalog lists every finding code, its severity, and the setting that turns it on
   See [the §FS-login.3 timeout rule](../functional-spec/FS-login.md).
   ```
 
-  Only an inline link written on one line counts for now, and an image's
-  description never does ([§FS-citations.wrap.enclosing.scope](../functional-spec/FS-citations.md#wrapenclosingscope-every-form-a-link-is-written-in)). A
-  line an older `grund` already nested, `[[§…](…): title](…)`, keeps its inner
-  link and is left as it stands: search for `[[§` to find one, and take the
-  outer brackets out by hand ([§DF-fmt-preserves-authored-link-labels](../decisions/functional/DF-fmt-preserves-authored-link-labels.md#df-fmt-preserves-authored-link-labels-fmt-leaves-a-citation-in-a-link-its-author-wrote-and-check-takes-that-link-as-the-index-entry)).
+  Every form a link is written in counts: an inline link whose text runs onto
+  the next line of its paragraph, a reference link `[text][key]`, a collapsed
+  `[text][]` or shortcut `[text]` reference, a definition `[key]: url`, an
+  autolink `<https://…>` and a raw HTML `<a>` element ([§FS-citations.wrap.enclosing.scope](../functional-spec/FS-citations.md#wrapenclosingscope-every-form-a-link-is-written-in)).
+  A reference key, and every byte of a raw HTML tag, is yours too: no pass writes
+  into one, so a collapsed reference and its definition keep spelling the same
+  key ([§FS-citations.zones.authored-markup](../functional-spec/FS-citations.md#zonesauthored-markup-a-reference-key-and-an-html-tag-keep-their-bytes)). A citation that is an image's whole
+  description, `![<§>FS-login](diagram.png)`, keeps its destination; one in a
+  longer description is wrapped as prose is ([§FS-citations.wrap.enclosing.images](../functional-spec/FS-citations.md#wrapenclosingimages-an-image-is-not-a-link)).
+  The [authored-citations example](../../examples/authored-citations/) shows each
+  form. A line an older `grund` already nested, `[[§…](…): title](…)`, keeps
+  its inner link and is left as it stands: search for `[[§` to find one, and
+  take the outer brackets out by hand ([§DF-fmt-preserves-authored-markup](../decisions/functional/DF-fmt-preserves-authored-markup.md#df-fmt-preserves-authored-markup-fmt-leaves-a-citation-in-every-link-form-its-author-wrote-and-in-an-image-and-check-credits-only-the-ones-that-go-somewhere)).
 
 - **Typing and expanding.** `$$` becomes `§`, and a persisted number-only
   shorthand is expanded to the full ID.

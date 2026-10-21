@@ -7,6 +7,7 @@ use std::path::Path;
 use super::fmt_links::wrap_markdown_links_with_targets;
 use super::fmt_rewrite::FmtLineOpts;
 use crate::config::Config;
+use crate::grammar::LineLinks;
 
 /// One line of a suppressed scope (§FS-fmt.2.5): an excluded file, or a
 /// `grund:fmt off` region. Every rewrite is off here — the trigger, the marker
@@ -22,6 +23,7 @@ use crate::config::Config;
 /// case and returns the line untouched.
 pub(super) fn suppressed_line(
     line: &str,
+    links: LineLinks<'_>,
     path: &Path,
     config: &Config,
     is_md: bool,
@@ -36,6 +38,7 @@ pub(super) fn suppressed_line(
     };
     let wrapped = wrap_markdown_links_with_targets(
         line,
+        links,
         path,
         config,
         findings,

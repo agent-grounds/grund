@@ -3,9 +3,8 @@ use std::path::Path;
 
 use crate::config::{Config, fmt_excluded};
 use crate::grammar::{
-    DocstringContent, DocstringCursor, FmtDirectives, MarkdownBlocks, MarkdownLine,
-    MultiLineStrings, id_token_end_at, is_inside_inline_code, is_inside_markdown_link_destination,
-    never_rewrite_context_in, string_literal_in,
+    DocstringContent, DocstringCursor, FmtDirectives, LineLinks, MarkdownBlocks, MarkdownLine,
+    MarkdownLinks, MultiLineStrings, id_token_end_at, never_rewrite_context_in, string_literal_in,
 };
 use crate::scanner::DeclarationLines;
 use crate::sources::canonical_snapshot_path;
@@ -40,6 +39,7 @@ pub fn can_replace_trigger_at(
     Ok(can_replace_trigger_with_config(
         &config,
         DocstringContent::default(),
+        LineLinks::default(),
         path,
         line,
         trigger_start,
@@ -54,10 +54,12 @@ pub fn can_replace_trigger_at(
 /// multi-line string literal an earlier line opened either
 /// (§FS-languages.multi-line-string), so it reads an interior line of one as
 /// code. `on_type_line_edits`, which is handed the document, passes the real view
-/// and agrees with `grund fmt`.
+/// and agrees with `grund fmt`, and so does the line's place in the document's links
+/// (`links`), which a reference key spanning lines is read in (§FS-citations.zones).
 fn can_replace_trigger_with_config(
     config: &Config,
     docstring: DocstringContent<'_>,
+    links: LineLinks<'_>,
     path: &Path,
     line: &str,
     trigger_start: usize,
@@ -72,9 +74,10 @@ fn can_replace_trigger_with_config(
         return false;
     }
     // §FS-config-v2.schema.sources: the file is read as `grund fmt` reads it.
+    // §FS-lsp.1.4: every zone of §FS-citations.zones the bulk pass refuses, a
+    // reference key and an HTML tag included.
     if config.reading(path).markdown {
-        !is_inside_inline_code(line, trigger_start)
-            && !is_inside_markdown_link_destination(line, trigger_start)
+        !never_rewrite_context_in(docstring, links, line, true, trigger_start)
     } else {
         !string_literal_in(docstring, line, trigger_start)
     }
@@ -320,7 +323,16 @@ fn trigger_marker_edit(
     // §FS-fmt.2.3.1.1: the docstring walk runs only here, past the two tests that
     // reject every ordinary keystroke (§GOAL-fast-feedback).
     let docstring = docstring_content_at(config, path, text, line_index);
-    if !can_replace_trigger_with_config(config, docstring, path, line, trigger_start, token) {
+    let links = MarkdownLinks::new(text);
+    if !can_replace_trigger_with_config(
+        config,
+        docstring,
+        links.line(line_index),
+        path,
+        line,
+        trigger_start,
+        token,
+    ) {
         return None;
     }
     Some(LineEdit {
@@ -367,7 +379,8 @@ fn shorthand_expansion_edit(
     // code stays as typed and so does one in a scope the repository suppressed.
     let is_md = config.reading(path).markdown;
     let docstring = docstring_content_at(config, path, text, line_index);
-    if never_rewrite_context_in(docstring, line, is_md, marker_start)
+    let links = MarkdownLinks::new(text);
+    if never_rewrite_context_in(docstring, links.line(line_index), line, is_md, marker_start)
         || file_is_fmt_excluded(config, path)
         || !line_is_rewritable(config, path, text, line_index)
     {

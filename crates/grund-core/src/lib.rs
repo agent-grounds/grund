@@ -180,9 +180,9 @@ pub use queries::{
     DeclaredId, LineEdit, LspCitation, LspCompletionContext, LspDeclaration, LspFindingRange,
     LspShowContext, LspSnapshot, LspSnapshotOpts, LspSnapshotWithCompletion,
     LspSnapshotWithMetadata, LspStub, LspUsage, can_replace_trigger_at, citation_under_title,
-    cites_clause, list_sizes_with_run_warnings, lsp_hover_with_kind_title, lsp_title_hover_body,
-    on_type_line_edits, show_batch_with_globs, show_batch_with_scope, usage_clause,
-    usage_over_paths,
+    cites_clause, link_hover_citations, list_sizes_with_run_warnings, lsp_hover_with_kind_title,
+    lsp_title_hover_body, on_type_line_edits, show_batch_with_globs, show_batch_with_scope,
+    usage_clause, usage_over_paths,
 };
 pub use queries::{
     ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput, ShowFormat, ShowMode,

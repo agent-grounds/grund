@@ -18,6 +18,7 @@ use crate::model::{
 pub(super) fn scanned_citation_rewritable(line: &CitationLine<'_>, marker_start: usize) -> bool {
     !never_rewrite_context_in(
         line.docstring,
+        line.links,
         line.raw_line,
         line.is_md,
         line.column_offset + marker_start,

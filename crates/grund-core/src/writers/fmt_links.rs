@@ -19,8 +19,8 @@ use super::fmt_shorthand_links::{accepted_shorthand_link, collect_local_accepted
 use super::fmt_value_bindings::markdown_citation_is_value_binding;
 use crate::config::Config;
 use crate::grammar::{
-    CandidateReading, CitationLink, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, citation_link,
-    markdown_never_rewrite_context, parse_id, parse_longest_id_prefix,
+    CandidateReading, CitationLink, LineLinks, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX,
+    citation_link, markdown_never_rewrite_context, parse_id, parse_longest_id_prefix,
 };
 use crate::model::{Catalog, Id};
 use crate::resolver::{
@@ -53,16 +53,27 @@ pub(crate) fn wrap_markdown_links(
     let targets = ShorthandTargets::new(config.frame(), Some(findings), workspace);
     let settled = SettledHeadings::default();
     wrap_markdown_links_with_targets(
-        line, path, config, findings, workspace, only_ids, &targets, &settled,
+        line,
+        LineLinks::default(),
+        path,
+        config,
+        findings,
+        workspace,
+        only_ids,
+        &targets,
+        &settled,
     )
 }
 
 /// The production §FS-fmt.6 wrapper pass, sharing §FS-fmt.2.4.5's already-built
 /// target indexes so accepted shorthand adds no per-citation catalog scan. Every
 /// anchor names its heading as `settled` says the run leaves it (§FS-fmt.6.3.3).
+/// `links` places the line in its file, which the reading of §FS-citations.wrap
+/// is of.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn wrap_markdown_links_with_targets(
     line: &str,
+    links: LineLinks<'_>,
     path: &Path,
     config: &Config,
     findings: &Catalog,
@@ -74,7 +85,9 @@ pub(super) fn wrap_markdown_links_with_targets(
     let mut output = String::new();
     let mut cursor = 0;
     let mut binding_end = 0;
-    for citation in markdown_link_citations(line, config, findings, workspace, shorthand_targets) {
+    for citation in
+        markdown_link_citations(line, links, config, findings, workspace, shorthand_targets)
+    {
         if citation.marker_start < cursor.max(binding_end) {
             continue;
         }
@@ -93,11 +106,11 @@ pub(super) fn wrap_markdown_links_with_targets(
             binding_end = citation.token_end;
             continue;
         }
-        // §FS-fmt.6.4, §FS-citations.wrap.enclosing: a citation in a link its author
-        // wrote is left with that link, in an index as anywhere, before any target is
-        // derived; a wrap there would be a link inside a link.
-        let reading = citation_link(line, citation.marker_start, citation.token_end);
-        if let CitationLink::Enclosing { .. } = reading {
+        // §FS-fmt.6.4, §FS-citations.wrap.enclosing: an authored link of any form is
+        // left, in an index as anywhere, before any target is derived; an image keeps
+        // its destination (§FS-citations.wrap.enclosing.images).
+        let reading = citation_link(links, line, citation.marker_start, citation.token_end);
+        if let CitationLink::Enclosing { .. } | CitationLink::Image(_) = reading {
             continue;
         }
         // §FS-workspace.8.5: a qualified `§<alias>/<ID>` resolves against the
@@ -159,6 +172,7 @@ pub(super) fn wrap_markdown_links_with_targets(
 
 fn markdown_link_citations(
     line: &str,
+    links: LineLinks<'_>,
     config: &Config,
     findings: &Catalog,
     workspace: Option<&WorkspaceContext>,
@@ -168,6 +182,7 @@ fn markdown_link_citations(
     if let Some(workspace) = workspace {
         collect_workspace_markdown_link_citations(
             line,
+            links,
             config,
             workspace,
             shorthand_targets,
@@ -199,8 +214,9 @@ fn markdown_link_citations(
             continue;
         }
         // §FS-fmt.6.4: inline code and every destination the line holds, read
-        // with the one extent every other pass reads.
-        if markdown_never_rewrite_context(line, marker_start) {
+        // with the one extent every other pass reads, and the zones of
+        // §FS-citations.zones.authored-markup.
+        if markdown_never_rewrite_context(links, line, marker_start) {
             continue;
         }
         let Some(id) = parse_id(&caps, &config.grammar) else {
@@ -216,12 +232,14 @@ fn markdown_link_citations(
     }
     collect_local_accepted_shorthand_links(
         line,
+        links,
         config,
         shorthand_targets.local.as_ref(),
         &mut citations,
     );
     collect_local_legacy_markdown_citations(
         line,
+        links,
         config.schema(),
         config.frame(),
         findings,
@@ -237,6 +255,7 @@ fn markdown_link_citations(
 
 fn collect_workspace_markdown_link_citations(
     line: &str,
+    links: LineLinks<'_>,
     config: &Config,
     workspace: &WorkspaceContext,
     shorthand_targets: &ShorthandTargets<'_>,
@@ -246,7 +265,7 @@ fn collect_workspace_markdown_link_citations(
         return;
     }
     for (marker_start, _) in line.match_indices(&config.marker) {
-        if markdown_never_rewrite_context(line, marker_start) {
+        if markdown_never_rewrite_context(links, line, marker_start) {
             continue;
         }
         let token_start = marker_start + config.marker.len();

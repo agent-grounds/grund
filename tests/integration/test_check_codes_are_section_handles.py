@@ -122,7 +122,6 @@ NOT_YET_MIGRATED = (
 # with the Remotes piece of §DF-remote-projects, which strikes them off here.
 SPECIFIED_AHEAD = {
     "FS-remote-projects": ("remote-missing", "remote-modified", "remote-orphan", "remote-stale"),
-    "FS-citations": ("image-index-entry",),
 }
 
 

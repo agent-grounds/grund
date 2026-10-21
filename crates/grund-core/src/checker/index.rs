@@ -14,8 +14,8 @@ use super::index_entries::KindIndexEntries;
 use super::index_mention::index_mentions;
 use crate::config::{Frame, Owners, Schema};
 use crate::grammar::{
-    CitationLink, citation_link, is_inside_inline_code, markdown_line_kinds,
-    markdown_never_rewrite_context, render_catalog_id,
+    CitationLink, LineLinks, MarkdownLinks, citation_link, is_inside_inline_code,
+    markdown_line_kinds, markdown_never_rewrite_context, render_catalog_id,
 };
 use crate::model::{
     Catalog, CheckReport, Citation, Code, Declaration, Diagnostic, HeadingKind, Id,
@@ -84,6 +84,11 @@ enum IndexCitationForm {
     /// text of a link its author wrote whose destination is not empty
     /// (§FS-citations.wrap.enclosing).
     Link,
+    /// A citation that is an image's whole description, with a destination: no
+    /// link to the declaration, but credited as the entry for one more release
+    /// and warned about where it is all the index holds
+    /// (§FS-citations.checks.image-index-entry).
+    Image,
     /// A recognized citation of the ID, unwrapped, **and one the
     /// cross-reference pass would wrap on its next `--write`**. §FS-check.3.17.4's
     /// finding, and the only form that earns it.
@@ -121,7 +126,12 @@ enum IndexCitationForm {
 /// sit just before this occurrence of it, which is the same token either way. An
 /// empty marker (permitted outside strict mode) matches both tests, exactly as it
 /// makes the formatter's own test vacuous.
-fn index_citation_form(line: &str, text: &str, marker: &str) -> IndexCitationForm {
+fn index_citation_form(
+    line: &str,
+    links: LineLinks<'_>,
+    text: &str,
+    marker: &str,
+) -> IndexCitationForm {
     let mut form = IndexCitationForm::Ignored;
     let mut cursor = 0;
     while let Some(relative) = line[cursor..].find(text) {
@@ -131,9 +141,13 @@ fn index_citation_form(line: &str, text: &str, marker: &str) -> IndexCitationFor
         // marker, which is multi-byte under the default `§`, and slicing one byte
         // into it would panic (§REQ-never-crashes).
         cursor = end;
-        match index_citation_form_at(line, start, end, marker) {
+        match index_citation_form_at(line, links, start, end, marker) {
             IndexCitationForm::Link => return IndexCitationForm::Link,
-            IndexCitationForm::Bare => form = IndexCitationForm::Bare,
+            IndexCitationForm::Image => form = IndexCitationForm::Image,
+            IndexCitationForm::Bare if form != IndexCitationForm::Image => {
+                form = IndexCitationForm::Bare;
+            }
+            IndexCitationForm::Bare => {}
             IndexCitationForm::Ignored => {}
         }
     }
@@ -142,9 +156,16 @@ fn index_citation_form(line: &str, text: &str, marker: &str) -> IndexCitationFor
 
 /// The same entry-form judgment for one exact occurrence (§FS-check.3.18.5),
 /// also used by §FS-check.3.12.2's repair so another link on the line cannot
-/// turn an ordinary citation into a required marked entry.
-fn index_citation_form_at(line: &str, start: usize, end: usize, marker: &str) -> IndexCitationForm {
-    match citation_link(line, start, end) {
+/// turn an ordinary citation into a required marked entry. `links` places `line`
+/// in the index, so a reference or a link spanning lines is read as `fmt` reads it.
+fn index_citation_form_at(
+    line: &str,
+    links: LineLinks<'_>,
+    start: usize,
+    end: usize,
+    marker: &str,
+) -> IndexCitationForm {
+    match citation_link(links, line, start, end) {
         // §FS-check.3.17.4: the formatter's own bracket test, with a destination
         // closed by its balancing `)` and holding something before it.
         CitationLink::Wrap(wrap) if wrap.close > wrap.url_start => {
@@ -156,9 +177,17 @@ fn index_citation_form_at(line: &str, start: usize, end: usize, marker: &str) ->
         // §FS-check.3.18.5: the author's link is the entry where it goes somewhere,
         // its destination never compared. `fmt` leaves it either way, so one that
         // goes nowhere is no entry and the ID falls to §FS-check.3.18.
-        CitationLink::Enclosing { url_start, close } => {
-            if close > url_start {
+        CitationLink::Enclosing { entry } => {
+            if entry {
                 return IndexCitationForm::Link;
+            }
+            return IndexCitationForm::Ignored;
+        }
+        // §FS-citations.checks.image-index-entry: the image keeps the credit it
+        // had as a wrap, for one release, where it goes somewhere.
+        CitationLink::Image(wrap) => {
+            if wrap.close > wrap.url_start {
+                return IndexCitationForm::Image;
             }
             return IndexCitationForm::Ignored;
         }
@@ -171,7 +200,7 @@ fn index_citation_form_at(line: &str, start: usize, end: usize, marker: &str) ->
     // §FS-fmt.2.3, through the one predicate the scanner and the rewrite
     // already share: an inline-code illustration and a Markdown link
     // destination are zones `fmt` never writes in.
-    if !marked || markdown_never_rewrite_context(line, start) {
+    if !marked || markdown_never_rewrite_context(links, line, start) {
         return IndexCitationForm::Ignored;
     }
     IndexCitationForm::Bare
@@ -189,6 +218,7 @@ pub(super) fn marked_index_entries<'a>(
 ) -> Vec<&'a Citation> {
     let entries = KindIndexEntries::new(findings, schema, frame, index_targets);
     let mut lines_by_file = BTreeMap::new();
+    let mut links_by_file = BTreeMap::new();
     findings
         .edges()
         .filter(|cite| {
@@ -217,31 +247,52 @@ pub(super) fn marked_index_entries<'a>(
             let Some(line) = lines.get(cite.line.saturating_sub(1)) else {
                 return false;
             };
+            let links = links_by_file
+                .entry(&cite.file)
+                .or_insert_with(|| MarkdownLinks::new(record.text()));
             let Some(start) = cite.column.checked_sub(1) else {
                 return false;
             };
             let Some(end) = start.checked_add(cite.text.len()) else {
                 return false;
             };
+            // §FS-citations.checks.image-index-entry: an image keeps its credit
+            // as a marked link owed for the release it is credited in.
             line.get(start..end) == Some(cite.text.as_str())
-                && index_citation_form_at(line, start, end, &schema.citation.marker)
-                    == IndexCitationForm::Link
+                && matches!(
+                    index_citation_form_at(
+                        line,
+                        links.line(cite.line - 1),
+                        start,
+                        end,
+                        &schema.citation.marker,
+                    ),
+                    IndexCitationForm::Link | IndexCitationForm::Image
+                )
         })
         .collect()
 }
 
 /// What an index says about one ID: whether any citation of it is a full link,
-/// and where the first bare one sits (§FS-check.3.17.6 anchors there).
+/// where the first bare one sits (§FS-check.3.17.6 anchors there), and where the
+/// first citation-only image sits (§FS-citations.checks.image-index-entry).
 #[derive(Default)]
 struct IndexEntryState {
     linked: bool,
     first_bare: Option<(usize, usize)>,
+    first_image: Option<(usize, usize)>,
 }
 
 impl IndexEntryState {
     fn record(&mut self, form: IndexCitationForm, line: usize, column: usize) {
         match form {
             IndexCitationForm::Link => self.linked = true,
+            IndexCitationForm::Image => {
+                let here = (line, column);
+                if self.first_image.is_none_or(|seen| here < seen) {
+                    self.first_image = Some(here);
+                }
+            }
             IndexCitationForm::Bare => {
                 let here = (line, column);
                 if self.first_bare.is_none_or(|seen| here < seen) {
@@ -417,6 +468,8 @@ pub(super) fn check_kind_indexes(
             .as_deref()
             .map(|text| text.lines().collect())
             .unwrap_or_default();
+        // §FS-citations.wrap: the index is the document a reference is read in.
+        let links = MarkdownLinks::new(text.as_deref().unwrap_or_default());
         // §FS-check.1.1.5.1: which of those lines may hold a heading at all.
         let kinds = markdown_line_kinds(lines.iter().copied());
         // §AR-scanner.2.8.5: which are declaration headings, off the record of these
@@ -453,7 +506,12 @@ pub(super) fn check_kind_indexes(
             // An `Ignored` form creates no entry: a citation `fmt` will not wrap
             // neither satisfies the rule nor triggers §FS-check.3.17.5
             // (§DF-index-entry-form.2.3), so the ID is reported as unlisted.
-            let form = index_citation_form(line, &citation.text, &schema.citation.marker);
+            let form = index_citation_form(
+                line,
+                links.line(citation.line.saturating_sub(1)),
+                &citation.text,
+                &schema.citation.marker,
+            );
             // §FS-check.3.2.1: §FS-check.3.2's own test, so a stub's section in a
             // target outside the walk admits the entry.
             let section_known = citation
@@ -494,6 +552,33 @@ pub(super) fn check_kind_indexes(
 
         for (id, decl) in covered {
             match entries.get(id) {
+                // §FS-citations.checks.image-index-entry: the image is credited, and
+                // it is all the index holds for the ID, so its retirement is announced.
+                Some(IndexEntryState {
+                    linked: false,
+                    first_image: Some((line, column)),
+                    ..
+                }) => {
+                    let rendered = render_catalog_id(frame.grammar(), &findings.declarations, id);
+                    let marker = &schema.citation.marker;
+                    let write = index_targets
+                        .get(&(target.index_file.clone(), id.clone()))
+                        .map(|link| {
+                            format!("; write `[{marker}{rendered}]({link})` in {index_display}")
+                        })
+                        .unwrap_or_default();
+                    report.warnings.push(Diagnostic {
+                        code: Code::IMAGE_INDEX_ENTRY,
+                        path: Some(target.index_file.clone()),
+                        line: Some(*line),
+                        column: Some(*column),
+                        message: format!(
+                            "index entry {marker}{rendered} is an image, not a link{write} — this warning becomes an error in grund 0.20.0"
+                        ),
+                        sites: Vec::new(),
+                        authority: Vec::new(),
+                    });
+                }
                 // §FS-check.3.17: an entry that exists and is not a link, at the
                 // line `grund fmt --write` rewrites.
                 Some(state) if !state.linked => {

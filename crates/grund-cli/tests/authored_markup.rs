@@ -155,7 +155,6 @@ const AUTHORED: &[(&str, &str)] = &[
 /// `fmt --check` then lists nothing. Today each but the link inside the text
 /// gains a wrap, and the image loses `cache.png`.
 #[test]
-#[ignore = "red until #839 leaves every authored link form as written; implement removes this"]
 fn every_authored_form_keeps_its_bytes() {
     let mut failures = Vec::new();
     for (name, notes) in AUTHORED {
@@ -182,7 +181,6 @@ fn every_authored_form_keeps_its_bytes() {
 /// so a bare citation beside a reference is still wrapped, and the second run of
 /// `fmt --write` writes nothing (§FS-fmt.6.3).
 #[test]
-#[ignore = "red until #839 leaves a reference's text as written; implement removes this"]
 fn a_bare_citation_beside_authored_markup_is_still_wrapped() {
     let notes = "See [the §ADR-use-postgres rationale][pg] and §ADR-use-postgres.\n\n\
                  [pg]: adr/use-postgres.md\n";
@@ -237,7 +235,6 @@ fn bare_citations_and_managed_wraps_are_maintained_as_before() {
 /// the shorthand demand there (§FS-citations.rewrite-exemption). A full reference's
 /// visible text is no key, and its shorthand is still expanded.
 #[test]
-#[ignore = "red until #839 keeps a reference key's bytes in every pass; implement removes this"]
 fn a_collapsed_reference_and_its_definition_keep_one_key() {
     let keys = "See [the §ADR-001 record][].\n\n[the §ADR-001 record]: adr/ADR-001-postgres.md\n\n\
                 And [the ADR-001-postgres record][].\n\n\
@@ -297,7 +294,6 @@ fn a_collapsed_reference_and_its_definition_keep_one_key() {
 /// and `fmt --write` writes nothing. Today each is reported as not a link, and the
 /// command it names nests a second link into it.
 #[test]
-#[ignore = "red until #839 credits a resolved reference and a multi-line link; implement removes this"]
 fn index_rows_that_go_somewhere_are_entries() {
     let mut failures = Vec::new();
     for (name, row) in [
@@ -358,7 +354,6 @@ fn a_link_inside_an_index_rows_text_stays_an_entry() {
 /// no entry, so the ID is reported missing, at the declaration, in the bytes that
 /// finding has shipped in, and never as "is not a link".
 #[test]
-#[ignore = "red until #839 protects the forms that go nowhere and reports them missing; implement removes this"]
 fn index_rows_that_go_nowhere_are_missing_entries() {
     let missing = "docs/adr/use-redis.md:1: error: ADR-use-redis appears in docs/adr/README.md but not \
                    as an entry: an entry is a `§`-marked Markdown link to the declaration — became an \
@@ -411,7 +406,6 @@ fn image_warning(line: usize, link: &str) -> String {
 /// and warns at its line with the link to write; `fmt` keeps `cache.png`; and the
 /// line the warning names, written beside the image, clears it.
 #[test]
-#[ignore = "red until #839 keeps an image's destination and warns on its index credit; implement removes this"]
 fn a_citation_only_image_entry_warns_and_the_named_line_clears_it() {
     let index = format!("{PG_ROW}- ![§ADR-use-redis](cache.png)\n");
     let dir = project("image-entry", "", &index);
@@ -450,7 +444,6 @@ fn a_citation_only_image_entry_warns_and_the_named_line_clears_it() {
 /// release (§FS-check.3.18.3) — the declaration is a member, so it is reported
 /// uncited — and warns, naming the canonical link.
 #[test]
-#[ignore = "red until #839 warns on an image's enrollment; implement removes this"]
 fn a_citation_only_image_enrollment_warns() {
     let dir = tree(
         "image-enrollment",
@@ -500,7 +493,6 @@ fn a_wrapped_image_description_keeps_its_credit() {
 /// §FS-show.3.2.1: `show` collapses only a wrap, so a reference, a collapsed
 /// reference and a citation-only image in a body print as written.
 #[test]
-#[ignore = "red until #839 stops reading an image as a wrap; implement removes this"]
 fn show_prints_authored_markup_as_written() {
     let body = "See [the §ADR-use-postgres rationale][pg].\n\n\
                 See [the §ADR-use-postgres record][].\n\n\

@@ -10,7 +10,7 @@ command's own `--help` page links the guide and example that cover it
 |---|---|
 | [Installation](installation.md) | — |
 | [Setting up a repository](setup.md) | [`examples/scheme-*`](../../examples/) |
-| [Checking a repository](checking.md) | — |
+| [Checking a repository](checking.md) | [`examples/authored-citations`](../../examples/authored-citations/) |
 | [The `grund.toml` reference](configuration.md), with its [JSON Schema](../../schemas/grund.schema.json) | [`examples/places`](../../examples/places/) |
 | [Migrating a config to version 2](migrating.md) | [`examples/migrate`](../../examples/migrate/) |
 | [Asking the binary what a key or a check code means](explain.md) | [`examples/config-explain`](../../examples/config-explain/) |

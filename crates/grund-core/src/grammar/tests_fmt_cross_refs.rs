@@ -46,7 +46,12 @@ fn a_citation_without_both_brackets_is_no_wrap() {
 /// The reading of the `nth` citation `\u{a7}FS-x` on `line`.
 fn reading_at(line: &str, nth: usize) -> CitationLink {
     let start = line.match_indices('\u{a7}').nth(nth).expect("a citation").0;
-    citation_link(line, start, start + "\u{a7}FS-x".len())
+    citation_link(
+        LineLinks::default(),
+        line,
+        start,
+        start + "\u{a7}FS-x".len(),
+    )
 }
 
 fn encloses(reading: CitationLink) -> bool {
@@ -66,32 +71,26 @@ fn a_wrap_an_enclosing_link_and_an_unwrapped_citation() {
             close: wrap_url + "a.md".len(),
         })
     );
-    let link_url = line.find("b.md").unwrap();
-    assert_eq!(
-        reading_at(line, 1),
-        CitationLink::Enclosing {
-            url_start: link_url,
-            close: link_url + "b.md".len(),
-        }
-    );
+    assert_eq!(reading_at(line, 1), CitationLink::Enclosing { entry: true });
     assert_eq!(reading_at(line, 2), CitationLink::Unwrapped);
 }
 
 /// §FS-citations.wrap.enclosing.wrap-wins: a citation whose own brackets make a
 /// wrap is one whatever stands around it, so the line an older `fmt` nested reads
-/// its inner wrap, and the citation-only image is still read as a wrap
+/// its inner wrap; the citation-only image is no wrap
 /// (§FS-citations.wrap.enclosing.images).
 #[test]
 fn a_wrap_wins_over_the_brackets_around_it() {
-    for line in [
-        "- [[\u{a7}FS-x](a.md#x): the title](x.md)",
-        "See ![\u{a7}FS-x](diagram.png).",
-    ] {
-        assert!(
-            matches!(reading_at(line, 0), CitationLink::Wrap(_)),
-            "`{line}` is a wrap"
-        );
-    }
+    let line = "- [[\u{a7}FS-x](a.md#x): the title](x.md)";
+    assert!(
+        matches!(reading_at(line, 0), CitationLink::Wrap(_)),
+        "`{line}` is a wrap"
+    );
+    let image = "See ![\u{a7}FS-x](diagram.png).";
+    assert!(
+        matches!(reading_at(image, 0), CitationLink::Image(_)),
+        "`{image}` is an image"
+    );
 }
 
 /// §FS-citations.wrap.enclosing.shape: every shape that encloses — an escaped and
@@ -112,13 +111,9 @@ fn every_enclosing_shape_encloses() {
         assert!(encloses(reading_at(line, 0)), "`{line}` encloses");
     }
     let empty = "[the \u{a7}FS-x spec]()";
-    let url_start = empty.find("()").unwrap() + 1;
     assert_eq!(
         reading_at(empty, 0),
-        CitationLink::Enclosing {
-            url_start,
-            close: url_start,
-        },
+        CitationLink::Enclosing { entry: false },
         "an empty destination encloses, and says it is empty"
     );
 }
@@ -126,8 +121,9 @@ fn every_enclosing_shape_encloses() {
 /// §FS-citations.wrap.enclosing.shape, §FS-citations.wrap.enclosing.images,
 /// §FS-citations.wrap.enclosing.scope: what opens or closes no link leaves the
 /// citation unwrapped — an escaped opener, an opener in a code span, an image's
-/// description, a destination that never closes, a reference link, a definition
-/// label, text that never closes, and brackets that close before the citation.
+/// description, a destination that never closes, text that never closes, and
+/// brackets that close before the citation. A reference link and a definition
+/// label enclose (§FS-citations.wrap.enclosing.scope).
 #[test]
 fn what_makes_no_enclosing_link_leaves_the_citation_unwrapped() {
     for line in [
@@ -135,12 +131,13 @@ fn what_makes_no_enclosing_link_leaves_the_citation_unwrapped() {
         "`[` \u{a7}FS-x](a.md)",
         "![a diagram of \u{a7}FS-x](d.png)",
         "[the \u{a7}FS-x spec](a.md",
-        "[the \u{a7}FS-x rationale][pg]",
-        "[\u{a7}FS-x]: a.md",
         "[the \u{a7}FS-x",
         "[the] \u{a7}FS-x (a.md)",
     ] {
         assert_eq!(reading_at(line, 0), CitationLink::Unwrapped, "`{line}`");
+    }
+    for line in ["[the \u{a7}FS-x rationale][pg]", "[\u{a7}FS-x]: a.md"] {
+        assert!(encloses(reading_at(line, 0)), "`{line}` encloses");
     }
 }
 

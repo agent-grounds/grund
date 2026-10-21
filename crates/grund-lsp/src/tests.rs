@@ -26,10 +26,12 @@ fn write(path: &Path, text: &str) {
 
 #[test]
 fn hover_linkifier_preserves_existing_markdown_links() {
-    let linked = replace_unlinked_token(
+    let linked = link_hover_citations(
         "See §FS-lsp and [§FS-lsp](already).",
-        "§FS-lsp",
-        "file:///tmp/FS-lsp.md#L1",
+        &[(
+            "§FS-lsp".to_string(),
+            "file:///tmp/FS-lsp.md#L1".to_string(),
+        )],
     );
     assert_eq!(
         linked,

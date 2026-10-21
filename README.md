@@ -223,7 +223,10 @@ pub(crate) fn check_on_disk(
 | `{kind}-{slug}` *(grund's own)* | `FS-user-login` | reads like English; renaming a slug rewrites its citations |
 
 The [structure guide](docs/user-facing/structure.md) has the rest of the syntax, and a
-runnable example of each scheme.
+runnable example of each scheme. A link you write around a citation, in any form
+Markdown has, stays yours: `grund fmt` leaves it as written and `grund check` still
+checks the citation in it, as
+[`examples/authored-citations/`](examples/authored-citations/) shows.
 
 ## Workspaces
 
