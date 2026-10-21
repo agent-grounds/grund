@@ -21,8 +21,9 @@ fn equal<T: PartialEq + std::fmt::Debug>(
 }
 
 /// Common host envelopes accompany command-specific CLI projections. Python's
-/// refs fields are asserted before projection; Node-only show metadata has its
-/// native peer (§FS-distribution.3.3.1, §REQ-one-answer.proof.evidence).
+/// refs fields and Node's complete authored envelopes are asserted before
+/// projection. Unaudited Node show shapes keep their native peer
+/// (§FS-distribution.3.3.1, §REQ-one-answer.proof.evidence).
 pub fn hosts(
     host: &mut Host,
     context: &Value,
@@ -47,7 +48,9 @@ pub fn hosts(
     // §FS-distribution.3.2.1.1: Node's `cover` takes no `lines`, so its pinned
     // refusal is the whole of its answer and it shares no domain with the peers.
     let node_peer = question.surface != "cover-lines";
-    if matches!(question.surface, "show" | "show-batch") {
+    if matches!(question.surface, "show" | "show-batch")
+        && !super::agreement_truth::complete_node_show(context, question)
+    {
         let node_rust = node_embedding_call(node_request(
             question.node_operation,
             node_req["args"].as_array().unwrap().clone(),

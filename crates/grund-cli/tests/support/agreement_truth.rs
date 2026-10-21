@@ -128,6 +128,92 @@ pub fn host(
     );
 }
 
+/// §REQ-one-answer.proof.evidence: only a complete independent, successful
+/// ordinary-show envelope replaces the extra native peer. Refusals, cautions,
+/// manifests and future schemas retain that peer until their own audit.
+pub fn complete_node_show(context: &Value, question: &Question) -> bool {
+    fn keys(value: &Value, names: &[&str]) -> bool {
+        value.as_object().is_some_and(|object| {
+            object.len() == names.len() && names.iter().all(|name| object.contains_key(*name))
+        })
+    }
+    fn shown(value: &Value) -> bool {
+        keys(
+            value,
+            &[
+                "id",
+                "section",
+                "kind_title",
+                "manifest",
+                "body",
+                "path",
+                "line",
+                "json",
+                "sections",
+            ],
+        ) && value["manifest"].is_null()
+            && value["json"].as_str().is_some_and(|text| {
+                serde_json::from_str::<Value>(text).is_ok_and(|object| {
+                    let mut fields = vec![
+                        "id", "section", "body", "path", "line", "anchor", "sections",
+                    ];
+                    if object.get("kind_title").is_some() {
+                        fields.push("kind_title");
+                    }
+                    keys(&object, &fields)
+                        && [
+                            "id",
+                            "section",
+                            "kind_title",
+                            "body",
+                            "path",
+                            "line",
+                            "sections",
+                        ]
+                        .iter()
+                        .all(|field| {
+                            value.get(*field).is_some()
+                                && (matches!(*field, "sections") || value[*field] == object[*field])
+                        })
+                        && value["sections"].as_array().is_some_and(|sections| {
+                            sections
+                                .iter()
+                                .all(|section| keys(section, &["path", "title", "depth"]))
+                        })
+                        && object["sections"].as_array().is_some_and(|sections| {
+                            sections
+                                .iter()
+                                .all(|section| keys(section, &["path", "title", "depth", "anchor"]))
+                        })
+                })
+            })
+    }
+    let expected = &context["truth"]["calls"][key(question)]["node"];
+    if !keys(expected, &["failure", "result", "run_cautions"])
+        || !expected["failure"].is_null()
+        || expected["run_cautions"] != json!([])
+    {
+        return false;
+    }
+    let result = &expected["result"];
+    match question.surface {
+        "show" => shown(result),
+        "show-batch" => {
+            keys(result, &["records", "note"])
+                && result["note"].is_null()
+                && result["records"].as_array().is_some_and(|records| {
+                    records.iter().all(|record| {
+                        keys(record, &["query", "ok", "result"])
+                            && keys(&record["query"], &["id", "section"])
+                            && record["ok"] == true
+                            && shown(&record["result"])
+                    })
+                })
+        }
+        _ => false,
+    }
+}
+
 pub fn editor(context: &Value, key: &str, response: &Value, errors: &mut Vec<String>) {
     // Structured snapshots contain physical paths; serialized hover JSON is
     // decoded by logical_value. Section-map coordinates remain coordinates.

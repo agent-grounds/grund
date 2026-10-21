@@ -8,8 +8,8 @@ The loader and consumers are in the CLI test support modules. They follow
 [§AR-system.principle](../../../docs/architecture/README.md#principle-one-fact-one-point-one-implementation).
 
 **Construction status:** every case the acceptance asks has a manifest here:
-the seed's sampled first projects and every case of `cover`, `scan` and `stub`,
-the families tranche 1 covers whole
+the seed's sampled first projects and every case of `basic`, `cover`, `scan` and
+`stub`. The basic tranche adds its dynamically discovered family whole
 ([§REQ-one-answer.proof.matrix.family](../../../docs/requirements/REQ-one-answer.md#proofmatrixfamily-a-family-is-covered-whole-or-not-at-all)).
 `symlink` stays a row of `WIDENING`: its sampled project,
 `symlink-alias-read-once`, has facts, and its fourteen other cases do not yet.
@@ -99,6 +99,16 @@ normalization then serialized canonically. Bodies, spans/maps/anchors,
 measurements and empty/refused answers must be pinned, not inferred from hits
 or a returned declaration catalog. Node-only metadata remains asserted as well.
 
+Before common projection, `agreement_truth::host` compares Node's entire
+envelope with these facts. Successful ordinary show and wholly successful batch
+envelopes with all metadata fields, null `manifest` and empty cautions no longer
+need the extra native-peer scan. Their `id`, `section` and `kind_title` derive
+from the authored declaration/section and owning config; `manifest` is null for
+these non-E2E declarations. Bodies, paths, lines, JSON and section maps retain
+the exact comparison. Refusals, mixed batches, nonempty cautions, manifests and
+unrecognized schemas retain the extra peer pending an independent audit
+([§REQ-one-answer.proof.evidence](../../../docs/requirements/REQ-one-answer.md#proofevidence-execution-and-independent-truth)).
+
 `writtenChanges` is an authored map of output paths to resulting byte-inventory
 entries (or `{"remove": true}`). The independent saved-input inventory supplies
 the unchanged entries. Explicit `{}` pins entirely unchanged output; an omitted
@@ -126,7 +136,11 @@ carries `point` and `authoredFrom`, and then:
   a workspace root.
 - `declarations`, `sections` and `citations`: each by its file and its written
   heading or token, with the title, anchor, body range, enclosing declaration
-  and the stub, duplicate or value-root facts its point defines.
+  and the stub, duplicate or value-root facts its point defines. A section's
+  optional `file` selects its physical owner when `of` names duplicate homes;
+  ambiguous ownership is rejected. Size rows interleave those homes by
+  coordinate, then site, keeping every measurement local to its body
+  ([§FS-list.2.7](../../../docs/functional-spec/FS-list.md#27-duplicate-sections)).
 - `findings` and `refusals`: each finding as `check` publishes it, and each
   refused query with its code, message and the questions it refuses.
 - `fmt`: the changes a dry run lists and a write makes, and the written lines.

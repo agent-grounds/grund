@@ -118,7 +118,8 @@ pub fn from_python(mut value: Value, operation: &str, errors: &mut Vec<String>) 
     value
 }
 
-/// Node's additional show metadata retains its full native-peer assertion.
+/// Node's additional show metadata is first held to complete authored facts;
+/// unaudited envelopes also retain the full native-peer assertion.
 /// Common fields are compared after the explicit Python refs-field assertions.
 pub fn node_common(mut value: Value, operation: &str) -> Value {
     let strip = |out: &mut Value| {
