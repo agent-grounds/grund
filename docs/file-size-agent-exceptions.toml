@@ -268,3 +268,13 @@ Issue #829 has a narrowed check say when what it selected judged nothing: the se
 
 Issue #909 specifies the explanatory append at §FS-check.4.1.2. The file already measured 280149 bytes on arrival; this point takes it to 281327. The missing boundary and retirement condition above remain: a mapped migration of the finding catalog into independent declarations, preserving old section addresses as pointers while callers migrate. That cross-family specification refactor is outside this explanation-only contract. The byte ceiling is reconciled to the current measured 281327 bytes, with no growth allowance.
 """
+[[exceptions]]
+path = "docs/functional-spec/FS-init.md"
+match = "exact"
+rules = ["docs"]
+kind = "deferred"
+max_accepted = { value = 820, unit = "lines" }
+until = "the Citation directions chapter (FS-init.2.3.5) moves into a declaration of its own with its section citations migrated"
+reason = """
+Over the soft budget before #908 touched it (796 non-blank lines). #908 adds one subsection to the Citation directions chapter, FS-init.2.3.5.2.2, plus a paragraph to FS-init.2.3.7.1, because the subject rule it changes lives there and one fact keeps one point. Missing boundary: FS-init.2.3.5 is a self-contained chapter of fifteen numbered sections, cited by coordinate from code, tests and decisions; it can become its own FS declaration, which needs every FS-init.2.3.5.* citation migrated in one change.
+"""
