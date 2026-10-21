@@ -92,15 +92,16 @@ local pre-commit and Ubuntu CI, realizing
 Every network pass, the gate's changed-line pass and the sweep alike, uses lychee 0.23.0 with explicit `timeout = 30`
 (seconds for the whole request), `max_retries = 4` (after the initial attempt),
 and `retry_wait_time = 1` (seconds for the exponential-backoff base).
-Five attempts have nominal waits of 1, 2, 4, and 8 seconds. A persistent
-whole-request timeout therefore consumes a nominal 165 seconds, plus overhead
-and possible host-specific pacing, in each of the two passes [§AR-ci.3.1.3](AR-ci.md#313-a-transient-failure-from-any-host-is-checked-once-more)
+Five attempts have nominal waits of 1, 2, 4, and 8 seconds, totalling 15 seconds.
+A persistent whole-request timeout therefore consumes a nominal 165 seconds
+(5 × 30 + 15), plus overhead and possible host-specific pacing, in each of the two
+passes [§AR-ci.3.1.3](AR-ci.md#313-a-transient-failure-from-any-host-is-checked-once-more)
 allows before a nonzero exit. HTTP 404 responses
 remain failures, and unresolved timeouts are never accepted as successes.
 
 The pinned binary retains a separate fixed 10-second connection timeout; the
 30-second setting does not raise that ceiling. A persistent connection timeout
-therefore consumes a nominal 65 seconds per pass: five attempts at 10 seconds
+therefore consumes a nominal 65 seconds per pass (5 × 10 + 15): five attempts at 10 seconds
 plus 15 seconds of backoff, plus overhead and possible host-specific pacing.
 Both timeout phases enter
 lychee's shared retry loop, so the extra retry offers either phase another
@@ -218,8 +219,10 @@ changed-line pass or the sweep. This is a re-check of named URLs, not the whole-
 [§AR-ci.3.1.1](AR-ci.md#311-bounded-external-link-tolerance) rules out: the tree is not walked again, and a URL that passed the
 network pass is not requested again. Nothing passes without a successful
 response from the same URL, so a persistent timeout and a 404 still fail. A
-persistent timeout now spends lychee's whole budget twice, a nominal 335
-seconds with the pause, before the hook fails.
+persistent connection timeout spends the per-pass budget of
+[§AR-ci.3.1.1](AR-ci.md#311-bounded-external-link-tolerance) twice, a nominal 135 seconds (2 × 65 + 5)
+with the pause; a persistent whole-request timeout spends a nominal 335 seconds
+(2 × 165 + 5). Both totals exclude overhead and possible host-specific pacing.
 
 The real-lychee loopback tests of `tests/integration/test_check_links_network.py`
 hold the re-check to a 503, a 502, a 403 and a malformed response once followed
