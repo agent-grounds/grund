@@ -33,7 +33,8 @@ correcting a reading.
 
 Two verdicts move, and they take different routes. The `glob-citation` finding is new and is a
 warning first: its promotion to an error in grund 0.19.0 is the deprecation path of
-[§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), recorded in [§FS-check.checks.glob-citation.1](../../functional-spec/FS-check.md#checksglob-citation1-a-warning-before-0190-an-error-in-it). Removing the prefix
+[§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), recorded in [§FS-check.checks.glob-citation.1](../../functional-spec/FS-check.md#checksglob-citation1-a-warning-before-0190-an-error-in-it), and it landed in grund 0.19.0 under
+[§DF-glob-citation-lands-in-0-19](DF-glob-citation-lands-in-0-19.md#df-glob-citation-lands-in-0-19-a-glob-citation-is-an-error-from-0190). Removing the prefix
 edge is not ramped. Without it a declaration cited only through a pattern earns the `unused`
 warning, and a unit grounded or satisfying a `must` direction only through one can now fail
 `ungrounded`, `missing-citation`, or a chapter rule; a pattern whose prefix dangled or named a

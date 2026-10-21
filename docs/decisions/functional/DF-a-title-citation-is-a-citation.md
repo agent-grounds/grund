@@ -59,10 +59,11 @@ The verdict moves both ways, on title lines that cite another ID only.
   `shorthand-citation` error, as is each one's `out-of-scope-` form in an out-of-scope file.
   `fmt` never rewrites a title ([§FS-fmt.2.3](../../functional-spec/FS-fmt.md#23-what-is-never-rewritten)), so a shorthand in one is fixed by hand: the
   message names the full ID to write.
-- **New warnings and suggestions.** A glob in a title is a `glob-citation` warning, an
+- **New warnings and suggestions.** A glob in a title is a `glob-citation` finding, an
   escaped title citation that resolves is an `escaped-citation-resolves` suggestion, and one
-  a `should-not` direction discourages is a `discouraged-citation` suggestion. None of them
-  changes the exit code.
+  a `should-not` direction discourages is a `discouraged-citation` suggestion. The suggestions
+  leave the exit code alone; so did the `glob-citation` warning, until grund 0.19.0 made it an
+  error that fails the run ([§DF-glob-citation-lands-in-0-19](DF-glob-citation-lands-in-0-19.md#df-glob-citation-lands-in-0-19-a-glob-citation-is-an-error-from-0190)).
 - **Fail to pass, or quieter.** A declaration cited only from another declaration's title is
   no longer `unused`, and a `must` direction a title citation satisfies is now satisfied.
 - **Counts move.** `refs`, `cover` and the inbound counts include the title citation.

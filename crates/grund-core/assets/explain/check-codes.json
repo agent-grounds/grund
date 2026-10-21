@@ -518,11 +518,11 @@
  {
   "code": "glob-citation",
   "meaning": "A marked citation is written as a pattern rather than as one ID.",
-  "ramp": "error in 0.19.0",
+  "ramp": null,
   "2": {
    "severity": {
     "kind": "fixed",
-    "text": "warning"
+    "text": "error"
    },
    "enabled": {
     "kind": "always"
@@ -531,7 +531,7 @@
   "1": {
    "severity": {
     "kind": "fixed",
-    "text": "warning"
+    "text": "error"
    },
    "enabled": {
     "kind": "always"
