@@ -45,40 +45,27 @@ GitHub: [#368](https://github.com/agent-grounds/grund/issues/368).
 
 ## RM-one-grammar-flip: end the one-grammar window in 0.19.0
 
-The kind verdict and the refusal order of [§DF-one-kind-verdict](decisions/functional/DF-one-kind-verdict.md#df-one-kind-verdict-every-command-reads-one-kind-verdict-in-its-own-scope-and-refuses-a-rule-sentence-for-the-first-stage-it-fails) ship with a
-window, as [§REQ-backwards-compatibility.2](requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) requires of every move that is not
-purely additive. In the release that lands them, two refusals keep their
-legacy reason and append the new one ([§FS-errors.3.8](functional-spec/FS-errors.md#38-the-one-grammar-wording-migration)), and a pinned or `*/`
-`[citations]` target the run cannot accept loads with a warning naming
-`0.19.0` ([§FS-config.3.9.5.2](functional-spec/FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds)). This milestone is `0.19.0`, the release those
-messages name.
+This milestone shipped in grund 0.19.0: the two refusals of
+[§FS-errors.3.8](functional-spec/FS-errors.md#38-the-one-grammar-wording-migration) print [§FS-errors.3.8.1](functional-spec/FS-errors.md#381-the-final-templates)'s reasons alone, and a pinned or `*/`
+`[citations]` target the run cannot accept fails the load
+([§FS-config.3.9.5.2](functional-spec/FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds)). Its record is the compatibility notice that landed it,
+[§DF-one-grammar-lands-in-0-19.release-note](decisions/functional/DF-one-grammar-lands-in-0-19.md#release-note-release-note). The item's own plan is removed, as
+a shipped item's is; this address, heading text included, is kept while the
+decisions and specifications written before it still cite it.
 
-GitHub: follows [#599](https://github.com/agent-grounds/grund/issues/599), which ships the window; [#680](https://github.com/agent-grounds/grund/issues/680) flipped the window [#671](https://github.com/agent-grounds/grund/issues/671) opened for the homeless kind `code`, ahead of the rest, under [§DF-homeless-code-declares-no-ids](decisions/functional/DF-homeless-code-declares-no-ids.md#df-homeless-code-declares-no-ids-code-with-no-row-is-refused-as-declaring-no-ids-alone-from-0190).
+GitHub: [#881](https://github.com/agent-grounds/grund/issues/881), which landed it; [#599](https://github.com/agent-grounds/grund/issues/599) shipped the window, and [#680](https://github.com/agent-grounds/grund/issues/680) flipped the window [#671](https://github.com/agent-grounds/grund/issues/671) opened for the homeless kind `code`, ahead of the rest, under [§DF-homeless-code-declares-no-ids](decisions/functional/DF-homeless-code-declares-no-ids.md#df-homeless-code-declares-no-ids-code-with-no-row-is-refused-as-declaring-no-ids-alone-from-0190).
 
 ### 1. What
 
-Drop the legacy prefix and the `; this wording changes in grund 0.19.0` suffix,
-so the two reasons are [§FS-errors.3.8.1](functional-spec/FS-errors.md#381-the-final-templates)'s final templates, and raise each
-`[citations]` warning of [§FS-config.3.9.5.2](functional-spec/FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds) to an `error:` that fails the load
-with exit `2`, its text ending in `; this became an error in grund 0.19.0`. The
-release constant goes with them. The flip is a change of its own, with its own
-`release-note` on the decision record that lands it.
-
-The canonical config of [§DF-directions-render.3](decisions/functional/DF-directions-render.md#3-the-canonical-config) pins `api/AR` in a project
-that declares no `[workspace]`, so from `0.19.0` it stops loading. The flip
-changes it, and the e2e cases built on it, in the same change.
-
-### 2. Why now
-
-The e2e goldens carry `0.19.0` as literal bytes and a unit test asserts it is
-still ahead of `CARGO_PKG_VERSION`, so the version bump that reaches it fails
-CI until this milestone lands, the forcing function the earlier windows used.
-
-### 3. Measurable
-
-No message in the tree names `0.19.0` in the future tense; the e2e cases that
-pin the window print the final templates, and the `[citations]` warning cases
-exit `2`.
+The legacy prefix and the `; this wording changes in grund 0.19.0` suffix went,
+so the two reasons are [§FS-errors.3.8.1](functional-spec/FS-errors.md#381-the-final-templates)'s final templates, and each `[citations]`
+warning of [§FS-config.3.9.5.2](functional-spec/FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds) became an `error:` that fails the load with exit
+`2`, its text ending in `; this became an error in grund 0.19.0`. The release
+constant went with them, and the canonical config of
+[§DF-directions-render.3](decisions/functional/DF-directions-render.md#3-the-canonical-config), which pinned `api/AR` in a project that declared no
+`[workspace]`, gained the workspace that lets it load. The homeless kind
+`code` flipped first, under [§DF-homeless-code-declares-no-ids](decisions/functional/DF-homeless-code-declares-no-ids.md#df-homeless-code-declares-no-ids-code-with-no-row-is-refused-as-declaring-no-ids-alone-from-0190); the rest landed
+under [§DF-one-grammar-lands-in-0-19](decisions/functional/DF-one-grammar-lands-in-0-19.md#df-one-grammar-lands-in-0-19-the-one-grammar-window-closes-in-0190-and-a-pinned-target-the-run-cannot-accept-fails-the-load).
 
 ## RM-doc-comment-relative-headings: give a relative heading in a doc-comment its meaning in 0.19.0
 

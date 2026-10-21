@@ -33,10 +33,10 @@ fn assert_expected_errors_are_concise(case: &Path, name: &str, args: &[String], 
 /// bytes rather than the cap.
 const ABSORBED_SCAN_SENTENCE: &str = ": [workspace] members swallows this project's whole scan — ";
 
-/// A refusal in the one-grammar wording window keeps its legacy reason whole and
-/// appends the new one (§FS-errors.3.8), so it ends in this suffix and keeps the
-/// bytes that point fixes rather than the cap, until `0.19.0` drops the prefix.
-const WORDING_WINDOW_SUFFIX: &str = "; this wording changes in grund 0.19.0";
+/// A pinned `[citations]` target the run cannot accept was a load warning until
+/// `0.19.0` made it an error (§FS-config.3.9.5.2), so its line ends in this
+/// clause and keeps the bytes that point fixes rather than the cap.
+const PROMOTED_LOAD_WARNING_SUFFIX: &str = "; this became an error in grund 0.19.0";
 
 /// The judgement, isolated from the filesystem. A `--format json` case's
 /// stderr is not uniformly JSON (§FS-errors.5.2.2): a launch-time `error: …`
@@ -55,7 +55,7 @@ fn assert_stderr_is_concise(name: &str, json_case: bool, stderr: &str) {
     for line in stderr.lines().filter(|line| !line.trim().is_empty()) {
         if line.starts_with("warning: ")
             || (line.starts_with("error: ") && line.contains(ABSORBED_SCAN_SENTENCE))
-            || (line.starts_with("error: ") && line.ends_with(WORDING_WINDOW_SUFFIX))
+            || (line.starts_with("error: ") && line.ends_with(PROMOTED_LOAD_WARNING_SUFFIX))
         {
             continue;
         } else if json_case && line.starts_with('{') {
@@ -290,14 +290,14 @@ mod stderr_concise_tests {
     }
 
     #[test]
-    fn nonzero_case_preserves_a_wording_window_refusal_and_nothing_beside_it() {
+    fn nonzero_case_preserves_a_promoted_load_warning_and_nothing_beside_it() {
         let error = format!(
-            "error: conjunctions are not accepted{} — section-component wildcards are not \
-             accepted in phase 1; this wording changes in grund 0.19.0",
+            "error: grund.toml: [citations.API] should names `web/WEB`: {} — check from \
+             the workspace root; this became an error in grund 0.19.0",
             "x".repeat(180)
         );
         assert_stderr_is_concise("case", false, &error);
-        let other = format!("error: conjunctions are not accepted{}", "x".repeat(180));
+        let other = format!("error: grund.toml: [citations.API] should names {}", "x".repeat(180));
         let panic_message = rejects(false, &other);
         assert!(panic_message.contains("too long"), "{panic_message}");
     }

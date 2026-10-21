@@ -1,8 +1,7 @@
 //! Test module: the run's one kind table (§FS-scan.projects.kinds) — a verdict
 //! per scope, unverifiable where the run holds no workspace, named sections read
 //! under the project that configures the kind, the non-citable reason in both
-//! quotings (§FS-errors.2.5.1), and the window's release still ahead
-//! (§FS-errors.3.8).
+//! quotings (§FS-errors.2.5.1), the first of §FS-errors.3.8.1's final templates.
 
 use std::collections::BTreeSet;
 
@@ -158,8 +157,8 @@ fn named_sections_follow_the_configuring_project() {
 }
 
 /// §FS-errors.2.5.1: one renderer, in each surface's quoting. The double-quoted
-/// form is the first of §FS-errors.3.8.1's final templates: the reason that
-/// follows the window's ` — `, and that `0.19.0` prints alone.
+/// form is the first of §FS-errors.3.8.1's final templates, which `0.19.0`
+/// prints alone.
 #[test]
 fn the_non_citable_reason_renders_in_both_quotings() {
     let entry = KindEntry {
@@ -175,23 +174,5 @@ fn the_non_citable_reason_renders_in_both_quotings() {
     assert_eq!(
         entry.non_citable_reason(Quote::Double),
         "kind \"skill\" declares no IDs — skills/ is not a citable home"
-    );
-}
-
-/// §FS-errors.3.8: the window ends in a release still to come; once this crate
-/// reaches it, the appended reasons must stand alone and this test says so.
-#[test]
-fn the_one_grammar_flip_is_still_ahead() {
-    let parse = |version: &str| -> Vec<u64> {
-        version
-            .split(['.', '-'])
-            .take(3)
-            .map(|part| part.parse().expect("numeric version"))
-            .collect()
-    };
-    assert!(
-        parse(env!("CARGO_PKG_VERSION")) < parse(ONE_GRAMMAR_FLIP),
-        "grund {} has reached {ONE_GRAMMAR_FLIP}: close the one-grammar window",
-        env!("CARGO_PKG_VERSION")
     );
 }

@@ -15,10 +15,6 @@ const STAGES: [&str; 6] = [
     "6. the predicate",
 ];
 
-/// The suffix a reason carries while §FS-errors.3.8's window keeps the legacy
-/// reason ahead of it.
-const WINDOW: &str = "; this wording changes in grund 0.19.0";
-
 /// The rows of the `.order` table: stage, example sentence, opening reason.
 fn order_rows() -> Vec<(String, String, String)> {
     let spec = fs::read_to_string(repo_root().join("docs/functional-spec/FS-rule-refusals.md"))
@@ -64,8 +60,8 @@ fn the_order_table_names_the_documented_stages() {
 }
 
 /// §FS-rule-refusals.sentences.order: each example fails its own stage and a
-/// later one, and is refused for its own. During §FS-errors.3.8's window a moved
-/// reason stands after the legacy one, before the suffix naming `0.19.0`.
+/// later one, and is refused for its own. Since §FS-errors.3.8's window closed
+/// in `0.19.0`, a moved reason opens the line with no legacy reason before it.
 #[test]
 fn a_sentence_is_refused_for_the_first_stage_it_fails() {
     let root = case_repo("check-rule-conjunction-one-kind");
@@ -78,8 +74,7 @@ fn a_sentence_is_refused_for_the_first_stage_it_fails() {
             .strip_prefix("error: ")
             .and_then(|rest| rest.strip_prefix(reason.as_str()))
             .is_some_and(|rest| rest.is_empty() || rest.starts_with(';'));
-        let windowed = line.ends_with(&format!(" — {reason}{WINDOW}"));
-        if output.status.code() != Some(2) || !(opens || windowed) {
+        if output.status.code() != Some(2) || !opens {
             wrong.push(format!(
                 "{stage}: {sentence}\n  exit {:?}\n  first line {line:?}\n  expected the reason {reason:?}",
                 output.status.code()
@@ -97,7 +92,9 @@ fn a_sentence_is_refused_for_the_first_stage_it_fails() {
 /// clause's subject, so the modality of a later clause cannot hide it — `must
 /// not` and `should not` are read before `must` and `should` when a subject is
 /// split off a whole sentence (§FS-rules.3.6). A modality the first clause does
-/// not accept leaves no subject, and the sentence is refused as before.
+/// not accept leaves no subject, and the sentence is refused as before. A
+/// subject rebuilt from the wildcard leaves a conjunction, so no form is offered
+/// (§FS-errors.3.8.1).
 #[test]
 fn a_wildcard_is_read_from_the_subject_of_the_first_clause() {
     let root = case_repo("check-rule-conjunction-one-kind");
@@ -105,15 +102,11 @@ fn a_wildcard_is_read_from_the_subject_of_the_first_clause() {
     let rows = [
         (
             "The * chapter of each FS must cite at least one FS and must not cite any FS.",
-            format!(
-                "error: conjunctions are not accepted; accepted forms: \"Each FS must cite at least one FS.\" and \"Each FS must not cite any FS.\" — {wildcard}{WINDOW}"
-            ),
+            format!("error: {wildcard}"),
         ),
         (
             "The * chapter of each FS should cite at least one FS and should not cite any FS.",
-            format!(
-                "error: conjunctions are not accepted; accepted forms: \"Each FS should cite at least one FS.\" and \"Each FS should not cite any FS.\" — {wildcard}{WINDOW}"
-            ),
+            format!("error: {wildcard}"),
         ),
         (
             "FS-x.* may not cite any FS.",

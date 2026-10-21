@@ -208,16 +208,19 @@ fn run(root: &Path, args: &[&str]) -> Output {
 /// The verdict a run gave, and what it printed, for the report.
 fn verdict(output: &Output) -> (Verdict, String) {
     let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
-    let verdict =
-        if stderr.contains("declares no IDs") || stderr.contains("non-citable target kind") {
-            NonCitable
-        } else if output.status.code() == Some(2) || stderr.contains("[citations.") {
-            // A pinned target the run cannot accept loads with a warning until it
-            // becomes an error (§FS-config.3.9.5.2): either way it is refused.
-            Refused
-        } else {
-            Accepted
-        };
+    let refused = output.status.code() == Some(2);
+    let verdict = if stderr.contains("[citations.") && !refused {
+        // A pinned target the run cannot accept fails the load since `0.19.0`
+        // (§FS-config.3.9.5.2), so a `[citations]` line on a run that went on
+        // refused nothing.
+        Accepted
+    } else if stderr.contains("declares no IDs") || stderr.contains("non-citable target kind") {
+        NonCitable
+    } else if refused {
+        Refused
+    } else {
+        Accepted
+    };
     (verdict, stderr)
 }
 

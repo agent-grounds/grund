@@ -153,9 +153,12 @@ should-not = ["*/AR"]               # any-namespace: prose
 
 [citations.code]
 should = ["FS|AR"]
+
+[workspace]                         # member `api` configures AR: `api/AR` loads
+members = ["api"]
 ```
 
-The whole file is `tests/e2e/cases/init-citation-directions-canonical/repo/grund.toml`; three sibling cases pin the branches it cannot hold at once — a homeless kind without a `title`, a closed global default, and grounding off.
+The member `api` is an empty project whose own `grund.toml` declares one row, `AR`. Without it the pinned `api/AR` names a project the run does not hold, which grund `0.18.x` loaded with a warning and `0.19.0` refuses ([§FS-config.3.9.5.2](../../functional-spec/FS-config.md#3952-a-pinned-target-is-judged-against-its-projects-kinds)); the workspace was added in that release rather than the pin dropped, so the rendered section above is unchanged. The whole file is `tests/e2e/cases/init-citation-directions-canonical/repo/grund.toml`; three sibling cases pin the branches it cannot hold at once — a homeless kind without a `title`, a closed global default, and grounding off.
 
 ## 4. Consequences
 
