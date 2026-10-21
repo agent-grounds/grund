@@ -90,6 +90,7 @@ mod link_walk;
 mod managed_block;
 mod markdown_blocks;
 mod markdown_links;
+mod markdown_paragraphs;
 mod multi_line_forms;
 mod multi_line_string;
 mod near_miss;
@@ -136,6 +137,7 @@ pub(crate) use ids::{
     split_alias_path,
 };
 pub(crate) use markdown_links::{LineLinks, MarkdownLinks};
+pub(crate) use markdown_paragraphs::blockquote_markers;
 mod spelling;
 pub(crate) use inline_note_layout::{
     BlockCitations, CITATION_RUN_SEPARATOR, LayoutChannel, block_has_inline_note_memoized,
@@ -224,6 +226,8 @@ mod tests_line_prefix_forms;
 mod tests_managed_block_label;
 #[cfg(test)]
 mod tests_markdown_blocks;
+#[cfg(test)]
+mod tests_markdown_paragraphs;
 #[cfg(test)]
 mod tests_multi_line_string;
 #[cfg(test)]
