@@ -99,5 +99,51 @@ class PythonGateDurationsTests(unittest.TestCase):
         self.assertEqual(5, result.returncode, result.stdout + result.stderr)
 
 
+SLEEPS, LEADER = "test_slow.Slow.test_sleeps", "test_fast.Fast.test_fast_0"
+FAST = tuple((f"test_fast.Fast.test_fast_{n}", "0.00") for n in range(1, 9))  # ten rows at most
+
+
+class SlowestTableTests(unittest.TestCase):
+    """§AR-ci.3.4.2 on canned output: the table lists its slowest first, whichever leads.
+
+    `test_a_passing_run_ends_with_its_ten_slowest_tests` is run on a table the gate may
+    print: a module fixture is charged to its module's first test, so a fast test can be
+    charged more than the sleeper (#912). Each case changes only the rows.
+    """
+
+    def failures(self, *rows):
+        table = "".join(f"    {seconds}s {name}\n" for name, seconds in rows)
+        output = f"Slowest tests\n{table}13 tests: 13 passed, 0 failed, 0 ignored, 1.3s\n"
+
+        class Canned(PythonGateDurationsTests):
+            def suite(self, failing=False):
+                return None
+
+            def run_tests(self, start):
+                return subprocess.CompletedProcess([], 0, stdout=output, stderr="")
+
+        result = unittest.TestResult()
+        Canned("test_a_passing_run_ends_with_its_ten_slowest_tests").run(result)
+        self.assertEqual([], result.errors, "\n".join(trace for _, trace in result.errors))
+        return [trace for _, trace in result.failures]
+
+    @unittest.skipUnless(os.environ.get("GRUND_912_RED"),
+                         "red until #912 holds the table to its order rather than to which "
+                         "test leads it; implement removes this")
+    def test_a_test_charged_more_than_the_sleeper_leads_it(self):
+        failures = self.failures((LEADER, "0.80"), (SLEEPS, "0.50"), *FAST)
+        if failures:
+            self.fail(failures[0])
+
+    def test_a_test_charged_less_than_the_sleeper_may_not_lead_it(self):
+        self.assertTrue(self.failures((LEADER, "0.01"), (SLEEPS, "0.50"), *FAST))
+
+    def test_a_table_without_the_sleeper_is_refused(self):
+        self.assertTrue(self.failures((LEADER, "0.80"), *FAST))
+
+    def test_a_sleeper_charged_less_than_it_slept_is_refused(self):
+        self.assertTrue(self.failures((LEADER, "0.80"), (SLEEPS, "0.30"), *FAST))
+
+
 if __name__ == "__main__":
     unittest.main()

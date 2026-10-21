@@ -314,6 +314,53 @@ class PythonGateOutputTests(SuiteShape, unittest.TestCase):
         self.assert_shape(lines, PASSING + 2, failed=1, ignored=1)
 
 
+FAILS, SLEEPER, CHILD = ("test_fails.Fails.test_fails_on_purpose",
+                         "test_noise.Noise.test_sleeps_one_second",
+                         "test_noise.Noise.test_child_process_writes")
+
+
+class SlowestListTests(SuiteShape, unittest.TestCase):
+    """§AR-ci.requirements.5.1 on canned lines: the last check-in lists its slowest first.
+
+    The lines are the red tree's last two check-ins and its summary as the Windows job of
+    CI run 39638987585 printed them (#912), where a runner stall charged the failing test
+    1.14s, ahead of the one-second sleeper. Each case changes only the last slowest list.
+    """
+
+    def shape(self, *slowest):
+        listed = ", ".join(f"{name} {seconds}s" for name, seconds in slowest)
+        lines = [f"40/42 tests, 1 failed, 1.2s elapsed, slowest: {FAILS} 1.14s, {CHILD} 0.02s, "
+                 "test_noise.Noise.test_passes_0 0.00s",
+                 f"42/42 tests, 1 failed, 2.2s elapsed, slowest: {listed}",
+                 "42 tests: 40 passed, 1 failed, 1 ignored, 2.2s"]
+        self.assert_shape(lines, PASSING + 2, failed=1, ignored=1)  # the red tree's call
+
+    @unittest.skipUnless(os.environ.get("GRUND_912_RED"),
+                         "red until #912 holds the slowest list to its order rather than to "
+                         "which test leads it; implement removes this")
+    def test_a_test_charged_more_than_the_sleeper_leads_it(self):
+        self.shape((FAILS, "1.14"), (SLEEPER, "1.00"), (CHILD, "0.02"))
+
+    def test_a_test_charged_less_than_the_sleeper_may_not_lead_it(self):
+        with self.assertRaises(AssertionError):
+            self.shape((FAILS, "0.14"), (SLEEPER, "1.00"), (CHILD, "0.02"))
+
+    @unittest.skipUnless(os.environ.get("GRUND_912_RED"),
+                         "red until #912 holds the slowest list to its order rather than to "
+                         "which test leads it; implement removes this")
+    def test_a_list_out_of_order_is_refused_though_the_sleeper_leads_it(self):
+        with self.assertRaises(AssertionError):
+            self.shape((SLEEPER, "1.00"), (CHILD, "0.02"), (FAILS, "1.14"))
+
+    def test_a_list_without_the_sleeper_is_refused(self):
+        with self.assertRaises(AssertionError):
+            self.shape((FAILS, "1.14"), (CHILD, "0.02"))
+
+    def test_a_sleeper_charged_less_than_it_slept_is_refused(self):
+        with self.assertRaises(AssertionError):
+            self.shape((FAILS, "1.14"), (SLEEPER, "0.50"), (CHILD, "0.02"))
+
+
 def ci_steps():
     """`(name, run)` for each step of `ci.yml` whose `run:` is one line."""
     steps, name = [], None
