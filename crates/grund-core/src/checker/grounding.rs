@@ -23,10 +23,6 @@ use crate::model::{Catalog, CheckReport, Citation, Code, Diagnostic, FileStructu
 use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
 use crate::workspace::namespace_is_unverified;
 
-/// §FS-check.3.6.2.2: an ungrounded Lisp doc-comment warns until grund 0.19.0. The
-/// clause is the pending half of the release guard's vocabulary (§FS-distribution.4.2.3).
-const LISP_DOC_RAMP_CLAUSE: &str = "; this warning becomes an error in grund 0.19.0";
-
 /// One thing a row's `grounding_level` asks for a citation (§FS-check.3.6.2):
 /// where it starts, where it ends, the line a finding anchors at, and how the
 /// message names it.
@@ -117,12 +113,6 @@ pub(super) fn check_grounding(
         // §FS-config-v2.rules.grounding: rungs run strongest first, and a unit a
         // stronger rung already reported is not reported again by a finer one.
         let mut reported: Vec<(usize, usize)> = Vec::new();
-        // §FS-config-v2.schema.sources.extensions: the file's language's recognizer.
-        let lisp = frame
-            .compiled
-            .reading(schema, file)
-            .measurement_rule()
-            .is_lisp();
         for (channel, level) in rungs {
             for unit in grounding_units(findings.file_structure.get(file), level) {
                 if reported.contains(&(unit.start, unit.end))
@@ -134,13 +124,9 @@ pub(super) fn check_grounding(
                     continue;
                 }
                 reported.push((unit.start, unit.end));
-                // §FS-check.3.6.2.2: a Lisp doc-comment became a unit in the release
-                // that made it one, so its `must` finding warns first.
-                let ramped = lisp
-                    && channel == Strength::Must
-                    && matches!(unit.subject, GroundingSubject::DocComment);
+                // §FS-check.3.6.2.2: a Lisp doc-comment's `must` finding is an error
+                // like any other since grund 0.19.0 (§DF-lisp-doc-grounding-lands-in-0-19).
                 let target = match channel {
-                    _ if ramped => &mut report.warnings,
                     Strength::Must => &mut report.errors,
                     Strength::Warn => &mut report.warnings,
                     _ => &mut report.suggestions,
@@ -151,10 +137,9 @@ pub(super) fn check_grounding(
                     line: Some(unit.start),
                     column: None,
                     message: format!(
-                        "{}: no {} citation to a declared ID{}",
+                        "{}: no {} citation to a declared ID",
                         ungrounded_subject(&unit, place.as_deref()),
                         schema.citation.marker,
-                        if ramped { LISP_DOC_RAMP_CLAUSE } else { "" }
                     ),
                     sites: Vec::new(),
                     authority: Vec::new(),

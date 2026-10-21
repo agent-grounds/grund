@@ -230,14 +230,6 @@ pub(crate) enum DocCommentRule {
     None,
 }
 
-impl DocCommentRule {
-    /// Whether this is the Lisp position row, whose ungrounded doc-comments are
-    /// reported on the `warning:` channel through 0.18.x (§FS-check.3.6.2.2).
-    pub(crate) fn is_lisp(self) -> bool {
-        matches!(self, Self::Position(DefinitionStart::LispDefinition))
-    }
-}
-
 /// What the line under a position language's doc comment begins with
 /// (§FS-inline-citation-style.1.1.3). Recognition, not parsing: the test reads one
 /// line, so a Go `var` inside a function body classifies as a definition and a
