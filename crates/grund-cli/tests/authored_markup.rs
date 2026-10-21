@@ -114,6 +114,18 @@ const AUTHORED: &[(&str, &str)] = &[
         "[the §ADR-use-postgres record]: adr/use-postgres.md\n",
     ),
     (
+        "definition-in-a-block-quote",
+        "> See [the §ADR-use-postgres record][].\n>\n> [the §ADR-use-postgres record]: adr/use-postgres.md\n",
+    ),
+    (
+        "definition-in-a-list-item",
+        "- See [the §ADR-use-postgres record][].\n- [the §ADR-use-postgres record]: adr/use-postgres.md\n",
+    ),
+    (
+        "definition-in-a-nested-container",
+        "> 1. [the §ADR-use-postgres record]: adr/use-postgres.md\n",
+    ),
+    (
         "definition-destination-and-title",
         "[pg]: https://example.com/§ADR-use-postgres \"the §ADR-use-postgres record\"\n",
     ),
@@ -192,6 +204,24 @@ fn a_bare_citation_beside_authored_markup_is_still_wrapped() {
             "See [the §ADR-use-postgres rationale][pg] and [§ADR-use-postgres]({PG_LINK}).\n\n\
              [pg]: adr/use-postgres.md\n"
         )
+    );
+    assert_eq!(
+        stdout(&grund(&["fmt", "--write"], &dir)),
+        "rewrote 0 lines\n"
+    );
+}
+
+/// §FS-citations.wrap.enclosing.shape: a `[^` opens a footnote, not a definition's
+/// label, so a citation in a footnote's text is prose: `fmt` wraps it, and a second
+/// write is a no-op.
+#[test]
+fn a_citation_in_a_footnotes_text_is_wrapped() {
+    let notes = "A claim.[^1]\n\n[^1]: See §ADR-use-postgres for why.\n";
+    let dir = project("footnote-text", notes, &full_index());
+    grund(&["fmt", "--write"], &dir);
+    assert_eq!(
+        read(&dir, "docs/notes.md"),
+        format!("A claim.[^1]\n\n[^1]: See [§ADR-use-postgres]({PG_LINK}) for why.\n")
     );
     assert_eq!(
         stdout(&grund(&["fmt", "--write"], &dir)),
@@ -349,8 +379,8 @@ fn a_link_inside_an_index_rows_text_stays_an_entry() {
 }
 
 /// §FS-citations.wrap.enclosing, §FS-check.3.18: a protected form that goes
-/// nowhere — a reference no definition matches, a definition's label, an autolink,
-/// an HTML anchor, a label a lone backtick leaves unclosed — is left by `fmt` and is
+/// nowhere — a reference no definition matches, a definition's label, in a list
+/// item too, an autolink, an HTML anchor, a label a lone backtick leaves unclosed — is left by `fmt` and is
 /// no entry, so the ID is reported missing, at the declaration, in the bytes that
 /// finding has shipped in, and never as "is not a link".
 #[test]
@@ -367,6 +397,10 @@ fn index_rows_that_go_nowhere_are_missing_entries() {
         (
             "definition-label",
             "[the §ADR-use-redis record]: use-redis.md\n",
+        ),
+        (
+            "list-item-definition-label",
+            "- [the §ADR-use-redis record]: use-redis.md\n",
         ),
         ("autolink", "- <https://example.com/§ADR-use-redis>\n"),
         (

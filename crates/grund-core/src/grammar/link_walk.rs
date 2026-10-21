@@ -14,14 +14,15 @@ use super::never_rewrite::{inline_code_span_end, is_escaped, link_destination_cl
 
 /// A `[` still open: its document-wide `id`, where it stands on the line being
 /// walked (`None` when an earlier line of the paragraph opened it), whether it
-/// opens an image's description, and whether it opens its line behind at most
-/// three spaces, the one place a definition's label may start.
+/// opens an image's description, and whether it may open a definition's label:
+/// at the start of its line behind at most three spaces or the line's container
+/// prefixes, and not a footnote's `[^` (§FS-citations.wrap.enclosing.shape).
 #[derive(Clone, Copy, Debug)]
 pub(super) struct Open {
     pub(super) id: Option<usize>,
     pub(super) at: Option<usize>,
     pub(super) image: bool,
-    pub(super) line_start: bool,
+    pub(super) may_define: bool,
 }
 
 /// What follows the `]` that closes an [`Open`], which decides its form
@@ -130,12 +131,14 @@ pub(super) fn walk_line(line: &str, state: &mut WalkState, sink: &mut impl Sink)
             }
             b'[' => {
                 let image = i > 0 && bytes[i - 1] == b'!' && !is_escaped(bytes, i - 1);
-                let line_start = i <= 3 && bytes[..i].iter().all(|byte| *byte == b' ');
+                let may_define = !image
+                    && behind_container_prefixes(&bytes[..i])
+                    && bytes.get(i + 1) != Some(&b'^');
                 state.stack.push(Open {
                     id: sink.opened(i),
                     at: Some(i),
                     image,
-                    line_start,
+                    may_define,
                 });
             }
             b']' => {
@@ -182,7 +185,7 @@ fn after_close(bytes: &[u8], close: usize, open: Option<Open>) -> After {
             },
             None => After::Other,
         },
-        Some(b':') if open.is_some_and(|open| open.line_start && !open.image) => {
+        Some(b':') if open.is_some_and(|open| open.may_define) => {
             let mut dest_start = close + 2;
             while bytes
                 .get(dest_start)
@@ -193,6 +196,42 @@ fn after_close(bytes: &[u8], close: usize, open: Option<Open>) -> After {
             After::Definition { dest_start }
         }
         _ => After::Other,
+    }
+}
+
+/// §FS-citations.wrap.enclosing.shape: whether `prefix`, the bytes before a `[`
+/// on its line, is where a definition's label may start: at most three spaces,
+/// after any block-quote `>` markers and list markers with their indent.
+fn behind_container_prefixes(prefix: &[u8]) -> bool {
+    let mut i = 0;
+    loop {
+        let indent = prefix[i..].iter().take_while(|b| **b == b' ').count();
+        if i + indent == prefix.len() {
+            return indent <= 3;
+        }
+        let marker = i + indent;
+        let after = match prefix[marker] {
+            b'>' if indent <= 3 => marker + 1,
+            b'-' | b'*' | b'+' => marker + 1,
+            b'0'..=b'9' => {
+                let digits = prefix[marker..]
+                    .iter()
+                    .take_while(|b| b.is_ascii_digit())
+                    .count();
+                match prefix.get(marker + digits) {
+                    Some(b'.' | b')') if digits <= 9 => marker + digits + 1,
+                    _ => return false,
+                }
+            }
+            _ => return false,
+        };
+        let block_quote = prefix[marker] == b'>';
+        match prefix.get(after) {
+            Some(b' ' | b'\t') => i = after + 1,
+            None if block_quote => return true,
+            _ if block_quote => i = after,
+            _ => return false,
+        }
     }
 }
 
