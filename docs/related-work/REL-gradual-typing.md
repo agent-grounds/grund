@@ -87,7 +87,7 @@ grund does to a repository's text: what is marked is checked, and the rest is le
   and implementation of the system evolve over almost a decade". Its first account is Klein
   et al., *seL4: Formal Verification of an OS Kernel*, SOSP 2009, pages 207–220, DOI
   10.1145/1629575.1629596
-  ([abstract](https://trustworthy.systems/publications/nictaabstracts/Klein_EHACDEEKNSTW_09.abstract)),
+  ([PDF](https://sel4.systems/Research/pdfs/sel4-formal-verification-os-kernel.pdf)),
   which verifies the kernel "from an abstract specification down to its C implementation".
 
 ## agrees: Where grund agrees
