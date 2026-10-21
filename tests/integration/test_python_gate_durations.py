@@ -1,8 +1,8 @@
 """§AR-ci.3.4.2 — the Python gate ends with its ten slowest tests, not a line per test.
 
 `run_python_gate.run_tests` is run on a suite of its own in a temporary directory:
-one test that sleeps and a dozen that do not. The table must exist, name the slow
-test first, and stop at ten lines; a failing suite must still fail the run.
+one test that sleeps and a dozen that do not. The table must exist, be sorted slowest
+first, list the slow test, and stop at ten lines; a failing suite must still fail the run.
 """
 
 import os
@@ -61,8 +61,9 @@ class PythonGateDurationsTests(unittest.TestCase):
         rows = [row for row in rows if row]
         self.assertTrue(rows, output)
         self.assertLessEqual(len(rows), 10, "the table is the slowest ten, not every test")
-        self.assertIn("test_sleeps", rows[0].group(2), output)
-        self.assertGreaterEqual(float(rows[0].group(1)), 0.5, output)
+        sleeper = [float(row.group(1)) for row in rows if "test_sleeps" in row.group(2)]
+        self.assertTrue(sleeper, f"the slow test is listed:\n{output}")
+        self.assertGreaterEqual(sleeper[0], 0.5, f"the slow test is charged its sleep:\n{output}")
         seconds = [float(row.group(1)) for row in rows]
         self.assertEqual(sorted(seconds, reverse=True), seconds, "slowest first")
 
@@ -127,9 +128,6 @@ class SlowestTableTests(unittest.TestCase):
         self.assertEqual([], result.errors, "\n".join(trace for _, trace in result.errors))
         return [trace for _, trace in result.failures]
 
-    @unittest.skipUnless(os.environ.get("GRUND_912_RED"),
-                         "red until #912 holds the table to its order rather than to which "
-                         "test leads it; implement removes this")
     def test_a_test_charged_more_than_the_sleeper_leads_it(self):
         failures = self.failures((LEADER, "0.80"), (SLEEPS, "0.50"), *FAST)
         if failures:

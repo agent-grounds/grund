@@ -77,8 +77,12 @@ class SuiteShape:
         self.assertEqual(failed, int(last.group(3)), output)
         slowest = SLOWEST.findall(last.group(5))
         self.assertTrue(1 <= len(slowest) <= 3, output)
-        self.assertIn("sleeps_one_second", slowest[0][0], f"the slowest test leads:\n{output}")
-        self.assertGreaterEqual(float(slowest[0][1]), 0.9, output)
+        # §AR-ci.requirements.5.1 holds the order, not the leader, which a stall can move (#912).
+        seconds = [float(listed) for _, listed in slowest]
+        self.assertEqual(sorted(seconds, reverse=True), seconds, f"slowest first:\n{output}")
+        sleeper = [float(listed) for name, listed in slowest if "sleeps_one_second" in name]
+        self.assertTrue(sleeper, f"the one-second sleeper is listed:\n{output}")
+        self.assertGreaterEqual(sleeper[0], 0.9, f"the sleeper is charged its second:\n{output}")
         summary = SUMMARY.match(lines[-1])
         self.assertIsNotNone(summary, f"the last line is not the summary:\n{output}")
         self.assertEqual((total, total - failed - ignored, failed, ignored),
@@ -335,9 +339,6 @@ class SlowestListTests(SuiteShape, unittest.TestCase):
                  "42 tests: 40 passed, 1 failed, 1 ignored, 2.2s"]
         self.assert_shape(lines, PASSING + 2, failed=1, ignored=1)  # the red tree's call
 
-    @unittest.skipUnless(os.environ.get("GRUND_912_RED"),
-                         "red until #912 holds the slowest list to its order rather than to "
-                         "which test leads it; implement removes this")
     def test_a_test_charged_more_than_the_sleeper_leads_it(self):
         self.shape((FAILS, "1.14"), (SLEEPER, "1.00"), (CHILD, "0.02"))
 
@@ -345,9 +346,6 @@ class SlowestListTests(SuiteShape, unittest.TestCase):
         with self.assertRaises(AssertionError):
             self.shape((FAILS, "0.14"), (SLEEPER, "1.00"), (CHILD, "0.02"))
 
-    @unittest.skipUnless(os.environ.get("GRUND_912_RED"),
-                         "red until #912 holds the slowest list to its order rather than to "
-                         "which test leads it; implement removes this")
     def test_a_list_out_of_order_is_refused_though_the_sleeper_leads_it(self):
         with self.assertRaises(AssertionError):
             self.shape((SLEEPER, "1.00"), (CHILD, "0.02"), (FAILS, "1.14"))
