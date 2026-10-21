@@ -82,6 +82,26 @@ fn printed_entries(check: &str) -> Vec<String> {
         .collect()
 }
 
+/// The `missing-index-entry` and `unlinked-index-entry` findings a JSON `check`
+/// reports, read by code: the unused warning's explanation of a discounted
+/// index entry (§FS-check.4.1.2) also says "index" and is not one of them.
+fn index_findings(dir: &Path, case: &str) -> Vec<String> {
+    let output = run_grund(&["check", "--format", "json", "."], dir);
+    assert_eq!(output.status.code(), Some(0), "{case}: JSON check failed");
+    stdout(&output)
+        .lines()
+        .filter(|line| !line.is_empty())
+        .filter_map(|line| {
+            let finding: serde_json::Value = serde_json::from_str(line)
+                .unwrap_or_else(|err| panic!("{case}: not a JSON finding ({err}): {line}"));
+            let code = finding["code"]
+                .as_str()
+                .unwrap_or_else(|| panic!("{case}: a JSON finding carries no code: {line}"));
+            matches!(code, "missing-index-entry" | "unlinked-index-entry").then(|| line.to_string())
+        })
+        .collect()
+}
+
 /// Run `check`, paste every printed entry into the index as its own list item,
 /// and require a clean second `check` and an index `fmt --write` leaves alone.
 fn assert_printed_entries_repair(dir: &Path, case: &str, expected: usize) {
@@ -103,10 +123,10 @@ fn assert_printed_entries_repair(dir: &Path, case: &str, expected: usize) {
         "{case}: the printed entry did not repair the index: {}",
         stdout(&after)
     );
+    let left = index_findings(dir, case);
     assert!(
-        !stdout(&after).contains("index"),
-        "{case}: the printed entry left an index finding: {}",
-        stdout(&after)
+        left.is_empty(),
+        "{case}: the printed entry left an index finding: {left:?}"
     );
 
     let fmt = run_grund(&["fmt", "--write", "."], dir);
