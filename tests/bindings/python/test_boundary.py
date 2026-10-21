@@ -2,6 +2,7 @@
 
 from concurrent.futures import ThreadPoolExecutor
 import contextlib
+import errno
 import io
 import os
 from pathlib import Path
@@ -123,7 +124,14 @@ class BoundaryTests(unittest.TestCase):
             (root / "grund.toml").write_text('grund_config_version = 1\n[workspace]\nmembers = ["packages/*"]\n')
             (root / "packages").mkdir()
             member = os.fsencode(root / "packages") + b"/bad-\xff"
-            os.mkdir(member)
+            try:
+                os.mkdir(member)
+            except OSError as error:
+                # §FS-distribution.3.3.3: no non-UTF-8 name, no such member (macOS, #891).
+                if error.errno != errno.EILSEQ:
+                    raise
+                self.skipTest("this filesystem cannot hold a non-UTF-8 name, so the "
+                              "unnamed non-Unicode member cannot arise here")
             with open(member + b"/grund.toml", "wb") as config:
                 config.write(b"grund_config_version = 1\n")
             with self.assertRaises(self.g.PathEncodingError):
