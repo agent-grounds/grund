@@ -17,9 +17,8 @@ pub struct InitOpts {
     /// (§FS-init.1.6). `None` lays the default; a named one, the default's name
     /// included, also earns the note over an existing config (§FS-init.1.6.5).
     pub template: Option<String>,
-    /// `--scaffold`, and its deprecated spelling `--docs` — also lay the
-    /// template's starter files (§FS-init.1, §FS-init.1.7). The field keeps its
-    /// name because it is published API (§DF-init-templates.2.3).
+    /// `--scaffold` — also lay the template's starter files (§FS-init.1). The
+    /// field keeps its name because it is published API (§DF-init-templates.2.3).
     pub docs: bool,
     pub force: bool,
     pub dry_run: bool,

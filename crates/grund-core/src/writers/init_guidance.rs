@@ -11,9 +11,8 @@ use crate::templates::{
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct InitNext {
-    /// Whether the run laid the starter files: `--scaffold`, or its deprecated
-    /// spelling `--docs` (§FS-init.1.7). The name is published API and stays
-    /// (§DF-init-templates.2.3).
+    /// Whether the run laid the starter files (`--scaffold`, §FS-init.1). The
+    /// name is published API and stays (§DF-init-templates.2.3).
     pub docs: bool,
     /// Whether the effective config declares any citable kind. Where it does
     /// not, the guidance teaches the first kind instead (§FS-init.2.2.2.2).
