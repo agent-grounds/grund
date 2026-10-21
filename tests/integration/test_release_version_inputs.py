@@ -8,11 +8,15 @@ release and dev trees. §REQ-one-answer.proof.evidence keeps truth independent.
 
 import copy
 import json
+import os
+import shutil
+import sys
+import tomllib
 import unittest
 
 from release_version_fixture import (
-    CASE, FACT, copy_tree, execute_phase, git, inventory, read_bytes, set_version,
-    workflow_phases,
+    CASE, FACT, REPO, copy_tree, execute_phase, git, inventory, read_bytes, run,
+    set_version, workflow_phases,
 )
 
 
@@ -98,6 +102,42 @@ class WorkflowVersionInputTests(unittest.TestCase):
 
     def test_patch_dev_index_contains_synchronized_inputs(self):
         self.check_phase("auto-bump", "0.19.1", "0.19.2-dev", 1)
+
+
+@unittest.skipUnless(os.environ.get("GRUND_895_RED"),
+                     "red until #895 derives the bump versions from the tree under test; "
+                     "implement removes this")
+class CandidateTreeTests(unittest.TestCase):
+    """§FS-distribution.4.5: the workflow tests hold on the candidates they gate.
+
+    Candidate CI runs this module on a tree already bumped to the release and to
+    its dev successor (#895), so run it there, not only on main's version.
+    """
+
+    def check_tree(self, version):
+        root = copy_tree(self)
+        for name in (".github/workflows/release-minor.yml", ".github/workflows/auto-bump.yml",
+                     "tests/integration/release_version_fixture.py",
+                     "tests/integration/test_release_workflow.py",
+                     "tests/integration/test_release_version_inputs.py"):
+            (root / name).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(REPO / name, root / name)
+        result = set_version(root, version)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        result = run(root / "tests/integration", sys.executable, "-m", "unittest",
+                     "test_release_version_inputs.WorkflowVersionInputTests")
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+    def candidates(self):
+        manifest = tomllib.loads((REPO / "Cargo.toml").read_text(encoding="utf-8"))
+        major, minor, _ = manifest["workspace"]["package"]["version"].split(".", 2)
+        return f"{major}.{int(minor) + 1}.0", f"{major}.{int(minor) + 1}.1-dev"
+
+    def test_release_candidate_tree(self):
+        self.check_tree(self.candidates()[0])
+
+    def test_dev_candidate_tree(self):
+        self.check_tree(self.candidates()[1])
 
 
 if __name__ == "__main__":
