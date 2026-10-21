@@ -333,4 +333,4 @@ Under `--format=json` it is one warning finding on stdout with `path` and `line`
 
 #### checks.unread-scan-root.empty-scan: It stands in place of the empty-scan caution
 
-It is a finding about the default scope, so where the unread root was the only thing the run would have read, it suppresses the generic empty-scan caution ([§FS-check.2.2.3](FS-check.md#223-exit-code-json-and-what-suppresses-it)) and the run's stderr is empty. That caution points at `include` and `grund init --docs`, the wrong fix for a file the configuration already names; this warning names the row and the edit.
+It is a finding about the default scope, so where the unread root was the only thing the run would have read, it suppresses the generic empty-scan caution ([§FS-check.2.2.3](FS-check.md#223-exit-code-json-and-what-suppresses-it)) and the run's stderr is empty. That caution points at `include` and `grund init --scaffold`, the wrong fix for a file the configuration already names; this warning names the row and the edit.

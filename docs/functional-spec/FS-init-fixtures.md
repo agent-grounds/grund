@@ -142,7 +142,7 @@ next:
 see AGENTS.md for the full workflow.
 ```
 
-`grund init {repo_copy} --docs` writes the same tree and the same report, after one deprecation warning on stderr ([§FS-init.1.7](FS-init.md#17---docs-is-the-deprecated-spelling-of---scaffold)).
+`grund init {repo_copy} --docs` writes nothing: `--docs` is an unknown flag since 0.19.0, refused as [§FS-init-fixtures.4](FS-init-fixtures.md#4-target-and-flag-failures) says ([§FS-init.1.7](FS-init.md#17---docs-is-the-deprecated-spelling-of---scaffold)).
 
 Final tree includes the default-form files plus exactly these docs and tests scaffold paths:
 

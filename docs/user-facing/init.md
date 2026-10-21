@@ -69,12 +69,15 @@ two test homes — at the homes the config names ([§FS-init.2.1.3](../functiona
 starter file is left alone unless you pass `--force`. Use it on an empty
 repository, or one that wants to move to the canonical layout.
 
-`--scaffold` used to be spelled `--docs`. The old spelling still lays the same
-files, after a warning that it is removed in grund 0.19.0 ([§FS-init.1.7](../functional-spec/FS-init.md#17---docs-is-the-deprecated-spelling-of---scaffold)):
+`--scaffold` used to be spelled `--docs`. grund 0.18.0 still took the old
+spelling with a warning; since grund 0.19.0 it is an unknown flag, and the run
+writes nothing ([§FS-init.1.7](../functional-spec/FS-init.md#17---docs-is-the-deprecated-spelling-of---scaffold)):
 
 ```text
-warning: --docs is deprecated and is removed in grund 0.19.0; use --scaffold, which lays the same starter files
+error: unknown flag `--docs`
 ```
+
+A script or CI step that still runs `grund init --docs` spells it `--scaffold`.
 
 ## `--template=none`: a repository with its own kinds
 
