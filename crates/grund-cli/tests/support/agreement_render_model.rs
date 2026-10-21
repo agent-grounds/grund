@@ -231,11 +231,21 @@ impl Model {
         }
         for s in facts["sections"].as_array().into_iter().flatten() {
             let of = field(s, "of")?;
-            let owner = model
+            // §REQ-one-answer.proof.evidence: duplicate homes own separate
+            // section maps; an ID alone cannot choose their physical owner.
+            let owners: Vec<_> = model
                 .decls
                 .iter()
-                .position(|d| d.id == of)
-                .ok_or_else(|| format!("section of undeclared {of}"))?;
+                .enumerate()
+                .filter(|(_, d)| d.id == of && s["file"].as_str().is_none_or(|file| d.file == file))
+                .map(|(index, _)| index)
+                .collect();
+            let [owner] = owners.as_slice() else {
+                return Err(format!(
+                    "section of {of} needs exactly one physical owner: {s}"
+                ));
+            };
+            let owner = *owner;
             let file = model.decls[owner].file.clone();
             let text = model.text(&file)?;
             let heading = field(s, "heading")?;

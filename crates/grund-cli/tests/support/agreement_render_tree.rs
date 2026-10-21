@@ -192,26 +192,34 @@ impl View<'_> {
             .map_or(Value::Null, |k| k["title"].clone())
     }
 
-    /// Declarations by ID order (§FS-list.2.4), each followed by its sections.
+    /// Declarations and sections by coordinate, then physical site (§FS-list.2.7).
     pub fn order(&self) -> Vec<(usize, Option<usize>)> {
-        let mut decls: Vec<usize> = (0..self.m.decls.len()).collect();
-        decls.sort_by(|&a, &b| {
-            natural(&self.m.decls[a].id, &self.m.decls[b].id)
-                .then(self.m.decls[a].file.cmp(&self.m.decls[b].file))
-                .then(self.m.decls[a].line.cmp(&self.m.decls[b].line))
-        });
         let mut rows = Vec::new();
-        for d in decls {
+        for d in 0..self.m.decls.len() {
             rows.push((d, None));
-            let mut sections: Vec<usize> = (0..self.m.sections.len())
-                .filter(|&s| self.m.sections[s].owner == d)
-                .collect();
-            sections.sort_by(|&a, &b| {
-                natural(&self.m.sections[a].path, &self.m.sections[b].path)
-                    .then(self.m.sections[a].line.cmp(&self.m.sections[b].line))
-            });
-            rows.extend(sections.into_iter().map(|s| (d, Some(s))));
+            rows.extend(
+                (0..self.m.sections.len())
+                    .filter(|&s| self.m.sections[s].owner == d)
+                    .map(|s| (d, Some(s))),
+            );
         }
+        // §FS-list.2.7: duplicate homes interleave by coordinate, then site;
+        // every claimant's measurement stays local to its own physical body.
+        rows.sort_by(|&(a, sa), &(b, sb)| {
+            let section = |s: Option<usize>| s.map(|s| self.m.sections[s].path.as_str());
+            natural(&self.m.decls[a].id, &self.m.decls[b].id)
+                .then_with(|| match (section(sa), section(sb)) {
+                    (Some(a), Some(b)) => natural(a, b),
+                    (a, b) => a.cmp(&b),
+                })
+                .then(self.m.decls[a].file.cmp(&self.m.decls[b].file))
+                .then_with(|| {
+                    let line = |d: usize, s: Option<usize>| {
+                        s.map_or(self.m.decls[d].line, |s| self.m.sections[s].line)
+                    };
+                    line(a, sa).cmp(&line(b, sb))
+                })
+        });
         rows
     }
 
@@ -364,7 +372,10 @@ impl View<'_> {
                 let section = &self.m.sections[s];
                 row["section"] = json!(section.path);
                 row["line"] = json!(section.line);
-                row["duplicate"] = json!(section.facts["duplicate"].as_bool().unwrap_or(false));
+                row["duplicate"] = json!(
+                    decl.facts["duplicate"].as_bool().unwrap_or(false)
+                        || section.facts["duplicate"].as_bool().unwrap_or(false)
+                );
                 (Some(section.lead.clone()), Some(section.full.clone()))
             }
             None => (decl.lead.clone(), decl.full.clone()),
