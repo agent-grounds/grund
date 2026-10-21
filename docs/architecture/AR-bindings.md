@@ -280,6 +280,32 @@ success and failure. Preserve POSIX acceptance coverage; a Linux-only validation
 instrument or a blanket skip cannot replace it. These are private test mechanics,
 not a public testing API or a change to the Rust return boundary.
 
+#### 6.2.2 Every step fails with its output, and the one fetch is retried
+
+"With its output" holds for every command the Python acceptance runs, not only the
+install of [§AR-bindings.6.2](AR-bindings.md#62-the-python-acceptance-runs-in-the-gate). `tests/bindings/support.py` has one helper, `checked`, that
+runs a command with its output captured and, when it exits non-zero, fails the test with
+the command, its exit status, its stdout and its stderr in the failure's own text. Every
+captured command in `tests/bindings/support.py` and `tests/bindings/python/` goes through
+it, the oracle call of `rust_call` included; none passes `check=True`, whose
+`CalledProcessError` prints the exit status and drops what the command said. A failed
+step on a CI runner is then diagnosable from the job log alone.
+
+The acceptance has one registry fetch: `test_build`'s `pip install build`, the build
+frontend its sdist check needs. `test_build.install_build` makes it, and retries it
+only for what a retry can cure, as [§AR-ci.3.4.1.3](AR-ci.md#3413-the-typescript-compiler-a-prepared-input) does for npm. An install whose pip
+output names a broken or refused connection, a timeout or a failed name resolution is
+tried again after a short pause, up to three attempts in all. Any other failure, and a
+third network failure, fails the test at once with pip's own output and never turns into
+a skip ([§AR-ci.3.4](AR-ci.md#34-the-python-gates-inputs)). pip's own `--retries` does not replace this: it had already run on
+the CI attempt that failed.
+
+`tests/integration/test_python_acceptance_steps.py` holds the harness to this without
+the network: each helper's failure carries a failing command's stdout and stderr, no
+captured `check=True` call is left, and `install_build`, against a local index, is
+tried three times when every connection is dropped and once when the index answers
+that it has no such package, and fails both times with pip's message.
+
 ## 7. Why this shape
 
 - **One source of truth for behavior.** Bug fixes and new rules land in `grund-core` and reach all three ecosystems on the next release.
