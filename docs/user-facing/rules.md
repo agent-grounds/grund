@@ -285,14 +285,19 @@ produced was a warning; from 0.19.0 it is an ordinary error and fails the run.
 
 From grund 0.19.0, a citation of a name under a number is ordinary for required
 rules too. A forbidden citation, or an outbound, per-target or inbound upper
-count that only such a site breaks, is an error. Mixed sites also count as
-ordinary when deciding whether another warning window applies. An
-independently applicable nested-alias window still warns with its own clause.
-Recommended findings remain opt-in suggestions; explicit `warn` and `warn-not`
-strengths remain warnings
+count that only such a site breaks, is an error. Recommended findings remain
+opt-in suggestions; explicit `warn` and `warn-not` strengths remain warnings
 ([§FS-rules.7.12](../functional-spec/FS-rules.md#712-a-finding-only-a-citation-of-a-name-under-a-number-raises-warns-until-0190)).
 Repair or remove the citation, adjust the constraint, or filter the finding's
 code with `--ignore`.
+
+In a workspace that nests one member inside another, a rule target pinned at
+the member's own alias path, such as `group/api/AR` in a rule of member
+`group/api`, matches what the bare `AR` matches. In 0.18.0 a finding only that
+match produced — a forbidden citation, an upper count it pushed out of bounds,
+or a per-target finding for a declaration the pin brought in — was a warning;
+from 0.19.0 it is an ordinary error and fails the run.
+[§FS-config.3.9.3](../functional-spec/FS-config.md#393-alias-matching) [§FS-rules.7.9](../functional-spec/FS-rules.md#79-a-target-pinned-at-its-own-nested-alias-warns-until-0190)
 
 The runnable [`examples/rules/`](../../examples/rules/) repository includes a
 passing and violated instance of all five families, shared-prefix coverage
