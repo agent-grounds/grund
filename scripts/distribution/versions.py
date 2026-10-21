@@ -6,12 +6,13 @@ tree or from a ref (§FS-distribution.4.3: the verify job reads the release sour
 not the checkout), and fails naming each one that disagrees. `set_version` writes them
 all, and both bump helpers use it (§FS-distribution.4.5).
 
-`set_version` rewrites only the lines that hold a version, so on the Cargo files it
-writes exactly what `cargo set-version --workspace` did before it: the workspace
+`set_version` rewrites only version fields and the checked CLI version inputs.
+On the Cargo files it writes exactly what `cargo set-version --workspace` did before it: the workspace
 version, a crate's own literal version, every path dependency's requirement on a
 member, and each member's entry in the lock. Line endings and every other byte stay.
 """
 
+import json
 import re
 import subprocess
 import tomllib
@@ -21,6 +22,8 @@ from plan import pep440
 
 PYPROJECT = "crates/grund-py/pyproject.toml"
 PRE_MOVE_PYPROJECT = "pyproject.toml"
+CLI_STDOUT = "tests/e2e/cases/cli-version/expected.stdout"
+CLI_FACT = "tests/integration/command_agreement_facts/cli-version.json"
 
 
 class Source:
@@ -121,8 +124,38 @@ def _in_table(text, header, pattern, value):
     raise SystemExit(f"error: no {pattern} line in [{header}]")
 
 
+def _version_fact(text, output):
+    """§FS-distribution.4.5: replace only the authored version input's byte array.
+
+    §REQ-one-answer.proof.evidence: leave every other input and independent
+    answer intact, including its formatting; do not reconstruct the inventory.
+    """
+    match = re.search(r'"inputFiles"\s*:\s*', text)
+    if match is None:
+        raise SystemExit(f"error: {CLI_FACT} must carry its authored inputFiles")
+    start = match.end()
+    _, length = json.JSONDecoder().raw_decode(text[start:])
+    inputs = text[start:start + length]
+    pattern = r'("expected\.stdout"\s*:\s*\{\s*"bytes"\s*:\s*)\[[\d,\s]*\](\s*\})'
+    updated, count = re.subn(pattern, lambda m: (
+        m.group(1) + json.dumps(list(output.encode("utf-8")), separators=(",", ":"))
+        + m.group(2)), inputs)
+    if count != 1:
+        raise SystemExit(f"error: {CLI_FACT} must have one expected.stdout bytes input")
+    return text[:start] + updated + text[start + length:]
+
+
+def _set_cli_version(root, version):
+    """§FS-distribution.4.5: one write owns both checked CLI version inputs."""
+    output = f"grund {version}\n"
+    if (root / CLI_STDOUT).is_file():
+        _rewrite(root / CLI_STDOUT, lambda _: output)
+    if (root / CLI_FACT).is_file():
+        _rewrite(root / CLI_FACT, lambda t: _version_fact(t, output))
+
+
 def set_version(root, version):
-    """Write `version` into every source `readings` reads (§FS-distribution.4.5)."""
+    """§FS-distribution.4.5: write package versions and their checked CLI inputs."""
     root = Path(root)
     _, members = _members(Source(root))
     names = set(members.values())
@@ -143,3 +176,4 @@ def set_version(root, version):
     if (root / PYPROJECT).is_file():
         _rewrite(root / PYPROJECT,
                  lambda t: _in_table(t, "project", r'version\s*=\s*"', pep440(version)))
+    _set_cli_version(root, version)
