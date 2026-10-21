@@ -236,7 +236,6 @@ fn evaluate_one(
                         } else {
                             (Code::DISCOURAGED_CITATION, "")
                         };
-                        // §FS-rules.7.9: a site a nested-alias pin matches is ordinary.
                         let message = format!(
                             "{} {} not cite {} ({authority}){repair}",
                             index
@@ -262,7 +261,7 @@ fn evaluate_one(
             for subject in subjects {
                 // §FS-rules.3.4: a numbered section of the subject's own body
                 // reaches it here, an ordinary site since §FS-rules.7.8 landed, and a
-                // citing kind a nested-alias pin matches counts since §FS-rules.7.9 did.
+                // citing kind counts wherever a pinned target matches it (§FS-config.3.9.3).
                 let count = index
                     .citations_to(&subject)
                     .iter()

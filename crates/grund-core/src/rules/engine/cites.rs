@@ -1,6 +1,6 @@
-//! The `cites` relation's count over one subject (§FS-rules.5.1–5.3). Sites a
-//! target pinned at the rule's own nested alias matches count as any other since
-//! §FS-rules.7.9's window closed, and mixed sites are ordinary (§FS-rules.7.12).
+//! The `cites` relation's count over one subject (§FS-rules.5.1–5.3): every site
+//! a target matches counts, one pinned at the rule's own nested alias included
+//! (§FS-config.3.9.3). Mixed sites are ordinary (§FS-rules.7.12).
 
 use super::super::facts::{NodeKey, RuleFacts};
 use super::super::{Cardinality, RuleLevel, RuleTargets, TargetMode};
