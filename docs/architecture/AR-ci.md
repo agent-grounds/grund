@@ -99,7 +99,10 @@ allows before a nonzero exit. HTTP 404 responses
 remain failures, and unresolved timeouts are never accepted as successes.
 
 The pinned binary retains a separate fixed 10-second connection timeout; the
-30-second setting does not raise that ceiling. Both timeout phases enter
+30-second setting does not raise that ceiling. A persistent connection timeout
+therefore consumes a nominal 65 seconds per pass: five attempts at 10 seconds
+plus 15 seconds of backoff, plus overhead and possible host-specific pacing.
+Both timeout phases enter
 lychee's shared retry loop, so the extra retry offers either phase another
 recovery opportunity. This does not identify which phase stalled at a public
 host or guarantee immunity to arbitrary outages.
