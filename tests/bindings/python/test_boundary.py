@@ -5,7 +5,6 @@ import contextlib
 import io
 import os
 from pathlib import Path
-import subprocess
 import sys
 import threading
 import time
@@ -13,7 +12,7 @@ import unittest
 from unittest.mock import patch
 
 from adapter import binding, plain
-from support import REPO, fixture, temporary, tree_bytes
+from support import REPO, checked, fixture, temporary, tree_bytes
 
 
 def workload(parent):
@@ -55,8 +54,7 @@ class BoundaryTests(unittest.TestCase):
             self.assertEqual(argv, sys.argv)
             # Capture OS file descriptors too; Python redirects alone miss native prints.
             code = 'import grund; grund.check(__import__("pathlib").Path(__import__("sys").argv[1])); print("alive")'
-            run = subprocess.run([sys.executable, "-c", code, str(root)], capture_output=True,
-                                 text=True, cwd=REPO, check=True)
+            run = checked([sys.executable, "-c", code, root])
             self.assertEqual("alive\n", run.stdout)
             self.assertEqual("", run.stderr)
 
@@ -67,8 +65,7 @@ class BoundaryTests(unittest.TestCase):
                     'assert grund.check().report.errors; '
                     'assert grund.show("FS-001-alpha").body; '
                     'assert os.getcwd()==before')
-            subprocess.run([sys.executable, "-c", code], cwd=root, check=True,
-                           capture_output=True, text=True)
+            checked([sys.executable, "-c", code], cwd=root)
             source = root / "docs/functional-spec/FS-001-alpha.md"
             result = self.g.check(source)
             self.assertTrue(result.report.errors)

@@ -1,16 +1,14 @@
 """Resolved Python/frontend isolation (§AR-bindings.1, §FS-distribution.3.3.7)."""
 
 import json
-import subprocess
 import unittest
-from support import REPO
+from support import REPO, checked
 
 
 class IsolationTests(unittest.TestCase):
     def test_python_is_an_independent_core_frontend(self):
-        metadata = json.loads(subprocess.run(
-            ["cargo", "metadata", "--locked", "--format-version", "1"],
-            cwd=REPO, capture_output=True, text=True, check=True).stdout)
+        metadata = json.loads(checked(
+            ["cargo", "metadata", "--locked", "--format-version", "1"]).stdout)
         names = {p["id"]: p["name"] for p in metadata["packages"]}
         ids = {names[i]: i for i in metadata["workspace_members"]}
         self.assertIn("grund-py", ids, "the missing Python frontend must join the workspace")
@@ -39,5 +37,4 @@ class IsolationTests(unittest.TestCase):
         import os
         environment = dict(os.environ, PYO3_PYTHON="/no/python/available",
                            PYTHON_SYS_EXECUTABLE="/no/python/available")
-        subprocess.run(["cargo", "check", "--locked", "-p", "grund"], cwd=REPO,
-                       capture_output=True, text=True, check=True, env=environment)
+        checked(["cargo", "check", "--locked", "-p", "grund"], env=environment)

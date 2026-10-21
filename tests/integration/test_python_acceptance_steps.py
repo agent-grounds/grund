@@ -119,9 +119,6 @@ class EmptyIndex:
         self.server.server_close()
 
 
-@unittest.skipUnless(os.environ.get("GRUND_896_RED") == "1",
-                     "red until #896 adds support.checked and routes every step through it; "
-                     "implement removes this")
 class StepOutputTests(unittest.TestCase):
     def assert_output_shown(self, outcome):
         self.assertIsNotNone(outcome["error"], "a failing command must fail the step")
@@ -162,9 +159,6 @@ class StepOutputTests(unittest.TestCase):
         self.assertEqual([], silent, "route these through support.checked")
 
 
-@unittest.skipUnless(os.environ.get("GRUND_896_RED") == "1",
-                     "red until #896 adds test_build.install_build and its retry; "
-                     "implement removes this")
 class BuildFetchTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

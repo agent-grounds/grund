@@ -9,20 +9,40 @@ import json
 from pathlib import Path
 import re
 import shutil
-import subprocess
 import sys
 import tarfile
+import time
 import unittest
 import venv
 
-from support import REPO, temporary
+from support import REPO, checked, temporary
 
 CRATE = Path("crates/grund-py")
+# What a retry can cure: pip never reached the index, or lost it (§AR-bindings.6.2.2).
+NETWORK_ERRORS = re.compile(
+    r"connection (?:broken|aborted|refused|reset)|NewConnectionError|ConnectTimeoutError"
+    r"|ReadTimeoutError|timed out|name resolution|Name or service not known"
+    r"|nodename nor servname|getaddrinfo failed", re.IGNORECASE)
+INSTALL_ATTEMPTS = 3
 
 
 def run(arguments, cwd, env=None):
-    return subprocess.run([str(a) for a in arguments], cwd=cwd, env=env,
-                          capture_output=True, text=True, check=True)
+    return checked(arguments, cwd=cwd, env=env)
+
+
+def install_build(python, cwd, env):
+    """Install the sdist's build frontend, retried only on a network failure (§AR-bindings.6.2.2).
+
+    Any other failure, and the last network one, fails the test with pip's own output and
+    never skips it (§AR-ci.3.4).
+    """
+    for attempt in range(1, INSTALL_ATTEMPTS + 1):
+        try:
+            return run([python, "-m", "pip", "install", "build"], cwd, env)
+        except AssertionError as failure:
+            if attempt == INSTALL_ATTEMPTS or not NETWORK_ERRORS.search(str(failure)):
+                raise
+        time.sleep(2 * attempt)
 
 
 def environment(parent):
@@ -61,7 +81,7 @@ class BuildTests(unittest.TestCase):
                      'assert not [e for e in distribution("grund").entry_points '
                      'if e.group=="console_scripts"]')
             run([python, "-c", smoke], source, env)
-            run([python, "-m", "pip", "install", "build"], source, env)
+            install_build(python, source, env)
             run([python, "-m", "build", "--sdist", "--outdir", Path(temp) / "dist", crate],
                 source, env)
             archive, = (Path(temp) / "dist").glob("*.tar.gz")
