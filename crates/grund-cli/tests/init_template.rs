@@ -1,7 +1,7 @@
 //! What `grund init` lays from a template (§FS-init.1.6) as the shipped CLI sees
-//! it: `--scaffold` and its deprecated spelling `--docs` lay one tree, and a
-//! fresh `--template=none` tree is one `grund check` and `grund init --check`
-//! both pass. The single-command transcripts are e2e cases; these are the
+//! it: `--scaffold` lays the starter files while `--docs`, its old spelling, is
+//! refused as an unknown flag, and a fresh `--template=none` tree is one
+//! `grund check` and `grund init --check` both pass. The single-command transcripts are e2e cases; these are the
 //! sequences a case cannot express.
 
 use std::fs;
@@ -41,20 +41,29 @@ fn init(target: &Path, flags: &[&str]) -> (bool, String) {
     )
 }
 
-/// §FS-init.1.7: `--docs` lays exactly what `--scaffold` lays and reports it the
-/// same way, after one warning naming the replacement and the removal release.
+/// §FS-init.1.7: `--docs` was the deprecated spelling of `--scaffold` and is an
+/// unknown flag from 0.19.0: refused with exit 2 before anything is written, while
+/// `--scaffold` lays the starter files and warns about nothing.
 #[test]
-fn docs_and_scaffold_lay_one_tree() {
+fn docs_is_an_unknown_flag_and_scaffold_lays_the_files() {
     let scaffold = workdir("init_template_scaffold_spelling");
     let docs = workdir("init_template_docs_spelling");
     let (ok, scaffold_stderr) = init(&scaffold, &["--scaffold"]);
     assert!(ok, "{scaffold_stderr}");
-    let (ok, docs_stderr) = init(&docs, &["--docs"]);
-    assert!(ok, "{docs_stderr}");
-    assert_eq!(tree(&scaffold), tree(&docs));
-    let warning = "warning: --docs is deprecated and is removed in grund 0.19.0; use --scaffold, which lays the same starter files\n";
-    assert_eq!(docs_stderr, format!("{warning}{scaffold_stderr}"));
-    assert!(!scaffold_stderr.contains("deprecated"), "{scaffold_stderr}");
+    assert!(!scaffold_stderr.contains("--docs"), "{scaffold_stderr}");
+    assert!(scaffold.join("docs/functional-spec/README.md").is_file());
+
+    let refused = run_grund(
+        &["init", docs.to_str().unwrap(), "--name", "demo", "--docs"],
+        manifest_dir(),
+    );
+    assert_eq!(refused.status.code(), Some(2), "{refused:?}");
+    assert!(refused.stdout.is_empty(), "{refused:?}");
+    assert_eq!(
+        String::from_utf8_lossy(&refused.stderr),
+        "error: unknown flag `--docs`\n"
+    );
+    assert!(tree(&docs).is_empty(), "a refused flag writes nothing");
 }
 
 /// §FS-init.1.6.2: a fresh `none` tree passes `grund check` and `grund init

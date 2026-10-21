@@ -558,7 +558,6 @@
 {"project":"tests/e2e/cases/init-conversation-link-claude/repo","show":[0,"fddd00933eb6fca3",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-conversation-link/expected.repo","show":[0,"fddd00933eb6fca3",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-conversation-link/repo","show":[0,"fddd00933eb6fca3",""],"validate":[0,"e3b0c44298fc1c14",""]}
-{"project":"tests/e2e/cases/init-docs-form/expected.repo","show":[0,"70a7174f2e2b0a68",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-force-keeps-existing-config/expected.repo","show":[0,"6119672bf68d9523",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-force-keeps-existing-config/repo","show":[0,"6119672bf68d9523",""],"validate":[0,"e3b0c44298fc1c14",""]}
 {"project":"tests/e2e/cases/init-grund-toml-conflict-no-force/repo","show":[0,"af56f373e6b3ee9f",""],"validate":[0,"e3b0c44298fc1c14",""]}

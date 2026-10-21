@@ -6,7 +6,7 @@ Usage:  grund init [PATH] [--template NAME] [--scaffold] [--name NAME] [--descri
 
 Options:
   --template NAME  software-development (default: the canonical kinds) or none (no kinds, for a repo that declares its own)
-  --scaffold     also write the template's starter files: docs/ and tests/ (--docs is the deprecated spelling)
+  --scaffold     also write the template's starter files: docs/ and tests/
   --name NAME    project name (default: target project_name, then directory name)
   --description TEXT  one-line project description written to grund.toml (shown next to this project in workspace member lists)
   --force        rewrite the canonical AGENTS.md and the --scaffold starter files; grund.toml is never overwritten
