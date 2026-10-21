@@ -86,7 +86,7 @@ should = ["FS|AR"]
 
 - Each **FS** declaration should cite GOAL or FS; never cite AR.
 - Each **DA** declaration must cite AR and FS.
-- Each file in **skills/** must cite FS; never cite AR.
+- Each file in **skills/** that cites anything must cite FS; never cite AR. A file there that cites nothing is not checked; `require_grounding = true` on its `[[kinds]]` row makes it a finding.
 - Each source file outside the Project map (**code**) that cites anything should cite FS or AR.
 Anything not listed above is allowed.
 ```

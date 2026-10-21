@@ -1,7 +1,7 @@
 # units — agent instructions
 
 <!-- BEGIN GRUND MANAGED BLOCK -->
-## Grounding with grund (block v37)
+## Grounding with grund (block v41)
 
 This project uses [`grund`](https://github.com/agent-grounds/grund): every spec, goal, decision, and end-to-end test has a stable ID `<KIND>-<slug>[.<section>]` (`KIND ∈ {GOAL, FS}`), cited with the marker `§` — e.g. `<§>FS-user-login.3.1`, where the ID is a shape illustration rather than a real one in this repo, which is what the `<§>` escape says. Type `$$` in a grund-aware editor and it becomes `§`. Bare ID-shaped tokens are ignored — config version 2 recognizes only `§`-prefixed citations, with no opt-out.
 

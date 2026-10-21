@@ -297,7 +297,7 @@ fn a_newer_labelled_block_is_refused_without_writes() {
     let (code, stderr) = init(&target, &[]);
     assert_eq!(code, Some(2), "{stderr}");
     assert!(
-        stderr.contains("contains newer grund init block v99; this binary supports v38"),
+        stderr.contains("contains newer grund init block v99; this binary supports v42"),
         "the newer-version refusal, not a malformed block: {stderr}"
     );
     assert_eq!(read(&target.join("AGENTS.md")), file);

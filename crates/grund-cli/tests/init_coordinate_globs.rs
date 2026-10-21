@@ -37,8 +37,8 @@ fn glob_bullet(agents: &str) -> Option<&str> {
 fn init_block_teaches_the_glob_recipe() {
     let agents = init_agents(&workdir("init_block_teaches_the_glob_recipe"));
     assert!(
-        agents.contains("## Grounding with grund (block v35)"),
-        "the current base block, v35, teaches globs"
+        agents.contains("## Grounding with grund (block v39)"),
+        "the current base block, v39, teaches globs"
     );
     let bullet = glob_bullet(&agents).expect("a bullet teaching `grund list --glob`");
     for needle in [

@@ -196,7 +196,7 @@ pub(crate) fn check_agent_block_path(
 }
 
 /// Whether a supported block is newer than the version the config selects. A
-/// v37 or v38 block where v35 or v36 is selected is not: it is stale, not
+/// v41 or v42 block where v39 or v40 is selected is not: it is stale, not
 /// unsupported (§FS-init.2.3.7.1).
 fn newer_than_selected(version: u32, expected_version: u32) -> bool {
     let scoped = AGENTS_BLOCK_BASE_VERSION + 2;
