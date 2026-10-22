@@ -87,7 +87,6 @@
     "guide": {"waiver": "Prints fixed text and scans nothing."},
     "completions": {"waiver": "Prints a fixed shell script once per shell setup and scans nothing; the ID lookup it installs runs `grund complete ids` on each Tab, which is inventoried as the hidden command `complete`."},
     "complete": {"scenarios": ["complete_ids", "complete_ids_all", "complete_ids_sections"]},
-    "agent-setup-instructions": {"waiver": "The deprecated name of guide, which prints the same fixed text and scans nothing."},
     "integrations": {"waiver": "Prints or installs editor and terminal integration snippets once per machine and scans nothing."}
   },
   "modes": {
