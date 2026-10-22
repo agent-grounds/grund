@@ -236,7 +236,7 @@ path = "docs/architecture/AR-ci.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 901, unit = "lines" }
+max_accepted = { value = 934, unit = "lines" }
 until = "§AR-ci.5 and §AR-ci.3.4 leave for declarations of their own with their existing section citations migrated"
 reason = """
 Over the soft budget at 790 non-blank lines before issue #696 touched it, and promoted by the count of soft edits, so any staged edit is refused. Missing boundary: §AR-ci.5, the benchmark jobs, is a subject of its own with its own sub-structure (5.1 to 5.5, and the store's five children #696 adds), and it is the part #696 grows, by 19 lines to 809. Giving it a declaration of its own is a mapped migration of 171 citing sites across 37 files, which is outside #696. It alone would not bring the file under budget: §AR-ci.5 is 46 non-blank lines, and the bulk is §AR-ci.3.4, the Python gate's inputs, at 245, and §AR-ci.3.1, citations and links, at 199. So the entry retires once §AR-ci.5 and §AR-ci.3.4 have left.
@@ -244,6 +244,7 @@ Issue #809 adds the narrow oracle reuse (§AR-ci.3.4.4), version-fixture (§AR-c
 Issue #883 adds six non-blank lines deriving both existing timeout-phase budgets at §AR-ci.3.1.1 and distinguishing their two-pass totals at §AR-ci.3.1.3. The file already measured 870 lines before this correction; the accepted size becomes exactly 876, with no growth allowance. The extraction boundary and retirement condition above remain unchanged: migrating the benchmark and Python-gate section citations is outside this documentation correction.
 Issue #913 defines the release-specific bounded deadline and its supplemental mechanism proof in 21 non-blank lines at §AR-ci.3.4.1.1. The existing extraction boundary and retirement condition remain; migrating the benchmark and Python-gate section citations would expand this internal harness correction. The ceiling accepts exactly 897 non-blank lines, with no growth allowance.
 Issue #906 rewrites §AR-ci.3.2's one paragraph in place, adding no line: the grund-init-check hook now catches what check leaves out, since check compares the whole managed block. Main already measured 901 non-blank lines, past the 897 above, so the ceiling is reconciled to exactly 901, with no growth allowance; the extraction boundary and retirement condition above remain.
+The #809 follow-up specifies one pristine Node installation with private consumers at §AR-ci.3.4.1.4 before implementation, adding 33 non-blank lines to the integrated baseline's 901. This entry now accepts exactly 934, with no growth allowance. The missing boundary and retirement condition above remain: extracting the benchmark and Python-input hierarchies requires their own owning declarations and a coordinated migration of existing section citations, rather than changing those coordinates inside a CI-cost specification commit.
 """
 [[exceptions]]
 path = "scripts/bench_record.py"

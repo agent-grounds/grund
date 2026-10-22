@@ -554,6 +554,44 @@ runs the strict check once and then again with the registry unreachable and an
 empty npm cache, which is a CI runner meeting a DNS blip after its cache
 restore. The second run must pass.
 
+##### 3.4.1.4 One pristine installed consumer per staged source
+
+The Node acceptance installs each run's staged local tarball once into a pristine
+consumer template. Every `Rehearsal` gets a fresh private copy of that installed
+consumer, including its package metadata, bundled sources and native artifact;
+it never shares writable files, links back to the template or another consumer,
+or adopts another source's installation merely because its version matches.
+The template belongs to the staged tarball and this run, outside the checkout,
+and is discarded with the run. It is not a new persistent or forge cache.
+
+The first consumer still comes through the real local `npm install`, with
+`--ignore-scripts`, `--no-audit` and `--no-fund`, and must load through bare
+package resolution from its own directory. Only a successful install can
+publish a reusable template; a failed install fails with the command's output
+and leaves nothing a later rehearsal can mistake for a completed installation.
+A cold run therefore needs no prepared template, and different staged sources
+at the same package version each require their own install.
+
+This removes repeated package-manager startup and tarball extraction, without
+removing any test, assertion or fresh consumer. Tests may corrupt or remove
+their private native artifact, rebuild the bundled fallback, edit bundled
+sources or package metadata, and start concurrent requests without affecting
+another test. The real release build, dev and test-seams builds, independent
+CLI and same-source data oracle, TypeScript check and installed-source fallback
+of [§AR-ci.3.4.1](AR-ci.md#341-the-node-acceptances-shared-build-target) remain required.
+The source package is still staged and built anew from the actual checkout.
+
+`NodeAcceptanceWorkflowTests.test_rehearsals_prepare_each_source_once_and_isolate_consumers`
+runs the real `Rehearsal` constructor and npm transport against two small local
+tarballs with the same name and version and different source receipts. It
+loads each consumer with Node, mutates one consumer's installed files and
+removes its native artifact, then verifies the next consumer's pristine bytes
+and disjoint paths. Four rehearsals of those two sources require two installs.
+This regression runs on the Node side of the existing gate selection, so the
+Python jobs do not acquire its preparation cost. It supplements the unchanged
+real native-package acceptance; its small tarballs do not claim native proof.
+Full Windows job evidence remains required by [§AR-ci.requirements.1.verification](AR-ci.md#requirements1verification-a-cost-correction-measures-comparable-full-gates).
+
 #### 3.4.2 Per-test durations
 
 The wrapper times every test it runs and ends with a short table of the slowest
