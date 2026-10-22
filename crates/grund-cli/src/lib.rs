@@ -16,10 +16,10 @@ use grund_core::{
     FindingSite, FmtConflictAbort, FmtOpts, FmtScanAbort, IdOpts, IdProposal, IdProposalOutcome,
     InitAgentEntrypointSelection, InitNext, InitOpts, InitOutput, ListEntry, ListOpts,
     ListSizeEntry, ListSizeOpts, NamespaceMatch, PathBase, PointSizeUnit, RefHit, RefsOpts,
-    RefsOutput, RefsQueryFailure, RefsSites, RefsSitesOpts, Report, SETUP_CORE_SECTION, SetupPart,
-    ShowFormat, ShowMode, ShowOpts, ShowQueryError, check_coordinate_globs,
-    check_with_run_warnings, cites_clause, complete_ids_with_run_warnings, config_run_warnings,
-    config_warnings, cover_lines, cover_with_globs, effective_config, effective_project,
+    RefsOutput, RefsQueryFailure, RefsSites, RefsSitesOpts, Report, SetupPart, ShowFormat,
+    ShowMode, ShowOpts, ShowQueryError, check_coordinate_globs, check_with_run_warnings,
+    cites_clause, complete_ids_with_run_warnings, config_run_warnings, config_warnings,
+    cover_lines, cover_with_globs, effective_config, effective_project,
     fetch_snapshot_with_run_warnings, format_references, glob_beside_section, guide_sections, init,
     list_sizes, list_with_run_warnings, names_member_id_candidate, propose_id_with_run_warnings,
     reads_as_coordinate, reads_as_coordinate_glob, render_finding_sites_json, setup_fresh_path,
@@ -75,8 +75,9 @@ const SUBCOMMANDS: &[&str] = &[
 ];
 
 /// Dispatched by `main_entry` but kept out of help and completion: the shell
-/// completion helper (§FS-completions.2) and `guide`'s deprecated name (§FS-init.5.7).
-const HIDDEN_SUBCOMMANDS: &[&str] = &["complete", "agent-setup-instructions"];
+/// completion helper (§FS-completions.2). `guide`'s old name is gone from grund
+/// 0.20.0, so it is no subcommand at all (§FS-init.5.7).
+const HIDDEN_SUBCOMMANDS: &[&str] = &["complete"];
 
 // §AR-bindings.3: distributed builds erase private hooks and their arguments.
 #[cfg(feature = "test-watch")]

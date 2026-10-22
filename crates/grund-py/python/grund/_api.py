@@ -305,5 +305,5 @@ def reference_style(*, root: PathInput | None = None) -> ReferenceStyle:
 
 
 def agent_setup_instructions() -> SetupInstructions:
-    """Return the whole setup guide: the text `grund agent-setup-instructions --full` prints."""
+    """Return the whole setup guide: the text `grund guide --full` prints."""
     return _call("agent_setup_instructions", SetupInstructions, None)

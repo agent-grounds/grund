@@ -73,20 +73,6 @@ fn kilobytes(bytes: usize) -> String {
     format!("{} KB", (bytes.saturating_add(500) / 1000).max(1))
 }
 
-/// §FS-init.5.7: the warning every use of `guide`'s deprecated name prints first.
-const AGENT_SETUP_INSTRUCTIONS_DEPRECATION: &str = "warning: agent-setup-instructions is deprecated and is removed in grund 0.20.0; use grund guide setup, which prints the same text";
-
-/// `grund agent-setup-instructions`, `guide`'s deprecated name (§FS-init.5.7): the
-/// core after one warning, taking no argument, as it took none in 0.18.0.
-fn command_agent_setup_instructions(args: &[String]) -> ExitCode {
-    eprintln!("{AGENT_SETUP_INSTRUCTIONS_DEPRECATION}");
-    if !args.is_empty() {
-        eprintln!("error: agent-setup-instructions takes no arguments");
-        return ExitCode::from(2);
-    }
-    command_guide(&[SETUP_CORE_SECTION.to_string()])
-}
-
 /// The report format a run prints: the `--format` flag, else the v1
 /// `[output] format` key the load read, else `text` (§FS-cli.3). One parse for the
 /// flag before the load and the key after it.
@@ -262,12 +248,6 @@ pub fn main_entry() -> ExitCode {
                 print_subcommand_help(cmd);
                 ExitCode::SUCCESS
             }
-            // §FS-init.5.7: the deprecated name's page is `guide`'s, after its warning.
-            Some("agent-setup-instructions") => {
-                eprintln!("{AGENT_SETUP_INSTRUCTIONS_DEPRECATION}");
-                print_subcommand_help("guide");
-                ExitCode::SUCCESS
-            }
             Some(other) => {
                 eprintln!("error: unknown command: {other}");
                 eprintln!("known commands: {}", SUBCOMMANDS.join(", "));
@@ -281,10 +261,6 @@ pub fn main_entry() -> ExitCode {
     if args.iter().any(|arg| arg == "--help" || arg == "-h") {
         match first {
             Some(cmd) if SUBCOMMANDS.contains(&cmd) => print_subcommand_help(cmd),
-            Some("agent-setup-instructions") => {
-                eprintln!("{AGENT_SETUP_INSTRUCTIONS_DEPRECATION}");
-                print_subcommand_help("guide");
-            }
             None | Some("--help" | "-h") => print_help(),
             Some(other) if other.starts_with('-') => print_help(),
             Some(other) => {
@@ -320,7 +296,6 @@ pub fn main_entry() -> ExitCode {
         // §FS-schema.1.1: a subcommand, so it wins over the default ID query.
         Some("schema") => with_path_base(&args[1..], command_schema),
         Some("guide") => command_guide(&args[1..]),
-        Some("agent-setup-instructions") => command_agent_setup_instructions(&args[1..]),
         Some("completions") => command_completions(&args[1..]),
         Some("integrations") => with_path_base(&args[1..], command_integrations),
         Some("complete") => command_complete(&args[1..]),
