@@ -11,7 +11,8 @@ project boundary.
    When splitting a standalone repository, add that workspace configuration to
    its root `grund.toml` first.
 3. Run `grund init` in the member to render its own agent entrypoints, and at the
-   root to refresh its workspace guidance. Every project's block lists the
+   root to refresh its workspace guidance: once per project, in any order. Every
+   project's block lists the
    members, so the change makes the siblings' blocks stale too: run `grund check`
    at the root and `grund init` in every directory its findings name. Init does
    not create the topology or initialize sibling members for you. In a checkout

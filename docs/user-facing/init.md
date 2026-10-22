@@ -38,6 +38,11 @@ claimed members. Standalone repositories omit it. A discovered workspace keeps
 that guidance even if a missing member or duplicate alias prevents its Workspace
 members list from rendering
 ([§FS-init.2.3.4.16](../functional-spec/FS-init.md#23416-project-boundaries)).
+Each other project in the workspace is one bullet that links its directory,
+as in ``- [`billing`](packages/billing/)``, whether or not that project has been
+initialized yet, so the order in which you run one `grund init` per project
+does not matter
+([§FS-init.2.3.4.15.6](../functional-spec/FS-init.md#234156-the-link-target)).
 In a checkout without one of the workspace's `optional_members`, `init` keeps
 each block's Workspace members list as it is and says so in a note, so the list
 is refreshed only from a full checkout

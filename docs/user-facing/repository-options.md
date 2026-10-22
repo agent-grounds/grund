@@ -48,8 +48,11 @@ declaration or section. A genuinely unknown alias needs correcting rather than
 being treated as the root project's name.
 
 Every project's managed block lists the workspace's members, so changing the
-membership — adding or removing a member, editing a `project_description`, or a
-member's first `grund init` — makes the other projects' blocks stale too. The
+membership — adding or removing a member, or editing a `project_description` —
+makes the other projects' blocks stale too. Initializing a project does not:
+each member is listed by its directory, never by whether its `AGENTS.md` exists,
+so a fresh workspace needs one `grund init` per project, in any order
+([§FS-init.2.3.4.15.6](../functional-spec/FS-init.md#234156-the-link-target)). The
 root's `grund check` reports each one and names the directory to run
 `grund init` in, as in ``run `grund init` in packages/billing to refresh``;
 running it in each named directory clears them

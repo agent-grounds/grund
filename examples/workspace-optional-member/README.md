@@ -21,8 +21,8 @@ optional_members = ["packages/secret"]
 
 Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 
-- [`billing`](packages/billing/AGENTS.md)
-- [`secret`](packages/secret/AGENTS.md)
+- [`billing`](packages/billing/)
+- [`secret`](packages/secret/)
 ```
 
 It is for whoever maintains a workspace with a private member and has to keep

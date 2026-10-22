@@ -44,9 +44,9 @@ Do not create a namespace for a regular module or component that still belongs t
 
 Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 
-- [`core`](../../packages/core/) *(not yet initialized)*
-- [`root`](../../) *(not yet initialized)*
-- [`ui`](../../packages/ui/) *(not yet initialized)*
+- [`core`](../../packages/core/)
+- [`root`](../../)
+- [`ui`](../../packages/ui/)
 
 ### Declarations and citations
 

@@ -6,7 +6,7 @@ use crate::config::{
 };
 use crate::model::{Finding, normalize_path_lexically};
 use crate::resolver::settled_run_warnings;
-use crate::sources::{canonical_path, path_exists};
+use crate::sources::canonical_path;
 use crate::templates::{WorkspaceGuidance, markdown_link_destination};
 use crate::workspace::{
     AncestorWorkspaces, absent_optional_members, apply_workspace_boundary, enclosing_workspace_of,
@@ -297,33 +297,25 @@ pub(crate) fn render_workspace_members(
         if project.project_root.as_path() == target_canonical {
             continue;
         }
-        let agents_md_path = project.project_root.join("AGENTS.md");
-        let initialized = path_exists(&agents_md_path);
-        let link = if initialized {
-            relative_link_path(target_canonical, &agents_md_path)
+        // §FS-init.2.3.4.15.6, §DF-member-link-names-the-directory: the link names
+        // the project's root directory, never a file in it, so no probe of disk
+        // and no "not yet initialized" mark: init order cannot leave a block stale.
+        let dir_rel = relative_link_path(target_canonical, &project.project_root);
+        let link = if dir_rel == "." {
+            "./".to_string()
         } else {
-            let dir_rel = relative_link_path(target_canonical, &project.project_root);
-            if dir_rel == "." {
-                "./".to_string()
-            } else {
-                format!("{dir_rel}/")
-            }
-        };
-        let suffix = if initialized {
-            ""
-        } else {
-            " *(not yet initialized)*"
+            format!("{dir_rel}/")
         };
         // §FS-init.2.3.4.15.5: the alias is the link label so the path appears
         // once, mirroring the Project Map's `- [x](y): …` shape; the one-line
-        // description follows `: `, before the trailing marker.
+        // description follows `: `.
         let description = project
             .description
             .as_deref()
             .map(|description| format!(": {description}"))
             .unwrap_or_default();
         bullets.push(format!(
-            "- [`{alias}`]({dest}){description}{suffix}",
+            "- [`{alias}`]({dest}){description}",
             alias = project.alias,
             dest = markdown_link_destination(&link),
         ));

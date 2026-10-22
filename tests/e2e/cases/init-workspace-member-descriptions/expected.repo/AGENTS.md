@@ -43,9 +43,9 @@ Do not create a namespace for a regular module or component that still belongs t
 
 Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 
-- [`api`](apps/api/AGENTS.md): Payment API service
-- [`core`](packages/core/): Core domain library *(not yet initialized)*
-- [`ui`](packages/ui/) *(not yet initialized)*
+- [`api`](apps/api/): Payment API service
+- [`core`](packages/core/): Core domain library
+- [`ui`](packages/ui/)
 
 ### Declarations and citations
 

@@ -37,7 +37,7 @@ Do not create a namespace for a regular module or component that still belongs t
 
 Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 
-- [`workshop`](workshop/) *(not yet initialized)*
+- [`workshop`](workshop/)
 
 ### Declarations and citations
 

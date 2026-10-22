@@ -176,7 +176,6 @@ fn config_migrate_write_then_check() {
 /// `check` green, and no block describes a sibling as not yet initialized.
 /// grund#931: the project initialized first kept that mark and went stale.
 #[test]
-#[ignore = "red until #931 links each workspace member by its directory; implement removes this"]
 fn one_init_per_project_in_either_order_leaves_the_root_check_green() {
     let stale: Vec<_> = [[".", "packages/billing"], ["packages/billing", "."]]
         .into_iter()
@@ -218,7 +217,6 @@ fn one_init_per_project_in_either_order_leaves_the_root_check_green() {
 /// §FS-check.3.5.5, §FS-errors.3.6.1: a new member turns three blocks stale, each
 /// finding names where to run `grund init`, and running it there clears them all.
 #[test]
-#[ignore = "red until #931 links each workspace member by its directory; implement removes this"]
 fn new_member_blocks_clear_after_init_in_each_named_directory() {
     let fixture = Fixture::new("member");
     fixture.write("grund.toml", SHOP);

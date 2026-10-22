@@ -35,7 +35,7 @@ Do not create a namespace for a regular module or component that still belongs t
 
 Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 
-- [`billing`](packages/billing/AGENTS.md)
+- [`billing`](packages/billing/)
 
 ### Declarations and citations
 

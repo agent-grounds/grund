@@ -33,7 +33,6 @@ fn workspace_members_empty_when_no_workspace_declared() {
 /// directory whether or not it is initialized (§FS-init.2.3.4.15.6). Mirrors
 /// §FS-init-fixtures.6.1.
 #[test]
-#[ignore = "red until #931 links each workspace member by its directory; implement removes this"]
 fn workspace_members_root_init_omits_self_and_preserves_foreign_rows() {
     let root = test_root("workspace_members_root_init_omits_self_and_preserves_foreign_rows");
     write(
@@ -58,7 +57,6 @@ fn workspace_members_root_init_omits_self_and_preserves_foreign_rows() {
 /// recomputed relative to the member's AGENTS.md: the root is `../../`.
 /// Mirrors §FS-init-fixtures.6.2.
 #[test]
-#[ignore = "red until #931 links each workspace member by its directory; implement removes this"]
 fn workspace_members_member_init_omits_self_and_preserves_foreign_rows() {
     let root = test_root("workspace_members_member_init_omits_self_and_preserves_foreign_rows");
     write(
@@ -85,7 +83,6 @@ fn workspace_members_member_init_omits_self_and_preserves_foreign_rows() {
 /// the root and from a member alike. grund#931: each init order left the block
 /// written first stale.
 #[test]
-#[ignore = "red until #931 links each workspace member by its directory; implement removes this"]
 fn workspace_members_bytes_do_not_depend_on_which_siblings_are_initialized() {
     let root = test_root("workspace_members_bytes_do_not_depend_on_which_siblings_are_initialized");
     write(
@@ -288,7 +285,6 @@ fn workspace_members_suppresses_duplicate_aliases() {
 /// read: each member's description comes from that member's own config and a
 /// member without one has none, which `packages/ui` is here for.
 #[test]
-#[ignore = "red until #931 links each workspace member by its directory; implement removes this"]
 fn workspace_members_renders_configured_descriptions() {
     let root = test_root("workspace_members_renders_configured_descriptions");
     write(

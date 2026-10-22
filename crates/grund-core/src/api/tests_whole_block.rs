@@ -176,7 +176,6 @@ fn block_sections_name_every_part_of_the_block() {
 /// a companion under `.claude/` included — names that project's root
 /// (§FS-errors.3.6.1). Inside the member the workspace sections are left out.
 #[test]
-#[ignore = "red until #931 links each workspace member by its directory; implement removes this"]
 fn a_new_member_names_each_block_by_the_directory_to_refresh_it_in() {
     let root = workspace("whole_block_new_member", &["billing"], &[]);
     let billing = root.join("packages/billing");
@@ -231,7 +230,6 @@ fn a_new_member_names_each_block_by_the_directory_to_refresh_it_in() {
 /// leaves the workspace sections out, and says so in the member's warning
 /// only where the run verified a block.
 #[test]
-#[ignore = "red until #931 links each workspace member by its directory; implement removes this"]
 fn an_absent_optional_member_leaves_the_workspace_sections_out() {
     let root = workspace("whole_block_optional", &["billing"], &["secret"]);
     init_workspace(&root, &[&root.join("packages/billing")]);

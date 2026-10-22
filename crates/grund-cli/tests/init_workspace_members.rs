@@ -52,7 +52,7 @@ fn init_workspace_companion_only_omits_self_and_uses_marker() {
         "companion-only init must omit its canonical self project:\n{claude}"
     );
     assert!(
-        claude.contains("- [`root`](../../) *(not yet initialized)*"),
-        "the foreign root row should retain its relative link and annotation:\n{claude}"
+        claude.contains("- [`root`](../../)\n") && !claude.contains("not yet initialized"),
+        "the foreign root row should link its directory, unannotated (§FS-init.2.3.4.15.6):\n{claude}"
     );
 }
