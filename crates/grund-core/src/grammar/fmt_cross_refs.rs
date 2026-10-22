@@ -94,8 +94,8 @@ pub(crate) enum CitationLink {
     /// (§FS-citations.wrap.enclosing).
     Enclosing { entry: bool },
     /// The whole description of an image, whose destination the wrap gives:
-    /// left as written, and credited only on the ramp of
-    /// §FS-citations.checks.image-index-entry (§FS-citations.wrap.enclosing.images).
+    /// left as written, and no kind-index entry or enrollment
+    /// (§FS-citations.wrap.enclosing.images, §FS-citations.checks.image-index-entry).
     Image(CrossRefWrap),
     /// None of these, so the link pass wraps it fresh wherever a zone does not
     /// forbid it.
