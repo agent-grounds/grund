@@ -9,5 +9,5 @@ exclude = [
   "docs/architecture/src/checker\\.rs$",
   # The optional-member example is a checkout without packages/secret, whose
   # managed blocks keep listing it (§FS-init.2.3.4.15.8): the link is the lesson.
-  "examples/workspace-optional-member/.*/packages/secret/AGENTS\\.md$",
+  "examples/workspace-optional-member/.*/packages/secret/?$",
 ]
