@@ -178,6 +178,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-block-teaches-structural-queries](DF-block-teaches-structural-queries.md#df-block-teaches-structural-queries-the-managed-block-teaches-the-structural-query-inline-and-links-the-query-guide) — the managed block teaches the structural query inline and links the query guide
 - [§DF-kind-fields](DF-kind-fields.md#df-kind-fields-a-kind-states-its-fields-by-section-name-and-a-present-optional-field-is-still-checked) — a kind states its fields by section name, and a present optional field is still checked
 - [§DF-check-compares-the-whole-block](DF-check-compares-the-whole-block.md#df-check-compares-the-whole-block-grund-check-holds-the-whole-managed-block-the-workspace-sections-at-the-outermost-root-of-a-full-checkout) — `grund check` holds the whole managed block, the workspace sections at the outermost root of a full checkout
+- [§DF-init-keeps-the-member-list](DF-init-keeps-the-member-list.md#df-init-keeps-the-member-list-grund-init-keeps-a-blocks-member-list-while-an-optional-member-is-absent) — `grund init` keeps a block's member list while an optional member is absent
 
 ## The one-answer rulings
 

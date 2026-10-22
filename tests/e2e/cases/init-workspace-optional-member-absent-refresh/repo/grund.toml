@@ -1,0 +1,12 @@
+grund_config_version = 2
+project_name = "shop"
+
+[schema.kinds.FS]
+files = ["requirements.md"]
+
+[schema.kinds.AR]
+files = ["design.md"]
+
+[workspace]
+members = ["packages/billing"]
+optional_members = ["packages/secret"]

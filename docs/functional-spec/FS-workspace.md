@@ -310,6 +310,9 @@ is a config error ([§FS-workspace.2.2.2.1](FS-workspace.md#2221-a-project_name-
 its segment, since it may itself have declared `[workspace]` ([§FS-workspace.2.2.2.3](FS-workspace.md#2223-an-absent-member-absorbs-the-alias-paths-beneath-it)), and a
 citation into it is recognized by [§FS-workspace.5](FS-workspace.md#5-command-scope)'s fixed `KIND[-NUM]-SLUG` fallback shape
 ([§FS-workspace.2.2.2.4](FS-workspace.md#2224-recognizing-a-citation-into-an-absent-member)).
+`grund init` does not render a member list it cannot render whole either: while
+the member is absent it keeps an existing block's `### Workspace members` section
+as it is ([§FS-init.2.3.4.15.8](FS-init.md#234158-while-an-optional-member-is-absent)).
 
 ##### 2.2.2.1 A `project_name` that disagrees with the segment
 

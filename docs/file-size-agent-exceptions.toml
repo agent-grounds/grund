@@ -132,7 +132,7 @@ path = "docs/functional-spec/FS-workspace.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 1180, unit = "lines" }
+max_accepted = { value = 1183, unit = "lines" }
 until = "workspace concerns move into independently declared child specs with stable replacements for existing FS-workspace section citations"
 reason = """
 This file is the single normative contract for workspace configuration, resolution, command scope, nested boundaries, and alias IDs. The issue-232 one-line correction belongs in §FS-workspace.5 so its existing citations remain stable. Missing boundary: independently declared child specifications for those concerns, plus a migration for the section citations that currently target this declaration.
@@ -140,6 +140,8 @@ This file is the single normative contract for workspace configuration, resoluti
 Issue 474 changes only the link to the renamed roadmap heading in this file, without adding prose or increasing its size. The former 900-line ceiling was already exceeded; the ceiling is reconciled to the measured 1149 non-blank lines, with the same split boundary and no growth allowance.
 
 Issue 823 adds the member diagnostic point under the existing §FS-workspace.5.1, as its supervising contract requires. The independent workspace child specifications and citation migration named above still do not exist. The ceiling is reconciled to the current 1180 non-blank lines, without headroom for further growth.
+
+Issue #921 adds one sentence to §FS-workspace.2.2.2, pointing at the init point that keeps a member list while an optional member is absent, so the workspace side of the boundary names it. The split boundary above remains; the ceiling accepts the measured 1183 non-blank lines, with no growth allowance.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-check.md"
@@ -258,7 +260,7 @@ path = "docs/functional-spec/FS-check.md"
 match = "exact"
 rules = ["large-file-default"]
 kind = "deferred"
-max_accepted = { value = 286299, unit = "bytes" }
+max_accepted = { value = 286372, unit = "bytes" }
 until = "the finding catalog moves into independently declared child specifications and existing FS-check section citations are migrated"
 reason = """
 The check specification still combines recognition, reporting, its finding catalog and watch behavior in one declaration. Issue #823 adds only a cross-reference to the defining member diagnostic point in FS-workspace.5.1.1. Missing boundary: independent finding specifications with a stable mapping for current FS-check section citations; moving that catalog is outside this specification-only diagnostic change. This byte ceiling accepts only the current measured file size, separately from the existing line-budget exception.
@@ -270,6 +272,8 @@ Issue #829 has a narrowed check say when what it selected judged nothing: the se
 Issue #909 specifies the explanatory append at §FS-check.4.1.2. The file already measured 280149 bytes on arrival; this point takes it to 281327. The missing boundary and retirement condition above remain: a mapped migration of the finding catalog into independent declarations, preserving old section addresses as pointers while callers migrate. That cross-family specification refactor is outside this explanation-only contract. The byte ceiling is reconciled to the current measured 281327 bytes, with no growth allowance.
 
 Issue #906 has check compare the whole managed block: §FS-check.3.5.3 gains the section nouns and the directory a finding names, §FS-check.3.5.4 widens to the whole block, the new §FS-check.3.5.5 declares the runs that leave the workspace sections out, and §FS-check.4.9.1 gains the warning's clause. Each extends the point that already owns the behavior, so one fact keeps one point; moving the finding catalog remains outside this change. The ceiling accepts the measured 286299 bytes, with no growth allowance.
+
+Issue #921 rewrites the last clause of §FS-check.3.5.5's fourth case to cite the init point that keeps the member list there, adding no line. Moving the finding catalog remains outside this change. The ceiling accepts the measured 286372 bytes, with no growth allowance.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-init.md"
