@@ -29,10 +29,11 @@ fn workspace_members_empty_when_no_workspace_declared() {
 }
 
 /// §FS-init.2.3.4.15: invoked at the workspace root, the section omits the
-/// root itself and lists every foreign member in alias order, preserving
-/// initialized and not-yet-initialized link grammar. Mirrors
+/// root itself and lists every foreign member in alias order, each linking its
+/// directory whether or not it is initialized (§FS-init.2.3.4.15.6). Mirrors
 /// §FS-init-fixtures.6.1.
 #[test]
+#[ignore = "red until #931 links each workspace member by its directory; implement removes this"]
 fn workspace_members_root_init_omits_self_and_preserves_foreign_rows() {
     let root = test_root("workspace_members_root_init_omits_self_and_preserves_foreign_rows");
     write(
@@ -48,14 +49,16 @@ fn workspace_members_root_init_omits_self_and_preserves_foreign_rows() {
 
     assert_eq!(
         section,
-        "\n\n### Workspace members\n\nCross-project citations use §alias/<ID>, one alias segment per workspace level.\n\n- [`api`](apps/api/AGENTS.md)\n- [`core`](packages/core/) *(not yet initialized)*\n- [`ui`](packages/ui/) *(not yet initialized)*"
+        "\n\n### Workspace members\n\nCross-project citations use §alias/<ID>, one alias segment per workspace level.\n\n- [`api`](apps/api/)\n- [`core`](packages/core/)\n- [`ui`](packages/ui/)"
     );
 }
 
 /// §FS-init.2.3.4.15: invoked inside a member, the section omits that member
 /// and keeps the foreign root and siblings in alias order, with link paths
-/// recomputed relative to the member's AGENTS.md. Mirrors §FS-init-fixtures.6.2.
+/// recomputed relative to the member's AGENTS.md: the root is `../../`.
+/// Mirrors §FS-init-fixtures.6.2.
 #[test]
+#[ignore = "red until #931 links each workspace member by its directory; implement removes this"]
 fn workspace_members_member_init_omits_self_and_preserves_foreign_rows() {
     let root = test_root("workspace_members_member_init_omits_self_and_preserves_foreign_rows");
     write(
@@ -72,7 +75,54 @@ fn workspace_members_member_init_omits_self_and_preserves_foreign_rows() {
 
     assert_eq!(
         section,
-        "\n\n### Workspace members\n\nCross-project citations use §alias/<ID>, one alias segment per workspace level.\n\n- [`core`](../../packages/core/) *(not yet initialized)*\n- [`root`](../../) *(not yet initialized)*\n- [`ui`](../../packages/ui/) *(not yet initialized)*"
+        "\n\n### Workspace members\n\nCross-project citations use §alias/<ID>, one alias segment per workspace level.\n\n- [`core`](../../packages/core/)\n- [`root`](../../)\n- [`ui`](../../packages/ui/)"
+    );
+}
+
+/// §FS-init.2.3.4.15.6, §FS-init.requirements.reproducible: the section is a
+/// function of the workspace's configs, so creating a sibling's `AGENTS.md` (the
+/// sibling's own `grund init`) leaves every other block's bytes as they were, from
+/// the root and from a member alike. grund#931: each init order left the block
+/// written first stale.
+#[test]
+#[ignore = "red until #931 links each workspace member by its directory; implement removes this"]
+fn workspace_members_bytes_do_not_depend_on_which_siblings_are_initialized() {
+    let root = test_root("workspace_members_bytes_do_not_depend_on_which_siblings_are_initialized");
+    write(
+        &root.join("grund.toml"),
+        "project_name = \"shop\"\n\n[workspace]\nmembers = [\"packages/billing\"]\n",
+    );
+    write(
+        &root.join("packages/billing/grund.toml"),
+        "project_name = \"billing\"\n",
+    );
+    let billing = root.join("packages/billing");
+    let from_root = || render_workspace_members_section(&root, None, None, "§", true);
+    let from_member = || render_workspace_members_section(&billing, None, None, "§", true);
+
+    let root_before = from_root();
+    let member_before = from_member();
+    assert!(
+        root_before.ends_with("\n\n- [`billing`](packages/billing/)"),
+        "{root_before}"
+    );
+    assert!(
+        member_before.ends_with("\n\n- [`shop`](../../)"),
+        "{member_before}"
+    );
+
+    write(&billing.join("AGENTS.md"), "## existing block\n");
+    write(&root.join("AGENTS.md"), "## existing block\n");
+
+    assert_eq!(
+        from_root(),
+        root_before,
+        "billing's AGENTS.md moved the root's list"
+    );
+    assert_eq!(
+        from_member(),
+        member_before,
+        "the root's AGENTS.md moved billing's list"
     );
 }
 
@@ -94,7 +144,7 @@ fn workspace_members_companion_only_init_omits_self() {
         !section.contains("`api`"),
         "self row leaked into: {section}"
     );
-    assert!(section.contains("- [`root`](../../) *(not yet initialized)*"));
+    assert!(section.contains("- [`root`](../../)"));
 }
 
 /// §FS-init.2.3.4.15.2: the discoverability line is the spec's line verbatim, both clauses,
@@ -140,7 +190,7 @@ fn workspace_members_self_identity_is_canonical_not_pending_alias_text() {
         !section.contains("`api`"),
         "self basename leaked into: {section}"
     );
-    assert!(section.contains("- [`root`](../../) *(not yet initialized)*"));
+    assert!(section.contains("- [`root`](../../)"));
 }
 
 /// §FS-init.2.3.4.15.4: a target reached through a symlink still omits the
@@ -162,7 +212,7 @@ fn workspace_members_self_identity_follows_target_symlink() {
         !section.contains("`api`"),
         "canonical self row leaked into: {section}"
     );
-    assert!(section.contains("- [`root`](../../) *(not yet initialized)*"));
+    assert!(section.contains("- [`root`](../../)"));
 }
 
 /// §FS-init.2.3.4.15.4: `include_root = false` still drops the root from a
@@ -189,7 +239,7 @@ fn workspace_members_omits_root_when_include_root_false() {
         !section.contains("`root`"),
         "include_root = false should suppress the root row entirely"
     );
-    assert!(section.contains("- [`web`](../web/) *(not yet initialized)*"));
+    assert!(section.contains("- [`web`](../web/)"));
 }
 
 /// §FS-init.2.3.4.15 + §FS-workspace.6: a configured-but-misconfigured
@@ -232,12 +282,13 @@ fn workspace_members_suppresses_duplicate_aliases() {
 }
 
 /// §FS-init.2.3.4.15.5 + §DF-workspace-member-descriptions: a project's
-/// `project_description` renders after its link (before any trailing
-/// marker), and a project without one keeps the link-only bullet. Mirrors
+/// `project_description` renders after its link, and a project without one
+/// keeps the link-only bullet. Mirrors
 /// §FS-init-fixtures.6.4. §FS-workspace.3.1 is the residency rule the rows
 /// read: each member's description comes from that member's own config and a
 /// member without one has none, which `packages/ui` is here for.
 #[test]
+#[ignore = "red until #931 links each workspace member by its directory; implement removes this"]
 fn workspace_members_renders_configured_descriptions() {
     let root = test_root("workspace_members_renders_configured_descriptions");
     write(
@@ -259,19 +310,17 @@ fn workspace_members_renders_configured_descriptions() {
 
     let section = render_workspace_members_section(&root, None, None, "§", true);
 
-    // Initialized member: description after the link.
-    assert!(section.contains("- [`api`](apps/api/AGENTS.md): Payment API service"));
-    // Uninitialized member: description before the trailing marker.
-    assert!(
-        section.contains("- [`core`](packages/core/): Core domain library *(not yet initialized)*")
-    );
+    // Initialized member: description after the directory link.
+    assert!(section.contains("- [`api`](apps/api/): Payment API service"));
+    // Uninitialized member: the same form, with no suffix (§FS-init.2.3.4.15.6).
+    assert!(section.contains("- [`core`](packages/core/): Core domain library"));
     // Self and its description are omitted together.
     assert!(
         !section.contains("`root`"),
         "self description row leaked into: {section}"
     );
     // No config ⇒ no description ⇒ bullet unchanged.
-    assert!(section.contains("- [`ui`](packages/ui/) *(not yet initialized)*"));
+    assert!(section.contains("- [`ui`](packages/ui/)"));
 }
 
 /// §FS-init.2.3.4.15.4: pending self metadata never creates a local row.
@@ -301,7 +350,7 @@ fn workspace_members_member_init_omits_pending_self_description() {
         !section.contains("Billing service"),
         "pending self description leaked into: {section}"
     );
-    assert!(section.contains("- [`root`](../../) *(not yet initialized)*"));
+    assert!(section.contains("- [`root`](../../)"));
 }
 
 /// §FS-init.2.3.4.15.1 + §FS-workspace.6.1.5: in a nested workspace the search
@@ -333,15 +382,15 @@ fn workspace_members_nested_workspace_lists_the_whole_tree() {
         "self row leaked into: {section}"
     );
     assert!(
-        section.contains("- [`group`](../) *(not yet initialized)*"),
+        section.contains("- [`group`](../)"),
         "the grouping node is a project of its own: {section}"
     );
     assert!(
-        section.contains("- [`api`](../../apps/api/) *(not yet initialized)*"),
+        section.contains("- [`api`](../../apps/api/)"),
         "a sibling outside the enclosing group is still citable: {section}"
     );
     assert!(
-        section.contains("- [`root`](../../) *(not yet initialized)*"),
+        section.contains("- [`root`](../../)"),
         "root row: {section}"
     );
 }
@@ -409,7 +458,7 @@ fn workspace_members_ignores_an_ancestor_workspace_that_does_not_claim_the_targe
         "repository self row leaked into: {section}"
     );
     assert!(
-        section.contains("- [`api`](api/) *(not yet initialized)*"),
+        section.contains("- [`api`](api/)"),
         "its member is listed relative to the entrypoint: {section}"
     );
     assert!(
@@ -444,7 +493,7 @@ fn workspace_members_at_a_group_its_parent_does_not_list_names_its_own_tree() {
         "workspace self row leaked into: {section}"
     );
     assert!(
-        section.contains("- [`leaf`](leaf/) *(not yet initialized)*"),
+        section.contains("- [`leaf`](leaf/)"),
         "its member keeps the one segment its own scope gives it: {section}"
     );
     assert!(
