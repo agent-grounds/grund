@@ -161,8 +161,13 @@ impl View<'_> {
             .collect();
         json!({"kind_titles":kind_titles,"readFiles":read,"snapshot":{
             "citations":cites.iter().map(|c| {
-                // §FS-values.7: a citation navigates by its written alias path.
+                // §FS-values.7: a citation navigates by its written alias path, and
+                // in a workspace an unwritten one by its own project's (§FS-lsp.1.2.5).
                 let id = self.citation(c, true)["id"].as_str().unwrap().to_string();
+                let id = match self.project_of(&c.file).as_str() {
+                    Some(project) if !id.contains('/') => format!("{project}/{id}"),
+                    _ => id,
+                };
                 let target = self.target(&id, &c.section);
                 let query = match c.section.as_str() {
                     Some(s) => format!("{id}.{s}"),

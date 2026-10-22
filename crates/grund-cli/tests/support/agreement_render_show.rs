@@ -49,8 +49,25 @@ impl View<'_> {
         s.map_or(id.clone(), |s| format!("{id}.{}", self.m.sections[s].path))
     }
 
+    /// §FS-workspace.8.9: the project an unqualified ID resolves against at the
+    /// workspace root, the root project, which `include_root = false` leaves out.
+    fn current(&self) -> Option<&str> {
+        let aliases = self.m.facts["aliases"].as_array()?;
+        let root = aliases.iter().find(|a| a["file"] == "grund.toml")?;
+        root["project"].as_str().filter(|_| self.workspace())
+    }
+
+    /// §FS-workspace.8.2.2: an unqualified coordinate asks the current project.
+    fn canonical(&self, coordinate: &str) -> String {
+        match self.current() {
+            Some(current) if !coordinate.contains('/') => format!("{current}/{coordinate}"),
+            _ => coordinate.to_string(),
+        }
+    }
+
     /// The row a coordinate resolves to, when exactly one model row is it.
     pub fn resolve(&self, coordinate: &str) -> Option<Row> {
+        let coordinate = self.canonical(coordinate);
         self.order()
             .into_iter()
             .find(|row| self.coordinate(*row) == coordinate)
@@ -184,7 +201,7 @@ impl View<'_> {
         let (id, section) = coordinate
             .split_once('.')
             .map_or((coordinate, None), |(i, s)| (i, Some(s)));
-        let declared = (0..self.m.decls.len()).any(|d| self.qualified(d) == id);
+        let declared = (0..self.m.decls.len()).any(|d| self.qualified(d) == self.canonical(id));
         if declared && section.is_some() {
             json!({"code":"missing-section","message":format!("section not found: {coordinate}")})
         } else {
@@ -222,11 +239,17 @@ impl View<'_> {
             if !self.declared_within(row.0) || !seen.insert(coordinate.clone()) {
                 continue;
             }
-            // §FS-workspace.8.1.5: generated IDs are spelled as the run qualifies them.
-            let (id, section) = (
-                self.qualified(row.0),
-                row.1.map(|s| &self.m.sections[s].path),
-            );
+            // §FS-workspace.8.1.5: generated IDs are spelled as the run qualifies
+            // them, the current project's unqualified.
+            let id = self.qualified(row.0);
+            let id = match self.current() {
+                Some(current) => id
+                    .strip_prefix(&format!("{current}/"))
+                    .unwrap_or(&id)
+                    .into(),
+                None => id,
+            };
+            let section = row.1.map(|s| &self.m.sections[s].path);
             let query = json!({"id":id,"section":section});
             records.push(match self.refusal(&coordinate, "show") {
                 Some(refusal) => json!({"query":query,"result":null,
@@ -258,10 +281,11 @@ impl View<'_> {
             .map_or((coordinate, None), |(i, s)| (i, Some(s)));
         // §FS-workspace.8.2: a qualified query names its project; an unqualified
         // one the current project, which a root left out of the workspace lacks.
-        let (project, bare) = match id.split_once('/') {
-            Some((alias, bare)) => (json!(alias), bare),
-            None => (Value::Null, id),
+        let (written, bare) = match id.split_once('/') {
+            Some((alias, bare)) => (Some(alias), bare),
+            None => (None, id),
         };
+        let project = json!(written.or(self.current()));
         let aimed =
             |c: &&super::agreement_render_model::Cite| self.aim(c) == (project.clone(), bare);
         let hits: Vec<_> = self
@@ -278,12 +302,12 @@ impl View<'_> {
                 None => files.push((c.file.clone(), 1)),
             }
         }
-        let declaration =
-            (0..self.m.decls.len()).find(|&d| self.qualified(d) == id && self.declared_within(d));
+        let declaration = (0..self.m.decls.len())
+            .find(|&d| self.qualified(d) == self.canonical(id) && self.declared_within(d));
         let declared = declaration.is_some();
         // §FS-refs.2.1: the no-hit note uses the requested citation set;
         // explicit paths qualify it and its project-list advice (§FS-refs.1).
-        let note = (hits.is_empty() && !declared).then(|| match (project.as_str(), self.explicit_path) {
+        let note = (hits.is_empty() && !declared).then(|| match (written, self.explicit_path) {
             (Some(alias), Some(path)) => format!("{id} is neither declared nor cited in scan path `{path}` \u{2014} run `grund list --project {alias}` to see {alias}'s declared IDs, including outside this scan"),
             (None, Some(path)) => format!("{id} is neither declared nor cited in scan path `{path}` \u{2014} run `grund list` to see project declarations, including outside this scan"),
             (Some(alias), None) => format!("{id} is neither declared nor cited \u{2014} run `grund list --project {alias}` to see {alias}'s declared IDs"),
@@ -295,7 +319,8 @@ impl View<'_> {
         let complete = self.scan_errors_in(false).is_empty();
         let note = note.or_else(|| {
             let d = declaration.filter(|_| whole && complete)?;
-            let project = project.as_str().map_or(String::new(), |a| format!(" --project {a}"));
+            // An unqualified query keeps the bare command (§FS-refs.2.1.1).
+            let project = written.map_or(String::new(), |a| format!(" --project {a}"));
             let kind = if self.m.decls[d].kind == "E2E" { " --kind E2E" } else { "" };
             Some(format!("{id} is declared but nothing cites it; `grund list{project} --unused{kind}` lists every such declaration"))
         });
