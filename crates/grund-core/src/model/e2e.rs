@@ -9,10 +9,29 @@ use std::path::PathBuf;
 #[derive(Debug, Clone)]
 pub struct E2eCase {
     pub dir: PathBuf,
+    /// The words of `command.args`, empty when the file is absent (§AR-scanner.6.2).
     pub args: Vec<String>,
+    /// Whether `command.args` is present at all, so an absent manifest (implicit
+    /// `grund check`) stays apart from one that holds no words (§AR-scanner.6.2).
+    pub has_command_args: bool,
     pub expected_exit: i32,
     pub fixtures: Vec<PathBuf>,
     pub spec_refs: Vec<E2eSpecRef>,
+}
+
+impl E2eCase {
+    /// The invocation the text form prints on its first line: `grund check` when
+    /// the case has no `command.args`, the bare `grund` when it holds no words,
+    /// `grund <words>` otherwise (§FS-show.2.4, §AR-scanner.6.2).
+    pub fn invocation(&self) -> String {
+        if !self.has_command_args {
+            "grund check".to_string()
+        } else if self.args.is_empty() {
+            "grund".to_string()
+        } else {
+            format!("grund {}", self.args.join(" "))
+        }
+    }
 }
 
 /// A non-empty `spec.refs` manifest line from an E2E case (§AR-scanner.6.3).
