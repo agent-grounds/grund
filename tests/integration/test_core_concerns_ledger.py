@@ -160,7 +160,6 @@ class CoreConcernsLedgerTest(unittest.TestCase):
         last = last_shipped_release()
         self.assertEqual([], [p for cells in rows for p in row_problems(cells, last)])
 
-    @unittest.expectedFailure
     def test_no_phase_is_still_planned_for_a_release_that_shipped(self):
         self.assertIsNotNone(section(self.text, "9"), "§DISC-core-concerns.9 is missing")
         self.assertEqual([], phase_problems(self.text, last_shipped_release()))
