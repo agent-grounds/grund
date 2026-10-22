@@ -1,6 +1,7 @@
 //! Black-box: `grund check` holds the whole managed block (§FS-check.3.5.4), so the
 //! two scenarios of grund#906 go red until `grund init` runs where the findings say,
-//! and every way of naming the tree reports the same findings.
+//! and every way of naming the tree reports the same findings; and one `grund init`
+//! per project of a fresh workspace, in either order, leaves none (grund#931).
 
 use std::fs;
 use std::path::PathBuf;
@@ -170,15 +171,60 @@ fn config_migrate_write_then_check() {
     assert!(agents_init_lines(&check).is_empty());
 }
 
+/// §FS-init.requirements.clean, §FS-init.2.3.4.15.6: one `grund init` in each
+/// project of a fresh workspace, root first or member first, leaves the root's
+/// `check` green, and no block describes a sibling as not yet initialized.
+/// grund#931: the project initialized first kept that mark and went stale.
+#[test]
+#[ignore = "red until #931 links each workspace member by its directory; implement removes this"]
+fn one_init_per_project_in_either_order_leaves_the_root_check_green() {
+    let stale: Vec<_> = [[".", "packages/billing"], ["packages/billing", "."]]
+        .into_iter()
+        .map(|order| {
+            let fixture = Fixture::new("order");
+            fixture.write("grund.toml", SHOP);
+            fixture.write("requirements.md", "# FS-receipt: Receipts\n");
+            fixture.member("billing");
+            for dir in order {
+                fixture.init_in(dir);
+            }
+            let check = fixture.run(&["check"]);
+            let marked: Vec<_> = ["AGENTS.md", "packages/billing/AGENTS.md"]
+                .into_iter()
+                .filter(|block| {
+                    fs::read_to_string(fixture.0.join(block))
+                        .expect("entrypoint")
+                        .contains("not yet initialized")
+                })
+                .collect();
+            let current = order
+                .iter()
+                .all(|dir| fixture.run_in(dir, &["init", "--check"]).status.success());
+            (
+                order,
+                check.status.code(),
+                agents_init_lines(&check),
+                marked,
+                current,
+            )
+        })
+        .filter(|(_, code, lines, marked, current)| {
+            *code != Some(0) || !lines.is_empty() || !marked.is_empty() || !current
+        })
+        .collect();
+    assert!(stale.is_empty(), "{stale:#?}");
+}
+
 /// §FS-check.3.5.5, §FS-errors.3.6.1: a new member turns three blocks stale, each
 /// finding names where to run `grund init`, and running it there clears them all.
 #[test]
+#[ignore = "red until #931 links each workspace member by its directory; implement removes this"]
 fn new_member_blocks_clear_after_init_in_each_named_directory() {
     let fixture = Fixture::new("member");
     fixture.write("grund.toml", SHOP);
     fixture.write("requirements.md", "# FS-receipt: Receipts\n");
     fixture.member("billing");
-    for dir in ["packages/billing", ".", "packages/billing"] {
+    for dir in [".", "packages/billing"] {
         fixture.init_in(dir);
     }
     assert!(agents_init_lines(&fixture.run(&["check"])).is_empty());
@@ -244,7 +290,7 @@ fn check_full_and_path_report_the_same_stale_blocks() {
     fixture.write("grund.toml", SHOP);
     fixture.write("requirements.md", "# FS-receipt: Receipts\n");
     fixture.member("billing");
-    for dir in ["packages/billing", ".", "packages/billing"] {
+    for dir in [".", "packages/billing"] {
         fixture.init_in(dir);
     }
     fixture.write(

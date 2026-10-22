@@ -67,13 +67,12 @@ fn init_at(root: &Path) {
     .expect("init");
 }
 
-/// `init` in every project of the workspace at `root`. Each block marks the
-/// projects not yet initialized (§FS-init.2.3.4.15), so the members run again
-/// once the root has: then no block describes a project as it was before.
+/// `init` once in every project of the workspace at `root`: no block says which
+/// projects are initialized, so the order leaves none stale (§FS-init.2.3.4.15.6,
+/// §FS-init.requirements.clean).
 fn init_workspace(root: &Path, members: &[&Path]) {
     members.iter().for_each(|member| init_at(member));
     init_at(root);
-    members.iter().for_each(|member| init_at(member));
 }
 
 fn check(path: &Path) -> CheckOutput {
@@ -177,6 +176,7 @@ fn block_sections_name_every_part_of_the_block() {
 /// a companion under `.claude/` included — names that project's root
 /// (§FS-errors.3.6.1). Inside the member the workspace sections are left out.
 #[test]
+#[ignore = "red until #931 links each workspace member by its directory; implement removes this"]
 fn a_new_member_names_each_block_by_the_directory_to_refresh_it_in() {
     let root = workspace("whole_block_new_member", &["billing"], &[]);
     let billing = root.join("packages/billing");
@@ -231,6 +231,7 @@ fn a_new_member_names_each_block_by_the_directory_to_refresh_it_in() {
 /// leaves the workspace sections out, and says so in the member's warning
 /// only where the run verified a block.
 #[test]
+#[ignore = "red until #931 links each workspace member by its directory; implement removes this"]
 fn an_absent_optional_member_leaves_the_workspace_sections_out() {
     let root = workspace("whole_block_optional", &["billing"], &["secret"]);
     init_workspace(&root, &[&root.join("packages/billing")]);

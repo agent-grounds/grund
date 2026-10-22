@@ -559,7 +559,7 @@ A workspace run compares each project's block against the vocabulary of the work
 
 #### 3.5.5 The workspace sections are judged at the outermost root of a full checkout
 
-`### Project namespaces` and `### Workspace members` ([§FS-init.2.3.4.16](FS-init.md#23416-project-boundaries), [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members)) are rendered from the whole workspace: the outermost root and every member's alias, root, description and `AGENTS.md`. Only a run at the outermost workspace root whose expansion found every member has loaded all of that, so only such a run compares them, in every block it verifies. Every other run removes the two sections from both sides before comparing, and compares the rest:
+`### Project namespaces` and `### Workspace members` ([§FS-init.2.3.4.16](FS-init.md#23416-project-boundaries), [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members)) are rendered from the whole workspace: the outermost root and every member's alias, root and description. Only a run at the outermost workspace root whose expansion found every member has loaded all of that, so only such a run compares them, in every block it verifies. Every other run removes the two sections from both sides before comparing, and compares the rest:
 
 1. a run inside a member, `grund check <member>` from the root among them, which would otherwise have to climb to the outermost root and expand the whole workspace on every run;
 2. a run at the root of a nested group, for the same reason;

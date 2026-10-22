@@ -251,16 +251,16 @@ The generated `{repo_copy}/AGENTS.md` contains, between `### Project map` and `#
 
 Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 
-- [`api`](apps/api/AGENTS.md)
-- [`core`](packages/core/) *(not yet initialized)*
-- [`ui`](packages/ui/) *(not yet initialized)*
+- [`api`](apps/api/)
+- [`core`](packages/core/)
+- [`ui`](packages/ui/)
 ```
 
-The list is sorted lexicographically by alias. `api` is initialized, so its bullet links to its `AGENTS.md`; `core` and `ui`, expanded from the glob `packages/*`, have none yet, so they link to the member root and carry the trailing `*(not yet initialized)*` suffix. The root's own row is absent even though `include_root` defaults to `true`: [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members) omits the project whose entrypoint is being rendered.
+The list is sorted lexicographically by alias. Every bullet links its project's root directory ([§FS-init.2.3.4.15.6](FS-init.md#234156-the-link-target)): `api` has an `AGENTS.md` and `core` and `ui`, expanded from the glob `packages/*`, have none, and their bullets take the same form, with no suffix. The root's own row is absent even though `include_root` defaults to `true`: [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members) omits the project whose entrypoint is being rendered.
 
 ### 6.2 Workspace member init
 
-Same precondition as [§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init), but with `apps/api/AGENTS.md` removed so the member is uninitialized.
+Same precondition as [§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init), but with `apps/api/AGENTS.md` removed so the member is uninitialized. The fixture pins that the bytes do not depend on it: the section below is the same byte for byte whether `apps/api/AGENTS.md` exists or not, and whether `{repo_copy}/AGENTS.md` does.
 
 Command: `grund init {repo_copy}/apps/api`.
 
@@ -271,12 +271,12 @@ The generated `{repo_copy}/apps/api/AGENTS.md` contains a `### Workspace members
 
 Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 
-- [`core`](../../packages/core/) *(not yet initialized)*
-- [`root`](../../) *(not yet initialized)*
-- [`ui`](../../packages/ui/) *(not yet initialized)*
+- [`core`](../../packages/core/)
+- [`root`](../../)
+- [`ui`](../../packages/ui/)
 ```
 
-`root` remains a foreign row because `include_root` is true, and is marked uninitialized because `{repo_copy}/AGENTS.md` does not exist; its link points at the workspace root directory rather than the file that would 404. The discoverability line and foreign-row grammar match [§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init) exactly; each perspective omits its own canonical project and sorts the remaining aliases.
+`root` remains a foreign row because `include_root` is true, and its link is the workspace root directory, as every foreign link is a directory ([§FS-init.2.3.4.15.6](FS-init.md#234156-the-link-target)); that `{repo_copy}/AGENTS.md` does not exist changes nothing in it. The discoverability line and foreign-row grammar match [§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init) exactly; each perspective omits its own canonical project and sorts the remaining aliases.
 
 ### 6.3 Non-workspace repo
 
@@ -309,12 +309,12 @@ The generated `{repo_copy}/AGENTS.md` contains exactly this block:
 
 Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 
-- [`api`](apps/api/AGENTS.md): Payment API service
-- [`core`](packages/core/): Core domain library *(not yet initialized)*
-- [`ui`](packages/ui/) *(not yet initialized)*
+- [`api`](apps/api/): Payment API service
+- [`core`](packages/core/): Core domain library
+- [`ui`](packages/ui/)
 ```
 
-Each described foreign project appends `: <description>` after its link; `core` shows the description rendering *before* the trailing `*(not yet initialized)*` suffix; `ui` has no config, therefore no description, and its bullet is byte-identical to the [§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init) form. The root's configured description is absent with its omitted self row, but remains available when the root is foreign in a member entrypoint.
+Each described foreign project appends `: <description>` after its link, and the bullet ends there; `api`, which has an `AGENTS.md`, and `core`, which has none, take the same form; `ui` has no config, therefore no description, and its bullet is byte-identical to the [§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init) form. The root's configured description is absent with its omitted self row, but remains available when the root is foreign in a member entrypoint.
 
 ## 7. The `none` template
 
