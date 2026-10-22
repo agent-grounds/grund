@@ -42,8 +42,8 @@ Examples:
   grund config validate           # exit 1 if the discovered config has an error
   grund config show docs/         # the config that governs docs/
   grund config explain oversized-lead   # what a check code means, its severity and what turns it on
-  grund config explain '[schema.sources]'           # a table: its keys, bracketed as in the file
-  grund config explain '[schema.sources] exclude'   # one key of a table, after its bracketed header
+  grund config explain '[schema.sources]'           # a version-2 table: its keys, bracketed as in the file
+  grund config explain '[schema.sources] exclude'   # one key of a version-2 table, after its bracketed header
   grund config migrate --to 2     # the version-2 file, previewed; nothing written
   grund config migrate --to 2 --write   # compact report on stderr; stdout is empty
   grund config migrate --to 2 --write --full   # apply with candidate and complete report
