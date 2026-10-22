@@ -232,27 +232,27 @@ fn an_image_is_never_an_entry() {
 
 /// §FS-citations.checks.image-index-entry: a citation that is an image's whole
 /// description is no link to the declaration (§FS-citations.wrap.enclosing.images),
-/// but for one release it keeps the credit it had, and `check` warns where that
-/// credit is all the index holds for the ID, naming the link to write beside it.
+/// and from grund 0.20.0 it keeps no credit. The index mentions the ID and holds no
+/// entry for it, so the ID is §FS-check.3.18's, in the "appears" words of
+/// §FS-check.3.18.5, never §FS-check.3.17's, and the spent code never fires.
 #[test]
-fn a_citation_only_image_keeps_its_credit_for_one_release_and_warns() {
+fn a_citation_only_image_is_no_entry() {
     let run = checked_index(
-        "a_citation_only_image_keeps_its_credit_for_one_release_and_warns",
+        "a_citation_only_image_is_no_entry",
         "# Specs\n\n- ![§FS-001-login](diagram.png)\n",
     );
-    assert_entry(
-        &run,
-        "the citation-only image keeps its credit for one release",
-    );
-    assert!(
-        has(&run, "image-index-entry"),
-        "the image is the ID's only entry, so the retirement is announced: {:?}",
-        findings(&run)
-    );
+    assert!(!has(&run, "image-index-entry"), "{:?}", findings(&run));
+    assert!(!has(&run, "unlinked-index-entry"), "{:?}", findings(&run));
+    assert!(has(&run, "missing-index-entry"), "{:?}", findings(&run));
+    let missing: Vec<_> = findings(&run)
+        .into_iter()
+        .filter(|line| line.contains(MENTION_CLAUSE))
+        .collect();
+    assert_eq!(missing.len(), 1, "{:?}", findings(&run));
 }
 
 /// §FS-citations.checks.image-index-entry: an image beside another entry for the
-/// same ID draws no warning, because retiring its credit changes nothing there.
+/// same ID changes nothing: the wrap is the entry, and nothing is reported.
 #[test]
 fn a_citation_only_image_beside_an_entry_draws_no_warning() {
     let run = checked_index(

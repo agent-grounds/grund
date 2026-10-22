@@ -18,7 +18,7 @@ excluded-stub-target: A stub led to a file the scan excludes; that case is now r
 forbidden-citation: A citation goes to a target that a must-not entry or rule forbids.
 full-scope-ignored: --full was given an explicit path, which it cannot widen, so it changed nothing.
 glob-citation: A marked citation is written as a pattern rather than as one ID.
-image-index-entry: A citation-only image is the only entry or enrollment a kind's index holds for an ID, a credit the next minor retires.
+image-index-entry: A citation-only image was all a kind's index held for an ID; such an image is now neither an entry nor an enrollment.
 inline-citation-style: A citation's inline note in a code comment breaks the configured note style: too many lines, too wide, the wrong layout, or prose where only the citation is allowed.
 invalid-field-value: A field's value is not one of the values its kind admits for it.
 invalid-rule: A rule declaration cannot be read: its title, rationale, vocabulary or subject is invalid.

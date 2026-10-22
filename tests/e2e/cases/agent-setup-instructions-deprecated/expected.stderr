@@ -1,2 +1,0 @@
-warning: agent-setup-instructions is deprecated and is removed in grund 0.20.0; use grund guide setup, which prints the same text
-error: agent-setup-instructions takes no arguments

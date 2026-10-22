@@ -66,8 +66,8 @@ inline-code zone keeps its reading ([§FS-citations.wrap.enclosing.shape](../../
 ### 2.5 An image's destination is the author's
 
 Only the citation-only image changes ([§FS-citations.wrap.enclosing.images](../../functional-spec/FS-citations.md#wrapenclosingimages-an-image-is-not-a-link)). `fmt` leaves
-`![§<ID>](cache.png)` as written, and it is no index entry and no enrollment once one release has
-warned ([§FS-citations.checks.image-index-entry](../../functional-spec/FS-citations.md#checksimage-index-entry-a-citation-only-image-is-an-index-entry-for-one-more-release)). `![a diagram of §<ID>](diagram.png)` keeps its
+`![§<ID>](cache.png)` as written, and it is no index entry and no enrollment: grund 0.19.0 warned
+for one release, and grund 0.20.0 retired the credit ([§FS-citations.checks.image-index-entry](../../functional-spec/FS-citations.md#checksimage-index-entry-a-citation-only-image-is-an-index-entry-for-one-more-release), [§DF-image-index-entry-lands-in-0-20](DF-image-index-entry-lands-in-0-20.md#df-image-index-entry-lands-in-0-20-a-citation-only-image-is-no-index-entry-from-0200)). `![a diagram of §<ID>](diagram.png)` keeps its
 reading, and a row an older `fmt` already wrapped that way keeps its credit through the inner wrap.
 
 ## 3. Rejected alternative: retire the image's credit in the correcting release
@@ -78,7 +78,8 @@ would fail. No requirement forbade that verdict when it shipped. The writer's da
 ([§REQ-no-data-loss.2](../../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own)) is a prohibition on `fmt`, not on `check`, and the correction route refuses, by its
 no-new-licence condition, refuses to stretch one into the other. So the image's credit takes the deprecation path
 ([§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)): one release warns at the image's line with the literal entry to
-write, and the next minor retires it.
+write, and the next minor retires it. The route is complete: grund 0.19.0 warned, and grund 0.20.0
+retired the credit ([§DF-image-index-entry-lands-in-0-20](DF-image-index-entry-lands-in-0-20.md#df-image-index-entry-lands-in-0-20-a-citation-only-image-is-no-index-entry-from-0200)).
 
 ## 4. Rejected alternative: read Markdown as CommonMark does
 
@@ -101,8 +102,9 @@ forms the issue lists are added to them.
   unresolved reference, a definition's label, an autolink, an HTML anchor and an incomplete label
   stop being reported that way too, and the ID is reported missing from the index
   ([§FS-check.3.18](../../functional-spec/FS-check.md#318-declaration-missing-from-its-kinds-index)) at the declaration's heading, naming the index and the form an entry takes.
-- **A citation-only image in a kind's index.** It keeps its credit for one release and warns
-  `image-index-entry` where that credit is all the index holds for the ID; then it is no entry.
+- **A citation-only image in a kind's index.** It kept its credit for one release, 0.19.0, and
+  warned `image-index-entry` where that credit was all the index held for the ID; from 0.20.0 it
+  is no entry ([§DF-image-index-entry-lands-in-0-20](DF-image-index-entry-lands-in-0-20.md#df-image-index-entry-lands-in-0-20-a-citation-only-image-is-no-index-entry-from-0200)).
 - **Nothing else.** A bare citation is still wrapped, a wrap is still re-derived, a line an older
   `fmt` nested is still a fixed point, and `show` still collapses only a wrap.
 
