@@ -7,7 +7,7 @@ fn print_help() {
     println!();
     println!("Query the catalog:");
     println!("  show          Print a coordinate's lead for agent context (default).  grund FS-login.3");
-    println!("  list          Every declared ID, with path:line and title.            grund list --kind FS");
+    println!("  list          Every declared ID, or the ones nothing cites.           grund list --unused");
     println!("  refs          Every citation site of a coordinate, as path:line.      grund refs FS-login");
     println!("  cover         Every scanned file, with the citations in it.           grund cover --format json");
     println!();
