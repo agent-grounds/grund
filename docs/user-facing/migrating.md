@@ -11,6 +11,7 @@ on a small repository, and its recorded output is what `grund` prints.
 ```bash
 grund config migrate --to 2                          # preview: nothing is written
 grund config migrate --to 2 --write                  # write, past both gates
+grund config migrate --to 2 --write --full           # write with candidate and complete report
 grund config migrate --to 2 --write --drop-comments  # and drop the listed comments
 ```
 
@@ -82,8 +83,9 @@ Before anything is written, the candidate is held to two comparisons
 - **the report**: `grund check --suggestions` on this tree, run once with each
   file, gives the same findings and the same exit.
 
-When both pass the report says `compared:`. When one differs it prints the
-differing lines, `- ` for version 1 and `+ ` for the candidate, and refuses:
+When both pass the preview or full report says `compared:`; compact successful
+writes run the same gates without repeating that line. When one differs it
+prints the differing lines, `- ` for version 1 and `+ ` for the candidate, and refuses:
 the candidate would change a meaning, so nothing is written
 ([§FS-config-migrate.5.4](../functional-spec/FS-config-migrate.md#54-the-result-and-a-difference)).
 
@@ -98,8 +100,14 @@ shape that adds a `Declaration shapes` section
 Add `--write` (and `--drop-comments` if the preview listed comments). The file is
 replaced atomically, keeps its permissions, and nothing else is written; if the
 file changed since it was read, nothing is written and the run says so
-([§FS-config-migrate.6](../functional-spec/FS-config-migrate.md#6-the-write)). The
-report explains how to get version 1 back, from version control, then ends with:
+([§FS-config-migrate.6](../functional-spec/FS-config-migrate.md#6-the-write)).
+
+A successful write leaves stdout empty. Its compact stderr report starts with
+what was written and the exact original ranges of any dropped comments, then
+retains every notice and carried-comment warning, member migration commands
+and the distinct Project map note when applicable. It explains how to undo the
+write and preview again, then ends with
+([§FS-config-migrate.6.5](../functional-spec/FS-config-migrate.md#65-what-it-says-after-the-write)):
 
 ```text
 note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them
@@ -111,6 +119,14 @@ migration leaves them unchanged
 The qualified reminder appears after every successful write, even when no
 `AGENTS.md` exists. Previews, refused or failed writes, and already-version-2
 runs omit it. A second migration run says the config is already version 2.
+
+To capture the candidate and complete mapping/default/gate report while
+applying, use `grund config migrate --to 2 --write --full`. Stdout then contains
+exactly the bytes written, and stderr retains the preview's complete report
+before the write outcome and advice. `--full` changes no preview, refusal,
+failure or already-version-2 output, and can be combined with PATH,
+`--drop-comments` and either `--path-base`
+([§FS-config-migrate.1.3](../functional-spec/FS-config-migrate.md#13-the-other-flags)).
 
 ## Workspaces
 

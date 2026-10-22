@@ -2,7 +2,7 @@
 
 This runnable walkthrough moves a version-1 `grund.toml` to version 2 with `grund config migrate --to 2` ([§FS-config-migrate](../../docs/functional-spec/FS-config-migrate.md#fs-config-migrate-grund-config-migrate---to-2-shows-the-version-2-file-that-means-what-a-version-1-config-means-and-writes-it-only-when-asked-and-only-when-it-does)). It is for a repository `grund init` set up before version 2 existed. Its config is the one `grund init` writes, trimmed to two kinds and two languages, with four comments: a header block, one above the `FS` row, one above `[scan] include`, and one trailing `[scan] exclude`.
 
-The example pins three runs, one per step ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)). The first two preview; the third writes only the config in a disposable copy.
+The example pins four runs, one per step ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)). The first two preview; the third writes with compact output and the fourth with complete output, each changing only the config in a disposable copy.
 
 ## Step 1: the preview refuses, and names the repairs
 
@@ -68,17 +68,38 @@ echo $?    # 0
 
 The write is atomic, writes no other file, and says how to get version 1 back: from version control, or by previewing again ([§FS-config-migrate.6](../../docs/functional-spec/FS-config-migrate.md#6-the-write)). Without `--drop-comments` it refuses, and the file stays as it is. Run it a second time and it reports that the config is already version 2.
 
-The successful-write report ends with:
+Stdout is empty. The complete compact report on stderr is:
 
 ```text
 wrote grund.toml: version 1 (35 lines) replaced by version 2
 dropped the comments at grund.toml:28 (version 1 lines)
+changed: grund.toml:30: [scan] exclude: value vocabulary translated to [schema.sources] exclude; check the carried comment
+note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check does not compare that table
 to get version 1 back: it is in version control, e.g. git restore grund.toml
 to see this candidate again: restore version 1 and run grund config migrate --to 2
 note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them
 ```
 
-Run `grund init` in the migrated project to refresh managed instructions that may still describe version 1 ([§FS-config-migrate.6.5](../../docs/functional-spec/FS-config-migrate.md#65-what-it-says-after-the-write)). The reminder appears even though this fixture has no `AGENTS.md`; migration does not create one. `migrate-3-write/expected.repo/` records the complete final tree: only `grund.toml` changes, and it equals `expected.stdout`. The harness uses a disposable copy for the write and checks that tree; the follow-up `grund init` is a separate action.
+Run `grund init` in the migrated project to refresh managed instructions that may still describe version 1 ([§FS-config-migrate.6.5](../../docs/functional-spec/FS-config-migrate.md#65-what-it-says-after-the-write)). The reminder appears even though this fixture has no `AGENTS.md`; migration does not create one. `migrate-3-write/expected.repo/` records the complete final tree: only `grund.toml` changes, and it equals the candidate in `migrate-2-repaired/expected.stdout`. The harness uses a disposable copy for the write and checks that tree; the follow-up `grund init` is a separate action.
+
+## Step 4: request complete output when writing
+
+`migrate-4-full/repo/` starts from the same repaired version-1 fixture, so this
+is a separate write rather than a second migration of step 3's version-2 file:
+
+```bash
+grund config migrate --to 2 --write --drop-comments --full examples/migrate/migrate-4-full/repo
+echo $?    # 0
+```
+
+`--full` restores the candidate on stdout and the complete report on stderr
+([§FS-config-migrate.1.3](../../docs/functional-spec/FS-config-migrate.md#13-the-other-flags)).
+`migrate-4-full/expected.stdout` is byte-identical to the preview candidate and
+the written `expected.repo/grund.toml`. Stderr preserves the preview's comments,
+notices, key mappings, defaults, gate result and Project map note in their
+original order, then adds the write outcome, dropped ranges and advice. The
+refresh reminder still appears once and last. `--full` leaves preview and
+refusal output unchanged, and both write modes make the same config-only change.
 
 ## Trade-offs
 

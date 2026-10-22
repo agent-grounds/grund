@@ -155,7 +155,6 @@ fn assert_complete_report(preview: &Output) {
 /// §FS-config-migrate.2.1, §FS-config-migrate.6.4, §FS-config-migrate.6.5:
 /// issue fixture, including existing managed instructions, preview and tree.
 #[test]
-#[ignore = "red until #907 compact successful writes suppress the candidate; implement removes this"]
 fn compact_write_has_no_candidate_and_only_changes_config() {
     for init in [true, false] {
         let fixture = Fixture::new(V1);
@@ -194,7 +193,6 @@ fn compact_write_has_no_candidate_and_only_changes_config() {
 /// §FS-config-migrate.6.5: exact five-line report independently pins stderr,
 /// so candidate suppression alone cannot satisfy the issue.
 #[test]
-#[ignore = "red until #907 compact successful writes omit repeated report detail; implement removes this"]
 fn compact_write_report_is_exactly_five_lines() {
     let fixture = Fixture::new(V1);
     let write = fixture.migrate(&["--write"]);
@@ -224,7 +222,6 @@ fn compact_write_report_is_exactly_five_lines() {
 /// §FS-config-migrate.6.5, §FS-config-migrate.4.1.1: retain every notice and
 /// carried-comment warning, but list dropped original ranges only once.
 #[test]
-#[ignore = "red until #907 compact ordering retains comments and notices without replay; implement removes this"]
 fn compact_write_orders_multiple_drops_notices_and_carried_warning() {
     let input = annotated_v1();
     let fixture = Fixture::new(&input);
@@ -268,7 +265,6 @@ fn compact_write_orders_multiple_drops_notices_and_carried_warning() {
 /// §FS-config-migrate.8, §FS-config-migrate.6.5: member commands survive
 /// compact rendering between notices and the Project map note, without writes.
 #[test]
-#[ignore = "red until #907 compact workspace output preserves member commands in order; implement removes this"]
 fn compact_workspace_keeps_member_commands_in_order() {
     for full in [false, true] {
         let input = format!("{V1}\n[workspace]\nmembers = [\"member\"]\n");
@@ -317,7 +313,6 @@ fn compact_workspace_keeps_member_commands_in_order() {
 /// §FS-config-migrate.1.3, §FS-config-migrate.2.2: full writes restore the
 /// entire legacy report in its order, not just the suppressed stdout.
 #[test]
-#[ignore = "red until #907 migration accepts --full and restores legacy write output; implement removes this"]
 fn full_write_restores_candidate_and_complete_report_with_path_and_comments() {
     for base in ["project", "invocation"] {
         let input = annotated_v1();
@@ -351,7 +346,6 @@ fn full_write_restores_candidate_and_complete_report_with_path_and_comments() {
 /// §FS-config-migrate.1.3: full is inert on successful and comment-refused
 /// previews, including PATH, --drop-comments and both path-base values.
 #[test]
-#[ignore = "red until #907 --full is accepted and inert on previews; implement removes this"]
 fn full_previews_preserve_both_streams_and_tree() {
     for base in ["project", "invocation"] {
         for drop in [false, true] {
@@ -377,7 +371,6 @@ fn full_previews_preserve_both_streams_and_tree() {
 /// §FS-config-migrate.2.2, §FS-config-migrate.5.3: compact selection must
 /// not abridge failed setting, comment or generated-guidance gate diagnostics.
 #[test]
-#[ignore = "red until #907 --full leaves refused writes unchanged; implement removes this"]
 fn full_refused_writes_keep_complete_diagnostics_and_original_tree() {
     for (input, diagnostic) in [
         (
@@ -417,7 +410,6 @@ fn full_refused_writes_keep_complete_diagnostics_and_original_tree() {
 /// §FS-config-migrate.1.2, §FS-config-migrate.1.3: accepting full must not
 /// bypass required target validation or make --format a supported flag.
 #[test]
-#[ignore = "red until #907 --full preserves migration usage validation; implement removes this"]
 fn full_keeps_to_required_and_format_rejected() {
     let fixture = Fixture::new(V1);
     let before = snapshot(&fixture.0);

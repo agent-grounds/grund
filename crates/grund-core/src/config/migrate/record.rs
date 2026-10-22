@@ -1,7 +1,8 @@
 //! The one typed record `grund config migrate --to 2` returns (§AR-config.8):
-//! everything the report says, in the order §FS-config-migrate.2.2 prints it,
-//! and the candidate stdout carries (§FS-config-migrate.2.1). It renders
-//! nothing; `grund-cli` spells each part as a line.
+//! everything the complete report says (§FS-config-migrate.2.2), and the
+//! eligible candidate (§FS-config-migrate.2.1). It renders nothing;
+//! `grund-cli` selects compact success (§FS-config-migrate.6.5) or complete
+//! output without changing this record or migration policy.
 
 /// What a run found at the config it was pointed at.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -61,9 +62,10 @@ impl MigrateReport {
             || (!self.comments.is_empty() && !self.drop_comments)
     }
 
-    /// §FS-config-migrate.2.1: the bytes stdout carries — the candidate, unless
-    /// nothing may be written for a cause other than a listed comment, or a
-    /// `--write` refuses.
+    /// §FS-config-migrate.2.1: the candidate eligible for stdout, unless nothing
+    /// may be written for a cause other than a listed comment, or a `--write`
+    /// refuses. This is eligibility, not CLI presentation: the CLI omits even
+    /// an eligible candidate on compact successful writes (§FS-config-migrate.6.5).
     pub fn stdout(&self) -> Option<&str> {
         let blocked = !self.refusals.is_empty() || !matches!(self.gates, Some(GateResult::Equal));
         if blocked || (self.write && self.refused()) {
