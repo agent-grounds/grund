@@ -139,10 +139,10 @@ CITED = ("REQ-one-answer.differences.scope", "FS-workspace.6.2")
 # FS-check's adds #634's 10-line chapter, §FS-check.3.17.4's wrap-test line (grund#655)
 # and #756's 9 lines of checks.config-version-1: a restatement still has one line to regrow.
 
-# FS-workspace's adds #823's 20 non-blank lines of §FS-workspace.5.1.1; FS-check's adds
-# #836's 9 of §FS-check.2.3.1.3 and its parent and #829's 17 of §FS-check.1.4.1 and
-# §FS-check.2.2.1.4; the original scan-move shrink margin remains unchanged.
-BASELINES = {"FS-config.md": 765, "FS-workspace.md": 1183, "FS-check.md": 965}
+# FS-workspace's adds #823's 20 lines of §FS-workspace.5.1.1; FS-check's adds #836's 9 of
+# §FS-check.2.3.1.3, #829's 17 of §FS-check.1.4.1 and §FS-check.2.2.1.4, and #906's 14 of
+# §FS-check.3.5.3, §FS-check.3.5.5 and §FS-check.4.9.1; the scan-move margin is unchanged.
+BASELINES = {"FS-config.md": 765, "FS-workspace.md": 1183, "FS-check.md": 979}
 
 
 def _flat(text):
