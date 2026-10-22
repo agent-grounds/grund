@@ -1197,7 +1197,7 @@ The asymmetry between `--dry-run`'s `0` and `--check`'s `1` is deliberate. `1` i
 - A section name together with `--full` prints `error: a section and --full cannot be used together`.
 - Any other flag is the usual ``error: unknown flag `<flag>` ``.
 
-The command exists so a user can tell an agent only "set up grund" plus provide an installed `grund` binary, and the agent can still discover the recommended setup workflow without browsing the source repository. Its name says what it prints for any reader, and `agent-setup-instructions` is its deprecated name ([§FS-init.5.7](FS-init.md#57-agent-setup-instructions-is-the-deprecated-name-of-guide), [§DF-guide-command](../decisions/functional/DF-guide-command.md#df-guide-command-grund-agent-setup-instructions-becomes-grund-guide-whose-bare-run-prints-a-front-page-and-whose-sections-are-named-positionally)).
+The command exists so a user can tell an agent only "set up grund" plus provide an installed `grund` binary, and the agent can still discover the recommended setup workflow without browsing the source repository. Its name says what it prints for any reader; `agent-setup-instructions`, the name it had before, was removed in grund 0.20.0 ([§FS-init.5.7](FS-init.md#57-agent-setup-instructions-is-the-deprecated-name-of-guide), [§DF-guide-command](../decisions/functional/DF-guide-command.md#df-guide-command-grund-agent-setup-instructions-becomes-grund-guide-whose-bare-run-prints-a-front-page-and-whose-sections-are-named-positionally)).
 
 ### 5.1 What the instructions tell the agent
 
@@ -1264,15 +1264,15 @@ Every byte of guidance on the front page is the core's or a Contents line's, and
 
 ### 5.7 `agent-setup-instructions` is the deprecated name of `guide`
 
-`agent-setup-instructions` was the command's name through grund 0.18.0. grund 0.19.0 keeps it as a deprecated name under [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path): it prints the core, the text `grund guide setup` prints, after one warning on stderr naming the replacement and the release that removes the name:
+`agent-setup-instructions` was the command's name through grund 0.18.0. grund 0.19.0 kept it as a deprecated name under [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path): it printed the core, the text `grund guide setup` prints, after one warning on stderr naming the replacement and the release that removes the name ([§DF-guide-command](../decisions/functional/DF-guide-command.md#df-guide-command-grund-agent-setup-instructions-becomes-grund-guide-whose-bare-run-prints-a-front-page-and-whose-sections-are-named-positionally)). That release is 0.20.0, and the name is gone ([§DF-agent-setup-instructions-removed-in-0-20](../decisions/functional/DF-agent-setup-instructions-removed-in-0-20.md#df-agent-setup-instructions-removed-in-0-20-grund-agent-setup-instructions-is-no-command-from-0200)): it is no subcommand, hidden or listed, and nothing answers to it by name. It is refused as every first word that is neither a subcommand nor an ID is ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)). `grund agent-setup-instructions` is the ID query of [§FS-cli.1](FS-cli.md#1-the-default-subcommand), and `--full` is that query's flag, so the bare name and the name with `--full` are both its failure of [§FS-cli.1.2](FS-cli.md#12-a-first-word-that-is-not-an-id): the invalid ID and the format hint, and no `grund --help` hint, because the word holds a `-`, with an empty stdout and exit `1`; any other argument is read as that query reads it. Where the word is no valid ID, as under the default `{kind}-{slug}` format, the first line reads:
 
 ```
-warning: agent-setup-instructions is deprecated and is removed in grund 0.20.0; use grund guide setup, which prints the same text
+invalid ID `agent-setup-instructions`
 ```
 
-It takes no arguments, as it took none in 0.18.0: any argument prints the same warning and then `error: agent-setup-instructions takes no arguments`, exit `2`. `--section` and `--full` were never released under this name. `grund agent-setup-instructions -h` and `grund help agent-setup-instructions` print `guide`'s page after the same warning. The name is dispatched but listed nowhere: not on the top-level page, in the `known commands:` line or in shell completion ([§FS-cli.1](FS-cli.md#1-the-default-subcommand)).
+`grund help agent-setup-instructions` and `grund agent-setup-instructions -h` are the help request with an unknown first word of [§FS-cli.1.3](FS-cli.md#13-a-help-request-with-an-unknown-first-word): `error: unknown command: agent-setup-instructions` and the `known commands:` line, which names `guide`, with exit `2`. Neither names `grund guide` as the replacement; the release note and this point do.
 
-The bindings keep `agent_setup_instructions()` and `agentSetupInstructions()`, which return the `--full` text: they are not a command-line spelling, so nothing of theirs is renamed ([§DF-setup-guide-core-by-default.2.3](../decisions/functional/DF-setup-guide-core-by-default.md#23-the-bindings-return-the-whole-guide)).
+The bindings keep `agent_setup_instructions()` and `agentSetupInstructions()`, which return the `--full` text: they are not a command-line spelling, so nothing of theirs is renamed or removed ([§DF-setup-guide-core-by-default.2.3](../decisions/functional/DF-setup-guide-core-by-default.md#23-the-bindings-return-the-whole-guide)). This address, heading text included, is kept so citations written while the name was deprecated still resolve.
 
 ## 6. Why this exists
 

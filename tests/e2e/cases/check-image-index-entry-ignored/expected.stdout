@@ -1,0 +1,1 @@
+docs/adr/use-redis.md:1: error: ADR-use-redis appears in docs/adr/README.md but not as an entry: an entry is a `§`-marked Markdown link to the declaration — became an error in grund 0.13.0

@@ -540,12 +540,12 @@
  },
  {
   "code": "image-index-entry",
-  "meaning": "A citation-only image is the only entry or enrollment a kind's index holds for an ID, a credit the next minor retires.",
-  "ramp": "retired in 0.20.0",
+  "meaning": "A citation-only image was all a kind's index held for an ID; such an image is now neither an entry nor an enrollment.",
+  "ramp": null,
   "2": {
    "severity": {
-    "kind": "fixed",
-    "text": "warning"
+    "kind": "spent",
+    "text": "spent from grund 0.20.0; select missing-index-entry instead"
    },
    "enabled": {
     "kind": "always"
@@ -553,8 +553,8 @@
   },
   "1": {
    "severity": {
-    "kind": "fixed",
-    "text": "warning"
+    "kind": "spent",
+    "text": "spent from grund 0.20.0; select missing-index-entry instead"
    },
    "enabled": {
     "kind": "always"

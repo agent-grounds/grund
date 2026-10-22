@@ -1,8 +1,8 @@
 //! §FS-citations.wrap.enclosing.scope — a citation in every form a Markdown link is
 //! written in, and in a citation-only image, is left with the author's markup by
 //! `fmt`, and `check` credits only the forms that go somewhere
-//! (§FS-citations.wrap.enclosing), with one release of credit and a warning for the
-//! citation-only image (§FS-citations.checks.image-index-entry).
+//! (§FS-citations.wrap.enclosing): from grund 0.20.0 a citation-only image keeps no
+//! credit at all (§FS-citations.checks.image-index-entry).
 //!
 //! These run the real binary, because the defect is a write: `fmt --write`, then
 //! `fmt --check`, then `check`, on the bytes a user would hold. They port the
@@ -328,6 +328,12 @@ fn a_collapsed_reference_and_its_definition_keep_one_key() {
     );
 }
 
+/// The §FS-check.3.18 finding for `ADR-use-redis` where the index mentions it and holds
+/// no entry for it: it appears, but not as an entry (§FS-check.3.18.5).
+const REDIS_APPEARS: &str = "docs/adr/use-redis.md:1: error: ADR-use-redis appears in docs/adr/README.md \
+     but not as an entry: an entry is a `§`-marked Markdown link to the declaration — became an \
+     error in grund 0.13.0\n";
+
 /// §FS-check.3.18.5 by §FS-citations.wrap.enclosing: in a kind's index, a reference
 /// whose key a definition matches and a complete link whose text runs onto a second
 /// line go somewhere, so each is the entry; `check` never says "is not a link"
@@ -395,9 +401,7 @@ fn a_link_inside_an_index_rows_text_stays_an_entry() {
 /// finding has shipped in, and never as "is not a link".
 #[test]
 fn index_rows_that_go_nowhere_are_missing_entries() {
-    let missing = "docs/adr/use-redis.md:1: error: ADR-use-redis appears in docs/adr/README.md but not \
-                   as an entry: an entry is a `§`-marked Markdown link to the declaration — became an \
-                   error in grund 0.13.0\n";
+    let missing = REDIS_APPEARS;
     let mut failures = Vec::new();
     for (name, row) in [
         (
@@ -436,34 +440,31 @@ fn index_rows_that_go_nowhere_are_missing_entries() {
     assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
-/// The warning of §FS-citations.checks.image-index-entry for `ADR-use-redis`.
-fn image_warning(line: usize, link: &str) -> String {
-    format!(
-        "docs/adr/README.md:{line}: warning: index entry §ADR-use-redis is an image, not a link; \
-         write `[§ADR-use-redis]({link})` in docs/adr/README.md \
-         — this warning becomes an error in grund 0.20.0\n"
-    )
-}
-
-/// §FS-citations.checks.image-index-entry, §FS-citations.wrap.enclosing.images: a
-/// citation-only image that is the ID's only entry keeps its credit for one release
-/// and warns at its line with the link to write; `fmt` keeps `cache.png`; and the
-/// line the warning names, written beside the image, clears it.
+/// §FS-citations.checks.image-index-entry, §FS-citations.wrap.enclosing.images: from
+/// grund 0.20.0 a citation-only image that was the ID's only entry is no entry, so the ID
+/// is reported missing, an error, in the "appears" words of §FS-check.3.18.5, and never
+/// as `image-index-entry` or as not a link; `fmt` keeps `cache.png`; and the link the
+/// 0.19.0 warning named, written beside the image, is the entry.
 #[test]
-fn a_citation_only_image_entry_warns_and_the_named_line_clears_it() {
+fn a_citation_only_image_is_no_entry_and_a_link_beside_it_is() {
     let index = format!("{PG_ROW}- ![§ADR-use-redis](cache.png)\n");
     let dir = project("image-entry", "", &index);
     let check = grund(&["check"], &dir);
-    assert!(
-        check.status.success(),
-        "a warning, exit 0: {}",
+    assert_eq!(
+        check.status.code(),
+        Some(1),
+        "an error, exit 1: {}",
         stdout(&check)
     );
-    assert_eq!(stdout(&check), image_warning(2, REDIS_LINK));
+    assert_eq!(stdout(&check), REDIS_APPEARS);
     let json = stdout(&grund(&["check", "--format", "json"], &dir));
     assert!(
-        json.contains("\"code\":\"image-index-entry\"")
-            && json.contains("\"severity\":\"warning\""),
+        json.contains("\"code\":\"missing-index-entry\"")
+            && json.contains("\"severity\":\"error\""),
+        "{json}"
+    );
+    assert!(
+        !json.contains("image-index-entry") && !json.contains("unlinked-index-entry"),
         "{json}"
     );
     assert_eq!(
@@ -483,12 +484,13 @@ fn a_citation_only_image_entry_warns_and_the_named_line_clears_it() {
     assert_eq!(stdout(&grund(&["check"], &dir)), "success\n");
 }
 
-/// §FS-citations.checks.image-index-entry: a citation-only image whose destination
-/// is the canonical link to an external source declaration still enrolls it for one
-/// release (§FS-check.3.18.3) — the declaration is a member, so it is reported
-/// uncited — and warns, naming the canonical link.
+/// §FS-citations.checks.image-index-entry: from grund 0.20.0 a citation-only image
+/// whose destination is the canonical link to an external source declaration no longer
+/// enrolls it (§FS-check.3.18.4). The declaration is no member, so the image is an
+/// ordinary citation of it and nothing is reported: no warning, and no uncited note
+/// naming an index entry.
 #[test]
-fn a_citation_only_image_enrollment_warns() {
+fn a_citation_only_image_enrolls_nothing() {
     let dir = tree(
         "image-enrollment",
         &[
@@ -505,19 +507,9 @@ fn a_citation_only_image_enrollment_warns() {
             ),
         ],
     );
-    let out = stdout(&grund(&["check"], &dir));
-    assert!(
-        out.contains("declared but never cited: ADR-inline"),
-        "still enrolled: {out}"
-    );
-    assert!(
-        out.contains(
-            "docs/adr/README.md:2: warning: index entry §ADR-inline is an image, not a link; \
-             write `[§ADR-inline](../../src/lib.rs)` in docs/adr/README.md \
-             — this warning becomes an error in grund 0.20.0"
-        ),
-        "{out}"
-    );
+    let check = grund(&["check"], &dir);
+    assert!(check.status.success(), "{}", stdout(&check));
+    assert_eq!(stdout(&check), "success\n", "ADR-inline is still enrolled");
 }
 
 /// §FS-citations.wrap.enclosing.images: an index row a `fmt` already wrapped inside a

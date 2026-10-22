@@ -1,0 +1,8 @@
+grund_config_version = 2
+project_name = "records"
+
+[schema.sources]
+languages = ["markdown", "rust"]
+
+[schema.kinds.ADR]
+folders = ["docs/adr"]

@@ -1,0 +1,2 @@
+invalid ID `agent-setup-instructions`
+hint: this repo's [schema] id_format is `{kind}-{slug}` (run `grund config show`); `grund list` shows the IDs that exist

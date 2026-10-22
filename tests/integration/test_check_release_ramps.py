@@ -294,6 +294,19 @@ class ThisRepositoryTests(unittest.TestCase):
         ]
         self.assertEqual([], golden)
 
+    def test_no_line_still_promises_a_change_in_0_20_0(self):
+        """§FS-distribution.4.2.2 — the two ramps 0.19.0 announced for 0.20.0 have
+        landed: `grund agent-setup-instructions` is gone (§FS-init.5.7) and a
+        citation-only image is no index entry (§FS-citations.checks.image-index-entry).
+        A source line or golden that still promised a change at 0.20.0 would make the
+        release guard refuse 0.20.0."""
+        pending = [
+            claim.quoted()
+            for claim in self.claims
+            if claim.direction == ramps.PENDING and claim.release == "0.20.0"
+        ]
+        self.assertEqual([], pending)
+
     def test_the_landed_stub_target_flip_holds_the_floor_at_0_19_0(self):
         """§FS-distribution.4.2.2 — excluded and ignored stub targets became
         errors in 0.19.0 (§FS-declarations.stubs.target.3), raising the message

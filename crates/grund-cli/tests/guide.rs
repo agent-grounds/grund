@@ -505,20 +505,29 @@ fn front_page_lists_every_section_with_its_size_and_summary() {
     }
 }
 
-/// §FS-init.5.7: the deprecated name prints the core after its one warning, which
-/// names the replacement and the release that removes it.
+/// §FS-init.5.7: the deprecated name is gone from grund 0.20.0, so it is refused as
+/// any first word that is no subcommand is: alone or with `--full`, the failed ID
+/// query of §FS-cli.1.2 (exit `1`), and as a help request the unknown command of
+/// §FS-cli.1.3 (exit `2`). No form prints the guide or the deprecation warning, which
+/// would come first; the e2e goldens pin the whole refusal.
 #[test]
-fn deprecated_name_prints_the_core_after_one_warning() {
-    let output = Command::new(env!("CARGO_BIN_EXE_grund"))
-        .arg("agent-setup-instructions")
-        .current_dir(manifest_dir())
-        .output()
-        .expect("spawn grund");
-    assert_eq!(output.status.code(), Some(0));
-    assert_eq!(String::from_utf8_lossy(&output.stdout), core());
-    assert_eq!(
-        String::from_utf8_lossy(&output.stderr),
-        "warning: agent-setup-instructions is deprecated and is removed in grund 0.20.0; \
-         use grund guide setup, which prints the same text\n"
-    );
+fn removed_name_is_refused_as_any_unknown_word() {
+    let invalid = "invalid ID `agent-setup-instructions`\nhint: ";
+    let unknown = "error: unknown command: agent-setup-instructions\nknown commands: ";
+    for (args, code, opening) in [
+        (&["agent-setup-instructions"][..], 1, invalid),
+        (&["agent-setup-instructions", "--full"], 1, invalid),
+        (&["help", "agent-setup-instructions"], 2, unknown),
+        (&["agent-setup-instructions", "-h"], 2, unknown),
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_grund"))
+            .args(args)
+            .current_dir(manifest_dir())
+            .output()
+            .expect("spawn grund");
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(output.status.code(), Some(code), "grund {args:?}: {stderr}");
+        assert!(output.stdout.is_empty(), "grund {args:?} printed a page");
+        assert!(stderr.starts_with(opening), "grund {args:?}: {stderr}");
+    }
 }

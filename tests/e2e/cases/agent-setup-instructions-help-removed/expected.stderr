@@ -1,0 +1,2 @@
+error: unknown command: agent-setup-instructions
+known commands: check, show, list, refs, cover, fmt, fetch, id, init, config, schema, guide, completions, integrations

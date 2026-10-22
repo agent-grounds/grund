@@ -1,0 +1,1 @@
+check --ignore image-index-entry {repo}
