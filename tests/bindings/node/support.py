@@ -21,6 +21,7 @@ TYPESCRIPT = "5.9.3"
 # What a retry can cure: the registry was not reached (§AR-ci.3.4.1.3).
 NETWORK_ERRORS = ("ENOTFOUND", "EAI_AGAIN", "ETIMEDOUT", "ECONNRESET", "ECONNREFUSED")
 INSTALL_ATTEMPTS = 3
+_INSTALLED_CONSUMERS = {}
 
 
 def node_root():
@@ -114,6 +115,37 @@ def source_package():
     return stage, target, tarball
 
 
+def installed_consumer(tarball):
+    """One pristine real npm installation per staged tarball (§AR-ci.3.4.1.4).
+
+    Both the resolved path and bytes identify the run's input, never its version.
+    Only successful preparations are retained, outside any rehearsal's lifetime;
+    their temporary directories are discarded at process exit.
+    """
+    tarball = tarball.resolve()
+    digest = hashlib.sha256()
+    with tarball.open("rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
+    key = (tarball, digest.digest())
+    if key not in _INSTALLED_CONSUMERS:
+        temp = tempfile.TemporaryDirectory(prefix="grund-809-node-installed-", dir=SCRATCH)
+        consumer = Path(temp.name) / "consumer"
+        try:
+            consumer.mkdir()
+            (consumer / "package.json").write_text(
+                '{"private":true,"type":"module"}\n', encoding="utf-8",
+            )
+            checked(["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund",
+                     tarball], cwd=consumer)
+        except BaseException:
+            temp.cleanup()
+            raise
+        atexit.register(temp.cleanup)
+        _INSTALLED_CONSUMERS[key] = temp
+    return Path(_INSTALLED_CONSUMERS[key].name) / "consumer"
+
+
 @lru_cache(maxsize=1)
 def checkout_cli():
     """Independent same-source mutation byte oracle (§FS-distribution.3.2.3.1).
@@ -132,16 +164,13 @@ class Rehearsal:
     """No production builder/loader lives here; invoke the declared workflow."""
 
     def __init__(self):
+        """Private writable copies of the run's pristine install (§AR-ci.3.4.1.4)."""
         self.stage, self.target, self.tarball = source_package()
+        template = installed_consumer(self.tarball)
         self.temp = tempfile.TemporaryDirectory(prefix="grund-node-contract-", dir=SCRATCH)
         self.root = Path(self.temp.name)
         self.consumer = self.root / "consumer"
-        self.consumer.mkdir()
-        (self.consumer / "package.json").write_text(
-            '{"private":true,"type":"module"}\n', encoding="utf-8",
-        )
-        checked(["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund",
-                 self.tarball], cwd=self.consumer)
+        shutil.copytree(template, self.consumer)
         self.package = self.consumer / "node_modules" / "grund-cli"
         self.fixture = self.root / "répo-雪"
         shutil.copytree(CASES / "json-report" / "repo", self.fixture)
