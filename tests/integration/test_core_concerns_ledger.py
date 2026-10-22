@@ -10,6 +10,10 @@ carries either `Open — owner #N`, naming the ticket that rules on it, or
 planned notice in a release at or below the last one shipped. The last shipped
 release is read from the repository — its `v*` tags, and the released headings
 of `docs/changelog.md` for a clone fetched without tags — never written here.
+The same rule holds the phases of §DISC-core-concerns.9: a phase whose lead
+opens `Not shipped` names no release it is planned for at or below the last one
+shipped, because a phase planned for a release that is out has either shipped
+or slipped, and its lead says which.
 
 No architecture point describes this repository's planning documents, so this
 test cites the discussion points it holds them to instead. The two tests that
@@ -17,7 +21,7 @@ read the documents landed under `@unittest.expectedFailure`, one commit before
 the reconciliation, because the pre-commit hook runs this suite and a plainly
 failing test could not be committed without `--no-verify`. An expected failure
 that passes fails the suite, so the commit that reconciles the plan takes the
-decorators off.
+decorators off. The phase check landed the same way for `agent-grounds/grund#465`.
 """
 
 import re
@@ -43,6 +47,9 @@ ITEM = re.compile(r"^(\d+)\. ", re.MULTILINE)
 OWNED = re.compile(r"Open — owner #\d+|Settled by")
 STATUSES = ("planned", "shipped")
 TAG = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
+PHASE = re.compile(r"^Phase \d+:")
+PLANNED_FOR = re.compile(r"\bfor ((?:`\d+\.\d+\.(?:\d+|x)`(?:,? (?:and )?)?)+)")
+PLANNED_RELEASE = re.compile(r"`(\d+)\.(\d+)\.(\d+|x)`")
 RELEASED = re.compile(
     r"^(?:## \d+\. |- )\[(\d+)\.(\d+)\.(\d+)\]", re.MULTILINE
 )
@@ -78,6 +85,33 @@ def row_problems(cells, last_shipped):
             f"{surface}: notice {notice_cell} is at or below the last shipped release "
             f"{'.'.join(map(str, last_shipped))} but the row is not marked shipped"
         )
+    return problems
+
+
+def phase_problems(text, last_shipped):
+    """Each §DISC-core-concerns.9 phase still `Not shipped` for a release that is out."""
+    problems = []
+    for minor in range(1, 10):
+        body = section(text, f"9.{minor}")
+        if body is None:
+            continue
+        title, _, rest = body.partition("\n")
+        if not PHASE.match(title):
+            continue
+        lead = rest.strip().split("\n\n", 1)[0]
+        if not lead.startswith("Not shipped"):
+            continue
+        for listed in PLANNED_FOR.finditer(lead):
+            for major, minor_part, patch in PLANNED_RELEASE.findall(listed.group(1)):
+                # A series `0.N.x` has closed once a later minor shipped.
+                last_patch = float("inf") if patch == "x" else int(patch)
+                planned = (int(major), int(minor_part), last_patch)
+                if planned <= last_shipped:
+                    problems.append(
+                        f"9.{minor} {title.split(':')[0]}: not shipped but planned for "
+                        f"{major}.{minor_part}.{patch}, at or below the last shipped release "
+                        f"{'.'.join(map(str, last_shipped))}"
+                    )
     return problems
 
 
@@ -125,6 +159,28 @@ class CoreConcernsLedgerTest(unittest.TestCase):
         self.assertTrue(rows, "§DISC-core-concerns.9.9 carries no ledger row")
         last = last_shipped_release()
         self.assertEqual([], [p for cells in rows for p in row_problems(cells, last)])
+
+    @unittest.expectedFailure
+    def test_no_phase_is_still_planned_for_a_release_that_shipped(self):
+        self.assertIsNotNone(section(self.text, "9"), "§DISC-core-concerns.9 is missing")
+        self.assertEqual([], phase_problems(self.text, last_shipped_release()))
+
+    def test_a_phase_is_held_to_what_shipped(self):
+        last = (0, 18, 0)
+
+        def problems(lead, title="Phase 1: the engine"):
+            text = f"## 9. The releases\n\n### 9.2 {title}\n\n{lead}\n\nMore.\n"
+            return phase_problems(text, last)
+
+        self.assertEqual([], problems("Not shipped. Planned for `0.19.0`."))
+        self.assertEqual([], problems("Shipped in `0.17.0`."))
+        self.assertEqual([], problems("Not shipped. Adoption is planned for `0.18.x`."))
+        self.assertEqual([], problems("Not shipped. Planned for `0.17.0`.", "`1.0.0`"))
+        self.assertEqual([], problems("Not shipped. Planned for `0.19.0`, beside `0.16.1`'s ramp."))
+        self.assertTrue(problems("Not shipped. Planned for `0.17.0`, the notice release."))
+        self.assertTrue(problems("Not shipped. Planned for `0.18.0`."))
+        self.assertTrue(problems("Not shipped. Adoption is planned for `0.17.x`."))
+        self.assertTrue(problems("Not shipped. The removals are for `0.19.0` and `0.18.0`."))
 
     def test_the_last_shipped_release_is_read_from_the_repository(self):
         self.assertGreaterEqual(last_shipped_release(), (0, 16, 1))
