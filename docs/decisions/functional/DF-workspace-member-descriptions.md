@@ -2,6 +2,7 @@
 
 **Date:** 2026-06-12
 **Authors:** Claude Fable 5, Vojin Jovanovic
+**Amended by:** [§DF-member-link-names-the-directory](DF-member-link-names-the-directory.md#df-member-link-names-the-directory-a-workspace-member-link-names-the-members-directory) — a member's bullet now links the member's directory rather than its `AGENTS.md`, and the `*(not yet initialized)*` suffix is gone, so the bullet no longer depends on which entrypoints exist. The description rule decided here stands unchanged.
 
 ## status: Accepted
 
@@ -42,13 +43,13 @@ project_description = "Gradle plugin that builds native images from JVM projects
 ```
 
 The [§FS-init.2.3.4.15](../../functional-spec/FS-init.md#23415-workspace-members) renderer appends a foreign project's description after the bullet's
-link as `: <description>`, before any `*(not yet initialized)*` marker; a
+link as `: <description>`; a
 foreign project without a description keeps the link-only bullet. The project
 whose entrypoint is being rendered has no row, so its description is
 intentionally absent from that local list; the same description renders when
 the project is foreign from another entrypoint's perspective. Adopting
 descriptions also tightened the bullet itself: the alias is now the link's
-*label* — `` - [`api`](apps/api/AGENTS.md): Payment API service `` — so the
+*label* — `` - [`api`](apps/api/): Payment API service `` — so the
 destination path appears once instead of twice, sharing the Project Map's
 `- [x](y): …` grammar and superseding the `alias → path` bullet shape that
 [§DISC-init-workspace-members](../../discussions/proposals/2026-05-17-init-workspace-members.md#disc-init-workspace-members-have-init-mention-workspace-members) originally proposed. The
