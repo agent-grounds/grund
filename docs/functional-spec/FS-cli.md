@@ -109,6 +109,16 @@ The `fmt` row names both link and section-lock maintenance, so a reader can disc
 more than marker conversion within that same budget. The full workflow belongs on
 its own page ([§FS-cli.2.3.3](FS-cli.md#233-fmt-teaches-declaration-maintenance)).
 
+The `list` row makes the declarations nothing cites reachable from the top level, because
+"which specs does nothing cite?" is a question a reader asks of the catalog, and one that
+`refs` answers only one ID at a time, with an empty answer ([§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations)). Its description
+names that set beside the whole catalog, and its sample call is the flag that selects it,
+`--unused` ([§FS-list.1.3](FS-list.md#13---unused)), so the one-call answer is found without opening `list`'s own page:
+
+```text
+  list          Every declared ID, or the ones nothing cites.           grund list --unused
+```
+
 ### 2.3 A subcommand's help page
 
 Static help describes configuration scope truthfully across supported versions, without discovering a configuration just to render help. In particular, `check` help preserves the no-config default directories, and either uses version-neutral scope terms or explicitly labels v1's `[scan] include` and v2's places ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places)). Its `--full` description widens past configured scope as [§FS-config-v2.schema.places.boundaries.7](FS-config-v2.md#schemaplacesboundaries7---full-widens-past-the-places) specifies; it does not suggest bypassing source exclusions ([§FS-config-v2.schema.sources.exclude](FS-config-v2.md#schemasourcesexclude-exclude-is-a-gitignore-style-glob-list)). An unqualified instruction to set `[scan] include` is not v2 repair advice.
