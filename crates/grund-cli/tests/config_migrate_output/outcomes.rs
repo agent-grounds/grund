@@ -5,7 +5,6 @@ use super::*;
 
 /// §FS-config-migrate.7: full cannot turn a load error into a write.
 #[test]
-#[ignore = "red until #907 --full preserves load failures; implement removes this"]
 fn full_load_failure_preserves_message_and_original_tree() {
     let bad = Fixture::new("not valid TOML {");
     let before = snapshot(&bad.0);
@@ -21,7 +20,6 @@ fn full_load_failure_preserves_message_and_original_tree() {
 /// §FS-config-migrate.6.6: full cannot turn a no-op into a refresh or write,
 /// including a change to file modification time.
 #[test]
-#[ignore = "red until #907 --full preserves already-v2 no-ops; implement removes this"]
 fn full_noops_preserve_message_bytes_and_mtime() {
     let fixture = Fixture::new(V1);
     status(&fixture.migrate(&["--write"]), 0);
@@ -57,7 +55,6 @@ fn full_noops_preserve_message_bytes_and_mtime() {
 /// root, without changing production code or depending on disk exhaustion.
 #[cfg(unix)]
 #[test]
-#[ignore = "red until #907 --full preserves atomic-write failures; implement removes this"]
 fn full_atomic_write_failure_keeps_original_and_leaves_no_temporary_file() {
     use std::os::unix::process::CommandExt;
 

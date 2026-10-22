@@ -6,7 +6,7 @@ fn print_config_help() {
     println!();
     println!("Usage:  grund config <show | validate> [PATH]");
     println!("        grund config explain [TARGET] [PATH] [--path PATH] [--codes | --all]");
-    println!("        grund config migrate --to 2 [PATH] [--write] [--drop-comments]");
+    println!("        grund config migrate --to 2 [PATH] [--write] [--drop-comments] [--full]");
     println!();
     println!(
         "  show       print the effective config as TOML in the file's own version (defaults filled in for keys you didn't set)."
@@ -21,9 +21,10 @@ fn print_config_help() {
         "             the tables. It reads the file's version and nothing else, so a config other commands refuse is answered."
     );
     println!(
-        "  migrate    print the version-2 file that means what this version-1 config means, and report where each key went;"
+        "  migrate    preview the version-2 file that means what this version-1 config means, and report where each key went;"
     );
-    println!("             writes nothing unless --write is given.");
+    // §FS-config-migrate.6.5: successful writes use the compact presentation.
+    println!("             writes nothing unless --write is given; successful writes use a compact report.");
     println!();
     println!("Options:");
     println!("  --codes              explain: every check code the version can report, one line each.");
@@ -42,6 +43,11 @@ fn print_config_help() {
         "  --write              migrate: replace the config with the candidate, once both comparisons pass."
     );
     println!("                       e.g. grund config migrate --to 2 --write");
+    // §FS-config-migrate.1.3: expansion belongs only to migration presentation.
+    println!(
+        "  --full               migrate: restore the candidate on stdout and complete report on stderr after a successful write."
+    );
+    println!("                       e.g. grund config migrate --to 2 --write --full");
     println!(
         "  --drop-comments      migrate: let --write drop the comments the preview lists, and name them again."
     );
@@ -67,8 +73,19 @@ fn print_config_help() {
         "  grund config explain oversized-lead   # what a check code means, its severity and what turns it on"
     );
     println!("  grund config migrate --to 2     # the version-2 file, previewed; nothing written");
+    // §FS-config-migrate.6.5: the ordinary apply step reports only its outcome and follow-up.
+    println!("  grund config migrate --to 2 --write   # compact report on stderr; stdout is empty");
+    println!(
+        "  grund config migrate --to 2 --write --full   # apply with candidate and complete report"
+    );
     print_guide_links(
-        &["https://github.com/agent-grounds/grund/blob/main/docs/user-facing/explain.md"],
-        &["https://github.com/agent-grounds/grund/tree/main/examples/config-explain"],
+        &[
+            "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/explain.md",
+            "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/migrating.md",
+        ],
+        &[
+            "https://github.com/agent-grounds/grund/tree/main/examples/config-explain",
+            "https://github.com/agent-grounds/grund/tree/main/examples/migrate",
+        ],
     );
 }

@@ -1,0 +1,35 @@
+# Configuration for the example project.
+# grund init wrote it; this walkthrough trimmed it to what it needs.
+
+grund_config_version = 1
+project_name = "example"
+
+[reference]
+marker = "§"
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+named_sections = true
+slug_pattern = "[a-z][a-z0-9-]*"
+
+[[kinds]]
+kind = "GOAL"
+file = "docs/goals.md"
+title = "Where: project direction and outcomes"
+
+# The specification is one file at the root.
+[[kinds]]
+kind = "FS"
+file = "requirements.md"
+title = "What: behavior, requirements, and constraints"
+
+[scan]
+# What the walk reads besides the homes.
+include = ["requirements.md", "docs", "src"]
+exclude = ["target", "node_modules", ".git", "dist", "build", ".venv"] # directory names
+extensions = ["md", "rs"]
+comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
+
+[citations.FS]
+must = ["GOAL"]

@@ -1,0 +1,1 @@
+config migrate --to 2 --write --full --drop-comments {repo_copy}
