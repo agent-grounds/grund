@@ -12,6 +12,8 @@ mod tests_answers;
 #[cfg(test)]
 mod tests_audit;
 #[cfg(test)]
+mod tests_dotted;
+#[cfg(test)]
 mod tests_page_parity;
 
 use anyhow::{Context, Result};
