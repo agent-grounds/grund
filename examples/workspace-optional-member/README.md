@@ -19,7 +19,7 @@ optional_members = ["packages/secret"]
 <!-- repo/AGENTS.md, inside the managed block -->
 ### Workspace members
 
-Cross-project citations use §alias/<ID>.
+Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 
 - [`billing`](packages/billing/AGENTS.md)
 - [`secret`](packages/secret/AGENTS.md)

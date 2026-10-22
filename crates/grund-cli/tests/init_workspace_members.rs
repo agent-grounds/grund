@@ -11,7 +11,6 @@ mod init_fixture;
 use init_fixture::{manifest_dir, run_grund, workdir};
 
 #[test]
-#[ignore = "red until #946 writes the discoverability line's second clause; implement removes this"]
 fn init_workspace_companion_only_omits_self_and_uses_marker() {
     // §FS-init.2.3.4.15: a companion-only workspace init omits self just like
     // canonical init, retains foreign rows, and uses the local citation marker

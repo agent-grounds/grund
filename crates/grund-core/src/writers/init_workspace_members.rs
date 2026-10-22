@@ -328,8 +328,10 @@ pub(crate) fn render_workspace_members(
             dest = markdown_link_destination(&link),
         ));
     }
+    // §FS-init.2.3.4.15.2: the discoverability line, verbatim but for the marker.
     let mut out = format!(
-        "\n\n### Workspace members\n\nCross-project citations use {citation_marker}alias/<ID>.\n\n",
+        "\n\n### Workspace members\n\nCross-project citations use \
+         {citation_marker}alias/<ID>, one alias segment per workspace level.\n\n",
     );
     out.push_str(&bullets.join("\n"));
     out
