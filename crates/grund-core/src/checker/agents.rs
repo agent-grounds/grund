@@ -358,8 +358,8 @@ fn stale_block(path: &Path, line: usize, noun: &str, owner: Option<&str>) -> Dia
 
 /// The text of a `heading`-led section inside the managed block, from the heading
 /// line to the next heading of any level (or block end), trailing blank lines
-/// trimmed. Used to byte-compare config-derived sections against a fresh render
-/// (§FS-check.3.5). The boundary is *any* following heading, not just H1/H2, so
+/// trimmed. Used to byte-compare a scoped file's sections against `Expected`
+/// (§FS-check.3.5) and to read the root's `### Scoped guidance`. The boundary is *any* following heading, not just H1/H2, so
 /// two adjacent config-derived `###` sections (Citation directions, Clickable
 /// citations — §FS-init.2.3.5/2.3.6) do not bleed into each other; neither
 /// rendered section contains a `#`-led line, so this cannot cut one short.
