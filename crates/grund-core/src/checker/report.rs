@@ -227,11 +227,11 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 ///
 /// The text a current block is compared against is not this rule's to know, and
 /// this rule renders nothing. What a managed block should say is a function of
-/// config and of the run's own catalog, so the writers render each entrypoint's
-/// config-derived sections through the same renderers `grund init` writes
-/// through (§AR-system.2.11) and hand them over as `Expected`
-/// (§AR-checker.1.3); this rule compares those bytes with disk, byte for byte,
-/// and never reads a presentation key. Which companion files count as
+/// config and of the run's own catalog, so the writers render each root
+/// entrypoint's whole block by the same two calls `grund init` makes
+/// (§AR-system.2.11), split into the sections the comparison names, and hand it
+/// over as `Expected` (§AR-checker.1.3); this rule compares every section with
+/// disk, byte for byte (§FS-check.3.5.4), and never reads a presentation key. Which companion files count as
 /// entrypoints is the one entrypoint walk in `scanner/agent_entrypoints.rs`,
 /// which `init`'s own selection is derived from, and whose surface reach takes
 /// `&Presentation` explicitly (§AR-scanner.7). So this rule cannot disagree

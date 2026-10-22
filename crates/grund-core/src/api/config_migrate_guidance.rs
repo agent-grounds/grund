@@ -1,7 +1,8 @@
 //! §FS-config-migrate.5.3: the guidance comparison. The root `AGENTS.md` block
 //! `grund init` would write is rendered in memory for the file as read and for
-//! the candidate, and each difference `grund check` compares — the block's
-//! version or a config-derived section — is a refusal.
+//! the candidate, and a difference in the block's version or in one of the
+//! five generated sections is a refusal. Every other difference passes: it
+//! describes the config, and `grund check` reports it until `grund init` runs.
 
 use crate::config::migrate::{Located, MigrateRefusal, RefusalAnchor};
 use crate::config::{Invocation, Selection, config_at, with_config_text};
