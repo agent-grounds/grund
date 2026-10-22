@@ -666,7 +666,10 @@ is not specified here.
 
 A case declaration is located at its directory, line 1. It is never a stub and has no
 sections, so a citation of it with a section suffix names a section that does not exist
-([§FS-show.2.4.1](FS-show.md#241-the-slices-over-a-manifest)). Its body is the manifest `grund E2E-<name>` prints ([§FS-show.2.4](FS-show.md#24-e2e-cases)), and
+([§FS-show.2.4.1](FS-show.md#241-the-slices-over-a-manifest)). It has no title either: no
+heading declares it, so there is no title tail to read, and grund makes none up from the
+directory's name. Where a surface reports a declaration's title, a case's is absent: an
+empty title column in `grund list`, and `null` in its JSON ([§FS-list.3.1.1](FS-list.md#311-row-notes), [§FS-list.3.2](FS-list.md#32---format-json)). Its body is the manifest `grund E2E-<name>` prints ([§FS-show.2.4](FS-show.md#24-e2e-cases)), and
 a case that nothing cites is not reported as unused ([§FS-check.4.1.3](FS-check.md#413-e2e-declarations-are-exempt)).
 
 ### e2e-case.walk: The walk stops at a case directory

@@ -1,0 +1,7 @@
+grund_config_version = 2
+
+[schema.kinds.E2E]
+folders = ["e2e/cases"]
+
+[schema.kinds.FS]
+folders = ["docs/functional-spec"]

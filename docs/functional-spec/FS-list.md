@@ -180,7 +180,7 @@ Stderr is empty on success.
 
 #### 3.1.1 Row notes
 
-A declaration whose heading carries no `: <text>` tail has an empty title column. A broken stub shows `→ <target>` in place of a title. A duplicated ID's lines carry a `(duplicate declaration — grund check)` note. A row with value roots — marked ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)) or chapter-declared ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)) — appends ` [value roots: <ID.path>, <ID.path> (invalid)]`, ordered by canonical section path and not by origin; a row without them is byte-identical to its prior form.
+A declaration with no title has an empty title column: one whose heading carries no `: <text>` tail, and an E2E case, which no heading declares ([§FS-declarations.e2e-case.id](FS-declarations.md#e2e-caseid-a-case-directory-and-the-id-it-declares)). A broken stub shows `→ <target>` in place of a title. A duplicated ID's lines carry a `(duplicate declaration — grund check)` note. A row with value roots — marked ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)) or chapter-declared ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)) — appends ` [value roots: <ID.path>, <ID.path> (invalid)]`, ordered by canonical section path and not by origin; a row without them is byte-identical to its prior form.
 
 ### 3.2 `--format json`
 
@@ -191,7 +191,7 @@ NDJSON on stdout — one object per catalog entry, same order as the text form:
 {"id":"FS-login","kind":"FS","path":"docs/functional-spec/FS-login.md","line":1,"title":"A player can log in with email","stub":false,"defines":null,"refs":7,"duplicate":false}
 ```
 
-Fields: `id` (rendered ID), `kind`, `path` and `line` of the home declaration, `title` (`null` when the heading has no title tail or the home is a broken stub), `stub` (true when this entry's home is a stub heading — only ever true for a *broken* stub, since a healthy one collapses into its source declaration), `defines` (the `<target>` of a stub heading, else `null`), `refs` (the count of recognised citations of this ID — exactly the number `grund refs` would list, and not the `--unused` predicate; [§FS-list.3.2.1](FS-list.md#321-refs-counts-citations)), and `duplicate` (true when the ID has more than one home). A row with marked roots adds a `value_roots` member in canonical section-path order, omitted when there are none ([§FS-list.3.2.2](FS-list.md#322-value_roots)).
+Fields: `id` (rendered ID), `kind`, `path` and `line` of the home declaration, `title` (`null` when the declaration has no title — a heading with no title tail, or an E2E case ([§FS-declarations.e2e-case.id](FS-declarations.md#e2e-caseid-a-case-directory-and-the-id-it-declares)) — or when the home is a broken stub), `stub` (true when this entry's home is a stub heading — only ever true for a *broken* stub, since a healthy one collapses into its source declaration), `defines` (the `<target>` of a stub heading, else `null`), `refs` (the count of recognised citations of this ID — exactly the number `grund refs` would list, and not the `--unused` predicate; [§FS-list.3.2.1](FS-list.md#321-refs-counts-citations)), and `duplicate` (true when the ID has more than one home). A row with marked roots adds a `value_roots` member in canonical section-path order, omitted when there are none ([§FS-list.3.2.2](FS-list.md#322-value_roots)).
 
 #### 3.2.1 `refs` counts citations
 
