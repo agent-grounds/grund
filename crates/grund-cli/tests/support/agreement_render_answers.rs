@@ -31,7 +31,12 @@ impl View<'_> {
         result["id"] = object["id"].clone();
         result["section"] = object["section"].clone();
         result["kind_title"] = object["kind_title"].clone();
-        result["manifest"] = Value::Null;
+        // §FS-distribution.3.3.1: a case's typed manifest, from the same object.
+        result["manifest"] = match object.get("args") {
+            Some(args) => json!({"kind":object["kind"],"args":args,
+                "expectedExit":object["expected_exit"],"fixtures":object["fixtures"]}),
+            None => Value::Null,
+        };
     }
 
     /// §FS-refs.2: Node folds hits into per-file summaries, at reported paths.

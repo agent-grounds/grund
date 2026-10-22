@@ -64,8 +64,45 @@ impl View<'_> {
         (!refusal.is_null() && applies).then(|| refusal.clone())
     }
 
+    /// §FS-show.2.4.2: a case directory's manifest object, unchanged by every
+    /// slice; `anchor` is null and the optional kind title closes it.
+    fn manifest_object(&self, d: usize) -> Option<Value> {
+        let decl = &self.m.decls[d];
+        let case = decl.facts.get("case")?;
+        let mut object = json!({"id":decl.id,"kind":decl.kind,"path":decl.file,"args":case["args"],
+            "expected_exit":case["expected_exit"],"fixtures":case["fixtures"],"anchor":null});
+        let title = self.kind_title(&decl.id);
+        if !title.is_null() {
+            object["kind_title"] = title;
+        }
+        Some(object)
+    }
+
+    /// What a show answer carries beside its object: the body, line and
+    /// section map, a case's being its manifest at line 1 (§FS-show.2.4.1).
+    fn beside(&self, (d, _): Row, object: &Value) -> (Value, Value, Vec<Value>) {
+        let decl = &self.m.decls[d];
+        let sections = object["sections"].as_array().into_iter().flatten();
+        (
+            object
+                .get("body")
+                .cloned()
+                .unwrap_or_else(|| json!(decl.toc)),
+            object
+                .get("line")
+                .cloned()
+                .unwrap_or_else(|| json!(decl.line)),
+            sections
+                .map(|s| json!({"path":s["path"],"title":s["title"],"depth":s["depth"]}))
+                .collect(),
+        )
+    }
+
     /// The `show --toc --format json` object, sites relative as written.
     pub fn show_object(&self, (d, s): Row) -> Value {
+        if let Some(object) = self.manifest_object(d).filter(|_| s.is_none()) {
+            return object;
+        }
         let decl = &self.m.decls[d];
         // §FS-values.6.2: every read mode of a JSON value collapses to its slice.
         let sliced = decl.facts["slice"].is_string();
@@ -116,14 +153,9 @@ impl View<'_> {
     pub fn show_result(&self, row: Row) -> Value {
         let mut object = self.show_object(row);
         object["path"] = json!(self.site(object["path"].as_str().unwrap()));
-        let sections: Vec<_> = object["sections"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .map(|s| json!({"path":s["path"],"title":s["title"],"depth":s["depth"]}))
-            .collect();
-        json!({"run_cautions":[],"body":object["body"],"path":object["path"],
-            "line":object["line"],"json":object.to_string(),"sections":sections})
+        let (body, line, sections) = self.beside(row, &object);
+        json!({"run_cautions":[],"body":body,"path":object["path"],
+            "line":line,"json":object.to_string(),"sections":sections})
     }
 
     pub fn failure(&self, refusal: &Value, causes: Value, partial: Value) -> Value {
@@ -301,10 +333,9 @@ impl View<'_> {
                 let mut object = self.show_object(row);
                 let site = self.site(object["path"].as_str().unwrap());
                 object["path"] = json!(self.raw(object["path"].as_str().unwrap()));
-                json!({"body":object["body"],"json":object.to_string(),"line":object["line"],
-                    "path":site,
-                    "sections":object["sections"].as_array().unwrap().iter().map(|s|
-                        json!({"path":s["path"],"title":s["title"],"depth":s["depth"]})).collect::<Vec<_>>()})
+                let (body, line, sections) = self.beside(row, &object);
+                json!({"body":body,"json":object.to_string(),"line":line,"path":site,
+                    "sections":sections})
             }
             (refusal, _) => {
                 let refusal = refusal.unwrap_or_else(|| self.absent(coordinate));

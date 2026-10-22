@@ -224,6 +224,24 @@ pub fn closure(inventory: &Value) -> Result<BTreeSet<String>, String> {
                     .or_default()
                     .insert(id.into());
             }
+            "case" => {
+                // §FS-declarations.e2e-case.id: the directory's name writes the ID
+                // and its `expected.exit` is the marker the fact covers.
+                let id = text(role, "id")?;
+                let directory = text(role, "directory")?;
+                let name = directory.rsplit('/').next().unwrap_or(directory);
+                if *site != format!("{directory}/expected.exit:0")
+                    || !id.ends_with(&format!("-{name}"))
+                {
+                    return Err(format!("case {id} is not its directory {directory}"));
+                }
+                project(role)?;
+                coordinates.insert(id.into());
+                projects
+                    .entry(role["project"].as_str())
+                    .or_default()
+                    .insert(id.into());
+            }
             "section" => {
                 let (owner, path) = section(site, &facts, &mut BTreeSet::new())?;
                 let declaration = facts

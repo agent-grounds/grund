@@ -183,6 +183,30 @@ pub fn flatten(body: &str, marker: &str, markdown: bool) -> String {
     out
 }
 
+/// §FS-show.2.4: the invocation (`grund check` without `command.args`), the
+/// expected exit and one line per fixture in the case's sorted file list.
+fn manifest(case: &Value) -> Option<String> {
+    let args: Vec<&str> = case["args"]
+        .as_array()?
+        .iter()
+        .filter_map(Value::as_str)
+        .collect();
+    let invocation = if args.is_empty() {
+        "check".into()
+    } else {
+        args.join(" ")
+    };
+    let fixtures: String = case["fixtures"]
+        .as_array()?
+        .iter()
+        .map(|f| format!("- {}\n", f.as_str().unwrap_or_default()))
+        .collect();
+    Some(format!(
+        "grund {invocation}\nexpected exit: {}\nfixtures:\n{fixtures}",
+        case["expected_exit"]
+    ))
+}
+
 /// §FS-list.3.4.2: non-blank lines, ASCII-whitespace words and UTF-8 bytes.
 pub fn measure(body: &str) -> [usize; 3] {
     let lines = body.split('\n').filter(|l| !blank(l)).count();
@@ -205,10 +229,15 @@ impl Model {
         };
         for d in facts["declarations"].as_array().into_iter().flatten() {
             let file = field(d, "file")?.to_string();
-            let text = model.text(&file)?;
-            let heading = field(d, "heading")?;
-            let nth = d["nth"].as_u64().unwrap_or(1) as usize;
-            let (line, column, _) = locate(text, heading, nth, 1)?;
+            // §FS-declarations.e2e-case.id: a case directory declares its ID at line 1.
+            let (heading, line, column) = if d["case"].is_object() {
+                (field(d, "id")?, 1, 1)
+            } else {
+                let heading = field(d, "heading")?;
+                let nth = d["nth"].as_u64().unwrap_or(1) as usize;
+                let (line, column, _) = locate(model.text(&file)?, heading, nth, 1)?;
+                (heading, line, column)
+            };
             // §FS-declarations.stubs.pairing.1: the stubs that point at it.
             let mut via = Vec::new();
             for stub in d["via"].as_array().into_iter().flatten() {
@@ -374,6 +403,16 @@ impl Model {
             if let Some(slice) = d.facts["slice"].as_str().map(String::from) {
                 let d = &mut self.decls[index];
                 (d.lead, d.full, d.toc) = (Some(slice.clone()), Some(slice.clone()), Some(slice));
+                continue;
+            }
+            // §FS-show.2.4: every slice of a case prints its manifest.
+            if let Some(manifest) = manifest(&d.facts["case"]) {
+                let d = &mut self.decls[index];
+                (d.lead, d.full, d.toc) = (
+                    Some(manifest.clone()),
+                    Some(manifest.clone()),
+                    Some(manifest),
+                );
                 continue;
             }
             let Some(body) = d.facts["body"].as_array() else {
