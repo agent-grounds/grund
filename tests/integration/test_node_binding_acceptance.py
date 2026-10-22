@@ -14,6 +14,7 @@ Exact-leaf proof routes, exercised by the suite below:
 §FS-distribution.3.2.4: executable acceptance and honest readiness.
 """
 
+import os
 import subprocess
 import sys
 import unittest
@@ -35,6 +36,14 @@ def build_lines(stderr):
 
 
 class NodeAcceptanceWorkflowTests(unittest.TestCase):
+    @unittest.skipUnless(os.environ.get("GRUND_809_RUN_RED") == "1",
+                         "red until #809 prepares each staged source once; implement removes this")
+    def test_rehearsals_prepare_each_source_once_and_isolate_consumers(self):
+        """§AR-ci.3.4.1.4: actual npm preparation, private bytes and same-version sources."""
+        result = subprocess.run([sys.executable, str(Path(__file__).with_name(
+            "node_consumer_fixture.py"))], cwd=REPO, capture_output=True, text=True)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
     def test_node_acceptance_is_in_the_complete_local_gate(self):
         result = subprocess.run(
             [sys.executable, "tests/bindings/node/run.py"], cwd=REPO,

@@ -94,7 +94,8 @@ class Done:
     stderr = "Compiling grund\\nnode build: dev /t 5.0s\\ntest_x ... node build: release /t 49.2s\\ntest_x ... ok\\n"
 
 wrapper.subprocess.run = lambda *args, **options: Done()
-tests = unittest.defaultTestLoader.loadTestsFromModule(wrapper)
+tests = unittest.TestSuite([wrapper.NodeAcceptanceWorkflowTests(
+    "test_node_acceptance_is_in_the_complete_local_gate")])
 sys.exit(not unittest.TextTestRunner().run(tests).wasSuccessful())
 """
 
@@ -317,14 +318,18 @@ class NodeSharedTargetTests(unittest.TestCase):
             self.assertNotIn(noise, output)
 
     def test_a_green_acceptance_under_the_gate_shows_its_build_lines_and_nothing_else(self):
-        # The build lines §AR-ci.requirements.5.1 keeps, under the gate: the wrapper,
-        # copied verbatim, runs the stand-in `run.py` its own `REPO` finds beside it.
+        # §AR-ci.requirements.5.1: the real acceptance method runs the stand-in run.py.
+        # Other constructor regressions need their own fixtures, outside this output test.
         tests = self.temp / "repo" / "tests" / "integration"
         harness = self.temp / "repo" / "tests" / "bindings" / "node"
         for directory in (tests, harness):
             directory.mkdir(parents=True)
         wrapper = "test_node_binding_acceptance.py"
-        (tests / wrapper).write_bytes((REPO / "tests" / "integration" / wrapper).read_bytes())
+        collection = ('\ndef load_tests(loader, suite, pattern):\n'
+                      '    return unittest.TestSuite([NodeAcceptanceWorkflowTests('
+                      '"test_node_acceptance_is_in_the_complete_local_gate")])\n')
+        (tests / wrapper).write_bytes((REPO / "tests" / "integration" / wrapper).read_bytes()
+                                     + collection.encode())
         (harness / "run.py").write_text(RUN, encoding="utf-8")
         result = child(GATE, REPO / "scripts", tests, cwd=self.temp)
         output = result.stdout + result.stderr
