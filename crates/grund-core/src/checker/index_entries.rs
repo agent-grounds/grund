@@ -42,6 +42,29 @@ impl KindIndexEntries {
         frame: Frame<'_>,
         index_targets: &BTreeMap<(PathBuf, Id), String>,
     ) -> Self {
+        Self::build(findings, schema, frame, index_targets, None)
+    }
+
+    /// The same classifier, owing entries only for `ids`: `is_index_entry`
+    /// answers a citation of one of them exactly as `new`'s would, without
+    /// walking every declaration of the kind (§GOAL-fast-feedback).
+    pub(crate) fn restricted(
+        findings: &Catalog,
+        schema: &Schema,
+        frame: Frame<'_>,
+        index_targets: &BTreeMap<(PathBuf, Id), String>,
+        ids: &BTreeSet<Id>,
+    ) -> Self {
+        Self::build(findings, schema, frame, index_targets, Some(ids))
+    }
+
+    fn build(
+        findings: &Catalog,
+        schema: &Schema,
+        frame: Frame<'_>,
+        index_targets: &BTreeMap<(PathBuf, Id), String>,
+        only: Option<&BTreeSet<Id>>,
+    ) -> Self {
         let configured_root = scanned_path_key(frame.root());
         let physical_root = physical_path_key(frame.root());
         let targets = kind_index_targets(schema, frame);
@@ -50,6 +73,7 @@ impl KindIndexEntries {
         for target in &targets {
             for (id, decls) in &findings.declarations {
                 if id.kind == target.kind
+                    && only.is_none_or(|ids| ids.contains(id))
                     && declarations_under_folder(decls, target.folder, &owners)
                 {
                     folder_owed
@@ -68,6 +92,7 @@ impl KindIndexEntries {
             &physical_root,
             index_targets,
             frame.sources(),
+            only,
             &mut owed,
         );
         let binding_sites =
@@ -168,6 +193,7 @@ fn enroll_external_inline_declarations(
     physical_root: &Path,
     index_targets: &BTreeMap<(PathBuf, Id), String>,
     sources: Sources<'_>,
+    only: Option<&BTreeSet<Id>>,
     owed: &mut BTreeMap<PathBuf, BTreeSet<Id>>,
 ) -> BTreeMap<PathBuf, BTreeSet<(usize, usize)>> {
     let mut targets_by_index: BTreeMap<&Path, Vec<&KindIndexTarget<'_>>> = BTreeMap::new();
@@ -198,6 +224,7 @@ fn enroll_external_inline_declarations(
             || citation.section.is_some()
             || !citation.has_marker
             || citation.shorthand
+            || only.is_some_and(|ids| !ids.contains(&citation.id))
         {
             continue;
         }

@@ -1,8 +1,10 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::checker::KindIndexEntries;
 use crate::model::Id;
-use crate::resolver::{SettledHeadings, WorkspaceContext, WorkspaceProject, index_link_targets};
+use crate::resolver::{
+    SettledHeadings, WorkspaceContext, WorkspaceProject, index_link_targets, index_link_targets_for,
+};
 
 /// The two per-target-alias citation counts `grund list` needs, built in one
 /// pass (§FS-list.3.2.1, §DF-index-not-an-inbound-citation).
@@ -79,8 +81,7 @@ impl<'a> ListCitationCounts<'a> {
 }
 
 /// `source`'s own kind-index entries, the citations `--unused` discounts
-/// (§FS-list.1.3) and text refs labels (§FS-refs.3.1.1), using check's defining
-/// classifier (§FS-check.4.1.2).
+/// (§FS-list.1.3, §DF-index-not-an-inbound-citation).
 pub(crate) fn kind_index_entries(source: &WorkspaceProject) -> KindIndexEntries {
     // §AR-checker.2.16: the enrollment destination, as `Expected` carries it.
     let index_targets = index_link_targets(
@@ -95,5 +96,30 @@ pub(crate) fn kind_index_entries(source: &WorkspaceProject) -> KindIndexEntries 
         source.config.schema(),
         source.config.frame(),
         &index_targets,
+    )
+}
+
+/// The kind-index entries among citations of `ids`, the sites text refs labels
+/// (§FS-refs.3.1.1), by check's defining classifier (§FS-check.4.1.2) restricted
+/// to those IDs, so a refs run links no other declaration (§GOAL-fast-feedback).
+pub(crate) fn kind_index_entries_for(
+    source: &WorkspaceProject,
+    ids: &BTreeSet<Id>,
+) -> KindIndexEntries {
+    // §AR-checker.2.16: the enrollment destination, as `Expected` carries it.
+    let index_targets = index_link_targets_for(
+        &source.config.project().presentation,
+        source.config.schema(),
+        source.config.frame(),
+        &source.findings,
+        &SettledHeadings::default(),
+        Some(ids),
+    );
+    KindIndexEntries::restricted(
+        &source.findings,
+        source.config.schema(),
+        source.config.frame(),
+        &index_targets,
+        ids,
     )
 }

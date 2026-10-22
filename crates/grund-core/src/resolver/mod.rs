@@ -102,8 +102,9 @@ pub(crate) use id_candidates::{join_alternatives, with_member_id_candidates};
 #[cfg(test)]
 use link_targets::heading_anchor;
 pub(crate) use link_targets::{
-    index_link_targets, markdown_link_target, markdown_link_target_with_root,
-    numbered_heading_anchor, section_site_anchor, takes_heading_anchor,
+    index_link_targets, index_link_targets_for, markdown_link_target,
+    markdown_link_target_with_root, numbered_heading_anchor, section_site_anchor,
+    takes_heading_anchor,
 };
 pub(crate) use point_body::point_body_pair;
 pub(crate) use section_lock::{EntryVerdict, judge_section_locks};

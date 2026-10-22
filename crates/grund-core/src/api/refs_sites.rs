@@ -163,7 +163,12 @@ fn refs_sites_run(
         })
         .collect();
     if let Some(entries) = index_entries {
-        *entries = super::refs_annotations::index_entry_sites(&context);
+        *entries = super::refs_annotations::index_entry_sites(
+            &context,
+            sites
+                .iter()
+                .map(|site| (&context.projects[site.project], site.citation)),
+        );
     }
     Ok(RefsOutput {
         output_format: context.render_config().output_format.clone(),
