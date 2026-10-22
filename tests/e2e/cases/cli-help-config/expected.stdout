@@ -2,14 +2,14 @@ grund config — inspect the effective `grund.toml` discovered from a path.
 
 Usage:  grund config <show | validate> [PATH]
         grund config explain [TARGET] [PATH] [--path PATH] [--codes | --all]
-        grund config migrate --to 2 [PATH] [--write] [--drop-comments]
+        grund config migrate --to 2 [PATH] [--write] [--drop-comments] [--full]
 
   show       print the effective config as TOML in the file's own version (defaults filled in for keys you didn't set).
   validate   parse the discovered config and report the first error; exit 0 if it's well-formed.
   explain    say what a table, a key or a check code is, in the version the file is read as; with no target, list
              the tables. It reads the file's version and nothing else, so a config other commands refuse is answered.
-  migrate    print the version-2 file that means what this version-1 config means, and report where each key went;
-             writes nothing unless --write is given.
+  migrate    preview the version-2 file that means what this version-1 config means, and report where each key went;
+             writes nothing unless --write is given; successful writes use a compact report.
 
 Options:
   --codes              explain: every check code the version can report, one line each.
@@ -22,6 +22,8 @@ Options:
                        e.g. grund config migrate --to 2
   --write              migrate: replace the config with the candidate, once both comparisons pass.
                        e.g. grund config migrate --to 2 --write
+  --full               migrate: restore the candidate on stdout and complete report on stderr after a successful write.
+                       e.g. grund config migrate --to 2 --write --full
   --drop-comments      migrate: let --write drop the comments the preview lists, and name them again.
                        e.g. grund config migrate --to 2 --write --drop-comments
   --path-base project|invocation
@@ -41,6 +43,10 @@ Examples:
   grund config show docs/         # the config that governs docs/
   grund config explain oversized-lead   # what a check code means, its severity and what turns it on
   grund config migrate --to 2     # the version-2 file, previewed; nothing written
+  grund config migrate --to 2 --write   # compact report on stderr; stdout is empty
+  grund config migrate --to 2 --write --full   # apply with candidate and complete report
 
 Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/explain.md
+Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/migrating.md
 Example:  https://github.com/agent-grounds/grund/tree/main/examples/config-explain
+Example:  https://github.com/agent-grounds/grund/tree/main/examples/migrate

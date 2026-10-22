@@ -98,11 +98,13 @@ fn snapshot(root: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
 }
 
 /// §FS-config-migrate.6.4, §FS-config-migrate.6.5: the config alone changes,
-/// stdout is its candidate, and the reminder follows the existing report.
+/// compact stdout is empty, disk matches preview, and the reminder is last.
 fn assert_successful_write(fixture: &Fixture) {
     let before = snapshot(&fixture.0);
     let preview = fixture.migrate(false);
     assert_eq!(preview.status.code(), Some(0), "{}", text(&preview.stderr));
+    assert!(preview.stdout.starts_with(b"grund_config_version = 2\n"));
+    assert_eq!(snapshot(&fixture.0), before, "preview is read-only");
     let out = fixture.migrate(true);
     let stderr = text(&out.stderr);
     assert_eq!(
@@ -110,11 +112,13 @@ fn assert_successful_write(fixture: &Fixture) {
         Some(0),
         "migration must succeed: {stderr}"
     );
-    assert!(out.stdout.starts_with(b"grund_config_version = 2\n"));
-    assert_eq!(out.stdout, preview.stdout, "stdout stays the candidate");
-    assert_eq!(fs::read(fixture.0.join("grund.toml")).unwrap(), out.stdout);
+    assert!(out.stdout.is_empty(), "compact success omits the candidate");
+    assert_eq!(
+        fs::read(fixture.0.join("grund.toml")).unwrap(),
+        preview.stdout
+    );
     let mut expected = before;
-    expected.insert("grund.toml".into(), out.stdout);
+    expected.insert("grund.toml".into(), preview.stdout);
     assert_eq!(snapshot(&fixture.0), expected, "only the config may change");
     assert!(
         stderr.contains("note: the next grund init adds a `code` row"),

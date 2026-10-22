@@ -304,3 +304,7 @@ fn comment_lines(config: &str, comment: &ListedComment) -> String {
         format!("{config}:{}-{}", comment.first, comment.last)
     }
 }
+
+#[cfg(test)]
+#[path = "tests_config_migrate.rs"]
+mod tests_config_migrate;
