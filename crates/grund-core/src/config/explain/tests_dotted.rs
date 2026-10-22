@@ -19,7 +19,6 @@ fn unknown_of(version: u32, target: &str) -> ExplainUnknown {
 /// and carries the bracketed spelling, with a name kept as written and the
 /// longest table prefix taken.
 #[test]
-#[ignore = "red until #904 names the bracketed spelling for a dotted path; implement removes this"]
 fn a_dotted_path_names_its_bracketed_spelling() {
     for (version, target, spelling) in [
         (2, "schema.sources", "[schema.sources]"),

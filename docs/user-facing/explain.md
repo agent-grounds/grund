@@ -112,6 +112,15 @@ hint: version 2 writes its settings in [schema.sources], [schema.sources.extensi
 
 A version-2 table asked in a version-1 project names
 `grund config migrate --to 2`; a key the table does not have lists the keys it
-does; and anything else says how to list what there is: `grund config explain`
+does. A target written the way TOML writes a nested key, such as
+`schema.sources` or `schema.sources.exclude`, is not answered: the brackets are
+part of a table's target. Where the dotted path names a table or a key the
+version has, the line gives the spelling that answers:
+
+```text
+version 2 has no top-level key or check code `schema.sources.exclude`; for the key, ask grund config explain '[schema.sources] exclude'
+```
+
+Anything else says how to list what there is: `grund config explain`
 for the tables, `grund config explain --codes` for the codes. A usage mistake,
 or a file whose version cannot be read, is exit `2` with one `error:` line.

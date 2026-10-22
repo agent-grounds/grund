@@ -1,0 +1,1 @@
+version 2 has no top-level key or check code `schema.sources`; for the table, ask grund config explain '[schema.sources]'
