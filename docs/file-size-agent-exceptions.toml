@@ -234,13 +234,14 @@ path = "docs/architecture/AR-ci.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 897, unit = "lines" }
+max_accepted = { value = 901, unit = "lines" }
 until = "§AR-ci.5 and §AR-ci.3.4 leave for declarations of their own with their existing section citations migrated"
 reason = """
 Over the soft budget at 790 non-blank lines before issue #696 touched it, and promoted by the count of soft edits, so any staged edit is refused. Missing boundary: §AR-ci.5, the benchmark jobs, is a subject of its own with its own sub-structure (5.1 to 5.5, and the store's five children #696 adds), and it is the part #696 grows, by 19 lines to 809. Giving it a declaration of its own is a mapped migration of 171 citing sites across 37 files, which is outside #696. It alone would not bring the file under budget: §AR-ci.5 is 46 non-blank lines, and the bulk is §AR-ci.3.4, the Python gate's inputs, at 245, and §AR-ci.3.1, citations and links, at 199. So the entry retires once §AR-ci.5 and §AR-ci.3.4 have left.
 Issue #809 adds the narrow oracle reuse (§AR-ci.3.4.4), version-fixture (§AR-ci.10.5) and paired gate verification (§AR-ci.requirements.1.verification) contracts before implementation. This adds 55 non-blank lines, taking the ceiling from 809 to exactly 864, with no growth allowance. The existing extraction boundary and retirement condition remain: relocating the input hierarchy still requires migrating its citing sites together, rather than breaking the stable coordinates in a cost correction's specification commit.
 Issue #883 adds six non-blank lines deriving both existing timeout-phase budgets at §AR-ci.3.1.1 and distinguishing their two-pass totals at §AR-ci.3.1.3. The file already measured 870 lines before this correction; the accepted size becomes exactly 876, with no growth allowance. The extraction boundary and retirement condition above remain unchanged: migrating the benchmark and Python-gate section citations is outside this documentation correction.
 Issue #913 defines the release-specific bounded deadline and its supplemental mechanism proof in 21 non-blank lines at §AR-ci.3.4.1.1. The existing extraction boundary and retirement condition remain; migrating the benchmark and Python-gate section citations would expand this internal harness correction. The ceiling accepts exactly 897 non-blank lines, with no growth allowance.
+Issue #906 rewrites §AR-ci.3.2's one paragraph in place, adding no line: the grund-init-check hook now catches what check leaves out, since check compares the whole managed block. Main already measured 901 non-blank lines, past the 897 above, so the ceiling is reconciled to exactly 901, with no growth allowance; the extraction boundary and retirement condition above remain.
 """
 [[exceptions]]
 path = "scripts/bench_record.py"
@@ -257,7 +258,7 @@ path = "docs/functional-spec/FS-check.md"
 match = "exact"
 rules = ["large-file-default"]
 kind = "deferred"
-max_accepted = { value = 281327, unit = "bytes" }
+max_accepted = { value = 286299, unit = "bytes" }
 until = "the finding catalog moves into independently declared child specifications and existing FS-check section citations are migrated"
 reason = """
 The check specification still combines recognition, reporting, its finding catalog and watch behavior in one declaration. Issue #823 adds only a cross-reference to the defining member diagnostic point in FS-workspace.5.1.1. Missing boundary: independent finding specifications with a stable mapping for current FS-check section citations; moving that catalog is outside this specification-only diagnostic change. This byte ceiling accepts only the current measured file size, separately from the existing line-budget exception.
@@ -267,6 +268,8 @@ Issue #842 extends the existing forbidden-citation point with index-specific rep
 Issue #829 has a narrowed check say when what it selected judged nothing: the selected-check-off line and the switches that arm it, inside the existing selection point §FS-check.1.4.1, and a rule's empty obligation beside the table's at §FS-check.2.2.1.4. Main had already reached 268844 bytes past the 267799 ceiling, and #829 takes the file to 274764. Moving the finding catalog into child specifications still retires this debt, and that migration is outside a diagnostic change. Review round 2 of #829 adds one sentence to §FS-check.1.4.1: a cell that needs two things, such as missing-snapshot's fetch and should resolution, is armed only where both hold, and its fix round names the two other cells of that shape, empty-citation-obligation's folder home and the place ungrounded reaches. The ceiling accepts the measured 275698 bytes, with no growth allowance.
 
 Issue #909 specifies the explanatory append at §FS-check.4.1.2. The file already measured 280149 bytes on arrival; this point takes it to 281327. The missing boundary and retirement condition above remain: a mapped migration of the finding catalog into independent declarations, preserving old section addresses as pointers while callers migrate. That cross-family specification refactor is outside this explanation-only contract. The byte ceiling is reconciled to the current measured 281327 bytes, with no growth allowance.
+
+Issue #906 has check compare the whole managed block: §FS-check.3.5.3 gains the section nouns and the directory a finding names, §FS-check.3.5.4 widens to the whole block, the new §FS-check.3.5.5 declares the runs that leave the workspace sections out, and §FS-check.4.9.1 gains the warning's clause. Each extends the point that already owns the behavior, so one fact keeps one point; moving the finding catalog remains outside this change. The ceiling accepts the measured 286299 bytes, with no growth allowance.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-init.md"

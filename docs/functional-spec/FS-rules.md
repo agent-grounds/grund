@@ -1032,7 +1032,7 @@ rule citation. A rule-enabled block uses v11 on the v10 base. With no rule kind,
 `init` retains the v10 block byte-for-byte. `grund check` re-renders and
 byte-compares this config-derived section whether or not every rule resolved;
 drift is `agents-init`, and the comparison is never skipped in silence
-([§FS-check.3.5.4](FS-check.md#354-no-config-derived-section-is-exempt-from-the-comparison)).
+([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)).
 
 Hard rule findings and `invalid-rule` travel through the same core report to
 the LSP with the same message, code, title/citation range, and severity as CLI

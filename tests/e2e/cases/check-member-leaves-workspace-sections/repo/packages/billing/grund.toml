@@ -1,0 +1,8 @@
+grund_config_version = 2
+project_name = "billing"
+
+[schema.kinds.FS]
+files = ["spec.md"]
+
+[schema.kinds.AR]
+files = ["architecture.md"]

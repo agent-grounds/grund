@@ -1,0 +1,5 @@
+grund_config_version = 2
+project_name = "notify"
+
+[schema.kinds.FS]
+files = ["spec.md"]
