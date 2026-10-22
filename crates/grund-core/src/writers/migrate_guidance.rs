@@ -35,6 +35,7 @@ pub(crate) fn root_guidance(mut config: Config) -> RootGuidance {
     let rules = scanned.as_ref().and_then(|findings| {
         let vocab = declared_workspace_vocabulary(
             config.schema(),
+            config.rules(),
             config.frame(),
             &declared_member_schemas(config),
         );

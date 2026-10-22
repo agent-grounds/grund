@@ -107,6 +107,25 @@ pub(crate) fn row_grounds_at_any_strength(rules: &Rules, run: &Run, kind: &str) 
     row_grounding(rules, run, kind).0 || !soft_grounding_rungs(rules, kind).is_empty()
 }
 
+/// The one setting that makes a file of the row named `kind` that cites nothing a
+/// finding, spelled in config `version` (§FS-init.2.3.5.2.2): version 2's
+/// grounding ladder, version 1's row key. `code` wraps each config fragment, so
+/// the Citation directions bullet and the place-refusal hint
+/// (§FS-rule-refusals.sentences.rewrite.no-form.place) spell it from this alone.
+pub(crate) fn grounding_setting(kind: &str, version: u32, code: fn(&str) -> String) -> String {
+    if version >= 2 {
+        code(&format!(
+            "[rules.citations.{kind}.grounding] must = \"file\""
+        ))
+    } else {
+        format!(
+            "{} on its {} row",
+            code("require_grounding = true"),
+            code("[[kinds]]")
+        )
+    }
+}
+
 /// Whether any place is grounded at all (§FS-check.3.6), the checker's early out
 /// and the gate that arms `ungrounded` (§FS-check.1.4.1): a row, or the homeless
 /// kind, whose effective pair requires grounding, so a default that every row sets

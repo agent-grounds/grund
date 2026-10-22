@@ -5,7 +5,8 @@ use std::collections::BTreeMap;
 
 use super::RuleVocabulary;
 use crate::config::{
-    CitationPlace, KindEntry, Schema, citation_places, escape_toml_basic, has_dot_path_component,
+    CitationPlace, KindEntry, Rules, Run, Schema, citation_places, escape_toml_basic,
+    grounding_setting, has_dot_path_component, row_grounds_at_any_strength,
 };
 
 /// Non-citable subject kinds and their optional place routes. Selectors keep
@@ -15,6 +16,9 @@ use crate::config::{
 pub(crate) struct SubjectKinds {
     pub(super) entries: BTreeMap<String, KindEntry>,
     places: Vec<CitationPlace>,
+    /// Each place whose row grounds nothing, with the setting that makes its
+    /// uncited files findings (§FS-init.2.3.5.2.2).
+    ungrounded: BTreeMap<String, String>,
 }
 
 impl From<BTreeMap<String, KindEntry>> for SubjectKinds {
@@ -24,21 +28,35 @@ impl From<BTreeMap<String, KindEntry>> for SubjectKinds {
         Self {
             entries,
             places: Vec::new(),
+            ungrounded: BTreeMap::new(),
         }
     }
 }
 
 impl SubjectKinds {
     /// Attach only this rule project's configured routes, never workspace
-    /// object routes (§FS-rule-refusals.sentences.rewrite.no-form.place).
+    /// object routes, and the grounding each route lacks
+    /// (§FS-rule-refusals.sentences.rewrite.no-form.place).
     pub(crate) fn for_rules(
         entries: BTreeMap<String, KindEntry>,
         schema: &Schema,
+        rules: &Rules,
+        run: &Run,
         version: u32,
     ) -> Self {
+        let places = citation_places(schema, version);
+        let ungrounded = places
+            .iter()
+            .filter(|place| !row_grounds_at_any_strength(rules, run, &place.name))
+            .map(|place| {
+                let setting = grounding_setting(&place.name, version, str::to_string);
+                (place.name.clone(), setting)
+            })
+            .collect();
         Self {
             entries,
-            places: citation_places(schema, version),
+            places,
+            ungrounded,
         }
     }
 
@@ -75,8 +93,17 @@ impl SubjectKinds {
             return None;
         }
         let target = escape_toml_basic(target);
+        // §FS-init.2.3.5.2.2: the entry alone never judges a file that cites nothing.
+        let grounding = self
+            .ungrounded
+            .get(&place.name)
+            .map_or_else(String::new, |setting| {
+                format!(
+                    ", and {setting}, without which a file there that cites nothing is not checked"
+                )
+            });
         Some(format!(
-            "; for configured place \"{}\", express this obligation in grund.toml: [{}] with must = [\"{target}\"]",
+            "; for configured place \"{}\", express this obligation in grund.toml: [{}] with must = [\"{target}\"]{grounding}",
             place.name, place.table
         ))
     }

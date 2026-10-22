@@ -104,7 +104,7 @@ fn rule_declarations<'a>(
 /// The vocabulary a rule of `schema`'s project is read in: its subject and a
 /// bare object in that project's scope (§AR-config.1.5), named
 /// sections as that project sets them.
-pub(crate) fn vocabulary(schema: &Schema, frame: Frame<'_>) -> RuleVocabulary {
+pub(crate) fn vocabulary(schema: &Schema, rules: &Rules, frame: Frame<'_>) -> RuleVocabulary {
     let table = KindTable::standalone(schema);
     let scope = KindScope::Project("");
     let kinds: BTreeSet<String> = table
@@ -121,6 +121,8 @@ pub(crate) fn vocabulary(schema: &Schema, frame: Frame<'_>) -> RuleVocabulary {
         non_citable: crate::rules::sentence::SubjectKinds::for_rules(
             table.non_citable_entries(scope),
             schema,
+            rules,
+            frame.run,
             frame.version,
         ),
         objects: table,
@@ -131,19 +133,21 @@ pub(crate) fn vocabulary(schema: &Schema, frame: Frame<'_>) -> RuleVocabulary {
 
 pub(crate) fn parse_ad_hoc(
     schema: &Schema,
+    rules: &Rules,
     frame: Frame<'_>,
     sentence: &str,
 ) -> anyhow::Result<ParsedRule> {
-    parse_ad_hoc_with_vocabulary(schema, sentence, vocabulary(schema, frame))
+    parse_ad_hoc_with_vocabulary(schema, sentence, vocabulary(schema, rules, frame))
 }
 
 pub(crate) fn parse_ad_hoc_with_workspace(
     schema: &Schema,
+    rules: &Rules,
     frame: Frame<'_>,
     sentence: &str,
     projects: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
 ) -> anyhow::Result<ParsedRule> {
-    let mut vocab = vocabulary(schema, frame);
+    let mut vocab = vocabulary(schema, rules, frame);
     add_workspace_targets(&mut vocab, projects);
     parse_ad_hoc_with_vocabulary(schema, sentence, vocab)
 }
@@ -207,10 +211,11 @@ fn add_workspace_targets(
 /// in it is unverifiable here.
 pub(crate) fn workspace_vocabulary(
     schema: &Schema,
+    rules: &Rules,
     frame: Frame<'_>,
     projects: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
 ) -> RuleVocabulary {
-    let mut vocab = vocabulary(schema, frame);
+    let mut vocab = vocabulary(schema, rules, frame);
     if !projects.is_empty() {
         add_workspace_targets(&mut vocab, projects);
     }
@@ -231,10 +236,11 @@ pub(crate) fn workspace_vocabulary(
 /// member list expands to (§FS-rules.4.1.1).
 pub(crate) fn declared_workspace_vocabulary(
     schema: &Schema,
+    rules: &Rules,
     frame: Frame<'_>,
     declared: &[(String, Schema)],
 ) -> RuleVocabulary {
-    let mut vocab = vocabulary(schema, frame);
+    let mut vocab = vocabulary(schema, rules, frame);
     vocab.objects.add_projects(
         declared
             .iter()
@@ -334,7 +340,7 @@ pub(crate) fn check_chapter_rules(
     }
     // §FS-check.1.4.1: a rule kind or a `--rule` turns the rule checks on.
     report.armed.arm(Switch::Rules);
-    let mut vocab = vocabulary(schema, frame);
+    let mut vocab = vocabulary(schema, rules, frame);
     if let Some((_, projects)) = workspace {
         add_workspace_targets(&mut vocab, projects);
     }

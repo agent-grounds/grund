@@ -208,11 +208,22 @@ the supplementary hint to express this obligation in a version-2 `grund.toml`
 must = ["FS"]
 ```
 
-Use `[citations.e2e]` in a version-1 config. This is configuration guidance;
-it offers no accepted sentence rewrite. See the [place-subject guidance](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentencesrewriteno-formplace-a-refused-place-subject-names-its-citation-configuration)
+Use `[citations.e2e]` in a version-1 config. That entry judges only a file
+that already cites something, so a file there that cites nothing still passes.
+Where the row grounds nothing, the hint therefore also names the grounding
+setting that makes such a file a finding:
+
+```toml
+[rules.citations.e2e.grounding]
+must = "file"
+```
+
+Use `require_grounding = true` on the `e2e` `[[kinds]]` row in a version-1
+config. Where the row already grounds, the hint names the citation entry alone.
+This is configuration guidance; it offers no accepted sentence rewrite. See the
+[place-subject guidance](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-rule-refusals.md#sentencesrewriteno-formplace-a-refused-place-subject-names-its-citation-configuration)
 for the exact matching boundary, and the [runnable example](https://github.com/agent-grounds/grund/tree/main/examples/rules)
-for the refusal and its citation-direction finding. Files with no citations
-remain exempt; require grounding separately if they must cite anything.
+for the refusal and its citation-direction finding.
 
 Try a sentence without adding a declaration:
 

@@ -51,7 +51,8 @@ pub(crate) fn expected(
         .iter()
         .any(|kind| kind.rules)
         .then(|| {
-            let vocab = workspace_vocabulary(config.schema(), config.frame(), workspace);
+            let vocab =
+                workspace_vocabulary(config.schema(), config.rules(), config.frame(), workspace);
             configured_rule_sentences(findings, config.schema(), config.frame(), &vocab).ok()
         })
         .flatten();
