@@ -33,6 +33,7 @@ fn workspace_members_empty_when_no_workspace_declared() {
 /// initialized and not-yet-initialized link grammar. Mirrors
 /// §FS-init-fixtures.6.1.
 #[test]
+#[ignore = "red until #946 writes the discoverability line's second clause; implement removes this"]
 fn workspace_members_root_init_omits_self_and_preserves_foreign_rows() {
     let root = test_root("workspace_members_root_init_omits_self_and_preserves_foreign_rows");
     write(
@@ -48,7 +49,7 @@ fn workspace_members_root_init_omits_self_and_preserves_foreign_rows() {
 
     assert_eq!(
         section,
-        "\n\n### Workspace members\n\nCross-project citations use §alias/<ID>.\n\n- [`api`](apps/api/AGENTS.md)\n- [`core`](packages/core/) *(not yet initialized)*\n- [`ui`](packages/ui/) *(not yet initialized)*"
+        "\n\n### Workspace members\n\nCross-project citations use §alias/<ID>, one alias segment per workspace level.\n\n- [`api`](apps/api/AGENTS.md)\n- [`core`](packages/core/) *(not yet initialized)*\n- [`ui`](packages/ui/) *(not yet initialized)*"
     );
 }
 
@@ -56,6 +57,7 @@ fn workspace_members_root_init_omits_self_and_preserves_foreign_rows() {
 /// and keeps the foreign root and siblings in alias order, with link paths
 /// recomputed relative to the member's AGENTS.md. Mirrors §FS-init-fixtures.6.2.
 #[test]
+#[ignore = "red until #946 writes the discoverability line's second clause; implement removes this"]
 fn workspace_members_member_init_omits_self_and_preserves_foreign_rows() {
     let root = test_root("workspace_members_member_init_omits_self_and_preserves_foreign_rows");
     write(
@@ -72,7 +74,7 @@ fn workspace_members_member_init_omits_self_and_preserves_foreign_rows() {
 
     assert_eq!(
         section,
-        "\n\n### Workspace members\n\nCross-project citations use §alias/<ID>.\n\n- [`core`](../../packages/core/) *(not yet initialized)*\n- [`root`](../../) *(not yet initialized)*\n- [`ui`](../../packages/ui/) *(not yet initialized)*"
+        "\n\n### Workspace members\n\nCross-project citations use §alias/<ID>, one alias segment per workspace level.\n\n- [`core`](../../packages/core/) *(not yet initialized)*\n- [`root`](../../) *(not yet initialized)*\n- [`ui`](../../packages/ui/) *(not yet initialized)*"
     );
 }
 
@@ -97,9 +99,10 @@ fn workspace_members_companion_only_init_omits_self() {
     assert!(section.contains("- [`root`](../../) *(not yet initialized)*"));
 }
 
-/// §FS-init.2.3.4.15.2: the discoverability line uses the target project's
-/// configured marker, not a hard-coded `§`.
+/// §FS-init.2.3.4.15.2: the discoverability line is the spec's line verbatim, both clauses,
+/// with the target project's configured marker, not a hard-coded `§`.
 #[test]
+#[ignore = "red until #946 writes the discoverability line's second clause; implement removes this"]
 fn workspace_members_discoverability_line_uses_configured_marker() {
     let root = test_root("workspace_members_discoverability_line_uses_configured_marker");
     write(
@@ -110,8 +113,12 @@ fn workspace_members_discoverability_line_uses_configured_marker() {
 
     let section = render_workspace_members_section(&root, None, None, "@", true);
 
-    assert!(section.contains("Cross-project citations use @alias/<ID>."));
-    assert!(!section.contains("Cross-project citations use §alias/<ID>."));
+    assert!(
+        section.lines().any(|line| line
+            == "Cross-project citations use @alias/<ID>, one alias segment per workspace level."),
+        "the discoverability line should be the spec's, with the configured marker:\n{section}"
+    );
+    assert!(!section.contains("§alias/<ID>"));
 }
 
 /// §FS-init.2.3.4.15.4: self is selected by canonical project identity, not

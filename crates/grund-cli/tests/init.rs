@@ -405,51 +405,6 @@ fn init_scaffold_existing_kindless_config_uses_the_built_in_fs_home() {
 }
 
 #[test]
-fn init_workspace_companion_only_omits_self_and_uses_marker() {
-    // §FS-init.2.3.4.15: a companion-only workspace init omits self just like
-    // canonical init, retains foreign rows, and uses the local citation marker.
-    let root = workdir("init_workspace_companion_only_omits_self_and_uses_marker");
-    fs::create_dir_all(root.join(".agents")).expect("create root config dir");
-    fs::write(
-        root.join(".agents/grund.toml"),
-        "project_name = \"root\"\n\n[workspace]\nmembers = [\"apps/api\"]\n",
-    )
-    .expect("write workspace config");
-    let api = root.join("apps/api");
-    fs::create_dir_all(api.join(".agents")).expect("create api config dir");
-    fs::write(
-        api.join(".agents/grund.toml"),
-        "[reference]\nmarker = \"@\"\nstrict = true\n",
-    )
-    .expect("write api config");
-
-    let output = run_grund(&["init", api.to_str().unwrap(), "--claude"], manifest_dir());
-    assert!(
-        output.status.success(),
-        "init failed: stderr={}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    assert!(
-        !api.join("AGENTS.md").exists(),
-        "explicit companion-only init should not create AGENTS.md"
-    );
-
-    let claude = fs::read_to_string(api.join("CLAUDE.md")).expect("read CLAUDE.md");
-    assert!(
-        claude.contains("Cross-project citations use @alias/<ID>."),
-        "workspace citation hint should use the configured marker:\n{claude}"
-    );
-    assert!(
-        !claude.contains("`api`"),
-        "companion-only init must omit its canonical self project:\n{claude}"
-    );
-    assert!(
-        claude.contains("- [`root`](../../) *(not yet initialized)*"),
-        "the foreign root row should retain its relative link and annotation:\n{claude}"
-    );
-}
-
-#[test]
 fn init_rerun_on_current_repo_writes_nothing_and_reports_exists() {
     // §FS-init.2.2 / §FS-init.2.3: re-running `grund init` on a repo whose managed
     // AGENTS.md block already matches the current render rewrites nothing — the
