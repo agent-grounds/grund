@@ -15,7 +15,7 @@
 //! text is the lexical half and is `grammar/anchors.rs`.
 
 use std::collections::btree_map::Entry;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 use super::anchor_numbering::numbered_anchor;
@@ -86,6 +86,19 @@ pub(crate) fn index_link_targets<'c>(
     findings: &'c Catalog,
     settled: &SettledHeadings,
 ) -> BTreeMap<(PathBuf, Id), String> {
+    index_link_targets_for(presentation, schema, frame, findings, settled, None)
+}
+
+/// `index_link_targets`, linking only the IDs in `only` when it is given: the
+/// entries a classifier restricted to those IDs compares (§FS-refs.3.1.1).
+pub(crate) fn index_link_targets_for<'c>(
+    presentation: &Presentation,
+    schema: &Schema,
+    frame: Frame<'_>,
+    findings: &'c Catalog,
+    settled: &SettledHeadings,
+    only: Option<&BTreeSet<Id>>,
+) -> BTreeMap<(PathBuf, Id), String> {
     // §FS-config-v2.schema.places.ownership: one index in each folder of the row.
     let places: Vec<(&str, &str, PathBuf, PathBuf)> = schema
         .rows
@@ -126,6 +139,9 @@ pub(crate) fn index_link_targets<'c>(
     }
     let mut found: BTreeMap<(usize, &Id), String> = BTreeMap::new();
     let mut link = |file: usize, id: &'c Id| {
+        if only.is_some_and(|ids| !ids.contains(id)) {
+            return;
+        }
         let Entry::Vacant(entry) = found.entry((file, id)) else {
             return;
         };
@@ -150,6 +166,7 @@ pub(crate) fn index_link_targets<'c>(
             || citation.section.is_some()
             || !citation.has_marker
             || citation.shorthand
+            || only.is_some_and(|ids| !ids.contains(&citation.id))
             || !findings.declarations.contains_key(&citation.id)
         {
             continue;
@@ -171,6 +188,9 @@ pub(crate) fn index_link_targets<'c>(
     // asked only of the folders above each declaration.
     let owners = Owners::new(schema, frame);
     for (id, decls) in &findings.declarations {
+        if only.is_some_and(|ids| !ids.contains(id)) {
+            continue;
+        }
         for decl in decls {
             let Some(relative) = owners.relative(&decl.file) else {
                 continue;

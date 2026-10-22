@@ -311,7 +311,10 @@ pub(super) fn refs_impl_with_annotations(
         .find(|kind| kind.kind == id.kind)
         .and_then(|kind| kind.title.clone());
     if let Some(entries) = index_entries {
-        *entries = super::refs_annotations::index_entry_sites(&context);
+        *entries = super::refs_annotations::index_entry_sites(
+            &context,
+            hits.iter().map(|hit| (hit.project, hit.citation)),
+        );
     }
     Ok(RefsWithMetadata {
         kind_title,
