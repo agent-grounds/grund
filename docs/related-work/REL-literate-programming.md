@@ -30,8 +30,7 @@ Two descendants:
   simpler alternative (from the abstract).
 - Eric Schulte, Dan Davison, Thomas Dye and Carsten Dominik, *A Multi-Language Computing
   Environment for Literate Programming and Reproducible Research*, Journal of Statistical
-  Software 46(3), 2012, DOI 10.18637/jss.v046.i03
-  ([JSS](https://doi.org/10.18637/jss.v046.i03)), describe Org-mode's Babel. "A single
+  Software 46(3), 2012, DOI 10.18637/jss.v046.i03, describe Org-mode's Babel. "A single
   hierarchically-organized plain text source file" holds prose and code in arbitrary
   languages. Code blocks run in place, with their output captured in the file, and a block
   may take the result of a named code block as an argument. The file is exported to LaTeX,
