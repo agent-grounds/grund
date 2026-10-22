@@ -41,7 +41,7 @@ Do not create a namespace for a regular module or component that still belongs t
 
 ### Workspace members
 
-Cross-project citations use §alias/<ID>.
+Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 
 - [`api`](apps/api/AGENTS.md)
 - [`core`](packages/core/) *(not yet initialized)*

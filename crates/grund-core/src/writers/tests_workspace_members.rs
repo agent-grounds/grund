@@ -33,7 +33,6 @@ fn workspace_members_empty_when_no_workspace_declared() {
 /// initialized and not-yet-initialized link grammar. Mirrors
 /// §FS-init-fixtures.6.1.
 #[test]
-#[ignore = "red until #946 writes the discoverability line's second clause; implement removes this"]
 fn workspace_members_root_init_omits_self_and_preserves_foreign_rows() {
     let root = test_root("workspace_members_root_init_omits_self_and_preserves_foreign_rows");
     write(
@@ -57,7 +56,6 @@ fn workspace_members_root_init_omits_self_and_preserves_foreign_rows() {
 /// and keeps the foreign root and siblings in alias order, with link paths
 /// recomputed relative to the member's AGENTS.md. Mirrors §FS-init-fixtures.6.2.
 #[test]
-#[ignore = "red until #946 writes the discoverability line's second clause; implement removes this"]
 fn workspace_members_member_init_omits_self_and_preserves_foreign_rows() {
     let root = test_root("workspace_members_member_init_omits_self_and_preserves_foreign_rows");
     write(
@@ -102,7 +100,6 @@ fn workspace_members_companion_only_init_omits_self() {
 /// §FS-init.2.3.4.15.2: the discoverability line is the spec's line verbatim, both clauses,
 /// with the target project's configured marker, not a hard-coded `§`.
 #[test]
-#[ignore = "red until #946 writes the discoverability line's second clause; implement removes this"]
 fn workspace_members_discoverability_line_uses_configured_marker() {
     let root = test_root("workspace_members_discoverability_line_uses_configured_marker");
     write(
