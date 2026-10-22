@@ -318,11 +318,8 @@ fn link_target_at_citation<'a>(
         return None;
     }
     // §FS-citations.wrap.recognized: a wrap enrolls; an authored link never does
-    // (§FS-check.3.18.3), and a citation-only image does for one more release
-    // (§FS-citations.checks.image-index-entry).
-    let (CitationLink::Wrap(wrap) | CitationLink::Image(wrap)) =
-        citation_link(links, line, start, end)
-    else {
+    // (§FS-check.3.18.3), nor a citation-only image (§FS-citations.checks.image-index-entry).
+    let CitationLink::Wrap(wrap) = citation_link(links, line, start, end) else {
         return None;
     };
     // §FS-fmt.2.3: a wrap whose `[` sits in a zone `fmt` never writes in is not one.

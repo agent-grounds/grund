@@ -144,8 +144,8 @@ A link the author wrote around a citation is theirs in every Markdown form: an
 inline link, one whose text runs onto the next line, a reference with its key, a
 definition, an autolink and an HTML `<a>`. fmt leaves it and does not follow a
 move for it, so repair such a destination by hand; the citation inside is still
-checked. A citation-only image in a kind's index, `![§<ID>](x.png)`, warns
-`image-index-entry` with the link to write beside it
+checked. A citation-only image in a kind's index, `![§<ID>](x.png)`, is no
+entry: write the link beside it, or the ID is reported missing
 ([authored links](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/structure.md#linking-what-grund-does),
 [example](https://github.com/agent-grounds/grund/blob/main/examples/authored-citations/README.md)).
 Use the [maintenance guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/structure.md#maintaining-declarations)

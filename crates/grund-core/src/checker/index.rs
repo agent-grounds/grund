@@ -84,11 +84,6 @@ enum IndexCitationForm {
     /// text of a link its author wrote whose destination is not empty
     /// (§FS-citations.wrap.enclosing).
     Link,
-    /// A citation that is an image's whole description, with a destination: no
-    /// link to the declaration, but credited as the entry for one more release
-    /// and warned about where it is all the index holds
-    /// (§FS-citations.checks.image-index-entry).
-    Image,
     /// A recognized citation of the ID, unwrapped, **and one the
     /// cross-reference pass would wrap on its next `--write`**. §FS-check.3.17.4's
     /// finding, and the only form that earns it.
@@ -143,11 +138,7 @@ fn index_citation_form(
         cursor = end;
         match index_citation_form_at(line, links, start, end, marker) {
             IndexCitationForm::Link => return IndexCitationForm::Link,
-            IndexCitationForm::Image => form = IndexCitationForm::Image,
-            IndexCitationForm::Bare if form != IndexCitationForm::Image => {
-                form = IndexCitationForm::Bare;
-            }
-            IndexCitationForm::Bare => {}
+            IndexCitationForm::Bare => form = IndexCitationForm::Bare,
             IndexCitationForm::Ignored => {}
         }
     }
@@ -183,14 +174,9 @@ fn index_citation_form_at(
             }
             return IndexCitationForm::Ignored;
         }
-        // §FS-citations.checks.image-index-entry: the image keeps the credit it
-        // had as a wrap, for one release, where it goes somewhere.
-        CitationLink::Image(wrap) => {
-            if wrap.close > wrap.url_start {
-                return IndexCitationForm::Image;
-            }
-            return IndexCitationForm::Ignored;
-        }
+        // §FS-citations.checks.image-index-entry: a citation-only image is no entry,
+        // and `fmt` leaves it, so the ID falls to §FS-check.3.18 as a mention.
+        CitationLink::Image(_) => return IndexCitationForm::Ignored,
         CitationLink::Wrap(_) | CitationLink::Unwrapped => {}
     }
     // §FS-fmt.6.5: `--cross-refs` wraps marker-prefixed citations only, and
@@ -256,43 +242,30 @@ pub(super) fn marked_index_entries<'a>(
             let Some(end) = start.checked_add(cite.text.len()) else {
                 return false;
             };
-            // §FS-citations.checks.image-index-entry: an image keeps its credit
-            // as a marked link owed for the release it is credited in.
             line.get(start..end) == Some(cite.text.as_str())
-                && matches!(
-                    index_citation_form_at(
-                        line,
-                        links.line(cite.line - 1),
-                        start,
-                        end,
-                        &schema.citation.marker,
-                    ),
-                    IndexCitationForm::Link | IndexCitationForm::Image
-                )
+                && index_citation_form_at(
+                    line,
+                    links.line(cite.line - 1),
+                    start,
+                    end,
+                    &schema.citation.marker,
+                ) == IndexCitationForm::Link
         })
         .collect()
 }
 
 /// What an index says about one ID: whether any citation of it is a full link,
-/// where the first bare one sits (§FS-check.3.17.6 anchors there), and where the
-/// first citation-only image sits (§FS-citations.checks.image-index-entry).
+/// and where the first bare one sits (§FS-check.3.17.6 anchors there).
 #[derive(Default)]
 struct IndexEntryState {
     linked: bool,
     first_bare: Option<(usize, usize)>,
-    first_image: Option<(usize, usize)>,
 }
 
 impl IndexEntryState {
     fn record(&mut self, form: IndexCitationForm, line: usize, column: usize) {
         match form {
             IndexCitationForm::Link => self.linked = true,
-            IndexCitationForm::Image => {
-                let here = (line, column);
-                if self.first_image.is_none_or(|seen| here < seen) {
-                    self.first_image = Some(here);
-                }
-            }
             IndexCitationForm::Bare => {
                 let here = (line, column);
                 if self.first_bare.is_none_or(|seen| here < seen) {
@@ -552,33 +525,6 @@ pub(super) fn check_kind_indexes(
 
         for (id, decl) in covered {
             match entries.get(id) {
-                // §FS-citations.checks.image-index-entry: the image is credited, and
-                // it is all the index holds for the ID, so its retirement is announced.
-                Some(IndexEntryState {
-                    linked: false,
-                    first_image: Some((line, column)),
-                    ..
-                }) => {
-                    let rendered = render_catalog_id(frame.grammar(), &findings.declarations, id);
-                    let marker = &schema.citation.marker;
-                    let write = index_targets
-                        .get(&(target.index_file.clone(), id.clone()))
-                        .map(|link| {
-                            format!("; write `[{marker}{rendered}]({link})` in {index_display}")
-                        })
-                        .unwrap_or_default();
-                    report.warnings.push(Diagnostic {
-                        code: Code::IMAGE_INDEX_ENTRY,
-                        path: Some(target.index_file.clone()),
-                        line: Some(*line),
-                        column: Some(*column),
-                        message: format!(
-                            "index entry {marker}{rendered} is an image, not a link{write} — this warning becomes an error in grund 0.20.0"
-                        ),
-                        sites: Vec::new(),
-                        authority: Vec::new(),
-                    });
-                }
                 // §FS-check.3.17: an entry that exists and is not a link, at the
                 // line `grund fmt --write` rewrites.
                 Some(state) if !state.linked => {
