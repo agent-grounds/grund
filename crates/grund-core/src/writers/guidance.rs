@@ -1,20 +1,20 @@
 //! The managed blocks one run renders under scoped guidance (§FS-init.2.3.5.11):
-//! the root block's config-derived sections and every destination's scoped
-//! block, from one placement. `grund init` writes these bytes and `Expected`
-//! carries them to the drift check, so the two ask one component for one answer
-//! (§AR-checker.2.7).
+//! the root block, whole, and every destination's scoped block, from one
+//! placement. `grund init` writes these bytes and `Expected` carries them to the
+//! drift check, so the two ask one component for one answer (§AR-checker.2.7,
+//! §FS-init.2.3.5.8).
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use super::expected::{block_version, chapter_rules_section};
 use crate::config::Config;
-use crate::grammar::{AGENTS_BLOCK_BASE_VERSION, agents_block_heading};
+use crate::grammar::{AGENTS_BLOCK_BASE_VERSION, agents_block_heading, block_sections};
 use crate::model::{Catalog, ExpectedEntrypoint, ExpectedSection, ScopedExpectation};
 use crate::sources::path_is_dir;
 use crate::templates::{
-    ConversationSurface, Layout, citation_directions_section, clickable_citations_section,
-    declaration_shapes_section,
+    ConversationSurface, Layout, WorkspaceGuidance, citation_directions_section,
+    clickable_citations_section, declaration_shapes_section, render_agents_append_block,
 };
 
 /// The validated chapter rules a run renders (§FS-init.2.3.5.10): the catalog
@@ -83,21 +83,23 @@ impl<'a> Guidance<'a> {
         renders.then(|| chapter_rules_section(self.config, path, rules.findings, &rows))
     }
 
-    /// The root entrypoint's config-derived sections, rendered for `path`'s
+    /// The root entrypoint's five generated sections, rendered for `path`'s
     /// surface (§FS-init.2.3.6.1); a section with no content is expected absent.
-    pub(crate) fn root_sections(&self, path: &Path) -> Vec<ExpectedSection> {
+    /// They are what `config migrate`'s guidance gate refuses a change to
+    /// (§FS-config-migrate.5.3); `check` compares the whole block.
+    pub(crate) fn generated_sections(&self, path: &Path) -> Vec<ExpectedSection> {
         let project = self.config.project();
         let mut sections = vec![
             ExpectedSection {
-                heading: "### Citation directions",
-                noun: "citation directions",
+                heading: "### Citation directions".into(),
+                noun: "citation directions".into(),
                 bytes: self
                     .layout
                     .root_citation_directions(project, self.config.run()),
             },
             ExpectedSection {
-                heading: "### Clickable citations",
-                noun: "clickable citations",
+                heading: "### Clickable citations".into(),
+                noun: "clickable citations".into(),
                 bytes: clickable_citations_section(
                     project,
                     ConversationSurface::for_entrypoint(path),
@@ -106,33 +108,63 @@ impl<'a> Guidance<'a> {
         ];
         if self.rules.is_some() {
             sections.push(ExpectedSection {
-                heading: "### Chapter rules",
-                noun: "chapter rules",
+                heading: "### Chapter rules".into(),
+                noun: "chapter rules".into(),
                 bytes: self.chapter_rules(path, "").unwrap_or_default(),
             });
         }
         sections.extend([
             ExpectedSection {
-                heading: "### Declaration shapes",
-                noun: "declaration shapes",
+                heading: "### Declaration shapes".into(),
+                noun: "declaration shapes".into(),
                 bytes: self
                     .layout
                     .declaration_shapes(project, "")
                     .unwrap_or_default(),
             },
             ExpectedSection {
-                heading: "### Scoped guidance",
-                noun: "scoped guidance",
+                heading: "### Scoped guidance".into(),
+                noun: "scoped guidance".into(),
                 bytes: self.layout.pointer().unwrap_or_default(),
             },
         ]);
         sections
     }
 
-    /// A root entrypoint as the drift check holds it (§FS-check.3.5).
-    pub(crate) fn root_entrypoint(&self, path: PathBuf, require_block: bool) -> ExpectedEntrypoint {
+    /// The whole root block `grund init` writes at `path`, by the two calls
+    /// `init` makes (§FS-init.2.3.5.8): the template rendered for `path`'s
+    /// surface, then finished for this run's placement.
+    pub(crate) fn root_block(&self, path: &Path, workspace: &WorkspaceGuidance) -> String {
+        let block = render_agents_append_block(
+            self.config.project_name.as_deref().unwrap_or_default(),
+            self.config.project(),
+            self.config.run(),
+            self.config.compiled(),
+            workspace,
+            ConversationSurface::for_entrypoint(path),
+        );
+        self.finish_root_block(block, path)
+    }
+
+    /// A root entrypoint as the drift check holds it: its whole block, cut into
+    /// the parts a stale finding names (§FS-check.3.5.3, §FS-check.3.5.4).
+    pub(crate) fn root_entrypoint(
+        &self,
+        path: PathBuf,
+        require_block: bool,
+        workspace: &WorkspaceGuidance,
+    ) -> ExpectedEntrypoint {
+        let block = self.root_block(&path, workspace);
+        let sections = block_sections(&block)
+            .iter()
+            .map(|section| ExpectedSection {
+                heading: section.heading.to_string(),
+                noun: section.noun(),
+                bytes: section.bytes.to_string(),
+            })
+            .collect();
         ExpectedEntrypoint {
-            sections: self.root_sections(&path),
+            sections,
             path,
             require_block,
             scoped: None,
@@ -218,8 +250,8 @@ impl<'a> Guidance<'a> {
             .into_iter()
             .zip(nouns)
             .map(|((heading, bytes), noun)| ExpectedSection {
-                heading,
-                noun,
+                heading: heading.into(),
+                noun: noun.into(),
                 bytes: bytes.unwrap_or_default(),
             })
             .collect();

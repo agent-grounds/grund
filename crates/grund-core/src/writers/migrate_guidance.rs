@@ -1,8 +1,9 @@
 //! §FS-config-migrate.5.3: what `grund init` would write into the root
-//! `AGENTS.md` for one config, rendered in memory and reduced to what `grund
-//! check` compares: the block version and each config-derived section. Migration
-//! renders it for the v1 file and for the candidate and refuses on a
-//! difference. It goes through the renderers `init` writes with and `Expected`
+//! `AGENTS.md` for one config, rendered in memory and reduced to what the
+//! guidance gate refuses a change to: the block version and the five generated
+//! sections. Migration renders it for the v1 file and for the candidate and
+//! refuses on a difference; the rest of the block describes the config, so it
+//! passes, and `check` reports it until `grund init` runs. It goes through the renderers `init` writes with and `Expected`
 //! carries, so the three cannot disagree (§AR-checker.2.7).
 
 use super::guidance::{Guidance, RuleGuidance};
@@ -12,7 +13,8 @@ use crate::model::ExpectedSection;
 use crate::scanner::{CANONICAL_AGENT_ENTRYPOINT, scan_tree};
 use crate::workspace::{declared_member_schemas, populate_workspace_boundary};
 
-/// The root block `init` would write, as the drift check holds it.
+/// The root block `init` would write, reduced to its version and its five
+/// generated sections (§FS-config-migrate.5.3).
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct RootGuidance {
     pub(crate) version: u32,
@@ -54,6 +56,6 @@ pub(crate) fn root_guidance(mut config: Config) -> RootGuidance {
     );
     RootGuidance {
         version: guidance.version,
-        sections: guidance.root_sections(&config.root.join(CANONICAL_AGENT_ENTRYPOINT)),
+        sections: guidance.generated_sections(&config.root.join(CANONICAL_AGENT_ENTRYPOINT)),
     }
 }

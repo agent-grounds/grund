@@ -26,7 +26,7 @@ const COMPLEMENT_TITLE: &str = "Every scanned file no other row claims";
 /// The note §FS-config-migrate.5.3 prints when the complement gains a row.
 const MIGRATE_NOTE: &str = "note: the next grund init adds a `code` row to the AGENTS.md \
                             Project map, because the complement's places are now listed; \
-                            grund check does not compare that table";
+                            grund check reports the block stale until then";
 
 /// A version-1 config shaped like rhei's: one `FS` folder, and a `[scan] include`
 /// that lists files and folders beyond it. Version 1 has no field for the

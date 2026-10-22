@@ -90,9 +90,14 @@ the candidate would change a meaning, so nothing is written
 ([§FS-config-migrate.5.4](../functional-spec/FS-config-migrate.md#54-the-result-and-a-difference)).
 
 The `AGENTS.md` block `grund init` would write is compared too, whether or not
-the file exists yet. A difference `grund check` would hold the tree to is
+the file exists yet. A change to its version or to one of its five generated
+sections — `Citation directions`, `Clickable citations`, `Declaration shapes`,
+`Chapter rules` and `Scoped guidance`, the rules the tree is held to — is
 refused: most often a `values = true` row, which version 2 gives a declaration
-shape that adds a `Declaration shapes` section
+shape that adds a `Declaration shapes` section. The rest of the block describes
+the config, the citation scheme and the project map among it, so it is expected
+to change and passes; the report comparison leaves out the stale-block finding
+it earns
 ([§FS-config-migrate.5.3](../functional-spec/FS-config-migrate.md#53-guidance)).
 
 ## 5. Write
@@ -115,7 +120,10 @@ note: existing AGENTS.md managed instructions may still describe version 1; run 
 
 Run `grund init` in the migrated project to refresh its managed instructions;
 migration leaves them unchanged
-([§FS-config-migrate.6.5](../functional-spec/FS-config-migrate.md#65-what-it-says-after-the-write)).
+([§FS-config-migrate.6.5](../functional-spec/FS-config-migrate.md#65-what-it-says-after-the-write)),
+and until then `grund check` reports the block stale, naming each part the new
+config renders differently
+([§FS-check.3.5.4](../functional-spec/FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)).
 The qualified reminder appears after every successful write, even when no
 `AGENTS.md` exists. Previews, refused or failed writes, and already-version-2
 runs omit it. A second migration run says the config is already version 2.

@@ -7,7 +7,7 @@
 
 use std::path::{Path, PathBuf};
 
-use super::config_migrate::{config_lines, report_gate, surplus, v1_spelling};
+use super::config_migrate::{config_lines, describes_config, report_gate, surplus, v1_spelling};
 use super::config_migrate_guidance::refusals as guidance;
 use crate::config::Project;
 use crate::config::migrate::{
@@ -279,8 +279,8 @@ fn guidance_refuses_a_value_row_with_no_agents_md() {
 #[test]
 fn guidance_refuses_a_changed_section_or_version() {
     let section = |bytes: &str| ExpectedSection {
-        heading: "### Citation directions",
-        noun: "citation directions",
+        heading: "### Citation directions".into(),
+        noun: "citation directions".into(),
         bytes: bytes.into(),
     };
     let block = |version, bytes: &str| RootGuidance {
@@ -294,4 +294,75 @@ fn guidance_refuses_a_changed_section_or_version() {
     let version = guidance(&block(19, "a\n"), &block(21, "a\n"), &[]);
     assert!(version[0].what.contains("from v19 to v21"), "{version:?}");
     assert!(guidance(&block(19, "a\n"), &block(19, "a\n"), &[]).is_empty());
+}
+
+/// §FS-config-migrate.5.2: the report gate leaves out a stale block whose part
+/// describes the config, which a migration is expected to change, and still
+/// compares one in the five generated sections the guidance gate holds
+/// (§FS-config-migrate.5.3).
+#[test]
+fn report_gate_ignores_a_stale_block_outside_the_generated_sections() {
+    let stale = |noun: &str| crate::Finding {
+        severity: "error",
+        code: "agents-init",
+        path: Some("AGENTS.md".to_string()),
+        line: Some(3),
+        column: None,
+        message: format!(
+            "repo maintenance: stale grund init block: {noun} differ from grund.toml — run \
+             `grund init` to refresh (does not affect citation validity)"
+        ),
+        sites: Vec::new(),
+        authority: Vec::new(),
+    };
+    for noun in [
+        "citation scheme",
+        "project map",
+        "declarations and citations",
+        "rules",
+    ] {
+        assert!(describes_config(&stale(noun)), "{noun}");
+    }
+    for noun in crate::model::GENERATED_SECTIONS {
+        assert!(!describes_config(&stale(noun)), "{noun}");
+    }
+    let mut outdated = stale("rules");
+    outdated.message = "repo maintenance: outdated grund init block v35 — run `grund init` to \
+                        update to v39 (does not affect citation validity)"
+        .into();
+    assert!(!describes_config(&outdated));
+}
+
+/// §FS-config-migrate.5.2, §FS-config-migrate.5.3: a v1 tree `init` wrote a
+/// block for migrates with both gates equal, whatever its candidate renders
+/// into the block's citation scheme.
+#[test]
+fn a_block_init_wrote_passes_both_gates() {
+    let root = tree(
+        "initialized-block",
+        &v1_config(FS),
+        &[("docs/FS-a.md", "# FS-a: A\n\nText.\n")],
+    );
+    crate::writers::init(crate::writers::InitOpts {
+        target: root.clone(),
+        no_vcs: true,
+        ..crate::writers::InitOpts::default()
+    })
+    .expect("init");
+    let (located, v1, candidate, map) = prepared(&root);
+    assert_eq!(
+        report_gate(&located, &v1, &candidate, &map, "grund.toml"),
+        Vec::<String>::new()
+    );
+    match config_migrate(&MigrateOpts {
+        path: root,
+        write: false,
+        drop_comments: false,
+    }) {
+        Ok(MigrateOutcome::Migrated(report)) => {
+            assert_eq!(report.gates, Some(GateResult::Equal));
+            assert!(report.refusals.is_empty(), "{:?}", report.refusals);
+        }
+        other => panic!("{other:?}"),
+    }
 }

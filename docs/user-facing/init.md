@@ -49,11 +49,14 @@ The managed block opens with a heading such as `## Grounding with grund (block v
 That number is the revision of the block's text, not a grund release: `grund -V`
 prints the release you are running
 ([§FS-init.2.3.9.3](../functional-spec/FS-init.md#2393-the-headings-two-spellings)). A
-config selects one of four current revisions: v31, v32 once a kind declares rules,
-and v33 or v34 when its guidance lands in a scoped `AGENTS.md` or a declaration
+config selects one of four current revisions: v39, v40 once a kind declares rules,
+and v41 or v42 when its guidance lands in a scoped `AGENTS.md` or a declaration
 shape renders ([§FS-init.2.3.7.1](../functional-spec/FS-init.md#2371-the-current-version)).
 `grund check` reports an older block as outdated, and one `grund init` re-renders
-it. Blocks up to v30 spell the heading `(vN)`; both spellings are read, and
+it. A current block whose text no longer matches what `init` would write — after a
+config edit, a migration, or a member joining the workspace — is reported stale,
+naming the part that differs, and `grund init` refreshes it
+([§FS-check.3.5.4](../functional-spec/FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). Blocks up to v30 spell the heading `(vN)`; both spellings are read, and
 `init` writes the labelled one in their place. A grund older than the block reports
 it as malformed, so upgrade grund first rather than editing the block by hand.
 

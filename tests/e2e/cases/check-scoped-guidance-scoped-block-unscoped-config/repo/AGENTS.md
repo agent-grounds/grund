@@ -3,7 +3,7 @@
 <!-- BEGIN GRUND MANAGED BLOCK -->
 ## Grounding with grund (block v42)
 
-This project uses [`grund`](https://github.com/agent-grounds/grund): every spec, goal, decision, and end-to-end test has a stable ID `<KIND>-<slug>[.<section>]` (`KIND ∈ {FS, RULE}`), cited with the marker `§` — e.g. `<§>FS-user-login.3.1`, where the ID is a shape illustration rather than a real one in this repo, which is what the `<§>` escape says. Type `$$` in a grund-aware editor and it becomes `§`. Bare ID-shaped tokens are ignored — config version 2 recognizes only `§`-prefixed citations, with no opt-out.
+This project uses [`grund`](https://github.com/agent-grounds/grund): every spec, goal, decision, and end-to-end test has a stable ID `<KIND>-<slug>[.<section>]` (`KIND ∈ {FS}`), cited with the marker `§` — e.g. `<§>FS-user-login.3.1`, where the ID is a shape illustration rather than a real one in this repo, which is what the `<§>` escape says. Type `$$` in a grund-aware editor and it becomes `§`. Bare ID-shaped tokens are ignored — config version 2 recognizes only `§`-prefixed citations, with no opt-out.
 
 ### Grounding from a citation
 
@@ -22,7 +22,6 @@ A `§<ID>` is a pointer to a fact, not a file path. Resolve it with `grund` and 
 ### Project map
 
 - [FS](docs/fs): Declaration
-- [RULE](docs/rules): Declaration
 
 ### Declarations and citations
 
@@ -39,11 +38,6 @@ Declarations are heading lines `# <ID>: …` in markdown. In a code doc-comment 
 ### Citation directions
 
 Specs cite goals, architecture cites specs, code and executable tests cite the specs they realize. In a citation rule array, entries are all required; `|` inside one entry means any one alternative. See https://github.com/agent-grounds/grund/blob/main/docs/user-facing/citation-directions.md for the levels and examples.
-
-### Chapter rules
-
-`must`/`must not` are `grund check` errors; `should`/`should not` are suggestions (`grund check --suggestions`).
-
 
 ### Scoped guidance
 

@@ -29,7 +29,7 @@ file = \"requirements.md\"
 include = [\"requirements.md\", \"src\"]
 ";
 const REMINDER: &str = "note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them";
-const PROJECT_MAP: &str = "note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check does not compare that table";
+const PROJECT_MAP: &str = "note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check reports the block stale until then";
 const REPREVIEW: &str =
     "to see this candidate again: restore version 1 and run grund config migrate --to 2";
 

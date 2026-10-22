@@ -1,11 +1,12 @@
 //! `Expected`, rendered (§AR-checker.1.3, §AR-system.2.11): what presentation
-//! decided, as the bytes the checker compares with disk. The managed-block
-//! sections are rendered through the same renderers `grund init` writes with —
-//! citation directions, clickable citations per conversation surface, and the
-//! chapter-rule section — so the command that clears a drift finding and the
+//! decided, as the bytes the checker compares with disk. Each root block is
+//! rendered whole through the two calls `grund init` writes with, per
+//! conversation surface, so the command that clears a drift finding and the
 //! check that raises it ask one component for one answer from opposite
-//! directions (§AR-checker.2.7). The chapter-rule section is rendered from the
-//! check run's own catalog, so building it adds no walk (§FS-init.2.3.4.15).
+//! directions (§AR-checker.2.7, §FS-check.3.5.4). The chapter-rule section is
+//! rendered from the check run's own catalog, so building it adds no walk
+//! (§FS-init.2.3.4.15), and the workspace sections from the projects the run
+//! already loaded, or not at all (§FS-check.3.5.5).
 
 use crate::sources::path_exists;
 use std::collections::{BTreeMap, BTreeSet};
@@ -22,9 +23,40 @@ use crate::resolver::{
 use crate::scanner::{CANONICAL_AGENT_ENTRYPOINT, companion_agent_entrypoints};
 
 use super::guidance::{Guidance, RuleGuidance};
+use super::init_workspace_members::{ListedProject, render_workspace_members};
 use super::scoped_files::{
     OrphanFile, OwnedCompanion, ScopedRecord, orphan_files, owned_companions, scoped_companions,
 };
+use crate::sources::canonical_path;
+use crate::templates::WorkspaceGuidance;
+
+/// What a run renders the two workspace sections of its blocks from
+/// (§FS-check.3.5.5).
+#[derive(Clone, Copy)]
+pub(crate) enum WorkspaceBlocks<'a> {
+    /// A run anywhere but the outermost root of a full checkout: the sections
+    /// leave both sides of the comparison.
+    LeftOut,
+    /// The outermost root of a full checkout, with every project it loaded.
+    Compared(&'a [ListedProject]),
+}
+
+impl WorkspaceBlocks<'_> {
+    /// The workspace guidance `grund init` renders into the block at `root`.
+    fn guidance(&self, root: &Path, marker: &str) -> WorkspaceGuidance {
+        match self {
+            Self::LeftOut => WorkspaceGuidance::default(),
+            Self::Compared(projects) => WorkspaceGuidance {
+                present: true,
+                members: render_workspace_members(
+                    &canonical_path(root).unwrap_or_else(|_| root.to_path_buf()),
+                    projects,
+                    marker,
+                ),
+            },
+        }
+    }
+}
 
 /// Render `Expected` for one project's check (§AR-checker.1.3).
 ///
@@ -40,11 +72,13 @@ use super::scoped_files::{
 /// configured rule resolved. A rule this scope cannot verify still earns its
 /// bullet (§FS-rules.4.1.2), so the section is left out only for a genuinely
 /// invalid rule — the one case that already carries its own located error at
-/// the rule's heading.
+/// the rule's heading. `blocks` says whether the workspace sections are
+/// rendered and compared, and from which projects (§FS-check.3.5.5).
 pub(crate) fn expected(
     findings: &Catalog,
     config: &Config,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
+    blocks: WorkspaceBlocks<'_>,
 ) -> Expected {
     let rules = config
         .kinds
@@ -69,16 +103,18 @@ pub(crate) fn expected(
     let root = &config.root;
     let canonical = root.join(CANONICAL_AGENT_ENTRYPOINT);
     let canonical_exists = path_exists(&canonical);
+    // §FS-init.2.3.4.15: one workspace render for every surface of the project.
+    let members = blocks.guidance(root, &config.marker);
     let mut entrypoints = Vec::new();
     if canonical_exists {
-        entrypoints.push(guidance.root_entrypoint(canonical, true));
+        entrypoints.push(guidance.root_entrypoint(canonical, true, &members));
     }
     let mut entrypoint_probe_error = None;
     match companion_agent_entrypoints(root, config.frame().sources()) {
         Ok(companions) => entrypoints.extend(
             companions
                 .into_iter()
-                .map(|companion| guidance.root_entrypoint(companion, canonical_exists)),
+                .map(|companion| guidance.root_entrypoint(companion, canonical_exists, &members)),
         ),
         Err(error) => entrypoint_probe_error = Some(error),
     }
@@ -87,6 +123,7 @@ pub(crate) fn expected(
         block_version: guidance.version,
         entrypoints,
         entrypoint_probe_error,
+        workspace_sections: matches!(blocks, WorkspaceBlocks::Compared(_)),
         index_targets: index_link_targets(
             &config.project().presentation,
             config.schema(),

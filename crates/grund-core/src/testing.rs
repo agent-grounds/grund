@@ -19,7 +19,7 @@ use crate::resolver::WorkspaceCheckTarget;
 use crate::scanner::ScanError;
 use crate::templates::ConversationSurface;
 use crate::workspace::WorkspaceCitationTarget;
-use crate::writers::{Guidance, expected, render_agents_append_block_at};
+use crate::writers::{Guidance, WorkspaceBlocks, expected, render_agents_append_block_at};
 // The embedded `grund-open` script, read only by the harness that runs it.
 #[cfg(unix)]
 use crate::writers::GRUND_OPEN_RESOLVER;
@@ -68,7 +68,7 @@ pub(crate) fn check_with_workspace(
     current_alias: Option<&str>,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
 ) -> CheckReport {
-    let expected = expected(findings, config, workspace);
+    let expected = expected(findings, config, workspace, WorkspaceBlocks::LeftOut);
     let frame = config
         .frame()
         .displayed_by(path_config.display())
@@ -92,10 +92,19 @@ pub(crate) fn check_agent_block_path(
     require_block: bool,
 ) {
     let guidance = Guidance::new(config, None);
-    let entrypoint = guidance.root_entrypoint(path.to_path_buf(), require_block);
+    let entrypoint = guidance.root_entrypoint(
+        path.to_path_buf(),
+        require_block,
+        &crate::templates::WorkspaceGuidance::default(),
+    );
+    let held = crate::checker::Held {
+        version: guidance.version,
+        workspace_sections: false,
+        owner: None,
+    };
     crate::checker::compare_agent_block(
         &entrypoint,
-        guidance.version,
+        held,
         crate::sources::Sources::on_disk(),
         report,
     );

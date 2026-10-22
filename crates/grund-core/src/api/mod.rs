@@ -176,6 +176,8 @@ mod tests_stub_overlays;
 mod tests_stub_section_overlays;
 #[cfg(test)]
 mod tests_unread_roots;
+#[cfg(test)]
+mod tests_whole_block;
 
 #[cfg(test)]
 mod tests_kind_title_refs;

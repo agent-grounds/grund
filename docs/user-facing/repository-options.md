@@ -47,6 +47,21 @@ validate the cross-project target; the root check can still report a missing
 declaration or section. A genuinely unknown alias needs correcting rather than
 being treated as the root project's name.
 
+Every project's managed block lists the workspace's members, so changing the
+membership — adding or removing a member, editing a `project_description`, or a
+member's first `grund init` — makes the other projects' blocks stale too. The
+root's `grund check` reports each one and names the directory to run
+`grund init` in, as in ``run `grund init` in packages/billing to refresh``;
+running it in each named directory clears them
+([§FS-errors.3.6.1](../functional-spec/FS-errors.md#361-the-final-templates)). Only
+that run judges the two workspace sections: a check inside a member, at a nested
+group's root, or in a checkout without one of the `optional_members` leaves them
+alone, and in the last case the absent member's warning says so
+([§FS-check.3.5.5](../functional-spec/FS-check.md#355-the-workspace-sections-are-judged-at-the-outermost-root-of-a-full-checkout)).
+Refresh managed blocks from a full checkout: `grund init` in a checkout without
+an optional member drops that member from the lists it writes, and the full
+checkout's root `check` then reports every block it wrote.
+
 An independently checked project's canonical root also bounds directory
 symlinks: outward directory targets are not scanned, including from inside a
 workspace member, while in-root directory links, file links, and intentional

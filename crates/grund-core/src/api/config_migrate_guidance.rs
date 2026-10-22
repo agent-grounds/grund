@@ -44,7 +44,7 @@ pub(super) fn refusals(
             Vec::new()
         };
         if shapes.is_empty() {
-            out.push(section_refusal(old.noun, &old.bytes, &new.bytes));
+            out.push(section_refusal(&old.noun, &old.bytes, &new.bytes));
         } else {
             out.extend(shapes);
         }

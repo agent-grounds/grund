@@ -241,7 +241,7 @@ fn render_migrate_project_map(
     if report.code_row_note {
         writeln!(
             out,
-            "note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check does not compare that table"
+            "note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check reports the block stale until then"
         )?;
     }
     Ok(())

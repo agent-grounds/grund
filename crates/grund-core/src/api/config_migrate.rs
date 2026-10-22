@@ -10,12 +10,13 @@ use std::path::{Path, PathBuf};
 use super::check::{CheckOpts, CheckOutput, check_with_projects};
 use super::config_findings::{CONFIG_VERSION_1, version_1_caution};
 use super::config_migrate_guidance::guidance_refusals;
+use crate::checker::stale_section_noun;
 use crate::config::migrate::{
     Gate, GateResult, Located, MigrateFailure, MigrateOutcome, MigrateReport, Prepared, locate,
     member_on_v1, translate,
 };
 use crate::config::{Invocation, PathBase, Project, Selection, config_at, with_report_path_base};
-use crate::model::{Finding, format_path, relative_from_base};
+use crate::model::{Code, Finding, GENERATED_SECTIONS, format_path, relative_from_base};
 use crate::writers::{Install, InstallFailure, atomic_install};
 
 /// The options of one `grund config migrate --to 2` run (§FS-config-migrate.1).
@@ -210,8 +211,9 @@ fn lines(
         )
     };
     // §FS-config-migrate.5.2: the v1 run's own caution is what migrating ends, not a
-    // difference the candidate makes, so neither run carries it.
-    let compared = |f: &&Finding| f.code != CONFIG_VERSION_1.as_str();
+    // difference the candidate makes, so neither run carries it; nor a stale block
+    // outside the generated sections, which the guidance gate passes (.5.3).
+    let compared = |f: &&Finding| f.code != CONFIG_VERSION_1.as_str() && !describes_config(f);
     let mut out: Vec<String> = warnings
         .iter()
         .filter(compared)
@@ -252,12 +254,21 @@ fn lines(
                     .filter(compared)
                     .map(|f| finding("run-warning", f)),
             );
-            let failed = !report.errors.is_empty() || output.had_scan_errors;
+            let failed = report.errors.iter().any(|f| compared(&f)) || output.had_scan_errors;
             out.push(format!("exit {}", u8::from(failed)));
         }
         Err(error) => out.push(format!("error {error:#}")),
     }
     out
+}
+
+/// §FS-config-migrate.5.2: an `agents-init` finding about a block's text outside
+/// its version and its five generated sections, which describes the config and
+/// is expected to change under a migration (§FS-config-migrate.5.3).
+pub(super) fn describes_config(finding: &Finding) -> bool {
+    finding.code == Code::AGENTS_INIT.as_str()
+        && stale_section_noun(&finding.message)
+            .is_some_and(|noun| !GENERATED_SECTIONS.contains(&noun))
 }
 
 /// Each `<config>:<line>` a message names, its line moved by `v1_line`: a

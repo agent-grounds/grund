@@ -70,13 +70,16 @@ impl Code {
 /// exit code.
 ///
 /// `armed` is not a channel: it is what the run's gates turned on, which only
-/// the CLI's selection reads (§FS-check.1.4.1).
+/// the CLI's selection reads (§FS-check.1.4.1). Nor is `verified_blocks`: it
+/// says the run found a managed block to compare, which the absent-member
+/// warning reads (§FS-check.4.9.1).
 #[derive(Default)]
 pub(crate) struct CheckReport {
     pub(crate) errors: Vec<Diagnostic>,
     pub(crate) warnings: Vec<Diagnostic>,
     pub(crate) suggestions: Vec<Diagnostic>,
     pub(crate) armed: Armed,
+    pub(crate) verified_blocks: bool,
 }
 
 /// A secondary location attached to a published [`Finding`] (§FS-errors.2.1,

@@ -68,6 +68,7 @@
 //! rather than of a line.
 
 mod anchors;
+mod block_sections;
 mod comment_block;
 mod comment_line;
 mod compiled;
@@ -108,6 +109,7 @@ pub use compiled::Grammar;
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
 pub(crate) use anchors::{anchor_slug, section_anchor_text, section_display_name};
+pub(crate) use block_sections::{WORKSPACE_SECTIONS, block_sections};
 pub(crate) use comment_block::{
     CommentBlockKind, DocCommentRule, block_declares_id, block_is_doc_comment, comment_blocks,
     declaration_id_on_source_line, first_content_line, is_bare_block_line,

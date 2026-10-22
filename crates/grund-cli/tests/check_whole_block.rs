@@ -127,7 +127,6 @@ fn assert_current(fixture: &Fixture, dir: &str) {
 /// §FS-config-migrate.5.3: `--write` is accepted, the next `check` reports the
 /// block's config-describing text stale, and `grund init` clears it.
 #[test]
-#[ignore = "red until #906 reports a migrated block's citation scheme; implement removes this"]
 fn config_migrate_write_then_check() {
     let fixture = Fixture::new("migrate");
     fixture.write("grund.toml", V1);
@@ -174,7 +173,6 @@ fn config_migrate_write_then_check() {
 /// §FS-check.3.5.5, §FS-errors.3.6.1: a new member turns three blocks stale, each
 /// finding names where to run `grund init`, and running it there clears them all.
 #[test]
-#[ignore = "red until #906 compares the workspace sections and names each directory; implement removes this"]
 fn new_member_blocks_clear_after_init_in_each_named_directory() {
     let fixture = Fixture::new("member");
     fixture.write("grund.toml", SHOP);
@@ -241,7 +239,6 @@ fn new_member_blocks_clear_after_init_in_each_named_directory() {
 /// §FS-check.3.5.4: the render reads the config and the workspace, never the scan
 /// or a path argument, so `check`, `check --full` and `check <root>` agree.
 #[test]
-#[ignore = "red until #906 compares the whole block; implement removes this"]
 fn check_full_and_path_report_the_same_stale_blocks() {
     let fixture = Fixture::new("agree");
     fixture.write("grund.toml", SHOP);

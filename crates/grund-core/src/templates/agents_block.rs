@@ -4,8 +4,8 @@
 //!
 //! What a managed block *should say*, as a function of config alone
 //! (§AR-system.2.11). That is what lets `init` write the block and the writers
-//! render its config-derived sections into `Expected`, which `check` byte-compares
-//! for drift (§FS-check.3.5): rendering is deterministic, so a fresh render is
+//! render the whole block into `Expected`, which `check` byte-compares for
+//! drift (§FS-check.3.5.4): rendering is deterministic, so a fresh render is
 //! the hash.
 //! Nothing here reads the tree — workspace presence (§FS-init.2.3.4.16) and
 //! member text (§FS-init.2.3.4.15) arrive from the run that walked for them
@@ -188,18 +188,17 @@ fn section_heading_note(project: &Project, marker: &str) -> String {
 /// verbatim, and the position languages it names are
 /// §FS-inline-citation-style.1.1.2's: a plain `//` or `#` block above a
 /// definition is an inline note in every other language, so naming them all
-/// taught a rule the gate does not enforce. It moves no managed-block version
-/// (§FS-inline-citation-style.5.6): the sentence is rendered, not live, and a
-/// block that predates this correction teaches a wider rule than the gate
-/// enforces until the repository's next `grund init`.
+/// taught a rule the gate does not enforce. Like every rendered line it is
+/// compared by `check` (§FS-inline-citation-style.5.5), so a change to its wording
+/// moves the block version (§FS-init.2.3.7).
 const DOC_COMMENT_SENTENCE: &str = " Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell, SQL or Lisp comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there.";
 
 /// §FS-inline-citation-style.5.2: the sentence that follows the budgets and
 /// precedes the layout sentence, under `citation-with-note` only — restating
-/// §FS-inline-citation-style.1's block rule at the point an agent needs it to act on a cap finding. It
-/// moves no managed-block version, for the same reason the layout and
-/// doc-comment sentences do not (§FS-inline-citation-style.2.2): a block that predates it teaches the
-/// same rule less precisely, an over-careful comment, never a finding.
+/// §FS-inline-citation-style.1's block rule at the point an agent needs it to act on a cap finding
+/// (§FS-inline-citation-style.2.2). `check` compares it as it does the doc-comment sentence
+/// (§FS-inline-citation-style.5.5), so a change to its wording moves the block version
+/// (§FS-init.2.3.7).
 const BLOCK_SENTENCE: &str =
     " A note is one comment block: a blank line splits it, an empty comment line does not.";
 

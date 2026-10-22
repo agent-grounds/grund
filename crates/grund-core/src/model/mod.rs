@@ -58,6 +58,7 @@ pub use armed::{Armed, Switch};
 pub use catalog::{ClauseBy, CodeClause, CodeEnabled, CodeSeverity};
 pub use codes::Code;
 pub use e2e::{E2eCase, E2eSpecRef};
+pub(crate) use expected::GENERATED_SECTIONS;
 pub use expected::{Expected, ExpectedEntrypoint, ExpectedSection, ScopedExpectation};
 pub(crate) use failure::OperationContext;
 pub use failure::OperationDiagnostic;
