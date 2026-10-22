@@ -27,7 +27,11 @@ impl Server {
         result.items = context.complete(&path, &text, position.line as usize, cursor)
             .into_iter().map(|candidate| lsp_types::CompletionItem {
                 label: candidate.id,
-                detail: Some(format!("{} — {}", candidate.title, candidate.source_path)),
+                // §FS-declarations.e2e-case.id: an untitled candidate shows its path alone.
+                detail: Some(match candidate.title.as_str() {
+                    "" => candidate.source_path,
+                    title => format!("{title} — {}", candidate.source_path),
+                }),
                 sort_text: Some(candidate.sort_text),
                 filter_text: Some(candidate.filter_text),
                 insert_text_format: Some(lsp_types::InsertTextFormat::PLAIN_TEXT),
