@@ -177,6 +177,7 @@ fn config(case: &Case, attachment: Option<bool>) -> String {
 
 /// Run all modes even while warnings are missing, so a failure records the
 /// entire translation/control matrix rather than only its first cell.
+/// §FS-config-migrate.6.5: compact writes omit stdout but keep carried warnings.
 fn check_carried_comments(above: bool) {
     static SERIAL: AtomicUsize = AtomicUsize::new(0);
     let mut missing = Vec::new();
@@ -213,7 +214,13 @@ fn check_carried_comments(above: bool) {
                     let after = fs::read_to_string(root.join("grund.toml")).unwrap();
                     fs::remove_dir_all(&root).unwrap();
                     let stderr = String::from_utf8(out.stderr).unwrap();
-                    let candidate = String::from_utf8(out.stdout).unwrap();
+                    let stdout = String::from_utf8(out.stdout).unwrap();
+                    let candidate = if write {
+                        assert!(stdout.is_empty(), "compact success omits the candidate");
+                        after.clone()
+                    } else {
+                        stdout
+                    };
                     let context = format!(
                         "{}; above={above}, attached={attached}, write={write}, drop={drop_comments}",
                         case.source
@@ -266,12 +273,15 @@ fn check_carried_comments(above: bool) {
                         })
                         .collect();
                     if case.translated && attached {
-                        if !warnings.iter().any(|line| {
-                            line.contains(case.source)
-                                && line.contains(case.target)
-                                && line.contains(&format!("grund.toml:{key_line}:"))
-                        }) {
-                            missing.push(format!("missing carried-comment warning: {context}"));
+                        if warnings.len() != 1
+                            || !warnings.iter().any(|line| {
+                                line.contains(case.source)
+                                    && line.contains(case.target)
+                                    && line.contains(&format!("grund.toml:{key_line}:"))
+                            })
+                        {
+                            missing
+                                .push(format!("expected one carried-comment warning: {context}"));
                             first_report.get_or_insert(stderr);
                         }
                     } else {
@@ -309,6 +319,7 @@ fn leading_carried_comments_report_translated_vocabulary() {
 
 /// §FS-config-migrate.4.1.1 and §FS-config-migrate.4.4: warning about a carried
 /// comment does not change which unrelated split-key comments refuse or drop.
+/// §FS-config-migrate.6.5: only compact success omits the pre-write listing.
 #[test]
 fn carried_comment_warning_keeps_split_comment_drop_policy() {
     let input = config(&CASES[0], Some(false)).replace(
@@ -316,6 +327,12 @@ fn carried_comment_warning_keeps_split_comment_drop_policy() {
         "include = [\"docs\", \"requirements.md\"] # split-key comment",
     );
     let mut missing = Vec::new();
+    let mut preview = None;
+    let split_line = input
+        .lines()
+        .position(|line| line.contains("# split-key comment"))
+        .unwrap()
+        + 1;
     for drop_comments in [false, true] {
         for write in [false, true] {
             let root = std::env::temp_dir().join(format!(
@@ -344,33 +361,59 @@ fn carried_comment_warning_keeps_split_comment_drop_policy() {
                 Some(if drop_comments { 0 } else { 1 }),
                 "{stderr}"
             );
-            assert!(
+            let compact = write && drop_comments;
+            assert_eq!(
                 stderr.contains("comments with no single key to follow"),
+                !compact,
                 "{stderr}"
             );
-            assert!(stderr.contains("inside [scan] include"), "{stderr}");
+            assert_eq!(
+                stderr.contains("inside [scan] include"),
+                !compact,
+                "{stderr}"
+            );
             assert!(!stdout.contains("split-key comment"));
-            if write && !drop_comments {
+            if write {
                 assert!(stdout.is_empty());
             } else {
                 assert!(stdout.contains("must = true # citation-with-note | citation-only"));
+                if let Some(expected) = &preview {
+                    assert_eq!(
+                        &stdout, expected,
+                        "authorization does not change candidate bytes"
+                    );
+                } else {
+                    preview = Some(stdout.clone());
+                }
             }
-            if write && drop_comments {
-                assert_eq!(after, stdout);
-                assert!(stderr.contains("dropped the comments at"), "{stderr}");
+            if compact {
+                assert_eq!(&after, preview.as_ref().expect("preview precedes writes"));
+                assert!(!after.contains("split-key comment"));
+                assert!(after.contains("must = true # citation-with-note | citation-only"));
+                let dropped =
+                    format!("dropped the comments at grund.toml:{split_line} (version 1 lines)");
+                assert_eq!(
+                    stderr.lines().filter(|line| *line == dropped).count(),
+                    1,
+                    "{stderr}"
+                );
             } else {
                 assert_eq!(after, input);
             }
-            if !stderr.lines().any(|line| {
-                line.contains("comment")
-                    && (line.contains("check") || line.contains("review"))
-                    && (line.contains("translat") || line.contains("vocab"))
-                    && line.contains("grund.toml:3:")
-                    && line.contains("[reference] inline_style")
-                    && line.contains("[schema.notes.text] must")
-            }) {
+            let warnings: Vec<_> = stderr
+                .lines()
+                .filter(|line| {
+                    line.contains("comment")
+                        && (line.contains("check") || line.contains("review"))
+                        && (line.contains("translat") || line.contains("vocab"))
+                        && line.contains("grund.toml:3:")
+                        && line.contains("[reference] inline_style")
+                        && line.contains("[schema.notes.text] must")
+                })
+                .collect();
+            if warnings.len() != 1 {
                 missing.push(format!(
-                    "missing carried-comment warning: write={write}, drop={drop_comments}\n{stderr}"
+                    "expected one carried-comment warning: write={write}, drop={drop_comments}\n{stderr}"
                 ));
             }
         }

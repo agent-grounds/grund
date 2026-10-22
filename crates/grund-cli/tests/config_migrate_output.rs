@@ -133,10 +133,10 @@ fn annotated_v1() -> String {
     ) + "\n# standalone one\n# standalone two\n\n[output]\nformat = \"json\"\nrelative_paths = false\ncolor = \"always\"\n\n# final standalone\n"
 }
 
-fn dropped_ranges(input: &str) -> String {
+fn dropped_ranges(input: &str, config: &str) -> String {
     let first = input.lines().position(|l| l == "# standalone one").unwrap() + 1;
     format!(
-        "dropped the comments at grund.toml:{first}-{} and grund.toml:{} (version 1 lines)",
+        "dropped the comments at {config}:{first}-{} and {config}:{} (version 1 lines)",
         first + 1,
         input.lines().count()
     )
@@ -247,7 +247,10 @@ fn compact_write_orders_multiple_drops_notices_and_carried_warning() {
     );
     let write = fixture.migrate(&["--write", "--drop-comments"]);
     status(&write, 0);
-    let mut expected = vec![outcome(&input, "grund.toml"), dropped_ranges(&input)];
+    let mut expected = vec![
+        outcome(&input, "grund.toml"),
+        dropped_ranges(&input, "grund.toml"),
+    ];
     expected.extend(notices);
     expected.push(PROJECT_MAP.into());
     expected.extend(advice("grund.toml"));
@@ -315,6 +318,11 @@ fn compact_workspace_keeps_member_commands_in_order() {
 #[test]
 fn full_write_restores_candidate_and_complete_report_with_path_and_comments() {
     for base in ["project", "invocation"] {
+        let config = if base == "project" {
+            "grund.toml"
+        } else {
+            "../grund.toml"
+        };
         let input = annotated_v1();
         let fixture = Fixture::new(&input);
         let before = snapshot(&fixture.0);
@@ -328,10 +336,10 @@ fn full_write_restores_candidate_and_complete_report_with_path_and_comments() {
         status(&write, 0);
         assert_eq!(write.stdout, preview.stdout);
         let mut expected = lines(&preview.stderr);
-        expected[0] = "grund.toml: version 1 → 2, --write".into();
-        expected.push(outcome(&input, "grund.toml"));
-        expected.push(dropped_ranges(&input));
-        expected.extend(advice("grund.toml"));
+        expected[0] = format!("{config}: version 1 → 2, --write");
+        expected.push(outcome(&input, config));
+        expected.push(dropped_ranges(&input, config));
+        expected.extend(advice(config));
         assert_eq!(
             lines(&write.stderr),
             expected,
