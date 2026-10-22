@@ -125,7 +125,7 @@ pub(super) fn scan_e2e_cases(
                 defined_in: None,
                 stub_resolution: None,
                 e2e_case: Some(case),
-                title: Some(format!("e2e case `{name}`")),
+                title: None, // §FS-declarations.e2e-case.id: a case has no title.
                 // §AR-scanner.2.4.1: an E2E case spans its manifest line only; its
                 // obligations evaluate over the case's scanned files, not a body.
                 body_start: 1,
