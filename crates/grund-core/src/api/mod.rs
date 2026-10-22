@@ -137,6 +137,8 @@ mod tests_config_version_1;
 #[cfg(test)]
 mod tests_cover_workspace;
 #[cfg(test)]
+mod tests_e2e_manifest_args;
+#[cfg(test)]
 mod tests_embedding;
 #[cfg(test)]
 mod tests_embedding_sources;
