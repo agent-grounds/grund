@@ -20,7 +20,7 @@ Leans on [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure)
 ## 1. The command
 
 ```text
-grund config migrate --to 2 [PATH] [--write] [--drop-comments] [--path-base project|invocation]
+grund config migrate --to 2 [PATH] [--write] [--full] [--drop-comments] [--path-base project|invocation]
 ```
 
 ### 1.1 Which file
@@ -34,6 +34,7 @@ grund config migrate --to 2 [PATH] [--write] [--drop-comments] [--path-base proj
 ### 1.3 The other flags
 
 - `--write` replaces the config with the candidate, on the terms of [§FS-config-migrate.6](FS-config-migrate.md#6-the-write).
+- `--full` is migration-only. After a successful write it restores the candidate on stdout and the complete report on stderr; without it successful writes use the compact report of [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write). On previews it changes nothing. It accepts `PATH`, `--write`, `--drop-comments` and either `--path-base`; it does not relax `--to 2` or permit `--format`.
 - `--drop-comments` lets the write drop exactly the listed comments ([§FS-config-migrate.4.4](FS-config-migrate.md#44-listed-comments-and---drop-comments)). It is accepted without `--write`, so a preview can predict the write.
 - `--path-base` is accepted and spells the paths of the report ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)).
 - `--format` is refused as it is for every `config` command ([§FS-cli.3](FS-cli.md#3-cross-subcommand-flags)), with `` error: unknown flag `--format` ``, exit `2`, as `config show` answers it.
@@ -42,20 +43,20 @@ grund config migrate --to 2 [PATH] [--write] [--drop-comments] [--path-base proj
 
 ### 2.1 Stdout is the candidate
 
-Stdout carries exactly the bytes `--write` would write with the same flags, and nothing else ([§FS-errors.1](FS-errors.md#1-streams)). A write that succeeds prints the candidate it wrote. When there is no candidate, because something is refused or the config is already version 2, stdout is empty, and so it is for a `--write` that refuses. So `grund config migrate --to 2 > new.toml` captures only the candidate. The candidate is a version-2 file, so it prints its tables keyed by a row name in the order a version-2 file prints in ([§FS-config.4.2.4](FS-config.md#424-the-order-show-prints-in)): the rows' order, which is the order of the version-1 `[[kinds]]` entries. A preview that exits `1` only because a listed comment would be lost still prints the candidate, without those comments, as `--drop-comments` would write it: the comments are what refuse, not the file.
+On a preview, stdout carries exactly the bytes `--write` would write with the same flags, and nothing else ([§FS-errors.1](FS-errors.md#1-streams)). A successful write has empty stdout by default; with `--full` it prints exactly the candidate it wrote. The output choice never changes candidate bytes. When there is no candidate, because something is refused or the config is already version 2, stdout is empty, and so it is for a refused or failed write, with or without `--full`. So `grund config migrate --to 2 > new.toml` captures only the candidate. The candidate is a version-2 file, so it prints its tables keyed by a row name in the order a version-2 file prints in ([§FS-config.4.2.4](FS-config.md#424-the-order-show-prints-in)): the rows' order, which is the order of the version-1 `[[kinds]]` entries. A preview that exits `1` only because a listed comment would be lost still prints the candidate, without those comments, as `--drop-comments` would write it: the comments are what refuse, not the file.
 
 ### 2.2 Stderr is the report
 
-Every other line goes to stderr, in this order. `<config>` is the config's path spelled from the report base ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)), `grund.toml` by default.
+Every other line goes to stderr. Only an actual successful write without `--full` uses the compact report defined in [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write). Previews and `--write --full` use the complete report below; refused writes retain that complete diagnostic report regardless of `--full`. Failures and already-version-2 runs retain their error or no-op messages and exits, without a refresh reminder. `<config>` is the config's path spelled from the report base ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)), `grund.toml` by default.
 
 1. The heading: `<config>: version 1 → 2, preview, nothing written` for a preview, or `<config>: version 1 → 2, --write` with `--write`.
 2. One block per refusal, in file order: `refused: <config>:<line>: <what version 2 cannot spell>`, then any indented detail lines, then `  repair: <the v1 edit>`. A refusal for a key the file omits has no line: `refused: <config>: …`. Every refusal is listed in one run.
 3. The listed comments, when there are any: `comments with no single key to follow (--write refuses; --drop-comments drops exactly these):`, then one line each, `  <config>:<first>-<last>  <where>`, or `  <config>:<line>  <where>` for one line. `<where>` is `above <v1 key>`, `inside <v1 key>` or `standing alone`.
 4. One line per notice, in file order: `dropped: <config>:<line>: <v1 key>: <why>`, or `changed: <config>:<line>: <v1 key>: <why>`. A carried comment on a translated value also gets the explanatory warning of [§FS-config-migrate.4.1.1](FS-config-migrate.md#411-check-carried-comments-when-the-value-vocabulary-changes), identifying the original config location/key and its destination and asking the reader to check the comment.
-5. Only when nothing is refused: the key map, one `mapped: <config>:<line>: <v1 key> → <v2 spelling>` per authored key in file order, where a key version 2 needs no spelling for reads `→ nothing, version 2 always means it` and an `include` entry that is already a place reads `→ nothing, <entry> is a place of [schema.kinds.<ROW>] already`, then one `written: <v2 key> = <value>: version 1's default, written out` per default written out ([§FS-config-migrate.3.3](FS-config-migrate.md#33-defaults-are-written-out)), then the gates' result ([§FS-config-migrate.5.4](FS-config-migrate.md#54-the-result-and-a-difference)) and any `note:` line.
+5. Only when nothing is refused: the key map, one `mapped: <config>:<line>: <v1 key> → <v2 spelling>` per authored key in file order, where a key version 2 needs no spelling for reads `→ nothing, version 2 always means it` and an `include` entry that is already a place reads `→ nothing, <entry> is a place of [schema.kinds.<ROW>] already`, then one `written: <v2 key> = <value>: version 1's default, written out` per default written out ([§FS-config-migrate.3.3](FS-config-migrate.md#33-defaults-are-written-out)), then member commands ([§FS-config-migrate.8](FS-config-migrate.md#8-workspaces)), then the gates' result ([§FS-config-migrate.5.4](FS-config-migrate.md#54-the-result-and-a-difference)) and any `note:` line.
 6. After a write, the lines of [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write). A `--write` that refuses ends with `not written: <config> is unchanged`.
 
-A line is never wrapped. Paths inside the report follow `--path-base`.
+A line is never wrapped. Paths inside either report follow `--path-base`. The output policy changes no gates, comment authorization, discovery, atomic config-only writing, or exit codes. The compatibility decision for the new default is [§DF-config-migrate-output](../decisions/functional/DF-config-migrate-output.md#df-config-migrate-output-successful-migration-writes-report-the-outcome-the-candidate-and-mapping-report-are-opt-in).
 
 ### 2.3 Exits
 
@@ -159,7 +160,7 @@ Some settings are written with a notice rather than refused, because version 1 g
 
 ### 3.3 Defaults are written out
 
-Every v1 default that differs from version 2's is written out explicitly, so the file keeps v1's meaning after later edits ([§FS-config-v2.schema.sources.migration](FS-config-v2.md#schemasourcesmigration-what-a-v1-source-configuration-becomes)): the slug pattern, the ID format, the default exclusions as globs, `declarations = "any-comment"`, the explicit language list with its definitions, a suggested note length as the `may` rung of `[schema.notes.lines]`, and `[presentation] rules = "root"` ([§DF-scoped-guidance](../decisions/functional/DF-scoped-guidance.md#df-scoped-guidance-a-version-2-rows-guidance-is-written-above-its-places-with-a-root-pointer-for-agents-that-do-not-load-nested-files)). A file with no `[[kinds]]` gets every built-in row written out. Each one is a `written:` line of the report, in the candidate's order.
+Every v1 default that differs from version 2's is written out explicitly, so the file keeps v1's meaning after later edits ([§FS-config-v2.schema.sources.migration](FS-config-v2.md#schemasourcesmigration-what-a-v1-source-configuration-becomes)): the slug pattern, the ID format, the default exclusions as globs, `declarations = "any-comment"`, the explicit language list with its definitions, a suggested note length as the `may` rung of `[schema.notes.lines]`, and `[presentation] rules = "root"` ([§DF-scoped-guidance](../decisions/functional/DF-scoped-guidance.md#df-scoped-guidance-a-version-2-rows-guidance-is-written-above-its-places-with-a-root-pointer-for-agents-that-do-not-load-nested-files)). A file with no `[[kinds]]` gets every built-in row written out. Each one is a `written:` line of the complete report, in the candidate's order; compact success omits that narration, never the defaults in the candidate.
 
 ## 4. Comments
 
@@ -279,7 +280,7 @@ The Project map row the complement gains once its places are listed is a `note:`
 
 ### 5.4 The result, and a difference
 
-When both gates pass the report says `compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after`. A difference prints `differs: the records` or `differs: grund check --suggestions on this tree`, then each differing line prefixed `- ` for version 1 and `+ ` for the candidate, and refuses with exit `1` and empty stdout.
+When both gates pass the complete report says `compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after`. Compact success omits that narration, but runs the same gates. A difference always prints `differs: the records` or `differs: grund check --suggestions on this tree`, then each differing line prefixed `- ` for version 1 and `+ ` for the candidate, and refuses with exit `1` and empty stdout, with or without `--full`.
 
 ## 6. The write
 
@@ -308,6 +309,18 @@ Nothing but the config is ever written: no `AGENTS.md`, no lock, no backup.
 
 ### 6.5 What it says after the write
 
+After an actual successful write without `--full`, stderr contains only these items, in order, omitting inapplicable items:
+
+1. The `wrote` outcome below.
+2. The exact dropped-comment ranges below, once, in original file order.
+3. Every notice of [§FS-config-migrate.3.2](FS-config-migrate.md#32-notices) and every carried-comment warning promised by [§FS-config-migrate.4.1.1](FS-config-migrate.md#411-check-carried-comments-when-the-value-vocabulary-changes), in file order. That warning still appears in compact output.
+4. Workspace member commands ([§FS-config-migrate.8](FS-config-migrate.md#8-workspaces)).
+5. The distinct Project map note ([§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance)), when applicable.
+6. The undo and re-preview advice below.
+7. The qualified managed-instructions refresh reminder below, exactly once and last.
+
+Compact success omits the heading, key mappings, defaults, passing-gate narration and pre-write comment listing. With `--full`, the complete report of [§FS-config-migrate.2.2](FS-config-migrate.md#22-stderr-is-the-report) precedes the same outcome, dropped ranges, undo/re-preview advice and final reminder; notices, warnings, member commands and the Project map note stay in their complete-report positions and are not repeated.
+
 ```text
 wrote grund.toml: version 1 (24 lines) replaced by version 2
 dropped the comments at grund.toml:6-7 and grund.toml:12 (version 1 lines)
@@ -318,7 +331,7 @@ note: existing AGENTS.md managed instructions may still describe version 1; run 
 
 The `dropped the comments` line appears only when `--drop-comments` dropped any, and names every range in file order, joined by `, ` and a final ` and `.
 
-The final `note:` line appears on stderr after every successful version-1-to-version-2 write, including when no `AGENTS.md` exists. It is a qualified reminder about existing managed instructions, not a claim that a file was inspected or found stale. Run `grund init` in the migrated project to refresh those instructions; migration itself still writes only the config ([§FS-config-migrate.6.4](FS-config-migrate.md#64-a-symbolic-link-and-nothing-else-written)). The reminder is absent from previews, refused or failed writes, and already-version-2 runs. It changes neither stdout nor exits and does not replace the distinct Project map note ([§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance)).
+The final `note:` line appears on stderr after every successful version-1-to-version-2 write, including when no `AGENTS.md` exists. It is a qualified reminder about existing managed instructions, not a claim that a file was inspected or found stale. Run `grund init` in the migrated project to refresh those instructions; migration itself still writes only the config ([§FS-config-migrate.6.4](FS-config-migrate.md#64-a-symbolic-link-and-nothing-else-written)). Migration neither inspects managed blocks for drift nor runs init. The reminder is absent from previews, refused or failed writes, and already-version-2 runs. It does not change exits or replace the distinct Project map note ([§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance)).
 
 ### 6.6 A second run is a no-op
 
@@ -337,7 +350,7 @@ A config that is already version 2 is reported as `` <config> is already version
 
 ## 8. Workspaces
 
-Only the file at `PATH` is migrated; mixed versions are legal ([§FS-config.5](FS-config.md#5-schema-versioning)). At a workspace root the report names each member still on version 1 and the command that migrates it, one line each after the `written:` lines and before the gates' result: `` member: <member>/grund.toml is version 1; migrate it with grund config migrate --to 2 <member> ``. The report gate runs over the whole workspace as `check` would, each member read by its own reader. A member's config is migrated from the member's root, and the report gate runs from there. No member is written; there is no `--recursive`, because several files cannot be replaced atomically together.
+Only the file at `PATH` is migrated; mixed versions are legal ([§FS-config.5](FS-config.md#5-schema-versioning)). At a workspace root the report names each member still on version 1 and the command that migrates it, one line each: `` member: <member>/grund.toml is version 1; migrate it with grund config migrate --to 2 <member> ``. The complete report places these after the `written:` lines and before the gates' result; compact success retains them at the position defined in [§FS-config-migrate.6.5](FS-config-migrate.md#65-what-it-says-after-the-write), without requiring default narration before them. The report gate runs over the whole workspace as `check` would, each member read by its own reader. A member's config is migrated from the member's root, and the report gate runs from there. No member is written; there is no `--recursive`, because several files cannot be replaced atomically together.
 
 ## mapping: Every version-1 key and default
 
