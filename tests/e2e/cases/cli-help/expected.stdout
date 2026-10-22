@@ -3,7 +3,7 @@ Usage:  grund <ID>[.<section>]  ·  grund <COMMAND> [ARGS]  ·  grund <COMMAND> 
 
 Query the catalog:
   show          Print a coordinate's lead for agent context (default).  grund FS-login.3
-  list          Every declared ID, with path:line and title.            grund list --kind FS
+  list          Every declared ID, or the ones nothing cites.           grund list --unused
   refs          Every citation site of a coordinate, as path:line.      grund refs FS-login
   cover         Every scanned file, with the citations in it.           grund cover --format json
 
