@@ -108,6 +108,28 @@ fn table(version: u8) -> &'static str {
     }
 }
 
+/// The setting that makes an uncited e2e file a finding, as the hint spells it
+/// (§FS-init.2.3.5.2.2).
+fn grounding(version: u8) -> &'static str {
+    if version == 2 {
+        "[rules.citations.e2e.grounding] must = \"file\""
+    } else {
+        "require_grounding = true on its [[kinds]] row"
+    }
+}
+
+/// The config with the e2e row grounded, in the version's own spelling.
+fn grounded_config(version: u8) -> String {
+    if version == 2 {
+        config(version) + "\n[rules.citations.e2e.grounding]\nmust = \"file\"\n"
+    } else {
+        config(version).replace(
+            "folder = \"tests/e2e\"\ncitable = false",
+            "folder = \"tests/e2e\"\ncitable = false\nrequire_grounding = true",
+        )
+    }
+}
+
 fn stderr(output: &Output) -> String {
     String::from_utf8(output.stderr.clone()).unwrap()
 }
@@ -165,6 +187,47 @@ fn guidance_contract(version: u8, subject: &str) {
         );
         assert!(error.contains("e2e"), "missing configured place: {error}");
         assert!(!error.contains("citable = true"), "{error}");
+        // §FS-rule-refusals.sentences.rewrite.no-form.place: the row grounds
+        // nothing, so the entry alone would leave an uncited file unchecked.
+        assert!(
+            error.contains(&format!(
+                ", and {}, without which a file there that cites nothing is not checked",
+                grounding(version)
+            )),
+            "v{version}, citation entry {entry}: missing grounding setting:\n{error}"
+        );
+    }
+}
+
+/// §FS-rule-refusals.sentences.rewrite.no-form.place, #908: with no grounding
+/// row the hint names the grounding setting, and with one it names the entry
+/// alone, since that entry then judges a file that cites nothing as well.
+#[test]
+fn place_hint_names_grounding_only_where_the_row_grounds_nothing() {
+    for version in [1, 2] {
+        let repo = Repo::new(version);
+        for subject in ["Each e2e", "Each file in tests/e2e/"] {
+            let sentence = format!("{subject} must cite at least one FS.");
+            repo.write("grund.toml", &config(version));
+            let error = stderr(&repo.rule(&sentence));
+            assert!(
+                error.contains(grounding(version)),
+                "v{version} {subject}: {error}"
+            );
+
+            repo.write("grund.toml", &grounded_config(version));
+            let output = repo.rule(&sentence);
+            assert_eq!(output.status.code(), Some(2), "{output:?}");
+            let error = stderr(&output);
+            assert!(
+                error.contains(&format!("[{}] with must = [\"FS\"]\n", table(version))),
+                "v{version} {subject}: the hint ends at the entry:\n{error}"
+            );
+            assert!(
+                !error.contains("grounding"),
+                "v{version} {subject}: {error}"
+            );
+        }
     }
 }
 

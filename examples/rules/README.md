@@ -64,11 +64,14 @@ guidance ([§FS-rule-refusals.sentences.rewrite.no-form.place](../../docs/functi
 grund check examples/rules/place-obligations/repo --rule 'Each e2e must cite at least one FS.' --only-rule
 grund check examples/rules/place-obligations/repo --rule 'Each file in tests/e2e/ must cite at least one FS.' --only-rule
 # Both exit 2. Their existing reasons end with:
-# ; for configured place "e2e", express this obligation in grund.toml: [rules.citations.e2e] with must = ["FS"]
+# ; for configured place "e2e", express this obligation in grund.toml: [rules.citations.e2e] with must = ["FS"], and [rules.citations.e2e.grounding] must = "file", without which a file there that cites nothing is not checked
 ```
 
 This fixture uses version 2. In version 1, the hint instead names
-`[citations.e2e]`. The suggested obligation is already configured here:
+`[citations.e2e]` and `require_grounding = true` on its `[[kinds]]` row. The
+row grounds nothing here, so the hint names the grounding setting too; once the
+row grounds, it names the citation entry alone. The suggested obligation is
+already configured here:
 
 ```toml
 [rules.citations.e2e]
@@ -104,8 +107,8 @@ PY
 # Exit 0; the original missing-FS fixture remains in place.
 ```
 
-Files with no citations remain exempt; use the separate grounding setting
-to require evidence in every file ([§FS-config.3.9.2.4](../../docs/functional-spec/FS-config.md#3924-obligations-apply-per-source-file)).
+Files with no citations remain exempt until the grounding setting the hint
+names requires evidence in every file ([§FS-config.3.9.2.4](../../docs/functional-spec/FS-config.md#3924-obligations-apply-per-source-file)).
 The hint names the supported configuration route and offers no accepted
 sentence rewrite. The unrelated `vendor/` refusal below still has no hint.
 

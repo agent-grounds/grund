@@ -278,3 +278,13 @@ until = "the Citation directions chapter (FS-init.2.3.5) moves into a declaratio
 reason = """
 Over the soft budget before #908 touched it (796 non-blank lines). #908 adds one subsection to the Citation directions chapter, FS-init.2.3.5.2.2, plus a paragraph to FS-init.2.3.7.1, because the subject rule it changes lives there and one fact keeps one point. Missing boundary: FS-init.2.3.5 is a self-contained chapter of fifteen numbered sections, cited by coordinate from code, tests and decisions; it can become its own FS declaration, which needs every FS-init.2.3.5.* citation migrated in one change.
 """
+[[exceptions]]
+path = "crates/grund-core/src/api/run.rs"
+match = "exact"
+rules = ["core-source"]
+kind = "deferred"
+max_accepted = { value = 400, unit = "lines" }
+until = "run_workspace_check moves into a sibling file of crates/grund-core/src/api"
+reason = """
+Over the soft budget before #908 touched it (370 lines, its five over-soft edits already spent). #908 threads the project's rules into the two ad-hoc --rule parses here so the place-refusal hint can name the grounding setting a row lacks (FS-rule-refusals.sentences.rewrite.no-form.place); that is one argument at each call, not new logic. Missing boundary: the workspace run, run_workspace_check and its helpers, is a seam of its own beside the single-project run and can move to a sibling api file, which is a refactor outside a message fix.
+"""

@@ -1,6 +1,6 @@
 use crate::config::{
     CitationDisjunction, CitationLevel, CitationTarget, KindCitationRules, NamespaceMatch, Project,
-    Row, Run, row_grounds_at_any_strength,
+    Row, Run, grounding_setting, row_grounds_at_any_strength,
 };
 
 use super::citation_grounding::citation_grounding_sentence;
@@ -243,11 +243,7 @@ fn citation_direction_subject(
         return (subject, None);
     }
     // §FS-init.2.3.5.2.2: the one setting that closes the hole, in the live version.
-    let setting = if project.version >= 2 {
-        format!("`[rules.citations.{kind}.grounding] must = \"file\"`")
-    } else {
-        "`require_grounding = true` on its `[[kinds]]` row".to_string()
-    };
+    let setting = grounding_setting(kind, project.version, |fragment| format!("`{fragment}`"));
     (
         format!("{subject}{narrowed}"),
         Some(format!("{uncited}; {setting} makes it a finding.")),

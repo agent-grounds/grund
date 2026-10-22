@@ -129,7 +129,7 @@ pub(super) fn run_check_with_run_warnings(
     }
     // §FS-rules.4: ad-hoc grammar/vocabulary refusals happen before scanning.
     let ad_hoc = ad_hoc_sentence
-        .map(|sentence| parse_ad_hoc(config.schema(), config.frame(), sentence))
+        .map(|sentence| parse_ad_hoc(config.schema(), config.rules(), config.frame(), sentence))
         .transpose()?;
 
     let (mut findings, mut scan_errors) =
@@ -342,6 +342,7 @@ fn run_workspace_check(
         .map(|sentence| {
             parse_ad_hoc_with_workspace(
                 root_config.schema(),
+                root_config.rules(),
                 root_config.frame(),
                 sentence,
                 &workspace,

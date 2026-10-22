@@ -81,6 +81,7 @@ fn workshop(root: &Path) {
 fn declared(config: &Config) -> RuleVocabulary {
     declared_workspace_vocabulary(
         config.schema(),
+        config.rules(),
         config.frame(),
         &declared_member_schemas(config),
     )
@@ -300,7 +301,7 @@ fn a_declared_workspace_holds_its_own_namespace_even_when_the_members_do_not_exp
     );
     assert_eq!(
         vocab.objects.citable(KindScope::Project("")),
-        vocabulary(config.schema(), config.frame())
+        vocabulary(config.schema(), config.rules(), config.frame())
             .objects
             .citable(KindScope::Project("")),
         "the local kinds are unaffected"

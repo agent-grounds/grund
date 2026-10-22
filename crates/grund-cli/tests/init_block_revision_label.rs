@@ -163,7 +163,9 @@ fn reported_repository_gets_a_labelled_heading_beside_an_unchanged_refusal() {
         text(&refused.stderr),
         "error: kind \"e2e\" declares no IDs — tests/e2e/ is not a citable home; for \
          configured place \"e2e\", express this obligation in grund.toml: \
-         [rules.citations.e2e] with must = [\"FS\"]\n\
+         [rules.citations.e2e] with must = [\"FS\"], and \
+         [rules.citations.e2e.grounding] must = \"file\", without which a file there \
+         that cites nothing is not checked\n\
          known kinds: FS\n",
         "the refusal's bytes are §FS-errors.3.8.1's since the one-grammar window closed"
     );

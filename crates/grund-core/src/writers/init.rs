@@ -173,6 +173,7 @@ fn init_run(
         // one climbed to above, which is teaching rather than judging.
         let vocab = declared_workspace_vocabulary(
             init_config.schema(),
+            init_config.rules(),
             init_config.frame(),
             &declared_member_schemas(&init_config),
         );
