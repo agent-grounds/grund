@@ -249,8 +249,7 @@ pub(crate) fn absent_optional_member_warnings(
     config: &Config,
     verified_blocks: bool,
 ) -> Vec<Diagnostic> {
-    config
-        .workspace_absent_optional
+    absent_optional_members(config)
         .iter()
         .map(|absent| Diagnostic {
             code: Code::OPTIONAL_MEMBER_ABSENT,
@@ -266,6 +265,22 @@ pub(crate) fn absent_optional_member_warnings(
             authority: Vec::new(),
         })
         .collect()
+}
+
+/// The optional members absent anywhere in the tree the run's expansion walked
+/// from `config`, each named by the whole alias path a citation writes: the one
+/// fact `check` leaves the blocks' workspace sections out on (§FS-check.3.5.5) and
+/// `init` keeps the member list on (§FS-init.2.3.4.15.8), so both commands draw
+/// one boundary. Expansion records it on the root config it walked from.
+pub(crate) fn absent_optional_members(config: &Config) -> &[AbsentOptionalNamespace] {
+    &config.workspace_absent_optional
+}
+
+/// How a report names an absent optional entry, as the config wrote it: the
+/// opening words of `check`'s warning (§FS-check.4.9.2) and of `init`'s note
+/// (§FS-init.2.3.4.15.8) alike, so the two lines name one member one way.
+pub(crate) fn absent_optional_member_subject(written: &str) -> String {
+    format!("optional workspace member `{written}`")
 }
 
 /// §FS-check.1.4.1: the absence check is on wherever a block the run expanded
@@ -289,8 +304,9 @@ fn absent_optional_member_message(written: &str, alias_path: &str, blocks: bool)
         ""
     };
     format!(
-        "optional workspace member `{written}` is absent — citations into namespace \
-         `{alias_path}` were not checked, so this run does not cover it{blocks}"
+        "{} is absent — citations into namespace `{alias_path}` were not checked, so this run \
+         does not cover it{blocks}",
+        absent_optional_member_subject(written)
     )
 }
 
@@ -310,7 +326,7 @@ pub(crate) fn absent_only_workspace_caution(
     config: &Config,
     no_projects: bool,
 ) -> Option<Diagnostic> {
-    (no_projects && !config.workspace_absent_optional.is_empty()).then(|| Diagnostic {
+    (no_projects && !absent_optional_members(config).is_empty()).then(|| Diagnostic {
         code: Code::EMPTY_SCAN,
         path: None,
         line: None,

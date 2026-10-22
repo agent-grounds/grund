@@ -28,8 +28,8 @@ use crate::resolver::{
 };
 use crate::scanner::scan_tree;
 use crate::workspace::{
-    absent_only_workspace_caution, absent_optional_member_warnings, arm_optional_members, open,
-    unlisted_workspace_block_errors,
+    absent_only_workspace_caution, absent_optional_member_warnings, absent_optional_members,
+    arm_optional_members, open, unlisted_workspace_block_errors,
 };
 use crate::writers::{ListedProject, WorkspaceBlocks, expected, listed_projects};
 
@@ -512,8 +512,9 @@ fn run_workspace_check(
 /// §FS-check.3.5.5: the projects a workspace run renders its blocks' workspace
 /// sections from, or `None` where it leaves them out — a run at a nested group's
 /// root, whose projects carry the group's alias path, and one with an optional
-/// member absent anywhere in the tree. The list is the projects already loaded,
-/// so the comparison adds no walk.
+/// member absent anywhere in the tree, the fact `init` keeps the member list on
+/// (§FS-init.2.3.4.15.8). The list is the projects already loaded, so the
+/// comparison adds no walk.
 pub(super) fn workspace_block_projects(
     root_config: &Config,
     projects: &[WorkspaceProject],
@@ -521,7 +522,7 @@ pub(super) fn workspace_block_projects(
     let outermost = projects
         .iter()
         .all(|project| project.config.workspace_scope_path.is_empty());
-    (outermost && root_config.workspace_absent_optional.is_empty()).then(|| {
+    (outermost && absent_optional_members(root_config).is_empty()).then(|| {
         listed_projects(projects.iter().map(|project| {
             (
                 project.alias.clone(),

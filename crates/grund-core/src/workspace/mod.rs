@@ -57,8 +57,8 @@ pub(crate) use id_arg::split_qualified_id_arg;
 pub(crate) use member_guidance::member_root_guidance;
 pub(crate) use members::AncestorWorkspaces;
 pub(crate) use optional_members::{
-    absent_only_workspace_caution, absent_optional_member_warnings, arm_optional_members,
-    namespace_is_unverified,
+    absent_only_workspace_caution, absent_optional_member_subject, absent_optional_member_warnings,
+    absent_optional_members, arm_optional_members, namespace_is_unverified,
 };
 pub(crate) use preflight::preflight_embedding_paths;
 pub(crate) use scope::{

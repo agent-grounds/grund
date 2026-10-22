@@ -38,6 +38,10 @@ claimed members. Standalone repositories omit it. A discovered workspace keeps
 that guidance even if a missing member or duplicate alias prevents its Workspace
 members list from rendering
 ([§FS-init.2.3.4.16](../functional-spec/FS-init.md#23416-project-boundaries)).
+In a checkout without one of the workspace's `optional_members`, `init` keeps
+each block's Workspace members list as it is and says so in a note, so the list
+is refreshed only from a full checkout
+([§FS-init.2.3.4.15.8](../functional-spec/FS-init.md#234158-while-an-optional-member-is-absent)).
 For when and how to split off an independently checked app, package, service or
 subproject, run `grund guide members`, which prints
 “Splitting off a member”

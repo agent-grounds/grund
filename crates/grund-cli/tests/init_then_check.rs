@@ -139,7 +139,6 @@ fn init_in(repo: &Path, dir: &str) {
 /// an optional member, at the root and in a present member, are the ones the
 /// full checkout's root `check` accepts once the member is back (§FS-check.3.5.5).
 #[test]
-#[ignore = "red until #921 keeps the Workspace members section while an optional member is absent; implement removes this"]
 fn init_without_an_optional_member_writes_blocks_the_full_checkout_accepts() {
     let root = manifest_dir();
     let work = root.join("target/init-tests/init_without_an_optional_member");

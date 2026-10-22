@@ -5,7 +5,9 @@ use super::guidance::{Guidance, RuleGuidance};
 use super::init_block::{refuse_planned_agent_blocks, write_or_update_canonical_agent_entrypoint};
 pub(crate) use super::init_guidance::init_fs_home;
 use super::init_guidance::{InitNext, docs_scaffold_for_config};
-use super::init_notes::{duplicate_agent_entrypoint_notes, shadowed_claude_entrypoint_note};
+use super::init_notes::{
+    absent_optional_member_notes, duplicate_agent_entrypoint_notes, shadowed_claude_entrypoint_note,
+};
 use super::init_plan::selected_init_agent_entrypoints;
 use super::init_render::{agents_workspace_guidance, init_pending_effective_config};
 use super::init_scoped::{plan_scoped, refuse_scoped, write_scoped};
@@ -20,9 +22,7 @@ use crate::scanner::{
     CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, effective_scope_reads_any_file, scan_tree,
 };
 use crate::sources::path_exists;
-use crate::templates::{
-    ConversationSurface, render_agents_append_block, render_agents_md_from_block, render_grund_toml,
-};
+use crate::templates::{ConversationSurface, render_agents_append_block, render_grund_toml};
 use crate::workspace::{declared_member_schemas, populate_workspace_boundary};
 
 pub use super::init_output::{InitError, InitEvent, InitOpts, InitOutput};
@@ -259,7 +259,7 @@ fn init_run(
     // §FS-init.2.3.4.16, §FS-check.3.29: walked once and handed to both surfaces —
     // the section does not vary by surface, and this walk is where every block is
     // asked whether its members swallowed its scan, once per run.
-    let (workspace, run_warnings) = agents_workspace_guidance(
+    let (workspace, run_warnings, absent) = agents_workspace_guidance(
         &resolved_name,
         &init_config,
         &target,
@@ -299,7 +299,6 @@ fn init_run(
         agents_block.clone(),
         &target.join(CANONICAL_AGENT_ENTRYPOINT),
     );
-    let agents_contents = render_agents_md_from_block(&resolved_name, &canonical_block);
     // §FS-init.2.1.1, §FS-init.2.3.4.17.4: both computed before the companion loop
     // consumes the plan.
     let claude_companions = agent_entrypoints.companions_of_claude(&target);
@@ -310,16 +309,20 @@ fn init_run(
     // since the user already has a complete grund setup (§FS-init.2.2.2).
     let mut any_change = false;
     let mut events = Vec::new();
+    // §FS-init.2.3.4.15.8: what each root entrypoint did with its member list.
+    let mut members = Vec::new();
     if agent_entrypoints.canonical {
         match write_or_update_canonical_agent_entrypoint(
             &target,
             CANONICAL_AGENT_ENTRYPOINT,
-            &agents_contents,
+            &resolved_name,
             &canonical_block,
             force,
             dry_run,
+            !absent.is_empty(),
         ) {
-            Ok(event) => {
+            Ok((event, section)) => {
+                members.push((event.path.clone(), section));
                 any_change |= event.is_change();
                 events.push(event);
                 #[cfg(feature = "test-binding-writes")]
@@ -349,8 +352,10 @@ fn init_run(
         claude_block: claude_block.as_deref(),
         add_chapter_rules,
         dry_run,
+        keep_members: !absent.is_empty(),
         diagnostic,
         events: &mut events,
+        members: &mut members,
         workflow_entrypoint: &mut workflow_entrypoint,
         any_change: &mut any_change,
     })?;
@@ -498,6 +503,7 @@ fn init_run(
             }
         }
     }
+    notes.extend(absent_optional_member_notes(&absent, &members, dry_run));
     Ok(InitOutput {
         events,
         // §FS-rules.4.1.2: it is the write that is not withheld, not the failure
