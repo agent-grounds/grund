@@ -136,10 +136,10 @@ fn reported_repository_gets_a_labelled_heading_beside_an_unchanged_refusal() {
     assert_eq!(code, Some(0), "init failed: {stderr}");
 
     let agents = read(&target.join("AGENTS.md"));
-    assert_labelled(&agents, 35, "AGENTS.md");
+    assert_labelled(&agents, 39, "AGENTS.md");
     let gemini = read(&target.join("GEMINI.md"));
     assert!(gemini.starts_with("# Gemini notes\n"), "{gemini}");
-    assert_labelled(&gemini, 35, "the standalone companion GEMINI.md");
+    assert_labelled(&gemini, 39, "the standalone companion GEMINI.md");
 
     let version = run_grund(&["-V"], &target);
     assert_eq!(
@@ -194,15 +194,15 @@ fn assert_selection(name: &str, target: &Path, n: u32, scoped: &[&str]) {
 #[test]
 fn each_selected_pair_is_labelled_and_four_higher() {
     let base = reported_tree("block_label_base");
-    assert_selection("base", &base, 35, &[]);
+    assert_selection("base", &base, 39, &[]);
 
     let rules = reported_tree("block_label_rules");
     fs::write(rules.join("grund.toml"), format!("{REPORTED}{RULE_KIND}")).expect("rule kind");
     fs::create_dir_all(rules.join("docs/rules")).expect("docs/rules");
-    assert_selection("rule kind", &rules, 36, &[]);
+    assert_selection("rule kind", &rules, 40, &[]);
 
     let shape = tree("block_label_root_shape", ROOT_SHAPE, &["docs/df"]);
-    assert_selection("root-only shape", &shape, 37, &[]);
+    assert_selection("root-only shape", &shape, 41, &[]);
 
     let dirs = [
         "docs/spec/core",
@@ -219,7 +219,7 @@ fn each_selected_pair_is_labelled_and_four_higher() {
     assert_selection(
         "scoped with a rule kind",
         &scoped,
-        38,
+        42,
         &["docs/spec/AGENTS.md", "tests/AGENTS.md"],
     );
 }
@@ -264,7 +264,7 @@ fn an_unlabelled_block_is_relabelled_in_place_once() {
         "{migrated}"
     );
     assert!(migrated.ends_with(&format!("{END}\n{after}")), "{migrated}");
-    assert_labelled(&migrated, 35, "the migrated block");
+    assert_labelled(&migrated, 39, "the migrated block");
 
     let (code, stderr) = init(&target, &[]);
     assert_eq!(code, Some(0), "{stderr}");
@@ -284,7 +284,7 @@ fn a_labelled_block_inside_the_delimiters_is_read() {
     assert!(stderr.contains("updated AGENTS.md"), "{stderr}");
     let agents = read(&target.join("AGENTS.md"));
     assert!(agents.starts_with("# Title\n\n"), "{agents}");
-    assert_labelled(&agents, 35, "the re-rendered block");
+    assert_labelled(&agents, 39, "the re-rendered block");
 }
 
 /// A newer revision is refused in the new spelling as in the old, with nothing written.
@@ -319,7 +319,7 @@ fn a_labelled_heading_without_delimiters_opens_no_legacy_block() {
         "the user's text is kept whole:\n{agents}"
     );
     assert!(
-        agents[file.len()..].contains(&format!("{BEGIN}\n{}\n", heading(35))),
+        agents[file.len()..].contains(&format!("{BEGIN}\n{}\n", heading(39))),
         "a block is appended after it:\n{agents}"
     );
 }
