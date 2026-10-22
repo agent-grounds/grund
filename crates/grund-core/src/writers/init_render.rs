@@ -12,7 +12,9 @@ use std::path::Path;
 
 use super::init_target::derive_default_name;
 use super::init_workspace_members::render_workspace_guidance_with_run_warnings;
-use crate::config::{Config, Invocation, Selection, config_file_in, pending_config};
+use crate::config::{
+    AbsentOptionalNamespace, Config, Invocation, Selection, config_file_in, pending_config,
+};
 use crate::model::Finding;
 #[cfg(test)]
 use crate::templates::{
@@ -30,13 +32,19 @@ use crate::workspace::open;
 /// against §FS-check.3.29's once per block per run.
 ///
 /// Canonical target identity omits self regardless of whether this run selected
-/// the canonical `AGENTS.md` or only a companion.
+/// the canonical `AGENTS.md` or only a companion. The same walk names the
+/// optional members absent from the tree, which every entrypoint's write reads
+/// (§FS-init.2.3.4.15.8).
 pub(super) fn agents_workspace_guidance(
     name: &str,
     config: &Config,
     target: &Path,
     canonical_agent_entrypoint_selected: bool,
-) -> (WorkspaceGuidance, Vec<Finding>) {
+) -> (
+    WorkspaceGuidance,
+    Vec<Finding>,
+    Vec<AbsentOptionalNamespace>,
+) {
     render_workspace_guidance_with_run_warnings(
         target,
         Some(name),
@@ -105,7 +113,7 @@ pub(crate) fn render_agents_append_block_at(
     canonical_agent_entrypoint_selected: bool,
     surface: ConversationSurface,
 ) -> String {
-    let (workspace, _) =
+    let (workspace, _, _) =
         agents_workspace_guidance(name, config, target, canonical_agent_entrypoint_selected);
     render_agents_append_block(
         name,

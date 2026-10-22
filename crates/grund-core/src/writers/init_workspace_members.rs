@@ -1,13 +1,15 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use crate::config::{Config, config_file_in, is_valid_project_alias, run_warning_findings};
+use crate::config::{
+    AbsentOptionalNamespace, Config, config_file_in, is_valid_project_alias, run_warning_findings,
+};
 use crate::model::{Finding, normalize_path_lexically};
 use crate::resolver::settled_run_warnings;
 use crate::sources::{canonical_path, path_exists};
 use crate::templates::{WorkspaceGuidance, markdown_link_destination};
 use crate::workspace::{
-    AncestorWorkspaces, apply_workspace_boundary, enclosing_workspace_of,
+    AncestorWorkspaces, absent_optional_members, apply_workspace_boundary, enclosing_workspace_of,
     expand_workspace_tree_with_report_base, open_at,
 };
 
@@ -67,6 +69,11 @@ pub(crate) fn listed_projects(
 /// The renderer later omits that canonical self project; only its pending name
 /// can still affect the section, by colliding with a foreign alias during the
 /// ambiguity check below.
+///
+/// Beside the list it returns the optional members the same expansion found
+/// absent anywhere in the tree (§FS-init.2.3.4.15.8), read where `check` reads
+/// them (§FS-check.3.5.5): a suppressed section returns neither, because there
+/// is no member list for the writers to keep.
 fn collect_init_workspace_projects(
     target: &Path,
     mut root_config: Config,
@@ -74,7 +81,7 @@ fn collect_init_workspace_projects(
     pending_project_name: Option<&str>,
     pending_project_description: Option<&str>,
     run_warnings: &mut Vec<Finding>,
-) -> Option<Vec<ListedProject>> {
+) -> Option<(Vec<ListedProject>, Vec<AbsentOptionalNamespace>)> {
     // §FS-init.2.3.4.16: boundary expansion suppresses only members, not discovery.
     // §FS-check.3.29: ask the climbed block about its scan before expansion asks
     // the remaining blocks, once per block per run.
@@ -139,7 +146,7 @@ fn collect_init_workspace_projects(
         }
     }
     projects.sort_by(|a, b| a.alias.cmp(&b.alias));
-    Some(projects)
+    Some((projects, absent_optional_members(&root_config).to_vec()))
 }
 
 /// The outermost workspace whose tree actually contains `target`: start at the
@@ -229,22 +236,30 @@ pub(crate) fn render_workspace_members_section(
 /// carried out to `InitOutput` (§FS-distribution.3.1). Discovery is carried
 /// separately from expansion so project boundaries survive a suppressed member
 /// list (§FS-init.2.3.4.16).
+///
+/// The third value is the optional members absent from the tree whose list this
+/// rendered, which the writers keep each block's list for (§FS-init.2.3.4.15.8);
+/// empty wherever the section is not rendered.
 pub(crate) fn render_workspace_guidance_with_run_warnings(
     target: &Path,
     pending_project_name: Option<&str>,
     pending_project_description: Option<&str>,
     citation_marker: &str,
     _canonical_agent_entrypoint_selected: bool,
-) -> (WorkspaceGuidance, Vec<Finding>) {
+) -> (
+    WorkspaceGuidance,
+    Vec<Finding>,
+    Vec<AbsentOptionalNamespace>,
+) {
     let mut run_warnings = Vec::new();
     let Some((root_config, run_root)) = find_init_workspace_root(target, &mut run_warnings) else {
-        return (WorkspaceGuidance::default(), run_warnings);
+        return (WorkspaceGuidance::default(), run_warnings, Vec::new());
     };
     let mut guidance = WorkspaceGuidance {
         present: true,
         members: String::new(),
     };
-    let Some(projects) = collect_init_workspace_projects(
+    let Some((projects, absent)) = collect_init_workspace_projects(
         target,
         root_config,
         &run_root,
@@ -252,17 +267,17 @@ pub(crate) fn render_workspace_guidance_with_run_warnings(
         pending_project_description,
         &mut run_warnings,
     ) else {
-        return (guidance, run_warnings);
+        return (guidance, run_warnings, Vec::new());
     };
     // `collect_init_workspace_projects` already required `target` to canonicalize
     // before it returned `Some`, so this call cannot fail in practice; bail
     // out instead of falling back to a non-canonical path that would break
     // the `is_self` comparison below.
     let Ok(target_canonical) = canonical_path(target) else {
-        return (guidance, run_warnings);
+        return (guidance, run_warnings, Vec::new());
     };
     guidance.members = render_workspace_members(&target_canonical, &projects, citation_marker);
-    (guidance, run_warnings)
+    (guidance, run_warnings, absent)
 }
 
 /// The §FS-init.2.3.4.15 Workspace Members section of the block at

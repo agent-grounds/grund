@@ -58,9 +58,14 @@ that run judges the two workspace sections: a check inside a member, at a nested
 group's root, or in a checkout without one of the `optional_members` leaves them
 alone, and in the last case the absent member's warning says so
 ([§FS-check.3.5.5](../functional-spec/FS-check.md#355-the-workspace-sections-are-judged-at-the-outermost-root-of-a-full-checkout)).
-Refresh managed blocks from a full checkout: `grund init` in a checkout without
-an optional member drops that member from the lists it writes, and the full
-checkout's root `check` then reports every block it wrote.
+In such a checkout `grund init` draws the same line: it keeps each managed
+block's `### Workspace members` section exactly as it is, refreshes the rest of
+the block, and prints one note per absent member, so `grund init --check` there
+passes when that list is the only difference. A block written there for the
+first time lists only the members the checkout has, and the full checkout's root
+`check` reports it until `grund init` runs there. The member list itself changes
+only from a full checkout, whose root `check` names every block still waiting
+([§FS-init.2.3.4.15.8](../functional-spec/FS-init.md#234158-while-an-optional-member-is-absent)).
 
 An independently checked project's canonical root also bounds directory
 symlinks: outward directory targets are not scanned, including from inside a

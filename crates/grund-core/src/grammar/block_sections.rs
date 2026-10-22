@@ -12,7 +12,11 @@ pub(crate) const CITATION_SCHEME: &str = "citation scheme";
 
 /// The two sections only the outermost root of a full checkout compares
 /// (§FS-check.3.5.5), by their nouns.
-pub(crate) const WORKSPACE_SECTIONS: [&str; 2] = ["project namespaces", "workspace members"];
+pub(crate) const WORKSPACE_SECTIONS: [&str; 2] = ["project namespaces", WORKSPACE_MEMBERS];
+
+/// The noun of the member list, the one section `grund init` keeps while an
+/// optional member is absent (§FS-init.2.3.4.15.8).
+pub(crate) const WORKSPACE_MEMBERS: &str = "workspace members";
 
 /// One part of a managed block: the `###` heading line that opens it, empty for
 /// the citation scheme, and its bytes, the heading and its trailing blank lines

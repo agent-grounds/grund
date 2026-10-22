@@ -207,6 +207,8 @@ mod tests_local_section_citations;
 #[cfg(test)]
 mod tests_open_resolver;
 #[cfg(test)]
+mod tests_optional_member_absent;
+#[cfg(test)]
 mod tests_scoped_guidance;
 #[cfg(test)]
 mod tests_workspace_members;

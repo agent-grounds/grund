@@ -14,7 +14,9 @@ project boundary.
    root to refresh its workspace guidance. Every project's block lists the
    members, so the change makes the siblings' blocks stale too: run `grund check`
    at the root and `grund init` in every directory its findings name. Init does
-   not create the topology or initialize sibling members for you.
+   not create the topology or initialize sibling members for you. In a checkout
+   without one of the `optional_members`, `grund init` keeps each block's member
+   list as it is and says so, so run it from a full checkout to change the list.
 4. Keep local citations local. Across members, use `§alias/<ID>` (substitute your
    configured citation marker), with one alias segment per nesting level:
    `§group/member/<ID>` for a nested member.

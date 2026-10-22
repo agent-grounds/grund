@@ -7,4 +7,7 @@ exclude = [
   # Inline-spec stubs are resolved by grund from the repo root; Markdown link
   # checkers resolve them relative to the stub file.
   "docs/architecture/src/checker\\.rs$",
+  # The optional-member example is a checkout without packages/secret, whose
+  # managed blocks keep listing it (§FS-init.2.3.4.15.8): the link is the lesson.
+  "examples/workspace-optional-member/.*/packages/secret/AGENTS\\.md$",
 ]

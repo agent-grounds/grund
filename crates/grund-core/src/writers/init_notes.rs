@@ -1,12 +1,15 @@
 use std::path::{Path, PathBuf};
 
+use super::init_block::MembersSection;
 use super::init_plan::SelectedInitAgentEntrypoints;
+use crate::config::AbsentOptionalNamespace;
 use crate::model::format_list;
 use crate::scanner::{
     AgentEntrypoint, CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS,
     CanonicalSurfaceReach, CompanionAgentEntrypoint, is_file_or_symlink, is_symlink_to,
     path_missing_without_following_symlinks,
 };
+use crate::workspace::absent_optional_member_subject;
 
 /// The `note:` for a repository whose committed `link` opinion cannot reach
 /// Claude, because a Claude entrypoint is a symlink to the canonical file
@@ -25,13 +28,14 @@ use crate::scanner::{
 /// that has just run and can do no more would be a note that never retires.
 ///
 /// What this file holds: what one `grund init` run reports about the entrypoint
-/// layout it found (§FS-init.2.2.1) — the `note:` lines, which change nothing and
-/// never touch the exit code. Both are things a caller would otherwise have to
-/// notice for itself — an agent reading the same block twice, or reading the
-/// wrong form of it — and both are only visible from the run that just wrote to
-/// those files.
+/// layout it found, and about the member lists it kept (§FS-init.2.2.1) — the
+/// `note:` lines, which change nothing and never touch the exit code. Each is a
+/// thing a caller would otherwise have to notice for itself — an agent reading
+/// the same block twice, or reading the wrong form of it, or a list this
+/// checkout could not bring up to date — and each is only visible from the run
+/// that just wrote to those files.
 ///
-/// Both are also written in the conditional under `--dry-run` (§FS-init.2.2.1):
+/// Each is also written in the conditional under `--dry-run` (§FS-init.2.2.1):
 /// the run wrote nothing, so a note in the present tense describes a tree that
 /// does not exist, and an instruction that assumes the write already happened —
 /// "delete the symlink" — costs the reader the only entrypoint they have.
@@ -187,4 +191,55 @@ pub(super) fn duplicate_agent_entrypoint_notes(
         ));
     }
     notes
+}
+
+/// §FS-init.2.3.4.15.8: one `note:` per optional member absent from this run,
+/// ordered by namespace. It names the member as `check`'s warning does, then says
+/// for each root entrypoint the run reports (`members`, in report order) whether
+/// that entrypoint's `### Workspace members` section was kept as it was or written
+/// new without the member, the clauses joined by `; `. Under `--dry-run` and
+/// `--check` the clauses are conditional, like every note (§FS-init.2.2.1).
+///
+/// This is the blind spot's declaration: the list is the one part of the block
+/// this run did not bring up to date, and only a full checkout's root `check`
+/// judges it (§REQ-no-missed-citation.2). A run that reports no root entrypoint
+/// wrote no list, so it has nothing to say.
+pub(super) fn absent_optional_member_notes(
+    absent: &[AbsentOptionalNamespace],
+    members: &[(String, MembersSection)],
+    dry_run: bool,
+) -> Vec<String> {
+    if members.is_empty() {
+        return Vec::new();
+    }
+    let clauses = members
+        .iter()
+        .map(|(path, section)| match (section, dry_run) {
+            (MembersSection::Kept, false) => {
+                format!("{path} keeps its `### Workspace members` section as it was")
+            }
+            (MembersSection::Kept, true) => {
+                format!("{path} would keep its `### Workspace members` section as it is")
+            }
+            (MembersSection::New, false) => {
+                format!("{path}'s new `### Workspace members` section does not list it")
+            }
+            (MembersSection::New, true) => {
+                format!("{path}'s new `### Workspace members` section would not list it")
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("; ");
+    let mut absent: Vec<&AbsentOptionalNamespace> = absent.iter().collect();
+    absent.sort_by(|a, b| a.alias_path.cmp(&b.alias_path));
+    absent
+        .into_iter()
+        .map(|member| {
+            format!(
+                "{} (namespace `{}`) is absent, so {clauses}",
+                absent_optional_member_subject(&member.written),
+                member.alias_path
+            )
+        })
+        .collect()
 }

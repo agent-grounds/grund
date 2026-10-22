@@ -1,7 +1,7 @@
 //! Companion entrypoint writes and their partial failures (§FS-init.2.3.4.17.2,
 //! §FS-distribution.3.2.2.1).
-use super::init::{verb_appended, verb_updated, verb_wrote};
-use super::init_block::{AgentsUpdateResult, update_agents_block};
+use super::init::verb_wrote;
+use super::init_block::{AgentsUpdateResult, MembersSection, update_agents_block};
 use super::init_output::{InitError, InitEvent};
 use crate::model::format_path;
 use crate::scanner::InitCompanionAgentEntrypoint;
@@ -16,8 +16,13 @@ pub(super) struct CompanionWrite<'a, F> {
     pub claude_block: Option<&'a str>,
     pub add_chapter_rules: F,
     pub dry_run: bool,
+    /// §FS-init.2.3.4.15.8: an optional member is absent, so each existing block
+    /// keeps its own member list.
+    pub keep_members: bool,
     pub diagnostic: &'a mut Option<anyhow::Error>,
     pub events: &'a mut Vec<InitEvent>,
+    /// What each companion did with its member list, in report order.
+    pub members: &'a mut Vec<(String, MembersSection)>,
     pub workflow_entrypoint: &'a mut Option<String>,
     pub any_change: &'a mut bool,
 }
@@ -32,8 +37,10 @@ where
         claude_block,
         add_chapter_rules,
         dry_run,
+        keep_members,
         diagnostic,
         events,
+        members,
         workflow_entrypoint,
         any_change,
     } = args;
@@ -56,25 +63,13 @@ where
         }
         match entrypoint {
             InitCompanionAgentEntrypoint::Existing(path) => {
-                match update_agents_block(&path, &entrypoint_block, &rel, dry_run) {
-                    Ok(AgentsUpdateResult::Appended) => {
-                        events.push(InitEvent {
-                            verb: verb_appended(dry_run),
-                            path: rel,
-                        });
-                        *any_change = true;
+                match update_agents_block(&path, &entrypoint_block, &rel, dry_run, keep_members) {
+                    Ok((result, section)) => {
+                        members.push((rel.clone(), section));
+                        *any_change |= result != AgentsUpdateResult::Unchanged;
+                        let verb = result.verb(dry_run);
+                        events.push(InitEvent { verb, path: rel });
                     }
-                    Ok(AgentsUpdateResult::Updated) => {
-                        events.push(InitEvent {
-                            verb: verb_updated(dry_run),
-                            path: rel,
-                        });
-                        *any_change = true;
-                    }
-                    Ok(AgentsUpdateResult::Unchanged) => events.push(InitEvent {
-                        verb: "exists",
-                        path: rel,
-                    }),
                     Err(err) => {
                         let (source, message) = update_failure(&path, &err);
                         *diagnostic = Some(source);
@@ -116,6 +111,7 @@ where
                         format!("write {}: {err}", path.display()),
                     ));
                 }
+                members.push((rel.clone(), MembersSection::New));
                 events.push(InitEvent {
                     verb: verb_wrote(dry_run),
                     path: rel,

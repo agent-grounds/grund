@@ -10,8 +10,8 @@ use std::path::{Path, PathBuf};
 use anyhow::anyhow;
 
 use super::guidance::Guidance;
-use super::init::{verb_appended, verb_updated, verb_wrote};
-use super::init_block::{AgentsUpdateResult, update_agents_block, update_agents_text};
+use super::init::{verb_updated, verb_wrote};
+use super::init_block::{update_agents_block, update_agents_text};
 use super::init_output::InitEvent;
 use super::scoped_files::{
     OrphanFile, OwnedCompanion, ScopedRecord, orphan_files, owned_companions,
@@ -220,12 +220,10 @@ fn splice(
     rel: &str,
     dry_run: bool,
 ) -> Result<&'static str, (PathBuf, anyhow::Error)> {
-    match update_agents_block(path, block, rel, dry_run) {
-        Ok(AgentsUpdateResult::Appended) => Ok(verb_appended(dry_run)),
-        Ok(AgentsUpdateResult::Updated) => Ok(verb_updated(dry_run)),
-        Ok(AgentsUpdateResult::Unchanged) => Ok("exists"),
-        Err(err) => Err((path.to_path_buf(), err)),
-    }
+    // A scoped file carries no member list to keep (§FS-init.2.3.4.15.8).
+    update_agents_block(path, block, rel, dry_run, false)
+        .map(|(result, _)| result.verb(dry_run))
+        .map_err(|err| (path.to_path_buf(), err))
 }
 
 /// The report verb for an orphan's file: removed when it was deleted, updated
