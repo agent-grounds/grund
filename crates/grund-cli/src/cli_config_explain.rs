@@ -299,6 +299,10 @@ fn explain_unknown(version: u32, unknown: &ExplainUnknown) -> String {
             "version {version} `{table}` has no key `{key}` (expected one of: {})",
             admitted.join(", ")
         ),
+        ExplainUnknown::Bracketed { target, spelling, key } => format!(
+            "version {version} has no top-level key or check code `{target}`; for the {}, ask grund config explain '{spelling}'",
+            if *key { "key" } else { "table" }
+        ),
         ExplainUnknown::Other { target } => format!(
             "version {version} knows no table, key or check code `{target}`; grund config explain lists the tables, grund config explain --codes the codes"
         ),

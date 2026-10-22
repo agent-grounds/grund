@@ -64,7 +64,6 @@ fn assert_refused(project: &Project, target: &str, line: &str) {
 /// §FS-config-explain.5: a dotted path to a table or a key names the bracketed
 /// spelling, in version 2 and in version 1, and is still not answered.
 #[test]
-#[ignore = "red until #904 names the bracketed spelling for a dotted path; implement removes this"]
 fn a_dotted_path_is_refused_with_its_bracketed_spelling() {
     let v2 = Project::new(2);
     assert_refused(
@@ -108,7 +107,6 @@ fn a_bare_leaf_keeps_the_catch_all() {
 /// §FS-config-explain.1.1: the help page's explain examples include a target
 /// answered as a table and one answered as a key of a table.
 #[test]
-#[ignore = "red until #904 adds a table and a key explain example to grund config --help; implement removes this"]
 fn the_help_shows_a_table_and_a_key_example_that_answer() {
     let v2 = Project::new(2);
     let help = run(&v2.0, &["config", "--help"]);

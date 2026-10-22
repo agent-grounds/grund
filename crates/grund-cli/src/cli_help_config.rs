@@ -72,6 +72,12 @@ fn print_config_help() {
     println!(
         "  grund config explain oversized-lead   # what a check code means, its severity and what turns it on"
     );
+    println!(
+        "  grund config explain '[schema.sources]'           # a table: its keys, bracketed as in the file"
+    );
+    println!(
+        "  grund config explain '[schema.sources] exclude'   # one key of a table, after its bracketed header"
+    );
     println!("  grund config migrate --to 2     # the version-2 file, previewed; nothing written");
     // §FS-config-migrate.6.5: the ordinary apply step reports only its outcome and follow-up.
     println!("  grund config migrate --to 2 --write   # compact report on stderr; stdout is empty");

@@ -31,9 +31,9 @@ pub(super) fn resolve<'a>(
         }
         return match Code::named(asked) {
             Some(code) => Resolved::Code(code),
-            None => Resolved::Unknown(ExplainUnknown::Other {
+            None => Resolved::Unknown(dotted(tables, asked).unwrap_or(ExplainUnknown::Other {
                 target: asked.to_string(),
-            }),
+            })),
         };
     };
     let Some(at) = find_table(tables, header) else {
@@ -50,6 +50,31 @@ pub(super) fn resolve<'a>(
             admitted: written_keys(&tables[at].1),
         }),
     }
+}
+
+/// §FS-config-explain.5: `asked` read as a dotted TOML key, the bracketed
+/// spelling that answers it: the longest leading run of its segments that
+/// spells an admitted table is the table, and the rest is a key of it.
+fn dotted(tables: &[(String, Vec<String>)], asked: &str) -> Option<ExplainUnknown> {
+    let segments: Vec<&str> = asked.split('.').collect();
+    let (header, at, rest) = (1..=segments.len()).rev().find_map(|run| {
+        let path = segments[..run].join(".");
+        [format!("[{path}]"), format!("[[{path}]]")]
+            .into_iter()
+            .find_map(|header| find_table(tables, &header).map(|at| (header, at)))
+            .map(|(header, at)| (header, at, segments[run..].join(".")))
+    })?;
+    let spelling = if rest.is_empty() {
+        header
+    } else {
+        find_key(&tables[at].1, &rest)?;
+        format!("{header} {rest}")
+    };
+    Some(ExplainUnknown::Bracketed {
+        target: asked.to_string(),
+        spelling,
+        key: !rest.is_empty(),
+    })
 }
 
 /// §FS-config-explain.5: the keys a table's reader admits under its header, as

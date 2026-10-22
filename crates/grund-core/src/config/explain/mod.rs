@@ -137,6 +137,13 @@ pub enum ExplainUnknown {
         key: String,
         admitted: Vec<String>,
     },
+    /// A dotted path to a table, or a key of one when `key`, and the
+    /// bracketed spelling that answers it, without shell quotes.
+    Bracketed {
+        target: String,
+        spelling: String,
+        key: bool,
+    },
     /// Anything else, a misspelt or a planned code included.
     Other { target: String },
 }
