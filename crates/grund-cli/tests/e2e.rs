@@ -5,6 +5,8 @@ use std::time::Instant;
 
 #[path = "support/case_runner.rs"]
 mod case_runner;
+#[path = "../../../tests/integration/ordered_pool.rs"]
+mod ordered_pool;
 
 // §FS-init.2.3.5.10: the generated chapter rules survive a whole init/fmt cycle.
 #[path = "support/chapter_rule_workflow.rs"]
@@ -387,10 +389,11 @@ fn a_fenced_heading_in_a_doc_comment_is_not_a_section() {
 fn e2e_output_is_deterministic() {
     let started = Instant::now();
     let manifest_dir = repo_root();
-    let outcomes = discover_e2e_cases(&manifest_dir)
-        .iter()
-        .map(|case| assert_case_is_deterministic(&manifest_dir, case))
-        .collect::<Vec<_>>();
+    // §REQ-deterministic-output.1, §REQ-one-answer.proof.delivery.payment: the cases
+    // overlap, each one's two runs stay one pair on one worker, outcomes in corpus order.
+    let outcomes = ordered_pool::in_order(&discover_e2e_cases(&manifest_dir), |case| {
+        assert_case_is_deterministic(&manifest_dir, case)
+    });
     let compared = outcomes
         .iter()
         .filter(|outcome| matches!(outcome, CaseOutcome::Ran | CaseOutcome::Failed { .. }))
@@ -398,7 +401,8 @@ fn e2e_output_is_deterministic() {
     // §AR-ci.requirements.5.1: past libtest's capture, the seconds this sweep costs.
     let _ = writeln!(
         std::io::stderr(),
-        "gate time: e2e determinism {compared} case(s) on 1 worker in {:.1}s",
+        "gate time: e2e determinism {compared} case(s) on {} worker(s) in {:.1}s",
+        ordered_pool::workers(),
         started.elapsed().as_secs_f64()
     );
     assert_every_case_passed("e2e determinism", &outcomes);
