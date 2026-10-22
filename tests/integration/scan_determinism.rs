@@ -10,12 +10,15 @@
 mod binaries;
 #[path = "corpus.rs"]
 mod corpus;
+#[path = "ordered_pool.rs"]
+mod ordered_pool;
 
 use std::io::Write;
 use std::path::Path;
 use std::process::Command;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Instant;
+
+use ordered_pool::{in_order, workers};
 
 const THREADS: &[&str] = &["1", "8"];
 const REPO_COMMANDS: &[&[&str]] = &[
@@ -83,49 +86,6 @@ fn differences(grund: &Path, cwd: &Path, args: &[&str]) -> Option<String> {
         })
 }
 
-fn workers() -> usize {
-    std::thread::available_parallelism().map_or(1, |n| n.get())
-}
-
-/// `work` over every item on every CPU libtest may use, results in item order
-/// (§REQ-one-answer.proof.delivery.payment): a fixture's one-thread run and its
-/// eight-thread rerun stay one pair on one worker, only different fixtures overlap, and
-/// every comparison and message is the serial sweep's (§REQ-deterministic-output.1).
-fn in_order<T: Sync, R: Send>(items: &[T], work: impl Fn(&T) -> R + Sync) -> Vec<R> {
-    let next = AtomicUsize::new(0);
-    let mut results: Vec<Option<R>> = items.iter().map(|_| None).collect();
-    std::thread::scope(|scope| {
-        let handles: Vec<_> = (0..workers().clamp(1, items.len().max(1)))
-            .map(|_| {
-                scope.spawn(|| {
-                    let mut done = Vec::new();
-                    loop {
-                        let index = next.fetch_add(1, Ordering::Relaxed);
-                        let Some(item) = items.get(index) else {
-                            return done;
-                        };
-                        done.push((index, work(item)));
-                    }
-                })
-            })
-            .collect();
-        for handle in handles {
-            match handle.join() {
-                Ok(done) => {
-                    for (index, result) in done {
-                        results[index] = Some(result);
-                    }
-                }
-                Err(panic) => std::panic::resume_unwind(panic),
-            }
-        }
-    });
-    results
-        .into_iter()
-        .map(|result| result.expect("every item ran"))
-        .collect()
-}
-
 #[test]
 fn every_report_is_byte_identical_at_one_thread_and_at_eight() {
     let started = Instant::now();
@@ -137,6 +97,7 @@ fn every_report_is_byte_identical_at_one_thread_and_at_eight() {
             .flatten()
             .collect();
     let selection = corpus::plain_check_cases(&repo);
+    // A fixture's one-thread run and its eight-thread rerun stay one pair on one worker.
     let per_case = in_order(&selection.cases, |case| {
         let baseline = run(
             &grund,

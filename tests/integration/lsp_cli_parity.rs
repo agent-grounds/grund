@@ -26,6 +26,8 @@
 mod binaries;
 #[path = "corpus.rs"]
 mod corpus;
+#[path = "ordered_pool.rs"]
+mod ordered_pool;
 #[path = "../../crates/grund-lsp/tests/support/mod.rs"]
 mod support;
 
@@ -275,16 +277,22 @@ fn lsp_diagnostics_are_the_cli_findings_for_every_plain_check_case() {
         other_commands,
         no_config,
     } = corpus::plain_check_cases(&repo);
+    // §FS-lsp.4, §REQ-one-answer.proof.delivery.payment: the cases overlap, each one's CLI
+    // run and its server stay on one worker, and what they found is read in corpus order.
+    let per_case = ordered_pool::in_order(&cases, |case| {
+        let (cli, cli_run_warnings) = cli_findings(&grund, &case.root)?;
+        let (lsp, lsp_run_warnings) = lsp_findings(&case.root);
+        Some((cli, cli_run_warnings, lsp, lsp_run_warnings))
+    });
     let mut compared = 0;
     let mut refused = Vec::new();
     let mut mismatches = Vec::new();
     let mut run_warning_cases = 0;
-    for case in &cases {
-        let Some((cli, cli_run_warnings)) = cli_findings(&grund, &case.root) else {
+    for (case, found) in cases.iter().zip(per_case) {
+        let Some((cli, cli_run_warnings, lsp, lsp_run_warnings)) = found else {
             refused.push(case.name.clone());
             continue;
         };
-        let (lsp, lsp_run_warnings) = lsp_findings(&case.root);
         compared += 1;
         if cli != lsp {
             let only_cli = cli.difference(&lsp).collect::<Vec<_>>();
@@ -323,7 +331,8 @@ fn lsp_diagnostics_are_the_cli_findings_for_every_plain_check_case() {
     // §AR-ci.requirements.5.1: past libtest's capture, the seconds this sweep costs.
     let _ = writeln!(
         std::io::stderr(),
-        "gate time: lsp/cli parity {compared} plain-check case(s) on 1 worker in {:.1}s",
+        "gate time: lsp/cli parity {compared} plain-check case(s) on {} worker(s) in {:.1}s",
+        ordered_pool::workers(),
         started.elapsed().as_secs_f64()
     );
     assert!(
