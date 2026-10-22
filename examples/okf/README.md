@@ -23,8 +23,9 @@ The bundle stays an OKF bundle, and grund holds it to more than OKF does.
 The fixture is the income statement of OKF's Appendix A: a metric that narrates
 two figures, an attested computation for each, the policies and the table they
 answer to, the executor that runs them, and the attester that checks a run. The
-example pins two runs over the same fixture ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)): the schema, and
-the check. Neither writes anything.
+example pins four runs ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)): the schema, the check, the check refusing
+three edits OKF accepts, and OKF's own conformance over both bundles. None of
+them writes anything.
 
 ## The bundle
 
@@ -142,13 +143,94 @@ echo $?    # 0
 success
 ```
 
-The same tree is a conformant OKF v0.2 bundle (OKF 11). Every concept opens
-with frontmatter carrying a non-empty `type`. No `index.md` carries frontmatter
-except the root's `okf_version`. `log.md` groups its entries under
-`YYYY-MM-DD` headings. Its trust and lifecycle families reach the two verdicts
-the appendix designed: `COMP-revenue` is human-reviewed and fresh, while
-`COMP-profit` is only machine-confirmed and past its `stale_after`. Those come
-from frontmatter, which grund leaves to OKF.
+The same tree is also a conformant OKF v0.2 bundle, which step 4 checks. Its
+trust and lifecycle families reach the two verdicts the appendix designed:
+`COMP-revenue` is human-reviewed and fresh, while `COMP-profit` is only
+machine-confirmed and past its `stale_after`. Those come from frontmatter,
+which grund leaves to OKF.
+
+## Step 3: three edits grund refuses
+
+`3-break/repo` is `2-check/repo` with three edits an agent plausibly makes, and
+`diff -ru examples/okf/2-check/repo examples/okf/3-break/repo` shows them. Each
+one leaves a conformant OKF bundle (step 4):
+
+1. In `finance/computations/revenue.md`, the line `## computation: Computation`
+   is gone, so the SQL is part of the lead.
+2. `finance/policies/cost-allocation.md` ends with the back-link list OKF's
+   sample bundles give their policies:
+
+   ```markdown
+   ## 3. Cited by
+
+   - §COMP-profit computes gross profit under this standard.
+   ```
+
+3. `finance/tables/orders.md` is new, with OKF's bare heading and no index
+   entry:
+
+   ```markdown
+   ---
+   type: BigQuery Table
+   ---
+
+   # TBL-orders: Orders
+
+   One row per order.
+
+   ## Schema
+
+   | Column | Type |
+   |---|---|
+   | `order_id` | STRING |
+   ```
+
+`grund check` refuses all three:
+
+```bash
+grund check examples/okf/3-break/repo
+echo $?    # 1
+```
+
+```text
+finance/computations/revenue.md:33: error: COMP-revenue has no computation field; kind COMP declares it
+finance/policies/cost-allocation.md:31: error: POL must not cite COMP (citation direction) — re-point the citation or downgrade it to a plain Markdown link
+finance/tables/orders.md:5: error: TBL-orders has no schema field; kind TBL declares it
+finance/tables/orders.md:5: error: TBL-orders is not listed in finance/tables/index.md: an entry is a `§`-marked Markdown link to the declaration; write `[§TBL-orders](orders.md#tbl-orders-orders)` in finance/tables/index.md — became an error in grund 0.13.0
+finance/tables/orders.md:9: error: unmarked heading inside TBL-orders; number it (## 1. Schema) as TBL-orders.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
+finance/tables/orders.md:5: warning: declared but never cited: TBL-orders
+```
+
+The repair for the table is the field's form, `## schema: Schema`, plus the
+index entry the finding writes out. Numbering the heading would leave the field
+missing.
+
+## Step 4: both bundles are still OKF bundles
+
+```bash
+python3 examples/okf/okf_conformance.py examples/okf/2-check/repo/finance examples/okf/3-break/repo/finance
+echo $?    # 0
+```
+
+```text
+examples/okf/2-check/repo/finance: conformant to OKF v0.2 (7 concepts, 7 index files, 1 log)
+examples/okf/3-break/repo/finance: conformant to OKF v0.2 (8 concepts, 7 index files, 1 log)
+```
+
+[`okf_conformance.py`](okf_conformance.py) holds a bundle to OKF's
+conformance section (OKF 11) and to nothing more. Every concept must open with
+frontmatter carrying a non-empty `type`. No `index.md` may carry frontmatter
+except the root's `okf_version`, and each lists its entries under a heading.
+`log.md` must group its entries under `YYYY-MM-DD` headings, newest first. The
+script prints each problem as `path:line: message` and exits 1. It uses
+Python's standard library alone, so it reads frontmatter as top-level
+`key: value` lines rather than parsing it as YAML.
+
+Both bundles pass, and that is the point: OKF accepts the broken bundle as
+readily as the clean one, and grund is what tells them apart. Run the script on
+your own bundle to check that a grund schema has not cost it conformance. An
+`AGENTS.md` that `grund init` wrote inside the bundle, for example, is reported
+as a concept with no frontmatter.
 
 ## Writing a concept
 
@@ -172,61 +254,6 @@ Before the first `grund init`, keep `[presentation] rules = "root"`
 ([§FS-config-v2.presentation](../../docs/functional-spec/FS-config-v2.md#presentation-the-presentation-concern)). The default, `"home"`, writes an `AGENTS.md`
 into each kind's folder, which puts six concepts without frontmatter inside the
 bundle. With `"root"`, the one `AGENTS.md` sits beside `grund.toml`.
-
-## Break it
-
-Copy the fixture somewhere writable and make three edits an agent plausibly
-makes. Every one leaves a conformant OKF bundle, and `grund check` refuses all
-three:
-
-```bash
-demo_root=$(mktemp -d)
-cp -R examples/okf/2-check/repo/. "$demo_root/"
-cd "$demo_root"
-```
-
-1. In `finance/computations/revenue.md`, delete the line
-   `## computation: Computation`, so the SQL becomes part of the lead.
-2. Append the back-link list OKF's sample bundles give their policies to
-   `finance/policies/cost-allocation.md`:
-
-   ```markdown
-   ## 3. Cited by
-
-   - §COMP-profit computes gross profit under this standard.
-   ```
-
-3. Add `finance/tables/orders.md`, using OKF's bare heading and no index entry:
-
-   ```markdown
-   ---
-   type: BigQuery Table
-   ---
-
-   # TBL-orders: Orders
-
-   One row per order.
-
-   ## Schema
-
-   | Column | Type |
-   |---|---|
-   | `order_id` | STRING |
-   ```
-
-```console
-$ grund check
-finance/computations/revenue.md:33: error: COMP-revenue has no computation field; kind COMP declares it
-finance/policies/cost-allocation.md:31: error: POL must not cite COMP (citation direction) — re-point the citation or downgrade it to a plain Markdown link
-finance/tables/orders.md:5: error: TBL-orders has no schema field; kind TBL declares it
-finance/tables/orders.md:5: error: TBL-orders is not listed in finance/tables/index.md: an entry is a `§`-marked Markdown link to the declaration; write `[§TBL-orders](orders.md#tbl-orders-orders)` in finance/tables/index.md — became an error in grund 0.13.0
-finance/tables/orders.md:9: error: unmarked heading inside TBL-orders; number it (## 1. Schema) as TBL-orders.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
-finance/tables/orders.md:5: warning: declared but never cited: TBL-orders
-```
-
-The repair for the table is the field's form, `## schema: Schema`, plus the
-index entry the finding writes out. Numbering the heading would leave the field
-missing.
 
 ## Trade-offs
 
