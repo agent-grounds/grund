@@ -12,19 +12,41 @@ use crate::workspace::{
 };
 
 /// One resolved workspace project — the alias, canonical root, and optional
-/// one-line description — collected by [`collect_init_workspace_projects`] so the
-/// workspace-members renderer never has to talk to the config layer directly
-/// (§FS-init.2.3.4.15, §DF-workspace-member-descriptions).
+/// one-line description — collected by [`collect_init_workspace_projects`] for
+/// `init`, or by [`listed_projects`] from the projects `check` already loaded,
+/// so the workspace-members renderer never has to talk to the config layer
+/// directly (§FS-init.2.3.4.15, §DF-workspace-member-descriptions).
 ///
 /// What this file holds: the workspace half of the `init` renderer
 /// (§FS-init.2.3.4.15), in a file of its own beside `init_render.rs`
-/// (§AR-core-module-layout.1) — finding the workspace a target sits in, and
-/// rendering the member list the managed block carries. `templates/agents_block.rs`
-/// keeps the fixed project-boundary fragment (§FS-init.2.3.4.16).
-struct InitWorkspaceProject {
+/// (§AR-core-module-layout.1), in two halves. One finds the workspace a target
+/// sits in and expands it, which only `init` does; the other renders one
+/// target's member list from a project list, which `init` and the outermost
+/// root's `check` share (§FS-check.3.5.5). `templates/agents_block.rs` keeps the
+/// fixed project-boundary fragment (§FS-init.2.3.4.16).
+pub(crate) struct ListedProject {
     alias: String,
     project_root: PathBuf,
     description: Option<String>,
+}
+
+/// §FS-check.3.5.5: the project list a run at the outermost root of a full
+/// checkout renders every block's workspace sections from — the `(alias, root,
+/// description)` of each project it loaded, its root made canonical as the
+/// expansion `init` walks makes it, in alias order.
+pub(crate) fn listed_projects(
+    projects: impl IntoIterator<Item = (String, PathBuf, Option<String>)>,
+) -> Vec<ListedProject> {
+    let mut listed: Vec<ListedProject> = projects
+        .into_iter()
+        .map(|(alias, root, description)| ListedProject {
+            alias,
+            project_root: canonical_path(&root).unwrap_or(root),
+            description,
+        })
+        .collect();
+    listed.sort_by(|a, b| a.alias.cmp(&b.alias));
+    listed
 }
 
 /// Expand the discovered workspace separately from its presence (§FS-init.2.3.4.16)
@@ -52,7 +74,7 @@ fn collect_init_workspace_projects(
     pending_project_name: Option<&str>,
     pending_project_description: Option<&str>,
     run_warnings: &mut Vec<Finding>,
-) -> Option<Vec<InitWorkspaceProject>> {
+) -> Option<Vec<ListedProject>> {
     // §FS-init.2.3.4.16: boundary expansion suppresses only members, not discovery.
     // §FS-check.3.29: ask the climbed block about its scan before expansion asks
     // the remaining blocks, once per block per run.
@@ -95,7 +117,7 @@ fn collect_init_workspace_projects(
                 description = Some(pending.to_string());
             }
         }
-        projects.push(InitWorkspaceProject {
+        projects.push(ListedProject {
             alias,
             project_root: entry.config.root,
             description,
@@ -239,19 +261,33 @@ pub(crate) fn render_workspace_guidance_with_run_warnings(
     let Ok(target_canonical) = canonical_path(target) else {
         return (guidance, run_warnings);
     };
+    guidance.members = render_workspace_members(&target_canonical, &projects, citation_marker);
+    (guidance, run_warnings)
+}
+
+/// The §FS-init.2.3.4.15 Workspace Members section of the block at
+/// `target_canonical`, from a project list already expanded: the half `init` and
+/// the outermost root's `check` share, so both render one answer
+/// (§FS-check.3.5.5). The leading `\n\n` is the separator from the preceding
+/// namespace guidance block.
+pub(crate) fn render_workspace_members(
+    target_canonical: &Path,
+    projects: &[ListedProject],
+    citation_marker: &str,
+) -> String {
     let mut bullets = Vec::with_capacity(projects.len());
-    for project in &projects {
+    for project in projects {
         // §FS-init.2.3.4.15.4: the canonical init target is the local namespace,
         // so this cross-project list contains only foreign projects.
-        if project.project_root == target_canonical {
+        if project.project_root.as_path() == target_canonical {
             continue;
         }
         let agents_md_path = project.project_root.join("AGENTS.md");
         let initialized = path_exists(&agents_md_path);
         let link = if initialized {
-            relative_link_path(&target_canonical, &agents_md_path)
+            relative_link_path(target_canonical, &agents_md_path)
         } else {
-            let dir_rel = relative_link_path(&target_canonical, &project.project_root);
+            let dir_rel = relative_link_path(target_canonical, &project.project_root);
             if dir_rel == "." {
                 "./".to_string()
             } else {
@@ -281,8 +317,7 @@ pub(crate) fn render_workspace_guidance_with_run_warnings(
         "\n\n### Workspace members\n\nCross-project citations use {citation_marker}alias/<ID>.\n\n",
     );
     out.push_str(&bullets.join("\n"));
-    guidance.members = out;
-    (guidance, run_warnings)
+    out
 }
 
 /// Compute a relative POSIX-style path from `from_dir` to `to`. Both inputs

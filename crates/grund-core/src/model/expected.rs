@@ -22,6 +22,10 @@ pub struct Expected {
     /// The companion probe's io error, kept as data so the check reports it
     /// where it reported it before (§FS-check.3.5).
     pub entrypoint_probe_error: Option<(PathBuf, String)>,
+    /// Whether the two workspace sections are compared: only at the outermost
+    /// root of a full checkout, and elsewhere the mark that leaves them out of
+    /// both sides (§FS-check.3.5.5).
+    pub workspace_sections: bool,
     /// `fmt`'s bare-ID link destination keyed by (index file, ID), for each ID
     /// the index cites and each declaration its folders own (§FS-check.3.18.3,
     /// §FS-check.3.18.5.2, §DF-index-entry-form.2.7).
@@ -32,9 +36,10 @@ pub struct Expected {
     pub non_units: BTreeSet<PathBuf>,
 }
 
-/// §AR-checker.1.3: one entrypoint and the config-derived sections its managed
-/// block should carry, each rendered for this file's conversation surface
-/// (§FS-init.2.3.6.1).
+/// §AR-checker.1.3: one entrypoint and the sections its managed block should
+/// carry, each rendered for this file's conversation surface (§FS-init.2.3.6.1):
+/// a root entrypoint's whole block, cut into the parts a stale finding names
+/// (§FS-check.3.5.3, §FS-check.3.5.4), and a scoped one's generated sections.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ExpectedEntrypoint {
     pub path: PathBuf,
@@ -44,7 +49,7 @@ pub struct ExpectedEntrypoint {
     /// What the file's whole managed block should be, for a scoped entrypoint
     /// (§FS-init.2.3.5.12): the block of a destination of the live render, or
     /// `None` for an orphan the list on disk names (§FS-init.2.3.5.13.1). Root
-    /// entrypoints are held to their sections alone.
+    /// entrypoints are held to their sections, which cover the whole block.
     pub scoped: Option<ScopedExpectation>,
 }
 
@@ -57,11 +62,21 @@ pub enum ScopedExpectation {
     Orphan,
 }
 
-/// One generated `###` section: its heading, the noun a drift message names it
-/// by, and the bytes `grund init` would write (§FS-check.3.5).
+/// One section of a managed block: its heading, the noun a drift message names
+/// it by, and the bytes `grund init` would write (§FS-check.3.5.3).
 #[derive(Clone, Debug, PartialEq)]
 pub struct ExpectedSection {
-    pub heading: &'static str,
-    pub noun: &'static str,
+    pub heading: String,
+    pub noun: String,
     pub bytes: String,
 }
+
+/// The five generated sections, by their nouns: the ones `config migrate`'s
+/// guidance gate refuses a change to (§FS-config-migrate.5.3).
+pub(crate) const GENERATED_SECTIONS: [&str; 5] = [
+    "citation directions",
+    "clickable citations",
+    "chapter rules",
+    "declaration shapes",
+    "scoped guidance",
+];

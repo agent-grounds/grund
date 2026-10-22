@@ -540,6 +540,7 @@ fn merge(mut conformed: CheckReport, mut judged: CheckReport) -> CheckReport {
         warnings: merge_channel(conformed.warnings, judged.warnings),
         suggestions: merge_channel(conformed.suggestions, judged.suggestions),
         armed: conformed.armed,
+        verified_blocks: conformed.verified_blocks || judged.verified_blocks,
     }
 }
 

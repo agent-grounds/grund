@@ -75,6 +75,8 @@ How a citation is written, and the project-wide grounding and inline-note defaul
 | `inline_note_layout_check` | `"off"` \| `"warn"` \| `"error"` | `"off"` | How a note that breaks `inline_note_layout` is reported. [§FS-config.3.1.9](../functional-spec/FS-config.md#319-inline_note_layout-and-inline_note_layout_check) |
 | `warn_on_suggested` | boolean | `false` | Report notes past `inline_note_suggested_lines` as warnings rather than suggestions. [§FS-config.3.1.8](../functional-spec/FS-config.md#318-inline_style-and-the-note-budgets) |
 
+`inline_style`, the note budgets and `inline_note_layout` are rendered into the managed block's `rules` section, so after changing one `grund check` reports the block stale until `grund init` runs ([§FS-inline-citation-style.5.5](../functional-spec/FS-inline-citation-style.md#55-rendered-not-live)).
+
 ### `[id]`
 
 The ID grammar: the shape of every declared ID and section path. [§FS-config.3.2](../functional-spec/FS-config.md#32-id--id-grammar)
@@ -279,6 +281,8 @@ Where the citation sits inside a note; write one strength only. [§FS-config-v2.
 | `warn` | `"any"` \| `"citation-first-colon"` | — | The required layout; a deviation is a warning. [§FS-config-v2.schema.measures](../functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys) |
 | `should` | `"any"` \| `"citation-first-colon"` | — | The required layout; a deviation is a suggestion. [§FS-config-v2.schema.measures](../functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys) |
 | `may` | `"any"` \| `"citation-first-colon"` | — | The layout, unchecked. [§FS-config-v2.schema.measures](../functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys) |
+
+Every `[schema.notes]` table is rendered into the managed block's `rules` section, so after a change to one `grund check` reports the block stale until `grund init` runs ([§FS-inline-citation-style.5.5](../functional-spec/FS-inline-citation-style.md#55-rendered-not-live)).
 
 ### `[schema.leads.words]`
 

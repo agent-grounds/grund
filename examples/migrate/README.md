@@ -50,7 +50,7 @@ comments with no single key to follow (--write refuses; --drop-comments drops ex
 changed: grund.toml:30: [scan] exclude: value vocabulary translated to [schema.sources] exclude; check the carried comment
 …
 compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after
-note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check does not compare that table
+note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check reports the block stale until then
 ```
 
 The `compared:` line is the two checks every write must pass: the records both files lower into are equal, and `grund check` on this tree gives the same findings with either ([§FS-config-migrate.5](../../docs/functional-spec/FS-config-migrate.md#5-equivalence-two-gates)). It still exits 1, because `--write` would refuse while the listed comment would be lost.
@@ -74,7 +74,7 @@ Stdout is empty. The complete compact report on stderr is:
 wrote grund.toml: version 1 (35 lines) replaced by version 2
 dropped the comments at grund.toml:28 (version 1 lines)
 changed: grund.toml:30: [scan] exclude: value vocabulary translated to [schema.sources] exclude; check the carried comment
-note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check does not compare that table
+note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check reports the block stale until then
 to get version 1 back: it is in version control, e.g. git restore grund.toml
 to see this candidate again: restore version 1 and run grund config migrate --to 2
 note: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them

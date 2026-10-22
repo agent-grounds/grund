@@ -128,10 +128,11 @@ pub use init_plan::InitAgentEntrypointSelection;
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
 pub(crate) use atomic_install::{Install, InstallFailure, atomic_install};
-pub(crate) use expected::expected;
+pub(crate) use expected::{WorkspaceBlocks, expected};
 pub(crate) use fmt_tree::{FmtRunOpts, auto_cross_refs_for_scope, fmt_tree};
 pub(crate) use fmt_workspace::fmt_workspace_projects;
 pub(crate) use id::{format_id, slugify_title};
+pub(crate) use init_workspace_members::{ListedProject, listed_projects};
 
 // `grund integrations` as one operation (§FS-distribution.3.1.3): its closed
 // vocabularies, options, answer and refusal, public because the CLI renders the

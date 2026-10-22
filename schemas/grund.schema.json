@@ -238,7 +238,8 @@
               }
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "x-grund-note": "`inline_style`, the note budgets and `inline_note_layout` are rendered into the managed block's `rules` section, so after changing one `grund check` reports the block stale until `grund init` runs ([§FS-inline-citation-style.5.5](../functional-spec/FS-inline-citation-style.md#55-rendered-not-live))."
         },
         "id": {
           "type": "object",
@@ -1342,7 +1343,8 @@
                       }
                     }
                   },
-                  "additionalProperties": false
+                  "additionalProperties": false,
+                  "x-grund-note": "Every `[schema.notes]` table is rendered into the managed block's `rules` section, so after a change to one `grund check` reports the block stale until `grund init` runs ([§FS-inline-citation-style.5.5](../functional-spec/FS-inline-citation-style.md#55-rendered-not-live))."
                 }
               },
               "additionalProperties": false

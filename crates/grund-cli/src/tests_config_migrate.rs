@@ -12,7 +12,7 @@ const MAPPINGS: &str = "mapped: grund.toml:1: grund_config_version → grund_con
 const DEFAULTS: &str = "written: [schema.notes.lines] may = 1: version 1's default, written out\nwritten: [presentation] rules = \"root\": version 1's default, written out\n";
 const MEMBERS: &str = "member: api/grund.toml is version 1; migrate it with grund config migrate --to 2 api\nmember: web/grund.toml is version 1; migrate it with grund config migrate --to 2 web\n";
 const EQUAL: &str = "compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after\n";
-const PROJECT_MAP: &str = "note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check does not compare that table\n";
+const PROJECT_MAP: &str = "note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check reports the block stale until then\n";
 const OUTCOME: &str = "wrote grund.toml: version 1 (24 lines) replaced by version 2\n";
 const DROPS: &str = "dropped the comments at grund.toml:6-7, grund.toml:12 and grund.toml:22-23 (version 1 lines)\n";
 const ADVICE: &str = "to get version 1 back: it is in version control, e.g. git restore grund.toml\nto see this candidate again: restore version 1 and run grund config migrate --to 2\nnote: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them\n";

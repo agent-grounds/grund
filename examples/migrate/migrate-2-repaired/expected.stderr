@@ -24,4 +24,4 @@ written: [schema.sources] declarations = "any-comment": version 1's default, wri
 written: [schema.notes.lines] may = 1: version 1's default, written out
 written: [presentation] rules = "root": version 1's default, written out
 compared: the records are equal, and grund check --suggestions on this tree gives the same findings and the same exit before and after
-note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check does not compare that table
+note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check reports the block stale until then

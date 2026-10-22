@@ -10,6 +10,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use super::path_report::unread_resolution_source_cautions;
+use super::run::workspace_block_projects;
 use super::scope_cautions::{scan_scope_caution, workspace_path_caution};
 use super::unread_roots::unread_root_warnings;
 use crate::checker::{
@@ -22,7 +23,7 @@ use crate::resolver::{WorkspaceCheckTarget, WorkspaceContext};
 use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, unlisted_workspace_block_errors,
 };
-use crate::writers::expected;
+use crate::writers::{WorkspaceBlocks, expected};
 
 /// §AR-lsp.5.1.1: a snapshot anchored below its config root keeps the two scopes of
 /// §FS-check.1.3.6.1, the way `run_check_with_run_warnings` does for `grund check
@@ -111,6 +112,15 @@ fn check_workspace_context(
         .projects
         .iter()
         .all(|project| project.scan_errors.is_empty());
+    // §FS-check.3.5.5: the workspace sections are compared where `grund check`
+    // compares them, from the same projects.
+    let listed = context
+        .workspace_loaded
+        .then(|| workspace_block_projects(context.render_config(), &context.projects))
+        .flatten();
+    let blocks = listed
+        .as_deref()
+        .map_or(WorkspaceBlocks::LeftOut, WorkspaceBlocks::Compared);
     for project in &context.projects {
         let config = project.config.clone();
         let no_workspace = BTreeMap::new();
@@ -122,6 +132,7 @@ fn check_workspace_context(
             } else {
                 &no_workspace
             },
+            blocks,
         );
         let mut project_report = if context.workspace_loaded {
             // §AR-checker.1.3: presentation's bytes, rendered before the checker runs.
@@ -194,6 +205,7 @@ fn check_workspace_context(
             project_report.errors.is_empty() && project_report.warnings.is_empty();
         report.errors.append(&mut project_report.errors);
         report.warnings.append(&mut project_report.warnings);
+        report.verified_blocks |= project_report.verified_blocks;
         if narrowed_workspace {
             unread_outside_report_scope.extend(unread_outside);
             continue;
@@ -243,7 +255,8 @@ fn check_workspace_context(
     // §FS-check.4.9, §FS-check.2.2: the announcements and the caution — see this
     // function's docs. An announcement is located, so the anchor narrows it as `grund
     // check <path>` does (§FS-check.1.3.6.1).
-    let mut announcements = absent_optional_member_warnings(context.render_config());
+    let mut announcements =
+        absent_optional_member_warnings(context.render_config(), report.verified_blocks);
     retain_diagnostics_in_report_scope(
         &mut announcements,
         context.render_config().frame(),

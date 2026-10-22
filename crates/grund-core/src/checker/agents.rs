@@ -1,20 +1,37 @@
 use crate::config::Frame;
 use crate::grammar::{
     AGENTS_BLOCK_BASE_VERSION, AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup,
-    find_agents_block,
+    WORKSPACE_SECTIONS, agents_block_heading, block_sections, find_agents_block,
 };
 use crate::model::{
-    CheckReport, Code, Diagnostic, Expected, ExpectedEntrypoint, ScopedExpectation,
+    CheckReport, Code, Diagnostic, Expected, ExpectedEntrypoint, ExpectedSection, ScopedExpectation,
 };
 use crate::sources::Sources;
 use std::path::Path;
 
-/// One of §FS-errors.3.6.1's five final templates around its `detail`: the
+/// One of §FS-errors.3.6.1's final templates around its `detail`: the
 /// `repo maintenance: ` classification ahead, and the reminder that the finding
 /// leaves citation validity alone behind. A message classification only, not a
 /// finding category or selector value (§FS-check.1).
 fn agents_init_message(detail: String) -> String {
     format!("repo maintenance: {detail} (does not affect citation validity)")
+}
+
+/// §FS-errors.3.6.1: a held-stable template that names `grund init`, grown at
+/// its end with the directory of another project's block.
+fn command_message(detail: String, owner: Option<&str>) -> String {
+    let message = agents_init_message(detail);
+    match owner {
+        Some(dir) => format!("{message}; run it in {dir}"),
+        None => message,
+    }
+}
+
+/// The section noun a stale finding's `message` names (§FS-check.3.5.3), or
+/// `None` for any other `agents-init` variant.
+pub(crate) fn stale_section_noun(message: &str) -> Option<&str> {
+    let rest = message.strip_prefix("repo maintenance: stale grund init block: ")?;
+    rest.split_once(" differ from ").map(|(noun, _)| noun)
 }
 
 /// Validate the managed agent-entrypoint blocks (§FS-check.3.5): the begin/end
@@ -24,8 +41,10 @@ fn agents_init_message(detail: String) -> String {
 /// present and not symlinked to `AGENTS.md`.
 ///
 /// What each block should say arrives as `Expected` (§AR-checker.1.3): its
-/// version, the entrypoints in comparison order, each one's config-derived
-/// sections rendered for its own surface, and the companion probe's io error.
+/// version, the entrypoints in comparison order, each root one's whole block
+/// cut into sections and each scoped one's sections, rendered for its own
+/// surface, whether the workspace sections are compared (§FS-check.3.5.5), and
+/// the companion probe's io error.
 /// This rule compares those bytes with disk and renders nothing
 /// (§AR-checker.2.7). §FS-check.3.5.4's chapter-rule section is among them
 /// exactly when the writers could render it, which is every case but a
@@ -36,8 +55,15 @@ pub(super) fn check_agents_block_version(
     frame: Frame<'_>,
     report: &mut CheckReport,
 ) {
+    // §FS-check.3.5.3: another project's block names the directory it belongs to.
+    let owner = (frame.run.root != frame.display.root).then(|| frame.display_path(&frame.run.root));
+    let held = Held {
+        version: expected.block_version,
+        workspace_sections: expected.workspace_sections,
+        owner: owner.as_deref(),
+    };
     for entrypoint in &expected.entrypoints {
-        check_agent_block_path(entrypoint, expected.block_version, frame.sources(), report);
+        check_agent_block_path(entrypoint, held, frame.sources(), report);
     }
     if let Some((path, message)) = &expected.entrypoint_probe_error {
         report.errors.push(Diagnostic {
@@ -52,9 +78,19 @@ pub(super) fn check_agents_block_version(
     }
 }
 
+/// What every block of one project is held to: the version, whether the two
+/// workspace sections are compared (§FS-check.3.5.5), and the directory a
+/// finding about another project's block names (§FS-check.3.5.3).
+#[derive(Clone, Copy)]
+pub(crate) struct Held<'a> {
+    pub(crate) version: u32,
+    pub(crate) workspace_sections: bool,
+    pub(crate) owner: Option<&'a str>,
+}
+
 /// Checks one agent-entrypoint file's managed `grund init` block: present when
-/// required, version supported, and its generated sections still matching the
-/// bytes `Expected` carries for this file.
+/// required, version supported, and every section still matching the bytes
+/// `Expected` carries for this file.
 ///
 /// Why the generated sections are compared rather than re-derived: rendering is
 /// deterministic, so a fresh render is the hash — and the writers render it
@@ -64,10 +100,11 @@ pub(super) fn check_agents_block_version(
 /// read as drift against the LF render.
 pub(crate) fn check_agent_block_path(
     entrypoint: &ExpectedEntrypoint,
-    expected_version: u32,
+    held: Held<'_>,
     sources: Sources<'_>,
     report: &mut CheckReport,
 ) {
+    let (expected_version, owner) = (held.version, held.owner);
     let path = entrypoint.path.as_path();
     let require_block = entrypoint.require_block;
     // §FS-check.6.1.3: retain this probe when the entrypoint is absent.
@@ -78,7 +115,9 @@ pub(crate) fn check_agent_block_path(
         // §FS-init.2.3.5.8: a destination of the live render with no file is a
         // missing block.
         if matches!(entrypoint.scoped, Some(ScopedExpectation::Block(_))) {
-            report.errors.push(missing_block(path, expected_version));
+            report
+                .errors
+                .push(missing_block(path, expected_version, owner));
         }
         return;
     }
@@ -118,13 +157,15 @@ pub(crate) fn check_agent_block_path(
         AgentsBlockLookup::Absent => None,
     };
     if let Some(block) = block {
+        // §FS-check.4.9.1: the absent-member warning says what such a run left out.
+        report.verified_blocks = true;
         let line = line_for_byte_index(&text, block.start);
         let block_text = text[block.start..block.end].replace('\r', "");
         if let Some(ScopedExpectation::Orphan) = entrypoint.scoped {
             // §FS-init.2.3.5.13.1: an orphan still carrying a block is stale.
             report
                 .errors
-                .push(stale_block(path, line, "scoped guidance"));
+                .push(stale_block(path, line, "scoped guidance", owner));
             return;
         }
         if block.version < expected_version {
@@ -133,10 +174,13 @@ pub(crate) fn check_agent_block_path(
                 path: Some(path.to_path_buf()),
                 line: Some(line),
                 column: None,
-                message: agents_init_message(format!(
-                    "outdated grund init block v{} — run `grund init` to update to v{}",
-                    block.version, expected_version
-                )),
+                message: command_message(
+                    format!(
+                        "outdated grund init block v{} — run `grund init` to update to v{}",
+                        block.version, expected_version
+                    ),
+                    owner,
+                ),
                 sites: Vec::new(),
                 authority: Vec::new(),
             });
@@ -156,16 +200,31 @@ pub(crate) fn check_agent_block_path(
                 authority: Vec::new(),
             });
         } else {
-            // §FS-check.3.5 / §FS-init.2.3.5.8: the version marker alone misses a
-            // config edit, so byte-compare each section against `Expected`; one
-            // expected empty must be absent.
+            // §FS-check.3.5.4: the version marker alone misses a config edit, so
+            // compare every section against `Expected`; the scoped file's own
+            // sections are held as before, then its whole block.
             let mut stale = false;
-            for section in &entrypoint.sections {
-                if section_in_block(&block_text, section.heading).unwrap_or("")
-                    != section.bytes.trim_end()
+            if entrypoint.scoped.is_none() {
+                let current = block_text.replacen(
+                    &agents_block_heading(block.version),
+                    &agents_block_heading(expected_version),
+                    1,
+                );
+                for noun in stale_sections(&entrypoint.sections, &current, held.workspace_sections)
                 {
                     stale = true;
-                    report.errors.push(stale_block(path, line, section.noun));
+                    report.errors.push(stale_block(path, line, &noun, owner));
+                }
+            } else {
+                for section in &entrypoint.sections {
+                    if section_in_block(&block_text, &section.heading).unwrap_or("")
+                        != section.bytes.trim_end()
+                    {
+                        stale = true;
+                        report
+                            .errors
+                            .push(stale_block(path, line, &section.noun, owner));
+                    }
                 }
             }
             // §FS-init.2.3.7.1: a scoped-pair block where the unscoped pair is
@@ -174,7 +233,7 @@ pub(crate) fn check_agent_block_path(
                 stale = true;
                 report
                     .errors
-                    .push(stale_block(path, line, "scoped guidance"));
+                    .push(stale_block(path, line, "scoped guidance", owner));
             }
             // §FS-init.2.3.5.12: a scoped block is the render, byte for byte, so
             // a difference no section names is still a stale one.
@@ -184,7 +243,7 @@ pub(crate) fn check_agent_block_path(
             {
                 report
                     .errors
-                    .push(stale_block(path, line, "scoped guidance"));
+                    .push(stale_block(path, line, "scoped guidance", owner));
             }
         }
         return;
@@ -192,7 +251,9 @@ pub(crate) fn check_agent_block_path(
     if !require_block {
         return;
     }
-    report.errors.push(missing_block(path, expected_version));
+    report
+        .errors
+        .push(missing_block(path, expected_version, owner));
 }
 
 /// Whether a supported block is newer than the version the config selects. A
@@ -204,31 +265,92 @@ fn newer_than_selected(version: u32, expected_version: u32) -> bool {
     !scoped_where_unscoped && version > expected_version
 }
 
+/// The nouns of the sections of the root block `current` that differ from
+/// `expected`, in the render's order (§FS-check.3.5.3, §FS-check.3.5.4): one
+/// expected and absent, one present and unexpected, one whose bytes differ, and,
+/// where the sections agree but their order does not, the first one out of
+/// place. Where the run does not compare the workspace sections both sides lose
+/// them first (§FS-check.3.5.5).
+fn stale_sections(
+    expected: &[ExpectedSection],
+    current: &str,
+    workspace_sections: bool,
+) -> Vec<String> {
+    let compared = |noun: &str| workspace_sections || !WORKSPACE_SECTIONS.contains(&noun);
+    let expected: Vec<&ExpectedSection> = expected
+        .iter()
+        .filter(|section| compared(&section.noun))
+        .collect();
+    let on_disk: Vec<(String, &str)> = block_sections(current)
+        .iter()
+        .map(|section| (section.noun(), section.bytes))
+        .filter(|(noun, _)| compared(noun))
+        .collect();
+    let mut stale: Vec<String> = Vec::new();
+    for section in &expected {
+        let found = on_disk.iter().find(|(noun, _)| *noun == section.noun);
+        if found.is_none_or(|(_, bytes)| *bytes != section.bytes) {
+            stale.push(section.noun.clone());
+        }
+    }
+    for (noun, _) in &on_disk {
+        if !expected.iter().any(|section| section.noun == *noun) && !stale.contains(noun) {
+            stale.push(noun.clone());
+        }
+    }
+    if stale.is_empty()
+        && let Some((section, _)) = expected
+            .iter()
+            .zip(&on_disk)
+            .find(|(section, (noun, _))| section.noun != *noun)
+    {
+        stale.push(section.noun.clone());
+    }
+    stale
+}
+
 /// §FS-check.3.5.3: a block that should be there and is not.
-fn missing_block(path: &Path, expected_version: u32) -> Diagnostic {
+fn missing_block(path: &Path, expected_version: u32, owner: Option<&str>) -> Diagnostic {
     Diagnostic {
         code: Code::AGENTS_INIT,
         path: Some(path.to_path_buf()),
         line: Some(1),
         column: None,
-        message: agents_init_message(format!(
-            "missing grund init block v{expected_version} — run `grund init` to install it"
-        )),
+        message: command_message(
+            format!(
+                "missing grund init block v{expected_version} — run `grund init` to install it"
+            ),
+            owner,
+        ),
         sites: Vec::new(),
         authority: Vec::new(),
     }
 }
 
-/// §FS-check.3.5.3: a block whose `noun` differs from the render.
-fn stale_block(path: &Path, line: usize, noun: &str) -> Diagnostic {
+/// §FS-check.3.5.3: a block whose `noun` differs from the render. A workspace
+/// section differs from the workspace and names its directory inside the
+/// template; every other section differs from `grund.toml`, and the held-stable
+/// template grows at its end (§FS-errors.3.6.1).
+fn stale_block(path: &Path, line: usize, noun: &str, owner: Option<&str>) -> Diagnostic {
+    let message = if WORKSPACE_SECTIONS.contains(&noun) {
+        let dir = owner.map(|dir| format!(" in {dir}")).unwrap_or_default();
+        agents_init_message(format!(
+            "stale grund init block: {noun} differ from the workspace — run `grund init`{dir} to refresh"
+        ))
+    } else {
+        command_message(
+            format!(
+                "stale grund init block: {noun} differ from grund.toml — run `grund init` to refresh"
+            ),
+            owner,
+        )
+    };
     Diagnostic {
         code: Code::AGENTS_INIT,
         path: Some(path.to_path_buf()),
         line: Some(line),
         column: None,
-        message: agents_init_message(format!(
-            "stale grund init block: {noun} differ from grund.toml — run `grund init` to refresh"
-        )),
+        message,
         sites: Vec::new(),
         authority: Vec::new(),
     }

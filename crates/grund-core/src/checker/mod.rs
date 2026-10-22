@@ -86,7 +86,7 @@ pub(crate) use chapter_rules::{
 // does (§AR-core-module-layout.1.3).
 #[cfg(test)]
 pub(crate) use crate::testing::{check_findings, check_with_workspace};
-pub(crate) use agents::section_in_block;
+pub(crate) use agents::{section_in_block, stale_section_noun};
 #[cfg(test)]
 pub(crate) use chapter_rules::markdown_project;
 pub(crate) use citation_repair::repair_index_citations;
@@ -112,7 +112,7 @@ pub(crate) use values::{
 #[cfg(test)]
 pub(crate) use crate::testing::check_agent_block_path;
 #[cfg(test)]
-pub(crate) use agents::check_agent_block_path as compare_agent_block;
+pub(crate) use agents::{Held, check_agent_block_path as compare_agent_block};
 #[cfg(test)]
 pub(crate) use support::dangling_message;
 #[cfg(test)]

@@ -17,7 +17,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 #[cfg(unix)]
 use crate::testing::linked_repo;
 use crate::testing::{drifted_include_repo, kind_index_repo, scan_tree, test_root, write};
-use crate::writers::expected;
+use crate::writers::{WorkspaceBlocks, expected};
 
 type Line = (&'static str, Option<PathBuf>, Option<usize>, String);
 
@@ -112,8 +112,16 @@ fn judge_under_two_presentations_differs_only_in_managed_block_drift() {
     assert_eq!(github.rules(), pandoc.rules(), "the rules are fixed");
 
     let none = BTreeMap::new();
-    let as_written = judged(&github, &catalog, &expected(&catalog, &github, &none));
-    let flipped = judged(&github, &catalog, &expected(&catalog, &pandoc, &none));
+    let as_written = judged(
+        &github,
+        &catalog,
+        &expected(&catalog, &github, &none, WorkspaceBlocks::LeftOut),
+    );
+    let flipped = judged(
+        &github,
+        &catalog,
+        &expected(&catalog, &pandoc, &none, WorkspaceBlocks::LeftOut),
+    );
 
     assert_eq!(
         drifted(&as_written),
@@ -147,7 +155,12 @@ fn each_entrypoint_is_compared_against_its_own_bytes_and_a_probe_error_is_an_io_
     let (config, catalog) = loaded(&root);
     // The loaded root, not the logical one: macOS's temp dir is behind a symlink.
     let root = config.frame().root().to_path_buf();
-    let rendered = expected(&catalog, &config, &BTreeMap::new());
+    let rendered = expected(
+        &catalog,
+        &config,
+        &BTreeMap::new(),
+        WorkspaceBlocks::LeftOut,
+    );
     let paths = rendered
         .entrypoints
         .iter()
@@ -229,7 +242,12 @@ fn has_code(report: &CheckReport, code: &str) -> bool {
 fn an_external_enrollment_is_matched_by_the_expected_index_target() {
     let root = external_index_repo("external_enrollment_by_expected");
     let (config, catalog) = loaded(&root);
-    let rendered = expected(&catalog, &config, &BTreeMap::new());
+    let rendered = expected(
+        &catalog,
+        &config,
+        &BTreeMap::new(),
+        WorkspaceBlocks::LeftOut,
+    );
     assert!(
         !rendered.index_targets.is_empty(),
         "the index citation has a target"
@@ -263,7 +281,12 @@ fn an_inline_source_declaration_enrolls_under_both_anchor_profiles() {
         config
             .edit_project(|project| project.presentation.fmt.anchor_format = profile.to_string())
             .expect("set the anchor profile");
-        let rendered = expected(&catalog, &config, &BTreeMap::new());
+        let rendered = expected(
+            &catalog,
+            &config,
+            &BTreeMap::new(),
+            WorkspaceBlocks::LeftOut,
+        );
         let report = judged(&github, &catalog, &rendered);
         assert!(
             !has_code(&report, "missing-index-entry") && has_code(&report, "unused"),
@@ -293,7 +316,7 @@ fn the_merge_has_no_cross_half_tie_and_is_the_stable_sort_of_both_halves() {
         let (config, catalog) = loaded(&root);
         let none = BTreeMap::new();
         let workspace = CheckWorkspace::alone(&none);
-        let rendered = expected(&catalog, &config, &none);
+        let rendered = expected(&catalog, &config, &none, WorkspaceBlocks::LeftOut);
         let conformed = conform(config.schema(), &catalog, config.frame());
         let judged = judge(
             config.rules(),

@@ -23,13 +23,15 @@ use crate::checker::{
 };
 use crate::config::{Config, Invocation, ProjectRecords, Selection};
 use crate::model::{CheckReport, Code, Diagnostic, Finding, Switch};
-use crate::resolver::{WorkspaceCheckTarget, load_workspace_projects, settled_run_warnings};
+use crate::resolver::{
+    WorkspaceCheckTarget, WorkspaceProject, load_workspace_projects, settled_run_warnings,
+};
 use crate::scanner::scan_tree;
 use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, arm_optional_members, open,
     unlisted_workspace_block_errors,
 };
-use crate::writers::expected;
+use crate::writers::{ListedProject, WorkspaceBlocks, expected, listed_projects};
 
 pub(crate) struct CheckRun {
     pub(crate) config: Config,
@@ -173,7 +175,9 @@ pub(super) fn run_check_with_run_warnings(
     let resolution_was_complete = scan_errors.is_empty() && unread_outside_report_scope.is_empty();
     // §AR-checker.1.3: presentation's bytes, rendered before the checker runs.
     let no_workspace = BTreeMap::new();
-    let expected = expected(&findings, &config, &no_workspace);
+    // §FS-check.3.5.5: a member's or a standalone project's run leaves the
+    // workspace sections out rather than climb to render them.
+    let expected = expected(&findings, &config, &no_workspace, WorkspaceBlocks::LeftOut);
     let mut report = check_project(
         config.rules(),
         config.schema(),
@@ -359,8 +363,12 @@ fn run_workspace_check(
     let mut report = CheckReport::default();
     let mut had_scan_errors = false;
     let mut unread_outside_report_scope = Vec::new();
+    let listed = workspace_block_projects(&root_config, &projects);
+    let blocks = listed
+        .as_deref()
+        .map_or(WorkspaceBlocks::LeftOut, WorkspaceBlocks::Compared);
     for project in &projects {
-        let expected = expected(&project.findings, &project.config, &workspace);
+        let expected = expected(&project.findings, &project.config, &workspace, blocks);
         // §FS-workspace.8.1: the report is rendered from the workspace root,
         // so a path a member's message names is spelled from there too.
         let frame = project
@@ -404,6 +412,7 @@ fn run_workspace_check(
         report.errors.append(&mut project_report.errors);
         report.warnings.append(&mut project_report.warnings);
         report.suggestions.append(&mut project_report.suggestions);
+        report.verified_blocks |= project_report.verified_blocks;
         // §FS-check.1.4.1: a check any project armed is armed in the run.
         report.armed.absorb(&mut project_report.armed);
         // §FS-check.1.3.6.3: as the single-project arm partitions them.
@@ -436,9 +445,10 @@ fn run_workspace_check(
         &root_config,
         projects.is_empty(),
     ));
-    report
-        .warnings
-        .extend(absent_optional_member_warnings(&root_config));
+    report.warnings.extend(absent_optional_member_warnings(
+        &root_config,
+        report.verified_blocks,
+    ));
     arm_optional_members(&root_config, &mut report.armed);
     if full {
         report.armed.arm(Switch::Full);
@@ -496,6 +506,29 @@ fn run_workspace_check(
             .iter()
             .map(|project| project.config.root.clone())
             .collect(),
+    })
+}
+
+/// §FS-check.3.5.5: the projects a workspace run renders its blocks' workspace
+/// sections from, or `None` where it leaves them out — a run at a nested group's
+/// root, whose projects carry the group's alias path, and one with an optional
+/// member absent anywhere in the tree. The list is the projects already loaded,
+/// so the comparison adds no walk.
+pub(super) fn workspace_block_projects(
+    root_config: &Config,
+    projects: &[WorkspaceProject],
+) -> Option<Vec<ListedProject>> {
+    let outermost = projects
+        .iter()
+        .all(|project| project.config.workspace_scope_path.is_empty());
+    (outermost && root_config.workspace_absent_optional.is_empty()).then(|| {
+        listed_projects(projects.iter().map(|project| {
+            (
+                project.alias.clone(),
+                project.config.root.clone(),
+                project.config.project_description.clone(),
+            )
+        }))
     })
 }
 

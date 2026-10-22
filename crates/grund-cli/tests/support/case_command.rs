@@ -193,3 +193,30 @@ fn external_words(case: &Path) -> Option<Vec<String>> {
     );
     Some(words)
 }
+
+/// A case's own command run in its copy and kept, for a test that goes on to
+/// run more commands over the tree it left (§FS-examples.5.6.1). The copy is
+/// removed when this is dropped. Only `init_then_check.rs` reads it, so the
+/// other binaries that include the runner allow it unused.
+#[allow(dead_code)]
+pub struct CopiedRun {
+    execution: CaseExecution,
+    pub output: Output,
+}
+
+#[allow(dead_code)]
+impl CopiedRun {
+    pub fn repo(&self) -> &Path {
+        &self.execution.copy.as_ref().expect("a copied case").repo
+    }
+}
+
+/// [`CopiedRun`] for `case`, or `None` where its command runs in place.
+#[allow(dead_code)]
+pub fn run_in_copy(manifest_dir: &Path, case: &Path) -> Option<CopiedRun> {
+    let name = case.file_name()?.to_string_lossy().into_owned();
+    let execution = prepare_case(manifest_dir, case, &name);
+    execution.copy.as_ref()?;
+    let output = run_grund(case, &execution.cwd, &execution.args, &name);
+    Some(CopiedRun { execution, output })
+}

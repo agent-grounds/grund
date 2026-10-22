@@ -241,7 +241,14 @@ pub(super) fn qualify_absent_optional(
 /// It names no remedy and no release: the only thing that would "fix" it is a
 /// checkout with the member in it, which is not grund's to ask for, and the skip
 /// is the standing price of the opt-out rather than a state to migrate off.
-pub(crate) fn absent_optional_member_warnings(config: &Config) -> Vec<Diagnostic> {
+///
+/// `verified_blocks` is whether the run compared a managed block: such a run
+/// left the blocks' workspace sections out too, and the warning says so
+/// (§FS-check.3.5.5); one that compared none keeps the shorter form.
+pub(crate) fn absent_optional_member_warnings(
+    config: &Config,
+    verified_blocks: bool,
+) -> Vec<Diagnostic> {
     config
         .workspace_absent_optional
         .iter()
@@ -250,7 +257,11 @@ pub(crate) fn absent_optional_member_warnings(config: &Config) -> Vec<Diagnostic
             path: Some(absent.source.path.clone()),
             line: Some(absent.source.line),
             column: None,
-            message: absent_optional_member_message(&absent.written, &absent.alias_path),
+            message: absent_optional_member_message(
+                &absent.written,
+                &absent.alias_path,
+                verified_blocks,
+            ),
             sites: Vec::new(),
             authority: Vec::new(),
         })
@@ -269,11 +280,17 @@ pub(crate) fn arm_optional_members(config: &Config, armed: &mut Armed) {
 /// The sentence [`absent_optional_member_warnings`] carries, built apart from the
 /// diagnostic so a test can read it: the entry as the config wrote it, the
 /// namespace by the whole alias path a citation has to write, and what the run
-/// therefore does not cover (§FS-check.4.9.2, §FS-errors.4).
-fn absent_optional_member_message(written: &str, alias_path: &str) -> String {
+/// therefore does not cover (§FS-check.4.9.2, §FS-errors.4), the managed blocks'
+/// workspace sections among it where the run verified one (§FS-check.4.9.1).
+fn absent_optional_member_message(written: &str, alias_path: &str, blocks: bool) -> String {
+    let blocks = if blocks {
+        ", nor the managed blocks' workspace sections"
+    } else {
+        ""
+    };
     format!(
         "optional workspace member `{written}` is absent — citations into namespace \
-         `{alias_path}` were not checked, so this run does not cover it"
+         `{alias_path}` were not checked, so this run does not cover it{blocks}"
     )
 }
 

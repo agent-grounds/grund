@@ -258,12 +258,15 @@ impl View<'_> {
     }
 
     /// §FS-check.1.3.6.2: a finding is reported when its anchor or a site it
-    /// names lies at or under the path; §FS-check.1.3.6.3: a file outside it
-    /// that the walk could not read is a caution, never an error.
+    /// names lies at or under the path; §FS-check.1.3.6.1: the agent-entrypoint
+    /// finding is a probe over the root, which the path never drops;
+    /// §FS-check.1.3.6.3: a file outside it that the walk could not read is a
+    /// caution, never an error.
     pub fn findings(&self) -> Vec<Value> {
         let mut out = Vec::new();
         for f in self.fact("findings").as_array().into_iter().flatten() {
-            let inside = f["path"].as_str().is_none_or(|p| self.within(p))
+            let inside = f["code"] == "agents-init"
+                || f["path"].as_str().is_none_or(|p| self.within(p))
                 || f["sites"]
                     .as_array()
                     .into_iter()
