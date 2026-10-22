@@ -211,7 +211,7 @@ must = ["FS"]
 Use `[citations.e2e]` in a version-1 config. That entry judges only a file
 that already cites something, so a file there that cites nothing still passes.
 Where the row grounds nothing, the hint therefore also names the grounding
-setting that makes such a file a finding:
+setting that makes such a file a finding, in a version-2 `grund.toml`:
 
 ```toml
 [rules.citations.e2e.grounding]
