@@ -129,15 +129,47 @@ pub fn host(
 }
 
 /// §REQ-one-answer.proof.evidence: only a complete independent, successful
-/// ordinary-show envelope replaces the extra native peer. Refusals, cautions,
-/// manifests and future schemas retain that peer until their own audit.
+/// ordinary-show or case-manifest envelope replaces the extra native peer.
+/// Refusals, cautions and future schemas retain that peer until their own audit.
 pub fn complete_node_show(context: &Value, question: &Question) -> bool {
     fn keys(value: &Value, names: &[&str]) -> bool {
         value.as_object().is_some_and(|object| {
             object.len() == names.len() && names.iter().all(|name| object.contains_key(*name))
         })
     }
+    /// §FS-show.2.4.2: a case's manifest object, its typed copy the same fields.
+    fn case(value: &Value) -> bool {
+        let Some(object) = value["json"]
+            .as_str()
+            .and_then(|t| serde_json::from_str::<Value>(t).ok())
+        else {
+            return false;
+        };
+        let mut fields: Vec<_> = "id kind path args expected_exit fixtures anchor"
+            .split(' ')
+            .collect();
+        if object.get("kind_title").is_some() {
+            fields.push("kind_title");
+        }
+        let shown = "id section kind_title manifest body path line json sections";
+        keys(value, &shown.split(' ').collect::<Vec<_>>())
+            && keys(&object, &fields)
+            && object["anchor"].is_null()
+            && value["manifest"]
+                == json!({"kind":object["kind"],"args":object["args"],
+                    "expectedExit":object["expected_exit"],"fixtures":object["fixtures"]})
+            && ["id", "path", "kind_title"]
+                .iter()
+                .all(|f| value[*f] == object[*f])
+            && value["section"].is_null()
+            && value["sections"] == json!([])
+            && value["line"] == json!(1)
+            && value["body"].is_string()
+    }
     fn shown(value: &Value) -> bool {
+        if !value["manifest"].is_null() {
+            return case(value);
+        }
         keys(
             value,
             &[

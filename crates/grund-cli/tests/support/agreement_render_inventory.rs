@@ -20,7 +20,29 @@ fn role(facts: &Value, kind: &str, extra: Value) -> Value {
 pub fn inventory(m: &Model, files: &BTreeMap<String, Vec<u8>>) -> Result<Value, String> {
     let mut segments: BTreeMap<String, Vec<(usize, usize, Value)>> = BTreeMap::new();
     let mut decl_sites = Vec::new();
+    let mut cases = Vec::new();
     for d in &m.decls {
+        // §FS-declarations.e2e-case.id: a case is declared by its directory's
+        // name and the `expected.exit` in it, which its fact covers whole.
+        if d.facts["case"].is_object() {
+            let marker = format!("{}/expected.exit", d.file);
+            let length = files
+                .get(&marker)
+                .ok_or("case lacks its expected.exit")?
+                .len();
+            decl_sites.push(format!("{marker}:0"));
+            cases.push(format!("{}/", d.file));
+            segments.entry(marker).or_default().push((
+                0,
+                length,
+                role(
+                    &m.facts,
+                    "case",
+                    json!({"id":d.id,"project":d.project,"directory":d.file}),
+                ),
+            ));
+            continue;
+        }
         let text = m.text(&d.file)?;
         let (_, _, at) = locate(
             text,
@@ -109,15 +131,17 @@ pub fn inventory(m: &Model, files: &BTreeMap<String, Vec<u8>>) -> Result<Value, 
         pinned.sort_by_key(|s| s.0);
         let mut partition = Vec::new();
         let mut cursor = 0;
-        let excluded = role(
-            &m.facts,
-            "excluded",
-            json!({"reason":"bytes that write no declaration ID, section component or citation"}),
-        );
         let slice = |a: usize, b: usize| match std::str::from_utf8(&bytes[a..b]) {
             Ok(s) => json!({"start":a,"end":b,"source":s}),
             Err(_) => json!({"start":a,"end":b,"sourceBytes":bytes[a..b].to_vec()}),
         };
+        // §FS-declarations.e2e-case.walk: the walk does not enter a case.
+        let reason = if cases.iter().any(|c| file.starts_with(c)) {
+            "a fixture of a case directory, which the walk does not enter"
+        } else {
+            "bytes that write no declaration ID, section component or citation"
+        };
+        let excluded = role(&m.facts, "excluded", json!({"reason":reason}));
         for (start, end, role) in pinned {
             if start < cursor {
                 return Err(format!("{file}:{start}: overlapping pinned facts"));
