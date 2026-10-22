@@ -41,7 +41,7 @@ A root run reports other projects' blocks, and `grund init` at the root does not
 - A tree whose block no longer matches its config or its workspace is red where it was green: edits to kinds, titles, the ID format, the marker, named sections or the inline-style keys; a migration; a member joining or leaving; a member's description; a member's first `grund init`. Adding one member can turn up to N+1 blocks red, each naming its directory.
 - This change shares the unreleased v39–v42 pairs ([§FS-init.2.3.7.1](../../functional-spec/FS-init.md#2371-the-current-version)), so every block 0.19.0 wrote is already outdated in this release and one `grund init` re-renders it whole; from then on the wider comparison turns nothing red by itself ([§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)).
 - `migrate`'s Project map note changes its ending rather than growing, because kept as it was it would state the opposite of what `check` does. That is a message, not a verdict, and pre-1.0 ([§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise)).
-- `grund init` is unchanged: in a checkout without an optional member it still drops the member from the lists, so managed blocks are refreshed from a full checkout. Making `init` list a member it cannot read is a separate change.
+- `grund init` is unchanged by this record. In a checkout without an optional member it dropped the member from the lists; [§DF-init-keeps-the-member-list](DF-init-keeps-the-member-list.md#df-init-keeps-the-member-list-grund-init-keeps-a-blocks-member-list-while-an-optional-member-is-absent) has it keep an existing member list there instead.
 
 ## 4. Alternatives considered
 

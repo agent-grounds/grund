@@ -1,0 +1,3 @@
+exists AGENTS.md
+exists grund.toml
+note: optional workspace member `packages/secret` (namespace `secret`) is absent, so AGENTS.md would keep its `### Workspace members` section as it is

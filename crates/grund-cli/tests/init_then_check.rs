@@ -111,3 +111,71 @@ fn every_init_case_leaves_blocks_check_holds_current() {
     }
     assert!(wrong.is_empty(), "{}", wrong.join("\n"));
 }
+
+fn copy_tree(from: &Path, to: &Path) {
+    fs::create_dir_all(to).unwrap();
+    for entry in fs::read_dir(from).unwrap() {
+        let entry = entry.unwrap();
+        let target = to.join(entry.file_name());
+        if entry.file_type().unwrap().is_dir() {
+            copy_tree(&entry.path(), &target);
+        } else {
+            fs::copy(entry.path(), &target).unwrap();
+        }
+    }
+}
+
+fn init_in(repo: &Path, dir: &str) {
+    let out = grund(repo, &["init", dir]);
+    assert_eq!(
+        out.status.code(),
+        Some(0),
+        "init {dir}: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+}
+
+/// §FS-init.2.3.4.15.8: the blocks `grund init` refreshes in a checkout without
+/// an optional member, at the root and in a present member, are the ones the
+/// full checkout's root `check` accepts once the member is back (§FS-check.3.5.5).
+#[test]
+#[ignore = "red until #921 keeps the Workspace members section while an optional member is absent; implement removes this"]
+fn init_without_an_optional_member_writes_blocks_the_full_checkout_accepts() {
+    let root = manifest_dir();
+    let work = root.join("target/init-tests/init_without_an_optional_member");
+    let _ = fs::remove_dir_all(&work);
+    let repo = work.join("repo");
+    let fixture = "tests/e2e/cases/check-workspace-optional-member-absent-blocks/repo";
+    copy_tree(&root.join(fixture), &repo);
+    let secret = repo.join("packages/secret");
+    fs::create_dir_all(&secret).unwrap();
+    fs::write(
+        secret.join("grund.toml"),
+        "grund_config_version = 2\nproject_name = \"secret\"\n",
+    )
+    .unwrap();
+    for dir in ["packages/secret", "packages/billing", "."] {
+        init_in(&repo, dir);
+    }
+    assert_eq!(
+        agents_init(&repo, &[]),
+        [],
+        "the full checkout starts clean"
+    );
+
+    let held = work.join("secret-held");
+    fs::rename(&secret, &held).unwrap();
+    for dir in [".", "packages/billing"] {
+        init_in(&repo, dir);
+    }
+    fs::rename(&held, &secret).unwrap();
+
+    let reported: Vec<_> = agents_init(&repo, &[])
+        .into_iter()
+        .map(|(_, line)| line)
+        .collect();
+    assert!(
+        reported.is_empty(),
+        "the full checkout's root check reports blocks init wrote without `secret`: {reported:#?}"
+    );
+}
