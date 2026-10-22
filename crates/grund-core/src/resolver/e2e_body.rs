@@ -41,7 +41,8 @@ pub(crate) fn show_e2e_case(
             section
         ));
     }
-    let invocation = format!("grund {}", case.args.join(" "));
+    // §FS-show.2.4, §AR-scanner.6.2: the first line alone supplies the implicit `check`.
+    let invocation = case.invocation();
     let brief_body = format!("{invocation}\n");
     let manifest = {
         let mut lines = vec![

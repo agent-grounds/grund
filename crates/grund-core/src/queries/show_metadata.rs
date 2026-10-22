@@ -11,6 +11,7 @@ pub(crate) fn show_metadata(c: &Config, f: &Catalog, id: &Id, section: Option<&s
         .and_then(|ds| ds.first())
         .and_then(|d| d.e2e_case.as_ref())
         .map(|e| {
+            // §AR-scanner.6.2: the parsed words, `[]` with no `command.args`.
             json!({"kind":"E2E","args":e.args,"expected_exit":e.expected_exit,
             "fixtures":e.fixtures.iter().map(|p|crate::model::format_path(p)).collect::<Vec<_>>()})
         });

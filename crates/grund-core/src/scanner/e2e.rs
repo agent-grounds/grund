@@ -175,14 +175,16 @@ pub(crate) fn e2e_case_dir_name(schema: &Schema, rendered: &str) -> String {
         .to_string()
 }
 
-/// Read one e2e case directory into an `E2eCase` — `command.args` (defaulting to
-/// `check`), `expected.exit`, `spec.refs`, and the recursive fixture file list —
+/// Read one e2e case directory into an `E2eCase` — the words of `command.args`
+/// (none when absent) and whether it is present (§AR-scanner.6.2), `expected.exit`, `spec.refs`, and the recursive fixture file list —
 /// the data `grund E2E-<name>` renders or checks (§FS-show.2.4, §FS-config.3.9).
 fn read_e2e_case(schema: &Schema, frame: Frame<'_>, dir: &Path) -> Result<E2eCase> {
     // §AR-system.2.13: the manifest as a save would write it.
     let sources = frame.sources();
     let command_args = dir.join("command.args");
-    let args = if path_is_file(&command_args) {
+    // §AR-scanner.6.2: the record keeps the manifest; the implicit `check` is the text form's.
+    let has_command_args = path_is_file(&command_args);
+    let args = if has_command_args {
         // §FS-check.6.1.1: cover this effective input before its shared read.
         sources
             .text(&command_args)?
@@ -190,7 +192,7 @@ fn read_e2e_case(schema: &Schema, frame: Frame<'_>, dir: &Path) -> Result<E2eCas
             .map(str::to_string)
             .collect()
     } else {
-        vec!["check".to_string()]
+        Vec::new()
     };
     // §FS-check.6.1.1: cover this effective input before its shared read.
     let expected_exit = sources
@@ -205,6 +207,7 @@ fn read_e2e_case(schema: &Schema, frame: Frame<'_>, dir: &Path) -> Result<E2eCas
     Ok(E2eCase {
         dir: dir.to_path_buf(),
         args,
+        has_command_args,
         expected_exit,
         fixtures,
         spec_refs,

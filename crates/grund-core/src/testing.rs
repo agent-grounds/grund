@@ -316,10 +316,11 @@ pub(crate) fn findings_signature(config: &Config, findings: &Catalog) -> Vec<Str
             }
             if let Some(case) = &declaration.e2e_case {
                 rows.push(format!(
-                    "e2e|{}|{}|{}|{}|{}",
+                    "e2e|{}|{}|{}|{}|{}|{}",
                     render_id(&config.grammar, id),
                     sort_path_key(&case.dir),
                     case.expected_exit,
+                    case.has_command_args,
                     case.args.join(" "),
                     case.fixtures
                         .iter()

@@ -44,7 +44,6 @@ fn json_args(root: &Path, id: &str) -> Value {
 }
 
 #[test]
-#[ignore = "red until #947 keeps the manifest in the E2E record; implement removes this"]
 fn show_json_args_are_empty_for_a_case_without_command_args() {
     let root = cases("show_json_args_are_empty_without_command_args");
     assert_eq!(json_args(&root, "E2E-with-args"), json!(["list"]));
@@ -53,7 +52,6 @@ fn show_json_args_are_empty_for_a_case_without_command_args() {
 }
 
 #[test]
-#[ignore = "red until #947 keeps the manifest in the E2E record; implement removes this"]
 fn the_text_form_alone_says_grund_check_for_a_case_without_command_args() {
     let root = cases("the_text_form_alone_says_grund_check");
     let first = |id: &str| {
@@ -66,7 +64,6 @@ fn the_text_form_alone_says_grund_check_for_a_case_without_command_args() {
 }
 
 #[test]
-#[ignore = "red until #947 keeps the manifest in the E2E record; implement removes this"]
 fn the_node_show_manifest_args_are_empty_for_a_case_without_command_args() {
     let root = cases("node_show_manifest_args_are_empty");
     let args = |id: &str| {
@@ -84,7 +81,6 @@ fn the_node_show_manifest_args_are_empty_for_a_case_without_command_args() {
 }
 
 #[test]
-#[ignore = "red until #947 keeps the manifest in the E2E record; implement removes this"]
 fn the_scan_snapshot_e2e_case_args_are_empty_for_a_case_without_command_args() {
     let root = cases("scan_snapshot_e2e_case_args_are_empty");
     let request = node_request("scan", vec![json!(root.to_string_lossy())], &root);

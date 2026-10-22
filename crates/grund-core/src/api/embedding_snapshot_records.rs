@@ -41,6 +41,7 @@ impl Data for InlineCitationSite {
 }
 impl Data for E2eCase {
     fn data(&self) -> Value {
+        // §AR-scanner.6.2: the parsed words, `[]` with no `command.args`.
         json!({"dir":self.dir.data(),"args":self.args,"expected_exit":self.expected_exit,
             "fixtures":self.fixtures.data(),"spec_refs":self.spec_refs.iter()
                 .map(|s|json!({"namespace":s.namespace,"kind":s.kind})).collect::<Vec<_>>()})
