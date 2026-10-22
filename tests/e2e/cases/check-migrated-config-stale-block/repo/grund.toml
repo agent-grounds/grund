@@ -1,0 +1,166 @@
+grund_config_version = 2
+project_name = "demo"
+
+[schema]
+marker = "§"
+shorthand = "canonical"
+id_format = "{kind}-{slug}"
+slug_pattern = "[a-z0-9][a-z0-9-]*"
+number_pattern = "\\d+"
+section_separator = "."
+heading_depth = "must"
+
+[schema.sources]
+languages = ["v1_markdown", "v1_c_family", "v1_go", "v1_python", "v1_ruby", "v1_lisp", "v1_sql", "v1_haddock", "v1_ldoc", "v1_plain", "v1_roxygen", "v1_shell"]
+declarations = "any-comment"
+exclude = ["target/", "node_modules/", ".git/", "dist/", "build/", ".venv/"]
+respect_gitignore = true
+
+[schema.sources.extensions]
+md = "v1_markdown"
+rs = "v1_c_family"
+go = "v1_go"
+java = "v1_c_family"
+kt = "v1_c_family"
+ts = "v1_c_family"
+tsx = "v1_c_family"
+js = "v1_c_family"
+py = "v1_python"
+c = "v1_c_family"
+cpp = "v1_c_family"
+swift = "v1_c_family"
+scala = "v1_c_family"
+rb = "v1_ruby"
+php = "v1_c_family"
+cs = "v1_c_family"
+lisp = "v1_lisp"
+scm = "v1_lisp"
+clj = "v1_lisp"
+sql = "v1_sql"
+hs = "v1_haddock"
+lhs = "v1_haddock"
+lua = "v1_ldoc"
+ada = "v1_plain"
+adb = "v1_plain"
+ads = "v1_plain"
+h = "v1_c_family"
+cc = "v1_c_family"
+cxx = "v1_c_family"
+hpp = "v1_c_family"
+hh = "v1_c_family"
+hxx = "v1_c_family"
+m = "v1_c_family"
+mm = "v1_c_family"
+kts = "v1_c_family"
+jsx = "v1_c_family"
+mjs = "v1_c_family"
+cjs = "v1_c_family"
+dart = "v1_c_family"
+r = "v1_roxygen"
+R = "v1_roxygen"
+sh = "v1_shell"
+bash = "v1_shell"
+zsh = "v1_shell"
+cl = "v1_lisp"
+el = "v1_lisp"
+ss = "v1_lisp"
+rkt = "v1_lisp"
+cljs = "v1_lisp"
+cljc = "v1_lisp"
+
+[schema.sources.definitions.v1_markdown]
+class = "document"
+comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
+doc_comments = "none"
+docstrings = "off"
+
+[schema.sources.definitions.v1_c_family]
+class = "source"
+comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
+doc_comments = "c-family"
+docstrings = "off"
+
+[schema.sources.definitions.v1_go]
+class = "source"
+comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
+doc_comments = "go"
+docstrings = "off"
+
+[schema.sources.definitions.v1_python]
+class = "source"
+comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
+doc_comments = "python"
+docstrings = "python"
+
+[schema.sources.definitions.v1_ruby]
+class = "source"
+comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
+doc_comments = "ruby"
+docstrings = "off"
+
+[schema.sources.definitions.v1_lisp]
+class = "source"
+comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
+doc_comments = "lisp"
+docstrings = "off"
+
+[schema.sources.definitions.v1_sql]
+class = "source"
+comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
+doc_comments = "sql"
+docstrings = "off"
+
+[schema.sources.definitions.v1_haddock]
+class = "source"
+comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
+doc_comments = "haddock"
+docstrings = "off"
+
+[schema.sources.definitions.v1_ldoc]
+class = "source"
+comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
+doc_comments = "ldoc"
+docstrings = "off"
+
+[schema.sources.definitions.v1_plain]
+class = "source"
+comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
+doc_comments = "none"
+docstrings = "off"
+
+[schema.sources.definitions.v1_roxygen]
+class = "source"
+comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
+doc_comments = "roxygen"
+docstrings = "off"
+
+[schema.sources.definitions.v1_shell]
+class = "source"
+comment_prefixes = ["//", "#", ";", "--", "*", "/*"]
+doc_comments = "shell"
+docstrings = "off"
+
+[schema.notes.lines]
+must = 3
+may = 1
+
+[schema.notes.columns]
+must = 100
+
+[schema.notes.text]
+must = true
+
+[schema.kinds.FS]
+files = ["requirements.md"]
+
+[schema.kinds.code]
+folders = ["src"]
+
+[presentation]
+trigger = "$$"
+rules = "root"
+
+[presentation.fmt]
+anchors = "github"
+links = "index"
+exclude = []

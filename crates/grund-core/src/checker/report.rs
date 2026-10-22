@@ -110,9 +110,13 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected};
 /// ### 1.3 `Expected`: what presentation decided, as bytes
 ///
 /// `Expected` is plain data in `model/`, built by the writers before `judge`
-/// runs (§AR-system.2.11): the managed-block version, every agent entrypoint
-/// with the config-derived sections it should carry, each rendered for its own
-/// conversation surface (§FS-init.2.3.6.1) in today's comparison order, the
+/// runs (§AR-system.2.11): the managed-block version, every root agent
+/// entrypoint with the whole block `grund init` would write there, rendered by
+/// the same two calls `init` makes and split into the sections the comparison
+/// names (§FS-check.3.5.3, §FS-check.3.5.4), each for its own conversation
+/// surface (§FS-init.2.3.6.1); at the outermost root of a full checkout, the
+/// workspace's project list the two workspace sections render from, and
+/// elsewhere the mark that leaves them out (§FS-check.3.5.5); the
 /// entrypoint probe's io error kept as data, the canonical link target of
 /// each index-file citation that external enrollment inspects
 /// (§FS-check.3.18.3). The

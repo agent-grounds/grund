@@ -8,7 +8,7 @@
 
 ## 2. The managed block stays current
 
-The versioned `grund init` block is kept at the version the pinned `grund` binary writes; a missing, older, or unsupported block fails the build ([§FS-check.3.5](../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)).
+The versioned `grund init` block is kept at the version the pinned `grund` binary writes, and its text is what that binary renders from this repository's config; a missing, older, unsupported or stale block fails the build ([§FS-check.3.5](../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)).
 
 ## 3. Rules outside the block are grounded
 

@@ -101,7 +101,7 @@ the command ran in.
 unverifiable ones and byte-compares it, in every scope. Only a genuinely invalid
 rule leaves the section unrenderable, and such a run already carries that rule's
 own located error at its heading, so the omission is named where a reader can
-act on it ([§FS-check.3.5.4](../../functional-spec/FS-check.md#354-no-config-derived-section-is-exempt-from-the-comparison)). The unverifiable rule's diagnostic is not repeated
+act on it ([§FS-check.3.5.4](../../functional-spec/FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). The unverifiable rule's diagnostic is not repeated
 by this pass: `check_chapter_rules` reports it at the rule's own site, and one
 fact is one finding.
 

@@ -1,0 +1,3 @@
+packages/billing/AGENTS.md:3: error: repo maintenance: outdated grund init block v35 — run `grund init` to update to v39 (does not affect citation validity); run it in packages/billing
+packages/billing/spec.md:3: warning: declared but never cited: FS-billing
+requirements.md:3: warning: declared but never cited: FS-receipt

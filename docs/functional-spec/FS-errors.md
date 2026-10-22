@@ -306,7 +306,7 @@ of [§FS-errors.3.6.1](FS-errors.md#361-the-final-templates).
 
 #### 3.6.1 The final templates
 
-Since `0.16.0`, with the compatibility tail removed, the five templates are:
+Since `0.16.0`, with the compatibility tail removed, the templates are these five, and a sixth since the check compares the whole block ([§FS-check.3.5.5](FS-check.md#355-the-workspace-sections-are-judged-at-the-outermost-root-of-a-full-checkout), [§DF-check-compares-the-whole-block](../decisions/functional/DF-check-compares-the-whole-block.md#df-check-compares-the-whole-block-grund-check-holds-the-whole-managed-block-the-workspace-sections-at-the-outermost-root-of-a-full-checkout)):
 
 ```text
 repo maintenance: malformed grund managed block: <detail> (does not affect citation validity)
@@ -314,7 +314,16 @@ repo maintenance: outdated grund init block v<found> — run `grund init` to upd
 repo maintenance: unsupported grund init block v<found> — this grund supports v<current> (does not affect citation validity)
 repo maintenance: stale grund init block: <section> differ from grund.toml — run `grund init` to refresh (does not affect citation validity)
 repo maintenance: missing grund init block v<current> — run `grund init` to install it (does not affect citation validity)
+repo maintenance: stale grund init block: <section> differ from the workspace — run `grund init` in <dir> to refresh (does not affect citation validity)
 ```
+
+`<section>` is one of the nouns of [§FS-check.3.5.3](FS-check.md#353-code-and-message), and the sixth template carries the two workspace sections. `<dir>` is the root of the project that owns the block, from the finding's own base; where that project is the one the run started in, ` in <dir>` is left out. The first five templates are held stable, so where they report another project's block they grow at the end rather than change in the middle — `outdated`, `stale … differ from grund.toml` and `missing` each append `; run it in <dir>` after their last byte:
+
+```text
+packages/billing/AGENTS.md:3: error: repo maintenance: outdated grund init block v35 — run `grund init` to update to v39 (does not affect citation validity); run it in packages/billing
+```
+
+`malformed` and `unsupported` name no command and append nothing.
 
 These are message classifications only: `repo maintenance` is not a finding
 category or selector value ([§FS-check.1](FS-check.md#1-inputs)).

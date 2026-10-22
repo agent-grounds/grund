@@ -253,11 +253,12 @@ The candidate is loaded through the v2 reader, the path a file on disk goes thro
 
 - a finding located in the config itself, whose line is mapped through the key map before comparing; a finding with no mapped line is a difference;
 - the config-table names inside messages, such as `[scan] exclude` against `[schema.sources] exclude`: both runs are spelled as v1;
-- the `config-version-1` caution ([§FS-check.checks.config-version-1](FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)), which the run on the file as read carries and the candidate's run never does, so it is dropped from both before comparing.
+- the `config-version-1` caution ([§FS-check.checks.config-version-1](FS-check.md#checksconfig-version-1-a-config-file-read-as-version-1)), which the run on the file as read carries and the candidate's run never does, so it is dropped from both before comparing;
+- an `agents-init` finding about a managed block's text outside the block version and the five generated sections: [§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance) passes that difference on purpose, and the candidate's run reports it because `check` compares the whole block ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). Kept, it would refuse every version-1 migration, whose citation scheme paragraph always changes.
 
 ### 5.3 Guidance
 
-Migration also renders in memory what `grund init` would write into each `AGENTS.md`, for the file as read and for the candidate, whether or not an `AGENTS.md` exists yet. A difference `grund check` compares, the block's version or one of its config-derived sections, is a refusal, because the next `grund init` would write it and `check` would then hold the tree to it. A value row is the common case: version 2 gives it a declaration shape, which adds a section version 1 never wrote:
+Migration also renders in memory what `grund init` would write into each `AGENTS.md`, for the file as read and for the candidate, whether or not an `AGENTS.md` exists yet. A difference in the block's version or in one of its five generated sections — `### Citation directions`, `### Clickable citations`, `### Declaration shapes`, `### Chapter rules` and `### Scoped guidance` — is a refusal, because those carry the rules the tree is held to, and a migration must not move them. Every other difference passes: the rest of the block describes the config, the citation scheme, the project map and the declaration forms among it, so it is expected to change under a migration, and `check` reports the block stale until `grund init` runs ([§FS-check.3.5.4](FS-check.md#354-no-part-of-the-block-is-exempt-from-the-comparison)). A value row is the common case: version 2 gives it a declaration shape, which adds a section version 1 never wrote:
 
 ```text
 refused: grund.toml:11: [[kinds]] `TERM` values = true adds a "Declaration shapes" section to the AGENTS.md block in version 2, which grund check compares
@@ -276,7 +277,7 @@ refused: grund.toml: the AGENTS.md block grund init writes would go from v19 to 
   repair: none keeps the generated guidance; keep version 1 until that block may change
 ```
 
-The Project map row the complement gains once its places are listed is a `note:` line, because only `init` writes that table and `check` does not compare it ([§FS-init.2.3.7.2](FS-init.md#2372-what-check-compares)): `` note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check does not compare that table ``.
+The Project map row the complement gains once its places are listed is a `note:` line rather than a refusal, because the Project map is not one of the generated sections ([§FS-init.2.3.7.2](FS-init.md#2372-what-check-compares)): `` note: the next grund init adds a `code` row to the AGENTS.md Project map, because the complement's places are now listed; grund check reports the block stale until then ``.
 
 ### 5.4 The result, and a difference
 

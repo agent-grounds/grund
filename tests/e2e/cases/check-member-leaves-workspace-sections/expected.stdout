@@ -1,0 +1,4 @@
+AGENTS.md:3: error: repo maintenance: stale grund init block: citation scheme differ from grund.toml — run `grund init` to refresh (does not affect citation validity)
+AGENTS.md:3: error: repo maintenance: stale grund init block: project map differ from grund.toml — run `grund init` to refresh (does not affect citation validity)
+architecture.md:3: warning: declared but never cited: AR-billing
+spec.md:3: warning: declared but never cited: FS-billing
