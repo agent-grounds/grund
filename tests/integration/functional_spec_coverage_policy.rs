@@ -172,6 +172,7 @@ pub(super) const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-init.2.3.9.1", reason: "rationale for the delimiter shape" },
     Exception { id: "FS-init.6.1", reason: "initialization rationale" },
     Exception { id: "FS-inline-citation-style.4.4.4", reason: "rationale for the two severity levels" },
+    Exception { id: "FS-inline-citation-style.5.6", reason: "pointer kept so citations written before the whole-block comparison still resolve; the version rule it now names is proven at FS-init.2.3.7, and this row retires with the pointer" },
     Exception { id: "FS-inline-citation-style.6.2", reason: "explicit non-goal" },
     Exception { id: "FS-inline-citation-style.6.3", reason: "explicit non-goal" },
     Exception { id: "FS-inline-citation-style.6.4", reason: "explicit non-goal" },
