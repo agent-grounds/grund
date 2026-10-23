@@ -103,13 +103,40 @@ def _ignore_removed_node_output(operation, path, error):
         raise error[1]
 
 
+def _remove_node_output(target):
+    """Bound Windows deletion contention per target (§FS-repository-maintenance.2.4).
+
+    Retry the traversal, not the callback operation: shutil may report a failed
+    lookup or scan as well as an unlink or rmdir. Share a ten-second budget across
+    the target and its descendants, matching the ownership-publication wait.
+    """
+    deadline = time.monotonic() + 10
+    while True:
+        try:
+            shutil.rmtree(target, onerror=_ignore_removed_node_output)
+            return
+        except PermissionError:
+            if os.name != "nt":
+                raise
+            try:
+                target.lstat()
+            except FileNotFoundError:
+                return
+            except PermissionError:
+                # Delete-pending output may deny lookup too (§FS-repository-maintenance.2.4).
+                pass
+            if time.monotonic() >= deadline:
+                raise
+            time.sleep(0.01)
+
+
 def _reclaim_node_targets(root, current):
     """Reclaim recorded dead siblings on every call (§FS-repository-maintenance.2.2)."""
     for candidate in root.iterdir():
         if candidate == current or not re.fullmatch(r"[0-9a-f]{16}", candidate.name):
             continue
         if _node_checkout_is_missing(candidate):
-            shutil.rmtree(candidate, onerror=_ignore_removed_node_output)
+            _remove_node_output(candidate)
 
 
 def node_target():

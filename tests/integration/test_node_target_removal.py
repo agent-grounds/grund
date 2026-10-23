@@ -32,7 +32,6 @@ class NodeTargetRemovalTests(unittest.TestCase):
         self.assertTrue(observed["returned"], "helper did not return the caller's stable target")
         self.assertTrue(observed["absent_at_return"], "helper returned before removal completed")
 
-    @unittest.skip("red until #986 tolerates deletion contention; implement removes this")
     def test_peer_removal_after_denial_completes_before_return(self):
         for location in ("root", "directory", "file"):
             with self.subTest(location=location):
@@ -40,7 +39,6 @@ class NodeTargetRemovalTests(unittest.TestCase):
                 self.assertTrue(observed["peer_finished"])
                 self.assert_completed(observed)
 
-    @unittest.skip("red until #986 tolerates deletion contention; implement removes this")
     def test_successful_removal_after_transient_denial(self):
         for location in ("root", "directory", "file"):
             with self.subTest(location=location):
