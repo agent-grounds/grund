@@ -1,6 +1,6 @@
 use crate::config::Frame;
 use crate::grammar::{
-    AGENTS_BLOCK_BASE_VERSION, AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup,
+    AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup, AgentsBlockMember,
     WORKSPACE_SECTIONS, agents_block_heading, block_sections, find_agents_block,
 };
 use crate::model::{
@@ -184,9 +184,8 @@ pub(crate) fn check_agent_block_path(
                 sites: Vec::new(),
                 authority: Vec::new(),
             });
-        } else if block.version > AGENTS_BLOCK_VERSION
-            || newer_than_selected(block.version, expected_version)
-        {
+        } else if block.version > AGENTS_BLOCK_VERSION {
+            // §FS-init.2.3.7.3.1: only above the maximum, which the message names.
             report.errors.push(Diagnostic {
                 code: Code::AGENTS_INIT,
                 path: Some(path.to_path_buf()),
@@ -194,7 +193,7 @@ pub(crate) fn check_agent_block_path(
                 column: None,
                 message: agents_init_message(format!(
                     "unsupported grund init block v{} — this grund supports v{}",
-                    block.version, expected_version
+                    block.version, AGENTS_BLOCK_VERSION
                 )),
                 sites: Vec::new(),
                 authority: Vec::new(),
@@ -227,13 +226,12 @@ pub(crate) fn check_agent_block_path(
                     }
                 }
             }
-            // §FS-init.2.3.7.1: a scoped-pair block where the unscoped pair is
-            // selected is stale even when no compared section tells it apart.
+            // §FS-init.2.3.7.3.2: another known member is stale even when no
+            // compared section tells it apart, named by what its selection turns on.
             if !stale && block.version != expected_version {
                 stale = true;
-                report
-                    .errors
-                    .push(stale_block(path, line, "scoped guidance", owner));
+                let noun = unselected_member_noun(block.version, expected_version);
+                report.errors.push(stale_block(path, line, noun, owner));
             }
             // §FS-init.2.3.5.12: a scoped block is the render, byte for byte, so
             // a difference no section names is still a stale one.
@@ -256,13 +254,19 @@ pub(crate) fn check_agent_block_path(
         .push(missing_block(path, expected_version, owner));
 }
 
-/// Whether a supported block is newer than the version the config selects. A
-/// v41 or v42 block where v39 or v40 is selected is not: it is stale, not
-/// unsupported (§FS-init.2.3.7.1).
-fn newer_than_selected(version: u32, expected_version: u32) -> bool {
-    let scoped = AGENTS_BLOCK_BASE_VERSION + 2;
-    let scoped_where_unscoped = version >= scoped && expected_version < scoped;
-    !scoped_where_unscoped && version > expected_version
+/// The section a known block revision other than the selected one turns on
+/// (§FS-init.2.3.7.3.2): `scoped guidance` across the pairs, alone where the
+/// rule-kind member differs too, otherwise `chapter rules`.
+fn unselected_member_noun(version: u32, expected_version: u32) -> &'static str {
+    let (found, selected) = (
+        AgentsBlockMember::of(version),
+        AgentsBlockMember::of(expected_version),
+    );
+    if found.scoped != selected.scoped {
+        "scoped guidance"
+    } else {
+        "chapter rules"
+    }
 }
 
 /// The nouns of the sections of the root block `current` that differ from
