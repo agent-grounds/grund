@@ -47,7 +47,7 @@ fn bus_id() -> Id {
     }
 }
 
-fn scanned_index(root: &Path) -> (Config, Catalog, KindIndexEntries) {
+pub(super) fn scanned_index(root: &Path) -> (Config, Catalog, KindIndexEntries) {
     let config = resolve_workspace_config(root).expect("load config");
     let findings = scan_findings(&config, root);
     let targets = crate::resolver::index_link_targets(
