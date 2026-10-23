@@ -52,13 +52,15 @@ CONCERN_RECORDS = ("Catalog", "Project", "Run", "Compiled", "effective_project")
 REMOVED_ALIASES = ("Findings", "Config", "KindConfig", "CitationRules")
 REMOVED_LINE = "was removed in 0.19.0"
 
-# §FS-distribution.3.1.2: every row is promised, hidden, or on its way out.
-FROZEN, HIDDEN, LEAVING = "frozen at 1.0", "hidden", "is removed in 0.21.0"
-DISPOSITIONS = (FROZEN, HIDDEN, LEAVING)
+# §FS-distribution.3.1.2: every row is promised or hidden.
+FROZEN, HIDDEN = "frozen at 1.0", "hidden"
+DISPOSITIONS = (FROZEN, HIDDEN)
 FROZEN_COUNT, HIDDEN_COUNT = 115, 150
 # §FS-distribution.3.1.3: the 30 root names the CLI assembled `--write` from,
-# and the 9 methods of the kept vocabularies, deprecated in 0.19.0.
-LEAVING_NAMES = frozenset((
+# and the 9 methods of the kept vocabularies, deprecated in 0.19.0 and removed
+# in 0.21.0, each leaving one `lib.rs` line in the shape the aliases' lines have.
+RETIRED_LINE = "was removed in 0.21.0"
+RETIRED_NAMES = frozenset((
     "agent_override_table", "block_outcome_verb", "BlockOutcome", "detect_clients",
     "expand_target", "GLOBAL_AGENT_INSTRUCTION_TARGETS", "GlobalAgentTarget",
     "GRUND_OPEN_RESOLVER", "install_agent_guidance_block", "install_managed_block",
@@ -69,7 +71,7 @@ LEAVING_NAMES = frozenset((
     "VSCODE_EXTENSION_JS", "vscode_integration_is_current", "VSCODE_PACKAGE_JSON",
     "WEZTERM_APPLY_CALL", "write_resolver_script",
 ))
-LEAVING_METHODS = (
+RETIRED_METHODS = (
     ("IntegrationClient", "is_terminal"), ("IntegrationClient", "install_kind"),
     ("IntegrationClient", "snippet"), ("IntegrationClient", "config_target"),
     ("IntegrationClient", "install_command"), ("IntegrationClient", "comment_prefix"),
@@ -85,6 +87,12 @@ NO_OUTSIDE_READER = (
 )
 NO_OUTSIDE_READER_TEXT = "no reader outside grund-core"
 CORE_SRC = REPO_ROOT / "crates" / "grund-core" / "src"
+RETIRED = sorted(RETIRED_NAMES) + [f"{owner}::{method}" for owner, method in RETIRED_METHODS]
+RETIRING_MODULE = CORE_SRC / "writers" / "integrations_retiring.rs"
+# One removal line in the shape of the aliases': the name, the release, and what
+# answers it now. The release guard reads the clause as landed.
+REMOVAL_LINE = re.compile(r"^// `([A-Za-z_][A-Za-z0-9_:]*)` was removed in 0\.21\.0; \S[^\n]*\.$", re.MULTILINE)
+REMOVED_BULLET = re.compile(r"^- `([A-Za-z_][A-Za-z0-9_:]*)`: \S", re.MULTILINE)
 # A `pub use` tree or root item and the attributes stacked above it; comment
 # lines are blanked by `_source`, so they never separate the two.
 ATTRIBUTED_USE = re.compile(r"((?:^[ \t]*#\[[^\]]*\]\s*)*)^[ \t]*pub use\s+([^;]+);", re.MULTILINE)
@@ -219,6 +227,47 @@ def inventory_dispositions():
     return dict(DISPOSITION.findall(INVENTORY.read_text(encoding="utf-8")))
 
 
+def inventory_section(heading):
+    """The inventory's text under `## <heading>`, up to the next `## ` heading."""
+    text = INVENTORY.read_text(encoding="utf-8") if INVENTORY.is_file() else ""
+    match = re.search(rf"^## {re.escape(heading)}\n(.*?)(?=^## |\Z)", text, re.MULTILINE | re.DOTALL)
+    return match.group(1) if match else ""
+
+
+def counts_the_rows_add_up_to():
+    """Each reading of the counts table, recomputed from the rows' cells."""
+    rows = [[cell.strip() for cell in line.strip().strip("|").split("|")] for line in inventory_rows().values()]
+    unread = ("none found", NO_OUTSIDE_READER_TEXT)
+    return {
+        "Public root names": len(rows),
+        "Rustdoc-visible": sum(row[2] == "visible" for row in rows),
+        "`#[doc(hidden)]`": sum(row[2] == "`#[doc(hidden)]`" for row in rows),
+        "Named, a related API, or a data type of one": sum(row[3] != "no" for row in rows),
+        "Outside that closure": sum(row[3] == "no" for row in rows),
+        "Named by a frontend or its tests": sum(row[4] not in unread for row in rows),
+        "Reached structurally only": sum(row[4] in unread and row[5].startswith("via ") for row in rows),
+        "No repository consumer of either kind": sum(row[4] in unread and not row[5].startswith("via ") for row in rows),
+        f"Disposition {FROZEN}": sum(row[6] == FROZEN for row in rows),
+        f"Disposition {HIDDEN}": sum(row[6] == HIDDEN for row in rows),
+    }
+
+
+def _core_sources():
+    """`(path, text)` for every grund-core source, its comment lines blanked."""
+    for path in sorted(CORE_SRC.rglob("*.rs")):
+        lines = path.read_text(encoding="utf-8").splitlines()
+        yield path, "\n".join("" if line.lstrip().startswith("//") else line for line in lines)
+
+
+def inherent_methods(owner):
+    """The `fn` names of every `impl <owner>` block in grund-core, at any visibility."""
+    names = set()
+    for _, text in _core_sources():
+        for body in re.findall(rf"^impl\s+{owner}\s*\{{(.*?)^\}}", text, re.MULTILINE | re.DOTALL):
+            names.update(re.findall(r"\bfn\s+([A-Za-z_][A-Za-z0-9_]*)", body))
+    return names
+
+
 def _sample(names, limit=8):
     names = sorted(names)
     shown = ", ".join(names[:limit])
@@ -246,6 +295,8 @@ class PublicSurfaceInventoryTests(unittest.TestCase):
         except GlobReExport as glob:
             self.fail(str(glob))
 
+    # The 30 rows moved to Removed names with this point; the root still exports them.
+    @unittest.expectedFailure  # red until #808 removes the 30 root exports; implement removes this marker
     def test_every_public_root_name_has_an_inventory_row(self):
         missing = set(public_root_names()) - set(inventory_names())
         self.assertEqual(
@@ -298,10 +349,10 @@ class ConcernRecordSurfaceTests(unittest.TestCase):
 
 
 class OneDotZeroPromiseTests(unittest.TestCase):
-    """§FS-distribution.3.1.2: every root name is promised, hidden, or noticed
-    for removal in 0.21.0, and `lib.rs` says which of the first two it is."""
+    """§FS-distribution.3.1.2: every root name is promised or hidden, and `lib.rs`
+    says which it is."""
 
-    def test_every_row_has_one_of_the_three_dispositions(self):
+    def test_every_row_has_one_of_the_two_dispositions(self):
         wrong = {
             name: disposition
             for name, disposition in inventory_dispositions().items()
@@ -323,22 +374,49 @@ class OneDotZeroPromiseTests(unittest.TestCase):
         frozen_hidden = {n for n, d in dispositions.items() if d == FROZEN} & hidden
         self.assertEqual("", _sample(frozen_hidden), "`frozen at 1.0` rows lib.rs hides")
 
-    def test_the_leaving_rows_are_the_30_integrations_names(self):
-        leaving = {n for n, d in inventory_dispositions().items() if d == LEAVING}
-        self.assertEqual("", _sample(leaving ^ LEAVING_NAMES), "rows differing from the 30")
-
-    def test_every_leaving_name_and_method_carries_a_one_line_note_naming_0_21_0(self):
-        notes = one_line_deprecations()
-        wanted = sorted(LEAVING_NAMES) + [f"{owner}::{method}" for owner, method in LEAVING_METHODS]
-        wrong = [name for name in wanted if LEAVING not in notes.get(name, "")]
-        self.assertEqual(
-            "", _sample(wrong), f'no one-line #[deprecated(since = "0.19.0")] note with `{LEAVING}`'
-        )
+    def test_the_counts_table_is_what_the_rows_add_up_to(self):
+        table = {
+            reading: int(count)
+            for reading, count in re.findall(r"^\| (.+?) \| (\d+) \|$", inventory_section("What the columns add up to"), re.MULTILINE)
+        }
+        self.assertEqual(counts_the_rows_add_up_to(), table)
 
     def test_the_hidden_rows_nothing_outside_core_reads_say_so(self):
         rows = inventory_rows()
         wrong = [name for name in NO_OUTSIDE_READER if NO_OUTSIDE_READER_TEXT not in rows.get(name, "")]
         self.assertEqual([], wrong, f"rows that do not say `{NO_OUTSIDE_READER_TEXT}`")
+
+
+class IntegrationsRetirementTests(unittest.TestCase):
+    """§FS-distribution.3.1.3: the 30 names and the 9 methods noticed in 0.19.0
+    are gone in 0.21.0, each leaving one `lib.rs` line and one inventory entry."""
+
+    @unittest.expectedFailure  # red until #808 removes the 30 root exports; implement removes this marker
+    def test_no_retired_name_is_a_root_name(self):
+        present = RETIRED_NAMES & set(public_root_names())
+        self.assertEqual("", _sample(present), "retired integrations names the crate root still exports")
+
+    @unittest.expectedFailure  # red until #808 deletes writers/integrations_retiring.rs; implement removes this marker
+    def test_no_retired_name_or_method_keeps_its_forwarding_notice(self):
+        self.assertFalse(RETIRING_MODULE.exists(), f"{RETIRING_MODULE.relative_to(REPO_ROOT)} still exists")
+        noticed = set(RETIRED) & set(one_line_deprecations())
+        self.assertEqual("", _sample(noticed), "retired names still carrying their 0.19.0 notice")
+
+    @unittest.expectedFailure  # red until #808 removes the 9 methods; implement removes this marker
+    def test_no_retired_method_is_defined_on_its_vocabulary(self):
+        defined = [
+            f"{owner}::{method}" for owner, method in RETIRED_METHODS if method in inherent_methods(owner)
+        ]
+        self.assertEqual("", _sample(defined), "retired methods still defined")
+
+    @unittest.expectedFailure  # red until #808 writes the 39 removal lines; implement removes this marker
+    def test_each_retired_name_and_method_leaves_one_removal_line_in_lib_rs(self):
+        named = REMOVAL_LINE.findall(LIB_RS.read_text(encoding="utf-8"))
+        self.assertEqual(sorted(RETIRED), sorted(named), f"`{RETIRED_LINE}` lines in {LIB_RS.name}")
+
+    def test_the_inventory_lists_each_retired_name_and_method_under_removed_names(self):
+        listed = REMOVED_BULLET.findall(inventory_section("Removed names"))
+        self.assertEqual(sorted(RETIRED + list(REMOVED_ALIASES)), sorted(listed))
 
 
 if __name__ == "__main__":

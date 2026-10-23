@@ -3,6 +3,88 @@
 //! a name hidden from these docs is a frontend's seam and outside the promise.
 //! An option record is built from `Default` with its fields assigned, and an output record or a refusal is read, never built.
 //! Building a promised record with a struct literal, or matching a promised enum without a wildcard arm, becomes an error in 0.21.0.
+//!
+//! Since 0.21.0 each block below that is marked not to compile stops at the error its
+//! fence names, and the block after it, which differs in one line, is what compiles
+//! instead (§FS-distribution.3.1.2, §FS-distribution.3.1.3).
+//!
+//! The functions the CLI once assembled `grund integrations --write` from are gone, and
+//! `integrations` answers what each of them did:
+//!
+//! ```compile_fail,E0425
+//! let detected = grund_core::detect_clients();
+//! assert!(detected.len() <= grund_core::IntegrationClient::ALL.len());
+//! # Ok::<(), grund_core::IntegrationsError>(())
+//! ```
+//!
+//! ```no_run
+//! let detected = grund_core::integrations(grund_core::IntegrationsOpts::default())?.detected;
+//! assert!(detected.len() <= grund_core::IntegrationClient::ALL.len());
+//! # Ok::<(), grund_core::IntegrationsError>(())
+//! ```
+//!
+//! So are the methods of the kept vocabularies beyond `ALL`, `name` and `from_name`:
+//!
+//! ```compile_fail,E0599
+//! let output = grund_core::integrations(grund_core::IntegrationsOpts::default())?;
+//! let status = &output.clients[0];
+//! let target = status.client.config_target();
+//! assert!(!target.is_empty(), "{} names no target", status.client.name());
+//! # Ok::<(), grund_core::IntegrationsError>(())
+//! ```
+//!
+//! ```no_run
+//! let output = grund_core::integrations(grund_core::IntegrationsOpts::default())?;
+//! let status = &output.clients[0];
+//! let target = status.config_target;
+//! assert!(!target.is_empty(), "{} names no target", status.client.name());
+//! # Ok::<(), grund_core::IntegrationsError>(())
+//! ```
+//!
+//! A promised record is `#[non_exhaustive]`, so it is built from `Default`:
+//!
+//! ```compile_fail,E0639
+//! use grund_core::{ShowMode, ShowOpts};
+//! let mut opts = ShowOpts { ..ShowOpts::default() };
+//! opts.mode = ShowMode::Toc;
+//! assert!(opts.mode == ShowMode::Toc && opts.section.is_none());
+//! ```
+//!
+//! ```
+//! use grund_core::{ShowMode, ShowOpts};
+//! let mut opts = ShowOpts::default();
+//! opts.mode = ShowMode::Toc;
+//! assert!(opts.mode == ShowMode::Toc && opts.section.is_none());
+//! ```
+//!
+//! A promised enum is `#[non_exhaustive]` too, so a `match` on one ends in a wildcard arm:
+//!
+//! ```compile_fail,E0004
+//! use grund_core::ShowMode;
+//! fn label(mode: ShowMode) -> &'static str {
+//!     match mode {
+//!         ShowMode::Brief => "brief",
+//!         ShowMode::Lead => "lead",
+//!         ShowMode::Toc => "toc",
+//!         ShowMode::Full => "full",
+//!     }
+//! }
+//! assert_eq!(label(ShowMode::Toc), "toc");
+//! ```
+//!
+//! ```
+//! use grund_core::ShowMode;
+//! fn label(mode: ShowMode) -> &'static str {
+//!     match mode {
+//!         ShowMode::Brief => "brief",
+//!         ShowMode::Lead => "lead",
+//!         ShowMode::Toc => "toc",
+//!         ShowMode::Full => "full",
+//!         _ => "a mode this release does not name",
+//!     }
+//! }
+//! assert_eq!(label(ShowMode::Toc), "toc");
+//! ```
 
 // §AR-system.2.2: the model component is one Rust module, so its records are
 // declared in `model/` and what crosses the boundary is what `model/mod.rs`
