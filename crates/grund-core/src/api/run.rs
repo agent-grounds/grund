@@ -12,14 +12,14 @@ use std::path::{Path, PathBuf};
 
 use super::config_findings::config_diagnostics;
 use super::path_report::PathReport;
-use super::report::public_run_warnings;
+use super::report::{complete_report, public_run_warnings};
 use super::scope_cautions::{scan_scope_caution, workspace_path_caution};
 use super::unread_roots::unread_root_warnings;
 use crate::checker::{
     CheckWorkspace, check_chapter_rules, check_project, configured_scope, out_of_scope_references,
     out_of_scope_section_headings, parse_ad_hoc, parse_ad_hoc_with_workspace, path_report_scope,
     repair_index_citations, retain_diagnostics_in_report_scope, retain_findings_in_scope,
-    sort_diagnostics, workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
+    workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
 };
 use crate::config::{Config, Invocation, ProjectRecords, Selection};
 use crate::model::{CheckReport, Code, Diagnostic, Finding, Switch};
@@ -253,7 +253,8 @@ pub(super) fn run_check_with_run_warnings(
     // a `--full` run whose *configured* scope read or recognized nothing still earns
     // that caution — the tier says where the citations are, the config was not told.
     report.errors.extend(out_of_scope);
-    sort_diagnostics(&mut report.errors);
+    // §FS-errors.4.1: complete every channel after the final report additions.
+    complete_report(&mut report);
     // §FS-check.1.4.1: the flag is the gate of the tier and of its caution.
     if full {
         report.armed.arm(Switch::Full);
@@ -494,9 +495,8 @@ fn run_workspace_check(
         },
         config_warnings,
     );
-    sort_diagnostics(&mut report.errors);
-    sort_diagnostics(&mut report.warnings);
-    sort_diagnostics(&mut report.suggestions);
+    // §FS-errors.4.1: complete every channel after narrowing and caution insertion.
+    complete_report(&mut report);
 
     Ok(CheckRun {
         config: root_config.into_facade(),

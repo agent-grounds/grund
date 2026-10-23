@@ -29,6 +29,10 @@ have channel `suggestion` and severity None. `run_cautions` carries separate
 run warnings; it is never folded into the report
 ([§FS-distribution.3.3.1](../functional-spec/FS-distribution.md#331-typed-immutable-results)).
 
+Each completed report channel stably sorts bytewise by `(path, line, message)`,
+with absent paths first and absent lines counted as zero ([§FS-errors.4.1](../functional-spec/FS-errors.md#41-ordering)).
+`selected_report` preserves surviving findings' order and appends `selected-check-off` advice.
+
 ## Functions and defaults
 
 Required operands are positional. Other options are keywords. Every disk-tree

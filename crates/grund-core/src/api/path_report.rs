@@ -22,7 +22,7 @@ pub(super) struct PathReport<'a> {
 impl PathReport<'_> {
     /// Narrow `report` to the path and add the cautions the path itself earns.
     ///
-    /// In this order, which is the order the single-project arm always printed:
+    /// In this order, so caution insertion preserves the silence decision:
     /// the three channels are narrowed; the scope caution is asked whether the
     /// *narrowed* report is silent (§FS-check.2.2), through `scope_caution`, because
     /// each arm knows what its walk read; the files the resolution scope could not
@@ -30,6 +30,7 @@ impl PathReport<'_> {
     /// question so they cannot suppress it (§FS-check.2.2.3.1); `config_warnings`
     /// follow unnarrowed (§FS-check.4.3); and a `--full` the path made redundant says
     /// so last (§FS-check.1.3.7).
+    /// The caller then completes channel ordering (§FS-errors.4.1).
     pub(super) fn narrow(
         &self,
         report: &mut CheckReport,

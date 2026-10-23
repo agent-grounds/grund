@@ -36,13 +36,13 @@
       {"file":"docs/cites.md","token":"§FS-login","nth":6}
     ],
     "findings": [
-      {"severity":"warning","code":"unused","path":"docs/FS-log.md","line":1,"message":"declared but never cited: FS-log","sites":[]},
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]},
       {"severity":"error","code":"glob-citation","path":"docs/cites.md","line":3,"token":"§FS-login.*","message":"glob citation §FS-login.*: a citation names one exact point, not a pattern; cite the point, or escape it as <§>FS-login.*; this became an error in grund 0.19.0","sites":[]},
       {"severity":"error","code":"glob-citation","path":"docs/cites.md","line":4,"token":"§FS-login.requirements.**","message":"glob citation §FS-login.requirements.**: a citation names one exact point, not a pattern; cite the point, or escape it as <§>FS-login.requirements.**; this became an error in grund 0.19.0","sites":[]},
       {"severity":"error","code":"glob-citation","path":"docs/cites.md","line":5,"token":"§FS-log*in.requirements","message":"glob citation §FS-log*in.requirements: a citation names one exact point, not a pattern; cite the point, or escape it as <§>FS-log*in.requirements; this became an error in grund 0.19.0","sites":[]},
       {"severity":"error","code":"glob-citation","path":"docs/cites.md","line":6,"token":"§FS-*.requirements","message":"glob citation §FS-*.requirements: a citation names one exact point, not a pattern; cite the point, or escape it as <§>FS-*.requirements; this became an error in grund 0.19.0","sites":[]},
       {"severity":"error","code":"glob-citation","path":"docs/cites.md","line":7,"token":"§FS-[a,b]","message":"glob citation §FS-[a,b]: a citation names one exact point, not a pattern; cite the point, or escape it as <§>FS-[a,b]; this became an error in grund 0.19.0","sites":[]},
-      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+      {"severity":"warning","code":"unused","path":"docs/FS-log.md","line":1,"message":"declared but never cited: FS-log","sites":[]}
     ],
     "refusals": {},
     "fmt": {

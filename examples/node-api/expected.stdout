@@ -1,2 +1,3 @@
 dangling: true
 show: FS-001-alpha
+warnings: config-version-1, unused

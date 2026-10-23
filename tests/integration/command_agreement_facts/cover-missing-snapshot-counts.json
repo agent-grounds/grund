@@ -33,8 +33,8 @@
       {"file":"docs/guide.md","token":"§TICKET-1234","enclosing":[null,null]}
     ],
     "findings": [
-      {"severity":"warning","code":"missing-snapshot","path":"docs/guide.md","line":3,"message":"no snapshot for TICKET-1234 in docs/tickets.md — run grund fetch TICKET-1234","sites":[],"token":"§TICKET-1234"},
-      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]},
+      {"severity":"warning","code":"missing-snapshot","path":"docs/guide.md","line":3,"message":"no snapshot for TICKET-1234 in docs/tickets.md — run grund fetch TICKET-1234","sites":[],"token":"§TICKET-1234"}
     ],
     "refusals": {},
     "absentQuery": "TICKET-9999",
