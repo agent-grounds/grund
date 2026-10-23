@@ -121,7 +121,7 @@ mod scoped_files;
 pub use fetch::{FetchFailure, FetchFailureKind, fetch_snapshot, fetch_snapshot_with_run_warnings};
 pub use fmt_error::{FmtConflictAbort, FmtScanAbort};
 pub use init::{InitError, InitEvent, InitOpts, InitOutput, init};
-pub use init_guidance::{InitFsHome, InitNext};
+pub use init_guidance::{InitAllocation, InitAllocationHome, InitFsHome, InitNext};
 pub use init_plan::InitAgentEntrypointSelection;
 
 // What the other components read, each by this module's path (§AR-system.4):

@@ -82,7 +82,9 @@ impl Data for ListSizeMeasurement {
     }
 }
 record!(InitEvent; verb, path);
-record!(InitNext; docs, declares_kinds, entrypoint, fs_home, scan_reads_file);
+record!(InitNext; docs, declares_kinds, entrypoint, fs_home, allocation, scan_reads_file);
+// §FS-distribution.3.2.2.2: the selected home travels in the shape of the FS home.
+record!(InitAllocation; kind, home, home_exists);
 impl Data for InitFsHome {
     fn data(&self) -> Value {
         match self {
@@ -90,12 +92,31 @@ impl Data for InitFsHome {
                 path,
                 heading_name,
                 heading_marker,
-            } => json!({
-                "kind": "file", "path": path, "heading_name": heading_name,
-                "heading_marker": heading_marker}),
-            Self::Folder { path } => json!({"kind": "folder", "path": path,
-                "heading_name": null, "heading_marker": null}),
+            } => home_data(path, Some((heading_name, heading_marker))),
+            Self::Folder { path } => home_data(path, None),
         }
+    }
+}
+impl Data for InitAllocationHome {
+    fn data(&self) -> Value {
+        match self {
+            Self::File {
+                path,
+                heading_name,
+                heading_marker,
+            } => home_data(path, Some((heading_name, heading_marker))),
+            Self::Folder { path } => home_data(path, None),
+        }
+    }
+}
+/// One home record for both home types: a file carries its heading, a folder nulls.
+fn home_data(path: &str, heading: Option<(&str, &str)>) -> Value {
+    match heading {
+        Some((heading_name, heading_marker)) => json!({
+            "kind": "file", "path": path, "heading_name": heading_name,
+            "heading_marker": heading_marker}),
+        None => json!({"kind": "folder", "path": path,
+            "heading_name": null, "heading_marker": null}),
     }
 }
 impl Data for InitOutput {

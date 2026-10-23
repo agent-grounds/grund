@@ -107,7 +107,10 @@ export type Event = { readonly verb: string; readonly path: string };
 export type InitData = { readonly events: readonly Event[]; readonly errors: readonly Finding[]; readonly notes: readonly string[];
   readonly next: { readonly docs: boolean; readonly declaresKinds: boolean; readonly entrypoint: string; readonly scanReadsFile: boolean;
     readonly fsHome: { readonly kind: 'file'; readonly path: string; readonly headingName: string; readonly headingMarker: string } |
-      { readonly kind: 'folder'; readonly path: string } } | null; readonly pendingChanges: boolean };
+      { readonly kind: 'folder'; readonly path: string };
+    readonly allocation: { readonly kind: string; readonly homeExists: boolean;
+      readonly home: { readonly kind: 'file'; readonly path: string; readonly headingName: string; readonly headingMarker: string } |
+        { readonly kind: 'folder'; readonly path: string } | null } | null } | null; readonly pendingChanges: boolean };
 export type InitResult = InitData & Cautions;
 export type CompleteResult = Cautions & { readonly ids: readonly string[] };
 export type FetchResult = Cautions & { readonly id: string };

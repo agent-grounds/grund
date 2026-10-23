@@ -215,7 +215,8 @@ pub use templates::{
 pub use writers::fetch_snapshot_with_run_warnings;
 pub use writers::{
     FetchFailure, FetchFailureKind, FmtConflictAbort, FmtScanAbort, InitAgentEntrypointSelection,
-    InitError, InitEvent, InitFsHome, InitNext, InitOpts, InitOutput, fetch_snapshot, init,
+    InitAllocation, InitAllocationHome, InitError, InitEvent, InitFsHome, InitNext, InitOpts,
+    InitOutput, fetch_snapshot, init,
 };
 
 // §AR-system.2.8 writers, `grund integrations` as one operation

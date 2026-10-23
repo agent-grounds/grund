@@ -1,4 +1,5 @@
-"""Fetch sources, filesystem roots and fmt refusals (§FS-distribution.3.3.2, §FS-distribution.3.3.3)."""
+"""Fetch sources, filesystem roots, fmt refusals and init's guidance selection
+(§FS-distribution.3.3.2, §FS-distribution.3.3.3, §FS-distribution.3.2.2.2)."""
 
 import errno
 import os
@@ -153,3 +154,12 @@ class RegressionTests(unittest.TestCase):
                 self.module.fmt(root=root, write=True)
             self.assertEqual(0, len(caught.exception.failure.partial_output["changes"]))
             self.assertEqual(before, tree_bytes(root), "nothing is written before the refusal")
+
+    def test_init_carries_the_guidance_selection(self):
+        # §FS-init.2.2.2.3: the SPEC row is the selection, its folder not yet made.
+        with temporary() as temp:
+            root = fixture(temp, "init-force-keeps-existing-config")
+            allocation = self.module.init(root, no_vcs=True).next.allocation
+        self.assertEqual("SPEC", allocation.kind)
+        self.assertEqual(("folder", "specs"), (allocation.home.kind, allocation.home.path))
+        self.assertFalse(allocation.home_exists)

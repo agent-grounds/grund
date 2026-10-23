@@ -7,7 +7,7 @@ use super::scope_probe::effective_scope_reads_any_file_with;
 use super::*;
 use crate::config::Config;
 use crate::testing::{test_root, write};
-use crate::writers::{InitFsHome, InitNext};
+use crate::writers::{InitAllocation, InitAllocationHome, InitFsHome, InitNext};
 
 #[test]
 fn effective_scope_recognizes_include_and_kind_home_files() {
@@ -124,6 +124,15 @@ fn next_guidance(scan_reads_file: bool) -> InitNext {
             heading_name: "H2",
             heading_marker: "##",
         },
+        allocation: Some(InitAllocation {
+            kind: "FS".to_string(),
+            home: Some(InitAllocationHome::File {
+                path: "requirements.md".to_string(),
+                heading_name: "H2",
+                heading_marker: "##",
+            }),
+            home_exists: false,
+        }),
         scan_reads_file,
     }
 }

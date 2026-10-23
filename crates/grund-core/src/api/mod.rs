@@ -153,6 +153,8 @@ mod tests_fmt_errors;
 #[cfg(all(test, unix))]
 mod tests_fmt_workspace;
 #[cfg(test)]
+mod tests_init_allocation;
+#[cfg(test)]
 mod tests_init_guidance;
 #[cfg(test)]
 mod tests_multi_line_string;
