@@ -121,6 +121,13 @@ version has, the line gives the spelling that answers:
 version 2 has no top-level key or check code `schema.sources.exclude`; for the key, ask grund config explain '[schema.sources] exclude'
 ```
 
+A dotted path copied from a guide for the other version, such as
+`reference.strict` or `scan.include` in a version-2 project, gets what its
+table's bracketed spelling gets: `scan.include` is answered as `'[scan]'` is
+above, with the `hint:` line naming where version 2 writes those settings. A
+table both versions have, such as `[workspace]`, is always read as your own
+version's.
+
 Anything else says how to list what there is: `grund config explain`
 for the tables, `grund config explain --codes` for the codes. A usage mistake,
 or a file whose version cannot be read, is exit `2` with one `error:` line.
