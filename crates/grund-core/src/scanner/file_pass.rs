@@ -271,14 +271,12 @@ pub(super) fn scan_file_text(
             }
             declared = true;
         }
-        // §AR-scanner.2.3: a declaration's heading is read for its citations below,
-        // never again for structure.
-        let structure = heading_position && !declared;
 
         // §FS-declarations.checks.declaration-near-miss.1: the line was not a declaration. Ask the
         // near-miss pattern whether it looked like one, here rather than in a second read of the
         // tree — the scan has the line, the position rules and the fence/docstring state.
-        if structure
+        if heading_position
+            && !declared
             && eligible
             && let Some(((text, format, kind), bare)) =
                 near_miss_heading(grammar, scan_line, scan.in_py_docstring, is_md)
@@ -340,8 +338,12 @@ pub(super) fn scan_file_text(
                 source: DeclarationSource::Text,
                 value_valid: None,
             });
-            continue;
+            // §FS-citations.recognized.title-lines: it declares, so its title is read below.
+            declared = true;
         }
+        // §AR-scanner.2.3: a declaration's heading is read for its citations below,
+        // never again for structure.
+        let structure = heading_position && !declared;
 
         // §FS-languages.fence.comment-block: a fence in a comment block hides its headings only.
         let heading_structure = structure && !record.in_comment_fence(lineno);
@@ -446,6 +448,10 @@ pub(super) fn scan_file_text(
             source_forms: reading.source_forms(),
             is_md,
             may_be_heading: heading_position,
+            declares: current
+                .as_ref()
+                .filter(|decl| decl.line == lineno)
+                .map(|decl| &decl.id),
             value_comment: source_value_context,
             inline_sites: &inline_sites,
             inline_block_lines: &inline_block_lines,
@@ -511,10 +517,7 @@ pub(super) fn scan_file_text(
             if namespace.is_some() && has_marker && citation_line.qualified_suppressed(start) {
                 continue;
             }
-            if let Some(decl) = current.as_ref()
-                && decl.line == lineno
-                && decl.id == id
-            {
+            if citation_line.declares == Some(&id) {
                 continue;
             }
             let text = scan_line[start..token_end].to_string();

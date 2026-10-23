@@ -141,6 +141,7 @@ pub(super) fn scan_legacy_citation_candidates(line: &CitationLine<'_>, findings:
                 column,
                 inline_site: line.inline_sites.get(&line.lineno).cloned(),
                 inline_block_lines: line.inline_block_lines.get(&line.lineno).cloned(),
+                declares: line.declares.cloned(),
                 source_kind: String::new(),
                 enclosing_declaration: None,
                 enclosing_section: None,

@@ -9,7 +9,7 @@ use crate::config::{Frame, Schema};
 use crate::grammar::{
     DocstringContent, LexicalSettings, LineLinks, QualifiedSource, bare_token_in_never_rewrite_zone,
 };
-use crate::model::InlineCitationSite;
+use crate::model::{Id, InlineCitationSite};
 
 pub(super) struct CitationLine<'a> {
     pub(super) scan_line: &'a str,
@@ -39,6 +39,9 @@ pub(super) struct CitationLine<'a> {
     /// Whether this line may be a heading: false inside a raw-text HTML block,
     /// whose lines are never headings (§FS-check.1.1.5.1).
     pub(super) may_be_heading: bool,
+    /// The ID this line declares where it is a declaration's heading, a near miss's
+    /// included. A citation of it here is none (§FS-citations.recognized.title-lines).
+    pub(super) declares: Option<&'a Id>,
     /// The bytes on this physical source line that the scanner's shared block
     /// walk recognizes as comment content, and the block they belong to.
     /// Markdown and Python docstrings use their already-normalized `scan_line`
