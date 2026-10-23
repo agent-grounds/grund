@@ -17,7 +17,6 @@ HARNESS = Path(__file__).with_name("test_watch_terminal.py")
 EXE = "grund.exe" if os.name == "nt" else "grund"
 
 
-@unittest.skip("red until #988 checkout-owned terminal setup; implement removes this")
 class WatchTerminalInputsTests(unittest.TestCase):
     def setUp(self):
         scratch = Path.home() / "ag/tmp"

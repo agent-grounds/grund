@@ -1,4 +1,7 @@
-"""PTY byte contracts for §FS-check.6.2.2 and CLI ownership (§AR-bindings.3)."""
+"""PTY byte contracts for §FS-check.6.2.2 and CLI ownership (§AR-bindings.3).
+
+Exercise this checkout by default (§FS-repository-maintenance.3).
+"""
 
 import errno
 import os
@@ -16,7 +19,6 @@ if os.name == "posix":
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRATCH = Path.home() / "ag/tmp"
-TARGET = SCRATCH / "grund-issue-473-target"
 ENTER = b"\x1b[?1049h"
 CLEAR = b"\x1b[H\x1b[2J"
 RESTORE = b"\x1b[?1049l"
@@ -26,12 +28,17 @@ RESTORE = b"\x1b[?1049l"
 class WatchTerminalTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        """Select caller inputs or build this checkout (§AR-ci-terminal-inputs.1)."""
         SCRATCH.mkdir(parents=True, exist_ok=True)
+        if built := os.environ.get("GRUND_BUILT"):
+            cls.binary = Path(built).resolve()
+            return
+        target = (ROOT / (os.environ.get("CARGO_TARGET_DIR") or "target")).resolve()
         subprocess.run(
-            ["cargo", "build", "--locked", "-p", "grund", "--target-dir", str(TARGET)],
+            ["cargo", "build", "--locked", "-p", "grund", "--target-dir", str(target)],
             cwd=ROOT, check=True, timeout=120,
         )
-        cls.binary = TARGET / "debug/grund"
+        cls.binary = target / "debug" / ("grund.exe" if os.name == "nt" else "grund")
 
     def setUp(self):
         self.fixture = tempfile.TemporaryDirectory(prefix="grund-473-pty-", dir=SCRATCH)
