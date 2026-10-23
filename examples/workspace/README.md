@@ -85,7 +85,7 @@ only the root block's `api` entry from its directory link to the
 not-yet-initialized mark an earlier grund wrote. The root check exits 1 and shows:
 
 ```text
-AGENTS.md:3: error: repo maintenance: stale grund init block: workspace members differ from the workspace (expected - [`api`](packages/api/); found - [`api`](packages/api/) *(not yet initialized)*) — run `grund init` to refresh (does not affect citation validity)
+AGENTS.md:3: error: repo maintenance: stale grund init block: the workspace members section differs from the workspace (expected - [`api`](packages/api/); found - [`api`](packages/api/) *(not yet initialized)*) — run `grund init` to refresh (does not affect citation validity)
 ```
 
 `expected` comes from the current render; `found` is the stale body line on

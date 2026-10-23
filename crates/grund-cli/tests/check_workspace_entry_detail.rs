@@ -125,7 +125,7 @@ impl Fixture {
         assert!(!findings.is_empty(), "no stale finding: {stdout}");
         assert!(
             findings.iter().all(|line| line.contains(&format!(
-                "error: repo maintenance: stale grund init block: {section} differ from the workspace"
+                "error: repo maintenance: stale grund init block: the {section} section differs from the workspace"
             ))),
             "unexpected section or severity: {findings:?}"
         );
@@ -157,7 +157,7 @@ impl Drop for Fixture {
 // Exclude both the finding's path and its owner-directory command hint.
 fn detail<'a>(finding: &'a str, section: &str) -> &'a str {
     finding
-        .split_once(&format!("{section} differ from the workspace"))
+        .split_once(&format!("the {section} section differs from the workspace"))
         .unwrap()
         .1
         .split_once("— run")
