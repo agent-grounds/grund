@@ -7,6 +7,7 @@ use std::path::PathBuf;
 /// (§AR-scanner.6.1) — its `command.args`, `expected.exit`, and fixture file list
 /// are what `grund E2E-<name>` renders (§FS-show.2.4).
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct E2eCase {
     pub dir: PathBuf,
     /// The words of `command.args`, empty when the file is absent (§AR-scanner.6.2).
@@ -41,6 +42,7 @@ impl E2eCase {
 /// deliberately allowed to use idealized, not-locally-resolvable IDs, so only
 /// `kind` (plus `namespace`) is retained.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct E2eSpecRef {
     pub namespace: Option<String>,
     pub kind: String,

@@ -24,6 +24,7 @@ pub use super::id::Id;
 /// (§AR-scanner.2.2) and, for stub headings, the inline-home path it points at
 /// (§FS-show.2.3, §FS-declarations.checks.broken-stub).
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct Declaration {
     pub id: Id,
     /// Source spelling is presentation, separate from the public identity
@@ -105,6 +106,7 @@ impl Declaration {
 /// source line and Markdown heading level used by the section-depth checker
 /// (§FS-declarations.checks.section-heading-level).
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct SectionInfo {
     pub title: String,
     pub line: usize,
@@ -136,6 +138,7 @@ impl SectionInfo {
 /// filtering (§FS-config.3.1) and is what `grund fmt` upgrades a bare token
 /// from (§FS-fmt.2.2).
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct Citation {
     pub namespace: Option<String>,
     pub id: Id,
@@ -257,6 +260,7 @@ pub(crate) struct LegacyCitationCandidate {
 /// (§FS-inline-citation-style.1.1). Such a citation still resolves and is still
 /// checked for everything else — dangling, direction, grounding, shorthand.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[non_exhaustive]
 pub struct InlineCitationSite {
     pub first_line: usize,
     pub last_line: usize,
@@ -296,6 +300,7 @@ pub struct InlineCitationSite {
 /// re-reading files. It was `Findings` before §AR-system.2.2 took the glossary's
 /// word, which kept the report item `Finding` apart from it (§FS-terms.terms.5).
 #[derive(Default)]
+#[non_exhaustive]
 pub struct Catalog {
     pub declarations: BTreeMap<Id, Vec<Declaration>>,
     /// The citations the walk found. A hygiene check reads these alone; a reader
@@ -410,6 +415,7 @@ pub(crate) enum ShowRenderMode {
     Outline,
 }
 
+#[non_exhaustive]
 pub struct ShowSection {
     pub path: String,
     pub title: String,
@@ -419,6 +425,7 @@ pub struct ShowSection {
 /// What an ID query resolved to: the body text to print, the `path:line` it
 /// came from, the section map (`--toc` only), and the pre-rendered JSON when
 /// `--format json` was asked for (§FS-show.3, §FS-errors.5).
+#[non_exhaustive]
 pub struct ShowOutput {
     pub body: String,
     pub path: PathBuf,
@@ -430,6 +437,7 @@ pub struct ShowOutput {
 /// One Markdown heading outside a fence (§AR-scanner.2.7): its line, its level,
 /// and its text without the leading `#`s, which is what a section finding quotes
 /// back (§FS-check.3.6.3).
+#[non_exhaustive]
 pub struct FileHeading {
     pub line: usize,
     pub level: usize,
@@ -441,6 +449,7 @@ pub struct FileHeading {
 /// Indentation is the parse-free stand-in for "top-level item" that
 /// §FS-check.3.6.2.2 reads at level 2 — it holds across Rust, Python, Java, Go, and
 /// Kotlin without knowing any of them (§FS-non-goals.3).
+#[non_exhaustive]
 pub struct DocCommentBlock {
     pub start: usize,
     pub end: usize,
@@ -451,6 +460,7 @@ pub struct DocCommentBlock {
 /// `headings` and a source file `doc_comments`; `total_lines` closes the last
 /// subtree or block, which would otherwise have no end.
 #[derive(Default)]
+#[non_exhaustive]
 pub struct FileStructure {
     pub headings: Vec<FileHeading>,
     pub doc_comments: Vec<DocCommentBlock>,

@@ -16,6 +16,7 @@ use crate::model::Finding;
 /// (§FS-integrations.1.3.1). Built from `Default` with its fields assigned
 /// (§FS-distribution.3.1.2).
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct IntegrationsOpts {
     /// The client to describe or, under `write`, install.
     pub client: Option<IntegrationClient>,
@@ -59,6 +60,7 @@ impl IntegrationsOpts {
 
 /// The answer (§FS-integrations.1.3.2): only facts, never a line of output.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct IntegrationsOutput {
     /// The clients the environment shows, in the frozen client order
     /// (§FS-integrations.2).
@@ -78,6 +80,7 @@ pub struct IntegrationsOutput {
 /// One client as detection reports it (§FS-integrations.5). It carries no
 /// install command: that is the CLI's own argv (§FS-integrations.1.3.2).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct IntegrationClientStatus {
     pub client: IntegrationClient,
     pub install_kind: InstallKind,
@@ -92,6 +95,7 @@ pub struct IntegrationClientStatus {
 
 /// What a client's integration consists of, as content (§FS-integrations.3).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct IntegrationArtifact {
     pub client: IntegrationClient,
     /// The config snippet; `None` for the editor clients.
@@ -108,6 +112,7 @@ pub struct IntegrationArtifact {
 
 /// One target a `write` touched (§FS-integrations.1.3.2).
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct IntegrationEvent {
     pub path: PathBuf,
     pub outcome: IntegrationOutcome,
@@ -116,6 +121,7 @@ pub struct IntegrationEvent {
 
 /// What happened to one target (§FS-integrations.4.1.6).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum IntegrationOutcome {
     Wrote,
     Appended,
@@ -140,6 +146,7 @@ impl IntegrationOutcome {
 
 /// What a report says beside one event (§FS-integrations.1.3.2).
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum IntegrationNote {
     /// The WezTerm config does not make this call on the config it returns, so
     /// the block registers nothing (§FS-integrations.4.1.3).
@@ -161,6 +168,7 @@ pub enum IntegrationNote {
 /// A client the user must set up by hand, with the snippet to apply
 /// (§FS-integrations.3.4.2).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct IntegrationManualStep {
     pub client: IntegrationClient,
     pub snippet: &'static str,
@@ -168,6 +176,7 @@ pub struct IntegrationManualStep {
 
 /// Why `integrations` refused (§FS-integrations.1.3.3, §FS-integrations.6.2).
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum IntegrationsFailure {
     /// `agent` without `write`.
     AgentWithoutWrite,
@@ -203,6 +212,7 @@ impl std::fmt::Display for IntegrationsFailure {
 /// `output` holds the events written, the manual steps reached and the
 /// cautions read, and the filesystem's own error is the `source`.
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct IntegrationsError {
     pub output: IntegrationsOutput,
     pub failure: IntegrationsFailure,

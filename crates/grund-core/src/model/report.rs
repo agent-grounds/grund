@@ -87,6 +87,7 @@ pub(crate) struct CheckReport {
 /// report spells it, because a consumer of the published shape has no `Config`
 /// to render one with.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct FindingSite {
     pub path: String,
     pub line: usize,
@@ -96,6 +97,7 @@ pub struct FindingSite {
 /// paths rendered — the twin of [`Diagnostic`], and what `check` returns to an
 /// embedder rather than prints (§AR-bindings.2).
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct Finding {
     pub severity: &'static str,
     pub code: &'static str,
@@ -120,6 +122,7 @@ pub struct Finding {
 /// same three channels so the exit code still keys off errors alone
 /// (§FS-check.2, §FS-check.2.3).
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct Report {
     pub errors: Vec<Finding>,
     pub warnings: Vec<Finding>,

@@ -10,6 +10,7 @@ use super::records::Id;
 /// expansion is involved.
 
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub enum DeclarationSource {
     Text,
     Json {
@@ -22,6 +23,7 @@ pub enum DeclarationSource {
 /// One authoritative component shared by Markdown and JSON value declarations
 /// (§FS-values.2, §FS-values.4).
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct ValueComponent {
     pub decoded: String,
     pub kind: ValueComponentKind,
@@ -30,6 +32,7 @@ pub struct ValueComponent {
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum ValueComponentKind {
     Number,
     String,
@@ -40,6 +43,7 @@ pub enum ValueComponentKind {
 /// the exact suffix (§FS-values.2.4); `Chapter` carries nothing, because a
 /// chapter-declared root has no marker bytes to point at (§FS-values.2.5).
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum ValueRootOrigin {
     Marker { column: usize },
     Chapter,
@@ -51,6 +55,7 @@ pub enum ValueRootOrigin {
 /// comparison read this record rather than the route that wrote it
 /// (§AR-scanner.2.2.8).
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct EmbeddedValueRoot {
     pub valid: bool,
     pub origin: ValueRootOrigin,
@@ -96,6 +101,7 @@ pub(crate) fn positive_numeric_component(part: &str) -> bool {
 /// root's components is resolved against the catalog, not read off the
 /// spelling (§FS-values.5.1).
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct ValueBinding {
     pub namespace: Option<String>,
     pub id: Id,
@@ -113,6 +119,7 @@ pub struct ValueBinding {
 /// A readable declaration or attempted binding that violates the explicit
 /// value grammar (§FS-values.5.2, §AR-scanner.3).
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct InvalidValueSite {
     pub id: Option<Id>,
     pub file: PathBuf,

@@ -23,6 +23,7 @@ fn command_fetch(args: &[String]) -> ExitCode {
                 eprintln!("error: {}", err.message);
                 ExitCode::from(2)
             }
+            _ => unnamed_variant::<FetchFailureKind>(),
         },
     }
 }

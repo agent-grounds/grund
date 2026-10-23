@@ -18,6 +18,7 @@ use crate::scanner::{ApiScanError, api_scan_error};
 use super::report::context_run_warnings;
 
 #[derive(Clone)]
+#[non_exhaustive]
 pub struct CoverOpts {
     pub path: PathBuf,
     pub path_provided: bool,
@@ -33,6 +34,7 @@ impl Default for CoverOpts {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct CoverCitation {
     /// The alias of the project whose tree contains this citation site — the
     /// *citing* project, as in `refs` (§FS-workspace.8.2.4). `None` outside
@@ -59,6 +61,7 @@ pub struct CoverCitation {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct CoverEntry {
     /// The alias of the project this scanned file belongs to. A file belongs to
     /// exactly one project by the boundary rule (§FS-workspace.6), so this is
@@ -69,6 +72,7 @@ pub struct CoverEntry {
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct CoverOutput {
     pub output_format: String,
     pub entries: Vec<CoverEntry>,
@@ -88,6 +92,7 @@ pub struct CoverOutput {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct CoverTextCitation {
     pub line: usize,
     pub column: usize,
@@ -95,12 +100,14 @@ pub struct CoverTextCitation {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct CoverTextEntry {
     pub path: String,
     pub citations: Vec<CoverTextCitation>,
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct CoverTextOutput {
     pub output_format: String,
     pub entries: Vec<CoverTextEntry>,

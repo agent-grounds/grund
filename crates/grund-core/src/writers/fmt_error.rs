@@ -11,6 +11,7 @@ use crate::scanner::ApiScanError;
 /// unreadable paths (§FS-fmt.3.2). Kept structured so API callers can inspect the
 /// complete set and each CLI adapter can add its own `error:` prefix.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct FmtScanAbort {
     pub scan_errors: Vec<ApiScanError>,
 }
@@ -44,6 +45,7 @@ impl std::error::Error for FmtScanAbort {}
 /// beside [`FmtScanAbort`], which stays as it is, because a block is a finding
 /// with a line and sites where an unreadable path is not.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct FmtConflictAbort {
     pub conflicts: Vec<Finding>,
 }

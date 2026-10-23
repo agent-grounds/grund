@@ -28,14 +28,12 @@ fn repos() -> impl Iterator<Item = Repo> {
 }
 
 fn note(repo: &Repo, path_provided: bool, id: &str, section: Option<&str>) -> Option<String> {
-    let output = refs(RefsOpts {
-        path: repo.0.clone(),
-        path_provided,
-        id: id.into(),
-        section: section.map(str::to_owned),
-        descendants: false,
-    })
-    .unwrap();
+    let mut opts = RefsOpts::default();
+    opts.path = repo.0.clone();
+    opts.path_provided = path_provided;
+    opts.id = id.into();
+    opts.section = section.map(str::to_owned);
+    let output = refs(opts).unwrap();
     assert!(output.hits.is_empty() || id.starts_with("ADR-1"), "{id}");
     output.note
 }

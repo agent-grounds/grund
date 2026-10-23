@@ -7,6 +7,7 @@ use std::path::PathBuf;
 
 /// Options for the additive per-point size catalog (§FS-list.1, §FS-list.3.4).
 #[derive(Clone)]
+#[non_exhaustive]
 pub struct ListSizeOpts {
     pub path: PathBuf,
     pub path_provided: bool,
@@ -43,6 +44,7 @@ impl Default for ListSizeOpts {
 
 /// One selected unit's lead/full pair, kept in caller order (§FS-list.3.4).
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct ListSizeMeasurement {
     pub unit: PointSizeUnit,
     pub lead: Option<usize>,
@@ -53,6 +55,7 @@ pub struct ListSizeMeasurement {
 /// §FS-list.3.4). Unlike [`ListEntry`](crate::ListEntry), it deliberately carries no title/ref
 /// fields and never collapses ambiguous sites.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct ListSizeEntry {
     pub project: Option<String>,
     pub id: String,
@@ -71,6 +74,7 @@ pub struct ListSizeEntry {
 
 /// Structured result for one deterministic size-catalog scan (§FS-list.3.4).
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct ListSizeOutput {
     pub output_format: String,
     pub workspace: bool,

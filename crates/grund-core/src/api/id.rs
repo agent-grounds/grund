@@ -21,6 +21,7 @@ use crate::workspace::open;
 use crate::writers::{format_id, slugify_title};
 
 #[derive(Clone)]
+#[non_exhaustive]
 pub struct IdOpts {
     pub path: PathBuf,
     pub path_provided: bool,
@@ -38,6 +39,7 @@ impl Default for IdOpts {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct IdProposal {
     pub id: String,
     pub kind: String,
@@ -59,6 +61,7 @@ pub struct IdProposal {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum IdProposalOutcome {
     Proposed(IdProposal),
     /// The kind is not one `id` can mint from (§FS-id.1.1): a name the config does

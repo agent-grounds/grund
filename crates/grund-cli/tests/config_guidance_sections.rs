@@ -99,12 +99,11 @@ impl Fixture {
     }
 
     fn opts(&self, operand: &str) -> RefsOpts {
-        RefsOpts {
-            path: self.root.clone(),
-            path_provided: true,
-            id: operand.into(),
-            ..RefsOpts::default()
-        }
+        let mut opts = RefsOpts::default();
+        opts.path = self.root.clone();
+        opts.path_provided = true;
+        opts.id = operand.into();
+        opts
     }
 
     fn hint(&self, template: &str, overridden: bool) -> String {

@@ -41,13 +41,18 @@ fn iterm2_write() -> IntegrationsOpts {
     opts
 }
 
-/// The step names the client and the snippet its artifact carries.
-fn iterm2_step(artifact: Option<IntegrationArtifact>) -> IntegrationManualStep {
+/// The one step names the client and the snippet its artifact carries, read
+/// field by field: a promised record is read, never built (§FS-distribution.3.1.2).
+fn assert_iterm2_step(steps: &[IntegrationManualStep], artifact: Option<IntegrationArtifact>) {
     let snippet = artifact.and_then(|artifact| artifact.snippet);
-    IntegrationManualStep {
-        client: IntegrationClient::Iterm2,
-        snippet: snippet.expect("iterm2's artifact carries its snippet"),
-    }
+    let [step] = steps else {
+        panic!("one manual step, not {steps:?}");
+    };
+    assert_eq!(step.client, IntegrationClient::Iterm2);
+    assert_eq!(
+        step.snippet,
+        snippet.expect("iterm2's artifact carries its snippet")
+    );
 }
 
 #[test]
@@ -83,7 +88,7 @@ fn a_manual_clients_step_is_in_the_answer_and_in_the_refusal() {
             .all(|(_, outcome)| *outcome == IntegrationOutcome::Skipped),
         "{events:?}"
     );
-    assert_eq!(out.manual_steps, [iterm2_step(out.artifact)]);
+    assert_iterm2_step(&out.manual_steps, out.artifact);
 
     // §FS-integrations.1.3.3: the resolver's directory is a file, so the run
     // stops there; the refusal names it with the filesystem's message, and
@@ -98,8 +103,5 @@ fn a_manual_clients_step_is_in_the_answer_and_in_the_refusal() {
     assert_eq!(path, &root.join("home/.local/bin"));
     assert!(!message.is_empty(), "the filesystem's message is kept");
     assert!(error.output.events.is_empty(), "nothing was written");
-    assert_eq!(
-        error.output.manual_steps,
-        [iterm2_step(error.output.artifact)]
-    );
+    assert_iterm2_step(&error.output.manual_steps, error.output.artifact);
 }

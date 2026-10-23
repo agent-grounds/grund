@@ -90,6 +90,7 @@ fn command_id(args: &[String]) -> ExitCode {
             print_id_proposal(&proposal, &format, explain);
             ExitCode::SUCCESS
         }
+        _ => unnamed_variant::<IdProposalOutcome>(),
     }
 }
 

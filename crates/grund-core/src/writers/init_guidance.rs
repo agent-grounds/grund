@@ -13,6 +13,7 @@ use crate::templates::{
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct InitNext {
     /// Whether the run laid the starter files (`--scaffold`, §FS-init.1). The
     /// name is published API and stays (§DF-init-templates.2.3).
@@ -53,6 +54,7 @@ impl InitNext {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum InitFsHome {
     File {
         path: String,
@@ -76,6 +78,7 @@ impl InitFsHome {
 /// The kind and place the guidance names (§FS-init.2.2.2.3): one selection, read
 /// by the allocation step and by the refresh test of §FS-init.2.2.2.1.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct InitAllocation {
     /// The selected kind, the `<KIND>` of `grund id <KIND>`.
     pub kind: String,
@@ -89,6 +92,7 @@ pub struct InitAllocation {
 
 /// The selected place, in the shapes [`InitFsHome`] gives one (§FS-init.2.2.2.3).
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum InitAllocationHome {
     File {
         path: String,

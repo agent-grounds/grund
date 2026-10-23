@@ -47,18 +47,12 @@ fn integrations_block_updates_in_place() {
     assert!(!updated.contains("OLD"));
 }
 
-/// §FS-integrations.4.1.6: the three outcomes a splice can have map to the
-/// three stderr verbs, and `exists` is the one that says the disk was not
-/// touched. One file carrying two managed keys is reported once, so the verbs
-/// are merged: `exists` only when neither line moved, and an append anywhere
-/// makes the whole write an append — a file that gained a key was not
-/// "updated", it was written into.
+/// §FS-integrations.4.1.6: one file carrying two managed keys is reported
+/// once, so the outcomes of its splices are merged: unchanged only when neither
+/// line moved, and an append anywhere makes the whole write an append — a file
+/// that gained a key was not "updated", it was written into.
 #[test]
-fn install_outcomes_map_to_their_verbs_and_merge_towards_the_stronger_one() {
-    assert_eq!(block_outcome_verb(BlockOutcome::Appended), "appended");
-    assert_eq!(block_outcome_verb(BlockOutcome::Updated), "updated");
-    assert_eq!(block_outcome_verb(BlockOutcome::Unchanged), "exists");
-
+fn install_outcomes_merge_towards_the_stronger_one() {
     let (exists, updated, appended) = (
         BlockOutcome::Unchanged,
         BlockOutcome::Updated,

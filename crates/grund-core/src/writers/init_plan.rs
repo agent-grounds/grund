@@ -18,6 +18,7 @@ use crate::templates::ConversationSurface;
 /// neither has to ask the tree a question the selection already answered
 /// (§AR-core-module-layout.1).
 #[derive(Clone, Default)]
+#[non_exhaustive]
 pub struct InitAgentEntrypointSelection {
     pub canonical: bool,
     pub claude: bool,

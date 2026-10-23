@@ -30,14 +30,11 @@ fn editor_keys_join_equivalent_citations_and_preserve_source_ranges() {
             assert_eq!(decl.text, "ADR-0001: Decision");
             let usage = s.title_usage(&decl.query_id, &decl.section_separator);
             assert_eq!((usage.sites, usage.files), (3, 1));
-            let references = refs(RefsOpts {
-                path: repo.0.clone(),
-                path_provided: true,
-                id: "ADR-01".into(),
-                section: None,
-                descendants: false,
-            })
-            .unwrap();
+            let mut opts = RefsOpts::default();
+            opts.path = repo.0.clone();
+            opts.path_provided = true;
+            opts.id = "ADR-01".into();
+            let references = refs(opts).unwrap();
             assert_eq!(references.hits.len(), usage.sites);
             assert_eq!(s.citations.len(), 3);
             for (cite, (written, query, target_line)) in s.citations.iter().zip([

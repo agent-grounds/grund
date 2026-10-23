@@ -75,6 +75,7 @@ pub(crate) const RESOLVER_TARGET: &str = "~/.local/bin/grund-open";
 /// and frozen (§FS-integrations.1.4); the ordering here is the frozen output order
 /// used by detection and every listing.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum IntegrationClient {
     Codium,
     Iterm2,
@@ -86,6 +87,7 @@ pub enum IntegrationClient {
 
 /// How `--write` applies a client's integration (§FS-integrations.4).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum InstallKind {
     /// A marked block spliced into the client's text config.
     Block,
@@ -233,17 +235,6 @@ impl IntegrationClient {
             _ => None,
         }
     }
-}
-
-pub(crate) fn known_clients_line() -> String {
-    format!(
-        "known clients: {}",
-        IntegrationClient::ALL
-            .iter()
-            .map(|client| client.name())
-            .collect::<Vec<_>>()
-            .join(", ")
-    )
 }
 
 /// Expand a leading `~` in an install-target hint against `$HOME`, resolving

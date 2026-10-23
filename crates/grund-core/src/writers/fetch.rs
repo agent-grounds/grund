@@ -14,6 +14,7 @@ use crate::workspace::{expand_workspace_tree, resolve_workspace_config, split_qu
 
 /// Which public CLI exit class a fetch refusal belongs to (§FS-fetch.7).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum FetchFailureKind {
     Query,
     Operational,
@@ -21,6 +22,7 @@ pub enum FetchFailureKind {
 
 /// A located fetch refusal with its fixed exit class (§FS-fetch.7).
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct FetchFailure {
     pub kind: FetchFailureKind,
     pub message: String,
