@@ -89,9 +89,11 @@ fn querying_guide_and_skill_hold_the_query_recipes() {
 }
 
 /// The guide teaches the declarations nothing cites yet as one call, `list --unused`, with
-/// `--kind E2E` for the e2e cases it skips and the JSON form, and links the checking
-/// guide for why an index entry is not a use; both skill copies name the call, so an agent
-/// that reads them never loops `grund refs` over every ID (§FS-init.2.3.4.3.1).
+/// the JSON form, and links the checking guide for why an index entry is not a use; both
+/// skill copies name the call, so an agent that reads them never loops `grund refs` over
+/// every ID. The guide and both skill copies state the `E2E` exclusion as a configured
+/// `E2E` kind's and carry no `--unused --kind E2E` example, a form the default kinds refuse
+/// (§FS-init.2.3.4.3.1, §FS-list.1.3.2).
 #[test]
 fn querying_guide_and_skill_teach_the_unused_recipe() {
     let root = manifest_dir();
@@ -99,7 +101,7 @@ fn querying_guide_and_skill_teach_the_unused_recipe() {
         .expect("docs/user-facing/querying.md, the Querying grund guide");
     for recipe in [
         "grund list --unused",
-        "--unused --kind E2E",
+        "a configured `E2E` kind",
         "--unused --format json",
         "checking.md#when-only-an-index-cites-a-declaration",
     ] {
@@ -108,6 +110,10 @@ fn querying_guide_and_skill_teach_the_unused_recipe() {
             "querying.md does not teach `{recipe}`"
         );
     }
+    assert!(
+        !guide.contains("--unused --kind E2E"),
+        "querying.md teaches `--unused --kind E2E`, which the default kinds refuse"
+    );
     for skill in [
         "skills/grund-init/references/queries.md",
         "crates/grund-core/assets/skills/grund-init/references/queries.md",
@@ -116,6 +122,14 @@ fn querying_guide_and_skill_teach_the_unused_recipe() {
         assert!(
             text.contains("grund list --unused"),
             "{skill} does not name `grund list --unused`"
+        );
+        assert!(
+            text.contains("a configured `E2E` kind"),
+            "{skill} does not state the E2E exclusion as a configured E2E kind's"
+        );
+        assert!(
+            !text.contains("--kind E2E"),
+            "{skill} teaches `--kind E2E`, which the default kinds refuse"
         );
     }
 }
