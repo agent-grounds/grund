@@ -2,8 +2,9 @@
 `main` (§FS-distribution.4.4.1.1, §AR-ci.11).
 
 `Case` builds a local bare origin that stands for agent-grounds/grund - the
-version sources, changelog and `scripts/` of this checkout, at `0.19.1-dev` over
-a `v0.19.0` tag, one merged pull request `A` on `main`, and the commits the
+version sources, changelog and `scripts/` of this checkout, at the `-dev` after
+the release its changelog keeps inline and over that release's tag, one merged
+pull request `A` on `main`, and the commits the
 queue can land held under `refs/queue/` where no fetch looks - and runs every
 `run:` step of the helper's one job, from the first, the way GitHub runs it:
 under `bash --noprofile --norc -eo pipefail`, `${{ }}` filled in, `if:` read,
@@ -26,8 +27,21 @@ from pathlib import Path
 from changelog_gate_fixture import REPO_ROOT, environment
 from test_release_workflow import WORKFLOWS, jobs, steps
 
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from prepare_changelog_release import _inline_release  # noqa: E402
+
 FORGE = Path(__file__).resolve().parent / "release_queue_forge.py"
-RUN_ID, PREV, NEXT, DEV = "39962684811", "0.19.0", "0.20.0", "0.20.1-dev"
+RUN_ID = "39962684811"
+# The tag is the release the copied changelog keeps inline, as the release section it
+# lists from must be (§FS-distribution.4.6.1), so the fixture follows each release main takes.
+PREV = _inline_release(REPO_ROOT / "docs/changelog.md").version
+_X, _Y, _Z = (int(part) for part in PREV.split("."))
+OPEN = f"{_X}.{_Y}.{_Z + 1}-dev"
+# What each helper cuts from `main` at OPEN: the release and the `-dev` over it.
+MINOR = (f"{_X}.{_Y + 1}.0", f"{_X}.{_Y + 1}.1-dev")
+PATCH = (f"{_X}.{_Y}.{_Z + 1}", f"{_X}.{_Y}.{_Z + 2}-dev")
+# A release past both: a ramp that names it as landed refuses either (§FS-distribution.4.2.2).
+LATER = f"{_X}.{_Y + 2}.0"
 STEP_TIMEOUT = 600
 # The tree the helper reads: version sources, changelog, the ledger and the scripts.
 SKELETON = ("Cargo.toml", "Cargo.lock", "crates/grund-core/Cargo.toml", "crates/grund-cli/Cargo.toml",
@@ -44,7 +58,7 @@ QUEUE = (("m1", None, "Speed up the scanner's queue path (#975)", {"queued.rs": 
          ("m6", "m5", "Name the queue's sixth group (#980)", {"queued.rs": "// 6\n"}),
          # A ramp landed for a later release refuses either helper (§FS-distribution.4.2.2).
          ("ramp", None, "Warn on the old spelling (#981)",
-          {"ramp.rs": 'pub const W: &str = "the old spelling became an error in 0.21.0";\n'}))
+          {"ramp.rs": f'pub const W: &str = "the old spelling became an error in {LATER}";\n'}))
 _TEMPLATE = None
 
 
@@ -97,8 +111,8 @@ def template():
     set_version(PREV)
     commit(f"Release v{PREV}")
     git("-C", str(seed), "tag", f"v{PREV}", env=env)
-    set_version("0.19.1-dev")
-    commit("Open 0.19.1-dev for development")
+    set_version(OPEN)
+    commit(f"Open {OPEN} for development")
     (seed / "crates/grund-core/src").mkdir(parents=True)
     (seed / "crates/grund-core/src/lib.rs").write_text("// the scanner\n")
     shas = {"a": commit("Speed up the scanner (#970)")}
@@ -109,8 +123,8 @@ def template():
         shas[name] = commit(message)
     # A pull request that moves every version source (§FS-distribution.4.4.1.2).
     git("-C", str(seed), "switch", "-q", "--detach", shas["a"], env=env)
-    set_version("0.19.2-dev")
-    shas["versions"] = commit("Move main to 0.19.2-dev by hand (#982)")
+    set_version(PATCH[1])
+    shas["versions"] = commit(f"Move main to {PATCH[1]} by hand (#982)")
     git("init", "-q", "--bare", str(origin), env=env)
     refs = [f"{sha}:refs/queue/{name}" for name, sha in shas.items() if name != "a"]
     git("-C", str(seed), "push", "-q", str(origin), f"{shas['a']}:refs/heads/main", "--tags", *refs, env=env)

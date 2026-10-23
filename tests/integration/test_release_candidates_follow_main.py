@@ -18,7 +18,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from release_queue_fixture import Case
+from release_queue_fixture import LATER, MINOR, PATCH, Case
 
 
 
@@ -134,7 +134,7 @@ class FollowsMain:
         self.assertNothingPublished(case, case.shas["ramp"])
         self.assertEqual(1, case.rounds(), case.report())
         self.assertEqual(2, len(case.created()), "the rebuild pushed a branch")
-        self.assertIn("became an error in 0.21.0", case.stderr())
+        self.assertIn(f"became an error in {LATER}", case.stderr())
 
     def test_a_target_tag_that_appeared_stops_before_anything_is_pushed(self):
         case = self.case({"move": {"1": "m1"}, "tag": {"1": f"v{self.NEXT}"}})
@@ -151,7 +151,7 @@ class FollowsMain:
         self.assertEqual(1, case.rounds(), case.report())
         self.assertCancelled(case, 1)
         self.assertEqual(2, len(case.created()), case.report())
-        self.assertIn("0.19.2-dev", case.stderr())
+        self.assertIn(PATCH[1], case.stderr())
 
     def test_main_settles_before_the_next_round(self):
         case = self.case({"move": {"1": "m1"}, "lander": {"1": "m2"}}, knobs={"GRUND_RELEASE_SETTLE": 4})
@@ -188,7 +188,7 @@ class FollowsMain:
 
 
 class ReleaseMinorFollowsMain(FollowsMain, unittest.TestCase):
-    WORKFLOW, NEXT, DEV = "release-minor.yml", "0.20.0", "0.20.1-dev"
+    WORKFLOW, (NEXT, DEV) = "release-minor.yml", MINOR
     INPUTS = {"version": "next-minor", "expected_main_sha": ""}
 
     def test_a_pinned_run_refuses_movement_and_names_the_tip_to_pin(self):
@@ -205,7 +205,7 @@ class ReleaseMinorFollowsMain(FollowsMain, unittest.TestCase):
 
 
 class AutoBumpFollowsMain(FollowsMain, unittest.TestCase):
-    WORKFLOW, NEXT, DEV, INPUTS = "auto-bump.yml", "0.19.1", "0.19.2-dev", {}
+    WORKFLOW, (NEXT, DEV), INPUTS = "auto-bump.yml", PATCH, {}
 
 
 if __name__ == "__main__":
