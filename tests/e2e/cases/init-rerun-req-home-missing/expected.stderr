@@ -1,0 +1,8 @@
+exists AGENTS.md
+exists grund.toml
+
+next:
+  1. create the REQ home (docs/req)
+  2. run `grund check`
+  3. allocate an ID:  ID=$(grund id REQ "…")  then add it under docs/req
+see AGENTS.md for the full workflow.

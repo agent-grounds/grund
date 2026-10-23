@@ -141,8 +141,9 @@ The guidance only ever names a kind the config declares
 kind that has one, here `ADR`. Its home `docs/adr` already exists, so a
 refresh has nothing left to teach. Allocate the first ID with
 `grund id ADR "…"`, and run `grund check` to see what the repository already
-cites. A first run whose selected home is missing asks you to create it, as
-in `create the ADR home (docs/adr)`. It never offers `--scaffold`, because
+cites. A run whose selected home is missing asks you to create it, as in
+`create the ADR home (docs/adr)`, and so does every re-run until it exists,
+even one that changes nothing. It never offers `--scaffold`, because
 that lays grund's whole software-development starter, the files listed under
 `--scaffold` above, rather than your kind's home alone. That is a tree your
 project did not ask for, and here it would not even lay the home: it writes no
