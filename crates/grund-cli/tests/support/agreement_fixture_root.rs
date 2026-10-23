@@ -13,9 +13,7 @@ impl FixtureRoot {
     /// A process-wide serial distinguishes sequential and overlapping instances (§AR-ci.10.1).
     pub(crate) fn new(parent: &Path, name: &str) -> io::Result<Self> {
         static NEXT: AtomicU64 = AtomicU64::new(0);
-        let serial = NEXT
-            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |n| n.checked_add(1))
-            .expect("fixture identity exhausted");
+        let serial = NEXT.fetch_add(1, Ordering::Relaxed);
         fs::create_dir_all(parent)?;
         Self::claim(parent.join(format!("{name}-{}-{serial}", std::process::id())))
     }
