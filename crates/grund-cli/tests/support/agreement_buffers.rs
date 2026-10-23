@@ -17,6 +17,9 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
+#[path = "agreement_buffer_ownership.rs"]
+mod ownership;
+
 /// One kind, `FS`, at `docs/`, scanning `docs` and whatever `extra` adds.
 fn config(extra: &[&str]) -> String {
     let include: Vec<String> = ["docs"]
@@ -89,6 +92,7 @@ impl Tree {
             .join(format!("{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(&root).expect("create fixture root");
+        ownership::before_git(&root);
         let git = Command::new("git")
             .args(["init", "-q", "."])
             .current_dir(&root)
