@@ -238,6 +238,10 @@ class NodeTargetLifetimeTests(unittest.TestCase):
                         data = (target / "checkout.json").read_text(encoding="utf-8")
                     except FileNotFoundError:  # not published yet
                         continue
+                    except PermissionError:  # Windows: a replace holds the name
+                        if os.name != "nt":
+                            raise
+                        continue
                     self.assertEqual(str(checkout), json.loads(data)["checkout"],
                                      "concurrent reader saw incomplete or wrong ownership")
                 time.sleep(0.001)

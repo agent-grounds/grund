@@ -36,6 +36,19 @@ def _node_target_key(checkout):
     return hashlib.sha256(os.fsencode(checkout)).hexdigest()[:16]
 
 
+def _replace_node_record(temporary, record):
+    """Wait out a Windows reader's open handle on the record (§FS-repository-maintenance.2.4)."""
+    deadline = time.monotonic() + 10
+    while True:
+        try:
+            temporary.replace(record)
+            return
+        except PermissionError:
+            if os.name != "nt" or time.monotonic() > deadline:
+                raise
+            time.sleep(0.01)
+
+
 def _record_node_checkout(target):
     """Publish complete ownership atomically (§FS-repository-maintenance.2.4)."""
     record = target / "checkout.json"
@@ -52,7 +65,7 @@ def _record_node_checkout(target):
         with output:
             json.dump({"checkout": str(REPO)}, output)
             output.write("\n")
-        temporary.replace(record)
+        _replace_node_record(temporary, record)
     finally:
         temporary.unlink(missing_ok=True)
 
