@@ -4,6 +4,9 @@
 use super::*;
 use grund_core::{MappedKey, MigrateNotice, MigrateRefusal};
 
+#[path = "tests_config_migrate_refused.rs"]
+mod refused;
+
 const HEADING: &str = "grund.toml: version 1 → 2, --write\n";
 const PREVIEW: &str = "grund.toml: version 1 → 2, preview, nothing written\n";
 const COMMENTS: &str = "comments with no single key to follow (--write refuses; --drop-comments drops exactly these):\n  grund.toml:6-7  standing alone\n  grund.toml:12  inside [scan] include\n  grund.toml:22-23  above [scan] include\n";
@@ -16,7 +19,8 @@ const PROJECT_MAP: &str = "note: the next grund init adds a `code` row to the AG
 const OUTCOME: &str = "wrote grund.toml: version 1 (24 lines) replaced by version 2\n";
 const DROPS: &str = "dropped the comments at grund.toml:6-7, grund.toml:12 and grund.toml:22-23 (version 1 lines)\n";
 const ADVICE: &str = "to get version 1 back: it is in version control, e.g. git restore grund.toml\nto see this candidate again: restore version 1 and run grund config migrate --to 2\nnote: existing AGENTS.md managed instructions may still describe version 1; run grund init in the migrated project to refresh them\n";
-const UNCHANGED: &str = "not written: grund.toml is unchanged\n";
+const REFUSALS: &str = "not written: 3 refusals (follow the repairs above); grund.toml is unchanged\n";
+const COMMENT_REFUSAL: &str = "not written: 3 comments have no single key to follow (move them, or re-run with --drop-comments); grund.toml is unchanged\n";
 
 fn successful_report() -> MigrateReport {
     MigrateReport {
@@ -241,7 +245,7 @@ fn refused_report_keeps_complete_diagnostics() {
                     refusals,
                     COMMENTS,
                     NOTICES,
-                    if write { UNCHANGED } else { "" }
+                    if write { REFUSALS } else { "" }
                 ]
                 .concat()
             );
@@ -278,11 +282,11 @@ fn comment_refusal_keeps_complete_diagnostics() {
                     COMMENTS,
                     NOTICES,
                     MAPPINGS,
-                    DEFAULTS,
+                    if write { "" } else { DEFAULTS },
                     MEMBERS,
                     EQUAL,
-                    PROJECT_MAP,
-                    if write { UNCHANGED } else { "" }
+                    if write { "" } else { PROJECT_MAP },
+                    if write { COMMENT_REFUSAL } else { "" }
                 ]
                 .concat()
             );
@@ -290,7 +294,7 @@ fn comment_refusal_keeps_complete_diagnostics() {
     }
 }
 
-fn assert_gate_difference(gate: Gate, difference: &str) {
+fn assert_gate_difference(gate: Gate, difference: &str, closing: &str) {
     let mut report = successful_report();
     report.wrote = false;
     report.gates = Some(GateResult::Differs {
@@ -312,12 +316,12 @@ fn assert_gate_difference(gate: Gate, difference: &str) {
                     COMMENTS,
                     NOTICES,
                     MAPPINGS,
-                    DEFAULTS,
+                    if write { "" } else { DEFAULTS },
                     MEMBERS,
                     difference,
                     "- before\n+ after\n",
-                    PROJECT_MAP,
-                    if write { UNCHANGED } else { "" }
+                    if write { "" } else { PROJECT_MAP },
+                    if write { closing } else { "" }
                 ]
                 .concat()
             );
@@ -328,7 +332,11 @@ fn assert_gate_difference(gate: Gate, difference: &str) {
 /// §FS-config-migrate.5.4: record differences remain complete in both modes.
 #[test]
 fn records_gate_difference_keeps_complete_diagnostics() {
-    assert_gate_difference(Gate::Records, "differs: the records\n");
+    assert_gate_difference(
+        Gate::Records,
+        "differs: the records\n",
+        "not written: the records differ (inspect the comparison above); grund.toml is unchanged\n",
+    );
 }
 
 /// §FS-config-migrate.5.4: check-report differences remain complete in both modes.
@@ -337,5 +345,6 @@ fn report_gate_difference_keeps_complete_diagnostics() {
     assert_gate_difference(
         Gate::Report,
         "differs: grund check --suggestions on this tree\n",
+        "not written: grund check --suggestions differs (inspect the comparison above); grund.toml is unchanged\n",
     );
 }

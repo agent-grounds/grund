@@ -107,6 +107,21 @@ replaced atomically, keeps its permissions, and nothing else is written; if the
 file changed since it was read, nothing is written and the run says so
 ([§FS-config-migrate.6](../functional-spec/FS-config-migrate.md#6-the-write)).
 
+A refused write exits `1`, leaves stdout empty and the config unchanged, and
+ends with the blocking causes and their remedies. For example, with only one
+listed comment left, the final line is:
+
+```text
+not written: 1 comment has no single key to follow (move it, or re-run with --drop-comments); grund.toml is unchanged
+```
+
+Setting or file refusals direct you to their repairs above; a differing gate
+directs you to its comparison. When several causes block the write, the final
+line lists all of them: dropping comments does not repair settings or gate
+differences. Refused writes print neither `written:` defaults nor next-init
+Project map advice, with or without `--full`
+([§FS-config-migrate.2.2](../functional-spec/FS-config-migrate.md#22-stderr-is-the-report)).
+
 A successful write leaves stdout empty. Its compact stderr report starts with
 what was written and the exact original ranges of any dropped comments, then
 retains every notice and carried-comment warning, member migration commands

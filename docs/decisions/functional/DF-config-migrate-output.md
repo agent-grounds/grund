@@ -8,7 +8,7 @@ After reviewing a migration preview, a caller applying it needs the outcome and 
 
 ## 2. Decision
 
-Only an actual successful write defaults to the compact report of [§FS-config-migrate.6.5](../../functional-spec/FS-config-migrate.md#65-what-it-says-after-the-write) and empty stdout ([§FS-config-migrate.2.1](../../functional-spec/FS-config-migrate.md#21-stdout-is-the-candidate)). Migration-only `--full` restores the candidate and complete report ([§FS-config-migrate.1.3](../../functional-spec/FS-config-migrate.md#13-the-other-flags), [§FS-config-migrate.2.2](../../functional-spec/FS-config-migrate.md#22-stderr-is-the-report)). Previews, refusals, failures and no-ops retain their behavior. Presentation never changes candidate bytes, gates, comment authorization or config-only atomic writing. No automatic init or managed-block drift detection is added.
+Only an actual successful write defaults to the compact report of [§FS-config-migrate.6.5](../../functional-spec/FS-config-migrate.md#65-what-it-says-after-the-write) and empty stdout ([§FS-config-migrate.2.1](../../functional-spec/FS-config-migrate.md#21-stdout-is-the-candidate)). Migration-only `--full` restores the candidate and complete report ([§FS-config-migrate.1.3](../../functional-spec/FS-config-migrate.md#13-the-other-flags), [§FS-config-migrate.2.2](../../functional-spec/FS-config-migrate.md#22-stderr-is-the-report)). That successful-write change left previews, refusals, failures and no-ops alone; the later refusal wording adjustment is defined below. Presentation never changes candidate bytes, gates, comment authorization or config-only atomic writing. No automatic init or managed-block drift detection is added.
 
 ## 3. Compatibility and alternatives
 
@@ -18,6 +18,13 @@ Apply the argued pre-1.0 licence of [§REQ-backwards-compatibility.4](../../requ
 
 The ordinary deprecation route of [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) was considered and rejected for that specific cost. Moving the reminder alone leaves the duplicated candidate and mapping report. Suppressing stdout alone leaves repeated stderr detail. Removing the complete output would deny callers a supported replacement. The issue's tokens label alone authorizes none of these compatibility choices; the author approved this concrete design on 2026-10-22.
 
+## 4. Refused writes close with their causes and remedies
+
+Issue #939 shows a comment-only refusal ending with defaults described as `written:`, next-init advice, and a bare unchanged-file footer. Extend [§FS-config-migrate.2.2](../../functional-spec/FS-config-migrate.md#22-stderr-is-the-report) to close a refused requested write with all blocking causes and their remedies, retaining `not written:` and the unchanged-config assurance. Omit completed-write defaults and the next-init Project map note on that path, with or without `--full`; keep useful diagnostics and real comparison differences. Preview and successful-write output stay as decided above.
+
+This changes human-readable diagnostic bytes covered by [§REQ-backwards-compatibility.1](../../requirements/REQ-backwards-compatibility.md#1-what-is-covered), but moves no verdict: the same inputs refuse, with the same exit, stdout eligibility and unchanged config. The verdict-correction route in [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids) does not apply. Apply the pre-1.0 licence of [§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise) narrowly: carrying the old footer beside the actionable one, or retaining misleading completed-write lines through a deprecation window, would preserve precisely the confusing closing report being repaired. Callers matching the whole old footer must accept its added causes; callers matching `not written:` keep that prefix. No flag restores the misleading refused-write wording. That small diagnostic adjustment costs less than an alias and warning that perpetuate the ambiguity; it licenses no policy change or redesign of successful output.
+
 ## release-note: Release note
 
 - A successful `grund config migrate --to 2 --write` no longer prints the candidate or mapping report; `--full` brings both back.
+- A refused `grund config migrate --to 2 --write` ends with its causes and remedies, without completed-write defaults or next-init advice; its refusal verdict is unchanged.

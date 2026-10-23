@@ -1,4 +1,4 @@
 grund.toml: version 1 → 2, --write
 refused: grund.toml: [id] named_sections is not set, so version 1 reads no named sections, and version 2 always reads them
   repair: add [id] named_sections = true under version 1; grund check shows its effect
-not written: grund.toml is unchanged
+not written: 1 refusal (follow the repairs above); grund.toml is unchanged

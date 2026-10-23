@@ -1,0 +1,9 @@
+grund.toml: version 1 → 2, --write
+refused: grund.toml:13: [id] named_sections = false turns named sections off, and version 2 always reads them
+  repair: set [id] named_sections = true under version 1; grund check shows its effect
+refused: grund.toml:29: [scan] include names `e2e`, which does not exist, and version 2 must know whether it is a folder or a file
+  repair: create e2e, or remove it from include; grund check under version 1 shows the effect
+comments with no single key to follow (--write refuses; --drop-comments drops exactly these):
+  grund.toml:28  above [scan] include
+changed: grund.toml:30: [scan] exclude: value vocabulary translated to [schema.sources] exclude; check the carried comment
+not written: 2 refusals (follow the repairs above); 1 comment has no single key to follow (move it, or re-run with --drop-comments); grund.toml is unchanged
