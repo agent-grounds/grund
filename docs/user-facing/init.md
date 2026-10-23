@@ -128,8 +128,23 @@ folders = ["docs/adr"]
 title = "Architecture decisions"
 ```
 
-Then run `grund init` again, so the entrypoint's Project map lists `ADR`, and
-`grund check` to see what the repository already cites.
+Then run `grund init` again, so the entrypoint's Project map lists `ADR`. That
+run refreshes the managed block and prints no `next:` block:
+
+```text
+updated AGENTS.md
+exists grund.toml
+```
+
+The guidance only ever names a kind the config declares
+([§FS-init.2.2.2.3](../functional-spec/FS-init.md#2223-the-kind-the-guidance-names)): `FS` when it has a home, otherwise the first citable
+kind that has one, here `ADR`. Its home `docs/adr` already exists, so a
+refresh has nothing left to teach. Allocate the first ID with
+`grund id ADR "…"`, and run `grund check` to see what the repository already
+cites. A first run whose selected home is missing asks you to create it, as
+in `create the ADR home (docs/adr)`. It never offers `--scaffold`, because
+that lays grund's own `FS` starter, not one for your kind. A kind with no home
+at all is taught as a declaration in a source doc-comment.
 
 `none` has no starter files, so `--template=none --scaffold` is refused, exit
 `2`, and so is a template name grund does not know:
