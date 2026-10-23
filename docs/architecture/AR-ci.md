@@ -302,6 +302,12 @@ Some tests count what the binary did rather than read what it printed, and the b
 
 Stated so a test can hold a test file to it: **a test that reads an observation compiled only under a feature is ignored in a build without that feature, and its ignore reason names the feature as the gate passes it.** It never asserts on the observation there, so a default run neither fails nor passes on something it could not have seen; the same case's other assertions — exit code, stdout, stderr — sit in a test that runs in every build. `tests/integration/test_feature_gated_observers.py` holds each test file that reads an observer to this, and holds the gate's test command to naming every feature such a file needs, because the gate itself, running with every feature on, cannot see a test that breaks the rule.
 
+#### 3.3.1 An observation is read from a process the test's own build made
+
+That rule is keyed to how the test was built, and a test built with the feature can still spawn a binary built without it. `env!("CARGO_BIN_EXE_<name>")` names the uplifted `<target>/<profile>/<name>`, one path per target, and every later build of the package into that target re-links it, whatever its features. Cargo releases the target's lock before it runs the test binaries, so such a build can land anywhere in the test phase; the Python gate's `GRUND_BUILT` ([§AR-ci.3.4](AR-ci.md#34-the-python-gates-inputs)) is one. A featured test that spawns the path after it reads the observed zero [§AR-ci.3.3](AR-ci.md#33-test-only-observers) names, in the very run that enabled the feature.
+
+So **a test that reads an observation compiled only under a feature reads it from a process its own build made, never from an uplifted artifact another build of the package can re-link.** For the CLI that process is the test executable, re-spawned into the CLI's entry; a run that observes nothing keeps `CARGO_BIN_EXE_<name>`, whose output any build of the binary gives. `tests/integration/test_feature_gated_observers.py` holds each observer's test file, with the files it declares as modules, to this: no fn there reaches both the observer's variable and `CARGO_BIN_EXE_`, in its own body or through a helper it calls, so observed and unobserved runs are made by different fns, and some fn there still names the variable.
+
 ### 3.4 The Python gate's inputs
 
 The wrapper hands its discovery run four inputs, each an absolute path in the
