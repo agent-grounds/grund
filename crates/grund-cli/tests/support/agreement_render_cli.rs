@@ -49,7 +49,30 @@ impl View<'_> {
     /// the path exits 2.
     pub fn cli_check(&self) -> Value {
         let findings = self.findings();
-        let out: Vec<_> = findings.iter().filter(|f| !f["line"].is_null()).collect();
+        let mut out: Vec<_> = findings
+            .iter()
+            .filter(|f| !f["line"].is_null())
+            .map(|f| self.finding_row(f))
+            .collect();
+        // §FS-errors.4.1: JSON stdout sorts across channels using rendered paths;
+        // equal (path, line, message) keys keep their authored order.
+        out.sort_by(|a, b| {
+            a["path"]
+                .as_str()
+                .cmp(&b["path"].as_str())
+                .then_with(|| {
+                    a["line"]
+                        .as_u64()
+                        .unwrap_or(0)
+                        .cmp(&b["line"].as_u64().unwrap_or(0))
+                })
+                .then_with(|| {
+                    a["message"]
+                        .as_str()
+                        .unwrap_or("")
+                        .cmp(b["message"].as_str().unwrap_or(""))
+                })
+        });
         let err = findings.iter().filter(|f| f["path"].is_null()).chain(
             findings
                 .iter()
@@ -63,7 +86,7 @@ impl View<'_> {
         };
         fact(
             exit,
-            json!(out.iter().map(|f| self.finding_row(f)).collect::<Vec<_>>()),
+            json!(out),
             json!(err.map(|f| self.finding_row(f)).collect::<Vec<_>>()),
         )
     }
@@ -229,5 +252,76 @@ impl View<'_> {
             .as_str()
             .map_or(String::new(), |n| format!("note: {n}\n"));
         self.incomplete(false, json!(rows), &note)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::agreement_render_model::Model;
+
+    /// §FS-errors.4.1: the CLI projection orders rendered rows independently of
+    /// the authored report channels, retaining ties without a severity/code key.
+    /// The `./` spelling makes sorting unrendered fact paths observably wrong.
+    /// §FS-check.2.1.1: pathless, lineless cautions stay on stderr in their order.
+    #[test]
+    fn cli_check_orders_rendered_stdout_stably_across_channels() {
+        let facts = json!({"findings":[
+            {"severity":"error","path":"docs/a.md","line":10,
+                "code":"late","message":"Ten","sites":[]},
+            {"severity":"error","path":"docs/b.md","line":1,
+                "code":"missing-index-entry","message":"Beta","sites":[
+                    {"path":"docs/b.md","line":1},{"path":"docs/c.md","line":3}]},
+            {"severity":"warning","path":"docs/a.md","line":2,
+                "code":"z-warning","message":"Shared","sites":[]},
+            {"severity":"error","path":"docs/a.md","line":2,
+                "code":"a-error","message":"Shared","sites":[]},
+            {"severity":"warning","path":"./docs/a.md","line":1,
+                "code":"early","message":"é","sites":[]},
+            {"severity":"warning","path":"docs/a.md","line":1,
+                "code":"bytewise","message":"Z","sites":[]},
+            {"severity":"warning","path":null,"line":null,
+                "code":"empty-scan","message":"nothing to scan","sites":[]},
+            {"severity":"warning","path":null,"line":null,
+                "code":"config-version-1","message":"grund.toml is version 1","sites":[]}
+        ]});
+        let model = Model::new(&facts, Default::default()).unwrap();
+        let view = View {
+            m: &model,
+            root: "<repo>",
+            selected: ".".into(),
+            base: ".".into(),
+            lines: None,
+            explicit_path: None,
+            variant: json!({}),
+        };
+
+        assert_eq!(
+            view.cli_check(),
+            json!({"exit":1,"stdout":[
+                {"severity":"warning","path":"<repo>/docs/a.md","line":1,
+                    "code":"bytewise","message":"Z","sites":null,"authority":null},
+                {"severity":"warning","path":"<repo>/docs/a.md","line":1,
+                    "code":"early","message":"é","sites":null,"authority":null},
+                {"severity":"warning","path":"<repo>/docs/a.md","line":2,
+                    "code":"z-warning","message":"Shared","sites":null,"authority":null},
+                {"severity":"error","path":"<repo>/docs/a.md","line":2,
+                    "code":"a-error","message":"Shared","sites":null,"authority":null},
+                {"severity":"error","path":"<repo>/docs/a.md","line":10,
+                    "code":"late","message":"Ten","sites":null,"authority":null},
+                {"severity":"error","path":"<repo>/docs/b.md","line":1,
+                    "code":"missing-index-entry","message":"Beta","sites":[
+                        {"path":"<repo>/docs/b.md","line":1},
+                        {"path":"<repo>/docs/c.md","line":3}],"authority":null}
+            ],"stderr":[
+                {"severity":"warning","path":null,"line":null,
+                    "code":"empty-scan","message":"nothing to scan","sites":null,
+                    "authority":null},
+                {"severity":"warning","path":null,"line":null,
+                    "code":"config-version-1","message":"grund.toml is version 1",
+                    "sites":null,"authority":null}
+            ]})
+        );
+        assert_eq!(view.findings(), *facts["findings"].as_array().unwrap());
     }
 }
