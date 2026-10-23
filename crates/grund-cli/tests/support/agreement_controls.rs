@@ -3,6 +3,7 @@
 
 use super::agreement_oracles::{golden, rows, witnesses};
 use super::agreement_paths::{logical_text, logical_value, physical};
+use super::agreement_tree::fixture_root::FixtureRoot;
 use super::agreement_tree::{CONFIG_SLUG, Tree};
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
@@ -294,7 +295,7 @@ fn real_held_saved_snapshots_preserve_escaped_roots() {
 #[path = "agreement_control_ownership.rs"]
 mod ownership;
 
-/// Allocation extracted unchanged for ownership probes (§AR-ci.10.2, §AR-ci.10.3).
+/// Own a root outside configured ancestry (§AR-ci.10.1, §AR-ci.10.2, §AR-ci.10.3).
 fn no_config_tree() -> Tree {
     let parent = std::env::temp_dir().canonicalize().unwrap();
     for ancestor in parent.ancestors() {
@@ -305,9 +306,10 @@ fn no_config_tree() -> Tree {
             ancestor.display()
         );
     }
-    let root = parent.join(format!("grund-no-config-control-{}", std::process::id()));
+    let owner = FixtureRoot::new(&parent, "grund-no-config-control").expect("claim control root");
+    let root = owner.path();
     fs::create_dir_all(root.join("docs/functional-spec")).unwrap();
-    Tree(root.canonicalize().unwrap())
+    Tree(root.to_path_buf(), owner)
 }
 
 #[test]

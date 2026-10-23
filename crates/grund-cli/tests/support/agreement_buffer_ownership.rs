@@ -21,7 +21,6 @@ pub(super) fn before_git(root: &std::path::Path) {
 }
 
 #[test]
-#[ignore = "red until #977 gives each buffer fixture an owned root; implement removes this"]
 fn grund_977_buffer_lifetimes() {
     lifetimes(
         || Tree::new("977-buffer-lifetimes", &config(&[]), &[]),
@@ -30,7 +29,6 @@ fn grund_977_buffer_lifetimes() {
 }
 
 #[test]
-#[ignore = "red until #977 refuses occupied buffer roots; implement removes this"]
 fn grund_977_buffer_occupied_root() {
     let name = "977-buffer-occupied";
     occupied(
@@ -41,7 +39,6 @@ fn grund_977_buffer_occupied_root() {
 }
 
 #[test]
-#[ignore = "red until #977 preserves cwd before buffer git init; implement removes this"]
 fn grund_977_buffer_create_spawn_interleave() {
     let (ready_tx, ready_rx) = channel();
     let (resume_tx, resume_rx) = channel();

@@ -8,6 +8,10 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
+#[path = "agreement_fixture_root.rs"]
+pub(super) mod fixture_root;
+use fixture_root::FixtureRoot;
+
 #[path = "agreement_fixture_checks.rs"]
 pub(super) mod fixture_checks;
 #[path = "agreement_tree_ownership.rs"]
@@ -26,25 +30,25 @@ pub const CONFIG_NUMBER: &str = "grund_config_version = 1\nproject_name = \"t\"\
     [[kinds]]\nkind = \"FS\"\nfile = \"docs/fs.md\"\n";
 
 /// One fixture tree under the worktree's own `target/`.
-pub struct Tree(pub PathBuf);
+pub struct Tree(pub PathBuf, pub(super) FixtureRoot);
 
 impl Tree {
     pub fn new(name: &str, files: &[(&str, &str)]) -> Self {
-        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../target/command-agreement")
-            .join(format!("{name}-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&root);
+        // §AR-ci.10.1, §AR-ci.10.2: claim even an empty fixture before writing.
+        let parent =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../target/command-agreement");
+        let owner = FixtureRoot::new(&parent, name).expect("claim fixture root");
+        let root = owner.path();
         for (path, body) in files {
             let path = root.join(path);
             fs::create_dir_all(path.parent().expect("parent")).expect("create fixture parent");
             fs::write(path, body).expect("write fixture");
         }
-        fs::create_dir_all(&root).expect("create fixture root");
-        Self(root.canonicalize().expect("canonical fixture root"))
+        Self(root.to_path_buf(), owner)
     }
 
     pub fn grund(&self, args: &[&str]) -> Output {
-        grund(&self.0, args)
+        grund(self.1.path(), args)
     }
 
     /// The exit code of one command, `-1` where it was killed.
@@ -60,12 +64,6 @@ impl Tree {
     /// The JSON rows one command prints on stdout.
     pub fn json(&self, args: &[&str]) -> Vec<Value> {
         json_lines(&stdout(&self.grund(args)))
-    }
-}
-
-impl Drop for Tree {
-    fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.0);
     }
 }
 
