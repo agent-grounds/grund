@@ -18,13 +18,11 @@ fn uncovered_tree() -> Tree {
 }
 
 #[test]
-#[ignore = "red until #977 gives the no-config control owned roots; implement removes this"]
 fn grund_977_no_config_lifetimes() {
     lifetimes(uncovered_tree, |tree| &tree.0);
 }
 
 #[test]
-#[ignore = "red until #977 refuses occupied no-config roots; implement removes this"]
 fn grund_977_no_config_occupied_root() {
     let candidate = std::env::temp_dir()
         .canonicalize()

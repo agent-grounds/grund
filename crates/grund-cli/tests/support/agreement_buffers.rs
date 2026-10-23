@@ -9,6 +9,7 @@
 //! with §DF-four-editor-checks-read-saved-text, so their trees must agree too.
 
 use super::agreement_tree::Verdict;
+use super::agreement_tree::fixture_root::FixtureRoot;
 use grund_core::{
     Finding, LspSnapshotOpts, ShowOpts, lsp_snapshot_with_completion, show_from_snapshot,
 };
@@ -83,23 +84,23 @@ const DECLARES: &str = "# FS-a: Alpha\n\nBody.\n";
 
 /// One fixture tree under the worktree's own `target/`, a git repository so that
 /// `.git/info/exclude` is one of its ignore files.
-struct Tree(PathBuf);
+struct Tree(PathBuf, FixtureRoot);
 
 impl Tree {
     fn new(name: &str, config: &str, files: &[(&str, &str)]) -> Self {
-        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../target/command-agreement")
-            .join(format!("{name}-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&root);
-        fs::create_dir_all(&root).expect("create fixture root");
-        ownership::before_git(&root);
+        // §AR-ci.10.1, §AR-ci.10.2: hold ownership through Git init and any unwind.
+        let parent =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../target/command-agreement");
+        let owner = FixtureRoot::new(&parent, name).expect("claim fixture root");
+        let root = owner.path();
+        ownership::before_git(root);
         let git = Command::new("git")
             .args(["init", "-q", "."])
-            .current_dir(&root)
+            .current_dir(root)
             .output()
             .expect("spawn git init");
         assert!(git.status.success(), "git init {}", root.display());
-        let tree = Self(root.canonicalize().expect("canonical fixture root"));
+        let tree = Self(root.to_path_buf(), owner);
         tree.write("grund.toml", config);
         for (path, body) in files {
             tree.write(path, body);
@@ -108,7 +109,7 @@ impl Tree {
     }
 
     fn write(&self, relative: &str, body: &str) {
-        let path = self.0.join(relative);
+        let path = self.1.path().join(relative);
         fs::create_dir_all(path.parent().expect("parent")).expect("create fixture parent");
         fs::write(path, body).expect("write fixture");
     }
@@ -159,12 +160,6 @@ impl Tree {
                 "buffer at {relative}: {buffered}\n    saved: {saved}"
             ))
         }
-    }
-}
-
-impl Drop for Tree {
-    fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.0);
     }
 }
 
