@@ -1,0 +1,4 @@
+docs/fs/FS-login.md:1: error: FS-login appears in docs/fs/README.md but not as an entry: an entry is a `§`-marked Markdown link to the declaration — became an error in grund 0.13.0
+docs/fs/FS-login.md:1: warning: declared but never cited: FS-login
+docs/fs/FS-token.md:1: warning: declared but never cited: FS-token (its index entry at docs/fs/README.md:7 does not count as a use)
+docs/fs/README.md:1: warning: declared but never cited: FS-index (its index entry at docs/fs/README.md:3 does not count as a use)
