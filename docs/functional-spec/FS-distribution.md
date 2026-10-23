@@ -277,7 +277,7 @@ let body = grund_core::show("FS-check", ShowOpts::default())?;
 
 #### 3.1.2 What 1.0 freezes
 
-`grund-core` 1.0 freezes exactly the root names this point reaches: the entry points `check`, `check_with_opts`, `scan`, `show`, `list`, `list_sizes`, `refs`, `refs_outcome`, `cover`, `cover_text`, `cover_lines`, `format_references`, `propose_id`, `complete_ids`, `init`, `fetch_snapshot` and `integrations` ([§FS-distribution.3.1.3](FS-distribution.md#313-integrations-is-the-one-integrations-entry-point)), the typed refusals `ShowQueryError`, `FmtScanAbort` and `FmtConflictAbort` ([§FS-fmt.3.2](FS-fmt.md#32-a-run-that-needs-the-whole-declaration-set-rewrites-nothing)), and every root type their signatures reach, transitively. That is 113 names, and the rows whose disposition is `frozen at 1.0` in the [public-surface inventory](../discussions/proposals/2026-09-22-grund-core-public-surface-inventory.md) are the full list. An entry point with no typed refusal returns `anyhow::Result`.
+`grund-core` 1.0 freezes exactly the root names this point reaches: the entry points `check`, `check_with_opts`, `scan`, `show`, `list`, `list_sizes`, `refs`, `refs_outcome`, `cover`, `cover_text`, `cover_lines`, `format_references`, `propose_id`, `complete_ids`, `init`, `fetch_snapshot` and `integrations` ([§FS-distribution.3.1.3](FS-distribution.md#313-integrations-is-the-one-integrations-entry-point)), the typed refusals `ShowQueryError`, `FmtScanAbort` and `FmtConflictAbort` ([§FS-fmt.3.2](FS-fmt.md#32-a-run-that-needs-the-whole-declaration-set-rewrites-nothing)), and every root type their signatures reach, transitively. That is 115 names, `InitAllocation` and `InitAllocationHome` among them, which `InitNext.allocation` reaches ([§FS-init.2.2.2.3](FS-init.md#2223-the-kind-the-guidance-names)), and the rows whose disposition is `frozen at 1.0` in the [public-surface inventory](../discussions/proposals/2026-09-22-grund-core-public-surface-inventory.md) are the full list. An entry point with no typed refusal returns `anyhow::Result`.
 
 Every other root name is `#[doc(hidden)]` and outside the promise, and so are the `test-*` Cargo features and what they export. Hiding retires nothing and changes no type: a hidden name still links and still works. Frozen means what Cargo reads into a `1.0.0`: a `1.x` release may add a name, a field or a variant and may deprecate a name, and only `2.0` removes or retypes one ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)).
 
@@ -496,9 +496,9 @@ not permission to return a string in place of typed data.
 - IdResult: id/kind/number:number|null/slug/folder:string|null/file:string|null/
   e2eCaseDir:string|null/fileHoldsSingleDeclaration:boolean.
 - InitData: events:{verb,path}[]/errors:Finding[]/notes:string[]/
-  next:{docs:boolean,declaresKinds:boolean,entrypoint:string,scanReadsFile:boolean,fsHome:
-  {kind:'file',path:string,headingName:string,headingMarker:string} |
-  {kind:'folder',path:string}}|null/pendingChanges:boolean.
+  next:{docs:boolean,declaresKinds:boolean,entrypoint:string,scanReadsFile:boolean,fsHome:Home,
+  allocation:{kind:string,home:Home|null,homeExists:boolean}|null}|null/pendingChanges:boolean, where Home is
+  {kind:'file',path:string,headingName:string,headingMarker:string} | {kind:'folder',path:string}.
 - CompleteResult: ids:string[]. FetchResult: id:string (the requested operand).
 - ConfigResult: root:string/configFile:string|null/values:ConfigValues.
   ConfigValues is a readonly, typed tree of current public configuration keys:

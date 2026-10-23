@@ -363,3 +363,107 @@ note: grund.toml exists, so the none template's grund.toml is not written — in
 ```
 
 The `next:` block that follows is the one the kept config earns ([§FS-init.2.2.2](FS-init.md#222-the-next-block)).
+
+## 8. A project without FS
+
+The configured-kind form of [§FS-init.2.2.2.3](FS-init.md#2223-the-kind-the-guidance-names), over one fixture: a version-1 `grund.toml` that declares one kind, `REQ`, homed in `docs/req`, and scans `docs` and `README.md`:
+
+```toml
+[id]
+format = "{kind}-{slug}"
+named_sections = true
+
+[[kinds]]
+kind = "REQ"
+folder = "docs/req"
+
+[scan]
+include = ["docs", "README.md"]
+```
+
+`docs/req/REQ-login.md` declares `REQ-login`, `docs/req/README.md` indexes it, and `README.md` cites it. Each command below runs on a copy of that tree under Git with no `AGENTS.md` yet, unless its case says otherwise. No block names `FS` or `docs/functional-spec`, because the project declares neither, and none offers `--scaffold`, which lays the FS starter and no `REQ` one.
+
+### 8.1 The home exists
+
+Command: `grund init {repo_copy}`. Exit `0`, stdout empty, stderr:
+
+```text
+wrote AGENTS.md
+exists grund.toml
+
+next:
+  1. run `grund check`
+  2. allocate an ID:  ID=$(grund id REQ "…")  then add it under docs/req
+see AGENTS.md for the full workflow.
+```
+
+No step asks for a home, because `docs/req` exists. After `grund config migrate --to 2 --write`, `grund check` reports the block stale and exits `1`. The refresh it asks for, `grund init {repo_copy}`, exits `0` with exactly this on stderr:
+
+```text
+updated AGENTS.md
+exists grund.toml
+```
+
+It is a refresh of a complete setup, since its selected home exists ([§FS-init.2.2.2.1](FS-init.md#2221-a-refresh-of-a-complete-setup-teaches-nothing)). The `grund check` after it exits `0`, and so does `grund id REQ "…"`. Under `--check` the same refresh prints `would-update AGENTS.md` and `exists grund.toml`, again with no block, and exits `1` ([§FS-init.4](FS-init.md#4-exit-codes)).
+
+### 8.2 The home is missing
+
+The same tree without `docs/req/`. Command: `grund init {repo_copy}`. Exit `0`, stdout empty, stderr:
+
+```text
+wrote AGENTS.md
+exists grund.toml
+
+next:
+  1. create the REQ home (docs/req)
+  2. run `grund check`
+  3. allocate an ID:  ID=$(grund id REQ "…")  then add it under docs/req
+see AGENTS.md for the full workflow.
+```
+
+A refresh of the same tree keeps the whole block below `updated AGENTS.md`, step 1 included. Step 1 carries no ` — until then \`grund check\` has nothing to scan` here because the scanner still reads `README.md`. Over a tree whose scanner would read no file it does, as the `init-force-keeps-existing-config` e2e case pins. A row homed in a file, such as `file = "requirements.md"`, prints `create the REQ home (requirements.md)` and `then add it to requirements.md`.
+
+### 8.3 No home at all
+
+The tree of [§FS-init-fixtures.8](FS-init-fixtures.md#8-a-project-without-fs) with the `folder` line removed, so `REQ` is citable and has no home. Command: `grund init {repo_copy}`. Exit `0`, stdout empty, stderr:
+
+```text
+wrote AGENTS.md
+exists grund.toml
+
+next:
+  1. run `grund check`
+  2. allocate an ID:  ID=$(grund id REQ "…")  then declare it in a source doc-comment
+see AGENTS.md for the full workflow.
+```
+
+The block names no directory and invents none. A refresh of that tree prints no `next:` block, because there is no home to create.
+
+### 8.4 Scaffold form
+
+Command: `grund init {repo_copy} --scaffold`, on the tree of [§FS-init-fixtures.8](FS-init-fixtures.md#8-a-project-without-fs). Exit `0`, stdout empty, stderr:
+
+```text
+wrote AGENTS.md
+exists grund.toml
+wrote docs/functional-spec/README.md
+exists docs/req/README.md
+wrote docs/grund.md
+wrote docs/goals.md
+wrote docs/roadmap.md
+wrote docs/changelog.md
+wrote docs/architecture/README.md
+wrote docs/decisions/architectural/README.md
+wrote docs/decisions/functional/README.md
+wrote tests/e2e/README.md
+wrote tests/integration/.gitkeep
+
+next:
+  1. run `grund check` — on a fresh scaffold it warns "nothing recognized" until the first declaration; this is expected (exit 0), no repair needed
+  2. allocate an ID:  ID=$(grund id REQ "…")  then add it under docs/req
+     (H1: `# <ID>: <one-line statement of the behavior>`)
+  3. cite it as §<ID> from the docs and e2e tests that depend on it, then `grund check` again
+see AGENTS.md for the full workflow.
+```
+
+The writes are the ones this run made before [§FS-init.2.2.2.3](FS-init.md#2223-the-kind-the-guidance-names), the FS starter in the built-in `docs/functional-spec` included; which starter `--scaffold` lays in a project without FS is not settled here. Only the allocation step names a different kind. A row homed in a file prints the H2 line the FS form prints for one, `(H2: \`## <ID>: <one-line statement of the behavior>\`)`. A row with no home prints `then declare it in a source doc-comment`, followed by `(doc-comment: \`<ID>: <one-line statement of the behavior>\`)`.

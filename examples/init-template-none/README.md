@@ -6,21 +6,22 @@ running the `grund-init` skill, who wants grund's citations without grund's
 nine default kinds: the existing-structure adoption model
 ([§FS-init.5.2](../../docs/functional-spec/FS-init.md#52-adopting-an-existing-docs-heavy-repo)).
 
-Open `repo/` first. It holds an architecture decision under `docs/adr/` and a
-runbook under `docs/runbooks/`, and no grund config.
+Open `1-template-none/repo/` first. It holds an architecture decision under
+`docs/adr/` and a runbook under `docs/runbooks/`, and no grund config. The
+example pins two runs, one per step ([§FS-examples.5.5](../../docs/functional-spec/FS-examples.md#55-an-example-may-pin-several-runs)).
 
-## Run it
+## Step 1: `grund init --template=none`
 
 From the repository root, on a copy of the fixture:
 
 ```bash
-cp -r examples/init-template-none/repo /tmp/adopt && git -C /tmp/adopt init -q
+cp -r examples/init-template-none/1-template-none/repo /tmp/adopt && git -C /tmp/adopt init -q
 grund init /tmp/adopt --template=none
 echo $?    # 0
 ```
 
 The run writes two files and touches nothing under `docs/`
-([§FS-init.3.6](../../docs/functional-spec/FS-init.md#36-bare-init-writes-the-config-and-the-entrypoints-and-nothing-in-a-home)), which `expected.repo/` records byte for byte:
+([§FS-init.3.6](../../docs/functional-spec/FS-init.md#36-bare-init-writes-the-config-and-the-entrypoints-and-nothing-in-a-home)), which `1-template-none/expected.repo/` records byte for byte:
 
 - `grund.toml`, the `none` template's config ([§FS-init.2.4.9](../../docs/functional-spec/FS-init.md#249-the-none-templates-config)): a
   version-2 file holding the version, the project name and a comment on
@@ -33,10 +34,11 @@ The run writes two files and touches nothing under `docs/`
 On stderr it reports those two paths, then a `next:` block whose first step is
 to declare a first kind ([§FS-init.2.2.2.2](../../docs/functional-spec/FS-init.md#2222-a-project-with-no-kinds)). Stdout is empty.
 
-## What to do next
+## Step 2: declare the kinds, then `grund init` again
 
-Add the repository's own kinds, then run `grund init` again so the entrypoint
-lists them:
+Add the repository's own kinds to `/tmp/adopt/grund.toml`, then run `grund init`
+again so the entrypoint lists them. `2-declare-kinds/repo/` is step 1's tree with
+these tables added:
 
 ```toml
 [schema.kinds.ADR]
@@ -50,6 +52,25 @@ title = "Architecture decisions"
 [presentation.kinds.runbook]
 title = "Operational runbooks"
 ```
+
+```bash
+grund init /tmp/adopt
+echo $?    # 0
+```
+
+The run rewrites the managed block, whose Project map now lists `ADR` and the
+runbooks, and reports exactly this on stderr:
+
+```text
+updated AGENTS.md
+exists grund.toml
+```
+
+No `next:` block follows. The guidance would name `ADR`, the first citable kind
+with a home, and its home `docs/adr` already exists, so this refresh leaves
+nothing to teach ([§FS-init.2.2.2.3](../../docs/functional-spec/FS-init.md#2223-the-kind-the-guidance-names)). Allocate the first ID in
+it with `grund id ADR "…"`. The runbook kind is not citable, so the guidance
+never names it.
 
 ## The trade-off
 
