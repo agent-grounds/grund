@@ -14,7 +14,8 @@ use crate::resolver::WorkspaceProject;
 
 /// What an ID-mode query asked, beside the answer it got.
 pub(super) struct NoteQuery<'a> {
-    /// The explicit scan path, as supplied, when one was given (§FS-scan.path.refs).
+    /// The explicit scan path, as supplied, when one was given: it scopes the typo
+    /// note (§FS-refs.2.1) and withholds the pointer (§FS-refs.2.1.1).
     pub(super) path: Option<&'a Path>,
     /// The selected project, whose declarations decide which note applies.
     pub(super) target: &'a WorkspaceProject,

@@ -189,7 +189,21 @@ fn literal_and_nonleading_kind_sections_keep_effective_guidance() {
                 ] {
                     let output = fixture.run(&args);
                     assert_eq!(output.status.code(), Some(0), "{}", stderr(&output));
-                    assert_eq!(stderr(&output), "");
+                    let expected = if args.first() == Some(&"refs") {
+                        // §FS-refs.2.1.1: an uncited declaration, no path, points at the listing.
+                        let list = if fixture.qualified {
+                            "grund list --project child --unused"
+                        } else {
+                            "grund list --unused"
+                        };
+                        format!(
+                            "note: {operand} is declared but nothing cites it; \
+                             `{list}` lists every such declaration\n"
+                        )
+                    } else {
+                        String::new()
+                    };
+                    assert_eq!(stderr(&output), expected);
                     if args.first() != Some(&"refs") {
                         assert_eq!(String::from_utf8_lossy(&output.stdout), "Body.\n");
                     }
