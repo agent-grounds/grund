@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Demonstrate §FS-check.3.5.3.1 with an initialized member's stale mark.
+# Demonstrate §FS-check.3.5.3.1 with a member mark an earlier render left.
 set -eu
 
 fixture_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/repo"
@@ -23,11 +23,11 @@ from pathlib import Path
 
 path = Path("AGENTS.md")
 text = path.read_text()
-initialized = "- [`api`](packages/api/AGENTS.md)"
-stale = "- [`api`](packages/api/) *(not yet initialized)*"
-if initialized not in text:
-    raise SystemExit("the initialized api entry is missing from the baseline")
-path.write_text(text.replace(initialized, stale, 1))
+current = "- [`api`](packages/api/)\n"
+stale = "- [`api`](packages/api/) *(not yet initialized)*\n"
+if text.count(current) != 1:
+    raise SystemExit("the baseline does not list the api entry exactly once")
+path.write_text(text.replace(current, stale, 1))
 PY
 
 status=0

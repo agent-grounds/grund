@@ -93,11 +93,11 @@ config's version ([config explain](explain.md)).
 
 A stale workspace section shows the first differing nonblank body line as
 `expected …; found …` ([§FS-check.3.5.3.1](../functional-spec/FS-check.md#3531-first-differing-workspace-entry)).
-For example, billing has been initialized, but the root block still marks it as
-not yet initialized:
+For example, the root block still carries the *(not yet initialized)* mark an
+earlier grund wrote for billing, where the current render links its directory:
 
 ```text
-AGENTS.md:3: error: repo maintenance: stale grund init block: workspace members differ from the workspace (expected - [`billing`](packages/billing/AGENTS.md); found - [`billing`](packages/billing/) *(not yet initialized)*) — run `grund init` to refresh (does not affect citation validity)
+AGENTS.md:3: error: repo maintenance: stale grund init block: workspace members differ from the workspace (expected - [`billing`](packages/billing/); found - [`billing`](packages/billing/) *(not yet initialized)*) — run `grund init` to refresh (does not affect citation validity)
 ```
 
 `expected` is what the current render would write; `found` is the entry on disk.

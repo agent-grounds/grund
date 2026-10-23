@@ -201,15 +201,9 @@ fn a_new_member_names_each_block_by_the_directory_to_refresh_it_in() {
     );
     let members = |dir: &str| {
         let (entry, found) = if dir.is_empty() {
-            (
-                "- [`notify`](packages/notify/) *(not yet initialized)*",
-                "<missing>",
-            )
+            ("- [`notify`](packages/notify/)", "<missing>")
         } else {
-            (
-                "- [`notify`](../notify/) *(not yet initialized)*",
-                "- [`shop`](../../AGENTS.md)",
-            )
+            ("- [`notify`](../notify/)", "- [`shop`](../../)")
         };
         let refresh = if dir.is_empty() {
             "run `grund init` to refresh".to_string()
