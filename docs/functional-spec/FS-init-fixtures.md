@@ -381,7 +381,7 @@ folder = "docs/req"
 include = ["docs", "README.md"]
 ```
 
-`docs/req/REQ-login.md` declares `REQ-login`, `docs/req/README.md` indexes it, and `README.md` cites it. Each command below runs on a copy of that tree under Git with no `AGENTS.md` yet, unless its case says otherwise. No block names `FS` or `docs/functional-spec`, because the project declares neither, and none offers `--scaffold`, which lays the FS starter and no `REQ` one.
+`docs/req/REQ-login.md` declares `REQ-login`, `docs/req/README.md` indexes it, and `README.md` cites it. Each command below runs on a copy of that tree under Git with no `AGENTS.md` yet, unless its case says otherwise. No block names `FS` or `docs/functional-spec`, because the project declares neither, and none offers `--scaffold`, which lays grund's whole software-development starter ([§FS-init.2.1.3](FS-init.md#213-the-software-development-starter-files)), the FS home and this `REQ` row's folder among it, rather than the selected home alone.
 
 ### 8.1 The home exists
 
@@ -466,4 +466,4 @@ next:
 see AGENTS.md for the full workflow.
 ```
 
-The writes are the ones this run made before [§FS-init.2.2.2.3](FS-init.md#2223-the-kind-the-guidance-names), the FS starter in the built-in `docs/functional-spec` included; which starter `--scaffold` lays in a project without FS is not settled here. Only the allocation step names a different kind. A row homed in a file prints the H2 line the FS form prints for one, `(H2: \`## <ID>: <one-line statement of the behavior>\`)`. A row with no home prints `then declare it in a source doc-comment`, followed by `(doc-comment: \`<ID>: <one-line statement of the behavior>\`)`.
+On that tree with `docs/req` absent, the same run writes the `REQ` starter there, so its line reads `wrote docs/req/README.md`, and the block is the one above. The writes are the ones this run made before [§FS-init.2.2.2.3](FS-init.md#2223-the-kind-the-guidance-names), the FS starter in the built-in `docs/functional-spec` included; which starter `--scaffold` lays in a project without FS is not settled here. Only the allocation step names a different kind. A row homed in a file prints the H2 line the FS form prints for one, `(H2: \`## <ID>: <one-line statement of the behavior>\`)`. A row with no home prints `then declare it in a source doc-comment`, followed by `(doc-comment: \`<ID>: <one-line statement of the behavior>\`)`.
