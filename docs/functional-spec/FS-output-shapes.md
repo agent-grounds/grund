@@ -290,7 +290,7 @@ For each case above, [§FS-output-shapes.7.1](FS-output-shapes.md#71-the-matrix)
 | `refs` resolver rejection text | empty | bare failure; invalid format alone adds a hint | `1` |
 | `refs` resolver rejection JSON | empty | one `invalid-id` or `ambiguous` finding object; no hint | `1` |
 | `refs --total` text, cited | one `cited at <n> site(s) across <m> file(s)` line | empty | `0` |
-| `refs --total` text, uncited | one `not cited` line | empty, or the [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations) `note:` for an ID neither declared nor cited | `0` |
+| `refs --total` text, uncited | one `not cited` line | empty, or one [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations) `note:`: the typo note for an ID neither declared nor cited, or the `list --unused` pointer for a declared one ([§FS-refs.2.1.1](FS-refs.md#211-a-declared-id-nothing-cites-points-at-list---unused)) | `0` |
 | `refs --total --format=json`, any count | exactly one `{"sites":<n>,"files":<m>}` object | as the text rows | `0` |
 | `list --total` text, any count | the bare count and a newline | empty | `0` |
 | `list --total --format=json`, any count | exactly one `{"count":<n>}` object | empty | `0` |

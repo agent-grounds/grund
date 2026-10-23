@@ -288,3 +288,52 @@ fn section_filtered_refs_note_uses_requested_hits_and_scan_local_declarations() 
         );
     }
 }
+
+/// §FS-refs.2.1.1: the model's answer for a declared ID nothing cites carries
+/// the `list --unused` note on a no-path whole-ID query, and withholds it under
+/// an explicit path or a section. All inputs and answers are authored here.
+fn unused_note_model(query: &str, selected: &str, explicit_path: Option<&str>) -> Value {
+    use super::{agreement_render_model::Model, agreement_render_tree::View};
+    use std::collections::BTreeMap;
+
+    let files = BTreeMap::from([(
+        "docs/session.md".into(),
+        "# FS-session: Session\n## 1: First\n".into(),
+    )]);
+    let facts = json!({"declarations":[{"id":"FS-session","kind":"FS",
+        "file":"docs/session.md","heading":"# FS-session: Session","body":[2,2]}],
+        "sections":[{"of":"FS-session","path":"1","heading":"## 1: First","end":2}],
+        "citations":[]});
+    let model = Model::new(&facts, files).unwrap();
+    let view = View {
+        m: &model,
+        root: "<repo>",
+        selected: selected.into(),
+        base: String::new(),
+        lines: None,
+        explicit_path,
+        variant: json!({}),
+    };
+    view.refs(query)["result"]["note"].clone()
+}
+
+#[test]
+#[ignore = "red until #936 teaches the agreement model the note; implement removes this"]
+fn refs_unused_note_model_gives_the_note() {
+    assert_eq!(
+        unused_note_model("FS-session", ".", None),
+        json!(
+            "FS-session is declared but nothing cites it; `grund list --unused` lists every such declaration"
+        )
+    );
+}
+
+#[test]
+fn refs_unused_note_model_withholds_the_note() {
+    assert_eq!(
+        unused_note_model("FS-session", "docs", Some("docs")),
+        Value::Null
+    );
+    assert_eq!(unused_note_model("FS-session", ".", Some(".")), Value::Null);
+    assert_eq!(unused_note_model("FS-session.1", ".", None), Value::Null);
+}

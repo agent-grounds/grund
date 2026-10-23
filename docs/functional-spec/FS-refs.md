@@ -101,11 +101,11 @@ With `--descendants` ([§FS-refs.1](FS-refs.md#1-inputs)) the section filter kee
 
 Nothing else widens with it: the scan, the sort, the rendering, the `note:` of [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations) and the exit policy of [§FS-refs.4](FS-refs.md#4-exit-codes) are the ones a bare `--section` query gets.
 
-Output is sorted by `(path, line, column)` ([§FS-errors.4](FS-errors.md#4-determinism)). The list is the command's *result*, so it goes to **stdout** — text lines and `--format json` NDJSON alike, as for `grund list` and `grund cover` ([§FS-errors.1](FS-errors.md#1-streams)). A text line has the `<path>:<line>: <message>` located-finding shape ([§FS-errors.2.1](FS-errors.md#21-located-finding)) so an editor can jump to it, but it is an *answer*, not a finding; stderr is left for errors and the typo note of [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations).
+Output is sorted by `(path, line, column)` ([§FS-errors.4](FS-errors.md#4-determinism)). The list is the command's *result*, so it goes to **stdout** — text lines and `--format json` NDJSON alike, as for `grund list` and `grund cover` ([§FS-errors.1](FS-errors.md#1-streams)). A text line has the `<path>:<line>: <message>` located-finding shape ([§FS-errors.2.1](FS-errors.md#21-located-finding)) so an editor can jump to it, but it is an *answer*, not a finding; stderr is left for errors and the notes of [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations): the typo note, and the pointer to `list --unused` for a declared ID nothing cites ([§FS-refs.2.1.1](FS-refs.md#211-a-declared-id-nothing-cites-points-at-list---unused)).
 
 ### 2.1 An ID with no citations
 
-An ID with zero citations produces empty output and exit `0` — or, under `--total`, the single line `not cited` and exit `0` ([§FS-refs.3.4](FS-refs.md#34---total)): an as-yet-uncited declaration is normal, and `check` already warns about it ([§FS-check.4.1](FS-check.md#41-unused-declaration)). If the ID is *also* declared nowhere in the scanned tree, `refs` prints one `note:` line to **stderr** and still exits `0`. The scanned tree is the one [§FS-scan.path.refs](FS-scan.md#pathrefs-refs-scans-the-paths-tree) defines; the note does not test declaration existence outside it.
+An ID with zero citations produces empty output and exit `0` — or, under `--total`, the single line `not cited` and exit `0` ([§FS-refs.3.4](FS-refs.md#34---total)): an as-yet-uncited declaration is normal, and `check` already warns about it ([§FS-check.4.1](FS-check.md#41-unused-declaration)). Beside that empty answer `refs` may print one `note:` line to **stderr**, and still exits `0`. If the ID is *also* declared nowhere in the scanned tree, it is the typo note below. If it is declared, it is the pointer to the one call that lists every such declaration, under the conditions of [§FS-refs.2.1.1](FS-refs.md#211-a-declared-id-nothing-cites-points-at-list---unused). The scanned tree is the one [§FS-scan.path.refs](FS-scan.md#pathrefs-refs-scans-the-paths-tree) defines; the typo note does not test declaration existence outside it.
 
 Without an explicit path, the typo hint remains `note: <ID> is neither declared nor cited — run \`grund list\` to see every declared ID`. For an alias-qualified workspace query it remains `note: <alias>/<ID> is neither declared nor cited — run \`grund list --project <alias>\` to see <alias>'s declared IDs`.
 
@@ -116,7 +116,36 @@ note: <ID> is neither declared nor cited in scan path `<path>` — run `grund li
 note: <alias>/<ID> is neither declared nor cited in scan path `<path>` — run `grund list --project <alias>` to see <alias>'s declared IDs, including outside this scan
 ```
 
-Thus an uncited ID declared in `docs/` can earn this scoped note when the path is `src` or a file in it; it earns no note without a path. A genuinely absent ID still earns the hint, scoped when a path is supplied. The note is a hint, not part of the result: it never joins stdout, in text or JSON, which stays empty, or carries only `--total`'s own answer, so machine consumers that read only stdout never see it. It mirrors the `ID not found` hint the ID query gives for a typo ([§FS-show.3](FS-show.md#3-outputs)) without that query's exit `1`. A resolver rejection is different: once the selected project's grammar rejects the operand there is no citation-list result, and from 0.16.0 that failed query exits `1` ([§FS-refs.4](FS-refs.md#4-exit-codes)).
+Thus an uncited ID declared in `docs/` can earn this scoped note when the path is `src` or a file in it; without a path it earns the note of [§FS-refs.2.1.1](FS-refs.md#211-a-declared-id-nothing-cites-points-at-list---unused) instead. A genuinely absent ID still earns the hint, scoped when a path is supplied. Either note is a hint, not part of the result: it never joins stdout, in text or JSON, which stays empty, or carries only `--total`'s own answer, so machine consumers that read only stdout never see it. It mirrors the `ID not found` hint the ID query gives for a typo ([§FS-show.3](FS-show.md#3-outputs)) without that query's exit `1`. A resolver rejection is different: once the selected project's grammar rejects the operand there is no citation-list result, and from 0.16.0 that failed query exits `1` ([§FS-refs.4](FS-refs.md#4-exit-codes)).
+
+#### 2.1.1 A declared ID nothing cites points at `list --unused`
+
+A whole-ID query of a declared ID that lists no citation site prints one `note:` line to **stderr** naming the query that answers the same question for every declaration at once, `grund list --unused` ([§FS-list.1.3](FS-list.md#13---unused)), and changes nothing else: stdout is the empty answer, or `not cited` or `{"sites":0,"files":0}` under `--total`, in either format and with or without `--summary`, and the exit is `0`. One call then answers what would otherwise take one `refs` per declaration ([§GOAL-token-economy.1](../goals.md#1-what-this-requires)).
+
+```text
+$ grund refs FS-api-audit
+note: FS-api-audit is declared but nothing cites it; `grund list --unused` lists every such declaration
+```
+
+The ID is the declaration's catalog spelling, whatever form the operand took: a number-only shorthand, or other digits for the same number, names the declaration it resolved to. The command is written so that its listing holds that declaration, so the advice and the listing give one answer ([§REQ-one-answer.contract](../requirements/REQ-one-answer.md#contract-one-question-one-tree-one-answer)):
+
+- An alias-qualified workspace query names its project as the typo note does, in the first form below. An unqualified query, a member-local one included, keeps the bare command, whose listing holds the current project's declarations.
+- An `E2E` case appends `--kind E2E`, because `--unused` leaves cases out unless that kind is selected ([§FS-list.1.3](FS-list.md#13---unused)), with or without the alias, as in the second form. Every other citable kind, a custom one included, is in the plain listing and takes no filter.
+
+```text
+note: <alias>/<ID> is declared but nothing cites it; `grund list --project <alias> --unused` lists every such declaration
+note: <alias>/E2E-<name> is declared but nothing cites it; `grund list --project <alias> --unused --kind E2E` lists every such declaration
+```
+
+The note is given only where that listing answers the question the query asked. Otherwise it is withheld, and the query's output, its other notes and its exit are what they are without this point:
+
+1. **The query selects a section**, inline or by `--section`, with or without `--descendants`: `--unused` judges whole declarations. On a query with no section `--descendants` changes nothing ([§FS-refs.4](FS-refs.md#4-exit-codes)), so `grund refs <ID> --descendants` gets the note exactly as `grund refs <ID>` does.
+2. **A path is given**, a file, a directory or `.`: an empty answer about part of the tree says nothing about the whole project the listing reads. The scoped typo note above is unchanged.
+3. **The scan is incomplete**: that run exits `2`, and its empty answer is not trustworthy as complete ([§FS-refs.4](FS-refs.md#4-exit-codes)).
+4. **The mode is `--glob` or `--from`**: neither names one target ([§FS-refs.globs.unresolved](FS-refs.md#globsunresolved-a-pattern-resolves-no-target)).
+5. **The answer is not empty.** An ID whose only citation site is its kind's index entry is listed with that site labelled ([§FS-refs.3.1.1](FS-refs.md#311-label-the-excluded-index-sites)) and earns no note, though `--unused` lists it, because the listing discounts the entry ([§FS-list.3.2.1](FS-list.md#321-refs-counts-citations)). That misses a hint and never gives a wrong one, so the citation query does not take on the index rule to close it.
+
+The note is the text after `note: `, carried as the `note` of the result the Rust API and both bindings return, as the typo note is ([§FS-distribution.3.2.2.2](FS-distribution.md#3222-result-fields)); a caller that reads only the sites never sees it. Decided in [§DF-refs-unused-note](../decisions/functional/DF-refs-unused-note.md#df-refs-unused-note-an-uncited-declarations-empty-refs-answer-points-at-grund-list---unused).
 
 ### 2.2 Value bindings
 
@@ -142,7 +171,7 @@ For an ID `X` the run resolves, written with its operators escaped and qualified
 
 ### globs.unresolved: A pattern resolves no target
 
-A pattern names no one target, so nothing it matches is resolved or refused: a coordinate that is undeclared, dangling, or claimed by two homes is listed as matched, and the mode has no exit `1` of its own ([§FS-refs.4](FS-refs.md#4-exit-codes)). A refused pattern exits `2` ([§FS-coordinate-globs.errors.shape](FS-coordinate-globs.md#errorsshape-one-refusal-line)), a pattern no kind in scope can start prints its note on stderr and changes nothing else ([§FS-coordinate-globs.errors.note](FS-coordinate-globs.md#errorsnote-a-pattern-no-kind-can-start-gets-a-note)), and [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations)'s note is ID mode's and is never printed here. An empty set prints nothing and exits `0`, and under `--total` reads `not cited` as ID mode's does ([§FS-refs.3.4](FS-refs.md#34---total)).
+A pattern names no one target, so nothing it matches is resolved or refused: a coordinate that is undeclared, dangling, or claimed by two homes is listed as matched, and the mode has no exit `1` of its own ([§FS-refs.4](FS-refs.md#4-exit-codes)). A refused pattern exits `2` ([§FS-coordinate-globs.errors.shape](FS-coordinate-globs.md#errorsshape-one-refusal-line)), a pattern no kind in scope can start prints its note on stderr and changes nothing else ([§FS-coordinate-globs.errors.note](FS-coordinate-globs.md#errorsnote-a-pattern-no-kind-can-start-gets-a-note)), and [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations)'s notes are ID mode's and are never printed here. An empty set prints nothing and exits `0`, and under `--total` reads `not cited` as ID mode's does ([§FS-refs.3.4](FS-refs.md#34---total)).
 
 ## from: `--from` lists what one point cites
 
