@@ -34,7 +34,7 @@ grund list [<path>] [--selector <selector>] [--glob <pattern>]… [--kind <KIND>
 
 Which entries `<path>` reports, and what they resolve against, is [§FS-scan.path.list](FS-scan.md#pathlist-list-reports-the-paths-entries-and-resolves-against-the-project). `--format text|json` picks the output shape ([§FS-list.3](FS-list.md#3-outputs)), `text` by default.
 
-`--kind` selects configured citable kinds and refuses an unknown one, or a non-citable one with the two-line message giving its reason ([§FS-list.1.1](FS-list.md#11---kind)). `--project` narrows a workspace catalog to the named projects ([§FS-list.1.2](FS-list.md#12---project)). `--unused` keeps only uncited declarations, discounting a kind's index entries and leaving out `E2E` cases unless `--kind` selects them ([§FS-list.1.3](FS-list.md#13---unused)). `--summary` prints one count per kind under those same filters ([§FS-list.1.4](FS-list.md#14---summary)). `--size` and `--top` switch to coordinate-size rows over a closed unit set ([§FS-list.1.5](FS-list.md#15---size), [§FS-list.1.6](FS-list.md#16---top)); their syntax and combination errors are launch errors, decided before config discovery or scanning ([§FS-list.1.7](FS-list.md#17-size-selector-errors)).
+`--kind` selects configured citable kinds and refuses an unknown one, or a non-citable one with the two-line message giving its reason ([§FS-list.1.1](FS-list.md#11---kind)). `--project` narrows a workspace catalog to the named projects ([§FS-list.1.2](FS-list.md#12---project)). `--unused` keeps only uncited declarations, discounting a kind's index entries and leaving out a configured `E2E` kind's cases unless `--kind` selects them ([§FS-list.1.3](FS-list.md#13---unused), [§FS-list.1.3.1](FS-list.md#131-a-configured-e2e-kind-is-left-out-unless-selected)). `--summary` prints one count per kind under those same filters ([§FS-list.1.4](FS-list.md#14---summary)). `--size` and `--top` switch to coordinate-size rows over a closed unit set ([§FS-list.1.5](FS-list.md#15---size), [§FS-list.1.6](FS-list.md#16---top)); their syntax and combination errors are launch errors, decided before config discovery or scanning ([§FS-list.1.7](FS-list.md#17-size-selector-errors)).
 
 `list` is a query, like `show` and `refs` — non-interactive, no prompts ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)).
 
@@ -112,7 +112,7 @@ Where a config declares an `E2E` case kind ([§FS-config.3.4.4.3](FS-config.md#3
 
 #### 1.3.2 The default kinds have no `E2E` kind
 
-The default kinds, which `grund init` writes, put e2e in the non-citable folder kind `e2e` at `tests/e2e` ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)). Its files declare no IDs, so a bare `--unused` there has no e2e case to leave out and none to list. `--kind E2E` names no kind such a config has and is refused as an unknown kind, and `--kind e2e` as a kind that declares no IDs, both with exit `2` ([§FS-list.1.1](FS-list.md#11---kind)). An inventory of uncited cases therefore exists only where a config declares the `E2E` kind.
+The default kinds, and the config `grund init` writes from them, put e2e in the non-citable folder kind `e2e` at `tests/e2e` ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)). Its files declare no IDs, so a bare `--unused` there has no e2e case to leave out and none to list. `--kind E2E` names no kind such a config has and is refused as an unknown kind, and `--kind e2e` as a kind that declares no IDs, both with exit `2` ([§FS-list.1.1](FS-list.md#11---kind)). An inventory of uncited cases therefore exists only where a config declares the `E2E` kind.
 
 A query taught for any repository, as the examples of `grund list --help` are ([§FS-cli.2.3](FS-cli.md#23-a-subcommands-help-page)), therefore works under the default kinds. It states the `E2E` rule as one for a configured `E2E` kind, and an example that composes `--unused` with `--kind` selects a kind the default kinds declare, such as `grund list --unused --kind FS`, never `--kind E2E`.
 
@@ -228,7 +228,7 @@ Columns: the kind, the count of declarations of that kind the scan found (after 
 
 #### 3.3.1 Narrowed summaries
 
-With `--kind FS,AR --summary` only those rows appear; with `--unused --summary` the counts are of uncited declarations — the same set the per-declaration `--unused` lists, under [§FS-list.1.3](FS-list.md#13---unused)'s `E2E` rule.
+With `--kind FS,AR --summary` only those rows appear; with `--unused --summary` the counts are of uncited declarations — the same set the per-declaration `--unused` lists, under [§FS-list.1.3.1](FS-list.md#131-a-configured-e2e-kind-is-left-out-unless-selected)'s `E2E` rule.
 
 ### 3.4 `--size` — per-coordinate lead and full-body measurements
 
