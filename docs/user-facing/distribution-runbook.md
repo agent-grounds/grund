@@ -37,6 +37,52 @@ CI, both candidates' CI and a non-publishing dry run before advancing main
 and starting Cargo/GitHub publication. Dispatch remains the owner's release
 authorization; merging this helper capability performs no release.
 
+### While the merge queue lands pull requests
+
+A helper no longer needs a quiet hour. Both `release-minor.yml` and
+`auto-bump.yml` hand everything from their candidates on to
+`scripts/release_candidates.py`, which works in rounds and follows `main`
+([§FS-distribution.4.4.1.1](../functional-spec/FS-distribution.md#4411-a-moved-main-is-followed-not-refused)). Run 39962684811 of
+`release-minor.yml` shows why: it was dispatched on `853e88959a`, its three
+candidate runs passed an hour later, and it was refused because the queue had
+landed #975 (`c5362e3936`) three minutes before they finished. Today that run
+gives round 1 up as soon as it sees `c5362e3936`: it cancels the runs still
+going, deletes `release-candidate/v0.20.0-39962684811-1-r1` and its `-dev`
+twin, waits until `main` has held still for three minutes, rebuilds both
+candidates on the new tip, and runs all three runs again on
+`release-candidate/v0.20.0-39962684811-1-r2`. Only the commits the last round's
+runs passed reach `main`, and the release section lists #975.
+
+The rounds are bounded ([§FS-distribution.4.4.1.2](../functional-spec/FS-distribution.md#4412-six-rounds-within-five-hours)): at most six, in a job of 300
+minutes, and a round starts only with 90 minutes left. A helper that runs out
+of either publishes nothing and says which ran out; dispatch it again. It also
+stops, before pushing anything, when the target tag appeared or a merged pull
+request changed the version sources, and the release guard refuses a ramp a
+merged pull request landed before any run starts.
+
+A run dispatched with `expected_main_sha` follows no move
+([§FS-distribution.4.4.2](../functional-spec/FS-distribution.md#442-deliberately-select-the-first-stable-release-from-the-dispatch-main-tip)): it cancels its runs, deletes its branches and names the new
+tip. To release that tip, dispatch again with a fresh pin:
+
+```bash
+gh workflow run release-minor.yml --ref main \
+  -f version=1.0.0 -f expected_main_sha=THE_TIP_THE_REFUSAL_NAMED
+```
+
+Only a failure leaves branches ([§FS-distribution.4.4.1.4](../functional-spec/FS-distribution.md#4414-only-a-failure-leaves-branches)): a candidate run
+that did not pass, or a push to `main` git refused while `main` was still the
+round's base, keeps that round's two branches for you to read, and `main` is
+untouched. A round given up for a move, a helper out of rounds or time and a
+pinned refusal delete theirs.
+
+Once the release commit is on `main`, the helper dispatches `release.yml` on
+the round's release-candidate branch with `expected_release_sha` set to that
+commit ([§FS-distribution.4.4.1.3](../functional-spec/FS-distribution.md#4413-the-push-to-main-reads-main-back)); the publisher refuses any other source before it
+builds, and removes the branch once it has published
+([§FS-distribution.4.3](../functional-spec/FS-distribution.md#43-releaseyml-publishes-a-commit-that-already-carries-its-version)). If that dispatch fails, the helper says so and does not start
+over: dispatch `release.yml` on the branch it names, with the version and the
+`expected_release_sha` it prints.
+
 ## The candidate
 
 Before preparing a release, check the version against the checked-out tree:

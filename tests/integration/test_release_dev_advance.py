@@ -1,39 +1,33 @@
 """§FS-distribution.4.4.1 — the `-dev` advance pushes the tested commit onto a `main`
 that is still the release commit, and refuses only a `main` that has moved.
 
-Each case runs the "Advance main to the next dev version" step's own `run:`,
-read out of both helper workflows, so the test holds whether the step keeps its
-body or calls a script under `scripts/` (the fixture clone links this
-checkout's `scripts/`). Its origin is a local bare repository whose `main` is
-the release commit R, with the advance D over R on the candidate branch and a
-pre-receive hook that refuses pushes to `main` as the case asks. The retry
-backoff is zeroed with `GRUND_ADVANCE_RETRY_DELAY=0`, so no case waits and none
-reaches the network."""
+Each case runs the advance the way both helpers reach it: their candidates step
+hands everything from the candidates on to `scripts/release_candidates.py`, and
+each case calls that controller's own `advance`, which runs the one script the
+advance has (the fixture clone links this checkout's `scripts/`). Its origin is
+a local bare repository whose `main` is the release commit R, with the advance D
+over R on the candidate branch and a pre-receive hook that refuses pushes to
+`main` as the case asks. The retry backoff is zeroed with
+`GRUND_ADVANCE_RETRY_DELAY=0`, so no case waits and none reaches the network."""
 
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
-import textwrap
 import unittest
 from pathlib import Path
 
 from changelog_gate_fixture import REPO_ROOT, environment
-from test_release_candidate_runs import ADVANCE, HELPERS, helper_steps
+from test_release_candidate_runs import CANDIDATES, CONTROLLER_CALL, HELPERS, helper_steps
 from test_release_workflow import step_index
 
 RELEASED, DEV = "0.19.0", "0.19.1-dev"
 BRANCH = "release-candidate/dev-0.19.1"
 REJECTION = "missing necessary objects (simulated transient rejection)"
 MOVED = "main moved"
-# The step's outputs, as the earlier steps of the job would set them.
-OUTPUTS = {
-    "${{ steps.versions.outputs.next }}": RELEASED,
-    "${{ steps.dev_candidate.outputs.dev }}": DEV,
-    "${{ steps.dev_candidate.outputs.branch }}": BRANCH,
-}
-DEV_SHA = "${{ steps.dev_candidate.outputs.sha }}"
+# Where the case puts the advance's commit, which only the fixture knows.
+DEV_SHA = "@DEV_SHA@"
 # Refuses pushes to main while `refuse` holds a count above zero (`always` refuses every one),
 # and counts every push to main that reaches it.
 HOOK = """#!/bin/sh
@@ -50,23 +44,14 @@ exit 0
 
 
 def advance_script(workflow):
-    """The step's `run:` block, dedented, with every output but the sha filled in."""
+    """The controller's advance, as the helper's candidates step reaches it."""
     found = helper_steps(workflow)
-    index = step_index(found, ADVANCE)
-    if index == -1:
-        raise AssertionError(f"{workflow} has no step named {ADVANCE!r}")
-    lines = found[index].splitlines()
-    start = next(i for i, line in enumerate(lines) if line.strip() == "run: |") + 1
-    indent = len(lines[start]) - len(lines[start].lstrip())
-    body = []
-    for line in lines[start:]:
-        if line.strip() and len(line) - len(line.lstrip()) < indent:
-            break
-        body.append(line)
-    script = textwrap.dedent("\n".join(body)) + "\n"
-    for placeholder, value in OUTPUTS.items():
-        script = script.replace(placeholder, value)
-    return script
+    index = step_index(found, CANDIDATES)
+    if index == -1 or CONTROLLER_CALL not in found[index]:
+        raise AssertionError(f"{workflow} does not hand its candidates to {CONTROLLER_CALL}")
+    call = (f"import sys; sys.path.insert(0, 'scripts'); import release_candidates; "
+            f"sys.exit(release_candidates.advance('{RELEASED}', '{DEV}', '{BRANCH}', '{DEV_SHA}'))")
+    return f'"{sys.executable}" -c "{call}"\n'
 
 
 @unittest.skipIf(sys.platform == "win32", "the step is a bash script with a shell pre-receive hook")

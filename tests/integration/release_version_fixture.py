@@ -13,7 +13,7 @@ import sys
 import tempfile
 import tomllib
 
-from test_release_workflow import jobs, steps
+from test_release_workflow import preparation
 
 
 REPO = Path(__file__).resolve().parents[2]
@@ -106,17 +106,16 @@ def workflow_phases(name):
     forge queries are outside this version-input probe; no push/branch command
     is executed. The existing workflow shape tests cover their ordering.
     """
-    (body,) = jobs((REPO / f".github/workflows/{name}.yml").read_text()).values()
     phases, adds = [], []
-    for step in steps(body):
-        for raw in step.replace("\\\n", " ").splitlines():
-            line = raw.strip()
-            if line.startswith("python3 scripts/distribution/candidate.py set-version "):
-                phases.append([line])
-            elif line.startswith("printf ") and CASE + "/expected.stdout" in line:
-                phases[-1].append(line)
-            elif line.startswith("git add "):
-                adds.append(line)
+    # §FS-distribution.4.4: the helper's round, which its controller builds, holds the writes.
+    for raw in preparation(f"{name}.yml").replace("\\\n", " ").splitlines():
+        line = raw.strip()
+        if line.startswith("python3 scripts/distribution/candidate.py set-version "):
+            phases.append([line])
+        elif line.startswith("printf ") and CASE + "/expected.stdout" in line:
+            phases[-1].append(line)
+        elif line.startswith("git add "):
+            adds.append(line)
     if len(phases) != 2 or len(adds) != 2:
         raise AssertionError(f"Cannot identify both write/staging phases in {name}")
     return [writes + [add] for writes, add in zip(phases, adds)]
@@ -125,7 +124,7 @@ def workflow_phases(name):
 def execute_phase(test, root, commands, version):
     for line in commands:
         line = line.replace("${{ steps.versions.outputs.next }}", "${TEST_VERSION}")
-        line = line.replace("$dev", "${TEST_VERSION}")
+        line = line.replace("$dev", "${TEST_VERSION}").replace("$next", "${TEST_VERSION}")
         result = run(root, BASH, "-euc", line,
                      env={**os.environ, "TEST_VERSION": version})
         test.assertEqual(0, result.returncode, f"{line}: {result.stdout}{result.stderr}")

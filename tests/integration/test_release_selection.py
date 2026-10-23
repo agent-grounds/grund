@@ -77,7 +77,7 @@ class ManualSelectionWorkflowTests(unittest.TestCase):
         guard = step_index(found, "Gate - the tree can be released as this version")
         self.assertGreater(guard, selection_index)
         self.assertIn('steps.versions.outputs.next', found[guard])
-        self.assertLess(guard, step_index(found, "Bump workspace version and refresh lockfile"))
+        self.assertLess(guard, step_index(found, "Build, run and publish the candidates"))
         fetch = squash("\n".join(found[:selection_index + 1]))
         self.assertRegex(fetch, r"git fetch\b.*\bmain\b")
         self.assertIn("github.sha", text)

@@ -17,10 +17,7 @@ run has just finished ends nothing (§AR-ci.11).
 `release.yml` is read as text, as `test_release_workflow.py` reads it: it takes
 an optional `expected_release_sha` and refuses a source that is not that commit,
 and only a publishing run removes the candidate branch it was dispatched from
-(§FS-distribution.4.3).
-
-Every case is an `expectedFailure` until #983's controller lands; the
-implementation removes the markers."""
+(§FS-distribution.4.3)."""
 
 import json
 import os
@@ -39,8 +36,6 @@ from test_release_workflow import WORKFLOWS, jobs, steps
 
 SCRIPT = REPO_ROOT / "scripts" / "candidate_runs.py"
 RELEASE = WORKFLOWS / "release.yml"
-# red until #983 lands the release-candidate controller; implement removes this marker.
-red_until_983 = (lambda case: case) if os.environ.get("GRUND_983_RED") else unittest.expectedFailure
 
 
 @unittest.skipIf(sys.platform == "win32", "the stub forge is run through a shell wrapper")
@@ -101,7 +96,6 @@ class WatchTests(unittest.TestCase):
         going = [run["id"] for run in self.after() if run["status"] != "completed"]
         self.assertEqual([], going, f"runs left going\n{result.stderr}")
 
-    @red_until_983
     def test_a_move_cancels_every_pending_run_and_exits_moved(self):
         self.save(move={"1": self.b})
         result = self.watch("--main", self.a)
@@ -111,7 +105,6 @@ class WatchTests(unittest.TestCase):
         self.assertNoneGoing(result)
         self.assertTrue(all(run.get("cancelled") for run in self.after()), self.after())
 
-    @red_until_983
     def test_a_failed_run_cancels_the_others_still_going(self):
         self.save(fail={"1": "ci.yml"})
         result = self.watch()
@@ -119,7 +112,6 @@ class WatchTests(unittest.TestCase):
         self.assertIn("ended failure", result.stderr)
         self.assertNoneGoing(result)
 
-    @red_until_983
     def test_a_failed_run_wins_over_a_move_in_the_same_poll(self):
         git("--git-dir", str(self.origin), "update-ref", "refs/heads/main", self.b, env=self.env)
         self.save(fail={"1": "ci.yml"})
@@ -128,14 +120,12 @@ class WatchTests(unittest.TestCase):
         self.assertIn("ended failure", result.stderr)
         self.assertNoneGoing(result)
 
-    @red_until_983
     def test_a_cancel_refused_on_a_run_that_just_finished_ends_nothing(self):
         self.save(move={"1": self.b}, finish_before_cancel=True)
         result = self.watch("--main", self.a)
         self.assertEqual(3, result.returncode, result.stderr)
         self.assertIn("main moved", result.stderr)
 
-    @red_until_983
     def test_main_is_read_with_git_not_the_forge_api(self):
         self.save(move={"1": self.b})
         result = self.watch("--main", self.a)
@@ -143,7 +133,6 @@ class WatchTests(unittest.TestCase):
         asked = {tuple(call[:2]) for call in self.calls()}
         self.assertLessEqual(asked, {("run", "view"), ("run", "cancel")}, self.calls())
 
-    @red_until_983
     def test_the_deadline_cancels_the_runs_still_going(self):
         self.save(slow=True)
         self.env["CANDIDATE_RUNS_WATCH"] = "0.2"
@@ -154,7 +143,6 @@ class WatchTests(unittest.TestCase):
         self.assertLess(time.time() - started, 30)
         self.assertNoneGoing(result)
 
-    @red_until_983
     def test_dispatch_ignores_a_run_that_existed_before_it(self):
         """The publisher runs on the branch and commit the dry run ran on (§AR-ci.11)."""
         branch = "release-candidate/v0.20.0-7-1-r1"
@@ -187,7 +175,6 @@ class DryRun:
 class PublisherTests(unittest.TestCase):
     """`release.yml` publishes only the commit the helper tested, and only it cleans up."""
 
-    @red_until_983
     def test_release_yml_takes_an_optional_expected_release_sha(self):
         text = RELEASE.read_text(encoding="utf-8")
         inputs = text.split("workflow_dispatch:", 1)[1].split("\npermissions:", 1)[0]
@@ -195,7 +182,6 @@ class PublisherTests(unittest.TestCase):
         self.assertIsNotNone(found, "release.yml has no expected_release_sha input")
         self.assertNotRegex(found[1], r"required:\s*true")
 
-    @red_until_983
     @unittest.skipIf(sys.platform == "win32", "the step is a bash script")
     def test_a_source_other_than_expected_release_sha_is_refused(self):
         body = release_jobs()["verify"]
@@ -225,7 +211,6 @@ class PublisherTests(unittest.TestCase):
             self.assertEqual([0] * len(guards), run(head), "the tested sha itself was refused")
             self.assertEqual([0] * len(guards), run(""), "a manual dispatch without the input was refused")
 
-    @red_until_983
     def test_only_a_publishing_run_removes_the_candidate_branch(self):
         removals = []
         for name, body in release_jobs().items():
