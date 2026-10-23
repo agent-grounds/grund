@@ -53,7 +53,8 @@
         "--path-base": {"waiver": "Rewrites the printed paths, after the scan the refs row already counts."},
         "--section": {"scenarios": ["refs_section", "refs_section_named"]},
         "--summary": {"scenarios": ["refs_citations", "refs_summary"]},
-        "--total": {"scenarios": ["refs_total"]}
+        "--total": {"scenarios": ["refs_total"]},
+        "--unused": {"waiver": "Not a refs flag: the help names `grund list --unused`, the query the uncited-ID note points at, which the list_unused rows count."}
       }
     },
     "cover": {
