@@ -469,6 +469,19 @@ two worktrees of the repository never get one directory between them. The
 helper derives that directory once, and every build site reaches it through the
 helper; the wrapper and CI still prepare, cache and restore only the root.
 
+The helper also owns target lifetime, implementing
+[§FS-repository-maintenance.2.1](../functional-spec/FS-repository-maintenance.md#21-ownership-and-reuse), [§FS-repository-maintenance.2.2](../functional-spec/FS-repository-maintenance.md#22-automatic-reclamation),
+[§FS-repository-maintenance.2.3](../functional-spec/FS-repository-maintenance.md#23-conservative-deletion-boundary-and-legacy-entries) and [§FS-repository-maintenance.2.4](../functional-spec/FS-repository-maintenance.md#24-concurrent-callers-and-source-lifetime). Each target
+records its resolved source root in `checkout.json`, a UTF-8 JSON object with
+a `checkout` string. The directory key remains the first 16 hexadecimal
+characters of SHA-256 over `os.fsencode(resolved_checkout_root)`. The helper
+publishes the record by replacing it atomically from a private temporary file,
+and checks other direct child targets for reclaimable ownership on every call.
+Record validation and a filesystem lookup establish eligibility before recursive
+removal; a missing record is never reverse-mapped from its digest. The shared
+`tools` directory stays outside this ownership scheme. Cleanup tolerates another
+caller having already removed a dead target; it supplies no running-build lease.
+
 Cargo's lock does not make one target safe to share across source trees,
 because it serialises builds and separates nothing else. Two things in a target
 are keyed by neither the source tree nor the run. Cargo gives a workspace path
@@ -495,6 +508,11 @@ under one root get disjoint targets, both under it; one checkout gets the same
 target on every call and every run; every `--target-dir` a checkout's
 source package and CLI build name lies under that checkout's own target; and
 the CI cache key carries the `v3` this point bumped.
+
+`tests/integration/test_node_target_lifetime.py` exercises the real helper in
+disposable checkouts and an isolated shared root, without compiling or fetching
+dependencies: deleted-source reclamation, ownership adoption, retained artifacts,
+untrusted records, symlinks, uncertain source lookups and concurrent processes.
 
 ##### 3.4.1.3 The TypeScript compiler, a prepared input
 
