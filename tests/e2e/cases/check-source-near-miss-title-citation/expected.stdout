@@ -1,0 +1,6 @@
+src/a.py:2: error: `FS-BadPython` resolves for compatibility but does not match [id] format = "{kind}-{number}-{slug}" — rename it or change the effective format; this became an error in grund 0.16.0
+src/b.rs:2: error: `FS-BadBlock` resolves for compatibility but does not match [id] format = "{kind}-{number}-{slug}" — rename it or change the effective format; this became an error in grund 0.16.0
+src/c.rs:1: error: `FS-BadRust` resolves for compatibility but does not match [id] format = "{kind}-{number}-{slug}" — rename it or change the effective format; this became an error in grund 0.16.0
+src/a.py:2: warning: declared but never cited: FS-BadPython
+src/b.rs:2: warning: declared but never cited: FS-BadBlock
+src/c.rs:1: warning: declared but never cited: FS-BadRust
