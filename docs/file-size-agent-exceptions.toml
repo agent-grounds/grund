@@ -281,10 +281,12 @@ path = "docs/functional-spec/FS-init.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 820, unit = "lines" }
+max_accepted = { value = 821, unit = "lines" }
 until = "the Citation directions chapter (FS-init.2.3.5) moves into a declaration of its own with its section citations migrated"
 reason = """
 Over the soft budget before #908 touched it (796 non-blank lines). #908 adds one subsection to the Citation directions chapter, FS-init.2.3.5.2.2, plus a paragraph to FS-init.2.3.7.1, because the subject rule it changes lives there and one fact keeps one point. Missing boundary: FS-init.2.3.5 is a self-contained chapter of fifteen numbered sections, cited by coordinate from code, tests and decisions; it can become its own FS declaration, which needs every FS-init.2.3.5.* citation migrated in one change.
+
+Issue #940 adds FS-init.2.2.2.3, the one rule that selects the kind and home the next: block names in a project without FS, beside the FS-init.2.2.2.1 refresh test that reads it, because one fact keeps one point. Its four exact rendered blocks went to FS-init-fixtures.8 rather than here; the point itself is a heading and three paragraphs, and every other edit of the change rewrote lines in place. The file was 817 non-blank lines; the ceiling accepts exactly the measured 821, with no growth allowance. The same Citation directions extraction retires this debt.
 """
 [[exceptions]]
 path = "crates/grund-core/src/api/run.rs"

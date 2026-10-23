@@ -1,0 +1,17 @@
+# Only what differs from grund's defaults; `grund config show` prints every setting.
+grund_config_version = 2
+project_name = "repo"
+
+# No kinds yet. Add a [schema.kinds.<KIND>] table per kind of document this
+# repository gives IDs to, then run `grund init` again so AGENTS.md lists them.
+
+[schema.kinds.ADR]
+folders = ["docs/adr"]
+[schema.kinds.runbook]
+citable = false
+folders = ["docs/runbooks"]
+
+[presentation.kinds.ADR]
+title = "Architecture decisions"
+[presentation.kinds.runbook]
+title = "Operational runbooks"
