@@ -41,7 +41,7 @@ AGENTS.md
 grund.toml
 ```
 
-`AGENTS.md` contains exactly one delimiter-bounded managed block — `<!-- BEGIN GRUND MANAGED BLOCK -->` through `<!-- END GRUND MANAGED BLOCK -->` ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) — headed `## Grounding with grund (block vN)` at the current block version. `grund.toml` is the `software-development` starter of [§FS-init.2.4.3](FS-init.md#243-every-written-key-differs-from-its-default), byte for byte: the comment line, `grund_config_version = 2`, `project_name`, the ten `[schema.kinds]` rows with their places, `REQ` after `FS` ([§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements)), and their ten `[presentation.kinds]` titles. Nothing else is written: no `[schema.sources]`, no `[schema] id_format`, no `[rules]`, and no commented-out key. A second `grund init {repo_copy}` reports `exists AGENTS.md` and `exists grund.toml`, prints no `next:` block, and leaves the tree byte-identical ([§FS-init.3.3](FS-init.md#33-without---force)).
+`AGENTS.md` contains exactly one delimiter-bounded managed block — `<!-- BEGIN GRUND MANAGED BLOCK -->` through `<!-- END GRUND MANAGED BLOCK -->` ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) — headed `## Grounding with grund (block vN)` at the current block version. `grund.toml` is the `software-development` starter of [§FS-init.2.4.3](FS-init.md#243-every-written-key-differs-from-its-default), byte for byte: the comment line, `grund_config_version = 2`, `project_name`, the ten `[schema.kinds]` rows with their places, `REQ` after `FS` ([§FS-init.2.4.10](FS-init.md#2410-req-is-declared-in-docsrequirements)), and their ten `[presentation.kinds]` titles. Nothing else is written: no `[schema.sources]`, no `[schema] id_format`, no `[rules]`, and no commented-out key. A second `grund init {repo_copy}` reports `exists AGENTS.md` and `exists grund.toml`, prints the same `next:` block the first run printed — this form lays no FS home, so the step to create it is still open ([§FS-init.2.2.2](FS-init.md#222-the-next-block), [§FS-init.2.2.2.1](FS-init.md#2221-a-refresh-of-a-complete-setup-teaches-nothing)) — and leaves the tree byte-identical ([§FS-init.3.3](FS-init.md#33-without---force)).
 
 ### 1.1 Populated configured form
 
@@ -185,7 +185,7 @@ exists AGENTS.md
 exists grund.toml
 ```
 
-Every reported path is `exists `, so the `next:` block is suppressed ([§FS-init.2.2](FS-init.md#22-stdout--stderr)).
+Every reported path is `exists `, which without `--scaffold` suppresses the `next:` block only when the selected home is on disk ([§FS-init.2.2.2.1](FS-init.md#2221-a-refresh-of-a-complete-setup-teaches-nothing)). This repository has no FS home, so the run still prints the [§FS-init.2.2.2](FS-init.md#222-the-next-block) block that teaches creating it.
 
 When `AGENTS.md` exists without a managed block and `--force` is not passed, `init` appends the block and reports:
 

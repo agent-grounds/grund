@@ -195,9 +195,9 @@ const PLAIN_CHECK_STEP: &str = "run `grund check`";
 
 /// The trailing `next:` guidance block (§FS-init.2.2.2) for the selected kind and
 /// place: the FS form for FS with a home, the configured-kind form for every other
-/// selection (§FS-init.2.2.2.3). Suppressed by the caller when every reported path
-/// was `exists `, or on a refresh of a complete setup (§FS-init.2.2.2.1) — when
-/// the repo is already current there is no next step to teach.
+/// selection (§FS-init.2.2.2.3). Suppressed by the caller on a refresh of a complete
+/// setup (§FS-init.2.2.2.1), or on a `--scaffold` run whose every reported path is
+/// `exists ` (§FS-init.2.2.2) — then there is no next step to teach.
 fn render_next_block(
     docs: bool,
     entrypoint: &str,
