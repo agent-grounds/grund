@@ -262,7 +262,7 @@ path = "docs/functional-spec/FS-check.md"
 match = "exact"
 rules = ["large-file-default"]
 kind = "deferred"
-max_accepted = { value = 286372, unit = "bytes" }
+max_accepted = { value = 288320, unit = "bytes" }
 until = "the finding catalog moves into independently declared child specifications and existing FS-check section citations are migrated"
 reason = """
 The check specification still combines recognition, reporting, its finding catalog and watch behavior in one declaration. Issue #823 adds only a cross-reference to the defining member diagnostic point in FS-workspace.5.1.1. Missing boundary: independent finding specifications with a stable mapping for current FS-check section citations; moving that catalog is outside this specification-only diagnostic change. This byte ceiling accepts only the current measured file size, separately from the existing line-budget exception.
@@ -276,6 +276,8 @@ Issue #909 specifies the explanatory append at §FS-check.4.1.2. The file alread
 Issue #906 has check compare the whole managed block: §FS-check.3.5.3 gains the section nouns and the directory a finding names, §FS-check.3.5.4 widens to the whole block, the new §FS-check.3.5.5 declares the runs that leave the workspace sections out, and §FS-check.4.9.1 gains the warning's clause. Each extends the point that already owns the behavior, so one fact keeps one point; moving the finding catalog remains outside this change. The ceiling accepts the measured 286299 bytes, with no growth allowance.
 
 Issue #921 rewrites the last clause of §FS-check.3.5.5's fourth case to cite the init point that keeps the member list there, adding no line. Moving the finding catalog remains outside this change. The ceiling accepts the measured 286372 bytes, with no growth allowance.
+
+Issue #932 adds §FS-check.3.5.3.1 beneath the existing agents-init message point to define first-differing-entry detail once for both workspace sections. The missing boundary and retirement condition above remain: splitting the finding catalog requires a mapped migration of stable section citations, outside this specification/test step. The ceiling accepts exactly the measured 288320 bytes, with no growth allowance.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-init.md"
