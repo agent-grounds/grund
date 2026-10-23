@@ -8,7 +8,7 @@ import unittest
 from unittest import mock
 
 from launch import cargo_probe
-from support import (NODE, REPO, SCRATCH, Rehearsal, checked, dev_env, node_target,
+from support import (CASES, NODE, REPO, SCRATCH, Rehearsal, checked, dev_env, node_target,
                      typescript_compiler)
 
 
@@ -178,7 +178,12 @@ class NodePackageTests(unittest.TestCase):
         self.assertTrue(example.is_file())
         self.assertTrue(golden.is_file())
         shutil.copyfile(example, self.r.consumer / "example.mjs")
-        result = checked(["node", "example.mjs", self.r.fixture], cwd=self.r.consumer)
+        # §FS-distribution.3.2.4, §FS-errors.4.1: rehearse both fixtures in the consumer.
+        warning_fixture = self.r.root / "warnings"
+        shutil.copytree(CASES / "cross-project-citation-without-workspace" / "repo",
+                        warning_fixture)
+        result = checked(["node", "example.mjs", self.r.fixture, warning_fixture],
+                         cwd=self.r.consumer)
         self.assertEqual("", result.stderr)
         self.assertEqual(golden.read_bytes(), result.stdout.encode())
 
