@@ -1,37 +1,81 @@
-//! The basic-family tranche is held to the dynamic whole-family boundary
+//! Each tranche of S4 is held to the dynamic whole-family boundary
 //! (§REQ-one-answer.proof.matrix.family), complete independent facts and actual
-//! completed calls (§REQ-one-answer.proof.evidence, §FS-distribution.3.3.1).
+//! completed calls (§REQ-one-answer.proof.evidence, §FS-distribution.3.3.1), by
+//! one check every tranche calls with the families it delivers.
 
 use super::{agreement_expectations as expectations, agreement_families as families};
 use serde_json::json;
 use std::collections::BTreeSet;
 
-fn basic_members(cases: &BTreeSet<String>) -> BTreeSet<String> {
+/// The families tranche 1 delivered with the compact fact model.
+const TRANCHE_1: &[&str] = &["cover", "scan", "stub"];
+/// The family tranche 2 delivered.
+const TRANCHE_2: &[&str] = &["basic"];
+/// The families tranche 3 delivers: every family of three cases or fewer.
+const TRANCHE_3: &[&str] = &[
+    "agent",
+    "cross",
+    "declare",
+    "deterministic",
+    "e2e",
+    "external",
+    "guide",
+    "haskell",
+    "json",
+    "line",
+    "markdown",
+    "marked",
+    "named",
+    "path",
+    "relative",
+    "remote",
+    "report",
+    "rust",
+];
+
+fn members(cases: &BTreeSet<String>, family: &str) -> BTreeSet<String> {
     cases
         .iter()
-        .filter(|case| families::family(case) == "basic")
+        .filter(|case| families::family(case) == family)
         .cloned()
         .collect()
 }
 
-/// §REQ-one-answer.proof.matrix.family: every basic member enters the same
-/// full receipt acceptance as the retained seed and covered families.
-/// Preflight is deliberately before scope checks and native preparation, so
-/// missing facts cannot be hidden by leaving basic outside COVERED.
 #[test]
 fn s4_basic_family_runs_against_complete_authored_facts() {
+    assert_covered_whole(TRANCHE_2, TRANCHE_1);
+}
+
+#[test]
+#[ignore = "red until #674 agent, cross, declare, deterministic, e2e, external, guide, haskell, \
+            json, line, markdown, marked, named, path, relative, remote, report and rust have \
+            authored facts; implement removes this"]
+fn s4_tranche_3_families_run_against_complete_authored_facts() {
+    assert_covered_whole(TRANCHE_3, &[TRANCHE_1, TRANCHE_2].concat());
+}
+
+/// §REQ-one-answer.proof.matrix.family: every member of each `delivered` family
+/// enters the same full receipt acceptance as the retained seed and covered
+/// families, and every `retained` family stays covered. Preflight is
+/// deliberately before scope checks and native preparation, so missing facts
+/// cannot be hidden by leaving a family outside COVERED.
+fn assert_covered_whole(delivered: &[&str], retained: &[&str]) {
     let cases = families::cases_root().canonicalize().expect("corpus");
     let discovered = families::discovered();
-    let basic = basic_members(&discovered);
-    assert!(!basic.is_empty(), "the basic family must exist");
-    let manifests = expectations::load(&cases, &basic).unwrap_or_else(|errors| {
+    let mut asked = BTreeSet::new();
+    for family in delivered {
+        let found = members(&discovered, family);
+        assert!(!found.is_empty(), "the {family} family must exist");
+        asked.extend(found);
+    }
+    let manifests = expectations::load(&cases, &asked).unwrap_or_else(|errors| {
         panic!(
-            "basic-family independent truth is unfinished for dynamically discovered cases \
-             {basic:?}:\n{}\nNo native preparation or matrix execution attempted.",
+            "independent truth for {delivered:?} is unfinished for dynamically discovered \
+             cases {asked:?}:\n{}\nNo native preparation or matrix execution attempted.",
             errors.join("\n")
         )
     });
-    assert_eq!(manifests.keys().cloned().collect::<BTreeSet<_>>(), basic);
+    assert_eq!(manifests.keys().cloned().collect::<BTreeSet<_>>(), asked);
 
     // §REQ-one-answer.proof.evidence: the input closure and question closure
     // must reject deleting a physical declaration/section/citation/alias and
@@ -41,16 +85,21 @@ fn s4_basic_family_runs_against_complete_authored_facts() {
 
     let scope = families::scope(&discovered);
     assert!(
-        basic.is_subset(&scope),
-        "basic facts exist but cases are absent from completed-call acceptance: {:?}",
-        basic.difference(&scope).collect::<Vec<_>>()
+        asked.is_subset(&scope),
+        "facts exist but cases are absent from completed-call acceptance: {:?}",
+        asked.difference(&scope).collect::<Vec<_>>()
     );
-    assert!(super::COVERED.contains(&"basic"));
-    assert!(!super::WIDENING.iter().any(|(family, _)| *family == "basic"));
-    for retained in ["cover", "scan", "stub"] {
-        assert!(super::COVERED.contains(&retained), "lost {retained} proof");
+    for family in delivered {
+        assert!(super::COVERED.contains(family), "{family} is not COVERED");
+        assert!(
+            !super::WIDENING.iter().any(|(row, _)| row == family),
+            "{family} is still WIDENING"
+        );
     }
-    assert_new_member_requires_facts(&discovered);
+    for family in retained {
+        assert!(super::COVERED.contains(family), "lost {family} proof");
+    }
+    assert_new_members_require_facts(&discovered, delivered);
 
     // This asserts genuine CLI/editor/package calls, exact applicability and
     // authored question receipts, not a count or a family label. Once shares
@@ -58,37 +107,40 @@ fn s4_basic_family_runs_against_complete_authored_facts() {
     super::agreement_acceptance::s4_executes_the_covered_families_and_the_seed();
 }
 
-fn assert_new_member_requires_facts(discovered: &BTreeSet<String>) {
-    let new_case = "basic-new-member-without-authored-facts";
-    assert!(!discovered.contains(new_case), "control name became real");
+fn assert_new_members_require_facts(discovered: &BTreeSet<String>, delivered: &[&str]) {
+    let mut new_cases = BTreeSet::new();
     let mut extended = discovered.clone();
-    extended.insert(new_case.into());
-    assert!(basic_members(&extended).contains(new_case));
-    assert!(families::scope(&extended).contains(new_case));
+    for family in delivered {
+        let new_case = format!("{family}-new-member-without-authored-facts");
+        assert!(!discovered.contains(&new_case), "control name became real");
+        extended.insert(new_case.clone());
+        assert!(members(&extended, family).contains(&new_case));
+        assert!(families::scope(&extended).contains(&new_case));
+        new_cases.insert(new_case);
+    }
 
     // Isolated corpus with the real directory layout used by the fact loader;
     // no mutation of the repository's fixture tree or native setup is needed.
-    let control = super::agreement_tree::Tree::new(
-        "grund-674-basic-new-member",
-        &[
-            (
-                "tests/e2e/cases/basic-new-member-without-authored-facts/repo/grund.toml",
-                super::agreement_tree::CONFIG_SLUG,
-            ),
-            ("tests/integration/command_agreement_facts/.keep", ""),
-        ],
-    );
-    let errors = expectations::load(
-        &control.0.join("tests/e2e/cases"),
-        &BTreeSet::from([new_case.into()]),
-    )
-    .expect_err("new basic member without truth must fail before native setup");
-    assert!(
-        errors
-            .iter()
-            .any(|error| error.starts_with(&format!("{new_case}: no input-authored manifest"))),
-        "missing new member was not diagnosed: {errors:?}"
-    );
+    let configs: Vec<String> = new_cases
+        .iter()
+        .map(|case| format!("tests/e2e/cases/{case}/repo/grund.toml"))
+        .collect();
+    let mut files: Vec<(&str, &str)> = configs
+        .iter()
+        .map(|path| (path.as_str(), super::agreement_tree::CONFIG_SLUG))
+        .collect();
+    files.push(("tests/integration/command_agreement_facts/.keep", ""));
+    let control = super::agreement_tree::Tree::new("grund-674-new-members", &files);
+    let errors = expectations::load(&control.0.join("tests/e2e/cases"), &new_cases)
+        .expect_err("new members without truth must fail before native setup");
+    for new_case in &new_cases {
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.starts_with(&format!("{new_case}: no input-authored manifest"))),
+            "missing new member {new_case} was not diagnosed: {errors:?}"
+        );
+    }
 }
 
 /// §REQ-one-answer.proof.evidence: Node metadata cannot disappear with a

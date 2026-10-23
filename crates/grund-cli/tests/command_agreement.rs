@@ -25,8 +25,6 @@
 
 #[path = "support/agreement_acceptance.rs"]
 mod agreement_acceptance;
-#[path = "support/agreement_basic.rs"]
-mod agreement_basic;
 #[path = "support/agreement_buffers.rs"]
 mod agreement_buffers;
 #[path = "support/agreement_closed_rows.rs"]
@@ -107,6 +105,8 @@ mod agreement_sites;
 mod agreement_snapshot;
 #[path = "support/agreement_stubs.rs"]
 mod agreement_stubs;
+#[path = "support/agreement_tranches.rs"]
+mod agreement_tranches;
 #[path = "support/agreement_tree.rs"]
 mod agreement_tree;
 #[path = "support/agreement_truth.rs"]

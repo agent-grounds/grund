@@ -271,10 +271,11 @@ once and fails until its facts are authored. A family asked only in part — on 
 cases, through some of the surfaces or variants, or only through the seed's sampled
 project — is not covered.
 
-The `basic` tranche uses that same boundary: its acceptance discovers every `basic-`
-case, validates its facts before native setup, and requires it in the ordinary
-completed-call acceptance's scope. The acceptance rejects a newly discovered member
-without facts; naming today's members or moving the family's debt row is insufficient.
+Every tranche holds each family it delivers to that same boundary: its acceptance
+discovers every case of the family, validates their facts before native setup, and
+requires them in the ordinary completed-call acceptance's scope. The acceptance rejects a
+newly discovered member without facts; naming today's members or moving the family's
+debt row is insufficient.
 
 #### proof.matrix.seed: The seed is asked the same way
 
