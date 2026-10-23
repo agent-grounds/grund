@@ -76,7 +76,6 @@ fn assert_refused(project: &Project, target: &str, line: &str) {
 /// §FS-config-explain.5: under version 2, a version-1 table asked bare or dotted
 /// gets the answer its bracketed spelling gets, by the longest leading run.
 #[test]
-#[ignore = "red until #935 reads a bare or dotted target against the other version's tables; implement removes this"]
 fn a_version_one_table_asked_bare_or_dotted_under_version_two() {
     let v2 = Project::new(2);
     let v1_table = "it is a version 1 table";
@@ -98,7 +97,6 @@ fn a_version_one_table_asked_bare_or_dotted_under_version_two() {
 /// §FS-config-explain.5: under version 1, a version-2 table asked dotted gets
 /// the answer its bracketed spelling gets.
 #[test]
-#[ignore = "red until #935 reads a bare or dotted target against the other version's tables; implement removes this"]
 fn a_version_two_table_asked_dotted_under_version_one() {
     let v1 = Project::new(1);
     let v2_table = "it is a version 2 table";
