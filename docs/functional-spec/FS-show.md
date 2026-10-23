@@ -377,7 +377,7 @@ fixtures:
 …
 ```
 
-The first line is the invocation (`grund check` when the case has no `command.args`, and the bare `grund` when its `command.args` holds no words); the implicit `check` is this line's alone, never the JSON `args` ([§FS-show.2.4.2](FS-show.md#242-the-manifest-as-json)); then an `expected exit: <code>` line; then a `fixtures:` line followed by one `- <path>` line per file in the case directory, paths relative to that directory, sorted lexicographically — deterministic for a given tree. How each slice prints it is [§FS-show.2.4.1](FS-show.md#241-the-slices-over-a-manifest); its JSON object is [§FS-show.2.4.2](FS-show.md#242-the-manifest-as-json).
+The first line is the invocation (`grund check` when the case has no `command.args`, bare `grund` when it holds no words); then an `expected exit: <code>` line; then a `fixtures:` line followed by one `- <path>` line per file in the case directory, paths relative to that directory, sorted lexicographically — deterministic for a given tree. How each slice prints it is [§FS-show.2.4.1](FS-show.md#241-the-slices-over-a-manifest); its JSON object is [§FS-show.2.4.2](FS-show.md#242-the-manifest-as-json).
 
 #### 2.4.1 The slices over a manifest
 
