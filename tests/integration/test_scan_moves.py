@@ -142,7 +142,8 @@ CITED = ("REQ-one-answer.differences.scope", "FS-workspace.6.2")
 # FS-workspace's adds #823's 20 lines of §FS-workspace.5.1.1 and #921's 3 of §FS-workspace.2.2.2;
 # FS-check's adds #836's 9 of §FS-check.2.3.1.3, #829's 17 of §FS-check.1.4.1 and §FS-check.2.2.1.4,
 # and #906's 14 of §FS-check.3.5.3, §FS-check.3.5.5 and §FS-check.4.9.1; the margin is unchanged.
-BASELINES = {"FS-config.md": 765, "FS-workspace.md": 1186, "FS-check.md": 979}
+# #932 adds 4 lines of §FS-check.3.5.3.1; retain the one-line margin.
+BASELINES = {"FS-config.md": 765, "FS-workspace.md": 1186, "FS-check.md": 983}
 
 
 def _flat(text):

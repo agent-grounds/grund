@@ -128,15 +128,9 @@ and the [runnable example](https://github.com/agent-grounds/grund/blob/main/exam
 
 `grund refs` on an uncited ID notes `grund list --unused`: run that once, not `refs` per ID.
 
-For a stale workspace section, read `expected …; found …` as the first unequal
-body lines from the current render and the block on disk; `<missing>` marks an
-absent side ([§FS-check.3.5.3.1](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#3531-first-differing-workspace-entry)).
-For example, expected ``- [`billing`](packages/billing/AGENTS.md)`` versus found
-``- [`billing`](packages/billing/) *(not yet initialized)*`` means the block's
-initialization mark is stale. Run `grund init` in the directory the finding
-names, or in the checked project when it gives no directory. A
-`section text or order differs` detail still requires refreshing the block.
-See the [workspace walkthrough](https://github.com/agent-grounds/grund/blob/main/examples/workspace/README.md#finding-and-refreshing-a-stale-entry).
+For stale workspace sections, `expected …; found …` shows the first unequal
+entries; `<missing>` marks an absent side. Run `grund init` in the finding's
+directory (the checked project if omitted). See the [entry-detail rule](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#3531-first-differing-workspace-entry).
 
 If a project needs its own grammar or independent check, follow
 Splitting off a member (`grund guide members`), then validate from the workspace root.
