@@ -64,8 +64,8 @@ The note appears only where `list --unused` answers the question you asked:
   answer is not trusted as complete.
 
 In a workspace, an alias-qualified query names its project:
-`grund list --project <alias> --unused`. An `E2E` case adds `--kind E2E`, because
-`--unused` leaves cases out unless that kind is selected.
+`grund list --project <alias> --unused`. A case of a configured `E2E` kind adds
+`--kind E2E`, because `--unused` leaves those cases out unless that kind is selected.
 
 ## Trade-offs
 
