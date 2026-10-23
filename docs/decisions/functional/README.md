@@ -184,6 +184,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-check-compares-the-whole-block](DF-check-compares-the-whole-block.md#df-check-compares-the-whole-block-grund-check-holds-the-whole-managed-block-the-workspace-sections-at-the-outermost-root-of-a-full-checkout) — `grund check` holds the whole managed block, the workspace sections at the outermost root of a full checkout
 - [§DF-init-keeps-the-member-list](DF-init-keeps-the-member-list.md#df-init-keeps-the-member-list-grund-init-keeps-a-blocks-member-list-while-an-optional-member-is-absent) — `grund init` keeps a block's member list while an optional member is absent
 - [§DF-member-link-names-the-directory](DF-member-link-names-the-directory.md#df-member-link-names-the-directory-a-workspace-member-link-names-the-members-directory) — A workspace member link names the member's directory
+- [§DF-block-teaches-unused](DF-block-teaches-unused.md#df-block-teaches-unused-the-managed-block-teaches-grund-list---unused) — the managed block teaches `grund list --unused`
 
 ## The one-answer rulings
 
