@@ -136,7 +136,7 @@ The loader exposes an opt-in test-only counting observer, compiled in only by th
 `test-workspace-load-count` feature, so focused black-box tests count one load
 for many explicit queries and one for exhaustive discovery; in a build without
 the feature those tests are ignored, naming it, rather than run against a log
-nobody wrote ([§AR-ci.3.3](AR-ci.md#33-test-only-observers)).
+nobody wrote ([§AR-ci.3.3](AR-ci.md#33-test-only-observers), [§AR-ci.3.3.1](AR-ci.md#331-an-observation-is-read-from-a-process-the-tests-own-build-made)).
 
 ### 3.2 `grund cover` drops no file
 
