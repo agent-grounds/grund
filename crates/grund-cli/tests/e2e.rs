@@ -1,5 +1,7 @@
 // §AR-bindings.3: the e2e tests exercise the dedicated CLI frontend crate.
+use std::io::Write;
 use std::path::PathBuf;
+use std::time::Instant;
 
 #[path = "support/case_runner.rs"]
 mod case_runner;
@@ -33,8 +35,8 @@ mod index_use_explanations;
 
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
-    assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases, discover_examples,
-    golden_form_violations, run_case,
+    CaseOutcome, assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases,
+    discover_examples, golden_form_violations, run_case,
 };
 
 /// A clean run's line on a version 1 config (§FS-check.checks.config-version-1).
@@ -67,11 +69,22 @@ fn project_namespaces_golden_contract() {
 
 #[test]
 fn e2e_cases_match_expected_reports() {
+    let started = Instant::now();
     let manifest_dir = repo_root();
     let outcomes = discover_e2e_cases(&manifest_dir)
         .iter()
         .map(|case| run_case(&manifest_dir, case, E2e))
         .collect::<Vec<_>>();
+    let compared = outcomes
+        .iter()
+        .filter(|outcome| matches!(outcome, CaseOutcome::Ran | CaseOutcome::Failed { .. }))
+        .count();
+    // §AR-ci.requirements.5.1: past libtest's capture, the seconds this sweep costs.
+    let _ = writeln!(
+        std::io::stderr(),
+        "gate time: e2e cases {compared} case(s) on 1 worker in {:.1}s",
+        started.elapsed().as_secs_f64()
+    );
     assert_every_case_passed("e2e cases", &outcomes);
 }
 
@@ -454,11 +467,22 @@ fn a_fenced_heading_in_a_doc_comment_is_not_a_section() {
 /// immutable case, so their bytes are stable across invocations (§FS-completions.3).
 #[test]
 fn e2e_output_is_deterministic() {
+    let started = Instant::now();
     let manifest_dir = repo_root();
     let outcomes = discover_e2e_cases(&manifest_dir)
         .iter()
         .map(|case| assert_case_is_deterministic(&manifest_dir, case))
         .collect::<Vec<_>>();
+    let compared = outcomes
+        .iter()
+        .filter(|outcome| matches!(outcome, CaseOutcome::Ran | CaseOutcome::Failed { .. }))
+        .count();
+    // §AR-ci.requirements.5.1: past libtest's capture, the seconds this sweep costs.
+    let _ = writeln!(
+        std::io::stderr(),
+        "gate time: e2e determinism {compared} case(s) on 1 worker in {:.1}s",
+        started.elapsed().as_secs_f64()
+    );
     assert_every_case_passed("e2e determinism", &outcomes);
 }
 
