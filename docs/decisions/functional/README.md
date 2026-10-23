@@ -206,6 +206,7 @@ The rulings the one-answer work is built from, one record per step family, each 
 - [§DF-unread-hidden-root](DF-unread-hidden-root.md#df-unread-hidden-root-a-configured-file-root-with-a-hidden-name-is-named-not-read) — a configured file root with a hidden name is named, not read
 
 - [§DF-global-excludes-literal-tilde](DF-global-excludes-literal-tilde.md#df-global-excludes-literal-tilde-preserve-literal-tildes-in-the-global-excludes-pathname) — preserve literal tildes in the global excludes pathname
+- [§DF-release-candidates-follow-main](DF-release-candidates-follow-main.md#df-release-candidates-follow-main-a-release-helper-follows-a-main-the-merge-queue-moves-rebuilding-and-re-running-its-candidates) — a release helper follows a main the merge queue moves, rebuilding and re-running its candidates
 - [§DF-managed-block-revision-label](DF-managed-block-revision-label.md#df-managed-block-revision-label-the-managed-block-heading-labels-its-number-as-the-blocks-revision) — the managed block heading labels its number as the block's revision
 
 This index is navigational — citations should target the decision ID directly, never this file.
