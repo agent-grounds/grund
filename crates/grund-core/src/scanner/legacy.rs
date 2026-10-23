@@ -201,6 +201,10 @@ pub(crate) fn promote_legacy_candidate(
     // With no configured interpretation left, exact catalog compatibility is
     // the one target and replaces the rejected/empty shorthand parse.
     citations.retain(|citation| !same_marker(citation));
+    // §FS-citations.recognized.title-lines: a heading's citation of the ID it declares is none.
+    if candidate.namespace.is_none() && candidate.declares.as_ref() == Some(&id) {
+        return;
+    }
     let site = candidate.inline_site.clone();
     let block_lines = candidate.inline_block_lines.clone();
     let file = candidate.file.clone();

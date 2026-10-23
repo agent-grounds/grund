@@ -241,6 +241,9 @@ pub(crate) struct LegacyCitationCandidate {
     pub(crate) column: usize,
     pub(crate) inline_site: Option<InlineCitationSite>,
     pub(crate) inline_block_lines: Option<std::sync::Arc<[String]>>,
+    /// The ID the heading on this line declares, which the candidate cannot cite
+    /// (§FS-citations.recognized.title-lines).
+    pub(crate) declares: Option<Id>,
     pub(crate) source_kind: String,
     pub(crate) enclosing_declaration: Option<Id>,
     pub(crate) enclosing_section: Option<String>,
