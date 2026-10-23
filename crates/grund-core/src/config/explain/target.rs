@@ -31,9 +31,13 @@ pub(super) fn resolve<'a>(
         }
         return match Code::named(asked) {
             Some(code) => Resolved::Code(code),
-            None => Resolved::Unknown(dotted(tables, asked).unwrap_or(ExplainUnknown::Other {
-                target: asked.to_string(),
-            })),
+            None => Resolved::Unknown(
+                dotted(tables, asked)
+                    .or_else(|| other_dotted(version, tables, asked))
+                    .unwrap_or(ExplainUnknown::Other {
+                        target: asked.to_string(),
+                    }),
+            ),
         };
     };
     let Some(at) = find_table(tables, header) else {
@@ -56,14 +60,8 @@ pub(super) fn resolve<'a>(
 /// spelling that answers it: the longest leading run of its segments that
 /// spells an admitted table is the table, and the rest is a key of it.
 fn dotted(tables: &[(String, Vec<String>)], asked: &str) -> Option<ExplainUnknown> {
-    let segments: Vec<&str> = asked.split('.').collect();
-    let (header, at, rest) = (1..=segments.len()).rev().find_map(|run| {
-        let path = segments[..run].join(".");
-        [format!("[{path}]"), format!("[[{path}]]")]
-            .into_iter()
-            .find_map(|header| find_table(tables, &header).map(|at| (header, at)))
-            .map(|(header, at)| (header, at, segments[run..].join(".")))
-    })?;
+    let (header, at, rest) = leading_tables(asked)
+        .find_map(|(header, rest)| find_table(tables, &header).map(|at| (header, at, rest)))?;
     let spelling = if rest.is_empty() {
         header
     } else {
@@ -74,6 +72,32 @@ fn dotted(tables: &[(String, Vec<String>)], asked: &str) -> Option<ExplainUnknow
         target: asked.to_string(),
         spelling,
         key: !rest.is_empty(),
+    })
+}
+
+/// §FS-config-explain.5: `asked` read as a dotted TOML key whose own tables
+/// name nothing, the failure the bracketed spelling of the longest leading run
+/// gets when that run is a table only the other version admits.
+fn other_dotted(
+    version: u32,
+    tables: &[(String, Vec<String>)],
+    asked: &str,
+) -> Option<ExplainUnknown> {
+    leading_tables(asked)
+        .filter(|(header, _)| !admits(tables, header))
+        .find_map(|(header, _)| other_version_table(version, &header))
+}
+
+/// Each bracketed spelling of a leading run of `asked`'s segments, longest run
+/// first and the table before the array of tables, with the rest of the path.
+fn leading_tables(asked: &str) -> impl Iterator<Item = (String, String)> + '_ {
+    let segments: Vec<&str> = asked.split('.').collect();
+    (1..=segments.len()).rev().flat_map(move |run| {
+        let (path, rest) = (segments[..run].join("."), segments[run..].join("."));
+        [
+            (format!("[{path}]"), rest.clone()),
+            (format!("[[{path}]]"), rest),
+        ]
     })
 }
 
@@ -140,20 +164,23 @@ fn find_key<'a>(keys: &'a [String], asked: &str) -> Option<&'a str> {
 
 /// §FS-config-explain.5: why `version` has no table `header`.
 fn unknown_table(version: u32, header: &str, asked: &str) -> ExplainUnknown {
-    if version >= 2 {
-        if let Some(homes) = v1_homes(header) {
-            return ExplainUnknown::VersionOneTable {
-                table: header.to_string(),
-                homes,
-            };
-        }
-    } else if find_table(&admitted(2), header).is_some() {
-        return ExplainUnknown::VersionTwoTable {
-            table: header.to_string(),
-        };
-    }
-    ExplainUnknown::Other {
+    other_version_table(version, header).unwrap_or(ExplainUnknown::Other {
         target: asked.to_string(),
+    })
+}
+
+/// §FS-config-explain.5: the failure for `header` when it is a table of the
+/// other version (§FS-config-v2.reader.1.v1-tables under version 2), else `None`.
+fn other_version_table(version: u32, header: &str) -> Option<ExplainUnknown> {
+    if version >= 2 {
+        v1_homes(header).map(|homes| ExplainUnknown::VersionOneTable {
+            table: header.to_string(),
+            homes,
+        })
+    } else {
+        admits(&admitted(2), header).then(|| ExplainUnknown::VersionTwoTable {
+            table: header.to_string(),
+        })
     }
 }
 
