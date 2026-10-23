@@ -15,7 +15,7 @@ Options:
   --kind KIND[,KIND]  only selected kinds; repeatable       e.g. grund list --kind FS,AR
   --selector SUBJECT  only one declaration/chapter selector, e.g. FS.requirements
   --glob PATTERN      only coordinates the pattern matches; repeatable  e.g. --glob 'FS-login.**'
-  --unused            only declarations nothing cites yet (skips E2E unless E2E is selected)
+  --unused            only declarations nothing cites yet (skips a configured E2E kind unless selected)
   --summary           one row per kind with count and home  e.g. grund list --summary
   --total             only the count of the rows             e.g. grund list --glob 'FS-*' --total
   --size[=lines,words,bytes]  coordinate lead/full sizes; bare selects all three units
@@ -37,8 +37,8 @@ Examples:
   grund list --selector FS.requirements # every FS requirements chapter
   grund list --glob 'FS-login.**' --total # how many sections FS-login holds
   grund list --size=words --top 10 # largest coordinate leads
-  grund list --unused             # uncited declarations (specs, decisions, …) — E2E cases excluded
-  grund list --unused --kind E2E  # uncited e2e cases only, for inventory
+  grund list --unused             # uncited declarations (specs, decisions, …) — configured E2E cases excluded
+  grund list --unused --kind FS   # uncited FS declarations only
   grund list --kind FS --format json # one NDJSON record per ID, with its refs count
 
 Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/coordinate-sizes.md
