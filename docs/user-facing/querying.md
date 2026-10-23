@@ -329,7 +329,8 @@ note: FS-api-audit is declared but nothing cites it; `grund list --unused` lists
 
 stdout stays empty, `--total` still prints `not cited`, and the exit is `0`, so a
 script that reads the answer sees no change. If you are checking IDs one at a
-time, the first empty answer tells you that `grund list --unused` answers all of
+time, the first empty answer tells you that
+[`grund list --unused`](#what-nothing-cites-yet-list---unused) answers all of
 them at once. The note names the declaration as the catalog spells it, whatever
 shorthand or digits you typed. An alias-qualified workspace query names its
 project, `grund list --project <alias> --unused`, and an `E2E` case adds
