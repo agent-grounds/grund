@@ -128,10 +128,6 @@ and the [runnable example](https://github.com/agent-grounds/grund/blob/main/exam
 
 `grund refs` on an uncited ID notes `grund list --unused`: run that once, not `refs` per ID.
 
-For stale workspace sections, `expected …; found …` shows the first unequal
-entries; `<missing>` marks an absent side. Run `grund init` in the finding's
-directory (the checked project if omitted). See the [entry-detail rule](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#3531-first-differing-workspace-entry).
-
 If a project needs its own grammar or independent check, follow
 Splitting off a member (`grund guide members`), then validate from the workspace root.
 

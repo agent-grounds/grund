@@ -24,6 +24,10 @@ project boundary.
 5. Run `grund check` from the workspace root to validate the whole workspace and
    its qualified citations.
 
+For stale workspace sections, `expected …; found …` shows the first unequal
+entries; `<missing>` marks an absent side. Run `grund init` in the finding's
+directory (the checked project if omitted). See the [entry-detail rule](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-check.md#3531-first-differing-workspace-entry).
+
 A member-local `unknown project alias` finding still fails. When its alias
 names the verified enclosing workspace's root project, follow the root location
 and `grund check` remedy in the finding to validate the cross-project citation.
