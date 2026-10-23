@@ -279,6 +279,77 @@ see AGENTS.md for the full workflow.
     );
 }
 
+/// §FS-init-fixtures.8.4, §FS-init.2.1.3: `--scaffold` lays the whole starter, so on the
+/// tree with `docs/req` absent it writes the `REQ` home too, and the block stays the same.
+#[test]
+fn the_scaffold_lays_a_missing_req_home_with_the_rest_of_the_starter() {
+    let files: Vec<_> = REQ_TREE
+        .iter()
+        .copied()
+        .filter(|(path, _)| !path.starts_with("docs/req/"))
+        .collect();
+    let fixture = Fixture::new("scaffold-no-req", REQ_ONLY, &files, &[]);
+    let stderr = fixture.stderr_of(&["init", "--scaffold"], 0);
+    let present = Fixture::req_only("scaffold-req");
+    let expected = present
+        .stderr_of(&["init", "--scaffold"], 0)
+        .replace("exists docs/req/README.md", "wrote docs/req/README.md");
+    assert_eq!(stderr, expected);
+    assert!(fixture.0.join("docs/req/README.md").is_file());
+}
+
+/// §FS-init.2.1.3: a one-kind `AR` project homed in `docs/architecture` gets that home
+/// from the same starter, as one of its fixed places.
+#[test]
+fn the_scaffold_lays_an_ar_home_at_the_starters_place() {
+    let config = "[[kinds]]\nkind = \"AR\"\nfolder = \"docs/architecture\"\n";
+    let fixture = Fixture::new("scaffold-ar", config, &[], &[]);
+    let stderr = fixture.stderr_of(&["init", "--scaffold"], 0);
+    assert!(
+        stderr.contains("wrote docs/functional-spec/README.md\n"),
+        "{stderr}"
+    );
+    assert!(
+        stderr.contains("wrote docs/architecture/README.md\n"),
+        "{stderr}"
+    );
+}
+
+/// §FS-init.2.2.2.3, §FS-init-fixtures.8: every place that gives the reason the
+/// configured-kind form never offers `--scaffold` says the scaffold lays the whole
+/// software-development starter, and none says it lays the FS starter alone (#974).
+#[test]
+#[ignore = "red until #974 corrects the decision, the guide and both skill copies; implement removes this"]
+fn the_scaffold_rationale_names_the_whole_starter_everywhere() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+    for place in [
+        "docs/functional-spec/FS-init.md",
+        "docs/functional-spec/FS-init-fixtures.md",
+        "docs/decisions/functional/DF-init-configured-kind-guidance.md",
+        "docs/user-facing/init.md",
+        "skills/grund-init/SKILL.md",
+        "crates/grund-core/assets/skills/grund-init/SKILL.md",
+    ] {
+        let prose = fs::read_to_string(root.join(place))
+            .expect(place)
+            .replace('\n', " ");
+        for false_reason in [
+            "FS starter and no",
+            "lays only grund's `FS` starter",
+            "lays grund's own `FS` starter",
+        ] {
+            assert!(
+                !prose.contains(false_reason),
+                "{place} still says `{false_reason}`, but --scaffold lays the whole starter"
+            );
+        }
+        assert!(
+            prose.contains("whole software-development starter"),
+            "{place} does not say --scaffold lays the whole software-development starter"
+        );
+    }
+}
+
 /// The first `init` of a version-2 project declaring `rows`, over `dirs`.
 fn first_block(name: &str, rows: &str, dirs: &[&str]) -> String {
     let config = format!("grund_config_version = 2\nproject_name = \"demo\"\n{rows}");
