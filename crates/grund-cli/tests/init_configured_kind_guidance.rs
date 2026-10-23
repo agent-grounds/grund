@@ -317,7 +317,8 @@ fn the_scaffold_lays_an_ar_home_at_the_starters_place() {
 
 /// §FS-init.2.2.2.3, §FS-init-fixtures.8: every place that gives the reason the
 /// configured-kind form never offers `--scaffold` says the scaffold lays the whole
-/// software-development starter, and none says it lays the FS starter alone (#974).
+/// software-development starter rather than the selected home alone, and none says it
+/// lays the FS starter alone or never lays the selected home (#974).
 #[test]
 fn the_scaffold_rationale_names_the_whole_starter_everywhere() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
@@ -336,6 +337,8 @@ fn the_scaffold_rationale_names_the_whole_starter_everywhere() {
             "FS starter and no",
             "lays only grund's `FS` starter",
             "lays grund's own `FS` starter",
+            "not the selected kind's home",
+            "is no way to lay the selected kind's home",
         ] {
             assert!(
                 !prose.contains(false_reason),
@@ -345,6 +348,10 @@ fn the_scaffold_rationale_names_the_whole_starter_everywhere() {
         assert!(
             prose.contains("whole software-development starter"),
             "{place} does not say --scaffold lays the whole software-development starter"
+        );
+        assert!(
+            prose.contains("home alone"),
+            "{place} does not say --scaffold lays more than the selected home alone"
         );
     }
 }
