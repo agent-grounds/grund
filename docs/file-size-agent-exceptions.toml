@@ -282,12 +282,14 @@ path = "docs/functional-spec/FS-init.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 821, unit = "lines" }
+max_accepted = { value = 832, unit = "lines" }
 until = "the Citation directions chapter (FS-init.2.3.5) moves into a declaration of its own with its section citations migrated"
 reason = """
 Over the soft budget before #908 touched it (796 non-blank lines). #908 adds one subsection to the Citation directions chapter, FS-init.2.3.5.2.2, plus a paragraph to FS-init.2.3.7.1, because the subject rule it changes lives there and one fact keeps one point. Missing boundary: FS-init.2.3.5 is a self-contained chapter of fifteen numbered sections, cited by coordinate from code, tests and decisions; it can become its own FS declaration, which needs every FS-init.2.3.5.* citation migrated in one change.
 
 Issue #940 adds FS-init.2.2.2.3, the one rule that selects the kind and home the next: block names in a project without FS, beside the FS-init.2.2.2.1 refresh test that reads it, because one fact keeps one point. Its four exact rendered blocks went to FS-init-fixtures.8 rather than here; the point itself is a heading and three paragraphs, and every other edit of the change rewrote lines in place. The file was 817 non-blank lines; the ceiling accepts exactly the measured 821, with no growth allowance. The same Citation directions extraction retires this debt.
+
+Issue #934 adds FS-init.2.3.7.3, which says which block versions check calls unsupported (above the binary's maximum) and which it reports stale (known, but not the one the config selects). It sits beside FS-init.2.3.7.1, which names the maximum and the pairs, and FS-init.2.3.7.2, what check compares, because that is the point the version facts already live at; FS-check.md is at its own byte ceiling. Moving FS-init.2.3.5 out remains outside a message fix. The file was 821 non-blank lines; the ceiling accepts exactly the measured 832, with no growth allowance.
 """
 [[exceptions]]
 path = "crates/grund-core/src/api/run.rs"

@@ -912,6 +912,26 @@ section over a v10 base, v10 the in-body Markdown heading policy of
 
 `grund check`'s agent-entrypoint validation ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)) checks the delimiter lines and the version, then compares the whole block against `init`'s render, section by section ([§FS-init.2.3.5.8](FS-init.md#2358-the-drift-check), [§FS-init.2.3.6.1](FS-init.md#2361-the-drift-check)), the two workspace sections only where [§FS-check.3.5.5](FS-check.md#355-the-workspace-sections-are-judged-at-the-outermost-root-of-a-full-checkout) says. `grund config migrate` is narrower on purpose: its guidance gate refuses only a change to the block version or to one of the five generated sections, and passes the rest ([§FS-config-migrate.5.3](FS-config-migrate.md#53-guidance)).
 
+##### 2.3.7.3 Which versions are unsupported
+
+A block is unsupported only when this grund cannot handle it; one `grund init` can rewrite is stale. `check` judges the block's version against the maximum this binary supports ([§FS-init.2.3.7.1](FS-init.md#2371-the-current-version)), not against the version the config selects.
+
+###### 2.3.7.3.1 Above the maximum: unsupported
+
+A block is **unsupported** exactly when its version is above the maximum this binary supports, the same number `grund init` names when it refuses such a block ([§FS-init.2.3.10.2](FS-init.md#23102-a-newer-block-version)). `check`'s message names that maximum, never the version the config selects ([§FS-errors.3.6.1](FS-errors.md#361-the-final-templates)): the remedy it implies is a newer grund, and the two commands name one limit for one block, as [§FS-init.requirements.clean](FS-init.md#requirementsclean-what-init-writes-check-accepts--realized) asks of them.
+
+###### 2.3.7.3.2 At or below the maximum, above the selection: stale
+
+A block whose version is at or below the maximum and above the version the config selects is one `grund init` rewrites, so `check` never calls it unsupported. It is compared section by section like a block at the selected version ([§FS-init.2.3.7.2](FS-init.md#2372-what-check-compares)), and every section that differs is reported stale ([§FS-check.3.5.3](FS-check.md#353-code-and-message)). Where no compared section tells it apart, the one stale finding names the section that selection turns on ([§FS-init.2.3.7.1](FS-init.md#2371-the-current-version)):
+
+1. `scoped guidance` across the scoped and unscoped pairs — a v41 or v42 block where v39 or v40 is selected;
+2. `chapter rules` across a pair's rule-kind member, which renders `### Chapter rules` ([§FS-init.2.3.5.10](FS-init.md#23510-chapter-rules)) — a v40 block where v39 is selected, or a v42 one where v41 is;
+3. where both differ — a v42 block where v39 is selected — `scoped guidance`, as one finding.
+
+###### 2.3.7.3.3 What does not move
+
+A block below the selected version stays `outdated` ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)). Each case is still an `agents-init` error with the exit code it had; only which template reports it, and the number that template names, are settled here ([§FS-errors.3.6.1](FS-errors.md#361-the-final-templates)).
+
 #### 2.3.8 Substituted content
 
 Several things in the generated entrypoint are *substituted in* rather than fixed for its `vN`, so the file describes the repo it is in. The generated project name is the explicit `--name`, otherwise the `project_name` from a config at either supported location in the target, otherwise the resolved target basename. That name is interpolated into the scaffolding H1 emitted above the block whenever canonical `AGENTS.md` is created or forcibly regenerated ([§FS-init.2.3.10](FS-init.md#2310-writing-the-block)); an ordinary update still preserves the unmanaged H1. The block's **effective ID grammar and artifact map** come from the `grund.toml` `init` leaves governing the target (an existing config in the target, or the defaults `init` is about to write). Neither the generated name nor the effective configuration is inherited from an ancestor when the target has no config.

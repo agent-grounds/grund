@@ -1,0 +1,12 @@
+grund_config_version = 2
+project_name = "scoped"
+
+[schema.kinds.GOAL]
+files = ["docs/goals.md"]
+
+[schema.kinds.FS]
+folders = ["docs/spec"]
+index = false
+
+[rules.citations.FS]
+must = ["GOAL"]
