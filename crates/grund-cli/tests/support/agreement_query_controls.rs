@@ -318,7 +318,6 @@ fn unused_note_model(query: &str, selected: &str, explicit_path: Option<&str>) -
 }
 
 #[test]
-#[ignore = "red until #936 teaches the agreement model the note; implement removes this"]
 fn refs_unused_note_model_gives_the_note() {
     assert_eq!(
         unused_note_model("FS-session", ".", None),

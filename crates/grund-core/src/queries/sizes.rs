@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 
 use super::citation_counts::ListCitationCounts;
 use super::glob_scope::{GlobSelection, read_globs};
-use super::list_scope::check_list_scope;
+use super::list_scope::{check_list_scope, unused_leaves_out};
 use super::report_scope::{reported_scope, reports};
 use super::selector_refusal::require_unique_literal;
 use crate::config::{Config, display_path, measure_point_text, run_warning_findings};
@@ -91,7 +91,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
                 continue;
             }
             // §FS-list.1.3.1: a configured `E2E` kind is left out unless `--kind` selects it.
-            if opts.unused_only && id.kind == "E2E" && !opts.kind_filter.contains("E2E") {
+            if opts.unused_only && unused_leaves_out(&id.kind, &opts.kind_filter) {
                 continue;
             }
             // §FS-list.3.4.6: one row per declaration, at its record, so a healthy stub
