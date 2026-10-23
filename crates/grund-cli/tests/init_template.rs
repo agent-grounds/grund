@@ -67,7 +67,8 @@ fn docs_is_an_unknown_flag_and_scaffold_lays_the_files() {
 }
 
 /// §FS-init.1.6.2: a fresh `none` tree passes `grund check` and `grund init
-/// --check` unmodified, before any kind is declared.
+/// --check` unmodified, before any kind is declared; the check still teaches the
+/// open step, since a config with no kind is never a complete setup (§FS-init.2.2.2.2).
 #[test]
 fn a_fresh_none_tree_passes_check_and_init_check() {
     let target = workdir("init_template_none_passes_its_gates");
@@ -85,7 +86,14 @@ fn a_fresh_none_tree_passes_check_and_init_check() {
     );
     let (ok, stderr) = init(&target, &["--check"]);
     assert!(ok, "grund init --check: {stderr}");
-    assert_eq!(stderr, "exists AGENTS.md\nexists grund.toml\n");
+    assert_eq!(
+        stderr,
+        "exists AGENTS.md\nexists grund.toml\n\nnext:\n  \
+         1. declare a first kind in grund.toml, then run `grund init` again so AGENTS.md lists it\n  \
+         2. run `grund check`\n  \
+         3. allocate an ID:  ID=$(grund id <KIND> \"…\")  then add it to that kind's home\n\
+         see AGENTS.md for the full workflow.\n"
+    );
 }
 
 /// §FS-init.1.6.2, §FS-init.2.2.2.2: once the `none` config declares a first

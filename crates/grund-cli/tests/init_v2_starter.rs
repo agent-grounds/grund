@@ -151,14 +151,21 @@ fn tree(root: &Path) -> Vec<(String, Vec<u8>)> {
 }
 
 /// §FS-init-fixtures.2: a fresh `--scaffold` tree is version 2 and passes `grund
-/// check` and `grund init --check` unmodified; so does a fresh `none` tree.
+/// check` and `grund init --check` unmodified; so does a fresh `none` tree, whose
+/// check still teaches the open step of declaring a kind (§FS-init.2.2.2.2).
 #[test]
 fn a_fresh_v2_tree_passes_check_and_init_check() {
     let scaffold = workdir("init_v2_scaffold_gates");
     let (ok, stderr) = init(&scaffold, &["--scaffold"]);
     assert!(ok, "{stderr}");
     let (none, _) = fresh_starter("init_v2_none_gates", "none");
-    for target in [&scaffold, &none] {
+    for (target, expected) in [
+        (
+            &scaffold,
+            "exists AGENTS.md\nexists grund.toml\n".to_string(),
+        ),
+        (&none, rerun_of("none")),
+    ] {
         let config = fs::read_to_string(target.join("grund.toml")).unwrap();
         assert!(config.contains("\ngrund_config_version = 2\n"), "{config}");
         let check = run_grund(&["check", target.to_str().unwrap()], manifest_dir());
@@ -170,12 +177,36 @@ fn a_fresh_v2_tree_passes_check_and_init_check() {
         );
         let (ok, stderr) = init(target, &["--check"]);
         assert!(ok, "grund init --check: {stderr}");
-        assert_eq!(stderr, "exists AGENTS.md\nexists grund.toml\n");
+        assert_eq!(stderr, expected);
     }
 }
 
+/// What a re-run that changes nothing prints over a fresh `template` starter: both
+/// files `exists`, and the `next:` block while the step it teaches is still open
+/// (§FS-init.2.2.2): neither starter has its selected home on disk.
+fn rerun_of(template: &str) -> String {
+    let steps = match template {
+        "none" => [
+            "declare a first kind in grund.toml, then run `grund init` again so AGENTS.md lists it",
+            "run `grund check`",
+            "allocate an ID:  ID=$(grund id <KIND> \"…\")  then add it to that kind's home",
+        ],
+        _ => [
+            "re-run with --scaffold to scaffold the FS home (docs/functional-spec), docs/, and tests/ (or create them yourself)",
+            FRESH_SCAFFOLD_CHECK_ADVICE,
+            "allocate an ID:  ID=$(grund id FS \"…\")  then add it under docs/functional-spec",
+        ],
+    };
+    format!(
+        "exists AGENTS.md\nexists grund.toml\n\nnext:\n  1. {}\n  2. {}\n  3. {}\n\
+         see AGENTS.md for the full workflow.\n",
+        steps[0], steps[1], steps[2]
+    )
+}
+
 /// §FS-init.3.3, §FS-init-fixtures.1: a second `init` over a fresh starter reports
-/// `exists` for both files and leaves the tree byte-identical.
+/// `exists` for both files and leaves the tree byte-identical; neither starter has
+/// its selected home on disk, so it still prints the `next:` block.
 #[test]
 fn a_second_init_over_the_starter_changes_nothing() {
     for template in TEMPLATES {
@@ -183,10 +214,7 @@ fn a_second_init_over_the_starter_changes_nothing() {
         let before = tree(&target);
         let (ok, stderr) = init(&target, &[]);
         assert!(ok, "{stderr}");
-        assert_eq!(
-            stderr, "exists AGENTS.md\nexists grund.toml\n",
-            "{template}"
-        );
+        assert_eq!(stderr, rerun_of(template), "{template}");
         assert_eq!(
             tree(&target),
             before,
