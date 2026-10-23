@@ -163,6 +163,8 @@ mod tests_refs_descendants;
 #[cfg(test)]
 mod tests_refs_query_failures;
 #[cfg(test)]
+mod tests_report_order;
+#[cfg(test)]
 mod tests_rule_overlays;
 #[cfg(test)]
 mod tests_scope_cautions;

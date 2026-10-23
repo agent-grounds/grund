@@ -67,7 +67,6 @@ fn codes(report: &Value) -> Vec<&str> {
 
 /// Port of grund.142's minimal same-tree reproducer through the bindings' entrypoint.
 #[test]
-#[ignore = "red until #952 completes report ordering; implement removes this"]
 fn completed_report_order_single_project_matches_empty_workspace() {
     let repo = Repo::new("single-workspace");
     let config = concat!(
@@ -116,7 +115,6 @@ fn completed_report_order_single_project_matches_empty_workspace() {
 
 /// The relative-paths-false shape: an empty path scope earns two pathless cautions.
 #[test]
-#[ignore = "red until #952 completes report ordering; implement removes this"]
 fn completed_report_order_two_pathless_cautions() {
     let repo = Repo::new("pathless");
     repo.write(

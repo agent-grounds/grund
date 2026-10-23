@@ -10,12 +10,13 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use super::path_report::unread_resolution_source_cautions;
+use super::report::complete_report;
 use super::run::workspace_block_projects;
 use super::scope_cautions::{scan_scope_caution, workspace_path_caution};
 use super::unread_roots::unread_root_warnings;
 use crate::checker::{
     CheckWorkspace, ScanScope, check_chapter_rules, check_project, path_report_scope,
-    repair_index_citations, retain_diagnostics_in_report_scope, sort_diagnostics,
+    repair_index_citations, retain_diagnostics_in_report_scope,
 };
 use crate::config::Config;
 use crate::model::{CheckReport, Code, Diagnostic};
@@ -281,8 +282,8 @@ fn check_workspace_context(
             unread_outside_report_scope,
         ));
     }
-    sort_diagnostics(&mut report.errors);
-    sort_diagnostics(&mut report.warnings);
+    // §FS-errors.4.1: the editor completes its channels by the same rule as disk checks.
+    complete_report(&mut report);
     report
 }
 

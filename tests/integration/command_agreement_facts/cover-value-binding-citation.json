@@ -38,8 +38,8 @@
       {"file":"docs/offer.md","token":"§CONST-discount.1","enclosing":["DOC-offer",null]}
     ],
     "findings": [
-      {"severity":"warning","code":"unused","path":"docs/offer.md","line":1,"message":"declared but never cited: DOC-offer","sites":[]},
-      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]},
+      {"severity":"warning","code":"unused","path":"docs/offer.md","line":1,"message":"declared but never cited: DOC-offer","sites":[]}
     ],
     "refusals": {},
     "absentQuery": "DOC-absent",

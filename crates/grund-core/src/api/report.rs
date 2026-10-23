@@ -13,9 +13,18 @@
 use std::path::Path;
 
 use super::lsp_ranges::absolutize_path;
+use crate::checker::sort_diagnostics;
 use crate::config::{Config, display_path, published_finding, run_warning_findings};
 use crate::model::{CheckReport, Diagnostic, Finding, FindingSite, Report, json_escape};
 use crate::resolver::WorkspaceContext;
+
+/// Complete each channel's stable order after narrowing and caution insertion
+/// (§FS-errors.4.1), before selection can append its own advice.
+pub(super) fn complete_report(report: &mut CheckReport) {
+    sort_diagnostics(&mut report.errors);
+    sort_diagnostics(&mut report.warnings);
+    sort_diagnostics(&mut report.suggestions);
+}
 
 pub(super) fn public_report(
     config: &Config,

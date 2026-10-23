@@ -90,6 +90,10 @@ findings resolve normally, including partial file-read checks where
 `hadScanErrors` is true. Strict scan failure rejects with available snapshot
 partial. Batch query failures continue in order; setup failure rejects the batch.
 
+Each completed report channel stably sorts bytewise by `(path, line, message)`,
+with absent paths first and absent lines counted as zero ([§FS-errors.4.1](../functional-spec/FS-errors.md#41-ordering)).
+`selectedReport` preserves surviving findings' order and appends `selected-check-off` advice.
+
 ```js
 import { show, GrundError } from 'grund-cli';
 try {

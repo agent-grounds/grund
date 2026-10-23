@@ -19,7 +19,6 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::direction_findings::directions;
 use super::fields::pair_fields_with_rules;
 use super::rule_obligations::{arm_rule_directions, empty_rule_obligations};
-use super::support::sort_diagnostics;
 
 /// What the rules adapter reads of one project's records: the façade stays out of
 /// both components (§AR-config.5, §AR-rules.3). `name` is the scope a standalone
@@ -405,10 +404,6 @@ pub(crate) fn check_chapter_rules(
     report
         .errors
         .extend(evaluate(&parsed_rules, &precedence, &facts));
-    // §FS-check.2.2.1.4 / §FS-errors.4.1: the single-project `grund-core` arm is the
-    // one caller that does not sort warnings downstream, so the obligation lines above
-    // are ordered here; the sort is idempotent over every other caller's channel.
-    sort_diagnostics(&mut report.warnings);
     report
         .suggestions
         .extend(evaluate_suggestions(&parsed_rules, &precedence, &facts));

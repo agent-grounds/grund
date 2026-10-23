@@ -32,11 +32,11 @@
     ],
     "findings": [
       {"severity":"error","code":"missing-index-entry","path":"docs/architecture/AR-001-auth.md","line":1,"message":"AR-001-auth is not listed in docs/architecture/README.md (the index file does not exist): an entry is a Markdown link to the declaration whose text is the ID, with or without the `§` marker; write `[§AR-001-auth](AR-001-auth.md#ar-001-auth-the-auth-module)` in docs/architecture/README.md — became an error in grund 0.13.0","sites":[]},
-      {"severity":"warning","code":"unused","path":"docs/architecture/AR-001-auth.md","line":1,"message":"declared but never cited: AR-001-auth","sites":[]},
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]},
       {"severity":"error","code":"missing-index-entry","path":"docs/functional-spec/FS-001-login.md","line":1,"message":"FS-001-login is not listed in docs/functional-spec/README.md (the index file does not exist): an entry is a Markdown link to the declaration whose text is the ID, with or without the `§` marker; write `[§FS-001-login](FS-001-login.md#fs-001-login-user-can-log-in)` in docs/functional-spec/README.md — became an error in grund 0.13.0","sites":[]},
       {"severity":"error","code":"missing-index-entry","path":"docs/functional-spec/FS-002-session.md","line":1,"message":"FS-002-session is not listed in docs/functional-spec/README.md (the index file does not exist): an entry is a Markdown link to the declaration whose text is the ID, with or without the `§` marker; write `[§FS-002-session](FS-002-session.md#fs-002-session-a-session-is-created-on-login)` in docs/functional-spec/README.md — became an error in grund 0.13.0","sites":[]},
-      {"severity":"warning","code":"unused","path":"docs/functional-spec/FS-002-session.md","line":1,"message":"declared but never cited: FS-002-session","sites":[]},
-      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+      {"severity":"warning","code":"unused","path":"docs/architecture/AR-001-auth.md","line":1,"message":"declared but never cited: AR-001-auth","sites":[]},
+      {"severity":"warning","code":"unused","path":"docs/functional-spec/FS-002-session.md","line":1,"message":"declared but never cited: FS-002-session","sites":[]}
     ],
     "refusals": {},
     "fmt": {

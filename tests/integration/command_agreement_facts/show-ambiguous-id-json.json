@@ -26,9 +26,9 @@
     "citations": [],
     "findings": [
       {"severity":"error","code":"missing-index-entry","path":"docs/functional-spec/a.md","line":1,"message":"FS-001-login is not listed in docs/functional-spec/README.md (the index file does not exist): an entry is a Markdown link to the declaration whose text is the ID, with or without the `§` marker — became an error in grund 0.13.0","sites":[]},
-      {"severity":"warning","code":"unused","path":"docs/functional-spec/a.md","line":1,"message":"declared but never cited: FS-001-login","sites":[]},
+      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]},
       {"severity":"error","code":"duplicate","path":"docs/functional-spec/a.md","line":1,"message":"duplicate declaration of FS-001-login (also declared at docs/functional-spec/b.md:1)","sites":[{"path":"docs/functional-spec/a.md","line":1},{"path":"docs/functional-spec/b.md","line":1}]},
-      {"severity":"warning","code":"config-version-1","path":null,"line":null,"message":"grund.toml is version 1; migrate it with grund config migrate --to 2","sites":[]}
+      {"severity":"warning","code":"unused","path":"docs/functional-spec/a.md","line":1,"message":"declared but never cited: FS-001-login","sites":[]}
     ],
     "refusals": {
       "FS-001-login": {"code":"ambiguous","message":"ambiguous ID: FS-001-login (declared at docs/functional-spec/a.md:1, docs/functional-spec/b.md:1)","sites":[{"path":"docs/functional-spec/a.md","line":1},{"path":"docs/functional-spec/b.md","line":1}]}
