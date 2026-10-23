@@ -133,8 +133,9 @@ impl KindIndexEntries {
     /// declaration itself, so a section citation, or the citation inside a
     /// recognized value binding (a root-aimed one with no section included), is use.
     /// So is a citation on a declaration heading, for either branch: it is a
-    /// citation from the declaration that heading declares, and it enrolled nothing
-    /// (§FS-citations.recognized.title-lines, §FS-check.3.18.3).
+    /// citation from the declaration that heading declares
+    /// (§FS-citations.recognized.title-lines), the entry of no folder-owned ID
+    /// (§FS-check.4.1.2.1) and the enrollment of no external one (§FS-check.3.18.3).
     pub(crate) fn is_index_entry(&self, citation: &Citation) -> bool {
         if citation.namespace.is_some() || self.owed.is_empty() {
             return false;
@@ -304,8 +305,8 @@ fn enroll_external_inline_declarations(
         else {
             continue;
         };
-        // §FS-check.3.18.3: the link that enrolls is the entry that satisfies, and a
-        // citation on a declaration heading is no entry (§FS-check.4.1.2.1).
+        // §FS-check.3.18.3: a citation on a declaration heading never enrolls, so it is
+        // not the entry that satisfies either.
         if headings.holds(relative.as_ref(), citation.line) {
             continue;
         }
