@@ -9,7 +9,9 @@ use std::path::{Path, PathBuf};
 
 use super::expected::{block_version, chapter_rules_section};
 use crate::config::Config;
-use crate::grammar::{AGENTS_BLOCK_BASE_VERSION, agents_block_heading, block_sections};
+use crate::grammar::{
+    AGENTS_BLOCK_BASE_VERSION, AgentsBlockMember, agents_block_heading, block_sections,
+};
 use crate::model::{Catalog, ExpectedEntrypoint, ExpectedSection, ScopedExpectation};
 use crate::sources::path_is_dir;
 use crate::templates::{
@@ -47,9 +49,13 @@ impl<'a> Guidance<'a> {
         let layout = Layout::of(config.project(), config.run(), &subjects, &|dir| {
             path_is_dir(root.join(dir))
         });
-        // §FS-init.2.3.7.1: a scoped file or a declaration shape adds two.
+        // §FS-init.2.3.7.1: a scoped file or a declaration shape selects the scoped pair.
         let shapes = declaration_shapes_section(config.project(), &|_| true).is_some();
-        let version = block_version(config) + if layout.is_scoped() || shapes { 2 } else { 0 };
+        let version = AgentsBlockMember {
+            scoped: layout.is_scoped() || shapes,
+            ..AgentsBlockMember::of(block_version(config))
+        }
+        .version();
         Self {
             config,
             layout,

@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 
 use crate::checker::{configured_rule_sentences, workspace_vocabulary};
 use crate::config::Config;
-use crate::grammar::AGENTS_BLOCK_BASE_VERSION;
+use crate::grammar::AgentsBlockMember;
 use crate::grammar::parse_id_arg;
 use crate::model::{Catalog, Expected, ExpectedEntrypoint, ScopedExpectation};
 use crate::resolver::{
@@ -196,10 +196,15 @@ fn scoped_entrypoints(
 }
 
 /// The managed-block version this config asks for without scoped guidance:
-/// the base revision plus one once a kind declares rules (§FS-init.2.3.7.1);
-/// `Guidance` adds two for a scoped file or a declaration shape.
+/// the rule-kind member once a kind declares rules (§FS-init.2.3.7.1);
+/// `Guidance` moves it to the scoped pair for a scoped file or a declaration shape.
 pub(crate) fn block_version(config: &Config) -> u32 {
-    AGENTS_BLOCK_BASE_VERSION + u32::from(config.kinds.iter().any(|kind| kind.rules))
+    let rules = config.kinds.iter().any(|kind| kind.rules);
+    AgentsBlockMember {
+        scoped: false,
+        rules,
+    }
+    .version()
 }
 
 /// The shared chapter-rule section for `init` and the drift comparison's

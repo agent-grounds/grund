@@ -142,6 +142,33 @@ pub(crate) const AGENTS_BLOCK_VERSION: u32 = AGENTS_BLOCK_BASE_VERSION + 3;
 /// and a scoped file or a declaration shape adds two, up to [`AGENTS_BLOCK_VERSION`].
 pub(crate) const AGENTS_BLOCK_BASE_VERSION: u32 = 39;
 
+/// Which member of the current pairs a managed-block revision is (§FS-init.2.3.7.1):
+/// the scoped pair sits two above the unscoped one, and a pair's rule-kind member
+/// one above its base. The one place the selection's arithmetic is written, read by
+/// the writers' selection and by `check`'s stale noun (§FS-init.2.3.7.3.2).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(crate) struct AgentsBlockMember {
+    pub(crate) scoped: bool,
+    pub(crate) rules: bool,
+}
+
+impl AgentsBlockMember {
+    /// The member a revision from [`AGENTS_BLOCK_BASE_VERSION`] to
+    /// [`AGENTS_BLOCK_VERSION`] is.
+    pub(crate) const fn of(version: u32) -> Self {
+        let offset = version.saturating_sub(AGENTS_BLOCK_BASE_VERSION);
+        Self {
+            scoped: offset >= 2,
+            rules: offset % 2 == 1,
+        }
+    }
+
+    /// The revision this member renders.
+    pub(crate) const fn version(self) -> u32 {
+        AGENTS_BLOCK_BASE_VERSION + 2 * self.scoped as u32 + self.rules as u32
+    }
+}
+
 /// The byte span and `vN` version of the managed block inside an `AGENTS.md`
 /// (§FS-init.2.3) — what both `grund init`'s update and `grund check`'s validation
 /// (§FS-check.3.5) key off.
