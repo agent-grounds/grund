@@ -333,9 +333,9 @@ time, the first empty answer tells you that
 [`grund list --unused`](#what-nothing-cites-yet-list---unused) answers all of
 them at once. The note names the declaration as the catalog spells it, whatever
 shorthand or digits you typed. An alias-qualified workspace query names its
-project, `grund list --project <alias> --unused`, and an `E2E` case adds
-`--kind E2E`, because `--unused` leaves cases out unless that kind is selected
-([§FS-list.1.3](../functional-spec/FS-list.md#13---unused)).
+project, `grund list --project <alias> --unused`, and a case of a configured `E2E`
+kind adds `--kind E2E`, because `--unused` leaves those cases out unless that kind
+is selected ([§FS-list.1.3.1](../functional-spec/FS-list.md#131-a-configured-e2e-kind-is-left-out-unless-selected)).
 
 The note is given only where that listing answers the question you asked. It is
 withheld under an explicit path, `.` included, which asks about part of the

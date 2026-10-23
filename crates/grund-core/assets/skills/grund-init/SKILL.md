@@ -126,9 +126,7 @@ or cite an actual dependency; do not invent a dependency just to silence the
 warning. See the [checking guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/checking.md#when-only-an-index-cites-a-declaration)
 and the [runnable example](https://github.com/agent-grounds/grund/blob/main/examples/authored-citations/README.md#when-only-the-index-cites-a-record).
 
-With no path, `grund refs <ID>` on a declared ID nothing cites adds one stderr
-`note:` naming the `grund list --unused` call that lists every such declaration:
-run it once rather than `refs` per ID ([when the note is withheld](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/querying.md#who-cites-a-point-refs---descendants)).
+`grund refs` on an uncited ID notes `grund list --unused`: run that once, not `refs` per ID.
 
 If a project needs its own grammar or independent check, follow
 Splitting off a member (`grund guide members`), then validate from the workspace root.
