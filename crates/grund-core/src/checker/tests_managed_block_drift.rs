@@ -297,6 +297,11 @@ fn agents_init_messages_cover_all_five_final_templates() {
         "### Citation directions\nstale generated guidance\n",
         1,
     );
+    // §FS-init.2.3.7.3.1: `unsupported` names this binary's maximum, not the selection.
+    let unsupported = format!(
+        "repo maintenance: unsupported grund init block v99 — this grund supports v{} (does not affect citation validity)",
+        crate::grammar::AGENTS_BLOCK_VERSION
+    );
     let cases = [
         (
             "malformed",
@@ -311,7 +316,7 @@ fn agents_init_messages_cover_all_five_final_templates() {
         (
             "unsupported",
             "## Grounding with grund (v99)\n\nfuture body\n",
-            "repo maintenance: unsupported grund init block v99 — this grund supports v39 (does not affect citation validity)",
+            unsupported.as_str(),
         ),
         (
             "stale",
@@ -344,6 +349,7 @@ fn agents_init_messages_cover_all_five_final_templates() {
                 .map(|error| (error.code, error.message.as_str()))
                 .collect::<Vec<_>>()
         );
+        // §FS-init.2.3.7.3.3: every variant keeps the one `agents-init` code.
         assert_eq!(report.errors[0].code, "agents-init", "{name}");
         assert_eq!(report.errors[0].message, expected, "{name}");
     }

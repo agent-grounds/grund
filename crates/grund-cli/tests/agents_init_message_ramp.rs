@@ -64,6 +64,29 @@ fn agents_init_line(root: &Path) -> String {
         .to_string()
 }
 
+/// The newest block version this binary supports, as `grund init --check` names
+/// it when it refuses a block newer than that: the one limit §FS-init.2.3.7.3.1 has
+/// `check` name too.
+fn init_supported_max() -> String {
+    let root = fixture_root("unsupported-init");
+    write(
+        root.join("AGENTS.md"),
+        "## Grounding with grund (v999)\n\nfuture block\n",
+    );
+    let output = Command::new(env!("CARGO_BIN_EXE_grund"))
+        .args(["init", "--check"])
+        .current_dir(&root)
+        .output()
+        .expect("run grund init --check");
+    let stderr = std::str::from_utf8(&output.stderr).expect("stderr is UTF-8");
+    stderr
+        .split_once("this binary supports v")
+        .and_then(|(_, rest)| rest.split(|c: char| !c.is_ascii_digit()).next())
+        .filter(|version| !version.is_empty())
+        .unwrap_or_else(|| panic!("init names no supported version: {stderr:?}"))
+        .to_string()
+}
+
 /// The five §FS-errors.3.6 `agents-init` messages this binary actually prints,
 /// in the order §FS-errors.3.6.1 lists them.
 ///
@@ -115,11 +138,18 @@ fn the_agents_init_messages_are_the_five_final_templates() {
     assert_eq!(
         agents_init_messages(),
         vec![
-            "repo maintenance: malformed grund managed block: missing `<!-- END GRUND MANAGED BLOCK -->` (does not affect citation validity)",
-            "repo maintenance: outdated grund init block v3 — run `grund init` to update to v39 (does not affect citation validity)",
-            "repo maintenance: unsupported grund init block v999 — this grund supports v39 (does not affect citation validity)",
-            "repo maintenance: stale grund init block: clickable citations differ from grund.toml — run `grund init` to refresh (does not affect citation validity)",
-            "repo maintenance: missing grund init block v39 — run `grund init` to install it (does not affect citation validity)",
+            "repo maintenance: malformed grund managed block: missing `<!-- END GRUND MANAGED BLOCK -->` (does not affect citation validity)"
+                .to_string(),
+            "repo maintenance: outdated grund init block v3 — run `grund init` to update to v39 (does not affect citation validity)"
+                .to_string(),
+            format!(
+                "repo maintenance: unsupported grund init block v999 — this grund supports v{} (does not affect citation validity)",
+                init_supported_max()
+            ),
+            "repo maintenance: stale grund init block: clickable citations differ from grund.toml — run `grund init` to refresh (does not affect citation validity)"
+                .to_string(),
+            "repo maintenance: missing grund init block v39 — run `grund init` to install it (does not affect citation validity)"
+                .to_string(),
         ]
     );
 }
