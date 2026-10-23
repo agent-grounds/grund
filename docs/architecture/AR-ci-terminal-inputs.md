@@ -5,13 +5,18 @@ within the Python gate's input convention ([§AR-ci.3.4](AR-ci.md#34-the-python-
 
 ## placement: What setup selects
 
+```text
+gate inputs, checkout root ─► [ terminal harness setup ] ─► CLI executable ─► PTY tests
+```
+
 `tests/integration/test_watch_terminal.py` selects its executable once in class
 setup, before the PTY tests exercise [§FS-check.6.2.2](../functional-spec/FS-check.md#622-owned-terminal-screen). This is acceptance
-infrastructure outside the shipped CLI and core.
+infrastructure: a meter outside the shipped CLI and core ([§AR-system.5](README.md#5-what-holds-the-shape)).
 
 ## terms: Terms
 
-Leans on [§FS-repository-maintenance.terms](../functional-spec/FS-repository-maintenance.md#terms-terms) (checkout root).
+Leans on [§FS-terms.terms.8](../functional-spec/FS-terms.md#terms8-the-architectures-own-words) (meter),
+and [§FS-repository-maintenance.terms](../functional-spec/FS-repository-maintenance.md#terms-terms) (checkout root).
 
 - **Supplied input**: an executable or Cargo target selected by the caller
   through the existing Python gate environment convention.
