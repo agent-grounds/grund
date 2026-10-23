@@ -175,6 +175,7 @@ fn block_sections_name_every_part_of_the_block() {
 /// turns every block red, and each finding about another project's block —
 /// a companion under `.claude/` included — names that project's root
 /// (§FS-errors.3.6.1). Inside the member the workspace sections are left out.
+/// §FS-check.3.5.3.1: each detail compares the first unequal body lines positionally.
 #[test]
 fn a_new_member_names_each_block_by_the_directory_to_refresh_it_in() {
     let root = workspace("whole_block_new_member", &["billing"], &[]);
@@ -199,6 +200,17 @@ fn a_new_member_names_each_block_by_the_directory_to_refresh_it_in() {
         "FS-notify",
     );
     let members = |dir: &str| {
+        let (entry, found) = if dir.is_empty() {
+            (
+                "- [`notify`](packages/notify/) *(not yet initialized)*",
+                "<missing>",
+            )
+        } else {
+            (
+                "- [`notify`](../notify/) *(not yet initialized)*",
+                "- [`shop`](../../AGENTS.md)",
+            )
+        };
         let refresh = if dir.is_empty() {
             "run `grund init` to refresh".to_string()
         } else {
@@ -206,7 +218,8 @@ fn a_new_member_names_each_block_by_the_directory_to_refresh_it_in() {
         };
         format!(
             "repo maintenance: stale grund init block: the workspace members section differs \
-             from the workspace — {refresh} (does not affect citation validity)"
+             from the workspace (expected {entry}; found {found}) — {refresh} \
+             (does not affect citation validity)"
         )
     };
     assert_eq!(

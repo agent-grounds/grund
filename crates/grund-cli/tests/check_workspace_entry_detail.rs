@@ -174,6 +174,7 @@ const BILLING: &str = "- [`billing`](packages/billing/AGENTS.md)";
 const BILLING_MARK: &str = "- [`billing`](packages/billing/) *(not yet initialized)*";
 const NOTIFY: &str = "- [`notify`](packages/notify/AGENTS.md)";
 
+/// §FS-check.3.5.3.1: the first unequal pair is positional in each block.
 #[test]
 fn joined_member_detail_names_notify_in_root_and_member_findings() {
     let fixture = Fixture::new(&["billing"]);
@@ -181,16 +182,18 @@ fn joined_member_detail_names_notify_in_root_and_member_findings() {
     fixture.config(&["billing", "notify"]);
     let findings = fixture.findings("workspace members");
     assert_eq!(findings.len(), 2, "root and billing only: {findings:?}");
-    for (path, owner, entry) in [
+    for (path, owner, entry, found) in [
         (
             "AGENTS.md",
             "",
             "- [`notify`](packages/notify/) *(not yet initialized)*",
+            "<missing>",
         ),
         (
             "packages/billing/AGENTS.md",
             " in packages/billing",
             "- [`notify`](../notify/) *(not yet initialized)*",
+            "- [`shop`](../../AGENTS.md)",
         ),
     ] {
         let finding = findings
@@ -202,7 +205,7 @@ fn joined_member_detail_names_notify_in_root_and_member_findings() {
         )));
         assert_eq!(
             detail(finding, "workspace members"),
-            expected_found(entry, "<missing>"),
+            expected_found(entry, found),
             "joined notify must be identified in message detail: {finding}"
         );
     }
