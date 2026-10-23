@@ -51,14 +51,15 @@ fn a_dotted_path_names_its_bracketed_spelling() {
 
 /// §FS-config-explain.1.1, §FS-config-explain.5: what the dotted reading must
 /// not move: a top-level key still answers, and a path naming nothing, a bare
-/// leaf and a misspelling still take the catch-all.
+/// leaf and a misspelling still take the catch-all; a bare table of the other
+/// version gets its bracketed spelling's answer instead.
 #[test]
 fn a_top_level_key_answers_and_a_path_naming_nothing_is_the_catch_all() {
     assert!(matches!(ask(1, "kinds"), ExplainAnswer::Key(_)));
     assert!(matches!(ask(2, "oversized-lead"), ExplainAnswer::Code(_)));
+    assert_eq!(unknown_of(2, "citations"), unknown_of(2, "[citations]"));
     for (version, target) in [
         (2, "sources"),
-        (2, "citations"),
         (2, "schema.sorces"),
         (2, "schema.sources.nope"),
         (1, "scna"),
